@@ -1,0 +1,15 @@
+---
+  extends: airbnb/legacy
+  rules:
+    comma-dangle: 0
+    new-cap: 0
+    indent: 0
+    no-console: 2
+    strict: [2, "global"]
+    vars-on-top: 0
+    func-names: 0
+    id-length: 0
+    eqeqeq: [2, "allow-null"]
+    "no-use-before-define": [2, "nofunc"]
+    yoda: 0
+    block-scoped-var: 0

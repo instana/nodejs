@@ -1,0 +1,40 @@
+{
+  "name": "instana-nodejs-sensor",
+  "version": "1.0.0",
+  "description": "The Instana Node.js sensor",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "mocha --reporter dot $(find src -name '*_test.js') && eslint src",
+    "dev": "DEBUG=instana-nodejs-sensor:* node .",
+    "dev-http": "DEBUG=instana-nodejs-sensor:* node test/instrumentation/http/index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/instana/nodejs-sensor.git"
+  },
+  "keywords": [
+    "instana",
+    "agent",
+    "sensor",
+    "monitoring"
+  ],
+  "author": "Ben Ripkens <ben@instana.com>",
+  "license": "UNLICENSED",
+  "bugs": {
+    "url": "https://github.com/instana/nodejs-sensor/issues"
+  },
+  "homepage": "https://github.com/instana/nodejs-sensor#readme",
+  "dependencies": {
+    "debug": "2.0.0",
+    "event-loop-lag": "1.1.0",
+    "event-loop-stats": "1.0.0",
+    "gcstats.js": "1.0.0"
+  },
+  "devDependencies": {
+    "chai": "3.3.0",
+    "eslint": "1.7.2",
+    "eslint-config-airbnb": "0.1.0",
+    "mocha": "2.3.3",
+    "sinon": "1.17.1"
+  }
+}

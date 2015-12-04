@@ -1,0 +1,12 @@
+{
+  "name": "appWithComponentJson",
+  "version": "1.0.0",
+  "description": "The Instana NodeJS sensor",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/"
+  },
+  "dependencies": {
+    "express": "4.13.3"
+  }
+}
