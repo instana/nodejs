@@ -32,9 +32,15 @@
   },
   "devDependencies": {
     "chai": "3.3.0",
+    "cz-conventional-changelog": "1.1.5",
     "eslint": "1.7.2",
     "eslint-config-airbnb": "0.1.0",
     "mocha": "2.3.3",
     "sinon": "1.17.1"
+  },
+  "config": {
+    "commitizen": {
+      "path": "./node_modules/cz-conventional-changelog"
+    }
   }
 }
