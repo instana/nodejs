@@ -19,9 +19,10 @@ describe('metrics.dependencies', function() {
     dependencies.activate();
 
     setTimeout(function() {
+      // testing against Mocha dependencies
       expect(dependencies.currentPayload.mkdirp).to.equal('0.5.0');
-      expect(dependencies.currentPayload.diff).to.equal('1.4.0');
+      expect(dependencies.currentPayload.glob).to.equal('3.2.3');
       done();
-    }, 300);
+    }, 1000);
   });
 });
