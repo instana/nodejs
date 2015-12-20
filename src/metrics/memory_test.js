@@ -23,7 +23,9 @@ describe('metrics.memory', function() {
     expect(p.heapUsed).to.be.a('number');
   });
 
-  it('should update memory information after 1s', function(done) {
+  // Test is too fragile (especially for CI environments) and should only be used locally
+  // to verify the behavior from time to time.
+  it.skip('should update memory information after 1s', function(done) {
     memory.activate();
     var previousPayload = memory.currentPayload;
 
