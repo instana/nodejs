@@ -4,7 +4,7 @@
   "description": "The Instana Node.js sensor",
   "main": "src/index.js",
   "scripts": {
-    "test": "mocha --reporter dot $(find src -name '*_test.js') && eslint src",
+    "test": "DEBUG=instana-nodejs-sensor:* mocha --reporter spec $(find src -name '*_test.js') && eslint src",
     "dev": "DEBUG=instana-nodejs-sensor:* node .",
     "dev-http": "DEBUG=instana-nodejs-sensor:* node test/instrumentation/http/index.js"
   },
