@@ -26,7 +26,9 @@
   "homepage": "https://github.com/instana/nodejs-sensor#readme",
   "dependencies": {
     "debug": "2.0.0",
-    "event-loop-lag": "1.1.0",
+    "event-loop-lag": "1.1.0"
+  },
+  "optionalDependencies": {
     "event-loop-stats": "1.0.0",
     "gcstats.js": "1.0.0"
   },
