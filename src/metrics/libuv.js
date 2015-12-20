@@ -32,6 +32,7 @@ function sense() {
   if (eventLoopStats) {
     var stats = eventLoopStats.sense();
     stats.statsSupported = true;
+    return stats;
   }
   return {
     statsSupported: false
