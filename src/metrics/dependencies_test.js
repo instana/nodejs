@@ -23,6 +23,6 @@ describe('metrics.dependencies', function() {
       expect(dependencies.currentPayload.mkdirp).to.equal('0.5.0');
       expect(dependencies.currentPayload.glob).to.equal('3.2.3');
       done();
-    }, 1000);
+    }, 500);
   });
 });

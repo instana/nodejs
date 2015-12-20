@@ -23,6 +23,6 @@ describe('metrics.name', function() {
       // As such mocha is the main module.
       expect(name.currentPayload).to.equal('mocha');
       done();
-    }, 1000);
+    }, 500);
   });
 });

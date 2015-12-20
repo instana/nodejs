@@ -12,7 +12,13 @@ var mainPackageJsonPath = undefined;
 
 exports.getMainPackageJson = function getMainPackageJson(cb) {
   if (parsedMainPackageJson !== undefined) {
-    process.nextTick(cb, null, parsedMainPackageJson);
+    process.nextTick(function() {
+      // caution: Node.js v12 and lower treat null as undefined
+      // when using process.nextTick(cb, null). This leads to
+      // logic differences. This needs to be kept until Node.js v12
+      // and Node.js v10 support is no longer required.
+      cb(null, parsedMainPackageJson);
+    });
   }
 
   exports.getMainPackageJsonPath(function(err, packageJsonPath) {
@@ -30,7 +36,13 @@ exports.getMainPackageJson = function getMainPackageJson(cb) {
         parsedMainPackageJson = JSON.parse(contents);
         // Schedule cb call in next tick to avoid calling it twice which may occur when
         // callback is throwing exceptions.
-        process.nextTick(cb, null, parsedMainPackageJson);
+        process.nextTick(function() {
+          // caution: Node.js v12 and lower treat null as undefined
+          // when using process.nextTick(cb, null). This leads to
+          // logic differences. This needs to be kept until Node.js v12
+          // and Node.js v10 support is no longer required.
+          cb(null, parsedMainPackageJson);
+        });
       } catch (e) {
         cb(e, null);
       }
@@ -41,15 +53,27 @@ exports.getMainPackageJson = function getMainPackageJson(cb) {
 
 exports.getMainPackageJsonPath = function getMainPackageJsonPath(cb) {
   if (mainPackageJsonPath !== undefined) {
-    process.nextTick(cb, null, mainPackageJsonPath);
+    process.nextTick(function() {
+      // caution: Node.js v12 and lower treat null as undefined
+      // when using process.nextTick(cb, null). This leads to
+      // logic differences. This needs to be kept until Node.js v12
+      // and Node.js v10 support is no longer required.
+      cb(null, mainPackageJsonPath);
+    });
   }
 
   var mainModule = process.mainModule;
 
-  // this may happen when the Node CLI is evaluating an expression or for the REPL
+  // this may happen when the Node CLI is evaluating an expression or when the REPL is used
   if (!mainModule) {
     mainPackageJsonPath = null;
-    process.nextTick(cb, null, null);
+    process.nextTick(function() {
+      // caution: Node.js v12 and lower treat null as undefined
+      // when using process.nextTick(cb, null). This leads to
+      // logic differences. This needs to be kept until Node.js v12
+      // and Node.js v10 support is no longer required.
+      cb(null, null);
+    });
   }
 
   var mainModuleFilename = mainModule.filename;
