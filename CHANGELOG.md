@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.1.2
+ - Requests may hang and put sensor in endless announce cycle.
+
 ## 1.1.1
  - Identification of `event-loop-stats` availability always fails.
 
