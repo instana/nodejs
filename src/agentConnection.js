@@ -4,7 +4,10 @@ var fs = require('fs');
 var http = require('http');
 var debug = require('debug')('instana-nodejs-sensor:agentConnection');
 var pidStore = require('./pidStore');
+var atMostOnce = require('./util/atMostOnce');
 
+// max time spend waiting for an agent response
+var requestTimeout = 5000;
 var host = '127.0.0.1';
 var port = 42699;
 var cmdline;
@@ -23,6 +26,8 @@ try {
 
 
 exports.announceNodeSensor = function announceNodeSensor(cb) {
+  cb = atMostOnce('callback for announceNodeSensor', cb);
+
   var payload = 'pid=' + process.pid;
 
   if (cmdline) {
@@ -54,6 +59,10 @@ exports.announceNodeSensor = function announceNodeSensor(cb) {
     });
   });
 
+  req.setTimeout(requestTimeout, function onTimeout() {
+    cb(new Error('Announce request to agent failed due to timeout'));
+  });
+
   req.on('error', function(err) {
     cb(new Error('Announce request to agent failed due to: ' + err.message));
   });
@@ -79,6 +88,8 @@ exports.checkWhetherAgentIsReadyToAcceptData = function checkWhetherAgentIsReady
 
 
 function checkWhetherResponseForPathIsOkay(path, cb) {
+  cb = atMostOnce('callback for checkWhetherResponseForPathIsOkay', cb);
+
   var req = http.request({
     host: host,
     port: port,
@@ -86,6 +97,10 @@ function checkWhetherResponseForPathIsOkay(path, cb) {
     method: 'HEAD',
   }, function(res) {
     cb(199 < res.statusCode && res.statusCode < 300);
+  });
+
+  req.setTimeout(requestTimeout, function onTimeout() {
+    cb(new Error('Data path readyness check timed out'));
   });
 
   req.on('error', function() {
@@ -125,6 +140,8 @@ exports.sendDataToAgent = function sendDataToAgent(data, cb) {
 
 
 function sendData(path, data, cb) {
+  cb = atMostOnce('callback for sendData', cb);
+
   var payload = JSON.stringify(data);
   debug('Sending payload', path, payload);
 
@@ -143,6 +160,10 @@ function sendData(path, data, cb) {
     } else {
       cb(null);
     }
+  });
+
+  req.setTimeout(requestTimeout, function onTimeout() {
+    cb(new Error('Timeout while trying to send data to agent.'));
   });
 
   req.on('error', function(err) {
