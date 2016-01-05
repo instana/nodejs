@@ -1,5 +1,11 @@
-<h1 align="center">instana-nodejs-sensor</h1>
-<p align="center">Monitor your Node.js applications with Instana</p>
+# instana-nodejs-sensor &nbsp; [![Build Status](https://travis-ci.org/instana/nodejs-sensor.svg?branch=master)](https://travis-ci.org/instana/nodejs-sensor) [![Dependency Status](https://david-dm.org/instana/nodejs-sensor/master.svg)](https://david-dm.org/instana/nodejs-sensor/master) [![devDependency Status](https://david-dm.org/instana/nodejs-sensor/master/dev-status.svg)](https://david-dm.org/instana/nodejs-sensor/master#info=devDependencies) [![npm version](https://badge.fury.io/js/instana-nodejs-sensor.svg)](https://badge.fury.io/js/instana-nodejs-sensor)
+
+Monitor your Node.js applications with Instana!
+
+**[Installation](#installation) |**
+**[Changelog](CHANGELOG.md)**
+
+---
 
 ## Installation
 Install the Instana Node.js sensor for production usage:
