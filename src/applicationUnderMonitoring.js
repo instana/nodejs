@@ -74,6 +74,7 @@ exports.getMainPackageJsonPath = function getMainPackageJsonPath(cb) {
       // and Node.js v10 support is no longer required.
       cb(null, null);
     });
+    return;
   }
 
   var mainModuleFilename = mainModule.filename;

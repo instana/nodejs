@@ -1,10 +1,13 @@
 'use strict';
 
-var debug = require('debug')('instana-nodejs-sensor:index');
-var fs = require('fs');
+var log = require('./logger');
 var path = require('path');
+var fs = require('fs');
 
-module.exports = function start() {
+module.exports = function start(config) {
+  log.init(config);
+  var logger = log.getLogger('index');
+
   var currentState = null;
 
   var states = fs.readdirSync(path.join(__dirname, 'states'))
@@ -20,7 +23,8 @@ module.exports = function start() {
 
   var ctx = {
     transitionTo: function(newStateName) {
-      debug('Transitioning from ' + currentState + ' to ' + newStateName);
+      logger.info('Transitioning from %s to %s', currentState, newStateName);
+
       if (currentState) {
         states[currentState].leave(ctx);
       }

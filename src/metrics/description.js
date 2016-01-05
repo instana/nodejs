@@ -1,7 +1,7 @@
 'use strict';
 
-var debug = require('debug')('instana-nodejs-sensor:description');
 var applicationUnderMonitoring = require('../applicationUnderMonitoring');
+var logger = require('../logger').getLogger('description');
 
 exports.payloadType = 'app';
 exports.payloadPrefix = 'description';
@@ -10,7 +10,7 @@ exports.currentPayload = undefined;
 exports.activate = function() {
   applicationUnderMonitoring.getMainPackageJson(function(err, pckg) {
     if (err) {
-      debug('Failed to determine main package json. Reason: ', err.message, err.stack);
+      logger.warn('Failed to determine main package json. Reason: ', err.message, err.stack);
     }
 
     if (!err && pckg) {

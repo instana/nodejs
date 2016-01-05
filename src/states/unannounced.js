@@ -1,6 +1,6 @@
 'use strict';
 
-var debug = require('debug')('instana-nodejs-sensor:unannounced');
+var logger = require('../logger').getLogger('unannounced');
 var agentConnection = require('../agentConnection');
 var pidStore = require('../pidStore');
 
@@ -16,7 +16,7 @@ module.exports = {
 function tryToAnnounce(ctx) {
   agentConnection.announceNodeSensor(function(err, response) {
     if (err) {
-      debug('Announce attempt failed ' + err.message);
+      logger.info('Announce attempt failed: %s', err.message);
       setTimeout(tryToAnnounce, 10000, ctx);
       return;
     }
@@ -24,7 +24,7 @@ function tryToAnnounce(ctx) {
     var match = response.match(/pid=(\d+)/i);
     if (match) {
       var pid = parseInt(match[1], 10);
-      debug('Overwriting pid for reporting purposes to: ' + pid);
+      logger.info('Overwriting pid for reporting purposes to: %s', pid);
       pidStore.pid = pid;
     }
 

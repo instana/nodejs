@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.2.0
+ - Support varying log levels and output destinations.
+
 ## 1.1.2
  - Requests may hang and put sensor in endless announce cycle.
 

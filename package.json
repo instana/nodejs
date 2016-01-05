@@ -4,9 +4,9 @@
   "description": "The Instana Node.js sensor",
   "main": "src/index.js",
   "scripts": {
-    "test": "DEBUG=instana-nodejs-sensor:* mocha --reporter spec $(find src -name '*_test.js') && eslint src",
-    "dev": "DEBUG=instana-nodejs-sensor:* node .",
-    "dev-http": "DEBUG=instana-nodejs-sensor:* node test/instrumentation/http/index.js"
+    "test": "mocha --reporter spec $(find src -name '*_test.js') && eslint src",
+    "dev": "node -e 'require(\".\")()' | bunyan",
+    "dev-http": "node test/instrumentation/http/index.js | bunyan"
   },
   "repository": {
     "type": "git",
@@ -25,7 +25,7 @@
   },
   "homepage": "https://github.com/instana/nodejs-sensor#readme",
   "dependencies": {
-    "debug": "2.0.0",
+    "bunyan": "^1.5.1",
     "event-loop-lag": "1.1.0"
   },
   "optionalDependencies": {

@@ -1,6 +1,6 @@
 'use strict';
 
-var debug = require('debug')('instana-nodejs-sensor:announced');
+var logger = require('../logger').getLogger('announced');
 var agentConnection = require('../agentConnection');
 
 module.exports = {
@@ -15,12 +15,11 @@ module.exports = {
 function checkWhetherAgentIsReadyToAccept(totalNumberOfAttempts, ctx) {
   agentConnection.checkWhetherAgentIsReadyToAcceptData(function(ready) {
     if (ready) {
-      debug('Agent is ready to accept!');
+      logger.info('Agent is ready to accept!');
       ctx.transitionTo('agentready');
     } else if (totalNumberOfAttempts >= 10) {
-      debug(
-        'Agent is not ready to accept data after %s attempts. Restarting announce cycle. ' +
-        'Total attempts ' +
+      logger.warn(
+        'Agent is not ready to accept data after %s attempts. Restarting announce cycle.',
         totalNumberOfAttempts
       );
       ctx.transitionTo('unannounced');

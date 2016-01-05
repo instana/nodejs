@@ -1,12 +1,12 @@
 'use strict';
 
-var debug = require('debug')('instana-nodejs-sensor:metrics-libuv');
+var logger = require('../logger').getLogger('libuv');
 
 var eventLoopStats;
 try {
   eventLoopStats = require('event-loop-stats');
 } catch (e) {
-  debug(
+  logger.info(
     'Could not load event-loop-stats. You will only see limited event loop information in ' +
     'Instana for this application. This typically occurs when native addons could not be ' +
     'installed during module installation (npm install). See the instructions to learn more ' +

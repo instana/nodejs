@@ -1,10 +1,11 @@
 'use strict';
 
-var fs = require('fs');
 var http = require('http');
-var debug = require('debug')('instana-nodejs-sensor:agentConnection');
-var pidStore = require('./pidStore');
+var fs = require('fs');
+
+var logger = require('./logger').getLogger('agentConnection');
 var atMostOnce = require('./util/atMostOnce');
+var pidStore = require('./pidStore');
 
 // max time spend waiting for an agent response
 var requestTimeout = 5000;
@@ -20,7 +21,7 @@ try {
   );
 } catch (err) {
   if (err.code !== 'ENOENT') {
-    debug('cmdline could not be retrieved via proc file. Reason: ' + err.message);
+    logger.info('cmdline could not be retrieved via proc file. Reason: %s', err.message);
   }
 }
 
@@ -143,7 +144,7 @@ function sendData(path, data, cb) {
   cb = atMostOnce('callback for sendData', cb);
 
   var payload = JSON.stringify(data);
-  debug('Sending payload', path, payload);
+  logger.debug({payload: data}, 'Sending payload to %s', path);
 
   var req = http.request({
     host: host,

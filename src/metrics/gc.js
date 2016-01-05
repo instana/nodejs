@@ -1,6 +1,6 @@
 'use strict';
 
-var debug = require('debug')('instana-nodejs-sensor:metrics-gc');
+var logger = require('../logger').getLogger('metrics-gc');
 var slidingWindow = require('../slidingWindow');
 
 var windowOpts = {duration: 1000};
@@ -39,7 +39,7 @@ try {
   });
 } catch (e) {
   exports.currentPayload.statsSupported = false;
-  debug(
+  logger.info(
     'Could not load gcstats.js. You will not be able to see GC information in ' +
     'Instana for this application. This typically occurs when native addons could not be ' +
     'installed during module installation (npm install). See the instructions to learn more ' +

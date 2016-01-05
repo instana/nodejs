@@ -1,7 +1,8 @@
 'use strict';
 
-var debug = require('debug')('instana-nodejs-sensor:pidStore');
 var EventEmitter = require('events').EventEmitter;
+
+var logger = require('./logger').getLogger('pidStore');
 
 
 var eventName = 'pidChanged';
@@ -10,14 +11,14 @@ exports.onPidChange = eventEmitter.on.bind(eventEmitter, eventName);
 
 
 var pid = process.pid;
-debug('Starting with pid ' + pid);
+logger.info('Starting with pid %s', pid);
 Object.defineProperty(exports, 'pid', {
   get: function() {
     return pid;
   },
   set: function(newPid) {
     if (pid !== newPid) {
-      debug('Changing pid to ' + newPid);
+      logger.info('Changing pid to %s', newPid);
       pid = newPid;
       eventEmitter.emit(eventName, pid);
     }

@@ -1,6 +1,6 @@
 'use strict';
 
-var debug = require('debug')('instana-nodejs-sensor:atMostOnce');
+var logger = require('../logger').getLogger('atMostOnce');
 
 /**
  * Make sure that a function is only ever called once. This is useful to maintain
@@ -21,13 +21,11 @@ module.exports = function atMostOnce(name, cb) {
       return cb.apply(null, arguments);
     }
 
-    debug(
-      'Function ' +
-        name +
-        ' was called ' +
-        callCount +
-        ' times. This time with the following arguments.',
-      Array.prototype.slice.call(arguments)
+    logger.warn(
+      'Function %s was called %s times. This time with the following arguments.',
+      name,
+      callCount,
+      {args: Array.prototype.slice.call(arguments)}
     );
   };
 };

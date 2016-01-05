@@ -1,9 +1,10 @@
 'use strict';
 
-var debug = require('debug')('instana-nodejs-sensor:dependencies');
-var fs = require('fs');
 var path = require('path');
+var fs = require('fs');
+
 var applicationUnderMonitoring = require('../applicationUnderMonitoring');
+var logger = require('../logger').getLogger('dependencies');
 
 exports.payloadType = 'app';
 exports.payloadPrefix = 'dependencies';
@@ -13,9 +14,9 @@ exports.currentPayload = {};
 exports.activate = function() {
   applicationUnderMonitoring.getMainPackageJsonPath(function(err, packageJsonPath) {
     if (err) {
-      return debug('Failed to determine main package json. Reason: ' + err.message, err.stack);
+      return logger.warn('Failed to determine main package json. Reason: %s %s ', err.message, err.stack);
     } else if (!packageJsonPath) {
-      return debug('main package json could not be found. Stopping dependency analysis.');
+      return logger.warn('main package json could not be found. Stopping dependency analysis.');
     }
 
     var rootPath = path.dirname(packageJsonPath);
@@ -23,7 +24,7 @@ exports.activate = function() {
 
     fs.readdir(dependenciesPath, function(readDirErr, dependencies) {
       if (readDirErr) {
-        return debug('Cannot analyse dependencies due to ' + readDirErr.message);
+        return logger.warn('Cannot analyse dependencies due to %s', readDirErr.message);
       }
 
       dependencies.filter(function(dependency) {
@@ -42,14 +43,14 @@ exports.activate = function() {
 function addDependency(dependency, packageJsonPath) {
   fs.readFile(packageJsonPath, {encoding: 'utf8'}, function(err, contents) {
     if (err) {
-      return debug('Failed to identify version of %s dependency due to', dependency, err);
+      return logger.warn('Failed to identify version of %s dependency due to', dependency, err);
     }
 
     try {
       var pckg = JSON.parse(contents);
       exports.currentPayload[pckg.name] = pckg.version;
     } catch (subErr) {
-      return debug('Failed to identify version of %s dependency due to', dependency, subErr);
+      return logger.warn('Failed to identify version of %s dependency due to', dependency, subErr);
     }
   });
 }

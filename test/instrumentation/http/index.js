@@ -1,6 +1,8 @@
 'use strict';
 
-require('../../../')();
+require('../../../')({
+  level: 'debug'
+});
 var express = require('express');
 var app = express();
 

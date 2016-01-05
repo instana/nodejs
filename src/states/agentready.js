@@ -1,8 +1,9 @@
 'use strict';
 
-var fs = require('fs');
 var path = require('path');
-var debug = require('debug')('instana-nodejs-sensor:agentready');
+var fs = require('fs');
+
+var logger = require('../logger').getLogger('agentready');
 var agentConnection = require('../agentConnection');
 var compression = require('../compression');
 var clone = require('../clone');
@@ -56,7 +57,7 @@ module.exports = {
 
       agentConnection.sendDataToAgent(payload, function(err) {
         if (err) {
-          debug('Error received while trying to send data to agent: ' + err.message);
+          logger.error('Error received while trying to send data to agent: %s', err.message);
           ctx.transitionTo('unannounced');
           return;
         }
@@ -112,7 +113,7 @@ function gatherDataFromModules() {
       payload.app[mod.payloadPrefix] = modPayload;
       payload.runtime[mod.payloadPrefix] = modPayload;
     } else {
-      debug('Module ' + mod.payloadPrefix + ' did not specify a payload type. Skipping module.');
+      logger.warn('Module %s did not specify a payload type. Skipping module.', mod.payloadPrefix);
     }
   });
 

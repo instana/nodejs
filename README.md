@@ -22,8 +22,18 @@ require('instana-nodejs-sensor')();
 ```
 
 ## Enable Logging
-This sensor is using the [debug](https://www.npmjs.com/package/debug) module. To enable logging, set the `DEBUG=instana-nodejs-sensor:*` environment variable before starting your app. Example:
+This sensor is using the [bunyan](https://www.npmjs.com/package/bunyan) logging module. By default, the Node.js sensor uses a standard bunyan logger with an `INFO` log level. You can override the logger as follows:
 
+```javascript
+require('instana-nodejs-sensor')({
+  logger: SOME_BUNYAN_LOGGER
+});
 ```
-DEBUG=instana-nodejs-sensor:* npm start
+
+The Node.js sensor will now create children of this logger with the same log level and target streams. If you only want to change the default log level, you can configure it via:
+
+```javascript
+require('instana-nodejs-sensor')({
+  level: 'warn'
+});
 ```
