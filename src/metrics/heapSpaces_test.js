@@ -6,6 +6,14 @@ var expect = require('chai').expect;
 var proxyquire = require('proxyquire');
 var sinon = require('sinon');
 
+var doesV8ModuleExist;
+try {
+  require('v8');
+  doesV8ModuleExist = true;
+} catch (e) {
+  doesV8ModuleExist = false;
+}
+
 describe('metrics.heapSpaces', function() {
   var v8;
   var heapSpaces;
@@ -15,7 +23,7 @@ describe('metrics.heapSpaces', function() {
       getHeapSpaceStatistics: sinon.stub()
     };
     heapSpaces = proxyquire('./heapSpaces', {
-      v8: v8
+      'v8': v8
     });
   });
 
@@ -35,15 +43,17 @@ describe('metrics.heapSpaces', function() {
     expect(heapSpaces.currentPayload).to.deep.equal([]);
   });
 
-  it('should gather heap space data', function() {
-    v8.getHeapSpaceStatistics.returns([
-      {name: 'some heap space'}
-    ]);
+  if (doesV8ModuleExist) {
+    it('should gather heap space data', function() {
+      v8.getHeapSpaceStatistics.returns([
+        {name: 'some heap space'}
+      ]);
 
-    heapSpaces.activate();
+      heapSpaces.activate();
 
-    expect(heapSpaces.currentPayload).to.deep.equal([
-      {name: 'some heap space'}
-    ]);
-  });
+      expect(heapSpaces.currentPayload).to.deep.equal([
+        {name: 'some heap space'}
+      ]);
+    });
+  }
 });
