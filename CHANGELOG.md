@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.3.0
+ - Retrieve heap space statistics.
+
 ## 1.2.0
  - Support varying log levels and output destinations.
 
