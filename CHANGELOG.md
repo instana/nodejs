@@ -1,7 +1,7 @@
 # Changelog
 
 ## 1.3.1
- - `v8` module does not exist in ealy Node.js versions.
+ - `v8` module does not exist in early Node.js versions.
 
 ## 1.3.0
  - Retrieve heap space statistics.
