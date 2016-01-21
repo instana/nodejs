@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.3.2
+ - Use a more efficient data structure for heap space data.
+
 ## 1.3.1
  - `v8` module does not exist in early Node.js versions.
 

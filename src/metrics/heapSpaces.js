@@ -10,7 +10,7 @@ try {
 
 exports.payloadType = 'runtime';
 exports.payloadPrefix = 'heapSpaces';
-exports.currentPayload = [];
+exports.currentPayload = {};
 
 var activeIntervalHandle = null;
 
@@ -23,11 +23,27 @@ exports.activate = function() {
 };
 
 function gatherHeapSpaceStatistics() {
-  exports.currentPayload = v8.getHeapSpaceStatistics();
+  var rawStats = v8.getHeapSpaceStatistics();
+
+  // We are changing the native format to a format which can be more
+  // efficiently compressed and processed in the backend.
+  var processedStats = {};
+
+  for (var i = 0, len = rawStats.length; i < len; i++) {
+    var rawStat = rawStats[i];
+    processedStats[rawStat.space_name] = {
+      current: rawStat.space_size,
+      available: rawStat.space_available_size,
+      used: rawStat.space_used_size,
+      physical: rawStat.physical_space_size
+    };
+  }
+
+  exports.currentPayload = processedStats;
 }
 
 exports.deactivate = function() {
-  exports.currentPayload = [];
+  exports.currentPayload = {};
   if (activeIntervalHandle) {
     clearInterval(activeIntervalHandle);
   }

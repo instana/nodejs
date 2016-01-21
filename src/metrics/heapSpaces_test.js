@@ -40,20 +40,31 @@ describe('metrics.heapSpaces', function() {
 
     heapSpaces.activate();
 
-    expect(heapSpaces.currentPayload).to.deep.equal([]);
+    expect(heapSpaces.currentPayload).to.deep.equal({});
   });
 
   if (doesV8ModuleExist) {
     it('should gather heap space data', function() {
       v8.getHeapSpaceStatistics.returns([
-        {name: 'some heap space'}
+        {
+          space_name: 'new_space',
+          space_size: 2063872,
+          space_used_size: 951112,
+          space_available_size: 80824,
+          physical_space_size: 2063872
+        }
       ]);
 
       heapSpaces.activate();
 
-      expect(heapSpaces.currentPayload).to.deep.equal([
-        {name: 'some heap space'}
-      ]);
+      expect(heapSpaces.currentPayload).to.deep.equal({
+        new_space: {
+          current: 2063872,
+          available: 80824,
+          used: 951112,
+          physical: 2063872
+        }
+      });
     });
   }
 });
