@@ -1,39 +1,31 @@
 'use strict';
 
 var http = require('http');
-var fs = require('fs');
 
 var logger = require('./logger').getLogger('agentConnection');
 var atMostOnce = require('./util/atMostOnce');
 var pidStore = require('./pidStore');
+var cmdline = require('./cmdline');
 
 // max time spend waiting for an agent response
 var requestTimeout = 5000;
 var host = '127.0.0.1';
 var port = 42699;
-var cmdline;
-
-
-try {
-  cmdline = fs.readFileSync(
-    '/proc/' + process.pid + '/cmdline',
-    {encoding: 'utf8'}
-  );
-} catch (err) {
-  if (err.code !== 'ENOENT') {
-    logger.info('cmdline could not be retrieved via proc file. Reason: %s', err.message);
-  }
-}
 
 
 exports.announceNodeSensor = function announceNodeSensor(cb) {
   cb = atMostOnce('callback for announceNodeSensor', cb);
 
-  var payload = 'pid=' + process.pid;
+  var payload = {
+    pid: process.pid
+  };
 
-  if (cmdline) {
-    payload += '\ncmdline=' + cmdline;
+  if (cmdline.name && cmdline.args) {
+    payload.name = cmdline.name;
+    payload.args = cmdline.args;
   }
+
+  payload = JSON.stringify(payload);
 
   var req = http.request({
     host: host,
@@ -41,7 +33,8 @@ exports.announceNodeSensor = function announceNodeSensor(cb) {
     path: '/com.instana.plugin.nodejs.discovery',
     method: 'PUT',
     headers: {
-      'Content-Type': 'application/x-www-form-urlencoded',
+      'Accept': 'application/json',
+      'Content-Type': 'application/json',
       'Content-Length': payload.length
     }
   }, function(res) {

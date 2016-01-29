@@ -1,5 +1,8 @@
 # Changelog
 
+## Unreleased
+ - Improve announce cycle stability.
+
 ## 1.3.2
  - Use a more efficient data structure for heap space data.
 
