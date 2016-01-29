@@ -10,5 +10,10 @@
   "license": "UNLICENSED",
   "dependencies": {
     "express": "4.13.3"
-  }
+  },
+  "keywords": [
+    "http",
+    "instana",
+    "sensor"
+  ]
 }
