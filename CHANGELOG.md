@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.3.3
  - Improve announce cycle stability.
 
 ## 1.3.2
