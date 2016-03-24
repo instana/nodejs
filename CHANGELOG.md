@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.5.0
  - Track Node.js internal handle and request counts.
  - Report application start time to calculate uptime.
 
