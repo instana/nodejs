@@ -21,7 +21,7 @@ module.exports = function atMostOnce(name, cb) {
       return cb.apply(null, arguments);
     }
 
-    logger.warn(
+    logger.debug(
       'Function %s was called %s times. This time with the following arguments.',
       name,
       callCount,
