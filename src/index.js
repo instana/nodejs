@@ -5,7 +5,10 @@ var path = require('path');
 var fs = require('fs');
 
 module.exports = function start(config) {
+  config = config || {};
   log.init(config);
+  require('./agentConnection').init(config);
+
   var logger = log.getLogger('index');
 
   var currentState = null;

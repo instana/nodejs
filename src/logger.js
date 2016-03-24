@@ -6,7 +6,6 @@ var parentLogger;
 var logLevel = 'info';
 
 exports.init = function(config) {
-  config = config || {};
   logLevel = config.level || logLevel;
   parentLogger = config.logger || bunyan.createLogger({ name: 'instana-nodejs-sensor' });
   parentLogger.level(logLevel);

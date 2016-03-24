@@ -2,6 +2,7 @@
 
 ## Unreleased
  - Support Docker bridge networks by attempting agent communication with the container's default gateway.
+ - Support custom agent HTTP ports and name.
 
 ## 1.3.3
  - Improve announce cycle stability.

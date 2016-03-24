@@ -112,6 +112,6 @@ function checkHost(host, cb) {
 
 
 function setAgentHost(host) {
-  logger.info('Attempting agent communication via %s', host);
+  logger.info('Attempting agent communication via %s:%s', host, agentConnection.port);
   agentConnection.setAgentHost(host);
 }

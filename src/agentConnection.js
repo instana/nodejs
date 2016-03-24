@@ -10,8 +10,19 @@ var cmdline = require('./cmdline');
 // max time spend waiting for an agent response
 var requestTimeout = 5000;
 var host = '127.0.0.1';
-var port = exports.port = 42699;
+exports.port = 42699;
 exports.serverHeader = 'Instana Agent';
+
+
+exports.init = function init(config) {
+  if (config.agentPort) {
+    exports.port = config.agentPort;
+  }
+  if (config.agentName) {
+    exports.serverHeader = config.agentName;
+  }
+};
+
 
 exports.setAgentHost = function setAgentHost(newHost) {
   host = newHost;
@@ -34,7 +45,7 @@ exports.announceNodeSensor = function announceNodeSensor(cb) {
 
   var req = http.request({
     host: host,
-    port: port,
+    port: exports.port,
     path: '/com.instana.plugin.nodejs.discovery',
     method: 'PUT',
     headers: {
@@ -91,7 +102,7 @@ function checkWhetherResponseForPathIsOkay(path, cb) {
 
   var req = http.request({
     host: host,
-    port: port,
+    port: exports.port,
     path: path,
     method: 'HEAD',
   }, function(res) {
@@ -146,7 +157,7 @@ function sendData(path, data, cb) {
 
   var req = http.request({
     host: host,
-    port: port,
+    port: exports.port,
     path: path,
     method: 'POST',
     headers: {
