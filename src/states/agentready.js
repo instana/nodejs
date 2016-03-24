@@ -17,7 +17,7 @@ var modules = fs.readdirSync(metricsBaseDir)
     return require(path.join(metricsBaseDir, moduleName));
   });
 
-var resendFullDataEveryXTransmissions = 1200; /* about every 20 minutes */
+var resendFullDataEveryXTransmissions = 600; /* about every 10 minutes */
 
 var transmissionsSinceLastFullDataEmit = 0;
 var previousTransmittedValue = undefined;

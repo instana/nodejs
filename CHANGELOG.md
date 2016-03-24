@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+ - Track Node.js internal handle and request counts.
+ - Report application start time to calculate uptime.
+
 ## 1.4.0
  - Support Docker bridge networks by attempting agent communication with the container's default gateway.
  - Support custom agent HTTP ports and name.
