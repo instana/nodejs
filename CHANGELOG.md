@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.4.0
  - Support Docker bridge networks by attempting agent communication with the container's default gateway.
  - Support custom agent HTTP ports and name.
 
