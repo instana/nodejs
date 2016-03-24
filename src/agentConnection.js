@@ -10,7 +10,12 @@ var cmdline = require('./cmdline');
 // max time spend waiting for an agent response
 var requestTimeout = 5000;
 var host = '127.0.0.1';
-var port = 42699;
+var port = exports.port = 42699;
+exports.serverHeader = 'Instana Agent';
+
+exports.setAgentHost = function setAgentHost(newHost) {
+  host = newHost;
+};
 
 
 exports.announceNodeSensor = function announceNodeSensor(cb) {

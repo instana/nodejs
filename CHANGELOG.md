@@ -1,5 +1,8 @@
 # Changelog
 
+## Unreleased
+ - Support Docker bridge networks by attempting agent communication with the container's default gateway.
+
 ## 1.3.3
  - Improve announce cycle stability.
 

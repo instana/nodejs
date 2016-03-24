@@ -33,5 +33,5 @@ module.exports = function start(config) {
     }
   };
 
-  ctx.transitionTo('unannounced');
+  ctx.transitionTo('agentHostLookup');
 };
