@@ -13,7 +13,7 @@ exports.init = function(config) {
 
 exports.getLogger = function(moduleName) {
   if (!parentLogger) {
-    exports.init();
+    exports.init({});
   }
 
   var logger = parentLogger.child({ module: moduleName });
