@@ -39,7 +39,7 @@ function enter(ctx) {
 
     getDefaultGateway(function onGetDefaultGateway(getDefaultGatewayErr, defaultGateway) {
       if (getDefaultGatewayErr) {
-        logger.info(
+        logger.warn(
           'Agent cannot be contacted via localhost and default gateway cannot be determined. ' +
             'Scheduling reattempt of agent host lookup in %s millis.',
           retryTimeoutMillis,
@@ -56,7 +56,7 @@ function enter(ctx) {
           return;
         }
 
-        logger.info(
+        logger.warn(
           'Agent cannot be contacted via localhost nor via default gateway %s. ' +
             'Scheduling reattempt of agent host lookup in %s millis.',
           defaultGateway,
