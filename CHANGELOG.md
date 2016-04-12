@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.5.1
  - Increase log level for failed agent communication to warn.
 
 ## 1.5.0
