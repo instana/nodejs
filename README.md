@@ -40,6 +40,6 @@ The Node.js sensor will now create children of this logger with the same log lev
 
 ```javascript
 require('instana-nodejs-sensor')({
-  level: 'warn'
+  level: 'info'
 });
 ```
