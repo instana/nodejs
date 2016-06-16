@@ -43,7 +43,7 @@ function getPidFromParentNamespace() {
       {encoding: 'utf8'}
     );
 
-    var match = schedFileContent.match(/^node \((\d+)/i);
+    var match = schedFileContent.match(/^[a-z0-9_\-]+ \((\d+)/im);
     if (!match) {
       logger.debug('Could not locate PID in sched file');
       return null;

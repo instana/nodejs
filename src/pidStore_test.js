@@ -54,6 +54,18 @@ describe('pidStore', function() {
     expect(pidStore.pid).to.equal(15926);
   });
 
+  it('should not rely on specific command name', function() {
+    readFileSync.returns('ddasdasd\nsyslog-ng (19841, #threads: 1)\n-------------------------------------------------------------------\nse.exec_start                                :    1093303068.953905');
+    doRequire();
+    expect(pidStore.pid).to.equal(19841);
+  });
+
+  it('should not rely on specific command name', function() {
+    readFileSync.returns('ddasdasd\n_-0918log-ng (1941, #threads: 1)\n§"!?=joidsajio90\n312903i .-.d-"');
+    doRequire();
+    expect(pidStore.pid).to.equal(1941);
+  });
+
   it('should not fail when the sched file does not contain a parseable parent PID header', function() {
     readFileSync.returns('something which we cannot parse');
     doRequire();
