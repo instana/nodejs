@@ -26,6 +26,6 @@ try {
   }
 } catch (err) {
   if (err.code !== 'ENOENT') {
-    logger.info('cmdline could not be retrieved via proc file. Reason: %s', err.message);
+    logger.warn('cmdline could not be retrieved via proc file. Reason: %s', err.message);
   }
 }

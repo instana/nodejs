@@ -2,23 +2,42 @@
 
 'use strict';
 
-var sinon = require('sinon');
+var proxyquire = require('proxyquire');
 var expect = require('chai').expect;
-
-var pidStore = require('./pidStore');
+var sinon = require('sinon');
 
 describe('pidStore', function() {
+  var pidStore;
+  var readFileSync;
+
+  beforeEach(function() {
+    readFileSync = sinon.stub().throws();
+
+    pidStore = null;
+  });
+
+  function doRequire() {
+    pidStore = proxyquire('./pidStore', {
+      fs: {
+        readFileSync: readFileSync
+      }
+    });
+  }
+
   it('should by default return the process pid', function() {
+    doRequire();
     expect(pidStore.pid).to.equal(process.pid);
   });
 
   it('should allow changing the pid', function() {
+    doRequire();
     var newPid = 42;
     pidStore.pid = newPid;
     expect(pidStore.pid).to.equal(newPid);
   });
 
   it('should provide means to observe pid changes', function() {
+    doRequire();
     var observer = sinon.stub();
     pidStore.onPidChange(observer);
 
@@ -27,5 +46,17 @@ describe('pidStore', function() {
 
     expect(observer.callCount).to.equal(1);
     expect(observer.getCall(0).args[0]).to.equal(newPid);
+  });
+
+  it('should use the PID from the parent namespace when found', function() {
+    readFileSync.returns('node (15926, #threads: 10)\n-------------------------------------------------------------------\nse.exec_start                                :    1093303068.953905');
+    doRequire();
+    expect(pidStore.pid).to.equal(15926);
+  });
+
+  it('should not fail when the sched file does not contain a parseable parent PID header', function() {
+    readFileSync.returns('something which we cannot parse');
+    doRequire();
+    expect(pidStore.pid).to.equal(process.pid);
   });
 });

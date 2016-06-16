@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.6.0
+ - Read PID from `/proc/<pid>/sched` for increased robustness in cases where the Node.js sensor is running in a different PID namespace than the agent.
+
 ## 1.5.1
  - Increase log level for failed agent communication to warn.
 
