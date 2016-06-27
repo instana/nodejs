@@ -33,7 +33,7 @@ exports.announceNodeSensor = function announceNodeSensor(cb) {
   cb = atMostOnce('callback for announceNodeSensor', cb);
 
   var payload = {
-    pid: process.pid
+    pid: pidStore.pid
   };
 
   if (cmdline.name && cmdline.args) {

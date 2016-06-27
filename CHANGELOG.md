@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.6.2
+ - Determined PID is not transmitted to agent during announce phase.
+
 ## 1.6.1
  - Do not depend on a specific command name when parsing `/proc/<pid>/sched` files.
 
