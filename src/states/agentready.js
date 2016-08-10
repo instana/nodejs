@@ -21,18 +21,11 @@ var resendFullDataEveryXTransmissions = 600; /* about every 10 minutes */
 
 var transmissionsSinceLastFullDataEmit = 0;
 var previousTransmittedValue = undefined;
-var discoveryKeepaliveIntervalHandle = null;
 
 
 module.exports = {
   enter: function(ctx) {
     transmissionsSinceLastFullDataEmit = 0;
-
-    // keep announcing this node instance, because otherwise the agent
-    // will assume that we are dead.
-    discoveryKeepaliveIntervalHandle = setInterval(function() {
-      agentConnection.announceNodeSensor(function() {});
-    }, 30000);
 
     enableAllSensors();
     sendData();
@@ -73,10 +66,6 @@ module.exports = {
   },
 
   leave: function() {
-    if (discoveryKeepaliveIntervalHandle) {
-      clearInterval(discoveryKeepaliveIntervalHandle);
-    }
-
     disableAllSensors();
     previousTransmittedValue = undefined;
   }
