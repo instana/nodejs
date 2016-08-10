@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.7.0
+ - Send logs to agent for ease of debugging.
+ - Fix agent communication issues were successive announce attempts resulted in announce problems.
+
 ## 1.6.2
  - Determined PID is not transmitted to agent during announce phase.
 
