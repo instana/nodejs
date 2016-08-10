@@ -2,13 +2,30 @@
 
 var bunyan = require('bunyan');
 
+var bunyanToAgentStream = require('./agent/bunyanToAgentStream');
+
 var parentLogger;
-var logLevel = 'info';
 
 exports.init = function(config) {
-  logLevel = config.level || logLevel;
-  parentLogger = config.logger || bunyan.createLogger({ name: 'instana-nodejs-sensor' });
-  parentLogger.level(logLevel);
+  var loggerOptions = {
+    name: 'instana-nodejs-sensor'
+  };
+
+  if (config.level) {
+    loggerOptions.level = config.level;
+  }
+
+  if (config.logger) {
+    parentLogger = config.logger.child(loggerOptions, false);
+  } else {
+    parentLogger = bunyan.createLogger(loggerOptions);
+  }
+
+  parentLogger.addStream({
+    type: 'raw',
+    stream: bunyanToAgentStream,
+    level: 'info'
+  });
 };
 
 exports.getLogger = function(moduleName) {
@@ -16,8 +33,9 @@ exports.getLogger = function(moduleName) {
     exports.init({});
   }
 
-  var logger = parentLogger.child({ module: moduleName });
-  logger.level(parentLogger.level());
+  var logger = parentLogger.child({
+    module: moduleName
+  });
 
   return logger;
 };

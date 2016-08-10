@@ -2,10 +2,10 @@
 
 var http = require('http');
 
+var agentOpts = require('../agent/opts');
 var exec = require('child_process').exec;
 var atMostOnce = require('../util/atMostOnce');
 var logger = require('../logger').getLogger('agentHostLookup');
-var agentConnection = require('../agentConnection');
 
 // Depending on the environment in which the agent and node sensor are running,
 // the agent may be available under different hosts. For instance,
@@ -86,11 +86,11 @@ function checkHost(host, cb) {
 
   var req = http.request({
     host: host,
-    port: agentConnection.port,
+    port: agentOpts.port,
     path: '/',
     method: 'GET',
   }, function(res) {
-    if (res.headers.server === agentConnection.serverHeader) {
+    if (res.headers.server === agentOpts.serverHeader) {
       cb(null);
     } else {
       cb(new Error('Host ' + host +
@@ -112,6 +112,6 @@ function checkHost(host, cb) {
 
 
 function setAgentHost(host) {
-  logger.info('Attempting agent communication via %s:%s', host, agentConnection.port);
-  agentConnection.setAgentHost(host);
+  logger.info('Attempting agent communication via %s:%s', host, agentOpts.port);
+  agentOpts.host = host;
 }

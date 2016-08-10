@@ -6,27 +6,7 @@ var logger = require('./logger').getLogger('agentConnection');
 var atMostOnce = require('./util/atMostOnce');
 var pidStore = require('./pidStore');
 var cmdline = require('./cmdline');
-
-// max time spend waiting for an agent response
-var requestTimeout = 5000;
-var host = '127.0.0.1';
-exports.port = 42699;
-exports.serverHeader = 'Instana Agent';
-
-
-exports.init = function init(config) {
-  if (config.agentPort) {
-    exports.port = config.agentPort;
-  }
-  if (config.agentName) {
-    exports.serverHeader = config.agentName;
-  }
-};
-
-
-exports.setAgentHost = function setAgentHost(newHost) {
-  host = newHost;
-};
+var agentOpts = require('./agent/opts');
 
 
 exports.announceNodeSensor = function announceNodeSensor(cb) {
@@ -44,8 +24,8 @@ exports.announceNodeSensor = function announceNodeSensor(cb) {
   payload = JSON.stringify(payload);
 
   var req = http.request({
-    host: host,
-    port: exports.port,
+    host: agentOpts.host,
+    port: agentOpts.port,
     path: '/com.instana.plugin.nodejs.discovery',
     method: 'PUT',
     headers: {
@@ -69,7 +49,7 @@ exports.announceNodeSensor = function announceNodeSensor(cb) {
     });
   });
 
-  req.setTimeout(requestTimeout, function onTimeout() {
+  req.setTimeout(agentOpts.requestTimeout, function onTimeout() {
     cb(new Error('Announce request to agent failed due to timeout'));
   });
 
@@ -101,15 +81,15 @@ function checkWhetherResponseForPathIsOkay(path, cb) {
   cb = atMostOnce('callback for checkWhetherResponseForPathIsOkay', cb);
 
   var req = http.request({
-    host: host,
-    port: exports.port,
+    host: agentOpts.host,
+    port: agentOpts.port,
     path: path,
     method: 'HEAD',
   }, function(res) {
     cb(199 < res.statusCode && res.statusCode < 300);
   });
 
-  req.setTimeout(requestTimeout, function onTimeout() {
+  req.setTimeout(agentOpts.requestTimeout, function onTimeout() {
     cb(new Error('Data path readyness check timed out'));
   });
 
@@ -156,8 +136,8 @@ function sendData(path, data, cb) {
   logger.debug({payload: data}, 'Sending payload to %s', path);
 
   var req = http.request({
-    host: host,
-    port: exports.port,
+    host: agentOpts.host,
+    port: agentOpts.port,
     path: path,
     method: 'POST',
     headers: {
@@ -172,7 +152,7 @@ function sendData(path, data, cb) {
     }
   });
 
-  req.setTimeout(requestTimeout, function onTimeout() {
+  req.setTimeout(agentOpts.requestTimeout, function onTimeout() {
     cb(new Error('Timeout while trying to send data to agent.'));
   });
 

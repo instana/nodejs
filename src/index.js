@@ -7,7 +7,7 @@ var fs = require('fs');
 module.exports = function start(config) {
   config = config || {};
   log.init(config);
-  require('./agentConnection').init(config);
+  require('./agent/opts').init(config);
 
   var logger = log.getLogger('index');
 
@@ -26,7 +26,7 @@ module.exports = function start(config) {
 
   var ctx = {
     transitionTo: function(newStateName) {
-      logger.info('Transitioning from %s to %s', currentState, newStateName);
+      logger.info('Transitioning from %s to %s', currentState || '<init>', newStateName);
 
       if (currentState) {
         states[currentState].leave(ctx);
