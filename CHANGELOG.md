@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.8.0
+ - Use keep alive connections for all agent communication.
+ - Treat agent ready call timeouts as failed checks.
+
 ## 1.7.0
  - Send logs to agent for ease of debugging.
  - Fix agent communication issues were successive announce attempts resulted in announce problems.

@@ -1,6 +1,6 @@
 'use strict';
 
-var http = require('http');
+var http = require('../http');
 
 var agentOpts = require('../agent/opts');
 var exec = require('child_process').exec;
@@ -82,12 +82,13 @@ function getDefaultGateway(cb) {
 
 
 function checkHost(host, cb) {
-  cb = atMostOnce('callback for checkHost', cb);
+  cb = atMostOnce('callback for checkHost: ' + host, cb);
 
   var req = http.request({
     host: host,
     port: agentOpts.port,
     path: '/',
+    agent: http.agent,
     method: 'GET',
   }, function(res) {
     if (res.headers.server === agentOpts.serverHeader) {
@@ -97,6 +98,7 @@ function checkHost(host, cb) {
         ' did not respond with expected agent header. Got: ' +
         res.headers.server));
     }
+    res.resume();
   });
 
   req.setTimeout(5000, function onTimeout() {

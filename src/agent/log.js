@@ -1,6 +1,6 @@
 'use strict';
 
-var http = require('http');
+var http = require('../http');
 
 var agentOpts = require('./opts');
 
@@ -19,6 +19,7 @@ module.exports = exports = function log(logLevel, message, stackTrace) {
     port: agentOpts.port,
     path: '/com.instana.agent.logger',
     method: 'POST',
+    agent: http.agent,
     headers: {
       'Content-Type': 'application/json',
       'Content-Length': payload.length,
@@ -34,6 +35,7 @@ module.exports = exports = function log(logLevel, message, stackTrace) {
 };
 
 
-function swallow() {
+function swallow(res) {
   // swallow all errors
+  res.resume();
 }
