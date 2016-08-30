@@ -42,8 +42,8 @@ module.exports = {
         payload = compression(previousTransmittedValue, newValueToTransmit);
       }
 
-      // ensure that the app and runtime keys are always enable. We need both to be available
-      // because we need to talk regularly with the backend. Even when there are no updates
+      // ensure that the app and runtime keys are always available. We need both to be available
+      // because we need to talk regularly with the agent. Even when there are no updates
       // because of presence updates.
       payload.app = payload.app || {};
       payload.runtime = payload.runtime || {};

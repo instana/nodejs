@@ -90,7 +90,7 @@ function checkWhetherResponseForPathIsOkay(path, cb) {
   });
 
   req.setTimeout(agentOpts.requestTimeout, function onTimeout() {
-    cb(new Error('Data path readyness check timed out'));
+    cb(false);
   });
 
   req.on('error', function() {
