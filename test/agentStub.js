@@ -40,8 +40,8 @@ app.head('/com.instana.plugin.nodejs.:pid', checkExistenceOfKnownPid(function ha
 }));
 
 
-app.post('/com.instana.plugin.nodejsapp.:pid', checkExistenceOfKnownPid(function handleDataRetrieval(dataPot, req, res) {
-  dataPot.push({
+app.post('/com.instana.plugin.nodejs.:pid', checkExistenceOfKnownPid(function handleDataRetrieval(req, res) {
+  retrievedData.runtime.push({
     pid: req.params.pid,
     time: Date.now(),
     data: req.body
@@ -69,15 +69,19 @@ app.get('/retrievedData', function(req, res) {
 });
 
 
+app.get('/discoveries', function(req, res) {
+  res.json(discoveries);
+});
+
+
 function resetRetrievedData() {
   retrievedData = {
     runtime: [],
-    app: [],
     traces: []
   };
 }
 
 
 app.listen(process.env.AGENT_PORT, function() {
-  console.log('Example app listening on port: ' + process.env.AGENT_PORT);
+  console.log('Agent stub listening on port: ' + process.env.AGENT_PORT);
 });

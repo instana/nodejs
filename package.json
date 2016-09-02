@@ -4,11 +4,13 @@
   "description": "The Instana Node.js sensor",
   "main": "src/index.js",
   "scripts": {
-    "test": "mocha --reporter spec $(find src -name '*_test.js') && eslint src",
-    "dev": "node -e 'require(\".\")()' | bunyan",
-    "dev-http": "node test/instrumentation/http/index.js | bunyan",
-    "dev-http-to-dummy-agent": "AGENT_PORT=3210 npm run dev-http",
-    "dummy-agent": "AGENT_PORT=3210 node test/dummyAgent.js"
+    "test": "npm run utest && npm run itest && npm run lint",
+    "utest": "mocha --reporter spec $(find src -name '*_test.js') ",
+    "itest": "mocha --reporter spec $(find test -name '*_test.js')",
+    "lint": "eslint src test",
+    "dev": "node -e 'require(\".\")({agentPort: process.env.AGENT_PORT || 42699})' | bunyan",
+    "dev-to-agent-stub": "AGENT_PORT=3210 npm run dev",
+    "agent-stub": "AGENT_PORT=3210 node test/agentStub.js"
   },
   "repository": {
     "type": "git",
@@ -43,6 +45,8 @@
     "express": "4.14.0",
     "mocha": "2.3.3",
     "proxyquire": "1.7.3",
+    "request": "2.74.0",
+    "request-promise": "4.1.1",
     "sinon": "1.17.1"
   },
   "config": {
