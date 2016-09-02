@@ -1,7 +1,8 @@
 'use strict';
 
 require('../../../')({
-  level: 'debug'
+  level: 'debug',
+  agentPort: process.env.AGENT_PORT || 40699
 });
 var express = require('express');
 var app = express();
@@ -16,7 +17,7 @@ app.get('/', function root(req, res) {
   }
 });
 
-var server = app.listen(3210, function onListen() {
+var server = app.listen(3211, function onListen() {
   var host = server.address().address;
   var port = server.address().port;
 

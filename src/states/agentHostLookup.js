@@ -33,7 +33,8 @@ function enter(ctx) {
     }
 
     logger.debug(
-      '127.0.0.1 is not running the agent. Trying default gateway...',
+      '127.0.0.1:%s is not running the agent. Trying default gateway...',
+      agentOpts.port,
       {error: localhostCheckErr}
     );
 

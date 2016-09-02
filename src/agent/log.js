@@ -25,7 +25,9 @@ module.exports = exports = function log(logLevel, message, stackTrace) {
       'Content-Length': payload.length,
       'x-log-level': logLevel
     }
-  }, swallow);
+  }, function(res) {
+    res.resume();
+  });
 
   req.setTimeout(agentOpts.requestTimeout, swallow);
   req.on('error', swallow);
@@ -35,7 +37,6 @@ module.exports = exports = function log(logLevel, message, stackTrace) {
 };
 
 
-function swallow(res) {
+function swallow() {
   // swallow all errors
-  res.resume();
 }
