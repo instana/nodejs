@@ -6,7 +6,6 @@ var fs = require('fs');
 var applicationUnderMonitoring = require('../applicationUnderMonitoring');
 var logger = require('../logger').getLogger('dependencies');
 
-exports.payloadType = 'app';
 exports.payloadPrefix = 'dependencies';
 exports.currentPayload = {};
 

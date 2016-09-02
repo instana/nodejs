@@ -7,7 +7,6 @@ var createSlidingWindow = require('../slidingWindow').create;
 var windowCalculations = {};
 var payload = {};
 
-exports.payloadType = 'app';
 exports.payloadPrefix = 'http';
 
 Object.defineProperty(exports, 'currentPayload', {

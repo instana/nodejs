@@ -3,7 +3,6 @@
 var applicationUnderMonitoring = require('../applicationUnderMonitoring');
 var logger = require('../logger').getLogger('keywords');
 
-exports.payloadType = 'app';
 exports.payloadPrefix = 'keywords';
 exports.currentPayload = [];
 

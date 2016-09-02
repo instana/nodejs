@@ -1,6 +1,5 @@
 'use strict';
 
-exports.payloadType = 'runtime';
 exports.payloadPrefix = 'activeHandles';
 
 exports.activate = function() {};

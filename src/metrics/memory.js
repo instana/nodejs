@@ -1,6 +1,5 @@
 'use strict';
 
-exports.payloadType = 'runtime';
 exports.payloadPrefix = 'memory';
 exports.currentPayload = {};
 

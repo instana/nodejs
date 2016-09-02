@@ -16,7 +16,6 @@ try {
 }
 var lag = require('event-loop-lag')(1000);
 
-exports.payloadType = 'runtime';
 exports.payloadPrefix = 'libuv';
 exports.currentPayload = {};
 

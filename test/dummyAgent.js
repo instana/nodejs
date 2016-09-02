@@ -10,14 +10,17 @@ resetRetrievedData();
 
 app.use(bodyParser.json());
 
+
 app.use(function(req, res, next) {
   res.set('server', 'Instana Agent');
   next();
 });
 
+
 app.get('/', function(req, res) {
   res.send('OK');
 });
+
 
 app.put('/com.instana.plugin.nodejs.discovery', function(req, res) {
   var pid = req.body.pid;
@@ -30,17 +33,14 @@ app.put('/com.instana.plugin.nodejs.discovery', function(req, res) {
   });
 });
 
-app.head('/com.instana.plugin.nodejs.:pid', checkExistenceOfKnownPid(handleAnnounceCheck));
-app.head('/com.instana.plugin.nodejsapp.:pid', checkExistenceOfKnownPid(handleAnnounceCheck));
-function handleAnnounceCheck(req, res) {
+
+app.head('/com.instana.plugin.nodejs.:pid', checkExistenceOfKnownPid(function handleAnnounceCheck(req, res) {
   console.log('Announce Check: Got announce check for pid: ', req.params.pid);
   res.send('OK');
-}
+}));
 
-app.post('/com.instana.plugin.nodejs.:pid', checkExistenceOfKnownPid(handleDataRetrieval.bind(null, retrievedData.runtime)));
-app.post('/com.instana.plugin.nodejsapp.:pid', checkExistenceOfKnownPid(handleDataRetrieval.bind(null, retrievedData.app)));
 
-function handleDataRetrieval(dataPot, req, res) {
+app.post('/com.instana.plugin.nodejsapp.:pid', checkExistenceOfKnownPid(function handleDataRetrieval(dataPot, req, res) {
   dataPot.push({
     pid: req.params.pid,
     time: Date.now(),
@@ -48,7 +48,8 @@ function handleDataRetrieval(dataPot, req, res) {
   });
   console.log('Retrieval: Got new data for PID ' + req.params.pid);
   res.send('OK');
-}
+}));
+
 
 function checkExistenceOfKnownPid(fn) {
   return function(req, res) {
@@ -61,10 +62,12 @@ function checkExistenceOfKnownPid(fn) {
   };
 }
 
+
 app.get('/retrievedData', function(req, res) {
   res.json(retrievedData);
   resetRetrievedData();
 });
+
 
 function resetRetrievedData() {
   retrievedData = {
@@ -73,6 +76,7 @@ function resetRetrievedData() {
     traces: []
   };
 }
+
 
 app.listen(process.env.AGENT_PORT, function() {
   console.log('Example app listening on port: ' + process.env.AGENT_PORT);

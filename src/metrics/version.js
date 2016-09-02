@@ -3,7 +3,6 @@
 var applicationUnderMonitoring = require('../applicationUnderMonitoring');
 var logger = require('../logger').getLogger('version');
 
-exports.payloadType = 'both';
 exports.payloadPrefix = 'version';
 exports.currentPayload = undefined;
 

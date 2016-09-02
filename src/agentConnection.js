@@ -66,14 +66,7 @@ exports.announceNodeSensor = function announceNodeSensor(cb) {
 exports.checkWhetherAgentIsReadyToAcceptData = function checkWhetherAgentIsReadyToAcceptData(cb) {
   checkWhetherResponseForPathIsOkay(
     '/com.instana.plugin.nodejs.' + pidStore.pid,
-    function(nodejsSensorLoaded) {
-      if (!nodejsSensorLoaded) return cb(false);
-
-      checkWhetherResponseForPathIsOkay(
-        '/com.instana.plugin.nodejsapp.' + pidStore.pid,
-        cb
-      );
-    }
+    cb
   );
 };
 
@@ -107,28 +100,11 @@ function checkWhetherResponseForPathIsOkay(path, cb) {
 exports.sendDataToAgent = function sendDataToAgent(data, cb) {
   cb = atMostOnce('callback for sendDataToAgent', cb);
 
-  var responseCount = 0;
-  var responseErrored = false;
-
-  sendAndCheckForCompletion('/com.instana.plugin.nodejs.' + pidStore.pid, data.runtime);
-  sendAndCheckForCompletion('/com.instana.plugin.nodejsapp.' + pidStore.pid, data.app);
-
-  function sendAndCheckForCompletion(path, dataToSend) {
-    sendData(
-      path,
-      dataToSend,
-      function(error) {
-        responseCount++;
-        if (error) {
-          responseErrored = true;
-        }
-
-        if (responseCount === 2) {
-          cb(responseErrored);
-        }
-      }
-    );
-  }
+  sendData(
+    '/com.instana.plugin.nodejs.' + pidStore.pid,
+    data,
+    cb
+  );
 };
 
 

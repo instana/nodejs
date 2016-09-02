@@ -42,15 +42,9 @@ module.exports = {
         payload = compression(previousTransmittedValue, newValueToTransmit);
       }
 
-      // ensure that the app and runtime keys are always available. We need both to be available
-      // because we need to talk regularly with the agent. Even when there are no updates
-      // because of presence updates.
-      payload.app = payload.app || {};
-      payload.runtime = payload.runtime || {};
-
-      agentConnection.sendDataToAgent(payload, function(errored) {
-        if (errored) {
-          logger.error('Error received while trying to send data to agent.');
+      agentConnection.sendDataToAgent(payload, function(error) {
+        if (error) {
+          logger.error('Error received while trying to send data to agent.', {error: error});
           ctx.transitionTo('unannounced');
           return;
         }
@@ -87,23 +81,10 @@ function disableAllSensors() {
 
 
 function gatherDataFromModules() {
-  var payload = {
-    runtime: {},
-    app: {}
-  };
+  var payload = {};
 
   modules.forEach(function(mod) {
-    if (mod.payloadType === 'runtime') {
-      payload.runtime[mod.payloadPrefix] = mod.currentPayload;
-    } else if (mod.payloadType === 'app') {
-      payload.app[mod.payloadPrefix] = mod.currentPayload;
-    } else if (mod.payloadType === 'both') {
-      var modPayload = mod.currentPayload;
-      payload.app[mod.payloadPrefix] = modPayload;
-      payload.runtime[mod.payloadPrefix] = modPayload;
-    } else {
-      logger.warn('Module %s did not specify a payload type. Skipping module.', mod.payloadPrefix);
-    }
+    payload[mod.payloadPrefix] = mod.currentPayload;
   });
 
   return payload;

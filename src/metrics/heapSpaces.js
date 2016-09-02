@@ -8,7 +8,6 @@ try {
   v8 = null;
 }
 
-exports.payloadType = 'runtime';
 exports.payloadPrefix = 'heapSpaces';
 exports.currentPayload = {};
 

@@ -8,7 +8,6 @@ var minorGcWindow = slidingWindow.create(windowOpts);
 var majorGcWindow = slidingWindow.create(windowOpts);
 var gcPauseWindow = slidingWindow.create(windowOpts);
 
-exports.payloadType = 'runtime';
 exports.payloadPrefix = 'gc';
 exports.currentPayload = {
   minorGcs: 0,

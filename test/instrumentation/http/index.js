@@ -2,7 +2,7 @@
 
 require('../../../')({
   level: 'debug',
-  agentPort: process.env.AGENT_PORT || 40699
+  agentPort: process.env.AGENT_PORT || 42699
 });
 var express = require('express');
 var app = express();

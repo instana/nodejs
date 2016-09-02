@@ -2,7 +2,6 @@
 
 var pidStore = require('../pidStore');
 
-exports.payloadType = 'both';
 exports.payloadPrefix = 'pid';
 exports.currentPayload = pidStore.pid;
 
