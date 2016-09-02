@@ -16,12 +16,20 @@ describe('agentCommunication', function() {
   expressControls.registerTestHooks();
 
   it('must announce itself to the agent', function() {
-    var expectedPid = expressControls.getPid();
-
     return util.retry(function() {
       return agentStubControls.getDiscoveries()
         .then(function(discoveries) {
-          expect(discoveries[expectedPid].pid).to.be.a('number');
+          expect(discoveries[expressControls.getPid()].pid).to.be.a('number');
+        });
+    });
+  });
+
+
+  it('must send data to the agent', function() {
+    return util.retry(function() {
+      return agentStubControls.getLastMetricValue(expressControls.getPid(), ['pid'])
+        .then(function(pid) {
+          expect(pid).to.equal(expressControls.getPid());
         });
     });
   });

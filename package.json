@@ -45,6 +45,7 @@
     "eslint": "1.7.2",
     "eslint-config-airbnb": "0.1.0",
     "express": "4.14.0",
+    "lodash": "4.15.0",
     "mocha": "2.3.3",
     "proxyquire": "1.7.3",
     "request": "2.74.0",

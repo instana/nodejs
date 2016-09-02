@@ -5,7 +5,8 @@
 // to test distributed tracing.
 
 require('../../')({
-  agentPort: process.env.AGENT_PORT
+  agentPort: process.env.AGENT_PORT,
+  level: 'debug'
 });
 
 var express = require('express');

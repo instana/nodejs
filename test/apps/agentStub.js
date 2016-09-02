@@ -42,7 +42,7 @@ app.head('/com.instana.plugin.nodejs.:pid', checkExistenceOfKnownPid(function ha
 
 app.post('/com.instana.plugin.nodejs.:pid', checkExistenceOfKnownPid(function handleDataRetrieval(req, res) {
   retrievedData.runtime.push({
-    pid: req.params.pid,
+    pid: parseInt(req.params.pid, 10),
     time: Date.now(),
     data: req.body
   });
