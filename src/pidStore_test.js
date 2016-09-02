@@ -10,11 +10,22 @@ describe('pidStore', function() {
   var pidStore;
   var readFileSync;
 
+  var prevCiFlag;
+
   beforeEach(function() {
+    prevCiFlag = process.env.CONTINUOUS_INTEGRATION;
+    delete process.env.CONTINUOUS_INTEGRATION;
+
     readFileSync = sinon.stub().throws();
 
     pidStore = null;
   });
+
+
+  afterEach(function() {
+    process.env.CONTINUOUS_INTEGRATION = prevCiFlag;
+  });
+
 
   function doRequire() {
     pidStore = proxyquire('./pidStore', {

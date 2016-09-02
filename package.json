@@ -5,6 +5,7 @@
   "main": "src/index.js",
   "scripts": {
     "test": "npm run utest && npm run itest && npm run lint",
+    "debug-test": "export WITH_STDOUT=true && npm run test",
     "utest": "mocha --reporter spec $(find src -name '*_test.js') ",
     "itest": "mocha --reporter spec $(find test -name '*_test.js')",
     "lint": "eslint src test",
@@ -37,6 +38,7 @@
     "gcstats.js": "1.0.0"
   },
   "devDependencies": {
+    "bluebird": "3.4.6",
     "body-parser": "1.15.2",
     "chai": "3.3.0",
     "cz-conventional-changelog": "1.1.5",

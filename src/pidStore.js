@@ -26,13 +26,15 @@ Object.defineProperty(exports, 'pid', {
   }
 });
 
-var pidInParentNamespace = getPidFromParentNamespace();
-if (pidInParentNamespace) {
-  exports.pid = pidInParentNamespace;
-  logger.info(
-    'Changing pid to %s due to successful identification of PID in parent namespace',
-    pidInParentNamespace
-  );
+if (!process.env.CONTINUOUS_INTEGRATION) {
+  var pidInParentNamespace = getPidFromParentNamespace();
+  if (pidInParentNamespace) {
+    exports.pid = pidInParentNamespace;
+    logger.info(
+      'Changing pid to %s due to successful identification of PID in parent namespace',
+      pidInParentNamespace
+    );
+  }
 }
 
 

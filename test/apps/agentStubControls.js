@@ -6,18 +6,20 @@ var spawn = require('child_process').spawn;
 var request = require('request-promise');
 var path = require('path');
 
-var agentPort = 3210;
+var util = require('../util');
+var config = require('../config');
 
+var agentPort = exports.agentPort = 3210;
+
+var agentStub;
 
 exports.registerTestHooks = function() {
-  var agentStub;
-
   beforeEach(function() {
     var env = Object.create(process.env);
     env.AGENT_PORT = agentPort;
 
     agentStub = spawn('node', [path.join(__dirname, 'agentStub.js')], {
-      stdio: 'inherit',
+      stdio: config.getAppStdio(),
       env: env
     });
 
@@ -49,11 +51,10 @@ exports.getRetrievedData = function() {
 
 
 function waitUntilServerIsUp() {
-  return request({
-    method: 'GET',
-    url: 'http://127.0.0.1:' + agentPort
-  })
-  .catch(function() {
-    return waitUntilServerIsUp();
+  return util.retry(function() {
+    return request({
+      method: 'GET',
+      url: 'http://127.0.0.1:' + agentPort
+    });
   });
 }

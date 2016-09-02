@@ -26,7 +26,7 @@ app.put('/com.instana.plugin.nodejs.discovery', function(req, res) {
   var pid = req.body.pid;
   discoveries[pid] = req.body;
 
-  console.log('Discovery: New discovery %s with params', pid, req.body);
+  console.log('Agent Stub: New discovery %s with params', pid, req.body);
 
   res.send({
     pid: pid
@@ -35,7 +35,7 @@ app.put('/com.instana.plugin.nodejs.discovery', function(req, res) {
 
 
 app.head('/com.instana.plugin.nodejs.:pid', checkExistenceOfKnownPid(function handleAnnounceCheck(req, res) {
-  console.log('Announce Check: Got announce check for pid: ', req.params.pid);
+  console.log('Agent Stub: Got announce check for pid: ', req.params.pid);
   res.send('OK');
 }));
 
@@ -46,7 +46,7 @@ app.post('/com.instana.plugin.nodejs.:pid', checkExistenceOfKnownPid(function ha
     time: Date.now(),
     data: req.body
   });
-  console.log('Retrieval: Got new data for PID ' + req.params.pid);
+  console.log('Agent Stub: Got new data for PID ' + req.params.pid);
   res.send('OK');
 }));
 
@@ -55,7 +55,7 @@ function checkExistenceOfKnownPid(fn) {
   return function(req, res) {
     var pid = req.params.pid;
     if (!discoveries[pid]) {
-      console.log('Rejecting access for pid %s as PID is not a known discovery', pid);
+      console.error('Agent Stub: Rejecting access for pid %s as PID is not a known discovery', pid);
       return res.status(400).send('Unknown discovery with pid: ' + pid);
     }
     fn(req, res);
@@ -64,12 +64,14 @@ function checkExistenceOfKnownPid(fn) {
 
 
 app.get('/retrievedData', function(req, res) {
+  console.log('Agent Stub: Sending retrieved data');
   res.json(retrievedData);
   resetRetrievedData();
 });
 
 
 app.get('/discoveries', function(req, res) {
+  console.log('Agent Stub: Sending discoveries');
   res.json(discoveries);
 });
 
