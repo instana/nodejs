@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.9.0
+ - Fix errors that can occur when logging to the agent.
+ - Combine app and runtime sensor.
+
 ## 1.8.0
  - Use keep alive connections for all agent communication.
  - Treat agent ready call timeouts as failed checks.
