@@ -76,6 +76,13 @@ app.get('/discoveries', function(req, res) {
 });
 
 
+app.delete('/discoveries', function(req, res) {
+  console.log('Agent Stub: Clearing discoveries');
+  discoveries = {};
+  res.send('OK');
+});
+
+
 function resetRetrievedData() {
   retrievedData = {
     runtime: [],

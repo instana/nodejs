@@ -18,9 +18,9 @@ describe('agentCommunication', function() {
   it('must announce itself to the agent', function() {
     return util.retry(function() {
       return agentStubControls.getDiscoveries()
-        .then(function(discoveries) {
-          expect(discoveries[expressControls.getPid()].pid).to.be.a('number');
-        });
+      .then(function(discoveries) {
+        expect(discoveries[expressControls.getPid()].pid).to.be.a('number');
+      });
     });
   });
 
@@ -28,9 +28,30 @@ describe('agentCommunication', function() {
   it('must send data to the agent', function() {
     return util.retry(function() {
       return agentStubControls.getLastMetricValue(expressControls.getPid(), ['pid'])
-        .then(function(pid) {
-          expect(pid).to.equal(expressControls.getPid());
+      .then(function(pid) {
+        expect(pid).to.equal(expressControls.getPid());
+      });
+    });
+  });
+
+
+  it('must reannounce itself to the agent once discoveries are cleared', function() {
+    return util.retry(function() {
+      return agentStubControls.getDiscoveries()
+      .then(function(discoveries) {
+        expect(discoveries[expressControls.getPid()].pid).to.be.a('number');
+      });
+    })
+    .then(function() {
+      agentStubControls.deleteDiscoveries();
+    })
+    .then(function() {
+      return util.retry(function() {
+        return agentStubControls.getDiscoveries()
+        .then(function(discoveries) {
+          expect(discoveries[expressControls.getPid()].pid).to.be.a('number');
         });
+      });
     });
   });
 });

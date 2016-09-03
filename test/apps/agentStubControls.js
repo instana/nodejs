@@ -52,6 +52,15 @@ exports.getDiscoveries = function() {
 };
 
 
+exports.deleteDiscoveries = function() {
+  return request({
+    method: 'DELETE',
+    url: 'http://127.0.0.1:' + agentPort + '/discoveries',
+    json: true
+  });
+};
+
+
 exports.getRetrievedData = function() {
   return request({
     method: 'GET',
