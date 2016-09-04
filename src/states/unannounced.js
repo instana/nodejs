@@ -2,6 +2,7 @@
 
 var logger = require('../logger').getLogger('unannounced');
 var agentConnection = require('../agentConnection');
+var agentOpts = require('../agent/opts');
 var pidStore = require('../pidStore');
 
 var retryDelay = 60 * 1000;
@@ -44,6 +45,8 @@ function tryToAnnounce(ctx) {
     var pid = response.pid;
     logger.info('Overwriting pid for reporting purposes to: %s', pid);
     pidStore.pid = pid;
+
+    agentOpts.agentUuid = response.agentUuid;
 
     ctx.transitionTo('announced');
   });

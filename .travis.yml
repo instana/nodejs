@@ -9,10 +9,18 @@ addons:
     packages:
      - g++-4.8
 node_js:
-  - "v0.10.41"
-  - "v0.12.9"
+  - "v0.10"
+  - "v0.12"
   - "iojs-v2.5.0"
   - "iojs-v3.3.1"
   - "v4"
   - "v5"
   - "v6"
+
+# https://docs.travis-ci.com/user/database-setup/#ElasticSearch
+services:
+  - elasticsearch
+before_script:
+  - sleep 10
+env:
+  - ELASTICSEARCH_HOST=127.0.0.1:9200

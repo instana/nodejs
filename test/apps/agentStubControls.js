@@ -7,7 +7,7 @@ var request = require('request-promise');
 var path = require('path');
 var _ = require('lodash');
 
-var util = require('../util');
+var utils = require('../utils');
 var config = require('../config');
 
 var agentPort = exports.agentPort = 3210;
@@ -34,7 +34,7 @@ exports.registerTestHooks = function() {
 
 
 function waitUntilServerIsUp() {
-  return util.retry(function() {
+  return utils.retry(function() {
     return request({
       method: 'GET',
       url: 'http://127.0.0.1:' + agentPort
@@ -70,6 +70,16 @@ exports.getRetrievedData = function() {
 };
 
 
+exports.getSpans = function() {
+  return exports.getRetrievedData()
+    .then(function(data) {
+      return data.traces.reduce(function(result, traceMessage) {
+        return result.concat(traceMessage.data);
+      }, []);
+    });
+};
+
+
 exports.getLastMetricValue = function(pid, _path) {
   return exports.getRetrievedData()
     .then(function(data) {
@@ -92,3 +102,20 @@ function getLastMetricValue(pid, data, _path) {
 
   return undefined;
 }
+
+
+exports.waitUntilAppIsCompletelyInitialized = function(pid) {
+  return utils.retry(function() {
+    return exports.getRetrievedData()
+      .then(function(data) {
+        for (var i = 0, len = data.runtime.length; i < len; i++) {
+          var d = data.runtime[i];
+          if (d.pid) {
+            return true;
+          }
+        }
+
+        throw new Error('PID ' + pid + ' never sent any data to the agent.');
+      });
+  });
+};

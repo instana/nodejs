@@ -108,6 +108,17 @@ exports.sendDataToAgent = function sendDataToAgent(data, cb) {
 };
 
 
+exports.sendSpansToAgent = function sendSpansToAgent(spans, cb) {
+  cb = atMostOnce('callback for sendDataToAgent', cb);
+
+  sendData(
+    '/com.instana.plugin.nodejs/traces.' + pidStore.pid,
+    spans,
+    cb
+  );
+};
+
+
 function sendData(path, data, cb) {
   cb = atMostOnce('callback for sendData: ' + path, cb);
 

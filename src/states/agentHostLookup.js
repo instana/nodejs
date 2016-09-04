@@ -85,22 +85,27 @@ function getDefaultGateway(cb) {
 function checkHost(host, cb) {
   cb = atMostOnce('callback for checkHost: ' + host, cb);
 
-  var req = http.request({
-    host: host,
-    port: agentOpts.port,
-    path: '/',
-    agent: http.agent,
-    method: 'GET',
-  }, function(res) {
-    if (res.headers.server === agentOpts.serverHeader) {
-      cb(null);
-    } else {
-      cb(new Error('Host ' + host +
-        ' did not respond with expected agent header. Got: ' +
-        res.headers.server));
-    }
-    res.resume();
-  });
+  try {
+    var req = http.request({
+      host: host,
+      port: agentOpts.port,
+      path: '/',
+      agent: http.agent,
+      method: 'GET',
+    }, function(res) {
+      if (res.headers.server === agentOpts.serverHeader) {
+        cb(null);
+      } else {
+        cb(new Error('Host ' + host +
+          ' did not respond with expected agent header. Got: ' +
+          res.headers.server));
+      }
+      res.resume();
+    });
+  } catch (e) {
+    cb(new Error('Host lookup failed due to: ' + e.message));
+    return;
+  }
 
   req.setTimeout(5000, function onTimeout() {
     cb(new Error('Host check timed out'));

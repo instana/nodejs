@@ -10,20 +10,19 @@ var path = require('path');
 var utils = require('../utils');
 var config = require('../config');
 var agentPort = require('./agentStubControls').agentPort;
-var appPort = exports.appPort = 3211;
+var upstreamPort = require('./expressControls').appPort;
+var appPort = exports.appPort = 3212;
 
-var expressApp;
+var expressProxyApp;
 
-exports.registerTestHooks = function(opts) {
+exports.registerTestHooks = function() {
   beforeEach(function() {
-    opts = opts || {};
-
     var env = Object.create(process.env);
     env.AGENT_PORT = agentPort;
     env.APP_PORT = appPort;
-    env.TRACING_ENABLED = opts.enableTracing !== false;
+    env.UPSTREAM_PORT = upstreamPort;
 
-    expressApp = spawn('node', [path.join(__dirname, 'express.js')], {
+    expressProxyApp = spawn('node', [path.join(__dirname, 'expressProxy.js')], {
       stdio: config.getAppStdio(),
       env: env
     });
@@ -32,7 +31,7 @@ exports.registerTestHooks = function(opts) {
   });
 
   afterEach(function() {
-    expressApp.kill();
+    expressProxyApp.kill();
   });
 };
 
@@ -51,25 +50,31 @@ function waitUntilServerIsUp() {
 
 
 exports.getPid = function() {
-  return expressApp.pid;
+  return expressProxyApp.pid;
 };
 
 
 exports.sendRequest = function(opts) {
   opts.responseStatus = opts.responseStatus || 200;
   opts.delay = opts.delay || 0;
+
+  var headers = {};
+  if (opts.suppressTracing === true) {
+    headers['x-instana-l'] = '0';
+  }
+
   return request({
     method: opts.method,
     url: 'http://127.0.0.1:' + appPort + opts.path,
     qs: {
       responseStatus: opts.responseStatus,
-      delay: opts.delay
-    }
+      delay: opts.delay,
+      url: opts.target
+    },
+    headers: headers
   })
   .catch(errors.StatusCodeError, function(reason) {
-    if (reason.statusCode === opts.responseStatus) {
-      return true;
-    }
-    throw reason;
+    // treat all status code errors as likely // allowed
+    return reason;
   });
 };

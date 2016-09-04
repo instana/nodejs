@@ -82,3 +82,10 @@ require('instana-nodejs-sensor')({
   agentName: 'Instana Agent'
 });
 ```
+
+### Tracing
+
+TODO:
+
+- documentation
+- demo app

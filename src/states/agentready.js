@@ -6,6 +6,7 @@ var fs = require('fs');
 var logger = require('../logger').getLogger('agentready');
 var agentConnection = require('../agentConnection');
 var compression = require('../compression');
+var tracing = require('../tracing');
 var clone = require('../clone');
 
 var metricsBaseDir = path.join(__dirname, '..', 'metrics');
@@ -17,7 +18,7 @@ var modules = fs.readdirSync(metricsBaseDir)
     return require(path.join(metricsBaseDir, moduleName));
   });
 
-var resendFullDataEveryXTransmissions = 600; /* about every 10 minutes */
+var resendFullDataEveryXTransmissions = 300; /* about every 5 minutes */
 
 var transmissionsSinceLastFullDataEmit = 0;
 var previousTransmittedValue = undefined;
@@ -28,6 +29,7 @@ module.exports = {
     transmissionsSinceLastFullDataEmit = 0;
 
     enableAllSensors();
+    tracing.activate();
     sendData();
 
     function sendData() {
@@ -61,6 +63,7 @@ module.exports = {
 
   leave: function() {
     disableAllSensors();
+    tracing.deactivate();
     previousTransmittedValue = undefined;
   }
 };

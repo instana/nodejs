@@ -4,14 +4,16 @@
   "description": "The Instana Node.js sensor",
   "main": "src/index.js",
   "scripts": {
-    "test": "npm run utest && npm run itest && npm run lint",
-    "debug-test": "export WITH_STDOUT=true && npm run test",
-    "utest": "mocha --reporter spec $(find src -name '*_test.js') ",
-    "itest": "mocha --reporter spec $(find test -name '*_test.js')",
+    "test": "npm run run-test && npm run lint",
+    "run-test": "mocha --reporter spec $(find src test -name '*_test.js')",
+    "debug-test": "export WITH_STDOUT=true && npm run run-test",
     "lint": "eslint src test",
     "dev": "node -e 'require(\".\")({agentPort: process.env.AGENT_PORT || 42699})' | bunyan",
     "dev-to-agent-stub": "AGENT_PORT=3210 npm run dev",
-    "agent-stub": "AGENT_PORT=3210 node test/agentStub.js"
+    "agent-stub": "AGENT_PORT=3210 node test/agentStub.js",
+    "dev-http": "APP_PORT=3456 TRACING_ENABLED=true node test/apps/express | bunyan",
+    "dev-http-proxy": "APP_PORT=3457 UPSTREAM_PORT=3456 TRACING_ENABLED=true node test/apps/expressProxy | bunyan",
+    "dev-http-elasticsearch": "APP_PORT=3458 TRACING_ENABLED=true node test/apps/expressElasticsearch | bunyan"
   },
   "repository": {
     "type": "git",
@@ -34,6 +36,7 @@
     "event-loop-lag": "1.1.0"
   },
   "optionalDependencies": {
+    "async-hook": "1.6.0",
     "event-loop-stats": "1.0.0",
     "gcstats.js": "1.0.0"
   },
@@ -42,6 +45,7 @@
     "body-parser": "1.15.2",
     "chai": "3.3.0",
     "cz-conventional-changelog": "1.1.5",
+    "elasticsearch": "11.0.1",
     "eslint": "1.7.2",
     "eslint-config-airbnb": "0.1.0",
     "express": "4.14.0",

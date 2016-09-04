@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+ - Be more careful about identification of agent hosts in cases where the identified URL is not actually a URL.
+ - Add tracing infrastructure.
+ - Add HTTP server tracing.
+ - Add HTTP client tracing.
+ - Add Elasticsearch tracing.
+
 ## 1.9.0
  - Fix errors that can occur when logging to the agent.
  - Combine app and runtime sensor.
