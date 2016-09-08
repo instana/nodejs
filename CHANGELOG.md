@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.10.0
  - Be more careful about identification of agent hosts in cases where the identified URL is not actually a URL.
  - Add tracing infrastructure.
  - Add HTTP server tracing.
