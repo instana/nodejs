@@ -1,7 +1,5 @@
 'use strict';
 
-var logger = require('../../logger').getLogger('tracing/httpServer');
-
 var coreHttpModule = require('http');
 var url = require('url');
 
@@ -92,12 +90,7 @@ function getExistingSpanId(req, fallback) {
     return fallback;
   }
 
-  try {
-    return Number(spanId);
-  } catch (e) {
-    logger.info('Retrieved a Instana tracing span ID which is not a number. Got %s.', spanId);
-    return fallback;
-  }
+  return spanId;
 }
 
 
@@ -109,10 +102,5 @@ function getExistingTraceId(req, fallback) {
     return fallback;
   }
 
-  try {
-    return Number(traceId);
-  } catch (e) {
-    logger.info('Retrieved a Instana tracing trace ID which is not a number. Got %s.', traceId);
-    return fallback;
-  }
+  return traceId;
 }

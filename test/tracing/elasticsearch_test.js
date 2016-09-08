@@ -176,8 +176,8 @@ describe('tracing/elasticsearch', function() {
         title: titleA
       },
       rejectWrongStatusCodes: true,
-      parentSpanId: 42,
-      traceId: 42
+      parentSpanId: '42',
+      traceId: '42'
     })
     .then(function() {
       return expressElasticsearchControls.index({
@@ -185,8 +185,8 @@ describe('tracing/elasticsearch', function() {
           title: titleB
         },
         rejectWrongStatusCodes: true,
-        parentSpanId: 43,
-        traceId: 43
+        parentSpanId: '43',
+        traceId: '43'
       });
     })
     .then(function() {
@@ -202,7 +202,7 @@ describe('tracing/elasticsearch', function() {
         return agentStubControls.getSpans()
         .then(function(spans) {
           utils.expectOneMatching(spans, function(span) {
-            expect(span.t).to.equal(42);
+            expect(span.t).to.equal('42');
             expect(span.n).to.equal('elasticsearch');
             expect(span.f.e).to.equal(String(expressElasticsearchControls.getPid()));
             expect(span.async).to.equal(false);
@@ -214,7 +214,7 @@ describe('tracing/elasticsearch', function() {
           });
 
           utils.expectOneMatching(spans, function(span) {
-            expect(span.t).to.equal(43);
+            expect(span.t).to.equal('43');
             expect(span.n).to.equal('elasticsearch');
             expect(span.f.e).to.equal(String(expressElasticsearchControls.getPid()));
             expect(span.async).to.equal(false);

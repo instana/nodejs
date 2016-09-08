@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.10.3
+ - Ensure compatibility with Zipkin by receiving span and trace IDs as hex.
+
 ## 1.10.2
  - Ensure compatibility with Zipkin by transmitting span and trace IDs as hex.
 

@@ -104,7 +104,7 @@ describe('tracing/hook', function() {
   describe('generateRandomSpanId', function() {
     it('must generate random IDs', function() {
       for (var i = 0; i < 30; i++) {
-        expect(hook.generateRandomSpanId()).to.be.a('number');
+        expect(hook.generateRandomSpanId()).to.be.a('string');
       }
     });
   });

@@ -77,8 +77,8 @@ exports.init = function() {
       throw e;
     }
 
-    clientRequest.setHeader(tracingConstants.spanIdHeaderName, span.s.toString(16));
-    clientRequest.setHeader(tracingConstants.traceIdHeaderName, span.t.toString(16));
+    clientRequest.setHeader(tracingConstants.spanIdHeaderName, span.s);
+    clientRequest.setHeader(tracingConstants.traceIdHeaderName, span.t);
 
     clientRequest.addListener('timeout', function() {
       span.data = {

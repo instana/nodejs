@@ -116,7 +116,10 @@ exports.isTracingSuppressed = function isTracingSuppressed(uid) {
 };
 
 exports.generateRandomSpanId = function generateRandomSpanId() {
-  return Math.floor(Math.random() * (Number.MAX_SAFE_INTEGER - Number.MIN_SAFE_INTEGER) + Number.MIN_SAFE_INTEGER);
+  var spanId = Math.floor(
+    Math.random() * (Number.MAX_SAFE_INTEGER - Number.MIN_SAFE_INTEGER) + Number.MIN_SAFE_INTEGER
+  );
+  return spanId.toString(16);
 };
 
 exports.getFrom = function getFrom() {
