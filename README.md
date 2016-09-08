@@ -3,89 +3,39 @@
 Monitor your Node.js applications with Instana!
 
 **[Installation](#installation) |**
+**[Configuration](CONFIGURATION.md) |**
 **[Changelog](CHANGELOG.md)**
 
 ---
 
 <!-- TOC depthFrom:2 depthTo:6 withLinks:1 updateOnSave:1 orderedList:0 -->
 
-- [Installation](#installation)
-- [Activation](#activation)
-- [Configuration](#configuration)
-	- [Logging](#logging)
-		- [Bunyan Parent Logger](#bunyan-parent-logger)
-		- [Log Level Configuration](#log-level-configuration)
-	- [Agent Communication](#agent-communication)
-		- [Agent Port](#agent-port)
-		- [Agent Name](#agent-name)
+- [Installation and Usage](#installation-and-usage)
+- [Garbage Collection and Event Loop Information](#garbage-collection-and-event-loop-information)
 
 <!-- /TOC -->
 
-## Installation
-Install the Instana Node.js sensor for production usage:
+
+## Installation and Usage
+The installation of the Instana Node.js sensor is a simple two step process. First, install the `instana-nodejs-sensor` package in your application via:
 
 ```
 npm install --save instana-nodejs-sensor
 ```
 
-The Node.js sensor requires native addons. These addons are compiled automatically for your system and Node.js version when you execute the command you see above. In order for this to work the system needs to have tools like `make` and `g++` installed. These tools can often be installed via a bundle called `build-essential` or similar (depending on your package manager and registry).
-
-```
-sudo apt-get install build-essential
-```
-
-## Activation
-Now that the sensor is installed, it needs to be activated from within your application. You do this by requiring and initializing it as the *first line* in your application.
+Now that the sensor is installed, it needs to be activated from within the application. Do this by requiring and initializing it as the *first statement* in your application. Please take care that this is the first statement as the sensor will otherwise not be able to access certain information.
 
 ```javascript
 require('instana-nodejs-sensor')();
 ```
 
-## Configuration
+The code shown above initializes the sensor with default configuration options. Refer to the [CONFIGURATION.md](CONFIGURATION.md) file for a list of valid configuration options.
 
-### Logging
+## Garbage Collection and Event Loop Information
+Some information is not available to Node.js programs without the help of native addons. Specifically, the Instana Node.js sensor uses these addons to retrieve information about garbage collection and event loop activity. While the sensor works fine without these native addons (technically, they are marked as *optional dependencies*), we strongly recommend you to support native addon compilation.
 
-#### Bunyan Parent Logger
-This sensor is using the [bunyan](https://www.npmjs.com/package/bunyan) logging module. By default, the Node.js sensor uses a standard bunyan logger with an `INFO` log level. You can a define parent logger for all the loggers created by this module in the following way:
+Native addons are compiled automatically for your system and Node.js version when the Instana Node.js sensor dependency is installed (as part of the `npm install` step). In order for the compilation to work, the system needs to have tools like `make` and `g++` installed. These tools can often be installed via a bundle called `build-essential` or similar (depending on your package manager and registry). The following example shows how to do this for a typical Ubuntu setup.
 
-```javascript
-require('instana-nodejs-sensor')({
-  logger: A_BUNYAN_LOGGER
-});
 ```
-
-#### Log Level Configuration
-The Node.js sensor will now create children of this logger with the same log level and target streams. If you only want to change the default log level, you can configure it via:
-
-```javascript
-require('instana-nodejs-sensor')({
-  level: 'debug'
-});
+sudo apt-get install build-essential
 ```
-
-### Agent Communication
-#### Agent Port
-The sensor tries to communicate with the Instana Agent via port `42699`. Should the port have been changed, you can use the `agentPort` option to change the port.
-
-```javascript
-require('instana-nodejs-sensor')({
-  agentPort: 42699
-});
-```
-
-
-#### Agent Name
-This sensor communicates with the Instana Agent via HTTP. While doing so, the Node.js sensor validates the Instana Agent's `Server` response header. Should you have changed the `Server` name, use the `agentName` option to adjust the sensor's validation rules.
-
-```javascript
-require('instana-nodejs-sensor')({
-  agentName: 'Instana Agent'
-});
-```
-
-### Tracing
-
-TODO:
-
-- documentation
-- demo app
