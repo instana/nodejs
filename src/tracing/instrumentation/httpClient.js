@@ -1,7 +1,6 @@
 'use strict';
 
 var coreHttpModule = require('http');
-var url = require('url');
 
 var tracingConstants = require('../constants');
 var transmission = require('../transmission');
@@ -30,6 +29,13 @@ exports.init = function() {
 
     hook.markAsExitSpan(uid);
 
+    var completeCallUrl;
+    if (typeof(opts) === 'string') {
+      completeCallUrl = opts;
+    } else {
+      completeCallUrl = constructCompleteUrlFromOpts(opts, coreHttpModule);
+    }
+
     var span = {
       s: hook.generateRandomSpanId(),
       t: traceId,
@@ -45,11 +51,10 @@ exports.init = function() {
     hook.setSpanId(uid, span.s);
 
     var responseListener = function responseListener(res) {
-      var parsedUrl = url.parse(clientRequest.path);
       span.data = {
         http: {
           method: clientRequest.method,
-          url: parsedUrl.pathname,
+          url: completeCallUrl,
           status: res.statusCode
         }
       };
@@ -76,11 +81,10 @@ exports.init = function() {
     clientRequest.setHeader(tracingConstants.traceIdHeaderName, span.t);
 
     clientRequest.addListener('timeout', function() {
-      var parsedUrl = url.parse(clientRequest.path);
       span.data = {
         http: {
           method: clientRequest.method,
-          url: parsedUrl.pathname,
+          url: completeCallUrl,
           error: 'Timeout exceeded'
         }
       };
@@ -91,17 +95,10 @@ exports.init = function() {
     });
 
     clientRequest.addListener('error', function(err) {
-      try {
-        var parsedUrl = url.parse(clientRequest.path);
-      } catch (e) {
-        // do not break the application on invalid requests
-        return;
-      }
-
       span.data = {
         http: {
           method: clientRequest.method,
-          url: parsedUrl.pathname,
+          url: completeCallUrl,
           error: err.message
         }
       };
@@ -124,3 +121,28 @@ exports.activate = function() {
 exports.deactivate = function() {
   isActive = false;
 };
+
+function constructCompleteUrlFromOpts(options, self) {
+  if (options.href) {
+    return discardQueryParameters(options.href);
+  }
+
+  try {
+    var agent = options.agent || self.agent;
+
+    // copy of logic from
+    // https://github.com/nodejs/node/blob/master/lib/_http_client.js
+    // to support incomplete options with agent specific defaults.
+    var protocol = options.protocol || (agent && agent.protocol) || 'http';
+    var port = options.port || options.defaultPort || (agent && agent.defaultPort) || 80;
+    var host = options.hostname || options.host || 'localhost';
+    var path = options.path || '/';
+    return discardQueryParameters(protocol + '//' + host + ':' + port + path);
+  } catch (e) {
+    return undefined;
+  }
+}
+
+function discardQueryParameters(url) {
+  return url.replace(/\?.*$/, '');
+}

@@ -2,6 +2,7 @@
 
 ## 1.10.1
  - Transport cluster name in Elasticsearch spans to allow logical view creation.
+ - Transport full URL for HTTP exit spans.
 
 ## 1.10.0
  - Be more careful about identification of agent hosts in cases where the identified URL is not actually a URL.
