@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.10.4
+ - Maintenance: Avoid header casing questions by always transmitting uppercase header names.
+
 ## 1.10.3
  - Ensure compatibility with Zipkin by receiving span and trace IDs as hex.
 

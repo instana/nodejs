@@ -43,7 +43,7 @@ function waitUntilServerIsUp() {
       method: 'GET',
       url: 'http://127.0.0.1:' + appPort,
       headers: {
-        'x-instana-l': '0'
+        'X-INSTANA-L': '0'
       }
     });
   });
@@ -58,7 +58,7 @@ exports.deleteIndex = function() {
     method: 'DELETE',
     url: 'http://127.0.0.1:' + appPort + '/database',
     headers: {
-      'x-instana-l': '0'
+      'X-INSTANA-L': '0'
     }
   });
 };
@@ -78,15 +78,15 @@ exports.index = function(opts) {
 function requestWithPath(method, p, opts) {
   var headers = {};
   if (opts.suppressTracing === true) {
-    headers['x-instana-l'] = '0';
+    headers['X-INSTANA-L'] = '0';
   }
 
   if (opts.parentSpanId) {
-    headers['x-instana-s'] = opts.parentSpanId;
+    headers['X-INSTANA-S'] = opts.parentSpanId;
   }
 
   if (opts.traceId) {
-    headers['x-instana-t'] = opts.traceId;
+    headers['X-INSTANA-T'] = opts.traceId;
   }
 
   return request({

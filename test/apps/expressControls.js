@@ -43,7 +43,7 @@ function waitUntilServerIsUp() {
       method: 'GET',
       url: 'http://127.0.0.1:' + appPort,
       headers: {
-        'x-instana-l': '0'
+        'X-INSTANA-L': '0'
       }
     });
   });

@@ -31,7 +31,7 @@ function requestListener(req, res) {
   }
 
   var uid = hook.getCurrentUid();
-  if (req.headers[tracingConstants.traceLevelHeaderName] === '0') {
+  if (req.headers[tracingConstants.traceLevelHeaderNameLowerCase] === '0') {
     hook.setTracingSuppressed(uid, true);
     return;
   }
@@ -85,7 +85,7 @@ exports.deactivate = function() {
 function getExistingSpanId(req, fallback) {
   fallback = arguments.length > 1 ? fallback : null;
 
-  var spanId = req.headers[tracingConstants.spanIdHeaderName];
+  var spanId = req.headers[tracingConstants.spanIdHeaderNameLowerCase];
   if (spanId == null) {
     return fallback;
   }
@@ -97,7 +97,7 @@ function getExistingSpanId(req, fallback) {
 function getExistingTraceId(req, fallback) {
   fallback = arguments.length > 1 ? fallback : null;
 
-  var traceId = req.headers[tracingConstants.traceIdHeaderName];
+  var traceId = req.headers[tracingConstants.traceIdHeaderNameLowerCase];
   if (traceId == null) {
     return fallback;
   }

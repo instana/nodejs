@@ -1,5 +1,8 @@
 'use strict';
 
-exports.spanIdHeaderName = 'x-instana-s';
-exports.traceIdHeaderName = 'x-instana-t';
-exports.traceLevelHeaderName = 'x-instana-l';
+exports.spanIdHeaderName = 'X-INSTANA-S';
+exports.spanIdHeaderNameLowerCase = exports.spanIdHeaderName.toLowerCase();
+exports.traceIdHeaderName = 'X-INSTANA-T';
+exports.traceIdHeaderNameLowerCase = exports.traceIdHeaderName.toLowerCase();
+exports.traceLevelHeaderName = 'X-INSTANA-L';
+exports.traceLevelHeaderNameLowerCase = exports.traceLevelHeaderName.toLowerCase();
