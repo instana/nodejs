@@ -15,16 +15,30 @@ function instrument(es) {
 
   es.Client = function InstrumentedClient() {
     var client = OriginalClient.apply(OriginalClient, arguments);
+    var info = {};
 
-    instrumentApi(client, 'search');
-    instrumentApi(client, 'index');
-    instrumentApi(client, 'get');
+    gatherClusterInfo(client, info);
+
+    instrumentApi(client, 'search', info);
+    instrumentApi(client, 'index', info);
+    instrumentApi(client, 'get', info);
 
     return client;
   };
 }
 
-function instrumentApi(client, action) {
+function gatherClusterInfo(client, info) {
+  client.info()
+    .then(function(_info) {
+      info.clusterName = _info.cluster_name;
+    }, function() {
+      setTimeout(function() {
+        gatherClusterInfo(client, info);
+      }, 30000);
+    });
+}
+
+function instrumentApi(client, action, info) {
   var original = client[action];
 
   client[action] = function instrumentedAction(params, cb) {
@@ -50,8 +64,9 @@ function instrumentApi(client, action) {
       data: {
         elasticsearch: {
           action: action,
-          type: toStringEsMultiParameter(params.type),
+          cluster: info.clusterName,
           index: toStringEsMultiParameter(params.index),
+          type: toStringEsMultiParameter(params.type),
           stats: toStringEsMultiParameter(params.stats),
           id: action === 'get' ? params.id : undefined,
           query: action === 'search' ? params : undefined

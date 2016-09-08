@@ -48,6 +48,7 @@ describe('tracing/elasticsearch', function() {
             expect(span.f.e).to.equal(String(expressElasticsearchControls.getPid()));
             expect(span.async).to.equal(false);
             expect(span.error).to.equal(true);
+            expect(span.data.elasticsearch.cluster).to.be.a('string');
             expect(span.data.elasticsearch.action).to.equal('get');
             expect(span.data.elasticsearch.type).to.equal('mytype');
             expect(span.data.elasticsearch.index).to.equal('thisIndexDoesNotExist');
@@ -83,6 +84,7 @@ describe('tracing/elasticsearch', function() {
             expect(span.f.e).to.equal(String(expressElasticsearchControls.getPid()));
             expect(span.async).to.equal(false);
             expect(span.error).to.equal(false);
+            expect(span.data.elasticsearch.cluster).to.be.a('string');
             expect(span.data.elasticsearch.action).to.equal('index');
             expect(span.data.elasticsearch.type).to.equal('mytype');
             expect(span.data.elasticsearch.index).to.equal('myindex');
@@ -130,6 +132,7 @@ describe('tracing/elasticsearch', function() {
             expect(span.f.e).to.equal(String(expressElasticsearchControls.getPid()));
             expect(span.async).to.equal(false);
             expect(span.error).to.equal(false);
+            expect(span.data.elasticsearch.cluster).to.be.a('string');
             expect(span.data.elasticsearch.action).to.equal('index');
             expect(span.data.elasticsearch.type).to.equal('mytype');
             expect(span.data.elasticsearch.index).to.equal('myindex');
@@ -150,6 +153,7 @@ describe('tracing/elasticsearch', function() {
             expect(span.f.e).to.equal(String(expressElasticsearchControls.getPid()));
             expect(span.async).to.equal(false);
             expect(span.error).to.equal(false);
+            expect(span.data.elasticsearch.cluster).to.be.a('string');
             expect(span.data.elasticsearch.action).to.equal('get');
             expect(span.data.elasticsearch.type).to.equal('mytype');
             expect(span.data.elasticsearch.index).to.equal('myindex');
@@ -203,6 +207,7 @@ describe('tracing/elasticsearch', function() {
             expect(span.f.e).to.equal(String(expressElasticsearchControls.getPid()));
             expect(span.async).to.equal(false);
             expect(span.error).to.equal(false);
+            expect(span.data.elasticsearch.cluster).to.be.a('string');
             expect(span.data.elasticsearch.action).to.equal('index');
             expect(span.data.elasticsearch.type).to.equal('mytype');
             expect(span.data.elasticsearch.index).to.equal('myindex');
@@ -214,6 +219,7 @@ describe('tracing/elasticsearch', function() {
             expect(span.f.e).to.equal(String(expressElasticsearchControls.getPid()));
             expect(span.async).to.equal(false);
             expect(span.error).to.equal(false);
+            expect(span.data.elasticsearch.cluster).to.be.a('string');
             expect(span.data.elasticsearch.action).to.equal('index');
             expect(span.data.elasticsearch.type).to.equal('mytype');
             expect(span.data.elasticsearch.index).to.equal('myindex');
@@ -234,6 +240,7 @@ describe('tracing/elasticsearch', function() {
             expect(span.f.e).to.equal(String(expressElasticsearchControls.getPid()));
             expect(span.async).to.equal(false);
             expect(span.error).to.equal(false);
+            expect(span.data.elasticsearch.cluster).to.be.a('string');
             expect(span.data.elasticsearch.action).to.equal('search');
             expect(span.data.elasticsearch.type).to.equal('mytype');
             expect(span.data.elasticsearch.index).to.equal('myindex');
@@ -270,6 +277,7 @@ describe('tracing/elasticsearch', function() {
             expect(span.f.e).to.equal(String(expressElasticsearchControls.getPid()));
             expect(span.async).to.equal(false);
             expect(span.error).to.equal(false);
+            expect(span.data.elasticsearch.cluster).to.be.a('string');
             expect(span.data.elasticsearch.action).to.equal('search');
             expect(span.data.elasticsearch.type).to.equal('mytype');
             expect(span.data.elasticsearch.index).to.equal('myindex');
