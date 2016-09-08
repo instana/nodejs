@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.10.2
+ - Ensure compatibility with Zipkin by transmitting span and trace IDs as hex.
+
 ## 1.10.1
  - Transport cluster name in Elasticsearch spans to allow logical view creation.
  - Transport full URL for HTTP exit spans.
