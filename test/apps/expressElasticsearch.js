@@ -11,6 +11,7 @@ require('../../')({
 
 var elasticsearch = require('elasticsearch');
 var bodyParser = require('body-parser');
+var request = require('request-promise-native');
 var express = require('express');
 var app = express();
 
@@ -80,6 +81,27 @@ app.post('/index', function(req, res) {
     res.json(response);
   }, function(error) {
     log('Sending indexing error.', error);
+    res.status(500).json(error);
+  });
+});
+
+app.get('/searchAndGet', function(req, res) {
+  request({
+    method: 'GET',
+    url: 'http://google.com'
+  })
+  .then(function() {
+    return client.search({
+      index: req.query.index || 'myindex',
+      type: 'mytype',
+      q: req.query.q,
+      ignoreUnavailable: true
+    });
+  })
+  .then(function(response) {
+    res.json(response);
+  })
+  .catch(function(error) {
     res.status(500).json(error);
   });
 });

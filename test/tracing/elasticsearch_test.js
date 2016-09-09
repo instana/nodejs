@@ -287,4 +287,32 @@ describe('tracing/elasticsearch', function() {
       });
     });
   });
+
+  it('must trace across native promise boundaries', function() {
+    return expressElasticsearchControls.searchAndGet({
+      q: 'name:foo'
+    })
+    .then(function() {
+      return utils.retry(function() {
+        return agentStubControls.getSpans()
+        .then(function(spans) {
+          var httpEntrySpan = utils.expectOneMatching(spans, function(span) {
+            expect(span.n).to.equal('node.http.server');
+          });
+
+          utils.expectOneMatching(spans, function(span) {
+            expect(span.t).to.equal(httpEntrySpan.t);
+            expect(span.p).to.equal(httpEntrySpan.s);
+            expect(span.n).to.equal('elasticsearch');
+          });
+
+          utils.expectOneMatching(spans, function(span) {
+            expect(span.t).to.equal(httpEntrySpan.t);
+            expect(span.p).to.equal(httpEntrySpan.s);
+            expect(span.n).to.equal('node.http.client');
+          });
+        });
+      });
+    });
+  });
 });

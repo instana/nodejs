@@ -76,15 +76,17 @@ exports.destroyAsync = function destroy(uid) {
 };
 
 exports.printDebugInfo = function printDebugInfo(uid) {
+  /* eslint-disable no-console */
   var dataToPrint = handleData;
   if (uid != null) {
     dataToPrint = dataToPrint[uid];
-    process._rawDebug('Printing debug information for UID ' + uid + ' only.');
+    console.log('Printing debug information for UID ' + uid + ' only.');
   }
-  process._rawDebug(require('util').inspect(dataToPrint, {
+  console.log(require('util').inspect(dataToPrint, {
     depth: null,
     colors: true
   }));
+  /* eslint-enable no-console */
 };
 
 exports.getCurrentUid = function getCurrentUid() {

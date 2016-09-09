@@ -71,6 +71,10 @@ exports.search = function(opts) {
   return requestWithPath('GET', '/search', opts);
 };
 
+exports.searchAndGet = function(opts) {
+  return requestWithPath('GET', '/searchAndGet', opts);
+};
+
 exports.index = function(opts) {
   return requestWithPath('POST', '/index', opts);
 };
