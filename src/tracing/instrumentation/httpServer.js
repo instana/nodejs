@@ -62,7 +62,8 @@ function requestListener(req, res) {
       http: {
         method: req.method,
         url: parsedUrl.pathname,
-        status: res.statusCode
+        status: res.statusCode,
+        host: req.headers.host
       }
     };
     span.error = res.statusCode >= 500;

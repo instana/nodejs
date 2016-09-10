@@ -58,6 +58,7 @@ describe('tracing', function() {
               expect(span.data.http.method).to.equal('POST');
               expect(span.data.http.url).to.equal('/checkout');
               expect(span.data.http.status).to.equal(201);
+              expect(span.data.http.host).to.equal('127.0.0.1:3211');
             });
           });
         });

@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.11.0
+ - Capture HTTP `Host` header on entry spans.
+
 ## 1.10.4
  - Maintenance: Avoid header casing questions by always transmitting uppercase header names.
 
