@@ -24,8 +24,24 @@ describe('agentStub', function() {
       .then(function(data) {
         expect(data).to.deep.equal({
           runtime: [],
-          traces: []
+          traces: [],
+          responses: []
         });
+      });
+  });
+
+  it('must return requests when retrieving entity data', function() {
+    var pid = 23;
+    var params = {foo: 'bar'};
+    return agentStubControls.simulateDiscovery(pid)
+      .then(function() {
+        return agentStubControls.addRequestForPid(pid, params);
+      })
+      .then(function() {
+        return agentStubControls.addEntityData(pid, {});
+      })
+      .then(function(requests) {
+        expect(requests).to.deep.equal([params]);
       });
   });
 });

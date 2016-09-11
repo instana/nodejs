@@ -13,6 +13,7 @@ module.exports = function start(config) {
   log.init(config);
   require('./util/requireHook').init(config);
   require('./agent/opts').init(config);
+  require('./profiling/cpu').init(config);
   require('./tracing').init(config);
 
   var logger = log.getLogger('index');

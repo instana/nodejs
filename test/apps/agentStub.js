@@ -5,9 +5,11 @@ var bodyParser = require('body-parser');
 var app = express();
 
 var discoveries = {};
+var requests = {};
 var retrievedData = {
   runtime: [],
-  traces: []
+  traces: [],
+  responses: []
 };
 
 app.use(bodyParser.json());
@@ -48,8 +50,11 @@ app.post('/com.instana.plugin.nodejs.:pid', checkExistenceOfKnownPid(function ha
     time: Date.now(),
     data: req.body
   });
-  log('Got new data for PID ' + req.params.pid);
-  res.send('OK');
+
+  var requestsForPid = requests[req.params.pid] || [];
+  log('Got new data for PID ' + req.params.pid + '. Responding with ' + requestsForPid.length + 'requests.');
+  res.json(requestsForPid);
+  delete requests[req.params.pid];
 }));
 
 
@@ -60,6 +65,18 @@ app.post('/com.instana.plugin.nodejs/traces.:pid', checkExistenceOfKnownPid(func
     data: req.body
   });
   log('Got new spans for PID ' + req.params.pid);
+  res.send('OK');
+}));
+
+
+app.post('/com.instana.plugin.nodejs/response.:pid', checkExistenceOfKnownPid(function handleDataRetrieval(req, res) {
+  retrievedData.responses.push({
+    pid: parseInt(req.params.pid, 10),
+    time: Date.now(),
+    messageId: req.query.messageId,
+    data: req.body
+  });
+  log('Got new responses for PID ' + req.params.pid);
   res.send('OK');
 }));
 
@@ -101,6 +118,13 @@ app.get('/discoveries', function(req, res) {
 app.delete('/discoveries', function(req, res) {
   log('Clearing discoveries');
   discoveries = {};
+  res.send('OK');
+});
+
+
+app.post('/request/:pid', function(req, res) {
+  requests[req.params.pid] = requests[req.params.pid] || [];
+  requests[req.params.pid].push(req.body);
   res.send('OK');
 });
 

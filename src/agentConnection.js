@@ -103,17 +103,43 @@ exports.sendDataToAgent = function sendDataToAgent(data, cb) {
   sendData(
     '/com.instana.plugin.nodejs.' + pidStore.pid,
     data,
-    cb
+    function(err, body) {
+      if (err) {
+        cb(err, null);
+      } else {
+        try {
+          // 2016-09-11
+          // Older sensor versions will not repond with a JSON
+          // structure. Support a smooth update path.
+          body = JSON.parse(body);
+        } catch (e) {
+          body = [];
+        }
+
+        cb(null, body);
+      }
+    }
   );
 };
 
 
 exports.sendSpansToAgent = function sendSpansToAgent(spans, cb) {
-  cb = atMostOnce('callback for sendDataToAgent', cb);
+  cb = atMostOnce('callback for sendSpansToAgent', cb);
 
   sendData(
     '/com.instana.plugin.nodejs/traces.' + pidStore.pid,
     spans,
+    cb
+  );
+};
+
+
+exports.sendAgentResponseToAgent = function sendAgentResponseToAgent(messageId, response, cb) {
+  cb = atMostOnce('callback for sendAgentResponseToAgent', cb);
+
+  sendData(
+    '/com.instana.plugin.nodejs/response.' + pidStore.pid + '?messageId=' + encodeURIComponent(messageId),
+    response,
     cb
   );
 };
@@ -136,12 +162,19 @@ function sendData(path, data, cb) {
       'Content-Length': payload.length
     }
   }, function(res) {
-    res.resume();
     if (res.statusCode < 200 || res.statusCode >= 300) {
       cb(new Error('Failed to send data to agent with status code ' + res.statusCode));
-    } else {
-      cb(null);
+      return;
     }
+
+    res.setEncoding('utf8');
+    var responseBody = '';
+    res.on('data', function(chunk) {
+      responseBody += chunk;
+    });
+    res.on('end', function() {
+      cb(null, responseBody);
+    });
   });
 
   req.setTimeout(agentOpts.requestTimeout, function onTimeout() {
@@ -149,7 +182,7 @@ function sendData(path, data, cb) {
   });
 
   req.on('error', function(err) {
-    cb(new Error('Send data to agent (path: ' + path + ')request failed: ' + err.message));
+    cb(new Error('Send data to agent (path: ' + path + ') request failed: ' + err.message));
   });
 
   req.write(payload);

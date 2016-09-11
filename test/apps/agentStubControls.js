@@ -89,6 +89,14 @@ exports.getSpans = function() {
 };
 
 
+exports.getResponses = function() {
+  return exports.getRetrievedData()
+    .then(function(data) {
+      return data.responses;
+    });
+};
+
+
 exports.getLastMetricValue = function(pid, _path) {
   return exports.getRetrievedData()
     .then(function(data) {
@@ -126,5 +134,37 @@ exports.waitUntilAppIsCompletelyInitialized = function(pid) {
 
         throw new Error('PID ' + pid + ' never sent any data to the agent.');
       });
+  });
+};
+
+
+exports.simulateDiscovery = function(pid) {
+  return request({
+    method: 'PUT',
+    url: 'http://127.0.0.1:' + agentPort + '/com.instana.plugin.nodejs.discovery',
+    json: true,
+    body: {
+      pid: pid
+    }
+  });
+};
+
+
+exports.addEntityData = function(pid, data) {
+  return request({
+    method: 'POST',
+    url: 'http://127.0.0.1:' + agentPort + '/com.instana.plugin.nodejs.' + pid,
+    json: true,
+    body: data
+  });
+};
+
+
+exports.addRequestForPid = function(pid, r) {
+  return request({
+    method: 'POST',
+    url: 'http://127.0.0.1:' + agentPort + '/request/' + pid,
+    json: true,
+    body: r
   });
 };

@@ -4,6 +4,7 @@ var path = require('path');
 var fs = require('fs');
 
 var logger = require('../logger').getLogger('agentready');
+var requestHandler = require('../agent/requestHandler');
 var agentConnection = require('../agentConnection');
 var compression = require('../compression');
 var tracing = require('../tracing');
@@ -30,6 +31,7 @@ module.exports = {
 
     enableAllSensors();
     tracing.activate();
+    requestHandler.activate();
     sendData();
 
     function sendData() {
@@ -44,7 +46,7 @@ module.exports = {
         payload = compression(previousTransmittedValue, newValueToTransmit);
       }
 
-      agentConnection.sendDataToAgent(payload, function(error) {
+      agentConnection.sendDataToAgent(payload, function(error, requests) {
         if (error) {
           logger.error('Error received while trying to send data to agent.', {error: error});
           ctx.transitionTo('unannounced');
@@ -56,6 +58,7 @@ module.exports = {
         } else {
           transmissionsSinceLastFullDataEmit++;
         }
+        requestHandler.handleRequests(requests);
         setTimeout(sendData, 1000);
       });
     }
@@ -64,6 +67,7 @@ module.exports = {
   leave: function() {
     disableAllSensors();
     tracing.deactivate();
+    requestHandler.deactivate();
     previousTransmittedValue = undefined;
   }
 };

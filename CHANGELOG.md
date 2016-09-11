@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.14.0
+ - Add on-demand CPU profiling support.
+
 ## 1.13.0
  - Add MongoDB tracing.
 

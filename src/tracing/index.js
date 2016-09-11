@@ -20,7 +20,7 @@ exports.init = function(config) {
 
 function checkPrerequisites(config) {
   if (!config.tracing || !config.tracing.enabled) {
-    logger.info('Tracing feature is not abled via config.');
+    logger.info('Tracing feature is not enabled via config.');
     return false;
   }
 
