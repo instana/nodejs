@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.12.1
+ - Format function name in stack traces as defined in the v8 Wiki.
+
 ## 1.12.0
  - Capture stack traces for exit spans.
 

@@ -30,10 +30,7 @@ function jsonPrepareStackTrace(error, structuredStackTrace) {
   for (var i = 0; i < len; i++) {
     var callSite = structuredStackTrace[i];
     result[i] = {
-      f: callSite.getFunctionName() || undefined,
-      m: callSite.getMethodName() || undefined,
-      i: callSite.isConstructor() || undefined,
-      t: callSite.getTypeName() || undefined,
+      m: exports.buildFunctionIdentifier(callSite),
       c: callSite.getFileName() || undefined,
       n: callSite.getLineNumber() || undefined
     };
@@ -41,3 +38,38 @@ function jsonPrepareStackTrace(error, structuredStackTrace) {
 
   return result;
 }
+
+
+exports.buildFunctionIdentifier = function buildFunctionIdentifier(callSite) {
+  if (callSite.isConstructor()) {
+    return 'new ' + callSite.getFunctionName();
+  }
+
+  var name;
+  var methodName = callSite.getMethodName();
+  var functionName = callSite.getFunctionName();
+  var type = callSite.getTypeName();
+
+  if (!methodName && !functionName) {
+    return '<anonymous>';
+  } else if ((functionName && !methodName) || (!functionName && methodName)) {
+    name = functionName || methodName;
+    if (type) {
+      return type + '.' + name;
+    }
+    return name;
+  } else if (functionName === methodName) {
+    if (type) {
+      return type + '.' + functionName;
+    }
+    return functionName;
+  }
+
+  var label = '';
+  if (type) {
+    label += type + '.';
+  }
+  label += functionName;
+  label += ' [as ' + methodName + ']';
+  return label;
+};

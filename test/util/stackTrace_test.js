@@ -24,8 +24,8 @@ describe('util/stackTrace', function() {
       })();
     })();
 
-    expect(stack[0].f).to.equal('b');
-    expect(stack[1].f).to.equal('a');
+    expect(stack[0].m).to.equal('b');
+    expect(stack[1].m).to.equal('a');
   });
 
   it('must restrict length of stack traces', function() {
@@ -41,8 +41,8 @@ describe('util/stackTrace', function() {
       })();
     })();
 
-    expect(stack[0].f).to.equal('d');
-    expect(stack[1].f).to.equal('c');
+    expect(stack[0].m).to.equal('d');
+    expect(stack[1].m).to.equal('c');
     expect(stack).to.have.lengthOf(2);
   });
 });

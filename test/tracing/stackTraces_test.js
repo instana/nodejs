@@ -91,7 +91,7 @@ describe('tracing/stackTraces', function() {
           .then(function(spans) {
             utils.expectOneMatching(spans, function(span) {
               expect(span.n).to.equal('node.http.client');
-              expect(span.stack[0].m).to.equal('start');
+              expect(span.stack[0].m).to.equal('Request.Request.start [as start]');
               expect(span.stack[0].c).to.match(/request\.js$/i);
             });
           });
