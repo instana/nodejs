@@ -46,6 +46,7 @@ exports.init = function() {
       ts: Date.now(),
       d: 0,
       n: 'node.http.client',
+      stack: hook.getStackTrace(request),
       data: null
     };
     hook.setSpanId(uid, span.s);

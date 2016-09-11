@@ -8,7 +8,7 @@ exports.init = function(config) {
   fulfillsPrerequisites = checkPrerequisites(config);
 
   if (fulfillsPrerequisites) {
-    require('./hook').init();
+    require('./hook').init(config);
     require('./transmission').init(config);
     require('./instrumentation/httpServer.js').init(config);
     require('./instrumentation/httpClient.js').init(config);

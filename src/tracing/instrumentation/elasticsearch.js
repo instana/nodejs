@@ -61,6 +61,7 @@ function instrumentApi(client, action, info) {
       ts: Date.now(),
       d: 0,
       n: 'elasticsearch',
+      stack: hook.getStackTrace(instrumentedAction),
       data: {
         elasticsearch: {
           action: action,

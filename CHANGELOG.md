@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.12.0
+ - Capture stack traces for exit spans.
+
 ## 1.11.0
  - Capture HTTP `Host` header on entry spans.
 

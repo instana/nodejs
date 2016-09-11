@@ -22,6 +22,7 @@ exports.registerTestHooks = function(opts) {
     env.AGENT_PORT = agentPort;
     env.APP_PORT = appPort;
     env.TRACING_ENABLED = opts.enableTracing !== false;
+    env.STACK_TRACE_LENGTH = opts.stackTraceLength || 0;
 
     expressApp = spawn('node', [path.join(__dirname, 'express.js')], {
       stdio: config.getAppStdio(),

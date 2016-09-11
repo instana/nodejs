@@ -50,6 +50,7 @@ function requestListener(req, res) {
     ts: Date.now(),
     d: 0,
     n: 'node.http.server',
+    stack: [],
     data: null
   };
   hook.setSpanId(uid, spanId);

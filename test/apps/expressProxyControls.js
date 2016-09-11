@@ -15,12 +15,14 @@ var appPort = exports.appPort = 3212;
 
 var expressProxyApp;
 
-exports.registerTestHooks = function() {
+exports.registerTestHooks = function(opts) {
+  opts = opts || {};
   beforeEach(function() {
     var env = Object.create(process.env);
     env.AGENT_PORT = agentPort;
     env.APP_PORT = appPort;
     env.UPSTREAM_PORT = upstreamPort;
+    env.STACK_TRACE_LENGTH = opts.stackTraceLength || 0;
 
     expressProxyApp = spawn('node', [path.join(__dirname, 'expressProxy.js')], {
       stdio: config.getAppStdio(),

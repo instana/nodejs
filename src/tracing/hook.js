@@ -2,9 +2,11 @@
 
 var asyncHook = require('async-hook');
 
+var stackTrace = require('../util/stackTrace');
 var agentOpts = require('../agent/opts');
 var pidStore = require('../pidStore');
 
+var stackTraceLength = 0;
 var simulatedUidCounter = 0;
 
 var active = null;
@@ -18,7 +20,8 @@ var handleDefaults = {
   containsExitSpan: false
 };
 
-exports.init = function() {
+exports.init = function(config) {
+  stackTraceLength = config.tracing.stackTraceLength != null ? config.tracing.stackTraceLength : 10;
   active = null;
   asyncHook.addHooks({
     init: exports.initAsync,
@@ -137,4 +140,8 @@ exports.markAsExitSpan = function markAsExitSpan(uid) {
 
 exports.containsExitSpan = function containsExitSpan(uid) {
   return handleData[uid].containsExitSpan;
+};
+
+exports.getStackTrace = function getStackTrace(referenceFunction) {
+  return stackTrace.captureStackTrace(stackTraceLength, referenceFunction);
 };
