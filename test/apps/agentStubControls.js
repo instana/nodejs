@@ -70,6 +70,15 @@ exports.getRetrievedData = function() {
 };
 
 
+exports.clearRetrievedData = function() {
+  return request({
+    method: 'DELETE',
+    url: 'http://127.0.0.1:' + agentPort + '/retrievedData',
+    json: true
+  });
+};
+
+
 exports.getSpans = function() {
   return exports.getRetrievedData()
     .then(function(data) {

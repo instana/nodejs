@@ -10,10 +10,11 @@
     "lint": "eslint src test",
     "dev": "node -e 'require(\".\")({agentPort: process.env.AGENT_PORT || 42699})' | bunyan",
     "dev-to-agent-stub": "AGENT_PORT=3210 npm run dev",
-    "agent-stub": "AGENT_PORT=3210 node test/agentStub.js",
+    "agent-stub": "AGENT_PORT=3210 node test/apps/agentStub.js",
     "dev-http": "APP_PORT=3456 TRACING_ENABLED=true node test/apps/express | bunyan",
     "dev-http-proxy": "APP_PORT=3457 UPSTREAM_PORT=3456 TRACING_ENABLED=true node test/apps/expressProxy | bunyan",
-    "dev-http-elasticsearch": "APP_PORT=3458 TRACING_ENABLED=true node test/apps/expressElasticsearch | bunyan"
+    "dev-http-elasticsearch": "APP_PORT=3458 TRACING_ENABLED=true node test/apps/expressElasticsearch | bunyan",
+    "dev-http-mongodb": "APP_PORT=3459 TRACING_ENABLED=true node test/apps/expressMongodb | bunyan"
   },
   "repository": {
     "type": "git",
@@ -51,6 +52,7 @@
     "express": "4.14.0",
     "lodash": "4.15.0",
     "mocha": "2.3.3",
+    "mongodb": "2.2.9",
     "proxyquire": "1.7.3",
     "request": "2.74.0",
     "request-promise": "4.1.1",

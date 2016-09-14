@@ -82,6 +82,16 @@ app.get('/retrievedData', function(req, res) {
 });
 
 
+app.delete('/retrievedData', function(req, res) {
+  log('Clearing retrieved data');
+  retrievedData = {
+    runtime: [],
+    traces: []
+  };
+  res.sendStatus(200);
+});
+
+
 app.get('/discoveries', function(req, res) {
   log('Sending discoveries');
   res.json(discoveries);

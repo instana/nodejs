@@ -13,6 +13,7 @@ exports.init = function(config) {
     require('./instrumentation/httpServer.js').init(config);
     require('./instrumentation/httpClient.js').init(config);
     require('./instrumentation/elasticsearch.js').init(config);
+    require('./instrumentation/mongodb.js').init(config);
   }
 };
 
@@ -72,6 +73,7 @@ exports.activate = function() {
   require('./instrumentation/httpServer.js').activate();
   require('./instrumentation/httpClient.js').activate();
   require('./instrumentation/elasticsearch.js').activate();
+  require('./instrumentation/mongodb.js').activate();
 };
 
 
@@ -80,6 +82,7 @@ exports.deactivate = function() {
     return;
   }
 
+  require('./instrumentation/mongodb.js').deactivate();
   require('./instrumentation/elasticsearch.js').deactivate();
   require('./instrumentation/httpServer.js').deactivate();
   require('./instrumentation/httpClient.js').deactivate();

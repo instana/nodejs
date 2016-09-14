@@ -2,14 +2,15 @@ language: node_js
 sudo: false
 env:
   - CXX=g++-4.8
+
 addons:
   apt:
     sources:
      - ubuntu-toolchain-r-test
     packages:
      - g++-4.8
+
 node_js:
-  - "v0.10"
   - "v0.12"
   - "iojs-v2.5.0"
   - "iojs-v3.3.1"
@@ -17,10 +18,14 @@ node_js:
   - "v5"
   - "v6"
 
-# https://docs.travis-ci.com/user/database-setup/#ElasticSearch
 services:
   - elasticsearch
+  - mongodb
+
 before_script:
   - sleep 10
+
 env:
-  - ELASTICSEARCH_HOST=127.0.0.1:9200
+  global:
+    - ELASTICSEARCH_HOST=127.0.0.1:9200
+    - MONGODB_HOST=127.0.0.1:27017

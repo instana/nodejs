@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.13.0
+ - Add MongoDB tracing.
+
 ## 1.12.1
  - Format function name in stack traces as defined in the v8 Wiki.
 

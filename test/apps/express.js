@@ -35,6 +35,6 @@ app.listen(process.env.APP_PORT, function() {
 
 function log() {
   var args = Array.prototype.slice.call(arguments);
-  args.unshift('Express App (' + process.pid + '):\t');
+  args[0] = 'Express App (' + process.pid + '):\t' + args[0];
   console.log.apply(console, args);
 }

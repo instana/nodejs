@@ -1,4 +1,6 @@
-/* eslint-disable */
+/* eslint-disable no-console */
+
+'use strict';
 
 require('../../')({
   agentPort: process.env.AGENT_PORT,
@@ -32,7 +34,7 @@ app.get('/get', function(req, res) {
     index: req.query.index || 'myindex',
     type: 'mytype',
     id: req.query.id
-  }, function (error, response) {
+  }, function(error, response) {
     if (error) {
       res.status(500).json(error);
     } else {
@@ -133,6 +135,6 @@ app.listen(process.env.APP_PORT, function() {
 
 function log() {
   var args = Array.prototype.slice.call(arguments);
-  args.unshift('Express / Elasticsearch App (' + process.pid + '):\t');
+  args[0] = 'Express / Elasticsearch (' + process.pid + '):\t' + args[0];
   console.log.apply(console, args);
 }
