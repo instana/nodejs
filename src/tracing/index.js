@@ -1,5 +1,7 @@
 'use strict';
 
+var semver = require('semver');
+
 var logger = require('../logger').getLogger('tracing');
 
 var fulfillsPrerequisites = false;
@@ -43,23 +45,7 @@ function checkPrerequisites(config) {
 
 
 exports.supportsAsyncWrap = function supportsAsyncWrap(version) {
-  var match = version.match(/^(\d+)\.(\d+)\..*/);
-  if (!match) {
-    return false;
-  }
-
-  var major = parseInt(match[1], 10);
-  var minor = parseInt(match[2], 10);
-
-  if (major >= 6) {
-    return true;
-  } else if (major === 5 && minor >= 10) {
-    return true;
-  } else if (major === 4 && minor >= 5) {
-    return true;
-  }
-
-  return false;
+  return semver.satisfies(version, '^4.5 || ^5.10 || >=6.0.0');
 };
 
 

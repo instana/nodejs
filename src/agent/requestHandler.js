@@ -1,13 +1,17 @@
 'use strict';
 
+var semver = require('semver');
+
 var logger = require('../logger').getLogger('agent/requestHandler');
 var agentConnection = require('../agentConnection');
-var cpuProfiling = require('../profiling/cpu');
 
-var actionMapping = {
-  'node.startCpuProfiling': cpuProfiling.startProfiling,
-  'node.stopCpuProfiling': cpuProfiling.stopProfiling
-};
+var actionMapping = {};
+
+if (semver.satisfies(process.versions.node, '>=4.0.0')) {
+  var cpuProfiling = require('../profiling/cpu');
+  actionMapping['node.startCpuProfiling'] = cpuProfiling.startProfiling;
+  actionMapping['node.stopCpuProfiling'] = cpuProfiling.stopProfiling;
+}
 
 exports.handleRequests = function(requests) {
   requests.forEach(handleRequest);

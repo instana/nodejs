@@ -34,7 +34,8 @@
   "homepage": "https://github.com/instana/nodejs-sensor#readme",
   "dependencies": {
     "bunyan": "^1.5.1",
-    "event-loop-lag": "1.1.0"
+    "event-loop-lag": "1.1.0",
+    "semver": "5.3.0"
   },
   "optionalDependencies": {
     "async-hook": "1.6.0",

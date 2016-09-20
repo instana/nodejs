@@ -19,7 +19,6 @@ describe('tracing', function() {
 
       expect(tracing.supportsAsyncWrap('6.0.0')).to.equal(true);
       expect(tracing.supportsAsyncWrap('6.1.0')).to.equal(true);
-      expect(tracing.supportsAsyncWrap('6.1.0-alpha')).to.equal(true);
       expect(tracing.supportsAsyncWrap('6.2.0')).to.equal(true);
     });
 

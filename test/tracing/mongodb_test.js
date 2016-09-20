@@ -97,7 +97,7 @@ describe('tracing/mongodb', function() {
     });
   });
 
-  it.only('must trace find requests with cursors', function() {
+  it('must trace find requests with cursors', function() {
     return Promise.all(_.range(10)
     .map(function(i) {
       return expressMongodbControls.sendRequest({

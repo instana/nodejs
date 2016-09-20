@@ -1,6 +1,7 @@
 'use strict';
 
 var expect = require('chai').expect;
+var semver = require('semver');
 var path = require('path');
 var fs = require('fs');
 
@@ -13,6 +14,10 @@ var utils = require('../utils');
 
 
 describe('profiling/cpu', function() {
+  if (!semver.satisfies(process.versions.node, '>=4.0.0')) {
+    return;
+  }
+
   describe('toTreeWithTiming', function() {
     var rawCpuProfile;
 
@@ -45,7 +50,7 @@ describe('profiling/cpu', function() {
     });
   });
 
-  describe.only('integration-test', function() {
+  describe('integration-test', function() {
     this.timeout(config.getTestTimeout());
 
     agentStubControls.registerTestHooks();
