@@ -1,6 +1,6 @@
 'use strict';
 
-var logger = require('../logger').getLogger('profiling/cpu');
+var logger = require('../../logger').getLogger('actions/profiling/cpu');
 
 var profiler;
 var samplingIntervalMicros = 1000; /* v8 profiler default */

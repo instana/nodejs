@@ -5,12 +5,12 @@ var semver = require('semver');
 var path = require('path');
 var fs = require('fs');
 
-var supportsAsyncWrap = require('../../src/tracing/index').supportsAsyncWrap;
-var expressElasticsearchControls = require('../apps/expressElasticsearchControls');
-var agentStubControls = require('../apps/agentStubControls');
-var cpu = require('../../src/profiling/cpu');
-var config = require('../config');
-var utils = require('../utils');
+var expressElasticsearchControls = require('../../apps/expressElasticsearchControls');
+var supportsAsyncWrap = require('../../../src/tracing/index').supportsAsyncWrap;
+var agentStubControls = require('../../apps/agentStubControls');
+var cpu = require('../../../src/actions/profiling/cpu');
+var config = require('../../config');
+var utils = require('../../utils');
 
 
 describe('profiling/cpu', function() {
