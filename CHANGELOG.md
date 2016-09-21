@@ -1,7 +1,8 @@
 # Changelog
 
-## Unreleased
- - Restrict CPU profiling support to Node.js >=4.0.0
+## 1.15.0
+ - Restrict CPU profiling support to Node.js >=4.0.0.
+ - Differentiate between all the supported V8 garbage collection types.
 
 ## 1.14.0
  - Add on-demand CPU profiling support.

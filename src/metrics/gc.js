@@ -6,12 +6,16 @@ var slidingWindow = require('../slidingWindow');
 var windowOpts = {duration: 1000};
 var minorGcWindow = slidingWindow.create(windowOpts);
 var majorGcWindow = slidingWindow.create(windowOpts);
+var incrementalMarkingsWindow = slidingWindow.create(windowOpts);
+var processWeakCallbacksWindow = slidingWindow.create(windowOpts);
 var gcPauseWindow = slidingWindow.create(windowOpts);
 
 exports.payloadPrefix = 'gc';
 exports.currentPayload = {
   minorGcs: 0,
   majorGcs: 0,
+  incrementalMarkings: 0,
+  weakCallbackProcessing: 0,
   gcPause: 0,
   statsSupported: true
 };
@@ -28,9 +32,15 @@ try {
       minorGcWindow.addPoint(1);
     } else if (type === 2) {
       majorGcWindow.addPoint(1);
-    } else {
+    } else if (type === 4) {
+      incrementalMarkingsWindow.addPoint(1);
+    } else if (type === 8) {
+      processWeakCallbacksWindow.addPoint(1);
+    } else if (type === 15) {
       minorGcWindow.addPoint(1);
       majorGcWindow.addPoint(1);
+      incrementalMarkingsWindow.addPoint(1);
+      processWeakCallbacksWindow.addPoint(1);
     }
 
     exports.currentPayload.statsSupported = true;
@@ -54,6 +64,8 @@ exports.activate = function() {
   reducingIntervalHandle = setInterval(function() {
     exports.currentPayload.minorGcs = minorGcWindow.sum();
     exports.currentPayload.majorGcs = majorGcWindow.sum();
+    exports.currentPayload.incrementalMarkings = incrementalMarkingsWindow.sum();
+    exports.currentPayload.weakCallbackProcessing = processWeakCallbacksWindow.sum();
     exports.currentPayload.gcPause = gcPauseWindow.sum();
   }, 1000);
 };
