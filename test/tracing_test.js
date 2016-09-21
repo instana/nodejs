@@ -215,7 +215,7 @@ describe('tracing', function() {
 
     it('must support tracing of concurrent calls', function() {
       var callsNumbers = [];
-      for (var i = 0; i < 100; i++) {
+      for (var i = 0; i < 20; i++) {
         callsNumbers.push(i);
       }
 
