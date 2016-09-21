@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.16.0
+ - Allow retrieval of loaded modules via agent requests.
+
 ## 1.15.0
  - Restrict CPU profiling support to Node.js >=4.0.0.
  - Differentiate between all the supported V8 garbage collection types.

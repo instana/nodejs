@@ -13,7 +13,7 @@ var config = require('../../config');
 var utils = require('../../utils');
 
 
-describe('profiling/cpu', function() {
+describe('actions/profiling/cpu', function() {
   if (!semver.satisfies(process.versions.node, '>=4.0.0')) {
     return;
   }

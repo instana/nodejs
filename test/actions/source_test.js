@@ -2,7 +2,6 @@
 
 var expect = require('chai').expect;
 var path = require('path');
-var fs = require('fs');
 
 var supportsAsyncWrap = require('../../src/tracing/index').supportsAsyncWrap;
 var expressControls = require('../apps/expressElasticsearchControls');
@@ -24,35 +23,28 @@ describe('actions/source', function() {
   });
 
   it('retrieve fully qualified source file', function() {
-    // var messageId = 'a';
-    // return agentStubControls.addRequestForPid(
-    //   expressElasticsearchControls.getPid(),
-    //   {
-    //     action: 'node.startCpuProfiling',
-    //     messageId: messageId,
-    //     args: {
-    //       duration: 1000
-    //     }
-    //   }
-    // )
-    // .then(function() {
-    //   return utils.retry(function() {
-    //     return agentStubControls.getResponses()
-    //     .then(function(responses) {
-    //       utils.expectOneMatching(responses, function(response) {
-    //         expect(response.messageId).to.equal(messageId);
-    //         expect(response.data.data).to.match(/Profiling successfully started/i);
-    //       });
-    //
-    //       utils.expectOneMatching(responses, function(response) {
-    //         expect(response.messageId).to.equal(messageId);
-    //         expect(response.data.data.f).to.equal('(root)');
-    //         expect(response.data.data.sh).to.equal(0);
-    //         expect(response.data.data.th).to.be.above(0);
-    //         expect(response.data.data.t).to.equal(response.data.data.th * 1000);
-    //       });
-    //     });
-    //   });
-    // });
+    var messageId = 'a';
+    return agentStubControls.addRequestForPid(
+      expressControls.getPid(),
+      {
+        action: 'node.source',
+        messageId: messageId,
+        args: {
+          file: path.join(process.cwd(), 'node_modules', 'semver', 'semver.js')
+        }
+      }
+    )
+    .then(function() {
+      return utils.retry(function() {
+        return agentStubControls.getResponses()
+        .then(function(responses) {
+          utils.expectOneMatching(responses, function(response) {
+            expect(response.messageId).to.equal(messageId);
+            expect(response.data.data).to.be.a('string');
+            expect(response.data.data).to.match(/SEMVER_SPEC_VERSION/i);
+          });
+        });
+      });
+    });
   });
 });
