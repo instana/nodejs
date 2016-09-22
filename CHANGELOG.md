@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.15.2
+ - Allow retrieval of loaded modules and of other JS files located in the require path.
+
 ## 1.15.1
  - Allow retrieval of loaded modules via agent requests.
  - Fix name of command property in MongoDB spans.
