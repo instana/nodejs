@@ -1,10 +1,8 @@
 # Changelog
 
-## 1.16.1
- - Fix name of command property in MongoDB spans.
-
-## 1.16.0
+## 1.15.1
  - Allow retrieval of loaded modules via agent requests.
+ - Fix name of command property in MongoDB spans.
 
 ## 1.15.0
  - Restrict CPU profiling support to Node.js >=4.0.0.
