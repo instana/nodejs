@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.16.1
+ - Fix name of command property in MongoDB spans.
+
 ## 1.16.0
  - Allow retrieval of loaded modules via agent requests.
 

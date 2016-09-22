@@ -94,7 +94,7 @@ function onStarted(event) {
         port: port
       },
       mongo: {
-        commandName: event.commandName,
+        command: event.commandName,
         service: host + ':' + port,
         namespace: database + '.' + collection,
         query: event.command.filter || event.command.query
