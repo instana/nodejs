@@ -70,7 +70,7 @@ function instrumentApi(client, action, info) {
           type: toStringEsMultiParameter(params.type),
           stats: toStringEsMultiParameter(params.stats),
           id: action === 'get' ? params.id : undefined,
-          query: action === 'search' ? params : undefined
+          query: action === 'search' ? JSON.stringify(params) : undefined
         }
       }
     };

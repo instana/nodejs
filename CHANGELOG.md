@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.15.3
+ - Stringify Elasticsearch query to align with Java tracing implementation.
+
 ## 1.15.2
  - Allow retrieval of loaded modules and of other JS files located in the require path.
 
