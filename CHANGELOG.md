@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.16.0
+ - Enable tracing by default.
+
 ## 1.15.4
  - Never generate negative span IDs to avoid negative hex values.
 

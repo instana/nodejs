@@ -7,6 +7,7 @@ var logger = require('../logger').getLogger('tracing');
 var fulfillsPrerequisites = false;
 
 exports.init = function(config) {
+  setDefaults(config);
   fulfillsPrerequisites = checkPrerequisites(config);
 
   if (fulfillsPrerequisites) {
@@ -20,8 +21,14 @@ exports.init = function(config) {
 };
 
 
+function setDefaults(config) {
+  config.tracing = config.tracing || {};
+  config.tracing.enabled = config.tracing.enabled !== false;
+}
+
+
 function checkPrerequisites(config) {
-  if (!config.tracing || !config.tracing.enabled) {
+  if (config.tracing && config.tracing.enabled === false) {
     logger.info('Tracing feature is not enabled via config.');
     return false;
   }

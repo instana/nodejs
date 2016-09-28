@@ -14,12 +14,12 @@
 <!-- /TOC -->
 
 ## Tracing
-The Tracing feature is disabled by default. To enable it, pass the following option to the initialization function.
+The Tracing feature is enabled by default. To disable it, pass the following option to the initialization function.
 
 ```javascript
 require('instana-nodejs-sensor')({
   tracing: {
-    enabled: true
+    enabled: false
   }
 });
 ```
