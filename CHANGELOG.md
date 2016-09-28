@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.15.4
+ - Never generate negative span IDs to avoid negative hex values.
+
 ## 1.15.3
  - Stringify Elasticsearch query to align with Java tracing implementation.
 
