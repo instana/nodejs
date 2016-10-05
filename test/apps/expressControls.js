@@ -64,8 +64,10 @@ exports.sendRequest = function(opts) {
     url: 'http://127.0.0.1:' + appPort + opts.path,
     qs: {
       responseStatus: opts.responseStatus,
-      delay: opts.delay
-    }
+      delay: opts.delay,
+      cookie: opts.cookie
+    },
+    resolveWithFullResponse: opts.resolveWithFullResponse
   })
   .catch(errors.StatusCodeError, function(reason) {
     if (reason.statusCode === opts.responseStatus) {

@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.17.0
+ - Expose trace ID via response cookie so it may be picked up for EUM tracing.
+
 ## 1.16.0
  - Enable tracing by default.
 

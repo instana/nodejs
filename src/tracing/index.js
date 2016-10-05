@@ -24,6 +24,7 @@ exports.init = function(config) {
 function setDefaults(config) {
   config.tracing = config.tracing || {};
   config.tracing.enabled = config.tracing.enabled !== false;
+  config.tracing.exposeTraceIdForEumTracing = config.tracing.exposeTraceIdForEumTracing !== false;
 }
 
 

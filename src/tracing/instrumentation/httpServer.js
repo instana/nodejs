@@ -1,6 +1,7 @@
 'use strict';
 
 var coreHttpModule = require('http');
+var shimmer = require('shimmer');
 var url = require('url');
 
 var tracingConstants = require('../constants');
@@ -10,8 +11,10 @@ var hook = require('../hook');
 var originalCreateServer = coreHttpModule.createServer;
 
 var isActive = false;
+var exposeTraceIdForEumTracing = false;
 
-exports.init = function() {
+exports.init = function(config) {
+  exposeTraceIdForEumTracing = config.tracing.exposeTraceIdForEumTracing;
   coreHttpModule.createServer = function createServer(givenRequestListener) {
     var actualRequestListener = givenRequestListener == null ? requestListener : function(req, res) {
       requestListener(req, res);
@@ -55,6 +58,27 @@ function requestListener(req, res) {
   };
   hook.setSpanId(uid, spanId);
   hook.setTraceId(uid, traceId);
+
+  // handle client / backend eum correlation
+  if (exposeTraceIdForEumTracing) {
+    var cookie = 'ibs_' + traceId + '=1; Max-Age=60';
+    res.setHeader('set-cookie', cookie);
+
+    // the user may override our cookie. Support multiple set-cookie headers
+    shimmer.wrap(res, 'setHeader', function(original) {
+      return function wrappedSetHeader(name, value) {
+        if (name.toLowerCase() === 'set-cookie') {
+          if (value instanceof Array) {
+            value = value.slice();
+            value.push(cookie);
+          } else {
+            value = [value, cookie];
+          }
+        }
+        return original.call(this, name, value);
+      };
+    });
+  }
 
   var parsedUrl = url.parse(req.url);
 

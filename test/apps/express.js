@@ -23,6 +23,10 @@ app.use(function(req, res) {
   var delay = parseInt(req.query.delay || 0, 10);
   var responseStatus = parseInt(req.query.responseStatus || 200, 10);
 
+  if (req.query.cookie) {
+    res.set('set-CooKie', req.query.cookie);
+  }
+
   setTimeout(function() {
     res.sendStatus(responseStatus);
   }, delay);

@@ -87,6 +87,22 @@ describe('tracing', function() {
         });
       });
     });
+
+    it('must not interrupt cookie settings of application', function() {
+      var expectedCookie = 'sessionId=42';
+      return expressControls.sendRequest({
+        method: 'POST',
+        path: '/checkout',
+        responseStatus: 200,
+        cookie: expectedCookie,
+        resolveWithFullResponse: true
+      })
+      .then(function(response) {
+        var cookieHeader = response.headers['set-cookie'];
+        expect(cookieHeader[0]).to.equal('sessionId=42');
+        expect(cookieHeader[1].indexOf('ibs_')).to.equal(0);
+      });
+    });
   });
 
   describe('with proxy', function() {
