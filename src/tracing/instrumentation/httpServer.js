@@ -8,6 +8,8 @@ var tracingConstants = require('../constants');
 var transmission = require('../transmission');
 var hook = require('../hook');
 
+var cookieMaxAgeSeconds = 60;
+
 var originalCreateServer = coreHttpModule.createServer;
 
 var isActive = false;
@@ -59,9 +61,11 @@ function requestListener(req, res) {
   hook.setSpanId(uid, spanId);
   hook.setTraceId(uid, traceId);
 
-  // handle client / backend eum correlation
-  if (exposeTraceIdForEumTracing) {
-    var cookie = 'ibs_' + traceId + '=1; Max-Age=60';
+  // Handle client / backend eum correlation.
+  // Only set the cookie when we are not an intermediate span.
+  if (exposeTraceIdForEumTracing && spanId === traceId) {
+    var expires = new Date(Date.now() + 1000 * cookieMaxAgeSeconds);
+    var cookie = 'ibs_' + traceId + '=1;Expires=' + expires.toUTCString() + ';';
     res.setHeader('set-cookie', cookie);
 
     // the user may override our cookie. Support multiple set-cookie headers

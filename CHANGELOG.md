@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.17.1
+ - Use an `Expires` directive for EUM cookies to support IE<=8.
+
 ## 1.17.0
  - Expose trace ID via response cookie so it may be picked up for EUM tracing.
 
