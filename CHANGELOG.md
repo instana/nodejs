@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.17.2
+ - Add a `Path` directive for EUM cookies to support sub directory resource requests.
+
 ## 1.17.1
  - Use an `Expires` directive for EUM cookies to support IE<=8.
 

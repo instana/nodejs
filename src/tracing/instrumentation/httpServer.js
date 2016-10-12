@@ -65,7 +65,7 @@ function requestListener(req, res) {
   // Only set the cookie when we are not an intermediate span.
   if (exposeTraceIdForEumTracing && spanId === traceId) {
     var expires = new Date(Date.now() + 1000 * cookieMaxAgeSeconds);
-    var cookie = 'ibs_' + traceId + '=1;Expires=' + expires.toUTCString() + ';';
+    var cookie = 'ibs_' + traceId + '=1;Expires=' + expires.toUTCString() + ';Path=/';
     res.setHeader('set-cookie', cookie);
 
     // the user may override our cookie. Support multiple set-cookie headers
