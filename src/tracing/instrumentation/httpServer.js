@@ -8,7 +8,7 @@ var tracingConstants = require('../constants');
 var transmission = require('../transmission');
 var hook = require('../hook');
 
-var cookieMaxAgeSeconds = 60;
+var cookieMaxAgeSeconds = 30;
 
 var originalCreateServer = coreHttpModule.createServer;
 

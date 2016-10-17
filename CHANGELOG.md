@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.17.4
+ - Disable extended EUM support by default.
+
 ## 1.17.3
  - Reported URLs for outgoing HTTP calls must include a `:` after the protocol name.
 

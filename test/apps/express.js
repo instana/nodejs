@@ -9,6 +9,7 @@ require('../../')({
   level: 'info',
   tracing: {
     enabled: process.env.TRACING_ENABLED === 'true',
+    exposeTraceIdForEumTracing: true,
     forceTransmissionStartingAt: 1,
     stackTraceLength: process.env.STACK_TRACE_LENGTH != null ? parseInt(process.env.STACK_TRACE_LENGTH, 10) : 10
   }
