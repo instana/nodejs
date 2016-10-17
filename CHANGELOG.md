@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.17.3
+ - Reported URLs for outgoing HTTP calls must include a `:` after the protocol name.
+
 ## 1.17.2
  - Add a `Path` directive for EUM cookies to support sub directory resource requests.
 
