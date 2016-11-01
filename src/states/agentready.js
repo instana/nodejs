@@ -48,7 +48,7 @@ module.exports = {
 
       agentConnection.sendDataToAgent(payload, function(error, requests) {
         if (error) {
-          logger.error('Error received while trying to send data to agent.', {error: error});
+          logger.error('Error received while trying to send data to agent: %s', error.message);
           ctx.transitionTo('unannounced');
           return;
         }
