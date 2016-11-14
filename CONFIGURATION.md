@@ -4,7 +4,6 @@
 
 - [Tracing](#tracing)
 	- [Capturing Stack Traces](#capturing-stack-traces)
-	- [EUM Tracing Support](#eum-tracing-support)
 - [Logging](#logging)
 	- [Bunyan Parent Logger](#bunyan-parent-logger)
 	- [Log Level Configuration](#log-level-configuration)
@@ -33,18 +32,6 @@ require('instana-nodejs-sensor')({
   tracing: {
     enabled: true,
     stackTraceLength: 10
-  }
-});
-```
-
-### EUM Tracing Support
-To support correlation between EUM and backend traces, this sensor can add cookies to outgoing HTTP responses which indicate span and trace IDs. To enable extended EUM support, use the `exposeTraceIdForEumTracing` option.
-
-```javascript
-require('instana-nodejs-sensor')({
-  tracing: {
-    enabled: true,
-    exposeTraceIdForEumTracing: true
   }
 });
 ```

@@ -98,9 +98,33 @@ describe('tracing', function() {
         resolveWithFullResponse: true
       })
       .then(function(response) {
-        var cookieHeader = response.headers['set-cookie'];
-        expect(cookieHeader[0]).to.equal('sessionId=42');
-        expect(cookieHeader[1].indexOf('ibs_')).to.equal(0);
+        expect(response.headers['set-cookie']).to.deep.equal([expectedCookie]);
+      });
+    });
+
+    it('must expose trace ID on incoming HTTP request', function() {
+      return expressControls.sendRequest({
+        method: 'GET',
+        path: '/return-instana-trace-id',
+        responseStatus: 200,
+        resolveWithFullResponse: true
+      })
+      .then(function(response) {
+        var traceId = response.body;
+        expect(traceId).to.be.a('string');
+
+        return utils.retry(function() {
+          return agentStubControls.getSpans()
+          .then(function(spans) {
+            expect(spans).to.have.lengthOf(1);
+
+            utils.expectOneMatching(spans, function(span) {
+              expect(span.t).to.equal(traceId);
+              expect(span.s).to.equal(traceId);
+              expect(span.f.e).to.equal(String(expressControls.getPid()));
+            });
+          });
+        });
       });
     });
   });

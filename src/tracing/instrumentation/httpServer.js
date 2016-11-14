@@ -1,22 +1,17 @@
 'use strict';
 
 var coreHttpModule = require('http');
-var shimmer = require('shimmer');
 var url = require('url');
 
 var tracingConstants = require('../constants');
 var transmission = require('../transmission');
 var hook = require('../hook');
 
-var cookieMaxAgeSeconds = 30;
-
 var originalCreateServer = coreHttpModule.createServer;
 
 var isActive = false;
-var exposeTraceIdForEumTracing = false;
 
-exports.init = function(config) {
-  exposeTraceIdForEumTracing = config.tracing.exposeTraceIdForEumTracing;
+exports.init = function() {
   coreHttpModule.createServer = function createServer(givenRequestListener) {
     var actualRequestListener = givenRequestListener == null ? requestListener : function(req, res) {
       requestListener(req, res);
@@ -62,26 +57,8 @@ function requestListener(req, res) {
   hook.setTraceId(uid, traceId);
 
   // Handle client / backend eum correlation.
-  // Only set the cookie when we are not an intermediate span.
-  if (exposeTraceIdForEumTracing && spanId === traceId) {
-    var expires = new Date(Date.now() + 1000 * cookieMaxAgeSeconds);
-    var cookie = 'ibs_' + traceId + '=1;Expires=' + expires.toUTCString() + ';Path=/';
-    res.setHeader('set-cookie', cookie);
-
-    // the user may override our cookie. Support multiple set-cookie headers
-    shimmer.wrap(res, 'setHeader', function(original) {
-      return function wrappedSetHeader(name, value) {
-        if (name.toLowerCase() === 'set-cookie') {
-          if (value instanceof Array) {
-            value = value.slice();
-            value.push(cookie);
-          } else {
-            value = [value, cookie];
-          }
-        }
-        return original.call(this, name, value);
-      };
-    });
+  if (spanId === traceId) {
+    req.headers['x-instana-t'] = traceId;
   }
 
   var parsedUrl = url.parse(req.url);

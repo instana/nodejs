@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.17.5
+ - Allow user access to trace IDs as automatically for extended EUM support.
+ - Stop setting cookies automatically for extended EUM support.
+
 ## 1.17.4
  - Disable extended EUM support by default.
 

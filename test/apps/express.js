@@ -9,7 +9,6 @@ require('../../')({
   level: 'info',
   tracing: {
     enabled: process.env.TRACING_ENABLED === 'true',
-    exposeTraceIdForEumTracing: true,
     forceTransmissionStartingAt: 1,
     stackTraceLength: process.env.STACK_TRACE_LENGTH != null ? parseInt(process.env.STACK_TRACE_LENGTH, 10) : 10
   }
@@ -18,6 +17,9 @@ require('../../')({
 var express = require('express');
 var app = express();
 
+app.get('/return-instana-trace-id', function(req, res) {
+  res.send(req.get('x-instana-t'));
+});
 
 app.use(function(req, res) {
   log(req.method, req.url);
