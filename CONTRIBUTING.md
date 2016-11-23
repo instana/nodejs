@@ -13,3 +13,13 @@ npm dist-tag add instana-nodejs-sensor@<sensor version> latest
 # verify that tags have been correctly applied
 npm dist-tag ls instana-nodejs-sensor
 ```
+
+
+## Executing Tests locally
+Some of the tests require databases to run locally. The easiest way to run these databases locally is to use Docker and on top of this [dock](https://github.com/bripkens/dock). Execute these commands to set up all the necessary databases and environment variables.
+
+```shell
+dock elasticsearch mongodb
+export MONGODB_HOST="0.0.0.0:27017"
+export ELASTICSEARCH_HOST="0.0.0.0:9200"
+```
