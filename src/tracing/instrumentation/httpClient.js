@@ -2,6 +2,7 @@
 
 var coreHttpModule = require('http');
 
+var discardUrlParameters = require('../../util/url').discardUrlParameters;
 var tracingConstants = require('../constants');
 var transmission = require('../transmission');
 var hook = require('../hook');
@@ -31,7 +32,7 @@ exports.init = function() {
 
     var completeCallUrl;
     if (typeof(opts) === 'string') {
-      completeCallUrl = opts;
+      completeCallUrl = discardUrlParameters(opts);
     } else {
       completeCallUrl = constructCompleteUrlFromOpts(opts, coreHttpModule);
     }
@@ -126,7 +127,7 @@ exports.deactivate = function() {
 
 function constructCompleteUrlFromOpts(options, self) {
   if (options.href) {
-    return discardQueryParameters(options.href);
+    return discardUrlParameters(options.href);
   }
 
   try {
@@ -139,12 +140,8 @@ function constructCompleteUrlFromOpts(options, self) {
     var port = options.port || options.defaultPort || (agent && agent.defaultPort) || 80;
     var host = options.hostname || options.host || 'localhost';
     var path = options.path || '/';
-    return discardQueryParameters(protocol + '//' + host + ':' + port + path);
+    return discardUrlParameters(protocol + '//' + host + ':' + port + path);
   } catch (e) {
     return undefined;
   }
-}
-
-function discardQueryParameters(url) {
-  return url.replace(/\?.*$/, '');
 }

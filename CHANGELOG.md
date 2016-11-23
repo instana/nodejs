@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.17.6
+ - Strip matrix parameters and hash values from requests paths in addition to query parameters.
+
 ## 1.17.5
  - Allow user access to trace IDs as automatically for extended EUM support.
  - Stop setting cookies automatically for extended EUM support.
