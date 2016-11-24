@@ -1,7 +1,8 @@
 # Changelog
 
-## Unreleased
+## 1.18.0
  - Transport errors counts in preparation for span batching logic.
+ - Log fewer stacktraces when agent identification fails.
 
 ## 1.17.6
  - Strip matrix parameters and hash values from requests paths in addition to query parameters.
