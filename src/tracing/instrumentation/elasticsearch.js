@@ -58,6 +58,7 @@ function instrumentApi(client, action, info) {
       f: hook.getFrom(),
       async: false,
       error: false,
+      ec: 0,
       ts: Date.now(),
       d: 0,
       n: 'elasticsearch',
@@ -114,6 +115,7 @@ function instrumentApi(client, action, info) {
     function onError(error) {
       span.d = Date.now() - span.ts;
       span.error = true;
+      span.ec = 1;
       span.data.elasticsearch.error = error.message;
       transmission.addSpan(span);
       hook.postAndDestroySimulated(uid);

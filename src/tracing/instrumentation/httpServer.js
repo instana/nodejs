@@ -47,6 +47,7 @@ function requestListener(req, res) {
     f: hook.getFrom(),
     async: false,
     error: false,
+    ec: 0,
     ts: Date.now(),
     d: 0,
     n: 'node.http.server',
@@ -73,6 +74,7 @@ function requestListener(req, res) {
       }
     };
     span.error = res.statusCode >= 500;
+    span.ec = span.error ? 1 : 0;
     span.d = Date.now() - span.ts;
     transmission.addSpan(span);
   });

@@ -1,5 +1,8 @@
 # Changelog
 
+## Unreleased
+ - Transport errors counts in preparation for span batching logic.
+
 ## 1.17.6
  - Strip matrix parameters and hash values from requests paths in addition to query parameters.
 

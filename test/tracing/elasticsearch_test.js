@@ -39,6 +39,7 @@ describe('tracing/elasticsearch', function() {
             expect(span.f.e).to.equal(String(expressElasticsearchControls.getPid()));
             expect(span.async).to.equal(false);
             expect(span.error).to.equal(true);
+            expect(span.ec).to.equal(1);
           });
 
           utils.expectOneMatching(spans, function(span) {
@@ -48,6 +49,7 @@ describe('tracing/elasticsearch', function() {
             expect(span.f.e).to.equal(String(expressElasticsearchControls.getPid()));
             expect(span.async).to.equal(false);
             expect(span.error).to.equal(true);
+            expect(span.ec).to.equal(1);
             expect(span.data.elasticsearch.cluster).to.be.a('string');
             expect(span.data.elasticsearch.action).to.equal('get');
             expect(span.data.elasticsearch.type).to.equal('mytype');

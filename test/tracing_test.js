@@ -55,6 +55,7 @@ describe('tracing', function() {
               expect(span.n).to.equal('node.http.server');
               expect(span.async).to.equal(false);
               expect(span.error).to.equal(false);
+              expect(span.ec).to.equal(0);
               expect(span.data.http.method).to.equal('POST');
               expect(span.data.http.url).to.equal('/checkout');
               expect(span.data.http.status).to.equal(201);
@@ -79,6 +80,7 @@ describe('tracing', function() {
               expect(span.n).to.equal('node.http.server');
               expect(span.async).to.equal(false);
               expect(span.error).to.equal(true);
+              expect(span.ec).to.equal(1);
               expect(span.data.http.method).to.equal('POST');
               expect(span.data.http.url).to.equal('/checkout');
               expect(span.data.http.status).to.equal(503);

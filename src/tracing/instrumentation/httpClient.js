@@ -44,6 +44,7 @@ exports.init = function() {
       f: hook.getFrom(),
       async: false,
       error: false,
+      ec: 0,
       ts: Date.now(),
       d: 0,
       n: 'node.http.client',
@@ -62,6 +63,7 @@ exports.init = function() {
       };
       span.d = Date.now() - span.ts;
       span.error = res.statusCode >= 500;
+      span.ec = span.error ? 1 : 0;
       transmission.addSpan(span);
       hook.postAndDestroySimulated(uid);
 

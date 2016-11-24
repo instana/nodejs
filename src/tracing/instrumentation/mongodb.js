@@ -82,6 +82,7 @@ function onStarted(event) {
     f: hook.getFrom(),
     async: false,
     error: false,
+    ec: 0,
     ts: Date.now(),
     d: 0,
     n: 'mongo',
@@ -145,6 +146,7 @@ function onFailed(event) {
 
   spanData.span.d = Date.now() - spanData.span.ts;
   spanData.span.error = true;
+  spanData.span.ec = 1;
   transmission.addSpan(spanData.span);
   hook.postAndDestroySimulated(spanData.uid);
 
