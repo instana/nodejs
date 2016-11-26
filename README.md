@@ -2,7 +2,8 @@
 
 Monitor your Node.js applications with Instana!
 
-**[Installation](#installation) |**
+**[Installation](#installation-and-usage) |**
+**[OpenTracing](#opentracing) |**
 **[Configuration](CONFIGURATION.md) |**
 **[Changelog](CHANGELOG.md)**
 
@@ -12,6 +13,9 @@ Monitor your Node.js applications with Instana!
 
 - [Installation and Usage](#installation-and-usage)
 - [Garbage Collection and Event Loop Information](#garbage-collection-and-event-loop-information)
+- [OpenTracing](#opentracing)
+	- [Connecting OpenTracing spans to Instana spans](#connecting-opentracing-spans-to-instana-spans)
+	- [Limitations](#limitations)
 
 <!-- /TOC -->
 
@@ -39,3 +43,72 @@ Native addons are compiled automatically for your system and Node.js version whe
 ```
 sudo apt-get install build-essential
 ```
+
+## OpenTracing
+This sensor automatically instruments widely used APIs to add tracing support, e.g. HTTP server / client of the Node.js core API. Sometimes you may find that this is not enough or you may already have invested in [OpenTracing](http://opentracing.io). The OpenTracing API is implemented by this Node.js sensor. This API can be used to provide insights into areas of your applications, e.g. custom libraries and frameworks, which would otherwise go unnoticed.
+
+In order to use OpenTracing for Node.js with Instana, you need to [enable tracing](https://github.com/instana/nodejs-sensor-internal/blob/master/CONFIGURATION.md#tracing) and use the Instana OpenTracing API implementation. The following sample project shows how this is done.
+
+```javascript
+const instana = require('instana-nodejs-sensor');
+
+// Always initialize the sensor as the first module inside the application.
+instana({
+  tracing: {
+    enabled: false
+  }
+});
+
+const opentracing = require('opentracing');
+
+// optionally use the opentracing provided singleton tracer wrapper
+opentracing.initGlobalTracer(instana.opentracing.createTracer());
+
+// retrieve the tracer instance from the opentracing tracer wrapper
+const tracer = opentracing.globalTracer();
+
+// start a new trace with an operation name
+const span = tracer.startSpan('auth');
+
+// mark operation as failed
+span.setTag(opentracing.Tags.ERROR, true);
+
+// finish the span and schedule it for transmission to instana
+span.finish();
+```
+
+### Connecting OpenTracing spans to Instana spans
+The Node.js sensor automatically instruments common HTTP and database APIs for your convenience. It would therefore be inefficient to do this again using OpenTracing. We recommend to use the OpenTracing APIs to add additional tracing insights on top of the auto-generated Instana traces. To support this, Instana offers an additional API to retrieve the currently existing OpenTracing SpanContext. This SpanContext can then be used to stitch traces together. The following code sample shows how this could be done for a simple [expressjs](https://expressjs.com/) app.
+
+```javascript
+const instana = require('instana-nodejs-sensor');
+instana({
+  tracing: {
+    enabled: false
+  }
+});
+
+const opentracing = require('opentracing');
+const express = require('express');
+
+opentracing.initGlobalTracer(instana.opentracing.createTracer());
+const tracer = opentracing.globalTracer();
+
+const app = express();
+
+app.get('/', (req, res) => {
+  var spanContext = instana.opentracing.getCurrentlyActiveInstanaSpanContext();
+  var authSpan = tracer.startSpan('auth', {childOf: spanContext});
+  authSpan.finish();
+  res.send('OK');
+});
+
+app.listen(300, () => {
+  log('Listening on port 3000');
+});
+```
+
+### Limitations
+The Instana Node.js sensor does not yet have support for OpenTracing binary carriers. This OpenTracing implementation will silently ignore OpenTracing binary carrier objects.
+
+Care should also be taken with OpenTracing baggage items. Baggage items are meta data which is transport via carrier objects across network boundaries. Furthermore, this meta data is inherited by child spans (and their child spans…). This can produce quite a lot of overhead. We recommended to completely avoid the OpenTracing baggage API.

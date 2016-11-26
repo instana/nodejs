@@ -22,4 +22,5 @@ Some of the tests require databases to run locally. The easiest way to run these
 dock elasticsearch mongodb
 export MONGODB_HOST="0.0.0.0:27017"
 export ELASTICSEARCH_HOST="0.0.0.0:9200"
+npm test
 ```

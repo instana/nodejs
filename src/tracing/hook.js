@@ -3,8 +3,6 @@
 var asyncHook = require('async-hook');
 
 var stackTrace = require('../util/stackTrace');
-var agentOpts = require('../agent/opts');
-var pidStore = require('../pidStore');
 
 var stackTraceLength = 0;
 var simulatedUidCounter = 0;
@@ -100,6 +98,10 @@ exports.setSpanId = function setSpanId(uid, spanId) {
   handleData[uid].spanId = spanId;
 };
 
+exports.getSpanId = function getSpanId(uid) {
+  return handleData[uid].spanId;
+};
+
 exports.getParentSpanId = function getParentSpanId(uid) {
   return handleData[uid].parentSpanId;
 };
@@ -118,17 +120,6 @@ exports.setTracingSuppressed = function setTracingSuppressed(uid, suppressed) {
 
 exports.isTracingSuppressed = function isTracingSuppressed(uid) {
   return handleData[uid].suppressTracing;
-};
-
-exports.generateRandomSpanId = function generateRandomSpanId() {
-  return Math.floor(Math.random() * Number.MAX_SAFE_INTEGER).toString(16);
-};
-
-exports.getFrom = function getFrom() {
-  return {
-    e: String(pidStore.pid),
-    h: agentOpts.agentUuid
-  };
 };
 
 exports.markAsExitSpan = function markAsExitSpan(uid) {

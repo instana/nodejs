@@ -33,13 +33,17 @@ exports.deactivate = function() {
 
 
 exports.addSpan = function(span) {
+  if (!isActive) {
+    return;
+  }
+
   if (span.t == null) {
     logger.warn('Span of type %s has no trace ID. Not transmitting this span', span.n);
     return;
   }
   spans.push(span);
 
-  if (isActive && spans.length >= forceTransmissionStartingAt) {
+  if (spans.length >= forceTransmissionStartingAt) {
     transmitSpans();
   }
 };

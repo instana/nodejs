@@ -2,6 +2,7 @@
 
 var requireHook = require('../../util/requireHook');
 var transmission = require('../transmission');
+var tracingUtil = require('../tracingUtil');
 var hook = require('../hook');
 
 var isActive = false;
@@ -52,17 +53,17 @@ function instrumentApi(client, action, info) {
     hook.markAsExitSpan(uid);
 
     var span = {
-      s: hook.generateRandomSpanId(),
+      s: tracingUtil.generateRandomSpanId(),
       t: traceId,
       p: hook.getParentSpanId(uid),
-      f: hook.getFrom(),
+      f: tracingUtil.getFrom(),
       async: false,
       error: false,
       ec: 0,
       ts: Date.now(),
       d: 0,
       n: 'elasticsearch',
-      stack: hook.getStackTrace(instrumentedAction),
+      stack: tracingUtil.getStackTrace(instrumentedAction),
       data: {
         elasticsearch: {
           action: action,

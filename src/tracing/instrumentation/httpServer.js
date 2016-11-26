@@ -5,6 +5,7 @@ var url = require('url');
 
 var tracingConstants = require('../constants');
 var transmission = require('../transmission');
+var tracingUtil = require('../tracingUtil');
 var hook = require('../hook');
 
 var originalCreateServer = coreHttpModule.createServer;
@@ -38,13 +39,13 @@ function requestListener(req, res) {
 
   hook.setTracingSuppressed(uid, false);
 
-  var spanId = hook.generateRandomSpanId();
+  var spanId = tracingUtil.generateRandomSpanId();
   var traceId = getExistingTraceId(req, spanId);
   var span = {
     s: spanId,
     t: traceId,
     p: getExistingSpanId(req),
-    f: hook.getFrom(),
+    f: tracingUtil.getFrom(),
     async: false,
     error: false,
     ec: 0,

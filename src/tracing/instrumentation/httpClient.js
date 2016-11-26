@@ -5,6 +5,7 @@ var coreHttpModule = require('http');
 var discardUrlParameters = require('../../util/url').discardUrlParameters;
 var tracingConstants = require('../constants');
 var transmission = require('../transmission');
+var tracingUtil = require('../tracingUtil');
 var hook = require('../hook');
 
 var originalRequest = coreHttpModule.request;
@@ -38,17 +39,17 @@ exports.init = function() {
     }
 
     var span = {
-      s: hook.generateRandomSpanId(),
+      s: tracingUtil.generateRandomSpanId(),
       t: traceId,
       p: hook.getParentSpanId(uid),
-      f: hook.getFrom(),
+      f: tracingUtil.getFrom(),
       async: false,
       error: false,
       ec: 0,
       ts: Date.now(),
       d: 0,
       n: 'node.http.client',
-      stack: hook.getStackTrace(request),
+      stack: tracingUtil.getStackTrace(request),
       data: null
     };
     hook.setSpanId(uid, span.s);

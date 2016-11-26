@@ -3,6 +3,7 @@
 var logger = require('../../logger').getLogger('tracing/mongodb');
 var requireHook = require('../../util/requireHook');
 var transmission = require('../transmission');
+var tracingUtil = require('../tracingUtil');
 var hook = require('../hook');
 
 var isActive = false;
@@ -76,10 +77,10 @@ function onStarted(event) {
   var database = event.databaseName;
   var collection = event.command.collection || event.command[event.commandName];
   var span = {
-    s: hook.generateRandomSpanId(),
+    s: tracingUtil.generateRandomSpanId(),
     t: traceId,
     p: parentSpanId,
-    f: hook.getFrom(),
+    f: tracingUtil.getFrom(),
     async: false,
     error: false,
     ec: 0,

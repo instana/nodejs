@@ -1,7 +1,12 @@
 # Changelog
 
+## 1.19.0
+ - Remove development and documentation artifacts from NPM published module.
+ - Execute tests against Node.js v7.
+ - Add opentracing support.
+
 ## 1.18.0
- - Transport errors counts in preparation for span batching logic.
+ - Transport error counts in preparation for span batching logic.
  - Log fewer stacktraces when agent identification fails.
 
 ## 1.17.6

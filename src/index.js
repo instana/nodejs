@@ -7,7 +7,7 @@ var log = require('./logger');
 var path = require('path');
 var fs = require('fs');
 
-module.exports = function start(config) {
+module.exports = exports = function start(config) {
   config = config || {};
 
   log.init(config);
@@ -45,3 +45,5 @@ module.exports = function start(config) {
 
   ctx.transitionTo('agentHostLookup');
 };
+
+exports.opentracing = require('./tracing/opentracing');

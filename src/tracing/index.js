@@ -12,6 +12,7 @@ exports.init = function(config) {
 
   if (fulfillsPrerequisites) {
     require('./hook').init(config);
+    require('./tracingUtil').init(config);
     require('./transmission').init(config);
     require('./instrumentation/httpServer.js').init(config);
     require('./instrumentation/httpClient.js').init(config);
@@ -67,6 +68,7 @@ exports.activate = function() {
   require('./instrumentation/httpClient.js').activate();
   require('./instrumentation/elasticsearch.js').activate();
   require('./instrumentation/mongodb.js').activate();
+  require('./opentracing').activate();
 };
 
 
@@ -75,6 +77,7 @@ exports.deactivate = function() {
     return;
   }
 
+  require('./opentracing').deactivate();
   require('./instrumentation/mongodb.js').deactivate();
   require('./instrumentation/elasticsearch.js').deactivate();
   require('./instrumentation/httpServer.js').deactivate();

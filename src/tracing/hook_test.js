@@ -100,12 +100,4 @@ describe('tracing/hook', function() {
     expect(hook.isTracingSuppressed(2)).to.equal(true);
     expect(hook.isTracingSuppressed(3)).to.equal(true);
   });
-
-  describe('generateRandomSpanId', function() {
-    it('must generate random IDs', function() {
-      for (var i = 0; i < 30; i++) {
-        expect(hook.generateRandomSpanId()).to.be.a('string');
-      }
-    });
-  });
 });

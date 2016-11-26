@@ -4,7 +4,7 @@
   "description": "The Instana Node.js sensor",
   "main": "src/index.js",
   "scripts": {
-    "test": "npm run run-test && npm run lint",
+    "test": "NODE_ENV=debug USE_OPENTRACING_DEBUG_IMPL=true npm run run-test && npm run lint",
     "run-test": "mocha --reporter spec $(find src test -name '*_test.js')",
     "debug-test": "export WITH_STDOUT=true && npm run run-test",
     "lint": "eslint src test",
@@ -36,7 +36,8 @@
     "bunyan": "^1.5.1",
     "event-loop-lag": "1.1.0",
     "semver": "5.3.0",
-    "shimmer": "1.1.0"
+    "shimmer": "1.1.0",
+    "opentracing": "^0.13.0"
   },
   "optionalDependencies": {
     "async-hook": "1.6.0",
@@ -60,7 +61,8 @@
     "request": "2.74.0",
     "request-promise": "4.1.1",
     "request-promise-native": "1.0.3",
-    "sinon": "1.17.1"
+    "sinon": "1.17.1",
+    "underscore": "^1.8.3"
   },
   "config": {
     "commitizen": {
