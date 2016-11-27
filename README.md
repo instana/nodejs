@@ -111,4 +111,4 @@ app.listen(300, () => {
 ### Limitations
 The Instana Node.js sensor does not yet have support for OpenTracing binary carriers. This OpenTracing implementation will silently ignore OpenTracing binary carrier objects.
 
-Care should also be taken with OpenTracing baggage items. Baggage items are meta data which is transport via carrier objects across network boundaries. Furthermore, this meta data is inherited by child spans (and their child spans…). This can produce quite a lot of overhead. We recommended to completely avoid the OpenTracing baggage API.
+Care should also be taken with OpenTracing baggage items. Baggage items are meta data which is transported via carrier objects across network boundaries. Furthermore, this meta data is inherited by child spans (and their child spans…). This can produce some overhead. We recommend to completely avoid the OpenTracing baggage API.
