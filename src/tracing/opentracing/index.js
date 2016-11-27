@@ -37,16 +37,20 @@ exports.getCurrentlyActiveInstanaSpanContext = function getCurrentlyActiveInstan
     hook = require('../hook');
   }
 
-  var uid = hook.getCurrentUid();
-  var t = hook.getTraceId(uid);
-  if (!t) {
+  var handleData = hook.getCurrentHandleData();
+  if (!handleData) {
     return null;
   }
 
-  var s = hook.getSpanId(uid) || hook.getParentSpanId(uid);
+  var t = handleData.traceId;
+  var s = handleData.spanId || handleData.parentSpanId;
+  if (!t || !s) {
+    return null;
+  }
+
   var spanContext = new opentracing.SpanContext();
   spanContext.s = s;
   spanContext.t = t;
-  spanContext.samplingPriority = hook.isTracingSuppressed(uid) ? 0 : 1;
+  spanContext.samplingPriority = handleData.suppressTracing ? 0 : 1;
   return spanContext;
 };

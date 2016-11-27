@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.19.1
+ - `getCurrentlyActiveInstanaSpanContext()` fails for modules which are using opentracing APIs while testing.
+
 ## 1.19.0
  - Remove development and documentation artifacts from NPM published module.
  - Execute tests against Node.js v7.

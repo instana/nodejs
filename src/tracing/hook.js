@@ -94,6 +94,10 @@ exports.getCurrentUid = function getCurrentUid() {
   return active;
 };
 
+exports.getCurrentHandleData = function getCurrentHandleData() {
+  return handleData[active];
+};
+
 exports.setSpanId = function setSpanId(uid, spanId) {
   handleData[uid].spanId = spanId;
 };
