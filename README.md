@@ -57,7 +57,7 @@ const instana = require('instana-nodejs-sensor');
 // Always initialize the sensor as the first module inside the application.
 instana({
   tracing: {
-    enabled: false
+    enabled: true
   }
 });
 
@@ -86,7 +86,7 @@ The Node.js sensor automatically instruments common HTTP and database APIs for y
 const instana = require('instana-nodejs-sensor');
 instana({
   tracing: {
-    enabled: false
+    enabled: true
   }
 });
 
