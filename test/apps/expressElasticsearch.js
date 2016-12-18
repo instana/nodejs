@@ -20,7 +20,7 @@ var app = express();
 app.use(bodyParser.json());
 
 var client = new elasticsearch.Client({
-  host: process.env.ELASTICSEARCH_HOST,
+  host: process.env.ELASTICSEARCH,
   log: 'info'
 });
 

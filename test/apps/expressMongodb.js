@@ -22,7 +22,7 @@ var collection;
 
 app.use(bodyParser.json());
 
-MongoClient.connect('mongodb://' + process.env.MONGODB_HOST + '/myproject', function(err, _db) {
+MongoClient.connect('mongodb://' + process.env.MONGODB + '/myproject', function(err, _db) {
   assert.equal(null, err);
   log('Connected to MongoDB');
   db = _db;
