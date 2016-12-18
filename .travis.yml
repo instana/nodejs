@@ -11,12 +11,11 @@ addons:
       - g++-4.8
 
 node_js:
-  - "v0.12"
-  - "iojs-v2.5.0"
-  - "iojs-v3.3.1"
-  - "v4"
-  - "v5"
-  - "v6"
+  - v0.12
+  - v4
+  - v5
+  - v6
+  - v7
 
 before_script:
   - docker-compose up -d
