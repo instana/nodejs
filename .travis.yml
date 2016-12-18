@@ -1,14 +1,14 @@
 language: node_js
-sudo: false
-env:
-  - CXX=g++-4.8
+sudo: required
+services:
+  - docker
 
 addons:
   apt:
     sources:
-     - ubuntu-toolchain-r-test
+      - ubuntu-toolchain-r-test
     packages:
-     - g++-4.8
+      - g++-4.8
 
 node_js:
   - "v0.12"
@@ -18,14 +18,18 @@ node_js:
   - "v5"
   - "v6"
 
-services:
-  - elasticsearch
-  - mongodb
-
 before_script:
+  - docker-compose up -d
   - sleep 10
+
+after_failure:
+  - docker ps
+  - docker-compose logs
 
 env:
   global:
-    - ELASTICSEARCH_HOST=127.0.0.1:9200
-    - MONGODB_HOST=127.0.0.1:27017
+    - ELASTICSEARCH=127.0.0.1:9200
+    - MONGODB=127.0.0.1:27017
+    - ZOOKEEPER=127.0.0.1:2181
+    - KAFKA=127.0.0.1:9092
+    - CXX=g++-4.8

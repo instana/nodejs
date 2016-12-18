@@ -52,7 +52,7 @@ app.post('/com.instana.plugin.nodejs.:pid', checkExistenceOfKnownPid(function ha
   });
 
   var requestsForPid = requests[req.params.pid] || [];
-  log('Got new data for PID ' + req.params.pid + '. Responding with ' + requestsForPid.length + 'requests.');
+  log('Got new data for PID ' + req.params.pid + '. Responding with ' + requestsForPid.length + ' requests.');
   res.json(requestsForPid);
   delete requests[req.params.pid];
 }));

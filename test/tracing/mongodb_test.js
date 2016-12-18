@@ -51,7 +51,7 @@ describe('tracing/mongodb', function() {
             expect(span.async).to.equal(false);
             expect(span.error).to.equal(false);
             expect(span.data.mongo.command).to.equal('insert');
-            expect(span.data.mongo.service).to.equal(process.env.MONGODB_HOST);
+            expect(span.data.mongo.service).to.equal(process.env.MONGODB);
             expect(span.data.mongo.namespace).to.equal('myproject.mydocs');
           });
         });
@@ -86,7 +86,7 @@ describe('tracing/mongodb', function() {
             expect(span.async).to.equal(false);
             expect(span.error).to.equal(false);
             expect(span.data.mongo.command).to.equal('find');
-            expect(span.data.mongo.service).to.equal(process.env.MONGODB_HOST);
+            expect(span.data.mongo.service).to.equal(process.env.MONGODB);
             expect(span.data.mongo.namespace).to.equal('myproject.mydocs');
             expect(span.data.mongo.query).to.deep.equal({
               bla: 'blub'
@@ -138,7 +138,7 @@ describe('tracing/mongodb', function() {
             expect(span.async).to.equal(false);
             expect(span.error).to.equal(false);
             expect(span.data.mongo.command).to.equal('find');
-            expect(span.data.mongo.service).to.equal(process.env.MONGODB_HOST);
+            expect(span.data.mongo.service).to.equal(process.env.MONGODB);
             expect(span.data.mongo.namespace).to.equal('myproject.mydocs');
             expect(span.data.mongo.query).to.deep.equal({});
           });
@@ -151,7 +151,7 @@ describe('tracing/mongodb', function() {
             expect(span.async).to.equal(false);
             expect(span.error).to.equal(false);
             expect(span.data.mongo.command).to.equal('getMore');
-            expect(span.data.mongo.service).to.equal(process.env.MONGODB_HOST);
+            expect(span.data.mongo.service).to.equal(process.env.MONGODB);
             expect(span.data.mongo.namespace).to.equal('myproject.mydocs');
           });
         });

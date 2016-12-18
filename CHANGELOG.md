@@ -1,5 +1,8 @@
 # Changelog
 
+## Unreleased
+ - Add kafka-node tracing support.
+
 ## 1.19.1
  - `getCurrentlyActiveInstanaSpanContext()` fails for modules which are using opentracing APIs while testing.
 
