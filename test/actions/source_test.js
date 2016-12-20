@@ -72,29 +72,4 @@ describe('actions/source', function() {
       });
     });
   });
-
-  it('must not allow JSON requests', function() {
-    var messageId = 'a';
-    return agentStubControls.addRequestForPid(
-      expressControls.getPid(),
-      {
-        action: 'node.source',
-        messageId: messageId,
-        args: {
-          file: path.join(process.cwd(), '..', 'secret.js')
-        }
-      }
-    )
-    .then(function() {
-      return utils.retry(function() {
-        return agentStubControls.getResponses()
-        .then(function(responses) {
-          utils.expectOneMatching(responses, function(response) {
-            expect(response.messageId).to.equal(messageId);
-            expect(response.data.error).to.match(/require path/i);
-          });
-        });
-      });
-    });
-  });
 });

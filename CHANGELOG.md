@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.20.1
+ - Source file retrieval is often broken. After discussions, we decided to relax the checks to only allow transmission of `*.js` files without validation of the location of the file.
+
 ## 1.20.0
  - Add kafka-node tracing support.
 
