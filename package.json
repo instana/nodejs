@@ -35,7 +35,7 @@
   "homepage": "https://github.com/instana/nodejs-sensor#readme",
   "dependencies": {
     "bunyan": "^1.5.1",
-    "event-loop-lag": "1.1.0",
+    "event-loop-lag": "1.2.0",
     "semver": "5.3.0",
     "shimmer": "1.1.0",
     "opentracing": "^0.13.0"
