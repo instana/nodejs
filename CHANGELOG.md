@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.20.3
+ - The Node.js tracing sensor on the agent side can be stopped. This will result in 404 errors which we should not log.
+
 ## 1.20.2
  - Upgrade event-loop-lag because of security vulnerabilities in its dependency tree. Contributed from @jamessharp. Thank you!
 

@@ -129,7 +129,8 @@ exports.sendSpansToAgent = function sendSpansToAgent(spans, cb) {
   sendData(
     '/com.instana.plugin.nodejs/traces.' + pidStore.pid,
     spans,
-    cb
+    cb,
+    true
   );
 };
 
@@ -145,8 +146,11 @@ exports.sendAgentResponseToAgent = function sendAgentResponseToAgent(messageId, 
 };
 
 
-function sendData(path, data, cb) {
+function sendData(path, data, cb, ignore404) {
   cb = atMostOnce('callback for sendData: ' + path, cb);
+  if (ignore404 === undefined) {
+    ignore404 = false;
+  }
 
   var payload = JSON.stringify(data);
   logger.debug({payload: data}, 'Sending payload to %s', path);
@@ -163,8 +167,10 @@ function sendData(path, data, cb) {
     }
   }, function(res) {
     if (res.statusCode < 200 || res.statusCode >= 300) {
-      cb(new Error('Failed to send data to agent with status code ' + res.statusCode));
-      return;
+      if (!(ignore404 && res.statusCode === 404)) {
+        cb(new Error('Failed to send data to agent with status code ' + res.statusCode));
+        return;
+      }
     }
 
     res.setEncoding('utf8');
