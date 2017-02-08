@@ -40,6 +40,17 @@ describe('tracing', function() {
     });
   });
 
+  it('must expose trace id as Server-Timing header', function() {
+    return expressControls.sendRequest({
+      method: 'POST',
+      path: '/checkout',
+      resolveWithFullResponse: true
+    })
+    .then(function(res) {
+      expect(res.headers['server-timing']).to.match(/^ibs_[a-f0-9]+=1$/);
+    });
+  });
+
   describe('httpServer', function() {
     it('must send a HTTP span to the agent', function() {
       return expressControls.sendRequest({

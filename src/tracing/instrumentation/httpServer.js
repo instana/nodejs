@@ -61,6 +61,7 @@ function requestListener(req, res) {
   // Handle client / backend eum correlation.
   if (spanId === traceId) {
     req.headers['x-instana-t'] = traceId;
+    res.setHeader('Server-Timing', 'ibs_' + traceId + '=1');
   }
 
   var parsedUrl = url.parse(req.url);

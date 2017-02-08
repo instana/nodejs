@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.21.0
+ - Expose trace ID for root spans in `Server-Timing` header.
+
 ## 1.20.3
  - The Node.js tracing sensor on the agent side can be stopped. This will result in 404 errors which we should not log.
 
