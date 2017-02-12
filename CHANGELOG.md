@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.21.1
+ - Remove duplicated HTTP metric gathering and reduce memory overhead.
+
 ## 1.21.0
  - Expose trace ID for root spans in `Server-Timing` header.
 
