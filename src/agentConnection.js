@@ -1,19 +1,35 @@
 'use strict';
 
-var http = require('./http');
+var pathUtil = require('path');
+var fs = require('fs');
 
 var logger = require('./logger').getLogger('agentConnection');
 var atMostOnce = require('./util/atMostOnce');
+var agentOpts = require('./agent/opts');
 var pidStore = require('./pidStore');
 var cmdline = require('./cmdline');
-var agentOpts = require('./agent/opts');
+var http = require('./http');
 
+// How many extra characters are to be reserved for the inode and
+// file descriptor fields in the sensor announce cycle.
+var paddingForInodeAndFileDescriptor = 200;
 
 exports.announceNodeSensor = function announceNodeSensor(cb) {
   cb = atMostOnce('callback for announceNodeSensor', cb);
 
   var payload = {
-    pid: pidStore.pid
+    pid: pidStore.pid,
+
+    // We need to add properties to this JSON payload for which don't know
+    // yet how large they are going to be. Specifically, we don't know how
+    // long (as in characters) the file descriptor and inode are. Still,
+    // we need to set a correct Content-Length header. This is what this
+    // spacer is used for.
+    //
+    // We reserve <paddingForInodeAndFileDescriptor> extra characters for
+    // content. Any unused characters will be filled up with whitespace
+    // before the payload is send.
+    spacer: ''
   };
 
   if (cmdline.name && cmdline.args) {
@@ -21,7 +37,8 @@ exports.announceNodeSensor = function announceNodeSensor(cb) {
     payload.args = cmdline.args;
   }
 
-  payload = JSON.stringify(payload);
+  var payloadStr = JSON.stringify(payload);
+  var contentLength = payloadStr.length + paddingForInodeAndFileDescriptor;
 
   var req = http.request({
     host: agentOpts.host,
@@ -32,7 +49,7 @@ exports.announceNodeSensor = function announceNodeSensor(cb) {
     headers: {
       'Accept': 'application/json',
       'Content-Type': 'application/json',
-      'Content-Length': payload.length
+      'Content-Length': contentLength
     }
   }, function(res) {
     if (res.statusCode < 200 || res.statusCode >= 300) {
@@ -58,8 +75,31 @@ exports.announceNodeSensor = function announceNodeSensor(cb) {
     cb(new Error('Announce request to agent failed due to: ' + err.message));
   });
 
-  req.write(payload);
-  req.end();
+  req.on('socket', function(socket) {
+    if (socket._handle != null && socket._handle.fd != null) {
+      payload.fd = String(socket._handle.fd);
+
+      try {
+        payload.inode = fs.readlinkSync(pathUtil.join('/proc', String(process.pid), 'fd', payload.fd));
+      } catch (e) {
+        logger.debug('Failed to retrieve inode for file descriptor %s: %s', payload.fd, e.message);
+      }
+    }
+
+    // Ensure that the payload length matches the length transmitted via the
+    // Content-Length header.
+    payloadStr = JSON.stringify(payload);
+    if (payloadStr.length < contentLength) {
+      var missingChars = contentLength - payloadStr.length;
+      for (var i = 0; i < missingChars; i++) {
+        payload.spacer += ' ';
+      }
+    }
+    payloadStr = JSON.stringify(payload);
+
+    req.write(payloadStr);
+    req.end();
+  });
 };
 
 

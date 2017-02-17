@@ -17,7 +17,12 @@ describe('agentCommunication', function() {
     return utils.retry(function() {
       return agentStubControls.getDiscoveries()
       .then(function(discoveries) {
-        expect(discoveries[expressControls.getPid()].pid).to.be.a('number');
+        var discovery = discoveries[expressControls.getPid()];
+        expect(discovery.pid).to.be.a('number');
+        expect(discovery.fd).to.be.a('string');
+        if (/linux/i.test(process.platform)) {
+          expect(discovery.inode).to.be.a('string');
+        }
       });
     });
   });

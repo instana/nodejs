@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.22.0
+ - Add additional meta data to the agent announce information to enable discovery in Kubernetes and CloudFoundry environments.
+
 ## 1.21.1
  - Remove duplicated HTTP metric gathering and reduce memory overhead.
 
