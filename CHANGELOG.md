@@ -1,5 +1,8 @@
 # Changelog
 
+## Unreleased
+ - Only publish the necessary runtime files.
+
 ## 1.22.0
  - Add additional meta data to the agent announce information to enable discovery in Kubernetes and CloudFoundry environments.
 
