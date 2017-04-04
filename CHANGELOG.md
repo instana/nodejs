@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.23.0
  - Only publish the necessary runtime files.
  - Support scoped modules in dependency analysis.
  - Support the new OpenTracing span kinds `producer` and `consumer`.
