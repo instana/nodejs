@@ -89,6 +89,18 @@ describe('tracing/opentracing/Span', function() {
     });
 
 
+    it('must change direction to exit for producer rpc kind', function() {
+      span.setTag(opentracing.Tags.SPAN_KIND, 'producer');
+      expect(span.span.data.sdk.type).to.equal('exit');
+    });
+
+
+    it('must change direction to entry for consumer rpc kind', function() {
+      span.setTag(opentracing.Tags.SPAN_KIND, 'consumer');
+      expect(span.span.data.sdk.type).to.equal('entry');
+    });
+
+
     it('must treat sampling priority changes specially', function() {
       span.setTag(opentracing.Tags.SAMPLING_PRIORITY, 0.5);
       expect(span.context().samplingPriority).to.equal(0.5);

@@ -109,9 +109,9 @@ Span.prototype._addTag = function _addTag(key, value) {
       this.span.ec = 1;
     }
   } else if (key === opentracing.Tags.SPAN_KIND) {
-    if (value === opentracing.Tags.SPAN_KIND_RPC_SERVER) {
+    if (value === opentracing.Tags.SPAN_KIND_RPC_SERVER || value === 'consumer') {
       this.span.data.sdk.type = 'entry';
-    } else if (value === opentracing.Tags.SPAN_KIND_RPC_CLIENT) {
+    } else if (value === opentracing.Tags.SPAN_KIND_RPC_CLIENT || value === 'producer') {
       this.span.data.sdk.type = 'exit';
     }
   } else if (key === opentracing.Tags.SAMPLING_PRIORITY) {
