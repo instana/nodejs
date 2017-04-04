@@ -2,6 +2,7 @@
 
 ## Unreleased
  - Only publish the necessary runtime files.
+ - Support scoped modules in dependency analysis.
 
 ## 1.22.0
  - Add additional meta data to the agent announce information to enable discovery in Kubernetes and CloudFoundry environments.
