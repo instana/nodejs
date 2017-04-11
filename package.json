@@ -1,9 +1,11 @@
 {
   "name": "instana-nodejs-sensor",
-  "version": "1.23.0",
+  "version": "1.23.1",
   "description": "The Instana Node.js sensor",
   "main": "src/index.js",
-  "files": ["src"],
+  "files": [
+    "src"
+  ],
   "scripts": {
     "test": "NODE_ENV=debug USE_OPENTRACING_DEBUG_IMPL=true npm run test:mocha && npm run test:lint",
     "test:mocha": "mocha --reporter spec $(find src test -name '*_test.js')",
