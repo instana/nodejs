@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.23.1
+ - Support CPU profiling in Node.js >=7.0.0
+
 ## 1.23.0
  - Only publish the necessary runtime files.
  - Support scoped modules in dependency analysis.
