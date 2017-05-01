@@ -14,11 +14,17 @@ require('../../')({
 var MongoClient = require('mongodb').MongoClient;
 var bodyParser = require('body-parser');
 var express = require('express');
+var morgan = require('morgan');
 var assert = require('assert');
 
 var app = express();
 var db;
 var collection;
+var logPrefix = 'Express / MongoDB App (' + process.pid + '):\t';
+
+if (process.env.WITH_STDOUT) {
+  app.use(morgan(logPrefix + ':method :url :status'));
+}
 
 app.use(bodyParser.json());
 
@@ -77,6 +83,6 @@ app.listen(process.env.APP_PORT, function() {
 
 function log() {
   var args = Array.prototype.slice.call(arguments);
-  args[0] = 'Express / MongoDB App (' + process.pid + '):\t' + args[0];
+  args[0] = logPrefix + args[0];
   console.log.apply(console, args);
 }

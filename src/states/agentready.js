@@ -19,13 +19,14 @@ var modules = fs.readdirSync(metricsBaseDir)
     return require(path.join(metricsBaseDir, moduleName));
   });
 
+var config;
 var resendFullDataEveryXTransmissions = 300; /* about every 5 minutes */
 
 var transmissionsSinceLastFullDataEmit = 0;
 var previousTransmittedValue = undefined;
 
 
-module.exports = {
+module.exports = exports = {
   enter: function(ctx) {
     transmissionsSinceLastFullDataEmit = 0;
 
@@ -72,10 +73,13 @@ module.exports = {
   }
 };
 
+exports.init = function init(_config) {
+  config = _config;
+};
 
 function enableAllSensors() {
   modules.forEach(function(mod) {
-    mod.activate();
+    mod.activate(config);
   });
 }
 

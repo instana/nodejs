@@ -76,3 +76,17 @@ exports.sendRequest = function(opts) {
     throw reason;
   });
 };
+
+exports.setHealthy = function() {
+  return request({
+    method: 'POST',
+    url: 'http://127.0.0.1:' + appPort + '/admin/set-to-healthy'
+  });
+};
+
+exports.setUnhealthy = function() {
+  return request({
+    method: 'POST',
+    url: 'http://127.0.0.1:' + appPort + '/admin/set-to-unhealthy'
+  });
+};

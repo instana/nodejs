@@ -15,6 +15,7 @@ module.exports = exports = function start(config) {
   require('./agent/opts').init(config);
   require('./actions/profiling/cpu').init(config);
   require('./tracing').init(config);
+  require('./states/agentready').init(config);
 
   var logger = log.getLogger('index');
 

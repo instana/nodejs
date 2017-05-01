@@ -1,9 +1,11 @@
 /* eslint-disable */
 
-var express = require('express');
 var bodyParser = require('body-parser');
+var express = require('express');
+var morgan = require('morgan');
 var app = express();
 
+var logPrefix = 'Agent Stub (' + process.pid + '):\t';
 var discoveries = {};
 var requests = {};
 var retrievedData = {
@@ -11,6 +13,10 @@ var retrievedData = {
   traces: [],
   responses: []
 };
+
+if (process.env.WITH_STDOUT) {
+  app.use(morgan(logPrefix + ':method :url :status'));
+}
 
 app.use(bodyParser.json());
 
@@ -103,7 +109,8 @@ app.delete('/retrievedData', function(req, res) {
   log('Clearing retrieved data');
   retrievedData = {
     runtime: [],
-    traces: []
+    traces: [],
+    responses: []
   };
   res.sendStatus(200);
 });
@@ -135,6 +142,6 @@ app.listen(process.env.AGENT_PORT, function() {
 
 function log() {
   var args = Array.prototype.slice.call(arguments);
-  args[0] = 'Agent Stub (' + process.pid + '):\t' + args[0];
+  args[0] = logPrefix + args[0];
   console.log.apply(console, args);
 }

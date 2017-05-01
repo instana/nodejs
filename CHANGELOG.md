@@ -1,5 +1,8 @@
 # Changelog
 
+## Unreleased
+ - Collect healthcheck results.
+
 ## 1.23.1
  - Support CPU profiling in Node.js >=7.0.0
 

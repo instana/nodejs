@@ -50,6 +50,8 @@
     "v8-profiler": "5.7.0"
   },
   "devDependencies": {
+    "admin": "^1.4.0",
+    "admin-plugin-healthcheck": "^1.1.0",
     "bluebird": "3.4.6",
     "body-parser": "1.15.2",
     "chai": "3.3.0",
@@ -62,6 +64,7 @@
     "lodash": "4.15.0",
     "mocha": "2.3.3",
     "mongodb": "2.2.9",
+    "morgan": "^1.8.1",
     "proxyquire": "1.7.3",
     "request": "2.74.0",
     "request-promise": "4.1.1",
