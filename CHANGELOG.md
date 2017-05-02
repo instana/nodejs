@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.24.0
  - Collect healthcheck results.
 
 ## 1.23.1
