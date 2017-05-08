@@ -19,6 +19,7 @@ exports.init = function(config) {
     require('./instrumentation/elasticsearch.js').init(config);
     require('./instrumentation/mongodb.js').init(config);
     require('./instrumentation/kafka.js').init(config);
+    require('./instrumentation/mysql.js').init(config);
   }
 };
 
@@ -70,6 +71,7 @@ exports.activate = function() {
   require('./instrumentation/elasticsearch.js').activate();
   require('./instrumentation/mongodb.js').activate();
   require('./instrumentation/kafka.js').activate();
+  require('./instrumentation/mysql.js').activate();
   require('./opentracing').activate();
 };
 
@@ -80,6 +82,7 @@ exports.deactivate = function() {
   }
 
   require('./opentracing').deactivate();
+  require('./instrumentation/mysql.js').deactivate();
   require('./instrumentation/kafka.js').deactivate();
   require('./instrumentation/mongodb.js').deactivate();
   require('./instrumentation/elasticsearch.js').deactivate();
