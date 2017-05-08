@@ -1,5 +1,8 @@
 # Changelog
 
+## Unreleased
+ - Support tracing for the mysql module.
+
 ## 1.24.0
  - Collect healthcheck results.
 

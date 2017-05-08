@@ -18,8 +18,9 @@ node_js:
   - v7
 
 before_script:
-  - docker-compose up -d
-  - sleep 10
+  - sudo /etc/init.d/mysql stop
+  - docker-compose kill && docker-compose rm -f && docker-compose up -d
+  - sleep 45
 
 after_failure:
   - docker ps
@@ -31,6 +32,11 @@ env:
     - MONGODB=127.0.0.1:27017
     - ZOOKEEPER=127.0.0.1:2181
     - KAFKA=127.0.0.1:9092
+    - MYSQL_HOST=127.0.0.1
+    - MYSQL_PORT=3306
+    - MYSQL_USER=root
+    - MYSQL_PW=nodepw
+    - MYSQL_DB=nodedb
     - CXX=g++-4.8
 
 notifications:

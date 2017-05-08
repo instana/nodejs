@@ -18,7 +18,8 @@
     "dev-http-proxy": "APP_PORT=3457 UPSTREAM_PORT=3456 TRACING_ENABLED=true node test/apps/expressProxy | bunyan",
     "dev-http-elasticsearch": "APP_PORT=3458 TRACING_ENABLED=true node test/apps/expressElasticsearch | bunyan",
     "dev-http-mongodb": "APP_PORT=3459 TRACING_ENABLED=true node test/apps/expressMongodb | bunyan",
-    "dev-http-kafka-producer": "APP_PORT=3460 TRACING_ENABLED=true node test/apps/expressKafkaProducer | bunyan"
+    "dev-http-kafka-producer": "APP_PORT=3460 TRACING_ENABLED=true node test/apps/expressKafkaProducer | bunyan",
+    "dev-http-mysql": "APP_PORT=3461 TRACING_ENABLED=true node test/apps/expressMysql | bunyan"
   },
   "repository": {
     "type": "git",
@@ -65,6 +66,7 @@
     "mocha": "2.3.3",
     "mongodb": "2.2.9",
     "morgan": "^1.8.1",
+    "mysql": "^2.13.0",
     "proxyquire": "1.7.3",
     "request": "2.74.0",
     "request-promise": "4.1.1",

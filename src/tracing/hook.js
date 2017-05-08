@@ -64,6 +64,10 @@ exports.postAndDestroySimulated = function(uid) {
   delete handleData[uid];
 };
 
+exports.isUidExisting = function isUidExisting(uid) {
+  return uid in handleData;
+};
+
 exports.preAsync = function pre(uid) {
   active = uid;
 };

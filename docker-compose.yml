@@ -25,3 +25,16 @@ services:
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
+
+  mysql:
+    image: mysql:8.0.1
+    ports:
+      - 3306:3306
+    environment:
+      MYSQL_ROOT_PASSWORD: nodepw
+      MYSQL_DATABASE: nodedb
+      MYSQL_USER: node
+      MYSQL_PASSWORD: nodepw
+      MYSQL_ROOT_HOST: 0.0.0.0
+    volumes:
+      - ./test/mysqlConfig:/etc/mysql/conf.d
