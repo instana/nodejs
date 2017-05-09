@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.25.0
  - Support tracing for the mysql module.
 
 ## 1.24.0
