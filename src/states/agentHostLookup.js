@@ -27,11 +27,7 @@ module.exports = {
 
 
 function enter(ctx) {
-  let agentHost = '127.0.0.1';
-
-  if (agentOpts.host) {
-    agentHost = agentOpts.host
-  }
+  var agentHost = agentOpts.host;
 
   checkHost(agentHost, function onCheckHost(localhostCheckErr) {
     if (!localhostCheckErr) {
