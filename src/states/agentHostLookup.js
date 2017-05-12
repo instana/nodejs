@@ -37,7 +37,8 @@ function enter(ctx) {
     }
 
     logger.debug(
-      'agentHost:%s is not running the agent. Trying default gateway...',
+      '%s:%s is not running the agent. Trying default gateway...',
+      agentHost,
       agentOpts.port,
       {error: localhostCheckErr}
     );
@@ -49,8 +50,9 @@ function enter(ctx) {
           {error: getDefaultGatewayErr}
         );
         logger.warn(
-          'Agent cannot be contacted via localhost and default gateway cannot be determined. ' +
+          'Agent cannot be contacted via %s and default gateway cannot be determined. ' +
             'Scheduling reattempt of agent host lookup in %s millis.',
+          agentHost,
           retryTimeoutMillis
         );
         setTimeout(enter, retryTimeoutMillis, ctx);
@@ -70,8 +72,9 @@ function enter(ctx) {
           {error: defaultGatewayCheckErr}
         );
         logger.warn(
-          'Agent cannot be contacted via localhost nor via default gateway %s. ' +
+          'Agent cannot be contacted via %s nor via default gateway %s. ' +
             'Scheduling reattempt of agent host lookup in %s millis.',
+          agentHost,
           defaultGateway,
           retryTimeoutMillis
         );

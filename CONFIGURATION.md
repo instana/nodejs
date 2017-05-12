@@ -8,8 +8,8 @@
 	- [Bunyan Parent Logger](#bunyan-parent-logger)
 	- [Log Level Configuration](#log-level-configuration)
 - [Agent Communication](#agent-communication)
-	- [Agent Port](#agent-port)
 	- [Agent Host](#agent-host)
+	- [Agent Port](#agent-port)
 	- [Agent Name](#agent-name)
 
 <!-- /TOC -->
@@ -58,6 +58,24 @@ require('instana-nodejs-sensor')({
 ```
 
 ## Agent Communication
+
+### Agent Host
+The sensor tries to communicate with the Instana agent via IP `127.0.0.1` and as a fallback via the host's default gateway. Should the agent not be available under either of these IPs, e.g. due to iptables or other networking tricks, you can use the `agentHost` option to use a custom IP.
+
+```javascript
+require('instana-nodejs-sensor')({
+  agentHost: '::1' // use IPv6 to contact via localhost
+});
+```
+
+Or leverage an environment variable:
+
+```javascript
+require('instana-nodejs-sensor')({
+  agentHost: process.env.INSTANA_AGENT_IP
+});
+```
+
 ### Agent Port
 The sensor tries to communicate with the Instana Agent via port `42699`. Should the port have been changed, you can use the `agentPort` option to change the port.
 
@@ -66,25 +84,6 @@ require('instana-nodejs-sensor')({
   agentPort: 42699
 });
 ```
-
-
-### Agent Host
-The sensor tries to communicate with the Instana Agent on host with IP `127.0.0.1`. Should the IP have been changed, you can use the `agentHost` option to change the host-ip.
-
-```javascript
-require('instana-nodejs-sensor')({
-  agentHost: '::1' // allow IPv6
-});
-```
-
-or setting per environment variable, e.g. 
-
-```javascript
-require('instana-nodejs-sensor')({
-  agentHost: process.env.INSTANA_HOST_IP
-});
-```
-or
 
 ### Agent Name
 This sensor communicates with the Instana Agent via HTTP. While doing so, the Node.js sensor validates the Instana Agent's `Server` response header. Should you have changed the `Server` name, use the `agentName` option to adjust the sensor's validation rules.

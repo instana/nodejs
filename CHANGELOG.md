@@ -1,5 +1,8 @@
 # Changelog
 
+## Unreleased
+ - Allow configuration of agent host address to support environments in which iptables or other networking tricks are used. Contributed by @lowsky. Thank you!
+
 ## 1.25.0
  - Support tracing for the mysql module.
 
@@ -27,7 +30,7 @@
  - The Node.js tracing sensor on the agent side can be stopped. This will result in 404 errors which we should not log.
 
 ## 1.20.2
- - Upgrade event-loop-lag because of security vulnerabilities in its dependency tree. Contributed from @jamessharp. Thank you!
+ - Upgrade event-loop-lag because of security vulnerabilities in its dependency tree. Contributed by @jamessharp. Thank you!
 
 ## 1.20.1
  - Source file retrieval is often broken. After discussions, we decided to relax the checks to only allow transmission of `*.js` files without validation of the location of the file.
