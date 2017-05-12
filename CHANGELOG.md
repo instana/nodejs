@@ -2,6 +2,7 @@
 
 ## Unreleased
  - Allow configuration of agent host address to support environments in which iptables or other networking tricks are used. Contributed by @lowsky. Thank you!
+ - Upgrade opentracing to 0.14.0.
 
 ## 1.25.0
  - Support tracing for the mysql module.
