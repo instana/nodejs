@@ -9,6 +9,9 @@ exports.agentUuid = undefined;
 
 
 exports.init = function init(config) {
+  if (config.agentHost) {
+    exports.host = config.agentHost;
+  }
   if (config.agentPort) {
     exports.port = config.agentPort;
   }

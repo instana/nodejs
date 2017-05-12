@@ -12,6 +12,8 @@ var logger = require('../logger').getLogger('agentHostLookup');
 // when the agent and sensor are running on the same host outside any container,
 // the host will probably be 127.0.0.1.
 //
+// A custom host can be set via agent options
+//
 // The host differs, when the sensor is running inside a Docker container and the
 // agent is running on the host.
 
@@ -25,15 +27,21 @@ module.exports = {
 
 
 function enter(ctx) {
-  checkHost('127.0.0.1', function onCheckHost(localhostCheckErr) {
+  let agentHost = '127.0.0.1';
+
+  if (agentOpts.host) {
+    agentHost = agentOpts.host
+  }
+
+  checkHost(agentHost, function onCheckHost(localhostCheckErr) {
     if (!localhostCheckErr) {
-      setAgentHost('127.0.0.1');
+      setAgentHost(agentHost);
       ctx.transitionTo('unannounced');
       return;
     }
 
     logger.debug(
-      '127.0.0.1:%s is not running the agent. Trying default gateway...',
+      'agentHost:%s is not running the agent. Trying default gateway...',
       agentOpts.port,
       {error: localhostCheckErr}
     );
