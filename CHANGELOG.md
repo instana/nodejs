@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.26.1
  - OpenTracing is broken in version 0.14.0 and sensor support is incompatible.
 
 ## 1.26.0
