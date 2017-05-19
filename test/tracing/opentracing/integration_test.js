@@ -42,8 +42,6 @@ describe('tracing/opentracing/integration', function() {
       return utils.retry(function() {
         return agentStubControls.getSpans()
         .then(function(spans) {
-          expect(spans).to.have.lengthOf(3);
-
           utils.expectOneMatching(spans, function(span) {
             expect(span.n).to.equal('node.http.server');
             expect(span.f.e).to.equal(String(expressOpentracingControls.getPid()));
@@ -71,6 +69,8 @@ describe('tracing/opentracing/integration', function() {
             expect(span.data.sdk.name).to.equal('auth');
             expect(span.data.sdk.type).to.equal('local');
           });
+
+          expect(spans).to.have.lengthOf(3);
         });
       });
     });

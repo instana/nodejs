@@ -22,7 +22,9 @@ app.get('/', function(req, res) {
 });
 
 app.get('/withOpentracing', function(req, res) {
+  log('########################## Start span!');
   var serviceSpan = tracer.startSpan('service');
+  log('########################## Started span:', serviceSpan)
   serviceSpan.setTag(opentracing.Tags.SPAN_KIND, opentracing.Tags.SPAN_KIND_RPC_SERVER);
   var authSpan = tracer.startSpan('auth', {childOf: serviceSpan});
   authSpan.finish();

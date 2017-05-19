@@ -1,10 +1,10 @@
 'use strict';
 
 var instanaOpentracing = require('../../../src/tracing/opentracing');
-var setupApiCompatibilityTest = require('opentracing/test/api_compatibility');
+var apiCompatibilityChecks = require('opentracing/lib/test/api_compatibility').apiCompatibilityChecks;
 
 describe('tracing/opentracing/opentracingApi', function() {
-  setupApiCompatibilityTest(instanaOpentracing.createTracer, {
+  apiCompatibilityChecks(instanaOpentracing.createTracer, {
     checkBaggageValues: true
   });
 });

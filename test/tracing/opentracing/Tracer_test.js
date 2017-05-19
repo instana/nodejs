@@ -1,6 +1,6 @@
 'use strict';
 
-var opentracing = require('../../../src/tracing/opentracing/opentracingImplementationProvider');
+var opentracing = require('opentracing');
 var Tracer = require('../../../src/tracing/opentracing/Tracer');
 var expect = require('chai').expect;
 

@@ -1,6 +1,6 @@
 'use strict';
 
-var opentracing = require('./opentracingImplementationProvider');
+var opentracing = require('opentracing');
 var constants = require('../constants');
 var Span = require('./Span');
 

@@ -1,5 +1,8 @@
 # Changelog
 
+## Unreleased
+ - OpenTracing is broken in version 0.14.0 and sensor support is incompatible.
+
 ## 1.26.0
  - Allow configuration of agent host address to support environments in which iptables or other networking tricks are used. Contributed by @lowsky. Thank you!
  - Upgrade opentracing to 0.14.0.
