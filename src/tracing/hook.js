@@ -35,8 +35,6 @@ exports.initAsync = function init(uid) {
   handleData[uid] = {
     uid: uid,
     parentUid: active,
-    parentHandle: handleData[active],
-
     spanId: null,
     parentSpanId: parentHandle.spanId || parentHandle.parentSpanId,
     traceId: parentHandle.traceId,
