@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.26.2
  - Parent handle in hooks is unused and can result in memory leaks.
 
 ## 1.26.1
