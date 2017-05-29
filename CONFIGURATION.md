@@ -14,6 +14,13 @@
 
 <!-- /TOC -->
 
+## Installation
+Install the agent into your Node Application using the following
+```javascript
+npm install --save instana-nodejs-sensor
+```
+
+
 ## Tracing
 The Tracing feature is enabled by default. To disable it, pass the following option to the initialization function.
 
