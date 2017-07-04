@@ -1,5 +1,8 @@
 # Changelog
 
+## Unreleased
+ - Node.js v8 tracing is not yet possible. Automatically disable tracing when running within Node.js v8.
+
 ## 1.26.2
  - Parent handle in hooks is unused and can result in memory leaks.
 

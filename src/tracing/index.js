@@ -55,7 +55,7 @@ function checkPrerequisites(config) {
 
 
 exports.supportsAsyncWrap = function supportsAsyncWrap(version) {
-  return semver.satisfies(version, '^4.5 || ^5.10 || >=6.0.0');
+  return semver.satisfies(version, '^4.5 || ^5.10 || >=6.0.0 <= 7.0.0');
 };
 
 
