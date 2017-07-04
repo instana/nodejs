@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.26.3
  - Node.js v8 tracing is not yet possible. Automatically disable tracing when running within Node.js v8.
 
 ## 1.26.2
