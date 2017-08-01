@@ -9,15 +9,19 @@ Monitor your Node.js applications with Instana!
 
 ---
 
-<!-- TOC depthFrom:2 depthTo:6 withLinks:1 updateOnSave:1 orderedList:0 -->
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+
 
 - [Installation and Usage](#installation-and-usage)
 - [Garbage Collection and Event Loop Information](#garbage-collection-and-event-loop-information)
 - [OpenTracing](#opentracing)
-	- [Connecting OpenTracing spans to Instana spans](#connecting-opentracing-spans-to-instana-spans)
-	- [Limitations](#limitations)
+  - [Connecting OpenTracing spans to Instana spans](#connecting-opentracing-spans-to-instana-spans)
+  - [Limitations](#limitations)
+- [FAQ](#faq)
+  - [How can the Node.js sensor be disabled for (local) development?](#how-can-the-nodejs-sensor-be-disabled-for-local-development)
 
-<!-- /TOC -->
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
 
 ## Installation and Usage
@@ -116,3 +120,22 @@ app.listen(300, () => {
 The Instana Node.js sensor does not yet have support for OpenTracing binary carriers. This OpenTracing implementation will silently ignore OpenTracing binary carrier objects.
 
 Care should also be taken with OpenTracing baggage items. Baggage items are meta data which is transported via carrier objects across network boundaries. Furthermore, this meta data is inherited by child spans (and their child spans…). This can produce some overhead. We recommend to completely avoid the OpenTracing baggage API.
+
+## FAQ
+
+### How can the Node.js sensor be disabled for (local) development?
+The easiest way to disable the Node.js sensor for development is to use environment variables. The Express framework popularized the environment variable `NODE_ENV` for this purpose, which we recommend to use for this purpose. Load the Node.js sensor in the following way:
+
+```javascript
+if (process.env.NODE_ENV !== 'development') {
+  require('instana-nodejs-sensor')();
+}
+```
+
+Next, start your application locally with the `NODE_ENV` variable set to `development`. Example:
+
+```
+export NODE_ENV=development
+# -or-
+NODE_ENV=development node myApp.js
+```
