@@ -99,7 +99,8 @@ function onStarted(event) {
         command: event.commandName,
         service: host + ':' + port,
         namespace: database + '.' + collection,
-        query: event.command.filter || event.command.query
+        filter: event.command.filter,
+        query: event.command.query
       }
     }
   };

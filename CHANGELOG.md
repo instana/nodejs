@@ -1,5 +1,8 @@
 # Changelog
 
+## Unreleased
+ - MongoDB tracing writes filter information into the wrong property.
+
 ## 1.26.3
  - Node.js v8 tracing is not yet possible. Automatically disable tracing when running within Node.js v8.
 

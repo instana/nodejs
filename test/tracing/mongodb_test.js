@@ -88,7 +88,7 @@ describe('tracing/mongodb', function() {
             expect(span.data.mongo.command).to.equal('find');
             expect(span.data.mongo.service).to.equal(process.env.MONGODB);
             expect(span.data.mongo.namespace).to.equal('myproject.mydocs');
-            expect(span.data.mongo.query).to.deep.equal({
+            expect(span.data.mongo.filter).to.deep.equal({
               bla: 'blub'
             });
           });
@@ -140,7 +140,7 @@ describe('tracing/mongodb', function() {
             expect(span.data.mongo.command).to.equal('find');
             expect(span.data.mongo.service).to.equal(process.env.MONGODB);
             expect(span.data.mongo.namespace).to.equal('myproject.mydocs');
-            expect(span.data.mongo.query).to.deep.equal({});
+            expect(span.data.mongo.filter).to.deep.equal({});
           });
 
           utils.expectOneMatching(spans, function(span) {
