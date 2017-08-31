@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.26.4
  - MongoDB tracing writes filter information into the wrong property.
 
 ## 1.26.3
