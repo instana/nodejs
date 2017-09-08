@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.26.5
  - URL parsing results in measurable overhead in HTTP server tracing.
 
 ## 1.26.4
