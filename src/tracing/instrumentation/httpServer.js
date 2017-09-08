@@ -1,8 +1,8 @@
 'use strict';
 
 var coreHttpModule = require('http');
-var url = require('url');
 
+var discardUrlParameters = require('../../util/url').discardUrlParameters;
 var tracingConstants = require('../constants');
 var transmission = require('../transmission');
 var tracingUtil = require('../tracingUtil');
@@ -64,13 +64,11 @@ function requestListener(req, res) {
     res.setHeader('Server-Timing', 'ibs_' + traceId + '=1');
   }
 
-  var parsedUrl = url.parse(req.url);
-
   res.on('finish', function() {
     span.data = {
       http: {
         method: req.method,
-        url: parsedUrl.pathname,
+        url: discardUrlParameters(req.url),
         status: res.statusCode,
         host: req.headers.host
       }

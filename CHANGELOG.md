@@ -1,5 +1,8 @@
 # Changelog
 
+## Unreleased
+ - URL parsing results in measurable overhead in HTTP server tracing.
+
 ## 1.26.4
  - MongoDB tracing writes filter information into the wrong property.
 
