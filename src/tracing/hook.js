@@ -18,7 +18,7 @@ var handleDefaults = {
   containsExitSpan: false
 };
 
-exports.init = function(config) {
+exports.init = function init(config) {
   stackTraceLength = config.tracing.stackTraceLength != null ? config.tracing.stackTraceLength : 10;
   active = null;
   asyncHook.addHooks({
@@ -30,7 +30,7 @@ exports.init = function(config) {
   asyncHook.enable();
 };
 
-exports.initAsync = function init(uid) {
+exports.initAsync = function initAsync(uid) {
   var parentHandle = handleData[active] || handleDefaults;
   handleData[uid] = {
     uid: uid,
@@ -43,7 +43,7 @@ exports.initAsync = function init(uid) {
   };
 };
 
-exports.initAndPreSimulated = function() {
+exports.initAndPreSimulated = function initAndPreSimulated() {
   var uid = 'sim-' + simulatedUidCounter++;
   exports.initAsync(uid);
   exports.preAsync(uid);
@@ -55,7 +55,7 @@ exports.initAndPreSimulated = function() {
   return uid;
 };
 
-exports.postAndDestroySimulated = function(uid) {
+exports.postAndDestroySimulated = function postAndDestroySimulated(uid) {
   if (active === uid) {
     active = null;
   }
