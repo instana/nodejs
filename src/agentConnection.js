@@ -38,7 +38,7 @@ exports.announceNodeSensor = function announceNodeSensor(cb) {
   }
 
   var payloadStr = JSON.stringify(payload);
-  var contentLength = payloadStr.length + paddingForInodeAndFileDescriptor;
+  var contentLength = Buffer.from(payloadStr, 'utf8').length + paddingForInodeAndFileDescriptor;
 
   var req = http.request({
     host: agentOpts.host,
@@ -89,15 +89,15 @@ exports.announceNodeSensor = function announceNodeSensor(cb) {
     // Ensure that the payload length matches the length transmitted via the
     // Content-Length header.
     payloadStr = JSON.stringify(payload);
-    if (payloadStr.length < contentLength) {
-      var missingChars = contentLength - payloadStr.length;
+    var payloadStrBufferLength = Buffer.from(payloadStr, 'utf8').length;
+    if (payloadStrBufferLength < contentLength) {
+      var missingChars = contentLength - payloadStrBufferLength;
       for (var i = 0; i < missingChars; i++) {
         payload.spacer += ' ';
       }
     }
-    payloadStr = JSON.stringify(payload);
 
-    req.write(payloadStr, 'utf8');
+    req.write(Buffer.from(JSON.stringify(payload), 'utf8'));
     req.end();
   });
 };
@@ -194,6 +194,8 @@ function sendData(path, data, cb, ignore404) {
 
   var payload = JSON.stringify(data);
   logger.debug({payload: data}, 'Sending payload to %s', path);
+  // manually turn into a buffer to correctly identify content-length
+  payload = Buffer.from(payload, 'utf8');
 
   var req = http.request({
     host: agentOpts.host,
@@ -231,6 +233,6 @@ function sendData(path, data, cb, ignore404) {
     cb(new Error('Send data to agent (path: ' + path + ') request failed: ' + err.message));
   });
 
-  req.write(payload, 'utf8');
+  req.write(payload);
   req.end();
 }

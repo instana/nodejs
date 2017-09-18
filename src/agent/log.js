@@ -12,7 +12,7 @@ module.exports = exports = function log(logLevel, message, stackTrace) {
     payload.st = stackTrace.trim();
   }
 
-  payload = JSON.stringify(payload);
+  payload = Buffer.from(JSON.stringify(payload), 'utf8');
 
   var req = http.request({
     host: agentOpts.host,
@@ -32,7 +32,7 @@ module.exports = exports = function log(logLevel, message, stackTrace) {
   req.setTimeout(agentOpts.requestTimeout, swallow);
   req.on('error', swallow);
 
-  req.write(payload, 'utf8');
+  req.write(payload);
   req.end();
 };
 
