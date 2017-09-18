@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.26.6
  - Encoding in communication between sensor and agent is only guaranteed via Node.js default opts.
  - Transmission of data to agents will fail whenever a character is being transmitted that needs more than one byte.
 
