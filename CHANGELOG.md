@@ -1,5 +1,8 @@
 # Changelog
 
+## Unreleased
+ - Encoding in communication between sensor and agent is only guaranteed via Node.js default opts.
+
 ## 1.26.5
  - URL parsing results in measurable overhead in HTTP server tracing.
 

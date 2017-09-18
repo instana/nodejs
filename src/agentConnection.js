@@ -48,7 +48,7 @@ exports.announceNodeSensor = function announceNodeSensor(cb) {
     agent: http.agent,
     headers: {
       'Accept': 'application/json',
-      'Content-Type': 'application/json',
+      'Content-Type': 'application/json; charset=UTF-8',
       'Content-Length': contentLength
     }
   }, function(res) {
@@ -97,7 +97,7 @@ exports.announceNodeSensor = function announceNodeSensor(cb) {
     }
     payloadStr = JSON.stringify(payload);
 
-    req.write(payloadStr);
+    req.write(payloadStr, 'utf8');
     req.end();
   });
 };
@@ -202,7 +202,7 @@ function sendData(path, data, cb, ignore404) {
     method: 'POST',
     agent: http.agent,
     headers: {
-      'Content-Type': 'application/json',
+      'Content-Type': 'application/json; charset=UTF-8',
       'Content-Length': payload.length
     }
   }, function(res) {
@@ -231,6 +231,6 @@ function sendData(path, data, cb, ignore404) {
     cb(new Error('Send data to agent (path: ' + path + ') request failed: ' + err.message));
   });
 
-  req.write(payload);
+  req.write(payload, 'utf8');
   req.end();
 }
