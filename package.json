@@ -41,7 +41,7 @@
   "dependencies": {
     "bunyan": "^1.5.1",
     "event-loop-lag": "1.2.0",
-    "semver": "5.3.0",
+    "semver": "5.4.1",
     "shimmer": "1.1.0",
     "opentracing": "^0.14.1"
   },

@@ -1,5 +1,8 @@
 # Changelog
 
+## Unreleased
+ - Check for supported Node.js tracing versions marks v7 as unsupported.
+
 ## 1.26.7
  - Data transmission is broken in Node.js 0.12.
 
