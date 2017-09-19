@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.26.8
  - Check for supported Node.js tracing versions marks v7 as unsupported.
 
 ## 1.26.7
