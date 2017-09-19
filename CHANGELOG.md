@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.26.7
  - Data transmission is broken in Node.js 0.12.
 
 ## 1.26.6 (only released under `next` tag)
