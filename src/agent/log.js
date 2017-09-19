@@ -1,8 +1,8 @@
 'use strict';
 
-var http = require('../http');
-
+var buffer = require('../util/buffer');
 var agentOpts = require('./opts');
+var http = require('../http');
 
 module.exports = exports = function log(logLevel, message, stackTrace) {
   var payload = {
@@ -12,7 +12,7 @@ module.exports = exports = function log(logLevel, message, stackTrace) {
     payload.st = stackTrace.trim();
   }
 
-  payload = Buffer.from(JSON.stringify(payload), 'utf8');
+  payload = buffer.fromString(JSON.stringify(payload), 'utf8');
 
   var req = http.request({
     host: agentOpts.host,

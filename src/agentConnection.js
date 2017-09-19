@@ -6,6 +6,7 @@ var fs = require('fs');
 var logger = require('./logger').getLogger('agentConnection');
 var atMostOnce = require('./util/atMostOnce');
 var agentOpts = require('./agent/opts');
+var buffer = require('./util/buffer');
 var pidStore = require('./pidStore');
 var cmdline = require('./cmdline');
 var http = require('./http');
@@ -38,7 +39,7 @@ exports.announceNodeSensor = function announceNodeSensor(cb) {
   }
 
   var payloadStr = JSON.stringify(payload);
-  var contentLength = Buffer.from(payloadStr, 'utf8').length + paddingForInodeAndFileDescriptor;
+  var contentLength = buffer.fromString(payloadStr, 'utf8').length + paddingForInodeAndFileDescriptor;
 
   var req = http.request({
     host: agentOpts.host,
@@ -89,7 +90,7 @@ exports.announceNodeSensor = function announceNodeSensor(cb) {
     // Ensure that the payload length matches the length transmitted via the
     // Content-Length header.
     payloadStr = JSON.stringify(payload);
-    var payloadStrBufferLength = Buffer.from(payloadStr, 'utf8').length;
+    var payloadStrBufferLength = buffer.fromString(payloadStr, 'utf8').length;
     if (payloadStrBufferLength < contentLength) {
       var missingChars = contentLength - payloadStrBufferLength;
       for (var i = 0; i < missingChars; i++) {
@@ -97,7 +98,7 @@ exports.announceNodeSensor = function announceNodeSensor(cb) {
       }
     }
 
-    req.write(Buffer.from(JSON.stringify(payload), 'utf8'));
+    req.write(buffer.fromString(JSON.stringify(payload), 'utf8'));
     req.end();
   });
 };
@@ -195,7 +196,7 @@ function sendData(path, data, cb, ignore404) {
   var payload = JSON.stringify(data);
   logger.debug({payload: data}, 'Sending payload to %s', path);
   // manually turn into a buffer to correctly identify content-length
-  payload = Buffer.from(payload, 'utf8');
+  payload = buffer.fromString(payload, 'utf8');
 
   var req = http.request({
     host: agentOpts.host,
