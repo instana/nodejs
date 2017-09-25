@@ -96,6 +96,7 @@ exports.init = function() {
       };
       span.d = Date.now() - span.ts;
       span.error = true;
+      span.ec = 1;
       transmission.addSpan(span);
       hook.postAndDestroySimulated(uid);
     });
@@ -110,6 +111,7 @@ exports.init = function() {
       };
       span.d = Date.now() - span.ts;
       span.error = true;
+      span.ec = 1;
       transmission.addSpan(span);
       hook.postAndDestroySimulated(uid);
     });

@@ -233,6 +233,8 @@ describe('tracing', function() {
             .then(function(spans) {
               utils.expectOneMatching(spans, function(span) {
                 expect(span.n).to.equal('node.http.client');
+                expect(span.error).to.equal(true);
+                expect(span.ec).to.equal(1);
                 expect(span.f.e).to.equal(String(expressProxyControls.getPid()));
                 expect(span.async).to.equal(false);
                 expect(span.data.http.error).to.be.a('string');
@@ -259,6 +261,8 @@ describe('tracing', function() {
 
               utils.expectOneMatching(spans, function(span) {
                 expect(span.n).to.equal('node.http.server');
+                expect(span.error).to.equal(true);
+                expect(span.ec).to.equal(1);
               });
             });
           });

@@ -1,5 +1,8 @@
 # Changelog
 
+## Unreleased
+ - HTTP client spans do not have the error count field `ec` set.
+
 ## 1.26.8
  - Check for supported Node.js tracing versions marks v7 as unsupported.
 
