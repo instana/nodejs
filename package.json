@@ -20,7 +20,7 @@
     "dev-http-mongodb": "APP_PORT=3459 TRACING_ENABLED=true node test/apps/expressMongodb | bunyan",
     "dev-http-kafka-producer": "APP_PORT=3460 TRACING_ENABLED=true node test/apps/expressKafkaProducer | bunyan",
     "dev-http-mysql": "APP_PORT=3461 TRACING_ENABLED=true node test/apps/expressMysql | bunyan",
-    "precommit": "doctoc README.md"
+    "precommit": "doctoc README.md CONFIGURATION.md"
   },
   "repository": {
     "type": "git",

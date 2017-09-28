@@ -1,18 +1,21 @@
 # Configuration
 
-<!-- TOC depthFrom:2 depthTo:6 withLinks:1 updateOnSave:1 orderedList:0 -->
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+
 
 - [Tracing](#tracing)
-	- [Capturing Stack Traces](#capturing-stack-traces)
+  - [Disabling Automatic Tracing](#disabling-automatic-tracing)
+  - [Capturing Stack Traces](#capturing-stack-traces)
 - [Logging](#logging)
-	- [Bunyan Parent Logger](#bunyan-parent-logger)
-	- [Log Level Configuration](#log-level-configuration)
+  - [Bunyan Parent Logger](#bunyan-parent-logger)
+  - [Log Level Configuration](#log-level-configuration)
 - [Agent Communication](#agent-communication)
-	- [Agent Host](#agent-host)
-	- [Agent Port](#agent-port)
-	- [Agent Name](#agent-name)
+  - [Agent Host](#agent-host)
+  - [Agent Port](#agent-port)
+  - [Agent Name](#agent-name)
 
-<!-- /TOC -->
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
 ## Tracing
 The Tracing feature is enabled by default. To disable it, pass the following option to the initialization function.
@@ -21,6 +24,17 @@ The Tracing feature is enabled by default. To disable it, pass the following opt
 require('instana-nodejs-sensor')({
   tracing: {
     enabled: false
+  }
+});
+```
+
+### Disabling Automatic Tracing
+Automatic tracing is enabled by default. To disable it, pass the following option to the initialization function.
+
+```javascript
+require('instana-nodejs-sensor')({
+  tracing: {
+    disableAutomaticTracing: true
   }
 });
 ```

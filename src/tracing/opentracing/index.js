@@ -5,6 +5,13 @@ var opentracing = require('opentracing');
 var isActive = false;
 var tracer;
 var hook;
+var automaticTracingEnabled = false;
+
+
+exports.init = function init(config, _automaticTracingEnabled) {
+  automaticTracingEnabled = _automaticTracingEnabled;
+};
+
 
 exports.createTracer = function createTracer() {
   if (!tracer) {
@@ -32,6 +39,10 @@ exports.deactivate = function deactivate() {
 
 
 exports.getCurrentlyActiveInstanaSpanContext = function getCurrentlyActiveInstanaSpanContext() {
+  if (!automaticTracingEnabled) {
+    return null;
+  }
+
   // Lazy lood hook to ensure that its dependencies will only be loaded when actually necessary.
   if (!hook) {
     hook = require('../hook');

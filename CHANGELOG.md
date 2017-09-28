@@ -2,6 +2,8 @@
 
 ## Unreleased
  - HTTP client spans do not have the error count field `ec` set.
+ - It must be possible to run in manual tracing mode only.
+ - Support OpenTracing usage in Node.js 8.
 
 ## 1.26.8
  - Check for supported Node.js tracing versions marks v7 as unsupported.
