@@ -4,6 +4,7 @@ var instana = require('../../');
 instana({
   agentPort: process.env.AGENT_PORT,
   level: 'info',
+  serviceName: 'theFancyServiceYouWouldntBelieveActuallyExists',
   tracing: {
     enabled: process.env.TRACING_ENABLED === 'true',
     forceTransmissionStartingAt: 1

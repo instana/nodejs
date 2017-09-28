@@ -7,6 +7,7 @@
 - [Tracing](#tracing)
   - [Disabling Automatic Tracing](#disabling-automatic-tracing)
   - [Capturing Stack Traces](#capturing-stack-traces)
+  - [OpenTracing Service Naming](#opentracing-service-naming)
 - [Logging](#logging)
   - [Bunyan Parent Logger](#bunyan-parent-logger)
   - [Log Level Configuration](#log-level-configuration)
@@ -48,6 +49,15 @@ require('instana-nodejs-sensor')({
     enabled: true,
     stackTraceLength: 10
   }
+});
+```
+
+### OpenTracing Service Naming
+Services are a central concept within Instana. Spans and traces are associated to services. To name services when using OpenTracing, you can configure the `serviceName` property.
+
+```javascript
+require('instana-nodejs-sensor')({
+  serviceName: 'shop'
 });
 ```
 

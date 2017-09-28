@@ -48,6 +48,7 @@ describe('tracing/opentracing/integration', function() {
             expect(span.p).to.equal(undefined);
             expect(span.n).to.equal('sdk');
             expect(span.f.e).to.equal(String(expressOpentracingControls.getPid()));
+            expect(span.data.service).to.equal('theFancyServiceYouWouldntBelieveActuallyExists');
             expect(span.data.sdk.name).to.equal('service');
             expect(span.data.sdk.type).to.equal('entry');
           });
@@ -60,6 +61,7 @@ describe('tracing/opentracing/integration', function() {
             expect(span.s).not.to.equal(span.p);
             expect(span.n).to.equal('sdk');
             expect(span.f.e).to.equal(String(expressOpentracingControls.getPid()));
+            expect(span.data.service).to.equal('theFancyServiceYouWouldntBelieveActuallyExists');
             expect(span.data.sdk.name).to.equal('auth');
             expect(span.data.sdk.type).to.equal('local');
           });
@@ -96,6 +98,7 @@ describe('tracing/opentracing/integration', function() {
               expect(span.s).not.to.equal(span.p);
               expect(span.n).to.equal('sdk');
               expect(span.f.e).to.equal(String(expressOpentracingControls.getPid()));
+              expect(span.data.service).to.equal('theFancyServiceYouWouldntBelieveActuallyExists');
               expect(span.data.sdk.name).to.equal('service');
             });
           });

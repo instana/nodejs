@@ -10,6 +10,8 @@ var automaticTracingEnabled = false;
 
 exports.init = function init(config, _automaticTracingEnabled) {
   automaticTracingEnabled = _automaticTracingEnabled;
+
+  require('./Span').init(config);
 };
 
 

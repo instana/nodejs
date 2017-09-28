@@ -4,6 +4,8 @@ var opentracing = require('opentracing');
 var transmission = require('../transmission');
 var tracingUtil = require('../tracingUtil');
 
+// can be set via config
+var serviceName = undefined;
 
 function Span(tracer, name, fields) {
   opentracing.Span.call(this);
@@ -42,6 +44,7 @@ function Span(tracer, name, fields) {
     n: 'sdk',
     stack: tracingUtil.getStackTrace(Span),
     data: {
+      service: serviceName,
       sdk: {
         type: 'local',
         name: name,
@@ -62,7 +65,7 @@ function Span(tracer, name, fields) {
   }
 }
 
-module.exports = Span;
+module.exports = exports = Span;
 
 
 Span.prototype = Object.create(opentracing.Span.prototype);
@@ -168,3 +171,9 @@ function copyBaggage(baggage) {
 
   return copy;
 }
+
+exports.init = function init(config) {
+  if (typeof config.serviceName === 'string' && config.serviceName) {
+    serviceName = config.serviceName;
+  }
+};

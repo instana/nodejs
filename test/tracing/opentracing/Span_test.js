@@ -44,6 +44,7 @@ describe('tracing/opentracing/Span', function() {
     expect(span.n).to.equal('sdk');
     expect(span.stack).to.be.an('array');
     expect(span.data).to.deep.equal({
+      service: undefined,
       sdk: {
         type: 'local',
         name: 'rpc',
