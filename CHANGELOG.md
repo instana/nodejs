@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.27.0
  - HTTP client spans do not have the error count field `ec` set.
  - It must be possible to run in manual tracing mode only.
  - Support OpenTracing usage in Node.js 8.
