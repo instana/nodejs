@@ -7,7 +7,8 @@ instana({
   serviceName: 'theFancyServiceYouWouldntBelieveActuallyExists',
   tracing: {
     enabled: process.env.TRACING_ENABLED === 'true',
-    forceTransmissionStartingAt: 1
+    forceTransmissionStartingAt: 1,
+    disableAutomaticTracing: process.env.DISABLE_AUTOMATIC_TRACING === 'true'
   }
 });
 

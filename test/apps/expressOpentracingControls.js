@@ -21,6 +21,7 @@ exports.registerTestHooks = function(opts) {
     env.AGENT_PORT = agentPort;
     env.APP_PORT = appPort;
     env.TRACING_ENABLED = opts.enableTracing !== false;
+    env.DISABLE_AUTOMATIC_TRACING = opts.disableAutomaticTracing === true;
 
     expressOpentracingApp = spawn('node', [path.join(__dirname, 'expressOpentracing.js')], {
       stdio: config.getAppStdio(),
