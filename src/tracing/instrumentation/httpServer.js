@@ -7,6 +7,7 @@ var tracingConstants = require('../constants');
 var transmission = require('../transmission');
 var tracingUtil = require('../tracingUtil');
 var hook = require('../hook');
+var url = require('url');
 
 var originalCreateServer = coreHttpModule.createServer;
 
@@ -65,10 +66,12 @@ function requestListener(req, res) {
   }
 
   res.on('finish', function() {
+    var urlParts = url.parse(req.url);
     span.data = {
       http: {
         method: req.method,
-        url: discardUrlParameters(req.url),
+        params: urlParts.search,
+        url: urlParts.pathname,
         status: res.statusCode,
         host: req.headers.host
       }
