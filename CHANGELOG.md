@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.27.1
+## Unreleased
  - Add Request query capture & reporting
 
 ## 1.27.0
