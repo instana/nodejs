@@ -76,7 +76,7 @@ describe('tracing', function() {
         });
       });
     });
-    it.only('must properly capture request params', function() {
+    it('must properly capture request params', function() {
       return expressControls.sendBasicRequest({
         method: 'POST',
         path: '/checkout?stan=isalwayswatching&neversleeps',
