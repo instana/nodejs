@@ -2,7 +2,6 @@
 
 var coreHttpModule = require('http');
 
-var discardUrlParameters = require('../../util/url').discardUrlParameters;
 var tracingConstants = require('../constants');
 var transmission = require('../transmission');
 var tracingUtil = require('../tracingUtil');
@@ -65,10 +64,12 @@ function requestListener(req, res) {
   }
 
   res.on('finish', function() {
+    var urlParts = req.url.split('?');
     span.data = {
       http: {
         method: req.method,
-        url: discardUrlParameters(req.url),
+        url: urlParts.shift(),
+        params: urlParts.join('?'),
         status: res.statusCode,
         host: req.headers.host
       }
