@@ -65,10 +65,12 @@ function requestListener(req, res) {
   }
 
   res.on('finish', function() {
+    var urlParts = req.url.split('?');
     span.data = {
       http: {
         method: req.method,
-        url: discardUrlParameters(req.url),
+        url: discardUrlParameters(urlParts.shift()),
+        params: urlParts.join('?'),
         status: res.statusCode,
         host: req.headers.host
       }

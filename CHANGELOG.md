@@ -1,5 +1,8 @@
 # Changelog
 
+## Unreleased
+ - Add Request query capture & reporting
+
 ## 1.27.0
  - HTTP client spans do not have the error count field `ec` set.
  - It must be possible to run in manual tracing mode only.
