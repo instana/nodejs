@@ -76,6 +76,30 @@ describe('tracing', function() {
         });
       });
     });
+    it.only('must properly capture request params', function() {
+      return expressControls.sendBasicRequest({
+        method: 'POST',
+        path: '/checkout?stan=isalwayswatching&neversleeps',
+      })
+      .then(function() {
+        return utils.retry(function() {
+          return agentStubControls.getSpans()
+          .then(function(spans) {
+            utils.expectOneMatching(spans, function(span) {
+              expect(span.n).to.equal('node.http.server');
+              expect(span.async).to.equal(false);
+              expect(span.error).to.equal(false);
+              expect(span.ec).to.equal(0);
+              expect(span.data.http.method).to.equal('POST');
+              expect(span.data.http.url).to.equal('/checkout');
+              expect(span.data.http.params).to.equal('stan=isalwayswatching&neversleeps');
+              expect(span.data.http.status).to.equal(200);
+              expect(span.data.http.host).to.equal('127.0.0.1:3211');
+            });
+          });
+        });
+      });
+    });
 
     it('must translate 5XX status codes to error flags', function() {
       return expressControls.sendRequest({

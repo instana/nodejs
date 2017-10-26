@@ -55,6 +55,13 @@ exports.getPid = function() {
   return expressApp.pid;
 };
 
+exports.sendBasicRequest = function(opts) {
+  return request({
+    method: opts.method,
+    url: 'http://127.0.0.1:' + appPort + opts.path,
+    resolveWithFullResponse: opts.resolveWithFullResponse
+  });
+};
 
 exports.sendRequest = function(opts) {
   opts.responseStatus = opts.responseStatus || 200;
