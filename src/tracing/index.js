@@ -21,7 +21,7 @@ exports.init = function(_config) {
     require('./opentracing').init(config, automaticTracingEnabled);
 
     if (automaticTracingEnabled) {
-      require('./hook').init(config);
+      require('./cls').init(config);
       require('./instrumentation/httpServer.js').init(config);
       require('./instrumentation/httpClient.js').init(config);
       require('./instrumentation/elasticsearch.js').init(config);
@@ -59,20 +59,6 @@ function shouldEnableAutomaticTracing() {
     logger.info('Not enabling automatic tracing as automatic tracing is disabled via config.');
     return false;
   }
-
-  var nodeVersion = process.versions.node;
-  if (!exports.supportsAsyncWrap(nodeVersion)) {
-    logger.warn('The used Node.js version ' + nodeVersion + ' does not support the features required for automatic tracing.');
-    return false;
-  }
-
-  try {
-    require('async-hook');
-  } catch (e) {
-    logger.warn('Could not enable automatic tracing features due to an error while loading async-hook', {error: e});
-    return false;
-  }
-
   return true;
 }
 
