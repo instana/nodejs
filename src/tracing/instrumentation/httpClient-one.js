@@ -6,38 +6,32 @@ var discardUrlParameters = require('../../util/url').discardUrlParameters;
 var tracingConstants = require('../constants');
 var transmission = require('../transmission');
 var tracingUtil = require('../tracingUtil');
+var shimmer = require('shimmer')
 var cls = require('../cls');
 
 var originalRequest = coreHttpModule.request;
 
+var log = require('../../logger');
+var logger = log.getLogger('cls');
+
 var isActive = false;
 
-exports.init = function() {
-  coreHttpModule.request = function request(opts, givenResponseListener) {
-    var clientRequest;
+exports.init = function () {
+  shimmer.wrap(coreHttpModule, 'request', fn => function (options, callback) {
+    if (!isActive) {
+      return fn(options, cls.stanStorage.bind(callback));
+    }
+
+    var ret = null;
     cls.stanStorage.run(() => {
-
-      var parentContext = cls.getActiveContext();
       var context = cls.createContext();
-
-      if (!isActive || context.tracingSuppressed ||
-          parentContext.containsExitSpan || context.traceId == null) {
-        clientRequest = originalRequest.apply(coreHttpModule, arguments);
-
-        if (context.tracingSuppressed) {
-          clientRequest.setHeader(tracingConstants.traceLevelHeaderName, '0');
-        }
-
-        return clientRequest;
-      }
-
       context.containsExitSpan = true;
 
       var completeCallUrl;
-      if (typeof(opts) === 'string') {
-        completeCallUrl = discardUrlParameters(opts);
+      if (typeof(options) === 'string') {
+        completeCallUrl = discardUrlParameters(options);
       } else {
-        completeCallUrl = constructCompleteUrlFromOpts(opts, coreHttpModule);
+        completeCallUrl = constructCompleteUrlFromOpts(options, coreHttpModule);
       }
 
       var span = {
@@ -51,15 +45,20 @@ exports.init = function() {
         ts: Date.now(),
         d: 0,
         n: 'node.http.client',
-        stack: tracingUtil.getStackTrace(request),
+        // stack: tracingUtil.getStackTrace(request),
         data: null
       };
       context.spanId = span.s;
 
-      var responseListener = function responseListener(res) {
+      options.headers[tracingConstants.spanIdHeaderName] = span.s;
+      options.headers[tracingConstants.traceIdHeaderName] = span.t;
+      options.headers[tracingConstants.traceLevelHeaderName] = '1';
+
+      var responseListener = function(res) {
+        logger.info('inside response listener');
         span.data = {
           http: {
-            method: clientRequest.method,
+            method: ret.method,
             url: completeCallUrl,
             status: res.statusCode
           }
@@ -68,30 +67,26 @@ exports.init = function() {
         span.error = res.statusCode >= 500;
         span.ec = span.error ? 1 : 0;
         transmission.addSpan(span);
-        cls.destroyContextByUid(context.uid);
 
-        if (givenResponseListener) {
-          givenResponseListener(res);
+        if (callback) {
+          callback(res);
         }
       };
 
       try {
-        clientRequest = originalRequest.call(coreHttpModule, opts, responseListener);
+        ret = fn(options, responseListener);
       } catch (e) {
         // synchronous exceptions normally indicate failures that are not covered by the
         // listeners. Cleanup immediately.
-        cls.destroyContextByUid(context.uid);
+        logger.info('error caught: %j', e);
         throw e;
       }
 
-      clientRequest.setHeader(tracingConstants.spanIdHeaderName, span.s);
-      clientRequest.setHeader(tracingConstants.traceIdHeaderName, span.t);
-      clientRequest.setHeader(tracingConstants.traceLevelHeaderName, '1');
-
-      clientRequest.addListener('timeout', function() {
+      ret.addListener('timeout', function() {
+        logger.info('inside timeout listener')
         span.data = {
           http: {
-            method: clientRequest.method,
+            method: ret.method,
             url: completeCallUrl,
             error: 'Timeout exceeded'
           }
@@ -100,13 +95,14 @@ exports.init = function() {
         span.error = true;
         span.ec = 1;
         transmission.addSpan(span);
-        cls.destroyContextByUid(context.uid);
       });
 
-      clientRequest.addListener('error', function(err) {
+      ret.addListener('error', function(err) {
+        logger.info('inside error listener: %j', err)
+
         span.data = {
           http: {
-            method: clientRequest.method,
+            method: ret.method,
             url: completeCallUrl,
             error: err.message
           }
@@ -115,13 +111,32 @@ exports.init = function() {
         span.error = true;
         span.ec = 1;
         transmission.addSpan(span);
-        cls.destroyContextByUid(context.uid);
       });
-
     });
-    return clientRequest;
-  };
+    return ret;
+  });
 };
+
+
+// exports.init = function() {
+//   coreHttpModule.request = function request(opts, givenResponseListener) {
+//
+//     var tracingSuppressed = context.tracingSuppressed;
+//     var traceId = context.traceId;
+//     var clientRequest;
+//
+//     if (!isActive || tracingSuppressed || context.containsExitSpan || traceId == null) {
+//       clientRequest = originalRequest.apply(coreHttpModule, arguments);
+//
+//       if (tracingSuppressed) {
+//         clientRequest.setHeader(tracingConstants.traceLevelHeaderName, '0');
+//       }
+//
+//       return clientRequest;
+//     }
+//     return clientRequest;
+//   };
+// };
 
 
 exports.activate = function() {
