@@ -13,80 +13,87 @@ var isActive = false;
 
 exports.init = function() {
   var proto = coreHttpModule.Server && coreHttpModule.Server.prototype;
-  shimmer.wrap(proto, 'emit', exports.shimEmit);
+  shimmer.wrap(proto, 'emit', shimEmit);
 };
 
-exports.shimEmit = function shimEmit(realEmit) {
-  var type = arguments[0];
-  var req = arguments[1];
-  var res = arguments[2];
+function shimEmit(realEmit) {
+  return function() {
+    var type = arguments[0];
+    var req = arguments[1];
+    var res = arguments[2];
 
-  if (type !== 'request' || !isActive) {
-    return realEmit.apply(this, arguments);
-  }
+    var originalThis = this;
+    var originalArgs = arguments;
 
-  var context = cls.createContext();
+    if (type !== 'request' || !isActive) {
+      return realEmit.apply(this, arguments);
+    }
 
-  if (req.headers[tracingConstants.traceLevelHeaderNameLowerCase] === '0') {
-    context.tracingSuppressed = true;
-    return realEmit.apply(this, arguments);
-  }
+    var context = cls.createContext();
 
-  context.tracingSuppressed = false;
+    if (req.headers[tracingConstants.traceLevelHeaderNameLowerCase] === '0') {
+      cls.stanStorage.run(function() {
+        context.tracingSuppressed = true;
+        cls.setActiveContext(context);
+        return realEmit.apply(originalThis, originalArgs);
+      });
+    }
 
-  var spanId = tracingUtil.generateRandomSpanId();
-  var traceId = getExistingTraceId(req, spanId);
-  var span = {
-    s: spanId,
-    t: traceId,
-    p: getExistingSpanId(req),
-    f: tracingUtil.getFrom(),
-    async: false,
-    error: false,
-    ec: 0,
-    ts: Date.now(),
-    d: 0,
-    n: 'node.http.server',
-    stack: [],
-    data: null
-  };
-  context.spanId = spanId;
-  context.traceId = traceId;
+    context.tracingSuppressed = false;
 
-  cls.stanStorage.bindEmitter(req);
-  cls.stanStorage.bindEmitter(res);
-
-  // Handle client / backend eum correlation.
-  if (spanId === traceId) {
-    req.headers['x-instana-t'] = traceId;
-    res.setHeader('Server-Timing', 'ibs_' + traceId + '=1');
-  }
-
-  res.on('finish', function() {
-    var urlParts = req.url.split('?');
-    span.data = {
-      http: {
-        method: req.method,
-        url: discardUrlParameters(urlParts.shift()),
-        params: urlParts.join('?'),
-        status: res.statusCode,
-        host: req.headers.host
-      }
+    var spanId = tracingUtil.generateRandomSpanId();
+    var traceId = getExistingTraceId(req, spanId);
+    var span = {
+      s: spanId,
+      t: traceId,
+      p: getExistingSpanId(req),
+      f: tracingUtil.getFrom(),
+      async: false,
+      error: false,
+      ec: 0,
+      ts: Date.now(),
+      d: 0,
+      n: 'node.http.server',
+      stack: [],
+      data: null
     };
-    span.error = res.statusCode >= 500;
-    span.ec = span.error ? 1 : 0;
-    span.d = Date.now() - span.ts;
-    transmission.addSpan(span);
-  });
+    context.spanId = spanId;
+    context.traceId = traceId;
 
-  var ret = null;
-  cls.stanStorage.run(function() {
-    cls.setActiveContext(context);
-    ret = realEmit.apply(this, arguments);
-  });
+    cls.stanStorage.bindEmitter(req);
+    cls.stanStorage.bindEmitter(res);
 
-  return ret;
-};
+    // Handle client / backend eum correlation.
+    if (spanId === traceId) {
+      req.headers['x-instana-t'] = traceId;
+      res.setHeader('Server-Timing', 'ibs_' + traceId + '=1');
+    }
+
+    res.on('finish', function() {
+      var urlParts = req.url.split('?');
+      span.data = {
+        http: {
+          method: req.method,
+          url: discardUrlParameters(urlParts.shift()),
+          params: urlParts.join('?'),
+          status: res.statusCode,
+          host: req.headers.host
+        }
+      };
+      span.error = res.statusCode >= 500;
+      span.ec = span.error ? 1 : 0;
+      span.d = Date.now() - span.ts;
+      transmission.addSpan(span);
+      cls.destroyContextByUid(context.uid);
+    });
+
+    cls.stanStorage.run(function() {
+      cls.setActiveContext(context);
+      return realEmit.apply(originalThis, originalArgs);
+    });
+  };
+}
+
 
 exports.activate = function() {
   isActive = true;

@@ -19,14 +19,13 @@ exports.init = function() {
       var parentContext = cls.getActiveContext();
       var context = cls.createContext();
 
-      if (!isActive || context.tracingSuppressed ||
+      if (!parentContext || !isActive || context.tracingSuppressed ||
           parentContext.containsExitSpan || context.traceId == null) {
-        clientRequest = originalRequest.apply(coreHttpModule, arguments);
+        clientRequest = originalRequest.call(coreHttpModule, opts, givenResponseListener);
 
         if (context.tracingSuppressed) {
           clientRequest.setHeader(tracingConstants.traceLevelHeaderName, '0');
         }
-
         return clientRequest;
       }
 
