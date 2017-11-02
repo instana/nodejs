@@ -43,6 +43,26 @@ describe.only('tracing/cls', function() {
     expect(newContext.parentSpanId).to.equal('span1');
   });
 
+  it('must validate that context exists by Uid', function() {
+    var parentContext;
+    var childContext;
+    var parentExists = false;
+    var childExists = false;
+
+    cls.stanStorage.run(() => {
+      parentContext = cls.createContext();
+      cls.setActiveContext(parentContext);
+      childContext = cls.createContext();
+      cls.setActiveContext(childContext);
+
+      parentExists = cls.contextExistsByUid(parentContext.uid);
+      childExists = cls.contextExistsByUid(childContext.uid);
+    });
+
+    expect(parentExists).to.equal(true);
+    expect(childExists).to.equal(true);
+  });
+
   it('must transport trace id across handles', function() {
     var parentContext;
     var newContext1;
