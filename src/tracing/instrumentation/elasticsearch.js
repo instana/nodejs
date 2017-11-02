@@ -3,7 +3,7 @@
 var requireHook = require('../../util/requireHook');
 var transmission = require('../transmission');
 var tracingUtil = require('../tracingUtil');
-var hook = require('../hook');
+var cls = require('../cls');
 
 var isActive = false;
 
@@ -43,84 +43,86 @@ function instrumentApi(client, action, info) {
   var original = client[action];
 
   client[action] = function instrumentedAction(params, cb) {
-    var uid = hook.initAndPreSimulated();
-    var traceId = hook.getTraceId(uid);
+    cls.stanStorage.run(() => {
+      var context = cls.createContext();
+      var traceId = context.traceId;
 
-    if (!isActive || hook.isTracingSuppressed(uid) || hook.containsExitSpan(uid) || traceId == null) {
-      return original.apply(client, arguments);
-    }
-
-    hook.markAsExitSpan(uid);
-
-    var span = {
-      s: tracingUtil.generateRandomSpanId(),
-      t: traceId,
-      p: hook.getParentSpanId(uid),
-      f: tracingUtil.getFrom(),
-      async: false,
-      error: false,
-      ec: 0,
-      ts: Date.now(),
-      d: 0,
-      n: 'elasticsearch',
-      stack: tracingUtil.getStackTrace(instrumentedAction),
-      data: {
-        elasticsearch: {
-          action: action,
-          cluster: info.clusterName,
-          index: toStringEsMultiParameter(params.index),
-          type: toStringEsMultiParameter(params.type),
-          stats: toStringEsMultiParameter(params.stats),
-          id: action === 'get' ? params.id : undefined,
-          query: action === 'search' ? JSON.stringify(params) : undefined
-        }
+      if (!isActive || context.tracingSuppressed || context.containsExitSpan || traceId == null) {
+        return original.apply(client, arguments);
       }
-    };
-    hook.setSpanId(uid, span.s);
 
-    if (arguments.length === 2) {
-      return original.call(client, params, function(error, response) {
-        if (error) {
-          onError(error);
-        } else {
-          onSuccess(response);
+      context.containsExitSpan = true;
+
+      var span = {
+        s: tracingUtil.generateRandomSpanId(),
+        t: traceId,
+        p: context.parentSpanId,
+        f: tracingUtil.getFrom(),
+        async: false,
+        error: false,
+        ec: 0,
+        ts: Date.now(),
+        d: 0,
+        n: 'elasticsearch',
+        stack: tracingUtil.getStackTrace(instrumentedAction),
+        data: {
+          elasticsearch: {
+            action: action,
+            cluster: info.clusterName,
+            index: toStringEsMultiParameter(params.index),
+            type: toStringEsMultiParameter(params.type),
+            stats: toStringEsMultiParameter(params.stats),
+            id: action === 'get' ? params.id : undefined,
+            query: action === 'search' ? JSON.stringify(params) : undefined
+          }
         }
+      };
+      context.spanId = span.s;
 
-        return cb.apply(this, arguments);
-      });
-    }
+      if (arguments.length === 2) {
+        return original.call(client, params, function(error, response) {
+          if (error) {
+            onError(error);
+          } else {
+            onSuccess(response);
+          }
 
-    try {
-      return original.call(client, params)
-        .then(onSuccess, function(error) {
-          onError(error);
-          throw error;
+          return cb.apply(this, arguments);
         });
-    } catch (e) {
-      // Immediately cleanup on synchronous errors.
-      hook.postAndDestroySimulated(uid);
-      throw e;
-    }
-
-    function onSuccess(response) {
-      if (response.hits != null && response.hits.total != null) {
-        span.data.elasticsearch.hits = response.hits.total;
       }
-      span.d = Date.now() - span.ts;
-      span.error = false;
-      transmission.addSpan(span);
-      hook.postAndDestroySimulated(uid);
-      return response;
-    }
 
-    function onError(error) {
-      span.d = Date.now() - span.ts;
-      span.error = true;
-      span.ec = 1;
-      span.data.elasticsearch.error = error.message;
-      transmission.addSpan(span);
-      hook.postAndDestroySimulated(uid);
-    }
+      try {
+        return original.call(client, params)
+          .then(onSuccess, function(error) {
+            onError(error);
+            throw error;
+          });
+      } catch (e) {
+        // Immediately cleanup on synchronous errors.
+        cls.destroyContextByUid(context.uid);
+        throw e;
+      }
+
+      function onSuccess(response) {
+        if (response.hits != null && response.hits.total != null) {
+          span.data.elasticsearch.hits = response.hits.total;
+        }
+        span.d = Date.now() - span.ts;
+        span.error = false;
+        transmission.addSpan(span);
+        cls.destroyContextByUid(context.uid);
+        return response;
+      }
+
+      function onError(error) {
+        span.d = Date.now() - span.ts;
+        span.error = true;
+        span.ec = 1;
+        span.data.elasticsearch.error = error.message;
+        transmission.addSpan(span);
+        cls.destroyContextByUid(context.uid);
+      }
+    });
   };
 }
 
