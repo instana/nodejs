@@ -78,6 +78,11 @@ exports.createContext = function createContext() {
     containsExitSpan: parentContext.containsExitSpan
   };
 
+  // Save the created context.
+  exports.stanStorage.run(() => {
+    namespace.set(context.uid, context);
+  })
+
   logger.debug('createContext created: %j', context);
   return context;
 };
@@ -122,6 +127,20 @@ exports.destroyContextByUid = function destroyContextByUid(uid) {
     };
     exports.stanStorage.set(uid, null);
   });
+};
+
+/*
+ * Check if a context exists by Uid
+ *
+ */
+exports.contextExistsByUid = function contextExistsByUid(uid) {
+  var candidate = null;
+
+  exports.stanStorage.run(function() {
+    candidate = exports.stanStorage.get(uid);
+  });
+
+  return candidate ? true : false;
 };
 
 /*
