@@ -5,7 +5,7 @@ var shimmer = require('shimmer');
 var requireHook = require('../../util/requireHook');
 var transmission = require('../transmission');
 var tracingUtil = require('../tracingUtil');
-var hook = require('../hook');
+var cls = require('../cls');
 
 var isActive = false;
 
@@ -39,106 +39,109 @@ function instrumentedQuery(ctx, originalQuery, statementOrOpts, valuesOrCallback
     argsForOriginalQuery.push(optCallback);
   }
 
-  var uid = hook.initAndPreSimulated();
-  var tracingSuppressed = hook.isTracingSuppressed(uid);
-  if (tracingSuppressed || hook.containsExitSpan(uid)) {
-    return originalQuery.apply(ctx, argsForOriginalQuery);
-  }
+  cls.stanStorage.run(() => {
+    var parentContext = cls.getActiveContext();
+    var context = cls.createContext();
 
-  var host;
-  var port;
-  var user;
-  var db;
-  if (ctx.config) {
-    if (ctx.config.connectionConfig) {
-      host = ctx.config.connectionConfig.host;
-      port = ctx.config.connectionConfig.port;
-      user = ctx.config.connectionConfig.user;
-      db = ctx.config.connectionConfig.database;
-    } else {
-      host = ctx.config.host;
-      port = ctx.config.port;
-      user = ctx.config.user;
-      db = ctx.config.database;
+    if (context.tracingSuppressed || context.containsExitSpan) {
+      return originalQuery.apply(ctx, argsForOriginalQuery);
     }
-  }
 
-  hook.markAsExitSpan(uid);
-
-  var spanId = tracingUtil.generateRandomSpanId();
-  var traceId = hook.getTraceId(uid);
-  var parentId = undefined;
-  if (!traceId) {
-    traceId = spanId;
-  } else {
-    parentId = hook.getParentSpanId(uid);
-  }
-
-  var span = {
-    s: spanId,
-    t: traceId,
-    p: parentId,
-    f: tracingUtil.getFrom(),
-    async: false,
-    error: false,
-    ec: 0,
-    ts: Date.now(),
-    d: 0,
-    n: 'mysql',
-    b: {
-      s: 1
-    },
-    stack: tracingUtil.getStackTrace(instrumentedQuery),
-    data: {
-      mysql: {
-        stmt: typeof statementOrOpts === 'string' ? statementOrOpts : statementOrOpts.sql,
-        host: host,
-        port: port,
-        user: user,
-        db: db
+    var host;
+    var port;
+    var user;
+    var db;
+    if (ctx.config) {
+      if (ctx.config.connectionConfig) {
+        host = ctx.config.connectionConfig.host;
+        port = ctx.config.connectionConfig.port;
+        user = ctx.config.connectionConfig.user;
+        db = ctx.config.connectionConfig.database;
+      } else {
+        host = ctx.config.host;
+        port = ctx.config.port;
+        user = ctx.config.user;
+        db = ctx.config.database;
       }
     }
-  };
-  hook.setSpanId(uid, span.s);
 
-  var originalCallback = argsForOriginalQuery[argsForOriginalQuery.length - 1];
-  argsForOriginalQuery[argsForOriginalQuery.length - 1] = function onQueryResult(error) {
-    if (error) {
-      span.ec = 1;
-      span.error = true;
-      span.data.mysql.error = error.message;
+    context.markAsExitSpan = true;
+
+    var spanId = tracingUtil.generateRandomSpanId();
+    var traceId = context.traceId;
+    var parentId = undefined;
+    if (!traceId) {
+      traceId = spanId;
+    } else {
+      parentId = context.parentSpanId;
     }
 
-    span.d = Date.now() - span.ts;
-    transmission.addSpan(span);
-    hook.postAndDestroySimulated(uid);
+    var span = {
+      s: spanId,
+      t: traceId,
+      p: parentId,
+      f: tracingUtil.getFrom(),
+      async: false,
+      error: false,
+      ec: 0,
+      ts: Date.now(),
+      d: 0,
+      n: 'mysql',
+      b: {
+        s: 1
+      },
+      stack: tracingUtil.getStackTrace(instrumentedQuery),
+      data: {
+        mysql: {
+          stmt: typeof statementOrOpts === 'string' ? statementOrOpts : statementOrOpts.sql,
+          host: host,
+          port: port,
+          user: user,
+          db: db
+        }
+      }
+    };
+    context.spanId = span.s;
 
-    if (originalCallback) {
-      return originalCallback.apply(this, arguments);
-    }
-  };
+    var originalCallback = argsForOriginalQuery[argsForOriginalQuery.length - 1];
+    argsForOriginalQuery[argsForOriginalQuery.length - 1] = function onQueryResult(error) {
+      if (error) {
+        span.ec = 1;
+        span.error = true;
+        span.data.mysql.error = error.message;
+      }
 
-  return originalQuery.apply(ctx, argsForOriginalQuery);
+      span.d = Date.now() - span.ts;
+      transmission.addSpan(span);
+      cls.destroyContextByUid(context.uid);
+
+      if (originalCallback) {
+        return originalCallback.apply(this, arguments);
+      }
+    };
+
+    return originalQuery.apply(ctx, argsForOriginalQuery);
+  });
 }
+
 
 function shimGetConnection(original) {
   return function(cb) {
-    var targetContextUid = hook.getCurrentUid();
+    var targetContextUid = cls.getActiveContext().uid;
     return original.call(this, wrappedCallback);
 
     function wrappedCallback() {
-      if (hook.isUidExisting(targetContextUid)) {
-        var originalContextUid = hook.getCurrentUid();
-        hook.preAsync(targetContextUid);
-        hook.initAndPreSimulated();
+      if (cls.contextExistsByUid(targetContextUid)) {
+        var originalContext = cls.getActiveContext();
+        cls.setActiveContext(originContext);
         var result = cb.apply(this, arguments);
-        hook.preAsync(originalContextUid);
+        cls.setActiveContext(originContext);
         return result;
       }
 
       return cb.apply(this, arguments);
     }
-  };
+  }
 }
 
 exports.activate = function() {
