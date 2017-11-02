@@ -78,7 +78,7 @@ exports.createContext = function createContext() {
     containsExitSpan: parentContext.containsExitSpan
   };
 
-  logger.info('createContext created: %j', context);
+  logger.debug('createContext created: %j', context);
   return context;
 };
 
@@ -99,7 +99,7 @@ exports.getActiveContext = function getActiveContext() {
  *
  */
 exports.setActiveContext = function setActiveContext(activeContext) {
-  logger.info('setting active context to: %j', activeContext);
+  logger.debug('setActiveContext: %j', activeContext);
   var namespace = exports.stanStorage;
   namespace.set(activeContext.uid, activeContext);
   namespace.set(activeContextKey, activeContext)
@@ -114,6 +114,7 @@ exports.setActiveContext = function setActiveContext(activeContext) {
  *
  */
 exports.destroyContextByUid = function destroyContextByUid(uid) {
+  logger.debug('destroyContextByUid: %j', activeContext);
   var acId = exports.stanStorage.get(activeContextKey);
   exports.stanStorage.run(function() {
     if (acId == uid) {
@@ -121,6 +122,19 @@ exports.destroyContextByUid = function destroyContextByUid(uid) {
     };
     exports.stanStorage.set(uid, null);
   });
+};
+
+/*
+ * Reset all context.
+ *
+ * Used in test suite to reset any/all context.
+ *
+ * @params: none
+ * @return: none
+ */
+exports.reset = function reset() {
+  logger.debug('Resetting CLS storage.');
+  exports.stanStorage.set(activeContextKey, null);
 };
 
 /*
