@@ -9,81 +9,83 @@ var tracingUtil = require('../tracingUtil');
 var shimmer = require('shimmer');
 var cls = require('../cls');
 
-
-var originalCreateServer = coreHttpModule.createServer;
-
 var isActive = false;
 
-const proto = coreHttpModule.Server && coreHttpModule.Server.prototype
-
 exports.init = function() {
-  shimmer.wrap(proto, 'emit', realEmit => function (type, req, res) {
-    if (type !== 'request' || !isActive) {
-      return realEmit.apply(this, arguments);
-    }
+  var proto = coreHttpModule.Server && coreHttpModule.Server.prototype;
+  shimmer.wrap(proto, 'emit', exports.shimEmit);
+};
 
-    var context = cls.createContext();
+exports.shimEmit = function shimEmit(realEmit) {
+  var type = arguments[0];
+  var req = arguments[1];
+  var res = arguments[2];
 
-    if (req.headers[tracingConstants.traceLevelHeaderNameLowerCase] === '0') {
-      context.tracingSuppressed = true;
-      return realEmit.apply(this, arguments);
-    }
+  if (type !== 'request' || !isActive) {
+    return realEmit.apply(this, arguments);
+  }
 
-    context.tracingSuppressed = false;
+  var context = cls.createContext();
 
-    var spanId = tracingUtil.generateRandomSpanId();
-    var traceId = getExistingTraceId(req, spanId);
-    var span = {
-      s: spanId,
-      t: traceId,
-      p: getExistingSpanId(req),
-      f: tracingUtil.getFrom(),
-      async: false,
-      error: false,
-      ec: 0,
-      ts: Date.now(),
-      d: 0,
-      n: 'node.http.server',
-      stack: [],
-      data: null
+  if (req.headers[tracingConstants.traceLevelHeaderNameLowerCase] === '0') {
+    context.tracingSuppressed = true;
+    return realEmit.apply(this, arguments);
+  }
+
+  context.tracingSuppressed = false;
+
+  var spanId = tracingUtil.generateRandomSpanId();
+  var traceId = getExistingTraceId(req, spanId);
+  var span = {
+    s: spanId,
+    t: traceId,
+    p: getExistingSpanId(req),
+    f: tracingUtil.getFrom(),
+    async: false,
+    error: false,
+    ec: 0,
+    ts: Date.now(),
+    d: 0,
+    n: 'node.http.server',
+    stack: [],
+    data: null
+  };
+  context.spanId = spanId;
+  context.traceId = traceId;
+
+  cls.stanStorage.bindEmitter(req);
+  cls.stanStorage.bindEmitter(res);
+
+  // Handle client / backend eum correlation.
+  if (spanId === traceId) {
+    req.headers['x-instana-t'] = traceId;
+    res.setHeader('Server-Timing', 'ibs_' + traceId + '=1');
+  }
+
+  res.on('finish', function() {
+    var urlParts = req.url.split('?');
+    span.data = {
+      http: {
+        method: req.method,
+        url: discardUrlParameters(urlParts.shift()),
+        params: urlParts.join('?'),
+        status: res.statusCode,
+        host: req.headers.host
+      }
     };
-    context.spanId = spanId;
-    context.traceId = traceId;
-
-    cls.stanStorage.bindEmitter(req);
-    cls.stanStorage.bindEmitter(res);
-
-    // Handle client / backend eum correlation.
-    if (spanId === traceId) {
-      req.headers['x-instana-t'] = traceId;
-      res.setHeader('Server-Timing', 'ibs_' + traceId + '=1');
-    }
-
-    res.on('finish', function() {
-      var urlParts = req.url.split('?');
-      span.data = {
-        http: {
-          method: req.method,
-          url: discardUrlParameters(urlParts.shift()),
-          params: urlParts.join('?'),
-          status: res.statusCode,
-          host: req.headers.host
-        }
-      };
-      span.error = res.statusCode >= 500;
-      span.ec = span.error ? 1 : 0;
-      span.d = Date.now() - span.ts;
-      transmission.addSpan(span);
-    });
-
-    var ret = null;
-    cls.stanStorage.run(() => {
-      cls.setActiveContext(context);
-      ret = realEmit.apply(this, arguments);
-    });
-
-    return ret
+    span.error = res.statusCode >= 500;
+    span.ec = span.error ? 1 : 0;
+    span.d = Date.now() - span.ts;
+    transmission.addSpan(span);
   });
+
+  var ret = null;
+  cls.stanStorage.run(function() {
+    cls.setActiveContext(context);
+    ret = realEmit.apply(this, arguments);
+  });
+
+  return ret;
 };
 
 exports.activate = function() {

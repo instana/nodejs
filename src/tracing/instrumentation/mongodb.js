@@ -59,9 +59,7 @@ function onStarted(event) {
     return;
   }
 
-  cls.stanStorage.run(() => {
-
-    var parentContext = cls.getActiveContext();
+  cls.stanStorage.run(function() {
     var context = cls.createContext();
 
     if (context.tracingSuppressed) {
@@ -113,7 +111,6 @@ function onStarted(event) {
     event.operationId.parentSpanId = span.p;
 
     requests[getUniqueRequestId(event)] = {
-      uid: uid,
       span: span,
       context: context
     };
@@ -135,7 +132,7 @@ function onSucceeded(event) {
   spanData.span.d = Date.now() - spanData.span.ts;
   spanData.span.error = false;
   transmission.addSpan(spanData.span);
-  cls.destroyContextByUid(spanData.context.uid)
+  cls.destroyContextByUid(spanData.context.uid);
 
   cleanup(event);
 }
@@ -156,7 +153,7 @@ function onFailed(event) {
   spanData.span.error = true;
   spanData.span.ec = 1;
   transmission.addSpan(spanData.span);
-  cls.destroyContextByUid(spanData.context.uid)
+  cls.destroyContextByUid(spanData.context.uid);
 
   cleanup(event);
 }

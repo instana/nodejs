@@ -43,7 +43,7 @@ function instrumentApi(client, action, info) {
   var original = client[action];
 
   client[action] = function instrumentedAction(params, cb) {
-    cls.stanStorage.run(() => {
+    cls.stanStorage.run(function() {
       var context = cls.createContext();
       var traceId = context.traceId;
 

@@ -15,8 +15,7 @@ var isActive = false;
 exports.init = function() {
   coreHttpModule.request = function request(opts, givenResponseListener) {
     var clientRequest;
-    cls.stanStorage.run(() => {
-
+    cls.stanStorage.run(function() {
       var parentContext = cls.getActiveContext();
       var context = cls.createContext();
 
@@ -117,7 +116,6 @@ exports.init = function() {
         transmission.addSpan(span);
         cls.destroyContextByUid(context.uid);
       });
-
     });
     return clientRequest;
   };

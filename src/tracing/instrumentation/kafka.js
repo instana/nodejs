@@ -32,7 +32,7 @@ function shimSend(original) {
 
 
 function instrumentedSend(ctx, originalSend, produceRequests, cb) {
-  cls.stanStorage.run(() => {
+  cls.stanStorage.run(function() {
     var context = cls.createContext();
     var args = [produceRequests];
 
@@ -108,14 +108,14 @@ function shimEmit(original) {
       return original.apply(this, arguments);
     }
 
-    cls.stanStorage.run(() => {
+    cls.stanStorage.run(function() {
       var context = cls.createContext();
       context.suppressTracing = false;
 
       var spanId = tracingUtil.generateRandomSpanId();
       var span = {
         s: spanId,
-        t: spanId,
+        t: context.traceId,
         f: tracingUtil.getFrom(),
         async: false,
         error: false,
@@ -132,7 +132,6 @@ function shimEmit(original) {
         }
       };
       context.spanId = spanId;
-      context.traceId = traceId;
 
       try {
         return original.apply(this, arguments);

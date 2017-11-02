@@ -9,8 +9,6 @@ var logger = log.getLogger('cls');
 var stackTraceLength = 0;
 var simulatedUidCounter = 0;
 
-var active = null;
-
 var contextDefaults = {
   spanId: null,
   parentSpanId: null,
@@ -21,7 +19,6 @@ var contextDefaults = {
 
 exports.init = function init(config) {
   stackTraceLength = config.tracing.stackTraceLength != null ? config.tracing.stackTraceLength : 10;
-  active = null;
 };
 
 /*
@@ -30,15 +27,15 @@ exports.init = function init(config) {
  * Usage:
  *   cls.stanStorage.get(key);
  *   cls.stanStorage.set(key);
- *   cls.stanStorage.run(() => {});
+ *   cls.stanStorage.run(function() {});
  *
  */
-const instanaNamespace = 'instana.sensor';
+var instanaNamespace = 'instana.sensor';
 Object.defineProperty(exports, 'stanStorage', {
-  get () {
-    return hooked.getNamespace(instanaNamespace) || hooked.createNamespace(instanaNamespace)
+  get: function() {
+    return hooked.getNamespace(instanaNamespace) || hooked.createNamespace(instanaNamespace);
   }
-})
+});
 
 /*
  * Access the Instana configuration hash.
@@ -47,12 +44,12 @@ Object.defineProperty(exports, 'stanStorage', {
  *   cls.config.suppressTracing;
  *
  */
-const configKey = 'stanConfig';
+var configKey = 'stanConfig';
 Object.defineProperty(exports, 'config', {
-  get () {
-    return exports.stanStorage.get(configKey) || exports.stanStorage.set(configKey, {})
+  get: function() {
+    return exports.stanStorage.get(configKey) || exports.stanStorage.set(configKey, {});
   }
-})
+});
 
 /*
  * Create a new tracing context and inherit from the active context (if
@@ -60,9 +57,8 @@ Object.defineProperty(exports, 'config', {
  *
  * @returns {Hash} Hash representing the tracing context.
  */
-const activeContextKey = 'acKey';
+var activeContextKey = 'acKey';
 exports.createContext = function createContext() {
-
   var namespace = exports.stanStorage;
   var parentContext = namespace.get(activeContextKey) || contextDefaults;
   var parentUid = parentContext && parentContext.parentUid;
@@ -79,9 +75,9 @@ exports.createContext = function createContext() {
   };
 
   // Save the created context.
-  exports.stanStorage.run(() => {
+  exports.stanStorage.run(function() {
     namespace.set(context.uid, context);
-  })
+  });
 
   logger.debug('createContext created: %j', context);
   return context;
@@ -95,7 +91,7 @@ exports.createContext = function createContext() {
  */
 exports.getActiveContext = function getActiveContext() {
   return exports.stanStorage.get(activeContextKey);
-}
+};
 
 /*
  * Set the active context.
@@ -107,7 +103,7 @@ exports.setActiveContext = function setActiveContext(activeContext) {
   logger.debug('setActiveContext: %j', activeContext);
   var namespace = exports.stanStorage;
   namespace.set(activeContext.uid, activeContext);
-  namespace.set(activeContextKey, activeContext)
+  namespace.set(activeContextKey, activeContext);
 
   setTimeout(exports.destroyContextByUid, 60000, activeContext.uid);
   return activeContext;
@@ -119,12 +115,11 @@ exports.setActiveContext = function setActiveContext(activeContext) {
  *
  */
 exports.destroyContextByUid = function destroyContextByUid(uid) {
-  logger.debug('destroyContextByUid: %j', activeContext);
   var acId = exports.stanStorage.get(activeContextKey);
   exports.stanStorage.run(function() {
-    if (acId == uid) {
+    if (acId === uid) {
       exports.stanStorage.set(activeContextKey, null);
-    };
+    }
     exports.stanStorage.set(uid, null);
   });
 };

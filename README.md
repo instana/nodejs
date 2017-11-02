@@ -111,7 +111,7 @@ app.get('/', (req, res) => {
   res.send('OK');
 });
 
-app.listen(300, () => {
+app.listen(300, function() {
   log('Listening on port 3000');
 });
 ```

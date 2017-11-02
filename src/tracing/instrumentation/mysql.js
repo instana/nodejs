@@ -39,8 +39,7 @@ function instrumentedQuery(ctx, originalQuery, statementOrOpts, valuesOrCallback
     argsForOriginalQuery.push(optCallback);
   }
 
-  cls.stanStorage.run(() => {
-    var parentContext = cls.getActiveContext();
+  cls.stanStorage.run(function() {
     var context = cls.createContext();
 
     if (context.tracingSuppressed || context.containsExitSpan) {
@@ -133,15 +132,15 @@ function shimGetConnection(original) {
     function wrappedCallback() {
       if (cls.contextExistsByUid(targetContextUid)) {
         var originalContext = cls.getActiveContext();
-        cls.setActiveContext(originContext);
+        cls.setActiveContext(originalContext);
         var result = cb.apply(this, arguments);
-        cls.setActiveContext(originContext);
+        cls.setActiveContext(originalContext);
         return result;
       }
 
       return cb.apply(this, arguments);
     }
-  }
+  };
 }
 
 exports.activate = function() {

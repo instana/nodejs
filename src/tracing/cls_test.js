@@ -6,13 +6,13 @@ var proxyquire = require('proxyquire');
 var expect = require('chai').expect;
 
 
-describe.only('tracing/cls', function() {
+describe('tracing/cls', function() {
   var cls;
 
   beforeEach(function() {
     // reload to clear vars
     cls = proxyquire('./cls', {});
-    cls.stanStorage.run(() => { cls.reset(); });
+    cls.stanStorage.run(function() { cls.reset(); });
   });
 
   it('must not have an active context initially', function() {
@@ -34,7 +34,7 @@ describe.only('tracing/cls', function() {
     var parentContext;
     var newContext;
 
-    cls.stanStorage.run(() => {
+    cls.stanStorage.run(function() {
       parentContext = cls.createContext();
       parentContext.spanId = 'span1';
       cls.setActiveContext(parentContext);
@@ -49,7 +49,7 @@ describe.only('tracing/cls', function() {
     var parentExists = false;
     var childExists = false;
 
-    cls.stanStorage.run(() => {
+    cls.stanStorage.run(function() {
       parentContext = cls.createContext();
       cls.setActiveContext(parentContext);
       childContext = cls.createContext();
@@ -68,7 +68,7 @@ describe.only('tracing/cls', function() {
     var newContext1;
     var newContext2;
 
-    cls.stanStorage.run(() => {
+    cls.stanStorage.run(function() {
       parentContext = cls.createContext();
       parentContext.traceId = 'traceId1';
       cls.setActiveContext(parentContext);
@@ -87,7 +87,7 @@ describe.only('tracing/cls', function() {
     var intermediateContext;
     var lastContext;
 
-    cls.stanStorage.run(() => {
+    cls.stanStorage.run(function() {
       parentContext = cls.createContext();
       parentContext.spanId = 'span1';
       cls.setActiveContext(parentContext);
@@ -108,7 +108,7 @@ describe.only('tracing/cls', function() {
     var intermediateContext;
     var lastContext;
 
-    cls.stanStorage.run(() => {
+    cls.stanStorage.run(function() {
       parentContext = cls.createContext();
       parentContext.suppressTracing = true;
       cls.setActiveContext(parentContext);
