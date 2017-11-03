@@ -3,7 +3,7 @@
 var expect = require('chai').expect;
 var path = require('path');
 
-var supportsAsyncWrap = require('../../src/tracing/index').supportsAsyncWrap;
+var supportedVersion = require('../../src/tracing/index').supportedVersion;
 var expressControls = require('../apps/expressElasticsearchControls');
 var agentStubControls = require('../apps/agentStubControls');
 var config = require('../config');
@@ -15,7 +15,7 @@ describe('actions/source', function() {
 
   agentStubControls.registerTestHooks();
   expressControls.registerTestHooks({
-    enableTracing: supportsAsyncWrap(process.versions.node)
+    enableTracing: supportedVersion(process.versions.node)
   });
 
   beforeEach(function() {

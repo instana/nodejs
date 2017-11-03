@@ -4,14 +4,14 @@ var expect = require('chai').expect;
 var Promise = require('bluebird');
 var _ = require('lodash');
 
-var supportsAsyncWrap = require('../../src/tracing/index').supportsAsyncWrap;
+var supportedVersion = require('../../src/tracing/index').supportedVersion;
 var expressMongodbControls = require('../apps/expressMongodbControls');
 var agentStubControls = require('../apps/agentStubControls');
 var config = require('../config');
 var utils = require('../utils');
 
 describe('tracing/mongodb', function() {
-  if (!supportsAsyncWrap(process.versions.node)) {
+  if (!supportedVersion(process.versions.node)) {
     return;
   }
 

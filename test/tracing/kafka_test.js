@@ -3,14 +3,14 @@
 var expect = require('chai').expect;
 
 var expressKafkaProducerControls = require('../apps/expressKafkaProducerControls');
-var supportsAsyncWrap = require('../../src/tracing/index').supportsAsyncWrap;
+var supportedVersion = require('../../src/tracing/index').supportedVersion;
 var kafkaConsumerControls = require('../apps/kafkaConsumerControls');
 var agentStubControls = require('../apps/agentStubControls');
 var config = require('../config');
 var utils = require('../utils');
 
 describe('tracing/kafka', function() {
-  if (!supportsAsyncWrap(process.versions.node)) {
+  if (!supportedVersion(process.versions.node)) {
     return;
   }
 

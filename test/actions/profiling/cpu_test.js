@@ -6,7 +6,7 @@ var path = require('path');
 var fs = require('fs');
 
 var expressElasticsearchControls = require('../../apps/expressElasticsearchControls');
-var supportsAsyncWrap = require('../../../src/tracing/index').supportsAsyncWrap;
+var supportedVersion = require('../../../src/tracing/index').supportedVersion;
 var agentStubControls = require('../../apps/agentStubControls');
 var cpu = require('../../../src/actions/profiling/cpu');
 var config = require('../../config');
@@ -55,7 +55,7 @@ describe('actions/profiling/cpu', function() {
 
     agentStubControls.registerTestHooks();
     expressElasticsearchControls.registerTestHooks({
-      enableTracing: supportsAsyncWrap(process.versions.node)
+      enableTracing: supportedVersion(process.versions.node)
     });
 
     beforeEach(function() {

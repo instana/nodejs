@@ -63,8 +63,8 @@ function shouldEnableAutomaticTracing() {
 }
 
 
-exports.supportsAsyncWrap = function supportsAsyncWrap(version) {
-  return semver.satisfies(version, '^4.5 || ^5.10 || >=6 <8');
+exports.supportedVersion = function supportedVersion(version) {
+  return semver.satisfies(version, '^4.5 || ^5.10 || >=6');
 };
 
 
