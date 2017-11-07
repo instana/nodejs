@@ -17,28 +17,17 @@ exports.init = function() {
 };
 
 function shimEmit(realEmit) {
-  return function() {
-    var type = arguments[0];
-    var req = arguments[1];
-    var res = arguments[2];
+  return function(type, req, res) {
+    var suppressedTracing = false;
+    if (req && req.headers && req.headers[tracingConstants.traceLevelHeaderNameLowerCase] === '0') {
+        suppressedTracing = true;
+    }
 
-    var originalThis = this;
-    var originalArgs = arguments;
-
-    if (type !== 'request' || !isActive) {
+    if (type !== 'request' || !isActive || suppressedTracing) {
       return realEmit.apply(this, arguments);
     }
 
     var context = cls.createContext();
-
-    if (req.headers[tracingConstants.traceLevelHeaderNameLowerCase] === '0') {
-      cls.stanStorage.run(function() {
-        context.tracingSuppressed = true;
-        cls.setActiveContext(context);
-        return realEmit.apply(originalThis, originalArgs);
-      });
-    }
-
     context.tracingSuppressed = false;
 
     var spanId = tracingUtil.generateRandomSpanId();
@@ -59,9 +48,6 @@ function shimEmit(realEmit) {
     };
     context.spanId = spanId;
     context.traceId = traceId;
-
-    cls.stanStorage.bindEmitter(req);
-    cls.stanStorage.bindEmitter(res);
 
     // Handle client / backend eum correlation.
     if (spanId === traceId) {
@@ -87,13 +73,20 @@ function shimEmit(realEmit) {
       cls.destroyContextByUid(context.uid);
     });
 
+    cls.stanStorage.bindEmitter(req);
+    cls.stanStorage.bindEmitter(res);
+
+    var origThis = this;
+    var origArgs = arguments;
+    var ret = null;
+
     cls.stanStorage.run(function() {
       cls.setActiveContext(context);
-      return realEmit.apply(originalThis, originalArgs);
+      ret = realEmit.apply(origThis, origArgs);
     });
+    return ret;
   };
 }
-
 
 exports.activate = function() {
   isActive = true;
