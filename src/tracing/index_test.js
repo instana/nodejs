@@ -6,7 +6,7 @@ var expect = require('chai').expect;
 
 var tracing = require('./index');
 
-describe.only('tracing', function() {
+describe('tracing', function() {
   describe('supportedVersion', function() {
     it('must support various Node.js versions', function() {
       expect(tracing.supportedVersion('4.5.0')).to.equal(true);
