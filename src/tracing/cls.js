@@ -84,6 +84,15 @@ exports.createContext = function createContext() {
 };
 
 /*
+ * Create a new context and set it as the active context.
+ *
+ */
+exports.createAndSetActiveContext = function createAndSetActiveContext() {
+  var context = exports.createContext();
+  return exports.setActiveContext(context);
+};
+
+/*
  * Get the active context.
  *
  * @returns {Hash} Hash representing the tracing context.
@@ -91,6 +100,14 @@ exports.createContext = function createContext() {
  */
 exports.getActiveContext = function getActiveContext() {
   return exports.stanStorage.get(activeContextKey);
+};
+
+/*
+ * Determine if we're currently tracing or not.
+ *
+ */
+exports.isTracing = function isTracing() {
+  return exports.stanStorage.get(activeContextKey) ? true : false;
 };
 
 /*
