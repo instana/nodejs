@@ -43,86 +43,84 @@ function instrumentApi(client, action, info) {
   var original = client[action];
 
   client[action] = function instrumentedAction(params, cb) {
-    cls.stanStorage.run(function() {
-      var context = cls.createContext();
-      var traceId = context.traceId;
+    if (!isActive || !cls.isTracing ) {
+      return original.apply(client, arguments);
+    }
 
-      if (!isActive || context.tracingSuppressed || context.containsExitSpan || traceId == null) {
-        return original.apply(client, arguments);
-      }
+    var context = cls.createAndSetActiveContext();
+    context.containsExitSpan = true;
 
-      context.containsExitSpan = true;
-
-      var span = {
-        s: tracingUtil.generateRandomSpanId(),
-        t: traceId,
-        p: context.parentSpanId,
-        f: tracingUtil.getFrom(),
-        async: false,
-        error: false,
-        ec: 0,
-        ts: Date.now(),
-        d: 0,
-        n: 'elasticsearch',
-        stack: tracingUtil.getStackTrace(instrumentedAction),
-        data: {
-          elasticsearch: {
-            action: action,
-            cluster: info.clusterName,
-            index: toStringEsMultiParameter(params.index),
-            type: toStringEsMultiParameter(params.type),
-            stats: toStringEsMultiParameter(params.stats),
-            id: action === 'get' ? params.id : undefined,
-            query: action === 'search' ? JSON.stringify(params) : undefined
-          }
+    var span = {
+      s: tracingUtil.generateRandomSpanId(),
+      t: context.traceId,
+      p: context.parentSpanId,
+      f: tracingUtil.getFrom(),
+      async: false,
+      error: false,
+      ec: 0,
+      ts: Date.now(),
+      d: 0,
+      n: 'elasticsearch',
+      stack: tracingUtil.getStackTrace(instrumentedAction),
+      data: {
+        elasticsearch: {
+          action: action,
+          cluster: info.clusterName,
+          index: toStringEsMultiParameter(params.index),
+          type: toStringEsMultiParameter(params.type),
+          stats: toStringEsMultiParameter(params.stats),
+          id: action === 'get' ? params.id : undefined,
+          query: action === 'search' ? JSON.stringify(params) : undefined
         }
-      };
-      context.spanId = span.s;
+      }
+    };
+    context.spanId = span.s;
 
-      if (arguments.length === 2) {
-        return original.call(client, params, function(error, response) {
-          if (error) {
-            onError(error);
-          } else {
-            onSuccess(response);
-          }
+    cls.stanStorage.bind(cb);
 
-          return cb.apply(this, arguments);
+    if (arguments.length === 2) {
+      return original.call(client, params, function(error, response) {
+        if (error) {
+          onError(error);
+        } else {
+          onSuccess(response);
+        }
+
+        return cb.apply(client, arguments);
+      });
+    }
+
+    try {
+      return original.call(client, params)
+        .then(onSuccess, function(error) {
+          onError(error);
+          throw error;
         });
-      }
+    } catch (e) {
+      // Immediately cleanup on synchronous errors.
+      cls.destroyContextByUid(context.uid);
+      throw e;
+    }
 
-      try {
-        return original.call(client, params)
-          .then(onSuccess, function(error) {
-            onError(error);
-            throw error;
-          });
-      } catch (e) {
-        // Immediately cleanup on synchronous errors.
-        cls.destroyContextByUid(context.uid);
-        throw e;
+    function onSuccess(response) {
+      if (response.hits != null && response.hits.total != null) {
+        span.data.elasticsearch.hits = response.hits.total;
       }
+      span.d = Date.now() - span.ts;
+      span.error = false;
+      transmission.addSpan(span);
+      cls.destroyContextByUid(context.uid);
+      return response;
+    }
 
-      function onSuccess(response) {
-        if (response.hits != null && response.hits.total != null) {
-          span.data.elasticsearch.hits = response.hits.total;
-        }
-        span.d = Date.now() - span.ts;
-        span.error = false;
-        transmission.addSpan(span);
-        cls.destroyContextByUid(context.uid);
-        return response;
-      }
-
-      function onError(error) {
-        span.d = Date.now() - span.ts;
-        span.error = true;
-        span.ec = 1;
-        span.data.elasticsearch.error = error.message;
-        transmission.addSpan(span);
-        cls.destroyContextByUid(context.uid);
-      }
-    });
+    function onError(error) {
+      span.d = Date.now() - span.ts;
+      span.error = true;
+      span.ec = 1;
+      span.data.elasticsearch.error = error.message;
+      transmission.addSpan(span);
+      cls.destroyContextByUid(context.uid);
+    }
   };
 }
 
