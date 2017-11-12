@@ -8,6 +8,10 @@ var transmission = require('../transmission');
 var tracingUtil = require('../tracingUtil');
 var cls = require('../cls');
 
+var log = require('../../logger');
+var logger = log.getLogger('cls');
+
+
 var originalRequest = coreHttpModule.request;
 
 var isActive = false;
@@ -15,21 +19,28 @@ var isActive = false;
 exports.init = function() {
   coreHttpModule.request = function request(opts, givenResponseListener) {
     var clientRequest;
-    cls.stanStorage.run(function() {
-      var parentContext = cls.getActiveContext();
-      var context = cls.createContext();
 
-      if (!parentContext || !isActive || context.tracingSuppressed ||
-          parentContext.containsExitSpan || context.traceId == null) {
-        clientRequest = originalRequest.call(coreHttpModule, opts, givenResponseListener);
-
-        if (context.tracingSuppressed) {
-          clientRequest.setHeader(tracingConstants.traceLevelHeaderName, '0');
-        }
-        return clientRequest;
+    if (!isActive || !cls.isTracing()) {
+      clientRequest = originalRequest.call(coreHttpModule, opts, givenResponseListener);
+      if (cls.tracingLevel()) {
+        clientRequest.setHeader(tracingConstants.traceLevelHeaderName, cls.tracingLevel());
       }
+      return clientRequest;
+    }
 
-      context.containsExitSpan = true;
+    var parentSpan = cls.getCurrentSpan();
+
+    if (cls.isExitSpan(parentSpan)) {
+      clientRequest = originalRequest.call(coreHttpModule, opts, givenResponseListener);
+
+      if (cls.tracingSuppressed()) {
+        clientRequest.setHeader(tracingConstants.traceLevelHeaderName, '0');
+      }
+      return clientRequest;
+    }
+
+    cls.ns.run(() => {
+      var span = cls.startSpan('node.http.client');
 
       var completeCallUrl;
       if (typeof(opts) === 'string') {
@@ -38,21 +49,7 @@ exports.init = function() {
         completeCallUrl = constructCompleteUrlFromOpts(opts, coreHttpModule);
       }
 
-      var span = {
-        s: tracingUtil.generateRandomSpanId(),
-        t: context.traceId,
-        p: context.parentSpanId,
-        f: tracingUtil.getFrom(),
-        async: false,
-        error: false,
-        ec: 0,
-        ts: Date.now(),
-        d: 0,
-        n: 'node.http.client',
-        stack: tracingUtil.getStackTrace(request),
-        data: null
-      };
-      context.spanId = span.s;
+      span.stack = tracingUtil.getStackTrace(request);
 
       var responseListener = function responseListener(res) {
         span.data = {
@@ -66,7 +63,7 @@ exports.init = function() {
         span.error = res.statusCode >= 500;
         span.ec = span.error ? 1 : 0;
         transmission.addSpan(span);
-        cls.destroyContextByUid(context.uid);
+        logger.info('adding client Span is %s tid: %s sid: %s', span.n, span.t, span.s);
 
         if (givenResponseListener) {
           givenResponseListener(res);
@@ -78,7 +75,6 @@ exports.init = function() {
       } catch (e) {
         // synchronous exceptions normally indicate failures that are not covered by the
         // listeners. Cleanup immediately.
-        cls.destroyContextByUid(context.uid);
         throw e;
       }
 
@@ -98,7 +94,6 @@ exports.init = function() {
         span.error = true;
         span.ec = 1;
         transmission.addSpan(span);
-        cls.destroyContextByUid(context.uid);
       });
 
       clientRequest.addListener('error', function(err) {
@@ -113,7 +108,6 @@ exports.init = function() {
         span.error = true;
         span.ec = 1;
         transmission.addSpan(span);
-        cls.destroyContextByUid(context.uid);
       });
     });
     return clientRequest;

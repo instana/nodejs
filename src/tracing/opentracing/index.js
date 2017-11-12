@@ -50,13 +50,13 @@ exports.getCurrentlyActiveInstanaSpanContext = function getCurrentlyActiveInstan
     cls = require('../cls');
   }
 
-  var context = cls.getActiveContext();
-  if (!context) {
+  var currentSpan = cls.getCurrentSpan();
+  if (!currentSpan) {
     return null;
   }
 
-  var t = context.traceId;
-  var s = context.spanId || context.parentSpanId;
+  var t = currentSpan.t;
+  var s = currentSpan.s;
   if (!t || !s) {
     return null;
   }
@@ -64,6 +64,6 @@ exports.getCurrentlyActiveInstanaSpanContext = function getCurrentlyActiveInstan
   var spanContext = new opentracing.SpanContext();
   spanContext.s = s;
   spanContext.t = t;
-  spanContext.samplingPriority = context.suppressTracing ? 0 : 1;
+  spanContext.samplingPriority = cls.tracingLevel() === '0' ? 0 : 1;
   return spanContext;
 };

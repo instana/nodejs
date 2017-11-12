@@ -5,122 +5,95 @@
 var proxyquire = require('proxyquire');
 var expect = require('chai').expect;
 
-
 describe('tracing/cls', function() {
   var cls;
 
   beforeEach(function() {
     // reload to clear vars
     cls = proxyquire('./cls', {});
-    cls.stanStorage.run(function() { cls.reset(); });
   });
 
   it('must not have an active context initially', function() {
-    expect(cls.getActiveContext()).to.equal(undefined);
+    expect(cls.getCurrentSpan()).to.equal(undefined);
   });
 
-  it('must initialize a new valid context', function() {
-    var newContext = cls.createContext();
-    expect(newContext).to.be.a('Object');
-    expect(newContext).to.have.property('uid');
-    expect(newContext).to.have.property('parentUid');
-    expect(newContext).to.have.property('spanId');
-    expect(newContext).to.have.property('traceId');
-    expect(newContext).to.have.property('suppressTracing');
-    expect(newContext).to.have.property('containsExitSpan');
-  });
-
-  it('new context must inherit parent span IDs', function() {
-    var parentContext;
-    var newContext;
-
-    cls.stanStorage.run(function() {
-      parentContext = cls.createContext();
-      parentContext.spanId = 'span1';
-      cls.setActiveContext(parentContext);
-      newContext = cls.createContext();
+  it('must initialize a new valid span', function() {
+    cls.ns.run(function() {
+      var newSpan = cls.startSpan('cls-test-run');
+      expect(newSpan).to.be.a('Object');
+      expect(newSpan).to.have.property('t');
+      expect(newSpan).to.have.property('s');
+      expect(newSpan).to.have.property('f');
+      expect(newSpan).to.have.property('async');
+      expect(newSpan.async).to.equal(false);
+      expect(newSpan).to.have.property('error');
+      expect(newSpan.error).to.equal(false);
+      expect(newSpan).to.have.property('ec');
+      expect(newSpan.ec).to.equal(0);
+      expect(newSpan).to.have.property('ts');
+      expect(newSpan).to.have.property('d');
+      expect(newSpan.d).to.equal(0);
+      expect(newSpan).to.have.property('n');
+      expect(newSpan.n).to.equal('cls-test-run');
+      expect(newSpan).to.have.property('stack');
+      expect(newSpan).to.have.property('data');
     });
-    expect(newContext.parentSpanId).to.equal('span1');
   });
 
-  it('must validate that context exists by Uid', function() {
-    var parentContext;
-    var childContext;
-    var parentExists = false;
-    var childExists = false;
+  it('new spans must inherit from current span IDs', function() {
+    var parentSpan;
+    var newSpan;
 
-    cls.stanStorage.run(function() {
-      parentContext = cls.createContext();
-      cls.setActiveContext(parentContext);
-      childContext = cls.createContext();
-      cls.setActiveContext(childContext);
-
-      parentExists = cls.contextExistsByUid(parentContext.uid);
-      childExists = cls.contextExistsByUid(childContext.uid);
+    cls.ns.run(function() {
+      parentSpan = cls.startSpan('Mr-Brady');
+      newSpan = cls.startSpan('Peter-Brady');
     });
-
-    expect(parentExists).to.equal(true);
-    expect(childExists).to.equal(true);
+    expect(newSpan.t).to.equal(parentSpan.t);
+    expect(newSpan.p).to.equal(parentSpan.s);
   });
 
-  it('must transport trace id across handles', function() {
-    var parentContext;
-    var newContext1;
-    var newContext2;
+  it('must pass trace suppression configuration across spans', function() {
+    cls.ns.run(function() {
+      cls.setTracingLevel('0');
+      expect(cls.tracingSuppressed()).to.equal(true);
+      cls.startSpan('Antonio-Andolini');
+      expect(cls.tracingSuppressed()).to.equal(true);
+      cls.startSpan('Vito-Corleone');
+      expect(cls.tracingSuppressed()).to.equal(true);
+      cls.startSpan('Michael-Corleone');
+      expect(cls.tracingSuppressed()).to.equal(true);
 
-    cls.stanStorage.run(function() {
-      parentContext = cls.createContext();
-      parentContext.traceId = 'traceId1';
-      cls.setActiveContext(parentContext);
+      cls.ns.run(function() {
+        cls.setTracingLevel('1');
+        expect(cls.tracingSuppressed()).to.equal(false);
+        cls.startSpan('Antonio-Andolini');
+        expect(cls.tracingSuppressed()).to.equal(false);
+        cls.startSpan('Vito-Corleone');
+        expect(cls.tracingSuppressed()).to.equal(false);
+        cls.startSpan('Michael-Corleone');
+        expect(cls.tracingSuppressed()).to.equal(false);
 
-      newContext1 = cls.createContext();
-      newContext2 = cls.createContext();
+        cls.ns.run(function() {
+          cls.setTracingLevel('0');
+          expect(cls.tracingSuppressed()).to.equal(true);
+          cls.startSpan('Antonio-Andolini');
+          expect(cls.tracingSuppressed()).to.equal(true);
+          cls.startSpan('Vito-Corleone');
+          expect(cls.tracingSuppressed()).to.equal(true);
+          cls.startSpan('Michael-Corleone');
+          expect(cls.tracingSuppressed()).to.equal(true);
+
+          cls.ns.run(function() {
+            expect(cls.tracingSuppressed()).to.equal(true);
+            cls.startSpan('Antonio-Andolini');
+            expect(cls.tracingSuppressed()).to.equal(true);
+            cls.startSpan('Vito-Corleone');
+            expect(cls.tracingSuppressed()).to.equal(true);
+            cls.startSpan('Michael-Corleone');
+            expect(cls.tracingSuppressed()).to.equal(true);
+          });
+        });
+      });
     });
-
-    expect(parentContext.traceId).to.equal('traceId1');
-    expect(newContext1.traceId).to.equal('traceId1');
-    expect(newContext2.traceId).to.equal('traceId1');
-  });
-
-  it('must set new parent span IDs due to intermediate spans', function() {
-    var parentContext;
-    var intermediateContext;
-    var lastContext;
-
-    cls.stanStorage.run(function() {
-      parentContext = cls.createContext();
-      parentContext.spanId = 'span1';
-      cls.setActiveContext(parentContext);
-
-      intermediateContext = cls.createContext();
-      intermediateContext.spanId = 'span2';
-      cls.setActiveContext(intermediateContext);
-
-      lastContext = cls.createContext();
-      cls.setActiveContext(lastContext);
-    });
-    expect(intermediateContext.parentSpanId).to.equal('span1');
-    expect(lastContext.parentSpanId).to.equal('span2');
-  });
-
-  it('must pass trace suppression configuration across handles', function() {
-    var parentContext;
-    var intermediateContext;
-    var lastContext;
-
-    cls.stanStorage.run(function() {
-      parentContext = cls.createContext();
-      parentContext.suppressTracing = true;
-      cls.setActiveContext(parentContext);
-
-      intermediateContext = cls.createContext();
-      cls.setActiveContext(intermediateContext);
-
-      lastContext = cls.createContext();
-      cls.setActiveContext(lastContext);
-    });
-
-    expect(intermediateContext.suppressTracing).to.equal(true);
-    expect(lastContext.suppressTracing).to.equal(true);
   });
 });

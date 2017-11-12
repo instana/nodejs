@@ -25,7 +25,7 @@ function instrument(mysql) {
 
 function shimQuery(original) {
   return function() {
-    if (isActive) {
+    if (isActive && cls.isTracing()) {
       return instrumentedQuery(this, original, arguments[0], arguments[1], arguments[2]);
     }
     return original.apply(this, arguments);
@@ -38,9 +38,8 @@ function instrumentedQuery(ctx, originalQuery, statementOrOpts, valuesOrCallback
     argsForOriginalQuery.push(optCallback);
   }
 
-  var context = cls.createContext();
-
-  if (context.tracingSuppressed || context.containsExitSpan) {
+  var parentSpan = cls.getCurrentSpan();
+  if (cls.isExitSpan(parentSpan)) {
     return originalQuery.apply(ctx, argsForOriginalQuery);
   }
 
@@ -62,33 +61,10 @@ function instrumentedQuery(ctx, originalQuery, statementOrOpts, valuesOrCallback
     }
   }
 
-  context.markAsExitSpan = true;
-
-  var spanId = tracingUtil.generateRandomSpanId();
-  var traceId = context.traceId;
-  var parentId = undefined;
-  if (!traceId) {
-    traceId = spanId;
-  } else {
-    parentId = context.parentSpanId;
-  }
-
-  var span = {
-    s: spanId,
-    t: traceId,
-    p: parentId,
-    f: tracingUtil.getFrom(),
-    async: false,
-    error: false,
-    ec: 0,
-    ts: Date.now(),
-    d: 0,
-    n: 'mysql',
-    b: {
-      s: 1
-    },
-    stack: tracingUtil.getStackTrace(instrumentedQuery),
-    data: {
+  var span = cls.startSpan('mysql');
+  span.b = { s: 1 };
+  span.stack = tracingUtil.getStackTrace(instrumentedQuery);
+  span.data = {
       mysql: {
         stmt: typeof statementOrOpts === 'string' ? statementOrOpts : statementOrOpts.sql,
         host: host,
@@ -96,9 +72,7 @@ function instrumentedQuery(ctx, originalQuery, statementOrOpts, valuesOrCallback
         user: user,
         db: db
       }
-    }
-  };
-  context.spanId = span.s;
+    };
 
   var originalCallback = argsForOriginalQuery[argsForOriginalQuery.length - 1];
   argsForOriginalQuery[argsForOriginalQuery.length - 1] = function onQueryResult(error) {
@@ -110,7 +84,6 @@ function instrumentedQuery(ctx, originalQuery, statementOrOpts, valuesOrCallback
 
     span.d = Date.now() - span.ts;
     transmission.addSpan(span);
-    cls.destroyContextByUid(context.uid);
 
     if (originalCallback) {
       return originalCallback.apply(this, arguments);
@@ -123,7 +96,7 @@ function instrumentedQuery(ctx, originalQuery, statementOrOpts, valuesOrCallback
 
 function shimGetConnection(original) {
   return function(cb) {
-    return original.call(this, cls.stanStorage.bind(cb));
+    return original.call(this, cls.ns.bind(cb));
   };
 }
 

@@ -1,105 +1,68 @@
 'use strict';
 
-var stackTrace = require('../util/stackTrace');
+var tracingUtil = require('./tracingUtil');
 var hooked = require('cls-hooked');
-var log = require('../logger');
-
-var logger = log.getLogger('cls');
-
-var stackTraceLength = 0;
-var simulatedUidCounter = 0;
-
-var contextDefaults = {
-  spanId: null,
-  parentSpanId: null,
-  traceId: null,
-  suppressTracing: false,
-  containsExitSpan: false
-};
-
-exports.init = function init(config) {
-  stackTraceLength = config.tracing.stackTraceLength != null ? config.tracing.stackTraceLength : 10;
-};
+var currentSpanKey = 'csKey';
 
 /*
  * Access the Instana namespace in context local storage.
  *
  * Usage:
- *   cls.stanStorage.get(key);
- *   cls.stanStorage.set(key);
- *   cls.stanStorage.run(function() {});
+ *   cls.ns.get(key);
+ *   cls.ns.set(key);
+ *   cls.ns.run(function() {});
  *
  */
 var instanaNamespace = 'instana.sensor';
-Object.defineProperty(exports, 'stanStorage', {
+Object.defineProperty(exports, 'ns', {
   get: function() {
     return hooked.getNamespace(instanaNamespace) || hooked.createNamespace(instanaNamespace);
   }
 });
 
 /*
- * Access the Instana configuration hash.
- *
- * Usage:
- *   cls.config.suppressTracing;
+ * Start a new span and set it as the current span
  *
  */
-var configKey = 'stanConfig';
-Object.defineProperty(exports, 'config', {
-  get: function() {
-    return exports.stanStorage.get(configKey) || exports.stanStorage.set(configKey, {});
-  }
-});
-
-/*
- * Create a new tracing context and inherit from the active context (if
- * there is one).
- *
- * @returns {Hash} Hash representing the tracing context.
- */
-var activeContextKey = 'acKey';
-exports.createContext = function createContext() {
-  var namespace = exports.stanStorage;
-  var parentContext = namespace.get(activeContextKey) || contextDefaults;
-  var parentUid = parentContext && parentContext.parentUid;
-
-  var uid = 'sim-' + simulatedUidCounter++;
-  var context = {
-    uid: uid,
-    parentUid: parentUid,
-    spanId: null,
-    parentSpanId: parentContext.spanId || parentContext.parentSpanId,
-    traceId: parentContext.traceId,
-    suppressTracing: parentContext.suppressTracing,
-    containsExitSpan: parentContext.containsExitSpan
+exports.startSpan = function startSpan(spanName, traceId, spanId) {
+  var span = {
+    f: tracingUtil.getFrom(),
+    async: false,
+    error: false,
+    ec: 0,
+    ts: Date.now(),
+    d: 0,
+    n: spanName,
+    stack: [],
+    data: null
   };
 
-  // Save the created context.
-  exports.stanStorage.run(function() {
-    namespace.set(context.uid, context);
-  });
+  var parentSpan = exports.ns.get(currentSpanKey);
+  var randomId = tracingUtil.generateRandomSpanId();
 
-  logger.debug('createContext created: %j', context);
-  return context;
+  // If specified, use params
+  if (traceId && spanId) {
+    span.t = traceId;
+    span.p = spanId;
+  // else use pre-existing context (if any)
+  } else if (parentSpan) {
+    span.t = parentSpan.t;
+    span.p = parentSpan.s;
+  // last resort, use newly generated Ids
+  } else {
+    span.t = randomId;
+  }
+  span.s = randomId;
+  exports.ns.set(currentSpanKey, span);
+  return span;
 };
 
 /*
- * Create a new context and set it as the active context.
+ * Get the currently active span
  *
  */
-exports.createAndSetActiveContext = function createAndSetActiveContext() {
-  var context = exports.createContext();
-  return exports.setActiveContext(context);
-};
-
-/*
- * Get the active context.
- *
- * @returns {Hash} Hash representing the tracing context.
- *
- */
-exports.getActiveContext = function getActiveContext() {
-  return exports.stanStorage.get(activeContextKey);
+exports.getCurrentSpan = function getCurrentSpan() {
+  return exports.ns.get(currentSpanKey);
 };
 
 /*
@@ -107,72 +70,41 @@ exports.getActiveContext = function getActiveContext() {
  *
  */
 exports.isTracing = function isTracing() {
-  return exports.stanStorage.get(activeContextKey) ? true : false;
+  return exports.ns.get(currentSpanKey) ? true : false;
 };
 
 /*
- * Set the active context.
- *
- * @returns {Hash} Hash representing the active tracing context.
- *
+ * Set the tracing level
  */
-exports.setActiveContext = function setActiveContext(activeContext) {
-  logger.debug('setActiveContext: %j', activeContext);
-  var namespace = exports.stanStorage;
-  namespace.set(activeContext.uid, activeContext);
-  namespace.set(activeContextKey, activeContext);
-
-  setTimeout(exports.destroyContextByUid, 60000, activeContext.uid);
-  return activeContext;
+var tracingLevelKey = 'tlKey';
+exports.setTracingLevel = function setTracingLevel(level) {
+  return exports.ns.set(tracingLevelKey, level);
 };
 
 /*
- * Destroy a context by removing it from context local storage.  If this
- * context is also the active context, it will also be removed.
- *
+ * Get the tracing level (if any)
  */
-exports.destroyContextByUid = function destroyContextByUid(uid) {
-  var acId = exports.stanStorage.get(activeContextKey);
-  exports.stanStorage.run(function() {
-    if (acId === uid) {
-      exports.stanStorage.set(activeContextKey, null);
-    }
-    exports.stanStorage.set(uid, null);
-  });
+exports.tracingLevel = function tracingLevel() {
+  return exports.ns.get(tracingLevelKey);
 };
 
 /*
- * Check if a context exists by Uid
+ * Determine if tracing is suppressed (via tracing level) for this request.
  *
  */
-exports.contextExistsByUid = function contextExistsByUid(uid) {
-  var candidate = null;
-
-  exports.stanStorage.run(function() {
-    candidate = exports.stanStorage.get(uid);
-  });
-
-  return candidate ? true : false;
+exports.tracingSuppressed = function tracingSuppressed() {
+  var tl = exports.ns.get(tracingLevelKey);
+  if (tl && tl === '0') {
+    return true;
+  }
+  return false;
 };
 
 /*
- * Reset all context.
+ * Determine if <span> is an exit span
  *
- * Used in test suite to reset any/all context.
- *
- * @params: none
- * @return: none
  */
-exports.reset = function reset() {
-  logger.debug('Resetting CLS storage.');
-  exports.stanStorage.set(activeContextKey, null);
-};
-
-/*
- * Capture a stack trace from the passed in function.
- *
- * @params {Function}
- */
-exports.getStackTrace = function getStackTrace(referenceFunction) {
-  return stackTrace.captureStackTrace(stackTraceLength, referenceFunction);
+var exitSpans = ['node.http.client', 'elasticsearch', 'mongo', 'mysql'];
+exports.isExitSpan = function isExitSpan(span) {
+  return (exitSpans.indexOf(span.n) > -1);
 };

@@ -21,7 +21,7 @@ exports.init = function(_config) {
     require('./opentracing').init(config, automaticTracingEnabled);
 
     if (automaticTracingEnabled) {
-      require('./cls').init(config);
+      require('./cls');
       require('./instrumentation/httpServer.js').init(config);
       require('./instrumentation/httpClient.js').init(config);
       require('./instrumentation/elasticsearch.js').init(config);
