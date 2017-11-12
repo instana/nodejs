@@ -60,13 +60,18 @@ describe('pidStore', function() {
   });
 
   it('should use the PID from the parent namespace when found', function() {
-    readFileSync.returns('node (15926, #threads: 10)\n-------------------------------------------------------------------\nse.exec_start                                :    1093303068.953905');
+    readFileSync.returns(
+      'node (15926, #threads: 10)\n-------------------------------------------------------------------\n' +
+      'se.exec_start                                :    1093303068.953905');
     doRequire();
     expect(pidStore.pid).to.equal(15926);
   });
 
   it('should not rely on specific command name', function() {
-    readFileSync.returns('ddasdasd\nsyslog-ng (19841, #threads: 1)\n-------------------------------------------------------------------\nse.exec_start                                :    1093303068.953905');
+    readFileSync.returns(
+      'ddasdasd\nsyslog-ng (19841, #threads: 1)\n' +
+      '-------------------------------------------------------------------\n' +
+      'se.exec_start                                :    1093303068.953905');
     doRequire();
     expect(pidStore.pid).to.equal(19841);
   });
