@@ -80,21 +80,23 @@ function shimEmit(original) {
       return original.apply(this, arguments);
     }
 
-    var span = cls.startSpan('kafka');
-    span.stack = [];
-    span.data = {
-        kafka: {
-          access: 'consume',
-          service: message.topic
-        }
-      };
+    cls.ns.runAndReturn(() => {
+      var span = cls.startSpan('kafka');
+      span.stack = [];
+      span.data = {
+          kafka: {
+            access: 'consume',
+            service: message.topic
+          }
+        };
 
-    try {
-      return original.apply(this, arguments);
-    } finally {
-      span.d = Date.now() - span.ts;
-      transmission.addSpan(span);
-    }
+      try {
+        return original.apply(this, arguments);
+      } finally {
+        span.d = Date.now() - span.ts;
+        transmission.addSpan(span);
+      }
+    });
   };
 }
 
