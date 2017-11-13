@@ -108,17 +108,17 @@ describe('tracing/cls', function() {
       localSpan = cls.startSpan('myCustom');
     });
 
-    expect(entrySpan.k).to.equal('entry');
+    expect(entrySpan.k).to.equal(1);
     expect(cls.isEntrySpan(entrySpan)).to.equal(true);
     expect(cls.isExitSpan(entrySpan)).to.equal(false);
     expect(cls.isLocalSpan(entrySpan)).to.equal(false);
 
-    expect(exitSpan.k).to.equal('exit');
+    expect(exitSpan.k).to.equal(2);
     expect(cls.isEntrySpan(exitSpan)).to.equal(false);
     expect(cls.isExitSpan(exitSpan)).to.equal(true);
     expect(cls.isLocalSpan(exitSpan)).to.equal(false);
 
-    expect(localSpan.k).to.equal('local');
+    expect(localSpan.k).to.equal(3);
     expect(cls.isEntrySpan(localSpan)).to.equal(false);
     expect(cls.isExitSpan(localSpan)).to.equal(false);
     expect(cls.isLocalSpan(localSpan)).to.equal(true);

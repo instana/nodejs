@@ -57,13 +57,13 @@ exports.startSpan = function startSpan(spanName, traceId, spanId) {
   }
   span.s = randomId;
 
-  // Set span direction type
-  if (exitSpans.indexOf(span.n) > -1) {
-    span.k = 'exit';
-  } else if (entrySpans.indexOf(span.n) > -1) {
-    span.k = 'entry';
+  // Set span direction type (1=entry, 2=exit, 3=local/intermediate)
+  if (entrySpans.indexOf(span.n) > -1) {
+    span.k = 1;
+  } else if (exitSpans.indexOf(span.n) > -1) {
+    span.k = 2;
   } else {
-    span.k = 'local';
+    span.k = 3;
   }
 
   exports.ns.set(currentSpanKey, span);
@@ -114,19 +114,19 @@ exports.tracingSuppressed = function tracingSuppressed() {
 };
 
 /*
- * Determine if <span> is an exit span
- *
- */
-exports.isExitSpan = function isExitSpan(span) {
-  return span.k === 'exit' ? true : false;
-};
-
-/*
  * Determine if <span> is an entry span
  *
  */
 exports.isEntrySpan = function isEntrySpan(span) {
-  return span.k === 'entry' ? true : false;
+  return span.k === 1 ? true : false;
+};
+
+/*
+ * Determine if <span> is an exit span
+ *
+ */
+exports.isExitSpan = function isExitSpan(span) {
+  return span.k === 2 ? true : false;
 };
 
 /*
@@ -134,5 +134,5 @@ exports.isEntrySpan = function isEntrySpan(span) {
  *
  */
 exports.isLocalSpan = function isLocalSpan(span) {
-  return span.k === 'local' ? true : false;
+  return span.k === 3 ? true : false;
 };
