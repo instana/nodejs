@@ -8,12 +8,7 @@ var transmission = require('../transmission');
 var tracingUtil = require('../tracingUtil');
 var cls = require('../cls');
 
-var log = require('../../logger');
-var logger = log.getLogger('cls');
-
-
 var originalRequest = coreHttpModule.request;
-
 var isActive = false;
 
 exports.init = function() {
@@ -63,7 +58,6 @@ exports.init = function() {
         span.error = res.statusCode >= 500;
         span.ec = span.error ? 1 : 0;
         transmission.addSpan(span);
-        logger.info('adding client Span is %s tid: %s sid: %s', span.n, span.t, span.s);
 
         if (givenResponseListener) {
           givenResponseListener(res);
