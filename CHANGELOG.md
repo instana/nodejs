@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.28.0
  - Support automatic Node.js 8 tracing.
 
 ## 1.27.1
