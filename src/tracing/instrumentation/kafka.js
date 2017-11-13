@@ -80,7 +80,10 @@ function shimEmit(original) {
       return original.apply(this, arguments);
     }
 
-    cls.ns.runAndReturn(() => {
+    var originalThis = this;
+    var originalArgs = arguments;
+
+    cls.ns.runAndReturn(function() {
       var span = cls.startSpan('kafka');
       span.stack = [];
       span.data = {
@@ -91,7 +94,7 @@ function shimEmit(original) {
         };
 
       try {
-        return original.apply(this, arguments);
+        return original.apply(originalThis, originalArgs);
       } finally {
         span.d = Date.now() - span.ts;
         transmission.addSpan(span);

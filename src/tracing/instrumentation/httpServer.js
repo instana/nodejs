@@ -17,14 +17,17 @@ exports.init = function() {
 
 function shimEmit(realEmit) {
   return function(type, req, res) {
-    return cls.ns.runAndReturn(() => {
+    var originalThis = this;
+    var originalArgs = arguments;
+
+    return cls.ns.runAndReturn(function() {
       // Respect any incoming tracing level headers
       if (req && req.headers && req.headers[tracingConstants.traceLevelHeaderNameLowerCase] === '0') {
         cls.setTracingLevel(req.headers[tracingConstants.traceLevelHeaderNameLowerCase]);
       }
 
       if (type !== 'request' || !isActive || cls.tracingSuppressed()) {
-        return realEmit.apply(this, arguments);
+        return realEmit.apply(originalThis, originalArgs);
       }
 
       var incomingTraceId = getExistingTraceId(req);
@@ -57,13 +60,8 @@ function shimEmit(realEmit) {
       cls.ns.bindEmitter(req);
       cls.ns.bindEmitter(res);
 
-      var origThis = this;
-      var origArgs = arguments;
       var ret = null;
-
-      cls.ns.run(function() {
-        ret = realEmit.apply(origThis, origArgs);
-      });
+      ret = realEmit.apply(originalThis, originalArgs);
       return ret;
     });
   };

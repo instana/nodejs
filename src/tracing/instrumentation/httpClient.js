@@ -34,7 +34,7 @@ exports.init = function() {
       return clientRequest;
     }
 
-    cls.ns.run(() => {
+    cls.ns.run(function() {
       var span = cls.startSpan('node.http.client');
 
       var completeCallUrl;
