@@ -83,7 +83,7 @@ function getExistingSpanId(req, fallback) {
   fallback = arguments.length > 1 ? fallback : null;
 
   var spanId = req.headers[tracingConstants.spanIdHeaderNameLowerCase];
-  if (spanId === null) {
+  if (spanId == null) {
     return fallback;
   }
 
@@ -95,7 +95,7 @@ function getExistingTraceId(req, fallback) {
   fallback = arguments.length > 1 ? fallback : null;
 
   var traceId = req.headers[tracingConstants.traceIdHeaderNameLowerCase];
-  if (traceId === null) {
+  if (traceId == null) {
     return fallback;
   }
 
