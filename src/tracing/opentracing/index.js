@@ -4,7 +4,7 @@ var opentracing = require('opentracing');
 
 var isActive = false;
 var tracer;
-var hook;
+var cls;
 var automaticTracingEnabled = false;
 
 
@@ -45,18 +45,18 @@ exports.getCurrentlyActiveInstanaSpanContext = function getCurrentlyActiveInstan
     return null;
   }
 
-  // Lazy lood hook to ensure that its dependencies will only be loaded when actually necessary.
-  if (!hook) {
-    hook = require('../hook');
+  // Lazy load cls to ensure that its dependencies will only be loaded when actually necessary.
+  if (!cls) {
+    cls = require('../cls');
   }
 
-  var handleData = hook.getCurrentHandleData();
-  if (!handleData) {
+  var currentSpan = cls.getCurrentSpan();
+  if (!currentSpan) {
     return null;
   }
 
-  var t = handleData.traceId;
-  var s = handleData.spanId || handleData.parentSpanId;
+  var t = currentSpan.t;
+  var s = currentSpan.s;
   if (!t || !s) {
     return null;
   }
@@ -64,6 +64,6 @@ exports.getCurrentlyActiveInstanaSpanContext = function getCurrentlyActiveInstan
   var spanContext = new opentracing.SpanContext();
   spanContext.s = s;
   spanContext.t = t;
-  spanContext.samplingPriority = handleData.suppressTracing ? 0 : 1;
+  spanContext.samplingPriority = cls.tracingLevel() === '0' ? 0 : 1;
   return spanContext;
 };

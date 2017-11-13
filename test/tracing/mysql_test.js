@@ -2,14 +2,14 @@
 
 var expect = require('chai').expect;
 
-var supportsAsyncWrap = require('../../src/tracing/index').supportsAsyncWrap;
+var supportedVersion = require('../../src/tracing/index').supportedVersion;
 var expressMysqlControls = require('../apps/expressMysqlControls');
 var agentStubControls = require('../apps/agentStubControls');
 var config = require('../config');
 var utils = require('../utils');
 
 describe('tracing/mysql', function() {
-  if (!supportsAsyncWrap(process.versions.node)) {
+  if (!supportedVersion(process.versions.node)) {
     return;
   }
 

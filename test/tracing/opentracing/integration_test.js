@@ -2,7 +2,7 @@
 
 var expect = require('chai').expect;
 
-var supportsAsyncWrap = require('../../../src/tracing/index').supportsAsyncWrap;
+var supportedVersion = require('../../../src/tracing/index').supportedVersion;
 var expressOpentracingControls = require('../../apps/expressOpentracingControls');
 var agentStubControls = require('../../apps/agentStubControls');
 var config = require('../../config');
@@ -26,7 +26,7 @@ describe('tracing/opentracing/integration', function() {
         return utils.retry(function() {
           return agentStubControls.getSpans()
           .then(function(spans) {
-            if (supportsAsyncWrap(process.versions.node)) {
+            if (supportedVersion(process.versions.node)) {
               expect(spans).to.have.lengthOf(1);
               expect(spans[0].n).to.equal('node.http.server');
             } else {
@@ -68,7 +68,7 @@ describe('tracing/opentracing/integration', function() {
               expect(span.data.sdk.type).to.equal('local');
             });
 
-            if (supportsAsyncWrap(process.versions.node)) {
+            if (supportedVersion(process.versions.node)) {
               expect(spans).to.have.lengthOf(3);
             } else {
               expect(spans).to.have.lengthOf(2);
@@ -78,7 +78,7 @@ describe('tracing/opentracing/integration', function() {
       });
     });
 
-    if (supportsAsyncWrap(process.versions.node)) {
+    if (supportedVersion(process.versions.node)) {
       it('must connect instana trace to opentracing spans', function() {
         return expressOpentracingControls.sendRequest({path: '/withOpentracingConnectedToInstanaTrace'})
         .then(function() {

@@ -3,7 +3,7 @@
 var requireHook = require('../../util/requireHook');
 var transmission = require('../transmission');
 var tracingUtil = require('../tracingUtil');
-var hook = require('../hook');
+var cls = require('../cls');
 
 var isActive = false;
 
@@ -43,28 +43,13 @@ function instrumentApi(client, action, info) {
   var original = client[action];
 
   client[action] = function instrumentedAction(params, cb) {
-    var uid = hook.initAndPreSimulated();
-    var traceId = hook.getTraceId(uid);
-
-    if (!isActive || hook.isTracingSuppressed(uid) || hook.containsExitSpan(uid) || traceId == null) {
+    if (!isActive || !cls.isTracing() ) {
       return original.apply(client, arguments);
     }
 
-    hook.markAsExitSpan(uid);
-
-    var span = {
-      s: tracingUtil.generateRandomSpanId(),
-      t: traceId,
-      p: hook.getParentSpanId(uid),
-      f: tracingUtil.getFrom(),
-      async: false,
-      error: false,
-      ec: 0,
-      ts: Date.now(),
-      d: 0,
-      n: 'elasticsearch',
-      stack: tracingUtil.getStackTrace(instrumentedAction),
-      data: {
+    var span = cls.startSpan('elasticsearch');
+    span.stack = tracingUtil.getStackTrace(instrumentedAction);
+    span.data = {
         elasticsearch: {
           action: action,
           cluster: info.clusterName,
@@ -74,9 +59,9 @@ function instrumentApi(client, action, info) {
           id: action === 'get' ? params.id : undefined,
           query: action === 'search' ? JSON.stringify(params) : undefined
         }
-      }
-    };
-    hook.setSpanId(uid, span.s);
+      };
+
+    cls.ns.bind(cb);
 
     if (arguments.length === 2) {
       return original.call(client, params, function(error, response) {
@@ -98,7 +83,6 @@ function instrumentApi(client, action, info) {
         });
     } catch (e) {
       // Immediately cleanup on synchronous errors.
-      hook.postAndDestroySimulated(uid);
       throw e;
     }
 
@@ -109,7 +93,6 @@ function instrumentApi(client, action, info) {
       span.d = Date.now() - span.ts;
       span.error = false;
       transmission.addSpan(span);
-      hook.postAndDestroySimulated(uid);
       return response;
     }
 
@@ -119,7 +102,6 @@ function instrumentApi(client, action, info) {
       span.ec = 1;
       span.data.elasticsearch.error = error.message;
       transmission.addSpan(span);
-      hook.postAndDestroySimulated(uid);
     }
   };
 }

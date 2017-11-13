@@ -2,14 +2,14 @@
 
 var expect = require('chai').expect;
 
-var supportsAsyncWrap = require('../../src/tracing/index').supportsAsyncWrap;
+var supportedVersion = require('../../src/tracing/index').supportedVersion;
 var agentStubControls = require('../apps/agentStubControls');
 var expressProxyControls = require('../apps/expressProxyControls');
 var config = require('../config');
 var utils = require('../utils');
 
 describe('tracing/stackTraces', function() {
-  if (!supportsAsyncWrap(process.versions.node)) {
+  if (!supportedVersion(process.versions.node)) {
     return;
   }
 

@@ -3,14 +3,14 @@
 var expect = require('chai').expect;
 var Promise = require('bluebird');
 
-var supportsAsyncWrap = require('../src/tracing/index').supportsAsyncWrap;
+var supportedVersion = require('../src/tracing/index').supportedVersion;
 var agentStubControls = require('./apps/agentStubControls');
 var expressControls = require('./apps/expressControls');
 var config = require('./config');
 var utils = require('./utils');
 
 describe('disabled tracing', function() {
-  if (!supportsAsyncWrap(process.versions.node)) {
+  if (!supportedVersion(process.versions.node)) {
     return;
   }
 

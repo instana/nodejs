@@ -5,7 +5,7 @@ var shimmer = require('shimmer');
 var requireHook = require('../../util/requireHook');
 var transmission = require('../transmission');
 var tracingUtil = require('../tracingUtil');
-var hook = require('../hook');
+var cls = require('../cls');
 
 var isActive = false;
 
@@ -32,12 +32,11 @@ function shimSend(original) {
 
 
 function instrumentedSend(ctx, originalSend, produceRequests, cb) {
-  var uid = hook.initAndPreSimulated();
-  var tracingSuppressed = hook.isTracingSuppressed(uid);
+  var parentSpan = cls.getCurrentSpan();
   var args = [produceRequests];
 
-  // bail early
-  if (tracingSuppressed || hook.containsExitSpan(uid) || !produceRequests || produceRequests.length === 0) {
+  // Possibly bail early
+  if (!cls.isTracing() || cls.isExitSpan(parentSpan) || !produceRequests || produceRequests.length === 0) {
     // restore original send args
     if (cb) {
       args.push(cb);
@@ -45,42 +44,17 @@ function instrumentedSend(ctx, originalSend, produceRequests, cb) {
     return originalSend.apply(ctx, args);
   }
 
-  hook.markAsExitSpan(uid);
-
   var produceRequest = produceRequests[0];
 
-  var spanId = tracingUtil.generateRandomSpanId();
-  var traceId = hook.getTraceId(uid);
-  var parentId = undefined;
-  if (!traceId) {
-    traceId = spanId;
-  } else {
-    parentId = hook.getParentSpanId(uid);
-  }
-
-  var span = {
-    s: spanId,
-    t: traceId,
-    p: parentId,
-    f: tracingUtil.getFrom(),
-    async: false,
-    error: false,
-    ec: 0,
-    ts: Date.now(),
-    d: 0,
-    n: 'kafka',
-    b: {
-      s: produceRequests.length
-    },
-    stack: tracingUtil.getStackTrace(instrumentedSend),
-    data: {
+  var span = cls.startSpan('kafka');
+  span.b = { s: produceRequests.length };
+  span.stack = tracingUtil.getStackTrace(instrumentedSend);
+  span.data = {
       kafka: {
         service: produceRequest.topic,
         access: 'send'
       }
-    }
-  };
-  hook.setSpanId(uid, span.s);
+    };
 
   args.push(function onSendCompleted(err) {
     if (err) {
@@ -91,13 +65,11 @@ function instrumentedSend(ctx, originalSend, produceRequests, cb) {
 
     span.d = Date.now() - span.ts;
     transmission.addSpan(span);
-    hook.postAndDestroySimulated(uid);
 
     if (cb) {
       return cb.apply(this, arguments);
     }
   });
-
   return originalSend.apply(ctx, args);
 }
 
@@ -108,37 +80,26 @@ function shimEmit(original) {
       return original.apply(this, arguments);
     }
 
-    var uid = hook.initAndPreSimulated();
-    hook.setTracingSuppressed(uid, false);
-    var spanId = tracingUtil.generateRandomSpanId();
-    var span = {
-      s: spanId,
-      t: spanId,
-      f: tracingUtil.getFrom(),
-      async: false,
-      error: false,
-      ec: 0,
-      ts: Date.now(),
-      d: 0,
-      n: 'kafka',
-      stack: [],
-      data: {
-        kafka: {
-          access: 'consume',
-          service: message.topic
-        }
-      }
-    };
-    hook.setSpanId(uid, spanId);
-    hook.setTraceId(uid, spanId);
+    var originalThis = this;
+    var originalArgs = arguments;
 
-    try {
-      return original.apply(this, arguments);
-    } finally {
-      span.d = Date.now() - span.ts;
-      transmission.addSpan(span);
-      hook.postAndDestroySimulated(uid);
-    }
+    cls.ns.runAndReturn(function() {
+      var span = cls.startSpan('kafka');
+      span.stack = [];
+      span.data = {
+          kafka: {
+            access: 'consume',
+            service: message.topic
+          }
+        };
+
+      try {
+        return original.apply(originalThis, originalArgs);
+      } finally {
+        span.d = Date.now() - span.ts;
+        transmission.addSpan(span);
+      }
+    });
   };
 }
 

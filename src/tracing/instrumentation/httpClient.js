@@ -6,116 +6,104 @@ var discardUrlParameters = require('../../util/url').discardUrlParameters;
 var tracingConstants = require('../constants');
 var transmission = require('../transmission');
 var tracingUtil = require('../tracingUtil');
-var hook = require('../hook');
+var cls = require('../cls');
 
 var originalRequest = coreHttpModule.request;
-
 var isActive = false;
 
 exports.init = function() {
   coreHttpModule.request = function request(opts, givenResponseListener) {
-    var uid = hook.initAndPreSimulated();
-    var tracingSuppressed = hook.isTracingSuppressed(uid);
-    var traceId = hook.getTraceId(uid);
     var clientRequest;
 
-    if (!isActive || tracingSuppressed || hook.containsExitSpan(uid) || traceId == null) {
-      clientRequest = originalRequest.apply(coreHttpModule, arguments);
-
-      if (tracingSuppressed) {
-        clientRequest.setHeader(tracingConstants.traceLevelHeaderName, '0');
+    if (!isActive || !cls.isTracing()) {
+      clientRequest = originalRequest.call(coreHttpModule, opts, givenResponseListener);
+      if (cls.tracingLevel()) {
+        clientRequest.setHeader(tracingConstants.traceLevelHeaderName, cls.tracingLevel());
       }
-
       return clientRequest;
     }
 
-    hook.markAsExitSpan(uid);
+    var parentSpan = cls.getCurrentSpan();
 
-    var completeCallUrl;
-    if (typeof(opts) === 'string') {
-      completeCallUrl = discardUrlParameters(opts);
-    } else {
-      completeCallUrl = constructCompleteUrlFromOpts(opts, coreHttpModule);
-    }
+    if (cls.isExitSpan(parentSpan)) {
+      clientRequest = originalRequest.call(coreHttpModule, opts, givenResponseListener);
 
-    var span = {
-      s: tracingUtil.generateRandomSpanId(),
-      t: traceId,
-      p: hook.getParentSpanId(uid),
-      f: tracingUtil.getFrom(),
-      async: false,
-      error: false,
-      ec: 0,
-      ts: Date.now(),
-      d: 0,
-      n: 'node.http.client',
-      stack: tracingUtil.getStackTrace(request),
-      data: null
-    };
-    hook.setSpanId(uid, span.s);
-
-    var responseListener = function responseListener(res) {
-      span.data = {
-        http: {
-          method: clientRequest.method,
-          url: completeCallUrl,
-          status: res.statusCode
-        }
-      };
-      span.d = Date.now() - span.ts;
-      span.error = res.statusCode >= 500;
-      span.ec = span.error ? 1 : 0;
-      transmission.addSpan(span);
-      hook.postAndDestroySimulated(uid);
-
-      if (givenResponseListener) {
-        givenResponseListener(res);
+      if (cls.tracingSuppressed()) {
+        clientRequest.setHeader(tracingConstants.traceLevelHeaderName, '0');
       }
-    };
-
-    try {
-      clientRequest = originalRequest.call(coreHttpModule, opts, responseListener);
-    } catch (e) {
-      // synchronous exceptions normally indicate failures that are not covered by the
-      // listeners. Cleanup immediately.
-      hook.postAndDestroySimulated(uid);
-      throw e;
+      return clientRequest;
     }
 
-    clientRequest.setHeader(tracingConstants.spanIdHeaderName, span.s);
-    clientRequest.setHeader(tracingConstants.traceIdHeaderName, span.t);
-    clientRequest.setHeader(tracingConstants.traceLevelHeaderName, '1');
+    cls.ns.run(function() {
+      var span = cls.startSpan('node.http.client');
 
-    clientRequest.addListener('timeout', function() {
-      span.data = {
-        http: {
-          method: clientRequest.method,
-          url: completeCallUrl,
-          error: 'Timeout exceeded'
+      var completeCallUrl;
+      if (typeof(opts) === 'string') {
+        completeCallUrl = discardUrlParameters(opts);
+      } else {
+        completeCallUrl = constructCompleteUrlFromOpts(opts, coreHttpModule);
+      }
+
+      span.stack = tracingUtil.getStackTrace(request);
+
+      var responseListener = function responseListener(res) {
+        span.data = {
+          http: {
+            method: clientRequest.method,
+            url: completeCallUrl,
+            status: res.statusCode
+          }
+        };
+        span.d = Date.now() - span.ts;
+        span.error = res.statusCode >= 500;
+        span.ec = span.error ? 1 : 0;
+        transmission.addSpan(span);
+
+        if (givenResponseListener) {
+          givenResponseListener(res);
         }
       };
-      span.d = Date.now() - span.ts;
-      span.error = true;
-      span.ec = 1;
-      transmission.addSpan(span);
-      hook.postAndDestroySimulated(uid);
-    });
 
-    clientRequest.addListener('error', function(err) {
-      span.data = {
-        http: {
-          method: clientRequest.method,
-          url: completeCallUrl,
-          error: err.message
-        }
-      };
-      span.d = Date.now() - span.ts;
-      span.error = true;
-      span.ec = 1;
-      transmission.addSpan(span);
-      hook.postAndDestroySimulated(uid);
-    });
+      try {
+        clientRequest = originalRequest.call(coreHttpModule, opts, responseListener);
+      } catch (e) {
+        // synchronous exceptions normally indicate failures that are not covered by the
+        // listeners. Cleanup immediately.
+        throw e;
+      }
 
+      clientRequest.setHeader(tracingConstants.spanIdHeaderName, span.s);
+      clientRequest.setHeader(tracingConstants.traceIdHeaderName, span.t);
+      clientRequest.setHeader(tracingConstants.traceLevelHeaderName, '1');
+
+      clientRequest.addListener('timeout', function() {
+        span.data = {
+          http: {
+            method: clientRequest.method,
+            url: completeCallUrl,
+            error: 'Timeout exceeded'
+          }
+        };
+        span.d = Date.now() - span.ts;
+        span.error = true;
+        span.ec = 1;
+        transmission.addSpan(span);
+      });
+
+      clientRequest.addListener('error', function(err) {
+        span.data = {
+          http: {
+            method: clientRequest.method,
+            url: completeCallUrl,
+            error: err.message
+          }
+        };
+        span.d = Date.now() - span.ts;
+        span.error = true;
+        span.ec = 1;
+        transmission.addSpan(span);
+      });
+    });
     return clientRequest;
   };
 };

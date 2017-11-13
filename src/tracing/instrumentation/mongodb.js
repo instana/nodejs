@@ -3,14 +3,12 @@
 var logger = require('../../logger').getLogger('tracing/mongodb');
 var requireHook = require('../../util/requireHook');
 var transmission = require('../transmission');
-var tracingUtil = require('../tracingUtil');
-var hook = require('../hook');
+var cls = require('../cls');
 
 var isActive = false;
 
 // operation ID + request ID => {
-//   span,
-//   uid
+//   span
 // }
 var requests = {};
 
@@ -55,42 +53,25 @@ function instrument(mongodb) {
 
 
 function onStarted(event) {
-  if (!isActive) {
+  if (!isActive || !cls.isTracing()) {
     return;
   }
 
-  var uid = hook.initAndPreSimulated();
-  if (hook.isTracingSuppressed(uid)) {
-    return;
+  var span = null;
+  if (event.operationId.traceId && event.operationId.parentSpanId) {
+    span = cls.startSpan('mongo', event.operationId.traceId, event.operationId.parentSpanId);
+  } else {
+    span = cls.startSpan('mongo');
   }
-
-  var traceId = event.operationId.traceId || hook.getTraceId(uid);
-  var parentSpanId = event.operationId.parentSpanId || hook.getParentSpanId(uid);
-  if (!traceId || !parentSpanId) {
-    return;
-  }
-
-  hook.markAsExitSpan(uid);
 
   var host = event.connectionId.host;
   var port = event.connectionId.port;
   var database = event.databaseName;
   var collection = event.command.collection || event.command[event.commandName];
-  var span = {
-    s: tracingUtil.generateRandomSpanId(),
-    t: traceId,
-    p: parentSpanId,
-    f: tracingUtil.getFrom(),
-    async: false,
-    error: false,
-    ec: 0,
-    ts: Date.now(),
-    d: 0,
-    n: 'mongo',
-    // using the Mongodb instrumentation API, it is not possible to gather stack traces. Getting started
-    // without stack traces at first.
-    stack: [],
-    data: {
+  // using the Mongodb instrumentation API, it is not possible to gather stack traces. Getting started
+  // without stack traces at first.
+  span.stack = [];
+  span.data = {
       peer: {
         hostname: host,
         port: port
@@ -102,14 +83,12 @@ function onStarted(event) {
         filter: event.command.filter,
         query: event.command.query
       }
-    }
-  };
-  hook.setSpanId(uid, span.s);
+    };
+
   event.operationId.traceId = span.t;
   event.operationId.parentSpanId = span.p;
 
   requests[getUniqueRequestId(event)] = {
-    uid: uid,
     span: span
   };
 }
@@ -129,7 +108,6 @@ function onSucceeded(event) {
   spanData.span.d = Date.now() - spanData.span.ts;
   spanData.span.error = false;
   transmission.addSpan(spanData.span);
-  hook.postAndDestroySimulated(spanData.uid);
 
   cleanup(event);
 }
@@ -150,7 +128,6 @@ function onFailed(event) {
   spanData.span.error = true;
   spanData.span.ec = 1;
   transmission.addSpan(spanData.span);
-  hook.postAndDestroySimulated(spanData.uid);
 
   cleanup(event);
 }
