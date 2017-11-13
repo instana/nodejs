@@ -123,6 +123,4 @@ describe('tracing/cls', function() {
     expect(cls.isExitSpan(localSpan)).to.equal(false);
     expect(cls.isLocalSpan(localSpan)).to.equal(true);
   });
-
-
 });
