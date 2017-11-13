@@ -96,4 +96,33 @@ describe('tracing/cls', function() {
       });
     });
   });
+
+  it('new spans must have direction set', function() {
+    var entrySpan;
+    var exitSpan;
+    var localSpan;
+
+    cls.ns.run(function() {
+      entrySpan = cls.startSpan('node.http.server');
+      exitSpan = cls.startSpan('mongo');
+      localSpan = cls.startSpan('myCustom');
+    });
+
+    expect(entrySpan.k).to.equal('entry');
+    expect(cls.isEntrySpan(entrySpan)).to.equal(true);
+    expect(cls.isExitSpan(entrySpan)).to.equal(false);
+    expect(cls.isLocalSpan(entrySpan)).to.equal(false);
+
+    expect(exitSpan.k).to.equal('exit');
+    expect(cls.isEntrySpan(exitSpan)).to.equal(false);
+    expect(cls.isExitSpan(exitSpan)).to.equal(true);
+    expect(cls.isLocalSpan(exitSpan)).to.equal(false);
+
+    expect(localSpan.k).to.equal('local');
+    expect(cls.isEntrySpan(localSpan)).to.equal(false);
+    expect(cls.isExitSpan(localSpan)).to.equal(false);
+    expect(cls.isLocalSpan(localSpan)).to.equal(true);
+  });
+
+
 });

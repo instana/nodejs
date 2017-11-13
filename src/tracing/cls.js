@@ -4,6 +4,9 @@ var tracingUtil = require('./tracingUtil');
 var hooked = require('cls-hooked');
 var currentSpanKey = 'csKey';
 
+var exitSpans = ['node.http.client', 'elasticsearch', 'mongo', 'mysql'];
+var entrySpans = ['node.http.server'];
+
 /*
  * Access the Instana namespace in context local storage.
  *
@@ -53,6 +56,16 @@ exports.startSpan = function startSpan(spanName, traceId, spanId) {
     span.t = randomId;
   }
   span.s = randomId;
+
+  // Set span direction type
+  if (exitSpans.indexOf(span.n) > -1) {
+    span.k = 'exit';
+  } else if (entrySpans.indexOf(span.n) > -1) {
+    span.k = 'entry';
+  } else {
+    span.k = 'local';
+  }
+
   exports.ns.set(currentSpanKey, span);
   return span;
 };
@@ -104,7 +117,22 @@ exports.tracingSuppressed = function tracingSuppressed() {
  * Determine if <span> is an exit span
  *
  */
-var exitSpans = ['node.http.client', 'elasticsearch', 'mongo', 'mysql'];
 exports.isExitSpan = function isExitSpan(span) {
-  return (exitSpans.indexOf(span.n) > -1);
+  return span.k === 'exit' ? true : false;
+};
+
+/*
+ * Determine if <span> is an entry span
+ *
+ */
+exports.isEntrySpan = function isEntrySpan(span) {
+  return span.k === 'entry' ? true : false;
+};
+
+/*
+ * Determine if <span> is an local span
+ *
+ */
+exports.isLocalSpan = function isLocalSpan(span) {
+  return span.k === 'local' ? true : false;
 };
