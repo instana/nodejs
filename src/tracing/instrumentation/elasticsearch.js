@@ -71,7 +71,7 @@ function instrumentApi(client, action, info) {
           onSuccess(response);
         }
 
-        return cb.apply(client, arguments);
+        return cb.apply(this, arguments);
       });
     }
 
