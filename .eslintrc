@@ -2,13 +2,9 @@
   extends: airbnb/legacy
   env:
     node: true
-    mocha: true
-    es6: true
   parserOptions:
     sourceType: strict
   rules:
-    no-shadow: 0
-    require-yield: 0
     comma-dangle: 0
     no-underscore-dangle: 0
     func-names: 0
