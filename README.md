@@ -55,7 +55,7 @@ yum groupinstall "Development Tools"
 ## OpenTracing
 This sensor automatically instruments widely used APIs to add tracing support, e.g. HTTP server / client of the Node.js core API. Sometimes you may find that this is not enough or you may already have invested in [OpenTracing](http://opentracing.io). The OpenTracing API is implemented by this Node.js sensor. This API can be used to provide insights into areas of your applications, e.g. custom libraries and frameworks, which would otherwise go unnoticed.
 
-In order to use OpenTracing for Node.js with Instana, you need to [enable tracing](https://github.com/instana/nodejs-sensor-internal/blob/master/CONFIGURATION.md#tracing) and use the Instana OpenTracing API implementation. The following sample project shows how this is done.
+In order to use OpenTracing for Node.js with Instana, you need to [enable tracing](https://github.com/instana/nodejs-sensor/blob/master/CONFIGURATION.md#tracing) and use the Instana OpenTracing API implementation. The following sample project shows how this is done.
 
 ```javascript
 const instana = require('instana-nodejs-sensor');
