@@ -39,7 +39,7 @@ function setDefaults() {
 
 
 function shouldEnableTracing() {
-  if (config.tracing && config.tracing.enabled === false) {
+  if (config.tracing && config.tracing.enabled === false && exports.supportedVersion(process.versions.node)) {
     logger.info('Not enabling manual tracing as tracing is not enabled via config.');
     return false;
   }
@@ -49,7 +49,7 @@ function shouldEnableTracing() {
 
 
 function shouldEnableAutomaticTracing() {
-  if (config.tracing && config.tracing.enabled === false) {
+  if (config.tracing && config.tracing.enabled === false && exports.supportedVersion(process.versions.node)) {
     logger.info('Not enabling automatic tracing as tracing is not enabled via config.');
     return false;
   }
@@ -63,7 +63,7 @@ function shouldEnableAutomaticTracing() {
 
 
 exports.supportedVersion = function supportedVersion(version) {
-  return semver.satisfies(version, '^4.5 || ^5.10 || >=6');
+  return semver.satisfies(version, '^4.5 || ^5.10 || >=6 <8.0 || >=8.2.1');
 };
 
 
