@@ -39,7 +39,7 @@ function setDefaults() {
 
 
 function shouldEnableTracing() {
-  if (config.tracing && config.tracing.enabled === false && exports.supportedVersion(process.versions.node)) {
+  if (config.tracing && config.tracing.enabled === false) {
     logger.info('Not enabling manual tracing as tracing is not enabled via config.');
     return false;
   }
@@ -49,13 +49,19 @@ function shouldEnableTracing() {
 
 
 function shouldEnableAutomaticTracing() {
-  if (config.tracing && config.tracing.enabled === false && exports.supportedVersion(process.versions.node)) {
+  if (config.tracing && config.tracing.enabled === false) {
     logger.info('Not enabling automatic tracing as tracing is not enabled via config.');
     return false;
   }
 
   if (config.tracing && config.tracing.disableAutomaticTracing) {
     logger.info('Not enabling automatic tracing as automatic tracing is disabled via config.');
+    return false;
+  }
+
+  if (!exports.supportedVersion(process.versions.node)) {
+    logger.info('Not enabling automatic tracing this is an unsupported version of Node.' +
+                '  See: https://docs.instana.io/ecosystem/node-js/');
     return false;
   }
   return true;
