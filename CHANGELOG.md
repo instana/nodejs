@@ -1,5 +1,8 @@
 # Changelog
 
+## Unreleased
+ - Support announce to agent even when the Node.js process is renamed.
+
 ## 1.28.0
  - Support automatic Node.js 8 tracing.
 
