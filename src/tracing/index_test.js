@@ -19,8 +19,9 @@ describe('tracing', function() {
       expect(tracing.supportedVersion('6.1.0')).to.equal(true);
       expect(tracing.supportedVersion('6.2.0')).to.equal(true);
       expect(tracing.supportedVersion('7.3.3')).to.equal(true);
-      expect(tracing.supportedVersion('8.0.0')).to.equal(true);
+      expect(tracing.supportedVersion('8.2.1')).to.equal(true);
       expect(tracing.supportedVersion('8.3.0')).to.equal(true);
+      expect(tracing.supportedVersion('8.9.1')).to.equal(true);
     });
 
     it('must report various Node.js versions as not supported', function() {
@@ -30,6 +31,8 @@ describe('tracing', function() {
       expect(tracing.supportedVersion('4.4.9')).to.equal(false);
       expect(tracing.supportedVersion('4.0.0')).to.equal(false);
       expect(tracing.supportedVersion('5.9.0')).to.equal(false);
+      expect(tracing.supportedVersion('8.0.0')).to.equal(false);
+      expect(tracing.supportedVersion('8.1.4')).to.equal(false);
     });
   });
 });

@@ -58,12 +58,18 @@ function shouldEnableAutomaticTracing() {
     logger.info('Not enabling automatic tracing as automatic tracing is disabled via config.');
     return false;
   }
+
+  if (!exports.supportedVersion(process.versions.node)) {
+    logger.info('Not enabling automatic tracing this is an unsupported version of Node.' +
+                '  See: https://docs.instana.io/ecosystem/node-js/');
+    return false;
+  }
   return true;
 }
 
 
 exports.supportedVersion = function supportedVersion(version) {
-  return semver.satisfies(version, '^4.5 || ^5.10 || >=6');
+  return semver.satisfies(version, '^4.5 || ^5.10 || >=6 <8.0 || >=8.2.1');
 };
 
 
