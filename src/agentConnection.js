@@ -8,6 +8,7 @@ var atMostOnce = require('./util/atMostOnce');
 var agentOpts = require('./agent/opts');
 var buffer = require('./util/buffer');
 var pidStore = require('./pidStore');
+var cmdline = require('./cmdline');
 var http = require('./http');
 
 // How many extra characters are to be reserved for the inode and
@@ -15,7 +16,6 @@ var http = require('./http');
 var paddingForInodeAndFileDescriptor = 200;
 
 exports.announceNodeSensor = function announceNodeSensor(cb) {
-  var cmdline = require('./cmdline');
   cb = atMostOnce('callback for announceNodeSensor', cb);
 
   var payload = {
@@ -33,6 +33,7 @@ exports.announceNodeSensor = function announceNodeSensor(cb) {
     spacer: ''
   };
 
+  cmdline.fetch();
   if (cmdline.name && cmdline.args) {
     payload.name = cmdline.name;
     payload.args = cmdline.args;
