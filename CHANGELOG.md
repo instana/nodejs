@@ -1,5 +1,8 @@
 # Changelog
 
+## Unreleased
+ - Node.js <=4.5.0 can have `Buffer.from`, but it does not accept a string.
+
 ## 1.28.0
  - Support automatic Node.js 8 tracing.
 
