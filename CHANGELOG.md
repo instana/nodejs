@@ -1,7 +1,10 @@
 # Changelog
 
+## Unreleased
+ - Fix: MongoDB instrumentation tests fail intermittently
+
 ## 1.28.1
- - Node.js <=4.5.0 can have `Buffer.from`, but it does not accept a string.
+ - Node.js <=4.5.0 can have `Buffer.from`, but it does not accept a string.  Thanks @libozh!
  - Support announce to agent even when the Node.js process is renamed.
  - Update supported versions; checks & tests
 
