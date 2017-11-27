@@ -2,6 +2,7 @@
 
 ## Unreleased
  - Node.js <=4.5.0 can have `Buffer.from`, but it does not accept a string.
+ - Support announce to agent even when the Node.js process is renamed.
 
 ## 1.28.0
  - Support automatic Node.js 8 tracing.

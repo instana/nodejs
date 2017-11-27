@@ -33,9 +33,10 @@ exports.announceNodeSensor = function announceNodeSensor(cb) {
     spacer: ''
   };
 
-  if (cmdline.name && cmdline.args) {
-    payload.name = cmdline.name;
-    payload.args = cmdline.args;
+  var processCmdline = cmdline.getCmdline();
+  if (processCmdline.name && processCmdline.args) {
+    payload.name = processCmdline.name;
+    payload.args = processCmdline.args;
   }
 
   var payloadStr = JSON.stringify(payload);
