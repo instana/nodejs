@@ -11,7 +11,13 @@ require('../../')({
   }
 });
 
-var mysql = require('mysql');
+var mysql;
+if (process.env.MYSQL_2_DRIVER === 'true') {
+  mysql = require('mysql2');
+} else {
+  mysql = require('mysql');
+}
+
 var bodyParser = require('body-parser');
 var express = require('express');
 var morgan = require('morgan');
