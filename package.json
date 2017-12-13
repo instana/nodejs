@@ -68,6 +68,7 @@
     "mongodb": "2.2.33",
     "morgan": "^1.8.1",
     "mysql": "^2.13.0",
+    "mysql2": "^1.5.1",
     "proxyquire": "1.7.3",
     "request": "2.74.0",
     "request-promise": "4.1.1",

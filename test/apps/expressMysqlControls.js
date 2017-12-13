@@ -23,6 +23,7 @@ exports.registerTestHooks = function(opts) {
     env.UPSTREAM_PORT = upstreamPort;
     env.STACK_TRACE_LENGTH = opts.stackTraceLength || 0;
     env.TRACING_ENABLED = opts.enableTracing !== false;
+    env.MYSQL_2_DRIVER = opts.useMysql2 === true;
 
     expressMysqlApp = spawn('node', [path.join(__dirname, 'expressMysql.js')], {
       stdio: config.getAppStdio(),

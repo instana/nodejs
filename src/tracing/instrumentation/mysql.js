@@ -10,16 +10,31 @@ var cls = require('../cls');
 var isActive = false;
 
 exports.init = function() {
-  requireHook.on('mysql', instrument);
+  requireHook.on('mysql', instrumentMysql);
+  requireHook.on('mysql2', instrumentMysql2);
 };
 
 
-function instrument(mysql) {
-  var Connection = Object.getPrototypeOf(mysql.createConnection({}));
-  var Pool = Object.getPrototypeOf(mysql.createPool({}));
-  shimmer.wrap(Connection, 'query', shimQuery);
+function instrumentMysql(mysql) {
+  instrumentConnection(Object.getPrototypeOf(mysql.createConnection({})));
+  instrumentPool(Object.getPrototypeOf(mysql.createPool({})));
+}
+
+
+function instrumentMysql2(mysql) {
+  instrumentConnection(mysql.Connection.prototype);
+  instrumentPool(mysql.Pool.prototype);
+}
+
+
+function instrumentPool(Pool) {
   shimmer.wrap(Pool, 'query', shimQuery);
   shimmer.wrap(Pool, 'getConnection', shimGetConnection);
+}
+
+
+function instrumentConnection(Connection) {
+  shimmer.wrap(Connection, 'query', shimQuery);
 }
 
 
