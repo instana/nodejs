@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.30.0
  - Use MIT license.
 
 ## 1.29.0
