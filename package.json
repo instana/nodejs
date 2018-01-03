@@ -33,7 +33,7 @@
     "monitoring"
   ],
   "author": "Ben Ripkens <ben@instana.com>",
-  "license": "UNLICENSED",
+  "license": "MIT",
   "bugs": {
     "url": "https://github.com/instana/nodejs-sensor/issues"
   },

@@ -1,5 +1,8 @@
 # Changelog
 
+## Unreleased
+ - Use MIT license.
+
 ## 1.29.0
  - MongoDB instrumentation tests fail intermittently
  - Add automatic mysql2 instrumentation
