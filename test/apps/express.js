@@ -63,6 +63,12 @@ app.use(function(req, res) {
   if (req.query.cookie) {
     res.set('set-CooKie', req.query.cookie);
   }
+  if (req.query.serverTiming) {
+    res.set('sErver-tiMING', 'myServerTimingKey');
+  }
+  if (req.query.serverTimingArray) {
+    res.set('sErver-tiMING', ['key1', "key2;dur=42"]);
+  }
 
   setTimeout(function() {
     res.sendStatus(responseStatus);

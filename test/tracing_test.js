@@ -40,14 +40,40 @@ describe('tracing', function() {
     });
   });
 
-  it('must expose trace id as Server-Timing header', function() {
-    return expressControls.sendRequest({
-      method: 'POST',
-      path: '/checkout',
-      resolveWithFullResponse: true
-    })
-    .then(function(res) {
-      expect(res.headers['server-timing']).to.match(/^ibs_[a-f0-9]+=1$/);
+  describe('serverTiming', function() {
+    it('must expose trace id as Server-Timing header', function() {
+      return expressControls.sendRequest({
+        method: 'POST',
+        path: '/checkout',
+        resolveWithFullResponse: true
+      })
+      .then(function(res) {
+        expect(res.headers['server-timing']).to.match(/^intid;desc=[a-f0-9]+$/);
+      });
+    });
+
+    it('must expose trace id as Server-Timing header: Custom server-timing arrayg', function() {
+      return expressControls.sendRequest({
+        method: 'POST',
+        path: '/checkout',
+        resolveWithFullResponse: true,
+        serverTiming: true
+      })
+      .then(function(res) {
+        expect(res.headers['server-timing']).to.match(/^myServerTimingKey, intid;desc=[a-f0-9]+$/);
+      });
+    });
+
+    it('must expose trace id as Server-Timing header: Custom server-timing array', function() {
+      return expressControls.sendRequest({
+        method: 'POST',
+        path: '/checkout',
+        resolveWithFullResponse: true,
+        serverTimingArray: true
+      })
+      .then(function(res) {
+        expect(res.headers['server-timing']).to.match(/^key1, key2;dur=42, intid;desc=[a-f0-9]+$/);
+      });
     });
   });
 

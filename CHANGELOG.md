@@ -1,5 +1,8 @@
 # Changelog
 
+## Unreleased
+ - Update `Server-Timing` response header in HTTP instrumentation to format of latest spec version.
+
 ## 1.30.0
  - Use MIT license.
 

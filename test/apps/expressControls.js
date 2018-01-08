@@ -72,7 +72,9 @@ exports.sendRequest = function(opts) {
     qs: {
       responseStatus: opts.responseStatus,
       delay: opts.delay,
-      cookie: opts.cookie
+      cookie: opts.cookie,
+      serverTiming: opts.serverTiming,
+      serverTimingArray: opts.serverTimingArray
     },
     resolveWithFullResponse: opts.resolveWithFullResponse
   })

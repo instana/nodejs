@@ -37,7 +37,24 @@ function shimEmit(realEmit) {
       // Handle client / backend eum correlation.
       if (span.s === span.t) {
         req.headers['x-instana-t'] = span.t;
-        res.setHeader('Server-Timing', 'ibs_' + span.t + '=1');
+
+        // support for automatic client / backend eum correlation
+        // intid = instana trace id
+        // This abbreviation is small enough to not incur a notable overhead while at the same
+        // time being unique (funky) enough to avoid name collisions.
+        var serverTimingValue = 'intid;desc=' + span.t;
+        res.setHeader('Server-Timing', serverTimingValue);
+        shimmer.wrap(res, 'setHeader', function(realSetHeader) {
+          return function shimmedSetHeader(key, value) {
+            if (key.toLowerCase() === 'server-timing') {
+              if (value instanceof Array) {
+                return realSetHeader.call(this, key, value.concat(serverTimingValue));
+              }
+              return realSetHeader.call(this, key, value + ', ' + serverTimingValue);
+            }
+            return realSetHeader.apply(this, arguments);
+          };
+        });
       }
 
       res.on('finish', function() {
