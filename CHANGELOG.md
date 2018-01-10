@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.30.2
+ - Support HTTPS server tracing.
+
 ## 1.30.1
  - Update `Server-Timing` response header in HTTP instrumentation to format of latest spec version.
 

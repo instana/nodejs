@@ -17,6 +17,8 @@ require('../../')({
 
 var express = require('express');
 var semver = require('semver');
+var path = require('path');
+var fs = require('fs');
 var app = express();
 
 var healthcheckFunction = function() {
@@ -76,9 +78,18 @@ app.use(function(req, res) {
 });
 
 
-app.listen(process.env.APP_PORT, function() {
-  log('Listening on port: ' + process.env.APP_PORT);
-});
+if (process.env.USE_HTTPS === 'true') {
+  require('https').createServer({
+    key: fs.readFileSync(path.join(__dirname, 'ssl', 'key')),
+    cert: fs.readFileSync(path.join(__dirname, 'ssl', 'cert'))
+  }, app).listen(process.env.APP_PORT, function() {
+    log('Listening (HTTPS!) on port: ' + process.env.APP_PORT);
+  });
+} else {
+  app.listen(process.env.APP_PORT, function() {
+    log('Listening on port: ' + process.env.APP_PORT);
+  });
+}
 
 function log() {
   var args = Array.prototype.slice.call(arguments);
