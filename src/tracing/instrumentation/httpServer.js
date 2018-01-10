@@ -1,5 +1,6 @@
 'use strict';
 
+var coreHttpsModule = require('https');
 var coreHttpModule = require('http');
 
 var discardUrlParameters = require('../../util/url').discardUrlParameters;
@@ -11,8 +12,8 @@ var cls = require('../cls');
 var isActive = false;
 
 exports.init = function() {
-  var proto = coreHttpModule.Server && coreHttpModule.Server.prototype;
-  shimmer.wrap(proto, 'emit', shimEmit);
+  shimmer.wrap(coreHttpModule.Server && coreHttpModule.Server.prototype, 'emit', shimEmit);
+  shimmer.wrap(coreHttpsModule.Server && coreHttpsModule.Server.prototype, 'emit', shimEmit);
 };
 
 function shimEmit(realEmit) {

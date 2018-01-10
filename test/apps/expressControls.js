@@ -23,13 +23,14 @@ exports.registerTestHooks = function(opts) {
     env.APP_PORT = appPort;
     env.TRACING_ENABLED = opts.enableTracing !== false;
     env.STACK_TRACE_LENGTH = opts.stackTraceLength || 0;
+    env.USE_HTTPS = opts.useHttps === true;
 
     expressApp = spawn('node', [path.join(__dirname, 'express.js')], {
       stdio: config.getAppStdio(),
       env: env
     });
 
-    return waitUntilServerIsUp();
+    return waitUntilServerIsUp(opts.useHttps);
   });
 
   afterEach(function() {
@@ -38,14 +39,15 @@ exports.registerTestHooks = function(opts) {
 };
 
 
-function waitUntilServerIsUp() {
+function waitUntilServerIsUp(useHttps) {
   return utils.retry(function() {
     return request({
       method: 'GET',
-      url: 'http://127.0.0.1:' + appPort,
+      url: getBaseUrl(useHttps),
       headers: {
         'X-INSTANA-L': '0'
-      }
+      },
+      strictSSL: false
     });
   });
 }
@@ -58,8 +60,9 @@ exports.getPid = function() {
 exports.sendBasicRequest = function(opts) {
   return request({
     method: opts.method,
-    url: 'http://127.0.0.1:' + appPort + opts.path,
-    resolveWithFullResponse: opts.resolveWithFullResponse
+    url: getBaseUrl(opts.useHttps) + opts.path,
+    resolveWithFullResponse: opts.resolveWithFullResponse,
+      strictSSL: false
   });
 };
 
@@ -68,7 +71,7 @@ exports.sendRequest = function(opts) {
   opts.delay = opts.delay || 0;
   return request({
     method: opts.method,
-    url: 'http://127.0.0.1:' + appPort + opts.path,
+    url: getBaseUrl(opts.useHttps) + opts.path,
     qs: {
       responseStatus: opts.responseStatus,
       delay: opts.delay,
@@ -76,7 +79,8 @@ exports.sendRequest = function(opts) {
       serverTiming: opts.serverTiming,
       serverTimingArray: opts.serverTimingArray
     },
-    resolveWithFullResponse: opts.resolveWithFullResponse
+    resolveWithFullResponse: opts.resolveWithFullResponse,
+      strictSSL: false
   })
   .catch(errors.StatusCodeError, function(reason) {
     if (reason.statusCode === opts.responseStatus) {
@@ -86,16 +90,22 @@ exports.sendRequest = function(opts) {
   });
 };
 
-exports.setHealthy = function() {
+exports.setHealthy = function(useHttps) {
   return request({
     method: 'POST',
-    url: 'http://127.0.0.1:' + appPort + '/admin/set-to-healthy'
+    url: getBaseUrl(useHttps) + '/admin/set-to-healthy',
+    strictSSL: false
   });
 };
 
-exports.setUnhealthy = function() {
+exports.setUnhealthy = function(useHttps) {
   return request({
     method: 'POST',
-    url: 'http://127.0.0.1:' + appPort + '/admin/set-to-unhealthy'
+    url: getBaseUrl(useHttps) + '/admin/set-to-unhealthy',
+    strictSSL: false
   });
 };
+
+function getBaseUrl(useHttps) {
+ return 'http' + (useHttps ? 's' : '') + '://127.0.0.1:' + appPort;
+}
