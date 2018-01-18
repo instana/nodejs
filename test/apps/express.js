@@ -57,6 +57,12 @@ app.post('/admin/set-to-healthy', function(req, res) {
   res.send('OK');
 });
 
+var router = express.Router();
+router.get('/subPath', function(req, res) {
+  res.sendStatus(200);
+});
+app.use('/routed', router);
+
 app.use(function(req, res) {
   log(req.method, req.url);
   var delay = parseInt(req.query.delay || 0, 10);

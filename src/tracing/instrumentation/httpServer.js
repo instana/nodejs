@@ -35,6 +35,11 @@ function shimEmit(realEmit) {
       var incomingSpanId = getExistingSpanId(req);
       var span = cls.startSpan('node.http.server', incomingTraceId, incomingSpanId);
 
+      // Grab the URL before application code gets access to the incoming message.
+      // We are doing this because libs like express are manipulating req.url when
+      // using routers.
+      var urlParts = req.url.split('?');
+
       // Handle client / backend eum correlation.
       if (span.s === span.t) {
         req.headers['x-instana-t'] = span.t;
@@ -59,7 +64,6 @@ function shimEmit(realEmit) {
       }
 
       res.on('finish', function() {
-        var urlParts = req.url.split('?');
         span.data = {
           http: {
             method: req.method,

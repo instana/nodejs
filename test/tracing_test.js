@@ -40,6 +40,24 @@ describe('tracing', function() {
     });
   });
 
+  it('must support sub routes', function() {
+    return expressControls.sendRequest({
+      method: 'GET',
+      path: '/routed/subPath',
+      responseStatus: 200
+    })
+    .then(function() {
+      return utils.retry(function() {
+        return agentStubControls.getSpans()
+        .then(function(spans) {
+          utils.expectOneMatching(spans, function(span) {
+            expect(span.data.http.url).to.equal('/routed/subPath');
+          });
+        });
+      });
+    });
+  });
+
   describe('serverTiming', function() {
     it('must expose trace id as Server-Timing header', function() {
       return expressControls.sendRequest({

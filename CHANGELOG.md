@@ -1,5 +1,8 @@
 # Changelog
 
+## Unreleased
+ - HTTP tracing will report incorrect path in case of express.js router usage.
+
 ## 1.30.2
  - Support HTTPS server tracing.
 
