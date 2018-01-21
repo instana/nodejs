@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.31.0
  - Add redis instrumentation.
 
 ## 1.30.3
