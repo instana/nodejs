@@ -76,6 +76,7 @@ AbstractControls.prototype.sendRequest = function(opts) {
     url: this.baseUrl + opts.path,
     json: true,
     body: opts.body,
-    headers: headers
+    headers: headers,
+    qs: opts.qs
   });
 };

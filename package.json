@@ -71,6 +71,7 @@
     "mysql": "^2.13.0",
     "mysql2": "^1.5.1",
     "proxyquire": "1.7.3",
+    "redis": "^2.8.0",
     "request": "2.74.0",
     "request-promise": "4.1.1",
     "request-promise-native": "1.0.3",

@@ -4,7 +4,7 @@ var tracingUtil = require('./tracingUtil');
 var hooked = require('cls-hooked');
 var currentSpanKey = 'csKey';
 
-var exitSpans = ['node.http.client', 'elasticsearch', 'mongo', 'mysql'];
+var exitSpans = ['node.http.client', 'elasticsearch', 'mongo', 'mysql', 'redis'];
 var entrySpans = ['node.http.server'];
 
 /*

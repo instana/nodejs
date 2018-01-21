@@ -43,7 +43,7 @@ function instrumentApi(client, action, info) {
   var original = client[action];
 
   client[action] = function instrumentedAction(params, cb) {
-    if (!isActive || !cls.isTracing() ) {
+    if (!isActive || !cls.isTracing()) {
       return original.apply(client, arguments);
     }
 
