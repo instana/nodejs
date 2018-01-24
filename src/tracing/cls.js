@@ -2,8 +2,9 @@
 
 var tracingUtil = require('./tracingUtil');
 var hooked = require('cls-hooked');
-var currentRootSpanKey = 'crsKey';
-var currentSpanKey = 'csKey';
+
+var currentRootSpanKey = 'com.instana.rootSpan';
+var currentSpanKey = 'com.instana.span';
 
 var exitSpans = ['node.http.client', 'elasticsearch', 'mongo', 'mysql', 'redis'];
 var entrySpans = ['node.http.server'];

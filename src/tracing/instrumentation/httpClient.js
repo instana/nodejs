@@ -46,7 +46,7 @@ exports.init = function() {
 
       span.stack = tracingUtil.getStackTrace(request);
 
-      var responseListener = function responseListener(res) {
+      var responseListener = cls.ns.bind(function responseListener(res) {
         span.data = {
           http: {
             method: clientRequest.method,
@@ -62,7 +62,7 @@ exports.init = function() {
         if (givenResponseListener) {
           givenResponseListener(res);
         }
-      };
+      });
 
       try {
         clientRequest = originalRequest.call(coreHttpModule, opts, responseListener);
@@ -72,11 +72,12 @@ exports.init = function() {
         throw e;
       }
 
+      cls.ns.bindEmitter(clientRequest);
       clientRequest.setHeader(tracingConstants.spanIdHeaderName, span.s);
       clientRequest.setHeader(tracingConstants.traceIdHeaderName, span.t);
       clientRequest.setHeader(tracingConstants.traceLevelHeaderName, '1');
 
-      clientRequest.addListener('timeout', function() {
+      clientRequest.on('timeout', function() {
         span.data = {
           http: {
             method: clientRequest.method,
@@ -90,7 +91,7 @@ exports.init = function() {
         transmission.addSpan(span);
       });
 
-      clientRequest.addListener('error', function(err) {
+      clientRequest.on('error', function(err) {
         span.data = {
           http: {
             method: clientRequest.method,

@@ -21,15 +21,16 @@ exports.init = function(_config) {
     require('./opentracing').init(config, automaticTracingEnabled);
 
     if (automaticTracingEnabled) {
-      require('./instrumentation/httpServer.js').init(config);
-      require('./instrumentation/httpClient.js').init(config);
-      require('./instrumentation/elasticsearch.js').init(config);
-      require('./instrumentation/mongodb.js').init(config);
-      require('./instrumentation/kafka.js').init(config);
-      require('./instrumentation/mysql.js').init(config);
-      require('./instrumentation/redis.js').init(config);
-      require('./instrumentation/express.js').init(config);
-      require('./instrumentation/ioredis.js').init(config);
+      require('./instrumentation/bluebird').init(config);
+      require('./instrumentation/httpServer').init(config);
+      require('./instrumentation/httpClient').init(config);
+      require('./instrumentation/elasticsearch').init(config);
+      require('./instrumentation/mongodb').init(config);
+      require('./instrumentation/kafka').init(config);
+      require('./instrumentation/mysql').init(config);
+      require('./instrumentation/redis').init(config);
+      require('./instrumentation/express').init(config);
+      require('./instrumentation/ioredis').init(config);
     }
   }
 };
@@ -82,15 +83,16 @@ exports.activate = function() {
     require('./opentracing').activate();
 
     if (automaticTracingEnabled) {
-      require('./instrumentation/httpServer.js').activate();
-      require('./instrumentation/httpClient.js').activate();
-      require('./instrumentation/elasticsearch.js').activate();
-      require('./instrumentation/mongodb.js').activate();
-      require('./instrumentation/kafka.js').activate();
-      require('./instrumentation/mysql.js').activate();
-      require('./instrumentation/redis.js').activate();
-      require('./instrumentation/ioredis.js').activate();
-      require('./instrumentation/express.js').activate();
+      require('./instrumentation/bluebird').activate();
+      require('./instrumentation/httpServer').activate();
+      require('./instrumentation/httpClient').activate();
+      require('./instrumentation/elasticsearch').activate();
+      require('./instrumentation/mongodb').activate();
+      require('./instrumentation/kafka').activate();
+      require('./instrumentation/mysql').activate();
+      require('./instrumentation/redis').activate();
+      require('./instrumentation/ioredis').activate();
+      require('./instrumentation/express').activate();
     }
   }
 };
@@ -99,15 +101,16 @@ exports.activate = function() {
 exports.deactivate = function() {
   if (tracingEnabled) {
     if (automaticTracingEnabled) {
-      require('./instrumentation/mysql.js').deactivate();
-      require('./instrumentation/kafka.js').deactivate();
-      require('./instrumentation/mongodb.js').deactivate();
-      require('./instrumentation/elasticsearch.js').deactivate();
-      require('./instrumentation/httpServer.js').deactivate();
-      require('./instrumentation/httpClient.js').deactivate();
-      require('./instrumentation/redis.js').deactivate();
-      require('./instrumentation/ioredis.js').deactivate();
-      require('./instrumentation/express.js').deactivate();
+      require('./instrumentation/bluebird').deactivate();
+      require('./instrumentation/mysql').deactivate();
+      require('./instrumentation/kafka').deactivate();
+      require('./instrumentation/mongodb').deactivate();
+      require('./instrumentation/elasticsearch').deactivate();
+      require('./instrumentation/httpServer').deactivate();
+      require('./instrumentation/httpClient').deactivate();
+      require('./instrumentation/redis').deactivate();
+      require('./instrumentation/ioredis').deactivate();
+      require('./instrumentation/express').deactivate();
     }
 
     require('./opentracing').deactivate();
