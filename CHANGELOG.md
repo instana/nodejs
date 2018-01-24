@@ -1,5 +1,8 @@
 # Changelog
 
+## Unreleased
+ - Include details about uncaught errors in express handlers.
+
 ## 1.31.0
  - Add redis instrumentation.
 

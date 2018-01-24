@@ -11,6 +11,8 @@ var cls = require('../cls');
 
 var isActive = false;
 
+exports.spanName = 'node.http.server';
+
 exports.init = function() {
   shimmer.wrap(coreHttpModule.Server && coreHttpModule.Server.prototype, 'emit', shimEmit);
   shimmer.wrap(coreHttpsModule.Server && coreHttpsModule.Server.prototype, 'emit', shimEmit);
@@ -33,12 +35,21 @@ function shimEmit(realEmit) {
 
       var incomingTraceId = getExistingTraceId(req);
       var incomingSpanId = getExistingSpanId(req);
-      var span = cls.startSpan('node.http.server', incomingTraceId, incomingSpanId);
+      // expose the span for the express instrumentation
+      var span = req.__instanaHttpSpan = cls.startSpan(exports.spanName, incomingTraceId, incomingSpanId);
 
       // Grab the URL before application code gets access to the incoming message.
       // We are doing this because libs like express are manipulating req.url when
       // using routers.
       var urlParts = req.url.split('?');
+      span.data = {
+        http: {
+          method: req.method,
+          url: discardUrlParameters(urlParts.shift()),
+          params: urlParts.join('?'),
+          host: req.headers.host
+        }
+      };
 
       // Handle client / backend eum correlation.
       if (span.s === span.t) {
@@ -64,15 +75,7 @@ function shimEmit(realEmit) {
       }
 
       res.on('finish', function() {
-        span.data = {
-          http: {
-            method: req.method,
-            url: discardUrlParameters(urlParts.shift()),
-            params: urlParts.join('?'),
-            status: res.statusCode,
-            host: req.headers.host
-          }
-        };
+        span.data.http.status = res.statusCode;
         span.error = res.statusCode >= 500;
         span.ec = span.error ? 1 : 0;
         span.d = Date.now() - span.ts;

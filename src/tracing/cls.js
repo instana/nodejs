@@ -2,6 +2,7 @@
 
 var tracingUtil = require('./tracingUtil');
 var hooked = require('cls-hooked');
+var currentRootSpanKey = 'crsKey';
 var currentSpanKey = 'csKey';
 
 var exitSpans = ['node.http.client', 'elasticsearch', 'mongo', 'mysql', 'redis'];
@@ -60,6 +61,7 @@ exports.startSpan = function startSpan(spanName, traceId, spanId) {
   // Set span direction type (1=entry, 2=exit, 3=local/intermediate)
   if (entrySpans.indexOf(span.n) > -1) {
     span.k = 1;
+    exports.ns.set(currentRootSpanKey, span);
   } else if (exitSpans.indexOf(span.n) > -1) {
     span.k = 2;
   } else {
@@ -68,6 +70,14 @@ exports.startSpan = function startSpan(spanName, traceId, spanId) {
 
   exports.ns.set(currentSpanKey, span);
   return span;
+};
+
+/*
+ * Get the currently active root span
+ *
+ */
+exports.getCurrentRootSpan = function getCurrentRootSpan() {
+  return exports.ns.get(currentRootSpanKey);
 };
 
 /*
