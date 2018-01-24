@@ -42,7 +42,7 @@ Sensor releases are a two-stage process. New releases will initially be tagged w
 npm publish --tag=next
 
 # once verified that the release works as expected
-npm dist-tag add instana-nodejs-sensor@<sensor version> latest
+npm dist-tag add instana-nodejs-sensor@$(node -e "console.log(require('./package.json').version)") latest
 
 # verify that tags have been correctly applied
 npm dist-tag ls instana-nodejs-sensor
