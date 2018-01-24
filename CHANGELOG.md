@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.32.0
  - Include details about uncaught errors in express handlers.
 
 ## 1.31.0
