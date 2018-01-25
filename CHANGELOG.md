@@ -1,5 +1,8 @@
 # Changelog
 
+## Unreleased
+ - - Add ioredis instrumentation.
+
 ## 1.32.0
  - Include details about uncaught errors in express handlers.
 

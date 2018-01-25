@@ -29,6 +29,7 @@ exports.init = function(_config) {
       require('./instrumentation/mysql.js').init(config);
       require('./instrumentation/redis.js').init(config);
       require('./instrumentation/express.js').init(config);
+      require('./instrumentation/ioredis.js').init(config);
     }
   }
 };
@@ -88,6 +89,7 @@ exports.activate = function() {
       require('./instrumentation/kafka.js').activate();
       require('./instrumentation/mysql.js').activate();
       require('./instrumentation/redis.js').activate();
+      require('./instrumentation/ioredis.js').activate();
       require('./instrumentation/express.js').activate();
     }
   }
@@ -104,6 +106,7 @@ exports.deactivate = function() {
       require('./instrumentation/httpServer.js').deactivate();
       require('./instrumentation/httpClient.js').deactivate();
       require('./instrumentation/redis.js').deactivate();
+      require('./instrumentation/ioredis.js').deactivate();
       require('./instrumentation/express.js').deactivate();
     }
 
