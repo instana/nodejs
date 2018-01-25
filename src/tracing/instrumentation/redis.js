@@ -19,18 +19,31 @@ exports.deactivate = function() {
 
 exports.init = function() {
   requireHook.on('redis', instrument);
+  requireHook.on('ioredis', instrumentIoredis);
 };
 
 
 function instrument(redis) {
-  shimmer.wrap(redis.RedisClient.prototype, 'internal_send_command', instrumentInternalSendCommand);
+  shimmer.wrap(redis.RedisClient.prototype, 'internal_send_command', instrumentNodeRedisSendCommand);
 }
 
-function instrumentInternalSendCommand(original) {
+function instrumentIoredis(ioredis) {
+  shimmer.wrap(ioredis.prototype, 'sendCommand', instrumentIoredisSendCommand);
+}
+
+function instrumentNodeRedisSendCommand(original) {
+  return instrumentSendCommand(original, 'command');
+}
+
+function instrumentIoredisSendCommand(original) {
+  return instrumentSendCommand(original, 'name');
+}
+
+function instrumentSendCommand(original, nameProp) {
   return function wrappedInternalSendCommand(command) {
     var client = this;
 
-    if (typeof command.command !== 'string' || !isActive || !cls.isTracing()) {
+    if (typeof command[nameProp] !== 'string' || !isActive || !cls.isTracing()) {
       return original.apply(this, arguments);
     }
 
@@ -38,12 +51,17 @@ function instrumentInternalSendCommand(original) {
     if (cls.isExitSpan(parentSpan)) {
       // multi commands could actually be recorded as multiple spans, but we only want to record one
       // batched span
-      if (parentSpan.n === 'redis' && parentSpan.data.redis.command === 'multi') {
+      if (parentSpan.n === 'redis' && (parentSpan.data.redis.command === 'multi' || parentSpan.data.redis.command === 'pipeline')) {
         var parentSpanSubCommands = parentSpan.data.redis.subCommands = parentSpan.data.redis.subCommands || [];
-        parentSpanSubCommands.push(command.command);
+        parentSpanSubCommands.push(command[nameProp]);
 
-        if (command.command.toLowerCase() === 'exec') {
-          command.callback = cls.ns.bind(getMultiCommandEndCall(parentSpan, command.callback));
+        if (command[nameProp].toLowerCase() === 'exec') {
+          if (command.promise) {
+            var cb = cls.ns.bind(getMultiCommandEndCall(parentSpan));
+            command.promise.then(function() { cb(); }, cb);
+          } else {
+            command.callback = cls.ns.bind(getMultiCommandEndCall(parentSpan, command.callback));
+          }
         }
       }
       return original.apply(this, arguments);
@@ -51,20 +69,26 @@ function instrumentInternalSendCommand(original) {
 
     var span = cls.startSpan('redis');
     span.stack = tracingUtil.getStackTrace(wrappedInternalSendCommand);
+    var address = client.address || client.options.host + ':' + client.options.port;
     span.data = {
       redis: {
-        connection: client.address,
-        command: command.command.toLowerCase()
+        connection: address,
+        command: command[nameProp].toLowerCase()
       }
     };
 
-    var userProvidedCallback = command.callback;
-    command.callback = cls.ns.bind(onResult);
+    var userProvidedCallback;
+    if (command.promise) {
+      command.promise.then(cls.ns.bind(function() { onResult(); }), cls.ns.bind(onResult));
+    } else {
+      userProvidedCallback = command.callback;
+      command.callback = cls.ns.bind(onResult);
+    }
     return original.apply(this, arguments);
 
     function onResult(error) {
       // multi commands are ended by exec. Wait for the exec result
-      if (command.command === 'multi') {
+      if (command[nameProp] === 'multi' || command[nameProp] === 'pipeline') {
         if (typeof userProvidedCallback === 'function') {
           return userProvidedCallback.apply(this, arguments);
         }
