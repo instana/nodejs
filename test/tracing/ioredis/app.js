@@ -107,6 +107,36 @@ app.get('/multiFailure', function(req, res) {
 });
 
 
+app.get('/pipeline', function(req, res) {
+  client.pipeline()
+    .hset('someCollection', 'key', 'value')
+    .hset('someCollection', 'key2', 'value')
+    .hget('someCollection', 'key')
+    .exec(function(err) {
+      if (err) {
+        res.sendStatus(500);
+      } else {
+        res.sendStatus(200);
+      }
+    });
+});
+
+
+app.get('/pipelineFailure', function(req, res) {
+  client.pipeline()
+    .hset('someCollection', 'key', 'value')
+    .hset('someCollection', 'key2', 'value', 'tooManyArgs')
+    .hget('someCollection', 'key')
+    .exec(function(err) {
+      if (err) {
+        res.sendStatus(500);
+      } else {
+        res.sendStatus(200);
+      }
+    });
+});
+
+
 app.listen(process.env.APP_PORT, function() {
   log('Listening on port: ' + process.env.APP_PORT);
 });

@@ -27,3 +27,10 @@ exports.getStackTrace = function getStackTrace(referenceFunction) {
 exports.generateRandomSpanId = function generateRandomSpanId() {
   return Math.floor(Math.random() * Number.MAX_SAFE_INTEGER).toString(16);
 };
+
+exports.getErrorDetails = function getErrorDetails(err) {
+  if (err == null) {
+    return undefined;
+  }
+  return String(err.stack || err.message || err).slice(0, 500);
+};

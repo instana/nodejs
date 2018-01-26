@@ -23,10 +23,11 @@ exports.init = function() {
 
 
 function instrument(ioredis) {
-  shimmer.wrap(ioredis.prototype, 'sendCommand', instrumentIoredisSendCommand);
+  shimmer.wrap(ioredis.prototype, 'sendCommand', instrumentSendCommand);
+  shimmer.wrap(ioredis.prototype, 'pipeline', instrumentPipelineCommand);
 }
 
-function instrumentIoredisSendCommand(original) {
+function instrumentSendCommand(original) {
   return function wrappedInternalSendCommand(command) {
     var client = this;
 
@@ -41,12 +42,17 @@ function instrumentIoredisSendCommand(original) {
     var parentSpan = cls.getCurrentSpan();
     if (cls.isExitSpan(parentSpan)) {
       // multi commands could actually be recorded as multiple spans, but we only want to record one
-      // batched span
-      if (parentSpan.n === 'redis' && parentSpan.data.redis.command === 'multi') {
+      // batched span considering that a multi call represents a transaction.
+      // The same is true for pipeline calls, but they have a slightlt different semantic.
+      var isMultiParent = parentSpan.data.redis.command === 'multi';
+      var isPipelineParent = parentSpan.data.redis.command === 'pipeline';
+      if (parentSpan.n === 'redis' && (isMultiParent || isPipelineParent)) {
         var parentSpanSubCommands = parentSpan.data.redis.subCommands = parentSpan.data.redis.subCommands || [];
         parentSpanSubCommands.push(command.name);
 
-        if (command.name.toLowerCase() === 'exec') {
+        if (command.name.toLowerCase() === 'exec' &&
+            // pipelining is handled differently in ioredis
+            isMultiParent) {
           callback = cls.ns.bind(getMultiCommandEndCall(parentSpan));
           command.promise.then(
             // make sure that the first parameter is never truthy
@@ -75,7 +81,7 @@ function instrumentIoredisSendCommand(original) {
 
     function onResult(error) {
       // multi commands are ended by exec. Wait for the exec result
-      if (command.name === 'pipeline') {
+      if (command.name === 'multi') {
         return;
       }
 
@@ -97,7 +103,12 @@ function getMultiCommandEndCall(span) {
     span.d = Date.now() - span.ts;
 
     var subCommands = span.data.redis.subCommands;
-    var commandCount = subCommands ? subCommands.length : 1;
+    var commandCount = 1;
+    if (subCommands) {
+      // remove exec call
+      subCommands.pop();
+      commandCount = subCommands.length;
+    }
 
     span.b = {
       s: commandCount,
@@ -112,4 +123,86 @@ function getMultiCommandEndCall(span) {
 
     transmission.addSpan(span);
   };
+}
+
+function instrumentPipelineCommand(original) {
+  return function wrappedInternalPipelineCommand() {
+    var client = this;
+
+    if (!isActive ||
+        !cls.isTracing()) {
+      return original.apply(this, arguments);
+    }
+
+    var parentSpan = cls.getCurrentSpan();
+    if (cls.isExitSpan(parentSpan)) {
+      return original.apply(this, arguments);
+    }
+
+    var span = cls.startSpan('redis');
+    span.stack = tracingUtil.getStackTrace(wrappedInternalPipelineCommand);
+    span.data = {
+      redis: {
+        connection: client.options.host + ':' + client.options.port,
+        command: 'pipeline'
+      }
+    };
+
+    var pipeline = original.apply(this, arguments);
+    shimmer.wrap(pipeline, 'exec', instrumentPipelineExec.bind(null, span));
+    return pipeline;
+  };
+}
+
+function instrumentPipelineExec(span, original) {
+  return function instrumentedPipelineExec() {
+    var result = original.apply(this, arguments);
+    if (result.then) {
+      result.then(function(results) {
+        pipelineCommandEndCallback(span, null, results);
+      }, function(error) {
+        pipelineCommandEndCallback(span, error, []);
+      });
+    }
+    return result;
+  };
+}
+
+function pipelineCommandEndCallback(span, error, results) {
+  span.d = Date.now() - span.ts;
+
+  var subCommands = span.data.redis.subCommands;
+  var commandCount = subCommands ? subCommands.length : 1;
+
+  span.b = {
+    s: commandCount,
+    u: false
+  };
+
+  if (error) {
+    // ioredis docs mention that this should never be possible, but better be safe than sorry
+    span.error = true;
+    span.ec = commandCount;
+    span.data.redis.error = tracingUtil.getErrorDetails(error);
+  } else {
+    var numberOfErrors = 0;
+    var sampledError = undefined;
+
+    // results is an array of the form
+    // [[?Error, ?Response]]
+    for (var i = 0; i < results.length; i++) {
+      if (results[i][0]) {
+        numberOfErrors += 1;
+        sampledError = sampledError || results[i][0];
+      }
+    }
+
+    if (numberOfErrors > 0) {
+      span.error = true;
+      span.ec = numberOfErrors;
+      span.data.redis.error = tracingUtil.getErrorDetails(sampledError);
+    }
+  }
+
+  transmission.addSpan(span);
 }
