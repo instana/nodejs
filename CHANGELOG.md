@@ -1,7 +1,8 @@
 # Changelog
 
 ## Unreleased
- - - Add ioredis instrumentation.
+ - Add ioredis instrumentation.
+ - Exclude `exec` call from Redis instrumentation sub commands.
 
 ## 1.32.0
  - Include details about uncaught errors in express handlers.

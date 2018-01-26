@@ -137,14 +137,13 @@ describe('tracing/redis', function() {
             expect(span.async).to.equal(false);
             expect(span.error).to.equal(false);
             expect(span.ec).to.equal(0);
-            expect(span.b.s).to.equal(3);
+            expect(span.b.s).to.equal(2);
             expect(span.b.u).to.equal(false);
             expect(span.data.redis.connection).to.equal(process.env.REDIS);
             expect(span.data.redis.command).to.equal('multi');
             expect(span.data.redis.subCommands).to.deep.equal([
               'hset',
-              'hget',
-              'exec'
+              'hget'
             ]);
           });
         });
@@ -176,15 +175,14 @@ describe('tracing/redis', function() {
             expect(span.f.e).to.equal(String(redisControls.getPid()));
             expect(span.async).to.equal(false);
             expect(span.error).to.equal(true);
-            expect(span.ec).to.equal(3);
-            expect(span.b.s).to.equal(3);
+            expect(span.ec).to.equal(2);
+            expect(span.b.s).to.equal(2);
             expect(span.b.u).to.equal(false);
             expect(span.data.redis.connection).to.equal(process.env.REDIS);
             expect(span.data.redis.command).to.equal('multi');
             expect(span.data.redis.subCommands).to.deep.equal([
               'hset',
-              'hget',
-              'exec'
+              'hget'
             ]);
           });
         });
