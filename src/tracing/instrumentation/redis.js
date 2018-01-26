@@ -93,7 +93,12 @@ function getMultiCommandEndCall(span, userProvidedCallback) {
     span.d = Date.now() - span.ts;
 
     var subCommands = span.data.redis.subCommands;
-    var commandCount = subCommands ? subCommands.length : 1;
+    var commandCount = 1;
+    if (subCommands) {
+      // remove exec call
+      subCommands.pop();
+      commandCount = subCommands.length;
+    }
 
     span.b = {
       s: commandCount,
