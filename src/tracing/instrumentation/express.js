@@ -3,6 +3,7 @@
 var shimmer = require('shimmer');
 
 var requireHook = require('../../util/requireHook');
+var tracingUtil = require('../tracingUtil');
 var httpServer = require('./httpServer');
 var cls = require('../cls');
 
@@ -92,19 +93,5 @@ function annotateHttpRootSpanWithError(err) {
     return;
   }
 
-  span.data.http.error = getErrorDetails(err);
-}
-
-function getErrorDetails(err) {
-  var message;
-  if (typeof err === 'string') {
-    message = err;
-  } else {
-    message = err.stack || err.message;
-  }
-
-  if (typeof message === 'string') {
-    return message.slice(0, 500);
-  }
-  return undefined;
+  span.data.http.error = tracingUtil.getErrorDetails(err);
 }
