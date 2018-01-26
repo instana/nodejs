@@ -43,6 +43,8 @@ function instrumentInternalSendCommand(original) {
         parentSpanSubCommands.push(command.command);
 
         if (command.command.toLowerCase() === 'exec') {
+          // the exec call is actually when the transmission of these commands to redis is happening
+          parentSpan.ts = Date.now();
           command.callback = cls.ns.bind(getMultiCommandEndCall(parentSpan, command.callback));
         }
       }

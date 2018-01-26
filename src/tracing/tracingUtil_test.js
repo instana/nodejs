@@ -13,4 +13,23 @@ describe('tracing/tracingUtil', function() {
       }
     });
   });
+
+  describe('getErrorDetails', function() {
+    it('must not fail on null/undefined', function() {
+      expect(tracingUtil.getErrorDetails(null)).to.equal(undefined);
+      expect(tracingUtil.getErrorDetails(undefined)).to.equal(undefined);
+    });
+
+    it('must use error stack when available', function() {
+      expect(tracingUtil.getErrorDetails(new Error('Whhoooopppppss'))).to.match(/Whhoooopppppss/);
+    });
+
+    it('must use error message when available', function() {
+      expect(tracingUtil.getErrorDetails({message: 'Whhoooopppppss'})).to.match(/Whhoooopppppss/);
+    });
+
+    it('must use the whole provided error when all else fails', function() {
+      expect(tracingUtil.getErrorDetails('Whhoooopppppss')).to.match(/Whhoooopppppss/);
+    });
+  });
 });

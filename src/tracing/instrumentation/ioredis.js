@@ -53,6 +53,8 @@ function instrumentSendCommand(original) {
         if (command.name.toLowerCase() === 'exec' &&
             // pipelining is handled differently in ioredis
             isMultiParent) {
+          // the exec call is actually when the transmission of these commands to redis is happening
+          parentSpan.ts = Date.now();
           callback = cls.ns.bind(getMultiCommandEndCall(parentSpan));
           command.promise.then(
             // make sure that the first parameter is never truthy
@@ -156,6 +158,9 @@ function instrumentPipelineCommand(original) {
 
 function instrumentPipelineExec(span, original) {
   return function instrumentedPipelineExec() {
+    // the exec call is actually when the transmission of these commands to redis is happening
+    span.ts = Date.now();
+
     var result = original.apply(this, arguments);
     if (result.then) {
       result.then(function(results) {
