@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.33.0
  - Add ioredis instrumentation.
  - Exclude `exec` call from Redis instrumentation sub commands.
 
