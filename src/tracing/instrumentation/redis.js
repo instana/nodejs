@@ -1,5 +1,6 @@
 'use strict';
 
+var commands = require('redis-commands');
 var shimmer = require('shimmer');
 
 var requireHook = require('../../util/requireHook');
@@ -21,64 +22,78 @@ exports.init = function() {
   requireHook.on('redis', instrument);
 };
 
-
 function instrument(redis) {
-  shimmer.wrap(redis.RedisClient.prototype, 'internal_send_command', instrumentInternalSendCommand);
+  var redisClientProto = redis.RedisClient.prototype;
+  commands.list.forEach(function(name) {
+    // some commands are not added or are renamed. Ignore them for now.
+    if (!redisClientProto[name] &&
+        // multi commands are handled differently
+        name !== 'multi') {
+      return;
+    }
+
+    var boundInstrumentCommand = instrumentCommand.bind(null, name);
+    shimmer.wrap(redisClientProto, name, boundInstrumentCommand);
+    shimmer.wrap(redisClientProto, name.toUpperCase(), boundInstrumentCommand);
+  });
+
+  if (redis.Multi) {
+    shimmer.wrap(redis.Multi.prototype, 'exec_transaction', instrumentMultiExec.bind(null, true));
+
+    var instrumentedBatch = instrumentMultiExec.bind(null, false);
+    shimmer.wrap(redis.Multi.prototype, 'exec_batch', instrumentedBatch);
+    shimmer.wrap(redis.Multi.prototype, 'EXEC', instrumentedBatch);
+    shimmer.wrap(redis.Multi.prototype, 'exec', instrumentedBatch);
+  }
 }
 
-function instrumentInternalSendCommand(original) {
-  return function wrappedInternalSendCommand(command) {
+function instrumentCommand(command, original) {
+  return function wrappedCommand() {
     var client = this;
 
-    if (typeof command.command !== 'string' || !isActive || !cls.isTracing()) {
+    if (!isActive || !cls.isTracing()) {
       return original.apply(this, arguments);
     }
 
     var parentSpan = cls.getCurrentSpan();
     if (cls.isExitSpan(parentSpan)) {
-      // multi commands could actually be recorded as multiple spans, but we only want to record one
-      // batched span
-      if (parentSpan.n === 'redis' && parentSpan.data.redis.command === 'multi') {
-        var parentSpanSubCommands = parentSpan.data.redis.subCommands = parentSpan.data.redis.subCommands || [];
-        parentSpanSubCommands.push(command.command);
-
-        if (command.command.toLowerCase() === 'exec') {
-          // the exec call is actually when the transmission of these commands to redis is happening
-          parentSpan.ts = Date.now();
-          command.callback = cls.ns.bind(getMultiCommandEndCall(parentSpan, command.callback));
-        }
-      }
       return original.apply(this, arguments);
     }
 
     var span = cls.startSpan('redis');
-    span.stack = tracingUtil.getStackTrace(wrappedInternalSendCommand);
+    // do not set the redis span as the current span
+    cls.setCurrentSpan(parentSpan);
+    span.stack = tracingUtil.getStackTrace(wrappedCommand);
     span.data = {
       redis: {
         connection: client.address,
-        command: command.command.toLowerCase()
+        command: command
       }
     };
 
-    var userProvidedCallback = command.callback;
-    command.callback = cls.ns.bind(onResult);
-    return original.apply(this, arguments);
+    var callback = cls.ns.bind(onResult);
+    var args = [];
+    for (var i = 0; i < arguments.length; i++) {
+      args[i] = arguments[i];
+    }
+
+    var userProvidedCallback = args[args.length - 1];
+    if (typeof userProvidedCallback !== 'function') {
+      userProvidedCallback = null;
+      args.push(callback);
+    } else {
+      args[args.length - 1] = callback;
+    }
+
+    return original.apply(this, args);
 
     function onResult(error) {
-      // multi commands are ended by exec. Wait for the exec result
-      if (command.command === 'multi') {
-        if (typeof userProvidedCallback === 'function') {
-          return userProvidedCallback.apply(this, arguments);
-        }
-        return undefined;
-      }
-
       span.d = Date.now() - span.ts;
 
       if (error) {
         span.error = true;
         span.ec = 1;
-        span.data.redis.error = error.message;
+        span.data.redis.error = tracingUtil.getErrorDetails(error);
       }
 
       transmission.addSpan(span);
@@ -90,33 +105,92 @@ function instrumentInternalSendCommand(original) {
   };
 }
 
-function getMultiCommandEndCall(span, userProvidedCallback) {
-  return function multiCommandEndCallback(error) {
-    span.d = Date.now() - span.ts;
 
-    var subCommands = span.data.redis.subCommands;
-    var commandCount = 1;
-    if (subCommands) {
-      // remove exec call
-      subCommands.pop();
-      commandCount = subCommands.length;
+function instrumentMultiExec(isAtomic, original) {
+  return function instrumentedMultiExec() {
+    var multi = this;
+
+    if (!isActive || !cls.isTracing()) {
+      return original.apply(this, arguments);
     }
 
+    var parentSpan = cls.getCurrentSpan();
+    if (cls.isExitSpan(parentSpan)) {
+      return original.apply(this, arguments);
+    }
+
+    var span = cls.startSpan('redis');
+    // do not set the redis span as the current span
+    cls.setCurrentSpan(parentSpan);
+    span.stack = tracingUtil.getStackTrace(instrumentedMultiExec);
+    span.data = {
+      redis: {
+        connection: multi._client.address,
+        command: isAtomic ? 'multi' : 'pipeline'
+      }
+    };
+
+    var callback = cls.ns.bind(onResult);
+    var args = [];
+    for (var i = 0; i < arguments.length; i++) {
+      args[i] = arguments[i];
+    }
+
+    var userProvidedCallback = args[args.length - 1];
+    if (typeof userProvidedCallback !== 'function') {
+      userProvidedCallback = null;
+      args.push(callback);
+    } else {
+      args[args.length - 1] = callback;
+    }
+
+    var subCommands = span.data.redis.subCommands = [];
+    var len = multi.queue.length;
+    for (i = 0; i < len; i++) {
+      var subCommand = multi.queue.get(i);
+      subCommands[i] = subCommand.command;
+      subCommand.callback = buildSubCommandCallback(span, subCommand.callback);
+    }
     span.b = {
-      s: commandCount,
+      s: subCommands.length,
       u: false
     };
 
-    if (error) {
+    span.ec = 0;
+    span.error = false;
+
+    return original.apply(this, args);
+
+    function onResult(error) {
+      span.d = Date.now() - span.ts;
+
+      if (error && isAtomic) {
+        span.ec = span.data.redis.subCommands.length;
+      }
+
+      transmission.addSpan(span);
+
+      if (typeof userProvidedCallback === 'function') {
+        return userProvidedCallback.apply(this, arguments);
+      }
+    }
+  };
+}
+
+
+function buildSubCommandCallback(span, userProvidedCallback) {
+  return function subCommandCallback(err) {
+    if (err) {
+      span.ec++;
       span.error = true;
-      span.ec = commandCount;
-      span.data.redis.error = error.message;
+
+      if (!span.data.redis.error) {
+        span.data.redis.error = tracingUtil.getErrorDetails(err);
+      }
     }
 
-    transmission.addSpan(span);
-
     if (typeof userProvidedCallback === 'function') {
-      return userProvidedCallback.apply(this, arguments);
+      userProvidedCallback.apply(this, arguments);
     }
   };
 }

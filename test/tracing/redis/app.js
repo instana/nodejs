@@ -79,12 +79,12 @@ app.get('/failure', function(req, res) {
 
 
 app.get('/multi', function(req, res) {
-  // simulating wrong get usage
   client.multi()
     .hset('someCollection', 'key', 'value')
     .hget('someCollection', 'key')
     .exec(function(err) {
       if (err) {
+        log('Multi failed', err);
         res.sendStatus(500);
       } else {
         res.sendStatus(200);
@@ -100,11 +100,50 @@ app.get('/multiFailure', function(req, res) {
     .hget('someCollection', 'key', 'too', 'many', 'args')
     .exec(function(err) {
       if (err) {
+        log('Multi failed', err);
         res.sendStatus(500);
       } else {
         res.sendStatus(200);
       }
     });
+});
+
+app.get('/batchFailure', function(req, res) {
+  // simulating wrong get usage
+  client.batch()
+    .hset('someCollection', 'key', 'value')
+    .hget('someCollection', 'key', 'too', 'many', 'args')
+    .exec(function(err) {
+      if (err) {
+        log('batch failed', err);
+        res.sendStatus(500);
+      } else {
+        res.sendStatus(200);
+      }
+    });
+});
+
+
+app.get('/callSequence', function(req, res) {
+  var key = 'foo';
+  var value = 'bar';
+  client.set(key, value, function(err) {
+    if (err) {
+      log('Set with key %s, value %s failed', key, value, err);
+      res.sendStatus(500);
+      return;
+    }
+
+    client.get(key, function(err2, result) {
+      if (err2) {
+        log('get with key %s failed', key, err2);
+        res.sendStatus(500);
+        return;
+      }
+
+      res.send(result);
+    });
+  });
 });
 
 

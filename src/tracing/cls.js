@@ -81,6 +81,14 @@ exports.getCurrentRootSpan = function getCurrentRootSpan() {
 };
 
 /*
+ * Set the currently active span
+ *
+ */
+exports.setCurrentSpan = function setCurrentSpan(span) {
+  return exports.ns.set(currentSpanKey, span);
+};
+
+/*
  * Get the currently active span
  *
  */

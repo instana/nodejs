@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+ - Call sequences are not recoded when using Redis.
+ - Add `batch` (pipeline) support for Redis.
+
 ## 1.33.0
  - Add ioredis instrumentation.
  - Exclude `exec` call from Redis instrumentation sub commands.
