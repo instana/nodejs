@@ -189,4 +189,75 @@ describe('tracing/redis', function() {
       });
     });
   });
+
+  it('must trace failed batch calls', function() {
+    return redisControls.sendRequest({
+      method: 'GET',
+      path: '/batchFailure'
+    })
+    .catch(function() {
+      // ignore errors
+    })
+    .then(function() {
+      return utils.retry(function() {
+        return agentControls.getSpans()
+        .then(function(spans) {
+          var writeEntrySpan = utils.expectOneMatching(spans, function(span) {
+            expect(span.n).to.equal('node.http.server');
+            expect(span.data.http.method).to.equal('GET');
+          });
+
+          utils.expectOneMatching(spans, function(span) {
+            expect(span.t).to.equal(writeEntrySpan.t);
+            expect(span.p).to.equal(writeEntrySpan.s);
+            expect(span.n).to.equal('redis');
+            expect(span.f.e).to.equal(String(redisControls.getPid()));
+            expect(span.async).to.equal(false);
+            expect(span.error).to.equal(true);
+            expect(span.ec).to.equal(1);
+            expect(span.b.s).to.equal(2);
+            expect(span.b.u).to.equal(false);
+            expect(span.data.redis.connection).to.equal(process.env.REDIS);
+            expect(span.data.redis.command).to.equal('pipeline');
+            expect(span.data.redis.subCommands).to.deep.equal([
+              'hset',
+              'hget'
+            ]);
+          });
+        });
+      });
+    });
+  });
+
+  it('must trace call sequences', function() {
+    return redisControls.sendRequest({
+      method: 'GET',
+      path: '/callSequence'
+    })
+    .then(function() {
+      return utils.retry(function() {
+        return agentControls.getSpans()
+        .then(function(spans) {
+          var writeEntrySpan = utils.expectOneMatching(spans, function(span) {
+            expect(span.n).to.equal('node.http.server');
+            expect(span.data.http.method).to.equal('GET');
+          });
+
+          utils.expectOneMatching(spans, function(span) {
+            expect(span.t).to.equal(writeEntrySpan.t);
+            expect(span.p).to.equal(writeEntrySpan.s);
+            expect(span.n).to.equal('redis');
+            expect(span.data.redis.command).to.equal('set');
+          });
+
+          utils.expectOneMatching(spans, function(span) {
+            expect(span.t).to.equal(writeEntrySpan.t);
+            expect(span.p).to.equal(writeEntrySpan.s);
+            expect(span.n).to.equal('redis');
+            expect(span.data.redis.command).to.equal('get');
+          });
+        });
+      });
+    });
+  });
 });
