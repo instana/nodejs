@@ -35,6 +35,10 @@ Now that the sensor is installed, it needs to be activated from within the appli
 
 ```javascript
 require('instana-nodejs-sensor')();
+
+// All other require statements must be done after the sensor is initialized.
+// Note the () after the require statement of the sensor which initializes it.
+// const express = require('redis');
 ```
 
 The code shown above initializes the sensor with default configuration options. Refer to the [CONFIGURATION.md](CONFIGURATION.md) file for a list of valid configuration options.
