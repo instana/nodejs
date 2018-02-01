@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.34.0
  - Call sequences are not recoded when using Redis.
  - Add `batch` (pipeline) support for Redis.
 
