@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.34.1
  - Allow retrieval of TypeScipt and JSX files via the backchannel.
 
 ## 1.34.0
