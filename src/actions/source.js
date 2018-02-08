@@ -4,7 +4,7 @@ var fs = require('fs');
 
 var logger = require('../logger').getLogger('actions/profiling/cpu');
 
-var validFileRequests = /\.js$/i;
+var validFileRequests = /\.(js|ts|jsx)$/i;
 
 exports.getSourceFile = function(request, multiCb) {
   if (!request.args.file.match(validFileRequests)) {

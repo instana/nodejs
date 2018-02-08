@@ -1,5 +1,8 @@
 # Changelog
 
+## Unreleased
+ - Allow retrieval of TypeScipt and JSX files via the backchannel.
+
 ## 1.34.0
  - Call sequences are not recoded when using Redis.
  - Add `batch` (pipeline) support for Redis.
