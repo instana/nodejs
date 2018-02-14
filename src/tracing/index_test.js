@@ -33,6 +33,7 @@ describe('tracing', function() {
       expect(tracing.supportedVersion('5.9.0')).to.equal(false);
       expect(tracing.supportedVersion('8.0.0')).to.equal(false);
       expect(tracing.supportedVersion('8.1.4')).to.equal(false);
+      expect(tracing.supportedVersion('9.0.0')).to.equal(false);
     });
   });
 });
