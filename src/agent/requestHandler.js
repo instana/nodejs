@@ -6,7 +6,8 @@ var logger = require('../logger').getLogger('agent/requestHandler');
 var agentConnection = require('../agentConnection');
 
 var actionMapping = {
-  'node.source': require('../actions/source').getSourceFile
+  'node.source': require('../actions/source').getSourceFile,
+  'node.getModuleAnalysis': require('../actions/getModuleAnalysis').getModuleAnalysis
 };
 
 if (semver.satisfies(process.versions.node, '>=4.0.0')) {
