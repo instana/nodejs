@@ -101,10 +101,10 @@ describe('tracing/mongoose', function() {
             expect(span.data.mongo.command).to.equal('find');
             expect(span.data.mongo.service).to.equal(process.env.MONGODB);
             expect(span.data.mongo.namespace).to.equal('mongoose.people');
-            expect(span.data.mongo.filter).to.deep.equal({
-              name: randomName,
-              age: 42
-            });
+            expect(span.data.mongo.filter).to.deep.equal(JSON.stringify({
+              age: 42,
+              name: randomName
+            }));
           });
         });
       });

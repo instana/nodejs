@@ -32,5 +32,13 @@ exports.getErrorDetails = function getErrorDetails(err) {
   if (err == null) {
     return undefined;
   }
-  return String(err.stack || err.message || err).slice(0, 500);
+  return String(err.stack || err.message || err).substring(0, 500);
+};
+
+exports.shortenDatabaseStatement = function shortenDatabaseStatement(stmt) {
+  if (stmt == null || typeof stmt !== 'string') {
+    return undefined;
+  }
+
+  return stmt.substring(0, 4000);
 };

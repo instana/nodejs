@@ -81,7 +81,8 @@ function instrumentedQuery(ctx, originalQuery, statementOrOpts, valuesOrCallback
   span.stack = tracingUtil.getStackTrace(instrumentedQuery);
   span.data = {
       mysql: {
-        stmt: typeof statementOrOpts === 'string' ? statementOrOpts : statementOrOpts.sql,
+        stmt: tracingUtil.shortenDatabaseStatement(typeof statementOrOpts === 'string' ? statementOrOpts :
+          statementOrOpts.sql),
         host: host,
         port: port,
         user: user,
@@ -94,7 +95,7 @@ function instrumentedQuery(ctx, originalQuery, statementOrOpts, valuesOrCallback
     if (error) {
       span.ec = 1;
       span.error = true;
-      span.data.mysql.error = error.message;
+      span.data.mysql.error = tracingUtil.getErrorDetails(error);
     }
 
     span.d = Date.now() - span.ts;
