@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.35.0
  - Fix an async correlation issue caused by outgoing HTTP calls.
  - Do not enable tracing in Node.js v9
  - Limit maximum database statement length that is stored in spans.
