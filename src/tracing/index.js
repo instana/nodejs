@@ -73,7 +73,7 @@ function shouldEnableAutomaticTracing() {
 
 
 exports.supportedVersion = function supportedVersion(version) {
-  return semver.satisfies(version, '^4.5 || ^5.10 || >=6 <8.0 || >=8.2.1');
+  return semver.satisfies(version, '^4.5 || ^5.10 || >=6 <8.0 || >=8.2.1 < 9');
 };
 
 

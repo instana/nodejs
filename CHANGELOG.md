@@ -2,6 +2,7 @@
 
 ## Unreleased
  - Fix an async correlation issue caused by outgoing HTTP calls.
+ - Do not enable tracing in Node.js v9
 
 ## 1.34.1
  - Allow retrieval of TypeScipt and JSX files via the backchannel.
