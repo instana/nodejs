@@ -18,7 +18,9 @@ if (process.env.WITH_STDOUT) {
   app.use(morgan(logPrefix + ':method :url :status'));
 }
 
-app.use(bodyParser.json());
+app.use(bodyParser.json({
+  limit: '10mb'
+}));
 
 
 app.use(function(req, res, next) {
@@ -102,6 +104,12 @@ function checkExistenceOfKnownPid(fn) {
 app.get('/retrievedData', function(req, res) {
   log('Sending retrieved data');
   res.json(retrievedData);
+});
+
+
+app.get('/retrievedTraces', function(req, res) {
+  log('Sending retrieved data');
+  res.json(retrievedData.traces);
 });
 
 
