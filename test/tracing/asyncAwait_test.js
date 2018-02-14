@@ -10,7 +10,7 @@ var config = require('../config');
 var utils = require('../utils');
 
 describe('tracing', function() {
-  if (semver.satisfies(process.versions.node, '<8.0.0')) {
+  if (!semver.satisfies(process.versions.node, '^8')) {
     return;
   }
 

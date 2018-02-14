@@ -17,6 +17,7 @@ node_js:
   - v6
   - v7
   - v8
+  - v9
 
 before_script:
   - sudo /etc/init.d/mysql stop

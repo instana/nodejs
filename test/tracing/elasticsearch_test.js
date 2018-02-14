@@ -2,8 +2,8 @@
 
 var expect = require('chai').expect;
 
-var supportedVersion = require('../../src/tracing/index').supportedVersion;
 var expressElasticsearchControls = require('../apps/expressElasticsearchControls');
+var supportedVersion = require('../../src/tracing/index').supportedVersion;
 var agentStubControls = require('../apps/agentStubControls');
 var config = require('../config');
 var utils = require('../utils');
