@@ -58,12 +58,14 @@ function onStarted(event) {
     return;
   }
 
+  var parentSpan = cls.getCurrentSpan();
   var span = null;
   if (event.operationId.traceId && event.operationId.parentSpanId) {
     span = cls.startSpan('mongo', event.operationId.traceId, event.operationId.parentSpanId);
   } else {
     span = cls.startSpan('mongo');
   }
+  cls.setCurrentSpan(parentSpan);
 
   var host = event.connectionId.host;
   var port = event.connectionId.port;

@@ -4,6 +4,7 @@
  - Fix an async correlation issue caused by outgoing HTTP calls.
  - Do not enable tracing in Node.js v9
  - Limit maximum database statement length that is stored in spans.
+ - MongoDB spans are nested in a wrong way.
 
 ## 1.34.1
  - Allow retrieval of TypeScipt and JSX files via the backchannel.
