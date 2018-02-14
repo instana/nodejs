@@ -3,6 +3,7 @@
 var logger = require('../../logger').getLogger('tracing/mongodb');
 var requireHook = require('../../util/requireHook');
 var transmission = require('../transmission');
+var tracingUtil = require('../tracingUtil');
 var cls = require('../cls');
 
 var isActive = false;
@@ -80,8 +81,8 @@ function onStarted(event) {
         command: event.commandName,
         service: host + ':' + port,
         namespace: database + '.' + collection,
-        filter: event.command.filter,
-        query: event.command.query
+        filter: stringifyWhenNecessary(event.command.filter),
+        query: stringifyWhenNecessary(event.command.query)
       }
     };
 
@@ -91,6 +92,16 @@ function onStarted(event) {
   requests[getUniqueRequestId(event)] = {
     span: span
   };
+}
+
+
+function stringifyWhenNecessary(obj) {
+  if (obj == null) {
+    return undefined;
+  } else if (typeof obj === 'string') {
+    return tracingUtil.shortenDatabaseStatement(obj);
+  }
+  return tracingUtil.shortenDatabaseStatement(JSON.stringify(obj));
 }
 
 

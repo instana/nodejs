@@ -57,7 +57,7 @@ function instrumentApi(client, action, info) {
           type: toStringEsMultiParameter(params.type),
           stats: toStringEsMultiParameter(params.stats),
           id: action === 'get' ? params.id : undefined,
-          query: action === 'search' ? JSON.stringify(params) : undefined
+          query: action === 'search' ? tracingUtil.shortenDatabaseStatement(JSON.stringify(params)) : undefined
         }
       };
 
@@ -100,7 +100,7 @@ function instrumentApi(client, action, info) {
       span.d = Date.now() - span.ts;
       span.error = true;
       span.ec = 1;
-      span.data.elasticsearch.error = error.message;
+      span.data.elasticsearch.error = tracingUtil.getErrorDetails(error);
       transmission.addSpan(span);
     }
   };
