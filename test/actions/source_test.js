@@ -15,7 +15,7 @@ describe('actions/source', function() {
   }
 
   // controls require features that aren't available in early Node.js versions
-  var expressControls = require('../apps/expressElasticsearchControls');
+  var expressControls = require('../apps/expressControls');
   var agentStubControls = require('../apps/agentStubControls');
 
   this.timeout(config.getTestTimeout());
@@ -55,7 +55,7 @@ describe('actions/source', function() {
     });
   });
 
-  it('must not allow JSON requests', function() {
+  it('must allow package.json requests', function() {
     var messageId = 'a';
     return agentStubControls.addRequestForPid(
       expressControls.getPid(),
@@ -64,6 +64,32 @@ describe('actions/source', function() {
         messageId: messageId,
         args: {
           file: path.join(process.cwd(), 'package.json')
+        }
+      }
+    )
+    .then(function() {
+      return utils.retry(function() {
+        return agentStubControls.getResponses()
+        .then(function(responses) {
+          utils.expectOneMatching(responses, function(response) {
+            expect(response.messageId).to.equal(messageId);
+            expect(response.data.data).to.be.a('string');
+            expect(response.data.data).to.match(/"name": "instana-nodejs-sensor"/i);
+          });
+        });
+      });
+    });
+  });
+
+  it('must not allow JSON requests', function() {
+    var messageId = 'a';
+    return agentStubControls.addRequestForPid(
+      expressControls.getPid(),
+      {
+        action: 'node.source',
+        messageId: messageId,
+        args: {
+          file: path.join(process.cwd(), 'foo.json')
         }
       }
     )

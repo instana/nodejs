@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+ - Expose a debugging action to learn about loaded modules.
+ - Allow retrieval of `package.json` files.
+
 ## 1.41.0
  - Add PostgreSQL instrumentation ([pg](https://www.npmjs.com/package/pg)).
 
