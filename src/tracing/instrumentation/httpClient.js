@@ -127,11 +127,8 @@ function constructCompleteUrlFromOpts(options, self) {
   try {
     var agent = options.agent || self.agent;
 
-    // copy of logic from
-    // https://github.com/nodejs/node/blob/master/lib/_http_client.js
-    // to support incomplete options with agent specific defaults.
-    var protocol = options.protocol || (agent && agent.protocol) || 'http:';
     var port = options.port || options.defaultPort || (agent && agent.defaultPort) || 80;
+    var protocol = (port === 443 && 'https:') || options.protocol || (agent && agent.protocol) || 'http:';
     var host = options.hostname || options.host || 'localhost';
     var path = options.path || '/';
     return discardUrlParameters(protocol + '//' + host + ':' + port + path);

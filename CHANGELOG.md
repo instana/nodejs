@@ -1,5 +1,8 @@
 # Changelog
 
+## Unreleased
+ - HTTPS exit spans can have the wrong protocol set.
+
 ## 1.35.0
  - Fix an async correlation issue caused by outgoing HTTP calls.
  - Do not enable tracing in Node.js v9
