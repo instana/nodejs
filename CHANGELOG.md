@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.35.1
  - HTTPS exit spans can have the wrong protocol set.
 
 ## 1.35.0
