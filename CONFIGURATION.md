@@ -92,13 +92,15 @@ require('instana-nodejs-sensor')({
 });
 ```
 
-Or leverage an environment variable:
+Or leverage an environment variable.
 
 ```javascript
 require('instana-nodejs-sensor')({
-  agentHost: process.env.INSTANA_AGENT_IP
+  agentHost: process.env.HOST_IP
 });
 ```
+
+If not configured, the Instana sensor will look for an environment variable called `INSTANA_AGENT_HOST` and use what is defined in this environment variable to communicate with the agent.
 
 ### Agent Port
 The sensor tries to communicate with the Instana Agent via port `42699`. Should the port have been changed, you can use the `agentPort` option to change the port.
@@ -109,6 +111,8 @@ require('instana-nodejs-sensor')({
 });
 ```
 
+If not configured, the Instana sensor will look for an environment variable called `INSTANA_AGENT_PORT` and use what is defined in this environment variable to communicate with the agent.
+
 ### Agent Name
 This sensor communicates with the Instana Agent via HTTP. While doing so, the Node.js sensor validates the Instana Agent's `Server` response header. Should you have changed the `Server` name, use the `agentName` option to adjust the sensor's validation rules.
 
@@ -117,3 +121,5 @@ require('instana-nodejs-sensor')({
   agentName: 'Instana Agent'
 });
 ```
+
+If not configured, the Instana sensor will look for an environment variable called `INSTANA_AGENT_NAME` and use what is defined in this environment variable to communicate with the agent.
