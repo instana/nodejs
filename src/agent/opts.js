@@ -9,15 +9,21 @@ exports.agentUuid = undefined;
 
 
 exports.init = function init(config) {
-  if (process.env.AGENT_HOST) {
-    exports.host = process.env.AGENT_HOST;
+  if (process.env.INSTANA_AGENT_IP) {
+    exports.host = process.env.INSTANA_AGENT_IP;
   } else if (config.agentHost) {
     exports.host = config.agentHost;
   }
-  if (config.agentPort) {
+  
+  if (process.env.INSTANA_AGENT_PORT) {
+    exports.port = process.env.INSTANA_AGENT_PORT;
+  } else if (config.agentPort) {
     exports.port = config.agentPort;
   }
-  if (config.agentName) {
+  
+  if (process.env.INSTANA_AGENT_NAME) {
+    exports.serverHeader = process.env.INSTANA_AGENT_NAME;
+  } else if (config.agentName) {
     exports.serverHeader = config.agentName;
   }
 };
