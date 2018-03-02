@@ -14,13 +14,13 @@ exports.init = function init(config) {
   } else if (config.agentHost) {
     exports.host = config.agentHost;
   }
-  
+
   if (process.env.INSTANA_AGENT_PORT) {
     exports.port = process.env.INSTANA_AGENT_PORT;
   } else if (config.agentPort) {
     exports.port = config.agentPort;
   }
-  
+
   if (process.env.INSTANA_AGENT_NAME) {
     exports.serverHeader = process.env.INSTANA_AGENT_NAME;
   } else if (config.agentName) {
