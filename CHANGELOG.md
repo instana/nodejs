@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.36.0
  - Fix support for mysql2 versions prior to 1.5.0
  - Read env vars by default to determine agent connection config
 
