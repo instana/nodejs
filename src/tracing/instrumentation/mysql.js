@@ -23,7 +23,7 @@ function instrumentMysql(mysql) {
 
 function instrumentMysql2(mysql) {
   instrumentConnection(mysql.Connection.prototype);
-  instrumentPool(mysql.Pool.prototype);
+  instrumentPool(Object.getPrototypeOf('mysql.Pool'));
 }
 
 
