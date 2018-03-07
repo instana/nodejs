@@ -23,7 +23,9 @@ function instrumentMysql(mysql) {
 
 function instrumentMysql2(mysql) {
   instrumentConnection(mysql.Connection.prototype);
-  instrumentPool(Object.getPrototypeOf('mysql.Pool'));
+  if ( typeof mysql.Pool !== 'undefined' && mysql.Pool ) {
+    instrumentPool(mysql.Pool.prototype);
+  }
 }
 
 
