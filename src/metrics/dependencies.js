@@ -48,14 +48,16 @@ function addDependenciesFromDir(dependencyDir) {
 function addDependency(dependency, packageJsonPath) {
   fs.readFile(packageJsonPath, {encoding: 'utf8'}, function(err, contents) {
     if (err) {
-      return logger.warn('Failed to identify version of %s dependency due to: %s', dependency, err.message);
+      return logger.info('Failed to identify version of %s dependency due to: %s. This means that you will not be ' +
+        'able to see details about this dependency within Instana.', dependency, err.message);
     }
 
     try {
       var pckg = JSON.parse(contents);
       exports.currentPayload[pckg.name] = pckg.version;
     } catch (subErr) {
-      return logger.warn('Failed to identify version of %s dependency due to: %s', dependency, subErr.message);
+      return logger.info('Failed to identify version of %s dependency due to: %s.  This means that you will not be ' +
+        'able to see details about this dependency within Instana.', dependency, subErr.message);
     }
   });
 }
