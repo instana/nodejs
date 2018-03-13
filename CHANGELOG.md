@@ -2,6 +2,7 @@
 
 ## Unreleased
  - Reduce severity in log messages which describe dependency analysis failures.
+ - Upgrade `event-loop-lag` to address [security vulnerability](https://nodesecurity.io/advisories/534) in `debug`.
 
 ## 1.36.0
  - Fix support for mysql2 versions prior to 1.5.0
