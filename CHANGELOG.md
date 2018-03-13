@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.36.1
  - Reduce severity in log messages which describe dependency analysis failures.
  - Upgrade `event-loop-lag` to address [security vulnerability](https://nodesecurity.io/advisories/534) in `debug`.
 
