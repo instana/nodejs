@@ -5,7 +5,7 @@ var config = require('./config');
 // init instana sensor if needed for load test
 if (config.instana.sensorEnabled) {
   try {
-    require('../../')({
+    require('instana-nodejs-sensor')({
       agentPort: config.instana.agentPort,
       level: 'info'
     });

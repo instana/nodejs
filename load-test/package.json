@@ -10,6 +10,7 @@
     "glob": "^7.1.2",
     "ioredis": "^3.2.2",
     "mongoose": "^5.0.11",
-    "mysql2": "^1.5.3"
+    "mysql2": "^1.5.3",
+    "instana-nodejs-sensor": "^1.36.1"
   }
 }
