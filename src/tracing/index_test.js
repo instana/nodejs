@@ -22,6 +22,7 @@ describe('tracing', function() {
       expect(tracing.supportedVersion('8.2.1')).to.equal(true);
       expect(tracing.supportedVersion('8.3.0')).to.equal(true);
       expect(tracing.supportedVersion('8.9.1')).to.equal(true);
+      expect(tracing.supportedVersion('9.2.0')).to.equal(true);
     });
 
     it('must report various Node.js versions as not supported', function() {
