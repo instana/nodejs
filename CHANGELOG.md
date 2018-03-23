@@ -1,7 +1,7 @@
 # Changelog
 
-## Unreleased
- - Enable tracing in Node.js `9.1.0`.
+## 1.37.0
+ - Enable tracing in Node.js `^9.1.0`.
 
 ## 1.36.1
  - Reduce severity in log messages which describe dependency analysis failures.
