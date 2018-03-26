@@ -80,9 +80,9 @@ app.get('/', function(req, res) {
 
 app.get('/values', function(req, res) {
   if (process.env.MYSQL_2_WITH_PROMISES === 'true') {
-    fetchValuesWithPromises('SELECT value FROM random_values', req, res);
+    fetchValuesWithPromises(req, res);
   } else {
-    fetchValues('SELECT value FROM random_values', req, res);
+    fetchValues(req, res);
   }
 });
 
@@ -98,8 +98,8 @@ app.listen(process.env.APP_PORT, function() {
   log('Listening on port: ' + process.env.APP_PORT);
 });
 
-function fetchValues(qry, req, res) {
-  wrapQuery(pool, qry, null, function(queryError, results) {
+function fetchValues(req, res) {
+  wrapQuery(pool, 'SELECT value FROM random_values', null, function(queryError, results) {
    if (queryError) {
       log('Failed to execute query', queryError);
       res.sendStatus(500);
@@ -111,9 +111,9 @@ function fetchValues(qry, req, res) {
   });
 }
 
-function fetchValuesWithPromises(qry, req, res) {
+function fetchValuesWithPromises(req, res) {
   pool.getConnection().then(function(connection) {
-    wrapQuery(connection, qry, null, function(queryError, results) {
+    wrapQuery(connection, 'SELECT value FROM random_values', null, function(queryError, results) {
       if (queryError) {
         log('Failed to execute query', queryError);
         res.sendStatus(500);

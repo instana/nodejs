@@ -124,7 +124,6 @@ function instrumentedQuery(ctx, originalQuery, statementOrOpts, valuesOrCallback
         return result;
       })
       .catch(function(error) {
-        // TODO: Correct this way?
         if (error) {
           span.ec = 1;
           span.error = true;
