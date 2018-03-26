@@ -24,6 +24,7 @@ exports.registerTestHooks = function(opts) {
     env.STACK_TRACE_LENGTH = opts.stackTraceLength || 0;
     env.TRACING_ENABLED = opts.enableTracing !== false;
     env.MYSQL_2_DRIVER = opts.useMysql2 === true;
+    env.MYSQL_2_WITH_PROMISES = opts.useMysql2WithPromises === true;
 
     expressMysqlApp = spawn('node', [path.join(__dirname, 'expressMysql.js')], {
       stdio: config.getAppStdio(),
@@ -71,5 +72,12 @@ exports.getValues = function() {
   return request({
     method: 'get',
     url: 'http://127.0.0.1:' + appPort + '/values'
+  });
+};
+
+exports.getValuesAndProduceError = function() {
+  return request({
+    method: 'get',
+    url: 'http://127.0.0.1:' + appPort + '/values/error'
   });
 };

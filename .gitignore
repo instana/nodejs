@@ -1,3 +1,5 @@
 node_modules
 .npmrc
 npm-debug*
+load-test/jmeter/result
+load-test/jmeter/jmeter.log

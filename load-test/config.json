@@ -1,0 +1,21 @@
+{
+  "instana": {
+    "useSensor": false
+  },
+  "server": {
+    "port": 3333
+  },
+  "services": {
+    "mongo": {
+      "url": "127.0.0.1",
+      "port": 27017
+    },
+    "mysql": {
+      "url": "127.0.0.1",
+      "user": "root",
+      "password":"nodepw",
+      "database":"nodedb",
+      "table": "loadtest"
+    }
+  }
+}
