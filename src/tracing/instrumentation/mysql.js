@@ -120,15 +120,14 @@ function instrumentedQuery(ctx, originalQuery, statementOrOpts, valuesOrCallback
   if (isPromiseImpl) {
     return originalQuery.apply(ctx, argsForOriginalQuery)
       .then(function(result) {
+        span.d = Date.now() - span.ts;
         transmission.addSpan(span);
         return result;
       })
       .catch(function(error) {
-        if (error) {
-          span.ec = 1;
-          span.error = true;
-          span.data.mysql.error = tracingUtil.getErrorDetails(error);
-        }
+        span.ec = 1;
+        span.error = true;
+        span.data.mysql.error = tracingUtil.getErrorDetails(error);
 
         span.d = Date.now() - span.ts;
         transmission.addSpan(span);
