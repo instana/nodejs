@@ -56,7 +56,7 @@ function instrumentPoolWithPromises(mysql) {
 function shimQuery(original) {
   return function() {
     if (isActive && cls.isTracing()) {
-        return instrumentedQuery(this, original, arguments[0], arguments[1], arguments[2]);
+      return instrumentedQuery(this, original, arguments[0], arguments[1], arguments[2]);
     }
     return original.apply(this, arguments);
   };
@@ -104,27 +104,27 @@ function instrumentedQuery(ctx, originalQuery, statementOrOpts, valuesOrCallback
   }
 
   var span = cls.startSpan('mysql');
-  span.b = { s: 1 };
+  span.b = {s: 1};
   span.stack = tracingUtil.getStackTrace(instrumentedQuery);
   span.data = {
-      mysql: {
-        stmt: tracingUtil.shortenDatabaseStatement(typeof statementOrOpts === 'string' ? statementOrOpts :
-          statementOrOpts.sql),
-        host: host,
-        port: port,
-        user: user,
-        db: db
-      }
-    };
+    mysql: {
+      stmt: tracingUtil.shortenDatabaseStatement(typeof statementOrOpts === 'string' ? statementOrOpts :
+        statementOrOpts.sql),
+      host: host,
+      port: port,
+      user: user,
+      db: db
+    }
+  };
 
   if (isPromiseImpl) {
-    return originalQuery.apply(ctx, argsForOriginalQuery)
-      .then(function(result) {
-        span.d = Date.now() - span.ts;
-        transmission.addSpan(span);
-        return result;
-      })
-      .catch(function(error) {
+    var resultPromise = originalQuery.apply(ctx, argsForOriginalQuery);
+
+    resultPromise.then(function(result) {
+      span.d = Date.now() - span.ts;
+      transmission.addSpan(span);
+      return result;
+    }).catch(function(error) {
         span.ec = 1;
         span.error = true;
         span.data.mysql.error = tracingUtil.getErrorDetails(error);
@@ -133,6 +133,7 @@ function instrumentedQuery(ctx, originalQuery, statementOrOpts, valuesOrCallback
         transmission.addSpan(span);
         return error;
       });
+    return resultPromise;
   }
   // no promise, continue with standard instrumentation
   var originalCallback = argsForOriginalQuery[argsForOriginalQuery.length - 1];
