@@ -10,6 +10,14 @@ var fetchData = exports.fetchData = function() {
   return query('SELECT * FROM %TABLE%');
 };
 
+var pool = mysql.createPool({
+  connectionLimit: 20,
+  host: config.services.mysql.url,
+  user: config.services.mysql.user,
+  password: config.services.mysql.password,
+  database: config.services.mysql.database
+});
+
 exports.router = function StandardRoute(res) {
   fetchData()
       .then(function(rows) {
