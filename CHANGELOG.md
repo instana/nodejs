@@ -1,8 +1,9 @@
 # Changelog
 
-## unreleased
- - ioRedis could accidentally lead to errors on span batching 
-
+## Unreleased
+ - ioRedis instrumentation can lead to errors when async correlation doesn't work as expected.
+ - Add tracing support for mysql2/promise.
+ 
 ## 1.37.0
  - Enable tracing in Node.js `^9.1.0`.
 
