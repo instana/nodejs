@@ -40,10 +40,10 @@ function instrumentSendCommand(original) {
 
     var callback;
     var parentSpan = cls.getCurrentSpan();
-    if (cls.isExitSpan(parentSpan)) {
+    if (cls.isExitSpan(parentSpan) && parentSpan.n === 'redis') {
       // multi commands could actually be recorded as multiple spans, but we only want to record one
       // batched span considering that a multi call represents a transaction.
-      // The same is true for pipeline calls, but they have a slightlt different semantic.
+      // The same is true for pipeline calls, but they have a slightly different semantic.
       var isMultiParent = parentSpan.data.redis.command === 'multi';
       var isPipelineParent = parentSpan.data.redis.command === 'pipeline';
       if (parentSpan.n === 'redis' && (isMultiParent || isPipelineParent)) {

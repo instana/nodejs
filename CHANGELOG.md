@@ -1,5 +1,8 @@
 # Changelog
 
+## unreleased
+ - ioRedis could accidentally lead to errors on span batching 
+
 ## 1.37.0
  - Enable tracing in Node.js `^9.1.0`.
 
