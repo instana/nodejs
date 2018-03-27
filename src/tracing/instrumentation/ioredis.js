@@ -40,26 +40,28 @@ function instrumentSendCommand(original) {
 
     var callback;
     var parentSpan = cls.getCurrentSpan();
-    if (cls.isExitSpan(parentSpan) && parentSpan.n === 'redis') {
-      // multi commands could actually be recorded as multiple spans, but we only want to record one
-      // batched span considering that a multi call represents a transaction.
-      // The same is true for pipeline calls, but they have a slightly different semantic.
-      var isMultiParent = parentSpan.data.redis.command === 'multi';
-      var isPipelineParent = parentSpan.data.redis.command === 'pipeline';
-      if (parentSpan.n === 'redis' && (isMultiParent || isPipelineParent)) {
-        var parentSpanSubCommands = parentSpan.data.redis.subCommands = parentSpan.data.redis.subCommands || [];
-        parentSpanSubCommands.push(command.name);
+    if (cls.isExitSpan(parentSpan)) {
+      if (parentSpan.n === 'redis') {
+        // multi commands could actually be recorded as multiple spans, but we only want to record one
+        // batched span considering that a multi call represents a transaction.
+        // The same is true for pipeline calls, but they have a slightly different semantic.
+        var isMultiParent = parentSpan.data.redis.command === 'multi';
+        var isPipelineParent = parentSpan.data.redis.command === 'pipeline';
+        if (isMultiParent || isPipelineParent) {
+          var parentSpanSubCommands = parentSpan.data.redis.subCommands = parentSpan.data.redis.subCommands || [];
+          parentSpanSubCommands.push(command.name);
 
-        if (command.name.toLowerCase() === 'exec' &&
+          if (command.name.toLowerCase() === 'exec' &&
             // pipelining is handled differently in ioredis
             isMultiParent) {
-          // the exec call is actually when the transmission of these commands to redis is happening
-          parentSpan.ts = Date.now();
-          callback = cls.ns.bind(getMultiCommandEndCall(parentSpan));
-          command.promise.then(
-            // make sure that the first parameter is never truthy
-            callback.bind(null, null),
-            callback);
+            // the exec call is actually when the transmission of these commands to redis is happening
+            parentSpan.ts = Date.now();
+            callback = cls.ns.bind(getMultiCommandEndCall(parentSpan));
+            command.promise.then(
+              // make sure that the first parameter is never truthy
+              callback.bind(null, null),
+              callback);
+          }
         }
       }
       return original.apply(this, arguments);
