@@ -13,7 +13,11 @@ require('../../')({
 
 var mysql;
 if (process.env.MYSQL_2_DRIVER === 'true') {
-  mysql = require('mysql2');
+  if (process.env.MYSQL_2_WITH_PROMISES === 'true') {
+    mysql = require('mysql2/promise');
+  } else {
+    mysql = require('mysql2');
+  }
 } else {
   mysql = require('mysql');
 }
@@ -32,13 +36,26 @@ var pool = mysql.createPool({
   database: process.env.MYSQL_DB
 });
 
+function wrapQuery(connection, query, optQueryParams, cb) {
+  if (process.env.MYSQL_2_WITH_PROMISES === 'true') {
+    connection.query(query, optQueryParams || null)
+      .then(function(content) {
+        var rows = content == null ? null : content[0];
+        cb(null, rows);
+      }).catch(function(err) {
+      cb(err, null);
+    });
+  } else {
+    connection.query(query, cb);
+  }
+}
+
 pool.getConnection(function(err, connection) {
   if (err) {
     log('Failed to get connection for table creation', err);
     return;
   }
-
-  connection.query('CREATE TABLE random_values (value double);', function(queryError) {
+  wrapQuery(connection, 'CREATE TABLE random_values (value double);', null, function(queryError) {
     connection.release();
 
     if (queryError && queryError.code !== 'ER_TABLE_EXISTS_ERROR') {
@@ -62,27 +79,64 @@ app.get('/', function(req, res) {
 });
 
 app.get('/values', function(req, res) {
-  pool.query('SELECT value FROM random_values', function(queryError, results) {
-    if (queryError) {
+  if (process.env.MYSQL_2_WITH_PROMISES === 'true') {
+    fetchValuesWithPromises(req, res);
+  } else {
+    fetchValues(req, res);
+  }
+});
+
+app.post('/values', function(req, res) {
+  if (process.env.MYSQL_2_WITH_PROMISES === 'true') {
+    insertValuesWithPromises(req, res);
+  } else {
+    insertValues(req, res);
+  }
+});
+
+app.listen(process.env.APP_PORT, function() {
+  log('Listening on port: ' + process.env.APP_PORT);
+});
+
+function fetchValues(req, res) {
+  wrapQuery(pool, 'SELECT value FROM random_values', null, function(queryError, results) {
+   if (queryError) {
       log('Failed to execute query', queryError);
       res.sendStatus(500);
       return;
     }
-
     res.json(results.map(function(result) {
       return result.value;
     }));
   });
-});
+}
 
-app.post('/values', function(req, res) {
+function fetchValuesWithPromises(req, res) {
+  pool.getConnection().then(function(connection) {
+    wrapQuery(connection, 'SELECT value FROM random_values', null, function(queryError, results) {
+      if (queryError) {
+        log('Failed to execute query', queryError);
+        res.sendStatus(500);
+        return;
+      }
+      res.json(results.map(function(result) {
+        return result.value;
+      }));
+    });
+  }).catch(function(err) {
+    log('Failed to get connection', err);
+    res.sendStatus(500);
+  });
+}
+
+
+function insertValues(req, res) {
   pool.getConnection(function(err, connection) {
     if (err) {
       log('Failed to get connection', err);
       res.sendStatus(500);
       return;
     }
-
     connection.query('INSERT INTO random_values (value) VALUES (?)', [req.query.value], function(queryError) {
       connection.release();
 
@@ -95,11 +149,24 @@ app.post('/values', function(req, res) {
       res.sendStatus(200);
     });
   });
-});
+}
 
-app.listen(process.env.APP_PORT, function() {
-  log('Listening on port: ' + process.env.APP_PORT);
-});
+function insertValuesWithPromises(req, res) {
+  pool.getConnection().then(function(connection) {
+    wrapQuery(connection, 'INSERT INTO random_values (value) VALUES (?)', [req.query.value], function(queryError) {
+      if (queryError != null) {
+        log('Failed to execute query', queryError);
+        res.sendStatus(500);
+      } else {
+        connection.release();
+        res.sendStatus(200);
+      }
+    });
+  }).catch(function(err) {
+    log('Failed to get connection', err);
+    res.sendStatus(500);
+  });
+}
 
 function log() {
   var args = Array.prototype.slice.call(arguments);

@@ -1,5 +1,8 @@
 # Changelog
 
+## unreleased
+ - Add tracing support for mysql2/promises.
+ 
 ## 1.37.0
  - Enable tracing in Node.js `^9.1.0`.
 
