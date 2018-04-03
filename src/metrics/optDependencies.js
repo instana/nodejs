@@ -3,7 +3,7 @@
 exports.payloadPrefix = 'optDependencies';
 exports.currentPayload = {
   gcstats: isAvailable('gcstats.js'),
-  v8Profiler: isAvailable('v8-profiler'),
+  v8Profiler: isAvailable('@risingstack/v8-profiler'),
   eventLoopStats: isAvailable('event-loop-stats')
 };
 
