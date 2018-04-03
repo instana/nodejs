@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.37.1
  - ioRedis instrumentation can lead to errors when async correlation doesn't work as expected.
  - Add tracing support for mysql2/promise.
  - Switch to `@risingstack/v8-profiler` due to security issues in transitive dependencies of `v8-profiler`.
