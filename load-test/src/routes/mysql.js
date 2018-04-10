@@ -31,7 +31,7 @@ exports.router = function StandardRoute(res) {
 exports.connect = function() {
   pool = mysql.createPool({
     connectionLimit: 30,
-    host: config.services.mysql.url,
+    host: config.services.mysql.host,
     user: config.services.mysql.user,
     database: config.services.mysql.database,
     password: config.services.mysql.password
