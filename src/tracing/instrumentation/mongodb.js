@@ -27,6 +27,8 @@ function instrument(mongodb) {
 
   var listener = mongodb.instrument({
     operationIdGenerator: {
+      operationId: {},
+
       next: function() {
         return {};
       }
@@ -60,6 +62,11 @@ function onStarted(event) {
 
   var parentSpan = cls.getCurrentSpan();
   var span = null;
+
+  if (event.operationId == null) {
+    event.operationId = {};
+  }
+
   if (event.operationId.traceId && event.operationId.parentSpanId) {
     span = cls.startSpan('mongo', event.operationId.traceId, event.operationId.parentSpanId);
   } else {
