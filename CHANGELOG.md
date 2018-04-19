@@ -1,5 +1,8 @@
 # Changelog
 
+## Unreleased
+ - MongoDB: Properly initialize and assure operationId is generated
+
 ## 1.37.1
  - ioRedis instrumentation can lead to errors when async correlation doesn't work as expected.
  - Add tracing support for mysql2/promise.
