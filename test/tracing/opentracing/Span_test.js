@@ -291,12 +291,13 @@ describe('tracing/opentracing/Span', function() {
       expect(child.span.t).to.equal(child.span.s);
     });
 
-    it('must not use follows from references to build a span hierarchy', function() {
+    it('must set trace and parent ID based on follows from of reference', function() {
       var child = new Span(tracerInstance, 'oauth', {
         references: [opentracing.followsFrom(span)]
       });
-      expect(child.span.t).to.not.equal(span.span.t);
-      expect(child.span.p).to.not.equal(span.span.s);
+      expect(child.span.t).to.equal(span.span.t);
+      expect(child.span.p).to.equal(span.span.s);
+      expect(child.span.s).not.to.equal(span.span.s);
     });
   });
 });

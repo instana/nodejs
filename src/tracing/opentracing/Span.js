@@ -16,7 +16,8 @@ function Span(tracer, name, fields) {
     for (var i = 0, length = fields.references.length; i < length; i++) {
       var reference = fields.references[i];
 
-      if (reference.type() === opentracing.REFERENCE_CHILD_OF) {
+      if (reference.type() === opentracing.REFERENCE_CHILD_OF
+          || reference.type() === opentracing.REFERENCE_FOLLOWS_FROM) {
         parentContext = reference.referencedContext();
       }
     }
