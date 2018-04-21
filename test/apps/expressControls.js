@@ -69,6 +69,7 @@ exports.sendBasicRequest = function(opts) {
 exports.sendRequest = function(opts) {
   opts.responseStatus = opts.responseStatus || 200;
   opts.delay = opts.delay || 0;
+  opts.headers = opts.headers || {};
   return request({
     method: opts.method,
     url: getBaseUrl(opts.useHttps) + opts.path,
@@ -79,6 +80,7 @@ exports.sendRequest = function(opts) {
       serverTiming: opts.serverTiming,
       serverTimingArray: opts.serverTimingArray
     },
+    headers: opts.headers,
     resolveWithFullResponse: opts.resolveWithFullResponse,
       strictSSL: false
   })

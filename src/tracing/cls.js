@@ -43,7 +43,6 @@ exports.startSpan = function startSpan(spanName, traceId, spanId) {
   };
 
   var parentSpan = exports.ns.get(currentSpanKey);
-  var randomId = tracingUtil.generateRandomSpanId();
 
   // If specified, use params
   if (traceId && spanId) {
@@ -55,9 +54,9 @@ exports.startSpan = function startSpan(spanName, traceId, spanId) {
     span.p = parentSpan.s;
   // last resort, use newly generated Ids
   } else {
-    span.t = randomId;
+    span.t = tracingUtil.generateRandomTraceId();
   }
-  span.s = randomId;
+  span.s = tracingUtil.generateRandomSpanId();
 
   // Set span direction type (1=entry, 2=exit, 3=local/intermediate)
   if (entrySpans.indexOf(span.n) > -1) {
