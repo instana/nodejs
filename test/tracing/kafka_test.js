@@ -92,7 +92,7 @@ describe('tracing/kafka', function() {
                 });
 
                 utils.expectOneMatching(spans, function(span) {
-                  expect(span.t).to.equal(span.s);
+                  expect(span.p).to.equal(undefined);
                   expect(span.n).to.equal('kafka');
                   expect(span.f.e).to.equal(String(kafkaConsumerControls.getPid()));
                   expect(span.async).to.equal(false);

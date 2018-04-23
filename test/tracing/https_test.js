@@ -50,4 +50,55 @@ describe('tracing/https', function() {
       });
     });
   });
+
+  it('must continue incoming trace', function() {
+    return expressControls.sendRequest({
+      method: 'POST',
+      path: '/checkout',
+      responseStatus: 201,
+      useHttps: true,
+      headers: {
+        'X-INSTANA-T': '84e588b697868fee',
+        'X-INSTANA-S': '5e734f51bce69eca',
+        'X-INSTANA-L': '1'
+      }
+    })
+    .then(function() {
+      return utils.retry(function() {
+        return agentStubControls.getSpans()
+        .then(function(spans) {
+          expect(spans.length).to.equal(1);
+
+          var span = spans[0];
+          expect(span.t).to.equal('84e588b697868fee');
+          expect(span.p).to.equal('5e734f51bce69eca');
+        });
+      });
+    });
+  });
+  it('must continue incoming trace with 128bit traceIds', function() {
+    return expressControls.sendRequest({
+      method: 'POST',
+      path: '/checkout',
+      responseStatus: 201,
+      useHttps: true,
+      headers: {
+        'X-INSTANA-T': '6636f38f0f3dd0996636f38f0f3dd099',
+        'X-INSTANA-S': 'fb2bb293ac206c05',
+        'X-INSTANA-L': '1'
+      }
+    })
+    .then(function() {
+      return utils.retry(function() {
+        return agentStubControls.getSpans()
+        .then(function(spans) {
+          expect(spans.length).to.equal(1);
+
+          var span = spans[0];
+          expect(span.t).to.equal('6636f38f0f3dd0996636f38f0f3dd099');
+          expect(span.p).to.equal('fb2bb293ac206c05');
+        });
+      });
+    });
+  });
 });

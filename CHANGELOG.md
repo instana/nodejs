@@ -1,5 +1,8 @@
 # Changelog
 
+## Unreleased
+ - Prepare support for 128bit trace IDs.
+
 ## 1.37.2
  - MongoDB: Properly initialize and assure operationId is generated
 
