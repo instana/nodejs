@@ -9,8 +9,8 @@ if (config.instana.sensorEnabled) {
       agentPort: config.instana.agentPort,
       level: 'info'
     });
-  } catch (Exception) {
-    console.error('Sensor could not be instantiated.');
+  } catch (e) {
+    console.error('Sensor could not be instantiated.', e);
   }
 }
 
