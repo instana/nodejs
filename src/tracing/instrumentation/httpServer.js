@@ -52,7 +52,7 @@ function shimEmit(realEmit) {
       };
 
       // Handle client / backend eum correlation.
-      if (span.s === span.t) {
+      if (!span.p) {
         req.headers['x-instana-t'] = span.t;
 
         // support for automatic client / backend eum correlation

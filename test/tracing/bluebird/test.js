@@ -72,7 +72,7 @@ describe('tracing/bluebird', function() {
 
   function getEntySpan(spans, path) {
     return utils.expectOneMatching(spans, function(span) {
-      expect(span.t).to.equal(span.s);
+      expect(span.p).to.equal(undefined);
       expect(span.n).to.equal('node.http.server');
       expect(span.data.http.url).to.equal(path);
     });

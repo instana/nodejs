@@ -71,7 +71,7 @@ describe('tracing/https', function() {
 
           var span = spans[0];
           expect(span.t).to.equal('84e588b697868fee');
-          expect(span.s).to.equal('5e734f51bce69eca');
+          expect(span.p).to.equal('5e734f51bce69eca');
         });
       });
     });
@@ -96,7 +96,7 @@ describe('tracing/https', function() {
 
           var span = spans[0];
           expect(span.t).to.equal('6636f38f0f3dd0996636f38f0f3dd099');
-          expect(span.s).to.equal('fb2bb293ac206c05');
+          expect(span.p).to.equal('fb2bb293ac206c05');
         });
       });
     });

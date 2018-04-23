@@ -201,7 +201,6 @@ describe('tracing', function() {
 
             utils.expectOneMatching(spans, function(span) {
               expect(span.t).to.equal(traceId);
-              expect(span.s).to.equal(traceId);
               expect(span.f.e).to.equal(String(expressControls.getPid()));
             });
           });
