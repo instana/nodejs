@@ -1,7 +1,6 @@
 'use strict';
 
 var requireHook = require('../../util/requireHook');
-var transmission = require('../transmission');
 var tracingUtil = require('../tracingUtil');
 var cls = require('../cls');
 
@@ -92,7 +91,7 @@ function instrumentApi(client, action, info) {
       }
       span.d = Date.now() - span.ts;
       span.error = false;
-      transmission.addSpan(span);
+      span.transmit();
       return response;
     }
 
@@ -101,7 +100,7 @@ function instrumentApi(client, action, info) {
       span.error = true;
       span.ec = 1;
       span.data.elasticsearch.error = tracingUtil.getErrorDetails(error);
-      transmission.addSpan(span);
+      span.transmit();
     }
   };
 }

@@ -2,6 +2,7 @@
 
 ## Unreleased
  - Prepare support for 128bit trace IDs.
+ - Reduce memory footprint when using HTTP agents with `maxSockets: Infinity`.
 
 ## 1.37.2
  - MongoDB: Properly initialize and assure operationId is generated

@@ -3,7 +3,6 @@
 var shimmer = require('shimmer');
 
 var requireHook = require('../../util/requireHook');
-var transmission = require('../transmission');
 var tracingUtil = require('../tracingUtil');
 var cls = require('../cls');
 
@@ -122,7 +121,7 @@ function instrumentedQuery(ctx, originalQuery, statementOrOpts, valuesOrCallback
 
     resultPromise.then(function(result) {
       span.d = Date.now() - span.ts;
-      transmission.addSpan(span);
+      span.transmit();
       return result;
     }).catch(function(error) {
         span.ec = 1;
@@ -130,7 +129,7 @@ function instrumentedQuery(ctx, originalQuery, statementOrOpts, valuesOrCallback
         span.data.mysql.error = tracingUtil.getErrorDetails(error);
 
         span.d = Date.now() - span.ts;
-        transmission.addSpan(span);
+        span.transmit();
         return error;
       });
     return resultPromise;
@@ -145,7 +144,7 @@ function instrumentedQuery(ctx, originalQuery, statementOrOpts, valuesOrCallback
     }
 
     span.d = Date.now() - span.ts;
-    transmission.addSpan(span);
+    span.transmit();
 
     if (originalCallback) {
       return originalCallback.apply(this, arguments);
