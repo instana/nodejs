@@ -1,27 +1,26 @@
 # Load Tests
-This server provides a base to load test the Instana Node.js sensor.
 
-## Configuration
-Application specific configuration options can be found in `./src/config.js`. The most relevant one is `sensorEnabled` which controls whether or not the Node.js sensor is loaded.
 
-## Execution
+## Starting the App
+The app can be started via `./runApps.bash`. It is configured via environment variables. The default values for the
+environment variables can be seen in `.env`. The defaults can be easily overwritten like this `AGENT_PORT=3210 ./runApps.bash`.
 
-### Starting required databases, messaging systems…
-Start the required databases and middleware as described in the [contribution docs](https://github.com/instana/nodejs-sensor/blob/master/CONTRIBUTING.md).
-
-### Starting the instrumented test application
+### With Dummy Agent
+The agent doesn't play a relevant role in the majority of load tests. For this reason, it is possible to execute the
+load tests without the real agent. It can be done in the following way
 
 ```
-cd load-test
-npm run start
+# start the agent stub
+cd nodejs-sensor
+DROP_DATA=true npm run agent-stub
+
+# start the app (in a separate terminal)
+cd nodejs-sensor/load
+AGENT_PORT=3210 ./runApps.bash
 ```
 
-### Starting the load test
-[JMeter](https://jmeter.apache.org/) is being used to generate the load.
+## Executing Load Tests
 
-```
-./jmeter/run.sh
-```
-
-## Results
-The results of the load test can be found in `./jmeter/result/testresult`.
+1. [Download JMeter](https://jmeter.apache.org/download_jmeter.cgi) and extract it. Put the `bin/` directory on your path.
+2. Execute a load test: `TEST=httpCallSequence ./runLoadTest.bash`.
+3. Check the results: `open result/testresult/index.html`.

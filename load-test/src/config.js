@@ -1,25 +1,29 @@
 'use strict';
-module.exports = {
-  instana: {
-    sensorEnabled: true,
-    agentPort: process.env.AGENT_PORT || null
+
+require('dotenv').config();
+
+module.exports = exports = {
+  app: {
+    workers: getInt('APP_WORKERS'),
+    httpPort: getInt('APP_PORT'),
+    downstreamHttpPort: getInt('DOWNSTREAM_PORT')
   },
-  server: {
-    port: process.env.APP_PORT || 3333
-  },
-  services: {
-    mongo: {
-      host: process.env.MONGODB || '127.0.0.1:27017'
-    },
-    mysql: {
-      host: process.env.MYSQL_HOST || '127.0.0.1',
-      user: process.env.MYSQL_USER || 'root',
-      password: process.env.MYSQL_PW || 'nodepw',
-      database: process.env.MYSQL_DB || 'nodedb',
-      table: 'loadtest'
-    },
-    redis: {
-      host: process.env.REDIS || '127.0.0.1:6379'
-    }
+  sensor: {
+    agentPort: getInt('AGENT_PORT'),
+    enabled: getBool('SENSOR_ENABLED'),
+    tracing: getBool('TRACING_ENABLED'),
+    stackTraceLength: getInt('STACK_TRACE_LENGTH')
   }
 };
+
+function getInt(varName) {
+  var val = parseInt(process.env[varName], 10);
+  if (isNaN(val)) {
+    return null;
+  }
+  return val;
+}
+
+function getBool(varName) {
+  return process.env[varName] !== 'false';
+}

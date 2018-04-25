@@ -6,6 +6,7 @@ var morgan = require('morgan');
 var app = express();
 
 var logPrefix = 'Agent Stub (' + process.pid + '):\t';
+var dropAllData = process.env.DROP_DATA === 'true';
 var discoveries = {};
 var requests = {};
 var retrievedData = {
@@ -53,11 +54,13 @@ app.head('/com.instana.plugin.nodejs.:pid', checkExistenceOfKnownPid(function ha
 
 
 app.post('/com.instana.plugin.nodejs.:pid', checkExistenceOfKnownPid(function handleDataRetrieval(req, res) {
-  retrievedData.runtime.push({
-    pid: parseInt(req.params.pid, 10),
-    time: Date.now(),
-    data: req.body
-  });
+  if (!dropAllData) {
+    retrievedData.runtime.push({
+      pid: parseInt(req.params.pid, 10),
+      time: Date.now(),
+      data: req.body
+    });
+  }
 
   var requestsForPid = requests[req.params.pid] || [];
   log('Got new data for PID ' + req.params.pid + '. Responding with ' + requestsForPid.length + ' requests.');
@@ -67,23 +70,27 @@ app.post('/com.instana.plugin.nodejs.:pid', checkExistenceOfKnownPid(function ha
 
 
 app.post('/com.instana.plugin.nodejs/traces.:pid', checkExistenceOfKnownPid(function handleDataRetrieval(req, res) {
-  retrievedData.traces.push({
-    pid: parseInt(req.params.pid, 10),
-    time: Date.now(),
-    data: req.body
-  });
+  if (!dropAllData) {
+    retrievedData.traces.push({
+      pid: parseInt(req.params.pid, 10),
+      time: Date.now(),
+      data: req.body
+    });
+  }
   log('Got new spans for PID ' + req.params.pid);
   res.send('OK');
 }));
 
 
 app.post('/com.instana.plugin.nodejs/response.:pid', checkExistenceOfKnownPid(function handleDataRetrieval(req, res) {
-  retrievedData.responses.push({
-    pid: parseInt(req.params.pid, 10),
-    time: Date.now(),
-    messageId: req.query.messageId,
-    data: req.body
-  });
+  if (!dropAllData) {
+    retrievedData.responses.push({
+      pid: parseInt(req.params.pid, 10),
+      time: Date.now(),
+      messageId: req.query.messageId,
+      data: req.body
+    });
+  }
   log('Got new responses for PID ' + req.params.pid);
   res.send('OK');
 }));
