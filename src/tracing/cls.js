@@ -1,10 +1,12 @@
 'use strict';
 
+var transmission = require('./transmission');
 var tracingUtil = require('./tracingUtil');
-var hooked = require('cls-hooked');
+var hooked = require('./clsHooked');
 
-var currentRootSpanKey = 'com.instana.rootSpan';
-var currentSpanKey = 'com.instana.span';
+var currentRootSpanKey = exports.currentRootSpanKey = 'com.instana.rootSpan';
+var currentSpanKey = exports.currentSpanKey = 'com.instana.span';
+var tracingLevelKey = exports.tracingLevelKey = 'com.instana.tl';
 
 var exitSpans = ['node.http.client', 'elasticsearch', 'mongo', 'mysql', 'redis'];
 var entrySpans = ['node.http.server'];
@@ -18,30 +20,15 @@ var entrySpans = ['node.http.server'];
  *   cls.ns.run(function() {});
  *
  */
-var instanaNamespace = 'instana.sensor';
-Object.defineProperty(exports, 'ns', {
-  get: function() {
-    return hooked.getNamespace(instanaNamespace) || hooked.createNamespace(instanaNamespace);
-  }
-});
+exports.ns = hooked.createNamespace('instana.sensor');
 
 /*
  * Start a new span and set it as the current span
  *
  */
-exports.startSpan = function startSpan(spanName, traceId, spanId) {
-  var span = {
-    f: tracingUtil.getFrom(),
-    async: false,
-    error: false,
-    ec: 0,
-    ts: Date.now(),
-    d: 0,
-    n: spanName,
-    stack: [],
-    data: null
-  };
-
+exports.startSpan = function startSpan(spanName, traceId, spanId, modifyAsyncContext) {
+  modifyAsyncContext = modifyAsyncContext !== false;
+  var span = new InstanaSpan(spanName);
   var parentSpan = exports.ns.get(currentSpanKey);
 
   // If specified, use params
@@ -61,14 +48,19 @@ exports.startSpan = function startSpan(spanName, traceId, spanId) {
   // Set span direction type (1=entry, 2=exit, 3=local/intermediate)
   if (entrySpans.indexOf(span.n) > -1) {
     span.k = 1;
-    exports.ns.set(currentRootSpanKey, span);
+
+    if (!span.p && modifyAsyncContext) {
+      span.addCleanup(exports.ns.set(currentRootSpanKey, span));
+    }
   } else if (exitSpans.indexOf(span.n) > -1) {
     span.k = 2;
   } else {
     span.k = 3;
   }
 
-  exports.ns.set(currentSpanKey, span);
+  if (modifyAsyncContext) {
+    span.addCleanup(exports.ns.set(currentSpanKey, span));
+  }
   return span;
 };
 
@@ -85,7 +77,8 @@ exports.getCurrentRootSpan = function getCurrentRootSpan() {
  *
  */
 exports.setCurrentSpan = function setCurrentSpan(span) {
-  return exports.ns.set(currentSpanKey, span);
+  exports.ns.set(currentSpanKey, span);
+  return span;
 };
 
 /*
@@ -107,9 +100,9 @@ exports.isTracing = function isTracing() {
 /*
  * Set the tracing level
  */
-var tracingLevelKey = 'tlKey';
 exports.setTracingLevel = function setTracingLevel(level) {
-  return exports.ns.set(tracingLevelKey, level);
+  exports.ns.set(tracingLevelKey, level);
+  return level;
 };
 
 /*
@@ -154,3 +147,55 @@ exports.isExitSpan = function isExitSpan(span) {
 exports.isLocalSpan = function isLocalSpan(span) {
   return span.k === 3 ? true : false;
 };
+
+/*
+ * Instead of creating a span object via {}, we use new InstanaSpan().
+ * This will support better debugging, especially in cases where we need
+ * to analyse heap dumps.
+ *
+ * Furthermore, it allows us to add CLS cleanup logic to the span and to
+ * manipulate JSON serialization logic.
+ */
+function InstanaSpan(name) {
+  // properties that part of our span model
+  this.t = undefined;
+  this.s = undefined;
+  this.p = undefined;
+  this.k = undefined;
+  this.n = name;
+  this.f = tracingUtil.getFrom();
+  this.async = false;
+  this.error = false;
+  this.ec = 0;
+  this.ts = Date.now();
+  this.d = 0;
+  this.stack = [];
+  this.data = undefined;
+
+  // properties used within the sensor that should not be transmitted to the agent/backend
+  // NOTE: If you add a new property, make sure that it is not enumerable, as it may otherwise be transmitted
+  // to the backend!
+  Object.defineProperty(this, 'cleanupFunctions', {
+    value: [],
+    writable: false,
+    enumerable: false
+  });
+}
+
+InstanaSpan.prototype.addCleanup = function addCleanup(fn) {
+  this.cleanupFunctions.push(fn);
+};
+
+InstanaSpan.prototype.transmit = function transmit() {
+  transmission.addSpan(this);
+  this.cleanup();
+};
+
+InstanaSpan.prototype.cleanup = function cleanup() {
+  this.cleanupFunctions.forEach(call);
+  this.cleanupFunctions.length = 0;
+};
+
+function call(fn) {
+  fn();
+}

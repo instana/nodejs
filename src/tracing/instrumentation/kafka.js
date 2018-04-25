@@ -3,7 +3,6 @@
 var shimmer = require('shimmer');
 
 var requireHook = require('../../util/requireHook');
-var transmission = require('../transmission');
 var tracingUtil = require('../tracingUtil');
 var cls = require('../cls');
 
@@ -64,7 +63,7 @@ function instrumentedSend(ctx, originalSend, produceRequests, cb) {
     }
 
     span.d = Date.now() - span.ts;
-    transmission.addSpan(span);
+    span.transmit();
 
     if (cb) {
       return cb.apply(this, arguments);
@@ -97,7 +96,7 @@ function shimEmit(original) {
         return original.apply(originalThis, originalArgs);
       } finally {
         span.d = Date.now() - span.ts;
-        transmission.addSpan(span);
+        span.transmit();
       }
     });
   };

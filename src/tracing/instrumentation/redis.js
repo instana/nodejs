@@ -4,7 +4,6 @@ var commands = require('redis-commands');
 var shimmer = require('shimmer');
 
 var requireHook = require('../../util/requireHook');
-var transmission = require('../transmission');
 var tracingUtil = require('../tracingUtil');
 var cls = require('../cls');
 
@@ -96,7 +95,7 @@ function instrumentCommand(command, original) {
         span.data.redis.error = tracingUtil.getErrorDetails(error);
       }
 
-      transmission.addSpan(span);
+      span.transmit();
 
       if (typeof userProvidedCallback === 'function') {
         return userProvidedCallback.apply(this, arguments);
@@ -168,7 +167,7 @@ function instrumentMultiExec(isAtomic, original) {
         span.ec = span.data.redis.subCommands.length;
       }
 
-      transmission.addSpan(span);
+      span.transmit();
 
       if (typeof userProvidedCallback === 'function') {
         return userProvidedCallback.apply(this, arguments);

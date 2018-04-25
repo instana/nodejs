@@ -123,4 +123,19 @@ describe('tracing/cls', function() {
     expect(cls.isExitSpan(localSpan)).to.equal(false);
     expect(cls.isLocalSpan(localSpan)).to.equal(true);
   });
+
+  it('must clean up span data from contexts once the span is transmitted', function() {
+    cls.ns.run(function(context) {
+      expect(context[cls.currentRootSpanKey]).to.equal(undefined);
+      expect(context[cls.currentSpanKey]).to.equal(undefined);
+
+      var span = cls.startSpan('node.http.server');
+      expect(context[cls.currentRootSpanKey]).to.equal(span);
+      expect(context[cls.currentSpanKey]).to.equal(span);
+
+      span.cleanup();
+      expect(context[cls.currentRootSpanKey]).to.equal(undefined);
+      expect(context[cls.currentSpanKey]).to.equal(undefined);
+    });
+  });
 });

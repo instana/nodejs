@@ -4,7 +4,6 @@ var coreHttpModule = require('http');
 
 var discardUrlParameters = require('../../util/url').discardUrlParameters;
 var tracingConstants = require('../constants');
-var transmission = require('../transmission');
 var tracingUtil = require('../tracingUtil');
 var cls = require('../cls');
 
@@ -57,7 +56,7 @@ exports.init = function() {
         span.d = Date.now() - span.ts;
         span.error = res.statusCode >= 500;
         span.ec = span.error ? 1 : 0;
-        transmission.addSpan(span);
+        span.transmit();
 
         if (givenResponseListener) {
           givenResponseListener(res);
@@ -88,7 +87,7 @@ exports.init = function() {
         span.d = Date.now() - span.ts;
         span.error = true;
         span.ec = 1;
-        transmission.addSpan(span);
+        span.transmit();
       });
 
       clientRequest.on('error', function(err) {
@@ -102,7 +101,7 @@ exports.init = function() {
         span.d = Date.now() - span.ts;
         span.error = true;
         span.ec = 1;
-        transmission.addSpan(span);
+        span.transmit();
       });
     });
     return clientRequest;

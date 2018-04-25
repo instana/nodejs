@@ -3,7 +3,6 @@
 var shimmer = require('shimmer');
 
 var requireHook = require('../../util/requireHook');
-var transmission = require('../transmission');
 var tracingUtil = require('../tracingUtil');
 var cls = require('../cls');
 
@@ -97,7 +96,7 @@ function instrumentSendCommand(original) {
         span.data.redis.error = error.message;
       }
 
-      transmission.addSpan(span);
+      span.transmit();
     }
   };
 }
@@ -125,7 +124,7 @@ function getMultiCommandEndCall(span) {
       span.data.redis.error = error.message;
     }
 
-    transmission.addSpan(span);
+    span.transmit();
   };
 }
 
@@ -211,5 +210,5 @@ function pipelineCommandEndCallback(span, error, results) {
     }
   }
 
-  transmission.addSpan(span);
+  span.transmit();
 }

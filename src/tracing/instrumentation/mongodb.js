@@ -2,7 +2,6 @@
 
 var logger = require('../../logger').getLogger('tracing/mongodb');
 var requireHook = require('../../util/requireHook');
-var transmission = require('../transmission');
 var tracingUtil = require('../tracingUtil');
 var cls = require('../cls');
 
@@ -56,23 +55,24 @@ function instrument(mongodb) {
 
 
 function onStarted(event) {
-  if (!isActive || !cls.isTracing()) {
+  if (!isActive) {
     return;
   }
 
+  var traceId = event.operationId.traceId;
+  var parentSpanId = event.operationId.parentSpanId;
   var parentSpan = cls.getCurrentSpan();
-  var span = null;
-
-  if (event.operationId == null) {
-    event.operationId = {};
+  if (parentSpan && (traceId == null || parentSpanId == null)) {
+    traceId = parentSpan.t;
+    parentSpanId = parentSpan.s;
   }
 
-  if (event.operationId.traceId && event.operationId.parentSpanId) {
-    span = cls.startSpan('mongo', event.operationId.traceId, event.operationId.parentSpanId);
-  } else {
-    span = cls.startSpan('mongo');
+  if (traceId == null || parentSpanId == null) {
+    // no parent found. We don't want to keep track of isolated mongodb spans
+    return;
   }
-  cls.setCurrentSpan(parentSpan);
+
+  var span = cls.startSpan('mongo', traceId, parentSpanId, false);
 
   var host = event.connectionId.host;
   var port = event.connectionId.port;
@@ -127,7 +127,7 @@ function onSucceeded(event) {
 
   spanData.span.d = Date.now() - spanData.span.ts;
   spanData.span.error = false;
-  transmission.addSpan(spanData.span);
+  spanData.span.transmit();
 
   cleanup(event);
 }
@@ -147,7 +147,7 @@ function onFailed(event) {
   spanData.span.d = Date.now() - spanData.span.ts;
   spanData.span.error = true;
   spanData.span.ec = 1;
-  transmission.addSpan(spanData.span);
+  spanData.span.transmit();
 
   cleanup(event);
 }
