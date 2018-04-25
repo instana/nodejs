@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.37.3
  - Prepare support for 128bit trace IDs.
  - Reduce memory footprint when using HTTP agents with `maxSockets: Infinity`.
 
