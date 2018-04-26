@@ -1,5 +1,8 @@
 # Changelog
 
+## Unreleased
+ - Enable tracing in Node.js `^10.0.0`.
+
 ## 1.37.3
  - Prepare support for 128bit trace IDs.
  - Reduce memory footprint when using HTTP agents with `maxSockets: Infinity`.
