@@ -55,7 +55,9 @@ function instrument(mongodb) {
 
 
 function onStarted(event) {
-  if (!isActive) {
+  if (!isActive ||
+      // In some cases, the operationId may not be defined on a MongoDB event!
+      !event.operationId) {
     return;
   }
 

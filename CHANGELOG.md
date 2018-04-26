@@ -2,6 +2,7 @@
 
 ## Unreleased
  - Enable tracing in Node.js `^10.0.0`.
+ - Regression in MongoDB instrumentation which attempts to access optional `operationId` properties.
 
 ## 1.37.3
  - Prepare support for 128bit trace IDs.
