@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.38.0
  - Enable tracing in Node.js `^10.0.0`.
  - Regression in MongoDB instrumentation which attempts to access optional `operationId` properties.
 
