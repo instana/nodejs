@@ -2,12 +2,18 @@
 
 'use strict';
 
+var supportedVersion = require('../../src/tracing/index').supportedVersion;
 var config = require('../config');
-var agentStubControls = require('./agentStubControls');
 var expect = require('chai').expect;
 
-
 describe('agentStub', function() {
+  if (!supportedVersion(process.versions.node)) {
+    return;
+  }
+
+  // controls require features that aren't available in early Node.js versions
+  var agentStubControls = require('./agentStubControls');
+
   this.timeout(config.getTestTimeout());
 
   agentStubControls.registerTestHooks();

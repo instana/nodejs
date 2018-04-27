@@ -5,8 +5,6 @@ var Promise = require('bluebird');
 var _ = require('lodash');
 
 var supportedVersion = require('../../src/tracing/index').supportedVersion;
-var expressMongodbControls = require('../apps/expressMongodbControls');
-var agentStubControls = require('../apps/agentStubControls');
 var config = require('../config');
 var utils = require('../utils');
 
@@ -14,6 +12,10 @@ describe('tracing/mongodb', function() {
   if (!supportedVersion(process.versions.node)) {
     return;
   }
+
+  // controls require features that aren't available in early Node.js versions
+  var expressMongodbControls = require('../apps/expressMongodbControls');
+  var agentStubControls = require('../apps/agentStubControls');
 
   this.timeout(config.getTestTimeout());
 

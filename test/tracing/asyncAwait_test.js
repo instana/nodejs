@@ -3,9 +3,6 @@
 var expect = require('chai').expect;
 var semver = require('semver');
 
-var expressAsyncAwaitControls = require('../apps/expressAsyncAwaitControls');
-var agentStubControls = require('../apps/agentStubControls');
-var expressControls = require('../apps/expressControls');
 var config = require('../config');
 var utils = require('../utils');
 
@@ -13,6 +10,11 @@ describe('tracing', function() {
   if (!semver.satisfies(process.versions.node, '^8')) {
     return;
   }
+
+  // controls require features that aren't available in early Node.js versions
+  var expressAsyncAwaitControls = require('../apps/expressAsyncAwaitControls');
+  var agentStubControls = require('../apps/agentStubControls');
+  var expressControls = require('../apps/expressControls');
 
   this.timeout(config.getTestTimeout());
 

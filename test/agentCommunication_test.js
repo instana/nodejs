@@ -1,13 +1,20 @@
 'use strict';
 
 var expect = require('chai').expect;
+var semver = require('semver');
 
-var agentStubControls = require('./apps/agentStubControls');
-var expressControls = require('./apps/expressControls');
 var config = require('./config');
 var utils = require('./utils');
 
 describe('agentCommunication', function() {
+  if (semver.satisfies(process.versions.node, '<4')) {
+    return;
+  }
+
+  // controls require features that aren't available in early Node.js versions
+  var agentStubControls = require('./apps/agentStubControls');
+  var expressControls = require('./apps/expressControls');
+
   this.timeout(config.getTestTimeout());
 
   agentStubControls.registerTestHooks();

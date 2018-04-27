@@ -5,9 +5,7 @@ var semver = require('semver');
 var path = require('path');
 var fs = require('fs');
 
-var expressElasticsearchControls = require('../../apps/expressElasticsearchControls');
 var supportedVersion = require('../../../src/tracing/index').supportedVersion;
-var agentStubControls = require('../../apps/agentStubControls');
 var cpu = require('../../../src/actions/profiling/cpu');
 var config = require('../../config');
 var utils = require('../../utils');
@@ -17,6 +15,10 @@ describe('actions/profiling/cpu', function() {
   if (!semver.satisfies(process.versions.node, '>=4.0.0 <10')) {
     return;
   }
+
+  // controls require features that aren't available in early Node.js versions
+  var expressElasticsearchControls = require('../../apps/expressElasticsearchControls');
+  var agentStubControls = require('../../apps/agentStubControls');
 
   describe('toTreeWithTiming', function() {
     var rawCpuProfile;

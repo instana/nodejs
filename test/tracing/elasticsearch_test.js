@@ -2,9 +2,7 @@
 
 var expect = require('chai').expect;
 
-var expressElasticsearchControls = require('../apps/expressElasticsearchControls');
 var supportedVersion = require('../../src/tracing/index').supportedVersion;
-var agentStubControls = require('../apps/agentStubControls');
 var config = require('../config');
 var utils = require('../utils');
 
@@ -12,6 +10,10 @@ describe('tracing/elasticsearch', function() {
   if (!supportedVersion(process.versions.node)) {
     return;
   }
+
+  // controls require features that aren't available in early Node.js versions
+  var expressElasticsearchControls = require('../apps/expressElasticsearchControls');
+  var agentStubControls = require('../apps/agentStubControls');
 
   this.timeout(config.getTestTimeout());
 

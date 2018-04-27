@@ -4,9 +4,6 @@ var expect = require('chai').expect;
 var Promise = require('bluebird');
 
 var supportedVersion = require('../src/tracing/index').supportedVersion;
-var expressProxyControls = require('./apps/expressProxyControls');
-var agentStubControls = require('./apps/agentStubControls');
-var expressControls = require('./apps/expressControls');
 var config = require('./config');
 var utils = require('./utils');
 
@@ -14,6 +11,11 @@ describe('tracing', function() {
   if (!supportedVersion(process.versions.node)) {
     return;
   }
+
+  // controls require features that aren't available in early Node.js versions
+  var expressProxyControls = require('./apps/expressProxyControls');
+  var agentStubControls = require('./apps/agentStubControls');
+  var expressControls = require('./apps/expressControls');
 
   this.timeout(config.getTestTimeout());
 

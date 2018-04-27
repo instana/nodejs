@@ -4,8 +4,6 @@ var expect = require('chai').expect;
 var uuid = require('uuid/v4');
 
 var supportedVersion = require('../../../src/tracing/index').supportedVersion;
-var agentControls = require('../../apps/agentStubControls');
-var MongooseControls = require('./controls');
 var config = require('../../config');
 var utils = require('../../utils');
 
@@ -13,6 +11,11 @@ describe('tracing/mongoose', function() {
   if (!supportedVersion(process.versions.node)) {
     return;
   }
+
+  // controls require features that aren't available in early Node.js versions
+  var agentControls = require('../../apps/agentStubControls');
+  var MongooseControls = require('./controls');
+
   this.timeout(config.getTestTimeout());
 
   agentControls.registerTestHooks();

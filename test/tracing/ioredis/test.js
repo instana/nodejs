@@ -3,8 +3,6 @@
 var expect = require('chai').expect;
 
 var supportedVersion = require('../../../src/tracing/index').supportedVersion;
-var agentControls = require('../../apps/agentStubControls');
-var IoRedisControls = require('./controls');
 var config = require('../../config');
 var utils = require('../../utils');
 
@@ -12,6 +10,11 @@ describe('tracing/ioredis', function() {
   if (!supportedVersion(process.versions.node)) {
     return;
   }
+
+  // controls require features that aren't available in early Node.js versions
+  var agentControls = require('../../apps/agentStubControls');
+  var IoRedisControls = require('./controls');
+
   this.timeout(config.getTestTimeout());
 
   agentControls.registerTestHooks();

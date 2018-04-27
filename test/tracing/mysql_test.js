@@ -3,8 +3,6 @@
 var expect = require('chai').expect;
 
 var supportedVersion = require('../../src/tracing/index').supportedVersion;
-var expressMysqlControls = require('../apps/expressMysqlControls');
-var agentStubControls = require('../apps/agentStubControls');
 var config = require('../config');
 var utils = require('../utils');
 
@@ -12,6 +10,10 @@ describe('tracing/mysql', function() {
   if (!supportedVersion(process.versions.node)) {
     return;
   }
+
+  // controls require features that aren't available in early Node.js versions
+  var expressMysqlControls = require('../apps/expressMysqlControls');
+  var agentStubControls = require('../apps/agentStubControls');
 
   this.timeout(config.getTestTimeout());
 
