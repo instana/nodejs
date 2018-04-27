@@ -2,10 +2,7 @@
 
 var expect = require('chai').expect;
 
-var expressKafkaProducerControls = require('../apps/expressKafkaProducerControls');
 var supportedVersion = require('../../src/tracing/index').supportedVersion;
-var kafkaConsumerControls = require('../apps/kafkaConsumerControls');
-var agentStubControls = require('../apps/agentStubControls');
 var config = require('../config');
 var utils = require('../utils');
 
@@ -13,6 +10,11 @@ describe('tracing/kafka', function() {
   if (!supportedVersion(process.versions.node)) {
     return;
   }
+
+  // controls require features that aren't available in early Node.js versions
+  var expressKafkaProducerControls = require('../apps/expressKafkaProducerControls');
+  var kafkaConsumerControls = require('../apps/kafkaConsumerControls');
+  var agentStubControls = require('../apps/agentStubControls');
 
   // Too many moving parts with Kafka involed. Increase the default timeout.
   // This is especially important since the Kafka client has an
