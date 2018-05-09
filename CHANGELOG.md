@@ -1,5 +1,8 @@
 # Changelog
 
+## Unreleased
+ - OpenTracing baggage is not defined on span context when using `getCurrentlyActiveInstanaSpanContext`.
+
 ## 1.38.0
  - Enable tracing in Node.js `^10.0.0`.
  - Regression in MongoDB instrumentation which attempts to access optional `operationId` properties.

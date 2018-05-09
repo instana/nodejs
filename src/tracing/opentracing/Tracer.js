@@ -40,6 +40,11 @@ Tracer.prototype._inject = function _inject(spanContext, format, carrier) {
     return;
   }
 
+  if (carrier == null || spanContext == null) {
+    // For some reason this case is not handled by the OpenTracing abstraction.
+    return;
+  }
+
   carrier[constants.spanIdHeaderNameLowerCase] = spanContext.s;
   carrier[constants.traceIdHeaderNameLowerCase] = spanContext.t;
   carrier[constants.traceLevelHeaderNameLowerCase] = String(spanContext.samplingPriority);
@@ -55,6 +60,11 @@ Tracer.prototype._extract = function _extract(format, carrier) {
   if (format !== opentracing.FORMAT_TEXT_MAP &&
       format !== opentracing.FORMAT_HTTP_HEADERS) {
     // Only text formats supported right now
+    return null;
+  }
+
+  if (carrier == null) {
+    // For some reason this case is not handled by the OpenTracing abstraction.
     return null;
   }
 

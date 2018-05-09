@@ -41,6 +41,10 @@ app.get('/withOpentracingConnectedToInstanaTrace', function(req, res) {
   res.send('OK');
 });
 
+app.get('/getCurrentlyActiveInstanaSpanContext', function(req, res) {
+  res.json(instana.opentracing.getCurrentlyActiveInstanaSpanContext());
+});
+
 app.listen(process.env.APP_PORT, function() {
   log('Listening on port: ' + process.env.APP_PORT);
 });
