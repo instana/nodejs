@@ -114,6 +114,13 @@ describe('tracing/opentracing/integration', function() {
           });
         });
       });
+
+      it('must contain baggage in instana span context', function() {
+        return expressOpentracingControls.sendRequest({path: '/getCurrentlyActiveInstanaSpanContext'})
+        .then(function(body) {
+          expect(JSON.parse(body).baggage).to.deep.equal({});
+        });
+      });
     }
   });
 

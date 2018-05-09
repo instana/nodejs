@@ -65,5 +65,6 @@ exports.getCurrentlyActiveInstanaSpanContext = function getCurrentlyActiveInstan
   spanContext.s = s;
   spanContext.t = t;
   spanContext.samplingPriority = cls.tracingLevel() === '0' ? 0 : 1;
+  spanContext.baggage = {};
   return spanContext;
 };
