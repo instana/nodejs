@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.38.1
  - OpenTracing baggage is not defined on span context when using `getCurrentlyActiveInstanaSpanContext`.
 
 ## 1.38.0
