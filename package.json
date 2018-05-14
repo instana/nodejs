@@ -74,6 +74,7 @@
     "morgan": "^1.8.1",
     "mysql": "^2.13.0",
     "mysql2": "^1.5.1",
+    "node-fetch": "^2.1.2",
     "proxyquire": "1.7.3",
     "redis": "^2.8.0",
     "request": "^2.85.0",

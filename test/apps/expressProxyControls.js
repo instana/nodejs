@@ -71,7 +71,8 @@ exports.sendRequest = function(opts) {
     qs: {
       responseStatus: opts.responseStatus,
       delay: opts.delay,
-      url: opts.target
+      url: opts.target,
+      httpLib: opts.httpLib
     },
     headers: headers
   })
