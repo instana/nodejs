@@ -271,6 +271,59 @@ describe('tracing', function() {
         });
       });
 
+      it('must support node-fetch', function() {
+        return expressProxyControls.sendRequest({
+          method: 'POST',
+          path: '/checkout',
+          responseStatus: 200,
+          httpLib: 'node-fetch'
+        })
+        .then(function() {
+          return utils.retry(function() {
+            return agentStubControls.getSpans()
+            .then(function(spans) {
+              expect(spans.length).to.equal(3, 'Expecting at most three spans');
+
+              // proxy entry span
+              var proxyEntrySpan = utils.expectOneMatching(spans, function(span) {
+                expect(span.n).to.equal('node.http.server');
+                expect(span.f.e).to.equal(String(expressProxyControls.getPid()));
+                expect(span.async).to.equal(false);
+                expect(span.error).to.equal(false);
+                expect(span.data.http.method).to.equal('POST');
+                expect(span.data.http.url).to.equal('/checkout');
+                expect(span.data.http.status).to.equal(200);
+              });
+
+              // proxy exit span
+              var proxyExitSpan = utils.expectOneMatching(spans, function(span) {
+                expect(span.t).to.equal(proxyEntrySpan.t);
+                expect(span.p).to.equal(proxyEntrySpan.s);
+                expect(span.n).to.equal('node.http.client');
+                expect(span.f.e).to.equal(String(expressProxyControls.getPid()));
+                expect(span.async).to.equal(false);
+                expect(span.error).to.equal(false);
+                expect(span.data.http.method).to.equal('POST');
+                expect(span.data.http.url).to.equal('http://127.0.0.1:3211/proxy-call/checkout');
+                expect(span.data.http.status).to.equal(200);
+              });
+
+              utils.expectOneMatching(spans, function(span) {
+                expect(span.t).to.equal(proxyEntrySpan.t);
+                expect(span.p).to.equal(proxyExitSpan.s);
+                expect(span.n).to.equal('node.http.server');
+                expect(span.f.e).to.equal(String(expressControls.getPid()));
+                expect(span.async).to.equal(false);
+                expect(span.error).to.equal(false);
+                expect(span.data.http.method).to.equal('POST');
+                expect(span.data.http.url).to.equal('/proxy-call/checkout');
+                expect(span.data.http.status).to.equal(200);
+              });
+            });
+          });
+        });
+      });
+
       it('must not generate traces when the suppression header is set', function() {
         return expressProxyControls.sendRequest({
           method: 'POST',
