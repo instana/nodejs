@@ -66,38 +66,42 @@ function instrumentSendCommand(original) {
       return original.apply(this, arguments);
     }
 
-    var span = cls.startSpan('redis');
-    span.stack = tracingUtil.getStackTrace(wrappedInternalSendCommand);
-    span.data = {
-      redis: {
-        connection: client.options.host + ':' + client.options.port,
-        command: command.name.toLowerCase()
+    var argsForOriginal = arguments;
+    return cls.ns.runAndReturn(function() {
+      var span = cls.startSpan('redis');
+      span.stack = tracingUtil.getStackTrace(wrappedInternalSendCommand);
+      span.data = {
+        redis: {
+          connection: client.options.host + ':' + client.options.port,
+          command: command.name.toLowerCase()
+        }
+      };
+
+      callback = cls.ns.bind(onResult);
+      command.promise.then(
+        // make sure that the first parameter is never truthy
+        callback.bind(null, null),
+        callback);
+
+      return original.apply(client, argsForOriginal);
+
+      function onResult(error) {
+        // multi commands are ended by exec. Wait for the exec result
+        if (command.name === 'multi') {
+          return;
+        }
+
+        span.d = Date.now() - span.ts;
+
+        if (error) {
+          span.error = true;
+          span.ec = 1;
+          span.data.redis.error = error.message;
+        }
+
+        span.transmit();
       }
-    };
-
-    callback = cls.ns.bind(onResult);
-    command.promise.then(
-      // make sure that the first parameter is never truthy
-      callback.bind(null, null),
-      callback);
-    return original.apply(this, arguments);
-
-    function onResult(error) {
-      // multi commands are ended by exec. Wait for the exec result
-      if (command.name === 'multi') {
-        return;
-      }
-
-      span.d = Date.now() - span.ts;
-
-      if (error) {
-        span.error = true;
-        span.ec = 1;
-        span.data.redis.error = error.message;
-      }
-
-      span.transmit();
-    }
+    });
   };
 }
 
