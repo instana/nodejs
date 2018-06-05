@@ -71,6 +71,7 @@ exports.announceNodeSensor = function announceNodeSensor(cb) {
 
   req.setTimeout(agentOpts.requestTimeout, function onTimeout() {
     cb(new Error('Announce request to agent failed due to timeout'));
+    req.abort();
   });
 
   req.on('error', function(err) {
@@ -129,6 +130,7 @@ function checkWhetherResponseForPathIsOkay(path, cb) {
 
   req.setTimeout(agentOpts.requestTimeout, function onTimeout() {
     cb(false);
+    req.abort();
   });
 
   req.on('error', function() {
@@ -229,6 +231,7 @@ function sendData(path, data, cb, ignore404) {
 
   req.setTimeout(agentOpts.requestTimeout, function onTimeout() {
     cb(new Error('Timeout while trying to send data to agent via path: ' + path));
+    req.abort();
   });
 
   req.on('error', function(err) {
