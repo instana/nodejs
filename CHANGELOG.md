@@ -1,5 +1,8 @@
 # Changelog
 
+## Unreleased
+ - Protect spans from accidental retransmission.
+
 ## 1.38.2
  - ioredis: Correctly manage tracing context in ioredis instrumentation
 

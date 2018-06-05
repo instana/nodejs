@@ -180,6 +180,11 @@ function InstanaSpan(name) {
     writable: false,
     enumerable: false
   });
+  Object.defineProperty(this, 'transmitted', {
+    value: false,
+    writable: true,
+    enumerable: false
+  });
 }
 
 InstanaSpan.prototype.addCleanup = function addCleanup(fn) {
@@ -187,8 +192,11 @@ InstanaSpan.prototype.addCleanup = function addCleanup(fn) {
 };
 
 InstanaSpan.prototype.transmit = function transmit() {
-  transmission.addSpan(this);
-  this.cleanup();
+  if (!this.transmitted) {
+    transmission.addSpan(this);
+    this.cleanup();
+    this.transmitted = true;
+  }
 };
 
 InstanaSpan.prototype.cleanup = function cleanup() {
