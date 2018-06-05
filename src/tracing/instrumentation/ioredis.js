@@ -23,6 +23,7 @@ exports.init = function() {
 
 function instrument(ioredis) {
   shimmer.wrap(ioredis.prototype, 'sendCommand', instrumentSendCommand);
+  shimmer.wrap(ioredis.prototype, 'multi', instrumentMultiCommand);
   shimmer.wrap(ioredis.prototype, 'pipeline', instrumentPipelineCommand);
 }
 
@@ -44,22 +45,13 @@ function instrumentSendCommand(original) {
         // multi commands could actually be recorded as multiple spans, but we only want to record one
         // batched span considering that a multi call represents a transaction.
         // The same is true for pipeline calls, but they have a slightly different semantic.
-        var isMultiParent = parentSpan.data.redis.command === 'multi';
-        var isPipelineParent = parentSpan.data.redis.command === 'pipeline';
-        if (isMultiParent || isPipelineParent) {
+        var isMultiOrPipelineParent =
+          parentSpan.data.redis.command === 'multi' ||
+          parentSpan.data.redis.command === 'pipeline';
+        if (isMultiOrPipelineParent) {
           var parentSpanSubCommands = parentSpan.data.redis.subCommands = parentSpan.data.redis.subCommands || [];
-          parentSpanSubCommands.push(command.name);
-
-          if (command.name.toLowerCase() === 'exec' &&
-            // pipelining is handled differently in ioredis
-            isMultiParent) {
-            // the exec call is actually when the transmission of these commands to redis is happening
-            parentSpan.ts = Date.now();
-            callback = cls.ns.bind(getMultiCommandEndCall(parentSpan));
-            command.promise.then(
-              // make sure that the first parameter is never truthy
-              callback.bind(null, null),
-              callback);
+          if (command.name !== 'multi' && command.name !== 'pipeline') {
+            parentSpanSubCommands.push(command.name);
           }
         }
       }
@@ -105,35 +97,16 @@ function instrumentSendCommand(original) {
   };
 }
 
-function getMultiCommandEndCall(span) {
-  return function multiCommandEndCallback(error) {
-    span.d = Date.now() - span.ts;
-
-    var subCommands = span.data.redis.subCommands;
-    var commandCount = 1;
-    if (subCommands) {
-      // remove exec call
-      subCommands.pop();
-      commandCount = subCommands.length;
-    }
-
-    span.b = {
-      s: commandCount,
-      u: false
-    };
-
-    if (error) {
-      span.error = true;
-      span.ec = commandCount;
-      span.data.redis.error = error.message;
-    }
-
-    span.transmit();
-  };
+function instrumentMultiCommand(original) {
+  return instrumentMultiOrPipelineCommand('multi', original);
 }
 
 function instrumentPipelineCommand(original) {
-  return function wrappedInternalPipelineCommand() {
+  return instrumentMultiOrPipelineCommand('pipeline', original);
+}
+
+function instrumentMultiOrPipelineCommand(commandName, original) {
+  return function wrappedInternalMultiOrPipelineCommand() {
     var client = this;
 
     if (!isActive ||
@@ -147,35 +120,69 @@ function instrumentPipelineCommand(original) {
     }
 
     var span = cls.startSpan('redis');
-    span.stack = tracingUtil.getStackTrace(wrappedInternalPipelineCommand);
+    span.stack = tracingUtil.getStackTrace(wrappedInternalMultiOrPipelineCommand);
     span.data = {
       redis: {
         connection: client.options.host + ':' + client.options.port,
-        command: 'pipeline'
+        command: commandName
       }
     };
 
-    var pipeline = original.apply(this, arguments);
-    shimmer.wrap(pipeline, 'exec', instrumentPipelineExec.bind(null, span));
-    return pipeline;
+    var multiOrPipeline = original.apply(this, arguments);
+    shimmer.wrap(
+      multiOrPipeline,
+      'exec',
+      instrumentMultiOrPipelineExec.bind(null, commandName, span)
+    );
+    return multiOrPipeline;
   };
 }
 
-function instrumentPipelineExec(span, original) {
-  return function instrumentedPipelineExec() {
-    // the exec call is actually when the transmission of these commands to redis is happening
+function instrumentMultiOrPipelineExec(commandName, span, original) {
+  var endCallback =
+    commandName === 'pipeline' ?
+      pipelineCommandEndCallback :
+      multiCommandEndCallback;
+  return function instrumentedExec() {
+    // the exec call is actually when the transmission of these commands to
+    // redis is happening
     span.ts = Date.now();
 
     var result = original.apply(this, arguments);
     if (result.then) {
       result.then(function(results) {
-        pipelineCommandEndCallback(span, null, results);
+        endCallback.call(null, span, null, results);
       }, function(error) {
-        pipelineCommandEndCallback(span, error, []);
+        endCallback.call(null, span, error, []);
       });
     }
     return result;
   };
+}
+
+function multiCommandEndCallback(span, error) {
+  span.d = Date.now() - span.ts;
+
+  var subCommands = span.data.redis.subCommands;
+  var commandCount = 1;
+  if (subCommands) {
+    // remove exec call
+    subCommands.pop();
+    commandCount = subCommands.length;
+  }
+
+  span.b = {
+    s: commandCount,
+    u: false
+  };
+
+  if (error) {
+    span.error = true;
+    span.ec = commandCount;
+    span.data.redis.error = error.message;
+  }
+
+  span.transmit();
 }
 
 function pipelineCommandEndCallback(span, error, results) {
