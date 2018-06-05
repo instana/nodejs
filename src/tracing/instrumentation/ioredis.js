@@ -40,21 +40,21 @@ function instrumentSendCommand(original) {
 
     var callback;
     var parentSpan = cls.getCurrentSpan();
-    if (cls.isExitSpan(parentSpan)) {
-      if (parentSpan.n === 'redis') {
-        // multi commands could actually be recorded as multiple spans, but we only want to record one
-        // batched span considering that a multi call represents a transaction.
-        // The same is true for pipeline calls, but they have a slightly different semantic.
-        var isMultiOrPipelineParent =
-          parentSpan.data.redis.command === 'multi' ||
-          parentSpan.data.redis.command === 'pipeline';
-        if (isMultiOrPipelineParent) {
-          var parentSpanSubCommands = parentSpan.data.redis.subCommands = parentSpan.data.redis.subCommands || [];
-          if (command.name !== 'multi' && command.name !== 'pipeline') {
-            parentSpanSubCommands.push(command.name);
-          }
-        }
-      }
+
+    if (parentSpan.n === 'redis' &&
+       (parentSpan.data.redis.command === 'multi' ||
+        parentSpan.data.redis.command === 'pipeline') &&
+        // the multi call is handled in instrumentMultiCommand but since multi is also send to Redis it will also
+        // trigger instrumentSendCommand, which is why we filter it out.
+        command.name !== 'multi') {
+
+      // multi commands could actually be recorded as multiple spans, but we only want to record one
+      // batched span considering that a multi call represents a transaction.
+      // The same is true for pipeline calls, but they have a slightly different semantic.
+      var parentSpanSubCommands = parentSpan.data.redis.subCommands = parentSpan.data.redis.subCommands || [];
+      parentSpanSubCommands.push(command.name);
+    } else if (cls.isExitSpan(parentSpan)) {
+      // Apart from the special case of multi/pipeline calls, redis exits can't be child spans of other exits.
       return original.apply(this, arguments);
     }
 
@@ -119,6 +119,9 @@ function instrumentMultiOrPipelineCommand(commandName, original) {
       return original.apply(this, arguments);
     }
 
+    // create a new cls context parent to track the multi/pipeline child calls
+    var clsContextForMultiOrPipeline = cls.ns.createContext();
+    cls.ns.enter(clsContextForMultiOrPipeline);
     var span = cls.startSpan('redis');
     span.stack = tracingUtil.getStackTrace(wrappedInternalMultiOrPipelineCommand);
     span.data = {
@@ -132,13 +135,13 @@ function instrumentMultiOrPipelineCommand(commandName, original) {
     shimmer.wrap(
       multiOrPipeline,
       'exec',
-      instrumentMultiOrPipelineExec.bind(null, commandName, span)
+      instrumentMultiOrPipelineExec.bind(null, clsContextForMultiOrPipeline, commandName, span)
     );
     return multiOrPipeline;
   };
 }
 
-function instrumentMultiOrPipelineExec(commandName, span, original) {
+function instrumentMultiOrPipelineExec(clsContextForMultiOrPipeline, commandName, span, original) {
   var endCallback =
     commandName === 'pipeline' ?
       pipelineCommandEndCallback :
@@ -151,16 +154,16 @@ function instrumentMultiOrPipelineExec(commandName, span, original) {
     var result = original.apply(this, arguments);
     if (result.then) {
       result.then(function(results) {
-        endCallback.call(null, span, null, results);
+        endCallback.call(null, clsContextForMultiOrPipeline, span, null, results);
       }, function(error) {
-        endCallback.call(null, span, error, []);
+        endCallback.call(null, clsContextForMultiOrPipeline, span, error, []);
       });
     }
     return result;
   };
 }
 
-function multiCommandEndCallback(span, error) {
+function multiCommandEndCallback(clsContextForMultiOrPipeline, span, error) {
   span.d = Date.now() - span.ts;
 
   var subCommands = span.data.redis.subCommands;
@@ -183,9 +186,10 @@ function multiCommandEndCallback(span, error) {
   }
 
   span.transmit();
+  cls.ns.exit(clsContextForMultiOrPipeline);
 }
 
-function pipelineCommandEndCallback(span, error, results) {
+function pipelineCommandEndCallback(clsContextForMultiOrPipeline, span, error, results) {
   span.d = Date.now() - span.ts;
 
   var subCommands = span.data.redis.subCommands;
@@ -222,4 +226,5 @@ function pipelineCommandEndCallback(span, error, results) {
   }
 
   span.transmit();
+  cls.ns.exit(clsContextForMultiOrPipeline);
 }
