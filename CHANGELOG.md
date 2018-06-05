@@ -3,6 +3,7 @@
 ## Unreleased
  - Protect spans from accidental retransmission.
  - Abort HTTP requests to the agent on timeouts.
+ - HTTP client instrumentation does not correctly interpret HTTP client timeouts.
 
 ## 1.38.2
  - ioredis: Correctly manage tracing context in ioredis instrumentation
