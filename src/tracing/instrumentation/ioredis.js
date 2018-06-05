@@ -47,7 +47,6 @@ function instrumentSendCommand(original) {
         // the multi call is handled in instrumentMultiCommand but since multi is also send to Redis it will also
         // trigger instrumentSendCommand, which is why we filter it out.
         command.name !== 'multi') {
-
       // multi commands could actually be recorded as multiple spans, but we only want to record one
       // batched span considering that a multi call represents a transaction.
       // The same is true for pipeline calls, but they have a slightly different semantic.

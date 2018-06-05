@@ -2,7 +2,7 @@
 
 'use strict';
 
-const agentPort = process.env.AGENT_PORT;
+var agentPort = process.env.AGENT_PORT;
 
 require('../../../')({
   agentPort: agentPort,
@@ -70,7 +70,7 @@ app.get('/values', function(req, res) {
 
 app.get('/keepTracing', function(req, res) {
   var key = req.query.key;
-  let redisResponse = null;
+  var redisResponse = null;
   client.get(key).then(function(redisRes) {
     redisResponse = redisRes;
     // Execute another traced call to verify that we keep the tracing context.
@@ -156,7 +156,7 @@ app.get('/multiFailure', function(req, res) {
 
 
 app.post('/multiKeepTracing', function(req, res) {
-  let redisResponse = null;
+  var redisResponse = null;
   client.multi()
     .hset('someCollection', 'key', 'value')
     .hget('someCollection', 'key')
@@ -168,7 +168,7 @@ app.post('/multiKeepTracing', function(req, res) {
   }).then(function(httpRes) {
     res.send(httpRes + ';' + redisResponse);
   }).catch(function(err) {
-    log('Unexpected error for key %s', key, err);
+    log('Unexpected error', err);
     res.sendStatus(500);
   });
 });
@@ -205,7 +205,7 @@ app.get('/pipelineFailure', function(req, res) {
 
 
 app.post('/pipelineKeepTracing', function(req, res) {
-  let redisResponse = null;
+  var redisResponse = null;
   client.pipeline()
     .hset('someCollection', 'key', 'value')
     .hget('someCollection', 'key')
@@ -217,7 +217,7 @@ app.post('/pipelineKeepTracing', function(req, res) {
   }).then(function(httpRes) {
     res.send(httpRes + ';' + redisResponse);
   }).catch(function(err) {
-    log('Unexpected error for key %s', key, err);
+    log('Unexpected error', err);
     res.sendStatus(500);
   });
 });
