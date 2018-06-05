@@ -1,26 +1,7 @@
 # Contributing
 
 ## Executing Tests locally
-Some of the tests require databases to run locally. The easiest way to run these databases locally is to use Docker and on top of this [Docker Compose](https://docs.docker.com/compose/). Execute these commands to set up all the necessary databases and environment variables.
-
-```shell
-# We aren't properly shutting down these services. Therefore
-# the internal data store might get corrupted. Completely clean up
-# existing images to ensure that we will not hunt ghost bugs.
-docker-compose kill && docker-compose rm -f && docker-compose up
-export MONGODB="127.0.0.1:27017"
-export ELASTICSEARCH="127.0.0.1:9200"
-export ZOOKEEPER="127.0.0.1:2181"
-export KAFKA="127.0.0.1:9092"
-export REDIS="127.0.0.1:6379"
-export MYSQL_HOST="127.0.0.1"
-export MYSQL_PORT="3306"
-export MYSQL_USER="root"
-export MYSQL_PW="nodepw"
-export MYSQL_DB="nodedb"
-npm test
-```
-
+Some of the tests require databases to run locally. The easiest way to run these databases locally is to use Docker and on top of this [Docker Compose](https://docs.docker.com/compose/). Run the convenience script `run-tests-with-docker.sh` to set up all the necessary databases and environment variables and kick off the tests. The script also makes sure that the tests are running from a clean starting state.
 
 ## Release Process
 
