@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.38.2
+ - ioredis: Correctly manage tracing context in ioredis instrumentation
+
 ## 1.38.1
  - OpenTracing baggage is not defined on span context when using `getCurrentlyActiveInstanaSpanContext`.
 
