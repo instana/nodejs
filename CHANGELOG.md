@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.38.3
  - Protect spans from accidental retransmission.
  - Abort HTTP requests to the agent on timeouts.
  - HTTP client instrumentation does not correctly interpret HTTP client timeouts.
