@@ -28,9 +28,12 @@ describe('pidStore', function() {
 
 
   function doRequire() {
-    pidStore = proxyquire('./pidStore', {
+    pidStore = proxyquire('./index', {
       fs: {
         readFileSync: readFileSync
+      },
+      './internalPidStore': {
+        pid: process.pid
       }
     });
   }
