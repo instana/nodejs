@@ -2,10 +2,18 @@
 
 var log = require('./log');
 
+var pidStore = require('../pidStore/internalPidStore');
+
 module.exports = exports = {
   write: function write(record) {
     var logLevel = getAgentLogLevel(record.level);
-    var message = 'Node.js sensor (pid: ' + process.pid + '): ' + record.msg;
+    var message =
+      'Node.js sensor (pid: ' +
+      process.pid +
+      ', reporting pid: ' +
+      pidStore.pid +
+      '): ' +
+      record.msg;
     var stack = null;
 
     if (record.err) {
@@ -16,7 +24,6 @@ module.exports = exports = {
     log(logLevel, message, stack);
   }
 };
-
 
 function getAgentLogLevel(level) {
   if (level < 30) {

@@ -1,5 +1,8 @@
 # Changelog
 
+## Unreleased
+ - Include reporting PID in agent logs.
+
 ## 1.38.3
  - Protect spans from accidental retransmission.
  - Abort HTTP requests to the agent on timeouts.
