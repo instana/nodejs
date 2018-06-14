@@ -9,9 +9,9 @@ Some of the tests require databases to run locally. The easiest way to run these
 To make a release, you first need to ensure that the released version will either be a semver minor or patch release so that automatic updates are working for our users. Following that, the process is simple:
 
  - Update `CHANGELOG.md` so that the unreleased section gets its version number.
- - Update the version number in `package.json`.
- - Commit the new version, e.g. `git commit -m "1.28.0"`.
- - Tag the new version, e.g. `git tag -a v1.28.0 -m v1.28.0`.
+ - Update the version number in `package.json` and `package-lock.json`.
+ - Commit the new version, e.g. `VERSION=$(node -e "console.log(require('./package.json').version)") && git commit -m $VERSION`.
+ - Tag the new version, e.g. `VERSION=$(node -e "console.log(require('./package.json').version)") && git tag -a v$VERSION -m v$VERSION`.
  - Push the commit with the tag to GitHub, e.g. `git push --tags origin master`.
 
 ### Pushing Artifacts to NPM
@@ -23,7 +23,7 @@ Sensor releases are a two-stage process. New releases will initially be tagged w
 npm publish --tag=next
 
 # once verified that the release works as expected
-npm dist-tag add instana-nodejs-sensor@$(node -e "console.log(require('./package.json').version)") latest
+VERSION=$(node -e "console.log(require('./package.json').version)") && npm dist-tag add instana-nodejs-sensor@$VERSION latest
 
 # verify that tags have been correctly applied
 npm dist-tag ls instana-nodejs-sensor
