@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.39.0
  - Include reporting PID in agent logs.
 
 ## 1.38.3
