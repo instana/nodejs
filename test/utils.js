@@ -48,3 +48,19 @@ exports.expectOneMatching = function expectOneMatching(arr, fn) {
       '. Error stack trace: ' + error.stack);
   }
 };
+
+exports.getSpansByName = function getSpansByName(arr, name) {
+  var result = [];
+
+  if (!arr || arr.length === 0) {
+    return result;
+  }
+
+  for (var i = 0; i < arr.length; i++) {
+    var item = arr[i];
+    if (item.n === name) {
+      result.push(item);
+    }
+  }
+  return result;
+};

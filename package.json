@@ -75,13 +75,14 @@
     "mysql": "^2.13.0",
     "mysql2": "^1.5.1",
     "node-fetch": "^2.1.2",
+    "pg": "^7.4.3",
     "proxyquire": "1.7.3",
     "redis": "^2.8.0",
-    "request": "^2.85.0",
+    "request": "^2.87.0",
     "request-promise": "^4.1.1",
     "request-promise-native": "^1.0.3",
     "sinon": "1.17.1",
-    "underscore": "^1.8.3",
+    "underscore": "^1.9.1",
     "uuid": "^3.2.1"
   }
 }
