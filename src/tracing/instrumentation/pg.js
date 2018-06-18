@@ -13,7 +13,6 @@ exports.init = function() {
   requireHook.on('pg', instrumentPg);
 };
 
-
 function instrumentPg(pg) {
   instrumentClient(pg.Client);
 }
@@ -47,7 +46,7 @@ function instrumentedQuery(ctx, originalQuery, config, values, callback) {
   span.stack = tracingUtil.getStackTrace(instrumentedQuery);
   span.data = {
     pg: {
-      stmt: tracingUtil.shortenDatabaseStatement(typeof config === 'string' ? config : config.query),
+      stmt: tracingUtil.shortenDatabaseStatement(typeof config === 'string' ? config : config.text),
       host: host,
       port: port,
       user: user,
@@ -55,7 +54,13 @@ function instrumentedQuery(ctx, originalQuery, config, values, callback) {
     }
   };
 
-  var originalCallback = callback;
+  var originalCallback;
+  if (typeof(values) === 'function') {
+    originalCallback = values;
+  } else {
+    originalCallback = callback;
+  }
+
   callback = function(error) {
     if (error) {
       span.ec = 1;
