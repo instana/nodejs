@@ -1,5 +1,8 @@
 # Changelog
 
+## Unreleased
+ - Include additional debugging data in log when data transmission to agent fails.
+
 ## 1.39.0
  - Include reporting PID in agent logs.
 

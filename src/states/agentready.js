@@ -49,7 +49,7 @@ module.exports = exports = {
 
       agentConnection.sendDataToAgent(payload, function(error, requests) {
         if (error) {
-          logger.error('Error received while trying to send data to agent: %s', error.message);
+          logger.error('Error received while trying to send raw payload to agent: %s', error.message);
           ctx.transitionTo('unannounced');
           return;
         }
