@@ -2,7 +2,6 @@
 
 var shimmer = require('shimmer');
 
-var logger = require('../../logger').getLogger('tracing/pg');
 var requireHook = require('../../util/requireHook');
 var tracingUtil = require('../tracingUtil');
 var cls = require('../cls');

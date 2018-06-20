@@ -2,8 +2,6 @@
 
 'use strict';
 
-var logger = require('../../src/logger').getLogger('tracing/pg');
-
 require('../../')({
   agentPort: process.env.AGENT_PORT,
   level: 'info',
@@ -134,6 +132,17 @@ app.get('/client-config-select', function(req, res) {
     res.json(results);
   });
 });
+
+app.get('/table-doesnt-exist', function(req, res) {
+  pool.query('SELECT name, email FROM nonexistanttable')
+    .then(function(r) {
+      res.json(r);
+    })
+    .catch(function(e) {
+      res.status(500).json(e);
+    });
+});
+
 
 app.listen(process.env.APP_PORT, function() {
   log('Listening on port: ' + process.env.APP_PORT);

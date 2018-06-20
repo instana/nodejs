@@ -12,6 +12,8 @@ var agentPort = require('./agentStubControls').agentPort;
 var upstreamPort = require('./expressControls').appPort;
 var appPort = exports.appPort = 3218;
 
+var errors = require('request-promise/errors');
+
 var expressPgApp;
 
 exports.registerTestHooks = function(opts) {
@@ -65,37 +67,12 @@ exports.sendRequest = function(opts) {
     json: true,
     body: opts.body,
     headers: headers
-  });
-};
-
-
-exports.addValue = function(value) {
-  return request({
-    method: 'post',
-    url: 'http://127.0.0.1:' + appPort + '/values',
-    qs: {
-      value: value
+  })
+  .catch(errors.StatusCodeError, function(reason) {
+    if (opts.rejectWrongStatusCodes) {
+      throw reason;
     }
-  });
-};
-
-exports.getNow = function() {
-  return request({
-    method: 'get',
-    url: 'http://127.0.0.1:' + appPort + '/select-now'
-  });
-};
-
-exports.getValues = function() {
-  return request({
-    method: 'get',
-    url: 'http://127.0.0.1:' + appPort + '/values'
-  });
-};
-
-exports.getValuesAndProduceError = function() {
-  return request({
-    method: 'get',
-    url: 'http://127.0.0.1:' + appPort + '/values/error'
+    // treat all status code errors as likely // allowed
+    return reason;
   });
 };
