@@ -1,4 +1,4 @@
-# instana-nodejs-sensor &nbsp; [![Build Status](https://travis-ci.org/instana/nodejs-sensor.svg?branch=master)](https://travis-ci.org/instana/nodejs-sensor) [![Code Climate](https://codeclimate.com/github/instana/nodejs-sensor/badges/gpa.svg)](https://codeclimate.com/github/instana/nodejs-sensor) [![NSP Status](https://nodesecurity.io/orgs/instana/projects/39a5a19c-535f-4723-ac73-812a4a077084/badge)](https://nodesecurity.io/orgs/instana/projects/39a5a19c-535f-4723-ac73-812a4a077084) [![OpenTracing Badge](https://img.shields.io/badge/OpenTracing-enabled-blue.svg)](http://opentracing.io)
+# instana-nodejs-sensor &nbsp; [![Build Status](https://travis-ci.org/instana/nodejs-sensor.svg?branch=master)](https://travis-ci.org/instana/nodejs-sensor) [![NSP Status](https://nodesecurity.io/orgs/instana/projects/39a5a19c-535f-4723-ac73-812a4a077084/badge)](https://nodesecurity.io/orgs/instana/projects/39a5a19c-535f-4723-ac73-812a4a077084) [![OpenTracing Badge](https://img.shields.io/badge/OpenTracing-enabled-blue.svg)](http://opentracing.io)
 
 Monitor your Node.js applications with Instana!
 
