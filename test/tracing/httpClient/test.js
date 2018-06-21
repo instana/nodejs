@@ -18,7 +18,9 @@ describe('tracing/httpClient', function() {
 
   this.timeout(config.getTestTimeout());
 
-  agentControls.registerTestHooks();
+  agentControls.registerTestHooks({
+    extraHeaders: ['fooBaR']
+  });
 
   var serverControls = new ServerControls({
     agentControls: agentControls
@@ -90,6 +92,24 @@ describe('tracing/httpClient', function() {
               expect(span.n).to.equal('node.http.client');
               expect(span.ec).to.equal(1);
               expect(span.data.http.error).to.match(/aborted/);
+            });
+          });
+        });
+      });
+  });
+
+  it('must record custom headers', function() {
+    return clientControls.sendRequest({
+      method: 'GET',
+      path: '/'
+    })
+      .then(function() {
+        return utils.retry(function() {
+          return agentControls.getSpans()
+          .then(function(spans) {
+            utils.expectOneMatching(spans, function(span) {
+              expect(span.n).to.equal('node.http.client');
+              expect(span.data.http.header.foobar).to.equal('42');
             });
           });
         });

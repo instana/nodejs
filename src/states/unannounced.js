@@ -47,6 +47,12 @@ function tryToAnnounce(ctx) {
     pidStore.pid = pid;
 
     agentOpts.agentUuid = response.agentUuid;
+    if (response.extraHeaders instanceof Array) {
+      agentOpts.extraHttpHeadersToCapture = response.extraHeaders.map(function(s) {
+        // Node.js HTTP API turns all incoming HTTP headers into lowercase.
+        return s.toLowerCase();
+      });
+    }
 
     ctx.transitionTo('announced');
   });

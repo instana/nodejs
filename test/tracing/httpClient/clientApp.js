@@ -26,7 +26,16 @@ if (process.env.WITH_STDOUT) {
 app.use(bodyParser.json());
 
 app.get('/', function(req, res) {
-  res.sendStatus(200);
+  rp({
+    method: 'GET',
+    url: 'http://127.0.0.1:' + process.env.SERVER_PORT + '/',
+  })
+    .then(function() {
+      res.sendStatus(200);
+    })
+    .catch(function() {
+      res.sendStatus(500);
+    });
 });
 
 app.get('/timeout', function(req, res) {

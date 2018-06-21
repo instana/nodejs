@@ -20,4 +20,3 @@ export MYSQL_PW="nodepw"
 export MYSQL_DB="nodedb"
 
 npm run test
-

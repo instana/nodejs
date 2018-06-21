@@ -75,7 +75,7 @@ AbstractControls.prototype.getPid = function getPid() {
 
 
 AbstractControls.prototype.sendRequest = function(opts) {
-  var headers = {};
+  var headers = opts.headers || {};
   if (opts.suppressTracing === true) {
     headers['X-INSTANA-L'] = '0';
   }
