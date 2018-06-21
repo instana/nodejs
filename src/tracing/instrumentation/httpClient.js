@@ -5,6 +5,7 @@ var coreHttpModule = require('http');
 var discardUrlParameters = require('../../util/url').discardUrlParameters;
 var tracingConstants = require('../constants');
 var tracingUtil = require('../tracingUtil');
+var httpCommon = require('./_http');
 var cls = require('../cls');
 
 var originalRequest = coreHttpModule.request;
@@ -50,7 +51,8 @@ exports.init = function() {
           http: {
             method: clientRequest.method,
             url: completeCallUrl,
-            status: res.statusCode
+            status: res.statusCode,
+            header: httpCommon.getExtraHeaders(res)
           }
         };
         span.d = Date.now() - span.ts;
