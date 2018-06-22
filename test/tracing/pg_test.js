@@ -249,6 +249,7 @@ describe.only('tracing/pg', function() {
             expect(pgSpan.f.e).to.equal(String(expressPgControls.getPid()));
             expect(pgSpan.async).to.equal(false);
             expect(pgSpan.error).to.equal(true);
+            // expect(pgSpan.data.pg.error).to.equal('blah');
             expect(pgSpan.ec).to.equal(1);
             expect(pgSpan.data.pg.stmt).to.equal('SELECT name, email FROM nonexistanttable');
           });
@@ -281,7 +282,7 @@ describe.only('tracing/pg', function() {
   });
 
   // TBD Not supported (yet)
-  it.skip('must trace transactions', function() {
+  it('must trace transactions', function() {
     return expressPgControls.sendRequest({
       method: 'GET',
       path: '/transaction',

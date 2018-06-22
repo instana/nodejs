@@ -2,6 +2,8 @@
 
 var shimmer = require('shimmer');
 
+var logger = require('../../logger').getLogger('tracing/pg');
+
 var requireHook = require('../../util/requireHook');
 var tracingUtil = require('../tracingUtil');
 var cls = require('../cls');
@@ -22,6 +24,20 @@ function instrumentClient(Client) {
 
 function shimQuery(original) {
   return function() {
+    logger.warn('shimQuery: isTracing() == ' + cls.isTracing());
+    logger.warn('shimQuery args: 0: ', arguments[0]);
+    if (typeof(arguments[1]) === 'function') {
+        logger.warn('shimQuery args: 1: function/callback');
+    } else {
+      logger.warn('shimQuery args: 1: ', arguments[1]);
+    }
+    if (typeof(arguments[2]) === 'function') {
+        logger.warn('shimQuery args: 2: function/callback');
+    } else {
+      logger.warn('shimQuery args: 2: ', arguments[2]);
+    }
+
+
     if (isActive && cls.isTracing()) {
       return instrumentedQuery(this, original, arguments[0], arguments[1], arguments[2]);
     }
@@ -31,6 +47,7 @@ function shimQuery(original) {
 
 function instrumentedQuery(ctx, originalQuery, config, values, callback) {
   var parentSpan = cls.getCurrentSpan();
+
   if (cls.isExitSpan(parentSpan)) {
     return originalQuery.apply(ctx, [config, values, callback]);
   }
@@ -55,12 +72,13 @@ function instrumentedQuery(ctx, originalQuery, config, values, callback) {
 
   var originalCallback;
   if (typeof(values) === 'function') {
-    originalCallback = values;
+    originalCallback = cls.ns.bind(values);
   } else {
-    originalCallback = callback;
+    originalCallback = cls.ns.bind(callback);
   }
 
-  callback = function(error) {
+  var wrappedCallback = function(error, res) {
+    logger.warn('wrappedCallback isTracing() == ' + cls.isTracing());
     if (error) {
       span.ec = 1;
       span.error = true;
@@ -71,10 +89,18 @@ function instrumentedQuery(ctx, originalQuery, config, values, callback) {
     span.transmit();
 
     if (originalCallback) {
-      return originalCallback.apply(this, arguments);
+      cls.ns.bind(originalCallback).apply(this, error, res);
     }
   };
-  return originalQuery.apply(ctx, [config, values, callback]);
+
+  return cls.ns.runAndReturn(function() {
+    if (typeof(values) === 'function') {
+      values = cls.ns.bind(wrappedCallback);
+    } else {
+      callback = cls.ns.bind(wrappedCallback);
+    }
+    return originalQuery.apply(ctx, [config, values, callback]);
+  });
 }
 
 exports.activate = function() {
