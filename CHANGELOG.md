@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.40.0
  - Include additional debugging data in log when data transmission to agent fails.
  - Support recording of user-configurable HTTP headers in HTTP client and server instrumentation.
 
