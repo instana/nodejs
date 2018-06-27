@@ -1,5 +1,20 @@
 # Changelog
 
+## 1.40.0
+ - Include additional debugging data in log when data transmission to agent fails.
+ - Support recording of user-configurable HTTP headers in HTTP client and server instrumentation.
+
+## 1.39.0
+ - Include reporting PID in agent logs.
+
+## 1.38.3
+ - Protect spans from accidental retransmission.
+ - Abort HTTP requests to the agent on timeouts.
+ - HTTP client instrumentation does not correctly interpret HTTP client timeouts.
+
+## 1.38.2
+ - ioredis: Correctly manage tracing context in ioredis instrumentation
+
 ## 1.38.1
  - OpenTracing baggage is not defined on span context when using `getCurrentlyActiveInstanaSpanContext`.
 

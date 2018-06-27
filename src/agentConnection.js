@@ -71,6 +71,7 @@ exports.announceNodeSensor = function announceNodeSensor(cb) {
 
   req.setTimeout(agentOpts.requestTimeout, function onTimeout() {
     cb(new Error('Announce request to agent failed due to timeout'));
+    req.abort();
   });
 
   req.on('error', function(err) {
@@ -129,6 +130,7 @@ function checkWhetherResponseForPathIsOkay(path, cb) {
 
   req.setTimeout(agentOpts.requestTimeout, function onTimeout() {
     cb(false);
+    req.abort();
   });
 
   req.on('error', function() {
@@ -212,7 +214,7 @@ function sendData(path, data, cb, ignore404) {
   }, function(res) {
     if (res.statusCode < 200 || res.statusCode >= 300) {
       if (!(ignore404 && res.statusCode === 404)) {
-        cb(new Error('Failed to send data to agent with status code ' + res.statusCode));
+        cb(new Error('Failed to send data to agent via POST ' + path + '. Got status code ' + res.statusCode));
         return;
       }
     }
@@ -228,11 +230,12 @@ function sendData(path, data, cb, ignore404) {
   });
 
   req.setTimeout(agentOpts.requestTimeout, function onTimeout() {
-    cb(new Error('Timeout while trying to send data to agent via path: ' + path));
+    cb(new Error('Failed to send data to agent via POST ' + path + '. Ran into a timeout.'));
+    req.abort();
   });
 
   req.on('error', function(err) {
-    cb(new Error('Send data to agent (path: ' + path + ') request failed: ' + err.message));
+    cb(new Error('Send data to agent via POST ' + path + '. Request failed: ' + err.message));
   });
 
   req.write(payload);

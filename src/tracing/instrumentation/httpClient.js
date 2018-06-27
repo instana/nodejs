@@ -5,6 +5,7 @@ var coreHttpModule = require('http');
 var discardUrlParameters = require('../../util/url').discardUrlParameters;
 var tracingConstants = require('../constants');
 var tracingUtil = require('../tracingUtil');
+var httpCommon = require('./_http');
 var cls = require('../cls');
 
 var originalRequest = coreHttpModule.request;
@@ -50,7 +51,8 @@ exports.init = function() {
           http: {
             method: clientRequest.method,
             url: completeCallUrl,
-            status: res.statusCode
+            status: res.statusCode,
+            header: httpCommon.getExtraHeaders(res)
           }
         };
         span.d = Date.now() - span.ts;
@@ -76,26 +78,42 @@ exports.init = function() {
       clientRequest.setHeader(tracingConstants.traceIdHeaderName, span.t);
       clientRequest.setHeader(tracingConstants.traceLevelHeaderName, '1');
 
+      var isTimeout = false;
       clientRequest.on('timeout', function() {
-        span.data = {
-          http: {
-            method: clientRequest.method,
-            url: completeCallUrl,
-            error: 'Timeout exceeded'
-          }
-        };
-        span.d = Date.now() - span.ts;
-        span.error = true;
-        span.ec = 1;
-        span.transmit();
+        // From the Node.js HTTP client documentation:
+        //
+        //  > Emitted when the underlying socket times out from inactivity. This **only notifies** that the socket
+        //  > has been idle. **The request must be aborted manually.**
+        //
+        // This means that the timeout event is only an indication that something is wrong. After the timeout occurred,
+        // a well behaved client will do one of two things:
+        //
+        // 1) Abort the request via req.abort(). This will result in a "socket hang up" error event being emitted by
+        //    the request.
+        // 2) The request continues as normal and the timeout is ignored. In this case, we could end up either in a
+        //    success or in an error state. This is most likely unintentional HTTP client behavior.
+        //
+        // On top of this, commonly used HTTP client libraries add additional timeout capabilities based on wall clock
+        // time on top of Node.js' timeout capabilities (which typically end in an abort() call).
+        isTimeout = true;
       });
 
       clientRequest.on('error', function(err) {
+        var errorMessage = err.message;
+        if (isTimeout) {
+          errorMessage = 'Timeout exceeded';
+
+          if (clientRequest.aborted) {
+            errorMessage += ', request aborted';
+          }
+        } else if (clientRequest.aborted) {
+          errorMessage = 'Request aborted';
+        }
         span.data = {
           http: {
             method: clientRequest.method,
             url: completeCallUrl,
-            error: err.message
+            error: errorMessage
           }
         };
         span.d = Date.now() - span.ts;

@@ -6,6 +6,7 @@ var morgan = require('morgan');
 var app = express();
 
 var logPrefix = 'Agent Stub (' + process.pid + '):\t';
+var extraHeaders = process.env.EXTRA_HEADERS.split(',');
 var dropAllData = process.env.DROP_DATA === 'true';
 var discoveries = {};
 var requests = {};
@@ -42,7 +43,8 @@ app.put('/com.instana.plugin.nodejs.discovery', function(req, res) {
   log('New discovery %s with params', pid, req.body);
 
   res.send({
-    pid: pid
+    pid: pid,
+    extraHeaders: extraHeaders
   });
 });
 

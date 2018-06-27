@@ -1,26 +1,7 @@
 # Contributing
 
 ## Executing Tests locally
-Some of the tests require databases to run locally. The easiest way to run these databases locally is to use Docker and on top of this [Docker Compose](https://docs.docker.com/compose/). Execute these commands to set up all the necessary databases and environment variables.
-
-```shell
-# We aren't properly shutting down these services. Therefore
-# the internal data store might get corrupted. Completely clean up
-# existing images to ensure that we will not hunt ghost bugs.
-docker-compose kill && docker-compose rm -f && docker-compose up
-export MONGODB="127.0.0.1:27017"
-export ELASTICSEARCH="127.0.0.1:9200"
-export ZOOKEEPER="127.0.0.1:2181"
-export KAFKA="127.0.0.1:9092"
-export REDIS="127.0.0.1:6379"
-export MYSQL_HOST="127.0.0.1"
-export MYSQL_PORT="3306"
-export MYSQL_USER="root"
-export MYSQL_PW="nodepw"
-export MYSQL_DB="nodedb"
-npm test
-```
-
+Some of the tests require databases to run locally. The easiest way to run these databases locally is to use Docker and on top of this [Docker Compose](https://docs.docker.com/compose/). Run the convenience script `run-tests-with-docker.sh` to set up all the necessary databases and environment variables and kick off the tests. The script also makes sure that the tests are running from a clean starting state.
 
 ## Release Process
 
@@ -28,9 +9,9 @@ npm test
 To make a release, you first need to ensure that the released version will either be a semver minor or patch release so that automatic updates are working for our users. Following that, the process is simple:
 
  - Update `CHANGELOG.md` so that the unreleased section gets its version number.
- - Update the version number in `package.json`.
- - Commit the new version, e.g. `git commit -m "1.28.0"`.
- - Tag the new version, e.g. `git tag -a v1.28.0 -m v1.28.0`.
+ - Update the version number in `package.json` and `package-lock.json`.
+ - Commit the new version, e.g. `VERSION=$(node -e "console.log(require('./package.json').version)") && git commit -m $VERSION`.
+ - Tag the new version, e.g. `VERSION=$(node -e "console.log(require('./package.json').version)") && git tag -a v$VERSION -m v$VERSION`.
  - Push the commit with the tag to GitHub, e.g. `git push --tags origin master`.
 
 ### Pushing Artifacts to NPM
@@ -42,7 +23,7 @@ Sensor releases are a two-stage process. New releases will initially be tagged w
 npm publish --tag=next
 
 # once verified that the release works as expected
-npm dist-tag add instana-nodejs-sensor@$(node -e "console.log(require('./package.json').version)") latest
+VERSION=$(node -e "console.log(require('./package.json').version)") && npm dist-tag add instana-nodejs-sensor@$VERSION latest
 
 # verify that tags have been correctly applied
 npm dist-tag ls instana-nodejs-sensor

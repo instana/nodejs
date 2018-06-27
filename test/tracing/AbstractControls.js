@@ -41,7 +41,16 @@ AbstractControls.prototype.registerTestHooks = function registerTestHooks() {
     }.bind(this));
   }
 
-  afterEach(function() {
+  afterEach(this.kill.bind(this));
+};
+
+
+AbstractControls.prototype.kill = function kill() {
+  if (this.process.killed) {
+    return Promise.resolve();
+  }
+  return new Promise(function(resolve) {
+    this.process.once('exit', resolve);
     this.process.kill();
   }.bind(this));
 };
@@ -66,7 +75,7 @@ AbstractControls.prototype.getPid = function getPid() {
 
 
 AbstractControls.prototype.sendRequest = function(opts) {
-  var headers = {};
+  var headers = opts.headers || {};
   if (opts.suppressTracing === true) {
     headers['X-INSTANA-L'] = '0';
   }

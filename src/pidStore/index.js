@@ -3,25 +3,24 @@
 var fs = require('fs');
 var EventEmitter = require('events').EventEmitter;
 
-var logger = require('./logger').getLogger('pidStore');
-
+var logger = require('../logger').getLogger('pidStore');
+var internalPidStore = require('./internalPidStore');
 
 var eventName = 'pidChanged';
 var eventEmitter = new EventEmitter();
 exports.onPidChange = eventEmitter.on.bind(eventEmitter, eventName);
 
-var pid = process.pid;
-logger.info('Starting with pid %s', pid);
+logger.info('Starting with pid %s', internalPidStore.pid);
 
 Object.defineProperty(exports, 'pid', {
-  get: function() {
-    return pid;
+  get: function getPid() {
+    return internalPidStore.pid;
   },
-  set: function(newPid) {
-    if (pid !== newPid) {
+  set: function setPid(newPid) {
+    if (internalPidStore.pid !== newPid) {
       logger.info('Changing pid to %s', newPid);
-      pid = newPid;
-      eventEmitter.emit(eventName, pid);
+      internalPidStore.pid = newPid;
+      eventEmitter.emit(eventName, internalPidStore.pid);
     }
   }
 });
@@ -29,7 +28,7 @@ Object.defineProperty(exports, 'pid', {
 if (!process.env.CONTINUOUS_INTEGRATION) {
   var pidInParentNamespace = getPidFromParentNamespace();
   if (pidInParentNamespace) {
-    exports.pid = pidInParentNamespace;
+    internalPidStore.pid = pidInParentNamespace;
     logger.info(
       'Changing pid to %s due to successful identification of PID in parent namespace',
       pidInParentNamespace
@@ -53,7 +52,7 @@ function getPidFromParentNamespace() {
 
     var pidInSchedFile = parseInt(match[1], 10);
     if (pidInSchedFile === process.pid) {
-      logger.debug('PID in sched file matches PID. Probably not running inside a PID namespace');
+      logger.debug('PID in sched file matches process.pid. Probably not running inside a PID namespace');
       return null;
     }
 

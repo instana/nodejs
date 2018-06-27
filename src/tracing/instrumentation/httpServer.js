@@ -5,6 +5,7 @@ var coreHttpModule = require('http');
 
 var discardUrlParameters = require('../../util/url').discardUrlParameters;
 var tracingConstants = require('../constants');
+var httpCommon = require('./_http');
 var shimmer = require('shimmer');
 var cls = require('../cls');
 
@@ -45,7 +46,8 @@ function shimEmit(realEmit) {
           method: req.method,
           url: discardUrlParameters(urlParts.shift()),
           params: urlParts.join('?'),
-          host: req.headers.host
+          host: req.headers.host,
+          header: httpCommon.getExtraHeaders(req)
         }
       };
 

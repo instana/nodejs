@@ -14,10 +14,13 @@ var agentPort = exports.agentPort = 3210;
 
 var agentStub;
 
-exports.registerTestHooks = function() {
+exports.registerTestHooks = function(opts) {
+  opts = opts || {};
+
   beforeEach(function() {
     var env = Object.create(process.env);
     env.AGENT_PORT = agentPort;
+    env.EXTRA_HEADERS = (opts.extraHeaders || []).join(',');
 
     agentStub = spawn('node', [path.join(__dirname, 'agentStub.js')], {
       stdio: config.getAppStdio(),
