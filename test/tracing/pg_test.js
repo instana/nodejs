@@ -281,7 +281,6 @@ describe.only('tracing/pg', function() {
     });
   });
 
-  // TBD Not supported (yet)
   it('must trace transactions', function() {
     return expressPgControls.sendRequest({
       method: 'GET',

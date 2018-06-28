@@ -57,43 +57,43 @@ function instrumentedQuery(ctx, originalQuery, config, values, callback) {
   var user = ctx.connectionParameters.user;
   var db = ctx.connectionParameters.database;
 
-  var span = cls.startSpan('postgres');
-  span.b = {s: 1};
-  span.stack = tracingUtil.getStackTrace(instrumentedQuery);
-  span.data = {
-    pg: {
-      stmt: tracingUtil.shortenDatabaseStatement(typeof config === 'string' ? config : config.text),
-      host: host,
-      port: port,
-      user: user,
-      db: db
-    }
-  };
-
-  var originalCallback;
-  if (typeof(values) === 'function') {
-    originalCallback = cls.ns.bind(values);
-  } else {
-    originalCallback = cls.ns.bind(callback);
-  }
-
-  var wrappedCallback = function(error, res) {
-    logger.warn('wrappedCallback isTracing() == ' + cls.isTracing());
-    if (error) {
-      span.ec = 1;
-      span.error = true;
-      span.data.pg.error = tracingUtil.getErrorDetails(error);
-    }
-
-    span.d = Date.now() - span.ts;
-    span.transmit();
-
-    if (originalCallback) {
-      cls.ns.bind(originalCallback).apply(this, error, res);
-    }
-  };
-
   return cls.ns.runAndReturn(function() {
+    var span = cls.startSpan('postgres');
+    span.b = {s: 1};
+    span.stack = tracingUtil.getStackTrace(instrumentedQuery);
+    span.data = {
+      pg: {
+        stmt: tracingUtil.shortenDatabaseStatement(typeof config === 'string' ? config : config.text),
+        host: host,
+        port: port,
+        user: user,
+        db: db
+      }
+    };
+
+    var originalCallback;
+    if (typeof(values) === 'function') {
+      originalCallback = cls.ns.bind(values);
+    } else {
+      originalCallback = cls.ns.bind(callback);
+    }
+
+    var wrappedCallback = function(error, res) {
+      logger.warn('wrappedCallback isTracing() == ' + cls.isTracing());
+      if (error) {
+        span.ec = 1;
+        span.error = true;
+        span.data.pg.error = tracingUtil.getErrorDetails(error);
+      }
+
+      span.d = Date.now() - span.ts;
+      span.transmit();
+
+      if (originalCallback) {
+        cls.ns.bind(originalCallback).apply(this, error, res);
+      }
+    };
+
     if (typeof(values) === 'function') {
       values = cls.ns.bind(wrappedCallback);
     } else {

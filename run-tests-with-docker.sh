@@ -22,4 +22,4 @@ export POSTGRES_USER="node"
 export POSTGRES_PASSWORD="nodepw"
 export POSTGRES_DB="nodedb"
 
-npm run test
+npm test
