@@ -21,6 +21,7 @@ exports.registerTestHooks = function(opts) {
     env.AGENT_PORT = agentPort;
     env.APP_PORT = appPort;
     env.UPSTREAM_PORT = opts.upstreamPort;
+    env.USE_REQUEST_PROMISE = String(opts.useRequestPromise);
 
     expressApp = spawn('node', [path.join(__dirname, 'expressAsyncAwait.js')], {
       stdio: config.getAppStdio(),
