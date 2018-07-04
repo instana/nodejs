@@ -8,11 +8,9 @@ Some of the tests require databases to run locally. The easiest way to run these
 ### Making a new release
 To make a release, you first need to ensure that the released version will either be a semver minor or patch release so that automatic updates are working for our users. Following that, the process is simple:
 
- - Update `CHANGELOG.md` so that the unreleased section gets its version number.
- - Update the version number in `package.json` and `package-lock.json`.
- - Commit the new version, e.g. `VERSION=$(node -e "console.log(require('./package.json').version)") && git commit -m $VERSION`.
- - Tag the new version, e.g. `VERSION=$(node -e "console.log(require('./package.json').version)") && git tag -a v$VERSION -m v$VERSION`.
- - Push the commit with the tag to GitHub, e.g. `git push --tags origin master`.
+ - Update `CHANGELOG.md` so that the unreleased section gets its version number. Commit this change.
+ - Run `npm version patch`, `npm version minor`, or `npm version major`, depending on which part of the version number has to be bumped.
+ - Push the commit and the tag created by `npm version` to GitHub, e.g. `git push --tags origin master`.
 
 ### Pushing Artifacts to NPM
 Once the released is properly commited and tagged, you can release the artifact to NPM in the following way.
