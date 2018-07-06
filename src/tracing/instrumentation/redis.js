@@ -150,11 +150,13 @@ function instrumentMultiExec(isAtomic, original) {
       subCommands[i] = subCommand.command;
       subCommand.callback = buildSubCommandCallback(span, subCommand.callback);
     }
-    span.b = {
-      s: subCommands.length,
-      u: false
-    };
-
+    // must not send batch size 0
+    if (subCommands.length > 0) {
+      span.b = {
+        s: subCommands.length,
+        u: false
+      };
+    }
     span.ec = 0;
     span.error = false;
 
