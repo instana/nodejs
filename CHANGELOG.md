@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.40.2
+ - Avoid sending batch size 0 for Redis multi commands.
+
 ## 1.40.1
  - Only try to instrument bluebird if it is actually available.
 
