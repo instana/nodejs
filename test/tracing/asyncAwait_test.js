@@ -6,8 +6,8 @@ var semver = require('semver');
 var config = require('../config');
 var utils = require('../utils');
 
-describe('tracing', function() {
-  if (!semver.satisfies(process.versions.node, '^8')) {
+describe.only('tracing/asyncAwait', function() {
+  if (!semver.satisfies(process.versions.node, '^8 || ^9 || ^10')) {
     return;
   }
 
@@ -20,58 +20,78 @@ describe('tracing', function() {
 
   agentStubControls.registerTestHooks();
   expressControls.registerTestHooks();
-  expressAsyncAwaitControls.registerTestHooks({
-    upstreamPort: expressControls.appPort
-  });
 
   beforeEach(function() {
     return agentStubControls.waitUntilAppIsCompletelyInitialized(expressControls.getPid());
   });
 
-  beforeEach(function() {
-    return agentStubControls.waitUntilAppIsCompletelyInitialized(expressAsyncAwaitControls.getPid());
+  describe('custom http client wrapper with native promises', function() {
+    expressAsyncAwaitControls.registerTestHooks({
+      upstreamPort: expressControls.appPort
+    });
+
+    beforeEach(function() {
+      return agentStubControls.waitUntilAppIsCompletelyInitialized(expressAsyncAwaitControls.getPid());
+    });
+
+    testAsyncControlFlow();
   });
 
-  it('must follow async control flow', function() {
-    return expressAsyncAwaitControls.sendRequest()
-    .then(function() {
-      return utils.retry(function() {
-        return agentStubControls.getSpans()
-        .then(function(spans) {
-          expect(spans.length).to.equal(5, 'Expecting five spans');
+  describe('request-promise', function() {
+    expressAsyncAwaitControls.registerTestHooks({
+      upstreamPort: expressControls.appPort,
+      useRequestPromise: true
+    });
 
-          var rootSpan = utils.expectOneMatching(spans, function(span) {
-            expect(span.n).to.equal('node.http.server');
-            expect(span.f.e).to.equal(String(expressAsyncAwaitControls.getPid()));
-          });
+    beforeEach(function() {
+      return agentStubControls.waitUntilAppIsCompletelyInitialized(expressAsyncAwaitControls.getPid());
+    });
 
-          var client1Span = utils.expectOneMatching(spans, function(span) {
-            expect(span.n).to.equal('node.http.client');
-            expect(span.p).to.equal(rootSpan.s);
-            expect(span.f.e).to.equal(String(expressAsyncAwaitControls.getPid()));
-            expect(span.data.http.url).to.have.string('/foo');
-          });
+    testAsyncControlFlow();
+  });
 
-          utils.expectOneMatching(spans, function(span) {
-            expect(span.n).to.equal('node.http.server');
-            expect(span.p).to.equal(client1Span.s);
-            expect(span.f.e).to.equal(String(expressControls.getPid()));
-          });
+  function testAsyncControlFlow() {
+    it('must follow async control flow', function() {
+      return expressAsyncAwaitControls.sendRequest()
+      .then(function() {
+        return utils.retry(function() {
+          return agentStubControls.getSpans()
+          .then(function(spans) {
+            expect(spans.length).to.equal(5, 'Expecting five spans');
 
-          var client2Span = utils.expectOneMatching(spans, function(span) {
-            expect(span.n).to.equal('node.http.client');
-            expect(span.p).to.equal(rootSpan.s);
-            expect(span.f.e).to.equal(String(expressAsyncAwaitControls.getPid()));
-            expect(span.data.http.url).to.have.string('/bar');
-          });
+            var rootSpan = utils.expectOneMatching(spans, function(span) {
+              expect(span.n).to.equal('node.http.server');
+              expect(span.f.e).to.equal(String(expressAsyncAwaitControls.getPid()));
+            });
 
-          utils.expectOneMatching(spans, function(span) {
-            expect(span.n).to.equal('node.http.server');
-            expect(span.p).to.equal(client2Span.s);
-            expect(span.f.e).to.equal(String(expressControls.getPid()));
+            var client1Span = utils.expectOneMatching(spans, function(span) {
+              expect(span.n).to.equal('node.http.client');
+              expect(span.p).to.equal(rootSpan.s);
+              expect(span.f.e).to.equal(String(expressAsyncAwaitControls.getPid()));
+              expect(span.data.http.url).to.have.string('/foo');
+            });
+
+            utils.expectOneMatching(spans, function(span) {
+              expect(span.n).to.equal('node.http.server');
+              expect(span.p).to.equal(client1Span.s);
+              expect(span.f.e).to.equal(String(expressControls.getPid()));
+            });
+
+            var client2Span = utils.expectOneMatching(spans, function(span) {
+              expect(span.n).to.equal('node.http.client');
+              expect(span.p).to.equal(rootSpan.s);
+              expect(span.f.e).to.equal(String(expressAsyncAwaitControls.getPid()));
+              expect(span.data.http.url).to.have.string('/bar');
+            });
+
+            utils.expectOneMatching(spans, function(span) {
+              expect(span.n).to.equal('node.http.server');
+              expect(span.p).to.equal(client2Span.s);
+              expect(span.f.e).to.equal(String(expressControls.getPid()));
+            });
           });
         });
       });
     });
-  });
+  }
 });
