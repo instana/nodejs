@@ -144,21 +144,21 @@ app.get('/table-doesnt-exist', function(req, res) {
 });
 
 app.get('/transaction', function(req, res) {
-  client.query('BEGIN', function(err1, res1) {
+  client.query('BEGIN', function(err1) {
     if (err1) {
       log('Failed to execute client transaction', err1);
       res.status(500).json(err1);
     }
 
     client.query('INSERT INTO users(name, email) VALUES($1, $2) RETURNING *',
-                ['trans1', 'nodejstests@blah'], function(err2, res2) {
+                ['trans1', 'nodejstests@blah'], function(err2) {
       if (err2) {
         log('Failed to execute client transaction', err2);
         res.status(500).json(err2);
       }
       var insertTrans2 = 'INSERT INTO users(name, email) VALUES($1, $2) RETURNING *';
       var insertTrans2Values = ['trans2', 'nodejstests@blah'];
-      client.query(insertTrans2, insertTrans2Values, function(err3, res3) {
+      client.query(insertTrans2, insertTrans2Values, function(err3) {
         if (err3) {
           log('Failed to execute client transaction', err3);
           res.status(500).json(err3);
