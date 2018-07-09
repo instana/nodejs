@@ -52,5 +52,3 @@ services:
       POSTGRES_USER: node
       POSTGRES_PASSWORD: nodepw
       POSTGRES_DB: nodedb
-    volumes:
-      - /srv/docker/postgresql:/var/lib/postgresql
