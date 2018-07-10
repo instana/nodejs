@@ -43,7 +43,6 @@ function instrumentedQuery(ctx, originalQuery, config, values, callback) {
 
   return cls.ns.runAndReturn(function() {
     var span = cls.startSpan('postgres');
-    span.b = {s: 1};
     span.stack = tracingUtil.getStackTrace(instrumentedQuery);
     span.data = {
       pg: {
