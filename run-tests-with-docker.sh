@@ -18,5 +18,8 @@ export MYSQL_PORT="3306"
 export MYSQL_USER="root"
 export MYSQL_PW="nodepw"
 export MYSQL_DB="nodedb"
+export POSTGRES_USER="node"
+export POSTGRES_PASSWORD="nodepw"
+export POSTGRES_DB="nodedb"
 
-npm run test
+npm test

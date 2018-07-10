@@ -28,6 +28,7 @@ exports.init = function(_config) {
       require('./instrumentation/mongodb').init(config);
       require('./instrumentation/kafka').init(config);
       require('./instrumentation/mysql').init(config);
+      require('./instrumentation/pg').init(config);
       require('./instrumentation/redis').init(config);
       require('./instrumentation/express').init(config);
       require('./instrumentation/ioredis').init(config);
@@ -90,6 +91,7 @@ exports.activate = function() {
       require('./instrumentation/mongodb').activate();
       require('./instrumentation/kafka').activate();
       require('./instrumentation/mysql').activate();
+      require('./instrumentation/pg').activate();
       require('./instrumentation/redis').activate();
       require('./instrumentation/ioredis').activate();
       require('./instrumentation/express').activate();
@@ -102,6 +104,7 @@ exports.deactivate = function() {
   if (tracingEnabled) {
     if (automaticTracingEnabled) {
       require('./instrumentation/bluebird').deactivate();
+      require('./instrumentation/pg').deactivate();
       require('./instrumentation/mysql').deactivate();
       require('./instrumentation/kafka').deactivate();
       require('./instrumentation/mongodb').deactivate();

@@ -43,3 +43,12 @@ services:
       MYSQL_ROOT_HOST: 0.0.0.0
     volumes:
       - ./test/mysqlConfig:/etc/mysql/conf.d
+
+  postgres:
+    image: postgres:10.4
+    ports:
+      - 5432:5432
+    environment:
+      POSTGRES_USER: node
+      POSTGRES_PASSWORD: nodepw
+      POSTGRES_DB: nodedb

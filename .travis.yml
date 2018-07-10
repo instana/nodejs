@@ -22,6 +22,7 @@ node_js:
 
 before_script:
   - sudo /etc/init.d/mysql stop
+  - sudo /etc/init.d/postgresql stop
   - docker-compose kill && docker-compose rm -f && docker-compose up -d
   - sleep 45
 
@@ -41,6 +42,10 @@ env:
     - MYSQL_USER=root
     - MYSQL_PW=nodepw
     - MYSQL_DB=nodedb
+    - POSTGRES_HOST=127.0.0.1
+    - POSTGRES_USER=node
+    - POSTGRES_PASSWORD=nodepw
+    - POSTGRES_DB=nodedb
     - CXX=g++-4.8
 
 notifications:
