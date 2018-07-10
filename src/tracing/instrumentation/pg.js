@@ -2,8 +2,6 @@
 
 var shimmer = require('shimmer');
 
-var logger = require('../../logger').getLogger('tracing/pg');
-
 var requireHook = require('../../util/requireHook');
 var tracingUtil = require('../tracingUtil');
 var cls = require('../cls');
@@ -24,20 +22,6 @@ function instrumentClient(Client) {
 
 function shimQuery(original) {
   return function() {
-    logger.warn('shimQuery: isTracing() == ' + cls.isTracing());
-    logger.warn('shimQuery args: 0: ', arguments[0]);
-    if (typeof(arguments[1]) === 'function') {
-        logger.warn('shimQuery args: 1: function/callback');
-    } else {
-      logger.warn('shimQuery args: 1: ', arguments[1]);
-    }
-    if (typeof(arguments[2]) === 'function') {
-        logger.warn('shimQuery args: 2: function/callback');
-    } else {
-      logger.warn('shimQuery args: 2: ', arguments[2]);
-    }
-
-
     if (isActive && cls.isTracing()) {
       return instrumentedQuery(this, original, arguments[0], arguments[1], arguments[2]);
     }
@@ -79,7 +63,6 @@ function instrumentedQuery(ctx, originalQuery, config, values, callback) {
     }
 
     var wrappedCallback = function(error, res) {
-      logger.warn('wrappedCallback isTracing() == ' + cls.isTracing());
       if (error) {
         span.ec = 1;
         span.error = true;
