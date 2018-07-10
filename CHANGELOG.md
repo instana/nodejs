@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.41.0
+ - Add PostgreSQL instrumentation ([pg](https://www.npmjs.com/package/pg)).
+
 ## 1.40.2
  - Avoid sending batch size 0 for Redis multi commands.
 
