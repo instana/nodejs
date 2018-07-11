@@ -6,7 +6,7 @@ var semver = require('semver');
 var config = require('../config');
 var utils = require('../utils');
 
-describe.only('tracing/asyncAwait', function() {
+describe('tracing/asyncAwait', function() {
   if (!semver.satisfies(process.versions.node, '^8 || ^9 || ^10')) {
     return;
   }
