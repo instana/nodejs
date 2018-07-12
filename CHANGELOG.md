@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.42.0
  - Expose a debugging action to learn about loaded modules.
  - Allow retrieval of `package.json` files.
 
