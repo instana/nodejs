@@ -46,4 +46,29 @@ describe('tracing/httpServer', function() {
         });
       });
   });
+
+  describe('express.js path templates', function() {
+    check('/blub', '/blub');
+    check('/sub/bar/42', '/sub/bar/:id');
+    check('/sub/sub/bar/42', '/sub/sub/bar/:id');
+
+    function check(actualPath, expectedTemplate) {
+      it('must report express path templates for actual path: ' + actualPath, function() {
+        return controls.sendRequest({
+          method: 'GET',
+          path: actualPath
+        })
+          .then(function() {
+            return utils.retry(function() {
+              return agentControls.getSpans()
+              .then(function(spans) {
+                utils.expectOneMatching(spans, function(span) {
+                  expect(span.data.http.pathTpl).to.equal(expectedTemplate);
+                });
+              });
+            });
+          });
+      });
+    }
+  });
 });
