@@ -1,6 +1,7 @@
 'use strict';
 
 var shimmer = require('shimmer');
+var methods = require('methods');
 
 var requireHook = require('../../util/requireHook');
 var tracingUtil = require('../tracingUtil');
@@ -25,6 +26,14 @@ function instrument(express) {
   if (express.Router && express.Router.handle && express.Router.use) { // express 4
     shimmer.wrap(express.Router, 'handle', shimExpress4Handle);
     shimmer.wrap(express.Router, 'use', shimExpress4Use);
+  }
+
+  if (express.Route && express.Route.prototype) { // express 4
+    methods.concat('all').forEach(function(method) {
+      if (typeof express.Route.prototype[method] === 'function') {
+        shimmer.wrap(express.Route.prototype, method, shimHandlerRegistration);
+      }
+    });
   }
 }
 
@@ -94,4 +103,52 @@ function annotateHttpRootSpanWithError(err) {
   }
 
   span.data.http.error = tracingUtil.getErrorDetails(err);
+}
+
+function shimHandlerRegistration(original) {
+  return function shimmedHandlerRegistration() {
+    var args = [];
+    for (var i = 0; i < arguments.length; i++) {
+      var arg = arguments[i];
+      if (typeof arg === 'function') {
+        args.push(wrapHandler(arg));
+      } else {
+        args.push(arg);
+      }
+    }
+    return original.apply(this, args);
+  };
+}
+
+function wrapHandler(fn) {
+  if (fn.length < 4) {
+    // DO NOT REMOVE UNUSED PARAMETERS
+    // express.js checks parameter count to decide what kind of handler function
+    // it should invoke.
+    return function(req, res, next) { // eslint-disable-line no-unused-vars
+      annotateHttpEntrySpanWithPathTemplate(req);
+      return fn.apply(this, arguments);
+    };
+  }
+
+  // DO NOT REMOVE UNUSED PARAMETERS
+  // express.js checks parameter count to decide what kind of handler function
+  // it should invoke.
+  return function(err, req, res, next) { // eslint-disable-line no-unused-vars
+    annotateHttpEntrySpanWithPathTemplate(req);
+    return fn.apply(this, arguments);
+  };
+}
+
+function annotateHttpEntrySpanWithPathTemplate(req) {
+  if (!req.route) {
+    return;
+  }
+
+  var span = cls.getCurrentRootSpan();
+  if (!span || span.n !== httpServer.spanName) {
+    return;
+  }
+
+  span.data.http.path_tpl = (req.baseUrl || '') + req.route.path;
 }

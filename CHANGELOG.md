@@ -1,5 +1,8 @@
 # Changelog
 
+## Unreleased
+ - Record express.js path templates when tracing HTTP entries.
+
 ## 1.42.0
  - Expose a debugging action to learn about loaded modules.
  - Allow retrieval of `package.json` files.

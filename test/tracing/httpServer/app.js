@@ -27,6 +27,20 @@ app.get('/', function(req, res) {
   res.sendStatus(200);
 });
 
+app.get('/blub', sendRoute);
+
+var subRoutes = express.Router();
+subRoutes.get('/bar/:id', sendRoute);
+app.use('/sub', subRoutes);
+
+var subSubRoutes = express.Router();
+subSubRoutes.get('/bar/:id', sendRoute);
+subRoutes.use('/sub', subSubRoutes);
+
+function sendRoute(req, res) {
+  res.send(req.baseUrl + req.route.path);
+}
+
 app.listen(process.env.APP_PORT, function() {
   log('Listening on port: ' + process.env.APP_PORT);
 });
