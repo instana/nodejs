@@ -14,7 +14,7 @@ var requests = {};
 
 
 exports.init = function() {
-  requireHook.on('mongodb', instrument);
+  requireHook.onModuleLoad('mongodb', instrument);
 };
 
 

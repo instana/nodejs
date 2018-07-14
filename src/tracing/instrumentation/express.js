@@ -19,7 +19,7 @@ exports.deactivate = function() {
 };
 
 exports.init = function() {
-  requireHook.on('express', instrument);
+  requireHook.onModuleLoad('express', instrument);
 };
 
 function instrument(express) {

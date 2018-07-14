@@ -9,9 +9,9 @@ var cls = require('../cls');
 var isActive = false;
 
 exports.init = function() {
-  requireHook.on('mysql', instrumentMysql);
-  requireHook.on('mysql2', instrumentMysql2);
-  requireHook.on('mysql2/promise', instrumentMysql2WithPromises);
+  requireHook.onModuleLoad('mysql', instrumentMysql);
+  requireHook.onModuleLoad('mysql2', instrumentMysql2);
+  requireHook.onModuleLoad('mysql2/promise', instrumentMysql2WithPromises);
 };
 
 

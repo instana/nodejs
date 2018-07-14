@@ -18,7 +18,7 @@ exports.deactivate = function() {
 };
 
 exports.init = function() {
-  requireHook.on('redis', instrument);
+  requireHook.onModuleLoad('redis', instrument);
 };
 
 function instrument(redis) {

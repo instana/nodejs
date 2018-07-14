@@ -9,7 +9,7 @@ var cls = require('../cls');
 var isActive = false;
 
 exports.init = function() {
-  requireHook.on('kafka-node', instrument);
+  requireHook.onModuleLoad('kafka-node', instrument);
 };
 
 
