@@ -9,7 +9,7 @@ var cls = require('../cls');
 var isActive = false;
 
 exports.init = function() {
-  requireHook.on('pg', instrumentPg);
+  requireHook.onModuleLoad('pg', instrumentPg);
 };
 
 function instrumentPg(pg) {

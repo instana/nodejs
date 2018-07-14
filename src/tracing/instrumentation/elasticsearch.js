@@ -7,7 +7,7 @@ var cls = require('../cls');
 var isActive = false;
 
 exports.init = function() {
-  requireHook.on('elasticsearch', instrument);
+  requireHook.onModuleLoad('elasticsearch', instrument);
 };
 
 function instrument(es) {

@@ -32,6 +32,7 @@ exports.init = function(_config) {
       require('./instrumentation/redis').init(config);
       require('./instrumentation/express').init(config);
       require('./instrumentation/ioredis').init(config);
+      require('./instrumentation/fastify').init(config);
     }
   }
 };
@@ -95,6 +96,7 @@ exports.activate = function() {
       require('./instrumentation/redis').activate();
       require('./instrumentation/ioredis').activate();
       require('./instrumentation/express').activate();
+      require('./instrumentation/fastify').activate();
     }
   }
 };
@@ -114,6 +116,7 @@ exports.deactivate = function() {
       require('./instrumentation/redis').deactivate();
       require('./instrumentation/ioredis').deactivate();
       require('./instrumentation/express').deactivate();
+      require('./instrumentation/fastify').deactivate();
     }
 
     require('./opentracing').deactivate();

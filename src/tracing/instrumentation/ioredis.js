@@ -17,7 +17,7 @@ exports.deactivate = function() {
 };
 
 exports.init = function() {
-  requireHook.on('ioredis', instrument);
+  requireHook.onModuleLoad('ioredis', instrument);
 };
 
 

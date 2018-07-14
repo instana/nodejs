@@ -13,7 +13,7 @@ var timeoutHandle;
 exports.payloadPrefix = 'healthchecks';
 exports.currentPayload = {};
 
-requireHook.on('admin-plugin-healthcheck', function onAdminPluginHealthcheckLoaded(_adminPluginHealthcheck) {
+requireHook.onModuleLoad('admin-plugin-healthcheck', function onAdminPluginHealthcheckLoaded(_adminPluginHealthcheck) {
   adminPluginHealthcheck = _adminPluginHealthcheck;
 });
 

@@ -1,5 +1,8 @@
 # Changelog
 
+## Unreleased
+ - Record fastify path templates when tracing HTTP entries.
+
 ## 1.43.0
  - Record express.js path templates when tracing HTTP entries.
 
