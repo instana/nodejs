@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.44.0
  - Record fastify path templates when tracing HTTP entries.
 
 ## 1.43.0
