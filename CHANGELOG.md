@@ -1,5 +1,8 @@
 # Changelog
 
+## Unreleased
+ - Do not break when modules use `stealthy-require` or similar mechanisms.
+
 ## 1.44.0
  - Record fastify path templates when tracing HTTP entries.
 
