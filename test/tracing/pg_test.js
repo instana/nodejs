@@ -31,7 +31,13 @@ describe('tracing/pg', function() {
       path: '/select-now',
       body: {}
     })
-    .then(function() {
+    .then(function(response) {
+      expect(response).to.exist;
+      expect(response.command).to.equal('SELECT');
+      expect(response.rowCount).to.equal(1);
+      expect(response.rows.length).to.equal(1);
+      expect(response.rows[0].now).to.be.a('string');
+
       return utils.retry(function() {
         return agentStubControls.getSpans()
           .then(function(spans) {
@@ -64,7 +70,14 @@ describe('tracing/pg', function() {
       path: '/pool-string-insert',
       body: {}
     })
-    .then(function() {
+    .then(function(response) {
+      expect(response).to.exist;
+      expect(response.command).to.equal('INSERT');
+      expect(response.rowCount).to.equal(1);
+      expect(response.rows.length).to.equal(1);
+      expect(response.rows[0].name).to.equal('beaker');
+      expect(response.rows[0].email).to.equal('beaker@muppets.com');
+
       return utils.retry(function() {
         return agentStubControls.getSpans()
           .then(function(spans) {
@@ -97,7 +110,11 @@ describe('tracing/pg', function() {
       path: '/pool-config-select',
       body: {}
     })
-    .then(function() {
+    .then(function(response) {
+      expect(response).to.exist;
+      expect(response.command).to.equal('SELECT');
+      expect(response.rowCount).to.be.a('number');
+
       return utils.retry(function() {
         return agentStubControls.getSpans()
           .then(function(spans) {
@@ -130,7 +147,14 @@ describe('tracing/pg', function() {
       path: '/pool-config-select-promise',
       body: {}
     })
-    .then(function() {
+    .then(function(response) {
+      expect(response).to.exist;
+      expect(response.command).to.equal('INSERT');
+      expect(response.rowCount).to.equal(1);
+      expect(response.rows.length).to.equal(1);
+      expect(response.rows[0].name).to.equal('beaker');
+      expect(response.rows[0].email).to.equal('beaker@muppets.com');
+
       return utils.retry(function() {
         return agentStubControls.getSpans()
           .then(function(spans) {
@@ -163,7 +187,14 @@ describe('tracing/pg', function() {
       path: '/client-string-insert',
       body: {}
     })
-    .then(function() {
+    .then(function(response) {
+      expect(response).to.exist;
+      expect(response.command).to.equal('INSERT');
+      expect(response.rowCount).to.equal(1);
+      expect(response.rows.length).to.equal(1);
+      expect(response.rows[0].name).to.equal('beaker');
+      expect(response.rows[0].email).to.equal('beaker@muppets.com');
+
       return utils.retry(function() {
         return agentStubControls.getSpans()
           .then(function(spans) {
@@ -196,7 +227,11 @@ describe('tracing/pg', function() {
       path: '/client-config-select',
       body: {}
     })
-    .then(function() {
+    .then(function(response) {
+      expect(response).to.exist;
+      expect(response.command).to.equal('SELECT');
+      expect(response.rowCount).to.be.a('number');
+
       return utils.retry(function() {
         return agentStubControls.getSpans()
           .then(function(spans) {
@@ -229,7 +264,13 @@ describe('tracing/pg', function() {
       path: '/table-doesnt-exist',
       body: {}
     })
-    .then(function() {
+    .then(function(response) {
+      expect(response).to.exist;
+      expect(response.name).to.equal('StatusCodeError');
+      expect(response.statusCode).to.equal(500);
+      // 42P01 -> PostgreSQL's code for "relation does not exist"
+      expect(response.message).to.include('42P01');
+
       return utils.retry(function() {
         return agentStubControls.getSpans()
           .then(function(spans) {
@@ -264,6 +305,13 @@ describe('tracing/pg', function() {
       suppressTracing: true
     })
     .then(function(response) {
+      expect(response).to.exist;
+      expect(response.command).to.equal('INSERT');
+      expect(response.rowCount).to.equal(1);
+      expect(response.rows.length).to.equal(1);
+      expect(response.rows[0].name).to.equal('beaker');
+      expect(response.rows[0].email).to.equal('beaker@muppets.com');
+
       return utils.retry(function() {
         return agentStubControls.getSpans()
           .then(function(spans) {
@@ -287,7 +335,14 @@ describe('tracing/pg', function() {
       path: '/transaction',
       body: {}
     })
-    .then(function() {
+    .then(function(response) {
+      expect(response).to.exist;
+      expect(response.command).to.equal('INSERT');
+      expect(response.rowCount).to.equal(1);
+      expect(response.rows.length).to.equal(1);
+      expect(response.rows[0].name).to.equal('trans2');
+      expect(response.rows[0].email).to.equal('nodejstests@blah');
+
       return utils.retry(function() {
         return agentStubControls.getSpans()
           .then(function(spans) {
