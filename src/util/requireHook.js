@@ -18,11 +18,12 @@ function patchedModuleLoad(moduleName) {
   // First attempt to always get the module via the original implementation
   // as this action may fail. The original function populates the module cache.
   var moduleExports = origLoad.apply(Module, arguments);
-  var filename = Module._resolveFilename.apply(this, arguments);
+  var filename = Module._resolveFilename.apply(Module, arguments);
 
   // We are not directly manipulating the global module cache because there might be other tools fiddling with
   // Module._load. We don't want to break any of them.
   var cacheEntry = executedHooks[filename] = executedHooks[filename] || {
+    originalModuleExports: moduleExports,
     moduleExports: moduleExports,
 
     // We might have already seen and processed, i.e. manipulated, this require statement. This is something we
@@ -30,6 +31,19 @@ function patchedModuleLoad(moduleName) {
     appliedByModuleNameTransformers: [],
     byFileNamePatternTransformersApplied: false
   };
+
+  // Some non-APM modules are fiddling with the require cache in some very unexpected ways.
+  // For example the request-promise* modules use stealthy-require to always get a fresh copy
+  // of the request module. Instead of adding a mechanism to get a copy the request function,
+  // they temporarily force clear the require cache and require the request module again
+  // to get a copy.
+  //
+  // In order to ensure that any such (weird) use cases are supported by us, we are making sure
+  // that we only return our patched variant when Module._load returned the same object based
+  // on which we applied our patches.
+  if (cacheEntry.originalModuleExports !== moduleExports) {
+    return moduleExports;
+  }
 
   var applicableByModuleNameTransformers = byModuleNameTransformers[moduleName];
   if (applicableByModuleNameTransformers && cacheEntry.appliedByModuleNameTransformers.indexOf(moduleName) === -1) {
