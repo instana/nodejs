@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.44.1
  - Do not break when modules use `stealthy-require` or similar mechanisms.
 
 ## 1.44.0
