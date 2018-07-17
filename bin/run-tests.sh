@@ -1,13 +1,9 @@
 #!/usr/bin/env bash
 
-set -e
+set -eo pipefail
 
-# We aren't properly shutting down these services. Therefore
-# the internal data store might get corrupted. Completely clean up
-# existing images to ensure that we will not hunt ghost bugs.
-docker-compose kill
-docker-compose rm -f
-docker-compose up -d || true
+cd `dirname $BASH_SOURCE`/..
+
 export MONGODB="127.0.0.1:27017"
 export ELASTICSEARCH="127.0.0.1:9200"
 export ZOOKEEPER="127.0.0.1:2181"

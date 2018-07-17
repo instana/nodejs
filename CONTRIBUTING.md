@@ -1,7 +1,7 @@
 # Contributing
 
 ## Executing Tests locally
-Some of the tests require databases to run locally. The easiest way to run these databases locally is to use Docker and on top of this [Docker Compose](https://docs.docker.com/compose/). Run the convenience script `run-tests-with-docker.sh` to set up all the necessary databases and environment variables and kick off the tests. The script also makes sure that the tests are running from a clean starting state.
+Some of the tests require infrastructure components (databases etc.) to run locally. The easiest way to run all required components locally is to use Docker and on top of this [Docker Compose](https://docs.docker.com/compose/). Start the script `bin/start-test-containers.sh` to set up all the necessary infrastructure. Once this is up, leave it running and, in second shell, start `bin/run-tests.sh`. This will set the necessary environment variables and kick off the tests.
 
 If you want to see the Node.js sensor's debug output while running the tests, make sure the environment variable `WITH_STDOUT` is set to a non-empty string. You can also use `npm run test:debug` instead of `npm test` to achieve this.
 
