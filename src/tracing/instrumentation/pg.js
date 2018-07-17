@@ -72,7 +72,7 @@ function instrumentedQuery(ctx, originalQuery, config, values, callback) {
       span.transmit();
 
       if (originalCallback) {
-        cls.ns.bind(originalCallback).apply(this, error, res);
+        cls.ns.bind(originalCallback).apply(this, [error, res]);
       }
     };
 

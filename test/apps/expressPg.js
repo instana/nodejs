@@ -158,7 +158,7 @@ app.get('/transaction', function(req, res) {
       }
       var insertTrans2 = 'INSERT INTO users(name, email) VALUES($1, $2) RETURNING *';
       var insertTrans2Values = ['trans2', 'nodejstests@blah'];
-      client.query(insertTrans2, insertTrans2Values, function(err3) {
+      client.query(insertTrans2, insertTrans2Values, function(err3, result3) {
         if (err3) {
           log('Failed to execute client transaction', err3);
           res.status(500).json(err3);
@@ -168,7 +168,7 @@ app.get('/transaction', function(req, res) {
             log('Failed to execute client transaction', err4);
             res.status(500).json(err4);
           }
-          res.json('');
+          res.json(result3);
         });
       });
     });
