@@ -1,4 +1,5 @@
 /* eslint-disable no-console */
+/* global Promise */
 
 'use strict';
 
@@ -118,4 +119,3 @@ function delay(ms) {
     }, ms);
   });
 }
-

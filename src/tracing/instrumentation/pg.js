@@ -62,7 +62,7 @@ function instrumentedQuery(ctx, originalQuery, argsForOriginalQuery) {
     };
 
     var originalCallback;
-    if (typeof(argsForOriginalQuery[1]) === 'function') {
+    if (typeof argsForOriginalQuery[1] === 'function') {
       originalCallback = cls.ns.bind(argsForOriginalQuery[1]);
     } else {
       originalCallback = cls.ns.bind(argsForOriginalQuery[2]);
@@ -83,7 +83,7 @@ function instrumentedQuery(ctx, originalQuery, argsForOriginalQuery) {
       }
     };
 
-    if (typeof(argsForOriginalQuery[1]) === 'function') {
+    if (typeof argsForOriginalQuery[1] === 'function') {
       argsForOriginalQuery[1] = cls.ns.bind(wrappedCallback);
     } else {
       argsForOriginalQuery[2] = cls.ns.bind(wrappedCallback);

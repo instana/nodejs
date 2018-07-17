@@ -43,5 +43,5 @@ function sendResponse(request, response) {
   });
 }
 
-exports.activate = function() {/* noop */};
-exports.deactivate = function() {/* noop */};
+exports.activate = function() { /* noop */ };
+exports.deactivate = function() { /* noop */ };

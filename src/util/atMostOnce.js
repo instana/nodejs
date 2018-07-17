@@ -1,3 +1,5 @@
+/* eslint-disable consistent-return */
+
 'use strict';
 
 var logger = require('../logger').getLogger('atMostOnce');

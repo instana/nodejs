@@ -37,7 +37,9 @@ function applyCompressionToObject(prev, next) {
   var result = {};
   var addedProps = 0;
 
+  // eslint-disable-next-line no-restricted-syntax
   for (var nKey in next) {
+    // eslint-disable-next-line no-prototype-builtins
     if (next.hasOwnProperty(nKey)) {
       var nValue = next[nKey];
       var pValue = prev[nKey];

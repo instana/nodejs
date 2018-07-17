@@ -1,3 +1,5 @@
+/* global Promise */
+
 'use strict';
 
 var expect = require('chai').expect;

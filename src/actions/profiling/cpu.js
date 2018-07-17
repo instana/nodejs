@@ -21,7 +21,6 @@ exports.init = function() {
       'about the requirements of the sensor: ' +
       'https://github.com/instana/nodejs-sensor/blob/master/README.md'
     );
-    return;
   }
 };
 

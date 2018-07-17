@@ -11,5 +11,6 @@ exports.fromString = function fromString(str, encoding) {
   if (suppotsBufferFrom) {
     return Buffer.from(str, encoding);
   }
+  // eslint-disable-next-line no-buffer-constructor
   return new Buffer(str, encoding);
 };

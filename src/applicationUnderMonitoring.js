@@ -6,8 +6,8 @@ var path = require('path');
 
 // Cache determined main package json as these will be referenced often
 // and identification of these values is expensive.
-var parsedMainPackageJson = undefined;
-var mainPackageJsonPath = undefined;
+var parsedMainPackageJson;
+var mainPackageJsonPath;
 
 
 exports.getMainPackageJson = function getMainPackageJson(cb) {
