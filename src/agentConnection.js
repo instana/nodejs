@@ -49,7 +49,7 @@ exports.announceNodeSensor = function announceNodeSensor(cb) {
     method: 'PUT',
     agent: http.agent,
     headers: {
-      'Accept': 'application/json',
+      Accept: 'application/json',
       'Content-Type': 'application/json; charset=UTF-8',
       'Content-Length': contentLength
     }

@@ -110,7 +110,7 @@ function toStringEsMultiParameter(param) {
     return undefined;
   }
 
-  if (typeof(param) === 'string') {
+  if (typeof param === 'string') {
     if (param === '') {
       return '_all';
     }

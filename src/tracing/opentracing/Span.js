@@ -5,7 +5,7 @@ var transmission = require('../transmission');
 var tracingUtil = require('../tracingUtil');
 
 // can be set via config
-var serviceName = undefined;
+var serviceName;
 
 function Span(tracer, name, fields) {
   opentracing.Span.call(this);
@@ -40,7 +40,7 @@ function Span(tracer, name, fields) {
     async: false,
     error: false,
     ec: 0,
-    ts: (fields ? fields.startTime : null ) || Date.now(),
+    ts: (fields ? fields.startTime : null) || Date.now(),
     d: 0,
     n: 'sdk',
     stack: tracingUtil.getStackTrace(Span),

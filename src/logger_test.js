@@ -1,5 +1,6 @@
-/* eslint-disable no-console */
 /* eslint-env mocha */
+/* eslint-disable no-console */
+
 'use strict';
 
 var expect = require('chai').expect;

@@ -72,7 +72,8 @@ function instrumentSendCommand(original) {
       command.promise.then(
         // make sure that the first parameter is never truthy
         callback.bind(null, null),
-        callback);
+        callback
+      );
 
       return original.apply(client, argsForOriginal);
 
@@ -206,7 +207,7 @@ function pipelineCommandEndCallback(clsContextForMultiOrPipeline, span, error, r
     span.data.redis.error = tracingUtil.getErrorDetails(error);
   } else {
     var numberOfErrors = 0;
-    var sampledError = undefined;
+    var sampledError;
 
     // results is an array of the form
     // [[?Error, ?Response]]

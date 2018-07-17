@@ -1,4 +1,5 @@
 /* eslint-disable no-console */
+/* global Promise */
 
 'use strict';
 
@@ -93,7 +94,8 @@ app.get('/keepTracingCallback', function(req, res) {
     client.get(key, function(err, redisRes) {
       if (err) {
         log('Get with key %s failed', key, err);
-        return reject(err);
+        reject(err);
+        return;
       }
       // Execute another traced call to verify that we keep the tracing context.
       request('http://127.0.0.1:' + agentPort, function(httpErr, httpRes) {

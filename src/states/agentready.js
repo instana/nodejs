@@ -23,7 +23,7 @@ var config;
 var resendFullDataEveryXTransmissions = 300; /* about every 5 minutes */
 
 var transmissionsSinceLastFullDataEmit = 0;
-var previousTransmittedValue = undefined;
+var previousTransmittedValue;
 
 
 module.exports = exports = {

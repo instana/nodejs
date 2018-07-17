@@ -94,7 +94,7 @@ exports.getCurrentSpan = function getCurrentSpan() {
  *
  */
 exports.isTracing = function isTracing() {
-  return exports.ns.get(currentSpanKey) ? true : false;
+  return !!exports.ns.get(currentSpanKey);
 };
 
 /*
@@ -129,7 +129,7 @@ exports.tracingSuppressed = function tracingSuppressed() {
  *
  */
 exports.isEntrySpan = function isEntrySpan(span) {
-  return span.k === 1 ? true : false;
+  return span.k === 1;
 };
 
 /*
@@ -137,7 +137,7 @@ exports.isEntrySpan = function isEntrySpan(span) {
  *
  */
 exports.isExitSpan = function isExitSpan(span) {
-  return span.k === 2 ? true : false;
+  return span.k === 2;
 };
 
 /*
@@ -145,7 +145,7 @@ exports.isExitSpan = function isExitSpan(span) {
  *
  */
 exports.isLocalSpan = function isLocalSpan(span) {
-  return span.k === 3 ? true : false;
+  return span.k === 3;
 };
 
 /*

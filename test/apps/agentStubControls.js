@@ -111,6 +111,7 @@ function getLastMetricValue(pid, data, _path) {
   for (var i = data.runtime.length - 1; i >= 0; i--) {
     var runtimeMessage = data.runtime[i];
     if (runtimeMessage.pid !== pid) {
+      // eslint-disable-next-line no-continue
       continue;
     }
 

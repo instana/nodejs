@@ -38,7 +38,7 @@ exports.init = function() {
       var span = cls.startSpan('node.http.client');
 
       var completeCallUrl;
-      if (typeof(opts) === 'string') {
+      if (typeof opts === 'string') {
         completeCallUrl = discardUrlParameters(opts);
       } else {
         completeCallUrl = constructCompleteUrlFromOpts(opts, coreHttpModule);

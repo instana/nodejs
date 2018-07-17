@@ -31,7 +31,9 @@ function gatherHealthcheckResults() {
       var results = {};
       var previousResults = exports.currentPayload;
 
+      // eslint-disable-next-line no-restricted-syntax
       for (var key in adminHealthcheckResults) {
+        // eslint-disable-next-line no-prototype-builtins
         if (adminHealthcheckResults.hasOwnProperty(key)) {
           var result = adminHealthcheckResults[key];
           var checkHealthy = result.healthy ? healthy : unhealthy;
