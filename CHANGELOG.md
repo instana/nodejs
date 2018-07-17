@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.44.2
+ - Fix result handling in PostgreSQL instrumentation.
+
 ## 1.44.1
  - Do not break when modules use `stealthy-require` or similar mechanisms.
 
