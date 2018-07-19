@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.45.0
  - Record `https` client calls.
 
 ## 1.44.2
