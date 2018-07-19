@@ -1,6 +1,7 @@
 'use strict';
 
 var coreHttpModule = require('http');
+var coreHttpsModule = require('https');
 
 var discardUrlParameters = require('../../util/url').discardUrlParameters;
 var tracingConstants = require('../constants');
@@ -8,15 +9,20 @@ var tracingUtil = require('../tracingUtil');
 var httpCommon = require('./_http');
 var cls = require('../cls');
 
-var originalRequest = coreHttpModule.request;
 var isActive = false;
 
 exports.init = function() {
-  coreHttpModule.request = function request(opts, givenResponseListener) {
+  instrument(coreHttpModule);
+  instrument(coreHttpsModule);
+};
+
+function instrument(coreModule) {
+  var originalRequest = coreModule.request;
+  coreModule.request = function request(opts, givenResponseListener) {
     var clientRequest;
 
     if (!isActive || !cls.isTracing()) {
-      clientRequest = originalRequest.call(coreHttpModule, opts, givenResponseListener);
+      clientRequest = originalRequest.call(coreModule, opts, givenResponseListener);
       if (cls.tracingLevel()) {
         clientRequest.setHeader(tracingConstants.traceLevelHeaderName, cls.tracingLevel());
       }
@@ -26,7 +32,7 @@ exports.init = function() {
     var parentSpan = cls.getCurrentSpan();
 
     if (cls.isExitSpan(parentSpan)) {
-      clientRequest = originalRequest.call(coreHttpModule, opts, givenResponseListener);
+      clientRequest = originalRequest.call(coreModule, opts, givenResponseListener);
 
       if (cls.tracingSuppressed()) {
         clientRequest.setHeader(tracingConstants.traceLevelHeaderName, '0');
@@ -41,7 +47,7 @@ exports.init = function() {
       if (typeof opts === 'string') {
         completeCallUrl = discardUrlParameters(opts);
       } else {
-        completeCallUrl = constructCompleteUrlFromOpts(opts, coreHttpModule);
+        completeCallUrl = constructCompleteUrlFromOpts(opts, coreModule);
       }
 
       span.stack = tracingUtil.getStackTrace(request);
@@ -66,7 +72,7 @@ exports.init = function() {
       });
 
       try {
-        clientRequest = originalRequest.call(coreHttpModule, opts, responseListener);
+        clientRequest = originalRequest.call(coreModule, opts, responseListener);
       } catch (e) {
         // synchronous exceptions normally indicate failures that are not covered by the
         // listeners. Cleanup immediately.
@@ -124,8 +130,7 @@ exports.init = function() {
     });
     return clientRequest;
   };
-};
-
+}
 
 exports.activate = function() {
   isActive = true;

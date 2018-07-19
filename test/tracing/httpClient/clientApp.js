@@ -11,10 +11,13 @@ require('../../../')({
 });
 
 var bodyParser = require('body-parser');
+var fs = require('fs');
+var path = require('path');
 var rp = require('request-promise');
 var express = require('express');
 var morgan = require('morgan');
-var http = require('http');
+var httpModule = process.env.USE_HTTPS === 'true' ? require('https') : require('http');
+var protocol = process.env.USE_HTTPS === 'true' ? 'https' : 'http';
 
 var app = express();
 var logPrefix = 'Express HTTP client: Client (' + process.pid + '):\t';
@@ -28,7 +31,8 @@ app.use(bodyParser.json());
 app.get('/', function(req, res) {
   rp({
     method: 'GET',
-    url: 'http://127.0.0.1:' + process.env.SERVER_PORT + '/',
+    url: protocol + '://127.0.0.1:' + process.env.SERVER_PORT + '/',
+    strictSSL: false
   })
     .then(function() {
       res.sendStatus(200);
@@ -41,8 +45,9 @@ app.get('/', function(req, res) {
 app.get('/timeout', function(req, res) {
   rp({
     method: 'GET',
-    url: 'http://127.0.0.1:' + process.env.SERVER_PORT + '/timeout',
-    timeout: 500
+    url: protocol + '://127.0.0.1:' + process.env.SERVER_PORT + '/timeout',
+    timeout: 500,
+    strictSSL: false
   })
     .then(function() {
       res.sendStatus(200);
@@ -53,11 +58,12 @@ app.get('/timeout', function(req, res) {
 });
 
 app.get('/abort', function(req, res) {
-  var clientRequest = http.request({
+  var clientRequest = httpModule.request({
     method: 'GET',
     hostname: '127.0.0.1',
     port: process.env.SERVER_PORT,
-    path: '/timeout'
+    path: '/timeout',
+    rejectUnauthorized: false,
   });
 
   clientRequest.end();
@@ -70,9 +76,19 @@ app.get('/abort', function(req, res) {
 });
 
 
-app.listen(process.env.APP_PORT, function() {
-  log('Listening on port: ' + process.env.APP_PORT);
-});
+if (process.env.USE_HTTPS === 'true') {
+  var sslDir = path.join(__dirname, '..', '..', 'apps', 'ssl');
+  require('https').createServer({
+    key: fs.readFileSync(path.join(sslDir, 'key')),
+    cert: fs.readFileSync(path.join(sslDir, 'cert'))
+  }, app).listen(process.env.APP_PORT, function() {
+    log('Listening (HTTPS!) on port: ' + process.env.APP_PORT);
+  });
+} else {
+  app.listen(process.env.APP_PORT, function() {
+    log('Listening on port: ' + process.env.APP_PORT);
+  });
+}
 
 function log() {
   var args = Array.prototype.slice.call(arguments);

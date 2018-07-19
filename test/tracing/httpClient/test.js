@@ -6,15 +6,19 @@ var supportedVersion = require('../../../src/tracing/index').supportedVersion;
 var config = require('../../config');
 var utils = require('../../utils');
 
+var agentControls;
+var ClientControls;
+var ServerControls;
+
 describe('tracing/httpClient', function() {
+  // controls require features that aren't available in early Node.js versions
   if (!supportedVersion(process.versions.node)) {
     return;
   }
 
-  // controls require features that aren't available in early Node.js versions
-  var agentControls = require('../../apps/agentStubControls');
-  var ClientControls = require('./clientControls');
-  var ServerControls = require('./serverControls');
+  agentControls = require('../../apps/agentStubControls');
+  ClientControls = require('./clientControls');
+  ServerControls = require('./serverControls');
 
   this.timeout(config.getTestTimeout());
 
@@ -22,15 +26,29 @@ describe('tracing/httpClient', function() {
     extraHeaders: ['fooBaR']
   });
 
+  describe('http', function() {
+    registerTests.call(this, false);
+  });
+
+  describe('https', function() {
+    registerTests.call(this, true);
+  });
+});
+
+function registerTests(useHttps) {
   var serverControls = new ServerControls({
-    agentControls: agentControls
+    agentControls: agentControls,
+    env: {
+      USE_HTTPS: useHttps
+    }
   });
   serverControls.registerTestHooks();
 
   var clientControls = new ClientControls({
     agentControls: agentControls,
     env: {
-      SERVER_PORT: serverControls.port
+      SERVER_PORT: serverControls.port,
+      USE_HTTPS: useHttps
     }
   });
   clientControls.registerTestHooks();
@@ -115,4 +133,4 @@ describe('tracing/httpClient', function() {
         });
       });
   });
-});
+}

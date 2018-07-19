@@ -1,5 +1,8 @@
 # Changelog
 
+## Unreleased
+ - Record `https` client calls.
+
 ## 1.44.2
  - Fix result handling in PostgreSQL instrumentation.
 
