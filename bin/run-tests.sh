@@ -18,4 +18,5 @@ export POSTGRES_USER="node"
 export POSTGRES_PASSWORD="nodepw"
 export POSTGRES_DB="nodedb"
 
-npm test
+npm run test:nolint
+
