@@ -15,7 +15,8 @@ var AbstractControls = module.exports = function AbstractControls(opts) {
   // absolute path to .js file that should be executed
   this.appPath = opts.appPath;
   this.port = opts.port || process.env.APP_PORT || 3215;
-  this.baseUrl = 'http://127.0.0.1:' + this.port;
+  this.useHttps = opts.env && !!opts.env.USE_HTTPS;
+  this.baseUrl = (this.useHttps ? 'https' : 'http') + '://127.0.0.1:' + this.port;
   // optional agent controls which will result in a beforeEach call which ensures that the
   // sensor is successfully connected to the agent.
   this.agentControls = opts.agentControls;
@@ -64,7 +65,8 @@ AbstractControls.prototype.waitUntilServerIsUp = function waitUntilServerIsUp() 
       url: this.baseUrl,
       headers: {
         'X-INSTANA-L': '0'
-      }
+      },
+      strictSSL: false
     });
   }.bind(this));
 };
@@ -89,6 +91,7 @@ AbstractControls.prototype.sendRequest = function(opts) {
     headers: headers,
     qs: opts.qs,
     simple: opts.simple,
-    resolveWithFullResponse: opts.resolveWithFullResponse
+    resolveWithFullResponse: opts.resolveWithFullResponse,
+    strictSSL: false
   });
 };
