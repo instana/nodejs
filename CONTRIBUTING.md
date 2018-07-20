@@ -24,7 +24,7 @@ npm publish --tag=next
 
 # once verified that the release works as expected
 OTP="" # one-time password as received from your authenticator
-VERSION=$(node -e "console.log(require('./package.json').version)") npm dist-tag add "instana-nodejs-sensor@$VERSION" latest --otp="$OTP"
+VERSION=$(node -e "console.log(require('./package.json').version)") npm dist-tag add --otp="$OTP" "instana-nodejs-sensor@$VERSION" latest
 
 # verify that tags have been correctly applied
 npm dist-tag ls instana-nodejs-sensor
