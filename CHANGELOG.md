@@ -1,5 +1,8 @@
 # Changelog
 
+## Unreleased
+ - Support a wider range of command names for identification of PID in parent PID namespace.
+
 ## 1.45.0
  - Record `https` client calls.
 
