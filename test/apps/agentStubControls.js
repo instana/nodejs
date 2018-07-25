@@ -73,6 +73,15 @@ exports.getRetrievedData = function() {
 };
 
 
+exports.getEvents = function() {
+  return request({
+    method: 'GET',
+    url: 'http://127.0.0.1:' + agentPort + '/retrievedEvents',
+    json: true
+  });
+};
+
+
 exports.clearRetrievedData = function() {
   return request({
     method: 'DELETE',

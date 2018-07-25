@@ -1,5 +1,8 @@
 # Changelog
 
+## Unreleased
+ - Report uncaught exceptions as incidents and via span/trace.
+
 ## 1.45.0
  - Record `https` client calls.
 

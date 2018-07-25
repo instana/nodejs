@@ -190,6 +190,22 @@ exports.sendAgentResponseToAgent = function sendAgentResponseToAgent(messageId, 
 };
 
 
+exports.sendEventToAgent = function sendEventToAgent(eventData, cb) {
+  cb = atMostOnce('callback for sendEventToAgent', cb);
+  sendData(
+    '/com.instana.plugin.generic.event',
+    eventData,
+    function(err) {
+      if (err) {
+        cb(err);
+      } else {
+        cb(null);
+      }
+    }
+  );
+};
+
+
 function sendData(path, data, cb, ignore404) {
   cb = atMostOnce('callback for sendData: ' + path, cb);
   if (ignore404 === undefined) {

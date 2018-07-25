@@ -3,6 +3,7 @@
 var path = require('path');
 var fs = require('fs');
 
+var uncaughtExceptionHandler = require('../util/uncaughtExceptionHandler');
 var logger = require('../logger').getLogger('agentready');
 var requestHandler = require('../agent/requestHandler');
 var agentConnection = require('../agentConnection');
@@ -30,6 +31,7 @@ module.exports = exports = {
   enter: function(ctx) {
     transmissionsSinceLastFullDataEmit = 0;
 
+    uncaughtExceptionHandler.activate();
     enableAllSensors();
     tracing.activate();
     requestHandler.activate();
@@ -66,6 +68,7 @@ module.exports = exports = {
   },
 
   leave: function() {
+    uncaughtExceptionHandler.deactivate();
     disableAllSensors();
     tracing.deactivate();
     requestHandler.deactivate();

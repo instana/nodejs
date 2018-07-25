@@ -29,8 +29,7 @@ process.once(eventName, function(err) {
         process.removeListener(eventName, listener);
       });
     }
-    // eslint-disable-next-line max-len
-    console.error('The Instana Node.js sensor caught an otherwise uncaught exception to generate a respective event in Instana for you. This means that you have configured Instana to do just that (this feature is opt-in). Instana will now rethrow the error to terminate the process, otherwise the application might be in an inconsistent state, see https://nodejs.org/api/process.html#process_warning_using_uncaughtexception_correctly. The next line on stderr will look as if Instana crashed your application, but actually the original error came from your application code, not from Instana. Since we rethrow the original error, you should see its stacktrace below (depening on how you operate your application and how logging is configured.)');
+    console.error('Caught an otherwise uncaught exception.');
     throw err;
   }, 500);
 });

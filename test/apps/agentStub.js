@@ -13,7 +13,8 @@ var requests = {};
 var retrievedData = {
   runtime: [],
   traces: [],
-  responses: []
+  responses: [],
+  events: []
 };
 
 if (process.env.WITH_STDOUT) {
@@ -110,6 +111,15 @@ function checkExistenceOfKnownPid(fn) {
 }
 
 
+app.post('/com.instana.plugin.generic.event', function postEvent(req, res) {
+  if (!dropAllData) {
+    retrievedData.events.push(req.body);
+  }
+  log('Got new events', req.body);
+  res.send('OK');
+});
+
+
 app.get('/retrievedData', function(req, res) {
   log('Sending retrieved data');
   res.json(retrievedData);
@@ -122,12 +132,19 @@ app.get('/retrievedTraces', function(req, res) {
 });
 
 
+app.get('/retrievedEvents', function(req, res) {
+  log('Sending retrieved events');
+  res.json(retrievedData.events);
+});
+
+
 app.delete('/retrievedData', function(req, res) {
   log('Clearing retrieved data');
   retrievedData = {
     runtime: [],
     traces: [],
-    responses: []
+    responses: [],
+    events: []
   };
   res.sendStatus(200);
 });

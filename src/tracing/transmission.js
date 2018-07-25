@@ -49,11 +49,21 @@ exports.addSpan = function(span) {
 };
 
 
-function transmitSpans() {
+exports.transmitImmediately = function(cb) {
+  transmitSpans(cb);
+};
+
+
+function transmitSpans(cb) {
   clearTimeout(transmissionTimeoutHandle);
 
   if (spans.length === 0) {
     transmissionTimeoutHandle = setTimeout(transmitSpans, 1000);
+    if (cb) {
+      process.nextTick(function() {
+        cb();
+      });
+    }
     return;
   }
 
@@ -68,6 +78,9 @@ function transmitSpans() {
     }
 
     transmissionTimeoutHandle = setTimeout(transmitSpans, 1000);
+    if (cb) {
+      cb(error);
+    }
   });
 }
 
