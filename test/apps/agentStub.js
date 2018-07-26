@@ -6,7 +6,7 @@ var morgan = require('morgan');
 var app = express();
 
 var logPrefix = 'Agent Stub (' + process.pid + '):\t';
-var extraHeaders = process.env.EXTRA_HEADERS.split(',');
+var extraHeaders = process.env.EXTRA_HEADERS ? process.env.EXTRA_HEADERS.split(',') : [];
 var dropAllData = process.env.DROP_DATA === 'true';
 var discoveries = {};
 var requests = {};
