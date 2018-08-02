@@ -41,6 +41,7 @@ exports.init = function(_config) {
 function setDefaults() {
   config.tracing = config.tracing || {};
   config.tracing.enabled = config.tracing.enabled !== false;
+  config.tracing.traceContextSupportEnabled = config.tracing.traceContextSupportEnabled === true;
 }
 
 

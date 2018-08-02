@@ -52,6 +52,19 @@ require('instana-nodejs-sensor')({
 });
 ```
 
+### Record TraceContext Data
+[TraceContext](https://github.com/w3c/distributed-tracing/tree/master/trace_context) is a new propagation format for distributed trace contexts. It is currently in a draft state and therefore disabled by default. Once enabled, the sensor will record additional data and make this available to you via the Instana UI.
+
+Since the TraceContext specification is in a draft state, this feature is disabled by default. You most likely want to keep it disabled as well.
+
+```javascript
+require('instana-nodejs-sensor')({
+  tracing: {
+    traceContextSupportEnabled: true
+  }
+});
+```
+
 ### OpenTracing Service Naming
 Services are a central concept within Instana. Spans and traces are associated to services. To name services when using OpenTracing, you can configure the `serviceName` property.
 

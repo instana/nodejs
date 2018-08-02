@@ -1,5 +1,8 @@
 # Changelog
 
+## Unreleased
+ - Optionally record [TraceContext data](https://github.com/w3c/distributed-tracing/tree/master/trace_context).
+
 ## 1.45.0
  - Record `https` client calls.
 

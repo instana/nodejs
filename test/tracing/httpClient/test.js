@@ -1,6 +1,7 @@
 'use strict';
 
 var expect = require('chai').expect;
+var leftpad = require('leftpad');
 
 var supportedVersion = require('../../../src/tracing/index').supportedVersion;
 var config = require('../../config');
@@ -39,7 +40,8 @@ function registerTests(useHttps) {
   var serverControls = new ServerControls({
     agentControls: agentControls,
     env: {
-      USE_HTTPS: useHttps
+      USE_HTTPS: useHttps,
+      TRACE_CONTEXT_ENABLED: true
     }
   });
   serverControls.registerTestHooks();
@@ -48,7 +50,8 @@ function registerTests(useHttps) {
     agentControls: agentControls,
     env: {
       SERVER_PORT: serverControls.port,
-      USE_HTTPS: useHttps
+      USE_HTTPS: useHttps,
+      TRACE_CONTEXT_ENABLED: true
     }
   });
   clientControls.registerTestHooks();
@@ -128,6 +131,32 @@ function registerTests(useHttps) {
             utils.expectOneMatching(spans, function(span) {
               expect(span.n).to.equal('node.http.client');
               expect(span.data.http.header.foobar).to.equal('42');
+            });
+          });
+        });
+      });
+  });
+
+  it('must forward trace context headers', function() {
+    return clientControls.sendRequest({
+      method: 'GET',
+      path: '/',
+      headers: {
+        traceparent: '00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01',
+        tracestate: 'congo=BleGNlZWRzIHRohbCBwbGVhc3VyZS4='
+      }
+    })
+      .then(function() {
+        return utils.retry(function() {
+          return agentControls.getSpans()
+          .then(function(spans) {
+            utils.expectOneMatching(spans, function(span) {
+              expect(span.n).to.equal('node.http.server');
+              expect(span.p).not.to.equal(undefined);
+              expect(span.data.tc.s).to.deep.equal([
+                {k: 'in', v: '00-0af7651916cd43dd8448eb211c80319c-' + leftpad(span.s, 16, '0') + '-01'},
+                {k: 'congo', v: 'BleGNlZWRzIHRohbCBwbGVhc3VyZS4='}
+              ]);
             });
           });
         });

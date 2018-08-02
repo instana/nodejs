@@ -5,15 +5,18 @@ var coreHttpModule = require('http');
 
 var discardUrlParameters = require('../../util/url').discardUrlParameters;
 var tracingConstants = require('../constants');
+var traceContext = require('trace-context');
 var httpCommon = require('./_http');
 var shimmer = require('shimmer');
 var cls = require('../cls');
 
 var isActive = false;
+var config;
 
 exports.spanName = 'node.http.server';
 
-exports.init = function() {
+exports.init = function(_config) {
+  config = _config;
   shimmer.wrap(coreHttpModule.Server && coreHttpModule.Server.prototype, 'emit', shimEmit);
   shimmer.wrap(coreHttpsModule.Server && coreHttpsModule.Server.prototype, 'emit', shimEmit);
 };
@@ -37,6 +40,26 @@ function shimEmit(realEmit) {
       var incomingSpanId = getExistingSpanId(req);
       var span = cls.startSpan(exports.spanName, incomingTraceId, incomingSpanId);
 
+      var traceState;
+      if (config.tracing.traceContextSupportEnabled) {
+        var getHeader = function getHeader(name) {
+          return req.headers[name];
+        };
+
+        var traceParent = traceContext.http.extractTraceParent(getHeader) || new traceContext.TraceParent({
+          version: 0,
+          traceId: span.t,
+          spanId: span.s,
+          options: 0
+        });
+        traceState = traceContext.http.extractTraceState(getHeader) || new traceContext.TraceState({});
+
+        traceParent.spanId = span.s;
+        traceParent.setTracedFlag();
+        traceState.set('in', traceContext.http.serializeTraceParent(traceParent));
+        span.addCleanup(cls.setTraceContext({traceState: traceState, traceParent: traceParent}));
+      }
+
       // Grab the URL before application code gets access to the incoming message.
       // We are doing this because libs like express are manipulating req.url when
       // using routers.
@@ -50,6 +73,18 @@ function shimEmit(realEmit) {
           header: httpCommon.getExtraHeaders(req)
         }
       };
+
+      if (traceState) {
+        span.data.tc = {
+          s: traceState.keys()
+            .map(function(k) {
+              return {
+                k: k,
+                v: traceState.get(k)
+              };
+            })
+        };
+      }
 
       // Handle client / backend eum correlation.
       if (!span.p) {

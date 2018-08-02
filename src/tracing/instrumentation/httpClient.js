@@ -5,13 +5,16 @@ var coreHttpsModule = require('https');
 
 var discardUrlParameters = require('../../util/url').discardUrlParameters;
 var tracingConstants = require('../constants');
+var traceContext = require('trace-context');
 var tracingUtil = require('../tracingUtil');
 var httpCommon = require('./_http');
 var cls = require('../cls');
 
 var isActive = false;
+var config;
 
-exports.init = function() {
+exports.init = function(_config) {
+  config = _config;
   instrument(coreHttpModule);
   instrument(coreHttpsModule);
 };
@@ -83,6 +86,17 @@ function instrument(coreModule) {
       clientRequest.setHeader(tracingConstants.spanIdHeaderName, span.s);
       clientRequest.setHeader(tracingConstants.traceIdHeaderName, span.t);
       clientRequest.setHeader(tracingConstants.traceLevelHeaderName, '1');
+
+      if (config.tracing.traceContextSupportEnabled) {
+        var ctx = cls.getTraceContext();
+        if (ctx) {
+          var setHeader = function setHeader(name, value) {
+            clientRequest.setHeader(name, value);
+          };
+          traceContext.http.injectTraceState(setHeader, ctx.traceState);
+          traceContext.http.injectTraceParent(setHeader, ctx.traceParent);
+        }
+      }
 
       var isTimeout = false;
       clientRequest.on('timeout', function() {

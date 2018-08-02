@@ -7,6 +7,7 @@ var hooked = require('./clsHooked');
 var currentRootSpanKey = exports.currentRootSpanKey = 'com.instana.rootSpan';
 var currentSpanKey = exports.currentSpanKey = 'com.instana.span';
 var tracingLevelKey = exports.tracingLevelKey = 'com.instana.tl';
+var traceContextKey = 'com.instana.tc';
 
 var exitSpans = ['node.http.client', 'elasticsearch', 'mongo', 'mysql', 'postgres', 'redis'];
 var entrySpans = ['node.http.server'];
@@ -146,6 +147,20 @@ exports.isExitSpan = function isExitSpan(span) {
  */
 exports.isLocalSpan = function isLocalSpan(span) {
   return span.k === 3;
+};
+
+/*
+ * Stores the TraceContext object which entered this process using an HTTP request or message.
+ */
+exports.setTraceContext = function(ctx) {
+  return exports.ns.set(traceContextKey, ctx);
+};
+
+/*
+ * Returns the TraceContext object which entered this process using an HTTP request or message. May be missing.
+ */
+exports.getTraceContext = function() {
+  return exports.ns.get(traceContextKey);
 };
 
 /*
