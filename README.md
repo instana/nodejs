@@ -16,7 +16,6 @@ Monitor your Node.js applications with Instana!
 - [Installation and Usage](#installation-and-usage)
 - [Garbage Collection and Event Loop Information](#garbage-collection-and-event-loop-information)
 - [OpenTracing](#opentracing)
-  - [Connecting OpenTracing spans to Instana spans](#connecting-opentracing-spans-to-instana-spans)
   - [Limitations](#limitations)
 - [FAQ](#faq)
   - [How can the Node.js sensor be disabled for (local) development?](#how-can-the-nodejs-sensor-be-disabled-for-local-development)
@@ -87,37 +86,6 @@ span.setTag(opentracing.Tags.ERROR, true);
 
 // finish the span and schedule it for transmission to instana
 span.finish();
-```
-
-### Connecting OpenTracing spans to Instana spans
-The Node.js sensor automatically instruments common HTTP and database APIs for your convenience. It would therefore be inefficient to do this again using OpenTracing. We recommend to use the OpenTracing APIs to add additional tracing insights on top of the auto-generated Instana traces. To support this, Instana offers an additional API to retrieve the currently existing OpenTracing SpanContext. This SpanContext can then be used to stitch traces together. The following code sample shows how this could be done for a simple [expressjs](https://expressjs.com/) app.
-
-```javascript
-const instana = require('instana-nodejs-sensor');
-instana({
-  tracing: {
-    enabled: true
-  }
-});
-
-const opentracing = require('opentracing');
-const express = require('express');
-
-opentracing.initGlobalTracer(instana.opentracing.createTracer());
-const tracer = opentracing.globalTracer();
-
-const app = express();
-
-app.get('/', (req, res) => {
-  var spanContext = instana.opentracing.getCurrentlyActiveInstanaSpanContext();
-  var authSpan = tracer.startSpan('auth', {childOf: spanContext});
-  authSpan.finish();
-  res.send('OK');
-});
-
-app.listen(3000, function() {
-  log('Listening on port 3000');
-});
 ```
 
 ### Limitations
