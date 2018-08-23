@@ -195,13 +195,7 @@ exports.sendEventToAgent = function sendEventToAgent(eventData, cb) {
   sendData(
     '/com.instana.plugin.generic.event',
     eventData,
-    function(err) {
-      if (err) {
-        cb(err);
-      } else {
-        cb(null);
-      }
-    }
+    cb
   );
 };
 
