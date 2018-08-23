@@ -11,7 +11,7 @@ var pidStore = require('../pidStore');
 var cls = require('../tracing/cls');
 
 var uncaughtExceptionEventName = 'uncaughtException';
-var warningHasBeenLogged = false;
+var infoHasBeenLogged = false;
 var stackTraceLength = 10;
 var config;
 
@@ -26,21 +26,20 @@ exports.init = function(_config) {
 
 
 function setDefaults() {
-  config.reportUncaughtException = config.reportUncaughtException === true;
+  config.reportUncaughtException = config.reportUncaughtException !== false;
 }
 
 
 exports.activate = function() {
   if (config.reportUncaughtException) {
-    if (!warningHasBeenLogged) {
-      logger.info('Reporting uncaught exceptions is enabled. Note that this can alter the behaviour of your ' +
-      'application. See documentation for details.');
-      warningHasBeenLogged = true;
+    if (!infoHasBeenLogged) {
+      logger.info('Reporting uncaught exceptions is enabled.');
+      infoHasBeenLogged = true;
     }
     process.once(uncaughtExceptionEventName, onUncaughtException);
-  } else if (!warningHasBeenLogged) {
-    logger.info('Reporting uncaught exceptions is not enabled. See documentation for details.');
-    warningHasBeenLogged = true;
+  } else if (!infoHasBeenLogged) {
+    logger.info('Reporting uncaught exceptions is disabled.');
+    infoHasBeenLogged = true;
   }
 };
 
@@ -120,7 +119,7 @@ function logAndRethrow(err) {
     });
   }
   // eslint-disable-next-line max-len
-  logger.error('The Instana Node.js sensor caught an otherwise uncaught exception to generate a respective Instana event for you. This means that you have configured Instana to do just that by setting reportUncaughtException (reporting uncaught exceptions is opt-in). Instana will now rethrow the error to terminate this process, otherwise the application would be left in an inconsistent state, see https://nodejs.org/api/process.html#process_warning_using_uncaughtexception_correctly. The next line on stderr will look as if Instana crashed your application, but actually the original error came from your application code, not from Instana. Since we rethrow the original error, you should see its stacktrace below (depening on how you operate your application and how logging is configured.)');
+  logger.error('The Instana Node.js sensor caught an otherwise uncaught exception to generate a respective Instana event for you. Instana will now rethrow the error to terminate this process, otherwise the application would be left in an inconsistent state, see https://nodejs.org/api/process.html#process_warning_using_uncaughtexception_correctly. The next line on stderr will look as if Instana crashed your application, but actually the original error came from your application code, not from Instana. Since we rethrow the original error, you should see its stacktrace below (depening on how you operate your application and how logging is configured.)');
 
   // Rethrow the original error (after notifying the agent) to trigger the process to finally terminate - Node won't
   // run this handler again since it (a) has been registered with `once` and (b) we removed all handlers for

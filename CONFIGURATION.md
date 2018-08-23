@@ -61,8 +61,8 @@ require('instana-nodejs-sensor')({
 });
 ```
 
-## Reporting Uncaught Exceptions
-The Instana Node.js sensor has the ability to report uncaught exceptions. By default, a Node.js process will be terminated by an uncaught exception (see [Node.js docs](https://nodejs.org/api/process.html#process_event_uncaughtexception)). If uncaught exception reporting is enabled, the Instana Node.js sensor will take the following actions when an uncaught exception occurs:
+## Disabling Reporting Uncaught Exceptions
+The Instana Node.js sensor has the ability to report uncaught exceptions. By default, a Node.js process will be terminated by an uncaught exception (see [Node.js docs](https://nodejs.org/api/process.html#process_event_uncaughtexception)). If uncaught exception reporting is enabled, the Instana Node.js sensor will register a listener for the `uncaughtException` event and take the following actions when an uncaught exception occurs:
 
 * Report this as an incident to Instana, including the uncaught exception and its stack trace.
 * Finish the currently active span and mark it as an error (if automatic tracing is enabled).
@@ -71,15 +71,15 @@ It will then rethrow the original exception to terminate the Node.js process. (K
 
 A timeout of one second is applied, so if one or both of these actions have not completed after one second, the process will be terminated anyway.
 
-Reporting uncaught exceptions is disabled by default. It can be enabled with the option `reportUncaughtException`, as follows:
+Reporting uncaught exceptions is enabled by default. It can be disabled with the option `reportUncaughtException`, as follows:
 
 ```javascript
 require('instana-nodejs-sensor')({
-  reportUncaughtException: true
+  reportUncaughtException: false
 });
 ```
 
-The reason that this facility is opt-in is that it alters the behaviour of the application slightly. The [Node.js docs](https://nodejs.org/api/process.html#process_event_uncaughtexception) advise that the "correct use of 'uncaughtException' is to perform synchronous cleanup of allocated resources (e.g. file descriptors, handles, etc) before shutting down the process." However, Instana performs asynchronous operations in its uncaught exception handler (sending information about the uncaught exception to the agent is inherently an asynchronous operation). The downside of this is that it might prolong the time it takes for the application process to finally terminate after the uncaught exception. If you have a mechanism in place that restarts the Node.js process once it has crashed, enabling uncaught exception tracking might lead to more failed requests, because the application process is kept alive for at most one second longer.
+The [Node.js docs](https://nodejs.org/api/process.html#process_event_uncaughtexception) advise that the "correct use of 'uncaughtException' is to perform synchronous cleanup of allocated resources (e.g. file descriptors, handles, etc) before shutting down the process." However, Instana performs asynchronous operations in its uncaught exception handler (sending information about the uncaught exception to the agent is inherently an asynchronous operation). The downside of this is that it might prolong the time it takes for the application process to finally terminate after the uncaught exception. If you have a mechanism in place that restarts the Node.js process once it has crashed, enabling uncaught exception tracking might lead to more failed requests, because the application process is kept alive for at most one second longer.
 
 ## Logging
 

@@ -2,13 +2,18 @@
 
 // Deliberately not using Express.js here to avoid conflicts with Express.js' error handling.
 
-require('../../../..')({
+var instana = require('../../../..');
+var config = {
   agentPort: process.env.AGENT_PORT,
   level: 'info',
   // not using "forceTransmissionStartingAt: 1" as usual here to verify that the uncaught exception handler actually
   // transmits the erroneous span before terminating the process.
-  reportUncaughtException: true
-});
+};
+if (process.env.DISABLE_REPORT_UNCAUGHT_EXCEPTION) {
+  config.reportUncaughtException = false;
+}
+
+instana(config);
 
 var http = require('http');
 var port = process.env.APP_PORT;
