@@ -8,6 +8,7 @@
   - [Disabling Automatic Tracing](#disabling-automatic-tracing)
   - [Capturing Stack Traces](#capturing-stack-traces)
   - [OpenTracing Service Naming](#opentracing-service-naming)
+- [Disable Uncaught Exception Reporting](#disable-uncaught-exception-reporting)
 - [Logging](#logging)
   - [Bunyan Parent Logger](#bunyan-parent-logger)
   - [Log Level Configuration](#log-level-configuration)
@@ -61,7 +62,7 @@ require('instana-nodejs-sensor')({
 });
 ```
 
-## Disabling Reporting Uncaught Exceptions
+## Disable Uncaught Exception Reporting
 The Instana Node.js sensor has the ability to report uncaught exceptions. By default, a Node.js process will be terminated by an uncaught exception (see [Node.js docs](https://nodejs.org/api/process.html#process_event_uncaughtexception)). If uncaught exception reporting is enabled, the Instana Node.js sensor will register a listener for the `uncaughtException` event and take the following actions when an uncaught exception occurs:
 
 * Report this as an incident to Instana, including the uncaught exception and its stack trace.
