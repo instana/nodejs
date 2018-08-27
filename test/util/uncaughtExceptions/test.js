@@ -33,7 +33,7 @@ describe('uncaught exceptions', function() {
       resolveWithFullResponse: true
     })
     .then(function(response) {
-      assert.fail(response, 'no response', 'Unexpected response, server should have crashed');
+      assert.fail(response, 'no response', 'Unexpected response, server should have crashed.');
     })
     .catch(function(err) {
       expect(err.name).to.equal('RequestError');
@@ -61,7 +61,7 @@ describe('uncaught exceptions', function() {
       resolveWithFullResponse: true
     })
     .then(function(response) {
-      assert.fail(response, 'no response', 'Unexpected response, server should have crashed');
+      assert.fail(response, 'no response', 'Unexpected response, server should have crashed.');
     })
     .catch(function(err) {
       expect(err.name).to.equal('RequestError');
@@ -77,6 +77,51 @@ describe('uncaught exceptions', function() {
             expect(event.timestamp).to.exist;
             expect(event.duration).to.equal(1);
             expect(event.severity).to.equal(10);
+          });
+        });
+      });
+    });
+  });
+
+  it('must block the dying process until termination', function() {
+    var serverAcceptedAnotherResponse = false;
+    var errorFromSecondHttpRequest = null;
+    var triggerUncaughtException = serverControls.sendRequest({
+      method: 'GET',
+      path: '/boom',
+      simple: false,
+      resolveWithFullResponse: true
+    });
+    // send another request, this must never be accepted or processed
+    serverControls.sendRequest({
+      method: 'GET',
+      path: '/other',
+      simple: false
+    }).then(function() {
+      serverAcceptedAnotherResponse = true;
+    }).catch(function(_errorFromSecondHttpRequest) {
+      errorFromSecondHttpRequest = _errorFromSecondHttpRequest;
+    });
+
+    return triggerUncaughtException.then(function(response) {
+      assert.fail(response, 'no response', 'Unexpected response, server should have crashed.');
+    })
+    .catch(function(err) {
+      expect(err.name).to.equal('RequestError');
+      expect(err.message).to.equal('Error: socket hang up');
+
+      // Wait until the event has arrived and make sure that the other HTTP request has not been accepted/processed
+      // in the meantime.
+      return utils.retry(function() {
+        return agentControls.getEvents()
+        .then(function(events) {
+          expect(serverAcceptedAnotherResponse,
+            'Unexpected response, server shouldn\'t have accepted another call.').to.be.false;
+          expect(errorFromSecondHttpRequest).to.exist;
+          expect(errorFromSecondHttpRequest.message).to.equal('Error: read ECONNRESET');
+          utils.expectOneMatching(events, function(event) {
+            expect(event.title).to.equal('A Node.js process terminated abnormally due to an uncaught exception.');
+            expect(event.text).to.contain('Boom');
           });
         });
       });

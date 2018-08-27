@@ -41,7 +41,6 @@
   },
   "homepage": "https://github.com/instana/nodejs-sensor#readme",
   "dependencies": {
-    "async": "^2.6.1",
     "async-hook-jl": "^1.7.6",
     "bunyan": "^1.5.1",
     "cls-bluebird": "^2.1.0",
@@ -55,9 +54,10 @@
     "shimmer": "1.1.0"
   },
   "optionalDependencies": {
+    "@risingstack/v8-profiler": "5.7.11",
     "event-loop-stats": "1.0.0",
     "gcstats.js": "1.0.0",
-    "@risingstack/v8-profiler": "5.7.11"
+    "netlinkwrapper": "^1.0.0"
   },
   "devDependencies": {
     "admin": "^1.4.0",

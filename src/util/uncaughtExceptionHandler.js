@@ -1,7 +1,6 @@
 'use strict';
 
 var serializeError = require('serialize-error');
-var async = require('async');
 
 var logger = require('../logger').getLogger('uncaughtExceptionHandler');
 var transmission = require('../tracing/transmission');
@@ -53,60 +52,43 @@ function onUncaughtException(uncaughtError) {
   // because of the way Error.prepareStackTrace works and how error.stack is only created once and then cached it is
   // important to create the JSON formatted stack trace first, before anything else accesses error.stack.
   var jsonStackTrace = stackTraceUtil.getStackTraceAsJson(stackTraceLength, uncaughtError);
-  finishCurrentSpanAndReportEvent(uncaughtError, jsonStackTrace, logAndRethrow.bind(null, uncaughtError));
+  finishCurrentSpanAndReportEvent(uncaughtError, jsonStackTrace);
+  logAndRethrow(uncaughtError);
 }
 
 
-function finishCurrentSpanAndReportEvent(uncaughtError, jsonStackTrace, cb) {
-  // If we can not finish our last minute actions after 1 second, it is probably better to let the process die
-  // (and possibly get restarted) instead of waiting any longer. Thus we apply a 1000 ms timeout.
-  async.timeout(async.parallel, 1000)([
-      reportEvent.bind(null, uncaughtError),
-      finishCurrentSpan.bind(null, jsonStackTrace),
-    ],
-    function() {
-      // Ignore all errors from both last minute actions - if we can not report the event or finish the current span,
-      // so be it.
-      cb();
-    });
+function finishCurrentSpanAndReportEvent(uncaughtError, jsonStackTrace) {
+  var spans = finishCurrentSpan(jsonStackTrace);
+  var eventPayload = createEventForUncaughtException(uncaughtError);
+  agentConnection.reportUncaughtExceptionToAgentSync(eventPayload, spans);
 }
 
 
-function reportEvent(uncaughtError, cb) {
-  var text = JSON.stringify(serializeError(uncaughtError));
-  agentConnection.sendEventToAgent({
+function createEventForUncaughtException(uncaughtError) {
+  var eventText = JSON.stringify(serializeError(uncaughtError));
+  return {
     title: 'A Node.js process terminated abnormally due to an uncaught exception.',
-    text: text,
+    text: eventText,
     plugin: 'com.instana.forge.infrastructure.runtime.nodejs.NodeJsRuntimePlatform',
     id: pidStore.pid,
     timestamp: Date.now(),
     duration: 1,
     severity: 10
-  }, function(err) {
-    if (err) {
-      logger.warn('Failed to report uncaught exception event to agent.', {error: err});
-    }
-    cb();
-  });
+  };
 }
 
 
-function finishCurrentSpan(jsonStackTrace, cb) {
+function finishCurrentSpan(jsonStackTrace) {
   var currentSpan = cls.getCurrentSpan();
   if (!currentSpan) {
-    return cb();
+    return [];
   }
   currentSpan.error = true;
   currentSpan.ec = 1;
   currentSpan.d = Date.now() - currentSpan.ts;
   currentSpan.stack = jsonStackTrace;
   currentSpan.transmit();
-  transmission.transmitImmediately(function(err) {
-    if (err) {
-      logger.warn('Failed to transmit span for uncaught exception to agent.', {error: err});
-    }
-    cb();
-  });
+  return transmission.getAndResetSpans();
 }
 
 

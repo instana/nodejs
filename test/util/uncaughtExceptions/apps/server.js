@@ -21,6 +21,8 @@ var port = process.env.APP_PORT;
 var requestHandler = function(request, response) {
   if (request.url === '/') {
     return success(response);
+  } else if (request.url === '/other') {
+    return success(response);
   } else if (request.url === '/boom') {
     return uncaughtError(response);
   } else {
@@ -36,9 +38,9 @@ function success(response) {
 }
 
 function uncaughtError() {
-  setTimeout(function() {
+  process.nextTick(function() {
     throw new Error('Boom');
-  }, 100);
+  });
 }
 
 var server = http.createServer(requestHandler);

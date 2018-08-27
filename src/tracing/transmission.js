@@ -49,21 +49,11 @@ exports.addSpan = function(span) {
 };
 
 
-exports.transmitImmediately = function(cb) {
-  transmitSpans(cb);
-};
-
-
-function transmitSpans(cb) {
+function transmitSpans() {
   clearTimeout(transmissionTimeoutHandle);
 
   if (spans.length === 0) {
     transmissionTimeoutHandle = setTimeout(transmitSpans, 1000);
-    if (cb) {
-      process.nextTick(function() {
-        cb();
-      });
-    }
     return;
   }
 
@@ -78,11 +68,19 @@ function transmitSpans(cb) {
     }
 
     transmissionTimeoutHandle = setTimeout(transmitSpans, 1000);
-    if (cb) {
-      cb(error);
-    }
   });
 }
+
+
+/**
+ * Synchronously returns the spans that are scheduled for transmission and resets the internal span buffer to an empty
+ * array.
+ */
+exports.getAndResetSpans = function getAndResetSpans() {
+  var spansToSend = spans;
+  spans = [];
+  return spansToSend;
+};
 
 
 function removeSpansIfNecessary() {
