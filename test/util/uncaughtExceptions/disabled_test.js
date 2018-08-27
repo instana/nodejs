@@ -22,10 +22,7 @@ describe('uncaught exception reporting disabled', function() {
   agentControls.registerTestHooks();
 
   var serverControls = new ServerControls({
-    agentControls: agentControls,
-    env: {
-      DISABLE_REPORT_UNCAUGHT_EXCEPTION: false
-    }
+    agentControls: agentControls
   });
   serverControls.registerTestHooks();
 

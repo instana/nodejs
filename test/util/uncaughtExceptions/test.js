@@ -21,7 +21,10 @@ describe('uncaught exceptions', function() {
   agentControls.registerTestHooks();
 
   var serverControls = new ServerControls({
-    agentControls: agentControls
+    agentControls: agentControls,
+    env: {
+      ENABLE_REPORT_UNCAUGHT_EXCEPTION: true
+    }
   });
   serverControls.registerTestHooks();
 

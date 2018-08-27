@@ -9,8 +9,8 @@ var config = {
   // not using "forceTransmissionStartingAt: 1" as usual here to verify that the uncaught exception handler actually
   // transmits the erroneous span before terminating the process.
 };
-if (process.env.DISABLE_REPORT_UNCAUGHT_EXCEPTION) {
-  config.reportUncaughtException = false;
+if (process.env.ENABLE_REPORT_UNCAUGHT_EXCEPTION) {
+  config.reportUncaughtException = true;
 }
 
 instana(config);

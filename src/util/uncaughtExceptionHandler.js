@@ -10,7 +10,6 @@ var pidStore = require('../pidStore');
 var cls = require('../tracing/cls');
 
 var uncaughtExceptionEventName = 'uncaughtException';
-var infoHasBeenLogged = false;
 var stackTraceLength = 10;
 var config;
 
@@ -25,20 +24,16 @@ exports.init = function(_config) {
 
 
 function setDefaults() {
-  config.reportUncaughtException = config.reportUncaughtException !== false;
+  config.reportUncaughtException = config.reportUncaughtException === true;
 }
 
 
 exports.activate = function() {
   if (config.reportUncaughtException) {
-    if (!infoHasBeenLogged) {
-      logger.info('Reporting uncaught exceptions is enabled.');
-      infoHasBeenLogged = true;
-    }
+    logger.info('Reporting uncaught exceptions is enabled.');
     process.once(uncaughtExceptionEventName, onUncaughtException);
-  } else if (!infoHasBeenLogged) {
+  } else {
     logger.info('Reporting uncaught exceptions is disabled.');
-    infoHasBeenLogged = true;
   }
 };
 
