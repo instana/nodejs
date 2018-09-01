@@ -57,7 +57,7 @@
     "@risingstack/v8-profiler": "5.7.11",
     "event-loop-stats": "1.0.0",
     "gcstats.js": "1.0.0",
-    "netlinkwrapper": "basti1302/netlinkwrapper#v1.0.0-node-10-fix"
+    "netlinkwrapper": "1.1.0"
   },
   "devDependencies": {
     "admin": "^1.4.0",
