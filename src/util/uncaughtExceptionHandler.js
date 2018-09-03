@@ -60,7 +60,7 @@ function finishCurrentSpanAndReportEvent(uncaughtError, jsonStackTrace) {
 
 
 function createEventForUncaughtException(uncaughtError) {
-  var eventText = JSON.stringify(serializeError(uncaughtError));
+  var eventText = errorToMarkdown(uncaughtError);
   return {
     title: 'A Node.js process terminated abnormally due to an uncaught exception.',
     text: eventText,
@@ -102,4 +102,24 @@ function logAndRethrow(err) {
   // run this handler again since it (a) has been registered with `once` and (b) we removed all handlers for
   // uncaughtException anyway.
   throw err;
+}
+
+function errorToMarkdown(error) {
+  var serializedError = serializeError(error);
+  if (serializedError.name && serializedError.message && typeof serializedError.stack === 'string') {
+    return '### ' + serializedError.name + '\n\n' +
+      '#### Message: \n\n' + serializedError.message + '\n\n' +
+      '#### Stack:\n\n' + stackTraceToMarkdown(serializedError.stack);
+  } else {
+    return JSON.stringify(serializedError);
+  }
+}
+
+function stackTraceToMarkdown(stackTrace) {
+  var formatted = '';
+  var callSites = stackTrace.split('\n');
+  callSites.forEach(function(callSite) {
+    formatted = formatted + '* `' + callSite.trim() + '`\n';
+  });
+  return formatted;
 }
