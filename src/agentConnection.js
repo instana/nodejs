@@ -15,6 +15,9 @@ var http = require('./http');
 // file descriptor fields in the sensor announce cycle.
 var paddingForInodeAndFileDescriptor = 200;
 
+var netLinkHasBeenRequired;
+var netLink;
+
 exports.announceNodeSensor = function announceNodeSensor(cb) {
   cb = atMostOnce('callback for announceNodeSensor', cb);
 
@@ -240,4 +243,99 @@ function sendData(path, data, cb, ignore404) {
 
   req.write(payload);
   req.end();
+}
+
+/**
+ * Sends the given event data and trace data synchronously to the agent via HTTP. This function is synchronous, that is,
+ * it blocks the event loop!
+ *
+ * YOU MUST NOT USE THIS FUNCTION, except for the one use case where it is actually required to block the event loop
+ * (reporting an uncaught exception tot the agent in the process.on('uncaughtException') handler).
+ */
+exports.reportUncaughtExceptionToAgentSync = function reportUncaughtExceptionToAgentSync(eventData, spans) {
+  sendRequestsSync([{
+    path: '/com.instana.plugin.nodejs/traces.' + pidStore.pid,
+    data: spans
+  }, {
+    path: '/com.instana.plugin.generic.event',
+    data: eventData
+  }]);
+};
+
+
+/**
+ * Sends multiple HTTP POST requests to the agent. This function is synchronous, that is, it blocks the event loop!
+ *
+ * YOU MUST NOT USE THIS FUNCTION, except for the one use case where it is actually required to block the event loop
+ * (reporting an uncaught exception tot the agent in the process.on('uncaughtException') handler).
+ */
+function sendRequestsSync(requests) {
+  // only try to require optional dependency netlinkwrapper once
+  if (!netLinkHasBeenRequired) {
+    netLinkHasBeenRequired = true;
+    try {
+      netLink = require('netlinkwrapper')();
+    } catch (requireNetlinkError) {
+      logger.warn('Failed to require optional dependency netlinkwrapper, uncaught exception will not be reported ' +
+                  'to Instana.');
+    }
+  }
+  if (!netLink) {
+    return;
+  }
+
+  var port = agentOpts.port;
+  if (typeof port !== 'number') {
+    try {
+      port = parseInt(port, 10);
+    } catch (nonNumericPortError) {
+      logger.warn('Detected non-numeric port configuration value %s, uncaught exception will not be reported.', port);
+      return;
+    }
+  }
+
+  try {
+    netLink.connect(port, agentOpts.host);
+    netLink.blocking(false);
+    requests.forEach(function(request) {
+      sendHttpPostRequestSync(port, request.path, request.data);
+    });
+  } catch (netLinkError) {
+    logger.warn('Failed to report uncaught exception due to network error.', {error: netLinkError});
+  } finally {
+    try {
+      netLink.disconnect();
+    } catch (ignoreDisconnectError) {
+      logger.debug('Failed to disconnect after trying to report uncaught exception.');
+    }
+  }
+}
+
+
+/**
+ * Sends a single, synchronous HTTP POST request to the agent. This function is synchronous, that is, it blocks the
+ * event loop!
+ *
+ * YOU MUST NOT USE THIS FUNCTION, except for the one use case where it is actually required to block the event loop
+ * (reporting an uncaught exception tot the agent in the process.on('uncaughtException') handler).
+ */
+function sendHttpPostRequestSync(port, path, data) {
+  logger.debug({payload: data}, 'Sending payload synchronously to %s', path);
+  try {
+    var payload = JSON.stringify(data);
+    var payloadLength = buffer.fromString(payload, 'utf8').length;
+  } catch (payloadSerializationError) {
+    logger.warn('Could not serialize payload, uncaught exception will not be reported.',
+      { error: payloadSerializationError });
+    return;
+  }
+
+  netLink.write(
+    'POST ' + path + ' HTTP/1.1\u000d\u000a' +
+    'Host: ' + agentOpts.host + '\u000d\u000a' +
+    'Content-Type: application/json; charset=UTF-8\u000d\u000a' +
+    'Content-Length: ' + payloadLength + '\u000d\u000a' +
+    '\u000d\u000a' + // extra CRLF before body
+    payload
+  );
 }

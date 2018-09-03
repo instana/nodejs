@@ -16,7 +16,7 @@ describe('tracing/kafka', function() {
   var kafkaConsumerControls = require('../apps/kafkaConsumerControls');
   var agentStubControls = require('../apps/agentStubControls');
 
-  // Too many moving parts with Kafka involed. Increase the default timeout.
+  // Too many moving parts with Kafka involved. Increase the default timeout.
   // This is especially important since the Kafka client has an
   // exponential backoff implemented.
   this.timeout(config.getTestTimeout() * 2);

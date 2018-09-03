@@ -48,7 +48,7 @@ AbstractControls.prototype.registerTestHooks = function registerTestHooks() {
 
 
 AbstractControls.prototype.kill = function kill() {
-  if (this.process.killed) {
+  if (this.process.killed || this.dontKillInAfterHook) {
     return Promise.resolve();
   }
   return new Promise(function(resolve) {

@@ -72,6 +72,17 @@ function transmitSpans() {
 }
 
 
+/**
+ * Synchronously returns the spans that are scheduled for transmission and resets the internal span buffer to an empty
+ * array.
+ */
+exports.getAndResetSpans = function getAndResetSpans() {
+  var spansToSend = spans;
+  spans = [];
+  return spansToSend;
+};
+
+
 function removeSpansIfNecessary() {
   if (spans.length > maxBufferedSpans) {
     spans = spans.slice(maxBufferedSpans - spans.length);
