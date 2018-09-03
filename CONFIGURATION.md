@@ -82,7 +82,7 @@ The [Node.js docs](https://nodejs.org/api/process.html#process_event_uncaughtexc
 
 The downside of this is that it might prolong the time it takes for the application process to finally terminate after the uncaught exception. Since the actions are synchronous, no other incoming requests will be accepted by your application during this time, that is, the process will be unresponsive to incoming request (HTTP, WebSockets, ...). This is an important safeguard, since the application might already be in an inconsistent state, so it would not be safe to accept/process any more requests in this process. However, this has two drawbacks:
 
-* If you have a mechanism in place that restarts the Node.js process once it has crashed, enabling uncaught exception tracking might lead to more failed requests, because the application process is kept alive for a bit longer, delaying the automatic restart.
+* If you have a mechanism in place that restarts the Node.js process once it has crashed, enabling uncaught exception tracking might lead to more failed requests, because the application process is kept alive for a bit longer (though only for a few milliseconds), delaying the automatic restart.
 * Since Instana rethrows the original exception synchronously from the uncaught exception handler, other handlers for the 'uncaughtException' event that have been registered after initialising Instana's nodejs-sensor are not executed. If you want to enable uncaught exception handling and also use your own handlers for this event, they should be registered before initialising Instana's nodejs-sensor.
 
 
