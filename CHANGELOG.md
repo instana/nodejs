@@ -1,7 +1,8 @@
 # Changelog
 
 ## Unreleased
- - Report uncaught exceptions as incidents and via span/trace.
+ - Tracing support for [mongodb](https://www.npmjs.com/package/mongodb) version >= 3.0.6.
+ - Report uncaught exceptions as incidents and via span/trace (disabled by default).
 
 ## 1.45.0
  - Record `https` client calls.

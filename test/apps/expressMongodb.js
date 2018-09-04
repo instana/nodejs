@@ -28,11 +28,19 @@ if (process.env.WITH_STDOUT) {
 
 app.use(bodyParser.json());
 
-MongoClient.connect('mongodb://' + process.env.MONGODB + '/myproject', function(err, _db) {
+MongoClient.connect('mongodb://' + process.env.MONGODB + '/myproject', function(err, client) {
   assert.equal(null, err);
-  log('Connected to MongoDB');
-  db = _db;
+  if (client.constructor.name === 'Db') {
+    // mongodb versions < 3.x
+    db = client;
+  } else if (client.constructor.name === 'MongoClient') {
+    // mongodb versions >= 3.x
+    db = client.db();
+  } else {
+    throw new Error('Can not detect mongodb package version.');
+  }
   collection = db.collection('mydocs');
+  log('Connected to MongoDB');
 });
 
 app.get('/', function(req, res) {
