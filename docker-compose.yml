@@ -52,3 +52,11 @@ services:
       POSTGRES_USER: node
       POSTGRES_PASSWORD: nodepw
       POSTGRES_DB: nodedb
+
+  mssql:
+    image: microsoft/mssql-server-linux:2017-CU9
+    ports:
+      - 1433:1433
+    environment:
+      ACCEPT_EULA: Y
+      SA_PASSWORD: stanCanHazMsSQL1

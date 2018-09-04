@@ -57,8 +57,7 @@ app.get('/select-now', function(req, res) {
   pool.query('SELECT NOW()', function(err, results) {
     if (err) {
       log('Failed to execute select now query', err);
-      res.sendStatus(500);
-      return;
+      return res.sendStatus(500);
     }
     res.json(results);
   });
@@ -71,7 +70,7 @@ app.get('/pool-string-insert', function(req, res) {
   pool.query(insert, values, function(err, results) {
     if (err) {
       log('Failed to execute pool insert', err);
-      res.sendStatus(500);
+      return res.sendStatus(500);
     }
     res.json(results);
   });
@@ -85,7 +84,7 @@ app.get('/pool-config-select', function(req, res) {
   pool.query(query, function(err, results) {
     if (err) {
       log('Failed to execute pool config insert', err);
-      res.sendStatus(500);
+      return res.sendStatus(500);
     }
     res.json(results);
   });
@@ -102,7 +101,8 @@ app.get('/pool-config-select-promise', function(req, res) {
       res.json(results);
     })
     .catch(function(e) {
-      return log(e.stack);
+      log(e.stack);
+      return res.sendStatus(500);
     });
 });
 
@@ -113,7 +113,7 @@ app.get('/client-string-insert', function(req, res) {
   client.query(insert, values, function(err, results) {
     if (err) {
       log('Failed to execute client insert', err);
-      res.sendStatus(500);
+      return res.sendStatus(500);
     }
     res.json(results);
   });
@@ -127,7 +127,7 @@ app.get('/client-config-select', function(req, res) {
   client.query(query, function(err, results) {
     if (err) {
       log('Failed to execute client select', err);
-      res.sendStatus(500);
+      return res.sendStatus(500);
     }
     res.json(results);
   });
@@ -139,7 +139,7 @@ app.get('/table-doesnt-exist', function(req, res) {
       res.json(r);
     })
     .catch(function(e) {
-      res.status(500).json(e);
+      return res.sendStatus(500).json(e);
     });
 });
 
@@ -147,28 +147,28 @@ app.get('/transaction', function(req, res) {
   client.query('BEGIN', function(err1) {
     if (err1) {
       log('Failed to execute client transaction', err1);
-      res.status(500).json(err1);
+      return res.status(500).json(err1);
     }
 
     client.query('INSERT INTO users(name, email) VALUES($1, $2) RETURNING *',
                 ['trans1', 'nodejstests@blah'], function(err2) {
       if (err2) {
         log('Failed to execute client transaction', err2);
-        res.status(500).json(err2);
+        return res.status(500).json(err2);
       }
       var insertTrans2 = 'INSERT INTO users(name, email) VALUES($1, $2) RETURNING *';
       var insertTrans2Values = ['trans2', 'nodejstests@blah'];
       client.query(insertTrans2, insertTrans2Values, function(err3, result3) {
         if (err3) {
           log('Failed to execute client transaction', err3);
-          res.status(500).json(err3);
+          return res.status(500).json(err3);
         }
         client.query('COMMIT', function(err4) {
           if (err4) {
             log('Failed to execute client transaction', err4);
-            res.status(500).json(err4);
+            return res.status(500).json(err4);
           }
-          res.json(result3);
+          return res.json(result3);
         });
       });
     });

@@ -1,7 +1,8 @@
 # Changelog
 
 ## Unreleased
- - Report uncaught exceptions as incidents and via span/trace.
+ - Add MSSQL (Microsoft SQL Server) instrumentation ([mssql](https://www.npmjs.com/package/mssql)).
+ - Report uncaught exceptions as incidents and via span/trace (disabled by default).
 
 ## 1.45.0
  - Record `https` client calls.
