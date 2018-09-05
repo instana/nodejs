@@ -139,7 +139,7 @@ app.get('/table-doesnt-exist', function(req, res) {
       res.json(r);
     })
     .catch(function(e) {
-      return res.sendStatus(500).json(e);
+      return res.status(500).json(e);
     });
 });
 

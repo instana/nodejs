@@ -1,5 +1,6 @@
 'use strict';
 
+var errors = require('request-promise/errors');
 var expect = require('chai').expect;
 
 var supportedVersion = require('../../../src/tracing/index').supportedVersion;
@@ -19,6 +20,7 @@ describe('tracing/mssql', function() {
     agentControls: agentControls
   });
   appControls.registerTestHooks();
+
 
   it('must trace dummy select', function() {
     return appControls.sendRequest({
@@ -40,6 +42,147 @@ describe('tracing/mssql', function() {
           utils.expectOneMatching(spans, function(span) {
             checkMssqlSpan(span, httpEntrySpan);
             expect(span.data.mssql.stmt).to.equal('SELECT GETDATE()');
+          });
+        });
+      });
+    });
+  });
+
+
+  it('must trace errors', function() {
+    return appControls.sendRequest({
+      method: 'GET',
+      path: '/error-callback'
+    })
+    .catch(errors.StatusCodeError, function(reason) {
+      return reason;
+    })
+    .then(function(response) {
+      expect(response.statusCode).to.equal(500);
+
+      return utils.retry(function() {
+        return agentControls.getSpans()
+        .then(function(spans) {
+          var httpEntrySpan = utils.expectOneMatching(spans, function(span) {
+            expect(span.n).to.equal('node.http.server');
+            expect(span.data.http.method).to.equal('GET');
+            expect(span.data.http.url).to.equal('/error-callback');
+          });
+
+          utils.expectOneMatching(spans, function(span) {
+            expect(span.data.mssql.stmt).to.equal('SELECT name, email FROM non_existing_table');
+            checkMssqlErrorSpan(span, httpEntrySpan, 'Invalid object name \'non_existing_table\'');
+          });
+        });
+      });
+    });
+  });
+
+
+  it('must trace select via promise', function() {
+    return appControls.sendRequest({
+      method: 'GET',
+      path: '/select-promise'
+    })
+    .then(function(response) {
+      expect(response.length).to.equal(1);
+
+      return utils.retry(function() {
+        return agentControls.getSpans()
+        .then(function(spans) {
+          var httpEntrySpan = utils.expectOneMatching(spans, function(span) {
+            expect(span.n).to.equal('node.http.server');
+            expect(span.data.http.method).to.equal('GET');
+            expect(span.data.http.url).to.equal('/select-promise');
+          });
+
+          utils.expectOneMatching(spans, function(span) {
+            checkMssqlSpan(span, httpEntrySpan);
+            expect(span.data.mssql.stmt).to.equal('SELECT GETDATE()');
+          });
+        });
+      });
+    });
+  });
+
+
+  it('must trace errors via promise', function() {
+    return appControls.sendRequest({
+      method: 'GET',
+      path: '/error-promise'
+    })
+    .catch(errors.StatusCodeError, function(reason) {
+      return reason;
+    })
+    .then(function(response) {
+      expect(response.statusCode).to.equal(500);
+
+      return utils.retry(function() {
+        return agentControls.getSpans()
+        .then(function(spans) {
+          var httpEntrySpan = utils.expectOneMatching(spans, function(span) {
+            expect(span.n).to.equal('node.http.server');
+            expect(span.data.http.method).to.equal('GET');
+            expect(span.data.http.url).to.equal('/error-promise');
+          });
+
+          utils.expectOneMatching(spans, function(span) {
+            expect(span.data.mssql.stmt).to.equal('SELECT name, email FROM non_existing_table');
+            checkMssqlErrorSpan(span, httpEntrySpan, 'Invalid object name \'non_existing_table\'');
+          });
+        });
+      });
+    });
+  });
+
+
+  it('must trace standard pool', function() {
+    return appControls.sendRequest({
+      method: 'GET',
+      path: '/select-standard-pool'
+    })
+    .then(function(response) {
+      expect(response.length).to.equal(1);
+
+      return utils.retry(function() {
+        return agentControls.getSpans()
+        .then(function(spans) {
+          var httpEntrySpan = utils.expectOneMatching(spans, function(span) {
+            expect(span.n).to.equal('node.http.server');
+            expect(span.data.http.method).to.equal('GET');
+            expect(span.data.http.url).to.equal('/select-standard-pool');
+          });
+
+          utils.expectOneMatching(spans, function(span) {
+            checkMssqlSpan(span, httpEntrySpan);
+            expect(span.data.mssql.stmt).to.equal('SELECT 1 AS NUMBER');
+          });
+        });
+      });
+    });
+  });
+
+
+  it('must trace custom pool', function() {
+    return appControls.sendRequest({
+      method: 'GET',
+      path: '/select-custom-pool'
+    })
+    .then(function(response) {
+      expect(response.length).to.equal(1);
+
+      return utils.retry(function() {
+        return agentControls.getSpans()
+        .then(function(spans) {
+          var httpEntrySpan = utils.expectOneMatching(spans, function(span) {
+            expect(span.n).to.equal('node.http.server');
+            expect(span.data.http.method).to.equal('GET');
+            expect(span.data.http.url).to.equal('/select-custom-pool');
+          });
+
+          utils.expectOneMatching(spans, function(span) {
+            checkMssqlSpan(span, httpEntrySpan);
+            expect(span.data.mssql.stmt).to.equal('SELECT 1 AS NUMBER');
           });
         });
       });
@@ -108,13 +251,25 @@ describe('tracing/mssql', function() {
     });
   });
 
+
   function checkMssqlSpan(span, parent) {
+    checkMssqlInternally(span, parent, false);
+  }
+
+
+  function checkMssqlErrorSpan(span, parent, stringInError) {
+    checkMssqlInternally(span, parent, true);
+    expect(span.data.mssql.error).to.contain(stringInError);
+  }
+
+
+  function checkMssqlInternally(span, parent, error) {
     expect(span.t).to.equal(parent.t);
     expect(span.p).to.equal(parent.s);
     expect(span.f.e).to.equal(String(appControls.getPid()));
     expect(span.n).to.equal('mssql');
     expect(span.async).to.equal(false);
-    expect(span.error).to.equal(false);
+    expect(span.error).to.equal(error);
     expect(span.data.mssql.host).to.equal('127.0.0.1');
     expect(span.data.mssql.port).to.equal(1433);
     expect(span.data.mssql.user).to.equal('sa');

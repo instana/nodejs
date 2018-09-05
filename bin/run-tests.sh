@@ -17,7 +17,8 @@ export MYSQL_DB="nodedb"
 export POSTGRES_USER="node"
 export POSTGRES_PASSWORD="nodepw"
 export POSTGRES_DB="nodedb"
-export MSSQL_URL="127.0.0.1:1433"
+export MSSQL_HOST="127.0.0.1"
+export MSSQL_PORT="1433"
 export MSSQL_PW="stanCanHazMsSQL1"
 
 npm run test:nolint

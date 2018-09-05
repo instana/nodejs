@@ -16,9 +16,8 @@ exports.init = function() {
 
 function instrumentMssql(mssql) {
   instrumentRequest(mssql.Request);
-  // ConnectionPool: [Function: ConnectionPool],
+
   // Transaction: [Function: Transaction],
-  // Request: [Function: Request],
   // PreparedStatement: [Function: PreparedStatement],
   // RequestError: [Function: RequestError],
   //
@@ -75,30 +74,44 @@ function instrumentedQuery(ctx, originalQueryFunction, argsForOriginalQuery) {
     };
 
     var originalCallback;
-    if (argsForOriginalQuery.length >= 1 && typeof argsForOriginalQuery[1] === 'function') {
+    if (argsForOriginalQuery.length >= 2 && typeof argsForOriginalQuery[1] === 'function') {
       originalCallback = cls.ns.bind(argsForOriginalQuery[1]);
     }
 
-    var wrappedCallback = function(error) {
-      if (error) {
-        span.ec = 1;
-        span.error = true;
-        span.data.pg.error = tracingUtil.getErrorDetails(error);
-      }
-
-      span.d = Date.now() - span.ts;
-      span.transmit();
-
-      if (originalCallback) {
-        return cls.ns.bind(originalCallback).apply(this, arguments);
-      }
-    };
-
     if (originalCallback) {
+      // original call had a callback argument, replace it with our wrapper
+      var wrappedCallback = function(error) {
+        finishSpan(error, span);
+        return cls.ns.bind(originalCallback).apply(this, arguments);
+      };
       argsForOriginalQuery[1] = cls.ns.bind(wrappedCallback);
     }
-    return originalQueryFunction.apply(ctx, argsForOriginalQuery);
+
+    var promise = originalQueryFunction.apply(ctx, argsForOriginalQuery);
+    if (typeof promise.then === 'function') {
+      promise.then(function(value) {
+        finishSpan(null, span);
+        return value;
+      })
+      .catch(function(error) {
+        finishSpan(error, span);
+        return error;
+      });
+    }
+    return promise;
   });
+}
+
+
+function finishSpan(error, span) {
+  if (error) {
+    span.ec = 1;
+    span.error = true;
+    span.data.mssql.error = tracingUtil.getErrorDetails(error);
+  }
+
+  span.d = Date.now() - span.ts;
+  span.transmit();
 }
 
 
