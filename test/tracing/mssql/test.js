@@ -652,6 +652,34 @@ describe('tracing/mssql', function() {
   });
 
 
+  it('must trace cancel', function() {
+    return appControls.sendRequest({
+      method: 'GET',
+      path: '/cancel'
+    })
+    .then(function(response) {
+      expect(response.name).to.equal('RequestError');
+      expect(response.code).to.equal('ECANCEL');
+
+      return utils.retry(function() {
+        return agentControls.getSpans()
+        .then(function(spans) {
+          var httpEntrySpan = utils.expectOneMatching(spans, function(span) {
+            expect(span.n).to.equal('node.http.server');
+            expect(span.data.http.method).to.equal('GET');
+            expect(span.data.http.url).to.equal('/cancel');
+          });
+
+          utils.expectOneMatching(spans, function(span) {
+            checkMssqlErrorSpan(span, httpEntrySpan, 'Canceled.');
+            expect(span.data.mssql.stmt).to.equal('WAITFOR DELAY \'00:00:05\'; SELECT 1 as NUMBER');
+          });
+        });
+      });
+    });
+  });
+
+
   function checkMssqlSpan(span, parent) {
     checkMssqlInternally(span, parent, false);
   }

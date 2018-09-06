@@ -11,11 +11,6 @@ require('../../../')({
 });
 
 
-// TODO:
-// cancel
-// Keeping trace context
-
-
 var bodyParser = require('body-parser');
 var express = require('express');
 var morgan = require('morgan');
@@ -459,7 +454,6 @@ app.get('/streaming', function(req, res) {
 
   request.on('row', function(row) {
     rows.push(row);
-     // Emitted for each row in a recordset
   });
 
   request.on('error', function(err) {
@@ -529,6 +523,20 @@ app.get('/bulk', function(req, res) {
     }
     res.json(results);
   });
+});
+
+
+app.get('/cancel', function(req, res) {
+  var request = new sql.Request();
+  request.query('WAITFOR DELAY \'00:00:05\'; SELECT 1 as NUMBER', function(err, results) {
+    if (err) {
+      console.log(err);
+      return res.json(err);
+    }
+    log('Failed to cancel query.');
+    res.json(results.recordset);
+  });
+  request.cancel();
 });
 
 
