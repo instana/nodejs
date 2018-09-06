@@ -625,6 +625,33 @@ describe('tracing/mssql', function() {
   });
 
 
+  it('must trace bulk operations', function() {
+    return appControls.sendRequest({
+      method: 'GET',
+      path: '/bulk'
+    })
+    .then(function(response) {
+      expect(response.rowsAffected).to.equal(3);
+
+      return utils.retry(function() {
+        return agentControls.getSpans()
+        .then(function(spans) {
+          var httpEntrySpan = utils.expectOneMatching(spans, function(span) {
+            expect(span.n).to.equal('node.http.server');
+            expect(span.data.http.method).to.equal('GET');
+            expect(span.data.http.url).to.equal('/bulk');
+          });
+
+          utils.expectOneMatching(spans, function(span) {
+            checkMssqlSpan(span, httpEntrySpan);
+            expect(span.data.mssql.stmt).to.equal('MSSQL bulk operation');
+          });
+        });
+      });
+    });
+  });
+
+
   function checkMssqlSpan(span, parent) {
     checkMssqlInternally(span, parent, false);
   }

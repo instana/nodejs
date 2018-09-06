@@ -12,7 +12,7 @@ require('../../../')({
 
 
 // TODO:
-// bulk, cancel
+// cancel
 // Keeping trace context
 
 
@@ -510,6 +510,24 @@ app.get('/batch-promise', function(req, res) {
   .catch(function(err) {
     log('Failed to execute batch.', err);
     return res.status(500).json(err);
+  });
+});
+
+
+app.get('/bulk', function(req, res) {
+  var table = new sql.Table('AnotherUserTable');
+  table.create = true;
+  table.columns.add('name', sql.NVarChar(40), { nullable: true });
+  table.columns.add('email', sql.NVarChar(40), { nullable: true });
+  table.rows.add('Domitian', 'domitian@flavius.com');
+  table.rows.add('Nerva', 'nerva@nerva.com');
+  table.rows.add('Trajan ', 'trajan@nerva.com');
+  new sql.Request().bulk(table, function(err, results) {
+    if (err) {
+      log('Failed to execute bulk operation.', err);
+      return res.status(500).json(err);
+    }
+    res.json(results);
   });
 });
 

@@ -22,21 +22,21 @@ function instrumentMssql(mssql) {
 
 
 function instrumentRequest(Request) {
-  // query, execute and batch all have the same signature
-  shimmer.wrap(Request.prototype, 'query', shimRequestMethod);
-  shimmer.wrap(Request.prototype, 'execute', shimRequestMethod);
-  shimmer.wrap(Request.prototype, 'batch', shimRequestMethod);
+  shimmer.wrap(Request.prototype, 'query', shimMethod.bind(null, instrumentedRequestMethod));
+  shimmer.wrap(Request.prototype, 'execute', shimMethod.bind(null, instrumentedRequestMethod));
+  shimmer.wrap(Request.prototype, 'batch', shimMethod.bind(null, instrumentedRequestMethod));
+  shimmer.wrap(Request.prototype, 'bulk', shimMethod.bind(null, instrumentedBulk));
 }
 
 
-function shimRequestMethod(originalFunction) {
+function shimMethod(instrumentedFunction, originalFunction) {
   return function() {
     if (isActive && cls.isTracing()) {
       var originalArgs = new Array(arguments.length);
       for (var i = 0; i < arguments.length; i++) {
         originalArgs[i] = arguments[i];
       }
-      return instrumentedRequestMethod(this, originalFunction, originalArgs);
+      return instrumentedFunction(this, originalFunction, originalArgs);
     }
     return originalFunction.apply(this, arguments);
   };
@@ -44,6 +44,32 @@ function shimRequestMethod(originalFunction) {
 
 
 function instrumentedRequestMethod(ctx, originalFunction, originalArgs) {
+  return instrumentedMethod(
+    ctx,
+    originalFunction,
+    originalArgs,
+    instrumentedRequestMethod,
+    function(args) {
+      return args[0];
+    }
+  );
+}
+
+
+function instrumentedBulk(ctx, originalFunction, originalArgs) {
+  return instrumentedMethod(
+    ctx,
+    originalFunction,
+    originalArgs,
+    instrumentedBulk,
+    function() {
+      return 'MSSQL bulk operation';
+    }
+  );
+}
+
+
+function instrumentedMethod(ctx, originalFunction, originalArgs, stackTraceRef, commandProvider) {
   var parentSpan = cls.getCurrentSpan();
 
   if (cls.isExitSpan(parentSpan)) {
@@ -51,10 +77,10 @@ function instrumentedRequestMethod(ctx, originalFunction, originalArgs) {
   }
 
   var connectionParameters = findConnectionParameters(ctx);
-  var command = originalArgs[0];
+  var command = commandProvider(originalArgs);
   return cls.ns.runAndReturn(function() {
     var span = cls.startSpan('mssql');
-    span.stack = tracingUtil.getStackTrace(instrumentedRequestMethod);
+    span.stack = tracingUtil.getStackTrace(stackTraceRef);
     span.data = {
       mssql: {
         stmt: tracingUtil.shortenDatabaseStatement(command),
@@ -97,7 +123,7 @@ function instrumentedRequestMethod(ctx, originalFunction, originalArgs) {
 
 function instrumentPreparedStatement(PreparedStatement) {
   shimmer.wrap(PreparedStatement.prototype, 'prepare', shimPrepare);
-  shimmer.wrap(PreparedStatement.prototype, 'execute', shimExecute);
+  shimmer.wrap(PreparedStatement.prototype, 'execute', shimMethod.bind(null, instrumentedExecute));
 }
 
 
@@ -119,69 +145,16 @@ function shimPrepare(originalFunction) {
 }
 
 
-function shimExecute(originalFunction) {
-  return function() {
-    if (isActive && cls.isTracing()) {
-      var originalArgs = new Array(arguments.length);
-      for (var i = 0; i < arguments.length; i++) {
-        originalArgs[i] = arguments[i];
-      }
-      return instrumentedExecute(this, originalFunction, originalArgs);
-    }
-    return originalFunction.apply(this, arguments);
-  };
-}
-
-
 function instrumentedExecute(ctx, originalFunction, originalArgs) {
-  var parentSpan = cls.getCurrentSpan();
-
-  if (cls.isExitSpan(parentSpan)) {
-    return originalFunction.apply(ctx, originalArgs);
-  }
-
-  var connectionParameters = findConnectionParameters(ctx);
-  var command = cls.ns.get('com.instana.mssql.stmt');
-  return cls.ns.runAndReturn(function() {
-    var span = cls.startSpan('mssql');
-    span.stack = tracingUtil.getStackTrace(instrumentedExecute);
-    span.data = {
-      mssql: {
-        stmt: tracingUtil.shortenDatabaseStatement(command),
-        host: connectionParameters.host,
-        port: connectionParameters.port,
-        user: connectionParameters.user,
-        db: connectionParameters.db
-      }
-    };
-
-    var originalCallback;
-    if (originalArgs.length >= 2 && typeof originalArgs[1] === 'function') {
-      originalCallback = cls.ns.bind(originalArgs[1]);
+  return instrumentedMethod(
+    ctx,
+    originalFunction,
+    originalArgs,
+    instrumentedExecute,
+    function() {
+      return cls.ns.get('com.instana.mssql.stmt');
     }
-
-    if (originalCallback) {
-      // original call had a callback argument, replace it with our wrapper
-      var wrappedCallback = function(error) {
-        finishSpan(error, span);
-        return cls.ns.bind(originalCallback).apply(this, arguments);
-      };
-      originalArgs[1] = cls.ns.bind(wrappedCallback);
-    }
-
-    var promise = originalFunction.apply(ctx, originalArgs);
-    if (typeof promise.then === 'function') {
-      promise.then(function(value) {
-        finishSpan(null, span);
-        return value;
-      })
-      .catch(function(error) {
-        finishSpan(error, span);
-        return error;
-      });
-    }
-    return promise;
-  });
+  );
 }
 
 
