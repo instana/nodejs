@@ -571,6 +571,60 @@ describe('tracing/mssql', function() {
   });
 
 
+  it('must trace batch with callback', function() {
+    return appControls.sendRequest({
+      method: 'GET',
+      path: '/batch-callback'
+    })
+    .then(function(response) {
+      expect(response.length).to.equal(1);
+
+      return utils.retry(function() {
+        return agentControls.getSpans()
+        .then(function(spans) {
+          var httpEntrySpan = utils.expectOneMatching(spans, function(span) {
+            expect(span.n).to.equal('node.http.server');
+            expect(span.data.http.method).to.equal('GET');
+            expect(span.data.http.url).to.equal('/batch-callback');
+          });
+
+          utils.expectOneMatching(spans, function(span) {
+            checkMssqlSpan(span, httpEntrySpan);
+            expect(span.data.mssql.stmt).to.equal('SELECT GETDATE()');
+          });
+        });
+      });
+    });
+  });
+
+
+  it('must trace batch with promise', function() {
+    return appControls.sendRequest({
+      method: 'GET',
+      path: '/batch-promise'
+    })
+    .then(function(response) {
+      expect(response.length).to.equal(1);
+
+      return utils.retry(function() {
+        return agentControls.getSpans()
+        .then(function(spans) {
+          var httpEntrySpan = utils.expectOneMatching(spans, function(span) {
+            expect(span.n).to.equal('node.http.server');
+            expect(span.data.http.method).to.equal('GET');
+            expect(span.data.http.url).to.equal('/batch-promise');
+          });
+
+          utils.expectOneMatching(spans, function(span) {
+            checkMssqlSpan(span, httpEntrySpan);
+            expect(span.data.mssql.stmt).to.equal('SELECT GETDATE()');
+          });
+        });
+      });
+    });
+  });
+
+
   function checkMssqlSpan(span, parent) {
     checkMssqlInternally(span, parent, false);
   }

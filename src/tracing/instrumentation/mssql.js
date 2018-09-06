@@ -22,27 +22,28 @@ function instrumentMssql(mssql) {
 
 
 function instrumentRequest(Request) {
-  shimmer.wrap(Request.prototype, 'query', shimQuery);
-  // both query and execute have the same signature
-  shimmer.wrap(Request.prototype, 'execute', shimQuery);
+  // query, execute and batch all have the same signature
+  shimmer.wrap(Request.prototype, 'query', shimRequestMethod);
+  shimmer.wrap(Request.prototype, 'execute', shimRequestMethod);
+  shimmer.wrap(Request.prototype, 'batch', shimRequestMethod);
 }
 
 
-function shimQuery(originalFunction) {
+function shimRequestMethod(originalFunction) {
   return function() {
     if (isActive && cls.isTracing()) {
       var originalArgs = new Array(arguments.length);
       for (var i = 0; i < arguments.length; i++) {
         originalArgs[i] = arguments[i];
       }
-      return instrumentedQuery(this, originalFunction, originalArgs);
+      return instrumentedRequestMethod(this, originalFunction, originalArgs);
     }
     return originalFunction.apply(this, arguments);
   };
 }
 
 
-function instrumentedQuery(ctx, originalFunction, originalArgs) {
+function instrumentedRequestMethod(ctx, originalFunction, originalArgs) {
   var parentSpan = cls.getCurrentSpan();
 
   if (cls.isExitSpan(parentSpan)) {
@@ -53,7 +54,7 @@ function instrumentedQuery(ctx, originalFunction, originalArgs) {
   var command = originalArgs[0];
   return cls.ns.runAndReturn(function() {
     var span = cls.startSpan('mssql');
-    span.stack = tracingUtil.getStackTrace(instrumentedQuery);
+    span.stack = tracingUtil.getStackTrace(instrumentedRequestMethod);
     span.data = {
       mssql: {
         stmt: tracingUtil.shortenDatabaseStatement(command),

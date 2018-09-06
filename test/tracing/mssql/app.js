@@ -12,7 +12,7 @@ require('../../../')({
 
 
 // TODO:
-// pipe, batch, bulk, cancel
+// bulk, cancel
 // Keeping trace context
 
 
@@ -487,6 +487,29 @@ app.get('/pipe', function(req, res) {
   stream.on('finish', function() {
     console.log('PIPE FINISH');
     res.end();
+  });
+});
+
+
+app.get('/batch-callback', function(req, res) {
+  new sql.Request().batch('SELECT GETDATE()', function(err, results) {
+    if (err) {
+      log('Failed to execute batch.', err);
+      return res.status(500).json(err);
+    }
+    res.json(results.recordset);
+  });
+});
+
+
+app.get('/batch-promise', function(req, res) {
+  new sql.Request().batch('SELECT GETDATE()')
+  .then(function(results) {
+    res.json(results.recordset);
+  })
+  .catch(function(err) {
+    log('Failed to execute batch.', err);
+    return res.status(500).json(err);
   });
 });
 
