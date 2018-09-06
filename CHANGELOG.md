@@ -1,7 +1,7 @@
 # Changelog
 
 ## Unreleased
- - Add MSSQL (Microsoft SQL Server) instrumentation ([mssql](https://www.npmjs.com/package/mssql)).
+ - Add MSSQL (Microsoft SQL Server) instrumentation (supports [mssql](https://www.npmjs.com/package/mssql), version >= 4 via [tedious driver](https://www.npmjs.com/package/tedious)).
  - Report uncaught exceptions as incidents and via span/trace (disabled by default).
 
 ## 1.45.0
