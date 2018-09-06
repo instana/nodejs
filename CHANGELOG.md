@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased
+ - Support a wider range of command names for identification of PID in parent PID namespace.
  - Report uncaught exceptions as incidents and via span/trace.
 
 ## 1.45.0
