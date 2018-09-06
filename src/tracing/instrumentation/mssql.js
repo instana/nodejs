@@ -19,20 +19,17 @@ function instrumentMssql(mssql) {
   instrumentPreparedStatement(mssql.PreparedStatement);
   instrumentTransaction(mssql.Transaction);
 
-  // RequestError: [Function: RequestError],
-  //
-  // connect: [Function: connect],
-  // close: [Function: close],
   // on: [Function: on],
   // off: [Function: removeListener],
   // removeListener: [Function: removeListener],
-  // query: [Function: query],
   // batch: [Function: batch],
 }
 
 
 function instrumentRequest(Request) {
   shimmer.wrap(Request.prototype, 'query', shimQuery);
+  // both query and execute have the same signature
+  shimmer.wrap(Request.prototype, 'execute', shimQuery);
 }
 
 

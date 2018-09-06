@@ -13,7 +13,6 @@ require('../../../')({
 // TODO:
 // Keeping trace context
 // Streaming
-// Stored Procedures
 // pipe, batch, bulk, cancel
 
 var sql = require('mssql');
@@ -70,6 +69,17 @@ sql
     );
   })
   .then(function() {
+    return new sql.Request().batch(
+      'CREATE PROCEDURE testProcedure' +
+      '    @username nvarchar(40)' +
+      'AS' +
+      '    SET NOCOUNT ON;' +
+      '    SELECT name, email' +
+      '    FROM UserTable' +
+      '    WHERE name = @username;'
+    );
+  })
+  .then(function() {
     ready = true;
   })
   .catch(function(initErr) {
@@ -99,6 +109,17 @@ app.get('/', function(req, res) {
 
 app.get('/select-getdate', function(req, res) {
   new sql.Request().query('SELECT GETDATE()', function(err, results) {
+    if (err) {
+      log('Failed to execute select query.', err);
+      return res.status(500).json(err);
+    }
+    res.json(results.recordset);
+  });
+});
+
+
+app.get('/select-static', function(req, res) {
+  sql.query('SELECT GETDATE()', function(err, results) {
     if (err) {
       log('Failed to execute select query.', err);
       return res.status(500).json(err);
@@ -411,6 +432,19 @@ app.post('/transaction-promise', function(req, res) {
     .catch(function(err) {
       log('Failed to process transaction.', err);
     });
+});
+
+
+app.get('/stored-procedure-callback', function(req, res) {
+  new sql.Request()
+    .input('username', sql.NVarChar(40), 'augustus')
+    .execute('testProcedure', function(err, results) {
+    if (err) {
+      log('Failed to execute stored procedure.', err);
+      return res.status(500).json(err);
+    }
+    res.json(results);
+  });
 });
 
 

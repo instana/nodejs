@@ -49,6 +49,34 @@ describe('tracing/mssql', function() {
   });
 
 
+  it('must trace static dummy select', function() {
+    return appControls.sendRequest({
+      method: 'GET',
+      path: '/select-static'
+    })
+    .then(function(response) {
+      expect(response.length).to.equal(1);
+
+      return utils.retry(function() {
+        return agentControls.getSpans()
+        .then(function(spans) {
+          var httpEntrySpan = utils.expectOneMatching(spans, function(span) {
+            expect(span.n).to.equal('node.http.server');
+            expect(span.data.http.method).to.equal('GET');
+            expect(span.data.http.url).to.equal('/select-static');
+          });
+
+          utils.expectOneMatching(spans, function(span) {
+            checkMssqlSpan(span, httpEntrySpan);
+            expect(span.data.mssql.stmt).to.equal('SELECT GETDATE()');
+          });
+        });
+      });
+    });
+  });
+
+
+
   it('must trace errors', function() {
     return appControls.sendRequest({
       method: 'GET',
@@ -457,6 +485,33 @@ describe('tracing/mssql', function() {
           utils.expectOneMatching(spans, function(span) {
             checkMssqlSpan(span, httpEntry);
             expect(span.data.mssql.stmt).to.equal('SELECT name, email FROM UserTable WHERE name=N\'titus\'');
+          });
+        });
+      });
+    });
+  });
+
+
+  it('must trace stored procedure execution', function() {
+    return appControls.sendRequest({
+      method: 'GET',
+      path: '/stored-procedure-callback'
+    })
+    .then(function(response) {
+      expect(response.recordset).to.exist;
+
+      return utils.retry(function() {
+        return agentControls.getSpans()
+        .then(function(spans) {
+          var httpEntrySpan = utils.expectOneMatching(spans, function(span) {
+            expect(span.n).to.equal('node.http.server');
+            expect(span.data.http.method).to.equal('GET');
+            expect(span.data.http.url).to.equal('/stored-procedure-callback');
+          });
+
+          utils.expectOneMatching(spans, function(span) {
+            checkMssqlSpan(span, httpEntrySpan);
+            expect(span.data.mssql.stmt).to.equal('testProcedure');
           });
         });
       });
