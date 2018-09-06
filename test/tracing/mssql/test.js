@@ -518,7 +518,7 @@ describe('tracing/mssql', function() {
   });
 
 
-  it('must trace streaming API', function() {
+  it('must trace the streaming API', function() {
     return appControls.sendRequest({
       method: 'GET',
       path: '/streaming'
@@ -534,6 +534,31 @@ describe('tracing/mssql', function() {
             expect(span.n).to.equal('node.http.server');
             expect(span.data.http.method).to.equal('GET');
             expect(span.data.http.url).to.equal('/streaming');
+          });
+
+          utils.expectOneMatching(spans, function(span) {
+            checkMssqlSpan(span, httpEntrySpan);
+            expect(span.data.mssql.stmt).to.equal('SELECT name, email FROM UserTable');
+          });
+        });
+      });
+    });
+  });
+
+
+  it('must trace the pipe API', function() {
+    return appControls.sendRequest({
+      method: 'GET',
+      path: '/pipe'
+    })
+    .then(function() {
+      return utils.retry(function() {
+        return agentControls.getSpans()
+        .then(function(spans) {
+          var httpEntrySpan = utils.expectOneMatching(spans, function(span) {
+            expect(span.n).to.equal('node.http.server');
+            expect(span.data.http.method).to.equal('GET');
+            expect(span.data.http.url).to.equal('/pipe');
           });
 
           utils.expectOneMatching(spans, function(span) {

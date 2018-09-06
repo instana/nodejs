@@ -16,10 +16,11 @@ require('../../../')({
 // Keeping trace context
 
 
-var sql = require('mssql');
+var bodyParser = require('body-parser');
 var express = require('express');
 var morgan = require('morgan');
-var bodyParser = require('body-parser');
+var sql = require('mssql');
+var devNull = require('dev-null');
 
 var pool;
 var app = express();
@@ -470,6 +471,22 @@ app.get('/streaming', function(req, res) {
       rows: rows,
       errors: errors
     });
+  });
+});
+
+
+app.get('/pipe', function(req, res) {
+  var request = new sql.Request();
+  var stream = devNull();
+  request.pipe(stream);
+  request.query('SELECT name, email FROM UserTable');
+
+  stream.on('error', function(err) {
+    console.log('PIPE ERR', err);
+  });
+  stream.on('finish', function() {
+    console.log('PIPE FINISH');
+    res.end();
   });
 });
 
