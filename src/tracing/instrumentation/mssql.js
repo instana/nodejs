@@ -16,9 +16,9 @@ exports.init = function() {
 
 function instrumentMssql(mssql) {
   instrumentRequest(mssql.Request);
+  instrumentPreparedStatement(mssql.PreparedStatement);
 
   // Transaction: [Function: Transaction],
-  // PreparedStatement: [Function: PreparedStatement],
   // RequestError: [Function: RequestError],
   //
   // connect: [Function: connect],
@@ -36,30 +36,29 @@ function instrumentRequest(Request) {
 }
 
 
-function shimQuery(original) {
+function shimQuery(originalFunction) {
   return function() {
     if (isActive && cls.isTracing()) {
-      // slightly more performant version of the usual Array.prototype.slice trick.
-      var argsForOriginalQuery = new Array(arguments.length);
+      var originalArgs = new Array(arguments.length);
       for (var i = 0; i < arguments.length; i++) {
-        argsForOriginalQuery[i] = arguments[i];
+        originalArgs[i] = arguments[i];
       }
-      return instrumentedQuery(this, original, argsForOriginalQuery);
+      return instrumentedQuery(this, originalFunction, originalArgs);
     }
-    return original.apply(this, arguments);
+    return originalFunction.apply(this, arguments);
   };
 }
 
 
-function instrumentedQuery(ctx, originalQueryFunction, argsForOriginalQuery) {
+function instrumentedQuery(ctx, originalFunction, originalArgs) {
   var parentSpan = cls.getCurrentSpan();
 
   if (cls.isExitSpan(parentSpan)) {
-    return originalQueryFunction.apply(ctx, argsForOriginalQuery);
+    return originalFunction.apply(ctx, originalArgs);
   }
 
   var connectionParameters = findConnectionParameters(ctx);
-  var command = argsForOriginalQuery[0];
+  var command = originalArgs[0];
   return cls.ns.runAndReturn(function() {
     var span = cls.startSpan('mssql');
     span.stack = tracingUtil.getStackTrace(instrumentedQuery);
@@ -74,8 +73,8 @@ function instrumentedQuery(ctx, originalQueryFunction, argsForOriginalQuery) {
     };
 
     var originalCallback;
-    if (argsForOriginalQuery.length >= 2 && typeof argsForOriginalQuery[1] === 'function') {
-      originalCallback = cls.ns.bind(argsForOriginalQuery[1]);
+    if (originalArgs.length >= 2 && typeof originalArgs[1] === 'function') {
+      originalCallback = cls.ns.bind(originalArgs[1]);
     }
 
     if (originalCallback) {
@@ -84,10 +83,100 @@ function instrumentedQuery(ctx, originalQueryFunction, argsForOriginalQuery) {
         finishSpan(error, span);
         return cls.ns.bind(originalCallback).apply(this, arguments);
       };
-      argsForOriginalQuery[1] = cls.ns.bind(wrappedCallback);
+      originalArgs[1] = cls.ns.bind(wrappedCallback);
     }
 
-    var promise = originalQueryFunction.apply(ctx, argsForOriginalQuery);
+    var promise = originalFunction.apply(ctx, originalArgs);
+    if (typeof promise.then === 'function') {
+      promise.then(function(value) {
+        finishSpan(null, span);
+        return value;
+      })
+      .catch(function(error) {
+        finishSpan(error, span);
+        return error;
+      });
+    }
+    return promise;
+  });
+}
+
+
+function instrumentPreparedStatement(PreparedStatement) {
+  shimmer.wrap(PreparedStatement.prototype, 'prepare', shimPrepare);
+  shimmer.wrap(PreparedStatement.prototype, 'execute', shimExecute);
+}
+
+
+function shimPrepare(originalFunction) {
+  return function() {
+    if (isActive && cls.isTracing()) {
+      var originalArgs = new Array(arguments.length);
+      for (var i = 0; i < arguments.length; i++) {
+        originalArgs[i] = arguments[i];
+      }
+      if (originalArgs.length >= 2 && typeof originalArgs[1] === 'function') {
+        originalArgs[1] = cls.ns.bind(originalArgs[1]);
+      }
+      cls.ns.set('com.instana.mssql.stmt', originalArgs[0]);
+      return originalFunction.apply(this, originalArgs);
+    }
+    return originalFunction.apply(this, arguments);
+  };
+}
+
+
+function shimExecute(originalFunction) {
+  return function() {
+    if (isActive && cls.isTracing()) {
+      var originalArgs = new Array(arguments.length);
+      for (var i = 0; i < arguments.length; i++) {
+        originalArgs[i] = arguments[i];
+      }
+      return instrumentedExecute(this, originalFunction, originalArgs);
+    }
+    return originalFunction.apply(this, arguments);
+  };
+}
+
+
+function instrumentedExecute(ctx, originalFunction, originalArgs) {
+  var parentSpan = cls.getCurrentSpan();
+
+  if (cls.isExitSpan(parentSpan)) {
+    return originalFunction.apply(ctx, originalArgs);
+  }
+
+  var connectionParameters = findConnectionParameters(ctx);
+  var command = cls.ns.get('com.instana.mssql.stmt');
+  return cls.ns.runAndReturn(function() {
+    var span = cls.startSpan('mssql');
+    span.stack = tracingUtil.getStackTrace(instrumentedExecute);
+    span.data = {
+      mssql: {
+        stmt: tracingUtil.shortenDatabaseStatement(command),
+        host: connectionParameters.host,
+        port: connectionParameters.port,
+        user: connectionParameters.user,
+        db: connectionParameters.db
+      }
+    };
+
+    var originalCallback;
+    if (originalArgs.length >= 2 && typeof originalArgs[1] === 'function') {
+      originalCallback = cls.ns.bind(originalArgs[1]);
+    }
+
+    if (originalCallback) {
+      // original call had a callback argument, replace it with our wrapper
+      var wrappedCallback = function(error) {
+        finishSpan(error, span);
+        return cls.ns.bind(originalCallback).apply(this, arguments);
+      };
+      originalArgs[1] = cls.ns.bind(wrappedCallback);
+    }
+
+    var promise = originalFunction.apply(ctx, originalArgs);
     if (typeof promise.then === 'function') {
       promise.then(function(value) {
         finishSpan(null, span);

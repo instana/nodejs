@@ -16,7 +16,6 @@ require('../../../')({
 // Stored Procedures
 // pipe, batch, bulk, cancel
 // Transactions
-// prepared statements
 
 var sql = require('mssql');
 var express = require('express');
@@ -36,7 +35,9 @@ sql.on('error', function(err) {
 var dbHost = process.env.MSSQL_HOST ? process.env.MSSQL_HOST : '127.0.0.1';
 var dbPort = process.env.MSSQL_PORT ? parseInt(process.env.MSSQL_PORT, 10) : 1433;
 var dbUrl = dbHost + ':' + dbPort;
-var initConnectString = 'mssql://sa:' + process.env.MSSQL_PW + '@' + dbUrl + '/tempdb';
+var dbUser = process.env.MSSQL_USER ? process.env.MSSQL_USER : 'sa';
+var dbPassword = process.env.MSSQL_PW ? process.env.MSSQL_PW : 'stanCanHazMsSQL1';
+var initConnectString = 'mssql://' + dbUser + ':' + dbPassword + '@' + dbUrl + '/tempdb';
 var dbName = 'nodejssensor';
 var ready = false;
 
@@ -56,8 +57,8 @@ sql
   })
   .then(function() {
     return sql.connect({
-      user: 'sa',
-      password: process.env.MSSQL_PW,
+      user: dbUser,
+      password: dbPassword,
       server: dbHost,
       port: dbPort,
       database: dbName
@@ -181,6 +182,141 @@ app.get('/select', function(req, res) {
 });
 
 
+app.post('/insert-prepared-callback', function(req, res) {
+  var ps = new sql.PreparedStatement();
+  ps.input('username', sql.NVarChar(40));
+  ps.input('email', sql.NVarChar(40));
+  ps.prepare('INSERT INTO UserTable (name, email) VALUES (@username, @email)', function(err1) {
+    if (err1) {
+      log('Failed to prepare statement.', err1);
+      return res.status(500).json(err1);
+    }
+    ps.execute({
+      username: 'tiberius',
+      email: 'tiberius@claudius.com'
+    }, function(err2, results) {
+      if (err2) {
+        log('Failed to execute prepared insert.', err2);
+        return res.status(500).json(err2);
+      }
+      ps.unprepare(function(err3) {
+        if (err3) {
+          log('Failed to unprepare statement.', err3);
+          return res.status(500).json(err3);
+        }
+        res.json(results);
+      });
+    });
+  });
+});
+
+
+app.post('/insert-prepared-promise', function(req, res) {
+  var ps = new sql.PreparedStatement();
+  ps.input('username', sql.NVarChar(40));
+  ps.input('email', sql.NVarChar(40));
+  var results;
+  return ps.prepare('INSERT INTO UserTable (name, email) VALUES (@username, @email)')
+  .then(function() {
+    return ps.execute({
+      username: 'caligula',
+      email: 'caligula@julioclaudian.com'
+    });
+  })
+  .then(function(_results) {
+    results = _results;
+    return ps.unprepare();
+  })
+  .then(function() {
+     res.json(results);
+  })
+  .catch(function(err) {
+    log('Failed to process prepared statement.', err);
+    ps.unprepare();
+    return res.status(500).json(err);
+  });
+});
+
+
+app.post('/insert-prepared-error-callback', function(req, res) {
+  var ps = new sql.PreparedStatement();
+  ps.input('username', sql.NVarChar(40));
+  ps.input('email', sql.NVarChar(40));
+  ps.prepare('INSERT INTO UserTable (name, email) VALUES (@username, @email)', function(err1) {
+    if (err1) {
+      log('Failed to prepare statement.', err1);
+      return res.status(500).json(err1);
+    }
+    ps.execute({
+      username: 'claudius',
+      email: 'claudius@claudius.com_lets_make_this_longer_than_40_chars'
+    }, function(err2, results) {
+      ps.unprepare(function(err3) {
+        if (err3) {
+          log('Failed to unprepare statement.', err3);
+          return res.status(500).json(err3);
+        }
+        if (!err2) {
+          log('Failed to fail on execute');
+          return res.json(results);
+        } else {
+          res.status(500).json(err2);
+        }
+      });
+    });
+  });
+});
+
+
+app.post('/insert-prepared-error-promise', function(req, res) {
+  var ps = new sql.PreparedStatement();
+  ps.input('username', sql.NVarChar(40));
+  ps.input('email', sql.NVarChar(40));
+  var results;
+  return ps.prepare('INSERT INTO UserTable (name, email) VALUES (@username, @email)')
+  .then(function() {
+    return ps.execute({
+      username: 'nero',
+      email: 'nero@julioclaudian.com_lets_make_this_longer_than_40_chars'
+    });
+  })
+  .then(function(_results) {
+    results = _results;
+    return ps.unprepare();
+  })
+  .then(function() {
+    log('Failed to fail prepared statement.');
+    res.json(results);
+  })
+  .catch(function(err) {
+    ps.unprepare();
+    return res.status(500).json(err);
+  });
+});
+
+
+app.get('/select-by-name/:username', function(req, res) {
+  var ps = new sql.PreparedStatement();
+  ps.input('username', sql.NVarChar(40));
+  var results;
+  return ps.prepare('SELECT name, email FROM UserTable WHERE name=@username')
+  .then(function() {
+    return ps.execute({ username: req.params.username });
+  })
+  .then(function(_results) {
+    results = _results;
+    return ps.unprepare();
+  })
+  .then(function() {
+    res.json(results.recordset[0].email);
+  })
+  .catch(function(err) {
+    log('Failed to process prepared select statement.', err);
+    return res.status(500).json(err);
+  });
+});
+
+
 app.get('/select-standard-pool', function(req, res) {
   pool.request().query('SELECT 1 AS NUMBER', function(err, results) {
     if (err) {
@@ -194,8 +330,8 @@ app.get('/select-standard-pool', function(req, res) {
 
 app.get('/select-custom-pool', function(req, res) {
   var customPool = new sql.ConnectionPool({
-    user: 'sa',
-    password: process.env.MSSQL_PW,
+    user: dbUser,
+    password: dbPassword,
     server: dbHost,
     port: dbPort,
     database: dbName

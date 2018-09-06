@@ -19,6 +19,7 @@ export POSTGRES_PASSWORD="nodepw"
 export POSTGRES_DB="nodedb"
 export MSSQL_HOST="127.0.0.1"
 export MSSQL_PORT="1433"
+export MSSQL_USER="sa"
 export MSSQL_PW="stanCanHazMsSQL1"
 
 npm run test:nolint

@@ -70,8 +70,8 @@ describe('tracing/mssql', function() {
           });
 
           utils.expectOneMatching(spans, function(span) {
-            expect(span.data.mssql.stmt).to.equal('SELECT name, email FROM non_existing_table');
             checkMssqlErrorSpan(span, httpEntrySpan, 'Invalid object name \'non_existing_table\'');
+            expect(span.data.mssql.stmt).to.equal('SELECT name, email FROM non_existing_table');
           });
         });
       });
@@ -127,8 +127,8 @@ describe('tracing/mssql', function() {
           });
 
           utils.expectOneMatching(spans, function(span) {
-            expect(span.data.mssql.stmt).to.equal('SELECT name, email FROM non_existing_table');
             checkMssqlErrorSpan(span, httpEntrySpan, 'Invalid object name \'non_existing_table\'');
+            expect(span.data.mssql.stmt).to.equal('SELECT name, email FROM non_existing_table');
           });
         });
       });
@@ -233,18 +233,168 @@ describe('tracing/mssql', function() {
           });
 
           utils.expectOneMatching(spans, function(span) {
+            checkMssqlSpan(span, firstWriteEntry);
             expect(span.data.mssql.stmt).to.equal(
               'INSERT INTO UserTable (name, email) VALUES (N\'gaius\', N\'gaius@julius.com\')'
             );
-            checkMssqlSpan(span, firstWriteEntry);
           });
           utils.expectOneMatching(spans, function(span) {
-            expect(span.data.mssql.stmt).to.equal('INSERT INTO UserTable (name, email) VALUES (@username, @email)');
             checkMssqlSpan(span, secondWriteEntry);
+            expect(span.data.mssql.stmt).to.equal('INSERT INTO UserTable (name, email) VALUES (@username, @email)');
           });
           utils.expectOneMatching(spans, function(span) {
-            expect(span.data.mssql.stmt).to.equal('SELECT name, email FROM UserTable');
             checkMssqlSpan(span, readEntry);
+            expect(span.data.mssql.stmt).to.equal('SELECT name, email FROM UserTable');
+          });
+        });
+      });
+    });
+  });
+
+
+  it('must trace prepared statements via callback', function() {
+    return appControls.sendRequest({
+      method: 'POST',
+      path: '/insert-prepared-callback'
+    })
+    .then(function() {
+      return appControls.sendRequest({
+        method: 'GET',
+        path: '/select-by-name/tiberius'
+      });
+    })
+    .then(function(response) {
+      expect(response).to.equal('tiberius@claudius.com');
+      return utils.retry(function() {
+        return agentControls.getSpans()
+        .then(function(spans) {
+          var writeEntry = utils.expectOneMatching(spans, function(span) {
+            expect(span.n).to.equal('node.http.server');
+            expect(span.data.http.method).to.equal('POST');
+            expect(span.data.http.url).to.equal('/insert-prepared-callback');
+          });
+          var readEntry = utils.expectOneMatching(spans, function(span) {
+            expect(span.n).to.equal('node.http.server');
+            expect(span.data.http.method).to.equal('GET');
+            expect(span.data.http.url).to.equal('/select-by-name/tiberius');
+          });
+
+          utils.expectOneMatching(spans, function(span) {
+            checkMssqlSpan(span, writeEntry);
+            expect(span.data.mssql.stmt).to.equal(
+              'INSERT INTO UserTable (name, email) VALUES (@username, @email)'
+            );
+          });
+          utils.expectOneMatching(spans, function(span) {
+            checkMssqlSpan(span, readEntry);
+            expect(span.data.mssql.stmt).to.equal('SELECT name, email FROM UserTable WHERE name=@username');
+          });
+        });
+      });
+    });
+  });
+
+
+  it('must trace prepared statements via promise', function() {
+    return appControls.sendRequest({
+      method: 'POST',
+      path: '/insert-prepared-promise'
+    })
+    .then(function() {
+      return appControls.sendRequest({
+        method: 'GET',
+        path: '/select-by-name/caligula'
+      });
+    })
+    .then(function(response) {
+      expect(response).to.equal('caligula@julioclaudian.com');
+      return utils.retry(function() {
+        return agentControls.getSpans()
+        .then(function(spans) {
+          var writeEntry = utils.expectOneMatching(spans, function(span) {
+            expect(span.n).to.equal('node.http.server');
+            expect(span.data.http.method).to.equal('POST');
+            expect(span.data.http.url).to.equal('/insert-prepared-promise');
+          });
+          var readEntry = utils.expectOneMatching(spans, function(span) {
+            expect(span.n).to.equal('node.http.server');
+            expect(span.data.http.method).to.equal('GET');
+            expect(span.data.http.url).to.equal('/select-by-name/caligula');
+          });
+
+          utils.expectOneMatching(spans, function(span) {
+            checkMssqlSpan(span, writeEntry);
+            expect(span.data.mssql.stmt).to.equal(
+              'INSERT INTO UserTable (name, email) VALUES (@username, @email)'
+            );
+          });
+          utils.expectOneMatching(spans, function(span) {
+            checkMssqlSpan(span, readEntry);
+            expect(span.data.mssql.stmt).to.equal('SELECT name, email FROM UserTable WHERE name=@username');
+          });
+        });
+      });
+    });
+  });
+
+
+  it('must trace errors in prepared statements via callback', function() {
+    return appControls.sendRequest({
+      method: 'POST',
+      path: '/insert-prepared-error-callback'
+    })
+    .catch(errors.StatusCodeError, function(reason) {
+      return reason;
+    })
+   .then(function(response) {
+      expect(response.statusCode).to.equal(500);
+      return utils.retry(function() {
+        return agentControls.getSpans()
+        .then(function(spans) {
+          var writeEntry = utils.expectOneMatching(spans, function(span) {
+            expect(span.n).to.equal('node.http.server');
+            expect(span.data.http.method).to.equal('POST');
+            expect(span.data.http.url).to.equal('/insert-prepared-error-callback');
+          });
+          utils.expectOneMatching(spans, function(span) {
+            checkMssqlErrorSpan(span, writeEntry,
+              'The incoming tabular data stream (TDS) remote procedure call (RPC) protocol stream is incorrect. ' +
+              'Parameter 3 ("@email"): Data type 0xE7 has an invalid data length or metadata length.');
+            expect(span.data.mssql.stmt).to.equal(
+              'INSERT INTO UserTable (name, email) VALUES (@username, @email)'
+            );
+          });
+        });
+      });
+    });
+  });
+
+
+  it('must trace errors in prepared statements via promise', function() {
+    return appControls.sendRequest({
+      method: 'POST',
+      path: '/insert-prepared-error-promise'
+    })
+    .catch(errors.StatusCodeError, function(reason) {
+      return reason;
+    })
+   .then(function(response) {
+      expect(response.statusCode).to.equal(500);
+      return utils.retry(function() {
+        return agentControls.getSpans()
+        .then(function(spans) {
+          var writeEntry = utils.expectOneMatching(spans, function(span) {
+            expect(span.n).to.equal('node.http.server');
+            expect(span.data.http.method).to.equal('POST');
+            expect(span.data.http.url).to.equal('/insert-prepared-error-promise');
+          });
+          utils.expectOneMatching(spans, function(span) {
+            checkMssqlErrorSpan(span, writeEntry,
+              'The incoming tabular data stream (TDS) remote procedure call (RPC) protocol stream is incorrect. ' +
+              'Parameter 3 ("@email"): Data type 0xE7 has an invalid data length or metadata length.');
+            expect(span.data.mssql.stmt).to.equal(
+              'INSERT INTO UserTable (name, email) VALUES (@username, @email)'
+            );
           });
         });
       });
@@ -270,6 +420,8 @@ describe('tracing/mssql', function() {
     expect(span.n).to.equal('mssql');
     expect(span.async).to.equal(false);
     expect(span.error).to.equal(error);
+    expect(span.data).to.exist;
+    expect(span.data.mssql).to.exist;
     expect(span.data.mssql.host).to.equal('127.0.0.1');
     expect(span.data.mssql.port).to.equal(1433);
     expect(span.data.mssql.user).to.equal('sa');
