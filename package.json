@@ -50,12 +50,14 @@
     "opentracing": "^0.14.1",
     "redis-commands": "^1.3.1",
     "semver": "5.4.1",
+    "serialize-error": "^2.1.0",
     "shimmer": "1.1.0"
   },
   "optionalDependencies": {
+    "@risingstack/v8-profiler": "5.7.11",
     "event-loop-stats": "1.0.0",
     "gcstats.js": "1.0.0",
-    "@risingstack/v8-profiler": "5.7.11"
+    "netlinkwrapper": "1.1.0"
   },
   "devDependencies": {
     "admin": "^1.4.0",

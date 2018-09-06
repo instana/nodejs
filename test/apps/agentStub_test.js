@@ -31,7 +31,8 @@ describe('agentStub', function() {
         expect(data).to.deep.equal({
           runtime: [],
           traces: [],
-          responses: []
+          responses: [],
+          events: []
         });
       });
   });
