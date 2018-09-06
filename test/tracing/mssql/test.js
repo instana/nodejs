@@ -402,6 +402,68 @@ describe('tracing/mssql', function() {
   });
 
 
+  it('must trace transactions with callbacks', function() {
+    return appControls.sendRequest({
+      method: 'POST',
+      path: '/transaction-callback'
+    })
+    .then(function(response) {
+      expect(response).to.equal('vespasian@flavius.com');
+      return utils.retry(function() {
+        return agentControls.getSpans()
+        .then(function(spans) {
+          var httpEntry = utils.expectOneMatching(spans, function(span) {
+            expect(span.n).to.equal('node.http.server');
+            expect(span.data.http.method).to.equal('POST');
+            expect(span.data.http.url).to.equal('/transaction-callback');
+          });
+          utils.expectOneMatching(spans, function(span) {
+            checkMssqlSpan(span, httpEntry);
+            expect(span.data.mssql.stmt).to.equal(
+              'INSERT INTO UserTable (name, email) VALUES (@username, @email)'
+            );
+          });
+          utils.expectOneMatching(spans, function(span) {
+            checkMssqlSpan(span, httpEntry);
+            expect(span.data.mssql.stmt).to.equal('SELECT name, email FROM UserTable WHERE name=N\'vespasian\'');
+          });
+        });
+      });
+    });
+  });
+
+
+  it('must trace transactions with promises', function() {
+    return appControls.sendRequest({
+      method: 'POST',
+      path: '/transaction-promise'
+    })
+    .then(function(response) {
+      expect(response).to.equal('titus@flavius.com');
+      return utils.retry(function() {
+        return agentControls.getSpans()
+        .then(function(spans) {
+          var httpEntry = utils.expectOneMatching(spans, function(span) {
+            expect(span.n).to.equal('node.http.server');
+            expect(span.data.http.method).to.equal('POST');
+            expect(span.data.http.url).to.equal('/transaction-promise');
+          });
+          utils.expectOneMatching(spans, function(span) {
+            checkMssqlSpan(span, httpEntry);
+            expect(span.data.mssql.stmt).to.equal(
+              'INSERT INTO UserTable (name, email) VALUES (@username, @email)'
+            );
+          });
+          utils.expectOneMatching(spans, function(span) {
+            checkMssqlSpan(span, httpEntry);
+            expect(span.data.mssql.stmt).to.equal('SELECT name, email FROM UserTable WHERE name=N\'titus\'');
+          });
+        });
+      });
+    });
+  });
+
+
   function checkMssqlSpan(span, parent) {
     checkMssqlInternally(span, parent, false);
   }

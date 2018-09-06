@@ -17,8 +17,8 @@ exports.init = function() {
 function instrumentMssql(mssql) {
   instrumentRequest(mssql.Request);
   instrumentPreparedStatement(mssql.PreparedStatement);
+  instrumentTransaction(mssql.Transaction);
 
-  // Transaction: [Function: Transaction],
   // RequestError: [Function: RequestError],
   //
   // connect: [Function: connect],
@@ -192,6 +192,30 @@ function instrumentedExecute(ctx, originalFunction, originalArgs) {
 }
 
 
+function instrumentTransaction(Transaction) {
+  shimmer.wrap(Transaction.prototype, 'begin', shimBeginTransaction);
+}
+
+
+function shimBeginTransaction(originalFunction) {
+  return function() {
+    if (isActive && cls.isTracing()) {
+      var originalArgs = new Array(arguments.length);
+      for (var i = 0; i < arguments.length; i++) {
+        originalArgs[i] = arguments[i];
+      }
+      if (typeof originalArgs[1] === 'function') {
+        originalArgs[1] = cls.ns.bind(originalArgs[1]);
+      } else if (typeof originalArgs[0] === 'function') {
+        originalArgs[0] = cls.ns.bind(originalArgs[0]);
+      }
+      return originalFunction.apply(this, originalArgs);
+    }
+    return originalFunction.apply(this, arguments);
+  };
+}
+
+
 function finishSpan(error, span) {
   if (error) {
     span.ec = 1;
@@ -205,23 +229,25 @@ function finishSpan(error, span) {
 
 
 function findConnectionParameters(ctx) {
-  if (ctx.parent &&
-      ctx.parent.config) {
+  if (ctx.parent && ctx.parent.config && ctx.parent.config.server) {
     return {
       host: ctx.parent.config.server,
       port: ctx.parent.config.port,
       user: ctx.parent.config.user,
       db: ctx.parent.config.database
     };
+  } else if (ctx.parent) {
+    // search the tree of Request, Transaction, ... upwards recursively for a connection config
+    return findConnectionParameters(ctx.parent);
+  } else {
+    // Fallback if we can't find the connection parameters.
+    return {
+      host: '',
+      port: -1,
+      user: '',
+      db: '',
+    };
   }
-
-  // Fallback if we can't find the connection parameters.
-  return {
-    host: '',
-    port: -1,
-    user: '',
-    db: '',
-  };
 }
 
 

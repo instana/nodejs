@@ -15,7 +15,6 @@ require('../../../')({
 // Streaming
 // Stored Procedures
 // pipe, batch, bulk, cancel
-// Transactions
 
 var sql = require('mssql');
 var express = require('express');
@@ -350,6 +349,68 @@ app.get('/select-custom-pool', function(req, res) {
         return res.json(results.recordset);
       });
   });
+});
+
+
+app.post('/transaction-callback', function(req, res) {
+  var transaction = new sql.Transaction();
+  transaction.begin(function(err1) {
+    if (err1) {
+      log('Failed to begin transaction.', err1);
+      return res.status(500).json(err1);
+    }
+    new sql.Request(transaction)
+      .input('username', sql.NVarChar(40), 'vespasian')
+      .input('email', sql.NVarChar(40), 'vespasian@flavius.com')
+      .query('INSERT INTO UserTable (name, email) VALUES (@username, @email)', function(err2) {
+      if (err2) {
+        log('Failed to execute insert.', err2);
+        return res.status(500).json(err2);
+      }
+      new sql.Request(transaction).query('SELECT name, email FROM UserTable WHERE name=N\'vespasian\'',
+          function(err3, results) {
+        if (err3) {
+          log('Failed to execute insert.', err3);
+          return res.status(500).json(err3);
+        }
+        transaction.commit(function(err4) {
+          if (err4) {
+            log('Failed to commit transaction.', err4);
+            return res.status(500).json(err4);
+          }
+          res.json(results.recordset[0].email);
+        });
+      });
+    });
+  });
+});
+
+
+app.post('/transaction-promise', function(req, res) {
+  var transaction = new sql.Transaction();
+  var results;
+  transaction.begin()
+    .then(function() {
+      return new sql.Request(transaction)
+        .input('username', sql.NVarChar(40), 'titus')
+        .input('email', sql.NVarChar(40), 'titus@flavius.com')
+        .query('INSERT INTO UserTable (name, email) VALUES (@username, @email)');
+    })
+    .then(function() {
+      return new sql.Request(transaction).query('SELECT name, email FROM UserTable WHERE name=N\'titus\'');
+    })
+    .then(function(_results) {
+      results = _results;
+    })
+    .then(function() {
+      return transaction.commit();
+    })
+    .then(function() {
+      res.json(results.recordset[0].email);
+    })
+    .catch(function(err) {
+      log('Failed to process transaction.', err);
+    });
 });
 
 
