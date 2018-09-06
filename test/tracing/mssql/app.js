@@ -10,10 +10,11 @@ require('../../../')({
   }
 });
 
+
 // TODO:
-// Keeping trace context
-// Streaming
 // pipe, batch, bulk, cancel
+// Keeping trace context
+
 
 var sql = require('mssql');
 var express = require('express');
@@ -444,6 +445,31 @@ app.get('/stored-procedure-callback', function(req, res) {
       return res.status(500).json(err);
     }
     res.json(results);
+  });
+});
+
+
+app.get('/streaming', function(req, res) {
+  var request = new sql.Request();
+  var rows = [];
+  var errors = [];
+  request.stream = true;
+  request.query('SELECT name, email FROM UserTable');
+
+  request.on('row', function(row) {
+    rows.push(row);
+     // Emitted for each row in a recordset
+  });
+
+  request.on('error', function(err) {
+    errors.push(err);
+  });
+
+  request.on('done', function() {
+    res.json({
+      rows: rows,
+      errors: errors
+    });
   });
 });
 

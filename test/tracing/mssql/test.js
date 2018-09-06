@@ -76,7 +76,6 @@ describe('tracing/mssql', function() {
   });
 
 
-
   it('must trace errors', function() {
     return appControls.sendRequest({
       method: 'GET',
@@ -512,6 +511,34 @@ describe('tracing/mssql', function() {
           utils.expectOneMatching(spans, function(span) {
             checkMssqlSpan(span, httpEntrySpan);
             expect(span.data.mssql.stmt).to.equal('testProcedure');
+          });
+        });
+      });
+    });
+  });
+
+
+  it('must trace streaming API', function() {
+    return appControls.sendRequest({
+      method: 'GET',
+      path: '/streaming'
+    })
+    .then(function(response) {
+      expect(response.rows).to.exist;
+      expect(response.errors.length).to.equal(0);
+
+      return utils.retry(function() {
+        return agentControls.getSpans()
+        .then(function(spans) {
+          var httpEntrySpan = utils.expectOneMatching(spans, function(span) {
+            expect(span.n).to.equal('node.http.server');
+            expect(span.data.http.method).to.equal('GET');
+            expect(span.data.http.url).to.equal('/streaming');
+          });
+
+          utils.expectOneMatching(spans, function(span) {
+            checkMssqlSpan(span, httpEntrySpan);
+            expect(span.data.mssql.stmt).to.equal('SELECT name, email FROM UserTable');
           });
         });
       });

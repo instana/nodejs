@@ -18,11 +18,6 @@ function instrumentMssql(mssql) {
   instrumentRequest(mssql.Request);
   instrumentPreparedStatement(mssql.PreparedStatement);
   instrumentTransaction(mssql.Transaction);
-
-  // on: [Function: on],
-  // off: [Function: removeListener],
-  // removeListener: [Function: removeListener],
-  // batch: [Function: batch],
 }
 
 
