@@ -1,8 +1,8 @@
 # Changelog
 
-## Unreleased
+## 1.46.0
  - Support a wider range of command names for identification of PID in parent PID namespace.
- - Report uncaught exceptions as incidents and via span/trace.
+ - Report uncaught exceptions as incidents and via span/trace (disabled by default).
 
 ## 1.45.0
  - Record `https` client calls.
