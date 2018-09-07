@@ -694,6 +694,7 @@ describe('tracing/mssql', function() {
   function checkMssqlInternally(span, parent, error) {
     expect(span.t).to.equal(parent.t);
     expect(span.p).to.equal(parent.s);
+    expect(span.k).to.equal(2);
     expect(span.f.e).to.equal(String(appControls.getPid()));
     expect(span.n).to.equal('mssql');
     expect(span.async).to.equal(false);
