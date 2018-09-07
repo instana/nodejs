@@ -81,6 +81,16 @@ describe('pidStore', function() {
     expect(pidStore.pid).to.equal(19841);
   });
 
+  it('should accept wider range of command names', function() {
+    readFileSync.returns(
+      'ui-client.sh (105065, #threads: 1)\n' +
+      '-------------------------------------------------------------------\n' +
+      'se.exec_start                                :    1093303068.953905'
+    );
+    doRequire();
+    expect(pidStore.pid).to.equal(105065);
+  });
+
   it('should not rely on specific command name', function() {
     readFileSync.returns('ddasdasd\n_-0918log-ng (1941, #threads: 1)\n§"!?=joidsajio90\n312903i .-.d-"');
     doRequire();

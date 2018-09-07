@@ -2,6 +2,9 @@
 
 ## Unreleased
  - Add MSSQL (Microsoft SQL Server) instrumentation (supports [mssql](https://www.npmjs.com/package/mssql), version >= 4 via [tedious driver](https://www.npmjs.com/package/tedious)).
+
+## 1.46.0
+ - Support a wider range of command names for identification of PID in parent PID namespace.
  - Report uncaught exceptions as incidents and via span/trace (disabled by default).
 
 ## 1.45.0
