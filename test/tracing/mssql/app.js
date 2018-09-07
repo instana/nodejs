@@ -34,6 +34,7 @@ var dbUser = process.env.MSSQL_USER ? process.env.MSSQL_USER : 'sa';
 var dbPassword = process.env.MSSQL_PW ? process.env.MSSQL_PW : 'stanCanHazMsSQL1';
 var initConnectString = 'mssql://' + dbUser + ':' + dbPassword + '@' + dbUrl + '/tempdb';
 var dbName = 'nodejssensor';
+var preparedStatementGlobal = new sql.PreparedStatement();
 var ready = false;
 
 
@@ -75,6 +76,12 @@ sql
       '    FROM UserTable' +
       '    WHERE name = @username;'
     );
+  })
+  .then(function() {
+    preparedStatementGlobal = new sql.PreparedStatement();
+    preparedStatementGlobal.input('username', sql.NVarChar(40));
+    preparedStatementGlobal.input('email', sql.NVarChar(40));
+    return preparedStatementGlobal.prepare('INSERT INTO UserTable (name, email) VALUES (@username, @email)');
   })
   .then(function() {
     ready = true;
@@ -229,27 +236,15 @@ app.post('/insert-prepared-callback', function(req, res) {
 
 
 app.post('/insert-prepared-promise', function(req, res) {
-  var ps = new sql.PreparedStatement();
-  ps.input('username', sql.NVarChar(40));
-  ps.input('email', sql.NVarChar(40));
-  var results;
-  return ps.prepare('INSERT INTO UserTable (name, email) VALUES (@username, @email)')
-  .then(function() {
-    return ps.execute({
-      username: 'caligula',
-      email: 'caligula@julioclaudian.com'
-    });
+  preparedStatementGlobal.execute({
+    username: 'caligula',
+    email: 'caligula@julioclaudian.com'
   })
-  .then(function(_results) {
-    results = _results;
-    return ps.unprepare();
-  })
-  .then(function() {
-     res.json(results);
+  .then(function(results) {
+    res.json(results);
   })
   .catch(function(err) {
     log('Failed to process prepared statement.', err);
-    ps.unprepare();
     return res.status(500).json(err);
   });
 });

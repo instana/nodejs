@@ -129,7 +129,9 @@ function instrumentPreparedStatement(PreparedStatement) {
 
 function shimPrepare(originalFunction) {
   return function() {
-    if (isActive && cls.isTracing()) {
+    // Statements can be prepared globally at application startup, there is not necessarily any HTTP request active, so
+    // we explicitly do not check for cls.isTracing() here.
+    if (isActive) {
       var originalArgs = new Array(arguments.length);
       for (var i = 0; i < arguments.length; i++) {
         originalArgs[i] = arguments[i];
@@ -137,7 +139,8 @@ function shimPrepare(originalFunction) {
       if (originalArgs.length >= 2 && typeof originalArgs[1] === 'function') {
         originalArgs[1] = cls.ns.bind(originalArgs[1]);
       }
-      cls.ns.set('com.instana.mssql.stmt', originalArgs[0]);
+      // Attach the statement to the PreparedStatement object so that we can add it to the span when execute is called.
+      this.__instanaStatement = originalArgs[0];
       return originalFunction.apply(this, originalArgs);
     }
     return originalFunction.apply(this, arguments);
@@ -152,7 +155,7 @@ function instrumentedExecute(ctx, originalFunction, originalArgs) {
     originalArgs,
     instrumentedExecute,
     function() {
-      return cls.ns.get('com.instana.mssql.stmt');
+      return ctx.__instanaStatement;
     }
   );
 }
