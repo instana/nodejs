@@ -1,5 +1,8 @@
 # Changelog
 
+## Unreleased
+ - Tracing support for [mongodb](https://www.npmjs.com/package/mongodb) version >= 3.0.6.
+
 ## 1.46.0
  - Support a wider range of command names for identification of PID in parent PID namespace.
  - Report uncaught exceptions as incidents and via span/trace (disabled by default).

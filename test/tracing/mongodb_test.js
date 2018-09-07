@@ -13,7 +13,6 @@ describe('tracing/mongodb', function() {
     return;
   }
 
-  // controls require features that aren't available in early Node.js versions
   var expressMongodbControls = require('../apps/expressMongodbControls');
   var agentStubControls = require('../apps/agentStubControls');
 
@@ -52,6 +51,8 @@ describe('tracing/mongodb', function() {
             expect(span.f.e).to.equal(String(expressMongodbControls.getPid()));
             expect(span.async).to.equal(false);
             expect(span.error).to.equal(false);
+            expect(span.data.peer.hostname).to.equal('127.0.0.1');
+            expect(span.data.peer.port).to.equal(27017);
             expect(span.data.mongo.command).to.equal('insert');
             expect(span.data.mongo.service).to.equal(process.env.MONGODB);
             expect(span.data.mongo.namespace).to.equal('myproject.mydocs');
@@ -87,6 +88,8 @@ describe('tracing/mongodb', function() {
             expect(span.f.e).to.equal(String(expressMongodbControls.getPid()));
             expect(span.async).to.equal(false);
             expect(span.error).to.equal(false);
+            expect(span.data.peer.hostname).to.equal('127.0.0.1');
+            expect(span.data.peer.port).to.equal(27017);
             expect(span.data.mongo.command).to.equal('find');
             expect(span.data.mongo.service).to.equal(process.env.MONGODB);
             expect(span.data.mongo.namespace).to.equal('myproject.mydocs');
@@ -99,7 +102,9 @@ describe('tracing/mongodb', function() {
     });
   });
 
-  it('must trace find requests with cursors', function() {
+  // correlating multiple operations (bulk writes, find with getMore) is broken in mongodb APM support since
+  // version 3.0.6, see https://groups.google.com/forum/#!topic/node-mongodb-native/uBae-HO0zw8
+  it.skip('must trace find requests with cursors', function() {
     return Promise.all(_.range(10)
     .map(function(i) {
       return expressMongodbControls.sendRequest({
@@ -139,6 +144,8 @@ describe('tracing/mongodb', function() {
             expect(span.f.e).to.equal(String(expressMongodbControls.getPid()));
             expect(span.async).to.equal(false);
             expect(span.error).to.equal(false);
+            expect(span.data.peer.hostname).to.equal('127.0.0.1');
+            expect(span.data.peer.port).to.equal(27017);
             expect(span.data.mongo.command).to.equal('find');
             expect(span.data.mongo.service).to.equal(process.env.MONGODB);
             expect(span.data.mongo.namespace).to.equal('myproject.mydocs');
@@ -152,6 +159,8 @@ describe('tracing/mongodb', function() {
             expect(span.f.e).to.equal(String(expressMongodbControls.getPid()));
             expect(span.async).to.equal(false);
             expect(span.error).to.equal(false);
+            expect(span.data.peer.hostname).to.equal('127.0.0.1');
+            expect(span.data.peer.port).to.equal(27017);
             expect(span.data.mongo.command).to.equal('getMore');
             expect(span.data.mongo.service).to.equal(process.env.MONGODB);
             expect(span.data.mongo.namespace).to.equal('myproject.mydocs');
