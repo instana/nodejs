@@ -8,7 +8,15 @@ var currentRootSpanKey = exports.currentRootSpanKey = 'com.instana.rootSpan';
 var currentSpanKey = exports.currentSpanKey = 'com.instana.span';
 var tracingLevelKey = exports.tracingLevelKey = 'com.instana.tl';
 
-var exitSpans = ['node.http.client', 'elasticsearch', 'mongo', 'mysql', 'postgres', 'redis'];
+var exitSpans = [
+  'elasticsearch',
+  'mongo',
+  'mysql',
+  'mssql',
+  'node.http.client',
+  'postgres',
+  'redis'
+];
 var entrySpans = ['node.http.server'];
 
 /*
