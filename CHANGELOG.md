@@ -2,6 +2,7 @@
 
 ## Unreleased
  - Add MSSQL (Microsoft SQL Server) instrumentation (supports [mssql](https://www.npmjs.com/package/mssql), version >= 4 via [tedious driver](https://www.npmjs.com/package/tedious)).
+ - Tracing support for [mongodb](https://www.npmjs.com/package/mongodb) version >= 3.0.6.
 
 ## 1.46.0
  - Support a wider range of command names for identification of PID in parent PID namespace.
