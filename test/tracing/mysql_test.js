@@ -23,6 +23,7 @@ describe('tracing/mysql', function() {
     expressMysqlControls.registerTestHooks();
     test();
   });
+
   describe('mysql2', function() {
     expressMysqlControls.registerTestHooks({
       useMysql2: true
@@ -37,10 +38,12 @@ describe('tracing/mysql', function() {
     });
     test();
   });
+
   function test() {
     beforeEach(function() {
       return agentStubControls.waitUntilAppIsCompletelyInitialized(expressMysqlControls.getPid());
     });
+
     it('must trace queries', function() {
       return expressMysqlControls.addValue(42)
         .then(function() {
@@ -118,6 +121,57 @@ describe('tracing/mysql', function() {
                   expect(span.data.mysql.port).to.equal(Number(process.env.MYSQL_PORT));
                   expect(span.data.mysql.user).to.equal(process.env.MYSQL_USER);
                   expect(span.data.mysql.db).to.equal(process.env.MYSQL_DB);
+                });
+              });
+          });
+        });
+    });
+
+    it('must keep the tracing context', function() {
+      return expressMysqlControls.addValueAndDoCall(1302)
+        .then(function(spanContext) {
+          expect(spanContext).to.exist;
+          spanContext = JSON.parse(spanContext);
+          expect(spanContext.s).to.exist;
+          expect(spanContext.t).to.exist;
+
+          return utils.retry(function() {
+            return agentStubControls.getSpans()
+              .then(function(spans) {
+                var postEntrySpan = utils.expectOneMatching(spans, function(span) {
+                  expect(span.n).to.equal('node.http.server');
+                  expect(span.f.e).to.equal(String(expressMysqlControls.getPid()));
+                  expect(span.data.http.method).to.equal('POST');
+                });
+
+                utils.expectOneMatching(spans, function(span) {
+                  expect(span.t).to.equal(postEntrySpan.t);
+                  expect(span.p).to.equal(postEntrySpan.s);
+                  expect(span.n).to.equal('mysql');
+                  expect(span.f.e).to.equal(String(expressMysqlControls.getPid()));
+                  expect(span.async).to.equal(false);
+                  expect(span.error).to.equal(false);
+                  expect(span.ec).to.equal(0);
+                  expect(span.data.mysql.stmt).to.equal('INSERT INTO random_values (value) VALUES (?)');
+                  expect(span.data.mysql.host).to.equal(process.env.MYSQL_HOST);
+                  expect(span.data.mysql.port).to.equal(Number(process.env.MYSQL_PORT));
+                  expect(span.data.mysql.user).to.equal(process.env.MYSQL_USER);
+                  expect(span.data.mysql.db).to.equal(process.env.MYSQL_DB);
+                });
+
+                utils.expectOneMatching(spans, function(span) {
+                  expect(span.t).to.equal(postEntrySpan.t);
+                  expect(span.p).to.equal(postEntrySpan.s);
+                  expect(span.n).to.equal('node.http.client');
+                  expect(span.f.e).to.equal(String(expressMysqlControls.getPid()));
+                  expect(span.async).to.equal(false);
+                  expect(span.error).to.equal(false);
+                  expect(span.data.http.method).to.equal('GET');
+                  expect(span.data.http.url).to.match(/http:\/\/127\.0\.0\.1:/);
+                  expect(span.data.http.status).to.equal(200);
+
+                  expect(span.t).to.equal(spanContext.t);
+                  expect(span.p).to.equal(spanContext.s);
                 });
               });
           });

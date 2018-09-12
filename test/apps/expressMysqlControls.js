@@ -68,6 +68,19 @@ exports.addValue = function(value) {
   });
 };
 
+/**
+ * Executes a MySQL INSERT and then does an HTTP client call. Used to verify that the tracing context is not corrupted.
+ */
+exports.addValueAndDoCall = function(value) {
+  return request({
+    method: 'post',
+    url: 'http://127.0.0.1:' + appPort + '/valuesAndCall',
+    qs: {
+      value: value
+    }
+  });
+};
+
 exports.getValues = function() {
   return request({
     method: 'get',
