@@ -2,14 +2,18 @@
 
 'use strict';
 
-require('../../')({
-  agentPort: process.env.AGENT_PORT,
+var agentPort = process.env.AGENT_PORT;
+
+var instana = require('../../');
+instana({
+  agentPort: agentPort,
   level: 'info',
   tracing: {
     enabled: process.env.TRACING_ENABLED === 'true',
     forceTransmissionStartingAt: 1
   }
 });
+
 
 var mysql;
 if (process.env.MYSQL_2_DRIVER === 'true') {
@@ -22,6 +26,7 @@ if (process.env.MYSQL_2_DRIVER === 'true') {
   mysql = require('mysql');
 }
 
+var request = require('request-promise');
 var bodyParser = require('body-parser');
 var express = require('express');
 var morgan = require('morgan');
@@ -36,6 +41,7 @@ var pool = mysql.createPool({
   database: process.env.MYSQL_DB
 });
 
+
 function wrapQuery(connection, query, optQueryParams, cb) {
   if (process.env.MYSQL_2_WITH_PROMISES === 'true') {
     connection.query(query, optQueryParams || null)
@@ -49,6 +55,7 @@ function wrapQuery(connection, query, optQueryParams, cb) {
     connection.query(query, cb);
   }
 }
+
 
 pool.getConnection(function(err, connection) {
   if (err) {
@@ -67,6 +74,7 @@ pool.getConnection(function(err, connection) {
   });
 });
 
+
 if (process.env.WITH_STDOUT) {
   app.use(morgan(logPrefix + ':method :url :status'));
 }
@@ -78,6 +86,7 @@ app.get('/', function(req, res) {
   res.sendStatus(200);
 });
 
+
 app.get('/values', function(req, res) {
   if (process.env.MYSQL_2_WITH_PROMISES === 'true') {
     fetchValuesWithPromises(req, res);
@@ -85,6 +94,7 @@ app.get('/values', function(req, res) {
     fetchValues(req, res);
   }
 });
+
 
 app.post('/values', function(req, res) {
   if (process.env.MYSQL_2_WITH_PROMISES === 'true') {
@@ -94,9 +104,22 @@ app.post('/values', function(req, res) {
   }
 });
 
+
+app.post('/valuesAndCall', function(req, res) {
+  if (process.env.MYSQL_2_WITH_PROMISES === 'true') {
+    insertValuesWithPromisesAndCall(req, res);
+  } else {
+    insertValues(req, res, function(cb) {
+      request('http://127.0.0.1:' + agentPort, cb);
+    });
+  }
+});
+
+
 app.listen(process.env.APP_PORT, function() {
   log('Listening on port: ' + process.env.APP_PORT);
 });
+
 
 function fetchValues(req, res) {
   wrapQuery(pool, 'SELECT value FROM random_values', null, function(queryError, results) {
@@ -110,6 +133,7 @@ function fetchValues(req, res) {
     }));
   });
 }
+
 
 function fetchValuesWithPromises(req, res) {
   pool.getConnection().then(function(connection) {
@@ -130,7 +154,7 @@ function fetchValuesWithPromises(req, res) {
 }
 
 
-function insertValues(req, res) {
+function insertValues(req, res, extraCallback) {
   pool.getConnection(function(err, connection) {
     if (err) {
       log('Failed to get connection', err);
@@ -146,10 +170,17 @@ function insertValues(req, res) {
         return;
       }
 
-      res.sendStatus(200);
+      if (extraCallback) {
+        extraCallback(function() {
+          return res.json(instana.opentracing.getCurrentlyActiveInstanaSpanContext());
+        });
+      } else {
+        return res.json(instana.opentracing.getCurrentlyActiveInstanaSpanContext());
+      }
     });
   });
 }
+
 
 function insertValuesWithPromises(req, res) {
   pool.getConnection().then(function(connection) {
@@ -167,6 +198,33 @@ function insertValuesWithPromises(req, res) {
     res.sendStatus(500);
   });
 }
+
+
+function insertValuesWithPromisesAndCall(req, res) {
+  var connection;
+  pool
+  .getConnection()
+  .then(function(_connection) {
+    connection = _connection;
+    return connection.query('INSERT INTO random_values (value) VALUES (?)', [req.query.value]);
+  })
+  .then(function(result) {
+    return result ? result[0] : null;
+  })
+  .then(function() {
+    connection.release();
+  })
+  .then(function() {
+    return request('http://127.0.0.1:' + agentPort);
+  })
+  .then(function() {
+    res.json(instana.opentracing.getCurrentlyActiveInstanaSpanContext());
+  }).catch(function(err) {
+    log('Could not process request.', err);
+    res.sendStatus(500);
+  });
+}
+
 
 function log() {
   var args = Array.prototype.slice.call(arguments);

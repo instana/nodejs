@@ -102,56 +102,65 @@ function instrumentedQuery(ctx, originalQuery, statementOrOpts, valuesOrCallback
     }
   }
 
-  var span = cls.startSpan('mysql');
-  span.b = {s: 1};
-  span.stack = tracingUtil.getStackTrace(instrumentedQuery);
-  span.data = {
-    mysql: {
-      stmt: tracingUtil.shortenDatabaseStatement(typeof statementOrOpts === 'string' ? statementOrOpts :
-        statementOrOpts.sql),
-      host: host,
-      port: port,
-      user: user,
-      db: db
+  return cls.ns.runAndReturn(function() {
+    var span = cls.startSpan('mysql');
+    span.b = {s: 1};
+    span.stack = tracingUtil.getStackTrace(instrumentedQuery);
+    span.data = {
+      mysql: {
+        stmt: tracingUtil.shortenDatabaseStatement(typeof statementOrOpts === 'string' ? statementOrOpts :
+          statementOrOpts.sql),
+        host: host,
+        port: port,
+        user: user,
+        db: db
+      }
+    };
+
+    if (isPromiseImpl) {
+      var resultPromise = originalQuery.apply(ctx, argsForOriginalQuery);
+
+      resultPromise.then(function(result) {
+        span.d = Date.now() - span.ts;
+        span.transmit();
+        return result;
+      }).catch(function(error) {
+          span.ec = 1;
+          span.error = true;
+          span.data.mysql.error = tracingUtil.getErrorDetails(error);
+
+          span.d = Date.now() - span.ts;
+          span.transmit();
+          return error;
+        });
+      return resultPromise;
     }
-  };
 
-  if (isPromiseImpl) {
-    var resultPromise = originalQuery.apply(ctx, argsForOriginalQuery);
+    // no promise, continue with standard instrumentation
+    var originalCallback = argsForOriginalQuery[argsForOriginalQuery.length - 1];
+    var hasCallback = false;
+    if (typeof originalCallback === 'function') {
+      originalCallback = cls.ns.bind(originalCallback);
+      hasCallback = true;
+    }
 
-    resultPromise.then(function(result) {
-      span.d = Date.now() - span.ts;
-      span.transmit();
-      return result;
-    }).catch(function(error) {
+    argsForOriginalQuery[argsForOriginalQuery.length - 1] = function onQueryResult(error) {
+      if (error) {
         span.ec = 1;
         span.error = true;
         span.data.mysql.error = tracingUtil.getErrorDetails(error);
+      }
 
-        span.d = Date.now() - span.ts;
-        span.transmit();
-        return error;
-      });
-    return resultPromise;
-  }
-  // no promise, continue with standard instrumentation
-  var originalCallback = argsForOriginalQuery[argsForOriginalQuery.length - 1];
-  argsForOriginalQuery[argsForOriginalQuery.length - 1] = function onQueryResult(error) {
-    if (error) {
-      span.ec = 1;
-      span.error = true;
-      span.data.mysql.error = tracingUtil.getErrorDetails(error);
-    }
+      span.d = Date.now() - span.ts;
+      span.transmit();
 
-    span.d = Date.now() - span.ts;
-    span.transmit();
+      if (hasCallback) {
+        return originalCallback.apply(this, arguments);
+      }
+    };
 
-    if (originalCallback) {
-      return originalCallback.apply(this, arguments);
-    }
-  };
-
-  return originalQuery.apply(ctx, argsForOriginalQuery);
+    return originalQuery.apply(ctx, argsForOriginalQuery);
+  });
 }
 
 
