@@ -1,7 +1,7 @@
 # Changelog
 
-## Unreleased
- - MySQL: Fix for MySQL instrumentation sometimes losing the tracing context
+## 1.47.1
+ - MySQL: Fix for MySQL instrumentation sometimes losing the tracing context.
 
 ## 1.47.0
  - Add MSSQL (Microsoft SQL Server) instrumentation (supports [mssql](https://www.npmjs.com/package/mssql), version >= 4 via [tedious driver](https://www.npmjs.com/package/tedious)).
