@@ -22,9 +22,13 @@ Sensor releases are a two-stage process. New releases will initially be tagged w
 ```
 npm publish --tag=next
 
+# you will be prompted for a 2FA code/OTP (one time password).
+
 # once verified that the release works as expected
-OTP="" # one-time password as received from your authenticator
-VERSION=$(node -e "console.log(require('./package.json').version)") npm dist-tag add --otp="$OTP" "instana-nodejs-sensor@$VERSION" latest
+
+VERSION=$(node -e "console.log(require('./package.json').version)")
+OTP=... # one-time password as received from your authenticator
+npm dist-tag add --otp="$OTP" "instana-nodejs-sensor@$VERSION" latest
 
 # verify that tags have been correctly applied
 npm dist-tag ls instana-nodejs-sensor
