@@ -80,9 +80,14 @@ function instrument(coreModule) {
       }
 
       cls.ns.bindEmitter(clientRequest);
-      clientRequest.setHeader(tracingConstants.spanIdHeaderName, span.s);
-      clientRequest.setHeader(tracingConstants.traceIdHeaderName, span.t);
-      clientRequest.setHeader(tracingConstants.traceLevelHeaderName, '1');
+      try {
+        clientRequest.setHeader(tracingConstants.spanIdHeaderName, span.s);
+        clientRequest.setHeader(tracingConstants.traceIdHeaderName, span.t);
+        clientRequest.setHeader(tracingConstants.traceLevelHeaderName, '1');
+      } catch (e) {
+        // headers already modified so we can't do much here
+        throw e;
+      }
 
       var isTimeout = false;
       clientRequest.on('timeout', function() {
