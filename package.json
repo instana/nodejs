@@ -62,6 +62,7 @@
   "devDependencies": {
     "admin": "^1.4.0",
     "admin-plugin-healthcheck": "^1.1.0",
+    "aws-sdk": "^2.315.0",
     "bluebird": "^3.5.1",
     "body-parser": "1.15.2",
     "chai": "3.3.0",
