@@ -133,4 +133,37 @@ function registerTests(useHttps) {
         });
       });
   });
+
+  it('must record calls with an "Expect: 100-continue" header', function() {
+    return clientControls.sendRequest({
+      method: 'put',
+      path: '/expect-continue'
+    })
+      .then(function() {
+        return utils.retry(function() {
+          return agentControls.getSpans()
+          .then(function(spans) {
+            utils.expectOneMatching(spans, function(span) {
+              expect(span.n).to.equal('node.http.client');
+              expect(span.data.http.method).to.equal('PUT');
+              expect(span.data.http.status).to.equal(200);
+              expect(span.data.http.url).to.match(/\/continue/);
+            });
+          });
+        });
+      });
+  });
+
+  // This test is always skipped on CI, it is meant to be only activated for manual execution because it needs three
+  // additional environment variables that provide access to an S3 bucket. The env vars that need to be set are:
+  // AWS_ACCESS_KEY_ID,
+  // AWS_SECRET_ACCESS_KEY and
+  // AWS_S3_BUCKET_NAME.
+  it.skip('must upload to S3', function() {
+    return clientControls.sendRequest({
+      method: 'POST',
+      path: '/upload-s3'
+    });
+  });
+
 }

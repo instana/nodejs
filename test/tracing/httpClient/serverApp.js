@@ -36,6 +36,13 @@ app.get('/timeout', function(req, res) {
   }, 1000);
 });
 
+app.put('/continue', function(req, res) {
+  // Node http server will automatically send 100 Continue when it receives a request with an "Expect: 100-continue"
+  // header present, unless we override the 'checkContinue' listener. For our test case, the default behaviour is just
+  // fine.
+  res.json({ response: 'yada yada yada' });
+});
+
 if (process.env.USE_HTTPS === 'true') {
   var sslDir = path.join(__dirname, '..', '..', 'apps', 'ssl');
   require('https').createServer({
