@@ -30,6 +30,19 @@ app.get('/', function(req, res) {
   res.sendStatus(200);
 });
 
+[
+  '/request-url-opts',
+  '/request-url',
+  '/request-opts',
+  '/get-url-opts',
+  '/get-url',
+  '/get-opts',
+].forEach(function(p) {
+  app.get(p, function(req, res) {
+    res.sendStatus(200);
+  });
+});
+
 app.get('/timeout', function(req, res) {
   setTimeout(function() {
     res.sendStatus(200);

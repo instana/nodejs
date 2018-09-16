@@ -46,6 +46,68 @@ app.get('/', function(req, res) {
     });
 });
 
+app.get('/request-url-and-options', function(req, res) {
+  httpModule.request(
+    protocol + '://127.0.0.1:' + process.env.SERVER_PORT + '/request-url-opts',
+    { rejectUnauthorized: false },
+    function() {
+      return res.sendStatus(200);
+    }
+  ).end();
+});
+
+app.get('/request-url-only', function(req, res) {
+  httpModule.request(
+    protocol + '://127.0.0.1:' + process.env.SERVER_PORT + '/request-url',
+    function() {
+      return res.sendStatus(200);
+    }
+  ).end();
+});
+
+app.get('/request-options-only', function(req, res) {
+  httpModule.request({
+    hostname: '127.0.0.1',
+    port: process.env.SERVER_PORT,
+    method: 'GET',
+    path: '/request-opts',
+    rejectUnauthorized: false,
+  }, function() {
+    return res.sendStatus(200);
+  }).end();
+});
+
+app.get('/get-url-and-options', function(req, res) {
+  httpModule.get(
+    protocol + '://127.0.0.1:' + process.env.SERVER_PORT + '/get-url-opts',
+    { rejectUnauthorized: false },
+    function() {
+      return res.sendStatus(200);
+    }
+  );
+});
+
+app.get('/get-url-only', function(req, res) {
+  httpModule.get(
+    protocol + '://127.0.0.1:' + process.env.SERVER_PORT + '/get-url',
+    function() {
+      return res.sendStatus(200);
+    }
+  );
+});
+
+app.get('/get-options-only', function(req, res) {
+  httpModule.get({
+    hostname: '127.0.0.1',
+    port: process.env.SERVER_PORT,
+    method: 'GET',
+    path: '/get-opts',
+    rejectUnauthorized: false,
+  }, function() {
+    return res.sendStatus(200);
+  });
+});
+
 app.get('/timeout', function(req, res) {
   rp({
     method: 'GET',
@@ -116,14 +178,14 @@ app.put('/expect-continue', function(req, res) {
     path: '/continue',
     rejectUnauthorized: false,
     headers: {
-      'Accept': 'application/json',
+      Accept: 'application/json',
       'Content-Type': 'application/json',
-      'Expect': '100-continue'
+      Expect: '100-continue'
     }
   }, function(response) {
     var responseString = '';
     response.on('data', function(chunk) {
-      responseString = responseString + chunk;
+      responseString += chunk;
     });
     response.on('end', function() {
       res.send(responseString);
