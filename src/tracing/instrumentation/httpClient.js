@@ -27,11 +27,11 @@ exports.init = function() {
 
 function instrument(coreModule) {
   var originalRequest = coreModule.request;
-  coreModule.request = function request(opts, givenResponseListener) {
+  coreModule.request = function request() {
     var clientRequest;
 
     if (!isActive || !cls.isTracing()) {
-      clientRequest = originalRequest.call(coreModule, opts, givenResponseListener);
+      clientRequest = originalRequest.apply(coreModule, arguments);
       if (cls.tracingLevel()) {
         clientRequest.setHeader(tracingConstants.traceLevelHeaderName, cls.tracingLevel());
       }
@@ -41,7 +41,7 @@ function instrument(coreModule) {
     var parentSpan = cls.getCurrentSpan();
 
     if (cls.isExitSpan(parentSpan)) {
-      clientRequest = originalRequest.call(coreModule, opts, givenResponseListener);
+      clientRequest = originalRequest.apply(coreModule, arguments);
 
       if (cls.tracingSuppressed()) {
         clientRequest.setHeader(tracingConstants.traceLevelHeaderName, '0');
@@ -49,19 +49,45 @@ function instrument(coreModule) {
       return clientRequest;
     }
 
+    var originalArgs = new Array(arguments.length);
+    for (var i = 0; i < arguments.length; i++) {
+      originalArgs[i] = arguments[i];
+    }
+
     cls.ns.run(function() {
       var span = cls.startSpan('node.http.client');
 
+      var url = null;
+      var options = null;
+      var callback = null;
+      var callbackIndex = -1;
+      if (typeof originalArgs[0] === 'string') {
+        url = originalArgs[0];
+      } else if (typeof originalArgs[0] === 'object') {
+        options = originalArgs[0];
+      }
+      if (!options && typeof originalArgs[1] === 'object') {
+        options = originalArgs[1];
+      }
+      if (typeof originalArgs[1] === 'function') {
+        callback = originalArgs[1];
+        callbackIndex = 1;
+      }
+      if (!callback && typeof originalArgs[2] === 'function') {
+        callback = originalArgs[2];
+        callbackIndex = 2;
+      }
+
       var completeCallUrl;
-      if (typeof opts === 'string') {
-        completeCallUrl = discardUrlParameters(opts);
-      } else {
-        completeCallUrl = constructCompleteUrlFromOpts(opts, coreModule);
+      if (url) {
+        completeCallUrl = discardUrlParameters(url);
+      } else if (options) {
+        completeCallUrl = constructCompleteUrlFromOpts(options, coreModule);
       }
 
       span.stack = tracingUtil.getStackTrace(request);
 
-      var responseListener = cls.ns.bind(function responseListener(res) {
+      var boundCallback = cls.ns.bind(function boundCallback(res) {
         span.data = {
           http: {
             method: clientRequest.method,
@@ -75,14 +101,20 @@ function instrument(coreModule) {
         span.ec = span.error ? 1 : 0;
         span.transmit();
 
-        if (givenResponseListener) {
-          givenResponseListener(res);
+        if (callback) {
+          callback(res);
         }
       });
 
+      if (callbackIndex >= 0) {
+        originalArgs[callbackIndex] = boundCallback;
+      } else {
+        originalArgs.push(boundCallback);
+      }
+
       try {
-        var instanaHeadersHaveBeenAdded = tryToAddHeadersToOpts(opts, span);
-        clientRequest = originalRequest.call(coreModule, opts, responseListener);
+        var instanaHeadersHaveBeenAdded = tryToAddHeadersToOpts(options, span);
+        clientRequest = originalRequest.apply(coreModule, originalArgs);
       } catch (e) {
         // synchronous exceptions normally indicate failures that are not covered by the
         // listeners. Cleanup immediately.
@@ -91,7 +123,7 @@ function instrument(coreModule) {
 
       cls.ns.bindEmitter(clientRequest);
       if (!instanaHeadersHaveBeenAdded) {
-        setHeadersOnRequest(clientRequest, span);
+        instanaHeadersHaveBeenAdded = setHeadersOnRequest(clientRequest, span);
       }
 
       var isTimeout = false;
@@ -140,6 +172,12 @@ function instrument(coreModule) {
     });
     return clientRequest;
   };
+
+  coreModule.get = function get() {
+    var req = coreModule.request.apply(coreModule, arguments);
+    req.end();
+    return req;
+  };
 }
 
 exports.activate = function() {
@@ -157,7 +195,6 @@ function constructCompleteUrlFromOpts(options, self) {
 
   try {
     var agent = options.agent || self.agent;
-
     var port = options.port || options.defaultPort || (agent && agent.defaultPort) || 80;
     var protocol = (port === 443 && 'https:') || options.protocol || (agent && agent.protocol) || 'http:';
     var host = options.hostname || options.host || 'localhost';
@@ -168,10 +205,11 @@ function constructCompleteUrlFromOpts(options, self) {
   }
 }
 
-function tryToAddHeadersToOpts(opts, span) {
+function tryToAddHeadersToOpts(options, span) {
   // Some HTTP spec background: If the request has a header Expect: 100-continue, the client will first send the
   // request headers, without the body. The client is then ought to wait for the server to send a first, preliminary
-  // response with the status code 100 Continue (if all is well). Only then will the client send the actual request body.
+  // response with the status code 100 Continue (if all is well). Only then will the client send the actual request
+  // body.
 
   // The Node.js HTTP client core module implements this in the following way: If the option's object given to the
   // `http(s).request` contains "Expect": "100-continue", it will immediately flush the headers and send them internally
@@ -183,11 +221,12 @@ function tryToAddHeadersToOpts(opts, span) {
   // Thus, at the very least, when this header is present in the incoming request options arguments, we need to add our
   // INSTANA-... HTTP headers to options.headers instead of calling request.setHeader later. In fact, we opt for the
   // slightly more general solution: If there is an options object parameter with a `headers` object, we just always
-  // add our headers there. Only when this object is missing do we use request.setHeader on the ClientRequest object (see setHeadersOnRequest).
-  if (typeof opts === 'object' && typeof opts.headers === 'object') {
-    opts.headers[tracingConstants.spanIdHeaderName] = span.s;
-    opts.headers[tracingConstants.traceIdHeaderName] = span.t;
-    opts.headers[tracingConstants.traceLevelHeaderName] = '1';
+  // add our headers there. Only when this object is missing do we use request.setHeader on the ClientRequest object
+  // (see setHeadersOnRequest).
+  if (options && typeof options === 'object' && typeof options.headers === 'object') {
+    options.headers[tracingConstants.spanIdHeaderName] = span.s;
+    options.headers[tracingConstants.traceIdHeaderName] = span.t;
+    options.headers[tracingConstants.traceLevelHeaderName] = '1';
     return true;
   }
   return false;
@@ -197,4 +236,5 @@ function setHeadersOnRequest(clientRequest, span) {
   clientRequest.setHeader(tracingConstants.spanIdHeaderName, span.s);
   clientRequest.setHeader(tracingConstants.traceIdHeaderName, span.t);
   clientRequest.setHeader(tracingConstants.traceLevelHeaderName, '1');
+  return true;
 }
