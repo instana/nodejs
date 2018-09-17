@@ -33,6 +33,13 @@ function instrument(coreModule) {
   coreModule.request = function request() {
     var clientRequest;
 
+    // When http.request is called with http.request(options, undefined) (happens with request-promise, for example),
+    // arguments.length will still be 2 but there is no callback. Even though we push a callback into the arguments
+    // array, this cb will then be at index 2, thus never get called in older versions of Node, hence the span would
+    // not be finished/transmitted. We normalize the args by removing undefined/null from the end.
+    while (arguments.length > 0 && arguments[arguments.length - 1] == null) {
+      arguments.length--;
+    }
     var originalArgs = new Array(arguments.length);
     for (var i = 0; i < arguments.length; i++) {
       originalArgs[i] = arguments[i];
