@@ -2,13 +2,16 @@
 
 var coreHttpModule = require('http');
 var coreHttpsModule = require('https');
+
 var semver = require('semver');
+var URL = require('url').URL;
 
 var discardUrlParameters = require('../../util/url').discardUrlParameters;
 var tracingConstants = require('../constants');
 var tracingUtil = require('../tracingUtil');
 var httpCommon = require('./_http');
 var cls = require('../cls');
+var url = require('url');
 
 var isActive = false;
 
@@ -30,9 +33,40 @@ function instrument(coreModule) {
   coreModule.request = function request() {
     var clientRequest;
 
+    var originalArgs = new Array(arguments.length);
+    for (var i = 0; i < arguments.length; i++) {
+      originalArgs[i] = arguments[i];
+    }
+
+    var urlArg = null;
+    var options = null;
+    var callback = null;
+    var callbackIndex = -1;
+
+    if (typeof originalArgs[0] === 'string' || isUrlObject(originalArgs[0])) {
+      urlArg = originalArgs[0];
+    } else if (typeof originalArgs[0] === 'object') {
+      options = originalArgs[0];
+    }
+    if (!options && typeof originalArgs[1] === 'object') {
+      options = originalArgs[1];
+    }
+    if (typeof originalArgs[1] === 'function') {
+      callback = originalArgs[1];
+      callbackIndex = 1;
+    }
+    if (!callback && typeof originalArgs[2] === 'function') {
+      callback = originalArgs[2];
+      callbackIndex = 2;
+    }
+
     if (!isActive || !cls.isTracing()) {
-      clientRequest = originalRequest.apply(coreModule, arguments);
+      var traceLevelHeaderHasBeenAdded = false;
       if (cls.tracingLevel()) {
+        traceLevelHeaderHasBeenAdded = tryToAddTraceLevelAddHeaderToOpts(options, cls.tracingLevel());
+      }
+      clientRequest = originalRequest.apply(coreModule, arguments);
+      if (cls.tracingLevel() && !traceLevelHeaderHasBeenAdded) {
         clientRequest.setHeader(tracingConstants.traceLevelHeaderName, cls.tracingLevel());
       }
       return clientRequest;
@@ -41,46 +75,24 @@ function instrument(coreModule) {
     var parentSpan = cls.getCurrentSpan();
 
     if (cls.isExitSpan(parentSpan)) {
-      clientRequest = originalRequest.apply(coreModule, arguments);
-
       if (cls.tracingSuppressed()) {
+        traceLevelHeaderHasBeenAdded = tryToAddTraceLevelAddHeaderToOpts(options, '0');
+      }
+      clientRequest = originalRequest.apply(coreModule, arguments);
+      if (cls.tracingSuppressed() && !traceLevelHeaderHasBeenAdded) {
         clientRequest.setHeader(tracingConstants.traceLevelHeaderName, '0');
       }
       return clientRequest;
     }
 
-    var originalArgs = new Array(arguments.length);
-    for (var i = 0; i < arguments.length; i++) {
-      originalArgs[i] = arguments[i];
-    }
-
     cls.ns.run(function() {
       var span = cls.startSpan('node.http.client');
 
-      var url = null;
-      var options = null;
-      var callback = null;
-      var callbackIndex = -1;
-      if (typeof originalArgs[0] === 'string') {
-        url = originalArgs[0];
-      } else if (typeof originalArgs[0] === 'object') {
-        options = originalArgs[0];
-      }
-      if (!options && typeof originalArgs[1] === 'object') {
-        options = originalArgs[1];
-      }
-      if (typeof originalArgs[1] === 'function') {
-        callback = originalArgs[1];
-        callbackIndex = 1;
-      }
-      if (!callback && typeof originalArgs[2] === 'function') {
-        callback = originalArgs[2];
-        callbackIndex = 2;
-      }
-
       var completeCallUrl;
-      if (url) {
-        completeCallUrl = discardUrlParameters(url);
+      if (urlArg && typeof urlArg === 'string') {
+        completeCallUrl = discardUrlParameters(urlArg);
+      } else if (urlArg && isUrlObject(urlArg)) {
+        completeCallUrl = discardUrlParameters(url.format(urlArg));
       } else if (options) {
         completeCallUrl = constructCompleteUrlFromOpts(options, coreModule);
       }
@@ -205,6 +217,10 @@ function constructCompleteUrlFromOpts(options, self) {
   }
 }
 
+function isUrlObject(argument) {
+  return URL && argument instanceof url.URL;
+}
+
 function tryToAddHeadersToOpts(options, span) {
   // Some HTTP spec background: If the request has a header Expect: 100-continue, the client will first send the
   // request headers, without the body. The client is then ought to wait for the server to send a first, preliminary
@@ -223,13 +239,25 @@ function tryToAddHeadersToOpts(options, span) {
   // slightly more general solution: If there is an options object parameter with a `headers` object, we just always
   // add our headers there. Only when this object is missing do we use request.setHeader on the ClientRequest object
   // (see setHeadersOnRequest).
-  if (options && typeof options === 'object' && typeof options.headers === 'object') {
+  if (hasHeadersOption(options)) {
     options.headers[tracingConstants.spanIdHeaderName] = span.s;
     options.headers[tracingConstants.traceIdHeaderName] = span.t;
     options.headers[tracingConstants.traceLevelHeaderName] = '1';
     return true;
   }
   return false;
+}
+
+function tryToAddTraceLevelAddHeaderToOpts(options, level) {
+  if (hasHeadersOption(options)) {
+    options.headers[tracingConstants.traceLevelHeaderName] = level;
+    return true;
+  }
+  return false;
+}
+
+function hasHeadersOption(options) {
+  return options && typeof options === 'object' && typeof options.headers === 'object';
 }
 
 function setHeadersOnRequest(clientRequest, span) {

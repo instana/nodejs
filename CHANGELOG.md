@@ -5,6 +5,7 @@
     - Fix for requests with header "Expect: 100-continue"
     - Instrument http.get and https.get separately from http(s).request
     - Support for http(s).request(url, options, callback) API introduced in Node.js 10.9.0
+    - Support for WHATWG URL objects
 
 ## 1.47.1
  - MySQL: Fix for MySQL instrumentation sometimes losing the tracing context.
