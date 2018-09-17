@@ -62,61 +62,74 @@ function registerTests(useHttps) {
   //
   // This following tests cover all variants.
 
-  it('must trace request(url, options, cb)', function() {
-    // this API only exists since Node 10.9.0
-    if (semver.lt(process.versions.node, '10.9.0')) {
-      return;
-    }
-    return clientControls.sendRequest({
-      method: 'GET',
-      path: '/request-url-and-options'
-    })
-      .then(function() {
-        return utils.retry(function() {
-          return agentControls.getSpans()
-          .then(function(spans) {
-            var clientSpan = utils.expectOneMatching(spans, function(span) {
-              expect(span.n).to.equal('node.http.client');
-              expect(span.data.http.url).to.match(/\/request-url-opts/);
-            });
-            utils.expectOneMatching(spans, function(span) {
-              expect(span.n).to.equal('node.http.server');
-              expect(span.data.http.url).to.match(/\/request-url-opts/);
-              expect(span.t).to.equal(clientSpan.t);
-              expect(span.p).to.equal(clientSpan.s);
+  [false, true].forEach(function(urlObject) {
+    var urlParam = urlObject ? 'urlObject' : 'urlString';
+    it('must trace request(' + urlParam + ', options, cb)', function() {
+      if (semver.lt(process.versions.node, '10.9.0')) {
+        // The (url, options[, callback]) API only exists since Node 10.9.0:
+        return;
+      }
+
+      return clientControls.sendRequest({
+        method: 'GET',
+        path: '/request-url-and-options' +
+          (urlObject ? '?urlObject=true' : '')
+      })
+        .then(function() {
+          return utils.retry(function() {
+            return agentControls.getSpans()
+            .then(function(spans) {
+              var clientSpan = utils.expectOneMatching(spans, function(span) {
+                expect(span.n).to.equal('node.http.client');
+                expect(span.data.http.url).to.match(/\/request-url-opts/);
+              });
+              utils.expectOneMatching(spans, function(span) {
+                expect(span.n).to.equal('node.http.server');
+                expect(span.data.http.url).to.match(/\/request-url-opts/);
+                expect(span.t).to.equal(clientSpan.t);
+                expect(span.p).to.equal(clientSpan.s);
+              });
             });
           });
         });
-      });
+    });
   });
 
-  it('must trace request(url, cb)', function() {
-    if (useHttps) {
-      // Can't execute this test with a self signed certificate because without an options object, there is no place
-      // where we can specify the `rejectUnauthorized: false` option.
-      return;
-    }
-    return clientControls.sendRequest({
-      method: 'GET',
-      path: '/request-url-only'
-    })
-      .then(function() {
-        return utils.retry(function() {
-          return agentControls.getSpans()
-          .then(function(spans) {
-            var clientSpan = utils.expectOneMatching(spans, function(span) {
-              expect(span.n).to.equal('node.http.client');
-              expect(span.data.http.url).to.match(/\/request-url/);
-            });
-            utils.expectOneMatching(spans, function(span) {
-              expect(span.n).to.equal('node.http.server');
-              expect(span.data.http.url).to.match(/\/request-url/);
-              expect(span.t).to.equal(clientSpan.t);
-              expect(span.p).to.equal(clientSpan.s);
+  [false, true].forEach(function(urlObject) {
+    var urlParam = urlObject ? 'urlObject' : 'urlString';
+    it('must trace request(' + urlParam + ', cb)', function() {
+      if (urlObject && semver.lt(process.versions.node, '7.5.0')) {
+        // WHATWG URL objects can only be passed since 7.5.0
+        return;
+      }
+      if (useHttps) {
+        // Can't execute this test with a self signed certificate because without an options object, there is no place
+        // where we can specify the `rejectUnauthorized: false` option.
+        return;
+      }
+      return clientControls.sendRequest({
+        method: 'GET',
+        path: '/request-url-only' +
+          (urlObject ? '?urlObject=true' : '')
+      })
+        .then(function() {
+          return utils.retry(function() {
+            return agentControls.getSpans()
+            .then(function(spans) {
+              var clientSpan = utils.expectOneMatching(spans, function(span) {
+                expect(span.n).to.equal('node.http.client');
+                expect(span.data.http.url).to.match(/\/request-only-url/);
+              });
+              utils.expectOneMatching(spans, function(span) {
+                expect(span.n).to.equal('node.http.server');
+                expect(span.data.http.url).to.match(/\/request-only-url/);
+                expect(span.t).to.equal(clientSpan.t);
+                expect(span.p).to.equal(clientSpan.s);
+              });
             });
           });
         });
-      });
+    });
   });
 
   it('must trace request(options, cb)', function() {
@@ -130,11 +143,11 @@ function registerTests(useHttps) {
           .then(function(spans) {
             var clientSpan = utils.expectOneMatching(spans, function(span) {
               expect(span.n).to.equal('node.http.client');
-              expect(span.data.http.url).to.match(/\/request-opts/);
+              expect(span.data.http.url).to.match(/\/request-only-opts/);
             });
             utils.expectOneMatching(spans, function(span) {
               expect(span.n).to.equal('node.http.server');
-              expect(span.data.http.url).to.match(/\/request-opts/);
+              expect(span.data.http.url).to.match(/\/request-only-opts/);
               expect(span.t).to.equal(clientSpan.t);
               expect(span.p).to.equal(clientSpan.s);
             });
@@ -143,61 +156,73 @@ function registerTests(useHttps) {
       });
   });
 
-  it('must trace get(url, options, cb)', function() {
-    // this API only exists since Node 10.9.0
-    if (semver.lt(process.versions.node, '10.9.0')) {
-      return;
-    }
-    return clientControls.sendRequest({
-      method: 'GET',
-      path: '/get-url-and-options'
-    })
-      .then(function() {
-        return utils.retry(function() {
-          return agentControls.getSpans()
-          .then(function(spans) {
-            var clientSpan = utils.expectOneMatching(spans, function(span) {
-              expect(span.n).to.equal('node.http.client');
-              expect(span.data.http.url).to.match(/\/get-url-opts/);
-            });
-            utils.expectOneMatching(spans, function(span) {
-              expect(span.n).to.equal('node.http.server');
-              expect(span.data.http.url).to.match(/\/get-url-opts/);
-              expect(span.t).to.equal(clientSpan.t);
-              expect(span.p).to.equal(clientSpan.s);
+  [false, true].forEach(function(urlObject) {
+    var urlParam = urlObject ? 'urlObject' : 'urlString';
+    it('must trace get(' + urlParam + ', options, cb)', function() {
+      if (semver.lt(process.versions.node, '10.9.0')) {
+        // The (url, options[, callback]) API only exists since Node 10.9.0.
+        return;
+      }
+      return clientControls.sendRequest({
+        method: 'GET',
+        path: '/get-url-and-options' +
+          (urlObject ? '?urlObject=true' : '')
+      })
+        .then(function() {
+          return utils.retry(function() {
+            return agentControls.getSpans()
+            .then(function(spans) {
+              var clientSpan = utils.expectOneMatching(spans, function(span) {
+                expect(span.n).to.equal('node.http.client');
+                expect(span.data.http.url).to.match(/\/get-url-opts/);
+              });
+              utils.expectOneMatching(spans, function(span) {
+                expect(span.n).to.equal('node.http.server');
+                expect(span.data.http.url).to.match(/\/get-url-opts/);
+                expect(span.t).to.equal(clientSpan.t);
+                expect(span.p).to.equal(clientSpan.s);
+              });
             });
           });
         });
-      });
+    });
   });
 
-  it('must trace get(url, cb)', function() {
-    if (useHttps) {
-      // Can't execute this test with a self signed certificate because without an options object, there is no place
-      // where we can specify the `rejectUnauthorized: false` option.
-      return;
-    }
-    return clientControls.sendRequest({
-      method: 'GET',
-      path: '/get-url-only'
-    })
-      .then(function() {
-        return utils.retry(function() {
-          return agentControls.getSpans()
-          .then(function(spans) {
-            var clientSpan = utils.expectOneMatching(spans, function(span) {
-              expect(span.n).to.equal('node.http.client');
-              expect(span.data.http.url).to.match(/\/get-url/);
-            });
-            utils.expectOneMatching(spans, function(span) {
-              expect(span.n).to.equal('node.http.server');
-              expect(span.data.http.url).to.match(/\/get-url/);
-              expect(span.t).to.equal(clientSpan.t);
-              expect(span.p).to.equal(clientSpan.s);
+  [false, true].forEach(function(urlObject) {
+    var urlParam = urlObject ? 'urlObject' : 'urlString';
+    it('must trace get(' + urlParam + ', cb)', function() {
+      if (urlObject && semver.lt(process.versions.node, '7.5.0')) {
+        // WHATWG URL objects can only be passed since 7.5.0
+        return;
+      }
+      if (useHttps) {
+        // Can't execute this test with a self signed certificate because without an options object, there is no place
+        // where we can specify the `rejectUnauthorized: false` option.
+        return;
+      }
+      return clientControls.sendRequest({
+        method: 'GET',
+        path: '/get-url-only' +
+          (urlObject ? '?urlObject=true' : '')
+      })
+        .then(function() {
+          return utils.retry(function() {
+            return agentControls.getSpans()
+            .then(function(spans) {
+              var clientSpan = utils.expectOneMatching(spans, function(span) {
+                expect(span.n).to.equal('node.http.client');
+                expect(span.data.http.url).to.match(/\/get-only-url/);
+              });
+              utils.expectOneMatching(spans, function(span) {
+                expect(span.n).to.equal('node.http.server');
+                expect(span.data.http.url).to.match(/\/get-only-url/);
+                expect(span.t).to.equal(clientSpan.t);
+                expect(span.p).to.equal(clientSpan.s);
+              });
             });
           });
         });
-      });
+    });
   });
 
   it('must trace get(options, cb)', function() {
@@ -211,11 +236,11 @@ function registerTests(useHttps) {
           .then(function(spans) {
             var clientSpan = utils.expectOneMatching(spans, function(span) {
               expect(span.n).to.equal('node.http.client');
-              expect(span.data.http.url).to.match(/\/get-opts/);
+              expect(span.data.http.url).to.match(/\/get-only-opts/);
             });
             utils.expectOneMatching(spans, function(span) {
               expect(span.n).to.equal('node.http.server');
-              expect(span.data.http.url).to.match(/\/get-opts/);
+              expect(span.data.http.url).to.match(/\/get-only-opts/);
               expect(span.t).to.equal(clientSpan.t);
               expect(span.p).to.equal(clientSpan.s);
             });

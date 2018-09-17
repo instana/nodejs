@@ -61,6 +61,7 @@ describe('tracing/asyncAwait', function() {
 
             var rootSpan = utils.expectOneMatching(spans, function(span) {
               expect(span.n).to.equal('node.http.server');
+              expect(span.data.http.url).to.match(/\/getSomething/);
               expect(span.f.e).to.equal(String(expressAsyncAwaitControls.getPid()));
             });
 

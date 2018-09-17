@@ -32,11 +32,11 @@ app.get('/', function(req, res) {
 
 [
   '/request-url-opts',
-  '/request-url',
-  '/request-opts',
+  '/request-only-url',
+  '/request-only-opts',
   '/get-url-opts',
-  '/get-url',
-  '/get-opts',
+  '/get-only-url',
+  '/get-only-opts',
 ].forEach(function(p) {
   app.get(p, function(req, res) {
     res.sendStatus(200);
