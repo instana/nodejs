@@ -21,6 +21,8 @@ exports.registerTestHooks = function(opts) {
     var env = Object.create(process.env);
     env.AGENT_PORT = agentPort;
     env.EXTRA_HEADERS = (opts.extraHeaders || []).join(',');
+    env.SECRETS_MATCHER = opts.secretsMatcher || 'contains-ignore-case';
+    env.SECRETS_LIST = (opts.secretsList || []).join(',');
 
     agentStub = spawn('node', [path.join(__dirname, 'agentStub.js')], {
       stdio: config.getAppStdio(),

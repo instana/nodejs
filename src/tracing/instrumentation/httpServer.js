@@ -5,6 +5,7 @@ var coreHttpModule = require('http');
 
 var discardUrlParameters = require('../../util/url').discardUrlParameters;
 var tracingConstants = require('../constants');
+var agentOpts = require('../../agent/opts');
 var httpCommon = require('./_http');
 var shimmer = require('shimmer');
 var cls = require('../cls');
@@ -41,6 +42,9 @@ function shimEmit(realEmit) {
       // We are doing this because libs like express are manipulating req.url when
       // using routers.
       var urlParts = req.url.split('?');
+      if (urlParts.length >= 1) {
+        urlParts[1] = filterParams(urlParts[1]);
+      }
       span.data = {
         http: {
           method: req.method,
@@ -92,6 +96,7 @@ function shimEmit(realEmit) {
   };
 }
 
+
 exports.activate = function() {
   isActive = true;
 };
@@ -123,4 +128,20 @@ function getExistingTraceId(req, fallback) {
   }
 
   return traceId;
+}
+
+
+function filterParams(queryString) {
+  if (!queryString ||
+      queryString === '' ||
+      !(typeof queryString === 'string')) {
+    return queryString;
+  }
+  return queryString.split('&').filter(function(param) {
+    var key = param.split('=')[0];
+    if (key) {
+      return !agentOpts.isSecret(key);
+    }
+    return true;
+  }).join('&');
 }

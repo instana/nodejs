@@ -4,6 +4,7 @@ var logger = require('../logger').getLogger('unannounced');
 var agentConnection = require('../agentConnection');
 var agentOpts = require('../agent/opts');
 var pidStore = require('../pidStore');
+var secrets = require('../secrets');
 
 var retryDelay = 60 * 1000;
 
@@ -52,6 +53,27 @@ function tryToAnnounce(ctx) {
         // Node.js HTTP API turns all incoming HTTP headers into lowercase.
         return s.toLowerCase();
       });
+    }
+
+    if (response.secrets) {
+      if (!(typeof response.secrets.matcher === 'string')) {
+        logger.warn(
+          'Received invalid secrets configuration from agent, attribute matcher is not a string: $s',
+          response.secrets.matcher
+        );
+      } else if (Object.keys(secrets.matchers).indexOf(response.secrets.matcher) < 0) {
+        logger.warn(
+          'Received invalid secrets configuration from agent, matcher is not supported: $s',
+          response.secrets.matcher
+        );
+      } else if (!(response.secrets.list instanceof Array)) {
+        logger.warn(
+          'Received invalid secrets configuration from agent, attribute list is not an array: $s',
+          response.secrets.list
+        );
+      } else {
+        agentOpts.isSecret = secrets.matchers[response.secrets.matcher](response.secrets.list);
+      }
     }
 
     ctx.transitionTo('announced');

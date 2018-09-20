@@ -7,6 +7,8 @@ var app = express();
 
 var logPrefix = 'Agent Stub (' + process.pid + '):\t';
 var extraHeaders = process.env.EXTRA_HEADERS ? process.env.EXTRA_HEADERS.split(',') : [];
+var secretsMatcher = process.env.SECRETS_MATCHER ? process.env.SECRETS_MATCHER : 'contains-ignore-case';
+var secretsList = process.env.SECRETS_LIST ? process.env.SECRETS_LIST.split(',') : ['key', 'pass', 'secret'];
 var dropAllData = process.env.DROP_DATA === 'true';
 var discoveries = {};
 var requests = {};
@@ -45,7 +47,11 @@ app.put('/com.instana.plugin.nodejs.discovery', function(req, res) {
 
   res.send({
     pid: pid,
-    extraHeaders: extraHeaders
+    extraHeaders: extraHeaders,
+    secrets: {
+      matcher: secretsMatcher,
+      list: secretsList
+    }
   });
 });
 
