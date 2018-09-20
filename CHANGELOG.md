@@ -1,5 +1,8 @@
 # Changelog
 
+## Unreleased (patch)
+- Fix secret scrubbing for HTTP server instrumentation.
+
 ## 1.48.0
 - Various fixes and improvements for the HTTP client instrumentation
     - Support for http(s).request(url, options, callback) API introduced in Node.js 10.9.0

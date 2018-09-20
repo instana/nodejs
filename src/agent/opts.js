@@ -8,6 +8,13 @@ exports.serverHeader = 'Instana Agent';
 exports.agentUuid = undefined;
 exports.extraHttpHeadersToCapture = [];
 
+// Will be initalized lazily to avoid a dependency cycle
+// secrets -> logger -> agent/bunyanToAgentStream -> agent/log -> agent/opts -> secrets.
+// Until initialization has happend, everything is considered a secret (but init should happen before secret checking
+// becomes relevant anyway).
+exports.isSecret = function() {
+  return true;
+};
 
 exports.init = function init(config) {
   if (config.agentHost) {
@@ -27,4 +34,6 @@ exports.init = function init(config) {
   } else if (process.env.INSTANA_AGENT_NAME) {
     exports.serverHeader = process.env.INSTANA_AGENT_NAME;
   }
+
+  exports.isSecret = require('../secrets').defaultMatcher;
 };
