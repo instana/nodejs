@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased (patch)
+## 1.48.1
 - Fix secret scrubbing for HTTP server instrumentation.
 
 ## 1.48.0
