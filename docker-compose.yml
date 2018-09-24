@@ -32,6 +32,8 @@ services:
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
+      - ./bin:/nodejs-sensor-bin
+    command: ["/nodejs-sensor-bin/wait-for-it.sh", "-s", "-t", "120", "zookeeper:2181", "--", "start-kafka.sh"]
 
   mysql:
     image: mysql:8.0.1
