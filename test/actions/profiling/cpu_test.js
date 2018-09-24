@@ -17,7 +17,7 @@ describe('actions/profiling/cpu', function() {
   }
 
   // controls require features that aren't available in early Node.js versions
-  var expressElasticsearchControls = require('../../apps/expressElasticsearchControls');
+  var elasticSearchControls = require('../../tracing/elasticsearch/controls');
   var agentStubControls = require('../../apps/agentStubControls');
 
   describe('toTreeWithTiming', function() {
@@ -56,18 +56,18 @@ describe('actions/profiling/cpu', function() {
     this.timeout(config.getTestTimeout());
 
     agentStubControls.registerTestHooks();
-    expressElasticsearchControls.registerTestHooks({
+    elasticSearchControls.registerTestHooks({
       enableTracing: supportedVersion(process.versions.node)
     });
 
     beforeEach(function() {
-      return agentStubControls.waitUntilAppIsCompletelyInitialized(expressElasticsearchControls.getPid());
+      return agentStubControls.waitUntilAppIsCompletelyInitialized(elasticSearchControls.getPid());
     });
 
     it('must inform about start of CPU profile', function() {
       var messageId = 'a';
       return agentStubControls.addRequestForPid(
-        expressElasticsearchControls.getPid(),
+        elasticSearchControls.getPid(),
         {
           action: 'node.startCpuProfiling',
           messageId: messageId,
@@ -101,7 +101,7 @@ describe('actions/profiling/cpu', function() {
       var startMessageId = 'start';
       var stopMessageId = 'stop';
       return agentStubControls.addRequestForPid(
-        expressElasticsearchControls.getPid(),
+        elasticSearchControls.getPid(),
         {
           action: 'node.startCpuProfiling',
           messageId: startMessageId,
@@ -112,7 +112,7 @@ describe('actions/profiling/cpu', function() {
       )
       .then(function() {
         return agentStubControls.addRequestForPid(
-          expressElasticsearchControls.getPid(),
+          elasticSearchControls.getPid(),
           {
             action: 'node.stopCpuProfiling',
             messageId: stopMessageId,
@@ -147,7 +147,7 @@ describe('actions/profiling/cpu', function() {
       var startMessageId = 'start';
       var stopMessageId = 'stop';
       return agentStubControls.addRequestForPid(
-        expressElasticsearchControls.getPid(),
+        elasticSearchControls.getPid(),
         {
           action: 'node.startCpuProfiling',
           messageId: startMessageId,
@@ -158,7 +158,7 @@ describe('actions/profiling/cpu', function() {
       )
       .then(function() {
         return agentStubControls.addRequestForPid(
-          expressElasticsearchControls.getPid(),
+          elasticSearchControls.getPid(),
           {
             action: 'node.stopCpuProfiling',
             messageId: stopMessageId,
@@ -189,7 +189,7 @@ describe('actions/profiling/cpu', function() {
     it('must do nothing when there is no active CPU profile', function() {
       var stopMessageId = 'stop';
       return agentStubControls.addRequestForPid(
-        expressElasticsearchControls.getPid(),
+        elasticSearchControls.getPid(),
         {
           action: 'node.stopCpuProfiling',
           messageId: stopMessageId,

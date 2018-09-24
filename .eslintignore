@@ -1,2 +1,2 @@
-test/apps/expressAsyncAwait.js
+test/tracing/async_await/app.js
 test/tracing/fastify/app.js
