@@ -46,7 +46,7 @@ app.get('/', function(req, res) {
 app.get('/timeout', function(req, res) {
   setTimeout(function() {
     res.sendStatus(200);
-  }, 1000);
+  }, 10000);
 });
 
 app.put('/continue', function(req, res) {

@@ -20,7 +20,7 @@ describe('tracing/httpClient', function() {
   ClientControls = require('./clientControls');
   ServerControls = require('./serverControls');
 
-  this.timeout(config.getTestTimeout());
+  this.timeout(config.getTestTimeout() * 2);
 
   agentControls.registerTestHooks({
     extraHeaders: ['fooBaR']

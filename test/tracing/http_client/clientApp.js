@@ -141,9 +141,8 @@ app.get('/abort', function(req, res) {
 
   setTimeout(function() {
     clientRequest.abort();
-  }, 300);
-
-  res.sendStatus(200);
+    res.sendStatus(200);
+  }, 1500);
 });
 
 app.post('/upload-s3', function(req, res) {
