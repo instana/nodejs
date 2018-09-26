@@ -15,6 +15,9 @@ services:
     ports:
       - 9200:9200
 
+  # Kafka test will sometimes fail because Zookeeper won't start due to
+  # java.io.IOException: Unable to create data directory /opt/zookeeper-3.4.9/data/version-2, which seems to be a known issue:
+  # -> https://issues.apache.org/jira/browse/ZOOKEEPER-1936
   zookeeper:
     image: wurstmeister/zookeeper
     ports:
