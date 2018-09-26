@@ -12,7 +12,7 @@ var utils = require('../../utils');
 
 
 describe('actions/profiling/cpu', function() {
-  if (!semver.satisfies(process.versions.node, '>=4.0.0 <10')) {
+  if (!semver.satisfies(process.versions.node, '>=4.0.0')) {
     return;
   }
 

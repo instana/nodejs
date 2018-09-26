@@ -12,10 +12,10 @@ var profilingTimeoutHandle;
 
 exports.init = function() {
   try {
-    profiler = require('@risingstack/v8-profiler');
+    profiler = require('v8-profiler-node8');
   } catch (error) {
     logger.info(
-      'Could not load @risingstack/v8-profiler. You will not be able to gather CPU profiles via ' +
+      'Could not load v8-profiler-node8. You will not be able to gather CPU profiles via ' +
       'Instana for this application. This typically occurs when native addons could not be ' +
       'installed during module installation (npm install). See the instructions to learn more ' +
       'about the requirements of the sensor: ' +
@@ -28,7 +28,7 @@ exports.init = function() {
 exports.startProfiling = function(request, multiCb) {
   if (!profiler) {
     multiCb({
-      error: '@risingstack/v8-profiler was not properly installed. Cannot gather CPU profile.'
+      error: 'v8-profiler-node8 was not properly installed. Cannot gather CPU profile.'
     });
     return;
   }
