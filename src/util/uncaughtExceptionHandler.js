@@ -30,8 +30,32 @@ function setDefaults() {
 
 exports.activate = function() {
   if (config.reportUncaughtException) {
-    logger.info('Reporting uncaught exceptions is enabled.');
     process.once(uncaughtExceptionEventName, onUncaughtException);
+    try {
+      if (require.resolve('netlinkwrapper')) {
+        logger.info('Reporting uncaught exceptions is enabled.');
+      } else {
+        // This should actually not happen as require.resolve should either return a resolved filename or throw an
+        // exception.
+        logger.warn(
+          'Reporting uncaught exceptions is enabled, but netlinkwrapper could not be loaded ' +
+          '(require.resolve(\'netlinkwrapper\') returned a falsy value). Uncaught exceptions will ' +
+          'not be reported to Instana for this application. This typically occurs when native addons could not be ' +
+          'compiled during module installation (npm install/yarn). See the instructions to learn more about the ' +
+          'requirements of the sensor: ' +
+          'https://github.com/instana/nodejs-sensor/blob/master/README.md'
+        );
+      }
+    } catch (notResolved) {
+      // This happens if netlinkwrapper is not available (it is an optional dependency).
+      logger.warn(
+        'Reporting uncaught exceptions is enabled, but netlinkwrapper could not be loaded. Uncaught exceptions will ' +
+        'not be reported to Instana for this application. This typically occurs when native addons could not be ' +
+        'compiled during module installation (npm install/yarn). See the instructions to learn more about the ' +
+        'requirements of the sensor: ' +
+        'https://github.com/instana/nodejs-sensor/blob/master/README.md'
+      );
+    }
   } else {
     logger.info('Reporting uncaught exceptions is disabled.');
   }
