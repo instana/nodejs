@@ -1,5 +1,8 @@
 # Changelog
 
+## Unreleased
+- Warn about missing dependency netlinkwrapper at startup when reporting of uncaught exceptions is enabled.
+
 ## 1.48.1
 - Fix secret scrubbing for HTTP server instrumentation.
 
