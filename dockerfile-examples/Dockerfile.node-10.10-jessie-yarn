@@ -1,0 +1,12 @@
+# Bare Jessie Node.js 10 image, using yarn.
+# Native addons will work except for v8-profiler, which has not been updated for
+# Node 10. The install step will work though (since v8-profiler is an optional
+# dependency) and running the Docker image will also work.
+
+FROM node:10.10.0-jessie
+WORKDIR /usr/src/app
+RUN yarn global add node-gyp
+RUN yarn
+COPY . .
+EXPOSE 3333
+CMD [ "yarn", "start" ]

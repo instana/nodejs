@@ -1,0 +1,12 @@
+# Bare Jessie Node.js 10 image.
+# Native addons will work except for v8-profiler, which has not been updated for
+# Node 10. The install step will work though (since v8-profiler is an optional
+# dependency) and running the Docker image will also work.
+
+FROM node:10.6.0
+WORKDIR /usr/src/app
+COPY package*.json ./
+RUN npm install --only=production
+COPY . .
+EXPOSE 3333
+CMD [ "npm", "start" ]

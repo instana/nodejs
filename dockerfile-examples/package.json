@@ -1,0 +1,14 @@
+{
+  "name": "dockerfiles",
+  "version": "1.0.0",
+  "description": "",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Bastian Krol <bastian.krol@web.de>",
+  "license": "ISC",
+  "dependencies": {
+    "instana-nodejs-sensor": "^1.48.1"
+  }
+}
