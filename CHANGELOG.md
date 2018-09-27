@@ -2,6 +2,7 @@
 
 ## Unreleased
 - Warn about missing dependency netlinkwrapper at startup when reporting of uncaught exceptions is enabled.
+- Fix: Uncaught exception reporting can now be enabled on systems using musl libc instead of glibc (e.g. Alpine Linux)
 
 ## 1.48.1
 - Fix secret scrubbing for HTTP server instrumentation.
