@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.49.0
 - Enable CPU profiling for Node.js 10 apps.
 - Warn about missing dependency netlinkwrapper at startup when reporting of uncaught exceptions is enabled.
 - Fix: Uncaught exception reporting can now be enabled on systems using musl libc instead of glibc (e.g. Alpine Linux)
