@@ -1,7 +1,5 @@
 # An Alpine image with additional Alpine packages, so native addons can
-# be compiled via node-gyp. Currently, netlinkwrapper will still fail to
-# compile, see
-# https://github.com/instana/nodejs-sensor/issues/83#issuecomment-424629275
+# be compiled via node-gyp.
 
 FROM node:8.12.0-alpine
 WORKDIR /usr/src/app
