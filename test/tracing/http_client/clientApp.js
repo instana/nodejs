@@ -82,6 +82,19 @@ app.get('/request-options-only', function(req, res) {
   }).end();
 });
 
+app.get('/request-options-only-null-headers', function(req, res) {
+  httpModule.request({
+    hostname: '127.0.0.1',
+    port: process.env.SERVER_PORT,
+    method: 'GET',
+    path: '/request-only-opts',
+    rejectUnauthorized: false,
+    headers: null
+  }, function() {
+    return res.sendStatus(200);
+  }).end();
+});
+
 app.get('/get-url-and-options', function(req, res) {
   httpModule.get(
     createUrl(req, '/get-url-opts'),

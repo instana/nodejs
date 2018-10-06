@@ -156,6 +156,30 @@ function registerTests(useHttps) {
       });
   });
 
+  it('must trace request(options, cb) with { headers: null }', function() {
+    return clientControls.sendRequest({
+      method: 'GET',
+      path: '/request-options-only-null-headers'
+    })
+      .then(function() {
+        return utils.retry(function() {
+          return agentControls.getSpans()
+          .then(function(spans) {
+            var clientSpan = utils.expectOneMatching(spans, function(span) {
+              expect(span.n).to.equal('node.http.client');
+              expect(span.data.http.url).to.match(/\/request-only-opts/);
+            });
+            utils.expectOneMatching(spans, function(span) {
+              expect(span.n).to.equal('node.http.server');
+              expect(span.data.http.url).to.match(/\/request-only-opts/);
+              expect(span.t).to.equal(clientSpan.t);
+              expect(span.p).to.equal(clientSpan.s);
+            });
+          });
+        });
+      });
+  });
+
   [false, true].forEach(function(urlObject) {
     var urlParam = urlObject ? 'urlObject' : 'urlString';
     it('must trace get(' + urlParam + ', options, cb)', function() {

@@ -264,7 +264,7 @@ function tryToAddTraceLevelAddHeaderToOpts(options, level) {
 }
 
 function hasHeadersOption(options) {
-  return options && typeof options === 'object' && typeof options.headers === 'object';
+  return options && typeof options === 'object' && options.headers && typeof options.headers === 'object';
 }
 
 function setHeadersOnRequest(clientRequest, span) {

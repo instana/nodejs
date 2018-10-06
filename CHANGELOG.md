@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.49.1
+- Fix: Do not fail when http client options object has a headers attribute with value
+
 ## 1.49.0
 - Enable CPU profiling for Node.js 10 apps.
 - Warn about missing dependency netlinkwrapper at startup when reporting of uncaught exceptions is enabled.
