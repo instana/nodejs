@@ -19,9 +19,10 @@ describe('metrics.dependencies', function() {
     dependencies.activate();
 
     setTimeout(function() {
-      // testing against Mocha dependencies
-      expect(dependencies.currentPayload.mkdirp).to.equal('0.5.0');
-      expect(dependencies.currentPayload.glob).to.equal('3.2.3');
+      // Testing against Mocha dependencies as mocha is the main module when running the tests and dependencies are
+      // evaluated as the content of the node_modules directory relative to the main module.
+      expect(dependencies.currentPayload.debug).to.equal('3.1.0');
+      expect(dependencies.currentPayload['supports-color']).to.equal('5.4.0');
       done();
     }, 500);
   });
