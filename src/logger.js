@@ -7,8 +7,11 @@ var bunyanToAgentStream = require('./agent/bunyanToAgentStream');
 var parentLogger;
 
 exports.init = function(config) {
-  if (config.logger) {
+  if (config.logger && typeof config.logger.child === 'function') {
     parentLogger = config.logger.child({module: 'instana-nodejs-logger-parent'});
+  } else if (config.logger && hasLoggingFunctions(config.logger)) {
+    parentLogger = config.logger;
+    return;
   } else {
     parentLogger = bunyan.createLogger({name: 'instana-nodejs-sensor'});
   }
@@ -29,9 +32,20 @@ exports.getLogger = function(moduleName) {
     exports.init({});
   }
 
+  if (typeof parentLogger.child !== 'function') {
+    return parentLogger;
+  }
+
   var logger = parentLogger.child({
     module: moduleName
   });
 
   return logger;
 };
+
+function hasLoggingFunctions(logger) {
+  return typeof logger.debug === 'function' &&
+    typeof logger.info === 'function' &&
+    typeof logger.warn === 'function' &&
+    typeof logger.error === 'function';
+}

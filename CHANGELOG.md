@@ -1,5 +1,8 @@
 # Changelog
 
+## Unreleased
+- Allow other (non-Bunyan) loggers to be injected.
+
 ## 1.51.0
 - Instrument amqplib (RabbitMQ tracing)
 
