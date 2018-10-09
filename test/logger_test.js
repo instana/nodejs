@@ -53,4 +53,12 @@ describe('logger', function() {
 
     expect(logger.level()).to.equal(50);
   });
+
+  it('should accept non-bunyan loggers', function() {
+    var nonBunyanLogger = {};
+
+    log.init({ nonBunyanLogger: nonBunyanLogger });
+
+    expect(log.getLogger('childName')).to.equal(nonBunyanLogger);
+  });
 });
