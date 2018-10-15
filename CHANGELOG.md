@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.50.0
+- Update to latest emitter-listener package to include [latest fix](https://github.com/othiym23/emitter-listener/pull/6)
+- Update a number of dependencies (bunyan, event-loop-lag, opentracing, shimmer, ...)
+- Fix minor issues reported by npm audit
+
 ## 1.49.1
 - Fix: Do not fail when http client options object has a headers attribute with value
 
