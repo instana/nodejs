@@ -59,7 +59,7 @@ function instrumentCommand(command, original) {
       return original.apply(this, arguments);
     }
 
-    var span = cls.startSpan('redis');
+    var span = cls.startSpan('redis', cls.EXIT);
     // do not set the redis span as the current span
     cls.setCurrentSpan(parentSpan);
     span.stack = tracingUtil.getStackTrace(wrappedCommand);
@@ -118,7 +118,7 @@ function instrumentMultiExec(isAtomic, original) {
       return original.apply(this, arguments);
     }
 
-    var span = cls.startSpan('redis');
+    var span = cls.startSpan('redis', cls.EXIT);
     // do not set the redis span as the current span
     cls.setCurrentSpan(parentSpan);
     span.stack = tracingUtil.getStackTrace(instrumentedMultiExec);

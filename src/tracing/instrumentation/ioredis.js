@@ -59,7 +59,7 @@ function instrumentSendCommand(original) {
 
     var argsForOriginal = arguments;
     return cls.ns.runAndReturn(function() {
-      var span = cls.startSpan('redis');
+      var span = cls.startSpan('redis', cls.EXIT);
       span.stack = tracingUtil.getStackTrace(wrappedInternalSendCommand);
       span.data = {
         redis: {
@@ -122,7 +122,7 @@ function instrumentMultiOrPipelineCommand(commandName, original) {
     // create a new cls context parent to track the multi/pipeline child calls
     var clsContextForMultiOrPipeline = cls.ns.createContext();
     cls.ns.enter(clsContextForMultiOrPipeline);
-    var span = cls.startSpan('redis');
+    var span = cls.startSpan('redis', cls.EXIT);
     span.stack = tracingUtil.getStackTrace(wrappedInternalMultiOrPipelineCommand);
     span.data = {
       redis: {

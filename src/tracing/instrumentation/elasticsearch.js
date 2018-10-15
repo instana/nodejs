@@ -46,7 +46,7 @@ function instrumentApi(client, action, info) {
       return original.apply(client, arguments);
     }
 
-    var span = cls.startSpan('elasticsearch');
+    var span = cls.startSpan('elasticsearch', cls.EXIT);
     span.stack = tracingUtil.getStackTrace(instrumentedAction);
     span.data = {
         elasticsearch: {
