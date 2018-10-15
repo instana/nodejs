@@ -103,7 +103,7 @@ function instrumentedQuery(ctx, originalQuery, statementOrOpts, valuesOrCallback
   }
 
   return cls.ns.runAndReturn(function() {
-    var span = cls.startSpan('mysql');
+    var span = cls.startSpan('mysql', cls.EXIT);
     span.b = {s: 1};
     span.stack = tracingUtil.getStackTrace(instrumentedQuery);
     span.data = {

@@ -3,21 +3,15 @@
 var transmission = require('./transmission');
 var tracingUtil = require('./tracingUtil');
 var hooked = require('./clsHooked');
+var logger = require('../logger').getLogger('cls');
 
 var currentRootSpanKey = exports.currentRootSpanKey = 'com.instana.rootSpan';
 var currentSpanKey = exports.currentSpanKey = 'com.instana.span';
 var tracingLevelKey = exports.tracingLevelKey = 'com.instana.tl';
 
-var exitSpans = [
-  'elasticsearch',
-  'mongo',
-  'mysql',
-  'mssql',
-  'node.http.client',
-  'postgres',
-  'redis'
-];
-var entrySpans = ['node.http.server'];
+exports.ENTRY = 1;
+exports.EXIT = 2;
+exports.INTERMEDIATE = 3;
 
 /*
  * Access the Instana namespace in context local storage.
@@ -32,12 +26,16 @@ exports.ns = hooked.createNamespace('instana.sensor');
 
 /*
  * Start a new span and set it as the current span
- *
  */
-exports.startSpan = function startSpan(spanName, traceId, spanId, modifyAsyncContext) {
+exports.startSpan = function startSpan(spanName, kind, traceId, spanId, modifyAsyncContext) {
+  if (!kind || (kind !== exports.ENTRY && kind !== exports.EXIT && kind !== exports.INTERMEDIATE)) {
+    logger.warn('Invalid span (%s) without kind/with invalid kind: %s, assuming EXIT.', spanName, kind);
+    kind = exports.EXIT;
+  }
   modifyAsyncContext = modifyAsyncContext !== false;
   var span = new InstanaSpan(spanName);
   var parentSpan = exports.ns.get(currentSpanKey);
+  span.k = kind;
 
   // If specified, use params
   if (traceId && spanId) {
@@ -53,17 +51,10 @@ exports.startSpan = function startSpan(spanName, traceId, spanId, modifyAsyncCon
   }
   span.s = tracingUtil.generateRandomSpanId();
 
-  // Set span direction type (1=entry, 2=exit, 3=local/intermediate)
-  if (entrySpans.indexOf(span.n) > -1) {
-    span.k = 1;
-
+  if (span.k === exports.ENTRY) {
     if (!span.p && modifyAsyncContext) {
       span.addCleanup(exports.ns.set(currentRootSpanKey, span));
     }
-  } else if (exitSpans.indexOf(span.n) > -1) {
-    span.k = 2;
-  } else {
-    span.k = 3;
   }
 
   if (modifyAsyncContext) {

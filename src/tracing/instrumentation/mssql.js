@@ -79,7 +79,7 @@ function instrumentedMethod(ctx, originalFunction, originalArgs, stackTraceRef, 
   var connectionParameters = findConnectionParameters(ctx);
   var command = commandProvider(originalArgs);
   return cls.ns.runAndReturn(function() {
-    var span = cls.startSpan('mssql');
+    var span = cls.startSpan('mssql', cls.EXIT);
     span.stack = tracingUtil.getStackTrace(stackTraceRef);
     span.data = {
       mssql: {

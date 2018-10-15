@@ -93,7 +93,7 @@ function instrument(coreModule) {
     }
 
     cls.ns.run(function() {
-      var span = cls.startSpan('node.http.client');
+      var span = cls.startSpan('node.http.client', cls.EXIT);
 
       var completeCallUrl;
       if (urlArg && typeof urlArg === 'string') {

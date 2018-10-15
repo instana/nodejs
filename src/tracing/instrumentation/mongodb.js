@@ -96,7 +96,7 @@ function onStarted(event) {
     return;
   }
 
-  var span = cls.startSpan('mongo', traceId, parentSpanId, false);
+  var span = cls.startSpan('mongo', cls.EXIT, traceId, parentSpanId, false);
 
   var peer = null;
   var service = null;

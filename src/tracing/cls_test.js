@@ -19,11 +19,13 @@ describe('tracing/cls', function() {
 
   it('must initialize a new valid span', function() {
     cls.ns.run(function() {
-      var newSpan = cls.startSpan('cls-test-run');
+      var newSpan = cls.startSpan('cls-test-run', cls.EXIT);
       expect(newSpan).to.be.a('Object');
       expect(newSpan).to.have.property('t');
       expect(newSpan).to.have.property('s');
       expect(newSpan).to.have.property('f');
+      expect(newSpan).to.have.property('k');
+      expect(newSpan.k).to.equal(cls.EXIT);
       expect(newSpan).to.have.property('async');
       expect(newSpan.async).to.equal(false);
       expect(newSpan).to.have.property('error');
@@ -45,8 +47,8 @@ describe('tracing/cls', function() {
     var newSpan;
 
     cls.ns.run(function() {
-      parentSpan = cls.startSpan('Mr-Brady');
-      newSpan = cls.startSpan('Peter-Brady');
+      parentSpan = cls.startSpan('Mr-Brady', cls.ENTRY);
+      newSpan = cls.startSpan('Peter-Brady', cls.EXIT);
     });
     expect(newSpan.t).to.equal(parentSpan.t);
     expect(newSpan.p).to.equal(parentSpan.s);
@@ -56,40 +58,40 @@ describe('tracing/cls', function() {
     cls.ns.run(function() {
       cls.setTracingLevel('0');
       expect(cls.tracingSuppressed()).to.equal(true);
-      cls.startSpan('Antonio-Andolini');
+      cls.startSpan('Antonio-Andolini', cls.ENTRY);
       expect(cls.tracingSuppressed()).to.equal(true);
-      cls.startSpan('Vito-Corleone');
+      cls.startSpan('Vito-Corleone', cls.EXIT);
       expect(cls.tracingSuppressed()).to.equal(true);
-      cls.startSpan('Michael-Corleone');
+      cls.startSpan('Michael-Corleone', cls.EXIT);
       expect(cls.tracingSuppressed()).to.equal(true);
 
       cls.ns.run(function() {
         cls.setTracingLevel('1');
         expect(cls.tracingSuppressed()).to.equal(false);
-        cls.startSpan('Antonio-Andolini');
+        cls.startSpan('Antonio-Andolini', cls.EXIT);
         expect(cls.tracingSuppressed()).to.equal(false);
-        cls.startSpan('Vito-Corleone');
+        cls.startSpan('Vito-Corleone', cls.EXIT);
         expect(cls.tracingSuppressed()).to.equal(false);
-        cls.startSpan('Michael-Corleone');
+        cls.startSpan('Michael-Corleone', cls.EXIT);
         expect(cls.tracingSuppressed()).to.equal(false);
 
         cls.ns.run(function() {
           cls.setTracingLevel('0');
           expect(cls.tracingSuppressed()).to.equal(true);
-          cls.startSpan('Antonio-Andolini');
+          cls.startSpan('Antonio-Andolini', cls.EXIT);
           expect(cls.tracingSuppressed()).to.equal(true);
-          cls.startSpan('Vito-Corleone');
+          cls.startSpan('Vito-Corleone', cls.EXIT);
           expect(cls.tracingSuppressed()).to.equal(true);
-          cls.startSpan('Michael-Corleone');
+          cls.startSpan('Michael-Corleone', cls.EXIT);
           expect(cls.tracingSuppressed()).to.equal(true);
 
           cls.ns.run(function() {
             expect(cls.tracingSuppressed()).to.equal(true);
-            cls.startSpan('Antonio-Andolini');
+            cls.startSpan('Antonio-Andolini', cls.EXIT);
             expect(cls.tracingSuppressed()).to.equal(true);
-            cls.startSpan('Vito-Corleone');
+            cls.startSpan('Vito-Corleone', cls.EXIT);
             expect(cls.tracingSuppressed()).to.equal(true);
-            cls.startSpan('Michael-Corleone');
+            cls.startSpan('Michael-Corleone', cls.EXIT);
             expect(cls.tracingSuppressed()).to.equal(true);
           });
         });
@@ -103,22 +105,22 @@ describe('tracing/cls', function() {
     var localSpan;
 
     cls.ns.run(function() {
-      entrySpan = cls.startSpan('node.http.server');
-      exitSpan = cls.startSpan('mongo');
-      localSpan = cls.startSpan('myCustom');
+      entrySpan = cls.startSpan('node.http.server', cls.ENTRY);
+      exitSpan = cls.startSpan('mongo', cls.EXIT);
+      localSpan = cls.startSpan('myCustom', cls.INTERMEDIATE);
     });
 
-    expect(entrySpan.k).to.equal(1);
+    expect(entrySpan.k).to.equal(cls.ENTRY);
     expect(cls.isEntrySpan(entrySpan)).to.equal(true);
     expect(cls.isExitSpan(entrySpan)).to.equal(false);
     expect(cls.isLocalSpan(entrySpan)).to.equal(false);
 
-    expect(exitSpan.k).to.equal(2);
+    expect(exitSpan.k).to.equal(cls.EXIT);
     expect(cls.isEntrySpan(exitSpan)).to.equal(false);
     expect(cls.isExitSpan(exitSpan)).to.equal(true);
     expect(cls.isLocalSpan(exitSpan)).to.equal(false);
 
-    expect(localSpan.k).to.equal(3);
+    expect(localSpan.k).to.equal(cls.INTERMEDIATE);
     expect(cls.isEntrySpan(localSpan)).to.equal(false);
     expect(cls.isExitSpan(localSpan)).to.equal(false);
     expect(cls.isLocalSpan(localSpan)).to.equal(true);
@@ -129,7 +131,7 @@ describe('tracing/cls', function() {
       expect(context[cls.currentRootSpanKey]).to.equal(undefined);
       expect(context[cls.currentSpanKey]).to.equal(undefined);
 
-      var span = cls.startSpan('node.http.server');
+      var span = cls.startSpan('node.http.server', cls.ENTRY);
       expect(context[cls.currentRootSpanKey]).to.equal(span);
       expect(context[cls.currentSpanKey]).to.equal(span);
 
