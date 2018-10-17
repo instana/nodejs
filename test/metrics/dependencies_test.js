@@ -4,7 +4,7 @@
 
 var expect = require('chai').expect;
 
-var dependencies = require('./dependencies');
+var dependencies = require('../../src/metrics/dependencies');
 
 describe('metrics.dependencies', function() {
   afterEach(function() {

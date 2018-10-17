@@ -10,7 +10,7 @@ describe('tracing/cls', function() {
 
   beforeEach(function() {
     // reload to clear vars
-    cls = proxyquire('./cls', {});
+    cls = proxyquire('../../src/tracing/cls', {});
   });
 
   it('must not have an active context initially', function() {

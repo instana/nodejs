@@ -25,7 +25,7 @@ describe('metrics.startTime', function() {
     process.uptime.returns(3); // seconds
     clock.tick(100000);
     // proxyquire to reset module state
-    var startTime = proxyquire('./startTime', {});
+    var startTime = proxyquire('../../src/metrics/startTime', {});
     expect(startTime.currentPayload).to.equal(97000);
   });
 });

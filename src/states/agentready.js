@@ -13,11 +13,9 @@ var clone = require('../clone');
 
 var metricsBaseDir = path.join(__dirname, '..', 'metrics');
 var modules = fs.readdirSync(metricsBaseDir)
-  // ignore non-JS files and tests
+  // ignore non-JS files
   .filter(function(moduleName) {
-    return moduleName.indexOf('.js') >= 0 &&
-      moduleName.indexOf('.js') === moduleName.length - 3 &&
-      moduleName.indexOf('_test.js') === -1;
+    return moduleName.indexOf('.js') === moduleName.length - 3;
   })
   .map(function(moduleName) {
     return require(path.join(metricsBaseDir, moduleName));

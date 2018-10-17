@@ -4,7 +4,7 @@
 
 var sinon = require('sinon');
 var expect = require('chai').expect;
-var slidingWindow = require('./slidingWindow');
+var slidingWindow = require('../src/slidingWindow');
 
 describe('slidingWindow', function() {
   var clock;

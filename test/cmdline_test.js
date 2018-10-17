@@ -53,7 +53,7 @@ describe('cmdline', function() {
   });
 
   function req() {
-    result = proxyquire('./cmdline', {
+    result = proxyquire('../src/cmdline', {
       fs: fs
     }).getCmdline();
   }

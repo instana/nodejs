@@ -3,7 +3,7 @@
 'use strict';
 
 var expect = require('chai').expect;
-var compression = require('./compression');
+var compression = require('../src/compression');
 
 describe('compression', function() {
   it('should comparse primitive values', function() {

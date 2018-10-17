@@ -23,11 +23,9 @@ module.exports = exports = function start(config) {
   var currentState = null;
 
   var states = fs.readdirSync(path.join(__dirname, 'states'))
-    // ignore non-JS files and tests
+    // ignore non-JS files
     .filter(function(moduleName) {
-      return moduleName.indexOf('.js') >= 0 &&
-        moduleName.indexOf('.js') === moduleName.length - 3 &&
-        moduleName.indexOf('_test.js') === -1;
+      return moduleName.indexOf('.js') === moduleName.length - 3;
     })
     .reduce(function(stateModules, stateModuleName) {
       var stateName = stateModuleName.replace(/\.js$/i, '');

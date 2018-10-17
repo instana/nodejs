@@ -4,7 +4,7 @@
 
 var expect = require('chai').expect;
 
-var name = require('./name');
+var name = require('../../src/metrics/name');
 
 describe('metrics.name', function() {
   afterEach(function() {

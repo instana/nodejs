@@ -3,7 +3,7 @@
 'use strict';
 
 var expect = require('chai').expect;
-var uniq = require('./uniq');
+var uniq = require('../src/uniq');
 
 describe('uniq', function() {
   it('should not fail for empty arrays', function() {

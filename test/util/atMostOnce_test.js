@@ -5,7 +5,7 @@
 var expect = require('chai').expect;
 var sinon = require('sinon');
 
-var atMostOnce = require('./atMostOnce');
+var atMostOnce = require('../../src/util/atMostOnce');
 
 describe('util.atMostOnce', function() {
   var cb;

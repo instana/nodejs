@@ -22,7 +22,7 @@ describe('metrics.heapSpaces', function() {
     v8 = {
       getHeapSpaceStatistics: sinon.stub()
     };
-    heapSpaces = proxyquire('./heapSpaces', {
+    heapSpaces = proxyquire('../../src/metrics/heapSpaces', {
       v8: v8
     });
   });

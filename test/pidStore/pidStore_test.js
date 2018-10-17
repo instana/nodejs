@@ -28,7 +28,7 @@ describe('pidStore', function() {
 
 
   function doRequire() {
-    pidStore = proxyquire('./index', {
+    pidStore = proxyquire('../../src/pidStore', {
       fs: {
         readFileSync: readFileSync
       },

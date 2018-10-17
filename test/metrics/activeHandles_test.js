@@ -4,7 +4,7 @@
 
 var expect = require('chai').expect;
 
-var activeHandles = require('./activeHandles');
+var activeHandles = require('../../src/metrics/activeHandles');
 
 describe('metrics.activeHandles', function() {
   beforeEach(function() {

@@ -6,7 +6,7 @@
 var expect = require('chai').expect;
 var bunyan = require('bunyan');
 
-var log = require('./logger');
+var log = require('../src/logger');
 
 
 describe('logger', function() {

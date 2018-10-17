@@ -4,7 +4,7 @@
 
 var expect = require('chai').expect;
 
-var memory = require('./memory');
+var memory = require('../../src/metrics/memory');
 
 describe('metrics.memory', function() {
   afterEach(function() {

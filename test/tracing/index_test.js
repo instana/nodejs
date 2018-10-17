@@ -4,7 +4,7 @@
 
 var expect = require('chai').expect;
 
-var tracing = require('./index');
+var tracing = require('../../src/tracing/index');
 
 describe('tracing', function() {
   describe('supportedVersion', function() {
