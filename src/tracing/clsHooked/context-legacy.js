@@ -13,7 +13,6 @@ const wrapEmitter = require('emitter-listener');
 const asyncHook = require('async-hook-jl');
 
 const CONTEXTS_SYMBOL = 'instanaClsHooked@contexts';
-const ERROR_SYMBOL = 'instanaClsHookedError@context';
 
 //const trace = [];
 
@@ -32,7 +31,6 @@ module.exports = {
   destroyNamespace: destroyNamespace,
   reset: reset,
   //trace: trace,
-  ERROR_SYMBOL: ERROR_SYMBOL
 };
 
 function Namespace(name) {
@@ -106,12 +104,6 @@ Namespace.prototype.run = function run(fn) {
     fn(context);
     return context;
   }
-  catch (exception) {
-    if (exception) {
-      exception[ERROR_SYMBOL] = context;
-    }
-    throw exception;
-  }
   finally {
     if (DEBUG_CLS_HOOKED) {
       debug2(' AFTER RUN: ' + this.name + ' uid:' + currentUid + ' len:' + this._set.length + ' ' +
@@ -158,7 +150,6 @@ Namespace.prototype.runPromise = function runPromise(fn) {
       return result;
     })
     .catch(err => {
-      err[ERROR_SYMBOL] = context;
       if (DEBUG_CLS_HOOKED) {
         debug2(' AFTER runPromise: ' + this.name + ' uid:' + currentUid + ' len:' + this._set.length + ' ' +
           util.inspect(context));
@@ -183,12 +174,6 @@ Namespace.prototype.bind = function bindFactory(fn, context) {
     self.enter(context);
     try {
       return fn.apply(this, arguments);
-    }
-    catch (exception) {
-      if (exception) {
-        exception[ERROR_SYMBOL] = context;
-      }
-      throw exception;
     }
     finally {
       self.exit(context);
@@ -273,16 +258,6 @@ Namespace.prototype.bindEmitter = function bindEmitter(emitter) {
   }
 
   wrapEmitter(emitter, attach, bind);
-};
-
-/**
- * If an error comes out of a namespace, it will have a context attached to it.
- * This function knows how to find it.
- *
- * @param {Error} exception Possibly annotated error.
- */
-Namespace.prototype.fromException = function fromException(exception) {
-  return exception[ERROR_SYMBOL];
 };
 
 function getNamespace(name) {

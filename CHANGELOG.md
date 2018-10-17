@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.50.1
+- Fix: Do not attach context to error/exception objects (#90)
+
 ## 1.50.0
 - Update to latest emitter-listener package to include [latest fix](https://github.com/othiym23/emitter-listener/pull/6)
 - Update a number of dependencies (bunyan, event-loop-lag, opentracing, shimmer, ...)
