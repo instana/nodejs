@@ -10,6 +10,7 @@ var config;
 
 var instrumentations = [
   './instrumentation/bluebird',
+  './instrumentation/amqp',
   './instrumentation/elasticsearch',
   './instrumentation/express',
   './instrumentation/fastify',

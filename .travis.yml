@@ -23,7 +23,7 @@ before_script:
   - sudo /etc/init.d/mysql stop
   - sudo /etc/init.d/postgresql stop
   - docker-compose kill && docker-compose rm -f && docker-compose up -d
-  - sleep 180
+  - sleep 45
 
 after_failure:
   - docker ps

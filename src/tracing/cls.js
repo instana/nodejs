@@ -198,6 +198,13 @@ InstanaSpan.prototype.transmit = function transmit() {
   }
 };
 
+InstanaSpan.prototype.cancel = function cancel() {
+  if (!this.transmitted) {
+    this.cleanup();
+    this.transmitted = true;
+  }
+};
+
 InstanaSpan.prototype.cleanup = function cleanup() {
   this.cleanupFunctions.forEach(call);
   this.cleanupFunctions.length = 0;
