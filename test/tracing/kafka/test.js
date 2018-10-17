@@ -11,7 +11,6 @@ describe('tracing/kafka', function() {
     return;
   }
 
-  // controls require features that aren't available in early Node.js versions
   var expressKafkaProducerControls = require('./producerControls');
   var kafkaConsumerControls = require('./consumerControls');
   var agentStubControls = require('../../apps/agentStubControls');

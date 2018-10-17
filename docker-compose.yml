@@ -67,3 +67,9 @@ services:
     environment:
       ACCEPT_EULA: Y
       SA_PASSWORD: stanCanHazMsSQL1
+
+  rabbitmq:
+    image: rabbitmq:3.7.8-alpine
+    ports:
+      - 5671:5671
+      - 5672:5672

@@ -1,5 +1,8 @@
 # Changelog
 
+## Unreleased
+- Instrument amqplib (RabbitMQ tracing)
+
 ## 1.50.1
 - Fix: Do not attach context to error/exception objects (#90)
 

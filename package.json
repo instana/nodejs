@@ -32,7 +32,8 @@
     "instana",
     "agent",
     "sensor",
-    "monitoring"
+    "monitoring",
+    "tracing"
   ],
   "author": "Ben Ripkens <ben@instana.com>",
   "license": "MIT",
@@ -62,6 +63,8 @@
   "devDependencies": {
     "admin": "^1.4.0",
     "admin-plugin-healthcheck": "^1.1.0",
+    "amqplib": "^0.5.2",
+    "async": "^2.6.1",
     "aws-sdk": "^2.329.0",
     "bluebird": "^3.5.2",
     "body-parser": "^1.18.3",
