@@ -54,11 +54,26 @@ describe('logger', function() {
     expect(logger.level()).to.equal(50);
   });
 
-  it('should accept non-bunyan loggers', function() {
+  it('should not accept non-bunyan loggers without necessary logging functions', function() {
     var nonBunyanLogger = {};
 
-    log.init({ nonBunyanLogger: nonBunyanLogger });
+    log.init({ logger: nonBunyanLogger });
 
-    expect(log.getLogger('childName')).to.equal(nonBunyanLogger);
+    var logger = log.getLogger('myLogger');
+    expect(logger).to.be.an.instanceOf(bunyan);
+  });
+
+  it('should accept non-bunyan loggers with necessary logging functions', function() {
+    var nonBunyanLogger = {
+      debug: function () {},
+      info: function () {},
+      warn: function () {},
+      error: function () {}
+    };
+
+    log.init({ logger: nonBunyanLogger });
+
+    var logger = log.getLogger('myLogger');
+    expect(logger).not.to.be.an.instanceOf(bunyan);
   });
 });
