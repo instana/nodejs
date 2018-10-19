@@ -93,9 +93,11 @@ This sensor is using the [bunyan](https://www.npmjs.com/package/bunyan) logging 
 
 ```javascript
 require('instana-nodejs-sensor')({
-  logger: A_BUNYAN_LOGGER
+  logger: A_LOGGER
 });
 ```
+
+Other logging modules are supported if they provide functions for the log levels `debug`, `info`, `warn` and `error`.
 
 ### Log Level Configuration
 The Node.js sensor will now create children of this logger with the same log level and target streams. If you only want to change the default log level, you can configure it via:
