@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.51.0
 - Instrument amqplib (RabbitMQ tracing)
 
 ## 1.50.1
