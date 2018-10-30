@@ -2,6 +2,7 @@
 
 ## Unreleased
 - Allow other (non-Bunyan) loggers to be injected.
+- Instrument [Pino](http://getpino.io/).
 
 ## 1.51.0
 - Instrument amqplib (RabbitMQ tracing)

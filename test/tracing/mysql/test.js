@@ -11,7 +11,6 @@ describe('tracing/mysql', function() {
     return;
   }
 
-  // controls require features that aren't available in early Node.js versions
   var expressMysqlControls = require('./controls');
   var agentStubControls = require('../../apps/agentStubControls');
 

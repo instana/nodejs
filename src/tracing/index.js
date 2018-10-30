@@ -18,14 +18,14 @@ var instrumentations = [
   './instrumentation/httpServer',
   './instrumentation/ioredis',
   './instrumentation/kafka',
+  './instrumentation/loggers/pino',
   './instrumentation/mongodb',
   './instrumentation/mssql',
   './instrumentation/mysql',
   './instrumentation/pg',
-  './instrumentation/redis',
+  './instrumentation/redis'
 ];
 var instrumentationModules = {};
-
 
 exports.init = function(_config) {
   config = _config;
@@ -48,12 +48,10 @@ exports.init = function(_config) {
   }
 };
 
-
 function setDefaults() {
   config.tracing = config.tracing || {};
   config.tracing.enabled = config.tracing.enabled !== false;
 }
-
 
 function shouldEnableTracing() {
   if (config.tracing && config.tracing.enabled === false) {
@@ -63,7 +61,6 @@ function shouldEnableTracing() {
 
   return true;
 }
-
 
 function shouldEnableAutomaticTracing() {
   if (config.tracing && config.tracing.enabled === false) {
@@ -77,18 +74,18 @@ function shouldEnableAutomaticTracing() {
   }
 
   if (!exports.supportedVersion(process.versions.node)) {
-    logger.info('Not enabling automatic tracing this is an unsupported version of Node.' +
-                '  See: https://docs.instana.io/ecosystem/node-js/');
+    logger.info(
+      'Not enabling automatic tracing this is an unsupported version of Node.' +
+        '  See: https://docs.instana.io/ecosystem/node-js/'
+    );
     return false;
   }
   return true;
 }
 
-
 exports.supportedVersion = function supportedVersion(version) {
   return semver.satisfies(version, '^4.5 || ^5.10 || ^6 || ^7 || ^8.2.1 || ^9.1.0 || ^10.0.0');
 };
-
 
 exports.activate = function() {
   if (tracingEnabled) {
@@ -102,7 +99,6 @@ exports.activate = function() {
     }
   }
 };
-
 
 exports.deactivate = function() {
   if (tracingEnabled) {
