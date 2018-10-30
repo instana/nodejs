@@ -40,7 +40,7 @@ require('instana-nodejs-sensor')();
 // const express = require('redis');
 ```
 
-The code shown above initializes the sensor with default configuration options. Refer to the [CONFIGURATION.md](CONFIGURATION.md) file for a list of valid configuration options.
+The code shown above initializes the sensor with default configuration options. Refer to the [CONFIGURATION.md](CONFIGURATION.md) file for a list of valid configuration options, and in particular to the section [Agent Communication](https://github.com/instana/nodejs-sensor/blob/master/CONFIGURATION.md#agent-communication) for details about configuring connectivity between your monitored application and the Instana agent.
 
 ## CPU Profiling, Garbage Collection and Event Loop Information
 Some information is not available to Node.js programs without the help of native addons. Specifically, the Instana Node.js sensor uses these addons

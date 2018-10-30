@@ -150,3 +150,8 @@ require('instana-nodejs-sensor')({
 ```
 
 If not configured, the Instana sensor will look for an environment variable called `INSTANA_AGENT_NAME` and use what is defined in this environment variable to communicate with the agent.
+
+### Kubernetes
+
+If your Node.js application and the Instana agent run in a Kubernetes cluster, please refer to the [Instana documentation](https://docs.instana.io/quick_start/agent_setup/container/kubernetes/#configuring-network-access-for-monitored-applications) about configuring network access in this setup.
+
