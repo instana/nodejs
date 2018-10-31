@@ -1,37 +1,37 @@
 # Changelog
 
-## Unreleased
-- Allow other (non-Bunyan) loggers to be injected.
+## 1.52.0
 - Instrument [Pino](http://getpino.io/).
+- Allow other (non-Bunyan) loggers to be injected ([#88](https://github.com/instana/nodejs-sensor/pull/88), thanks to @SerayaEryn).
 
 ## 1.51.0
-- Instrument amqplib (RabbitMQ tracing)
+- Instrument amqplib (RabbitMQ tracing).
 
 ## 1.50.1
-- Fix: Do not attach context to error/exception objects (#90)
+- Fix: Do not attach context to error/exception objects (#90).
 
 ## 1.50.0
-- Update to latest emitter-listener package to include [latest fix](https://github.com/othiym23/emitter-listener/pull/6)
-- Update a number of dependencies (bunyan, event-loop-lag, opentracing, shimmer, ...)
-- Fix minor issues reported by npm audit
+- Update to latest emitter-listener package to include [latest fix](https://github.com/othiym23/emitter-listener/pull/6).
+- Update a number of dependencies (bunyan, event-loop-lag, opentracing, shimmer, ...).
+- Fix minor issues reported by npm audit.
 
 ## 1.49.1
-- Fix: Do not fail when http client options object has a headers attribute with value
+- Fix: Do not fail when http client options object has a headers attribute with value.
 
 ## 1.49.0
 - Enable CPU profiling for Node.js 10 apps.
 - Warn about missing dependency netlinkwrapper at startup when reporting of uncaught exceptions is enabled.
-- Fix: Uncaught exception reporting can now be enabled on systems using musl libc instead of glibc (e.g. Alpine Linux)
+- Fix: Uncaught exception reporting can now be enabled on systems using musl libc instead of glibc (e.g. Alpine Linux).
 
 ## 1.48.1
 - Fix secret scrubbing for HTTP server instrumentation.
 
 ## 1.48.0
-- Various fixes and improvements for the HTTP client instrumentation
-    - Support for http(s).request(url, options, callback) API introduced in Node.js 10.9.0
-    - Support for WHATWG URL objects
-    - Fix for requests with header "Expect: 100-continue"
-    - Instrument http.get and https.get separately from http(s).request
+- Various fixes and improvements for the HTTP client instrumentation:
+    - support for http(s).request(url, options, callback) API introduced in Node.js 10.9.0,
+    - support for WHATWG URL objects,
+    - fix for requests with header "Expect: 100-continue", and
+    - instrument http.get and https.get separately from http(s).request.
 
 ## 1.47.1
  - MySQL: Fix for MySQL instrumentation sometimes losing the tracing context.
@@ -85,7 +85,7 @@
  - HTTP client instrumentation does not correctly interpret HTTP client timeouts.
 
 ## 1.38.2
- - ioredis: Correctly manage tracing context in ioredis instrumentation
+ - ioredis: Correctly manage tracing context in ioredis instrumentation.
 
 ## 1.38.1
  - OpenTracing baggage is not defined on span context when using `getCurrentlyActiveInstanaSpanContext`.
@@ -99,7 +99,7 @@
  - Reduce memory footprint when using HTTP agents with `maxSockets: Infinity`.
 
 ## 1.37.2
- - MongoDB: Properly initialize and assure operationId is generated
+ - MongoDB: Properly initialize and assure operationId is generated.
 
 ## 1.37.1
  - ioRedis instrumentation can lead to errors when async correlation doesn't work as expected.
@@ -114,8 +114,8 @@
  - Upgrade `event-loop-lag` to address [security vulnerability](https://nodesecurity.io/advisories/534) in `debug`.
 
 ## 1.36.0
- - Fix support for mysql2 versions prior to 1.5.0
- - Read env vars by default to determine agent connection config
+ - Fix support for mysql2 versions prior to 1.5.0.
+ - Read env vars by default to determine agent connection config.
 
 ## 1.35.1
  - HTTPS exit spans can have the wrong protocol set.
