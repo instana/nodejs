@@ -1,5 +1,8 @@
 # Changelog
 
+## Unreleased
+- Exclude file system entries that are not directories in dependency analysis, fixes confusing warning.
+
 ## 1.52.0
 - Instrument [Pino](http://getpino.io/).
 - Allow other (non-Bunyan) loggers to be injected ([#88](https://github.com/instana/nodejs-sensor/pull/88), thanks to @SerayaEryn).

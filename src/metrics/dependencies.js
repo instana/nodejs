@@ -22,14 +22,14 @@ exports.activate = function() {
   });
 };
 
-
 function addDependenciesFromDir(dependencyDir) {
   fs.readdir(dependencyDir, function(readDirErr, dependencies) {
     if (readDirErr) {
       return logger.warn('Cannot analyse dependencies due to %s', readDirErr.message);
     }
 
-    dependencies.filter(function(dependency) {
+    dependencies
+      .filter(function(dependency) {
         // exclude the .bin directory
         return dependency !== '.bin';
       })
@@ -37,8 +37,19 @@ function addDependenciesFromDir(dependencyDir) {
         if (dependency.indexOf('@') === 0) {
           addDependenciesFromDir(path.join(dependencyDir, dependency));
         } else {
-          var fullPackageJsonPath = path.join(dependencyDir, dependency, 'package.json');
-          addDependency(dependency, fullPackageJsonPath);
+          var fullDirPath = path.join(dependencyDir, dependency);
+          // Only check directories. For example, yarn adds a .yarn-integrity file to /node_modules/ which we need to
+          // exclude, otherwise we get a confusing "Failed to identify version of .yarn-integrity dependency due to:
+          // ENOTDIR: not a directory, open '.../node_modules/.yarn-integrity/package.json'." in the logs.
+          fs.stat(fullDirPath, function(statErr, stats) {
+            if (statErr) {
+              return logger.warn('Cannot analyse dependency %s due to %s', fullDirPath, statErr.message);
+            }
+            if (stats.isDirectory()) {
+              var fullPackageJsonPath = path.join(fullDirPath, 'package.json');
+              addDependency(dependency, fullPackageJsonPath);
+            }
+          });
         }
       });
   });
@@ -56,8 +67,12 @@ function addDependency(dependency, packageJsonPath) {
       var pckg = JSON.parse(contents);
       exports.currentPayload[pckg.name] = pckg.version;
     } catch (subErr) {
-      return logger.info('Failed to identify version of %s dependency due to: %s.  This means that you will not be ' +
-        'able to see details about this dependency within Instana.', dependency, subErr.message);
+      return logger.info(
+        'Failed to identify version of %s dependency due to: %s. This means that you will not be ' +
+          'able to see details about this dependency within Instana.',
+        dependency,
+        subErr.message
+      );
     }
   });
 }
