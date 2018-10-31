@@ -1,5 +1,6 @@
 'use strict';
 
+var semver = require('semver');
 var expect = require('chai').expect;
 
 var supportedVersion = require('../../../../src/tracing/index').supportedVersion;
@@ -7,7 +8,8 @@ var config = require('../../../config');
 var utils = require('../../../utils');
 
 describe('tracing/logger/pino', function() {
-  if (!supportedVersion(process.versions.node)) {
+  // Pino 5 does not support Node.js 4, it uses EcmaScrip language features that only work in more recent versions.
+  if (!supportedVersion(process.versions.node) || semver.lt(process.versions.node, '6.0.0')) {
     return;
   }
 
