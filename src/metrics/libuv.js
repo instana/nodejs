@@ -8,10 +8,10 @@ try {
 } catch (e) {
   logger.info(
     'Could not load event-loop-stats. You will only see limited event loop information in ' +
-    'Instana for this application. This typically occurs when native addons could not be ' +
-    'installed during module installation (npm install). See the instructions to learn more ' +
-    'about the requirements of the sensor: ' +
-    'https://github.com/instana/nodejs-sensor/blob/master/README.md'
+      'Instana for this application. This typically occurs when native addons could not be ' +
+      'installed during module installation (npm install). See the instructions to learn more ' +
+      'about the requirements of the sensor: ' +
+      'https://github.com/instana/nodejs-sensor/blob/master/README.md'
   );
 }
 var lag = require('event-loop-lag')(1000);

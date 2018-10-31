@@ -26,7 +26,8 @@ exports.activate = function(config) {
 };
 
 function gatherHealthcheckResults() {
-  adminPluginHealthcheck.getHealthCheckResult()
+  adminPluginHealthcheck
+    .getHealthCheckResult()
     .then(function onHealthcheckResults(adminHealthcheckResults) {
       var results = {};
       var previousResults = exports.currentPayload;

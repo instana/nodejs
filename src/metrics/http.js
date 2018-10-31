@@ -9,7 +9,6 @@ exports.deactivate = function() {};
 instrumentHttpModule('http');
 instrumentHttpModule('https');
 
-
 function instrumentHttpModule(httpModuleName) {
   var coreHttpModule = require(httpModuleName);
   var originalCreateServer = coreHttpModule.createServer;

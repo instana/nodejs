@@ -17,15 +17,10 @@ exports.getSourceFile = function(request, multiCb) {
   readFile(request, multiCb);
 };
 
-
 function readFile(request, multiCb) {
-  fs.readFile(request.args.file, {encoding: 'utf8'}, function(error, content) {
+  fs.readFile(request.args.file, { encoding: 'utf8' }, function(error, content) {
     if (error) {
-      logger.debug(
-        'Failed to retrieve source file for user request: %s.',
-        request.args.file,
-        {error: error}
-      );
+      logger.debug('Failed to retrieve source file for user request: %s.', request.args.file, { error: error });
       multiCb({
         error: 'Could not load file. Error: ' + error.message
       });

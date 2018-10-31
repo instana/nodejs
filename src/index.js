@@ -22,7 +22,8 @@ module.exports = exports = function start(config) {
 
   var currentState = null;
 
-  var states = fs.readdirSync(path.join(__dirname, 'states'))
+  var states = fs
+    .readdirSync(path.join(__dirname, 'states'))
     // ignore non-JS files
     .filter(function(moduleName) {
       return moduleName.indexOf('.js') === moduleName.length - 3;

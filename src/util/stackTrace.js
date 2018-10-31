@@ -22,7 +22,6 @@ exports.captureStackTrace = function captureStackTrace(length, referenceFunction
   return stack;
 };
 
-
 exports.getStackTraceAsJson = function getStackTraceAsJson(length, error) {
   if (length <= 0) {
     return [];
@@ -41,17 +40,14 @@ exports.getStackTraceAsJson = function getStackTraceAsJson(length, error) {
   return jsonStackTrace;
 };
 
-
 function jsonPrepareStackTrace(error, structuredStackTrace) {
   return jsonifyStackTrace(structuredStackTrace);
 }
-
 
 function attachJsonStackTrace(error, structuredStackTrace) {
   error._jsonStackTrace = jsonifyStackTrace(structuredStackTrace);
   return defaultPrepareStackTrace(error, structuredStackTrace);
 }
-
 
 function jsonifyStackTrace(structuredStackTrace) {
   var len = structuredStackTrace.length;
@@ -68,7 +64,6 @@ function jsonifyStackTrace(structuredStackTrace) {
 
   return result;
 }
-
 
 exports.buildFunctionIdentifier = function buildFunctionIdentifier(callSite) {
   if (callSite.isConstructor()) {
@@ -103,7 +98,6 @@ exports.buildFunctionIdentifier = function buildFunctionIdentifier(callSite) {
   label += ' [as ' + methodName + ']';
   return label;
 };
-
 
 function defaultPrepareStackTrace(error, frames) {
   frames.push(error);

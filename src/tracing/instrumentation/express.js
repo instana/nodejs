@@ -23,12 +23,14 @@ exports.init = function() {
 };
 
 function instrument(express) {
-  if (express.Router && express.Router.handle && express.Router.use) { // express 4
+  if (express.Router && express.Router.handle && express.Router.use) {
+    // express 4
     shimmer.wrap(express.Router, 'handle', shimExpress4Handle);
     shimmer.wrap(express.Router, 'use', shimExpress4Use);
   }
 
-  if (express.Route && express.Route.prototype) { // express 4
+  if (express.Route && express.Route.prototype) {
+    // express 4
     methods.concat('all').forEach(function(method) {
       if (typeof express.Route.prototype[method] === 'function') {
         shimmer.wrap(express.Route.prototype, method, shimHandlerRegistration);
@@ -86,7 +88,8 @@ function wrapExpress4ErrorHandlingFn(fn) {
   // DO NOT REMOVE THE UNUSED PARAMETERS IN THE FOLLOWING LINE
   // express is checking the existence for four parameters on the function to identify that this is an error
   // handling function. Defining less than four parameter would change application behavior.
-  return function wrappedErrorHandlingFn(err, req, res, next) { // eslint-disable-line no-unused-vars
+  // eslint-disable-next-line no-unused-vars
+  return function wrappedErrorHandlingFn(err, req, res, next) {
     annotateHttpRootSpanWithError(err);
     return fn.apply(this, arguments);
   };
@@ -125,7 +128,8 @@ function wrapHandler(fn) {
     // DO NOT REMOVE UNUSED PARAMETERS
     // express.js checks parameter count to decide what kind of handler function
     // it should invoke.
-    return function(req, res, next) { // eslint-disable-line no-unused-vars
+    // eslint-disable-next-line no-unused-vars
+    return function(req, res, next) {
       annotateHttpEntrySpanWithPathTemplate(req);
       return fn.apply(this, arguments);
     };
@@ -134,7 +138,8 @@ function wrapHandler(fn) {
   // DO NOT REMOVE UNUSED PARAMETERS
   // express.js checks parameter count to decide what kind of handler function
   // it should invoke.
-  return function(err, req, res, next) { // eslint-disable-line no-unused-vars
+  // eslint-disable-next-line no-unused-vars
+  return function(err, req, res, next) {
     annotateHttpEntrySpanWithPathTemplate(req);
     return fn.apply(this, arguments);
   };

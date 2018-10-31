@@ -8,12 +8,12 @@ var parentLogger;
 
 exports.init = function(config) {
   if (config.logger && typeof config.logger.child === 'function') {
-    parentLogger = config.logger.child({module: 'instana-nodejs-logger-parent'});
+    parentLogger = config.logger.child({ module: 'instana-nodejs-logger-parent' });
   } else if (config.logger && hasLoggingFunctions(config.logger)) {
     parentLogger = config.logger;
     return;
   } else {
-    parentLogger = bunyan.createLogger({name: 'instana-nodejs-sensor'});
+    parentLogger = bunyan.createLogger({ name: 'instana-nodejs-sensor' });
   }
 
   parentLogger.addStream({
@@ -44,8 +44,10 @@ exports.getLogger = function(moduleName) {
 };
 
 function hasLoggingFunctions(logger) {
-  return typeof logger.debug === 'function' &&
+  return (
+    typeof logger.debug === 'function' &&
     typeof logger.info === 'function' &&
     typeof logger.warn === 'function' &&
-    typeof logger.error === 'function';
+    typeof logger.error === 'function'
+  );
 }

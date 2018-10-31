@@ -25,7 +25,8 @@ exports.init = function init(config) {
 
   if (config.agentPort) {
     exports.port = config.agentPort;
-  } if (process.env.INSTANA_AGENT_PORT) {
+  }
+  if (process.env.INSTANA_AGENT_PORT) {
     exports.port = process.env.INSTANA_AGENT_PORT;
   }
 

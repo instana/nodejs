@@ -7,13 +7,7 @@ var pidStore = require('../pidStore/internalPidStore');
 module.exports = exports = {
   write: function write(record) {
     var logLevel = getAgentLogLevel(record.level);
-    var message =
-      'Node.js sensor (pid: ' +
-      process.pid +
-      ', reporting pid: ' +
-      pidStore.pid +
-      '): ' +
-      record.msg;
+    var message = 'Node.js sensor (pid: ' + process.pid + ', reporting pid: ' + pidStore.pid + '): ' + record.msg;
     var stack = null;
 
     if (record.err) {

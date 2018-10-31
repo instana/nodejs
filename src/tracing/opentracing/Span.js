@@ -16,8 +16,10 @@ function Span(tracer, name, fields) {
     for (var i = 0, length = fields.references.length; i < length; i++) {
       var reference = fields.references[i];
 
-      if (reference.type() === opentracing.REFERENCE_CHILD_OF
-          || reference.type() === opentracing.REFERENCE_FOLLOWS_FROM) {
+      if (
+        reference.type() === opentracing.REFERENCE_CHILD_OF ||
+        reference.type() === opentracing.REFERENCE_FOLLOWS_FROM
+      ) {
         parentContext = reference.referencedContext();
       }
     }
@@ -68,34 +70,27 @@ function Span(tracer, name, fields) {
 
 module.exports = exports = Span;
 
-
 Span.prototype = Object.create(opentracing.Span.prototype);
-
 
 Span.prototype._context = function _context() {
   return this._contextImpl;
 };
 
-
 Span.prototype._tracer = function _tracer() {
   return this.tracerImpl;
 };
-
 
 Span.prototype._setOperationName = function _setOperationName(name) {
   this.span.data.sdk.name = name;
 };
 
-
 Span.prototype._setBaggageItem = function _setBaggageItem(key, value) {
   this._contextImpl.baggage[key] = value;
 };
 
-
 Span.prototype._getBaggageItem = function _getBaggageItem(key) {
   return this._contextImpl.baggage[key];
 };
-
 
 Span.prototype._addTags = function _addTags(keyValuePairs) {
   var keys = Object.keys(keyValuePairs);
@@ -104,7 +99,6 @@ Span.prototype._addTags = function _addTags(keyValuePairs) {
     this._addTag(key, keyValuePairs[key]);
   }
 };
-
 
 Span.prototype._addTag = function _addTag(key, value) {
   if (key === opentracing.Tags.ERROR) {
@@ -125,7 +119,6 @@ Span.prototype._addTag = function _addTag(key, value) {
   }
 };
 
-
 Span.prototype._log = function _log(keyValuePairs, timestamp) {
   if (timestamp == null) {
     timestamp = Date.now();
@@ -143,7 +136,6 @@ Span.prototype._log = function _log(keyValuePairs, timestamp) {
   }
 };
 
-
 Span.prototype._finish = function _finish(finishTime) {
   if (this._contextImpl.samplingPriority <= 0) {
     return;
@@ -155,7 +147,6 @@ Span.prototype._finish = function _finish(finishTime) {
   this.span.d = Math.max(0, finishTime - this.span.ts);
   transmission.addSpan(this.span);
 };
-
 
 function copyBaggage(baggage) {
   if (!baggage) {

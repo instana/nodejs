@@ -12,7 +12,8 @@ var tracing = require('../tracing');
 var clone = require('../clone');
 
 var metricsBaseDir = path.join(__dirname, '..', 'metrics');
-var modules = fs.readdirSync(metricsBaseDir)
+var modules = fs
+  .readdirSync(metricsBaseDir)
   // ignore non-JS files
   .filter(function(moduleName) {
     return moduleName.indexOf('.js') === moduleName.length - 3;
@@ -26,7 +27,6 @@ var resendFullDataEveryXTransmissions = 300; /* about every 5 minutes */
 
 var transmissionsSinceLastFullDataEmit = 0;
 var previousTransmittedValue;
-
 
 module.exports = exports = {
   enter: function(ctx) {
@@ -87,13 +87,11 @@ function enableAllSensors() {
   });
 }
 
-
 function disableAllSensors() {
   modules.forEach(function(mod) {
     mod.deactivate();
   });
 }
-
 
 function gatherDataFromModules() {
   var payload = {};

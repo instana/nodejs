@@ -28,14 +28,16 @@ function instrument(es) {
 }
 
 function gatherClusterInfo(client, info) {
-  client.info()
-    .then(function(_info) {
+  client.info().then(
+    function(_info) {
       info.clusterName = _info.cluster_name;
-    }, function() {
+    },
+    function() {
       setTimeout(function() {
         gatherClusterInfo(client, info);
       }, 30000);
-    });
+    }
+  );
 }
 
 function instrumentApi(client, action, info) {
@@ -49,16 +51,16 @@ function instrumentApi(client, action, info) {
     var span = cls.startSpan('elasticsearch', cls.EXIT);
     span.stack = tracingUtil.getStackTrace(instrumentedAction);
     span.data = {
-        elasticsearch: {
-          action: action,
-          cluster: info.clusterName,
-          index: toStringEsMultiParameter(params.index),
-          type: toStringEsMultiParameter(params.type),
-          stats: toStringEsMultiParameter(params.stats),
-          id: action === 'get' ? params.id : undefined,
-          query: action === 'search' ? tracingUtil.shortenDatabaseStatement(JSON.stringify(params)) : undefined
-        }
-      };
+      elasticsearch: {
+        action: action,
+        cluster: info.clusterName,
+        index: toStringEsMultiParameter(params.index),
+        type: toStringEsMultiParameter(params.type),
+        stats: toStringEsMultiParameter(params.stats),
+        id: action === 'get' ? params.id : undefined,
+        query: action === 'search' ? tracingUtil.shortenDatabaseStatement(JSON.stringify(params)) : undefined
+      }
+    };
 
     cls.ns.bind(cb);
 
@@ -75,11 +77,10 @@ function instrumentApi(client, action, info) {
     }
 
     try {
-      return original.call(client, params)
-        .then(onSuccess, function(error) {
-          onError(error);
-          throw error;
-        });
+      return original.call(client, params).then(onSuccess, function(error) {
+        onError(error);
+        throw error;
+      });
     } catch (e) {
       // Immediately cleanup on synchronous errors.
       throw e;
@@ -125,7 +126,6 @@ function toStringEsMultiParameter(param) {
 exports.activate = function() {
   isActive = true;
 };
-
 
 exports.deactivate = function() {
   isActive = false;

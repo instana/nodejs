@@ -9,10 +9,7 @@ exports.getCmdline = function getCmdline() {
   var args;
 
   try {
-    var cmdline = fs.readFileSync(
-      '/proc/' + process.pid + '/cmdline',
-      {encoding: 'utf8'}
-    );
+    var cmdline = fs.readFileSync('/proc/' + process.pid + '/cmdline', { encoding: 'utf8' });
 
     cmdline = cmdline.split('\u0000');
     if (cmdline.length > 0) {

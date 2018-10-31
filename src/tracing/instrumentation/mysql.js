@@ -14,12 +14,10 @@ exports.init = function() {
   requireHook.onModuleLoad('mysql2/promise', instrumentMysql2WithPromises);
 };
 
-
 function instrumentMysql(mysql) {
   instrumentConnection(Object.getPrototypeOf(mysql.createConnection({})));
   instrumentPool(Object.getPrototypeOf(mysql.createPool({})));
 }
-
 
 function instrumentMysql2(mysql) {
   instrumentConnection(mysql.Connection.prototype);
@@ -31,12 +29,10 @@ function instrumentMysql2WithPromises(mysql) {
   instrumentPoolWithPromises(mysql);
 }
 
-
 function instrumentPool(Pool) {
   shimmer.wrap(Pool, 'query', shimQuery);
   shimmer.wrap(Pool, 'getConnection', shimGetConnection);
 }
-
 
 function instrumentConnection(Connection) {
   shimmer.wrap(Connection, 'query', shimQuery);
@@ -104,12 +100,13 @@ function instrumentedQuery(ctx, originalQuery, statementOrOpts, valuesOrCallback
 
   return cls.ns.runAndReturn(function() {
     var span = cls.startSpan('mysql', cls.EXIT);
-    span.b = {s: 1};
+    span.b = { s: 1 };
     span.stack = tracingUtil.getStackTrace(instrumentedQuery);
     span.data = {
       mysql: {
-        stmt: tracingUtil.shortenDatabaseStatement(typeof statementOrOpts === 'string' ? statementOrOpts :
-          statementOrOpts.sql),
+        stmt: tracingUtil.shortenDatabaseStatement(
+          typeof statementOrOpts === 'string' ? statementOrOpts : statementOrOpts.sql
+        ),
         host: host,
         port: port,
         user: user,
@@ -120,11 +117,13 @@ function instrumentedQuery(ctx, originalQuery, statementOrOpts, valuesOrCallback
     if (isPromiseImpl) {
       var resultPromise = originalQuery.apply(ctx, argsForOriginalQuery);
 
-      resultPromise.then(function(result) {
-        span.d = Date.now() - span.ts;
-        span.transmit();
-        return result;
-      }).catch(function(error) {
+      resultPromise
+        .then(function(result) {
+          span.d = Date.now() - span.ts;
+          span.transmit();
+          return result;
+        })
+        .catch(function(error) {
           span.ec = 1;
           span.error = true;
           span.data.mysql.error = tracingUtil.getErrorDetails(error);
@@ -163,7 +162,6 @@ function instrumentedQuery(ctx, originalQuery, statementOrOpts, valuesOrCallback
   });
 }
 
-
 function shimGetConnection(original) {
   return function(cb) {
     return original.call(this, cls.ns.bind(cb));
@@ -172,19 +170,17 @@ function shimGetConnection(original) {
 
 function shimPromiseConnection(original) {
   return function getConnection() {
-    return original.apply(this, arguments)
-      .then(function(connection) {
-        shimmer.wrap(connection, 'query', shimPromiseQuery);
+    return original.apply(this, arguments).then(function(connection) {
+      shimmer.wrap(connection, 'query', shimPromiseQuery);
 
-        return connection;
-      });
+      return connection;
+    });
   };
 }
 
 exports.activate = function() {
   isActive = true;
 };
-
 
 exports.deactivate = function() {
   isActive = false;

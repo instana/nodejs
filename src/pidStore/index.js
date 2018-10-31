@@ -29,20 +29,13 @@ if (!process.env.CONTINUOUS_INTEGRATION) {
   var pidInParentNamespace = getPidFromParentNamespace();
   if (pidInParentNamespace) {
     internalPidStore.pid = pidInParentNamespace;
-    logger.info(
-      'Changing pid to %s due to successful identification of PID in parent namespace',
-      pidInParentNamespace
-    );
+    logger.info('Changing pid to %s due to successful identification of PID in parent namespace', pidInParentNamespace);
   }
 }
 
-
 function getPidFromParentNamespace() {
   try {
-    var schedFileContent = fs.readFileSync(
-      '/proc/' + process.pid + '/sched',
-      {encoding: 'utf8'}
-    );
+    var schedFileContent = fs.readFileSync('/proc/' + process.pid + '/sched', { encoding: 'utf8' });
 
     var match = schedFileContent.match(/^[^(]+\((\d+),/im);
     if (!match) {

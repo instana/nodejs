@@ -12,13 +12,11 @@ exports.init = function() {
   requireHook.onModuleLoad('kafka-node', instrument);
 };
 
-
 function instrument(kafka) {
   shimmer.wrap(Object.getPrototypeOf(kafka.Producer.prototype), 'send', shimSend);
   shimmer.wrap(kafka.Consumer.prototype, 'emit', shimEmit);
   shimmer.wrap(kafka.HighLevelConsumer.prototype, 'emit', shimEmit);
 }
-
 
 function shimSend(original) {
   return function() {
@@ -28,7 +26,6 @@ function shimSend(original) {
     return original.apply(this, arguments);
   };
 }
-
 
 function instrumentedSend(ctx, originalSend, produceRequests, cb) {
   var parentSpan = cls.getCurrentSpan();
@@ -49,11 +46,11 @@ function instrumentedSend(ctx, originalSend, produceRequests, cb) {
   span.b = { s: produceRequests.length };
   span.stack = tracingUtil.getStackTrace(instrumentedSend);
   span.data = {
-      kafka: {
-        service: produceRequest.topic,
-        access: 'send'
-      }
-    };
+    kafka: {
+      service: produceRequest.topic,
+      access: 'send'
+    }
+  };
 
   args.push(function onSendCompleted(err) {
     if (err) {
@@ -72,7 +69,6 @@ function instrumentedSend(ctx, originalSend, produceRequests, cb) {
   return originalSend.apply(ctx, args);
 }
 
-
 function shimEmit(original) {
   return function(eventType, message) {
     if (!isActive || eventType !== 'message') {
@@ -86,11 +82,11 @@ function shimEmit(original) {
       var span = cls.startSpan('kafka', cls.ENTRY);
       span.stack = [];
       span.data = {
-          kafka: {
-            access: 'consume',
-            service: message.topic
-          }
-        };
+        kafka: {
+          access: 'consume',
+          service: message.topic
+        }
+      };
 
       try {
         return original.apply(originalThis, originalArgs);
@@ -102,11 +98,9 @@ function shimEmit(original) {
   };
 }
 
-
 exports.activate = function() {
   isActive = true;
 };
-
 
 exports.deactivate = function() {
   isActive = false;

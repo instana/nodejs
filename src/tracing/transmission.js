@@ -11,12 +11,10 @@ var spans = [];
 
 var transmissionTimeoutHandle;
 
-
 exports.init = function(config) {
   maxBufferedSpans = config.tracing.maxBufferedSpans || 1000;
   forceTransmissionStartingAt = config.tracing.forceTransmissionStartingAt || 500;
 };
-
 
 exports.activate = function() {
   isActive = true;
@@ -24,13 +22,11 @@ exports.activate = function() {
   transmissionTimeoutHandle = setTimeout(transmitSpans, 1000);
 };
 
-
 exports.deactivate = function() {
   isActive = false;
   spans = [];
   clearTimeout(transmissionTimeoutHandle);
 };
-
 
 exports.addSpan = function(span) {
   if (!isActive) {
@@ -48,7 +44,6 @@ exports.addSpan = function(span) {
   }
 };
 
-
 function transmitSpans() {
   clearTimeout(transmissionTimeoutHandle);
 
@@ -62,7 +57,7 @@ function transmitSpans() {
 
   agentConnection.sendSpansToAgent(spansToSend, function onSpansSendToAgent(error) {
     if (error) {
-      logger.warn('Failed to transmit spans to agent', {error: error});
+      logger.warn('Failed to transmit spans to agent', { error: error });
       spans = spans.concat(spansToSend);
       removeSpansIfNecessary();
     }
@@ -70,7 +65,6 @@ function transmitSpans() {
     transmissionTimeoutHandle = setTimeout(transmitSpans, 1000);
   });
 }
-
 
 /**
  * Synchronously returns the spans that are scheduled for transmission and resets the internal span buffer to an empty
@@ -81,7 +75,6 @@ exports.getAndResetSpans = function getAndResetSpans() {
   spans = [];
   return spansToSend;
 };
-
 
 function removeSpansIfNecessary() {
   if (spans.length > maxBufferedSpans) {

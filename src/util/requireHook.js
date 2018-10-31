@@ -22,7 +22,7 @@ function patchedModuleLoad(moduleName) {
 
   // We are not directly manipulating the global module cache because there might be other tools fiddling with
   // Module._load. We don't want to break any of them.
-  var cacheEntry = executedHooks[filename] = executedHooks[filename] || {
+  var cacheEntry = (executedHooks[filename] = executedHooks[filename] || {
     originalModuleExports: moduleExports,
     moduleExports: moduleExports,
 
@@ -30,7 +30,7 @@ function patchedModuleLoad(moduleName) {
     // are checking using these fields.
     appliedByModuleNameTransformers: [],
     byFileNamePatternTransformersApplied: false
-  };
+  });
 
   // Some non-APM modules are fiddling with the require cache in some very unexpected ways.
   // For example the request-promise* modules use stealthy-require to always get a fresh copy
@@ -48,8 +48,8 @@ function patchedModuleLoad(moduleName) {
   var applicableByModuleNameTransformers = byModuleNameTransformers[moduleName];
   if (applicableByModuleNameTransformers && cacheEntry.appliedByModuleNameTransformers.indexOf(moduleName) === -1) {
     for (i = 0; i < applicableByModuleNameTransformers.length; i++) {
-      cacheEntry.moduleExports = applicableByModuleNameTransformers[i](cacheEntry.moduleExports) ||
-        cacheEntry.moduleExports;
+      cacheEntry.moduleExports =
+        applicableByModuleNameTransformers[i](cacheEntry.moduleExports) || cacheEntry.moduleExports;
     }
     cacheEntry.appliedByModuleNameTransformers.push(moduleName);
   }
@@ -57,8 +57,8 @@ function patchedModuleLoad(moduleName) {
   if (!cacheEntry.byFileNamePatternTransformersApplied) {
     for (i = 0; i < byFileNamePatternTransformers.length; i++) {
       if (byFileNamePatternTransformers[i].pattern.test(filename)) {
-        cacheEntry.moduleExports = byFileNamePatternTransformers[i].fn(cacheEntry.moduleExports) ||
-          cacheEntry.moduleExports;
+        cacheEntry.moduleExports =
+          byFileNamePatternTransformers[i].fn(cacheEntry.moduleExports) || cacheEntry.moduleExports;
       }
     }
     cacheEntry.byFileNamePatternTransformersApplied = true;
