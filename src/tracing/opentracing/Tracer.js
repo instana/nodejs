@@ -4,19 +4,15 @@ var opentracing = require('opentracing');
 var constants = require('../constants');
 var Span = require('./Span');
 
-
 var baggageKeyPrefix = 'x-instana-b-';
-
 
 var valueEncoders = {};
 valueEncoders[opentracing.FORMAT_TEXT_MAP] = identity;
 valueEncoders[opentracing.FORMAT_HTTP_HEADERS] = encodeURIComponent;
 
-
 var valueDecoders = {};
 valueDecoders[opentracing.FORMAT_TEXT_MAP] = identity;
 valueDecoders[opentracing.FORMAT_HTTP_HEADERS] = decodeURIComponent;
-
 
 function Tracer(isActive) {
   opentracing.Tracer.apply(this, arguments);
@@ -24,18 +20,14 @@ function Tracer(isActive) {
 }
 module.exports = Tracer;
 
-
 Tracer.prototype = Object.create(opentracing.Tracer.prototype);
-
 
 Tracer.prototype._startSpan = function _startSpan(name, fields) {
   return new Span(this, name, fields);
 };
 
-
 Tracer.prototype._inject = function _inject(spanContext, format, carrier) {
-  if (format !== opentracing.FORMAT_TEXT_MAP &&
-      format !== opentracing.FORMAT_HTTP_HEADERS) {
+  if (format !== opentracing.FORMAT_TEXT_MAP && format !== opentracing.FORMAT_HTTP_HEADERS) {
     // Only text formats supported right now
     return;
   }
@@ -55,10 +47,8 @@ Tracer.prototype._inject = function _inject(spanContext, format, carrier) {
   });
 };
 
-
 Tracer.prototype._extract = function _extract(format, carrier) {
-  if (format !== opentracing.FORMAT_TEXT_MAP &&
-      format !== opentracing.FORMAT_HTTP_HEADERS) {
+  if (format !== opentracing.FORMAT_TEXT_MAP && format !== opentracing.FORMAT_HTTP_HEADERS) {
     // Only text formats supported right now
     return null;
   }
@@ -97,16 +87,13 @@ Tracer.prototype._extract = function _extract(format, carrier) {
   return spanContext;
 };
 
-
 Tracer.prototype.activate = function activate() {
   this._isActive = true;
 };
 
-
 Tracer.prototype.deactivate = function deactivate() {
   this._isActive = false;
 };
-
 
 function identity(v) {
   return v;

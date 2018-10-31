@@ -96,16 +96,13 @@ function shimEmit(realEmit) {
   };
 }
 
-
 exports.activate = function() {
   isActive = true;
 };
 
-
 exports.deactivate = function() {
   isActive = false;
 };
-
 
 function getExistingSpanId(req, fallback) {
   fallback = arguments.length > 1 ? fallback : null;
@@ -118,7 +115,6 @@ function getExistingSpanId(req, fallback) {
   return spanId;
 }
 
-
 function getExistingTraceId(req, fallback) {
   fallback = arguments.length > 1 ? fallback : null;
 
@@ -130,18 +126,18 @@ function getExistingTraceId(req, fallback) {
   return traceId;
 }
 
-
 function filterParams(queryString) {
-  if (!queryString ||
-      queryString === '' ||
-      !(typeof queryString === 'string')) {
+  if (!queryString || queryString === '' || !(typeof queryString === 'string')) {
     return queryString;
   }
-  return queryString.split('&').filter(function(param) {
-    var key = param.split('=')[0];
-    if (key) {
-      return !agentOpts.isSecret(key);
-    }
-    return true;
-  }).join('&');
+  return queryString
+    .split('&')
+    .filter(function(param) {
+      var key = param.split('=')[0];
+      if (key) {
+        return !agentOpts.isSecret(key);
+      }
+      return true;
+    })
+    .join('&');
 }

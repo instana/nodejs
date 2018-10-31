@@ -8,11 +8,9 @@ var cls = require('../cls');
 
 var isActive = false;
 
-
 exports.init = function() {
   requireHook.onModuleLoad('mssql', instrumentMssql);
 };
-
 
 function instrumentMssql(mssql) {
   instrumentRequest(mssql.Request);
@@ -20,14 +18,12 @@ function instrumentMssql(mssql) {
   instrumentTransaction(mssql.Transaction);
 }
 
-
 function instrumentRequest(Request) {
   shimmer.wrap(Request.prototype, 'query', shimMethod.bind(null, instrumentedRequestMethod));
   shimmer.wrap(Request.prototype, 'execute', shimMethod.bind(null, instrumentedRequestMethod));
   shimmer.wrap(Request.prototype, 'batch', shimMethod.bind(null, instrumentedRequestMethod));
   shimmer.wrap(Request.prototype, 'bulk', shimMethod.bind(null, instrumentedBulk));
 }
-
 
 function shimMethod(instrumentedFunction, originalFunction) {
   return function() {
@@ -42,32 +38,17 @@ function shimMethod(instrumentedFunction, originalFunction) {
   };
 }
 
-
 function instrumentedRequestMethod(ctx, originalFunction, originalArgs) {
-  return instrumentedMethod(
-    ctx,
-    originalFunction,
-    originalArgs,
-    instrumentedRequestMethod,
-    function(args) {
-      return args[0];
-    }
-  );
+  return instrumentedMethod(ctx, originalFunction, originalArgs, instrumentedRequestMethod, function(args) {
+    return args[0];
+  });
 }
-
 
 function instrumentedBulk(ctx, originalFunction, originalArgs) {
-  return instrumentedMethod(
-    ctx,
-    originalFunction,
-    originalArgs,
-    instrumentedBulk,
-    function() {
-      return 'MSSQL bulk operation';
-    }
-  );
+  return instrumentedMethod(ctx, originalFunction, originalArgs, instrumentedBulk, function() {
+    return 'MSSQL bulk operation';
+  });
 }
-
 
 function instrumentedMethod(ctx, originalFunction, originalArgs, stackTraceRef, commandProvider) {
   var parentSpan = cls.getCurrentSpan();
@@ -107,25 +88,24 @@ function instrumentedMethod(ctx, originalFunction, originalArgs, stackTraceRef, 
 
     var promise = originalFunction.apply(ctx, originalArgs);
     if (typeof promise.then === 'function') {
-      promise.then(function(value) {
-        finishSpan(null, span);
-        return value;
-      })
-      .catch(function(error) {
-        finishSpan(error, span);
-        return error;
-      });
+      promise
+        .then(function(value) {
+          finishSpan(null, span);
+          return value;
+        })
+        .catch(function(error) {
+          finishSpan(error, span);
+          return error;
+        });
     }
     return promise;
   });
 }
 
-
 function instrumentPreparedStatement(PreparedStatement) {
   shimmer.wrap(PreparedStatement.prototype, 'prepare', shimPrepare);
   shimmer.wrap(PreparedStatement.prototype, 'execute', shimMethod.bind(null, instrumentedExecute));
 }
-
 
 function shimPrepare(originalFunction) {
   return function() {
@@ -147,24 +127,15 @@ function shimPrepare(originalFunction) {
   };
 }
 
-
 function instrumentedExecute(ctx, originalFunction, originalArgs) {
-  return instrumentedMethod(
-    ctx,
-    originalFunction,
-    originalArgs,
-    instrumentedExecute,
-    function() {
-      return ctx.__instanaStatement;
-    }
-  );
+  return instrumentedMethod(ctx, originalFunction, originalArgs, instrumentedExecute, function() {
+    return ctx.__instanaStatement;
+  });
 }
-
 
 function instrumentTransaction(Transaction) {
   shimmer.wrap(Transaction.prototype, 'begin', shimBeginTransaction);
 }
-
 
 function shimBeginTransaction(originalFunction) {
   return function() {
@@ -184,7 +155,6 @@ function shimBeginTransaction(originalFunction) {
   };
 }
 
-
 function finishSpan(error, span) {
   if (error) {
     span.ec = 1;
@@ -195,7 +165,6 @@ function finishSpan(error, span) {
   span.d = Date.now() - span.ts;
   span.transmit();
 }
-
 
 function findConnectionParameters(ctx) {
   if (ctx.parent && ctx.parent.config && ctx.parent.config.server) {
@@ -214,16 +183,14 @@ function findConnectionParameters(ctx) {
       host: '',
       port: -1,
       user: '',
-      db: '',
+      db: ''
     };
   }
 }
 
-
 exports.activate = function() {
   isActive = true;
 };
-
 
 exports.deactivate = function() {
   isActive = false;

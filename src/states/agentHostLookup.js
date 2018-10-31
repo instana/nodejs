@@ -25,7 +25,6 @@ module.exports = {
   leave: function() {}
 };
 
-
 function enter(ctx) {
   var agentHost = agentOpts.host;
 
@@ -36,19 +35,13 @@ function enter(ctx) {
       return;
     }
 
-    logger.debug(
-      '%s:%s is not running the agent. Trying default gateway...',
-      agentHost,
-      agentOpts.port,
-      {error: localhostCheckErr}
-    );
+    logger.debug('%s:%s is not running the agent. Trying default gateway...', agentHost, agentOpts.port, {
+      error: localhostCheckErr
+    });
 
     getDefaultGateway(function onGetDefaultGateway(getDefaultGatewayErr, defaultGateway) {
       if (getDefaultGatewayErr) {
-        logger.debug(
-          'Error while trying to determine default gateway.',
-          {error: getDefaultGatewayErr}
-        );
+        logger.debug('Error while trying to determine default gateway.', { error: getDefaultGatewayErr });
         logger.warn(
           'Agent cannot be contacted via %s and default gateway cannot be determined. ' +
             'Scheduling reattempt of agent host lookup in %s millis.',
@@ -66,11 +59,9 @@ function enter(ctx) {
           return;
         }
 
-        logger.debug(
-          'Failed to contact agent via default gateway %s',
-          defaultGateway,
-          {error: defaultGatewayCheckErr}
-        );
+        logger.debug('Failed to contact agent via default gateway %s', defaultGateway, {
+          error: defaultGatewayCheckErr
+        });
         logger.warn(
           'Agent cannot be contacted via %s nor via default gateway %s. ' +
             'Scheduling reattempt of agent host lookup in %s millis.',
@@ -84,7 +75,6 @@ function enter(ctx) {
   });
 }
 
-
 function getDefaultGateway(cb) {
   exec("/sbin/ip route | awk '/default/ { print $3 }'", function(error, stdout, stderr) {
     if (error !== null || stderr.length > 0) {
@@ -95,27 +85,27 @@ function getDefaultGateway(cb) {
   });
 }
 
-
 function checkHost(host, cb) {
   cb = atMostOnce('callback for checkHost: ' + host, cb);
 
   try {
-    var req = http.request({
-      host: host,
-      port: agentOpts.port,
-      path: '/',
-      agent: http.agent,
-      method: 'GET',
-    }, function(res) {
-      if (res.headers.server === agentOpts.serverHeader) {
-        cb(null);
-      } else {
-        cb(new Error('Host ' + host +
-          ' did not respond with expected agent header. Got: ' +
-          res.headers.server));
+    var req = http.request(
+      {
+        host: host,
+        port: agentOpts.port,
+        path: '/',
+        agent: http.agent,
+        method: 'GET'
+      },
+      function(res) {
+        if (res.headers.server === agentOpts.serverHeader) {
+          cb(null);
+        } else {
+          cb(new Error('Host ' + host + ' did not respond with expected agent header. Got: ' + res.headers.server));
+        }
+        res.resume();
       }
-      res.resume();
-    });
+    );
   } catch (e) {
     cb(new Error('Host lookup failed due to: ' + e.message));
     return;
@@ -131,7 +121,6 @@ function checkHost(host, cb) {
 
   req.end();
 }
-
 
 function setAgentHost(host) {
   logger.info('Attempting agent communication via %s:%s', host, agentOpts.port);

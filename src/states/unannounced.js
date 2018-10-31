@@ -16,15 +16,10 @@ module.exports = {
   leave: function() {}
 };
 
-
 function tryToAnnounce(ctx) {
   agentConnection.announceNodeSensor(function(err, rawResponse) {
     if (err) {
-      logger.info(
-        'Announce attempt failed: %s. Will rety in %sms',
-        err.message,
-        retryDelay
-      );
+      logger.info('Announce attempt failed: %s. Will rety in %sms', err.message, retryDelay);
       setTimeout(tryToAnnounce, retryDelay, ctx);
       return;
     }

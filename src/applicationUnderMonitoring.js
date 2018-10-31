@@ -3,12 +3,10 @@
 var fs = require('fs');
 var path = require('path');
 
-
 // Cache determined main package json as these will be referenced often
 // and identification of these values is expensive.
 var parsedMainPackageJson;
 var mainPackageJsonPath;
-
 
 exports.getMainPackageJson = function getMainPackageJson(cb) {
   if (parsedMainPackageJson !== undefined) {
@@ -28,7 +26,7 @@ exports.getMainPackageJson = function getMainPackageJson(cb) {
       return cb(null, null);
     }
 
-    fs.readFile(packageJsonPath, {encoding: 'utf8'}, function(readFileErr, contents) {
+    fs.readFile(packageJsonPath, { encoding: 'utf8' }, function(readFileErr, contents) {
       if (readFileErr) return cb(readFileErr);
 
       // JSON parsing can fail…
@@ -49,7 +47,6 @@ exports.getMainPackageJson = function getMainPackageJson(cb) {
     });
   });
 };
-
 
 exports.getMainPackageJsonPath = function getMainPackageJsonPath(cb) {
   if (mainPackageJsonPath !== undefined) {
@@ -85,7 +82,6 @@ exports.getMainPackageJsonPath = function getMainPackageJsonPath(cb) {
     cb(null, mainPackageJsonPath);
   });
 };
-
 
 function searchForPackageJsonInParentDirs(dir, cb) {
   var fileToCheck = path.join(dir, 'package.json');

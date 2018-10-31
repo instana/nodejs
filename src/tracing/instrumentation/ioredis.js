@@ -20,7 +20,6 @@ exports.init = function() {
   requireHook.onModuleLoad('ioredis', instrument);
 };
 
-
 function instrument(ioredis) {
   shimmer.wrap(ioredis.prototype, 'sendCommand', instrumentSendCommand);
   shimmer.wrap(ioredis.prototype, 'multi', instrumentMultiCommand);
@@ -31,26 +30,24 @@ function instrumentSendCommand(original) {
   return function wrappedInternalSendCommand(command) {
     var client = this;
 
-    if (command.promise == null ||
-        typeof command.name !== 'string' ||
-        !isActive ||
-        !cls.isTracing()) {
+    if (command.promise == null || typeof command.name !== 'string' || !isActive || !cls.isTracing()) {
       return original.apply(this, arguments);
     }
 
     var callback;
     var parentSpan = cls.getCurrentSpan();
 
-    if (parentSpan.n === 'redis' &&
-       (parentSpan.data.redis.command === 'multi' ||
-        parentSpan.data.redis.command === 'pipeline') &&
-        // the multi call is handled in instrumentMultiCommand but since multi is also send to Redis it will also
-        // trigger instrumentSendCommand, which is why we filter it out.
-        command.name !== 'multi') {
+    if (
+      parentSpan.n === 'redis' &&
+      (parentSpan.data.redis.command === 'multi' || parentSpan.data.redis.command === 'pipeline') &&
+      // the multi call is handled in instrumentMultiCommand but since multi is also send to Redis it will also
+      // trigger instrumentSendCommand, which is why we filter it out.
+      command.name !== 'multi'
+    ) {
       // multi commands could actually be recorded as multiple spans, but we only want to record one
       // batched span considering that a multi call represents a transaction.
       // The same is true for pipeline calls, but they have a slightly different semantic.
-      var parentSpanSubCommands = parentSpan.data.redis.subCommands = parentSpan.data.redis.subCommands || [];
+      var parentSpanSubCommands = (parentSpan.data.redis.subCommands = parentSpan.data.redis.subCommands || []);
       parentSpanSubCommands.push(command.name);
     } else if (cls.isExitSpan(parentSpan)) {
       // Apart from the special case of multi/pipeline calls, redis exits can't be child spans of other exits.
@@ -109,8 +106,7 @@ function instrumentMultiOrPipelineCommand(commandName, original) {
   return function wrappedInternalMultiOrPipelineCommand() {
     var client = this;
 
-    if (!isActive ||
-        !cls.isTracing()) {
+    if (!isActive || !cls.isTracing()) {
       return original.apply(this, arguments);
     }
 
@@ -142,10 +138,7 @@ function instrumentMultiOrPipelineCommand(commandName, original) {
 }
 
 function instrumentMultiOrPipelineExec(clsContextForMultiOrPipeline, commandName, span, original) {
-  var endCallback =
-    commandName === 'pipeline' ?
-      pipelineCommandEndCallback :
-      multiCommandEndCallback;
+  var endCallback = commandName === 'pipeline' ? pipelineCommandEndCallback : multiCommandEndCallback;
   return function instrumentedExec() {
     // the exec call is actually when the transmission of these commands to
     // redis is happening
@@ -153,11 +146,14 @@ function instrumentMultiOrPipelineExec(clsContextForMultiOrPipeline, commandName
 
     var result = original.apply(this, arguments);
     if (result.then) {
-      result.then(function(results) {
-        endCallback.call(null, clsContextForMultiOrPipeline, span, null, results);
-      }, function(error) {
-        endCallback.call(null, clsContextForMultiOrPipeline, span, error, []);
-      });
+      result.then(
+        function(results) {
+          endCallback.call(null, clsContextForMultiOrPipeline, span, null, results);
+        },
+        function(error) {
+          endCallback.call(null, clsContextForMultiOrPipeline, span, error, []);
+        }
+      );
     }
     return result;
   };

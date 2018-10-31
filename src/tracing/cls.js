@@ -5,9 +5,9 @@ var tracingUtil = require('./tracingUtil');
 var hooked = require('./clsHooked');
 var logger = require('../logger').getLogger('cls');
 
-var currentRootSpanKey = exports.currentRootSpanKey = 'com.instana.rootSpan';
-var currentSpanKey = exports.currentSpanKey = 'com.instana.span';
-var tracingLevelKey = exports.tracingLevelKey = 'com.instana.tl';
+var currentRootSpanKey = (exports.currentRootSpanKey = 'com.instana.rootSpan');
+var currentSpanKey = (exports.currentSpanKey = 'com.instana.span');
+var tracingLevelKey = (exports.tracingLevelKey = 'com.instana.tl');
 
 exports.ENTRY = 1;
 exports.EXIT = 2;
@@ -41,11 +41,11 @@ exports.startSpan = function startSpan(spanName, kind, traceId, spanId, modifyAs
   if (traceId && spanId) {
     span.t = traceId;
     span.p = spanId;
-  // else use pre-existing context (if any)
+    // else use pre-existing context (if any)
   } else if (parentSpan) {
     span.t = parentSpan.t;
     span.p = parentSpan.s;
-  // last resort, use newly generated Ids
+    // last resort, use newly generated Ids
   } else {
     span.t = tracingUtil.generateRandomTraceId();
   }

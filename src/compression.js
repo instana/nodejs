@@ -10,7 +10,6 @@ module.exports = function applyCompressionRoot(prev, next) {
   return result;
 };
 
-
 function applyCompression(prev, next) {
   if (prev === next) {
     return undefined;
@@ -31,7 +30,6 @@ function applyCompression(prev, next) {
 
   return undefined;
 }
-
 
 function applyCompressionToObject(prev, next) {
   var result = {};
@@ -58,7 +56,6 @@ function applyCompressionToObject(prev, next) {
 
   return undefined;
 }
-
 
 function applyCompressionToArray(prev, next) {
   if (next.length !== prev.length) {

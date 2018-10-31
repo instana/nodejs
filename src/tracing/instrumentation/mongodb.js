@@ -12,11 +12,9 @@ var isActive = false;
 // }
 var requests = {};
 
-
 exports.init = function() {
   requireHook.onModuleLoad('mongodb', instrument);
 };
-
 
 var supportsOperationIds = false;
 var apmConfig = {
@@ -39,7 +37,6 @@ var apmConfig = {
   }
 };
 
-
 function instrument(mongodb) {
   if (!mongodb.instrument) {
     logger.info('Cannot instrument the MongoDB driver as it is lacking APM support.');
@@ -51,7 +48,7 @@ function instrument(mongodb) {
   // property but still make use of it in versions that have them.
   var listener = mongodb.instrument(apmConfig, function(error) {
     if (error) {
-      logger.warn('Failed to instrument MongoDB', {error: error});
+      logger.warn('Failed to instrument MongoDB', { error: error });
     }
   });
 
@@ -59,7 +56,6 @@ function instrument(mongodb) {
   listener.on('succeeded', onSucceeded);
   listener.on('failed', onFailed);
 }
-
 
 function onStarted(event) {
   if (!isActive) {
@@ -103,7 +99,7 @@ function onStarted(event) {
   if (event.connectionId && (event.connectionId.host || event.connectionId.port)) {
     peer = {
       hostname: event.connectionId.host,
-      port: event.connectionId.port,
+      port: event.connectionId.port
     };
     service = event.connectionId.host + ':' + event.connectionId.port;
   } else if (typeof event.connectionId === 'string') {
@@ -132,7 +128,6 @@ function onStarted(event) {
   requests[getUniqueRequestId(event)] = span;
 }
 
-
 function stringifyWhenNecessary(obj) {
   if (obj == null) {
     return undefined;
@@ -141,7 +136,6 @@ function stringifyWhenNecessary(obj) {
   }
   return tracingUtil.shortenDatabaseStatement(JSON.stringify(obj));
 }
-
 
 function onSucceeded(event) {
   if (!isActive) {
@@ -160,7 +154,6 @@ function onSucceeded(event) {
 
   cleanup(event);
 }
-
 
 function onFailed(event) {
   if (!isActive) {
@@ -181,17 +174,14 @@ function onFailed(event) {
   cleanup(event);
 }
 
-
 function getUniqueRequestId(event) {
   return event.commandName + event.requestId;
 }
-
 
 function cleanup(event) {
   var requestId = getUniqueRequestId(event);
   delete requests[requestId];
 }
-
 
 function parseConnectionToPeer(connectionString) {
   if (!connectionString) {
@@ -212,22 +202,20 @@ function parseConnectionToPeer(connectionString) {
     } catch (_) {
       return {
         hostname: connectionString,
-        port: 27017,
+        port: 27017
       };
     }
   } else {
     return {
       hostname: connectionString,
-      port: 27017,
+      port: 27017
     };
   }
 }
 
-
 exports.activate = function() {
   isActive = true;
 };
-
 
 exports.deactivate = function() {
   isActive = false;

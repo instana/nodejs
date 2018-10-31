@@ -25,9 +25,11 @@ function instrument(redis) {
   var redisClientProto = redis.RedisClient.prototype;
   commands.list.forEach(function(name) {
     // some commands are not added or are renamed. Ignore them for now.
-    if (!redisClientProto[name] &&
-        // multi commands are handled differently
-        name !== 'multi') {
+    if (
+      !redisClientProto[name] &&
+      // multi commands are handled differently
+      name !== 'multi'
+    ) {
       return;
     }
 
@@ -104,7 +106,6 @@ function instrumentCommand(command, original) {
   };
 }
 
-
 function instrumentMultiExec(isAtomic, original) {
   return function instrumentedMultiExec() {
     var multi = this;
@@ -143,7 +144,7 @@ function instrumentMultiExec(isAtomic, original) {
       args[args.length - 1] = callback;
     }
 
-    var subCommands = span.data.redis.subCommands = [];
+    var subCommands = (span.data.redis.subCommands = []);
     var len = multi.queue.length;
     for (i = 0; i < len; i++) {
       var subCommand = multi.queue.get(i);
@@ -177,7 +178,6 @@ function instrumentMultiExec(isAtomic, original) {
     }
   };
 }
-
 
 function buildSubCommandCallback(span, userProvidedCallback) {
   return function subCommandCallback(err) {

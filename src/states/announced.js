@@ -11,7 +11,6 @@ module.exports = {
   leave: function() {}
 };
 
-
 function checkWhetherAgentIsReadyToAccept(totalNumberOfAttempts, ctx) {
   agentConnection.checkWhetherAgentIsReadyToAcceptData(function(ready) {
     if (ready) {

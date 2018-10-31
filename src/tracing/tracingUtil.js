@@ -10,14 +10,12 @@ exports.init = function(config) {
   stackTraceLength = config.tracing.stackTraceLength != null ? config.tracing.stackTraceLength : 10;
 };
 
-
 exports.getFrom = function getFrom() {
   return {
     e: String(pidStore.pid),
     h: agentOpts.agentUuid
   };
 };
-
 
 exports.getStackTrace = function getStackTrace(referenceFunction) {
   return stackTrace.captureStackTrace(stackTraceLength, referenceFunction);

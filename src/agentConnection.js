@@ -45,32 +45,35 @@ exports.announceNodeSensor = function announceNodeSensor(cb) {
   var payloadStr = JSON.stringify(payload);
   var contentLength = buffer.fromString(payloadStr, 'utf8').length + paddingForInodeAndFileDescriptor;
 
-  var req = http.request({
-    host: agentOpts.host,
-    port: agentOpts.port,
-    path: '/com.instana.plugin.nodejs.discovery',
-    method: 'PUT',
-    agent: http.agent,
-    headers: {
-      Accept: 'application/json',
-      'Content-Type': 'application/json; charset=UTF-8',
-      'Content-Length': contentLength
-    }
-  }, function(res) {
-    if (res.statusCode < 200 || res.statusCode >= 300) {
-      cb(new Error('Announce to agent failed with status code ' + res.statusCode));
-      return;
-    }
+  var req = http.request(
+    {
+      host: agentOpts.host,
+      port: agentOpts.port,
+      path: '/com.instana.plugin.nodejs.discovery',
+      method: 'PUT',
+      agent: http.agent,
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json; charset=UTF-8',
+        'Content-Length': contentLength
+      }
+    },
+    function(res) {
+      if (res.statusCode < 200 || res.statusCode >= 300) {
+        cb(new Error('Announce to agent failed with status code ' + res.statusCode));
+        return;
+      }
 
-    res.setEncoding('utf8');
-    var responseBody = '';
-    res.on('data', function(chunk) {
-      responseBody += chunk;
-    });
-    res.on('end', function() {
-      cb(null, responseBody);
-    });
-  });
+      res.setEncoding('utf8');
+      var responseBody = '';
+      res.on('data', function(chunk) {
+        responseBody += chunk;
+      });
+      res.on('end', function() {
+        cb(null, responseBody);
+      });
+    }
+  );
 
   req.setTimeout(agentOpts.requestTimeout, function onTimeout() {
     cb(new Error('Announce request to agent failed due to timeout'));
@@ -108,28 +111,26 @@ exports.announceNodeSensor = function announceNodeSensor(cb) {
   });
 };
 
-
 exports.checkWhetherAgentIsReadyToAcceptData = function checkWhetherAgentIsReadyToAcceptData(cb) {
-  checkWhetherResponseForPathIsOkay(
-    '/com.instana.plugin.nodejs.' + pidStore.pid,
-    cb
-  );
+  checkWhetherResponseForPathIsOkay('/com.instana.plugin.nodejs.' + pidStore.pid, cb);
 };
-
 
 function checkWhetherResponseForPathIsOkay(path, cb) {
   cb = atMostOnce('callback for checkWhetherResponseForPathIsOkay', cb);
 
-  var req = http.request({
-    host: agentOpts.host,
-    port: agentOpts.port,
-    path: path,
-    agent: http.agent,
-    method: 'HEAD',
-  }, function(res) {
-    cb(199 < res.statusCode && res.statusCode < 300);
-    res.resume();
-  });
+  var req = http.request(
+    {
+      host: agentOpts.host,
+      port: agentOpts.port,
+      path: path,
+      agent: http.agent,
+      method: 'HEAD'
+    },
+    function(res) {
+      cb(199 < res.statusCode && res.statusCode < 300);
+      res.resume();
+    }
+  );
 
   req.setTimeout(agentOpts.requestTimeout, function onTimeout() {
     cb(false);
@@ -143,44 +144,32 @@ function checkWhetherResponseForPathIsOkay(path, cb) {
   req.end();
 }
 
-
 exports.sendDataToAgent = function sendDataToAgent(data, cb) {
   cb = atMostOnce('callback for sendDataToAgent', cb);
 
-  sendData(
-    '/com.instana.plugin.nodejs.' + pidStore.pid,
-    data,
-    function(err, body) {
-      if (err) {
-        cb(err, null);
-      } else {
-        try {
-          // 2016-09-11
-          // Older sensor versions will not repond with a JSON
-          // structure. Support a smooth update path.
-          body = JSON.parse(body);
-        } catch (e) {
-          body = [];
-        }
-
-        cb(null, body);
+  sendData('/com.instana.plugin.nodejs.' + pidStore.pid, data, function(err, body) {
+    if (err) {
+      cb(err, null);
+    } else {
+      try {
+        // 2016-09-11
+        // Older sensor versions will not repond with a JSON
+        // structure. Support a smooth update path.
+        body = JSON.parse(body);
+      } catch (e) {
+        body = [];
       }
-    }
-  );
-};
 
+      cb(null, body);
+    }
+  });
+};
 
 exports.sendSpansToAgent = function sendSpansToAgent(spans, cb) {
   cb = atMostOnce('callback for sendSpansToAgent', cb);
 
-  sendData(
-    '/com.instana.plugin.nodejs/traces.' + pidStore.pid,
-    spans,
-    cb,
-    true
-  );
+  sendData('/com.instana.plugin.nodejs/traces.' + pidStore.pid, spans, cb, true);
 };
-
 
 exports.sendAgentResponseToAgent = function sendAgentResponseToAgent(messageId, response, cb) {
   cb = atMostOnce('callback for sendAgentResponseToAgent', cb);
@@ -192,7 +181,6 @@ exports.sendAgentResponseToAgent = function sendAgentResponseToAgent(messageId, 
   );
 };
 
-
 function sendData(path, data, cb, ignore404) {
   cb = atMostOnce('callback for sendData: ' + path, cb);
   if (ignore404 === undefined) {
@@ -200,37 +188,40 @@ function sendData(path, data, cb, ignore404) {
   }
 
   var payload = JSON.stringify(data);
-  logger.debug({payload: data}, 'Sending payload to %s', path);
+  logger.debug({ payload: data }, 'Sending payload to %s', path);
   // manually turn into a buffer to correctly identify content-length
   payload = buffer.fromString(payload, 'utf8');
 
-  var req = http.request({
-    host: agentOpts.host,
-    port: agentOpts.port,
-    path: path,
-    method: 'POST',
-    agent: http.agent,
-    headers: {
-      'Content-Type': 'application/json; charset=UTF-8',
-      'Content-Length': payload.length
-    }
-  }, function(res) {
-    if (res.statusCode < 200 || res.statusCode >= 300) {
-      if (!(ignore404 && res.statusCode === 404)) {
-        cb(new Error('Failed to send data to agent via POST ' + path + '. Got status code ' + res.statusCode));
-        return;
+  var req = http.request(
+    {
+      host: agentOpts.host,
+      port: agentOpts.port,
+      path: path,
+      method: 'POST',
+      agent: http.agent,
+      headers: {
+        'Content-Type': 'application/json; charset=UTF-8',
+        'Content-Length': payload.length
       }
-    }
+    },
+    function(res) {
+      if (res.statusCode < 200 || res.statusCode >= 300) {
+        if (!(ignore404 && res.statusCode === 404)) {
+          cb(new Error('Failed to send data to agent via POST ' + path + '. Got status code ' + res.statusCode));
+          return;
+        }
+      }
 
-    res.setEncoding('utf8');
-    var responseBody = '';
-    res.on('data', function(chunk) {
-      responseBody += chunk;
-    });
-    res.on('end', function() {
-      cb(null, responseBody);
-    });
-  });
+      res.setEncoding('utf8');
+      var responseBody = '';
+      res.on('data', function(chunk) {
+        responseBody += chunk;
+      });
+      res.on('end', function() {
+        cb(null, responseBody);
+      });
+    }
+  );
 
   req.setTimeout(agentOpts.requestTimeout, function onTimeout() {
     cb(new Error('Failed to send data to agent via POST ' + path + '. Ran into a timeout.'));
@@ -253,15 +244,17 @@ function sendData(path, data, cb, ignore404) {
  * (reporting an uncaught exception tot the agent in the process.on('uncaughtException') handler).
  */
 exports.reportUncaughtExceptionToAgentSync = function reportUncaughtExceptionToAgentSync(eventData, spans) {
-  sendRequestsSync([{
-    path: '/com.instana.plugin.nodejs/traces.' + pidStore.pid,
-    data: spans
-  }, {
-    path: '/com.instana.plugin.generic.event',
-    data: eventData
-  }]);
+  sendRequestsSync([
+    {
+      path: '/com.instana.plugin.nodejs/traces.' + pidStore.pid,
+      data: spans
+    },
+    {
+      path: '/com.instana.plugin.generic.event',
+      data: eventData
+    }
+  ]);
 };
-
 
 /**
  * Sends multiple HTTP POST requests to the agent. This function is synchronous, that is, it blocks the event loop!
@@ -276,8 +269,9 @@ function sendRequestsSync(requests) {
     try {
       netLink = require('netlinkwrapper')();
     } catch (requireNetlinkError) {
-      logger.warn('Failed to require optional dependency netlinkwrapper, uncaught exception will not be reported ' +
-                  'to Instana.');
+      logger.warn(
+        'Failed to require optional dependency netlinkwrapper, uncaught exception will not be reported to Instana.'
+      );
     }
   }
   if (!netLink) {
@@ -295,13 +289,16 @@ function sendRequestsSync(requests) {
   }
 
   try {
-    netLink.connect(port, agentOpts.host);
+    netLink.connect(
+      port,
+      agentOpts.host
+    );
     netLink.blocking(false);
     requests.forEach(function(request) {
       sendHttpPostRequestSync(port, request.path, request.data);
     });
   } catch (netLinkError) {
-    logger.warn('Failed to report uncaught exception due to network error.', {error: netLinkError});
+    logger.warn('Failed to report uncaught exception due to network error.', { error: netLinkError });
   } finally {
     try {
       netLink.disconnect();
@@ -311,7 +308,6 @@ function sendRequestsSync(requests) {
   }
 }
 
-
 /**
  * Sends a single, synchronous HTTP POST request to the agent. This function is synchronous, that is, it blocks the
  * event loop!
@@ -320,16 +316,18 @@ function sendRequestsSync(requests) {
  * (reporting an uncaught exception tot the agent in the process.on('uncaughtException') handler).
  */
 function sendHttpPostRequestSync(port, path, data) {
-  logger.debug({payload: data}, 'Sending payload synchronously to %s', path);
+  logger.debug({ payload: data }, 'Sending payload synchronously to %s', path);
   try {
     var payload = JSON.stringify(data);
     var payloadLength = buffer.fromString(payload, 'utf8').length;
   } catch (payloadSerializationError) {
-    logger.warn('Could not serialize payload, uncaught exception will not be reported.',
-      { error: payloadSerializationError });
+    logger.warn('Could not serialize payload, uncaught exception will not be reported.', {
+      error: payloadSerializationError
+    });
     return;
   }
 
+  // prettier-ignore
   netLink.write(
     'POST ' + path + ' HTTP/1.1\u000d\u000a' +
     'Host: ' + agentOpts.host + '\u000d\u000a' +

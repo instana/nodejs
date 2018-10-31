@@ -9,7 +9,6 @@ var logger = require('../logger').getLogger('dependencies');
 exports.payloadPrefix = 'dependencies';
 exports.currentPayload = {};
 
-
 exports.activate = function() {
   applicationUnderMonitoring.getMainPackageJsonPath(function(err, packageJsonPath) {
     if (err) {
@@ -55,12 +54,15 @@ function addDependenciesFromDir(dependencyDir) {
   });
 }
 
-
 function addDependency(dependency, packageJsonPath) {
-  fs.readFile(packageJsonPath, {encoding: 'utf8'}, function(err, contents) {
+  fs.readFile(packageJsonPath, { encoding: 'utf8' }, function(err, contents) {
     if (err) {
-      return logger.info('Failed to identify version of %s dependency due to: %s. This means that you will not be ' +
-        'able to see details about this dependency within Instana.', dependency, err.message);
+      return logger.info(
+        'Failed to identify version of %s dependency due to: %s. This means that you will not be ' +
+          'able to see details about this dependency within Instana.',
+        dependency,
+        err.message
+      );
     }
 
     try {
@@ -76,6 +78,5 @@ function addDependency(dependency, packageJsonPath) {
     }
   });
 }
-
 
 exports.deactivate = function() {};

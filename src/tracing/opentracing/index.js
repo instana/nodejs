@@ -7,13 +7,11 @@ var tracer;
 var cls;
 var automaticTracingEnabled = false;
 
-
 exports.init = function init(config, _automaticTracingEnabled) {
   automaticTracingEnabled = _automaticTracingEnabled;
 
   require('./Span').init(config);
 };
-
 
 exports.createTracer = function createTracer() {
   if (!tracer) {
@@ -23,7 +21,6 @@ exports.createTracer = function createTracer() {
   return tracer;
 };
 
-
 exports.activate = function activate() {
   isActive = true;
   if (tracer) {
@@ -31,14 +28,12 @@ exports.activate = function activate() {
   }
 };
 
-
 exports.deactivate = function deactivate() {
   isActive = false;
   if (tracer) {
     tracer.deactivate();
   }
 };
-
 
 exports.getCurrentlyActiveInstanaSpanContext = function getCurrentlyActiveInstanaSpanContext() {
   if (!automaticTracingEnabled) {

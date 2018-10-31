@@ -13,7 +13,6 @@ var uncaughtExceptionEventName = 'uncaughtException';
 var stackTraceLength = 10;
 var config;
 
-
 exports.init = function(_config) {
   config = _config;
   setDefaults();
@@ -22,11 +21,9 @@ exports.init = function(_config) {
   }
 };
 
-
 function setDefaults() {
   config.reportUncaughtException = config.reportUncaughtException === true;
 }
-
 
 exports.activate = function() {
   if (config.reportUncaughtException) {
@@ -39,21 +36,21 @@ exports.activate = function() {
         // exception.
         logger.warn(
           'Reporting uncaught exceptions is enabled, but netlinkwrapper could not be loaded ' +
-          '(require.resolve(\'netlinkwrapper\') returned a falsy value). Uncaught exceptions will ' +
-          'not be reported to Instana for this application. This typically occurs when native addons could not be ' +
-          'compiled during module installation (npm install/yarn). See the instructions to learn more about the ' +
-          'requirements of the sensor: ' +
-          'https://github.com/instana/nodejs-sensor/blob/master/README.md'
+            "(require.resolve('netlinkwrapper') returned a falsy value). Uncaught exceptions will " +
+            'not be reported to Instana for this application. This typically occurs when native addons could not be ' +
+            'compiled during module installation (npm install/yarn). See the instructions to learn more about the ' +
+            'requirements of the sensor: ' +
+            'https://github.com/instana/nodejs-sensor/blob/master/README.md'
         );
       }
     } catch (notResolved) {
       // This happens if netlinkwrapper is not available (it is an optional dependency).
       logger.warn(
         'Reporting uncaught exceptions is enabled, but netlinkwrapper could not be loaded. Uncaught exceptions will ' +
-        'not be reported to Instana for this application. This typically occurs when native addons could not be ' +
-        'compiled during module installation (npm install/yarn). See the instructions to learn more about the ' +
-        'requirements of the sensor: ' +
-        'https://github.com/instana/nodejs-sensor/blob/master/README.md'
+          'not be reported to Instana for this application. This typically occurs when native addons could not be ' +
+          'compiled during module installation (npm install/yarn). See the instructions to learn more about the ' +
+          'requirements of the sensor: ' +
+          'https://github.com/instana/nodejs-sensor/blob/master/README.md'
       );
     }
   } else {
@@ -61,11 +58,9 @@ exports.activate = function() {
   }
 };
 
-
 exports.deactivate = function() {
   process.removeListener(uncaughtExceptionEventName, onUncaughtException);
 };
-
 
 function onUncaughtException(uncaughtError) {
   // because of the way Error.prepareStackTrace works and how error.stack is only created once and then cached it is
@@ -75,13 +70,11 @@ function onUncaughtException(uncaughtError) {
   logAndRethrow(uncaughtError);
 }
 
-
 function finishCurrentSpanAndReportEvent(uncaughtError, jsonStackTrace) {
   var spans = finishCurrentSpan(jsonStackTrace);
   var eventPayload = createEventForUncaughtException(uncaughtError);
   agentConnection.reportUncaughtExceptionToAgentSync(eventPayload, spans);
 }
-
 
 function createEventForUncaughtException(uncaughtError) {
   var eventText = errorToMarkdown(uncaughtError);
@@ -96,7 +89,6 @@ function createEventForUncaughtException(uncaughtError) {
   };
 }
 
-
 function finishCurrentSpan(jsonStackTrace) {
   var currentSpan = cls.getCurrentSpan();
   if (!currentSpan) {
@@ -110,7 +102,6 @@ function finishCurrentSpan(jsonStackTrace) {
   return transmission.getAndResetSpans();
 }
 
-
 function logAndRethrow(err) {
   // Remove all listeners now, so the final throw err won't trigger other registered listeners a second time.
   var registeredListeners = process.listeners(uncaughtExceptionEventName);
@@ -119,6 +110,7 @@ function logAndRethrow(err) {
       process.removeListener(uncaughtExceptionEventName, listener);
     });
   }
+  // prettier-ignore
   // eslint-disable-next-line max-len
   logger.error('The Instana Node.js sensor caught an otherwise uncaught exception to generate a respective Instana event for you. Instana will now rethrow the error to terminate this process, otherwise the application would be left in an inconsistent state, see https://nodejs.org/api/process.html#process_warning_using_uncaughtexception_correctly. The next line on stderr will look as if Instana crashed your application, but actually the original error came from your application code, not from Instana. Since we rethrow the original error, you should see its stacktrace below (depening on how you operate your application and how logging is configured.)');
 
@@ -131,9 +123,12 @@ function logAndRethrow(err) {
 function errorToMarkdown(error) {
   var serializedError = serializeError(error);
   if (serializedError.name && serializedError.message && typeof serializedError.stack === 'string') {
-    return '### ' + serializedError.name + '\n\n' +
+    // prettier-ignore
+    return (
+      '### ' + serializedError.name + '\n\n' +
       '#### Message: \n\n' + serializedError.message + '\n\n' +
-      '#### Stack:\n\n' + stackTraceToMarkdown(serializedError.stack);
+      '#### Stack:\n\n' + stackTraceToMarkdown(serializedError.stack)
+    );
   } else {
     return JSON.stringify(serializedError);
   }

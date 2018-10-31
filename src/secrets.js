@@ -5,7 +5,6 @@ var defaultMatcherMode = 'contains-ignore-case';
 var defaultSecrets = ['key', 'pass', 'secret'];
 
 exports.matchers = {
-
   'equals-ignore-case': function createEqualsIgnoreCaseMatcher(secrets) {
     secrets = toLowerCase(secrets);
     return function isSecret(key) {
@@ -105,7 +104,7 @@ exports.matchers = {
     return function isSecret() {
       return false;
     };
-  },
+  }
 };
 
 function checkSecrets(configuredSecrets) {
@@ -117,10 +116,7 @@ function checkSecrets(configuredSecrets) {
     if (typeof s === 'string') {
       secrets.push(s);
     } else {
-      logger.warn(
-        'Received invalid secret key from agent: %s - this key will not be used for removing secrets',
-        s
-      );
+      logger.warn('Received invalid secret key from agent: %s - this key will not be used for removing secrets', s);
     }
   });
   return secrets;

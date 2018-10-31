@@ -22,11 +22,11 @@ exports.init = function() {
     } else {
       // This should actually not happen as require.resolve should either return a resolved filename or throw an
       // exception.
-      logger.debug('Won\'t instrument bluebird as it is not installed (require.resolve returned falsy value).');
+      logger.debug("Won't instrument bluebird as it is not installed (require.resolve returned falsy value).");
     }
   } catch (notResolved) {
     // This happens if bluebird is not available, in which case we do not need
     // to instrument anything, so we can safely ignore the error.
-    logger.debug('Won\'t instrument bluebird as it is not installed.');
+    logger.debug("Won't instrument bluebird as it is not installed.");
   }
 };
