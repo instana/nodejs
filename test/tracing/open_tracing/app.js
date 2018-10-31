@@ -26,9 +26,9 @@ app.get('/', function(req, res) {
 app.get('/withOpentracing', function(req, res) {
   log('########################## Start span!');
   var serviceSpan = tracer.startSpan('service');
-  log('########################## Started span:', serviceSpan)
+  log('########################## Started span:', serviceSpan);
   serviceSpan.setTag(opentracing.Tags.SPAN_KIND, opentracing.Tags.SPAN_KIND_RPC_SERVER);
-  var authSpan = tracer.startSpan('auth', {childOf: serviceSpan});
+  var authSpan = tracer.startSpan('auth', { childOf: serviceSpan });
   authSpan.finish();
   serviceSpan.finish();
   res.send('OK');
@@ -36,7 +36,7 @@ app.get('/withOpentracing', function(req, res) {
 
 app.get('/withOpentracingConnectedToInstanaTrace', function(req, res) {
   var spanContext = instana.opentracing.getCurrentlyActiveInstanaSpanContext();
-  var serviceSpan = tracer.startSpan('service', {childOf: spanContext});
+  var serviceSpan = tracer.startSpan('service', { childOf: spanContext });
   serviceSpan.finish();
   res.send('OK');
 });

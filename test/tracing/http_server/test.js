@@ -29,17 +29,17 @@ describe('tracing/httpServer', function() {
 
   it('must report additional headers when requested', function() {
     var userAgent = 'medivhTheTeleporter';
-    return controls.sendRequest({
-      method: 'GET',
-      path: '/',
-      headers: {
-        'User-Agent': userAgent
-      }
-    })
+    return controls
+      .sendRequest({
+        method: 'GET',
+        path: '/',
+        headers: {
+          'User-Agent': userAgent
+        }
+      })
       .then(function() {
         return utils.retry(function() {
-          return agentControls.getSpans()
-          .then(function(spans) {
+          return agentControls.getSpans().then(function(spans) {
             utils.expectOneMatching(spans, function(span) {
               expect(span.n).to.equal('node.http.server');
               expect(span.data.http.header['user-agent']).to.equal(userAgent);
@@ -50,14 +50,14 @@ describe('tracing/httpServer', function() {
   });
 
   it('must remove secrets from query parameters', function() {
-    return controls.sendRequest({
-      method: 'GET',
-      path: '/?param1=value1&TheSecreT=classified&param2=value2&enIgmAtic=occult&param3=value4&cipher=veiled',
-    })
+    return controls
+      .sendRequest({
+        method: 'GET',
+        path: '/?param1=value1&TheSecreT=classified&param2=value2&enIgmAtic=occult&param3=value4&cipher=veiled'
+      })
       .then(function() {
         return utils.retry(function() {
-          return agentControls.getSpans()
-          .then(function(spans) {
+          return agentControls.getSpans().then(function(spans) {
             utils.expectOneMatching(spans, function(span) {
               expect(span.n).to.equal('node.http.server');
               expect(span.data.http.params).to.equal('param1=value1&param2=value2&param3=value4');
@@ -74,14 +74,14 @@ describe('tracing/httpServer', function() {
 
     function check(actualPath, expectedTemplate) {
       it('must report express path templates for actual path: ' + actualPath, function() {
-        return controls.sendRequest({
-          method: 'GET',
-          path: actualPath
-        })
+        return controls
+          .sendRequest({
+            method: 'GET',
+            path: actualPath
+          })
           .then(function() {
             return utils.retry(function() {
-              return agentControls.getSpans()
-              .then(function(spans) {
+              return agentControls.getSpans().then(function(spans) {
                 utils.expectOneMatching(spans, function(span) {
                   expect(span.data.http.path_tpl).to.equal(expectedTemplate);
                 });

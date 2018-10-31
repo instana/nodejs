@@ -12,7 +12,7 @@ describe('slidingWindow', function() {
 
   beforeEach(function() {
     clock = sinon.useFakeTimers();
-    w = slidingWindow.create({duration: 10000});
+    w = slidingWindow.create({ duration: 10000 });
   });
 
   afterEach(function() {

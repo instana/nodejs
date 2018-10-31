@@ -26,21 +26,21 @@ describe('tracing/requireHook', function() {
 
   describe('stealthy require', function() {
     it('must not apply caching when not necessary / or when something is fishy', function() {
-      return controls.sendRequest({
-        method: 'GET',
-        path: '/requireRequestPromiseMultipleTimes',
-      })
-      .then(function() {
-        return utils.retry(function() {
-          return agentControls.getSpans()
-          .then(function(spans) {
-            utils.expectOneMatching(spans, function(span) {
-              expect(span.n).to.equal('node.http.server');
-              expect(span.data.http.status).to.equal(200);
+      return controls
+        .sendRequest({
+          method: 'GET',
+          path: '/requireRequestPromiseMultipleTimes'
+        })
+        .then(function() {
+          return utils.retry(function() {
+            return agentControls.getSpans().then(function(spans) {
+              utils.expectOneMatching(spans, function(span) {
+                expect(span.n).to.equal('node.http.server');
+                expect(span.data.http.status).to.equal(200);
+              });
             });
           });
         });
-      });
     });
   });
 });

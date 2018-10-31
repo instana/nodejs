@@ -56,12 +56,10 @@ describe('tracing/opentracing/Span', function() {
     });
   });
 
-
   it('must be able to change operation name at a later point', function() {
     span.setOperationName('http');
     expect(span.span.data.sdk.name).to.equal('http');
   });
-
 
   describe('tags', function() {
     it('must handle error tag differently', function() {
@@ -70,50 +68,42 @@ describe('tracing/opentracing/Span', function() {
       expect(span.span.ec).to.equal(1);
     });
 
-
     it('must support setting error to false', function() {
       span.setTag(opentracing.Tags.ERROR, false);
       expect(span.span.error).to.equal(false);
       expect(span.span.ec).to.equal(0);
     });
 
-
     it('must change direction to exit for client rpc kind', function() {
       span.setTag(opentracing.Tags.SPAN_KIND, opentracing.Tags.SPAN_KIND_RPC_CLIENT);
       expect(span.span.data.sdk.type).to.equal('exit');
     });
-
 
     it('must change direction to entry for server rpc kind', function() {
       span.setTag(opentracing.Tags.SPAN_KIND, opentracing.Tags.SPAN_KIND_RPC_SERVER);
       expect(span.span.data.sdk.type).to.equal('entry');
     });
 
-
     it('must change direction to exit for producer rpc kind', function() {
       span.setTag(opentracing.Tags.SPAN_KIND, 'producer');
       expect(span.span.data.sdk.type).to.equal('exit');
     });
-
 
     it('must change direction to entry for consumer rpc kind', function() {
       span.setTag(opentracing.Tags.SPAN_KIND, 'consumer');
       expect(span.span.data.sdk.type).to.equal('entry');
     });
 
-
     it('must treat sampling priority changes specially', function() {
       span.setTag(opentracing.Tags.SAMPLING_PRIORITY, 0.5);
       expect(span.context().samplingPriority).to.equal(0.5);
     });
-
 
     it('must set all other tags as user provided payload', function() {
       span.setTag('foo', 'bar');
       expect(span.span.data.sdk.custom.tags.foo).to.equal('bar');
     });
   });
-
 
   describe('logs', function() {
     it('must set logs without timestamp', function() {
@@ -129,9 +119,12 @@ describe('tracing/opentracing/Span', function() {
     });
 
     it('must set logs with user specified timestamp', function() {
-      span.log({
-        foo: 'bar'
-      }, 5);
+      span.log(
+        {
+          foo: 'bar'
+        },
+        5
+      );
       var keys = Object.keys(span.span.data.sdk.custom.logs);
       expect(keys).to.have.lengthOf(1);
       expect(keys[0]).to.equal('5');
@@ -141,12 +134,18 @@ describe('tracing/opentracing/Span', function() {
     });
 
     it('must merge log entries with the same timestamp', function() {
-      span.log({
-        foo: 'bar'
-      }, 5);
-      span.log({
-        blub: 'bla'
-      }, 5);
+      span.log(
+        {
+          foo: 'bar'
+        },
+        5
+      );
+      span.log(
+        {
+          blub: 'bla'
+        },
+        5
+      );
       var keys = Object.keys(span.span.data.sdk.custom.logs);
       expect(keys).to.have.lengthOf(1);
       expect(keys[0]).to.equal('5');
@@ -157,12 +156,18 @@ describe('tracing/opentracing/Span', function() {
     });
 
     it('must support log entries of varying timestamps', function() {
-      span.log({
-        foo: 'bar'
-      }, 5);
-      span.log({
-        blub: 'bla'
-      }, 6);
+      span.log(
+        {
+          foo: 'bar'
+        },
+        5
+      );
+      span.log(
+        {
+          blub: 'bla'
+        },
+        6
+      );
       expect(span.span.data.sdk.custom.logs).to.deep.equal({
         5: {
           foo: 'bar'
@@ -173,7 +178,6 @@ describe('tracing/opentracing/Span', function() {
       });
     });
   });
-
 
   describe('finish', function() {
     it('must pass span to transmission handler when finishing', function() {
@@ -195,7 +199,6 @@ describe('tracing/opentracing/Span', function() {
       expect(transmission.addSpan.callCount).to.equal(0);
     });
   });
-
 
   describe('fields', function() {
     it('must use start time from passed fields', function() {
@@ -230,7 +233,6 @@ describe('tracing/opentracing/Span', function() {
     });
   });
 
-
   describe('baggage', function() {
     it('must support set and get baggage items', function() {
       span.setBaggageItem('foo', 'bar');
@@ -241,7 +243,6 @@ describe('tracing/opentracing/Span', function() {
       expect(span.getBaggageItem('foo')).to.equal(undefined);
     });
   });
-
 
   describe('references', function() {
     it('must set trace and parent ID based on child of reference', function() {

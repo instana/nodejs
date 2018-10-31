@@ -40,32 +40,39 @@ describe('tracing/bluebird', function() {
 
     it('must trace: ' + path, function() {
       // trigger tracing
-      return bluebirdControls.sendRequest({
-        method: 'GET',
-        path: path
-      })
+      return (
+        bluebirdControls
+          .sendRequest({
+            method: 'GET',
+            path: path
+          })
 
-      // validate the data
-      .then(function(spanContext) {
-        return utils.retry(function() {
-          return agentControls.getSpans()
-          .then(function(spans) {
-            checker(spanContext, spans, path);
-          });
-        })
+          // validate the data
+          .then(function(spanContext) {
+            return (
+              utils
+                .retry(function() {
+                  return agentControls.getSpans().then(function(spans) {
+                    checker(spanContext, spans, path);
+                  });
+                })
 
-        // actionable error reporting
-        .catch(function(error) {
-          return agentControls.getSpans()
-          .then(function(spans) {
-            console.error('Span context %s does not match expectation.\n\nError: %s\n\nSpans: %s', //eslint-disable-line
-              JSON.stringify(spanContext, 0, 2),
-              error,
-              JSON.stringify(spans, 0, 2));
-            return Promise.reject(error);
-          });
-        });
-      });
+                // actionable error reporting
+                .catch(function(error) {
+                  return agentControls.getSpans().then(function(spans) {
+                    // eslint-disable-next-line no-console
+                    console.error(
+                      'Span context %s does not match expectation.\n\nError: %s\n\nSpans: %s',
+                      JSON.stringify(spanContext, 0, 2),
+                      error,
+                      JSON.stringify(spans, 0, 2)
+                    );
+                    return Promise.reject(error);
+                  });
+                })
+            );
+          })
+      );
     });
   }
 

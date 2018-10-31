@@ -75,7 +75,7 @@ app.use(function(req, res) {
     res.set('sErver-tiMING', 'myServerTimingKey');
   }
   if (req.query.serverTimingArray) {
-    res.set('sErver-tiMING', ['key1', "key2;dur=42"]);
+    res.set('sErver-tiMING', ['key1', 'key2;dur=42']);
   }
 
   setTimeout(function() {
@@ -83,14 +83,18 @@ app.use(function(req, res) {
   }, delay);
 });
 
-
 if (process.env.USE_HTTPS === 'true') {
-  require('https').createServer({
-    key: fs.readFileSync(path.join(__dirname, 'ssl', 'key')),
-    cert: fs.readFileSync(path.join(__dirname, 'ssl', 'cert'))
-  }, app).listen(process.env.APP_PORT, function() {
-    log('Listening (HTTPS!) on port: ' + process.env.APP_PORT);
-  });
+  require('https')
+    .createServer(
+      {
+        key: fs.readFileSync(path.join(__dirname, 'ssl', 'key')),
+        cert: fs.readFileSync(path.join(__dirname, 'ssl', 'cert'))
+      },
+      app
+    )
+    .listen(process.env.APP_PORT, function() {
+      log('Listening (HTTPS!) on port: ' + process.env.APP_PORT);
+    });
 } else {
   app.listen(process.env.APP_PORT, function() {
     log('Listening on port: ' + process.env.APP_PORT);

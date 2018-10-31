@@ -21,11 +21,9 @@ describe('pidStore', function() {
     pidStore = null;
   });
 
-
   afterEach(function() {
     process.env.CONTINUOUS_INTEGRATION = prevCiFlag;
   });
-
 
   function doRequire() {
     pidStore = proxyquire('../../src/pidStore', {
@@ -65,7 +63,7 @@ describe('pidStore', function() {
   it('should use the PID from the parent namespace when found', function() {
     readFileSync.returns(
       'node (15926, #threads: 10)\n-------------------------------------------------------------------\n' +
-      'se.exec_start                                :    1093303068.953905'
+        'se.exec_start                                :    1093303068.953905'
     );
     doRequire();
     expect(pidStore.pid).to.equal(15926);
@@ -74,8 +72,8 @@ describe('pidStore', function() {
   it('should not rely on specific command name', function() {
     readFileSync.returns(
       'ddasdasd\nsyslog-ng (19841, #threads: 1)\n' +
-      '-------------------------------------------------------------------\n' +
-      'se.exec_start                                :    1093303068.953905'
+        '-------------------------------------------------------------------\n' +
+        'se.exec_start                                :    1093303068.953905'
     );
     doRequire();
     expect(pidStore.pid).to.equal(19841);
@@ -84,8 +82,8 @@ describe('pidStore', function() {
   it('should accept wider range of command names', function() {
     readFileSync.returns(
       'ui-client.sh (105065, #threads: 1)\n' +
-      '-------------------------------------------------------------------\n' +
-      'se.exec_start                                :    1093303068.953905'
+        '-------------------------------------------------------------------\n' +
+        'se.exec_start                                :    1093303068.953905'
     );
     doRequire();
     expect(pidStore.pid).to.equal(105065);

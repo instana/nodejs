@@ -32,7 +32,6 @@ exports.registerTestHooks = function(opts) {
   });
 };
 
-
 exports.getPid = function() {
   return app.pid;
 };

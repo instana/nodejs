@@ -38,7 +38,6 @@ app.get('/', function(req, res) {
   }
 });
 
-
 app.post('/values', function(req, res) {
   var key = req.query.key;
   var value = req.query.value;
@@ -52,7 +51,6 @@ app.post('/values', function(req, res) {
   });
 });
 
-
 app.get('/values', function(req, res) {
   var key = req.query.key;
   client.get(key, function(err, redisRes) {
@@ -65,7 +63,6 @@ app.get('/values', function(req, res) {
   });
 });
 
-
 app.get('/failure', function(req, res) {
   // simulating wrong get usage
   client.get('someCollection', 'someKey', 'someValue', function(err, redisRes) {
@@ -77,9 +74,9 @@ app.get('/failure', function(req, res) {
   });
 });
 
-
 app.get('/multi', function(req, res) {
-  client.multi()
+  client
+    .multi()
     .hset('someCollection', 'key', 'value')
     .hget('someCollection', 'key')
     .exec(function(err) {
@@ -92,10 +89,10 @@ app.get('/multi', function(req, res) {
     });
 });
 
-
 app.get('/multiFailure', function(req, res) {
   // simulating wrong get usage
-  client.multi()
+  client
+    .multi()
     .hset('someCollection', 'key', 'value')
     .hget('someCollection', 'key', 'too', 'many', 'args')
     .exec(function(err) {
@@ -110,7 +107,8 @@ app.get('/multiFailure', function(req, res) {
 
 app.get('/batchFailure', function(req, res) {
   // simulating wrong get usage
-  client.batch()
+  client
+    .batch()
     .hset('someCollection', 'key', 'value')
     .hget('someCollection', 'key', 'too', 'many', 'args')
     .exec(function(err) {
@@ -122,7 +120,6 @@ app.get('/batchFailure', function(req, res) {
       }
     });
 });
-
 
 app.get('/callSequence', function(req, res) {
   var key = 'foo';
@@ -145,7 +142,6 @@ app.get('/callSequence', function(req, res) {
     });
   });
 });
-
 
 app.listen(process.env.APP_PORT, function() {
   log('Listening on port: ' + process.env.APP_PORT);

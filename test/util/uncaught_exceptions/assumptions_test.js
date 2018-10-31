@@ -36,9 +36,7 @@ describe('uncaught exceptions assumptions - ', function() {
       expect(stdOut).to.be.empty;
       expect(stdErr).to.contain('Error: Boom');
       expect(stdErr).to.contain('_onTimeout');
-      expect(stdErr).to.contain(
-        'test/util/uncaught_exceptions/apps/rethrow.js'
-      );
+      expect(stdErr).to.contain('test/util/uncaught_exceptions/apps/rethrow.js');
     });
 
     it('executes handlers registered before rethrowing handler, but not handlers registered after that', function() {
@@ -50,9 +48,7 @@ describe('uncaught exceptions assumptions - ', function() {
       expect(stdErr).to.not.be.empty;
       expect(stdErr).to.contain('Error: Boom');
       expect(stdErr).to.contain('_onTimeout');
-      expect(stdErr).to.contain(
-        'test/util/uncaught_exceptions/apps/rethrowWhenOtherHandlersArePresent.js'
-      );
+      expect(stdErr).to.contain('test/util/uncaught_exceptions/apps/rethrowWhenOtherHandlersArePresent.js');
     });
   });
 });

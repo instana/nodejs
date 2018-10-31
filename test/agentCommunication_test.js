@@ -22,8 +22,7 @@ describe('agentCommunication', function() {
 
   it('must announce itself to the agent', function() {
     return utils.retry(function() {
-      return agentStubControls.getDiscoveries()
-      .then(function(discoveries) {
+      return agentStubControls.getDiscoveries().then(function(discoveries) {
         var discovery = discoveries[expressControls.getPid()];
         expect(discovery.pid).to.be.a('number');
         expect(discovery.fd).to.be.a('string');
@@ -34,34 +33,30 @@ describe('agentCommunication', function() {
     });
   });
 
-
   it('must send data to the agent', function() {
     return utils.retry(function() {
-      return agentStubControls.getLastMetricValue(expressControls.getPid(), ['pid'])
-      .then(function(pid) {
+      return agentStubControls.getLastMetricValue(expressControls.getPid(), ['pid']).then(function(pid) {
         expect(pid).to.equal(expressControls.getPid());
       });
     });
   });
 
-
   it('must reannounce itself to the agent once discoveries are cleared', function() {
-    return utils.retry(function() {
-      return agentStubControls.getDiscoveries()
-      .then(function(discoveries) {
-        expect(discoveries[expressControls.getPid()].pid).to.be.a('number');
-      });
-    })
-    .then(function() {
-      agentStubControls.deleteDiscoveries();
-    })
-    .then(function() {
-      return utils.retry(function() {
-        return agentStubControls.getDiscoveries()
-        .then(function(discoveries) {
+    return utils
+      .retry(function() {
+        return agentStubControls.getDiscoveries().then(function(discoveries) {
           expect(discoveries[expressControls.getPid()].pid).to.be.a('number');
         });
+      })
+      .then(function() {
+        agentStubControls.deleteDiscoveries();
+      })
+      .then(function() {
+        return utils.retry(function() {
+          return agentStubControls.getDiscoveries().then(function(discoveries) {
+            expect(discoveries[expressControls.getPid()].pid).to.be.a('number');
+          });
+        });
       });
-    });
   });
 });

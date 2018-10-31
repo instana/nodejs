@@ -10,7 +10,7 @@ var utils = require('../../utils');
 var config = require('../../config');
 var agentPort = require('../../apps/agentStubControls').agentPort;
 var upstreamPort = require('../../apps/expressControls').appPort;
-var appPort = exports.appPort = 3215;
+var appPort = (exports.appPort = 3215);
 
 var expressMysqlApp;
 
@@ -39,7 +39,6 @@ exports.registerTestHooks = function(opts) {
   });
 };
 
-
 function waitUntilServerIsUp() {
   return utils.retry(function() {
     return request({
@@ -52,11 +51,9 @@ function waitUntilServerIsUp() {
   });
 }
 
-
 exports.getPid = function() {
   return expressMysqlApp.pid;
 };
-
 
 exports.addValue = function(value) {
   return request({

@@ -34,8 +34,8 @@ var client = new Client({
 });
 client.connect();
 
-var createTableQuery = 'CREATE TABLE IF NOT EXISTS users(id serial primary key,' +
-                       ' name varchar(40) NOT NULL, email varchar(40) NOT NULL)';
+var createTableQuery =
+  'CREATE TABLE IF NOT EXISTS users(id serial primary key, name varchar(40) NOT NULL, email varchar(40) NOT NULL)';
 
 pool.query(createTableQuery, function(err) {
   if (err) {
@@ -78,7 +78,7 @@ app.get('/pool-string-insert', function(req, res) {
 
 app.get('/pool-config-select', function(req, res) {
   var query = {
-    text: 'SELECT name, email FROM users',
+    text: 'SELECT name, email FROM users'
   };
 
   pool.query(query, function(err, results) {
@@ -93,10 +93,11 @@ app.get('/pool-config-select', function(req, res) {
 app.get('/pool-config-select-promise', function(req, res) {
   var query = {
     text: 'INSERT INTO users(name, email) VALUES($1, $2) RETURNING *',
-    values: ['beaker', 'beaker@muppets.com'],
+    values: ['beaker', 'beaker@muppets.com']
   };
 
-  pool.query(query)
+  pool
+    .query(query)
     .then(function(results) {
       res.json(results);
     })
@@ -121,7 +122,7 @@ app.get('/client-string-insert', function(req, res) {
 
 app.get('/client-config-select', function(req, res) {
   var query = {
-    text: 'SELECT name, email FROM users',
+    text: 'SELECT name, email FROM users'
   };
 
   client.query(query, function(err, results) {
@@ -134,7 +135,8 @@ app.get('/client-config-select', function(req, res) {
 });
 
 app.get('/table-doesnt-exist', function(req, res) {
-  pool.query('SELECT name, email FROM nonexistanttable')
+  pool
+    .query('SELECT name, email FROM nonexistanttable')
     .then(function(r) {
       res.json(r);
     })
@@ -150,8 +152,9 @@ app.get('/transaction', function(req, res) {
       return res.status(500).json(err1);
     }
 
-    client.query('INSERT INTO users(name, email) VALUES($1, $2) RETURNING *',
-                ['trans1', 'nodejstests@blah'], function(err2) {
+    client.query('INSERT INTO users(name, email) VALUES($1, $2) RETURNING *', ['trans1', 'nodejstests@blah'], function(
+      err2
+    ) {
       if (err2) {
         log('Failed to execute client transaction', err2);
         return res.status(500).json(err2);

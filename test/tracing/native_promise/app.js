@@ -44,21 +44,17 @@ app.get('/childPromise', function(req, res) {
 });
 
 app.get('/childPromiseWithChildSend', function(req, res) {
-  delay(50)
-    .then(function() {
-      return delay(20)
-        .then(sendActiveTraceContext.bind(null, res));
-    });
+  delay(50).then(function() {
+    return delay(20).then(sendActiveTraceContext.bind(null, res));
+  });
 });
 
 app.get('/combined', function(req, res) {
-  Promise.all([delay(50), delay(40)])
-    .then(sendActiveTraceContext.bind(null, res));
+  Promise.all([delay(50), delay(40)]).then(sendActiveTraceContext.bind(null, res));
 });
 
 app.get('/rejected', function(req, res) {
-  Promise.all([delay(50), Promise.reject(new Error('bad timing'))])
-    .catch(sendActiveTraceContext.bind(null, res));
+  Promise.all([delay(50), Promise.reject(new Error('bad timing'))]).catch(sendActiveTraceContext.bind(null, res));
 });
 
 app.get('/childHttpCall', function(req, res) {
@@ -71,17 +67,16 @@ app.get('/childHttpCall', function(req, res) {
       }
     });
   })
-  .catch(function() {
-    return delay(20);
-  })
-  .then(function() {
-    sendActiveTraceContext(res);
-  });
+    .catch(function() {
+      return delay(20);
+    })
+    .then(function() {
+      sendActiveTraceContext(res);
+    });
 });
 
 app.get('/rejected', function(req, res) {
-  Promise.all([delay(50), Promise.reject(new Error('bad timing'))])
-    .catch(sendActiveTraceContext.bind(null, res));
+  Promise.all([delay(50), Promise.reject(new Error('bad timing'))]).catch(sendActiveTraceContext.bind(null, res));
 });
 
 app.get('/eventEmitterBased', function(req, res) {

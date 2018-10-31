@@ -10,7 +10,6 @@ var cpu = require('../../../src/actions/profiling/cpu');
 var config = require('../../config');
 var utils = require('../../utils');
 
-
 describe('actions/profiling/cpu', function() {
   if (!semver.satisfies(process.versions.node, '>=4.0.0')) {
     return;
@@ -24,7 +23,7 @@ describe('actions/profiling/cpu', function() {
     var rawCpuProfile;
 
     beforeEach(function() {
-      rawCpuProfile = JSON.parse(fs.readFileSync(path.join(__dirname, 'cpuProfile.json'), {encoding: 'utf8'}));
+      rawCpuProfile = JSON.parse(fs.readFileSync(path.join(__dirname, 'cpuProfile.json'), { encoding: 'utf8' }));
     });
 
     it('must turn the raw CPU profile into a tree with timing information', function() {
@@ -66,149 +65,131 @@ describe('actions/profiling/cpu', function() {
 
     it('must inform about start of CPU profile', function() {
       var messageId = 'a';
-      return agentStubControls.addRequestForPid(
-        elasticSearchControls.getPid(),
-        {
+      return agentStubControls
+        .addRequestForPid(elasticSearchControls.getPid(), {
           action: 'node.startCpuProfiling',
           messageId: messageId,
           args: {
             duration: 1000
           }
-        }
-      )
-      .then(function() {
-        return utils.retry(function() {
-          return agentStubControls.getResponses()
-          .then(function(responses) {
-            utils.expectOneMatching(responses, function(response) {
-              expect(response.messageId).to.equal(messageId);
-              expect(response.data.data).to.match(/Profiling successfully started/i);
-            });
+        })
+        .then(function() {
+          return utils.retry(function() {
+            return agentStubControls.getResponses().then(function(responses) {
+              utils.expectOneMatching(responses, function(response) {
+                expect(response.messageId).to.equal(messageId);
+                expect(response.data.data).to.match(/Profiling successfully started/i);
+              });
 
-            utils.expectOneMatching(responses, function(response) {
-              expect(response.messageId).to.equal(messageId);
-              expect(response.data.data.f).to.equal('(root)');
-              expect(response.data.data.sh).to.equal(0);
-              expect(response.data.data.th).to.be.above(0);
-              expect(response.data.data.t).to.equal(response.data.data.th * 1000);
+              utils.expectOneMatching(responses, function(response) {
+                expect(response.messageId).to.equal(messageId);
+                expect(response.data.data.f).to.equal('(root)');
+                expect(response.data.data.sh).to.equal(0);
+                expect(response.data.data.th).to.be.above(0);
+                expect(response.data.data.t).to.equal(response.data.data.th * 1000);
+              });
             });
           });
         });
-      });
     });
 
     it('must stop running CPU profiles and provide the results', function() {
       var startMessageId = 'start';
       var stopMessageId = 'stop';
-      return agentStubControls.addRequestForPid(
-        elasticSearchControls.getPid(),
-        {
+      return agentStubControls
+        .addRequestForPid(elasticSearchControls.getPid(), {
           action: 'node.startCpuProfiling',
           messageId: startMessageId,
           args: {
             duration: 6000000
           }
-        }
-      )
-      .then(function() {
-        return agentStubControls.addRequestForPid(
-          elasticSearchControls.getPid(),
-          {
+        })
+        .then(function() {
+          return agentStubControls.addRequestForPid(elasticSearchControls.getPid(), {
             action: 'node.stopCpuProfiling',
             messageId: stopMessageId,
             args: {}
-          }
-        );
-      })
-      .then(function() {
-        return utils.retry(function() {
-          return agentStubControls.getResponses()
-          .then(function(responses) {
-            utils.expectOneMatching(responses, function(response) {
-              expect(response.messageId).to.equal(stopMessageId);
-              expect(response.data.data).to.match(/CPU profiling successfully stopped/i);
-            });
+          });
+        })
+        .then(function() {
+          return utils.retry(function() {
+            return agentStubControls.getResponses().then(function(responses) {
+              utils.expectOneMatching(responses, function(response) {
+                expect(response.messageId).to.equal(stopMessageId);
+                expect(response.data.data).to.match(/CPU profiling successfully stopped/i);
+              });
 
-            utils.expectOneMatching(responses, function(response) {
-              expect(response.messageId).to.equal(startMessageId);
-              expect(response.data.data).to.match(/Profiling successfully started/i);
-            });
+              utils.expectOneMatching(responses, function(response) {
+                expect(response.messageId).to.equal(startMessageId);
+                expect(response.data.data).to.match(/Profiling successfully started/i);
+              });
 
-            utils.expectOneMatching(responses, function(response) {
-              expect(response.messageId).to.equal(startMessageId);
-              expect(response.data.data.f).to.equal('(root)');
+              utils.expectOneMatching(responses, function(response) {
+                expect(response.messageId).to.equal(startMessageId);
+                expect(response.data.data.f).to.equal('(root)');
+              });
             });
           });
         });
-      });
     });
 
     it('must abort running CPU profiles', function() {
       var startMessageId = 'start';
       var stopMessageId = 'stop';
-      return agentStubControls.addRequestForPid(
-        elasticSearchControls.getPid(),
-        {
+      return agentStubControls
+        .addRequestForPid(elasticSearchControls.getPid(), {
           action: 'node.startCpuProfiling',
           messageId: startMessageId,
           args: {
             duration: 6000000
           }
-        }
-      )
-      .then(function() {
-        return agentStubControls.addRequestForPid(
-          elasticSearchControls.getPid(),
-          {
+        })
+        .then(function() {
+          return agentStubControls.addRequestForPid(elasticSearchControls.getPid(), {
             action: 'node.stopCpuProfiling',
             messageId: stopMessageId,
             args: {
               abort: true
             }
-          }
-        );
-      })
-      .then(function() {
-        return utils.retry(function() {
-          return agentStubControls.getResponses()
-          .then(function(responses) {
-            utils.expectOneMatching(responses, function(response) {
-              expect(response.messageId).to.equal(stopMessageId);
-              expect(response.data.data).to.match(/CPU profiling successfully aborted/i);
-            });
+          });
+        })
+        .then(function() {
+          return utils.retry(function() {
+            return agentStubControls.getResponses().then(function(responses) {
+              utils.expectOneMatching(responses, function(response) {
+                expect(response.messageId).to.equal(stopMessageId);
+                expect(response.data.data).to.match(/CPU profiling successfully aborted/i);
+              });
 
-            utils.expectOneMatching(responses, function(response) {
-              expect(response.messageId).to.equal(startMessageId);
-              expect(response.data.data).to.match(/Profiling successfully started/i);
+              utils.expectOneMatching(responses, function(response) {
+                expect(response.messageId).to.equal(startMessageId);
+                expect(response.data.data).to.match(/Profiling successfully started/i);
+              });
             });
           });
         });
-      });
     });
 
     it('must do nothing when there is no active CPU profile', function() {
       var stopMessageId = 'stop';
-      return agentStubControls.addRequestForPid(
-        elasticSearchControls.getPid(),
-        {
+      return agentStubControls
+        .addRequestForPid(elasticSearchControls.getPid(), {
           action: 'node.stopCpuProfiling',
           messageId: stopMessageId,
           args: {
             abort: true
           }
-        }
-      )
-      .then(function() {
-        return utils.retry(function() {
-          return agentStubControls.getResponses()
-          .then(function(responses) {
-            utils.expectOneMatching(responses, function(response) {
-              expect(response.messageId).to.equal(stopMessageId);
-              expect(response.data.data).to.match(/No active CPU profiling session found/i);
+        })
+        .then(function() {
+          return utils.retry(function() {
+            return agentStubControls.getResponses().then(function(responses) {
+              utils.expectOneMatching(responses, function(response) {
+                expect(response.messageId).to.equal(stopMessageId);
+                expect(response.data.data).to.match(/No active CPU profiling session found/i);
+              });
             });
           });
         });
-      });
     });
   });
 });

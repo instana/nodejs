@@ -25,7 +25,7 @@ describe('tracing/tracingUtil', function() {
     });
 
     it('must use error message when available', function() {
-      expect(tracingUtil.getErrorDetails({message: 'Whhoooopppppss'})).to.match(/Whhoooopppppss/);
+      expect(tracingUtil.getErrorDetails({ message: 'Whhoooopppppss' })).to.match(/Whhoooopppppss/);
     });
 
     it('must use the whole provided error when all else fails', function() {

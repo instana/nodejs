@@ -32,14 +32,14 @@ describe('tracing/fastify', function() {
 
     function check(actualPath, expectedTemplate) {
       it('must report path templates for actual path: ' + actualPath, function() {
-        return controls.sendRequest({
-          method: 'GET',
-          path: actualPath
-        })
+        return controls
+          .sendRequest({
+            method: 'GET',
+            path: actualPath
+          })
           .then(function() {
             return utils.retry(function() {
-              return agentControls.getSpans()
-              .then(function(spans) {
+              return agentControls.getSpans().then(function(spans) {
                 utils.expectOneMatching(spans, function(span) {
                   expect(span.data.http.path_tpl).to.equal(expectedTemplate);
                   expect(span.data.http.status).to.equal(200);

@@ -8,7 +8,6 @@ var bunyan = require('bunyan');
 
 var log = require('../src/logger');
 
-
 describe('logger', function() {
   it('should return the default parent logger if no config is available', function() {
     var logger = log.getLogger('myLogger');
@@ -65,10 +64,10 @@ describe('logger', function() {
 
   it('should accept non-bunyan loggers with necessary logging functions', function() {
     var nonBunyanLogger = {
-      debug: function () {},
-      info: function () {},
-      warn: function () {},
-      error: function () {}
+      debug: function() {},
+      info: function() {},
+      warn: function() {},
+      error: function() {}
     };
 
     log.init({ logger: nonBunyanLogger });

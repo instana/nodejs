@@ -5,7 +5,7 @@
 var instana = require('../../../..');
 var config = {
   agentPort: process.env.AGENT_PORT,
-  level: 'info',
+  level: 'info'
   // not using "forceTransmissionStartingAt: 1" as usual here to verify that the uncaught exception handler actually
   // transmits the erroneous span before terminating the process.
 };
@@ -33,7 +33,7 @@ var requestHandler = function(request, response) {
 
 function success(response) {
   setTimeout(function() {
-    response.end('Everything\'s peachy.');
+    response.end("Everything's peachy.");
   }, 100);
 }
 

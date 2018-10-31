@@ -9,7 +9,7 @@ var path = require('path');
 var utils = require('../../utils');
 var config = require('../../config');
 var agentPort = require('../../apps/agentStubControls').agentPort;
-var appPort = exports.appPort = 3215;
+var appPort = (exports.appPort = 3215);
 
 var expressOpentracingApp;
 
@@ -36,7 +36,6 @@ exports.registerTestHooks = function(opts) {
   });
 };
 
-
 function waitUntilServerIsUp() {
   return utils.retry(function() {
     return request({
@@ -49,11 +48,9 @@ function waitUntilServerIsUp() {
   });
 }
 
-
 exports.getPid = function() {
   return expressOpentracingApp.pid;
 };
-
 
 exports.sendRequest = function(opts) {
   return request({
