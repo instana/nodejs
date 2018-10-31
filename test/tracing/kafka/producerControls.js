@@ -9,7 +9,7 @@ var path = require('path');
 var utils = require('../../utils');
 var config = require('../../config');
 var agentPort = require('../../apps/agentStubControls').agentPort;
-var appPort = exports.appPort = 3216;
+var appPort = (exports.appPort = 3216);
 
 var app;
 
@@ -35,7 +35,6 @@ exports.registerTestHooks = function(opts) {
   });
 };
 
-
 function waitUntilServerIsUp() {
   return utils.retry(function() {
     return request({
@@ -48,11 +47,9 @@ function waitUntilServerIsUp() {
   });
 }
 
-
 exports.getPid = function() {
   return app.pid;
 };
-
 
 exports.send = function(key, message) {
   return request({

@@ -39,31 +39,35 @@ app.use(function(req, res) {
       fetch(url, {
         method: req.method,
         timeout: 500
-      }).then(function(response) {
-        res.sendStatus(response.status);
-      }).catch(function(err) {
-        res.sendStatus(500);
-        log('Unexpected error', err);
-      });
-    } else {
-      // use request package
-      request({
-        method: req.method,
-        url: url,
-        qs: req.query,
-        timeout: 500
-      }, function(err, response) {
-        if (err) {
+      })
+        .then(function(response) {
+          res.sendStatus(response.status);
+        })
+        .catch(function(err) {
           res.sendStatus(500);
           log('Unexpected error', err);
-        } else {
-          res.sendStatus(response.statusCode);
+        });
+    } else {
+      // use request package
+      request(
+        {
+          method: req.method,
+          url: url,
+          qs: req.query,
+          timeout: 500
+        },
+        function(err, response) {
+          if (err) {
+            res.sendStatus(500);
+            log('Unexpected error', err);
+          } else {
+            res.sendStatus(response.statusCode);
+          }
         }
-      });
+      );
     }
   }, delay * 0.25);
 });
-
 
 app.listen(process.env.APP_PORT, function() {
   log('Listening on port: ' + process.env.APP_PORT);

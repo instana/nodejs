@@ -28,31 +28,29 @@ describe('tracing/kafka', function() {
   });
 
   it('must record trace publish spans', function() {
-    return expressKafkaProducerControls.send('someKey', 'someMessage')
-      .then(function() {
-        return utils.retry(function() {
-          return agentStubControls.getSpans()
-          .then(function(spans) {
-            var entrySpan = utils.expectOneMatching(spans, function(span) {
-              expect(span.n).to.equal('node.http.server');
-              expect(span.f.e).to.equal(String(expressKafkaProducerControls.getPid()));
-              expect(span.async).to.equal(false);
-              expect(span.error).to.equal(false);
-            });
+    return expressKafkaProducerControls.send('someKey', 'someMessage').then(function() {
+      return utils.retry(function() {
+        return agentStubControls.getSpans().then(function(spans) {
+          var entrySpan = utils.expectOneMatching(spans, function(span) {
+            expect(span.n).to.equal('node.http.server');
+            expect(span.f.e).to.equal(String(expressKafkaProducerControls.getPid()));
+            expect(span.async).to.equal(false);
+            expect(span.error).to.equal(false);
+          });
 
-            utils.expectOneMatching(spans, function(span) {
-              expect(span.t).to.equal(entrySpan.t);
-              expect(span.p).to.equal(entrySpan.s);
-              expect(span.n).to.equal('kafka');
-              expect(span.f.e).to.equal(String(expressKafkaProducerControls.getPid()));
-              expect(span.async).to.equal(false);
-              expect(span.error).to.equal(false);
-              expect(span.data.kafka.access).to.equal('send');
-              expect(span.data.kafka.service).to.equal('test');
-            });
+          utils.expectOneMatching(spans, function(span) {
+            expect(span.t).to.equal(entrySpan.t);
+            expect(span.p).to.equal(entrySpan.s);
+            expect(span.n).to.equal('kafka');
+            expect(span.f.e).to.equal(String(expressKafkaProducerControls.getPid()));
+            expect(span.async).to.equal(false);
+            expect(span.error).to.equal(false);
+            expect(span.data.kafka.access).to.equal('send');
+            expect(span.data.kafka.service).to.equal('test');
           });
         });
       });
+    });
   });
 
   ['consumerGroup', 'plain', 'highLevel'].forEach(function(consumerType) {
@@ -66,10 +64,10 @@ describe('tracing/kafka', function() {
       });
 
       it('must record kafka consumer spans via:' + consumerType, function() {
-        return expressKafkaProducerControls.send('someKey', 'someMessage')
-          .then(function() {
-            return utils.retry(function() {
-              return expressKafkaProducerControls.send('someKey', 'someMessage')
+        return expressKafkaProducerControls.send('someKey', 'someMessage').then(function() {
+          return utils.retry(function() {
+            return expressKafkaProducerControls
+              .send('someKey', 'someMessage')
               .then(function() {
                 return agentStubControls.getSpans();
               })
@@ -102,8 +100,8 @@ describe('tracing/kafka', function() {
                   expect(span.data.kafka.service).to.equal('test');
                 });
               });
-            });
           });
+        });
       });
     });
   });

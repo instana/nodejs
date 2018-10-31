@@ -36,7 +36,7 @@ app.get('/', function(req, res) {
   '/request-only-opts',
   '/get-url-opts',
   '/get-only-url',
-  '/get-only-opts',
+  '/get-only-opts'
 ].forEach(function(p) {
   app.get(p, function(req, res) {
     res.sendStatus(200);
@@ -58,12 +58,17 @@ app.put('/continue', function(req, res) {
 
 if (process.env.USE_HTTPS === 'true') {
   var sslDir = path.join(__dirname, '..', '..', 'apps', 'ssl');
-  require('https').createServer({
-    key: fs.readFileSync(path.join(sslDir, 'key')),
-    cert: fs.readFileSync(path.join(sslDir, 'cert'))
-  }, app).listen(process.env.APP_PORT, function() {
-    log('Listening (HTTPS!) on port: ' + process.env.APP_PORT);
-  });
+  require('https')
+    .createServer(
+      {
+        key: fs.readFileSync(path.join(sslDir, 'key')),
+        cert: fs.readFileSync(path.join(sslDir, 'cert'))
+      },
+      app
+    )
+    .listen(process.env.APP_PORT, function() {
+      log('Listening (HTTPS!) on port: ' + process.env.APP_PORT);
+    });
 } else {
   app.listen(process.env.APP_PORT, function() {
     log('Listening on port: ' + process.env.APP_PORT);

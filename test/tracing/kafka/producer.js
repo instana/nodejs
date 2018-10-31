@@ -28,7 +28,6 @@ producer.on('ready', function() {
   log('Producer is now ready');
 });
 
-
 app.use(bodyParser.json());
 
 app.get('/', function(req, res) {
@@ -44,19 +43,22 @@ app.post('/send-message', function(req, res) {
   var message = req.body.message;
 
   log('Sending message with key %s and body %s', key, message);
-  producer.send([
-    {
-      topic: 'test',
-      messages: new kafka.KeyedMessage(key, message)
+  producer.send(
+    [
+      {
+        topic: 'test',
+        messages: new kafka.KeyedMessage(key, message)
+      }
+    ],
+    function(err) {
+      if (err) {
+        log('Failed to send message with key %s', key, err);
+        res.status(500).send('Failed to send message');
+        return;
+      }
+      res.sendStatus(200);
     }
-  ], function(err) {
-    if (err) {
-      log('Failed to send message with key %s', key, err);
-      res.status(500).send('Failed to send message');
-      return;
-    }
-    res.sendStatus(200);
-  });
+  );
 });
 
 function log() {

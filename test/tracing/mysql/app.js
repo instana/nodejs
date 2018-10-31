@@ -14,7 +14,6 @@ instana({
   }
 });
 
-
 var mysql;
 if (process.env.MYSQL_2_DRIVER === 'true') {
   if (process.env.MYSQL_2_WITH_PROMISES === 'true') {
@@ -41,21 +40,21 @@ var pool = mysql.createPool({
   database: process.env.MYSQL_DB
 });
 
-
 function wrapQuery(connection, query, optQueryParams, cb) {
   if (process.env.MYSQL_2_WITH_PROMISES === 'true') {
-    connection.query(query, optQueryParams || null)
+    connection
+      .query(query, optQueryParams || null)
       .then(function(content) {
         var rows = content == null ? null : content[0];
         cb(null, rows);
-      }).catch(function(err) {
-      cb(err, null);
-    });
+      })
+      .catch(function(err) {
+        cb(err, null);
+      });
   } else {
     connection.query(query, cb);
   }
 }
-
 
 pool.getConnection(function(err, connection) {
   if (err) {
@@ -74,18 +73,15 @@ pool.getConnection(function(err, connection) {
   });
 });
 
-
 if (process.env.WITH_STDOUT) {
   app.use(morgan(logPrefix + ':method :url :status'));
 }
 
 app.use(bodyParser.json());
 
-
 app.get('/', function(req, res) {
   res.sendStatus(200);
 });
-
 
 app.get('/values', function(req, res) {
   if (process.env.MYSQL_2_WITH_PROMISES === 'true') {
@@ -95,7 +91,6 @@ app.get('/values', function(req, res) {
   }
 });
 
-
 app.post('/values', function(req, res) {
   if (process.env.MYSQL_2_WITH_PROMISES === 'true') {
     insertValuesWithPromises(req, res);
@@ -103,7 +98,6 @@ app.post('/values', function(req, res) {
     insertValues(req, res);
   }
 });
-
 
 app.post('/valuesAndCall', function(req, res) {
   if (process.env.MYSQL_2_WITH_PROMISES === 'true') {
@@ -115,44 +109,47 @@ app.post('/valuesAndCall', function(req, res) {
   }
 });
 
-
 app.listen(process.env.APP_PORT, function() {
   log('Listening on port: ' + process.env.APP_PORT);
 });
 
-
 function fetchValues(req, res) {
   wrapQuery(pool, 'SELECT value FROM random_values', null, function(queryError, results) {
-   if (queryError) {
+    if (queryError) {
       log('Failed to execute query', queryError);
       res.sendStatus(500);
       return;
     }
-    res.json(results.map(function(result) {
-      return result.value;
-    }));
+    res.json(
+      results.map(function(result) {
+        return result.value;
+      })
+    );
   });
 }
-
 
 function fetchValuesWithPromises(req, res) {
-  pool.getConnection().then(function(connection) {
-    wrapQuery(connection, 'SELECT value FROM random_values', null, function(queryError, results) {
-      if (queryError) {
-        log('Failed to execute query', queryError);
-        res.sendStatus(500);
-        return;
-      }
-      res.json(results.map(function(result) {
-        return result.value;
-      }));
+  pool
+    .getConnection()
+    .then(function(connection) {
+      wrapQuery(connection, 'SELECT value FROM random_values', null, function(queryError, results) {
+        if (queryError) {
+          log('Failed to execute query', queryError);
+          res.sendStatus(500);
+          return;
+        }
+        res.json(
+          results.map(function(result) {
+            return result.value;
+          })
+        );
+      });
+    })
+    .catch(function(err) {
+      log('Failed to get connection', err);
+      res.sendStatus(500);
     });
-  }).catch(function(err) {
-    log('Failed to get connection', err);
-    res.sendStatus(500);
-  });
 }
-
 
 function insertValues(req, res, extraCallback) {
   pool.getConnection(function(err, connection) {
@@ -181,50 +178,51 @@ function insertValues(req, res, extraCallback) {
   });
 }
 
-
 function insertValuesWithPromises(req, res) {
-  pool.getConnection().then(function(connection) {
-    wrapQuery(connection, 'INSERT INTO random_values (value) VALUES (?)', [req.query.value], function(queryError) {
-      if (queryError != null) {
-        log('Failed to execute query', queryError);
-        res.sendStatus(500);
-      } else {
-        connection.release();
-        res.sendStatus(200);
-      }
+  pool
+    .getConnection()
+    .then(function(connection) {
+      wrapQuery(connection, 'INSERT INTO random_values (value) VALUES (?)', [req.query.value], function(queryError) {
+        if (queryError != null) {
+          log('Failed to execute query', queryError);
+          res.sendStatus(500);
+        } else {
+          connection.release();
+          res.sendStatus(200);
+        }
+      });
+    })
+    .catch(function(err) {
+      log('Failed to get connection', err);
+      res.sendStatus(500);
     });
-  }).catch(function(err) {
-    log('Failed to get connection', err);
-    res.sendStatus(500);
-  });
 }
-
 
 function insertValuesWithPromisesAndCall(req, res) {
   var connection;
   pool
-  .getConnection()
-  .then(function(_connection) {
-    connection = _connection;
-    return connection.query('INSERT INTO random_values (value) VALUES (?)', [req.query.value]);
-  })
-  .then(function(result) {
-    return result ? result[0] : null;
-  })
-  .then(function() {
-    connection.release();
-  })
-  .then(function() {
-    return request('http://127.0.0.1:' + agentPort);
-  })
-  .then(function() {
-    res.json(instana.opentracing.getCurrentlyActiveInstanaSpanContext());
-  }).catch(function(err) {
-    log('Could not process request.', err);
-    res.sendStatus(500);
-  });
+    .getConnection()
+    .then(function(_connection) {
+      connection = _connection;
+      return connection.query('INSERT INTO random_values (value) VALUES (?)', [req.query.value]);
+    })
+    .then(function(result) {
+      return result ? result[0] : null;
+    })
+    .then(function() {
+      connection.release();
+    })
+    .then(function() {
+      return request('http://127.0.0.1:' + agentPort);
+    })
+    .then(function() {
+      res.json(instana.opentracing.getCurrentlyActiveInstanaSpanContext());
+    })
+    .catch(function(err) {
+      log('Could not process request.', err);
+      res.sendStatus(500);
+    });
 }
-
 
 function log() {
   var args = Array.prototype.slice.call(arguments);

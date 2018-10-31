@@ -18,7 +18,7 @@ describe('cmdline', function() {
   });
 
   it('should not define name and args when procfile cannot be read', function() {
-    fs.readFileSync.throws({code: 'ENOENT'});
+    fs.readFileSync.throws({ code: 'ENOENT' });
     req();
     expect(result.name).to.equal(undefined);
     expect(result.args).to.equal(undefined);

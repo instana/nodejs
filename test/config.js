@@ -7,7 +7,6 @@ exports.getAppStdio = function() {
   return [process.stdin, 'ignore', process.stderr];
 };
 
-
 exports.getTestTimeout = function() {
   if (process.env.CI) {
     return 30000;

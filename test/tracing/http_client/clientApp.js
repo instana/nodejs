@@ -52,78 +52,81 @@ app.get('/', function(req, res) {
 });
 
 app.get('/request-url-and-options', function(req, res) {
-  httpModule.request(
-    createUrl(req, '/request-url-opts'),
-    { rejectUnauthorized: false },
-    function() {
+  httpModule
+    .request(createUrl(req, '/request-url-opts'), { rejectUnauthorized: false }, function() {
       return res.sendStatus(200);
-    }
-  ).end();
+    })
+    .end();
 });
 
 app.get('/request-url-only', function(req, res) {
-  httpModule.request(
-    createUrl(req, '/request-only-url'),
-    function() {
+  httpModule
+    .request(createUrl(req, '/request-only-url'), function() {
       return res.sendStatus(200);
-    }
-  ).end();
+    })
+    .end();
 });
 
 app.get('/request-options-only', function(req, res) {
-  httpModule.request({
-    hostname: '127.0.0.1',
-    port: process.env.SERVER_PORT,
-    method: 'GET',
-    path: '/request-only-opts',
-    rejectUnauthorized: false,
-  }, function() {
-    return res.sendStatus(200);
-  }).end();
+  httpModule
+    .request(
+      {
+        hostname: '127.0.0.1',
+        port: process.env.SERVER_PORT,
+        method: 'GET',
+        path: '/request-only-opts',
+        rejectUnauthorized: false
+      },
+      function() {
+        return res.sendStatus(200);
+      }
+    )
+    .end();
 });
 
 app.get('/request-options-only-null-headers', function(req, res) {
-  httpModule.request({
-    hostname: '127.0.0.1',
-    port: process.env.SERVER_PORT,
-    method: 'GET',
-    path: '/request-only-opts',
-    rejectUnauthorized: false,
-    headers: null
-  }, function() {
-    return res.sendStatus(200);
-  }).end();
+  httpModule
+    .request(
+      {
+        hostname: '127.0.0.1',
+        port: process.env.SERVER_PORT,
+        method: 'GET',
+        path: '/request-only-opts',
+        rejectUnauthorized: false,
+        headers: null
+      },
+      function() {
+        return res.sendStatus(200);
+      }
+    )
+    .end();
 });
 
 app.get('/get-url-and-options', function(req, res) {
-  httpModule.get(
-    createUrl(req, '/get-url-opts'),
-    { rejectUnauthorized: false },
-    function() {
-      return res.sendStatus(200);
-    }
-  );
+  httpModule.get(createUrl(req, '/get-url-opts'), { rejectUnauthorized: false }, function() {
+    return res.sendStatus(200);
+  });
 });
 
 app.get('/get-url-only', function(req, res) {
+  httpModule.get(createUrl(req, '/get-only-url'), function() {
+    return res.sendStatus(200);
+  });
+});
+
+app.get('/get-options-only', function(req, res) {
   httpModule.get(
-    createUrl(req, '/get-only-url'),
+    {
+      hostname: '127.0.0.1',
+      port: process.env.SERVER_PORT,
+      method: 'GET',
+      path: '/get-only-opts',
+      rejectUnauthorized: false
+    },
     function() {
       return res.sendStatus(200);
     }
   );
-});
-
-app.get('/get-options-only', function(req, res) {
-  httpModule.get({
-    hostname: '127.0.0.1',
-    port: process.env.SERVER_PORT,
-    method: 'GET',
-    path: '/get-only-opts',
-    rejectUnauthorized: false,
-  }, function() {
-    return res.sendStatus(200);
-  });
 });
 
 app.get('/timeout', function(req, res) {
@@ -147,7 +150,7 @@ app.get('/abort', function(req, res) {
     hostname: '127.0.0.1',
     port: process.env.SERVER_PORT,
     path: '/timeout',
-    rejectUnauthorized: false,
+    rejectUnauthorized: false
   });
 
   clientRequest.end();
@@ -172,12 +175,11 @@ app.post('/upload-s3', function(req, res) {
     return res.sendStatus(500);
   }
 
-  var testFilePath =
-    path.join(
-      __dirname,
-      'upload',
-      'Verdi_Messa_da_requiem_Section_7.2_Libera_me_Dies_irae_Markevitch_1959.mp3'
-    );
+  var testFilePath = path.join(
+    __dirname,
+    'upload',
+    'Verdi_Messa_da_requiem_Section_7.2_Libera_me_Dies_irae_Markevitch_1959.mp3'
+  );
   var readStream = fs.createReadStream(testFilePath);
   var bucketName = process.env.AWS_S3_BUCKET_NAME;
   var params = { Bucket: process.env.AWS_S3_BUCKET_NAME, Key: 'test-file', Body: readStream };
@@ -188,26 +190,29 @@ app.post('/upload-s3', function(req, res) {
 });
 
 app.put('/expect-continue', function(req, res) {
-  var continueRequest = httpModule.request({
-    hostname: '127.0.0.1',
-    port: process.env.SERVER_PORT,
-    method: 'PUT',
-    path: '/continue',
-    rejectUnauthorized: false,
-    headers: {
-      Accept: 'application/json',
-      'Content-Type': 'application/json',
-      Expect: '100-continue'
+  var continueRequest = httpModule.request(
+    {
+      hostname: '127.0.0.1',
+      port: process.env.SERVER_PORT,
+      method: 'PUT',
+      path: '/continue',
+      rejectUnauthorized: false,
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+        Expect: '100-continue'
+      }
+    },
+    function(response) {
+      var responseString = '';
+      response.on('data', function(chunk) {
+        responseString += chunk;
+      });
+      response.on('end', function() {
+        res.send(responseString);
+      });
     }
-  }, function(response) {
-    var responseString = '';
-    response.on('data', function(chunk) {
-      responseString += chunk;
-    });
-    response.on('end', function() {
-      res.send(responseString);
-    });
-  });
+  );
 
   continueRequest.on('continue', function() {
     // send body
@@ -217,12 +222,17 @@ app.put('/expect-continue', function(req, res) {
 
 if (process.env.USE_HTTPS === 'true') {
   var sslDir = path.join(__dirname, '..', '..', 'apps', 'ssl');
-  require('https').createServer({
-    key: fs.readFileSync(path.join(sslDir, 'key')),
-    cert: fs.readFileSync(path.join(sslDir, 'cert'))
-  }, app).listen(process.env.APP_PORT, function() {
-    log('Listening (HTTPS!) on port: ' + process.env.APP_PORT);
-  });
+  require('https')
+    .createServer(
+      {
+        key: fs.readFileSync(path.join(sslDir, 'key')),
+        cert: fs.readFileSync(path.join(sslDir, 'cert'))
+      },
+      app
+    )
+    .listen(process.env.APP_PORT, function() {
+      log('Listening (HTTPS!) on port: ' + process.env.APP_PORT);
+    });
 } else {
   app.listen(process.env.APP_PORT, function() {
     log('Listening on port: ' + process.env.APP_PORT);
@@ -230,9 +240,7 @@ if (process.env.USE_HTTPS === 'true') {
 }
 
 function createUrl(req, urlPath) {
-  return req.query.urlObject ?
-    new URL(urlPath, baseUrl) :
-    baseUrl + urlPath;
+  return req.query.urlObject ? new URL(urlPath, baseUrl) : baseUrl + urlPath;
 }
 
 function log() {

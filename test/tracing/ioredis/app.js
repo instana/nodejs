@@ -43,7 +43,6 @@ app.get('/', function(req, res) {
   }
 });
 
-
 app.post('/values', function(req, res) {
   var key = req.query.key;
   var value = req.query.value;
@@ -57,33 +56,37 @@ app.post('/values', function(req, res) {
   });
 });
 
-
 app.get('/values', function(req, res) {
   var key = req.query.key;
-  client.get(key).then(function(redisRes) {
-    res.send(redisRes);
-  }, function(err) {
-    log('Get with key %s failed', key, err);
-    res.sendStatus(500);
-  });
+  client.get(key).then(
+    function(redisRes) {
+      res.send(redisRes);
+    },
+    function(err) {
+      log('Get with key %s failed', key, err);
+      res.sendStatus(500);
+    }
+  );
 });
-
 
 app.get('/keepTracing', function(req, res) {
   var key = req.query.key;
   var redisResponse = null;
-  client.get(key).then(function(redisRes) {
-    redisResponse = redisRes;
-    // Execute another traced call to verify that we keep the tracing context.
-    return request('http://127.0.0.1:' + agentPort);
-  }).then(function(httpRes) {
-    res.send(httpRes + ';' + redisResponse);
-  }).catch(function(err) {
-    log('Unexpected error for key %s', key, err);
-    res.sendStatus(500);
-  });
+  client
+    .get(key)
+    .then(function(redisRes) {
+      redisResponse = redisRes;
+      // Execute another traced call to verify that we keep the tracing context.
+      return request('http://127.0.0.1:' + agentPort);
+    })
+    .then(function(httpRes) {
+      res.send(httpRes + ';' + redisResponse);
+    })
+    .catch(function(err) {
+      log('Unexpected error for key %s', key, err);
+      res.sendStatus(500);
+    });
 });
-
 
 app.get('/keepTracingCallback', function(req, res) {
   // this uses a self created promise and a mix promise and callback styles,
@@ -106,14 +109,15 @@ app.get('/keepTracingCallback', function(req, res) {
         return resolve(httpRes.body + ';' + redisRes);
       });
     });
-  }).then(function(result) {
-    res.send(result);
-  }).catch(function(err) {
-    log('Unexpected error for key %s', key, err);
-    res.sendStatus(500);
-  });
+  })
+    .then(function(result) {
+      res.send(result);
+    })
+    .catch(function(err) {
+      log('Unexpected error for key %s', key, err);
+      res.sendStatus(500);
+    });
 });
-
 
 app.get('/failure', function(req, res) {
   // simulating wrong get usage
@@ -126,10 +130,10 @@ app.get('/failure', function(req, res) {
   });
 });
 
-
 app.get('/multi', function(req, res) {
   // simulating wrong get usage
-  client.multi()
+  client
+    .multi()
     .hset('someCollection', 'key', 'value')
     .hget('someCollection', 'key')
     .exec(function(err) {
@@ -141,10 +145,10 @@ app.get('/multi', function(req, res) {
     });
 });
 
-
 app.get('/multiFailure', function(req, res) {
   // simulating wrong get usage
-  client.multi()
+  client
+    .multi()
     .hset('someCollection', 'key', 'value')
     .hget('someCollection', 'key', 'too', 'many', 'args')
     .exec(function(err) {
@@ -156,28 +160,30 @@ app.get('/multiFailure', function(req, res) {
     });
 });
 
-
 app.post('/multiKeepTracing', function(req, res) {
   var redisResponse = null;
-  client.multi()
+  client
+    .multi()
     .hset('someCollection', 'key', 'value')
     .hget('someCollection', 'key')
     .exec()
     .then(function(redisRes) {
-    redisResponse = redisRes;
-    // Execute another traced call to verify that we keep the tracing context.
-    return request('http://127.0.0.1:' + agentPort);
-  }).then(function(httpRes) {
-    res.send(httpRes + ';' + redisResponse);
-  }).catch(function(err) {
-    log('Unexpected error', err);
-    res.sendStatus(500);
-  });
+      redisResponse = redisRes;
+      // Execute another traced call to verify that we keep the tracing context.
+      return request('http://127.0.0.1:' + agentPort);
+    })
+    .then(function(httpRes) {
+      res.send(httpRes + ';' + redisResponse);
+    })
+    .catch(function(err) {
+      log('Unexpected error', err);
+      res.sendStatus(500);
+    });
 });
 
-
 app.get('/pipeline', function(req, res) {
-  client.pipeline()
+  client
+    .pipeline()
     .hset('someCollection', 'key', 'value')
     .hset('someCollection', 'key2', 'value')
     .hget('someCollection', 'key')
@@ -190,9 +196,9 @@ app.get('/pipeline', function(req, res) {
     });
 });
 
-
 app.get('/pipelineFailure', function(req, res) {
-  client.pipeline()
+  client
+    .pipeline()
     .hset('someCollection', 'key', 'value')
     .hset('someCollection', 'key2', 'value', 'tooManyArgs')
     .hget('someCollection', 'key')
@@ -205,25 +211,26 @@ app.get('/pipelineFailure', function(req, res) {
     });
 });
 
-
 app.post('/pipelineKeepTracing', function(req, res) {
   var redisResponse = null;
-  client.pipeline()
+  client
+    .pipeline()
     .hset('someCollection', 'key', 'value')
     .hget('someCollection', 'key')
     .exec()
     .then(function(redisRes) {
-    redisResponse = redisRes;
-    // Execute another traced call to verify that we keep the tracing context.
-    return request('http://127.0.0.1:' + agentPort);
-  }).then(function(httpRes) {
-    res.send(httpRes + ';' + redisResponse);
-  }).catch(function(err) {
-    log('Unexpected error', err);
-    res.sendStatus(500);
-  });
+      redisResponse = redisRes;
+      // Execute another traced call to verify that we keep the tracing context.
+      return request('http://127.0.0.1:' + agentPort);
+    })
+    .then(function(httpRes) {
+      res.send(httpRes + ';' + redisResponse);
+    })
+    .catch(function(err) {
+      log('Unexpected error', err);
+      res.sendStatus(500);
+    });
 });
-
 
 app.listen(process.env.APP_PORT, function() {
   log('Listening on port: ' + process.env.APP_PORT);

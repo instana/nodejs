@@ -180,7 +180,6 @@ describe('secrets with matcher mode', function() {
       expect(matcher('.-=whatever=-.')).to.be.true;
     });
 
-
     it('should ignore null', function() {
       expect(matcher(null)).to.be.false;
     });

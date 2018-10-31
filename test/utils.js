@@ -45,9 +45,16 @@ exports.expectOneMatching = function expectOneMatching(arr, fn) {
   }
 
   if (error) {
-    throw new Error('Could not find an item which matches all the criteria. Got ' + arr.length +
-      ' items. Last error: ' + error.message + '. All Items:\n' + JSON.stringify(arr, 0, 2) +
-      '. Error stack trace: ' + error.stack);
+    throw new Error(
+      'Could not find an item which matches all the criteria. Got ' +
+        arr.length +
+        ' items. Last error: ' +
+        error.message +
+        '. All Items:\n' +
+        JSON.stringify(arr, 0, 2) +
+        '. Error stack trace: ' +
+        error.stack
+    );
   }
 };
 

@@ -70,15 +70,14 @@ function registerTests(useHttps) {
         return;
       }
 
-      return clientControls.sendRequest({
-        method: 'GET',
-        path: '/request-url-and-options' +
-          (urlObject ? '?urlObject=true' : '')
-      })
+      return clientControls
+        .sendRequest({
+          method: 'GET',
+          path: '/request-url-and-options' + (urlObject ? '?urlObject=true' : '')
+        })
         .then(function() {
           return utils.retry(function() {
-            return agentControls.getSpans()
-            .then(function(spans) {
+            return agentControls.getSpans().then(function(spans) {
               var clientSpan = utils.expectOneMatching(spans, function(span) {
                 expect(span.n).to.equal('node.http.client');
                 expect(span.data.http.url).to.match(/\/request-url-opts/);
@@ -107,15 +106,14 @@ function registerTests(useHttps) {
         // where we can specify the `rejectUnauthorized: false` option.
         return;
       }
-      return clientControls.sendRequest({
-        method: 'GET',
-        path: '/request-url-only' +
-          (urlObject ? '?urlObject=true' : '')
-      })
+      return clientControls
+        .sendRequest({
+          method: 'GET',
+          path: '/request-url-only' + (urlObject ? '?urlObject=true' : '')
+        })
         .then(function() {
           return utils.retry(function() {
-            return agentControls.getSpans()
-            .then(function(spans) {
+            return agentControls.getSpans().then(function(spans) {
               var clientSpan = utils.expectOneMatching(spans, function(span) {
                 expect(span.n).to.equal('node.http.client');
                 expect(span.data.http.url).to.match(/\/request-only-url/);
@@ -133,14 +131,14 @@ function registerTests(useHttps) {
   });
 
   it('must trace request(options, cb)', function() {
-    return clientControls.sendRequest({
-      method: 'GET',
-      path: '/request-options-only'
-    })
+    return clientControls
+      .sendRequest({
+        method: 'GET',
+        path: '/request-options-only'
+      })
       .then(function() {
         return utils.retry(function() {
-          return agentControls.getSpans()
-          .then(function(spans) {
+          return agentControls.getSpans().then(function(spans) {
             var clientSpan = utils.expectOneMatching(spans, function(span) {
               expect(span.n).to.equal('node.http.client');
               expect(span.data.http.url).to.match(/\/request-only-opts/);
@@ -157,14 +155,14 @@ function registerTests(useHttps) {
   });
 
   it('must trace request(options, cb) with { headers: null }', function() {
-    return clientControls.sendRequest({
-      method: 'GET',
-      path: '/request-options-only-null-headers'
-    })
+    return clientControls
+      .sendRequest({
+        method: 'GET',
+        path: '/request-options-only-null-headers'
+      })
       .then(function() {
         return utils.retry(function() {
-          return agentControls.getSpans()
-          .then(function(spans) {
+          return agentControls.getSpans().then(function(spans) {
             var clientSpan = utils.expectOneMatching(spans, function(span) {
               expect(span.n).to.equal('node.http.client');
               expect(span.data.http.url).to.match(/\/request-only-opts/);
@@ -187,15 +185,14 @@ function registerTests(useHttps) {
         // The (url, options[, callback]) API only exists since Node 10.9.0.
         return;
       }
-      return clientControls.sendRequest({
-        method: 'GET',
-        path: '/get-url-and-options' +
-          (urlObject ? '?urlObject=true' : '')
-      })
+      return clientControls
+        .sendRequest({
+          method: 'GET',
+          path: '/get-url-and-options' + (urlObject ? '?urlObject=true' : '')
+        })
         .then(function() {
           return utils.retry(function() {
-            return agentControls.getSpans()
-            .then(function(spans) {
+            return agentControls.getSpans().then(function(spans) {
               var clientSpan = utils.expectOneMatching(spans, function(span) {
                 expect(span.n).to.equal('node.http.client');
                 expect(span.data.http.url).to.match(/\/get-url-opts/);
@@ -224,15 +221,14 @@ function registerTests(useHttps) {
         // where we can specify the `rejectUnauthorized: false` option.
         return;
       }
-      return clientControls.sendRequest({
-        method: 'GET',
-        path: '/get-url-only' +
-          (urlObject ? '?urlObject=true' : '')
-      })
+      return clientControls
+        .sendRequest({
+          method: 'GET',
+          path: '/get-url-only' + (urlObject ? '?urlObject=true' : '')
+        })
         .then(function() {
           return utils.retry(function() {
-            return agentControls.getSpans()
-            .then(function(spans) {
+            return agentControls.getSpans().then(function(spans) {
               var clientSpan = utils.expectOneMatching(spans, function(span) {
                 expect(span.n).to.equal('node.http.client');
                 expect(span.data.http.url).to.match(/\/get-only-url/);
@@ -250,14 +246,14 @@ function registerTests(useHttps) {
   });
 
   it('must trace get(options, cb)', function() {
-    return clientControls.sendRequest({
-      method: 'GET',
-      path: '/get-options-only'
-    })
+    return clientControls
+      .sendRequest({
+        method: 'GET',
+        path: '/get-options-only'
+      })
       .then(function() {
         return utils.retry(function() {
-          return agentControls.getSpans()
-          .then(function(spans) {
+          return agentControls.getSpans().then(function(spans) {
             var clientSpan = utils.expectOneMatching(spans, function(span) {
               expect(span.n).to.equal('node.http.client');
               expect(span.data.http.url).to.match(/\/get-only-opts/);
@@ -274,7 +270,8 @@ function registerTests(useHttps) {
   });
 
   it('must trace calls that fail due to connection refusal', function() {
-    return serverControls.kill()
+    return serverControls
+      .kill()
       .then(function() {
         return clientControls.sendRequest({
           method: 'GET',
@@ -284,8 +281,7 @@ function registerTests(useHttps) {
       })
       .then(function() {
         return utils.retry(function() {
-          return agentControls.getSpans()
-          .then(function(spans) {
+          return agentControls.getSpans().then(function(spans) {
             utils.expectOneMatching(spans, function(span) {
               expect(span.n).to.equal('node.http.client');
               expect(span.ec).to.equal(1);
@@ -297,15 +293,15 @@ function registerTests(useHttps) {
   });
 
   it('must trace calls that fail due to timeouts', function() {
-    return clientControls.sendRequest({
-      method: 'GET',
-      path: '/timeout',
-      simple: false
-    })
+    return clientControls
+      .sendRequest({
+        method: 'GET',
+        path: '/timeout',
+        simple: false
+      })
       .then(function() {
         return utils.retry(function() {
-          return agentControls.getSpans()
-          .then(function(spans) {
+          return agentControls.getSpans().then(function(spans) {
             utils.expectOneMatching(spans, function(span) {
               expect(span.n).to.equal('node.http.client');
               expect(span.ec).to.equal(1);
@@ -317,15 +313,15 @@ function registerTests(useHttps) {
   });
 
   it('must trace aborted calls', function() {
-    return clientControls.sendRequest({
-      method: 'GET',
-      path: '/abort',
-      simple: false
-    })
+    return clientControls
+      .sendRequest({
+        method: 'GET',
+        path: '/abort',
+        simple: false
+      })
       .then(function() {
         return utils.retry(function() {
-          return agentControls.getSpans()
-          .then(function(spans) {
+          return agentControls.getSpans().then(function(spans) {
             utils.expectOneMatching(spans, function(span) {
               expect(span.n).to.equal('node.http.client');
               expect(span.ec).to.equal(1);
@@ -337,14 +333,14 @@ function registerTests(useHttps) {
   });
 
   it('must record custom headers', function() {
-    return clientControls.sendRequest({
-      method: 'GET',
-      path: '/'
-    })
+    return clientControls
+      .sendRequest({
+        method: 'GET',
+        path: '/'
+      })
       .then(function() {
         return utils.retry(function() {
-          return agentControls.getSpans()
-          .then(function(spans) {
+          return agentControls.getSpans().then(function(spans) {
             utils.expectOneMatching(spans, function(span) {
               expect(span.n).to.equal('node.http.client');
               expect(span.data.http.header.foobar).to.equal('42');
@@ -355,14 +351,14 @@ function registerTests(useHttps) {
   });
 
   it('must record calls with an "Expect: 100-continue" header', function() {
-    return clientControls.sendRequest({
-      method: 'put',
-      path: '/expect-continue'
-    })
+    return clientControls
+      .sendRequest({
+        method: 'put',
+        path: '/expect-continue'
+      })
       .then(function() {
         return utils.retry(function() {
-          return agentControls.getSpans()
-          .then(function(spans) {
+          return agentControls.getSpans().then(function(spans) {
             utils.expectOneMatching(spans, function(span) {
               expect(span.n).to.equal('node.http.client');
               expect(span.data.http.method).to.equal('PUT');

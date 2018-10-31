@@ -10,7 +10,7 @@ var _ = require('lodash');
 var utils = require('../utils');
 var config = require('../config');
 
-var agentPort = exports.agentPort = 3210;
+var agentPort = (exports.agentPort = 3210);
 
 var agentStub;
 
@@ -37,7 +37,6 @@ exports.registerTestHooks = function(opts) {
   });
 };
 
-
 function waitUntilServerIsUp() {
   return utils.retry(function() {
     return request({
@@ -47,7 +46,6 @@ function waitUntilServerIsUp() {
   });
 }
 
-
 exports.getDiscoveries = function() {
   return request({
     method: 'GET',
@@ -55,7 +53,6 @@ exports.getDiscoveries = function() {
     json: true
   });
 };
-
 
 exports.deleteDiscoveries = function() {
   return request({
@@ -65,7 +62,6 @@ exports.deleteDiscoveries = function() {
   });
 };
 
-
 exports.getRetrievedData = function() {
   return request({
     method: 'GET',
@@ -73,7 +69,6 @@ exports.getRetrievedData = function() {
     json: true
   });
 };
-
 
 exports.getEvents = function() {
   return request({
@@ -83,7 +78,6 @@ exports.getEvents = function() {
   });
 };
 
-
 exports.clearRetrievedData = function() {
   return request({
     method: 'DELETE',
@@ -92,30 +86,24 @@ exports.clearRetrievedData = function() {
   });
 };
 
-
 exports.getSpans = function() {
-  return exports.getRetrievedData()
-    .then(function(data) {
-      return data.traces.reduce(function(result, traceMessage) {
-        return result.concat(traceMessage.data);
-      }, []);
-    });
+  return exports.getRetrievedData().then(function(data) {
+    return data.traces.reduce(function(result, traceMessage) {
+      return result.concat(traceMessage.data);
+    }, []);
+  });
 };
-
 
 exports.getResponses = function() {
-  return exports.getRetrievedData()
-    .then(function(data) {
-      return data.responses;
-    });
+  return exports.getRetrievedData().then(function(data) {
+    return data.responses;
+  });
 };
 
-
 exports.getLastMetricValue = function(pid, _path) {
-  return exports.getRetrievedData()
-    .then(function(data) {
-      return getLastMetricValue(pid, data, _path);
-    });
+  return exports.getRetrievedData().then(function(data) {
+    return getLastMetricValue(pid, data, _path);
+  });
 };
 
 function getLastMetricValue(pid, data, _path) {
@@ -135,23 +123,20 @@ function getLastMetricValue(pid, data, _path) {
   return undefined;
 }
 
-
 exports.waitUntilAppIsCompletelyInitialized = function(pid) {
   return utils.retry(function() {
-    return exports.getRetrievedData()
-      .then(function(data) {
-        for (var i = 0, len = data.runtime.length; i < len; i++) {
-          var d = data.runtime[i];
-          if (d.pid) {
-            return true;
-          }
+    return exports.getRetrievedData().then(function(data) {
+      for (var i = 0, len = data.runtime.length; i < len; i++) {
+        var d = data.runtime[i];
+        if (d.pid) {
+          return true;
         }
+      }
 
-        throw new Error('PID ' + pid + ' never sent any data to the agent.');
-      });
+      throw new Error('PID ' + pid + ' never sent any data to the agent.');
+    });
   });
 };
-
 
 exports.simulateDiscovery = function(pid) {
   return request({
@@ -164,7 +149,6 @@ exports.simulateDiscovery = function(pid) {
   });
 };
 
-
 exports.addEntityData = function(pid, data) {
   return request({
     method: 'POST',
@@ -173,7 +157,6 @@ exports.addEntityData = function(pid, data) {
     body: data
   });
 };
-
 
 exports.addRequestForPid = function(pid, r) {
   return request({

@@ -31,21 +31,21 @@ describe('disabled tracing', function() {
   });
 
   it('must not send any spans to the agent', function() {
-    return expressControls.sendRequest({
-      method: 'POST',
-      path: '/checkout',
-      responseStatus: 201
-    })
-    .then(function() {
-      return Promise.delay(500);
-    })
-    .then(function() {
-      return utils.retry(function() {
-        return agentStubControls.getSpans()
-        .then(function(spans) {
-          expect(spans).to.have.lengthOf(0);
+    return expressControls
+      .sendRequest({
+        method: 'POST',
+        path: '/checkout',
+        responseStatus: 201
+      })
+      .then(function() {
+        return Promise.delay(500);
+      })
+      .then(function() {
+        return utils.retry(function() {
+          return agentStubControls.getSpans().then(function(spans) {
+            expect(spans).to.have.lengthOf(0);
+          });
         });
       });
-    });
   });
 });

@@ -52,11 +52,9 @@ describe('tracing/asyncAwait', function() {
 
   function testAsyncControlFlow() {
     it('must follow async control flow', function() {
-      return expressAsyncAwaitControls.sendRequest()
-      .then(function() {
+      return expressAsyncAwaitControls.sendRequest().then(function() {
         return utils.retry(function() {
-          return agentStubControls.getSpans()
-          .then(function(spans) {
+          return agentStubControls.getSpans().then(function(spans) {
             expect(spans.length).to.equal(5, 'Expecting five spans');
 
             var rootSpan = utils.expectOneMatching(spans, function(span) {

@@ -18,10 +18,10 @@ var logPrefix = 'Fastify (' + process.pid + '):\t';
 // Declare a route
 app.get('/', ok);
 app.get('/foo/:id', ok);
-app.register(subRouter, {prefix: '/sub'});
+app.register(subRouter, { prefix: '/sub' });
 
 async function ok() {
-  return { hello: 'world' }
+  return { hello: 'world' };
 }
 
 function subRouter(fastify, opts, next) {
@@ -32,15 +32,14 @@ function subRouter(fastify, opts, next) {
 
 const start = async () => {
   try {
-    await app.listen(process.env.APP_PORT)
-    log(`listening on ${app.server.address().port}`)
+    await app.listen(process.env.APP_PORT);
+    log(`listening on ${app.server.address().port}`);
   } catch (err) {
     log('startup failure', err);
     process.exit(1);
   }
-}
-start()
-
+};
+start();
 
 function log() {
   var args = Array.prototype.slice.call(arguments);

@@ -10,7 +10,7 @@ var utils = require('../../utils');
 var config = require('../../config');
 var agentPort = require('../../apps/agentStubControls').agentPort;
 var upstreamPort = require('../../apps/expressControls').appPort;
-var appPort = exports.appPort = 3218;
+var appPort = (exports.appPort = 3218);
 
 var errors = require('request-promise/errors');
 
@@ -67,8 +67,7 @@ exports.sendRequest = function(opts) {
     json: true,
     body: opts.body,
     headers: headers
-  })
-  .catch(errors.StatusCodeError, function(reason) {
+  }).catch(errors.StatusCodeError, function(reason) {
     if (opts.rejectWrongStatusCodes) {
       throw reason;
     }

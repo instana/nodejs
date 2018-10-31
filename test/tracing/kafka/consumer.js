@@ -20,27 +20,42 @@ client.on('error', function(error) {
 var consumer;
 if (process.env.CONSUMER_TYPE === 'plain') {
   log('Using Consumer');
-  consumer = new kafka.Consumer(client, [{
-    topic: 'test'
-  }], {
-    fromOffset: false,
-    groupId: uuid()
-  });
+  consumer = new kafka.Consumer(
+    client,
+    [
+      {
+        topic: 'test'
+      }
+    ],
+    {
+      fromOffset: false,
+      groupId: uuid()
+    }
+  );
 } else if (process.env.CONSUMER_TYPE === 'highLevel') {
   log('Using HighLevelConsumer');
-  consumer = new kafka.HighLevelConsumer(client, [{
-    topic: 'test'
-  }], {
-    fromOffset: false,
-    groupId: uuid()
-  });
+  consumer = new kafka.HighLevelConsumer(
+    client,
+    [
+      {
+        topic: 'test'
+      }
+    ],
+    {
+      fromOffset: false,
+      groupId: uuid()
+    }
+  );
 } else {
   log('Using ConsumerGroup');
-  consumer = new kafka.ConsumerGroup({
-    host: process.env.ZOOKEEPER,
-    fromOffset: 'latest',
-    groupId: uuid()
-  }, ['test']);
+  consumer = new kafka.ConsumerGroup(
+    {
+      host: process.env.ZOOKEEPER,
+      fromOffset: 'latest',
+      groupId: uuid()
+    },
+    ['test']
+  );
 }
 
 consumer.on('error', function(err) {

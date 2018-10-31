@@ -10,7 +10,7 @@ var path = require('path');
 var utils = require('../../utils');
 var config = require('../../config');
 var agentPort = require('../../apps/agentStubControls').agentPort;
-var appPort = exports.appPort = 3213;
+var appPort = (exports.appPort = 3213);
 
 var expressElasticsearchApp;
 
@@ -35,7 +35,6 @@ exports.registerTestHooks = function(opts) {
     expressElasticsearchApp.kill();
   });
 };
-
 
 function waitUntilServerIsUp() {
   return utils.retry(function() {
@@ -104,8 +103,7 @@ function requestWithPath(method, p, opts) {
     },
     json: true,
     body: opts.body
-  })
-  .catch(errors.StatusCodeError, function(reason) {
+  }).catch(errors.StatusCodeError, function(reason) {
     if (opts.rejectWrongStatusCodes) {
       throw reason;
     }

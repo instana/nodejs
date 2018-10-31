@@ -31,25 +31,28 @@ describe('metrics/healthchecks', function() {
 
   it('must report health status', function() {
     var healthyTimestamp;
-    return utils.retry(function() {
-      return agentStubControls.getLastMetricValue(expressControls.getPid(), ['healthchecks'])
-      .then(function(healthchecks) {
-        expect(healthchecks.configurable.healthy).to.equal(1);
-        expect(healthchecks.configurable.since).to.be.gte(start);
-        healthyTimestamp = healthchecks.configurable.since;
-      });
-    })
-    .then(function() {
-      return expressControls.setUnhealthy();
-    })
-    .then(function() {
-      return utils.retry(function() {
-        return agentStubControls.getLastMetricValue(expressControls.getPid(), ['healthchecks'])
-        .then(function(healthchecks) {
-          expect(healthchecks.configurable.healthy).to.equal(0);
-          expect(healthchecks.configurable.since).to.be.gt(healthyTimestamp);
+    return utils
+      .retry(function() {
+        return agentStubControls
+          .getLastMetricValue(expressControls.getPid(), ['healthchecks'])
+          .then(function(healthchecks) {
+            expect(healthchecks.configurable.healthy).to.equal(1);
+            expect(healthchecks.configurable.since).to.be.gte(start);
+            healthyTimestamp = healthchecks.configurable.since;
+          });
+      })
+      .then(function() {
+        return expressControls.setUnhealthy();
+      })
+      .then(function() {
+        return utils.retry(function() {
+          return agentStubControls
+            .getLastMetricValue(expressControls.getPid(), ['healthchecks'])
+            .then(function(healthchecks) {
+              expect(healthchecks.configurable.healthy).to.equal(0);
+              expect(healthchecks.configurable.since).to.be.gt(healthyTimestamp);
+            });
         });
       });
-    });
   });
 });

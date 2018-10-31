@@ -19,28 +19,27 @@ describe('agentStub', function() {
   agentStubControls.registerTestHooks();
 
   it('must respond without any discoveries upon start', function() {
-    return agentStubControls.getDiscoveries()
-      .then(function(discoveries) {
-        expect(discoveries).to.deep.equal({});
-      });
+    return agentStubControls.getDiscoveries().then(function(discoveries) {
+      expect(discoveries).to.deep.equal({});
+    });
   });
 
   it('must respond without any data upon start', function() {
-    return agentStubControls.getRetrievedData()
-      .then(function(data) {
-        expect(data).to.deep.equal({
-          runtime: [],
-          traces: [],
-          responses: [],
-          events: []
-        });
+    return agentStubControls.getRetrievedData().then(function(data) {
+      expect(data).to.deep.equal({
+        runtime: [],
+        traces: [],
+        responses: [],
+        events: []
       });
+    });
   });
 
   it('must return requests when retrieving entity data', function() {
     var pid = 23;
-    var params = {foo: 'bar'};
-    return agentStubControls.simulateDiscovery(pid)
+    var params = { foo: 'bar' };
+    return agentStubControls
+      .simulateDiscovery(pid)
       .then(function() {
         return agentStubControls.addRequestForPid(pid, params);
       })

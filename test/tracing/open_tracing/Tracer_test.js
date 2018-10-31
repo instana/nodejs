@@ -80,7 +80,6 @@ describe('tracing/opentracing/Tracer', function() {
       });
     });
 
-
     describe('extract', function() {
       beforeEach(function() {
         carrier = {

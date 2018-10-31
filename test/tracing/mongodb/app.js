@@ -28,20 +28,23 @@ if (process.env.WITH_STDOUT) {
 
 app.use(bodyParser.json());
 
-MongoClient.connect('mongodb://' + process.env.MONGODB + '/myproject', function(err, client) {
-  assert.equal(null, err);
-  if (client.constructor.name === 'Db') {
-    // mongodb versions < 3.x
-    db = client;
-  } else if (client.constructor.name === 'MongoClient') {
-    // mongodb versions >= 3.x
-    db = client.db();
-  } else {
-    throw new Error('Can not detect mongodb package version.');
+MongoClient.connect(
+  'mongodb://' + process.env.MONGODB + '/myproject',
+  function(err, client) {
+    assert.equal(null, err);
+    if (client.constructor.name === 'Db') {
+      // mongodb versions < 3.x
+      db = client;
+    } else if (client.constructor.name === 'MongoClient') {
+      // mongodb versions >= 3.x
+      db = client.db();
+    } else {
+      throw new Error('Can not detect mongodb package version.');
+    }
+    collection = db.collection('mydocs');
+    log('Connected to MongoDB');
   }
-  collection = db.collection('mydocs');
-  log('Connected to MongoDB');
-});
+);
 
 app.get('/', function(req, res) {
   if (!db || !collection) {
@@ -52,38 +55,41 @@ app.get('/', function(req, res) {
 });
 
 app.post('/insert', function(req, res) {
-  collection.insertOne(req.body)
-  .then(function(r) {
-    res.json(r);
-  })
-  .catch(function(e) {
-    log('Failed to write document', e);
-    res.sendStatus(500);
-  });
+  collection
+    .insertOne(req.body)
+    .then(function(r) {
+      res.json(r);
+    })
+    .catch(function(e) {
+      log('Failed to write document', e);
+      res.sendStatus(500);
+    });
 });
 
 app.post('/find', function(req, res) {
-  collection.findOne(req.body)
-  .then(function(r) {
-    res.json(r);
-  })
-  .catch(function(e) {
-    log('Failed to find document', e);
-    res.sendStatus(500);
-  });
+  collection
+    .findOne(req.body)
+    .then(function(r) {
+      res.json(r);
+    })
+    .catch(function(e) {
+      log('Failed to find document', e);
+      res.sendStatus(500);
+    });
 });
-
 
 app.get('/findall', function(req, res) {
-  collection.find({}).batchSize(2).toArray(function(err, docs) {
-    if (err) {
-      res.status(500).json(err);
-    } else {
-      res.json(docs);
-    }
-  });
+  collection
+    .find({})
+    .batchSize(2)
+    .toArray(function(err, docs) {
+      if (err) {
+        res.status(500).json(err);
+      } else {
+        res.json(docs);
+      }
+    });
 });
-
 
 app.listen(process.env.APP_PORT, function() {
   log('Listening on port: ' + process.env.APP_PORT);

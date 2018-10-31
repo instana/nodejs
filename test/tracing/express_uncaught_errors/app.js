@@ -27,15 +27,18 @@ app.get('/', function(req, res) {
   res.sendStatus(200);
 });
 
-app.get('/customErrorHandler', function(req, res) { // eslint-disable-line
+// eslint-disable-next-line
+app.get('/customErrorHandler', function(req, res) {
   throw new Error('To be caught by custom error handler');
 });
 
-app.use(function(err, req, res, next) { // eslint-disable-line
+// eslint-disable-next-line
+app.use(function(err, req, res, next) {
   res.sendStatus(400);
 });
 
-app.get('/defaultErrorHandler', function(req, res) {  // eslint-disable-line
+// eslint-disable-next-line
+app.get('/defaultErrorHandler', function(req, res) {
   throw new Error('To be caught by default error handler');
 });
 
