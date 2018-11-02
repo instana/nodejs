@@ -16,7 +16,7 @@ describe('actions/profiling/cpu', function() {
   }
 
   // controls require features that aren't available in early Node.js versions
-  var elasticSearchControls = require('../../tracing/elasticsearch/controls');
+  var elasticSearchControls = require('../../tracing/database/elasticsearch/controls');
   var agentStubControls = require('../../apps/agentStubControls');
 
   describe('toTreeWithTiming', function() {

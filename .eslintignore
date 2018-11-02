@@ -1,2 +1,2 @@
-test/tracing/async_await/app.js
-test/tracing/fastify/app.js
+test/tracing/control_flow/async_await/app.js
+test/tracing/frameworks/fastify/app.js
