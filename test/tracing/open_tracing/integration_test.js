@@ -1,18 +1,12 @@
 'use strict';
 
 var expect = require('chai').expect;
-var semver = require('semver');
 
 var supportedVersion = require('../../../src/tracing/index').supportedVersion;
 var config = require('../../config');
 var utils = require('../../utils');
 
 describe('tracing/opentracing/integration', function() {
-  if (semver.satisfies(process.versions.node, '<4')) {
-    return;
-  }
-
-  // controls require features that aren't available in early Node.js versions
   var agentStubControls = require('../../apps/agentStubControls');
   var expressOpentracingControls = require('./controls');
 
