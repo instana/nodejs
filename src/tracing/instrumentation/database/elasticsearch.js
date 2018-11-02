@@ -1,8 +1,8 @@
 'use strict';
 
-var requireHook = require('../../util/requireHook');
-var tracingUtil = require('../tracingUtil');
-var cls = require('../cls');
+var requireHook = require('../../../util/requireHook');
+var tracingUtil = require('../../tracingUtil');
+var cls = require('../../cls');
 
 var isActive = false;
 

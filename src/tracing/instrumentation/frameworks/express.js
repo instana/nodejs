@@ -3,10 +3,10 @@
 var shimmer = require('shimmer');
 var methods = require('methods');
 
-var requireHook = require('../../util/requireHook');
-var tracingUtil = require('../tracingUtil');
-var httpServer = require('./httpServer');
-var cls = require('../cls');
+var requireHook = require('../../../util/requireHook');
+var tracingUtil = require('../../tracingUtil');
+var httpServer = require('../protocols/httpServer');
+var cls = require('../../cls');
 
 var active = false;
 

@@ -9,22 +9,22 @@ var automaticTracingEnabled = false;
 var config;
 
 var instrumentations = [
-  './instrumentation/bluebird',
-  './instrumentation/amqp',
-  './instrumentation/elasticsearch',
-  './instrumentation/express',
-  './instrumentation/fastify',
-  './instrumentation/httpClient',
-  './instrumentation/httpServer',
-  './instrumentation/ioredis',
-  './instrumentation/kafka',
+  './instrumentation/control_flow/bluebird',
+  './instrumentation/database/elasticsearch',
+  './instrumentation/database/ioredis',
+  './instrumentation/database/mongodb',
+  './instrumentation/database/mssql',
+  './instrumentation/database/mysql',
+  './instrumentation/database/pg',
+  './instrumentation/database/redis',
+  './instrumentation/frameworks/express',
+  './instrumentation/frameworks/fastify',
   './instrumentation/loggers/pino',
   './instrumentation/loggers/winston',
-  './instrumentation/mongodb',
-  './instrumentation/mssql',
-  './instrumentation/mysql',
-  './instrumentation/pg',
-  './instrumentation/redis'
+  './instrumentation/messaging/amqp',
+  './instrumentation/messaging/kafka',
+  './instrumentation/protocols/httpClient',
+  './instrumentation/protocols/httpServer'
 ];
 var instrumentationModules = {};
 

@@ -6,11 +6,11 @@ var coreHttpsModule = require('https');
 var semver = require('semver');
 var URL = require('url').URL;
 
-var discardUrlParameters = require('../../util/url').discardUrlParameters;
-var tracingConstants = require('../constants');
-var tracingUtil = require('../tracingUtil');
+var discardUrlParameters = require('../../../util/url').discardUrlParameters;
+var tracingConstants = require('../../constants');
+var tracingUtil = require('../../tracingUtil');
 var httpCommon = require('./_http');
-var cls = require('../cls');
+var cls = require('../../cls');
 var url = require('url');
 
 var isActive = false;
