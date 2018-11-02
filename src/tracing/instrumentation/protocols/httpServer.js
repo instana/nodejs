@@ -3,12 +3,12 @@
 var coreHttpsModule = require('https');
 var coreHttpModule = require('http');
 
-var discardUrlParameters = require('../../util/url').discardUrlParameters;
-var tracingConstants = require('../constants');
-var agentOpts = require('../../agent/opts');
+var discardUrlParameters = require('../../../util/url').discardUrlParameters;
+var tracingConstants = require('../../constants');
+var agentOpts = require('../../../agent/opts');
 var httpCommon = require('./_http');
 var shimmer = require('shimmer');
-var cls = require('../cls');
+var cls = require('../../cls');
 
 var isActive = false;
 

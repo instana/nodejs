@@ -1,9 +1,9 @@
 'use strict';
 
-var logger = require('../../logger').getLogger('tracing/mongodb');
-var requireHook = require('../../util/requireHook');
-var tracingUtil = require('../tracingUtil');
-var cls = require('../cls');
+var logger = require('../../../logger').getLogger('tracing/mongodb');
+var requireHook = require('../../../util/requireHook');
+var tracingUtil = require('../../tracingUtil');
+var cls = require('../../cls');
 
 var isActive = false;
 

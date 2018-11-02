@@ -1,6 +1,6 @@
 'use strict';
 
-var agentOpts = require('../../agent/opts');
+var agentOpts = require('../../../agent/opts');
 
 exports.getExtraHeaders = function getExtraHeaders(incomingMessage) {
   if (!agentOpts.extraHttpHeadersToCapture || agentOpts.extraHttpHeadersToCapture.length === 0) {

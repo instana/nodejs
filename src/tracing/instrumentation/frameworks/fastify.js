@@ -1,8 +1,8 @@
 'use strict';
 
-var requireHook = require('../../util/requireHook');
-var httpServer = require('./httpServer');
-var cls = require('../cls');
+var requireHook = require('../../../util/requireHook');
+var httpServer = require('../protocols/httpServer');
+var cls = require('../../cls');
 
 var active = false;
 
