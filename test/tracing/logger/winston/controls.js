@@ -53,7 +53,16 @@ exports.getPid = function() {
   return appProcess.pid;
 };
 
-exports.trigger = function(level, useExpressPino) {
-  var pathSegment = (useExpressPino ? '/express-pino-' : '/') + level;
+exports.trigger = function(level, useGlobalLogger, useLogFunction) {
+  var pathSegment;
+  if (useGlobalLogger && useLogFunction) {
+    pathSegment = '/global-log-' + level;
+  } else if (useGlobalLogger) {
+    pathSegment = '/global-' + level;
+  } else if (useLogFunction) {
+    pathSegment = '/log-' + level;
+  } else {
+    pathSegment = '/' + level;
+  }
   return request('http://127.0.0.1:' + appPort + pathSegment);
 };

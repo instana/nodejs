@@ -19,6 +19,7 @@ var instrumentations = [
   './instrumentation/ioredis',
   './instrumentation/kafka',
   './instrumentation/loggers/pino',
+  './instrumentation/loggers/winston',
   './instrumentation/mongodb',
   './instrumentation/mssql',
   './instrumentation/mysql',

@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased
+- Instrument [Winston](https://github.com/winstonjs/winston).
 - Exclude file system entries that are not directories in dependency analysis, fixes confusing warning.
 
 ## 1.52.0
