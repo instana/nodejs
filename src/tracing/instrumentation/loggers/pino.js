@@ -40,6 +40,10 @@ function shimGenLog(originalGenLog) {
               span.stack = tracingUtil.getStackTrace(log);
               if (typeof mergingObject === 'string') {
                 message = mergingObject;
+              } else if (mergingObject && typeof mergingObject.message === 'string' && typeof message === 'string') {
+                message = mergingObject.message + ' -- ' + message;
+              } else if (mergingObject && typeof mergingObject.message === 'string') {
+                message = mergingObject.message;
               } else if (typeof message !== 'string') {
                 message =
                   'Log call without message. The Pino mergingObject argument will not be serialized by Instana for performance reasons.';

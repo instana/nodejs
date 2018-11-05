@@ -1,5 +1,8 @@
 # Changelog
 
+## Unreleased
+- Pino: Improve tracing Pino for error objects.
+
 ## 1.53.0
 - Instrument [Winston](https://github.com/winstonjs/winston).
 - Exclude file system entries that are not directories in dependency analysis, fixes confusing warning.
