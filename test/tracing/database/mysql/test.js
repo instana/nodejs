@@ -1,5 +1,6 @@
 'use strict';
 
+var semver = require('semver');
 var expect = require('chai').expect;
 
 var supportedVersion = require('../../../../src/tracing/index').supportedVersion;
@@ -7,7 +8,8 @@ var config = require('../../../config');
 var utils = require('../../../utils');
 
 describe('tracing/mysql', function() {
-  if (!supportedVersion(process.versions.node)) {
+  if (!supportedVersion(process.versions.node) || semver.lt(process.versions.node, '6.0.0')) {
+    // mysql2 recently started to use ES6 syntax.
     return;
   }
 
