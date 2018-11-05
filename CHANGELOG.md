@@ -1,7 +1,8 @@
 # Changelog
 
 ## Unreleased
-- Pino: Improve tracing Pino for error objects.
+- Instrument [Bunyan](https://github.com/trentm/node-bunyan).
+- Pino: Improve tracing for error objects.
 
 ## 1.53.0
 - Instrument [Winston](https://github.com/winstonjs/winston).
