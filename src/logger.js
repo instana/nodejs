@@ -8,12 +8,18 @@ var parentLogger;
 
 exports.init = function(config) {
   if (config.logger && typeof config.logger.child === 'function') {
-    parentLogger = config.logger.child({ module: 'instana-nodejs-logger-parent' });
+    parentLogger = config.logger.child({
+      module: 'instana-nodejs-logger-parent',
+      __in: 1
+    });
   } else if (config.logger && hasLoggingFunctions(config.logger)) {
     parentLogger = config.logger;
     return;
   } else {
-    parentLogger = bunyan.createLogger({ name: 'instana-nodejs-sensor' });
+    parentLogger = bunyan.createLogger({
+      name: 'instana-nodejs-sensor',
+      __in: 1
+    });
   }
 
   parentLogger.addStream({
