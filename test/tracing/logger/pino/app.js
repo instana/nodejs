@@ -75,11 +75,21 @@ app.get('/custom-error', function(req, res) {
 });
 
 app.get('/error-object-only', function(req, res) {
+  plainVanillaPino.error(new Error('This is an error.'));
+  finish(res);
+});
+
+app.get('/error-random-object-only', function(req, res) {
   plainVanillaPino.error({ foo: { bar: 'baz' } });
   finish(res);
 });
 
 app.get('/error-object-and-string', function(req, res) {
+  plainVanillaPino.error(new Error('This is an error.'), 'Error message - should be traced.');
+  finish(res);
+});
+
+app.get('/error-random-object-and-string', function(req, res) {
   plainVanillaPino.error({ foo: { bar: 'baz' } }, 'Error message - should be traced.');
   finish(res);
 });
@@ -121,11 +131,21 @@ app.get('/express-pino-custom-error', function(req, res) {
 });
 
 app.get('/express-pino-error-object-only', function(req, res) {
+  req.log.error(new Error('This is an error.'));
+  finish(res);
+});
+
+app.get('/express-pino-error-random-object-only', function(req, res) {
   req.log.error({ foo: { bar: 'baz' } });
   finish(res);
 });
 
 app.get('/express-pino-error-object-and-string', function(req, res) {
+  req.log.error(new Error('This is an error.'), 'Error message - should be traced.');
+  finish(res);
+});
+
+app.get('/express-pino-error-random-object-and-string', function(req, res) {
   req.log.error({ foo: { bar: 'baz' } }, 'Error message - should be traced.');
   finish(res);
 });
