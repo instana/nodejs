@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.54.0
 - Instrument [Bunyan](https://github.com/trentm/node-bunyan).
 - Pino: Improve tracing for error objects.
 
