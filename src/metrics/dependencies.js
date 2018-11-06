@@ -12,9 +12,9 @@ exports.currentPayload = {};
 exports.activate = function() {
   applicationUnderMonitoring.getMainPackageJsonPath(function(err, packageJsonPath) {
     if (err) {
-      return logger.warn('Failed to determine main package json. Reason: %s %s ', err.message, err.stack);
+      return logger.warn('Failed to determine main package.json. Reason: %s %s ', err.message, err.stack);
     } else if (!packageJsonPath) {
-      return logger.warn('main package json could not be found. Stopping dependency analysis.');
+      return logger.warn('Main package.json could not be found. Stopping dependency analysis.');
     }
 
     addDependenciesFromDir(path.join(path.dirname(packageJsonPath), 'node_modules'));
