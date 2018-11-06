@@ -13,10 +13,9 @@ addons:
 node_js:
   - v4
   - v6
-  - v7
   - v8
-  - v9
   - v10
+  - v11
 
 before_script:
   - sudo /etc/init.d/mysql stop

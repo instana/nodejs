@@ -22,9 +22,17 @@ describe('tracing', function() {
       expect(tracing.supportedVersion('8.2.1')).to.equal(true);
       expect(tracing.supportedVersion('8.3.0')).to.equal(true);
       expect(tracing.supportedVersion('8.9.1')).to.equal(true);
+      expect(tracing.supportedVersion('9.1.0')).to.equal(true);
       expect(tracing.supportedVersion('9.2.0')).to.equal(true);
       expect(tracing.supportedVersion('10.4.0')).to.equal(true);
       expect(tracing.supportedVersion('10.13.0')).to.equal(true);
+      expect(tracing.supportedVersion('11.0.0')).to.equal(true);
+      expect(tracing.supportedVersion('11.1.0')).to.equal(true);
+      expect(tracing.supportedVersion('11.2.0')).to.equal(true);
+      expect(tracing.supportedVersion('11.3.0')).to.equal(true);
+      expect(tracing.supportedVersion('11.4.0')).to.equal(true);
+      expect(tracing.supportedVersion('11.5.0')).to.equal(true);
+      expect(tracing.supportedVersion('11.6.0')).to.equal(true);
     });
 
     it('must report various Node.js versions as not supported', function() {
@@ -41,6 +49,10 @@ describe('tracing', function() {
       expect(tracing.supportedVersion('10.1.0')).to.equal(false);
       expect(tracing.supportedVersion('10.2.0')).to.equal(false);
       expect(tracing.supportedVersion('10.3.0')).to.equal(false);
+      expect(tracing.supportedVersion('12.0.0')).to.equal(false);
+      expect(tracing.supportedVersion('13.0.0')).to.equal(false);
+      expect(tracing.supportedVersion('14.0.0')).to.equal(false);
+      expect(tracing.supportedVersion('15.0.0')).to.equal(false);
     });
   });
 });
