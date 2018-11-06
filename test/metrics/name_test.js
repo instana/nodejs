@@ -4,6 +4,7 @@
 
 var expect = require('chai').expect;
 
+var utils = require('../utils');
 var name = require('../../src/metrics/name');
 
 describe('metrics.name', function() {
@@ -15,14 +16,13 @@ describe('metrics.name', function() {
     expect(name.payloadPrefix).to.equal('name');
   });
 
-  it('should provide the main module name', function(done) {
+  it('should provide the main module name', function() {
     name.activate();
 
-    setTimeout(function() {
+    return utils.retry(function() {
       // Mocha is used to execute the tests via the mocha executable.
       // As such mocha is the main module.
       expect(name.currentPayload).to.equal('mocha');
-      done();
-    }, 500);
+    });
   });
 });

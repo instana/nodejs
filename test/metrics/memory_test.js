@@ -4,6 +4,7 @@
 
 var expect = require('chai').expect;
 
+var utils = require('../utils');
 var memory = require('../../src/metrics/memory');
 
 describe('metrics.memory', function() {
@@ -25,7 +26,7 @@ describe('metrics.memory', function() {
 
   // Test is too fragile (especially for CI environments) and should only be used locally
   // to verify the behavior from time to time.
-  it.skip('should update memory information after 1s', function(done) {
+  it.skip('should update memory information after 1s', function() {
     memory.activate();
     var previousPayload = memory.currentPayload;
 
@@ -35,10 +36,9 @@ describe('metrics.memory', function() {
       garbage.push(new Date());
     }
 
-    setTimeout(function() {
+    return utils.retry(function() {
       var newPayload = memory.currentPayload;
       expect(newPayload.heapUsed).to.be.gt(previousPayload.heapUsed);
-      done();
-    }, 1100);
+    });
   });
 });
