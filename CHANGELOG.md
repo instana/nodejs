@@ -1,5 +1,8 @@
 # Changelog
 
+## Unreleased
+- Support Node.js 11
+
 ## 1.57.0
 - Provide an API to set a logger after initialization to resolve init/logger cycle.
 

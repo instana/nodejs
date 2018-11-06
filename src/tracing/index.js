@@ -93,7 +93,7 @@ function shouldEnableAutomaticTracing() {
 }
 
 exports.supportedVersion = function supportedVersion(version) {
-  return semver.satisfies(version, '^4.5 || ^5.10 || ^6 || ^7 || ^8.2.1 || ^9.1.0 || ^10.4.0');
+  return semver.satisfies(version, '^4.5 || ^5.10 || ^6 || ^7 || ^8.2.1 || ^9.1.0 || ^10.4.0 || ^11');
 };
 
 exports.activate = function() {
