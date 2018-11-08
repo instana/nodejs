@@ -67,7 +67,7 @@ function wrapExpress4HandleFn(fn) {
 function shimExpress4Use(originalUse) {
   return function shimmedUsed(path, fn) {
     // middleware attached to application.
-    // An error handling middleware is defined as a middleware which accepts for parameters
+    // An error handling middleware is defined as a middleware which accepts four parameters
     if (typeof path === 'string' && typeof fn === 'function' && fn.length === 4) {
       var args = [];
       for (var i = 0; i < arguments.length; i++) {

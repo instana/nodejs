@@ -85,13 +85,12 @@ function processExitSpan(ctx, span, originalArgs) {
     }
   };
   if (ctx.connection.stream) {
+    // prettier-ignore
     span.data.rabbitmq.address =
-      typeof ctx.connection.stream.getProtocol === 'function'
-        ? 'amqps://'
-        : 'amqp://' + //
-          ctx.connection.stream.remoteAddress +
-          ':' +
-          ctx.connection.stream.remotePort;
+      (typeof ctx.connection.stream.getProtocol === 'function' ? 'amqps://' : 'amqp://') + //
+      ctx.connection.stream.remoteAddress +
+      ':' +
+      ctx.connection.stream.remotePort;
   }
   var fieldsAndProperties = originalArgs[0] || {};
   if (fieldsAndProperties.exchange) {
@@ -132,16 +131,17 @@ function shimDispatchMessage(originalFunction) {
 
 function instrumentedDispatchMessage(ctx, originalDispatchMessage, originalArgs) {
   var fields = originalArgs[0] || {};
-  var headers =
-    originalArgs[1] && originalArgs[1].properties && originalArgs[1].properties.headers
-      ? originalArgs[1].properties.headers
-      : {};
   var consumerTag = fields.consumerTag;
   var consumer = ctx.consumers[consumerTag];
   if (!consumer) {
     // amqplib will throw an error for this call because it can't be routed, so we don't create a span for it.
     return originalDispatchMessage.apply(ctx, originalArgs);
   }
+
+  var headers =
+    originalArgs[1] && originalArgs[1].properties && originalArgs[1].properties.headers
+      ? originalArgs[1].properties.headers
+      : {};
 
   cls.ns.runAndReturn(function() {
     if (headers && headers[tracingConstants.traceLevelHeaderName] === '0') {
@@ -164,13 +164,12 @@ function instrumentedDispatchMessage(ctx, originalDispatchMessage, originalArgs)
     };
 
     if (ctx.connection.stream) {
+      // prettier-ignore
       span.data.rabbitmq.address =
-        typeof ctx.connection.stream.getProtocol === 'function'
-          ? 'amqps://'
-          : 'amqp://' + //
-            ctx.connection.stream.remoteAddress +
-            ':' +
-            ctx.connection.stream.remotePort;
+        (typeof ctx.connection.stream.getProtocol === 'function' ? 'amqps://' : 'amqp://') + //
+        ctx.connection.stream.remoteAddress +
+        ':' +
+        ctx.connection.stream.remotePort;
     }
     if (fields.exchange) {
       span.data.rabbitmq.exchange = fields.exchange;

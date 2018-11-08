@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.54.1
+- RabbitMQ/amqplib: Small fix for TLS AMQP Urls (amqps).
+
 ## 1.54.0
 - Instrument [Bunyan](https://github.com/trentm/node-bunyan).
 - Pino: Improve tracing for error objects.
