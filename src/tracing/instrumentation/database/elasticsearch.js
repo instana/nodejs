@@ -22,6 +22,8 @@ function instrument(es) {
     instrumentApi(client, 'search', info);
     instrumentApi(client, 'index', info);
     instrumentApi(client, 'get', info);
+    instrumentApi(client, 'msearch', info);
+    instrumentApi(client, 'mget', info);
 
     return client;
   };
