@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.54.2
 - Fix broken trace context in some MongoDB usage scenarios
 
 ## 1.54.1
