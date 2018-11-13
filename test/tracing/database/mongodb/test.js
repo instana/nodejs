@@ -39,6 +39,7 @@ describe('tracing/mongodb', function() {
           return agentStubControls.getSpans().then(function(spans) {
             var entrySpan = utils.expectOneMatching(spans, function(span) {
               expect(span.n).to.equal('node.http.server');
+              expect(span.k).to.equal(1);
               expect(span.f.e).to.equal(String(expressMongodbControls.getPid()));
               expect(span.async).to.equal(false);
               expect(span.error).to.equal(false);
@@ -48,6 +49,7 @@ describe('tracing/mongodb', function() {
               expect(span.t).to.equal(entrySpan.t);
               expect(span.p).to.equal(entrySpan.s);
               expect(span.n).to.equal('mongo');
+              expect(span.k).to.equal(2);
               expect(span.f.e).to.equal(String(expressMongodbControls.getPid()));
               expect(span.async).to.equal(false);
               expect(span.error).to.equal(false);
@@ -56,6 +58,18 @@ describe('tracing/mongodb', function() {
               expect(span.data.mongo.command).to.equal('insert');
               expect(span.data.mongo.service).to.equal(process.env.MONGODB);
               expect(span.data.mongo.namespace).to.equal('myproject.mydocs');
+            });
+
+            utils.expectOneMatching(spans, function(span) {
+              expect(span.t).to.equal(entrySpan.t);
+              expect(span.p).to.equal(entrySpan.s);
+              expect(span.n).to.equal('node.http.client');
+              expect(span.f.e).to.equal(String(expressMongodbControls.getPid()));
+              expect(span.async).to.equal(false);
+              expect(span.error).to.equal(false);
+              expect(span.data.http.method).to.equal('GET');
+              expect(span.data.http.url).to.match(/http:\/\/127\.0\.0\.1:/);
+              expect(span.data.http.status).to.equal(200);
             });
           });
         });
@@ -99,6 +113,18 @@ describe('tracing/mongodb', function() {
                 })
               );
             });
+
+            utils.expectOneMatching(spans, function(span) {
+              expect(span.t).to.equal(entrySpan.t);
+              expect(span.p).to.equal(entrySpan.s);
+              expect(span.n).to.equal('node.http.client');
+              expect(span.f.e).to.equal(String(expressMongodbControls.getPid()));
+              expect(span.async).to.equal(false);
+              expect(span.error).to.equal(false);
+              expect(span.data.http.method).to.equal('GET');
+              expect(span.data.http.url).to.match(/http:\/\/127\.0\.0\.1:/);
+              expect(span.data.http.status).to.equal(200);
+            });
           });
         });
       });
@@ -106,7 +132,7 @@ describe('tracing/mongodb', function() {
 
   // correlating multiple operations (bulk writes, find with getMore) is broken in mongodb APM support since
   // version 3.0.6, see https://groups.google.com/forum/#!topic/node-mongodb-native/uBae-HO0zw8
-  it.skip('must trace find requests with cursors', function() {
+  it('must trace find requests with cursors', function() {
     return Promise.all(
       _.range(10).map(function(i) {
         return expressMongodbControls.sendRequest({
@@ -166,6 +192,18 @@ describe('tracing/mongodb', function() {
               expect(span.data.mongo.command).to.equal('getMore');
               expect(span.data.mongo.service).to.equal(process.env.MONGODB);
               expect(span.data.mongo.namespace).to.equal('myproject.mydocs');
+            });
+
+            utils.expectOneMatching(spans, function(span) {
+              expect(span.t).to.equal(entrySpan.t);
+              expect(span.p).to.equal(entrySpan.s);
+              expect(span.n).to.equal('node.http.client');
+              expect(span.f.e).to.equal(String(expressMongodbControls.getPid()));
+              expect(span.async).to.equal(false);
+              expect(span.error).to.equal(false);
+              expect(span.data.http.method).to.equal('GET');
+              expect(span.data.http.url).to.match(/http:\/\/127\.0\.0\.1:/);
+              expect(span.data.http.status).to.equal(200);
             });
           });
         });
