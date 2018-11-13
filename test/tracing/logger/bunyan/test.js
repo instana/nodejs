@@ -2,6 +2,7 @@
 
 var expect = require('chai').expect;
 
+var cls = require('../../../../src/tracing/cls');
 var supportedVersion = require('../../../../src/tracing/index').supportedVersion;
 var config = require('../../../config');
 var utils = require('../../../utils');
@@ -153,7 +154,7 @@ describe('tracing/logger/bunyan', function() {
   function checkBunyanSpan(span, parent, erroneous, message) {
     expect(span.t).to.equal(parent.t);
     expect(span.p).to.equal(parent.s);
-    expect(span.k).to.equal(2);
+    expect(span.k).to.equal(cls.EXIT);
     expect(span.f.e).to.equal(String(appControls.getPid()));
     expect(span.n).to.equal('log.bunyan');
     expect(span.async).to.equal(false);
@@ -167,7 +168,7 @@ describe('tracing/logger/bunyan', function() {
   function checkNextExitSpan(span, parent) {
     expect(span.t).to.equal(parent.t);
     expect(span.p).to.equal(parent.s);
-    expect(span.k).to.equal(2);
+    expect(span.k).to.equal(cls.EXIT);
     expect(span.f.e).to.equal(String(appControls.getPid()));
     expect(span.n).to.equal('node.http.client');
   }

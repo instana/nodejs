@@ -3,6 +3,7 @@
 var expect = require('chai').expect;
 var semver = require('semver');
 
+var cls = require('../../../../src/tracing/cls');
 var config = require('../../../config');
 var utils = require('../../../utils');
 
@@ -59,6 +60,7 @@ describe('tracing/asyncAwait', function() {
 
             var rootSpan = utils.expectOneMatching(spans, function(span) {
               expect(span.n).to.equal('node.http.server');
+              expect(span.k).to.equal(cls.ENTRY);
               expect(span.data.http.url).to.match(/\/getSomething/);
               expect(span.f.e).to.equal(String(expressAsyncAwaitControls.getPid()));
             });
@@ -66,12 +68,14 @@ describe('tracing/asyncAwait', function() {
             var client1Span = utils.expectOneMatching(spans, function(span) {
               expect(span.n).to.equal('node.http.client');
               expect(span.p).to.equal(rootSpan.s);
+              expect(span.k).to.equal(cls.EXIT);
               expect(span.f.e).to.equal(String(expressAsyncAwaitControls.getPid()));
               expect(span.data.http.url).to.have.string('/foo');
             });
 
             utils.expectOneMatching(spans, function(span) {
               expect(span.n).to.equal('node.http.server');
+              expect(span.k).to.equal(cls.ENTRY);
               expect(span.p).to.equal(client1Span.s);
               expect(span.f.e).to.equal(String(expressControls.getPid()));
             });
@@ -79,6 +83,7 @@ describe('tracing/asyncAwait', function() {
             var client2Span = utils.expectOneMatching(spans, function(span) {
               expect(span.n).to.equal('node.http.client');
               expect(span.p).to.equal(rootSpan.s);
+              expect(span.k).to.equal(cls.EXIT);
               expect(span.f.e).to.equal(String(expressAsyncAwaitControls.getPid()));
               expect(span.data.http.url).to.have.string('/bar');
             });
@@ -86,6 +91,7 @@ describe('tracing/asyncAwait', function() {
             utils.expectOneMatching(spans, function(span) {
               expect(span.n).to.equal('node.http.server');
               expect(span.p).to.equal(client2Span.s);
+              expect(span.k).to.equal(cls.ENTRY);
               expect(span.f.e).to.equal(String(expressControls.getPid()));
             });
           });

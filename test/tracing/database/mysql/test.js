@@ -3,6 +3,7 @@
 var semver = require('semver');
 var expect = require('chai').expect;
 
+var cls = require('../../../../src/tracing/cls');
 var supportedVersion = require('../../../../src/tracing/index').supportedVersion;
 var config = require('../../../config');
 var utils = require('../../../utils');
@@ -58,6 +59,7 @@ describe('tracing/mysql', function() {
               expect(span.t).to.equal(entrySpan.t);
               expect(span.p).to.equal(entrySpan.s);
               expect(span.n).to.equal('mysql');
+              expect(span.k).to.equal(cls.EXIT);
               expect(span.f.e).to.equal(String(expressMysqlControls.getPid()));
               expect(span.async).to.equal(false);
               expect(span.error).to.equal(false);
@@ -90,6 +92,7 @@ describe('tracing/mysql', function() {
                 expect(span.t).to.equal(postEntrySpan.t);
                 expect(span.p).to.equal(postEntrySpan.s);
                 expect(span.n).to.equal('mysql');
+                expect(span.k).to.equal(cls.EXIT);
                 expect(span.f.e).to.equal(String(expressMysqlControls.getPid()));
                 expect(span.async).to.equal(false);
                 expect(span.error).to.equal(false);
@@ -111,6 +114,7 @@ describe('tracing/mysql', function() {
                 expect(span.t).to.equal(getEntrySpan.t);
                 expect(span.p).to.equal(getEntrySpan.s);
                 expect(span.n).to.equal('mysql');
+                expect(span.k).to.equal(cls.EXIT);
                 expect(span.f.e).to.equal(String(expressMysqlControls.getPid()));
                 expect(span.async).to.equal(false);
                 expect(span.error).to.equal(false);
@@ -145,6 +149,7 @@ describe('tracing/mysql', function() {
               expect(span.t).to.equal(postEntrySpan.t);
               expect(span.p).to.equal(postEntrySpan.s);
               expect(span.n).to.equal('mysql');
+              expect(span.k).to.equal(cls.EXIT);
               expect(span.f.e).to.equal(String(expressMysqlControls.getPid()));
               expect(span.async).to.equal(false);
               expect(span.error).to.equal(false);
@@ -160,6 +165,7 @@ describe('tracing/mysql', function() {
               expect(span.t).to.equal(postEntrySpan.t);
               expect(span.p).to.equal(postEntrySpan.s);
               expect(span.n).to.equal('node.http.client');
+              expect(span.k).to.equal(cls.EXIT);
               expect(span.f.e).to.equal(String(expressMysqlControls.getPid()));
               expect(span.async).to.equal(false);
               expect(span.error).to.equal(false);

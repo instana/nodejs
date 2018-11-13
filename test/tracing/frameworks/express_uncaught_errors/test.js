@@ -2,6 +2,7 @@
 
 var expect = require('chai').expect;
 
+var cls = require('../../../../src/tracing/cls');
 var supportedVersion = require('../../../../src/tracing/index').supportedVersion;
 var config = require('../../../config');
 var utils = require('../../../utils');
@@ -38,6 +39,7 @@ describe('tracing/express with uncaught errors', function() {
           return agentControls.getSpans().then(function(spans) {
             utils.expectOneMatching(spans, function(span) {
               expect(span.n).to.equal('node.http.server');
+              expect(span.k).to.equal(cls.ENTRY);
               expect(span.f.e).to.equal(String(expressUncaughtErrorsControls.getPid()));
               expect(span.error).to.equal(true);
               expect(span.ec).to.equal(1);
@@ -63,6 +65,7 @@ describe('tracing/express with uncaught errors', function() {
           return agentControls.getSpans().then(function(spans) {
             utils.expectOneMatching(spans, function(span) {
               expect(span.n).to.equal('node.http.server');
+              expect(span.k).to.equal(cls.ENTRY);
               expect(span.f.e).to.equal(String(expressUncaughtErrorsControls.getPid()));
               expect(span.error).to.equal(false);
               expect(span.ec).to.equal(0);

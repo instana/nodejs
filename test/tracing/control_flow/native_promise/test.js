@@ -4,6 +4,7 @@
 
 var expect = require('chai').expect;
 
+var cls = require('../../../../src/tracing/cls');
 var supportedVersion = require('../../../../src/tracing/index').supportedVersion;
 var config = require('../../../config');
 var utils = require('../../../utils');
@@ -85,6 +86,7 @@ describe('tracing/native-promise', function() {
     return utils.expectOneMatching(spans, function(span) {
       expect(span.p).to.equal(undefined);
       expect(span.n).to.equal('node.http.server');
+      expect(span.k).to.equal(cls.ENTRY);
       expect(span.data.http.url).to.equal(path);
     });
   }
