@@ -1,5 +1,8 @@
 # Changelog
 
+## Unreleased
+- Fix broken trace context in some MongoDB usage scenarios
+
 ## 1.54.1
 - RabbitMQ/amqplib: Small fix for TLS AMQP Urls (amqps).
 

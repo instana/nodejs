@@ -2,8 +2,10 @@
 
 'use strict';
 
+var agentPort = process.env.AGENT_PORT;
+
 require('../../../../')({
-  agentPort: process.env.AGENT_PORT,
+  agentPort: agentPort,
   level: 'info',
   tracing: {
     enabled: process.env.TRACING_ENABLED === 'true',
@@ -16,6 +18,7 @@ var bodyParser = require('body-parser');
 var express = require('express');
 var morgan = require('morgan');
 var assert = require('assert');
+var request = require('request-promise');
 
 var app = express();
 var db;
@@ -55,10 +58,16 @@ app.get('/', function(req, res) {
 });
 
 app.post('/insert', function(req, res) {
+  var mongoResponse = null;
   collection
     .insertOne(req.body)
     .then(function(r) {
-      res.json(r);
+      mongoResponse = r;
+      // Execute another traced call to verify that we keep the tracing context.
+      return request('http://127.0.0.1:' + agentPort);
+    })
+    .then(function() {
+      res.json(mongoResponse);
     })
     .catch(function(e) {
       log('Failed to write document', e);
@@ -67,10 +76,16 @@ app.post('/insert', function(req, res) {
 });
 
 app.post('/find', function(req, res) {
+  var mongoResponse = null;
   collection
     .findOne(req.body)
     .then(function(r) {
-      res.json(r);
+      mongoResponse = r;
+      // Execute another traced call to verify that we keep the tracing context.
+      return request('http://127.0.0.1:' + agentPort);
+    })
+    .then(function() {
+      res.json(mongoResponse);
     })
     .catch(function(e) {
       log('Failed to find document', e);
@@ -86,7 +101,14 @@ app.get('/findall', function(req, res) {
       if (err) {
         res.status(500).json(err);
       } else {
-        res.json(docs);
+        // Execute another traced call to verify that we keep the tracing context.
+        return request('http://127.0.0.1:' + agentPort)
+          .then(function() {
+            res.json(docs);
+          })
+          .catch(function(err2) {
+            res.status(500).json(err2);
+          });
       }
     });
 });

@@ -8,9 +8,14 @@ var cls = require('../../cls');
 var isActive = false;
 
 // {
+//   [requestId]: clsContext
+// }
+var clsContextMap = {};
+
+// {
 //   [requestId]: span
 // }
-var requests = {};
+var mongoDbSpansInProgress = {};
 
 exports.init = function() {
   requireHook.onModuleLoad('mongodb', instrument);
@@ -125,7 +130,10 @@ function onStarted(event) {
     event.operationId.traceId = span.t;
     event.operationId.parentSpanId = span.p;
   }
-  requests[getUniqueRequestId(event)] = span;
+
+  var requestId = getUniqueRequestId(event);
+  clsContextMap[requestId] = cls.ns.active;
+  mongoDbSpansInProgress[requestId] = span;
 }
 
 function stringifyWhenNecessary(obj) {
@@ -143,16 +151,28 @@ function onSucceeded(event) {
     return;
   }
 
-  var span = requests[getUniqueRequestId(event)];
-  if (!span) {
+  var requestId = getUniqueRequestId(event);
+  var clsContext = clsContextMap[requestId];
+  if (!clsContext) {
+    cleanup(event);
     return;
   }
 
-  span.d = Date.now() - span.ts;
-  span.error = false;
-  span.transmit();
+  // Make sure follow up calls (especially after batch calls) are executed in the same cls context, so that the root
+  // span can be found.
+  cls.ns.enter(clsContext);
+  try {
+    var span = mongoDbSpansInProgress[requestId];
+    if (!span) {
+      return;
+    }
 
-  cleanup(event);
+    span.d = Date.now() - span.ts;
+    span.error = false;
+    span.transmit();
+  } finally {
+    cleanup(event);
+  }
 }
 
 function onFailed(event) {
@@ -161,17 +181,29 @@ function onFailed(event) {
     return;
   }
 
-  var span = requests[getUniqueRequestId(event)];
-  if (!span) {
+  var requestId = getUniqueRequestId(event);
+  var clsContext = clsContextMap[requestId];
+  if (!clsContext) {
+    cleanup(event);
     return;
   }
 
-  span.d = Date.now() - span.ts;
-  span.error = true;
-  span.ec = 1;
-  span.transmit();
+  // Make sure follow up calls (especially after batch calls) are executed in the same cls context, so that the root
+  // span can be found.
+  cls.ns.enter(clsContext);
+  try {
+    var span = mongoDbSpansInProgress[requestId];
+    if (!span) {
+      return;
+    }
 
-  cleanup(event);
+    span.d = Date.now() - span.ts;
+    span.error = true;
+    span.ec = 1;
+    span.transmit();
+  } finally {
+    cleanup(event);
+  }
 }
 
 function getUniqueRequestId(event) {
@@ -180,7 +212,8 @@ function getUniqueRequestId(event) {
 
 function cleanup(event) {
   var requestId = getUniqueRequestId(event);
-  delete requests[requestId];
+  delete mongoDbSpansInProgress[requestId];
+  delete clsContextMap[requestId];
 }
 
 function parseConnectionToPeer(connectionString) {
