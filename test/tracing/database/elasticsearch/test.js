@@ -2,6 +2,7 @@
 
 var expect = require('chai').expect;
 
+var cls = require('../../../../src/tracing/cls');
 var supportedVersion = require('../../../../src/tracing/index').supportedVersion;
 var config = require('../../../config');
 var utils = require('../../../utils');
@@ -303,18 +304,21 @@ describe('tracing/elasticsearch', function() {
           return agentStubControls.getSpans().then(function(spans) {
             var httpEntrySpan = utils.expectOneMatching(spans, function(span) {
               expect(span.n).to.equal('node.http.server');
+              expect(span.k).to.equal(cls.ENTRY);
             });
 
             utils.expectOneMatching(spans, function(span) {
               expect(span.t).to.equal(httpEntrySpan.t);
               expect(span.p).to.equal(httpEntrySpan.s);
               expect(span.n).to.equal('elasticsearch');
+              expect(span.k).to.equal(cls.EXIT);
             });
 
             utils.expectOneMatching(spans, function(span) {
               expect(span.t).to.equal(httpEntrySpan.t);
               expect(span.p).to.equal(httpEntrySpan.s);
               expect(span.n).to.equal('node.http.client');
+              expect(span.k).to.equal(cls.EXIT);
             });
           });
         });

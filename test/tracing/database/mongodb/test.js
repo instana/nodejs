@@ -4,6 +4,7 @@ var expect = require('chai').expect;
 var Promise = require('bluebird');
 var _ = require('lodash');
 
+var cls = require('../../../../src/tracing/cls');
 var supportedVersion = require('../../../../src/tracing/index').supportedVersion;
 var config = require('../../../config');
 var utils = require('../../../utils');
@@ -39,7 +40,7 @@ describe('tracing/mongodb', function() {
           return agentStubControls.getSpans().then(function(spans) {
             var entrySpan = utils.expectOneMatching(spans, function(span) {
               expect(span.n).to.equal('node.http.server');
-              expect(span.k).to.equal(1);
+              expect(span.k).to.equal(cls.ENTRY);
               expect(span.f.e).to.equal(String(expressMongodbControls.getPid()));
               expect(span.async).to.equal(false);
               expect(span.error).to.equal(false);
@@ -49,7 +50,7 @@ describe('tracing/mongodb', function() {
               expect(span.t).to.equal(entrySpan.t);
               expect(span.p).to.equal(entrySpan.s);
               expect(span.n).to.equal('mongo');
-              expect(span.k).to.equal(2);
+              expect(span.k).to.equal(cls.EXIT);
               expect(span.f.e).to.equal(String(expressMongodbControls.getPid()));
               expect(span.async).to.equal(false);
               expect(span.error).to.equal(false);
@@ -64,6 +65,7 @@ describe('tracing/mongodb', function() {
               expect(span.t).to.equal(entrySpan.t);
               expect(span.p).to.equal(entrySpan.s);
               expect(span.n).to.equal('node.http.client');
+              expect(span.k).to.equal(cls.EXIT);
               expect(span.f.e).to.equal(String(expressMongodbControls.getPid()));
               expect(span.async).to.equal(false);
               expect(span.error).to.equal(false);
@@ -99,6 +101,7 @@ describe('tracing/mongodb', function() {
               expect(span.t).to.equal(entrySpan.t);
               expect(span.p).to.equal(entrySpan.s);
               expect(span.n).to.equal('mongo');
+              expect(span.k).to.equal(cls.EXIT);
               expect(span.f.e).to.equal(String(expressMongodbControls.getPid()));
               expect(span.async).to.equal(false);
               expect(span.error).to.equal(false);
@@ -118,6 +121,7 @@ describe('tracing/mongodb', function() {
               expect(span.t).to.equal(entrySpan.t);
               expect(span.p).to.equal(entrySpan.s);
               expect(span.n).to.equal('node.http.client');
+              expect(span.k).to.equal(cls.EXIT);
               expect(span.f.e).to.equal(String(expressMongodbControls.getPid()));
               expect(span.async).to.equal(false);
               expect(span.error).to.equal(false);
@@ -130,8 +134,6 @@ describe('tracing/mongodb', function() {
       });
   });
 
-  // correlating multiple operations (bulk writes, find with getMore) is broken in mongodb APM support since
-  // version 3.0.6, see https://groups.google.com/forum/#!topic/node-mongodb-native/uBae-HO0zw8
   it('must trace find requests with cursors', function() {
     return Promise.all(
       _.range(10).map(function(i) {
@@ -169,6 +171,7 @@ describe('tracing/mongodb', function() {
               expect(span.t).to.equal(entrySpan.t);
               expect(span.p).to.equal(entrySpan.s);
               expect(span.n).to.equal('mongo');
+              expect(span.k).to.equal(cls.EXIT);
               expect(span.f.e).to.equal(String(expressMongodbControls.getPid()));
               expect(span.async).to.equal(false);
               expect(span.error).to.equal(false);
@@ -184,6 +187,7 @@ describe('tracing/mongodb', function() {
               expect(span.t).to.equal(entrySpan.t);
               expect(span.p).to.equal(entrySpan.s);
               expect(span.n).to.equal('mongo');
+              expect(span.k).to.equal(cls.EXIT);
               expect(span.f.e).to.equal(String(expressMongodbControls.getPid()));
               expect(span.async).to.equal(false);
               expect(span.error).to.equal(false);
@@ -198,6 +202,7 @@ describe('tracing/mongodb', function() {
               expect(span.t).to.equal(entrySpan.t);
               expect(span.p).to.equal(entrySpan.s);
               expect(span.n).to.equal('node.http.client');
+              expect(span.k).to.equal(cls.EXIT);
               expect(span.f.e).to.equal(String(expressMongodbControls.getPid()));
               expect(span.async).to.equal(false);
               expect(span.error).to.equal(false);

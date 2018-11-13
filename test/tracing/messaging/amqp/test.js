@@ -79,6 +79,7 @@ function registerTests(apiType) {
             expect(span.n).to.equal('node.http.client');
             expect(span.t).to.equal(entrySpan.t);
             expect(span.p).to.equal(entrySpan.s);
+            expect(span.k).to.equal(cls.EXIT);
           });
         });
       });

@@ -2,6 +2,7 @@
 
 var expect = require('chai').expect;
 
+var cls = require('../../../../src/tracing/cls');
 var supportedVersion = require('../../../../src/tracing/index').supportedVersion;
 var config = require('../../../config');
 var utils = require('../../../utils');
@@ -52,6 +53,7 @@ describe('tracing/pg', function() {
             expect(pgSpan.t).to.equal(entrySpan.t);
             expect(pgSpan.p).to.equal(entrySpan.s);
             expect(pgSpan.n).to.equal('postgres');
+            expect(pgSpan.k).to.equal(cls.EXIT);
             expect(pgSpan.f.e).to.equal(String(expressPgControls.getPid()));
             expect(pgSpan.async).to.equal(false);
             expect(pgSpan.error).to.equal(false);
@@ -92,6 +94,7 @@ describe('tracing/pg', function() {
             expect(pgSpan.t).to.equal(entrySpan.t);
             expect(pgSpan.p).to.equal(entrySpan.s);
             expect(pgSpan.n).to.equal('postgres');
+            expect(pgSpan.k).to.equal(cls.EXIT);
             expect(pgSpan.f.e).to.equal(String(expressPgControls.getPid()));
             expect(pgSpan.async).to.equal(false);
             expect(pgSpan.error).to.equal(false);
@@ -129,6 +132,7 @@ describe('tracing/pg', function() {
             expect(pgSpan.t).to.equal(entrySpan.t);
             expect(pgSpan.p).to.equal(entrySpan.s);
             expect(pgSpan.n).to.equal('postgres');
+            expect(pgSpan.k).to.equal(cls.EXIT);
             expect(pgSpan.f.e).to.equal(String(expressPgControls.getPid()));
             expect(pgSpan.async).to.equal(false);
             expect(pgSpan.error).to.equal(false);
@@ -169,6 +173,7 @@ describe('tracing/pg', function() {
             expect(pgSpan.t).to.equal(entrySpan.t);
             expect(pgSpan.p).to.equal(entrySpan.s);
             expect(pgSpan.n).to.equal('postgres');
+            expect(pgSpan.k).to.equal(cls.EXIT);
             expect(pgSpan.f.e).to.equal(String(expressPgControls.getPid()));
             expect(pgSpan.async).to.equal(false);
             expect(pgSpan.error).to.equal(false);
@@ -209,6 +214,7 @@ describe('tracing/pg', function() {
             expect(pgSpan.t).to.equal(entrySpan.t);
             expect(pgSpan.p).to.equal(entrySpan.s);
             expect(pgSpan.n).to.equal('postgres');
+            expect(pgSpan.k).to.equal(cls.EXIT);
             expect(pgSpan.f.e).to.equal(String(expressPgControls.getPid()));
             expect(pgSpan.async).to.equal(false);
             expect(pgSpan.error).to.equal(false);
@@ -246,6 +252,7 @@ describe('tracing/pg', function() {
             expect(pgSpan.t).to.equal(entrySpan.t);
             expect(pgSpan.p).to.equal(entrySpan.s);
             expect(pgSpan.n).to.equal('postgres');
+            expect(pgSpan.k).to.equal(cls.EXIT);
             expect(pgSpan.f.e).to.equal(String(expressPgControls.getPid()));
             expect(pgSpan.async).to.equal(false);
             expect(pgSpan.error).to.equal(false);
@@ -285,6 +292,7 @@ describe('tracing/pg', function() {
             expect(pgSpan.t).to.equal(entrySpan.t);
             expect(pgSpan.p).to.equal(entrySpan.s);
             expect(pgSpan.n).to.equal('postgres');
+            expect(pgSpan.k).to.equal(cls.EXIT);
             expect(pgSpan.f.e).to.equal(String(expressPgControls.getPid()));
             expect(pgSpan.async).to.equal(false);
             expect(pgSpan.error).to.equal(true);
@@ -360,6 +368,7 @@ describe('tracing/pg', function() {
             expect(pgSpan1.t).to.equal(entrySpan.t);
             expect(pgSpan1.p).to.equal(entrySpan.s);
             expect(pgSpan1.n).to.equal('postgres');
+            expect(pgSpan1.k).to.equal(cls.EXIT);
             expect(pgSpan1.f.e).to.equal(String(expressPgControls.getPid()));
             expect(pgSpan1.async).to.equal(false);
             expect(pgSpan1.error).to.equal(false);
@@ -370,6 +379,7 @@ describe('tracing/pg', function() {
             expect(pgSpan2.t).to.equal(entrySpan.t);
             expect(pgSpan2.p).to.equal(entrySpan.s);
             expect(pgSpan2.n).to.equal('postgres');
+            expect(pgSpan2.k).to.equal(cls.EXIT);
             expect(pgSpan2.f.e).to.equal(String(expressPgControls.getPid()));
             expect(pgSpan2.async).to.equal(false);
             expect(pgSpan2.error).to.equal(false);
@@ -380,6 +390,7 @@ describe('tracing/pg', function() {
             expect(pgSpan3.t).to.equal(entrySpan.t);
             expect(pgSpan3.p).to.equal(entrySpan.s);
             expect(pgSpan3.n).to.equal('postgres');
+            expect(pgSpan3.k).to.equal(cls.EXIT);
             expect(pgSpan3.f.e).to.equal(String(expressPgControls.getPid()));
             expect(pgSpan3.async).to.equal(false);
             expect(pgSpan3.error).to.equal(false);
@@ -390,6 +401,7 @@ describe('tracing/pg', function() {
             expect(pgSpan4.t).to.equal(entrySpan.t);
             expect(pgSpan4.p).to.equal(entrySpan.s);
             expect(pgSpan4.n).to.equal('postgres');
+            expect(pgSpan4.k).to.equal(cls.EXIT);
             expect(pgSpan4.f.e).to.equal(String(expressPgControls.getPid()));
             expect(pgSpan4.async).to.equal(false);
             expect(pgSpan4.error).to.equal(false);

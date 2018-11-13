@@ -2,6 +2,7 @@
 
 var expect = require('chai').expect;
 
+var cls = require('../../../../src/tracing/cls');
 var supportedVersion = require('../../../../src/tracing/index').supportedVersion;
 var config = require('../../../config');
 var utils = require('../../../utils');
@@ -41,6 +42,7 @@ describe('tracing/httpServer', function() {
           return agentControls.getSpans().then(function(spans) {
             utils.expectOneMatching(spans, function(span) {
               expect(span.n).to.equal('node.http.server');
+              expect(span.k).to.equal(cls.ENTRY);
               expect(span.data.http.header['user-agent']).to.equal(userAgent);
             });
           });
@@ -59,6 +61,7 @@ describe('tracing/httpServer', function() {
           return agentControls.getSpans().then(function(spans) {
             utils.expectOneMatching(spans, function(span) {
               expect(span.n).to.equal('node.http.server');
+              expect(span.k).to.equal(cls.ENTRY);
               expect(span.data.http.params).to.equal('param1=value1&param2=value2&param3=value4');
             });
           });
@@ -82,6 +85,8 @@ describe('tracing/httpServer', function() {
             return utils.retry(function() {
               return agentControls.getSpans().then(function(spans) {
                 utils.expectOneMatching(spans, function(span) {
+                  expect(span.n).to.equal('node.http.server');
+                  expect(span.k).to.equal(cls.ENTRY);
                   expect(span.data.http.path_tpl).to.equal(expectedTemplate);
                 });
               });

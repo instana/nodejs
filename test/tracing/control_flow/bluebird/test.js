@@ -4,6 +4,7 @@
 
 var expect = require('chai').expect;
 
+var cls = require('../../../../src/tracing/cls');
 var supportedVersion = require('../../../../src/tracing/index').supportedVersion;
 var config = require('../../../config');
 var utils = require('../../../utils');
@@ -77,15 +78,16 @@ describe('tracing/bluebird', function() {
   }
 
   function defaultChecker(spanContext, spans, path) {
-    var entrySpan = getEntySpan(spans, path);
+    var entrySpan = getEntrySpans(spans, path);
     expect(spanContext.t).to.equal(entrySpan.t);
     expect(spanContext.s).to.equal(entrySpan.s);
   }
 
-  function getEntySpan(spans, path) {
+  function getEntrySpans(spans, path) {
     return utils.expectOneMatching(spans, function(span) {
       expect(span.p).to.equal(undefined);
       expect(span.n).to.equal('node.http.server');
+      expect(span.k).to.equal(cls.ENTRY);
       expect(span.data.http.url).to.equal(path);
     });
   }
