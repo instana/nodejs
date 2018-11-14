@@ -1,7 +1,9 @@
 /* eslint-disable */
 
+var agentPort = process.env.AGENT_PORT;
+
 require('../../../../')({
-  agentPort: process.env.AGENT_PORT,
+  agentPort: agentPort,
   level: 'info',
   tracing: {
     enabled: process.env.TRACING_ENABLED === 'true',
@@ -9,6 +11,7 @@ require('../../../../')({
   }
 });
 
+var request = require('request-promise');
 var kafka = require('kafka-node');
 var uuid = require('uuid/v4');
 
@@ -60,10 +63,12 @@ if (process.env.CONSUMER_TYPE === 'plain') {
 
 consumer.on('error', function(err) {
   log('Error occured in consumer:', err);
+  request('http://127.0.0.1:' + agentPort);
 });
 
 consumer.on('message', function() {
   log('Got message in Kafka consumer', arguments);
+  request('http://127.0.0.1:' + agentPort);
 });
 
 function log() {

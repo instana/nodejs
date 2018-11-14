@@ -1,7 +1,9 @@
 /* eslint-disable */
 
+var agentPort = process.env.AGENT_PORT;
+
 require('../../../../')({
-  agentPort: process.env.AGENT_PORT,
+  agentPort: agentPort,
   level: 'info',
   tracing: {
     enabled: process.env.TRACING_ENABLED === 'true',
@@ -9,6 +11,7 @@ require('../../../../')({
   }
 });
 
+var request = require('request-promise');
 var bodyParser = require('body-parser');
 var express = require('express');
 var kafka = require('kafka-node');
@@ -56,7 +59,14 @@ app.post('/send-message', function(req, res) {
         res.status(500).send('Failed to send message');
         return;
       }
-      res.sendStatus(200);
+      request('http://127.0.0.1:' + agentPort)
+        .then(function() {
+          res.sendStatus(200);
+        })
+        .catch(function(err2) {
+          log(err2);
+          res.sendStatus(500);
+        });
     }
   );
 });

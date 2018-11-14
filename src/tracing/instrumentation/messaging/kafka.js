@@ -40,33 +40,37 @@ function instrumentedSend(ctx, originalSend, produceRequests, cb) {
     return originalSend.apply(ctx, args);
   }
 
-  var produceRequest = produceRequests[0];
+  return cls.ns.runAndReturn(function() {
+    var span = cls.startSpan('kafka', cls.EXIT);
+    var produceRequest = produceRequests[0];
+    span.b = { s: produceRequests.length };
+    span.stack = tracingUtil.getStackTrace(instrumentedSend);
+    span.data = {
+      kafka: {
+        service: produceRequest.topic,
+        access: 'send'
+      }
+    };
 
-  var span = cls.startSpan('kafka', cls.EXIT);
-  span.b = { s: produceRequests.length };
-  span.stack = tracingUtil.getStackTrace(instrumentedSend);
-  span.data = {
-    kafka: {
-      service: produceRequest.topic,
-      access: 'send'
-    }
-  };
+    args.push(
+      cls.ns.bind(function onSendCompleted(err) {
+        if (err) {
+          span.ec = 1;
+          span.error = true;
+          span.data.kafka.error = err.message;
+        }
 
-  args.push(function onSendCompleted(err) {
-    if (err) {
-      span.ec = 1;
-      span.error = true;
-      span.data.kafka.error = err.message;
-    }
+        span.d = Date.now() - span.ts;
+        span.transmit();
 
-    span.d = Date.now() - span.ts;
-    span.transmit();
+        if (cb) {
+          return cb.apply(this, arguments);
+        }
+      })
+    );
 
-    if (cb) {
-      return cb.apply(this, arguments);
-    }
+    return originalSend.apply(ctx, args);
   });
-  return originalSend.apply(ctx, args);
 }
 
 function shimEmit(original) {
@@ -78,7 +82,7 @@ function shimEmit(original) {
     var originalThis = this;
     var originalArgs = arguments;
 
-    cls.ns.runAndReturn(function() {
+    return cls.ns.runAndReturn(function() {
       var span = cls.startSpan('kafka', cls.ENTRY);
       span.stack = [];
       span.data = {
@@ -91,8 +95,12 @@ function shimEmit(original) {
       try {
         return original.apply(originalThis, originalArgs);
       } finally {
-        span.d = Date.now() - span.ts;
-        span.transmit();
+        // Best effort to capture child spans - if we call span.transmit immediately and synchronously, child spans
+        // won't be captured because cls.isTracing() will return false.
+        setImmediate(function() {
+          span.d = Date.now() - span.ts;
+          span.transmit();
+        });
       }
     });
   };
