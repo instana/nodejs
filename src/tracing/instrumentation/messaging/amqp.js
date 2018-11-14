@@ -63,7 +63,7 @@ function instrumentedSendMessage(ctx, originalSendMessage, originalArgs) {
     // the span is finished and transmitted in instrumentedChannelModelPublish
   } else {
     // Otherwise, a normal channel was used and we need to create the context here as usual.
-    cls.ns.runAndReturn(function() {
+    return cls.ns.runAndReturn(function() {
       var span = cls.startSpan('rabbitmq', cls.EXIT);
       processExitSpan(ctx, span, originalArgs);
       try {
@@ -143,7 +143,7 @@ function instrumentedDispatchMessage(ctx, originalDispatchMessage, originalArgs)
       ? originalArgs[1].properties.headers
       : {};
 
-  cls.ns.runAndReturn(function() {
+  return cls.ns.runAndReturn(function() {
     if (headers && headers[tracingConstants.traceLevelHeaderName] === '0') {
       cls.setTracingLevel('0');
       return originalDispatchMessage.apply(ctx, originalArgs);
@@ -371,7 +371,7 @@ function instrumentedChannelModelPublish(ctx, originalFunction, originalArgs) {
     return originalFunction.apply(ctx, originalArgs);
   }
 
-  cls.ns.runAndReturn(function() {
+  return cls.ns.runAndReturn(function() {
     var span = cls.startSpan('rabbitmq', cls.EXIT);
     // everything else is handled in instrumentedSendMessage/processExitSpan
     if (originalArgs.length >= 5 && typeof originalArgs[4] === 'function') {
@@ -408,7 +408,7 @@ function instrumentedCallbackModelPublish(ctx, originalFunction, originalArgs) {
     return originalFunction.apply(ctx, originalArgs);
   }
 
-  cls.ns.runAndReturn(function() {
+  return cls.ns.runAndReturn(function() {
     var span = cls.startSpan('rabbitmq', cls.EXIT);
     // everything else is handled in instrumentedSendMessage/processExitSpan
     if (originalArgs.length >= 5 && typeof originalArgs[4] === 'function') {
