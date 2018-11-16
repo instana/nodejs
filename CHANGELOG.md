@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.55.0
 - Provide API to end spans manually to allow capturing of child exit spans for message consumers (RabbitMQ/amqplib, Kafka).
 
 ## 1.54.2
