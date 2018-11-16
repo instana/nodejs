@@ -2,7 +2,7 @@
 
 var agentPort = process.env.AGENT_PORT;
 
-require('../../../../')({
+var instana = require('../../../../')({
   agentPort: agentPort,
   level: 'info',
   tracing: {
@@ -72,29 +72,43 @@ function consumer(conn) {
         }
         log('amqp connection established');
         channel.consume(queueForExchangeName, function(msg) {
+          var span = instana.currentSpan();
+          span.disableAutoEnd();
           if (msg !== null) {
             log(msg.content.toString());
-            request('http://127.0.0.1:' + agentPort)
-              .then(function() {
-                channel.ack(msg);
-              })
-              .catch(function(err2) {
-                log(err2);
-                channel.nack(msg);
-              });
+            // simulating asynchronous follow up steps with setTimout and request-promise
+            setTimeout(function() {
+              request('http://127.0.0.1:' + agentPort)
+                .then(function() {
+                  span.end();
+                  channel.ack(msg);
+                })
+                .catch(function(err2) {
+                  log(err2);
+                  span.end(1);
+                  channel.nack(msg);
+                });
+            }, 100);
           }
         });
         channel.consume(queueName, function(msg) {
+          var span = instana.currentSpan();
+          span.disableAutoEnd();
           if (msg !== null) {
             log(msg.content.toString());
-            request('http://127.0.0.1:' + agentPort)
-              .then(function() {
-                channel.ack(msg);
-              })
-              .catch(function(err3) {
-                log(err3);
-                channel.nack(msg);
-              });
+            // simulating asynchronous follow up steps with setTimout and request-promise
+            setTimeout(function() {
+              request('http://127.0.0.1:' + agentPort)
+                .then(function() {
+                  span.end();
+                  channel.ack(msg);
+                })
+                .catch(function(err3) {
+                  log(err3);
+                  span.end(1);
+                  channel.nack(msg);
+                });
+            }, 100);
           }
         });
         // poll a queue via get
@@ -105,14 +119,21 @@ function consumer(conn) {
             }
             if (msg) {
               log('[channel#get] ', msg.content.toString());
-              request('http://127.0.0.1:' + agentPort)
-                .then(function() {
-                  channel.ack(msg);
-                })
-                .catch(function(e2) {
-                  log(e2);
-                  channel.nack(msg);
-                });
+              var span = instana.currentSpan();
+              span.disableAutoEnd();
+              // simulating asynchronous follow up steps with setTimout and request-promise
+              setTimeout(function() {
+                request('http://127.0.0.1:' + agentPort)
+                  .then(function() {
+                    span.end();
+                    channel.ack(msg);
+                  })
+                  .catch(function(e2) {
+                    log(e2);
+                    span.end(1);
+                    channel.nack(msg);
+                  });
+              }, 100);
             }
           });
         }, 500);
@@ -145,16 +166,23 @@ function consumerConfirm(conn) {
         }
         log('amqp connection (confirm) established');
         channel.consume(queueNameConfirm, function(msg) {
+          var span = instana.currentSpan();
+          span.disableAutoEnd();
           if (msg !== null) {
             log(msg.content.toString());
-            request('http://127.0.0.1:' + agentPort)
-              .then(function() {
-                channel.ack(msg);
-              })
-              .catch(function(e2) {
-                log(e2);
-                channel.nack(msg);
-              });
+            // simulating asynchronous follow up steps with setTimout and request-promise
+            setTimeout(function() {
+              request('http://127.0.0.1:' + agentPort)
+                .then(function() {
+                  span.end();
+                  channel.ack(msg);
+                })
+                .catch(function(e2) {
+                  log(e2);
+                  span.end(1);
+                  channel.nack(msg);
+                });
+            }, 100);
           }
         });
       }

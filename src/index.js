@@ -7,6 +7,9 @@ var log = require('./logger');
 var path = require('path');
 var fs = require('fs');
 
+var spanHandle = require('./tracing/spanHandle');
+var clsHolder = {};
+
 module.exports = exports = function start(config) {
   config = config || {};
 
@@ -14,7 +17,7 @@ module.exports = exports = function start(config) {
   require('./util/requireHook').init(config);
   require('./agent/opts').init(config);
   require('./actions/profiling/cpu').init(config);
-  require('./tracing').init(config);
+  require('./tracing').init(config, clsHolder);
   require('./util/uncaughtExceptionHandler').init(config);
   require('./states/agentready').init(config);
 
@@ -47,6 +50,11 @@ module.exports = exports = function start(config) {
   };
 
   ctx.transitionTo('agentHostLookup');
+  return exports;
 };
 
 exports.opentracing = require('./tracing/opentracing');
+
+exports.currentSpan = function getHandleForCurrentSpan() {
+  return spanHandle.getHandleForCurrentSpan(clsHolder.cls);
+};

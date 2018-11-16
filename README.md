@@ -5,6 +5,7 @@ Monitor your Node.js applications with Instana!
 **[Installation](#installation-and-usage) |**
 **[OpenTracing](#opentracing) |**
 **[Configuration](CONFIGURATION.md) |**
+**[API](API.md) |**
 **[Changelog](CHANGELOG.md)**
 
 ---
@@ -71,10 +72,8 @@ This sensor automatically instruments widely used APIs to add tracing support, e
 In order to use OpenTracing for Node.js with Instana, you need to [enable tracing](https://github.com/instana/nodejs-sensor/blob/master/CONFIGURATION.md#tracing) and use the Instana OpenTracing API implementation. The following sample project shows how this is done.
 
 ```javascript
-const instana = require('instana-nodejs-sensor');
-
 // Always initialize the sensor as the first module inside the application.
-instana({
+const instana = require('instana-nodejs-sensor')({
   tracing: {
     enabled: true
   }

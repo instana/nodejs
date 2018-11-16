@@ -184,6 +184,11 @@ function InstanaSpan(name) {
     writable: true,
     enumerable: false
   });
+  Object.defineProperty(this, 'manualEndMode', {
+    value: false,
+    writable: true,
+    enumerable: false
+  });
 }
 
 InstanaSpan.prototype.addCleanup = function addCleanup(fn) {
@@ -191,6 +196,14 @@ InstanaSpan.prototype.addCleanup = function addCleanup(fn) {
 };
 
 InstanaSpan.prototype.transmit = function transmit() {
+  if (!this.transmitted && !this.manualEndMode) {
+    transmission.addSpan(this);
+    this.cleanup();
+    this.transmitted = true;
+  }
+};
+
+InstanaSpan.prototype.transmitManual = function transmitManual() {
   if (!this.transmitted) {
     transmission.addSpan(this);
     this.cleanup();
@@ -208,6 +221,10 @@ InstanaSpan.prototype.cancel = function cancel() {
 InstanaSpan.prototype.cleanup = function cleanup() {
   this.cleanupFunctions.forEach(call);
   this.cleanupFunctions.length = 0;
+};
+
+InstanaSpan.prototype.disableAutoEnd = function disableAutoEnd() {
+  this.manualEndMode = true;
 };
 
 function call(fn) {
