@@ -99,6 +99,7 @@ channel.consume(queueName, function(msg) {
     span.end();
 
   }, 5000);
+});
 ```
 
 Note that the span will never be sent to the back end if you call `span.disableAutoEnd()` but forget to call `span.end()` on it.
