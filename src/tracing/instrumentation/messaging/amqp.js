@@ -181,9 +181,9 @@ function instrumentedDispatchMessage(ctx, originalDispatchMessage, originalArgs)
     try {
       return originalDispatchMessage.apply(ctx, originalArgs);
     } finally {
-      // Best effort to capture child spans - if we call span.transmit immediately and synchronously, child spans won't
-      // be captured because cls.isTracing() will return false.
       setImmediate(function() {
+        // Client code is expected to end the span manually, end it automatically in case client code doesn't. Child
+        // exit spans won't be captured, but at least the RabbitMQ entry span is there.
         span.d = Date.now() - span.ts;
         span.transmit();
       });
@@ -206,18 +206,16 @@ function shimChannelModelGet(originalFunction) {
 
 function instrumentedChannelModelGet(ctx, originalGet, originalArgs) {
   // Each call to get has the potential to fetch a new message. We must create a new context and start a new span
-  // *before* get is called, n case it indeed ends up fetching a new message. If the call ends up fetching no message,
+  // *before* get is called, in case it indeed ends up fetching a new message. If the call ends up fetching no message,
   // we simply cancel the span instead of transmitting it.
-  return cls.ns.runAndReturn(function() {
+  return cls.ns.runPromise(function() {
     var span = cls.startSpan('rabbitmq', cls.ENTRY);
     return originalGet.apply(ctx, originalArgs).then(function(result) {
       if (!result) {
-        // get did not fetch a new message from RabbitMQ (because the queue has
-        // no messages), so we must no create an entry span for this call.
+        // get did not fetch a new message from RabbitMQ (because the queue has no messages), no need to create a span.
         span.cancel();
         return result;
       }
-
       var fields = result.fields || {};
       var headers = result.properties && result.properties.headers ? result.properties.headers : {};
 
@@ -225,8 +223,6 @@ function instrumentedChannelModelGet(ctx, originalGet, originalArgs) {
         var traceId = headers[tracingConstants.traceIdHeaderName];
         var parentId = headers[tracingConstants.spanIdHeaderName];
         if (traceId && parentId) {
-          // This is fine for setting the attributes of the RabbitMQ entry but child spans that have been created in
-          // the meantime won't have inherited the correct parent ID.
           span.t = traceId;
           span.p = parentId;
         }
@@ -260,8 +256,13 @@ function instrumentedChannelModelGet(ctx, originalGet, originalArgs) {
         span.data.rabbitmq.key = fields.routingKey;
       }
 
-      span.d = Date.now() - span.ts;
-      span.transmit();
+      setImmediate(function() {
+        // Client code is expected to end the span manually, end it automatically in case client code doesn't. Child
+        // exit spans won't be captured, but at least the RabbitMQ entry span is there.
+        span.d = Date.now() - span.ts;
+        span.transmit();
+      });
+      return result;
     });
   });
 }
@@ -280,24 +281,22 @@ function shimCallbackModelGet(originalFunction) {
 }
 
 function instrumentedCallbackModelGet(ctx, originalGet, originalArgs) {
-  // Each call to get has the potential to fetch a new message. We must create a new context and start a new span
-  // *before* get is called, n case it indeed ends up fetching a new message. If the call ends up fetching no message,
-  // we simply cancel the span instead of transmitting it.
-  return cls.ns.runAndReturn(function() {
-    var span = cls.startSpan('rabbitmq', cls.ENTRY);
-    var originalCallback = null;
-    if (originalArgs.length >= 3 && typeof originalArgs[2] === 'function') {
-      originalCallback = originalArgs[2];
-    }
+  var originalCallback = null;
+  if (originalArgs.length >= 3 && typeof originalArgs[2] === 'function') {
+    originalCallback = originalArgs[2];
+  }
 
-    originalArgs[2] = function(err, result) {
-      if (err || !result) {
-        // get did not fetch a new message from RabbitMQ (because the queue has
-        // no messages), so we must no create an entry span for this call.
-        span.cancel();
+  originalArgs[2] = function(err, result) {
+    if (err || !result) {
+      // get did not fetch a new message from RabbitMQ (because the queue has no messages), no need to create a span.
+      if (originalCallback) {
         return originalCallback(err, result);
       }
-
+      return;
+    }
+    // get did fetch a message, create a new cls context and a span
+    return cls.ns.runAndReturn(function() {
+      var span = cls.startSpan('rabbitmq', cls.ENTRY);
       var fields = result.fields || {};
       var headers = result.properties && result.properties.headers ? result.properties.headers : {};
 
@@ -305,14 +304,15 @@ function instrumentedCallbackModelGet(ctx, originalGet, originalArgs) {
         var traceId = headers[tracingConstants.traceIdHeaderName];
         var parentId = headers[tracingConstants.spanIdHeaderName];
         if (traceId && parentId) {
-          // This is fine for setting the attributes of the RabbitMQ entry but child spans that have been created in
-          // the meantime won't have inherited the correct parent ID.
           span.t = traceId;
           span.p = parentId;
         }
         if (headers[tracingConstants.traceLevelHeaderName] === '0') {
           cls.setTracingLevel('0');
-          return originalCallback(err, result);
+          if (originalCallback) {
+            return originalCallback(err, result);
+          }
+          return;
         }
       }
 
@@ -340,13 +340,20 @@ function instrumentedCallbackModelGet(ctx, originalGet, originalArgs) {
         span.data.rabbitmq.key = fields.routingKey;
       }
 
-      span.d = Date.now() - span.ts;
-      span.transmit();
-      return originalCallback(err, result);
-    };
+      setImmediate(function() {
+        // Client code is expected to end the span manually, end it automatically in case client code doesn't. Child
+        // exit spans won't be captured, but at least the RabbitMQ entry span is there.
+        span.d = Date.now() - span.ts;
+        span.transmit();
+      });
 
-    return originalGet.apply(ctx, originalArgs);
-  });
+      if (originalCallback) {
+        return originalCallback(err, result);
+      }
+    });
+  };
+
+  return originalGet.apply(ctx, originalArgs);
 }
 
 function shimChannelModelPublish(originalFunction) {
@@ -364,7 +371,7 @@ function shimChannelModelPublish(originalFunction) {
 
 function instrumentedChannelModelPublish(ctx, originalFunction, originalArgs) {
   // The main work is actually done in instrumentedSendMessage which will be called by ConfirmChannel.publish
-  // internally. We only instrument ConfirmChannel.publish only to hook into the callback.
+  // internally. We only instrument ConfirmChannel.publish to hook into the callback.
   var parentSpan = cls.getCurrentSpan();
 
   if (!cls.isTracing() || cls.isExitSpan(parentSpan)) {
@@ -401,7 +408,7 @@ function shimCallbackModelPublish(originalFunction) {
 
 function instrumentedCallbackModelPublish(ctx, originalFunction, originalArgs) {
   // The main work is actually done in instrumentedSendMessage which will be called by ConfirmChannel.publish
-  // internally. We only instrument ConfirmChannel.publish only to hook into the callback.
+  // internally. We only instrument ConfirmChannel.publish to hook into the callback.
   var parentSpan = cls.getCurrentSpan();
 
   if (!cls.isTracing() || cls.isExitSpan(parentSpan)) {

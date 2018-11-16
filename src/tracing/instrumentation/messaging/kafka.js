@@ -95,8 +95,6 @@ function shimEmit(original) {
       try {
         return original.apply(originalThis, originalArgs);
       } finally {
-        // Best effort to capture child spans - if we call span.transmit immediately and synchronously, child spans
-        // won't be captured because cls.isTracing() will return false.
         setImmediate(function() {
           span.d = Date.now() - span.ts;
           span.transmit();

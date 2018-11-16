@@ -29,7 +29,7 @@ var instrumentations = [
 ];
 var instrumentationModules = {};
 
-exports.init = function(_config) {
+exports.init = function(_config, clsHolder) {
   config = _config;
   setDefaults();
 
@@ -42,6 +42,9 @@ exports.init = function(_config) {
     require('./opentracing').init(config, automaticTracingEnabled);
 
     if (automaticTracingEnabled) {
+      // enable instana.currentSpan() function by providing access to the cls module
+      clsHolder.cls = require('./cls');
+      // initialize all instrumentations
       instrumentations.forEach(function(instrumentationKey) {
         instrumentationModules[instrumentationKey] = require(instrumentationKey);
         instrumentationModules[instrumentationKey].init(config);

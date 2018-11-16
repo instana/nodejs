@@ -4,7 +4,7 @@
 
 var agentPort = process.env.AGENT_PORT;
 
-require('../../../../')({
+var instana = require('../../../../')({
   agentPort: agentPort,
   level: 'info',
   tracing: {
@@ -48,14 +48,21 @@ amqp
     return channel.consume(queueForExchangeName, function(msg) {
       if (msg !== null) {
         log(msg.content.toString());
-        request('http://127.0.0.1:' + agentPort)
-          .then(function() {
-            channel.ack(msg);
-          })
-          .catch(function(err) {
-            log(err);
-            channel.nack(msg);
-          });
+        var span = instana.currentSpan();
+        span.disableAutoEnd();
+        // simulating asynchronous follow up steps with setTimout and request-promise
+        setTimeout(function() {
+          request('http://127.0.0.1:' + agentPort)
+            .then(function() {
+              span.end();
+              channel.ack(msg);
+            })
+            .catch(function(err) {
+              log(err);
+              span.end(1);
+              channel.nack(msg);
+            });
+        }, 100);
       }
     });
   })
@@ -67,14 +74,21 @@ amqp
     return channel.consume(queueName, function(msg) {
       if (msg !== null) {
         log(msg.content.toString());
-        request('http://127.0.0.1:' + agentPort)
-          .then(function() {
-            channel.ack(msg);
-          })
-          .catch(function(err) {
-            log(err);
-            channel.nack(msg);
-          });
+        var span = instana.currentSpan();
+        span.disableAutoEnd();
+        // simulating asynchronous follow up steps with setTimout and request-promise
+        setTimeout(function() {
+          request('http://127.0.0.1:' + agentPort)
+            .then(function() {
+              span.end();
+              channel.ack(msg);
+            })
+            .catch(function(err) {
+              log(err);
+              span.end(1);
+              channel.nack(msg);
+            });
+        }, 100);
       }
     });
   })
@@ -90,14 +104,21 @@ amqp
         .then(function(msg) {
           if (msg) {
             log('[channel#get] ', msg.content.toString());
-            request('http://127.0.0.1:' + agentPort)
-              .then(function() {
-                channel.ack(msg);
-              })
-              .catch(function(err) {
-                log(err);
-                channel.nack(msg);
-              });
+            var span = instana.currentSpan();
+            span.disableAutoEnd();
+            // simulating asynchronous follow up steps with setTimout and request-promise
+            setTimeout(function() {
+              return request('http://127.0.0.1:' + agentPort)
+                .then(function() {
+                  span.end();
+                  channel.ack(msg);
+                })
+                .catch(function(err) {
+                  log(err);
+                  span.end(1);
+                  channel.nack(msg);
+                });
+            }, 100);
           }
         })
         .catch(function(err) {
@@ -116,14 +137,21 @@ amqp
     return confirmChannel.consume(queueNameConfirm, function(msg) {
       if (msg !== null) {
         log(msg.content.toString());
-        request('http://127.0.0.1:' + agentPort)
-          .then(function() {
-            confirmChannel.ack(msg);
-          })
-          .catch(function(err) {
-            log(err);
-            confirmChannel.nack(msg);
-          });
+        var span = instana.currentSpan();
+        span.disableAutoEnd();
+        // simulating asynchronous follow up steps with setTimout and request-promise
+        setTimeout(function() {
+          request('http://127.0.0.1:' + agentPort)
+            .then(function() {
+              span.end();
+              confirmChannel.ack(msg);
+            })
+            .catch(function(err) {
+              log(err);
+              span.end(1);
+              confirmChannel.nack(msg);
+            });
+        });
       }
     });
   })
