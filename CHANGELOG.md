@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.55.1
+- Fix method name of NoopSpanHandle.
+
 ## 1.55.0
 - Provide API to end spans manually to allow capturing of child exit spans for message consumers (RabbitMQ/amqplib, Kafka).
 

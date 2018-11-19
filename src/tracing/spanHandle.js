@@ -36,7 +36,7 @@ SpanHandle.prototype.end = function end(errorCount) {
  */
 function NoopSpanHandle() {}
 
-NoopSpanHandle.prototype.setManualEndMode = function setManualEndMode() {
+NoopSpanHandle.prototype.disableAutoEnd = function disableAutoEnd() {
   // provide dummy operation when automatic tracing is not enabled
 };
 
