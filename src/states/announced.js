@@ -14,7 +14,7 @@ module.exports = {
 function checkWhetherAgentIsReadyToAccept(totalNumberOfAttempts, ctx) {
   agentConnection.checkWhetherAgentIsReadyToAcceptData(function(ready) {
     if (ready) {
-      logger.info('Agent is ready to accept!');
+      logger.info('Agent is ready to accept.');
       ctx.transitionTo('agentready');
     } else if (totalNumberOfAttempts >= 10) {
       logger.warn(

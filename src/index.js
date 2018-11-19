@@ -22,6 +22,7 @@ module.exports = exports = function start(config) {
   require('./states/agentready').init(config);
 
   var logger = log.getLogger('index');
+  logger.info('instana-nodejs-sensor module version:', require(path.join(__dirname, '..', 'package.json')).version);
 
   var currentState = null;
 
