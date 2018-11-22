@@ -161,6 +161,36 @@ app.get('/abort', function(req, res) {
   }, 1500);
 });
 
+app.get('/request-malformed-url', function(req, res) {
+  try {
+    httpModule
+      .request(
+        //
+        'ha-te-te-peh://999.0.0.1:not-a-port/malformed-url', //
+        { rejectUnauthorized: false }, //
+        function() {
+          console.log('This should not have happend!');
+        }
+      )
+      .end();
+  } catch (e) {
+    httpModule
+      .request(
+        {
+          hostname: '127.0.0.1',
+          port: process.env.SERVER_PORT,
+          method: 'GET',
+          path: '/request-only-opts',
+          rejectUnauthorized: false
+        },
+        function() {
+          return res.sendStatus(200);
+        }
+      )
+      .end();
+  }
+});
+
 app.post('/upload-s3', function(req, res) {
   if (!process.env.AWS_ACCESS_KEY_ID) {
     console.error('AWS_ACCESS_KEY_ID is not set.');

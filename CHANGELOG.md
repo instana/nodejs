@@ -2,6 +2,7 @@
 
 ## Unreleased
 - Fix: Do not capture HTTP headers for HTTP exits (only for entries)
+- Fix: Capture erroneous span on synchronous exceptions in HTTP client (like malformed URL)
 
 ## 1.55.1
 - Fix method name of NoopSpanHandle.

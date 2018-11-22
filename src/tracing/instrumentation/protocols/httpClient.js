@@ -133,8 +133,18 @@ function instrument(coreModule) {
         var instanaHeadersHaveBeenAdded = tryToAddHeadersToOpts(options, span);
         clientRequest = originalRequest.apply(coreModule, originalArgs);
       } catch (e) {
-        // synchronous exceptions normally indicate failures that are not covered by the
-        // listeners. Cleanup immediately.
+        // A synchronous exception indicates a failure that is not covered by the listeners. Using a malformed URL for
+        // example is a case that triggers a synchronous exception.
+        span.data = {
+          http: {
+            url: completeCallUrl,
+            error: e ? e.message : ''
+          }
+        };
+        span.d = Date.now() - span.ts;
+        span.error = true;
+        span.ec = 1;
+        span.transmit();
         throw e;
       }
 

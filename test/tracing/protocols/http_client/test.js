@@ -161,6 +161,43 @@ function registerTests(useHttps) {
       });
   });
 
+  it('must capture sync exceptions', function() {
+    return clientControls
+      .sendRequest({
+        method: 'GET',
+        path: '/request-malformed-url'
+      })
+      .then(function() {
+        return utils.retry(function() {
+          return agentControls.getSpans().then(function(spans) {
+            var entrySpan = utils.expectOneMatching(spans, function(span) {
+              expect(span.n).to.equal('node.http.server');
+              expect(span.k).to.equal(cls.ENTRY);
+              expect(span.data.http.url).to.match(/\/request-malformed-url/);
+            });
+
+            utils.expectOneMatching(spans, function(span) {
+              expect(span.n).to.equal('node.http.client');
+              expect(span.k).to.equal(cls.EXIT);
+              expect(span.ec).to.equal(1);
+              expect(span.data.http.url).to.match(/ha-te-te-peh/);
+              expect(span.data.http.error).to.match(/Protocol .* not supported./);
+              expect(span.t).to.equal(entrySpan.t);
+              expect(span.p).to.equal(entrySpan.s);
+            });
+
+            utils.expectOneMatching(spans, function(span) {
+              expect(span.n).to.equal('node.http.client');
+              expect(span.k).to.equal(cls.EXIT);
+              expect(span.data.http.url).to.match(/\/request-only-opts/);
+              expect(span.t).to.equal(entrySpan.t);
+              expect(span.p).to.equal(entrySpan.s);
+            });
+          });
+        });
+      });
+  });
+
   it('must trace request(options, cb) with { headers: null }', function() {
     return clientControls
       .sendRequest({
