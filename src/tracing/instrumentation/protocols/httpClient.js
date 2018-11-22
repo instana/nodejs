@@ -9,7 +9,6 @@ var URL = require('url').URL;
 var discardUrlParameters = require('../../../util/url').discardUrlParameters;
 var tracingConstants = require('../../constants');
 var tracingUtil = require('../../tracingUtil');
-var httpCommon = require('./_http');
 var cls = require('../../cls');
 var url = require('url');
 
@@ -111,8 +110,7 @@ function instrument(coreModule) {
           http: {
             method: clientRequest.method,
             url: completeCallUrl,
-            status: res.statusCode,
-            header: httpCommon.getExtraHeaders(res)
+            status: res.statusCode
           }
         };
         span.d = Date.now() - span.ts;

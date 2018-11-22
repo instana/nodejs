@@ -1,5 +1,8 @@
 # Changelog
 
+## Unreleased
+- Fix: Do not capture HTTP headers for HTTP exits (only for entries)
+
 ## 1.55.1
 - Fix method name of NoopSpanHandle.
 

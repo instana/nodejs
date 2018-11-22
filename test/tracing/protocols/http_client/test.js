@@ -350,7 +350,8 @@ function registerTests(useHttps) {
       });
   });
 
-  it('must record custom headers', function() {
+  it('must not record custom headers', function() {
+    // only http entries are supposed to capture headers, not http exits
     return clientControls
       .sendRequest({
         method: 'GET',
@@ -362,7 +363,7 @@ function registerTests(useHttps) {
             utils.expectOneMatching(spans, function(span) {
               expect(span.n).to.equal('node.http.client');
               expect(span.k).to.equal(cls.EXIT);
-              expect(span.data.http.header.foobar).to.equal('42');
+              expect(span.data.http.header).to.not.exist;
             });
           });
         });
