@@ -1,4 +1,5 @@
 /* eslint-disable no-console */
+/* global Promise */
 
 'use strict';
 
@@ -91,6 +92,37 @@ app.post('/find', function(req, res) {
       log('Failed to find document', e);
       res.sendStatus(500);
     });
+});
+
+// An operation with an artificial delay to check that we do not by mistake inject other incoming http entries into the
+// current trace.
+app.post('/long-find', function(req, res) {
+  var mongoResponse = null;
+  collection
+    .findOne(req.body)
+    .then(function(r) {
+      mongoResponse = r;
+      // add an artificial delay and let the test start another HTTP entry, then make sure it is not put into the
+      // currently active trace.
+      return new Promise(function(resolve) {
+        setTimeout(resolve, 500);
+      });
+    })
+    .then(function() {
+      // Execute another traced call to verify that we keep the tracing context.
+      return request('http://127.0.0.1:' + agentPort);
+    })
+    .then(function() {
+      res.json(mongoResponse);
+    })
+    .catch(function(e) {
+      log('Failed to find document', e);
+      res.sendStatus(500);
+    });
+});
+
+app.get('/ping', function(req, res) {
+  res.sendStatus(200);
 });
 
 app.get('/findall', function(req, res) {
