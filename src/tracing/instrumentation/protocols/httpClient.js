@@ -6,11 +6,14 @@ var coreHttpsModule = require('https');
 var semver = require('semver');
 var URL = require('url').URL;
 
-var discardUrlParameters = require('../../../util/url').discardUrlParameters;
 var tracingConstants = require('../../constants');
 var tracingUtil = require('../../tracingUtil');
+var urlUtil = require('../../../util/url');
 var cls = require('../../cls');
 var url = require('url');
+
+var discardUrlParameters = urlUtil.discardUrlParameters;
+var filterParams = urlUtil.filterParams;
 
 var isActive = false;
 
@@ -95,12 +98,18 @@ function instrument(coreModule) {
       var span = cls.startSpan('node.http.client', cls.EXIT);
 
       var completeCallUrl;
+      var params;
       if (urlArg && typeof urlArg === 'string') {
+        // just one string....
         completeCallUrl = discardUrlParameters(urlArg);
+        params = splitAndFilter(urlArg);
       } else if (urlArg && isUrlObject(urlArg)) {
         completeCallUrl = discardUrlParameters(url.format(urlArg));
+        params = dropLeadingQuestionMark(filterParams(urlArg.search));
       } else if (options) {
-        completeCallUrl = constructCompleteUrlFromOpts(options, coreModule);
+        var urlAndQuery = constructFromUrlOpts(options, coreModule);
+        completeCallUrl = urlAndQuery[0];
+        params = urlAndQuery[1];
       }
 
       span.stack = tracingUtil.getStackTrace(request);
@@ -110,7 +119,8 @@ function instrument(coreModule) {
           http: {
             method: clientRequest.method,
             url: completeCallUrl,
-            status: res.statusCode
+            status: res.statusCode,
+            params: params
           }
         };
         span.d = Date.now() - span.ts;
@@ -215,9 +225,9 @@ exports.deactivate = function() {
   isActive = false;
 };
 
-function constructCompleteUrlFromOpts(options, self) {
+function constructFromUrlOpts(options, self) {
   if (options.href) {
-    return discardUrlParameters(options.href);
+    return [discardUrlParameters(options.href), splitAndFilter(options.href)];
   }
 
   try {
@@ -226,9 +236,9 @@ function constructCompleteUrlFromOpts(options, self) {
     var protocol = (port === 443 && 'https:') || options.protocol || (agent && agent.protocol) || 'http:';
     var host = options.hostname || options.host || 'localhost';
     var path = options.path || '/';
-    return discardUrlParameters(protocol + '//' + host + ':' + port + path);
+    return [discardUrlParameters(protocol + '//' + host + ':' + port + path), splitAndFilter(path)];
   } catch (e) {
-    return undefined;
+    return [undefined, undefined];
   }
 }
 
@@ -280,4 +290,19 @@ function setHeadersOnRequest(clientRequest, span) {
   clientRequest.setHeader(tracingConstants.traceIdHeaderName, span.t);
   clientRequest.setHeader(tracingConstants.traceLevelHeaderName, '1');
   return true;
+}
+
+function splitAndFilter(fullUrl) {
+  var parts = fullUrl.split('?');
+  if (parts.length >= 1) {
+    return filterParams(parts[1]);
+  }
+  return null;
+}
+
+function dropLeadingQuestionMark(params) {
+  if (params && params.charAt(0) === '?') {
+    return params.substring(1);
+  }
+  return params;
 }

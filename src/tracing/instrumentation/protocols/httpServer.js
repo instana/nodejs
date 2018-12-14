@@ -3,12 +3,14 @@
 var coreHttpsModule = require('https');
 var coreHttpModule = require('http');
 
-var discardUrlParameters = require('../../../util/url').discardUrlParameters;
 var tracingConstants = require('../../constants');
-var agentOpts = require('../../../agent/opts');
+var urlUtil = require('../../../util/url');
 var httpCommon = require('./_http');
 var shimmer = require('shimmer');
 var cls = require('../../cls');
+
+var discardUrlParameters = urlUtil.discardUrlParameters;
+var filterParams = urlUtil.filterParams;
 
 var isActive = false;
 
@@ -124,20 +126,4 @@ function getExistingTraceId(req, fallback) {
   }
 
   return traceId;
-}
-
-function filterParams(queryString) {
-  if (!queryString || queryString === '' || !(typeof queryString === 'string')) {
-    return queryString;
-  }
-  return queryString
-    .split('&')
-    .filter(function(param) {
-      var key = param.split('=')[0];
-      if (key) {
-        return !agentOpts.isSecret(key);
-      }
-      return true;
-    })
-    .join('&');
 }

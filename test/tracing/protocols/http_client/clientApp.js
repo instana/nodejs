@@ -74,7 +74,7 @@ app.get('/request-options-only', function(req, res) {
         hostname: '127.0.0.1',
         port: process.env.SERVER_PORT,
         method: 'GET',
-        path: '/request-only-opts',
+        path: '/request-only-opts' + (req.query.withQuery ? '?q1=some&pass=verysecret&q2=value' : ''),
         rejectUnauthorized: false
       },
       function() {
@@ -91,7 +91,7 @@ app.get('/request-options-only-null-headers', function(req, res) {
         hostname: '127.0.0.1',
         port: process.env.SERVER_PORT,
         method: 'GET',
-        path: '/request-only-opts',
+        path: '/request-only-opts' + (req.query.withQuery ? '?q1=some&pass=verysecret&q2=value' : ''),
         rejectUnauthorized: false,
         headers: null
       },
@@ -120,7 +120,7 @@ app.get('/get-options-only', function(req, res) {
       hostname: '127.0.0.1',
       port: process.env.SERVER_PORT,
       method: 'GET',
-      path: '/get-only-opts',
+      path: '/get-only-opts' + (req.query.withQuery ? '?q1=some&pass=verysecret&q2=value' : ''),
       rejectUnauthorized: false
     },
     function() {
@@ -180,7 +180,7 @@ app.get('/request-malformed-url', function(req, res) {
           hostname: '127.0.0.1',
           port: process.env.SERVER_PORT,
           method: 'GET',
-          path: '/request-only-opts',
+          path: '/request-only-opts' + (req.query.withQuery ? '?q1=some&pass=verysecret&q2=value' : ''),
           rejectUnauthorized: false
         },
         function() {
@@ -270,6 +270,7 @@ if (process.env.USE_HTTPS === 'true') {
 }
 
 function createUrl(req, urlPath) {
+  urlPath = req.query.withQuery ? urlPath + '?q1=some&pass=verysecret&q2=value' : urlPath;
   return req.query.urlObject ? new URL(urlPath, baseUrl) : baseUrl + urlPath;
 }
 
