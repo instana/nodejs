@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased
+- Fix: Add HTTP query params for HTTP exits
 - Fix: Do not capture HTTP headers for HTTP exits (only for entries)
 - Fix: Capture erroneous span on synchronous exceptions in HTTP client (like malformed URL)
 

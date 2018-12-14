@@ -1,5 +1,7 @@
 'use strict';
 
+var agentOpts = require('../agent/opts');
+
 exports.discardUrlParameters = function discardUrlParameters(url) {
   var index = getCharCountUntilOccurenceOfChar(url, '?');
   index = Math.min(index, getCharCountUntilOccurenceOfChar(url, '#'));
@@ -11,3 +13,22 @@ function getCharCountUntilOccurenceOfChar(s, char) {
   var index = s.indexOf(char);
   return index === -1 ? s.length : index;
 }
+
+exports.filterParams = function filterParams(queryString) {
+  if (!queryString || queryString === '') {
+    return undefined;
+  }
+  if (typeof queryString !== 'string') {
+    return queryString;
+  }
+  return queryString
+    .split('&')
+    .filter(function(param) {
+      var key = param.split('=')[0];
+      if (key) {
+        return !agentOpts.isSecret(key);
+      }
+      return true;
+    })
+    .join('&');
+};
