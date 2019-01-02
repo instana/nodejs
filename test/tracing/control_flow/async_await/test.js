@@ -12,7 +12,6 @@ describe('tracing/asyncAwait', function() {
     return;
   }
 
-  // controls require features that aren't available in early Node.js versions
   var expressAsyncAwaitControls = require('./controls');
   var agentStubControls = require('../../../apps/agentStubControls');
   var expressControls = require('../../../apps/expressControls');

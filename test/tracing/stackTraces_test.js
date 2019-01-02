@@ -11,7 +11,6 @@ describe('tracing/stackTraces', function() {
     return;
   }
 
-  // controls require features that aren't available in early Node.js versions
   var agentStubControls = require('../apps/agentStubControls');
   var expressProxyControls = require('../apps/expressProxyControls');
 

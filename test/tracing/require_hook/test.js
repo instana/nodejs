@@ -11,7 +11,6 @@ describe('tracing/requireHook', function() {
     return;
   }
 
-  // controls require features that aren't available in early Node.js versions
   var agentControls = require('../../apps/agentStubControls');
   var Controls = require('./controls');
 

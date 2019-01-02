@@ -14,7 +14,6 @@ describe('tracing/native-promise', function() {
     return;
   }
 
-  // controls require features that aren't available in early Node.js versions
   var agentControls = require('../../../apps/agentStubControls');
   var NativePromiseControls = require('./controls');
 
