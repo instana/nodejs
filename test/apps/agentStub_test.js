@@ -11,7 +11,6 @@ describe('agentStub', function() {
     return;
   }
 
-  // controls require features that aren't available in early Node.js versions
   var agentStubControls = require('./agentStubControls');
 
   this.timeout(config.getTestTimeout());

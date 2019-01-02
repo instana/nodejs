@@ -13,7 +13,6 @@ describe('actions/source', function() {
     return;
   }
 
-  // controls require features that aren't available in early Node.js versions
   var expressControls = require('../apps/expressControls');
   var agentStubControls = require('../apps/agentStubControls');
 

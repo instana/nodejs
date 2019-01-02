@@ -14,7 +14,6 @@ describe('tracing/bluebird', function() {
     return;
   }
 
-  // controls require features that aren't available in early Node.js versions
   var agentControls = require('../../../apps/agentStubControls');
   var BluebirdControls = require('./controls');
 
