@@ -2,6 +2,7 @@
 
 ## Unpublished
 - Left pad generated IDs with '0'.
+- Improve announce payload.
 
 ## 1.55.2
 - Fix: Add HTTP query params for HTTP exits
