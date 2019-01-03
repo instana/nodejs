@@ -11,6 +11,8 @@ var pidStore = require('./pidStore');
 var cmdline = require('./cmdline');
 var http = require('./http');
 
+var cpuSetFileContent = getCpuSetFileContent();
+
 // How many extra characters are to be reserved for the inode and
 // file descriptor fields in the sensor announce cycle.
 var paddingForInodeAndFileDescriptor = 200;
@@ -22,17 +24,20 @@ exports.announceNodeSensor = function announceNodeSensor(cb) {
   cb = atMostOnce('callback for announceNodeSensor', cb);
 
   var payload = {
+    // the PID of this process (might be relative to the container or the root PID namespace)
     pid: pidStore.pid,
 
-    // We need to add properties to this JSON payload for which don't know
-    // yet how large they are going to be. Specifically, we don't know how
-    // long (as in characters) the file descriptor and inode are. Still,
-    // we need to set a correct Content-Length header. This is what this
-    // spacer is used for.
+    // indicates whether the in-process sensor is sending the PID it has in its own namespace or the PID from a parent
+    // namespace
+    pidFromParentNS: pidStore.pid != process.pid, // eslint-disable-line eqeqeq
+
+    // We might need to add the propery `inode` to this JSON payload in the `socket` event handler - that is, *after*
+    // the Content-Length handler has already been sent. This is problematic because but we do not know how long (as in
+    // characters) the file descriptor and inode will be. Still, we need to set a correct Content-Length header before
+    // initiating the request. This is what this spacer is used for.
     //
-    // We reserve <paddingForInodeAndFileDescriptor> extra characters for
-    // content. Any unused characters will be filled up with whitespace
-    // before the payload is send.
+    // We reserve <paddingForInodeAndFileDescriptor> extra characters for the variable length content. Any unused
+    // characters will be filled up with whitespace before the payload is actually sent.
     spacer: ''
   };
 
@@ -40,6 +45,9 @@ exports.announceNodeSensor = function announceNodeSensor(cb) {
   if (processCmdline.name && processCmdline.args) {
     payload.name = processCmdline.name;
     payload.args = processCmdline.args;
+  }
+  if (cpuSetFileContent) {
+    payload.cpuSetFileContent = cpuSetFileContent;
   }
 
   var payloadStr = JSON.stringify(payload);
@@ -336,4 +344,22 @@ function sendHttpPostRequestSync(port, path, data) {
     '\u000d\u000a' + // extra CRLF before body
     payload
   );
+}
+
+function getCpuSetFileContent() {
+  try {
+    var cpuSetPath = '/proc/' + process.pid + '/cpuset';
+    var content = fs.readFileSync(cpuSetPath, { encoding: 'utf-8' });
+    // paranoid check - if the cpusets file for whatever reason is really big, we don't want to send it to the agent
+    // at all.
+    if (content && content.length >= 2000) {
+      return null;
+    }
+    return content;
+  } catch (err) {
+    if (err.code !== 'ENOENT') {
+      logger.warn('cpuset file could not be read. Reason: %s', err.message);
+    }
+    return null;
+  }
 }
