@@ -3,15 +3,54 @@
 'use strict';
 
 var expect = require('chai').expect;
+var fail = require('assert').fail;
+
 var tracingUtil = require('../../src/tracing/tracingUtil');
 
 describe('tracing/tracingUtil', function() {
-  describe('generateRandomSpanId', function() {
-    it('must generate random IDs', function() {
-      for (var i = 0; i < 30; i++) {
-        expect(tracingUtil.generateRandomSpanId()).to.be.a('string');
-      }
-    });
+  describe('generate random IDs', function() {
+    this.timeout(60000);
+
+    testRandomIds('trace', tracingUtil.generateRandomTraceId, 16);
+    testRandomIds('span', tracingUtil.generateRandomSpanId, 16);
+
+    function testRandomIds(idType, genFn, expectedLength) {
+      it('must generate random ' + idType + ' IDs', function() {
+        var iterations = 20000;
+        var generatedIds = [];
+        for (var i = 0; i < iterations; i++) {
+          generatedIds[i] = genFn();
+          expect(generatedIds[i]).to.be.a('string');
+          expect(generatedIds[i].length).to.equal(expectedLength);
+        }
+
+        // verify that the generated IDs are unique
+        for (i = 0; i < iterations; i++) {
+          for (var j = 0; j < iterations; j++) {
+            // eslint-disable-next-line no-continue
+            if (i === j) continue;
+            // eslint-disable-next-line eqeqeq
+            if (generatedIds[i] == generatedIds[j]) {
+              fail(
+                // actual
+                generatedIds[j],
+                // expected
+                'an ID != ' + generatedIds[j],
+                // message
+                'found a non-unique ID at indices ' +
+                  i +
+                  ' and ' +
+                  j +
+                  ': ' +
+                  generatedIds[i] +
+                  ' === ' +
+                  generatedIds[j]
+              );
+            }
+          }
+        }
+      });
+    }
   });
 
   describe('getErrorDetails', function() {
