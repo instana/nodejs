@@ -1,5 +1,8 @@
 # Changelog
 
+## Unpublished
+- Left pad generated IDs with '0'.
+
 ## 1.55.2
 - Fix: Add HTTP query params for HTTP exits
 - Fix: Do not capture HTTP headers for HTTP exits (only for entries)
