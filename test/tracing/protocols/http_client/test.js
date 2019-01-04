@@ -12,7 +12,7 @@ var agentControls;
 var ClientControls;
 var ServerControls;
 
-describe('tracing/httpClient', function() {
+describe('tracing/http client', function() {
   if (!supportedVersion(process.versions.node)) {
     return;
   }

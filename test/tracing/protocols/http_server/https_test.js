@@ -6,27 +6,27 @@ var supportedVersion = require('../../../../src/tracing/index').supportedVersion
 var config = require('../../../config');
 var utils = require('../../../utils');
 
-describe('tracing/https', function() {
+describe('tracing/https server', function() {
   if (!supportedVersion(process.versions.node)) {
     return;
   }
 
-  var agentStubControls = require('../../../apps/agentStubControls');
-  var expressControls = require('../../../apps/expressControls');
-
   this.timeout(config.getTestTimeout());
 
-  agentStubControls.registerTestHooks();
-  expressControls.registerTestHooks({
+  var agentControls = require('../../../apps/agentStubControls');
+  var controls = require('../../../apps/expressControls');
+
+  agentControls.registerTestHooks();
+  controls.registerTestHooks({
     useHttps: true
   });
 
   beforeEach(function() {
-    return agentStubControls.waitUntilAppIsCompletelyInitialized(expressControls.getPid());
+    return agentControls.waitUntilAppIsCompletelyInitialized(controls.getPid());
   });
 
   it('must trace incoming HTTPS calls', function() {
-    return expressControls
+    return controls
       .sendRequest({
         method: 'POST',
         path: '/checkout',
@@ -35,7 +35,7 @@ describe('tracing/https', function() {
       })
       .then(function() {
         return utils.retry(function() {
-          return agentStubControls.getSpans().then(function(spans) {
+          return agentControls.getSpans().then(function(spans) {
             expect(spans.length).to.equal(1);
 
             var span = spans[0];
@@ -53,7 +53,7 @@ describe('tracing/https', function() {
   });
 
   it('must continue incoming trace', function() {
-    return expressControls
+    return controls
       .sendRequest({
         method: 'POST',
         path: '/checkout',
@@ -67,7 +67,7 @@ describe('tracing/https', function() {
       })
       .then(function() {
         return utils.retry(function() {
-          return agentStubControls.getSpans().then(function(spans) {
+          return agentControls.getSpans().then(function(spans) {
             expect(spans.length).to.equal(1);
 
             var span = spans[0];
@@ -77,8 +77,9 @@ describe('tracing/https', function() {
         });
       });
   });
+
   it('must continue incoming trace with 128bit traceIds', function() {
-    return expressControls
+    return controls
       .sendRequest({
         method: 'POST',
         path: '/checkout',
@@ -92,7 +93,7 @@ describe('tracing/https', function() {
       })
       .then(function() {
         return utils.retry(function() {
-          return agentStubControls.getSpans().then(function(spans) {
+          return agentControls.getSpans().then(function(spans) {
             expect(spans.length).to.equal(1);
 
             var span = spans[0];

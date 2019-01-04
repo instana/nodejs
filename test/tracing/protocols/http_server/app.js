@@ -10,39 +10,21 @@ require('../../../../')({
   }
 });
 
-var bodyParser = require('body-parser');
-var express = require('express');
-var morgan = require('morgan');
+var logPrefix = 'HTTP: Server (' + process.pid + '):\t';
 
-var app = express();
-var logPrefix = 'Express HTTP: Server (' + process.pid + '):\t';
+var http = require('http');
+var port = process.env.APP_PORT || 3000;
+var app = new http.Server();
 
-if (process.env.WITH_STDOUT) {
-  app.use(morgan(logPrefix + ':method :url :status'));
-}
-
-app.use(bodyParser.json());
-
-app.get('/', function(req, res) {
-  res.sendStatus(200);
+app.on('request', (req, res) => {
+  if (process.env.WITH_STDOUT) {
+    log(req.method + ' ' + req.url);
+  }
+  res.end();
 });
 
-app.get('/blub', sendRoute);
-
-var subRoutes = express.Router();
-subRoutes.get('/bar/:id', sendRoute);
-app.use('/sub', subRoutes);
-
-var subSubRoutes = express.Router();
-subSubRoutes.get('/bar/:id', sendRoute);
-subRoutes.use('/sub', subSubRoutes);
-
-function sendRoute(req, res) {
-  res.send(req.baseUrl + req.route.path);
-}
-
-app.listen(process.env.APP_PORT, function() {
-  log('Listening on port: ' + process.env.APP_PORT);
+app.listen(port, function() {
+  log('Listening on port: ' + port);
 });
 
 function log() {
