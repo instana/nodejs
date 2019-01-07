@@ -19,6 +19,7 @@ var instrumentations = [
   './instrumentation/database/redis',
   './instrumentation/frameworks/express',
   './instrumentation/frameworks/fastify',
+  './instrumentation/frameworks/koa',
   './instrumentation/loggers/bunyan',
   './instrumentation/loggers/pino',
   './instrumentation/loggers/winston',
