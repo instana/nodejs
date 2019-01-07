@@ -37,7 +37,7 @@ module.exports = exports = {
     tracing.activate();
     requestHandler.activate();
     sendData();
-    logger.info('The Instana Node.js sensor is now fullly initialized.');
+    logger.info('The Instana Node.js sensor is now fully initialized.');
 
     function sendData() {
       // clone retrieved objects to allow mutations in metric retrievers
