@@ -16,7 +16,7 @@ var http = require('http');
 var port = process.env.APP_PORT || 3000;
 var app = new http.Server();
 
-app.on('request', (req, res) => {
+app.on('request', function(req, res) {
   if (process.env.WITH_STDOUT) {
     log(req.method + ' ' + req.url);
   }

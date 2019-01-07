@@ -1,8 +1,9 @@
 # Changelog
 
 ## Unpublished
-- Left pad generated IDs with '0'.
+- Record [koa](https://koajs.com/) path templates when tracing HTTP entries.
 - Improve announce payload.
+- Left pad generated IDs with '0'.
 
 ## 1.55.2
 - Fix: Add HTTP query params for HTTP exits
