@@ -3,7 +3,10 @@
 var transmission = require('./transmission');
 var tracingUtil = require('./tracingUtil');
 var hooked = require('./clsHooked');
-var logger = require('../logger').getLogger('cls');
+var logger;
+logger = require('../logger').getLogger('tracing/cls', function(newLogger) {
+  logger = newLogger;
+});
 
 var currentRootSpanKey = (exports.currentRootSpanKey = 'com.instana.rootSpan');
 var currentSpanKey = (exports.currentSpanKey = 'com.instana.span');

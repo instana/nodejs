@@ -2,7 +2,10 @@
 
 var fs = require('fs');
 
-var logger = require('./logger').getLogger('cmdline');
+var logger;
+logger = require('./logger').getLogger('cmdline', function(newLogger) {
+  logger = newLogger;
+});
 
 exports.getCmdline = function getCmdline() {
   var name;

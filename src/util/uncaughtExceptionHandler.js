@@ -2,7 +2,11 @@
 
 var serializeError = require('serialize-error');
 
-var logger = require('../logger').getLogger('uncaughtExceptionHandler');
+var logger;
+logger = require('../logger').getLogger('util/uncaughtExceptionHandler', function(newLogger) {
+  logger = newLogger;
+});
+
 var transmission = require('../tracing/transmission');
 var agentConnection = require('../agentConnection');
 var stackTraceUtil = require('./stackTrace');

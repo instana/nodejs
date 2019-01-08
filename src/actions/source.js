@@ -2,7 +2,10 @@
 
 var fs = require('fs');
 
-var logger = require('../logger').getLogger('actions/profiling/cpu');
+var logger;
+logger = require('../logger').getLogger('actions/source', function(newLogger) {
+  logger = newLogger;
+});
 
 var validFileRequests = /\.(js|ts|jsx)$|(^|\/)package\.json$/i;
 

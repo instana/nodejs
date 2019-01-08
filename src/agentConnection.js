@@ -3,7 +3,11 @@
 var pathUtil = require('path');
 var fs = require('fs');
 
-var logger = require('./logger').getLogger('agentConnection');
+var logger;
+logger = require('./logger').getLogger('agentConnection', function(newLogger) {
+  logger = newLogger;
+});
+
 var atMostOnce = require('./util/atMostOnce');
 var agentOpts = require('./agent/opts');
 var buffer = require('./util/buffer');

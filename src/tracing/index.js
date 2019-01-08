@@ -2,7 +2,10 @@
 
 var semver = require('semver');
 
-var logger = require('../logger').getLogger('tracing');
+var logger;
+logger = require('../logger').getLogger('tracing', function(newLogger) {
+  logger = newLogger;
+});
 
 var tracingEnabled = false;
 var automaticTracingEnabled = false;

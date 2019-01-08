@@ -1,6 +1,10 @@
 'use strict';
 
-var logger = require('./logger').getLogger('agentConnection');
+var logger;
+logger = require('./logger').getLogger('secrets', function(newLogger) {
+  logger = newLogger;
+});
+
 var defaultMatcherMode = 'contains-ignore-case';
 var defaultSecrets = ['key', 'pass', 'secret'];
 

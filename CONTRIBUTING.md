@@ -15,7 +15,7 @@ To make a release, you first need to ensure that the released version will eithe
  - Push the commit and the tag created by `npm version` to GitHub, e.g. `git push --tags origin master`.
 
 ### Pushing Artifacts to NPM
-Once the released is properly commited and tagged, you can release the artifact to NPM in the following way:
+Once the release is properly committed and tagged, you can release the artifact to NPM in the following way:
 
 ```
 # you will be prompted for a 2FA code/OTP (one time password).

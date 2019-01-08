@@ -1,6 +1,10 @@
 'use strict';
 
-var logger = require('../logger').getLogger('metrics-gc');
+var logger;
+logger = require('../logger').getLogger('metrics/gc', function(newLogger) {
+  logger = newLogger;
+});
+
 var slidingWindow = require('../slidingWindow');
 
 var windowOpts = { duration: 1000 };

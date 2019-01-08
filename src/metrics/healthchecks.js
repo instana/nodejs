@@ -1,7 +1,10 @@
 'use strict';
 
 var requireHook = require('../util/requireHook');
-var logger = require('../logger').getLogger('metrics/healthchecks');
+var logger;
+logger = require('../logger').getLogger('metrics/healthchecks', function(newLogger) {
+  logger = newLogger;
+});
 
 var timeBetweenHealthcheckCalls;
 var healthy = 1;

@@ -1,6 +1,9 @@
 'use strict';
 
-var logger = require('../logger').getLogger('libuv');
+var logger;
+logger = require('../logger').getLogger('metrics/libuv', function(newLogger) {
+  logger = newLogger;
+});
 
 var eventLoopStats;
 try {

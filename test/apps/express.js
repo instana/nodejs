@@ -4,9 +4,9 @@
 // latency and response codes. This can be used a baselines for many tests, e.g.
 // to test distributed tracing.
 
-require('../../')({
+var instana = require('../../')({
   agentPort: process.env.AGENT_PORT,
-  level: 'info',
+  level: 'debug',
   tracing: {
     timeBetweenHealthcheckCalls: 1000,
     enabled: process.env.TRACING_ENABLED === 'true',
@@ -16,10 +16,17 @@ require('../../')({
 });
 
 var express = require('express');
+var morgan = require('morgan');
 var semver = require('semver');
 var path = require('path');
 var fs = require('fs');
 var app = express();
+
+var logPrefix = 'Express App (' + process.pid + '):\t';
+
+if (process.env.WITH_STDOUT) {
+  app.use(morgan(logPrefix + ':method :url :status'));
+}
 
 var healthcheckFunction = function() {
   return 'OK!';
@@ -56,6 +63,34 @@ app.post('/admin/set-to-healthy', function(req, res) {
   };
   res.send('OK');
 });
+
+app.post('/set-logger', function(req, res) {
+  var logFilePath = req.query.logFilePath;
+  if (typeof logFilePath !== 'string') {
+    return res.sendStatus(400);
+  }
+  var dummyLogger = {
+    debug: writeToDummyLogFile('debug', logFilePath),
+    info: writeToDummyLogFile('info', logFilePath),
+    warn: writeToDummyLogFile('warn', logFilePath),
+    error: writeToDummyLogFile('error', logFilePath)
+  };
+
+  instana.setLogger(dummyLogger);
+
+  res.send('OK');
+});
+
+function writeToDummyLogFile(level, logFilePath) {
+  return function(message) {
+    var content = typeof messsage === 'string' ? message : JSON.stringify(message);
+    fs.writeFile(logFilePath, '[' + level + ']: ' + content, function(err) {
+      if (err) {
+        console.error(err);
+      }
+    });
+  };
+}
 
 var router = express.Router();
 router.get('/subPath', function(req, res) {

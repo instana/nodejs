@@ -2,7 +2,10 @@
 
 'use strict';
 
-var logger = require('../logger').getLogger('atMostOnce');
+var logger;
+logger = require('../logger').getLogger('util/atMostOnce', function(newLogger) {
+  logger = newLogger;
+});
 
 /**
  * Make sure that a function is only ever called once. This is useful to maintain

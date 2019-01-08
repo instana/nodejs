@@ -1,6 +1,10 @@
 'use strict';
 
-var logger = require('../logger').getLogger('tracing/transmission');
+var logger;
+logger = require('../logger').getLogger('tracing/transmission', function(newLogger) {
+  logger = newLogger;
+});
+
 var agentConnection = require('../agentConnection');
 
 var maxBufferedSpans;

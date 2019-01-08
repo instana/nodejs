@@ -1,6 +1,10 @@
 'use strict';
 
-var logger = require('../../../logger').getLogger('tracing/bluebird');
+var logger;
+logger = require('../../../logger').getLogger('tracing/bluebird', function(newLogger) {
+  logger = newLogger;
+});
+
 var cls = require('../../cls');
 
 exports.activate = function() {

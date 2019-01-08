@@ -13,7 +13,10 @@ instana({
     forceTransmissionStartingAt: 1
   }
 });
-var instanaLogger = require('../../../../src/logger').getLogger('test-module-name');
+var instanaLogger;
+instanaLogger = require('../../../../src/logger').getLogger('test-module-name', function(newLogger) {
+  instanaLogger = newLogger;
+});
 
 var bodyParser = require('body-parser');
 var express = require('express');
