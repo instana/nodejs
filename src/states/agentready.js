@@ -4,7 +4,10 @@ var path = require('path');
 var fs = require('fs');
 
 var uncaughtExceptionHandler = require('../util/uncaughtExceptionHandler');
-var logger = require('../logger').getLogger('agentready');
+var logger;
+logger = require('../logger').getLogger('states/agentready', function(newLogger) {
+  logger = newLogger;
+});
 var requestHandler = require('../agent/requestHandler');
 var agentConnection = require('../agentConnection');
 var compression = require('../compression');

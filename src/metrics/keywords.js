@@ -1,7 +1,10 @@
 'use strict';
 
 var applicationUnderMonitoring = require('../applicationUnderMonitoring');
-var logger = require('../logger').getLogger('keywords');
+var logger;
+logger = require('../logger').getLogger('metrics/keywords', function(newLogger) {
+  logger = newLogger;
+});
 
 exports.payloadPrefix = 'keywords';
 exports.currentPayload = [];

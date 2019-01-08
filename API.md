@@ -49,7 +49,8 @@ Almost all applications will only ever need to initialize Instana as demonstrate
 ```javascript
 // At the start of your main module/application entry point, the function
 // returned by require('instana-nodejs-sensor') needs to be called to initialize
-// the Instana Node.js sensor.
+// the Instana Node.js sensor. This needs to happen before anything else is
+// required or imported.
 const instana = require('instana-nodejs-sensor')();
 
 ...
@@ -67,8 +68,48 @@ instana.opentracing.createTracer();
 // or:
 instana.currentSpan();
 
+// or:
+instana.setLogger(...);
+
 // ...
 ```
+
+## Setting the Logger After Initialization
+
+As mentioned before, you need to call the initialization function (which is returned by `require('instana-nodejs-sensor')`) immediately, before requiring/importing any other packages, otherwise Instana's automatic tracing will only work partially. In particular, this requires you to initialize Instana before requiring your logging package (for example, `bunyan`). If you require the logging package before initializing Instana, you will not see log messages in Instana. On the other hand, you might want to pass your own logger to Instana's initialization function (see [configuration docs](CONFIGURATION.md#logging). To resolve this cyclic dependency, the `instana-nodejs-sensor` offers the function `setLogger` to initialize Instana without a custom logger first and then set the logger later.
+
+To give a concrete exampe, the following is _not_ supported:
+
+```javascript
+// WRONG
+const instana = require('instana-nodejs-sensor');
+
+// The bunyan package will not be instrumented by Instana, because it is
+// required *before* Instana has been initialized.
+const bunyan = require('bunyan');
+const logger = bunyan.createLogger(...);
+
+// Now Instana is initialized, after the logging package has already been
+// required. This is too late!
+instana({ logger: logger }); // TOO LATE!
+```
+
+Instead, initialize Instana first, without a logger, before requiring anything else. Then set the logger that Instana should use later, when the logger has been required and initialized:
+
+```javascript
+// Correct: Call the initialization function immediately.
+// (Pay attention to the extra pair of parantheses at the end of the line.)
+const instana = require('instana-nodejs-sensor')();
+
+// Require and initialize your logging package.
+const bunyan = require('bunyan');
+// Create your logger(s).
+const logger = bunyan.createLogger(...);
+// Set the logger Instana should use.
+instana.setLogger(logger);
+```
+
+The first few lines of log output from Instana (during the initialization procedure) will be logged with Instana's default bunyan logger, but everything after the `instana.setLogger(logger)` call will be logged with the logger you have set. Plus, your application's log output will show up in the "log messages" tab in Instana's dashboards correctly (note that we only show log calls for which the severity is at least "WARN").
 
 ## Ending Spans Manually (Message Broker Entries)
 
@@ -111,5 +152,4 @@ There is no need to do any of this when _sending/publishing_ messages to a messa
 ## OpenTracing Integration
 
 See [OpenTracing docs](README.md#opentracing).
-
 

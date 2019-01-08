@@ -3,7 +3,10 @@
 var fs = require('fs');
 var EventEmitter = require('events').EventEmitter;
 
-var logger = require('../logger').getLogger('pidStore');
+var logger;
+logger = require('../logger').getLogger('pidStore', function(newLogger) {
+  logger = newLogger;
+});
 var internalPidStore = require('./internalPidStore');
 
 var eventName = 'pidChanged';

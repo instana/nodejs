@@ -1,6 +1,10 @@
 'use strict';
 
-var logger = require('../logger').getLogger('announced');
+var logger;
+logger = require('../logger').getLogger('states/announced', function(newLogger) {
+  logger = newLogger;
+});
+
 var agentConnection = require('../agentConnection');
 
 module.exports = {

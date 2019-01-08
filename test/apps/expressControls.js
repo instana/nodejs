@@ -105,6 +105,14 @@ exports.setUnhealthy = function(useHttps) {
   });
 };
 
+exports.setLogger = function(useHttps, logFilePath) {
+  return request({
+    method: 'POST',
+    url: getBaseUrl(useHttps) + '/set-logger?logFilePath=' + encodeURIComponent(logFilePath),
+    strictSSL: false
+  });
+};
+
 function getBaseUrl(useHttps) {
   return 'http' + (useHttps ? 's' : '') + '://127.0.0.1:' + appPort;
 }

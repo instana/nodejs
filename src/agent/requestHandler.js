@@ -2,7 +2,11 @@
 
 var semver = require('semver');
 
-var logger = require('../logger').getLogger('agent/requestHandler');
+var logger;
+logger = require('../logger').getLogger('agent/requestHandler', function(newLogger) {
+  logger = newLogger;
+});
+
 var agentConnection = require('../agentConnection');
 
 var actionMapping = {

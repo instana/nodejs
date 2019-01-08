@@ -1,6 +1,10 @@
 'use strict';
 
-var logger = require('../../../logger').getLogger('tracing/mongodb');
+var logger;
+logger = require('../../../logger').getLogger('tracing/mongodb', function(newLogger) {
+  logger = newLogger;
+});
+
 var requireHook = require('../../../util/requireHook');
 var tracingUtil = require('../../tracingUtil');
 var cls = require('../../cls');

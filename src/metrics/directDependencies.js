@@ -3,7 +3,10 @@
 var fs = require('fs');
 
 var applicationUnderMonitoring = require('../applicationUnderMonitoring');
-var logger = require('../logger').getLogger('dependencies');
+var logger;
+logger = require('../logger').getLogger('metrics/directDependencies', function(newLogger) {
+  logger = newLogger;
+});
 
 exports.payloadPrefix = 'directDependencies';
 exports.currentPayload = {

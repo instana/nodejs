@@ -1,6 +1,9 @@
 'use strict';
 
-var logger = require('../logger').getLogger('unannounced');
+var logger;
+logger = require('../logger').getLogger('states/unannounced', function(newLogger) {
+  logger = newLogger;
+});
 var agentConnection = require('../agentConnection');
 var agentOpts = require('../agent/opts');
 var pidStore = require('../pidStore');

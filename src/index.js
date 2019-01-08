@@ -9,9 +9,10 @@ var fs = require('fs');
 
 var spanHandle = require('./tracing/spanHandle');
 var clsHolder = {};
+var config;
 
-module.exports = exports = function start(config) {
-  config = config || {};
+module.exports = exports = function start(_config) {
+  config = _config || {};
 
   log.init(config);
   require('./util/requireHook').init(config);
@@ -21,7 +22,11 @@ module.exports = exports = function start(config) {
   require('./util/uncaughtExceptionHandler').init(config);
   require('./states/agentready').init(config);
 
-  var logger = log.getLogger('index');
+  var logger;
+  logger = log.getLogger('index', function(newLogger) {
+    logger = newLogger;
+  });
+
   logger.info('instana-nodejs-sensor module version:', require(path.join(__dirname, '..', 'package.json')).version);
 
   var currentState = null;
@@ -58,4 +63,9 @@ exports.opentracing = require('./tracing/opentracing');
 
 exports.currentSpan = function getHandleForCurrentSpan() {
   return spanHandle.getHandleForCurrentSpan(clsHolder.cls);
+};
+
+exports.setLogger = function(logger) {
+  config.logger = logger;
+  log.init(config);
 };

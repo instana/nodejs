@@ -5,7 +5,10 @@ var http = require('../http');
 var agentOpts = require('../agent/opts');
 var exec = require('child_process').exec;
 var atMostOnce = require('../util/atMostOnce');
-var logger = require('../logger').getLogger('agentHostLookup');
+var logger;
+logger = require('../logger').getLogger('states/agentHostLookup', function(newLogger) {
+  logger = newLogger;
+});
 
 // Depending on the environment in which the agent and node sensor are running,
 // the agent may be available under different hosts. For instance,
