@@ -1,7 +1,7 @@
 # Changelog
 
-## Unpublished
-- Record [koa](https://koajs.com/) path templates when tracing HTTP entries.
+## 1.56.0
+- Record [koa-router](https://github.com/alexmingoia/koa-router) routes as path templates when tracing HTTP entries.
 - Improve announce payload.
 - Left pad generated IDs with '0'.
 
