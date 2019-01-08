@@ -1,7 +1,7 @@
 # Changelog
 
-## Unpublished
-- Provide API to set a logger after initialization to resolve init/logger cycle.
+## 1.57.0
+- Provide an API to set a logger after initialization to resolve init/logger cycle.
 
 ## 1.56.0
 - Record [koa-router](https://github.com/alexmingoia/koa-router) routes as path templates when tracing HTTP entries.
