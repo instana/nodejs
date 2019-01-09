@@ -14,6 +14,7 @@ Monitor your Node.js applications with Instana!
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 
 
+- [Server Only](#server-only)
 - [Installation and Usage](#installation-and-usage)
 - [CPU Profiling, Garbage Collection and Event Loop Information](#cpu-profiling-garbage-collection-and-event-loop-information)
 - [OpenTracing](#opentracing)
@@ -23,6 +24,9 @@ Monitor your Node.js applications with Instana!
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
+## Server Only
+
+**PSA**: This package is for monitoring *Node.js server applications* with Instana. If you want to monitor JavaScript applications running in a browser, check out our docs on [website monitoring](https://docs.instana.io/products/website_monitoring).
 
 ## Installation and Usage
 The installation of the Instana Node.js sensor is a simple two step process. First, install the `instana-nodejs-sensor` package in your application via:
