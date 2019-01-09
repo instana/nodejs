@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.58.0
 - Support Node.js 11
 
 ## 1.57.0
