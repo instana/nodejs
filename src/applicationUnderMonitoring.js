@@ -11,10 +11,10 @@ var mainPackageJsonPath;
 exports.getMainPackageJson = function getMainPackageJson(cb) {
   if (parsedMainPackageJson !== undefined) {
     process.nextTick(function() {
-      // caution: Node.js v12 and lower treat null as undefined
+      // caution: Node.js v0.12 and lower treat null as undefined
       // when using process.nextTick(cb, null). This leads to
-      // logic differences. This needs to be kept until Node.js v12
-      // and Node.js v10 support is no longer required.
+      // logic differences. This needs to be kept until Node.js v0.12
+      // and Node.js v0.10 support is no longer required.
       cb(null, parsedMainPackageJson);
     });
   }
