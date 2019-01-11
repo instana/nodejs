@@ -1,5 +1,8 @@
 # Changelog
 
+## Unreleased
+- Add GRPC instrumentation ([grpc](https://www.npmjs.com/package/grpc)).
+
 ## 1.58.0
 - Support Node.js 11
 

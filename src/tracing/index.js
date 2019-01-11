@@ -28,6 +28,7 @@ var instrumentations = [
   './instrumentation/loggers/winston',
   './instrumentation/messaging/amqp',
   './instrumentation/messaging/kafka',
+  './instrumentation/protocols/grpc',
   './instrumentation/protocols/httpClient',
   './instrumentation/protocols/httpServer'
 ];

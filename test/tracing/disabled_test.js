@@ -5,7 +5,6 @@ var Promise = require('bluebird');
 
 var supportedVersion = require('../../src/tracing/index').supportedVersion;
 var config = require('../config');
-var utils = require('../utils');
 
 /**
  * Tests behaviour when the Instana Node.js sensor is active but tracing is disabled.
@@ -40,10 +39,8 @@ describe('disabled tracing', function() {
         return Promise.delay(500);
       })
       .then(function() {
-        return utils.retry(function() {
-          return agentStubControls.getSpans().then(function(spans) {
-            expect(spans).to.have.lengthOf(0);
-          });
+        return agentStubControls.getSpans().then(function(spans) {
+          expect(spans).to.have.lengthOf(0);
         });
       });
   });
