@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.59.0
 - Add GRPC instrumentation ([grpc](https://www.npmjs.com/package/grpc)).
 
 ## 1.58.0
