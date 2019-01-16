@@ -24,7 +24,7 @@ var app = express();
 
 var STATIC = !!process.env.GRPC_STATIC;
 var withMetadata = !!process.env.GRPC_WITH_METADATA;
-var PACKAGE_VERSION = process.env.GRPC_PACKAGE_VERSION || '=1.10.1';
+var PACKAGE_VERSION = require('./versionUnderTest')();
 var PROTO_PATH = path.join(__dirname, 'protos/test.proto');
 var logPrefix = 'GRPC Client (' + process.pid + '):\t';
 

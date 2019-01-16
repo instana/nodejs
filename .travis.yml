@@ -18,6 +18,11 @@ node_js:
   - v11
 
 before_script:
+  # When running tests in Node.js 8, we pin grpc to exactly 1.10.1.
+  # For more recent Node.js versions (>= 10) we use the latest 1.x as stated in package.json. We can't use grcp@1.10.1
+  # in Node.js 10 since it fails to build under Node.js >= 10. We still want to explicitly test the combination of
+  # Node.js 8 with grpc@1.10.1 for reasons.
+  - '([[ $(node -v) =~ ^v8.*$ ]] && npm install grpc@1.10.1) || true'
   - sudo /etc/init.d/mysql stop
   - sudo /etc/init.d/postgresql stop
   - docker-compose kill && docker-compose rm -f && docker-compose up -d

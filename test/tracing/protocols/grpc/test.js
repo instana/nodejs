@@ -2,9 +2,9 @@
 
 var expect = require('chai').expect;
 var Promise = require('bluebird');
+var semver = require('semver');
 
 var cls = require('../../../../src/tracing/cls');
-var supportedVersion = require('../../../../src/tracing/index').supportedVersion;
 var config = require('../../../config');
 var utils = require('../../../utils');
 
@@ -15,7 +15,7 @@ var serverControls;
 var clientControls;
 
 describe('tracing/grpc', function() {
-  if (!supportedVersion(process.versions.node)) {
+  if (!semver.satisfies(process.versions.node, '>=8.2.1')) {
     return;
   }
 
