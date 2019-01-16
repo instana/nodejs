@@ -1,11 +1,14 @@
-/* eslint-disable */
+'use strict';
 
 var bodyParser = require('body-parser');
 var express = require('express');
 var morgan = require('morgan');
+var bunyan = require('bunyan');
 var app = express();
 
-var logPrefix = 'Agent Stub (' + process.pid + '):\t';
+var logger = bunyan.createLogger({ name: 'agent-stub', pid: process.pid });
+// logger.level('debug');
+
 var extraHeaders = process.env.EXTRA_HEADERS ? process.env.EXTRA_HEADERS.split(',') : [];
 var secretsMatcher = process.env.SECRETS_MATCHER ? process.env.SECRETS_MATCHER : 'contains-ignore-case';
 var secretsList = process.env.SECRETS_LIST ? process.env.SECRETS_LIST.split(',') : ['key', 'pass', 'secret'];
@@ -20,7 +23,7 @@ var retrievedData = {
 };
 
 if (process.env.WITH_STDOUT) {
-  app.use(morgan(logPrefix + ':method :url :status'));
+  app.use(morgan('Agent Stub (' + process.pid + '):\t:method :url :status'));
 }
 
 app.use(
@@ -42,7 +45,7 @@ app.put('/com.instana.plugin.nodejs.discovery', function(req, res) {
   var pid = req.body.pid;
   discoveries[pid] = req.body;
 
-  log('New discovery %s with params', pid, req.body);
+  logger.debug('New discovery %s with params', pid, req.body);
 
   res.send({
     pid: pid,
@@ -57,7 +60,7 @@ app.put('/com.instana.plugin.nodejs.discovery', function(req, res) {
 app.head(
   '/com.instana.plugin.nodejs.:pid',
   checkExistenceOfKnownPid(function handleAnnounceCheck(req, res) {
-    log('Got announce check for pid: ', req.params.pid);
+    logger.debug('Got announce check for PID %s', req.params.pid);
     res.send('OK');
   })
 );
@@ -112,7 +115,7 @@ function checkExistenceOfKnownPid(fn) {
   return function(req, res) {
     var pid = req.params.pid;
     if (!discoveries[pid]) {
-      log('Rejecting access for pid ' + pid + ' as PID is not a known discovery');
+      logger.debug('Rejecting access for PID %s, not a known discovery', pid);
       return res.status(400).send('Unknown discovery with pid: ' + pid);
     }
     fn(req, res);
@@ -164,11 +167,5 @@ app.post('/request/:pid', function(req, res) {
 });
 
 app.listen(process.env.AGENT_PORT, function() {
-  log('Listening on port: ' + process.env.AGENT_PORT);
+  logger.info('Listening on port: %s', process.env.AGENT_PORT);
 });
-
-function log() {
-  var args = Array.prototype.slice.call(arguments);
-  args[0] = logPrefix + args[0];
-  console.log.apply(console, args);
-}

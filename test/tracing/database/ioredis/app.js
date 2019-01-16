@@ -7,7 +7,7 @@ var agentPort = process.env.AGENT_PORT;
 
 require('../../../../')({
   agentPort: agentPort,
-  level: 'info',
+  level: 'warn',
   tracing: {
     forceTransmissionStartingAt: 1
   }

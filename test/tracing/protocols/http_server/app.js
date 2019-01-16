@@ -4,7 +4,7 @@
 
 require('../../../../')({
   agentPort: process.env.AGENT_PORT,
-  level: 'info',
+  level: 'warn',
   tracing: {
     forceTransmissionStartingAt: 1
   }

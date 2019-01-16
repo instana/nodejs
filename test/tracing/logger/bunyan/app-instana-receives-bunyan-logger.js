@@ -8,7 +8,7 @@ var instana = require('../../../..');
 instana({
   agentPort: agentPort,
   logger: require('bunyan').createLogger({ name: 'app-logger' }),
-  level: 'info',
+  level: 'warn',
   tracing: {
     enabled: process.env.TRACING_ENABLED === 'true',
     forceTransmissionStartingAt: 1

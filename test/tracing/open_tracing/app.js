@@ -3,7 +3,7 @@
 var instana = require('../../../');
 instana({
   agentPort: process.env.AGENT_PORT,
-  level: 'info',
+  level: 'warn',
   serviceName: 'theFancyServiceYouWouldntBelieveActuallyExists',
   tracing: {
     enabled: process.env.TRACING_ENABLED === 'true',

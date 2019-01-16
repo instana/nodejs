@@ -6,7 +6,7 @@
 
 var instana = require('../../')({
   agentPort: process.env.AGENT_PORT,
-  level: 'debug',
+  level: 'warn',
   tracing: {
     timeBetweenHealthcheckCalls: 1000,
     enabled: process.env.TRACING_ENABLED === 'true',

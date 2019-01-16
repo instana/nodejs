@@ -17,7 +17,7 @@ var instana = require('../../../..');
 instana({
   agentPort: agentPort,
   logger: dummyLogger,
-  level: 'info',
+  level: 'warn',
   tracing: {
     enabled: process.env.TRACING_ENABLED === 'true',
     forceTransmissionStartingAt: 1
