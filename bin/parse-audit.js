@@ -23,6 +23,11 @@ process.stdin.on('readable', () => {
 process.stdin.on('end', () => {
   try {
     const auditReport = JSON.parse(raw);
+    if (auditReport.error) {
+      process.stderr.write('npm audit --json failed with an error report:\n');
+      process.stderr.write(JSON.stringify(auditReport, null, 2));
+      printHelpAndExit();
+    }
     if (!auditReport.advisories) {
       process.stderr.write('Incoming JSON has no advisories field.\n');
       printHelpAndExit();
@@ -52,9 +57,10 @@ process.stdin.on('end', () => {
 
 function printHelpAndExit() {
   process.stderr.write(
-    'parse-audit expects the output of ' +
-      'npm audit --json to be piped into it via stdin. If you did something ' +
-      'different, you did it wrong :-)\n\n'
+    '\n\nparse-audit expects the output of ' +
+      'npm audit --json to be piped into it via stdin, like this:\n' +
+      'npm audit --json | node bin/parse-audit.js\n' +
+      'If you did something different, you did it wrong :-)\n\n'
   );
   process.exit(1);
 }
