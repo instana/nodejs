@@ -29,7 +29,6 @@ app.get('/', function(req, res) {
 });
 
 app.get('/get', function(req, res) {
-  log('Getting document', req.query.id);
   client.get(
     {
       index: req.query.index || 'myindex',
@@ -47,7 +46,6 @@ app.get('/get', function(req, res) {
 });
 
 app.get('/search', function(req, res) {
-  log('Searching document', req.query.q);
   client
     .search({
       index: req.query.index || 'myindex',
@@ -64,8 +62,77 @@ app.get('/search', function(req, res) {
     );
 });
 
+app.get('/mget1', function(req, res) {
+  var ids = req.query.id;
+  if (!Array.isArray(ids) || ids.length < 2) {
+    return res.status(400).json({ error: 'You need to provide an array of at least two document IDs.' });
+  }
+  client.mget(
+    {
+      body: {
+        docs: [
+          { _index: req.query.index || 'myindex', _type: 'mytype', _id: ids[0] },
+          { _index: req.query.index || 'myindex', _type: 'mytype', _id: ids[1] }
+        ]
+      }
+    },
+    function(error, response) {
+      if (error) {
+        res.status(500).json(error);
+      } else {
+        res.json(response);
+      }
+    }
+  );
+});
+
+app.get('/mget2', function(req, res) {
+  var ids = req.query.id;
+  if (!Array.isArray(ids) || ids.length < 2) {
+    return res.status(400).json({ error: 'You need to provide an array of at least two document IDs.' });
+  }
+  client.mget(
+    {
+      index: req.query.index || 'myindex',
+      type: 'mytype',
+      body: {
+        ids: ids
+      }
+    },
+    function(error, response) {
+      if (error) {
+        res.status(500).json(error);
+      } else {
+        res.json(response);
+      }
+    }
+  );
+});
+
+app.get('/msearch', function(req, res) {
+  var queryStrings = req.query.q;
+  if (!Array.isArray(queryStrings) || queryStrings.length < 2) {
+    return res.status(400).json({ error: 'You need to provide an array of at least two query params' });
+  }
+  var query = {
+    body: [
+      { index: req.query.index || 'myindex', type: 'mytype' },
+      { query: { query_string: { query: req.query.q[0] } } },
+      { index: req.query.index || 'myindex', type: 'mytype' },
+      { query: { query_string: { query: req.query.q[1] } } }
+    ]
+  };
+  client.msearch(query).then(
+    function(response) {
+      res.json(response);
+    },
+    function(error) {
+      res.status(500).json(error);
+    }
+  );
+});
+
 app.post('/index', function(req, res) {
-  log('Indexing document', req.body);
   client
     .index({
       index: req.query.index || 'myindex',
@@ -73,7 +140,6 @@ app.post('/index', function(req, res) {
       body: req.body
     })
     .then(function(response) {
-      log('Refreshing index');
       return client.indices
         .refresh({
           index: '_all',
@@ -85,14 +151,13 @@ app.post('/index', function(req, res) {
             return response;
           },
           function(error) {
-            log('Index refresh failed.');
+            log('Index refresh failed.', error);
             throw error;
           }
         );
     })
     .then(
       function(response) {
-        log('Sending indexing response for document ' + response._id);
         res.json(response);
       },
       function(error) {

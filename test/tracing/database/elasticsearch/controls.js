@@ -70,6 +70,18 @@ exports.search = function(opts) {
   return requestWithPath('GET', '/search', opts);
 };
 
+exports.mget1 = function(opts) {
+  return requestWithPath('GET', '/mget1', opts);
+};
+
+exports.mget2 = function(opts) {
+  return requestWithPath('GET', '/mget2', opts);
+};
+
+exports.msearch = function(opts) {
+  return requestWithPath('GET', '/msearch', opts);
+};
+
 exports.searchAndGet = function(opts) {
   return requestWithPath('GET', '/searchAndGet', opts);
 };

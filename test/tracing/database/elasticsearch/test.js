@@ -257,6 +257,235 @@ describe('tracing/elasticsearch', function() {
       });
   });
 
+  it('must trace mget', function() {
+    var titleA = 'a' + Date.now();
+    var titleB = 'b' + Date.now();
+    var titleC = 'c' + Date.now();
+    var idA;
+    var idB;
+    var idC;
+    var response1;
+    var response2;
+
+    return expressElasticsearchControls
+      .index({
+        body: {
+          title: titleA
+        },
+        rejectWrongStatusCodes: true,
+        parentSpanId: '42',
+        traceId: '42'
+      })
+      .then(function(response) {
+        idA = response._id;
+        return expressElasticsearchControls.index({
+          body: {
+            title: titleB
+          },
+          rejectWrongStatusCodes: true,
+          parentSpanId: '43',
+          traceId: '43'
+        });
+      })
+      .then(function(response) {
+        idB = response._id;
+        return expressElasticsearchControls.index({
+          body: {
+            title: titleC
+          },
+          rejectWrongStatusCodes: true,
+          parentSpanId: '44',
+          traceId: '44'
+        });
+      })
+      .then(function(response) {
+        idC = response._id;
+        return utils.retry(function() {
+          return expressElasticsearchControls.mget1({
+            id: [idA, idB],
+            rejectWrongStatusCodes: true
+          });
+        });
+      })
+      .then(function(response) {
+        response1 = response;
+        return utils.retry(function() {
+          return expressElasticsearchControls.mget2({
+            id: [idB, idC],
+            rejectWrongStatusCodes: true
+          });
+        });
+      })
+      .then(function(response) {
+        response2 = response;
+        expect(response1.docs[0]._source.title).to.deep.equal(titleA);
+        expect(response1.docs[1]._source.title).to.deep.equal(titleB);
+        expect(response2.docs[0]._source.title).to.deep.equal(titleB);
+        expect(response2.docs[1]._source.title).to.deep.equal(titleC);
+        return utils.retry(function() {
+          return agentStubControls.getSpans().then(function(spans) {
+            utils.expectOneMatching(spans, function(span) {
+              expect(span.t).to.equal('42');
+              expect(span.n).to.equal('elasticsearch');
+              expect(span.f.e).to.equal(String(expressElasticsearchControls.getPid()));
+              expect(span.async).to.equal(false);
+              expect(span.error).to.equal(false);
+              expect(span.data.elasticsearch.cluster).to.be.a('string');
+              expect(span.data.elasticsearch.action).to.equal('index');
+              expect(span.data.elasticsearch.type).to.equal('mytype');
+              expect(span.data.elasticsearch.index).to.equal('myindex');
+            });
+            utils.expectOneMatching(spans, function(span) {
+              expect(span.t).to.equal('43');
+              expect(span.n).to.equal('elasticsearch');
+              expect(span.f.e).to.equal(String(expressElasticsearchControls.getPid()));
+              expect(span.async).to.equal(false);
+              expect(span.error).to.equal(false);
+              expect(span.data.elasticsearch.cluster).to.be.a('string');
+              expect(span.data.elasticsearch.action).to.equal('index');
+              expect(span.data.elasticsearch.type).to.equal('mytype');
+              expect(span.data.elasticsearch.index).to.equal('myindex');
+            });
+            var mget1HttpEntry = utils.expectOneMatching(spans, function(span) {
+              expect(span.n).to.equal('node.http.server');
+              expect(span.f.e).to.equal(String(expressElasticsearchControls.getPid()));
+              expect(span.async).to.equal(false);
+              expect(span.error).to.equal(false);
+              expect(span.data.http.url).to.equal('/mget1');
+            });
+            utils.expectOneMatching(spans, function(span) {
+              expect(span.t).to.equal(mget1HttpEntry.t);
+              expect(span.p).to.equal(mget1HttpEntry.s);
+              expect(span.n).to.equal('elasticsearch');
+              expect(span.f.e).to.equal(String(expressElasticsearchControls.getPid()));
+              expect(span.async).to.equal(false);
+              expect(span.error).to.equal(false);
+              expect(span.data.elasticsearch.cluster).to.be.a('string');
+              expect(span.data.elasticsearch.action).to.equal('mget');
+              expect(span.data.elasticsearch.type).to.equal('mytype');
+              expect(span.data.elasticsearch.index).to.equal('myindex');
+              expect(span.data.elasticsearch.id).to.equal(idA + ',' + idB);
+            });
+            var mget2HttpEntry = utils.expectOneMatching(spans, function(span) {
+              expect(span.n).to.equal('node.http.server');
+              expect(span.f.e).to.equal(String(expressElasticsearchControls.getPid()));
+              expect(span.async).to.equal(false);
+              expect(span.error).to.equal(false);
+              expect(span.data.http.url).to.equal('/mget2');
+            });
+            utils.expectOneMatching(spans, function(span) {
+              expect(span.t).to.equal(mget2HttpEntry.t);
+              expect(span.p).to.equal(mget2HttpEntry.s);
+              expect(span.n).to.equal('elasticsearch');
+              expect(span.f.e).to.equal(String(expressElasticsearchControls.getPid()));
+              expect(span.async).to.equal(false);
+              expect(span.error).to.equal(false);
+              expect(span.data.elasticsearch.cluster).to.be.a('string');
+              expect(span.data.elasticsearch.action).to.equal('mget');
+              expect(span.data.elasticsearch.type).to.equal('mytype');
+              expect(span.data.elasticsearch.index).to.equal('myindex');
+              expect(span.data.elasticsearch.id).to.equal(idB + ',' + idC);
+            });
+          });
+        });
+      });
+  });
+
+  it('must trace msearch', function() {
+    var titleA = 'a' + Date.now();
+    var titleB = 'b' + Date.now();
+    var titleC = 'c' + Date.now();
+
+    return expressElasticsearchControls
+      .index({
+        body: {
+          title: titleA
+        },
+        rejectWrongStatusCodes: true,
+        parentSpanId: '42',
+        traceId: '42'
+      })
+      .then(function() {
+        return expressElasticsearchControls.index({
+          body: {
+            title: titleB
+          },
+          rejectWrongStatusCodes: true,
+          parentSpanId: '43',
+          traceId: '43'
+        });
+      })
+      .then(function() {
+        return expressElasticsearchControls.index({
+          body: {
+            title: titleC
+          },
+          rejectWrongStatusCodes: true,
+          parentSpanId: '44',
+          traceId: '44'
+        });
+      })
+      .then(function() {
+        return utils.retry(function() {
+          return expressElasticsearchControls.msearch({
+            q: ['title:' + titleA, 'title:' + titleB],
+            rejectWrongStatusCodes: true
+          });
+        });
+      })
+      .then(function(response) {
+        expect(response.responses).to.exist;
+        expect(response.responses[0].hits.total).to.equal(1);
+        expect(response.responses[1].hits.total).to.equal(1);
+        return utils.retry(function() {
+          return agentStubControls.getSpans().then(function(spans) {
+            utils.expectOneMatching(spans, function(span) {
+              expect(span.t).to.equal('42');
+              expect(span.n).to.equal('elasticsearch');
+              expect(span.f.e).to.equal(String(expressElasticsearchControls.getPid()));
+              expect(span.async).to.equal(false);
+              expect(span.error).to.equal(false);
+              expect(span.data.elasticsearch.cluster).to.be.a('string');
+              expect(span.data.elasticsearch.action).to.equal('index');
+              expect(span.data.elasticsearch.type).to.equal('mytype');
+              expect(span.data.elasticsearch.index).to.equal('myindex');
+            });
+            utils.expectOneMatching(spans, function(span) {
+              expect(span.t).to.equal('43');
+              expect(span.n).to.equal('elasticsearch');
+              expect(span.f.e).to.equal(String(expressElasticsearchControls.getPid()));
+              expect(span.async).to.equal(false);
+              expect(span.error).to.equal(false);
+              expect(span.data.elasticsearch.cluster).to.be.a('string');
+              expect(span.data.elasticsearch.action).to.equal('index');
+              expect(span.data.elasticsearch.type).to.equal('mytype');
+              expect(span.data.elasticsearch.index).to.equal('myindex');
+            });
+            var getEntrySpan = utils.expectOneMatching(spans, function(span) {
+              expect(span.n).to.equal('node.http.server');
+              expect(span.f.e).to.equal(String(expressElasticsearchControls.getPid()));
+              expect(span.async).to.equal(false);
+              expect(span.error).to.equal(false);
+              expect(span.data.http.url).to.equal('/msearch');
+            });
+            utils.expectOneMatching(spans, function(span) {
+              expect(span.t).to.equal(getEntrySpan.t);
+              expect(span.p).to.equal(getEntrySpan.s);
+              expect(span.n).to.equal('elasticsearch');
+              expect(span.f.e).to.equal(String(expressElasticsearchControls.getPid()));
+              expect(span.async).to.equal(false);
+              expect(span.error).to.equal(false);
+              expect(span.data.elasticsearch.cluster).to.be.a('string');
+              expect(span.data.elasticsearch.action).to.equal('msearch');
+              expect(span.data.elasticsearch.type).to.equal('mytype');
+              expect(span.data.elasticsearch.index).to.equal('myindex');
+              expect(span.data.elasticsearch.hits).to.equal(2);
+            });
+          });
+        });
+      });
+  });
+
   it('must not consider queries as failed when there are no hits', function() {
     return expressElasticsearchControls
       .index({
