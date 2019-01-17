@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.60.0
 - Instrument Elasticsearch operations msearch and mget ([#117](https://github.com/instana/nodejs-sensor/pull/117), thanks to @DtRWoS).
 
 ## 1.59.0
