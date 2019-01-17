@@ -1,10 +1,13 @@
 # Changelog
 
+## Unreleased
+- Instrument Elasticsearch operations msearch and mget ([#117](https://github.com/instana/nodejs-sensor/pull/117), thanks to @DtRWoS).
+
 ## 1.59.0
 - Add GRPC instrumentation ([grpc](https://www.npmjs.com/package/grpc)).
 
 ## 1.58.0
-- Support Node.js 11
+- Support Node.js 11.
 
 ## 1.57.0
 - Provide an API to set a logger after initialization to resolve init/logger cycle.
@@ -15,9 +18,9 @@
 - Left pad generated IDs with '0'.
 
 ## 1.55.2
-- Fix: Add HTTP query params for HTTP exits
-- Fix: Do not capture HTTP headers for HTTP exits (only for entries)
-- Fix: Capture erroneous span on synchronous exceptions in HTTP client (like malformed URL)
+- Fix: Add HTTP query params for HTTP exits.
+- Fix: Do not capture HTTP headers for HTTP exits (only for entries).
+- Fix: Capture erroneous span on synchronous exceptions in HTTP client (like malformed URL).
 
 ## 1.55.1
 - Fix method name of NoopSpanHandle.
@@ -26,7 +29,7 @@
 - Provide API to end spans manually to allow capturing of child exit spans for message consumers (RabbitMQ/amqplib, Kafka).
 
 ## 1.54.2
-- Fix broken trace context in some MongoDB usage scenarios
+- Fix broken trace context in some MongoDB usage scenarios.
 
 ## 1.54.1
 - RabbitMQ/amqplib: Small fix for TLS AMQP Urls (amqps).
