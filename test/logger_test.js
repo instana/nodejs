@@ -5,6 +5,12 @@
 
 var expect = require('chai').expect;
 var bunyan = require('bunyan');
+var semver = require('semver');
+var pino;
+if (semver.gte(process.versions.node, '6.0.0')) {
+  // pino needs Node.js >= 6
+  pino = require('pino');
+}
 
 var log = require('../src/logger');
 
@@ -53,6 +59,29 @@ describe('logger', function() {
     var logger = log.getLogger('childName');
 
     expect(logger.level()).to.equal(50);
+  });
+
+  it('should not detect pino as bunyan', function() {
+    if (!pino) {
+      // This test is skipped in Node.js 4 since pino only supports Node.js >= 6.
+      return;
+    }
+    var pinoLogger = pino();
+    log.init({ logger: pinoLogger });
+    var logger = log.getLogger('myLogger');
+    expect(logger).to.not.be.an.instanceOf(bunyan);
+    expect(logger.constructor.name).to.equal('Pino');
+  });
+
+  it('should create a child logger for pino', function() {
+    if (!pino) {
+      // This test is skipped in Node.js 4 since pino only supports Node.js >= 6.
+      return;
+    }
+    var pinoLogger = pino();
+    log.init({ logger: pinoLogger });
+    var logger = log.getLogger('myLogger');
+    expect(logger === pinoLogger).to.be.not.true;
   });
 
   it('should not accept non-bunyan loggers without necessary logging functions', function() {
