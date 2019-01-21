@@ -74,14 +74,14 @@ function instrumentedMethod(ctx, originalFunction, originalArgs, stackTraceRef, 
 
     var originalCallback;
     if (originalArgs.length >= 2 && typeof originalArgs[1] === 'function') {
-      originalCallback = cls.ns.bind(originalArgs[1]);
+      originalCallback = originalArgs[1];
     }
 
     if (originalCallback) {
       // original call had a callback argument, replace it with our wrapper
       var wrappedCallback = function(error) {
         finishSpan(error, span);
-        return cls.ns.bind(originalCallback).apply(this, arguments);
+        return originalCallback.apply(this, arguments);
       };
       originalArgs[1] = cls.ns.bind(wrappedCallback);
     }

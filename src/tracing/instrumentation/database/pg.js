@@ -62,10 +62,13 @@ function instrumentedQuery(ctx, originalQuery, argsForOriginalQuery) {
     };
 
     var originalCallback;
+    var callbackIndex = -1;
     if (typeof argsForOriginalQuery[1] === 'function') {
-      originalCallback = cls.ns.bind(argsForOriginalQuery[1]);
+      originalCallback = argsForOriginalQuery[1];
+      callbackIndex = 1;
     } else {
-      originalCallback = cls.ns.bind(argsForOriginalQuery[2]);
+      originalCallback = argsForOriginalQuery[2];
+      callbackIndex = 2;
     }
 
     var wrappedCallback = function(error) {
@@ -79,14 +82,12 @@ function instrumentedQuery(ctx, originalQuery, argsForOriginalQuery) {
       span.transmit();
 
       if (originalCallback) {
-        return cls.ns.bind(originalCallback).apply(this, arguments);
+        return originalCallback.apply(this, arguments);
       }
     };
 
-    if (typeof argsForOriginalQuery[1] === 'function') {
-      argsForOriginalQuery[1] = cls.ns.bind(wrappedCallback);
-    } else {
-      argsForOriginalQuery[2] = cls.ns.bind(wrappedCallback);
+    if (callbackIndex >= 0) {
+      argsForOriginalQuery[callbackIndex] = cls.ns.bind(wrappedCallback);
     }
     return originalQuery.apply(ctx, argsForOriginalQuery);
   });

@@ -1,5 +1,8 @@
 # Changelog
 
+## Unreleased
+- Fix duplicated cls binds in postgres and mssql instrumentation.
+
 ## 1.60.1
 - Fix error when a Pino logger was passed via config (#119).
 

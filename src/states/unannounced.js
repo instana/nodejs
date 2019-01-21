@@ -22,7 +22,7 @@ module.exports = {
 function tryToAnnounce(ctx) {
   agentConnection.announceNodeSensor(function(err, rawResponse) {
     if (err) {
-      logger.info('Announce attempt failed: %s. Will rety in %sms', err.message, retryDelay);
+      logger.info('Announce attempt failed: %s. Will retry in %sms', err.message, retryDelay);
       setTimeout(tryToAnnounce, retryDelay, ctx);
       return;
     }
@@ -32,7 +32,7 @@ function tryToAnnounce(ctx) {
       response = JSON.parse(rawResponse);
     } catch (e) {
       logger.warn(
-        'Failed to JSON.parse agent response. Response was %s. Will retriy in %sms',
+        'Failed to JSON.parse agent response. Response was %s. Will retry in %sms',
         rawResponse,
         retryDelay,
         e
