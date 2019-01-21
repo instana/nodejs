@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.60.2
 - Fix duplicated cls binds in postgres and mssql instrumentation.
 
 ## 1.60.1
