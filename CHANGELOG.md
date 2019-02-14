@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.60.3
+- Fix an issue in the GRPC instrumentation when an options object is provided.
+
 ## 1.60.2
 - Fix duplicated cls binds in postgres and mssql instrumentation.
 

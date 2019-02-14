@@ -228,17 +228,21 @@ function instrumentedClientMethod(ctx, originalFunction, originalArgs, rpcPath, 
  * we are tracing, that is, span != null).
  */
 function modifyArgs(originalArgs, span, responseStream) {
-  // find callback and metadata in original arguments
-  var callbackIndex = -1;
+  // Find callback, metadata and options in original arguments, the parameters can be:
+  // (message, metadata, options, callback) but all of them except the message can be optional.
+  // All of
   var metadataIndex = -1;
+  var optionsIndex = -1;
+  var callbackIndex = -1;
   for (var i = originalArgs.length - 1; i >= 0; i--) {
     if (originalArgs[i] && originalArgs[i].constructor && originalArgs[i].constructor.name === 'Metadata') {
       metadataIndex = i;
-    }
+    } else if (!responseStream && typeof originalArgs[i] === 'function') {
     // If the response is streamed there ought to be no callback. If if it was passed, it won't be called, so in this
     // case we ignore all function arguments.
-    if (!responseStream && typeof originalArgs[i] === 'function') {
       callbackIndex = i;
+    } else if (i > 0 && typeof originalArgs[i] === 'object') {
+      optionsIndex = i;
     }
   }
 
@@ -265,23 +269,30 @@ function modifyArgs(originalArgs, span, responseStream) {
 
   var metadata;
   if (metadataIndex >= 0) {
+    // If metadata has been provided, modify the existing metadata object.
     metadata = originalArgs[metadataIndex];
+  } else if (Metadata && optionsIndex >= 0) {
+    // If options have been given but no metadata, insert the new metadata object directly before the options parameter.
+    metadata = new Metadata();
+    originalArgs.splice(optionsIndex, 0, metadata);
   } else if (Metadata && callbackIndex >= 0) {
-    // insert new metadata object as second to last argument, before the callback
+    // If neither options nor metadata have been provided but a callback, insert the new metadata object directly
+    // before the callback.
     metadata = new Metadata();
     originalArgs.splice(callbackIndex, 0, metadata);
   } else if (Metadata) {
-    // append new metadata object as last argument
+    // If neither options nor metadata nor a callback have been provided, append the new metadata object as last
+    // argument.
     metadata = new Metadata();
     originalArgs.push(metadata);
   }
 
-  if (span) {
+  if (span && metadata) {
     // we are actively tracing, so we add x-instana-t, x-instana-s and set x-instana-l: 1
     metadata.add(tracingConstants.spanIdHeaderName, span.s);
     metadata.add(tracingConstants.traceIdHeaderName, span.t);
     metadata.add(tracingConstants.traceLevelHeaderName, '1');
-  } else {
+  } else if (metadata) {
     // tracing is suppressed, so we only set x-instana-l: 0
     metadata.add(tracingConstants.traceLevelHeaderName, '0');
   }
