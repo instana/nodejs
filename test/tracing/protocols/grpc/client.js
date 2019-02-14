@@ -24,6 +24,7 @@ var app = express();
 
 var STATIC = !!process.env.GRPC_STATIC;
 var withMetadata = !!process.env.GRPC_WITH_METADATA;
+var withOptions = !!process.env.GRPC_WITH_OPTIONS;
 var PACKAGE_VERSION = require('./versionUnderTest')();
 var PROTO_PATH = path.join(__dirname, 'protos/test.proto');
 var logPrefix = 'GRPC Client (' + process.pid + '):\t';
@@ -34,6 +35,15 @@ var makeUnaryCall;
 var startServerSideStreaming;
 var startClientSideStreaming;
 var startBidiStreaming;
+
+var loggingInterceptor = function(options, nextCall) {
+  return new grpc.InterceptingCall(nextCall(options), {
+    sendMessage: function(message, next) {
+      pinoLogger.warn('intercepted', message);
+      next(message);
+    }
+  });
+};
 
 switch (PACKAGE_VERSION) {
   case '=1.10.1':
@@ -122,9 +132,14 @@ function runStaticModernClient() {
 
 function dynamicUnaryCall(cancel, triggerError, cb) {
   var parameter = triggerError ? 'error' : 'request';
+  var options = { interceptors: [loggingInterceptor] };
   var call;
-  if (withMetadata) {
+  if (withMetadata && withOptions) {
+    call = client.makeUnaryCall({ parameter: parameter }, createMetadata(), options, cb);
+  } else if (withMetadata) {
     call = client.makeUnaryCall({ parameter: parameter }, createMetadata(), cb);
+  } else if (withOptions) {
+    call = client.makeUnaryCall({ parameter: parameter }, options, cb);
   } else {
     call = client.makeUnaryCall({ parameter: parameter }, cb);
   }

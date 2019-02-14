@@ -27,10 +27,12 @@ describe('tracing/grpc', function() {
 
   ['dynamic', 'static'].forEach(function(codeGenMode) {
     [false, true].forEach(function(withMetadata) {
-      registerSuite.bind(this)(codeGenMode, withMetadata);
+      [false, true].forEach(function(withOptions) {
+        registerSuite.bind(this)(codeGenMode, withMetadata, withOptions);
+      });
     });
   });
-  // registerSuite.bind(this)('dynamic', true);
+  // registerSuite.bind(this)('dynamic', true, true);
 
   describe('suppressed', function() {
     agentControls.registerTestHooks();
@@ -61,8 +63,10 @@ describe('tracing/grpc', function() {
   });
 });
 
-function registerSuite(codeGenMode, withMetadata) {
-  describe('codegen: ' + codeGenMode + ', with metadata: ' + withMetadata, function() {
+function registerSuite(codeGenMode, withMetadata, withOptions) {
+  describe('codegen: ' + codeGenMode +
+           ', with metadata: ' + withMetadata +
+           ', with options: ' + withOptions, function() {
     var env = {};
     if (codeGenMode === 'static') {
       env.GRPC_STATIC = true;
@@ -70,7 +74,9 @@ function registerSuite(codeGenMode, withMetadata) {
     if (withMetadata) {
       env.GRPC_WITH_METADATA = true;
     }
-
+    if (withOptions) {
+      env.GRPC_WITH_OPTIONS = true;
+    }
     agentControls.registerTestHooks();
     serverControls = new ServerControls({
       agentControls: agentControls,
@@ -189,6 +195,9 @@ function registerSuite(codeGenMode, withMetadata) {
       var grpcEntry = utils.expectOneMatching(spans, checkGrpcServerSpan.bind(null, grpcExit, url, cancel, erroneous));
       utils.expectOneMatching(spans, checkLogSpanDuringGrpcEntry.bind(null, grpcEntry, url, erroneous));
     }
+    // Would be nice to also check for the log span from the interceptor but will actually never be created because at
+    // that time, the parent span is an exit span (the GRPC exit). If only log spans were intermediate spans :-)
+    // utils.expectOneMatching(spans, checkLogSpanFromClientInterceptor.bind(null, httpEntry));
     utils.expectOneMatching(spans, checkLogSpanAfterGrpcExit.bind(null, httpEntry, url, cancel, erroneous));
   }
 
