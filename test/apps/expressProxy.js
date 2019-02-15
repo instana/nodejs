@@ -10,7 +10,7 @@ require('../../')({
   tracing: {
     enabled: true,
     forceTransmissionStartingAt: 1,
-    stackTraceLength: process.env.STACK_TRACE_LENGTH != null ? parseInt(process.env.STACK_TRACE_LENGTH, 10) : 10
+    stackTraceLength: process.env.STACK_TRACE_LENGTH != null ? process.env.STACK_TRACE_LENGTH : 10
   }
 });
 
