@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.61.0
+- Accept values of type string for config.tracing.stackTraceLength.
+
 ## 1.60.3
 - Fix an issue in the GRPC instrumentation when an options object is provided.
 
