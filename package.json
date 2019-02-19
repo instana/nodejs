@@ -129,7 +129,7 @@
   },
   "devDependencies": {
     "@grpc/proto-loader": "^0.3.0",
-    "admin": "^1.4.0",
+    "admin": "^1.4.1",
     "admin-plugin-healthcheck": "^1.1.0",
     "amqplib": "^0.5.2",
     "async": "^2.6.1",
