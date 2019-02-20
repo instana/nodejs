@@ -15,34 +15,42 @@ exports.init = function() {
 };
 
 function instrumentMysql(mysql) {
-  instrumentConnection(Object.getPrototypeOf(mysql.createConnection({})));
+  instrumentConnection(Object.getPrototypeOf(mysql.createConnection({})), false);
   instrumentPool(Object.getPrototypeOf(mysql.createPool({})));
 }
 
 function instrumentMysql2(mysql) {
-  instrumentConnection(mysql.Connection.prototype);
+  instrumentConnection(mysql.Connection.prototype, true);
   mysql.Pool && instrumentPool(mysql.Pool.prototype);
 }
 
 function instrumentMysql2WithPromises(mysql) {
-  // Currently only pooled connection will be instrumented
+  // Currently only pooled connections will be instrumented.
   instrumentPoolWithPromises(mysql);
 }
 
 function instrumentPool(Pool) {
   shimmer.wrap(Pool, 'query', shimQuery);
+  // There is also an 'execute' method on the pool object but it uses the connection internally, so we do not need to
+  // it. This is handled by the instrumented methods on Connection. We do need to instrument 'pool.query', though.
   shimmer.wrap(Pool, 'getConnection', shimGetConnection);
 }
 
-function instrumentConnection(Connection) {
+function instrumentConnection(Connection, mysql2) {
   shimmer.wrap(Connection, 'query', shimQuery);
+  if (mysql2) {
+    shimmer.wrap(Connection, 'execute', shimExecute);
+  }
 }
 
 function instrumentPoolWithPromises(mysql) {
   shimmer.wrap(mysql, 'createPool', function(original) {
     return function() {
       var Pool = original.apply(this, arguments);
-      shimmer.wrap(Object.getPrototypeOf(Pool), 'getConnection', shimPromiseConnection);
+      var poolPrototype = Object.getPrototypeOf(Pool);
+      shimmer.wrap(poolPrototype, 'getConnection', shimPromiseConnection);
+      shimmer.wrap(poolPrototype, 'query', shimPromiseQuery);
+      shimmer.wrap(poolPrototype, 'execute', shimPromiseExecute);
       return Pool;
     };
   });
@@ -51,7 +59,16 @@ function instrumentPoolWithPromises(mysql) {
 function shimQuery(original) {
   return function() {
     if (isActive && cls.isTracing()) {
-      return instrumentedQuery(this, original, arguments[0], arguments[1], arguments[2]);
+      return instrumentedAccessFunction(this, original, arguments[0], arguments[1], arguments[2]);
+    }
+    return original.apply(this, arguments);
+  };
+}
+
+function shimExecute(original) {
+  return function() {
+    if (isActive && cls.isTracing()) {
+      return instrumentedAccessFunction(this, original, arguments[0], arguments[1], arguments[2]);
     }
     return original.apply(this, arguments);
   };
@@ -60,21 +77,37 @@ function shimQuery(original) {
 function shimPromiseQuery(originalQuery) {
   return function() {
     if (isActive && cls.isTracing()) {
-      return instrumentedQuery(this, originalQuery, arguments[0], arguments[1], null, true);
+      return instrumentedAccessFunction(this, originalQuery, arguments[0], arguments[1], null, true);
     }
     return originalQuery.apply(this, arguments);
   };
 }
 
-function instrumentedQuery(ctx, originalQuery, statementOrOpts, valuesOrCallback, optCallback, isPromiseImpl) {
-  var argsForOriginalQuery = [statementOrOpts, valuesOrCallback];
+function shimPromiseExecute(originalExecute) {
+  return function() {
+    if (isActive && cls.isTracing()) {
+      return instrumentedAccessFunction(this, originalExecute, arguments[0], arguments[1], null, true);
+    }
+    return originalExecute.apply(this, arguments);
+  };
+}
+
+function instrumentedAccessFunction(
+  ctx,
+  originalFunction,
+  statementOrOpts,
+  valuesOrCallback,
+  optCallback,
+  isPromiseImpl
+) {
+  var originalArgs = [statementOrOpts, valuesOrCallback];
   if (typeof optCallback !== 'undefined') {
-    argsForOriginalQuery.push(optCallback);
+    originalArgs.push(optCallback);
   }
 
   var parentSpan = cls.getCurrentSpan();
   if (cls.isExitSpan(parentSpan)) {
-    return originalQuery.apply(ctx, argsForOriginalQuery);
+    return originalFunction.apply(ctx, originalArgs);
   }
 
   var host;
@@ -101,7 +134,7 @@ function instrumentedQuery(ctx, originalQuery, statementOrOpts, valuesOrCallback
   return cls.ns.runAndReturn(function() {
     var span = cls.startSpan('mysql', cls.EXIT);
     span.b = { s: 1 };
-    span.stack = tracingUtil.getStackTrace(instrumentedQuery);
+    span.stack = tracingUtil.getStackTrace(instrumentedAccessFunction);
     span.data = {
       mysql: {
         stmt: tracingUtil.shortenDatabaseStatement(
@@ -115,7 +148,7 @@ function instrumentedQuery(ctx, originalQuery, statementOrOpts, valuesOrCallback
     };
 
     if (isPromiseImpl) {
-      var resultPromise = originalQuery.apply(ctx, argsForOriginalQuery);
+      var resultPromise = originalFunction.apply(ctx, originalArgs);
 
       resultPromise
         .then(function(result) {
@@ -136,14 +169,14 @@ function instrumentedQuery(ctx, originalQuery, statementOrOpts, valuesOrCallback
     }
 
     // no promise, continue with standard instrumentation
-    var originalCallback = argsForOriginalQuery[argsForOriginalQuery.length - 1];
+    var originalCallback = originalArgs[originalArgs.length - 1];
     var hasCallback = false;
     if (typeof originalCallback === 'function') {
       originalCallback = cls.ns.bind(originalCallback);
       hasCallback = true;
     }
 
-    argsForOriginalQuery[argsForOriginalQuery.length - 1] = function onQueryResult(error) {
+    originalArgs[originalArgs.length - 1] = function onResult(error) {
       if (error) {
         span.ec = 1;
         span.error = true;
@@ -158,7 +191,7 @@ function instrumentedQuery(ctx, originalQuery, statementOrOpts, valuesOrCallback
       }
     };
 
-    return originalQuery.apply(ctx, argsForOriginalQuery);
+    return originalFunction.apply(ctx, originalArgs);
   });
 }
 
@@ -172,6 +205,7 @@ function shimPromiseConnection(original) {
   return function getConnection() {
     return original.apply(this, arguments).then(function(connection) {
       shimmer.wrap(connection, 'query', shimPromiseQuery);
+      shimmer.wrap(connection, 'execute', shimPromiseExecute);
 
       return connection;
     });

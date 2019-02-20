@@ -1,5 +1,8 @@
 # Changelog
 
+## Unreleased
+- Fix: Add missing instrumentation hooks for mysql/mysql2#execute.
+
 ## 1.61.0
 - Accept values of type string for config.tracing.stackTraceLength.
 
