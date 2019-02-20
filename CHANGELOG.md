@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.61.1
 - Fix: Add missing instrumentation hooks for mysql/mysql2#execute.
 
 ## 1.61.0
