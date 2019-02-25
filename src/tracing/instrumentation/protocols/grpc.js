@@ -156,7 +156,7 @@ function instrumentedMakeClientConstructor(originalFunction) {
 }
 
 function shimClientMethod(rpcPath, requestStream, responseStream, originalFunction) {
-  return function() {
+  function shimmedFunction() {
     var parentSpan = cls.getCurrentSpan();
     var isTracing = isActive && cls.isTracing() && parentSpan && cls.isEntrySpan(parentSpan);
     var isSuppressed = cls.tracingLevel() === '0';
@@ -175,7 +175,11 @@ function shimClientMethod(rpcPath, requestStream, responseStream, originalFuncti
       }
     }
     return originalFunction.apply(this, arguments);
-  };
+  }
+  Object.keys(originalFunction).forEach(function(attribute) {
+    shimmedFunction[attribute] = originalFunction[attribute];
+  });
+  return shimmedFunction;
 }
 
 function instrumentedClientMethod(ctx, originalFunction, originalArgs, rpcPath, requestStream, responseStream) {

@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Fix for GRPC instrumentation: Add original attributes to shimmed client method.
+
 ## 1.61.1
 - Fix: Add missing instrumentation hooks for mysql/mysql2#execute.
 
