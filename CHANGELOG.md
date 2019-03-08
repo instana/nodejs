@@ -1,7 +1,6 @@
 # Changelog
 
-## Unreleased
-
+## 1.61.2
 - Fix for GRPC instrumentation: Add original attributes to shimmed client method.
 
 ## 1.61.1
