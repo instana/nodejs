@@ -1,6 +1,6 @@
 {
   "name": "instana-nodejs-sensor",
-  "version": "1.61.1",
+  "version": "1.61.2",
   "description": "The Instana Node.js sensor",
   "main": "src/index.js",
   "files": [
