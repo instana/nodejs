@@ -1,0 +1,14 @@
+{
+  "name": "dummy",
+  "version": "1.0.0",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js"
+  },
+  "dependencies": {
+    "dotenv": "^5.0.1",
+    "express": "^4.16.3",
+    "instana-nodejs-sensor": "latest",
+    "request": "^2.85.0"
+  }
+}

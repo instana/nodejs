@@ -13,7 +13,7 @@
     "test:mocha": "mocha --reporter spec $(find src test -name '*test.js')",
     "test:debug": "WITH_STDOUT=true DEBUG=kafka-node:* npm run test:mocha",
     "test:lint": "bin/run-eslint.sh",
-    "test:eslint": "eslint src test",
+    "test:eslint": "eslint src test dummy-app",
     "dev": "node -e 'require(\".\")({agentPort: process.env.AGENT_PORT || 42699})' | bunyan",
     "dev-to-agent-stub": "AGENT_PORT=3210 npm run dev",
     "agent-stub": "AGENT_PORT=3210 node test/apps/agentStub.js",
