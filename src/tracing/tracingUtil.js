@@ -1,9 +1,10 @@
 'use strict';
 
+var crypto = require('crypto');
 var stackTrace = require('../util/stackTrace');
 var agentOpts = require('../agent/opts');
 var pidStore = require('../pidStore');
-var leftPad = require('./leftPad');
+
 var logger;
 logger = require('../logger').getLogger('tracing/util', function(newLogger) {
   logger = newLogger;
@@ -23,7 +24,7 @@ exports.init = function(config) {
       } else {
         logger.warn(
           'The value of config.tracing.stackTraceLength ("%s") has type string and cannot be parsed to a numerical ' +
-          'value. Assuming the default stack trace length %s.',
+            'value. Assuming the default stack trace length %s.',
           config.tracing.stackTraceLength,
           defaultStackTraceLength
         );
@@ -32,8 +33,8 @@ exports.init = function(config) {
     } else {
       logger.warn(
         'The value of config.tracing.stackTraceLength has the non-supported type %s (the value is "%s"). Assuming ' +
-        'the default stack trace length %s.',
-        (typeof config.tracing.stackTraceLength),
+          'the default stack trace length %s.',
+        typeof config.tracing.stackTraceLength,
         config.tracing.stackTraceLength,
         defaultStackTraceLength
       );
@@ -70,16 +71,19 @@ exports.getStackTrace = function getStackTrace(referenceFunction) {
 
 exports.generateRandomTraceId = function generateRandomTraceId() {
   // Note: As soon as all Instana tracers support 128bit trace IDs we can generate a string of length 32 here.
-  return generateRandomId(16);
+  return exports.generateRandomId(16);
 };
 
 exports.generateRandomSpanId = function generateRandomSpanId() {
-  return generateRandomId(16);
+  return exports.generateRandomId(16);
 };
 
-function generateRandomId(length) {
-  return leftPad(Math.floor(Math.random() * Number.MAX_SAFE_INTEGER).toString(length), length);
-}
+exports.generateRandomId = function(length) {
+  return crypto
+    .randomBytes(Math.ceil(length / 2))
+    .toString('hex')
+    .slice(0, length);
+};
 
 exports.getErrorDetails = function getErrorDetails(err) {
   if (err == null) {

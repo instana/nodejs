@@ -1,5 +1,8 @@
 # Changelog
 
+## Unreleased
+- Improve generated IDs (span ID, trace ID).
+
 ## 1.61.2
 - Fix for GRPC instrumentation: Add original attributes to shimmed client method.
 
