@@ -51,7 +51,8 @@ function enter(ctx) {
           agentHost,
           retryTimeoutMillis
         );
-        setTimeout(enter, retryTimeoutMillis, ctx);
+        var defaultGatewayRetryTimeout = setTimeout(enter, retryTimeoutMillis, ctx);
+        defaultGatewayRetryTimeout.unref();
         return;
       }
 
@@ -72,7 +73,8 @@ function enter(ctx) {
           defaultGateway,
           retryTimeoutMillis
         );
-        setTimeout(enter, retryTimeoutMillis, ctx);
+        var checkHostRetryTimeout = setTimeout(enter, retryTimeoutMillis, ctx);
+        checkHostRetryTimeout.unref();
       });
     });
   });

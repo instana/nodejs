@@ -8,8 +8,8 @@ logger = require('../../../logger').getLogger('tracing/grpc', function(newLogger
 });
 
 var requireHook = require('../../../util/requireHook');
-var tracingConstants = require('../../constants');
 var tracingUtil = require('../../tracingUtil');
+var constants = require('../../constants');
 var cls = require('../../cls');
 
 var Metadata;
@@ -61,7 +61,7 @@ function createInstrumentedServerHandler(name, type, originalHandler) {
     var originalArgs = arguments;
     return cls.ns.runAndReturn(function() {
       var metadata = call.metadata;
-      var level = readMetadata(metadata, tracingConstants.traceLevelHeaderName);
+      var level = readMetadata(metadata, constants.traceLevelHeaderName);
       if (level === '0') {
         cls.setTracingLevel('0');
       }
@@ -71,9 +71,9 @@ function createInstrumentedServerHandler(name, type, originalHandler) {
 
       cls.ns.bindEmitter(call);
 
-      var incomingTraceId = readMetadata(metadata, tracingConstants.traceIdHeaderName);
-      var incomingSpanId = readMetadata(metadata, tracingConstants.spanIdHeaderName);
-      var span = cls.startSpan('rpc-server', cls.ENTRY, incomingTraceId, incomingSpanId);
+      var incomingTraceId = readMetadata(metadata, constants.traceIdHeaderName);
+      var incomingSpanId = readMetadata(metadata, constants.spanIdHeaderName);
+      var span = cls.startSpan('rpc-server', constants.ENTRY, incomingTraceId, incomingSpanId);
       span.data = {
         rpc: {
           call: dropLeadingSlash(name),
@@ -158,7 +158,7 @@ function instrumentedMakeClientConstructor(originalFunction) {
 function shimClientMethod(rpcPath, requestStream, responseStream, originalFunction) {
   function shimmedFunction() {
     var parentSpan = cls.getCurrentSpan();
-    var isTracing = isActive && cls.isTracing() && parentSpan && cls.isEntrySpan(parentSpan);
+    var isTracing = isActive && cls.isTracing() && parentSpan && constants.isEntrySpan(parentSpan);
     var isSuppressed = cls.tracingLevel() === '0';
     if (isTracing || isSuppressed) {
       var originalArgs = new Array(arguments.length);
@@ -184,7 +184,7 @@ function shimClientMethod(rpcPath, requestStream, responseStream, originalFuncti
 
 function instrumentedClientMethod(ctx, originalFunction, originalArgs, rpcPath, requestStream, responseStream) {
   return cls.ns.runAndReturn(function() {
-    var span = cls.startSpan('rpc-client', cls.EXIT);
+    var span = cls.startSpan('rpc-client', constants.EXIT);
     span.ts = Date.now();
     span.stack = tracingUtil.getStackTrace(instrumentedClientMethod);
     span.data = {
@@ -242,8 +242,8 @@ function modifyArgs(originalArgs, span, responseStream) {
     if (originalArgs[i] && originalArgs[i].constructor && originalArgs[i].constructor.name === 'Metadata') {
       metadataIndex = i;
     } else if (!responseStream && typeof originalArgs[i] === 'function') {
-    // If the response is streamed there ought to be no callback. If if it was passed, it won't be called, so in this
-    // case we ignore all function arguments.
+      // If the response is streamed there ought to be no callback. If if it was passed, it won't be called, so in this
+      // case we ignore all function arguments.
       callbackIndex = i;
     } else if (i > 0 && typeof originalArgs[i] === 'object') {
       optionsIndex = i;
@@ -293,12 +293,12 @@ function modifyArgs(originalArgs, span, responseStream) {
 
   if (span && metadata) {
     // we are actively tracing, so we add x-instana-t, x-instana-s and set x-instana-l: 1
-    metadata.add(tracingConstants.spanIdHeaderName, span.s);
-    metadata.add(tracingConstants.traceIdHeaderName, span.t);
-    metadata.add(tracingConstants.traceLevelHeaderName, '1');
+    metadata.add(constants.spanIdHeaderName, span.s);
+    metadata.add(constants.traceIdHeaderName, span.t);
+    metadata.add(constants.traceLevelHeaderName, '1');
   } else if (metadata) {
     // tracing is suppressed, so we only set x-instana-l: 0
-    metadata.add(tracingConstants.traceLevelHeaderName, '0');
+    metadata.add(constants.traceLevelHeaderName, '0');
   }
 }
 

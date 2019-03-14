@@ -4,6 +4,7 @@ var shimmer = require('shimmer');
 
 var requireHook = require('../../../util/requireHook');
 var tracingUtil = require('../../tracingUtil');
+var constants = require('../../constants');
 var cls = require('../../cls');
 
 var isActive = false;
@@ -32,7 +33,7 @@ function instrumentedSend(ctx, originalSend, produceRequests, cb) {
   var args = [produceRequests];
 
   // Possibly bail early
-  if (!cls.isTracing() || cls.isExitSpan(parentSpan) || !produceRequests || produceRequests.length === 0) {
+  if (!cls.isTracing() || constants.isExitSpan(parentSpan) || !produceRequests || produceRequests.length === 0) {
     // restore original send args
     if (cb) {
       args.push(cb);
@@ -41,7 +42,7 @@ function instrumentedSend(ctx, originalSend, produceRequests, cb) {
   }
 
   return cls.ns.runAndReturn(function() {
-    var span = cls.startSpan('kafka', cls.EXIT);
+    var span = cls.startSpan('kafka', constants.EXIT);
     var produceRequest = produceRequests[0];
     span.b = { s: produceRequests.length };
     span.stack = tracingUtil.getStackTrace(instrumentedSend);
@@ -83,7 +84,7 @@ function shimEmit(original) {
     var originalArgs = arguments;
 
     return cls.ns.runAndReturn(function() {
-      var span = cls.startSpan('kafka', cls.ENTRY);
+      var span = cls.startSpan('kafka', constants.ENTRY);
       span.stack = [];
       span.data = {
         kafka: {

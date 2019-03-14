@@ -4,6 +4,7 @@ var shimmer = require('shimmer');
 
 var requireHook = require('../../../util/requireHook');
 var tracingUtil = require('../../tracingUtil');
+var constants = require('../../constants');
 var cls = require('../../cls');
 
 var isActive = false;
@@ -106,7 +107,7 @@ function instrumentedAccessFunction(
   }
 
   var parentSpan = cls.getCurrentSpan();
-  if (cls.isExitSpan(parentSpan)) {
+  if (constants.isExitSpan(parentSpan)) {
     return originalFunction.apply(ctx, originalArgs);
   }
 
@@ -132,7 +133,7 @@ function instrumentedAccessFunction(
   }
 
   return cls.ns.runAndReturn(function() {
-    var span = cls.startSpan('mysql', cls.EXIT);
+    var span = cls.startSpan('mysql', constants.EXIT);
     span.b = { s: 1 };
     span.stack = tracingUtil.getStackTrace(instrumentedAccessFunction);
     span.data = {

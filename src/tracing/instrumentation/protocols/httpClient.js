@@ -6,9 +6,9 @@ var coreHttpsModule = require('https');
 var semver = require('semver');
 var URL = require('url').URL;
 
-var tracingConstants = require('../../constants');
 var tracingUtil = require('../../tracingUtil');
 var urlUtil = require('../../../util/url');
+var constants = require('../../constants');
 var cls = require('../../cls');
 var url = require('url');
 
@@ -76,26 +76,26 @@ function instrument(coreModule) {
       }
       clientRequest = originalRequest.apply(coreModule, arguments);
       if (cls.tracingLevel() && !traceLevelHeaderHasBeenAdded) {
-        clientRequest.setHeader(tracingConstants.traceLevelHeaderName, cls.tracingLevel());
+        clientRequest.setHeader(constants.traceLevelHeaderName, cls.tracingLevel());
       }
       return clientRequest;
     }
 
     var parentSpan = cls.getCurrentSpan();
 
-    if (cls.isExitSpan(parentSpan)) {
+    if (constants.isExitSpan(parentSpan)) {
       if (cls.tracingSuppressed()) {
         traceLevelHeaderHasBeenAdded = tryToAddTraceLevelAddHeaderToOpts(options, '0');
       }
       clientRequest = originalRequest.apply(coreModule, arguments);
       if (cls.tracingSuppressed() && !traceLevelHeaderHasBeenAdded) {
-        clientRequest.setHeader(tracingConstants.traceLevelHeaderName, '0');
+        clientRequest.setHeader(constants.traceLevelHeaderName, '0');
       }
       return clientRequest;
     }
 
     cls.ns.run(function() {
-      var span = cls.startSpan('node.http.client', cls.EXIT);
+      var span = cls.startSpan('node.http.client', constants.EXIT);
 
       var completeCallUrl;
       var params;
@@ -265,9 +265,9 @@ function tryToAddHeadersToOpts(options, span) {
   // add our headers there. Only when this object is missing do we use request.setHeader on the ClientRequest object
   // (see setHeadersOnRequest).
   if (hasHeadersOption(options)) {
-    options.headers[tracingConstants.spanIdHeaderName] = span.s;
-    options.headers[tracingConstants.traceIdHeaderName] = span.t;
-    options.headers[tracingConstants.traceLevelHeaderName] = '1';
+    options.headers[constants.spanIdHeaderName] = span.s;
+    options.headers[constants.traceIdHeaderName] = span.t;
+    options.headers[constants.traceLevelHeaderName] = '1';
     return true;
   }
   return false;
@@ -275,7 +275,7 @@ function tryToAddHeadersToOpts(options, span) {
 
 function tryToAddTraceLevelAddHeaderToOpts(options, level) {
   if (hasHeadersOption(options)) {
-    options.headers[tracingConstants.traceLevelHeaderName] = level;
+    options.headers[constants.traceLevelHeaderName] = level;
     return true;
   }
   return false;
@@ -286,9 +286,9 @@ function hasHeadersOption(options) {
 }
 
 function setHeadersOnRequest(clientRequest, span) {
-  clientRequest.setHeader(tracingConstants.spanIdHeaderName, span.s);
-  clientRequest.setHeader(tracingConstants.traceIdHeaderName, span.t);
-  clientRequest.setHeader(tracingConstants.traceLevelHeaderName, '1');
+  clientRequest.setHeader(constants.spanIdHeaderName, span.s);
+  clientRequest.setHeader(constants.traceIdHeaderName, span.t);
+  clientRequest.setHeader(constants.traceLevelHeaderName, '1');
   return true;
 }
 

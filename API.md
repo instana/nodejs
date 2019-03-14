@@ -111,13 +111,43 @@ instana.setLogger(logger);
 
 The first few lines of log output from Instana (during the initialization procedure) will be logged with Instana's default bunyan logger, but everything after the `instana.setLogger(logger)` call will be logged with the logger you have set. Plus, your application's log output will show up in the "log messages" tab in Instana's dashboards correctly (note that we only show log calls for which the severity is at least "WARN").
 
-## Ending Spans Manually (Message Broker Entries)
+## Accessing The Currently Active Span
 
-Instana's automated tracing handles everything for you for [supported libraries](https://docs.instana.io/ecosystem/node-js/#supported-versions), there is no need to interfere. There is one exception to this rule: Tracing operations that have been triggered by consuming a message from a message broker (Kafka, RabbitMQ). Since there is no notion of a response or reply when consuming a message from a message broker, there is no event that could tell the Instana Node.js sensor when all operations that are triggered by a particular message have been finished (in contrast to an incoming HTTP request, which always has an associated response, demarcating the end of the transaction).
+Instana's automated tracing handles everything for you for [supported libraries](https://docs.instana.io/ecosystem/node-js/#supported-versions), there is no need to interfere.
+
+Nevertheless, application code is granted limited read only access to the the sensor's internal state. For this purpose, a handle for the currently active span can be acquired with `instana.currentSpan()`. This method will return a dummy handle when no span is currently active. A span handle returned by this method offers the following methods:
+
+`span.getTraceId()`: Returns the trace ID of the span.
+
+`span.getSpanId()`: Returns the span ID of the span.
+
+`span.getParentSpanId()`: Returns the parent span ID of the span.
+
+`span.getName()`: Returns the name of the span.
+
+`span.isEntrySpan()`: Determine if the span is an entry span (server span).
+
+`span.isExitSpan()`: Determine if the span is an exit span (client span).
+
+`span.isIntermediateSpan()`: Determine if the span is an intermediate span (local span).
+
+`span.getTimestamp()`: Returns the timestamp of the span's start.
+
+`span.getDuration()`: Returns the duration of the span. This method will return 0 if the span has not been completed yet. Note that this is almost always the case as `instana.currentSpan()` returns the currently active span, which, by definition, has not been completed. This will only return a duration greater than 0 if `span.disableAutoEnd()` and `span.end()` have been used (see below).
+
+`span.getErrorCount()`: Returns the number of errors that have occured during the processing of the request associated with the currently active span. This method will return 0 in most cases if the span has not been completed yet. This is almost always the case as `instana.currentSpan()` returns the currently active span, which, by definition, has not been completed. This will return a value greater than 0 if `span.disableAutoEnd()` and `span.end(errorCount)` have been used (see below).
+
+`span.disableAutoEnd()`: See [next section](#ending-spans-manually-message-broker-entries).
+
+`span.end(errorCount)`: See [next section](#ending-spans-manually-message-broker-entries).
+
+### Ending Spans Manually (Message Broker Entries)
+
+We mentioned before that Instana's automated tracing handles everything for you for [supported libraries](https://docs.instana.io/ecosystem/node-js/#supported-versions) and that there is no need to interfere. There is one small exception to this rule: Tracing operations that have been triggered by consuming a message from a message broker (Kafka, RabbitMQ). Since there is no notion of a response or reply when consuming a message from a message broker, there is no event that could tell the Instana Node.js sensor when all operations that are triggered by a particular message have been finished (in contrast to an incoming HTTP request, which always has an associated response, demarcating the end of the transaction).
 
 The problem is that in contrast to other entry span types (HTTP requests for example) there is no notion of a response when receiving a message. When a process receives a new message from RabbitMQ, it will start an entry span. Instana's tracing capabilities need some event that signify that this span is finished. Other calls will only be assigned to the same trace when they are triggered between starting the entry span and finishing it.
 
-Therefore, the application code needs to tell Instana when the processing of the incoming message is complete. For this purpose, a handle for the currently active span can be acquired with `instana.currentSpan()`. This handle offers two methods:
+Therefore, the application code needs to tell Instana when the processing of the incoming message is complete. For this purpose, the handle for the currently active span which can be acquired with `instana.currentSpan()` (see above) can be used. The handle offers two methods that are relevant for this use case:
 
 `span.disableAutoEnd()`: Disables automatically finishing the span and marks this span as one that will be finished manually by calling `span.end()` later.
 

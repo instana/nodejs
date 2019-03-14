@@ -2,6 +2,7 @@
 
 var requireHook = require('../../../util/requireHook');
 var tracingUtil = require('../../tracingUtil');
+var constants = require('../../constants');
 var cls = require('../../cls');
 
 var isActive = false;
@@ -52,7 +53,7 @@ function instrumentedLevelMethod(originalMethod, markAsError) {
   return function(message) {
     if (isActive && cls.isTracing()) {
       var parentSpan = cls.getCurrentSpan();
-      if (parentSpan && !cls.isExitSpan(parentSpan)) {
+      if (parentSpan && !constants.isExitSpan(parentSpan)) {
         var originalArgs = new Array(arguments.length);
         for (var i = 0; i < arguments.length; i++) {
           originalArgs[i] = arguments[i];
@@ -84,7 +85,7 @@ function instrumentedLog(originalMethod) {
     }
     if (levelIsTraced(level) && isActive && cls.isTracing()) {
       var parentSpan = cls.getCurrentSpan();
-      if (parentSpan && !cls.isExitSpan(parentSpan)) {
+      if (parentSpan && !constants.isExitSpan(parentSpan)) {
         var originalArgs = new Array(arguments.length);
         for (var i = 0; i < arguments.length; i++) {
           originalArgs[i] = arguments[i];
@@ -110,7 +111,7 @@ function levelIsError(level) {
 
 function createSpan(ctx, originalMethod, originalArgs, message, markAsError) {
   return cls.ns.runAndReturn(function() {
-    var span = cls.startSpan('log.winston', cls.EXIT);
+    var span = cls.startSpan('log.winston', constants.EXIT);
     span.stack = tracingUtil.getStackTrace(instrumentedLevelMethod);
     span.data = {
       log: {

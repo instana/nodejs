@@ -6,6 +6,7 @@ var shimmer = require('shimmer');
 
 var requireHook = require('../../../util/requireHook');
 var tracingUtil = require('../../tracingUtil');
+var constants = require('../../constants');
 var cls = require('../../cls');
 
 var isActive = false;
@@ -31,7 +32,7 @@ function shimLog(markAsError) {
       }
       if (isActive && cls.isTracing()) {
         var parentSpan = cls.getCurrentSpan();
-        if (parentSpan && !cls.isExitSpan(parentSpan)) {
+        if (parentSpan && !constants.isExitSpan(parentSpan)) {
           var originalArgs = new Array(arguments.length);
           for (var i = 0; i < arguments.length; i++) {
             originalArgs[i] = arguments[i];
@@ -49,7 +50,7 @@ function shimLog(markAsError) {
 
 function instrumentedLog(ctx, originalLog, originalArgs, markAsError) {
   return cls.ns.runAndReturn(function() {
-    var span = cls.startSpan('log.bunyan', cls.EXIT);
+    var span = cls.startSpan('log.bunyan', constants.EXIT);
     span.stack = tracingUtil.getStackTrace(instrumentedLog);
     var fields = originalArgs[0];
     var message = originalArgs[1];

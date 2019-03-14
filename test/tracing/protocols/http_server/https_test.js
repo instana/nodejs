@@ -3,6 +3,7 @@
 var expect = require('chai').expect;
 
 var supportedVersion = require('../../../../src/tracing/index').supportedVersion;
+var constants = require('../../../../src/tracing/constants');
 var config = require('../../../config');
 var utils = require('../../../utils');
 
@@ -40,6 +41,7 @@ describe('tracing/https server', function() {
 
             var span = spans[0];
             expect(span.n).to.equal('node.http.server');
+            expect(span.k).to.equal(constants.ENTRY);
             expect(span.async).to.equal(false);
             expect(span.error).to.equal(false);
             expect(span.ec).to.equal(0);

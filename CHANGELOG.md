@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased
+- Extend API: Offer various getters to inquire about details of the currently actice span (trace ID, span ID and other attributes).
 - Improve generated IDs (span ID, trace ID).
 
 ## 1.61.2

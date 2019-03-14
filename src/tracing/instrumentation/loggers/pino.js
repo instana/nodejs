@@ -6,6 +6,7 @@ var shimmer = require('shimmer');
 
 var requireHook = require('../../../util/requireHook');
 var tracingUtil = require('../../tracingUtil');
+var constants = require('../../constants');
 var cls = require('../../cls');
 
 var isActive = false;
@@ -29,14 +30,14 @@ function shimGenLog(originalGenLog) {
       return function log(mergingObject, message) {
         if (isActive && cls.isTracing()) {
           var parentSpan = cls.getCurrentSpan();
-          if (parentSpan && !cls.isExitSpan(parentSpan)) {
+          if (parentSpan && !constants.isExitSpan(parentSpan)) {
             var originalArgs = new Array(arguments.length);
             for (var i = 0; i < arguments.length; i++) {
               originalArgs[i] = arguments[i];
             }
             var ctx = this;
             return cls.ns.runAndReturn(function() {
-              var span = cls.startSpan('log.pino', cls.EXIT);
+              var span = cls.startSpan('log.pino', constants.EXIT);
               span.stack = tracingUtil.getStackTrace(log);
               if (typeof mergingObject === 'string') {
                 message = mergingObject;

@@ -4,6 +4,7 @@ var shimmer = require('shimmer');
 
 var requireHook = require('../../../util/requireHook');
 var tracingUtil = require('../../tracingUtil');
+var constants = require('../../constants');
 var cls = require('../../cls');
 
 var isActive = false;
@@ -49,14 +50,14 @@ function instrumentSendCommand(original) {
       // The same is true for pipeline calls, but they have a slightly different semantic.
       var parentSpanSubCommands = (parentSpan.data.redis.subCommands = parentSpan.data.redis.subCommands || []);
       parentSpanSubCommands.push(command.name);
-    } else if (cls.isExitSpan(parentSpan)) {
+    } else if (constants.isExitSpan(parentSpan)) {
       // Apart from the special case of multi/pipeline calls, redis exits can't be child spans of other exits.
       return original.apply(this, arguments);
     }
 
     var argsForOriginal = arguments;
     return cls.ns.runAndReturn(function() {
-      var span = cls.startSpan('redis', cls.EXIT);
+      var span = cls.startSpan('redis', constants.EXIT);
       span.stack = tracingUtil.getStackTrace(wrappedInternalSendCommand);
       span.data = {
         redis: {
@@ -111,14 +112,14 @@ function instrumentMultiOrPipelineCommand(commandName, original) {
     }
 
     var parentSpan = cls.getCurrentSpan();
-    if (cls.isExitSpan(parentSpan)) {
+    if (constants.isExitSpan(parentSpan)) {
       return original.apply(this, arguments);
     }
 
     // create a new cls context parent to track the multi/pipeline child calls
     var clsContextForMultiOrPipeline = cls.ns.createContext();
     cls.ns.enter(clsContextForMultiOrPipeline);
-    var span = cls.startSpan('redis', cls.EXIT);
+    var span = cls.startSpan('redis', constants.EXIT);
     span.stack = tracingUtil.getStackTrace(wrappedInternalMultiOrPipelineCommand);
     span.data = {
       redis: {

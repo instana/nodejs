@@ -15,6 +15,7 @@ var AbstractControls = (module.exports = function AbstractControls(opts) {
   // absolute path to .js file that should be executed
   this.appPath = opts.appPath;
   this.port = opts.port || process.env.APP_PORT || 3215;
+  this.tracingEnabled = opts.tracingEnabled !== false;
   this.useHttps = opts.env && !!opts.env.USE_HTTPS;
   this.baseUrl = (this.useHttps ? 'https' : 'http') + '://127.0.0.1:' + this.port;
   // optional agent controls which will result in a beforeEach call which ensures that the
@@ -25,7 +26,8 @@ var AbstractControls = (module.exports = function AbstractControls(opts) {
     process.env,
     {
       APP_PORT: this.port,
-      AGENT_PORT: agentPort
+      AGENT_PORT: agentPort,
+      TRACING_ENABLED: this.tracingEnabled
     },
     opts.env
   );

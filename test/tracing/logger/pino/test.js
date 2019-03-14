@@ -3,7 +3,7 @@
 var semver = require('semver');
 var expect = require('chai').expect;
 
-var cls = require('../../../../src/tracing/cls');
+var constants = require('../../../../src/tracing/constants');
 var supportedVersion = require('../../../../src/tracing/index').supportedVersion;
 var config = require('../../../config');
 var utils = require('../../../utils');
@@ -139,7 +139,7 @@ describe('tracing/logger/pino', function() {
   function checkPinoSpan(span, parent, expectErroneous, message) {
     expect(span.t).to.equal(parent.t);
     expect(span.p).to.equal(parent.s);
-    expect(span.k).to.equal(cls.EXIT);
+    expect(span.k).to.equal(constants.EXIT);
     expect(span.f.e).to.equal(String(appControls.getPid()));
     expect(span.n).to.equal('log.pino');
     expect(span.async).to.equal(false);
@@ -153,7 +153,7 @@ describe('tracing/logger/pino', function() {
   function checkNextExitSpan(span, parent) {
     expect(span.t).to.equal(parent.t);
     expect(span.p).to.equal(parent.s);
-    expect(span.k).to.equal(cls.EXIT);
+    expect(span.k).to.equal(constants.EXIT);
     expect(span.f.e).to.equal(String(appControls.getPid()));
     expect(span.n).to.equal('node.http.client');
   }

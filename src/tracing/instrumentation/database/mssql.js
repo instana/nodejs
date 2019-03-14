@@ -4,6 +4,7 @@ var shimmer = require('shimmer');
 
 var requireHook = require('../../../util/requireHook');
 var tracingUtil = require('../../tracingUtil');
+var constants = require('../../constants');
 var cls = require('../../cls');
 
 var isActive = false;
@@ -53,14 +54,14 @@ function instrumentedBulk(ctx, originalFunction, originalArgs) {
 function instrumentedMethod(ctx, originalFunction, originalArgs, stackTraceRef, commandProvider) {
   var parentSpan = cls.getCurrentSpan();
 
-  if (cls.isExitSpan(parentSpan)) {
+  if (constants.isExitSpan(parentSpan)) {
     return originalFunction.apply(ctx, originalArgs);
   }
 
   var connectionParameters = findConnectionParameters(ctx);
   var command = commandProvider(originalArgs);
   return cls.ns.runAndReturn(function() {
-    var span = cls.startSpan('mssql', cls.EXIT);
+    var span = cls.startSpan('mssql', constants.EXIT);
     span.stack = tracingUtil.getStackTrace(stackTraceRef);
     span.data = {
       mssql: {

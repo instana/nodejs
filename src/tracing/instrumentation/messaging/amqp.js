@@ -3,8 +3,8 @@
 var shimmer = require('shimmer');
 
 var requireHook = require('../../../util/requireHook');
-var tracingConstants = require('../../constants');
 var tracingUtil = require('../../tracingUtil');
+var constants = require('../../constants');
 var cls = require('../../cls');
 
 var isActive = false;
@@ -50,12 +50,12 @@ function instrumentedSendMessage(ctx, originalSendMessage, originalArgs) {
     !cls.isTracing() || //
     !parentSpan || //
     // allow rabbitmq parent exit spans, this is actually the span started in instrumentedChannelModelPublish
-    (cls.isExitSpan(parentSpan) && parentSpan.n !== 'rabbitmq')
+    (constants.isExitSpan(parentSpan) && parentSpan.n !== 'rabbitmq')
   ) {
     return originalSendMessage.apply(ctx, originalArgs);
   }
 
-  if (cls.isExitSpan(parentSpan) && parentSpan.n === 'rabbitmq') {
+  if (constants.isExitSpan(parentSpan) && parentSpan.n === 'rabbitmq') {
     // if ConfirmChannel#publish/sendToQueue has been invoked, we have already created a new cls context in
     // instrumentedChannelModelPublish and must not do so again here.
     processExitSpan(ctx, parentSpan, originalArgs);
@@ -64,7 +64,7 @@ function instrumentedSendMessage(ctx, originalSendMessage, originalArgs) {
   } else {
     // Otherwise, a normal channel was used and we need to create the context here as usual.
     return cls.ns.runAndReturn(function() {
-      var span = cls.startSpan('rabbitmq', cls.EXIT);
+      var span = cls.startSpan('rabbitmq', constants.EXIT);
       processExitSpan(ctx, span, originalArgs);
       try {
         return originalSendMessage.apply(ctx, originalArgs);
@@ -108,12 +108,12 @@ function processExitSpan(ctx, span, originalArgs) {
 }
 
 function setHeaders(map, span) {
-  if (!map || !map.headers || map.headers[tracingConstants.traceLevelHeaderName]) {
+  if (!map || !map.headers || map.headers[constants.traceLevelHeaderName]) {
     return;
   }
-  map.headers[tracingConstants.traceIdHeaderName] = span.t;
-  map.headers[tracingConstants.spanIdHeaderName] = span.s;
-  map.headers[tracingConstants.traceLevelHeaderName] = '1';
+  map.headers[constants.traceIdHeaderName] = span.t;
+  map.headers[constants.spanIdHeaderName] = span.s;
+  map.headers[constants.traceLevelHeaderName] = '1';
 }
 
 function shimDispatchMessage(originalFunction) {
@@ -144,16 +144,16 @@ function instrumentedDispatchMessage(ctx, originalDispatchMessage, originalArgs)
       : {};
 
   return cls.ns.runAndReturn(function() {
-    if (headers && headers[tracingConstants.traceLevelHeaderName] === '0') {
+    if (headers && headers[constants.traceLevelHeaderName] === '0') {
       cls.setTracingLevel('0');
       return originalDispatchMessage.apply(ctx, originalArgs);
     }
 
     var span = cls.startSpan(
       'rabbitmq',
-      cls.ENTRY,
-      headers[tracingConstants.traceIdHeaderName],
-      headers[tracingConstants.spanIdHeaderName]
+      constants.ENTRY,
+      headers[constants.traceIdHeaderName],
+      headers[constants.spanIdHeaderName]
     );
     span.ts = Date.now();
     span.stack = tracingUtil.getStackTrace(instrumentedDispatchMessage);
@@ -209,7 +209,7 @@ function instrumentedChannelModelGet(ctx, originalGet, originalArgs) {
   // *before* get is called, in case it indeed ends up fetching a new message. If the call ends up fetching no message,
   // we simply cancel the span instead of transmitting it.
   return cls.ns.runPromise(function() {
-    var span = cls.startSpan('rabbitmq', cls.ENTRY);
+    var span = cls.startSpan('rabbitmq', constants.ENTRY);
     return originalGet.apply(ctx, originalArgs).then(function(result) {
       if (!result) {
         // get did not fetch a new message from RabbitMQ (because the queue has no messages), no need to create a span.
@@ -220,13 +220,13 @@ function instrumentedChannelModelGet(ctx, originalGet, originalArgs) {
       var headers = result.properties && result.properties.headers ? result.properties.headers : {};
 
       if (headers) {
-        var traceId = headers[tracingConstants.traceIdHeaderName];
-        var parentId = headers[tracingConstants.spanIdHeaderName];
+        var traceId = headers[constants.traceIdHeaderName];
+        var parentId = headers[constants.spanIdHeaderName];
         if (traceId && parentId) {
           span.t = traceId;
           span.p = parentId;
         }
-        if (headers[tracingConstants.traceLevelHeaderName] === '0') {
+        if (headers[constants.traceLevelHeaderName] === '0') {
           cls.setTracingLevel('0');
           return result;
         }
@@ -296,18 +296,18 @@ function instrumentedCallbackModelGet(ctx, originalGet, originalArgs) {
     }
     // get did fetch a message, create a new cls context and a span
     return cls.ns.runAndReturn(function() {
-      var span = cls.startSpan('rabbitmq', cls.ENTRY);
+      var span = cls.startSpan('rabbitmq', constants.ENTRY);
       var fields = result.fields || {};
       var headers = result.properties && result.properties.headers ? result.properties.headers : {};
 
       if (headers) {
-        var traceId = headers[tracingConstants.traceIdHeaderName];
-        var parentId = headers[tracingConstants.spanIdHeaderName];
+        var traceId = headers[constants.traceIdHeaderName];
+        var parentId = headers[constants.spanIdHeaderName];
         if (traceId && parentId) {
           span.t = traceId;
           span.p = parentId;
         }
-        if (headers[tracingConstants.traceLevelHeaderName] === '0') {
+        if (headers[constants.traceLevelHeaderName] === '0') {
           cls.setTracingLevel('0');
           if (originalCallback) {
             return originalCallback(err, result);
@@ -374,12 +374,12 @@ function instrumentedChannelModelPublish(ctx, originalFunction, originalArgs) {
   // internally. We only instrument ConfirmChannel.publish to hook into the callback.
   var parentSpan = cls.getCurrentSpan();
 
-  if (!cls.isTracing() || cls.isExitSpan(parentSpan)) {
+  if (!cls.isTracing() || constants.isExitSpan(parentSpan)) {
     return originalFunction.apply(ctx, originalArgs);
   }
 
   return cls.ns.runAndReturn(function() {
-    var span = cls.startSpan('rabbitmq', cls.EXIT);
+    var span = cls.startSpan('rabbitmq', constants.EXIT);
     // everything else is handled in instrumentedSendMessage/processExitSpan
     if (originalArgs.length >= 5 && typeof originalArgs[4] === 'function') {
       var originalCb = originalArgs[4];
@@ -411,12 +411,12 @@ function instrumentedCallbackModelPublish(ctx, originalFunction, originalArgs) {
   // internally. We only instrument ConfirmChannel.publish to hook into the callback.
   var parentSpan = cls.getCurrentSpan();
 
-  if (!cls.isTracing() || cls.isExitSpan(parentSpan)) {
+  if (!cls.isTracing() || constants.isExitSpan(parentSpan)) {
     return originalFunction.apply(ctx, originalArgs);
   }
 
   return cls.ns.runAndReturn(function() {
-    var span = cls.startSpan('rabbitmq', cls.EXIT);
+    var span = cls.startSpan('rabbitmq', constants.EXIT);
     // everything else is handled in instrumentedSendMessage/processExitSpan
     if (originalArgs.length >= 5 && typeof originalArgs[4] === 'function') {
       var originalCb = originalArgs[4];

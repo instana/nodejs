@@ -3,7 +3,7 @@
 var expect = require('chai').expect;
 var semver = require('semver');
 
-var cls = require('../../../../src/tracing/cls');
+var constants = require('../../../../src/tracing/constants');
 var supportedVersion = require('../../../../src/tracing/index').supportedVersion;
 var config = require('../../../config');
 var utils = require('../../../utils');
@@ -82,13 +82,13 @@ function registerTests(useHttps) {
               return agentControls.getSpans().then(function(spans) {
                 var clientSpan = utils.expectOneMatching(spans, function(span) {
                   expect(span.n).to.equal('node.http.client');
-                  expect(span.k).to.equal(cls.EXIT);
+                  expect(span.k).to.equal(constants.EXIT);
                   expect(span.data.http.url).to.match(/\/request-url-opts/);
                   checkQuery(span, withQuery);
                 });
                 utils.expectOneMatching(spans, function(span) {
                   expect(span.n).to.equal('node.http.server');
-                  expect(span.k).to.equal(cls.ENTRY);
+                  expect(span.k).to.equal(constants.ENTRY);
                   expect(span.data.http.url).to.match(/\/request-url-opts/);
                   expect(span.t).to.equal(clientSpan.t);
                   expect(span.p).to.equal(clientSpan.s);
@@ -123,13 +123,13 @@ function registerTests(useHttps) {
               return agentControls.getSpans().then(function(spans) {
                 var clientSpan = utils.expectOneMatching(spans, function(span) {
                   expect(span.n).to.equal('node.http.client');
-                  expect(span.k).to.equal(cls.EXIT);
+                  expect(span.k).to.equal(constants.EXIT);
                   expect(span.data.http.url).to.match(/\/request-only-url/);
                   checkQuery(span, withQuery);
                 });
                 utils.expectOneMatching(spans, function(span) {
                   expect(span.n).to.equal('node.http.server');
-                  expect(span.k).to.equal(cls.ENTRY);
+                  expect(span.k).to.equal(constants.ENTRY);
                   expect(span.data.http.url).to.match(/\/request-only-url/);
                   expect(span.t).to.equal(clientSpan.t);
                   expect(span.p).to.equal(clientSpan.s);
@@ -153,13 +153,13 @@ function registerTests(useHttps) {
             return agentControls.getSpans().then(function(spans) {
               var clientSpan = utils.expectOneMatching(spans, function(span) {
                 expect(span.n).to.equal('node.http.client');
-                expect(span.k).to.equal(cls.EXIT);
+                expect(span.k).to.equal(constants.EXIT);
                 expect(span.data.http.url).to.match(/\/request-only-opts/);
                 checkQuery(span, withQuery);
               });
               utils.expectOneMatching(spans, function(span) {
                 expect(span.n).to.equal('node.http.server');
-                expect(span.k).to.equal(cls.ENTRY);
+                expect(span.k).to.equal(constants.ENTRY);
                 expect(span.data.http.url).to.match(/\/request-only-opts/);
                 expect(span.t).to.equal(clientSpan.t);
                 expect(span.p).to.equal(clientSpan.s);
@@ -181,13 +181,13 @@ function registerTests(useHttps) {
           return agentControls.getSpans().then(function(spans) {
             var entrySpan = utils.expectOneMatching(spans, function(span) {
               expect(span.n).to.equal('node.http.server');
-              expect(span.k).to.equal(cls.ENTRY);
+              expect(span.k).to.equal(constants.ENTRY);
               expect(span.data.http.url).to.match(/\/request-malformed-url/);
             });
 
             utils.expectOneMatching(spans, function(span) {
               expect(span.n).to.equal('node.http.client');
-              expect(span.k).to.equal(cls.EXIT);
+              expect(span.k).to.equal(constants.EXIT);
               expect(span.ec).to.equal(1);
               expect(span.data.http.url).to.match(/ha-te-te-peh/);
               expect(span.data.http.error).to.match(/Protocol .* not supported./);
@@ -197,7 +197,7 @@ function registerTests(useHttps) {
 
             utils.expectOneMatching(spans, function(span) {
               expect(span.n).to.equal('node.http.client');
-              expect(span.k).to.equal(cls.EXIT);
+              expect(span.k).to.equal(constants.EXIT);
               expect(span.data.http.url).to.match(/\/request-only-opts/);
               checkQuery(span, false);
               expect(span.t).to.equal(entrySpan.t);
@@ -220,13 +220,13 @@ function registerTests(useHttps) {
             return agentControls.getSpans().then(function(spans) {
               var clientSpan = utils.expectOneMatching(spans, function(span) {
                 expect(span.n).to.equal('node.http.client');
-                expect(span.k).to.equal(cls.EXIT);
+                expect(span.k).to.equal(constants.EXIT);
                 expect(span.data.http.url).to.match(/\/request-only-opts/);
                 checkQuery(span, withQuery);
               });
               utils.expectOneMatching(spans, function(span) {
                 expect(span.n).to.equal('node.http.server');
-                expect(span.k).to.equal(cls.ENTRY);
+                expect(span.k).to.equal(constants.ENTRY);
                 expect(span.data.http.url).to.match(/\/request-only-opts/);
                 expect(span.t).to.equal(clientSpan.t);
                 expect(span.p).to.equal(clientSpan.s);
@@ -255,13 +255,13 @@ function registerTests(useHttps) {
               return agentControls.getSpans().then(function(spans) {
                 var clientSpan = utils.expectOneMatching(spans, function(span) {
                   expect(span.n).to.equal('node.http.client');
-                  expect(span.k).to.equal(cls.EXIT);
+                  expect(span.k).to.equal(constants.EXIT);
                   expect(span.data.http.url).to.match(/\/get-url-opts/);
                   checkQuery(span, withQuery);
                 });
                 utils.expectOneMatching(spans, function(span) {
                   expect(span.n).to.equal('node.http.server');
-                  expect(span.k).to.equal(cls.ENTRY);
+                  expect(span.k).to.equal(constants.ENTRY);
                   expect(span.data.http.url).to.match(/\/get-url-opts/);
                   expect(span.t).to.equal(clientSpan.t);
                   expect(span.p).to.equal(clientSpan.s);
@@ -296,13 +296,13 @@ function registerTests(useHttps) {
               return agentControls.getSpans().then(function(spans) {
                 var clientSpan = utils.expectOneMatching(spans, function(span) {
                   expect(span.n).to.equal('node.http.client');
-                  expect(span.k).to.equal(cls.EXIT);
+                  expect(span.k).to.equal(constants.EXIT);
                   expect(span.data.http.url).to.match(/\/get-only-url/);
                   checkQuery(span, withQuery);
                 });
                 utils.expectOneMatching(spans, function(span) {
                   expect(span.n).to.equal('node.http.server');
-                  expect(span.k).to.equal(cls.ENTRY);
+                  expect(span.k).to.equal(constants.ENTRY);
                   expect(span.data.http.url).to.match(/\/get-only-url/);
                   expect(span.t).to.equal(clientSpan.t);
                   expect(span.p).to.equal(clientSpan.s);
@@ -326,13 +326,13 @@ function registerTests(useHttps) {
             return agentControls.getSpans().then(function(spans) {
               var clientSpan = utils.expectOneMatching(spans, function(span) {
                 expect(span.n).to.equal('node.http.client');
-                expect(span.k).to.equal(cls.EXIT);
+                expect(span.k).to.equal(constants.EXIT);
                 expect(span.data.http.url).to.match(/\/get-only-opts/);
                 checkQuery(span, withQuery);
               });
               utils.expectOneMatching(spans, function(span) {
                 expect(span.n).to.equal('node.http.server');
-                expect(span.k).to.equal(cls.ENTRY);
+                expect(span.k).to.equal(constants.ENTRY);
                 expect(span.data.http.url).to.match(/\/get-only-opts/);
                 expect(span.t).to.equal(clientSpan.t);
                 expect(span.p).to.equal(clientSpan.s);
@@ -358,7 +358,7 @@ function registerTests(useHttps) {
           return agentControls.getSpans().then(function(spans) {
             utils.expectOneMatching(spans, function(span) {
               expect(span.n).to.equal('node.http.client');
-              expect(span.k).to.equal(cls.EXIT);
+              expect(span.k).to.equal(constants.EXIT);
               expect(span.ec).to.equal(1);
               expect(span.data.http.error).to.match(/ECONNREFUSED/);
             });
@@ -379,7 +379,7 @@ function registerTests(useHttps) {
           return agentControls.getSpans().then(function(spans) {
             utils.expectOneMatching(spans, function(span) {
               expect(span.n).to.equal('node.http.client');
-              expect(span.k).to.equal(cls.EXIT);
+              expect(span.k).to.equal(constants.EXIT);
               expect(span.ec).to.equal(1);
               expect(span.data.http.error).to.match(/Timeout/);
             });
@@ -400,7 +400,7 @@ function registerTests(useHttps) {
           return agentControls.getSpans().then(function(spans) {
             utils.expectOneMatching(spans, function(span) {
               expect(span.n).to.equal('node.http.client');
-              expect(span.k).to.equal(cls.EXIT);
+              expect(span.k).to.equal(constants.EXIT);
               expect(span.ec).to.equal(1);
               expect(span.data.http.error).to.match(/aborted/);
             });
@@ -421,7 +421,7 @@ function registerTests(useHttps) {
           return agentControls.getSpans().then(function(spans) {
             utils.expectOneMatching(spans, function(span) {
               expect(span.n).to.equal('node.http.client');
-              expect(span.k).to.equal(cls.EXIT);
+              expect(span.k).to.equal(constants.EXIT);
               expect(span.data.http.header).to.not.exist;
             });
           });
@@ -440,7 +440,7 @@ function registerTests(useHttps) {
           return agentControls.getSpans().then(function(spans) {
             utils.expectOneMatching(spans, function(span) {
               expect(span.n).to.equal('node.http.client');
-              expect(span.k).to.equal(cls.EXIT);
+              expect(span.k).to.equal(constants.EXIT);
               expect(span.data.http.method).to.equal('PUT');
               expect(span.data.http.status).to.equal(200);
               expect(span.data.http.url).to.match(/\/continue/);

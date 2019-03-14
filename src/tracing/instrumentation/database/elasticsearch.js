@@ -2,6 +2,7 @@
 
 var requireHook = require('../../../util/requireHook');
 var tracingUtil = require('../../tracingUtil');
+var constants = require('../../constants');
 var cls = require('../../cls');
 
 var isActive = false;
@@ -50,7 +51,7 @@ function instrumentApi(client, action, info) {
       return original.apply(client, arguments);
     }
 
-    var span = cls.startSpan('elasticsearch', cls.EXIT);
+    var span = cls.startSpan('elasticsearch', constants.EXIT);
     span.stack = tracingUtil.getStackTrace(instrumentedAction);
     span.data = {
       elasticsearch: {

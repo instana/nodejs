@@ -2,6 +2,7 @@
 
 var transmission = require('./transmission');
 var tracingUtil = require('./tracingUtil');
+var constants = require('./constants');
 var hooked = require('./clsHooked');
 var logger;
 logger = require('../logger').getLogger('tracing/cls', function(newLogger) {
@@ -11,10 +12,6 @@ logger = require('../logger').getLogger('tracing/cls', function(newLogger) {
 var currentRootSpanKey = (exports.currentRootSpanKey = 'com.instana.rootSpan');
 var currentSpanKey = (exports.currentSpanKey = 'com.instana.span');
 var tracingLevelKey = (exports.tracingLevelKey = 'com.instana.tl');
-
-exports.ENTRY = 1;
-exports.EXIT = 2;
-exports.INTERMEDIATE = 3;
 
 /*
  * Access the Instana namespace in context local storage.
@@ -28,12 +25,12 @@ exports.INTERMEDIATE = 3;
 exports.ns = hooked.createNamespace('instana.sensor');
 
 /*
- * Start a new span and set it as the current span
+ * Start a new span and set it as the current span.
  */
 exports.startSpan = function startSpan(spanName, kind, traceId, spanId, modifyAsyncContext) {
-  if (!kind || (kind !== exports.ENTRY && kind !== exports.EXIT && kind !== exports.INTERMEDIATE)) {
+  if (!kind || (kind !== constants.ENTRY && kind !== constants.EXIT && kind !== constants.INTERMEDIATE)) {
     logger.warn('Invalid span (%s) without kind/with invalid kind: %s, assuming EXIT.', spanName, kind);
-    kind = exports.EXIT;
+    kind = constants.EXIT;
   }
   modifyAsyncContext = modifyAsyncContext !== false;
   var span = new InstanaSpan(spanName);
@@ -54,7 +51,7 @@ exports.startSpan = function startSpan(spanName, kind, traceId, spanId, modifyAs
   }
   span.s = tracingUtil.generateRandomSpanId();
 
-  if (span.k === exports.ENTRY) {
+  if (span.k === constants.ENTRY) {
     if (!span.p && modifyAsyncContext) {
       span.addCleanup(exports.ns.set(currentRootSpanKey, span));
     }
@@ -67,16 +64,14 @@ exports.startSpan = function startSpan(spanName, kind, traceId, spanId, modifyAs
 };
 
 /*
- * Get the currently active root span
- *
+ * Get the currently active root span.
  */
 exports.getCurrentRootSpan = function getCurrentRootSpan() {
   return exports.ns.get(currentRootSpanKey);
 };
 
 /*
- * Set the currently active span
- *
+ * Set the currently active span.
  */
 exports.setCurrentSpan = function setCurrentSpan(span) {
   exports.ns.set(currentSpanKey, span);
@@ -84,8 +79,7 @@ exports.setCurrentSpan = function setCurrentSpan(span) {
 };
 
 /*
- * Get the currently active span
- *
+ * Get the currently active span.
  */
 exports.getCurrentSpan = function getCurrentSpan() {
   return exports.ns.get(currentSpanKey);
@@ -116,7 +110,6 @@ exports.tracingLevel = function tracingLevel() {
 
 /*
  * Determine if tracing is suppressed (via tracing level) for this request.
- *
  */
 exports.tracingSuppressed = function tracingSuppressed() {
   var tl = exports.ns.get(tracingLevelKey);
@@ -124,30 +117,6 @@ exports.tracingSuppressed = function tracingSuppressed() {
     return true;
   }
   return false;
-};
-
-/*
- * Determine if <span> is an entry span
- *
- */
-exports.isEntrySpan = function isEntrySpan(span) {
-  return span.k === 1;
-};
-
-/*
- * Determine if <span> is an exit span
- *
- */
-exports.isExitSpan = function isExitSpan(span) {
-  return span.k === 2;
-};
-
-/*
- * Determine if <span> is an local span
- *
- */
-exports.isLocalSpan = function isLocalSpan(span) {
-  return span.k === 3;
 };
 
 /*
@@ -163,8 +132,8 @@ function InstanaSpan(name) {
   this.t = undefined;
   this.s = undefined;
   this.p = undefined;
-  this.k = undefined;
   this.n = name;
+  this.k = undefined;
   this.f = tracingUtil.getFrom();
   this.async = false;
   this.error = false;

@@ -3,7 +3,7 @@
 var expect = require('chai').expect;
 var semver = require('semver');
 
-var cls = require('../../../../src/tracing/cls');
+var constants = require('../../../../src/tracing/constants');
 var config = require('../../../config');
 var utils = require('../../../utils');
 
@@ -44,7 +44,7 @@ describe('tracing/fastify', function() {
                   expect(span.data.http.path_tpl).to.equal(expectedTemplate);
                   expect(span.data.http.status).to.equal(200);
                   expect(span.data.http.url).to.equal(actualPath);
-                  expect(span.k).to.equal(cls.ENTRY);
+                  expect(span.k).to.equal(constants.ENTRY);
                 });
               });
             });

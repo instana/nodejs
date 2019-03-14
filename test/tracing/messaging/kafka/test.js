@@ -2,7 +2,7 @@
 
 var expect = require('chai').expect;
 
-var cls = require('../../../../src/tracing/cls');
+var constants = require('../../../../src/tracing/constants');
 var supportedVersion = require('../../../../src/tracing/index').supportedVersion;
 var config = require('../../../config');
 var utils = require('../../../utils');
@@ -43,7 +43,7 @@ describe('tracing/kafka', function() {
             expect(span.t).to.equal(entrySpan.t);
             expect(span.p).to.equal(entrySpan.s);
             expect(span.n).to.equal('kafka');
-            expect(span.k).to.equal(cls.EXIT);
+            expect(span.k).to.equal(constants.EXIT);
             expect(span.f.e).to.equal(String(expressKafkaProducerControls.getPid()));
             expect(span.async).to.equal(false);
             expect(span.error).to.equal(false);
@@ -86,7 +86,7 @@ describe('tracing/kafka', function() {
                 expect(span.t).to.equal(entrySpan.t);
                 expect(span.p).to.equal(entrySpan.s);
                 expect(span.n).to.equal('kafka');
-                expect(span.k).to.equal(cls.EXIT);
+                expect(span.k).to.equal(constants.EXIT);
                 expect(span.f.e).to.equal(String(expressKafkaProducerControls.getPid()));
                 expect(span.async).to.equal(false);
                 expect(span.error).to.equal(false);
@@ -102,7 +102,7 @@ describe('tracing/kafka', function() {
               var kafkaConsumeEntry = utils.expectOneMatching(spans, function(span) {
                 expect(span.p).to.equal(undefined);
                 expect(span.n).to.equal('kafka');
-                expect(span.k).to.equal(cls.ENTRY);
+                expect(span.k).to.equal(constants.ENTRY);
                 expect(span.d).to.be.greaterThan(99);
                 expect(span.f.e).to.equal(String(kafkaConsumerControls.getPid()));
                 expect(span.async).to.equal(false);

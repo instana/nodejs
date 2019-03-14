@@ -4,7 +4,7 @@ var expect = require('chai').expect;
 var Promise = require('bluebird');
 var semver = require('semver');
 
-var cls = require('../../../../src/tracing/cls');
+var constants = require('../../../../src/tracing/constants');
 var config = require('../../../config');
 var utils = require('../../../utils');
 
@@ -64,92 +64,93 @@ describe('tracing/grpc', function() {
 });
 
 function registerSuite(codeGenMode, withMetadata, withOptions) {
-  describe('codegen: ' + codeGenMode +
-           ', with metadata: ' + withMetadata +
-           ', with options: ' + withOptions, function() {
-    var env = {};
-    if (codeGenMode === 'static') {
-      env.GRPC_STATIC = true;
+  describe(
+    'codegen: ' + codeGenMode + ', with metadata: ' + withMetadata + ', with options: ' + withOptions,
+    function() {
+      var env = {};
+      if (codeGenMode === 'static') {
+        env.GRPC_STATIC = true;
+      }
+      if (withMetadata) {
+        env.GRPC_WITH_METADATA = true;
+      }
+      if (withOptions) {
+        env.GRPC_WITH_OPTIONS = true;
+      }
+      agentControls.registerTestHooks();
+      serverControls = new ServerControls({
+        agentControls: agentControls,
+        env: env
+      });
+      serverControls.registerTestHooks();
+      clientControls = new ClientControls({
+        agentControls: agentControls,
+        env: env
+      });
+      clientControls.registerTestHooks();
+
+      it('must trace an unary call', function() {
+        var expectedReply = 'received: request' + (withMetadata ? ' & test-content' : '');
+        return runTest('/unary-call', expectedReply);
+      });
+
+      it('must cancel an unary call', function() {
+        return runTest('/unary-call', null, true, false);
+      });
+
+      it('must mark unary call as erroneous', function() {
+        return runTest('/unary-call', null, false, true);
+      });
+
+      it('must trace server-side streaming', function() {
+        var expectedReply = withMetadata
+          ? ['received: request & test-content', 'streaming', 'more', 'data']
+          : ['received: request', 'streaming', 'more', 'data'];
+        return runTest('/server-stream', expectedReply);
+      });
+
+      it('must cancel server-side streaming', function() {
+        return runTest('/server-stream', null, true, false);
+      });
+
+      it('must mark server-side streaming as erroneous', function() {
+        return runTest('/server-stream', null, false, true);
+      });
+
+      it('must trace client-side streaming', function() {
+        var expectedReply = 'first; second; third';
+        return runTest('/client-stream', expectedReply);
+      });
+
+      it('must cancel client-side streaming', function() {
+        return runTest('/client-stream', null, true, false);
+      });
+
+      it('must mark client-side streaming as erroneous', function() {
+        return runTest('/client-stream', null, false, true);
+      });
+
+      it('must trace bidi streaming', function() {
+        var expectedReply = withMetadata
+          ? [
+              'received: first & test-content',
+              'received: second & test-content',
+              'received: third & test-content',
+              'STOP'
+            ]
+          : ['received: first', 'received: second', 'received: third', 'STOP'];
+        return runTest('/bidi-stream', expectedReply);
+      });
+
+      it('must cancel bidi streaming', function() {
+        return runTest('/bidi-stream', null, true, false);
+      });
+
+      it('must mark bidi streaming as erroneous', function() {
+        return runTest('/bidi-stream', null, false, true);
+      });
     }
-    if (withMetadata) {
-      env.GRPC_WITH_METADATA = true;
-    }
-    if (withOptions) {
-      env.GRPC_WITH_OPTIONS = true;
-    }
-    agentControls.registerTestHooks();
-    serverControls = new ServerControls({
-      agentControls: agentControls,
-      env: env
-    });
-    serverControls.registerTestHooks();
-    clientControls = new ClientControls({
-      agentControls: agentControls,
-      env: env
-    });
-    clientControls.registerTestHooks();
-
-    it('must trace an unary call', function() {
-      var expectedReply = 'received: request' + (withMetadata ? ' & test-content' : '');
-      return runTest('/unary-call', expectedReply);
-    });
-
-    it('must cancel an unary call', function() {
-      return runTest('/unary-call', null, true, false);
-    });
-
-    it('must mark unary call as erroneous', function() {
-      return runTest('/unary-call', null, false, true);
-    });
-
-    it('must trace server-side streaming', function() {
-      var expectedReply = withMetadata
-        ? ['received: request & test-content', 'streaming', 'more', 'data']
-        : ['received: request', 'streaming', 'more', 'data'];
-      return runTest('/server-stream', expectedReply);
-    });
-
-    it('must cancel server-side streaming', function() {
-      return runTest('/server-stream', null, true, false);
-    });
-
-    it('must mark server-side streaming as erroneous', function() {
-      return runTest('/server-stream', null, false, true);
-    });
-
-    it('must trace client-side streaming', function() {
-      var expectedReply = 'first; second; third';
-      return runTest('/client-stream', expectedReply);
-    });
-
-    it('must cancel client-side streaming', function() {
-      return runTest('/client-stream', null, true, false);
-    });
-
-    it('must mark client-side streaming as erroneous', function() {
-      return runTest('/client-stream', null, false, true);
-    });
-
-    it('must trace bidi streaming', function() {
-      var expectedReply = withMetadata
-        ? [
-            'received: first & test-content',
-            'received: second & test-content',
-            'received: third & test-content',
-            'STOP'
-          ]
-        : ['received: first', 'received: second', 'received: third', 'STOP'];
-      return runTest('/bidi-stream', expectedReply);
-    });
-
-    it('must cancel bidi streaming', function() {
-      return runTest('/bidi-stream', null, true, false);
-    });
-
-    it('must mark bidi streaming as erroneous', function() {
-      return runTest('/bidi-stream', null, false, true);
-    });
-  });
+  );
 
   function runTest(url, expectedReply, cancel, erroneous) {
     return clientControls
@@ -203,13 +204,13 @@ function registerSuite(codeGenMode, withMetadata, withOptions) {
 
   function checkHttpEntry(url, span) {
     expect(span.n).to.equal('node.http.server');
-    expect(span.k).to.equal(cls.ENTRY);
+    expect(span.k).to.equal(constants.ENTRY);
     expect(span.data.http.url).to.equal(url);
   }
 
   function checkGrpcClientSpan(httpEntry, url, cancel, erroneous, span) {
     expect(span.n).to.equal('rpc-client');
-    expect(span.k).to.equal(cls.EXIT);
+    expect(span.k).to.equal(constants.EXIT);
     expect(span.t).to.equal(httpEntry.t);
     expect(span.p).to.equal(httpEntry.s);
     expect(span.s).to.be.not.empty;
@@ -229,7 +230,7 @@ function registerSuite(codeGenMode, withMetadata, withOptions) {
 
   function checkGrpcServerSpan(grpcExit, url, cancel, erroneous, span) {
     expect(span.n).to.equal('rpc-server');
-    expect(span.k).to.equal(cls.ENTRY);
+    expect(span.k).to.equal(constants.ENTRY);
     expect(span.t).to.equal(grpcExit.t);
     expect(span.p).to.equal(grpcExit.s);
     expect(span.s).to.be.not.empty;
@@ -249,7 +250,7 @@ function registerSuite(codeGenMode, withMetadata, withOptions) {
 
   function checkLogSpanAfterGrpcExit(httpEntry, url, cancel, erroneous, span) {
     expect(span.n).to.equal('log.pino');
-    expect(span.k).to.equal(cls.EXIT);
+    expect(span.k).to.equal(constants.EXIT);
     expect(span.t).to.equal(httpEntry.t);
     expect(span.p).to.equal(httpEntry.s);
     if (erroneous) {
@@ -263,7 +264,7 @@ function registerSuite(codeGenMode, withMetadata, withOptions) {
 
   function checkLogSpanDuringGrpcEntry(grpcEntry, url, erroneous, span) {
     expect(span.n).to.equal('log.pino');
-    expect(span.k).to.equal(cls.EXIT);
+    expect(span.k).to.equal(constants.EXIT);
     expect(span.t).to.equal(grpcEntry.t);
     expect(span.p).to.equal(grpcEntry.s);
     if (erroneous) {

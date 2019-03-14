@@ -7,6 +7,7 @@ logger = require('../../../logger').getLogger('tracing/mongodb', function(newLog
 
 var requireHook = require('../../../util/requireHook');
 var tracingUtil = require('../../tracingUtil');
+var constants = require('../../constants');
 var cls = require('../../cls');
 
 var isActive = false;
@@ -76,7 +77,7 @@ function onStarted(event) {
   }
 
   var parentSpan = cls.getCurrentSpan();
-  if (parentSpan && cls.isExitSpan(parentSpan)) {
+  if (parentSpan && constants.isExitSpan(parentSpan)) {
     return;
   }
 
@@ -101,7 +102,7 @@ function onStarted(event) {
     return;
   }
 
-  var span = cls.startSpan('mongo', cls.EXIT, traceId, parentSpanId, false);
+  var span = cls.startSpan('mongo', constants.EXIT, traceId, parentSpanId, false);
 
   var peer = null;
   var service = null;

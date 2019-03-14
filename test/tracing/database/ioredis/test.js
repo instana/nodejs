@@ -2,7 +2,7 @@
 
 var expect = require('chai').expect;
 
-var cls = require('../../../../src/tracing/cls');
+var constants = require('../../../../src/tracing/constants');
 var supportedVersion = require('../../../../src/tracing/index').supportedVersion;
 var config = require('../../../config');
 var utils = require('../../../utils');
@@ -57,7 +57,7 @@ describe('tracing/ioredis', function() {
               expect(span.t).to.equal(writeEntrySpan.t);
               expect(span.p).to.equal(writeEntrySpan.s);
               expect(span.n).to.equal('redis');
-              expect(span.k).to.equal(cls.EXIT);
+              expect(span.k).to.equal(constants.EXIT);
               expect(span.f.e).to.equal(String(ioRedisControls.getPid()));
               expect(span.async).to.equal(false);
               expect(span.error).to.equal(false);
@@ -74,7 +74,7 @@ describe('tracing/ioredis', function() {
               expect(span.t).to.equal(readEntrySpan.t);
               expect(span.p).to.equal(readEntrySpan.s);
               expect(span.n).to.equal('redis');
-              expect(span.k).to.equal(cls.EXIT);
+              expect(span.k).to.equal(constants.EXIT);
               expect(span.f.e).to.equal(String(ioRedisControls.getPid()));
               expect(span.async).to.equal(false);
               expect(span.error).to.equal(false);
@@ -119,7 +119,7 @@ describe('tracing/ioredis', function() {
               expect(span.t).to.equal(writeEntrySpan.t);
               expect(span.p).to.equal(writeEntrySpan.s);
               expect(span.n).to.equal('redis');
-              expect(span.k).to.equal(cls.EXIT);
+              expect(span.k).to.equal(constants.EXIT);
               expect(span.f.e).to.equal(String(ioRedisControls.getPid()));
               expect(span.async).to.equal(false);
               expect(span.error).to.equal(false);
@@ -136,7 +136,7 @@ describe('tracing/ioredis', function() {
               expect(span.t).to.equal(readEntrySpan.t);
               expect(span.p).to.equal(readEntrySpan.s);
               expect(span.n).to.equal('redis');
-              expect(span.k).to.equal(cls.EXIT);
+              expect(span.k).to.equal(constants.EXIT);
               expect(span.f.e).to.equal(String(ioRedisControls.getPid()));
               expect(span.async).to.equal(false);
               expect(span.error).to.equal(false);
@@ -148,7 +148,7 @@ describe('tracing/ioredis', function() {
               expect(span.t).to.equal(readEntrySpan.t);
               expect(span.p).to.equal(readEntrySpan.s);
               expect(span.n).to.equal('node.http.client');
-              expect(span.k).to.equal(cls.EXIT);
+              expect(span.k).to.equal(constants.EXIT);
               expect(span.f.e).to.equal(String(ioRedisControls.getPid()));
               expect(span.async).to.equal(false);
               expect(span.error).to.equal(false);
@@ -194,7 +194,7 @@ describe('tracing/ioredis', function() {
               expect(span.t).to.equal(writeEntrySpan.t);
               expect(span.p).to.equal(writeEntrySpan.s);
               expect(span.n).to.equal('redis');
-              expect(span.k).to.equal(cls.EXIT);
+              expect(span.k).to.equal(constants.EXIT);
               expect(span.f.e).to.equal(String(ioRedisControls.getPid()));
               expect(span.async).to.equal(false);
               expect(span.error).to.equal(false);
@@ -211,7 +211,7 @@ describe('tracing/ioredis', function() {
               expect(span.t).to.equal(readEntrySpan.t);
               expect(span.p).to.equal(readEntrySpan.s);
               expect(span.n).to.equal('redis');
-              expect(span.k).to.equal(cls.EXIT);
+              expect(span.k).to.equal(constants.EXIT);
               expect(span.f.e).to.equal(String(ioRedisControls.getPid()));
               expect(span.async).to.equal(false);
               expect(span.error).to.equal(false);
@@ -223,7 +223,7 @@ describe('tracing/ioredis', function() {
               expect(span.t).to.equal(readEntrySpan.t);
               expect(span.p).to.equal(readEntrySpan.s);
               expect(span.n).to.equal('node.http.client');
-              expect(span.k).to.equal(cls.EXIT);
+              expect(span.k).to.equal(constants.EXIT);
               expect(span.f.e).to.equal(String(ioRedisControls.getPid()));
               expect(span.async).to.equal(false);
               expect(span.error).to.equal(false);
@@ -257,7 +257,7 @@ describe('tracing/ioredis', function() {
               expect(span.t).to.equal(writeEntrySpan.t);
               expect(span.p).to.equal(writeEntrySpan.s);
               expect(span.n).to.equal('redis');
-              expect(span.k).to.equal(cls.EXIT);
+              expect(span.k).to.equal(constants.EXIT);
               expect(span.f.e).to.equal(String(ioRedisControls.getPid()));
               expect(span.async).to.equal(false);
               expect(span.error).to.equal(true);
@@ -289,7 +289,7 @@ describe('tracing/ioredis', function() {
               expect(span.t).to.equal(writeEntrySpan.t);
               expect(span.p).to.equal(writeEntrySpan.s);
               expect(span.n).to.equal('redis');
-              expect(span.k).to.equal(cls.EXIT);
+              expect(span.k).to.equal(constants.EXIT);
               expect(span.f.e).to.equal(String(ioRedisControls.getPid()));
               expect(span.async).to.equal(false);
               expect(span.error).to.equal(false);
@@ -326,7 +326,7 @@ describe('tracing/ioredis', function() {
               expect(span.t).to.equal(writeEntrySpan.t);
               expect(span.p).to.equal(writeEntrySpan.s);
               expect(span.n).to.equal('redis');
-              expect(span.k).to.equal(cls.EXIT);
+              expect(span.k).to.equal(constants.EXIT);
               expect(span.f.e).to.equal(String(ioRedisControls.getPid()));
               expect(span.async).to.equal(false);
               expect(span.error).to.equal(true);
@@ -361,7 +361,7 @@ describe('tracing/ioredis', function() {
               expect(span.t).to.equal(entrySpan.t);
               expect(span.p).to.equal(entrySpan.s);
               expect(span.n).to.equal('redis');
-              expect(span.k).to.equal(cls.EXIT);
+              expect(span.k).to.equal(constants.EXIT);
               expect(span.f.e).to.equal(String(ioRedisControls.getPid()));
               expect(span.async).to.equal(false);
               expect(span.error).to.equal(false);
@@ -377,7 +377,7 @@ describe('tracing/ioredis', function() {
               expect(span.t).to.equal(entrySpan.t);
               expect(span.p).to.equal(entrySpan.s);
               expect(span.n).to.equal('node.http.client');
-              expect(span.k).to.equal(cls.EXIT);
+              expect(span.k).to.equal(constants.EXIT);
               expect(span.f.e).to.equal(String(ioRedisControls.getPid()));
               expect(span.async).to.equal(false);
               expect(span.error).to.equal(false);
@@ -408,7 +408,7 @@ describe('tracing/ioredis', function() {
               expect(span.t).to.equal(writeEntrySpan.t);
               expect(span.p).to.equal(writeEntrySpan.s);
               expect(span.n).to.equal('redis');
-              expect(span.k).to.equal(cls.EXIT);
+              expect(span.k).to.equal(constants.EXIT);
               expect(span.f.e).to.equal(String(ioRedisControls.getPid()));
               expect(span.async).to.equal(false);
               expect(span.error).to.equal(false);
@@ -442,7 +442,7 @@ describe('tracing/ioredis', function() {
               expect(span.t).to.equal(writeEntrySpan.t);
               expect(span.p).to.equal(writeEntrySpan.s);
               expect(span.n).to.equal('redis');
-              expect(span.k).to.equal(cls.EXIT);
+              expect(span.k).to.equal(constants.EXIT);
               expect(span.f.e).to.equal(String(ioRedisControls.getPid()));
               expect(span.async).to.equal(false);
               expect(span.error).to.equal(true);
@@ -477,7 +477,7 @@ describe('tracing/ioredis', function() {
               expect(span.t).to.equal(entrySpan.t);
               expect(span.p).to.equal(entrySpan.s);
               expect(span.n).to.equal('redis');
-              expect(span.k).to.equal(cls.EXIT);
+              expect(span.k).to.equal(constants.EXIT);
               expect(span.f.e).to.equal(String(ioRedisControls.getPid()));
               expect(span.async).to.equal(false);
               expect(span.error).to.equal(false);
@@ -493,7 +493,7 @@ describe('tracing/ioredis', function() {
               expect(span.t).to.equal(entrySpan.t);
               expect(span.p).to.equal(entrySpan.s);
               expect(span.n).to.equal('node.http.client');
-              expect(span.k).to.equal(cls.EXIT);
+              expect(span.k).to.equal(constants.EXIT);
               expect(span.f.e).to.equal(String(ioRedisControls.getPid()));
               expect(span.async).to.equal(false);
               expect(span.error).to.equal(false);

@@ -3,7 +3,7 @@
 var coreHttpsModule = require('https');
 var coreHttpModule = require('http');
 
-var tracingConstants = require('../../constants');
+var constants = require('../../constants');
 var urlUtil = require('../../../util/url');
 var httpCommon = require('./_http');
 var shimmer = require('shimmer');
@@ -28,8 +28,8 @@ function shimEmit(realEmit) {
 
     return cls.ns.runAndReturn(function() {
       // Respect any incoming tracing level headers
-      if (req && req.headers && req.headers[tracingConstants.traceLevelHeaderNameLowerCase] === '0') {
-        cls.setTracingLevel(req.headers[tracingConstants.traceLevelHeaderNameLowerCase]);
+      if (req && req.headers && req.headers[constants.traceLevelHeaderNameLowerCase] === '0') {
+        cls.setTracingLevel(req.headers[constants.traceLevelHeaderNameLowerCase]);
       }
 
       if (type !== 'request' || !isActive || cls.tracingSuppressed()) {
@@ -38,7 +38,7 @@ function shimEmit(realEmit) {
 
       var incomingTraceId = getExistingTraceId(req);
       var incomingSpanId = getExistingSpanId(req);
-      var span = cls.startSpan(exports.spanName, cls.ENTRY, incomingTraceId, incomingSpanId);
+      var span = cls.startSpan(exports.spanName, constants.ENTRY, incomingTraceId, incomingSpanId);
 
       // Grab the URL before application code gets access to the incoming message.
       // We are doing this because libs like express are manipulating req.url when
@@ -109,7 +109,7 @@ exports.deactivate = function() {
 function getExistingSpanId(req, fallback) {
   fallback = arguments.length > 1 ? fallback : null;
 
-  var spanId = req.headers[tracingConstants.spanIdHeaderNameLowerCase];
+  var spanId = req.headers[constants.spanIdHeaderNameLowerCase];
   if (spanId == null) {
     return fallback;
   }
@@ -120,7 +120,7 @@ function getExistingSpanId(req, fallback) {
 function getExistingTraceId(req, fallback) {
   fallback = arguments.length > 1 ? fallback : null;
 
-  var traceId = req.headers[tracingConstants.traceIdHeaderNameLowerCase];
+  var traceId = req.headers[constants.traceIdHeaderNameLowerCase];
   if (traceId == null) {
     return fallback;
   }

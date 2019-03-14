@@ -4,7 +4,7 @@
 
 var expect = require('chai').expect;
 
-var cls = require('../../../../src/tracing/cls');
+var constants = require('../../../../src/tracing/constants');
 var supportedVersion = require('../../../../src/tracing/index').supportedVersion;
 var utils = require('../../../utils');
 var exchange = require('./amqpUtil').exchange;
@@ -63,7 +63,7 @@ function registerTests(apiType) {
           utils.expectOneMatching(spans, function(span) {
             expect(span.t).to.equal(entrySpan.t);
             expect(span.p).to.equal(entrySpan.s);
-            expect(span.k).to.equal(cls.EXIT);
+            expect(span.k).to.equal(constants.EXIT);
             expect(span.n).to.equal('rabbitmq');
             expect(span.f.e).to.equal(String(publisherControls.getPid()));
             expect(span.async).to.equal(false);
@@ -79,7 +79,7 @@ function registerTests(apiType) {
             expect(span.n).to.equal('node.http.client');
             expect(span.t).to.equal(entrySpan.t);
             expect(span.p).to.equal(entrySpan.s);
-            expect(span.k).to.equal(cls.EXIT);
+            expect(span.k).to.equal(constants.EXIT);
           });
         });
       });
@@ -100,7 +100,7 @@ function registerTests(apiType) {
           utils.expectOneMatching(spans, function(span) {
             expect(span.t).to.equal(entrySpan.t);
             expect(span.p).to.equal(entrySpan.s);
-            expect(span.k).to.equal(cls.EXIT);
+            expect(span.k).to.equal(constants.EXIT);
             expect(span.n).to.equal('rabbitmq');
             expect(span.f.e).to.equal(String(publisherControls.getPid()));
             expect(span.async).to.equal(false);
@@ -115,7 +115,7 @@ function registerTests(apiType) {
             expect(span.n).to.equal('node.http.client');
             expect(span.t).to.equal(entrySpan.t);
             expect(span.p).to.equal(entrySpan.s);
-            expect(span.k).to.equal(cls.EXIT);
+            expect(span.k).to.equal(constants.EXIT);
           });
         });
       });
@@ -127,7 +127,7 @@ function registerTests(apiType) {
       return utils.retry(function() {
         return agentStubControls.getSpans().then(function(spans) {
           var rabbitMqExit = utils.expectOneMatching(spans, function(span) {
-            expect(span.k).to.equal(cls.EXIT);
+            expect(span.k).to.equal(constants.EXIT);
             expect(span.n).to.equal('rabbitmq');
           });
 
@@ -135,7 +135,7 @@ function registerTests(apiType) {
             expect(span.t).to.equal(rabbitMqExit.t);
             expect(span.p).to.equal(rabbitMqExit.s);
             expect(span.n).to.equal('rabbitmq');
-            expect(span.k).to.equal(cls.ENTRY);
+            expect(span.k).to.equal(constants.ENTRY);
             expect(span.d).to.be.greaterThan(99);
             expect(span.f.e).to.equal(String(consumerControls.getPid()));
             expect(span.async).to.equal(false);
@@ -150,7 +150,7 @@ function registerTests(apiType) {
             expect(span.n).to.equal('node.http.client');
             expect(span.t).to.equal(rabbitMqExit.t);
             expect(span.p).to.equal(rabbitMqEntry.s);
-            expect(span.k).to.equal(cls.EXIT);
+            expect(span.k).to.equal(constants.EXIT);
           });
         });
       });
@@ -162,7 +162,7 @@ function registerTests(apiType) {
       return utils.retry(function() {
         return agentStubControls.getSpans().then(function(spans) {
           var rabbitMqExit = utils.expectOneMatching(spans, function(span) {
-            expect(span.k).to.equal(cls.EXIT);
+            expect(span.k).to.equal(constants.EXIT);
             expect(span.n).to.equal('rabbitmq');
           });
 
@@ -170,7 +170,7 @@ function registerTests(apiType) {
             expect(span.t).to.equal(rabbitMqExit.t);
             expect(span.p).to.equal(rabbitMqExit.s);
             expect(span.n).to.equal('rabbitmq');
-            expect(span.k).to.equal(cls.ENTRY);
+            expect(span.k).to.equal(constants.ENTRY);
             expect(span.d).to.be.greaterThan(99);
             expect(span.f.e).to.equal(String(consumerControls.getPid()));
             expect(span.async).to.equal(false);
@@ -185,7 +185,7 @@ function registerTests(apiType) {
             expect(span.n).to.equal('node.http.client');
             expect(span.t).to.equal(rabbitMqExit.t);
             expect(span.p).to.equal(rabbitMqEntry.s);
-            expect(span.k).to.equal(cls.EXIT);
+            expect(span.k).to.equal(constants.EXIT);
           });
         });
       });
@@ -197,7 +197,7 @@ function registerTests(apiType) {
       return utils.retry(function() {
         return agentStubControls.getSpans().then(function(spans) {
           var rabbitMqExit = utils.expectOneMatching(spans, function(span) {
-            expect(span.k).to.equal(cls.EXIT);
+            expect(span.k).to.equal(constants.EXIT);
             expect(span.n).to.equal('rabbitmq');
           });
 
@@ -205,7 +205,7 @@ function registerTests(apiType) {
             expect(span.t).to.equal(rabbitMqExit.t);
             expect(span.p).to.equal(rabbitMqExit.s);
             expect(span.n).to.equal('rabbitmq');
-            expect(span.k).to.equal(cls.ENTRY);
+            expect(span.k).to.equal(constants.ENTRY);
             expect(span.d).to.be.greaterThan(99);
             expect(span.f.e).to.equal(String(consumerControls.getPid()));
             expect(span.async).to.equal(false);
@@ -220,7 +220,7 @@ function registerTests(apiType) {
             expect(span.n).to.equal('node.http.client');
             expect(span.t).to.equal(rabbitMqExit.t);
             expect(span.p).to.equal(rabbitMqEntry.s);
-            expect(span.k).to.equal(cls.EXIT);
+            expect(span.k).to.equal(constants.EXIT);
           });
         });
       });
@@ -241,7 +241,7 @@ function registerTests(apiType) {
           utils.expectOneMatching(spans, function(span) {
             expect(span.t).to.equal(entrySpan.t);
             expect(span.p).to.equal(entrySpan.s);
-            expect(span.k).to.equal(cls.EXIT);
+            expect(span.k).to.equal(constants.EXIT);
             expect(span.n).to.equal('rabbitmq');
             expect(span.f.e).to.equal(String(publisherControls.getPid()));
             expect(span.async).to.equal(false);
@@ -257,7 +257,7 @@ function registerTests(apiType) {
             expect(span.n).to.equal('node.http.client');
             expect(span.t).to.equal(entrySpan.t);
             expect(span.p).to.equal(entrySpan.s);
-            expect(span.k).to.equal(cls.EXIT);
+            expect(span.k).to.equal(constants.EXIT);
           });
         });
       });
@@ -269,7 +269,7 @@ function registerTests(apiType) {
       return utils.retry(function() {
         return agentStubControls.getSpans().then(function(spans) {
           var rabbitMqExit = utils.expectOneMatching(spans, function(span) {
-            expect(span.k).to.equal(cls.EXIT);
+            expect(span.k).to.equal(constants.EXIT);
             expect(span.n).to.equal('rabbitmq');
           });
 
@@ -277,7 +277,7 @@ function registerTests(apiType) {
             expect(span.t).to.equal(rabbitMqExit.t);
             expect(span.p).to.equal(rabbitMqExit.s);
             expect(span.n).to.equal('rabbitmq');
-            expect(span.k).to.equal(cls.ENTRY);
+            expect(span.k).to.equal(constants.ENTRY);
             expect(span.f.e).to.equal(String(consumerControls.getPid()));
             expect(span.async).to.equal(false);
             expect(span.error).to.equal(false);
@@ -291,7 +291,7 @@ function registerTests(apiType) {
             expect(span.n).to.equal('node.http.client');
             expect(span.t).to.equal(rabbitMqExit.t);
             expect(span.p).to.equal(rabbitMqEntry.s);
-            expect(span.k).to.equal(cls.EXIT);
+            expect(span.k).to.equal(constants.EXIT);
           });
         });
       });

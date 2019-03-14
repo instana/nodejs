@@ -5,6 +5,7 @@ var shimmer = require('shimmer');
 
 var requireHook = require('../../../util/requireHook');
 var tracingUtil = require('../../tracingUtil');
+var constants = require('../../constants');
 var cls = require('../../cls');
 
 var isActive = false;
@@ -57,11 +58,11 @@ function instrumentCommand(command, original) {
     }
 
     var parentSpan = cls.getCurrentSpan();
-    if (cls.isExitSpan(parentSpan)) {
+    if (constants.isExitSpan(parentSpan)) {
       return original.apply(this, arguments);
     }
 
-    var span = cls.startSpan('redis', cls.EXIT);
+    var span = cls.startSpan('redis', constants.EXIT);
     // do not set the redis span as the current span
     cls.setCurrentSpan(parentSpan);
     span.stack = tracingUtil.getStackTrace(wrappedCommand);
@@ -115,11 +116,11 @@ function instrumentMultiExec(isAtomic, original) {
     }
 
     var parentSpan = cls.getCurrentSpan();
-    if (cls.isExitSpan(parentSpan)) {
+    if (constants.isExitSpan(parentSpan)) {
       return original.apply(this, arguments);
     }
 
-    var span = cls.startSpan('redis', cls.EXIT);
+    var span = cls.startSpan('redis', constants.EXIT);
     // do not set the redis span as the current span
     cls.setCurrentSpan(parentSpan);
     span.stack = tracingUtil.getStackTrace(instrumentedMultiExec);

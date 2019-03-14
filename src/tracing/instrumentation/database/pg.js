@@ -4,6 +4,7 @@ var shimmer = require('shimmer');
 
 var requireHook = require('../../../util/requireHook');
 var tracingUtil = require('../../tracingUtil');
+var constants = require('../../constants');
 var cls = require('../../cls');
 
 var isActive = false;
@@ -37,7 +38,7 @@ function shimQuery(original) {
 function instrumentedQuery(ctx, originalQuery, argsForOriginalQuery) {
   var parentSpan = cls.getCurrentSpan();
 
-  if (cls.isExitSpan(parentSpan)) {
+  if (constants.isExitSpan(parentSpan)) {
     return originalQuery.apply(ctx, argsForOriginalQuery);
   }
 
@@ -49,7 +50,7 @@ function instrumentedQuery(ctx, originalQuery, argsForOriginalQuery) {
   var config = argsForOriginalQuery[0];
 
   return cls.ns.runAndReturn(function() {
-    var span = cls.startSpan('postgres', cls.EXIT);
+    var span = cls.startSpan('postgres', constants.EXIT);
     span.stack = tracingUtil.getStackTrace(instrumentedQuery);
     span.data = {
       pg: {
