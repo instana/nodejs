@@ -50,7 +50,7 @@ amqp
         log(msg.content.toString());
         var span = instana.currentSpan();
         span.disableAutoEnd();
-        // simulating asynchronous follow up steps with setTimout and request-promise
+        // simulating asynchronous follow up steps with setTimeout and request-promise
         setTimeout(function() {
           request('http://127.0.0.1:' + agentPort)
             .then(function() {
@@ -76,7 +76,7 @@ amqp
         log(msg.content.toString());
         var span = instana.currentSpan();
         span.disableAutoEnd();
-        // simulating asynchronous follow up steps with setTimout and request-promise
+        // simulating asynchronous follow up steps with setTimeout and request-promise
         setTimeout(function() {
           request('http://127.0.0.1:' + agentPort)
             .then(function() {
@@ -106,7 +106,7 @@ amqp
             log('[channel#get] ', msg.content.toString());
             var span = instana.currentSpan();
             span.disableAutoEnd();
-            // simulating asynchronous follow up steps with setTimout and request-promise
+            // simulating asynchronous follow up steps with setTimeout and request-promise
             setTimeout(function() {
               return request('http://127.0.0.1:' + agentPort)
                 .then(function() {
@@ -139,7 +139,7 @@ amqp
         log(msg.content.toString());
         var span = instana.currentSpan();
         span.disableAutoEnd();
-        // simulating asynchronous follow up steps with setTimout and request-promise
+        // simulating asynchronous follow up steps with setTimeout and request-promise
         setTimeout(function() {
           request('http://127.0.0.1:' + agentPort)
             .then(function() {

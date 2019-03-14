@@ -65,7 +65,7 @@ consumer.on('error', function(err) {
   log('Error occured in consumer:', err);
   var span = instana.currentSpan();
   span.disableAutoEnd();
-  // simulating asynchronous follow up steps with setTimout and request-promise
+  // simulating asynchronous follow up steps with setTimeout and request-promise
   setTimeout(function() {
     request('http://127.0.0.1:' + agentPort).finally(function() {
       span.end(1);
@@ -77,7 +77,7 @@ consumer.on('message', function() {
   log('Got message in Kafka consumer', arguments);
   var span = instana.currentSpan();
   span.disableAutoEnd();
-  // simulating asynchronous follow up steps with setTimout and request-promise
+  // simulating asynchronous follow up steps with setTimeout and request-promise
   setTimeout(function() {
     request('http://127.0.0.1:' + agentPort).finally(function() {
       span.end();
