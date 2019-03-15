@@ -51,11 +51,13 @@ function gatherHealthcheckResults() {
 
       exports.currentPayload = results;
       timeoutHandle = setTimeout(gatherHealthcheckResults, timeBetweenHealthcheckCalls);
+      timeoutHandle.unref();
     })
     .catch(function onHealthcheckResultFailure(err) {
       exports.currentPayload = {};
       logger.warn('Unexpected error while getting healthcheck results', err);
       timeoutHandle = setTimeout(gatherHealthcheckResults, timeBetweenHealthcheckCalls);
+      timeoutHandle.unref();
     });
 }
 

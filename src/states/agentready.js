@@ -67,7 +67,7 @@ module.exports = exports = {
           transmissionsSinceLastFullDataEmit++;
         }
         requestHandler.handleRequests(requests);
-        setTimeout(sendData, 1000);
+        setTimeout(sendData, 1000).unref();
       });
     }
   },

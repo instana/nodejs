@@ -23,7 +23,7 @@ function tryToAnnounce(ctx) {
   agentConnection.announceNodeSensor(function(err, rawResponse) {
     if (err) {
       logger.info('Announce attempt failed: %s. Will retry in %sms', err.message, retryDelay);
-      setTimeout(tryToAnnounce, retryDelay, ctx);
+      setTimeout(tryToAnnounce, retryDelay, ctx).unref();
       return;
     }
 
@@ -37,7 +37,7 @@ function tryToAnnounce(ctx) {
         retryDelay,
         e
       );
-      setTimeout(tryToAnnounce, retryDelay, ctx);
+      setTimeout(tryToAnnounce, retryDelay, ctx).unref();
       return;
     }
 
