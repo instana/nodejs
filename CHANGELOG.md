@@ -1,8 +1,9 @@
 # Changelog
 
-## Unreleased
+## 1.62.0
 - Extend API: Offer various getters to inquire about details of the currently actice span (trace ID, span ID and other attributes).
 - Improve generated IDs (span ID, trace ID).
+- Fix: Make sure timeouts created by instana-nodejs-sensor do not prevent the process from terminating.
 
 ## 1.61.2
 - Fix for GRPC instrumentation: Add original attributes to shimmed client method.
