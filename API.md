@@ -6,7 +6,9 @@
 
 - [Instana's Init Function](#instanas-init-function)
 - [Accessing Other Exports](#accessing-other-exports)
-- [Ending Spans Manually (Message Broker Entries)](#ending-spans-manually-message-broker-entries)
+- [Setting the Logger After Initialization](#setting-the-logger-after-initialization)
+- [Accessing The Currently Active Span](#accessing-the-currently-active-span)
+  - [Ending Spans Manually (Message Broker Entries)](#ending-spans-manually-message-broker-entries)
 - [OpenTracing Integration](#opentracing-integration)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->

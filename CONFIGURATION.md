@@ -16,6 +16,7 @@
   - [Agent Host](#agent-host)
   - [Agent Port](#agent-port)
   - [Agent Name](#agent-name)
+  - [Kubernetes](#kubernetes)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
