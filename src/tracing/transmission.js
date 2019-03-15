@@ -24,6 +24,7 @@ exports.activate = function() {
   isActive = true;
   spans = [];
   transmissionTimeoutHandle = setTimeout(transmitSpans, 1000);
+  transmissionTimeoutHandle.unref();
 };
 
 exports.deactivate = function() {
@@ -53,6 +54,7 @@ function transmitSpans() {
 
   if (spans.length === 0) {
     transmissionTimeoutHandle = setTimeout(transmitSpans, 1000);
+    transmissionTimeoutHandle.unref();
     return;
   }
 
@@ -67,6 +69,7 @@ function transmitSpans() {
     }
 
     transmissionTimeoutHandle = setTimeout(transmitSpans, 1000);
+    transmissionTimeoutHandle.unref();
   });
 }
 

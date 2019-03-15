@@ -18,6 +18,7 @@ exports.activate = function() {
   if (v8 && v8.getHeapSpaceStatistics) {
     gatherHeapSpaceStatistics();
     activeIntervalHandle = setInterval(gatherHeapSpaceStatistics, 1000);
+    activeIntervalHandle.unref();
   }
 };
 

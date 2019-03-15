@@ -38,7 +38,7 @@ function gatherClusterInfo(client, info) {
     function() {
       setTimeout(function() {
         gatherClusterInfo(client, info);
-      }, 30000);
+      }, 30000).unref();
     }
   );
 }

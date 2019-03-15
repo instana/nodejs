@@ -27,7 +27,7 @@ function checkWhetherAgentIsReadyToAccept(totalNumberOfAttempts, ctx) {
       );
       ctx.transitionTo('unannounced');
     } else {
-      setTimeout(checkWhetherAgentIsReadyToAccept, 10000, totalNumberOfAttempts + 1, ctx);
+      setTimeout(checkWhetherAgentIsReadyToAccept, 10000, totalNumberOfAttempts + 1, ctx).unref();
     }
   });
 }

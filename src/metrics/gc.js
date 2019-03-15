@@ -72,6 +72,7 @@ exports.activate = function() {
     exports.currentPayload.weakCallbackProcessing = processWeakCallbacksWindow.sum();
     exports.currentPayload.gcPause = gcPauseWindow.sum();
   }, 1000);
+  reducingIntervalHandle.unref();
 };
 
 exports.deactivate = function() {

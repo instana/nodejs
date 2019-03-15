@@ -48,6 +48,7 @@ exports.startProfiling = function(request, multiCb) {
   profilingCallback = multiCb;
   var duration = request.args.duration ? Math.min(request.args.duration, maxProfilingDurationMillis) : 1000 * 60;
   profilingTimeoutHandle = setTimeout(onStopProfiling, duration);
+  profilingTimeoutHandle.unref();
   multiCb({
     data: 'Profiling successfully started for ' + duration + 'ms.'
   });
