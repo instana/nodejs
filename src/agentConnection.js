@@ -8,6 +8,7 @@ logger = require('./logger').getLogger('agentConnection', function(newLogger) {
   logger = newLogger;
 });
 
+var propertySizes = require('./util/propertySizes');
 var atMostOnce = require('./util/atMostOnce');
 var agentOpts = require('./agent/opts');
 var buffer = require('./util/buffer');
@@ -23,6 +24,9 @@ var paddingForInodeAndFileDescriptor = 200;
 
 var netLinkHasBeenRequired;
 var netLink;
+
+var maxContentLength = 1024 * 1024 * 5;
+var maxContentErrorHasBeenLogged = false;
 
 exports.announceNodeSensor = function announceNodeSensor(cb) {
   cb = atMostOnce('callback for announceNodeSensor', cb);
@@ -178,9 +182,14 @@ exports.sendDataToAgent = function sendDataToAgent(data, cb) {
 };
 
 exports.sendSpansToAgent = function sendSpansToAgent(spans, cb) {
-  cb = atMostOnce('callback for sendSpansToAgent', cb);
+  var callback = atMostOnce('callback for sendSpansToAgent', function(err, responseBody) {
+    if (err && !maxContentErrorHasBeenLogged && err instanceof PayloadTooLargeError) {
+      logLargeSpans(spans);
+    }
+    cb(err, responseBody);
+  });
 
-  sendData('/com.instana.plugin.nodejs/traces.' + pidStore.pid, spans, cb, true);
+  sendData('/com.instana.plugin.nodejs/traces.' + pidStore.pid, spans, callback, true);
 };
 
 exports.sendAgentResponseToAgent = function sendAgentResponseToAgent(messageId, response, cb) {
@@ -200,9 +209,16 @@ function sendData(path, data, cb, ignore404) {
   }
 
   var payload = JSON.stringify(data);
+
   logger.debug({ payload: data }, 'Sending payload to %s', path);
   // manually turn into a buffer to correctly identify content-length
   payload = buffer.fromString(payload, 'utf8');
+  if (payload.length > maxContentLength) {
+    var error = new PayloadTooLargeError(
+      'Request payload is too large. Will not send data to agent. (POST ' + path + ')'
+    );
+    return setImmediate(cb.bind(null, error));
+  }
 
   var req = http.request(
     {
@@ -301,10 +317,7 @@ function sendRequestsSync(requests) {
   }
 
   try {
-    netLink.connect(
-      port,
-      agentOpts.host
-    );
+    netLink.connect(port, agentOpts.host);
     netLink.blocking(false);
     requests.forEach(function(request) {
       sendHttpPostRequestSync(port, request.path, request.data);
@@ -366,4 +379,46 @@ function getCpuSetFileContent() {
     }
     return null;
   }
+}
+
+function PayloadTooLargeError(message) {
+  Error.captureStackTrace(this, this.constructor);
+  this.name = this.constructor.name;
+  this.message = message;
+}
+
+function logLargeSpans(spans) {
+  maxContentErrorHasBeenLogged = true;
+  var topFiveLargestSpans = spans
+    .map(function(span) {
+      return {
+        span: span,
+        length: JSON.stringify(span)
+      };
+    })
+    .sort(function(s1, s2) {
+      return s2.length - s1.length;
+    })
+    .slice(0, 4)
+    .map(function(s) {
+      return (
+        'span name: ' +
+        s.span.n +
+        ', largest attribute: ' +
+        propertySizes(s.span)
+          .sort(function(p1, p2) {
+            return p2.length - p1.length;
+          })
+          .slice(0, 1)
+          .map(function(p) {
+            return p.property + ' (' + p.length + ' bytes)';
+          })
+      );
+    });
+  logger.warn(
+    'A batch of spans has been rejected because they are too large to be sent to the agent. Here are the top five ' +
+      'largest spans of the rejected batch and their largest attribute. This detailed information will only be ' +
+      'logged once. ' +
+      topFiveLargestSpans.join('; ')
+  );
 }

@@ -1,5 +1,8 @@
 # Changelog
 
+## Unreleased
+- Limit content length of requests when talking to the agent.
+
 ## 1.62.0
 - Extend API: Offer various getters to inquire about details of the currently actice span (trace ID, span ID and other attributes).
 - Improve generated IDs (span ID, trace ID).
