@@ -64,34 +64,47 @@ function instrumentedQuery(ctx, originalQuery, argsForOriginalQuery) {
 
     var originalCallback;
     var callbackIndex = -1;
-    if (typeof argsForOriginalQuery[1] === 'function') {
-      originalCallback = argsForOriginalQuery[1];
-      callbackIndex = 1;
-    } else {
-      originalCallback = argsForOriginalQuery[2];
-      callbackIndex = 2;
+    for (var i = 1; i < argsForOriginalQuery.length; i++) {
+      if (typeof argsForOriginalQuery[i] === 'function') {
+        originalCallback = argsForOriginalQuery[i];
+        callbackIndex = i;
+        break;
+      }
     }
-
-    var wrappedCallback = function(error) {
-      if (error) {
-        span.ec = 1;
-        span.error = true;
-        span.data.pg.error = tracingUtil.getErrorDetails(error);
-      }
-
-      span.d = Date.now() - span.ts;
-      span.transmit();
-
-      if (originalCallback) {
-        return originalCallback.apply(this, arguments);
-      }
-    };
 
     if (callbackIndex >= 0) {
+      var wrappedCallback = function(error) {
+        finishSpan(error, span);
+        return originalCallback.apply(this, arguments);
+      };
       argsForOriginalQuery[callbackIndex] = cls.ns.bind(wrappedCallback);
     }
-    return originalQuery.apply(ctx, argsForOriginalQuery);
+
+    var promise = originalQuery.apply(ctx, argsForOriginalQuery);
+    if (promise && typeof promise.then === 'function') {
+      promise
+        .then(function(value) {
+          finishSpan(null, span);
+          return value;
+        })
+        .catch(function(error) {
+          finishSpan(error, span);
+          return error;
+        });
+    }
+    return promise;
   });
+}
+
+function finishSpan(error, span) {
+  if (error) {
+    span.ec = 1;
+    span.error = true;
+    span.data.pg.error = tracingUtil.getErrorDetails(error);
+  }
+
+  span.d = Date.now() - span.ts;
+  span.transmit();
 }
 
 exports.activate = function() {

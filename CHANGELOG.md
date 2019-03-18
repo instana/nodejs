@@ -2,6 +2,7 @@
 
 ## Unreleased
 - Limit content length of requests when talking to the agent.
+- Fix: Handle non-pooled pg queries using the promise API correctly.
 
 ## 1.62.0
 - Extend API: Offer various getters to inquire about details of the currently actice span (trace ID, span ID and other attributes).

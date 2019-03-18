@@ -24,11 +24,91 @@ describe('tracing/pg', function() {
     return agentStubControls.waitUntilAppIsCompletelyInitialized(expressPgControls.getPid());
   });
 
-  it('must trace select now', function() {
+  it('must trace pooled select now', function() {
     return expressPgControls
       .sendRequest({
         method: 'GET',
-        path: '/select-now',
+        path: '/select-now-pool',
+        body: {}
+      })
+      .then(function(response) {
+        expect(response).to.exist;
+        expect(response.command).to.equal('SELECT');
+        expect(response.rowCount).to.equal(1);
+        expect(response.rows.length).to.equal(1);
+        expect(response.rows[0].now).to.be.a('string');
+
+        return utils.retry(function() {
+          return agentStubControls.getSpans().then(function(spans) {
+            var entrySpans = utils.getSpansByName(spans, 'node.http.server');
+            var pgSpans = utils.getSpansByName(spans, 'postgres');
+
+            expect(entrySpans).to.have.lengthOf(1);
+            expect(pgSpans).to.have.lengthOf(1);
+
+            var entrySpan = entrySpans[0];
+            var pgSpan = pgSpans[0];
+
+            expect(pgSpan.f.e).to.equal(String(expressPgControls.getPid()));
+            expect(pgSpan.t).to.equal(entrySpan.t);
+            expect(pgSpan.p).to.equal(entrySpan.s);
+            expect(pgSpan.n).to.equal('postgres');
+            expect(pgSpan.k).to.equal(constants.EXIT);
+            expect(pgSpan.f.e).to.equal(String(expressPgControls.getPid()));
+            expect(pgSpan.async).to.equal(false);
+            expect(pgSpan.error).to.equal(false);
+            expect(pgSpan.ec).to.equal(0);
+            expect(pgSpan.data.pg.stmt).to.equal('SELECT NOW()');
+          });
+        });
+      });
+  });
+
+  it('must trace non-pooled query with callback', function() {
+    return expressPgControls
+      .sendRequest({
+        method: 'GET',
+        path: '/select-now-no-pool-callback',
+        body: {}
+      })
+      .then(function(response) {
+        expect(response).to.exist;
+        expect(response.command).to.equal('SELECT');
+        expect(response.rowCount).to.equal(1);
+        expect(response.rows.length).to.equal(1);
+        expect(response.rows[0].now).to.be.a('string');
+
+        return utils.retry(function() {
+          return agentStubControls.getSpans().then(function(spans) {
+            var entrySpans = utils.getSpansByName(spans, 'node.http.server');
+            var pgSpans = utils.getSpansByName(spans, 'postgres');
+
+            expect(entrySpans).to.have.lengthOf(1);
+            expect(pgSpans).to.have.lengthOf(1);
+
+            var entrySpan = entrySpans[0];
+            var pgSpan = pgSpans[0];
+
+            expect(pgSpan.f.e).to.equal(String(expressPgControls.getPid()));
+            expect(pgSpan.t).to.equal(entrySpan.t);
+            expect(pgSpan.p).to.equal(entrySpan.s);
+            expect(pgSpan.n).to.equal('postgres');
+            expect(pgSpan.k).to.equal(constants.EXIT);
+            expect(pgSpan.f.e).to.equal(String(expressPgControls.getPid()));
+            expect(pgSpan.async).to.equal(false);
+            expect(pgSpan.error).to.equal(false);
+            expect(pgSpan.ec).to.equal(0);
+            expect(pgSpan.data.pg.stmt).to.equal('SELECT NOW()');
+          });
+        });
+      });
+  });
+
+  it('must trace non-pooled query with promise', function() {
+    return expressPgControls
+      .sendRequest({
+        method: 'GET',
+        path: '/select-now-no-pool-promise',
         body: {}
       })
       .then(function(response) {

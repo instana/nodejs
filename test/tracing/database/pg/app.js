@@ -53,7 +53,7 @@ app.get('/', function(req, res) {
   res.sendStatus(200);
 });
 
-app.get('/select-now', function(req, res) {
+app.get('/select-now-pool', function(req, res) {
   pool.query('SELECT NOW()', function(err, results) {
     if (err) {
       log('Failed to execute select now query', err);
@@ -61,6 +61,30 @@ app.get('/select-now', function(req, res) {
     }
     res.json(results);
   });
+});
+
+app.get('/select-now-no-pool-callback', function(req, res) {
+  client.query('SELECT NOW()', function(err, results) {
+    if (err) {
+      log('Failed to execute select now query', err);
+      return res.sendStatus(500);
+    }
+    res.json(results);
+  });
+});
+
+app.get('/select-now-no-pool-promise', function(req, res) {
+  client
+    .query('SELECT NOW()')
+    .then(function(results) {
+      res.json(results);
+    })
+    .catch(function(err) {
+      if (err) {
+        log('Failed to execute select now query', err);
+        return res.sendStatus(500);
+      }
+    });
 });
 
 app.get('/pool-string-insert', function(req, res) {
