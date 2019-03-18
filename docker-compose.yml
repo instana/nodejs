@@ -52,7 +52,7 @@ services:
       - ./test/tracing/database/mysql/conf.d:/etc/mysql/conf.d
 
   postgres:
-    image: postgres:10.4
+    image: postgres:10.5
     ports:
       - 5432:5432
     environment:
