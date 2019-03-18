@@ -4,7 +4,7 @@ var config = require('./config');
 
 if (config.sensorEnabled) {
   console.log('enabling instana-nodejs-sensor');
-  require('instana-nodejs-sensor')({
+  require('../..')({
     level: 'info',
     agentPort: config.agentPort,
     tracing: {
