@@ -48,7 +48,6 @@ By default, the sensor captures the last ten call sites for every captured exit 
 ```javascript
 require('instana-nodejs-sensor')({
   tracing: {
-    enabled: true,
     stackTraceLength: 10
   }
 });
@@ -67,7 +66,7 @@ require('instana-nodejs-sensor')({
 The Instana Node.js sensor has the ability to report uncaught exceptions. By default, a Node.js process will be terminated by an uncaught exception (see [Node.js docs](https://nodejs.org/api/process.html#process_event_uncaughtexception)). If uncaught exception reporting is enabled, the Instana Node.js sensor will register a listener for the `uncaughtException` event and take the following actions when an uncaught exception occurs:
 
 * Report this as an incident to Instana, including the uncaught exception and its stack trace.
-* Finish the currently active span and mark it as an error (if automatic tracing is enabled).
+* Finish the currently active span and mark it as an error (if tracing is enabled).
 
 It will then rethrow the original exception to terminate the Node.js process. (Keeping a Node.js process running after an uncaught exception has occurred is strongly discouraged, as the process might be in an inconsistent state, see [Node.js docs](https://nodejs.org/api/process.html#process_warning_using_uncaughtexception_correctly).)
 

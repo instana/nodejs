@@ -3,7 +3,6 @@
 Monitor your Node.js applications with Instana!
 
 **[Installation](#installation-and-usage) |**
-**[OpenTracing](#opentracing) |**
 **[Configuration](CONFIGURATION.md) |**
 **[API](API.md) |**
 **[Changelog](CHANGELOG.md)**
@@ -17,8 +16,8 @@ Monitor your Node.js applications with Instana!
 - [Server Only](#server-only)
 - [Installation and Usage](#installation-and-usage)
 - [CPU Profiling, Garbage Collection and Event Loop Information](#cpu-profiling-garbage-collection-and-event-loop-information)
+- [API](#api)
 - [OpenTracing](#opentracing)
-  - [Limitations](#limitations)
 - [FAQ](#faq)
   - [How can the Node.js sensor be disabled for (local) development?](#how-can-the-nodejs-sensor-be-disabled-for-local-development)
 
@@ -29,6 +28,7 @@ Monitor your Node.js applications with Instana!
 **PSA**: This package is for monitoring *Node.js server applications* with Instana. If you want to monitor JavaScript applications running in a browser, check out our docs on [website monitoring](https://docs.instana.io/products/website_monitoring).
 
 ## Installation and Usage
+
 The installation of the Instana Node.js sensor is a simple two step process. First, install the `instana-nodejs-sensor` package in your application via:
 
 ```
@@ -47,7 +47,34 @@ require('instana-nodejs-sensor')();
 
 The code shown above initializes the sensor with default configuration options. Refer to the [CONFIGURATION.md](CONFIGURATION.md) file for a list of valid configuration options, and in particular to the section [Agent Communication](https://github.com/instana/nodejs-sensor/blob/master/CONFIGURATION.md#agent-communication) for details about configuring connectivity between your monitored application and the Instana agent.
 
+*Important:* It is not enough to only have the require statement as the first statement in your application. You need to actually call the function exported by require('instana-nodejs-sensor'), and this needs to happen before the any other `require` statements. That is, the following is not supported:
+
+```javascript
+// WRONG!
+require('instana-nodejs-sensor'); // instana-nodejs-sensor is not initialized
+
+require('something');
+require('another-thing');
+
+...
+```
+
+and neither is this:
+
+
+```javascript
+// WRONG!
+const instana = require('instana-nodejs-sensor');
+
+require('something');
+require('another-thing');
+
+instana(); // TOO LATE!
+...
+```
+
 ## CPU Profiling, Garbage Collection and Event Loop Information
+
 Some information is not available to Node.js programs without the help of native addons. Specifically, the Instana Node.js sensor uses these addons
 - to retrieve information about garbage collection,
 - to retrieve information about event loop activity,
@@ -70,45 +97,18 @@ If you run your Node.js application dockerized, this aspect deserves extra atten
 
 If the installation of an optional dependency ends with `gyp ERR! not ok`, you might want to look into it. While Instana can unfortunately not provide support for fixing your particular `Dockerfile`, we do provide some [example Dockerfiles](https://github.com/instana/nodejs-sensor/tree/master/dockerfile-examples).
 
+## API
+
+In most cases it is enough to require and initialize `instana-nodejs-sensor` and let it do its work. However, there is an [API](API.md) for more advanced use cases.
+
 ## OpenTracing
-This sensor automatically instruments widely used APIs to add tracing support, e.g. HTTP server / client of the Node.js core API. Sometimes you may find that this is not enough or you may already have invested in [OpenTracing](http://opentracing.io). The OpenTracing API is implemented by this Node.js sensor. This API can be used to provide insights into areas of your applications, e.g. custom libraries and frameworks, which would otherwise go unnoticed.
 
-In order to use OpenTracing for Node.js with Instana, you need to [enable tracing](https://github.com/instana/nodejs-sensor/blob/master/CONFIGURATION.md#tracing) and use the Instana OpenTracing API implementation. The following sample project shows how this is done.
-
-```javascript
-// Always initialize the sensor as the first module inside the application.
-const instana = require('instana-nodejs-sensor')({
-  tracing: {
-    enabled: true
-  }
-});
-
-const opentracing = require('opentracing');
-
-// optionally use the opentracing provided singleton tracer wrapper
-opentracing.initGlobalTracer(instana.opentracing.createTracer());
-
-// retrieve the tracer instance from the opentracing tracer wrapper
-const tracer = opentracing.globalTracer();
-
-// start a new trace with an operation name
-const span = tracer.startSpan('auth');
-
-// mark operation as failed
-span.setTag(opentracing.Tags.ERROR, true);
-
-// finish the span and schedule it for transmission to instana
-span.finish();
-```
-
-### Limitations
-The Instana Node.js sensor does not yet have support for OpenTracing binary carriers. This OpenTracing implementation will silently ignore OpenTracing binary carrier objects.
-
-Care should also be taken with OpenTracing baggage items. Baggage items are meta data which is transported via carrier objects across network boundaries. Furthermore, this meta data is inherited by child spans (and their child spans…). This can produce some overhead. We recommend to completely avoid the OpenTracing baggage API.
+See [OpenTracing API](API.md#opentracing-integration).
 
 ## FAQ
 
 ### How can the Node.js sensor be disabled for (local) development?
+
 The easiest way to disable the Node.js sensor for development is to use environment variables. The Express framework popularized the environment variable `NODE_ENV` for this purpose, which we recommend to use for this purpose. Load the Node.js sensor in the following way:
 
 ```javascript

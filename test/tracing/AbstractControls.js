@@ -3,7 +3,7 @@
 
 'use strict';
 
-var spawn = require('child_process').spawn;
+var fork = require('child_process').fork;
 var request = require('request-promise');
 var _ = require('lodash');
 
@@ -31,16 +31,23 @@ var AbstractControls = (module.exports = function AbstractControls(opts) {
     },
     opts.env
   );
+  this.receivedIpcMessages = [];
 });
 
 AbstractControls.prototype.registerTestHooks = function registerTestHooks() {
   beforeEach(
     function() {
-      this.process = spawn('node', [this.appPath], {
+      var that = this;
+      this.receivedIpcMessages = [];
+
+      this.process = fork(this.appPath, {
         stdio: config.getAppStdio(),
         env: this.env
       });
 
+      this.process.on('message', function(message) {
+        that.receivedIpcMessages.push(message);
+      });
       return this.waitUntilServerIsUp();
     }.bind(this)
   );
@@ -104,4 +111,12 @@ AbstractControls.prototype.sendRequest = function(opts) {
     resolveWithFullResponse: opts.resolveWithFullResponse,
     strictSSL: false
   });
+};
+
+AbstractControls.prototype.sendViaIpc = function(message) {
+  this.process.send(message);
+};
+
+AbstractControls.prototype.getIpcMessages = function() {
+  return this.receivedIpcMessages;
 };

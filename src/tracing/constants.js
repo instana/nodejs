@@ -11,6 +11,12 @@ exports.ENTRY = 1;
 exports.EXIT = 2;
 exports.INTERMEDIATE = 3;
 
+exports.SDK = {
+  ENTRY: 'entry',
+  EXIT: 'exit',
+  INTERMEDIATE: 'intermediate'
+};
+
 /*
  * Determine if <span> is an entry span (server span).
  */

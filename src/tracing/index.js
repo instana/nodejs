@@ -2,6 +2,8 @@
 
 var semver = require('semver');
 
+var sdk = require('./sdk');
+
 var logger;
 logger = require('../logger').getLogger('tracing', function(newLogger) {
   logger = newLogger;
@@ -45,6 +47,7 @@ exports.init = function(_config, clsHolder) {
     require('./tracingUtil').init(config);
     require('./transmission').init(config);
     require('./opentracing').init(config, automaticTracingEnabled);
+    sdk.init();
 
     if (automaticTracingEnabled) {
       // enable instana.currentSpan() function by providing access to the cls module
@@ -101,6 +104,7 @@ exports.activate = function() {
   if (tracingEnabled) {
     require('./transmission').activate();
     require('./opentracing').activate();
+    sdk.activate();
 
     if (automaticTracingEnabled) {
       instrumentations.forEach(function(instrumentationKey) {
@@ -120,5 +124,8 @@ exports.deactivate = function() {
 
     require('./opentracing').deactivate();
     require('./transmission').deactivate();
+    sdk.deactivate();
   }
 };
+
+exports.sdk = sdk;
