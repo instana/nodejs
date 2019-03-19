@@ -1,0 +1,6 @@
+/test/
+/lambdas/
+instana-serverless-nodejs-*.tgz
+npm-debug*
+notes.txt
+.prettierrc
