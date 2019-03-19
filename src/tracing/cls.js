@@ -27,7 +27,7 @@ exports.ns = hooked.createNamespace('instana.sensor');
 /*
  * Start a new span and set it as the current span.
  */
-exports.startSpan = function startSpan(spanName, kind, traceId, spanId, modifyAsyncContext) {
+exports.startSpan = function startSpan(spanName, kind, traceId, parentSpanId, modifyAsyncContext) {
   if (!kind || (kind !== constants.ENTRY && kind !== constants.EXIT && kind !== constants.INTERMEDIATE)) {
     logger.warn('Invalid span (%s) without kind/with invalid kind: %s, assuming EXIT.', spanName, kind);
     kind = constants.EXIT;
@@ -38,9 +38,9 @@ exports.startSpan = function startSpan(spanName, kind, traceId, spanId, modifyAs
   span.k = kind;
 
   // If specified, use params
-  if (traceId && spanId) {
+  if (traceId && parentSpanId) {
     span.t = traceId;
-    span.p = spanId;
+    span.p = parentSpanId;
     // else use pre-existing context (if any)
   } else if (parentSpan) {
     span.t = parentSpan.t;
@@ -139,6 +139,7 @@ function InstanaSpan(name) {
   this.error = false;
   this.ec = 0;
   this.ts = Date.now();
+  this.ta = 'node';
   this.d = 0;
   this.stack = [];
   this.data = undefined;

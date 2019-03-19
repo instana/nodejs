@@ -37,8 +37,8 @@ function shimEmit(realEmit) {
       }
 
       var incomingTraceId = getExistingTraceId(req);
-      var incomingSpanId = getExistingSpanId(req);
-      var span = cls.startSpan(exports.spanName, constants.ENTRY, incomingTraceId, incomingSpanId);
+      var incomingParentSpanId = getExistingSpanId(req);
+      var span = cls.startSpan(exports.spanName, constants.ENTRY, incomingTraceId, incomingParentSpanId);
 
       // Grab the URL before application code gets access to the incoming message.
       // We are doing this because libs like express are manipulating req.url when
