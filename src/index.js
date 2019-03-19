@@ -8,6 +8,7 @@ var path = require('path');
 var fs = require('fs');
 
 var spanHandle = require('./tracing/spanHandle');
+var tracing;
 var clsHolder = {};
 var config;
 
@@ -18,7 +19,8 @@ module.exports = exports = function start(_config) {
   require('./util/requireHook').init(config);
   require('./agent/opts').init(config);
   require('./actions/profiling/cpu').init(config);
-  require('./tracing').init(config, clsHolder);
+  tracing = require('./tracing');
+  tracing.init(config, clsHolder);
   require('./util/uncaughtExceptionHandler').init(config);
   require('./states/agentready').init(config);
 
@@ -64,6 +66,24 @@ exports.opentracing = require('./tracing/opentracing');
 exports.currentSpan = function getHandleForCurrentSpan() {
   return spanHandle.getHandleForCurrentSpan(clsHolder.cls);
 };
+
+Object.defineProperty(exports, 'sdk', {
+  enumerable: true,
+  get: function() {
+    if (tracing) {
+      return tracing.sdk;
+    }
+    // client code has required 'instana-nodejs-sensor' but failed to call the init function.
+    // eslint-disable-next-line no-console
+    console.error(
+      'You need to initialize the instana-nodejs-sensor before accessing its API. Please refer to ' +
+        'https://docs.instana.io/ecosystem/node-js/#common-pitfalls.'
+    );
+    var sdk = require('./tracing/sdk');
+    sdk.init(config);
+    return sdk;
+  }
+});
 
 exports.setLogger = function(logger) {
   config.logger = logger;

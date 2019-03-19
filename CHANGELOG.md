@@ -1,5 +1,8 @@
 # Changelog
 
+## Unreleased
+- Add tracing SDK to create spans manually, integrating seamlessly with automatic tracing - see [SDK API documentation](API.md#creating-spans-manually-with-the-sdk) for details.
+
 ## 1.63.1
 - Fix: Set GRPC headers instead of adding them.
 

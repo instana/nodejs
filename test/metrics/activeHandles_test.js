@@ -7,10 +7,13 @@ var expect = require('chai').expect;
 var semver = require('semver');
 var net = require('net');
 
+var config = require('../config');
 var activeHandles = require('../../src/metrics/activeHandles');
 var utils = require('../utils');
 
 describe('metrics.activeHandles', function() {
+  this.timeout(config.getTestTimeout());
+
   beforeEach(function() {
     activeHandles.activate();
   });
@@ -90,13 +93,10 @@ describe('metrics.activeHandles', function() {
       if (clients.length >= maxClients) {
         return;
       }
-      net.connect(
-        server.address().port,
-        function connected() {
-          clientConnected(this);
-          makeConnection();
-        }
-      );
+      net.connect(server.address().port, function connected() {
+        clientConnected(this);
+        makeConnection();
+      });
     }
 
     function clientConnected(client) {
