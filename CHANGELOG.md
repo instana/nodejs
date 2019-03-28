@@ -1,5 +1,8 @@
 # Changelog
 
+## Unreleased
+- Fix: Set GRPC headers instead of adding them.
+
 ## 1.63.0
 - Limit content length of requests when talking to the agent.
 - Fix: Handle non-pooled pg queries using the promise API correctly.
