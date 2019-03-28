@@ -72,8 +72,12 @@ describe('metrics.activeHandles', function() {
       return utils.retry(function() {
         return new Promise(function(resolve, reject) {
           if (clients.length >= maxClients) {
-            // at least one handle should exist per client and one per connection
-            expect(activeHandles.currentPayload).to.be.at.least(activeHandlesBefore + 2 * maxClients);
+            // At least one handle should exist per client and one per connection, that's why we expect
+            // (2 * maxClients) more handles than we had initially. However, other things are happening in the Node.js
+            // runtime as well while this test is running, so it might actually happen that some of the unrelated
+            // handles that existed initially have since been removed, which is why we allow for a little wiggle room
+            // (-2 at the end). Without this wiggle room, this test is flaky.
+            expect(activeHandles.currentPayload).to.be.at.least(activeHandlesBefore + 2 * maxClients - 2);
             resolve();
           } else {
             reject(new Error('Still waiting for more clients to connect.'));
