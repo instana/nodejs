@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.63.1
 - Fix: Set GRPC headers instead of adding them.
 
 ## 1.63.0
