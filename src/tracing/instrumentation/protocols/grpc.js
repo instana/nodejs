@@ -158,7 +158,7 @@ function instrumentedMakeClientConstructor(originalFunction) {
 function shimClientMethod(rpcPath, requestStream, responseStream, originalFunction) {
   function shimmedFunction() {
     var parentSpan = cls.getCurrentSpan();
-    var isTracing = isActive && cls.isTracing() && parentSpan && constants.isEntrySpan(parentSpan);
+    var isTracing = isActive && cls.isTracing() && parentSpan && !constants.isExitSpan(parentSpan);
     var isSuppressed = cls.tracingLevel() === '0';
     if (isTracing || isSuppressed) {
       var originalArgs = new Array(arguments.length);
@@ -293,12 +293,12 @@ function modifyArgs(originalArgs, span, responseStream) {
 
   if (span && metadata) {
     // we are actively tracing, so we add x-instana-t, x-instana-s and set x-instana-l: 1
-    metadata.add(constants.spanIdHeaderName, span.s);
-    metadata.add(constants.traceIdHeaderName, span.t);
-    metadata.add(constants.traceLevelHeaderName, '1');
+    metadata.set(constants.spanIdHeaderName, span.s);
+    metadata.set(constants.traceIdHeaderName, span.t);
+    metadata.set(constants.traceLevelHeaderName, '1');
   } else if (metadata) {
     // tracing is suppressed, so we only set x-instana-l: 0
-    metadata.add(constants.traceLevelHeaderName, '0');
+    metadata.set(constants.traceLevelHeaderName, '0');
   }
 }
 
