@@ -31,7 +31,6 @@ module.exports = exports = function(isCallbackApi) {
     }
 
     var parentSpan = cls.getCurrentSpan();
-
     if (parentSpan) {
       logger.warn(
         'Cannot start an entry span (' +

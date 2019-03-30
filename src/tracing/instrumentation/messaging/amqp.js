@@ -7,6 +7,11 @@ var tracingUtil = require('../../tracingUtil');
 var constants = require('../../constants');
 var cls = require('../../cls');
 
+var logger;
+logger = require('../../../logger').getLogger('tracing/amqp', function(newLogger) {
+  logger = newLogger;
+});
+
 var isActive = false;
 
 exports.init = function() {
@@ -135,6 +140,16 @@ function instrumentedDispatchMessage(ctx, originalDispatchMessage, originalArgs)
   var consumer = ctx.consumers[consumerTag];
   if (!consumer) {
     // amqplib will throw an error for this call because it can't be routed, so we don't create a span for it.
+    return originalDispatchMessage.apply(ctx, originalArgs);
+  }
+
+  var parentSpan = cls.getCurrentSpan();
+  if (parentSpan) {
+    logger.warn(
+      'Cannot start an AMQP entry span when another span is already active. Currently, the following span is ' +
+        'active: ' +
+        JSON.stringify(parentSpan)
+    );
     return originalDispatchMessage.apply(ctx, originalArgs);
   }
 
@@ -295,6 +310,16 @@ function instrumentedCallbackModelGet(ctx, originalGet, originalArgs) {
       return;
     }
     // get did fetch a message, create a new cls context and a span
+    var parentSpan = cls.getCurrentSpan();
+    if (parentSpan) {
+      logger.warn(
+        'Cannot start an AMQP entry span when another span is already active. Currently, the following span is ' +
+          'active: ' +
+          JSON.stringify(parentSpan)
+      );
+      return originalCallback(err, result);
+    }
+
     return cls.ns.runAndReturn(function() {
       var span = cls.startSpan('rabbitmq', constants.ENTRY);
       var fields = result.fields || {};
