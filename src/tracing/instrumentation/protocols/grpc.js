@@ -59,6 +59,17 @@ function createInstrumentedServerHandler(name, type, originalHandler) {
   return function(call) {
     var originalThis = this;
     var originalArgs = arguments;
+
+    var parentSpan = cls.getCurrentSpan();
+    if (parentSpan) {
+      logger.warn(
+        'Cannot start a GRPC entry span when another span is already active. Currently, the following span is ' +
+          'active: ' +
+          JSON.stringify(parentSpan)
+      );
+      return originalHandler.apply(originalThis, originalArgs);
+    }
+
     return cls.ns.runAndReturn(function() {
       var metadata = call.metadata;
       var level = readMetadata(metadata, constants.traceLevelHeaderName);

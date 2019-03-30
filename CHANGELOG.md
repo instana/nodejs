@@ -2,6 +2,7 @@
 
 ## Unreleased
 - Add tracing SDK to create spans manually, integrating seamlessly with automatic tracing - see [SDK API documentation](API.md#creating-spans-manually-with-the-sdk) for details.
+- Additional validation for entry spans (that no other span is already in progress).
 
 ## 1.63.2
 - Remove deprecated span attribute span.b.u (redis, ioredis).

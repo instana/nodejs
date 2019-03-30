@@ -7,6 +7,11 @@ var tracingUtil = require('../../tracingUtil');
 var constants = require('../../constants');
 var cls = require('../../cls');
 
+var logger;
+logger = require('../../../logger').getLogger('tracing/kafka', function(newLogger) {
+  logger = newLogger;
+});
+
 var isActive = false;
 
 exports.init = function() {
@@ -82,6 +87,16 @@ function shimEmit(original) {
 
     var originalThis = this;
     var originalArgs = arguments;
+
+    var parentSpan = cls.getCurrentSpan();
+    if (parentSpan) {
+      logger.warn(
+        'Cannot start a Kafka entry span when another span is already active. Currently, the following span is ' +
+          'active: ' +
+          JSON.stringify(parentSpan)
+      );
+      return original.apply(originalThis, originalArgs);
+    }
 
     return cls.ns.runAndReturn(function() {
       var span = cls.startSpan('kafka', constants.ENTRY);
