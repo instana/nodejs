@@ -172,8 +172,7 @@ function multiCommandEndCallback(clsContextForMultiOrPipeline, span, error) {
   }
 
   span.b = {
-    s: commandCount,
-    u: false
+    s: commandCount
   };
 
   if (error) {
@@ -193,8 +192,7 @@ function pipelineCommandEndCallback(clsContextForMultiOrPipeline, span, error, r
   var commandCount = subCommands ? subCommands.length : 1;
 
   span.b = {
-    s: commandCount,
-    u: false
+    s: commandCount
   };
 
   if (error) {

@@ -1,5 +1,8 @@
 # Changelog
 
+## Unreleased
+- Remove deprecated span attribute span.b.u (redis, ioredis).
+
 ## 1.63.1
 - Fix: Set GRPC headers instead of adding them.
 

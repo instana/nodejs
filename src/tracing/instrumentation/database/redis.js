@@ -155,8 +155,7 @@ function instrumentMultiExec(isAtomic, original) {
     // must not send batch size 0
     if (subCommands.length > 0) {
       span.b = {
-        s: subCommands.length,
-        u: false
+        s: subCommands.length
       };
     }
     span.ec = 0;
