@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.63.2
 - Remove deprecated span attribute span.b.u (redis, ioredis).
 
 ## 1.63.1
