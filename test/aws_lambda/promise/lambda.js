@@ -1,15 +1,17 @@
+'use strict';
+
+const fetch = require('node-fetch');
+
 const instana = require('../../..');
 
 exports.handler = instana.awsLambda.wrap((event, context) => {
   console.log('in actual handler');
-
-  return new Promise((resolve, reject) => {
+  return fetch('https://example.com').then(() => {
     if (event.error) {
-      reject(new Error('Boom!'));
-    } else {
-      resolve({
-        message: 'Stan says hi!'
-      });
+      throw new Error('Boom!');
     }
+    return {
+      message: 'Stan says hi!'
+    };
   });
 });

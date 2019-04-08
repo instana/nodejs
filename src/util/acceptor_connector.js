@@ -3,6 +3,7 @@
 // TODO Send via HTTP2 if possible.
 const https = require('https');
 
+const constants = require('@instana/core');
 const instanaUrlUtil = require('../util/instana_url');
 const logger = require('../util/logger');
 
@@ -13,23 +14,18 @@ const acceptorTimeout = process.env[timeoutEnvVar] || defaultTimeout;
 const acceptSelfSignedCertEnvVar = 'INSTANA_DEV_ACCEPT_SELF_SIGNED_CERT';
 const acceptSelfSignedCert = process.env[acceptSelfSignedCertEnvVar] === 'true';
 
-exports.sendBundle = function sendBundle(callback) {
-  send(
-    '/bundle',
-    {
-      spans: [{ ohai: 'hey' }],
-      metrics: [{ metric: 42 }]
-    },
-    callback
-  );
+// TODO We need to use X-INSTANA-L=0 for all requests!!
+
+exports.sendBundle = function sendBundle(bundle, callback) {
+  send('/bundle', bundle, callback);
 };
 
-exports.sendMetrics = function sendMetrics(callback) {
-  send('/metrics', [{ metric: 42 }], callback);
+exports.sendMetrics = function sendMetrics(metrics, callback) {
+  send('/metrics', metrics, callback);
 };
 
-exports.sendSpans = function sendSpans(callback) {
-  send('/spans', [{ ohai: 'hey' }], callback);
+exports.sendSpans = function sendSpans(spans, callback) {
+  send('/spans', spans, callback);
 };
 
 function send(resourcePath, payload, callback) {
@@ -48,7 +44,8 @@ function send(resourcePath, payload, callback) {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Content-Length': Buffer.byteLength(payload)
+      'Content-Length': Buffer.byteLength(payload),
+      [constants.traceLevelHeaderName]: '0'
     },
     rejectUnauthorized: !acceptSelfSignedCert
   };

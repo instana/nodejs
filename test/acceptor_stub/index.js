@@ -41,26 +41,28 @@ app.get('/', (_, res) => {
 });
 
 app.post('/bundle', (req, res) => {
-  logger.debug('incoming bundle', req.body);
+  logger.trace('incoming bundle', req.body);
   if (unresponsive) {
     // intentionally not responding for tests that verify proper timeout handling
     return;
   }
-  console.log('req.body', req.body);
   if (!req.body.metrics) {
     return res.status(400).send({ error: 'Payload has no metrics.' });
   }
-  if (!Array.isArray(req.body.metrics)) {
-    return res.status(400).send({ error: 'The metrics in the payload are no array.' });
+  if (typeof req.body.metrics !== 'object') {
+    return res.status(400).send({ error: 'The metrics value in the payload is no object.' });
+  }
+  if (Array.isArray(req.body.metrics)) {
+    return res.status(400).send({ error: 'The metrics value in the payload is an array.' });
   }
   if (!req.body.spans) {
     return res.status(400).send({ error: 'Payload has no spans.' });
   }
   if (!Array.isArray(req.body.spans)) {
-    return res.status(400).send({ error: 'The spans in the payload are no array.' });
+    return res.status(400).send({ error: 'The spans value in the payload is no array.' });
   }
   if (!dropAllData) {
-    receivedData.metrics = receivedData.metrics.concat(req.body.metrics);
+    receivedData.metrics.push(req.body.metrics);
     receivedData.spans = receivedData.spans.concat(req.body.spans);
   }
   return res.sendStatus(201);
@@ -72,11 +74,14 @@ app.post('/metrics', (req, res) => {
     // intentionally not responding for tests that verify proper timeout handling
     return;
   }
-  if (!Array.isArray(req.body)) {
-    return res.status(400).send({ error: 'The payload is no array.' });
+  if (typeof req.body !== 'object') {
+    return res.status(400).send({ error: 'The payload is no object.' });
+  }
+  if (Array.isArray(req.body)) {
+    return res.status(400).send({ error: 'The payload is an array.' });
   }
   if (!dropAllData) {
-    receivedData.metrics = receivedData.metrics.concat(req.body);
+    receivedData.metrics.push(req.body);
   }
   return res.sendStatus(201);
 });

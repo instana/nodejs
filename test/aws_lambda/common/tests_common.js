@@ -2,6 +2,7 @@
 
 const expect = require('chai').expect;
 const path = require('path');
+const constants = require('@instana/core').tracing.constants;
 
 const config = require('../../config');
 const delay = require('../../util/delay');
@@ -129,16 +130,20 @@ exports.registerTests = function registerTests(handlerDefinitionPath) {
       const error = control.getLambdaErrors()[0];
       expect(error.message).to.equal('Boom!');
     } else {
+      if (control.getLambdaErrors() && control.getLambdaErrors().length > 0) {
+        console.log(JSON.stringify(control.getLambdaErrors()));
+      }
       expect(control.getLambdaErrors()).to.be.empty;
       expect(control.getLambdaResults().length).to.equal(1);
       const result = control.getLambdaResults()[0];
+      expect(result).to.exist;
       expect(result.message).to.equal('Stan says hi!');
     }
 
     if (expectSpansAndMetrics) {
       // TODO Verify that metrics have been produced
       return retry(() => control.getSpans())
-        .then(spans => expectSpan(spans))
+        .then(spans => expectSpans(spans, lambdaError))
         .then(() => control.getMetrics())
         .then(metrics => expectMetrics(metrics));
     } else {
@@ -154,23 +159,51 @@ exports.registerTests = function registerTests(handlerDefinitionPath) {
     }
   }
 
-  function expectSpan(spans) {
-    expectOneMatching(spans, span => {
-      expect(span.ohai).to.equal('hey');
-      // TODO Do Lambda triggers define spans? Which ones?
-      // expect(span.t).to.exist;
-      // expect(span.p).to.not.exist;
-      // expect(span.n).to.equal('aws.lamdba.nodejs');
-      // expect(span.k).to.equal(constants.ENTRY);
-      // expect(span.async).to.equal(false);
-      // expect(span.error).to.equal(false);
+  function expectSpans(spans, lambdaError) {
+    const entry = expectLambdaEntry(spans, lambdaError);
+    expectHttpExit(spans, entry);
+  }
+
+  function expectLambdaEntry(spans, lambdaError) {
+    return expectOneMatching(spans, span => {
+      expect(span.t).to.exist;
+      expect(span.p).to.not.exist;
+      expect(span.n).to.equal('aws.lambda.entry');
+      expect(span.k).to.equal(constants.ENTRY);
+      expect(span.async).to.equal(false);
+      if (lambdaError) {
+        expect(span.error).to.be.true;
+        expect(span.ec).to.equal(1);
+      } else {
+        expect(span.error).to.equal(false);
+        expect(span.ec).to.equal(0);
+      }
     });
   }
 
-  function expectMetrics(metrics) {
-    expect(metrics).to.exist;
-    expect(Array.isArray(metrics)).to.be.true;
-    expect(metrics.length).to.equal(1);
-    expect(metrics[0].metric).to.equal(42);
+  function expectHttpExit(spans, entry) {
+    return expectOneMatching(spans, span => {
+      expect(span.t).to.equal(entry.t);
+      expect(span.p).to.equal(entry.s);
+      expect(span.n).to.equal('node.http.client');
+      expect(span.k).to.equal(constants.EXIT);
+      expect(span.async).to.equal(false);
+    });
+  }
+
+  function expectMetrics(allMetrics) {
+    expect(allMetrics).to.exist;
+    expect(Array.isArray(allMetrics)).to.be.true;
+    expect(allMetrics.length).to.equal(1);
+    const metrics = allMetrics[0];
+    expect(metrics.activeHandles).to.be.a('number');
+    expect(metrics.activeRequests).to.be.a('number');
+    expect(metrics.dependencies).to.exist;
+    expect(metrics.dependencies['event-loop-stats']).to.equal('1.1.0');
+    expect(metrics.description).to.equal('Monitor serverless Node.js code with Instana');
+    expect(metrics.gc).to.exist;
+    expect(metrics.healthchecks).to.exist;
+    expect(metrics.heapSpaces).to.exist;
+    expect(metrics.name).to.equal('instana-serverless-nodejs');
   }
 };
