@@ -29,9 +29,8 @@ before_script:
   - sleep 45
 
 script:
-  # npm audit was introduced in npm 6. We also actually don't need to run it for every Node.js version, running it for
-  # one version would be enough.
-  - '[[ $(npm -v) =~ ^2.*$ ]] || [[ $(npm -v) =~ ^3.*$ ]] || [[ $(npm -v) =~ ^4.*$ ]] || [[ $(npm -v) =~ ^5.*$ ]] || npm run audit'
+  # We only want to run npm audit for one Node.js version (let's say latest LTS).
+  - '([[ $(node -v) =~ ^v10.*$ ]] && npm run audit) || true'
   - npm test
 
 after_failure:
