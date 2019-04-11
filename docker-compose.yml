@@ -35,8 +35,8 @@ services:
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-      - ./bin:/nodejs-sensor-bin
-    command: ["/nodejs-sensor-bin/wait-for-it.sh", "-s", "-t", "120", "zookeeper:2181", "--", "start-kafka.sh"]
+      - ./bin:/nodejs-collector-bin
+    command: ["/nodejs-collector-bin/wait-for-it.sh", "-s", "-t", "120", "zookeeper:2181", "--", "start-kafka.sh"]
 
   mysql:
     image: mysql:8.0.1
@@ -49,7 +49,7 @@ services:
       MYSQL_PASSWORD: nodepw
       MYSQL_ROOT_HOST: 0.0.0.0
     volumes:
-      - ./test/tracing/database/mysql/conf.d:/etc/mysql/conf.d
+      - ./packages/collector/test/tracing/database/mysql/conf.d:/etc/mysql/conf.d
 
   postgres:
     image: postgres:10.5

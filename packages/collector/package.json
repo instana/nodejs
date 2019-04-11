@@ -1,0 +1,135 @@
+{
+  "name": "@instana/collector",
+  "version": "1.64.0",
+  "description": "The Instana Node.js metrics and trace data collector",
+  "author": {
+    "name": "Ben Ripkens",
+    "email": "ben@instana.com"
+  },
+  "homepage": "https://github.com/instana/nodejs-sensor#readme",
+  "license": "MIT",
+  "main": "src/index.js",
+  "files": [
+    "src"
+  ],
+  "directories": {
+    "lib": "src",
+    "test": "test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/instana/nodejs-sensor.git"
+  },
+  "scripts": {
+    "audit": "bin/prepare-audit.sh && npm audit --json | node ../../bin/parse-audit.js; git checkout package-lock.json",
+    "test": "npm run test:nolint && npm run test:lint",
+    "test:nolint": "NODE_ENV=debug USE_OPENTRACING_DEBUG_IMPL=true npm run test:mocha",
+    "test:mocha": "mocha --reporter spec $(find test -name '*test.js')",
+    "test:debug": "WITH_STDOUT=true DEBUG=kafka-node:* npm run test:mocha",
+    "test:lint": "eslint src test dummy-app",
+    "agent-stub": "AGENT_PORT=3210 node test/apps/agentStub.js",
+    "dev-http": "APP_PORT=3456 TRACING_ENABLED=true node test/apps/express | bunyan",
+    "dev-http-proxy": "APP_PORT=3457 UPSTREAM_PORT=3456 TRACING_ENABLED=true node test/apps/expressProxy | bunyan",
+    "dev-http-elasticsearch": "APP_PORT=3458 TRACING_ENABLED=true node test/apps/expressElasticsearch | bunyan",
+    "dev-http-mongodb": "APP_PORT=3459 TRACING_ENABLED=true node test/apps/expressMongodb | bunyan",
+    "dev-http-kafka-producer": "APP_PORT=3460 TRACING_ENABLED=true node test/apps/expressKafkaProducer | bunyan",
+    "dev-http-mysql": "APP_PORT=3461 TRACING_ENABLED=true node test/apps/expressMysql | bunyan",
+    "prepublishOnly": "npm audit --json | node bin/parse-audit.js",
+    "prettier": "prettier --write 'src/**/*.js' 'test/**/*.js' 'dummy-app/**/*.js' 'dockerfile-examples/**/*.js' 'bin/**/*.js'"
+  },
+  "keywords": [
+    "instana",
+    "agent",
+    "collector",
+    "sensor",
+    "monitoring",
+    "tracing"
+  ],
+  "contributors": [
+    {
+      "name": "Bastian Krol",
+      "email": "bastian.krol@instana.com"
+    },
+    {
+      "name": "Ben Ripkes",
+      "email": "ben@instana.com"
+    },
+    {
+      "name": "Simon Thiele",
+      "email": "simon.thiele@instana.com"
+    },
+    {
+      "name": "Robert Hostlowsky",
+      "email": "lowsky@users.noreply.github.com"
+    },
+    {
+      "name": "Piérre Reimertz",
+      "email": "reimertz@users.noreply.github.com"
+    },
+    {
+      "name": "Joshua Horowitz",
+      "email": "joshua.horowitz@jet.com"
+    },
+    {
+      "name": "Andrew Schmadel",
+      "email": "andrewschmadel@upside.com"
+    },
+    {
+      "name": "Omar Gonzalez",
+      "email": "s9tpepper@apache.org"
+    },
+    {
+      "name": "Colin Ihrig",
+      "email": "cjihrig@gmail.com"
+    },
+    {
+      "name": "Christian Kellner",
+      "email": "christian.kellner@instana.com"
+    },
+    {
+      "name": "Fabian Lange",
+      "email": "lange.fabian@gmail.com"
+    },
+    {
+      "name": "Peter Giacomo Lombardo",
+      "email": "pglombardo@gmail.com"
+    },
+    {
+      "name": "Borut Jegrisnik",
+      "email": "borut.jegrisnik@instana.com"
+    },
+    {
+      "name": "Denis Fäcke",
+      "email": "serayaeryn@gmail.com"
+    },
+    {
+      "name": "DtRWoS",
+      "email": "work@dtrwos.com"
+    },
+    {
+      "name": "Osasu Eboh",
+      "email": "osasu.eboh@jet.com"
+    }
+  ],
+  "bugs": {
+    "url": "https://github.com/instana/nodejs-sensor/issues"
+  },
+  "dependencies": {
+    "bunyan": "^1.8.12",
+    "@instana/core": "1.64.0",
+    "semver": "5.5.1",
+    "serialize-error": "^2.1.0"
+  },
+  "optionalDependencies": {
+    "netlinkwrapper": "1.1.1",
+    "v8-profiler-node8": "^6.0.1"
+  },
+  "devDependencies": {
+    "eslint": "^4.19.1",
+    "eslint-config-airbnb": "^17.1.0",
+    "eslint-plugin-mocha": "^4.12.1",
+    "mocha": "^5.2.0",
+    "opentracing": "^0.14.3",
+    "prettier": "^1.16.4"
+  }
+}

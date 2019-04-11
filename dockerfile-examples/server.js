@@ -1,6 +1,6 @@
 'use strict';
 
-require('instana-nodejs-sensor')({
+require('@instana/collector')({
   reportUncaughtException: true
 });
 

@@ -1,0 +1,53 @@
+{
+  "name": "instana-nodejs-sensor",
+  "version": "1.64.0",
+  "description": "The Instana Node.js sensor (legacy adapter for previous package name)",
+  "author": {
+    "name": "Bastian Krol",
+    "email": "bastian.krol@instana.com"
+  },
+  "homepage": "https://github.com/instana/nodejs-sensor#readme",
+  "license": "MIT",
+  "main": "src/index.js",
+  "files": [
+    "src"
+  ],
+  "directories": {
+    "lib": "src",
+    "test": "test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/instana/nodejs-sensor.git"
+  },
+  "scripts": {
+    "audit": "bin/prepare-audit.sh && npm audit --json | node ../../bin/parse-audit.js; git checkout package-lock.json",
+    "test": "npm run test:nolint && npm run test:lint",
+    "test:nolint": "npm run test:mocha",
+    "test:mocha": "mocha --reporter spec $(find test -name '*test.js')",
+    "test:debug": "WITH_STDOUT=true npm run test:mocha",
+    "test:lint": "eslint src test",
+    "prettier": "prettier --write 'src/**/*.js' 'test/**/*.js'"
+  },
+  "keywords": [
+    "instana",
+    "agent",
+    "sensor",
+    "monitoring",
+    "tracing"
+  ],
+  "bugs": {
+    "url": "https://github.com/instana/nodejs-sensor/issues"
+  },
+  "dependencies": {
+    "@instana/collector": "1.64.0"
+  },
+  "devDependencies": {
+    "@instana/core": "1.64.0",
+    "eslint": "^4.19.1",
+    "eslint-config-airbnb": "^17.1.0",
+    "eslint-plugin-mocha": "^4.12.1",
+    "mocha": "^5.2.0",
+    "prettier": "^1.16.4"
+  }
+}
