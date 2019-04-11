@@ -1,135 +1,17 @@
 {
-  "name": "instana-nodejs-sensor",
-  "version": "1.64.0",
-  "description": "The Instana Node.js sensor",
-  "main": "src/index.js",
-  "files": [
-    "src"
-  ],
+  "name": "@instana/root",
+  "private": true,
   "scripts": {
-    "audit": "npm audit --json | node bin/parse-audit.js",
-    "test": "npm run test:nolint && npm run test:lint",
-    "test:nolint": "NODE_ENV=debug USE_OPENTRACING_DEBUG_IMPL=true npm run test:mocha",
-    "test:mocha": "mocha --reporter spec $(find src test -name '*test.js')",
-    "test:debug": "WITH_STDOUT=true DEBUG=kafka-node:* npm run test:mocha",
-    "test:lint": "bin/run-eslint.sh",
-    "test:eslint": "eslint src test dummy-app",
-    "dev": "node -e 'require(\".\")({agentPort: process.env.AGENT_PORT || 42699})' | bunyan",
-    "dev-to-agent-stub": "AGENT_PORT=3210 npm run dev",
-    "agent-stub": "AGENT_PORT=3210 node test/apps/agentStub.js",
-    "dev-http": "APP_PORT=3456 TRACING_ENABLED=true node test/apps/express | bunyan",
-    "dev-http-proxy": "APP_PORT=3457 UPSTREAM_PORT=3456 TRACING_ENABLED=true node test/apps/expressProxy | bunyan",
-    "dev-http-elasticsearch": "APP_PORT=3458 TRACING_ENABLED=true node test/apps/expressElasticsearch | bunyan",
-    "dev-http-mongodb": "APP_PORT=3459 TRACING_ENABLED=true node test/apps/expressMongodb | bunyan",
-    "dev-http-kafka-producer": "APP_PORT=3460 TRACING_ENABLED=true node test/apps/expressKafkaProducer | bunyan",
-    "dev-http-mysql": "APP_PORT=3461 TRACING_ENABLED=true node test/apps/expressMysql | bunyan",
-    "precommit": "doctoc README.md CONFIGURATION.md API.md",
-    "prepublishOnly": "npm audit --json | node bin/parse-audit.js"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/instana/nodejs-sensor.git"
-  },
-  "keywords": [
-    "instana",
-    "agent",
-    "sensor",
-    "monitoring",
-    "tracing"
-  ],
-  "author": {
-    "name": "Ben Ripkens",
-    "email": "ben@instana.com"
-  },
-  "contributors": [
-    {
-      "name": "Bastian Krol",
-      "email": "bastian.krol@instana.com"
-    },
-    {
-      "name": "Ben Ripkes",
-      "email": "ben@instana.com"
-    },
-    {
-      "name": "Simon Thiele",
-      "email": "simon.thiele@instana.com"
-    },
-    {
-      "name": "Robert Hostlowsky",
-      "email": "lowsky@users.noreply.github.com"
-    },
-    {
-      "name": "Piérre Reimertz",
-      "email": "reimertz@users.noreply.github.com"
-    },
-    {
-      "name": "Joshua Horowitz",
-      "email": "joshua.horowitz@jet.com"
-    },
-    {
-      "name": "Andrew Schmadel",
-      "email": "andrewschmadel@upside.com"
-    },
-    {
-      "name": "Omar Gonzalez",
-      "email": "s9tpepper@apache.org"
-    },
-    {
-      "name": "Colin Ihrig",
-      "email": "cjihrig@gmail.com"
-    },
-    {
-      "name": "Christian Kellner",
-      "email": "christian.kellner@instana.com"
-    },
-    {
-      "name": "Fabian Lange",
-      "email": "lange.fabian@gmail.com"
-    },
-    {
-      "name": "Peter Giacomo Lombardo",
-      "email": "pglombardo@gmail.com"
-    },
-    {
-      "name": "Borut Jegrisnik",
-      "email": "borut.jegrisnik@instana.com"
-    },
-    {
-      "name": "Denis Fäcke",
-      "email": "serayaeryn@gmail.com"
-    },
-    {
-      "name": "DtRWoS",
-      "email": "work@dtrwos.com"
-    },
-    {
-      "name": "Osasu Eboh",
-      "email": "osasu.eboh@jet.com"
-    }
-  ],
-  "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/instana/nodejs-sensor/issues"
-  },
-  "homepage": "https://github.com/instana/nodejs-sensor#readme",
-  "dependencies": {
-    "async-hook-jl": "^1.7.6",
-    "bunyan": "^1.8.12",
-    "cls-bluebird": "^2.1.0",
-    "emitter-listener": "^1.1.2",
-    "event-loop-lag": "^1.4.0",
-    "methods": "^1.1.2",
-    "opentracing": "^0.14.3",
-    "redis-commands": "^1.3.5",
-    "semver": "5.5.1",
-    "serialize-error": "^2.1.0",
-    "shimmer": "1.2.0"
-  },
-  "optionalDependencies": {
-    "event-loop-stats": "1.1.0",
-    "gcstats.js": "1.0.0",
-    "netlinkwrapper": "1.1.1",
-    "v8-profiler-node8": "^6.0.1"
+    "audit": "lerna run audit --stream",
+    "bootstrap": "lerna bootstrap",
+    "bump": "lerna publish",
+    "postinstall": "npm run bootstrap",
+    "precommit": "doctoc packages/collector/README.md packages/collector/CONFIGURATION.md packages/collector/API.md",
+    "prettier": "lerna run prettier --stream",
+    "test:nolint": "lerna run test:nolint --stream",
+    "test:debug": "lerna run test:debug --stream",
+    "test:lint": "lerna run test:lint --stream",
+    "test": "lerna run test --stream"
   },
   "devDependencies": {
     "@grpc/proto-loader": "^0.3.0",
@@ -158,6 +40,7 @@
     "koa-bodyparser": "^3.2.0",
     "koa-morgan": "^1.0.1",
     "koa-router": "7.2.1",
+    "lerna": "^3.13.2",
     "lodash": "^4.17.11",
     "mocha": "^5.2.0",
     "mongodb": "^3.1.6",
@@ -169,6 +52,7 @@
     "node-fetch": "^2.2.0",
     "pg": "^7.7.1",
     "pino": "^5.8.0",
+    "prettier": "^1.16.4",
     "proxyquire": "2.1.0",
     "redis": "^2.8.0",
     "request": "^2.88.0",

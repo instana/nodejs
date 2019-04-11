@@ -23,15 +23,22 @@ process.stdin.on('readable', () => {
 process.stdin.on('end', () => {
   try {
     const auditReport = JSON.parse(raw);
-    if (auditReport.error) {
+    if (auditReport.error && auditReport.error.code === 'ENOAUDIT') {
+      process.stderr.write(
+        'npm audit --json failed with ENOAUDIT. ' +
+          'Unfortunately it does this sporadically, you can safely ignore this. Full report:\n'
+      );
+      process.stderr.write(JSON.stringify(auditReport, null, 2));
+      process.exit(0);
+    } else if (auditReport.error) {
       process.stderr.write('npm audit --json failed with an error report:\n');
       process.stderr.write(JSON.stringify(auditReport, null, 2));
       printHelpAndExit();
-    }
-    if (!auditReport.advisories) {
+    } else if (!auditReport.advisories) {
       process.stderr.write('Incoming JSON has no advisories field.\n');
       printHelpAndExit();
     }
+
     const nonDevFindings = Object.keys(auditReport.advisories)
       .map(k => auditReport.advisories[k].findings)
       .filter(findings => findings.filter(finding => !finding.dev).length >= 1);

@@ -1,7 +1,12 @@
 # Changelog
 
+## Unreleased
+- Rename the npm package from instana-nodejs-sensor to @instana/collector. See [migration guide](packages/collector/README.md#migrating-from-instana-nodejs-sensor-to-instanacollector) for details.
+- Split into @instana/core and @instana/collector.
+- Fix trace context continuity when multiple instances of `bluebird` are present.
+
 ## 1.64.0
-- Add tracing SDK to create spans manually, integrating seamlessly with automatic tracing - see [SDK API documentation](API.md#creating-spans-manually-with-the-sdk) for details.
+- Add tracing SDK to create spans manually, integrating seamlessly with automatic tracing - see [SDK API documentation](packages/collector/API.md#creating-spans-manually-with-the-sdk) for details.
 - Additional validation for entry spans (that no other span is already in progress).
 
 ## 1.63.2

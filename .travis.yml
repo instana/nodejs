@@ -11,7 +11,6 @@ addons:
       - g++-4.8
 
 node_js:
-  - v4
   - v6
   - v8
   - v10
@@ -30,7 +29,7 @@ before_script:
 
 script:
   # We only want to run npm audit for one Node.js version (let's say latest LTS).
-  - '([[ $(node -v) =~ ^v10.*$ ]] && npm run audit) || true'
+  - '([[ $(node -v) =~ ^v10.*$ ]] && npm run audit) || [[ ! $(node -v) =~ ^v10.*$ ]]'
   - npm test
 
 after_failure:
