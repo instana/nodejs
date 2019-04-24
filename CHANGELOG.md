@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.64.0
 - Add tracing SDK to create spans manually, integrating seamlessly with automatic tracing - see [SDK API documentation](API.md#creating-spans-manually-with-the-sdk) for details.
 - Additional validation for entry spans (that no other span is already in progress).
 
