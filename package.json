@@ -11,7 +11,8 @@
     "test:nolint": "lerna run test:nolint --stream",
     "test:debug": "lerna run test:debug --stream",
     "test:lint": "lerna run test:lint --stream",
-    "test": "lerna run test --stream"
+    "test": "lerna run test --stream",
+    "version": "lerna clean --yes && lerna bootstrap --ignore-scripts -- --package-lock-only --no-audit && git add packages/*/package-lock.json"
   },
   "devDependencies": {
     "@grpc/proto-loader": "^0.3.0",

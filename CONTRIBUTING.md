@@ -12,7 +12,7 @@ To make a release, you first need to ensure that the released version will eithe
 
  - Update `CHANGELOG.md` so that the unreleased section gets its version number. Commit this change.
  - Run `lerna version patch`, `lerna version minor`, depending on which part of the version number has to be bumped. We should never have the need to bump the major version, so do not run `lerna version major`.
- - Lerna will push the commit and the tag created by `lerna version` to GitHub. Check that this has happened.
+ - Lerna will push the commit and the tag created by `lerna version` to GitHub. Check that this has happened. Also check that the version numbers in package-lock.json have been updated as well.
 
 ### Pushing Artifacts to NPM
 Once the release is properly committed and tagged, you can release the artifacts to NPM in the following way:
