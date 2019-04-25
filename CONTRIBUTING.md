@@ -15,9 +15,9 @@ To make a release, you first need to ensure that the released version will eithe
  - Lerna will push the commit and the tag created by `lerna version` to GitHub. Check that this has happened. Also check that the version numbers in package-lock.json have been updated as well.
 
 ### Pushing Artifacts to NPM
-Once the release is properly committed and tagged, you can release the artifacts to NPM in the following way:
+Once the release is properly committed and tagged, you can release the artifacts to the npm registry. First, acquire an OTP token for 2fa, then:
 
 ```
 # you will be prompted for a 2FA code/OTP (one time password).
-lerna publish
+NPM_CONFIG_OTP={your token} lerna publish
 ```
