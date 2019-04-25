@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.65.0
 - Rename the npm package from instana-nodejs-sensor to @instana/collector. See [migration guide](packages/collector/README.md#migrating-from-instana-nodejs-sensor-to-instanacollector) for details.
 - Split into @instana/core and @instana/collector.
 - Fix trace context continuity when multiple instances of `bluebird` are present.
