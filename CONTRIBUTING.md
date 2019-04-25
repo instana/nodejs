@@ -19,5 +19,5 @@ Once the release is properly committed and tagged, you can release the artifacts
 
 ```
 # you will be prompted for a 2FA code/OTP (one time password).
-NPM_CONFIG_OTP={your token} lerna publish
+NPM_CONFIG_OTP={your token} lerna publish from-package
 ```
