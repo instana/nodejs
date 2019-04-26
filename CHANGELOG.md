@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.65.1
 - Fix: Init metrics correctly when no config is passed ([#138](https://github.com/instana/nodejs-sensor/issues/138)).
 - Add data.rpc.host and data.rpc.port to GRPC exits to improve service discovery.
 
