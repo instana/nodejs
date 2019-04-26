@@ -28,7 +28,7 @@ module.exports = exports = function init(_config) {
   agentOpts.init(config);
   instanaNodeJsCore.init(config, agentConnection, pidStore);
   uncaught.init(config, agentConnection, pidStore);
-  require('./metrics').init(_config);
+  require('./metrics').init(config);
   require('./actions/profiling/cpu').init(config);
 
   logger.info('@instana/collector module version:', require(path.join(__dirname, '..', 'package.json')).version);

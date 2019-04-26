@@ -1,5 +1,8 @@
 # Changelog
 
+# Unreleased
+- Fix: Init metrics correctly when no config is passed ([#138](https://github.com/instana/nodejs-sensor/issues/138)).
+
 ## 1.65.0
 - Rename the npm package from instana-nodejs-sensor to @instana/collector. See [migration guide](packages/collector/README.md#migrating-from-instana-nodejs-sensor-to-instanacollector) for details.
 - Split into @instana/core and @instana/collector.
