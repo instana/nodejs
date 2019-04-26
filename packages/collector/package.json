@@ -1,6 +1,6 @@
 {
   "name": "@instana/collector",
-  "version": "1.65.0",
+  "version": "1.65.1",
   "description": "The Instana Node.js metrics and trace data collector",
   "author": {
     "name": "Ben Ripkens",
@@ -115,7 +115,7 @@
     "url": "https://github.com/instana/nodejs-sensor/issues"
   },
   "dependencies": {
-    "@instana/core": "^1.65.0",
+    "@instana/core": "^1.65.1",
     "bunyan": "^1.8.12",
     "semver": "5.5.1",
     "serialize-error": "^2.1.0"
