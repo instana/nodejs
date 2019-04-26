@@ -32,7 +32,7 @@ describe('tracing/grpc', function() {
       });
     });
   });
-  // registerSuite.bind(this)('dynamic', true, true);
+  // registerSuite.bind(this)('dynamic', false, false);
 
   describe('suppressed', function() {
     agentControls.registerTestHooks();
@@ -217,6 +217,8 @@ function registerSuite(codeGenMode, withMetadata, withOptions) {
     expect(span.data.rpc).to.exist;
     expect(span.data.rpc.flavor).to.equal('grpc');
     expect(span.data.rpc.call).to.equal(rpcCallNameForUrl(url));
+    expect(span.data.rpc.host).to.equal('localhost');
+    expect(span.data.rpc.port).to.equal('50051');
     if (erroneous) {
       expect(span.ec).to.be.equal(1);
       expect(span.error).to.be.true;

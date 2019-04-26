@@ -19,6 +19,7 @@ var typeUnary = 'unary';
 var typeServerStream = 'server_stream';
 var typeClientStream = 'client_stream';
 var typeBidi = 'bidi';
+var addressRegex = /^(.*):(\d+)$/;
 
 var supportedTypes = [typeUnary, typeServerStream, typeClientStream, typeBidi];
 var typesWithCallback = [typeUnary, typeClientStream];
@@ -145,28 +146,48 @@ function instrumentClient(clientModule) {
 
 function instrumentedMakeClientConstructor(originalFunction) {
   return function(methods) {
+    var address = {
+      host: undefined,
+      port: undefined
+    };
     var ServiceClient = originalFunction.apply(this, arguments);
+    var InstrumentedServiceClient = function(addressString) {
+      var parseResult = addressRegex.exec(addressString);
+      if (parseResult && parseResult.length === 3) {
+        address.host = parseResult[1];
+        address.port = parseResult[2];
+      }
+      return ServiceClient.apply(this, arguments);
+    };
+    // grpc attaches extra properties to the client constructor which we need to copy over.
+    copyAttributes(ServiceClient, InstrumentedServiceClient);
+    // Make InstrumentedServiceClient prototypically inherit from ServiceClient.
+    InstrumentedServiceClient.prototype = Object.create(ServiceClient.prototype);
+    // Re-set the original constructor.
+    InstrumentedServiceClient.prototype.constructor = InstrumentedServiceClient;
+
     Object.keys(methods).forEach(function(name) {
       var methodDefinition = methods[name];
       var rpcPath = methodDefinition.path;
       var shimFn = shimClientMethod.bind(
         null,
+        address,
         rpcPath,
         methodDefinition.requestStream,
         methodDefinition.responseStream
       );
-      shimmer.wrap(ServiceClient.prototype, name, shimFn);
+      shimmer.wrap(InstrumentedServiceClient.prototype, name, shimFn);
       // the method is usually available under two identifiers, `name` (starting with a lower case letter) and
       // `originalName` (beginning with an upper case letter). We need to shim both identifiers.
       if (methodDefinition.originalName) {
-        shimmer.wrap(ServiceClient.prototype, methodDefinition.originalName, shimFn);
+        shimmer.wrap(InstrumentedServiceClient.prototype, methodDefinition.originalName, shimFn);
       }
     });
-    return ServiceClient;
+    return InstrumentedServiceClient;
   };
 }
 
-function shimClientMethod(rpcPath, requestStream, responseStream, originalFunction) {
+function shimClientMethod(address, rpcPath, requestStream, responseStream, originalFunction) {
   function shimmedFunction() {
     var parentSpan = cls.getCurrentSpan();
     var isTracing = isActive && cls.isTracing() && parentSpan && !constants.isExitSpan(parentSpan);
@@ -178,7 +199,15 @@ function shimClientMethod(rpcPath, requestStream, responseStream, originalFuncti
       }
 
       if (isTracing) {
-        return instrumentedClientMethod(this, originalFunction, originalArgs, rpcPath, requestStream, responseStream);
+        return instrumentedClientMethod(
+          this,
+          originalFunction,
+          originalArgs,
+          address,
+          rpcPath,
+          requestStream,
+          responseStream
+        );
       } else {
         // Suppressed: We don't want to trace this call but we need to propagate the x-instana-l=0 header.
         modifyArgs(originalArgs); // add x-instana-l: 0 to metadata
@@ -187,19 +216,26 @@ function shimClientMethod(rpcPath, requestStream, responseStream, originalFuncti
     }
     return originalFunction.apply(this, arguments);
   }
-  Object.keys(originalFunction).forEach(function(attribute) {
-    shimmedFunction[attribute] = originalFunction[attribute];
-  });
-  return shimmedFunction;
+  return copyAttributes(originalFunction, shimmedFunction);
 }
 
-function instrumentedClientMethod(ctx, originalFunction, originalArgs, rpcPath, requestStream, responseStream) {
+function instrumentedClientMethod(
+  ctx,
+  originalFunction,
+  originalArgs,
+  address,
+  rpcPath,
+  requestStream,
+  responseStream
+) {
   return cls.ns.runAndReturn(function() {
     var span = cls.startSpan('rpc-client', constants.EXIT);
     span.ts = Date.now();
     span.stack = tracingUtil.getStackTrace(instrumentedClientMethod);
     span.data = {
       rpc: {
+        host: address.host,
+        port: address.port,
         call: dropLeadingSlash(rpcPath),
         flavor: 'grpc'
       }
@@ -329,6 +365,13 @@ function dropLeadingSlash(rpcPath) {
     return rpcPath;
   }
   return 'unknown';
+}
+
+function copyAttributes(from, to) {
+  Object.keys(from).forEach(function(attribute) {
+    to[attribute] = from[attribute];
+  });
+  return to;
 }
 
 exports.activate = function() {
