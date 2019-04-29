@@ -88,7 +88,7 @@ The downside of this is that it might prolong the time it takes for the applicat
 
 ## Reporting Unhandled Promise Rejections
 
-In addition to reporting uncaught exceptions, the Instana Node.js collector can also report [unhandled promise rejections](https://nodejs.org/api/process.html#process_event_unhandledrejection). An unhandled promise rejection is a promise that is rejected but for which no rejection handler has been defined (that is, the promise chain does not have a `.catch(...)`).
+In addition to reporting uncaught exceptions, the Instana Node.js collector can also report [unhandled promise rejections](https://nodejs.org/api/process.html#process_event_unhandledrejection) as issues to Instana. An unhandled promise rejection is a promise that is rejected but for which no rejection handler has been defined (that is, the promise chain does not have a `.catch(...)`).
 
 This capability is disabled by default. If it is enabled and an unhandled promise rejection is detected, this is reported as an issue of severity "warning" to Instana.
 
