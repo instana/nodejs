@@ -192,6 +192,14 @@ exports.sendSpans = function sendSpans(spans, cb) {
   sendData('/com.instana.plugin.nodejs/traces.' + pidStore.pid, spans, callback, true);
 };
 
+exports.sendEvent = function sendEvent(eventData, cb) {
+  var callback = atMostOnce('callback for sendEvent', function(err, responseBody) {
+    cb(err, responseBody);
+  });
+
+  sendData('/com.instana.plugin.generic.event', eventData, callback);
+};
+
 exports.sendAgentResponseToAgent = function sendAgentResponseToAgent(messageId, response, cb) {
   cb = atMostOnce('callback for sendAgentResponseToAgent', cb);
 

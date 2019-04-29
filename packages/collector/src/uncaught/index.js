@@ -15,8 +15,22 @@ var stackTraceUtil = instanaNodeJsCore.util.stackTrace;
 var downstreamConnection = null;
 var processIdentityProvider = null;
 var uncaughtExceptionEventName = 'uncaughtException';
+var unhandledRejectionEventName = 'unhandledRejection';
+var unhandledRejectionDeprecationWarningHasBeenEmitted = false;
 var stackTraceLength = 10;
 var config;
+
+// see
+// https://nodejs.org/api/cli.html#cli_unhandled_rejections_mode /
+// https://github.com/nodejs/node/pull/26599
+var unhandledRejectionsMode = 'warn/default';
+for (var i = 0; i < process.execArgv.length; i++) {
+  if (process.execArgv[i] === '--unhandled-rejections=none') {
+    unhandledRejectionsMode = 'none';
+  } else if (process.execArgv[i] === '--unhandled-rejections=strict') {
+    unhandledRejectionsMode = 'strict';
+  }
+}
 
 exports.init = function(_config, _downstreamConnection, _processIdentityProvider) {
   config = _config;
@@ -40,9 +54,18 @@ function setDefaults() {
     stackTraceLength = config.tracing.stackTraceLength;
   }
   config.reportUncaughtException = config.reportUncaughtException === true;
+  // Make reportUncaughtException implies reportUnhandledPromiseRejections unless explicitly disabled.
+  if (config.reportUnhandledPromiseRejections == null) {
+    config.reportUnhandledPromiseRejections = config.reportUncaughtException;
+  }
 }
 
 exports.activate = function() {
+  activateUncaughtExceptionHandling();
+  activateUnhandledPromiseRejectionHandling();
+};
+
+function activateUncaughtExceptionHandling() {
   if (config.reportUncaughtException) {
     process.once(uncaughtExceptionEventName, onUncaughtException);
     try {
@@ -75,10 +98,11 @@ exports.activate = function() {
   } else {
     logger.info('Reporting uncaught exceptions is disabled.');
   }
-};
+}
 
 exports.deactivate = function() {
   process.removeListener(uncaughtExceptionEventName, onUncaughtException);
+  process.removeListener(unhandledRejectionEventName, onUnhandledRejection);
 };
 
 function onUncaughtException(uncaughtError) {
@@ -96,19 +120,7 @@ function finishCurrentSpanAndReportEvent(uncaughtError, jsonStackTrace) {
 }
 
 function createEventForUncaughtException(uncaughtError) {
-  var eventText = errorToMarkdown(uncaughtError);
-  return {
-    title: 'A Node.js process terminated abnormally due to an uncaught exception.',
-    text: eventText,
-    plugin: 'com.instana.forge.infrastructure.runtime.nodejs.NodeJsRuntimePlatform',
-    id:
-      processIdentityProvider && typeof processIdentityProvider.getEntityId === 'function'
-        ? processIdentityProvider.getEntityId()
-        : undefined,
-    timestamp: Date.now(),
-    duration: 1,
-    severity: 10
-  };
+  return createEvent(uncaughtError, 'A Node.js process terminated abnormally due to an uncaught exception.', 10);
 }
 
 function finishCurrentSpan(jsonStackTrace) {
@@ -145,6 +157,71 @@ function logAndRethrow(err) {
   // run this handler again since it (a) has been registered with `once` and (b) we removed all handlers for
   // uncaughtException anyway.
   throw err;
+}
+
+function activateUnhandledPromiseRejectionHandling() {
+  if (config.reportUnhandledPromiseRejections) {
+    if (unhandledRejectionsMode === 'strict') {
+      logger.warn(
+        'Node.js has been started with --unhandled-rejections=strict, therefore reporting unhandled promise ' +
+          'rejections will not be enabled.'
+      );
+      return;
+    }
+    process.on(unhandledRejectionEventName, onUnhandledRejection);
+    logger.info('Reporting unhandled promise rejections is enabled.');
+  } else {
+    logger.info('Reporting unhandled promise rejections is disabled.');
+  }
+}
+
+function onUnhandledRejection(reason) {
+  if (unhandledRejectionsMode !== 'none') {
+    // Best effort to emit the same log messages that Node.js does by default (when no handler for the
+    // unhandledRejection event is installed.
+    // eslint-disable-next-line no-console
+    console.warn('UnhandledPromiseRejectionWarning:', reason);
+    // eslint-disable-next-line no-console
+    console.warn(
+      'UnhandledPromiseRejectionWarning: Unhandled promise rejection. This error originated either by throwing ' +
+        'inside of an async function without a catch block, or by rejecting a promise which was not handled with ' +
+        '.catch().'
+    );
+    if (!unhandledRejectionDeprecationWarningHasBeenEmitted) {
+      // eslint-disable-next-line no-console
+      console.warn(
+        '[DEP0018] DeprecationWarning: Unhandled promise rejections are deprecated. In the future, promise ' +
+          'rejections that are not handled will terminate the Node.js process with a non-zero exit code.'
+      );
+      unhandledRejectionDeprecationWarningHasBeenEmitted = true;
+    }
+  }
+
+  downstreamConnection.sendEvent(createEventForUnhandledRejection(reason), function(error) {
+    if (error) {
+      logger.error('Error received while trying to send event to agent: %s', error.message);
+    }
+  });
+}
+
+function createEventForUnhandledRejection(reason) {
+  return createEvent(reason, 'An unhandled promise rejection occured in a Node.js process.', 5);
+}
+
+function createEvent(error, title, severity) {
+  var eventText = errorToMarkdown(error);
+  return {
+    title: title,
+    text: eventText,
+    plugin: 'com.instana.forge.infrastructure.runtime.nodejs.NodeJsRuntimePlatform',
+    id:
+      processIdentityProvider && typeof processIdentityProvider.getEntityId === 'function'
+        ? processIdentityProvider.getEntityId()
+        : undefined,
+    timestamp: Date.now(),
+    duration: 1,
+    severity: severity
+  };
 }
 
 function errorToMarkdown(error) {

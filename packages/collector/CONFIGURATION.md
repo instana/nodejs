@@ -9,6 +9,7 @@
   - [Capturing Stack Traces](#capturing-stack-traces)
   - [OpenTracing Service Naming](#opentracing-service-naming)
 - [Reporting Uncaught Exceptions](#reporting-uncaught-exceptions)
+- [Reporting Unhandled Promise Rejections](#reporting-unhandled-promise-rejections)
 - [Logging](#logging)
   - [Bunyan Parent Logger](#bunyan-parent-logger)
   - [Log Level Configuration](#log-level-configuration)
@@ -85,6 +86,34 @@ The downside of this is that it might prolong the time it takes for the applicat
 * If you have a mechanism in place that restarts the Node.js process once it has crashed, enabling uncaught exception tracking might lead to more failed requests, because the application process is kept alive for a bit longer (though only for a few milliseconds), delaying the automatic restart.
 * Since Instana rethrows the original exception synchronously from the uncaught exception handler, other handlers for the 'uncaughtException' event that have been registered after initialising Instana's Node.js collector are not executed. If you want to enable uncaught exception handling and also use your own handlers for this event, they should be registered before initialising Instana's Node.js collector.
 
+## Reporting Unhandled Promise Rejections
+
+In addition to reporting uncaught exceptions, the Instana Node.js collector can also report [unhandled promise rejections](https://nodejs.org/api/process.html#process_event_unhandledrejection). An unhandled promise rejection is a promise that is rejected but for which no rejection handler has been defined (that is, the promise chain does not have a `.catch(...)`).
+
+This capability is disabled by default. If it is enabled and an unhandled promise rejection is detected, this is reported as an issue of severity "warning" to Instana.
+
+Note that the call that is in progress while the promise is rejected is not marked as an error due to the unhandled rejection. The reason for this is twofold:
+1. Unhandled rejections do not cause an error in the Node.js runtime. Even if unhandled rejections occur during the processing of a request, the request can still be processed successfully.
+2. The Node.js runtime has no way of detecting unhandled rejections _in the context of specific calls_. In fact, unhandled rejections are only detected later, when the associated promise is about to be garbage collected. By that time, the request which triggered the unhandled rejection is already finished and has been responded to.
+
+This capability can be enabled with the option `reportUnhandledPromiseRejections`, as follows:
+
+```javascript
+require('@instana/collector')({
+  reportUnhandledPromiseRejections: true
+});
+```
+
+Note that enabling [`reportUncaughtException`](#reporting-uncaught-exceptions) implicitly enables `reportUnhandledPromiseRejections`. If required, you can enable `reportUncaughtException` and explicitly disable `reportUnhandledPromiseRejections`, like this:
+
+```javascript
+require('@instana/collector')({
+  reportUncaughtException: true,
+  reportUnhandledPromiseRejections: false
+});
+```
+
+Starting with Node.js 12.0.0, there is a command line flag [`--unhandled-rejections`](https://nodejs.org/api/cli.html#cli_unhandled_rejections_mode) that controls how unhandled promise rejections are handled. Reporting unhandled rejections is not supported with `--unhandled-rejections=strict`, because in this mode, Node.js will convert unhandled rejections to uncaught exceptions. Use the [`reportUncaughtException`](#reporting-uncaught-exceptions) option instead of `reportUnhandledPromiseRejections` when running Node.js with `--unhandled-rejections=strict`.
 
 ## Logging
 

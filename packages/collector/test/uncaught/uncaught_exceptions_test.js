@@ -5,15 +5,15 @@ var expect = chai.expect;
 var assert = chai.assert;
 
 var supportedVersion = require('@instana/core').tracing.supportedVersion;
-var config = require('../../config');
-var utils = require('../../utils');
+var config = require('../config');
+var utils = require('../utils');
 
 describe('uncaught exceptions', function() {
   if (!supportedVersion(process.versions.node)) {
     return;
   }
 
-  var agentControls = require('../../apps/agentStubControls');
+  var agentControls = require('../apps/agentStubControls');
   var ServerControls = require('./apps/serverControls');
 
   this.timeout(config.getTestTimeout());
@@ -23,7 +23,8 @@ describe('uncaught exceptions', function() {
   var serverControls = new ServerControls({
     agentControls: agentControls,
     env: {
-      ENABLE_REPORT_UNCAUGHT_EXCEPTION: true
+      ENABLE_REPORT_UNCAUGHT_EXCEPTION: true,
+      ENABLE_REPORT_UNHANDLED_REJECTIONS: false
     }
   });
   serverControls.registerTestHooks();
@@ -50,14 +51,14 @@ describe('uncaught exceptions', function() {
               expect(span.f.h).to.equal('agent-stub-uuid');
               expect(span.error).to.equal(true);
               expect(span.ec).to.equal(1);
-              expect(JSON.stringify(span.stack)).to.contain('test/util/uncaught_exceptions/apps/server.js');
+              expect(JSON.stringify(span.stack)).to.contain('test/uncaught/apps/server.js');
             });
           });
         });
       });
   });
 
-  it('must report uncaught exception as an issue', function() {
+  it('must be reported as an issue', function() {
     return serverControls
       .sendRequest({
         method: 'GET',

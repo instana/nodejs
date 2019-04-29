@@ -1,8 +1,10 @@
+/* global Promise */
+
 'use strict';
 
 // Deliberately not using Express.js here to avoid conflicts with Express.js' error handling.
 
-var instana = require('../../../..');
+var instana = require('../../..');
 var config = {
   agentPort: process.env.AGENT_PORT,
   level: 'warn'
@@ -11,6 +13,9 @@ var config = {
 };
 if (process.env.ENABLE_REPORT_UNCAUGHT_EXCEPTION) {
   config.reportUncaughtException = true;
+}
+if (process.env.ENABLE_REPORT_UNHANDLED_REJECTIONS) {
+  config.reportUnhandledPromiseRejections = true;
 }
 
 instana(config);
@@ -25,6 +30,8 @@ var requestHandler = function(request, response) {
     return success(response);
   } else if (request.url === '/boom') {
     return uncaughtError(response);
+  } else if (request.url === '/reject') {
+    return uncaughtPromiseRejection(response);
   } else {
     response.statusCode = 404;
     return response.end('Not here :-(');
@@ -40,6 +47,15 @@ function success(response) {
 function uncaughtError() {
   process.nextTick(function() {
     throw new Error('Boom');
+  });
+}
+
+function uncaughtPromiseRejection(response) {
+  process.nextTick(function() {
+    Promise.reject(new Error('Unhandled Promise Rejection'));
+    process.nextTick(function() {
+      response.end('Rejected.');
+    });
   });
 }
 
