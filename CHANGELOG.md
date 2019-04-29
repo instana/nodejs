@@ -1,16 +1,19 @@
 # Changelog
 
+## Unreleased
+- Report unhandled promise rejections as incidents (disabled by default, see [configuration guide](https://github.com/instana/nodejs-sensor/blob/master/packages/collector/CONFIGURATION.md#reporting-unhandled-promise-rejections)).
+
 ## 1.65.1
 - Fix: Init metrics correctly when no config is passed ([#138](https://github.com/instana/nodejs-sensor/issues/138)).
 - Add data.rpc.host and data.rpc.port to GRPC exits to improve service discovery.
 
 ## 1.65.0
-- Rename the npm package from instana-nodejs-sensor to @instana/collector. See [migration guide](packages/collector/README.md#migrating-from-instana-nodejs-sensor-to-instanacollector) for details.
+- Rename the npm package from instana-nodejs-sensor to @instana/collector. See [migration guide](https://github.com/instana/nodejs-sensor/blob/master/packages/collector/README.md#migrating-from-instana-nodejs-sensor-to-instanacollector) for details.
 - Split into @instana/core and @instana/collector.
 - Fix trace context continuity when multiple instances of `bluebird` are present.
 
 ## 1.64.0
-- Add tracing SDK to create spans manually, integrating seamlessly with automatic tracing - see [SDK API documentation](packages/collector/API.md#creating-spans-manually-with-the-sdk) for details.
+- Add tracing SDK to create spans manually, integrating seamlessly with automatic tracing - see [SDK API documentation](https://github.com/instana/nodejs-sensor/blob/master/packages/collector/API.md#creating-spans-manually-with-the-sdk) for details.
 - Additional validation for entry spans (that no other span is already in progress).
 
 ## 1.63.2

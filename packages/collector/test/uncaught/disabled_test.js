@@ -6,15 +6,15 @@ var assert = chai.assert;
 var Promise = require('bluebird');
 
 var supportedVersion = require('@instana/core').tracing.supportedVersion;
-var config = require('../../config');
-var utils = require('../../utils');
+var config = require('../config');
+var utils = require('../utils');
 
 describe('uncaught exception reporting disabled', function() {
   if (!supportedVersion(process.versions.node)) {
     return;
   }
 
-  var agentControls = require('../../apps/agentStubControls');
+  var agentControls = require('../apps/agentStubControls');
   var ServerControls = require('./apps/serverControls');
 
   this.timeout(config.getTestTimeout());
