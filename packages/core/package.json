@@ -13,7 +13,6 @@
     "test:mocha": "mocha --reporter spec $(find test -name '*test.js')",
     "test:debug": "WITH_STDOUT=true npm run test:mocha",
     "test:lint": "eslint src test",
-    "prepublishOnly": "npm run audit",
     "prettier": "prettier --write 'src/**/*.js' 'test/**/*.js' 'bin/**/*.js'"
   },
   "repository": {
@@ -126,5 +125,6 @@
     "eslint-plugin-mocha": "^4.12.1",
     "mocha": "^5.2.0",
     "prettier": "^1.16.4"
-  }
+  },
+  "gitHead": "2e88aaa62c56c7fd68a588b651c36ee2e532958e"
 }

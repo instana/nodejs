@@ -34,7 +34,6 @@
     "dev-http-mongodb": "APP_PORT=3459 TRACING_ENABLED=true node test/apps/expressMongodb | bunyan",
     "dev-http-kafka-producer": "APP_PORT=3460 TRACING_ENABLED=true node test/apps/expressKafkaProducer | bunyan",
     "dev-http-mysql": "APP_PORT=3461 TRACING_ENABLED=true node test/apps/expressMysql | bunyan",
-    "prepublishOnly": "npm run audit",
     "prettier": "prettier --write 'src/**/*.js' 'test/**/*.js' 'dummy-app/**/*.js' 'dockerfile-examples/**/*.js' 'bin/**/*.js'"
   },
   "keywords": [
@@ -131,5 +130,6 @@
     "mocha": "^5.2.0",
     "opentracing": "^0.14.3",
     "prettier": "^1.16.4"
-  }
+  },
+  "gitHead": "2e88aaa62c56c7fd68a588b651c36ee2e532958e"
 }
