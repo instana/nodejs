@@ -34,7 +34,7 @@
     "express-pino-logger": "^4.0.0",
     "fastify": "1.12.1",
     "google-protobuf": "^3.0.0",
-    "grpc": "^1.17.0",
+    "grpc": "^1.20.2",
     "ioredis": "^3.2.2",
     "kafka-node": "^2.6.1",
     "koa": "^2.3.0",

@@ -1,5 +1,8 @@
 # Changelog
 
+## Unreleased
+- Add support for Node.js 12 (except for two optional features that rely on native addons which are not yet available for Node.js 12, CPU profiling and reporting uncaught exceptions).
+
 ## 1.66.0
 - Report unhandled promise rejections as issues (disabled by default, see [configuration guide](https://github.com/instana/nodejs-sensor/blob/master/packages/collector/CONFIGURATION.md#reporting-unhandled-promise-rejections)).
 

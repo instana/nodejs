@@ -15,6 +15,7 @@ node_js:
   - v8
   - v10
   - v11
+  - v12
 
 before_script:
   # When running tests in Node.js 8, we pin grpc to exactly 1.10.1.

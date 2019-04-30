@@ -1,5 +1,6 @@
 'use strict';
 
+var semver = require('semver');
 var chai = require('chai');
 var expect = chai.expect;
 var assert = chai.assert;
@@ -10,6 +11,10 @@ var utils = require('../utils');
 
 describe('uncaught exceptions', function() {
   if (!supportedVersion(process.versions.node)) {
+    return;
+  }
+  if (semver.satisfies(process.versions.node, '>=12.0.0')) {
+    // TODO Skipping test, netlinkwrapper needs to be updated for Node.js 12.
     return;
   }
 

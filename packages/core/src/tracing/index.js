@@ -112,8 +112,8 @@ function shouldEnableAutomaticTracing() {
 
   if (!exports.supportedVersion(process.versions.node)) {
     logger.info(
-      'Not enabling automatic tracing this is an unsupported version of Node.' +
-        '  See: https://docs.instana.io/ecosystem/node-js/'
+      'Not enabling automatic tracing, this is an unsupported version of Node.js. ' +
+        'See: https://docs.instana.io/ecosystem/node-js/#supported-nodejs-versions'
     );
     return false;
   }
@@ -121,7 +121,7 @@ function shouldEnableAutomaticTracing() {
 }
 
 exports.supportedVersion = function supportedVersion(version) {
-  return semver.satisfies(version, '^4.5 || ^5.10 || ^6 || ^7 || ^8.2.1 || ^9.1.0 || ^10.4.0 || ^11');
+  return semver.satisfies(version, '^4.5 || ^5.10 || ^6 || ^7 || ^8.2.1 || ^9.1.0 || ^10.4.0 || ^11 || >=12.0.0');
 };
 
 exports.activate = function() {
