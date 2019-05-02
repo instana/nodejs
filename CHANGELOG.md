@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.67.0
 - Add support for Node.js 12 (except for two optional features that rely on native addons which are not yet available for Node.js 12, CPU profiling and reporting uncaught exceptions).
 
 ## 1.66.0
