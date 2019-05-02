@@ -86,7 +86,7 @@ app.post('/metrics', (req, res) => {
   return res.sendStatus(201);
 });
 
-app.post('/spans', (req, res) => {
+app.post('/traces', (req, res) => {
   logger.debug('incoming spans', req.body);
   if (unresponsive) {
     // intentionally not responding for tests that verify proper timeout handling

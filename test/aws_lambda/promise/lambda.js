@@ -1,8 +1,8 @@
 'use strict';
 
-const fetch = require('node-fetch');
-
 const instana = require('../../..');
+
+const fetch = require('node-fetch');
 
 exports.handler = instana.awsLambda.wrap((event, context) => {
   console.log('in actual handler');

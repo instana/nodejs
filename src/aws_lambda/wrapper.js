@@ -159,39 +159,43 @@ function postHandler(entrySpan, isError, callback) {
   const spans = spanBuffer.getAndResetSpans();
 
   const metricsData = metrics.gatherData();
+  const metricsPayload = {
+    plugins: [{ name: 'com.instana.plugin.nodejs', entityId: 'TODO:ARN', data: metricsData }]
+  };
 
-  acceptorConnector.sendBundle({ spans, metrics: metricsData }, err => {
-    if (err) {
-      // We intentionally do not propagate the error from the acceptor request - the customer's lambda needs to finish
-      // successfully, no matter if we have been able to report metrics and spans.
-      logger.warn('Could not send data to acceptor.', err.message);
-      logger.debug('Could not send data to acceptor.', err);
-    } else {
-      logger.debug('Data has been sent to acceptor.');
-    }
-    callback();
-  });
-
-  // For shits and giggles, we could also send metrics and spans separately:
-  // acceptorConnector.sendMetrics(err => {
+  // TODO Implement bundle resource in serverless-acceptor to save one HTTP request.
+  // acceptorConnector.sendBundle({ spans, metrics: metricsPayload }, err => {
   //   if (err) {
   //     // We intentionally do not propagate the error from the acceptor request - the customer's lambda needs to finish
   //     // successfully, no matter if we have been able to report metrics and spans.
-  //     logger.warn('Could not send metrics to acceptor.', err.message);
-  //     logger.debug('Could not send metrics to acceptor.', err);
+  //     logger.warn('Could not send data to acceptor.', err.message);
+  //     logger.debug('Could not send data to acceptor.', err);
   //   } else {
-  //     logger.debug('Metrics have been sent to acceptor.');
+  //     logger.debug('Data has been sent to acceptor.');
   //   }
-  //   acceptorConnector.sendSpans(err => {
-  //     if (err) {
-  //       // We intentionally do not propagate the error from the acceptor request - the customer's lambda needs to finish
-  //       // successfully, no matter if we have been able to report metrics and spans.
-  //       logger.warn('Could not send spans to acceptor.', err.message);
-  //       logger.debug('Could not send spans to acceptor.', err);
-  //     } else {
-  //       logger.debug('Spans have been sent to acceptor.');
-  //     }
-  //     callback();
-  //   });
+  //   callback();
   // });
+
+  // For now, we send send metrics and spans separately, until serverless-acceptor offers POST /bundle:
+  acceptorConnector.sendMetrics(metricsPayload, err => {
+    if (err) {
+      // We intentionally do not propagate the error from the acceptor request - the customer's lambda needs to finish
+      // successfully, no matter if we have been able to report metrics and spans.
+      logger.warn('Could not send metrics to acceptor.', err.message);
+      logger.debug('Could not send metrics to acceptor.', err);
+    } else {
+      logger.debug('Metrics have been sent to acceptor.');
+    }
+    acceptorConnector.sendSpans(spans, err => {
+      if (err) {
+        // We intentionally do not propagate the error from the acceptor request - the customer's lambda needs to finish
+        // successfully, no matter if we have been able to report metrics and spans.
+        logger.warn('Could not send spans to acceptor.', err.message);
+        logger.debug('Could not send spans to acceptor.', err);
+      } else {
+        logger.debug('Spans have been sent to acceptor.');
+      }
+      callback();
+    });
+  });
 }

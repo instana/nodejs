@@ -1,8 +1,8 @@
 'use strict';
 
-const https = require('https');
-
 const instana = require('../../..');
+
+const https = require('https');
 
 exports.handler = instana.awsLambda.wrap(function(event, context, callback) {
   console.log('in actual handler');

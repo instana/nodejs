@@ -30,12 +30,17 @@ if (semver.gte(process.version, '6.13.0')) {
 }
 
 const instanaUrlEnvVar = 'INSTANA_URL';
+const instanaKeyEnvVar = 'INSTANA_KEY';
 let valid = false;
 let acceptorHost = null;
 let acceptorPort = null;
+let instanaKey = null;
+
+exports.sendUnencryptedEnvVar = 'INSTANA_DEV_SEND_UNENCRYPTED';
+exports.sendUnencrypted = process.env[exports.sendUnencryptedEnvVar] === 'true';
 
 exports.validate = function validate() {
-  exports._validateUrl(process.env[instanaUrlEnvVar]);
+  exports._validate(process.env[instanaUrlEnvVar], process.env[instanaKeyEnvVar]);
 };
 
 // exposed for testing
@@ -46,7 +51,7 @@ exports._reset = function _reset() {
 };
 
 // exposed for testing
-exports._validateUrl = function _validateUrl(instanaUrl) {
+exports._validate = function _validate(instanaUrl, _instanaKey) {
   logger.debug(`${instanaUrlEnvVar}: ${instanaUrl}`);
 
   if (!instanaUrl) {
@@ -64,13 +69,21 @@ exports._validateUrl = function _validateUrl(instanaUrl) {
     return;
   }
 
-  if (parsedUrl.protocol !== 'https:') {
+  if (!exports.sendUnencrypted && parsedUrl.protocol !== 'https:') {
     logger.warn(
       `The value of ${instanaUrlEnvVar} (${instanaUrl}) specifies a non-supported protocol: "${parsedUrl.protocol}".` +
         ' Only "https:" is supported. No data will be reported to Instana.'
     );
     return;
   }
+  if (exports.sendUnencrypted && parsedUrl.protocol !== 'https:' && parsedUrl.protocol !== 'http:') {
+    logger.warn(
+      `The value of ${instanaUrlEnvVar} (${instanaUrl}) specifies a non-supported protocol: "${parsedUrl.protocol}".` +
+        ' Only "https:" and "http:" are supported. No data will be reported to Instana.'
+    );
+    return;
+  }
+
   if (!parsedUrl.hostname || parsedUrl.hostname.length === 0) {
     logger.warn(
       `The value of ${instanaUrlEnvVar} (${instanaUrl}) does not seem to be a well-formed URL.` +
@@ -85,8 +98,16 @@ exports._validateUrl = function _validateUrl(instanaUrl) {
     acceptorPort = '443';
   }
 
+  instanaKey = _instanaKey;
+
+  if (!instanaKey || instanaKey.length === 0) {
+    logger.warn(`The environment variable ${instanaKeyEnvVar} is not set. No data will be reported to Instana.`);
+    return;
+  }
+
   logger.debug(`INSTANA HOST: ${acceptorHost}`);
   logger.debug(`INSTANA PORT: ${acceptorPort}`);
+  logger.debug(`INSTANA KEY: ${instanaKey}`);
   valid = true;
 };
 
@@ -100,4 +121,8 @@ exports.getAcceptorHost = function getAcceptorHost() {
 
 exports.getAcceptorPort = function getAcceptorPort() {
   return acceptorPort;
+};
+
+exports.getInstanaKey = function getInstanaKey() {
+  return instanaKey;
 };

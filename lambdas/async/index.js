@@ -1,3 +1,5 @@
+'use strict';
+
 exports.handler = async (event, context) => {
   context.callbackWaitsForEmptyEventLoop = true;
   console.log('Starting up');

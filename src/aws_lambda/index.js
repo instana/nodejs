@@ -1,13 +1,14 @@
 'use strict';
 
 const https = require('https');
-const instanaUrlUtil = require('../util/instana_url');
+
+const environmentUtil = require('../util/environment');
 
 const logger = require('../util/logger');
 
-instanaUrlUtil.validate();
+environmentUtil.validate();
 
-if (instanaUrlUtil.isValid()) {
+if (environmentUtil.isValid()) {
   module.exports = exports = require('./wrapper');
 } else {
   module.exports = exports = require('./noop_wrapper');

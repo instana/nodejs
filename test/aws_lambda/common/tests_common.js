@@ -23,6 +23,9 @@ function prelude(opts) {
   if (opts.instanaUrl) {
     env.INSTANA_URL = opts.instanaUrl;
   }
+  if (opts.instanaKey) {
+    env.INSTANA_KEY = opts.instanaKey;
+  }
 
   const Control = require('../../util/control');
   const control = new Control({
@@ -42,7 +45,8 @@ exports.registerTests = function registerTests(handlerDefinitionPath) {
     // - lambda function ends with success
     const control = prelude.bind(this)({
       handlerDefinitionPath,
-      instanaUrl: config.acceptorBaseUrl
+      instanaUrl: config.acceptorBaseUrl,
+      instanaKey: config.instanaKey
     });
 
     it('must capture metrics and spans', () => verify(control, false, true));
@@ -55,6 +59,7 @@ exports.registerTests = function registerTests(handlerDefinitionPath) {
     const control = prelude.bind(this)({
       handlerDefinitionPath,
       instanaUrl: config.acceptorBaseUrl,
+      instanaKey: config.instanaKey,
       error: true
     });
 
@@ -65,7 +70,8 @@ exports.registerTests = function registerTests(handlerDefinitionPath) {
     // - INSTANA_URL is missing
     // - lambda function ends with success
     const control = prelude.bind(this)({
-      handlerDefinitionPath
+      handlerDefinitionPath,
+      instanaKey: config.instanaKey
     });
 
     it('must ignore the missing config gracefully', () => verify(control, false, false));
@@ -76,6 +82,30 @@ exports.registerTests = function registerTests(handlerDefinitionPath) {
     // - lambda function ends with an error
     const control = prelude.bind(this)({
       handlerDefinitionPath,
+      instanaKey: config.instanaKey,
+      error: true
+    });
+
+    it('must ignore the missing config gracefully', () => verify(control, true, false));
+  });
+
+  describe('when INSTANA_KEY is missing', () => {
+    // - INSTANA_KEY is missing
+    // - lambda function ends with success
+    const control = prelude.bind(this)({
+      handlerDefinitionPath,
+      instanaUrl: config.acceptorBaseUrl
+    });
+
+    it('must ignore the missing config gracefully', () => verify(control, false, false));
+  });
+
+  describe('when INSTANA_KEY is missing and the lambda function yields an error', () => {
+    // - INSTANA_KEY is missing
+    // - lambda function ends with an error
+    const control = prelude.bind(this)({
+      handlerDefinitionPath,
+      instanaUrl: config.acceptorBaseUrl,
       error: true
     });
 
@@ -89,6 +119,7 @@ exports.registerTests = function registerTests(handlerDefinitionPath) {
     const control = prelude.bind(this)({
       handlerDefinitionPath,
       instanaUrl: config.acceptorBaseUrl,
+      instanaKey: config.instanaKey,
       startAcceptor: false
     });
 
@@ -102,6 +133,7 @@ exports.registerTests = function registerTests(handlerDefinitionPath) {
     const control = prelude.bind(this)({
       handlerDefinitionPath,
       instanaUrl: config.acceptorBaseUrl,
+      instanaKey: config.instanaKey,
       startAcceptor: false,
       error: true
     });
@@ -117,6 +149,7 @@ exports.registerTests = function registerTests(handlerDefinitionPath) {
     const control = prelude.bind(this)({
       handlerDefinitionPath,
       instanaUrl: config.acceptorBaseUrl,
+      instanaKey: config.instanaKey,
       startAcceptor: 'unresponsive'
     });
 
@@ -147,7 +180,7 @@ exports.registerTests = function registerTests(handlerDefinitionPath) {
         .then(() => control.getMetrics())
         .then(metrics => expectMetrics(metrics));
     } else {
-      return delay(500)
+      return delay(1000)
         .then(() => control.getSpans())
         .then(spans => {
           expect(spans).to.be.empty;
@@ -194,8 +227,14 @@ exports.registerTests = function registerTests(handlerDefinitionPath) {
   function expectMetrics(allMetrics) {
     expect(allMetrics).to.exist;
     expect(Array.isArray(allMetrics)).to.be.true;
-    expect(allMetrics.length).to.equal(1);
-    const metrics = allMetrics[0];
+    expect(allMetrics).to.have.lengthOf(1);
+    const allPlugins = allMetrics[0];
+    expect(allPlugins.plugins).to.have.lengthOf(1);
+    const pluginData = allPlugins.plugins[0];
+    expect(pluginData.data).to.exist;
+    expect(pluginData.name).to.equal('com.instana.plugin.nodejs');
+    expect(pluginData.entityId).to.equal('TODO:ARN');
+    const metrics = pluginData.data;
     expect(metrics.activeHandles).to.be.a('number');
     expect(metrics.activeRequests).to.be.a('number');
     expect(metrics.dependencies).to.exist;

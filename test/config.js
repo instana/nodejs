@@ -4,6 +4,8 @@ exports.acceptorPort = 8443;
 
 exports.acceptorBaseUrl = `https://localhost:${exports.acceptorPort}`;
 
+exports.instanaKey = 'dummy-key';
+
 exports.getAppStdio = function() {
   if (process.env.WITH_STDOUT || process.env.CI) {
     return [process.stdin, process.stdout, process.stderr, 'ipc'];
