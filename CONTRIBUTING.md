@@ -15,7 +15,10 @@ To make a release, you first need to ensure that the released version will eithe
 
 - Update `CHANGELOG.md` so that the unreleased section gets its version number. Commit and push this change.
 - Acquire an OTP token for 2fa.
-- Run `NPM_CONFIG_OTP={your token} lerna publish --force-publish="*" minor`
+- Run either
+    - `NPM_CONFIG_OTP={your token} lerna publish --force-publish="*" patch`, or
+    - `NPM_CONFIG_OTP={your token} lerna publish --force-publish="*" minor`.
+
 
 #### Separate lerna version and lerna publish
 You might want to separate the version bumping and tagging from publishing to the npm registry. This is also possible. The separate lerna publish command (see below) is also helpful if the publish did not go through successfully.
