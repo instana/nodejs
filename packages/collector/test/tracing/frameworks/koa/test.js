@@ -33,6 +33,7 @@ describe('tracing/koa', function() {
     check('/sub1/sub2', '/sub1/sub2/');
     check('/sub1/sub2/route', '/sub1/sub2/route');
     check('/sub1/sub2/route/123', '/sub1/sub2/route/:id');
+    check('/does-not-exist-so-use-catch-all-regexp', '/.*/');
 
     function check(actualPath, expectedTemplate) {
       it('must report koa-router path templates for actual path: ' + actualPath, function() {
