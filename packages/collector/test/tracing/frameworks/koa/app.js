@@ -45,7 +45,8 @@ router
     ctx.body = '';
   })
   .get('/route', respondWithRoute)
-  .get('/route/:id', respondWithRoute);
+  .get('/route/:id', respondWithRoute)
+  .all(/.*/, respondWithRoute); // catch-all regexp
 
 subRouter.use('/sub2', subSubRouter.routes(), subSubRouter.allowedMethods());
 router.use('/sub1', subRouter.routes(), subRouter.allowedMethods());
