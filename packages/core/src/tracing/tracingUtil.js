@@ -90,3 +90,17 @@ exports.shortenDatabaseStatement = function shortenDatabaseStatement(stmt) {
 
   return stmt.substring(0, 4000);
 };
+
+exports.readAttribCaseInsensitive = function readAttribCaseInsensitive(object, key) {
+  if (!object || typeof object !== 'object' || typeof key !== 'string') {
+    return null;
+  }
+  var keyUpper = key.toUpperCase();
+  var allKeys = Object.keys(object);
+  for (var i = 0; i < allKeys.length; i++) {
+    if (typeof allKeys[i] === 'string' && allKeys[i].toUpperCase() === keyUpper) {
+      return object[allKeys[i]];
+    }
+  }
+  return null;
+};

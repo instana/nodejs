@@ -113,7 +113,7 @@ function processExitSpan(ctx, span, originalArgs) {
 }
 
 function setHeaders(map, span) {
-  if (!map || !map.headers || map.headers[constants.traceLevelHeaderName]) {
+  if (!map || !map.headers || tracingUtil.readAttribCaseInsensitive(map.headers, constants.traceLevelHeaderName)) {
     return;
   }
   map.headers[constants.traceIdHeaderName] = span.t;
@@ -159,7 +159,7 @@ function instrumentedDispatchMessage(ctx, originalDispatchMessage, originalArgs)
       : {};
 
   return cls.ns.runAndReturn(function() {
-    if (headers && headers[constants.traceLevelHeaderName] === '0') {
+    if (tracingUtil.readAttribCaseInsensitive(headers, constants.traceLevelHeaderName) === '0') {
       cls.setTracingLevel('0');
       return originalDispatchMessage.apply(ctx, originalArgs);
     }
@@ -167,8 +167,8 @@ function instrumentedDispatchMessage(ctx, originalDispatchMessage, originalArgs)
     var span = cls.startSpan(
       'rabbitmq',
       constants.ENTRY,
-      headers[constants.traceIdHeaderName],
-      headers[constants.spanIdHeaderName]
+      tracingUtil.readAttribCaseInsensitive(headers, constants.traceIdHeaderName),
+      tracingUtil.readAttribCaseInsensitive(headers, constants.spanIdHeaderName)
     );
     span.ts = Date.now();
     span.stack = tracingUtil.getStackTrace(instrumentedDispatchMessage);
@@ -234,17 +234,17 @@ function instrumentedChannelModelGet(ctx, originalGet, originalArgs) {
       var fields = result.fields || {};
       var headers = result.properties && result.properties.headers ? result.properties.headers : {};
 
-      if (headers) {
-        var traceId = headers[constants.traceIdHeaderName];
-        var parentId = headers[constants.spanIdHeaderName];
-        if (traceId && parentId) {
-          span.t = traceId;
-          span.p = parentId;
-        }
-        if (headers[constants.traceLevelHeaderName] === '0') {
-          cls.setTracingLevel('0');
-          return result;
-        }
+      if (tracingUtil.readAttribCaseInsensitive(headers, constants.traceLevelHeaderName) === '0') {
+        cls.setTracingLevel('0');
+        span.cancel();
+        return result;
+      }
+
+      var traceId = tracingUtil.readAttribCaseInsensitive(headers, constants.traceIdHeaderName);
+      var parentSpanId = tracingUtil.readAttribCaseInsensitive(headers, constants.spanIdHeaderName);
+      if (traceId && parentSpanId) {
+        span.t = traceId;
+        span.p = parentSpanId;
       }
 
       span.ts = Date.now();
@@ -321,26 +321,23 @@ function instrumentedCallbackModelGet(ctx, originalGet, originalArgs) {
     }
 
     return cls.ns.runAndReturn(function() {
-      var span = cls.startSpan('rabbitmq', constants.ENTRY);
       var fields = result.fields || {};
       var headers = result.properties && result.properties.headers ? result.properties.headers : {};
 
-      if (headers) {
-        var traceId = headers[constants.traceIdHeaderName];
-        var parentId = headers[constants.spanIdHeaderName];
-        if (traceId && parentId) {
-          span.t = traceId;
-          span.p = parentId;
+      if (tracingUtil.readAttribCaseInsensitive(headers, constants.traceLevelHeaderName) === '0') {
+        cls.setTracingLevel('0');
+        if (originalCallback) {
+          return originalCallback(err, result);
         }
-        if (headers[constants.traceLevelHeaderName] === '0') {
-          cls.setTracingLevel('0');
-          if (originalCallback) {
-            return originalCallback(err, result);
-          }
-          return;
-        }
+        return;
       }
 
+      var span = cls.startSpan(
+        'rabbitmq',
+        constants.ENTRY,
+        tracingUtil.readAttribCaseInsensitive(headers, constants.traceIdHeaderName),
+        tracingUtil.readAttribCaseInsensitive(headers, constants.spanIdHeaderName)
+      );
       span.ts = Date.now();
       span.stack = tracingUtil.getStackTrace(instrumentedChannelModelGet);
       span.data = {
