@@ -1,5 +1,8 @@
 # Changelog
 
+## Unreleased
+- Read X-INSTANA-... headers case-insensitive in amqp instrumentation.
+
 ## 1.67.1
 - Fix: Handle koa routes defined by regular expressions.
 

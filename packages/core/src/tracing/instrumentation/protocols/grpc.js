@@ -350,6 +350,8 @@ function modifyArgs(originalArgs, span, responseStream) {
 }
 
 function readMetadata(metadata, key) {
+  // The grpc library normalizes keys internally to lower-case, so we do not need to take care of reading
+  // them case-insensitive ourselves.
   var values = metadata.get(key);
   if (values && values.length > 0) {
     return values[0];
