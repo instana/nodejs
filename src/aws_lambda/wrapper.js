@@ -12,13 +12,20 @@ const acceptorConnector = require('../util/acceptor_connector');
 const identityProvider = require('./identity_provider');
 const logger = require('../util/logger');
 
-const config = {};
+function init(event, context) {
+  const config = {
+    logger
+  };
 
-instanaCore.init(config, acceptorConnector, identityProvider);
+  identityProvider.init(context);
+  acceptorConnector.init(identityProvider);
 
-metrics.init(config);
-metrics.activate();
-tracing.activate();
+  instanaCore.init(config, acceptorConnector, identityProvider);
+
+  metrics.init(config);
+  metrics.activate();
+  tracing.activate();
+}
 
 /**
  * Wraps an AWS Lambda handler so that metrics and traces are reported to Instana. This function will figure out if the
@@ -50,6 +57,8 @@ exports.wrap = function wrap(originalHandler) {
  */
 exports.wrapWithCallback = function wrapWithCallback(originalHandler) {
   return function(event, context, lambdaCallback) {
+    init(event, context);
+
     // TODO Manage incoming tracing headers
     const incomingTraceId = null;
     const incomingParentSpanId = null;
@@ -88,6 +97,7 @@ exports.wrapPromise = function wrapPromise(originalHandler) {
   const incomingParentSpanId = null;
 
   return function(event, context) {
+    init(event, context);
     return tracing.getCls().ns.runPromise(() => {
       const entrySpan = tracing
         .getCls()
@@ -160,7 +170,7 @@ function postHandler(entrySpan, isError, callback) {
 
   const metricsData = metrics.gatherData();
   const metricsPayload = {
-    plugins: [{ name: 'com.instana.plugin.nodejs', entityId: 'TODO:ARN', data: metricsData }]
+    plugins: [{ name: 'com.instana.plugin.aws.lambda', entityId: identityProvider.getEntityId(), data: metricsData }]
   };
 
   // TODO Implement bundle resource in serverless-acceptor to save one HTTP request.

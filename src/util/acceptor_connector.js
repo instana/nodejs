@@ -2,11 +2,12 @@
 
 const environmentUtil = require('../util/environment');
 
-// TODO Send via HTTP2 if possible.
+// acceptor_connector is required from aws_lambda/wrapper before initializing @instana/core, that is, in particular,
+// before tracing is initialized. Thus we always get an uninstrumented https module here.
 const https = environmentUtil.sendUnencrypted ? require('http') : require('https');
 
-const constants = require('@instana/core');
-const logger = require('../util/logger');
+const constants = require('./constants');
+const logger = require('./logger');
 
 const timeoutEnvVar = 'INSTANA_TIMEOUT';
 const defaultTimeout = 500;
@@ -28,6 +29,12 @@ if (process.env[timeoutEnvVar]) {
 
 const acceptSelfSignedCertEnvVar = 'INSTANA_DEV_ACCEPT_SELF_SIGNED_CERT';
 const acceptSelfSignedCert = process.env[acceptSelfSignedCertEnvVar] === 'true';
+
+let identityProvider;
+
+exports.init = function(identityProvider_) {
+  identityProvider = identityProvider_;
+};
 
 exports.sendBundle = function sendBundle(bundle, callback) {
   send('/bundle', bundle, callback);
@@ -67,12 +74,10 @@ function send(resourcePath, payload, callback) {
     headers: {
       'Content-Type': 'application/json',
       'Content-Length': Buffer.byteLength(payload),
-      [constants.traceLevelHeaderName]: '0',
-      'x-instana-host': 'aws-lambda',
-      'x-instana-key': environmentUtil.getInstanaKey(),
-      'x-instana-time': Date.now()
+      [constants.xInstanaHost]: identityProvider ? identityProvider.getHostHeader() : 'serverless-nodejs',
+      [constants.xInstanaKey]: environmentUtil.getInstanaKey(),
+      [constants.xInstanaTime]: Date.now()
     },
-
     rejectUnauthorized: !acceptSelfSignedCert
   };
 

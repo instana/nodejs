@@ -12,7 +12,7 @@ const sendToParent = require('../util/send_to_parent');
 
 const logPrefix = 'acceptor-stub';
 const logger = pino.child({ name: logPrefix, pid: process.pid });
-logger.level = 'debug';
+logger.level = 'info';
 
 const options = {
   key: fs.readFileSync(path.join(__dirname, 'cert/server.key')),
@@ -62,8 +62,8 @@ app.post('/bundle', (req, res) => {
     return res.status(400).send({ error: 'The spans value in the payload is no array.' });
   }
   if (!dropAllData) {
-    receivedData.metrics.push(req.body.metrics);
-    receivedData.spans = receivedData.spans.concat(req.body.spans);
+    receivedData.metrics.push(addHeaders(req, req.body.metrics));
+    receivedData.spans = receivedData.spans.concat(addHeaders(req, req.body.spans));
   }
   return res.sendStatus(201);
 });
@@ -81,7 +81,7 @@ app.post('/metrics', (req, res) => {
     return res.status(400).send({ error: 'The payload is an array.' });
   }
   if (!dropAllData) {
-    receivedData.metrics.push(req.body);
+    receivedData.metrics.push(addHeaders(req, req.body));
   }
   return res.sendStatus(201);
 });
@@ -96,7 +96,7 @@ app.post('/traces', (req, res) => {
     return res.status(400).send({ error: 'The payload is no array.' });
   }
   if (!dropAllData) {
-    receivedData.spans = receivedData.spans.concat(req.body);
+    receivedData.spans = receivedData.spans.concat(addHeaders(req, req.body));
   }
   return res.sendStatus(201);
 });
@@ -138,6 +138,17 @@ https.createServer(options, app).listen(port, error => {
     sendToParent('acceptor: started');
   }
 });
+
+function addHeaders(req, payload) {
+  if (Array.isArray(payload)) {
+    payload.forEach(elem => {
+      elem._receivedHeaders = req.headers;
+    });
+  } else {
+    payload._receivedHeaders = req.headers;
+  }
+  return payload;
+}
 
 function resetReceivedData() {
   return {

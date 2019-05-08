@@ -203,6 +203,8 @@ exports.registerTests = function registerTests(handlerDefinitionPath) {
       expect(span.p).to.not.exist;
       expect(span.n).to.equal('aws.lambda.entry');
       expect(span.k).to.equal(constants.ENTRY);
+      expect(span.f).to.be.an('object');
+      expect(span.f.e).to.equal('arn:aws:lambda:us-east-2:410797082306:function:functionName:$LATEST');
       expect(span.async).to.equal(false);
       if (lambdaError) {
         expect(span.error).to.be.true;
@@ -211,6 +213,7 @@ exports.registerTests = function registerTests(handlerDefinitionPath) {
         expect(span.error).to.equal(false);
         expect(span.ec).to.equal(0);
       }
+      expectHeaders(span);
     });
   }
 
@@ -220,7 +223,10 @@ exports.registerTests = function registerTests(handlerDefinitionPath) {
       expect(span.p).to.equal(entry.s);
       expect(span.n).to.equal('node.http.client');
       expect(span.k).to.equal(constants.EXIT);
+      expect(span.f).to.be.an('object');
+      expect(span.f.e).to.equal('arn:aws:lambda:us-east-2:410797082306:function:functionName:$LATEST');
       expect(span.async).to.equal(false);
+      expectHeaders(span);
     });
   }
 
@@ -232,8 +238,8 @@ exports.registerTests = function registerTests(handlerDefinitionPath) {
     expect(allPlugins.plugins).to.have.lengthOf(1);
     const pluginData = allPlugins.plugins[0];
     expect(pluginData.data).to.exist;
-    expect(pluginData.name).to.equal('com.instana.plugin.nodejs');
-    expect(pluginData.entityId).to.equal('TODO:ARN');
+    expect(pluginData.name).to.equal('com.instana.plugin.aws.lambda');
+    expect(pluginData.entityId).to.equal('arn:aws:lambda:us-east-2:410797082306:function:functionName:$LATEST');
     const metrics = pluginData.data;
     expect(metrics.activeHandles).to.be.a('number');
     expect(metrics.activeRequests).to.be.a('number');
@@ -244,5 +250,14 @@ exports.registerTests = function registerTests(handlerDefinitionPath) {
     expect(metrics.healthchecks).to.exist;
     expect(metrics.heapSpaces).to.exist;
     expect(metrics.name).to.equal('instana-serverless-nodejs');
+    expectHeaders(allPlugins);
+  }
+
+  function expectHeaders(payload) {
+    const headers = payload._receivedHeaders;
+    expect(headers).to.exist;
+    expect(headers['x-instana-host']).to.equal('arn:aws:lambda:us-east-2:410797082306:function:functionName');
+    expect(headers['x-instana-key']).to.equal('dummy-key');
+    expect(headers['x-instana-time']).to.be.a('string');
   }
 };
