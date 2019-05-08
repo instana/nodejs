@@ -5,7 +5,7 @@ logger = require('../logger').getLogger('metrics/gc', function(newLogger) {
   logger = newLogger;
 });
 
-var slidingWindow = require('../util/slidingWindow');
+var slidingWindow = require('@instana/core').util.slidingWindow;
 
 var windowOpts = { duration: 1000 };
 var minorGcWindow = slidingWindow.create(windowOpts);

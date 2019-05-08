@@ -7,5 +7,6 @@ module.exports = exports = {
   compression: require('./compression'),
   propertySizes: require('./propertySizes'),
   requireHook: require('./requireHook'),
+  slidingWindow: require('./slidingWindow'),
   stackTrace: require('./stackTrace')
 };
