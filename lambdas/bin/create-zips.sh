@@ -5,7 +5,7 @@ cd `dirname $BASH_SOURCE`/..
 
 pushd .. > /dev/null
 pwd
-rm -rf instana-serverless-nodejs-*.tgz
+rm -rf instana-serverless-*.tgz
 npm --loglevel=warn pack
 popd > /dev/null
 

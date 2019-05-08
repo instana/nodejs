@@ -8,6 +8,6 @@
   "author": "Bastian Krol <bastian.krol@instana.com>",
   "license": "MIT",
   "dependencies": {
-    "instana-serverless-nodejs": "file:../../instana-serverless-nodejs-1.0.0.tgz"
+    "@instana/serverless": "file:../../instana-serverless-1.0.0.tgz"
   }
 }

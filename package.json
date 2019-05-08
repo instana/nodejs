@@ -1,5 +1,5 @@
 {
-  "name": "instana-serverless-nodejs",
+  "name": "@instana/serverless",
   "version": "1.0.0",
   "description": "Monitor serverless Node.js code with Instana",
   "main": "src/index.js",
@@ -17,9 +17,7 @@
   },
   "homepage": "https://github.com/instana/nodejs-serverless-in-processs-collector#readme",
   "keywords": [
-    "cpu",
     "distributed-tracing",
-    "event-loop",
     "faas",
     "instana",
     "memory",
@@ -27,7 +25,6 @@
     "monitoring",
     "opentracing",
     "performance",
-    "profiling",
     "sensor",
     "tracing"
   ],

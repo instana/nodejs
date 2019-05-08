@@ -249,7 +249,7 @@ exports.registerTests = function registerTests(handlerDefinitionPath) {
     expect(metrics.gc).to.exist;
     expect(metrics.healthchecks).to.exist;
     expect(metrics.heapSpaces).to.exist;
-    expect(metrics.name).to.equal('instana-serverless-nodejs');
+    expect(metrics.name).to.equal('@instana/serverless');
     expectHeaders(allPlugins);
   }
 

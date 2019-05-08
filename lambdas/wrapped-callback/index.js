@@ -1,6 +1,6 @@
 'use strict';
 
-const instana = require('instana-serverless-nodejs');
+const instana = require('@instana-serverless');
 
 const https = require('https');
 
