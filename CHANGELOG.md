@@ -2,6 +2,7 @@
 
 ## Unreleased
 - Read X-INSTANA-... headers case-insensitive in amqp instrumentation.
+- Fix handling of Fastify routes with an beforeHandler array.
 
 ## 1.67.1
 - Fix: Handle koa routes defined by regular expressions.

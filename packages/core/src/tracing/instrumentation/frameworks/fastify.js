@@ -53,12 +53,30 @@ function instrument(build) {
           };
         }
 
-        if (opts.beforeHandler) {
-          var originalBeforeHandler = opts.beforeHandler;
-          opts.beforeHandler = function shimmedBeforeHandler() {
-            annotateHttpEntrySpanWithPathTemplate(app, opts);
-            return originalBeforeHandler.apply(this, arguments);
-          };
+        var preHandler;
+        var preHandlerKey;
+        if (opts.preHandler) {
+          // In Fastify 2.x, the attribute is called preHandler.
+          preHandler = opts.preHandler;
+          preHandlerKey = 'preHandler';
+        } else if (opts.beforeHandler) {
+          // In Fastify 1.x, the attribute is called beforeHandler.
+          preHandler = opts.beforeHandler;
+          preHandlerKey = 'beforeHandler';
+        }
+
+        if (preHandler) {
+          if (typeof preHandler === 'function') {
+            opts[preHandlerKey] = function shimmedPreHandler() {
+              annotateHttpEntrySpanWithPathTemplate(app, opts);
+              return preHandler.apply(this, arguments);
+            };
+          } else if (Array.isArray(preHandler)) {
+            opts[preHandlerKey].unshift(function prependedBeforeHandler(request, reply, done) {
+              annotateHttpEntrySpanWithPathTemplate(app, opts);
+              done();
+            });
+          }
         }
 
         return originalRoute.apply(this, arguments);

@@ -15,9 +15,39 @@ var fastify = require('fastify');
 var app = fastify();
 var logPrefix = 'Fastify (' + process.pid + '):\t';
 
-// Declare a route
 app.get('/', ok);
+
 app.get('/foo/:id', ok);
+
+app.get(
+  '/before-handler/:id',
+  {
+    beforeHandler: (request, reply, done) => {
+      // This tests that we record the path template even if a beforeHandler exits early
+      // (before the handler is executed).
+      reply.send({ before: 'handler' });
+    }
+  },
+  ok
+);
+
+app.get(
+  '/before-handler-array/:id',
+  {
+    beforeHandler: [
+      async () => {
+        // This tests that we record the path template even if a beforeHandler exits early
+        // (before the handler is executed).
+        throw new Error('Yikes');
+      },
+      (request, reply, done) => {
+        done();
+      }
+    ]
+  },
+  ok
+);
+
 app.register(subRouter, { prefix: '/sub' });
 
 async function ok() {
