@@ -1,3 +1,5 @@
+/* eslint-env mocha */
+
 'use strict';
 
 var secrets = require('../src/secrets');

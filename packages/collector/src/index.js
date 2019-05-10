@@ -4,11 +4,12 @@ var path = require('path');
 var instanaNodeJsCore = require('@instana/core');
 
 var log = require('./logger');
+var normalizeConfig = require('./util/normalizeConfig');
 
 var config;
 
 module.exports = exports = function init(_config) {
-  config = _config || {};
+  config = normalizeConfig(_config);
 
   log.init(config, false);
 

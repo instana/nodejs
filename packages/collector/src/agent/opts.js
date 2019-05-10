@@ -8,22 +8,7 @@ exports.serverHeader = 'Instana Agent';
 exports.agentUuid = undefined;
 
 exports.init = function init(config) {
-  if (config.agentHost) {
-    exports.host = config.agentHost;
-  } else if (process.env.INSTANA_AGENT_HOST) {
-    exports.host = process.env.INSTANA_AGENT_HOST;
-  }
-
-  if (config.agentPort) {
-    exports.port = config.agentPort;
-  }
-  if (process.env.INSTANA_AGENT_PORT) {
-    exports.port = process.env.INSTANA_AGENT_PORT;
-  }
-
-  if (config.agentName) {
-    exports.serverHeader = config.agentName;
-  } else if (process.env.INSTANA_AGENT_NAME) {
-    exports.serverHeader = process.env.INSTANA_AGENT_NAME;
-  }
+  exports.host = config.agentHost;
+  exports.port = config.agentPort;
+  exports.serverHeader = config.agentName;
 };

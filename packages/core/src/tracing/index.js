@@ -9,11 +9,6 @@ var spanHandle = require('./spanHandle');
 var tracingUtil = require('./tracingUtil');
 var spanBuffer = require('./spanBuffer');
 
-var logger;
-logger = require('../logger').getLogger('tracing', function(newLogger) {
-  logger = newLogger;
-});
-
 var tracingEnabled = false;
 var automaticTracingEnabled = false;
 var cls = null;
@@ -51,10 +46,9 @@ exports.spanBuffer = spanBuffer;
 
 exports.init = function(_config, downstreamConnection, processIdentityProvider) {
   config = _config;
-  setDefaults();
 
-  tracingEnabled = shouldEnableTracing();
-  automaticTracingEnabled = tracingEnabled && shouldEnableAutomaticTracing();
+  tracingEnabled = config.tracing.enabled;
+  automaticTracingEnabled = config.tracing.automaticTracingEnabled;
 
   if (tracingEnabled) {
     tracingUtil.init(config);
@@ -73,52 +67,6 @@ exports.init = function(_config, downstreamConnection, processIdentityProvider) 
     }
   }
 };
-
-function setDefaults() {
-  config.tracing = config.tracing || {};
-  config.tracing.enabled = config.tracing.enabled !== false;
-  config.tracing.http = config.tracing.http || {};
-  if (!config.tracing.http.extraHttpHeadersToCapture) {
-    config.tracing.http.extraHttpHeadersToCapture = extraHeaders;
-  } else if (!Array.isArray(config.tracing.http.extraHttpHeadersToCapture)) {
-    logger.warn(
-      'Invalid configuration: config.tracing.http.extraHttpHeadersToCapture is not an array, ' +
-        'the value will be ignored: ' +
-        JSON.stringify(config.tracing.http.extraHttpHeadersToCapture)
-    );
-    config.tracing.http.extraHttpHeadersToCapture = extraHeaders;
-  }
-}
-
-function shouldEnableTracing() {
-  if (config.tracing && config.tracing.enabled === false) {
-    logger.info('Not enabling manual tracing as tracing is not enabled via config.');
-    return false;
-  }
-
-  return true;
-}
-
-function shouldEnableAutomaticTracing() {
-  if (config.tracing && config.tracing.enabled === false) {
-    logger.info('Not enabling automatic tracing as tracing is not enabled via config.');
-    return false;
-  }
-
-  if (config.tracing && config.tracing.disableAutomaticTracing) {
-    logger.info('Not enabling automatic tracing as automatic tracing is disabled via config.');
-    return false;
-  }
-
-  if (!exports.supportedVersion(process.versions.node)) {
-    logger.info(
-      'Not enabling automatic tracing, this is an unsupported version of Node.js. ' +
-        'See: https://docs.instana.io/ecosystem/node-js/#supported-nodejs-versions'
-    );
-    return false;
-  }
-  return true;
-}
 
 exports.supportedVersion = function supportedVersion(version) {
   return semver.satisfies(version, '^4.5 || ^5.10 || ^6 || ^7 || ^8.2.1 || ^9.1.0 || ^10.4.0 || ^11 || >=12.0.0');

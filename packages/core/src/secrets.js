@@ -143,6 +143,11 @@ function toLowerCase(configuredSecrets) {
 
 exports.isSecret = exports.matchers[defaultMatcherMode](defaultSecrets);
 
+exports.init = function init(config) {
+  // Init from config/env vars. Might be overwritten from agent response later (via setMatcher);
+  exports.isSecret = exports.matchers[config.secrets.matcherMode](config.secrets.keywords);
+};
+
 exports.setMatcher = function setMatcher(matcherId, secretsList) {
   if (!(typeof matcherId === 'string')) {
     logger.warn('Received invalid secrets configuration, attribute matcher is not a string: $s', matcherId);
