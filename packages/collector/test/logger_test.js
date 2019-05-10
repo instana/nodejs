@@ -1,5 +1,5 @@
 /* eslint-env mocha */
-/* eslint-disable no-console */
+/* eslint-disable no-console, dot-notation */
 
 'use strict';
 
@@ -15,6 +15,15 @@ if (semver.gte(process.versions.node, '6.0.0')) {
 var log = require('../src/logger');
 
 describe('logger', function() {
+  beforeEach(resetEnv);
+  afterEach(resetEnv);
+
+  function resetEnv() {
+    delete process.env['INSTANA_LOG_LEVEL'];
+    delete process.env['INSTANA_DEBUG'];
+    delete process.env['INSTANA_DEV'];
+  }
+
   it('should return the default parent logger if no config is available', function() {
     log.init({});
     var logger = log.getLogger('myLogger');
@@ -59,6 +68,20 @@ describe('logger', function() {
     var logger = log.getLogger('childName');
 
     expect(logger.level()).to.equal(50);
+  });
+
+  it('should use log level from env var', function() {
+    process.env['INSTANA_LOG_LEVEL'] = 'warn';
+    log.init({});
+    var logger = log.getLogger('childName');
+    expect(logger.level()).to.equal(40);
+  });
+
+  it('should use debug log level when INSTANA_DEBUG is set', function() {
+    process.env['INSTANA_DEBUG'] = 'true';
+    log.init({});
+    var logger = log.getLogger('childName');
+    expect(logger.level()).to.equal(20);
   });
 
   it('should not detect pino as bunyan', function() {

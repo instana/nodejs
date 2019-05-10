@@ -16,8 +16,8 @@ var transmissionTimeoutHandle;
 
 exports.init = function(config, _downstreamConnection) {
   downstreamConnection = _downstreamConnection;
-  maxBufferedSpans = config.tracing.maxBufferedSpans || 1000;
-  forceTransmissionStartingAt = config.tracing.forceTransmissionStartingAt || 500;
+  maxBufferedSpans = config.tracing.maxBufferedSpans;
+  forceTransmissionStartingAt = config.tracing.forceTransmissionStartingAt;
 };
 
 exports.activate = function() {

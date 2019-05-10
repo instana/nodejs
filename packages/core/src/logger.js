@@ -12,6 +12,7 @@ var consoleLogger = {
 };
 
 exports.init = function init(config) {
+  config = config || {};
   if (
     config.logger &&
     typeof config.logger.child === 'function' &&

@@ -1,5 +1,8 @@
 # Changelog
 
+## Unreleased
+- Improve configuration handling, support more environment variables.
+
 ## 1.67.2
 - Read X-INSTANA-... headers case-insensitive in amqp instrumentation.
 - Fix handling of Fastify routes with an beforeHandler array.

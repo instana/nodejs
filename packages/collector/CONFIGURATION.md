@@ -7,7 +7,7 @@
 - [Tracing](#tracing)
   - [Disabling Automatic Tracing](#disabling-automatic-tracing)
   - [Capturing Stack Traces](#capturing-stack-traces)
-  - [OpenTracing Service Naming](#opentracing-service-naming)
+  - [SDK/OpenTracing Service Naming](#sdkopentracing-service-naming)
 - [Reporting Uncaught Exceptions](#reporting-uncaught-exceptions)
 - [Reporting Unhandled Promise Rejections](#reporting-unhandled-promise-rejections)
 - [Logging](#logging)
@@ -18,11 +18,12 @@
   - [Agent Port](#agent-port)
   - [Agent Name](#agent-name)
   - [Kubernetes](#kubernetes)
+- [Full Configuration Reference](#full-configuration-reference)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
 ## Tracing
-The Tracing feature is enabled by default. To disable it, pass the following option to the initialization function.
+The tracing feature is enabled by default. To disable it, pass the following option to the initialization function.
 
 ```javascript
 require('@instana/collector')({
@@ -32,8 +33,22 @@ require('@instana/collector')({
 });
 ```
 
+You can also disable tracing by setting the environment variable `INSTANA_DISABLE_TRACING=true`.
+
+When tracing is disabled, you can neither use the trace SDK nor the OpenTracing API, and automatic tracing will also be disabled.
+
 ### Disabling Automatic Tracing
 Automatic tracing is enabled by default. To disable it, pass the following option to the initialization function.
+
+```javascript
+require('@instana/collector')({
+  tracing: {
+    automaticTracingEnabled: false
+  }
+});
+```
+
+The Node.js collector also still supports the previous name of this property:
 
 ```javascript
 require('@instana/collector')({
@@ -42,6 +57,10 @@ require('@instana/collector')({
   }
 });
 ```
+
+Finally, you can disable automatic tracing by setting the environment variable `INSTANA_DISABLE_AUTO_INSTR=true`.
+
+When automatic tracing is disabled, you can still use the SDK or the OpenTracing API to create spans manually.
 
 ### Capturing Stack Traces
 By default, the collector captures the last ten call sites for every captured exit span. This value can be increased and decreased as necessary. Use a value of `0` to disable stack trace capturing.
@@ -54,14 +73,18 @@ require('@instana/collector')({
 });
 ```
 
-### OpenTracing Service Naming
-Services are a central concept within Instana. Spans and traces are associated to services. To name services when using OpenTracing, you can configure the `serviceName` property.
+You can also configure the stack trace length by setting the environment variable `INSTANA_STACK_TRACE_LENGTH`.
+
+### SDK/OpenTracing Service Naming
+Services are a central concept within Instana. Spans and traces are associated to services. To name services when using the SDK or OpenTracing, you can configure the `serviceName` property.
 
 ```javascript
 require('@instana/collector')({
   serviceName: 'shop'
 });
 ```
+
+You can also configure a custom service name by setting the environment variable `INSTANA_SERVICE_NAME`.
 
 ## Reporting Uncaught Exceptions
 The Instana Node.js collector has the ability to report uncaught exceptions. By default, a Node.js process will be terminated by an uncaught exception (see [Node.js docs](https://nodejs.org/api/process.html#process_event_uncaughtexception)). If uncaught exception reporting is enabled, the Instana Node.js collector will register a listener for the `uncaughtException` event and take the following actions when an uncaught exception occurs:
@@ -137,6 +160,8 @@ require('@instana/collector')({
 });
 ```
 
+You can also configure the log level by setting the environment variable `INSTANA_LOG_LEVEL` to either `'debug', 'info', 'warn' or 'error'`. Finally, setting `INSTANA_DEBUG` (or `INSTANA_DEV` for backwards compatibility) to any non-empty string will set the log level to `debug`.
+
 ## Agent Communication
 
 ### Agent Host
@@ -156,7 +181,7 @@ require('@instana/collector')({
 });
 ```
 
-If not configured, the Instana collector will look for an environment variable called `INSTANA_AGENT_HOST` and use what is defined in this environment variable to communicate with the agent.
+If not configured, the Instana collector will look for an environment variable called `INSTANA_AGENT_HOST` and use what is defined in this environment variable to communicate with the agent. If there is no such environment variable, it will try to contact the agent first on `localhost` and then on the default gateway.
 
 ### Agent Port
 The collector tries to communicate with the Instana Agent via port `42699`. Should the port have been changed, you can use the `agentPort` option to change the port.
@@ -167,7 +192,7 @@ require('@instana/collector')({
 });
 ```
 
-If not configured, the Instana collector will look for an environment variable called `INSTANA_AGENT_PORT` and use what is defined in this environment variable to communicate with the agent.
+If not configured, the Instana collector will look for an environment variable called `INSTANA_AGENT_PORT` and use what is defined in this environment variable to communicate with the agent. If there is no such environment variable, it will fall back to the default port 42699.
 
 ### Agent Name
 This collector communicates with the Instana Agent via HTTP. While doing so, the Node.js collector validates the Instana Agent's `Server` response header. Should you have changed the `Server` name, use the `agentName` option to adjust the collector's validation rules.
@@ -183,4 +208,56 @@ If not configured, the Instana collector will look for an environment variable c
 ### Kubernetes
 
 If your Node.js application and the Instana agent run in a Kubernetes cluster, please refer to the [Instana documentation](https://docs.instana.io/quick_start/agent_setup/container/kubernetes/#configuring-network-access-for-monitored-applications) about configuring network access in this setup.
+
+## Full Configuration Reference
+
+Here are all possible configuration values, with their default values:
+
+```
+{
+  agentHost: '127.0.0.1',
+  agentPort: 42699,
+  agentName: 'Instana Agent',
+  serviceName: null,
+  // the log level
+  level: 'info',
+  tracing: {
+    enabled: true,
+    automaticTracingEnabled: true,
+    // Spans are batched and sent to the agent once every second, or if ${forceTransmissionStartingAt} spans have been collected (whichever happens earlier)
+    forceTransmissionStartingAt: 500,
+    // If more than ${maxBufferedSpans} have been buffered and the collector has not been able to send them to the agent, it will start to drop spans to avoid causing memory issues.
+    maxBufferedSpans: 1000,
+    http: {
+      // This is usually configured at the agent level (configuration.yaml).
+      extraHttpHeadersToCapture: []
+    },
+    // How many stack trace frames are to be captured. Can also be 0 to disable collecting stack traces.
+    stackTraceLength: 10
+  },
+  metrics: {
+    timeBetweenHealthcheckCalls: 3000
+  },
+  // This is usually configured at the agent level (configuration.yaml).
+  secrets: {
+    matcherMode: 'contains-ignore-case',
+    keywords: ['key', 'pass', 'secret']
+  }
+}
+```
+
+The following is a list of all environment variables that the Node.js collector supports:
+
+| Environment Variable              | Equivalent Configuration Option                   |
+|-----------------------------------|---------------------------------------------------|
+| `INSTANA_AGENT_HOST`              | `config.agentHost`                                |
+| `INSTANA_AGENT_PORT`              | `config.agentPort`                                |
+| `INSTANA_AGENT_NAME`              | `config.agentName`                                |
+| `INSTANA_SERVICE_NAME`            | `config.serviceName`                              |
+| `INSTANA_DISABLE_TRACING=true`    | `config.tracing.enabled = false`                  |
+| `INSTANA_DISABLE_AUTO_INSTR=true` | `config.tracing.automaticTracingEnabled = false`  |
+| `INSTANA_STACK_TRACE_LENGTH`      | `config.tracing.stackTraceLength`                 |
+| `INSTANA_LOG_LEVEL`               | `config.level`                                    |
+| `INSTANA_DEBUG`                   |  `config.level=debug`                             |
+| `INSTANA_DEV`                     |  `config.level=debug`                             |
 
