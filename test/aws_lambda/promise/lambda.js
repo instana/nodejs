@@ -4,9 +4,11 @@ const instana = require('../../..');
 
 const fetch = require('node-fetch');
 
-exports.handler = instana.awsLambda.wrap((event, context) => {
+const config = require('../../config');
+
+const handler = (event, context) => {
   console.log('in actual handler');
-  return fetch('https://example.com').then(() => {
+  return fetch(config.downstreamDummyUrl).then(() => {
     if (event.error) {
       throw new Error('Boom!');
     }
@@ -14,4 +16,19 @@ exports.handler = instana.awsLambda.wrap((event, context) => {
       message: 'Stan says hi!'
     };
   });
-});
+};
+
+const args = process.env.WITH_CONFIG
+  ? [
+      {
+        tracing: {
+          stackTraceLength: 2
+        }
+      },
+      handler
+    ]
+  : [handler];
+
+const wrapper = process.env.USE_STYLE_DETECTION ? instana.awsLambda.wrap : instana.awsLambda.wrapPromise;
+
+exports.handler = wrapper.apply(instana.awsLambda, args);

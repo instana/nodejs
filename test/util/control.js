@@ -17,6 +17,7 @@ function Control(opts = {}) {
 
 Control.prototype.reset = function reset() {
   this.messagesFromAcceptor = [];
+  this.messagesFromDownstreamDummy = [];
   this.messagesFromFaasRuntime = [];
   this.lambdaErrors = [];
   this.lambdaResults = [];
@@ -31,9 +32,10 @@ Control.prototype.registerTestHooks = function registerTestHooks() {
     }
 
     this.messagesFromAcceptor = [];
+    this.messagesFromDownstreamDummy = [];
     this.messagesFromFaasRuntime = [];
 
-    let waitUntilAcceptorIsUp;
+    let acceptorPromise;
     if (this.opts.startAcceptor) {
       this.acceptor = fork(path.join(__dirname, '../acceptor_stub'), {
         stdio: config.getAppStdio(),
@@ -49,12 +51,27 @@ Control.prototype.registerTestHooks = function registerTestHooks() {
       this.acceptor.on('message', message => {
         this.messagesFromAcceptor.push(message);
       });
-      waitUntilAcceptorIsUp = this.waitUntilAcceptorIsUp();
+      acceptorPromise = this.waitUntilAcceptorIsUp();
     } else {
-      waitUntilAcceptorIsUp = Promise.resolve();
+      acceptorPromise = Promise.resolve();
     }
 
-    return waitUntilAcceptorIsUp
+    this.downstreamDummy = fork(path.join(__dirname, '../downstream_dummy'), {
+      stdio: config.getAppStdio(),
+      env: Object.assign(
+        {
+          DOWNSTREAM_DUMMY_PORT: config.downstreamDummyPort
+        },
+        process.env,
+        this.opts.env
+      )
+    });
+    this.downstreamDummy.on('message', message => {
+      this.messagesFromDownstreamDummy.push(message);
+    });
+    const downstreamDummyPromise = this.waitUntilDownstreamDummyIsUp();
+
+    return Promise.all([acceptorPromise, downstreamDummyPromise])
       .then(() => {
         this.faasRuntime = fork(this.opts.faasRuntimePath, {
           stdio: config.getAppStdio(),
@@ -109,6 +126,22 @@ Control.prototype.isAcceptorUp = function isAcceptorUp() {
   return this.messagesFromAcceptor.indexOf('acceptor: started') >= 0;
 };
 
+Control.prototype.waitUntilDownstreamDummyIsUp = function waitUntilDownstreamDummyIsUp() {
+  return retry(() => this.isDownstreamDummyUpPromise());
+};
+
+Control.prototype.isDownstreamDummyUpPromise = function isDownstreamDummyUpPromise() {
+  if (this.isDownstreamDummyUp()) {
+    return Promise.resolve();
+  } else {
+    return Promise.reject(new Error('The downstream dummy app is still not up.'));
+  }
+};
+
+Control.prototype.isDownstreamDummyUp = function isDownstreamDummyUp() {
+  return this.messagesFromDownstreamDummy.indexOf('downstream dummy: started') >= 0;
+};
+
 Control.prototype.waitUntilRuntimeHasTerminated = function waitUntilRuntimeHasTerminated() {
   return retry(() => this.hasRuntimeTerminatedPromise());
 };
@@ -126,11 +159,15 @@ Control.prototype.hasRuntimeTerminated = function hasRuntimeTerminated() {
 };
 
 Control.prototype.kill = function kill() {
-  return Promise.all([this.killAcceptor(), this.killFaasRuntime()]);
+  return Promise.all([this.killAcceptor(), this.killDownstreamDummy(), this.killFaasRuntime()]);
 };
 
 Control.prototype.killAcceptor = function killAcceptor() {
   return killChildProcess(this.acceptor);
+};
+
+Control.prototype.killDownstreamDummy = function killDownstreamDummy() {
+  return killChildProcess(this.downstreamDummy);
 };
 
 Control.prototype.killFaasRuntime = function killFaasRuntime() {

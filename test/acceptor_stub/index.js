@@ -27,7 +27,7 @@ const dropAllData = process.env.DROP_DATA === 'true';
 const receivedData = resetReceivedData();
 
 if (process.env.WITH_STDOUT) {
-  app.use(morgan(`acceptor-stub (${process.pid}): :method :url :status`));
+  app.use(morgan(`${logPrefix} (${process.pid}): :method :url :status`));
 }
 
 app.use(

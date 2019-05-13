@@ -1,10 +1,20 @@
 'use strict';
 
+exports.acceptorProtocol = 'https';
+exports.acceptorHost = 'localhost';
 exports.acceptorPort = 8443;
 
-exports.acceptorBaseUrl = `https://localhost:${exports.acceptorPort}`;
+exports.acceptorBaseUrl = `${exports.acceptorProtocol}://${exports.acceptorHost}:${exports.acceptorPort}`;
 
 exports.instanaKey = 'dummy-key';
+
+exports.downstreamDummyProtocol = 'http';
+exports.downstreamDummyHost = 'localhost';
+exports.downstreamDummyPort = 3456;
+
+exports.downstreamDummyUrl = `${exports.downstreamDummyProtocol}://${exports.downstreamDummyHost}:${
+  exports.downstreamDummyPort
+}`;
 
 exports.getAppStdio = function() {
   if (process.env.WITH_STDOUT || process.env.CI) {

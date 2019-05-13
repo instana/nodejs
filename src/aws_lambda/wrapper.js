@@ -12,20 +12,6 @@ const acceptorConnector = require('../util/acceptor_connector');
 const identityProvider = require('./identity_provider');
 const logger = require('../util/logger');
 
-function init(event, context) {
-  const config = {
-    logger
-  };
-
-  identityProvider.init(context);
-  acceptorConnector.init(identityProvider);
-
-  instanaCore.init(config, acceptorConnector, identityProvider);
-
-  metrics.init(config);
-  metrics.activate();
-  tracing.activate();
-}
 
 /**
  * Wraps an AWS Lambda handler so that metrics and traces are reported to Instana. This function will figure out if the
@@ -35,12 +21,16 @@ function init(event, context) {
  * You can also choose the wrapping explicitly by using `instana.awsLambda.wrapWithCallback` or
  * `instana.awsLambda.wrapPromise`/`instana.awsLambda.wrapAsync` directly, but there is usually no need to do so.
  */
-exports.wrap = function wrap(originalHandler) {
+exports.wrap = function wrap(config, originalHandler) {
+  if (arguments.length === 1) {
+    originalHandler = config;
+    config = null;
+  }
   switch (originalHandler.length) {
     case 2:
-      return exports.wrapPromise(originalHandler);
+      return exports.wrapPromise(config, originalHandler);
     case 3:
-      return exports.wrapWithCallback(originalHandler);
+      return exports.wrapWithCallback(config, originalHandler);
     default:
       logger.error(
         'Unexpected number of arguments, please use instana.wrapPromise/instana.wrapAsync or ' +
@@ -55,9 +45,14 @@ exports.wrap = function wrap(originalHandler) {
  *
  * There is usually no need to call this directly, instead, use `instana.awsLambda.wrap`.
  */
-exports.wrapWithCallback = function wrapWithCallback(originalHandler) {
+exports.wrapWithCallback = function wrapWithCallback(config, originalHandler) {
+  if (arguments.length === 1) {
+    originalHandler = config;
+    config = null;
+  }
+
   return function(event, context, lambdaCallback) {
-    init(event, context);
+    init(event, context, config);
 
     // TODO Manage incoming tracing headers
     const incomingTraceId = null;
@@ -83,7 +78,12 @@ exports.wrapWithCallback = function wrapWithCallback(originalHandler) {
  *
  * There is usually no need to call this directly, instead, use `instana.awsLambda.wrap`.
  */
-exports.wrapPromise = function wrapPromise(originalHandler) {
+exports.wrapPromise = function wrapPromise(config, originalHandler) {
+  if (arguments.length === 1) {
+    originalHandler = config;
+    config = null;
+  }
+
   // TODO Respect any incoming tracing level headers
   // if (req && req.headers && req.headers[constants.traceLevelHeaderNameLowerCase] === '0') {
   //   tracing.getCls().setTracingLevel(req.headers[constants.traceLevelHeaderNameLowerCase]);
@@ -93,11 +93,12 @@ exports.wrapPromise = function wrapPromise(originalHandler) {
   // }
   // var incomingTraceId = getExistingTraceId(req);
   // var incomingParentSpanId = getExistingSpanId(req);
+
   const incomingTraceId = null;
   const incomingParentSpanId = null;
 
   return function(event, context) {
-    init(event, context);
+    init(event, context, config);
     return tracing.getCls().ns.runPromise(() => {
       const entrySpan = tracing
         .getCls()
@@ -143,6 +144,23 @@ exports.wrapPromise = function wrapPromise(originalHandler) {
  * There is usually no need to call this directly, instead, use `instana.awsLambda.wrap`.
  */
 exports.wrapAsync = exports.wrapPromise;
+
+/**
+ * Initialize the wrapper.
+ */
+function init(event, context, config) {
+  config = config || {};
+  config.logger = config.logger || logger;
+
+  identityProvider.init(context);
+  acceptorConnector.init(identityProvider);
+
+  instanaCore.init(config, acceptorConnector, identityProvider);
+
+  metrics.init(config);
+  metrics.activate();
+  tracing.activate();
+}
 
 /**
  * Code to be executed after the promise returned by the original handler has completed.

@@ -26,6 +26,12 @@ function prelude(opts) {
   if (opts.instanaKey) {
     env.INSTANA_KEY = opts.instanaKey;
   }
+  if (opts.autoWrapper) {
+    env.USE_STYLE_DETECTION = 'true';
+  }
+  if (opts.withConfig) {
+    env.WITH_CONFIG = 'true';
+  }
 
   const Control = require('../../util/control');
   const control = new Control({
@@ -66,6 +72,68 @@ exports.registerTests = function registerTests(handlerDefinitionPath) {
     it('must capture metrics and spans', () => verify(control, true, true));
   });
 
+  describe('with auto wrapper', () => {
+    // - INSTANA_URL is configured
+    // - acceptor is reachable
+    // - lambda function ends with success
+    // - with auto wrapper/lambda style detection
+    const control = prelude.bind(this)({
+      handlerDefinitionPath,
+      instanaUrl: config.acceptorBaseUrl,
+      instanaKey: config.instanaKey,
+      autoWrapper: true
+    });
+
+    it('must capture metrics and spans', () => verify(control, false, true));
+  });
+
+  describe('with auto wrapper, when lambda function yields an error', () => {
+    // - INSTANA_URL is configured
+    // - acceptor is reachable
+    // - lambda function ends with an error
+    // - with auto wrapper/lambda style detection
+    const control = prelude.bind(this)({
+      handlerDefinitionPath,
+      instanaUrl: config.acceptorBaseUrl,
+      instanaKey: config.instanaKey,
+      autoWrapper: true,
+      error: true
+    });
+
+    it('must capture metrics and spans', () => verify(control, true, true));
+  });
+
+  describe('with config', () => {
+    // - INSTANA_URL is configured
+    // - acceptor is reachable
+    // - client provides a config object
+    // - lambda function ends with success
+    const control = prelude.bind(this)({
+      handlerDefinitionPath,
+      instanaUrl: config.acceptorBaseUrl,
+      instanaKey: config.instanaKey,
+      withConfig: true
+    });
+
+    it('must capture metrics and spans', () => verify(control, false, true));
+  });
+
+  describe('with config, when lambda function yields an error', () => {
+    // - INSTANA_URL is configured
+    // - acceptor is reachable
+    // - client provides a config object
+    // - lambda function ends with an error
+    const control = prelude.bind(this)({
+      handlerDefinitionPath,
+      instanaUrl: config.acceptorBaseUrl,
+      instanaKey: config.instanaKey,
+      withConfig: true,
+      error: true
+    });
+
+    it('must capture metrics and spans', () => verify(control, true, true));
+  });
+
   describe('when INSTANA_URL is missing', () => {
     // - INSTANA_URL is missing
     // - lambda function ends with success
@@ -74,7 +142,7 @@ exports.registerTests = function registerTests(handlerDefinitionPath) {
       instanaKey: config.instanaKey
     });
 
-    it('must ignore the missing config gracefully', () => verify(control, false, false));
+    it('must ignore the missing URL gracefully', () => verify(control, false, false));
   });
 
   describe('when INSTANA_URL is missing and the lambda function yields an error', () => {
@@ -86,7 +154,20 @@ exports.registerTests = function registerTests(handlerDefinitionPath) {
       error: true
     });
 
-    it('must ignore the missing config gracefully', () => verify(control, true, false));
+    it('must ignore the missing URL gracefully', () => verify(control, true, false));
+  });
+
+  describe('with config, when INSTANA_URL is missing', () => {
+    // - INSTANA_URL is missing
+    // - client provides a config
+    // - lambda function ends with success
+    const control = prelude.bind(this)({
+      handlerDefinitionPath,
+      instanaKey: config.instanaKey,
+      withConfig: true
+    });
+
+    it('must ignore the missing URL gracefully', () => verify(control, false, false));
   });
 
   describe('when INSTANA_KEY is missing', () => {
@@ -97,7 +178,7 @@ exports.registerTests = function registerTests(handlerDefinitionPath) {
       instanaUrl: config.acceptorBaseUrl
     });
 
-    it('must ignore the missing config gracefully', () => verify(control, false, false));
+    it('must ignore the missing key gracefully', () => verify(control, false, false));
   });
 
   describe('when INSTANA_KEY is missing and the lambda function yields an error', () => {
@@ -109,7 +190,7 @@ exports.registerTests = function registerTests(handlerDefinitionPath) {
       error: true
     });
 
-    it('must ignore the missing config gracefully', () => verify(control, true, false));
+    it('must ignore the missing key gracefully', () => verify(control, true, false));
   });
 
   describe('when acceptor is down', () => {
@@ -164,6 +245,7 @@ exports.registerTests = function registerTests(handlerDefinitionPath) {
       expect(error.message).to.equal('Boom!');
     } else {
       if (control.getLambdaErrors() && control.getLambdaErrors().length > 0) {
+        console.log('Unexpected Errors:');
         console.log(JSON.stringify(control.getLambdaErrors()));
       }
       expect(control.getLambdaErrors()).to.be.empty;
@@ -244,7 +326,7 @@ exports.registerTests = function registerTests(handlerDefinitionPath) {
     expect(metrics.activeHandles).to.be.a('number');
     expect(metrics.activeRequests).to.be.a('number');
     expect(metrics.dependencies).to.exist;
-    expect(metrics.dependencies['event-loop-stats']).to.equal('1.1.0');
+    // Not testing `dependencies` metric - collection might not have finished when we send metrics.
     expect(metrics.description).to.equal('Monitor serverless Node.js code with Instana');
     expect(metrics.gc).to.exist;
     expect(metrics.healthchecks).to.exist;
