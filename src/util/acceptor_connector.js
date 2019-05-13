@@ -7,7 +7,7 @@ const environmentUtil = require('../util/environment');
 const https = environmentUtil.sendUnencrypted ? require('http') : require('https');
 
 const constants = require('./constants');
-const logger = require('./logger');
+let logger = require('./console_logger');
 
 const timeoutEnvVar = 'INSTANA_TIMEOUT';
 const defaultTimeout = 500;
@@ -18,7 +18,7 @@ let warningsHaveBeenLogged = false;
 if (process.env[timeoutEnvVar]) {
   acceptorTimeout = parseInt(process.env[timeoutEnvVar], 10);
   if (isNaN(acceptorTimeout) || acceptorTimeout < 0) {
-    console.warn(
+    logger.warn(
       `The value of ${timeoutEnvVar} (${
         process.env[timeoutEnvVar]
       }) cannot be parsed to a valid numerical value. Will fall back to the default timeout (${defaultTimeout} ms).`
@@ -32,8 +32,9 @@ const acceptSelfSignedCert = process.env[acceptSelfSignedCertEnvVar] === 'true';
 
 let identityProvider;
 
-exports.init = function(identityProvider_) {
+exports.init = function(identityProvider_, logger_) {
   identityProvider = identityProvider_;
+  logger = logger_;
 };
 
 exports.sendBundle = function sendBundle(bundle, callback) {

@@ -4,8 +4,6 @@ const https = require('https');
 
 const environmentUtil = require('../util/environment');
 
-const logger = require('../util/logger');
-
 environmentUtil.validate();
 
 if (environmentUtil.isValid()) {

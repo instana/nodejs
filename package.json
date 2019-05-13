@@ -41,7 +41,6 @@
   "license": "MIT",
   "dependencies": {
     "@instana/core": "^1.65.0",
-    "pino": "^5.12.0",
     "semver": "^5.6.0"
   },
   "devDependencies": {
@@ -51,6 +50,7 @@
     "mocha": "^6.0.2",
     "morgan": "^1.9.1",
     "node-fetch": "^2.3.0",
+    "pino": "^5.12.3",
     "request": "^2.88.0",
     "request-promise": "^4.2.4",
     "spdy": "^4.0.0"

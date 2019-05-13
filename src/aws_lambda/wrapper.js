@@ -8,10 +8,11 @@ const tracing = instanaCore.tracing;
 const constants = tracing.constants;
 const spanBuffer = tracing.spanBuffer;
 
+const consoleLogger = require('../util/console_logger');
 const acceptorConnector = require('../util/acceptor_connector');
 const identityProvider = require('./identity_provider');
-const logger = require('../util/logger');
 
+let logger = consoleLogger;
 
 /**
  * Wraps an AWS Lambda handler so that metrics and traces are reported to Instana. This function will figure out if the
@@ -150,10 +151,14 @@ exports.wrapAsync = exports.wrapPromise;
  */
 function init(event, context, config) {
   config = config || {};
-  config.logger = config.logger || logger;
 
+  if (config.logger) {
+    logger = config.logger;
+  } else if (config.level || process.env['INSTANA_LOG_LEVEL']) {
+    logger.setLevel(config.level || process.env['INSTANA_LOG_LEVEL']);
+  }
   identityProvider.init(context);
-  acceptorConnector.init(identityProvider);
+  acceptorConnector.init(identityProvider, logger);
 
   instanaCore.init(config, acceptorConnector, identityProvider);
 

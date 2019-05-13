@@ -2,7 +2,7 @@
 
 const semver = require('semver');
 
-const logger = require('./logger');
+let logger = require('./console_logger');
 
 let parseFn;
 
