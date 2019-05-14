@@ -1,3 +1,5 @@
+/* eslint-disable indent, import/order, no-console */
+
 'use strict';
 
 const instana = require('../../..');
@@ -6,7 +8,7 @@ const fetch = require('node-fetch');
 
 const config = require('../../config');
 
-const handler = (event, context) => {
+const handler = event => {
   console.log('in actual handler');
   return fetch(config.downstreamDummyUrl).then(() => {
     if (event.error) {

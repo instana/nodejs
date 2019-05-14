@@ -1,3 +1,5 @@
+/* eslint-env mocha */
+
 'use strict';
 
 const expect = require('chai').expect;
@@ -238,6 +240,7 @@ exports.registerTests = function registerTests(handlerDefinitionPath) {
   });
 
   function verify(control, lambdaError, expectSpansAndMetrics) {
+    /* eslint-disable no-console */
     if (lambdaError) {
       expect(control.getLambdaErrors().length).to.equal(1);
       expect(control.getLambdaResults()).to.be.empty;

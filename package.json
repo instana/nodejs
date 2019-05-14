@@ -6,16 +6,18 @@
   "scripts": {
     "acceptor-stub": "node test/acceptor_stub",
     "test": "npm run test:mocha",
-    "test:mocha": "mocha --reporter spec $(find test -iname '*test.js')"
+    "test:mocha": "mocha --reporter spec $(find test -iname '*test.js')",
+    "lint": "eslint src test lambdas",
+    "prettier": "prettier --write 'src/**/*.js' 'test/**/*.js' 'lambdas/**/*.js'"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/instana/nodejs-serverless-in-processs-collector.git"
+    "url": "git+https://github.com/instana/serverless-nodejs.git"
   },
   "bugs": {
-    "url": "https://github.com/instana/nodejs-serverless-in-processs-collector/issues"
+    "url": "https://github.com/instana/serverless-nodejs/issues"
   },
-  "homepage": "https://github.com/instana/nodejs-serverless-in-processs-collector#readme",
+  "homepage": "https://github.com/instana/serverless-nodejs#readme",
   "keywords": [
     "distributed-tracing",
     "faas",
@@ -46,11 +48,16 @@
   "devDependencies": {
     "body-parser": "^1.18.3",
     "chai": "^4.2.0",
+    "eslint": "^5.3.0",
+    "eslint-config-airbnb-base": "^13.1.0",
+    "eslint-plugin-import": "^2.17.2",
+    "eslint-plugin-mocha": "^5.3.0",
     "express": "^4.16.4",
     "mocha": "^6.0.2",
     "morgan": "^1.9.1",
     "node-fetch": "^2.3.0",
     "pino": "^5.12.3",
+    "prettier": "^1.17.1",
     "request": "^2.88.0",
     "request-promise": "^4.2.4",
     "spdy": "^4.0.0"

@@ -1,5 +1,6 @@
 'use strict';
 
+// eslint-disable-next-line import/order
 const environmentUtil = require('../util/environment');
 
 // acceptor_connector is required from aws_lambda/wrapper before initializing @instana/core, that is, in particular,
@@ -32,7 +33,7 @@ const acceptSelfSignedCert = process.env[acceptSelfSignedCertEnvVar] === 'true';
 
 let identityProvider;
 
-exports.init = function(identityProvider_, logger_) {
+exports.init = function init(identityProvider_, logger_) {
   identityProvider = identityProvider_;
   logger = logger_;
 };
@@ -54,14 +55,16 @@ function send(resourcePath, payload, callback) {
     warningsHaveBeenLogged = true;
     if (environmentUtil.sendUnencrypted) {
       logger.error(
-        `${
-          environmentUtil.sendUnencryptedEnvVar
-        } is set, which means that the all traffic to Instana is send unencrypted via plain HTTP, not via HTTPS. This will effectively make that traffic public. This setting should never be used in production.`
+        `${environmentUtil.sendUnencryptedEnvVar} is set, which means that the all traffic to Instana is send ` +
+          'unencrypted via plain HTTP, not via HTTPS. This will effectively make that traffic public. This setting ' +
+          'should never be used in production.'
       );
     }
     if (acceptSelfSignedCert) {
       logger.error(
-        `${acceptSelfSignedCertEnvVar} is set, which means that the server certificate will not be verified against the list of known CAs. This makes your lambda vulnerable to MITM attacks when connecting to Instana. This setting should never be used in production.`
+        `${acceptSelfSignedCertEnvVar} is set, which means that the server certificate will not be verified against ` +
+          'the list of known CAs. This makes your lambda vulnerable to MITM attacks when connecting to Instana. ' +
+          'This setting should never be used in production.'
       );
     }
   }
@@ -106,10 +109,8 @@ function send(resourcePath, payload, callback) {
   req.setTimeout(acceptorTimeout, () => {
     callback(
       new Error(
-        `The Instana back end did not respond in the configured timeout of ${acceptorTimeout} ms.` +
-          (acceptorTimeout === defaultTimeout
-            ? ` The timeout can be configured by setting the environment variable ${timeoutEnvVar}.`
-            : '')
+        `The Instana back end did not respond in the configured timeout of ${acceptorTimeout} ms. The timeout can be ` +
+          `configured by setting the environment variable ${timeoutEnvVar}.`
       )
     );
   });

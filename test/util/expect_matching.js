@@ -1,3 +1,5 @@
+'use strict';
+
 module.exports = exports = function expectOneMatching(arr, fn) {
   if (!arr || arr.length === 0) {
     throw new Error('Could not find an item which matches all given criteria. Got 0 items.');
@@ -18,14 +20,9 @@ module.exports = exports = function expectOneMatching(arr, fn) {
 
   if (error) {
     throw new Error(
-      'Could not find an item which matches all given criteria. Got ' +
-        arr.length +
-        ' items. Last error: ' +
-        error.message +
-        '. All Items:\n' +
-        JSON.stringify(arr, 0, 2) +
-        '. Error stack trace: ' +
-        error.stack
+      `Could not find an item which matches all given criteria. Got ${arr.length} items. Last error: ` +
+        `${error.message}. All Items:\n${JSON.stringify(arr, 0, 2)}. Error stack trace: ${error.stack}`
     );
   }
+  return null;
 };

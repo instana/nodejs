@@ -4,7 +4,9 @@
  * Simulates the AWS Lambda runtime.
  */
 const path = require('path');
+
 const sendToParent = require('../../util/send_to_parent');
+
 const logPrefix = `aws-lambda-runtime-mock (${process.pid})`;
 const log = require('../../util/log')(logPrefix);
 
@@ -20,9 +22,11 @@ function main() {
   const definitionRelativePath = process.env.HANDLER_DEFINITION_PATH;
   if (!definitionRelativePath) {
     log('No handler definition path given. Please set the environment variable HANDLER_DEFINITION_PATH.');
-    return terminate(true);
+    terminate(true);
+    return;
   }
   definitionPath = path.resolve(definitionRelativePath);
+  // eslint-disable-next-line import/no-dynamic-require
   lambdaDefinition = require(definitionPath);
   validateDefinition(lambdaDefinition);
   runHandler(lambdaDefinition.handler, process.env.LAMDBA_ERROR === 'true');
@@ -72,14 +76,14 @@ function runHandler(handler, error) {
         });
         return terminate();
       },
-      error => {
+      err => {
         unregisterErrorHandling();
         log(`Lambda ${definitionPath} handler has failed:`);
-        log(error);
+        log(err);
         sendToParent({
           type: 'lambda-result',
           error: true,
-          payload: { message: error.message }
+          payload: { message: err.message }
         });
         return terminate(true);
       }

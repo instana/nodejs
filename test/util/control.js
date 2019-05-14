@@ -100,7 +100,7 @@ Control.prototype.registerTestHooks = function registerTestHooks() {
         return this.waitUntilRuntimeHasTerminated();
       })
       .catch(e => {
-        fail('A child process did not start properly: ' + e);
+        fail(`A child process did not start properly: ${e}`);
       });
   });
 
@@ -174,6 +174,7 @@ Control.prototype.killFaasRuntime = function killFaasRuntime() {
   if (!this.hasRuntimeTerminated()) {
     return killChildProcess(this.faasRuntime);
   }
+  return Promise.resolve();
 };
 
 function killChildProcess(childProcess) {
@@ -199,7 +200,7 @@ Control.prototype.getSpans = function getSpans() {
   if (this.opts.startAcceptor) {
     return request({
       method: 'GET',
-      url: config.acceptorBaseUrl + '/received/spans',
+      url: `${config.acceptorBaseUrl}/received/spans`,
       json: true,
       strictSSL: false
     });
@@ -212,7 +213,7 @@ Control.prototype.getMetrics = function getMetrics() {
   if (this.opts.startAcceptor) {
     return request({
       method: 'GET',
-      url: config.acceptorBaseUrl + '/received/metrics',
+      url: `${config.acceptorBaseUrl}/received/metrics`,
       json: true,
       strictSSL: false
     });

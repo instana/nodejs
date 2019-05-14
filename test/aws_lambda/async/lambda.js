@@ -1,3 +1,5 @@
+/* eslint-disable indent, import/order, no-console */
+
 'use strict';
 
 const instana = require('../../..');
@@ -6,9 +8,9 @@ const fetch = require('node-fetch');
 
 const config = require('../../config');
 
-const handler = async (event, context) => {
+const handler = async event => {
   console.log('in actual handler');
-  const response = await fetch(config.downstreamDummyUrl);
+  await fetch(config.downstreamDummyUrl);
   if (event.error) {
     throw new Error('Boom!');
   } else {

@@ -12,18 +12,21 @@ module.exports = exports = {
 };
 
 function createLogFn(level, fn) {
-  return function() {
+  return function log() {
     if (level >= minLevel) {
       fn.apply(console, arguments);
     }
   };
 }
 
-exports.setLevel = function(level) {
+exports.setLevel = function setLevel(level) {
+  // eslint-disable-next-line yoda
   if (typeof level === 'number' && 0 < level && level <= 50) {
     minLevel = level;
     return;
-  } else if (typeof level === 'string') {
+  }
+
+  if (typeof level === 'string') {
     switch (level) {
       case 'debug':
         minLevel = 20;
@@ -37,6 +40,8 @@ exports.setLevel = function(level) {
       case 'error':
         minLevel = 50;
         break;
+      default:
+        exports.warn(`Unknown log level: ${level}`);
     }
   }
 };

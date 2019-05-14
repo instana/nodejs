@@ -1,13 +1,14 @@
+/* eslint-disable indent, import/order, no-console */
+
 'use strict';
 
 const instana = require('../../..');
 
 const http = require('http');
-const https = require('https');
 
 const config = require('../../config');
 
-const handler = function(event, context, callback) {
+const handler = function handler(event, context, callback) {
   console.log('in actual handler');
   const req = http.get(config.downstreamDummyUrl, res => {
     res.resume();

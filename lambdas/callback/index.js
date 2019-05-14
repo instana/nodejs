@@ -1,6 +1,6 @@
 'use strict';
 
-exports.handler = function(event, context, callback) {
+exports.handler = function handler(event, context, callback) {
   context.callbackWaitsForEmptyEventLoop = true;
   console.log('Starting up');
   setTimeout(() => {

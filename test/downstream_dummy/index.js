@@ -26,7 +26,8 @@ app.get('/', (_, res) => {
 http.createServer(app).listen(port, error => {
   if (error) {
     logger.error(error);
-    return process.exit(1);
+    process.exit(1);
+    return; // eslint-disable-line no-useless-return
   } else {
     logger.info('Listening on port: %s', port);
     sendToParent('downstream dummy: started');

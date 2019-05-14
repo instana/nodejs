@@ -1,3 +1,5 @@
+/* eslint-disable consistent-return */
+
 'use strict';
 
 const bodyParser = require('body-parser');
@@ -24,7 +26,7 @@ const unresponsive = process.env.ACCEPTOR_UNRESPONSIVE === 'true';
 const app = express();
 
 const dropAllData = process.env.DROP_DATA === 'true';
-const receivedData = resetReceivedData();
+let receivedData = resetReceivedData();
 
 if (process.env.WITH_STDOUT) {
   app.use(morgan(`${logPrefix} (${process.pid}): :method :url :status`));
@@ -36,9 +38,7 @@ app.use(
   })
 );
 
-app.get('/', (_, res) => {
-  return res.sendStatus(200);
-});
+app.get('/', (_, res) => res.sendStatus(200));
 
 app.post('/bundle', (req, res) => {
   logger.trace('incoming bundle', req.body);
@@ -101,29 +101,23 @@ app.post('/traces', (req, res) => {
   return res.sendStatus(201);
 });
 
-app.get('/received', function(req, res) {
-  return res.json(receivedData);
-});
+app.get('/received', (req, res) => res.json(receivedData));
 
-app.delete('/received', function(req, res) {
+app.delete('/received', (req, res) => {
   receivedData = resetReceivedData();
   return res.sendStatus(204);
 });
 
-app.get('/received/metrics', function(req, res) {
-  return res.json(receivedData.metrics);
-});
+app.get('/received/metrics', (req, res) => res.json(receivedData.metrics));
 
-app.delete('/received/metrics', function(req, res) {
+app.delete('/received/metrics', (req, res) => {
   receivedData.metrics = [];
   return res.sendStatus('204');
 });
 
-app.get('/received/spans', function(req, res) {
-  return res.json(receivedData.spans);
-});
+app.get('/received/spans', (req, res) => res.json(receivedData.spans));
 
-app.delete('/received/spans', function(req, res) {
+app.delete('/received/spans', (req, res) => {
   receivedData.metrics = [];
   return res.sendStatus('204');
 });

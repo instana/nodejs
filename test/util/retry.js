@@ -1,12 +1,12 @@
 'use strict';
 
-var config = require('../config');
+const config = require('../config');
 
 const wait = ms => new Promise(r => setTimeout(r, ms));
 
 function retry(operation, time = config.getTestTimeout() / 2, until = Date.now() + time) {
-  return new Promise((resolve, reject) => {
-    return operation()
+  return new Promise((resolve, reject) =>
+    operation()
       .then(resolve)
       .catch(reason => {
         if (Date.now() > until) {
@@ -16,8 +16,8 @@ function retry(operation, time = config.getTestTimeout() / 2, until = Date.now()
           .then(retry.bind(null, operation, time, until))
           .then(resolve)
           .catch(reject);
-      });
-  });
+      })
+  );
 }
 
 module.exports = exports = retry;

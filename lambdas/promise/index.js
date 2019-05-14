@@ -7,7 +7,7 @@ exports.handler = (event, context) => {
     console.log('Still running');
   }, 1000);
 
-  return new Promise((resolve, reject) => {
+  return new Promise(resolve => {
     resolve({
       message: 'Stan says hi!'
     });

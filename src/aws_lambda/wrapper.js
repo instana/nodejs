@@ -1,17 +1,12 @@
 'use strict';
 
-const fs = require('fs');
-const path = require('path');
 const instanaCore = require('@instana/core');
-const metrics = instanaCore.metrics;
-const tracing = instanaCore.tracing;
-const constants = tracing.constants;
-const spanBuffer = tracing.spanBuffer;
 
 const consoleLogger = require('../util/console_logger');
 const acceptorConnector = require('../util/acceptor_connector');
 const identityProvider = require('./identity_provider');
 
+const { metrics, tracing, constants, spanBuffer } = instanaCore;
 let logger = consoleLogger;
 
 /**
@@ -52,7 +47,7 @@ exports.wrapWithCallback = function wrapWithCallback(config, originalHandler) {
     config = null;
   }
 
-  return function(event, context, lambdaCallback) {
+  return function handler(event, context, lambdaCallback) {
     init(event, context, config);
 
     // TODO Manage incoming tracing headers
@@ -62,7 +57,7 @@ exports.wrapWithCallback = function wrapWithCallback(config, originalHandler) {
       const entrySpan = tracing
         .getCls()
         .startSpan('aws.lambda.entry', constants.ENTRY, incomingTraceId, incomingParentSpanId);
-      const callbackWrapper = function(originalError, originalResult) {
+      const callbackWrapper = function wrapper(originalError, originalResult) {
         postHandler(entrySpan, !!originalError, () => {
           lambdaCallback(originalError, originalResult);
         });
@@ -98,7 +93,7 @@ exports.wrapPromise = function wrapPromise(config, originalHandler) {
   const incomingTraceId = null;
   const incomingParentSpanId = null;
 
-  return function(event, context) {
+  return function handler(event, context) {
     init(event, context, config);
     return tracing.getCls().ns.runPromise(() => {
       const entrySpan = tracing
@@ -115,20 +110,21 @@ exports.wrapPromise = function wrapPromise(config, originalHandler) {
       } else if (!originalPromise.then) {
         return Promise.reject(
           new Error(
-            'The wrapped function should have returned a promise/thenable, but the returned value does not have a then ' +
-              'property.'
+            'The wrapped function should have returned a promise/thenable, but the returned value does not have a ' +
+              'then property.'
           )
         );
       } else if (typeof originalPromise.then !== 'function') {
         return Promise.reject(
           new Error(
-            "The wrapped function should have returned a promise/thenable, but the returned value's then property is not " +
-              'a function.'
+            "The wrapped function should have returned a promise/thenable, but the returned value's then property is " +
+              'not a function.'
           )
         );
       }
       // Promise.prototype.finally would be the right thing to do here instead of two separate handlers for the success
-      // and error case, but it is not available, neither in 6.10 nor in 8.10. It only became available as of Node.js 10.0.0.
+      // and error case, but it is not available, neither in 6.10 nor in 8.10. It only became available as of
+      // Node.js 10.0.0.
       return originalPromise.then(
         postPromise.bind(null, context, entrySpan, false),
         postPromise.bind(null, context, entrySpan, true)
@@ -150,6 +146,7 @@ exports.wrapAsync = exports.wrapPromise;
  * Initialize the wrapper.
  */
 function init(event, context, config) {
+  /* eslint-disable dot-notation */
   config = config || {};
 
   if (config.logger) {
@@ -198,15 +195,15 @@ function postHandler(entrySpan, isError, callback) {
 
   // TODO Implement bundle resource in serverless-acceptor to save one HTTP request.
   // acceptorConnector.sendBundle({ spans, metrics: metricsPayload }, err => {
-  //   if (err) {
-  //     // We intentionally do not propagate the error from the acceptor request - the customer's lambda needs to finish
-  //     // successfully, no matter if we have been able to report metrics and spans.
-  //     logger.warn('Could not send data to acceptor.', err.message);
-  //     logger.debug('Could not send data to acceptor.', err);
-  //   } else {
-  //     logger.debug('Data has been sent to acceptor.');
-  //   }
-  //   callback();
+  //  if (err) {
+  //    // We intentionally do not propagate the error from the acceptor request - the customer's lambda needs to finish
+  //    // successfully, no matter if we have been able to report metrics and spans.
+  //    logger.warn('Could not send data to acceptor.', err.message);
+  //    logger.debug('Could not send data to acceptor.', err);
+  //  } else {
+  //    logger.debug('Data has been sent to acceptor.');
+  //  }
+  //  callback();
   // });
 
   // For now, we send send metrics and spans separately, until serverless-acceptor offers POST /bundle:
@@ -219,12 +216,12 @@ function postHandler(entrySpan, isError, callback) {
     } else {
       logger.debug('Metrics have been sent to acceptor.');
     }
-    acceptorConnector.sendSpans(spans, err => {
-      if (err) {
+    acceptorConnector.sendSpans(spans, err2 => {
+      if (err2) {
         // We intentionally do not propagate the error from the acceptor request - the customer's lambda needs to finish
         // successfully, no matter if we have been able to report metrics and spans.
-        logger.warn('Could not send spans to acceptor.', err.message);
-        logger.debug('Could not send spans to acceptor.', err);
+        logger.warn('Could not send spans to acceptor.', err2.message);
+        logger.debug('Could not send spans to acceptor.', err2);
       } else {
         logger.debug('Spans have been sent to acceptor.');
       }
