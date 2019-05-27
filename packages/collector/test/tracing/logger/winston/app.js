@@ -2,11 +2,11 @@
 
 'use strict';
 
-var agentPort = process.env.AGENT_PORT;
+const agentPort = process.env.AGENT_PORT;
 
-var instana = require('../../../..');
+const instana = require('../../../..');
 instana({
-  agentPort: agentPort,
+  agentPort,
   level: 'warn',
   tracing: {
     enabled: process.env.TRACING_ENABLED === 'true',
@@ -14,105 +14,105 @@ instana({
   }
 });
 
-var request = require('request-promise');
-var bodyParser = require('body-parser');
-var express = require('express');
-var morgan = require('morgan');
+const request = require('request-promise');
+const bodyParser = require('body-parser');
+const express = require('express');
+const morgan = require('morgan');
 
-var winston = require('winston');
+const winston = require('winston');
 winston.add(new winston.transports.Console({ level: 'info' }));
 
-var logger = winston.createLogger({
+const logger = winston.createLogger({
   level: 'info',
   format: winston.format.json(),
   transports: [new winston.transports.Console({ level: 'info' })]
 });
 
-var app = express();
-var logPrefix = 'Express / Winston App (' + process.pid + '):\t';
+const app = express();
+const logPrefix = `Express / Winston App (${process.pid}):\t`;
 
 if (process.env.WITH_STDOUT) {
-  app.use(morgan(logPrefix + ':method :url :status'));
+  app.use(morgan(`${logPrefix}:method :url :status`));
 }
 
 app.use(bodyParser.json());
 
-app.get('/', function(req, res) {
+app.get('/', (req, res) => {
   res.sendStatus(200);
 });
 
-app.get('/info', function(req, res) {
+app.get('/info', (req, res) => {
   logger.info('Info message - must not be traced.');
   finish(res);
 });
 
-app.get('/warn', function(req, res) {
+app.get('/warn', (req, res) => {
   logger.warn('Warn message - should be traced.');
   finish(res);
 });
 
-app.get('/error', function(req, res) {
+app.get('/error', (req, res) => {
   logger.error('Error message - should be traced.');
   finish(res);
 });
 
-app.get('/log-info', function(req, res) {
+app.get('/log-info', (req, res) => {
   logger.log('info', 'Info message - must not be traced.');
   finish(res);
 });
 
-app.get('/log-warn', function(req, res) {
+app.get('/log-warn', (req, res) => {
   logger.log('warn', 'Warn message - should be traced.');
   finish(res);
 });
 
-app.get('/log-error', function(req, res) {
+app.get('/log-error', (req, res) => {
   logger.log('error', 'Error message - should be traced.');
   finish(res);
 });
 
-app.get('/global-info', function(req, res) {
+app.get('/global-info', (req, res) => {
   winston.info('Info message - must not be traced.');
   finish(res);
 });
 
-app.get('/global-warn', function(req, res) {
+app.get('/global-warn', (req, res) => {
   winston.warn('Warn message - should be traced.');
   finish(res);
 });
 
-app.get('/global-error', function(req, res) {
+app.get('/global-error', (req, res) => {
   winston.error('Error message - should be traced.');
   finish(res);
 });
 
-app.get('/global-log-info', function(req, res) {
+app.get('/global-log-info', (req, res) => {
   winston.log('info', 'Info message - must not be traced.');
   finish(res);
 });
 
-app.get('/global-log-warn', function(req, res) {
+app.get('/global-log-warn', (req, res) => {
   winston.log('warn', 'Warn message - should be traced.');
   finish(res);
 });
 
-app.get('/global-log-error', function(req, res) {
+app.get('/global-log-error', (req, res) => {
   winston.log('error', 'Error message - should be traced.');
   finish(res);
 });
 
 function finish(res) {
-  request('http://127.0.0.1:' + agentPort).then(function() {
+  request(`http://127.0.0.1:${agentPort}`).then(() => {
     res.sendStatus(200);
   });
 }
 
-app.listen(process.env.APP_PORT, function() {
-  log('Listening on port: ' + process.env.APP_PORT);
+app.listen(process.env.APP_PORT, () => {
+  log(`Listening on port: ${process.env.APP_PORT}`);
 });
 
 function log() {
-  var args = Array.prototype.slice.call(arguments);
+  const args = Array.prototype.slice.call(arguments);
   args[0] = logPrefix + args[0];
   console.log.apply(console, args);
 }

@@ -1,7 +1,7 @@
 'use strict';
 
-var EventEmitter = require('events');
-var util = require('util');
+const EventEmitter = require('events');
+const util = require('util');
 
 function DummyEmitter() {
   EventEmitter.call(this);
@@ -9,8 +9,8 @@ function DummyEmitter() {
 util.inherits(DummyEmitter, EventEmitter);
 
 DummyEmitter.prototype.start = function start() {
-  var that = this;
-  this.intervalHandle = setInterval(function() {
+  const that = this;
+  this.intervalHandle = setInterval(() => {
     that.emit('tick');
   }, 100);
   this.intervalHandle.unref();

@@ -10,27 +10,27 @@ require('../../../../')({
   }
 });
 
-var bodyParser = require('body-parser');
-var express = require('express');
-var morgan = require('morgan');
-var redis = require('redis');
+const bodyParser = require('body-parser');
+const express = require('express');
+const morgan = require('morgan');
+const redis = require('redis');
 
-var app = express();
-var logPrefix = 'Express / Redis App (' + process.pid + '):\t';
-var connectedToRedis = false;
+const app = express();
+const logPrefix = `Express / Redis App (${process.pid}):\t`;
+let connectedToRedis = false;
 
-var client = redis.createClient('//' + process.env.REDIS);
-client.on('ready', function() {
+const client = redis.createClient(`//${process.env.REDIS}`);
+client.on('ready', () => {
   connectedToRedis = true;
 });
 
 if (process.env.WITH_STDOUT) {
-  app.use(morgan(logPrefix + ':method :url :status'));
+  app.use(morgan(`${logPrefix}:method :url :status`));
 }
 
 app.use(bodyParser.json());
 
-app.get('/', function(req, res) {
+app.get('/', (req, res) => {
   if (!connectedToRedis) {
     res.sendStatus(500);
   } else {
@@ -38,10 +38,10 @@ app.get('/', function(req, res) {
   }
 });
 
-app.post('/values', function(req, res) {
-  var key = req.query.key;
-  var value = req.query.value;
-  client.set(key, value, function(err) {
+app.post('/values', (req, res) => {
+  const key = req.query.key;
+  const value = req.query.value;
+  client.set(key, value, err => {
     if (err) {
       log('Set with key %s, value %s failed', key, value, err);
       res.sendStatus(500);
@@ -51,9 +51,9 @@ app.post('/values', function(req, res) {
   });
 });
 
-app.get('/values', function(req, res) {
-  var key = req.query.key;
-  client.get(key, function(err, redisRes) {
+app.get('/values', (req, res) => {
+  const key = req.query.key;
+  client.get(key, (err, redisRes) => {
     if (err) {
       log('Get with key %s failed', key, err);
       res.sendStatus(500);
@@ -63,9 +63,9 @@ app.get('/values', function(req, res) {
   });
 });
 
-app.get('/failure', function(req, res) {
+app.get('/failure', (req, res) => {
   // simulating wrong get usage
-  client.get('someCollection', 'someKey', 'someValue', function(err, redisRes) {
+  client.get('someCollection', 'someKey', 'someValue', (err, redisRes) => {
     if (err) {
       res.sendStatus(500);
     } else {
@@ -74,12 +74,12 @@ app.get('/failure', function(req, res) {
   });
 });
 
-app.get('/multi', function(req, res) {
+app.get('/multi', (req, res) => {
   client
     .multi()
     .hset('someCollection', 'key', 'value')
     .hget('someCollection', 'key')
-    .exec(function(err) {
+    .exec(err => {
       if (err) {
         log('Multi failed', err);
         res.sendStatus(500);
@@ -89,13 +89,13 @@ app.get('/multi', function(req, res) {
     });
 });
 
-app.get('/multiFailure', function(req, res) {
+app.get('/multiFailure', (req, res) => {
   // simulating wrong get usage
   client
     .multi()
     .hset('someCollection', 'key', 'value')
     .hget('someCollection', 'key', 'too', 'many', 'args')
-    .exec(function(err) {
+    .exec(err => {
       if (err) {
         log('Multi failed', err);
         res.sendStatus(500);
@@ -105,13 +105,13 @@ app.get('/multiFailure', function(req, res) {
     });
 });
 
-app.get('/batchFailure', function(req, res) {
+app.get('/batchFailure', (req, res) => {
   // simulating wrong get usage
   client
     .batch()
     .hset('someCollection', 'key', 'value')
     .hget('someCollection', 'key', 'too', 'many', 'args')
-    .exec(function(err) {
+    .exec(err => {
       if (err) {
         log('batch failed', err);
         res.sendStatus(500);
@@ -121,17 +121,17 @@ app.get('/batchFailure', function(req, res) {
     });
 });
 
-app.get('/callSequence', function(req, res) {
-  var key = 'foo';
-  var value = 'bar';
-  client.set(key, value, function(err) {
+app.get('/callSequence', (req, res) => {
+  const key = 'foo';
+  const value = 'bar';
+  client.set(key, value, err => {
     if (err) {
       log('Set with key %s, value %s failed', key, value, err);
       res.sendStatus(500);
       return;
     }
 
-    client.get(key, function(err2, result) {
+    client.get(key, (err2, result) => {
       if (err2) {
         log('get with key %s failed', key, err2);
         res.sendStatus(500);
@@ -143,12 +143,12 @@ app.get('/callSequence', function(req, res) {
   });
 });
 
-app.listen(process.env.APP_PORT, function() {
-  log('Listening on port: ' + process.env.APP_PORT);
+app.listen(process.env.APP_PORT, () => {
+  log(`Listening on port: ${process.env.APP_PORT}`);
 });
 
 function log() {
-  var args = Array.prototype.slice.call(arguments);
+  const args = Array.prototype.slice.call(arguments);
   args[0] = logPrefix + args[0];
   console.log.apply(console, args);
 }

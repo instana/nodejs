@@ -2,22 +2,22 @@
 
 'use strict';
 
-var spawn = require('child_process').spawn;
-var request = require('request-promise');
-var path = require('path');
+const spawn = require('child_process').spawn;
+const request = require('request-promise');
+const path = require('path');
 
-var utils = require('../../../utils');
-var config = require('../../../config');
-var agentPort = require('../../../apps/agentStubControls').agentPort;
-var upstreamPort = require('../../../apps/expressControls').appPort;
-var appPort = (exports.appPort = 3215);
+const utils = require('../../../utils');
+const config = require('../../../config');
+const agentPort = require('../../../apps/agentStubControls').agentPort;
+const upstreamPort = require('../../../apps/expressControls').appPort;
+const appPort = (exports.appPort = 3215);
 
-var expressMysqlApp;
+let expressMysqlApp;
 
-exports.registerTestHooks = function(opts) {
+exports.registerTestHooks = opts => {
   opts = opts || {};
-  beforeEach(function() {
-    var env = Object.create(process.env);
+  beforeEach(() => {
+    const env = Object.create(process.env);
     env.AGENT_PORT = agentPort;
     env.APP_PORT = appPort;
     env.UPSTREAM_PORT = upstreamPort;
@@ -35,66 +35,60 @@ exports.registerTestHooks = function(opts) {
 
     expressMysqlApp = spawn('node', [path.join(__dirname, 'app.js')], {
       stdio: config.getAppStdio(),
-      env: env
+      env
     });
 
     return waitUntilServerIsUp();
   });
 
-  afterEach(function() {
+  afterEach(() => {
     expressMysqlApp.kill();
   });
 };
 
 function waitUntilServerIsUp() {
-  return utils.retry(function() {
-    return request({
+  return utils.retry(() =>
+    request({
       method: 'GET',
-      url: 'http://127.0.0.1:' + appPort,
+      url: `http://127.0.0.1:${appPort}`,
       headers: {
         'X-INSTANA-L': '0'
       }
-    });
-  });
+    })
+  );
 }
 
-exports.getPid = function() {
-  return expressMysqlApp.pid;
-};
+exports.getPid = () => expressMysqlApp.pid;
 
-exports.addValue = function(value) {
-  return request({
+exports.addValue = value =>
+  request({
     method: 'post',
-    url: 'http://127.0.0.1:' + appPort + '/values',
+    url: `http://127.0.0.1:${appPort}/values`,
     qs: {
-      value: value
+      value
     }
   });
-};
 
 /**
  * Executes a MySQL INSERT and then does an HTTP client call. Used to verify that the tracing context is not corrupted.
  */
-exports.addValueAndDoCall = function(value) {
-  return request({
+exports.addValueAndDoCall = value =>
+  request({
     method: 'post',
-    url: 'http://127.0.0.1:' + appPort + '/valuesAndCall',
+    url: `http://127.0.0.1:${appPort}/valuesAndCall`,
     qs: {
-      value: value
+      value
     }
   });
-};
 
-exports.getValues = function() {
-  return request({
+exports.getValues = () =>
+  request({
     method: 'get',
-    url: 'http://127.0.0.1:' + appPort + '/values'
+    url: `http://127.0.0.1:${appPort}/values`
   });
-};
 
-exports.getValuesAndProduceError = function() {
-  return request({
+exports.getValuesAndProduceError = () =>
+  request({
     method: 'get',
-    url: 'http://127.0.0.1:' + appPort + '/values/error'
+    url: `http://127.0.0.1:${appPort}/values/error`
   });
-};

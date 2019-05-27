@@ -2,44 +2,44 @@
 
 'use strict';
 
-var proxyquire = require('proxyquire');
-var expect = require('chai').expect;
-var sinon = require('sinon');
+const proxyquire = require('proxyquire');
+const expect = require('chai').expect;
+const sinon = require('sinon');
 
-describe('util/requireHook', function() {
-  var requireHook;
-  var hook;
+describe('util/requireHook', () => {
+  let requireHook;
+  let hook;
 
-  beforeEach(function() {
+  beforeEach(() => {
     requireHook = proxyquire('../../../src/util/requireHook', {});
     hook = sinon.stub();
   });
 
-  afterEach(function() {
+  afterEach(() => {
     requireHook.teardownForTestPurposes();
   });
 
-  describe('onModuleLoad', function() {
-    it('must not inform aboute load modules when not initialized', function(done) {
+  describe('onModuleLoad', () => {
+    it('must not inform aboute load modules when not initialized', done => {
       requireHook.onModuleLoad('./testModuleA', hook);
-      setTimeout(function() {
+      setTimeout(() => {
         expect(hook.callCount).to.equal(0);
         done();
       }, 100);
       require('./testModuleA');
     });
 
-    it('must not forcefully load modules', function(done) {
+    it('must not forcefully load modules', done => {
       requireHook.init();
       requireHook.onModuleLoad('./testModuleA', hook);
 
-      setTimeout(function() {
+      setTimeout(() => {
         expect(hook.callCount).to.equal(0);
         done();
       }, 100);
     });
 
-    it('must inform about loaded modules', function() {
+    it('must inform about loaded modules', () => {
       requireHook.init();
       requireHook.onModuleLoad('./testModuleA', hook);
 
@@ -49,7 +49,7 @@ describe('util/requireHook', function() {
       expect(hook.getCall(0).args[0]).to.equal('module a');
     });
 
-    it('must not inform aboute loaded modules twice', function() {
+    it('must not inform aboute loaded modules twice', () => {
       requireHook.init();
       requireHook.onModuleLoad('./testModuleA', hook);
 
@@ -60,7 +60,7 @@ describe('util/requireHook', function() {
       expect(hook.getCall(0).args[0]).to.equal('module a');
     });
 
-    it('must support loading of two separate modules', function() {
+    it('must support loading of two separate modules', () => {
       requireHook.init();
       requireHook.onModuleLoad('./testModuleA', hook);
       requireHook.onModuleLoad('./testModuleB', hook);
@@ -73,7 +73,7 @@ describe('util/requireHook', function() {
       expect(hook.getCall(1).args[0]).to.equal('module a');
     });
 
-    it('must support redefinition of module exports', function() {
+    it('must support redefinition of module exports', () => {
       requireHook.init();
       requireHook.onModuleLoad('./testModuleA', hook);
       hook.returns('a');
@@ -85,7 +85,7 @@ describe('util/requireHook', function() {
       expect(hook.getCall(0).args[0]).to.equal('module a');
     });
 
-    it('must support require chains', function() {
+    it('must support require chains', () => {
       requireHook.init();
       requireHook.onModuleLoad('./testModuleA', hook);
       hook.returns('42');
@@ -97,27 +97,27 @@ describe('util/requireHook', function() {
     });
   });
 
-  describe('onFileLoad', function() {
-    it('must not inform aboute load modules when not initialized', function(done) {
+  describe('onFileLoad', () => {
+    it('must not inform aboute load modules when not initialized', done => {
       requireHook.onFileLoad(/testModuleA/, hook);
-      setTimeout(function() {
+      setTimeout(() => {
         expect(hook.callCount).to.equal(0);
         done();
       }, 100);
       require('./testModuleA');
     });
 
-    it('must not forcefully load modules', function(done) {
+    it('must not forcefully load modules', done => {
       requireHook.init();
       requireHook.onFileLoad(/testModuleA/, hook);
 
-      setTimeout(function() {
+      setTimeout(() => {
         expect(hook.callCount).to.equal(0);
         done();
       }, 100);
     });
 
-    it('must inform about loaded modules', function() {
+    it('must inform about loaded modules', () => {
       requireHook.init();
       requireHook.onFileLoad(/testModuleA/, hook);
 
@@ -127,7 +127,7 @@ describe('util/requireHook', function() {
       expect(hook.getCall(0).args[0]).to.equal('module a');
     });
 
-    it('must not inform aboute loaded modules twice', function() {
+    it('must not inform aboute loaded modules twice', () => {
       requireHook.init();
       requireHook.onFileLoad(/testModuleA/, hook);
 
@@ -138,7 +138,7 @@ describe('util/requireHook', function() {
       expect(hook.getCall(0).args[0]).to.equal('module a');
     });
 
-    it('must support loading of two separate modules', function() {
+    it('must support loading of two separate modules', () => {
       requireHook.init();
       requireHook.onFileLoad(/testModuleA/, hook);
       requireHook.onFileLoad(/testModuleB/, hook);
@@ -151,7 +151,7 @@ describe('util/requireHook', function() {
       expect(hook.getCall(1).args[0]).to.equal('module a');
     });
 
-    it('must support redefinition of module exports', function() {
+    it('must support redefinition of module exports', () => {
       requireHook.init();
       requireHook.onFileLoad(/testModuleA/, hook);
       hook.returns('a');
@@ -163,10 +163,10 @@ describe('util/requireHook', function() {
       expect(hook.getCall(0).args[0]).to.equal('module a');
     });
 
-    describe('real modules', function() {
-      it('must support loading of specific files within a module', function() {
+    describe('real modules', () => {
+      it('must support loading of specific files within a module', () => {
         requireHook.init();
-        var pattern = requireHook.buildFileNamePattern(['node_modules', 'express', 'lib', 'router', 'route.js']);
+        const pattern = requireHook.buildFileNamePattern(['node_modules', 'express', 'lib', 'router', 'route.js']);
         requireHook.onFileLoad(pattern, hook);
 
         expect(require('express')).to.be.a('function');

@@ -1,15 +1,15 @@
 'use strict';
 
-var semver = require('semver');
-var expect = require('chai').expect;
+const semver = require('semver');
+const expect = require('chai').expect;
 
-var constants = require('@instana/core').tracing.constants;
-var supportedVersion = require('@instana/core').tracing.supportedVersion;
-var config = require('../../../config');
-var utils = require('../../../utils');
+const constants = require('@instana/core').tracing.constants;
+const supportedVersion = require('@instana/core').tracing.supportedVersion;
+const config = require('../../../config');
+const utils = require('../../../utils');
 
-var expressMysqlControls;
-var agentStubControls;
+let expressMysqlControls;
+let agentStubControls;
 
 describe('tracing/mysql', function() {
   if (!supportedVersion(process.versions.node) || semver.lt(process.versions.node, '6.0.0')) {
@@ -24,7 +24,7 @@ describe('tracing/mysql', function() {
 
   agentStubControls.registerTestHooks();
 
-  ['mysql', 'mysql2', 'mysql2Promises'].forEach(function(driverMode) {
+  ['mysql', 'mysql2', 'mysql2Promises'].forEach(driverMode => {
     [false, true].forEach(function(useExecute) {
       // connection.query or connection.execute
       registerSuite.bind(this)(driverMode, useExecute);
@@ -38,9 +38,9 @@ function registerSuite(driverMode, useExecute) {
     return;
   }
 
-  describe('driver mode: ' + driverMode + ', access function: ' + (useExecute ? 'execute' : 'query'), function() {
-    var opts = {
-      useExecute: useExecute
+  describe(`driver mode: ${driverMode}, access function: ${useExecute ? 'execute' : 'query'}`, () => {
+    const opts = {
+      useExecute
     };
 
     switch (driverMode) {
@@ -55,7 +55,7 @@ function registerSuite(driverMode, useExecute) {
         opts.useMysql2WithPromises = true;
         break;
       default:
-        throw new Error('unkown mysql driver mode: ' + driverMode);
+        throw new Error(`unkown mysql driver mode: ${driverMode}`);
     }
 
     expressMysqlControls.registerTestHooks(opts);
@@ -64,21 +64,19 @@ function registerSuite(driverMode, useExecute) {
 }
 
 function test() {
-  beforeEach(function() {
-    return agentStubControls.waitUntilAppIsCompletelyInitialized(expressMysqlControls.getPid());
-  });
+  beforeEach(() => agentStubControls.waitUntilAppIsCompletelyInitialized(expressMysqlControls.getPid()));
 
-  it('must trace queries', function() {
-    return expressMysqlControls.addValue(42).then(function() {
-      return utils.retry(function() {
-        return agentStubControls.getSpans().then(function(spans) {
-          var entrySpan = utils.expectOneMatching(spans, function(span) {
+  it('must trace queries', () =>
+    expressMysqlControls.addValue(42).then(() =>
+      utils.retry(() =>
+        agentStubControls.getSpans().then(spans => {
+          const entrySpan = utils.expectOneMatching(spans, span => {
             expect(span.n).to.equal('node.http.server');
             expect(span.f.e).to.equal(String(expressMysqlControls.getPid()));
             expect(span.f.h).to.equal('agent-stub-uuid');
           });
 
-          utils.expectOneMatching(spans, function(span) {
+          utils.expectOneMatching(spans, span => {
             expect(span.t).to.equal(entrySpan.t);
             expect(span.p).to.equal(entrySpan.s);
             expect(span.n).to.equal('mysql');
@@ -90,30 +88,27 @@ function test() {
             expect(span.ec).to.equal(0);
             expect(span.data.mysql.stmt).to.equal('INSERT INTO random_values (value) VALUES (?)');
           });
-        });
-      });
-    });
-  });
+        })
+      )
+    ));
 
-  it('must trace insert and get queries', function() {
-    return expressMysqlControls
+  it('must trace insert and get queries', () =>
+    expressMysqlControls
       .addValue(43)
-      .then(function() {
-        return expressMysqlControls.getValues();
-      })
-      .then(function(values) {
+      .then(() => expressMysqlControls.getValues())
+      .then(values => {
         expect(values).to.contain(43);
 
-        return utils.retry(function() {
-          return agentStubControls.getSpans().then(function(spans) {
-            var postEntrySpan = utils.expectOneMatching(spans, function(span) {
+        return utils.retry(() =>
+          agentStubControls.getSpans().then(spans => {
+            const postEntrySpan = utils.expectOneMatching(spans, span => {
               expect(span.n).to.equal('node.http.server');
               expect(span.f.e).to.equal(String(expressMysqlControls.getPid()));
               expect(span.f.h).to.equal('agent-stub-uuid');
               expect(span.data.http.method).to.equal('POST');
             });
 
-            utils.expectOneMatching(spans, function(span) {
+            utils.expectOneMatching(spans, span => {
               expect(span.t).to.equal(postEntrySpan.t);
               expect(span.p).to.equal(postEntrySpan.s);
               expect(span.n).to.equal('mysql');
@@ -130,14 +125,14 @@ function test() {
               expect(span.data.mysql.db).to.equal(process.env.MYSQL_DB);
             });
 
-            var getEntrySpan = utils.expectOneMatching(spans, function(span) {
+            const getEntrySpan = utils.expectOneMatching(spans, span => {
               expect(span.n).to.equal('node.http.server');
               expect(span.f.e).to.equal(String(expressMysqlControls.getPid()));
               expect(span.f.h).to.equal('agent-stub-uuid');
               expect(span.data.http.method).to.equal('GET');
             });
 
-            utils.expectOneMatching(spans, function(span) {
+            utils.expectOneMatching(spans, span => {
               expect(span.t).to.equal(getEntrySpan.t);
               expect(span.p).to.equal(getEntrySpan.s);
               expect(span.n).to.equal('mysql');
@@ -153,28 +148,27 @@ function test() {
               expect(span.data.mysql.user).to.equal(process.env.MYSQL_USER);
               expect(span.data.mysql.db).to.equal(process.env.MYSQL_DB);
             });
-          });
-        });
-      });
-  });
+          })
+        );
+      }));
 
-  it('must keep the tracing context', function() {
-    return expressMysqlControls.addValueAndDoCall(1302).then(function(spanContext) {
+  it('must keep the tracing context', () =>
+    expressMysqlControls.addValueAndDoCall(1302).then(spanContext => {
       expect(spanContext).to.exist;
       spanContext = JSON.parse(spanContext);
       expect(spanContext.s).to.exist;
       expect(spanContext.t).to.exist;
 
-      return utils.retry(function() {
-        return agentStubControls.getSpans().then(function(spans) {
-          var postEntrySpan = utils.expectOneMatching(spans, function(span) {
+      return utils.retry(() =>
+        agentStubControls.getSpans().then(spans => {
+          const postEntrySpan = utils.expectOneMatching(spans, span => {
             expect(span.n).to.equal('node.http.server');
             expect(span.f.e).to.equal(String(expressMysqlControls.getPid()));
             expect(span.f.h).to.equal('agent-stub-uuid');
             expect(span.data.http.method).to.equal('POST');
           });
 
-          utils.expectOneMatching(spans, function(span) {
+          utils.expectOneMatching(spans, span => {
             expect(span.t).to.equal(postEntrySpan.t);
             expect(span.p).to.equal(postEntrySpan.s);
             expect(span.n).to.equal('mysql');
@@ -191,7 +185,7 @@ function test() {
             expect(span.data.mysql.db).to.equal(process.env.MYSQL_DB);
           });
 
-          utils.expectOneMatching(spans, function(span) {
+          utils.expectOneMatching(spans, span => {
             expect(span.t).to.equal(postEntrySpan.t);
             expect(span.p).to.equal(postEntrySpan.s);
             expect(span.n).to.equal('node.http.client');
@@ -207,8 +201,7 @@ function test() {
             expect(span.t).to.equal(spanContext.t);
             expect(span.p).to.equal(spanContext.s);
           });
-        });
-      });
-    });
-  });
+        })
+      );
+    }));
 }

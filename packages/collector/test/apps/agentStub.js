@@ -1,21 +1,21 @@
 'use strict';
 
-var bodyParser = require('body-parser');
-var express = require('express');
-var morgan = require('morgan');
-var bunyan = require('bunyan');
-var app = express();
+const bodyParser = require('body-parser');
+const express = require('express');
+const morgan = require('morgan');
+const bunyan = require('bunyan');
+const app = express();
 
-var logger = bunyan.createLogger({ name: 'agent-stub', pid: process.pid });
+const logger = bunyan.createLogger({ name: 'agent-stub', pid: process.pid });
 // logger.level('debug');
 
-var extraHeaders = process.env.EXTRA_HEADERS ? process.env.EXTRA_HEADERS.split(',') : [];
-var secretsMatcher = process.env.SECRETS_MATCHER ? process.env.SECRETS_MATCHER : 'contains-ignore-case';
-var secretsList = process.env.SECRETS_LIST ? process.env.SECRETS_LIST.split(',') : ['key', 'pass', 'secret'];
-var dropAllData = process.env.DROP_DATA === 'true';
-var discoveries = {};
-var requests = {};
-var retrievedData = {
+const extraHeaders = process.env.EXTRA_HEADERS ? process.env.EXTRA_HEADERS.split(',') : [];
+const secretsMatcher = process.env.SECRETS_MATCHER ? process.env.SECRETS_MATCHER : 'contains-ignore-case';
+const secretsList = process.env.SECRETS_LIST ? process.env.SECRETS_LIST.split(',') : ['key', 'pass', 'secret'];
+const dropAllData = process.env.DROP_DATA === 'true';
+let discoveries = {};
+const requests = {};
+let retrievedData = {
   runtime: [],
   traces: [],
   responses: [],
@@ -23,7 +23,7 @@ var retrievedData = {
 };
 
 if (process.env.WITH_STDOUT) {
-  app.use(morgan('Agent Stub (' + process.pid + '):\t:method :url :status'));
+  app.use(morgan(`Agent Stub (${process.pid}):\t:method :url :status`));
 }
 
 app.use(
@@ -32,25 +32,25 @@ app.use(
   })
 );
 
-app.use(function(req, res, next) {
+app.use((req, res, next) => {
   res.set('server', 'Instana Agent');
   next();
 });
 
-app.get('/', function(req, res) {
+app.get('/', (req, res) => {
   res.send('OK');
 });
 
-app.put('/com.instana.plugin.nodejs.discovery', function(req, res) {
-  var pid = req.body.pid;
+app.put('/com.instana.plugin.nodejs.discovery', (req, res) => {
+  const pid = req.body.pid;
   discoveries[pid] = req.body;
 
   logger.debug('New discovery %s with params', pid, req.body);
 
   res.send({
     agentUuid: 'agent-stub-uuid',
-    pid: pid,
-    extraHeaders: extraHeaders,
+    pid,
+    extraHeaders,
     secrets: {
       matcher: secretsMatcher,
       list: secretsList
@@ -77,7 +77,7 @@ app.post(
       });
     }
 
-    var requestsForPid = requests[req.params.pid] || [];
+    const requestsForPid = requests[req.params.pid] || [];
     res.json(requestsForPid);
     delete requests[req.params.pid];
   })
@@ -113,11 +113,11 @@ app.post(
 );
 
 function checkExistenceOfKnownPid(fn) {
-  return function(req, res) {
-    var pid = req.params.pid;
+  return (req, res) => {
+    const pid = req.params.pid;
     if (!discoveries[pid]) {
       logger.debug('Rejecting access for PID %s, not a known discovery', pid);
-      return res.status(400).send('Unknown discovery with pid: ' + pid);
+      return res.status(400).send(`Unknown discovery with pid: ${pid}`);
     }
     fn(req, res);
   };
@@ -130,19 +130,19 @@ app.post('/com.instana.plugin.generic.event', function postEvent(req, res) {
   res.send('OK');
 });
 
-app.get('/retrievedData', function(req, res) {
+app.get('/retrievedData', (req, res) => {
   res.json(retrievedData);
 });
 
-app.get('/retrievedTraces', function(req, res) {
+app.get('/retrievedTraces', (req, res) => {
   res.json(retrievedData.traces);
 });
 
-app.get('/retrievedEvents', function(req, res) {
+app.get('/retrievedEvents', (req, res) => {
   res.json(retrievedData.events);
 });
 
-app.delete('/retrievedData', function(req, res) {
+app.delete('/retrievedData', (req, res) => {
   retrievedData = {
     runtime: [],
     traces: [],
@@ -152,21 +152,21 @@ app.delete('/retrievedData', function(req, res) {
   res.sendStatus(200);
 });
 
-app.get('/discoveries', function(req, res) {
+app.get('/discoveries', (req, res) => {
   res.json(discoveries);
 });
 
-app.delete('/discoveries', function(req, res) {
+app.delete('/discoveries', (req, res) => {
   discoveries = {};
   res.send('OK');
 });
 
-app.post('/request/:pid', function(req, res) {
+app.post('/request/:pid', (req, res) => {
   requests[req.params.pid] = requests[req.params.pid] || [];
   requests[req.params.pid].push(req.body);
   res.send('OK');
 });
 
-app.listen(process.env.AGENT_PORT, function() {
+app.listen(process.env.AGENT_PORT, () => {
   logger.info('Listening on port: %s', process.env.AGENT_PORT);
 });

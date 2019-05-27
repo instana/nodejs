@@ -10,58 +10,50 @@ require('../../')({
   }
 });
 
-var bodyParser = require('body-parser');
-var rp = require('request-promise');
-var express = require('express');
-var semver = require('semver');
-var morgan = require('morgan');
+const bodyParser = require('body-parser');
+const rp = require('request-promise');
+const express = require('express');
+const semver = require('semver');
+const morgan = require('morgan');
 
 // WHATWG URL class is globally availabe as of Node.js 10.0.0, needs to be required in older versions.
-var URL = semver.lt(process.versions.node, '10.0.0') ? require('url').URL : global.URL;
+const URL = semver.lt(process.versions.node, '10.0.0') ? require('url').URL : global.URL;
 
-var http = require('http');
-var baseUrl = 'http://127.0.0.1:' + process.env.SERVER_PORT;
+const http = require('http');
+const baseUrl = `http://127.0.0.1:${process.env.SERVER_PORT}`;
 
-var app = express();
-var logPrefix = 'Express HTTP client: Client (' + process.pid + '):\t';
+const app = express();
+const logPrefix = `Express HTTP client: Client (${process.pid}):\t`;
 
 if (process.env.WITH_STDOUT) {
-  app.use(morgan(logPrefix + ':method :url :status'));
+  app.use(morgan(`${logPrefix}:method :url :status`));
 }
 
 app.use(bodyParser.json());
 
-app.get('/', function(req, res) {
+app.get('/', (req, res) => {
   rp({
     method: 'GET',
-    url: baseUrl + '/',
+    url: `${baseUrl}/`,
     strictSSL: false
   })
-    .then(function() {
+    .then(() => {
       res.sendStatus(200);
     })
-    .catch(function() {
+    .catch(() => {
       res.sendStatus(500);
     });
 });
 
-app.get('/request-url-and-options', function(req, res) {
-  http
-    .request(createUrl(req, '/request-url-opts'), { rejectUnauthorized: false }, function() {
-      return res.sendStatus(200);
-    })
-    .end();
+app.get('/request-url-and-options', (req, res) => {
+  http.request(createUrl(req, '/request-url-opts'), { rejectUnauthorized: false }, () => res.sendStatus(200)).end();
 });
 
-app.get('/request-url-only', function(req, res) {
-  http
-    .request(createUrl(req, '/request-only-url'), function() {
-      return res.sendStatus(200);
-    })
-    .end();
+app.get('/request-url-only', (req, res) => {
+  http.request(createUrl(req, '/request-only-url'), () => res.sendStatus(200)).end();
 });
 
-app.get('/request-options-only', function(req, res) {
+app.get('/request-options-only', (req, res) => {
   http
     .request(
       {
@@ -70,14 +62,12 @@ app.get('/request-options-only', function(req, res) {
         method: 'GET',
         path: '/request-only-opts'
       },
-      function() {
-        return res.sendStatus(200);
-      }
+      () => res.sendStatus(200)
     )
     .end();
 });
 
-app.get('/request-options-only-null-headers', function(req, res) {
+app.get('/request-options-only-null-headers', (req, res) => {
   http
     .request(
       {
@@ -87,26 +77,20 @@ app.get('/request-options-only-null-headers', function(req, res) {
         path: '/request-only-opts',
         headers: null
       },
-      function() {
-        return res.sendStatus(200);
-      }
+      () => res.sendStatus(200)
     )
     .end();
 });
 
-app.get('/get-url-and-options', function(req, res) {
-  http.get(createUrl(req, '/get-url-opts'), { rejectUnauthorized: false }, function() {
-    return res.sendStatus(200);
-  });
+app.get('/get-url-and-options', (req, res) => {
+  http.get(createUrl(req, '/get-url-opts'), { rejectUnauthorized: false }, () => res.sendStatus(200));
 });
 
-app.get('/get-url-only', function(req, res) {
-  http.get(createUrl(req, '/get-only-url'), function() {
-    return res.sendStatus(200);
-  });
+app.get('/get-url-only', (req, res) => {
+  http.get(createUrl(req, '/get-only-url'), () => res.sendStatus(200));
 });
 
-app.get('/get-options-only', function(req, res) {
+app.get('/get-options-only', (req, res) => {
   http.get(
     {
       hostname: '127.0.0.1',
@@ -114,29 +98,27 @@ app.get('/get-options-only', function(req, res) {
       method: 'GET',
       path: '/get-only-opts'
     },
-    function() {
-      return res.sendStatus(200);
-    }
+    () => res.sendStatus(200)
   );
 });
 
-app.get('/timeout', function(req, res) {
+app.get('/timeout', (req, res) => {
   rp({
     method: 'GET',
-    url: baseUrl + '/timeout',
+    url: `${baseUrl}/timeout`,
     timeout: 500,
     strictSSL: false
   })
-    .then(function() {
+    .then(() => {
       res.sendStatus(200);
     })
-    .catch(function() {
+    .catch(() => {
       res.sendStatus(500);
     });
 });
 
-app.get('/abort', function(req, res) {
-  var clientRequest = http.request({
+app.get('/abort', (req, res) => {
+  const clientRequest = http.request({
     method: 'GET',
     hostname: '127.0.0.1',
     port: process.env.SERVER_PORT,
@@ -145,19 +127,19 @@ app.get('/abort', function(req, res) {
 
   clientRequest.end();
 
-  setTimeout(function() {
+  setTimeout(() => {
     clientRequest.abort();
     res.sendStatus(200);
   }, 1500);
 });
 
-app.get('/request-malformed-url', function(req, res) {
+app.get('/request-malformed-url', (req, res) => {
   try {
     http
       .request(
         //
         'ha-te-te-peh://999.0.0.1:not-a-port/malformed-url', //
-        function() {
+        () => {
           console.log('This should not have happend!');
         }
       )
@@ -171,16 +153,14 @@ app.get('/request-malformed-url', function(req, res) {
           method: 'GET',
           path: '/request-only-opts'
         },
-        function() {
-          return res.sendStatus(200);
-        }
+        () => res.sendStatus(200)
       )
       .end();
   }
 });
 
-app.listen(process.env.APP_PORT, function() {
-  log('Listening on port: ' + process.env.APP_PORT);
+app.listen(process.env.APP_PORT, () => {
+  log(`Listening on port: ${process.env.APP_PORT}`);
 });
 
 function createUrl(req, urlPath) {
@@ -188,7 +168,7 @@ function createUrl(req, urlPath) {
 }
 
 function log() {
-  var args = Array.prototype.slice.call(arguments);
+  const args = Array.prototype.slice.call(arguments);
   args[0] = logPrefix + args[0];
   console.log.apply(console, args);
 }

@@ -11,31 +11,31 @@ require('../../../../')({
   }
 });
 
-var elasticsearch = require('elasticsearch');
-var bodyParser = require('body-parser');
-var request = require('request-promise-native');
-var express = require('express');
-var app = express();
+const elasticsearch = require('elasticsearch');
+const bodyParser = require('body-parser');
+const request = require('request-promise-native');
+const express = require('express');
+const app = express();
 
 app.use(bodyParser.json());
 
-var client = new elasticsearch.Client({
+const client = new elasticsearch.Client({
   host: process.env.ELASTICSEARCH,
   log: 'info'
 });
 
-app.get('/', function(req, res) {
+app.get('/', (req, res) => {
   res.sendStatus(200);
 });
 
-app.get('/get', function(req, res) {
+app.get('/get', (req, res) => {
   client.get(
     {
       index: req.query.index || 'myindex',
       type: 'mytype',
       id: req.query.id
     },
-    function(error, response) {
+    (error, response) => {
       if (error) {
         res.status(500).json(error);
       } else {
@@ -45,7 +45,7 @@ app.get('/get', function(req, res) {
   );
 });
 
-app.get('/search', function(req, res) {
+app.get('/search', (req, res) => {
   client
     .search({
       index: req.query.index || 'myindex',
@@ -53,17 +53,17 @@ app.get('/search', function(req, res) {
       q: req.query.q
     })
     .then(
-      function(response) {
+      response => {
         res.json(response);
       },
-      function(error) {
+      error => {
         res.status(500).json(error);
       }
     );
 });
 
-app.get('/mget1', function(req, res) {
-  var ids = req.query.id;
+app.get('/mget1', (req, res) => {
+  const ids = req.query.id;
   if (!Array.isArray(ids) || ids.length < 2) {
     return res.status(400).json({ error: 'You need to provide an array of at least two document IDs.' });
   }
@@ -76,7 +76,7 @@ app.get('/mget1', function(req, res) {
         ]
       }
     },
-    function(error, response) {
+    (error, response) => {
       if (error) {
         res.status(500).json(error);
       } else {
@@ -86,8 +86,8 @@ app.get('/mget1', function(req, res) {
   );
 });
 
-app.get('/mget2', function(req, res) {
-  var ids = req.query.id;
+app.get('/mget2', (req, res) => {
+  const ids = req.query.id;
   if (!Array.isArray(ids) || ids.length < 2) {
     return res.status(400).json({ error: 'You need to provide an array of at least two document IDs.' });
   }
@@ -96,10 +96,10 @@ app.get('/mget2', function(req, res) {
       index: req.query.index || 'myindex',
       type: 'mytype',
       body: {
-        ids: ids
+        ids
       }
     },
-    function(error, response) {
+    (error, response) => {
       if (error) {
         res.status(500).json(error);
       } else {
@@ -109,12 +109,12 @@ app.get('/mget2', function(req, res) {
   );
 });
 
-app.get('/msearch', function(req, res) {
-  var queryStrings = req.query.q;
+app.get('/msearch', (req, res) => {
+  const queryStrings = req.query.q;
   if (!Array.isArray(queryStrings) || queryStrings.length < 2) {
     return res.status(400).json({ error: 'You need to provide an array of at least two query params' });
   }
-  var query = {
+  const query = {
     body: [
       { index: req.query.index || 'myindex', type: 'mytype' },
       { query: { query_string: { query: req.query.q[0] } } },
@@ -123,77 +123,75 @@ app.get('/msearch', function(req, res) {
     ]
   };
   client.msearch(query).then(
-    function(response) {
+    response => {
       res.json(response);
     },
-    function(error) {
+    error => {
       res.status(500).json(error);
     }
   );
 });
 
-app.post('/index', function(req, res) {
+app.post('/index', (req, res) => {
   client
     .index({
       index: req.query.index || 'myindex',
       type: 'mytype',
       body: req.body
     })
-    .then(function(response) {
-      return client.indices
+    .then(response =>
+      client.indices
         .refresh({
           index: '_all',
           ignoreUnavailable: true,
           force: true
         })
         .then(
-          function() {
-            return response;
-          },
-          function(error) {
+          () => response,
+          error => {
             log('Index refresh failed.', error);
             throw error;
           }
-        );
-    })
+        )
+    )
     .then(
-      function(response) {
+      response => {
         res.json(response);
       },
-      function(error) {
+      error => {
         log('Sending indexing error.', error);
         res.status(500).json(error);
       }
     );
 });
 
-app.get('/searchAndGet', function(req, res) {
+app.get('/searchAndGet', (req, res) => {
   request({
     method: 'GET',
     url: 'http://google.com'
   })
-    .then(function() {
-      return client.search({
+    .then(() =>
+      client.search({
         index: req.query.index || 'myindex',
         type: 'mytype',
         q: req.query.q,
         ignoreUnavailable: true
-      });
-    })
-    .then(function(response) {
+      })
+    )
+    .then(response => {
       res.json(response);
     })
-    .catch(function(error) {
+    .catch(error => {
       res.status(500).json(error);
     });
 });
 
-app.delete('/database', function(req, res) {
+app.delete('/database', (req, res) => {
   client.indices
     .exists({
       index: req.query.index || 'myindex'
     })
-    .then(function(response) {
+    .then(response => {
       if (response === false) {
         return response;
       }
@@ -202,20 +200,20 @@ app.delete('/database', function(req, res) {
         index: req.query.index || 'myindex'
       });
     })
-    .then(function(response) {
+    .then(response => {
       res.json(response);
     })
-    .catch(function(error) {
+    .catch(error => {
       res.status(500).json(error);
     });
 });
 
-app.listen(process.env.APP_PORT, function() {
-  log('Listening on port: ' + process.env.APP_PORT);
+app.listen(process.env.APP_PORT, () => {
+  log(`Listening on port: ${process.env.APP_PORT}`);
 });
 
 function log() {
-  var args = Array.prototype.slice.call(arguments);
-  args[0] = 'Express / Elasticsearch (' + process.pid + '):\t' + args[0];
+  const args = Array.prototype.slice.call(arguments);
+  args[0] = `Express / Elasticsearch (${process.pid}):\t${args[0]}`;
   console.log.apply(console, args);
 }

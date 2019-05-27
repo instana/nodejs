@@ -2,22 +2,22 @@
 
 'use strict';
 
-var spawn = require('child_process').spawn;
-var request = require('request-promise');
-var path = require('path');
+const spawn = require('child_process').spawn;
+const request = require('request-promise');
+const path = require('path');
 
-var utils = require('../../../utils');
-var config = require('../../../config');
-var agentPort = require('../../../apps/agentStubControls').agentPort;
-var appPort = (exports.appPort = 3217);
+const utils = require('../../../utils');
+const config = require('../../../config');
+const agentPort = require('../../../apps/agentStubControls').agentPort;
+const appPort = (exports.appPort = 3217);
 
-var expressApp;
+let expressApp;
 
-exports.registerTestHooks = function(opts) {
-  beforeEach(function() {
+exports.registerTestHooks = opts => {
+  beforeEach(() => {
     opts = opts || {};
 
-    var env = Object.create(process.env);
+    const env = Object.create(process.env);
     env.AGENT_PORT = agentPort;
     env.APP_PORT = appPort;
     env.UPSTREAM_PORT = opts.upstreamPort;
@@ -25,37 +25,34 @@ exports.registerTestHooks = function(opts) {
 
     expressApp = spawn('node', [path.join(__dirname, 'app.js')], {
       stdio: config.getAppStdio(),
-      env: env
+      env
     });
 
     return waitUntilServerIsUp();
   });
 
-  afterEach(function() {
+  afterEach(() => {
     expressApp.kill();
   });
 };
 
 function waitUntilServerIsUp() {
-  return utils.retry(function() {
-    return request({
+  return utils.retry(() =>
+    request({
       method: 'GET',
-      url: 'http://127.0.0.1:' + appPort,
+      url: `http://127.0.0.1:${appPort}`,
       headers: {
         'X-INSTANA-L': '0'
       }
-    });
-  });
+    })
+  );
 }
 
-exports.getPid = function() {
-  return expressApp.pid;
-};
+exports.getPid = () => expressApp.pid;
 
-exports.sendRequest = function() {
-  return request({
+exports.sendRequest = () =>
+  request({
     method: 'GET',
-    url: 'http://127.0.0.1:' + appPort + '/getSomething',
+    url: `http://127.0.0.1:${appPort}/getSomething`,
     resolveWithFullResponse: true
   });
-};

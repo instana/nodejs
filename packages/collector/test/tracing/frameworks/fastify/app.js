@@ -10,10 +10,10 @@ require('../../../../')({
   }
 });
 
-var fastify = require('fastify');
+const fastify = require('fastify');
 
-var app = fastify();
-var logPrefix = 'Fastify (' + process.pid + '):\t';
+const app = fastify();
+const logPrefix = `Fastify (${process.pid}):\t`;
 
 app.get('/', ok);
 
@@ -72,7 +72,7 @@ const start = async () => {
 start();
 
 function log() {
-  var args = Array.prototype.slice.call(arguments);
+  const args = Array.prototype.slice.call(arguments);
   args[0] = logPrefix + args[0];
   console.log.apply(console, args);
 }

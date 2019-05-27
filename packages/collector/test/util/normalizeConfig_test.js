@@ -3,11 +3,11 @@
 
 'use strict';
 
-var expect = require('chai').expect;
+const expect = require('chai').expect;
 
-var normalizeConfig = require('../../src/util/normalizeConfig');
+const normalizeConfig = require('../../src/util/normalizeConfig');
 
-describe('util.normalizeConfig', function() {
+describe('util.normalizeConfig', () => {
   beforeEach(resetEnv);
   afterEach(resetEnv);
 
@@ -17,14 +17,14 @@ describe('util.normalizeConfig', function() {
     delete process.env['INSTANA_AGENT_NAME'];
   }
 
-  it('should apply all defaults', function() {
+  it('should apply all defaults', () => {
     checkDefaults(normalizeConfig());
     checkDefaults(normalizeConfig({}));
     checkDefaults(normalizeConfig({ unknowConfigOption: 13 }));
   });
 
-  it('should accept custom agent connection configuration', function() {
-    var config = normalizeConfig({
+  it('should accept custom agent connection configuration', () => {
+    const config = normalizeConfig({
       agentHost: 'LOKAL_HORST',
       agentPort: 1207,
       agentName: 'Joe'
@@ -34,19 +34,19 @@ describe('util.normalizeConfig', function() {
     expect(config.agentName).to.equal('Joe');
   });
 
-  it('should accept custom agent connection configuration from environment', function() {
+  it('should accept custom agent connection configuration from environment', () => {
     process.env['INSTANA_AGENT_HOST'] = 'yadayada';
     process.env['INSTANA_AGENT_PORT'] = '1357';
     process.env['INSTANA_AGENT_NAME'] = 'Cthulhu';
-    var config = normalizeConfig();
+    const config = normalizeConfig();
     expect(config.agentHost).to.equal('yadayada');
     expect(config.agentPort).to.equal(1357);
     expect(config.agentPort).to.be.a('number');
     expect(config.agentName).to.equal('Cthulhu');
   });
 
-  it('should custom stack trace length', function() {
-    var config = normalizeConfig({
+  it('should custom stack trace length', () => {
+    const config = normalizeConfig({
       tracing: {
         stackTraceLength: 7
       }
@@ -54,16 +54,16 @@ describe('util.normalizeConfig', function() {
     expect(config.tracing.stackTraceLength).to.equal(7);
   });
 
-  it('should enable reporting uncaught exceptions', function() {
-    var config = normalizeConfig({
+  it('should enable reporting uncaught exceptions', () => {
+    const config = normalizeConfig({
       reportUncaughtException: true
     });
     expect(config.reportUncaughtException).to.be.true;
     expect(config.reportUnhandledPromiseRejections).to.be.true;
   });
 
-  it('should enable uncaught exceptions but disable unhandled promises', function() {
-    var config = normalizeConfig({
+  it('should enable uncaught exceptions but disable unhandled promises', () => {
+    const config = normalizeConfig({
       reportUncaughtException: true,
       reportUnhandledPromiseRejections: false
     });
@@ -71,8 +71,8 @@ describe('util.normalizeConfig', function() {
     expect(config.reportUnhandledPromiseRejections).to.be.false;
   });
 
-  it('should enable disable unhandled promises only', function() {
-    var config = normalizeConfig({
+  it('should enable disable unhandled promises only', () => {
+    const config = normalizeConfig({
       reportUnhandledPromiseRejections: true
     });
     expect(config.reportUncaughtException).to.be.false;

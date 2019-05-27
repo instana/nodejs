@@ -1,9 +1,11 @@
 /* eslint-disable no-console, strict */
 
-var agentPort = process.env.AGENT_PORT;
+'use strict';
 
-var instana = require('../../../../')({
-  agentPort: agentPort,
+const agentPort = process.env.AGENT_PORT;
+
+const instana = require('../../../../')({
+  agentPort,
   level: 'warn',
   tracing: {
     enabled: process.env.TRACING_ENABLED === 'true',
@@ -11,19 +13,19 @@ var instana = require('../../../../')({
   }
 });
 
-var amqp = require('amqplib/callback_api');
-var a = require('async');
-var request = require('request-promise');
-var bail = require('./amqpUtil').bail;
-var exchange = require('./amqpUtil').exchange;
-var queueName = require('./amqpUtil').queueName;
-var queueNameGet = require('./amqpUtil').queueNameGet;
-var queueNameConfirm = require('./amqpUtil').queueNameConfirm;
-var queueForExchangeName;
+const amqp = require('amqplib/callback_api');
+const a = require('async');
+const request = require('request-promise');
+const bail = require('./amqpUtil').bail;
+const exchange = require('./amqpUtil').exchange;
+const queueName = require('./amqpUtil').queueName;
+const queueNameGet = require('./amqpUtil').queueNameGet;
+const queueNameConfirm = require('./amqpUtil').queueNameConfirm;
+let queueForExchangeName;
 
 // callback based amqp consumer
 function consumer(conn) {
-  var ok = conn.createChannel(onOpen);
+  const ok = conn.createChannel(onOpen);
   if (!ok) {
     return bail(new Error('Could not create channel'));
   }
@@ -34,56 +36,56 @@ function consumer(conn) {
 
     a.waterfall(
       [
-        function(cb) {
+        cb => {
           // set up exchange (for publish)
-          channel.assertExchange(exchange, 'fanout', { durable: false }, function(err) {
+          channel.assertExchange(exchange, 'fanout', { durable: false }, err => {
             cb(err);
           });
         },
-        function(cb) {
+        cb => {
           // queue for exchange (for publish)
-          channel.assertQueue('', { exclusive: true, durable: false }, function(err, queueForExchange) {
+          channel.assertQueue('', { exclusive: true, durable: false }, (err, queueForExchange) => {
             cb(err, queueForExchange);
           });
         },
-        function(queueForExchange, cb) {
+        (queueForExchange, cb) => {
           // bind exchange and queue
           queueForExchangeName = queueForExchange.queue;
-          channel.bindQueue(queueForExchangeName, exchange, '', null, function(err) {
+          channel.bindQueue(queueForExchangeName, exchange, '', null, err => {
             cb(err);
           });
         },
-        function(cb) {
+        cb => {
           // stand alone queue (for sendToQueue)
-          channel.assertQueue(queueName, { durable: false }, function(err) {
+          channel.assertQueue(queueName, { durable: false }, err => {
             cb(err);
           });
         },
-        function(cb) {
+        cb => {
           // stand alone queue (for get)
-          channel.assertQueue(queueNameGet, { durable: false, noAck: true }, function(err) {
+          channel.assertQueue(queueNameGet, { durable: false, noAck: true }, err => {
             cb(err);
           });
         }
       ],
-      function(err) {
+      err => {
         if (err) {
           return bail(err);
         }
         log('amqp connection established');
-        channel.consume(queueForExchangeName, function(msg) {
-          var span = instana.currentSpan();
+        channel.consume(queueForExchangeName, msg => {
+          const span = instana.currentSpan();
           span.disableAutoEnd();
           if (msg !== null) {
             log(msg.content.toString());
             // simulating asynchronous follow up steps with setTimeout and request-promise
-            setTimeout(function() {
-              request('http://127.0.0.1:' + agentPort)
-                .then(function() {
+            setTimeout(() => {
+              request(`http://127.0.0.1:${agentPort}`)
+                .then(() => {
                   span.end();
                   channel.ack(msg);
                 })
-                .catch(function(err2) {
+                .catch(err2 => {
                   log(err2);
                   span.end(1);
                   channel.nack(msg);
@@ -91,19 +93,19 @@ function consumer(conn) {
             }, 100);
           }
         });
-        channel.consume(queueName, function(msg) {
-          var span = instana.currentSpan();
+        channel.consume(queueName, msg => {
+          const span = instana.currentSpan();
           span.disableAutoEnd();
           if (msg !== null) {
             log(msg.content.toString());
             // simulating asynchronous follow up steps with setTimeout and request-promise
-            setTimeout(function() {
-              request('http://127.0.0.1:' + agentPort)
-                .then(function() {
+            setTimeout(() => {
+              request(`http://127.0.0.1:${agentPort}`)
+                .then(() => {
                   span.end();
                   channel.ack(msg);
                 })
-                .catch(function(err3) {
+                .catch(err3 => {
                   log(err3);
                   span.end(1);
                   channel.nack(msg);
@@ -112,38 +114,40 @@ function consumer(conn) {
           }
         });
         // poll a queue via get
-        setInterval(function() {
-          return channel.get(queueNameGet, null, function(e, msg) {
-            if (e) {
-              return log('Error during channel#get', e);
-            }
-            if (msg) {
-              log('[channel#get] ', msg.content.toString());
-              var span = instana.currentSpan();
-              span.disableAutoEnd();
-              // simulating asynchronous follow up steps with setTimeout and request-promise
-              setTimeout(function() {
-                request('http://127.0.0.1:' + agentPort)
-                  .then(function() {
-                    span.end();
-                    channel.ack(msg);
-                  })
-                  .catch(function(e2) {
-                    log(e2);
-                    span.end(1);
-                    channel.nack(msg);
-                  });
-              }, 100);
-            }
-          });
-        }, 500);
+        setInterval(
+          () =>
+            channel.get(queueNameGet, null, (e, msg) => {
+              if (e) {
+                return log('Error during channel#get', e);
+              }
+              if (msg) {
+                log('[channel#get] ', msg.content.toString());
+                const span = instana.currentSpan();
+                span.disableAutoEnd();
+                // simulating asynchronous follow up steps with setTimeout and request-promise
+                setTimeout(() => {
+                  request(`http://127.0.0.1:${agentPort}`)
+                    .then(() => {
+                      span.end();
+                      channel.ack(msg);
+                    })
+                    .catch(e2 => {
+                      log(e2);
+                      span.end(1);
+                      channel.nack(msg);
+                    });
+                }, 100);
+              }
+            }),
+          500
+        );
       }
     ); // a.waterfall
   }
 }
 
 function consumerConfirm(conn) {
-  var ok = conn.createConfirmChannel(onOpen);
+  const ok = conn.createConfirmChannel(onOpen);
   if (!ok) {
     return bail(new Error('Could not create confirm channel'));
   }
@@ -154,30 +158,30 @@ function consumerConfirm(conn) {
 
     a.waterfall(
       [
-        function(cb) {
-          channel.assertQueue(queueNameConfirm, { durable: false }, function(err) {
+        cb => {
+          channel.assertQueue(queueNameConfirm, { durable: false }, err => {
             cb(err);
           });
         }
       ],
-      function(err) {
+      err => {
         if (err) {
           return bail(err);
         }
         log('amqp connection (confirm) established');
-        channel.consume(queueNameConfirm, function(msg) {
-          var span = instana.currentSpan();
+        channel.consume(queueNameConfirm, msg => {
+          const span = instana.currentSpan();
           span.disableAutoEnd();
           if (msg !== null) {
             log(msg.content.toString());
             // simulating asynchronous follow up steps with setTimeout and request-promise
-            setTimeout(function() {
-              request('http://127.0.0.1:' + agentPort)
-                .then(function() {
+            setTimeout(() => {
+              request(`http://127.0.0.1:${agentPort}`)
+                .then(() => {
                   span.end();
                   channel.ack(msg);
                 })
-                .catch(function(e2) {
+                .catch(e2 => {
                   log(e2);
                   span.end(1);
                   channel.nack(msg);
@@ -190,7 +194,7 @@ function consumerConfirm(conn) {
   }
 }
 
-amqp.connect('amqp://localhost', function(err, conn) {
+amqp.connect('amqp://localhost', (err, conn) => {
   if (err != null) {
     return bail(err);
   }
@@ -199,7 +203,7 @@ amqp.connect('amqp://localhost', function(err, conn) {
 });
 
 function log() {
-  var args = Array.prototype.slice.call(arguments);
-  args[0] = 'RabbitMQ Consumer/Callbacks (' + process.pid + '):\t' + args[0];
+  const args = Array.prototype.slice.call(arguments);
+  args[0] = `RabbitMQ Consumer/Callbacks (${process.pid}):\t${args[0]}`;
   console.log.apply(console, args);
 }

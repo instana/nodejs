@@ -2,23 +2,23 @@
 
 'use strict';
 
-var expect = require('chai').expect;
+const expect = require('chai').expect;
 
-var utils = require('../utils');
-var memory = require('../../src/metrics/memory');
+const utils = require('../utils');
+const memory = require('../../src/metrics/memory');
 
-describe('metrics.memory', function() {
-  afterEach(function() {
+describe('metrics.memory', () => {
+  afterEach(() => {
     memory.deactivate();
   });
 
-  it('should export a memory payload prefix', function() {
+  it('should export a memory payload prefix', () => {
     expect(memory.payloadPrefix).to.equal('memory');
   });
 
-  it('should provide memory information', function() {
+  it('should provide memory information', () => {
     memory.activate();
-    var p = memory.currentPayload;
+    const p = memory.currentPayload;
     expect(p.rss).to.be.a('number');
     expect(p.heapTotal).to.be.a('number');
     expect(p.heapUsed).to.be.a('number');
@@ -26,18 +26,18 @@ describe('metrics.memory', function() {
 
   // Test is too fragile (especially for CI environments) and should only be used locally
   // to verify the behavior from time to time.
-  it.skip('should update memory information after 1s', function() {
+  it.skip('should update memory information after 1s', () => {
     memory.activate();
-    var previousPayload = memory.currentPayload;
+    const previousPayload = memory.currentPayload;
 
     // generate some garbage so that memory information changes
-    var garbage = [];
-    for (var i = 0; i < 100; i++) {
+    const garbage = [];
+    for (let i = 0; i < 100; i++) {
       garbage.push(new Date());
     }
 
-    return utils.retry(function() {
-      var newPayload = memory.currentPayload;
+    return utils.retry(() => {
+      const newPayload = memory.currentPayload;
       expect(newPayload.heapUsed).to.be.gt(previousPayload.heapUsed);
     });
   });

@@ -14,9 +14,9 @@ function getInt(key) {
   if (process.env[key] == null) {
     return null;
   }
-  var val = parseInt(process.env[key], 10);
+  const val = parseInt(process.env[key], 10);
   if (isNaN(val)) {
-    console.log('Cannot parse ' + key + ' value: ' + process.env[key]);
+    console.log(`Cannot parse ${key} value: ${process.env[key]}`);
     return null;
   }
   return val;

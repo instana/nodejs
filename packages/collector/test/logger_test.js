@@ -3,18 +3,18 @@
 
 'use strict';
 
-var expect = require('chai').expect;
-var bunyan = require('bunyan');
-var semver = require('semver');
-var pino;
+const expect = require('chai').expect;
+const bunyan = require('bunyan');
+const semver = require('semver');
+let pino;
 if (semver.gte(process.versions.node, '6.0.0')) {
   // pino needs Node.js >= 6
   pino = require('pino');
 }
 
-var log = require('../src/logger');
+const log = require('../src/logger');
 
-describe('logger', function() {
+describe('logger', () => {
   beforeEach(resetEnv);
   afterEach(resetEnv);
 
@@ -23,100 +23,100 @@ describe('logger', function() {
     delete process.env['INSTANA_DEBUG'];
   }
 
-  it('should return the default parent logger if no config is available', function() {
+  it('should return the default parent logger if no config is available', () => {
     log.init({});
-    var logger = log.getLogger('myLogger');
+    const logger = log.getLogger('myLogger');
     expect(logger).to.be.an.instanceOf(bunyan);
   });
 
-  it('should return a child logger if requested', function() {
+  it('should return a child logger if requested', () => {
     log.init({});
-    var logger = log.getLogger('childName');
+    const logger = log.getLogger('childName');
     expect(logger).to.be.an.instanceOf(bunyan);
     expect(logger.fields).to.have.property('module');
     expect(logger.fields.module).to.equal('childName');
   });
 
-  it('should use the parent logger if defined', function() {
-    var logger = bunyan.createLogger({ name: 'myParentLogger' });
-    log.init({ logger: logger });
-    var childLogger = log.getLogger('childName');
+  it('should use the parent logger if defined', () => {
+    const logger = bunyan.createLogger({ name: 'myParentLogger' });
+    log.init({ logger });
+    const childLogger = log.getLogger('childName');
 
     expect(logger).to.be.an.instanceOf(bunyan);
     expect(childLogger.fields).to.have.property('module');
     expect(childLogger.fields.module).to.equal('childName');
   });
 
-  it('should add child logger to defined parent', function() {
+  it('should add child logger to defined parent', () => {
     log.init({ logger: bunyan.createLogger({ name: 'myParentLogger' }) });
-    var logger = log.getLogger('childName');
+    const logger = log.getLogger('childName');
 
     expect(logger.fields).to.have.property('module');
     expect(logger.fields.module).to.equal('childName');
   });
 
-  it('should use default log level if not defined', function() {
+  it('should use default log level if not defined', () => {
     log.init({ logger: bunyan.createLogger({ name: 'myParentLogger' }) });
-    var logger = log.getLogger('childName');
+    const logger = log.getLogger('childName');
 
     expect(logger.level()).to.equal(30);
   });
 
-  it('should use defined log level', function() {
+  it('should use defined log level', () => {
     log.init({ level: 'error', logger: bunyan.createLogger({ name: 'myParentLogger' }) });
-    var logger = log.getLogger('childName');
+    const logger = log.getLogger('childName');
 
     expect(logger.level()).to.equal(50);
   });
 
-  it('should use log level from env var', function() {
+  it('should use log level from env var', () => {
     process.env['INSTANA_LOG_LEVEL'] = 'warn';
     log.init({});
-    var logger = log.getLogger('childName');
+    const logger = log.getLogger('childName');
     expect(logger.level()).to.equal(40);
   });
 
-  it('should use debug log level when INSTANA_DEBUG is set', function() {
+  it('should use debug log level when INSTANA_DEBUG is set', () => {
     process.env['INSTANA_DEBUG'] = 'true';
     log.init({});
-    var logger = log.getLogger('childName');
+    const logger = log.getLogger('childName');
     expect(logger.level()).to.equal(20);
   });
 
-  it('should not detect pino as bunyan', function() {
+  it('should not detect pino as bunyan', () => {
     if (!pino) {
       // This test is skipped in Node.js 4 since pino only supports Node.js >= 6.
       return;
     }
-    var pinoLogger = pino();
+    const pinoLogger = pino();
     log.init({ logger: pinoLogger });
-    var logger = log.getLogger('myLogger');
+    const logger = log.getLogger('myLogger');
     expect(logger).to.not.be.an.instanceOf(bunyan);
     expect(logger.constructor.name).to.equal('Pino');
   });
 
-  it('should create a child logger for pino', function() {
+  it('should create a child logger for pino', () => {
     if (!pino) {
       // This test is skipped in Node.js 4 since pino only supports Node.js >= 6.
       return;
     }
-    var pinoLogger = pino();
+    const pinoLogger = pino();
     log.init({ logger: pinoLogger });
-    var logger = log.getLogger('myLogger');
+    const logger = log.getLogger('myLogger');
     expect(logger === pinoLogger).to.be.not.true;
   });
 
-  it('should not accept non-bunyan loggers without necessary logging functions', function() {
-    var nonBunyanLogger = {};
+  it('should not accept non-bunyan loggers without necessary logging functions', () => {
+    const nonBunyanLogger = {};
 
     log.init({ logger: nonBunyanLogger });
 
-    var logger = log.getLogger('myLogger');
+    const logger = log.getLogger('myLogger');
     expect(logger).to.be.an.instanceOf(bunyan);
   });
 
-  it('should accept non-bunyan loggers with necessary logging functions', function() {
-    var nonBunyanLogger = {
+  it('should accept non-bunyan loggers with necessary logging functions', () => {
+    const nonBunyanLogger = {
       debug: function() {},
       info: function() {},
       warn: function() {},
@@ -125,15 +125,15 @@ describe('logger', function() {
 
     log.init({ logger: nonBunyanLogger });
 
-    var logger = log.getLogger('myLogger');
+    const logger = log.getLogger('myLogger');
     expect(logger).not.to.be.an.instanceOf(bunyan);
   });
 
-  it('should reset loggers when the logger is set after initialization', function() {
+  it('should reset loggers when the logger is set after initialization', () => {
     log.init({});
-    var reInitCalled = false;
-    var logger;
-    logger = log.getLogger('myLogger', function(newLogger) {
+    let reInitCalled = false;
+    let logger;
+    logger = log.getLogger('myLogger', newLogger => {
       reInitCalled = true;
       logger = newLogger;
     });
@@ -141,9 +141,9 @@ describe('logger', function() {
     // first getLogger call should yield the default bunyan logger
     expect(logger).to.be.an.instanceOf(bunyan);
     expect(logger.fields.name).to.equal('@instana/collector');
-    var originalLogger = logger;
+    const originalLogger = logger;
 
-    var logger2 = bunyan.createLogger({ name: 'new-logger' });
+    const logger2 = bunyan.createLogger({ name: 'new-logger' });
     log.init({ logger: logger2 }, true);
 
     expect(reInitCalled).to.be.true;
@@ -152,15 +152,15 @@ describe('logger', function() {
     expect(logger.fields.name).to.equal('new-logger');
   });
 
-  it('should not choke on re-initialization when there is no reInit callback', function() {
+  it('should not choke on re-initialization when there is no reInit callback', () => {
     log.init({});
-    var logger = log.getLogger('myLogger');
+    const logger = log.getLogger('myLogger');
 
     // first getLogger call should yield the default bunyan logger
     expect(logger).to.be.an.instanceOf(bunyan);
     expect(logger.fields.name).to.equal('@instana/collector');
 
-    var logger2 = bunyan.createLogger({ name: 'new-logger' });
+    const logger2 = bunyan.createLogger({ name: 'new-logger' });
     log.init({ logger: logger2 });
   });
 });

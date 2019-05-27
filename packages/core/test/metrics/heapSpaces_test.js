@@ -2,11 +2,11 @@
 
 'use strict';
 
-var expect = require('chai').expect;
-var proxyquire = require('proxyquire');
-var sinon = require('sinon');
+const expect = require('chai').expect;
+const proxyquire = require('proxyquire');
+const sinon = require('sinon');
 
-var doesV8ModuleExist;
+let doesV8ModuleExist;
 try {
   require('v8');
   doesV8ModuleExist = true;
@@ -14,28 +14,28 @@ try {
   doesV8ModuleExist = false;
 }
 
-describe('metrics.heapSpaces', function() {
-  var v8;
-  var heapSpaces;
+describe('metrics.heapSpaces', () => {
+  let v8;
+  let heapSpaces;
 
-  beforeEach(function() {
+  beforeEach(() => {
     v8 = {
       getHeapSpaceStatistics: sinon.stub()
     };
     heapSpaces = proxyquire('../../src/metrics/heapSpaces', {
-      v8: v8
+      v8
     });
   });
 
-  afterEach(function() {
+  afterEach(() => {
     heapSpaces.deactivate();
   });
 
-  it('should export a heapSpaces payload prefix', function() {
+  it('should export a heapSpaces payload prefix', () => {
     expect(heapSpaces.payloadPrefix).to.equal('heapSpaces');
   });
 
-  it('should not fail when the collector is activated in old Node versions', function() {
+  it('should not fail when the collector is activated in old Node versions', () => {
     delete v8.getHeapSpaceStatistics;
 
     heapSpaces.activate();
@@ -44,7 +44,7 @@ describe('metrics.heapSpaces', function() {
   });
 
   if (doesV8ModuleExist) {
-    it('should gather heap space data', function() {
+    it('should gather heap space data', () => {
       v8.getHeapSpaceStatistics.returns([
         {
           space_name: 'new_space',

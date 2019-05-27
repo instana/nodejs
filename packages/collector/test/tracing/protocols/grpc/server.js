@@ -2,11 +2,11 @@
 
 'use strict';
 
-var port = process.env.APP_PORT || 3217;
-var agentPort = process.env.AGENT_PORT;
+const port = process.env.APP_PORT || 3217;
+const agentPort = process.env.AGENT_PORT;
 
 require('../../../../')({
-  agentPort: agentPort,
+  agentPort,
   level: 'warn',
   tracing: {
     forceTransmissionStartingAt: 1
@@ -14,28 +14,28 @@ require('../../../../')({
 });
 
 // pino log spans are used to verify that follow up calls are traced correctly after a GRPC exit
-var pinoLogger = require('pino')();
-var express = require('express');
-var morgan = require('morgan');
-var path = require('path');
-var app = express();
+const pinoLogger = require('pino')();
+const express = require('express');
+const morgan = require('morgan');
+const path = require('path');
+const app = express();
 
-var STATIC = !!process.env.GRPC_STATIC;
-var PACKAGE_VERSION = require('./versionUnderTest')();
-var PROTO_PATH = path.join(__dirname, 'protos/test.proto');
-var logPrefix = 'GRPC Server (' + process.pid + '):\t';
+const STATIC = !!process.env.GRPC_STATIC;
+const PACKAGE_VERSION = require('./versionUnderTest')();
+const PROTO_PATH = path.join(__dirname, 'protos/test.proto');
+const logPrefix = `GRPC Server (${process.pid}):\t`;
 
-var messages;
-var server;
+let messages;
+let server;
 
-var dynamicServerDef = {
+const dynamicServerDef = {
   makeUnaryCall: unaryCall,
   startServerSideStreaming: serverSideStreaming(false),
   startClientSideStreaming: clientSideStreaming,
   startBidiStreaming: bidiStreaming
 };
 
-var staticServerDef = {
+const staticServerDef = {
   makeUnaryCall: unaryCall,
   startServerSideStreaming: serverSideStreaming(true),
   startClientSideStreaming: clientSideStreaming,
@@ -58,7 +58,7 @@ switch (PACKAGE_VERSION) {
     }
     break;
   default:
-    throw new Error('Unsupported API version: ' + PACKAGE_VERSION);
+    throw new Error(`Unsupported API version: ${PACKAGE_VERSION}`);
 }
 
 /**
@@ -67,8 +67,8 @@ switch (PACKAGE_VERSION) {
 function runDynamicLegacyServer() {
   log('Running dynamic legacy GRPC server.');
 
-  var grpc = require('grpc');
-  var testProto = grpc.load(PROTO_PATH).instana.node.grpc.test;
+  const grpc = require('grpc');
+  const testProto = grpc.load(PROTO_PATH).instana.node.grpc.test;
 
   function main() {
     server = new grpc.Server();
@@ -87,9 +87,9 @@ function runStaticLegacyServer() {
   log('Running static legacy GRPC server.');
 
   messages = require('./test_pb');
-  var services = require('./test_grpc_pb');
+  const services = require('./test_grpc_pb');
 
-  var grpc = require('grpc');
+  const grpc = require('grpc');
 
   function main() {
     server = new grpc.Server();
@@ -107,16 +107,16 @@ function runStaticLegacyServer() {
 function runDynamicModernServer() {
   log('Running dynamic modern GRPC server.');
 
-  var grpc = require('grpc');
-  var protoLoader = require('@grpc/proto-loader');
-  var packageDefinition = protoLoader.loadSync(PROTO_PATH, {
+  const grpc = require('grpc');
+  const protoLoader = require('@grpc/proto-loader');
+  const packageDefinition = protoLoader.loadSync(PROTO_PATH, {
     keepCase: true,
     longs: String,
     enums: String,
     defaults: true,
     oneofs: true
   });
-  var testProto = grpc.loadPackageDefinition(packageDefinition).instana.node.grpc.test;
+  const testProto = grpc.loadPackageDefinition(packageDefinition).instana.node.grpc.test;
 
   function main() {
     server = new grpc.Server();
@@ -135,9 +135,9 @@ function runStaticModernServer() {
   log('Running static modern GRPC server.');
 
   messages = require('./test_pb');
-  var services = require('./test_grpc_pb');
+  const services = require('./test_grpc_pb');
 
-  var grpc = require('grpc');
+  const grpc = require('grpc');
 
   function main() {
     server = new grpc.Server();
@@ -151,7 +151,7 @@ function runStaticModernServer() {
 
 function unaryCall(call, callback) {
   if (callWantsError(call)) {
-    var error = new Error('Boom!');
+    const error = new Error('Boom!');
     pinoLogger.error(error);
     callback(error);
   } else {
@@ -161,7 +161,7 @@ function unaryCall(call, callback) {
 }
 
 function serverSideStreaming(isStatic) {
-  return function(call) {
+  return call => {
     // write some data unconditionally
     call.write(replyForCall(call));
     call.write(createReply('streaming', isStatic));
@@ -170,7 +170,7 @@ function serverSideStreaming(isStatic) {
       pinoLogger.warn('/server-stream');
       call.write(createReply('please cancel', isStatic));
     } else if (callWantsError(call)) {
-      var error = new Error('Boom!');
+      const error = new Error('Boom!');
       pinoLogger.error(error);
       call.emit('error', error);
     } else {
@@ -183,22 +183,22 @@ function serverSideStreaming(isStatic) {
 }
 
 function clientSideStreaming(call, callback) {
-  var requests = [];
-  var hadError = false;
-  var isStatic = false;
-  call.on('data', function(request) {
+  const requests = [];
+  let hadError = false;
+  let isStatic = false;
+  call.on('data', request => {
     isStatic = isRequestStatic(request);
     if (requestWantsError(request)) {
       hadError = true;
-      var error = new Error('Boom!');
+      const error = new Error('Boom!');
       pinoLogger.error(error);
       return callback(error);
     }
     requests.push(request);
   });
-  call.on('end', function() {
+  call.on('end', () => {
     if (!hadError) {
-      var replyMessage = requests.map(getParameterFrom).join('; ');
+      const replyMessage = requests.map(getParameterFrom).join('; ');
       pinoLogger.warn('/client-stream');
       callback(null, createReply(replyMessage, isStatic));
     }
@@ -206,15 +206,15 @@ function clientSideStreaming(call, callback) {
 }
 
 function bidiStreaming(call) {
-  var receivedCounter = 0;
-  var hadError = false;
-  call.on('data', function(request) {
+  let receivedCounter = 0;
+  let hadError = false;
+  call.on('data', request => {
     if (requestWantsCancel(request)) {
       pinoLogger.warn('/bidi-stream');
       call.write(createReply('please cancel', isRequestStatic(request)));
     } else if (requestWantsError(request)) {
       hadError = true;
-      var error = new Error('Boom!');
+      const error = new Error('Boom!');
       pinoLogger.error(error);
       call.emit('error', error);
     } else {
@@ -224,7 +224,7 @@ function bidiStreaming(call) {
       }
     }
   });
-  call.on('end', function() {
+  call.on('end', () => {
     if (!hadError) {
       pinoLogger.warn('/bidi-stream');
       call.end();
@@ -237,21 +237,21 @@ function replyForCall(call) {
 }
 
 function replyForRequest(call, request) {
-  var replyMessage = 'received: ' + getParameterFrom(request);
-  var metadataContent = call.metadata.get('test-metadata');
+  let replyMessage = `received: ${getParameterFrom(request)}`;
+  const metadataContent = call.metadata.get('test-metadata');
   if (metadataContent && metadataContent.length && metadataContent.length > 0) {
-    replyMessage += ' & ' + metadataContent[0];
+    replyMessage += ` & ${metadataContent[0]}`;
   }
   return createReply(replyMessage, isRequestStatic(request));
 }
 
 function createReply(message, isStatic) {
   if (isStatic) {
-    var reply = new messages.TestReply();
+    const reply = new messages.TestReply();
     reply.setMessage(message);
     return reply;
   } else {
-    return { message: message };
+    return { message };
   }
 }
 
@@ -284,19 +284,19 @@ function requestWantsError(request) {
 }
 
 if (process.env.WITH_STDOUT) {
-  app.use(morgan(logPrefix + ':method :url :status'));
+  app.use(morgan(`${logPrefix}:method :url :status`));
 }
 
-app.get('/', function(req, res) {
+app.get('/', (req, res) => {
   res.send('OK');
 });
 
-app.listen(port, function() {
-  log('Listening on port: ' + port);
+app.listen(port, () => {
+  log(`Listening on port: ${port}`);
 });
 
 function log() {
-  var args = Array.prototype.slice.call(arguments);
-  args[0] = 'GRPC Server (' + process.pid + '):\t' + args[0];
+  const args = Array.prototype.slice.call(arguments);
+  args[0] = `GRPC Server (${process.pid}):\t${args[0]}`;
   console.log.apply(console, args);
 }

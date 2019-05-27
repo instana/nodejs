@@ -1,26 +1,26 @@
 'use strict';
 
-var chai = require('chai');
-var expect = chai.expect;
+const chai = require('chai');
+const expect = chai.expect;
 
-var supportedVersion = require('@instana/core').tracing.supportedVersion;
-var config = require('../config');
-var utils = require('../utils');
+const supportedVersion = require('@instana/core').tracing.supportedVersion;
+const config = require('../config');
+const utils = require('../utils');
 
 describe('unhandled promise rejections', function() {
   if (!supportedVersion(process.versions.node)) {
     return;
   }
 
-  var agentControls = require('../apps/agentStubControls');
-  var ServerControls = require('./apps/serverControls');
+  const agentControls = require('../apps/agentStubControls');
+  const ServerControls = require('./apps/serverControls');
 
   this.timeout(config.getTestTimeout());
 
   agentControls.registerTestHooks();
 
-  var serverControls = new ServerControls({
-    agentControls: agentControls,
+  const serverControls = new ServerControls({
+    agentControls,
     dontKillInAfterHook: false,
     env: {
       ENABLE_REPORT_UNCAUGHT_EXCEPTION: false,
@@ -29,19 +29,19 @@ describe('unhandled promise rejections', function() {
   });
   serverControls.registerTestHooks();
 
-  it('must not interfere with tracing', function() {
-    return serverControls
+  it('must not interfere with tracing', () =>
+    serverControls
       .sendRequest({
         method: 'GET',
         path: '/reject',
         simple: false,
         resolveWithFullResponse: true
       })
-      .then(function(response) {
+      .then(response => {
         expect(response.body).to.equal('Rejected.');
-        return utils.retry(function() {
-          return agentControls.getSpans().then(function(spans) {
-            utils.expectOneMatching(spans, function(span) {
+        return utils.retry(() =>
+          agentControls.getSpans().then(spans => {
+            utils.expectOneMatching(spans, span => {
               expect(span.n).to.equal('node.http.server');
               expect(span.f.e).to.equal(String(serverControls.getPid()));
               expect(span.f.h).to.equal('agent-stub-uuid');
@@ -49,24 +49,23 @@ describe('unhandled promise rejections', function() {
               expect(span.ec).to.equal(0);
               expect(span.stack).to.be.empty;
             });
-          });
-        });
-      });
-  });
+          })
+        );
+      }));
 
-  it('must be reported as an issue', function() {
-    return serverControls
+  it('must be reported as an issue', () =>
+    serverControls
       .sendRequest({
         method: 'GET',
         path: '/reject',
         simple: false,
         resolveWithFullResponse: true
       })
-      .then(function(response) {
+      .then(response => {
         expect(response.body).to.equal('Rejected.');
-        return utils.retry(function() {
-          return agentControls.getEvents().then(function(events) {
-            utils.expectOneMatching(events, function(event) {
+        return utils.retry(() =>
+          agentControls.getEvents().then(events => {
+            utils.expectOneMatching(events, event => {
               expect(event.title).to.equal('An unhandled promise rejection occured in a Node.js process.');
               expect(event.text).to.contain('Unhandled Promise Rejection');
               expect(event.plugin).to.equal('com.instana.forge.infrastructure.runtime.nodejs.NodeJsRuntimePlatform');
@@ -75,8 +74,7 @@ describe('unhandled promise rejections', function() {
               expect(event.duration).to.equal(1);
               expect(event.severity).to.equal(5);
             });
-          });
-        });
-      });
-  });
+          })
+        );
+      }));
 });

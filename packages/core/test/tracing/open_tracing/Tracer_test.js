@@ -1,27 +1,27 @@
 'use strict';
 
-var opentracing = require('opentracing');
-var Tracer = require('../../../src/tracing/opentracing/Tracer');
-var expect = require('chai').expect;
+const opentracing = require('opentracing');
+const Tracer = require('../../../src/tracing/opentracing/Tracer');
+const expect = require('chai').expect;
 
-describe('tracing/opentracing/Tracer', function() {
-  var tracer;
-  var span;
+describe('tracing/opentracing/Tracer', () => {
+  let tracer;
+  let span;
 
-  beforeEach(function() {
+  beforeEach(() => {
     tracer = new Tracer(true);
     span = tracer.startSpan('rpc');
   });
 
-  describe('serialization formats', function() {
-    var carrier;
+  describe('serialization formats', () => {
+    let carrier;
 
-    beforeEach(function() {
+    beforeEach(() => {
       carrier = {};
     });
 
-    describe('inject', function() {
-      it('must inject text map context', function() {
+    describe('inject', () => {
+      it('must inject text map context', () => {
         tracer.inject(span, opentracing.FORMAT_TEXT_MAP, carrier);
         expect(carrier).to.deep.equal({
           'x-instana-t': span.span.t,
@@ -30,7 +30,7 @@ describe('tracing/opentracing/Tracer', function() {
         });
       });
 
-      it('must inject varying log levels', function() {
+      it('must inject varying log levels', () => {
         span.setTag(opentracing.Tags.SAMPLING_PRIORITY, 0.5);
         tracer.inject(span, opentracing.FORMAT_TEXT_MAP, carrier);
         expect(carrier).to.deep.equal({
@@ -40,8 +40,8 @@ describe('tracing/opentracing/Tracer', function() {
         });
       });
 
-      it('must respect span hierarchy', function() {
-        var child = tracer.startSpan('oauth', {
+      it('must respect span hierarchy', () => {
+        const child = tracer.startSpan('oauth', {
           childOf: span
         });
         tracer.inject(child, opentracing.FORMAT_TEXT_MAP, carrier);
@@ -52,7 +52,7 @@ describe('tracing/opentracing/Tracer', function() {
         });
       });
 
-      it('must include baggage items in serialized context', function() {
+      it('must include baggage items in serialized context', () => {
         span.setBaggageItem('foo', 'bar');
         tracer.inject(span, opentracing.FORMAT_TEXT_MAP, carrier);
         expect(carrier).to.deep.equal({
@@ -63,7 +63,7 @@ describe('tracing/opentracing/Tracer', function() {
         });
       });
 
-      it('must url encode values', function() {
+      it('must url encode values', () => {
         span.setBaggageItem('foo', 'bar & blub');
         tracer.inject(span, opentracing.FORMAT_HTTP_HEADERS, carrier);
         expect(carrier).to.deep.equal({
@@ -74,14 +74,14 @@ describe('tracing/opentracing/Tracer', function() {
         });
       });
 
-      it('must not fail when requesting unknown or unsupported serialization formats', function() {
+      it('must not fail when requesting unknown or unsupported serialization formats', () => {
         tracer.inject(span, opentracing.FORMAT_BINARY, carrier);
         expect(carrier).to.deep.equal({});
       });
     });
 
-    describe('extract', function() {
-      beforeEach(function() {
+    describe('extract', () => {
+      beforeEach(() => {
         carrier = {
           'x-instana-t': 'aTraceId',
           'x-instana-s': 'aSpanId',
@@ -90,8 +90,8 @@ describe('tracing/opentracing/Tracer', function() {
         };
       });
 
-      it('must extract carrier object into span context and use it for new span', function() {
-        var spanContext = tracer.extract(opentracing.FORMAT_HTTP_HEADERS, carrier);
+      it('must extract carrier object into span context and use it for new span', () => {
+        const spanContext = tracer.extract(opentracing.FORMAT_HTTP_HEADERS, carrier);
         expect(spanContext.samplingPriority).to.equal(0.5);
         span = tracer.startSpan('oauth', {
           childOf: spanContext
@@ -101,20 +101,20 @@ describe('tracing/opentracing/Tracer', function() {
         expect(span.getBaggageItem('foo')).to.equal('bar & blub');
       });
 
-      it('must return null for unsupported / unknown serialization formats', function() {
-        var spanContext = tracer.extract(opentracing.FORMAT_BINARY, carrier);
+      it('must return null for unsupported / unknown serialization formats', () => {
+        const spanContext = tracer.extract(opentracing.FORMAT_BINARY, carrier);
         expect(spanContext).to.equal(null);
       });
 
-      it('must translate failed sampling priority parsing to disabled tracing', function() {
+      it('must translate failed sampling priority parsing to disabled tracing', () => {
         carrier['x-instana-l'] = 'unsupportedValue';
-        var spanContext = tracer.extract(opentracing.FORMAT_HTTP_HEADERS, carrier);
+        const spanContext = tracer.extract(opentracing.FORMAT_HTTP_HEADERS, carrier);
         expect(spanContext.samplingPriority).to.equal(0);
       });
 
-      it('must translate partially available parent trace data as unavailable trace data', function() {
+      it('must translate partially available parent trace data as unavailable trace data', () => {
         delete carrier['x-instana-t'];
-        var spanContext = tracer.extract(opentracing.FORMAT_HTTP_HEADERS, carrier);
+        const spanContext = tracer.extract(opentracing.FORMAT_HTTP_HEADERS, carrier);
         expect(spanContext.t).to.equal(null);
         expect(spanContext.s).to.equal(null);
       });

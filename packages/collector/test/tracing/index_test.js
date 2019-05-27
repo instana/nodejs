@@ -2,13 +2,13 @@
 
 'use strict';
 
-var expect = require('chai').expect;
+const expect = require('chai').expect;
 
-var tracing = require('@instana/core').tracing;
+const tracing = require('@instana/core').tracing;
 
-describe('tracing', function() {
-  describe('supportedVersion', function() {
-    it('must support various Node.js versions', function() {
+describe('tracing', () => {
+  describe('supportedVersion', () => {
+    it('must support various Node.js versions', () => {
       expect(tracing.supportedVersion('4.5.0')).to.equal(true);
       expect(tracing.supportedVersion('4.5.1')).to.equal(true);
       expect(tracing.supportedVersion('4.6.0')).to.equal(true);
@@ -40,7 +40,7 @@ describe('tracing', function() {
       expect(tracing.supportedVersion('15.0.0')).to.equal(true);
     });
 
-    it('must report various Node.js versions as not supported', function() {
+    it('must report various Node.js versions as not supported', () => {
       expect(tracing.supportedVersion('1.15.0')).to.equal(false);
       expect(tracing.supportedVersion('2.15.0')).to.equal(false);
       expect(tracing.supportedVersion('3.15.0')).to.equal(false);

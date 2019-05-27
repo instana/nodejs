@@ -2,10 +2,10 @@
 
 'use strict';
 
-var agentPort = process.env.AGENT_PORT;
+const agentPort = process.env.AGENT_PORT;
 
-var instana = require('../../../')({
-  agentPort: agentPort,
+const instana = require('../../../')({
+  agentPort,
   level: 'warn',
   tracing: {
     enabled: process.env.TRACING_ENABLED === 'true',
@@ -13,35 +13,35 @@ var instana = require('../../../')({
   }
 });
 
-var fs = require('fs');
-var bodyParser = require('body-parser');
-var express = require('express');
-var morgan = require('morgan');
-var path = require('path');
-var request = require('request-promise');
+const fs = require('fs');
+const bodyParser = require('body-parser');
+const express = require('express');
+const morgan = require('morgan');
+const path = require('path');
+const request = require('request-promise');
 
-var delay = require('../../test_util/delay');
-var DummyEmitter = require('./dummyEmitter');
+const delay = require('../../test_util/delay');
+const DummyEmitter = require('./dummyEmitter');
 
-var app = express();
-var logPrefix = 'SDK: Server (' + process.pid + '):\t';
+const app = express();
+const logPrefix = `SDK: Server (${process.pid}):\t`;
 
 if (process.env.WITH_STDOUT) {
-  app.use(morgan(logPrefix + ':method :url :status'));
+  app.use(morgan(`${logPrefix}:method :url :status`));
 }
 
 app.use(bodyParser.json());
 
-app.get('/', function(req, res) {
+app.get('/', (req, res) => {
   res.sendStatus(200);
 });
 
-process.on('message', function(message) {
+process.on('message', message => {
   if (typeof message !== 'object' || Array.isArray(message)) {
-    return process.send('error: malformed message, only non-array objects are allowed: ' + JSON.stringify(message));
+    return process.send(`error: malformed message, only non-array objects are allowed: ${JSON.stringify(message)}`);
   }
   if (!message.command) {
-    return process.send('error: message has no command attribute: ' + JSON.stringify(message));
+    return process.send(`error: message has no command attribute: ${JSON.stringify(message)}`);
   }
   switch (message.command) {
     case 'start-entry':
@@ -58,13 +58,13 @@ process.on('message', function(message) {
       break;
 
     default:
-      process.send('error: unknown command: ' + message.command);
+      process.send(`error: unknown command: ${message.command}`);
   }
 });
 
 function createEntry(message) {
   if (!message.type) {
-    return process.send('error: command start-entry needs a type attribute: ' + JSON.stringify(message));
+    return process.send(`error: command start-entry needs a type attribute: ${JSON.stringify(message)}`);
   }
   switch (message.type) {
     case 'callback':
@@ -74,7 +74,7 @@ function createEntry(message) {
       createEntryPromise(message);
       break;
     default:
-      process.send('error: unknown command type: ' + message.type);
+      process.send(`error: unknown command type: ${message.type}`);
   }
 }
 
@@ -84,7 +84,7 @@ function createEntryCallback(message) {
     message.withData === 'start' || message.withData === 'both' ? { start: 'whatever' } : null,
     message.traceId,
     message.parentSpanId,
-    function() {
+    () => {
       afterCreateEntry(instana.sdk.callback, message);
     }
   );
@@ -98,56 +98,56 @@ function createEntryPromise(message) {
       message.traceId,
       message.parentSpanId
     )
-    .then(function() {
+    .then(() => {
       afterCreateEntry(instana.sdk.promise, message);
     });
 }
 
 function afterCreateEntry(instanaSdk, message) {
   // follow-up with an IO action that is auto-traced to validate tracing context integrity
-  request('http://127.0.0.1:' + agentPort).then(function() {
-    var error = message.error ? new Error('Boom!') : null;
+  request(`http://127.0.0.1:${agentPort}`).then(() => {
+    const error = message.error ? new Error('Boom!') : null;
     instanaSdk.completeEntrySpan(
       error,
       message.withData === 'end' || message.withData === 'both' ? { end: 'some value' } : null
     );
-    process.send('done: ' + message.command);
+    process.send(`done: ${message.command}`);
   });
 }
 
 app.post('/callback/create-intermediate', function createIntermediateCallback(req, res) {
-  var file = getFile(req);
-  var encoding = 'UTF-8';
+  const file = getFile(req);
+  const encoding = 'UTF-8';
   instana.sdk.callback.startIntermediateSpan(
     'intermediate-file-access',
     {
       path: file,
-      encoding: encoding
+      encoding
     },
-    function() {
+    () => {
       afterCreateIntermediate(instana.sdk.callback, file, encoding, res);
     }
   );
 });
 
 app.post('/promise/create-intermediate', function createIntermediatePromise(req, res) {
-  var file = getFile(req);
-  var encoding = 'UTF-8';
+  const file = getFile(req);
+  const encoding = 'UTF-8';
   instana.sdk.promise
     .startIntermediateSpan('intermediate-file-access', {
       path: file,
-      encoding: encoding
+      encoding
     })
-    .then(function() {
+    .then(() => {
       afterCreateIntermediate(instana.sdk.promise, file, encoding, res);
     });
 });
 
 function afterCreateIntermediate(instanaSdk, file, encoding, res) {
-  fs.readFile(file, encoding, function(err, content) {
+  fs.readFile(file, encoding, (err, content) => {
     if (err) {
       if (err.code === 'ENOENT') {
-        return request('http://127.0.0.1:' + agentPort).then(function() {
+        return request(`http://127.0.0.1:${agentPort}`).then(() => {
           // intermediate span is finished after the http exit, so the http exit is s child of the intermediate span
           instana.sdk.callback.completeIntermediateSpan(err, { error: err.message });
           return res.sendStatus(404);
@@ -156,7 +156,7 @@ function afterCreateIntermediate(instanaSdk, file, encoding, res) {
       return res.status(500).send(err);
     }
     // trigger another IO action that is auto-traced to validate tracing context integrity
-    request('http://127.0.0.1:' + agentPort).then(function() {
+    request(`http://127.0.0.1:${agentPort}`).then(() => {
       // intermediate span is finished after the http exit, so the http exit is s child of the intermediate span
       instana.sdk.callback.completeIntermediateSpan(null, { success: true });
       res.send(content);
@@ -165,29 +165,29 @@ function afterCreateIntermediate(instanaSdk, file, encoding, res) {
 }
 
 app.post('/callback/create-exit', function createExitCallback(req, res) {
-  var file = getFile(req);
-  var encoding = 'UTF-8';
+  const file = getFile(req);
+  const encoding = 'UTF-8';
   instana.sdk.callback.startExitSpan(
     'file-access',
     {
       path: file,
-      encoding: encoding
+      encoding
     },
-    function() {
+    () => {
       afterCreateExit(instana.sdk.callback, file, encoding, res);
     }
   );
 });
 
 app.post('/promise/create-exit', function createExitPromise(req, res) {
-  var file = getFile(req);
-  var encoding = 'UTF-8';
+  const file = getFile(req);
+  const encoding = 'UTF-8';
   instana.sdk.promise
     .startExitSpan('file-access', {
       path: file,
-      encoding: encoding
+      encoding
     })
-    .then(function() {
+    .then(() => {
       afterCreateExit(instana.sdk.promise, file, encoding, res);
     });
 });
@@ -199,19 +199,17 @@ function getFile(req) {
 }
 
 function afterCreateExit(instanaSdk, file, encoding, res) {
-  fs.readFile(file, encoding, function(err, content) {
+  fs.readFile(file, encoding, (err, content) => {
     if (err) {
       instanaSdk.completeExitSpan(err, { error: err.message });
       if (err.code === 'ENOENT') {
-        return request('http://127.0.0.1:' + agentPort).then(function() {
-          return res.sendStatus(404);
-        });
+        return request(`http://127.0.0.1:${agentPort}`).then(() => res.sendStatus(404));
       }
       return res.status(500).send(err);
     }
     instanaSdk.completeExitSpan(null, { success: true });
     // follow-up with an IO action that is auto-traced to validate tracing context integrity
-    request('http://127.0.0.1:' + agentPort).then(function() {
+    request(`http://127.0.0.1:${agentPort}`).then(() => {
       res.send(content);
     });
   });
@@ -219,7 +217,7 @@ function afterCreateExit(instanaSdk, file, encoding, res) {
 
 function createSpansWithEventEmitter(message) {
   if (!message.type) {
-    return process.send('error: command event-emitter needs a type attribute: ' + JSON.stringify(message));
+    return process.send(`error: command event-emitter needs a type attribute: ${JSON.stringify(message)}`);
   }
   switch (message.type) {
     case 'callback':
@@ -229,35 +227,35 @@ function createSpansWithEventEmitter(message) {
       createEntryWithEventEmitterPromise(message);
       break;
     default:
-      process.send('error: unknown command type: ' + message.type);
+      process.send(`error: unknown command type: ${message.type}`);
   }
 }
 
 function createEntryWithEventEmitterCallback(message) {
-  var emitter = new DummyEmitter();
+  const emitter = new DummyEmitter();
   emitter.start();
-  instana.sdk.callback.startEntrySpan('custom-entry', function() {
+  instana.sdk.callback.startEntrySpan('custom-entry', () => {
     onEmittedEvent(instana.sdk.callback, emitter, message);
   });
 }
 
 function createEntryWithEventEmitterPromise(message) {
-  var emitter = new DummyEmitter();
+  const emitter = new DummyEmitter();
   emitter.start();
-  instana.sdk.promise.startEntrySpan('custom-entry').then(function() {
+  instana.sdk.promise.startEntrySpan('custom-entry').then(() => {
     onEmittedEvent(instana.sdk.promise, emitter, message);
   });
 }
 
 function onEmittedEvent(instanaSdk, emitter, message) {
-  var receivedTicks = 0;
+  let receivedTicks = 0;
   instanaSdk.bindEmitter(emitter);
-  emitter.on('tick', function() {
+  emitter.on('tick', () => {
     if (receivedTicks++ === 5) {
       emitter.stop();
-      request('http://127.0.0.1:' + agentPort).then(function() {
+      request(`http://127.0.0.1:${agentPort}`).then(() => {
         instanaSdk.completeEntrySpan();
-        process.send('done: ' + message.command);
+        process.send(`done: ${message.command}`);
       });
     }
   });
@@ -265,7 +263,7 @@ function onEmittedEvent(instanaSdk, emitter, message) {
 
 function nestEntryExit(message) {
   if (!message.type) {
-    return process.send('error: command nest-entry-exit needs a type attribute: ' + JSON.stringify(message));
+    return process.send(`error: command nest-entry-exit needs a type attribute: ${JSON.stringify(message)}`);
   }
   switch (message.type) {
     case 'callback':
@@ -275,15 +273,15 @@ function nestEntryExit(message) {
       nestEntryExitPromise(message);
       break;
     default:
-      process.send('error: unknown command type: ' + message.type);
+      process.send(`error: unknown command type: ${message.type}`);
   }
 }
 
 function nestEntryExitCallback(message) {
-  instana.sdk.callback.startEntrySpan('custom-entry', function() {
+  instana.sdk.callback.startEntrySpan('custom-entry', () => {
     setTimeout(function createExit() {
-      instana.sdk.callback.startExitSpan('custom-exit', function() {
-        setTimeout(function() {
+      instana.sdk.callback.startExitSpan('custom-exit', () => {
+        setTimeout(() => {
           // It might be a little surprising that this actually works - we complete the exit span and then immediately
           // and synchronously (that is, in the same async context) complete its parent span, the entry span.
           // Completing the entry span will only work if it is the currently active span. How does the entry span
@@ -298,7 +296,7 @@ function nestEntryExitCallback(message) {
           // inheritance).
           instana.sdk.callback.completeExitSpan();
           instana.sdk.callback.completeEntrySpan();
-          process.send('done: ' + message.command);
+          process.send(`done: ${message.command}`);
         }, 50);
       });
     }, 50);
@@ -308,28 +306,24 @@ function nestEntryExitCallback(message) {
 function nestEntryExitPromise(message) {
   instana.sdk.promise
     .startEntrySpan('custom-entry')
-    .then(function() {
-      return delay(50);
-    })
+    .then(() => delay(50))
     .then(function createExit() {
       return instana.sdk.promise
         .startExitSpan('custom-exit')
-        .then(function() {
-          return delay(50);
-        })
-        .then(function() {
+        .then(() => delay(50))
+        .then(() => {
           instana.sdk.promise.completeExitSpan();
         });
     })
-    .then(function() {
+    .then(() => {
       instana.sdk.promise.completeEntrySpan();
-      process.send('done: ' + message.command);
+      process.send(`done: ${message.command}`);
     });
 }
 
 function nestIntermediates(message) {
   if (!message.type) {
-    return process.send('error: command nest-intermediates needs a type attribute: ' + JSON.stringify(message));
+    return process.send(`error: command nest-intermediates needs a type attribute: ${JSON.stringify(message)}`);
   }
   switch (message.type) {
     case 'callback':
@@ -339,24 +333,24 @@ function nestIntermediates(message) {
       nestIntermediatesPromise(message);
       break;
     default:
-      process.send('error: unknown command type: ' + message.type);
+      process.send(`error: unknown command type: ${message.type}`);
   }
 }
 
 function nestIntermediatesCallback(message) {
-  instana.sdk.callback.startEntrySpan('custom-entry', function() {
+  instana.sdk.callback.startEntrySpan('custom-entry', () => {
     setTimeout(function createIntermediate1() {
-      instana.sdk.callback.startIntermediateSpan('intermediate-1', function() {
+      instana.sdk.callback.startIntermediateSpan('intermediate-1', () => {
         setTimeout(function createIntermediate2() {
-          instana.sdk.callback.startIntermediateSpan('intermediate-2', function() {
+          instana.sdk.callback.startIntermediateSpan('intermediate-2', () => {
             setTimeout(function createExit() {
-              instana.sdk.callback.startExitSpan('custom-exit', function() {
-                setTimeout(function() {
+              instana.sdk.callback.startExitSpan('custom-exit', () => {
+                setTimeout(() => {
                   instana.sdk.callback.completeExitSpan();
                   instana.sdk.callback.completeIntermediateSpan();
                   instana.sdk.callback.completeIntermediateSpan();
                   instana.sdk.callback.completeEntrySpan();
-                  process.send('done: ' + message.command);
+                  process.send(`done: ${message.command}`);
                 }, 50);
               });
             }, 50);
@@ -370,45 +364,37 @@ function nestIntermediatesCallback(message) {
 function nestIntermediatesPromise(message) {
   instana.sdk.promise
     .startEntrySpan('custom-entry')
-    .then(function() {
-      return delay(50);
-    })
+    .then(() => delay(50))
     .then(function createIntermediate1() {
       instana.sdk.promise
         .startIntermediateSpan('intermediate-1')
-        .then(function() {
-          return delay(50);
-        })
+        .then(() => delay(50))
         .then(function createIntermediate2() {
           instana.sdk.promise
             .startIntermediateSpan('intermediate-2')
-            .then(function() {
-              return delay(50);
-            })
+            .then(() => delay(50))
             .then(function createExit() {
               instana.sdk.promise
                 .startExitSpan('custom-exit')
-                .then(function() {
-                  return delay(50);
-                })
-                .then(function() {
+                .then(() => delay(50))
+                .then(() => {
                   instana.sdk.promise.completeExitSpan();
                   instana.sdk.promise.completeIntermediateSpan();
                   instana.sdk.promise.completeIntermediateSpan();
                   instana.sdk.promise.completeEntrySpan();
-                  process.send('done: ' + message.command);
+                  process.send(`done: ${message.command}`);
                 });
             });
         });
     });
 }
 
-app.listen(process.env.APP_PORT, function() {
-  log('Listening on port: ' + process.env.APP_PORT);
+app.listen(process.env.APP_PORT, () => {
+  log(`Listening on port: ${process.env.APP_PORT}`);
 });
 
 function log() {
-  var args = Array.prototype.slice.call(arguments);
+  const args = Array.prototype.slice.call(arguments);
   args[0] = logPrefix + args[0];
   console.log.apply(console, args);
 }

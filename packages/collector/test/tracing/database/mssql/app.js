@@ -10,60 +10,54 @@ require('../../../../')({
   }
 });
 
-var bodyParser = require('body-parser');
-var express = require('express');
-var morgan = require('morgan');
-var sql = require('mssql');
-var devNull = require('dev-null');
+const bodyParser = require('body-parser');
+const express = require('express');
+const morgan = require('morgan');
+const sql = require('mssql');
+const devNull = require('dev-null');
 
-var pool;
-var app = express();
-var logPrefix = 'Express / MSSQL App (' + process.pid + '):\t';
+let pool;
+const app = express();
+const logPrefix = `Express / MSSQL App (${process.pid}):\t`;
 
-sql.on('error', function(err) {
+sql.on('error', err => {
   log(err);
 });
 
-var dbHost = process.env.MSSQL_HOST ? process.env.MSSQL_HOST : '127.0.0.1';
-var dbPort = process.env.MSSQL_PORT ? parseInt(process.env.MSSQL_PORT, 10) : 1433;
-var dbUrl = dbHost + ':' + dbPort;
-var dbUser = process.env.MSSQL_USER ? process.env.MSSQL_USER : 'sa';
-var dbPassword = process.env.MSSQL_PW ? process.env.MSSQL_PW : 'stanCanHazMsSQL1';
-var initConnectString = 'mssql://' + dbUser + ':' + dbPassword + '@' + dbUrl + '/tempdb';
-var dbName = 'nodejscollector';
-var preparedStatementGlobal = new sql.PreparedStatement();
-var ready = false;
+const dbHost = process.env.MSSQL_HOST ? process.env.MSSQL_HOST : '127.0.0.1';
+const dbPort = process.env.MSSQL_PORT ? parseInt(process.env.MSSQL_PORT, 10) : 1433;
+const dbUrl = `${dbHost}:${dbPort}`;
+const dbUser = process.env.MSSQL_USER ? process.env.MSSQL_USER : 'sa';
+const dbPassword = process.env.MSSQL_PW ? process.env.MSSQL_PW : 'stanCanHazMsSQL1';
+const initConnectString = `mssql://${dbUser}:${dbPassword}@${dbUrl}/tempdb`;
+const dbName = 'nodejscollector';
+let preparedStatementGlobal = new sql.PreparedStatement();
+let ready = false;
 
 sql
   .connect(initConnectString)
-  .then(function() {
-    return new sql.Request().query(
-      "IF EXISTS (SELECT * FROM sys.databases WHERE name = N'" + dbName + "') DROP DATABASE " + dbName
-    );
-  })
-  .then(function() {
-    return new sql.Request().query('CREATE DATABASE ' + dbName);
-  })
-  .then(function() {
-    return sql.close();
-  })
-  .then(function() {
-    return sql.connect({
+  .then(() =>
+    new sql.Request().query(`IF EXISTS (SELECT * FROM sys.databases WHERE name = N'${dbName}') DROP DATABASE ${dbName}`)
+  )
+  .then(() => new sql.Request().query(`CREATE DATABASE ${dbName}`))
+  .then(() => sql.close())
+  .then(() =>
+    sql.connect({
       user: dbUser,
       password: dbPassword,
       server: dbHost,
       port: dbPort,
       database: dbName
-    });
-  })
-  .then(function(_pool) {
+    })
+  )
+  .then(_pool => {
     pool = _pool;
     return new sql.Request().query(
       'CREATE TABLE UserTable (id INT IDENTITY(1,1), name VARCHAR(40) NOT NULL, email VARCHAR(40) NOT NULL)'
     );
   })
-  .then(function() {
-    return new sql.Request().batch(
+  .then(() =>
+    new sql.Request().batch(
       'CREATE PROCEDURE testProcedure' +
         '    @username nvarchar(40)' +
         'AS' +
@@ -71,28 +65,28 @@ sql
         '    SELECT name, email' +
         '    FROM UserTable' +
         '    WHERE name = @username;'
-    );
-  })
-  .then(function() {
+    )
+  )
+  .then(() => {
     preparedStatementGlobal = new sql.PreparedStatement();
     preparedStatementGlobal.input('username', sql.NVarChar(40));
     preparedStatementGlobal.input('email', sql.NVarChar(40));
     return preparedStatementGlobal.prepare('INSERT INTO UserTable (name, email) VALUES (@username, @email)');
   })
-  .then(function() {
+  .then(() => {
     ready = true;
   })
-  .catch(function(initErr) {
+  .catch(initErr => {
     log('Failed to create database or table or failed to connect.', initErr);
   });
 
 if (process.env.WITH_STDOUT) {
-  app.use(morgan(logPrefix + ':method :url :status'));
+  app.use(morgan(`${logPrefix}:method :url :status`));
 }
 
 app.use(bodyParser.json());
 
-app.get('/', function(req, res) {
+app.get('/', (req, res) => {
   function checkIfReady() {
     if (ready) {
       res.sendStatus(200);
@@ -103,8 +97,8 @@ app.get('/', function(req, res) {
   setTimeout(checkIfReady, 10);
 });
 
-app.get('/select-getdate', function(req, res) {
-  new sql.Request().query('SELECT GETDATE()', function(err, results) {
+app.get('/select-getdate', (req, res) => {
+  new sql.Request().query('SELECT GETDATE()', (err, results) => {
     if (err) {
       log('Failed to execute select query.', err);
       return res.status(500).json(err);
@@ -113,8 +107,8 @@ app.get('/select-getdate', function(req, res) {
   });
 });
 
-app.get('/select-static', function(req, res) {
-  sql.query('SELECT GETDATE()', function(err, results) {
+app.get('/select-static', (req, res) => {
+  sql.query('SELECT GETDATE()', (err, results) => {
     if (err) {
       log('Failed to execute select query.', err);
       return res.status(500).json(err);
@@ -123,8 +117,8 @@ app.get('/select-static', function(req, res) {
   });
 });
 
-app.get('/error-callback', function(req, res) {
-  new sql.Request().query('SELECT name, email FROM non_existing_table', function(err, results) {
+app.get('/error-callback', (req, res) => {
+  new sql.Request().query('SELECT name, email FROM non_existing_table', (err, results) => {
     if (err) {
       return res.status(500).json(err);
     }
@@ -133,33 +127,33 @@ app.get('/error-callback', function(req, res) {
   });
 });
 
-app.get('/select-promise', function(req, res) {
+app.get('/select-promise', (req, res) => {
   new sql.Request()
     .query('SELECT GETDATE()')
-    .then(function(results) {
+    .then(results => {
       res.json(results.recordset);
     })
-    .catch(function(err) {
+    .catch(err => {
       log('Failed to execute select query.', err);
       res.status(500).json(err);
     });
 });
 
-app.get('/error-promise', function(req, res) {
+app.get('/error-promise', (req, res) => {
   new sql.Request()
     .query('SELECT name, email FROM non_existing_table')
-    .then(function(results) {
+    .then(results => {
       log('Failed to fail on error.');
       res.json(results.recordset);
     })
-    .catch(function(err) {
+    .catch(err => {
       res.status(500).json(err);
     });
 });
 
-app.post('/insert', function(req, res) {
-  var insert = "INSERT INTO UserTable (name, email) VALUES (N'gaius', N'gaius@julius.com')";
-  new sql.Request().query(insert, function(err, results) {
+app.post('/insert', (req, res) => {
+  const insert = "INSERT INTO UserTable (name, email) VALUES (N'gaius', N'gaius@julius.com')";
+  new sql.Request().query(insert, (err, results) => {
     if (err) {
       log('Failed to execute insert.', err);
       return res.status(500).json(err);
@@ -168,12 +162,12 @@ app.post('/insert', function(req, res) {
   });
 });
 
-app.post('/insert-params', function(req, res) {
-  var insert = 'INSERT INTO UserTable (name, email) VALUES (@username, @email)';
+app.post('/insert-params', (req, res) => {
+  const insert = 'INSERT INTO UserTable (name, email) VALUES (@username, @email)';
   new sql.Request()
     .input('username', sql.NVarChar(40), 'augustus')
     .input('email', sql.NVarChar(40), 'augustus@julius.com')
-    .query(insert, function(err, results) {
+    .query(insert, (err, results) => {
       if (err) {
         log('Failed to execute insert.', err);
         return res.status(500).json(err);
@@ -182,8 +176,8 @@ app.post('/insert-params', function(req, res) {
     });
 });
 
-app.get('/select', function(req, res) {
-  new sql.Request().query('SELECT name, email FROM UserTable', function(err, results) {
+app.get('/select', (req, res) => {
+  new sql.Request().query('SELECT name, email FROM UserTable', (err, results) => {
     if (err) {
       log('Failed to execute select.', err);
       return res.status(500).json(err);
@@ -192,11 +186,11 @@ app.get('/select', function(req, res) {
   });
 });
 
-app.post('/insert-prepared-callback', function(req, res) {
-  var ps = new sql.PreparedStatement();
+app.post('/insert-prepared-callback', (req, res) => {
+  const ps = new sql.PreparedStatement();
   ps.input('username', sql.NVarChar(40));
   ps.input('email', sql.NVarChar(40));
-  ps.prepare('INSERT INTO UserTable (name, email) VALUES (@username, @email)', function(err1) {
+  ps.prepare('INSERT INTO UserTable (name, email) VALUES (@username, @email)', err1 => {
     if (err1) {
       log('Failed to prepare statement.', err1);
       return res.status(500).json(err1);
@@ -206,12 +200,12 @@ app.post('/insert-prepared-callback', function(req, res) {
         username: 'tiberius',
         email: 'tiberius@claudius.com'
       },
-      function(err2, results) {
+      (err2, results) => {
         if (err2) {
           log('Failed to execute prepared insert.', err2);
           return res.status(500).json(err2);
         }
-        ps.unprepare(function(err3) {
+        ps.unprepare(err3 => {
           if (err3) {
             log('Failed to unprepare statement.', err3);
             return res.status(500).json(err3);
@@ -223,26 +217,26 @@ app.post('/insert-prepared-callback', function(req, res) {
   });
 });
 
-app.post('/insert-prepared-promise', function(req, res) {
+app.post('/insert-prepared-promise', (req, res) => {
   preparedStatementGlobal
     .execute({
       username: 'caligula',
       email: 'caligula@julioclaudian.com'
     })
-    .then(function(results) {
+    .then(results => {
       res.json(results);
     })
-    .catch(function(err) {
+    .catch(err => {
       log('Failed to process prepared statement.', err);
       return res.status(500).json(err);
     });
 });
 
-app.post('/insert-prepared-error-callback', function(req, res) {
-  var ps = new sql.PreparedStatement();
+app.post('/insert-prepared-error-callback', (req, res) => {
+  const ps = new sql.PreparedStatement();
   ps.input('username', sql.NVarChar(40));
   ps.input('email', sql.NVarChar(40));
-  ps.prepare('INSERT INTO UserTable (name, email) VALUES (@username, @email)', function(err1) {
+  ps.prepare('INSERT INTO UserTable (name, email) VALUES (@username, @email)', err1 => {
     if (err1) {
       log('Failed to prepare statement.', err1);
       return res.status(500).json(err1);
@@ -252,8 +246,8 @@ app.post('/insert-prepared-error-callback', function(req, res) {
         username: 'claudius',
         email: 'claudius@claudius.com_lets_make_this_longer_than_40_chars'
       },
-      function(err2, results) {
-        ps.unprepare(function(err3) {
+      (err2, results) => {
+        ps.unprepare(err3 => {
           if (err3) {
             log('Failed to unprepare statement.', err3);
             return res.status(500).json(err3);
@@ -270,57 +264,55 @@ app.post('/insert-prepared-error-callback', function(req, res) {
   });
 });
 
-app.post('/insert-prepared-error-promise', function(req, res) {
-  var ps = new sql.PreparedStatement();
+app.post('/insert-prepared-error-promise', (req, res) => {
+  const ps = new sql.PreparedStatement();
   ps.input('username', sql.NVarChar(40));
   ps.input('email', sql.NVarChar(40));
-  var results;
+  let results;
   return ps
     .prepare('INSERT INTO UserTable (name, email) VALUES (@username, @email)')
-    .then(function() {
-      return ps.execute({
+    .then(() =>
+      ps.execute({
         username: 'nero',
         email: 'nero@julioclaudian.com_lets_make_this_longer_than_40_chars'
-      });
-    })
-    .then(function(_results) {
+      })
+    )
+    .then(_results => {
       results = _results;
       return ps.unprepare();
     })
-    .then(function() {
+    .then(() => {
       log('Failed to fail prepared statement.');
       res.json(results);
     })
-    .catch(function(err) {
+    .catch(err => {
       ps.unprepare();
       return res.status(500).json(err);
     });
 });
 
-app.get('/select-by-name/:username', function(req, res) {
-  var ps = new sql.PreparedStatement();
+app.get('/select-by-name/:username', (req, res) => {
+  const ps = new sql.PreparedStatement();
   ps.input('username', sql.NVarChar(40));
-  var results;
+  let results;
   return ps
     .prepare('SELECT name, email FROM UserTable WHERE name=@username')
-    .then(function() {
-      return ps.execute({ username: req.params.username });
-    })
-    .then(function(_results) {
+    .then(() => ps.execute({ username: req.params.username }))
+    .then(_results => {
       results = _results;
       return ps.unprepare();
     })
-    .then(function() {
+    .then(() => {
       res.json(results.recordset[0].email);
     })
-    .catch(function(err) {
+    .catch(err => {
       log('Failed to process prepared select statement.', err);
       return res.status(500).json(err);
     });
 });
 
-app.get('/select-standard-pool', function(req, res) {
-  pool.request().query('SELECT 1 AS NUMBER', function(err, results) {
+app.get('/select-standard-pool', (req, res) => {
+  pool.request().query('SELECT 1 AS NUMBER', (err, results) => {
     if (err) {
       log('Failed to execute select.', err);
       return res.status(500).json(err);
@@ -329,8 +321,8 @@ app.get('/select-standard-pool', function(req, res) {
   });
 });
 
-app.get('/select-custom-pool', function(req, res) {
-  var customPool = new sql.ConnectionPool(
+app.get('/select-custom-pool', (req, res) => {
+  const customPool = new sql.ConnectionPool(
     {
       user: dbUser,
       password: dbPassword,
@@ -338,12 +330,12 @@ app.get('/select-custom-pool', function(req, res) {
       port: dbPort,
       database: dbName
     },
-    function(err1) {
+    err1 => {
       if (err1) {
         log('Failed to create a connection pool.', err1);
         return res.status(500).json(err1);
       }
-      customPool.request().query('SELECT 1 AS NUMBER', function(err2, results) {
+      customPool.request().query('SELECT 1 AS NUMBER', (err2, results) => {
         if (err2) {
           log('Failed to execute select.', err2);
           return res.status(500).json(err2);
@@ -354,9 +346,9 @@ app.get('/select-custom-pool', function(req, res) {
   );
 });
 
-app.post('/transaction-callback', function(req, res) {
-  var transaction = new sql.Transaction();
-  transaction.begin(function(err1) {
+app.post('/transaction-callback', (req, res) => {
+  const transaction = new sql.Transaction();
+  transaction.begin(err1 => {
     if (err1) {
       log('Failed to begin transaction.', err1);
       return res.status(500).json(err1);
@@ -364,61 +356,57 @@ app.post('/transaction-callback', function(req, res) {
     new sql.Request(transaction)
       .input('username', sql.NVarChar(40), 'vespasian')
       .input('email', sql.NVarChar(40), 'vespasian@flavius.com')
-      .query('INSERT INTO UserTable (name, email) VALUES (@username, @email)', function(err2) {
+      .query('INSERT INTO UserTable (name, email) VALUES (@username, @email)', err2 => {
         if (err2) {
           log('Failed to execute insert.', err2);
           return res.status(500).json(err2);
         }
-        new sql.Request(transaction).query("SELECT name, email FROM UserTable WHERE name=N'vespasian'", function(
-          err3,
-          results
-        ) {
-          if (err3) {
-            log('Failed to execute insert.', err3);
-            return res.status(500).json(err3);
-          }
-          transaction.commit(function(err4) {
-            if (err4) {
-              log('Failed to commit transaction.', err4);
-              return res.status(500).json(err4);
+        new sql.Request(transaction).query(
+          "SELECT name, email FROM UserTable WHERE name=N'vespasian'",
+          (err3, results) => {
+            if (err3) {
+              log('Failed to execute insert.', err3);
+              return res.status(500).json(err3);
             }
-            res.json(results.recordset[0].email);
-          });
-        });
+            transaction.commit(err4 => {
+              if (err4) {
+                log('Failed to commit transaction.', err4);
+                return res.status(500).json(err4);
+              }
+              res.json(results.recordset[0].email);
+            });
+          }
+        );
       });
   });
 });
 
-app.post('/transaction-promise', function(req, res) {
-  var transaction = new sql.Transaction();
-  var results;
+app.post('/transaction-promise', (req, res) => {
+  const transaction = new sql.Transaction();
+  let results;
   transaction
     .begin()
-    .then(function() {
-      return new sql.Request(transaction)
+    .then(() =>
+      new sql.Request(transaction)
         .input('username', sql.NVarChar(40), 'titus')
         .input('email', sql.NVarChar(40), 'titus@flavius.com')
-        .query('INSERT INTO UserTable (name, email) VALUES (@username, @email)');
-    })
-    .then(function() {
-      return new sql.Request(transaction).query("SELECT name, email FROM UserTable WHERE name=N'titus'");
-    })
-    .then(function(_results) {
+        .query('INSERT INTO UserTable (name, email) VALUES (@username, @email)')
+    )
+    .then(() => new sql.Request(transaction).query("SELECT name, email FROM UserTable WHERE name=N'titus'"))
+    .then(_results => {
       results = _results;
     })
-    .then(function() {
-      return transaction.commit();
-    })
-    .then(function() {
+    .then(() => transaction.commit())
+    .then(() => {
       res.json(results.recordset[0].email);
     })
-    .catch(function(err) {
+    .catch(err => {
       log('Failed to process transaction.', err);
     });
 });
 
-app.get('/stored-procedure-callback', function(req, res) {
-  new sql.Request().input('username', sql.NVarChar(40), 'augustus').execute('testProcedure', function(err, results) {
+app.get('/stored-procedure-callback', (req, res) => {
+  new sql.Request().input('username', sql.NVarChar(40), 'augustus').execute('testProcedure', (err, results) => {
     if (err) {
       log('Failed to execute stored procedure.', err);
       return res.status(500).json(err);
@@ -427,46 +415,46 @@ app.get('/stored-procedure-callback', function(req, res) {
   });
 });
 
-app.get('/streaming', function(req, res) {
-  var request = new sql.Request();
-  var rows = [];
-  var errors = [];
+app.get('/streaming', (req, res) => {
+  const request = new sql.Request();
+  const rows = [];
+  const errors = [];
   request.stream = true;
   request.query('SELECT name, email FROM UserTable');
 
-  request.on('row', function(row) {
+  request.on('row', row => {
     rows.push(row);
   });
 
-  request.on('error', function(err) {
+  request.on('error', err => {
     errors.push(err);
   });
 
-  request.on('done', function() {
+  request.on('done', () => {
     res.json({
-      rows: rows,
-      errors: errors
+      rows,
+      errors
     });
   });
 });
 
-app.get('/pipe', function(req, res) {
-  var request = new sql.Request();
-  var stream = devNull();
+app.get('/pipe', (req, res) => {
+  const request = new sql.Request();
+  const stream = devNull();
   request.pipe(stream);
   request.query('SELECT name, email FROM UserTable');
 
-  stream.on('error', function(err) {
+  stream.on('error', err => {
     console.log('PIPE ERR', err);
   });
-  stream.on('finish', function() {
+  stream.on('finish', () => {
     console.log('PIPE FINISH');
     res.end();
   });
 });
 
-app.get('/batch-callback', function(req, res) {
-  new sql.Request().batch('SELECT GETDATE()', function(err, results) {
+app.get('/batch-callback', (req, res) => {
+  new sql.Request().batch('SELECT GETDATE()', (err, results) => {
     if (err) {
       log('Failed to execute batch.', err);
       return res.status(500).json(err);
@@ -475,27 +463,27 @@ app.get('/batch-callback', function(req, res) {
   });
 });
 
-app.get('/batch-promise', function(req, res) {
+app.get('/batch-promise', (req, res) => {
   new sql.Request()
     .batch('SELECT GETDATE()')
-    .then(function(results) {
+    .then(results => {
       res.json(results.recordset);
     })
-    .catch(function(err) {
+    .catch(err => {
       log('Failed to execute batch.', err);
       return res.status(500).json(err);
     });
 });
 
-app.get('/bulk', function(req, res) {
-  var table = new sql.Table('AnotherUserTable');
+app.get('/bulk', (req, res) => {
+  const table = new sql.Table('AnotherUserTable');
   table.create = true;
   table.columns.add('name', sql.NVarChar(40), { nullable: true });
   table.columns.add('email', sql.NVarChar(40), { nullable: true });
   table.rows.add('Domitian', 'domitian@flavius.com');
   table.rows.add('Nerva', 'nerva@nerva.com');
   table.rows.add('Trajan ', 'trajan@nerva.com');
-  new sql.Request().bulk(table, function(err, results) {
+  new sql.Request().bulk(table, (err, results) => {
     if (err) {
       log('Failed to execute bulk operation.', err);
       return res.status(500).json(err);
@@ -504,9 +492,9 @@ app.get('/bulk', function(req, res) {
   });
 });
 
-app.get('/cancel', function(req, res) {
-  var request = new sql.Request();
-  request.query("WAITFOR DELAY '00:00:05'; SELECT 1 as NUMBER", function(err, results) {
+app.get('/cancel', (req, res) => {
+  const request = new sql.Request();
+  request.query("WAITFOR DELAY '00:00:05'; SELECT 1 as NUMBER", (err, results) => {
     if (err) {
       console.log(err);
       return res.json(err);
@@ -517,12 +505,12 @@ app.get('/cancel', function(req, res) {
   request.cancel();
 });
 
-app.listen(process.env.APP_PORT, function() {
-  log('Listening on port: ' + process.env.APP_PORT);
+app.listen(process.env.APP_PORT, () => {
+  log(`Listening on port: ${process.env.APP_PORT}`);
 });
 
 function log() {
-  var args = Array.prototype.slice.call(arguments);
+  const args = Array.prototype.slice.call(arguments);
   args[0] = logPrefix + args[0];
   console.log.apply(console, args);
 }

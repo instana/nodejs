@@ -3,7 +3,7 @@
 
 'use strict';
 
-var instana = require('../../../../');
+const instana = require('../../../../');
 instana({
   agentPort: process.env.AGENT_PORT,
   level: 'warn',
@@ -12,54 +12,50 @@ instana({
   }
 });
 
-var request = require('request');
-var bodyParser = require('body-parser');
-var EventEmitter = require('events');
-var express = require('express');
-var morgan = require('morgan');
+const request = require('request');
+const bodyParser = require('body-parser');
+const EventEmitter = require('events');
+const express = require('express');
+const morgan = require('morgan');
 
-var app = express();
-var logPrefix = 'Express app with native promises (' + process.pid + '):\t';
+const app = express();
+const logPrefix = `Express app with native promises (${process.pid}):\t`;
 
 if (process.env.WITH_STDOUT) {
-  app.use(morgan(logPrefix + ':method :url :status'));
+  app.use(morgan(`${logPrefix}:method :url :status`));
 }
 
 app.use(bodyParser.json());
 
-app.get('/', function(req, res) {
+app.get('/', (req, res) => {
   res.sendStatus(200);
 });
 
-app.get('/delayed', function(req, res) {
+app.get('/delayed', (req, res) => {
   delay(50).then(sendActiveTraceContext.bind(null, res));
 });
 
-app.get('/childPromise', function(req, res) {
+app.get('/childPromise', (req, res) => {
   delay(50)
-    .then(function() {
-      return delay(20);
-    })
+    .then(() => delay(20))
     .then(sendActiveTraceContext.bind(null, res));
 });
 
-app.get('/childPromiseWithChildSend', function(req, res) {
-  delay(50).then(function() {
-    return delay(20).then(sendActiveTraceContext.bind(null, res));
-  });
+app.get('/childPromiseWithChildSend', (req, res) => {
+  delay(50).then(() => delay(20).then(sendActiveTraceContext.bind(null, res)));
 });
 
-app.get('/combined', function(req, res) {
+app.get('/combined', (req, res) => {
   Promise.all([delay(50), delay(40)]).then(sendActiveTraceContext.bind(null, res));
 });
 
-app.get('/rejected', function(req, res) {
+app.get('/rejected', (req, res) => {
   Promise.all([delay(50), Promise.reject(new Error('bad timing'))]).catch(sendActiveTraceContext.bind(null, res));
 });
 
-app.get('/childHttpCall', function(req, res) {
-  new Promise(function(resolve, reject) {
-    request('http://127.0.0.1:65212', function(err, response) {
+app.get('/childHttpCall', (req, res) => {
+  new Promise((resolve, reject) => {
+    request('http://127.0.0.1:65212', (err, response) => {
       if (err) {
         reject(err);
       } else {
@@ -67,26 +63,24 @@ app.get('/childHttpCall', function(req, res) {
       }
     });
   })
-    .catch(function() {
-      return delay(20);
-    })
-    .then(function() {
+    .catch(() => delay(20))
+    .then(() => {
       sendActiveTraceContext(res);
     });
 });
 
-app.get('/rejected', function(req, res) {
+app.get('/rejected', (req, res) => {
   Promise.all([delay(50), Promise.reject(new Error('bad timing'))]).catch(sendActiveTraceContext.bind(null, res));
 });
 
-app.get('/eventEmitterBased', function(req, res) {
-  var emitter = new EventEmitter();
+app.get('/eventEmitterBased', (req, res) => {
+  const emitter = new EventEmitter();
 
-  new Promise(function(resolve) {
-    emitter.on('a', function(value) {
+  new Promise(resolve => {
+    emitter.on('a', value => {
       resolve(value);
     });
-  }).then(function() {
+  }).then(() => {
     sendActiveTraceContext(res);
   });
 
@@ -97,19 +91,19 @@ function sendActiveTraceContext(res) {
   res.json(instana.opentracing.getCurrentlyActiveInstanaSpanContext());
 }
 
-app.listen(process.env.APP_PORT, function() {
-  log('Listening on port: ' + process.env.APP_PORT);
+app.listen(process.env.APP_PORT, () => {
+  log(`Listening on port: ${process.env.APP_PORT}`);
 });
 
 function log() {
-  var args = Array.prototype.slice.call(arguments);
+  const args = Array.prototype.slice.call(arguments);
   args[0] = logPrefix + args[0];
   console.log.apply(console, args);
 }
 
 function delay(ms) {
-  return new Promise(function(resolve) {
-    setTimeout(function() {
+  return new Promise(resolve => {
+    setTimeout(() => {
       resolve();
     }, ms);
   });

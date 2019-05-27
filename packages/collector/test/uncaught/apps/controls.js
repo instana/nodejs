@@ -1,7 +1,7 @@
 'use strict';
 
-var spawnSync = require('child_process').spawnSync;
-var path = require('path');
+const spawnSync = require('child_process').spawnSync;
+const path = require('path');
 
 exports.order = function() {
   return spawnProcess('order.js');
@@ -24,7 +24,7 @@ exports.asyncRethrowWhenOtherHandlersArePresent = function() {
 };
 
 function spawnProcess(fileName) {
-  var appPath = path.join(__dirname, fileName);
+  const appPath = path.join(__dirname, fileName);
   return spawnSync('node', [appPath], {
     timeout: 1000
   });

@@ -1,30 +1,30 @@
 'use strict';
 
-var delay = require('bluebird').delay;
-var expect = require('chai').expect;
-var fail = require('chai').assert.fail;
+const delay = require('bluebird').delay;
+const expect = require('chai').expect;
+const fail = require('chai').assert.fail;
 
-var supportedVersion = require('@instana/core').tracing.supportedVersion;
-var constants = require('@instana/core').tracing.constants;
-var config = require('../../config');
-var utils = require('../../utils');
+const supportedVersion = require('@instana/core').tracing.supportedVersion;
+const constants = require('@instana/core').tracing.constants;
+const config = require('../../config');
+const utils = require('../../utils');
 
-var waitForSpans = process.env.CI ? 1000 : 200;
+const waitForSpans = process.env.CI ? 1000 : 200;
 
 describe('tracing/sdk', function() {
   if (!supportedVersion(process.versions.node)) {
     return;
   }
 
-  var agentControls = require('../../apps/agentStubControls');
-  var Controls = require('./controls');
+  const agentControls = require('../../apps/agentStubControls');
+  const Controls = require('./controls');
 
   this.timeout(config.getTestTimeout());
 
-  describe('when tracing is enabled', function() {
+  describe('when tracing is enabled', () => {
     agentControls.registerTestHooks();
-    var controls = new Controls({
-      agentControls: agentControls
+    const controls = new Controls({
+      agentControls
     });
     controls.registerTestHooks();
 
@@ -33,195 +33,197 @@ describe('tracing/sdk', function() {
     });
 
     function registerSuite(apiType) {
-      describe(apiType + ' API', function() {
-        it('must create an entry span without custom tags', function() {
+      describe(`${apiType} API`, () => {
+        it('must create an entry span without custom tags', () => {
           controls.sendViaIpc({ command: 'start-entry', type: apiType });
-          return utils.retry(function() {
-            var ipcMessages = controls.getIpcMessages();
+          return utils.retry(() => {
+            const ipcMessages = controls.getIpcMessages();
             checkForErrors(ipcMessages);
             expect(ipcMessages.length).to.equal(1);
             expect(ipcMessages[0]).to.equal('done: start-entry');
-            return agentControls.getSpans().then(function(spans) {
-              var customEntry = expectCustomEntry(spans, controls.getPid(), 'none');
+            return agentControls.getSpans().then(spans => {
+              const customEntry = expectCustomEntry(spans, controls.getPid(), 'none');
               expectHttpExit(spans, customEntry, controls.getPid());
             });
           });
         });
 
-        it('must create an entry span with tags provided at start', function() {
+        it('must create an entry span with tags provided at start', () => {
           controls.sendViaIpc({ command: 'start-entry', type: apiType, withData: 'start' });
-          return utils.retry(function() {
-            var ipcMessages = controls.getIpcMessages();
+          return utils.retry(() => {
+            const ipcMessages = controls.getIpcMessages();
             checkForErrors(ipcMessages);
             expect(ipcMessages.length).to.equal(1);
             expect(ipcMessages[0]).to.equal('done: start-entry');
-            return agentControls.getSpans().then(function(spans) {
-              var customEntry = expectCustomEntry(spans, controls.getPid(), 'start');
+            return agentControls.getSpans().then(spans => {
+              const customEntry = expectCustomEntry(spans, controls.getPid(), 'start');
               expectHttpExit(spans, customEntry, controls.getPid());
             });
           });
         });
 
-        it('must create an entry span with tags provided at completion', function() {
+        it('must create an entry span with tags provided at completion', () => {
           controls.sendViaIpc({ command: 'start-entry', type: apiType, withData: 'end' });
-          return utils.retry(function() {
-            var ipcMessages = controls.getIpcMessages();
+          return utils.retry(() => {
+            const ipcMessages = controls.getIpcMessages();
             checkForErrors(ipcMessages);
             expect(ipcMessages.length).to.equal(1);
             expect(ipcMessages[0]).to.equal('done: start-entry');
-            return agentControls.getSpans().then(function(spans) {
-              var customEntry = expectCustomEntry(spans, controls.getPid(), 'end');
+            return agentControls.getSpans().then(spans => {
+              const customEntry = expectCustomEntry(spans, controls.getPid(), 'end');
               expectHttpExit(spans, customEntry, controls.getPid());
             });
           });
         });
 
-        it('must create an entry span with tags provided at start and completion', function() {
+        it('must create an entry span with tags provided at start and completion', () => {
           controls.sendViaIpc({ command: 'start-entry', type: apiType, withData: 'both' });
-          return utils.retry(function() {
-            var ipcMessages = controls.getIpcMessages();
+          return utils.retry(() => {
+            const ipcMessages = controls.getIpcMessages();
             checkForErrors(ipcMessages);
             expect(ipcMessages.length).to.equal(1);
             expect(ipcMessages[0]).to.equal('done: start-entry');
-            return agentControls.getSpans().then(function(spans) {
-              var customEntry = expectCustomEntry(spans, controls.getPid(), 'both');
+            return agentControls.getSpans().then(spans => {
+              const customEntry = expectCustomEntry(spans, controls.getPid(), 'both');
               expectHttpExit(spans, customEntry, controls.getPid());
             });
           });
         });
 
-        it('must create an entry span with an error', function() {
+        it('must create an entry span with an error', () => {
           controls.sendViaIpc({ command: 'start-entry', type: apiType, error: true });
-          return utils.retry(function() {
-            var ipcMessages = controls.getIpcMessages();
+          return utils.retry(() => {
+            const ipcMessages = controls.getIpcMessages();
             checkForErrors(ipcMessages);
             expect(ipcMessages.length).to.equal(1);
             expect(ipcMessages[0]).to.equal('done: start-entry');
-            return agentControls.getSpans().then(function(spans) {
-              var customEntry = expectCustomEntry(spans, controls.getPid(), 'none', null, null, null, true);
+            return agentControls.getSpans().then(spans => {
+              const customEntry = expectCustomEntry(spans, controls.getPid(), 'none', null, null, null, true);
               expectHttpExit(spans, customEntry, controls.getPid());
             });
           });
         });
 
-        it('must create an entry span with trace ID and parent span ID', function() {
-          var traceId = 'trace-id';
-          var parentSpanId = 'parent-span-id';
+        it('must create an entry span with trace ID and parent span ID', () => {
+          const traceId = 'trace-id';
+          const parentSpanId = 'parent-span-id';
           controls.sendViaIpc({
             command: 'start-entry',
             type: apiType,
-            traceId: traceId,
-            parentSpanId: parentSpanId
+            traceId,
+            parentSpanId
           });
-          return utils.retry(function() {
-            var ipcMessages = controls.getIpcMessages();
+          return utils.retry(() => {
+            const ipcMessages = controls.getIpcMessages();
             checkForErrors(ipcMessages);
             expect(ipcMessages.length).to.equal(1);
             expect(ipcMessages[0]).to.equal('done: start-entry');
-            return agentControls.getSpans().then(function(spans) {
-              var customEntry = expectCustomEntry(spans, controls.getPid(), 'none', traceId, parentSpanId);
+            return agentControls.getSpans().then(spans => {
+              const customEntry = expectCustomEntry(spans, controls.getPid(), 'none', traceId, parentSpanId);
               expectHttpExit(spans, customEntry, controls.getPid());
             });
           });
         });
 
-        it('must create an intermediate span', function() {
-          return controls
+        it('must create an intermediate span', () =>
+          controls
             .sendRequest({
               method: 'POST',
-              path: '/' + apiType + '/create-intermediate'
+              path: `/${apiType}/create-intermediate`
             })
-            .then(function(response) {
+            .then(response => {
               expect(response).does.exist;
               expect(response.indexOf('The MIT License')).to.equal(0);
-              return utils.retry(function() {
-                return agentControls.getSpans().then(function(spans) {
-                  var httpEntry = expectHttpEntry(spans, '/' + apiType + '/create-intermediate');
-                  var intermediateSpan = expectCustomFsIntermediate(spans, httpEntry, controls.getPid(), /\/LICENSE$/);
+              return utils.retry(() =>
+                agentControls.getSpans().then(spans => {
+                  const httpEntry = expectHttpEntry(spans, `/${apiType}/create-intermediate`);
+                  const intermediateSpan = expectCustomFsIntermediate(
+                    spans,
+                    httpEntry,
+                    controls.getPid(),
+                    /\/LICENSE$/
+                  );
                   expectHttpExit(spans, intermediateSpan, controls.getPid());
-                });
-              });
-            });
-        });
+                })
+              );
+            }));
 
-        it('must create an exit span', function() {
-          return controls
+        it('must create an exit span', () =>
+          controls
             .sendRequest({
               method: 'POST',
-              path: '/' + apiType + '/create-exit'
+              path: `/${apiType}/create-exit`
             })
-            .then(function(response) {
+            .then(response => {
               expect(response).does.exist;
               expect(response.indexOf('The MIT License')).to.equal(0);
-              return utils.retry(function() {
-                return agentControls.getSpans().then(function(spans) {
-                  var httpEntry = expectHttpEntry(spans, '/' + apiType + '/create-exit');
+              return utils.retry(() =>
+                agentControls.getSpans().then(spans => {
+                  const httpEntry = expectHttpEntry(spans, `/${apiType}/create-exit`);
                   expectCustomFsExit(spans, httpEntry, controls.getPid(), /\/LICENSE$/);
                   expectHttpExit(spans, httpEntry, controls.getPid());
-                });
-              });
-            });
-        });
+                })
+              );
+            }));
 
-        it('must create an exit span with error', function() {
-          return controls
+        it('must create an exit span with error', () =>
+          controls
             .sendRequest({
               method: 'POST',
-              path: '/' + apiType + '/create-exit?error=true',
+              path: `/${apiType}/create-exit?error=true`,
               simple: false
             })
-            .then(function(response) {
+            .then(response => {
               expect(response).does.exist;
               expect(response).to.equal('Not Found');
-              return utils.retry(function() {
-                return agentControls.getSpans().then(function(spans) {
-                  var httpEntry = expectHttpEntry(spans, '/' + apiType + '/create-exit');
+              return utils.retry(() =>
+                agentControls.getSpans().then(spans => {
+                  const httpEntry = expectHttpEntry(spans, `/${apiType}/create-exit`);
                   expectCustomFsExit(spans, httpEntry, controls.getPid(), /\/does-not-exist$/, true);
                   expectHttpExit(spans, httpEntry, controls.getPid());
-                });
-              });
-            });
-        });
+                })
+              );
+            }));
 
-        it('must keep the trace context when binding an event emitter', function() {
+        it('must keep the trace context when binding an event emitter', () => {
           controls.sendViaIpc({ command: 'event-emitter', type: apiType });
-          return utils.retry(function() {
-            var ipcMessages = controls.getIpcMessages();
+          return utils.retry(() => {
+            const ipcMessages = controls.getIpcMessages();
             checkForErrors(ipcMessages);
             expect(ipcMessages.length).to.equal(1);
             expect(ipcMessages[0]).to.equal('done: event-emitter');
-            return agentControls.getSpans().then(function(spans) {
-              var customEntry = expectCustomEntry(spans, controls.getPid());
+            return agentControls.getSpans().then(spans => {
+              const customEntry = expectCustomEntry(spans, controls.getPid());
               expectHttpExit(spans, customEntry, controls.getPid());
             });
           });
         });
 
-        it('must nest entries and exits correctly', function() {
+        it('must nest entries and exits correctly', () => {
           controls.sendViaIpc({ command: 'nest-entry-exit', type: apiType });
-          return utils.retry(function() {
-            var ipcMessages = controls.getIpcMessages();
+          return utils.retry(() => {
+            const ipcMessages = controls.getIpcMessages();
             checkForErrors(ipcMessages);
             expect(ipcMessages.length).to.equal(1);
             expect(ipcMessages[0]).to.equal('done: nest-entry-exit');
-            return agentControls.getSpans().then(function(spans) {
-              var customEntry = expectCustomEntry(spans, controls.getPid(), null, null, null, /^nestEntryExit/);
+            return agentControls.getSpans().then(spans => {
+              const customEntry = expectCustomEntry(spans, controls.getPid(), null, null, null, /^nestEntryExit/);
               expectCustomExit(spans, customEntry, controls.getPid());
             });
           });
         });
 
-        it('must nest intermediates correctly', function() {
+        it('must nest intermediates correctly', () => {
           controls.sendViaIpc({ command: 'nest-intermediates', type: apiType });
-          return utils.retry(function() {
-            var ipcMessages = controls.getIpcMessages();
+          return utils.retry(() => {
+            const ipcMessages = controls.getIpcMessages();
             checkForErrors(ipcMessages);
             expect(ipcMessages.length).to.equal(1);
             expect(ipcMessages[0]).to.equal('done: nest-intermediates');
-            return agentControls.getSpans().then(function(spans) {
-              var customEntry = expectCustomEntry(spans, controls.getPid(), null, null, null, /^nestIntermediates/);
-              var intermediate1 = expectIntermediate(spans, customEntry, 'intermediate-1', controls.getPid());
-              var intermediate2 = expectIntermediate(spans, intermediate1, 'intermediate-2', controls.getPid());
+            return agentControls.getSpans().then(spans => {
+              const customEntry = expectCustomEntry(spans, controls.getPid(), null, null, null, /^nestIntermediates/);
+              const intermediate1 = expectIntermediate(spans, customEntry, 'intermediate-1', controls.getPid());
+              const intermediate2 = expectIntermediate(spans, intermediate1, 'intermediate-2', controls.getPid());
               expectCustomExit(spans, intermediate2, controls.getPid());
             });
           });
@@ -230,11 +232,11 @@ describe('tracing/sdk', function() {
     }
   });
 
-  describe('when tracing is not enabled', function() {
+  describe('when tracing is not enabled', () => {
     agentControls.registerTestHooks();
-    var controls = new Controls({
+    const controls = new Controls({
       tracingEnabled: false,
-      agentControls: agentControls
+      agentControls
     });
     controls.registerTestHooks();
 
@@ -243,71 +245,61 @@ describe('tracing/sdk', function() {
     });
 
     function registerSuite(apiType) {
-      describe(apiType + ' API', function() {
-        it('must not create entry spans', function() {
+      describe(`${apiType} API`, () => {
+        it('must not create entry spans', () => {
           controls.sendViaIpc({ command: 'start-entry', type: apiType });
           return utils
-            .retry(function() {
-              var ipcMessages = controls.getIpcMessages();
+            .retry(() => {
+              const ipcMessages = controls.getIpcMessages();
               checkForErrors(ipcMessages);
               expect(ipcMessages.length).to.equal(1);
               expect(ipcMessages[0]).to.equal('done: start-entry');
             })
-            .then(function() {
-              return delay(waitForSpans);
-            })
-            .then(function() {
-              return agentControls.getSpans();
-            })
-            .then(function(spans) {
+            .then(() => delay(waitForSpans))
+            .then(() => agentControls.getSpans())
+            .then(spans => {
               expect(spans).to.be.empty;
             });
         });
       });
 
-      it('must not create intermediate spans', function() {
-        return controls
+      it('must not create intermediate spans', () =>
+        controls
           .sendRequest({
             method: 'POST',
-            path: '/' + apiType + '/create-intermediate'
+            path: `/${apiType}/create-intermediate`
           })
-          .then(function(response) {
+          .then(response => {
             expect(response).does.exist;
             expect(response.indexOf('The MIT License')).to.equal(0);
             return delay(waitForSpans)
-              .then(function() {
-                return agentControls.getSpans();
-              })
-              .then(function(spans) {
+              .then(() => agentControls.getSpans())
+              .then(spans => {
                 expect(spans).to.be.empty;
               });
-          });
-      });
+          }));
 
-      it('must not create exit spans', function() {
-        return controls
+      it('must not create exit spans', () =>
+        controls
           .sendRequest({
             method: 'POST',
-            path: '/' + apiType + '/create-exit'
+            path: `/${apiType}/create-exit`
           })
-          .then(function(response) {
+          .then(response => {
             expect(response).does.exist;
             expect(response.indexOf('The MIT License')).to.equal(0);
             return delay(waitForSpans)
-              .then(function() {
-                return agentControls.getSpans();
-              })
-              .then(function(spans) {
+              .then(() => agentControls.getSpans())
+              .then(spans => {
                 expect(spans).to.be.empty;
               });
-          });
-      });
+          }));
     }
   });
 
   function expectCustomEntry(spans, pid, tagsAt, traceId, parentSpanId, functionName, error) {
     functionName = functionName || /^createEntry/;
-    return utils.expectOneMatching(spans, function(span) {
+    return utils.expectOneMatching(spans, span => {
       if (traceId) {
         expect(span.t).to.equal(traceId);
       } else {
@@ -350,13 +342,13 @@ describe('tracing/sdk', function() {
           expect(span.data.sdk.custom.tags.end).to.equal('some value');
           break;
         default:
-          throw new Error('Unknown value for tagsAt: ' + tagsAt);
+          throw new Error(`Unknown value for tagsAt: ${tagsAt}`);
       }
     });
   }
 
   function expectHttpEntry(spans, path) {
-    return utils.expectOneMatching(spans, function(span) {
+    return utils.expectOneMatching(spans, span => {
       expect(span.n).to.equal('node.http.server');
       expect(span.data.http.method).to.equal('POST');
       expect(span.data.http.url).to.equal(path);
@@ -364,7 +356,7 @@ describe('tracing/sdk', function() {
   }
 
   function expectHttpExit(spans, parentEntry, pid) {
-    utils.expectOneMatching(spans, function(span) {
+    utils.expectOneMatching(spans, span => {
       expect(span.t).to.equal(parentEntry.t);
       expect(span.p).to.equal(parentEntry.s);
       expect(span.n).to.equal('node.http.client');
@@ -388,7 +380,7 @@ describe('tracing/sdk', function() {
   }
 
   function expectCustomFsSpan(spans, kind, functionName, parentEntry, pid, path, error) {
-    return utils.expectOneMatching(spans, function(span) {
+    return utils.expectOneMatching(spans, span => {
       expect(span.t).to.equal(parentEntry.t);
       expect(span.p).to.equal(parentEntry.s);
       expect(span.n).to.equal('sdk');
@@ -417,7 +409,7 @@ describe('tracing/sdk', function() {
   }
 
   function expectIntermediate(spans, parentEntry, name, pid) {
-    return utils.expectOneMatching(spans, function(span) {
+    return utils.expectOneMatching(spans, span => {
       expect(span.t).to.equal(parentEntry.t);
       expect(span.p).to.equal(parentEntry.s);
       expect(span.n).to.equal('sdk');
@@ -437,7 +429,7 @@ describe('tracing/sdk', function() {
   }
 
   function expectCustomExit(spans, parentEntry, pid) {
-    return utils.expectOneMatching(spans, function(span) {
+    return utils.expectOneMatching(spans, span => {
       expect(span.t).to.equal(parentEntry.t);
       expect(span.p).to.equal(parentEntry.s);
       expect(span.n).to.equal('sdk');
@@ -457,10 +449,10 @@ describe('tracing/sdk', function() {
   }
 
   function checkForErrors(ipcMessages) {
-    for (var i = 0; i < ipcMessages.length; i++) {
-      var msg = ipcMessages[i];
+    for (let i = 0; i < ipcMessages.length; i++) {
+      const msg = ipcMessages[i];
       if (msg.indexOf('error: ') === 0) {
-        fail('IPC error: ' + msg);
+        fail(`IPC error: ${msg}`);
       }
     }
   }

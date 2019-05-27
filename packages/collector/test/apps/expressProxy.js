@@ -1,5 +1,7 @@
 /* eslint-disable */
 
+'use strict';
+
 // This is a tiny express app which responds to all methods and has configurable
 // latency and response codes. This can be used a baselines for many tests, e.g.
 // to test distributed tracing.
@@ -14,24 +16,24 @@ require('../../')({
   }
 });
 
-var express = require('express');
-var request = require('request');
-var fetch = require('node-fetch');
-var app = express();
+const express = require('express');
+const request = require('request');
+const fetch = require('node-fetch');
+const app = express();
 
-app.get('/', function(req, res) {
+app.get('/', (req, res) => {
   res.sendStatus(200);
 });
 
-app.use(function(req, res) {
+app.use((req, res) => {
   log(req.method, req.url);
-  var delay = parseInt(req.query.delay || 0, 10);
-  setTimeout(function() {
-    var url;
+  const delay = parseInt(req.query.delay || 0, 10);
+  setTimeout(() => {
+    let url;
     if (req.query.url) {
       url = req.query.url;
     } else {
-      url = 'http://127.0.0.1:' + process.env.UPSTREAM_PORT + '/proxy-call' + req.url;
+      url = `http://127.0.0.1:${process.env.UPSTREAM_PORT}/proxy-call${req.url}`;
     }
 
     if (req.query.httpLib === 'node-fetch') {
@@ -40,10 +42,10 @@ app.use(function(req, res) {
         method: req.method,
         timeout: 500
       })
-        .then(function(response) {
+        .then(response => {
           res.sendStatus(response.status);
         })
-        .catch(function(err) {
+        .catch(err => {
           res.sendStatus(500);
           log('Unexpected error', err);
         });
@@ -52,11 +54,11 @@ app.use(function(req, res) {
       request(
         {
           method: req.method,
-          url: url,
+          url,
           qs: req.query,
           timeout: 500
         },
-        function(err, response) {
+        (err, response) => {
           if (err) {
             res.sendStatus(500);
             log('Unexpected error', err);
@@ -69,12 +71,12 @@ app.use(function(req, res) {
   }, delay * 0.25);
 });
 
-app.listen(process.env.APP_PORT, function() {
-  log('Listening on port: ' + process.env.APP_PORT);
+app.listen(process.env.APP_PORT, () => {
+  log(`Listening on port: ${process.env.APP_PORT}`);
 });
 
 function log() {
-  var args = Array.prototype.slice.call(arguments);
-  args[0] = 'Express Proxy (' + process.pid + '):\t' + args[0];
+  const args = Array.prototype.slice.call(arguments);
+  args[0] = `Express Proxy (${process.pid}):\t${args[0]}`;
   console.log.apply(console, args);
 }

@@ -10,142 +10,126 @@ require('../../../../')({
   }
 });
 
-var bodyParser = require('body-parser');
-var rp = require('request-promise');
-var express = require('express');
-var semver = require('semver');
-var morgan = require('morgan');
-var AWS = require('aws-sdk');
-var path = require('path');
-var fs = require('fs');
+const bodyParser = require('body-parser');
+const rp = require('request-promise');
+const express = require('express');
+const semver = require('semver');
+const morgan = require('morgan');
+const AWS = require('aws-sdk');
+const path = require('path');
+const fs = require('fs');
 
 // WHATWG URL class is globally availabe as of Node.js 10.0.0, needs to be required in older versions.
-var URL = semver.lt(process.versions.node, '10.0.0') ? require('url').URL : global.URL;
+const URL = semver.lt(process.versions.node, '10.0.0') ? require('url').URL : global.URL;
 
-var httpModule = process.env.USE_HTTPS === 'true' ? require('https') : require('http');
-var protocol = process.env.USE_HTTPS === 'true' ? 'https' : 'http';
-var baseUrl = protocol + '://127.0.0.1:' + process.env.SERVER_PORT;
+const httpModule = process.env.USE_HTTPS === 'true' ? require('https') : require('http');
+const protocol = process.env.USE_HTTPS === 'true' ? 'https' : 'http';
+const baseUrl = `${protocol}://127.0.0.1:${process.env.SERVER_PORT}`;
 
-var app = express();
-var awsRegion = process.env.AWS_REGION || 'eu-west-1';
-var s3 = new AWS.S3({ apiVersion: '2006-03-01', region: awsRegion });
-var logPrefix = 'Express HTTP client: Client (' + process.pid + '):\t';
+const app = express();
+const awsRegion = process.env.AWS_REGION || 'eu-west-1';
+const s3 = new AWS.S3({ apiVersion: '2006-03-01', region: awsRegion });
+const logPrefix = `Express HTTP client: Client (${process.pid}):\t`;
 
 if (process.env.WITH_STDOUT) {
-  app.use(morgan(logPrefix + ':method :url :status'));
+  app.use(morgan(`${logPrefix}:method :url :status`));
 }
 
 app.use(bodyParser.json());
 
-app.get('/', function(req, res) {
+app.get('/', (req, res) => {
   rp({
     method: 'GET',
-    url: baseUrl + '/',
+    url: `${baseUrl}/`,
     strictSSL: false
   })
-    .then(function() {
+    .then(() => {
       res.sendStatus(200);
     })
-    .catch(function() {
+    .catch(() => {
       res.sendStatus(500);
     });
 });
 
-app.get('/request-url-and-options', function(req, res) {
+app.get('/request-url-and-options', (req, res) => {
   httpModule
-    .request(createUrl(req, '/request-url-opts'), { rejectUnauthorized: false }, function() {
-      return res.sendStatus(200);
-    })
+    .request(createUrl(req, '/request-url-opts'), { rejectUnauthorized: false }, () => res.sendStatus(200))
     .end();
 });
 
-app.get('/request-url-only', function(req, res) {
-  httpModule
-    .request(createUrl(req, '/request-only-url'), function() {
-      return res.sendStatus(200);
-    })
-    .end();
+app.get('/request-url-only', (req, res) => {
+  httpModule.request(createUrl(req, '/request-only-url'), () => res.sendStatus(200)).end();
 });
 
-app.get('/request-options-only', function(req, res) {
+app.get('/request-options-only', (req, res) => {
   httpModule
     .request(
       {
         hostname: '127.0.0.1',
         port: process.env.SERVER_PORT,
         method: 'GET',
-        path: '/request-only-opts' + (req.query.withQuery ? '?q1=some&pass=verysecret&q2=value' : ''),
+        path: `/request-only-opts${req.query.withQuery ? '?q1=some&pass=verysecret&q2=value' : ''}`,
         rejectUnauthorized: false
       },
-      function() {
-        return res.sendStatus(200);
-      }
+      () => res.sendStatus(200)
     )
     .end();
 });
 
-app.get('/request-options-only-null-headers', function(req, res) {
+app.get('/request-options-only-null-headers', (req, res) => {
   httpModule
     .request(
       {
         hostname: '127.0.0.1',
         port: process.env.SERVER_PORT,
         method: 'GET',
-        path: '/request-only-opts' + (req.query.withQuery ? '?q1=some&pass=verysecret&q2=value' : ''),
+        path: `/request-only-opts${req.query.withQuery ? '?q1=some&pass=verysecret&q2=value' : ''}`,
         rejectUnauthorized: false,
         headers: null
       },
-      function() {
-        return res.sendStatus(200);
-      }
+      () => res.sendStatus(200)
     )
     .end();
 });
 
-app.get('/get-url-and-options', function(req, res) {
-  httpModule.get(createUrl(req, '/get-url-opts'), { rejectUnauthorized: false }, function() {
-    return res.sendStatus(200);
-  });
+app.get('/get-url-and-options', (req, res) => {
+  httpModule.get(createUrl(req, '/get-url-opts'), { rejectUnauthorized: false }, () => res.sendStatus(200));
 });
 
-app.get('/get-url-only', function(req, res) {
-  httpModule.get(createUrl(req, '/get-only-url'), function() {
-    return res.sendStatus(200);
-  });
+app.get('/get-url-only', (req, res) => {
+  httpModule.get(createUrl(req, '/get-only-url'), () => res.sendStatus(200));
 });
 
-app.get('/get-options-only', function(req, res) {
+app.get('/get-options-only', (req, res) => {
   httpModule.get(
     {
       hostname: '127.0.0.1',
       port: process.env.SERVER_PORT,
       method: 'GET',
-      path: '/get-only-opts' + (req.query.withQuery ? '?q1=some&pass=verysecret&q2=value' : ''),
+      path: `/get-only-opts${req.query.withQuery ? '?q1=some&pass=verysecret&q2=value' : ''}`,
       rejectUnauthorized: false
     },
-    function() {
-      return res.sendStatus(200);
-    }
+    () => res.sendStatus(200)
   );
 });
 
-app.get('/timeout', function(req, res) {
+app.get('/timeout', (req, res) => {
   rp({
     method: 'GET',
-    url: baseUrl + '/timeout',
+    url: `${baseUrl}/timeout`,
     timeout: 500,
     strictSSL: false
   })
-    .then(function() {
+    .then(() => {
       res.sendStatus(200);
     })
-    .catch(function() {
+    .catch(() => {
       res.sendStatus(500);
     });
 });
 
-app.get('/abort', function(req, res) {
-  var clientRequest = httpModule.request({
+app.get('/abort', (req, res) => {
+  const clientRequest = httpModule.request({
     method: 'GET',
     hostname: '127.0.0.1',
     port: process.env.SERVER_PORT,
@@ -155,20 +139,20 @@ app.get('/abort', function(req, res) {
 
   clientRequest.end();
 
-  setTimeout(function() {
+  setTimeout(() => {
     clientRequest.abort();
     res.sendStatus(200);
   }, 1500);
 });
 
-app.get('/request-malformed-url', function(req, res) {
+app.get('/request-malformed-url', (req, res) => {
   try {
     httpModule
       .request(
         //
         'ha-te-te-peh://999.0.0.1:not-a-port/malformed-url', //
         { rejectUnauthorized: false }, //
-        function() {
+        () => {
           console.log('This should not have happend!');
         }
       )
@@ -180,18 +164,16 @@ app.get('/request-malformed-url', function(req, res) {
           hostname: '127.0.0.1',
           port: process.env.SERVER_PORT,
           method: 'GET',
-          path: '/request-only-opts' + (req.query.withQuery ? '?q1=some&pass=verysecret&q2=value' : ''),
+          path: `/request-only-opts${req.query.withQuery ? '?q1=some&pass=verysecret&q2=value' : ''}`,
           rejectUnauthorized: false
         },
-        function() {
-          return res.sendStatus(200);
-        }
+        () => res.sendStatus(200)
       )
       .end();
   }
 });
 
-app.post('/upload-s3', function(req, res) {
+app.post('/upload-s3', (req, res) => {
   if (!process.env.AWS_ACCESS_KEY_ID) {
     console.error('AWS_ACCESS_KEY_ID is not set.');
     return res.sendStatus(500);
@@ -205,22 +187,22 @@ app.post('/upload-s3', function(req, res) {
     return res.sendStatus(500);
   }
 
-  var testFilePath = path.join(
+  const testFilePath = path.join(
     __dirname,
     'upload',
     'Verdi_Messa_da_requiem_Section_7.2_Libera_me_Dies_irae_Markevitch_1959.mp3'
   );
-  var readStream = fs.createReadStream(testFilePath);
-  var bucketName = process.env.AWS_S3_BUCKET_NAME;
-  var params = { Bucket: process.env.AWS_S3_BUCKET_NAME, Key: 'test-file', Body: readStream };
-  log('Uploading to bucket ' + bucketName + ' in region ' + awsRegion);
-  s3.upload(params, function() {
+  const readStream = fs.createReadStream(testFilePath);
+  const bucketName = process.env.AWS_S3_BUCKET_NAME;
+  const params = { Bucket: process.env.AWS_S3_BUCKET_NAME, Key: 'test-file', Body: readStream };
+  log(`Uploading to bucket ${bucketName} in region ${awsRegion}`);
+  s3.upload(params, () => {
     res.sendStatus(200);
   });
 });
 
-app.put('/expect-continue', function(req, res) {
-  var continueRequest = httpModule.request(
+app.put('/expect-continue', (req, res) => {
+  const continueRequest = httpModule.request(
     {
       hostname: '127.0.0.1',
       port: process.env.SERVER_PORT,
@@ -233,25 +215,25 @@ app.put('/expect-continue', function(req, res) {
         Expect: '100-continue'
       }
     },
-    function(response) {
-      var responseString = '';
-      response.on('data', function(chunk) {
+    response => {
+      let responseString = '';
+      response.on('data', chunk => {
         responseString += chunk;
       });
-      response.on('end', function() {
+      response.on('end', () => {
         res.send(responseString);
       });
     }
   );
 
-  continueRequest.on('continue', function() {
+  continueRequest.on('continue', () => {
     // send body
     continueRequest.end('{"content": "whatever"}');
   });
 });
 
 if (process.env.USE_HTTPS === 'true') {
-  var sslDir = path.join(__dirname, '..', '..', '..', 'apps', 'ssl');
+  const sslDir = path.join(__dirname, '..', '..', '..', 'apps', 'ssl');
   require('https')
     .createServer(
       {
@@ -260,22 +242,22 @@ if (process.env.USE_HTTPS === 'true') {
       },
       app
     )
-    .listen(process.env.APP_PORT, function() {
-      log('Listening (HTTPS!) on port: ' + process.env.APP_PORT);
+    .listen(process.env.APP_PORT, () => {
+      log(`Listening (HTTPS!) on port: ${process.env.APP_PORT}`);
     });
 } else {
-  app.listen(process.env.APP_PORT, function() {
-    log('Listening on port: ' + process.env.APP_PORT);
+  app.listen(process.env.APP_PORT, () => {
+    log(`Listening on port: ${process.env.APP_PORT}`);
   });
 }
 
 function createUrl(req, urlPath) {
-  urlPath = req.query.withQuery ? urlPath + '?q1=some&pass=verysecret&q2=value' : urlPath;
+  urlPath = req.query.withQuery ? `${urlPath}?q1=some&pass=verysecret&q2=value` : urlPath;
   return req.query.urlObject ? new URL(urlPath, baseUrl) : baseUrl + urlPath;
 }
 
 function log() {
-  var args = Array.prototype.slice.call(arguments);
+  const args = Array.prototype.slice.call(arguments);
   args[0] = logPrefix + args[0];
   console.log.apply(console, args);
 }

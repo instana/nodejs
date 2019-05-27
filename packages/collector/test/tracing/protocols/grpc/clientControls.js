@@ -2,11 +2,11 @@
 
 'use strict';
 
-var path = require('path');
+const path = require('path');
 
-var AbstractControls = require('../../AbstractControls');
+const AbstractControls = require('../../AbstractControls');
 
-var Controls = (module.exports = function Controls(opts) {
+const Controls = (module.exports = function Controls(opts) {
   opts.appPath = path.join(__dirname, 'client.js');
   opts.port = 3216;
   AbstractControls.call(this, opts);

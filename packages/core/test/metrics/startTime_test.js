@@ -2,30 +2,30 @@
 
 'use strict';
 
-var proxyquire = require('proxyquire');
-var expect = require('chai').expect;
-var sinon = require('sinon');
+const proxyquire = require('proxyquire');
+const expect = require('chai').expect;
+const sinon = require('sinon');
 
-var originalUptime = process.uptime;
+const originalUptime = process.uptime;
 
-describe('metrics.startTime', function() {
-  var clock;
+describe('metrics.startTime', () => {
+  let clock;
 
-  beforeEach(function() {
+  beforeEach(() => {
     clock = sinon.useFakeTimers();
     process.uptime = sinon.stub();
   });
 
-  afterEach(function() {
+  afterEach(() => {
     process.uptime = originalUptime;
     clock.restore();
   });
 
-  it('should report start time', function() {
+  it('should report start time', () => {
     process.uptime.returns(3); // seconds
     clock.tick(100000);
     // proxyquire to reset module state
-    var startTime = proxyquire('../../src/metrics/startTime', {});
+    const startTime = proxyquire('../../src/metrics/startTime', {});
     expect(startTime.currentPayload).to.equal(97000);
   });
 });

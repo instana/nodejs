@@ -4,8 +4,8 @@
 
 // Deliberately not using Express.js here to avoid conflicts with Express.js' error handling.
 
-var instana = require('../../..');
-var config = {
+const instana = require('../../..');
+const config = {
   agentPort: process.env.AGENT_PORT,
   level: 'warn'
   // not using "forceTransmissionStartingAt: 1" as usual here to verify that the uncaught exception handler actually
@@ -20,10 +20,10 @@ if (process.env.ENABLE_REPORT_UNHANDLED_REJECTIONS) {
 
 instana(config);
 
-var http = require('http');
-var port = process.env.APP_PORT;
+const http = require('http');
+const port = process.env.APP_PORT;
 
-var requestHandler = function(request, response) {
+const requestHandler = (request, response) => {
   if (request.url === '/') {
     return success(response);
   } else if (request.url === '/other') {
@@ -39,34 +39,34 @@ var requestHandler = function(request, response) {
 };
 
 function success(response) {
-  setTimeout(function() {
+  setTimeout(() => {
     response.end("Everything's peachy.");
   }, 100);
 }
 
 function uncaughtError() {
-  process.nextTick(function() {
+  process.nextTick(() => {
     throw new Error('Boom');
   });
 }
 
 function uncaughtPromiseRejection(response) {
-  process.nextTick(function() {
+  process.nextTick(() => {
     Promise.reject(new Error('Unhandled Promise Rejection'));
-    process.nextTick(function() {
+    process.nextTick(() => {
       response.end('Rejected.');
     });
   });
 }
 
-var server = http.createServer(requestHandler);
+const server = http.createServer(requestHandler);
 
-server.listen(port, function(err) {
+server.listen(port, err => {
   if (err) {
     // eslint-disable-next-line no-console
     return console.log('something bad happened', err);
   }
 
   // eslint-disable-next-line no-console
-  console.log('server is listening on ' + port);
+  console.log(`server is listening on ${port}`);
 });

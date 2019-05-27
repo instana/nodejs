@@ -1,18 +1,18 @@
 'use strict';
 
-var expect = require('chai').expect;
-var path = require('path');
+const expect = require('chai').expect;
+const path = require('path');
 
-var stackTrace = require('../../src/util/stackTrace');
+const stackTrace = require('../../src/util/stackTrace');
 
-describe('util/stackTrace', function() {
-  it('must capture stack traces in a handleable format', function() {
-    var stack = stackTrace.captureStackTrace(10);
+describe('util/stackTrace', () => {
+  it('must capture stack traces in a handleable format', () => {
+    const stack = stackTrace.captureStackTrace(10);
     expect(stack[0].c).to.equal(path.join(__dirname, 'stackTrace_test.js'));
   });
 
-  it('must support custom reference functions', function() {
-    var stack;
+  it('must support custom reference functions', () => {
+    let stack;
 
     (function a() {
       (function b() {
@@ -28,8 +28,8 @@ describe('util/stackTrace', function() {
     expect(stack[1].m).to.equal('a');
   });
 
-  it('must restrict length of stack traces', function() {
-    var stack;
+  it('must restrict length of stack traces', () => {
+    let stack;
 
     (function a() {
       (function b() {

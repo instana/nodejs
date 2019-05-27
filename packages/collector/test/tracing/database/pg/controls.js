@@ -2,24 +2,24 @@
 
 'use strict';
 
-var spawn = require('child_process').spawn;
-var request = require('request-promise');
-var path = require('path');
+const spawn = require('child_process').spawn;
+const request = require('request-promise');
+const path = require('path');
 
-var utils = require('../../../utils');
-var config = require('../../../config');
-var agentPort = require('../../../apps/agentStubControls').agentPort;
-var upstreamPort = require('../../../apps/expressControls').appPort;
-var appPort = (exports.appPort = 3218);
+const utils = require('../../../utils');
+const config = require('../../../config');
+const agentPort = require('../../../apps/agentStubControls').agentPort;
+const upstreamPort = require('../../../apps/expressControls').appPort;
+const appPort = (exports.appPort = 3218);
 
-var errors = require('request-promise/errors');
+const errors = require('request-promise/errors');
 
-var expressPgApp;
+let expressPgApp;
 
-exports.registerTestHooks = function(opts) {
+exports.registerTestHooks = opts => {
   opts = opts || {};
-  beforeEach(function() {
-    var env = Object.create(process.env);
+  beforeEach(() => {
+    const env = Object.create(process.env);
     env.AGENT_PORT = agentPort;
     env.APP_PORT = appPort;
     env.UPSTREAM_PORT = upstreamPort;
@@ -28,46 +28,44 @@ exports.registerTestHooks = function(opts) {
 
     expressPgApp = spawn('node', [path.join(__dirname, 'app.js')], {
       stdio: config.getAppStdio(),
-      env: env
+      env
     });
 
     return waitUntilServerIsUp();
   });
 
-  afterEach(function() {
+  afterEach(() => {
     expressPgApp.kill();
   });
 };
 
 function waitUntilServerIsUp() {
-  return utils.retry(function() {
-    return request({
+  return utils.retry(() =>
+    request({
       method: 'GET',
-      url: 'http://127.0.0.1:' + appPort,
+      url: `http://127.0.0.1:${appPort}`,
       headers: {
         'X-INSTANA-L': '0'
       }
-    });
-  });
+    })
+  );
 }
 
-exports.getPid = function() {
-  return expressPgApp.pid;
-};
+exports.getPid = () => expressPgApp.pid;
 
-exports.sendRequest = function(opts) {
-  var headers = {};
+exports.sendRequest = opts => {
+  const headers = {};
   if (opts.suppressTracing === true) {
     headers['X-INSTANA-L'] = '0';
   }
 
   return request({
     method: opts.method,
-    url: 'http://127.0.0.1:' + appPort + opts.path,
+    url: `http://127.0.0.1:${appPort}${opts.path}`,
     json: true,
     body: opts.body,
-    headers: headers
-  }).catch(errors.StatusCodeError, function(reason) {
+    headers
+  }).catch(errors.StatusCodeError, reason => {
     if (opts.rejectWrongStatusCodes) {
       throw reason;
     }

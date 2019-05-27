@@ -1,5 +1,4 @@
 module.exports = {
-
   extends: 'airbnb/legacy',
 
   env: {
@@ -7,22 +6,22 @@ module.exports = {
   },
 
   parserOptions: {
-    sourceType: 'strict',
+    ecmaVersion: 6,
+    sourceType: 'strict'
   },
 
-  plugins: [
-    'mocha'
-  ],
+  plugins: ['mocha'],
 
-  rules:  {
-    'arrow-parens': [2, 'always'],
+  rules: {
     'block-scoped-var': 0,
     'comma-dangle': 0,
     'consistent-return': 0,
     eqeqeq: [2, 'allow-null'],
     'func-names': 0,
+    'function-paren-newline': 0,
     'global-require': 0,
     'id-length': 0,
+    'implicit-arrow-linebreak': 0,
     indent: 0,
     'max-len': [2, 120, 2],
     'mocha/no-exclusive-tests': 2,
@@ -38,12 +37,12 @@ module.exports = {
     'no-restricted-globals': 0,
     'no-underscore-dangle': 0,
     'no-unused-expressions': 0,
-    'no-use-before-define':  [2, 'nofunc'],
+    'no-use-before-define': [2, 'nofunc'],
     'object-curly-spacing': 0,
     'operator-linebreak': 0,
     'prefer-arrow-callback': 0,
     'space-before-function-paren': 0,
-    'strict': [2, 'global'],
+    strict: [2, 'global'],
     'vars-on-top': 0,
     'wrap-iife': 0,
     yoda: 0

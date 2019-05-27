@@ -1,46 +1,43 @@
 'use strict';
 
-var expect = require('chai').expect;
+const expect = require('chai').expect;
 
-var supportedVersion = require('@instana/core').tracing.supportedVersion;
-var config = require('../../config');
-var utils = require('../../utils');
+const supportedVersion = require('@instana/core').tracing.supportedVersion;
+const config = require('../../config');
+const utils = require('../../utils');
 
 describe('tracing/opentracing/integration', function() {
-  var agentStubControls = require('../../apps/agentStubControls');
-  var expressOpentracingControls = require('./controls');
+  const agentStubControls = require('../../apps/agentStubControls');
+  const expressOpentracingControls = require('./controls');
 
   this.timeout(config.getTestTimeout());
 
   agentStubControls.registerTestHooks();
 
-  describe('with automatic tracing', function() {
+  describe('with automatic tracing', () => {
     expressOpentracingControls.registerTestHooks();
 
-    beforeEach(function() {
-      return agentStubControls.waitUntilAppIsCompletelyInitialized(expressOpentracingControls.getPid());
-    });
+    beforeEach(() => agentStubControls.waitUntilAppIsCompletelyInitialized(expressOpentracingControls.getPid()));
 
-    it('must not generate opentracing traces when OT is not used', function() {
-      return expressOpentracingControls.sendRequest({ path: '/' }).then(function() {
-        return utils.retry(function() {
-          return agentStubControls.getSpans().then(function(spans) {
+    it('must not generate opentracing traces when OT is not used', () =>
+      expressOpentracingControls.sendRequest({ path: '/' }).then(() =>
+        utils.retry(() =>
+          agentStubControls.getSpans().then(spans => {
             if (supportedVersion(process.versions.node)) {
               expect(spans).to.have.lengthOf(1);
               expect(spans[0].n).to.equal('node.http.server');
             } else {
               expect(spans).to.have.lengthOf(0);
             }
-          });
-        });
-      });
-    });
+          })
+        )
+      ));
 
-    it('must generate opentracing traces', function() {
-      return expressOpentracingControls.sendRequest({ path: '/withOpentracing' }).then(function() {
-        return utils.retry(function() {
-          return agentStubControls.getSpans().then(function(spans) {
-            var serviceSpan = utils.expectOneMatching(spans, function(span) {
+    it('must generate opentracing traces', () =>
+      expressOpentracingControls.sendRequest({ path: '/withOpentracing' }).then(() =>
+        utils.retry(() =>
+          agentStubControls.getSpans().then(spans => {
+            const serviceSpan = utils.expectOneMatching(spans, span => {
               expect(span.t).to.be.a('string');
               expect(span.s).to.be.a('string');
               expect(span.s).to.equal(span.t);
@@ -53,7 +50,7 @@ describe('tracing/opentracing/integration', function() {
               expect(span.data.sdk.type).to.equal('entry');
             });
 
-            utils.expectOneMatching(spans, function(span) {
+            utils.expectOneMatching(spans, span => {
               expect(span.t).to.equal(serviceSpan.t);
               expect(span.p).to.equal(serviceSpan.s);
               expect(span.s).to.be.a('string');
@@ -72,65 +69,56 @@ describe('tracing/opentracing/integration', function() {
             } else {
               expect(spans).to.have.lengthOf(2);
             }
-          });
-        });
-      });
-    });
+          })
+        )
+      ));
 
     if (supportedVersion(process.versions.node)) {
-      it('must connect instana trace to opentracing spans', function() {
-        return expressOpentracingControls
-          .sendRequest({ path: '/withOpentracingConnectedToInstanaTrace' })
-          .then(function() {
-            return utils.retry(function() {
-              return agentStubControls.getSpans().then(function(spans) {
-                expect(spans).to.have.lengthOf(2);
+      it('must connect instana trace to opentracing spans', () =>
+        expressOpentracingControls.sendRequest({ path: '/withOpentracingConnectedToInstanaTrace' }).then(() =>
+          utils.retry(() =>
+            agentStubControls.getSpans().then(spans => {
+              expect(spans).to.have.lengthOf(2);
 
-                var httpSpan = utils.expectOneMatching(spans, function(span) {
-                  expect(span.n).to.equal('node.http.server');
-                  expect(span.f.e).to.equal(String(expressOpentracingControls.getPid()));
-                  expect(span.f.h).to.equal('agent-stub-uuid');
-                });
-
-                utils.expectOneMatching(spans, function(span) {
-                  expect(span.t).to.equal(httpSpan.t);
-                  expect(span.p).to.equal(httpSpan.s);
-                  expect(span.s).to.be.a('string');
-                  expect(span.s).not.to.equal(span.t);
-                  expect(span.s).not.to.equal(span.p);
-                  expect(span.n).to.equal('sdk');
-                  expect(span.f.e).to.equal(String(expressOpentracingControls.getPid()));
-                  expect(span.f.h).to.equal('agent-stub-uuid');
-                  expect(span.data.service).to.equal('theFancyServiceYouWouldntBelieveActuallyExists');
-                  expect(span.data.sdk.name).to.equal('service');
-                });
+              const httpSpan = utils.expectOneMatching(spans, span => {
+                expect(span.n).to.equal('node.http.server');
+                expect(span.f.e).to.equal(String(expressOpentracingControls.getPid()));
+                expect(span.f.h).to.equal('agent-stub-uuid');
               });
-            });
-          });
-      });
 
-      it('must contain baggage in instana span context', function() {
-        return expressOpentracingControls
-          .sendRequest({ path: '/getCurrentlyActiveInstanaSpanContext' })
-          .then(function(body) {
-            expect(JSON.parse(body).baggage).to.deep.equal({});
-          });
-      });
+              utils.expectOneMatching(spans, span => {
+                expect(span.t).to.equal(httpSpan.t);
+                expect(span.p).to.equal(httpSpan.s);
+                expect(span.s).to.be.a('string');
+                expect(span.s).not.to.equal(span.t);
+                expect(span.s).not.to.equal(span.p);
+                expect(span.n).to.equal('sdk');
+                expect(span.f.e).to.equal(String(expressOpentracingControls.getPid()));
+                expect(span.f.h).to.equal('agent-stub-uuid');
+                expect(span.data.service).to.equal('theFancyServiceYouWouldntBelieveActuallyExists');
+                expect(span.data.sdk.name).to.equal('service');
+              });
+            })
+          )
+        ));
+
+      it('must contain baggage in instana span context', () =>
+        expressOpentracingControls.sendRequest({ path: '/getCurrentlyActiveInstanaSpanContext' }).then(body => {
+          expect(JSON.parse(body).baggage).to.deep.equal({});
+        }));
     }
   });
 
-  describe('without automatic tracing', function() {
+  describe('without automatic tracing', () => {
     expressOpentracingControls.registerTestHooks({ disableAutomaticTracing: true });
 
-    beforeEach(function() {
-      return agentStubControls.waitUntilAppIsCompletelyInitialized(expressOpentracingControls.getPid());
-    });
+    beforeEach(() => agentStubControls.waitUntilAppIsCompletelyInitialized(expressOpentracingControls.getPid()));
 
-    it('must only generate opentracing traces', function() {
-      return expressOpentracingControls.sendRequest({ path: '/withOpentracing' }).then(function() {
-        return utils.retry(function() {
-          return agentStubControls.getSpans().then(function(spans) {
-            var serviceSpan = utils.expectOneMatching(spans, function(span) {
+    it('must only generate opentracing traces', () =>
+      expressOpentracingControls.sendRequest({ path: '/withOpentracing' }).then(() =>
+        utils.retry(() =>
+          agentStubControls.getSpans().then(spans => {
+            const serviceSpan = utils.expectOneMatching(spans, span => {
               expect(span.t).to.be.a('string');
               expect(span.s).to.be.a('string');
               expect(span.s).to.equal(span.t);
@@ -143,7 +131,7 @@ describe('tracing/opentracing/integration', function() {
               expect(span.data.sdk.type).to.equal('entry');
             });
 
-            utils.expectOneMatching(spans, function(span) {
+            utils.expectOneMatching(spans, span => {
               expect(span.t).to.equal(serviceSpan.t);
               expect(span.p).to.equal(serviceSpan.s);
               expect(span.s).to.be.a('string');
@@ -158,9 +146,8 @@ describe('tracing/opentracing/integration', function() {
             });
 
             expect(spans).to.have.lengthOf(2);
-          });
-        });
-      });
-    });
+          })
+        )
+      ));
   });
 });

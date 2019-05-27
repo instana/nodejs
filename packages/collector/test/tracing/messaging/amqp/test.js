@@ -2,21 +2,21 @@
 
 'use strict';
 
-var expect = require('chai').expect;
+const expect = require('chai').expect;
 
-var constants = require('@instana/core').tracing.constants;
-var supportedVersion = require('@instana/core').tracing.supportedVersion;
-var utils = require('../../../utils');
-var exchange = require('./amqpUtil').exchange;
-var queueName = require('./amqpUtil').queueName;
-var queueNameGet = require('./amqpUtil').queueNameGet;
-var queueNameConfirm = require('./amqpUtil').queueNameConfirm;
+const constants = require('@instana/core').tracing.constants;
+const supportedVersion = require('@instana/core').tracing.supportedVersion;
+const utils = require('../../../utils');
+const exchange = require('./amqpUtil').exchange;
+const queueName = require('./amqpUtil').queueName;
+const queueNameGet = require('./amqpUtil').queueNameGet;
+const queueNameConfirm = require('./amqpUtil').queueNameConfirm;
 
-var publisherControls;
-var consumerControls;
-var agentStubControls;
+let publisherControls;
+let consumerControls;
+let agentStubControls;
 
-describe('tracing/amqp', function() {
+describe('tracing/amqp', () => {
   if (!supportedVersion(process.versions.node)) {
     return;
   }
@@ -27,7 +27,7 @@ describe('tracing/amqp', function() {
 
   agentStubControls.registerTestHooks();
 
-  ['Promises', 'Callbacks'].forEach(function(apiType) {
+  ['Promises', 'Callbacks'].forEach(apiType => {
     describe(apiType, function() {
       registerTests.call(this, apiType);
     });
@@ -36,24 +36,24 @@ describe('tracing/amqp', function() {
 
 function registerTests(apiType) {
   publisherControls.registerTestHooks({
-    apiType: apiType
+    apiType
   });
   consumerControls.registerTestHooks({
-    apiType: apiType
+    apiType
   });
 
-  beforeEach(function() {
-    return Promise.all([
+  beforeEach(() =>
+    Promise.all([
       agentStubControls.waitUntilAppIsCompletelyInitialized(consumerControls.getPid()),
       agentStubControls.waitUntilAppIsCompletelyInitialized(publisherControls.getPid())
-    ]);
-  });
+    ])
+  );
 
-  it('must record an exit span for sendToQueue', function() {
-    return publisherControls.sendToQueue('Ohai!').then(function() {
-      return utils.retry(function() {
-        return agentStubControls.getSpans().then(function(spans) {
-          var entrySpan = utils.expectOneMatching(spans, function(span) {
+  it('must record an exit span for sendToQueue', () =>
+    publisherControls.sendToQueue('Ohai!').then(() =>
+      utils.retry(() =>
+        agentStubControls.getSpans().then(spans => {
+          const entrySpan = utils.expectOneMatching(spans, span => {
             expect(span.n).to.equal('node.http.server');
             expect(span.f.e).to.equal(String(publisherControls.getPid()));
             expect(span.f.h).to.equal('agent-stub-uuid');
@@ -61,7 +61,7 @@ function registerTests(apiType) {
             expect(span.error).to.equal(false);
           });
 
-          utils.expectOneMatching(spans, function(span) {
+          utils.expectOneMatching(spans, span => {
             expect(span.t).to.equal(entrySpan.t);
             expect(span.p).to.equal(entrySpan.s);
             expect(span.k).to.equal(constants.EXIT);
@@ -77,22 +77,21 @@ function registerTests(apiType) {
           });
 
           // verify that subsequent calls are correctly traced
-          utils.expectOneMatching(spans, function(span) {
+          utils.expectOneMatching(spans, span => {
             expect(span.n).to.equal('node.http.client');
             expect(span.t).to.equal(entrySpan.t);
             expect(span.p).to.equal(entrySpan.s);
             expect(span.k).to.equal(constants.EXIT);
           });
-        });
-      });
-    });
-  });
+        })
+      )
+    ));
 
-  it('must record an exit span for publish', function() {
-    return publisherControls.publish('Ohai!').then(function() {
-      return utils.retry(function() {
-        return agentStubControls.getSpans().then(function(spans) {
-          var entrySpan = utils.expectOneMatching(spans, function(span) {
+  it('must record an exit span for publish', () =>
+    publisherControls.publish('Ohai!').then(() =>
+      utils.retry(() =>
+        agentStubControls.getSpans().then(spans => {
+          const entrySpan = utils.expectOneMatching(spans, span => {
             expect(span.n).to.equal('node.http.server');
             expect(span.f.e).to.equal(String(publisherControls.getPid()));
             expect(span.f.h).to.equal('agent-stub-uuid');
@@ -100,7 +99,7 @@ function registerTests(apiType) {
             expect(span.error).to.equal(false);
           });
 
-          utils.expectOneMatching(spans, function(span) {
+          utils.expectOneMatching(spans, span => {
             expect(span.t).to.equal(entrySpan.t);
             expect(span.p).to.equal(entrySpan.s);
             expect(span.k).to.equal(constants.EXIT);
@@ -115,27 +114,26 @@ function registerTests(apiType) {
           });
 
           // verify that subsequent calls are correctly traced
-          utils.expectOneMatching(spans, function(span) {
+          utils.expectOneMatching(spans, span => {
             expect(span.n).to.equal('node.http.client');
             expect(span.t).to.equal(entrySpan.t);
             expect(span.p).to.equal(entrySpan.s);
             expect(span.k).to.equal(constants.EXIT);
           });
-        });
-      });
-    });
-  });
+        })
+      )
+    ));
 
-  it('must record an entry span for consume without exchange', function() {
-    return publisherControls.sendToQueue('Ohai').then(function() {
-      return utils.retry(function() {
-        return agentStubControls.getSpans().then(function(spans) {
-          var rabbitMqExit = utils.expectOneMatching(spans, function(span) {
+  it('must record an entry span for consume without exchange', () =>
+    publisherControls.sendToQueue('Ohai').then(() =>
+      utils.retry(() =>
+        agentStubControls.getSpans().then(spans => {
+          const rabbitMqExit = utils.expectOneMatching(spans, span => {
             expect(span.k).to.equal(constants.EXIT);
             expect(span.n).to.equal('rabbitmq');
           });
 
-          var rabbitMqEntry = utils.expectOneMatching(spans, function(span) {
+          const rabbitMqEntry = utils.expectOneMatching(spans, span => {
             expect(span.t).to.equal(rabbitMqExit.t);
             expect(span.p).to.equal(rabbitMqExit.s);
             expect(span.n).to.equal('rabbitmq');
@@ -151,27 +149,26 @@ function registerTests(apiType) {
           });
 
           // verify that subsequent calls are correctly traced
-          utils.expectOneMatching(spans, function(span) {
+          utils.expectOneMatching(spans, span => {
             expect(span.n).to.equal('node.http.client');
             expect(span.t).to.equal(rabbitMqExit.t);
             expect(span.p).to.equal(rabbitMqEntry.s);
             expect(span.k).to.equal(constants.EXIT);
           });
-        });
-      });
-    });
-  });
+        })
+      )
+    ));
 
-  it('must record an entry span for consume with exchange', function() {
-    return publisherControls.publish('Ohai').then(function() {
-      return utils.retry(function() {
-        return agentStubControls.getSpans().then(function(spans) {
-          var rabbitMqExit = utils.expectOneMatching(spans, function(span) {
+  it('must record an entry span for consume with exchange', () =>
+    publisherControls.publish('Ohai').then(() =>
+      utils.retry(() =>
+        agentStubControls.getSpans().then(spans => {
+          const rabbitMqExit = utils.expectOneMatching(spans, span => {
             expect(span.k).to.equal(constants.EXIT);
             expect(span.n).to.equal('rabbitmq');
           });
 
-          var rabbitMqEntry = utils.expectOneMatching(spans, function(span) {
+          const rabbitMqEntry = utils.expectOneMatching(spans, span => {
             expect(span.t).to.equal(rabbitMqExit.t);
             expect(span.p).to.equal(rabbitMqExit.s);
             expect(span.n).to.equal('rabbitmq');
@@ -187,27 +184,26 @@ function registerTests(apiType) {
           });
 
           // verify that subsequent calls are correctly traced
-          utils.expectOneMatching(spans, function(span) {
+          utils.expectOneMatching(spans, span => {
             expect(span.n).to.equal('node.http.client');
             expect(span.t).to.equal(rabbitMqExit.t);
             expect(span.p).to.equal(rabbitMqEntry.s);
             expect(span.k).to.equal(constants.EXIT);
           });
-        });
-      });
-    });
-  });
+        })
+      )
+    ));
 
-  it('must record an entry span for channel#get', function() {
-    return publisherControls.sendToGetQueue('Ohai').then(function() {
-      return utils.retry(function() {
-        return agentStubControls.getSpans().then(function(spans) {
-          var rabbitMqExit = utils.expectOneMatching(spans, function(span) {
+  it('must record an entry span for channel#get', () =>
+    publisherControls.sendToGetQueue('Ohai').then(() =>
+      utils.retry(() =>
+        agentStubControls.getSpans().then(spans => {
+          const rabbitMqExit = utils.expectOneMatching(spans, span => {
             expect(span.k).to.equal(constants.EXIT);
             expect(span.n).to.equal('rabbitmq');
           });
 
-          var rabbitMqEntry = utils.expectOneMatching(spans, function(span) {
+          const rabbitMqEntry = utils.expectOneMatching(spans, span => {
             expect(span.t).to.equal(rabbitMqExit.t);
             expect(span.p).to.equal(rabbitMqExit.s);
             expect(span.n).to.equal('rabbitmq');
@@ -223,22 +219,21 @@ function registerTests(apiType) {
           });
 
           // verify that subsequent calls are correctly traced
-          utils.expectOneMatching(spans, function(span) {
+          utils.expectOneMatching(spans, span => {
             expect(span.n).to.equal('node.http.client');
             expect(span.t).to.equal(rabbitMqExit.t);
             expect(span.p).to.equal(rabbitMqEntry.s);
             expect(span.k).to.equal(constants.EXIT);
           });
-        });
-      });
-    });
-  });
+        })
+      )
+    ));
 
-  it('must record an exit span for ConfirmChannel#sendToQueue', function() {
-    return publisherControls.sendToConfirmQueue('Ohai!').then(function() {
-      return utils.retry(function() {
-        return agentStubControls.getSpans().then(function(spans) {
-          var entrySpan = utils.expectOneMatching(spans, function(span) {
+  it('must record an exit span for ConfirmChannel#sendToQueue', () =>
+    publisherControls.sendToConfirmQueue('Ohai!').then(() =>
+      utils.retry(() =>
+        agentStubControls.getSpans().then(spans => {
+          const entrySpan = utils.expectOneMatching(spans, span => {
             expect(span.n).to.equal('node.http.server');
             expect(span.f.e).to.equal(String(publisherControls.getPid()));
             expect(span.f.h).to.equal('agent-stub-uuid');
@@ -246,7 +241,7 @@ function registerTests(apiType) {
             expect(span.error).to.equal(false);
           });
 
-          utils.expectOneMatching(spans, function(span) {
+          utils.expectOneMatching(spans, span => {
             expect(span.t).to.equal(entrySpan.t);
             expect(span.p).to.equal(entrySpan.s);
             expect(span.k).to.equal(constants.EXIT);
@@ -262,27 +257,26 @@ function registerTests(apiType) {
           });
 
           // verify that subsequent calls are correctly traced
-          utils.expectOneMatching(spans, function(span) {
+          utils.expectOneMatching(spans, span => {
             expect(span.n).to.equal('node.http.client');
             expect(span.t).to.equal(entrySpan.t);
             expect(span.p).to.equal(entrySpan.s);
             expect(span.k).to.equal(constants.EXIT);
           });
-        });
-      });
-    });
-  });
+        })
+      )
+    ));
 
-  it('must record an entry span for ConfirmChannel.consume', function() {
-    return publisherControls.sendToConfirmQueue('Ohai').then(function() {
-      return utils.retry(function() {
-        return agentStubControls.getSpans().then(function(spans) {
-          var rabbitMqExit = utils.expectOneMatching(spans, function(span) {
+  it('must record an entry span for ConfirmChannel.consume', () =>
+    publisherControls.sendToConfirmQueue('Ohai').then(() =>
+      utils.retry(() =>
+        agentStubControls.getSpans().then(spans => {
+          const rabbitMqExit = utils.expectOneMatching(spans, span => {
             expect(span.k).to.equal(constants.EXIT);
             expect(span.n).to.equal('rabbitmq');
           });
 
-          var rabbitMqEntry = utils.expectOneMatching(spans, function(span) {
+          const rabbitMqEntry = utils.expectOneMatching(spans, span => {
             expect(span.t).to.equal(rabbitMqExit.t);
             expect(span.p).to.equal(rabbitMqExit.s);
             expect(span.n).to.equal('rabbitmq');
@@ -297,14 +291,13 @@ function registerTests(apiType) {
           });
 
           // verify that subsequent calls are correctly traced
-          utils.expectOneMatching(spans, function(span) {
+          utils.expectOneMatching(spans, span => {
             expect(span.n).to.equal('node.http.client');
             expect(span.t).to.equal(rabbitMqExit.t);
             expect(span.p).to.equal(rabbitMqEntry.s);
             expect(span.k).to.equal(constants.EXIT);
           });
-        });
-      });
-    });
-  });
+        })
+      )
+    ));
 }

@@ -2,10 +2,10 @@
 
 'use strict';
 
-var Promise = require('bluebird');
-var fail = require('chai').assert.fail;
+const Promise = require('bluebird');
+const fail = require('chai').assert.fail;
 
-var config = require('./config');
+const config = require('./config');
 
 exports.retry = function retry(fn, time, until) {
   if (time == null) {
@@ -22,9 +22,7 @@ exports.retry = function retry(fn, time, until) {
 
   return Promise.delay(time / 20)
     .then(fn)
-    .catch(function() {
-      return retry(fn, time, until);
-    });
+    .catch(() => retry(fn, time, until));
 };
 
 exports.expectOneMatching = function expectOneMatching(arr, fn) {
@@ -32,10 +30,10 @@ exports.expectOneMatching = function expectOneMatching(arr, fn) {
     fail('Could not find an item which matches all the criteria. Got 0 items.');
   }
 
-  var error;
+  let error;
 
-  for (var i = 0; i < arr.length; i++) {
-    var item = arr[i];
+  for (let i = 0; i < arr.length; i++) {
+    const item = arr[i];
 
     try {
       fn(item);
@@ -47,27 +45,22 @@ exports.expectOneMatching = function expectOneMatching(arr, fn) {
 
   if (error) {
     fail(
-      'Could not find an item which matches all the criteria. Got ' +
-        arr.length +
-        ' items. Last error: ' +
-        error.message +
-        '. All Items:\n' +
-        JSON.stringify(arr, 0, 2) +
-        '. Error stack trace: ' +
-        error.stack
+      `Could not find an item which matches all the criteria. Got ${arr.length} items. Last error: ${
+        error.message
+      }. All Items:\n${JSON.stringify(arr, 0, 2)}. Error stack trace: ${error.stack}`
     );
   }
 };
 
 exports.getSpansByName = function getSpansByName(arr, name) {
-  var result = [];
+  const result = [];
 
   if (!arr || arr.length === 0) {
     return result;
   }
 
-  for (var i = 0; i < arr.length; i++) {
-    var item = arr[i];
+  for (let i = 0; i < arr.length; i++) {
+    const item = arr[i];
     if (item.n === name) {
       result.push(item);
     }

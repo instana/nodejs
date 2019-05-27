@@ -1,12 +1,12 @@
 'use strict';
 
-var semver = require('semver');
-var expect = require('chai').expect;
+const semver = require('semver');
+const expect = require('chai').expect;
 
-var constants = require('@instana/core').tracing.constants;
-var supportedVersion = require('@instana/core').tracing.supportedVersion;
-var config = require('../../../config');
-var utils = require('../../../utils');
+const constants = require('@instana/core').tracing.constants;
+const supportedVersion = require('@instana/core').tracing.supportedVersion;
+const config = require('../../../config');
+const utils = require('../../../utils');
 
 describe('tracing/logger/pino', function() {
   // Pino 5 does not support Node.js 4, it uses EcmaScript language features that only work in more recent versions.
@@ -15,103 +15,88 @@ describe('tracing/logger/pino', function() {
   }
 
   this.timeout(config.getTestTimeout());
-  var agentControls = require('../../../apps/agentStubControls');
-  var appControls = require('./controls');
+  const agentControls = require('../../../apps/agentStubControls');
+  const appControls = require('./controls');
   agentControls.registerTestHooks();
   appControls.registerTestHooks();
 
-  beforeEach(function() {
-    return agentControls.waitUntilAppIsCompletelyInitialized(appControls.getPid());
-  });
+  beforeEach(() => agentControls.waitUntilAppIsCompletelyInitialized(appControls.getPid()));
 
   runTests(false);
   runTests(true);
 
   function runTests(useExpressPino) {
-    var suffix = useExpressPino ? ' (express-pino)' : '';
+    const suffix = useExpressPino ? ' (express-pino)' : '';
 
-    it('must not trace info' + suffix, function() {
-      return appControls.trigger('info', useExpressPino).then(function() {
-        return utils.retry(function() {
-          return agentControls.getSpans().then(function(spans) {
-            var entrySpan = utils.expectOneMatching(spans, function(span) {
+    it(`must not trace info${suffix}`, () =>
+      appControls.trigger('info', useExpressPino).then(() =>
+        utils.retry(() =>
+          agentControls.getSpans().then(spans => {
+            const entrySpan = utils.expectOneMatching(spans, span => {
               expect(span.n).to.equal('node.http.server');
               expect(span.f.e).to.equal(String(appControls.getPid()));
               expect(span.f.h).to.equal('agent-stub-uuid');
             });
-            utils.expectOneMatching(spans, function(span) {
+            utils.expectOneMatching(spans, span => {
               checkNextExitSpan(span, entrySpan);
             });
-            var pinoSpans = utils.getSpansByName(spans, 'log.pino');
+            const pinoSpans = utils.getSpansByName(spans, 'log.pino');
             expect(pinoSpans).to.be.empty;
-          });
-        });
-      });
-    });
+          })
+        )
+      ));
 
-    it('must trace warn' + suffix, function() {
-      return runTest('warn', useExpressPino, false, 'Warn message - should be traced.');
-    });
+    it(`must trace warn${suffix}`, () => runTest('warn', useExpressPino, false, 'Warn message - should be traced.'));
 
-    it('must trace error' + suffix, function() {
-      return runTest('error', useExpressPino, true, 'Error message - should be traced.');
-    });
+    it(`must trace error${suffix}`, () => runTest('error', useExpressPino, true, 'Error message - should be traced.'));
 
-    it('must trace fatal' + suffix, function() {
-      return runTest('fatal', useExpressPino, true, 'Fatal message - should be traced.');
-    });
+    it(`must trace fatal${suffix}`, () => runTest('fatal', useExpressPino, true, 'Fatal message - should be traced.'));
 
-    it('must trace error object without message' + suffix, function() {
-      return runTest('error-object-only', useExpressPino, true, 'This is an error.');
-    });
+    it(`must trace error object without message${suffix}`, () =>
+      runTest('error-object-only', useExpressPino, true, 'This is an error.'));
 
-    it('must not serialize random object' + suffix, function() {
-      return runTest(
+    it(`must not serialize random object${suffix}`, () =>
+      runTest(
         'error-random-object-only',
         useExpressPino,
         true,
         'Log call without message. ' +
           'The Pino mergingObject argument will not be serialized by Instana for performance reasons.'
-      );
-    });
+      ));
 
-    it('must trace error object and string' + suffix, function() {
-      return runTest(
+    it(`must trace error object and string${suffix}`, () =>
+      runTest(
         'error-object-and-string',
         useExpressPino,
         true,
         'This is an error. -- Error message - should be traced.'
-      );
-    });
+      ));
 
-    it('must trace random object and string' + suffix, function() {
-      return runTest('error-random-object-and-string', useExpressPino, true, 'Error message - should be traced.');
-    });
+    it(`must trace random object and string${suffix}`, () =>
+      runTest('error-random-object-and-string', useExpressPino, true, 'Error message - should be traced.'));
 
-    it('must not trace custom info' + suffix, function() {
-      return appControls.trigger('custom-info', useExpressPino).then(function() {
-        return utils.retry(function() {
-          return agentControls.getSpans().then(function(spans) {
-            var entrySpan = utils.expectOneMatching(spans, function(span) {
+    it(`must not trace custom info${suffix}`, () =>
+      appControls.trigger('custom-info', useExpressPino).then(() =>
+        utils.retry(() =>
+          agentControls.getSpans().then(spans => {
+            const entrySpan = utils.expectOneMatching(spans, span => {
               expect(span.n).to.equal('node.http.server');
               expect(span.f.e).to.equal(String(appControls.getPid()));
               expect(span.f.h).to.equal('agent-stub-uuid');
             });
-            utils.expectOneMatching(spans, function(span) {
+            utils.expectOneMatching(spans, span => {
               checkNextExitSpan(span, entrySpan);
             });
-            var pinoSpans = utils.getSpansByName(spans, 'log.pino');
+            const pinoSpans = utils.getSpansByName(spans, 'log.pino');
             expect(pinoSpans).to.be.empty;
-          });
-        });
-      });
-    });
+          })
+        )
+      ));
 
-    it('must trace custom error' + suffix, function() {
-      return runTest('custom-error', useExpressPino, true, 'Custom error level message - should be traced.');
-    });
+    it(`must trace custom error${suffix}`, () =>
+      runTest('custom-error', useExpressPino, true, 'Custom error level message - should be traced.'));
 
-    it('must trace child logger error' + suffix, function() {
+    it(`must trace child logger error${suffix}`, () => {
       if (useExpressPino) {
         return;
       }
@@ -120,23 +105,23 @@ describe('tracing/logger/pino', function() {
   }
 
   function runTest(level, useExpressPino, expectErroneous, message) {
-    return appControls.trigger(level, useExpressPino).then(function() {
-      return utils.retry(function() {
-        return agentControls.getSpans().then(function(spans) {
-          var entrySpan = utils.expectOneMatching(spans, function(span) {
+    return appControls.trigger(level, useExpressPino).then(() =>
+      utils.retry(() =>
+        agentControls.getSpans().then(spans => {
+          const entrySpan = utils.expectOneMatching(spans, span => {
             expect(span.n).to.equal('node.http.server');
             expect(span.f.e).to.equal(String(appControls.getPid()));
             expect(span.f.h).to.equal('agent-stub-uuid');
           });
-          utils.expectOneMatching(spans, function(span) {
+          utils.expectOneMatching(spans, span => {
             checkPinoSpan(span, entrySpan, expectErroneous, message);
           });
-          utils.expectOneMatching(spans, function(span) {
+          utils.expectOneMatching(spans, span => {
             checkNextExitSpan(span, entrySpan);
           });
-        });
-      });
-    });
+        })
+      )
+    );
   }
 
   function checkPinoSpan(span, parent, expectErroneous, message) {

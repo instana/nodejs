@@ -2,23 +2,23 @@
 
 'use strict';
 
-var spawn = require('child_process').spawn;
-var errors = require('request-promise/errors');
-var request = require('request-promise');
-var path = require('path');
+const spawn = require('child_process').spawn;
+const errors = require('request-promise/errors');
+const request = require('request-promise');
+const path = require('path');
 
-var utils = require('../utils');
-var config = require('../config');
-var agentPort = require('./agentStubControls').agentPort;
-var appPort = (exports.appPort = 3211);
+const utils = require('../utils');
+const config = require('../config');
+const agentPort = require('./agentStubControls').agentPort;
+const appPort = (exports.appPort = 3211);
 
-var expressApp;
+let expressApp;
 
-exports.registerTestHooks = function(opts) {
-  beforeEach(function() {
+exports.registerTestHooks = opts => {
+  beforeEach(() => {
     opts = opts || {};
 
-    var env = Object.create(process.env);
+    const env = Object.create(process.env);
     env.AGENT_PORT = agentPort;
     env.APP_PORT = appPort;
     env.TRACING_ENABLED = opts.enableTracing !== false;
@@ -27,44 +27,41 @@ exports.registerTestHooks = function(opts) {
 
     expressApp = spawn('node', [path.join(__dirname, 'express.js')], {
       stdio: config.getAppStdio(),
-      env: env
+      env
     });
 
     return waitUntilServerIsUp(opts.useHttps);
   });
 
-  afterEach(function() {
+  afterEach(() => {
     expressApp.kill();
   });
 };
 
 function waitUntilServerIsUp(useHttps) {
-  return utils.retry(function() {
-    return request({
+  return utils.retry(() =>
+    request({
       method: 'GET',
       url: getBaseUrl(useHttps),
       headers: {
         'X-INSTANA-L': '0'
       },
       strictSSL: false
-    });
-  });
+    })
+  );
 }
 
-exports.getPid = function() {
-  return expressApp.pid;
-};
+exports.getPid = () => expressApp.pid;
 
-exports.sendBasicRequest = function(opts) {
-  return request({
+exports.sendBasicRequest = opts =>
+  request({
     method: opts.method,
     url: getBaseUrl(opts.useHttps) + opts.path,
     resolveWithFullResponse: opts.resolveWithFullResponse,
     strictSSL: false
   });
-};
 
-exports.sendRequest = function(opts) {
+exports.sendRequest = opts => {
   opts.responseStatus = opts.responseStatus || 200;
   opts.delay = opts.delay || 0;
   opts.headers = opts.headers || {};
@@ -81,7 +78,7 @@ exports.sendRequest = function(opts) {
     headers: opts.headers,
     resolveWithFullResponse: opts.resolveWithFullResponse,
     strictSSL: false
-  }).catch(errors.StatusCodeError, function(reason) {
+  }).catch(errors.StatusCodeError, reason => {
     if (reason.statusCode === opts.responseStatus) {
       return true;
     }
@@ -89,30 +86,27 @@ exports.sendRequest = function(opts) {
   });
 };
 
-exports.setHealthy = function(useHttps) {
-  return request({
+exports.setHealthy = useHttps =>
+  request({
     method: 'POST',
-    url: getBaseUrl(useHttps) + '/admin/set-to-healthy',
+    url: `${getBaseUrl(useHttps)}/admin/set-to-healthy`,
     strictSSL: false
   });
-};
 
-exports.setUnhealthy = function(useHttps) {
-  return request({
+exports.setUnhealthy = useHttps =>
+  request({
     method: 'POST',
-    url: getBaseUrl(useHttps) + '/admin/set-to-unhealthy',
+    url: `${getBaseUrl(useHttps)}/admin/set-to-unhealthy`,
     strictSSL: false
   });
-};
 
-exports.setLogger = function(useHttps, logFilePath) {
-  return request({
+exports.setLogger = (useHttps, logFilePath) =>
+  request({
     method: 'POST',
-    url: getBaseUrl(useHttps) + '/set-logger?logFilePath=' + encodeURIComponent(logFilePath),
+    url: `${getBaseUrl(useHttps)}/set-logger?logFilePath=${encodeURIComponent(logFilePath)}`,
     strictSSL: false
   });
-};
 
 function getBaseUrl(useHttps) {
-  return 'http' + (useHttps ? 's' : '') + '://127.0.0.1:' + appPort;
+  return `http${useHttps ? 's' : ''}://127.0.0.1:${appPort}`;
 }

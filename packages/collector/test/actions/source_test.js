@@ -1,20 +1,20 @@
 'use strict';
 
-var expect = require('chai').expect;
-var path = require('path');
-var semver = require('semver');
-var supportedVersion = require('@instana/core').tracing.supportedVersion;
+const expect = require('chai').expect;
+const path = require('path');
+const semver = require('semver');
+const supportedVersion = require('@instana/core').tracing.supportedVersion;
 
-var config = require('../config');
-var utils = require('../utils');
+const config = require('../config');
+const utils = require('../utils');
 
 describe('actions/source', function() {
   if (semver.satisfies(process.versions.node, '<4')) {
     return;
   }
 
-  var expressControls = require('../apps/expressControls');
-  var agentStubControls = require('../apps/agentStubControls');
+  const expressControls = require('../apps/expressControls');
+  const agentStubControls = require('../apps/agentStubControls');
 
   this.timeout(config.getTestTimeout());
 
@@ -23,75 +23,73 @@ describe('actions/source', function() {
     enableTracing: supportedVersion(process.versions.node)
   });
 
-  beforeEach(function() {
-    return agentStubControls.waitUntilAppIsCompletelyInitialized(expressControls.getPid());
-  });
+  beforeEach(() => agentStubControls.waitUntilAppIsCompletelyInitialized(expressControls.getPid()));
 
-  it('retrieve fully qualified source file', function() {
-    var messageId = 'a';
+  it('retrieve fully qualified source file', () => {
+    const messageId = 'a';
     return agentStubControls
       .addRequestForPid(expressControls.getPid(), {
         action: 'node.source',
-        messageId: messageId,
+        messageId,
         args: {
           file: path.join(process.cwd(), 'node_modules', 'semver', 'semver.js')
         }
       })
-      .then(function() {
-        return utils.retry(function() {
-          return agentStubControls.getResponses().then(function(responses) {
-            utils.expectOneMatching(responses, function(response) {
+      .then(() =>
+        utils.retry(() =>
+          agentStubControls.getResponses().then(responses => {
+            utils.expectOneMatching(responses, response => {
               expect(response.messageId).to.equal(messageId);
               expect(response.data.data).to.be.a('string');
               expect(response.data.data).to.match(/SEMVER_SPEC_VERSION/i);
             });
-          });
-        });
-      });
+          })
+        )
+      );
   });
 
-  it('must allow package.json requests', function() {
-    var messageId = 'a';
+  it('must allow package.json requests', () => {
+    const messageId = 'a';
     return agentStubControls
       .addRequestForPid(expressControls.getPid(), {
         action: 'node.source',
-        messageId: messageId,
+        messageId,
         args: {
           file: path.join(process.cwd(), 'package.json')
         }
       })
-      .then(function() {
-        return utils.retry(function() {
-          return agentStubControls.getResponses().then(function(responses) {
-            utils.expectOneMatching(responses, function(response) {
+      .then(() =>
+        utils.retry(() =>
+          agentStubControls.getResponses().then(responses => {
+            utils.expectOneMatching(responses, response => {
               expect(response.messageId).to.equal(messageId);
               expect(response.data.data).to.be.a('string');
               expect(response.data.data).to.match(/"name": "@instana\/collector"/i);
             });
-          });
-        });
-      });
+          })
+        )
+      );
   });
 
-  it('must not allow JSON requests', function() {
-    var messageId = 'a';
+  it('must not allow JSON requests', () => {
+    const messageId = 'a';
     return agentStubControls
       .addRequestForPid(expressControls.getPid(), {
         action: 'node.source',
-        messageId: messageId,
+        messageId,
         args: {
           file: path.join(process.cwd(), 'foo.json')
         }
       })
-      .then(function() {
-        return utils.retry(function() {
-          return agentStubControls.getResponses().then(function(responses) {
-            utils.expectOneMatching(responses, function(response) {
+      .then(() =>
+        utils.retry(() =>
+          agentStubControls.getResponses().then(responses => {
+            utils.expectOneMatching(responses, response => {
               expect(response.messageId).to.equal(messageId);
               expect(response.data.error).to.match(/JavaScript file/i);
             });
-          });
-        });
-      });
+          })
+        )
+      );
   });
 });

@@ -2,20 +2,20 @@
 
 'use strict';
 
-var expect = require('chai').expect;
-var sinon = require('sinon');
+const expect = require('chai').expect;
+const sinon = require('sinon');
 
-var atMostOnce = require('../../src/util/atMostOnce');
+const atMostOnce = require('../../src/util/atMostOnce');
 
-describe('util.atMostOnce', function() {
-  var cb;
+describe('util.atMostOnce', () => {
+  let cb;
 
-  beforeEach(function() {
+  beforeEach(() => {
     cb = sinon.stub();
   });
 
-  it('should forward calls with parameters', function() {
-    var wrapped = atMostOnce('test', cb);
+  it('should forward calls with parameters', () => {
+    const wrapped = atMostOnce('test', cb);
     expect(cb.callCount).to.equal(0);
 
     wrapped('foo', true, 1);
@@ -26,8 +26,8 @@ describe('util.atMostOnce', function() {
     expect(cb.getCall(0).args[2]).to.equal(1);
   });
 
-  it('should not permit any successive calls', function() {
-    var wrapped = atMostOnce('test', cb);
+  it('should not permit any successive calls', () => {
+    const wrapped = atMostOnce('test', cb);
     wrapped('a');
 
     wrapped();

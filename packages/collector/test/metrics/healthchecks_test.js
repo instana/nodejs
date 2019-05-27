@@ -1,9 +1,9 @@
 'use strict';
 
-var expect = require('chai').expect;
-var semver = require('semver');
-var config = require('../config');
-var utils = require('../utils');
+const expect = require('chai').expect;
+const semver = require('semver');
+const config = require('../config');
+const utils = require('../utils');
 
 describe('metrics/healthchecks', function() {
   // admin uses JavaScript language features which aren't available in all
@@ -12,46 +12,38 @@ describe('metrics/healthchecks', function() {
     return;
   }
 
-  var agentStubControls = require('../apps/agentStubControls');
-  var expressControls = require('../apps/expressControls');
+  const agentStubControls = require('../apps/agentStubControls');
+  const expressControls = require('../apps/expressControls');
 
   this.timeout(config.getTestTimeout());
 
-  var start = new Date().getTime();
+  const start = new Date().getTime();
 
   agentStubControls.registerTestHooks();
   expressControls.registerTestHooks({
     enableTracing: false
   });
 
-  beforeEach(function() {
-    return agentStubControls.waitUntilAppIsCompletelyInitialized(expressControls.getPid());
-  });
+  beforeEach(() => agentStubControls.waitUntilAppIsCompletelyInitialized(expressControls.getPid()));
 
-  it('must report health status', function() {
-    var healthyTimestamp;
+  it('must report health status', () => {
+    let healthyTimestamp;
     return utils
-      .retry(function() {
-        return agentStubControls
-          .getLastMetricValue(expressControls.getPid(), ['healthchecks'])
-          .then(function(healthchecks) {
-            expect(healthchecks.configurable.healthy).to.equal(1);
-            expect(healthchecks.configurable.since).to.be.gte(start);
-            healthyTimestamp = healthchecks.configurable.since;
-          });
-      })
-      .then(function() {
-        return expressControls.setUnhealthy();
-      })
-      .then(function() {
-        return utils.retry(function() {
-          return agentStubControls
-            .getLastMetricValue(expressControls.getPid(), ['healthchecks'])
-            .then(function(healthchecks) {
-              expect(healthchecks.configurable.healthy).to.equal(0);
-              expect(healthchecks.configurable.since).to.be.gt(healthyTimestamp);
-            });
-        });
-      });
+      .retry(() =>
+        agentStubControls.getLastMetricValue(expressControls.getPid(), ['healthchecks']).then(healthchecks => {
+          expect(healthchecks.configurable.healthy).to.equal(1);
+          expect(healthchecks.configurable.since).to.be.gte(start);
+          healthyTimestamp = healthchecks.configurable.since;
+        })
+      )
+      .then(() => expressControls.setUnhealthy())
+      .then(() =>
+        utils.retry(() =>
+          agentStubControls.getLastMetricValue(expressControls.getPid(), ['healthchecks']).then(healthchecks => {
+            expect(healthchecks.configurable.healthy).to.equal(0);
+            expect(healthchecks.configurable.since).to.be.gt(healthyTimestamp);
+          })
+        )
+      );
   });
 });

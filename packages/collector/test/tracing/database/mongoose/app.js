@@ -10,14 +10,14 @@ require('../../../../')({
   }
 });
 
-var bodyParser = require('body-parser');
-var mongoose = require('mongoose');
-var express = require('express');
-var morgan = require('morgan');
+const bodyParser = require('body-parser');
+const mongoose = require('mongoose');
+const express = require('express');
+const morgan = require('morgan');
 
-var app = express();
-var logPrefix = 'Express / Mongoose App (' + process.pid + '):\t';
-var connectedToMongo = false;
+const app = express();
+const logPrefix = `Express / Mongoose App (${process.pid}):\t`;
+let connectedToMongo = false;
 
 mongoose.Promise = global.Promise;
 
@@ -28,9 +28,9 @@ mongoose.model(
     age: Number
   })
 );
-var Person = mongoose.model('Person');
+const Person = mongoose.model('Person');
 
-mongoose.connect('mongodb://' + process.env.MONGODB + '/mongoose', function(err) {
+mongoose.connect(`mongodb://${process.env.MONGODB}/mongoose`, err => {
   if (err) {
     log('Failed to connect to Mongodb', err);
     process.exit(1);
@@ -39,12 +39,12 @@ mongoose.connect('mongodb://' + process.env.MONGODB + '/mongoose', function(err)
 });
 
 if (process.env.WITH_STDOUT) {
-  app.use(morgan(logPrefix + ':method :url :status'));
+  app.use(morgan(`${logPrefix}:method :url :status`));
 }
 
 app.use(bodyParser.json());
 
-app.get('/', function(req, res) {
+app.get('/', (req, res) => {
   if (!connectedToMongo) {
     res.sendStatus(500);
   } else {
@@ -52,35 +52,35 @@ app.get('/', function(req, res) {
   }
 });
 
-app.post('/insert', function(req, res) {
+app.post('/insert', (req, res) => {
   Person.create(req.body)
-    .then(function(r) {
+    .then(r => {
       res.json(r);
     })
-    .catch(function(e) {
+    .catch(e => {
       log('Failed to write document', e);
       res.sendStatus(500);
     });
 });
 
-app.post('/find', function(req, res) {
+app.post('/find', (req, res) => {
   Person.findOne(req.body)
     .exec()
-    .then(function(r) {
+    .then(r => {
       res.json(r);
     })
-    .catch(function(e) {
+    .catch(e => {
       log('Failed to find document', e);
       res.sendStatus(500);
     });
 });
 
-app.listen(process.env.APP_PORT, function() {
-  log('Listening on port: ' + process.env.APP_PORT);
+app.listen(process.env.APP_PORT, () => {
+  log(`Listening on port: ${process.env.APP_PORT}`);
 });
 
 function log() {
-  var args = Array.prototype.slice.call(arguments);
+  const args = Array.prototype.slice.call(arguments);
   args[0] = logPrefix + args[0];
   console.log.apply(console, args);
 }

@@ -3,39 +3,39 @@
 
 'use strict';
 
-var agentPort = process.env.AGENT_PORT;
+const agentPort = process.env.AGENT_PORT;
 
 require('../../../../')({
-  agentPort: agentPort,
+  agentPort,
   level: 'warn',
   tracing: {
     forceTransmissionStartingAt: 1
   }
 });
 
-var bodyParser = require('body-parser');
-var express = require('express');
-var morgan = require('morgan');
-var redis = require('ioredis');
-var request = require('request-promise');
+const bodyParser = require('body-parser');
+const express = require('express');
+const morgan = require('morgan');
+const redis = require('ioredis');
+const request = require('request-promise');
 
-var app = express();
-var logPrefix = 'Express / Redis App (' + process.pid + '):\t';
-var connectedToRedis = true;
+const app = express();
+const logPrefix = `Express / Redis App (${process.pid}):\t`;
+let connectedToRedis = true;
 
-var client = redis.createClient('//' + process.env.REDIS);
+const client = redis.createClient(`//${process.env.REDIS}`);
 
-client.on('ready', function() {
+client.on('ready', () => {
   connectedToRedis = true;
 });
 
 if (process.env.WITH_STDOUT) {
-  app.use(morgan(logPrefix + ':method :url :status'));
+  app.use(morgan(`${logPrefix}:method :url :status`));
 }
 
 app.use(bodyParser.json());
 
-app.get('/', function(req, res) {
+app.get('/', (req, res) => {
   if (!connectedToRedis) {
     res.sendStatus(500);
   } else {
@@ -43,10 +43,10 @@ app.get('/', function(req, res) {
   }
 });
 
-app.post('/values', function(req, res) {
-  var key = req.query.key;
-  var value = req.query.value;
-  client.set(key, value, function(err) {
+app.post('/values', (req, res) => {
+  const key = req.query.key;
+  const value = req.query.value;
+  client.set(key, value, err => {
     if (err) {
       log('Set with key %s, value %s failed', key, value, err);
       res.sendStatus(500);
@@ -56,72 +56,72 @@ app.post('/values', function(req, res) {
   });
 });
 
-app.get('/values', function(req, res) {
-  var key = req.query.key;
+app.get('/values', (req, res) => {
+  const key = req.query.key;
   client.get(key).then(
-    function(redisRes) {
+    redisRes => {
       res.send(redisRes);
     },
-    function(err) {
+    err => {
       log('Get with key %s failed', key, err);
       res.sendStatus(500);
     }
   );
 });
 
-app.get('/keepTracing', function(req, res) {
-  var key = req.query.key;
-  var redisResponse = null;
+app.get('/keepTracing', (req, res) => {
+  const key = req.query.key;
+  let redisResponse = null;
   client
     .get(key)
-    .then(function(redisRes) {
+    .then(redisRes => {
       redisResponse = redisRes;
       // Execute another traced call to verify that we keep the tracing context.
-      return request('http://127.0.0.1:' + agentPort);
+      return request(`http://127.0.0.1:${agentPort}`);
     })
-    .then(function(httpRes) {
-      res.send(httpRes + ';' + redisResponse);
+    .then(httpRes => {
+      res.send(`${httpRes};${redisResponse}`);
     })
-    .catch(function(err) {
+    .catch(err => {
       log('Unexpected error for key %s', key, err);
       res.sendStatus(500);
     });
 });
 
-app.get('/keepTracingCallback', function(req, res) {
+app.get('/keepTracingCallback', (req, res) => {
   // this uses a self created promise and a mix promise and callback styles,
   // in particular, it uses the ioredis optional callback argument.
-  var key = req.query.key;
-  return new Promise(function(resolve, reject) {
+  const key = req.query.key;
+  return new Promise((resolve, reject) => {
     // using ioredis client with callback instead of a promise here
-    client.get(key, function(err, redisRes) {
+    client.get(key, (err, redisRes) => {
       if (err) {
         log('Get with key %s failed', key, err);
         reject(err);
         return;
       }
       // Execute another traced call to verify that we keep the tracing context.
-      request('http://127.0.0.1:' + agentPort, function(httpErr, httpRes) {
+      request(`http://127.0.0.1:${agentPort}`, (httpErr, httpRes) => {
         if (httpErr) {
           log('HTTP call failed', httpErr);
           return reject(httpErr);
         }
-        return resolve(httpRes.body + ';' + redisRes);
+        return resolve(`${httpRes.body};${redisRes}`);
       });
     });
   })
-    .then(function(result) {
+    .then(result => {
       res.send(result);
     })
-    .catch(function(err) {
+    .catch(err => {
       log('Unexpected error for key %s', key, err);
       res.sendStatus(500);
     });
 });
 
-app.get('/failure', function(req, res) {
+app.get('/failure', (req, res) => {
   // simulating wrong get usage
-  client.get('someCollection', 'someKey', 'someValue', function(err, redisRes) {
+  client.get('someCollection', 'someKey', 'someValue', (err, redisRes) => {
     if (err) {
       res.sendStatus(500);
     } else {
@@ -130,13 +130,13 @@ app.get('/failure', function(req, res) {
   });
 });
 
-app.get('/multi', function(req, res) {
+app.get('/multi', (req, res) => {
   // simulating wrong get usage
   client
     .multi()
     .hset('someCollection', 'key', 'value')
     .hget('someCollection', 'key')
-    .exec(function(err) {
+    .exec(err => {
       if (err) {
         res.sendStatus(500);
       } else {
@@ -145,13 +145,13 @@ app.get('/multi', function(req, res) {
     });
 });
 
-app.get('/multiFailure', function(req, res) {
+app.get('/multiFailure', (req, res) => {
   // simulating wrong get usage
   client
     .multi()
     .hset('someCollection', 'key', 'value')
     .hget('someCollection', 'key', 'too', 'many', 'args')
-    .exec(function(err) {
+    .exec(err => {
       if (err) {
         res.sendStatus(500);
       } else {
@@ -160,34 +160,34 @@ app.get('/multiFailure', function(req, res) {
     });
 });
 
-app.post('/multiKeepTracing', function(req, res) {
-  var redisResponse = null;
+app.post('/multiKeepTracing', (req, res) => {
+  let redisResponse = null;
   client
     .multi()
     .hset('someCollection', 'key', 'value')
     .hget('someCollection', 'key')
     .exec()
-    .then(function(redisRes) {
+    .then(redisRes => {
       redisResponse = redisRes;
       // Execute another traced call to verify that we keep the tracing context.
-      return request('http://127.0.0.1:' + agentPort);
+      return request(`http://127.0.0.1:${agentPort}`);
     })
-    .then(function(httpRes) {
-      res.send(httpRes + ';' + redisResponse);
+    .then(httpRes => {
+      res.send(`${httpRes};${redisResponse}`);
     })
-    .catch(function(err) {
+    .catch(err => {
       log('Unexpected error', err);
       res.sendStatus(500);
     });
 });
 
-app.get('/pipeline', function(req, res) {
+app.get('/pipeline', (req, res) => {
   client
     .pipeline()
     .hset('someCollection', 'key', 'value')
     .hset('someCollection', 'key2', 'value')
     .hget('someCollection', 'key')
-    .exec(function(err) {
+    .exec(err => {
       if (err) {
         res.sendStatus(500);
       } else {
@@ -196,13 +196,13 @@ app.get('/pipeline', function(req, res) {
     });
 });
 
-app.get('/pipelineFailure', function(req, res) {
+app.get('/pipelineFailure', (req, res) => {
   client
     .pipeline()
     .hset('someCollection', 'key', 'value')
     .hset('someCollection', 'key2', 'value', 'tooManyArgs')
     .hget('someCollection', 'key')
-    .exec(function(err) {
+    .exec(err => {
       if (err) {
         res.sendStatus(500);
       } else {
@@ -211,33 +211,33 @@ app.get('/pipelineFailure', function(req, res) {
     });
 });
 
-app.post('/pipelineKeepTracing', function(req, res) {
-  var redisResponse = null;
+app.post('/pipelineKeepTracing', (req, res) => {
+  let redisResponse = null;
   client
     .pipeline()
     .hset('someCollection', 'key', 'value')
     .hget('someCollection', 'key')
     .exec()
-    .then(function(redisRes) {
+    .then(redisRes => {
       redisResponse = redisRes;
       // Execute another traced call to verify that we keep the tracing context.
-      return request('http://127.0.0.1:' + agentPort);
+      return request(`http://127.0.0.1:${agentPort}`);
     })
-    .then(function(httpRes) {
-      res.send(httpRes + ';' + redisResponse);
+    .then(httpRes => {
+      res.send(`${httpRes};${redisResponse}`);
     })
-    .catch(function(err) {
+    .catch(err => {
       log('Unexpected error', err);
       res.sendStatus(500);
     });
 });
 
-app.listen(process.env.APP_PORT, function() {
-  log('Listening on port: ' + process.env.APP_PORT);
+app.listen(process.env.APP_PORT, () => {
+  log(`Listening on port: ${process.env.APP_PORT}`);
 });
 
 function log() {
-  var args = Array.prototype.slice.call(arguments);
+  const args = Array.prototype.slice.call(arguments);
   args[0] = logPrefix + args[0];
   console.log.apply(console, args);
 }
