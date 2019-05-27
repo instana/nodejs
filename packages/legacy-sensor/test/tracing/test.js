@@ -1,16 +1,16 @@
 'use strict';
 
-var expect = require('chai').expect;
-var semver = require('semver');
-var constants = require('@instana/core').tracing.constants;
-var supportedVersion = require('@instana/core').tracing.supportedVersion;
+const expect = require('chai').expect;
+const semver = require('semver');
+const constants = require('@instana/core').tracing.constants;
+const supportedVersion = require('@instana/core').tracing.supportedVersion;
 
-var config = require('../../../collector/test/config');
-var utils = require('../../../collector/test/utils');
+const config = require('../../../collector/test/config');
+const utils = require('../../../collector/test/utils');
 
-var agentControls;
-var ClientControls;
-var ServerControls;
+let agentControls;
+let ClientControls;
+let ServerControls;
 
 describe('legacy sensor/tracing', function() {
   if (!supportedVersion(process.versions.node)) {
@@ -25,20 +25,20 @@ describe('legacy sensor/tracing', function() {
 
   agentControls.registerTestHooks();
 
-  var serverControls = new ServerControls({
-    agentControls: agentControls
+  const serverControls = new ServerControls({
+    agentControls
   });
   serverControls.registerTestHooks();
 
-  var clientControls = new ClientControls({
-    agentControls: agentControls,
+  const clientControls = new ClientControls({
+    agentControls,
     env: {
       SERVER_PORT: serverControls.port
     }
   });
   clientControls.registerTestHooks();
 
-  it('must trace request(<string>, options, cb)', function() {
+  it('must trace request(<string>, options, cb)', () => {
     if (semver.lt(process.versions.node, '10.9.0')) {
       // The (url, options[, callback]) API only exists since Node 10.9.0:
       return;
@@ -49,94 +49,92 @@ describe('legacy sensor/tracing', function() {
         method: 'GET',
         path: '/request-url-and-options'
       })
-      .then(function() {
-        return utils.retry(function() {
-          return agentControls.getSpans().then(function(spans) {
-            var clientSpan = utils.expectOneMatching(spans, function(span) {
+      .then(() =>
+        utils.retry(() =>
+          agentControls.getSpans().then(spans => {
+            const clientSpan = utils.expectOneMatching(spans, span => {
               expect(span.n).to.equal('node.http.client');
               expect(span.k).to.equal(constants.EXIT);
               expect(span.data.http.url).to.match(/\/request-url-opts/);
             });
-            utils.expectOneMatching(spans, function(span) {
+            utils.expectOneMatching(spans, span => {
               expect(span.n).to.equal('node.http.server');
               expect(span.k).to.equal(constants.ENTRY);
               expect(span.data.http.url).to.match(/\/request-url-opts/);
               expect(span.t).to.equal(clientSpan.t);
               expect(span.p).to.equal(clientSpan.s);
             });
-          });
-        });
-      });
+          })
+        )
+      );
   });
 
-  it('must trace request(<string>, cb)', function() {
-    return clientControls
+  it('must trace request(<string>, cb)', () =>
+    clientControls
       .sendRequest({
         method: 'GET',
         path: '/request-url-only'
       })
-      .then(function() {
-        return utils.retry(function() {
-          return agentControls.getSpans().then(function(spans) {
-            var clientSpan = utils.expectOneMatching(spans, function(span) {
+      .then(() =>
+        utils.retry(() =>
+          agentControls.getSpans().then(spans => {
+            const clientSpan = utils.expectOneMatching(spans, span => {
               expect(span.n).to.equal('node.http.client');
               expect(span.k).to.equal(constants.EXIT);
               expect(span.data.http.url).to.match(/\/request-only-url/);
             });
-            utils.expectOneMatching(spans, function(span) {
+            utils.expectOneMatching(spans, span => {
               expect(span.n).to.equal('node.http.server');
               expect(span.k).to.equal(constants.ENTRY);
               expect(span.data.http.url).to.match(/\/request-only-url/);
               expect(span.t).to.equal(clientSpan.t);
               expect(span.p).to.equal(clientSpan.s);
             });
-          });
-        });
-      });
-  });
+          })
+        )
+      ));
 
-  it('must trace request(options, cb)', function() {
-    return clientControls
+  it('must trace request(options, cb)', () =>
+    clientControls
       .sendRequest({
         method: 'GET',
         path: '/request-options-only'
       })
-      .then(function() {
-        return utils.retry(function() {
-          return agentControls.getSpans().then(function(spans) {
-            var clientSpan = utils.expectOneMatching(spans, function(span) {
+      .then(() =>
+        utils.retry(() =>
+          agentControls.getSpans().then(spans => {
+            const clientSpan = utils.expectOneMatching(spans, span => {
               expect(span.n).to.equal('node.http.client');
               expect(span.k).to.equal(constants.EXIT);
               expect(span.data.http.url).to.match(/\/request-only-opts/);
             });
-            utils.expectOneMatching(spans, function(span) {
+            utils.expectOneMatching(spans, span => {
               expect(span.n).to.equal('node.http.server');
               expect(span.k).to.equal(constants.ENTRY);
               expect(span.data.http.url).to.match(/\/request-only-opts/);
               expect(span.t).to.equal(clientSpan.t);
               expect(span.p).to.equal(clientSpan.s);
             });
-          });
-        });
-      });
-  });
+          })
+        )
+      ));
 
-  it('must capture sync exceptions', function() {
-    return clientControls
+  it('must capture sync exceptions', () =>
+    clientControls
       .sendRequest({
         method: 'GET',
         path: '/request-malformed-url'
       })
-      .then(function() {
-        return utils.retry(function() {
-          return agentControls.getSpans().then(function(spans) {
-            var entrySpan = utils.expectOneMatching(spans, function(span) {
+      .then(() =>
+        utils.retry(() =>
+          agentControls.getSpans().then(spans => {
+            const entrySpan = utils.expectOneMatching(spans, span => {
               expect(span.n).to.equal('node.http.server');
               expect(span.k).to.equal(constants.ENTRY);
               expect(span.data.http.url).to.match(/\/request-malformed-url/);
             });
 
-            utils.expectOneMatching(spans, function(span) {
+            utils.expectOneMatching(spans, span => {
               expect(span.n).to.equal('node.http.client');
               expect(span.k).to.equal(constants.EXIT);
               expect(span.ec).to.equal(1);
@@ -146,45 +144,43 @@ describe('legacy sensor/tracing', function() {
               expect(span.p).to.equal(entrySpan.s);
             });
 
-            utils.expectOneMatching(spans, function(span) {
+            utils.expectOneMatching(spans, span => {
               expect(span.n).to.equal('node.http.client');
               expect(span.k).to.equal(constants.EXIT);
               expect(span.data.http.url).to.match(/\/request-only-opts/);
               expect(span.t).to.equal(entrySpan.t);
               expect(span.p).to.equal(entrySpan.s);
             });
-          });
-        });
-      });
-  });
+          })
+        )
+      ));
 
-  it('must trace request(options, cb) with { headers: null }', function() {
-    return clientControls
+  it('must trace request(options, cb) with { headers: null }', () =>
+    clientControls
       .sendRequest({
         method: 'GET',
         path: '/request-options-only-null-headers'
       })
-      .then(function() {
-        return utils.retry(function() {
-          return agentControls.getSpans().then(function(spans) {
-            var clientSpan = utils.expectOneMatching(spans, function(span) {
+      .then(() =>
+        utils.retry(() =>
+          agentControls.getSpans().then(spans => {
+            const clientSpan = utils.expectOneMatching(spans, span => {
               expect(span.n).to.equal('node.http.client');
               expect(span.k).to.equal(constants.EXIT);
               expect(span.data.http.url).to.match(/\/request-only-opts/);
             });
-            utils.expectOneMatching(spans, function(span) {
+            utils.expectOneMatching(spans, span => {
               expect(span.n).to.equal('node.http.server');
               expect(span.k).to.equal(constants.ENTRY);
               expect(span.data.http.url).to.match(/\/request-only-opts/);
               expect(span.t).to.equal(clientSpan.t);
               expect(span.p).to.equal(clientSpan.s);
             });
-          });
-        });
-      });
-  });
+          })
+        )
+      ));
 
-  it('must trace get(<string>, options, cb)', function() {
+  it('must trace get(<string>, options, cb)', () => {
     if (semver.lt(process.versions.node, '10.9.0')) {
       // The (url, options[, callback]) API only exists since Node 10.9.0.
       return;
@@ -194,141 +190,136 @@ describe('legacy sensor/tracing', function() {
         method: 'GET',
         path: '/get-url-and-options'
       })
-      .then(function() {
-        return utils.retry(function() {
-          return agentControls.getSpans().then(function(spans) {
-            var clientSpan = utils.expectOneMatching(spans, function(span) {
+      .then(() =>
+        utils.retry(() =>
+          agentControls.getSpans().then(spans => {
+            const clientSpan = utils.expectOneMatching(spans, span => {
               expect(span.n).to.equal('node.http.client');
               expect(span.k).to.equal(constants.EXIT);
               expect(span.data.http.url).to.match(/\/get-url-opts/);
             });
-            utils.expectOneMatching(spans, function(span) {
+            utils.expectOneMatching(spans, span => {
               expect(span.n).to.equal('node.http.server');
               expect(span.k).to.equal(constants.ENTRY);
               expect(span.data.http.url).to.match(/\/get-url-opts/);
               expect(span.t).to.equal(clientSpan.t);
               expect(span.p).to.equal(clientSpan.s);
             });
-          });
-        });
-      });
+          })
+        )
+      );
   });
 
-  it('must trace get(<string>, cb)', function() {
-    return clientControls
+  it('must trace get(<string>, cb)', () =>
+    clientControls
       .sendRequest({
         method: 'GET',
         path: '/get-url-only'
       })
-      .then(function() {
-        return utils.retry(function() {
-          return agentControls.getSpans().then(function(spans) {
-            var clientSpan = utils.expectOneMatching(spans, function(span) {
+      .then(() =>
+        utils.retry(() =>
+          agentControls.getSpans().then(spans => {
+            const clientSpan = utils.expectOneMatching(spans, span => {
               expect(span.n).to.equal('node.http.client');
               expect(span.k).to.equal(constants.EXIT);
               expect(span.data.http.url).to.match(/\/get-only-url/);
             });
-            utils.expectOneMatching(spans, function(span) {
+            utils.expectOneMatching(spans, span => {
               expect(span.n).to.equal('node.http.server');
               expect(span.k).to.equal(constants.ENTRY);
               expect(span.data.http.url).to.match(/\/get-only-url/);
               expect(span.t).to.equal(clientSpan.t);
               expect(span.p).to.equal(clientSpan.s);
             });
-          });
-        });
-      });
-  });
+          })
+        )
+      ));
 
-  it('must trace get(options, cb)', function() {
-    return clientControls
+  it('must trace get(options, cb)', () =>
+    clientControls
       .sendRequest({
         method: 'GET',
         path: '/get-options-only'
       })
-      .then(function() {
-        return utils.retry(function() {
-          return agentControls.getSpans().then(function(spans) {
-            var clientSpan = utils.expectOneMatching(spans, function(span) {
+      .then(() =>
+        utils.retry(() =>
+          agentControls.getSpans().then(spans => {
+            const clientSpan = utils.expectOneMatching(spans, span => {
               expect(span.n).to.equal('node.http.client');
               expect(span.k).to.equal(constants.EXIT);
               expect(span.data.http.url).to.match(/\/get-only-opts/);
             });
-            utils.expectOneMatching(spans, function(span) {
+            utils.expectOneMatching(spans, span => {
               expect(span.n).to.equal('node.http.server');
               expect(span.k).to.equal(constants.ENTRY);
               expect(span.data.http.url).to.match(/\/get-only-opts/);
               expect(span.t).to.equal(clientSpan.t);
               expect(span.p).to.equal(clientSpan.s);
             });
-          });
-        });
-      });
-  });
+          })
+        )
+      ));
 
-  it('must trace calls that fail due to connection refusal', function() {
-    return serverControls
+  it('must trace calls that fail due to connection refusal', () =>
+    serverControls
       .kill()
-      .then(function() {
-        return clientControls.sendRequest({
+      .then(() =>
+        clientControls.sendRequest({
           method: 'GET',
           path: '/timeout',
           simple: false
-        });
-      })
-      .then(function() {
-        return utils.retry(function() {
-          return agentControls.getSpans().then(function(spans) {
-            utils.expectOneMatching(spans, function(span) {
+        })
+      )
+      .then(() =>
+        utils.retry(() =>
+          agentControls.getSpans().then(spans => {
+            utils.expectOneMatching(spans, span => {
               expect(span.n).to.equal('node.http.client');
               expect(span.k).to.equal(constants.EXIT);
               expect(span.ec).to.equal(1);
               expect(span.data.http.error).to.match(/ECONNREFUSED/);
             });
-          });
-        });
-      });
-  });
+          })
+        )
+      ));
 
-  it('must trace calls that fail due to timeouts', function() {
-    return clientControls
+  it('must trace calls that fail due to timeouts', () =>
+    clientControls
       .sendRequest({
         method: 'GET',
         path: '/timeout',
         simple: false
       })
-      .then(function() {
-        return utils.retry(function() {
-          return agentControls.getSpans().then(function(spans) {
-            utils.expectOneMatching(spans, function(span) {
+      .then(() =>
+        utils.retry(() =>
+          agentControls.getSpans().then(spans => {
+            utils.expectOneMatching(spans, span => {
               expect(span.n).to.equal('node.http.client');
               expect(span.k).to.equal(constants.EXIT);
               expect(span.ec).to.equal(1);
               expect(span.data.http.error).to.match(/Timeout/);
             });
-          });
-        });
-      });
-  });
+          })
+        )
+      ));
 
-  it('must trace aborted calls', function() {
-    return clientControls
+  it('must trace aborted calls', () =>
+    clientControls
       .sendRequest({
         method: 'GET',
         path: '/abort',
         simple: false
       })
-      .then(function() {
-        return utils.retry(function() {
-          return agentControls.getSpans().then(function(spans) {
-            utils.expectOneMatching(spans, function(span) {
+      .then(() =>
+        utils.retry(() =>
+          agentControls.getSpans().then(spans => {
+            utils.expectOneMatching(spans, span => {
               expect(span.n).to.equal('node.http.client');
               expect(span.k).to.equal(constants.EXIT);
               expect(span.ec).to.equal(1);
               expect(span.data.http.error).to.match(/aborted/);
             });
-          });
-        });
-      });
-  });
+          })
+        )
+      ));
 });

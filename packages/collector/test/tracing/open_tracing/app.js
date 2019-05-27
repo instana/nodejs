@@ -1,6 +1,8 @@
 /* eslint-disable */
 
-var instana = require('../../../');
+'use strict';
+
+const instana = require('../../../');
 instana({
   agentPort: process.env.AGENT_PORT,
   level: 'warn',
@@ -12,45 +14,45 @@ instana({
   }
 });
 
-var opentracing = require('opentracing');
-var express = require('express');
-var app = express();
+const opentracing = require('opentracing');
+const express = require('express');
+const app = express();
 
 opentracing.initGlobalTracer(instana.opentracing.createTracer());
-var tracer = opentracing.globalTracer();
+const tracer = opentracing.globalTracer();
 
-app.get('/', function(req, res) {
+app.get('/', (req, res) => {
   res.send('OK');
 });
 
-app.get('/withOpentracing', function(req, res) {
+app.get('/withOpentracing', (req, res) => {
   log('########################## Start span!');
-  var serviceSpan = tracer.startSpan('service');
+  const serviceSpan = tracer.startSpan('service');
   log('########################## Started span:', serviceSpan);
   serviceSpan.setTag(opentracing.Tags.SPAN_KIND, opentracing.Tags.SPAN_KIND_RPC_SERVER);
-  var authSpan = tracer.startSpan('auth', { childOf: serviceSpan });
+  const authSpan = tracer.startSpan('auth', { childOf: serviceSpan });
   authSpan.finish();
   serviceSpan.finish();
   res.send('OK');
 });
 
-app.get('/withOpentracingConnectedToInstanaTrace', function(req, res) {
-  var spanContext = instana.opentracing.getCurrentlyActiveInstanaSpanContext();
-  var serviceSpan = tracer.startSpan('service', { childOf: spanContext });
+app.get('/withOpentracingConnectedToInstanaTrace', (req, res) => {
+  const spanContext = instana.opentracing.getCurrentlyActiveInstanaSpanContext();
+  const serviceSpan = tracer.startSpan('service', { childOf: spanContext });
   serviceSpan.finish();
   res.send('OK');
 });
 
-app.get('/getCurrentlyActiveInstanaSpanContext', function(req, res) {
+app.get('/getCurrentlyActiveInstanaSpanContext', (req, res) => {
   res.json(instana.opentracing.getCurrentlyActiveInstanaSpanContext());
 });
 
-app.listen(process.env.APP_PORT, function() {
-  log('Listening on port: ' + process.env.APP_PORT);
+app.listen(process.env.APP_PORT, () => {
+  log(`Listening on port: ${process.env.APP_PORT}`);
 });
 
 function log() {
-  var args = Array.prototype.slice.call(arguments);
-  args[0] = 'Express OT App (' + process.pid + '):\t' + args[0];
+  const args = Array.prototype.slice.call(arguments);
+  args[0] = `Express OT App (${process.pid}):\t${args[0]}`;
   console.log.apply(console, args);
 }

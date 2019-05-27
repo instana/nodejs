@@ -2,22 +2,22 @@
 
 'use strict';
 
-var spawn = require('child_process').spawn;
-var request = require('request-promise');
-var path = require('path');
+const spawn = require('child_process').spawn;
+const request = require('request-promise');
+const path = require('path');
 
-var utils = require('../../../utils');
-var config = require('../../../config');
-var agentPort = require('../../../apps/agentStubControls').agentPort;
-var upstreamPort = require('../../../apps/expressControls').appPort;
-var appPort = (exports.appPort = 3215);
+const utils = require('../../../utils');
+const config = require('../../../config');
+const agentPort = require('../../../apps/agentStubControls').agentPort;
+const upstreamPort = require('../../../apps/expressControls').appPort;
+const appPort = (exports.appPort = 3215);
 
-var appProcess;
+let appProcess;
 
-exports.registerTestHooks = function(opts) {
+exports.registerTestHooks = opts => {
   opts = opts || {};
-  beforeEach(function() {
-    var env = Object.create(process.env);
+  beforeEach(() => {
+    const env = Object.create(process.env);
     env.AGENT_PORT = agentPort;
     env.APP_PORT = appPort;
     env.UPSTREAM_PORT = upstreamPort;
@@ -26,43 +26,41 @@ exports.registerTestHooks = function(opts) {
 
     appProcess = spawn('node', [path.join(__dirname, 'app.js')], {
       stdio: config.getAppStdio(),
-      env: env
+      env
     });
 
     return waitUntilServerIsUp();
   });
 
-  afterEach(function() {
+  afterEach(() => {
     appProcess.kill();
   });
 };
 
 function waitUntilServerIsUp() {
-  return utils.retry(function() {
-    return request({
+  return utils.retry(() =>
+    request({
       method: 'GET',
-      url: 'http://127.0.0.1:' + appPort,
+      url: `http://127.0.0.1:${appPort}`,
       headers: {
         'X-INSTANA-L': '0'
       }
-    });
-  });
+    })
+  );
 }
 
-exports.getPid = function() {
-  return appProcess.pid;
-};
+exports.getPid = () => appProcess.pid;
 
-exports.trigger = function(level, useGlobalLogger, useLogFunction) {
-  var pathSegment;
+exports.trigger = (level, useGlobalLogger, useLogFunction) => {
+  let pathSegment;
   if (useGlobalLogger && useLogFunction) {
-    pathSegment = '/global-log-' + level;
+    pathSegment = `/global-log-${level}`;
   } else if (useGlobalLogger) {
-    pathSegment = '/global-' + level;
+    pathSegment = `/global-${level}`;
   } else if (useLogFunction) {
-    pathSegment = '/log-' + level;
+    pathSegment = `/log-${level}`;
   } else {
-    pathSegment = '/' + level;
+    pathSegment = `/${level}`;
   }
-  return request('http://127.0.0.1:' + appPort + pathSegment);
+  return request(`http://127.0.0.1:${appPort}${pathSegment}`);
 };

@@ -1,6 +1,6 @@
 'use strict';
 
-var config = require('./config');
+const config = require('./config');
 
 if (config.collectorEnabled) {
   console.log('enabling @instana/collector');
@@ -15,16 +15,16 @@ if (config.collectorEnabled) {
   console.log('NOT enabling @instana/collector');
 }
 
-var express = require('express');
-var app = express();
+const express = require('express');
+const app = express();
 
-app.get('/', function(req, res) {
+app.get('/', (req, res) => {
   if (config.logRequests) {
     console.log('received request');
   }
   res.send('OK');
 });
 
-app.listen(config.appPort, function() {
+app.listen(config.appPort, () => {
   console.log('Listening on port', config.appPort);
 });

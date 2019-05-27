@@ -1,43 +1,43 @@
 'use strict';
 
-var expect = require('chai').expect;
+const expect = require('chai').expect;
 
-var constants = require('@instana/core').tracing.constants;
-var supportedVersion = require('@instana/core').tracing.supportedVersion;
-var config = require('../../../config');
-var utils = require('../../../utils');
+const constants = require('@instana/core').tracing.constants;
+const supportedVersion = require('@instana/core').tracing.supportedVersion;
+const config = require('../../../config');
+const utils = require('../../../utils');
 
 describe('tracing/express with uncaught errors', function() {
   if (!supportedVersion(process.versions.node)) {
     return;
   }
 
-  var agentControls = require('../../../apps/agentStubControls');
-  var ExpressUncaughtErrorsControls = require('./controls');
+  const agentControls = require('../../../apps/agentStubControls');
+  const ExpressUncaughtErrorsControls = require('./controls');
 
   this.timeout(config.getTestTimeout());
 
   agentControls.registerTestHooks();
 
-  var expressUncaughtErrorsControls = new ExpressUncaughtErrorsControls({
-    agentControls: agentControls
+  const expressUncaughtErrorsControls = new ExpressUncaughtErrorsControls({
+    agentControls
   });
   expressUncaughtErrorsControls.registerTestHooks();
 
-  it('must record result of default express uncaught error function', function() {
-    return expressUncaughtErrorsControls
+  it('must record result of default express uncaught error function', () =>
+    expressUncaughtErrorsControls
       .sendRequest({
         method: 'GET',
         path: '/defaultErrorHandler',
         simple: false,
         resolveWithFullResponse: true
       })
-      .then(function(response) {
+      .then(response => {
         expect(response.statusCode).to.equal(500);
 
-        return utils.retry(function() {
-          return agentControls.getSpans().then(function(spans) {
-            utils.expectOneMatching(spans, function(span) {
+        return utils.retry(() =>
+          agentControls.getSpans().then(spans => {
+            utils.expectOneMatching(spans, span => {
               expect(span.n).to.equal('node.http.server');
               expect(span.k).to.equal(constants.ENTRY);
               expect(span.f.e).to.equal(String(expressUncaughtErrorsControls.getPid()));
@@ -46,25 +46,24 @@ describe('tracing/express with uncaught errors', function() {
               expect(span.ec).to.equal(1);
               expect(span.data.http.error).to.match(/To be caught by default error handler/);
             });
-          });
-        });
-      });
-  });
+          })
+        );
+      }));
 
-  it('must record result of custom express uncaught error function', function() {
-    return expressUncaughtErrorsControls
+  it('must record result of custom express uncaught error function', () =>
+    expressUncaughtErrorsControls
       .sendRequest({
         method: 'GET',
         path: '/customErrorHandler',
         simple: false,
         resolveWithFullResponse: true
       })
-      .then(function(response) {
+      .then(response => {
         expect(response.statusCode).to.equal(400);
 
-        return utils.retry(function() {
-          return agentControls.getSpans().then(function(spans) {
-            utils.expectOneMatching(spans, function(span) {
+        return utils.retry(() =>
+          agentControls.getSpans().then(spans => {
+            utils.expectOneMatching(spans, span => {
               expect(span.n).to.equal('node.http.server');
               expect(span.k).to.equal(constants.ENTRY);
               expect(span.f.e).to.equal(String(expressUncaughtErrorsControls.getPid()));
@@ -73,8 +72,7 @@ describe('tracing/express with uncaught errors', function() {
               expect(span.ec).to.equal(0);
               expect(span.data.http.error).to.match(/To be caught by custom error handler/);
             });
-          });
-        });
-      });
-  });
+          })
+        );
+      }));
 });

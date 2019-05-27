@@ -6,7 +6,7 @@
 // uncaughtException handler terminates the process with an exit code != 1.
 // The orginal stack trace is preserved.
 
-process.on('uncaughtException', function(err) {
+process.on('uncaughtException', err => {
   throw err;
 });
 

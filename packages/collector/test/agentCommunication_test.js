@@ -1,61 +1,58 @@
 'use strict';
 
-var expect = require('chai').expect;
-var semver = require('semver');
+const expect = require('chai').expect;
+const semver = require('semver');
 
-var config = require('./config');
-var utils = require('./utils');
+const config = require('./config');
+const utils = require('./utils');
 
 describe('agentCommunication', function() {
   if (semver.satisfies(process.versions.node, '<4')) {
     return;
   }
 
-  var agentStubControls = require('./apps/agentStubControls');
-  var expressControls = require('./apps/expressControls');
+  const agentStubControls = require('./apps/agentStubControls');
+  const expressControls = require('./apps/expressControls');
 
   this.timeout(config.getTestTimeout());
 
   agentStubControls.registerTestHooks();
   expressControls.registerTestHooks();
 
-  it('must announce itself to the agent', function() {
-    return utils.retry(function() {
-      return agentStubControls.getDiscoveries().then(function(discoveries) {
-        var discovery = discoveries[expressControls.getPid()];
+  it('must announce itself to the agent', () =>
+    utils.retry(() =>
+      agentStubControls.getDiscoveries().then(discoveries => {
+        const discovery = discoveries[expressControls.getPid()];
         expect(discovery.pid).to.be.a('number');
         expect(discovery.fd).to.be.a('string');
         if (/linux/i.test(process.platform)) {
           expect(discovery.inode).to.be.a('string');
         }
-      });
-    });
-  });
-
-  it('must send data to the agent', function() {
-    return utils.retry(function() {
-      return agentStubControls.getLastMetricValue(expressControls.getPid(), ['pid']).then(function(pid) {
-        expect(pid).to.equal(expressControls.getPid());
-      });
-    });
-  });
-
-  it('must reannounce itself to the agent once discoveries are cleared', function() {
-    return utils
-      .retry(function() {
-        return agentStubControls.getDiscoveries().then(function(discoveries) {
-          expect(discoveries[expressControls.getPid()].pid).to.be.a('number');
-        });
       })
-      .then(function() {
+    ));
+
+  it('must send data to the agent', () =>
+    utils.retry(() =>
+      agentStubControls.getLastMetricValue(expressControls.getPid(), ['pid']).then(pid => {
+        expect(pid).to.equal(expressControls.getPid());
+      })
+    ));
+
+  it('must reannounce itself to the agent once discoveries are cleared', () =>
+    utils
+      .retry(() =>
+        agentStubControls.getDiscoveries().then(discoveries => {
+          expect(discoveries[expressControls.getPid()].pid).to.be.a('number');
+        })
+      )
+      .then(() => {
         agentStubControls.deleteDiscoveries();
       })
-      .then(function() {
-        return utils.retry(function() {
-          return agentStubControls.getDiscoveries().then(function(discoveries) {
+      .then(() =>
+        utils.retry(() =>
+          agentStubControls.getDiscoveries().then(discoveries => {
             expect(discoveries[expressControls.getPid()].pid).to.be.a('number');
-          });
-        });
-      });
-  });
+          })
+        )
+      ));
 });

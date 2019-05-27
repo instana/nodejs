@@ -1,30 +1,30 @@
 'use strict';
 
-var semver = require('semver');
-var expect = require('chai').expect;
+const semver = require('semver');
+const expect = require('chai').expect;
 
-var constants = require('@instana/core').tracing.constants;
-var config = require('../../../config');
-var utils = require('../../../utils');
+const constants = require('@instana/core').tracing.constants;
+const config = require('../../../config');
+const utils = require('../../../utils');
 
 describe('tracing/koa', function() {
   if (!semver.satisfies(process.versions.node, '>=6.0.0')) {
     return;
   }
 
-  var agentControls = require('../../../apps/agentStubControls');
-  var Controls = require('./controls');
+  const agentControls = require('../../../apps/agentStubControls');
+  const Controls = require('./controls');
 
   this.timeout(config.getTestTimeout());
 
   agentControls.registerTestHooks();
 
-  var controls = new Controls({
-    agentControls: agentControls
+  const controls = new Controls({
+    agentControls
   });
   controls.registerTestHooks();
 
-  describe('koa path templates', function() {
+  describe('koa path templates', () => {
     check('/route', '/route');
     check('/route/123', '/route/:id');
     check('/sub1', '/sub1/');
@@ -36,24 +36,23 @@ describe('tracing/koa', function() {
     check('/does-not-exist-so-use-catch-all-regexp', '/.*/');
 
     function check(actualPath, expectedTemplate) {
-      it('must report koa-router path templates for actual path: ' + actualPath, function() {
-        return controls
+      it(`must report koa-router path templates for actual path: ${actualPath}`, () =>
+        controls
           .sendRequest({
             method: 'GET',
             path: actualPath
           })
-          .then(function() {
-            return utils.retry(function() {
-              return agentControls.getSpans().then(function(spans) {
-                utils.expectOneMatching(spans, function(span) {
+          .then(() =>
+            utils.retry(() =>
+              agentControls.getSpans().then(spans => {
+                utils.expectOneMatching(spans, span => {
                   expect(span.n).to.equal('node.http.server');
                   expect(span.k).to.equal(constants.ENTRY);
                   expect(span.data.http.path_tpl).to.equal(expectedTemplate);
                 });
-              });
-            });
-          });
-      });
+              })
+            )
+          ));
     }
   });
 });

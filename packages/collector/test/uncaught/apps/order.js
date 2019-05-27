@@ -5,11 +5,11 @@
 // Handlers are called in the same order they are registered.
 // See https://nodejs.org/api/events.html#events_emitter_emit_eventname_args
 
-process.on('uncaughtException', function() {
+process.on('uncaughtException', () => {
   console.log('HANDLER 1');
 });
 
-process.on('uncaughtException', function() {
+process.on('uncaughtException', () => {
   console.log('HANDLER 2');
 });
 

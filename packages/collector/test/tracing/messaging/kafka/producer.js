@@ -1,9 +1,11 @@
 /* eslint-disable */
 
-var agentPort = process.env.AGENT_PORT;
+'use strict';
+
+const agentPort = process.env.AGENT_PORT;
 
 require('../../../../')({
-  agentPort: agentPort,
+  agentPort,
   level: 'warn',
   tracing: {
     enabled: process.env.TRACING_ENABLED === 'true',
@@ -11,39 +13,39 @@ require('../../../../')({
   }
 });
 
-var request = require('request-promise');
-var bodyParser = require('body-parser');
-var express = require('express');
-var kafka = require('kafka-node');
-var app = express();
+const request = require('request-promise');
+const bodyParser = require('body-parser');
+const express = require('express');
+const kafka = require('kafka-node');
+const app = express();
 
-var client = new kafka.Client(process.env.ZOOKEEPER + '/');
-client.on('error', function(error) {
+const client = new kafka.Client(`${process.env.ZOOKEEPER}/`);
+client.on('error', error => {
   log('Got a client error: %s', error);
 });
 
-var producer = new kafka.Producer(client);
-producer.on('error', function(error) {
+const producer = new kafka.Producer(client);
+producer.on('error', error => {
   log('Got a producer error: %s', error);
 });
 
-producer.on('ready', function() {
+producer.on('ready', () => {
   log('Producer is now ready');
 });
 
 app.use(bodyParser.json());
 
-app.get('/', function(req, res) {
+app.get('/', (req, res) => {
   res.send('OK');
 });
 
-app.listen(process.env.APP_PORT, function() {
-  log('Listening on port: ' + process.env.APP_PORT);
+app.listen(process.env.APP_PORT, () => {
+  log(`Listening on port: ${process.env.APP_PORT}`);
 });
 
-app.post('/send-message', function(req, res) {
-  var key = req.body.key;
-  var message = req.body.message;
+app.post('/send-message', (req, res) => {
+  const key = req.body.key;
+  const message = req.body.message;
 
   log('Sending message with key %s and body %s', key, message);
   producer.send(
@@ -53,17 +55,17 @@ app.post('/send-message', function(req, res) {
         messages: new kafka.KeyedMessage(key, message)
       }
     ],
-    function(err) {
+    err => {
       if (err) {
         log('Failed to send message with key %s', key, err);
         res.status(500).send('Failed to send message');
         return;
       }
-      request('http://127.0.0.1:' + agentPort)
-        .then(function() {
+      request(`http://127.0.0.1:${agentPort}`)
+        .then(() => {
           res.sendStatus(200);
         })
-        .catch(function(err2) {
+        .catch(err2 => {
           log(err2);
           res.sendStatus(500);
         });
@@ -72,7 +74,7 @@ app.post('/send-message', function(req, res) {
 });
 
 function log() {
-  var args = Array.prototype.slice.call(arguments);
-  args[0] = 'Express Kafka Producer App (' + process.pid + '):\t' + args[0];
+  const args = Array.prototype.slice.call(arguments);
+  args[0] = `Express Kafka Producer App (${process.pid}):\t${args[0]}`;
   console.log.apply(console, args);
 }

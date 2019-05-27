@@ -1,44 +1,42 @@
 'use strict';
 
-var expect = require('chai').expect;
+const expect = require('chai').expect;
 
-var constants = require('@instana/core').tracing.constants;
-var supportedVersion = require('@instana/core').tracing.supportedVersion;
-var config = require('../../../config');
-var utils = require('../../../utils');
+const constants = require('@instana/core').tracing.constants;
+const supportedVersion = require('@instana/core').tracing.supportedVersion;
+const config = require('../../../config');
+const utils = require('../../../utils');
 
 describe('tracing/elasticsearch', function() {
   if (!supportedVersion(process.versions.node)) {
     return;
   }
 
-  var expressElasticsearchControls = require('./controls');
-  var agentStubControls = require('../../../apps/agentStubControls');
+  const expressElasticsearchControls = require('./controls');
+  const agentStubControls = require('../../../apps/agentStubControls');
 
   this.timeout(config.getTestTimeout());
 
   agentStubControls.registerTestHooks();
   expressElasticsearchControls.registerTestHooks();
 
-  beforeEach(function() {
-    return agentStubControls.waitUntilAppIsCompletelyInitialized(expressElasticsearchControls.getPid());
-  });
+  beforeEach(() => agentStubControls.waitUntilAppIsCompletelyInitialized(expressElasticsearchControls.getPid()));
 
-  it('must report errors caused by missing indices', function() {
-    return expressElasticsearchControls
+  it('must report errors caused by missing indices', () =>
+    expressElasticsearchControls
       .get({
         id: 'thisDocumentWillNotExist',
         index: 'thisIndexDoesNotExist'
       })
-      .then(function() {
-        return utils.retry(function() {
-          return agentStubControls.getSpans().then(function(spans) {
+      .then(() =>
+        utils.retry(() =>
+          agentStubControls.getSpans().then(spans => {
             expect(spans).to.have.lengthOf(
               2,
-              'Should not generate an exit span when there is already one. Spans: ' + JSON.stringify(spans, 0, 2)
+              `Should not generate an exit span when there is already one. Spans: ${JSON.stringify(spans, 0, 2)}`
             );
 
-            var entrySpan = utils.expectOneMatching(spans, function(span) {
+            const entrySpan = utils.expectOneMatching(spans, span => {
               expect(span.n).to.equal('node.http.server');
               expect(span.f.e).to.equal(String(expressElasticsearchControls.getPid()));
               expect(span.f.h).to.equal('agent-stub-uuid');
@@ -47,7 +45,7 @@ describe('tracing/elasticsearch', function() {
               expect(span.ec).to.equal(1);
             });
 
-            utils.expectOneMatching(spans, function(span) {
+            utils.expectOneMatching(spans, span => {
               expect(span.t).to.equal(entrySpan.t);
               expect(span.p).to.equal(entrySpan.s);
               expect(span.n).to.equal('elasticsearch');
@@ -63,22 +61,21 @@ describe('tracing/elasticsearch', function() {
               expect(span.data.elasticsearch.id).to.equal('thisDocumentWillNotExist');
               expect(span.data.elasticsearch.error).to.match(/no such index|missing/gi);
             });
-          });
-        });
-      });
-  });
+          })
+        )
+      ));
 
-  it('must report successful indexing requests', function() {
-    return expressElasticsearchControls
+  it('must report successful indexing requests', () =>
+    expressElasticsearchControls
       .index({
         body: {
           title: 'A'
         }
       })
-      .then(function() {
-        return utils.retry(function() {
-          return agentStubControls.getSpans().then(function(spans) {
-            var entrySpan = utils.expectOneMatching(spans, function(span) {
+      .then(() =>
+        utils.retry(() =>
+          agentStubControls.getSpans().then(spans => {
+            const entrySpan = utils.expectOneMatching(spans, span => {
               expect(span.n).to.equal('node.http.server');
               expect(span.f.e).to.equal(String(expressElasticsearchControls.getPid()));
               expect(span.f.h).to.equal('agent-stub-uuid');
@@ -86,7 +83,7 @@ describe('tracing/elasticsearch', function() {
               expect(span.error).to.equal(false);
             });
 
-            utils.expectOneMatching(spans, function(span) {
+            utils.expectOneMatching(spans, span => {
               expect(span.t).to.equal(entrySpan.t);
               expect(span.p).to.equal(entrySpan.s);
               expect(span.n).to.equal('elasticsearch');
@@ -99,13 +96,12 @@ describe('tracing/elasticsearch', function() {
               expect(span.data.elasticsearch.type).to.equal('mytype');
               expect(span.data.elasticsearch.index).to.equal('myindex');
             });
-          });
-        });
-      });
-  });
+          })
+        )
+      ));
 
-  it('must write to ES and retrieve the same document, tracing everything', function() {
-    var titleA = 'a' + Date.now();
+  it('must write to ES and retrieve the same document, tracing everything', () => {
+    const titleA = `a${Date.now()}`;
     return expressElasticsearchControls
       .index({
         body: {
@@ -113,22 +109,20 @@ describe('tracing/elasticsearch', function() {
         },
         rejectWrongStatusCodes: true
       })
-      .then(function(response) {
-        return utils.retry(function() {
-          return expressElasticsearchControls
+      .then(response =>
+        utils.retry(() =>
+          expressElasticsearchControls
             .get({
               id: response._id,
               rejectWrongStatusCodes: true
             })
-            .then(function() {
-              return response._id;
-            });
-        });
-      })
-      .then(function(documentId) {
-        return utils.retry(function() {
-          return agentStubControls.getSpans().then(function(spans) {
-            var indexEntrySpan = utils.expectOneMatching(spans, function(span) {
+            .then(() => response._id)
+        )
+      )
+      .then(documentId =>
+        utils.retry(() =>
+          agentStubControls.getSpans().then(spans => {
+            const indexEntrySpan = utils.expectOneMatching(spans, span => {
               expect(span.n).to.equal('node.http.server');
               expect(span.f.e).to.equal(String(expressElasticsearchControls.getPid()));
               expect(span.f.h).to.equal('agent-stub-uuid');
@@ -137,7 +131,7 @@ describe('tracing/elasticsearch', function() {
               expect(span.data.http.url).to.equal('/index');
             });
 
-            utils.expectOneMatching(spans, function(span) {
+            utils.expectOneMatching(spans, span => {
               expect(span.t).to.equal(indexEntrySpan.t);
               expect(span.p).to.equal(indexEntrySpan.s);
               expect(span.n).to.equal('elasticsearch');
@@ -151,7 +145,7 @@ describe('tracing/elasticsearch', function() {
               expect(span.data.elasticsearch.index).to.equal('myindex');
             });
 
-            var getEntrySpan = utils.expectOneMatching(spans, function(span) {
+            const getEntrySpan = utils.expectOneMatching(spans, span => {
               expect(span.n).to.equal('node.http.server');
               expect(span.f.e).to.equal(String(expressElasticsearchControls.getPid()));
               expect(span.f.h).to.equal('agent-stub-uuid');
@@ -160,7 +154,7 @@ describe('tracing/elasticsearch', function() {
               expect(span.data.http.url).to.equal('/get');
             });
 
-            utils.expectOneMatching(spans, function(span) {
+            utils.expectOneMatching(spans, span => {
               expect(span.t).to.equal(getEntrySpan.t);
               expect(span.p).to.equal(getEntrySpan.s);
               expect(span.n).to.equal('elasticsearch');
@@ -175,15 +169,15 @@ describe('tracing/elasticsearch', function() {
               expect(span.data.elasticsearch.id).to.equal(documentId);
             });
 
-            expect(spans).to.have.lengthOf(4, 'Spans: ' + JSON.stringify(spans, 0, 2));
-          });
-        });
-      });
+            expect(spans).to.have.lengthOf(4, `Spans: ${JSON.stringify(spans, 0, 2)}`);
+          })
+        )
+      );
   });
 
-  it('must write to ES and search for matching documents, tracing everything', function() {
-    var titleA = 'a' + Date.now();
-    var titleB = 'b' + Date.now();
+  it('must write to ES and search for matching documents, tracing everything', () => {
+    const titleA = `a${Date.now()}`;
+    const titleB = `b${Date.now()}`;
 
     return expressElasticsearchControls
       .index({
@@ -194,28 +188,28 @@ describe('tracing/elasticsearch', function() {
         parentSpanId: '42',
         traceId: '42'
       })
-      .then(function() {
-        return expressElasticsearchControls.index({
+      .then(() =>
+        expressElasticsearchControls.index({
           body: {
             title: titleB
           },
           rejectWrongStatusCodes: true,
           parentSpanId: '43',
           traceId: '43'
-        });
-      })
-      .then(function() {
-        return utils.retry(function() {
-          return expressElasticsearchControls.search({
-            q: 'title:' + titleA,
+        })
+      )
+      .then(() =>
+        utils.retry(() =>
+          expressElasticsearchControls.search({
+            q: `title:${titleA}`,
             rejectWrongStatusCodes: true
-          });
-        });
-      })
-      .then(function() {
-        return utils.retry(function() {
-          return agentStubControls.getSpans().then(function(spans) {
-            utils.expectOneMatching(spans, function(span) {
+          })
+        )
+      )
+      .then(() =>
+        utils.retry(() =>
+          agentStubControls.getSpans().then(spans => {
+            utils.expectOneMatching(spans, span => {
               expect(span.t).to.equal('42');
               expect(span.n).to.equal('elasticsearch');
               expect(span.f.e).to.equal(String(expressElasticsearchControls.getPid()));
@@ -228,7 +222,7 @@ describe('tracing/elasticsearch', function() {
               expect(span.data.elasticsearch.index).to.equal('myindex');
             });
 
-            utils.expectOneMatching(spans, function(span) {
+            utils.expectOneMatching(spans, span => {
               expect(span.t).to.equal('43');
               expect(span.n).to.equal('elasticsearch');
               expect(span.f.e).to.equal(String(expressElasticsearchControls.getPid()));
@@ -241,7 +235,7 @@ describe('tracing/elasticsearch', function() {
               expect(span.data.elasticsearch.index).to.equal('myindex');
             });
 
-            var getEntrySpan = utils.expectOneMatching(spans, function(span) {
+            const getEntrySpan = utils.expectOneMatching(spans, span => {
               expect(span.n).to.equal('node.http.server');
               expect(span.f.e).to.equal(String(expressElasticsearchControls.getPid()));
               expect(span.f.h).to.equal('agent-stub-uuid');
@@ -250,7 +244,7 @@ describe('tracing/elasticsearch', function() {
               expect(span.data.http.url).to.equal('/search');
             });
 
-            utils.expectOneMatching(spans, function(span) {
+            utils.expectOneMatching(spans, span => {
               expect(span.t).to.equal(getEntrySpan.t);
               expect(span.p).to.equal(getEntrySpan.s);
               expect(span.n).to.equal('elasticsearch');
@@ -264,20 +258,20 @@ describe('tracing/elasticsearch', function() {
               expect(span.data.elasticsearch.index).to.equal('myindex');
               expect(span.data.elasticsearch.hits).to.equal(1);
             });
-          });
-        });
-      });
+          })
+        )
+      );
   });
 
-  it('must trace mget', function() {
-    var titleA = 'a' + Date.now();
-    var titleB = 'b' + Date.now();
-    var titleC = 'c' + Date.now();
-    var idA;
-    var idB;
-    var idC;
-    var response1;
-    var response2;
+  it('must trace mget', () => {
+    const titleA = `a${Date.now()}`;
+    const titleB = `b${Date.now()}`;
+    const titleC = `c${Date.now()}`;
+    let idA;
+    let idB;
+    let idC;
+    let response1;
+    let response2;
 
     return expressElasticsearchControls
       .index({
@@ -288,7 +282,7 @@ describe('tracing/elasticsearch', function() {
         parentSpanId: '42',
         traceId: '42'
       })
-      .then(function(response) {
+      .then(response => {
         idA = response._id;
         return expressElasticsearchControls.index({
           body: {
@@ -299,7 +293,7 @@ describe('tracing/elasticsearch', function() {
           traceId: '43'
         });
       })
-      .then(function(response) {
+      .then(response => {
         idB = response._id;
         return expressElasticsearchControls.index({
           body: {
@@ -310,33 +304,33 @@ describe('tracing/elasticsearch', function() {
           traceId: '44'
         });
       })
-      .then(function(response) {
+      .then(response => {
         idC = response._id;
-        return utils.retry(function() {
-          return expressElasticsearchControls.mget1({
+        return utils.retry(() =>
+          expressElasticsearchControls.mget1({
             id: [idA, idB],
             rejectWrongStatusCodes: true
-          });
-        });
+          })
+        );
       })
-      .then(function(response) {
+      .then(response => {
         response1 = response;
-        return utils.retry(function() {
-          return expressElasticsearchControls.mget2({
+        return utils.retry(() =>
+          expressElasticsearchControls.mget2({
             id: [idB, idC],
             rejectWrongStatusCodes: true
-          });
-        });
+          })
+        );
       })
-      .then(function(response) {
+      .then(response => {
         response2 = response;
         expect(response1.docs[0]._source.title).to.deep.equal(titleA);
         expect(response1.docs[1]._source.title).to.deep.equal(titleB);
         expect(response2.docs[0]._source.title).to.deep.equal(titleB);
         expect(response2.docs[1]._source.title).to.deep.equal(titleC);
-        return utils.retry(function() {
-          return agentStubControls.getSpans().then(function(spans) {
-            utils.expectOneMatching(spans, function(span) {
+        return utils.retry(() =>
+          agentStubControls.getSpans().then(spans => {
+            utils.expectOneMatching(spans, span => {
               expect(span.t).to.equal('42');
               expect(span.n).to.equal('elasticsearch');
               expect(span.f.e).to.equal(String(expressElasticsearchControls.getPid()));
@@ -348,7 +342,7 @@ describe('tracing/elasticsearch', function() {
               expect(span.data.elasticsearch.type).to.equal('mytype');
               expect(span.data.elasticsearch.index).to.equal('myindex');
             });
-            utils.expectOneMatching(spans, function(span) {
+            utils.expectOneMatching(spans, span => {
               expect(span.t).to.equal('43');
               expect(span.n).to.equal('elasticsearch');
               expect(span.f.e).to.equal(String(expressElasticsearchControls.getPid()));
@@ -360,7 +354,7 @@ describe('tracing/elasticsearch', function() {
               expect(span.data.elasticsearch.type).to.equal('mytype');
               expect(span.data.elasticsearch.index).to.equal('myindex');
             });
-            var mget1HttpEntry = utils.expectOneMatching(spans, function(span) {
+            const mget1HttpEntry = utils.expectOneMatching(spans, span => {
               expect(span.n).to.equal('node.http.server');
               expect(span.f.e).to.equal(String(expressElasticsearchControls.getPid()));
               expect(span.f.h).to.equal('agent-stub-uuid');
@@ -368,7 +362,7 @@ describe('tracing/elasticsearch', function() {
               expect(span.error).to.equal(false);
               expect(span.data.http.url).to.equal('/mget1');
             });
-            utils.expectOneMatching(spans, function(span) {
+            utils.expectOneMatching(spans, span => {
               expect(span.t).to.equal(mget1HttpEntry.t);
               expect(span.p).to.equal(mget1HttpEntry.s);
               expect(span.n).to.equal('elasticsearch');
@@ -380,9 +374,9 @@ describe('tracing/elasticsearch', function() {
               expect(span.data.elasticsearch.action).to.equal('mget');
               expect(span.data.elasticsearch.type).to.equal('mytype');
               expect(span.data.elasticsearch.index).to.equal('myindex');
-              expect(span.data.elasticsearch.id).to.equal(idA + ',' + idB);
+              expect(span.data.elasticsearch.id).to.equal(`${idA},${idB}`);
             });
-            var mget2HttpEntry = utils.expectOneMatching(spans, function(span) {
+            const mget2HttpEntry = utils.expectOneMatching(spans, span => {
               expect(span.n).to.equal('node.http.server');
               expect(span.f.e).to.equal(String(expressElasticsearchControls.getPid()));
               expect(span.f.h).to.equal('agent-stub-uuid');
@@ -390,7 +384,7 @@ describe('tracing/elasticsearch', function() {
               expect(span.error).to.equal(false);
               expect(span.data.http.url).to.equal('/mget2');
             });
-            utils.expectOneMatching(spans, function(span) {
+            utils.expectOneMatching(spans, span => {
               expect(span.t).to.equal(mget2HttpEntry.t);
               expect(span.p).to.equal(mget2HttpEntry.s);
               expect(span.n).to.equal('elasticsearch');
@@ -402,17 +396,17 @@ describe('tracing/elasticsearch', function() {
               expect(span.data.elasticsearch.action).to.equal('mget');
               expect(span.data.elasticsearch.type).to.equal('mytype');
               expect(span.data.elasticsearch.index).to.equal('myindex');
-              expect(span.data.elasticsearch.id).to.equal(idB + ',' + idC);
+              expect(span.data.elasticsearch.id).to.equal(`${idB},${idC}`);
             });
-          });
-        });
+          })
+        );
       });
   });
 
-  it('must trace msearch', function() {
-    var titleA = 'a' + Date.now();
-    var titleB = 'b' + Date.now();
-    var titleC = 'c' + Date.now();
+  it('must trace msearch', () => {
+    const titleA = `a${Date.now()}`;
+    const titleB = `b${Date.now()}`;
+    const titleC = `c${Date.now()}`;
 
     return expressElasticsearchControls
       .index({
@@ -423,41 +417,41 @@ describe('tracing/elasticsearch', function() {
         parentSpanId: '42',
         traceId: '42'
       })
-      .then(function() {
-        return expressElasticsearchControls.index({
+      .then(() =>
+        expressElasticsearchControls.index({
           body: {
             title: titleB
           },
           rejectWrongStatusCodes: true,
           parentSpanId: '43',
           traceId: '43'
-        });
-      })
-      .then(function() {
-        return expressElasticsearchControls.index({
+        })
+      )
+      .then(() =>
+        expressElasticsearchControls.index({
           body: {
             title: titleC
           },
           rejectWrongStatusCodes: true,
           parentSpanId: '44',
           traceId: '44'
-        });
-      })
-      .then(function() {
-        return utils.retry(function() {
-          return expressElasticsearchControls.msearch({
-            q: ['title:' + titleA, 'title:' + titleB],
+        })
+      )
+      .then(() =>
+        utils.retry(() =>
+          expressElasticsearchControls.msearch({
+            q: [`title:${titleA}`, `title:${titleB}`],
             rejectWrongStatusCodes: true
-          });
-        });
-      })
-      .then(function(response) {
+          })
+        )
+      )
+      .then(response => {
         expect(response.responses).to.exist;
         expect(response.responses[0].hits.total).to.equal(1);
         expect(response.responses[1].hits.total).to.equal(1);
-        return utils.retry(function() {
-          return agentStubControls.getSpans().then(function(spans) {
-            utils.expectOneMatching(spans, function(span) {
+        return utils.retry(() =>
+          agentStubControls.getSpans().then(spans => {
+            utils.expectOneMatching(spans, span => {
               expect(span.t).to.equal('42');
               expect(span.n).to.equal('elasticsearch');
               expect(span.f.e).to.equal(String(expressElasticsearchControls.getPid()));
@@ -469,7 +463,7 @@ describe('tracing/elasticsearch', function() {
               expect(span.data.elasticsearch.type).to.equal('mytype');
               expect(span.data.elasticsearch.index).to.equal('myindex');
             });
-            utils.expectOneMatching(spans, function(span) {
+            utils.expectOneMatching(spans, span => {
               expect(span.t).to.equal('43');
               expect(span.n).to.equal('elasticsearch');
               expect(span.f.e).to.equal(String(expressElasticsearchControls.getPid()));
@@ -481,7 +475,7 @@ describe('tracing/elasticsearch', function() {
               expect(span.data.elasticsearch.type).to.equal('mytype');
               expect(span.data.elasticsearch.index).to.equal('myindex');
             });
-            var getEntrySpan = utils.expectOneMatching(spans, function(span) {
+            const getEntrySpan = utils.expectOneMatching(spans, span => {
               expect(span.n).to.equal('node.http.server');
               expect(span.f.e).to.equal(String(expressElasticsearchControls.getPid()));
               expect(span.f.h).to.equal('agent-stub-uuid');
@@ -489,7 +483,7 @@ describe('tracing/elasticsearch', function() {
               expect(span.error).to.equal(false);
               expect(span.data.http.url).to.equal('/msearch');
             });
-            utils.expectOneMatching(spans, function(span) {
+            utils.expectOneMatching(spans, span => {
               expect(span.t).to.equal(getEntrySpan.t);
               expect(span.p).to.equal(getEntrySpan.s);
               expect(span.n).to.equal('elasticsearch');
@@ -503,13 +497,13 @@ describe('tracing/elasticsearch', function() {
               expect(span.data.elasticsearch.index).to.equal('myindex');
               expect(span.data.elasticsearch.hits).to.equal(2);
             });
-          });
-        });
+          })
+        );
       });
   });
 
-  it('must not consider queries as failed when there are no hits', function() {
-    return expressElasticsearchControls
+  it('must not consider queries as failed when there are no hits', () =>
+    expressElasticsearchControls
       .index({
         body: {
           title: 'A'
@@ -518,18 +512,18 @@ describe('tracing/elasticsearch', function() {
         parentSpanId: 42,
         traceSpanId: 42
       })
-      .then(function() {
-        return utils.retry(function() {
-          return expressElasticsearchControls.search({
+      .then(() =>
+        utils.retry(() =>
+          expressElasticsearchControls.search({
             q: 'title:Z',
             rejectWrongStatusCodes: true
-          });
-        });
-      })
-      .then(function() {
-        return utils.retry(function() {
-          return agentStubControls.getSpans().then(function(spans) {
-            utils.expectOneMatching(spans, function(span) {
+          })
+        )
+      )
+      .then(() =>
+        utils.retry(() =>
+          agentStubControls.getSpans().then(spans => {
+            utils.expectOneMatching(spans, span => {
               expect(span.n).to.equal('elasticsearch');
               expect(span.f.e).to.equal(String(expressElasticsearchControls.getPid()));
               expect(span.f.h).to.equal('agent-stub-uuid');
@@ -541,39 +535,37 @@ describe('tracing/elasticsearch', function() {
               expect(span.data.elasticsearch.index).to.equal('myindex');
               expect(span.data.elasticsearch.hits).to.equal(0);
             });
-          });
-        });
-      });
-  });
+          })
+        )
+      ));
 
-  it('must trace across native promise boundaries', function() {
-    return expressElasticsearchControls
+  it('must trace across native promise boundaries', () =>
+    expressElasticsearchControls
       .searchAndGet({
         q: 'name:foo'
       })
-      .then(function() {
-        return utils.retry(function() {
-          return agentStubControls.getSpans().then(function(spans) {
-            var httpEntrySpan = utils.expectOneMatching(spans, function(span) {
+      .then(() =>
+        utils.retry(() =>
+          agentStubControls.getSpans().then(spans => {
+            const httpEntrySpan = utils.expectOneMatching(spans, span => {
               expect(span.n).to.equal('node.http.server');
               expect(span.k).to.equal(constants.ENTRY);
             });
 
-            utils.expectOneMatching(spans, function(span) {
+            utils.expectOneMatching(spans, span => {
               expect(span.t).to.equal(httpEntrySpan.t);
               expect(span.p).to.equal(httpEntrySpan.s);
               expect(span.n).to.equal('elasticsearch');
               expect(span.k).to.equal(constants.EXIT);
             });
 
-            utils.expectOneMatching(spans, function(span) {
+            utils.expectOneMatching(spans, span => {
               expect(span.t).to.equal(httpEntrySpan.t);
               expect(span.p).to.equal(httpEntrySpan.s);
               expect(span.n).to.equal('node.http.client');
               expect(span.k).to.equal(constants.EXIT);
             });
-          });
-        });
-      });
-  });
+          })
+        )
+      ));
 });

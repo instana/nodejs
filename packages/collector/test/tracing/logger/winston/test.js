@@ -1,12 +1,12 @@
 'use strict';
 
-var semver = require('semver');
-var expect = require('chai').expect;
+const semver = require('semver');
+const expect = require('chai').expect;
 
-var constants = require('@instana/core').tracing.constants;
-var supportedVersion = require('@instana/core').tracing.supportedVersion;
-var config = require('../../../config');
-var utils = require('../../../utils');
+const constants = require('@instana/core').tracing.constants;
+const supportedVersion = require('@instana/core').tracing.supportedVersion;
+const config = require('../../../config');
+const utils = require('../../../utils');
 
 describe('tracing/logger/winston', function() {
   // Winston 3 has no guaranteed support for Node.js 4, code will be migrated to ES6 over time
@@ -16,14 +16,12 @@ describe('tracing/logger/winston', function() {
   }
 
   this.timeout(config.getTestTimeout());
-  var agentControls = require('../../../apps/agentStubControls');
-  var appControls = require('./controls');
+  const agentControls = require('../../../apps/agentStubControls');
+  const appControls = require('./controls');
   agentControls.registerTestHooks();
   appControls.registerTestHooks();
 
-  beforeEach(function() {
-    return agentControls.waitUntilAppIsCompletelyInitialized(appControls.getPid());
-  });
+  beforeEach(() => agentControls.waitUntilAppIsCompletelyInitialized(appControls.getPid()));
 
   runTests(false, false);
   runTests(true, false);
@@ -31,7 +29,7 @@ describe('tracing/logger/winston', function() {
   runTests(true, true);
 
   function runTests(useGlobalLogger, useLogFunction) {
-    var suffix = '';
+    let suffix = '';
     if (useGlobalLogger && useLogFunction) {
       suffix = ' (global/log)';
     } else if (useGlobalLogger) {
@@ -40,52 +38,49 @@ describe('tracing/logger/winston', function() {
       suffix = ' (log)';
     }
 
-    it('must not trace info' + suffix, function() {
-      return appControls.trigger('info', useGlobalLogger, useLogFunction).then(function() {
-        return utils.retry(function() {
-          return agentControls.getSpans().then(function(spans) {
-            var entrySpan = utils.expectOneMatching(spans, function(span) {
+    it(`must not trace info${suffix}`, () =>
+      appControls.trigger('info', useGlobalLogger, useLogFunction).then(() =>
+        utils.retry(() =>
+          agentControls.getSpans().then(spans => {
+            const entrySpan = utils.expectOneMatching(spans, span => {
               expect(span.n).to.equal('node.http.server');
               expect(span.f.e).to.equal(String(appControls.getPid()));
               expect(span.f.h).to.equal('agent-stub-uuid');
             });
-            utils.expectOneMatching(spans, function(span) {
+            utils.expectOneMatching(spans, span => {
               checkNextExitSpan(span, entrySpan);
             });
-            var winstonSpans = utils.getSpansByName(spans, 'log.winston');
+            const winstonSpans = utils.getSpansByName(spans, 'log.winston');
             expect(winstonSpans).to.be.empty;
-          });
-        });
-      });
-    });
+          })
+        )
+      ));
 
-    it('must trace warn' + suffix, function() {
-      return runTest('warn', useGlobalLogger, useLogFunction, false, 'Warn message - should be traced.');
-    });
+    it(`must trace warn${suffix}`, () =>
+      runTest('warn', useGlobalLogger, useLogFunction, false, 'Warn message - should be traced.'));
 
-    it('must trace error' + suffix, function() {
-      return runTest('error', useGlobalLogger, useLogFunction, true, 'Error message - should be traced.');
-    });
+    it(`must trace error${suffix}`, () =>
+      runTest('error', useGlobalLogger, useLogFunction, true, 'Error message - should be traced.'));
   }
 
   function runTest(level, useGlobalLogger, useLogFunction, expectErroneous, message) {
-    return appControls.trigger(level, useGlobalLogger, useLogFunction).then(function() {
-      return utils.retry(function() {
-        return agentControls.getSpans().then(function(spans) {
-          var entrySpan = utils.expectOneMatching(spans, function(span) {
+    return appControls.trigger(level, useGlobalLogger, useLogFunction).then(() =>
+      utils.retry(() =>
+        agentControls.getSpans().then(spans => {
+          const entrySpan = utils.expectOneMatching(spans, span => {
             expect(span.n).to.equal('node.http.server');
             expect(span.f.e).to.equal(String(appControls.getPid()));
             expect(span.f.h).to.equal('agent-stub-uuid');
           });
-          utils.expectOneMatching(spans, function(span) {
+          utils.expectOneMatching(spans, span => {
             checkWinstonSpan(span, entrySpan, expectErroneous, message);
           });
-          utils.expectOneMatching(spans, function(span) {
+          utils.expectOneMatching(spans, span => {
             checkNextExitSpan(span, entrySpan);
           });
-        });
-      });
-    });
+        })
+      )
+    );
   }
 
   function checkWinstonSpan(span, parent, erroneous, message) {

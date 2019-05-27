@@ -2,13 +2,13 @@
 
 'use strict';
 
-var expect = require('chai').expect;
+const expect = require('chai').expect;
 
-var propertySizes = require('../../src/util/propertySizes');
+const propertySizes = require('../../src/util/propertySizes');
 
-describe('util.propertySizes', function() {
-  it('should report sizes of first level attributes', function() {
-    var sizes = propertySizes({
+describe('util.propertySizes', () => {
+  it('should report sizes of first level attributes', () => {
+    const sizes = propertySizes({
       string: 'Ohai!',
       number: 1234,
       booleanTrue: true,
@@ -22,8 +22,8 @@ describe('util.propertySizes', function() {
     expect(find(sizes, 'booleanFalse')).to.equal(5);
   });
 
-  it('should not report undefined/null properties', function() {
-    var sizes = propertySizes({
+  it('should not report undefined/null properties', () => {
+    const sizes = propertySizes({
       nullValue: null,
       undefinedValue: undefined
     });
@@ -33,8 +33,8 @@ describe('util.propertySizes', function() {
     expect(find(sizes, 'undefinedValue')).to.not.exist;
   });
 
-  it('should not report nested properties', function() {
-    var sizes = propertySizes({
+  it('should not report nested properties', () => {
+    const sizes = propertySizes({
       string: 'level 1',
       number: 1302,
       data: {
@@ -58,7 +58,7 @@ describe('util.propertySizes', function() {
 });
 
 function find(sizes, property) {
-  for (var i = 0; i < sizes.length; i++) {
+  for (let i = 0; i < sizes.length; i++) {
     if (sizes[i].property === property) {
       return sizes[i].length;
     }

@@ -2,48 +2,47 @@
 
 'use strict';
 
-var port = process.env.APP_PORT || 3216;
-var agentPort = process.env.AGENT_PORT;
+const port = process.env.APP_PORT || 3216;
+const agentPort = process.env.AGENT_PORT;
 
 require('../../../../')({
-  agentPort: agentPort,
+  agentPort,
   level: 'warn',
   tracing: {
     forceTransmissionStartingAt: 1
   }
 });
 
-var bodyParser = require('body-parser');
+const bodyParser = require('body-parser');
 // pino log spans are used to verify that follow up calls are traced correctly after a GRPC exit
-var pinoLogger = require('pino')();
-var express = require('express');
-var morgan = require('morgan');
-var grpc = require('grpc');
-var path = require('path');
-var app = express();
+const pinoLogger = require('pino')();
+const express = require('express');
+const morgan = require('morgan');
+const grpc = require('grpc');
+const path = require('path');
+const app = express();
 
-var STATIC = !!process.env.GRPC_STATIC;
-var withMetadata = !!process.env.GRPC_WITH_METADATA;
-var withOptions = !!process.env.GRPC_WITH_OPTIONS;
-var PACKAGE_VERSION = require('./versionUnderTest')();
-var PROTO_PATH = path.join(__dirname, 'protos/test.proto');
-var logPrefix = 'GRPC Client (' + process.pid + '):\t';
+const STATIC = !!process.env.GRPC_STATIC;
+const withMetadata = !!process.env.GRPC_WITH_METADATA;
+const withOptions = !!process.env.GRPC_WITH_OPTIONS;
+const PACKAGE_VERSION = require('./versionUnderTest')();
+const PROTO_PATH = path.join(__dirname, 'protos/test.proto');
+const logPrefix = `GRPC Client (${process.pid}):\t`;
 
-var client;
-var messages;
-var makeUnaryCall;
-var startServerSideStreaming;
-var startClientSideStreaming;
-var startBidiStreaming;
+let client;
+let messages;
+let makeUnaryCall;
+let startServerSideStreaming;
+let startClientSideStreaming;
+let startBidiStreaming;
 
-var loggingInterceptor = function(options, nextCall) {
-  return new grpc.InterceptingCall(nextCall(options), {
+const loggingInterceptor = (options, nextCall) =>
+  new grpc.InterceptingCall(nextCall(options), {
     sendMessage: function(message, next) {
       pinoLogger.warn('intercepted', message);
       next(message);
     }
   });
-};
 
 switch (PACKAGE_VERSION) {
   case '=1.10.1':
@@ -61,7 +60,7 @@ switch (PACKAGE_VERSION) {
     }
     break;
   default:
-    throw new Error('Unsupported API version: ' + PACKAGE_VERSION);
+    throw new Error(`Unsupported API version: ${PACKAGE_VERSION}`);
 }
 
 /**
@@ -70,7 +69,7 @@ switch (PACKAGE_VERSION) {
 function runDynamicLegacyClient() {
   log('Running dynamic legacy GRPC client.');
 
-  var testProto = grpc.load(PROTO_PATH).instana.node.grpc.test;
+  const testProto = grpc.load(PROTO_PATH).instana.node.grpc.test;
   client = new testProto.TestService('localhost:50051', grpc.credentials.createInsecure());
   makeUnaryCall = dynamicUnaryCall;
   startServerSideStreaming = dynamicServerSideStreaming;
@@ -85,7 +84,7 @@ function runStaticLegacyClient() {
   log('Running static legacy GRPC client.');
 
   messages = require('./test_pb');
-  var services = require('./test_grpc_pb');
+  const services = require('./test_grpc_pb');
   client = new services.TestServiceClient('localhost:50051', grpc.credentials.createInsecure());
   makeUnaryCall = staticUnaryCall;
   startServerSideStreaming = staticServerSideStreaming;
@@ -99,15 +98,15 @@ function runStaticLegacyClient() {
 function runDynamicModernClient() {
   log('Running dynamic modern GRPC client.');
 
-  var protoLoader = require('@grpc/proto-loader');
-  var packageDefinition = protoLoader.loadSync(PROTO_PATH, {
+  const protoLoader = require('@grpc/proto-loader');
+  const packageDefinition = protoLoader.loadSync(PROTO_PATH, {
     keepCase: true,
     longs: String,
     enums: String,
     defaults: true,
     oneofs: true
   });
-  var testProto = grpc.loadPackageDefinition(packageDefinition).instana.node.grpc.test;
+  const testProto = grpc.loadPackageDefinition(packageDefinition).instana.node.grpc.test;
   client = new testProto.TestService('localhost:50051', grpc.credentials.createInsecure());
   makeUnaryCall = dynamicUnaryCall;
   startServerSideStreaming = dynamicServerSideStreaming;
@@ -122,7 +121,7 @@ function runStaticModernClient() {
   log('Running static modern GRPC client.');
 
   messages = require('./test_pb');
-  var services = require('./test_grpc_pb');
+  const services = require('./test_grpc_pb');
   client = new services.TestServiceClient('localhost:50051', grpc.credentials.createInsecure());
   makeUnaryCall = staticUnaryCall;
   startServerSideStreaming = staticServerSideStreaming;
@@ -131,139 +130,143 @@ function runStaticModernClient() {
 }
 
 function dynamicUnaryCall(cancel, triggerError, cb) {
-  var parameter = triggerError ? 'error' : 'request';
-  var options = { interceptors: [loggingInterceptor] };
-  var call;
+  const parameter = triggerError ? 'error' : 'request';
+  const options = { interceptors: [loggingInterceptor] };
+  let call;
   if (withMetadata && withOptions) {
-    call = client.makeUnaryCall({ parameter: parameter }, createMetadata(), options, cb);
+    call = client.makeUnaryCall({ parameter }, createMetadata(), options, cb);
   } else if (withMetadata) {
-    call = client.makeUnaryCall({ parameter: parameter }, createMetadata(), cb);
+    call = client.makeUnaryCall({ parameter }, createMetadata(), cb);
   } else if (withOptions) {
-    call = client.makeUnaryCall({ parameter: parameter }, options, cb);
+    call = client.makeUnaryCall({ parameter }, options, cb);
   } else {
-    call = client.makeUnaryCall({ parameter: parameter }, cb);
+    call = client.makeUnaryCall({ parameter }, cb);
   }
   if (cancel) {
-    setTimeout(function() {
+    setTimeout(() => {
       call.cancel();
     }, 1);
   }
 }
 
 function staticUnaryCall(cancel, triggerError, cb) {
-  var request = new messages.TestRequest();
+  const request = new messages.TestRequest();
   request.setParameter(triggerError ? 'error' : 'request');
 
-  var call;
+  let call;
   if (withMetadata) {
     call = client.makeUnaryCall(request, createMetadata(), cb);
   } else {
     call = client.makeUnaryCall(request, cb);
   }
   if (cancel) {
-    setTimeout(function() {
+    setTimeout(() => {
       call.cancel();
     }, 1);
   }
 }
 
 function dynamicServerSideStreaming(cancel, triggerError, cb) {
-  var replies = [];
-  var request = { parameter: paramFor(cancel, triggerError) };
-  var call = withMetadata
+  const replies = [];
+  const request = { parameter: paramFor(cancel, triggerError) };
+  const call = withMetadata
     ? client.startServerSideStreaming(request, createMetadata())
     : client.startServerSideStreaming(request);
 
-  call.on('data', function(reply) {
+  call.on('data', reply => {
     replies.push(reply.message);
     if (reply.message === 'please cancel') {
       call.cancel();
     }
   });
-  call.on('end', function() {
+  call.on('end', () => {
     cb(null, replies);
   });
-  call.on('error', function(err) {
+  call.on('error', err => {
     cb(err);
   });
 }
 
 function staticServerSideStreaming(cancel, triggerError, cb) {
-  var replies = [];
-  var request = new messages.TestRequest();
+  const replies = [];
+  const request = new messages.TestRequest();
   request.setParameter(paramFor(cancel, triggerError));
-  var call = withMetadata
+  const call = withMetadata
     ? client.startServerSideStreaming(request, createMetadata())
     : client.startServerSideStreaming(request);
-  call.on('data', function(reply) {
+  call.on('data', reply => {
     if (reply.getMessage() === 'please cancel') {
       call.cancel();
     }
     replies.push(reply.getMessage());
   });
-  call.on('end', function() {
+  call.on('end', () => {
     cb(null, replies);
   });
-  call.on('error', function(err) {
+  call.on('error', err => {
     cb(err);
   });
 }
 
 function dynamicClientSideStreaming(cancel, triggerError, cb) {
-  var call = withMetadata ? client.startClientSideStreaming(createMetadata(), cb) : client.startClientSideStreaming(cb);
+  const call = withMetadata
+    ? client.startClientSideStreaming(createMetadata(), cb)
+    : client.startClientSideStreaming(cb);
   if (triggerError) {
-    call.write({ parameter: 'error' }, function() {
+    call.write({ parameter: 'error' }, () => {
       call.end();
     });
   } else {
-    call.write({ parameter: 'first' }, function() {
-      call.write({ parameter: 'second' }, function() {
-        call.write({ parameter: 'third' }, function() {
+    call.write({ parameter: 'first' }, () => {
+      call.write({ parameter: 'second' }, () => {
+        call.write({ parameter: 'third' }, () => {
           call.end();
         });
       });
     });
   }
   if (cancel) {
-    setTimeout(function() {
+    setTimeout(() => {
       call.cancel();
     }, 1);
   }
 }
 
 function staticClientSideStreaming(cancel, triggerError, cb) {
-  var call = withMetadata ? client.startClientSideStreaming(createMetadata(), cb) : client.startClientSideStreaming(cb);
-  var request = new messages.TestRequest();
+  const call = withMetadata
+    ? client.startClientSideStreaming(createMetadata(), cb)
+    : client.startClientSideStreaming(cb);
+  let request = new messages.TestRequest();
   if (triggerError) {
     request.setParameter('error');
-    call.write(request, function() {
+    call.write(request, () => {
       call.end();
     });
   } else {
     request.setParameter('first');
-    call.write(request, function() {
+    call.write(request, () => {
       request = new messages.TestRequest();
       request.setParameter('second');
-      call.write(request, function() {
+      call.write(request, () => {
         request = new messages.TestRequest();
         request.setParameter('third');
-        call.write(request, function() {
+        call.write(request, () => {
           call.end();
         });
       });
     });
   }
   if (cancel) {
-    setTimeout(function() {
+    setTimeout(() => {
       call.cancel();
     }, 1);
   }
 }
 
 function dynamicBidiStreaming(cancel, triggerError, cb) {
-  var replies = [];
-  var call = withMetadata ? client.startBidiStreaming(createMetadata()) : client.startBidiStreaming();
-  call.on('data', function(reply) {
+  const replies = [];
+  const call = withMetadata ? client.startBidiStreaming(createMetadata()) : client.startBidiStreaming();
+  call.on('data', reply => {
     replies.push(reply.message);
     if (reply.message === 'please cancel') {
       call.cancel();
@@ -271,20 +274,20 @@ function dynamicBidiStreaming(cancel, triggerError, cb) {
       call.end();
     }
   });
-  call.on('end', function() {
+  call.on('end', () => {
     cb(null, replies);
   });
-  call.on('error', function(err) {
+  call.on('error', err => {
     cb(err);
   });
 
   if (triggerError) {
-    call.write({ parameter: 'error' }, function() {
+    call.write({ parameter: 'error' }, () => {
       call.end();
     });
   } else {
-    call.write({ parameter: 'first' }, function() {
-      call.write({ parameter: 'second' }, function() {
+    call.write({ parameter: 'first' }, () => {
+      call.write({ parameter: 'second' }, () => {
         call.write({ parameter: 'third' });
       });
     });
@@ -292,9 +295,9 @@ function dynamicBidiStreaming(cancel, triggerError, cb) {
 }
 
 function staticBidiStreaming(cancel, triggerError, cb) {
-  var replies = [];
-  var call = withMetadata ? client.startBidiStreaming(createMetadata()) : client.startBidiStreaming();
-  call.on('data', function(reply) {
+  const replies = [];
+  const call = withMetadata ? client.startBidiStreaming(createMetadata()) : client.startBidiStreaming();
+  call.on('data', reply => {
     replies.push(reply.getMessage());
     if (reply.message === 'please cancel') {
       call.cancel();
@@ -302,25 +305,25 @@ function staticBidiStreaming(cancel, triggerError, cb) {
       call.end();
     }
   });
-  call.on('end', function() {
+  call.on('end', () => {
     cb(null, replies);
   });
-  call.on('error', function(err) {
+  call.on('error', err => {
     cb(err);
   });
 
-  var request = new messages.TestRequest();
+  let request = new messages.TestRequest();
   if (triggerError) {
     request.setParameter('error');
-    call.write(request, function() {
+    call.write(request, () => {
       call.end();
     });
   } else {
     request.setParameter('first');
-    call.write(request, function() {
+    call.write(request, () => {
       request = new messages.TestRequest();
       request.setParameter('second');
-      call.write(request, function() {
+      call.write(request, () => {
         request = new messages.TestRequest();
         request.setParameter('third');
         call.write(request);
@@ -330,7 +333,7 @@ function staticBidiStreaming(cancel, triggerError, cb) {
 }
 
 function createMetadata() {
-  var metadata = new grpc.Metadata();
+  const metadata = new grpc.Metadata();
   metadata.add('test-metadata', 'test-content');
   return metadata;
 }
@@ -344,29 +347,29 @@ function paramFor(cancel, triggerError) {
 }
 
 if (process.env.WITH_STDOUT) {
-  app.use(morgan(logPrefix + ':method :url :status'));
+  app.use(morgan(`${logPrefix}:method :url :status`));
 }
 
 app.use(bodyParser.json());
 
-app.get('/', function(req, res) {
+app.get('/', (req, res) => {
   res.send('OK');
 });
 
-app.post('/unary-call', function(req, res) {
-  makeUnaryCall(req.query.cancel, req.query.error, function(err, reply) {
+app.post('/unary-call', (req, res) => {
+  makeUnaryCall(req.query.cancel, req.query.error, (err, reply) => {
     if (err) {
       pinoLogger.error(err);
       return res.send(err);
     }
-    var message = typeof reply.getMessage === 'function' ? reply.getMessage() : reply.message;
+    const message = typeof reply.getMessage === 'function' ? reply.getMessage() : reply.message;
     pinoLogger.warn('/unary-call');
     return res.send({ reply: message });
   });
 });
 
-app.post('/server-stream', function(req, res) {
-  startServerSideStreaming(req.query.cancel, req.query.error, function(err, replyMessages) {
+app.post('/server-stream', (req, res) => {
+  startServerSideStreaming(req.query.cancel, req.query.error, (err, replyMessages) => {
     if (err) {
       pinoLogger.error(err);
       return res.send(err);
@@ -376,20 +379,20 @@ app.post('/server-stream', function(req, res) {
   });
 });
 
-app.post('/client-stream', function(req, res) {
-  startClientSideStreaming(req.query.cancel, req.query.error, function(err, reply) {
+app.post('/client-stream', (req, res) => {
+  startClientSideStreaming(req.query.cancel, req.query.error, (err, reply) => {
     if (err) {
       pinoLogger.error(err);
       return res.send(err);
     }
-    var message = typeof reply.getMessage === 'function' ? reply.getMessage() : reply.message;
+    const message = typeof reply.getMessage === 'function' ? reply.getMessage() : reply.message;
     pinoLogger.warn('/client-stream');
     return res.send({ reply: message });
   });
 });
 
-app.post('/bidi-stream', function(req, res) {
-  startBidiStreaming(req.query.cancel, req.query.error, function(err, replyMessages) {
+app.post('/bidi-stream', (req, res) => {
+  startBidiStreaming(req.query.cancel, req.query.error, (err, replyMessages) => {
     if (err) {
       pinoLogger.error(err);
       return res.send(err);
@@ -399,17 +402,17 @@ app.post('/bidi-stream', function(req, res) {
   });
 });
 
-app.post('/shutdown', function(req, res) {
+app.post('/shutdown', (req, res) => {
   client.close();
   return res.send('Good bye :)');
 });
 
-app.listen(port, function() {
-  log('Listening on port: ' + port);
+app.listen(port, () => {
+  log(`Listening on port: ${port}`);
 });
 
 function log() {
-  var args = Array.prototype.slice.call(arguments);
+  const args = Array.prototype.slice.call(arguments);
   args[0] = logPrefix + args[0];
   console.log.apply(console, args);
 }

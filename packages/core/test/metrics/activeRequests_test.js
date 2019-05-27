@@ -2,20 +2,20 @@
 
 'use strict';
 
-var expect = require('chai').expect;
-var fs = require('fs');
+const expect = require('chai').expect;
+const fs = require('fs');
 
-var activeRequests = require('../../src/metrics/activeRequests');
+const activeRequests = require('../../src/metrics/activeRequests');
 
-describe('metrics.activeRequests', function() {
-  it('should export active requests count', function() {
+describe('metrics.activeRequests', () => {
+  it('should export active requests count', () => {
     expect(activeRequests.currentPayload).to.equal(process._getActiveRequests().length);
   });
 
-  it('should update requests count for a fs.open', function() {
-    var activeRequestBefore = activeRequests.currentPayload;
-    for (var i = 0; i < 13; i++) {
-      fs.open(__filename, 'r', function() {});
+  it('should update requests count for a fs.open', () => {
+    const activeRequestBefore = activeRequests.currentPayload;
+    for (let i = 0; i < 13; i++) {
+      fs.open(__filename, 'r', () => {});
     }
     expect(activeRequests.currentPayload).to.equal(activeRequestBefore + 13);
   });

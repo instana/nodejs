@@ -2,22 +2,22 @@
 
 'use strict';
 
-var spawn = require('child_process').spawn;
-var request = require('request-promise');
-var path = require('path');
+const spawn = require('child_process').spawn;
+const request = require('request-promise');
+const path = require('path');
 
-var utils = require('../../utils');
-var config = require('../../config');
-var agentPort = require('../../apps/agentStubControls').agentPort;
-var appPort = (exports.appPort = 3215);
+const utils = require('../../utils');
+const config = require('../../config');
+const agentPort = require('../../apps/agentStubControls').agentPort;
+const appPort = (exports.appPort = 3215);
 
-var expressOpentracingApp;
+let expressOpentracingApp;
 
-exports.registerTestHooks = function(opts) {
-  beforeEach(function() {
+exports.registerTestHooks = opts => {
+  beforeEach(() => {
     opts = opts || {};
 
-    var env = Object.create(process.env);
+    const env = Object.create(process.env);
     env.AGENT_PORT = agentPort;
     env.APP_PORT = appPort;
     env.TRACING_ENABLED = opts.enableTracing !== false;
@@ -25,36 +25,33 @@ exports.registerTestHooks = function(opts) {
 
     expressOpentracingApp = spawn('node', [path.join(__dirname, 'app.js')], {
       stdio: config.getAppStdio(),
-      env: env
+      env
     });
 
     return waitUntilServerIsUp();
   });
 
-  afterEach(function() {
+  afterEach(() => {
     expressOpentracingApp.kill();
   });
 };
 
 function waitUntilServerIsUp() {
-  return utils.retry(function() {
-    return request({
+  return utils.retry(() =>
+    request({
       method: 'GET',
-      url: 'http://127.0.0.1:' + appPort,
+      url: `http://127.0.0.1:${appPort}`,
       headers: {
         'X-INSTANA-L': '0'
       }
-    });
-  });
+    })
+  );
 }
 
-exports.getPid = function() {
-  return expressOpentracingApp.pid;
-};
+exports.getPid = () => expressOpentracingApp.pid;
 
-exports.sendRequest = function(opts) {
-  return request({
+exports.sendRequest = opts =>
+  request({
     method: opts.method,
-    url: 'http://127.0.0.1:' + appPort + opts.path
+    url: `http://127.0.0.1:${appPort}${opts.path}`
   });
-};

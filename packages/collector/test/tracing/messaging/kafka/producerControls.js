@@ -2,64 +2,61 @@
 
 'use strict';
 
-var spawn = require('child_process').spawn;
-var request = require('request-promise');
-var path = require('path');
+const spawn = require('child_process').spawn;
+const request = require('request-promise');
+const path = require('path');
 
-var utils = require('../../../utils');
-var config = require('../../../config');
-var agentPort = require('../../../apps/agentStubControls').agentPort;
-var appPort = (exports.appPort = 3216);
+const utils = require('../../../utils');
+const config = require('../../../config');
+const agentPort = require('../../../apps/agentStubControls').agentPort;
+const appPort = (exports.appPort = 3216);
 
-var app;
+let app;
 
-exports.registerTestHooks = function(opts) {
-  beforeEach(function() {
+exports.registerTestHooks = opts => {
+  beforeEach(() => {
     opts = opts || {};
 
-    var env = Object.create(process.env);
+    const env = Object.create(process.env);
     env.AGENT_PORT = agentPort;
     env.APP_PORT = appPort;
     env.TRACING_ENABLED = opts.enableTracing !== false;
 
     app = spawn('node', [path.join(__dirname, 'producer.js')], {
       stdio: config.getAppStdio(),
-      env: env
+      env
     });
 
     return waitUntilServerIsUp();
   });
 
-  afterEach(function() {
+  afterEach(() => {
     app.kill();
   });
 };
 
 function waitUntilServerIsUp() {
-  return utils.retry(function() {
-    return request({
+  return utils.retry(() =>
+    request({
       method: 'GET',
-      url: 'http://127.0.0.1:' + appPort,
+      url: `http://127.0.0.1:${appPort}`,
       headers: {
         'X-INSTANA-L': '0'
       }
-    });
-  });
+    })
+  );
 }
 
-exports.getPid = function() {
-  return app.pid;
-};
+exports.getPid = () => app.pid;
 
-exports.send = function(key, message) {
-  return request({
+exports.send = (key, message) =>
+  request({
     method: 'POST',
-    url: 'http://127.0.0.1:' + appPort + '/send-message',
+    url: `http://127.0.0.1:${appPort}/send-message`,
     json: true,
     simple: true,
     body: {
-      key: key,
-      message: message
+      key,
+      message
     }
   });
-};

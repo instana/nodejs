@@ -2,7 +2,7 @@
 
 'use strict';
 
-var instana = require('../../../')({
+const instana = require('../../../')({
   agentPort: process.env.AGENT_PORT,
   level: 'warn',
   tracing: {
@@ -11,32 +11,32 @@ var instana = require('../../../')({
   }
 });
 
-var express = require('express');
-var morgan = require('morgan');
-var bodyParser = require('body-parser');
+const express = require('express');
+const morgan = require('morgan');
+const bodyParser = require('body-parser');
 
-var app = express();
-var logPrefix = 'API: Server (' + process.pid + '):\t';
+const app = express();
+const logPrefix = `API: Server (${process.pid}):\t`;
 
 if (process.env.WITH_STDOUT) {
-  app.use(morgan(logPrefix + ':method :url :status'));
+  app.use(morgan(`${logPrefix}:method :url :status`));
 }
 
 app.use(bodyParser.json());
 
-app.get('/', function(req, res) {
+app.get('/', (req, res) => {
   res.sendStatus(200);
 });
 
-app.get('/span/active', function(req, res) {
-  var span = instana.currentSpan();
+app.get('/span/active', (req, res) => {
+  const span = instana.currentSpan();
   res.json({
     span: serialize(span)
   });
 });
 
-app.get('/span/manuallyended', function(req, res) {
-  var span = instana.currentSpan();
+app.get('/span/manuallyended', (req, res) => {
+  const span = instana.currentSpan();
   span.disableAutoEnd();
   span.end(42);
   res.json({
@@ -44,8 +44,8 @@ app.get('/span/manuallyended', function(req, res) {
   });
 });
 
-app.listen(process.env.APP_PORT, function() {
-  log('Listening on port: ' + process.env.APP_PORT);
+app.listen(process.env.APP_PORT, () => {
+  log(`Listening on port: ${process.env.APP_PORT}`);
 });
 
 function serialize(span) {
@@ -65,7 +65,7 @@ function serialize(span) {
 }
 
 function log() {
-  var args = Array.prototype.slice.call(arguments);
+  const args = Array.prototype.slice.call(arguments);
   args[0] = logPrefix + args[0];
   console.log.apply(console, args);
 }

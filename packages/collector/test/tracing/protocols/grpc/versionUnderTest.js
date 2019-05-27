@@ -1,6 +1,6 @@
 'use strict';
 
-var semver = require('semver');
+const semver = require('semver');
 
 module.exports = exports = function determineGrpcPackageVersionUnderTest() {
   if (process.env.GRPC_PACKAGE_VERSION) {

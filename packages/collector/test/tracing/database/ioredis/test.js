@@ -1,31 +1,31 @@
 'use strict';
 
-var expect = require('chai').expect;
+const expect = require('chai').expect;
 
-var constants = require('@instana/core').tracing.constants;
-var supportedVersion = require('@instana/core').tracing.supportedVersion;
-var config = require('../../../config');
-var utils = require('../../../utils');
+const constants = require('@instana/core').tracing.constants;
+const supportedVersion = require('@instana/core').tracing.supportedVersion;
+const config = require('../../../config');
+const utils = require('../../../utils');
 
 describe('tracing/ioredis', function() {
   if (!supportedVersion(process.versions.node)) {
     return;
   }
 
-  var agentControls = require('../../../apps/agentStubControls');
-  var IoRedisControls = require('./controls');
+  const agentControls = require('../../../apps/agentStubControls');
+  const IoRedisControls = require('./controls');
 
   this.timeout(config.getTestTimeout());
 
   agentControls.registerTestHooks();
 
-  var ioRedisControls = new IoRedisControls({
-    agentControls: agentControls
+  const ioRedisControls = new IoRedisControls({
+    agentControls
   });
   ioRedisControls.registerTestHooks();
 
-  it('must trace set/get calls', function() {
-    return ioRedisControls
+  it('must trace set/get calls', () =>
+    ioRedisControls
       .sendRequest({
         method: 'POST',
         path: '/values',
@@ -34,26 +34,26 @@ describe('tracing/ioredis', function() {
           value: 42
         }
       })
-      .then(function() {
-        return ioRedisControls.sendRequest({
+      .then(() =>
+        ioRedisControls.sendRequest({
           method: 'GET',
           path: '/values',
           qs: {
             key: 'price'
           }
-        });
-      })
-      .then(function(response) {
+        })
+      )
+      .then(response => {
         expect(String(response)).to.equal('42');
 
-        return utils.retry(function() {
-          return agentControls.getSpans().then(function(spans) {
-            var writeEntrySpan = utils.expectOneMatching(spans, function(span) {
+        return utils.retry(() =>
+          agentControls.getSpans().then(spans => {
+            const writeEntrySpan = utils.expectOneMatching(spans, span => {
               expect(span.n).to.equal('node.http.server');
               expect(span.data.http.method).to.equal('POST');
             });
 
-            utils.expectOneMatching(spans, function(span) {
+            utils.expectOneMatching(spans, span => {
               expect(span.t).to.equal(writeEntrySpan.t);
               expect(span.p).to.equal(writeEntrySpan.s);
               expect(span.n).to.equal('redis');
@@ -66,12 +66,12 @@ describe('tracing/ioredis', function() {
               expect(span.data.redis.command).to.equal('set');
             });
 
-            var readEntrySpan = utils.expectOneMatching(spans, function(span) {
+            const readEntrySpan = utils.expectOneMatching(spans, span => {
               expect(span.n).to.equal('node.http.server');
               expect(span.data.http.method).to.equal('GET');
             });
 
-            utils.expectOneMatching(spans, function(span) {
+            utils.expectOneMatching(spans, span => {
               expect(span.t).to.equal(readEntrySpan.t);
               expect(span.p).to.equal(readEntrySpan.s);
               expect(span.n).to.equal('redis');
@@ -83,13 +83,12 @@ describe('tracing/ioredis', function() {
               expect(span.data.redis.connection).to.equal(process.env.REDIS);
               expect(span.data.redis.command).to.equal('get');
             });
-          });
-        });
-      });
-  });
+          })
+        );
+      }));
 
-  it('must keep the tracing context', function() {
-    return ioRedisControls
+  it('must keep the tracing context', () =>
+    ioRedisControls
       .sendRequest({
         method: 'POST',
         path: '/values',
@@ -98,26 +97,26 @@ describe('tracing/ioredis', function() {
           value: 13
         }
       })
-      .then(function() {
-        return ioRedisControls.sendRequest({
+      .then(() =>
+        ioRedisControls.sendRequest({
           method: 'GET',
           path: '/keepTracing',
           qs: {
             key: 'keepTracing'
           }
-        });
-      })
-      .then(function(response) {
+        })
+      )
+      .then(response => {
         expect(String(response)).to.equal('OK;13');
 
-        return utils.retry(function() {
-          return agentControls.getSpans().then(function(spans) {
-            var writeEntrySpan = utils.expectOneMatching(spans, function(span) {
+        return utils.retry(() =>
+          agentControls.getSpans().then(spans => {
+            const writeEntrySpan = utils.expectOneMatching(spans, span => {
               expect(span.n).to.equal('node.http.server');
               expect(span.data.http.method).to.equal('POST');
             });
 
-            utils.expectOneMatching(spans, function(span) {
+            utils.expectOneMatching(spans, span => {
               expect(span.t).to.equal(writeEntrySpan.t);
               expect(span.p).to.equal(writeEntrySpan.s);
               expect(span.n).to.equal('redis');
@@ -130,12 +129,12 @@ describe('tracing/ioredis', function() {
               expect(span.data.redis.command).to.equal('set');
             });
 
-            var readEntrySpan = utils.expectOneMatching(spans, function(span) {
+            const readEntrySpan = utils.expectOneMatching(spans, span => {
               expect(span.n).to.equal('node.http.server');
               expect(span.data.http.method).to.equal('GET');
             });
 
-            utils.expectOneMatching(spans, function(span) {
+            utils.expectOneMatching(spans, span => {
               expect(span.t).to.equal(readEntrySpan.t);
               expect(span.p).to.equal(readEntrySpan.s);
               expect(span.n).to.equal('redis');
@@ -148,7 +147,7 @@ describe('tracing/ioredis', function() {
               expect(span.data.redis.command).to.equal('get');
             });
 
-            utils.expectOneMatching(spans, function(span) {
+            utils.expectOneMatching(spans, span => {
               expect(span.t).to.equal(readEntrySpan.t);
               expect(span.p).to.equal(readEntrySpan.s);
               expect(span.n).to.equal('node.http.client');
@@ -161,13 +160,12 @@ describe('tracing/ioredis', function() {
               expect(span.data.http.url).to.match(/http:\/\/127\.0\.0\.1:/);
               expect(span.data.http.status).to.equal(200);
             });
-          });
-        });
-      });
-  });
+          })
+        );
+      }));
 
-  it('must keep the tracing context with ioredis via callback', function() {
-    return ioRedisControls
+  it('must keep the tracing context with ioredis via callback', () =>
+    ioRedisControls
       .sendRequest({
         method: 'POST',
         path: '/values',
@@ -176,26 +174,26 @@ describe('tracing/ioredis', function() {
           value: 13
         }
       })
-      .then(function() {
-        return ioRedisControls.sendRequest({
+      .then(() =>
+        ioRedisControls.sendRequest({
           method: 'GET',
           path: '/keepTracingCallback',
           qs: {
             key: 'keepTracing'
           }
-        });
-      })
-      .then(function(response) {
+        })
+      )
+      .then(response => {
         expect(String(response)).to.equal('OK;13');
 
-        return utils.retry(function() {
-          return agentControls.getSpans().then(function(spans) {
-            var writeEntrySpan = utils.expectOneMatching(spans, function(span) {
+        return utils.retry(() =>
+          agentControls.getSpans().then(spans => {
+            const writeEntrySpan = utils.expectOneMatching(spans, span => {
               expect(span.n).to.equal('node.http.server');
               expect(span.data.http.method).to.equal('POST');
             });
 
-            utils.expectOneMatching(spans, function(span) {
+            utils.expectOneMatching(spans, span => {
               expect(span.t).to.equal(writeEntrySpan.t);
               expect(span.p).to.equal(writeEntrySpan.s);
               expect(span.n).to.equal('redis');
@@ -208,12 +206,12 @@ describe('tracing/ioredis', function() {
               expect(span.data.redis.command).to.equal('set');
             });
 
-            var readEntrySpan = utils.expectOneMatching(spans, function(span) {
+            const readEntrySpan = utils.expectOneMatching(spans, span => {
               expect(span.n).to.equal('node.http.server');
               expect(span.data.http.method).to.equal('GET');
             });
 
-            utils.expectOneMatching(spans, function(span) {
+            utils.expectOneMatching(spans, span => {
               expect(span.t).to.equal(readEntrySpan.t);
               expect(span.p).to.equal(readEntrySpan.s);
               expect(span.n).to.equal('redis');
@@ -226,7 +224,7 @@ describe('tracing/ioredis', function() {
               expect(span.data.redis.command).to.equal('get');
             });
 
-            utils.expectOneMatching(spans, function(span) {
+            utils.expectOneMatching(spans, span => {
               expect(span.t).to.equal(readEntrySpan.t);
               expect(span.p).to.equal(readEntrySpan.s);
               expect(span.n).to.equal('node.http.client');
@@ -239,29 +237,28 @@ describe('tracing/ioredis', function() {
               expect(span.data.http.url).to.match(/http:\/\/127\.0\.0\.1:/);
               expect(span.data.http.status).to.equal(200);
             });
-          });
-        });
-      });
-  });
+          })
+        );
+      }));
 
-  it('must trace failed redis calls', function() {
-    return ioRedisControls
+  it('must trace failed redis calls', () =>
+    ioRedisControls
       .sendRequest({
         method: 'GET',
         path: '/failure'
       })
-      .catch(function() {
+      .catch(() => {
         // ignore errors
       })
-      .then(function() {
-        return utils.retry(function() {
-          return agentControls.getSpans().then(function(spans) {
-            var writeEntrySpan = utils.expectOneMatching(spans, function(span) {
+      .then(() =>
+        utils.retry(() =>
+          agentControls.getSpans().then(spans => {
+            const writeEntrySpan = utils.expectOneMatching(spans, span => {
               expect(span.n).to.equal('node.http.server');
               expect(span.data.http.method).to.equal('GET');
             });
 
-            utils.expectOneMatching(spans, function(span) {
+            utils.expectOneMatching(spans, span => {
               expect(span.t).to.equal(writeEntrySpan.t);
               expect(span.p).to.equal(writeEntrySpan.s);
               expect(span.n).to.equal('redis');
@@ -275,26 +272,25 @@ describe('tracing/ioredis', function() {
               expect(span.data.redis.command).to.equal('get');
               expect(span.data.redis.error).to.be.a('string');
             });
-          });
-        });
-      });
-  });
+          })
+        )
+      ));
 
-  it('must trace multi calls', function() {
-    return ioRedisControls
+  it('must trace multi calls', () =>
+    ioRedisControls
       .sendRequest({
         method: 'GET',
         path: '/multi'
       })
-      .then(function() {
-        return utils.retry(function() {
-          return agentControls.getSpans().then(function(spans) {
-            var writeEntrySpan = utils.expectOneMatching(spans, function(span) {
+      .then(() =>
+        utils.retry(() =>
+          agentControls.getSpans().then(spans => {
+            const writeEntrySpan = utils.expectOneMatching(spans, span => {
               expect(span.n).to.equal('node.http.server');
               expect(span.data.http.method).to.equal('GET');
             });
 
-            utils.expectOneMatching(spans, function(span) {
+            utils.expectOneMatching(spans, span => {
               expect(span.t).to.equal(writeEntrySpan.t);
               expect(span.p).to.equal(writeEntrySpan.s);
               expect(span.n).to.equal('redis');
@@ -310,29 +306,28 @@ describe('tracing/ioredis', function() {
               expect(span.data.redis.command).to.equal('multi');
               expect(span.data.redis.subCommands).to.deep.equal(['hset', 'hget']);
             });
-          });
-        });
-      });
-  });
+          })
+        )
+      ));
 
-  it('must trace failed multi calls', function() {
-    return ioRedisControls
+  it('must trace failed multi calls', () =>
+    ioRedisControls
       .sendRequest({
         method: 'GET',
         path: '/multiFailure'
       })
-      .catch(function() {
+      .catch(() => {
         // ignore errors
       })
-      .then(function() {
-        return utils.retry(function() {
-          return agentControls.getSpans().then(function(spans) {
-            var writeEntrySpan = utils.expectOneMatching(spans, function(span) {
+      .then(() =>
+        utils.retry(() =>
+          agentControls.getSpans().then(spans => {
+            const writeEntrySpan = utils.expectOneMatching(spans, span => {
               expect(span.n).to.equal('node.http.server');
               expect(span.data.http.method).to.equal('GET');
             });
 
-            utils.expectOneMatching(spans, function(span) {
+            utils.expectOneMatching(spans, span => {
               expect(span.t).to.equal(writeEntrySpan.t);
               expect(span.p).to.equal(writeEntrySpan.s);
               expect(span.n).to.equal('redis');
@@ -349,26 +344,25 @@ describe('tracing/ioredis', function() {
               expect(span.data.redis.subCommands).to.deep.equal(['hset', 'hget']);
               expect(span.data.redis.error).to.be.a('string');
             });
-          });
-        });
-      });
-  });
+          })
+        )
+      ));
 
-  it('must keep the tracing context after multi', function() {
-    return ioRedisControls
+  it('must keep the tracing context after multi', () =>
+    ioRedisControls
       .sendRequest({
         method: 'POST',
         path: '/multiKeepTracing'
       })
-      .then(function() {
-        return utils.retry(function() {
-          return agentControls.getSpans().then(function(spans) {
-            var entrySpan = utils.expectOneMatching(spans, function(span) {
+      .then(() =>
+        utils.retry(() =>
+          agentControls.getSpans().then(spans => {
+            const entrySpan = utils.expectOneMatching(spans, span => {
               expect(span.n).to.equal('node.http.server');
               expect(span.data.http.method).to.equal('POST');
             });
 
-            utils.expectOneMatching(spans, function(span) {
+            utils.expectOneMatching(spans, span => {
               expect(span.t).to.equal(entrySpan.t);
               expect(span.p).to.equal(entrySpan.s);
               expect(span.n).to.equal('redis');
@@ -385,7 +379,7 @@ describe('tracing/ioredis', function() {
               expect(span.data.redis.subCommands).to.deep.equal(['hset', 'hget']);
             });
 
-            utils.expectOneMatching(spans, function(span) {
+            utils.expectOneMatching(spans, span => {
               expect(span.t).to.equal(entrySpan.t);
               expect(span.p).to.equal(entrySpan.s);
               expect(span.n).to.equal('node.http.client');
@@ -398,26 +392,25 @@ describe('tracing/ioredis', function() {
               expect(span.data.http.url).to.match(/http:\/\/127\.0\.0\.1:/);
               expect(span.data.http.status).to.equal(200);
             });
-          });
-        });
-      });
-  });
+          })
+        )
+      ));
 
-  it('must trace pipeline calls', function() {
-    return ioRedisControls
+  it('must trace pipeline calls', () =>
+    ioRedisControls
       .sendRequest({
         method: 'GET',
         path: '/pipeline'
       })
-      .then(function() {
-        return utils.retry(function() {
-          return agentControls.getSpans().then(function(spans) {
-            var writeEntrySpan = utils.expectOneMatching(spans, function(span) {
+      .then(() =>
+        utils.retry(() =>
+          agentControls.getSpans().then(spans => {
+            const writeEntrySpan = utils.expectOneMatching(spans, span => {
               expect(span.n).to.equal('node.http.server');
               expect(span.data.http.method).to.equal('GET');
             });
 
-            utils.expectOneMatching(spans, function(span) {
+            utils.expectOneMatching(spans, span => {
               expect(span.t).to.equal(writeEntrySpan.t);
               expect(span.p).to.equal(writeEntrySpan.s);
               expect(span.n).to.equal('redis');
@@ -433,26 +426,25 @@ describe('tracing/ioredis', function() {
               expect(span.data.redis.command).to.equal('pipeline');
               expect(span.data.redis.subCommands).to.deep.equal(['hset', 'hset', 'hget']);
             });
-          });
-        });
-      });
-  });
+          })
+        )
+      ));
 
-  it('must trace partially failed pipeline calls', function() {
-    return ioRedisControls
+  it('must trace partially failed pipeline calls', () =>
+    ioRedisControls
       .sendRequest({
         method: 'GET',
         path: '/pipelineFailure'
       })
-      .then(function() {
-        return utils.retry(function() {
-          return agentControls.getSpans().then(function(spans) {
-            var writeEntrySpan = utils.expectOneMatching(spans, function(span) {
+      .then(() =>
+        utils.retry(() =>
+          agentControls.getSpans().then(spans => {
+            const writeEntrySpan = utils.expectOneMatching(spans, span => {
               expect(span.n).to.equal('node.http.server');
               expect(span.data.http.method).to.equal('GET');
             });
 
-            utils.expectOneMatching(spans, function(span) {
+            utils.expectOneMatching(spans, span => {
               expect(span.t).to.equal(writeEntrySpan.t);
               expect(span.p).to.equal(writeEntrySpan.s);
               expect(span.n).to.equal('redis');
@@ -469,26 +461,25 @@ describe('tracing/ioredis', function() {
               expect(span.data.redis.subCommands).to.deep.equal(['hset', 'hset', 'hget']);
               expect(span.data.redis.error).to.be.a('string');
             });
-          });
-        });
-      });
-  });
+          })
+        )
+      ));
 
-  it('must keep the tracing context after pipeline', function() {
-    return ioRedisControls
+  it('must keep the tracing context after pipeline', () =>
+    ioRedisControls
       .sendRequest({
         method: 'POST',
         path: '/pipelineKeepTracing'
       })
-      .then(function() {
-        return utils.retry(function() {
-          return agentControls.getSpans().then(function(spans) {
-            var entrySpan = utils.expectOneMatching(spans, function(span) {
+      .then(() =>
+        utils.retry(() =>
+          agentControls.getSpans().then(spans => {
+            const entrySpan = utils.expectOneMatching(spans, span => {
               expect(span.n).to.equal('node.http.server');
               expect(span.data.http.method).to.equal('POST');
             });
 
-            utils.expectOneMatching(spans, function(span) {
+            utils.expectOneMatching(spans, span => {
               expect(span.t).to.equal(entrySpan.t);
               expect(span.p).to.equal(entrySpan.s);
               expect(span.n).to.equal('redis');
@@ -505,7 +496,7 @@ describe('tracing/ioredis', function() {
               expect(span.data.redis.subCommands).to.deep.equal(['hset', 'hget']);
             });
 
-            utils.expectOneMatching(spans, function(span) {
+            utils.expectOneMatching(spans, span => {
               expect(span.t).to.equal(entrySpan.t);
               expect(span.p).to.equal(entrySpan.s);
               expect(span.n).to.equal('node.http.client');
@@ -518,8 +509,7 @@ describe('tracing/ioredis', function() {
               expect(span.data.http.url).to.match(/http:\/\/127\.0\.0\.1:/);
               expect(span.data.http.status).to.equal(200);
             });
-          });
-        });
-      });
-  });
+          })
+        )
+      ));
 });

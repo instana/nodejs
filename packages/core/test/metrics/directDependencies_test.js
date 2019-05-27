@@ -2,29 +2,29 @@
 
 'use strict';
 
-var expect = require('chai').expect;
+const expect = require('chai').expect;
 
-var utils = require('../utils');
-var directDependencies = require('../../src/metrics/directDependencies');
+const utils = require('../utils');
+const directDependencies = require('../../src/metrics/directDependencies');
 
-describe('metrics.directDependencies', function() {
-  it('should use the correct payload prefix', function() {
+describe('metrics.directDependencies', () => {
+  it('should use the correct payload prefix', () => {
     expect(directDependencies.payloadPrefix).to.equal('directDependencies');
   });
 
-  it('should export a well formed empty payload right away', function() {
+  it('should export a well formed empty payload right away', () => {
     expect(directDependencies.currentPayload.dependencies).to.exist;
     expect(directDependencies.currentPayload.peerDependencies).to.exist;
     expect(directDependencies.currentPayload.optionalDependencies).to.exist;
   });
 
-  it('should provide the set of depencies with versions', function() {
+  it('should provide the set of depencies with versions', () => {
     directDependencies.activate();
 
-    return utils.retry(function() {
+    return utils.retry(() => {
       // Testing against Mocha dependencies as mocha is the main module when running the tests and dependencies are
       // evaluated as the content of the node_modules directory relative to the main module.
-      var deps = directDependencies.currentPayload.dependencies;
+      const deps = directDependencies.currentPayload.dependencies;
       expect(deps).to.exist;
       expect(deps.debug).to.equal('3.1.0');
       expect(deps['browser-stdout']).to.equal('1.3.1');

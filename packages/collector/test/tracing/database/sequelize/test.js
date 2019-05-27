@@ -1,52 +1,50 @@
 'use strict';
 
-var expect = require('chai').expect;
+const expect = require('chai').expect;
 
-var constants = require('@instana/core').tracing.constants;
-var supportedVersion = require('@instana/core').tracing.supportedVersion;
-var config = require('../../../config');
-var utils = require('../../../utils');
+const constants = require('@instana/core').tracing.constants;
+const supportedVersion = require('@instana/core').tracing.supportedVersion;
+const config = require('../../../config');
+const utils = require('../../../utils');
 
 describe('tracing/sequelize', function() {
   if (!supportedVersion(process.versions.node)) {
     return;
   }
 
-  var expressPgControls = require('./controls');
-  var agentStubControls = require('../../../apps/agentStubControls');
+  const expressPgControls = require('./controls');
+  const agentStubControls = require('../../../apps/agentStubControls');
 
   this.timeout(config.getTestTimeout());
 
   agentStubControls.registerTestHooks();
   expressPgControls.registerTestHooks();
 
-  beforeEach(function() {
-    return agentStubControls.waitUntilAppIsCompletelyInitialized(expressPgControls.getPid());
-  });
+  beforeEach(() => agentStubControls.waitUntilAppIsCompletelyInitialized(expressPgControls.getPid()));
 
-  it('must fetch', function() {
-    return expressPgControls
+  it('must fetch', () =>
+    expressPgControls
       .sendRequest({
         method: 'GET',
         path: '/regents'
       })
-      .then(function(response) {
+      .then(response => {
         expect(response).to.exist;
         expect(Array.isArray(response)).to.be.true;
         expect(response.length).to.be.gte(1);
         expect(response[0].firstName).to.equal('Irene');
         expect(response[0].lastName).to.equal('Sarantapechaina');
 
-        return utils.retry(function() {
-          return agentStubControls.getSpans().then(function(spans) {
-            var entrySpans = utils.getSpansByName(spans, 'node.http.server');
-            var pgSpans = utils.getSpansByName(spans, 'postgres');
+        return utils.retry(() =>
+          agentStubControls.getSpans().then(spans => {
+            const entrySpans = utils.getSpansByName(spans, 'node.http.server');
+            const pgSpans = utils.getSpansByName(spans, 'postgres');
 
             expect(entrySpans).to.have.lengthOf(1);
             expect(pgSpans).to.have.lengthOf(1);
 
-            var entrySpan = entrySpans[0];
-            var pgSpan = pgSpans[0];
+            const entrySpan = entrySpans[0];
+            const pgSpan = pgSpans[0];
 
             expect(pgSpan.f.e).to.equal(String(expressPgControls.getPid()));
             expect(pgSpan.f.h).to.equal('agent-stub-uuid');
@@ -60,13 +58,12 @@ describe('tracing/sequelize', function() {
             expect(pgSpan.error).to.equal(false);
             expect(pgSpan.ec).to.equal(0);
             expect(pgSpan.data.pg.stmt).to.contain('FROM "regents"');
-          });
-        });
-      });
-  });
+          })
+        );
+      }));
 
-  it('must write', function() {
-    return expressPgControls
+  it('must write', () =>
+    expressPgControls
       .sendRequest({
         method: 'POST',
         path: '/regents',
@@ -75,30 +72,30 @@ describe('tracing/sequelize', function() {
           lastName: '-'
         }
       })
-      .then(function() {
-        return expressPgControls.sendRequest({
+      .then(() =>
+        expressPgControls.sendRequest({
           method: 'GET',
           path: '/regents?firstName=Martina'
-        });
-      })
-      .then(function(response) {
+        })
+      )
+      .then(response => {
         expect(response).to.exist;
         expect(Array.isArray(response)).to.be.true;
         expect(response.length).to.be.gte(1);
         expect(response[0].firstName).to.equal('Martina');
         expect(response[0].lastName).to.equal('-');
-        return utils.retry(function() {
-          return agentStubControls.getSpans().then(function(spans) {
-            var entrySpans = utils.getSpansByName(spans, 'node.http.server');
-            var pgSpans = utils.getSpansByName(spans, 'postgres');
+        return utils.retry(() =>
+          agentStubControls.getSpans().then(spans => {
+            const entrySpans = utils.getSpansByName(spans, 'node.http.server');
+            const pgSpans = utils.getSpansByName(spans, 'postgres');
 
             expect(entrySpans).to.have.lengthOf(2);
             expect(pgSpans.length).to.be.gte(2);
 
-            var entrySpan = entrySpans[0];
-            var pgSpan = pgSpans[0];
+            const entrySpan = entrySpans[0];
+            const pgSpan = pgSpans[0];
 
-            for (var i = 0; i < pgSpans.length - 1; i++) {
+            for (let i = 0; i < pgSpans.length - 1; i++) {
               expect(entrySpan.data.http.method).to.equal('POST');
               expect(pgSpan.f.e).to.equal(String(expressPgControls.getPid()));
               expect(pgSpan.f.h).to.equal('agent-stub-uuid');
@@ -114,8 +111,7 @@ describe('tracing/sequelize', function() {
               expect(pgSpan.error).to.equal(false);
               expect(pgSpan.ec).to.equal(0);
             }
-          });
-        });
-      });
-  });
+          })
+        );
+      }));
 });

@@ -1,19 +1,19 @@
 'use strict';
 
-var expect = require('chai').expect;
-var semver = require('semver');
-var supportedVersion = require('@instana/core').tracing.supportedVersion;
+const expect = require('chai').expect;
+const semver = require('semver');
+const supportedVersion = require('@instana/core').tracing.supportedVersion;
 
-var config = require('../config');
-var utils = require('../utils');
+const config = require('../config');
+const utils = require('../utils');
 
 describe('actions/getModuleAnalysis', function() {
   if (semver.satisfies(process.versions.node, '<4')) {
     return;
   }
 
-  var expressControls = require('../apps/expressControls');
-  var agentStubControls = require('../apps/agentStubControls');
+  const expressControls = require('../apps/expressControls');
+  const agentStubControls = require('../apps/agentStubControls');
 
   this.timeout(config.getTestTimeout());
 
@@ -22,30 +22,28 @@ describe('actions/getModuleAnalysis', function() {
     enableTracing: supportedVersion(process.versions.node)
   });
 
-  beforeEach(function() {
-    return agentStubControls.waitUntilAppIsCompletelyInitialized(expressControls.getPid());
-  });
+  beforeEach(() => agentStubControls.waitUntilAppIsCompletelyInitialized(expressControls.getPid()));
 
-  it('must receive module analysis', function() {
-    var messageId = 'a';
+  it('must receive module analysis', () => {
+    const messageId = 'a';
     return agentStubControls
       .addRequestForPid(expressControls.getPid(), {
         action: 'node.getModuleAnalysis',
-        messageId: messageId,
+        messageId,
         args: {}
       })
-      .then(function() {
-        return utils.retry(function() {
-          return agentStubControls.getResponses().then(function(responses) {
-            utils.expectOneMatching(responses, function(response) {
+      .then(() =>
+        utils.retry(() =>
+          agentStubControls.getResponses().then(responses => {
+            utils.expectOneMatching(responses, response => {
               expect(response.messageId).to.equal(messageId);
               expect(response.data.data.cwd).to.be.a('string');
               expect(response.data.data['require.main.filename']).to.be.a('string');
               expect(response.data.data['require.main.paths']).to.be.an('array');
               expect(response.data.data['require.cache']).to.be.an('array');
             });
-          });
-        });
-      });
+          })
+        )
+      );
   });
 });

@@ -1,34 +1,32 @@
 'use strict';
 
-var expect = require('chai').expect;
+const expect = require('chai').expect;
 
-var config = require('../../../collector/test/config');
-var utils = require('../../../collector/test/utils');
+const config = require('../../../collector/test/config');
+const utils = require('../../../collector/test/utils');
 
 describe('legacy sensor/API', function() {
   this.timeout(config.getTestTimeout());
 
-  var agentControls = require('../../../collector/test/apps/agentStubControls');
-  var AppControls = require('./controls');
-  var appControls = new AppControls({
-    agentControls: agentControls
+  const agentControls = require('../../../collector/test/apps/agentStubControls');
+  const AppControls = require('./controls');
+  const appControls = new AppControls({
+    agentControls
   });
 
   agentControls.registerTestHooks();
   appControls.registerTestHooks();
 
-  beforeEach(function() {
-    return agentControls.waitUntilAppIsCompletelyInitialized(appControls.getPid());
-  });
+  beforeEach(() => agentControls.waitUntilAppIsCompletelyInitialized(appControls.getPid()));
 
-  it('all exports', function() {
-    return utils.retry(function() {
-      return appControls
+  it('all exports', () =>
+    utils.retry(() =>
+      appControls
         .sendRequest({
           method: 'GET',
           path: '/api'
         })
-        .then(function(instana) {
+        .then(instana => {
           expect(instana.currentSpan).to.equal('function');
           expect(instana.sdk.callback.startEntrySpan).to.equal('function');
           expect(instana.sdk.callback.completeEntrySpan).to.equal('function');
@@ -47,7 +45,6 @@ describe('legacy sensor/API', function() {
           expect(instana.opentracing.createTracer).to.equal('function');
           expect(instana.opentracing.activate).to.equal('function');
           expect(instana.opentracing.deactivate).to.equal('function');
-        });
-    });
-  });
+        })
+    ));
 });

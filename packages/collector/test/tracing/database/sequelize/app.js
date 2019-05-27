@@ -11,8 +11,8 @@ require('../../../../')({
   }
 });
 
-var Sequelize = require('sequelize');
-var sequelize = new Sequelize(process.env.POSTGRES_DB, process.env.POSTGRES_USER, process.env.POSTGRES_PASSWORD, {
+const Sequelize = require('sequelize');
+const sequelize = new Sequelize(process.env.POSTGRES_DB, process.env.POSTGRES_USER, process.env.POSTGRES_PASSWORD, {
   host: process.env.POSTGRES_HOST,
   dialect: 'postgres',
   operatorsAliases: false,
@@ -24,21 +24,21 @@ var sequelize = new Sequelize(process.env.POSTGRES_DB, process.env.POSTGRES_USER
   }
 });
 
-var express = require('express');
-var morgan = require('morgan');
-var bodyParser = require('body-parser');
+const express = require('express');
+const morgan = require('morgan');
+const bodyParser = require('body-parser');
 
-var app = express();
-var logPrefix = 'Express/Postgres/Sequelize App (' + process.pid + '):\t';
-var ready = false;
+const app = express();
+const logPrefix = `Express/Postgres/Sequelize App (${process.pid}):\t`;
+let ready = false;
 
 if (process.env.WITH_STDOUT) {
-  app.use(morgan(logPrefix + ':method :url :status'));
+  app.use(morgan(`${logPrefix}:method :url :status`));
 }
 
 app.use(bodyParser.json());
 
-app.get('/', function(req, res) {
+app.get('/', (req, res) => {
   if (ready) {
     res.sendStatus(200);
   } else {
@@ -46,22 +46,22 @@ app.get('/', function(req, res) {
   }
 });
 
-var Regent = sequelize.define('regent', {
+const Regent = sequelize.define('regent', {
   firstName: Sequelize.STRING,
   lastName: Sequelize.STRING
 });
 
-Regent.sync({ force: true }).then(function() {
-  return Regent.create({
+Regent.sync({ force: true }).then(() =>
+  Regent.create({
     firstName: 'Irene',
     lastName: 'Sarantapechaina'
-  }).then(function() {
+  }).then(() => {
     ready = true;
-  });
-});
+  })
+);
 
-app.get('/regents', function(req, res) {
-  var where = req.query ? req.query : {};
+app.get('/regents', (req, res) => {
+  const where = req.query ? req.query : {};
   // Regent.findOne({ attributes: ['firstName', 'lastName'], where: where })
   //   .then(function(regent) {
   //     res.send([regent.get()]);
@@ -69,21 +69,17 @@ app.get('/regents', function(req, res) {
   //   .catch(function(err) {
   //     res.status(500).send(err);
   //   });
-  Regent.findAll({ attributes: ['firstName', 'lastName'], where: where })
-    .then(function(regents) {
-      res.send(
-        regents.map(function(regent) {
-          return regent.get();
-        })
-      );
+  Regent.findAll({ attributes: ['firstName', 'lastName'], where })
+    .then(regents => {
+      res.send(regents.map(regent => regent.get()));
     })
-    .catch(function(err) {
+    .catch(err => {
       res.status(500).send(err);
     });
 });
 
-app.post('/regents', function(req, res) {
-  return Regent.findOrCreate({
+app.post('/regents', (req, res) =>
+  Regent.findOrCreate({
     where: {
       firstName: req.body.firstName,
       lastName: req.body.lastName
@@ -93,20 +89,20 @@ app.post('/regents', function(req, res) {
       lastName: req.body.lastName
     }
   })
-    .then(function() {
+    .then(() => {
       res.sendStatus(201);
     })
-    .catch(function(err) {
+    .catch(err => {
       res.status(500).send(err);
-    });
-});
+    })
+);
 
-app.listen(process.env.APP_PORT, function() {
-  log('Listening on port: ' + process.env.APP_PORT);
+app.listen(process.env.APP_PORT, () => {
+  log(`Listening on port: ${process.env.APP_PORT}`);
 });
 
 function log() {
-  var args = Array.prototype.slice.call(arguments);
+  const args = Array.prototype.slice.call(arguments);
   args[0] = logPrefix + args[0];
   console.log.apply(console, args);
 }

@@ -1,31 +1,31 @@
 'use strict';
 
-var expect = require('chai').expect;
+const expect = require('chai').expect;
 
-var constants = require('@instana/core').tracing.constants;
-var supportedVersion = require('@instana/core').tracing.supportedVersion;
-var config = require('../../../config');
-var utils = require('../../../utils');
+const constants = require('@instana/core').tracing.constants;
+const supportedVersion = require('@instana/core').tracing.supportedVersion;
+const config = require('../../../config');
+const utils = require('../../../utils');
 
 describe('tracing/redis', function() {
   if (!supportedVersion(process.versions.node)) {
     return;
   }
 
-  var agentControls = require('../../../apps/agentStubControls');
-  var RedisControls = require('./controls');
+  const agentControls = require('../../../apps/agentStubControls');
+  const RedisControls = require('./controls');
 
   this.timeout(config.getTestTimeout());
 
   agentControls.registerTestHooks();
 
-  var redisControls = new RedisControls({
-    agentControls: agentControls
+  const redisControls = new RedisControls({
+    agentControls
   });
   redisControls.registerTestHooks();
 
-  it('must trace set/get calls', function() {
-    return redisControls
+  it('must trace set/get calls', () =>
+    redisControls
       .sendRequest({
         method: 'POST',
         path: '/values',
@@ -34,26 +34,26 @@ describe('tracing/redis', function() {
           value: 42
         }
       })
-      .then(function() {
-        return redisControls.sendRequest({
+      .then(() =>
+        redisControls.sendRequest({
           method: 'GET',
           path: '/values',
           qs: {
             key: 'price'
           }
-        });
-      })
-      .then(function(response) {
+        })
+      )
+      .then(response => {
         expect(String(response)).to.equal('42');
 
-        return utils.retry(function() {
-          return agentControls.getSpans().then(function(spans) {
-            var writeEntrySpan = utils.expectOneMatching(spans, function(span) {
+        return utils.retry(() =>
+          agentControls.getSpans().then(spans => {
+            const writeEntrySpan = utils.expectOneMatching(spans, span => {
               expect(span.n).to.equal('node.http.server');
               expect(span.data.http.method).to.equal('POST');
             });
 
-            utils.expectOneMatching(spans, function(span) {
+            utils.expectOneMatching(spans, span => {
               expect(span.t).to.equal(writeEntrySpan.t);
               expect(span.p).to.equal(writeEntrySpan.s);
               expect(span.n).to.equal('redis');
@@ -66,14 +66,14 @@ describe('tracing/redis', function() {
               expect(span.data.redis.command).to.equal('set');
             });
 
-            var readEntrySpan = utils.expectOneMatching(spans, function(span) {
+            const readEntrySpan = utils.expectOneMatching(spans, span => {
               expect(span.n).to.equal('node.http.server');
               expect(span.data.http.method).to.equal('GET');
               expect(span.f.e).to.equal(String(redisControls.getPid()));
               expect(span.f.h).to.equal('agent-stub-uuid');
             });
 
-            utils.expectOneMatching(spans, function(span) {
+            utils.expectOneMatching(spans, span => {
               expect(span.t).to.equal(readEntrySpan.t);
               expect(span.p).to.equal(readEntrySpan.s);
               expect(span.n).to.equal('redis');
@@ -85,29 +85,28 @@ describe('tracing/redis', function() {
               expect(span.data.redis.connection).to.equal(process.env.REDIS);
               expect(span.data.redis.command).to.equal('get');
             });
-          });
-        });
-      });
-  });
+          })
+        );
+      }));
 
-  it('must trace failed redis calls', function() {
-    return redisControls
+  it('must trace failed redis calls', () =>
+    redisControls
       .sendRequest({
         method: 'GET',
         path: '/failure'
       })
-      .catch(function() {
+      .catch(() => {
         // ignore errors
       })
-      .then(function() {
-        return utils.retry(function() {
-          return agentControls.getSpans().then(function(spans) {
-            var writeEntrySpan = utils.expectOneMatching(spans, function(span) {
+      .then(() =>
+        utils.retry(() =>
+          agentControls.getSpans().then(spans => {
+            const writeEntrySpan = utils.expectOneMatching(spans, span => {
               expect(span.n).to.equal('node.http.server');
               expect(span.data.http.method).to.equal('GET');
             });
 
-            utils.expectOneMatching(spans, function(span) {
+            utils.expectOneMatching(spans, span => {
               expect(span.t).to.equal(writeEntrySpan.t);
               expect(span.p).to.equal(writeEntrySpan.s);
               expect(span.n).to.equal('redis');
@@ -121,26 +120,25 @@ describe('tracing/redis', function() {
               expect(span.data.redis.command).to.equal('get');
               expect(span.data.redis.error).to.be.a('string');
             });
-          });
-        });
-      });
-  });
+          })
+        )
+      ));
 
-  it('must trace multi calls', function() {
-    return redisControls
+  it('must trace multi calls', () =>
+    redisControls
       .sendRequest({
         method: 'GET',
         path: '/multi'
       })
-      .then(function() {
-        return utils.retry(function() {
-          return agentControls.getSpans().then(function(spans) {
-            var writeEntrySpan = utils.expectOneMatching(spans, function(span) {
+      .then(() =>
+        utils.retry(() =>
+          agentControls.getSpans().then(spans => {
+            const writeEntrySpan = utils.expectOneMatching(spans, span => {
               expect(span.n).to.equal('node.http.server');
               expect(span.data.http.method).to.equal('GET');
             });
 
-            utils.expectOneMatching(spans, function(span) {
+            utils.expectOneMatching(spans, span => {
               expect(span.t).to.equal(writeEntrySpan.t);
               expect(span.p).to.equal(writeEntrySpan.s);
               expect(span.n).to.equal('redis');
@@ -156,29 +154,28 @@ describe('tracing/redis', function() {
               expect(span.data.redis.command).to.equal('multi');
               expect(span.data.redis.subCommands).to.deep.equal(['hset', 'hget']);
             });
-          });
-        });
-      });
-  });
+          })
+        )
+      ));
 
-  it('must trace failed multi calls', function() {
-    return redisControls
+  it('must trace failed multi calls', () =>
+    redisControls
       .sendRequest({
         method: 'GET',
         path: '/multiFailure'
       })
-      .catch(function() {
+      .catch(() => {
         // ignore errors
       })
-      .then(function() {
-        return utils.retry(function() {
-          return agentControls.getSpans().then(function(spans) {
-            var writeEntrySpan = utils.expectOneMatching(spans, function(span) {
+      .then(() =>
+        utils.retry(() =>
+          agentControls.getSpans().then(spans => {
+            const writeEntrySpan = utils.expectOneMatching(spans, span => {
               expect(span.n).to.equal('node.http.server');
               expect(span.data.http.method).to.equal('GET');
             });
 
-            utils.expectOneMatching(spans, function(span) {
+            utils.expectOneMatching(spans, span => {
               expect(span.t).to.equal(writeEntrySpan.t);
               expect(span.p).to.equal(writeEntrySpan.s);
               expect(span.n).to.equal('redis');
@@ -194,29 +191,28 @@ describe('tracing/redis', function() {
               expect(span.data.redis.command).to.equal('multi');
               expect(span.data.redis.subCommands).to.deep.equal(['hset', 'hget']);
             });
-          });
-        });
-      });
-  });
+          })
+        )
+      ));
 
-  it('must trace failed batch calls', function() {
-    return redisControls
+  it('must trace failed batch calls', () =>
+    redisControls
       .sendRequest({
         method: 'GET',
         path: '/batchFailure'
       })
-      .catch(function() {
+      .catch(() => {
         // ignore errors
       })
-      .then(function() {
-        return utils.retry(function() {
-          return agentControls.getSpans().then(function(spans) {
-            var writeEntrySpan = utils.expectOneMatching(spans, function(span) {
+      .then(() =>
+        utils.retry(() =>
+          agentControls.getSpans().then(spans => {
+            const writeEntrySpan = utils.expectOneMatching(spans, span => {
               expect(span.n).to.equal('node.http.server');
               expect(span.data.http.method).to.equal('GET');
             });
 
-            utils.expectOneMatching(spans, function(span) {
+            utils.expectOneMatching(spans, span => {
               expect(span.t).to.equal(writeEntrySpan.t);
               expect(span.p).to.equal(writeEntrySpan.s);
               expect(span.n).to.equal('redis');
@@ -232,26 +228,25 @@ describe('tracing/redis', function() {
               expect(span.data.redis.command).to.equal('pipeline');
               expect(span.data.redis.subCommands).to.deep.equal(['hset', 'hget']);
             });
-          });
-        });
-      });
-  });
+          })
+        )
+      ));
 
-  it('must trace call sequences', function() {
-    return redisControls
+  it('must trace call sequences', () =>
+    redisControls
       .sendRequest({
         method: 'GET',
         path: '/callSequence'
       })
-      .then(function() {
-        return utils.retry(function() {
-          return agentControls.getSpans().then(function(spans) {
-            var writeEntrySpan = utils.expectOneMatching(spans, function(span) {
+      .then(() =>
+        utils.retry(() =>
+          agentControls.getSpans().then(spans => {
+            const writeEntrySpan = utils.expectOneMatching(spans, span => {
               expect(span.n).to.equal('node.http.server');
               expect(span.data.http.method).to.equal('GET');
             });
 
-            utils.expectOneMatching(spans, function(span) {
+            utils.expectOneMatching(spans, span => {
               expect(span.t).to.equal(writeEntrySpan.t);
               expect(span.p).to.equal(writeEntrySpan.s);
               expect(span.n).to.equal('redis');
@@ -261,7 +256,7 @@ describe('tracing/redis', function() {
               expect(span.f.h).to.equal('agent-stub-uuid');
             });
 
-            utils.expectOneMatching(spans, function(span) {
+            utils.expectOneMatching(spans, span => {
               expect(span.t).to.equal(writeEntrySpan.t);
               expect(span.p).to.equal(writeEntrySpan.s);
               expect(span.n).to.equal('redis');
@@ -269,8 +264,7 @@ describe('tracing/redis', function() {
               expect(span.f.e).to.equal(String(redisControls.getPid()));
               expect(span.f.h).to.equal('agent-stub-uuid');
             });
-          });
-        });
-      });
-  });
+          })
+        )
+      ));
 });

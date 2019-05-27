@@ -11,22 +11,22 @@ require('../../../../')({
   }
 });
 
-var _pg = require('pg');
-var Pool = _pg.Pool;
-var Client = _pg.Client;
-var express = require('express');
-var morgan = require('morgan');
-var bodyParser = require('body-parser');
+const _pg = require('pg');
+const Pool = _pg.Pool;
+const Client = _pg.Client;
+const express = require('express');
+const morgan = require('morgan');
+const bodyParser = require('body-parser');
 
-var app = express();
-var logPrefix = 'Express / Postgres App (' + process.pid + '):\t';
-var pool = new Pool({
+const app = express();
+const logPrefix = `Express / Postgres App (${process.pid}):\t`;
+const pool = new Pool({
   user: process.env.POSTGRES_USER,
   host: process.env.POSTGRES_HOST,
   database: process.env.POSTGRES_DB,
   password: process.env.POSTGRES_PASSWORD
 });
-var client = new Client({
+const client = new Client({
   user: process.env.POSTGRES_USER,
   host: process.env.POSTGRES_HOST,
   database: process.env.POSTGRES_DB,
@@ -34,27 +34,27 @@ var client = new Client({
 });
 client.connect();
 
-var createTableQuery =
+const createTableQuery =
   'CREATE TABLE IF NOT EXISTS users(id serial primary key, name varchar(40) NOT NULL, email varchar(40) NOT NULL)';
 
-pool.query(createTableQuery, function(err) {
+pool.query(createTableQuery, err => {
   if (err) {
     log('Failed create table query', err);
   }
 });
 
 if (process.env.WITH_STDOUT) {
-  app.use(morgan(logPrefix + ':method :url :status'));
+  app.use(morgan(`${logPrefix}:method :url :status`));
 }
 
 app.use(bodyParser.json());
 
-app.get('/', function(req, res) {
+app.get('/', (req, res) => {
   res.sendStatus(200);
 });
 
-app.get('/select-now-pool', function(req, res) {
-  pool.query('SELECT NOW()', function(err, results) {
+app.get('/select-now-pool', (req, res) => {
+  pool.query('SELECT NOW()', (err, results) => {
     if (err) {
       log('Failed to execute select now query', err);
       return res.sendStatus(500);
@@ -63,8 +63,8 @@ app.get('/select-now-pool', function(req, res) {
   });
 });
 
-app.get('/select-now-no-pool-callback', function(req, res) {
-  client.query('SELECT NOW()', function(err, results) {
+app.get('/select-now-no-pool-callback', (req, res) => {
+  client.query('SELECT NOW()', (err, results) => {
     if (err) {
       log('Failed to execute select now query', err);
       return res.sendStatus(500);
@@ -73,13 +73,13 @@ app.get('/select-now-no-pool-callback', function(req, res) {
   });
 });
 
-app.get('/select-now-no-pool-promise', function(req, res) {
+app.get('/select-now-no-pool-promise', (req, res) => {
   client
     .query('SELECT NOW()')
-    .then(function(results) {
+    .then(results => {
       res.json(results);
     })
-    .catch(function(err) {
+    .catch(err => {
       if (err) {
         log('Failed to execute select now query', err);
         return res.sendStatus(500);
@@ -87,11 +87,11 @@ app.get('/select-now-no-pool-promise', function(req, res) {
     });
 });
 
-app.get('/pool-string-insert', function(req, res) {
-  var insert = 'INSERT INTO users(name, email) VALUES($1, $2) RETURNING *';
-  var values = ['beaker', 'beaker@muppets.com'];
+app.get('/pool-string-insert', (req, res) => {
+  const insert = 'INSERT INTO users(name, email) VALUES($1, $2) RETURNING *';
+  const values = ['beaker', 'beaker@muppets.com'];
 
-  pool.query(insert, values, function(err, results) {
+  pool.query(insert, values, (err, results) => {
     if (err) {
       log('Failed to execute pool insert', err);
       return res.sendStatus(500);
@@ -100,12 +100,12 @@ app.get('/pool-string-insert', function(req, res) {
   });
 });
 
-app.get('/pool-config-select', function(req, res) {
-  var query = {
+app.get('/pool-config-select', (req, res) => {
+  const query = {
     text: 'SELECT name, email FROM users'
   };
 
-  pool.query(query, function(err, results) {
+  pool.query(query, (err, results) => {
     if (err) {
       log('Failed to execute pool config insert', err);
       return res.sendStatus(500);
@@ -114,28 +114,28 @@ app.get('/pool-config-select', function(req, res) {
   });
 });
 
-app.get('/pool-config-select-promise', function(req, res) {
-  var query = {
+app.get('/pool-config-select-promise', (req, res) => {
+  const query = {
     text: 'INSERT INTO users(name, email) VALUES($1, $2) RETURNING *',
     values: ['beaker', 'beaker@muppets.com']
   };
 
   pool
     .query(query)
-    .then(function(results) {
+    .then(results => {
       res.json(results);
     })
-    .catch(function(e) {
+    .catch(e => {
       log(e.stack);
       return res.sendStatus(500);
     });
 });
 
-app.get('/client-string-insert', function(req, res) {
-  var insert = 'INSERT INTO users(name, email) VALUES($1, $2) RETURNING *';
-  var values = ['beaker', 'beaker@muppets.com'];
+app.get('/client-string-insert', (req, res) => {
+  const insert = 'INSERT INTO users(name, email) VALUES($1, $2) RETURNING *';
+  const values = ['beaker', 'beaker@muppets.com'];
 
-  client.query(insert, values, function(err, results) {
+  client.query(insert, values, (err, results) => {
     if (err) {
       log('Failed to execute client insert', err);
       return res.sendStatus(500);
@@ -144,12 +144,12 @@ app.get('/client-string-insert', function(req, res) {
   });
 });
 
-app.get('/client-config-select', function(req, res) {
-  var query = {
+app.get('/client-config-select', (req, res) => {
+  const query = {
     text: 'SELECT name, email FROM users'
   };
 
-  client.query(query, function(err, results) {
+  client.query(query, (err, results) => {
     if (err) {
       log('Failed to execute client select', err);
       return res.sendStatus(500);
@@ -158,39 +158,35 @@ app.get('/client-config-select', function(req, res) {
   });
 });
 
-app.get('/table-doesnt-exist', function(req, res) {
+app.get('/table-doesnt-exist', (req, res) => {
   pool
     .query('SELECT name, email FROM nonexistanttable')
-    .then(function(r) {
+    .then(r => {
       res.json(r);
     })
-    .catch(function(e) {
-      return res.status(500).json(e);
-    });
+    .catch(e => res.status(500).json(e));
 });
 
-app.get('/transaction', function(req, res) {
-  client.query('BEGIN', function(err1) {
+app.get('/transaction', (req, res) => {
+  client.query('BEGIN', err1 => {
     if (err1) {
       log('Failed to execute client transaction', err1);
       return res.status(500).json(err1);
     }
 
-    client.query('INSERT INTO users(name, email) VALUES($1, $2) RETURNING *', ['trans1', 'nodejstests@blah'], function(
-      err2
-    ) {
+    client.query('INSERT INTO users(name, email) VALUES($1, $2) RETURNING *', ['trans1', 'nodejstests@blah'], err2 => {
       if (err2) {
         log('Failed to execute client transaction', err2);
         return res.status(500).json(err2);
       }
-      var insertTrans2 = 'INSERT INTO users(name, email) VALUES($1, $2) RETURNING *';
-      var insertTrans2Values = ['trans2', 'nodejstests@blah'];
-      client.query(insertTrans2, insertTrans2Values, function(err3, result3) {
+      const insertTrans2 = 'INSERT INTO users(name, email) VALUES($1, $2) RETURNING *';
+      const insertTrans2Values = ['trans2', 'nodejstests@blah'];
+      client.query(insertTrans2, insertTrans2Values, (err3, result3) => {
         if (err3) {
           log('Failed to execute client transaction', err3);
           return res.status(500).json(err3);
         }
-        client.query('COMMIT', function(err4) {
+        client.query('COMMIT', err4 => {
           if (err4) {
             log('Failed to execute client transaction', err4);
             return res.status(500).json(err4);
@@ -202,12 +198,12 @@ app.get('/transaction', function(req, res) {
   });
 });
 
-app.listen(process.env.APP_PORT, function() {
-  log('Listening on port: ' + process.env.APP_PORT);
+app.listen(process.env.APP_PORT, () => {
+  log(`Listening on port: ${process.env.APP_PORT}`);
 });
 
 function log() {
-  var args = Array.prototype.slice.call(arguments);
+  const args = Array.prototype.slice.call(arguments);
   args[0] = logPrefix + args[0];
   console.log.apply(console, args);
 }

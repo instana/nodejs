@@ -2,96 +2,79 @@
 
 'use strict';
 
-var spawn = require('child_process').spawn;
-var errors = require('request-promise/errors');
-var request = require('request-promise');
-var path = require('path');
+const spawn = require('child_process').spawn;
+const errors = require('request-promise/errors');
+const request = require('request-promise');
+const path = require('path');
 
-var utils = require('../../../utils');
-var config = require('../../../config');
-var agentPort = require('../../../apps/agentStubControls').agentPort;
-var appPort = (exports.appPort = 3213);
+const utils = require('../../../utils');
+const config = require('../../../config');
+const agentPort = require('../../../apps/agentStubControls').agentPort;
+const appPort = (exports.appPort = 3213);
 
-var expressElasticsearchApp;
+let expressElasticsearchApp;
 
-exports.registerTestHooks = function(opts) {
-  beforeEach(function() {
+exports.registerTestHooks = opts => {
+  beforeEach(() => {
     opts = opts || {};
 
-    var env = Object.create(process.env);
+    const env = Object.create(process.env);
     env.AGENT_PORT = agentPort;
     env.APP_PORT = appPort;
     env.TRACING_ENABLED = opts.enableTracing !== false;
 
     expressElasticsearchApp = spawn('node', [path.join(__dirname, 'app.js')], {
       stdio: config.getAppStdio(),
-      env: env
+      env
     });
 
     return waitUntilServerIsUp();
   });
 
-  afterEach(function() {
+  afterEach(() => {
     expressElasticsearchApp.kill();
   });
 };
 
 function waitUntilServerIsUp() {
-  return utils.retry(function() {
-    return request({
+  return utils.retry(() =>
+    request({
       method: 'GET',
-      url: 'http://127.0.0.1:' + appPort,
+      url: `http://127.0.0.1:${appPort}`,
       headers: {
         'X-INSTANA-L': '0'
       }
-    });
-  });
+    })
+  );
 }
 
-exports.getPid = function() {
-  return expressElasticsearchApp.pid;
-};
+exports.getPid = () => expressElasticsearchApp.pid;
 
-exports.deleteIndex = function() {
-  return request({
+exports.deleteIndex = () =>
+  request({
     method: 'DELETE',
-    url: 'http://127.0.0.1:' + appPort + '/database',
+    url: `http://127.0.0.1:${appPort}/database`,
     headers: {
       'X-INSTANA-L': '0'
     }
   });
-};
 
-exports.get = function(opts) {
-  return requestWithPath('GET', '/get', opts);
-};
+exports.get = opts => requestWithPath('GET', '/get', opts);
 
-exports.search = function(opts) {
-  return requestWithPath('GET', '/search', opts);
-};
+exports.search = opts => requestWithPath('GET', '/search', opts);
 
-exports.mget1 = function(opts) {
-  return requestWithPath('GET', '/mget1', opts);
-};
+exports.mget1 = opts => requestWithPath('GET', '/mget1', opts);
 
-exports.mget2 = function(opts) {
-  return requestWithPath('GET', '/mget2', opts);
-};
+exports.mget2 = opts => requestWithPath('GET', '/mget2', opts);
 
-exports.msearch = function(opts) {
-  return requestWithPath('GET', '/msearch', opts);
-};
+exports.msearch = opts => requestWithPath('GET', '/msearch', opts);
 
-exports.searchAndGet = function(opts) {
-  return requestWithPath('GET', '/searchAndGet', opts);
-};
+exports.searchAndGet = opts => requestWithPath('GET', '/searchAndGet', opts);
 
-exports.index = function(opts) {
-  return requestWithPath('POST', '/index', opts);
-};
+exports.index = opts => requestWithPath('POST', '/index', opts);
 
 function requestWithPath(method, p, opts) {
-  var headers = {};
+  const headers = {};
   if (opts.suppressTracing === true) {
     headers['X-INSTANA-L'] = '0';
   }
@@ -105,9 +88,9 @@ function requestWithPath(method, p, opts) {
   }
 
   return request({
-    method: method,
-    url: 'http://127.0.0.1:' + appPort + p,
-    headers: headers,
+    method,
+    url: `http://127.0.0.1:${appPort}${p}`,
+    headers,
     qs: {
       id: opts.id,
       q: opts.q,
@@ -115,7 +98,7 @@ function requestWithPath(method, p, opts) {
     },
     json: true,
     body: opts.body
-  }).catch(errors.StatusCodeError, function(reason) {
+  }).catch(errors.StatusCodeError, reason => {
     if (opts.rejectWrongStatusCodes) {
       throw reason;
     }

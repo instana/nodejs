@@ -2,27 +2,27 @@
 
 'use strict';
 
-var proxyquire = require('proxyquire');
-var expect = require('chai').expect;
+const proxyquire = require('proxyquire');
+const expect = require('chai').expect;
 
-var constants = require('../../src/tracing/constants');
+const constants = require('../../src/tracing/constants');
 
-describe('tracing/cls', function() {
-  var cls;
+describe('tracing/cls', () => {
+  let cls;
 
-  beforeEach(function() {
+  beforeEach(() => {
     // reload to clear vars
     cls = proxyquire('../../src/tracing/cls', {});
     cls.init();
   });
 
-  it('must not have an active context initially', function() {
+  it('must not have an active context initially', () => {
     expect(cls.getCurrentSpan()).to.equal(undefined);
   });
 
-  it('must initialize a new valid span', function() {
-    cls.ns.run(function() {
-      var newSpan = cls.startSpan('cls-test-run', constants.EXIT);
+  it('must initialize a new valid span', () => {
+    cls.ns.run(() => {
+      const newSpan = cls.startSpan('cls-test-run', constants.EXIT);
       expect(newSpan).to.be.a('Object');
       expect(newSpan).to.have.property('t');
       expect(newSpan).to.have.property('s');
@@ -44,22 +44,22 @@ describe('tracing/cls', function() {
     });
   });
 
-  it('must not set span.f without process identity provider', function() {
-    cls.ns.run(function() {
-      var newSpan = cls.startSpan('cls-test-run', constants.EXIT);
+  it('must not set span.f without process identity provider', () => {
+    cls.ns.run(() => {
+      const newSpan = cls.startSpan('cls-test-run', constants.EXIT);
       expect(newSpan).to.not.have.property('f');
     });
   });
 
-  it('must not set span.f if process identity provider does not support getFrom', function() {
+  it('must not set span.f if process identity provider does not support getFrom', () => {
     cls.init({});
-    cls.ns.run(function() {
-      var newSpan = cls.startSpan('cls-test-run', constants.EXIT);
+    cls.ns.run(() => {
+      const newSpan = cls.startSpan('cls-test-run', constants.EXIT);
       expect(newSpan).to.not.have.property('f');
     });
   });
 
-  it('must use process identity provider', function() {
+  it('must use process identity provider', () => {
     cls.init({
       getFrom: function() {
         return {
@@ -68,8 +68,8 @@ describe('tracing/cls', function() {
         };
       }
     });
-    cls.ns.run(function() {
-      var newSpan = cls.startSpan('cls-test-run', constants.EXIT);
+    cls.ns.run(() => {
+      const newSpan = cls.startSpan('cls-test-run', constants.EXIT);
       expect(newSpan.f).to.deep.equal({
         e: String(process.pid),
         h: undefined
@@ -77,11 +77,11 @@ describe('tracing/cls', function() {
     });
   });
 
-  it('new spans must inherit from current span IDs', function() {
-    var parentSpan;
-    var newSpan;
+  it('new spans must inherit from current span IDs', () => {
+    let parentSpan;
+    let newSpan;
 
-    cls.ns.run(function() {
+    cls.ns.run(() => {
       parentSpan = cls.startSpan('Mr-Brady', constants.ENTRY);
       newSpan = cls.startSpan('Peter-Brady', constants.EXIT);
     });
@@ -89,8 +89,8 @@ describe('tracing/cls', function() {
     expect(newSpan.p).to.equal(parentSpan.s);
   });
 
-  it('must pass trace suppression configuration across spans', function() {
-    cls.ns.run(function() {
+  it('must pass trace suppression configuration across spans', () => {
+    cls.ns.run(() => {
       cls.setTracingLevel('0');
       expect(cls.tracingSuppressed()).to.equal(true);
       cls.startSpan('Antonio-Andolini', constants.ENTRY);
@@ -100,7 +100,7 @@ describe('tracing/cls', function() {
       cls.startSpan('Michael-Corleone', constants.EXIT);
       expect(cls.tracingSuppressed()).to.equal(true);
 
-      cls.ns.run(function() {
+      cls.ns.run(() => {
         cls.setTracingLevel('1');
         expect(cls.tracingSuppressed()).to.equal(false);
         cls.startSpan('Antonio-Andolini', constants.EXIT);
@@ -110,7 +110,7 @@ describe('tracing/cls', function() {
         cls.startSpan('Michael-Corleone', constants.EXIT);
         expect(cls.tracingSuppressed()).to.equal(false);
 
-        cls.ns.run(function() {
+        cls.ns.run(() => {
           cls.setTracingLevel('0');
           expect(cls.tracingSuppressed()).to.equal(true);
           cls.startSpan('Antonio-Andolini', constants.EXIT);
@@ -120,7 +120,7 @@ describe('tracing/cls', function() {
           cls.startSpan('Michael-Corleone', constants.EXIT);
           expect(cls.tracingSuppressed()).to.equal(true);
 
-          cls.ns.run(function() {
+          cls.ns.run(() => {
             expect(cls.tracingSuppressed()).to.equal(true);
             cls.startSpan('Antonio-Andolini', constants.EXIT);
             expect(cls.tracingSuppressed()).to.equal(true);
@@ -134,12 +134,12 @@ describe('tracing/cls', function() {
     });
   });
 
-  it('new spans must have direction set', function() {
-    var entrySpan;
-    var exitSpan;
-    var intermediateSpan;
+  it('new spans must have direction set', () => {
+    let entrySpan;
+    let exitSpan;
+    let intermediateSpan;
 
-    cls.ns.run(function() {
+    cls.ns.run(() => {
       entrySpan = cls.startSpan('node.http.server', constants.ENTRY);
       exitSpan = cls.startSpan('mongo', constants.EXIT);
       intermediateSpan = cls.startSpan('intermediate', constants.INTERMEDIATE);
@@ -161,12 +161,12 @@ describe('tracing/cls', function() {
     expect(constants.isIntermediateSpan(intermediateSpan)).to.equal(true);
   });
 
-  it('must clean up span data from contexts once the span is transmitted', function() {
-    cls.ns.run(function(context) {
+  it('must clean up span data from contexts once the span is transmitted', () => {
+    cls.ns.run(context => {
       expect(context[cls.currentRootSpanKey]).to.equal(undefined);
       expect(context[cls.currentSpanKey]).to.equal(undefined);
 
-      var span = cls.startSpan('node.http.server', constants.ENTRY);
+      const span = cls.startSpan('node.http.server', constants.ENTRY);
       expect(context[cls.currentRootSpanKey]).to.equal(span);
       expect(context[cls.currentSpanKey]).to.equal(span);
 

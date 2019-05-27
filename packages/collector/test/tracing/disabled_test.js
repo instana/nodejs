@@ -1,10 +1,10 @@
 'use strict';
 
-var expect = require('chai').expect;
-var Promise = require('bluebird');
+const expect = require('chai').expect;
+const Promise = require('bluebird');
 
-var supportedVersion = require('@instana/core').tracing.supportedVersion;
-var config = require('../config');
+const supportedVersion = require('@instana/core').tracing.supportedVersion;
+const config = require('../config');
 
 /**
  * Tests behaviour when the Instana Node.js collector is active but tracing is disabled.
@@ -14,8 +14,8 @@ describe('disabled tracing', function() {
     return;
   }
 
-  var agentStubControls = require('../apps/agentStubControls');
-  var expressControls = require('../apps/expressControls');
+  const agentStubControls = require('../apps/agentStubControls');
+  const expressControls = require('../apps/expressControls');
 
   this.timeout(config.getTestTimeout());
 
@@ -24,24 +24,19 @@ describe('disabled tracing', function() {
     enableTracing: false
   });
 
-  beforeEach(function() {
-    return agentStubControls.waitUntilAppIsCompletelyInitialized(expressControls.getPid());
-  });
+  beforeEach(() => agentStubControls.waitUntilAppIsCompletelyInitialized(expressControls.getPid()));
 
-  it('must not send any spans to the agent', function() {
-    return expressControls
+  it('must not send any spans to the agent', () =>
+    expressControls
       .sendRequest({
         method: 'POST',
         path: '/checkout',
         responseStatus: 201
       })
-      .then(function() {
-        return Promise.delay(500);
-      })
-      .then(function() {
-        return agentStubControls.getSpans().then(function(spans) {
+      .then(() => Promise.delay(500))
+      .then(() =>
+        agentStubControls.getSpans().then(spans => {
           expect(spans).to.have.lengthOf(0);
-        });
-      });
-  });
+        })
+      ));
 });

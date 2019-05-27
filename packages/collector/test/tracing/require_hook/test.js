@@ -1,45 +1,44 @@
 'use strict';
 
-var expect = require('chai').expect;
-var semver = require('semver');
+const expect = require('chai').expect;
+const semver = require('semver');
 
-var config = require('../../config');
-var utils = require('../../utils');
+const config = require('../../config');
+const utils = require('../../utils');
 
 describe('tracing/requireHook', function() {
   if (semver.lt(process.versions.node, '8.0.0')) {
     return;
   }
 
-  var agentControls = require('../../apps/agentStubControls');
-  var Controls = require('./controls');
+  const agentControls = require('../../apps/agentStubControls');
+  const Controls = require('./controls');
 
   this.timeout(config.getTestTimeout());
 
   agentControls.registerTestHooks();
 
-  var controls = new Controls({
-    agentControls: agentControls
+  const controls = new Controls({
+    agentControls
   });
   controls.registerTestHooks();
 
-  describe('stealthy require', function() {
-    it('must not apply caching when not necessary / or when something is fishy', function() {
-      return controls
+  describe('stealthy require', () => {
+    it('must not apply caching when not necessary / or when something is fishy', () =>
+      controls
         .sendRequest({
           method: 'GET',
           path: '/requireRequestPromiseMultipleTimes'
         })
-        .then(function() {
-          return utils.retry(function() {
-            return agentControls.getSpans().then(function(spans) {
-              utils.expectOneMatching(spans, function(span) {
+        .then(() =>
+          utils.retry(() =>
+            agentControls.getSpans().then(spans => {
+              utils.expectOneMatching(spans, span => {
                 expect(span.n).to.equal('node.http.server');
                 expect(span.data.http.status).to.equal(200);
               });
-            });
-          });
-        });
-    });
+            })
+          )
+        ));
   });
 });

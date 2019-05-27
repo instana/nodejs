@@ -1,37 +1,37 @@
 'use strict';
 
-var expect = require('chai').expect;
+const expect = require('chai').expect;
 
-var supportedVersion = require('@instana/core').tracing.supportedVersion;
-var config = require('../../config');
+const supportedVersion = require('@instana/core').tracing.supportedVersion;
+const config = require('../../config');
 
 describe('tracing/api', function() {
   if (!supportedVersion(process.versions.node)) {
     return;
   }
 
-  var agentControls = require('../../apps/agentStubControls');
-  var Controls = require('./controls');
+  const agentControls = require('../../apps/agentStubControls');
+  const Controls = require('./controls');
 
   this.timeout(config.getTestTimeout());
 
   agentControls.registerTestHooks();
 
-  describe('when tracing is enabled', function() {
-    var controls = new Controls({
-      agentControls: agentControls
+  describe('when tracing is enabled', () => {
+    const controls = new Controls({
+      agentControls
     });
     controls.registerTestHooks();
 
-    it('must provide details for currently active span', function() {
-      var now = Date.now();
+    it('must provide details for currently active span', () => {
+      const now = Date.now();
       return controls
         .sendRequest({
           method: 'GET',
           path: '/span/active'
         })
-        .then(function(response) {
-          var span = response.span;
+        .then(response => {
+          const span = response.span;
           expect(span).to.exist;
           expect(span.traceId).to.be.not.null;
           expect(span.spanId).to.be.not.null;
@@ -49,15 +49,15 @@ describe('tracing/api', function() {
         });
     });
 
-    it('must manually end the currently active span', function() {
-      var now = Date.now();
+    it('must manually end the currently active span', () => {
+      const now = Date.now();
       return controls
         .sendRequest({
           method: 'GET',
           path: '/span/manuallyended'
         })
-        .then(function(response) {
-          var span = response.span;
+        .then(response => {
+          const span = response.span;
           expect(span).to.exist;
           expect(span.traceId).to.be.not.null;
           expect(span.spanId).to.be.not.null;
@@ -75,21 +75,21 @@ describe('tracing/api', function() {
     });
   });
 
-  describe('when tracing is not enabled', function() {
-    var controls = new Controls({
-      agentControls: agentControls,
+  describe('when tracing is not enabled', () => {
+    const controls = new Controls({
+      agentControls,
       tracingEnabled: false
     });
     controls.registerTestHooks();
 
-    it('must provide a noop span handle', function() {
-      return controls
+    it('must provide a noop span handle', () =>
+      controls
         .sendRequest({
           method: 'GET',
           path: '/span/active'
         })
-        .then(function(response) {
-          var span = response.span;
+        .then(response => {
+          const span = response.span;
           expect(span).to.exist;
           expect(span.traceId).to.be.null;
           expect(span.spanId).to.be.null;
@@ -102,17 +102,16 @@ describe('tracing/api', function() {
           expect(span.duration).to.equal(0);
           expect(span.errorCount).to.equal(0);
           expect(span.handleConstructorName).to.equal('NoopSpanHandle');
-        });
-    });
+        }));
 
-    it('must do nothing when trying to manually end the currently active span', function() {
-      return controls
+    it('must do nothing when trying to manually end the currently active span', () =>
+      controls
         .sendRequest({
           method: 'GET',
           path: '/span/manuallyended'
         })
-        .then(function(response) {
-          var span = response.span;
+        .then(response => {
+          const span = response.span;
           expect(span).to.exist;
           expect(span.traceId).to.be.null;
           expect(span.spanId).to.be.null;
@@ -125,7 +124,6 @@ describe('tracing/api', function() {
           expect(span.duration).to.equal(0);
           expect(span.errorCount).to.equal(0);
           expect(span.handleConstructorName).to.equal('NoopSpanHandle');
-        });
-    });
+        }));
   });
 });

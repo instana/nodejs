@@ -1,10 +1,12 @@
 /* eslint-disable */
 
+'use strict';
+
 // This is a tiny express app which responds to all methods and has configurable
 // latency and response codes. This can be used a baselines for many tests, e.g.
 // to test distributed tracing.
 
-var instana = require('../../')({
+const instana = require('../../')({
   agentPort: process.env.AGENT_PORT,
   level: 'warn',
   tracing: {
@@ -15,22 +17,20 @@ var instana = require('../../')({
   }
 });
 
-var express = require('express');
-var morgan = require('morgan');
-var semver = require('semver');
-var path = require('path');
-var fs = require('fs');
-var app = express();
+const express = require('express');
+const morgan = require('morgan');
+const semver = require('semver');
+const path = require('path');
+const fs = require('fs');
+const app = express();
 
-var logPrefix = 'Express App (' + process.pid + '):\t';
+const logPrefix = `Express App (${process.pid}):\t`;
 
 if (process.env.WITH_STDOUT) {
-  app.use(morgan(logPrefix + ':method :url :status'));
+  app.use(morgan(`${logPrefix}:method :url :status`));
 }
 
-var healthcheckFunction = function() {
-  return 'OK!';
-};
+let healthcheckFunction = () => 'OK!';
 
 if (semver.satisfies(process.versions.node, '>=6.0.0')) {
   require('admin').configure({
@@ -46,30 +46,28 @@ if (semver.satisfies(process.versions.node, '>=6.0.0')) {
   });
 }
 
-app.get('/return-instana-trace-id', function(req, res) {
+app.get('/return-instana-trace-id', (req, res) => {
   res.send(req.get('x-instana-t'));
 });
 
-app.post('/admin/set-to-unhealthy', function(req, res) {
-  healthcheckFunction = function() {
+app.post('/admin/set-to-unhealthy', (req, res) => {
+  healthcheckFunction = () => {
     throw new Error('Explicit healthcheck failure');
   };
   res.send('OK');
 });
 
-app.post('/admin/set-to-healthy', function(req, res) {
-  healthcheckFunction = function() {
-    return 'OK';
-  };
+app.post('/admin/set-to-healthy', (req, res) => {
+  healthcheckFunction = () => 'OK';
   res.send('OK');
 });
 
-app.post('/set-logger', function(req, res) {
-  var logFilePath = req.query.logFilePath;
+app.post('/set-logger', (req, res) => {
+  const logFilePath = req.query.logFilePath;
   if (typeof logFilePath !== 'string') {
     return res.sendStatus(400);
   }
-  var dummyLogger = {
+  const dummyLogger = {
     debug: writeToDummyLogFile('debug', logFilePath),
     info: writeToDummyLogFile('info', logFilePath),
     warn: writeToDummyLogFile('warn', logFilePath),
@@ -82,9 +80,9 @@ app.post('/set-logger', function(req, res) {
 });
 
 function writeToDummyLogFile(level, logFilePath) {
-  return function(message) {
-    var content = typeof messsage === 'string' ? message : JSON.stringify(message);
-    fs.writeFile(logFilePath, '[' + level + ']: ' + content, function(err) {
+  return message => {
+    const content = typeof messsage === 'string' ? message : JSON.stringify(message);
+    fs.writeFile(logFilePath, `[${level}]: ${content}`, err => {
       if (err) {
         console.error(err);
       }
@@ -92,16 +90,16 @@ function writeToDummyLogFile(level, logFilePath) {
   };
 }
 
-var router = express.Router();
-router.get('/subPath', function(req, res) {
+const router = express.Router();
+router.get('/subPath', (req, res) => {
   res.sendStatus(200);
 });
 app.use('/routed', router);
 
-app.use(function(req, res) {
+app.use((req, res) => {
   log(req.method, req.url);
-  var delay = parseInt(req.query.delay || 0, 10);
-  var responseStatus = parseInt(req.query.responseStatus || 200, 10);
+  const delay = parseInt(req.query.delay || 0, 10);
+  const responseStatus = parseInt(req.query.responseStatus || 200, 10);
 
   if (req.query.cookie) {
     res.set('set-CooKie', req.query.cookie);
@@ -113,7 +111,7 @@ app.use(function(req, res) {
     res.set('sErver-tiMING', ['key1', 'key2;dur=42']);
   }
 
-  setTimeout(function() {
+  setTimeout(() => {
     res.sendStatus(responseStatus);
   }, delay);
 });
@@ -127,17 +125,17 @@ if (process.env.USE_HTTPS === 'true') {
       },
       app
     )
-    .listen(process.env.APP_PORT, function() {
-      log('Listening (HTTPS!) on port: ' + process.env.APP_PORT);
+    .listen(process.env.APP_PORT, () => {
+      log(`Listening (HTTPS!) on port: ${process.env.APP_PORT}`);
     });
 } else {
-  app.listen(process.env.APP_PORT, function() {
-    log('Listening on port: ' + process.env.APP_PORT);
+  app.listen(process.env.APP_PORT, () => {
+    log(`Listening on port: ${process.env.APP_PORT}`);
   });
 }
 
 function log() {
-  var args = Array.prototype.slice.call(arguments);
-  args[0] = 'Express App (' + process.pid + '):\t' + args[0];
+  const args = Array.prototype.slice.call(arguments);
+  args[0] = `Express App (${process.pid}):\t${args[0]}`;
   console.log.apply(console, args);
 }

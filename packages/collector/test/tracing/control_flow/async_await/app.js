@@ -1,5 +1,7 @@
 /* eslint-disable */
 
+'use strict';
+
 const rp = require('request-promise');
 const request = require('request');
 
@@ -20,9 +22,7 @@ app.get('/', (req, res) => res.sendStatus(200));
 // simulating async middleware
 app.use((req, res, next) => setTimeout(() => next(), 50));
 
-const asyncHandler = fn => (req, res, next) => {
-  return Promise.resolve(fn(req, res, next)).catch(next);
-};
+const asyncHandler = fn => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
 
 app.get(
   '/getSomething',
@@ -40,12 +40,12 @@ app.get(
 async function executeCallSequence() {
   const { statusCode } = await sendRequest({
     method: 'GET',
-    uri: 'http://127.0.0.1:' + process.env.UPSTREAM_PORT + '/foo'
+    uri: `http://127.0.0.1:${process.env.UPSTREAM_PORT}/foo`
   });
 
   const { statusCode: statusCode2 } = await sendRequest({
     method: 'GET',
-    uri: 'http://127.0.0.1:' + process.env.UPSTREAM_PORT + '/bar',
+    uri: `http://127.0.0.1:${process.env.UPSTREAM_PORT}/bar`,
     query: {
       foo: statusCode
     }
@@ -82,12 +82,12 @@ async function sendRequest(requestOptions) {
   return response;
 }
 
-app.listen(process.env.APP_PORT, function() {
-  log('Listening on port: ' + process.env.APP_PORT);
+app.listen(process.env.APP_PORT, () => {
+  log(`Listening on port: ${process.env.APP_PORT}`);
 });
 
 function log() {
   const args = Array.prototype.slice.call(arguments);
-  args[0] = 'Express Async Await App (' + process.pid + '):\t' + args[0];
+  args[0] = `Express Async Await App (${process.pid}):\t${args[0]}`;
   console.log.apply(console, args);
 }

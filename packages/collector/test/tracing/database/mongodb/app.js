@@ -3,10 +3,10 @@
 
 'use strict';
 
-var agentPort = process.env.AGENT_PORT;
+const agentPort = process.env.AGENT_PORT;
 
 require('../../../../')({
-  agentPort: agentPort,
+  agentPort,
   level: 'warn',
   tracing: {
     enabled: process.env.TRACING_ENABLED === 'true',
@@ -14,25 +14,25 @@ require('../../../../')({
   }
 });
 
-var MongoClient = require('mongodb').MongoClient;
-var bodyParser = require('body-parser');
-var express = require('express');
-var morgan = require('morgan');
-var assert = require('assert');
-var request = require('request-promise');
+const MongoClient = require('mongodb').MongoClient;
+const bodyParser = require('body-parser');
+const express = require('express');
+const morgan = require('morgan');
+const assert = require('assert');
+const request = require('request-promise');
 
-var app = express();
-var db;
-var collection;
-var logPrefix = 'Express / MongoDB App (' + process.pid + '):\t';
+const app = express();
+let db;
+let collection;
+const logPrefix = `Express / MongoDB App (${process.pid}):\t`;
 
 if (process.env.WITH_STDOUT) {
-  app.use(morgan(logPrefix + ':method :url :status'));
+  app.use(morgan(`${logPrefix}:method :url :status`));
 }
 
 app.use(bodyParser.json());
 
-MongoClient.connect('mongodb://' + process.env.MONGODB + '/myproject', function(err, client) {
+MongoClient.connect(`mongodb://${process.env.MONGODB}/myproject`, (err, client) => {
   assert.equal(null, err);
   if (client.constructor.name === 'Db') {
     // mongodb versions < 3.x
@@ -47,7 +47,7 @@ MongoClient.connect('mongodb://' + process.env.MONGODB + '/myproject', function(
   log('Connected to MongoDB');
 });
 
-app.get('/', function(req, res) {
+app.get('/', (req, res) => {
   if (!db || !collection) {
     res.sendStatus(500);
   } else {
@@ -55,37 +55,37 @@ app.get('/', function(req, res) {
   }
 });
 
-app.post('/insert', function(req, res) {
-  var mongoResponse = null;
+app.post('/insert', (req, res) => {
+  let mongoResponse = null;
   collection
     .insertOne(req.body)
-    .then(function(r) {
+    .then(r => {
       mongoResponse = r;
       // Execute another traced call to verify that we keep the tracing context.
-      return request('http://127.0.0.1:' + agentPort);
+      return request(`http://127.0.0.1:${agentPort}`);
     })
-    .then(function() {
+    .then(() => {
       res.json(mongoResponse);
     })
-    .catch(function(e) {
+    .catch(e => {
       log('Failed to write document', e);
       res.sendStatus(500);
     });
 });
 
-app.post('/find', function(req, res) {
-  var mongoResponse = null;
+app.post('/find', (req, res) => {
+  let mongoResponse = null;
   collection
     .findOne(req.body)
-    .then(function(r) {
+    .then(r => {
       mongoResponse = r;
       // Execute another traced call to verify that we keep the tracing context.
-      return request('http://127.0.0.1:' + agentPort);
+      return request(`http://127.0.0.1:${agentPort}`);
     })
-    .then(function() {
+    .then(() => {
       res.json(mongoResponse);
     })
-    .catch(function(e) {
+    .catch(e => {
       log('Failed to find document', e);
       res.sendStatus(500);
     });
@@ -93,61 +93,61 @@ app.post('/find', function(req, res) {
 
 // An operation with an artificial delay to check that we do not by mistake inject other incoming http entries into the
 // current trace.
-app.post('/long-find', function(req, res) {
-  var mongoResponse = null;
+app.post('/long-find', (req, res) => {
+  let mongoResponse = null;
   collection
     .findOne(req.body)
-    .then(function(r) {
+    .then(r => {
       mongoResponse = r;
       // add an artificial delay and let the test start another HTTP entry, then make sure it is not put into the
       // currently active trace.
-      return new Promise(function(resolve) {
+      return new Promise(resolve => {
         setTimeout(resolve, 500);
       });
     })
-    .then(function() {
+    .then(() =>
       // Execute another traced call to verify that we keep the tracing context.
-      return request('http://127.0.0.1:' + agentPort);
-    })
-    .then(function() {
+      request(`http://127.0.0.1:${agentPort}`)
+    )
+    .then(() => {
       res.json(mongoResponse);
     })
-    .catch(function(e) {
+    .catch(e => {
       log('Failed to find document', e);
       res.sendStatus(500);
     });
 });
 
-app.get('/ping', function(req, res) {
+app.get('/ping', (req, res) => {
   res.sendStatus(200);
 });
 
-app.get('/findall', function(req, res) {
+app.get('/findall', (req, res) => {
   collection
     .find({})
     .batchSize(2)
-    .toArray(function(err, docs) {
+    .toArray((err, docs) => {
       if (err) {
         res.status(500).json(err);
       } else {
         // Execute another traced call to verify that we keep the tracing context.
-        return request('http://127.0.0.1:' + agentPort)
-          .then(function() {
+        return request(`http://127.0.0.1:${agentPort}`)
+          .then(() => {
             res.json(docs);
           })
-          .catch(function(err2) {
+          .catch(err2 => {
             res.status(500).json(err2);
           });
       }
     });
 });
 
-app.listen(process.env.APP_PORT, function() {
-  log('Listening on port: ' + process.env.APP_PORT);
+app.listen(process.env.APP_PORT, () => {
+  log(`Listening on port: ${process.env.APP_PORT}`);
 });
 
 function log() {
-  var args = Array.prototype.slice.call(arguments);
+  const args = Array.prototype.slice.call(arguments);
   args[0] = logPrefix + args[0];
   console.log.apply(console, args);
 }
