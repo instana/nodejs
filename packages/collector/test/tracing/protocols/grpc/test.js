@@ -1,18 +1,18 @@
 'use strict';
 
 const expect = require('chai').expect;
-const Promise = require('bluebird');
 const semver = require('semver');
 
 const constants = require('@instana/core').tracing.constants;
 const config = require('../../../config');
+const delay = require('../../../test_util/delay');
 const utils = require('../../../utils');
 
 let agentControls;
 let ClientControls;
+let clientControls;
 let ServerControls;
 let serverControls;
-let clientControls;
 
 describe('tracing/grpc', function() {
   if (!semver.satisfies(process.versions.node, '>=8.2.1')) {
@@ -52,7 +52,7 @@ describe('tracing/grpc', function() {
         })
         .then(response => {
           expect(response.reply).to.equal('received: request');
-          return Promise.delay(config.getTestTimeout() / 4);
+          return delay(config.getTestTimeout() / 4);
         })
         .then(() =>
           agentControls.getSpans().then(spans => {

@@ -13,11 +13,12 @@ require('../../../../')({
   }
 });
 
-// pino log spans are used to verify that follow up calls are traced correctly after a GRPC exit
-const pinoLogger = require('pino')();
 const express = require('express');
 const morgan = require('morgan');
 const path = require('path');
+// Pino log spans are used to verify that follow up calls are traced correctly after a GRPC exit.
+const pinoLogger = require('pino')();
+
 const app = express();
 
 const STATIC = !!process.env.GRPC_STATIC;

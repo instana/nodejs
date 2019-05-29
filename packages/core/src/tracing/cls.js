@@ -117,7 +117,7 @@ exports.tracingLevel = function tracingLevel() {
  * Determine if tracing is suppressed (via tracing level) for this request.
  */
 exports.tracingSuppressed = function tracingSuppressed() {
-  var tl = exports.ns.get(tracingLevelKey);
+  var tl = exports.tracingLevel();
   return tl && tl === '0';
 };
 

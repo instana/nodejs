@@ -54,11 +54,11 @@ function instrumentedRoutes(thisContext, originalRoutes, originalArgs) {
         return resolvedValue;
       });
     } else {
-      return dispatch.apply(thisContext, arguments);
+      return dispatch.apply(this, arguments);
     }
   };
 
-  // The router attaches itself as a property to the dispatch funciton and other methods in koa-router rely on this, se
+  // The router attaches itself as a property to the dispatch function and other methods in koa-router rely on this, so
   // we need to attach this property to our dispatch function, too.
   instrumentedDispatch.router = dispatch.router;
   return instrumentedDispatch;

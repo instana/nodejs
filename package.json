@@ -20,6 +20,9 @@
     "admin": "^1.4.1",
     "admin-plugin-healthcheck": "^1.1.0",
     "amqplib": "^0.5.2",
+    "apollo-link": "^1.2.11",
+    "apollo-link-ws": "^1.0.17",
+    "apollo-server-express": "^2.6.1",
     "async": "^2.6.1",
     "aws-sdk": "^2.329.0",
     "bluebird": "^3.5.2",
@@ -35,6 +38,8 @@
     "express-pino-logger": "^4.0.0",
     "fastify": "1.12.1",
     "google-protobuf": "^3.0.0",
+    "graphql": "^14.3.1",
+    "graphql-tools": "^4.0.4",
     "grpc": "^1.20.2",
     "ioredis": "^3.2.2",
     "kafka-node": "^2.6.1",
@@ -64,6 +69,7 @@
     "sinon": "^7.2.4",
     "underscore": "^1.9.1",
     "uuid": "^3.3.2",
-    "winston": "^3.1.0"
+    "winston": "^3.1.0",
+    "ws": "^7.0.0"
   }
 }

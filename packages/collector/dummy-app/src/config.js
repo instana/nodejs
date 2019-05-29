@@ -4,7 +4,6 @@ require('dotenv').config();
 
 module.exports = exports = {
   appPort: getInt('APP_PORT'),
-  agentPort: getInt('AGENT_PORT'),
   collectorEnabled: getBool('COLLECTOR_ENABLED', true),
   tracingEnabled: getBool('TRACING_ENABLED', true),
   logRequests: getBool('LOG_REQUESTS', false)

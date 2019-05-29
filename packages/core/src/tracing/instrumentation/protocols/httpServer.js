@@ -30,27 +30,38 @@ exports.init = function(config) {
 
 function shimEmit(realEmit) {
   return function(type, req, res) {
+    if (type !== 'request' || !isActive) {
+      return realEmit.apply(this, arguments);
+    }
+
+    var parentSpan = cls.getCurrentSpan();
+    if (parentSpan) {
+      logger.warn(
+        'Cannot start an HTTP(S) entry span for ' +
+          (req ? req.url : '(URL not available)') +
+          ' when another span is already active. Currently, the following span is active: ' +
+          JSON.stringify(parentSpan)
+      );
+      return realEmit.apply(this, arguments);
+    }
+
     var originalThis = this;
     var originalArgs = arguments;
 
     return cls.ns.runAndReturn(function() {
+      if (req && req.on && req.addListener && req.emit) {
+        cls.ns.bindEmitter(req);
+      }
+      if (res && res.on && res.addListener && res.emit) {
+        cls.ns.bindEmitter(res);
+      }
+
       // Respect any incoming tracing level headers
       if (req && req.headers && req.headers[constants.traceLevelHeaderNameLowerCase] === '0') {
         cls.setTracingLevel(req.headers[constants.traceLevelHeaderNameLowerCase]);
       }
 
-      if (type !== 'request' || !isActive || cls.tracingSuppressed()) {
-        return realEmit.apply(originalThis, originalArgs);
-      }
-
-      var parentSpan = cls.getCurrentSpan();
-      if (parentSpan) {
-        logger.warn(
-          'Cannot start an HTTP(S) entry span for ' +
-            (req ? req.url : '(URL not available)') +
-            ' when another span is already active. Currently, the following span is active: ' +
-            JSON.stringify(parentSpan)
-        );
+      if (cls.tracingSuppressed()) {
         return realEmit.apply(originalThis, originalArgs);
       }
 
@@ -105,9 +116,6 @@ function shimEmit(realEmit) {
         span.d = Date.now() - span.ts;
         span.transmit();
       });
-
-      cls.ns.bindEmitter(req);
-      cls.ns.bindEmitter(res);
 
       return realEmit.apply(originalThis, originalArgs);
     });
