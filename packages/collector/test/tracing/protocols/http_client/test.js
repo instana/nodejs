@@ -407,7 +407,7 @@ function registerTests(useHttps) {
     clientControls
       .sendRequest({
         method: 'GET',
-        path: '/'
+        path: '/request-options-only'
       })
       .then(() =>
         utils.retry(() =>
@@ -416,6 +416,7 @@ function registerTests(useHttps) {
               expect(span.n).to.equal('node.http.client');
               expect(span.k).to.equal(constants.EXIT);
               expect(span.data.http.header).to.not.exist;
+              expect(span.data.http.url).to.match(/\/request-only-opts/);
             });
           })
         )

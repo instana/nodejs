@@ -1,5 +1,8 @@
 # Changelog
 
+## Unreleased
+- Add graphql instrumentation ([graphql](https://www.npmjs.com/package/graphql)).
+
 ## 1.68.4
 - Require `cls-bluebird` before installing the require hook for `bluebird` so client code can use `cls-bluebird` without conflicts ([#152](https://github.com/instana/nodejs-sensor/pull/152), thanks to @jonathansamines).
 - Fix tracing of `https` client calls in Node.js 8.9.0.

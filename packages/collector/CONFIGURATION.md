@@ -258,5 +258,5 @@ The following is a list of all environment variables that the Node.js collector 
 | `INSTANA_DISABLE_AUTO_INSTR=true` | `config.tracing.automaticTracingEnabled = false`  |
 | `INSTANA_STACK_TRACE_LENGTH`      | `config.tracing.stackTraceLength`                 |
 | `INSTANA_LOG_LEVEL`               | `config.level`                                    |
-| `INSTANA_DEBUG`                   |  `config.level=debug`                             |
+| `INSTANA_DEBUG`                   | `config.level=debug`                              |
 

@@ -21,7 +21,7 @@ DROP_DATA=true npm run agent-stub
 
 # start the app (in a separate terminal)
 cd nodejs/packages/collector/dummy-app
-AGENT_PORT=3210 node .
+INSTANA_AGENT_PORT=3210 node .
 ```
 
 ## Triggering Requests

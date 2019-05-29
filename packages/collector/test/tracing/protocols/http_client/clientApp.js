@@ -37,19 +37,7 @@ if (process.env.WITH_STDOUT) {
 
 app.use(bodyParser.json());
 
-app.get('/', (req, res) => {
-  rp({
-    method: 'GET',
-    url: `${baseUrl}/`,
-    strictSSL: false
-  })
-    .then(() => {
-      res.sendStatus(200);
-    })
-    .catch(() => {
-      res.sendStatus(500);
-    });
-});
+app.get('/', (req, res) => res.sendStatus(200));
 
 app.get('/request-url-and-options', (req, res) => {
   httpModule

@@ -18,6 +18,7 @@ var extraHeaders = [];
 var httpServerInstrumentation = './instrumentation/protocols/httpServer';
 var instrumentations = [
   './instrumentation/control_flow/bluebird',
+  './instrumentation/control_flow/graphqlSubscriptions',
   './instrumentation/database/elasticsearch',
   './instrumentation/database/ioredis',
   './instrumentation/database/mongodb',
@@ -34,6 +35,7 @@ var instrumentations = [
   './instrumentation/loggers/winston',
   './instrumentation/messaging/amqp',
   './instrumentation/messaging/kafka',
+  './instrumentation/protocols/graphql',
   './instrumentation/protocols/grpc',
   './instrumentation/protocols/httpClient',
   httpServerInstrumentation
