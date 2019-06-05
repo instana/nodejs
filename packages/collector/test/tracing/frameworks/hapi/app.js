@@ -1,6 +1,3 @@
-/* eslint-env es6 */
-/* eslint-disable no-console */
-
 'use strict';
 
 require('../../../../')({
@@ -34,7 +31,7 @@ const init = async () => {
   server.route({
     method: 'GET',
     path: '/route/mandatory/{param}',
-    handler: (request, h) => {
+    handler: () => {
       return '/route/mandatory/{param}';
     }
   });
@@ -42,7 +39,7 @@ const init = async () => {
   server.route({
     method: 'GET',
     path: '/route/optional/{param?}',
-    handler: (request, h) => {
+    handler: () => {
       return '/route/optional/{param?}';
     }
   });
@@ -50,7 +47,7 @@ const init = async () => {
   server.route({
     method: 'GET',
     path: '/route/partial{param}/resource',
-    handler: (request, h) => {
+    handler: () => {
       return '/route/partial{param}/resource';
     }
   });
@@ -58,7 +55,7 @@ const init = async () => {
   server.route({
     method: 'GET',
     path: '/route/multi-segment/{param*2}',
-    handler: (request, h) => {
+    handler: () => {
       return '/route/multi-segment/{param*2}';
     }
   });
@@ -69,6 +66,7 @@ const init = async () => {
 };
 
 process.on('unhandledRejection', err => {
+  /* eslint-disable no-console */
   console.log(err);
   process.exit(1);
 });
@@ -76,6 +74,7 @@ process.on('unhandledRejection', err => {
 init();
 
 function log() {
+  /* eslint-disable no-console */
   const args = Array.prototype.slice.call(arguments);
   args[0] = logPrefix + args[0];
   console.log.apply(console, args);

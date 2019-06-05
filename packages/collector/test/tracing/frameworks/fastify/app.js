@@ -1,5 +1,3 @@
-/* eslint-disable */
-
 'use strict';
 
 require('../../../../')({
@@ -22,7 +20,7 @@ app.get('/foo/:id', ok);
 app.get(
   '/before-handler/:id',
   {
-    beforeHandler: (request, reply, done) => {
+    beforeHandler: (request, reply) => {
       // This tests that we record the path template even if a beforeHandler exits early
       // (before the handler is executed).
       reply.send({ before: 'handler' });
@@ -54,9 +52,9 @@ async function ok() {
   return { hello: 'world' };
 }
 
-function subRouter(fastify, opts, next) {
-  fastify.get('/', ok);
-  fastify.get('/bar/:id', ok);
+function subRouter(fstfy, opts, next) {
+  fstfy.get('/', ok);
+  fstfy.get('/bar/:id', ok);
   next();
 }
 
@@ -72,6 +70,7 @@ const start = async () => {
 start();
 
 function log() {
+  /* eslint-disable no-console */
   const args = Array.prototype.slice.call(arguments);
   args[0] = logPrefix + args[0];
   console.log.apply(console, args);

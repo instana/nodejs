@@ -1,5 +1,3 @@
-/* eslint-disable */
-
 'use strict';
 
 const rp = require('request-promise');
@@ -14,7 +12,6 @@ require('../../../../')({
 });
 
 const express = require('express');
-const semver = require('semver');
 const app = express();
 
 app.get('/', (req, res) => res.sendStatus(200));
@@ -67,15 +64,13 @@ async function sendRequest(requestOptions) {
   // a custom wrapper around request. Yes, this exists out of the box for request, but this
   // is supposed to be a repro case for a customer issue.
   const response = await new Promise((resolve, reject) => {
-    request(requestOptions, (error, response, body) => {
+    request(requestOptions, (error, res) => {
       if (error) {
         reject(error);
+      } else if (res.statusCode >= 200 && res.statusCode <= 299) {
+        resolve(res);
       } else {
-        if (response.statusCode >= 200 && response.statusCode <= 299) {
-          resolve(response);
-        } else {
-          reject(response);
-        }
+        reject(res);
       }
     });
   });
@@ -87,6 +82,7 @@ app.listen(process.env.APP_PORT, () => {
 });
 
 function log() {
+  /* eslint-disable no-console */
   const args = Array.prototype.slice.call(arguments);
   args[0] = `Express Async Await App (${process.pid}):\t${args[0]}`;
   console.log.apply(console, args);
