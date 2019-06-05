@@ -8,7 +8,7 @@ const config = require('../../../config');
 const utils = require('../../../utils');
 
 describe('tracing/asyncAwait', function() {
-  if (!semver.satisfies(process.versions.node, '^8 || ^9 || ^10')) {
+  if (!semver.satisfies(process.versions.node, '>= 8.2.1')) {
     return;
   }
 

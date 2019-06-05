@@ -7,8 +7,8 @@ const constants = require('@instana/core').tracing.constants;
 const config = require('../../../config');
 const utils = require('../../../utils');
 
-describe('tracing/koa', function() {
-  if (!semver.satisfies(process.versions.node, '>=6.0.0')) {
+describe('tracing/hapi', function() {
+  if (!semver.satisfies(process.versions.node, '>=8.2.1')) {
     return;
   }
 
@@ -24,19 +24,15 @@ describe('tracing/koa', function() {
   });
   controls.registerTestHooks();
 
-  describe('koa path templates', () => {
-    check('/route', '/route');
-    check('/route/123', '/route/:id');
-    check('/sub1', '/sub1/');
-    check('/sub1/route', '/sub1/route');
-    check('/sub1/route/123', '/sub1/route/:id');
-    check('/sub1/sub2', '/sub1/sub2/');
-    check('/sub1/sub2/route', '/sub1/sub2/route');
-    check('/sub1/sub2/route/123', '/sub1/sub2/route/:id');
-    check('/does-not-exist-so-use-catch-all-regexp', '/.*/');
+  describe('hapi path templates', () => {
+    check('/route/mandatory/value', '/route/mandatory/{param}');
+    check('/route/optional/value', '/route/optional/{param?}');
+    check('/route/optional', '/route/optional/{param?}');
+    check('/route/partialvalue/resource', '/route/partial{param}/resource');
+    check('/route/multi-segment/one/two', '/route/multi-segment/{param*2}');
 
     function check(actualPath, expectedTemplate) {
-      it(`must report koa-router path templates for actual path: ${actualPath}`, () =>
+      it(`must report hapi path templates for actual path: ${actualPath}`, () =>
         controls
           .sendRequest({
             method: 'GET',
@@ -46,10 +42,7 @@ describe('tracing/koa', function() {
           })
           .then(response => {
             expect(response.statusCode).to.equal(200);
-            expect(response.body.indexOf(actualPath)).to.equal(
-              0,
-              `Unexpected response: ${response.body} should have started with ${actualPath}.`
-            );
+            expect(response.body).to.equal(expectedTemplate);
             return utils.retry(() =>
               agentControls.getSpans().then(spans => {
                 utils.expectOneMatching(spans, span => {
