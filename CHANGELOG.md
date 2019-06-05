@@ -2,6 +2,7 @@
 
 ## Unreleased
 - Improve configuration handling, support more environment variables.
+- Record [hapi.js](https://hapijs.com/) routes as path templates when tracing HTTP entries.
 
 ## 1.67.2
 - Read X-INSTANA-... headers case-insensitive in amqp instrumentation.
