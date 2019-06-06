@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.68.1
+- Log a warning instead of info when running an unsupported Node.js version.
+
 ## 1.68.0
 - Improve configuration handling, support more environment variables.
 - Record [hapi.js](https://hapijs.com/) routes as path templates when tracing HTTP entries.
