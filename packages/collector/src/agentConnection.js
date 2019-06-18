@@ -12,6 +12,7 @@ logger = require('./logger').getLogger('agentConnection', function(newLogger) {
   logger = newLogger;
 });
 
+var circularReferenceRemover = require('./util/removeCircular');
 var agentOpts = require('./agent/opts');
 var pidStore = require('./pidStore');
 var cmdline = require('./cmdline');
@@ -216,9 +217,9 @@ function sendData(path, data, cb, ignore404) {
     ignore404 = false;
   }
 
-  var payload = JSON.stringify(data);
-
+  var payload = JSON.stringify(data, circularReferenceRemover());
   logger.debug({ payload: data }, 'Sending payload to %s', path);
+
   // manually turn into a buffer to correctly identify content-length
   payload = buffer.fromString(payload, 'utf8');
   if (payload.length > maxContentLength) {
