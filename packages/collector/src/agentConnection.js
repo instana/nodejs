@@ -216,7 +216,19 @@ function sendData(path, data, cb, ignore404) {
     ignore404 = false;
   }
 
-  var payload = JSON.stringify(data);
+  const circularReplacer = () => {
+    const seen = new WeakSet();
+    return (_, value) => {
+      if (typeof value === "object" && value !== null) {
+        if (seen.has(value)) {
+          return;
+        }
+        seen.add(value);
+      }
+      return value;
+    };
+  };
+  var payload = JSON.stringify(data, circularReplacer);
 
   logger.debug({ payload: data }, 'Sending payload to %s', path);
   // manually turn into a buffer to correctly identify content-length
