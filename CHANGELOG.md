@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.68.2
 - Remove circular references from span data before serializing it ([#148](https://github.com/instana/nodejs-sensor/pull/148), thanks to @sklose).
 
 ## 1.68.1
