@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.68.3
 - Add additional check to `requireHook` in case other modules interfering with `require` (like `require-in-the-middle`) are present.
 
 ## 1.68.2
