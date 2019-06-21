@@ -8,6 +8,11 @@ var byModuleNameTransformers = {};
 var byFileNamePatternTransformers = [];
 var origLoad = Module._load;
 
+var logger;
+logger = require('../logger').getLogger('util/requireHook', function(newLogger) {
+  logger = newLogger;
+});
+
 exports.init = function() {
   Module._load = patchedModuleLoad;
 };
@@ -48,8 +53,21 @@ function patchedModuleLoad(moduleName) {
   var applicableByModuleNameTransformers = byModuleNameTransformers[moduleName];
   if (applicableByModuleNameTransformers && cacheEntry.appliedByModuleNameTransformers.indexOf(moduleName) === -1) {
     for (i = 0; i < applicableByModuleNameTransformers.length; i++) {
-      cacheEntry.moduleExports =
-        applicableByModuleNameTransformers[i](cacheEntry.moduleExports) || cacheEntry.moduleExports;
+      var transformerFn = applicableByModuleNameTransformers[i];
+      if (typeof transformerFn === 'function') {
+        cacheEntry.moduleExports = transformerFn(cacheEntry.moduleExports) || cacheEntry.moduleExports;
+      } else {
+        logger.error(
+          'A requireHook invariant has been violated for module name %s, index %s. The transformer is not a function ' +
+            'but of type "%s" (details: %s). The most likely cause is that something has messed with Node.js\' ' +
+            'module cache. This can result in limited tracing and health check functionality (for example, missing ' +
+            'calls in Instana).',
+          moduleName,
+          i,
+          typeof transformerFn,
+          transformerFn == null ? 'null/undefined' : transformerFn
+        );
+      }
     }
     cacheEntry.appliedByModuleNameTransformers.push(moduleName);
   }

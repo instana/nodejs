@@ -1,5 +1,8 @@
 # Changelog
 
+## Unreleased
+- Add additional check to `requireHook` in case other modules interfering with `require` (like `require-in-the-middle`) are present.
+
 ## 1.68.2
 - Remove circular references from span data before serializing it ([#148](https://github.com/instana/nodejs-sensor/pull/148), thanks to @sklose).
 
