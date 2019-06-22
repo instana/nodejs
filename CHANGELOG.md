@@ -1,5 +1,8 @@
 # Changelog
 
+## Unreleased
+- Require `cls-bluebird` before installing the require hook for `bluebird` so client code can use `cls-bluebird` without conflicts ([#152](https://github.com/instana/nodejs-sensor/pull/152), thanks to @jonathansamines).
+
 ## 1.68.3
 - Add additional check to `requireHook` in case other modules interfering with `require` (like `require-in-the-middle`) are present.
 
