@@ -1,5 +1,6 @@
 'use strict';
 
+var instrument = require('cls-bluebird');
 var requireHook = require('../../../util/requireHook');
 var cls = require('../../cls');
 
@@ -16,5 +17,5 @@ exports.init = function() {
 };
 
 function patchBluebird(bluebirdModule) {
-  require('cls-bluebird')(cls.ns, bluebirdModule);
+  instrument(cls.ns, bluebirdModule);
 }
