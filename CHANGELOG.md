@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.69.0
 - Add graphql instrumentation ([graphql](https://www.npmjs.com/package/graphql)).
 
 ## 1.68.4
