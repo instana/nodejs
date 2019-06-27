@@ -21,7 +21,7 @@ exports.SDK = {
  * Determine if <span> is an entry span (server span).
  */
 exports.isEntrySpan = function isEntrySpan(span) {
-  return span.k === exports.ENTRY;
+  return span && span.k === exports.ENTRY;
 };
 
 /*
@@ -29,12 +29,12 @@ exports.isEntrySpan = function isEntrySpan(span) {
  *
  */
 exports.isExitSpan = function isExitSpan(span) {
-  return span.k === exports.EXIT;
+  return span && span.k === exports.EXIT;
 };
 
 /*
  * Determine if <span> is an intermediate span (local span).
  */
 exports.isIntermediateSpan = function isIntermediateSpan(span) {
-  return span.k === exports.INTERMEDIATE;
+  return span && span.k === exports.INTERMEDIATE;
 };

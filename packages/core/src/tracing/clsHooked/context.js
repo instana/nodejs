@@ -11,6 +11,7 @@ const util = require('util');
 const assert = require('assert');
 const wrapEmitter = require('emitter-listener');
 const async_hooks = require('async_hooks');
+const unset = require('./unset');
 
 const CONTEXTS_SYMBOL = 'instanaClsHooked@contexts';
 
@@ -48,11 +49,7 @@ Namespace.prototype.set = function set(key, value) {
     debug2(indentStr + 'CONTEXT-SET KEY:' + key + '=' + value + ' in ns:' + this.name + ' currentUid:' + currentUid + ' active:' + util.inspect(this.active, {showHidden:true, depth:2, colors:true}));
   }
 
-  return function unset() {
-    if (context[key] === value) {
-      delete context[key];
-    }
-  };
+  return unset.bind(null, context, key, value);
 };
 
 Namespace.prototype.get = function get(key) {

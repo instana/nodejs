@@ -1,5 +1,8 @@
 # Changelog
 
+## Unreleased
+- Trace through graphql-subscriptions PubSub/AsyncIterator.
+
 ## 1.69.0
 - Add graphql instrumentation ([graphql](https://www.npmjs.com/package/graphql)).
 
