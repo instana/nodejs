@@ -161,7 +161,7 @@ describe('tracing/cls', () => {
     expect(constants.isIntermediateSpan(intermediateSpan)).to.equal(true);
   });
 
-  it('must clean up span data from contexts once the span is transmitted', () => {
+  it('must clean up span data from contexts once the span has been transmitted', () => {
     cls.ns.run(context => {
       expect(context[cls.currentRootSpanKey]).to.equal(undefined);
       expect(context[cls.currentSpanKey]).to.equal(undefined);
@@ -171,8 +171,33 @@ describe('tracing/cls', () => {
       expect(context[cls.currentSpanKey]).to.equal(span);
 
       span.cleanup();
+
       expect(context[cls.currentRootSpanKey]).to.equal(undefined);
       expect(context[cls.currentSpanKey]).to.equal(undefined);
+    });
+  });
+
+  it('must store reduced backup of span data on cleanup', () => {
+    cls.ns.run(context => {
+      expect(context[cls.currentRootSpanKey]).to.equal(undefined);
+      expect(context[cls.currentSpanKey]).to.equal(undefined);
+
+      const span = cls.startSpan('node.http.server', constants.ENTRY);
+      span.data = { much: 'data' };
+      span.stack = ['a', 'b', 'c'];
+      expect(context[cls.currentRootSpanKey]).to.equal(span);
+      expect(context[cls.currentSpanKey]).to.equal(span);
+
+      span.cleanup();
+
+      const reducedSpan = context[cls.reducedSpanKey];
+
+      expect(Object.keys(reducedSpan)).to.have.lengthOf(5);
+      expect(reducedSpan.n).to.equal(span.n);
+      expect(reducedSpan.t).to.equal(span.t);
+      expect(reducedSpan.s).to.equal(span.s);
+      expect(reducedSpan.p).to.equal(span.p);
+      expect(reducedSpan.k).to.equal(span.k);
     });
   });
 });

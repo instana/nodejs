@@ -11,6 +11,8 @@ logger = require('../logger').getLogger('tracing/cls', function(newLogger) {
 
 var currentRootSpanKey = (exports.currentRootSpanKey = 'com.instana.rootSpan');
 var currentSpanKey = (exports.currentSpanKey = 'com.instana.span');
+var reducedSpanKey = (exports.reducedSpanKey = 'com.instana.reduced');
+
 var tracingLevelKey = (exports.tracingLevelKey = 'com.instana.tl');
 var processIdentityProvider = null;
 
@@ -91,8 +93,14 @@ exports.getCurrentSpan = function getCurrentSpan() {
 };
 
 /*
+ * Get the reduced backup of the last active span in this cls context.
+ */
+exports.getReducedSpan = function getReducedSpan() {
+  return exports.ns.get(reducedSpanKey);
+};
+
+/*
  * Determine if we're currently tracing or not.
- *
  */
 exports.isTracing = function isTracing() {
   return !!exports.ns.get(currentSpanKey);

@@ -39,6 +39,7 @@
     "fastify": "1.12.1",
     "google-protobuf": "^3.0.0",
     "graphql": "^14.3.1",
+    "graphql-subscriptions": "^1.1.0",
     "graphql-tools": "^4.0.4",
     "grpc": "^1.20.2",
     "ioredis": "^3.2.2",

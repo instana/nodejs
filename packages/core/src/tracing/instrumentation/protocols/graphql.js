@@ -41,15 +41,12 @@ function shimExecuteFunction(originalFunction) {
     var originalArgs = arguments;
     var doc;
     var operationName;
-    var rootValue;
 
     if (originalArgs.length === 1 && typeof originalArgs[0] === 'object') {
       doc = originalArgs[0].document;
-      rootValue = originalArgs[0].rootValue;
       operationName = originalArgs[0].operationName;
     } else {
       doc = originalArgs[1];
-      rootValue = originalArgs[2];
       operationName = originalArgs[5];
     }
 
@@ -72,8 +69,7 @@ function shimExecuteFunction(originalFunction) {
         originalArgs,
         instrumentedExecute,
         operationDefinition,
-        operationName,
-        rootValue
+        operationName
       );
     } else {
       return traceQueryOrMutation(
@@ -159,31 +155,15 @@ function traceSubscriptionUpdate(
   originalArgs,
   stackTraceRef,
   operationDefinition,
-  operationName,
-  rootValue
+  operationName
 ) {
-  var traceId;
-  var parentSpanId;
-
-  if (rootValue && rootValue.__in) {
-    // Case 1: We saw the call to graphql-subscriptions/PubSub.publish
-    // (see src/tracing/instrumentation/control_flow/graphqlSubscriptions.js) and have attached the then active trace ID
-    // and span ID to the payload.
-    traceId = rootValue.__in.t;
-    parentSpanId = rootValue.__in.s;
-  } else {
-    // Case 2: We did not see the call to graphql-subscriptions/PubSub.publish.
-    // Try to find a parent span via CLS (very unreliable with graphql-subscriptions).
-    var parentSpan = cls.getCurrentSpan();
-    if (!constants.isExitSpan(parentSpan)) {
-      traceId = parentSpan.t;
-      parentSpanId = parentSpan.s;
-    }
+  if (!isActive) {
+    return originalFunction.apply(originalThis, originalArgs);
   }
-
-  if (isActive && traceId && parentSpanId) {
+  var parentSpan = cls.getCurrentSpan() || cls.getReducedSpan();
+  if (parentSpan && !constants.isExitSpan(parentSpan) && parentSpan.t && parentSpan.s) {
     return cls.ns.runAndReturn(function() {
-      var span = cls.startSpan('graphql.client', constants.EXIT, traceId, parentSpanId);
+      var span = cls.startSpan('graphql.client', constants.EXIT, parentSpan.t, parentSpan.s);
       span.ts = Date.now();
       span.stack = tracingUtil.getStackTrace(stackTraceRef);
       span.data = {
@@ -195,7 +175,6 @@ function traceSubscriptionUpdate(
         }
       };
       addFieldsAndArguments(span, operationDefinition);
-
       return runOriginalAndFinish(originalFunction, originalThis, originalArgs, span);
     });
   } else {

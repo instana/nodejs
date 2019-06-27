@@ -1,3 +1,5 @@
+/* global Symbol */
+
 'use strict';
 
 var shimmer = require('shimmer');
@@ -7,34 +9,58 @@ var cls = require('../../cls');
 
 var isActive = false;
 
+var CLS_CONTEXT_SYMBOL = Symbol('_instana_cls_context');
+
 exports.init = function() {
-  requireHook.onModuleLoad('graphql-subscriptions', instrument);
+  requireHook.onModuleLoad('graphql-subscriptions', instrumentModule);
+  requireHook.onFileLoad(/\/graphql-subscriptions\/dist\/pubsub-async-iterator\.js/, instrumentAsyncIterator);
 };
 
-function instrument(graphQlSubscriptions) {
+function instrumentModule(graphQlSubscriptions) {
   shimmer.wrap(graphQlSubscriptions.PubSub.prototype, 'publish', shimPublish);
 }
 
 function shimPublish(originalPublish) {
-  return function(triggerName, payload) {
+  return function() {
     if (isActive && cls.isTracing()) {
       // Keep cls context in GraphQL subscriptions by binding the associated event emitters.
       if (this.ee && this.ee.on && this.ee.addListener && this.ee.emit) {
         cls.ns.bindEmitter(this.ee);
       }
-
-      var activeSpan = cls.getCurrentSpan();
-      if (activeSpan && payload && typeof payload === 'object') {
-        // Attach tracing context to payload to be able to retrieve it later in
-        // src/tracing/instrumentation/protocols/graphql - even though the event emitter is bound,
-        // cls context gets lost.
-        payload.__in = {
-          t: activeSpan.t,
-          s: activeSpan.s
-        };
-      }
     }
     return originalPublish.apply(this, arguments);
+  };
+}
+
+function instrumentAsyncIterator(pubSubAsyncIterator) {
+  shimmer.wrap(pubSubAsyncIterator.PubSubAsyncIterator.prototype, 'pushValue', shimPushValue);
+  shimmer.wrap(pubSubAsyncIterator.PubSubAsyncIterator.prototype, 'pullValue', shimPullValue);
+}
+
+function shimPushValue(originalFunction) {
+  return function(event) {
+    if (isActive && event && typeof event === 'object' && cls.ns.active) {
+      event[CLS_CONTEXT_SYMBOL] = cls.ns.active;
+    }
+    return originalFunction.apply(this, arguments);
+  };
+}
+
+function shimPullValue(originalFunction) {
+  return function() {
+    var pullPromise = originalFunction.apply(this, arguments);
+    return pullPromise.then(function(result) {
+      if (result && result.value && result.value[CLS_CONTEXT_SYMBOL]) {
+        var clsContext = result.value[CLS_CONTEXT_SYMBOL];
+        if (isActive && clsContext) {
+          cls.ns.enter(clsContext);
+          setImmediate(function() {
+            cls.ns.exit(clsContext);
+          });
+        }
+      }
+      return result;
+    });
   };
 }
 
