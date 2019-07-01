@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.69.1
 - Trace through graphql-subscriptions PubSub/AsyncIterator.
 - Add missing cls.ns.exit calls in mongodb instrumentation (fix for leaking `cls.ns._set` entries).
 
