@@ -77,7 +77,7 @@ function onStarted(event) {
   }
 
   var parentSpan = cls.getCurrentSpan();
-  if (parentSpan && constants.isExitSpan(parentSpan)) {
+  if (!parentSpan || constants.isExitSpan(parentSpan)) {
     return;
   }
 
@@ -90,7 +90,7 @@ function onStarted(event) {
     supportsOperationIds = true;
   }
 
-  if (parentSpan && (traceId == null || parentSpanId == null)) {
+  if (traceId == null || parentSpanId == null) {
     // either event.operationId has not been present or event.operationId did not have a traceId/parentSpanId set.
     traceId = parentSpan.t;
     parentSpanId = parentSpan.s;
@@ -98,47 +98,50 @@ function onStarted(event) {
 
   if (traceId == null || parentSpanId == null) {
     // We could not find the trace ID/parent span ID, neither via the operation ID mechanism nor the getCurrentSpan()
-    // way - give up finally.
+    // way - give up.
     return;
   }
 
-  var span = cls.startSpan('mongo', constants.EXIT, traceId, parentSpanId, false);
+  cls.ns.run(function(clsContext) {
+    var span = cls.startSpan('mongo', constants.EXIT, traceId, parentSpanId, false);
 
-  var peer = null;
-  var service = null;
-  if (event.connectionId && (event.connectionId.host || event.connectionId.port)) {
-    peer = {
-      hostname: event.connectionId.host,
-      port: event.connectionId.port
-    };
-    service = event.connectionId.host + ':' + event.connectionId.port;
-  } else if (typeof event.connectionId === 'string') {
-    peer = parseConnectionToPeer(event.connectionId);
-    service = event.connectionId;
-  }
-  var database = event.databaseName;
-  var collection = event.command.collection || event.command[event.commandName];
-  // using the Mongodb instrumentation API, it is not possible to gather stack traces.
-  span.stack = [];
-  span.data = {
-    peer: peer,
-    mongo: {
-      command: event.commandName,
-      service: service,
-      namespace: database + '.' + collection,
-      filter: stringifyWhenNecessary(event.command.filter),
-      query: stringifyWhenNecessary(event.command.query)
+    var peer = null;
+    var service = null;
+    if (event.connectionId && (event.connectionId.host || event.connectionId.port)) {
+      peer = {
+        hostname: event.connectionId.host,
+        port: event.connectionId.port
+      };
+      service = event.connectionId.host + ':' + event.connectionId.port;
+    } else if (typeof event.connectionId === 'string') {
+      peer = parseConnectionToPeer(event.connectionId);
+      service = event.connectionId;
     }
-  };
+    var database = event.databaseName;
+    var collection = event.command.collection || event.command[event.commandName];
 
-  if (event.operationId) {
-    event.operationId.traceId = span.t;
-    event.operationId.parentSpanId = span.p;
-  }
+    // using the Mongodb instrumentation API, it is not possible to gather stack traces.
+    span.stack = [];
+    span.data = {
+      peer: peer,
+      mongo: {
+        command: event.commandName,
+        service: service,
+        namespace: database + '.' + collection,
+        filter: stringifyWhenNecessary(event.command.filter),
+        query: stringifyWhenNecessary(event.command.query)
+      }
+    };
 
-  var requestId = getUniqueRequestId(event);
-  clsContextMap[requestId] = cls.ns.active;
-  mongoDbSpansInProgress[requestId] = span;
+    if (event.operationId) {
+      event.operationId.traceId = span.t;
+      event.operationId.parentSpanId = span.p;
+    }
+
+    var requestId = getUniqueRequestId(event);
+    clsContextMap[requestId] = clsContext;
+    mongoDbSpansInProgress[requestId] = span;
+  });
 }
 
 function stringifyWhenNecessary(obj) {
@@ -177,6 +180,9 @@ function onSucceeded(event) {
     span.transmit();
   } finally {
     cleanup(event);
+    setImmediate(function() {
+      cls.ns.exit(clsContext);
+    });
   }
 }
 
@@ -208,6 +214,9 @@ function onFailed(event) {
     span.transmit();
   } finally {
     cleanup(event);
+    setImmediate(function() {
+      cls.ns.exit(clsContext);
+    });
   }
 }
 

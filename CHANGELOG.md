@@ -2,6 +2,7 @@
 
 ## Unreleased
 - Trace through graphql-subscriptions PubSub/AsyncIterator.
+- Add missing cls.ns.exit calls in mongodb instrumentation (fix for leaking `cls.ns._set` entries).
 
 ## 1.69.0
 - Add graphql instrumentation ([graphql](https://www.npmjs.com/package/graphql)).
