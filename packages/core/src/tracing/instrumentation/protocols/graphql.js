@@ -118,6 +118,7 @@ function traceQueryOrMutation(
       // span still have the the correct parent span ID.
       span = activeEntrySpan;
       span.n = 'graphql.server';
+      delete span.data.http;
     } else {
       logger.warn(
         'Cannot start a GraphQL entry span when another span is already active. Currently, the following span is ' +
