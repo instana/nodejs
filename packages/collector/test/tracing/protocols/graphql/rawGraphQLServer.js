@@ -6,8 +6,7 @@ require('../../../../')({
   agentPort: process.env.AGENT_PORT,
   level: process.env.INSTANA_LOG_LEVEL || 'warn',
   tracing: {
-    enabled: process.env.TRACING_ENABLED !== 'false',
-    forceTransmissionStartingAt: 1
+    enabled: process.env.TRACING_ENABLED !== 'false'
   }
 });
 

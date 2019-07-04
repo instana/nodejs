@@ -110,11 +110,15 @@ function shimEmit(realEmit) {
       }
 
       res.on('finish', function() {
-        span.data.http.status = res.statusCode;
-        span.error = res.statusCode >= 500;
-        span.ec = span.error ? 1 : 0;
-        span.d = Date.now() - span.ts;
-        span.transmit();
+        // Check if a span with higher priority (like graphql.server) already finished this span, only overwrite
+        // span attributes if that is not the case.
+        if (!span.transmitted) {
+          span.data.http.status = res.statusCode;
+          span.error = res.statusCode >= 500;
+          span.ec = span.error ? 1 : 0;
+          span.d = Date.now() - span.ts;
+          span.transmit();
+        }
       });
 
       return realEmit.apply(originalThis, originalArgs);
