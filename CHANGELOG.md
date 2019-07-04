@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.69.2
 - Fix cases where span.ec would be overwritten by http server instrumentation.
 
 ## 1.69.1
