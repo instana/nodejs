@@ -13,6 +13,8 @@ const extraHeaders = process.env.EXTRA_HEADERS ? process.env.EXTRA_HEADERS.split
 const secretsMatcher = process.env.SECRETS_MATCHER ? process.env.SECRETS_MATCHER : 'contains-ignore-case';
 const secretsList = process.env.SECRETS_LIST ? process.env.SECRETS_LIST.split(',') : ['key', 'pass', 'secret'];
 const dropAllData = process.env.DROP_DATA === 'true';
+const logTraces = process.env.LOG_TRACES === 'true';
+
 let discoveries = {};
 const requests = {};
 let retrievedData = {
@@ -86,12 +88,17 @@ app.post(
 app.post(
   '/com.instana.plugin.nodejs/traces.:pid',
   checkExistenceOfKnownPid(function handleTraces(req, res) {
+    /* eslint-disable no-console */
     if (!dropAllData) {
       retrievedData.traces.push({
         pid: parseInt(req.params.pid, 10),
         time: Date.now(),
         data: req.body
       });
+    }
+    if (logTraces) {
+      console.log(JSON.stringify(req.body, null, 2));
+      console.log('--\n');
     }
     res.send('OK');
   })
