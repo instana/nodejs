@@ -151,7 +151,6 @@ function InstanaSpan(name) {
   this.error = false;
   this.ec = 0;
   this.ts = Date.now();
-  this.ta = 'node';
   this.d = 0;
   this.stack = [];
   this.data = undefined;
