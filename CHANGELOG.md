@@ -1,5 +1,8 @@
 # Changelog
 
+## Unreleased
+- Enable uncaught exception reporting in Node 12.x.
+
 ## 1.69.2
 - Fix cases where span.ec would be overwritten by http server instrumentation.
 
