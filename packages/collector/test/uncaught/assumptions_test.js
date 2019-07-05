@@ -1,6 +1,7 @@
 'use strict';
 
 const expect = require('chai').expect;
+const semver = require('semver');
 
 const controls = require('./apps/controls');
 
@@ -26,7 +27,9 @@ describe('uncaught exceptions assumptions - ', () => {
       expect(result.status).to.equal(7);
     });
 
-    it('keeps the original stack trace', () => {
+    const keepStackTraceTest = semver.lt(process.version, '12.6.0') ? it.bind(this) : it.skip.bind(this);
+
+    keepStackTraceTest('keeps the original stack trace', () => {
       const result = controls.rethrow();
       // Actually, it will be 7, see
       // https://nodejs.org/api/process.html#process_exit_codes
@@ -45,10 +48,13 @@ describe('uncaught exceptions assumptions - ', () => {
       const stdOut = result.stdout.toString('utf-8');
       const stdErr = result.stderr.toString('utf-8');
       expect(stdOut).to.match(/HANDLER 1\s*HANDLER 2\s*HANDLER 3/);
-      expect(stdErr).to.not.be.empty;
-      expect(stdErr).to.contain('Error: Boom');
-      expect(stdErr).to.contain('_onTimeout');
-      expect(stdErr).to.contain('test/uncaught/apps/rethrowWhenOtherHandlersArePresent.js');
+      if (semver.lt(process.version, '12.6.0')) {
+        // see https://github.com/nodejs/node/issues/28550
+        expect(stdErr).to.not.be.empty;
+        expect(stdErr).to.contain('Error: Boom');
+        expect(stdErr).to.contain('_onTimeout');
+        expect(stdErr).to.contain('test/uncaught/apps/rethrowWhenOtherHandlersArePresent.js');
+      }
     });
   });
 });
