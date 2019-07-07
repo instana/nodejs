@@ -59,6 +59,15 @@ function activateUncaughtExceptionHandling() {
     try {
       if (require.resolve('netlinkwrapper')) {
         logger.info('Reporting uncaught exceptions is enabled.');
+        if (process.version === 'v12.6.0') {
+          logger.warn(
+            'You are running Node.js v12.6.0 and have enabled reporting uncaught exceptions. To enable this feature, ' +
+              '@instana/collector will register an uncaughtException handler. Due to a bug in Node.js v12.6.0, the ' +
+              'original stack trace will get lost when this process is terminated with an uncaught exception. ' +
+              'Instana recommends to use a different Node.js version (<= v12.5.0 or >= v12.6.1). See ' +
+              'https://github.com/nodejs/node/issues/28550 for details.'
+          );
+        }
       } else {
         // This should actually not happen as require.resolve should either return a resolved filename or throw an
         // exception.

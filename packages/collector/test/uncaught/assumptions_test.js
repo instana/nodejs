@@ -1,7 +1,6 @@
 'use strict';
 
 const expect = require('chai').expect;
-const semver = require('semver');
 
 const controls = require('./apps/controls');
 
@@ -27,7 +26,9 @@ describe('uncaught exceptions assumptions - ', () => {
       expect(result.status).to.equal(7);
     });
 
-    const keepStackTraceTest = semver.lt(process.version, '12.6.0') ? it.bind(this) : it.skip.bind(this);
+    // See https://github.com/nodejs/node/issues/28550 for why this test is excluded in v12.6.0 and
+    // https://github.com/nodejs/node/pull/28562/commits/36fdf1aa6c87ccfaebabb8f9c8004baab0549b0b for the fix.
+    const keepStackTraceTest = process.version !== 'v12.6.0' ? it.bind(this) : it.skip.bind(this);
 
     keepStackTraceTest('keeps the original stack trace', () => {
       const result = controls.rethrow();
@@ -48,8 +49,9 @@ describe('uncaught exceptions assumptions - ', () => {
       const stdOut = result.stdout.toString('utf-8');
       const stdErr = result.stderr.toString('utf-8');
       expect(stdOut).to.match(/HANDLER 1\s*HANDLER 2\s*HANDLER 3/);
-      if (semver.lt(process.version, '12.6.0')) {
-        // see https://github.com/nodejs/node/issues/28550
+      if (process.version !== 'v12.6.0') {
+        // See https://github.com/nodejs/node/issues/28550 for why this test is excluded in v12.6.0 and
+        // https://github.com/nodejs/node/pull/28562/commits/36fdf1aa6c87ccfaebabb8f9c8004baab0549b0b for the fix.
         expect(stdErr).to.not.be.empty;
         expect(stdErr).to.contain('Error: Boom');
         expect(stdErr).to.contain('_onTimeout');
