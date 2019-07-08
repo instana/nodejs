@@ -46,10 +46,10 @@ function validateDefinition() {
         `${typeof lambdaDefinition.handler}.`
     );
     terminate(true);
-  } else if (lambdaDefinition.handler.length !== 2 && lambdaDefinition.handler.length !== 3) {
+  } else if (lambdaDefinition.handler.length > 3) {
     log(
-      `Lambda definition ${definitionPath} handler function has an unexpected number of arguments. Expecting either ` +
-        '2 or 3 arguments (promise/async API or callback API). The handler function expects ' +
+      `Lambda definition ${definitionPath} handler function has an unexpected number of arguments. Expecting up to ` +
+        '3 arguments (promise/async API or callback API). But the handler function takes ' +
         `${lambdaDefinition.handler.length} arguments.`
     );
     terminate(true);
@@ -64,7 +64,7 @@ function runHandler(handler, error) {
   const event = createEvent(error);
   registerErrorHandling();
   log(`Running ${definitionPath}.`);
-  if (handler.length === 2) {
+  if (handler.length <= 2) {
     handler(event, context).then(
       result => {
         unregisterErrorHandling();

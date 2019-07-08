@@ -5,6 +5,7 @@
   "main": "src/index.js",
   "scripts": {
     "acceptor-stub": "node test/acceptor_stub",
+    "audit": "npm audit --json | node bin/parse-audit.js",
     "test": "npm run test:mocha",
     "test:mocha": "mocha --reporter spec $(find test -iname '*test.js')",
     "lint": "eslint src test lambdas",
@@ -42,7 +43,7 @@
   ],
   "license": "MIT",
   "dependencies": {
-    "@instana/core": "^1.65.0",
+    "@instana/core": "^1.69.2",
     "semver": "^5.6.0"
   },
   "devDependencies": {

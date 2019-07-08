@@ -6,7 +6,8 @@ const consoleLogger = require('../util/console_logger');
 const acceptorConnector = require('../util/acceptor_connector');
 const identityProvider = require('./identity_provider');
 
-const { metrics, tracing, constants, spanBuffer } = instanaCore;
+const { metrics, tracing } = instanaCore;
+const { constants, spanBuffer } = tracing;
 let logger = consoleLogger;
 
 /**
@@ -23,6 +24,10 @@ exports.wrap = function wrap(config, originalHandler) {
     config = null;
   }
   switch (originalHandler.length) {
+    case 0:
+    // fall through
+    case 1:
+    // fall through
     case 2:
       return exports.wrapPromise(config, originalHandler);
     case 3:

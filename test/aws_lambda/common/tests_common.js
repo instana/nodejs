@@ -47,7 +47,7 @@ function prelude(opts) {
 }
 
 exports.registerTests = function registerTests(handlerDefinitionPath) {
-  describe('when everything is peachy', () => {
+  describe('when everything is peachy', function() {
     // - INSTANA_URL is configured
     // - acceptor is reachable
     // - lambda function ends with success
@@ -60,7 +60,7 @@ exports.registerTests = function registerTests(handlerDefinitionPath) {
     it('must capture metrics and spans', () => verify(control, false, true));
   });
 
-  describe('when lambda function yields an error', () => {
+  describe('when lambda function yields an error', function() {
     // - INSTANA_URL is configured
     // - acceptor is reachable
     // - lambda function ends with an error
@@ -74,7 +74,7 @@ exports.registerTests = function registerTests(handlerDefinitionPath) {
     it('must capture metrics and spans', () => verify(control, true, true));
   });
 
-  describe('with auto wrapper', () => {
+  describe('with auto wrapper', function() {
     // - INSTANA_URL is configured
     // - acceptor is reachable
     // - lambda function ends with success
@@ -89,7 +89,7 @@ exports.registerTests = function registerTests(handlerDefinitionPath) {
     it('must capture metrics and spans', () => verify(control, false, true));
   });
 
-  describe('with auto wrapper, when lambda function yields an error', () => {
+  describe('with auto wrapper, when lambda function yields an error', function() {
     // - INSTANA_URL is configured
     // - acceptor is reachable
     // - lambda function ends with an error
@@ -105,7 +105,7 @@ exports.registerTests = function registerTests(handlerDefinitionPath) {
     it('must capture metrics and spans', () => verify(control, true, true));
   });
 
-  describe('with config', () => {
+  describe('with config', function() {
     // - INSTANA_URL is configured
     // - acceptor is reachable
     // - client provides a config object
@@ -120,7 +120,7 @@ exports.registerTests = function registerTests(handlerDefinitionPath) {
     it('must capture metrics and spans', () => verify(control, false, true));
   });
 
-  describe('with config, when lambda function yields an error', () => {
+  describe('with config, when lambda function yields an error', function() {
     // - INSTANA_URL is configured
     // - acceptor is reachable
     // - client provides a config object
@@ -136,7 +136,7 @@ exports.registerTests = function registerTests(handlerDefinitionPath) {
     it('must capture metrics and spans', () => verify(control, true, true));
   });
 
-  describe('when INSTANA_URL is missing', () => {
+  describe('when INSTANA_URL is missing', function() {
     // - INSTANA_URL is missing
     // - lambda function ends with success
     const control = prelude.bind(this)({
@@ -147,7 +147,7 @@ exports.registerTests = function registerTests(handlerDefinitionPath) {
     it('must ignore the missing URL gracefully', () => verify(control, false, false));
   });
 
-  describe('when INSTANA_URL is missing and the lambda function yields an error', () => {
+  describe('when INSTANA_URL is missing and the lambda function yields an error', function() {
     // - INSTANA_URL is missing
     // - lambda function ends with an error
     const control = prelude.bind(this)({
@@ -159,7 +159,7 @@ exports.registerTests = function registerTests(handlerDefinitionPath) {
     it('must ignore the missing URL gracefully', () => verify(control, true, false));
   });
 
-  describe('with config, when INSTANA_URL is missing', () => {
+  describe('with config, when INSTANA_URL is missing', function() {
     // - INSTANA_URL is missing
     // - client provides a config
     // - lambda function ends with success
@@ -172,7 +172,7 @@ exports.registerTests = function registerTests(handlerDefinitionPath) {
     it('must ignore the missing URL gracefully', () => verify(control, false, false));
   });
 
-  describe('when INSTANA_KEY is missing', () => {
+  describe('when INSTANA_KEY is missing', function() {
     // - INSTANA_KEY is missing
     // - lambda function ends with success
     const control = prelude.bind(this)({
@@ -183,7 +183,7 @@ exports.registerTests = function registerTests(handlerDefinitionPath) {
     it('must ignore the missing key gracefully', () => verify(control, false, false));
   });
 
-  describe('when INSTANA_KEY is missing and the lambda function yields an error', () => {
+  describe('when INSTANA_KEY is missing and the lambda function yields an error', function() {
     // - INSTANA_KEY is missing
     // - lambda function ends with an error
     const control = prelude.bind(this)({
@@ -195,7 +195,7 @@ exports.registerTests = function registerTests(handlerDefinitionPath) {
     it('must ignore the missing key gracefully', () => verify(control, true, false));
   });
 
-  describe('when acceptor is down', () => {
+  describe('when acceptor is down', function() {
     // - INSTANA_URL is configured
     // - acceptor is not reachable
     // - lambda function ends with success
@@ -209,7 +209,7 @@ exports.registerTests = function registerTests(handlerDefinitionPath) {
     it('must ignore the failed request gracefully', () => verify(control, false, false));
   });
 
-  describe('when acceptor is down and the lambda function yields an error', () => {
+  describe('when acceptor is down and the lambda function yields an error', function() {
     // - INSTANA_URL is configured
     // - acceptor is not reachable
     // - lambda function ends with an error
@@ -224,7 +224,7 @@ exports.registerTests = function registerTests(handlerDefinitionPath) {
     it('must ignore the failed request gracefully', () => verify(control, true, false));
   });
 
-  describe('when acceptor is reachable but does not respond', () => {
+  describe('when acceptor is reachable but does not respond', function() {
     // - INSTANA_URL is configured
     // - acceptor is reachable, but will never respond (verifies that a reasonable timeout is applied -
     //   the default timeout would be two minutes)
@@ -331,7 +331,7 @@ exports.registerTests = function registerTests(handlerDefinitionPath) {
     expect(metrics.dependencies).to.exist;
     // Not testing `dependencies` metric - collection might not have finished when we send metrics.
     expect(metrics.description).to.equal('Monitor serverless Node.js code with Instana');
-    expect(metrics.gc).to.exist;
+    expect(metrics.memory).to.exist;
     expect(metrics.healthchecks).to.exist;
     expect(metrics.heapSpaces).to.exist;
     expect(metrics.name).to.equal('@instana/serverless');
