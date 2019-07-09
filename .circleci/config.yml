@@ -1,0 +1,186 @@
+# See https://circleci.com/docs/2.0/language-javascript/ for more details.
+
+version: 2
+
+shared: &shared
+  working_directory: ~/repo
+
+  environment:
+    - ELASTICSEARCH=127.0.0.1:9200
+    - MONGODB=127.0.0.1:27017
+    - ZOOKEEPER=127.0.0.1:2181
+    - KAFKA=127.0.0.1:9092
+    - REDIS=127.0.0.1:6379
+    - MYSQL_HOST=127.0.0.1
+    - MYSQL_PORT=3306
+    - MYSQL_USER=node
+    - MYSQL_PW=nodepw
+    - MYSQL_DB=nodedb
+    - POSTGRES_HOST=127.0.0.1
+    - POSTGRES_USER=node
+    - POSTGRES_PASSWORD=nodepw
+    - POSTGRES_DB=nodedb
+
+  steps:
+    - checkout
+    - run: node --version
+    - run: npm --version
+
+    - restore_cache:
+        keys:
+          - v3-root-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "package.json" }}
+          - v3-root-dependencies-{{ .Environment.CIRCLE_JOB }}-
+    - restore_cache:
+        keys:
+          - v3-core-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "packages/core/package.json" }}
+          - v3-core-dependencies-{{ .Environment.CIRCLE_JOB }}-
+    - restore_cache:
+        keys:
+          - v3-collector-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "packages/collector/package.json" }}
+          - v3-collector-dependencies-{{ .Environment.CIRCLE_JOB }}-
+    - restore_cache:
+        keys:
+          - v3-legacy-sensor-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "packages/legacy-sensor/package.json" }}
+          - v3-legacy-sensor-dependencies-{{ .Environment.CIRCLE_JOB }}-
+
+    - run: npm install
+    - run: ls -la packages/collector/node_modules
+
+    # When running tests in Node.js 8, we pin grpc to exactly 1.10.1.
+    # For more recent Node.js versions (>= 10) we use the latest 1.x as stated in package.json. We can't use grcp@1.10.1
+    # in Node.js 10 since it fails to build under Node.js >= 10. We still want to explicitly test the combination of
+    # Node.js 8 with grpc@1.10.1 for reasons.
+    - run: '([[ $(node -v) =~ ^v8.*$ ]] && npm install grpc@1.10.1) || true'
+
+    - save_cache:
+        paths:
+          - node_modules
+        key: v3-root-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "package.json" }}
+    - save_cache:
+        paths:
+          - packages/core/node_modules
+        key: v3-core-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "packages/core/package.json" }}
+    - save_cache:
+        paths:
+          - packages/collector/node_modules
+        key: v3-collector-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "packages/collector/package.json" }}
+    - save_cache:
+        paths:
+            - packages/legacy-sensor/node_modules
+        key: v3-legacy-sensor-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "packages/legacy-sensor/package.json" }}
+
+    - run: '([[ $(node -v) =~ ^v12.*$ ]] && npm run audit) || [[ ! $(node -v) =~ ^v12.*$ ]]'
+    - run: npm test
+
+
+elasticsearch: &elasticsearch
+  - image: elasticsearch:2.3.5
+
+kafka: &kafka
+  - image: wurstmeister/kafka:2.12-2.2.1
+    environment:
+      KAFKA_ADVERTISED_HOST_NAME: 127.0.0.1
+      KAFKA_CREATE_TOPICS: test:1:1
+      KAFKA_ZOOKEEPER_CONNECT: 127.0.0.1:2181
+
+mongo: &mongo
+  - image: circleci/mongo:4.1.13
+
+mssql: &mssql
+  - image: microsoft/mssql-server-linux:2017-CU13
+    environment:
+      ACCEPT_EULA: Y
+      SA_PASSWORD: stanCanHazMsSQL1
+
+mysql: &mysql
+  - image: circleci/mysql:8.0.1
+    environment:
+      MYSQL_ROOT_PASSWORD: nodepw
+      MYSQL_DATABASE: nodedb
+      MYSQL_USER: node
+      MYSQL_PASSWORD: nodepw
+      MYSQL_ROOT_HOST: 0.0.0.0
+
+postgres: &postgres
+  - image: circleci/postgres:10.9-alpine
+    environment:
+      POSTGRES_USER: node
+      POSTGRES_PASSWORD: nodepw
+      POSTGRES_DB: nodedb
+
+rabbitmq: &rabbitmq
+  - image: circleci/rabbitmq:3.7.7
+
+redis: &redis
+  - image: circleci/redis:4.0.14-alpine
+
+zookeeper: &zookeeper
+  - image: wurstmeister/zookeeper:latest
+
+
+jobs:
+  "node-12":
+    docker:
+      - image: circleci/node:12
+      - <<: *zookeeper
+      - <<: *elasticsearch
+      - <<: *mongo
+      - <<: *redis
+      - <<: *kafka
+      - <<: *mysql
+      - <<: *postgres
+      - <<: *mssql
+      - <<: *rabbitmq
+    <<: *shared
+
+  "node-10":
+    docker:
+      - image: circleci/node:10
+      - <<: *zookeeper
+      - <<: *elasticsearch
+      - <<: *mongo
+      - <<: *redis
+      - <<: *kafka
+      - <<: *mysql
+      - <<: *postgres
+      - <<: *mssql
+      - <<: *rabbitmq
+    <<: *shared
+
+  "node-8":
+    docker:
+      - image: circleci/node:8
+      - <<: *zookeeper
+      - <<: *elasticsearch
+      - <<: *mongo
+      - <<: *redis
+      - <<: *kafka
+      - <<: *mysql
+      - <<: *postgres
+      - <<: *mssql
+      - <<: *rabbitmq
+    <<: *shared
+
+  "node-6":
+    docker:
+      - image: circleci/node:6
+      - <<: *zookeeper
+      - <<: *elasticsearch
+      - <<: *mongo
+      - <<: *redis
+      - <<: *kafka
+      - <<: *mysql
+      - <<: *postgres
+      - <<: *mssql
+      - <<: *rabbitmq
+    <<: *shared
+
+workflows:
+  version: 2
+  build:
+    jobs:
+      - "node-12"
+      - "node-10"
+      - "node-8"
+      - "node-6"
+
