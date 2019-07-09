@@ -328,13 +328,14 @@ exports.registerTests = function registerTests(handlerDefinitionPath) {
     const metrics = pluginData.data;
     expect(metrics.activeHandles).to.be.a('number');
     expect(metrics.activeRequests).to.be.a('number');
+    // Not testing metrics that depend on fs actions, like 'dependencies', 'name' or 'description' - collection might
+    // not have finished when we send metrics.
     expect(metrics.dependencies).to.exist;
-    // Not testing `dependencies` metric - collection might not have finished when we send metrics.
-    expect(metrics.description).to.equal('Monitor serverless Node.js code with Instana');
+    // expect(metrics.description).to.equal('Monitor serverless Node.js code with Instana');
+    // expect(metrics.name).to.equal('@instana/serverless');
     expect(metrics.memory).to.exist;
     expect(metrics.healthchecks).to.exist;
     expect(metrics.heapSpaces).to.exist;
-    expect(metrics.name).to.equal('@instana/serverless');
     expectHeaders(allPlugins);
   }
 
