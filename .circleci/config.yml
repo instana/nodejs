@@ -1,0 +1,46 @@
+# See https://circleci.com/docs/2.0/language-javascript/ for more details.
+
+version: 2
+
+shared: &shared
+    working_directory: ~/repo
+
+    steps:
+      - checkout
+      - run: node --version
+      - run: npm --version
+
+      - restore_cache:
+          keys:
+            - v1-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "package.json" }}
+            - v1-dependencies-{{ .Environment.CIRCLE_JOB }}-
+
+      - run: npm install
+
+      - save_cache:
+          paths:
+            - node_modules
+          key: v1-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "package.json" }}
+
+      - run: '([[ $(node -v) =~ ^v10.*$ ]] && npm run audit) || [[ ! $(node -v) =~ ^v10.*$ ]]'
+      - run: npm test
+      - run: npm run lint
+
+jobs:
+  "node-10":
+    docker:
+      - image: circleci/node:10
+    <<: *shared
+
+  "node-8":
+    docker:
+      - image: circleci/node:8.10
+    <<: *shared
+
+workflows:
+  version: 2
+  build:
+    jobs:
+      - "node-10"
+      - "node-8"
+
