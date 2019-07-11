@@ -107,6 +107,10 @@ Namespace.prototype.runPromise = function runPromise(fn) {
     });
 };
 
+Namespace.prototype.runPromiseOrRunAndReturn = function runPromiseOrRunAndReturn(fn) {
+  throw new Error('Namespace.prototype.runPromiseOrRunAndReturn is not supported in Node.js < 8.');
+};
+
 Namespace.prototype.bind = function bindFactory(fn, context) {
   if (!context) {
     if (!this.active) {

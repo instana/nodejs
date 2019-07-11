@@ -24,6 +24,9 @@ module.exports = {
   reset: reset
 };
 
+/**
+ * Creates a new CLS namespace.
+ */
 function Namespace(name) {
   this.name = name;
   // changed in 2.7: no default context
@@ -34,6 +37,10 @@ function Namespace(name) {
   this._indent = 0;
 }
 
+/**
+ * Sets a key/value pair in the current CLS context. It can be retrieved later, but only from the same context
+ * or a child context.
+ */
 Namespace.prototype.set = function set(key, value) {
   if (!this.active) {
     throw new Error('No context available. ns.run() or ns.bind() must be called first.');
@@ -45,6 +52,10 @@ Namespace.prototype.set = function set(key, value) {
   return unset.bind(null, context, key, value);
 };
 
+/**
+ * Retrieves a value by key from the current CLS context (or a parent context), assuming the key/value pair has
+ * been set earlier in this context.
+ */
 Namespace.prototype.get = function get(key) {
   if (!this.active) {
     return undefined;
@@ -52,15 +63,23 @@ Namespace.prototype.get = function get(key) {
   return this.active[key];
 };
 
+/**
+ * Creates a new CLS context in this namespace.
+ */
 Namespace.prototype.createContext = function createContext() {
   // Prototype inherit existing context if created a new child context within existing context.
   let context = Object.create(this.active ? this.active : Object.prototype);
   context._ns_name = this.name;
   context.id = currentUid;
-
   return context;
 };
 
+/**
+ * Runs a function in a new CLS context. The context is left after the function terminates. Asynchronous work
+ * started in this function will happen in that new context. The return value from that function (if any) is discarded.
+ * If you aren't 100% certain that the function never returns a value or that client code never relies on that value,
+ * use runAndReturn instead.
+ */
 Namespace.prototype.run = function run(fn) {
   let context = this.createContext();
   this.enter(context);
@@ -73,6 +92,10 @@ Namespace.prototype.run = function run(fn) {
   }
 };
 
+/**
+ * Runs a function in a new CLS context and returns its return value. The context is left after the function
+ * terminates. Asynchronous work started in this function will happen in that new context.
+ */
 Namespace.prototype.runAndReturn = function runAndReturn(fn) {
   let value;
   this.run(function(context) {
@@ -82,9 +105,13 @@ Namespace.prototype.runAndReturn = function runAndReturn(fn) {
 };
 
 /**
- * Uses global Promise and assumes Promise is cls friendly or wrapped already.
- * @param {function} fn
- * @returns {*}
+ * Runs a function which returns a promise in a new CLS context and returns said promise. The context is left
+ * as soon as the the promise resolves/is rejected. Asynchronous work started in this promise will happen in that new
+ * context.
+ *
+ * If the given function does not create a then-able, an error will be thrown.
+ *
+ * This function assumes that the returned promise is CLS-friendly or wrapped already.
  */
 Namespace.prototype.runPromise = function runPromise(fn) {
   let context = this.createContext();
@@ -106,7 +133,49 @@ Namespace.prototype.runPromise = function runPromise(fn) {
     });
 };
 
-Namespace.prototype.bind = function bindFactory(fn, context) {
+/**
+ * Runs a function (which might or might not return a promise) in a new CLS context. If the given function indeed
+ * returns a then-able, this behaves like runPromise. If not, this behaves like runAndReturn. In particular, no error is
+ * thrown if the given function does not return a promise.
+ *
+ * This function assumes that the returned promise (if any) is CLS-friendly or wrapped already.
+ */
+Namespace.prototype.runPromiseOrRunAndReturn = function runPromiseOrRunAndReturn(fn) {
+  let isPromise = false;
+  let valueOrPromise;
+  const context = this.createContext();
+  this.enter(context);
+
+  try {
+    valueOrPromise = fn(context);
+    isPromise = valueOrPromise && valueOrPromise.then && valueOrPromise.catch;
+    if (isPromise) {
+      // fn returned a promise, so we behave like this.runPromise.
+      return valueOrPromise
+        .then(result => {
+          this.exit(context);
+          return result;
+        })
+        .catch(err => {
+          this.exit(context);
+          throw err;
+        });
+    }
+  } finally {
+    if (!isPromise) {
+      // fn did not return a promise, so we behave like this.runAndReturn.
+      this.exit(context);
+    }
+  }
+
+  return valueOrPromise;
+};
+
+/**
+ * Returns a wrapper around the given function which will enter CLS context which is active at the time of calling bind
+ * and leave that context once the function terminates. If no context is active, a new context will be created.
+ */
+Namespace.prototype.bind = function bind(fn, context) {
   if (!context) {
     if (!this.active) {
       context = this.createContext();
@@ -126,36 +195,10 @@ Namespace.prototype.bind = function bindFactory(fn, context) {
   };
 };
 
-Namespace.prototype.enter = function enter(context) {
-  assert.ok(context, 'context must be provided for entering');
-  this._set.push(this.active);
-  this.active = context;
-};
-
-Namespace.prototype.exit = function exit(context) {
-  assert.ok(context, 'context must be provided for exiting');
-
-  // Fast path for most exits that are at the top of the stack
-  if (this.active === context) {
-    assert.ok(this._set.length, "can't remove top context");
-    this.active = this._set.pop();
-    return;
-  }
-
-  // Fast search in the stack using lastIndexOf
-  let index = this._set.lastIndexOf(context);
-
-  if (index < 0) {
-    assert.ok(
-      index >= 0,
-      "context not currently entered; can't exit. \n" + util.inspect(this) + '\n' + util.inspect(context)
-    );
-  } else {
-    assert.ok(index, "can't remove top context");
-    this._set.splice(index, 1);
-  }
-};
-
+/**
+ * Binds the given emitter to the currently active CLS context. Work triggered by an emit from that emitter will happen
+ * in that CLS context.
+ */
 Namespace.prototype.bindEmitter = function bindEmitter(emitter) {
   assert.ok(emitter.on && emitter.addListener && emitter.emit, 'can only bind real EEs');
 
@@ -193,6 +236,36 @@ Namespace.prototype.bindEmitter = function bindEmitter(emitter) {
   }
 
   wrapEmitter(emitter, attach, bind);
+};
+
+Namespace.prototype.enter = function enter(context) {
+  assert.ok(context, 'context must be provided for entering');
+  this._set.push(this.active);
+  this.active = context;
+};
+
+Namespace.prototype.exit = function exit(context) {
+  assert.ok(context, 'context must be provided for exiting');
+
+  // Fast path for most exits that are at the top of the stack
+  if (this.active === context) {
+    assert.ok(this._set.length, "can't remove top context");
+    this.active = this._set.pop();
+    return;
+  }
+
+  // Fast search in the stack using lastIndexOf
+  let index = this._set.lastIndexOf(context);
+
+  if (index < 0) {
+    assert.ok(
+      index >= 0,
+      "context not currently entered; can't exit. \n" + util.inspect(this) + '\n' + util.inspect(context)
+    );
+  } else {
+    assert.ok(index, "can't remove top context");
+    this._set.splice(index, 1);
+  }
 };
 
 function getNamespace(name) {
