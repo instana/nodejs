@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.70.0
 - Enable uncaught exception reporting in Node 12.x.
 
 ## 1.69.2
