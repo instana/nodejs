@@ -14,138 +14,95 @@ let logger = consoleLogger;
  * Wraps an AWS Lambda handler so that metrics and traces are reported to Instana. This function will figure out if the
  * Lambda handler uses the callback style or promise/async function style by inspecting the number of function arguments
  * the function receives.
- *
- * You can also choose the wrapping explicitly by using `instana.awsLambda.wrapWithCallback` or
- * `instana.awsLambda.wrapPromise`/`instana.awsLambda.wrapAsync` directly, but there is usually no need to do so.
  */
 exports.wrap = function wrap(config, originalHandler) {
+  /* eslint-disable no-unused-vars */
   if (arguments.length === 1) {
     originalHandler = config;
     config = null;
   }
+
+  // Experiments show that the AWS Lambda runtime does not inspect the handlers signature for the number of arguments it
+  // accepts. But to be extra safe, we strive to return a function with the same number of arguments anyway.
   switch (originalHandler.length) {
     case 0:
-    // fall through
-    case 1:
-    // fall through
-    case 2:
-      return exports.wrapPromise(config, originalHandler);
-    case 3:
-      return exports.wrapWithCallback(config, originalHandler);
-    default:
-      logger.error(
-        'Unexpected number of arguments, please use instana.wrapPromise/instana.wrapAsync or ' +
-          'instana.wrapWithCallback explicitly.'
-      );
-      return originalHandler;
-  }
-};
-
-/**
- * Wraps a callback-style AWS Lambda handler so that metrics and traces are reported to Instana.
- *
- * There is usually no need to call this directly, instead, use `instana.awsLambda.wrap`.
- */
-exports.wrapWithCallback = function wrapWithCallback(config, originalHandler) {
-  if (arguments.length === 1) {
-    originalHandler = config;
-    config = null;
-  }
-
-  return function handler(event, context, lambdaCallback) {
-    init(event, context, config);
-
-    // TODO Manage incoming tracing headers
-    const incomingTraceId = null;
-    const incomingParentSpanId = null;
-    return tracing.getCls().ns.runAndReturn(() => {
-      const entrySpan = tracing
-        .getCls()
-        .startSpan('aws.lambda.entry', constants.ENTRY, incomingTraceId, incomingParentSpanId);
-      const callbackWrapper = function wrapper(originalError, originalResult) {
-        postHandler(entrySpan, !!originalError, () => {
-          lambdaCallback(originalError, originalResult);
-        });
+      return function handler0() {
+        return shimmedHandler(originalHandler, this, arguments, config);
       };
-
-      return originalHandler.call(null, event, context, callbackWrapper);
-    });
-  };
+    case 1:
+      return function handler1(event) {
+        return shimmedHandler(originalHandler, this, arguments, config);
+      };
+    case 2:
+      return function handler2(event, context) {
+        return shimmedHandler(originalHandler, this, arguments, config);
+      };
+    default:
+      return function handler3(event, context, callback) {
+        return shimmedHandler(originalHandler, this, arguments, config);
+      };
+  }
 };
 
-/**
- * Wraps a promise style AWS Lambda handler so that metrics and traces are reported to Instana. This function can also
- * be used for async functions because they create an implicit promise.
- *
- * There is usually no need to call this directly, instead, use `instana.awsLambda.wrap`.
- */
-exports.wrapPromise = function wrapPromise(config, originalHandler) {
-  if (arguments.length === 1) {
-    originalHandler = config;
-    config = null;
-  }
-
-  // TODO Respect any incoming tracing level headers
-  // if (req && req.headers && req.headers[constants.traceLevelHeaderNameLowerCase] === '0') {
-  //   tracing.getCls().setTracingLevel(req.headers[constants.traceLevelHeaderNameLowerCase]);
-  // }
-  // if (type !== 'request' || !isActive || tracing.getCls().tracingSuppressed()) {
-  //   return realEmit.apply(originalThis, originalArgs);
-  // }
-  // var incomingTraceId = getExistingTraceId(req);
-  // var incomingParentSpanId = getExistingSpanId(req);
+function shimmedHandler(originalHandler, originalThis, originalArgs, config) {
+  const event = originalArgs[0];
+  const context = originalArgs[1];
+  const lambdaCallback = originalArgs[2];
 
   const incomingTraceId = null;
   const incomingParentSpanId = null;
 
-  return function handler(event, context) {
-    init(event, context, config);
-    return tracing.getCls().ns.runPromise(() => {
-      const entrySpan = tracing
-        .getCls()
-        .startSpan('aws.lambda.entry', constants.ENTRY, incomingTraceId, incomingParentSpanId);
+  init(event, context, config);
 
-      const originalPromise = originalHandler(event, context);
-      if (originalPromise == null) {
-        return Promise.reject(
-          new Error(
-            'The wrapped function should have returned a promise/thenable, but it returned nothing (null or undefined).'
-          )
-        );
-      } else if (!originalPromise.then) {
-        return Promise.reject(
-          new Error(
-            'The wrapped function should have returned a promise/thenable, but the returned value does not have a ' +
-              'then property.'
-          )
-        );
-      } else if (typeof originalPromise.then !== 'function') {
-        return Promise.reject(
-          new Error(
-            "The wrapped function should have returned a promise/thenable, but the returned value's then property is " +
-              'not a function.'
-          )
-        );
+  // The AWS lambda runtime does not seem to inspect the number of arguments the handler function expects. Instead, it
+  // always call the handler with three arguments (event, context, callback), no matter if the handler will use the
+  // callback or not. If the handler returns a promise, the runtime uses the that promise's value when it resolves as
+  // the result. If the handler calls the callback, that value is used as the result. If the handler does both
+  // (return a promise and resolve it _and_ call the callback), it depends on the timing. Whichever happens first
+  // dictates the result of the lambda invocation, the later result is ignored. To mat
+  let handlerHasFinished = false;
+  return tracing.getCls().ns.runPromiseOrRunAndReturn(() => {
+    const entrySpan = tracing
+      .getCls()
+      .startSpan('aws.lambda.entry', constants.ENTRY, incomingTraceId, incomingParentSpanId);
+    entrySpan.data = {
+      lambda: {
       }
-      // Promise.prototype.finally would be the right thing to do here instead of two separate handlers for the success
-      // and error case, but it is not available, neither in 6.10 nor in 8.10. It only became available as of
-      // Node.js 10.0.0.
-      return originalPromise.then(
-        postPromise.bind(null, context, entrySpan, false),
-        postPromise.bind(null, context, entrySpan, true)
-      );
-    });
-  };
-};
+    };
 
-/**
- * An alias for `instana.awsLambda.wrapPromise`. Wraps a promise style or async function AWS Lambda handler so that
- * metrics and traces are reported to Instana. (Async functions create an implicit promise, so from the perspective of
- * thispackage promise based handlers and async function handlers are equivalenequivalent
- *
- * There is usually no need to call this directly, instead, use `instana.awsLambda.wrap`.
- */
-exports.wrapAsync = exports.wrapPromise;
+    originalArgs[2] = function wrapper(originalError, originalResult) {
+      if (handlerHasFinished) {
+        return;
+      }
+      handlerHasFinished = true;
+      postHandler(entrySpan, originalError, () => {
+        lambdaCallback(originalError, originalResult);
+      });
+    };
+
+    const handlerPromise = originalHandler.apply(originalThis, originalArgs);
+    if (handlerPromise && typeof handlerPromise.then === 'function') {
+      return handlerPromise.then(
+        value => {
+          if (handlerHasFinished) {
+            return Promise.resolve(value);
+          }
+          handlerHasFinished = true;
+          return postPromise(context, entrySpan, null, value);
+        },
+        error => {
+          if (handlerHasFinished) {
+            return Promise.reject(error);
+          }
+          handlerHasFinished = true;
+          return postPromise(context, entrySpan, error);
+        }
+      );
+    } else {
+      return handlerPromise;
+    }
+  });
+}
 
 /**
  * Initialize the wrapper.
@@ -172,11 +129,11 @@ function init(event, context, config) {
 /**
  * Code to be executed after the promise returned by the original handler has completed.
  */
-function postPromise(context, entrySpan, isError, value) {
+function postPromise(context, entrySpan, error, value) {
   return new Promise((resolve, reject) => {
-    postHandler(entrySpan, isError, () => {
-      if (isError) {
-        reject(value);
+    postHandler(entrySpan, error, () => {
+      if (error) {
+        reject(error);
       } else {
         resolve(value);
       }
@@ -184,9 +141,12 @@ function postPromise(context, entrySpan, isError, value) {
   });
 }
 
-function postHandler(entrySpan, isError, callback) {
-  entrySpan.error = isError;
-  entrySpan.ec = isError ? 1 : 0;
+function postHandler(entrySpan, error, callback) {
+  if (error) {
+    entrySpan.error = true;
+    entrySpan.ec = 1;
+    entrySpan.data.lambda.error = error.message ? error.message : error.toString();
+  }
   entrySpan.d = Date.now() - entrySpan.ts;
 
   entrySpan.transmit();

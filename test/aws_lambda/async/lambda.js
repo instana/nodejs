@@ -31,6 +31,4 @@ const args = process.env.WITH_CONFIG
     ]
   : [handler];
 
-const wrapper = process.env.USE_STYLE_DETECTION ? instana.awsLambda.wrap : instana.awsLambda.wrapAsync;
-
-exports.handler = wrapper.apply(instana.awsLambda, args);
+exports.handler = instana.awsLambda.wrap.apply(instana.awsLambda, args);

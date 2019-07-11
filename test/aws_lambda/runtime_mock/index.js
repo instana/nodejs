@@ -64,9 +64,45 @@ function runHandler(handler, error) {
   const event = createEvent(error);
   registerErrorHandling();
   log(`Running ${definitionPath}.`);
-  if (handler.length <= 2) {
-    handler(event, context).then(
+
+  let handlerHasFinished = false;
+  const promise = handler(event, context, (err, result) => {
+    if (handlerHasFinished) {
+      return;
+    }
+    handlerHasFinished = true;
+    unregisterErrorHandling();
+    if (err) {
+      log(`Lambda ${definitionPath} handler has failed:`);
+      log(err);
+      sendToParent({
+        type: 'lambda-result',
+        error: true,
+        payload: { message: err.message }
+      });
+
+      // eslint-disable-next-line consistent-return
+      return terminate(true);
+    }
+    log(`Lambda ${definitionPath} handler has returned successfully, result: ${JSON.stringify(result)}.`);
+    sendToParent({
+      type: 'lambda-result',
+      error: false,
+      payload: result
+    });
+    // eslint-disable-next-line consistent-return
+    return terminate();
+  });
+
+  if (promise && typeof promise.then === 'function') {
+    promise.then(
       result => {
+        if (handlerHasFinished) {
+          throw new Error(
+            'The promise returned by the handler has resolved after the handler has already finished via callback'
+          );
+        }
+        handlerHasFinished = true;
         unregisterErrorHandling();
         log(`Lambda ${definitionPath} handler has returned successfully, result: ${JSON.stringify(result)}.`);
         sendToParent({
@@ -77,6 +113,12 @@ function runHandler(handler, error) {
         return terminate();
       },
       err => {
+        if (handlerHasFinished) {
+          throw new Error(
+            'The promise returned by the handler has been rejected after the handler has already finished via callback'
+          );
+        }
+        handlerHasFinished = true;
         unregisterErrorHandling();
         log(`Lambda ${definitionPath} handler has failed:`);
         log(err);
@@ -88,31 +130,6 @@ function runHandler(handler, error) {
         return terminate(true);
       }
     );
-  } else if (handler.length === 3) {
-    handler(event, context, (err, result) => {
-      unregisterErrorHandling();
-      if (err) {
-        log(`Lambda ${definitionPath} handler has failed:`);
-        log(err);
-        sendToParent({
-          type: 'lambda-result',
-          error: true,
-          payload: { message: err.message }
-        });
-
-        return terminate(true);
-      }
-      log(`Lambda ${definitionPath} handler has returned successfully, result: ${JSON.stringify(result)}.`);
-      sendToParent({
-        type: 'lambda-result',
-        error: false,
-        payload: result
-      });
-      return terminate();
-    });
-  } else {
-    unregisterErrorHandling();
-    throw new Error('This should not have happened at all.');
   }
 }
 

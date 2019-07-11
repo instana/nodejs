@@ -28,9 +28,6 @@ function prelude(opts) {
   if (opts.instanaKey) {
     env.INSTANA_KEY = opts.instanaKey;
   }
-  if (opts.autoWrapper) {
-    env.USE_STYLE_DETECTION = 'true';
-  }
   if (opts.withConfig) {
     env.WITH_CONFIG = 'true';
   }
@@ -68,37 +65,6 @@ exports.registerTests = function registerTests(handlerDefinitionPath) {
       handlerDefinitionPath,
       instanaUrl: config.acceptorBaseUrl,
       instanaKey: config.instanaKey,
-      error: true
-    });
-
-    it('must capture metrics and spans', () => verify(control, true, true));
-  });
-
-  describe('with auto wrapper', function() {
-    // - INSTANA_URL is configured
-    // - acceptor is reachable
-    // - lambda function ends with success
-    // - with auto wrapper/lambda style detection
-    const control = prelude.bind(this)({
-      handlerDefinitionPath,
-      instanaUrl: config.acceptorBaseUrl,
-      instanaKey: config.instanaKey,
-      autoWrapper: true
-    });
-
-    it('must capture metrics and spans', () => verify(control, false, true));
-  });
-
-  describe('with auto wrapper, when lambda function yields an error', function() {
-    // - INSTANA_URL is configured
-    // - acceptor is reachable
-    // - lambda function ends with an error
-    // - with auto wrapper/lambda style detection
-    const control = prelude.bind(this)({
-      handlerDefinitionPath,
-      instanaUrl: config.acceptorBaseUrl,
-      instanaKey: config.instanaKey,
-      autoWrapper: true,
       error: true
     });
 
@@ -245,6 +211,7 @@ exports.registerTests = function registerTests(handlerDefinitionPath) {
       expect(control.getLambdaErrors().length).to.equal(1);
       expect(control.getLambdaResults()).to.be.empty;
       const error = control.getLambdaErrors()[0];
+      expect(error).to.exist;
       expect(error.message).to.equal('Boom!');
     } else {
       if (control.getLambdaErrors() && control.getLambdaErrors().length > 0) {
@@ -291,11 +258,14 @@ exports.registerTests = function registerTests(handlerDefinitionPath) {
       expect(span.f).to.be.an('object');
       expect(span.f.e).to.equal('arn:aws:lambda:us-east-2:410797082306:function:functionName:$LATEST');
       expect(span.async).to.equal(false);
+      expect(span.data.lambda).to.be.an('object');
       if (lambdaError) {
+        expect(span.data.lambda.error).to.equal('Boom!');
         expect(span.error).to.be.true;
         expect(span.ec).to.equal(1);
       } else {
-        expect(span.error).to.equal(false);
+        expect(span.data.lambda.error).to.not.exist;
+        expect(span.error).to.be.false;
         expect(span.ec).to.equal(0);
       }
       expectHeaders(span);
