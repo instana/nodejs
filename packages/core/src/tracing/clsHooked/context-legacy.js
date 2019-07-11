@@ -1,7 +1,7 @@
 /* eslint-env es6 */
 /* eslint-disable */
 
-// Copy of
+// This evolved from a copy of
 // Jeff-Lewis, feat(compat): v4.2 for node v4.7-v8 (0ebfb9b  on Jul 21, 2017)
 // https://github.com/Jeff-Lewis/cls-hooked/blob/066c6c4027a7924b06997cc6b175b1841342abdc/context-legacy.js
 
@@ -15,14 +15,10 @@ const unset = require('./unset');
 
 const CONTEXTS_SYMBOL = 'instanaClsHooked@contexts';
 
-//const trace = [];
-
 const invertedProviders = [];
 for (let key in asyncHook.providers) {
   invertedProviders[asyncHook.providers[key]] = key;
 }
-
-const DEBUG_CLS_HOOKED = process.env.DEBUG_CLS_HOOKED;
 
 let currentUid = -1;
 
@@ -31,7 +27,6 @@ module.exports = {
   createNamespace: createNamespace,
   destroyNamespace: destroyNamespace,
   reset: reset,
-  //trace: trace,
 };
 
 function Namespace(name) {
@@ -48,10 +43,6 @@ Namespace.prototype.set = function set(key, value) {
     throw new Error('No context available. ns.run() or ns.bind() must be called first.');
   }
 
-  if (DEBUG_CLS_HOOKED) {
-    debug2('    SETTING KEY:' + key + '=' + value + ' in ns:' + this.name + ' uid:' + currentUid + ' active:' +
-      util.inspect(this.active, true));
-  }
   var context = this.active;
   context[key] = value;
   return unset.bind(null, context, key, value);
@@ -59,33 +50,15 @@ Namespace.prototype.set = function set(key, value) {
 
 Namespace.prototype.get = function get(key) {
   if (!this.active) {
-    if (DEBUG_CLS_HOOKED) {
-      debug2('    GETTING KEY:' + key + '=undefined' + ' ' + this.name + ' uid:' + currentUid + ' active:' +
-        util.inspect(this.active, true));
-    }
     return undefined;
-  }
-  if (DEBUG_CLS_HOOKED) {
-    debug2('    GETTING KEY:' + key + '=' + this.active[key] + ' ' + this.name + ' uid:' + currentUid + ' active:' +
-      util.inspect(this.active, true));
   }
   return this.active[key];
 };
 
 Namespace.prototype.createContext = function createContext() {
-  if (DEBUG_CLS_HOOKED) {
-    debug2('   CREATING Context: ' + this.name + ' uid:' + currentUid + ' len:' + this._set.length + ' ' + ' active:' +
-      util.inspect(this.active, true, 2, true));
-  }
-
   let context = Object.create(this.active ? this.active : Object.prototype);
   context._ns_name = this.name;
   context.id = currentUid;
-
-  if (DEBUG_CLS_HOOKED) {
-    debug2('   CREATED Context: ' + this.name + ' uid:' + currentUid + ' len:' + this._set.length + ' ' + ' context:' +
-      util.inspect(context, true, 2, true));
-  }
 
   return context;
 };
@@ -94,18 +67,10 @@ Namespace.prototype.run = function run(fn) {
   let context = this.createContext();
   this.enter(context);
   try {
-    if (DEBUG_CLS_HOOKED) {
-      debug2(' BEFORE RUN: ' + this.name + ' uid:' + currentUid + ' len:' + this._set.length + ' ' +
-        util.inspect(context));
-    }
     fn(context);
     return context;
   }
   finally {
-    if (DEBUG_CLS_HOOKED) {
-      debug2(' AFTER RUN: ' + this.name + ' uid:' + currentUid + ' len:' + this._set.length + ' ' +
-        util.inspect(context));
-    }
     this.exit(context);
   }
 };
@@ -132,25 +97,12 @@ Namespace.prototype.runPromise = function runPromise(fn) {
     throw new Error('fn must return a promise.');
   }
 
-  if (DEBUG_CLS_HOOKED) {
-    debug2(' BEFORE runPromise: ' + this.name + ' uid:' + currentUid + ' len:' + this._set.length + ' ' +
-      util.inspect(context));
-  }
-
   return promise
     .then(result => {
-      if (DEBUG_CLS_HOOKED) {
-        debug2(' AFTER runPromise: ' + this.name + ' uid:' + currentUid + ' len:' + this._set.length + ' ' +
-          util.inspect(context));
-      }
       this.exit(context);
       return result;
     })
     .catch(err => {
-      if (DEBUG_CLS_HOOKED) {
-        debug2(' AFTER runPromise: ' + this.name + ' uid:' + currentUid + ' len:' + this._set.length + ' ' +
-          util.inspect(context));
-      }
       this.exit(context);
       throw err;
     });
@@ -180,21 +132,12 @@ Namespace.prototype.bind = function bindFactory(fn, context) {
 
 Namespace.prototype.enter = function enter(context) {
   assert.ok(context, 'context must be provided for entering');
-  if (DEBUG_CLS_HOOKED) {
-    debug2('  ENTER ' + this.name + ' uid:' + currentUid + ' len:' + this._set.length + ' context: ' +
-      util.inspect(context));
-  }
-
   this._set.push(this.active);
   this.active = context;
 };
 
 Namespace.prototype.exit = function exit(context) {
   assert.ok(context, 'context must be provided for exiting');
-  if (DEBUG_CLS_HOOKED) {
-    debug2('  EXIT ' + this.name + ' uid:' + currentUid + ' len:' + this._set.length + ' context: ' +
-      util.inspect(context));
-  }
 
   // Fast path for most exits that are at the top of the stack
   if (this.active === context) {
@@ -207,9 +150,6 @@ Namespace.prototype.exit = function exit(context) {
   let index = this._set.lastIndexOf(context);
 
   if (index < 0) {
-    if (DEBUG_CLS_HOOKED) {
-      debug2('??ERROR?? context exiting but not entered - ignoring: ' + util.inspect(context));
-    }
     assert.ok(index >= 0, 'context not currently entered; can\'t exit. \n' + util.inspect(this) + '\n' +
       util.inspect(context));
   } else {
@@ -264,9 +204,6 @@ function getNamespace(name) {
 function createNamespace(name) {
   assert.ok(name, 'namespace must be given a name.');
 
-  if (DEBUG_CLS_HOOKED) {
-    debug2('CREATING NAMESPACE ' + name);
-  }
   let namespace = new Namespace(name);
   namespace.id = currentUid;
 
@@ -278,59 +215,26 @@ function createNamespace(name) {
       //CHAIN Parent's Context onto child if none exists. This is needed to pass net-events.spec
       if (parentUid) {
         namespace._contexts.set(uid, namespace._contexts.get(parentUid));
-        if (DEBUG_CLS_HOOKED) {
-          debug2('PARENTID: ' + name + ' uid:' + uid + ' parent:' + parentUid + ' provider:' + provider);
-        }
       } else {
         namespace._contexts.set(currentUid, namespace.active);
       }
-
-      if (DEBUG_CLS_HOOKED) {
-        debug2('INIT ' + name + ' uid:' + uid + ' parent:' + parentUid + ' provider:' + invertedProviders[provider]
-          + ' active:' + util.inspect(namespace.active, true));
-      }
-
     },
     pre(uid, handle) {
       currentUid = uid;
       let context = namespace._contexts.get(uid);
       if (context) {
-        if (DEBUG_CLS_HOOKED) {
-          debug2(' PRE ' + name + ' uid:' + uid + ' handle:' + getFunctionName(handle) + ' context:' +
-            util.inspect(context));
-        }
-
         namespace.enter(context);
-      } else {
-        if (DEBUG_CLS_HOOKED) {
-          debug2(' PRE MISSING CONTEXT ' + name + ' uid:' + uid + ' handle:' + getFunctionName(handle));
-        }
       }
     },
     post(uid, handle) {
       currentUid = uid;
       let context = namespace._contexts.get(uid);
       if (context) {
-        if (DEBUG_CLS_HOOKED) {
-          debug2(' POST ' + name + ' uid:' + uid + ' handle:' + getFunctionName(handle) + ' context:' +
-            util.inspect(context));
-        }
-
         namespace.exit(context);
-      } else {
-        if (DEBUG_CLS_HOOKED) {
-          debug2(' POST MISSING CONTEXT ' + name + ' uid:' + uid + ' handle:' + getFunctionName(handle));
-        }
       }
     },
     destroy(uid) {
       currentUid = uid;
-
-      if (DEBUG_CLS_HOOKED) {
-        debug2('DESTROY ' + name + ' uid:' + uid + ' context:' + util.inspect(namespace._contexts.get(currentUid))
-          + ' active:' + util.inspect(namespace.active, true));
-      }
-
       namespace._contexts.delete(uid);
     }
   });
@@ -364,41 +268,3 @@ if (asyncHook._state && !asyncHook._state.enabled) {
   asyncHook.enable();
 }
 
-function debug2(msg) {
-  if (process.env.DEBUG) {
-    process._rawDebug(msg);
-  }
-}
-
-
-/*function debug(from, ns) {
- process._rawDebug('DEBUG: ' + util.inspect({
- from: from,
- currentUid: currentUid,
- context: ns ? ns._contexts.get(currentUid) : 'no ns'
- }, true, 2, true));
- }*/
-
-
-function getFunctionName(fn) {
-  if (!fn) {
-    return fn;
-  }
-  if (typeof fn === 'function') {
-    if (fn.name) {
-      return fn.name;
-    }
-    return (fn.toString().trim().match(/^function\s*([^\s(]+)/) || [])[1];
-  } else if (fn.constructor && fn.constructor.name) {
-    return fn.constructor.name;
-  }
-}
-
-
-// Add back to callstack
-if (DEBUG_CLS_HOOKED) {
-  var stackChain = require('stack-chain');
-  for (var modifier in stackChain.filter._modifiers) {
-    stackChain.filter.deattach(modifier);
-  }
-}
