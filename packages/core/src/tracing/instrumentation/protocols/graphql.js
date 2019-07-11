@@ -218,7 +218,7 @@ function addFieldsAndArguments(span, definition) {
           return arg.name && typeof arg.name.value === 'string' ? arg.name.value : '?';
         });
       }
-    }, {});
+    });
   });
 }
 
