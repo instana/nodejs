@@ -21,7 +21,7 @@ module.exports = {
   getNamespace: getNamespace,
   createNamespace: createNamespace,
   destroyNamespace: destroyNamespace,
-  reset: reset,
+  reset: reset
 };
 
 function Namespace(name) {
@@ -75,7 +75,7 @@ Namespace.prototype.run = function run(fn) {
 
 Namespace.prototype.runAndReturn = function runAndReturn(fn) {
   let value;
-  this.run(function (context) {
+  this.run(function(context) {
     value = fn(context);
   });
   return value;
@@ -137,7 +137,7 @@ Namespace.prototype.exit = function exit(context) {
 
   // Fast path for most exits that are at the top of the stack
   if (this.active === context) {
-    assert.ok(this._set.length, 'can\'t remove top context');
+    assert.ok(this._set.length, "can't remove top context");
     this.active = this._set.pop();
     return;
   }
@@ -146,9 +146,12 @@ Namespace.prototype.exit = function exit(context) {
   let index = this._set.lastIndexOf(context);
 
   if (index < 0) {
-    assert.ok(index >= 0, 'context not currently entered; can\'t exit. \n' + util.inspect(this) + '\n' + util.inspect(context));
+    assert.ok(
+      index >= 0,
+      "context not currently entered; can't exit. \n" + util.inspect(this) + '\n' + util.inspect(context)
+    );
   } else {
-    assert.ok(index, 'can\'t remove top context');
+    assert.ok(index, "can't remove top context");
     this._set.splice(index, 1);
   }
 };
@@ -182,7 +185,7 @@ Namespace.prototype.bindEmitter = function bindEmitter(emitter) {
 
     let wrapped = unwrapped;
     let unwrappedContexts = unwrapped[CONTEXTS_SYMBOL];
-    Object.keys(unwrappedContexts).forEach(function (name) {
+    Object.keys(unwrappedContexts).forEach(function(name) {
       let thunk = unwrappedContexts[name];
       wrapped = thunk.namespace.bind(wrapped, thunk.context);
     });
@@ -205,10 +208,9 @@ function createNamespace(name) {
   const hook = async_hooks.createHook({
     init(asyncId, type, triggerId, resource) {
       currentUid = async_hooks.executionAsyncId();
-      if(namespace.active) {
+      if (namespace.active) {
         namespace._contexts.set(asyncId, namespace.active);
-
-      } else if(currentUid === 0){
+      } else if (currentUid === 0) {
         // CurrentId will be 0 when triggered from C++. Promise events
         // https://github.com/nodejs/node/blob/master/doc/api/async_hooks.md#triggerid
         const triggerId = async_hooks.triggerAsyncId();
@@ -256,7 +258,7 @@ function destroyNamespace(name) {
   let namespace = getNamespace(name);
 
   assert.ok(namespace, 'can\'t delete nonexistent namespace! "' + name + '"');
-  assert.ok(namespace.id, 'don\'t assign to process.namespaces directly! ' + util.inspect(namespace));
+  assert.ok(namespace.id, "don't assign to process.namespaces directly! " + util.inspect(namespace));
 
   process.namespaces[name] = null;
 }
@@ -264,7 +266,7 @@ function destroyNamespace(name) {
 function reset() {
   // must unregister async listeners
   if (process.namespaces) {
-    Object.keys(process.namespaces).forEach(function (name) {
+    Object.keys(process.namespaces).forEach(function(name) {
       destroyNamespace(name);
     });
   }
@@ -272,4 +274,3 @@ function reset() {
 }
 
 process.namespaces = {};
-

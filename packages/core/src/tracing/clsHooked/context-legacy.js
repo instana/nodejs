@@ -26,7 +26,7 @@ module.exports = {
   getNamespace: getNamespace,
   createNamespace: createNamespace,
   destroyNamespace: destroyNamespace,
-  reset: reset,
+  reset: reset
 };
 
 function Namespace(name) {
@@ -69,15 +69,14 @@ Namespace.prototype.run = function run(fn) {
   try {
     fn(context);
     return context;
-  }
-  finally {
+  } finally {
     this.exit(context);
   }
 };
 
 Namespace.prototype.runAndReturn = function runAndReturn(fn) {
   var value;
-  this.run(function (context) {
+  this.run(function(context) {
     value = fn(context);
   });
   return value;
@@ -112,8 +111,7 @@ Namespace.prototype.bind = function bindFactory(fn, context) {
   if (!context) {
     if (!this.active) {
       context = this.createContext();
-    }
-    else {
+    } else {
       context = this.active;
     }
   }
@@ -123,8 +121,7 @@ Namespace.prototype.bind = function bindFactory(fn, context) {
     self.enter(context);
     try {
       return fn.apply(this, arguments);
-    }
-    finally {
+    } finally {
       self.exit(context);
     }
   };
@@ -141,7 +138,7 @@ Namespace.prototype.exit = function exit(context) {
 
   // Fast path for most exits that are at the top of the stack
   if (this.active === context) {
-    assert.ok(this._set.length, 'can\'t remove top context');
+    assert.ok(this._set.length, "can't remove top context");
     this.active = this._set.pop();
     return;
   }
@@ -150,10 +147,12 @@ Namespace.prototype.exit = function exit(context) {
   let index = this._set.lastIndexOf(context);
 
   if (index < 0) {
-    assert.ok(index >= 0, 'context not currently entered; can\'t exit. \n' + util.inspect(this) + '\n' +
-      util.inspect(context));
+    assert.ok(
+      index >= 0,
+      "context not currently entered; can't exit. \n" + util.inspect(this) + '\n' + util.inspect(context)
+    );
   } else {
-    assert.ok(index, 'can\'t remove top context');
+    assert.ok(index, "can't remove top context");
     this._set.splice(index, 1);
   }
 };
@@ -187,7 +186,7 @@ Namespace.prototype.bindEmitter = function bindEmitter(emitter) {
 
     let wrapped = unwrapped;
     let unwrappedContexts = unwrapped[CONTEXTS_SYMBOL];
-    Object.keys(unwrappedContexts).forEach(function (name) {
+    Object.keys(unwrappedContexts).forEach(function(name) {
       let thunk = unwrappedContexts[name];
       wrapped = thunk.namespace.bind(wrapped, thunk.context);
     });
@@ -247,7 +246,7 @@ function destroyNamespace(name) {
   let namespace = getNamespace(name);
 
   assert.ok(namespace, 'can\'t delete nonexistent namespace! "' + name + '"');
-  assert.ok(namespace.id, 'don\'t assign to process.namespaces directly! ' + util.inspect(namespace));
+  assert.ok(namespace.id, "don't assign to process.namespaces directly! " + util.inspect(namespace));
 
   process.namespaces[name] = null;
 }
@@ -255,7 +254,7 @@ function destroyNamespace(name) {
 function reset() {
   // must unregister async listeners
   if (process.namespaces) {
-    Object.keys(process.namespaces).forEach(function (name) {
+    Object.keys(process.namespaces).forEach(function(name) {
       destroyNamespace(name);
     });
   }
@@ -267,4 +266,3 @@ process.namespaces = {};
 if (asyncHook._state && !asyncHook._state.enabled) {
   asyncHook.enable();
 }
-
