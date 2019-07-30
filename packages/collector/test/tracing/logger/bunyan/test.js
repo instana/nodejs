@@ -46,7 +46,10 @@ describe('tracing/logger/bunyan', function() {
 
     it('must trace fatal', () => runTest('fatal', true, 'Fatal message - should be traced.'));
 
-    it('must trace error object without message', () => runTest('error-object-only', true, 'This is an error.'));
+    it("must capture an error object's message", () => runTest('error-object-only', true, 'This is an error.'));
+
+    it("must capture a nested error object's message", () =>
+      runTest('nested-error-object-only', true, 'This is a nested error.'));
 
     it('must not serialize random object', () =>
       runTest(
@@ -56,8 +59,11 @@ describe('tracing/logger/bunyan', function() {
           'The Bunyan "fields" argument will not be serialized by Instana for performance reasons.'
       ));
 
-    it('must trace error object and string', () =>
+    it("must capture an error object's message and an additional string", () =>
       runTest('error-object-and-string', true, 'This is an error. -- Error message - should be traced.'));
+
+    it("must capture a nested error object's message and an additional string", () =>
+      runTest('nested-error-object-and-string', true, 'This is a nested error. -- Error message - should be traced.'));
 
     it('must trace random object and string', () =>
       runTest('error-random-object-and-string', true, 'Error message - should be traced.'));
@@ -102,8 +108,8 @@ describe('tracing/logger/bunyan', function() {
     });
   });
 
-  function runTest(level, expectErroneous, message) {
-    return appControls.trigger(level).then(() =>
+  function runTest(url, expectErroneous, message) {
+    return appControls.trigger(url).then(() =>
       utils.retry(() =>
         agentControls.getSpans().then(spans => {
           const entrySpan = utils.expectOneMatching(spans, span => {
