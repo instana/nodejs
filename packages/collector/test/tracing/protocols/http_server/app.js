@@ -4,7 +4,7 @@
 
 require('../../../../')({
   agentPort: process.env.AGENT_PORT,
-  level: 'debug',
+  level: 'info',
   tracing: {
     forceTransmissionStartingAt: 1
   }
@@ -13,6 +13,7 @@ require('../../../../')({
 const logPrefix = `HTTP: Server (${process.pid}):\t`;
 
 const http = require('http');
+const url = require('url');
 const port = process.env.APP_PORT || 3000;
 const app = new http.Server();
 
@@ -20,7 +21,21 @@ app.on('request', (req, res) => {
   if (process.env.WITH_STDOUT) {
     log(`${req.method} ${req.url}`);
   }
-  res.end();
+  const query = url.parse(req.url, true).query || {};
+
+  if (query.responseStatus) {
+    res.statusCode = parseInt(query.responseStatus || 200, 10);
+  }
+
+  const delay = parseInt(query.delay || 0, 10);
+
+  if (delay === 0) {
+    res.end();
+  } else {
+    setTimeout(() => {
+      res.end();
+    }, delay);
+  }
 });
 
 app.listen(port, () => {
