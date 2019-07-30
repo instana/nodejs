@@ -60,6 +60,19 @@ function instrumentedLog(ctx, originalLog, originalArgs, markAsError) {
       message = fields.message + ' -- ' + message;
     } else if (fields && typeof fields.message === 'string') {
       message = fields.message;
+    } else if (
+      fields &&
+      fields.err &&
+      typeof fields.err === 'object' &&
+      typeof fields.err.message === 'string' &&
+      typeof message === 'string'
+    ) {
+      // Support for fields.err.message based on the last example given in
+      // https://github.com/trentm/node-bunyan#log-method-api - quote: "To pass in an Error *and* other fields, use the
+      // `err` field name for the Error instance..."
+      message = fields.err.message + ' -- ' + message;
+    } else if (fields && fields.err && typeof fields.err === 'object' && typeof fields.err.message === 'string') {
+      message = fields.err.message;
     } else if (typeof message !== 'string') {
       message =
         'Log call without message. The Bunyan "fields" argument will not be serialized by Instana for performance reasons.';

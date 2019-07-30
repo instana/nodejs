@@ -60,6 +60,11 @@ app.get('/error-object-only', (req, res) => {
   finish(res);
 });
 
+app.get('/nested-error-object-only', (req, res) => {
+  logger.error({ foo: 'bar', err: new Error('This is a nested error.') });
+  finish(res);
+});
+
 app.get('/error-random-object-only', (req, res) => {
   logger.error({ foo: { bar: 'baz' } });
   finish(res);
@@ -67,6 +72,11 @@ app.get('/error-random-object-only', (req, res) => {
 
 app.get('/error-object-and-string', (req, res) => {
   logger.error(new Error('This is an error.'), 'Error message - should be traced.');
+  finish(res);
+});
+
+app.get('/nested-error-object-and-string', (req, res) => {
+  logger.error({ foo: 'bar', err: new Error('This is a nested error.') }, 'Error message - should be traced.');
   finish(res);
 });
 
