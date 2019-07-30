@@ -2,7 +2,7 @@
   "name": "@instana/root",
   "private": true,
   "scripts": {
-    "audit": "lerna run audit --stream",
+    "audit": "lerna run audit --stream && npm audit --production",
     "bootstrap": "lerna bootstrap",
     "bump": "lerna publish",
     "postinstall": "npm run bootstrap",
