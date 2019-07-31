@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.71.0
 - Add support for kafka-node >= 4.0.0.
 - Bunyan: support for capturing the error message from a nested error object (attribute `err`) given in the fields argument.
 
