@@ -1,5 +1,8 @@
 # Changelog
 
+## Unreleased
+- Add support for kafka-node >= 4.0.0.
+
 ## 1.70.0
 - Enable uncaught exception reporting in Node 12.x.
 

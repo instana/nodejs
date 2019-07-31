@@ -12,8 +12,8 @@ describe('tracing/kafka', function() {
     return;
   }
 
-  const expressKafkaProducerControls = require('./producerControls');
-  const kafkaConsumerControls = require('./consumerControls');
+  const producerControls = require('./producerControls');
+  const consumerControls = require('./consumerControls');
   const agentStubControls = require('../../../apps/agentStubControls');
 
   // Too many moving parts with Kafka involved. Increase the default timeout.
@@ -22,60 +22,76 @@ describe('tracing/kafka', function() {
   this.timeout(config.getTestTimeout() * 2);
 
   agentStubControls.registerTestHooks();
-  expressKafkaProducerControls.registerTestHooks();
 
-  beforeEach(() => agentStubControls.waitUntilAppIsCompletelyInitialized(expressKafkaProducerControls.getPid()));
-
-  it('must record trace publish spans', () =>
-    expressKafkaProducerControls.send('someKey', 'someMessage').then(() =>
-      utils.retry(() =>
-        agentStubControls.getSpans().then(spans => {
-          const entrySpan = utils.expectOneMatching(spans, span => {
-            expect(span.n).to.equal('node.http.server');
-            expect(span.f.e).to.equal(String(expressKafkaProducerControls.getPid()));
-            expect(span.f.h).to.equal('agent-stub-uuid');
-            expect(span.async).to.equal(false);
-            expect(span.error).to.equal(false);
-          });
-
-          utils.expectOneMatching(spans, span => {
-            expect(span.t).to.equal(entrySpan.t);
-            expect(span.p).to.equal(entrySpan.s);
-            expect(span.n).to.equal('kafka');
-            expect(span.k).to.equal(constants.EXIT);
-            expect(span.f.e).to.equal(String(expressKafkaProducerControls.getPid()));
-            expect(span.f.h).to.equal('agent-stub-uuid');
-            expect(span.async).to.equal(false);
-            expect(span.error).to.equal(false);
-            expect(span.data.kafka.access).to.equal('send');
-            expect(span.data.kafka.service).to.equal('test');
-          });
-
-          // verify that subsequent calls are correctly traced
-          utils.expectOneMatching(spans, span => {
-            expect(span.n).to.equal('node.http.client');
-            expect(span.t).to.equal(entrySpan.t);
-            expect(span.p).to.equal(entrySpan.s);
-          });
-        })
-      )
-    ));
-
-  ['consumerGroup', 'plain', 'highLevel'].forEach(consumerType => {
-    describe(`consuming via: ${consumerType}`, () => {
-      kafkaConsumerControls.registerTestHooks({
-        consumerType
+  ['plain', 'highLevel'].forEach(producerType => {
+    describe(`producing via: ${producerType}`, () => {
+      producerControls.registerTestHooks({
+        producerType
       });
 
-      beforeEach(() => agentStubControls.waitUntilAppIsCompletelyInitialized(kafkaConsumerControls.getPid()));
+      beforeEach(() => agentStubControls.waitUntilAppIsCompletelyInitialized(producerControls.getPid()));
 
-      it(`must record kafka consumer spans via:${consumerType}`, () =>
-        utils.retry(() =>
-          expressKafkaProducerControls.send('someKey', 'someMessage').then(() =>
+      it(`must trace sending messages (producer type: ${producerType})`, () =>
+        producerControls.send('someKey', 'someMessage').then(() =>
+          utils.retry(() =>
             agentStubControls.getSpans().then(spans => {
               const entrySpan = utils.expectOneMatching(spans, span => {
                 expect(span.n).to.equal('node.http.server');
-                expect(span.f.e).to.equal(String(expressKafkaProducerControls.getPid()));
+                expect(span.f.e).to.equal(String(producerControls.getPid()));
+                expect(span.f.h).to.equal('agent-stub-uuid');
+                expect(span.async).to.equal(false);
+                expect(span.error).to.equal(false);
+              });
+
+              utils.expectOneMatching(spans, span => {
+                expect(span.t).to.equal(entrySpan.t);
+                expect(span.p).to.equal(entrySpan.s);
+                expect(span.n).to.equal('kafka');
+                expect(span.k).to.equal(constants.EXIT);
+                expect(span.f.e).to.equal(String(producerControls.getPid()));
+                expect(span.f.h).to.equal('agent-stub-uuid');
+                expect(span.async).to.equal(false);
+                expect(span.error).to.equal(false);
+                expect(span.data.kafka.access).to.equal('send');
+                expect(span.data.kafka.service).to.equal('test');
+              });
+
+              // verify that subsequent calls are correctly traced
+              utils.expectOneMatching(spans, span => {
+                expect(span.n).to.equal('node.http.client');
+                expect(span.t).to.equal(entrySpan.t);
+                expect(span.p).to.equal(entrySpan.s);
+              });
+            })
+          )
+        ));
+    });
+  });
+
+  // REMARK: HighLevelConsumer has been removed in kafka-node@4.0.0, so we no longer test the highLevel option in
+  // the regular test suite. It can be quickly reactivated if kafka-node < 4.0.0 needs to be tested, see remark in
+  // ../consumer.js
+  ['plain', /* 'highLevel', */ 'consumerGroup'].forEach(consumerType => {
+    describe(`consuming via: ${consumerType}`, () => {
+      producerControls.registerTestHooks({
+        producerType: 'plain'
+      });
+      consumerControls.registerTestHooks({
+        consumerType
+      });
+
+      beforeEach(() => {
+        agentStubControls.waitUntilAppIsCompletelyInitialized(producerControls.getPid());
+        agentStubControls.waitUntilAppIsCompletelyInitialized(consumerControls.getPid());
+      });
+
+      it(`must trace receiving messages (consumer type: ${consumerType})`, () =>
+        producerControls.send('someKey', 'someMessage').then(() =>
+          utils.retry(() =>
+            agentStubControls.getSpans().then(spans => {
+              const entrySpan = utils.expectOneMatching(spans, span => {
+                expect(span.n).to.equal('node.http.server');
+                expect(span.f.e).to.equal(String(producerControls.getPid()));
                 expect(span.f.h).to.equal('agent-stub-uuid');
                 expect(span.async).to.equal(false);
                 expect(span.error).to.equal(false);
@@ -85,7 +101,7 @@ describe('tracing/kafka', function() {
                 expect(span.p).to.equal(entrySpan.s);
                 expect(span.n).to.equal('kafka');
                 expect(span.k).to.equal(constants.EXIT);
-                expect(span.f.e).to.equal(String(expressKafkaProducerControls.getPid()));
+                expect(span.f.e).to.equal(String(producerControls.getPid()));
                 expect(span.f.h).to.equal('agent-stub-uuid');
                 expect(span.async).to.equal(false);
                 expect(span.error).to.equal(false);
@@ -93,8 +109,8 @@ describe('tracing/kafka', function() {
                 expect(span.data.kafka.service).to.equal('test');
               });
 
-              // Actually, we would want the trace started at the HTTP entry to continue here but (as of 2018-11)
-              // the Node.js kafka library _still_ has no support for message headers, so we are out of luck in
+              // Actually, we would want the trace started at the HTTP entry to continue here but as of 2019-07-31,
+              // version 4.1.3, kafka-node _still_ has no support for message headers, so we are out of luck in
               // Node.js/kafka. See
               // https://github.com/SOHU-Co/kafka-node/issues/763
               // So for now, span.p is undefined (new root span) and span.t is not equal to entrySpan.t.
@@ -103,7 +119,7 @@ describe('tracing/kafka', function() {
                 expect(span.n).to.equal('kafka');
                 expect(span.k).to.equal(constants.ENTRY);
                 expect(span.d).to.be.greaterThan(99);
-                expect(span.f.e).to.equal(String(kafkaConsumerControls.getPid()));
+                expect(span.f.e).to.equal(String(consumerControls.getPid()));
                 expect(span.f.h).to.equal('agent-stub-uuid');
                 expect(span.async).to.equal(false);
                 expect(span.error).to.equal(false);
