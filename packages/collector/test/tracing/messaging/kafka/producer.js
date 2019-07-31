@@ -19,12 +19,30 @@ const express = require('express');
 const kafka = require('kafka-node');
 const app = express();
 
-const client = new kafka.Client(`${process.env.ZOOKEEPER}/`);
-client.on('error', error => {
-  log('Got a client error: %s', error);
-});
+let client;
+if (kafka.Client) {
+  // kafka-node < 4.0.0, client connects via zookeeper
+  client = new kafka.Client(`${process.env.ZOOKEEPER}/`);
+  client.on('error', error => {
+    log('Got a client error: %s', error);
+  });
+} else {
+  // kafka-node >= 4.0.0, they dropped Zookeeper support, client connects directly to kafka
+  client = new kafka.KafkaClient({ kafkaHost: '127.0.0.1:9092' });
+  client.on('error', error => {
+    log('Got a client error: %s', error);
+  });
+}
 
-const producer = new kafka.Producer(client);
+let producer;
+if (process.env.PRODUCER_TYPE === 'highLevel') {
+  log('Using HighLevelProducer');
+  producer = new kafka.HighLevelProducer(client);
+} else {
+  log('Using Producer');
+  producer = new kafka.Producer(client);
+}
+
 producer.on('error', error => {
   log('Got a producer error: %s', error);
 });
@@ -75,6 +93,6 @@ app.post('/send-message', (req, res) => {
 
 function log() {
   const args = Array.prototype.slice.call(arguments);
-  args[0] = `Express Kafka Producer App (${process.pid}):\t${args[0]}`;
+  args[0] = `Kafka Producer (${process.pid}):\t${args[0]}`;
   console.log.apply(console, args);
 }

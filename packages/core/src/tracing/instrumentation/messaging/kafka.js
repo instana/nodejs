@@ -21,7 +21,14 @@ exports.init = function() {
 function instrument(kafka) {
   shimmer.wrap(Object.getPrototypeOf(kafka.Producer.prototype), 'send', shimSend);
   shimmer.wrap(kafka.Consumer.prototype, 'emit', shimEmit);
-  shimmer.wrap(kafka.HighLevelConsumer.prototype, 'emit', shimEmit);
+  if (kafka.HighLevelConsumer) {
+    // kafka-node 4.0.0 dropped the HighLevelConsumer API
+    shimmer.wrap(kafka.HighLevelConsumer.prototype, 'emit', shimEmit);
+  } else {
+    // kafka-node 4.0.0 refactored the ConsumerGroup to not longer inherit from HighLevelConsumer so it needs to be
+    // shimmed explicitly
+    shimmer.wrap(kafka.ConsumerGroup.prototype, 'emit', shimEmit);
+  }
 }
 
 function shimSend(original) {

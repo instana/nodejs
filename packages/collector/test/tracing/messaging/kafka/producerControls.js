@@ -21,6 +21,7 @@ exports.registerTestHooks = opts => {
     env.AGENT_PORT = agentPort;
     env.APP_PORT = appPort;
     env.TRACING_ENABLED = opts.enableTracing !== false;
+    env.PRODUCER_TYPE = opts.producerType;
 
     app = spawn('node', [path.join(__dirname, 'producer.js')], {
       stdio: config.getAppStdio(),
