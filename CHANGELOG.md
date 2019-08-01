@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.71.1
 - Remove overaggressive validation warning for HTTP spans.
 
 ## 1.71.0
