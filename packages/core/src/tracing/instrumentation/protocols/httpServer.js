@@ -9,11 +9,6 @@ var httpCommon = require('./_http');
 var shimmer = require('shimmer');
 var cls = require('../../cls');
 
-var logger;
-logger = require('../../../logger').getLogger('tracing/http/server', function(newLogger) {
-  logger = newLogger;
-});
-
 var discardUrlParameters = urlUtil.discardUrlParameters;
 var filterParams = urlUtil.filterParams;
 
@@ -31,17 +26,6 @@ exports.init = function(config) {
 function shimEmit(realEmit) {
   return function(type, req, res) {
     if (type !== 'request' || !isActive) {
-      return realEmit.apply(this, arguments);
-    }
-
-    var parentSpan = cls.getCurrentSpan();
-    if (parentSpan) {
-      logger.warn(
-        'Cannot start an HTTP(S) entry span for ' +
-          (req ? req.url : '(URL not available)') +
-          ' when another span is already active. Currently, the following span is active: ' +
-          JSON.stringify(parentSpan)
-      );
       return realEmit.apply(this, arguments);
     }
 
