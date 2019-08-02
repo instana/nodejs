@@ -11,7 +11,7 @@ const agentPort = require('../apps/agentStubControls').agentPort;
 const config = require('../config');
 const utils = require('../utils');
 
-const AbstractControls = (module.exports = function AbstractControls(opts) {
+const AbstractControls = (module.exports = function AbstractControls(opts = {}) {
   // absolute path to .js file that should be executed
   this.appPath = opts.appPath;
   this.port = opts.port || process.env.APP_PORT || 3215;

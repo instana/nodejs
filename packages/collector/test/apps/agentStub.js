@@ -2,7 +2,7 @@
 
 const bodyParser = require('body-parser');
 const express = require('express');
-const morgan = require('morgan');
+// const morgan = require('morgan');
 const bunyan = require('bunyan');
 const app = express();
 
@@ -24,9 +24,11 @@ let retrievedData = {
   events: []
 };
 
-if (process.env.WITH_STDOUT) {
-  app.use(morgan(`Agent Stub (${process.pid}):\t:method :url :status`));
-}
+// We usually do not activate morgan in the agent stub because it creates a lot of noise with little benefit. Activate
+// it on demand if required.
+// if (process.env.WITH_STDOUT) {
+//   app.use(morgan(`Agent Stub (${process.pid}):\t:method :url :status`));
+// }
 
 app.use(
   bodyParser.json({

@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+- Add NATS.io instrumentation ([nats](https://www.npmjs.com/package/nats)).
+- Add NATS streaming instrumentation ([node-nats-streaming](https://www.npmjs.com/package/node-nats-streaming)).
+
 ## 1.71.3
 - Fix: Add MongoDB command details for update, replace and delete operations.
 
