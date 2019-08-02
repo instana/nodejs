@@ -73,3 +73,18 @@ services:
     ports:
       - 5671:5671
       - 5672:5672
+
+  nats:
+    image: nats:2.0.2-linux
+    ports:
+      - 4222:4222
+      - 6222:6222
+      - 8222:8222
+
+  nats-streaming:
+    image: nats-streaming:0.15.1-linux
+    command: -p 4223 -m 8223
+    ports:
+      - 4223:4223
+      - 8223:8223
+
