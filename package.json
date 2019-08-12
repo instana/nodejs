@@ -6,7 +6,7 @@
     "bootstrap": "lerna bootstrap",
     "bump": "lerna publish",
     "postinstall": "npm run bootstrap",
-    "precommit": "doctoc packages/collector/README.md packages/collector/CONFIGURATION.md packages/collector/API.md",
+    "precommit": "doctoc packages/collector/README.md",
     "prettier": "lerna run prettier --stream",
     "test:nolint": "lerna run test:nolint --stream",
     "test:debug": "lerna run test:debug --stream",
