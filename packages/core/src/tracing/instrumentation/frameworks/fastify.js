@@ -97,5 +97,7 @@ function annotateHttpEntrySpanWithPathTemplate(app, opts) {
     return;
   }
 
-  span.data.http.path_tpl = (app.basePath || '') + (opts.url || opts.path || '/');
+  var basePathDescriptor = Object.getOwnPropertyDescriptor(app, 'basePath');
+  var basePathOrPrefix = basePathDescriptor && basePathDescriptor.get ? app.prefix : app.basePath;
+  span.data.http.path_tpl = (basePathOrPrefix || '') + (opts.url || opts.path || '/');
 }
