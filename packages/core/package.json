@@ -101,6 +101,10 @@
     {
       "name": "Jonathan Samines",
       "email": "jn.samines@gmail.com"
+    },
+    {
+      "name": "beep-boop-beep",
+      "url": "https://github.com/beep-boop-beep"
     }
   ],
   "license": "MIT",
