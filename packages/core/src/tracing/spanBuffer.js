@@ -1,5 +1,7 @@
 'use strict';
 
+var tracingMetrics = require('./metrics');
+
 var logger;
 logger = require('../logger').getLogger('tracing/spanBuffer', function(newLogger) {
   logger = newLogger;
@@ -97,6 +99,8 @@ exports.getAndResetSpans = function getAndResetSpans() {
 
 function removeSpansIfNecessary() {
   if (spans.length > maxBufferedSpans) {
-    spans = spans.slice(maxBufferedSpans - spans.length);
+    tracingMetrics.incrementDropped(spans.length - maxBufferedSpans);
+    // retain the last maxBufferedSpans elements, drop everything before that
+    spans = spans.slice(-maxBufferedSpans);
   }
 }

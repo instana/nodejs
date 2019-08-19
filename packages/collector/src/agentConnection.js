@@ -211,6 +211,14 @@ exports.sendAgentResponseToAgent = function sendAgentResponseToAgent(messageId, 
   );
 };
 
+exports.sendTracingMetricsToAgent = function sendTracingMetricsToAgent(tracingMetrics, cb) {
+  var callback = atMostOnce('callback for sendTracingMetricsToAgent', function(err) {
+    cb(err);
+  });
+
+  sendData('/tracermetrics', tracingMetrics, callback);
+};
+
 function sendData(path, data, cb, ignore404) {
   cb = atMostOnce('callback for sendData: ' + path, cb);
   if (ignore404 === undefined) {
@@ -244,7 +252,7 @@ function sendData(path, data, cb, ignore404) {
     function(res) {
       if (res.statusCode < 200 || res.statusCode >= 300) {
         if (!(ignore404 && res.statusCode === 404)) {
-          cb(new Error('Failed to send data to agent via POST ' + path + '. Got status code ' + res.statusCode));
+          cb(new Error('Failed to send data to agent via POST ' + path + '. Got status code ' + res.statusCode + '.'));
           return;
         }
       }
