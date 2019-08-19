@@ -14,6 +14,8 @@ const secretsMatcher = process.env.SECRETS_MATCHER ? process.env.SECRETS_MATCHER
 const secretsList = process.env.SECRETS_LIST ? process.env.SECRETS_LIST.split(',') : ['key', 'pass', 'secret'];
 const dropAllData = process.env.DROP_DATA === 'true';
 const logTraces = process.env.LOG_TRACES === 'true';
+const rejectTraces = process.env.REJECT_TRACES === 'true';
+const tracingMetrics = process.env.TRACING_METRICS !== 'false';
 
 let discoveries = {};
 const requests = {};
@@ -21,7 +23,8 @@ let retrievedData = {
   runtime: [],
   traces: [],
   responses: [],
-  events: []
+  events: [],
+  tracingMetrics: []
 };
 
 // We usually do not activate morgan in the agent stub because it creates a lot of noise with little benefit. Activate
@@ -90,7 +93,9 @@ app.post(
 app.post(
   '/com.instana.plugin.nodejs/traces.:pid',
   checkExistenceOfKnownPid(function handleTraces(req, res) {
-    /* eslint-disable no-console */
+    if (rejectTraces) {
+      return res.sendStatus(400);
+    }
     if (!dropAllData) {
       retrievedData.traces.push({
         pid: parseInt(req.params.pid, 10),
@@ -99,6 +104,7 @@ app.post(
       });
     }
     if (logTraces) {
+      /* eslint-disable no-console */
       console.log(JSON.stringify(req.body, null, 2));
       console.log('--\n');
     }
@@ -117,9 +123,20 @@ app.post(
         data: req.body
       });
     }
-    res.send('OK');
+    res.sendStatus(204);
   })
 );
+
+app.post('/tracermetrics', function handleTracermetrics(req, res) {
+  if (!dropAllData) {
+    retrievedData.tracingMetrics.push(req.body);
+  }
+  if (!tracingMetrics) {
+    res.sendStatus(404);
+  } else {
+    res.send('OK');
+  }
+});
 
 function checkExistenceOfKnownPid(fn) {
   return (req, res) => {
@@ -151,12 +168,17 @@ app.get('/retrievedEvents', (req, res) => {
   res.json(retrievedData.events);
 });
 
+app.get('/retrievedTracingMetrics', (req, res) => {
+  res.json(retrievedData.tracingMetrics);
+});
+
 app.delete('/retrievedData', (req, res) => {
   retrievedData = {
     runtime: [],
     traces: [],
     responses: [],
-    events: []
+    events: [],
+    tracingMetrics: []
   };
   res.sendStatus(200);
 });

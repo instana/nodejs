@@ -4,6 +4,7 @@ var spanBuffer = require('./spanBuffer');
 var tracingUtil = require('./tracingUtil');
 var constants = require('./constants');
 var hooked = require('./clsHooked');
+var tracingMetrics = require('./metrics');
 var logger;
 logger = require('../logger').getLogger('tracing/cls', function(newLogger) {
   logger = newLogger;
@@ -35,6 +36,7 @@ exports.init = function init(_processIdentityProvider) {
  * Start a new span and set it as the current span.
  */
 exports.startSpan = function startSpan(spanName, kind, traceId, parentSpanId, modifyAsyncContext) {
+  tracingMetrics.incrementOpened();
   if (!kind || (kind !== constants.ENTRY && kind !== constants.EXIT && kind !== constants.INTERMEDIATE)) {
     logger.warn('Invalid span (%s) without kind/with invalid kind: %s, assuming EXIT.', spanName, kind);
     kind = constants.EXIT;
@@ -183,6 +185,7 @@ InstanaSpan.prototype.transmit = function transmit() {
   if (!this.transmitted && !this.manualEndMode) {
     spanBuffer.addSpan(this);
     this.cleanup();
+    tracingMetrics.incrementClosed();
     this.transmitted = true;
   }
 };
@@ -191,6 +194,7 @@ InstanaSpan.prototype.transmitManual = function transmitManual() {
   if (!this.transmitted) {
     spanBuffer.addSpan(this);
     this.cleanup();
+    tracingMetrics.incrementClosed();
     this.transmitted = true;
   }
 };
@@ -198,6 +202,7 @@ InstanaSpan.prototype.transmitManual = function transmitManual() {
 InstanaSpan.prototype.cancel = function cancel() {
   if (!this.transmitted) {
     this.cleanup();
+    tracingMetrics.incrementClosed();
     this.transmitted = true;
   }
 };

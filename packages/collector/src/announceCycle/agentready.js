@@ -19,6 +19,15 @@ var resendFullDataEveryXTransmissions = 300; /* about every 5 minutes */
 var transmissionsSinceLastFullDataEmit = 0;
 var previousTransmittedValue;
 
+var tracingMetricsDelay = 1000;
+if (typeof process.env.INSTANA_TRACER_METRICS_INTERVAL === 'string') {
+  tracingMetricsDelay = parseInt(process.env.INSTANA_TRACER_METRICS_INTERVAL, 10);
+  if (isNaN(tracingMetricsDelay) || tracingMetricsDelay <= 0) {
+    tracingMetricsDelay = 1000;
+  }
+}
+var tracingMetricsTimeout = null;
+
 module.exports = exports = {
   enter: function(ctx) {
     transmissionsSinceLastFullDataEmit = 0;
@@ -28,6 +37,7 @@ module.exports = exports = {
     tracing.activate();
     requestHandler.activate();
     sendData();
+    scheduleTracingMetrics();
     logger.info('The Instana Node.js collector is now fully initialized.');
 
     function sendData() {
@@ -58,6 +68,27 @@ module.exports = exports = {
         setTimeout(sendData, 1000).unref();
       });
     }
+
+    function scheduleTracingMetrics() {
+      tracingMetricsTimeout = setTimeout(sendTracingMetrics, tracingMetricsDelay);
+      tracingMetricsTimeout.unref();
+    }
+
+    function sendTracingMetrics() {
+      var payload = tracing._getAndResetTracingMetrics();
+      agentConnection.sendTracingMetricsToAgent(payload, function(error) {
+        if (error) {
+          logger.warn('Error received while trying to send tracing metrics to agent: %s', error.message);
+          if (typeof error.message === 'string' && error.message.indexOf('Got status code 404')) {
+            logger.warn(
+              'Apparently the agent does not support POST /tracermetrics, will stop sending tracing metrics.'
+            );
+            return;
+          }
+        }
+        scheduleTracingMetrics();
+      });
+    }
   },
 
   leave: function() {
@@ -66,5 +97,9 @@ module.exports = exports = {
     tracing.deactivate();
     requestHandler.deactivate();
     previousTransmittedValue = undefined;
+    if (tracingMetricsTimeout) {
+      clearTimeout(tracingMetricsTimeout);
+      tracingMetricsTimeout = null;
+    }
   }
 };

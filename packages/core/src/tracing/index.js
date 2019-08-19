@@ -4,6 +4,7 @@ var semver = require('semver');
 
 var sdk = require('./sdk');
 var constants = require('./constants');
+var tracingMetrics = require('./metrics');
 var opentracing = require('./opentracing');
 var spanHandle = require('./spanHandle');
 var tracingUtil = require('./tracingUtil');
@@ -14,6 +15,7 @@ var automaticTracingEnabled = false;
 var cls = null;
 var config = null;
 var extraHeaders = [];
+var processIdentityProvider = null;
 
 var httpServerInstrumentation = './instrumentation/protocols/httpServer';
 var instrumentations = [
@@ -49,8 +51,9 @@ exports.opentracing = opentracing;
 exports.sdk = sdk;
 exports.spanBuffer = spanBuffer;
 
-exports.init = function(_config, downstreamConnection, processIdentityProvider) {
+exports.init = function(_config, downstreamConnection, _processIdentityProvider) {
   config = _config;
+  processIdentityProvider = _processIdentityProvider;
 
   tracingEnabled = config.tracing.enabled;
   automaticTracingEnabled = config.tracing.automaticTracingEnabled;
@@ -112,6 +115,17 @@ exports.getHandleForCurrentSpan = function getHandleForCurrentSpan() {
 exports.getCls = function getCls() {
   // This only provides a value if tracing is enabled, otherwise cls will not be required and is null.
   return cls;
+};
+
+exports._getAndResetTracingMetrics = function _getAndResetTracingMetrics() {
+  return {
+    tracer: 'node',
+    pid:
+      processIdentityProvider && typeof processIdentityProvider.getEntityId === 'function'
+        ? processIdentityProvider.getEntityId()
+        : undefined,
+    metrics: tracingMetrics.getAndReset()
+  };
 };
 
 exports._debugCurrentSpanName = function _debugCurrentSpanName() {

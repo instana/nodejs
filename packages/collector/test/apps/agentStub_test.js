@@ -28,7 +28,8 @@ describe('agentStub', function() {
         runtime: [],
         traces: [],
         responses: [],
-        events: []
+        events: [],
+        tracingMetrics: []
       });
     }));
 

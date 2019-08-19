@@ -23,6 +23,13 @@ exports.registerTestHooks = opts => {
     env.EXTRA_HEADERS = (opts.extraHeaders || []).join(',');
     env.SECRETS_MATCHER = opts.secretsMatcher || 'contains-ignore-case';
     env.SECRETS_LIST = (opts.secretsList || []).join(',');
+    env.SECRETS_LIST = (opts.secretsList || []).join(',');
+    if (opts.rejectTraces) {
+      env.REJECT_TRACES = 'true';
+    }
+    if (typeof opts.tracingMetrics === 'boolean') {
+      env.TRACING_METRICS = opts.tracingMetrics.toString();
+    }
 
     agentStub = spawn('node', [path.join(__dirname, 'agentStub.js')], {
       stdio: config.getAppStdio(),
@@ -113,6 +120,13 @@ exports.getAllMetrics = pid => exports.getRetrievedData().then(data => getAllMet
 function getAllMetrics(pid, data) {
   return data.runtime.filter(runtimeMessage => runtimeMessage.pid === pid);
 }
+
+exports.getTracingMetrics = () =>
+  request({
+    method: 'GET',
+    url: `http://127.0.0.1:${agentPort}/retrievedTracingMetrics`,
+    json: true
+  });
 
 exports.waitUntilAppIsCompletelyInitialized = pid =>
   utils.retry(() =>
