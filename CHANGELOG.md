@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.71.2
 - Avoid triggering fastify's `basePath` deprecation warning.
 
 ## 1.71.1
