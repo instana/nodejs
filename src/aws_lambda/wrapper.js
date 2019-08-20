@@ -22,7 +22,7 @@ exports.wrap = function wrap(config, originalHandler) {
     config = null;
   }
 
-  // Experiments show that the AWS Lambda runtime does not inspect the handlers signature for the number of arguments it
+  // Apparently the AWS Lambda Node.js runtime does not inspect the handlers signature for the number of arguments it
   // accepts. But to be extra safe, we strive to return a function with the same number of arguments anyway.
   switch (originalHandler.length) {
     case 0:

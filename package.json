@@ -5,7 +5,7 @@
   "main": "src/index.js",
   "scripts": {
     "acceptor-stub": "node test/acceptor_stub",
-    "audit": "npm audit --json | node bin/parse-audit.js",
+    "audit": "npm audit --production",
     "test": "npm run test:mocha",
     "test:mocha": "mocha --reporter spec $(find test -iname '*test.js')",
     "lint": "eslint src test lambdas",
