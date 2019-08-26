@@ -55,7 +55,7 @@ app.get('/', (req, res) => {
   }
 });
 
-app.post('/insert', (req, res) => {
+app.post('/insert-one', (req, res) => {
   let mongoResponse = null;
   collection
     .insertOne(req.body)
@@ -73,7 +73,61 @@ app.post('/insert', (req, res) => {
     });
 });
 
-app.post('/find', (req, res) => {
+app.post('/update-one', (req, res) => {
+  let mongoResponse = null;
+  collection
+    .updateOne(req.body.filter, req.body.update)
+    .then(r => {
+      mongoResponse = r;
+      // Execute another traced call to verify that we keep the tracing context.
+      return request(`http://127.0.0.1:${agentPort}`);
+    })
+    .then(() => {
+      res.json(mongoResponse);
+    })
+    .catch(e => {
+      log('Failed to update document', e);
+      res.sendStatus(500);
+    });
+});
+
+app.post('/replace-one', (req, res) => {
+  let mongoResponse = null;
+  collection
+    .replaceOne(req.body.filter, req.body.doc)
+    .then(r => {
+      mongoResponse = r;
+      // Execute another traced call to verify that we keep the tracing context.
+      return request(`http://127.0.0.1:${agentPort}`);
+    })
+    .then(() => {
+      res.json(mongoResponse);
+    })
+    .catch(e => {
+      log('Failed to replace document', e);
+      res.sendStatus(500);
+    });
+});
+
+app.post('/delete-one', (req, res) => {
+  let mongoResponse = null;
+  collection
+    .deleteOne(req.body.filter)
+    .then(r => {
+      mongoResponse = r;
+      // Execute another traced call to verify that we keep the tracing context.
+      return request(`http://127.0.0.1:${agentPort}`);
+    })
+    .then(() => {
+      res.json(mongoResponse);
+    })
+    .catch(e => {
+      log('Failed to delete document', e);
+      res.sendStatus(500);
+    });
+});
+
+app.get('/find-one', (req, res) => {
   let mongoResponse = null;
   collection
     .findOne(req.body)
