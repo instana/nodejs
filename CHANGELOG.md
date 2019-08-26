@@ -1,7 +1,7 @@
 # Changelog
 
-## Unreleased
-- Fix: Add MongoDB command details for update and delete operations.
+## 1.71.3
+- Fix: Add MongoDB command details for update, replace and delete operations.
 
 ## 1.71.2
 - Avoid triggering fastify's `basePath` deprecation warning.
