@@ -128,6 +128,7 @@ function onStarted(event) {
         command: event.commandName,
         service: service,
         namespace: database + '.' + collection,
+        json: readJsonFromEvent(event),
         filter: stringifyWhenNecessary(event.command.filter),
         query: stringifyWhenNecessary(event.command.query)
       }
@@ -142,6 +143,18 @@ function onStarted(event) {
     clsContextMap[requestId] = clsContext;
     mongoDbSpansInProgress[requestId] = span;
   });
+}
+
+function readJsonFromEvent(event) {
+  if (event.commandName === 'update' && event.command.updates && typeof event.command.updates === 'object') {
+    return tracingUtil.shortenDatabaseStatement(JSON.stringify(event.command.updates));
+  } else if (event.commandName === 'delete' && event.command.deletes && typeof event.command.deletes === 'object') {
+    return tracingUtil.shortenDatabaseStatement(JSON.stringify(event.command.deletes));
+  } else if (event.command.update && typeof event.command.update === 'object') {
+    // for findAndModify/findAndRemove
+    return tracingUtil.shortenDatabaseStatement(JSON.stringify(event.command.update));
+  }
+  return undefined;
 }
 
 function stringifyWhenNecessary(obj) {
