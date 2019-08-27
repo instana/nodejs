@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.72.0
 - Add NATS.io instrumentation ([nats](https://www.npmjs.com/package/nats)).
 - Add NATS streaming instrumentation ([node-nats-streaming](https://www.npmjs.com/package/node-nats-streaming)).
 
