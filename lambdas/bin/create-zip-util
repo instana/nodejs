@@ -1,5 +1,5 @@
 function createZip {
-  name=$1
+  name=${PWD##*/}
   echo "creating $name.zip"
   rm -f $name.zip
   mkdir -p ../zip

@@ -59,7 +59,8 @@ function shimmedHandler(originalHandler, originalThis, originalArgs, config) {
   // callback or not. If the handler returns a promise, the runtime uses the that promise's value when it resolves as
   // the result. If the handler calls the callback, that value is used as the result. If the handler does both
   // (return a promise and resolve it _and_ call the callback), it depends on the timing. Whichever happens first
-  // dictates the result of the lambda invocation, the later result is ignored. To mat
+  // dictates the result of the lambda invocation, the later result is ignored. To match this behaviour, we always
+  // wrap the given callback _and_ return an instrumented promise.
   let handlerHasFinished = false;
   return tracing.getCls().ns.runPromiseOrRunAndReturn(() => {
     const entrySpan = tracing

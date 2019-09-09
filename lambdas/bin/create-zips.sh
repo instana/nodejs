@@ -9,8 +9,12 @@ rm -rf instana-serverless-*.tgz
 npm --loglevel=warn pack
 popd > /dev/null
 
-callback/bin/create-zip.sh
-async/bin/create-zip.sh
-promise/bin/create-zip.sh
-wrapped-callback/bin/create-zip.sh
-wrapped-async/bin/create-zip.sh
+for lambda_directory in */ ; do
+  if [[ -d "$lambda_directory" && ! -L "$lambda_directory" && -e "$lambda_directory/bin/create-zip.sh" ]]; then
+    echo "next directory: $lambda_directory"
+    $lambda_directory/bin/create-zip.sh
+  else
+    echo "skipping directory: $lambda_directory"
+  fi
+done
+
