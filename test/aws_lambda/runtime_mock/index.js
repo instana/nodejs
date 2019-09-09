@@ -134,23 +134,51 @@ function runHandler(handler, error) {
 }
 
 function createContext() {
+  const functionName = process.env.LAMBDA_FUNCTION_NAME ? process.env.LAMBDA_FUNCTION_NAME : 'functionName';
+  const functionVersion = process.env.LAMBDA_FUNCTION_VERSION ? process.env.LAMBDA_FUNCTION_VERSION : '$LATEST';
+  const invokedFunctionArn = `arn:aws:lambda:us-east-2:410797082306:function:${functionName}`;
+
   return {
     callbackWaitsForEmptyEventLoop: false,
     logGroupName: '/aws/lambda/logGroup',
-    logStreamName: '2019/03/19/[$LATEST]056cc3b39a364bd4959264dba2ed7011',
-    functionName: 'functionName',
+    logStreamName: `2019/03/19/[${functionVersion}]056cc3b39a364bd4959264dba2ed7011`,
+    functionName,
     memoryLimitInMB: '128',
-    functionVersion: '$LATEST',
+    functionVersion,
     invokeid: '20024b9e-e726-40e2-915e-f787357738f7',
     awsRequestId: '20024b9e-e726-40e2-915e-f787357738f7',
-    invokedFunctionArn: 'arn:aws:lambda:us-east-2:410797082306:function:wrapped_async_8_10'
+    invokedFunctionArn
   };
 }
 
 function createEvent(error) {
-  return {
+  /* eslint-disable default-case */
+  const event = {
     error
   };
+
+  const trigger = process.env.LAMBDA_TRIGGER;
+  if (trigger != null) {
+    switch (trigger) {
+      case 's3': {
+        event.Records = [
+          {
+            eventSource: 'aws:s3'
+          }
+        ];
+        break;
+      }
+      case 'cloudwatch-logs': {
+        event.awslogs = { data: 'somegibberish' };
+        break;
+      }
+      case 'cloudwatch-events': {
+        event.source = 'aws.events';
+        break;
+      }
+    }
+  }
+  return event;
 }
 
 function registerErrorHandling() {

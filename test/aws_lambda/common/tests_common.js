@@ -31,6 +31,9 @@ function prelude(opts) {
   if (opts.withConfig) {
     env.WITH_CONFIG = 'true';
   }
+  if (opts.trigger) {
+    env.LAMBDA_TRIGGER = opts.trigger;
+  }
 
   const Control = require('../../util/control');
   const control = new Control({
@@ -55,6 +58,45 @@ exports.registerTests = function registerTests(handlerDefinitionPath) {
     });
 
     it('must capture metrics and spans', () => verify(control, false, true));
+  });
+
+  describe('triggered by S3', function() {
+    // - same as "everything is peachy"
+    // - but triggered by AWS S3
+    const control = prelude.bind(this)({
+      handlerDefinitionPath,
+      trigger: 's3',
+      instanaUrl: config.acceptorBaseUrl,
+      instanaKey: config.instanaKey
+    });
+
+    it('must recognize S3 trigger', () => verify(control, false, true, 'aws:s3'));
+  });
+
+  describe('triggered by CloudWatch Logs', function() {
+    // - same as "everything is peachy"
+    // - but triggered by AWS CloudWatch logs
+    const control = prelude.bind(this)({
+      handlerDefinitionPath,
+      trigger: 'cloudwatch-logs',
+      instanaUrl: config.acceptorBaseUrl,
+      instanaKey: config.instanaKey
+    });
+
+    it('must recognize CloudWatch logs trigger', () => verify(control, false, true, 'aws:cloudwatch.logs'));
+  });
+
+  describe('triggered by CloudWatch Events', function() {
+    // - same as "everything is peachy"
+    // - but triggered by AWS CloudWatch events
+    const control = prelude.bind(this)({
+      handlerDefinitionPath,
+      trigger: 'cloudwatch-events',
+      instanaUrl: config.acceptorBaseUrl,
+      instanaKey: config.instanaKey
+    });
+
+    it('must recognize CloudWatch events trigger', () => verify(control, false, true, 'aws:cloudwatch.events'));
   });
 
   describe('when lambda function yields an error', function() {
@@ -205,7 +247,7 @@ exports.registerTests = function registerTests(handlerDefinitionPath) {
     it('must finish swiftly', () => verify(control, false, false));
   });
 
-  function verify(control, lambdaError, expectSpansAndMetrics) {
+  function verify(control, lambdaError, expectSpansAndMetrics, trigger) {
     /* eslint-disable no-console */
     if (lambdaError) {
       expect(control.getLambdaErrors().length).to.equal(1);
@@ -228,7 +270,7 @@ exports.registerTests = function registerTests(handlerDefinitionPath) {
     if (expectSpansAndMetrics) {
       // TODO Verify that metrics have been produced
       return retry(() => control.getSpans())
-        .then(spans => expectSpans(spans, lambdaError))
+        .then(spans => expectSpans(spans, lambdaError, trigger))
         .then(() => control.getMetrics())
         .then(metrics => expectMetrics(metrics));
     } else {
@@ -244,12 +286,13 @@ exports.registerTests = function registerTests(handlerDefinitionPath) {
     }
   }
 
-  function expectSpans(spans, lambdaError) {
-    const entry = expectLambdaEntry(spans, lambdaError);
+  function expectSpans(spans, lambdaError, expectedTrigger) {
+    const entry = expectLambdaEntry(spans, lambdaError, expectedTrigger);
     expectHttpExit(spans, entry);
   }
 
-  function expectLambdaEntry(spans, lambdaError) {
+  function expectLambdaEntry(spans, lambdaError, expectedTrigger) {
+    expectedTrigger = expectedTrigger || 'unknown';
     return expectOneMatching(spans, span => {
       expect(span.t).to.exist;
       expect(span.p).to.not.exist;
@@ -259,6 +302,7 @@ exports.registerTests = function registerTests(handlerDefinitionPath) {
       expect(span.f.e).to.equal('arn:aws:lambda:us-east-2:410797082306:function:functionName:$LATEST');
       expect(span.async).to.equal(false);
       expect(span.data.lambda).to.be.an('object');
+      expect(span.data.lambda.trigger).to.equal(expectedTrigger);
       if (lambdaError) {
         expect(span.data.lambda.error).to.equal('Boom!');
         expect(span.error).to.be.true;
