@@ -143,7 +143,7 @@ function createContext() {
     functionVersion: '$LATEST',
     invokeid: '20024b9e-e726-40e2-915e-f787357738f7',
     awsRequestId: '20024b9e-e726-40e2-915e-f787357738f7',
-    invokedFunctionArn: 'arn:aws:lambda:us-east-2:410797082306:function:functionName'
+    invokedFunctionArn: 'arn:aws:lambda:us-east-2:410797082306:function:wrapped_async_8_10'
   };
 }
 
