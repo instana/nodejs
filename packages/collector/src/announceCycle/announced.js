@@ -5,6 +5,8 @@ logger = require('../logger').getLogger('announceCycle/announced', function(newL
   logger = newLogger;
 });
 
+var MAX_RETRIES = 60;
+
 var agentConnection = require('../agentConnection');
 
 module.exports = {
@@ -20,14 +22,14 @@ function checkWhetherAgentIsReadyToAccept(totalNumberOfAttempts, ctx) {
     if (ready) {
       logger.info('Agent is ready to accept.');
       ctx.transitionTo('agentready');
-    } else if (totalNumberOfAttempts >= 10) {
+    } else if (totalNumberOfAttempts > MAX_RETRIES) {
       logger.warn(
         'Agent is not ready to accept data after %s attempts. Restarting announce cycle.',
         totalNumberOfAttempts
       );
       ctx.transitionTo('unannounced');
     } else {
-      setTimeout(checkWhetherAgentIsReadyToAccept, 10000, totalNumberOfAttempts + 1, ctx).unref();
+      setTimeout(checkWhetherAgentIsReadyToAccept, 1000, totalNumberOfAttempts + 1, ctx).unref();
     }
   });
 }
