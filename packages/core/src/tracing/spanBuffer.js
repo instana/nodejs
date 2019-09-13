@@ -6,9 +6,21 @@ logger = require('../logger').getLogger('tracing/spanBuffer', function(newLogger
 });
 
 var downstreamConnection = null;
+var isActive = false;
+var activatedAt = null;
+
+var minDelayBeforeSendingSpans;
+if (process.env.INSTANA_DEV_MIN_DELAY_BEFORE_SENDING_SPANS != null) {
+  minDelayBeforeSendingSpans = parseInt(process.env.INSTANA_DEV_MIN_DELAY_BEFORE_SENDING_SPANS, 10);
+  if (isNaN(minDelayBeforeSendingSpans)) {
+    minDelayBeforeSendingSpans = 1000;
+  }
+} else {
+  minDelayBeforeSendingSpans = 1000;
+}
+var initialDelayBeforeSendingSpans = Math.max(minDelayBeforeSendingSpans, 1000);
 var maxBufferedSpans;
 var forceTransmissionStartingAt;
-var isActive = false;
 
 var spans = [];
 
@@ -34,8 +46,13 @@ exports.activate = function() {
     return;
   }
   isActive = true;
+  if (activatedAt == null) {
+    // record the time stamp of the first activation to enforce one second delay between sending snapshot data and
+    // sending spans for the first time.
+    activatedAt = Date.now();
+  }
   spans = [];
-  transmissionTimeoutHandle = setTimeout(transmitSpans, 1000);
+  transmissionTimeoutHandle = setTimeout(transmitSpans, initialDelayBeforeSendingSpans);
   transmissionTimeoutHandle.unref();
 };
 
@@ -56,7 +73,7 @@ exports.addSpan = function(span) {
   }
   spans.push(span);
 
-  if (spans.length >= forceTransmissionStartingAt) {
+  if (spans.length >= forceTransmissionStartingAt && Date.now() - minDelayBeforeSendingSpans > activatedAt) {
     transmitSpans();
   }
 };

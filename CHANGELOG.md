@@ -2,6 +2,7 @@
 
 ## Unreleased
 - Improve announce cycle by polling for the "agent ready" state once a second, this will bring the delay from "announce" to "agent ready" down from 10 to ~1 seconds for the majority of cases (in particular with the improved agent to be released soon).
+- Enforce minimum delay of one second between sending snapshot data and the first spans.
 
 ## 1.72.0
 - Add NATS.io instrumentation ([nats](https://www.npmjs.com/package/nats)).
