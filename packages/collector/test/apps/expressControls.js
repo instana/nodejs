@@ -24,6 +24,7 @@ exports.registerTestHooks = opts => {
     env.TRACING_ENABLED = opts.enableTracing !== false;
     env.STACK_TRACE_LENGTH = opts.stackTraceLength || 0;
     env.USE_HTTPS = opts.useHttps === true;
+    env.INSTANA_DEV_MIN_DELAY_BEFORE_SENDING_SPANS = 0;
 
     expressApp = spawn('node', [path.join(__dirname, 'express.js')], {
       stdio: config.getAppStdio(),
