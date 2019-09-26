@@ -204,7 +204,7 @@ describe('tracing/tracing metrics', function() {
     });
     controls.registerTestHooks();
 
-    it('must call POST /tracermetrics multiple times', function() {
+    it('must not call POST /tracermetrics multiple times', function() {
       return (
         controls
           .sendRequest({
@@ -243,7 +243,7 @@ function expectCumulativeTracingMetrics(tracingMetrics, expectedPid, expectedOpe
   let actualClosed = 0;
   let actualDropped = 0;
   tracingMetrics.forEach(data => {
-    expect(data.tracer).to.equal('node');
+    expect(data.tracer).to.not.exist;
     expect(data.pid).to.equal(expectedPid);
     actualOpened += data.metrics.opened;
     actualClosed += data.metrics.closed;

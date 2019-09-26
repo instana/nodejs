@@ -119,7 +119,6 @@ exports.getCls = function getCls() {
 
 exports._getAndResetTracingMetrics = function _getAndResetTracingMetrics() {
   return {
-    tracer: 'node',
     pid:
       processIdentityProvider && typeof processIdentityProvider.getEntityId === 'function'
         ? processIdentityProvider.getEntityId()
