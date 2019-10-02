@@ -69,6 +69,11 @@ function send(resourcePath, payload, callback) {
     }
   }
 
+  // prepend acceptor's path if the configured URL has a path component
+  if (environmentUtil.getAcceptorPath() !== '/') {
+    resourcePath = environmentUtil.getAcceptorPath() + resourcePath;
+  }
+
   payload = JSON.stringify(payload);
   const options = {
     hostname: environmentUtil.getAcceptorHost(),

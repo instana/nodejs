@@ -14,6 +14,15 @@ describe('environment util', () => {
     expect(environmentUtil.isValid()).to.be.true;
     expect(environmentUtil.getAcceptorHost()).to.equal('example.com');
     expect(environmentUtil.getAcceptorPort()).to.equal('8443');
+    expect(environmentUtil.getAcceptorPath()).to.equal('/');
+  });
+
+  it('must parse valid URLs with a path', () => {
+    environmentUtil._validate('https://example.com:8443/serverless', 'dummy-key');
+    expect(environmentUtil.isValid()).to.be.true;
+    expect(environmentUtil.getAcceptorHost()).to.equal('example.com');
+    expect(environmentUtil.getAcceptorPort()).to.equal('8443');
+    expect(environmentUtil.getAcceptorPath()).to.equal('/serverless');
   });
 
   it('must complain if Instana key is not set', () => {
@@ -47,5 +56,14 @@ describe('environment util', () => {
     expect(environmentUtil.isValid()).to.be.true;
     expect(environmentUtil.getAcceptorHost()).to.equal('example.com');
     expect(environmentUtil.getAcceptorPort()).to.equal('443');
+    expect(environmentUtil.getAcceptorPath()).to.equal('/');
+  });
+
+  it('must use the default port if not specified but a path is included', () => {
+    environmentUtil._validate('https://example.com/serverless', 'dummy-key');
+    expect(environmentUtil.isValid()).to.be.true;
+    expect(environmentUtil.getAcceptorHost()).to.equal('example.com');
+    expect(environmentUtil.getAcceptorPort()).to.equal('443');
+    expect(environmentUtil.getAcceptorPath()).to.equal('/serverless');
   });
 });

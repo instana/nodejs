@@ -3,8 +3,11 @@
 exports.acceptorProtocol = 'https';
 exports.acceptorHost = 'localhost';
 exports.acceptorPort = 8443;
+exports.acceptorPath = '/serverless';
 
-exports.acceptorBaseUrl = `${exports.acceptorProtocol}://${exports.acceptorHost}:${exports.acceptorPort}`;
+exports.acceptorBaseUrl = `${exports.acceptorProtocol}://${exports.acceptorHost}:${exports.acceptorPort}${
+  exports.acceptorPath
+}`;
 
 exports.instanaKey = 'dummy-key';
 

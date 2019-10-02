@@ -34,6 +34,7 @@ const instanaKeyEnvVar = 'INSTANA_KEY';
 let valid = false;
 let acceptorHost = null;
 let acceptorPort = null;
+let acceptorPath = null;
 let instanaKey = null;
 
 exports.sendUnencryptedEnvVar = 'INSTANA_DEV_SEND_UNENCRYPTED';
@@ -98,6 +99,8 @@ exports._validate = function _validate(instanaUrl, _instanaKey) {
     acceptorPort = '443';
   }
 
+  acceptorPath = parsedUrl.pathname;
+
   instanaKey = _instanaKey;
 
   if (!instanaKey || instanaKey.length === 0) {
@@ -107,6 +110,7 @@ exports._validate = function _validate(instanaUrl, _instanaKey) {
 
   logger.debug(`INSTANA HOST: ${acceptorHost}`);
   logger.debug(`INSTANA PORT: ${acceptorPort}`);
+  logger.debug(`INSTANA PATH: ${acceptorPath}`);
   logger.debug(`INSTANA KEY: ${instanaKey}`);
   valid = true;
 };
@@ -121,6 +125,10 @@ exports.getAcceptorHost = function getAcceptorHost() {
 
 exports.getAcceptorPort = function getAcceptorPort() {
   return acceptorPort;
+};
+
+exports.getAcceptorPath = function getAcceptorPath() {
+  return acceptorPath;
 };
 
 exports.getInstanaKey = function getInstanaKey() {

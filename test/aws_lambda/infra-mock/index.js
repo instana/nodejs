@@ -7,10 +7,11 @@
  */
 
 /* configuration */
-const acceptorHost = process.env['INSTANA_HOST'] || 'localhost';
-const acceptorPort = process.env['INSTANA_PORT'] || 8989;
+const acceptorHost = process.env.INSTANA_HOST || 'localhost';
+const acceptorPort = process.env.INSTANA_PORT || 8989;
 const acceptorTimeout = 5000;
-const sendUnencrypted = process.env['INSTANA_DEV_SEND_UNENCRYPTED'] === 'false' ? false : true;
+// eslint-disable-next-line no-unneeded-ternary
+const sendUnencrypted = process.env.INSTANA_DEV_SEND_UNENCRYPTED === 'false' ? false : true;
 const acceptSelfSignedCert = false;
 
 const instanaKeyEnvVar = 'INSTANA_KEY';

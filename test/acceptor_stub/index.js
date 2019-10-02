@@ -38,9 +38,7 @@ app.use(
   })
 );
 
-app.get('/', (_, res) => res.sendStatus(200));
-
-app.post('/bundle', (req, res) => {
+app.post('/serverless/bundle', (req, res) => {
   logger.trace('incoming bundle', req.body);
   if (unresponsive) {
     // intentionally not responding for tests that verify proper timeout handling
@@ -68,7 +66,7 @@ app.post('/bundle', (req, res) => {
   return res.sendStatus(201);
 });
 
-app.post('/metrics', (req, res) => {
+app.post('/serverless/metrics', (req, res) => {
   logger.debug('incoming metrics', req.body);
   if (unresponsive) {
     // intentionally not responding for tests that verify proper timeout handling
@@ -86,7 +84,7 @@ app.post('/metrics', (req, res) => {
   return res.sendStatus(201);
 });
 
-app.post('/traces', (req, res) => {
+app.post('/serverless/traces', (req, res) => {
   logger.debug('incoming spans', req.body);
   if (unresponsive) {
     // intentionally not responding for tests that verify proper timeout handling
@@ -101,23 +99,23 @@ app.post('/traces', (req, res) => {
   return res.sendStatus(201);
 });
 
-app.get('/received', (req, res) => res.json(receivedData));
+app.get('/serverless/received', (req, res) => res.json(receivedData));
 
 app.delete('/received', (req, res) => {
   receivedData = resetReceivedData();
   return res.sendStatus(204);
 });
 
-app.get('/received/metrics', (req, res) => res.json(receivedData.metrics));
+app.get('/serverless/received/metrics', (req, res) => res.json(receivedData.metrics));
 
 app.delete('/received/metrics', (req, res) => {
   receivedData.metrics = [];
   return res.sendStatus('204');
 });
 
-app.get('/received/spans', (req, res) => res.json(receivedData.spans));
+app.get('/serverless/received/spans', (req, res) => res.json(receivedData.spans));
 
-app.delete('/received/spans', (req, res) => {
+app.delete('/serverless/received/spans', (req, res) => {
   receivedData.metrics = [];
   return res.sendStatus('204');
 });
