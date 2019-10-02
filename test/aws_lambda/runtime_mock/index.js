@@ -160,22 +160,202 @@ function createEvent(error) {
   const trigger = process.env.LAMBDA_TRIGGER;
   if (trigger != null) {
     switch (trigger) {
-      case 's3': {
+      case 'api-gateway-no-proxy':
+        break;
+
+      case 'api-gateway-proxy':
+        event.resource = '/path/to/{param1}/{param2}';
+        event.path = '/path/to/path-xxx/path-yyy';
+        event.httpMethod = 'POST';
+        event.headers = {
+          'x-test-header-1': 'another-header-value',
+          'x-test-header-2': 'header-value'
+        };
+        event.multiValueHeaders = {
+          'x-test-header-1': ['header-value', 'another-header-value'],
+          'x-test-header-2': ['header-value']
+        };
+        event.queryStringParameters = {
+          param1: 'another-param-value',
+          param2: 'param-value'
+        };
+        event.multiValueQueryStringParameters = {
+          param1: ['param-value', 'another-param-value'],
+          param2: ['param-value']
+        };
+        event.pathParameters = {
+          param1: 'path-xxx',
+          param2: 'path-yyy'
+        };
+        event.body = '{\n    "test": "with body"\n}';
+        break;
+
+      case 'application-load-balancer':
+        event.requestContext = {
+          elb: {
+            targetGroupArn:
+              'arn:aws:elasticloadbalancing:us-east-2:410797082306:targetgroup/' +
+              'lambda-trigger-test-group/752535aa89ba8d62'
+          }
+        };
+        event.httpMethod = 'GET';
+        event.path = '/path/to/resource';
+        event.queryStringParameters = {
+          param1: 'value1',
+          param2: 'value2'
+        };
+        event.headers = {
+          accept: '*/*',
+          host: 'lambda-trigger-test-XXXXXXXXXX.us-east-2.elb.amazonaws.com',
+          'user-agent': 'curl/7.54.0',
+          'x-amzn-trace-id': 'Root=1-5d886fff-8f876915462336bXXXXXXXXX',
+          'x-forwarded-for': '2.204.181.152',
+          'x-forwarded-port': '80',
+          'x-forwarded-proto': 'http',
+          'x-header-param-1': 'header-value-1',
+          'x-header-param-2': 'header-value-2'
+        };
+        event.body = '';
+        event.isBase64Encoded = false;
+        break;
+
+      case 'cloudwatch-events':
+        event.source = 'aws.events';
+        event['detail-type'] = 'Scheduled Event';
+        event.resources = ['arn:aws:events:us-east-2:XXXXXXXXXXXX:rule/lambda-tracing-trigger-test'];
+        break;
+
+      case 'cloudwatch-logs':
+        event.awslogs = {
+          data:
+            'H4sIAAAAAAAAAK1TWW/UMBD+K1bEA0jNxveRt60aKiQKVXd5oakqJ3FKaC4cbw+q/ncm21YgQcVWEFmRMzP2fMfkLurcNNkLt74dXZRG' +
+            'B8v18vwoW62Wh1m0Fw3XvfMQ5gQro7CmDEsIt8PFoR82I2QSez0lre2KyialbdvClpfn+pzgh7JV8M52UEcxMQmGpZPTV++X62y1PmOF' +
+            'IoUstCwl4ZyRoiKOU6N4rV1hNIErpk0xlb4ZQzP0b5s2OD9F6Wn01CkOQ+yuXB/i0Tc9ZON6WxSdbbtnc2o+cBc1FYBg3EhgoQXhWGkM' +
+            'n0wKgwVVQnNNBJOGGYKpVIxriEmilOaMApDQgFDBdsCZCAliaK7gzfeeBHzkGGNYek1JynjK1MIo9jkPjhnopuqY8cLF3AoZa1PUsRKW' +
+            'ElNXlhYsD6tgfWj6C7QZ8z663/sdNcGYMSE1URpgawquCAk7gg01hmlGmWJSAXTNzfOoxd9Ri51Rz5OTeT/4FD3ZgpoJ9UNAFtWbvpy9' +
+            'y3sEjw3I3YyDD9Pii+2r1nn0OrmyPgl2ukyavnI3i69TqlL25s8CCNiCJ5xQg4EmI5hpDXvBGAV+0hCwUYGBkhIunxEAjCe/CpB9OEAn' +
+            '7tsGCt9VKdqJ9b+jUzuiO8mOP56sXwwwHGy8nZVPkdALglE35WG/aVtXoZ8pmCdIoDwcuW7wt2jVfHcQpRod7UPQ3qDHxKfJVfNN2/h/' +
+            'YK93Zf8y2ujYDyUchjFrAjAtXD14h8qhG1u3/bX8w4V5P5M4u/8BWHOedgAFAAA='
+        };
+        break;
+
+      case 's3':
         event.Records = [
           {
-            eventSource: 'aws:s3'
+            eventVersion: '2.1',
+            eventSource: 'aws:s3',
+            awsRegion: 'us-east-2',
+            eventTime: '2019-09-08T21:53:56.900Z',
+            eventName: 'ObjectCreated:Put',
+            userIdentity: {
+              principalId: 'AWS:XXXXXXXXXXXXXXXXXXXXX:edgar.example@example.com'
+            },
+            requestParameters: {
+              sourceIPAddress: '123.123.123.42'
+            },
+            responseElements: {
+              'x-amz-request-id': 'XXXXXXXXXXXXXXXX',
+              'x-amz-id-2': 'XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX='
+            },
+            s3: {
+              s3SchemaVersion: '1.0',
+              configurationId: 'XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX',
+              bucket: {
+                name: 'lambda-tracing-test',
+                ownerIdentity: {
+                  principalId: 'XXXXXXXXXXXXX'
+                },
+                arn: 'arn:aws:s3:::lambda-tracing-test'
+              },
+              object: {
+                key: 'test/',
+                size: 0,
+                eTag: 'XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX',
+                sequencer: 'XXXXXXXXXXXXXXXXXX'
+              }
+            }
+          },
+          {
+            eventSource: 'aws:s3',
+            eventName: 'ObjectCreated:Put',
+            s3: {
+              bucket: {
+                name: 'lambda-tracing-test-2'
+              },
+              object: {
+                key: 'test/two'
+              }
+            }
+          },
+          {
+            eventSource: 'aws:s3',
+            eventName: 'ObjectCreated:Put',
+            s3: {
+              bucket: {
+                name: 'lambda-tracing-test-3'
+              },
+              object: {
+                key: 'test/three'
+              }
+            }
+          },
+          {
+            eventSource: 'aws:s3',
+            eventName: 'ObjectCreated:Put',
+            s3: {
+              bucket: {
+                name: 'lambda-tracing-test-4'
+              },
+              object: {
+                key: 'test/four'
+              }
+            }
           }
         ];
         break;
-      }
-      case 'cloudwatch-logs': {
-        event.awslogs = { data: 'somegibberish' };
+
+      case 'sqs':
+        event.Records = [
+          {
+            messageId: '420440d5-8733-43d9-b93c-ad1305889995',
+            receiptHandle:
+              'AQEB4Sk+tR+qMK5ss+ZRB9h61fG3IQKnBUXsoQNJ+kLYADC16buCksferm4JtPM0SbqDfKWdtnnLFOPU69iISv3lVsI6t+T5FhD126' +
+              'yVoVMEu4Pw5ethWk9RRGWPkEgZcbV4WPU89gQC/u0lFdwtODnCxMvJZwW6cvtbX0yOPwGjmry3xj4wFNHG59U2QDTLaEQicsbo7YJJ' +
+              '6wXhHPl07/UIN5vIvPUhnHvAd37KeVy7dbRBugjq8UQk6APawf9RfNQRLkm9IXeXY8ZRCDDZaVkFDxWXfksaMrBZPNyOitQGvyxmmr' +
+              'm0yJbC/SMnh1Dohdwqq6Oc4XYVi7sI7YKt6lermIxF4Y8V3AUjvUte6fyzQZlXgzb4O8us6+yzhHUW9irwNlhWGF4WAgzUFscht2EQ' +
+              'fQ==',
+            body: '{\n  "body-1": "value-1",\n  "body-2": value-2"\n}',
+            attributes: {
+              ApproximateReceiveCount: '1',
+              SentTimestamp: '1569264666807',
+              SenderId: 'XXXXXXXXXXXXXXXXXXXXX',
+              ApproximateFirstReceiveTimestamp: '1569264666810'
+            },
+            messageAttributes: {
+              'param-1': {
+                stringValue: 'another-value',
+                stringListValues: [],
+                binaryListValues: [],
+                dataType: 'String'
+              },
+              'param-2': {
+                stringValue: 'value-2',
+                stringListValues: [],
+                binaryListValues: [],
+                dataType: 'String'
+              }
+            },
+            md5OfBody: 'XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX',
+            md5OfMessageAttributes: 'XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX',
+            eventSource: 'aws:sqs',
+            eventSourceARN: 'arn:aws:sqs:us-east-2:XXXXXXXXXXXX:lambda-tracing-test-queue',
+            awsRegion: 'us-east-2'
+          }
+        ];
         break;
-      }
-      case 'cloudwatch-events': {
-        event.source = 'aws.events';
-        break;
-      }
+
+      default:
+        throw new Error(`Unknown trigger type: ${trigger}.`);
     }
   }
   return event;

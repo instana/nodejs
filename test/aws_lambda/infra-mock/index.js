@@ -6,23 +6,12 @@
  * This little tool exists to send some made-up infra monitoring data about a Lambda to an acceptor.
  */
 
-/* CONFIGURATION */
-const acceptorHost = 'localhost';
-const acceptorPort = 8989;
+/* configuration */
+const acceptorHost = process.env['INSTANA_HOST'] || 'localhost';
+const acceptorPort = process.env['INSTANA_PORT'] || 8989;
 const acceptorTimeout = 5000;
-const sendUnencrypted = true;
+const sendUnencrypted = process.env['INSTANA_DEV_SEND_UNENCRYPTED'] === 'false' ? false : true;
 const acceptSelfSignedCert = false;
-
-const legacySensorMode = process.env.LEGACY_SENSOR != null;
-const anotherLambda = process.env.ANOTHER != null;
-
-const name = anotherLambda ? 'wrapped_callback_8_10' : 'wrapped_async_8_10';
-const unqualifiedArn = anotherLambda
-  ? `arn:aws:lambda:us-east-2:521808193417:function:${name}`
-  : `arn:aws:lambda:us-east-2:410797082306:function:${name}`;
-
-const https = sendUnencrypted ? require('http') : require('https');
-const constants = require('../../src/util/constants');
 
 const instanaKeyEnvVar = 'INSTANA_KEY';
 const instanaKey = process.env[instanaKeyEnvVar];
@@ -32,23 +21,39 @@ if (instanaKey == null) {
   process.exit(1);
 }
 
+/* dependencies */
+const https = sendUnencrypted ? require('http') : require('https');
+const constants = require('../../../src/util/constants');
+
+const legacySensorMode = process.env.LEGACY_SENSOR != null;
+const anotherLambda = process.env.ANOTHER != null;
+const onlyLatest = process.env.ONLY_LATEST;
+
+const name = process.env.LAMBDA_FUNCTION_NAME || 'wrapped_async_8_10';
+const unqualifiedArn = anotherLambda
+  ? `arn:aws:lambda:us-east-2:521808193417:function:${name}`
+  : `arn:aws:lambda:us-east-2:410797082306:function:${name}`;
+
 function random(maxValue) {
   return Math.floor(Math.random() * (maxValue + 1));
 }
 
 function sendPayload(callback) {
   let version = '$LATEST';
-  if (!legacySensorMode && random(5) > 3) {
+  if (process.env.LAMBDA_VERSION) {
+    // send data about a fixed version
+    version = process.env.LAMBDA_VERSION;
+  } else if (!onlyLatest && !legacySensorMode && random(5) > 3) {
     // send data about other versions (versions 1, 2, 3) sometimes (at randoml)
     version = (1 + random(4)).toString();
   }
+
   const qualifiedArn = `${unqualifiedArn}:${version}`;
 
   const metricsData = {
     aws_grouping_zone: 'us-east-2',
     name,
     arn: legacySensorMode ? unqualifiedArn : qualifiedArn,
-    version: legacySensorMode ? undefined : version,
     runtime: 'nodejs8.10',
     handler: 'index.handler',
     timeout: 3,
@@ -74,6 +79,13 @@ function sendPayload(callback) {
     }
   };
 
+  if (!legacySensorMode) {
+    metricsData.version = version;
+    metricsData.npmPackageName = 'wrapped-async-lambda';
+    metricsData.npmPackageVersion = '1.0.0';
+    metricsData.npmPackageDescription = 'An AWS Lambda';
+  }
+
   console.log(`sending: ${JSON.stringify(metricsData, null, 2)}`);
 
   const metricsPayload = {
@@ -90,7 +102,7 @@ function sendPayload(callback) {
     headers: {
       'Content-Type': 'application/json',
       'Content-Length': Buffer.byteLength(payload),
-      [constants.xInstanaHost]: unqualifiedArn,
+      [constants.xInstanaHost]: 'some-random-host-that-runs-the-aws-agent',
       [constants.xInstanaKey]: instanaKey,
       [constants.xInstanaTime]: Date.now()
     },

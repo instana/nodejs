@@ -5,7 +5,7 @@ const instanaCore = require('@instana/core');
 const consoleLogger = require('../util/console_logger');
 const acceptorConnector = require('../util/acceptor_connector');
 const identityProvider = require('./identity_provider');
-const extractTriggers = require('./triggers');
+const enrichSpanWithTriggerData = require('./triggers');
 
 const { metrics, tracing } = instanaCore;
 const { constants, spanBuffer } = tracing;
@@ -69,9 +69,13 @@ function shimmedHandler(originalHandler, originalThis, originalArgs, config) {
       .startSpan('aws.lambda.entry', constants.ENTRY, incomingTraceId, incomingParentSpanId);
     entrySpan.data = {
       lambda: {
-        trigger: extractTriggers(event)
+        arn: `${context.invokedFunctionArn}:${context.functionVersion}`,
+        runtime: 'nodejs',
+        functionName: context.functionName,
+        functionVersion: context.functionVersion
       }
     };
+    enrichSpanWithTriggerData(event, entrySpan);
 
     originalArgs[2] = function wrapper(originalError, originalResult) {
       if (handlerHasFinished) {

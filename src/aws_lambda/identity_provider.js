@@ -11,7 +11,7 @@ exports.init = function init(context) {
 };
 
 exports.getHostHeader = function getHostHeader() {
-  return unqualifiedArn;
+  return qualifiedArn;
 };
 
 exports.getEntityId = function getEntityId() {
@@ -20,6 +20,7 @@ exports.getEntityId = function getEntityId() {
 
 exports.getFrom = function getFrom() {
   return {
+    hl: true,
     e: qualifiedArn
   };
 };
