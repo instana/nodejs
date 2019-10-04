@@ -6,6 +6,7 @@ const environmentUtil = require('../util/environment');
 // acceptor_connector is required from aws_lambda/wrapper before initializing @instana/core, that is, in particular,
 // before tracing is initialized. Thus we always get an uninstrumented https module here.
 const https = environmentUtil.sendUnencrypted ? require('http') : require('https');
+const semver = require('semver');
 
 const constants = require('./constants');
 let logger = require('./console_logger');
@@ -15,6 +16,8 @@ const defaultTimeout = 500;
 let acceptorTimeout = defaultTimeout;
 
 let warningsHaveBeenLogged = false;
+
+const needsEcdhCurveFix = semver.lt(process.version, '10.0.0');
 
 if (process.env[timeoutEnvVar]) {
   acceptorTimeout = parseInt(process.env[timeoutEnvVar], 10);
@@ -89,6 +92,13 @@ function send(resourcePath, payload, callback) {
     },
     rejectUnauthorized: !acceptSelfSignedCert
   };
+
+  if (needsEcdhCurveFix) {
+    // Requests to K8s based back ends fail on Node.js 8.10 without this option, due to a bug in all
+    // Node.js versions >= 8.6.0 and < 10.0.0, see https://github.com/nodejs/node/issues/19359 and
+    // https://github.com/nodejs/node/issues/16196#issuecomment-336647658.
+    options.ecdhCurve = 'auto';
+  }
 
   const req = https.request(options, res => {
     const unexpectedStatus = res.statusCode < 200 || res.statusCode >= 300;
