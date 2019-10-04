@@ -1,7 +1,7 @@
 'use strict';
 
 // eslint-disable-next-line import/no-unresolved
-const instana = require('@instana-serverless');
+const instana = require('@instana/serverless');
 const https = require('https');
 
 exports.handler = instana.awsLambda.wrap((event, context, callback) => {
