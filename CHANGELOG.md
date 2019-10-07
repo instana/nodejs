@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.73.0
 - Allow early init of instrumentations (experimental).
 
 ## 1.72.1
