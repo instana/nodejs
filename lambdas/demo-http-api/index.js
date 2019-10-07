@@ -1,0 +1,150 @@
+'use strict';
+
+// eslint-disable-next-line import/no-unresolved
+const instana = require('@instana/serverless');
+
+const pg = require('pg');
+
+const pgHost = process.env.RDS_HOSTNAME || 'localhost';
+const pgPort = process.env.RDS_PORT || '5432';
+const pgDatabase = process.env.RDS_DB_NAME || 'lambdademo';
+const pgUser = process.env.RDS_USERNAME || 'postgres';
+const pgPassword = process.env.RDS_PASSWORD;
+
+console.log(
+  `Using PG config: ${pgHost}:${pgPort}/${pgDatabase}, user ${pgUser}, ${
+    pgPassword ? 'a password has been provided.' : 'no password has been provided!'
+  }`
+);
+
+exports.handler = instana.awsLambda.wrap(async event => {
+  if (!event.httpMethod || !event.path) {
+    // malformed event, probably not an API gateway request
+    return { statusCode: 400 };
+  }
+
+  if (event.path === '/items') {
+    return handleItemsRequest(event);
+  } else if (event.resource === '/items/{itemId}') {
+    return handleSingleItemRequest(event);
+  }
+  return { statusCode: 404 };
+});
+
+async function handleItemsRequest(event) {
+  if (event.httpMethod === 'GET') {
+    return handleList();
+  } else if (event.httpMethod === 'POST') {
+    return handleCreate(event);
+  } else {
+    return { statusCode: 405 };
+  }
+}
+
+async function handleList() {
+  const client = await connect();
+  try {
+    const results = await client.query('SELECT id, label FROM items');
+
+    return {
+      statusCode: 200,
+      body: JSON.stringify({
+        items: results.rows
+      })
+    };
+  } catch (err) {
+    console.log('Failed to execute SELECT.', err);
+    return { statusCode: 500 };
+  } finally {
+    await client.end();
+  }
+}
+
+async function handleCreate(event) {
+  if (!event.body) {
+    return {
+      statusCode: 400,
+      body: JSON.stringify({
+        message: 'No HTTP request body, please send JSON.'
+      })
+    };
+  }
+
+  let body;
+  try {
+    body = JSON.parse(event.body);
+  } catch (e) {
+    return {
+      statusCode: 400,
+      body: JSON.stringify({
+        message: 'Malformed HTTP request body, please send JSON.'
+      })
+    };
+  }
+
+  const client = await connect();
+  try {
+    const label = body.label || 'new item';
+    const values = [label];
+    const results = await client.query('INSERT INTO items(label) VALUES($1) RETURNING *', values);
+
+    return {
+      statusCode: 201,
+      body: JSON.stringify({
+        item: results.rows[0]
+      })
+    };
+  } catch (err) {
+    console.log('Failed to execute insert.', err);
+    return { statusCode: 500 };
+  } finally {
+    await client.end();
+  }
+}
+
+async function handleSingleItemRequest(event) {
+  if (event.httpMethod !== 'GET') {
+    return { statusCode: 405 };
+  }
+
+  if (!event.pathParameters || !event.pathParameters.itemId) {
+    return { statusCode: 404 };
+  }
+
+  const itemId = parseInt(event.pathParameters.itemId, 10);
+  if (isNaN(itemId)) {
+    return { statusCode: 404 };
+  }
+
+  const client = await connect();
+  try {
+    const result = await client.query('SELECT * FROM items WHERE id = $1', [itemId]);
+    if (result.rows.length === 0) {
+      return {
+        statusCode: 404
+      };
+    } else {
+      return {
+        statusCode: 200,
+        body: JSON.stringify(result.rows[0])
+      };
+    }
+  } catch (err) {
+    console.log('Failed to execute SELECT.', err);
+    return { statusCode: 500 };
+  } finally {
+    await client.end();
+  }
+}
+
+async function connect() {
+  const client = new pg.Client({
+    host: pgHost,
+    port: pgPort,
+    database: pgDatabase,
+    user: pgUser,
+    password: pgPassword
+  });
+  await client.connect();
+  return client;
+}

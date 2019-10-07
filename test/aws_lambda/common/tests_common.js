@@ -493,6 +493,9 @@ exports.registerTests = function registerTests(handlerDefinitionPath) {
       expect(span.f.hl).to.be.true;
       expect(span.f.e).to.equal(qualifiedArn);
       expect(span.async).to.equal(false);
+      expect(span.data.http).to.be.an('object');
+      expect(span.data.http.method).to.equal('GET');
+      expect(span.data.http.url).to.equal(config.downstreamDummyUrl);
       expectHeaders(span);
     });
   }

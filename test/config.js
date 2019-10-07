@@ -17,7 +17,7 @@ exports.downstreamDummyPort = 3456;
 
 exports.downstreamDummyUrl = `${exports.downstreamDummyProtocol}://${exports.downstreamDummyHost}:${
   exports.downstreamDummyPort
-}`;
+}/`;
 
 exports.getAppStdio = function getAppStdio() {
   if (process.env.WITH_STDOUT || process.env.CI) {
