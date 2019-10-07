@@ -15,6 +15,12 @@ module.exports = exports = {
   util: require('./util')
 };
 
+exports.preInit = function() {
+  var preliminaryConfig = normalizeConfig();
+  exports.util.requireHook.init(preliminaryConfig);
+  exports.tracing.preInit(preliminaryConfig);
+};
+
 exports.init = function(config, downstreamConnection, processIdentityProvider) {
   log.init(config);
   config = normalizeConfig(config);

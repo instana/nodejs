@@ -23,6 +23,10 @@ exports.init = function(config) {
   extraHttpHeadersToCapture = config.tracing.http.extraHttpHeadersToCapture;
 };
 
+exports.updateConfig = function(config) {
+  extraHttpHeadersToCapture = config.tracing.http.extraHttpHeadersToCapture;
+};
+
 function shimEmit(realEmit) {
   return function(type, req, res) {
     if (type !== 'request' || !isActive) {

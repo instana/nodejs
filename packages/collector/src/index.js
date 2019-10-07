@@ -49,3 +49,10 @@ exports.setLogger = function(logger) {
   config.logger = logger;
   log.init(config, true);
 };
+
+if (
+  process.env.INSTANA_EARLY_INSTRUMENTATION != null &&
+  process.env.INSTANA_EARLY_INSTRUMENTATION.toLowerCase() === 'true'
+) {
+  instanaNodeJsCore.preInit();
+}
