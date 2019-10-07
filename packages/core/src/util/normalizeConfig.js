@@ -2,7 +2,7 @@
 
 'use strict';
 
-var tracing = require('../tracing');
+var supportedTracingVersion = require('../tracing/supportedVersion');
 
 var logger;
 logger = require('../logger').getLogger('configuration', function(newLogger) {
@@ -126,7 +126,7 @@ function normalizeAutomaticTracingEnabled(config) {
     return;
   }
 
-  if (!tracing.supportedVersion(process.versions.node)) {
+  if (!supportedTracingVersion(process.versions.node)) {
     logger.warn(
       'Not enabling automatic tracing, this is an unsupported version of Node.js. ' +
         'See: https://docs.instana.io/ecosystem/node-js/#supported-nodejs-versions'

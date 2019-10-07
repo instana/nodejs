@@ -1,7 +1,5 @@
 'use strict';
 
-var semver = require('semver');
-
 var sdk = require('./sdk');
 var constants = require('./constants');
 var tracingMetrics = require('./metrics');
@@ -9,8 +7,10 @@ var opentracing = require('./opentracing');
 var spanHandle = require('./spanHandle');
 var tracingUtil = require('./tracingUtil');
 var spanBuffer = require('./spanBuffer');
+var supportedVersion = require('./supportedVersion');
 
 var tracingEnabled = false;
+var instrumenationsInitialized = false;
 var automaticTracingEnabled = false;
 var cls = null;
 var config = null;
@@ -50,6 +50,11 @@ exports.constants = constants;
 exports.opentracing = opentracing;
 exports.sdk = sdk;
 exports.spanBuffer = spanBuffer;
+exports.supportedVersion = supportedVersion;
+
+exports.preInit = function(preliminaryConfig) {
+  initInstrumenations(preliminaryConfig);
+};
 
 exports.init = function(_config, downstreamConnection, _processIdentityProvider) {
   config = _config;
@@ -67,18 +72,27 @@ exports.init = function(_config, downstreamConnection, _processIdentityProvider)
     sdk.init(cls);
 
     if (automaticTracingEnabled) {
-      // initialize all instrumentations
-      instrumentations.forEach(function(instrumentationKey) {
-        instrumentationModules[instrumentationKey] = require(instrumentationKey);
-        instrumentationModules[instrumentationKey].init(config);
-      });
+      initInstrumenations(config);
     }
   }
 };
 
-exports.supportedVersion = function supportedVersion(version) {
-  return semver.satisfies(version, '^4.5 || ^5.10 || ^6 || ^7 || ^8.2.1 || ^9.1.0 || ^10.4.0 || ^11 || >=12.0.0');
-};
+function initInstrumenations(_config) {
+  // initialize all instrumentations
+  if (!instrumenationsInitialized) {
+    instrumentations.forEach(function(instrumentationKey) {
+      instrumentationModules[instrumentationKey] = require(instrumentationKey);
+      instrumentationModules[instrumentationKey].init(_config);
+    });
+    instrumenationsInitialized = true;
+  } else {
+    instrumentations.forEach(function(instrumentationKey) {
+      if (instrumentationModules[instrumentationKey].updateConfig) {
+        instrumentationModules[instrumentationKey].updateConfig(_config);
+      }
+    });
+  }
+}
 
 exports.activate = function() {
   if (tracingEnabled) {
