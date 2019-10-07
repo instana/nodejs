@@ -11,6 +11,10 @@ const { metrics, tracing } = instanaCore;
 const { constants, spanBuffer } = tracing;
 let logger = consoleLogger;
 
+// Initialize instrumentations early to allow for require statements after our package has been required but before the
+// actual instana.wrap(...) call.
+instanaCore.preInit();
+
 /**
  * Wraps an AWS Lambda handler so that metrics and traces are reported to Instana. This function will figure out if the
  * Lambda handler uses the callback style or promise/async function style by inspecting the number of function arguments
