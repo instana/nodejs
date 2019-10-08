@@ -1,5 +1,6 @@
 'use strict';
 
+const tracingConstants = require('@instana/core').tracing.constants;
 const zlib = require('zlib');
 
 const maxCloudwatchEventsResources = 3;
@@ -10,7 +11,7 @@ const maxS3Records = 3;
 const maxS3ObjectKeyLength = 200;
 const maxSQSRecords = 3;
 
-module.exports = exports = function enrichSpanWithTriggerData(event, span) {
+exports.enrichSpanWithTriggerData = function enrichSpanWithTriggerData(event, span) {
   if (isApiGatewayProxyTrigger(event)) {
     span.data.lambda.trigger = 'aws:api.gateway';
     extractHttpFromApiGatewwayProxyEvent(event, span);
@@ -185,3 +186,23 @@ function extractEventFromSQS(event, span) {
   };
   span.data.lambda.sqs.more = event.Records.length > maxSQSRecords;
 }
+
+exports.readTracingHeaders = function readTracingHeaders(event) {
+  const tracingHeaders = {};
+  if (event.headers && typeof event.headers === 'object') {
+    let lowerCaseKey;
+    Object.keys(event.headers).forEach(key => {
+      if (typeof key === 'string') {
+        lowerCaseKey = key.toLowerCase();
+        if (lowerCaseKey === tracingConstants.traceIdHeaderNameLowerCase) {
+          tracingHeaders.t = event.headers[key];
+        } else if (lowerCaseKey === tracingConstants.spanIdHeaderNameLowerCase) {
+          tracingHeaders.s = event.headers[key];
+        } else if (lowerCaseKey === tracingConstants.traceLevelHeaderNameLowerCase) {
+          tracingHeaders.l = event.headers[key];
+        }
+      }
+    });
+  }
+  return tracingHeaders;
+};

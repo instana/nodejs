@@ -39,6 +39,15 @@ function prelude(opts) {
   if (opts.trigger) {
     env.LAMBDA_TRIGGER = opts.trigger;
   }
+  if (opts.traceId) {
+    env.INSTANA_HEADER_T = opts.traceId;
+  }
+  if (opts.traceId) {
+    env.INSTANA_HEADER_S = opts.spanId;
+  }
+  if (opts.traceId) {
+    env.INSTANA_HEADER_L = opts.traceLevel;
+  }
 
   const Control = require('../../util/control');
   const control = new Control({
@@ -92,6 +101,39 @@ exports.registerTests = function registerTests(handlerDefinitionPath) {
         ));
   });
 
+  describe('triggered by API Gateway (Lambda Proxy) with parent span', function() {
+    // - same as "everything is peachy"
+    // - but triggered by AWS API Gateway (with Lambda Proxy)
+    // - with an incoming parent span
+    const control = prelude.bind(this)({
+      handlerDefinitionPath,
+      trigger: 'api-gateway-proxy',
+      instanaUrl: config.acceptorBaseUrl,
+      instanaKey: config.instanaKey,
+      traceId: 'test-trace-id',
+      spanId: 'test-span-id'
+    });
+
+    it('must recognize API gateway trigger (with proxy) with parent trace', () =>
+      verify(control, false, true, 'aws:api.gateway', {
+        t: 'test-trace-id',
+        s: 'test-span-id'
+      })
+        .then(() => control.getSpans())
+        .then(spans =>
+          expectOneMatching(spans, span => {
+            expect(span.n).to.equal('aws.lambda.entry');
+            expect(span.k).to.equal(constants.ENTRY);
+            expect(span.data.http).to.be.an('object');
+            expect(span.data.http.method).to.equal('POST');
+            expect(span.data.http.url).to.equal('/path/to/path-xxx/path-yyy');
+            expect(span.data.http.path_tpl).to.equal('/path/to/{param1}/{param2}');
+            expect(span.data.http.params).to.equal('param1=param-value&param1=another-param-value&param2=param-value');
+            expect(span.data.http.host).to.not.exist;
+          })
+        ));
+  });
+
   describe('triggered by API Gateway (no Lambda Proxy)', function() {
     // - same as "everything is peachy"
     // - but triggered by AWS API Gateway (without Lambda Proxy)
@@ -126,6 +168,39 @@ exports.registerTests = function registerTests(handlerDefinitionPath) {
 
     it('must recognize the application load balancer trigger', () =>
       verify(control, false, true, 'aws:application.load.balancer')
+        .then(() => control.getSpans())
+        .then(spans =>
+          expectOneMatching(spans, span => {
+            expect(span.n).to.equal('aws.lambda.entry');
+            expect(span.k).to.equal(constants.ENTRY);
+            expect(span.data.http).to.be.an('object');
+            expect(span.data.http.method).to.equal('GET');
+            expect(span.data.http.url).to.equal('/path/to/resource');
+            expect(span.data.http.path_tpl).to.not.exist;
+            expect(span.data.http.params).to.equal('param1=value1&param2=value2');
+            expect(span.data.http.host).to.not.exist;
+          })
+        ));
+  });
+
+  describe('triggered by an application load balancer with parent span', function() {
+    // - same as "everything is peachy"
+    // - but triggered by an application load balancer
+    // - with an incoming parent span
+    const control = prelude.bind(this)({
+      handlerDefinitionPath,
+      trigger: 'application-load-balancer',
+      instanaUrl: config.acceptorBaseUrl,
+      instanaKey: config.instanaKey,
+      traceId: 'test-trace-id',
+      spanId: 'test-span-id'
+    });
+
+    it('must recognize the application load balancer trigger and parent span', () =>
+      verify(control, false, true, 'aws:application.load.balancer', {
+        t: 'test-trace-id',
+        s: 'test-span-id'
+      })
         .then(() => control.getSpans())
         .then(spans =>
           expectOneMatching(spans, span => {
@@ -410,7 +485,7 @@ exports.registerTests = function registerTests(handlerDefinitionPath) {
     it('must finish swiftly', () => verify(control, false, false));
   });
 
-  function verify(control, lambdaError, expectSpansAndMetrics, trigger) {
+  function verify(control, lambdaError, expectSpansAndMetrics, trigger, parent) {
     /* eslint-disable no-console */
     if (lambdaError) {
       expect(control.getLambdaErrors().length).to.equal(1);
@@ -432,7 +507,7 @@ exports.registerTests = function registerTests(handlerDefinitionPath) {
 
     if (expectSpansAndMetrics) {
       return retry(() => control.getSpans())
-        .then(spans => expectSpans(spans, lambdaError, trigger))
+        .then(spans => expectSpans(spans, lambdaError, trigger, parent))
         .then(() => control.getMetrics())
         .then(metrics => expectMetrics(metrics));
     } else {
@@ -448,15 +523,21 @@ exports.registerTests = function registerTests(handlerDefinitionPath) {
     }
   }
 
-  function expectSpans(spans, lambdaError, expectedTrigger) {
-    const entry = expectLambdaEntry(spans, lambdaError, expectedTrigger);
+  function expectSpans(spans, lambdaError, expectedTrigger, expectParent) {
+    const entry = expectLambdaEntry(spans, lambdaError, expectedTrigger, expectParent);
     expectHttpExit(spans, entry);
   }
 
-  function expectLambdaEntry(spans, lambdaError, expectedTrigger) {
+  function expectLambdaEntry(spans, lambdaError, expectedTrigger, expectParent) {
     return expectOneMatching(spans, span => {
-      expect(span.t).to.exist;
-      expect(span.p).to.not.exist;
+      if (expectParent) {
+        expect(span.t).to.equal(expectParent.t);
+        expect(span.p).to.equal(expectParent.s);
+      } else {
+        expect(span.t).to.exist;
+        expect(span.p).to.not.exist;
+      }
+      expect(span.s).to.exist;
       expect(span.n).to.equal('aws.lambda.entry');
       expect(span.k).to.equal(constants.ENTRY);
       expect(span.f).to.be.an('object');
@@ -486,6 +567,7 @@ exports.registerTests = function registerTests(handlerDefinitionPath) {
     return expectOneMatching(spans, span => {
       expect(span.t).to.equal(entry.t);
       expect(span.p).to.equal(entry.s);
+      expect(span.s).to.exist;
       expect(span.n).to.equal('node.http.client');
       expect(span.k).to.equal(constants.EXIT);
       expect(span.f).to.be.an('object');

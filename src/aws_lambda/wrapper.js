@@ -5,7 +5,7 @@ const instanaCore = require('@instana/core');
 const consoleLogger = require('../util/console_logger');
 const acceptorConnector = require('../util/acceptor_connector');
 const identityProvider = require('./identity_provider');
-const enrichSpanWithTriggerData = require('./triggers');
+const triggers = require('./triggers');
 
 const { metrics, tracing } = instanaCore;
 const { constants, spanBuffer } = tracing;
@@ -54,8 +54,9 @@ function shimmedHandler(originalHandler, originalThis, originalArgs, config) {
   const context = originalArgs[1];
   const lambdaCallback = originalArgs[2];
 
-  const incomingTraceId = null;
-  const incomingParentSpanId = null;
+  const tracingHeaders = triggers.readTracingHeaders(event);
+  const incomingTraceId = tracingHeaders.t;
+  const incomingParentSpanId = tracingHeaders.s;
 
   init(event, context, config);
 
@@ -79,7 +80,7 @@ function shimmedHandler(originalHandler, originalThis, originalArgs, config) {
         functionVersion: context.functionVersion
       }
     };
-    enrichSpanWithTriggerData(event, entrySpan);
+    triggers.enrichSpanWithTriggerData(event, entrySpan);
 
     originalArgs[2] = function wrapper(originalError, originalResult) {
       if (handlerHasFinished) {

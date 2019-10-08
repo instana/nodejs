@@ -188,6 +188,7 @@ function createEvent(error) {
           param2: 'path-yyy'
         };
         event.body = '{\n    "test": "with body"\n}';
+        addHttpTracingHeaders(event);
         break;
 
       case 'application-load-balancer':
@@ -217,6 +218,7 @@ function createEvent(error) {
         };
         event.body = '';
         event.isBase64Encoded = false;
+        addHttpTracingHeaders(event);
         break;
 
       case 'cloudwatch-events':
@@ -359,6 +361,18 @@ function createEvent(error) {
     }
   }
   return event;
+}
+
+function addHttpTracingHeaders(event) {
+  if (process.env.INSTANA_HEADER_T) {
+    event.headers['x-InStaNa-t'] = process.env.INSTANA_HEADER_T;
+  }
+  if (process.env.INSTANA_HEADER_S) {
+    event.headers['x-InStaNa-S'] = process.env.INSTANA_HEADER_S;
+  }
+  if (process.env.INSTANA_HEADER_L) {
+    event.headers['x-InStaNa-l'] = process.env.INSTANA_HEADER_L;
+  }
 }
 
 function registerErrorHandling() {
