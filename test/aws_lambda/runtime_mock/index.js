@@ -157,6 +157,10 @@ function createEvent(error) {
     error
   };
 
+  if (process.env.HTTP_STATUS_CODE) {
+    event.requestedStatusCode = process.env.HTTP_STATUS_CODE;
+  }
+
   const trigger = process.env.LAMBDA_TRIGGER;
   if (trigger != null) {
     switch (trigger) {

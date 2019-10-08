@@ -17,6 +17,7 @@ const handler = function handler(event, context, callback) {
         callback(new Error('Boom!'));
       } else {
         callback(null, {
+          statusCode: event.requestedStatusCode ? parseInt(event.requestedStatusCode, 10) : undefined,
           message: 'Stan says hi!'
         });
       }

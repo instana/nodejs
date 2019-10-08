@@ -87,7 +87,7 @@ function shimmedHandler(originalHandler, originalThis, originalArgs, config) {
         return;
       }
       handlerHasFinished = true;
-      postHandler(entrySpan, originalError, () => {
+      postHandler(entrySpan, originalError, originalResult, () => {
         lambdaCallback(originalError, originalResult);
       });
     };
@@ -143,7 +143,7 @@ function init(event, context, config) {
  */
 function postPromise(context, entrySpan, error, value) {
   return new Promise((resolve, reject) => {
-    postHandler(entrySpan, error, () => {
+    postHandler(entrySpan, error, value, () => {
       if (error) {
         reject(error);
       } else {
@@ -153,12 +153,30 @@ function postPromise(context, entrySpan, error, value) {
   });
 }
 
-function postHandler(entrySpan, error, callback) {
+function postHandler(entrySpan, error, result, callback) {
   if (error) {
-    entrySpan.error = true;
     entrySpan.ec = 1;
     entrySpan.data.lambda.error = error.message ? error.message : error.toString();
   }
+  // capture HTTP errors
+  if (result && typeof result === 'object' && result.statusCode) {
+    if (typeof result.statusCode === 'number') {
+      entrySpan.data.http = entrySpan.data.http || {};
+      entrySpan.data.http.status = result.statusCode;
+      if (result.statusCode >= 500) {
+        entrySpan.ec = entrySpan.ec ? entrySpan.ec + 1 : 1;
+        entrySpan.data.lambda.error = entrySpan.data.lambda.error || `HTTP status ${result.statusCode}`;
+      }
+    } else if (typeof result.statusCode === 'string' && /^\d\d\d$/.test(result.statusCode)) {
+      entrySpan.data.http = entrySpan.data.http || {};
+      entrySpan.data.http.status = parseInt(result.statusCode, 10);
+      if (entrySpan.data.http.status >= 500) {
+        entrySpan.ec = entrySpan.ec ? entrySpan.ec + 1 : 1;
+        entrySpan.data.lambda.error = entrySpan.data.lambda.error || `HTTP status ${result.statusCode}`;
+      }
+    }
+  }
+  entrySpan.error = entrySpan.ec > 0;
   entrySpan.d = Date.now() - entrySpan.ts;
 
   entrySpan.transmit();

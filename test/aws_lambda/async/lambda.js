@@ -15,6 +15,7 @@ const handler = async event => {
     throw new Error('Boom!');
   } else {
     return {
+      statusCode: event.requestedStatusCode ? parseInt(event.requestedStatusCode, 10) : undefined,
       message: 'Stan says hi!'
     };
   }

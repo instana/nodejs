@@ -39,13 +39,16 @@ function prelude(opts) {
   if (opts.trigger) {
     env.LAMBDA_TRIGGER = opts.trigger;
   }
+  if (opts.statusCode) {
+    env.HTTP_STATUS_CODE = opts.statusCode;
+  }
   if (opts.traceId) {
     env.INSTANA_HEADER_T = opts.traceId;
   }
-  if (opts.traceId) {
+  if (opts.spanId) {
     env.INSTANA_HEADER_S = opts.spanId;
   }
-  if (opts.traceId) {
+  if (opts.traceLevel) {
     env.INSTANA_HEADER_L = opts.traceLevel;
   }
 
@@ -80,6 +83,7 @@ exports.registerTests = function registerTests(handlerDefinitionPath) {
     const control = prelude.bind(this)({
       handlerDefinitionPath,
       trigger: 'api-gateway-proxy',
+      statusCode: 200,
       instanaUrl: config.acceptorBaseUrl,
       instanaKey: config.instanaKey
     });
@@ -97,6 +101,7 @@ exports.registerTests = function registerTests(handlerDefinitionPath) {
             expect(span.data.http.path_tpl).to.equal('/path/to/{param1}/{param2}');
             expect(span.data.http.params).to.equal('param1=param-value&param1=another-param-value&param2=param-value');
             expect(span.data.http.host).to.not.exist;
+            expect(span.data.http.status).to.equal(200);
           })
         ));
   });
@@ -110,11 +115,12 @@ exports.registerTests = function registerTests(handlerDefinitionPath) {
       trigger: 'api-gateway-proxy',
       instanaUrl: config.acceptorBaseUrl,
       instanaKey: config.instanaKey,
+      statusCode: 201,
       traceId: 'test-trace-id',
       spanId: 'test-span-id'
     });
 
-    it('must recognize API gateway trigger (with proxy) with parent trace', () =>
+    it('must recognize API gateway trigger (with proxy) with parent span', () =>
       verify(control, false, true, 'aws:api.gateway', {
         t: 'test-trace-id',
         s: 'test-span-id'
@@ -130,6 +136,34 @@ exports.registerTests = function registerTests(handlerDefinitionPath) {
             expect(span.data.http.path_tpl).to.equal('/path/to/{param1}/{param2}');
             expect(span.data.http.params).to.equal('param1=param-value&param1=another-param-value&param2=param-value');
             expect(span.data.http.host).to.not.exist;
+            expect(span.data.http.status).to.equal(201);
+          })
+        ));
+  });
+
+  describe('HTTP errors', function() {
+    const control = prelude.bind(this)({
+      handlerDefinitionPath,
+      trigger: 'api-gateway-proxy',
+      instanaUrl: config.acceptorBaseUrl,
+      instanaKey: config.instanaKey,
+      statusCode: 502
+    });
+
+    it('must capture HTTP error codes >= 500', () =>
+      verify(control, 'http', true, 'aws:api.gateway')
+        .then(() => control.getSpans())
+        .then(spans =>
+          expectOneMatching(spans, span => {
+            expect(span.n).to.equal('aws.lambda.entry');
+            expect(span.k).to.equal(constants.ENTRY);
+            expect(span.data.http).to.be.an('object');
+            expect(span.data.http.method).to.equal('POST');
+            expect(span.data.http.url).to.equal('/path/to/path-xxx/path-yyy');
+            expect(span.data.http.path_tpl).to.equal('/path/to/{param1}/{param2}');
+            expect(span.data.http.params).to.equal('param1=param-value&param1=another-param-value&param2=param-value');
+            expect(span.data.http.host).to.not.exist;
+            expect(span.data.http.status).to.equal(502);
           })
         ));
   });
@@ -348,7 +382,7 @@ exports.registerTests = function registerTests(handlerDefinitionPath) {
       error: true
     });
 
-    it('must capture metrics and spans', () => verify(control, true, true));
+    it('must capture metrics and spans', () => verify(control, 'lambda', true));
   });
 
   describe('with config', function() {
@@ -379,7 +413,7 @@ exports.registerTests = function registerTests(handlerDefinitionPath) {
       error: true
     });
 
-    it('must capture metrics and spans', () => verify(control, true, true));
+    it('must capture metrics and spans', () => verify(control, 'lambda', true));
   });
 
   describe('when INSTANA_URL is missing', function() {
@@ -402,7 +436,7 @@ exports.registerTests = function registerTests(handlerDefinitionPath) {
       error: true
     });
 
-    it('must ignore the missing URL gracefully', () => verify(control, true, false));
+    it('must ignore the missing URL gracefully', () => verify(control, 'lambda', false));
   });
 
   describe('with config, when INSTANA_URL is missing', function() {
@@ -438,7 +472,7 @@ exports.registerTests = function registerTests(handlerDefinitionPath) {
       error: true
     });
 
-    it('must ignore the missing key gracefully', () => verify(control, true, false));
+    it('must ignore the missing key gracefully', () => verify(control, 'lambda', false));
   });
 
   describe('when acceptor is down', function() {
@@ -467,7 +501,7 @@ exports.registerTests = function registerTests(handlerDefinitionPath) {
       error: true
     });
 
-    it('must ignore the failed request gracefully', () => verify(control, true, false));
+    it('must ignore the failed request gracefully', () => verify(control, 'lambda', false));
   });
 
   describe('when acceptor is reachable but does not respond', function() {
@@ -485,14 +519,14 @@ exports.registerTests = function registerTests(handlerDefinitionPath) {
     it('must finish swiftly', () => verify(control, false, false));
   });
 
-  function verify(control, lambdaError, expectSpansAndMetrics, trigger, parent) {
+  function verify(control, error, expectSpansAndMetrics, trigger, parent) {
     /* eslint-disable no-console */
-    if (lambdaError) {
+    if (error === 'lambda') {
       expect(control.getLambdaErrors().length).to.equal(1);
       expect(control.getLambdaResults()).to.be.empty;
-      const error = control.getLambdaErrors()[0];
-      expect(error).to.exist;
-      expect(error.message).to.equal('Boom!');
+      const lambdaError = control.getLambdaErrors()[0];
+      expect(lambdaError).to.exist;
+      expect(lambdaError.message).to.equal('Boom!');
     } else {
       if (control.getLambdaErrors() && control.getLambdaErrors().length > 0) {
         console.log('Unexpected Errors:');
@@ -507,7 +541,7 @@ exports.registerTests = function registerTests(handlerDefinitionPath) {
 
     if (expectSpansAndMetrics) {
       return retry(() => control.getSpans())
-        .then(spans => expectSpans(spans, lambdaError, trigger, parent))
+        .then(spans => expectSpans(spans, error, trigger, parent))
         .then(() => control.getMetrics())
         .then(metrics => expectMetrics(metrics));
     } else {
@@ -523,12 +557,12 @@ exports.registerTests = function registerTests(handlerDefinitionPath) {
     }
   }
 
-  function expectSpans(spans, lambdaError, expectedTrigger, expectParent) {
-    const entry = expectLambdaEntry(spans, lambdaError, expectedTrigger, expectParent);
+  function expectSpans(spans, error, expectedTrigger, expectParent) {
+    const entry = expectLambdaEntry(spans, error, expectedTrigger, expectParent);
     expectHttpExit(spans, entry);
   }
 
-  function expectLambdaEntry(spans, lambdaError, expectedTrigger, expectParent) {
+  function expectLambdaEntry(spans, error, expectedTrigger, expectParent) {
     return expectOneMatching(spans, span => {
       if (expectParent) {
         expect(span.t).to.equal(expectParent.t);
@@ -550,14 +584,20 @@ exports.registerTests = function registerTests(handlerDefinitionPath) {
       if (expectedTrigger) {
         expect(span.data.lambda.trigger).to.equal(expectedTrigger);
       }
-      if (lambdaError) {
+      if (error === 'lambda') {
         expect(span.data.lambda.error).to.equal('Boom!');
         expect(span.error).to.be.true;
         expect(span.ec).to.equal(1);
-      } else {
+      } else if (error === 'http') {
+        expect(span.data.lambda.error).to.equal('HTTP status 502');
+        expect(span.error).to.be.true;
+        expect(span.ec).to.equal(1);
+      } else if (!error) {
         expect(span.data.lambda.error).to.not.exist;
         expect(span.error).to.be.false;
         expect(span.ec).to.equal(0);
+      } else {
+        throw new Error(`Unknown error expectation type, don't know how to verify: ${error}`);
       }
       expectHeaders(span);
     });

@@ -15,6 +15,9 @@ const handler = event => {
       throw new Error('Boom!');
     }
     return {
+      // In contrast to both other lambdas we pass back the HTTP status code as a string here, just so this case is also
+      // tested.
+      statusCode: event.requestedStatusCode ? event.requestedStatusCode : undefined,
       message: 'Stan says hi!'
     };
   });
