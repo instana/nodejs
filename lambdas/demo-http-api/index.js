@@ -4,12 +4,15 @@
 const instana = require('@instana/serverless');
 
 const pg = require('pg');
+const request = require('request-promise');
 
 const pgHost = process.env.RDS_HOSTNAME || 'localhost';
 const pgPort = process.env.RDS_PORT || '5432';
 const pgDatabase = process.env.RDS_DB_NAME || 'lambdademo';
 const pgUser = process.env.RDS_USERNAME || 'postgres';
 const pgPassword = process.env.RDS_PASSWORD;
+const auditLogServiceUrl =
+  process.env.AUDIT_LOG_SERVICE_URL || 'https://ec2-3-15-208-8.us-east-2.compute.amazonaws.com:2808/audit-log';
 
 console.log(
   `Using PG config: ${pgHost}:${pgPort}/${pgDatabase}, user ${pgUser}, ${
@@ -42,6 +45,7 @@ async function handleItemsRequest(event) {
 }
 
 async function handleList() {
+  writeAuditLog('list request');
   const client = await connect();
   try {
     const results = await client.query('SELECT id, label FROM items');
@@ -61,6 +65,7 @@ async function handleList() {
 }
 
 async function handleCreate(event) {
+  writeAuditLog('create request');
   if (!event.body) {
     return {
       statusCode: 400,
@@ -103,6 +108,7 @@ async function handleCreate(event) {
 }
 
 async function handleSingleItemRequest(event) {
+  writeAuditLog('single item request');
   if (event.httpMethod !== 'GET') {
     return { statusCode: 405 };
   }
@@ -147,4 +153,15 @@ async function connect() {
   });
   await client.connect();
   return client;
+}
+
+function writeAuditLog(message) {
+  request({
+    method: 'POST',
+    url: auditLogServiceUrl,
+    body: `{"message":"${message}"}`,
+    rejectUnauthorized: false
+  })
+    .then(() => console.log(`wrote audit log: ${message}`))
+    .catch(e => console.error('Could not write audit log:', e));
 }

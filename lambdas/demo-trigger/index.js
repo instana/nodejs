@@ -12,6 +12,7 @@ const uuid = require('uuid/v4');
 const bucket = process.env.BUCKET_NAME || 'instana-lambda-demo';
 
 exports.handler = instana.awsLambda.wrap((event, context, callback) => {
+  console.log('Triggering API request.');
   triggerHttpRequest().finally(() => {
     async_.waterfall(
       [
@@ -25,7 +26,7 @@ exports.handler = instana.awsLambda.wrap((event, context, callback) => {
           ),
         (listObjectsResult, next) => {
           if (!listObjectsResult.Contents || listObjectsResult.Contents.length === 0) {
-            next();
+            setImmediate(next);
           } else {
             s3.deleteObjects(
               {
@@ -41,7 +42,10 @@ exports.handler = instana.awsLambda.wrap((event, context, callback) => {
             );
           }
         },
-        (deleteObjectsResult, next) =>
+        (deleteObjectsResult, next) => {
+          if (!next && typeof deleteObjectsResult === 'function') {
+            next = deleteObjectsResult;
+          }
           s3.putObject(
             {
               Bucket: bucket,
@@ -49,7 +53,8 @@ exports.handler = instana.awsLambda.wrap((event, context, callback) => {
               Body: ''
             },
             next
-          )
+          );
+        }
       ],
 
       err => {
@@ -58,7 +63,7 @@ exports.handler = instana.awsLambda.wrap((event, context, callback) => {
           callback(err);
         } else {
           console.log('All S3 tasks done.');
-          callback(err, '🎉');
+          callback(null, 'success');
         }
       }
     );
