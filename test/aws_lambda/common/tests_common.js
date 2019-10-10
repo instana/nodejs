@@ -577,6 +577,7 @@ exports.registerTests = function registerTests(handlerDefinitionPath) {
       expect(span.f).to.be.an('object');
       expect(span.f.h).to.not.exist;
       expect(span.f.hl).to.be.true;
+      expect(span.f.cp).to.equal('aws');
       expect(span.f.e).to.equal(qualifiedArn);
       expect(span.async).to.equal(false);
       expect(span.data.lambda).to.be.an('object');
@@ -612,6 +613,7 @@ exports.registerTests = function registerTests(handlerDefinitionPath) {
       expect(span.k).to.equal(constants.EXIT);
       expect(span.f).to.be.an('object');
       expect(span.f.h).to.not.exist;
+      expect(span.f.cp).to.equal('aws');
       expect(span.f.hl).to.be.true;
       expect(span.f.e).to.equal(qualifiedArn);
       expect(span.async).to.equal(false);

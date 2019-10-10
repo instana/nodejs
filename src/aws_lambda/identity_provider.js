@@ -21,6 +21,7 @@ exports.getEntityId = function getEntityId() {
 exports.getFrom = function getFrom() {
   return {
     hl: true,
+    cp: 'aws',
     e: qualifiedArn
   };
 };
