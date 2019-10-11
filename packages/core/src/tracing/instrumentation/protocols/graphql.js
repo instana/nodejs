@@ -125,7 +125,7 @@ function traceQueryOrMutation(
           'active: ' +
           JSON.stringify(activeEntrySpan)
       );
-      return originalFunction.apply(this, arguments);
+      return originalFunction.apply(this, originalArgs);
     }
   }
 
