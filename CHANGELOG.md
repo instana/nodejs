@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.73.1
 - Fix cases where GraphQL tracing would break when another non-HTTP entry span is already active.
 
 ## 1.73.0
