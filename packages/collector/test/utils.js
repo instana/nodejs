@@ -53,6 +53,9 @@ exports.expectOneMatching = function expectOneMatching(arr, fn) {
 };
 
 exports.getSpansByName = function getSpansByName(arr, name) {
+  if (!Array.isArray(arr)) {
+    throw new Error('Need an array of spans, but got ' + arr);
+  }
   const result = [];
 
   if (!arr || arr.length === 0) {

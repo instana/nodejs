@@ -114,6 +114,48 @@ describe('tracing/graphql', function() {
           })
         ));
   });
+
+  describe('when another entry span is already active', () => {
+    agentControls.registerTestHooks();
+    const serverControls = new ApolloServerControls({
+      agentControls,
+      env: {
+        CREATE_OBSTRUCTING_ENTRY_SPAN: true
+      }
+    });
+    serverControls.registerTestHooks();
+    const clientControls = new ClientControls({
+      agentControls,
+      env: {
+        SERVER_PORT: serverControls.port
+      }
+    });
+    clientControls.registerTestHooks();
+
+    it('should not interfer with processing when a non-HTTP span is already active', () =>
+      clientControls
+        .sendRequest({
+          method: 'POST',
+          path: '/value'
+        })
+        .then(response => {
+          checkQueryResponse('value', false, false, response);
+          return utils.retry(() =>
+            agentControls.getSpans().then(spans => {
+              const httpEntryInClientApp = verifyHttpEntry(null, /\/value/, spans);
+              verifyHttpExit(httpEntryInClientApp, /\/graphql/, spans);
+              utils.expectOneMatching(spans, span => {
+                expect(span.n).to.equal('log.pino');
+                expect(span.k).to.equal(constants.EXIT);
+                expect(span.data.log.message).to.equal('value');
+              });
+              // No graphql span has been recorded but graphql processing has worked (as we have verified via
+              // checkQueryResponse).
+              expect(utils.getSpansByName(spans, 'graphql.server')).to.be.empty;
+            })
+          );
+        }));
+  });
 });
 
 function registerQuerySuite(apollo, withError, queryShorthand, useAlias) {

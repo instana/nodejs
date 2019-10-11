@@ -2,7 +2,7 @@
 
 'use strict';
 
-require('../../../../')({
+const instana = require('../../../../')({
   agentPort: process.env.AGENT_PORT,
   level: process.env.INSTANA_LOG_LEVEL || 'warn',
   tracing: {
@@ -131,6 +131,21 @@ const server = new ApolloServer({
   typeDefs,
   resolvers
 });
+
+if (process.env.CREATE_OBSTRUCTING_ENTRY_SPAN) {
+  app.use((req, res, next) => {
+    const current = instana.currentSpan();
+    if (current.span) {
+      // if there is an HTTP entry span, we discard it
+      current.span.cancel();
+    }
+    // ...instead, we create a dummy SDK span just so that GraphQL tracing runs into the "some entry span is already
+    // active but it is not an HTTP span" codd path.
+    instana.sdk.callback.startEntrySpan('dummy', () => {
+      next();
+    });
+  });
+}
 
 app.get('/', (req, res) => {
   res.sendStatus(200);

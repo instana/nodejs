@@ -1,5 +1,8 @@
 # Changelog
 
+## Unreleased
+- Fix cases where GraphQL tracing would break when another non-HTTP entry span is already active.
+
 ## 1.73.0
 - Allow early init of instrumentations (experimental).
 
