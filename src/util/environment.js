@@ -4,29 +4,13 @@ const semver = require('semver');
 
 const logger = require('./console_logger');
 
-let parseFn;
-
-if (semver.gte(process.version, '6.13.0')) {
-  // prefer WHATWG URL API in more recent Node.js versions
-  let Url;
-  if (semver.gte(process.version, '10.0.0')) {
-    // Beginning with 10.0.0, the WHATWG URL constructor is available globally.
-    Url = URL;
-  } else {
-    // In Node.js >= 6.13.0 and < 10.0.0, the WHATWG URL constructor needs to be required explicitly
-    Url = require('url').URL;
-  }
-  parseFn = value => {
-    try {
-      return new Url(value);
-    } catch (e) {
-      logger.warn(e.message);
-      return null;
-    }
-  };
+let Url;
+if (semver.gte(process.version, '10.0.0')) {
+  // Beginning with 10.0.0, the WHATWG URL constructor is available globally.
+  Url = URL;
 } else {
-  // fall back to legacy URL API for older Node.js versions
-  parseFn = require('url').parse;
+  // In Node.js >= 6.13.0 and < 10.0.0, the WHATWG URL constructor needs to be required explicitly
+  Url = require('url').URL;
 }
 
 const instanaUrlEnvVar = 'INSTANA_URL';
@@ -60,7 +44,7 @@ exports._validate = function _validate(instanaUrl, _instanaKey) {
     return;
   }
 
-  const parsedUrl = parseFn(instanaUrl);
+  const parsedUrl = parseUrl(instanaUrl);
 
   if (!parsedUrl) {
     logger.warn(
@@ -134,3 +118,12 @@ exports.getAcceptorPath = function getAcceptorPath() {
 exports.getInstanaKey = function getInstanaKey() {
   return instanaKey;
 };
+
+function parseUrl(value) {
+  try {
+    return new Url(value);
+  } catch (e) {
+    logger.warn(e.message);
+    return null;
+  }
+}
