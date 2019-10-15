@@ -16,9 +16,9 @@ if (semver.gte(process.version, '10.0.0')) {
 const instanaUrlEnvVar = 'INSTANA_URL';
 const instanaKeyEnvVar = 'INSTANA_KEY';
 let valid = false;
-let acceptorHost = null;
-let acceptorPort = null;
-let acceptorPath = null;
+let backendHost = null;
+let backendPort = null;
+let backendPath = null;
 let instanaKey = null;
 
 exports.sendUnencryptedEnvVar = 'INSTANA_DEV_SEND_UNENCRYPTED';
@@ -31,8 +31,8 @@ exports.validate = function validate() {
 // exposed for testing
 exports._reset = function _reset() {
   valid = false;
-  acceptorHost = null;
-  acceptorPort = null;
+  backendHost = null;
+  backendPort = null;
 };
 
 // exposed for testing
@@ -77,13 +77,13 @@ exports._validate = function _validate(instanaUrl, _instanaKey) {
     return;
   }
 
-  acceptorHost = parsedUrl.hostname;
-  acceptorPort = parsedUrl.port;
-  if (!acceptorPort || acceptorPort.length === 0) {
-    acceptorPort = '443';
+  backendHost = parsedUrl.hostname;
+  backendPort = parsedUrl.port;
+  if (!backendPort || backendPort.length === 0) {
+    backendPort = '443';
   }
 
-  acceptorPath = parsedUrl.pathname;
+  backendPath = parsedUrl.pathname;
 
   instanaKey = _instanaKey;
 
@@ -92,9 +92,9 @@ exports._validate = function _validate(instanaUrl, _instanaKey) {
     return;
   }
 
-  logger.debug(`INSTANA HOST: ${acceptorHost}`);
-  logger.debug(`INSTANA PORT: ${acceptorPort}`);
-  logger.debug(`INSTANA PATH: ${acceptorPath}`);
+  logger.debug(`INSTANA HOST: ${backendHost}`);
+  logger.debug(`INSTANA PORT: ${backendPort}`);
+  logger.debug(`INSTANA PATH: ${backendPath}`);
   logger.debug(`INSTANA KEY: ${instanaKey}`);
   valid = true;
 };
@@ -103,16 +103,16 @@ exports.isValid = function isValid() {
   return valid;
 };
 
-exports.getAcceptorHost = function getAcceptorHost() {
-  return acceptorHost;
+exports.getBackendHost = function getBackendHost() {
+  return backendHost;
 };
 
-exports.getAcceptorPort = function getAcceptorPort() {
-  return acceptorPort;
+exports.getBackendPort = function getBackendPort() {
+  return backendPort;
 };
 
-exports.getAcceptorPath = function getAcceptorPath() {
-  return acceptorPath;
+exports.getBackendPath = function getBackendPath() {
+  return backendPath;
 };
 
 exports.getInstanaKey = function getInstanaKey() {

@@ -12,7 +12,7 @@ const pino = require('pino')();
 
 const sendToParent = require('../util/send_to_parent');
 
-const logPrefix = 'acceptor-stub';
+const logPrefix = 'backend-stub';
 const logger = pino.child({ name: logPrefix, pid: process.pid });
 logger.level = 'info';
 
@@ -21,8 +21,8 @@ const options = {
   cert: fs.readFileSync(path.join(__dirname, 'cert/server.crt'))
 };
 
-const port = process.env.ACCEPTOR_PORT || 8443;
-const unresponsive = process.env.ACCEPTOR_UNRESPONSIVE === 'true';
+const port = process.env.BACKEND_PORT || 8443;
+const unresponsive = process.env.BACKEND_UNRESPONSIVE === 'true';
 const app = express();
 
 const dropAllData = process.env.DROP_DATA === 'true';
@@ -120,14 +120,13 @@ app.delete('/serverless/received/spans', (req, res) => {
   return res.sendStatus('204');
 });
 
-// TODO Using http2 (with TLS, of course) would be preferable over HTTPS 1.1.
 https.createServer(options, app).listen(port, error => {
   if (error) {
     logger.error(error);
     return process.exit(1);
   } else {
     logger.info('Listening on port: %s', port);
-    sendToParent('acceptor: started');
+    sendToParent('backend: started');
   }
 });
 

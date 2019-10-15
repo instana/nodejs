@@ -1,12 +1,12 @@
 'use strict';
 
-exports.acceptorProtocol = 'https';
-exports.acceptorHost = 'localhost';
-exports.acceptorPort = 8443;
-exports.acceptorPath = '/serverless';
+exports.backendProtocol = 'https';
+exports.backendHost = 'localhost';
+exports.backendPort = 8443;
+exports.backendPath = '/serverless';
 
-exports.acceptorBaseUrl = `${exports.acceptorProtocol}://${exports.acceptorHost}:${exports.acceptorPort}${
-  exports.acceptorPath
+exports.backendBaseUrl = `${exports.backendProtocol}://${exports.backendHost}:${exports.backendPort}${
+  exports.backendPath
 }`;
 
 exports.instanaKey = 'dummy-key';

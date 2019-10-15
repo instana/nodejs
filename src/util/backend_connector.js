@@ -3,7 +3,7 @@
 // eslint-disable-next-line import/order
 const environmentUtil = require('../util/environment');
 
-// acceptor_connector is required from aws_lambda/wrapper before initializing @instana/core, that is, in particular,
+// backend_connector is required from aws_lambda/wrapper before initializing @instana/core, that is, in particular,
 // before tracing is initialized. Thus we always get an uninstrumented https module here.
 const https = environmentUtil.sendUnencrypted ? require('http') : require('https');
 const semver = require('semver');
@@ -13,21 +13,21 @@ let logger = require('./console_logger');
 
 const timeoutEnvVar = 'INSTANA_TIMEOUT';
 const defaultTimeout = 500;
-let acceptorTimeout = defaultTimeout;
+let backendTimeout = defaultTimeout;
 
 let warningsHaveBeenLogged = false;
 
 const needsEcdhCurveFix = semver.lt(process.version, '10.0.0');
 
 if (process.env[timeoutEnvVar]) {
-  acceptorTimeout = parseInt(process.env[timeoutEnvVar], 10);
-  if (isNaN(acceptorTimeout) || acceptorTimeout < 0) {
+  backendTimeout = parseInt(process.env[timeoutEnvVar], 10);
+  if (isNaN(backendTimeout) || backendTimeout < 0) {
     logger.warn(
       `The value of ${timeoutEnvVar} (${
         process.env[timeoutEnvVar]
       }) cannot be parsed to a valid numerical value. Will fall back to the default timeout (${defaultTimeout} ms).`
     );
-    acceptorTimeout = defaultTimeout;
+    backendTimeout = defaultTimeout;
   }
 }
 
@@ -72,15 +72,15 @@ function send(resourcePath, payload, callback) {
     }
   }
 
-  // prepend acceptor's path if the configured URL has a path component
-  if (environmentUtil.getAcceptorPath() !== '/') {
-    resourcePath = environmentUtil.getAcceptorPath() + resourcePath;
+  // prepend backend's path if the configured URL has a path component
+  if (environmentUtil.getBackendPath() !== '/') {
+    resourcePath = environmentUtil.getBackendPath() + resourcePath;
   }
 
   payload = JSON.stringify(payload);
   const options = {
-    hostname: environmentUtil.getAcceptorHost(),
-    port: environmentUtil.getAcceptorPort(),
+    hostname: environmentUtil.getBackendHost(),
+    port: environmentUtil.getBackendPort(),
     path: resourcePath,
     method: 'POST',
     headers: {
@@ -121,10 +121,10 @@ function send(resourcePath, payload, callback) {
       return callback();
     });
   });
-  req.setTimeout(acceptorTimeout, () => {
+  req.setTimeout(backendTimeout, () => {
     callback(
       new Error(
-        `The Instana back end did not respond in the configured timeout of ${acceptorTimeout} ms. The timeout can be ` +
+        `The Instana back end did not respond in the configured timeout of ${backendTimeout} ms. The timeout can be ` +
           `configured by setting the environment variable ${timeoutEnvVar}.`
       )
     );

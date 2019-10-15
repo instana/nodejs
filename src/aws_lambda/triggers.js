@@ -46,6 +46,8 @@ exports.enrichSpanWithTriggerData = function enrichSpanWithTriggerData(event, sp
 };
 
 function isApiGatewayProxyTrigger(event) {
+  // Note: An application load balancer event also has event.path and event.httpMethod but it does not have
+  // event.resource.
   return event.resource != null && event.path != null && event.httpMethod != null;
 }
 

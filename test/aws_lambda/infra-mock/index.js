@@ -3,13 +3,13 @@
 'use strict';
 
 /**
- * This little tool exists to send some made-up infra monitoring data about a Lambda to an acceptor.
+ * This little tool exists to send some made-up infra monitoring data about a Lambda to an Instana back end.
  */
 
 /* configuration */
-const acceptorHost = process.env.INSTANA_HOST || 'localhost';
-const acceptorPort = process.env.INSTANA_PORT || 8989;
-const acceptorTimeout = 5000;
+const backendHost = process.env.INSTANA_HOST || 'localhost';
+const backendPort = process.env.INSTANA_PORT || 8989;
+const backendTimeout = 5000;
 // eslint-disable-next-line no-unneeded-ternary
 const sendUnencrypted = process.env.INSTANA_DEV_SEND_UNENCRYPTED === 'false' ? false : true;
 const acceptSelfSignedCert = false;
@@ -96,8 +96,8 @@ function sendPayload(callback) {
   const payload = JSON.stringify(metricsPayload);
 
   const options = {
-    hostname: acceptorHost,
-    port: acceptorPort,
+    hostname: backendHost,
+    port: backendPort,
     path: '/metrics',
     method: 'POST',
     headers: {
@@ -131,8 +131,8 @@ function sendPayload(callback) {
       return callback();
     });
   });
-  req.setTimeout(acceptorTimeout, () => {
-    callback(new Error(`The Instana back end did not respond in the configured timeout of ${acceptorTimeout} ms.`));
+  req.setTimeout(backendTimeout, () => {
+    callback(new Error(`The Instana back end did not respond in the configured timeout of ${backendTimeout} ms.`));
   });
 
   req.on('error', e => {

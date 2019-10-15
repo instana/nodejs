@@ -3,7 +3,7 @@
 const instanaCore = require('@instana/core');
 
 const consoleLogger = require('../util/console_logger');
-const acceptorConnector = require('../util/acceptor_connector');
+const backendConnector = require('../util/backend_connector');
 const identityProvider = require('./identity_provider');
 const triggers = require('./triggers');
 
@@ -129,9 +129,9 @@ function init(event, context, config) {
     logger.setLevel(config.level || process.env['INSTANA_LOG_LEVEL']);
   }
   identityProvider.init(context);
-  acceptorConnector.init(identityProvider, logger);
+  backendConnector.init(identityProvider, logger);
 
-  instanaCore.init(config, acceptorConnector, identityProvider);
+  instanaCore.init(config, backendConnector, identityProvider);
 
   metrics.init(config);
   metrics.activate();
@@ -195,40 +195,17 @@ function postHandler(entrySpan, error, result, callback) {
     plugins: [{ name: 'com.instana.plugin.aws.lambda', entityId: identityProvider.getEntityId(), data: metricsData }]
   };
 
-  acceptorConnector.sendBundle({ spans, metrics: metricsPayload }, err => {
+  backendConnector.sendBundle({ spans, metrics: metricsPayload }, err => {
     if (err) {
-      // We intentionally do not propagate the error from the acceptor request - the customer's lambda needs to finish
+      // We intentionally do not propagate the error from the backend request - the customer's lambda needs to finish
       // successfully, no matter if we have been able to report metrics and spans.
-      logger.warn('Could not send data to acceptor.', err.message);
-      logger.debug('Could not send data to acceptor.', err);
+      logger.warn('Could not send data to backend.', err.message);
+      logger.debug('Could not send data to backend.', err);
     } else {
-      logger.debug('Data has been sent to acceptor.');
+      logger.debug('Data has been sent to backend.');
     }
     callback();
   });
-
-  // Not preferred: Sending metrics and spans separately -> serverless-acceptor offers POST /bundle, use that instead.
-  // acceptorConnector.sendMetrics(metricsPayload, err => {
-  //   if (err) {
-  //     // We intentionally do not propagate the error from the acceptor request - the customer's lambda needs to
-  //     // finish successfully, no matter if we have been able to report metrics and spans.
-  //     logger.warn('Could not send metrics to acceptor.', err.message);
-  //     logger.debug('Could not send metrics to acceptor.', err);
-  //   } else {
-  //     logger.debug('Metrics have been sent to acceptor.');
-  //   }
-  //   acceptorConnector.sendSpans(spans, err2 => {
-  //     if (err2) {
-  //       // We intentionally do not propagate the error from the acceptor request - the customer's lambda needs to
-  //       // finish successfully, no matter if we have been able to report metrics and spans.
-  //       logger.warn('Could not send spans to acceptor.', err2.message);
-  //       logger.debug('Could not send spans to acceptor.', err2);
-  //     } else {
-  //       logger.debug('Spans have been sent to acceptor.');
-  //     }
-  //     callback();
-  //   });
-  // });
 }
 
 function renameMetric(metricsData, oldKey, newKey) {

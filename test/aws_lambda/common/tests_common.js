@@ -20,8 +20,8 @@ function prelude(opts) {
   this.timeout(config.getTestTimeout());
   this.slow(config.getTestTimeout() / 4);
 
-  if (opts.startAcceptor == null) {
-    opts.startAcceptor = true;
+  if (opts.startBackend == null) {
+    opts.startBackend = true;
   }
 
   const env = {
@@ -56,7 +56,7 @@ function prelude(opts) {
   const control = new Control({
     faasRuntimePath: path.join(__dirname, '../runtime_mock'),
     handlerDefinitionPath: opts.handlerDefinitionPath,
-    startAcceptor: opts.startAcceptor,
+    startBackend: opts.startBackend,
     env
   });
   control.registerTestHooks();
@@ -66,11 +66,11 @@ function prelude(opts) {
 exports.registerTests = function registerTests(handlerDefinitionPath) {
   describe('when everything is peachy', function() {
     // - INSTANA_URL is configured
-    // - acceptor is reachable
+    // - backend is reachable
     // - lambda function ends with success
     const control = prelude.bind(this)({
       handlerDefinitionPath,
-      instanaUrl: config.acceptorBaseUrl,
+      instanaUrl: config.backendBaseUrl,
       instanaKey: config.instanaKey
     });
 
@@ -84,7 +84,7 @@ exports.registerTests = function registerTests(handlerDefinitionPath) {
       handlerDefinitionPath,
       trigger: 'api-gateway-proxy',
       statusCode: 200,
-      instanaUrl: config.acceptorBaseUrl,
+      instanaUrl: config.backendBaseUrl,
       instanaKey: config.instanaKey
     });
 
@@ -113,7 +113,7 @@ exports.registerTests = function registerTests(handlerDefinitionPath) {
     const control = prelude.bind(this)({
       handlerDefinitionPath,
       trigger: 'api-gateway-proxy',
-      instanaUrl: config.acceptorBaseUrl,
+      instanaUrl: config.backendBaseUrl,
       instanaKey: config.instanaKey,
       statusCode: 201,
       traceId: 'test-trace-id',
@@ -145,7 +145,7 @@ exports.registerTests = function registerTests(handlerDefinitionPath) {
     const control = prelude.bind(this)({
       handlerDefinitionPath,
       trigger: 'api-gateway-proxy',
-      instanaUrl: config.acceptorBaseUrl,
+      instanaUrl: config.backendBaseUrl,
       instanaKey: config.instanaKey,
       statusCode: 502
     });
@@ -174,7 +174,7 @@ exports.registerTests = function registerTests(handlerDefinitionPath) {
     const control = prelude.bind(this)({
       handlerDefinitionPath,
       trigger: 'api-gateway-no-proxy',
-      instanaUrl: config.acceptorBaseUrl,
+      instanaUrl: config.backendBaseUrl,
       instanaKey: config.instanaKey
     });
 
@@ -196,7 +196,7 @@ exports.registerTests = function registerTests(handlerDefinitionPath) {
     const control = prelude.bind(this)({
       handlerDefinitionPath,
       trigger: 'application-load-balancer',
-      instanaUrl: config.acceptorBaseUrl,
+      instanaUrl: config.backendBaseUrl,
       instanaKey: config.instanaKey
     });
 
@@ -224,7 +224,7 @@ exports.registerTests = function registerTests(handlerDefinitionPath) {
     const control = prelude.bind(this)({
       handlerDefinitionPath,
       trigger: 'application-load-balancer',
-      instanaUrl: config.acceptorBaseUrl,
+      instanaUrl: config.backendBaseUrl,
       instanaKey: config.instanaKey,
       traceId: 'test-trace-id',
       spanId: 'test-span-id'
@@ -256,7 +256,7 @@ exports.registerTests = function registerTests(handlerDefinitionPath) {
     const control = prelude.bind(this)({
       handlerDefinitionPath,
       trigger: 'cloudwatch-events',
-      instanaUrl: config.acceptorBaseUrl,
+      instanaUrl: config.backendBaseUrl,
       instanaKey: config.instanaKey
     });
 
@@ -283,7 +283,7 @@ exports.registerTests = function registerTests(handlerDefinitionPath) {
     const control = prelude.bind(this)({
       handlerDefinitionPath,
       trigger: 'cloudwatch-logs',
-      instanaUrl: config.acceptorBaseUrl,
+      instanaUrl: config.backendBaseUrl,
       instanaKey: config.instanaKey
     });
 
@@ -315,7 +315,7 @@ exports.registerTests = function registerTests(handlerDefinitionPath) {
     const control = prelude.bind(this)({
       handlerDefinitionPath,
       trigger: 's3',
-      instanaUrl: config.acceptorBaseUrl,
+      instanaUrl: config.backendBaseUrl,
       instanaKey: config.instanaKey
     });
 
@@ -349,7 +349,7 @@ exports.registerTests = function registerTests(handlerDefinitionPath) {
     const control = prelude.bind(this)({
       handlerDefinitionPath,
       trigger: 'sqs',
-      instanaUrl: config.acceptorBaseUrl,
+      instanaUrl: config.backendBaseUrl,
       instanaKey: config.instanaKey
     });
 
@@ -373,11 +373,11 @@ exports.registerTests = function registerTests(handlerDefinitionPath) {
 
   describe('when lambda function yields an error', function() {
     // - INSTANA_URL is configured
-    // - acceptor is reachable
+    // - backend is reachable
     // - lambda function ends with an error
     const control = prelude.bind(this)({
       handlerDefinitionPath,
-      instanaUrl: config.acceptorBaseUrl,
+      instanaUrl: config.backendBaseUrl,
       instanaKey: config.instanaKey,
       error: true
     });
@@ -387,12 +387,12 @@ exports.registerTests = function registerTests(handlerDefinitionPath) {
 
   describe('with config', function() {
     // - INSTANA_URL is configured
-    // - acceptor is reachable
+    // - backend is reachable
     // - client provides a config object
     // - lambda function ends with success
     const control = prelude.bind(this)({
       handlerDefinitionPath,
-      instanaUrl: config.acceptorBaseUrl,
+      instanaUrl: config.backendBaseUrl,
       instanaKey: config.instanaKey,
       withConfig: true
     });
@@ -402,12 +402,12 @@ exports.registerTests = function registerTests(handlerDefinitionPath) {
 
   describe('with config, when lambda function yields an error', function() {
     // - INSTANA_URL is configured
-    // - acceptor is reachable
+    // - backend is reachable
     // - client provides a config object
     // - lambda function ends with an error
     const control = prelude.bind(this)({
       handlerDefinitionPath,
-      instanaUrl: config.acceptorBaseUrl,
+      instanaUrl: config.backendBaseUrl,
       instanaKey: config.instanaKey,
       withConfig: true,
       error: true
@@ -457,7 +457,7 @@ exports.registerTests = function registerTests(handlerDefinitionPath) {
     // - lambda function ends with success
     const control = prelude.bind(this)({
       handlerDefinitionPath,
-      instanaUrl: config.acceptorBaseUrl
+      instanaUrl: config.backendBaseUrl
     });
 
     it('must ignore the missing key gracefully', () => verify(control, false, false));
@@ -468,52 +468,52 @@ exports.registerTests = function registerTests(handlerDefinitionPath) {
     // - lambda function ends with an error
     const control = prelude.bind(this)({
       handlerDefinitionPath,
-      instanaUrl: config.acceptorBaseUrl,
+      instanaUrl: config.backendBaseUrl,
       error: true
     });
 
     it('must ignore the missing key gracefully', () => verify(control, 'lambda', false));
   });
 
-  describe('when acceptor is down', function() {
+  describe('when backend is down', function() {
     // - INSTANA_URL is configured
-    // - acceptor is not reachable
+    // - backend is not reachable
     // - lambda function ends with success
     const control = prelude.bind(this)({
       handlerDefinitionPath,
-      instanaUrl: config.acceptorBaseUrl,
+      instanaUrl: config.backendBaseUrl,
       instanaKey: config.instanaKey,
-      startAcceptor: false
+      startBackend: false
     });
 
     it('must ignore the failed request gracefully', () => verify(control, false, false));
   });
 
-  describe('when acceptor is down and the lambda function yields an error', function() {
+  describe('when backend is down and the lambda function yields an error', function() {
     // - INSTANA_URL is configured
-    // - acceptor is not reachable
+    // - backend is not reachable
     // - lambda function ends with an error
     const control = prelude.bind(this)({
       handlerDefinitionPath,
-      instanaUrl: config.acceptorBaseUrl,
+      instanaUrl: config.backendBaseUrl,
       instanaKey: config.instanaKey,
-      startAcceptor: false,
+      startBackend: false,
       error: true
     });
 
     it('must ignore the failed request gracefully', () => verify(control, 'lambda', false));
   });
 
-  describe('when acceptor is reachable but does not respond', function() {
+  describe('when backend is reachable but does not respond', function() {
     // - INSTANA_URL is configured
-    // - acceptor is reachable, but will never respond (verifies that a reasonable timeout is applied -
+    // - backend is reachable, but will never respond (verifies that a reasonable timeout is applied -
     //   the default timeout would be two minutes)
     // - lambda function ends with success
     const control = prelude.bind(this)({
       handlerDefinitionPath,
-      instanaUrl: config.acceptorBaseUrl,
+      instanaUrl: config.backendBaseUrl,
       instanaKey: config.instanaKey,
-      startAcceptor: 'unresponsive'
+      startBackend: 'unresponsive'
     });
 
     it('must finish swiftly', () => verify(control, false, false));

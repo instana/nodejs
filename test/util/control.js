@@ -16,7 +16,7 @@ function Control(opts = {}) {
 }
 
 Control.prototype.reset = function reset() {
-  this.messagesFromAcceptor = [];
+  this.messagesFromBackend = [];
   this.messagesFromDownstreamDummy = [];
   this.messagesFromFaasRuntime = [];
   this.lambdaErrors = [];
@@ -31,29 +31,29 @@ Control.prototype.registerTestHooks = function registerTestHooks() {
       fail('opts.handlerDefinitionPath is unspecified.');
     }
 
-    this.messagesFromAcceptor = [];
+    this.messagesFromBackend = [];
     this.messagesFromDownstreamDummy = [];
     this.messagesFromFaasRuntime = [];
 
-    let acceptorPromise;
-    if (this.opts.startAcceptor) {
-      this.acceptor = fork(path.join(__dirname, '../acceptor_stub'), {
+    let backendPromise;
+    if (this.opts.startBackend) {
+      this.backend = fork(path.join(__dirname, '../backend_stub'), {
         stdio: config.getAppStdio(),
         env: Object.assign(
           {
-            ACCEPTOR_PORT: config.acceptorPort,
-            ACCEPTOR_UNRESPONSIVE: this.opts.startAcceptor === 'unresponsive'
+            BACKEND_PORT: config.backendPort,
+            BACKEND_UNRESPONSIVE: this.opts.startBackend === 'unresponsive'
           },
           process.env,
           this.opts.env
         )
       });
-      this.acceptor.on('message', message => {
-        this.messagesFromAcceptor.push(message);
+      this.backend.on('message', message => {
+        this.messagesFromBackend.push(message);
       });
-      acceptorPromise = this.waitUntilAcceptorIsUp();
+      backendPromise = this.waitUntilBackendIsUp();
     } else {
-      acceptorPromise = Promise.resolve();
+      backendPromise = Promise.resolve();
     }
 
     this.downstreamDummy = fork(path.join(__dirname, '../downstream_dummy'), {
@@ -71,7 +71,7 @@ Control.prototype.registerTestHooks = function registerTestHooks() {
     });
     const downstreamDummyPromise = this.waitUntilDownstreamDummyIsUp();
 
-    return Promise.all([acceptorPromise, downstreamDummyPromise])
+    return Promise.all([backendPromise, downstreamDummyPromise])
       .then(() => {
         this.faasRuntime = fork(this.opts.faasRuntimePath, {
           stdio: config.getAppStdio(),
@@ -110,20 +110,20 @@ Control.prototype.registerTestHooks = function registerTestHooks() {
   });
 };
 
-Control.prototype.waitUntilAcceptorIsUp = function waitUntilAcceptorIsUp() {
-  return retry(() => this.isAcceptorUpPromise());
+Control.prototype.waitUntilBackendIsUp = function waitUntilBackendIsUp() {
+  return retry(() => this.isBackendUpPromise());
 };
 
-Control.prototype.isAcceptorUpPromise = function isAcceptorUpPromise() {
-  if (this.isAcceptorUp()) {
+Control.prototype.isBackendUpPromise = function isBackendUpPromise() {
+  if (this.isBackendUp()) {
     return Promise.resolve();
   } else {
-    return Promise.reject(new Error('The acceptor mock is still not up.'));
+    return Promise.reject(new Error('The backend mock is still not up.'));
   }
 };
 
-Control.prototype.isAcceptorUp = function isAcceptorUp() {
-  return this.messagesFromAcceptor.indexOf('acceptor: started') >= 0;
+Control.prototype.isBackendUp = function isBackendUp() {
+  return this.messagesFromBackend.indexOf('backend: started') >= 0;
 };
 
 Control.prototype.waitUntilDownstreamDummyIsUp = function waitUntilDownstreamDummyIsUp() {
@@ -159,11 +159,11 @@ Control.prototype.hasRuntimeTerminated = function hasRuntimeTerminated() {
 };
 
 Control.prototype.kill = function kill() {
-  return Promise.all([this.killAcceptor(), this.killDownstreamDummy(), this.killFaasRuntime()]);
+  return Promise.all([this.killBackend(), this.killDownstreamDummy(), this.killFaasRuntime()]);
 };
 
-Control.prototype.killAcceptor = function killAcceptor() {
-  return killChildProcess(this.acceptor);
+Control.prototype.killBackend = function killBackend() {
+  return killChildProcess(this.backend);
 };
 
 Control.prototype.killDownstreamDummy = function killDownstreamDummy() {
@@ -197,10 +197,10 @@ Control.prototype.getLambdaErrors = function getLambdaErrors() {
 };
 
 Control.prototype.getSpans = function getSpans() {
-  if (this.opts.startAcceptor) {
+  if (this.opts.startBackend) {
     return request({
       method: 'GET',
-      url: `${config.acceptorBaseUrl}/received/spans`,
+      url: `${config.backendBaseUrl}/received/spans`,
       json: true,
       strictSSL: false
     });
@@ -210,10 +210,10 @@ Control.prototype.getSpans = function getSpans() {
 };
 
 Control.prototype.getMetrics = function getMetrics() {
-  if (this.opts.startAcceptor) {
+  if (this.opts.startBackend) {
     return request({
       method: 'GET',
-      url: `${config.acceptorBaseUrl}/received/metrics`,
+      url: `${config.backendBaseUrl}/received/metrics`,
       json: true,
       strictSSL: false
     });

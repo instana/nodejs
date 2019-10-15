@@ -4,7 +4,7 @@
   "description": "Monitor serverless Node.js code with Instana",
   "main": "src/index.js",
   "scripts": {
-    "acceptor-stub": "node test/acceptor_stub",
+    "backend-stub": "node test/backend_stub",
     "audit": "npm audit --production",
     "test": "npm run test:mocha",
     "test:mocha": "mocha --reporter spec $(find test -iname '*test.js')",
