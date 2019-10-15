@@ -57,6 +57,7 @@ function shimmedHandler(originalHandler, originalThis, originalArgs, config) {
   const tracingHeaders = triggers.readTracingHeaders(event);
   const incomingTraceId = tracingHeaders.t;
   const incomingParentSpanId = tracingHeaders.s;
+  const tracingSuppressed = tracingHeaders.l === '0';
 
   init(event, context, config);
 
@@ -69,18 +70,23 @@ function shimmedHandler(originalHandler, originalThis, originalArgs, config) {
   // wrap the given callback _and_ return an instrumented promise.
   let handlerHasFinished = false;
   return tracing.getCls().ns.runPromiseOrRunAndReturn(() => {
-    const entrySpan = tracing
-      .getCls()
-      .startSpan('aws.lambda.entry', constants.ENTRY, incomingTraceId, incomingParentSpanId);
-    entrySpan.data = {
-      lambda: {
-        arn: `${context.invokedFunctionArn}:${context.functionVersion}`,
-        runtime: 'nodejs',
-        functionName: context.functionName,
-        functionVersion: context.functionVersion
-      }
-    };
-    triggers.enrichSpanWithTriggerData(event, entrySpan);
+    let entrySpan;
+    if (tracingSuppressed) {
+      tracing.getCls().setTracingLevel('0');
+    } else {
+      entrySpan = tracing
+        .getCls()
+        .startSpan('aws.lambda.entry', constants.ENTRY, incomingTraceId, incomingParentSpanId);
+      entrySpan.data = {
+        lambda: {
+          arn: `${context.invokedFunctionArn}:${context.functionVersion}`,
+          runtime: 'nodejs',
+          functionName: context.functionName,
+          functionVersion: context.functionVersion
+        }
+      };
+      triggers.enrichSpanWithTriggerData(event, entrySpan);
+    }
 
     originalArgs[2] = function wrapper(originalError, originalResult) {
       if (handlerHasFinished) {
@@ -154,32 +160,35 @@ function postPromise(context, entrySpan, error, value) {
 }
 
 function postHandler(entrySpan, error, result, callback) {
-  if (error) {
-    entrySpan.ec = 1;
-    entrySpan.data.lambda.error = error.message ? error.message : error.toString();
-  }
-  // capture HTTP errors
-  if (result && typeof result === 'object' && result.statusCode) {
-    if (typeof result.statusCode === 'number') {
-      entrySpan.data.http = entrySpan.data.http || {};
-      entrySpan.data.http.status = result.statusCode;
-      if (result.statusCode >= 500) {
-        entrySpan.ec = entrySpan.ec ? entrySpan.ec + 1 : 1;
-        entrySpan.data.lambda.error = entrySpan.data.lambda.error || `HTTP status ${result.statusCode}`;
-      }
-    } else if (typeof result.statusCode === 'string' && /^\d\d\d$/.test(result.statusCode)) {
-      entrySpan.data.http = entrySpan.data.http || {};
-      entrySpan.data.http.status = parseInt(result.statusCode, 10);
-      if (entrySpan.data.http.status >= 500) {
-        entrySpan.ec = entrySpan.ec ? entrySpan.ec + 1 : 1;
-        entrySpan.data.lambda.error = entrySpan.data.lambda.error || `HTTP status ${result.statusCode}`;
+  // entrySpan is null when tracing is suppressed due to X-Instana-L
+  if (entrySpan) {
+    if (error) {
+      entrySpan.ec = 1;
+      entrySpan.data.lambda.error = error.message ? error.message : error.toString();
+    }
+    // capture HTTP errors
+    if (result && typeof result === 'object' && result.statusCode) {
+      if (typeof result.statusCode === 'number') {
+        entrySpan.data.http = entrySpan.data.http || {};
+        entrySpan.data.http.status = result.statusCode;
+        if (result.statusCode >= 500) {
+          entrySpan.ec = entrySpan.ec ? entrySpan.ec + 1 : 1;
+          entrySpan.data.lambda.error = entrySpan.data.lambda.error || `HTTP status ${result.statusCode}`;
+        }
+      } else if (typeof result.statusCode === 'string' && /^\d\d\d$/.test(result.statusCode)) {
+        entrySpan.data.http = entrySpan.data.http || {};
+        entrySpan.data.http.status = parseInt(result.statusCode, 10);
+        if (entrySpan.data.http.status >= 500) {
+          entrySpan.ec = entrySpan.ec ? entrySpan.ec + 1 : 1;
+          entrySpan.data.lambda.error = entrySpan.data.lambda.error || `HTTP status ${result.statusCode}`;
+        }
       }
     }
-  }
-  entrySpan.error = entrySpan.ec > 0;
-  entrySpan.d = Date.now() - entrySpan.ts;
+    entrySpan.error = entrySpan.ec > 0;
+    entrySpan.d = Date.now() - entrySpan.ts;
 
-  entrySpan.transmit();
+    entrySpan.transmit();
+  }
 
   const spans = spanBuffer.getAndResetSpans();
 

@@ -74,7 +74,7 @@ exports.registerTests = function registerTests(handlerDefinitionPath) {
       instanaKey: config.instanaKey
     });
 
-    it('must capture metrics and spans', () => verify(control, false, true));
+    it('must capture metrics and spans', () => verify(control, false, true, true));
   });
 
   describe('triggered by API Gateway (Lambda Proxy)', function() {
@@ -89,7 +89,7 @@ exports.registerTests = function registerTests(handlerDefinitionPath) {
     });
 
     it('must recognize API gateway trigger (with proxy)', () =>
-      verify(control, false, true, 'aws:api.gateway')
+      verify(control, false, true, true, 'aws:api.gateway')
         .then(() => control.getSpans())
         .then(spans =>
           expectOneMatching(spans, span => {
@@ -121,7 +121,7 @@ exports.registerTests = function registerTests(handlerDefinitionPath) {
     });
 
     it('must recognize API gateway trigger (with proxy) with parent span', () =>
-      verify(control, false, true, 'aws:api.gateway', {
+      verify(control, false, true, true, 'aws:api.gateway', {
         t: 'test-trace-id',
         s: 'test-span-id'
       })
@@ -141,6 +141,20 @@ exports.registerTests = function registerTests(handlerDefinitionPath) {
         ));
   });
 
+  describe('triggered by API Gateway (Lambda Proxy) with suppression', function() {
+    // - same as triggered by AWS API Gateway (with Lambda Proxy)
+    // - but with an incoming trace level header to suppress tracing
+    const control = prelude.bind(this)({
+      handlerDefinitionPath,
+      trigger: 'api-gateway-proxy',
+      instanaUrl: config.backendBaseUrl,
+      instanaKey: config.instanaKey,
+      traceLevel: '0'
+    });
+
+    it('must not trace when suppressed', () => verify(control, false, true, false));
+  });
+
   describe('HTTP errors', function() {
     const control = prelude.bind(this)({
       handlerDefinitionPath,
@@ -151,7 +165,7 @@ exports.registerTests = function registerTests(handlerDefinitionPath) {
     });
 
     it('must capture HTTP error codes >= 500', () =>
-      verify(control, 'http', true, 'aws:api.gateway')
+      verify(control, 'http', true, true, 'aws:api.gateway')
         .then(() => control.getSpans())
         .then(spans =>
           expectOneMatching(spans, span => {
@@ -179,7 +193,7 @@ exports.registerTests = function registerTests(handlerDefinitionPath) {
     });
 
     it('must recognize API gateway trigger (without proxy)', () =>
-      verify(control, false, true, 'aws:api.gateway.noproxy')
+      verify(control, false, true, true, 'aws:api.gateway.noproxy')
         .then(() => control.getSpans())
         .then(spans =>
           expectOneMatching(spans, span => {
@@ -201,7 +215,7 @@ exports.registerTests = function registerTests(handlerDefinitionPath) {
     });
 
     it('must recognize the application load balancer trigger', () =>
-      verify(control, false, true, 'aws:application.load.balancer')
+      verify(control, false, true, true, 'aws:application.load.balancer')
         .then(() => control.getSpans())
         .then(spans =>
           expectOneMatching(spans, span => {
@@ -231,7 +245,7 @@ exports.registerTests = function registerTests(handlerDefinitionPath) {
     });
 
     it('must recognize the application load balancer trigger and parent span', () =>
-      verify(control, false, true, 'aws:application.load.balancer', {
+      verify(control, false, true, true, 'aws:application.load.balancer', {
         t: 'test-trace-id',
         s: 'test-span-id'
       })
@@ -261,7 +275,7 @@ exports.registerTests = function registerTests(handlerDefinitionPath) {
     });
 
     it('must recognize CloudWatch events trigger', () =>
-      verify(control, false, true, 'aws:cloudwatch.events')
+      verify(control, false, true, true, 'aws:cloudwatch.events')
         .then(() => control.getSpans())
         .then(spans =>
           expectOneMatching(spans, span => {
@@ -288,7 +302,7 @@ exports.registerTests = function registerTests(handlerDefinitionPath) {
     });
 
     it('must recognize CloudWatch logs trigger', () =>
-      verify(control, false, true, 'aws:cloudwatch.logs')
+      verify(control, false, true, true, 'aws:cloudwatch.logs')
         .then(() => control.getSpans())
         .then(spans =>
           expectOneMatching(spans, span => {
@@ -320,7 +334,7 @@ exports.registerTests = function registerTests(handlerDefinitionPath) {
     });
 
     it('must recognize S3 trigger', () =>
-      verify(control, false, true, 'aws:s3')
+      verify(control, false, true, true, 'aws:s3')
         .then(() => control.getSpans())
         .then(spans =>
           expectOneMatching(spans, span => {
@@ -354,7 +368,7 @@ exports.registerTests = function registerTests(handlerDefinitionPath) {
     });
 
     it('must recognize SQS message trigger', () =>
-      verify(control, false, true, 'aws:sqs')
+      verify(control, false, true, true, 'aws:sqs')
         .then(() => control.getSpans())
         .then(spans =>
           expectOneMatching(spans, span => {
@@ -382,7 +396,7 @@ exports.registerTests = function registerTests(handlerDefinitionPath) {
       error: true
     });
 
-    it('must capture metrics and spans', () => verify(control, 'lambda', true));
+    it('must capture metrics and spans', () => verify(control, 'lambda', true, true));
   });
 
   describe('with config', function() {
@@ -397,7 +411,7 @@ exports.registerTests = function registerTests(handlerDefinitionPath) {
       withConfig: true
     });
 
-    it('must capture metrics and spans', () => verify(control, false, true));
+    it('must capture metrics and spans', () => verify(control, false, true, true));
   });
 
   describe('with config, when lambda function yields an error', function() {
@@ -413,7 +427,7 @@ exports.registerTests = function registerTests(handlerDefinitionPath) {
       error: true
     });
 
-    it('must capture metrics and spans', () => verify(control, 'lambda', true));
+    it('must capture metrics and spans', () => verify(control, 'lambda', true, true));
   });
 
   describe('when INSTANA_URL is missing', function() {
@@ -424,7 +438,7 @@ exports.registerTests = function registerTests(handlerDefinitionPath) {
       instanaKey: config.instanaKey
     });
 
-    it('must ignore the missing URL gracefully', () => verify(control, false, false));
+    it('must ignore the missing URL gracefully', () => verify(control, false, false, false));
   });
 
   describe('when INSTANA_URL is missing and the lambda function yields an error', function() {
@@ -436,7 +450,7 @@ exports.registerTests = function registerTests(handlerDefinitionPath) {
       error: true
     });
 
-    it('must ignore the missing URL gracefully', () => verify(control, 'lambda', false));
+    it('must ignore the missing URL gracefully', () => verify(control, 'lambda', false, false));
   });
 
   describe('with config, when INSTANA_URL is missing', function() {
@@ -449,7 +463,7 @@ exports.registerTests = function registerTests(handlerDefinitionPath) {
       withConfig: true
     });
 
-    it('must ignore the missing URL gracefully', () => verify(control, false, false));
+    it('must ignore the missing URL gracefully', () => verify(control, false, false, false));
   });
 
   describe('when INSTANA_KEY is missing', function() {
@@ -460,7 +474,7 @@ exports.registerTests = function registerTests(handlerDefinitionPath) {
       instanaUrl: config.backendBaseUrl
     });
 
-    it('must ignore the missing key gracefully', () => verify(control, false, false));
+    it('must ignore the missing key gracefully', () => verify(control, false, false, false));
   });
 
   describe('when INSTANA_KEY is missing and the lambda function yields an error', function() {
@@ -472,7 +486,7 @@ exports.registerTests = function registerTests(handlerDefinitionPath) {
       error: true
     });
 
-    it('must ignore the missing key gracefully', () => verify(control, 'lambda', false));
+    it('must ignore the missing key gracefully', () => verify(control, 'lambda', false, false));
   });
 
   describe('when backend is down', function() {
@@ -486,7 +500,7 @@ exports.registerTests = function registerTests(handlerDefinitionPath) {
       startBackend: false
     });
 
-    it('must ignore the failed request gracefully', () => verify(control, false, false));
+    it('must ignore the failed request gracefully', () => verify(control, false, false, false));
   });
 
   describe('when backend is down and the lambda function yields an error', function() {
@@ -501,7 +515,7 @@ exports.registerTests = function registerTests(handlerDefinitionPath) {
       error: true
     });
 
-    it('must ignore the failed request gracefully', () => verify(control, 'lambda', false));
+    it('must ignore the failed request gracefully', () => verify(control, 'lambda', false, false));
   });
 
   describe('when backend is reachable but does not respond', function() {
@@ -516,10 +530,10 @@ exports.registerTests = function registerTests(handlerDefinitionPath) {
       startBackend: 'unresponsive'
     });
 
-    it('must finish swiftly', () => verify(control, false, false));
+    it('must finish swiftly', () => verify(control, false, false, false));
   });
 
-  function verify(control, error, expectSpansAndMetrics, trigger, parent) {
+  function verify(control, error, expectMetrics, expectSpans, trigger, parent) {
     /* eslint-disable no-console */
     if (error === 'lambda') {
       expect(control.getLambdaErrors().length).to.equal(1);
@@ -527,6 +541,7 @@ exports.registerTests = function registerTests(handlerDefinitionPath) {
       const lambdaError = control.getLambdaErrors()[0];
       expect(lambdaError).to.exist;
       expect(lambdaError.message).to.equal('Boom!');
+      // other error cases like 'http' are checked in verifyLambdaEntry
     } else {
       if (control.getLambdaErrors() && control.getLambdaErrors().length > 0) {
         console.log('Unexpected Errors:');
@@ -539,30 +554,35 @@ exports.registerTests = function registerTests(handlerDefinitionPath) {
       expect(result.message).to.equal('Stan says hi!');
     }
 
-    if (expectSpansAndMetrics) {
-      return retry(() => control.getSpans())
-        .then(spans => expectSpans(spans, error, trigger, parent))
-        .then(() => control.getMetrics())
-        .then(metrics => expectMetrics(metrics));
+    if (expectMetrics && expectSpans) {
+      return retry(() => getAndVerifySpans(control, error, trigger, parent).then(() => getAndVerifyMetrics(control)));
+    } else if (!expectMetrics && expectSpans) {
+      return retry(() => getAndVerifySpans(control, error, trigger, parent).then(() => verifyNoMetrics(control)));
+    } else if (expectMetrics && !expectSpans) {
+      return retry(() => getAndVerifyMetrics(control).then(() => verifyNoSpans(control)));
     } else {
       return delay(1000)
-        .then(() => control.getSpans())
-        .then(spans => {
-          expect(spans).to.be.empty;
-        })
-        .then(() => control.getMetrics())
-        .then(metrics => {
-          expect(metrics).to.be.empty;
-        });
+        .then(() => verifyNoSpans(control))
+        .then(() => verifyNoMetrics(control));
     }
   }
 
-  function expectSpans(spans, error, expectedTrigger, expectParent) {
-    const entry = expectLambdaEntry(spans, error, expectedTrigger, expectParent);
-    expectHttpExit(spans, entry);
+  function verifyNoSpans(control) {
+    return control.getSpans().then(spans => {
+      expect(spans).to.be.empty;
+    });
   }
 
-  function expectLambdaEntry(spans, error, expectedTrigger, expectParent) {
+  function getAndVerifySpans(control, error, expectedTrigger, expectParent) {
+    return control.getSpans().then(spans => verifySpans(spans, error, expectedTrigger, expectParent));
+  }
+
+  function verifySpans(spans, error, expectedTrigger, expectParent) {
+    const entry = verifyLambdaEntry(spans, error, expectedTrigger, expectParent);
+    verifyHttpExit(spans, entry);
+  }
+
+  function verifyLambdaEntry(spans, error, expectedTrigger, expectParent) {
     return expectOneMatching(spans, span => {
       if (expectParent) {
         expect(span.t).to.equal(expectParent.t);
@@ -593,18 +613,18 @@ exports.registerTests = function registerTests(handlerDefinitionPath) {
         expect(span.data.lambda.error).to.equal('HTTP status 502');
         expect(span.error).to.be.true;
         expect(span.ec).to.equal(1);
-      } else if (!error) {
+      } else if (error === false) {
         expect(span.data.lambda.error).to.not.exist;
         expect(span.error).to.be.false;
         expect(span.ec).to.equal(0);
       } else {
         throw new Error(`Unknown error expectation type, don't know how to verify: ${error}`);
       }
-      expectHeaders(span);
+      verifyHeaders(span);
     });
   }
 
-  function expectHttpExit(spans, entry) {
+  function verifyHttpExit(spans, entry) {
     return expectOneMatching(spans, span => {
       expect(span.t).to.equal(entry.t);
       expect(span.p).to.equal(entry.s);
@@ -620,11 +640,21 @@ exports.registerTests = function registerTests(handlerDefinitionPath) {
       expect(span.data.http).to.be.an('object');
       expect(span.data.http.method).to.equal('GET');
       expect(span.data.http.url).to.equal(config.downstreamDummyUrl);
-      expectHeaders(span);
+      verifyHeaders(span);
     });
   }
 
-  function expectMetrics(allMetrics) {
+  function verifyNoMetrics(control) {
+    return control.getMetrics().then(metrics => {
+      expect(metrics).to.be.empty;
+    });
+  }
+
+  function getAndVerifyMetrics(control) {
+    return control.getMetrics().then(metrics => verifyMetrics(metrics));
+  }
+
+  function verifyMetrics(allMetrics) {
     expect(allMetrics).to.exist;
     expect(Array.isArray(allMetrics)).to.be.true;
     expect(allMetrics).to.have.lengthOf(1);
@@ -645,10 +675,10 @@ exports.registerTests = function registerTests(handlerDefinitionPath) {
     expect(metrics.memory).to.exist;
     expect(metrics.healthchecks).to.exist;
     expect(metrics.heapSpaces).to.exist;
-    expectHeaders(allPlugins);
+    verifyHeaders(allPlugins);
   }
 
-  function expectHeaders(payload) {
+  function verifyHeaders(payload) {
     const headers = payload._receivedHeaders;
     expect(headers).to.exist;
     expect(headers['x-instana-host']).to.equal(qualifiedArn);
