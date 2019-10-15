@@ -25,7 +25,8 @@ function prelude(opts) {
   }
 
   const env = {
-    LAMDBA_ERROR: opts.error
+    LAMDBA_ERROR: opts.error,
+    INSTANA_EXTRA_HTTP_HEADERS: 'x-My-Favorite-Header;ANOTHER-HEADER'
   };
   if (opts.instanaUrl) {
     env.INSTANA_URL = opts.instanaUrl;
@@ -100,6 +101,10 @@ exports.registerTests = function registerTests(handlerDefinitionPath) {
             expect(span.data.http.url).to.equal('/path/to/path-xxx/path-yyy');
             expect(span.data.http.path_tpl).to.equal('/path/to/{param1}/{param2}');
             expect(span.data.http.params).to.equal('param1=param-value&param1=another-param-value&param2=param-value');
+            expect(span.data.http.header).to.deep.equal({
+              'X-mY-favorite-header': 'A Header Value',
+              'Another-Header': 'Another Header Value'
+            });
             expect(span.data.http.host).to.not.exist;
             expect(span.data.http.status).to.equal(200);
           })
@@ -226,6 +231,10 @@ exports.registerTests = function registerTests(handlerDefinitionPath) {
             expect(span.data.http.url).to.equal('/path/to/resource');
             expect(span.data.http.path_tpl).to.not.exist;
             expect(span.data.http.params).to.equal('param1=value1&param2=value2');
+            expect(span.data.http.header).to.deep.equal({
+              'X-mY-favorite-header': 'A Header Value',
+              'Another-Header': 'Another Header Value'
+            });
             expect(span.data.http.host).to.not.exist;
           })
         ));

@@ -172,8 +172,8 @@ function createEvent(error) {
         event.path = '/path/to/path-xxx/path-yyy';
         event.httpMethod = 'POST';
         event.headers = {
-          'x-test-header-1': 'another-header-value',
-          'x-test-header-2': 'header-value'
+          'X-mY-favorite-header': 'A Header Value',
+          'Another-Header': 'Another Header Value'
         };
         event.multiValueHeaders = {
           'x-test-header-1': ['header-value', 'another-header-value'],
@@ -217,8 +217,8 @@ function createEvent(error) {
           'x-forwarded-for': '2.204.181.152',
           'x-forwarded-port': '80',
           'x-forwarded-proto': 'http',
-          'x-header-param-1': 'header-value-1',
-          'x-header-param-2': 'header-value-2'
+          'X-mY-favorite-header': 'A Header Value',
+          'Another-Header': 'Another Header Value'
         };
         event.body = '';
         event.isBase64Encoded = false;

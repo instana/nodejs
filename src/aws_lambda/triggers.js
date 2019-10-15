@@ -11,6 +11,8 @@ const maxS3Records = 3;
 const maxS3ObjectKeyLength = 200;
 const maxSQSRecords = 3;
 
+let extraHttpHeadersToCapture = null;
+
 exports.enrichSpanWithTriggerData = function enrichSpanWithTriggerData(event, span) {
   if (isApiGatewayProxyTrigger(event)) {
     span.data.lambda.trigger = 'aws:api.gateway';
@@ -58,7 +60,8 @@ function extractHttpFromApiGatewwayProxyEvent(event, span) {
     method: event.httpMethod,
     url: event.path,
     path_tpl: event.resource,
-    params: readHttpQueryParams(event)
+    params: readHttpQueryParams(event),
+    header: getExtraHeaders(event)
   };
 }
 
@@ -91,7 +94,8 @@ function extractHttpFromApplicationLoadBalancerEvent(event, span) {
   span.data.http = {
     method: event.httpMethod,
     url: event.path,
-    params: readHttpQueryParams(event)
+    params: readHttpQueryParams(event),
+    header: getExtraHeaders(event)
   };
 }
 
@@ -187,6 +191,36 @@ function extractEventFromSQS(event, span) {
     }))
   };
   span.data.lambda.sqs.more = event.Records.length > maxSQSRecords;
+}
+
+function getExtraHeaders(event) {
+  if (!Array.isArray(extraHttpHeadersToCapture)) {
+    if (!process.env.INSTANA_EXTRA_HTTP_HEADERS) {
+      extraHttpHeadersToCapture = [];
+      return undefined;
+    } else {
+      extraHttpHeadersToCapture = process.env.INSTANA_EXTRA_HTTP_HEADERS.split(';').map(header => header.toLowerCase());
+    }
+  }
+
+  if (extraHttpHeadersToCapture.length === 0) {
+    return undefined;
+  }
+  if (!event.headers || typeof event.headers !== 'object') {
+    return undefined;
+  }
+
+  const extraHeaders = {};
+  Object.keys(event.headers).forEach(key => {
+    if (typeof key === 'string') {
+      for (let i = 0; i < extraHttpHeadersToCapture.length; i++) {
+        if (key.toLowerCase() === extraHttpHeadersToCapture[i]) {
+          extraHeaders[key] = event.headers[key];
+        }
+      }
+    }
+  });
+  return extraHeaders;
 }
 
 exports.readTracingHeaders = function readTracingHeaders(event) {
