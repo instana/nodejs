@@ -8,126 +8,133 @@ var path = require('path');
 var parsedMainPackageJson;
 var mainPackageJsonPath;
 
-exports.getMainPackageJson = function getMainPackageJson(cb) {
-  if (parsedMainPackageJson !== undefined) {
-    process.nextTick(function() {
-      // caution: Node.js v0.12 and lower treat null as undefined
-      // when using process.nextTick(cb, null). This leads to
-      // logic differences. This needs to be kept until Node.js v0.12
-      // and Node.js v0.10 support is no longer required.
-      cb(null, parsedMainPackageJson);
-    });
+exports.getMainPackageJson = function getMainPackageJson(startDirectory, cb) {
+  if (typeof startDirectory === 'function') {
+    cb = startDirectory;
+    startDirectory = null;
   }
 
-  exports.getMainPackageJsonPath(function(err, packageJsonPath) {
-    if (err) return cb(err);
+  if (parsedMainPackageJson !== undefined) {
+    return process.nextTick(cb, null, parsedMainPackageJson);
+  }
+
+  exports.getMainPackageJsonPath(startDirectory, function(err, packageJsonPath) {
+    if (err) {
+      // fs.readFile would have called cb asynchronously later, so we use process.nextTick here to make all paths async.
+      return process.nextTick(cb, err, null);
+    }
     if (packageJsonPath == null) {
       parsedMainPackageJson = null;
-      return cb(null, null);
+      // fs.readFile would have called cb asynchronously later, so we use process.nextTick here to make all paths async.
+      return process.nextTick(cb, null, null);
     }
 
     fs.readFile(packageJsonPath, { encoding: 'utf8' }, function(readFileErr, contents) {
-      if (readFileErr) return cb(readFileErr);
+      if (readFileErr) {
+        return cb(readFileErr, null);
+      }
 
-      // JSON parsing can fail…
       try {
         parsedMainPackageJson = JSON.parse(contents);
-        // Schedule cb call in next tick to avoid calling it twice which may occur when
-        // callback is throwing exceptions.
-        process.nextTick(function() {
-          // caution: Node.js v12 and lower treat null as undefined
-          // when using process.nextTick(cb, null). This leads to
-          // logic differences. This needs to be kept until Node.js v12
-          // and Node.js v10 support is no longer required.
-          cb(null, parsedMainPackageJson);
-        });
       } catch (e) {
-        cb(e, null);
+        return cb(e, null);
       }
+      return cb(null, parsedMainPackageJson);
     });
   });
 };
 
-exports.getMainPackageJsonPath = function getMainPackageJsonPath(cb) {
+exports.getMainPackageJsonPath = function getMainPackageJsonPath(startDirectory, cb) {
+  if (typeof startDirectory === 'function') {
+    cb = startDirectory;
+    startDirectory = null;
+  }
+
   if (mainPackageJsonPath !== undefined) {
-    process.nextTick(function() {
-      // caution: Node.js v12 and lower treat null as undefined
-      // when using process.nextTick(cb, null). This leads to
-      // logic differences. This needs to be kept until Node.js v12
-      // and Node.js v10 support is no longer required.
-      cb(null, mainPackageJsonPath);
-    });
+    // searchForPackageJsonInDirectoryTreeUpwards would have called cb asynchronously later,
+    // so we use process.nextTick here to make all paths async.
+    return process.nextTick(cb, null, mainPackageJsonPath);
   }
 
-  var mainModule = process.mainModule;
-
-  // this may happen when the Node CLI is evaluating an expression or when the REPL is used
-  if (!mainModule) {
-    mainPackageJsonPath = null;
-    process.nextTick(function() {
-      // caution: Node.js v12 and lower treat null as undefined
-      // when using process.nextTick(cb, null). This leads to
-      // logic differences. This needs to be kept until Node.js v12
-      // and Node.js v10 support is no longer required.
-      cb(null, null);
-    });
-    return;
+  if (!startDirectory) {
+    // No explicit starting directory for searching for the main package.json has been provided, use the Node.js
+    // process' main module as the starting point.
+    var mainModule = process.mainModule;
+    // this may happen when the Node CLI is evaluating an expression or when the REPL is used
+    if (!mainModule) {
+      mainPackageJsonPath = null;
+      // searchForPackageJsonInDirectoryTreeUpwards would have called cb asynchronously later,
+      // so we use process.nextTick here to make all paths async.
+      return process.nextTick(cb, null, null);
+    }
+    startDirectory = path.dirname(mainModule.filename);
   }
 
-  var mainModuleFilename = mainModule.filename;
-  searchForPackageJsonInParentDirs(path.dirname(mainModuleFilename), function(err, main) {
-    if (err) return cb(err);
+  searchForPackageJsonInDirectoryTreeUpwards(startDirectory, function(err, main) {
+    if (err) {
+      return cb(err, null);
+    }
 
     mainPackageJsonPath = main;
-    cb(null, mainPackageJsonPath);
+    return cb(null, mainPackageJsonPath);
   });
 };
 
-function searchForPackageJsonInParentDirs(dir, cb) {
+function searchForPackageJsonInDirectoryTreeUpwards(dir, cb) {
   var fileToCheck = path.join(dir, 'package.json');
 
   fs.stat(fileToCheck, function(err, stats) {
     if (err) {
       if (err.code === 'ENOENT') {
-        return serchInParentDir();
+        return searchInParentDir();
+      } else {
+        // searchInParentDir would have called cb asynchronously,
+        // so we use process.nextTick here to make all paths async.
+        return process.nextTick(cb, err, null);
       }
-      return cb(err);
     }
 
-    // if it actually exists, we also need to make sure that there is a node_modules
-    // directory located next to it. This way we can be relatively certain that we did
-    // not encounter a component package.json (as used by the React community).
-    //
-    // It is highly unlikely that the application has no dependencies, because
-    // @instana/core is a dependency itself
+    // If the package.json file actually exists, we also need to make sure that there is a node_modules directory
+    // located next to it. This way we can be relatively certain that we did not encounter a component package.json
+    // (as used by the React for example). It is highly unlikely that the application has no dependencies, because
+    // @instana/core is a dependency itself.
     if (stats.isFile()) {
       var potentialNodeModulesDir = path.join(dir, 'node_modules');
-      fs.stat(potentialNodeModulesDir, function(statErr, dirStats) {
+      fs.stat(potentialNodeModulesDir, function(statErr, potentialNodeModulesDirStats) {
         if (statErr) {
           if (statErr.code === 'ENOENT') {
-            return serchInParentDir();
+            return searchInParentDir();
           }
-          return cb(statErr);
+          // searchInParentDir would have called cb asynchronously,
+          // so we use process.nextTick here to make all paths async.
+          return process.nextTick(cb, statErr, null);
         }
 
-        // great, we found a package.json which has dependencies located next to it. This
-        // should be it!
-        if (dirStats.isDirectory()) {
-          cb(null, fileToCheck);
+        if (potentialNodeModulesDirStats.isDirectory()) {
+          // We have found a package.json which has dependencies located next to it. We assume that this is the
+          // package.json file we are looking for.
+
+          // Also, searchInParentDir would have called cb asynchronously,
+          // so we use process.nextTick here to make all paths async.
+          return process.nextTick(cb, null, fileToCheck);
         } else {
-          serchInParentDir();
+          return searchInParentDir();
         }
       });
     } else {
-      serchInParentDir();
+      return searchInParentDir();
     }
   });
 
-  function serchInParentDir() {
+  function searchInParentDir() {
     // this happens when we cannot find a package.json
     var parentDir = path.resolve(dir, '..');
-    if (dir === parentDir) return cb(null, null);
+    if (dir === parentDir) {
+      // searchForPackageJsonInDirectoryTreeUpwards would have called cb asynchronously,
+      // so we use process.nextTick here to make all paths async.
+      return process.nextTick(cb, null, null);
+    }
 
-    searchForPackageJsonInParentDirs(parentDir, cb);
+    return searchForPackageJsonInDirectoryTreeUpwards(parentDir, cb);
   }
 }
