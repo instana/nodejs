@@ -5,9 +5,10 @@ const instanaCore = require('@instana/core');
 const consoleLogger = require('../util/console_logger');
 const backendConnector = require('../util/backend_connector');
 const identityProvider = require('./identity_provider');
+const metrics = require('./metrics');
 const triggers = require('./triggers');
 
-const { metrics, tracing } = instanaCore;
+const { tracing } = instanaCore;
 const { constants, spanBuffer } = tracing;
 let logger = consoleLogger;
 
@@ -194,12 +195,6 @@ function postHandler(entrySpan, error, result, callback) {
 
   const metricsData = metrics.gatherData();
 
-  // Quick fix for metrics name collision between in-process collector and infra monitoring. Needs to be fixed in
-  // @instana/core eventually by being able to select individual metrics.
-  renameMetric(metricsData, 'name', 'npmPackageName');
-  renameMetric(metricsData, 'version', 'npmPackageVersion');
-  renameMetric(metricsData, 'description', 'npmPackageDescription');
-
   const metricsPayload = {
     plugins: [{ name: 'com.instana.plugin.aws.lambda', entityId: identityProvider.getEntityId(), data: metricsData }]
   };
@@ -215,11 +210,4 @@ function postHandler(entrySpan, error, result, callback) {
     }
     callback();
   });
-}
-
-function renameMetric(metricsData, oldKey, newKey) {
-  if (metricsData[oldKey] != null) {
-    metricsData[newKey] = metricsData[oldKey];
-    delete metricsData[oldKey];
-  }
 }

@@ -674,16 +674,24 @@ exports.registerTests = function registerTests(handlerDefinitionPath) {
     expect(pluginData.name).to.equal('com.instana.plugin.aws.lambda');
     expect(pluginData.entityId).to.equal(qualifiedArn);
     const metrics = pluginData.data;
-    expect(metrics.activeHandles).to.be.a('number');
-    expect(metrics.activeRequests).to.be.a('number');
-    // Not testing metrics that depend on fs actions, like 'dependencies', 'name' or 'description' - collection might
-    // not have finished when we send metrics.
-    expect(metrics.dependencies).to.exist;
-    // expect(metrics.description).to.equal('Monitor serverless Node.js code with Instana');
-    // expect(metrics.name).to.equal('@instana/serverless');
-    expect(metrics.memory).to.exist;
-    expect(metrics.healthchecks).to.exist;
-    expect(metrics.heapSpaces).to.exist;
+    expect(metrics.sensorVersion).to.match(/1\.\d\d+\.\d+/);
+    expect(metrics.startTime).to.be.at.most(Date.now());
+    expect(metrics.versions).to.be.an('object');
+    expect(metrics.versions.node).to.match(/\d+\.\d+\.\d+/);
+    expect(metrics.versions.v8).to.match(/\d+\.\d+\.\d+/);
+    expect(metrics.versions.uv).to.match(/\d+\.\d+\.\d+/);
+    expect(metrics.versions.zlib).to.match(/\d+\.\d+\.\d+/);
+    // Deliberately not failing the test if metrics that depend on file system operations are missing.
+    // Reading package.json might or might not have finished when we send metrics.
+    if (metrics.npmPackageDescription) {
+      expect(metrics.npmPackageDescription).to.equal('Monitor serverless Node.js code with Instana');
+    }
+    if (metrics.npmPackageName) {
+      expect(metrics.npmPackageName).to.equal('@instana/serverless');
+    }
+    if (metrics.npmPackageVersion) {
+      expect(metrics.npmPackageVersion).to.match(/\d+\.\d+\.\d+/);
+    }
     verifyHeaders(allPlugins);
   }
 
