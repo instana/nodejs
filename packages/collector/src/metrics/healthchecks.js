@@ -1,6 +1,6 @@
 'use strict';
 
-var requireHook = require('../util/requireHook');
+var requireHook = require('@instana/core').util.requireHook;
 var logger;
 logger = require('../logger').getLogger('metrics/healthchecks', function(newLogger) {
   logger = newLogger;

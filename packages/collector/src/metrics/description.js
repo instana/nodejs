@@ -1,12 +1,12 @@
 'use strict';
 
-var applicationUnderMonitoring = require('../util/applicationUnderMonitoring');
+var applicationUnderMonitoring = require('@instana/core').util.applicationUnderMonitoring;
 var logger;
-logger = require('../logger').getLogger('metrics/name', function(newLogger) {
+logger = require('../logger').getLogger('metrics/description', function(newLogger) {
   logger = newLogger;
 });
 
-exports.payloadPrefix = 'name';
+exports.payloadPrefix = 'description';
 exports.currentPayload = undefined;
 
 exports.activate = function() {
@@ -16,7 +16,7 @@ exports.activate = function() {
     }
 
     if (!err && pckg) {
-      exports.currentPayload = pckg.name;
+      exports.currentPayload = pckg.description;
     }
   });
 };

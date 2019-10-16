@@ -1,5 +1,8 @@
 # Changelog
 
+## Unreleased
+- Move some metrics from core to collector package.
+
 ## 1.73.1
 - Fix cases where GraphQL tracing would break when another non-HTTP entry span is already active.
 

@@ -2,7 +2,7 @@
 
 var fs = require('fs');
 
-var applicationUnderMonitoring = require('../util/applicationUnderMonitoring');
+var applicationUnderMonitoring = require('@instana/core').util.applicationUnderMonitoring;
 var logger;
 logger = require('../logger').getLogger('metrics/directDependencies', function(newLogger) {
   logger = newLogger;
