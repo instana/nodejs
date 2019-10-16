@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.73.2
 - Move some metrics from core to collector package.
 
 ## 1.73.1
