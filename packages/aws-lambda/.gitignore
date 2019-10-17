@@ -1,0 +1,3 @@
+node_modules/
+instana-serverless-*.tgz
+npm-debug*

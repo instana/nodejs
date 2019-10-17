@@ -1,0 +1,23 @@
+function createZip {
+  name=${PWD##*/}
+  echo "creating $name.zip"
+  rm -f $name.zip
+  mkdir -p ../zip
+  rm -f ../zip/$name.zip
+  rm -rf node_modules
+  if [[ "$name" =~ ^wrapped-.* ]] || [[ "$name" =~ ^.*demo.* ]]; then
+    # The lambda's package.json might already have a dependency to the tar file:
+    # "dependencies": {
+    #   "@instana/serverless": "file:../../instana-serverless-1.0.0.tgz"
+    # }
+    # but only doing an npm install will use a stale copy of the tgz from npm's
+    # cache, so we force npm to use a fresh copy by installing the tgz again
+    # explicitly.
+    npm --loglevel=warn install -S "file:../../instana-serverless-1.0.0.tgz"
+  fi
+  # Now install everything else.
+  npm --loglevel=warn install
+  zip -qr $name . -x bin/*.sh -x \*.swp
+  mv $name.zip ../zip
+}
+

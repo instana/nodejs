@@ -1,0 +1,14 @@
+{
+  "name": "wrapped-async-lambda",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Bastian Krol <bastian.krol@instana.com>",
+  "license": "MIT",
+  "dependencies": {
+    "@instana/serverless": "file:../../instana-serverless-1.0.0.tgz",
+    "node-fetch": "^2.3.0"
+  }
+}

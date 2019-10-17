@@ -1,0 +1,14 @@
+# enable tracing for AWS agent:
+vim /opt/instana/agent/etc/instana/com.instana.agent.main.config.Agent.cfg
+change:
+  mode = APM
+
+yum install -y gcc-c++ make
+curl -sL https://rpm.nodesource.com/setup_10.x | sudo -E bash -
+sudo yum install -y nodejs
+mkdir /opt/demo-app
+cp /tmp/demo-ec2-app.zip /opt/demo-app/
+cd /opt/demo-app
+unzip demo-ec2-app.zip
+npm i
+
