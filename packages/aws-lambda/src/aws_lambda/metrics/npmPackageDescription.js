@@ -3,13 +3,13 @@
 const { util: coreUtil } = require('@instana/core');
 
 const logger = require('../../util/console_logger');
-const rootDir = require('./rootDir').root;
+const rootDir = require('./rootDir');
 
 exports.payloadPrefix = 'npmPackageDescription';
 exports.currentPayload = undefined;
 
 exports.activate = function activate() {
-  coreUtil.applicationUnderMonitoring.getMainPackageJson(rootDir, (err, pckg) => {
+  coreUtil.applicationUnderMonitoring.getMainPackageJson(rootDir.root, (err, pckg) => {
     if (err) {
       logger.warn('Failed to determine main package json. Reason: ', err.message, err.stack);
     }

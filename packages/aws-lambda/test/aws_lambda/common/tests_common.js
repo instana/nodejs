@@ -681,17 +681,9 @@ exports.registerTests = function registerTests(handlerDefinitionPath) {
     expect(metrics.versions.v8).to.match(/\d+\.\d+\.\d+/);
     expect(metrics.versions.uv).to.match(/\d+\.\d+\.\d+/);
     expect(metrics.versions.zlib).to.match(/\d+\.\d+\.\d+/);
-    // Deliberately not failing the test if metrics that depend on file system operations are missing.
-    // Reading package.json might or might not have finished when we send metrics.
-    if (metrics.npmPackageDescription) {
-      expect(metrics.npmPackageDescription).to.equal('Monitor Node.js based AWS Lambdas with Instana');
-    }
-    if (metrics.npmPackageName) {
-      expect(metrics.npmPackageName).to.equal('@instana/aws-lambda');
-    }
-    if (metrics.npmPackageVersion) {
-      expect(metrics.npmPackageVersion).to.match(/\d+\.\d+\.\d+/);
-    }
+    expect(metrics.npmPackageDescription).to.equal('Monitor Node.js based AWS Lambdas with Instana');
+    expect(metrics.npmPackageName).to.equal('@instana/aws-lambda');
+    expect(metrics.npmPackageVersion).to.match(/\d+\.\d+\.\d+/);
     verifyHeaders(allPlugins);
   }
 
