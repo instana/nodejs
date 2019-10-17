@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.74.0
 - In-process data collection for AWS Lambdas via new package @instana/aws-lambda (beta).
 
 ## 1.73.2
