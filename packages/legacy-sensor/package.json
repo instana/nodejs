@@ -16,6 +16,9 @@
     "lib": "src",
     "test": "test"
   },
+  "publishConfig": {
+    "access": "public"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/instana/nodejs-sensor.git"

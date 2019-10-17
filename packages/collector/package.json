@@ -12,6 +12,9 @@
   "files": [
     "src"
   ],
+  "publishConfig": {
+    "access": "public"
+  },
   "directories": {
     "lib": "src",
     "test": "test",

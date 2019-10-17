@@ -6,6 +6,9 @@
   "files": [
     "src"
   ],
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "audit": "npm audit --production",
     "test": "npm run test:nolint && npm run test:lint",
