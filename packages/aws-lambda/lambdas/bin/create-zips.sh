@@ -5,8 +5,9 @@ cd `dirname $BASH_SOURCE`/..
 
 pushd .. > /dev/null
 pwd
-rm -rf instana-serverless-*.tgz
+rm -rf instana-aws-lambda*.tgz
 npm --loglevel=warn pack
+mv instana-aws-lambda-*.tgz instana-aws-lambda.tgz
 popd > /dev/null
 
 for lambda_directory in */ ; do

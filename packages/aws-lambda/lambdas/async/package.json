@@ -1,7 +1,12 @@
 {
   "name": "async-lambda",
+  "description": "A simple Lambda with an async-style handler, not instrumented with Instana.",
   "version": "1.0.0",
   "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/instana/nodejs-sensor.git"
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },

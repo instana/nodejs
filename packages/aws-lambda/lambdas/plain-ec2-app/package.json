@@ -1,7 +1,12 @@
 {
   "name": "audit-log-backend",
+  "description": "A small Node.js/express app for demo purposes",
   "version": "1.0.0",
   "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/instana/nodejs-sensor.git"
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },

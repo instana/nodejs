@@ -23,9 +23,8 @@ if (process.env[timeoutEnvVar]) {
   backendTimeout = parseInt(process.env[timeoutEnvVar], 10);
   if (isNaN(backendTimeout) || backendTimeout < 0) {
     logger.warn(
-      `The value of ${timeoutEnvVar} (${
-        process.env[timeoutEnvVar]
-      }) cannot be parsed to a valid numerical value. Will fall back to the default timeout (${defaultTimeout} ms).`
+      `The value of ${timeoutEnvVar} (${process.env[timeoutEnvVar]}) cannot be parsed to a valid numerical value. ` +
+        `Will fall back to the default timeout (${defaultTimeout} ms).`
     );
     backendTimeout = defaultTimeout;
   }
@@ -86,7 +85,7 @@ function send(resourcePath, payload, callback) {
     headers: {
       'Content-Type': 'application/json',
       'Content-Length': Buffer.byteLength(payload),
-      [constants.xInstanaHost]: identityProvider ? identityProvider.getHostHeader() : 'serverless-nodejs',
+      [constants.xInstanaHost]: identityProvider ? identityProvider.getHostHeader() : 'nodejs-aws-lambda',
       [constants.xInstanaKey]: environmentUtil.getInstanaKey(),
       [constants.xInstanaTime]: Date.now()
     },

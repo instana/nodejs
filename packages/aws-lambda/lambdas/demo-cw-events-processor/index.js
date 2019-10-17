@@ -1,6 +1,6 @@
 'use strict';
 
-const instana = require('@instana/serverless');
+const instana = require('@instana/aws-lambda');
 
 const pg = require('pg');
 

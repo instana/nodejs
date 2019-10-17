@@ -684,10 +684,10 @@ exports.registerTests = function registerTests(handlerDefinitionPath) {
     // Deliberately not failing the test if metrics that depend on file system operations are missing.
     // Reading package.json might or might not have finished when we send metrics.
     if (metrics.npmPackageDescription) {
-      expect(metrics.npmPackageDescription).to.equal('Monitor serverless Node.js code with Instana');
+      expect(metrics.npmPackageDescription).to.equal('Monitor Node.js based AWS Lambdas with Instana');
     }
     if (metrics.npmPackageName) {
-      expect(metrics.npmPackageName).to.equal('@instana/serverless');
+      expect(metrics.npmPackageName).to.equal('@instana/aws-lambda');
     }
     if (metrics.npmPackageVersion) {
       expect(metrics.npmPackageVersion).to.match(/\d+\.\d+\.\d+/);

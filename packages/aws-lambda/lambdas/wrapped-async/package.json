@@ -1,14 +1,19 @@
 {
   "name": "wrapped-async-lambda",
+  "description": "A simple Lambda with an async-style handler, instrumented with Instana.",
   "version": "1.0.0",
   "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/instana/nodejs-sensor.git"
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Bastian Krol <bastian.krol@instana.com>",
   "license": "MIT",
   "dependencies": {
-    "@instana/serverless": "file:../../instana-serverless-1.0.0.tgz",
+    "@instana/aws-lambda": "file:../../instana-aws-lambda.tgz",
     "node-fetch": "^2.3.0"
   }
 }
