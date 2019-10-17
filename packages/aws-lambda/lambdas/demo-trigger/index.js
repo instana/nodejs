@@ -1,11 +1,10 @@
 'use strict';
 
-// eslint-disable-next-line import/no-unresolved
 const instana = require('@instana/serverless');
 
 const async_ = require('async');
 const request = require('request-promise');
-// eslint-disable-next-line import/no-unresolved
+// eslint-disable-next-line import/no-extraneous-dependencies
 const s3 = new (require('aws-sdk')).S3(); // this is provided by AWS, so it is not listed in package.json
 const uuid = require('uuid/v4');
 

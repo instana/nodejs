@@ -14,7 +14,8 @@
   ],
   "directories": {
     "lib": "src",
-    "test": "test"
+    "test": "test",
+    "example": "dummy-app"
   },
   "repository": {
     "type": "git",
@@ -28,12 +29,6 @@
     "test:debug": "WITH_STDOUT=true DEBUG=kafka-node:* npm run test:mocha",
     "test:lint": "eslint src test dummy-app",
     "agent-stub": "AGENT_PORT=3210 node test/apps/agentStub.js",
-    "dev-http": "APP_PORT=3456 TRACING_ENABLED=true node test/apps/express | bunyan",
-    "dev-http-proxy": "APP_PORT=3457 UPSTREAM_PORT=3456 TRACING_ENABLED=true node test/apps/expressProxy | bunyan",
-    "dev-http-elasticsearch": "APP_PORT=3458 TRACING_ENABLED=true node test/apps/expressElasticsearch | bunyan",
-    "dev-http-mongodb": "APP_PORT=3459 TRACING_ENABLED=true node test/apps/expressMongodb | bunyan",
-    "dev-http-kafka-producer": "APP_PORT=3460 TRACING_ENABLED=true node test/apps/expressKafkaProducer | bunyan",
-    "dev-http-mysql": "APP_PORT=3461 TRACING_ENABLED=true node test/apps/expressMysql | bunyan",
     "prettier": "prettier --write 'src/**/*.js' 'test/**/*.js' 'dummy-app/**/*.js' 'dockerfile-examples/**/*.js' 'bin/**/*.js'"
   },
   "keywords": [
@@ -134,8 +129,8 @@
     "eslint": "^5.16.0",
     "eslint-config-airbnb": "^17.1.0",
     "eslint-plugin-mocha": "^5.3.0",
-    "mocha": "^5.2.0",
+    "mocha": "^6.0.2",
     "opentracing": "^0.14.3",
-    "prettier": "^1.16.4"
+    "prettier": "^1.17.1"
   }
 }
