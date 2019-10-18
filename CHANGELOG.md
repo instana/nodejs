@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.74.1
+- Improve logging in AWS Lambdas.
+
 ## 1.74.0
 - In-process data collection for AWS Lambdas via new package @instana/aws-lambda (beta).
 
