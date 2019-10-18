@@ -2,10 +2,11 @@
 
 'use strict';
 
-let minLevel = 40;
+// TODO: Change back to 40
+let minLevel = 30;
 
 module.exports = exports = {
-  debug: createLogFn(20, console.debug),
+  debug: createLogFn(20, console.log /* This could be console.debug, but that won't emit anything cloudwatch logs */),
   info: createLogFn(30, console.log),
   warn: createLogFn(40, console.warn),
   error: createLogFn(50, console.error)

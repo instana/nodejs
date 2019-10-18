@@ -206,7 +206,7 @@ function postHandler(entrySpan, error, result, callback) {
       logger.warn('Could not send data to backend.', err.message);
       logger.debug('Could not send data to backend.', err);
     } else {
-      logger.debug('Data has been sent to backend.');
+      logger.info('Data has been sent to backend.');
     }
     callback();
   });
