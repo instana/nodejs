@@ -9,7 +9,7 @@ exports.backendBaseUrl = `${exports.backendProtocol}://${exports.backendHost}:${
   exports.backendPath
 }`;
 
-exports.instanaKey = 'dummy-key';
+exports.instanaAgentKey = 'dummy-key';
 
 exports.downstreamDummyProtocol = 'http';
 exports.downstreamDummyHost = 'localhost';

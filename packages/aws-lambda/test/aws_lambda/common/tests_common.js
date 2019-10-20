@@ -28,9 +28,17 @@ function prelude(opts) {
     LAMDBA_ERROR: opts.error,
     INSTANA_EXTRA_HTTP_HEADERS: 'x-My-Favorite-Header;ANOTHER-HEADER'
   };
+  if (opts.instanaEndpointUrl) {
+    env.INSTANA_ENDPOINT_URL = opts.instanaEndpointUrl;
+  }
+  // INSTANA_URL/instanaUrl is deprecated and will be removed before GA - use INSTANA_ENDPOINT_URL/instanaEndpointUrl
   if (opts.instanaUrl) {
     env.INSTANA_URL = opts.instanaUrl;
   }
+  if (opts.instanaAgentKey) {
+    env.INSTANA_AGENT_KEY = opts.instanaAgentKey;
+  }
+  // INSTANA_KEY/instanaKey is deprecated and will be removed before GA - use INSTANA_AGENT_KEY/instanaAgentKey
   if (opts.instanaKey) {
     env.INSTANA_KEY = opts.instanaKey;
   }
@@ -66,13 +74,28 @@ function prelude(opts) {
 
 exports.registerTests = function registerTests(handlerDefinitionPath) {
   describe('when everything is peachy', function() {
-    // - INSTANA_URL is configured
+    // - INSTANA_ENDPOINT_URL is configured
+    // - INSTANA_AGENT_KEY is configured
+    // - backend is reachable
+    // - lambda function ends with success
+    const control = prelude.bind(this)({
+      handlerDefinitionPath,
+      instanaEndpointUrl: config.backendBaseUrl,
+      instanaAgentKey: config.instanaAgentKey
+    });
+
+    it('must capture metrics and spans', () => verify(control, false, true, true));
+  });
+
+  describe('when deprecated env var keys are used', function() {
+    // - INSTANA_URL is configured (instead of INSTANA_ENDPOINT_URL)
+    // - INSTANA_KEY is configured (instead of INSTANA_AGENT_KEY)
     // - backend is reachable
     // - lambda function ends with success
     const control = prelude.bind(this)({
       handlerDefinitionPath,
       instanaUrl: config.backendBaseUrl,
-      instanaKey: config.instanaKey
+      instanaKey: config.instanaAgentKey
     });
 
     it('must capture metrics and spans', () => verify(control, false, true, true));
@@ -85,8 +108,8 @@ exports.registerTests = function registerTests(handlerDefinitionPath) {
       handlerDefinitionPath,
       trigger: 'api-gateway-proxy',
       statusCode: 200,
-      instanaUrl: config.backendBaseUrl,
-      instanaKey: config.instanaKey
+      instanaEndpointUrl: config.backendBaseUrl,
+      instanaAgentKey: config.instanaAgentKey
     });
 
     it('must recognize API gateway trigger (with proxy)', () =>
@@ -118,8 +141,8 @@ exports.registerTests = function registerTests(handlerDefinitionPath) {
     const control = prelude.bind(this)({
       handlerDefinitionPath,
       trigger: 'api-gateway-proxy',
-      instanaUrl: config.backendBaseUrl,
-      instanaKey: config.instanaKey,
+      instanaEndpointUrl: config.backendBaseUrl,
+      instanaAgentKey: config.instanaAgentKey,
       statusCode: 201,
       traceId: 'test-trace-id',
       spanId: 'test-span-id'
@@ -152,8 +175,8 @@ exports.registerTests = function registerTests(handlerDefinitionPath) {
     const control = prelude.bind(this)({
       handlerDefinitionPath,
       trigger: 'api-gateway-proxy',
-      instanaUrl: config.backendBaseUrl,
-      instanaKey: config.instanaKey,
+      instanaEndpointUrl: config.backendBaseUrl,
+      instanaAgentKey: config.instanaAgentKey,
       traceLevel: '0'
     });
 
@@ -164,8 +187,8 @@ exports.registerTests = function registerTests(handlerDefinitionPath) {
     const control = prelude.bind(this)({
       handlerDefinitionPath,
       trigger: 'api-gateway-proxy',
-      instanaUrl: config.backendBaseUrl,
-      instanaKey: config.instanaKey,
+      instanaEndpointUrl: config.backendBaseUrl,
+      instanaAgentKey: config.instanaAgentKey,
       statusCode: 502
     });
 
@@ -193,8 +216,8 @@ exports.registerTests = function registerTests(handlerDefinitionPath) {
     const control = prelude.bind(this)({
       handlerDefinitionPath,
       trigger: 'api-gateway-no-proxy',
-      instanaUrl: config.backendBaseUrl,
-      instanaKey: config.instanaKey
+      instanaEndpointUrl: config.backendBaseUrl,
+      instanaAgentKey: config.instanaAgentKey
     });
 
     it('must recognize API gateway trigger (without proxy)', () =>
@@ -215,8 +238,8 @@ exports.registerTests = function registerTests(handlerDefinitionPath) {
     const control = prelude.bind(this)({
       handlerDefinitionPath,
       trigger: 'application-load-balancer',
-      instanaUrl: config.backendBaseUrl,
-      instanaKey: config.instanaKey
+      instanaEndpointUrl: config.backendBaseUrl,
+      instanaAgentKey: config.instanaAgentKey
     });
 
     it('must recognize the application load balancer trigger', () =>
@@ -247,8 +270,8 @@ exports.registerTests = function registerTests(handlerDefinitionPath) {
     const control = prelude.bind(this)({
       handlerDefinitionPath,
       trigger: 'application-load-balancer',
-      instanaUrl: config.backendBaseUrl,
-      instanaKey: config.instanaKey,
+      instanaEndpointUrl: config.backendBaseUrl,
+      instanaAgentKey: config.instanaAgentKey,
       traceId: 'test-trace-id',
       spanId: 'test-span-id'
     });
@@ -279,8 +302,8 @@ exports.registerTests = function registerTests(handlerDefinitionPath) {
     const control = prelude.bind(this)({
       handlerDefinitionPath,
       trigger: 'cloudwatch-events',
-      instanaUrl: config.backendBaseUrl,
-      instanaKey: config.instanaKey
+      instanaEndpointUrl: config.backendBaseUrl,
+      instanaAgentKey: config.instanaAgentKey
     });
 
     it('must recognize CloudWatch events trigger', () =>
@@ -306,8 +329,8 @@ exports.registerTests = function registerTests(handlerDefinitionPath) {
     const control = prelude.bind(this)({
       handlerDefinitionPath,
       trigger: 'cloudwatch-logs',
-      instanaUrl: config.backendBaseUrl,
-      instanaKey: config.instanaKey
+      instanaEndpointUrl: config.backendBaseUrl,
+      instanaAgentKey: config.instanaAgentKey
     });
 
     it('must recognize CloudWatch logs trigger', () =>
@@ -338,8 +361,8 @@ exports.registerTests = function registerTests(handlerDefinitionPath) {
     const control = prelude.bind(this)({
       handlerDefinitionPath,
       trigger: 's3',
-      instanaUrl: config.backendBaseUrl,
-      instanaKey: config.instanaKey
+      instanaEndpointUrl: config.backendBaseUrl,
+      instanaAgentKey: config.instanaAgentKey
     });
 
     it('must recognize S3 trigger', () =>
@@ -372,8 +395,8 @@ exports.registerTests = function registerTests(handlerDefinitionPath) {
     const control = prelude.bind(this)({
       handlerDefinitionPath,
       trigger: 'sqs',
-      instanaUrl: config.backendBaseUrl,
-      instanaKey: config.instanaKey
+      instanaEndpointUrl: config.backendBaseUrl,
+      instanaAgentKey: config.instanaAgentKey
     });
 
     it('must recognize SQS message trigger', () =>
@@ -395,13 +418,13 @@ exports.registerTests = function registerTests(handlerDefinitionPath) {
   });
 
   describe('when lambda function yields an error', function() {
-    // - INSTANA_URL is configured
+    // - INSTANA_ENDPOINT_URL is configured
     // - backend is reachable
     // - lambda function ends with an error
     const control = prelude.bind(this)({
       handlerDefinitionPath,
-      instanaUrl: config.backendBaseUrl,
-      instanaKey: config.instanaKey,
+      instanaEndpointUrl: config.backendBaseUrl,
+      instanaAgentKey: config.instanaAgentKey,
       error: true
     });
 
@@ -409,14 +432,14 @@ exports.registerTests = function registerTests(handlerDefinitionPath) {
   });
 
   describe('with config', function() {
-    // - INSTANA_URL is configured
+    // - INSTANA_ENDPOINT_URL is configured
     // - backend is reachable
     // - client provides a config object
     // - lambda function ends with success
     const control = prelude.bind(this)({
       handlerDefinitionPath,
-      instanaUrl: config.backendBaseUrl,
-      instanaKey: config.instanaKey,
+      instanaEndpointUrl: config.backendBaseUrl,
+      instanaAgentKey: config.instanaAgentKey,
       withConfig: true
     });
 
@@ -424,14 +447,14 @@ exports.registerTests = function registerTests(handlerDefinitionPath) {
   });
 
   describe('with config, when lambda function yields an error', function() {
-    // - INSTANA_URL is configured
+    // - INSTANA_ENDPOINT_URL is configured
     // - backend is reachable
     // - client provides a config object
     // - lambda function ends with an error
     const control = prelude.bind(this)({
       handlerDefinitionPath,
-      instanaUrl: config.backendBaseUrl,
-      instanaKey: config.instanaKey,
+      instanaEndpointUrl: config.backendBaseUrl,
+      instanaAgentKey: config.instanaAgentKey,
       withConfig: true,
       error: true
     });
@@ -439,36 +462,36 @@ exports.registerTests = function registerTests(handlerDefinitionPath) {
     it('must capture metrics and spans', () => verify(control, 'lambda', true, true));
   });
 
-  describe('when INSTANA_URL is missing', function() {
-    // - INSTANA_URL is missing
+  describe('when INSTANA_ENDPOINT_URL is missing', function() {
+    // - INSTANA_ENDPOINT_URL is missing
     // - lambda function ends with success
     const control = prelude.bind(this)({
       handlerDefinitionPath,
-      instanaKey: config.instanaKey
+      instanaAgentKey: config.instanaAgentKey
     });
 
     it('must ignore the missing URL gracefully', () => verify(control, false, false, false));
   });
 
-  describe('when INSTANA_URL is missing and the lambda function yields an error', function() {
-    // - INSTANA_URL is missing
+  describe('when INSTANA_ENDPOINT_URL is missing and the lambda function yields an error', function() {
+    // - INSTANA_ENDPOINT_URL is missing
     // - lambda function ends with an error
     const control = prelude.bind(this)({
       handlerDefinitionPath,
-      instanaKey: config.instanaKey,
+      instanaAgentKey: config.instanaAgentKey,
       error: true
     });
 
     it('must ignore the missing URL gracefully', () => verify(control, 'lambda', false, false));
   });
 
-  describe('with config, when INSTANA_URL is missing', function() {
-    // - INSTANA_URL is missing
+  describe('with config, when INSTANA_ENDPOINT_URL is missing', function() {
+    // - INSTANA_ENDPOINT_URL is missing
     // - client provides a config
     // - lambda function ends with success
     const control = prelude.bind(this)({
       handlerDefinitionPath,
-      instanaKey: config.instanaKey,
+      instanaAgentKey: config.instanaAgentKey,
       withConfig: true
     });
 
@@ -480,7 +503,7 @@ exports.registerTests = function registerTests(handlerDefinitionPath) {
     // - lambda function ends with success
     const control = prelude.bind(this)({
       handlerDefinitionPath,
-      instanaUrl: config.backendBaseUrl
+      instanaEndpointUrl: config.backendBaseUrl
     });
 
     it('must ignore the missing key gracefully', () => verify(control, false, false, false));
@@ -491,7 +514,7 @@ exports.registerTests = function registerTests(handlerDefinitionPath) {
     // - lambda function ends with an error
     const control = prelude.bind(this)({
       handlerDefinitionPath,
-      instanaUrl: config.backendBaseUrl,
+      instanaEndpointUrl: config.backendBaseUrl,
       error: true
     });
 
@@ -499,13 +522,13 @@ exports.registerTests = function registerTests(handlerDefinitionPath) {
   });
 
   describe('when backend is down', function() {
-    // - INSTANA_URL is configured
+    // - INSTANA_ENDPOINT_URL is configured
     // - backend is not reachable
     // - lambda function ends with success
     const control = prelude.bind(this)({
       handlerDefinitionPath,
-      instanaUrl: config.backendBaseUrl,
-      instanaKey: config.instanaKey,
+      instanaEndpointUrl: config.backendBaseUrl,
+      instanaAgentKey: config.instanaAgentKey,
       startBackend: false
     });
 
@@ -513,13 +536,13 @@ exports.registerTests = function registerTests(handlerDefinitionPath) {
   });
 
   describe('when backend is down and the lambda function yields an error', function() {
-    // - INSTANA_URL is configured
+    // - INSTANA_ENDPOINT_URL is configured
     // - backend is not reachable
     // - lambda function ends with an error
     const control = prelude.bind(this)({
       handlerDefinitionPath,
-      instanaUrl: config.backendBaseUrl,
-      instanaKey: config.instanaKey,
+      instanaEndpointUrl: config.backendBaseUrl,
+      instanaAgentKey: config.instanaAgentKey,
       startBackend: false,
       error: true
     });
@@ -528,14 +551,14 @@ exports.registerTests = function registerTests(handlerDefinitionPath) {
   });
 
   describe('when backend is reachable but does not respond', function() {
-    // - INSTANA_URL is configured
+    // - INSTANA_ENDPOINT_URL is configured
     // - backend is reachable, but will never respond (verifies that a reasonable timeout is applied -
     //   the default timeout would be two minutes)
     // - lambda function ends with success
     const control = prelude.bind(this)({
       handlerDefinitionPath,
-      instanaUrl: config.backendBaseUrl,
-      instanaKey: config.instanaKey,
+      instanaEndpointUrl: config.backendBaseUrl,
+      instanaAgentKey: config.instanaAgentKey,
       startBackend: 'unresponsive'
     });
 

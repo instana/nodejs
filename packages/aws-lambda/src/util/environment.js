@@ -13,19 +13,25 @@ if (semver.gte(process.version, '10.0.0')) {
   Url = require('url').URL;
 }
 
-const instanaUrlEnvVar = 'INSTANA_URL';
-const instanaKeyEnvVar = 'INSTANA_KEY';
+const instanaEndpointUrlEnvVar = 'INSTANA_ENDPOINT_URL';
+const instanaAgentKeyEnvVar = 'INSTANA_AGENT_KEY';
+// The following two environment variables are deprecated and will be removed soon.
+const deprecatedInstanaUrlEnvVar = 'INSTANA_URL';
+const deprecatedInstanaKeyEnvVar = 'INSTANA_KEY';
 let valid = false;
 let backendHost = null;
 let backendPort = null;
 let backendPath = null;
-let instanaKey = null;
+let instanaAgentKey = null;
 
 exports.sendUnencryptedEnvVar = 'INSTANA_DEV_SEND_UNENCRYPTED';
 exports.sendUnencrypted = process.env[exports.sendUnencryptedEnvVar] === 'true';
 
 exports.validate = function validate() {
-  exports._validate(process.env[instanaUrlEnvVar], process.env[instanaKeyEnvVar]);
+  exports._validate(
+    process.env[instanaEndpointUrlEnvVar] || process.env[deprecatedInstanaUrlEnvVar],
+    process.env[instanaAgentKeyEnvVar] || process.env[deprecatedInstanaKeyEnvVar]
+  );
 };
 
 // exposed for testing
@@ -36,19 +42,19 @@ exports._reset = function _reset() {
 };
 
 // exposed for testing
-exports._validate = function _validate(instanaUrl, _instanaKey) {
-  logger.debug(`${instanaUrlEnvVar}: ${instanaUrl}`);
+exports._validate = function _validate(instanaEndpointUrl, _instanaAgentKey) {
+  logger.debug(`${instanaEndpointUrlEnvVar}: ${instanaEndpointUrl}`);
 
-  if (!instanaUrl) {
-    logger.warn(`${instanaUrlEnvVar} is not set. No data will be reported to Instana.`);
+  if (!instanaEndpointUrl) {
+    logger.warn(`${instanaEndpointUrlEnvVar} is not set. No data will be reported to Instana.`);
     return;
   }
 
-  const parsedUrl = parseUrl(instanaUrl);
+  const parsedUrl = parseUrl(instanaEndpointUrl);
 
   if (!parsedUrl) {
     logger.warn(
-      `The value of ${instanaUrlEnvVar} (${instanaUrl}) does not seem to be a well-formed URL.` +
+      `The value of ${instanaEndpointUrlEnvVar} (${instanaEndpointUrl}) does not seem to be a well-formed URL.` +
         ' No data will be reported to Instana.'
     );
     return;
@@ -56,22 +62,22 @@ exports._validate = function _validate(instanaUrl, _instanaKey) {
 
   if (!exports.sendUnencrypted && parsedUrl.protocol !== 'https:') {
     logger.warn(
-      `The value of ${instanaUrlEnvVar} (${instanaUrl}) specifies a non-supported protocol: "${parsedUrl.protocol}".` +
-        ' Only "https:" is supported. No data will be reported to Instana.'
+      `The value of ${instanaEndpointUrlEnvVar} (${instanaEndpointUrl}) specifies a non-supported protocol: ` +
+        `"${parsedUrl.protocol}". Only "https:" is supported. No data will be reported to Instana.`
     );
     return;
   }
   if (exports.sendUnencrypted && parsedUrl.protocol !== 'https:' && parsedUrl.protocol !== 'http:') {
     logger.warn(
-      `The value of ${instanaUrlEnvVar} (${instanaUrl}) specifies a non-supported protocol: "${parsedUrl.protocol}".` +
-        ' Only "https:" and "http:" are supported. No data will be reported to Instana.'
+      `The value of ${instanaEndpointUrlEnvVar} (${instanaEndpointUrl}) specifies a non-supported protocol: ` +
+        `"${parsedUrl.protocol}". Only "https:" and "http:" are supported. No data will be reported to Instana.`
     );
     return;
   }
 
   if (!parsedUrl.hostname || parsedUrl.hostname.length === 0) {
     logger.warn(
-      `The value of ${instanaUrlEnvVar} (${instanaUrl}) does not seem to be a well-formed URL.` +
+      `The value of ${instanaEndpointUrlEnvVar} (${instanaEndpointUrl}) does not seem to be a well-formed URL.` +
         ' No data will be reported to Instana.'
     );
     return;
@@ -85,17 +91,17 @@ exports._validate = function _validate(instanaUrl, _instanaKey) {
 
   backendPath = parsedUrl.pathname;
 
-  instanaKey = _instanaKey;
+  instanaAgentKey = _instanaAgentKey;
 
-  if (!instanaKey || instanaKey.length === 0) {
-    logger.warn(`The environment variable ${instanaKeyEnvVar} is not set. No data will be reported to Instana.`);
+  if (!instanaAgentKey || instanaAgentKey.length === 0) {
+    logger.warn(`The environment variable ${instanaAgentKeyEnvVar} is not set. No data will be reported to Instana.`);
     return;
   }
 
-  logger.debug(`INSTANA HOST: ${backendHost}`);
-  logger.debug(`INSTANA PORT: ${backendPort}`);
-  logger.debug(`INSTANA PATH: ${backendPath}`);
-  logger.debug(`INSTANA KEY: ${instanaKey}`);
+  logger.debug(`INSTANA ENDPOINT HOST: ${backendHost}`);
+  logger.debug(`INSTANA ENDPOINT PORT: ${backendPort}`);
+  logger.debug(`INSTANA ENDPOINT PATH: ${backendPath}`);
+  logger.debug(`INSTANA AGENT KEY: ${instanaAgentKey}`);
   valid = true;
 };
 
@@ -115,8 +121,8 @@ exports.getBackendPath = function getBackendPath() {
   return backendPath;
 };
 
-exports.getInstanaKey = function getInstanaKey() {
-  return instanaKey;
+exports.getInstanaAgentKey = function getInstanaAgentKey() {
+  return instanaAgentKey;
 };
 
 function parseUrl(value) {

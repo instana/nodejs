@@ -86,7 +86,7 @@ function send(resourcePath, payload, callback) {
       'Content-Type': 'application/json',
       'Content-Length': Buffer.byteLength(payload),
       [constants.xInstanaHost]: identityProvider ? identityProvider.getHostHeader() : 'nodejs-aws-lambda',
-      [constants.xInstanaKey]: environmentUtil.getInstanaKey(),
+      [constants.xInstanaKey]: environmentUtil.getInstanaAgentKey(),
       [constants.xInstanaTime]: Date.now()
     },
     rejectUnauthorized: !acceptSelfSignedCert

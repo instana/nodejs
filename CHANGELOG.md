@@ -1,10 +1,13 @@
 # Changelog
 
+## Unreleasd
+- [AWS Lambda]: Support new environment variables `INSTANA_ENDPOINT_URL` and `INSTANA_AGENT_KEY` in addition to the now deprecated variables `INSTANA_URL` and `INSTANA_KEY`.
+
 ## 1.74.1
-- Improve logging in AWS Lambdas.
+- [AWS Lambda]: Improve logging.
 
 ## 1.74.0
-- In-process data collection for AWS Lambdas via new package @instana/aws-lambda (beta).
+- [AWS Lambda]: In-process data collection for AWS Lambdas via new package @instana/aws-lambda (beta).
 
 ## 1.73.2
 - Move some metrics from core to collector package.
