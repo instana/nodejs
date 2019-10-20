@@ -1,6 +1,6 @@
 {
   "name": "@instana/aws-lambda",
-  "version": "1.74.1",
+  "version": "1.74.2",
   "description": "Monitor Node.js based AWS Lambdas with Instana",
   "author": {
     "name": "Bastian Krol",
@@ -57,7 +57,7 @@
   },
   "license": "MIT",
   "dependencies": {
-    "@instana/core": "^1.74.1",
+    "@instana/core": "^1.74.2",
     "semver": "^5.6.0"
   },
   "devDependencies": {
