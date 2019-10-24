@@ -22,5 +22,5 @@ export MSSQL_PORT="1433"
 export MSSQL_USER="sa"
 export MSSQL_PW="stanCanHazMsSQL1"
 
-npm run test:nolint
+npm run test:debug
 
