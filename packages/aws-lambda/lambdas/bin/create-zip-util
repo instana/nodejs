@@ -6,18 +6,34 @@ function createZip {
   rm -f ../zip/$name.zip
   rm -rf node_modules
   if [[ "$name" =~ ^wrapped-.* ]] || [[ "$name" =~ ^.*demo.* ]]; then
-    # The lambda's package.json might already have a dependency to the tar file:
-    # "dependencies": {
-    #   "@instana/aws-lambda": "file:../../instana-aws-lambda.tgz"
-    # }
-    # but only doing an npm install will use a stale copy of the tgz from npm's
-    # cache, so we force npm to use a fresh copy by installing the tgz again
-    # explicitly.
-    npm --loglevel=warn install -S "file:../../instana-aws-lambda.tgz"
+    if [[ -n "${USE_LAMBDA_LAYER-}" ]]; then
+      # We want to use the lambda layer and not the locally build npm package tar file.
+      # If the lambda's package.json currently contains a dependency to the tar file, like:
+      # "dependencies": {
+      #   "@instana/aws-lambda": "file:../../instana-aws-lambda.tgz"
+      # }
+      # this needs to be removed.
+      cp package.json package.json.backup
+      npm uninstall -S @instana/aws-lambda
+    else
+      # The lambda's package.json might or might not already have a dependency to the tar file:
+      # "dependencies": {
+      #   "@instana/aws-lambda": "file:../../instana-aws-lambda.tgz"
+      # }
+      # but only doing an npm install will use a stale copy of the tgz from npm's
+      # cache, so we force npm to use a fresh copy by installing the tgz again
+      # explicitly.
+      cp package.json package.json.backup
+      npm --loglevel=warn install -S "file:../../instana-aws-lambda.tgz"
+    fi
   fi
   # Now install everything else.
   npm --loglevel=warn install
   zip -qr $name . -x bin/*.sh -x \*.swp
   mv $name.zip ../zip
+
+  if [[ "$name" =~ ^wrapped-.* ]] || [[ "$name" =~ ^.*demo.* ]]; then
+    mv package.json.backup package.json
+  fi
 }
 
