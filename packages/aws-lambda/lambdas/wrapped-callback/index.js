@@ -1,6 +1,8 @@
 'use strict';
 
-const instana = require('@instana/aws-lambda');
+// eslint-disable-next-line import/no-extraneous-dependencies
+const instana = require('@instana/aws-lambda'); // provided by Lambda layer "instana"
+
 const https = require('https');
 
 exports.handler = instana.awsLambda.wrap((event, context, callback) => {
