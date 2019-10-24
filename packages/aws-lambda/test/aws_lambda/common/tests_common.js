@@ -101,6 +101,188 @@ exports.registerTests = function registerTests(handlerDefinitionPath) {
     it('must capture metrics and spans', () => verify(control, false, true, true));
   });
 
+  describe('when lambda function yields an error', function() {
+    // - INSTANA_ENDPOINT_URL is configured
+    // - backend is reachable
+    // - lambda function ends with an error
+    const control = prelude.bind(this)({
+      handlerDefinitionPath,
+      instanaEndpointUrl: config.backendBaseUrl,
+      instanaAgentKey: config.instanaAgentKey,
+      error: true
+    });
+
+    it('must capture metrics and spans', () => verify(control, 'lambda', true, true));
+  });
+
+  describe('with config', function() {
+    // - INSTANA_ENDPOINT_URL is configured
+    // - backend is reachable
+    // - client provides a config object
+    // - lambda function ends with success
+    const control = prelude.bind(this)({
+      handlerDefinitionPath,
+      instanaEndpointUrl: config.backendBaseUrl,
+      instanaAgentKey: config.instanaAgentKey,
+      withConfig: true
+    });
+
+    it('must capture metrics and spans', () => verify(control, false, true, true));
+  });
+
+  describe('with config, when lambda function yields an error', function() {
+    // - INSTANA_ENDPOINT_URL is configured
+    // - backend is reachable
+    // - client provides a config object
+    // - lambda function ends with an error
+    const control = prelude.bind(this)({
+      handlerDefinitionPath,
+      instanaEndpointUrl: config.backendBaseUrl,
+      instanaAgentKey: config.instanaAgentKey,
+      withConfig: true,
+      error: true
+    });
+
+    it('must capture metrics and spans', () => verify(control, 'lambda', true, true));
+  });
+
+  describe('when INSTANA_ENDPOINT_URL is missing', function() {
+    // - INSTANA_ENDPOINT_URL is missing
+    // - lambda function ends with success
+    const control = prelude.bind(this)({
+      handlerDefinitionPath,
+      instanaAgentKey: config.instanaAgentKey
+    });
+
+    it('must ignore the missing URL gracefully', () => verify(control, false, false, false));
+  });
+
+  describe('when INSTANA_ENDPOINT_URL is missing and the lambda function yields an error', function() {
+    // - INSTANA_ENDPOINT_URL is missing
+    // - lambda function ends with an error
+    const control = prelude.bind(this)({
+      handlerDefinitionPath,
+      instanaAgentKey: config.instanaAgentKey,
+      error: true
+    });
+
+    it('must ignore the missing URL gracefully', () => verify(control, 'lambda', false, false));
+  });
+
+  describe('with config, when INSTANA_ENDPOINT_URL is missing', function() {
+    // - INSTANA_ENDPOINT_URL is missing
+    // - client provides a config
+    // - lambda function ends with success
+    const control = prelude.bind(this)({
+      handlerDefinitionPath,
+      instanaAgentKey: config.instanaAgentKey,
+      withConfig: true
+    });
+
+    it('must ignore the missing URL gracefully', () => verify(control, false, false, false));
+  });
+
+  describe('when INSTANA_KEY is missing', function() {
+    // - INSTANA_KEY is missing
+    // - lambda function ends with success
+    const control = prelude.bind(this)({
+      handlerDefinitionPath,
+      instanaEndpointUrl: config.backendBaseUrl
+    });
+
+    it('must ignore the missing key gracefully', () => verify(control, false, false, false));
+  });
+
+  describe('when INSTANA_KEY is missing and the lambda function yields an error', function() {
+    // - INSTANA_KEY is missing
+    // - lambda function ends with an error
+    const control = prelude.bind(this)({
+      handlerDefinitionPath,
+      instanaEndpointUrl: config.backendBaseUrl,
+      error: true
+    });
+
+    it('must ignore the missing key gracefully', () => verify(control, 'lambda', false, false));
+  });
+
+  describe('when backend is down', function() {
+    // - INSTANA_ENDPOINT_URL is configured
+    // - backend is not reachable
+    // - lambda function ends with success
+    const control = prelude.bind(this)({
+      handlerDefinitionPath,
+      instanaEndpointUrl: config.backendBaseUrl,
+      instanaAgentKey: config.instanaAgentKey,
+      startBackend: false
+    });
+
+    it('must ignore the failed request gracefully', () => verify(control, false, false, false));
+  });
+
+  describe('when backend is down and the lambda function yields an error', function() {
+    // - INSTANA_ENDPOINT_URL is configured
+    // - backend is not reachable
+    // - lambda function ends with an error
+    const control = prelude.bind(this)({
+      handlerDefinitionPath,
+      instanaEndpointUrl: config.backendBaseUrl,
+      instanaAgentKey: config.instanaAgentKey,
+      startBackend: false,
+      error: true
+    });
+
+    it('must ignore the failed request gracefully', () => verify(control, 'lambda', false, false));
+  });
+
+  describe('when backend is reachable but does not respond', function() {
+    // - INSTANA_ENDPOINT_URL is configured
+    // - backend is reachable, but will never respond (verifies that a reasonable timeout is applied -
+    //   the default timeout would be two minutes)
+    // - lambda function ends with success
+    const control = prelude.bind(this)({
+      handlerDefinitionPath,
+      instanaEndpointUrl: config.backendBaseUrl,
+      instanaAgentKey: config.instanaAgentKey,
+      startBackend: 'unresponsive'
+    });
+
+    it('must finish swiftly', () => verify(control, false, false, false));
+  });
+
+  function verify(control, error, expectMetrics, expectSpans, trigger, parent) {
+    /* eslint-disable no-console */
+    if (error === 'lambda') {
+      expect(control.getLambdaErrors().length).to.equal(1);
+      expect(control.getLambdaResults()).to.be.empty;
+      const lambdaError = control.getLambdaErrors()[0];
+      expect(lambdaError).to.exist;
+      expect(lambdaError.message).to.equal('Boom!');
+      // other error cases like 'http' are checked in verifyLambdaEntry
+    } else {
+      if (control.getLambdaErrors() && control.getLambdaErrors().length > 0) {
+        console.log('Unexpected Errors:');
+        console.log(JSON.stringify(control.getLambdaErrors()));
+      }
+      expect(control.getLambdaErrors()).to.be.empty;
+      expect(control.getLambdaResults().length).to.equal(1);
+      const result = control.getLambdaResults()[0];
+      expect(result).to.exist;
+      expect(result.message).to.equal('Stan says hi!');
+    }
+
+    if (expectMetrics && expectSpans) {
+      return retry(() => getAndVerifySpans(control, error, trigger, parent).then(() => getAndVerifyMetrics(control)));
+    } else if (!expectMetrics && expectSpans) {
+      return retry(() => getAndVerifySpans(control, error, trigger, parent).then(() => verifyNoMetrics(control)));
+    } else if (expectMetrics && !expectSpans) {
+      return retry(() => getAndVerifyMetrics(control).then(() => verifyNoSpans(control)));
+    } else {
+      return delay(1000)
+        .then(() => verifyNoSpans(control))
+        .then(() => verifyNoMetrics(control));
+    }
+  }
+
   describe('triggered by API Gateway (Lambda Proxy)', function() {
     // - same as "everything is peachy"
     // - but triggered by AWS API Gateway (with Lambda Proxy)
@@ -416,188 +598,6 @@ exports.registerTests = function registerTests(handlerDefinitionPath) {
           })
         ));
   });
-
-  describe('when lambda function yields an error', function() {
-    // - INSTANA_ENDPOINT_URL is configured
-    // - backend is reachable
-    // - lambda function ends with an error
-    const control = prelude.bind(this)({
-      handlerDefinitionPath,
-      instanaEndpointUrl: config.backendBaseUrl,
-      instanaAgentKey: config.instanaAgentKey,
-      error: true
-    });
-
-    it('must capture metrics and spans', () => verify(control, 'lambda', true, true));
-  });
-
-  describe('with config', function() {
-    // - INSTANA_ENDPOINT_URL is configured
-    // - backend is reachable
-    // - client provides a config object
-    // - lambda function ends with success
-    const control = prelude.bind(this)({
-      handlerDefinitionPath,
-      instanaEndpointUrl: config.backendBaseUrl,
-      instanaAgentKey: config.instanaAgentKey,
-      withConfig: true
-    });
-
-    it('must capture metrics and spans', () => verify(control, false, true, true));
-  });
-
-  describe('with config, when lambda function yields an error', function() {
-    // - INSTANA_ENDPOINT_URL is configured
-    // - backend is reachable
-    // - client provides a config object
-    // - lambda function ends with an error
-    const control = prelude.bind(this)({
-      handlerDefinitionPath,
-      instanaEndpointUrl: config.backendBaseUrl,
-      instanaAgentKey: config.instanaAgentKey,
-      withConfig: true,
-      error: true
-    });
-
-    it('must capture metrics and spans', () => verify(control, 'lambda', true, true));
-  });
-
-  describe('when INSTANA_ENDPOINT_URL is missing', function() {
-    // - INSTANA_ENDPOINT_URL is missing
-    // - lambda function ends with success
-    const control = prelude.bind(this)({
-      handlerDefinitionPath,
-      instanaAgentKey: config.instanaAgentKey
-    });
-
-    it('must ignore the missing URL gracefully', () => verify(control, false, false, false));
-  });
-
-  describe('when INSTANA_ENDPOINT_URL is missing and the lambda function yields an error', function() {
-    // - INSTANA_ENDPOINT_URL is missing
-    // - lambda function ends with an error
-    const control = prelude.bind(this)({
-      handlerDefinitionPath,
-      instanaAgentKey: config.instanaAgentKey,
-      error: true
-    });
-
-    it('must ignore the missing URL gracefully', () => verify(control, 'lambda', false, false));
-  });
-
-  describe('with config, when INSTANA_ENDPOINT_URL is missing', function() {
-    // - INSTANA_ENDPOINT_URL is missing
-    // - client provides a config
-    // - lambda function ends with success
-    const control = prelude.bind(this)({
-      handlerDefinitionPath,
-      instanaAgentKey: config.instanaAgentKey,
-      withConfig: true
-    });
-
-    it('must ignore the missing URL gracefully', () => verify(control, false, false, false));
-  });
-
-  describe('when INSTANA_KEY is missing', function() {
-    // - INSTANA_KEY is missing
-    // - lambda function ends with success
-    const control = prelude.bind(this)({
-      handlerDefinitionPath,
-      instanaEndpointUrl: config.backendBaseUrl
-    });
-
-    it('must ignore the missing key gracefully', () => verify(control, false, false, false));
-  });
-
-  describe('when INSTANA_KEY is missing and the lambda function yields an error', function() {
-    // - INSTANA_KEY is missing
-    // - lambda function ends with an error
-    const control = prelude.bind(this)({
-      handlerDefinitionPath,
-      instanaEndpointUrl: config.backendBaseUrl,
-      error: true
-    });
-
-    it('must ignore the missing key gracefully', () => verify(control, 'lambda', false, false));
-  });
-
-  describe('when backend is down', function() {
-    // - INSTANA_ENDPOINT_URL is configured
-    // - backend is not reachable
-    // - lambda function ends with success
-    const control = prelude.bind(this)({
-      handlerDefinitionPath,
-      instanaEndpointUrl: config.backendBaseUrl,
-      instanaAgentKey: config.instanaAgentKey,
-      startBackend: false
-    });
-
-    it('must ignore the failed request gracefully', () => verify(control, false, false, false));
-  });
-
-  describe('when backend is down and the lambda function yields an error', function() {
-    // - INSTANA_ENDPOINT_URL is configured
-    // - backend is not reachable
-    // - lambda function ends with an error
-    const control = prelude.bind(this)({
-      handlerDefinitionPath,
-      instanaEndpointUrl: config.backendBaseUrl,
-      instanaAgentKey: config.instanaAgentKey,
-      startBackend: false,
-      error: true
-    });
-
-    it('must ignore the failed request gracefully', () => verify(control, 'lambda', false, false));
-  });
-
-  describe('when backend is reachable but does not respond', function() {
-    // - INSTANA_ENDPOINT_URL is configured
-    // - backend is reachable, but will never respond (verifies that a reasonable timeout is applied -
-    //   the default timeout would be two minutes)
-    // - lambda function ends with success
-    const control = prelude.bind(this)({
-      handlerDefinitionPath,
-      instanaEndpointUrl: config.backendBaseUrl,
-      instanaAgentKey: config.instanaAgentKey,
-      startBackend: 'unresponsive'
-    });
-
-    it('must finish swiftly', () => verify(control, false, false, false));
-  });
-
-  function verify(control, error, expectMetrics, expectSpans, trigger, parent) {
-    /* eslint-disable no-console */
-    if (error === 'lambda') {
-      expect(control.getLambdaErrors().length).to.equal(1);
-      expect(control.getLambdaResults()).to.be.empty;
-      const lambdaError = control.getLambdaErrors()[0];
-      expect(lambdaError).to.exist;
-      expect(lambdaError.message).to.equal('Boom!');
-      // other error cases like 'http' are checked in verifyLambdaEntry
-    } else {
-      if (control.getLambdaErrors() && control.getLambdaErrors().length > 0) {
-        console.log('Unexpected Errors:');
-        console.log(JSON.stringify(control.getLambdaErrors()));
-      }
-      expect(control.getLambdaErrors()).to.be.empty;
-      expect(control.getLambdaResults().length).to.equal(1);
-      const result = control.getLambdaResults()[0];
-      expect(result).to.exist;
-      expect(result.message).to.equal('Stan says hi!');
-    }
-
-    if (expectMetrics && expectSpans) {
-      return retry(() => getAndVerifySpans(control, error, trigger, parent).then(() => getAndVerifyMetrics(control)));
-    } else if (!expectMetrics && expectSpans) {
-      return retry(() => getAndVerifySpans(control, error, trigger, parent).then(() => verifyNoMetrics(control)));
-    } else if (expectMetrics && !expectSpans) {
-      return retry(() => getAndVerifyMetrics(control).then(() => verifyNoSpans(control)));
-    } else {
-      return delay(1000)
-        .then(() => verifyNoSpans(control))
-        .then(() => verifyNoMetrics(control));
-    }
-  }
 
   function verifyNoSpans(control) {
     return control.getSpans().then(spans => {
