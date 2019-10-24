@@ -1,5 +1,8 @@
 # Changelog
 
+## Unreleased
+- Capture HTTP response headers for HTTP entry spans.
+
 ## 1.74.2
 - [AWS Lambda]: Support new environment variables `INSTANA_ENDPOINT_URL` and `INSTANA_AGENT_KEY` in addition to the now deprecated variables `INSTANA_URL` and `INSTANA_KEY`.
 

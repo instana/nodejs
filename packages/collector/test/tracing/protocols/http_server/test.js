@@ -21,7 +21,12 @@ describe('tracing/http(s) server', function() {
   this.timeout(config.getTestTimeout());
 
   agentControls.registerTestHooks({
-    extraHeaders: ['UsEr-AgEnt'],
+    extraHeaders: [
+      //
+      'X-My-Fancy-Request-Header',
+      'X-My-Fancy-Response-Header',
+      'X-Write-Head-Response-Header'
+    ],
     secretsList: ['secret', 'Enigma', 'CIPHER']
   });
 
@@ -122,14 +127,14 @@ function registerTests(useHttps) {
         )
       ));
 
-  it(`must report additional headers when requested (HTTPS: ${useHttps})`, () => {
-    const userAgent = 'White Spy';
+  it(`must capture configured request headers when present (HTTPS: ${useHttps})`, () => {
+    const requestHeaderValue = 'Request Header Value';
     return controls
       .sendRequest({
         method: 'GET',
         path: '/',
         headers: {
-          'User-Agent': userAgent
+          'X-MY-FANCY-REQUEST-HEADER': requestHeaderValue
         }
       })
       .then(() =>
@@ -138,7 +143,130 @@ function registerTests(useHttps) {
             utils.expectOneMatching(spans, span => {
               expect(span.n).to.equal('node.http.server');
               expect(span.k).to.equal(constants.ENTRY);
-              expect(span.data.http.header['user-agent']).to.equal(userAgent);
+              expect(span.data.http.header).to.be.an('object');
+              expect(span.data.http.header['x-my-fancy-request-header']).to.equal(requestHeaderValue);
+              expect(Object.keys(span.data.http.header)).to.have.lengthOf(1);
+            });
+          })
+        )
+      );
+  });
+
+  it(`must capture configured response headers when present (HTTPS: ${useHttps})`, () => {
+    const expectedResponeHeaderValue = 'Response Header Value';
+    return controls
+      .sendRequest({
+        method: 'GET',
+        path: '/?responseHeader=true'
+      })
+      .then(() =>
+        utils.retry(() =>
+          agentControls.getSpans().then(spans => {
+            utils.expectOneMatching(spans, span => {
+              expect(span.n).to.equal('node.http.server');
+              expect(span.k).to.equal(constants.ENTRY);
+              expect(span.data.http.header).to.be.an('object');
+              expect(span.data.http.header['x-my-fancy-response-header']).to.equal(expectedResponeHeaderValue);
+              expect(Object.keys(span.data.http.header)).to.have.lengthOf(1);
+            });
+          })
+        )
+      );
+  });
+
+  it(`must capture response headers written directly to the response (HTTPS: ${useHttps})`, () => {
+    const expectedResponeHeaderValue = 'Write Head Response Header Value';
+    return controls
+      .sendRequest({
+        method: 'GET',
+        path: '/?writeHead=true'
+      })
+      .then(() =>
+        utils.retry(() =>
+          agentControls.getSpans().then(spans => {
+            utils.expectOneMatching(spans, span => {
+              expect(span.n).to.equal('node.http.server');
+              expect(span.k).to.equal(constants.ENTRY);
+              expect(span.data.http.header).to.be.an('object');
+              expect(span.data.http.header['x-write-head-response-header']).to.equal(expectedResponeHeaderValue);
+              expect(Object.keys(span.data.http.header)).to.have.lengthOf(1);
+            });
+          })
+        )
+      );
+  });
+
+  it(`must capture configured request and response headers when present (HTTPS: ${useHttps})`, () => {
+    const requestHeaderValue = 'Request Header Value';
+    const expectedResponeHeaderValue = 'Response Header Value';
+    return controls
+      .sendRequest({
+        method: 'GET',
+        path: '/?responseHeader=true',
+        headers: {
+          'X-MY-FANCY-REQUEST-HEADER': requestHeaderValue
+        }
+      })
+      .then(() =>
+        utils.retry(() =>
+          agentControls.getSpans().then(spans => {
+            utils.expectOneMatching(spans, span => {
+              expect(span.n).to.equal('node.http.server');
+              expect(span.k).to.equal(constants.ENTRY);
+              expect(span.data.http.header).to.be.an('object');
+              expect(span.data.http.header['x-my-fancy-request-header']).to.equal(requestHeaderValue);
+              expect(span.data.http.header['x-my-fancy-response-header']).to.equal(expectedResponeHeaderValue);
+              expect(Object.keys(span.data.http.header)).to.have.lengthOf(2);
+            });
+          })
+        )
+      );
+  });
+
+  it(//
+  `must capture both response headers written directly to the response and other heaers (HTTPS: ${useHttps})`, () => {
+    const requestHeaderValue = 'Request Header Value';
+    const expectedResponeHeaderValue1 = 'Write Head Response Header Value';
+    const expectedResponeHeaderValue2 = 'Response Header Value';
+    return controls
+      .sendRequest({
+        method: 'GET',
+        path: '/?responseHeader=true&writeHead=true',
+        headers: {
+          'X-MY-FANCY-REQUEST-HEADER': requestHeaderValue
+        }
+      })
+      .then(() =>
+        utils.retry(() =>
+          agentControls.getSpans().then(spans => {
+            utils.expectOneMatching(spans, span => {
+              expect(span.n).to.equal('node.http.server');
+              expect(span.k).to.equal(constants.ENTRY);
+              expect(span.data.http.header).to.be.an('object');
+              expect(span.data.http.header['x-my-fancy-request-header']).to.equal(requestHeaderValue);
+              expect(span.data.http.header['x-write-head-response-header']).to.equal(expectedResponeHeaderValue1);
+              expect(span.data.http.header['x-my-fancy-response-header']).to.equal(expectedResponeHeaderValue2);
+              expect(Object.keys(span.data.http.header)).to.have.lengthOf(3);
+            });
+          })
+        )
+      );
+  });
+
+  it(//
+  `must not contain the header field when neither request nor response headers arepresent (HTTPS: ${useHttps})`, () => {
+    return controls
+      .sendRequest({
+        method: 'GET',
+        path: '/'
+      })
+      .then(() =>
+        utils.retry(() =>
+          agentControls.getSpans().then(spans => {
+            utils.expectOneMatching(spans, span => {
+              expect(span.n).to.equal('node.http.server');
+              expect(span.k).to.equal(constants.ENTRY);
+              expect(span.data.http.header).to.not.exist;
             });
           })
         )
