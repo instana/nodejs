@@ -102,6 +102,7 @@ function shimEmit(realEmit) {
         // span attributes if that is not the case.
         if (!span.transmitted) {
           span.data.http.status = res.statusCode;
+          span.data.http.header = httpCommon.mergeExtraHeaders(span.data.http.header, res, extraHttpHeadersToCapture);
           span.error = res.statusCode >= 500;
           span.ec = span.error ? 1 : 0;
           span.d = Date.now() - span.ts;

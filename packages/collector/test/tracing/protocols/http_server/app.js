@@ -29,14 +29,27 @@ app.on('request', (req, res) => {
 
   const delay = parseInt(query.delay || 0, 10);
 
+  if (query.responseHeader) {
+    res.setHeader('X-MY-FANCY-RESPONSE-HEADER', 'Response Header Value');
+  }
+
   if (delay === 0) {
-    res.end();
+    endResponse(query, res);
   } else {
     setTimeout(() => {
-      res.end();
+      endResponse(query, res);
     }, delay);
   }
 });
+
+function endResponse(query, res) {
+  if (query.writeHead) {
+    res.writeHead(200, {
+      'X-WRITE-HEAD-RESPONSE-HEADER': 'Write Head Response Header Value'
+    });
+  }
+  res.end();
+}
 
 app.listen(port, () => {
   log(`Listening on port: ${port}`);
