@@ -25,11 +25,11 @@
   },
   "scripts": {
     "audit": "bin/prepare-audit.sh && npm audit --production; git checkout package-lock.json",
-    "test": "npm run test:nolint && npm run test:lint",
-    "test:nolint": "npm run test:mocha",
+    "test": "npm run test:mocha",
     "test:mocha": "mocha --reporter spec $(find test -name '*test.js')",
     "test:debug": "WITH_STDOUT=true npm run test:mocha",
-    "test:lint": "eslint src test",
+    "lint": "eslint src test",
+    "verify": "npm run lint && npm test",
     "prettier": "prettier --write 'src/**/*.js' 'test/**/*.js'"
   },
   "keywords": [

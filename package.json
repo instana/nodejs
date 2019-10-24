@@ -8,10 +8,10 @@
     "postinstall": "npm run bootstrap",
     "precommit": "doctoc packages/collector/README.md",
     "prettier": "lerna run prettier --stream",
-    "test:nolint": "lerna run test:nolint --stream",
-    "test:debug": "lerna run test:debug --stream",
-    "test:lint": "lerna run test:lint --stream",
     "test": "lerna run test --stream",
+    "test:debug": "lerna run test:debug --stream",
+    "lint": "lerna run lint --stream",
+    "verify": "lerna run verify --stream",
     "version": "lerna clean --yes && lerna bootstrap --ignore-scripts -- --package-lock-only --no-audit && git add packages/*/package-lock.json"
   },
   "devDependencies": {

@@ -26,11 +26,11 @@
   },
   "scripts": {
     "audit": "bin/prepare-audit.sh && npm audit --production; git checkout package-lock.json",
-    "test": "npm run test:nolint && npm run test:lint",
-    "test:nolint": "NODE_ENV=debug USE_OPENTRACING_DEBUG_IMPL=true npm run test:mocha",
+    "test": "NODE_ENV=debug USE_OPENTRACING_DEBUG_IMPL=true npm run test:mocha",
     "test:mocha": "mocha --reporter spec $(find test -name '*test.js')",
     "test:debug": "WITH_STDOUT=true DEBUG=kafka-node:* npm run test:mocha",
-    "test:lint": "eslint src test dummy-app",
+    "lint": "eslint src test dummy-app",
+    "verify": "npm run lint && npm test",
     "agent-stub": "AGENT_PORT=3210 node test/apps/agentStub.js",
     "prettier": "prettier --write 'src/**/*.js' 'test/**/*.js' 'dummy-app/**/*.js' 'dockerfile-examples/**/*.js' 'bin/**/*.js'"
   },

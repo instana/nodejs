@@ -26,10 +26,10 @@
   "scripts": {
     "backend-stub": "node test/backend_stub",
     "audit": "bin/prepare-audit.sh && npm audit --production; git checkout package-lock.json",
-    "test": "echo \"$(node -v)\" | grep v6 > /dev/null || npm run test:nolint && npm run test:lint",
-    "test:nolint": "npm run test:mocha",
+    "test": "echo \"$(node -v)\" | grep v6 > /dev/null || npm run test:mocha",
     "test:mocha": "mocha --reporter spec $(find test -iname '*test.js')",
-    "test:lint": "eslint src test lambdas",
+    "lint": "eslint src test lambdas",
+    "verify": "npm run lint && npm test",
     "prettier": "prettier --write 'src/**/*.js' 'test/**/*.js' 'lambdas/**/*.js'"
   },
   "keywords": [
