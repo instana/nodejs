@@ -1,8 +1,8 @@
 'use strict';
 
 const { util: coreUtil } = require('@instana/core');
+const { consoleLogger: logger } = require('@instana/serverless');
 
-const logger = require('../../util/console_logger');
 const rootDir = require('./rootDir');
 
 exports.payloadPrefix = 'npmPackageVersion';

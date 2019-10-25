@@ -6,10 +6,10 @@ const expect = require('chai').expect;
 const path = require('path');
 const constants = require('@instana/core').tracing.constants;
 
-const config = require('../../config');
-const delay = require('../../util/delay');
-const expectOneMatching = require('../../util/expect_matching');
-const retry = require('../../util/retry');
+const config = require('../../../serverless/test/config');
+const delay = require('../../../serverless/test/util/delay');
+const expectOneMatching = require('../../../serverless/test/util/expect_matching');
+const retry = require('../../../serverless/test/util/retry');
 
 const functionName = 'functionName';
 const unqualifiedArn = `arn:aws:lambda:us-east-2:410797082306:function:${functionName}`;
@@ -61,7 +61,7 @@ function prelude(opts) {
     env.INSTANA_HEADER_L = opts.traceLevel;
   }
 
-  const Control = require('../../util/control');
+  const Control = require('../../../serverless/test/util/control');
   const control = new Control({
     faasRuntimePath: path.join(__dirname, '../runtime_mock'),
     handlerDefinitionPath: opts.handlerDefinitionPath,
@@ -704,7 +704,7 @@ exports.registerTests = function registerTests(handlerDefinitionPath) {
     expect(metrics.versions.v8).to.match(/\d+\.\d+\.\d+/);
     expect(metrics.versions.uv).to.match(/\d+\.\d+\.\d+/);
     expect(metrics.versions.zlib).to.match(/\d+\.\d+\.\d+/);
-    expect(metrics.npmPackageDescription).to.equal('Monitor Node.js based AWS Lambdas with Instana');
+    expect(metrics.npmPackageDescription).to.equal('Instana tracing and monitoring for Node.js based AWS Lambdas');
     expect(metrics.npmPackageName).to.equal('@instana/aws-lambda');
     expect(metrics.npmPackageVersion).to.match(/\d+\.\d+\.\d+/);
     verifyHeaders(allPlugins);

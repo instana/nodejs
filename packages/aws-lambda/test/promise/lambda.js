@@ -2,17 +2,17 @@
 
 'use strict';
 
-const instana = require('../../..');
+const instana = require('../..');
 
 // In production, the package @instana/aws-lambda is located in
-// /var/task/node_modules/@instana/aws-lambda/src/aws_lambda/metrics while the main package.json of the Lambda is in
+// /var/task/node_modules/@instana/aws-lambda/src/metrics while the main package.json of the Lambda is in
 // /var/task/package.json. The assumption about the relative location does not hold in the tests, so we need to fix the
 // assumed root dir of the Lambda.
-require('../../../src/aws_lambda/metrics/rootDir').root = require('path').resolve(__dirname, '..', '..', '..');
+require('../../src/metrics/rootDir').root = require('path').resolve(__dirname, '..', '..');
 
 const fetch = require('node-fetch');
 
-const config = require('../../config');
+const config = require('../../../serverless/test/config');
 
 const handler = event => {
   console.log('in actual handler');

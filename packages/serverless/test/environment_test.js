@@ -4,7 +4,7 @@
 
 const expect = require('chai').expect;
 
-const environmentUtil = require('../../src/util/environment');
+const environmentUtil = require('../src/environment');
 
 describe('environment util', () => {
   beforeEach(environmentUtil._reset);

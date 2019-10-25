@@ -14,17 +14,17 @@ const backendTimeout = 5000;
 const sendUnencrypted = process.env.INSTANA_DEV_SEND_UNENCRYPTED === 'false' ? false : true;
 const acceptSelfSignedCert = false;
 
-const instanaKeyEnvVar = 'INSTANA_KEY';
+const instanaKeyEnvVar = 'INSTANA_AGENT_KEY';
 const instanaKey = process.env[instanaKeyEnvVar];
 
 if (instanaKey == null) {
-  console.error('An agent key needs to be provided via INSTANA_KEY.');
+  console.error('An agent key needs to be provided via INSTANA_AGENT_KEY.');
   process.exit(1);
 }
 
 /* dependencies */
 const https = sendUnencrypted ? require('http') : require('https');
-const constants = require('../../../src/util/constants');
+const constants = require('../../../serverless/src/constants');
 
 const legacySensorMode = process.env.LEGACY_SENSOR != null;
 const anotherLambda = process.env.ANOTHER != null;
