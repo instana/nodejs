@@ -1,7 +1,7 @@
 'use strict';
 
 // eslint-disable-next-line import/order
-const environmentUtil = require('../util/environment');
+const environmentUtil = require('./environment');
 
 // backend_connector is required from aws_lambda/wrapper before initializing @instana/core, that is, in particular,
 // before tracing is initialized. Thus we always get an uninstrumented https module here.

@@ -1,9 +1,8 @@
 'use strict';
 
 const instanaCore = require('@instana/core');
+const { backendConnector, consoleLogger } = require('@instana/serverless');
 
-const consoleLogger = require('../util/console_logger');
-const backendConnector = require('../util/backend_connector');
 const identityProvider = require('./identity_provider');
 const metrics = require('./metrics');
 const triggers = require('./triggers');

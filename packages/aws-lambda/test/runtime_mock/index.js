@@ -5,10 +5,10 @@
  */
 const path = require('path');
 
-const sendToParent = require('../../util/send_to_parent');
+const sendToParent = require('../../../serverless/test/util/send_to_parent');
 
 const logPrefix = `aws-lambda-runtime-mock (${process.pid})`;
-const log = require('../../util/log')(logPrefix);
+const log = require('../../../serverless/test/util/log')(logPrefix);
 
 const uncaughtExceptionEventName = 'uncaughtException';
 

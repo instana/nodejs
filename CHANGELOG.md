@@ -1,5 +1,8 @@
 # Changelog
 
+## Unreleased
+- Extract serverless utilities that are not specific to the AWS Lambda platform into their own utility package, @instana/serverless.
+
 ## 1.75.0
 - Capture HTTP response headers for HTTP entry spans.
 
