@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.75.0
 - Capture HTTP response headers for HTTP entry spans.
 
 ## 1.74.2
