@@ -68,12 +68,30 @@ echo "step 4/5: publishing $ZIP_NAME as AWS Lambda layer $LAYER_NAME to all regi
 while read -r region; do
   echo " - publishing to region $region:"
   # See https://docs.aws.amazon.com/cli/latest/reference/lambda/publish-layer-version.html for documentation.
-  aws --region $region lambda publish-layer-version \
-    --layer-name $LAYER_NAME \
-    --description "Adds the npm module $PACKAGE_NAME@$VERSION for Instana in-process monitoring and tracing of AWS Lambdas" \
-    --license-info $LICENSE \
-    --zip-file fileb://$ZIP_NAME \
-    --compatible-runtimes nodejs10.x nodejs8.10
+  lambda_layer_version=$( \
+    aws --region $region lambda publish-layer-version \
+      --layer-name $LAYER_NAME \
+      --description "Adds the npm module $PACKAGE_NAME@$VERSION for Instana in-process monitoring and tracing of AWS Lambdas" \
+      --license-info $LICENSE \
+      --zip-file fileb://$ZIP_NAME \
+      --output json \
+      --compatible-runtimes nodejs10.x nodejs8.10 \
+      | jq '.Version' \
+  )
+  echo "   + published version $lambda_layer_version to region $region"
+  if [[ $lambda_layer_version =~ ^[0-9]+$ ]]; then
+    echo "   + setting required permission on Lambda layer $LAYER_NAME / version $lambda_layer_version in region $region"
+    aws --region $region lambda add-layer-version-permission \
+      --layer-name $LAYER_NAME \
+      --version-number $lambda_layer_version \
+      --statement-id public-permission-all-accounts \
+      --principal \* \
+      --action lambda:GetLayerVersion \
+      --output text
+  else
+    echo "   + WARNING: Lambda layer version $lambda_layer_version does not seem to be numeric, will not set permissions in region $region"
+  fi
+
 done <<< "$REGIONS"
 
 echo "step 5/5: cleaning up"
