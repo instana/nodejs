@@ -6,6 +6,7 @@ module.exports = exports = {
   buffer: require('./buffer'),
   clone: require('./clone'),
   compression: require('./compression'),
+  hasThePackageBeenInitializedTooLate: require('./initializedTooLateHeuristic'),
   propertySizes: require('./propertySizes'),
   requireHook: require('./requireHook'),
   slidingWindow: require('./slidingWindow'),
