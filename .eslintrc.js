@@ -28,6 +28,7 @@ module.exports = {
     'newline-per-chained-call': 'off',
     'no-console': 'error',
     'no-else-return': 'off',
+    'no-labels': 'off',
     'no-mixed-operators': 'off',
     'no-multi-assign': 'off',
     'no-multiple-empty-lines': 'off',

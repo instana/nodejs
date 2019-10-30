@@ -23,6 +23,7 @@ exports.preInit = function() {
 
 exports.init = function(config, downstreamConnection, processIdentityProvider) {
   log.init(config);
+  exports.util.hasThePackageBeenInitializedTooLate();
   config = normalizeConfig(config);
   exports.secrets.init(config);
   exports.util.requireHook.init(config);
