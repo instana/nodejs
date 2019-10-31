@@ -1,6 +1,11 @@
 {
   "name": "@instana/root",
   "private": true,
+  "description": "A monorepo for various Instana Node.js tracing and metrics collector packages",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/instana/nodejs-sensor.git"
+  },
   "scripts": {
     "audit": "lerna run audit --stream && npm audit --production",
     "bootstrap": "lerna bootstrap",
@@ -67,6 +72,7 @@
     "request": "^2.88.0",
     "request-promise": "^4.2.2",
     "request-promise-native": "^1.0.5",
+    "rimraf": "^3.0.0",
     "sequelize": "^4.43.0",
     "sinon": "^7.2.4",
     "underscore": "^1.9.1",
