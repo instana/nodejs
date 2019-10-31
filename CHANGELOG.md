@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.76.0
 - Do not add tracing headers to signed aws-sdk HTTP requests.
 - Extract serverless utilities that are not specific to the AWS Lambda platform into their own utility package, @instana/serverless.
 - Log a warning when @instana/collector has been initialized too late. Additionally, this will be transmitted as snapshot data.
