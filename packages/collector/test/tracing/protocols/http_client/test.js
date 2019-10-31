@@ -448,10 +448,18 @@ function registerTests(useHttps) {
   // AWS_SECRET_ACCESS_KEY and
   // AWS_S3_BUCKET_NAME.
   it.skip('must upload to S3', () =>
-    clientControls.sendRequest({
-      method: 'POST',
-      path: '/upload-s3'
-    }));
+    clientControls
+      .sendRequest({
+        method: 'POST',
+        path: '/upload-s3'
+      })
+      .then(response => {
+        expect(response.ETag).to.exist;
+        expect(response.Location).to.exist;
+        expect(response.Bucket).to.exist;
+        expect(response.key).to.exist;
+        expect(response.Key).to.exist;
+      }));
 }
 
 function constructPath(basePath, urlObject, withQuery) {

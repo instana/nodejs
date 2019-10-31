@@ -27,8 +27,12 @@ const protocol = process.env.USE_HTTPS === 'true' ? 'https' : 'http';
 const baseUrl = `${protocol}://127.0.0.1:${process.env.SERVER_PORT}`;
 
 const app = express();
-const awsRegion = process.env.AWS_REGION || 'eu-west-1';
+
+// Use the wrong region (a different region from where the bucket is located) to force an error and a retry in the
+// aws-sdk.
+const awsRegion = process.env.AWS_REGION || 'eu-central-1';
 const s3 = new AWS.S3({ apiVersion: '2006-03-01', region: awsRegion });
+
 const logPrefix = `Express HTTP client: Client (${process.pid}):\t`;
 
 if (process.env.WITH_STDOUT) {
@@ -161,34 +165,6 @@ app.get('/request-malformed-url', (req, res) => {
   }
 });
 
-app.post('/upload-s3', (req, res) => {
-  if (!process.env.AWS_ACCESS_KEY_ID) {
-    console.error('AWS_ACCESS_KEY_ID is not set.');
-    return res.sendStatus(500);
-  }
-  if (!process.env.AWS_SECRET_ACCESS_KEY) {
-    console.error('AWS_SECRET_ACCESS_KEY is not set.');
-    return res.sendStatus(500);
-  }
-  if (!process.env.AWS_S3_BUCKET_NAME) {
-    console.error('AWS_S3_BUCKET_NAME is not set.');
-    return res.sendStatus(500);
-  }
-
-  const testFilePath = path.join(
-    __dirname,
-    'upload',
-    'Verdi_Messa_da_requiem_Section_7.2_Libera_me_Dies_irae_Markevitch_1959.mp3'
-  );
-  const readStream = fs.createReadStream(testFilePath);
-  const bucketName = process.env.AWS_S3_BUCKET_NAME;
-  const params = { Bucket: process.env.AWS_S3_BUCKET_NAME, Key: 'test-file', Body: readStream };
-  log(`Uploading to bucket ${bucketName} in region ${awsRegion}`);
-  s3.upload(params, () => {
-    res.sendStatus(200);
-  });
-});
-
 app.put('/expect-continue', (req, res) => {
   const continueRequest = httpModule.request(
     {
@@ -238,6 +214,39 @@ if (process.env.USE_HTTPS === 'true') {
     log(`Listening on port: ${process.env.APP_PORT}`);
   });
 }
+
+app.post('/upload-s3', (req, res) => {
+  if (!process.env.AWS_ACCESS_KEY_ID) {
+    console.error('ERROR: AWS_ACCESS_KEY_ID is not set.');
+    return res.sendStatus(500);
+  }
+  if (!process.env.AWS_SECRET_ACCESS_KEY) {
+    console.error('ERROR: AWS_SECRET_ACCESS_KEY is not set.');
+    return res.sendStatus(500);
+  }
+  if (!process.env.AWS_S3_BUCKET_NAME) {
+    console.error('ERROR: AWS_S3_BUCKET_NAME is not set.');
+    return res.sendStatus(500);
+  }
+
+  const testFilePath = path.join(
+    __dirname,
+    'upload',
+    'Verdi_Messa_da_requiem_Section_7.2_Libera_me_Dies_irae_Markevitch_1959.mp3'
+  );
+  const readStream = fs.createReadStream(testFilePath);
+  const bucketName = process.env.AWS_S3_BUCKET_NAME;
+  const params = { Bucket: process.env.AWS_S3_BUCKET_NAME, Key: 'test-file', Body: readStream };
+  log(`Uploading to bucket ${bucketName} in region ${awsRegion}`);
+  s3.upload(params, function(err, result) {
+    if (err) {
+      console.error(err);
+      return res.sendStatus(500);
+    } else {
+      return res.send(result);
+    }
+  });
+});
 
 function createUrl(req, urlPath) {
   urlPath = req.query.withQuery ? `${urlPath}?q1=some&pass=verysecret&q2=value` : urlPath;

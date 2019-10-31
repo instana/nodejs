@@ -265,6 +265,9 @@ function tryToAddHeadersToOpts(options, span) {
   // add our headers there. Only when this object is missing do we use request.setHeader on the ClientRequest object
   // (see setHeadersOnRequest).
   if (hasHeadersOption(options)) {
+    if (!isItSafeToModifiyHeadersInOptions(options)) {
+      return true;
+    }
     options.headers[constants.spanIdHeaderName] = span.s;
     options.headers[constants.traceIdHeaderName] = span.t;
     options.headers[constants.traceLevelHeaderName] = '1';
@@ -275,6 +278,9 @@ function tryToAddHeadersToOpts(options, span) {
 
 function tryToAddTraceLevelAddHeaderToOpts(options, level) {
   if (hasHeadersOption(options)) {
+    if (!isItSafeToModifiyHeadersInOptions(options)) {
+      return true;
+    }
     options.headers[constants.traceLevelHeaderName] = level;
     return true;
   }
@@ -286,10 +292,46 @@ function hasHeadersOption(options) {
 }
 
 function setHeadersOnRequest(clientRequest, span) {
+  if (!isItSafeToModifiyHeadersForRequest(clientRequest)) {
+    return;
+  }
   clientRequest.setHeader(constants.spanIdHeaderName, span.s);
   clientRequest.setHeader(constants.traceIdHeaderName, span.t);
   clientRequest.setHeader(constants.traceLevelHeaderName, '1');
+}
+
+function isItSafeToModifiyHeadersInOptions(options) {
+  var keys = Object.keys(options.headers);
+  var key;
+  for (var i = 0; i < keys.length; i++) {
+    key = keys[i];
+    if (
+      'authorization' === key.toLowerCase() &&
+      typeof options.headers[key] === 'string' &&
+      options.headers[key].indexOf('AWS') === 0
+    ) {
+      // This is a signed AWS API request (probably from the aws-sdk package).
+      // Adding our headers too this request would trigger a SignatureDoesNotMatch error in case the request will be
+      // retried:
+      // "SignatureDoesNotMatch: The request signature we calculated does not match the signature you provided.
+      // Check your key and signing method."
+      // See https://docs.aws.amazon.com/general/latest/gr/signing_aws_api_requests.html
+      //
+      // Additionally, adding our headers to this request would not have any benefit - the receiving end will be an AWS
+      // service like S3 and those are not instrumented. (There is a very small chance that the receiving end is an
+      // instrumented Lambda function behind an API gateway and the user is using
+      // https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/APIGateway.html to invoke this Gateway/Lambda
+      // combination, which _would_ benefit from tracing headers.)
+      return false;
+    }
+  }
   return true;
+}
+
+function isItSafeToModifiyHeadersForRequest(clientRequest) {
+  var authHeader = clientRequest.getHeader('Authorization');
+  // see comment in isItSafeToModifiyHeadersInOptions
+  return !authHeader || authHeader.indexOf('AWS') !== 0;
 }
 
 function splitAndFilter(fullUrl) {
