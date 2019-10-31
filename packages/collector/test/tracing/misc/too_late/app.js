@@ -10,7 +10,7 @@ if (process.env.REQUIRE_BEFORE_COLLECTOR) {
   http = require('http');
   httpGet = http.get;
   require(process.env.REQUIRE_BEFORE_COLLECTOR);
-  require('../../../')({
+  require('../../../../')({
     agentPort: agentPort,
     level: 'warn',
     tracing: {
@@ -19,7 +19,7 @@ if (process.env.REQUIRE_BEFORE_COLLECTOR) {
   });
 } else {
   // Initializing @instana/collector properly, before other require statements.
-  require('../../../')({
+  require('../../../../')({
     agentPort: agentPort,
     level: 'warn',
     tracing: {

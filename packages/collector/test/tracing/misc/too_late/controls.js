@@ -4,7 +4,7 @@
 
 const path = require('path');
 
-const AbstractControls = require('../AbstractControls');
+const AbstractControls = require('../../AbstractControls');
 
 const Controls = (module.exports = function Controls(opts) {
   opts.appPath = path.join(__dirname, 'app.js');

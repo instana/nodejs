@@ -10,8 +10,8 @@ const semver = require('semver');
 
 const constants = require('@instana/core').tracing.constants;
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
-const config = require('../../config');
-const utils = require('../../utils');
+const config = require('../../../config');
+const utils = require('../../../utils');
 
 let agentControls;
 let Controls;
@@ -21,7 +21,7 @@ describe('tracing/too late', function() {
     return;
   }
 
-  agentControls = require('../../apps/agentStubControls');
+  agentControls = require('../../../apps/agentStubControls');
   Controls = require('./controls');
 
   this.timeout(config.getTestTimeout());

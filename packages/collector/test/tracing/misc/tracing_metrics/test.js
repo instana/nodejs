@@ -5,9 +5,9 @@ const expect = require('chai').expect;
 const constants = require('@instana/core').tracing.constants;
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 
-const config = require('../../config');
-const delay = require('../../test_util/delay');
-const utils = require('../../utils');
+const config = require('../../../config');
+const delay = require('../../../test_util/delay');
+const utils = require('../../../utils');
 
 describe('tracing/tracing metrics', function() {
   if (!supportedVersion(process.versions.node)) {
@@ -20,7 +20,7 @@ describe('tracing/tracing metrics', function() {
   const retryTimeout = this.timeout() * 0.8;
 
   describe('when tracing is enabled', function() {
-    const agentControls = require('../../apps/agentStubControls');
+    const agentControls = require('../../../apps/agentStubControls');
     agentControls.registerTestHooks();
     const controls = new Controls({
       agentControls
@@ -85,7 +85,7 @@ describe('tracing/tracing metrics', function() {
   });
 
   describe('when INSTANA_TRACER_METRICS_INTERVAL is configured explicitly', function() {
-    const agentControls = require('../../apps/agentStubControls');
+    const agentControls = require('../../../apps/agentStubControls');
     agentControls.registerTestHooks();
     const controls = new Controls({
       agentControls,
@@ -124,7 +124,7 @@ describe('tracing/tracing metrics', function() {
   });
 
   describe('when tracing is not enabled', function() {
-    const agentControls = require('../../apps/agentStubControls');
+    const agentControls = require('../../../apps/agentStubControls');
     agentControls.registerTestHooks();
     const controls = new Controls({
       agentControls,
@@ -153,7 +153,7 @@ describe('tracing/tracing metrics', function() {
   });
 
   describe('when dropping spans', function() {
-    const agentControls = require('../../apps/agentStubControls');
+    const agentControls = require('../../../apps/agentStubControls');
     agentControls.registerTestHooks({
       // The trace endpoint will return an HTTP error code, triggering the removeSpansIfNecessary function.
       rejectTraces: true
@@ -191,7 +191,7 @@ describe('tracing/tracing metrics', function() {
   });
 
   describe('when agent does not support the tracermetrics endpoint', function() {
-    const agentControls = require('../../apps/agentStubControls');
+    const agentControls = require('../../../apps/agentStubControls');
     agentControls.registerTestHooks({
       tracingMetrics: false
     });

@@ -28,6 +28,7 @@ const AbstractControls = (module.exports = function AbstractControls(opts = {}) 
     {
       APP_PORT: this.port,
       AGENT_PORT: agentPort,
+      INSTANA_AGENT_PORT: agentPort,
       TRACING_ENABLED: this.tracingEnabled,
       INSTANA_DEV_MIN_DELAY_BEFORE_SENDING_SPANS: opts.minimalDelay != null ? opts.minimalDelay : 0
     },
