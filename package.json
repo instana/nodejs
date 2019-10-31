@@ -24,7 +24,7 @@
     "apollo-link-ws": "^1.0.17",
     "apollo-server-express": "^2.6.1",
     "async": "^2.6.1",
-    "aws-sdk": "^2.329.0",
+    "aws-sdk": "2.553.0",
     "bluebird": "^3.5.2",
     "body-parser": "^1.18.3",
     "chai": "4.2.0",

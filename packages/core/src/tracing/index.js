@@ -28,6 +28,7 @@ var instrumentations = [
   './instrumentation/database/mysql',
   './instrumentation/database/pg',
   './instrumentation/database/redis',
+  './instrumentation/frameworks/awsSdk',
   './instrumentation/frameworks/express',
   './instrumentation/frameworks/fastify',
   './instrumentation/frameworks/hapi',

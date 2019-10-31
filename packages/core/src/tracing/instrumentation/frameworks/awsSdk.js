@@ -1,0 +1,32 @@
+'use strict';
+
+var requireHook = require('../../../util/requireHook');
+var constants = require('../../constants');
+
+/**
+ * This module currently does _not_ instrument the aws-sdk. It only adds the Instana tracing headers to the list of
+ * headers that should be ignored when signing requests
+ * (see https://docs.aws.amazon.com/general/latest/gr/signing_aws_api_requests.html).
+ */
+exports.init = function() {
+  requireHook.onFileLoad(/\/aws-sdk\/lib\/signers\/v4.js/, addInstanaHeadersToUnsignableHeaders);
+};
+
+function addInstanaHeadersToUnsignableHeaders(v4SignerModule) {
+  // This only helps with the v4 signer. There are other signers (v2, v3, ...) which do not expose the list. Therefore
+  // we have an additional check in ../protocols/httpClient to skip adding headers if the Authorization header indicates
+  // that this is a signed AWS API request.
+  if (v4SignerModule && v4SignerModule.prototype && Array.isArray(v4SignerModule.prototype.unsignableHeaders)) {
+    v4SignerModule.prototype.unsignableHeaders.push(constants.spanIdHeaderNameLowerCase);
+    v4SignerModule.prototype.unsignableHeaders.push(constants.traceIdHeaderNameLowerCase);
+    v4SignerModule.prototype.unsignableHeaders.push(constants.traceLevelHeaderNameLowerCase);
+  }
+}
+
+exports.activate = function() {
+  // no-op
+};
+
+exports.deactivate = function() {
+  // no-op
+};
