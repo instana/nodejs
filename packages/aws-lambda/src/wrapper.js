@@ -6,6 +6,7 @@ const { backendConnector, consoleLogger } = require('@instana/serverless');
 const identityProvider = require('./identity_provider');
 const metrics = require('./metrics');
 const triggers = require('./triggers');
+const processResult = require('./process_result');
 
 const { tracing } = instanaCore;
 const { constants, spanBuffer } = tracing;
@@ -166,24 +167,9 @@ function postHandler(entrySpan, error, result, callback) {
       entrySpan.ec = 1;
       entrySpan.data.lambda.error = error.message ? error.message : error.toString();
     }
-    // capture HTTP errors
-    if (result && typeof result === 'object' && result.statusCode) {
-      if (typeof result.statusCode === 'number') {
-        entrySpan.data.http = entrySpan.data.http || {};
-        entrySpan.data.http.status = result.statusCode;
-        if (result.statusCode >= 500) {
-          entrySpan.ec = entrySpan.ec ? entrySpan.ec + 1 : 1;
-          entrySpan.data.lambda.error = entrySpan.data.lambda.error || `HTTP status ${result.statusCode}`;
-        }
-      } else if (typeof result.statusCode === 'string' && /^\d\d\d$/.test(result.statusCode)) {
-        entrySpan.data.http = entrySpan.data.http || {};
-        entrySpan.data.http.status = parseInt(result.statusCode, 10);
-        if (entrySpan.data.http.status >= 500) {
-          entrySpan.ec = entrySpan.ec ? entrySpan.ec + 1 : 1;
-          entrySpan.data.lambda.error = entrySpan.data.lambda.error || `HTTP status ${result.statusCode}`;
-        }
-      }
-    }
+
+    processResult(result, entrySpan);
+
     entrySpan.error = entrySpan.ec > 0;
     entrySpan.d = Date.now() - entrySpan.ts;
 

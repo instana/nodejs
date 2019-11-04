@@ -14,18 +14,40 @@ const fetch = require('node-fetch');
 
 const config = require('../../../serverless/test/config');
 
+const response = {
+  headers: {
+    'x-custom-header': 'custom header value'
+  },
+  body: {
+    message: 'Stan says hi!'
+  }
+};
+
+if (process.env.SERVER_TIMING_HEADER) {
+  if (process.env.SERVER_TIMING_HEADER === 'string') {
+    response.headers['sErveR-tIming'] = 'cache;desc="Cache Read";dur=23.2';
+  } else if (process.env.SERVER_TIMING_HEADER === 'array') {
+    response.multiValueHeaders = {
+      'ServEr-TiminG': ['cache;desc="Cache Read";dur=23.2', 'cpu;dur=2.4']
+    };
+  } else {
+    throw new Error(`Unknown SERVER_TIMING_HEADER value: ${process.env.SERVER_TIMING_HEADER}.`);
+  }
+}
+
 const handler = event => {
   console.log('in actual handler');
   return fetch(config.downstreamDummyUrl).then(() => {
     if (event.error) {
       throw new Error('Boom!');
     }
-    return {
+
+    if (event.requestedStatusCode) {
       // In contrast to both other lambdas we pass back the HTTP status code as a string here, just so this case is also
       // tested.
-      statusCode: event.requestedStatusCode ? event.requestedStatusCode : undefined,
-      message: 'Stan says hi!'
-    };
+      response.statusCode = event.requestedStatusCode;
+    }
+    return response;
   });
 };
 

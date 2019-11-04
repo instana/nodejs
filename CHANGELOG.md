@@ -1,5 +1,8 @@
 # Changelog
 
+## Unreleased
+- Inject EUM back end correlation header in AWS Lambda responses if possible.
+
 ## 1.76.0
 - Do not add tracing headers to signed aws-sdk HTTP requests.
 - Extract serverless utilities that are not specific to the AWS Lambda platform into their own utility package, @instana/serverless.

@@ -78,10 +78,10 @@ function shimEmit(realEmit) {
       if (!span.p) {
         req.headers['x-instana-t'] = span.t;
 
-        // support for automatic client / backend eum correlation
+        // support for automatic client/back end EUM correlation
         // intid = instana trace id
         // This abbreviation is small enough to not incur a notable overhead while at the same
-        // time being unique (funky) enough to avoid name collisions.
+        // time being unique enough to avoid name collisions.
         var serverTimingValue = 'intid;desc=' + span.t;
         res.setHeader('Server-Timing', serverTimingValue);
         shimmer.wrap(res, 'setHeader', function(realSetHeader) {

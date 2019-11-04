@@ -60,6 +60,9 @@ function prelude(opts) {
   if (opts.traceLevel) {
     env.INSTANA_HEADER_L = opts.traceLevel;
   }
+  if (opts.serverTiming) {
+    env.SERVER_TIMING_HEADER = opts.serverTiming;
+  }
 
   const Control = require('../../../serverless/test/util/control');
   const control = new Control({
@@ -249,40 +252,6 @@ exports.registerTests = function registerTests(handlerDefinitionPath) {
     it('must finish swiftly', () => verify(control, false, false, false));
   });
 
-  function verify(control, error, expectMetrics, expectSpans, trigger, parent) {
-    /* eslint-disable no-console */
-    if (error === 'lambda') {
-      expect(control.getLambdaErrors().length).to.equal(1);
-      expect(control.getLambdaResults()).to.be.empty;
-      const lambdaError = control.getLambdaErrors()[0];
-      expect(lambdaError).to.exist;
-      expect(lambdaError.message).to.equal('Boom!');
-      // other error cases like 'http' are checked in verifyLambdaEntry
-    } else {
-      if (control.getLambdaErrors() && control.getLambdaErrors().length > 0) {
-        console.log('Unexpected Errors:');
-        console.log(JSON.stringify(control.getLambdaErrors()));
-      }
-      expect(control.getLambdaErrors()).to.be.empty;
-      expect(control.getLambdaResults().length).to.equal(1);
-      const result = control.getLambdaResults()[0];
-      expect(result).to.exist;
-      expect(result.message).to.equal('Stan says hi!');
-    }
-
-    if (expectMetrics && expectSpans) {
-      return retry(() => getAndVerifySpans(control, error, trigger, parent).then(() => getAndVerifyMetrics(control)));
-    } else if (!expectMetrics && expectSpans) {
-      return retry(() => getAndVerifySpans(control, error, trigger, parent).then(() => verifyNoMetrics(control)));
-    } else if (expectMetrics && !expectSpans) {
-      return retry(() => getAndVerifyMetrics(control).then(() => verifyNoSpans(control)));
-    } else {
-      return delay(1000)
-        .then(() => verifyNoSpans(control))
-        .then(() => verifyNoMetrics(control));
-    }
-  }
-
   describe('triggered by API Gateway (Lambda Proxy)', function() {
     // - same as "everything is peachy"
     // - but triggered by AWS API Gateway (with Lambda Proxy)
@@ -390,6 +359,96 @@ exports.registerTests = function registerTests(handlerDefinitionPath) {
             expect(span.data.http.status).to.equal(502);
           })
         ));
+  });
+
+  describe('API Gateway/EUM - no Server-Timing header of its own', function() {
+    const control = prelude.bind(this)({
+      handlerDefinitionPath,
+      trigger: 'api-gateway-proxy',
+      instanaEndpointUrl: config.backendBaseUrl,
+      instanaAgentKey: config.instanaAgentKey
+    });
+
+    it('must inject the Server-Timing header', () => {
+      let serverTimingValue = null;
+      return verify(control, false, true, true, 'aws:api.gateway')
+        .then(() => {
+          const response = control.getLambdaResults()[0];
+          serverTimingValue = getHeaderCaseInsensitive(response.headers, 'server-timing');
+          expect(serverTimingValue).to.match(/^intid;desc=[0-9a-f]+$/);
+        })
+        .then(() => control.getSpans())
+        .then(spans =>
+          expectOneMatching(spans, span => {
+            expect(span.n).to.equal('aws.lambda.entry');
+            expect(span.k).to.equal(constants.ENTRY);
+            expect(/^intid;desc=([0-9a-f]+)$/.exec(serverTimingValue)[1]).to.equal(span.t);
+          })
+        );
+    });
+  });
+
+  describe('API Gateway/EUM - Server-Timing string header already present', function() {
+    const control = prelude.bind(this)({
+      handlerDefinitionPath,
+      trigger: 'api-gateway-proxy',
+      instanaEndpointUrl: config.backendBaseUrl,
+      instanaAgentKey: config.instanaAgentKey,
+      serverTiming: 'string'
+    });
+
+    it('must inject the Server-Timing header', () => {
+      let serverTimingValue = null;
+      return verify(control, false, true, true, 'aws:api.gateway')
+        .then(() => {
+          const response = control.getLambdaResults()[0];
+          serverTimingValue = getHeaderCaseInsensitive(response.headers, 'server-timing');
+          expect(serverTimingValue).to.match(/^cache;desc="Cache Read";dur=23.2, intid;desc=[0-9a-f]+$/);
+        })
+        .then(() => control.getSpans())
+        .then(spans =>
+          expectOneMatching(spans, span => {
+            expect(span.n).to.equal('aws.lambda.entry');
+            expect(span.k).to.equal(constants.ENTRY);
+            expect(/^cache;desc="Cache Read";dur=23.2, intid;desc=([0-9a-f]+)$/.exec(serverTimingValue)[1]).to.equal(
+              span.t
+            );
+          })
+        );
+    });
+  });
+
+  describe('API Gateway/EUM - Server-Timing array header already present', function() {
+    const control = prelude.bind(this)({
+      handlerDefinitionPath,
+      trigger: 'api-gateway-proxy',
+      instanaEndpointUrl: config.backendBaseUrl,
+      instanaAgentKey: config.instanaAgentKey,
+      serverTiming: 'array'
+    });
+
+    it('must add our Server-Timing value to the first entry in the multi value header array', () => {
+      let serverTimingValue = null;
+      return verify(control, false, true, true, 'aws:api.gateway')
+        .then(() => {
+          const response = control.getLambdaResults()[0];
+          const serverTimingValueArray = getHeaderCaseInsensitive(response.multiValueHeaders, 'server-timing');
+          expect(serverTimingValueArray).to.have.length(2);
+          expect(serverTimingValueArray[0]).to.match(/^cache;desc="Cache Read";dur=23.2, intid;desc=([0-9a-f]+)$/);
+          expect(serverTimingValueArray[1]).to.equal('cpu;dur=2.4');
+          serverTimingValue = serverTimingValueArray[0];
+        })
+        .then(() => control.getSpans())
+        .then(spans =>
+          expectOneMatching(spans, span => {
+            expect(span.n).to.equal('aws.lambda.entry');
+            expect(span.k).to.equal(constants.ENTRY);
+            expect(/^cache;desc="Cache Read";dur=23.2, intid;desc=([0-9a-f]+)$/.exec(serverTimingValue)[1]).to.equal(
+              span.t
+            );
+          })
+        );
+    });
   });
 
   describe('triggered by API Gateway (no Lambda Proxy)', function() {
@@ -599,6 +658,42 @@ exports.registerTests = function registerTests(handlerDefinitionPath) {
         ));
   });
 
+  function verify(control, error, expectMetrics, expectSpans, trigger, parent) {
+    /* eslint-disable no-console */
+    if (error === 'lambda') {
+      expect(control.getLambdaErrors().length).to.equal(1);
+      expect(control.getLambdaResults()).to.be.empty;
+      const lambdaError = control.getLambdaErrors()[0];
+      expect(lambdaError).to.exist;
+      expect(lambdaError.message).to.equal('Boom!');
+      // other error cases like 'http' are checked in verifyLambdaEntry
+    } else {
+      if (control.getLambdaErrors() && control.getLambdaErrors().length > 0) {
+        console.log('Unexpected Errors:');
+        console.log(JSON.stringify(control.getLambdaErrors()));
+      }
+      expect(control.getLambdaErrors()).to.be.empty;
+      expect(control.getLambdaResults().length).to.equal(1);
+      const result = control.getLambdaResults()[0];
+      expect(result).to.exist;
+      expect(result.headers).to.be.an('object');
+      expect(result.headers['x-custom-header']).to.equal('custom header value');
+      expect(result.body).to.deep.equal({ message: 'Stan says hi!' });
+    }
+
+    if (expectMetrics && expectSpans) {
+      return retry(() => getAndVerifySpans(control, error, trigger, parent).then(() => getAndVerifyMetrics(control)));
+    } else if (!expectMetrics && expectSpans) {
+      return retry(() => getAndVerifySpans(control, error, trigger, parent).then(() => verifyNoMetrics(control)));
+    } else if (expectMetrics && !expectSpans) {
+      return retry(() => getAndVerifyMetrics(control).then(() => verifyNoSpans(control)));
+    } else {
+      return delay(1000)
+        .then(() => verifyNoSpans(control))
+        .then(() => verifyNoMetrics(control));
+    }
+  }
+
   function verifyNoSpans(control) {
     return control.getSpans().then(spans => {
       expect(spans).to.be.empty;
@@ -716,5 +811,20 @@ exports.registerTests = function registerTests(handlerDefinitionPath) {
     expect(headers['x-instana-host']).to.equal(qualifiedArn);
     expect(headers['x-instana-key']).to.equal('dummy-key');
     expect(headers['x-instana-time']).to.be.a('string');
+  }
+
+  function getHeaderCaseInsensitive(headers, header) {
+    let key = null;
+    let value = null;
+    Object.keys(headers).forEach(h => {
+      if (header.toLowerCase() === h.toLowerCase()) {
+        if (key != null) {
+          throw new Error(`Found duplicated header: ${key} and ${h}.`);
+        }
+        key = h;
+        value = headers[key];
+      }
+    });
+    return value;
   }
 };
