@@ -1,7 +1,7 @@
 'use strict';
 
 const instanaCore = require('@instana/core');
-const { backendConnector, consoleLogger } = require('@instana/serverless');
+const { backendConnector, consoleLogger, headers: headersUtil } = require('@instana/serverless');
 
 const identityProvider = require('./identity_provider');
 const metrics = require('./metrics');
@@ -167,7 +167,7 @@ function postHandler(entrySpan, error, result, callback) {
       entrySpan.data.lambda.error = error.message ? error.message : error.toString();
     }
     // capture HTTP errors
-    if (result && typeof result === 'object' && result.statusCode) {
+    if (result && typeof result === 'object') {
       if (typeof result.statusCode === 'number') {
         entrySpan.data.http = entrySpan.data.http || {};
         entrySpan.data.http.status = result.statusCode;
@@ -183,7 +183,24 @@ function postHandler(entrySpan, error, result, callback) {
           entrySpan.data.lambda.error = entrySpan.data.lambda.error || `HTTP status ${result.statusCode}`;
         }
       }
+
+      if (typeof result.headers === 'object') {
+        // inject Server-Timing header for automatic client/back end EUM correlation
+        const eumServerTimingValue = `intid;desc=${entrySpan.t}`;
+        const existingHeader = headersUtil.readHeaderKeyValuePairCaseInsensitive(result.headers, 'server-timing');
+        if (existingHeader == null) {
+          result.headers['Server-Timing'] = eumServerTimingValue;
+        } else {
+          const { key: originalServerTimingKey, value: originalServerTimingValue } = existingHeader;
+          if (typeof originalServerTimingValue === 'string') {
+            result.headers[originalServerTimingKey] = `${originalServerTimingValue}, ${eumServerTimingValue}`;
+          } else if (Array.isArray(originalServerTimingValue)) {
+            result.headers[originalServerTimingKey].push(eumServerTimingValue);
+          }
+        }
+      }
     }
+
     entrySpan.error = entrySpan.ec > 0;
     entrySpan.d = Date.now() - entrySpan.ts;
 

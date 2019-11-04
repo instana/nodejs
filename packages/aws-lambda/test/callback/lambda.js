@@ -14,6 +14,19 @@ const http = require('http');
 
 const config = require('../../../serverless/test/config');
 
+const responseHeaders = {
+  'x-custom-header': 'custom header value'
+};
+if (process.env.SERVER_TIMING_HEADER) {
+  if (process.env.SERVER_TIMING_HEADER === 'string') {
+    responseHeaders['sErveR-tIming'] = 'cache;desc="Cache Read";dur=23.2';
+  } else if (process.env.SERVER_TIMING_HEADER === 'array') {
+    responseHeaders['sErveR-tIming'] = ['cache;desc="Cache Read";dur=23.2', 'cpu;dur=2.4'];
+  } else {
+    throw new Error(`Unknown SERVER_TIMING_HEADER value: ${process.env.SERVER_TIMING_HEADER}.`);
+  }
+}
+
 const handler = function handler(event, context, callback) {
   console.log('in actual handler');
   const req = http.get(config.downstreamDummyUrl, res => {
@@ -24,7 +37,10 @@ const handler = function handler(event, context, callback) {
       } else {
         callback(null, {
           statusCode: event.requestedStatusCode ? parseInt(event.requestedStatusCode, 10) : undefined,
-          message: 'Stan says hi!'
+          headers: responseHeaders,
+          body: {
+            message: 'Stan says hi!'
+          }
         });
       }
     });
