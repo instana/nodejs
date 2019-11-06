@@ -11,4 +11,6 @@ cp /tmp/demo-ec2-app.zip /opt/demo-app/
 cd /opt/demo-app
 unzip demo-ec2-app.zip
 npm i
+edit .env
+bin/start.sh
 

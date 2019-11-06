@@ -23,15 +23,17 @@ console.log(
 exports.handler = instana.awsLambda.wrap(async event => {
   if (!event.httpMethod || !event.path) {
     // malformed event, probably not an API gateway request
-    return { statusCode: 400 };
+    return { statusCode: 400, headers: corsAllowAll() };
   }
 
-  if (event.path === '/items') {
+  if (event.httpMethod === 'OPTIONS') {
+    return { statusCode: 204, headers: corsAllowAll() };
+  } else if (event.path === '/items') {
     return handleItemsRequest(event);
   } else if (event.resource === '/items/{itemId}') {
     return handleSingleItemRequest(event);
   }
-  return { statusCode: 404 };
+  return { statusCode: 404, headers: corsAllowAll() };
 });
 
 async function handleItemsRequest(event) {
@@ -40,7 +42,7 @@ async function handleItemsRequest(event) {
   } else if (event.httpMethod === 'POST') {
     return handleCreate(event);
   } else {
-    return { statusCode: 405 };
+    return { statusCode: 405, headers: corsAllowAll() };
   }
 }
 
@@ -52,13 +54,14 @@ async function handleList() {
 
     return {
       statusCode: 200,
+      headers: corsAllowAll(),
       body: JSON.stringify({
         items: results.rows
       })
     };
   } catch (err) {
     console.log('Failed to execute SELECT.', err);
-    return { statusCode: 500 };
+    return { statusCode: 500, headers: corsAllowAll() };
   } finally {
     await client.end();
   }
@@ -69,6 +72,7 @@ async function handleCreate(event) {
   if (!event.body) {
     return {
       statusCode: 400,
+      headers: corsAllowAll(),
       body: JSON.stringify({
         message: 'No HTTP request body, please send JSON.'
       })
@@ -81,6 +85,7 @@ async function handleCreate(event) {
   } catch (e) {
     return {
       statusCode: 400,
+      headers: corsAllowAll(),
       body: JSON.stringify({
         message: 'Malformed HTTP request body, please send JSON.'
       })
@@ -95,13 +100,14 @@ async function handleCreate(event) {
 
     return {
       statusCode: 201,
+      headers: corsAllowAll(),
       body: JSON.stringify({
         item: results.rows[0]
       })
     };
   } catch (err) {
     console.log('Failed to execute insert.', err);
-    return { statusCode: 500 };
+    return { statusCode: 500, headers: corsAllowAll() };
   } finally {
     await client.end();
   }
@@ -110,16 +116,16 @@ async function handleCreate(event) {
 async function handleSingleItemRequest(event) {
   writeAuditLog('single item request');
   if (event.httpMethod !== 'GET') {
-    return { statusCode: 405 };
+    return { statusCode: 405, headers: corsAllowAll() };
   }
 
   if (!event.pathParameters || !event.pathParameters.itemId) {
-    return { statusCode: 404 };
+    return { statusCode: 404, headers: corsAllowAll() };
   }
 
   const itemId = parseInt(event.pathParameters.itemId, 10);
   if (isNaN(itemId)) {
-    return { statusCode: 404 };
+    return { statusCode: 404, headers: corsAllowAll() };
   }
 
   const client = await connect();
@@ -127,17 +133,19 @@ async function handleSingleItemRequest(event) {
     const result = await client.query('SELECT * FROM items WHERE id = $1', [itemId]);
     if (result.rows.length === 0) {
       return {
-        statusCode: 404
+        statusCode: 404,
+        headers: corsAllowAll()
       };
     } else {
       return {
         statusCode: 200,
+        headers: corsAllowAll(),
         body: JSON.stringify(result.rows[0])
       };
     }
   } catch (err) {
     console.log('Failed to execute SELECT.', err);
-    return { statusCode: 500 };
+    return { statusCode: 500, headers: corsAllowAll() };
   } finally {
     await client.end();
   }
@@ -164,4 +172,13 @@ function writeAuditLog(message) {
   })
     .then(() => console.log(`wrote audit log: ${message}`))
     .catch(e => console.error('Could not write audit log:', e));
+}
+
+function corsAllowAll() {
+  return {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+    'Access-Control-Allow-Headers': '*',
+    'Timing-Allow-Origin': '*'
+  };
 }
