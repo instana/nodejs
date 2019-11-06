@@ -1,7 +1,7 @@
 # Changelog
 
-## Unreleased
-- Inject EUM back end correlation header in AWS Lambda responses if possible.
+## 1.77.0
+- [AWS Lambda]: Inject EUM back end correlation header in AWS Lambda responses if possible.
 
 ## 1.76.0
 - Do not add tracing headers to signed aws-sdk HTTP requests.
