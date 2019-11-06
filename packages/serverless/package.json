@@ -1,6 +1,6 @@
 {
   "name": "@instana/serverless",
-  "version": "1.76.0",
+  "version": "1.77.0",
   "description": "Internal utility package for serverless Node.js tracing and monitoring with Instana",
   "author": {
     "name": "Bastian Krol",
