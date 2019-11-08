@@ -149,6 +149,22 @@ nats-streaming: &nats-streaming
       - 8223:8223
 
 jobs:
+  "node-13":
+    docker:
+      - image: circleci/node:13
+      - <<: *zookeeper
+      - <<: *elasticsearch
+      - <<: *mongo
+      - <<: *redis
+      - <<: *kafka
+      - <<: *mysql
+      - <<: *postgres
+      - <<: *mssql
+      - <<: *rabbitmq
+      - <<: *nats
+      - <<: *nats-streaming
+    <<: *shared
+
   "node-12":
     docker:
       - image: circleci/node:12
@@ -217,6 +233,7 @@ workflows:
   version: 2
   build:
     jobs:
+      - "node-13"
       - "node-12"
       - "node-10"
       - "node-8"
