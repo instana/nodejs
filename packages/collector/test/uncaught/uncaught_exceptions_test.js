@@ -1,5 +1,6 @@
 'use strict';
 
+const semver = require('semver');
 const chai = require('chai');
 const expect = chai.expect;
 const assert = chai.assert;
@@ -10,6 +11,13 @@ const utils = require('../utils');
 
 describe('uncaught exceptions', function() {
   if (!supportedVersion(process.versions.node)) {
+    return;
+  }
+  if (semver.satisfies(process.versions.node, '>=13.0.0')) {
+    // eslint-disable-next-line no-console
+    console.error(
+      'SKIPPING UNCAUGHT EXCEPTIONS TEST BECAUSE OPTIONAL DEPENDENCY netlinkwrapper IS NOT YET AVAILABLE FOR NODE 13'
+    );
     return;
   }
 
