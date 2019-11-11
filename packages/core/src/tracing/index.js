@@ -69,7 +69,7 @@ exports.init = function(_config, downstreamConnection, _processIdentityProvider)
     spanBuffer.init(config, downstreamConnection);
     opentracing.init(config, automaticTracingEnabled, processIdentityProvider);
     cls = require('./cls');
-    cls.init(processIdentityProvider);
+    cls.init(config, processIdentityProvider);
     sdk.init(cls);
 
     if (automaticTracingEnabled) {

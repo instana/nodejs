@@ -77,10 +77,8 @@ function instrumentedLog(ctx, originalLog, originalArgs, markAsError) {
       message =
         'Log call without message. The Bunyan "fields" argument will not be serialized by Instana for performance reasons.';
     }
-    span.data = {
-      log: {
-        message: message
-      }
+    span.data.log = {
+      message: message
     };
     if (markAsError) {
       span.ec = 1;

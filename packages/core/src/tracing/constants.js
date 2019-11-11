@@ -6,6 +6,8 @@ exports.traceIdHeaderName = 'X-INSTANA-T';
 exports.traceIdHeaderNameLowerCase = exports.traceIdHeaderName.toLowerCase();
 exports.traceLevelHeaderName = 'X-INSTANA-L';
 exports.traceLevelHeaderNameLowerCase = exports.traceLevelHeaderName.toLowerCase();
+exports.serviceNameHeaderName = 'X-Instana-Service';
+exports.serviceNameHeaderNameLowerCase = exports.serviceNameHeaderName.toLowerCase();
 
 exports.ENTRY = 1;
 exports.EXIT = 2;

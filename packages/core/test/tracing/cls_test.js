@@ -13,7 +13,7 @@ describe('tracing/cls', () => {
   beforeEach(() => {
     // reload to clear vars
     cls = proxyquire('../../src/tracing/cls', {});
-    cls.init();
+    cls.init({});
   });
 
   it('must not have an active context initially', () => {
@@ -22,25 +22,39 @@ describe('tracing/cls', () => {
 
   it('must initialize a new valid span', () => {
     cls.ns.run(() => {
-      const newSpan = cls.startSpan('cls-test-run', constants.EXIT);
-      expect(newSpan).to.be.a('Object');
-      expect(newSpan).to.have.property('t');
-      expect(newSpan).to.have.property('s');
-      expect(newSpan).to.have.property('k');
-      expect(newSpan.k).to.equal(constants.EXIT);
-      expect(newSpan).to.have.property('async');
-      expect(newSpan.async).to.equal(false);
-      expect(newSpan).to.have.property('error');
-      expect(newSpan.error).to.equal(false);
-      expect(newSpan).to.have.property('ec');
-      expect(newSpan.ec).to.equal(0);
-      expect(newSpan).to.have.property('ts');
-      expect(newSpan).to.have.property('d');
-      expect(newSpan.d).to.equal(0);
-      expect(newSpan).to.have.property('n');
-      expect(newSpan.n).to.equal('cls-test-run');
-      expect(newSpan).to.have.property('stack');
-      expect(newSpan).to.have.property('data');
+      const span = cls.startSpan('cls-test-run', constants.EXIT);
+      expect(span).to.be.an('object');
+      expect(span.n).to.equal('cls-test-run');
+      expect(span.t).to.be.a('string');
+      expect(span.s).to.be.a('string');
+      expect(span.k).to.equal(constants.EXIT);
+      expect(span.async).to.be.false;
+      expect(span.error).to.be.false;
+      expect(span.ec).to.equal(0);
+      expect(span.ts).to.be.a('number');
+      expect(span.d).to.equal(0);
+      expect(span.stack).to.deep.equal([]);
+      expect(span.data).to.be.an('object');
+      expect(Object.keys(span.data)).to.have.lengthOf(0);
+    });
+  });
+
+  it('can create spans without config, identity provider, name and direction in a pinch', () => {
+    cls.init();
+    cls.ns.run(() => {
+      const span = cls.startSpan();
+      expect(span).to.be.an('object');
+      expect(span.t).to.be.a('string');
+      expect(span.s).to.be.a('string');
+      expect(span.k).to.equal(2);
+      expect(span.async).to.be.false;
+      expect(span.error).to.be.false;
+      expect(span.ec).to.equal(0);
+      expect(span.ts).to.be.a('number');
+      expect(span.d).to.equal(0);
+      expect(span.stack).to.deep.equal([]);
+      expect(span.data).to.be.an('object');
+      expect(Object.keys(span.data)).to.have.lengthOf(0);
     });
   });
 
@@ -52,7 +66,7 @@ describe('tracing/cls', () => {
   });
 
   it('must not set span.f if process identity provider does not support getFrom', () => {
-    cls.init({});
+    cls.init({}, {});
     cls.ns.run(() => {
       const newSpan = cls.startSpan('cls-test-run', constants.EXIT);
       expect(newSpan).to.not.have.property('f');
@@ -60,14 +74,17 @@ describe('tracing/cls', () => {
   });
 
   it('must use process identity provider', () => {
-    cls.init({
-      getFrom: function() {
-        return {
-          e: String(process.pid),
-          h: undefined
-        };
+    cls.init(
+      {},
+      {
+        getFrom: function() {
+          return {
+            e: String(process.pid),
+            h: undefined
+          };
+        }
       }
-    });
+    );
     cls.ns.run(() => {
       const newSpan = cls.startSpan('cls-test-run', constants.EXIT);
       expect(newSpan.f).to.deep.equal({
@@ -161,6 +178,24 @@ describe('tracing/cls', () => {
     expect(constants.isIntermediateSpan(intermediateSpan)).to.equal(true);
   });
 
+  it('new spans need to have an empty data object', () => {
+    cls.init({}, {});
+    cls.ns.run(() => {
+      const span = cls.startSpan('something.something', constants.ENTRY);
+      expect(span.data).to.be.an('object');
+      expect(Object.keys(span.data)).to.have.lengthOf(0);
+      expect(span.data.service).to.not.exist;
+    });
+  });
+
+  it('must use the configured service name', () => {
+    cls.init({ serviceName: 'Forsvarets Efterretningstjeneste' }, {});
+    cls.ns.run(() => {
+      const span = cls.startSpan('something.something', constants.ENTRY);
+      expect(span.data.service).to.equal('Forsvarets Efterretningstjeneste');
+    });
+  });
+
   it('must clean up span data from contexts once the span has been transmitted', () => {
     cls.ns.run(context => {
       expect(context[cls.currentRootSpanKey]).to.equal(undefined);
@@ -183,7 +218,7 @@ describe('tracing/cls', () => {
       expect(context[cls.currentSpanKey]).to.equal(undefined);
 
       const span = cls.startSpan('node.http.server', constants.ENTRY);
-      span.data = { much: 'data' };
+      span.data.much = 'data';
       span.stack = ['a', 'b', 'c'];
       expect(context[cls.currentRootSpanKey]).to.equal(span);
       expect(context[cls.currentSpanKey]).to.equal(span);
@@ -198,6 +233,8 @@ describe('tracing/cls', () => {
       expect(reducedSpan.s).to.equal(span.s);
       expect(reducedSpan.p).to.equal(span.p);
       expect(reducedSpan.k).to.equal(span.k);
+      expect(reducedSpan.data).to.not.exist;
+      expect(reducedSpan.stack).to.not.exist;
     });
   });
 });

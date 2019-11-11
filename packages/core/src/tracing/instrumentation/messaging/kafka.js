@@ -58,11 +58,9 @@ function instrumentedSend(ctx, originalSend, produceRequests, cb) {
     var produceRequest = produceRequests[0];
     span.b = { s: produceRequests.length };
     span.stack = tracingUtil.getStackTrace(instrumentedSend);
-    span.data = {
-      kafka: {
-        service: produceRequest.topic,
-        access: 'send'
-      }
+    span.data.kafka = {
+      service: produceRequest.topic,
+      access: 'send'
     };
 
     args.push(
@@ -108,11 +106,9 @@ function shimEmit(original) {
     return cls.ns.runAndReturn(function() {
       var span = cls.startSpan('kafka', constants.ENTRY);
       span.stack = [];
-      span.data = {
-        kafka: {
-          access: 'consume',
-          service: message.topic
-        }
+      span.data.kafka = {
+        access: 'consume',
+        service: message.topic
       };
 
       try {

@@ -115,13 +115,11 @@ function instrument(coreModule) {
       span.stack = tracingUtil.getStackTrace(request);
 
       var boundCallback = cls.ns.bind(function boundCallback(res) {
-        span.data = {
-          http: {
-            method: clientRequest.method,
-            url: completeCallUrl,
-            status: res.statusCode,
-            params: params
-          }
+        span.data.http = {
+          method: clientRequest.method,
+          url: completeCallUrl,
+          status: res.statusCode,
+          params: params
         };
         span.d = Date.now() - span.ts;
         span.error = res.statusCode >= 500;
@@ -145,11 +143,9 @@ function instrument(coreModule) {
       } catch (e) {
         // A synchronous exception indicates a failure that is not covered by the listeners. Using a malformed URL for
         // example is a case that triggers a synchronous exception.
-        span.data = {
-          http: {
-            url: completeCallUrl,
-            error: e ? e.message : ''
-          }
+        span.data.http = {
+          url: completeCallUrl,
+          error: e ? e.message : ''
         };
         span.d = Date.now() - span.ts;
         span.error = true;
@@ -194,12 +190,10 @@ function instrument(coreModule) {
         } else if (clientRequest.aborted) {
           errorMessage = 'Request aborted';
         }
-        span.data = {
-          http: {
-            method: clientRequest.method,
-            url: completeCallUrl,
-            error: errorMessage
-          }
+        span.data.http = {
+          method: clientRequest.method,
+          url: completeCallUrl,
+          error: errorMessage
         };
         span.d = Date.now() - span.ts;
         span.error = true;

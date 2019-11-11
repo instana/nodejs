@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+- Support `INSTANA_SERVICE_NAME`/`config.serviceName` for auto-tracing and SDK spans. Previously, this has only been supported for OpenTracing spans.
+- Support `X-Instana-Service` HTTP header.
+
 ## 1.77.0
 - [AWS Lambda]: Inject EUM back end correlation header in AWS Lambda responses if possible.
 

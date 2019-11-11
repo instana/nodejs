@@ -63,14 +63,12 @@ function instrumentedMethod(ctx, originalFunction, originalArgs, stackTraceRef, 
   return cls.ns.runAndReturn(function() {
     var span = cls.startSpan('mssql', constants.EXIT);
     span.stack = tracingUtil.getStackTrace(stackTraceRef);
-    span.data = {
-      mssql: {
-        stmt: tracingUtil.shortenDatabaseStatement(command),
-        host: connectionParameters.host,
-        port: connectionParameters.port,
-        user: connectionParameters.user,
-        db: connectionParameters.db
-      }
+    span.data.mssql = {
+      stmt: tracingUtil.shortenDatabaseStatement(command),
+      host: connectionParameters.host,
+      port: connectionParameters.port,
+      user: connectionParameters.user,
+      db: connectionParameters.db
     };
 
     var originalCallback;

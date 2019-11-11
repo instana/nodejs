@@ -64,15 +64,17 @@ function shimEmit(realEmit) {
       if (urlParts.length >= 1) {
         urlParts[1] = filterParams(urlParts[1]);
       }
-      span.data = {
-        http: {
-          method: req.method,
-          url: discardUrlParameters(urlParts.shift()),
-          params: urlParts.join('?'),
-          host: req.headers.host,
-          header: httpCommon.getExtraHeaders(req, extraHttpHeadersToCapture)
-        }
+      span.data.http = {
+        method: req.method,
+        url: discardUrlParameters(urlParts.shift()),
+        params: urlParts.join('?'),
+        host: req.headers.host,
+        header: httpCommon.getExtraHeaders(req, extraHttpHeadersToCapture)
       };
+      var incomingServiceName = req.headers[constants.serviceNameHeaderNameLowerCase];
+      if (incomingServiceName != null) {
+        span.data.service = incomingServiceName;
+      }
 
       // Handle client / backend eum correlation.
       if (!span.p) {
@@ -123,25 +125,19 @@ exports.deactivate = function() {
   isActive = false;
 };
 
-function getExistingSpanId(req, fallback) {
-  fallback = arguments.length > 1 ? fallback : null;
-
+function getExistingSpanId(req) {
   var spanId = req.headers[constants.spanIdHeaderNameLowerCase];
   if (spanId == null) {
-    return fallback;
+    return null;
   }
-
   return spanId;
 }
 
-function getExistingTraceId(req, fallback) {
-  fallback = arguments.length > 1 ? fallback : null;
-
+function getExistingTraceId(req) {
   var traceId = req.headers[constants.traceIdHeaderNameLowerCase];
   if (traceId == null) {
-    return fallback;
+    return null;
   }
-
   return traceId;
 }
 

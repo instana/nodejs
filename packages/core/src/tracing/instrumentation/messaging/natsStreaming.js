@@ -58,12 +58,10 @@ function instrumentedPublish(ctx, originalPublish, originalArgs, natsUrl) {
     var span = cls.startSpan('nats.streaming', constants.EXIT);
     span.ts = Date.now();
     span.stack = tracingUtil.getStackTrace(instrumentedPublish);
-    span.data = {
-      nats: {
-        sort: 'publish',
-        address: natsUrl,
-        subject: subject
-      }
+    span.data.nats = {
+      sort: 'publish',
+      address: natsUrl,
+      subject: subject
     };
 
     if (originalCallback) {
@@ -143,12 +141,10 @@ function captureMessageSpan(ctx, originalEmit, originalArgs, natsUrl, subject) {
     span.ts = Date.now();
     span.stack = tracingUtil.getStackTrace(instrumentedEmit);
     // purposefully overwrite data of raw nats entry, if present
-    span.data = {
-      nats: {
-        sort: 'consume',
-        address: natsUrl,
-        subject: subject
-      }
+    span.data.nats = {
+      sort: 'consume',
+      address: natsUrl,
+      subject: subject
     };
 
     try {

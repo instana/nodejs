@@ -15,6 +15,8 @@ var currentSpanKey = (exports.currentSpanKey = 'com.instana.span');
 var reducedSpanKey = (exports.reducedSpanKey = 'com.instana.reduced');
 
 var tracingLevelKey = (exports.tracingLevelKey = 'com.instana.tl');
+// eslint-disable-next-line no-undef-init
+var serviceName = undefined;
 var processIdentityProvider = null;
 
 /*
@@ -28,7 +30,10 @@ var processIdentityProvider = null;
  */
 exports.ns = hooked.createNamespace('instana.collector');
 
-exports.init = function init(_processIdentityProvider) {
+exports.init = function init(config, _processIdentityProvider) {
+  if (config && config.serviceName) {
+    serviceName = config.serviceName;
+  }
   processIdentityProvider = _processIdentityProvider;
 };
 
@@ -155,7 +160,7 @@ function InstanaSpan(name) {
   this.ts = Date.now();
   this.d = 0;
   this.stack = [];
-  this.data = undefined;
+  this.data = serviceName != null ? { service: serviceName } : {};
 
   // properties used within the collector that should not be transmitted to the agent/backend
   // NOTE: If you add a new property, make sure that it is not enumerable, as it may otherwise be transmitted

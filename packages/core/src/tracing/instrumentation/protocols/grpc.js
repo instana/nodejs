@@ -86,11 +86,9 @@ function createInstrumentedServerHandler(name, type, originalHandler) {
       var incomingTraceId = readMetadata(metadata, constants.traceIdHeaderName);
       var incomingSpanId = readMetadata(metadata, constants.spanIdHeaderName);
       var span = cls.startSpan('rpc-server', constants.ENTRY, incomingTraceId, incomingSpanId);
-      span.data = {
-        rpc: {
-          call: dropLeadingSlash(name),
-          flavor: 'grpc'
-        }
+      span.data.rpc = {
+        call: dropLeadingSlash(name),
+        flavor: 'grpc'
       };
       if (typesWithCallback.indexOf(type) >= 0) {
         var originalCallback = originalArgs[1];
@@ -232,13 +230,11 @@ function instrumentedClientMethod(
     var span = cls.startSpan('rpc-client', constants.EXIT);
     span.ts = Date.now();
     span.stack = tracingUtil.getStackTrace(instrumentedClientMethod);
-    span.data = {
-      rpc: {
-        host: address.host,
-        port: address.port,
-        call: dropLeadingSlash(rpcPath),
-        flavor: 'grpc'
-      }
+    span.data.rpc = {
+      host: address.host,
+      port: address.port,
+      call: dropLeadingSlash(rpcPath),
+      flavor: 'grpc'
     };
 
     modifyArgs(originalArgs, span, responseStream);

@@ -53,11 +53,9 @@ function instrumentApi(client, action, info) {
 
     var span = cls.startSpan('elasticsearch', constants.EXIT);
     span.stack = tracingUtil.getStackTrace(instrumentedAction);
-    span.data = {
-      elasticsearch: {
-        action: action,
-        cluster: info.clusterName
-      }
+    span.data.elasticsearch = {
+      action: action,
+      cluster: info.clusterName
     };
 
     if (action === 'mget' && params.body && params.body.docs && Array.isArray(params.body.docs)) {

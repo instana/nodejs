@@ -67,12 +67,10 @@ function instrumentedPublish(ctx, originalPublish, originalArgs, natsUrl) {
     var span = cls.startSpan('nats', constants.EXIT);
     span.ts = Date.now();
     span.stack = tracingUtil.getStackTrace(instrumentedPublish);
-    span.data = {
-      nats: {
-        sort: 'publish',
-        address: natsUrl,
-        subject: subject
-      }
+    span.data.nats = {
+      sort: 'publish',
+      address: natsUrl,
+      subject: subject
     };
 
     if (originalCallback) {
@@ -155,12 +153,10 @@ function instrumentedSubscribeCallback(natsUrl, subject, originalSubscribeCallba
         span.stack = tracingUtil.getStackTrace(instrumentedSubscribeCallback);
 
         // command, type, sort, operation
-        span.data = {
-          nats: {
-            sort: 'consume',
-            address: natsUrl,
-            subject: subject
-          }
+        span.data.nats = {
+          sort: 'consume',
+          address: natsUrl,
+          subject: subject
         };
 
         try {
