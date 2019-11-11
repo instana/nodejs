@@ -21,7 +21,6 @@ for lambda_zip_file in demo-*.zip ; do
   if [[ $lambda_zip_file == demo-ec2-app.zip ]]; then
     echo Skipping $lambda_zip_file.
     continue
-    exit
   fi
 
   function_name=${lambda_zip_file%.zip}
