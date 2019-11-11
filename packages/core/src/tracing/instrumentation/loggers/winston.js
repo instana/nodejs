@@ -113,10 +113,8 @@ function createSpan(ctx, originalMethod, originalArgs, message, markAsError) {
   return cls.ns.runAndReturn(function() {
     var span = cls.startSpan('log.winston', constants.EXIT);
     span.stack = tracingUtil.getStackTrace(instrumentedLevelMethod);
-    span.data = {
-      log: {
-        message: message
-      }
+    span.data.log = {
+      message: message
     };
     if (markAsError) {
       span.ec = 1;

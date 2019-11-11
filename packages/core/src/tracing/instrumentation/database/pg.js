@@ -52,14 +52,12 @@ function instrumentedQuery(ctx, originalQuery, argsForOriginalQuery) {
   return cls.ns.runAndReturn(function() {
     var span = cls.startSpan('postgres', constants.EXIT);
     span.stack = tracingUtil.getStackTrace(instrumentedQuery);
-    span.data = {
-      pg: {
-        stmt: tracingUtil.shortenDatabaseStatement(typeof config === 'string' ? config : config.text),
-        host: host,
-        port: port,
-        user: user,
-        db: db
-      }
+    span.data.pg = {
+      stmt: tracingUtil.shortenDatabaseStatement(typeof config === 'string' ? config : config.text),
+      host: host,
+      port: port,
+      user: user,
+      db: db
     };
 
     var originalCallback;

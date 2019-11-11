@@ -214,11 +214,9 @@ module.exports = exports = function(isCallbackApi) {
     return wrapper(function() {
       var span = cls.startSpan('sdk', kind, traceId, parentSpanId);
       span.stack = tracingUtil.getStackTrace(stackTraceRef);
-      span.data = {
-        sdk: {
-          name: name,
-          type: sdkKind
-        }
+      span.data.sdk = {
+        name: name,
+        type: sdkKind
       };
       if (tags) {
         span.data.sdk.custom = { tags: tags };
@@ -228,7 +226,7 @@ module.exports = exports = function(isCallbackApi) {
   }
 
   function completeSpan(error, span, tags) {
-    if (!span.data || !span.data.sdk) {
+    if (!span.data.sdk) {
       logger.warn(
         'Cannot complete an SDK span. The currently active span is not an SDK span, so there seems to be a mismatch ' +
           'in the trace context. This is the currently active span: ' +

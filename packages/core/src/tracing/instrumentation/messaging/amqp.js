@@ -84,10 +84,8 @@ function instrumentedSendMessage(ctx, originalSendMessage, originalArgs) {
 function processExitSpan(ctx, span, originalArgs) {
   span.ts = Date.now();
   span.stack = tracingUtil.getStackTrace(instrumentedSendMessage);
-  span.data = {
-    rabbitmq: {
-      sort: 'publish'
-    }
+  span.data.rabbitmq = {
+    sort: 'publish'
   };
   if (ctx.connection.stream) {
     // prettier-ignore
@@ -172,10 +170,8 @@ function instrumentedDispatchMessage(ctx, originalDispatchMessage, originalArgs)
     );
     span.ts = Date.now();
     span.stack = tracingUtil.getStackTrace(instrumentedDispatchMessage);
-    span.data = {
-      rabbitmq: {
-        sort: 'consume'
-      }
+    span.data.rabbitmq = {
+      sort: 'consume'
     };
 
     if (ctx.connection.stream) {
@@ -249,10 +245,8 @@ function instrumentedChannelModelGet(ctx, originalGet, originalArgs) {
 
       span.ts = Date.now();
       span.stack = tracingUtil.getStackTrace(instrumentedChannelModelGet);
-      span.data = {
-        rabbitmq: {
-          sort: 'consume'
-        }
+      span.data.rabbitmq = {
+        sort: 'consume'
       };
 
       if (ctx.connection.stream) {
@@ -340,10 +334,8 @@ function instrumentedCallbackModelGet(ctx, originalGet, originalArgs) {
       );
       span.ts = Date.now();
       span.stack = tracingUtil.getStackTrace(instrumentedChannelModelGet);
-      span.data = {
-        rabbitmq: {
-          sort: 'consume'
-        }
+      span.data.rabbitmq = {
+        sort: 'consume'
       };
 
       if (ctx.connection.stream) {

@@ -1,12 +1,18 @@
 'use strict';
 
-require('../../../')({
+const config = {
   agentPort: process.env.AGENT_PORT,
   level: 'warn',
   tracing: {
     forceTransmissionStartingAt: 1
   }
-});
+};
+
+if (process.env.SERVICE_CONFIG) {
+  config.serviceName = process.env.SERVICE_CONFIG;
+}
+
+require('../../../')(config);
 
 const logPrefix = `Server (${process.pid}):\t`;
 

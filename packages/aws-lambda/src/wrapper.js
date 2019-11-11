@@ -78,13 +78,11 @@ function shimmedHandler(originalHandler, originalThis, originalArgs, config) {
       entrySpan = tracing
         .getCls()
         .startSpan('aws.lambda.entry', constants.ENTRY, incomingTraceId, incomingParentSpanId);
-      entrySpan.data = {
-        lambda: {
-          arn: `${context.invokedFunctionArn}:${context.functionVersion}`,
-          runtime: 'nodejs',
-          functionName: context.functionName,
-          functionVersion: context.functionVersion
-        }
+      entrySpan.data.lambda = {
+        arn: `${context.invokedFunctionArn}:${context.functionVersion}`,
+        runtime: 'nodejs',
+        functionName: context.functionName,
+        functionVersion: context.functionVersion
       };
       triggers.enrichSpanWithTriggerData(event, entrySpan);
     }

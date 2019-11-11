@@ -66,11 +66,9 @@ function instrumentCommand(command, original) {
     // do not set the redis span as the current span
     cls.setCurrentSpan(parentSpan);
     span.stack = tracingUtil.getStackTrace(wrappedCommand);
-    span.data = {
-      redis: {
-        connection: client.address,
-        command: command
-      }
+    span.data.redis = {
+      connection: client.address,
+      command: command
     };
 
     var callback = cls.ns.bind(onResult);
@@ -124,11 +122,9 @@ function instrumentMultiExec(isAtomic, original) {
     // do not set the redis span as the current span
     cls.setCurrentSpan(parentSpan);
     span.stack = tracingUtil.getStackTrace(instrumentedMultiExec);
-    span.data = {
-      redis: {
-        connection: multi._client.address,
-        command: isAtomic ? 'multi' : 'pipeline'
-      }
+    span.data.redis = {
+      connection: multi._client.address,
+      command: isAtomic ? 'multi' : 'pipeline'
     };
 
     var callback = cls.ns.bind(onResult);

@@ -136,16 +136,14 @@ function instrumentedAccessFunction(
     var span = cls.startSpan('mysql', constants.EXIT);
     span.b = { s: 1 };
     span.stack = tracingUtil.getStackTrace(instrumentedAccessFunction);
-    span.data = {
-      mysql: {
-        stmt: tracingUtil.shortenDatabaseStatement(
-          typeof statementOrOpts === 'string' ? statementOrOpts : statementOrOpts.sql
-        ),
-        host: host,
-        port: port,
-        user: user,
-        db: db
-      }
+    span.data.mysql = {
+      stmt: tracingUtil.shortenDatabaseStatement(
+        typeof statementOrOpts === 'string' ? statementOrOpts : statementOrOpts.sql
+      ),
+      host: host,
+      port: port,
+      user: user,
+      db: db
     };
 
     if (isPromiseImpl) {

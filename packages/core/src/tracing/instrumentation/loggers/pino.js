@@ -49,10 +49,8 @@ function shimGenLog(originalGenLog) {
                 message =
                   'Log call without message. The Pino mergingObject argument will not be serialized by Instana for performance reasons.';
               }
-              span.data = {
-                log: {
-                  message: message
-                }
+              span.data.log = {
+                message: message
               };
               if (level >= 50) {
                 span.ec = 1;

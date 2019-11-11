@@ -122,16 +122,14 @@ function onStarted(event) {
 
     // using the Mongodb instrumentation API, it is not possible to gather stack traces.
     span.stack = [];
-    span.data = {
-      peer: peer,
-      mongo: {
-        command: event.commandName,
-        service: service,
-        namespace: database + '.' + collection,
-        json: readJsonFromEvent(event),
-        filter: stringifyWhenNecessary(event.command.filter),
-        query: stringifyWhenNecessary(event.command.query)
-      }
+    span.data.peer = peer;
+    span.data.mongo = {
+      command: event.commandName,
+      service: service,
+      namespace: database + '.' + collection,
+      json: readJsonFromEvent(event),
+      filter: stringifyWhenNecessary(event.command.filter),
+      query: stringifyWhenNecessary(event.command.query)
     };
 
     if (event.operationId) {

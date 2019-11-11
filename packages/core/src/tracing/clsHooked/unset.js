@@ -20,9 +20,9 @@ function storeReducedSpan(context, key, span) {
   // 1) If there is an async leak in the Node.js runtime, that is, missing destroy calls for async_hook resources for
   // which an init call has been received, the memory used by clsHooked will grow, because context objects will be  kept
   // around forever. By keeping the reduced span we can at least see (in a heap dump) for which type of spans the
-  // destroy all is missing, aiding in troubleshooting the Node.js runtime bug.
+  // destroy call is missing, aiding in troubleshooting the Node.js runtime bug.
   // 2) In some special cases, async continuity can break due to userland queueing. One example are GraphQL subscription
-  // updatess. The processing of the triggering HTTP entry has already finished by the time the subscription update is
+  // updates. The processing of the triggering HTTP entry has already finished by the time the subscription update is
   // processed. By keeping the reduced span around, we can still provide trace continuity. The reduced span will
   // automatically be removed when its async context is finally destroyed.
   if (key === currentSpanKey && span != null) {

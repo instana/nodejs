@@ -135,7 +135,6 @@ function traceQueryOrMutation(
       // root entry span here.
       span = cls.startSpan('graphql.server', constants.ENTRY);
       span.ts = Date.now();
-      span.data = {};
     }
     span.stack = tracingUtil.getStackTrace(stackTraceRef);
     span.data.graphql = {
@@ -167,13 +166,11 @@ function traceSubscriptionUpdate(
       var span = cls.startSpan('graphql.client', constants.EXIT, parentSpan.t, parentSpan.s);
       span.ts = Date.now();
       span.stack = tracingUtil.getStackTrace(stackTraceRef);
-      span.data = {
-        graphql: {
-          operationType: subscriptionUpdate,
-          operationName: operationDefinition.name ? operationDefinition.name.value : operationName,
-          fields: {},
-          args: {}
-        }
+      span.data.graphql = {
+        operationType: subscriptionUpdate,
+        operationName: operationDefinition.name ? operationDefinition.name.value : operationName,
+        fields: {},
+        args: {}
       };
       addFieldsAndArguments(span, operationDefinition);
       return runOriginalAndFinish(originalFunction, originalThis, originalArgs, span);

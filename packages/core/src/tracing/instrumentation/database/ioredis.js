@@ -59,11 +59,9 @@ function instrumentSendCommand(original) {
     return cls.ns.runAndReturn(function() {
       var span = cls.startSpan('redis', constants.EXIT);
       span.stack = tracingUtil.getStackTrace(wrappedInternalSendCommand);
-      span.data = {
-        redis: {
-          connection: client.options.host + ':' + client.options.port,
-          command: command.name.toLowerCase()
-        }
+      span.data.redis = {
+        connection: client.options.host + ':' + client.options.port,
+        command: command.name.toLowerCase()
       };
 
       callback = cls.ns.bind(onResult);
@@ -121,11 +119,9 @@ function instrumentMultiOrPipelineCommand(commandName, original) {
     cls.ns.enter(clsContextForMultiOrPipeline);
     var span = cls.startSpan('redis', constants.EXIT);
     span.stack = tracingUtil.getStackTrace(wrappedInternalMultiOrPipelineCommand);
-    span.data = {
-      redis: {
-        connection: client.options.host + ':' + client.options.port,
-        command: commandName
-      }
+    span.data.redis = {
+      connection: client.options.host + ':' + client.options.port,
+      command: commandName
     };
 
     var multiOrPipeline = original.apply(this, arguments);
