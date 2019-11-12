@@ -10,6 +10,7 @@ const s3 = new (require('aws-sdk')).S3(); // this is provided by AWS, so it is n
 const uuid = require('uuid/v4');
 
 const bucket = process.env.BUCKET_NAME || 'instana-lambda-demo';
+const apiUrl = process.env.API_URL || 'https://wn69a84ebf.execute-api.us-east-2.amazonaws.com/default';
 
 exports.handler = instana.awsLambda.wrap((event, context, callback) => {
   console.log('Triggering API request.');
@@ -78,16 +79,16 @@ function triggerHttpRequest() {
   if (r < 0.333) {
     // list items
     method = 'GET';
-    url = 'https://wn69a84ebf.execute-api.us-east-2.amazonaws.com/default/items';
+    url = `${apiUrl}/items`;
   } else if (r < 0.66) {
     // create item
     method = 'POST';
-    url = 'https://wn69a84ebf.execute-api.us-east-2.amazonaws.com/default/items';
+    url = `${apiUrl}/items`;
     body = `{"label":"dummy-http-${uuid().substring(0, 7)}"}`;
   } else {
     // load single item (might not exist)
     method = 'GET';
-    url = 'https://wn69a84ebf.execute-api.us-east-2.amazonaws.com/default/items/42';
+    url = `${apiUrl}/items/42`;
   }
 
   return request({
@@ -96,5 +97,5 @@ function triggerHttpRequest() {
     body
   })
     .then(() => console.log(`API request successful: ${method} ${url} ${body ? JSON.stringify(body) : ''}`))
-    .catch(e => console.error('API request failed:', e));
+    .catch(e => console.error('API request failed:', e.name, e.message));
 }

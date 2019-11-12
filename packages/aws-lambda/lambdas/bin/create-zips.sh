@@ -9,14 +9,9 @@ rm -rf instana-aws-lambda*.tgz
 
 # Specify one of:
 # - BUILD_LAMBDAS_WITH=local
-#     Uses the local code from packages/aws-lambda to build the zips.
-#     Heads up: @instana/serverless and @instana/core might still be used from node_modules and not from packages.
 # - BUILD_LAMBDAS_WITH=npm
-#     Uses the latest published npm package @instana/aws-lambda to build the zips.
 # - BUILD_LAMBDAS_WITH=layer
-#     Do not add @instana/aws-collector to the zip file, instead assume the Lambda function has the AWS Lambda layer
-#     "instana" configured and do not add. Note: You still need to add the layer to the Lambda configuration, this
-#     script will not take care of that.
+# See ../README.md for details.
 
 
 # Note: ${BUILD_LAMBDAS_WITH-xyz} -> default expansion with default xyz, to avoid bash error "unbound variable"
