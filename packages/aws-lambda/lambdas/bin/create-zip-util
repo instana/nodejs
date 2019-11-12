@@ -6,16 +6,23 @@ function createZip {
   rm -f ../zip/$name.zip
   rm -rf node_modules
   if [[ "$name" =~ ^wrapped-.* ]] || [[ "$name" =~ ^.*demo.* ]]; then
-    if [[ -n "${USE_LAMBDA_LAYER-}" ]]; then
+
+    # No matter how we build the zip file, we need to modifiy the package.json, so we create a backup copy to be able to
+    # revert that modification later. Also, we do not want a modified package-lock.json show up in git diff all the
+    # time.
+    cp package.json package.json.backup
+    cp package-lock.json package-lock.json.backup
+
+    if [[ "${BUILD_LAMBDAS_WITH-}" == "layer" ]]; then
       # We want to use the lambda layer and not the locally build npm package tar file.
       # If the lambda's package.json currently contains a dependency to the tar file, like:
       # "dependencies": {
       #   "@instana/aws-lambda": "file:../../instana-aws-lambda.tgz"
       # }
       # this needs to be removed.
-      cp package.json package.json.backup
       npm uninstall -S @instana/aws-lambda
-    else
+
+    elif [[ "${BUILD_LAMBDAS_WITH-}" == "local" ]]; then
       # The lambda's package.json might or might not already have a dependency to the tar file:
       # "dependencies": {
       #   "@instana/aws-lambda": "file:../../instana-aws-lambda.tgz"
@@ -23,17 +30,33 @@ function createZip {
       # but only doing an npm install will use a stale copy of the tgz from npm's
       # cache, so we force npm to use a fresh copy by installing the tgz again
       # explicitly.
-      cp package.json package.json.backup
       npm --loglevel=warn install -S "file:../../instana-aws-lambda.tgz"
+
+    elif [[ "${BUILD_LAMBDAS_WITH-npm}" == "npm" ]]; then
+      # The lambda's package.json might or might not already have a dependency to the tar file:
+      # "dependencies": {
+      #   "@instana/aws-lambda": "file:../../instana-aws-lambda.tgz"
+      # }
+      # this needs to be removed and then we install the latest published package from npm
+      npm uninstall -S @instana/aws-lambda
+      npm install -S @instana/aws-lambda
+    else
+      echo "Unknown option for BUILD_LAMBDAS_WITH: $BUILD_LAMBDAS_WITH"
+      echo Aborting.
+      exit 1
     fi
   fi
+
   # Now install everything else.
   npm --loglevel=warn install
+  # And create the zip file that can be deployed to AWS.
   zip -qr $name . -x bin/*.sh -x \*.swp
   mv $name.zip ../zip
 
   if [[ "$name" =~ ^wrapped-.* ]] || [[ "$name" =~ ^.*demo.* ]]; then
+    # revert package.json modification
     mv package.json.backup package.json
+    mv package-lock.json.backup package-lock.json
   fi
 }
 

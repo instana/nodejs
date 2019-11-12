@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-set -eo pipefail
+set -eEuo pipefail
 
 cd `dirname $BASH_SOURCE`/..
 
@@ -24,12 +24,12 @@ EOF
 
 REGION=us-east-2
 
-if [[ -z $NEW_INSTANA_URL ]]; then
+if [[ -z "${NEW_INSTANA_URL-}" ]]; then
   echo Please provide NEW_INSTANA_URL as an environment variable. Aborting.
   exit 1
 fi
 
-if [[ -z $NEW_INSTANA_KEY ]]; then
+if [[ -z ${NEW_INSTANA_KEY-} ]]; then
   echo Please provide NEW_INSTANA_KEY as an environment variable. Aborting.
   exit 1
 fi
