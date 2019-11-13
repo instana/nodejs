@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.78.1
 - Only use `X-Instana-Service` HTTP header when agent is configured to capture it.
 
 ## 1.78.0
