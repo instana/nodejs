@@ -1,5 +1,8 @@
 # Changelog
 
+## Unreleased
+- Only use `X-Instana-Service` HTTP header when agent is configured to capture it.
+
 ## 1.78.0
 - Support `INSTANA_SERVICE_NAME`/`config.serviceName` for auto-tracing and SDK spans. Previously, this has only been supported for OpenTracing spans.
 - Support `X-Instana-Service` HTTP header.

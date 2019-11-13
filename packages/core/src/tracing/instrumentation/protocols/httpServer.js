@@ -71,7 +71,8 @@ function shimEmit(realEmit) {
         host: req.headers.host,
         header: httpCommon.getExtraHeaders(req, extraHttpHeadersToCapture)
       };
-      var incomingServiceName = req.headers[constants.serviceNameHeaderNameLowerCase];
+      var incomingServiceName =
+        span.data.http.header && span.data.http.header[constants.serviceNameHeaderNameLowerCase];
       if (incomingServiceName != null) {
         span.data.service = incomingServiceName;
       }

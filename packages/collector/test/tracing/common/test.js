@@ -8,7 +8,6 @@ const config = require('../../config');
 const delay = require('../../test_util/delay');
 const utils = require('../../utils');
 
-let agentControls;
 let Controls;
 const extendedTimeout = Math.max(config.getTestTimeout(), 10000);
 
@@ -17,30 +16,26 @@ describe('tracing/common', function() {
     return;
   }
 
-  agentControls = require('../../apps/agentStubControls');
   Controls = require('./controls');
-
-  agentControls.registerTestHooks();
-
   describe('delay', function() {
     describe('with minimal delay', function() {
       this.timeout(extendedTimeout);
+      const agentControls = setupAgentControls();
       const controls = new Controls({
         agentControls,
         minimalDelay: 6000
       });
-      registerDelayTest.call(this, controls, true);
+      registerDelayTest.call(this, agentControls, controls, true);
     });
 
     describe('without minimal delay', function() {
       this.timeout(config.getTestTimeout());
-      const controls = new Controls({
-        agentControls
-      });
-      registerDelayTest.call(this, controls, false);
+      const agentControls = setupAgentControls();
+      const controls = new Controls({ agentControls });
+      registerDelayTest.call(this, agentControls, controls, false);
     });
 
-    function registerDelayTest(controls, withMinimalDelay) {
+    function registerDelayTest(agentControls, controls, withMinimalDelay) {
       controls.registerTestHooks();
 
       it(`must respect delay (with minimal delay: ${withMinimalDelay})`, () =>
@@ -53,7 +48,7 @@ describe('tracing/common', function() {
           ));
     }
 
-    function verifyMinimalDelay() {
+    function verifyMinimalDelay(agentControls) {
       return (
         delay(3000)
           .then(() => agentControls.getSpans())
@@ -89,7 +84,7 @@ describe('tracing/common', function() {
       );
     }
 
-    function verifyNoMinimalDelay() {
+    function verifyNoMinimalDelay(agentControls) {
       return utils.retry(() =>
         agentControls.getSpans().then(spans => {
           expect(spans.length).to.equal(1);
@@ -114,16 +109,18 @@ describe('tracing/common', function() {
 
   describe('service name', function() {
     describe('with env var', function() {
+      const agentControls = setupAgentControls();
       const controls = new Controls({
         agentControls,
         env: {
           INSTANA_SERVICE_NAME: 'much-custom-very-wow service'
         }
       });
-      registerServiceNameTest.call(this, controls, 'env var');
+      registerServiceNameTest.call(this, agentControls, controls, 'env var', true);
     });
 
     describe('with config', function() {
+      const agentControls = setupAgentControls();
       const controls = new Controls({
         agentControls,
         env: {
@@ -131,20 +128,25 @@ describe('tracing/common', function() {
           SERVICE_CONFIG: 'much-custom-very-wow service'
         }
       });
-      registerServiceNameTest.call(this, controls, 'config object');
+      registerServiceNameTest.call(this, agentControls, controls, 'config object', true);
     });
 
-    describe('with header', function() {
-      const controls = new Controls({
-        agentControls
-      });
-      registerServiceNameTest.call(this, controls, 'X-Instana-Service header');
+    describe('with header when agent is configured to capture the header', function() {
+      const agentControls = setupAgentControls(true);
+      const controls = new Controls({ agentControls });
+      registerServiceNameTest.call(this, agentControls, controls, 'X-Instana-Service header', true);
     });
 
-    function registerServiceNameTest(controls, configMethod) {
+    describe('with header when agent is _not_ configured to capture the header', function() {
+      const agentControls = setupAgentControls(false);
+      const controls = new Controls({ agentControls });
+      registerServiceNameTest.call(this, agentControls, controls, 'X-Instana-Service header', false);
+    });
+
+    function registerServiceNameTest(agentControls, controls, configMethod, expectServiceNameOnSpan) {
       controls.registerTestHooks();
 
-      it(`must respect service name configured via: ${configMethod})`, () => {
+      it(`must ${expectServiceNameOnSpan ? '' : '_not_'} respect service name configured via: ${configMethod})`, () => {
         const req = {
           path: '/'
         };
@@ -153,19 +155,32 @@ describe('tracing/common', function() {
             'x-InsTana-sErvice': 'much-custom-very-wow service'
           };
         }
-        return controls.sendRequest(req).then(() => verifyServiceName(agentControls));
+        return controls.sendRequest(req).then(() => verifyServiceName(agentControls, expectServiceNameOnSpan));
       });
     }
 
-    function verifyServiceName() {
+    function verifyServiceName(agentControls, expectServiceNameOnSpan) {
       return utils.retry(() =>
         agentControls.getSpans().then(spans => {
           expect(spans.length).to.equal(1);
           const span = spans[0];
           expect(span.n).to.equal('node.http.server');
-          expect(span.data.service).to.equal('much-custom-very-wow service');
+          if (expectServiceNameOnSpan == null) {
+            throw new Error('Please explicitly pass true or false for expectServiceNameOnSpan');
+          } else if (expectServiceNameOnSpan) {
+            expect(span.data.service).to.equal('much-custom-very-wow service');
+          } else {
+            expect(span.data.service).to.not.exist;
+          }
         })
       );
     }
   });
+
+  function setupAgentControls(captureXInstanaServiceHeader) {
+    const agentControls = require('../../apps/agentStubControls');
+    const agentConfig = captureXInstanaServiceHeader ? { extraHeaders: ['x-iNsTanA-sErViCe'] } : {};
+    agentControls.registerTestHooks(agentConfig);
+    return agentControls;
+  }
 });
