@@ -21,7 +21,7 @@ EOF
   exit 1
 }
 
-PACKAGE_NAME=@instana/aws-lambda
+PACKAGE_NAMES="@instana/aws-lambda instana-aws-lambda-auto-wrap"
 LAYER_NAME=instana
 LICENSE=MIT
 ZIP_PREFIX=instana-layer
@@ -52,8 +52,8 @@ cat <<EOF >> package.json
 }
 EOF
 
-echo "step 2/5: downloading latest $PACKAGE_NAME"
-npm install $PACKAGE_NAME
+echo "step 2/5: downloading latest packages"
+npm install $PACKAGE_NAMES
 VERSION=$(jq -r .version node_modules/@instana/aws-lambda/package.json)
 echo "downloaded version $VERSION"
 rm -f package.json package-lock.json
@@ -71,7 +71,7 @@ while read -r region; do
   lambda_layer_version=$( \
     aws --region $region lambda publish-layer-version \
       --layer-name $LAYER_NAME \
-      --description "Adds the npm module $PACKAGE_NAME@$VERSION for Instana in-process monitoring and tracing of AWS Lambdas" \
+      --description "Provides Instana tracing and monitoring for AWS Lambdas" \
       --license-info $LICENSE \
       --zip-file fileb://$ZIP_NAME \
       --output json \

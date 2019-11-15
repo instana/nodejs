@@ -12,7 +12,7 @@ const uuid = require('uuid/v4');
 const bucket = process.env.BUCKET_NAME || 'instana-lambda-demo';
 const apiUrl = process.env.API_URL || 'https://wn69a84ebf.execute-api.us-east-2.amazonaws.com/default';
 
-exports.handler = instana.awsLambda.wrap((event, context, callback) => {
+exports.handler = instana.wrap((event, context, callback) => {
   console.log('Triggering API request.');
   triggerHttpRequest().finally(() => {
     async_.waterfall(

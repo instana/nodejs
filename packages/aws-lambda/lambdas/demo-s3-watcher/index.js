@@ -17,7 +17,7 @@ console.log(
   }`
 );
 
-exports.handler = instana.awsLambda.wrap(async event => {
+exports.handler = instana.wrap(async event => {
   const label = event.Records.slice(0, 20).map(
     s3Record =>
       `${s3Record.eventName}: ${s3Record.s3 && s3Record.s3.bucket ? s3Record.s3.bucket.name : ''}/${s3RecordToObject(

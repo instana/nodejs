@@ -28,14 +28,20 @@ fi
 # uninstall it and all its transitive dependencies.
 echo "Building local tar.gz."
 npm --loglevel=warn pack
-mv instana-aws-lambda-*.tgz instana-aws-lambda.tgz
+mv instana-aws-lambda-1*.tgz instana-aws-lambda.tgz
+
+echo "Building local auto-wrap tar.gz."
+cd ../aws-lambda-auto-wrap
+npm --loglevel=warn pack
+mv instana-aws-lambda-auto-wrap*.tgz ../aws-lambda/instana-aws-lambda-auto-wrap.tgz
+cd ../aws-lambda
 
 if [[ "${BUILD_LAMBDAS_WITH-npm}" == "npm" ]]; then
-  echo "Building all Lambda zips with latest npm package."
+  echo "Building all Lambda zips with the latest npm packages."
 elif [[ "${BUILD_LAMBDAS_WITH-}" == "local" ]]; then
-  echo "Building all Lambda zips with local tar.gz."
+  echo "Building all Lambda zips with the local tar.gz files."
 elif [[ "$BUILD_LAMBDAS_WITH" == "layer" ]]; then
-  echo "Building all Lambda zips without @instana/collector, assuming the AWS Lambda layer \"instana\" is configured."
+  echo "Building all Lambda zips without @instana/aws-lambda, assuming the AWS Lambda layer \"instana\" is configured."
 else
   echo "Unknown option for BUILD_LAMBDAS_WITH: $BUILD_LAMBDAS_WITH"
   echo Aborting.

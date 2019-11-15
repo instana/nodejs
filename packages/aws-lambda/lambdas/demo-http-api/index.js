@@ -20,7 +20,7 @@ console.log(
   }`
 );
 
-exports.handler = instana.awsLambda.wrap(async event => {
+exports.handler = instana.wrap(async event => {
   if (!event.httpMethod || !event.path) {
     // malformed event, probably not an API gateway request
     return { statusCode: 400, headers: corsAllowAll() };

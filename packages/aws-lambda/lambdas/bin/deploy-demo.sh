@@ -48,6 +48,7 @@ for lambda_zip_file in demo-*.zip ; do
   echo
   if [[ $needs_layer == 0 ]]; then
     echo "The zip file $lambda_zip_file seems to contain the package @instana/aws-lambda, so I won't add the Lambda layer to it."
+    echo "WARNING: I won't attempt to remove the Lambda layer if the function has it, you might need to do that manually."
   else
     echo "It appears $lambda_zip_file does not contain package @instana/aws-lambda, so I'll check if the \"instana\" Lambda layer needs to be added to it."
 
@@ -70,7 +71,7 @@ for lambda_zip_file in demo-*.zip ; do
 
     if [[ "$current_layers" =~ ":instana:" ]]; then
       if [[ "$current_layers" =~ ":instana:$LAYER_VERSION" ]]; then
-        echo This lambda function definition already has the Instana layer in the specified version, doing nothing.
+        echo This lambda function definition already has the specified version of the Instana layer, doing nothing.
       else
         echo This lambda function definition already has the Instana layer in an outdated version, please fix this manually, doing nothing.
         # TODO Also remove Lambda layer if zip file contained @instana/aws-lambda
