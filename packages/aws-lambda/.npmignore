@@ -5,16 +5,15 @@
 .npmignore
 .nvmrc
 .prettierrc
+/intl/
 /.circleci/
 /bin/
-/default-runtime-aws-lambdas/
 /lambdas/
 /test/
 NOTES.txt
 README.md
 TODO.txt
 TRIGGERS.txt
-backend.txt
 instana-serverless-nodejs-*.tgz
 merge-todos.txt
 npm-debug*

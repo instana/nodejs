@@ -47,7 +47,7 @@ async function handleItemsRequest(event) {
 }
 
 async function handleList() {
-  writeAuditLog('list request');
+  await writeAuditLog('list request');
   const client = await connect();
   try {
     const results = await client.query('SELECT id, label FROM items');
@@ -68,7 +68,7 @@ async function handleList() {
 }
 
 async function handleCreate(event) {
-  writeAuditLog('create request');
+  await writeAuditLog('create request');
   if (!event.body) {
     return {
       statusCode: 400,
@@ -114,7 +114,7 @@ async function handleCreate(event) {
 }
 
 async function handleSingleItemRequest(event) {
-  writeAuditLog('single item request');
+  await writeAuditLog('single item request');
   if (event.httpMethod !== 'GET') {
     return { statusCode: 405, headers: corsAllowAll() };
   }
@@ -164,7 +164,7 @@ async function connect() {
 }
 
 function writeAuditLog(message) {
-  request({
+  return request({
     method: 'POST',
     url: auditLogServiceUrl,
     body: `{"message":"${message}"}`,
