@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.79.0
+- Add auto-wrap package for AWS Lambda to enable Lambda tracing without code modification.
+
 ## 1.78.1
 - Only use `X-Instana-Service` HTTP header when agent is configured to capture it.
 
