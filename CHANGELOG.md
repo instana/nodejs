@@ -1,5 +1,8 @@
 # Changelog
 
+## Unreleased
+- Add ability to disable individual tracers via `config.tracing.disabledTracers` or `INSTANA_DISABLED_TRACERS`.
+
 ## 1.79.1
 - [AWS Lambda]: Cache target handler across invocations.
 

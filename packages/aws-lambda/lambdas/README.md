@@ -28,7 +28,7 @@ The AWS Lambda demo is comprised of all Lambda functions in this folder prefixed
 
 ### Initial Setup
 
-To set up the demo initially for a new AWS account, go to https://us-east-2.console.aws.amazon.com/lambda/home?region=us-east-2#/functions (link might be different depending on the region you want to deploy to). Create four Lambda functions with the names from the list below. Choose the `Node.js 10` runtime. Each function will need the `INSTANA_URL` and `INSTANA_KEY` environment variable as outlined in our documentation. Some functions need additional environment variables to know where to reach the other components they talk to.
+To set up the demo initially for a new AWS account, go to https://us-east-2.console.aws.amazon.com/lambda/home?region=us-east-2#/functions (link might be different depending on the region you want to deploy to). Create four Lambda functions with the names from the list below. Choose the `Node.js 10` runtime. Each function will need the `INSTANA_ENDPOINT_URL` and `INSTANA_AGENT_KEY` environment variable as outlined in our documentation. Some functions need additional environment variables to know where to reach the other components they talk to.
 
 * `demo-cloudwatch-events-processor`
     * `RDS_HOSTNAME` (mandatory)
@@ -138,9 +138,9 @@ Note that if you have use `BUILD_LAMBDAS_WITH=npm` or `BUILD_LAMBDAS_WITH=local`
 
 ### Rerouting the Demo Traffic
 
-You can use `bin/reroute.sh` to quickly change the environment variables `INSTANA_URL` and `INSTANA_KEY` for all demo Lambda functions at once. Call it like this:
+You can use `bin/reroute.sh` to quickly change the environment variables `INSTANA_ENDPOINT_URL` and `INSTANA_AGENT_KEY` for all demo Lambda functions at once. Call it like this:
 
-`NEW_INSTANA_URL=... NEW_INSTANA_KEY=... bin/reroute.sh`
+`NEW_INSTANA_ENDPOINT_URL=... NEW_INSTANA_AGENT_KEY=... bin/reroute.sh`
 
 Do not forget to also change the configuration of the agent monitoring the Lambdas infrastructure-wise and the Node.js app – this needs to be done manually.
 

@@ -185,8 +185,8 @@ exports.registerTests = function registerTests(handlerDefinitionPath) {
     it('must ignore the missing URL gracefully', () => verify(control, false, false, false));
   });
 
-  describe('when INSTANA_KEY is missing', function() {
-    // - INSTANA_KEY is missing
+  describe('when INSTANA_AGENT_KEY is missing', function() {
+    // - INSTANA_AGENT_KEY is missing
     // - lambda function ends with success
     const control = prelude.bind(this)({
       handlerDefinitionPath,
@@ -196,8 +196,8 @@ exports.registerTests = function registerTests(handlerDefinitionPath) {
     it('must ignore the missing key gracefully', () => verify(control, false, false, false));
   });
 
-  describe('when INSTANA_KEY is missing and the lambda function yields an error', function() {
-    // - INSTANA_KEY is missing
+  describe('when INSTANA_AGENT_KEY is missing and the lambda function yields an error', function() {
+    // - INSTANA_AGENT_KEY is missing
     // - lambda function ends with an error
     const control = prelude.bind(this)({
       handlerDefinitionPath,

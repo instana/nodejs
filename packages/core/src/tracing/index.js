@@ -103,7 +103,12 @@ exports.activate = function() {
 
     if (automaticTracingEnabled) {
       instrumentations.forEach(function(instrumentationKey) {
-        instrumentationModules[instrumentationKey].activate();
+        var isDisabled = !!config.tracing.disabledTracers.find(function(disabledKey) {
+          return instrumentationKey.toLowerCase().indexOf(disabledKey) >= 0;
+        });
+        if (!isDisabled) {
+          instrumentationModules[instrumentationKey].activate();
+        }
       });
     }
   }

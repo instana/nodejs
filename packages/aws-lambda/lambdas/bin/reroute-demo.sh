@@ -24,13 +24,13 @@ EOF
 
 REGION=us-east-2
 
-if [[ -z "${NEW_INSTANA_URL-}" ]]; then
-  echo Please provide NEW_INSTANA_URL as an environment variable. Aborting.
+if [[ -z "${NEW_INSTANA_ENDPOINT_URL-}" ]]; then
+  echo Please provide NEW_INSTANA_ENDPOINT_URL as an environment variable. Aborting.
   exit 1
 fi
 
-if [[ -z ${NEW_INSTANA_KEY-} ]]; then
-  echo Please provide NEW_INSTANA_KEY as an environment variable. Aborting.
+if [[ -z ${NEW_INSTANA_AGENT_KEY-} ]]; then
+  echo Please provide NEW_INSTANA_AGENT_KEY as an environment variable. Aborting.
   exit 1
 fi
 
@@ -49,7 +49,7 @@ for lambda_directory in demo-* ; do
     aws --region $REGION lambda get-function-configuration \
       --function-name $function_name \
       --output json \
-      | jq ".Environment.Variables + {INSTANA_URL:\"$NEW_INSTANA_URL\", INSTANA_KEY:\"$NEW_INSTANA_KEY\"}"
+      | jq ".Environment.Variables + {INSTANA_ENDPOINT_URL:\"$NEW_INSTANA_ENDPOINT_URL\", INSTANA_AGENT_KEY:\"$NEW_INSTANA_AGENT_KEY\"}"
   )
 
   new_variables="{\"Variables\":$new_variables}"

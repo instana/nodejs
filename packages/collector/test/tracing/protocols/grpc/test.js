@@ -60,6 +60,41 @@ describe('tracing/grpc', function() {
           })
         ));
   });
+
+  describe('individually disabled', () => {
+    agentControls.registerTestHooks();
+    serverControls = new ServerControls({
+      agentControls,
+      env: {
+        INSTANA_DISABLED_TRACERS: 'GRPC'
+      }
+    });
+    serverControls.registerTestHooks();
+    clientControls = new ClientControls({
+      agentControls,
+      env: {
+        INSTANA_DISABLED_TRACERS: 'GRPC'
+      }
+    });
+    clientControls.registerTestHooks();
+
+    it('should not trace when GRPC tracing is individually disabled', () =>
+      clientControls
+        .sendRequest({
+          method: 'POST',
+          path: '/unary-call'
+        })
+        .then(response => {
+          expect(response.reply).to.equal('received: request');
+          return utils.retry(() =>
+            agentControls.getSpans().then(spans => {
+              utils.expectOneMatching(spans, checkHttpEntry.bind(null, '/unary-call'));
+              expect(utils.getSpansByName(spans, 'rpc-client')).to.be.empty;
+              expect(utils.getSpansByName(spans, 'rpc-server')).to.be.empty;
+            })
+          );
+        }));
+  });
 });
 
 function registerSuite(codeGenMode, withMetadata, withOptions) {
@@ -184,93 +219,93 @@ function registerSuite(codeGenMode, withMetadata, withOptions) {
     // utils.expectOneMatching(spans, checkLogSpanFromClientInterceptor.bind(null, httpEntry));
     utils.expectOneMatching(spans, checkLogSpanAfterGrpcExit.bind(null, httpEntry, url, cancel, erroneous));
   }
+}
 
-  function checkHttpEntry(url, span) {
-    expect(span.n).to.equal('node.http.server');
-    expect(span.k).to.equal(constants.ENTRY);
-    expect(span.data.http.url).to.equal(url);
+function checkHttpEntry(url, span) {
+  expect(span.n).to.equal('node.http.server');
+  expect(span.k).to.equal(constants.ENTRY);
+  expect(span.data.http.url).to.equal(url);
+}
+
+function checkGrpcClientSpan(httpEntry, url, cancel, erroneous, span) {
+  expect(span.n).to.equal('rpc-client');
+  expect(span.k).to.equal(constants.EXIT);
+  expect(span.t).to.equal(httpEntry.t);
+  expect(span.p).to.equal(httpEntry.s);
+  expect(span.s).to.be.not.empty;
+  expect(span.data.rpc).to.exist;
+  expect(span.data.rpc.flavor).to.equal('grpc');
+  expect(span.data.rpc.call).to.equal(rpcCallNameForUrl(url));
+  expect(span.data.rpc.host).to.equal('localhost');
+  expect(span.data.rpc.port).to.equal('50051');
+  if (erroneous) {
+    expect(span.ec).to.be.equal(1);
+    expect(span.error).to.be.true;
+    expect(span.data.rpc.error).to.equal('Boom!');
+  } else {
+    expect(span.ec).to.be.equal(0);
+    expect(span.error).to.be.false;
+    expect(span.data.rpc.error).to.not.exist;
   }
+}
 
-  function checkGrpcClientSpan(httpEntry, url, cancel, erroneous, span) {
-    expect(span.n).to.equal('rpc-client');
-    expect(span.k).to.equal(constants.EXIT);
-    expect(span.t).to.equal(httpEntry.t);
-    expect(span.p).to.equal(httpEntry.s);
-    expect(span.s).to.be.not.empty;
-    expect(span.data.rpc).to.exist;
-    expect(span.data.rpc.flavor).to.equal('grpc');
-    expect(span.data.rpc.call).to.equal(rpcCallNameForUrl(url));
-    expect(span.data.rpc.host).to.equal('localhost');
-    expect(span.data.rpc.port).to.equal('50051');
-    if (erroneous) {
-      expect(span.ec).to.be.equal(1);
-      expect(span.error).to.be.true;
-      expect(span.data.rpc.error).to.equal('Boom!');
-    } else {
-      expect(span.ec).to.be.equal(0);
-      expect(span.error).to.be.false;
-      expect(span.data.rpc.error).to.not.exist;
-    }
+function checkGrpcServerSpan(grpcExit, url, cancel, erroneous, span) {
+  expect(span.n).to.equal('rpc-server');
+  expect(span.k).to.equal(constants.ENTRY);
+  expect(span.t).to.equal(grpcExit.t);
+  expect(span.p).to.equal(grpcExit.s);
+  expect(span.s).to.be.not.empty;
+  expect(span.data.rpc).to.exist;
+  expect(span.data.rpc.flavor).to.equal('grpc');
+  expect(span.data.rpc.call).to.equal(rpcCallNameForUrl(url));
+  if (erroneous) {
+    expect(span.ec).to.be.equal(1);
+    expect(span.error).to.be.true;
+    expect(span.data.rpc.error).to.equal('Boom!');
+  } else {
+    expect(span.ec).to.be.equal(0);
+    expect(span.error).to.be.false;
+    expect(span.data.rpc.error).to.not.exist;
   }
+}
 
-  function checkGrpcServerSpan(grpcExit, url, cancel, erroneous, span) {
-    expect(span.n).to.equal('rpc-server');
-    expect(span.k).to.equal(constants.ENTRY);
-    expect(span.t).to.equal(grpcExit.t);
-    expect(span.p).to.equal(grpcExit.s);
-    expect(span.s).to.be.not.empty;
-    expect(span.data.rpc).to.exist;
-    expect(span.data.rpc.flavor).to.equal('grpc');
-    expect(span.data.rpc.call).to.equal(rpcCallNameForUrl(url));
-    if (erroneous) {
-      expect(span.ec).to.be.equal(1);
-      expect(span.error).to.be.true;
-      expect(span.data.rpc.error).to.equal('Boom!');
-    } else {
-      expect(span.ec).to.be.equal(0);
-      expect(span.error).to.be.false;
-      expect(span.data.rpc.error).to.not.exist;
-    }
+function checkLogSpanAfterGrpcExit(httpEntry, url, cancel, erroneous, span) {
+  expect(span.n).to.equal('log.pino');
+  expect(span.k).to.equal(constants.EXIT);
+  expect(span.t).to.equal(httpEntry.t);
+  expect(span.p).to.equal(httpEntry.s);
+  if (erroneous) {
+    expect(span.data.log.message).to.contain('Boom!');
+  } else if (cancel && url !== '/bidi-stream') {
+    expect(span.data.log.message).to.contain('Cancelled');
+  } else {
+    expect(span.data.log.message).to.equal(url);
   }
+}
 
-  function checkLogSpanAfterGrpcExit(httpEntry, url, cancel, erroneous, span) {
-    expect(span.n).to.equal('log.pino');
-    expect(span.k).to.equal(constants.EXIT);
-    expect(span.t).to.equal(httpEntry.t);
-    expect(span.p).to.equal(httpEntry.s);
-    if (erroneous) {
-      expect(span.data.log.message).to.contain('Boom!');
-    } else if (cancel && url !== '/bidi-stream') {
-      expect(span.data.log.message).to.contain('Cancelled');
-    } else {
-      expect(span.data.log.message).to.equal(url);
-    }
+function checkLogSpanDuringGrpcEntry(grpcEntry, url, erroneous, span) {
+  expect(span.n).to.equal('log.pino');
+  expect(span.k).to.equal(constants.EXIT);
+  expect(span.t).to.equal(grpcEntry.t);
+  expect(span.p).to.equal(grpcEntry.s);
+  if (erroneous) {
+    expect(span.data.log.message).to.contain('Boom!');
+  } else {
+    expect(span.data.log.message).to.equal(url);
   }
+}
 
-  function checkLogSpanDuringGrpcEntry(grpcEntry, url, erroneous, span) {
-    expect(span.n).to.equal('log.pino');
-    expect(span.k).to.equal(constants.EXIT);
-    expect(span.t).to.equal(grpcEntry.t);
-    expect(span.p).to.equal(grpcEntry.s);
-    if (erroneous) {
-      expect(span.data.log.message).to.contain('Boom!');
-    } else {
-      expect(span.data.log.message).to.equal(url);
-    }
-  }
-
-  function rpcCallNameForUrl(url) {
-    switch (url) {
-      case '/unary-call':
-        return 'instana.node.grpc.test.TestService/MakeUnaryCall';
-      case '/server-stream':
-        return 'instana.node.grpc.test.TestService/StartServerSideStreaming';
-      case '/client-stream':
-        return 'instana.node.grpc.test.TestService/StartClientSideStreaming';
-      case '/bidi-stream':
-        return 'instana.node.grpc.test.TestService/StartBidiStreaming';
-      default:
-        throw new Error(`Unknown URL: ${url}`);
-    }
+function rpcCallNameForUrl(url) {
+  switch (url) {
+    case '/unary-call':
+      return 'instana.node.grpc.test.TestService/MakeUnaryCall';
+    case '/server-stream':
+      return 'instana.node.grpc.test.TestService/StartServerSideStreaming';
+    case '/client-stream':
+      return 'instana.node.grpc.test.TestService/StartClientSideStreaming';
+    case '/bidi-stream':
+      return 'instana.node.grpc.test.TestService/StartBidiStreaming';
+    default:
+      throw new Error(`Unknown URL: ${url}`);
   }
 }
