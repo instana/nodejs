@@ -16,6 +16,7 @@ describe('util.normalizeConfig', () => {
     delete process.env['INSTANA_DISABLE_TRACING'];
     delete process.env['INSTANA_DISABLE_AUTO_INSTR'];
     delete process.env['INSTANA_STACK_TRACE_LENGTH'];
+    delete process.env['INSTANA_DISABLED_TRACERS'];
   }
 
   it('should apply all defaults', () => {
@@ -180,6 +181,34 @@ describe('util.normalizeConfig', () => {
     expect(config.tracing.stackTraceLength).to.equal(3);
   });
 
+  it('should disable individual tracers via config', () => {
+    const config = normalizeConfig({
+      tracing: {
+        disabledTracers: ['graphQL', 'GRPC']
+      }
+    });
+    // values will be normalized to lower case
+    expect(config.tracing.disabledTracers).to.deep.equal(['graphql', 'grpc']);
+  });
+
+  it('should disable individual tracers via env var', () => {
+    process.env['INSTANA_DISABLED_TRACERS'] = 'graphQL   , GRPC';
+    const config = normalizeConfig();
+    // values will be normalized to lower case
+    expect(config.tracing.disabledTracers).to.deep.equal(['graphql', 'grpc']);
+  });
+
+  it('config should take precedence over env vars when disabling individual tracers', () => {
+    process.env['INSTANA_DISABLED_TRACERS'] = 'foo, bar';
+    const config = normalizeConfig({
+      tracing: {
+        disabledTracers: ['baz', 'fizz']
+      }
+    });
+    // values will be normalized to lower case
+    expect(config.tracing.disabledTracers).to.deep.equal(['baz', 'fizz']);
+  });
+
   it('should accept custom secrets config', () => {
     const config = normalizeConfig({
       secrets: {
@@ -217,6 +246,7 @@ describe('util.normalizeConfig', () => {
     expect(config.tracing.disableAutomaticTracing).to.not.exist;
     expect(config.tracing.forceTransmissionStartingAt).to.equal(500);
     expect(config.tracing.maxBufferedSpans).to.equal(1000);
+    expect(config.tracing.disabledTracers).to.deep.equal([]);
     expect(config.tracing.http).to.be.an('object');
     expect(config.tracing.http.extraHttpHeadersToCapture).to.be.empty;
     expect(config.tracing.http.extraHttpHeadersToCapture).to.be.an('array');

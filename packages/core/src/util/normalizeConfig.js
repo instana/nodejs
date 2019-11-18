@@ -23,7 +23,8 @@ var defaults = {
     http: {
       extraHttpHeadersToCapture: []
     },
-    stackTraceLength: 10
+    stackTraceLength: 10,
+    disabledTracers: []
   },
   secrets: {
     matcherMode: 'contains-ignore-case',
@@ -83,6 +84,7 @@ function normalizeTracingConfig(config) {
   normalizeTracingTransmission(config);
   normalizeTracingHttp(config);
   normalizeTracingStackTraceLength(config);
+  normalizeDisabledTracers(config);
 }
 
 function normalizeTracingEnabled(config) {
@@ -217,6 +219,42 @@ function normalizeNumericalStackTraceLength(numericalLength) {
     );
   }
   return normalized;
+}
+
+function normalizeDisabledTracers(config) {
+  if (
+    config.tracing.disabledTracers == null &&
+    process.env['INSTANA_DISABLED_TRACERS'] &&
+    process.env['INSTANA_DISABLED_TRACERS'].trim().length >= 0
+  ) {
+    config.tracing.disabledTracers = process.env['INSTANA_DISABLED_TRACERS']
+      .split(',')
+      .map(function(key) {
+        return key.trim().toLowerCase();
+      })
+      .filter(function(key) {
+        return key.length >= 0;
+      });
+  }
+
+  if (!config.tracing.disabledTracers) {
+    config.tracing.disabledTracers = defaults.tracing.disabledTracers;
+  }
+
+  if (!Array.isArray(config.tracing.disabledTracers)) {
+    logger.warn(
+      'Invalid configuration: config.tracing.disabledTracers is not an array, ' +
+        'the value will be ignored: ' +
+        JSON.stringify(config.tracing.disabledTracers)
+    );
+    config.tracing.disabledTracers = defaults.tracing.disabledTracers;
+    return;
+  }
+
+  config.tracing.disabledTracers = config.tracing.disabledTracers.map(function(s) {
+    // We'll check for matches in an case-insensitive fashion
+    return s.toLowerCase();
+  });
 }
 
 function normalizeSecrets(config) {

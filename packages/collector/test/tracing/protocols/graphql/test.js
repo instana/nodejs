@@ -115,6 +115,46 @@ describe('tracing/graphql', function() {
         ));
   });
 
+  describe('individually disabled', () => {
+    agentControls.registerTestHooks();
+    const serverControls = new RawGraphQLServerControls({
+      agentControls,
+      env: {
+        INSTANA_DISABLED_TRACERS: 'graphQL'
+      }
+    });
+    serverControls.registerTestHooks();
+    const clientControls = new ClientControls({
+      agentControls,
+      env: {
+        SERVER_PORT: serverControls.port
+      }
+    });
+    clientControls.registerTestHooks();
+
+    it('should not trace graphql when that tracer is disabled individually but still trace all other calls', () =>
+      clientControls
+        .sendRequest({
+          method: 'POST',
+          path: '/value'
+        })
+        .then(response => {
+          checkQueryResponse('value', false, false, response);
+          return utils.retry(() =>
+            agentControls.getSpans().then(spans => {
+              const httpEntryInClientApp = verifyHttpEntry(null, /\/value/, spans);
+              const httpExitInClientApp = verifyHttpExit(httpEntryInClientApp, /\/graphql/, spans);
+              const httpEntryInServerApp = verifyHttpEntry(httpExitInClientApp, /\/graphql/, spans);
+              verifyFollowUpLogExit(httpEntryInServerApp, 'value', spans);
+              // No graphql span has been recorded but graphql since we have explicitly disabled graphql tracing, but
+              // processing has worked (as we have verified via checkQueryResponse).
+              expect(utils.getSpansByName(spans, 'graphql.server')).to.be.empty;
+              expect(utils.getSpansByName(spans, 'graphql.client')).to.be.empty;
+            })
+          );
+        }));
+  });
+
   describe('when another entry span is already active', () => {
     agentControls.registerTestHooks();
     const serverControls = new ApolloServerControls({
