@@ -12,9 +12,14 @@ const TWO_DOTS = '..';
 
 const lambdaRuntimeErrors = require(`${RUNTIME_PATH}/Errors.js`);
 
-exports.handler = function instanaAutowrapHandler(event, context, callback) {
+let wrappedHandler;
+
+if (!wrappedHandler) {
   const targetHandler = loadTargetHandlerFunction();
-  const wrappedHandler = instana.wrap(targetHandler);
+  wrappedHandler = instana.wrap(targetHandler);
+}
+
+exports.handler = function instanaAutowrapHandler(event, context, callback) {
   return wrappedHandler(event, context, callback);
 };
 
@@ -39,11 +44,9 @@ function loadTargetHandlerFunction() {
   if (!targetHandlerFunction) {
     throw new lambdaRuntimeErrors.HandlerNotFound(`${targetHandlerEnvVar} is undefined or not exported`);
   }
-
   if (typeof targetHandlerFunction !== 'function') {
     throw new lambdaRuntimeErrors.HandlerNotFound(`${targetHandlerEnvVar} is not a function`);
   }
-
   return targetHandlerFunction;
 }
 

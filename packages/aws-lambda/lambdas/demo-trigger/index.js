@@ -1,8 +1,5 @@
 'use strict';
 
-// eslint-disable-next-line import/no-extraneous-dependencies
-const instana = require('@instana/aws-lambda'); // provided by Lambda layer "instana"
-
 const async_ = require('async');
 const request = require('request-promise');
 // eslint-disable-next-line import/no-extraneous-dependencies
@@ -12,7 +9,7 @@ const uuid = require('uuid/v4');
 const bucket = process.env.BUCKET_NAME || 'instana-lambda-demo';
 const apiUrl = process.env.API_URL || 'https://wn69a84ebf.execute-api.us-east-2.amazonaws.com/default';
 
-exports.handler = instana.wrap((event, context, callback) => {
+exports.handler = (event, context, callback) => {
   console.log('Triggering API request.');
   triggerHttpRequest().finally(() => {
     async_.waterfall(
@@ -69,7 +66,7 @@ exports.handler = instana.wrap((event, context, callback) => {
       }
     );
   });
-});
+};
 
 function triggerHttpRequest() {
   let method;

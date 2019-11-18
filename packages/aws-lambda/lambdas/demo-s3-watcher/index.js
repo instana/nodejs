@@ -1,8 +1,5 @@
 'use strict';
 
-// eslint-disable-next-line import/no-extraneous-dependencies
-const instana = require('@instana/aws-lambda'); // provided by Lambda layer "instana"
-
 const pg = require('pg');
 
 const pgHost = process.env.RDS_HOSTNAME || 'localhost';
@@ -17,7 +14,7 @@ console.log(
   }`
 );
 
-exports.handler = instana.wrap(async event => {
+exports.handler = async event => {
   const label = event.Records.slice(0, 20).map(
     s3Record =>
       `${s3Record.eventName}: ${s3Record.s3 && s3Record.s3.bucket ? s3Record.s3.bucket.name : ''}/${s3RecordToObject(
@@ -34,7 +31,7 @@ exports.handler = instana.wrap(async event => {
   } finally {
     await client.end();
   }
-});
+};
 
 function s3RecordToObject(s3Record) {
   if (s3Record.s3 && s3Record.s3.object && s3Record.s3.object.key) {

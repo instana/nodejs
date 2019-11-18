@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.79.1
+- [AWS Lambda]: Cache target handler across invocations.
+
 ## 1.79.0
 - Add auto-wrap package for AWS Lambda to enable Lambda tracing without code modification.
 
