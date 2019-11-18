@@ -21,7 +21,7 @@ function createZip {
       # }
       # this needs to be removed.
       npm uninstall -S @instana/aws-lambda
-      npm uninstall -S instana-aws-lambda-auto-wrapper
+      npm uninstall -S instana-aws-lambda-auto-wrap
 
     elif [[ "${BUILD_LAMBDAS_WITH-}" == "local" ]]; then
       # The lambda's package.json might or might not already have a dependency to the tar file:

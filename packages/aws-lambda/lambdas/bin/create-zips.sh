@@ -41,7 +41,7 @@ if [[ "${BUILD_LAMBDAS_WITH-npm}" == "npm" ]]; then
 elif [[ "${BUILD_LAMBDAS_WITH-}" == "local" ]]; then
   echo "Building all Lambda zips with the local tar.gz files."
 elif [[ "$BUILD_LAMBDAS_WITH" == "layer" ]]; then
-  echo "Building all Lambda zips without @instana/aws-lambda, assuming the AWS Lambda layer \"instana\" is configured."
+  echo "Building all Lambda zips without @instana/aws-lambda, assuming the AWS Lambda layer \"instana\" is (or will be) configured."
 else
   echo "Unknown option for BUILD_LAMBDAS_WITH: $BUILD_LAMBDAS_WITH"
   echo Aborting.

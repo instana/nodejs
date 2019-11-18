@@ -13,7 +13,7 @@ The environment variable `BUILD_LAMBDAS_WITH` controls how the Lambda zip files 
 
 - `BUILD_LAMBDAS_WITH=npm bin/create-zips.sh`: Include the latest npm package `@instana/aws-lambda` (downloaded from the npm registry) in the zip file. This is the default if `BUILD_LAMBDAS_WITH` is not set.
 - `BUILD_LAMBDAS_WITH=local bin/create-zips.sh`: Build a local tar.gz from the current content of `packages/aws-lambda` (by running `npm pack`) and include that in the zip file. Useful to test modifications that have not yet been published to npm.
-- `BUILD_LAMBDAS_WITH=layer bin/create-zips.sh`: Do not add `@instana/aws-collector` at all to the zip file, instead assume the Lambda function has the AWS Lambda layer "instana" configured. Note: You still need to add the layer to the Lambda configuration, `bin/create-zips.sh` will not do this. The script `bin/deploy-demo.sh` will try to add the layer if it is asked to deploy a zip file that does not contain `@instana/aws-collector`, though.
+- `BUILD_LAMBDAS_WITH=layer bin/create-zips.sh`: Do not add `@instana/aws-collector` at all to the zip file, instead assume the Lambda function has the AWS Lambda layer "instana" configured. Note: You still need to add the layer to the Lambda configuration, `bin/create-zips.sh` will not do this. The script `bin/deploy-demo.sh` will try to add or update the layer if it is asked to deploy a zip file that does not contain `@instana/aws-collector`, though.
 
 
 The AWS Lambda Demo
