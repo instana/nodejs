@@ -1,8 +1,5 @@
 'use strict';
 
-// eslint-disable-next-line import/no-extraneous-dependencies
-const instana = require('@instana/aws-lambda'); // provided by Lambda layer "instana"
-
 const pg = require('pg');
 const request = require('request-promise');
 
@@ -20,7 +17,7 @@ console.log(
   }`
 );
 
-exports.handler = instana.wrap(async event => {
+exports.handler = async event => {
   if (!event.httpMethod || !event.path) {
     // malformed event, probably not an API gateway request
     return { statusCode: 400, headers: corsAllowAll() };
@@ -34,7 +31,7 @@ exports.handler = instana.wrap(async event => {
     return handleSingleItemRequest(event);
   }
   return { statusCode: 404, headers: corsAllowAll() };
-});
+};
 
 async function handleItemsRequest(event) {
   if (event.httpMethod === 'GET') {

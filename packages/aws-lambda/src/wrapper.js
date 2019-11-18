@@ -186,10 +186,10 @@ function postHandler(entrySpan, error, result, callback) {
     if (err) {
       // We intentionally do not propagate the error from the backend request - the customer's lambda needs to finish
       // successfully, no matter if we have been able to report metrics and spans.
-      logger.warn('Could not send data to backend.', err.message);
-      logger.debug('Could not send data to backend.', err);
+      logger.warn('Could not send traces and metrics to Instana.', err.message);
+      logger.debug('Could not send traces and metrics to Instana.', err);
     } else {
-      logger.info('Data has been sent to backend.');
+      logger.info('Traces and metrics have been sent to Instana.');
     }
     callback();
   });

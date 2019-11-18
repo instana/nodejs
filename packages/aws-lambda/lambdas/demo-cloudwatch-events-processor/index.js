@@ -1,8 +1,5 @@
 'use strict';
 
-// eslint-disable-next-line import/no-extraneous-dependencies
-const instana = require('@instana/aws-lambda'); // provided by Lambda layer "instana"
-
 const pg = require('pg');
 
 const pgHost = process.env.RDS_HOSTNAME || 'localhost';
@@ -17,7 +14,7 @@ console.log(
   }`
 );
 
-exports.handler = instana.awsLambda.wrap(async event => {
+exports.handler = async event => {
   if (!event.time || typeof event.time !== 'string') {
     // malformed event, probably not triggered by a CloudWatch event
     console.log('Event has no timestamp or timestamp is not a string. Aborting.');
@@ -39,7 +36,7 @@ exports.handler = instana.awsLambda.wrap(async event => {
   } finally {
     await client.end();
   }
-});
+};
 
 async function connect() {
   const client = new pg.Client({

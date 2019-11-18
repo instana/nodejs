@@ -77,10 +77,11 @@ for lambda_zip_file in demo-*.zip ; do
         # TODO Also remove Lambda layer if zip file contained @instana/aws-lambda
       fi
     else
-      echo This lambda function definition currently has no Instana layer at all, adding it now.
+      echo This lambda function definition currently has no Instana layer at all, adding it now. I\'ll also set the auto-wrap handler.
       aws --region $REGION lambda update-function-configuration \
         --function-name $function_name \
-        --layers "$LAYER_ARN"
+        --layers "$LAYER_ARN" \
+        --handler instana-aws-lambda-auto-wrap.handler
     fi
   fi
 
