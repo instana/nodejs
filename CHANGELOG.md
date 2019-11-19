@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.80.0
 - Add ability to disable individual tracers via `config.tracing.disabledTracers` or `INSTANA_DISABLED_TRACERS`.
 
 ## 1.79.1
