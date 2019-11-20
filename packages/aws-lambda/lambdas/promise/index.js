@@ -1,7 +1,7 @@
 'use strict';
 
+// eslint-disable-next-line no-unused-vars
 exports.handler = (event, context) => {
-  context.callbackWaitsForEmptyEventLoop = true;
   console.log('Starting up');
   setTimeout(() => {
     console.log('Still running');

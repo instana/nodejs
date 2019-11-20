@@ -1,0 +1,27 @@
+{
+  "name": "serverless-webpack-test",
+  "description": "A lambda function built with serverless and webpack",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/instana/nodejs-sensor.git"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "serverless package",
+    "deploy-initial": "sls deploy",
+    "deploy": "sls deploy function -f serverless-webpack-test"
+  },
+  "author": "Bastian Krol <bastian.krol@instana.com>",
+  "license": "MIT",
+  "dependencies": {
+    "lodash": "^4.17.15"
+  },
+  "devDependencies": {
+    "eslint-plugin-import": "^2.18.2",
+    "serverless": "^1.57.0",
+    "serverless-bundle": "^1.2.2",
+    "serverless-offline": "^5.3.3"
+  }
+}
