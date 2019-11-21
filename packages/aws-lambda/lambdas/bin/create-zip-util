@@ -5,7 +5,8 @@ function createZip {
   mkdir -p ../zip
   rm -f ../zip/$name.zip
   rm -rf node_modules
-  if [[ "$name" =~ ^wrapped-.* ]] || [[ "$name" =~ ^.*demo.* ]]; then
+
+  if [[ ! -e .dont-add-instana  ]]; then
 
     # No matter how we build the zip file, we need to modifiy the package.json, so we create a backup copy to be able to
     # revert that modification later. Also, we do not want a modified package-lock.json show up in git diff all the
@@ -47,6 +48,8 @@ function createZip {
       echo Aborting.
       exit 1
     fi
+  else
+    echo "Not adding @instana/aws-lambda package to zip for \"$name\" (found an .dont-add-instana file)."
   fi
 
   # Now install everything else.
@@ -55,7 +58,7 @@ function createZip {
   zip -qr $name . -x bin/*.sh -x \*.swp
   mv $name.zip ../zip
 
-  if [[ "$name" =~ ^wrapped-.* ]] || [[ "$name" =~ ^.*demo.* ]]; then
+  if [[ ! -e .dont-add-instana  ]]; then
     # revert package.json modification
     mv package.json.backup package.json
     mv package-lock.json.backup package-lock.json

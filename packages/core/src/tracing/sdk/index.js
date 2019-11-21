@@ -20,3 +20,4 @@ exports.deactivate = function deactivate() {
 
 exports.callback = callback;
 exports.promise = promise;
+exports.async = promise;

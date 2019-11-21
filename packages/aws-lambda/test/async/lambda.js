@@ -59,4 +59,4 @@ const args = process.env.WITH_CONFIG
     ]
   : [handler];
 
-exports.handler = instana.awsLambda.wrap.apply(instana.awsLambda, args);
+exports.handler = instana.wrap.apply(instana, args);

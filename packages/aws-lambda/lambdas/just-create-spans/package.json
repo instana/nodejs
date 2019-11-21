@@ -1,0 +1,18 @@
+{
+  "name": "just-create-spans",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/instana/nodejs-sensor.git"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Bastian Krol <bastian.krol@instana.com>",
+  "license": "MIT",
+  "dependencies": {
+    "@instana/aws-lambda": "file:../../instana-aws-lambda.tgz",
+    "instana-aws-lambda-auto-wrap": "file:../../instana-aws-lambda-auto-wrap.tgz"
+  }
+}

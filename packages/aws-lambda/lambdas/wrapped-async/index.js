@@ -5,7 +5,7 @@ const instana = require('@instana/aws-lambda'); // provided by Lambda layer "ins
 
 const fetch = require('node-fetch');
 
-exports.handler = instana.awsLambda.wrap(async event => {
+exports.handler = instana.wrap(async event => {
   console.log('in actual handler');
   await fetch('https://example.com');
   if (event.error) {
