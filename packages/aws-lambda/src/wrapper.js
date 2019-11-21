@@ -11,6 +11,7 @@ const processResult = require('./process_result');
 const { tracing } = instanaCore;
 const { constants, spanBuffer } = tracing;
 let logger = consoleLogger;
+let config;
 
 // Initialize instrumentations early to allow for require statements after our package has been required but before the
 // actual instana.wrap(...) call.
@@ -21,11 +22,11 @@ instanaCore.preInit();
  * Lambda handler uses the callback style or promise/async function style by inspecting the number of function arguments
  * the function receives.
  */
-exports.wrap = function wrap(config, originalHandler) {
+exports.wrap = function wrap(_config, originalHandler) {
   /* eslint-disable no-unused-vars */
   if (arguments.length === 1) {
-    originalHandler = config;
-    config = null;
+    originalHandler = _config;
+    _config = null;
   }
 
   // Apparently the AWS Lambda Node.js runtime does not inspect the handlers signature for the number of arguments it
@@ -33,24 +34,24 @@ exports.wrap = function wrap(config, originalHandler) {
   switch (originalHandler.length) {
     case 0:
       return function handler0() {
-        return shimmedHandler(originalHandler, this, arguments, config);
+        return shimmedHandler(originalHandler, this, arguments, _config);
       };
     case 1:
       return function handler1(event) {
-        return shimmedHandler(originalHandler, this, arguments, config);
+        return shimmedHandler(originalHandler, this, arguments, _config);
       };
     case 2:
       return function handler2(event, context) {
-        return shimmedHandler(originalHandler, this, arguments, config);
+        return shimmedHandler(originalHandler, this, arguments, _config);
       };
     default:
       return function handler3(event, context, callback) {
-        return shimmedHandler(originalHandler, this, arguments, config);
+        return shimmedHandler(originalHandler, this, arguments, _config);
       };
   }
 };
 
-function shimmedHandler(originalHandler, originalThis, originalArgs, config) {
+function shimmedHandler(originalHandler, originalThis, originalArgs, _config) {
   const event = originalArgs[0];
   const context = originalArgs[1];
   const lambdaCallback = originalArgs[2];
@@ -60,7 +61,7 @@ function shimmedHandler(originalHandler, originalThis, originalArgs, config) {
   const incomingParentSpanId = tracingHeaders.s;
   const tracingSuppressed = tracingHeaders.l === '0';
 
-  init(event, context, config);
+  init(event, context, _config);
 
   // The AWS lambda runtime does not seem to inspect the number of arguments the handler function expects. Instead, it
   // always call the handler with three arguments (event, context, callback), no matter if the handler will use the
@@ -124,9 +125,9 @@ function shimmedHandler(originalHandler, originalThis, originalArgs, config) {
 /**
  * Initialize the wrapper.
  */
-function init(event, context, config) {
+function init(event, context, _config) {
   /* eslint-disable dot-notation */
-  config = config || {};
+  config = _config || {};
 
   if (config.logger) {
     logger = config.logger;
@@ -194,3 +195,17 @@ function postHandler(entrySpan, error, result, callback) {
     callback();
   });
 }
+
+exports.currentSpan = function getHandleForCurrentSpan() {
+  return tracing.getHandleForCurrentSpan();
+};
+
+exports.sdk = tracing.sdk;
+
+exports.setLogger = function setLogger(_logger) {
+  logger = _logger;
+  config.logger = logger;
+  instanaCore.logger.init(config);
+};
+
+exports.opentracing = tracing.opentracing;

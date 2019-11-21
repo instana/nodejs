@@ -5,7 +5,7 @@ const instana = require('@instana/aws-lambda'); // provided by Lambda layer "ins
 
 const https = require('https');
 
-exports.handler = instana.awsLambda.wrap((event, context, callback) => {
+exports.handler = instana.wrap((event, context, callback) => {
   console.log('in actual handler');
   const req = https.get('https://example.com', res => {
     res.resume();

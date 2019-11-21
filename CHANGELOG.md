@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+- Provide access to Instana Node.js API via `@instana/aws-lambda`.
+- Add instana.sdk.async alias for instana.sdk.promise.
+
 ## 1.80.0
 - Add ability to disable individual tracers via `config.tracing.disabledTracers` or `INSTANA_DISABLED_TRACERS`.
 
