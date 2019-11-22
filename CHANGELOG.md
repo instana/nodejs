@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.81.0
 - Provide access to Instana Node.js API via `@instana/aws-lambda`.
 - Add instana.sdk.async alias for instana.sdk.promise.
 
