@@ -1,5 +1,8 @@
 # Changelog
 
+## Unreleased
+- Fully cover Winston 3.x API surface.
+
 ## 1.81.0
 - Provide access to Instana Node.js API via `@instana/aws-lambda`.
 - Add instana.sdk.async alias for instana.sdk.promise.
