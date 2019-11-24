@@ -41,63 +41,68 @@ app.get('/', (req, res) => {
   res.sendStatus(200);
 });
 
-app.get('/info', (req, res) => {
-  logger.info('Info message - must not be traced.');
-  finish(res);
-});
+app.get('/log', (req, res) => {
+  const query = req.query;
+  const level = query.level;
+  const variant = query.variant;
+  const useGlobalLogger = query.useGlobalLogger === 'true';
+  const useLevelMethod = query.useLevelMethod === 'true';
 
-app.get('/warn', (req, res) => {
-  logger.warn('Warn message - should be traced.');
-  finish(res);
-});
+  let context = null;
+  let method = null;
+  let args = [];
 
-app.get('/error', (req, res) => {
-  logger.error('Error message - should be traced.');
-  finish(res);
-});
+  if (useGlobalLogger) {
+    context = winston;
+  } else {
+    context = logger;
+  }
 
-app.get('/log-info', (req, res) => {
-  logger.log('info', 'Info message - must not be traced.');
-  finish(res);
-});
+  if (useLevelMethod) {
+    if (variant === 'object-with-level') {
+      throw new Error('illegal combination of useLevelMethod: true and variant: object-with-level');
+    }
+    if (level === 'info') {
+      method = context.info;
+    } else if (level === 'warn') {
+      method = context.warn;
+    } else if (level === 'error') {
+      method = context.error;
+    } else {
+      throw new Error(`unknown level: ${level}`);
+    }
+  } else {
+    method = context.log;
+    if (variant !== 'object-with-level') {
+      if (level === 'info') {
+        args.push('info');
+      } else if (level === 'warn') {
+        args.push('warn');
+      } else if (level === 'error') {
+        args.push('error');
+      } else {
+        throw new Error(`unknown level: ${level}`);
+      }
+    }
+  }
 
-app.get('/log-warn', (req, res) => {
-  logger.log('warn', 'Warn message - should be traced.');
-  finish(res);
-});
+  if (variant === 'string-only') {
+    args.push('the message');
+  } else if (variant === 'string-plus-additional-message') {
+    args.push('the message');
+    args.push({ message: '+additional message' });
+  } else if (variant === 'string-substitution') {
+    args.push('the message %s');
+    args.push('replacement');
+  } else if (variant === 'object-with-message') {
+    args.push({ message: 'the message' });
+  } else if (variant === 'object-with-level') {
+    args.push({ level: level, message: 'the message' });
+  } else {
+    throw new Error(`unknown variant: ${variant}`);
+  }
 
-app.get('/log-error', (req, res) => {
-  logger.log('error', 'Error message - should be traced.');
-  finish(res);
-});
-
-app.get('/global-info', (req, res) => {
-  winston.info('Info message - must not be traced.');
-  finish(res);
-});
-
-app.get('/global-warn', (req, res) => {
-  winston.warn('Warn message - should be traced.');
-  finish(res);
-});
-
-app.get('/global-error', (req, res) => {
-  winston.error('Error message - should be traced.');
-  finish(res);
-});
-
-app.get('/global-log-info', (req, res) => {
-  winston.log('info', 'Info message - must not be traced.');
-  finish(res);
-});
-
-app.get('/global-log-warn', (req, res) => {
-  winston.log('warn', 'Warn message - should be traced.');
-  finish(res);
-});
-
-app.get('/global-log-error', (req, res) => {
-  winston.log('error', 'Error message - should be traced.');
+  method.apply(context, args);
   finish(res);
 });
 

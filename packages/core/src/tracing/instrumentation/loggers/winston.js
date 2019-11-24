@@ -58,6 +58,23 @@ function instrumentedLevelMethod(originalMethod, markAsError) {
         for (var i = 0; i < arguments.length; i++) {
           originalArgs[i] = arguments[i];
         }
+
+        if (
+          arguments.length === 1 &&
+          !!arguments[0] &&
+          typeof arguments[0] === 'object' &&
+          typeof arguments[0].message === 'string'
+        ) {
+          // this is the case logger.$level({ message: '...'})
+          message = arguments[0].message;
+        } else if (arguments.length >= 1) {
+          for (var j = arguments.length - 1; j >= 1; j--) {
+            if (!!arguments[j] && typeof arguments[j] === 'object' && typeof arguments[j].message === 'string') {
+              message += arguments[j].message;
+            }
+          }
+        }
+
         var ctx = this;
         return createSpan(ctx, originalMethod, originalArgs, message, markAsError);
       } else {
@@ -79,16 +96,38 @@ function shimLogMethod(derivedLogger) {
 
 function instrumentedLog(originalMethod) {
   return function(level, message) {
-    if (arguments.length === 1) {
+    if (arguments.length === 1 && typeof arguments[0] === 'string') {
       // this is actually level 'info'
       return originalMethod.apply(this, arguments);
+    } else if (arguments.length === 1 && !!arguments[0] && typeof arguments[0] === 'object') {
+      // this is the case logger.log({level: 'something', message: '...'})
+      if (typeof arguments[0].level === 'string') {
+        level = arguments[0].level;
+      }
+      if (typeof arguments[0].message === 'string') {
+        message = arguments[0].message;
+      }
+    } else if (
+      arguments.length === 2 &&
+      !!arguments[1] &&
+      typeof arguments[1] === 'object' &&
+      typeof arguments[1].message === 'string'
+    ) {
+      message = arguments[1].message;
+    } else if (arguments.length >= 2) {
+      for (var i = arguments.length - 1; i >= 1; i--) {
+        if (!!arguments[i] && typeof arguments[i] === 'object' && typeof arguments[i].message === 'string') {
+          message += arguments[i].message;
+        }
+      }
     }
+
     if (levelIsTraced(level) && isActive && cls.isTracing()) {
       var parentSpan = cls.getCurrentSpan();
       if (parentSpan && !constants.isExitSpan(parentSpan)) {
         var originalArgs = new Array(arguments.length);
-        for (var i = 0; i < arguments.length; i++) {
-          originalArgs[i] = arguments[i];
+        for (var j = 0; j < arguments.length; j++) {
+          originalArgs[j] = arguments[j];
         }
         var ctx = this;
         return createSpan(ctx, originalMethod, originalArgs, message, levelIsError(level));

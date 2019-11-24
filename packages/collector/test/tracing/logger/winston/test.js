@@ -17,69 +17,99 @@ describe('tracing/logger/winston', function() {
 
   this.timeout(config.getTestTimeout());
   const agentControls = require('../../../apps/agentStubControls');
-  const appControls = require('./controls');
   agentControls.registerTestHooks();
-  appControls.registerTestHooks();
+  const Controls = require('./controls');
+  const controls = new Controls({ agentControls });
+  controls.registerTestHooks();
 
-  beforeEach(() => agentControls.waitUntilAppIsCompletelyInitialized(appControls.getPid()));
-
-  runTests(false, false);
-  runTests(true, false);
-  runTests(false, true);
-  runTests(true, true);
-
-  function runTests(useGlobalLogger, useLogFunction) {
-    let suffix = '';
-    if (useGlobalLogger && useLogFunction) {
-      suffix = ' (global/log)';
-    } else if (useGlobalLogger) {
-      suffix = ' (global)';
-    } else if (useLogFunction) {
-      suffix = ' (log)';
-    }
-
-    it(`must not trace info${suffix}`, () =>
-      appControls.trigger('info', useGlobalLogger, useLogFunction).then(() =>
-        utils.retry(() =>
-          agentControls.getSpans().then(spans => {
-            const entrySpan = utils.expectOneMatching(spans, span => {
-              expect(span.n).to.equal('node.http.server');
-              expect(span.f.e).to.equal(String(appControls.getPid()));
-              expect(span.f.h).to.equal('agent-stub-uuid');
-            });
-            utils.expectOneMatching(spans, span => {
-              checkNextExitSpan(span, entrySpan);
-            });
-            const winstonSpans = utils.getSpansByName(spans, 'log.winston');
-            expect(winstonSpans).to.be.empty;
+  [false, true].forEach(useGlobalLogger =>
+    [false, true].forEach(useLevelMethod =>
+      [
+        'string-only',
+        'string-plus-additional-message',
+        // 'string-substitution',
+        'object-with-message',
+        'object-with-level'
+      ]
+        .filter(variant => variant !== 'object-with-level' || !useLevelMethod)
+        .forEach(variant =>
+          ['info', 'warn', 'error'].forEach(level => {
+            runTests(useGlobalLogger, useLevelMethod, variant, level);
           })
         )
-      ));
+    )
+  );
+  // runTests(false, true, 'string-only', 'warn');
 
-    it(`must trace warn${suffix}`, () =>
-      runTest('warn', useGlobalLogger, useLogFunction, false, 'Warn message - should be traced.'));
+  function runTests(useGlobalLogger, useLevelMethod, variant, level) {
+    let testName;
+    const shouldTrace = level !== 'info';
+    const expectErroneous = level === 'error';
+    const query = {
+      variant,
+      level
+    };
+    if (useGlobalLogger) {
+      testName = 'winston.';
+      query.useGlobalLogger = true;
+    } else {
+      testName = 'logger.';
+      query.useGlobalLogger = false;
+    }
+    if (useLevelMethod) {
+      testName += level;
+      query.useLevelMethod = true;
+    } else {
+      testName += 'log/' + level;
+      query.useLevelMethod = false;
+    }
+    if (shouldTrace) {
+      testName += ' must trace (';
+    } else {
+      testName += ' must not trace (';
+    }
+    testName += variant + ')';
 
-    it(`must trace error${suffix}`, () =>
-      runTest('error', useGlobalLogger, useLogFunction, true, 'Error message - should be traced.'));
-  }
+    const queryString = Object.keys(query)
+      .map(key => `${key}=${query[key]}`)
+      .join('&');
 
-  function runTest(level, useGlobalLogger, useLogFunction, expectErroneous, message) {
-    return appControls.trigger(level, useGlobalLogger, useLogFunction).then(() =>
-      utils.retry(() =>
-        agentControls.getSpans().then(spans => {
-          const entrySpan = utils.expectOneMatching(spans, span => {
-            expect(span.n).to.equal('node.http.server');
-            expect(span.f.e).to.equal(String(appControls.getPid()));
-            expect(span.f.h).to.equal('agent-stub-uuid');
-          });
-          utils.expectOneMatching(spans, span => {
-            checkWinstonSpan(span, entrySpan, expectErroneous, message);
-          });
-          utils.expectOneMatching(spans, span => {
-            checkNextExitSpan(span, entrySpan);
-          });
+    let expectedMessage;
+    if (variant === 'string-plus-additional-message') {
+      expectedMessage = 'the message+additional message';
+    } else if (variant === 'string-substitution') {
+      expectedMessage = 'the message replacement';
+    } else {
+      expectedMessage = 'the message';
+    }
+
+    it(testName, () =>
+      controls
+        .sendRequest({
+          path: `/log?${queryString}`
         })
-      )
+        .then(() =>
+          utils.retry(() =>
+            agentControls.getSpans().then(spans => {
+              const entrySpan = utils.expectOneMatching(spans, span => {
+                expect(span.n).to.equal('node.http.server');
+                expect(span.f.e).to.equal(String(controls.getPid()));
+                expect(span.f.h).to.equal('agent-stub-uuid');
+              });
+              if (shouldTrace) {
+                utils.expectOneMatching(spans, span => {
+                  checkWinstonSpan(span, entrySpan, expectErroneous, expectedMessage);
+                });
+              } else {
+                const winstonSpans = utils.getSpansByName(spans, 'log.winston');
+                expect(winstonSpans).to.be.empty;
+              }
+              utils.expectOneMatching(spans, span => {
+                checkNextExitSpan(span, entrySpan);
+              });
+            })
+          )
+        )
     );
   }
 
@@ -87,7 +117,7 @@ describe('tracing/logger/winston', function() {
     expect(span.t).to.equal(parent.t);
     expect(span.p).to.equal(parent.s);
     expect(span.k).to.equal(constants.EXIT);
-    expect(span.f.e).to.equal(String(appControls.getPid()));
+    expect(span.f.e).to.equal(String(controls.getPid()));
     expect(span.f.h).to.equal('agent-stub-uuid');
     expect(span.n).to.equal('log.winston');
     expect(span.async).to.equal(false);
@@ -102,7 +132,7 @@ describe('tracing/logger/winston', function() {
     expect(span.t).to.equal(parent.t);
     expect(span.p).to.equal(parent.s);
     expect(span.k).to.equal(constants.EXIT);
-    expect(span.f.e).to.equal(String(appControls.getPid()));
+    expect(span.f.e).to.equal(String(controls.getPid()));
     expect(span.f.h).to.equal('agent-stub-uuid');
     expect(span.n).to.equal('node.http.client');
   }
