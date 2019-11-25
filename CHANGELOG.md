@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.81.1
 - Fully cover Winston 3.x API surface.
 
 ## 1.81.0
