@@ -122,13 +122,19 @@ app.get('/app', (req, res) => {
 
 app.post('/audit-log', (req, res) => {
   const message = req.body.message || 'some random audit log message';
-  return pool
-    .query('INSERT INTO audit_log(message) VALUES($1) RETURNING *', [message])
-    .then(() => res.sendStatus(201))
-    .catch(e => {
-      log('Could not write audit log: ', e);
-      res.sendStatus(500);
-    });
+
+  if (Math.random() > 0.66) {
+    // Trigger an error with 1/3 probability. Sales people love errors when demoing stuff.
+    return res.sendStatus(500);
+  } else {
+    return pool
+      .query('INSERT INTO audit_log(message) VALUES($1) RETURNING *', [message])
+      .then(() => res.sendStatus(201))
+      .catch(e => {
+        log('Could not write audit log: ', e);
+        res.sendStatus(500);
+      });
+  }
 });
 
 const httpModule = process.env.NO_HTTPS ? 'http' : 'https';
