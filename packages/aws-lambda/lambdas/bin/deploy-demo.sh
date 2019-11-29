@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-set -eEuo pipefail
+set -eEo pipefail
 
 cd `dirname $BASH_SOURCE`/../zip
 
@@ -111,8 +111,8 @@ if [[ -z $1 ]]; then
   echo Deploying all demo zip files.
   echo
   for zip_file in demo-*.zip ; do
-    if [[ $lambda_zip_file == demo-ec2-app.zip ]]; then
-      echo Skipping $lambda_zip_file.
+    if [[ $zip_file == demo-ec2-app.zip ]]; then
+      echo Skipping $zip_file.
       continue
     fi
     deploy_zip $zip_file

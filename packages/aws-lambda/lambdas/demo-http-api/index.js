@@ -23,6 +23,11 @@ exports.handler = async event => {
     return { statusCode: 400, headers: corsAllowAll() };
   }
 
+  if (Math.random() > 0.75) {
+    // Trigger an error with 1/4 probability. Sales people love errors when demoing stuff.
+    return { statusCode: 500, headers: corsAllowAll() };
+  }
+
   if (event.httpMethod === 'OPTIONS') {
     return { statusCode: 204, headers: corsAllowAll() };
   } else if (event.path === '/items') {
