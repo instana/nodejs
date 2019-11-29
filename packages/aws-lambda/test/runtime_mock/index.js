@@ -136,7 +136,10 @@ function runHandler(handler, error) {
 function createContext() {
   const functionName = process.env.LAMBDA_FUNCTION_NAME ? process.env.LAMBDA_FUNCTION_NAME : 'functionName';
   const functionVersion = process.env.LAMBDA_FUNCTION_VERSION ? process.env.LAMBDA_FUNCTION_VERSION : '$LATEST';
-  const invokedFunctionArn = `arn:aws:lambda:us-east-2:410797082306:function:${functionName}`;
+  const alias = process.env.LAMBDA_FUNCTION_ALIAS;
+  const invokedFunctionArn = alias
+    ? `arn:aws:lambda:us-east-2:410797082306:function:${functionName}:${process.env.LAMBDA_FUNCTION_ALIAS}`
+    : `arn:aws:lambda:us-east-2:410797082306:function:${functionName}`;
 
   return {
     callbackWaitsForEmptyEventLoop: false,
