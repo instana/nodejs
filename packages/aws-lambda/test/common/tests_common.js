@@ -25,9 +25,11 @@ function prelude(opts) {
   }
 
   const env = {
-    LAMDBA_ERROR: opts.error,
     INSTANA_EXTRA_HTTP_HEADERS: 'x-My-Favorite-Header;ANOTHER-HEADER'
   };
+  if (opts.error) {
+    env.LAMDBA_ERROR = opts.error;
+  }
   if (opts.instanaEndpointUrl) {
     env.INSTANA_ENDPOINT_URL = opts.instanaEndpointUrl;
   }
@@ -112,10 +114,24 @@ exports.registerTests = function registerTests(handlerDefinitionPath) {
       handlerDefinitionPath,
       instanaEndpointUrl: config.backendBaseUrl,
       instanaAgentKey: config.instanaAgentKey,
-      error: true
+      error: 'asynchronous'
     });
 
-    it('must capture metrics and spans', () => verify(control, 'lambda', true, true));
+    it('must capture metrics and spans', () => verify(control, 'lambda-asynchronous', true, true));
+  });
+
+  describe('when lambda function throws a synchronous error', function() {
+    // - INSTANA_ENDPOINT_URL is configured
+    // - backend is reachable
+    // - lambda function ends with an error
+    const control = prelude.bind(this)({
+      handlerDefinitionPath,
+      instanaEndpointUrl: config.backendBaseUrl,
+      instanaAgentKey: config.instanaAgentKey,
+      error: 'synchronous'
+    });
+
+    it('must capture metrics and spans', () => verify(control, 'lambda-synchronous', true, true));
   });
 
   describe('with config', function() {
@@ -143,10 +159,10 @@ exports.registerTests = function registerTests(handlerDefinitionPath) {
       instanaEndpointUrl: config.backendBaseUrl,
       instanaAgentKey: config.instanaAgentKey,
       withConfig: true,
-      error: true
+      error: 'asynchronous'
     });
 
-    it('must capture metrics and spans', () => verify(control, 'lambda', true, true));
+    it('must capture metrics and spans', () => verify(control, 'lambda-asynchronous', true, true));
   });
 
   describe('when INSTANA_ENDPOINT_URL is missing', function() {
@@ -166,10 +182,10 @@ exports.registerTests = function registerTests(handlerDefinitionPath) {
     const control = prelude.bind(this)({
       handlerDefinitionPath,
       instanaAgentKey: config.instanaAgentKey,
-      error: true
+      error: 'asynchronous'
     });
 
-    it('must ignore the missing URL gracefully', () => verify(control, 'lambda', false, false));
+    it('must ignore the missing URL gracefully', () => verify(control, 'lambda-asynchronous', false, false));
   });
 
   describe('with config, when INSTANA_ENDPOINT_URL is missing', function() {
@@ -202,10 +218,10 @@ exports.registerTests = function registerTests(handlerDefinitionPath) {
     const control = prelude.bind(this)({
       handlerDefinitionPath,
       instanaEndpointUrl: config.backendBaseUrl,
-      error: true
+      error: 'asynchronous'
     });
 
-    it('must ignore the missing key gracefully', () => verify(control, 'lambda', false, false));
+    it('must ignore the missing key gracefully', () => verify(control, 'lambda-asynchronous', false, false));
   });
 
   describe('when backend is down', function() {
@@ -231,10 +247,10 @@ exports.registerTests = function registerTests(handlerDefinitionPath) {
       instanaEndpointUrl: config.backendBaseUrl,
       instanaAgentKey: config.instanaAgentKey,
       startBackend: false,
-      error: true
+      error: 'asynchronous'
     });
 
-    it('must ignore the failed request gracefully', () => verify(control, 'lambda', false, false));
+    it('must ignore the failed request gracefully', () => verify(control, 'lambda-asynchronous', false, false));
   });
 
   describe('when backend is reachable but does not respond', function() {
@@ -660,7 +676,7 @@ exports.registerTests = function registerTests(handlerDefinitionPath) {
 
   function verify(control, error, expectMetrics, expectSpans, trigger, parent) {
     /* eslint-disable no-console */
-    if (error === 'lambda') {
+    if (error && error.startsWith('lambda')) {
       expect(control.getLambdaErrors().length).to.equal(1);
       expect(control.getLambdaResults()).to.be.empty;
       const lambdaError = control.getLambdaErrors()[0];
@@ -682,11 +698,13 @@ exports.registerTests = function registerTests(handlerDefinitionPath) {
     }
 
     if (expectMetrics && expectSpans) {
-      return retry(() => getAndVerifySpans(control, error, trigger, parent).then(() => getAndVerifyMetrics(control)));
+      return retry(() =>
+        getAndVerifySpans(control, error, trigger, parent).then(() => getAndVerifyMetrics(control, error))
+      );
     } else if (!expectMetrics && expectSpans) {
       return retry(() => getAndVerifySpans(control, error, trigger, parent).then(() => verifyNoMetrics(control)));
     } else if (expectMetrics && !expectSpans) {
-      return retry(() => getAndVerifyMetrics(control).then(() => verifyNoSpans(control)));
+      return retry(() => getAndVerifyMetrics(control, error).then(() => verifyNoSpans(control)));
     } else {
       return delay(1000)
         .then(() => verifyNoSpans(control))
@@ -706,7 +724,9 @@ exports.registerTests = function registerTests(handlerDefinitionPath) {
 
   function verifySpans(spans, error, expectedTrigger, expectParent) {
     const entry = verifyLambdaEntry(spans, error, expectedTrigger, expectParent);
-    verifyHttpExit(spans, entry);
+    if (error !== 'lambda-synchronous') {
+      verifyHttpExit(spans, entry);
+    }
   }
 
   function verifyLambdaEntry(spans, error, expectedTrigger, expectParent) {
@@ -732,7 +752,7 @@ exports.registerTests = function registerTests(handlerDefinitionPath) {
       if (expectedTrigger) {
         expect(span.data.lambda.trigger).to.equal(expectedTrigger);
       }
-      if (error === 'lambda') {
+      if (error && error.startsWith('lambda')) {
         expect(span.data.lambda.error).to.equal('Boom!');
         expect(span.error).to.be.true;
         expect(span.ec).to.equal(1);
@@ -777,11 +797,11 @@ exports.registerTests = function registerTests(handlerDefinitionPath) {
     });
   }
 
-  function getAndVerifyMetrics(control) {
-    return control.getMetrics().then(metrics => verifyMetrics(metrics));
+  function getAndVerifyMetrics(control, error) {
+    return control.getMetrics().then(metrics => verifyMetrics(metrics, error));
   }
 
-  function verifyMetrics(allMetrics) {
+  function verifyMetrics(allMetrics, error) {
     expect(allMetrics).to.exist;
     expect(Array.isArray(allMetrics)).to.be.true;
     expect(allMetrics).to.have.lengthOf(1);
@@ -799,10 +819,14 @@ exports.registerTests = function registerTests(handlerDefinitionPath) {
     expect(metrics.versions.v8).to.match(/\d+\.\d+\.\d+/);
     expect(metrics.versions.uv).to.match(/\d+\.\d+\.\d+/);
     expect(metrics.versions.zlib).to.match(/\d+\.\d+\.\d+/);
-    expect(metrics.npmPackageDescription).to.equal('Instana tracing and monitoring for Node.js based AWS Lambdas');
-    expect(metrics.npmPackageName).to.equal('@instana/aws-lambda');
-    expect(metrics.npmPackageVersion).to.match(/\d+\.\d+\.\d+/);
     verifyHeaders(allPlugins);
+    if (error !== 'lambda-synchronous') {
+      // A synchronous error terminates the Lambda really fast, so there might not have been enough time to collect
+      // asynchronous metrics based on fs calls.
+      expect(metrics.npmPackageDescription).to.equal('Instana tracing and monitoring for Node.js based AWS Lambdas');
+      expect(metrics.npmPackageName).to.equal('@instana/aws-lambda');
+      expect(metrics.npmPackageVersion).to.match(/\d+\.\d+\.\d+/);
+    }
   }
 
   function verifyHeaders(payload) {

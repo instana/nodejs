@@ -98,25 +98,43 @@ function shimmedHandler(originalHandler, originalThis, originalArgs, _config) {
       });
     };
 
-    const handlerPromise = originalHandler.apply(originalThis, originalArgs);
-    if (handlerPromise && typeof handlerPromise.then === 'function') {
-      return handlerPromise.then(
-        value => {
-          if (handlerHasFinished) {
-            return Promise.resolve(value);
+    let handlerPromise;
+    try {
+      handlerPromise = originalHandler.apply(originalThis, originalArgs);
+      if (handlerPromise && typeof handlerPromise.then === 'function') {
+        return handlerPromise.then(
+          value => {
+            if (handlerHasFinished) {
+              return Promise.resolve(value);
+            }
+            handlerHasFinished = true;
+            return postPromise(context, entrySpan, null, value);
+          },
+          error => {
+            if (handlerHasFinished) {
+              return Promise.reject(error);
+            }
+            handlerHasFinished = true;
+            return postPromise(context, entrySpan, error);
           }
-          handlerHasFinished = true;
-          return postPromise(context, entrySpan, null, value);
-        },
-        error => {
-          if (handlerHasFinished) {
-            return Promise.reject(error);
-          }
-          handlerHasFinished = true;
-          return postPromise(context, entrySpan, error);
-        }
+        );
+      } else {
+        return handlerPromise;
+      }
+    } catch (e) {
+      // A synchronous exception occured in the original handler.
+      handlerHasFinished = true;
+      // eslint-disable-next-line no-console
+      console.error(
+        // eslint-disable-next-line max-len
+        'Your Lambda handler threw a synchronous exception. To report this call (including the error) to Instana, we need to convert this synchronous failure into an asynchronous failure.',
+        e
       );
-    } else {
+
+      postHandler(entrySpan, e, undefined, () => {
+        // rethrow original exception
+        throw e;
+      });
       return handlerPromise;
     }
   });

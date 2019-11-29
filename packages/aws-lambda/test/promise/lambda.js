@@ -37,8 +37,12 @@ if (process.env.SERVER_TIMING_HEADER) {
 
 const handler = event => {
   console.log('in actual handler');
+
+  if (event.error === 'synchronous') {
+    throw new Error('Boom!');
+  }
   return fetch(config.downstreamDummyUrl).then(() => {
-    if (event.error) {
+    if (event.error === 'asynchronous') {
       throw new Error('Boom!');
     }
 
