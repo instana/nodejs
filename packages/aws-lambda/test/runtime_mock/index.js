@@ -29,7 +29,7 @@ function main() {
   // eslint-disable-next-line import/no-dynamic-require
   lambdaDefinition = require(definitionPath);
   validateDefinition(lambdaDefinition);
-  runHandler(lambdaDefinition.handler, process.env.LAMDBA_ERROR === 'true');
+  runHandler(lambdaDefinition.handler, process.env.LAMDBA_ERROR);
 }
 
 /**
@@ -153,10 +153,11 @@ function createContext() {
 
 function createEvent(error) {
   /* eslint-disable default-case */
-  const event = {
-    error
-  };
+  const event = {};
 
+  if (error != null) {
+    event.error = error;
+  }
   if (process.env.HTTP_STATUS_CODE) {
     event.requestedStatusCode = process.env.HTTP_STATUS_CODE;
   }
@@ -384,7 +385,22 @@ function registerErrorHandling() {
 }
 
 function onUncaughtException(error) {
-  log(`! Lambda ${definitionPath} handler has failed with a runtime error:"${error.message}`);
+  if (error.message === 'Boom!') {
+    // this is an intended error that is part of the test for synchronous error handling.
+    log(
+      `! Lambda ${definitionPath} handler has thronw runtime error ` +
+        `(possibly an expected error as part of the test): ${error.message}.`
+    );
+    unregisterErrorHandling();
+    sendToParent({
+      type: 'lambda-result',
+      error: true,
+      payload: { message: error.message }
+    });
+    return terminate(error);
+  }
+
+  log(`! Lambda ${definitionPath} handler has failed with an unexpected runtime error: ${error.message}`);
   throw error;
 }
 

@@ -20,9 +20,10 @@ function prelude(opts) {
   this.timeout(config.getTestTimeout());
   this.slow(config.getTestTimeout() / 4);
 
-  const env = {
-    LAMDBA_ERROR: opts.error
-  };
+  const env = {};
+  if (opts.error) {
+    env.LAMDBA_ERROR = opts.error;
+  }
   if (opts.instanaEndpointUrl) {
     env.INSTANA_ENDPOINT_URL = opts.instanaEndpointUrl;
   }

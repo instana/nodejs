@@ -37,10 +37,13 @@ if (process.env.SERVER_TIMING_HEADER) {
 
 const handler = function handler(event, context, callback) {
   console.log('in actual handler');
+  if (event.error === 'synchronous') {
+    throw new Error('Boom!');
+  }
   const req = http.get(config.downstreamDummyUrl, res => {
     res.resume();
     res.on('end', () => {
-      if (event.error) {
+      if (event.error === 'asynchronous') {
         callback(new Error('Boom!'));
       } else {
         if (event.requestedStatusCode) {

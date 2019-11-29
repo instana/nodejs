@@ -1,5 +1,8 @@
 # Changelog
 
+## Unreleased
+- Capture synchronous errors in Lambda functions.
+
 ## 1.81.1
 - Fully cover Winston 3.x API surface.
 
