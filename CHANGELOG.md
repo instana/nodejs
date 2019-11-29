@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.82.0
 - Capture synchronous errors in Lambda functions.
 - Handle ARN correctly when a Lambda function is called via an alias.
 
