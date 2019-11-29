@@ -2,6 +2,7 @@
 
 ## Unreleased
 - Capture synchronous errors in Lambda functions.
+- Handle ARN correctly when a Lambda function is called via an alias.
 
 ## 1.81.1
 - Fully cover Winston 3.x API surface.

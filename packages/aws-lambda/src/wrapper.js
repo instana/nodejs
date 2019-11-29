@@ -3,6 +3,7 @@
 const instanaCore = require('@instana/core');
 const { backendConnector, consoleLogger } = require('@instana/serverless');
 
+const arnParser = require('./arn');
 const identityProvider = require('./identity_provider');
 const metrics = require('./metrics');
 const triggers = require('./triggers');
@@ -60,8 +61,9 @@ function shimmedHandler(originalHandler, originalThis, originalArgs, _config) {
   const incomingTraceId = tracingHeaders.t;
   const incomingParentSpanId = tracingHeaders.s;
   const tracingSuppressed = tracingHeaders.l === '0';
+  const arnInfo = arnParser(context);
 
-  init(event, context, _config);
+  init(event, arnInfo, _config);
 
   // The AWS lambda runtime does not seem to inspect the number of arguments the handler function expects. Instead, it
   // always call the handler with three arguments (event, context, callback), no matter if the handler will use the
@@ -79,8 +81,10 @@ function shimmedHandler(originalHandler, originalThis, originalArgs, _config) {
       entrySpan = tracing
         .getCls()
         .startSpan('aws.lambda.entry', constants.ENTRY, incomingTraceId, incomingParentSpanId);
+      const { arn, alias } = arnInfo;
       entrySpan.data.lambda = {
-        arn: `${context.invokedFunctionArn}:${context.functionVersion}`,
+        arn,
+        alias,
         runtime: 'nodejs',
         functionName: context.functionName,
         functionVersion: context.functionVersion
@@ -108,14 +112,14 @@ function shimmedHandler(originalHandler, originalThis, originalArgs, _config) {
               return Promise.resolve(value);
             }
             handlerHasFinished = true;
-            return postPromise(context, entrySpan, null, value);
+            return postPromise(entrySpan, null, value);
           },
           error => {
             if (handlerHasFinished) {
               return Promise.reject(error);
             }
             handlerHasFinished = true;
-            return postPromise(context, entrySpan, error);
+            return postPromise(entrySpan, error);
           }
         );
       } else {
@@ -143,7 +147,7 @@ function shimmedHandler(originalHandler, originalThis, originalArgs, _config) {
 /**
  * Initialize the wrapper.
  */
-function init(event, context, _config) {
+function init(event, arnInfo, _config) {
   /* eslint-disable dot-notation */
   config = _config || {};
 
@@ -152,7 +156,7 @@ function init(event, context, _config) {
   } else if (config.level || process.env['INSTANA_LOG_LEVEL']) {
     logger.setLevel(config.level || process.env['INSTANA_LOG_LEVEL']);
   }
-  identityProvider.init(context);
+  identityProvider.init(arnInfo);
   backendConnector.init(identityProvider, logger);
 
   instanaCore.init(config, backendConnector, identityProvider);
@@ -165,7 +169,7 @@ function init(event, context, _config) {
 /**
  * Code to be executed after the promise returned by the original handler has completed.
  */
-function postPromise(context, entrySpan, error, value) {
+function postPromise(entrySpan, error, value) {
   return new Promise((resolve, reject) => {
     postHandler(entrySpan, error, value, () => {
       if (error) {
