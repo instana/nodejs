@@ -12,5 +12,5 @@ if [[ -z "$DEMO_APP_HOSTNAME" ]]; then
 fi
 
 bin/create-zip.sh
-scp ../zip/demo-ec2-app.zip "$DEMO_APP_HOSTNAME:/tmp"
+scp ../zip/website-visitor.zip "$DEMO_APP_HOSTNAME:/tmp"
 ssh $DEMO_APP_HOSTNAME 'bash -s' < bin/redeploy-on-ec2.sh

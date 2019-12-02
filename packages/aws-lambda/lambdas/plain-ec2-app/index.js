@@ -77,6 +77,9 @@ app.get('/app', (req, res) => {
           "//eum.instana.io/eum.min.js","InstanaEumObject","ineum");
           ineum('reportingUrl', '${instanaReportingUrl}');
           ineum('key', '${instanaWebsiteKey}');
+          ineum('user', '18180505 ', 'karlm', 'karl@iaa.org');
+          ineum('page', 'lambda-app/main');
+          ineum('meta', 'version', '18640928');
           ineum('whitelistedOrigins', [/.*amazonaws\.com.*/i]);
         </script>
       </head>`;

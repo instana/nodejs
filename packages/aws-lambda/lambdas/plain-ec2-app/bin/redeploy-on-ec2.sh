@@ -1,14 +1,17 @@
 #!/usr/bin/env bash
 set -xeEuo pipefail
 
-cd `dirname $BASH_SOURCE`/..
+mkdir -p /opt/demo-app
+cd /opt/demo-app
 
-pkill -f node || true
+pkill -f demo-app || true
 if [[ -e .env ]]; then
   cp .env /tmp/demo-app-env-file
 fi
+
+cd /opt/demo-app
 rm -rf *
-mv /tmp/demo-ec2-app.zip .
+cp /tmp/demo-ec2-app.zip .
 unzip -o demo-ec2-app.zip
 rm demo-ec2-app.zip
 cp /tmp/demo-app-env-file .env

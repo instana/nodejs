@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
-set -eEuo pipefail
+set -xeEuo pipefail
 
 cd `dirname $BASH_SOURCE`/..
 
-nohup node . &> demo-app.log &
-
+nohup bash -c "exec -a demo-app node ." &> demo-app.log &
