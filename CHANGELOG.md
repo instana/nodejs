@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.82.1
 - Trace MySql pool cluster calls.
 
 ## 1.82.0
