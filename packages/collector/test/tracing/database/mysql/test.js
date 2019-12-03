@@ -8,7 +8,7 @@ const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('../../../config');
 const utils = require('../../../utils');
 
-let expressMysqlControls;
+let controls;
 let agentStubControls;
 
 describe('tracing/mysql', function() {
@@ -17,14 +17,14 @@ describe('tracing/mysql', function() {
     return;
   }
 
-  expressMysqlControls = require('./controls');
+  controls = require('./controls');
   agentStubControls = require('../../../apps/agentStubControls');
 
   this.timeout(config.getTestTimeout());
 
   agentStubControls.registerTestHooks();
 
-  ['mysql', 'mysql2', 'mysql2Promises'].forEach(driverMode => {
+  ['mysql', 'mysql-cluster', 'mysql2', 'mysql2/promises'].forEach(driverMode => {
     [false, true].forEach(function(useExecute) {
       // connection.query or connection.execute
       registerSuite.bind(this)(driverMode, useExecute);
@@ -33,7 +33,7 @@ describe('tracing/mysql', function() {
 });
 
 function registerSuite(driverMode, useExecute) {
-  if (driverMode === 'mysql' && useExecute) {
+  if ((driverMode === 'mysql' || driverMode === 'mysql-cluster') && useExecute) {
     // Not applicable, mysql does not provide an execute function, only the query function whereas mysql2 provides both.
     return;
   }
@@ -43,36 +43,22 @@ function registerSuite(driverMode, useExecute) {
       useExecute
     };
 
-    switch (driverMode) {
-      case 'mysql':
-        // nothing to do, this is the default
-        break;
-      case 'mysql2':
-        opts.useMysql2 = true;
-        break;
-      case 'mysql2Promises':
-        opts.useMysql2 = true;
-        opts.useMysql2WithPromises = true;
-        break;
-      default:
-        throw new Error(`unkown mysql driver mode: ${driverMode}`);
-    }
-
-    expressMysqlControls.registerTestHooks(opts);
+    opts.driverMode = driverMode;
+    controls.registerTestHooks(opts);
     test();
   });
 }
 
 function test() {
-  beforeEach(() => agentStubControls.waitUntilAppIsCompletelyInitialized(expressMysqlControls.getPid()));
+  beforeEach(() => agentStubControls.waitUntilAppIsCompletelyInitialized(controls.getPid()));
 
   it('must trace queries', () =>
-    expressMysqlControls.addValue(42).then(() =>
+    controls.addValue(42).then(() =>
       utils.retry(() =>
         agentStubControls.getSpans().then(spans => {
           const entrySpan = utils.expectOneMatching(spans, span => {
             expect(span.n).to.equal('node.http.server');
-            expect(span.f.e).to.equal(String(expressMysqlControls.getPid()));
+            expect(span.f.e).to.equal(String(controls.getPid()));
             expect(span.f.h).to.equal('agent-stub-uuid');
           });
 
@@ -81,7 +67,7 @@ function test() {
             expect(span.p).to.equal(entrySpan.s);
             expect(span.n).to.equal('mysql');
             expect(span.k).to.equal(constants.EXIT);
-            expect(span.f.e).to.equal(String(expressMysqlControls.getPid()));
+            expect(span.f.e).to.equal(String(controls.getPid()));
             expect(span.f.h).to.equal('agent-stub-uuid');
             expect(span.async).to.equal(false);
             expect(span.error).to.equal(false);
@@ -93,27 +79,27 @@ function test() {
     ));
 
   it('must trace insert and get queries', () =>
-    expressMysqlControls
+    controls
       .addValue(43)
-      .then(() => expressMysqlControls.getValues())
+      .then(() => controls.getValues())
       .then(values => {
         expect(values).to.contain(43);
 
+        // controls.getValues().then(() => {
         return utils.retry(() =>
           agentStubControls.getSpans().then(spans => {
             const postEntrySpan = utils.expectOneMatching(spans, span => {
               expect(span.n).to.equal('node.http.server');
-              expect(span.f.e).to.equal(String(expressMysqlControls.getPid()));
+              expect(span.f.e).to.equal(String(controls.getPid()));
               expect(span.f.h).to.equal('agent-stub-uuid');
               expect(span.data.http.method).to.equal('POST');
             });
-
             utils.expectOneMatching(spans, span => {
               expect(span.t).to.equal(postEntrySpan.t);
               expect(span.p).to.equal(postEntrySpan.s);
               expect(span.n).to.equal('mysql');
               expect(span.k).to.equal(constants.EXIT);
-              expect(span.f.e).to.equal(String(expressMysqlControls.getPid()));
+              expect(span.f.e).to.equal(String(controls.getPid()));
               expect(span.f.h).to.equal('agent-stub-uuid');
               expect(span.async).to.equal(false);
               expect(span.error).to.equal(false);
@@ -124,20 +110,18 @@ function test() {
               expect(span.data.mysql.user).to.equal(process.env.MYSQL_USER);
               expect(span.data.mysql.db).to.equal(process.env.MYSQL_DB);
             });
-
             const getEntrySpan = utils.expectOneMatching(spans, span => {
               expect(span.n).to.equal('node.http.server');
-              expect(span.f.e).to.equal(String(expressMysqlControls.getPid()));
+              expect(span.f.e).to.equal(String(controls.getPid()));
               expect(span.f.h).to.equal('agent-stub-uuid');
               expect(span.data.http.method).to.equal('GET');
             });
-
             utils.expectOneMatching(spans, span => {
               expect(span.t).to.equal(getEntrySpan.t);
               expect(span.p).to.equal(getEntrySpan.s);
               expect(span.n).to.equal('mysql');
               expect(span.k).to.equal(constants.EXIT);
-              expect(span.f.e).to.equal(String(expressMysqlControls.getPid()));
+              expect(span.f.e).to.equal(String(controls.getPid()));
               expect(span.f.h).to.equal('agent-stub-uuid');
               expect(span.async).to.equal(false);
               expect(span.error).to.equal(false);
@@ -153,7 +137,7 @@ function test() {
       }));
 
   it('must keep the tracing context', () =>
-    expressMysqlControls.addValueAndDoCall(1302).then(spanContext => {
+    controls.addValueAndDoCall(1302).then(spanContext => {
       expect(spanContext).to.exist;
       spanContext = JSON.parse(spanContext);
       expect(spanContext.s).to.exist;
@@ -163,7 +147,7 @@ function test() {
         agentStubControls.getSpans().then(spans => {
           const postEntrySpan = utils.expectOneMatching(spans, span => {
             expect(span.n).to.equal('node.http.server');
-            expect(span.f.e).to.equal(String(expressMysqlControls.getPid()));
+            expect(span.f.e).to.equal(String(controls.getPid()));
             expect(span.f.h).to.equal('agent-stub-uuid');
             expect(span.data.http.method).to.equal('POST');
           });
@@ -173,7 +157,7 @@ function test() {
             expect(span.p).to.equal(postEntrySpan.s);
             expect(span.n).to.equal('mysql');
             expect(span.k).to.equal(constants.EXIT);
-            expect(span.f.e).to.equal(String(expressMysqlControls.getPid()));
+            expect(span.f.e).to.equal(String(controls.getPid()));
             expect(span.f.h).to.equal('agent-stub-uuid');
             expect(span.async).to.equal(false);
             expect(span.error).to.equal(false);
@@ -190,7 +174,7 @@ function test() {
             expect(span.p).to.equal(postEntrySpan.s);
             expect(span.n).to.equal('node.http.client');
             expect(span.k).to.equal(constants.EXIT);
-            expect(span.f.e).to.equal(String(expressMysqlControls.getPid()));
+            expect(span.f.e).to.equal(String(controls.getPid()));
             expect(span.f.h).to.equal('agent-stub-uuid');
             expect(span.async).to.equal(false);
             expect(span.error).to.equal(false);
