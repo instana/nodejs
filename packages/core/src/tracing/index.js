@@ -34,6 +34,7 @@ var instrumentations = [
   './instrumentation/frameworks/hapi',
   './instrumentation/frameworks/koa',
   './instrumentation/loggers/bunyan',
+  './instrumentation/loggers/log4js',
   './instrumentation/loggers/pino',
   './instrumentation/loggers/winston',
   './instrumentation/messaging/amqp',

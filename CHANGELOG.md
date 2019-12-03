@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased
+- Add support for the [log4js](https://www.npmjs.com/package/log4js) logging package.
 - [AWS Lambda]: Instrument deprecated legacy Lambda API (context.done, context.succeed, and context.fail).
 
 ## 1.83.0
