@@ -23,12 +23,7 @@ exports.registerTestHooks = opts => {
     env.UPSTREAM_PORT = upstreamPort;
     env.STACK_TRACE_LENGTH = opts.stackTraceLength || 0;
     env.TRACING_ENABLED = opts.enableTracing !== false;
-    if (opts.useMysql2) {
-      env.MYSQL_2_DRIVER = true;
-    }
-    if (opts.useMysql2WithPromises) {
-      env.MYSQL_2_WITH_PROMISES = true;
-    }
+    env.DRIVER_MODE = opts.driverMode;
     if (opts.useExecute) {
       env.USE_EXECUTE = true;
     }

@@ -15,11 +15,22 @@ instana({
 });
 
 const accessFunction = process.env.USE_EXECUTE ? 'execute' : 'query';
+const driverModeEnvVar = process.env.DRIVER_MODE;
+if (!accessFunction || !driverModeEnvVar) {
+  throw new Error(`Invalid configuration: ${accessFunction}, ${driverModeEnvVar}.`);
+}
+
 let driver;
-if (process.env.MYSQL_2_DRIVER) {
-  driver = process.env.MYSQL_2_WITH_PROMISES ? 'mysql2/promise' : 'mysql2';
-} else {
+let useCluster = false;
+if (driverModeEnvVar === 'mysql') {
   driver = 'mysql';
+} else if (driverModeEnvVar === 'mysql-cluster') {
+  driver = 'mysql';
+  useCluster = true;
+} else if (driverModeEnvVar === 'mysql2') {
+  driver = 'mysql2';
+} else if (driverModeEnvVar === 'mysql2/promises') {
+  driver = 'mysql2/promise';
 }
 
 const mysql = require(driver);
@@ -31,13 +42,27 @@ const morgan = require('morgan');
 
 const app = express();
 const logPrefix = `Express / MySQL App (${process.pid}):\t`;
-const pool = mysql.createPool({
-  connectionLimit: 5,
-  host: process.env.MYSQL_HOST,
-  user: process.env.MYSQL_USER,
-  password: process.env.MYSQL_PW,
-  database: process.env.MYSQL_DB
-});
+let pool;
+
+if (useCluster) {
+  var poolCluster = mysql.createPoolCluster({});
+  poolCluster.add({
+    connectionLimit: 5,
+    host: process.env.MYSQL_HOST,
+    user: process.env.MYSQL_USER,
+    password: process.env.MYSQL_PW,
+    database: process.env.MYSQL_DB
+  });
+  pool = poolCluster.of('*');
+} else {
+  pool = mysql.createPool({
+    connectionLimit: 5,
+    host: process.env.MYSQL_HOST,
+    user: process.env.MYSQL_USER,
+    password: process.env.MYSQL_PW,
+    database: process.env.MYSQL_DB
+  });
+}
 
 function wrapAccess(connection, query, optQueryParams, cb) {
   if (accessFunction === 'execute') {

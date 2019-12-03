@@ -33,7 +33,8 @@ function instrumentMysql2WithPromises(mysql) {
 function instrumentPool(Pool) {
   shimmer.wrap(Pool, 'query', shimQuery);
   // There is also an 'execute' method on the pool object but it uses the connection internally, so we do not need to
-  // it. This is handled by the instrumented methods on Connection. We do need to instrument 'pool.query', though.
+  // instrument it. This is handled by the instrumented methods on Connection. We do need to instrument 'pool.query',
+  // though.
   shimmer.wrap(Pool, 'getConnection', shimGetConnection);
 }
 
@@ -168,14 +169,9 @@ function instrumentedAccessFunction(
     }
 
     // no promise, continue with standard instrumentation
-    var originalCallback = originalArgs[originalArgs.length - 1];
-    var hasCallback = false;
-    if (typeof originalCallback === 'function') {
-      originalCallback = cls.ns.bind(originalCallback);
-      hasCallback = true;
-    }
+    var originalCallback;
 
-    originalArgs[originalArgs.length - 1] = function onResult(error) {
+    function onResult(error) {
       if (error) {
         span.ec = 1;
         span.error = true;
@@ -185,17 +181,27 @@ function instrumentedAccessFunction(
       span.d = Date.now() - span.ts;
       span.transmit();
 
-      if (hasCallback) {
+      if (originalCallback) {
         return originalCallback.apply(this, arguments);
       }
-    };
+    }
+
+    if (typeof statementOrOpts._callback === 'function') {
+      originalCallback = cls.ns.bind(statementOrOpts._callback);
+      statementOrOpts._callback = onResult;
+    } else {
+      if (typeof originalArgs[originalArgs.length - 1] === 'function') {
+        originalCallback = cls.ns.bind(originalArgs[originalArgs.length - 1]);
+      }
+      originalArgs[originalArgs.length - 1] = onResult;
+    }
 
     return originalFunction.apply(ctx, originalArgs);
   });
 }
 
 function shimGetConnection(original) {
-  return function(cb) {
+  return function getConnection(cb) {
     return original.call(this, cls.ns.bind(cb));
   };
 }
