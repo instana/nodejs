@@ -10,7 +10,7 @@ instana({
   logger: require('bunyan').createLogger({ name: 'app-logger' }),
   level: 'warn',
   tracing: {
-    enabled: process.env.TRACING_ENABLED === 'true',
+    enabled: process.env.TRACING_ENABLED !== 'false',
     forceTransmissionStartingAt: 1
   }
 });

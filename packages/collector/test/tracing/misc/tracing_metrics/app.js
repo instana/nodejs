@@ -4,7 +4,7 @@ const instana = require('../../../../')({
   agentPort: process.env.AGENT_PORT,
   level: 'warn',
   tracing: {
-    enabled: process.env.TRACING_ENABLED === 'true',
+    enabled: process.env.TRACING_ENABLED !== 'false',
     forceTransmissionStartingAt: process.env.FORCE_TRANSMISSION_STARTING_AT
       ? parseInt(process.env.FORCE_TRANSMISSION_STARTING_AT, 10)
       : 1,
