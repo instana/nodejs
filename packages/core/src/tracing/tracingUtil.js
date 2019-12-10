@@ -6,25 +6,6 @@ var hexDecoder = new StringDecoder('hex');
 
 var stackTrace = require('../util/stackTrace');
 
-const ZERO_PADDING = [
-  '000000000000000',
-  '00000000000000',
-  '0000000000000',
-  '000000000000',
-  '00000000000',
-  '0000000000',
-  '000000000',
-  '00000000',
-  '0000000',
-  '000000',
-  '00000',
-  '0000',
-  '000',
-  '00',
-  '0',
-  '0'
-];
-
 var stackTraceLength = 10;
 
 exports.init = function(config) {
@@ -51,33 +32,6 @@ exports.generateRandomId = function(length) {
     .slice(0, length);
 };
 
-/**
- * - convert one BigInt to a 64 bit hexString: signedBigIntToUnsignedHexString(bigInt)
- * - convert two BigInts to one 128 bit hexString: signedBigIntToUnsignedHexString(hi, lo)
- */
-exports.signedBigIntToUnsignedHexString = function signedBigIntToUnsignedHexString(hi, lo) {
-  if (lo == null) {
-    lo = hi;
-    hi = null;
-  }
-  if (hi === 0n || hi == null) {
-    return toUnsignedHexString(lo);
-  }
-  return toUnsignedHexString(hi) + toUnsignedHexString(lo);
-};
-
-function toUnsignedHexString(bigInt) {
-  // see also: https://docs.oracle.com/en/java/javase/13/docs/api/java.base/java/lang/Long.html#toHexString(long)
-  if (bigInt < 0n) {
-    bigInt += 18446744073709551616n; // 2^64
-  }
-  const hexString = bigInt.toString(16);
-  if (hexString.length < 16) {
-    return ZERO_PADDING[hexString.length - 1] + hexString;
-  }
-  return hexString;
-}
-
 exports.readTraceContextFromBuffer = function readTraceContextFromBuffer(buffer) {
   if (!Buffer.isBuffer(buffer)) {
     throw new Error('Not a buffer: ' + buffer);
@@ -96,26 +50,6 @@ exports.readTraceContextFromBuffer = function readTraceContextFromBuffer(buffer)
 
 function readHexFromBuffer(buffer, offset, length) {
   return hexDecoder.write(buffer.slice(offset, offset + length));
-}
-
-exports.unsignedHexStringToSignedBigInt = function unsignedHexStringToSignedBigInt(hexString) {
-  if (hexString.length <= 16) {
-    return toBigInt(hexString);
-  } else {
-    return toBigInt(hexString.substring(0, 16));
-  }
-};
-
-exports.unsignedHexStringToLoTraceIdBigInt = function unsignedHexStringToLoTraceIdBigInt(hexString) {
-  return toBigInt(hexString.substring(16, 32));
-};
-
-function toBigInt(hexString) {
-  var bigInt = BigInt(`0x${hexString}`);
-  if (bigInt >= 9223372036854775808n) {
-    bigInt -= 18446744073709551616n; // 2^64
-  }
-  return bigInt;
 }
 
 exports.unsignedHexStringToBuffer = function unsignedHexStringToBuffer(hexString, buffer, offsetFromRight) {
