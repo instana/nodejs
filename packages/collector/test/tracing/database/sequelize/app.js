@@ -6,7 +6,7 @@ require('../../../../')({
   agentPort: process.env.AGENT_PORT,
   level: 'warn',
   tracing: {
-    enabled: process.env.TRACING_ENABLED === 'true',
+    enabled: process.env.TRACING_ENABLED !== 'false',
     forceTransmissionStartingAt: 1
   }
 });

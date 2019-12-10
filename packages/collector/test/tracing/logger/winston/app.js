@@ -9,7 +9,7 @@ instana({
   agentPort,
   level: 'warn',
   tracing: {
-    enabled: process.env.TRACING_ENABLED === 'true',
+    enabled: process.env.TRACING_ENABLED !== 'false',
     forceTransmissionStartingAt: 1
   }
 });

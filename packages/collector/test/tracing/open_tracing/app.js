@@ -8,7 +8,7 @@ instana({
   level: 'warn',
   serviceName: 'theFancyServiceYouWouldntBelieveActuallyExists',
   tracing: {
-    enabled: process.env.TRACING_ENABLED === 'true',
+    enabled: process.env.TRACING_ENABLED !== 'false',
     forceTransmissionStartingAt: 1,
     disableAutomaticTracing: process.env.DISABLE_AUTOMATIC_TRACING === 'true'
   }
