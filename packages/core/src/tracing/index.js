@@ -37,6 +37,7 @@ var instrumentations = [
   './instrumentation/loggers/pino',
   './instrumentation/loggers/winston',
   './instrumentation/messaging/amqp',
+  './instrumentation/messaging/kafkaJs',
   './instrumentation/messaging/kafkaNode',
   './instrumentation/messaging/nats',
   './instrumentation/messaging/natsStreaming',

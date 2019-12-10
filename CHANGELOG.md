@@ -1,5 +1,8 @@
 # Changelog
 
+## Unreleased
+- Add kafkajs instrumentation ([kafkajs](https://www.npmjs.com/package/kafkajs)).
+
 ## 1.82.1
 - Trace MySql pool cluster calls.
 

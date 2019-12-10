@@ -99,6 +99,9 @@ SpanHandle.prototype.end = function end(errorCount) {
   }
   if (typeof errorCount === 'number') {
     this.span.ec = errorCount;
+    if (errorCount > 0) {
+      this.span.error = true;
+    }
   }
   this.span.transmitManual();
 };
