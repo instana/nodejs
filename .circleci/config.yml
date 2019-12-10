@@ -101,7 +101,7 @@ kafka: &kafka
   - image: wurstmeister/kafka:2.12-2.2.1
     environment:
       KAFKA_ADVERTISED_HOST_NAME: 127.0.0.1
-      KAFKA_CREATE_TOPICS: test:1:1
+      KAFKA_CREATE_TOPICS: "test:1:1,test-topic-1:1:1,test-topic-2:1:1,test-batch-topic-1:1:1,test-batch-topic-2:1:1"
       KAFKA_ZOOKEEPER_CONNECT: 127.0.0.1:2181
 
 mongo: &mongo

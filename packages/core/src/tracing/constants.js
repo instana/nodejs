@@ -2,10 +2,20 @@
 
 exports.spanIdHeaderName = 'X-INSTANA-S';
 exports.spanIdHeaderNameLowerCase = exports.spanIdHeaderName.toLowerCase();
+
 exports.traceIdHeaderName = 'X-INSTANA-T';
 exports.traceIdHeaderNameLowerCase = exports.traceIdHeaderName.toLowerCase();
+
 exports.traceLevelHeaderName = 'X-INSTANA-L';
 exports.traceLevelHeaderNameLowerCase = exports.traceLevelHeaderName.toLowerCase();
+
+exports.kafkaTraceContextHeaderName = 'X_INSTANA_C';
+exports.kafkaTraceLevelHeaderName = 'X_INSTANA_L';
+
+// The JVM tracers sends and expects one single signed byte.
+exports.kafkaTraceLevelValueSuppressed = Buffer.from([0]);
+exports.kafkaTraceLevelValueInherit = Buffer.from([1]);
+
 exports.serviceNameHeaderName = 'X-Instana-Service';
 exports.serviceNameHeaderNameLowerCase = exports.serviceNameHeaderName.toLowerCase();
 
