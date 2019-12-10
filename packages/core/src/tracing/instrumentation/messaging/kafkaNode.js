@@ -8,7 +8,7 @@ var constants = require('../../constants');
 var cls = require('../../cls');
 
 var logger;
-logger = require('../../../logger').getLogger('tracing/kafka', function(newLogger) {
+logger = require('../../../logger').getLogger('tracing/kafka-node', function(newLogger) {
   logger = newLogger;
 });
 

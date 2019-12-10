@@ -8,7 +8,7 @@ require('../../../../')({
   agentPort,
   level: 'warn',
   tracing: {
-    enabled: process.env.TRACING_ENABLED === 'true',
+    enabled: process.env.TRACING_ENABLED !== 'false',
     forceTransmissionStartingAt: 1
   }
 });
@@ -63,14 +63,14 @@ app.listen(process.env.APP_PORT, () => {
 
 app.post('/send-message', (req, res) => {
   const key = req.body.key;
-  const message = req.body.message;
+  const value = req.body.value;
 
-  log('Sending message with key %s and body %s', key, message);
+  log('Sending message with key %s and value %s', key, value);
   producer.send(
     [
       {
         topic: 'test',
-        messages: new kafka.KeyedMessage(key, message)
+        messages: new kafka.KeyedMessage(key, value)
       }
     ],
     err => {
