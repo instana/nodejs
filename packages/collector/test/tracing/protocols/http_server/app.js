@@ -2,13 +2,7 @@
 
 'use strict';
 
-require('../../../../')({
-  agentPort: process.env.AGENT_PORT,
-  level: 'info',
-  tracing: {
-    forceTransmissionStartingAt: 1
-  }
-});
+require('../../../../')();
 
 const logPrefix = `HTTP: Server (${process.pid}):\t`;
 

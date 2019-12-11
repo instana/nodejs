@@ -1,12 +1,6 @@
 'use strict';
 
-const config = {
-  agentPort: process.env.AGENT_PORT,
-  level: 'warn',
-  tracing: {
-    forceTransmissionStartingAt: 1
-  }
-};
+const config = {};
 
 if (process.env.SERVICE_CONFIG) {
   config.serviceName = process.env.SERVICE_CONFIG;

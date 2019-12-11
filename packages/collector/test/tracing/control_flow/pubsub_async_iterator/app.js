@@ -1,13 +1,6 @@
 'use strict';
 
-const instana = require('../../../../');
-instana({
-  agentPort: process.env.AGENT_PORT,
-  level: 'warn',
-  tracing: {
-    forceTransmissionStartingAt: 1
-  }
-});
+require('../../../../')();
 
 const cls = require('../../../../../core/src/tracing/cls');
 

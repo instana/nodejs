@@ -1,13 +1,6 @@
 'use strict';
 
-const instana = require('../../../../')({
-  agentPort,
-  level: 'warn',
-  tracing: {
-    enabled: process.env.TRACING_ENABLED !== 'false',
-    forceTransmissionStartingAt: 1
-  }
-});
+const instana = require('../../../../')();
 
 const express = require('express');
 const { Kafka } = require('kafkajs');

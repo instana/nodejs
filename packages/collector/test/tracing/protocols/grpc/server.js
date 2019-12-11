@@ -3,15 +3,8 @@
 'use strict';
 
 const port = process.env.APP_PORT || 3217;
-const agentPort = process.env.AGENT_PORT;
 
-require('../../../../')({
-  agentPort,
-  level: 'warn',
-  tracing: {
-    forceTransmissionStartingAt: 1
-  }
-});
+require('../../../../')();
 
 const express = require('express');
 const morgan = require('morgan');
