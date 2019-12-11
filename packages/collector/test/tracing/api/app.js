@@ -2,14 +2,7 @@
 
 'use strict';
 
-const instana = require('../../../')({
-  agentPort: process.env.AGENT_PORT,
-  level: 'warn',
-  tracing: {
-    enabled: process.env.TRACING_ENABLED !== 'false',
-    forceTransmissionStartingAt: 1
-  }
-});
+const instana = require('../../../')();
 
 const express = require('express');
 const morgan = require('morgan');

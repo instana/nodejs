@@ -3,16 +3,9 @@
 'use strict';
 
 const appPort = process.env.APP_PORT || 3215;
-const agentPort = process.env.AGENT_PORT;
+const agentPort = process.env.INSTANA_AGENT_PORT;
 
-const instana = require('../../../../')({
-  agentPort,
-  level: 'warn',
-  tracing: {
-    enabled: process.env.TRACING_ENABLED !== 'false',
-    forceTransmissionStartingAt: 1
-  }
-});
+const instana = require('../../../../')();
 
 const express = require('express');
 const kafka = require('kafka-node');

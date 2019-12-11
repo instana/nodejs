@@ -1,31 +1,19 @@
 'use strict';
 
-const agentPort = process.env.AGENT_PORT;
+const agentPort = process.env.INSTANA_AGENT_PORT;
 
 let http;
 let httpGet;
 
 if (process.env.REQUIRE_BEFORE_COLLECTOR) {
-  // Deliberately Initializing @instana/collector too late, that is, after requiring other modules.
+  // Deliberately initializing @instana/collector too late, that is, after requiring other modules.
   http = require('http');
   httpGet = http.get;
   require(process.env.REQUIRE_BEFORE_COLLECTOR);
-  require('../../../../')({
-    agentPort: agentPort,
-    level: 'warn',
-    tracing: {
-      forceTransmissionStartingAt: 1
-    }
-  });
+  require('../../../../')();
 } else {
   // Initializing @instana/collector properly, before other require statements.
-  require('../../../../')({
-    agentPort: agentPort,
-    level: 'warn',
-    tracing: {
-      forceTransmissionStartingAt: 1
-    }
-  });
+  require('../../../../')();
   http = require('http');
   httpGet = http.get;
 }

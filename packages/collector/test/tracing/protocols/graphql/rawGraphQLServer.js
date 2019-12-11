@@ -2,13 +2,7 @@
 
 'use strict';
 
-require('../../../../')({
-  agentPort: process.env.AGENT_PORT,
-  level: process.env.INSTANA_LOG_LEVEL || 'warn',
-  tracing: {
-    enabled: process.env.TRACING_ENABLED !== 'false'
-  }
-});
+require('../../../../')();
 
 const bodyParser = require('body-parser');
 const express = require('express');

@@ -2,13 +2,7 @@
 
 'use strict';
 
-const instana = require('../../../../')({
-  agentPort: process.env.AGENT_PORT,
-  level: process.env.INSTANA_LOG_LEVEL || 'warn',
-  tracing: {
-    enabled: process.env.TRACING_ENABLED !== 'false'
-  }
-});
+const instana = require('../../../../')();
 
 const { ApolloServer, gql } = require('apollo-server-express');
 const bodyParser = require('body-parser');

@@ -2,13 +2,7 @@
 
 'use strict';
 
-require('../../')({
-  agentPort: process.env.AGENT_PORT,
-  level: 'warn',
-  tracing: {
-    enabled: false
-  }
-});
+require('../../')();
 
 const express = require('express');
 const morgan = require('morgan');

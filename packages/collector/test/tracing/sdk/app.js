@@ -2,16 +2,9 @@
 
 'use strict';
 
-const agentPort = process.env.AGENT_PORT;
+const agentPort = process.env.INSTANA_AGENT_PORT;
 
-const instana = require('../../../')({
-  agentPort,
-  level: 'warn',
-  tracing: {
-    enabled: process.env.TRACING_ENABLED !== 'false',
-    forceTransmissionStartingAt: 1
-  }
-});
+const instana = require('../../../')();
 
 const fs = require('fs');
 const bodyParser = require('body-parser');

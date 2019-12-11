@@ -6,10 +6,12 @@
 
 const instana = require('../../..');
 const config = {
-  agentPort: process.env.AGENT_PORT,
-  level: 'warn'
-  // not using "forceTransmissionStartingAt: 1" as usual here to verify that the uncaught exception handler actually
-  // transmits the erroneous span before terminating the process.
+  // Overriding the default setting of INSTANA_FORCE_TRANSMISSION_STARTING_AT=1 that we usually use for all other
+  // tests. This is done to verify that the uncaught exception handler actually transmits the erroneous span before
+  // terminating the process.
+  tracing: {
+    forceTransmissionStartingAt: 500
+  }
 };
 if (process.env.ENABLE_REPORT_UNCAUGHT_EXCEPTION) {
   config.reportUncaughtException = true;

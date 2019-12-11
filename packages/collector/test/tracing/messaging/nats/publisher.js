@@ -1,15 +1,8 @@
 'use strict';
 
-const agentPort = process.env.AGENT_PORT;
+const agentPort = process.env.INSTANA_AGENT_PORT;
 
-require('../../../../')({
-  agentPort,
-  level: process.env.INSTANA_LOG_LEVEL || 'warn',
-  tracing: {
-    enabled: process.env.TRACING_ENABLED !== 'false',
-    forceTransmissionStartingAt: 1
-  }
-});
+require('../../../../')();
 
 const request = require('request-promise');
 const express = require('express');

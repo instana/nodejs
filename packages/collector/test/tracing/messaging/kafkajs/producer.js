@@ -2,16 +2,7 @@
 
 'use strict';
 
-const agentPort = process.env.AGENT_PORT;
-
-require('../../../../')({
-  agentPort,
-  level: 'warn',
-  tracing: {
-    enabled: process.env.TRACING_ENABLED !== 'false',
-    forceTransmissionStartingAt: 1
-  }
-});
+require('../../../../')();
 
 const request = require('request-promise');
 const bodyParser = require('body-parser');
@@ -21,6 +12,7 @@ const { Kafka } = require('kafkajs');
 const delay = require('../../../test_util/delay');
 
 const appPort = process.env.APP_PORT || 3216;
+const agentPort = process.env.INSTANA_AGENT_PORT || 42699;
 const runAsStandAlone = !!process.env.RUN_AS_STAND_ALONE;
 
 const kafka = new Kafka({

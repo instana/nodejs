@@ -16,13 +16,7 @@ const port = process.env.APP_PORT || 3000;
 const app = new http.Server();
 
 // Only calling @instana/collector#init now, after require statements (and in particular, _after_ requiring pino).
-instana({
-  agentPort: process.env.AGENT_PORT,
-  level: 'info',
-  tracing: {
-    forceTransmissionStartingAt: 1
-  }
-});
+instana();
 
 app.on('request', (req, res) => {
   if (process.env.WITH_STDOUT) {

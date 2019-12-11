@@ -142,8 +142,34 @@ function normalizeAutomaticTracingEnabled(config) {
 
 function normalizeTracingTransmission(config) {
   config.tracing.maxBufferedSpans = config.tracing.maxBufferedSpans || defaults.tracing.maxBufferedSpans;
-  config.tracing.forceTransmissionStartingAt =
-    config.tracing.forceTransmissionStartingAt || defaults.tracing.forceTransmissionStartingAt;
+
+  var originalValue = config.tracing.forceTransmissionStartingAt;
+  if (
+    config.tracing.forceTransmissionStartingAt == null &&
+    process.env['INSTANA_FORCE_TRANSMISSION_STARTING_AT'] == null
+  ) {
+    config.tracing.forceTransmissionStartingAt = defaults.tracing.forceTransmissionStartingAt;
+    return;
+  } else if (
+    config.tracing.forceTransmissionStartingAt == null &&
+    process.env['INSTANA_FORCE_TRANSMISSION_STARTING_AT'] != null
+  ) {
+    originalValue = process.env['INSTANA_FORCE_TRANSMISSION_STARTING_AT'];
+    config.tracing.forceTransmissionStartingAt = parseInt(originalValue, 10);
+  }
+
+  if (
+    typeof config.tracing.forceTransmissionStartingAt !== 'number' ||
+    isNaN(config.tracing.forceTransmissionStartingAt)
+  ) {
+    logger.warn(
+      'The value of config.tracing.forceTransmissionStartingAt (or INSTANA_FORCE_TRANSMISSION_STARTING_AT) ("%s") is ' +
+        'not numerical or cannot be parsed to a numerical value. Assuming the default value %s.',
+      originalValue,
+      defaults.tracing.forceTransmissionStartingAt
+    );
+    config.tracing.forceTransmissionStartingAt = defaults.tracing.forceTransmissionStartingAt;
+  }
 }
 
 function normalizeTracingHttp(config) {

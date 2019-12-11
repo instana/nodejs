@@ -3,14 +3,7 @@
 
 'use strict';
 
-const instana = require('../../../../');
-instana({
-  agentPort: process.env.AGENT_PORT,
-  level: 'warn',
-  tracing: {
-    forceTransmissionStartingAt: 1
-  }
-});
+const instana = require('../../../../')();
 
 const request = require('request-promise');
 const bodyParser = require('body-parser');

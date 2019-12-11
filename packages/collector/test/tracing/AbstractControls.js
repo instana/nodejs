@@ -27,9 +27,10 @@ const AbstractControls = (module.exports = function AbstractControls(opts = {}) 
     process.env,
     {
       APP_PORT: this.port,
-      AGENT_PORT: agentPort,
       INSTANA_AGENT_PORT: agentPort,
-      TRACING_ENABLED: this.tracingEnabled,
+      INSTANA_LOG_LEVEL: 'warn',
+      INSTANA_DISABLE_TRACING: !this.tracingEnabled,
+      INSTANA_FORCE_TRANSMISSION_STARTING_AT: '1',
       INSTANA_DEV_MIN_DELAY_BEFORE_SENDING_SPANS: opts.minimalDelay != null ? opts.minimalDelay : 0
     },
     opts.env

@@ -3,13 +3,7 @@
 
 'use strict';
 
-require('../../../../')({
-  agentPort: process.env.AGENT_PORT,
-  level: 'warn',
-  tracing: {
-    forceTransmissionStartingAt: 1
-  }
-});
+require('../../../../')();
 
 const Koa = require('koa');
 const Router = require('koa-router');
