@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.83.0
 - Add kafkajs instrumentation ([kafkajs](https://www.npmjs.com/package/kafkajs)).
 
 ## 1.82.1
