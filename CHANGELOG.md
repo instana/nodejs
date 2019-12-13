@@ -3,6 +3,7 @@
 ## Unreleased
 - Add support for the [log4js](https://www.npmjs.com/package/log4js) logging package.
 - [AWS Lambda]: Instrument deprecated legacy Lambda API (context.done, context.succeed, and context.fail).
+- Fix stack trace capturing for Winston log calls.
 
 ## 1.83.0
 - Add kafkajs instrumentation ([kafkajs](https://www.npmjs.com/package/kafkajs)).

@@ -1,7 +1,7 @@
 'use strict';
 
 // See v8 Error API docs at
-// https://github.com/v8/v8/wiki/Stack%20Trace%20API
+// https://v8.dev/docs/stack-trace-api
 
 exports.captureStackTrace = function captureStackTrace(length, referenceFunction) {
   if (length <= 0) {
@@ -15,6 +15,12 @@ exports.captureStackTrace = function captureStackTrace(length, referenceFunction
   Error.prepareStackTrace = jsonPrepareStackTrace;
   var stackTraceTarget = {};
   Error.captureStackTrace(stackTraceTarget, referenceFunction);
+  if (stackTraceTarget.stack == null || stackTraceTarget.stack.length === 0) {
+    // Fallback in case we have been passed a bogus referenceFunction which leads to Error.captureStackTrace returning
+    // an empty array. With this fallback, we at least get a stack trace that contains the source of the call. The
+    // drawback is that it might show too much, but that's better than not having any stack trace at all.
+    Error.captureStackTrace(stackTraceTarget);
+  }
   var stack = stackTraceTarget.stack;
   Error.stackTraceLimit = originalLimit;
   Error.prepareStackTrace = originalPrepareStackTrace;

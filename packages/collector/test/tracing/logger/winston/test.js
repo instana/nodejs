@@ -1,7 +1,7 @@
 'use strict';
 
 const semver = require('semver');
-const expect = require('chai').expect;
+const { expect, fail } = require('chai');
 
 const constants = require('@instana/core').tracing.constants;
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
@@ -126,6 +126,19 @@ describe('tracing/logger/winston', function() {
     expect(span.data).to.exist;
     expect(span.data.log).to.exist;
     expect(span.data.log.message).to.equal(message);
+    verifyStackTrace(span);
+  }
+
+  function verifyStackTrace(span) {
+    expect(span.stack).to.be.an('array');
+    expect(span.stack).to.not.be.empty;
+    let found = false;
+    span.stack.forEach(callSite => {
+      found = found || callSite.c.indexOf('winston/app.js') >= 0;
+    });
+    if (!found) {
+      fail('Did not find the expected call site winston/app.js in ' + JSON.stringify(span.stack, null, 2));
+    }
   }
 
   function checkNextExitSpan(span, parent) {

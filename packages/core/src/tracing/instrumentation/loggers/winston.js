@@ -151,7 +151,7 @@ function levelIsError(level) {
 function createSpan(ctx, originalMethod, originalArgs, message, markAsError) {
   return cls.ns.runAndReturn(function() {
     var span = cls.startSpan('log.winston', constants.EXIT);
-    span.stack = tracingUtil.getStackTrace(instrumentedLevelMethod);
+    span.stack = tracingUtil.getStackTrace(createSpan);
     span.data.log = {
       message: message
     };
