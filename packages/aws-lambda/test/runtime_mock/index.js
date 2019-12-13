@@ -60,13 +60,12 @@ function validateDefinition() {
  * Runs the given lambda handler.
  */
 function runHandler(handler, error) {
-  const context = createContext();
   const event = createEvent(error);
   registerErrorHandling();
   log(`Running ${definitionPath}.`);
 
   let handlerHasFinished = false;
-  const promise = handler(event, context, (err, result) => {
+  const callback = function(err, result) {
     if (handlerHasFinished) {
       return;
     }
@@ -92,7 +91,11 @@ function runHandler(handler, error) {
     });
     // eslint-disable-next-line consistent-return
     return terminate();
-  });
+  };
+
+  const context = createContext(callback);
+
+  const promise = handler(event, context, callback);
 
   if (promise && typeof promise.then === 'function') {
     promise.then(
@@ -133,13 +136,27 @@ function runHandler(handler, error) {
   }
 }
 
-function createContext() {
+function createContext(callback) {
   const functionName = process.env.LAMBDA_FUNCTION_NAME ? process.env.LAMBDA_FUNCTION_NAME : 'functionName';
   const functionVersion = process.env.LAMBDA_FUNCTION_VERSION ? process.env.LAMBDA_FUNCTION_VERSION : '$LATEST';
   const alias = process.env.LAMBDA_FUNCTION_ALIAS;
   const invokedFunctionArn = alias
     ? `arn:aws:lambda:us-east-2:410797082306:function:${functionName}:${process.env.LAMBDA_FUNCTION_ALIAS}`
     : `arn:aws:lambda:us-east-2:410797082306:function:${functionName}`;
+
+  const done = (err, result) => {
+    callback(err, result);
+  };
+  const succeed = result => {
+    done(null, result);
+  };
+  const fail = err => {
+    if (err == null) {
+      done('handled');
+    } else {
+      done(err, null);
+    }
+  };
 
   return {
     callbackWaitsForEmptyEventLoop: false,
@@ -150,7 +167,10 @@ function createContext() {
     functionVersion,
     invokeid: '20024b9e-e726-40e2-915e-f787357738f7',
     awsRequestId: '20024b9e-e726-40e2-915e-f787357738f7',
-    invokedFunctionArn
+    invokedFunctionArn,
+    done,
+    succeed,
+    fail
   };
 }
 
