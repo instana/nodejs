@@ -102,6 +102,45 @@ function shimmedHandler(originalHandler, originalThis, originalArgs, _config) {
       });
     };
 
+    // The functions context.done, context.succeed, and context.fail constitute a deprecated legacy Lambda API from the
+    // very first incarnations of the Node.js Lambda execution environment from ca. 2016. Although it is not documented
+    // anymore in the AWS Lambda docs, it still works (and is also used by some customers). See
+    // eslint-disable-next-line max-len
+    // https://web.archive.org/web/20161216092320/https://docs.aws.amazon.com/lambda/latest/dg/nodejs-prog-model-using-old-runtime.html
+    // for information about it.
+    const originalDone = context.done;
+    context.done = (originalError, originalResult) => {
+      if (handlerHasFinished) {
+        return;
+      }
+      handlerHasFinished = true;
+      postHandler(entrySpan, originalError, originalResult, () => {
+        originalDone(originalError, originalResult);
+      });
+    };
+
+    const originalSucceed = context.succeed;
+    context.succeed = originalResult => {
+      if (handlerHasFinished) {
+        return;
+      }
+      handlerHasFinished = true;
+      postHandler(entrySpan, undefined, originalResult, () => {
+        originalSucceed(originalResult);
+      });
+    };
+
+    const originalFail = context.fail;
+    context.fail = originalError => {
+      if (handlerHasFinished) {
+        return;
+      }
+      handlerHasFinished = true;
+      postHandler(entrySpan, originalError, undefined, () => {
+        originalFail(originalError);
+      });
+    };
+
     let handlerPromise;
     try {
       handlerPromise = originalHandler.apply(originalThis, originalArgs);
