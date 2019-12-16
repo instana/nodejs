@@ -4,9 +4,9 @@ const expect = require('chai').expect;
 const semver = require('semver');
 
 const constants = require('@instana/core').tracing.constants;
-const config = require('../../../config');
+const config = require('../../../../../core/test/config');
 const delay = require('../../../test_util/delay');
-const utils = require('../../../utils');
+const utils = require('../../../../../core/test/utils');
 
 let agentControls;
 let ClientControls;

@@ -7,8 +7,8 @@ const os = require('os');
 const path = require('path');
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 
-const config = require('./config');
-const utils = require('./utils');
+const config = require('../../core/test/config');
+const utils = require('../../core/test/utils');
 
 describe('setLogger', function() {
   if (!supportedVersion(process.versions.node)) {

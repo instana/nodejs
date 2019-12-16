@@ -7,9 +7,9 @@ const expect = require('chai').expect;
 const semver = require('semver');
 const net = require('net');
 
-const config = require('../config');
+const config = require('../../../core/test/config');
 const activeHandles = require('../../src/metrics/activeHandles');
-const utils = require('../utils');
+const utils = require('../../../core/test/utils');
 
 describe('metrics.activeHandles', function() {
   this.timeout(config.getTestTimeout());

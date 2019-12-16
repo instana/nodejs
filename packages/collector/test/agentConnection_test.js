@@ -4,7 +4,7 @@ const expect = require('chai').expect;
 
 const constants = require('@instana/core').tracing.constants;
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
-const config = require('./config');
+const config = require('../../core/test/config');
 
 const dummyEntry = {
   n: 'dummy.entry',

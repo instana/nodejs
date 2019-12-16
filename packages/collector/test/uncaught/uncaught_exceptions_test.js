@@ -6,8 +6,8 @@ const expect = chai.expect;
 const assert = chai.assert;
 
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
-const config = require('../config');
-const utils = require('../utils');
+const config = require('../../../core/test/config');
+const utils = require('../../../core/test/utils');
 
 describe('uncaught exceptions', function() {
   if (!supportedVersion(process.versions.node)) {

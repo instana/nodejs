@@ -4,7 +4,7 @@
 
 const expect = require('chai').expect;
 
-const utils = require('../utils');
+const utils = require('../../../core/test/utils');
 const dependencies = require('../../src/metrics/dependencies');
 
 describe('metrics.dependencies', () => {

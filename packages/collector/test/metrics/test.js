@@ -3,8 +3,8 @@
 const expect = require('chai').expect;
 const _ = require('lodash');
 
-const config = require('../config');
-const utils = require('../utils');
+const config = require('../../../core/test/config');
+const utils = require('../../../core/test/utils');
 
 describe('metrics', function() {
   this.timeout(config.getTestTimeout());

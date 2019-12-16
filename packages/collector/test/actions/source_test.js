@@ -5,8 +5,8 @@ const path = require('path');
 const semver = require('semver');
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 
-const config = require('../config');
-const utils = require('../utils');
+const config = require('../../../core/test/config');
+const utils = require('../../../core/test/utils');
 
 describe('actions/source', function() {
   if (semver.satisfies(process.versions.node, '<4')) {

@@ -4,7 +4,7 @@ const expect = require('chai').expect;
 const Promise = require('bluebird');
 
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
-const config = require('../config');
+const config = require('../../../core/test/config');
 
 /**
  * Tests behaviour when the Instana Node.js collector is active but tracing is disabled.

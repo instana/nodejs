@@ -8,8 +8,8 @@ const request = require('request-promise');
 const _ = require('lodash');
 
 const agentPort = require('../apps/agentStubControls').agentPort;
-const config = require('../config');
-const utils = require('../utils');
+const config = require('../../../core/test/config');
+const utils = require('../../../core/test/utils');
 
 const AbstractControls = (module.exports = function AbstractControls(opts = {}) {
   // absolute path to .js file that should be executed

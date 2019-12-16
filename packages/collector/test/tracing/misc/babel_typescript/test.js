@@ -10,8 +10,8 @@ const rimraf = require('rimraf');
 
 const constants = require('@instana/core').tracing.constants;
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
-const config = require('../../../config');
-const utils = require('../../../utils');
+const config = require('../../../../../core/test/config');
+const utils = require('../../../../../core/test/utils');
 
 const babelAppDir = path.join(__dirname, '../../../apps/babel-typescript');
 const babelLibDir = path.join(babelAppDir, 'lib');

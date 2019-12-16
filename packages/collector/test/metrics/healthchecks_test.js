@@ -2,8 +2,8 @@
 
 const expect = require('chai').expect;
 const semver = require('semver');
-const config = require('../config');
-const utils = require('../utils');
+const config = require('../../../core/test/config');
+const utils = require('../../../core/test/utils');
 
 describe('metrics/healthchecks', function() {
   // admin uses JavaScript language features which aren't available in all

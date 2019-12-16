@@ -5,8 +5,8 @@ const semver = require('semver');
 const constants = require('@instana/core').tracing.constants;
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 
-const config = require('../../../collector/test/config');
-const utils = require('../../../collector/test/utils');
+const config = require('../../../core/test/config');
+const utils = require('../../../core/test/utils');
 
 let agentControls;
 let ClientControls;

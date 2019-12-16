@@ -3,7 +3,7 @@
 'use strict';
 
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
-const config = require('../config');
+const config = require('../../../core/test/config');
 const expect = require('chai').expect;
 
 describe('agentStub', function() {

@@ -2,8 +2,8 @@
 
 const expect = require('chai').expect;
 
-const config = require('../../../collector/test/config');
-const utils = require('../../../collector/test/utils');
+const config = require('../../../core/test/config');
+const utils = require('../../../core/test/utils');
 
 describe('legacy sensor/API', function() {
   this.timeout(config.getTestTimeout());

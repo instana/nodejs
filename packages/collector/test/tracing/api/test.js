@@ -3,7 +3,7 @@
 const expect = require('chai').expect;
 
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
-const config = require('../../config');
+const config = require('../../../../core/test/config');
 
 describe('tracing/api', function() {
   if (!supportedVersion(process.versions.node)) {

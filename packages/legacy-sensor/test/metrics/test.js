@@ -3,8 +3,8 @@
 const expect = require('chai').expect;
 const _ = require('lodash');
 
-const config = require('../../../collector/test/config');
-const utils = require('../../../collector/test/utils');
+const config = require('../../../core/test/config');
+const utils = require('../../../core/test/utils');
 
 describe('legacy sensor/metrics', function() {
   this.timeout(config.getTestTimeout());

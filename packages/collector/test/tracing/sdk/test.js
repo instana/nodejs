@@ -6,8 +6,8 @@ const fail = require('chai').assert.fail;
 
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const constants = require('@instana/core').tracing.constants;
-const config = require('../../config');
-const utils = require('../../utils');
+const config = require('../../../../core/test/config');
+const utils = require('../../../../core/test/utils');
 
 const waitForSpans = process.env.CI ? 1000 : 200;
 

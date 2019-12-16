@@ -5,9 +5,9 @@ const uuid = require('uuid/v4');
 
 const constants = require('@instana/core').tracing.constants;
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
-const config = require('../../../config');
+const config = require('../../../../../core/test/config');
 const delay = require('../../../test_util/delay');
-const utils = require('../../../utils');
+const utils = require('../../../../../core/test/utils');
 
 describe('tracing/nats-streaming', function() {
   if (!supportedVersion(process.versions.node)) {

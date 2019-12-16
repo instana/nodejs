@@ -3,8 +3,8 @@
 const expect = require('chai').expect;
 const semver = require('semver');
 
-const config = require('../../config');
-const utils = require('../../utils');
+const config = require('../../../../core/test/config');
+const utils = require('../../../../core/test/utils');
 
 describe('tracing/requireHook', function() {
   if (semver.lt(process.versions.node, '8.0.0')) {

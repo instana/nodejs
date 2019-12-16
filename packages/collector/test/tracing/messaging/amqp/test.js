@@ -6,7 +6,7 @@ const expect = require('chai').expect;
 
 const constants = require('@instana/core').tracing.constants;
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
-const utils = require('../../../utils');
+const utils = require('../../../../../core/test/utils');
 const exchange = require('./amqpUtil').exchange;
 const queueName = require('./amqpUtil').queueName;
 const queueNameGet = require('./amqpUtil').queueNameGet;

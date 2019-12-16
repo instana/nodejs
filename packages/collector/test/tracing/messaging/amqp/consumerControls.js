@@ -6,7 +6,7 @@ const spawn = require('child_process').spawn;
 const Promise = require('bluebird');
 const path = require('path');
 
-const config = require('../../../config');
+const config = require('../../../../../core/test/config');
 const agentPort = require('../../../apps/agentStubControls').agentPort;
 
 let app;

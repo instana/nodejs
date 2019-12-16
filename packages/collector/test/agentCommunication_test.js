@@ -3,8 +3,8 @@
 const expect = require('chai').expect;
 const semver = require('semver');
 
-const config = require('./config');
-const utils = require('./utils');
+const config = require('../../core/test/config');
+const utils = require('../../core/test/utils');
 
 describe('agentCommunication', function() {
   if (semver.satisfies(process.versions.node, '<4')) {

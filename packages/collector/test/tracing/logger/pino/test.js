@@ -5,8 +5,8 @@ const expect = require('chai').expect;
 
 const constants = require('@instana/core').tracing.constants;
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
-const config = require('../../../config');
-const utils = require('../../../utils');
+const config = require('../../../../../core/test/config');
+const utils = require('../../../../../core/test/utils');
 
 describe('tracing/logger/pino', function() {
   // Pino 5 does not support Node.js 4, it uses EcmaScript language features that only work in more recent versions.

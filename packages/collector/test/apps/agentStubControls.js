@@ -7,8 +7,8 @@ const request = require('request-promise');
 const path = require('path');
 const _ = require('lodash');
 
-const utils = require('../utils');
-const config = require('../config');
+const utils = require('../../../core/test/utils');
+const config = require('../../../core/test/config');
 
 const agentPort = (exports.agentPort = 3210);
 

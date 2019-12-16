@@ -6,8 +6,8 @@ const spawn = require('child_process').spawn;
 const request = require('request-promise');
 const path = require('path');
 
-const utils = require('../../../utils');
-const config = require('../../../config');
+const utils = require('../../../../../core/test/utils');
+const config = require('../../../../../core/test/config');
 const agentPort = require('../../../apps/agentStubControls').agentPort;
 const appPort = (exports.appPort = 3216);
 

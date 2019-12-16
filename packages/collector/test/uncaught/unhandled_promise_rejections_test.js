@@ -4,8 +4,8 @@ const chai = require('chai');
 const expect = chai.expect;
 
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
-const config = require('../config');
-const utils = require('../utils');
+const config = require('../../../core/test/config');
+const utils = require('../../../core/test/utils');
 
 describe('unhandled promise rejections', function() {
   if (!supportedVersion(process.versions.node)) {

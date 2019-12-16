@@ -5,9 +5,9 @@ const semver = require('semver');
 
 const constants = require('@instana/core').tracing.constants;
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
-const config = require('../../../config');
+const config = require('../../../../../core/test/config');
 const delay = require('../../../test_util/delay');
-const utils = require('../../../utils');
+const utils = require('../../../../../core/test/utils');
 
 describe('tracing/kafkajs', function() {
   // kafkajs uses async/await style which is only available on Node.js >= 8.

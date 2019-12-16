@@ -7,8 +7,8 @@ const errors = require('request-promise/errors');
 const request = require('request-promise');
 const path = require('path');
 
-const utils = require('../utils');
-const config = require('../config');
+const utils = require('../../../core/test/utils');
+const config = require('../../../core/test/config');
 const agentPort = require('./agentStubControls').agentPort;
 const upstreamPort = require('./expressControls').appPort;
 const appPort = (exports.appPort = 3212);

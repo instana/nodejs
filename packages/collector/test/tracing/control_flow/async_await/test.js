@@ -4,8 +4,8 @@ const expect = require('chai').expect;
 const semver = require('semver');
 
 const constants = require('@instana/core').tracing.constants;
-const config = require('../../../config');
-const utils = require('../../../utils');
+const config = require('../../../../../core/test/config');
+const utils = require('../../../../../core/test/utils');
 
 describe('tracing/asyncAwait', function() {
   if (!semver.satisfies(process.versions.node, '>= 8.2.1')) {

@@ -3,8 +3,8 @@
 const expect = require('chai').expect;
 
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
-const config = require('../../config');
-const utils = require('../../utils');
+const config = require('../../../../core/test/config');
+const utils = require('../../../../core/test/utils');
 
 describe('tracing/opentracing/integration', function() {
   const agentStubControls = require('../../apps/agentStubControls');

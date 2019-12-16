@@ -3,6 +3,7 @@
 'use strict';
 
 const Promise = require('bluebird');
+const fail = require('chai').assert.fail;
 
 const config = require('./config');
 
@@ -26,7 +27,7 @@ exports.retry = function retry(fn, time, until) {
 
 exports.expectOneMatching = function expectOneMatching(arr, fn) {
   if (!arr || arr.length === 0) {
-    throw new Error('Could not find an item which matches all the criteria. Got 0 items.');
+    fail('Could not find an item which matches all the criteria. Got 0 items.');
   }
 
   let error;
@@ -52,6 +53,9 @@ exports.expectOneMatching = function expectOneMatching(arr, fn) {
 };
 
 exports.getSpansByName = function getSpansByName(arr, name) {
+  if (!Array.isArray(arr)) {
+    throw new Error('Need an array of spans, but got ' + arr);
+  }
   const result = [];
 
   if (!arr || arr.length === 0) {
