@@ -1,5 +1,6 @@
 'use strict';
 
+const semver = require('semver');
 const errors = require('request-promise/errors');
 const expect = require('chai').expect;
 
@@ -10,6 +11,13 @@ const utils = require('../../../utils');
 
 describe('tracing/mssql', function() {
   if (!supportedVersion(process.versions.node)) {
+    return;
+  }
+  if (process.env.CI && semver.gte(process.versions.node, '8.0.0') && semver.lt(process.versions.node, '9.0.0')) {
+    // At some point, the mssql container failed to link correctly into the main Node.js container when running the
+    // tests on Node.js 8, so all tests would fail because the app cannot connect to the MSSQL database. Since there is
+    // no reasonable way of troubleshooting this we just skip these tests on Node.js 8. They run in Node.js 6 and all
+    // >= 10 versions though.
     return;
   }
 
