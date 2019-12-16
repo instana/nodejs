@@ -23,7 +23,7 @@
     "url": "git+https://github.com/instana/nodejs-sensor.git"
   },
   "scripts": {
-    "audit": "bin/prepare-audit.sh && npm audit --production; git checkout package-lock.json",
+    "audit": "bin/prepare-audit.sh && npm audit --production; AUDIT_RESULT=$?; git checkout package-lock.json; exit $AUDIT_RESULT",
     "test": "true",
     "test:debug": "true",
     "lint": "eslint src",

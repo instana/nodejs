@@ -25,7 +25,7 @@
   },
   "scripts": {
     "backend-stub": "node test/backend_stub",
-    "audit": "bin/prepare-audit.sh && npm audit --production; git checkout package-lock.json",
+    "audit": "bin/prepare-audit.sh && npm audit --production; AUDIT_RESULT=$?; git checkout package-lock.json; exit $AUDIT_RESULT",
     "test": "echo \"$(node -v)\" | grep v6 > /dev/null || npm run test:mocha",
     "test:mocha": "mocha --reporter spec $(find test -iname '*test.js')",
     "test:debug": "WITH_STDOUT=true npm run test:mocha",

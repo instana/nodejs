@@ -25,7 +25,7 @@
     "url": "git+https://github.com/instana/nodejs-sensor.git"
   },
   "scripts": {
-    "audit": "bin/prepare-audit.sh && npm audit --production; git checkout package-lock.json",
+    "audit": "bin/prepare-audit.sh && npm audit --production; AUDIT_RESULT=$?; git checkout package-lock.json; exit $AUDIT_RESULT",
     "test": "NODE_ENV=debug USE_OPENTRACING_DEBUG_IMPL=true npm run test:mocha",
     "test:mocha": "mocha --reporter spec $(find test -name '*test.js' | grep -v node_modules)",
     "test:debug": "WITH_STDOUT=true DEBUG=kafka-node:* npm run test:mocha",
