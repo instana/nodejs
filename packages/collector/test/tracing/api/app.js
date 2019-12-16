@@ -31,10 +31,12 @@ app.get('/span/active', (req, res) => {
 app.get('/span/manuallyended', (req, res) => {
   const span = instana.currentSpan();
   span.disableAutoEnd();
-  span.end(42);
-  res.json({
-    span: serialize(span)
-  });
+  setTimeout(() => {
+    span.end(42);
+    res.json({
+      span: serialize(span)
+    });
+  }, 50);
 });
 
 app.listen(process.env.APP_PORT, () => {
