@@ -13,7 +13,7 @@ let ClientControls;
 let ServerControls;
 
 describe('legacy sensor/tracing', function() {
-  if (!supportedVersion(process.versions.node)) {
+  if (!supportedVersion(process.versions.node) || (process.env.CI && semver.lt(process.versions.node, '7.0.0'))) {
     return;
   }
 
