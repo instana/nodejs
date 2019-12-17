@@ -33,11 +33,32 @@ describe('tracing/graphql', function() {
   [false, true].forEach(apollo =>
     [false, true].forEach(withError =>
       [false, true].forEach(queryShorthand =>
-        registerQuerySuite.bind(this)(apollo, withError, queryShorthand, useAlias)
+        registerQuerySuite.bind(this)({
+          apollo,
+          withError,
+          queryShorthand,
+          useAlias,
+          communicationProtocol: 'http'
+        })
       )
     )
   );
-  // registerQuerySuite.bind(this)(true, false, false, false);
+  // registerQuerySuite.bind(this)({
+  //   apollo: true,
+  //   withError: false,
+  //   queryShorthand: false,
+  //   useAlias: false,
+  //   communicationProtocol: 'http'
+  // });
+
+  // Test GraphQL over AMQP
+  registerQuerySuite.bind(this)({
+    apollo: false,
+    withError: false,
+    queryShorthand: false,
+    useAlias: false,
+    communicationProtocol: 'amqp'
+  });
 
   [false, true].forEach(apollo => registerMutationSuite.bind(this)(apollo));
   // registerMutationSuite.bind(this)(true);
@@ -154,54 +175,12 @@ describe('tracing/graphql', function() {
           );
         }));
   });
-
-  describe('when another entry span is already active', () => {
-    agentControls.registerTestHooks();
-    const serverControls = new ApolloServerControls({
-      agentControls,
-      env: {
-        CREATE_OBSTRUCTING_ENTRY_SPAN: true
-      }
-    });
-    serverControls.registerTestHooks();
-    const clientControls = new ClientControls({
-      agentControls,
-      env: {
-        SERVER_PORT: serverControls.port
-      }
-    });
-    clientControls.registerTestHooks();
-
-    it('should not interfer with processing when a non-HTTP span is already active', () =>
-      clientControls
-        .sendRequest({
-          method: 'POST',
-          path: '/value'
-        })
-        .then(response => {
-          checkQueryResponse('value', false, false, response);
-          return utils.retry(() =>
-            agentControls.getSpans().then(spans => {
-              const httpEntryInClientApp = verifyHttpEntry(null, /\/value/, spans);
-              verifyHttpExit(httpEntryInClientApp, /\/graphql/, spans);
-              utils.expectOneMatching(spans, span => {
-                expect(span.n).to.equal('log.pino');
-                expect(span.k).to.equal(constants.EXIT);
-                expect(span.data.log.message).to.equal('value');
-              });
-              // No graphql span has been recorded but graphql processing has worked (as we have verified via
-              // checkQueryResponse).
-              expect(utils.getSpansByName(spans, 'graphql.server')).to.be.empty;
-            })
-          );
-        }));
-  });
 });
 
-function registerQuerySuite(apollo, withError, queryShorthand, useAlias) {
+function registerQuerySuite({ apollo, withError, queryShorthand, useAlias, communicationProtocol }) {
   // prettier-ignore
-  describe(`queries (apollo: ${apollo}, with error: ${withError}, shorthand: ${queryShorthand}, alias: ${useAlias})`,
-      function() {
+  describe(`queries (apollo: ${apollo}, with error: ${withError}, shorthand: ${queryShorthand}, alias: ${useAlias}, ` +
+      `over: ${communicationProtocol})`, function() {
     agentControls.registerTestHooks();
     const serverControls = apollo
       ? new ApolloServerControls({ agentControls })
@@ -217,35 +196,42 @@ function registerQuerySuite(apollo, withError, queryShorthand, useAlias) {
 
     it(
       'must trace a query with a value resolver ' +
-        `(apollo: ${apollo}, with error: ${withError}, shorthand: ${queryShorthand}, alias: ${useAlias})`,
-      () => testQuery(clientControls, 'value')
+        `(apollo: ${apollo}, with error: ${withError}, shorthand: ${queryShorthand}, alias: ${useAlias}, ` +
+        `over: ${communicationProtocol})`, () => testQuery(clientControls, 'value')
     );
 
     it(
       'must trace a query with a promise resolver ' +
-        `(apollo: ${apollo}, with error: ${withError}, shorthand: ${queryShorthand}, alias: ${useAlias})`,
-      () => testQuery(clientControls, 'promise')
+        `(apollo: ${apollo}, with error: ${withError}, shorthand: ${queryShorthand}, alias: ${useAlias}, ` +
+        `over: ${communicationProtocol})`, () => testQuery(clientControls, 'promise')
     );
 
     it(
       'must trace a query which resolves to an array of promises ' +
-        `(apollo: ${apollo}, with error: ${withError}, shorthand: ${queryShorthand}, alias: ${useAlias})`,
-      () => testQuery(clientControls, 'array')
+        `(apollo: ${apollo}, with error: ${withError}, shorthand: ${queryShorthand}, alias: ${useAlias}, ` +
+        `over: ${communicationProtocol})`, () => testQuery(clientControls, 'array')
     );
 
     it(
       'must trace a query with multiple entities ' +
-        `(apollo: ${apollo}, with error: ${withError}, shorthand: ${queryShorthand}, alias: ${useAlias})`,
-      () => testQuery(clientControls, 'promise', true)
+        `(apollo: ${apollo}, with error: ${withError}, shorthand: ${queryShorthand}, alias: ${useAlias}, ` +
+        `over: ${communicationProtocol})`, () => testQuery(clientControls, 'promise', true)
     );
   });
 
   function testQuery(clientControls, resolverType, multipleEntities) {
-    let queryParams = [
+    if (apollo && communicationProtocol === 'amqp') {
+      // We do trace this combination (Apollo & AMQP), but the Apollo test app does not connect to AMQP so this
+      // scenario is not covered in the regular test suite.
+      throw new Error('Test scenario not supported: Apollo & AMQP');
+    }
+
+    const queryParams = [
       withError ? 'withError=yes' : null,
       queryShorthand ? 'queryShorthand=yes' : null,
       multipleEntities ? 'multipleEntities=yes' : null,
-      useAlias ? 'useAlias=yes' : null
+      useAlias ? 'useAlias=yes' : null,
+      `communicationProtocol=${communicationProtocol}`
     ]
       .filter(param => !!param)
       .join('&');
@@ -262,9 +248,16 @@ function registerQuerySuite(apollo, withError, queryShorthand, useAlias) {
 
         checkQueryResponse(entityNameWithAlias, withError, multipleEntities, response);
         return utils.retry(() =>
-          agentControls
-            .getSpans()
-            .then(verifySpansForQuery.bind(null, resolverType, entityName, withError, queryShorthand, multipleEntities))
+          agentControls.getSpans().then(
+            verifySpansForQuery.bind(null, {
+              resolverType,
+              entityName,
+              withError,
+              queryShorthand,
+              multipleEntities,
+              communicationProtocol
+            })
+          )
         );
       });
   }
@@ -472,17 +465,18 @@ function checkSubscriptionUpdatesAndSpans(client1, client2, triggerUpdateVia) {
   });
 }
 
-function verifySpansForQuery(resolverType, entityName, withError, queryShorthand, multipleEntities, spans) {
+function verifySpansForQuery(testConfig, spans) {
+  const { resolverType, entityName } = testConfig;
   const httpEntryInClientApp = verifyHttpEntry(null, new RegExp(`/${resolverType}`), spans);
-  const httpExitInClientApp = verifyHttpExit(httpEntryInClientApp, /\/graphql/, spans);
-  const graphQLQueryEntryInServerApp = verifyGraphQLQueryEntry(
-    httpExitInClientApp,
-    entityName,
-    withError,
-    queryShorthand,
-    multipleEntities,
-    spans
-  );
+  let exitInClientApp;
+  if (testConfig.communicationProtocol === 'http') {
+    exitInClientApp = verifyHttpExit(httpEntryInClientApp, /\/graphql/, spans);
+  } else if (testConfig.communicationProtocol === 'amqp') {
+    exitInClientApp = verifyAmqpExit(httpEntryInClientApp, 'graphql-request-queue', spans);
+  } else {
+    throw new Error(`Unknown protocol: ${testConfig.communicationProtocol}`);
+  }
+  const graphQLQueryEntryInServerApp = verifyGraphQLQueryEntry(testConfig, exitInClientApp, spans);
   verifyFollowUpLogExit(graphQLQueryEntryInServerApp, entityName, spans);
 }
 
@@ -559,7 +553,19 @@ function verifyHttpExit(parentSpan, urlRegex, spans) {
   });
 }
 
-function verifyGraphQLQueryEntry(parentSpan, entityName, withError, queryShorthand, multipleEntities, spans) {
+function verifyAmqpExit(parentSpan, queueName, spans) {
+  return utils.expectOneMatching(spans, span => {
+    expect(span.t).to.equal(parentSpan.t);
+    expect(span.p).to.equal(parentSpan.s);
+    expect(span.k).to.equal(constants.EXIT);
+    expect(span.n).to.equal('rabbitmq');
+    expect(span.data.rabbitmq.sort).to.equal('publish');
+    expect(span.data.rabbitmq.address).to.equal('amqp://127.0.0.1:5672');
+    expect(span.data.rabbitmq.key).to.equal(queueName);
+  });
+}
+
+function verifyGraphQLQueryEntry({ entityName, withError, queryShorthand, multipleEntities }, parentSpan, spans) {
   return utils.expectOneMatching(spans, span => {
     expect(span.n).to.equal('graphql.server');
     expect(span.k).to.equal(constants.ENTRY);
