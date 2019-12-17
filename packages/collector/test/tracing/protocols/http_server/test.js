@@ -1,6 +1,7 @@
 'use strict';
 
-const expect = require('chai').expect;
+const { expect } = require('chai');
+const { fail } = expect;
 
 const constants = require('@instana/core').tracing.constants;
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
@@ -59,21 +60,8 @@ function registerTests(useHttps) {
       .then(() =>
         utils.retry(() =>
           agentControls.getSpans().then(spans => {
-            expect(spans.length).to.equal(1);
-
-            const span = spans[0];
-            expect(span.n).to.equal('node.http.server');
-            expect(span.k).to.equal(constants.ENTRY);
-            expect(span.async).to.equal(false);
-            expect(span.error).to.equal(false);
-            expect(span.ec).to.equal(0);
-            expect(span.t).to.be.a('string');
-            expect(span.s).to.be.a('string');
+            const span = verifyThereIsExactlyOneHttpEntry(spans, '/checkout', 'POST', 201);
             expect(span.p).to.not.exist;
-            expect(span.data.http.method).to.equal('POST');
-            expect(span.data.http.url).to.equal('/checkout');
-            expect(span.data.http.status).to.equal(201);
-            expect(span.data.http.host).to.equal('127.0.0.1:3215');
           })
         )
       ));
@@ -83,7 +71,9 @@ function registerTests(useHttps) {
       .sendRequest({
         method: 'POST',
         path: '/checkout',
-        responseStatus: 201,
+        qs: {
+          responseStatus: 201
+        },
         headers: {
           'X-INSTANA-T': '84e588b697868fee',
           'X-INSTANA-S': '5e734f51bce69eca',
@@ -93,9 +83,7 @@ function registerTests(useHttps) {
       .then(() =>
         utils.retry(() =>
           agentControls.getSpans().then(spans => {
-            expect(spans.length).to.equal(1);
-
-            const span = spans[0];
+            const span = verifyThereIsExactlyOneHttpEntry(spans, '/checkout', 'POST', 201);
             expect(span.t).to.equal('84e588b697868fee');
             expect(span.p).to.equal('5e734f51bce69eca');
             expect(span.s).to.be.a('string');
@@ -108,7 +96,9 @@ function registerTests(useHttps) {
       .sendRequest({
         method: 'POST',
         path: '/checkout',
-        responseStatus: 201,
+        qs: {
+          responseStatus: 201
+        },
         headers: {
           'X-INSTANA-T': '6636f38f0f3dd0996636f38f0f3dd099',
           'X-INSTANA-S': 'fb2bb293ac206c05',
@@ -118,9 +108,7 @@ function registerTests(useHttps) {
       .then(() =>
         utils.retry(() =>
           agentControls.getSpans().then(spans => {
-            expect(spans.length).to.equal(1);
-
-            const span = spans[0];
+            const span = verifyThereIsExactlyOneHttpEntry(spans, '/checkout', 'POST', 201);
             expect(span.t).to.equal('6636f38f0f3dd0996636f38f0f3dd099');
             expect(span.p).to.equal('fb2bb293ac206c05');
           })
@@ -140,13 +128,10 @@ function registerTests(useHttps) {
       .then(() =>
         utils.retry(() =>
           agentControls.getSpans().then(spans => {
-            utils.expectOneMatching(spans, span => {
-              expect(span.n).to.equal('node.http.server');
-              expect(span.k).to.equal(constants.ENTRY);
-              expect(span.data.http.header).to.be.an('object');
-              expect(span.data.http.header['x-my-fancy-request-header']).to.equal(requestHeaderValue);
-              expect(Object.keys(span.data.http.header)).to.have.lengthOf(1);
-            });
+            const span = verifyThereIsExactlyOneHttpEntry(spans);
+            expect(span.data.http.header).to.be.an('object');
+            expect(span.data.http.header['x-my-fancy-request-header']).to.equal(requestHeaderValue);
+            expect(Object.keys(span.data.http.header)).to.have.lengthOf(1);
           })
         )
       );
@@ -162,13 +147,10 @@ function registerTests(useHttps) {
       .then(() =>
         utils.retry(() =>
           agentControls.getSpans().then(spans => {
-            utils.expectOneMatching(spans, span => {
-              expect(span.n).to.equal('node.http.server');
-              expect(span.k).to.equal(constants.ENTRY);
-              expect(span.data.http.header).to.be.an('object');
-              expect(span.data.http.header['x-my-fancy-response-header']).to.equal(expectedResponeHeaderValue);
-              expect(Object.keys(span.data.http.header)).to.have.lengthOf(1);
-            });
+            const span = verifyThereIsExactlyOneHttpEntry(spans);
+            expect(span.data.http.header).to.be.an('object');
+            expect(span.data.http.header['x-my-fancy-response-header']).to.equal(expectedResponeHeaderValue);
+            expect(Object.keys(span.data.http.header)).to.have.lengthOf(1);
           })
         )
       );
@@ -184,13 +166,10 @@ function registerTests(useHttps) {
       .then(() =>
         utils.retry(() =>
           agentControls.getSpans().then(spans => {
-            utils.expectOneMatching(spans, span => {
-              expect(span.n).to.equal('node.http.server');
-              expect(span.k).to.equal(constants.ENTRY);
-              expect(span.data.http.header).to.be.an('object');
-              expect(span.data.http.header['x-write-head-response-header']).to.equal(expectedResponeHeaderValue);
-              expect(Object.keys(span.data.http.header)).to.have.lengthOf(1);
-            });
+            const span = verifyThereIsExactlyOneHttpEntry(spans);
+            expect(span.data.http.header).to.be.an('object');
+            expect(span.data.http.header['x-write-head-response-header']).to.equal(expectedResponeHeaderValue);
+            expect(Object.keys(span.data.http.header)).to.have.lengthOf(1);
           })
         )
       );
@@ -210,21 +189,18 @@ function registerTests(useHttps) {
       .then(() =>
         utils.retry(() =>
           agentControls.getSpans().then(spans => {
-            utils.expectOneMatching(spans, span => {
-              expect(span.n).to.equal('node.http.server');
-              expect(span.k).to.equal(constants.ENTRY);
-              expect(span.data.http.header).to.be.an('object');
-              expect(span.data.http.header['x-my-fancy-request-header']).to.equal(requestHeaderValue);
-              expect(span.data.http.header['x-my-fancy-response-header']).to.equal(expectedResponeHeaderValue);
-              expect(Object.keys(span.data.http.header)).to.have.lengthOf(2);
-            });
+            const span = verifyThereIsExactlyOneHttpEntry(spans);
+            expect(span.data.http.header).to.be.an('object');
+            expect(span.data.http.header['x-my-fancy-request-header']).to.equal(requestHeaderValue);
+            expect(span.data.http.header['x-my-fancy-response-header']).to.equal(expectedResponeHeaderValue);
+            expect(Object.keys(span.data.http.header)).to.have.lengthOf(2);
           })
         )
       );
   });
 
   it(//
-  `must capture both response headers written directly to the response and other heaers (HTTPS: ${useHttps})`, () => {
+  `must capture both response headers written directly to the response and other headers (HTTPS: ${useHttps})`, () => {
     const requestHeaderValue = 'Request Header Value';
     const expectedResponeHeaderValue1 = 'Write Head Response Header Value';
     const expectedResponeHeaderValue2 = 'Response Header Value';
@@ -239,22 +215,19 @@ function registerTests(useHttps) {
       .then(() =>
         utils.retry(() =>
           agentControls.getSpans().then(spans => {
-            utils.expectOneMatching(spans, span => {
-              expect(span.n).to.equal('node.http.server');
-              expect(span.k).to.equal(constants.ENTRY);
-              expect(span.data.http.header).to.be.an('object');
-              expect(span.data.http.header['x-my-fancy-request-header']).to.equal(requestHeaderValue);
-              expect(span.data.http.header['x-write-head-response-header']).to.equal(expectedResponeHeaderValue1);
-              expect(span.data.http.header['x-my-fancy-response-header']).to.equal(expectedResponeHeaderValue2);
-              expect(Object.keys(span.data.http.header)).to.have.lengthOf(3);
-            });
+            const span = verifyThereIsExactlyOneHttpEntry(spans);
+            expect(span.data.http.header).to.be.an('object');
+            expect(span.data.http.header['x-my-fancy-request-header']).to.equal(requestHeaderValue);
+            expect(span.data.http.header['x-write-head-response-header']).to.equal(expectedResponeHeaderValue1);
+            expect(span.data.http.header['x-my-fancy-response-header']).to.equal(expectedResponeHeaderValue2);
+            expect(Object.keys(span.data.http.header)).to.have.lengthOf(3);
           })
         )
       );
   });
 
-  it(//
-  `must not contain the header field when neither request nor response headers arepresent (HTTPS: ${useHttps})`, () => {
+  // eslint-disable-next-line max-len
+  it(`must not contain the header field when neither request nor response headers are present (HTTPS: ${useHttps})`, () => {
     return controls
       .sendRequest({
         method: 'GET',
@@ -263,11 +236,8 @@ function registerTests(useHttps) {
       .then(() =>
         utils.retry(() =>
           agentControls.getSpans().then(spans => {
-            utils.expectOneMatching(spans, span => {
-              expect(span.n).to.equal('node.http.server');
-              expect(span.k).to.equal(constants.ENTRY);
-              expect(span.data.http.header).to.not.exist;
-            });
+            const span = verifyThereIsExactlyOneHttpEntry(spans);
+            expect(span.data.http.header).to.not.exist;
           })
         )
       );
@@ -282,12 +252,77 @@ function registerTests(useHttps) {
       .then(() =>
         utils.retry(() =>
           agentControls.getSpans().then(spans => {
-            utils.expectOneMatching(spans, span => {
-              expect(span.n).to.equal('node.http.server');
-              expect(span.k).to.equal(constants.ENTRY);
-              expect(span.data.http.params).to.equal('param1=value1&param2=value2&param3=value4');
-            });
+            const span = verifyThereIsExactlyOneHttpEntry(spans);
+            expect(span.data.http.params).to.equal('param1=value1&param2=value2&param3=value4');
           })
         )
       ));
+
+  it(`must capture an HTTP entry when the client closes the connection (HTTPS: ${useHttps})`, () =>
+    controls
+      .sendRequest({
+        path: '/dont-respond',
+        timeout: 100,
+        simple: false
+      })
+      .then(() => {
+        fail('Expected the HTTP call to time out.');
+      })
+      .catch(err => {
+        if (err.error && err.error.code === 'ESOCKETTIMEDOUT') {
+          // We actually expect the request to time out. But we still want to verify that an entry span has been created
+          // for it.
+          return utils.retry(() =>
+            agentControls.getSpans().then(spans => {
+              verifyThereIsExactlyOneHttpEntry(spans, '/dont-respond');
+            })
+          );
+        } else {
+          throw err;
+        }
+      }));
+
+  it(`must capture an HTTP entry when the server destroys the socket (HTTPS: ${useHttps})`, () =>
+    controls
+      .sendRequest({
+        path: '/destroy-socket',
+        simple: false
+      })
+      .then(() => {
+        fail('Expected the HTTP connection to be closed by the server.');
+      })
+      .catch(err => {
+        if (err.error && err.error.code === 'ECONNRESET') {
+          // We actually expect the request to time out. But we still want to verify that an entry span has been created
+          // for it.
+          return utils.retry(() =>
+            agentControls.getSpans().then(spans => {
+              verifyThereIsExactlyOneHttpEntry(spans, '/destroy-socket');
+            })
+          );
+        } else {
+          throw err;
+        }
+      }));
+}
+
+function verifyThereIsExactlyOneHttpEntry(spans, url = '/', method = 'GET', status = 200) {
+  expect(spans.length).to.equal(1);
+  const span = spans[0];
+  verifyHttpEntry(span, url, method, status);
+  return span;
+}
+
+function verifyHttpEntry(span, url = '/', method = 'GET', status = 200) {
+  expect(span.n).to.equal('node.http.server');
+  expect(span.k).to.equal(constants.ENTRY);
+  expect(span.async).to.equal(false);
+  expect(span.error).to.equal(false);
+  expect(span.ec).to.equal(0);
+  expect(span.t).to.be.a('string');
+  expect(span.s).to.be.a('string');
+  expect(span.data.http.method).to.equal(method);
+  expect(span.data.http.url).to.equal(url);
+  expect(span.data.http.host).to.equal('127.0.0.1:3215');
+  expect(span.data.http.status).to.equal(status);
 }

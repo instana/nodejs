@@ -100,7 +100,21 @@ function shimEmit(realEmit) {
         });
       }
 
+      req.on('aborted', function() {
+        finishSpan();
+      });
+
       res.on('finish', function() {
+        finishSpan();
+      });
+
+      res.on('close', function() {
+        // This is purely a safe guard: in all known scenarios, one of the other events that finishes the HTTP entry
+        // span should have been called before (res#finish or req#aborted).
+        finishSpan();
+      });
+
+      function finishSpan() {
         // Check if a span with higher priority (like graphql.server) already finished this span, only overwrite
         // span attributes if that is not the case.
         if (!span.transmitted) {
@@ -111,7 +125,7 @@ function shimEmit(realEmit) {
           span.d = Date.now() - span.ts;
           span.transmit();
         }
-      });
+      }
 
       return realEmit.apply(originalThis, originalArgs);
     });

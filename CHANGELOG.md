@@ -1,5 +1,8 @@
 # Changelog
 
+## Unreleased
+- Also capture incoming HTTP calls that time out on the client side or are aborted on the server side (via `req.destroy()`).
+
 ## 1.84.0
 - Add support for the [log4js](https://www.npmjs.com/package/log4js) logging package.
 - [AWS Lambda]: Instrument deprecated legacy Lambda API (context.done, context.succeed, and context.fail).

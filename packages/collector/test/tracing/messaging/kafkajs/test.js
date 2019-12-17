@@ -80,7 +80,7 @@ describe('tracing/kafkajs', function() {
               error,
               useSendBatch,
               useEachBatch,
-              suppress: true
+              suppressTracing: true
             }).then(() =>
               utils.retry(() =>
                 getMessages(consumerControls)
@@ -139,11 +139,12 @@ describe('tracing/kafkajs', function() {
   });
 
   // eslint-disable-next-line object-curly-newline
-  function send({ key, value, error, useSendBatch, useEachBatch, suppress }) {
+  function send({ key, value, error, useSendBatch, useEachBatch, suppressTracing }) {
     const req = {
       method: 'POST',
       path: '/send-messages',
       simple: true,
+      suppressTracing,
       body: {
         key,
         value,
@@ -152,11 +153,6 @@ describe('tracing/kafkajs', function() {
         useEachBatch
       }
     };
-    if (suppress) {
-      req.headers = {
-        'X-INSTANA-L': '0'
-      };
-    }
     return producerControls.sendRequest(req);
   }
 
