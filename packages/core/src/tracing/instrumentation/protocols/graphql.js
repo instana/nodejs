@@ -94,39 +94,33 @@ function traceQueryOrMutation(
 ) {
   var activeEntrySpan = cls.getCurrentSpan();
   var span;
-  if (activeEntrySpan) {
-    if (activeEntrySpan.n === 'node.http.server') {
-      // For now, we assume that
-      // (a) all GraphQL entries we want to trace use HTTP as a transport protocol, and that
-      // (b) the GraphQL operation is the only relevant operation that is happening while processing the incoming HTTP
-      // request.
-      //
-      // With these assumptions in mind, we discard the HTTP entry span that has already been started and replace it
-      // with a GraphQL entry span.
-      //
-      // Possible situations where this might have negative consequences:
-      // 1) HTTP is by far the most common transport for GraphQL, but others are possible (GraphQL is transport-layer
-      // agnostic). If a customer does GraphQL over, say, GRPc or some other transport that we trace as an entry, the
-      // parent span will not be replaced and the call will show up as a generic GRPc call instead of a GraphQL call.
-      // (If the customer is using a transport that we do _not_ trace, we will start a new root entry span here.)
-      // 2) If a customer does multiple things in an HTTP call, only one of which is running a GraphQL query, they
-      // would probably rather see this call as the HTTP call that it is instead of a GraphQL call. But since we give
-      // GraphQL preference over HTTP, it will show up as a GraphQL call.
+  if (activeEntrySpan && activeEntrySpan.k === constants.ENTRY && activeEntrySpan.n !== 'graphql.server') {
+    // For now, we assume that the GraphQL operation is the only relevant operation that is happening while processing
+    // the incoming request.
+    //
+    // With these assumptions in mind, we overwrite the entry span that has already been started (if any) and turn it
+    // into a GraphQL entry span.
+    //
+    // HTTP is by far the most common transport for GraphQL, but others are possible and are actually used (AMQP for
+    // example) (GraphQL is transport-layer agnostic).
+    //
+    // Possible consequences:
+    // 1) If a customer does GraphQL over any transport that we trace as an entry, we will replace this
+    // transport/protocol level entry span with a GraphQL entry. But if the customer is using a transport that we do
+    // _not_ trace, we will start a new root entry span here. We will still trace the GraphQL entry but might lose trace
+    // continuity, as X-Instana-T andX-Instana-S are not transported at the GraphQL layer but rather in the underlying
+    // transport layer (HTTP, AMQP, ...)
+    //
+    // 2) If a customer does multiple things in an HTTP, AMQP, GRPc, ... call, only one of which is running a GraphQL
+    // query, it is possible that they would rather see this call as the HTTP/AMQP/GRPc/... call instead of a GraphQL
+    // call. But since we give GraphQL preference over protocol level entry spans, it will show up as a GraphQL call.
 
-      // Replace generic node.http.server span by a more specific graphql.server span. We change the values in the
-      // active span in-situ. This way, other exit spans that have already been created as children of the current entry
-      // span still have the the correct parent span ID.
-      span = activeEntrySpan;
-      span.n = 'graphql.server';
-      delete span.data.http;
-    } else {
-      logger.warn(
-        'Cannot start a GraphQL entry span when another span is already active. Currently, the following span is ' +
-          'active: ' +
-          JSON.stringify(activeEntrySpan)
-      );
-      return originalFunction.apply(this, originalArgs);
-    }
+    // Replace generic node.http.server/rabbitmq/... span by a more specific graphql.server span. We change the values
+    // in the active span in-situ. This way, other exit spans that have already been created as children of the current
+    // entry span still have the the correct parent span ID.
+    span = activeEntrySpan;
+    span.n = 'graphql.server';
+    span.resetData();
   }
 
   return cls.ns.runAndReturn(function() {

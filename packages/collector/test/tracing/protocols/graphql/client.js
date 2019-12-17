@@ -2,13 +2,15 @@
 
 require('../../../../')();
 
+const SubscriptionClient = require('subscriptions-transport-ws').SubscriptionClient;
+const WebSocketLink = require('apollo-link-ws').WebSocketLink;
+const amqp = require('amqplib');
 const bodyParser = require('body-parser');
-const rp = require('request-promise');
 const execute = require('apollo-link').execute;
 const express = require('express');
 const morgan = require('morgan');
-const SubscriptionClient = require('subscriptions-transport-ws').SubscriptionClient;
-const WebSocketLink = require('apollo-link-ws').WebSocketLink;
+const rp = require('request-promise');
+const uuid = require('uuid/v4');
 const ws = require('ws');
 
 const serverPort = process.env.SERVER_PORT || 3217;
@@ -20,13 +22,42 @@ const app = express();
 const port = process.env.APP_PORT || 3216;
 const logPrefix = `GraphQL Client (${process.pid}):\t`;
 
+let channel;
+const requestQueueName = 'graphql-request-queue';
+let responseQueueName;
+let amqpConnected = false;
+
+// We establish an AMQP connection to test GraphQL queries over non-HTTP protocols.
+amqp
+  .connect('amqp://localhost')
+  .then(connection => connection.createChannel())
+  .then(_channel => {
+    channel = _channel;
+    return channel.assertQueue(requestQueueName, { durable: false });
+  })
+  .then(() => channel.purgeQueue(requestQueueName))
+  .then(() => channel.assertQueue('', { durable: false, exclusive: true }))
+  .then(responseQueue => {
+    responseQueueName = responseQueue.queue;
+    amqpConnected = true;
+    log('amqp connection established');
+  })
+  // eslint-disable-next-line no-console
+  .catch(console.warn);
+
 if (process.env.WITH_STDOUT) {
   app.use(morgan(`${logPrefix}:method :url :status`));
 }
 
 app.use(bodyParser.json());
 
-app.get('/', (req, res) => res.sendStatus(200));
+app.get('/', (req, res) => {
+  if (amqpConnected) {
+    res.send('OK');
+  } else {
+    res.status(500).send('Not ready yet.');
+  }
+});
 
 app.post('/value', (req, res) => runQuery(req, res, 'value'));
 
@@ -79,6 +110,7 @@ function runQuery(req, res, resolverType) {
   const multipleEntities = !!req.query.multipleEntities;
   const operationPrefix = req.query.queryShorthand ? '' : 'query OperationName';
   const alias = req.query.useAlias ? `${resolverType}Alias: ` : '';
+  const communicationProtocol = req.query.communicationProtocol || 'http';
   const query = `
     ${operationPrefix} {
       ${alias}${resolverType}(crewMember: true) {
@@ -89,6 +121,20 @@ function runQuery(req, res, resolverType) {
       ${multipleEntities ? 'ships { id name origin }' : ''}
     }
   `;
+
+  if (communicationProtocol === 'http') {
+    return runQueryViaHttp(query, res);
+  } else if (communicationProtocol === 'amqp') {
+    return runQueryViaAmqp(query, res);
+  } else {
+    log('Unknown protocol:', communicationProtocol);
+    res.status(400).send({
+      message: `Unknown protocol: ${communicationProtocol}`
+    });
+  }
+}
+
+function runQueryViaHttp(query, res) {
   return rp({
     method: 'POST',
     url: serverGraphQLEndpoint,
@@ -106,6 +152,29 @@ function runQuery(req, res, resolverType) {
       log(e);
       res.sendStatus(500);
     });
+}
+
+function runQueryViaAmqp(query, res) {
+  const correlationId = uuid();
+  channel.consume(
+    responseQueueName,
+    msg => {
+      if (msg.properties.correlationId === correlationId) {
+        const response = msg.content.toString();
+        res.send(response);
+      }
+    },
+    {
+      noAck: true
+    }
+  );
+
+  const requestBody = JSON.stringify({ query });
+
+  channel.sendToQueue(requestQueueName, Buffer.from(requestBody), {
+    correlationId: correlationId,
+    replyTo: responseQueueName
+  });
 }
 
 function runMutation(req, res, input) {
@@ -180,8 +249,8 @@ function createSubscriptionObservable(webSocketUrl, query, variables) {
 }
 
 function log() {
-  /* eslint-disable no-console */
   const args = Array.prototype.slice.call(arguments);
   args[0] = logPrefix + args[0];
+  // eslint-disable-next-line no-console
   console.log.apply(console, args);
 }

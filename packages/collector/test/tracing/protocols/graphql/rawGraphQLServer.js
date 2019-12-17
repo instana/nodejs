@@ -8,6 +8,7 @@ const bodyParser = require('body-parser');
 const express = require('express');
 const graphQL = require('graphql');
 const morgan = require('morgan');
+const amqp = require('amqplib');
 
 // Pino log spans are used to verify that follow up calls are traced correctly in a GraphQL entry.
 const pinoLogger = require('pino')();
@@ -20,6 +21,10 @@ const port = process.env.APP_PORT || 3217;
 const app = express();
 
 const logPrefix = `GraphQL (raw) Server (${process.pid}):\t`;
+
+let channel;
+const requestQueueName = 'graphql-request-queue';
+let amqpConnected = false;
 
 if (process.env.WITH_STDOUT) {
   app.use(morgan(`${logPrefix}:method :url :status`));
@@ -195,8 +200,42 @@ const schema = new graphQL.GraphQLSchema({
   })
 });
 
+amqp
+  .connect('amqp://localhost')
+  .then(connection => connection.createChannel())
+  .then(_channel => {
+    channel = _channel;
+    return channel.assertQueue(requestQueueName, { durable: false });
+  })
+  .then(() => channel.purgeQueue(requestQueueName))
+  .then(() => {
+    channel.prefetch(1);
+    channel.consume(requestQueueName, msg => {
+      const requestContent = JSON.parse(msg.content.toString());
+      if (!requestContent || typeof requestContent.query !== 'string') {
+        channel.sendToQueue(msg.properties.replyTo, Buffer.from('You need to provide a query.'), {
+          correlationId: msg.properties.correlationId
+        });
+        return;
+      }
+
+      graphql(schema, requestContent.query, null, null, requestContent.variables).then(result => {
+        const stringifiedResult = JSON.stringify(result);
+        channel.sendToQueue(msg.properties.replyTo, Buffer.from(stringifiedResult), {
+          correlationId: msg.properties.correlationId
+        });
+      });
+    });
+    amqpConnected = true;
+    log('amqp connection established');
+  });
+
 app.get('/', (req, res) => {
-  res.sendStatus(200);
+  if (amqpConnected) {
+    res.send('OK');
+  } else {
+    res.status(500).send('Not ready yet.');
+  }
 });
 
 app.use('/graphql', bodyParser.json());

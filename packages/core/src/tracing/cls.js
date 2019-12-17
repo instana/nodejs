@@ -221,6 +221,10 @@ InstanaSpan.prototype.disableAutoEnd = function disableAutoEnd() {
   this.manualEndMode = true;
 };
 
+InstanaSpan.prototype.resetData = function resetData() {
+  this.data = this.data && this.data.service != null ? { service: this.data.service } : {};
+};
+
 function call(fn) {
   fn();
 }
