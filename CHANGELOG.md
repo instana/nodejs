@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.84.1
 - Also capture incoming HTTP calls that time out on the client side or are aborted on the server side (via `req.destroy()`).
 
 ## 1.84.0
