@@ -92,22 +92,15 @@ AbstractControls.prototype.getPid = function getPid() {
 };
 
 AbstractControls.prototype.sendRequest = function(opts) {
-  const headers = opts.headers || {};
   if (opts.suppressTracing === true) {
-    headers['X-INSTANA-L'] = '0';
+    opts.headers = opts.headers || {};
+    opts.headers['X-INSTANA-L'] = '0';
   }
 
-  return request({
-    method: opts.method,
-    url: this.baseUrl + opts.path,
-    json: true,
-    body: opts.body,
-    headers,
-    qs: opts.qs,
-    simple: opts.simple,
-    resolveWithFullResponse: opts.resolveWithFullResponse,
-    strictSSL: false
-  });
+  opts.url = this.baseUrl + opts.path;
+  opts.json = true;
+  opts.strictSSL = false;
+  return request(opts);
 };
 
 AbstractControls.prototype.sendViaIpc = function(message) {
