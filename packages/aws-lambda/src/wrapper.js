@@ -94,7 +94,7 @@ function shimmedHandler(originalHandler, originalThis, originalArgs, _config) {
 
     originalArgs[2] = function wrapper(originalError, originalResult) {
       if (handlerHasFinished) {
-        return;
+        lambdaCallback(originalError, originalResult);
       }
       handlerHasFinished = true;
       postHandler(entrySpan, originalError, originalResult, () => {
@@ -111,7 +111,7 @@ function shimmedHandler(originalHandler, originalThis, originalArgs, _config) {
     const originalDone = context.done;
     context.done = (originalError, originalResult) => {
       if (handlerHasFinished) {
-        return;
+        originalDone(originalError, originalResult);
       }
       handlerHasFinished = true;
       postHandler(entrySpan, originalError, originalResult, () => {
@@ -122,7 +122,7 @@ function shimmedHandler(originalHandler, originalThis, originalArgs, _config) {
     const originalSucceed = context.succeed;
     context.succeed = originalResult => {
       if (handlerHasFinished) {
-        return;
+        originalSucceed(originalResult);
       }
       handlerHasFinished = true;
       postHandler(entrySpan, undefined, originalResult, () => {
@@ -133,7 +133,7 @@ function shimmedHandler(originalHandler, originalThis, originalArgs, _config) {
     const originalFail = context.fail;
     context.fail = originalError => {
       if (handlerHasFinished) {
-        return;
+        originalFail(originalError);
       }
       handlerHasFinished = true;
       postHandler(entrySpan, originalError, undefined, () => {
