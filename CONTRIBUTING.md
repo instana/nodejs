@@ -16,8 +16,8 @@ To make a release, you first need to ensure that the released version will eithe
 - Update `CHANGELOG.md` so that the unreleased section gets its version number. Commit and push this change.
 - Acquire an OTP token for 2fa.
 - Run either
-    - `NPM_CONFIG_OTP={your token} lerna publish --force-publish="*" patch`, or
-    - `NPM_CONFIG_OTP={your token} lerna publish --force-publish="*" minor`.
+    - `NPM_CONFIG_OTP={your token} lerna publish --force-publish="*" patch && lerna bootstrap`, or
+    - `NPM_CONFIG_OTP={your token} lerna publish --force-publish="*" minor && lerna bootstrap`.
 
 After running this commands, the node_modules folder in the individual packages will have been pruned, so run `npm install` or `npm run bootstrap` afterwards.
 
