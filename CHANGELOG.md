@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.84.2
 - [AWS Lambda] Call original callback in wrapped context.succeed/context.fail/context.done.
 - Allow GraphQL tracing over other protocols in addition to HTTP.
 
