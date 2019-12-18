@@ -19,6 +19,8 @@ To make a release, you first need to ensure that the released version will eithe
     - `NPM_CONFIG_OTP={your token} lerna publish --force-publish="*" patch`, or
     - `NPM_CONFIG_OTP={your token} lerna publish --force-publish="*" minor`.
 
+After running this commands, the node_modules folder in the individual packages will have been pruned, so run `npm install` or `npm run bootstrap` afterwards.
+
 #### Separate lerna version and lerna publish
 You might want to separate the version bumping and tagging from publishing to the npm registry. This is also possible. The separate lerna publish command (see below) is also helpful if the publish did not go through successfully.
 
