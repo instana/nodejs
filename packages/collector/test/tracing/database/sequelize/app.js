@@ -62,13 +62,6 @@ Regent.sync({ force: true }).then(() =>
 
 app.get('/regents', (req, res) => {
   const where = req.query ? req.query : {};
-  // Regent.findOne({ attributes: ['firstName', 'lastName'], where: where })
-  //   .then(function(regent) {
-  //     res.send([regent.get()]);
-  //   })
-  //   .catch(function(err) {
-  //     res.status(500).send(err);
-  //   });
   Regent.findAll({ attributes: ['firstName', 'lastName'], where })
     .then(regents => {
       res.send(regents.map(regent => regent.get()));

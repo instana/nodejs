@@ -14,7 +14,7 @@ const appPort = (exports.appPort = 3218);
 
 const errors = require('request-promise/errors');
 
-let expressPgApp;
+let app;
 
 exports.registerTestHooks = opts => {
   opts = opts || {};
@@ -26,7 +26,7 @@ exports.registerTestHooks = opts => {
     env.STACK_TRACE_LENGTH = opts.stackTraceLength || 0;
     env.TRACING_ENABLED = opts.enableTracing !== false;
 
-    expressPgApp = spawn('node', [path.join(__dirname, 'app.js')], {
+    app = spawn('node', [path.join(__dirname, 'app.js')], {
       stdio: config.getAppStdio(),
       env
     });
@@ -35,7 +35,7 @@ exports.registerTestHooks = opts => {
   });
 
   afterEach(() => {
-    expressPgApp.kill();
+    app.kill();
   });
 };
 
@@ -51,7 +51,7 @@ function waitUntilServerIsUp() {
   );
 }
 
-exports.getPid = () => expressPgApp.pid;
+exports.getPid = () => app.pid;
 
 exports.sendRequest = opts => {
   const headers = {};

@@ -12,187 +12,89 @@ describe('tracing/pg', function() {
     return;
   }
 
-  const expressPgControls = require('./controls');
-  const agentStubControls = require('../../../apps/agentStubControls');
+  const controls = require('./controls');
+  const agentControls = require('../../../apps/agentStubControls');
 
   this.timeout(config.getTestTimeout());
 
-  agentStubControls.registerTestHooks();
-  expressPgControls.registerTestHooks();
+  agentControls.registerTestHooks();
+  controls.registerTestHooks();
 
-  beforeEach(() => agentStubControls.waitUntilAppIsCompletelyInitialized(expressPgControls.getPid()));
+  beforeEach(() => agentControls.waitUntilAppIsCompletelyInitialized(controls.getPid()));
 
   it('must trace pooled select now', () =>
-    expressPgControls
+    controls
       .sendRequest({
         method: 'GET',
-        path: '/select-now-pool',
-        body: {}
+        path: '/select-now-pool'
       })
       .then(response => {
-        expect(response).to.exist;
-        expect(response.command).to.equal('SELECT');
-        expect(response.rowCount).to.equal(1);
-        expect(response.rows.length).to.equal(1);
-        expect(response.rows[0].now).to.be.a('string');
-
+        verifySimpleSelectResponse(response);
         return utils.retry(() =>
-          agentStubControls.getSpans().then(spans => {
-            const entrySpans = utils.getSpansByName(spans, 'node.http.server');
-            const pgSpans = utils.getSpansByName(spans, 'postgres');
-
-            expect(entrySpans).to.have.lengthOf(1);
-            expect(pgSpans).to.have.lengthOf(1);
-
-            const entrySpan = entrySpans[0];
-            const pgSpan = pgSpans[0];
-
-            expect(pgSpan.f.e).to.equal(String(expressPgControls.getPid()));
-            expect(pgSpan.f.h).to.equal('agent-stub-uuid');
-            expect(pgSpan.t).to.equal(entrySpan.t);
-            expect(pgSpan.p).to.equal(entrySpan.s);
-            expect(pgSpan.n).to.equal('postgres');
-            expect(pgSpan.k).to.equal(constants.EXIT);
-            expect(pgSpan.f.e).to.equal(String(expressPgControls.getPid()));
-            expect(pgSpan.f.h).to.equal('agent-stub-uuid');
-            expect(pgSpan.async).to.equal(false);
-            expect(pgSpan.error).to.equal(false);
-            expect(pgSpan.ec).to.equal(0);
-            expect(pgSpan.data.pg.stmt).to.equal('SELECT NOW()');
+          agentControls.getSpans().then(spans => {
+            const httpEntry = verifyHttpEntry(spans, '/select-now-pool');
+            verifyPgExit(spans, httpEntry, 'SELECT NOW()');
           })
         );
       }));
 
   it('must trace non-pooled query with callback', () =>
-    expressPgControls
+    controls
       .sendRequest({
         method: 'GET',
-        path: '/select-now-no-pool-callback',
-        body: {}
+        path: '/select-now-no-pool-callback'
       })
       .then(response => {
-        expect(response).to.exist;
-        expect(response.command).to.equal('SELECT');
-        expect(response.rowCount).to.equal(1);
-        expect(response.rows.length).to.equal(1);
-        expect(response.rows[0].now).to.be.a('string');
-
+        verifySimpleSelectResponse(response);
         return utils.retry(() =>
-          agentStubControls.getSpans().then(spans => {
-            const entrySpans = utils.getSpansByName(spans, 'node.http.server');
-            const pgSpans = utils.getSpansByName(spans, 'postgres');
-
-            expect(entrySpans).to.have.lengthOf(1);
-            expect(pgSpans).to.have.lengthOf(1);
-
-            const entrySpan = entrySpans[0];
-            const pgSpan = pgSpans[0];
-
-            expect(pgSpan.f.e).to.equal(String(expressPgControls.getPid()));
-            expect(pgSpan.f.h).to.equal('agent-stub-uuid');
-            expect(pgSpan.t).to.equal(entrySpan.t);
-            expect(pgSpan.p).to.equal(entrySpan.s);
-            expect(pgSpan.n).to.equal('postgres');
-            expect(pgSpan.k).to.equal(constants.EXIT);
-            expect(pgSpan.f.e).to.equal(String(expressPgControls.getPid()));
-            expect(pgSpan.f.h).to.equal('agent-stub-uuid');
-            expect(pgSpan.async).to.equal(false);
-            expect(pgSpan.error).to.equal(false);
-            expect(pgSpan.ec).to.equal(0);
-            expect(pgSpan.data.pg.stmt).to.equal('SELECT NOW()');
+          agentControls.getSpans().then(spans => {
+            const httpEntry = verifyHttpEntry(spans, '/select-now-no-pool-callback');
+            verifyPgExit(spans, httpEntry, 'SELECT NOW()');
           })
         );
       }));
 
   it('must trace non-pooled query with promise', () =>
-    expressPgControls
+    controls
       .sendRequest({
         method: 'GET',
-        path: '/select-now-no-pool-promise',
-        body: {}
+        path: '/select-now-no-pool-promise'
       })
       .then(response => {
-        expect(response).to.exist;
-        expect(response.command).to.equal('SELECT');
-        expect(response.rowCount).to.equal(1);
-        expect(response.rows.length).to.equal(1);
-        expect(response.rows[0].now).to.be.a('string');
-
+        verifySimpleSelectResponse(response);
         return utils.retry(() =>
-          agentStubControls.getSpans().then(spans => {
-            const entrySpans = utils.getSpansByName(spans, 'node.http.server');
-            const pgSpans = utils.getSpansByName(spans, 'postgres');
+          agentControls.getSpans().then(spans => {
+            const httpEntry = verifyHttpEntry(spans, '/select-now-no-pool-promise');
+            verifyPgExit(spans, httpEntry, 'SELECT NOW()');
+          })
+        );
+      }));
 
-            expect(entrySpans).to.have.lengthOf(1);
-            expect(pgSpans).to.have.lengthOf(1);
-
-            const entrySpan = entrySpans[0];
-            const pgSpan = pgSpans[0];
-
-            expect(pgSpan.f.e).to.equal(String(expressPgControls.getPid()));
-            expect(pgSpan.f.h).to.equal('agent-stub-uuid');
-            expect(pgSpan.t).to.equal(entrySpan.t);
-            expect(pgSpan.p).to.equal(entrySpan.s);
-            expect(pgSpan.n).to.equal('postgres');
-            expect(pgSpan.k).to.equal(constants.EXIT);
-            expect(pgSpan.f.e).to.equal(String(expressPgControls.getPid()));
-            expect(pgSpan.f.h).to.equal('agent-stub-uuid');
-            expect(pgSpan.async).to.equal(false);
-            expect(pgSpan.error).to.equal(false);
-            expect(pgSpan.ec).to.equal(0);
-            expect(pgSpan.data.pg.stmt).to.equal('SELECT NOW()');
           })
         );
       }));
 
   it('must trace string based pool insert', () =>
-    expressPgControls
+    controls
       .sendRequest({
         method: 'GET',
-        path: '/pool-string-insert',
-        body: {}
+        path: '/pool-string-insert'
       })
       .then(response => {
-        expect(response).to.exist;
-        expect(response.command).to.equal('INSERT');
-        expect(response.rowCount).to.equal(1);
-        expect(response.rows.length).to.equal(1);
-        expect(response.rows[0].name).to.equal('beaker');
-        expect(response.rows[0].email).to.equal('beaker@muppets.com');
-
+        verifyInsertResponse(response);
         return utils.retry(() =>
-          agentStubControls.getSpans().then(spans => {
-            const entrySpans = utils.getSpansByName(spans, 'node.http.server');
-            const pgSpans = utils.getSpansByName(spans, 'postgres');
-
-            expect(entrySpans).to.have.lengthOf(1);
-            expect(pgSpans).to.have.lengthOf(1);
-
-            const entrySpan = entrySpans[0];
-            const pgSpan = pgSpans[0];
-
-            expect(pgSpan.f.e).to.equal(String(expressPgControls.getPid()));
-            expect(pgSpan.f.h).to.equal('agent-stub-uuid');
-            expect(pgSpan.t).to.equal(entrySpan.t);
-            expect(pgSpan.p).to.equal(entrySpan.s);
-            expect(pgSpan.n).to.equal('postgres');
-            expect(pgSpan.k).to.equal(constants.EXIT);
-            expect(pgSpan.f.e).to.equal(String(expressPgControls.getPid()));
-            expect(pgSpan.f.h).to.equal('agent-stub-uuid');
-            expect(pgSpan.async).to.equal(false);
-            expect(pgSpan.error).to.equal(false);
-            expect(pgSpan.ec).to.equal(0);
-            expect(pgSpan.data.pg.stmt).to.equal('INSERT INTO users(name, email) VALUES($1, $2) RETURNING *');
+          agentControls.getSpans().then(spans => {
+            const httpEntry = verifyHttpEntry(spans, '/pool-string-insert');
+            verifyPgExit(spans, httpEntry, 'INSERT INTO users(name, email) VALUES($1, $2) RETURNING *');
           })
         );
       }));
 
   it('must trace config object based pool select', () =>
-    expressPgControls
+    controls
       .sendRequest({
         method: 'GET',
-        path: '/pool-config-select',
-        body: {}
+        path: '/pool-config-select'
       })
       .then(response => {
         expect(response).to.exist;
@@ -200,122 +102,50 @@ describe('tracing/pg', function() {
         expect(response.rowCount).to.be.a('number');
 
         return utils.retry(() =>
-          agentStubControls.getSpans().then(spans => {
-            const entrySpans = utils.getSpansByName(spans, 'node.http.server');
-            const pgSpans = utils.getSpansByName(spans, 'postgres');
-
-            expect(entrySpans).to.have.lengthOf(1);
-            expect(pgSpans).to.have.lengthOf(1);
-
-            const entrySpan = entrySpans[0];
-            const pgSpan = pgSpans[0];
-
-            expect(pgSpan.f.e).to.equal(String(expressPgControls.getPid()));
-            expect(pgSpan.f.h).to.equal('agent-stub-uuid');
-            expect(pgSpan.t).to.equal(entrySpan.t);
-            expect(pgSpan.p).to.equal(entrySpan.s);
-            expect(pgSpan.n).to.equal('postgres');
-            expect(pgSpan.k).to.equal(constants.EXIT);
-            expect(pgSpan.f.e).to.equal(String(expressPgControls.getPid()));
-            expect(pgSpan.f.h).to.equal('agent-stub-uuid');
-            expect(pgSpan.async).to.equal(false);
-            expect(pgSpan.error).to.equal(false);
-            expect(pgSpan.ec).to.equal(0);
-            expect(pgSpan.data.pg.stmt).to.equal('SELECT name, email FROM users');
+          agentControls.getSpans().then(spans => {
+            const httpEntry = verifyHttpEntry(spans, '/pool-config-select');
+            verifyPgExit(spans, httpEntry, 'SELECT name, email FROM users');
           })
         );
       }));
 
   it('must trace promise based pool select', () =>
-    expressPgControls
+    controls
       .sendRequest({
         method: 'GET',
-        path: '/pool-config-select-promise',
-        body: {}
+        path: '/pool-config-select-promise'
       })
       .then(response => {
-        expect(response).to.exist;
-        expect(response.command).to.equal('INSERT');
-        expect(response.rowCount).to.equal(1);
-        expect(response.rows.length).to.equal(1);
-        expect(response.rows[0].name).to.equal('beaker');
-        expect(response.rows[0].email).to.equal('beaker@muppets.com');
-
+        verifyInsertResponse(response);
         return utils.retry(() =>
-          agentStubControls.getSpans().then(spans => {
-            const entrySpans = utils.getSpansByName(spans, 'node.http.server');
-            const pgSpans = utils.getSpansByName(spans, 'postgres');
-
-            expect(entrySpans).to.have.lengthOf(1);
-            expect(pgSpans).to.have.lengthOf(1);
-
-            const entrySpan = entrySpans[0];
-            const pgSpan = pgSpans[0];
-
-            expect(pgSpan.f.e).to.equal(String(expressPgControls.getPid()));
-            expect(pgSpan.f.h).to.equal('agent-stub-uuid');
-            expect(pgSpan.t).to.equal(entrySpan.t);
-            expect(pgSpan.p).to.equal(entrySpan.s);
-            expect(pgSpan.n).to.equal('postgres');
-            expect(pgSpan.k).to.equal(constants.EXIT);
-            expect(pgSpan.f.e).to.equal(String(expressPgControls.getPid()));
-            expect(pgSpan.f.h).to.equal('agent-stub-uuid');
-            expect(pgSpan.async).to.equal(false);
-            expect(pgSpan.error).to.equal(false);
-            expect(pgSpan.ec).to.equal(0);
-            expect(pgSpan.data.pg.stmt).to.equal('INSERT INTO users(name, email) VALUES($1, $2) RETURNING *');
+          agentControls.getSpans().then(spans => {
+            const httpEntry = verifyHttpEntry(spans, '/pool-config-select-promise');
+            verifyPgExit(spans, httpEntry, 'INSERT INTO users(name, email) VALUES($1, $2) RETURNING *');
           })
         );
       }));
 
   it('must trace string based client insert', () =>
-    expressPgControls
+    controls
       .sendRequest({
         method: 'GET',
-        path: '/client-string-insert',
-        body: {}
+        path: '/client-string-insert'
       })
       .then(response => {
-        expect(response).to.exist;
-        expect(response.command).to.equal('INSERT');
-        expect(response.rowCount).to.equal(1);
-        expect(response.rows.length).to.equal(1);
-        expect(response.rows[0].name).to.equal('beaker');
-        expect(response.rows[0].email).to.equal('beaker@muppets.com');
-
+        verifyInsertResponse(response);
         return utils.retry(() =>
-          agentStubControls.getSpans().then(spans => {
-            const entrySpans = utils.getSpansByName(spans, 'node.http.server');
-            const pgSpans = utils.getSpansByName(spans, 'postgres');
-
-            expect(entrySpans).to.have.lengthOf(1);
-            expect(pgSpans).to.have.lengthOf(1);
-
-            const entrySpan = entrySpans[0];
-            const pgSpan = pgSpans[0];
-
-            expect(pgSpan.f.e).to.equal(String(expressPgControls.getPid()));
-            expect(pgSpan.f.h).to.equal('agent-stub-uuid');
-            expect(pgSpan.t).to.equal(entrySpan.t);
-            expect(pgSpan.p).to.equal(entrySpan.s);
-            expect(pgSpan.n).to.equal('postgres');
-            expect(pgSpan.k).to.equal(constants.EXIT);
-            expect(pgSpan.f.e).to.equal(String(expressPgControls.getPid()));
-            expect(pgSpan.f.h).to.equal('agent-stub-uuid');
-            expect(pgSpan.async).to.equal(false);
-            expect(pgSpan.error).to.equal(false);
-            expect(pgSpan.ec).to.equal(0);
-            expect(pgSpan.data.pg.stmt).to.equal('INSERT INTO users(name, email) VALUES($1, $2) RETURNING *');
+          agentControls.getSpans().then(spans => {
+            const httpEntry = verifyHttpEntry(spans, '/client-string-insert');
+            verifyPgExit(spans, httpEntry, 'INSERT INTO users(name, email) VALUES($1, $2) RETURNING *');
           })
         );
       }));
 
   it('must trace config object based client select', () =>
-    expressPgControls
+    controls
       .sendRequest({
         method: 'GET',
-        path: '/client-config-select',
-        body: {}
+        path: '/client-config-select'
       })
       .then(response => {
         expect(response).to.exist;
@@ -323,38 +153,18 @@ describe('tracing/pg', function() {
         expect(response.rowCount).to.be.a('number');
 
         return utils.retry(() =>
-          agentStubControls.getSpans().then(spans => {
-            const entrySpans = utils.getSpansByName(spans, 'node.http.server');
-            const pgSpans = utils.getSpansByName(spans, 'postgres');
-
-            expect(entrySpans).to.have.lengthOf(1);
-            expect(pgSpans).to.have.lengthOf(1);
-
-            const entrySpan = entrySpans[0];
-            const pgSpan = pgSpans[0];
-
-            expect(pgSpan.f.e).to.equal(String(expressPgControls.getPid()));
-            expect(pgSpan.f.h).to.equal('agent-stub-uuid');
-            expect(pgSpan.t).to.equal(entrySpan.t);
-            expect(pgSpan.p).to.equal(entrySpan.s);
-            expect(pgSpan.n).to.equal('postgres');
-            expect(pgSpan.k).to.equal(constants.EXIT);
-            expect(pgSpan.f.e).to.equal(String(expressPgControls.getPid()));
-            expect(pgSpan.f.h).to.equal('agent-stub-uuid');
-            expect(pgSpan.async).to.equal(false);
-            expect(pgSpan.error).to.equal(false);
-            expect(pgSpan.ec).to.equal(0);
-            expect(pgSpan.data.pg.stmt).to.equal('SELECT name, email FROM users');
+          agentControls.getSpans().then(spans => {
+            const httpEntry = verifyHttpEntry(spans, '/client-config-select');
+            verifyPgExit(spans, httpEntry, 'SELECT name, email FROM users');
           })
         );
       }));
 
   it('must capture errors', () =>
-    expressPgControls
+    controls
       .sendRequest({
         method: 'GET',
-        path: '/table-doesnt-exist',
-        body: {}
+        path: '/table-doesnt-exist'
       })
       .then(response => {
         expect(response).to.exist;
@@ -364,144 +174,106 @@ describe('tracing/pg', function() {
         expect(response.message).to.include('42P01');
 
         return utils.retry(() =>
-          agentStubControls.getSpans().then(spans => {
-            const entrySpans = utils.getSpansByName(spans, 'node.http.server');
-            const pgSpans = utils.getSpansByName(spans, 'postgres');
-
-            expect(entrySpans).to.have.lengthOf(1);
-            expect(pgSpans).to.have.lengthOf(1);
-
-            const entrySpan = entrySpans[0];
-            const pgSpan = pgSpans[0];
-
-            expect(pgSpan.f.e).to.equal(String(expressPgControls.getPid()));
-            expect(pgSpan.f.h).to.equal('agent-stub-uuid');
-            expect(pgSpan.t).to.equal(entrySpan.t);
-            expect(pgSpan.p).to.equal(entrySpan.s);
-            expect(pgSpan.n).to.equal('postgres');
-            expect(pgSpan.k).to.equal(constants.EXIT);
-            expect(pgSpan.f.e).to.equal(String(expressPgControls.getPid()));
-            expect(pgSpan.f.h).to.equal('agent-stub-uuid');
-            expect(pgSpan.async).to.equal(false);
-            expect(pgSpan.error).to.equal(true);
-            // expect(pgSpan.data.pg.error).to.equal('blah');
-            expect(pgSpan.ec).to.equal(1);
-            expect(pgSpan.data.pg.stmt).to.equal('SELECT name, email FROM nonexistanttable');
+          agentControls.getSpans().then(spans => {
+            const httpEntry = verifyHttpEntry(spans, '/table-doesnt-exist');
+            verifyPgExitWithError(spans, httpEntry, 'SELECT name, email FROM nonexistanttable');
           })
         );
       }));
 
   it('must not break vanilla postgres (not tracing)', () =>
-    expressPgControls
+    controls
       .sendRequest({
         method: 'GET',
         path: '/pool-string-insert',
         suppressTracing: true
       })
       .then(response => {
-        expect(response).to.exist;
-        expect(response.command).to.equal('INSERT');
-        expect(response.rowCount).to.equal(1);
-        expect(response.rows.length).to.equal(1);
-        expect(response.rows[0].name).to.equal('beaker');
-        expect(response.rows[0].email).to.equal('beaker@muppets.com');
-
+        verifyInsertResponse(response);
         return utils.retry(() =>
-          agentStubControls.getSpans().then(spans => {
+          agentControls.getSpans().then(spans => {
             const entrySpans = utils.getSpansByName(spans, 'node.http.server');
-            const pgSpans = utils.getSpansByName(spans, 'postgres');
-
             expect(entrySpans).to.have.lengthOf(0);
-            expect(pgSpans).to.have.lengthOf(0);
-
-            expect(response.rows).to.lengthOf(1);
-            expect(response.rows[0].name).to.equal('beaker');
-            expect(response.rows[0].email).to.equal('beaker@muppets.com');
+            const pgExits = utils.getSpansByName(spans, 'postgres');
+            expect(pgExits).to.have.lengthOf(0);
           })
         );
       }));
 
   it('must trace transactions', () =>
-    expressPgControls
+    controls
       .sendRequest({
         method: 'GET',
-        path: '/transaction',
-        body: {}
+        path: '/transaction'
       })
       .then(response => {
-        expect(response).to.exist;
-        expect(response.command).to.equal('INSERT');
-        expect(response.rowCount).to.equal(1);
-        expect(response.rows.length).to.equal(1);
-        expect(response.rows[0].name).to.equal('trans2');
-        expect(response.rows[0].email).to.equal('nodejstests@blah');
-
+        verifyInsertResponse(response, 'trans2', 'nodejstests@blah');
         return utils.retry(() =>
-          agentStubControls.getSpans().then(spans => {
-            const entrySpans = utils.getSpansByName(spans, 'node.http.server');
-            const pgSpans = utils.getSpansByName(spans, 'postgres');
-
-            expect(entrySpans).to.have.lengthOf(1);
-            expect(pgSpans).to.have.lengthOf(4);
-
-            const entrySpan = entrySpans[0];
-            const pgSpan1 = pgSpans[0];
-            const pgSpan2 = pgSpans[1];
-            const pgSpan3 = pgSpans[2];
-            const pgSpan4 = pgSpans[3];
-
-            expect(pgSpan1.f.e).to.equal(String(expressPgControls.getPid()));
-            expect(pgSpan1.f.h).to.equal('agent-stub-uuid');
-            expect(pgSpan1.t).to.equal(entrySpan.t);
-            expect(pgSpan1.p).to.equal(entrySpan.s);
-            expect(pgSpan1.n).to.equal('postgres');
-            expect(pgSpan1.k).to.equal(constants.EXIT);
-            expect(pgSpan1.f.e).to.equal(String(expressPgControls.getPid()));
-            expect(pgSpan1.f.h).to.equal('agent-stub-uuid');
-            expect(pgSpan1.async).to.equal(false);
-            expect(pgSpan1.error).to.equal(false);
-            expect(pgSpan1.ec).to.equal(0);
-            expect(pgSpan1.data.pg.stmt).to.equal('BEGIN');
-
-            expect(pgSpan2.f.e).to.equal(String(expressPgControls.getPid()));
-            expect(pgSpan2.f.h).to.equal('agent-stub-uuid');
-            expect(pgSpan2.t).to.equal(entrySpan.t);
-            expect(pgSpan2.p).to.equal(entrySpan.s);
-            expect(pgSpan2.n).to.equal('postgres');
-            expect(pgSpan2.k).to.equal(constants.EXIT);
-            expect(pgSpan2.f.e).to.equal(String(expressPgControls.getPid()));
-            expect(pgSpan2.f.h).to.equal('agent-stub-uuid');
-            expect(pgSpan2.async).to.equal(false);
-            expect(pgSpan2.error).to.equal(false);
-            expect(pgSpan2.ec).to.equal(0);
-            expect(pgSpan2.data.pg.stmt).to.equal('INSERT INTO users(name, email) VALUES($1, $2) RETURNING *');
-
-            expect(pgSpan3.f.e).to.equal(String(expressPgControls.getPid()));
-            expect(pgSpan3.f.h).to.equal('agent-stub-uuid');
-            expect(pgSpan3.t).to.equal(entrySpan.t);
-            expect(pgSpan3.p).to.equal(entrySpan.s);
-            expect(pgSpan3.n).to.equal('postgres');
-            expect(pgSpan3.k).to.equal(constants.EXIT);
-            expect(pgSpan3.f.e).to.equal(String(expressPgControls.getPid()));
-            expect(pgSpan3.f.h).to.equal('agent-stub-uuid');
-            expect(pgSpan3.async).to.equal(false);
-            expect(pgSpan3.error).to.equal(false);
-            expect(pgSpan3.ec).to.equal(0);
-            expect(pgSpan3.data.pg.stmt).to.equal('INSERT INTO users(name, email) VALUES($1, $2) RETURNING *');
-
-            expect(pgSpan4.f.e).to.equal(String(expressPgControls.getPid()));
-            expect(pgSpan4.f.h).to.equal('agent-stub-uuid');
-            expect(pgSpan4.t).to.equal(entrySpan.t);
-            expect(pgSpan4.p).to.equal(entrySpan.s);
-            expect(pgSpan4.n).to.equal('postgres');
-            expect(pgSpan4.k).to.equal(constants.EXIT);
-            expect(pgSpan4.f.e).to.equal(String(expressPgControls.getPid()));
-            expect(pgSpan4.f.h).to.equal('agent-stub-uuid');
-            expect(pgSpan4.async).to.equal(false);
-            expect(pgSpan4.error).to.equal(false);
-            expect(pgSpan4.ec).to.equal(0);
-            expect(pgSpan4.data.pg.stmt).to.equal('COMMIT');
+          agentControls.getSpans().then(spans => {
+            const httpEntry = verifyHttpEntry(spans, '/transaction');
+            expect(utils.getSpansByName(spans, 'postgres')).to.have.lengthOf(4);
+            verifyPgExit(spans, httpEntry, 'BEGIN');
+            verifyPgExit(spans, httpEntry, 'INSERT INTO users(name, email) VALUES($1, $2) RETURNING *');
+            verifyPgExit(spans, httpEntry, 'INSERT INTO users(name, email) VALUES($1, $2) RETURNING *');
+            verifyPgExit(spans, httpEntry, 'COMMIT');
           })
         );
       }));
+
+  function verifySimpleSelectResponse(response) {
+    expect(response).to.exist;
+    expect(response.command).to.equal('SELECT');
+    expect(response.rowCount).to.equal(1);
+    expect(response.rows.length).to.equal(1);
+    expect(response.rows[0].now).to.be.a('string');
+  }
+
+  function verifyInsertResponse(response, name = 'beaker', email = 'beaker@muppets.com') {
+    expect(response).to.exist;
+    expect(response.command).to.equal('INSERT');
+    expect(response.rowCount).to.equal(1);
+    expect(response.rows.length).to.equal(1);
+    expect(response.rows[0].name).to.equal(name);
+    expect(response.rows[0].email).to.equal(email);
+  }
+
+  function verifyHttpEntry(spans, url) {
+    return utils.expectOneMatching(spans, span => {
+      expect(span.p).to.not.exist;
+      expect(span.k).to.equal(constants.ENTRY);
+      expect(span.f.e).to.equal(String(controls.getPid()));
+      expect(span.f.h).to.equal('agent-stub-uuid');
+      expect(span.n).to.equal('node.http.server');
+      expect(span.data.http.url).to.equal(url);
+    });
+  }
+
+  function verifyPgExit(spans, parent, statement) {
+    return utils.expectOneMatching(spans, span => {
+      verifyPgExitBase(span, parent, statement);
+      expect(span.error).to.equal(false);
+      expect(span.ec).to.equal(0);
+    });
+  }
+
+  function verifyPgExitWithError(spans, parent, statement) {
+    return utils.expectOneMatching(spans, span => {
+      verifyPgExitBase(span, parent, statement);
+      expect(span.error).to.equal(true);
+      expect(span.ec).to.equal(1);
+    });
+  }
+
+  function verifyPgExitBase(span, parent, statement) {
+    expect(span.n).to.equal('postgres');
+    expect(span.k).to.equal(constants.EXIT);
+    expect(span.t).to.equal(parent.t);
+    expect(span.p).to.equal(parent.s);
+    expect(span.f.e).to.equal(String(controls.getPid()));
+    expect(span.f.h).to.equal('agent-stub-uuid');
+    expect(span.async).to.equal(false);
+    expect(span.data).to.exist;
+    expect(span.data.pg).to.exist;
+    expect(span.data.pg.stmt).to.equal(statement);
+  }
 });
