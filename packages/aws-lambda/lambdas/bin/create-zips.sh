@@ -5,6 +5,7 @@ cd `dirname $BASH_SOURCE`/..
 
 pushd .. > /dev/null
 pwd
+rm -rf instana-serverless*.tgz
 rm -rf instana-aws-lambda*.tgz
 
 # Specify one of:
@@ -21,16 +22,21 @@ if [[ -z "${BUILD_LAMBDAS_WITH-}" ]]; then
   echo "Environmant variable BUILD_LAMBDAS_WITH has not been provided, assuming \"npm\" (build with latest npm package)."
 fi
 
+# We will want to install/uninstall local npm package tar files, which means we need to build them first. Note: Even for
+# options BUILD_LAMBDAS_WITH=layer or BUILD_LAMBDAS_WITH=npm, we need to build the packages, because we for all three
+# packages we will call "npm uninstall -S $package-name"  and if the package.json points to the tar file it needs
+# to exist so npm can uninstall it and all its transitive dependencies.
+echo "Building local tar.gz for @instana/serverless."
+cd ../serverless
+npm --loglevel=warn pack
+mv instana-serverless-*.tgz ../aws-lambda/instana-serverless.tgz
 
-# We will want to install/uninstall local npm package tar file, which means we need to build it first. Note: Even for
-# options BUILD_LAMBDAS_WITH=layer or BUILD_LAMBDAS_WITH=npm, we need to build the package, because we will call
-# "npm uninstall -S @instana/aws-lambda" and if the package.json points to the tar file it needs to exist so npm can
-# uninstall it and all its transitive dependencies.
-echo "Building local tar.gz."
+echo "Building local tar.gz for @instana/aws-lambda."
+cd ../aws-lambda
 npm --loglevel=warn pack
 mv instana-aws-lambda-1*.tgz instana-aws-lambda.tgz
 
-echo "Building local auto-wrap tar.gz."
+echo "Building local tar.gz for instana-aws-lambda-auto-wrap."
 cd ../aws-lambda-auto-wrap
 npm --loglevel=warn pack
 mv instana-aws-lambda-auto-wrap*.tgz ../aws-lambda/instana-aws-lambda-auto-wrap.tgz
