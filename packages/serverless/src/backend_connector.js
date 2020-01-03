@@ -106,6 +106,7 @@ function send(resourcePath, payload, callback) {
   const req = https.request(options);
 
   req.setTimeout(backendTimeout, () => {
+    console.log('XXX req.timeout');
     callback(
       new Error(
         `The Instana back end did not respond in the configured timeout of ${backendTimeout} ms. The timeout can be ` +
@@ -115,10 +116,13 @@ function send(resourcePath, payload, callback) {
   });
 
   req.on('error', e => {
+    console.log('XXX req#error');
     callback(e);
   });
 
+  console.log('INSTANA PRE REQ', Date.now() - process.handlerFinished);
   req.end(payload, () => {
+    console.log('INSTANA POST REQ', Date.now() - process.handlerFinished);
     // We finish as soon as the request has been flushed, without waiting for the response.
     return callback();
   });

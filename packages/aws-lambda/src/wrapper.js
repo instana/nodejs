@@ -151,6 +151,8 @@ function shimmedHandler(originalHandler, originalThis, originalArgs, _config) {
       if (handlerPromise && typeof handlerPromise.then === 'function') {
         return handlerPromise.then(
           value => {
+            process.handlerFinished = Date.now();
+            console.log('FINISHED', process.handlerFinished);
             if (handlerHasFinished) {
               return Promise.resolve(value);
             }
@@ -215,6 +217,7 @@ function init(event, arnInfo, _config) {
 function postPromise(entrySpan, error, value) {
   return new Promise((resolve, reject) => {
     postHandler(entrySpan, error, value, () => {
+      console.log('INSTANA DELAY', Date.now() - process.handlerFinished);
       if (error) {
         reject(error);
       } else {
