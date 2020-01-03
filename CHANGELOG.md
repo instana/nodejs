@@ -1,5 +1,8 @@
 # Changelog
 
+## Unreleased
+- [AWS Lambda] Reduce execution time penalty for native AWS Lambda tracing even further.
+
 ## 1.84.3
 - [AWS Lambda] Avoid duplicated postHandler calls.
 

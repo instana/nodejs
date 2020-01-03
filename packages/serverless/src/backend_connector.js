@@ -99,27 +99,12 @@ function send(resourcePath, payload, callback) {
     options.ecdhCurve = 'auto';
   }
 
-  const req = https.request(options, res => {
-    const unexpectedStatus = res.statusCode < 200 || res.statusCode >= 300;
-    let data = '';
-    res.setEncoding('utf8');
-    res.on('data', chunk => {
-      // Ignore response data unless we received an HTTP status code indicating a problem.
-      if (unexpectedStatus) {
-        data += chunk;
-      }
-    });
-    res.on('end', () => {
-      if (unexpectedStatus) {
-        return callback(
-          new Error(
-            `Received an unexpected HTTP status (${res.statusCode}) from the Instana back end. Message: ${data}`
-          )
-        );
-      }
-      return callback();
-    });
-  });
+  // We deliberately do not pass a callback when calling https.request but instead we pass the callback to req.end.
+  // This way, we do not wait for the HTTP _response_, but we still make sure the request data is written to the network
+  // completely. This reduces the delay we add to the Lambda execution time to report metrics and traces quite a bit.
+  // The (acceptable) downside is that we do not get to examine the response for HTTP status codes.
+  const req = https.request(options);
+
   req.setTimeout(backendTimeout, () => {
     callback(
       new Error(
@@ -133,6 +118,8 @@ function send(resourcePath, payload, callback) {
     callback(e);
   });
 
-  req.write(payload);
-  req.end();
+  req.end(payload, () => {
+    // We finish as soon as the request has been flushed, without waiting for the response.
+    return callback();
+  });
 }
