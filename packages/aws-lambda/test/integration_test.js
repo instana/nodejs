@@ -6,15 +6,25 @@ const expect = require('chai').expect;
 const path = require('path');
 const constants = require('@instana/core').tracing.constants;
 
-const config = require('../../../serverless/test/config');
-const delay = require('../../../serverless/test/util/delay');
-const expectOneMatching = require('../../../serverless/test/util/expect_matching');
-const retry = require('../../../serverless/test/util/retry');
+const config = require('../../serverless/test/config');
+const delay = require('../../serverless/test/util/delay');
+const expectOneMatching = require('../../serverless/test/util/expect_matching');
+const retry = require('../../serverless/test/util/retry');
 
 const functionName = 'functionName';
 const unqualifiedArn = `arn:aws:lambda:us-east-2:410797082306:function:${functionName}`;
 const version = '$LATEST';
 const qualifiedArn = `${unqualifiedArn}:${version}`;
+
+[
+  //
+  'async',
+  'callback',
+  'legacy_api',
+  'promise'
+].forEach(lambdaType => {
+  describe(`aws/lambda/${lambdaType}`, () => registerTests.bind(this)(path.join(__dirname, 'lambdas', lambdaType)));
+});
 
 function prelude(opts) {
   this.timeout(config.getTestTimeout());
@@ -69,9 +79,9 @@ function prelude(opts) {
     env.SERVER_TIMING_HEADER = opts.serverTiming;
   }
 
-  const Control = require('../../../serverless/test/util/control');
+  const Control = require('../../serverless/test/util/control');
   const control = new Control({
-    faasRuntimePath: path.join(__dirname, '../runtime_mock'),
+    faasRuntimePath: path.join(__dirname, './runtime_mock'),
     handlerDefinitionPath: opts.handlerDefinitionPath,
     startBackend: opts.startBackend,
     env
@@ -80,7 +90,7 @@ function prelude(opts) {
   return control;
 }
 
-exports.registerTests = function registerTests(handlerDefinitionPath) {
+function registerTests(handlerDefinitionPath) {
   describe('when everything is peachy', function() {
     // - INSTANA_ENDPOINT_URL is configured
     // - INSTANA_AGENT_KEY is configured
@@ -911,4 +921,4 @@ exports.registerTests = function registerTests(handlerDefinitionPath) {
     });
     return value;
   }
-};
+}
