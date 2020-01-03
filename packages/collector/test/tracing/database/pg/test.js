@@ -12,15 +12,17 @@ describe('tracing/pg', function() {
     return;
   }
 
-  const controls = require('./controls');
   const agentControls = require('../../../apps/agentStubControls');
+  const Controls = require('./controls');
 
   this.timeout(config.getTestTimeout());
 
   agentControls.registerTestHooks();
-  controls.registerTestHooks();
 
-  beforeEach(() => agentControls.waitUntilAppIsCompletelyInitialized(controls.getPid()));
+  const controls = new Controls({
+    agentControls
+  });
+  controls.registerTestHooks();
 
   it('must trace pooled select now', () =>
     controls
@@ -70,7 +72,7 @@ describe('tracing/pg', function() {
         );
       }));
 
-  it('must not confuse associate unrelated calls with long query span', () => {
+  it('must not associate unrelated calls with long query span', () => {
     setTimeout(() => {
       controls.sendRequest({
         method: 'GET',
@@ -205,14 +207,14 @@ describe('tracing/pg', function() {
     controls
       .sendRequest({
         method: 'GET',
-        path: '/table-doesnt-exist'
+        path: '/table-doesnt-exist',
+        simple: false
       })
       .then(response => {
         expect(response).to.exist;
-        expect(response.name).to.equal('StatusCodeError');
-        expect(response.statusCode).to.equal(500);
+        expect(response.severity).to.equal('ERROR');
         // 42P01 -> PostgreSQL's code for "relation does not exist"
-        expect(response.message).to.include('42P01');
+        expect(response.code).to.equal('42P01');
 
         return utils.retry(() =>
           agentControls.getSpans().then(spans => {
