@@ -90,6 +90,28 @@ app.post('/regents', (req, res) =>
     })
 );
 
+app.get('/long-running-query', (req, res) => {
+  sequelize
+    .query('SELECT NOW() FROM pg_sleep(2)')
+    .then(([results]) => {
+      res.send(results);
+    })
+    .catch(err => {
+      res.status(500).send(err);
+    });
+});
+
+app.get('/quick-query', (req, res) => {
+  sequelize
+    .query('SELECT NOW()')
+    .then(([results]) => {
+      res.send(results);
+    })
+    .catch(err => {
+      res.status(500).send(err);
+    });
+});
+
 app.listen(process.env.APP_PORT, () => {
   log(`Listening on port: ${process.env.APP_PORT}`);
 });

@@ -198,6 +198,34 @@ app.get('/transaction', (req, res) => {
   });
 });
 
+app.get('/long-running-query', (req, res) => {
+  client
+    .query('SELECT NOW() FROM pg_sleep(2)')
+    .then(results => {
+      res.json(results);
+    })
+    .catch(err => {
+      if (err) {
+        log('Failed to execute select now query', err);
+        return res.sendStatus(500);
+      }
+    });
+});
+
+app.get('/quick-query', (req, res) => {
+  client
+    .query('SELECT NOW()')
+    .then(results => {
+      res.json(results);
+    })
+    .catch(err => {
+      if (err) {
+        log('Failed to execute select now query', err);
+        return res.sendStatus(500);
+      }
+    });
+});
+
 app.listen(process.env.APP_PORT, () => {
   log(`Listening on port: ${process.env.APP_PORT}`);
 });
