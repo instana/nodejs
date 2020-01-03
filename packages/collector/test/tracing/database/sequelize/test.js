@@ -98,7 +98,7 @@ describe('tracing/sequelize', function() {
         );
       }));
 
-  it('must not confuse associate unrelated calls with long query span', () => {
+  it('must not associate unrelated HTTP calls with long query span', () => {
     setTimeout(() => {
       controls.sendRequest({
         method: 'GET',
@@ -128,6 +128,7 @@ describe('tracing/sequelize', function() {
         expect(Array.isArray(response)).to.be.true;
         expect(response.length).to.be.gte(1);
         expect(response[0].now).to.exist;
+
         let spans;
         return utils
           .retry(() =>
@@ -154,6 +155,60 @@ describe('tracing/sequelize', function() {
                   s.data.pg.stmt.indexOf('SELECT typname, typtype, oid, typarray FROM pg_type') < 0
               );
               expect(allPgExitsFromQuickQuery).to.have.lengthOf(1);
+            }
+          });
+      });
+  });
+
+  it('must not associate unrelated non-traced calls with long query span', () => {
+    setTimeout(() => {
+      controls.sendViaIpc('trigger-quick-query');
+      setTimeout(() => {
+        controls.sendViaIpc('trigger-quick-query');
+        setTimeout(() => {
+          controls.sendViaIpc('trigger-quick-query');
+        }, 200);
+      }, 200);
+    }, 500);
+
+    return controls
+      .sendRequest({
+        method: 'GET',
+        path: '/long-running-query'
+      })
+      .then(response => {
+        expect(response).to.exist;
+        expect(Array.isArray(response)).to.be.true;
+        expect(response.length).to.be.gte(1);
+        expect(response[0].now).to.exist;
+
+        const ipcMessages = controls.getIpcMessages();
+        expect(ipcMessages).to.be.an('array');
+        expect(ipcMessages).to.have.lengthOf(3);
+        for (let i = 0; i < ipcMessages.length; i++) {
+          expect(ipcMessages[i]).to.be.an('array');
+          expect(ipcMessages[i]).to.have.lengthOf(1);
+          expect(ipcMessages[i][0]).to.be.an('object');
+          expect(ipcMessages[i][0].now).to.exist;
+        }
+
+        let spans;
+        return utils
+          .retry(() =>
+            agentControls.getSpans().then(_spans => {
+              spans = _spans;
+              expect(spans).to.not.be.empty;
+            })
+          )
+          .then(() => {
+            const httpEntryLong = verifyHttpEntry(spans, 'GET', '/long-running-query');
+            const allPgExitsFromLongQuery = spans.filter(s => s.n === 'postgres' && s.t === httpEntryLong.t);
+            expect(allPgExitsFromLongQuery).to.have.lengthOf(1);
+
+            if (spans.length > 2) {
+              // eslint-disable-next-line no-console
+              console.log('Extraneous spans:', JSON.stringify(spans, null, 2));
+              fail('Found extraneous spans');
             }
           });
       });

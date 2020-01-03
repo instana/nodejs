@@ -105,6 +105,26 @@ app.get('/quick-query', (req, res) => {
     });
 });
 
+process.on('message', message => {
+  if (typeof message !== 'string') {
+    return process.send(`error: malformed message, only strings are allowed: ${JSON.stringify(message)}`);
+  }
+  switch (message) {
+    case 'trigger-quick-query':
+      sequelize
+        .query('SELECT NOW()')
+        .then(([results]) => {
+          process.send(results);
+        })
+        .catch(err => {
+          process.send(err);
+        });
+      break;
+    default:
+      process.send(`error: unknown command: ${message}`);
+  }
+});
+
 app.listen(process.env.APP_PORT, () => {
   log(`Listening on port: ${process.env.APP_PORT}`);
 });
