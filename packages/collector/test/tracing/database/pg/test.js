@@ -70,9 +70,50 @@ describe('tracing/pg', function() {
         );
       }));
 
+  it('must not confuse associate unrelated calls with long query span', () => {
+    setTimeout(() => {
+      controls.sendRequest({
+        method: 'GET',
+        path: '/quick-query'
+      });
+      setTimeout(() => {
+        controls.sendRequest({
+          method: 'GET',
+          path: '/quick-query'
+        });
+        setTimeout(() => {
+          controls.sendRequest({
+            method: 'GET',
+            path: '/quick-query'
+          });
+        }, 200);
+      }, 200);
+    }, 500);
+    return controls
+      .sendRequest({
+        method: 'GET',
+        path: '/long-running-query'
+      })
+      .then(response => {
+        verifySimpleSelectResponse(response);
+        return utils.retry(() =>
+          agentControls.getSpans().then(spans => {
+            const httpEntryLong = verifyHttpEntry(spans, '/long-running-query');
+            const httpEntriesQuick = [];
+            httpEntriesQuick[0] = verifyUniqueHttpEntry(spans, 'GET', '/quick-query', httpEntriesQuick);
+            httpEntriesQuick[1] = verifyUniqueHttpEntry(spans, 'GET', '/quick-query', httpEntriesQuick);
+            httpEntriesQuick[2] = verifyUniqueHttpEntry(spans, 'GET', '/quick-query', httpEntriesQuick);
+
+            const allPgExitsFromLongQuery = spans.filter(s => s.n === 'postgres' && s.t === httpEntryLong.t);
+            expect(allPgExitsFromLongQuery).to.have.lengthOf(1);
+            for (let i = 0; i < httpEntriesQuick.length; i++) {
+              const allPgExitsFromQuickQuery = spans.filter(s => s.n === 'postgres' && s.t === httpEntriesQuick[i].t);
+              expect(allPgExitsFromQuickQuery).to.have.lengthOf(1);
+            }
           })
         );
-      }));
+      });
+  });
 
   it('must trace string based pool insert', () =>
     controls
@@ -275,5 +316,21 @@ describe('tracing/pg', function() {
     expect(span.data).to.exist;
     expect(span.data.pg).to.exist;
     expect(span.data.pg.stmt).to.equal(statement);
+  }
+
+  function verifyUniqueHttpEntry(spans, method, url, other) {
+    return utils.expectOneMatching(spans, span => {
+      expect(span.p).to.not.exist;
+      expect(span.k).to.equal(constants.ENTRY);
+      expect(span.f.e).to.equal(String(controls.getPid()));
+      expect(span.f.h).to.equal('agent-stub-uuid');
+      expect(span.n).to.equal('node.http.server');
+      expect(span.data.http.method).to.equal(method);
+      expect(span.data.http.url).to.equal(url);
+      for (let i = 0; i < other.length; i++) {
+        expect(span.t).to.not.equal(other[i].t);
+        expect(span.s).to.not.equal(other[i].s);
+      }
+    });
   }
 });
