@@ -2,14 +2,7 @@
 
 'use strict';
 
-require('../../../../')({
-  agentPort: process.env.AGENT_PORT,
-  level: 'warn',
-  tracing: {
-    enabled: process.env.TRACING_ENABLED !== 'false',
-    forceTransmissionStartingAt: 1
-  }
-});
+require('../../../../')();
 
 const Sequelize = require('sequelize');
 const sequelize = new Sequelize(process.env.POSTGRES_DB, process.env.POSTGRES_USER, process.env.POSTGRES_PASSWORD, {

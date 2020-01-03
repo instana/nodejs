@@ -1,6 +1,7 @@
 'use strict';
 
-const expect = require('chai').expect;
+const { expect } = require('chai');
+const { fail } = require('chai').assert;
 
 const constants = require('@instana/core').tracing.constants;
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
@@ -12,15 +13,17 @@ describe('tracing/sequelize', function() {
     return;
   }
 
-  const controls = require('./controls');
   const agentControls = require('../../../apps/agentStubControls');
+  const Controls = require('./controls');
 
   this.timeout(config.getTestTimeout());
 
   agentControls.registerTestHooks();
-  controls.registerTestHooks();
 
-  beforeEach(() => agentControls.waitUntilAppIsCompletelyInitialized(controls.getPid()));
+  const controls = new Controls({
+    agentControls
+  });
+  controls.registerTestHooks();
 
   it('must fetch', () =>
     controls
