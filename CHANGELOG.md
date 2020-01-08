@@ -1,7 +1,8 @@
 # Changelog
 
-## Unreleased
+## 1.85.0
 - [AWS Lambda] Reduce execution time penalty for native AWS Lambda tracing even further.
+- Refactor agentready state to not use closures.
 
 ## 1.84.3
 - [AWS Lambda] Avoid duplicated postHandler calls.
