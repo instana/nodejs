@@ -25,7 +25,6 @@ var retryTimeoutMillis = 60 * 1000;
 
 module.exports = {
   enter: enter,
-
   leave: function() {}
 };
 
