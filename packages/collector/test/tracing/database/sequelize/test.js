@@ -8,24 +8,43 @@ const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('../../../../../core/test/config');
 const utils = require('../../../../../core/test/utils');
 
+let agentControls;
+let Controls;
+
 describe('tracing/sequelize', function() {
   if (!supportedVersion(process.versions.node)) {
     return;
   }
 
-  const agentControls = require('../../../apps/agentStubControls');
-  const Controls = require('./controls');
+  agentControls = require('../../../apps/agentStubControls');
+  Controls = require('./controls');
 
   this.timeout(config.getTestTimeout());
 
   agentControls.registerTestHooks();
 
+  describe('with pg', function() {
+    registerTests.call(this, false);
+  });
+
+  describe('with pg-native', function() {
+    registerTests.call(this, true);
+  });
+});
+
+function registerTests(usePgNative) {
+  const env = usePgNative
+    ? {
+        USE_PG_NATIVE: true
+      }
+    : {};
   const controls = new Controls({
-    agentControls
+    agentControls,
+    env
   });
   controls.registerTestHooks();
 
-  it('must fetch', () =>
+  it(`must fetch (pg-native: ${usePgNative})`, () =>
     controls
       .sendRequest({
         method: 'GET',
@@ -46,7 +65,7 @@ describe('tracing/sequelize', function() {
         );
       }));
 
-  it('must write', () =>
+  it(`must write (pg-native: ${usePgNative})`, () =>
     controls
       .sendRequest({
         method: 'POST',
@@ -98,7 +117,7 @@ describe('tracing/sequelize', function() {
         );
       }));
 
-  it('must not associate unrelated HTTP calls with long query span', () => {
+  it(`must not associate unrelated HTTP calls with long query span (pg-native: ${usePgNative})`, () => {
     setTimeout(() => {
       controls.sendRequest({
         method: 'GET',
@@ -160,7 +179,7 @@ describe('tracing/sequelize', function() {
       });
   });
 
-  it('must not associate unrelated non-traced calls with long query span', () => {
+  it(`must not associate unrelated non-traced calls with long query span (pg-native: ${usePgNative})`, () => {
     setTimeout(() => {
       controls.sendViaIpc('trigger-quick-query');
       setTimeout(() => {
@@ -287,4 +306,4 @@ describe('tracing/sequelize', function() {
     // eslint-disable-next-line no-console
     console.log(JSON.stringify(sortedSpans, null, 2));
   }
-});
+}
