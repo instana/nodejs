@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.86.0
 - Add instrumentation for [pg-native](https://www.npmjs.com/package/pg-native) (`pg-native` is an alternative PostgreSQL driver package to the already supported to [pg](https://www.npmjs.com/package/pg) package).
 
 ## 1.85.0
