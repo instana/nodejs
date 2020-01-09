@@ -1,7 +1,7 @@
 # Changelog
 
 ## 1.86.0
-- Add instrumentation for [pg-native](https://www.npmjs.com/package/pg-native) (`pg-native` is an alternative PostgreSQL driver package to the already supported to [pg](https://www.npmjs.com/package/pg) package).
+- Add instrumentation for [pg-native](https://www.npmjs.com/package/pg-native) (`pg-native` is an alternative PostgreSQL driver package, in addition to the already supported [pg](https://www.npmjs.com/package/pg) package).
 
 ## 1.85.0
 - [AWS Lambda] Reduce execution time penalty for native AWS Lambda tracing even further.

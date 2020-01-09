@@ -27,6 +27,6 @@ You might want to separate the version bumping and tagging from publishing to th
 - Run `lerna version --force-publish="*" patch` or `lerna version --force-publish="*" minor`, depending on which part of the version number has to be bumped. We should never have the need to bump the major version, so do not run `lerna version major`.
 - Lerna will push the commit and the tag created by `lerna version` to GitHub. Check that this has happened. Also check that the version numbers in package-lock.json have been updated as well.
 - Acquire an OTP token for 2fa.
-- `NPM_CONFIG_OTP={your token} lerna publish from-package`
+- `NPM_CONFIG_OTP={your token} lerna publish from-package && lerna bootstrap`
 
 This command can also be run if the previous publish command went through for a subset of packages but not for others. Lerna will automatically figure out for which packages the latest version is not present in the registry and only publish those.
