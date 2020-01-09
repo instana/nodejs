@@ -27,6 +27,7 @@ var instrumentations = [
   './instrumentation/database/mssql',
   './instrumentation/database/mysql',
   './instrumentation/database/pg',
+  './instrumentation/database/pgNative',
   './instrumentation/database/redis',
   './instrumentation/frameworks/awsSdk',
   './instrumentation/frameworks/express',

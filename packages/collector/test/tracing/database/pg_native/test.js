@@ -1,0 +1,276 @@
+'use strict';
+
+const expect = require('chai').expect;
+
+const constants = require('@instana/core').tracing.constants;
+const supportedVersion = require('@instana/core').tracing.supportedVersion;
+const config = require('../../../../../core/test/config');
+const utils = require('../../../../../core/test/utils');
+
+describe('tracing/pg-native', function() {
+  if (!supportedVersion(process.versions.node)) {
+    return;
+  }
+
+  const agentControls = require('../../../apps/agentStubControls');
+  const Controls = require('./controls');
+
+  this.timeout(config.getTestTimeout());
+
+  agentControls.registerTestHooks();
+
+  const controls = new Controls({
+    agentControls
+  });
+  controls.registerTestHooks();
+
+  it('must trace select', () =>
+    controls
+      .sendRequest({
+        method: 'POST',
+        path: '/select'
+      })
+      .then(response => {
+        verifySimpleSelectResponse(response);
+        return utils.retry(() =>
+          agentControls.getSpans().then(spans => {
+            const httpEntry = verifyHttpEntry(spans, '/select');
+            verifyPgExit(spans, httpEntry, 'SELECT NOW()');
+          })
+        );
+      }));
+
+  it('must trace sync select', () =>
+    controls
+      .sendRequest({
+        method: 'POST',
+        path: '/select-sync'
+      })
+      .then(response => {
+        verifySimpleSelectResponse(response);
+        return utils.retry(() =>
+          agentControls.getSpans().then(spans => {
+            const httpEntry = verifyHttpEntry(spans, '/select-sync');
+            verifyPgExit(spans, httpEntry, 'SELECT NOW()');
+          })
+        );
+      }));
+
+  it('must trace insert', () =>
+    controls
+      .sendRequest({
+        method: 'POST',
+        path: '/insert'
+      })
+      .then(response => {
+        verifyInsertResponse(response);
+        return utils.retry(() =>
+          agentControls.getSpans().then(spans => {
+            const httpEntry = verifyHttpEntry(spans, '/insert');
+            verifyPgExit(spans, httpEntry, 'INSERT INTO users(name, email) VALUES($1, $2) RETURNING *');
+          })
+        );
+      }));
+
+  it('must trace prepared statement execution', () =>
+    controls
+      .sendRequest({
+        method: 'POST',
+        path: '/prepared-statement'
+      })
+      .then(response => {
+        verifyInsertResponse(response, 'gonzo', 'gonzo@muppets.com');
+        return utils.retry(() =>
+          agentControls.getSpans().then(spans => {
+            const httpEntry = verifyHttpEntry(spans, '/prepared-statement');
+            verifyPgExit(spans, httpEntry, 'INSERT INTO users(name, email) VALUES($1, $2) RETURNING *');
+          })
+        );
+      }));
+
+  it('must trace sync prepared statement execution', () =>
+    controls
+      .sendRequest({
+        method: 'POST',
+        path: '/prepared-statement-sync'
+      })
+      .then(response => {
+        verifyInsertResponse(response, 'scooter', 'scooter@muppets.com');
+        return utils.retry(() =>
+          agentControls.getSpans().then(spans => {
+            const httpEntry = verifyHttpEntry(spans, '/prepared-statement-sync');
+            verifyPgExit(spans, httpEntry, 'INSERT INTO users(name, email) VALUES($1, $2) RETURNING *');
+          })
+        );
+      }));
+
+  it('must capture errors', () =>
+    controls
+      .sendRequest({
+        method: 'POST',
+        path: '/error',
+        simple: false
+      })
+      .then(response => {
+        expect(response).to.exist;
+        expect(response.error).to.contain('Error: ERROR:');
+        expect(response.error).to.contain('relation "nonexistanttable" does not exist');
+
+        return utils.retry(() =>
+          agentControls.getSpans().then(spans => {
+            const httpEntry = verifyHttpEntry(spans, '/error');
+            verifyPgExitWithError(
+              spans,
+              httpEntry,
+              'SELECT name, email FROM nonexistanttable',
+              'relation "nonexistanttable" does not exist'
+            );
+          })
+        );
+      }));
+
+  it('must capture sync errors', () =>
+    controls
+      .sendRequest({
+        method: 'POST',
+        path: '/error-sync',
+        simple: false
+      })
+      .then(response => {
+        expect(response).to.exist;
+        expect(response.error).to.contain('Error: ERROR:');
+        expect(response.error).to.contain('relation "nonexistanttable" does not exist');
+        return utils.retry(() =>
+          agentControls.getSpans().then(spans => {
+            const httpEntry = verifyHttpEntry(spans, '/error-sync');
+            verifyPgExitWithError(
+              spans,
+              httpEntry,
+              'SELECT name, email FROM nonexistanttable',
+              'relation "nonexistanttable" does not exist'
+            );
+          })
+        );
+      }));
+
+  it('must suppress', () =>
+    controls
+      .sendRequest({
+        method: 'POST',
+        path: '/insert',
+        suppressTracing: true
+      })
+      .then(response => {
+        verifyInsertResponse(response);
+        return utils.retry(() =>
+          agentControls.getSpans().then(spans => {
+            const entrySpans = utils.getSpansByName(spans, 'node.http.server');
+            expect(entrySpans).to.have.lengthOf(0);
+            const pgExits = utils.getSpansByName(spans, 'postgres');
+            expect(pgExits).to.have.lengthOf(0);
+          })
+        );
+      }));
+
+  it('must trace transactions', () =>
+    controls
+      .sendRequest({
+        method: 'POST',
+        path: '/transaction'
+      })
+      .then(response => {
+        verifyInsertResponse(response, 'animal', 'animal@muppets.com');
+        return utils.retry(() =>
+          agentControls.getSpans().then(spans => {
+            const httpEntry = verifyHttpEntry(spans, '/transaction');
+            expect(utils.getSpansByName(spans, 'postgres')).to.have.lengthOf(4);
+            verifyPgExit(spans, httpEntry, 'BEGIN');
+            verifyPgExit(spans, httpEntry, 'INSERT INTO users(name, email) VALUES($1, $2) RETURNING *');
+            verifyPgExit(spans, httpEntry, 'INSERT INTO users(name, email) VALUES($1, $2) RETURNING *');
+            verifyPgExit(spans, httpEntry, 'COMMIT');
+          })
+        );
+      }));
+
+  it('must finish span when query is cancelled', () =>
+    controls
+      .sendRequest({
+        method: 'POST',
+        path: '/cancel'
+      })
+      .then(response => {
+        expect(response).to.exist;
+        expect(response.results).to.be.an('array');
+        expect(response.results).to.be.empty;
+        expect(response.hasBeenCancelled).to.be.true;
+        return utils.retry(() =>
+          agentControls.getSpans().then(spans => {
+            const httpEntry = verifyHttpEntry(spans, '/cancel');
+            verifyPgExitWithError(
+              spans,
+              httpEntry,
+              'SELECT NOW() FROM pg_sleep(1)',
+              'canceling statement due to user request'
+            );
+          })
+        );
+      }));
+
+  function verifySimpleSelectResponse(response) {
+    expect(response).to.be.an('array');
+    expect(response).to.have.lengthOf(1);
+    expect(response[0].now).to.be.a('string');
+  }
+
+  function verifyInsertResponse(response, name = 'beaker', email = 'beaker@muppets.com') {
+    expect(response).to.be.an('array');
+    expect(response).to.have.lengthOf(1);
+    expect(response[0].name).to.equal(name);
+    expect(response[0].email).to.equal(email);
+  }
+
+  function verifyHttpEntry(spans, url) {
+    return utils.expectOneMatching(spans, span => {
+      expect(span.p).to.not.exist;
+      expect(span.k).to.equal(constants.ENTRY);
+      expect(span.f.e).to.equal(String(controls.getPid()));
+      expect(span.f.h).to.equal('agent-stub-uuid');
+      expect(span.n).to.equal('node.http.server');
+      expect(span.data.http.url).to.equal(url);
+    });
+  }
+
+  function verifyPgExit(spans, parent, statement) {
+    return utils.expectOneMatching(spans, span => {
+      verifyPgExitBase(span, parent, statement);
+      expect(span.error).to.equal(false);
+      expect(span.ec).to.equal(0);
+    });
+  }
+
+  function verifyPgExitWithError(spans, parent, statement, errorMessage) {
+    return utils.expectOneMatching(spans, span => {
+      verifyPgExitBase(span, parent, statement);
+      expect(span.error).to.equal(true);
+      expect(span.ec).to.equal(1);
+      expect(span.data.pg.error).to.contain(errorMessage);
+    });
+  }
+
+  function verifyPgExitBase(span, parent, statement) {
+    expect(span.n).to.equal('postgres');
+    expect(span.k).to.equal(constants.EXIT);
+    expect(span.t).to.equal(parent.t);
+    expect(span.p).to.equal(parent.s);
+    expect(span.f.e).to.equal(String(controls.getPid()));
+    expect(span.f.h).to.equal('agent-stub-uuid');
+    expect(span.async).to.equal(false);
+    expect(span.data).to.exist;
+    expect(span.data.pg).to.exist;
+    expect(span.data.pg.host).to.equal('127.0.0.1');
+    expect(span.data.pg.port).to.equal('5432');
+    expect(span.data.pg.user).to.equal('node');
+    expect(span.data.pg.db).to.equal('nodedb');
+    expect(span.data.pg.stmt).to.equal(statement);
+  }
+});

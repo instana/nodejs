@@ -119,6 +119,7 @@
     "async-hook-jl": "^1.7.6",
     "cls-bluebird": "^2.1.0",
     "emitter-listener": "^1.1.2",
+    "lru-cache": "^5.1.1",
     "methods": "^1.1.2",
     "opentracing": "^0.14.3",
     "redis-commands": "^1.3.5",

@@ -219,7 +219,12 @@ describe('tracing/pg', function() {
         return utils.retry(() =>
           agentControls.getSpans().then(spans => {
             const httpEntry = verifyHttpEntry(spans, '/table-doesnt-exist');
-            verifyPgExitWithError(spans, httpEntry, 'SELECT name, email FROM nonexistanttable');
+            verifyPgExitWithError(
+              spans,
+              httpEntry,
+              'SELECT name, email FROM nonexistanttable',
+              'relation "nonexistanttable" does not exist'
+            );
           })
         );
       }));
@@ -299,11 +304,12 @@ describe('tracing/pg', function() {
     });
   }
 
-  function verifyPgExitWithError(spans, parent, statement) {
+  function verifyPgExitWithError(spans, parent, statement, errorMessage) {
     return utils.expectOneMatching(spans, span => {
       verifyPgExitBase(span, parent, statement);
       expect(span.error).to.equal(true);
       expect(span.ec).to.equal(1);
+      expect(span.data.pg.error).to.contain(errorMessage);
     });
   }
 
@@ -317,6 +323,10 @@ describe('tracing/pg', function() {
     expect(span.async).to.equal(false);
     expect(span.data).to.exist;
     expect(span.data.pg).to.exist;
+    expect(span.data.pg.host).to.equal('127.0.0.1');
+    expect(span.data.pg.port).to.equal(5432);
+    expect(span.data.pg.user).to.equal('node');
+    expect(span.data.pg.db).to.equal('nodedb');
     expect(span.data.pg.stmt).to.equal(statement);
   }
 

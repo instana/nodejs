@@ -5,10 +5,15 @@
 require('../../../../')();
 
 const Sequelize = require('sequelize');
+const express = require('express');
+const morgan = require('morgan');
+const bodyParser = require('body-parser');
+
 const sequelize = new Sequelize(process.env.POSTGRES_DB, process.env.POSTGRES_USER, process.env.POSTGRES_PASSWORD, {
   host: process.env.POSTGRES_HOST,
   dialect: 'postgres',
-  operatorsAliases: false,
+  // whether to use pg-native under the hood
+  native: process.env.USE_PG_NATIVE,
   pool: {
     max: 5,
     min: 0,
@@ -16,10 +21,6 @@ const sequelize = new Sequelize(process.env.POSTGRES_DB, process.env.POSTGRES_US
     idle: 10000
   }
 });
-
-const express = require('express');
-const morgan = require('morgan');
-const bodyParser = require('body-parser');
 
 const app = express();
 const logPrefix = `Express/Postgres/Sequelize App (${process.pid}):\t`;
