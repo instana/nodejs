@@ -62,6 +62,8 @@ AbstractControls.prototype.registerTestHooks = function registerTestHooks() {
   }
 
   afterEach(this.kill.bind(this));
+
+  return this;
 };
 
 AbstractControls.prototype.kill = function kill() {

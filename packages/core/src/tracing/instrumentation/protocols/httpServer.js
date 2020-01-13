@@ -118,6 +118,9 @@ function shimEmit(realEmit) {
         // Check if a span with higher priority (like graphql.server) already finished this span, only overwrite
         // span attributes if that is not the case.
         if (!span.transmitted) {
+          // safe guard just in case a higher prio instrumentation (graphql etc.) has removed data.http (planning to
+          // take over the span) but did not actually transmit this span.
+          span.data.http = span.data.http || {};
           span.data.http.status = res.statusCode;
           span.data.http.header = httpCommon.mergeExtraHeaders(span.data.http.header, res, extraHttpHeadersToCapture);
           span.error = res.statusCode >= 500;

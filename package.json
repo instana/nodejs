@@ -20,6 +20,8 @@
     "version": "lerna clean --yes && lerna bootstrap --ignore-scripts -- --package-lock-only --no-audit && git add packages/*/package-lock.json"
   },
   "devDependencies": {
+    "@apollo/federation": "^0.11.3",
+    "@apollo/gateway": "^0.11.7",
     "@grpc/proto-loader": "^0.3.0",
     "@hapi/hapi": "^18.3.1",
     "admin": "^1.4.1",
@@ -27,7 +29,7 @@
     "amqplib": "^0.5.2",
     "apollo-link": "^1.2.11",
     "apollo-link-ws": "^1.0.17",
-    "apollo-server-express": "^2.6.1",
+    "apollo-server-express": "^2.9.16",
     "async": "^2.6.1",
     "aws-sdk": "2.553.0",
     "bluebird": "^3.7.2",
