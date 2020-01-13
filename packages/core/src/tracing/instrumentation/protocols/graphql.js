@@ -23,6 +23,7 @@ var subscriptionUpdate = 'subscription-update';
 
 exports.init = function() {
   requireHook.onFileLoad(/\/graphql\/execution\/execute.js/, instrumentExecute);
+  requireHook.onFileLoad(/\/@apollo\/gateway\/dist\/executeQueryPlan.js/, instrumentApolloGatewayExecuteQueryPlan);
 };
 
 function instrumentExecute(executeModule) {
@@ -272,7 +273,9 @@ function finishSpan(span, result) {
       })
       .join(', ');
   }
-  span.transmit();
+  if (!span.postponeTransmit) {
+    span.transmit();
+  }
 }
 
 function finishWithException(span, err) {
@@ -281,6 +284,57 @@ function finishWithException(span, err) {
   span.data.graphql.errors = err.message;
   span.transmit();
 }
+
+function instrumentApolloGatewayExecuteQueryPlan(apolloGatewayExecuteQueryPlanModule) {
+  shimmer.wrap(
+    apolloGatewayExecuteQueryPlanModule,
+    'executeQueryPlan',
+    shimApolloGatewayExecuteQueryPlanFunction.bind(null)
+  );
+}
+
+function shimApolloGatewayExecuteQueryPlanFunction(originalFunction) {
+  return function instrumentedExecuteQueryPlan() {
+    if (!isActive || cls.tracingSuppressed()) {
+      return originalFunction.apply(this, arguments);
+    }
+    var activeEntrySpan = cls.getCurrentSpan();
+    if (activeEntrySpan && activeEntrySpan.k === constants.ENTRY) {
+      // Most of the heavy lifting to trace Apollo Federation gateways (implemented by @apollo/gateway) is done by our
+      // standard GraphQL tracing, because those gateway queries are all also run through normal resolvers, which we
+      // instrument. There is one case that requires extra instrumentation, though. @apollo/gateway does something funky
+      // with errors that come back from individual services: At the we would normally finish and transmit the span in
+      // shimExecuteFunction/traceQueryOrMutation/runOriginalAndFinish, the errors (if any) are not part of the
+      // response. Therefore we mark the span so that transmitting it will postpone, that is, it won't happen in
+      // runOriginalAndFinish. Once the call returns from @apollo/gateway#executeQueryPlan the errors have been merged
+      // back into the response and only then will we transmit the span.
+      Object.defineProperty(activeEntrySpan, 'postponeTransmit', {
+        value: true,
+        configurable: true,
+        writable: true,
+        enumerable: false
+      });
+    }
+
+    var resultPromise = originalFunction.apply(this, arguments);
+    if (resultPromise && typeof resultPromise.then === 'function') {
+      return resultPromise.then(
+        function(promiseResult) {
+          delete activeEntrySpan.postponeTransmit;
+          finishSpan(activeEntrySpan, promiseResult);
+          return promiseResult;
+        },
+        function(err) {
+          delete activeEntrySpan.postponeTransmit;
+          finishWithException(activeEntrySpan, err);
+          throw err;
+        }
+      );
+    }
+    return resultPromise;
+  };
+}
+
 exports.activate = function() {
   isActive = true;
 };
