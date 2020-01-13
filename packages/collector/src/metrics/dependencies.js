@@ -59,7 +59,11 @@ function addDependenciesFromDir(dependencyDir) {
 
 function addDependency(dependency, packageJsonPath) {
   fs.readFile(packageJsonPath, { encoding: 'utf8' }, function(err, contents) {
-    if (err) {
+    if (err && err.code === 'ENOENT') {
+      // This directory does not contain a package json. This happens for example for node_modules/.cache etc.
+      // We can simply ignore this.
+      return logger.debug('No package.json at ' + packageJsonPath + ', ignoring this directory.');
+    } else if (err) {
       return logger.info(
         'Failed to identify version of %s dependency due to: %s. This means that you will not be ' +
           'able to see details about this dependency within Instana.',
