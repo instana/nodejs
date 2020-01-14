@@ -6,9 +6,9 @@
     "start": "node src/index.js"
   },
   "dependencies": {
+    "@instana/collector": "^1.87.0",
     "dotenv": "^5.0.1",
     "express": "^4.16.3",
-    "@instana/collector": "latest",
     "request": "^2.85.0"
   }
 }
