@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.88.0
 - Also support Winston 1.x and 2.x plus [`express-winston`](https://www.npmjs.com/package/express-winston) (in addition to Winston >= 3.x, which is already supported).
 
 ## 1.87.0
