@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.88.1
+- [AWS Lambda] Replace intid value if it already exists in the Server-Timing header (in case the same result object is reused for multiple requests).
+
 ## 1.88.0
 - Also support Winston 1.x and 2.x plus [`express-winston`](https://www.npmjs.com/package/express-winston) (in addition to Winston >= 3.x, which is already supported).
 
