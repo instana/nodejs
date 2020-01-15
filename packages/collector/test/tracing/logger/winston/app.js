@@ -2,26 +2,36 @@
 
 'use strict';
 
-const agentPort = process.env.INSTANA_AGENT_PORT;
-
 require('../../../..')();
 
 const request = require('request-promise');
 const bodyParser = require('body-parser');
 const express = require('express');
 const morgan = require('morgan');
+const semver = require('semver');
 
 const winston = require('winston');
-winston.add(new winston.transports.Console({ level: 'info' }));
 
-const logger = winston.createLogger({
-  level: 'info',
-  format: winston.format.json(),
-  transports: [new winston.transports.Console({ level: 'info' })]
-});
+const agentPort = process.env.INSTANA_AGENT_PORT;
+
+let logger;
+if (winston.version && semver.lt(winston.version, '3.0.0')) {
+  // either use Winston's default logger or create a new one
+  logger = new winston.Logger();
+} else if (winston.version && semver.gte(winston.version, '3.0.0')) {
+  // Winston >= 3.x
+  winston.add(new winston.transports.Console({ level: 'info' }));
+  logger = winston.createLogger({
+    level: 'info',
+    format: winston.format.json(),
+    transports: [new winston.transports.Console({ level: 'info' })]
+  });
+} else {
+  throw new Error(`You are running an unknown version of Winston: ${winston.version}`);
+}
 
 const app = express();
-const logPrefix = `Express / Winston App (${process.pid}):\t`;
+const logPrefix = `Winston App (${process.pid}):\t`;
 
 if (process.env.WITH_STDOUT) {
   app.use(morgan(`${logPrefix}:method :url :status`));

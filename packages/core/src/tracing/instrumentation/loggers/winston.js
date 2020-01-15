@@ -8,10 +8,22 @@ var cls = require('../../cls');
 var isActive = false;
 
 exports.init = function() {
-  requireHook.onFileLoad(/\/winston\/lib\/winston\/create-logger\.js/, instrumentCreateLogger);
+  // Winston 2.x
+  requireHook.onFileLoad(/\/winston\/lib\/winston\/logger\.js/, instrumentWinston2);
+  // Winston >= 3.x
+  requireHook.onFileLoad(/\/winston\/lib\/winston\/create-logger\.js/, instrumentWinston3);
 };
 
-function instrumentCreateLogger(createLogger) {
+function instrumentWinston2(loggerModule) {
+  if (typeof loggerModule.Logger !== 'function') {
+    return loggerModule;
+  }
+
+  shimLogMethod(loggerModule.Logger.prototype);
+  return loggerModule;
+}
+
+function instrumentWinston3(createLogger) {
   if (typeof createLogger !== 'function') {
     return createLogger;
   }

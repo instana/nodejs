@@ -1,11 +1,12 @@
 'use strict';
 
-const expect = require('chai').expect;
+const { expect } = require('chai');
 
 const constants = require('@instana/core').tracing.constants;
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('../../../../../core/test/config');
 const utils = require('../../../../../core/test/utils');
+const ProcessControls = require('../../ProcessControls');
 
 describe('tracing/logger/log4js', function() {
   if (!supportedVersion(process.versions.node)) {
@@ -15,9 +16,10 @@ describe('tracing/logger/log4js', function() {
   this.timeout(config.getTestTimeout());
   const agentControls = require('../../../apps/agentStubControls');
   agentControls.registerTestHooks();
-  const Controls = require('./controls');
-  const controls = new Controls({ agentControls });
-  controls.registerTestHooks();
+  const controls = new ProcessControls({
+    dirname: __dirname,
+    agentControls
+  }).registerTestHooks();
 
   [false, true].forEach(useLogMethod => runTests(useLogMethod));
   // runTests(true);

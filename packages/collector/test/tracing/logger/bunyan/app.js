@@ -23,7 +23,7 @@ const bunyan = require('bunyan');
 const logger = bunyan.createLogger({ name: 'test-logger' });
 
 const app = express();
-const logPrefix = `Express / Bunyan App (${process.pid}):\t`;
+const logPrefix = `Bunyan (${process.pid}):\t`;
 
 if (process.env.WITH_STDOUT) {
   app.use(morgan(`${logPrefix}:method :url :status`));
