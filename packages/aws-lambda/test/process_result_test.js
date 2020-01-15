@@ -9,8 +9,10 @@ const processResult = require('../src/process_result');
 
 describe('process lambda result', () => {
   let entrySpan;
+  let anotherEntrySpan;
 
   const traceId = '112358d152237';
+  const anotherTraceId = '1234566789abc';
 
   const emptyEntrySpan = {
     t: traceId,
@@ -18,9 +20,16 @@ describe('process lambda result', () => {
       lambda: {}
     }
   };
+  const anotherEmptyEntrySpan = {
+    t: anotherTraceId,
+    data: {
+      lambda: {}
+    }
+  };
 
   beforeEach(() => {
     entrySpan = cloneDeep(emptyEntrySpan);
+    anotherEntrySpan = cloneDeep(anotherEmptyEntrySpan);
   });
 
   it('must cope with undefined result', () => {
@@ -187,6 +196,27 @@ describe('process lambda result', () => {
         });
         expect(result.multiValueHeaders).to.not.exist;
       });
+
+      it('must replace initd value if it already exists', () => {
+        const result = {
+          statusCode: 200,
+          headers: {
+            'x-custom-header': 'value',
+            'sErver-timinG': 'cache;desc="Cache Read";dur=23.2'
+          }
+        };
+
+        // This is particularly important if customer code keeps re-using the same result object, so we explicitly
+        // simulate this pattern.
+        processResult(result, entrySpan);
+        processResult(result, anotherEntrySpan);
+
+        expect(result.headers).to.deep.equal({
+          'x-custom-header': 'value',
+          'sErver-timinG': `cache;desc="Cache Read";dur=23.2, intid;desc=${anotherTraceId}`
+        });
+        expect(result.multiValueHeaders).to.not.exist;
+      });
     });
 
     describe('only multi value headers are present', () => {
@@ -232,9 +262,30 @@ describe('process lambda result', () => {
         expect(result.headers).to.not.exist;
       });
 
+      it('must replace initd value if it already exists in first array entry', () => {
+        const result = {
+          statusCode: 200,
+          multiValueHeaders: {
+            'x-custom-header': 'value',
+            'sErver-timinG': ['cache;desc="Cache Read";dur=23.2', 'somethingelse']
+          }
+        };
+
+        // This is particularly important if customer code keeps re-using the same result object, so we explicitly
+        // simulate this pattern.
+        processResult(result, entrySpan);
+        processResult(result, anotherEntrySpan);
+
+        expect(result.multiValueHeaders).to.deep.equal({
+          'x-custom-header': 'value',
+          'sErver-timinG': [`cache;desc="Cache Read";dur=23.2, intid;desc=${anotherTraceId}`, 'somethingelse']
+        });
+        expect(result.headers).to.not.exist;
+      });
+
       it('must concat header to string value', () => {
         // The AWS docs say "The multiValueHeaders key can contain multi-value headers as well as single-value headers."
-        // It is not entirely clear if that means that an multiValueHeaders can is simply allowed to have single element
+        // It is not entirely clear if that means that a multiValueHeaders is simply allowed to have single element
         // arrays or also string values.
         const result = {
           statusCode: 200,
@@ -247,6 +298,30 @@ describe('process lambda result', () => {
         expect(result.multiValueHeaders).to.deep.equal({
           'x-custom-header': ['value1', 'value2'],
           'sErver-timinG': `cache;desc="Cache Read";dur=23.2, intid;desc=${traceId}`
+        });
+        expect(result.headers).to.not.exist;
+      });
+
+      it('must replace initd value in multi value header with string value', () => {
+        // The AWS docs say "The multiValueHeaders key can contain multi-value headers as well as single-value headers."
+        // It is not entirely clear if that means that a multiValueHeaders is simply allowed to have single element
+        // arrays or also string values.
+        const result = {
+          statusCode: 200,
+          multiValueHeaders: {
+            'x-custom-header': ['value1', 'value2'],
+            'sErver-timinG': 'cache;desc="Cache Read";dur=23.2'
+          }
+        };
+
+        // This is particularly important if customer code keeps re-using the same result object, so we explicitly
+        // simulate this pattern.
+        processResult(result, entrySpan);
+        processResult(result, anotherEntrySpan);
+
+        expect(result.multiValueHeaders).to.deep.equal({
+          'x-custom-header': ['value1', 'value2'],
+          'sErver-timinG': `cache;desc="Cache Read";dur=23.2, intid;desc=${anotherTraceId}`
         });
         expect(result.headers).to.not.exist;
       });
@@ -279,6 +354,27 @@ describe('process lambda result', () => {
         expect(result.headers).to.deep.equal({
           'x-custom-header-1': 'value',
           'sErVeR-tImInG': `cpu;dur=2.4, intid;desc=${traceId}`
+        });
+        expect(result.multiValueHeaders).to.deep.equal({
+          'x-custom-header-2': ['value1', 'value2']
+        });
+      });
+
+      it('must replace initd value in existing single value header', () => {
+        const result = {
+          statusCode: 200,
+          headers: { 'x-custom-header-1': 'value', 'sErVeR-tImInG': 'cpu;dur=2.4' },
+          multiValueHeaders: { 'x-custom-header-2': ['value1', 'value2'] }
+        };
+
+        // This is particularly important if customer code keeps re-using the same result object, so we explicitly
+        // simulate this pattern.
+        processResult(result, entrySpan);
+        processResult(result, anotherEntrySpan);
+
+        expect(result.headers).to.deep.equal({
+          'x-custom-header-1': 'value',
+          'sErVeR-tImInG': `cpu;dur=2.4, intid;desc=${anotherTraceId}`
         });
         expect(result.multiValueHeaders).to.deep.equal({
           'x-custom-header-2': ['value1', 'value2']

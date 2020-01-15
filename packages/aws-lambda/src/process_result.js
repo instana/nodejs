@@ -39,33 +39,31 @@ function captureStringStatusCode(result, entrySpan) {
 
 function injectEumBackendCorrelationHeader(result, entrySpan) {
   if (exports._isLambdaProxyResponse(result)) {
-    const eumServerTimingValue = `intid;desc=${entrySpan.t}`;
-
     if (result.headers == null && result.multiValueHeaders == null) {
       // result has neither headers nor multiValueHeaders, arbitrarily add it to result.headers
-      result.headers = { [serverTimingHeader]: eumServerTimingValue };
+      result.headers = { [serverTimingHeader]: createServerTimingValue(entrySpan) };
     } else if (result.headers != null && typeof result.headers === 'object' && result.multiValueHeaders == null) {
-      injectIntoSingleValueHeaders(result, entrySpan, eumServerTimingValue);
+      injectIntoSingleValueHeaders(result, entrySpan, createServerTimingValue(entrySpan));
     } else {
-      injectIntoHeaders(result, entrySpan, eumServerTimingValue);
+      injectIntoHeaders(result, entrySpan, createServerTimingValue(entrySpan));
     }
   }
 }
 
-function injectIntoSingleValueHeaders(result, entrySpan, eumServerTimingValue) {
+function injectIntoSingleValueHeaders(result, entrySpan) {
   // result has only headers, but not headers.multiValueHeaders, add it to result.headers
   const existingHeader = headersUtil.readHeaderKeyValuePairCaseInsensitive(result.headers, serverTimingHeader);
   if (existingHeader == null) {
-    result.headers[serverTimingHeader] = eumServerTimingValue;
+    result.headers[serverTimingHeader] = createServerTimingValue(entrySpan);
   } else {
     const { key: originalServerTimingKey, value: originalServerTimingValue } = existingHeader;
     if (typeof originalServerTimingValue === 'string') {
-      result.headers[originalServerTimingKey] = `${originalServerTimingValue}, ${eumServerTimingValue}`;
+      result.headers[originalServerTimingKey] = addToStringOrReplaceInString(originalServerTimingValue, entrySpan);
     }
   }
 }
 
-function injectIntoHeaders(result, entrySpan, eumServerTimingValue) {
+function injectIntoHeaders(result, entrySpan) {
   // result has only multi value headers or both, single and multi
 
   const existingHeaderMulti = headersUtil.readHeaderKeyValuePairCaseInsensitive(
@@ -79,22 +77,39 @@ function injectIntoHeaders(result, entrySpan, eumServerTimingValue) {
     // value headers or not.
     const { key: originalServerTimingKey, value: originalServerTimingValue } = existingHeaderMulti;
     if (Array.isArray(originalServerTimingValue) && originalServerTimingValue.length === 0) {
-      result.multiValueHeaders[originalServerTimingKey].push(eumServerTimingValue);
+      result.multiValueHeaders[originalServerTimingKey].push(createServerTimingValue(entrySpan));
     } else if (Array.isArray(originalServerTimingValue) && originalServerTimingValue.length > 0) {
-      result.multiValueHeaders[originalServerTimingKey][0] = `${
-        result.multiValueHeaders[originalServerTimingKey][0]
-      }, ${eumServerTimingValue}`;
+      result.multiValueHeaders[originalServerTimingKey][0] = addToStringOrReplaceInString(
+        result.multiValueHeaders[originalServerTimingKey][0],
+        entrySpan
+      );
     } else if (typeof originalServerTimingValue === 'string') {
-      result.multiValueHeaders[originalServerTimingKey] = `${originalServerTimingValue}, ${eumServerTimingValue}`;
+      result.multiValueHeaders[originalServerTimingKey] = addToStringOrReplaceInString(
+        originalServerTimingValue,
+        entrySpan
+      );
     }
   } else if (existingHeaderSingle != null && typeof existingHeaderSingle.value === 'string') {
     // concat to existing single value header
-    result.headers[existingHeaderSingle.key] = `${existingHeaderSingle.value}, ${eumServerTimingValue}`;
+    result.headers[existingHeaderSingle.key] = addToStringOrReplaceInString(existingHeaderSingle.value, entrySpan);
   } else {
     // There is no Server-Timing header neither in the single value headers nor in multi value headers, we
-    // arbitrarily attach it to the multi value headers.
-    result.multiValueHeaders[serverTimingHeader] = [eumServerTimingValue];
+    // arbitrarily add it as a multi value header.
+    result.multiValueHeaders[serverTimingHeader] = [createServerTimingValue(entrySpan)];
   }
+}
+
+function addToStringOrReplaceInString(originalServerTimingValue, entrySpan) {
+  const match = /^(.*)intid;desc=[0-9a-f]*(.*)$/.exec(originalServerTimingValue);
+  if (match) {
+    return `${match[1]}intid;desc=${entrySpan.t}${match[2]}`;
+  } else {
+    return `${originalServerTimingValue}, ${createServerTimingValue(entrySpan)}`;
+  }
+}
+
+function createServerTimingValue(entrySpan) {
+  return `intid;desc=${entrySpan.t}`;
 }
 
 exports._isLambdaProxyResponse = function _isLambdaProxyResponse(result) {
