@@ -7,6 +7,7 @@ const constants = require('@instana/core').tracing.constants;
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('../../../../../core/test/config');
 const utils = require('../../../../../core/test/utils');
+const ProcessControls = require('../../ProcessControls');
 
 describe('tracing/logger/winston', function() {
   // Winston 3 has no guaranteed support for Node.js 4, code will be migrated to ES6 over time
@@ -18,9 +19,10 @@ describe('tracing/logger/winston', function() {
   this.timeout(config.getTestTimeout());
   const agentControls = require('../../../apps/agentStubControls');
   agentControls.registerTestHooks();
-  const Controls = require('./controls');
-  const controls = new Controls({ agentControls });
-  controls.registerTestHooks();
+  const controls = new ProcessControls({
+    dirname: __dirname,
+    agentControls
+  }).registerTestHooks();
 
   [false, true].forEach(useGlobalLogger =>
     [false, true].forEach(useLevelMethod =>

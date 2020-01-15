@@ -30,7 +30,7 @@ const plainVanillaPino = pino(pinoOptions);
 const expressPino = require('express-pino-logger')(pinoOptions);
 
 const app = express();
-const logPrefix = `Express / Pino App (${process.pid}):\t`;
+const logPrefix = `Pino App (${process.pid}):\t`;
 
 if (process.env.WITH_STDOUT) {
   app.use(morgan(`${logPrefix}:method :url :status`));

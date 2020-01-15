@@ -1,5 +1,8 @@
 # Changelog
 
+## Unreleased
+- Also support Winston 1.x and 2.x plus [`express-winston`](https://www.npmjs.com/package/express-winston) (in addition to Winston >= 3.x, which is already supported).
+
 ## 1.87.0
 - Improve support for [Apollo Federation](https://www.apollographql.com/docs/apollo-server/federation/introduction/) by instrumenting [@apollo/gateway](https://www.npmjs.com/package/@apollo/gateway).
 - Downgrade log level for missing package.json in potential depedency directory from info to debug.

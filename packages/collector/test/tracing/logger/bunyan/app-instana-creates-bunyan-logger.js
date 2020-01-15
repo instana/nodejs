@@ -23,7 +23,7 @@ const express = require('express');
 const morgan = require('morgan');
 
 const app = express();
-const logPrefix = `Express / Bunyan App [Instana creates Bunyan logger] (${process.pid}):\t`;
+const logPrefix = `Bunyan App [Instana creates Bunyan logger] (${process.pid}):\t`;
 
 if (process.env.WITH_STDOUT) {
   app.use(morgan(`${logPrefix}:method :url :status`));
