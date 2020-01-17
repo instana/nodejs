@@ -40,10 +40,18 @@ function instrument(redis) {
   });
 
   if (redis.Multi) {
-    shimmer.wrap(redis.Multi.prototype, 'exec_transaction', instrumentMultiExec.bind(null, true));
+    if (typeof redis.Multi.prototype.exec_transaction === 'function') {
+      // Very old redis versions (0.10.x) like the one used by a particular edgemicro plug-in (volos-quota-redis) do not
+      // have the exec_transaction method. Shimming this conditionally is not really necessary (shimmer checks for
+      // itself) but supresses a log statement from shimmer.
+      shimmer.wrap(redis.Multi.prototype, 'exec_transaction', instrumentMultiExec.bind(null, true));
+    }
 
     var instrumentedBatch = instrumentMultiExec.bind(null, false);
-    shimmer.wrap(redis.Multi.prototype, 'exec_batch', instrumentedBatch);
+    if (typeof redis.Multi.prototype.exec_batch === 'function') {
+      // Old versions of redis also do not have exec_batch. See above (exec_transaction).
+      shimmer.wrap(redis.Multi.prototype, 'exec_batch', instrumentedBatch);
+    }
     shimmer.wrap(redis.Multi.prototype, 'EXEC', instrumentedBatch);
     shimmer.wrap(redis.Multi.prototype, 'exec', instrumentedBatch);
   }

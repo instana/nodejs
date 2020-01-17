@@ -1,2 +1,3 @@
 node_modules
 npm-debug*
+packages/collector/test/bin/edgemicroResources/cli/edgemicro

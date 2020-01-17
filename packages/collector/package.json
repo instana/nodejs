@@ -9,6 +9,9 @@
   "homepage": "https://github.com/instana/nodejs-sensor#readme",
   "license": "MIT",
   "main": "src/index.js",
+  "bin": {
+    "instana-instrument-edgemicro-cli": "src/bin/instrument-edgemicro-cli.js"
+  },
   "files": [
     "src"
   ],

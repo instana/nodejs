@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+- Instrument [Apigee Microgateway/edgemicro's](https://www.npmjs.com/package/edgemicro) worker processes automatically when they are spawned.
+- Provide an executable for static instrumentation of a globally installed [edgemicro](https://www.npmjs.com/package/edgemicro) CLI.
+- Keep asynchronous context across [memored](https://www.npmjs.com/package/memored) IPC communication gaps.
+
 ## 1.88.1
 - [AWS Lambda] Replace intid value if it already exists in the Server-Timing header (in case the same result object is reused for multiple requests).
 
