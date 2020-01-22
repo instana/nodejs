@@ -35,9 +35,10 @@ echo "step 1/5: fetching AWS regions (skipping, using fixed list of regions for 
 
 # Actually, this should give us the regions where the Lambda service is provided:
 # REGIONS=$(aws ssm get-parameters-by-path --path /aws/service/global-infrastructure/services/lambda/regions --output text --query "Parameters[].Value" | tr '\t' '\n')
-# But for some reason, publishing to all of these regions does not work. Need to investigate later.
+# But for some reason, publishing to all of these regions does not work. In particular, the
+# following regions either require special authorization/subscription status or don't support Lambdas: ap-east-1 me-south-1 ap-northeast-3
 
-REGIONS=$'eu-central-1\neu-north-1\neu-west-1\neu-west-2\neu-west-3\nsa-east-1\nus-east-1\nus-east-2\nus-west-1\nus-west-2'
+REGIONS=$'ap-northeast-1\nap-northeast-2\nap-south-1\nap-southeast-1\nap-southeast-2\nca-central-1\neu-central-1\neu-north-1\neu-west-1\neu-west-2\neu-west-3\nsa-east-1\nus-east-1\nus-east-2\nus-west-1\nus-west-2'
 
 echo Will publish to regions:
 echo "$REGIONS"
