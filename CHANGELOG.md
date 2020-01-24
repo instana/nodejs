@@ -1,8 +1,8 @@
 # Changelog
 
-## Unreleased
+## 1.89.0
 - Instrument [Apigee Microgateway/edgemicro's](https://www.npmjs.com/package/edgemicro) worker processes automatically when they are spawned.
-- Provide an executable for static instrumentation of a globally installed [edgemicro](https://www.npmjs.com/package/edgemicro) CLI.
+- Provide an executable for static instrumentation of a globally installed [edgemicro](https://www.npmjs.com/package/edgemicro) CLI (see [our docs](https://docs.instana.io/ecosystem/node-js/edgemicro) for details).
 - Keep asynchronous context across [memored](https://www.npmjs.com/package/memored) IPC communication gaps.
 
 ## 1.88.1
