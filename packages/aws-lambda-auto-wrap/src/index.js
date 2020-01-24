@@ -39,7 +39,7 @@ function loadTargetHandlerFunction() {
     targetHandlerModuleFolder,
     targetHandlerModuleName
   );
-  const targetHandlerFunction = findHandlerFuntionOnModule(targetHandlerModule, targetHandlerFunctionName);
+  const targetHandlerFunction = findHandlerFunctionOnModule(targetHandlerModule, targetHandlerFunctionName);
 
   if (!targetHandlerFunction) {
     throw new lambdaRuntimeErrors.HandlerNotFound(`${targetHandlerEnvVar} is undefined or not exported`);
@@ -100,7 +100,7 @@ function moduleFileExists(m) {
   return fs.existsSync(`${m}.js`) || fs.existsSync(m);
 }
 
-function findHandlerFuntionOnModule(targetHandlerModuleObject, targetHandlerFunctionName) {
+function findHandlerFunctionOnModule(targetHandlerModuleObject, targetHandlerFunctionName) {
   const pathToFunction = targetHandlerFunctionName.split('.');
   return pathToFunction.reduce((obj, pathFragment) => obj && obj[pathFragment], targetHandlerModuleObject);
 }
