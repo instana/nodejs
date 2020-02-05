@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.89.1
 - Rewrite MongoDB instrumentation from scratch without using its APM API (which makes it hard to keep the trace context across async calls).
 
 ## 1.89.0
