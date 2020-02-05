@@ -1,5 +1,8 @@
 # Changelog
 
+## Unreleased
+- Rewrite MongoDB instrumentation from scratch without using its APM API (which makes it hard to keep the trace context across async calls).
+
 ## 1.89.0
 - Instrument [Apigee Microgateway/edgemicro's](https://www.npmjs.com/package/edgemicro) worker processes automatically when they are spawned.
 - Provide an executable for static instrumentation of a globally installed [edgemicro](https://www.npmjs.com/package/edgemicro) CLI (see [our docs](https://docs.instana.io/ecosystem/node-js/edgemicro) for details).

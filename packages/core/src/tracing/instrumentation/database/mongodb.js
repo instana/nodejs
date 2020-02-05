@@ -1,9 +1,6 @@
 'use strict';
 
-var logger;
-logger = require('../../../logger').getLogger('tracing/mongodb', function(newLogger) {
-  logger = newLogger;
-});
+var shimmer = require('shimmer');
 
 var requireHook = require('../../../util/requireHook');
 var tracingUtil = require('../../tracingUtil');
@@ -12,147 +9,165 @@ var cls = require('../../cls');
 
 var isActive = false;
 
-// {
-//   [requestId]: clsContext
-// }
-var clsContextMap = {};
-
-// {
-//   [requestId]: span
-// }
-var mongoDbSpansInProgress = {};
+var commands = ['delete', 'find', 'findAndModify', 'getMore', 'insert', 'update'];
 
 exports.init = function() {
-  requireHook.onModuleLoad('mongodb', instrument);
+  requireHook.onFileLoad(/\/mongodb\/lib\/core\/connection\/pool.js/, instrumentPool);
 };
 
-var supportsOperationIds = false;
-var apmConfig = {
-  operationIdGenerator: {
-    operationId: {},
-
-    next: function() {
-      return {};
-    }
-  },
-
-  timestampGenerator: {
-    current: function() {
-      return Date.now();
-    },
-
-    duration: function(start, end) {
-      return end - start;
-    }
-  }
-};
-
-function instrument(mongodb) {
-  if (!mongodb.instrument) {
-    logger.info('Cannot instrument the MongoDB driver as it is lacking APM support.');
-    return;
-  }
-
-  // Note: The apmConfig parameter will be ignored beginning with version 3.0.6 of the mongodb package.
-  // operationIdGenerator/operationId are no longer supported, thus we cannot rely on the events having the operationId
-  // property but still make use of it in versions that have them.
-  var listener = mongodb.instrument(apmConfig, function(error) {
-    if (error) {
-      logger.warn('Failed to instrument MongoDB', { error: error });
-    }
-  });
-
-  listener.on('started', onStarted);
-  listener.on('succeeded', onSucceeded);
-  listener.on('failed', onFailed);
+function instrumentPool(Pool) {
+  shimmer.wrap(Pool.prototype, 'write', shimWrite);
 }
 
-function onStarted(event) {
-  if (!isActive) {
-    return;
-  }
+function shimWrite(original) {
+  return function() {
+    if (!isActive || !cls.isTracing()) {
+      return original.apply(this, arguments);
+    }
+    var originalArgs = new Array(arguments.length);
+    for (var i = 0; i < arguments.length; i++) {
+      originalArgs[i] = arguments[i];
+    }
+    return instrumentedWrite(this, original, originalArgs);
+  };
+}
 
-  if (supportsOperationIds && !event.operationId) {
-    return;
-  }
-
+function instrumentedWrite(ctx, originalWrite, originalArgs) {
   var parentSpan = cls.getCurrentSpan();
-  if (!parentSpan || constants.isExitSpan(parentSpan)) {
-    return;
+  if (constants.isExitSpan(parentSpan)) {
+    return originalWrite.apply(ctx, originalArgs);
   }
 
-  var traceId;
-  var parentSpanId;
-  // event.operationId is only present prior to mongodb package version 3.0.6, see above.
-  if (event.operationId) {
-    traceId = event.operationId.traceId;
-    parentSpanId = event.operationId.parentSpanId;
-    supportsOperationIds = true;
+  // mongodb/lib/core/connection/pool.js#write throws a sync error if there is no callback, so we can safely assume
+  // there is one. If there isn't one, we wouldn't be able to finish the span, so we won't start one.
+  var originalCallback;
+  var callbackIndex = -1;
+  for (var i = 1; i < originalArgs.length; i++) {
+    if (typeof originalArgs[i] === 'function') {
+      originalCallback = originalArgs[i];
+      callbackIndex = i;
+      break;
+    }
+  }
+  if (callbackIndex < 0) {
+    return originalWrite.apply(ctx, originalArgs);
   }
 
-  if (traceId == null || parentSpanId == null) {
-    // either event.operationId has not been present or event.operationId did not have a traceId/parentSpanId set.
-    traceId = parentSpan.t;
-    parentSpanId = parentSpan.s;
-  }
+  return cls.ns.runAndReturn(function() {
+    var span = cls.startSpan('mongo', constants.EXIT);
+    span.stack = tracingUtil.getStackTrace(instrumentedWrite);
 
-  if (traceId == null || parentSpanId == null) {
-    // We could not find the trace ID/parent span ID, neither via the operation ID mechanism nor the getCurrentSpan()
-    // way - give up.
-    return;
-  }
+    var hostname;
+    var port;
+    var service;
+    var command;
+    var database;
+    var collection;
+    var namespace;
 
-  cls.ns.run(function(clsContext) {
-    var span = cls.startSpan('mongo', constants.EXIT, traceId, parentSpanId, false);
+    var message = originalArgs[0];
+    if (message && typeof message === 'object') {
+      if (
+        message.options &&
+        message.options.session &&
+        message.options.session.topology &&
+        message.options.session.topology.s &&
+        message.options.session.topology.s
+      ) {
+        hostname = message.options.session.topology.s.host;
+        port = message.options.session.topology.s.port;
+      }
 
-    var peer = null;
-    var service = null;
-    if (event.connectionId && (event.connectionId.host || event.connectionId.port)) {
-      peer = {
-        hostname: event.connectionId.host,
-        port: event.connectionId.port
+      var cmdObj = message ? message.command : null;
+      if (cmdObj.collection) {
+        // only getMore commands have the collection attribute
+        collection = cmdObj.collection;
+      }
+      if (cmdObj) {
+        for (var j = 0; j < commands.length; j++) {
+          if (cmdObj[commands[j]]) {
+            command = commands[j];
+            if (typeof cmdObj[commands[j]] === 'string') {
+              // most commands (except for getMore) add the collection as the value for the command-specific key
+              collection = cmdObj[commands[j]];
+            }
+            break;
+          }
+        }
+
+        database = cmdObj.$db;
+      }
+    }
+
+    if (database && collection) {
+      namespace = database + '.' + collection;
+    } else if (database) {
+      namespace = database + '.?';
+    } else if (collection) {
+      namespace = '?.' + collection;
+    }
+
+    if (hostname || port) {
+      span.data.peer = {
+        hostname: hostname,
+        port: port
       };
-      service = event.connectionId.host + ':' + event.connectionId.port;
-    } else if (typeof event.connectionId === 'string') {
-      peer = parseConnectionToPeer(event.connectionId);
-      service = event.connectionId;
     }
-    var database = event.databaseName;
-    var collection = event.command.collection || event.command[event.commandName];
 
-    // using the Mongodb instrumentation API, it is not possible to gather stack traces.
-    span.stack = [];
-    span.data.peer = peer;
+    if (hostname && port) {
+      service = hostname + ':' + port;
+    } else if (hostname) {
+      service = hostname + ':27017';
+    } else if (port) {
+      service = '?:27017';
+    }
+
     span.data.mongo = {
-      command: event.commandName,
+      command: command,
       service: service,
-      namespace: database + '.' + collection,
-      json: readJsonFromEvent(event),
-      filter: stringifyWhenNecessary(event.command.filter),
-      query: stringifyWhenNecessary(event.command.query)
+      namespace: namespace
     };
+    readJsonOrFilter(message, span);
 
-    if (event.operationId) {
-      event.operationId.traceId = span.t;
-      event.operationId.parentSpanId = span.p;
-    }
+    var wrappedCallback = function(error) {
+      if (error) {
+        span.ec = 1;
+        span.error = true;
+        span.data.mongo.error = tracingUtil.getErrorDetails(error);
+      }
 
-    var requestId = getUniqueRequestId(event);
-    clsContextMap[requestId] = clsContext;
-    mongoDbSpansInProgress[requestId] = span;
+      span.d = Date.now() - span.ts;
+      span.transmit();
+
+      return originalCallback.apply(this, arguments);
+    };
+    originalArgs[callbackIndex] = cls.ns.bind(wrappedCallback);
+
+    return originalWrite.apply(ctx, originalArgs);
   });
 }
 
-function readJsonFromEvent(event) {
-  if (event.commandName === 'update' && event.command.updates && typeof event.command.updates === 'object') {
-    return tracingUtil.shortenDatabaseStatement(JSON.stringify(event.command.updates));
-  } else if (event.commandName === 'delete' && event.command.deletes && typeof event.command.deletes === 'object') {
-    return tracingUtil.shortenDatabaseStatement(JSON.stringify(event.command.deletes));
-  } else if (event.command.update && typeof event.command.update === 'object') {
-    // for findAndModify/findAndRemove
-    return tracingUtil.shortenDatabaseStatement(JSON.stringify(event.command.update));
+function readJsonOrFilter(message, span) {
+  if (!message || !message.command) {
+    return;
   }
-  return undefined;
+  var cmdObj = message.command;
+  var json;
+  var filter = cmdObj.filter || cmdObj.query;
+
+  if (Array.isArray(cmdObj.updates) && cmdObj.updates.length >= 1) {
+    json = cmdObj.updates;
+  } else if (Array.isArray(cmdObj.deletes) && cmdObj.deletes.length >= 1) {
+    json = cmdObj.deletes;
+  }
+
+  // The back end will process exactly one of json, query, or filter, so it does not matter too much which one we
+  // provide.
+  if (json) {
+    span.data.mongo.json = stringifyWhenNecessary(json);
+  } else if (filter) {
+    span.data.mongo.filter = stringifyWhenNecessary(filter);
+  }
 }
 
 function stringifyWhenNecessary(obj) {
@@ -162,113 +177,6 @@ function stringifyWhenNecessary(obj) {
     return tracingUtil.shortenDatabaseStatement(obj);
   }
   return tracingUtil.shortenDatabaseStatement(JSON.stringify(obj));
-}
-
-function onSucceeded(event) {
-  if (!isActive) {
-    cleanup(event);
-    return;
-  }
-
-  var requestId = getUniqueRequestId(event);
-  var clsContext = clsContextMap[requestId];
-  if (!clsContext) {
-    cleanup(event);
-    return;
-  }
-
-  // Make sure follow up calls (especially after batch calls) are executed in the same cls context, so that the root
-  // span can be found.
-  cls.ns.enter(clsContext);
-  try {
-    var span = mongoDbSpansInProgress[requestId];
-    if (!span) {
-      return;
-    }
-
-    span.d = Date.now() - span.ts;
-    span.error = false;
-    span.transmit();
-  } finally {
-    cleanup(event);
-    setImmediate(function() {
-      cls.ns.exit(clsContext);
-    });
-  }
-}
-
-function onFailed(event) {
-  if (!isActive) {
-    cleanup(event);
-    return;
-  }
-
-  var requestId = getUniqueRequestId(event);
-  var clsContext = clsContextMap[requestId];
-  if (!clsContext) {
-    cleanup(event);
-    return;
-  }
-
-  // Make sure follow up calls (especially after batch calls) are executed in the same cls context, so that the root
-  // span can be found.
-  cls.ns.enter(clsContext);
-  try {
-    var span = mongoDbSpansInProgress[requestId];
-    if (!span) {
-      return;
-    }
-
-    span.d = Date.now() - span.ts;
-    span.error = true;
-    span.ec = 1;
-    span.transmit();
-  } finally {
-    cleanup(event);
-    setImmediate(function() {
-      cls.ns.exit(clsContext);
-    });
-  }
-}
-
-function getUniqueRequestId(event) {
-  return event.commandName + event.requestId;
-}
-
-function cleanup(event) {
-  var requestId = getUniqueRequestId(event);
-  delete mongoDbSpansInProgress[requestId];
-  delete clsContextMap[requestId];
-}
-
-function parseConnectionToPeer(connectionString) {
-  if (!connectionString) {
-    return {
-      hostname: null,
-      port: null
-    };
-  }
-
-  var i = connectionString.indexOf(':');
-  if (i >= 0) {
-    var portStr = connectionString.substr(i + 1, connectionString.length);
-    try {
-      return {
-        hostname: connectionString.substr(0, i),
-        port: parseInt(portStr, 10)
-      };
-    } catch (_) {
-      return {
-        hostname: connectionString,
-        port: 27017
-      };
-    }
-  } else {
-    return {
-      hostname: connectionString,
-      port: 27017
-    };
-  }
 }
 
 exports.activate = function() {
