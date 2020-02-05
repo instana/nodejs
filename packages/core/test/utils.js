@@ -7,6 +7,8 @@ const fail = require('chai').assert.fail;
 
 const config = require('./config');
 
+const MAX_SPANS_IN_ERROR = 30;
+
 exports.retry = function retry(fn, time, until) {
   if (time == null) {
     time = config.getTestTimeout() / 2;
@@ -44,13 +46,46 @@ exports.expectOneMatching = function expectOneMatching(arr, fn) {
   }
 
   if (error) {
+    // Clone the stack before creating a new error object, otherwise the stack of the new error object (including the
+    // stringified spans) will be added again, basically duplicating the list of spans we add to the error message.
+    const stack = Object.assign('', error.stack);
     throw new Error(
       `Could not find an item which matches all the criteria. Got ${arr.length} items. Last error: ${
         error.message
-      }. All Items:\n${JSON.stringify(arr, null, 2)}. Error stack trace: ${error.stack}`
+      }. All Items:\n${exports.stringifySpans(arr)}. Error stack trace: ${stack}`
     );
   }
 };
+
+exports.stringifySpans = function stringifySpans(spans) {
+  if (spans === null) {
+    return 'null';
+  } else if (spans === undefined) {
+    return 'undefined';
+  } else if (!spans) {
+    return JSON.stringify(spans);
+  } else if (Array.isArray(spans)) {
+    const shortenedSpans = spans.map(shortenStackTrace);
+    if (shortenedSpans.length > MAX_SPANS_IN_ERROR) {
+      return `!! Only listing the first ${MAX_SPANS_IN_ERROR} of ${spans.length} total spans: ${JSON.stringify(
+        shortenedSpans.slice(0, MAX_SPANS_IN_ERROR),
+        null,
+        2
+      )}`;
+    }
+    return JSON.stringify(shortenedSpans, null, 2);
+  } else if (spans.n) {
+    return JSON.stringify(shortenStackTrace(spans), null, 2);
+  } else {
+    return JSON.stringify(spans, null, 2);
+  }
+};
+
+function shortenStackTrace(span) {
+  const clone = Object.assign({}, span);
+  clone.stack = '<redacted for readability in mocha output>';
+  return clone;
+}
 
 exports.getSpansByName = function getSpansByName(arr, name) {
   if (!Array.isArray(arr)) {
