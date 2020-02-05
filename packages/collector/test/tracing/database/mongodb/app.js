@@ -161,24 +161,22 @@ app.post('/long-find', (req, res) => {
     })
     .then(() =>
       // Execute another traced call to verify that we keep the tracing context.
-      request(`http://127.0.0.1:${agentPort}`)
+      request(`http://127.0.0.1:${agentPort}?param=${req.body.param}`)
     )
-    .then(() => {
-      res.json(mongoResponse);
-    })
+    .then(() => res.json(mongoResponse))
     .catch(e => {
       log('Failed to find document', e);
       res.sendStatus(500);
     });
 });
 
-app.get('/ping', (req, res) => {
-  res.sendStatus(200);
-});
-
 app.get('/findall', (req, res) => {
+  let filter = {};
+  if (req.query && req.query.unique) {
+    filter.unique = req.query.unique;
+  }
   collection
-    .find({})
+    .find(filter)
     .batchSize(2)
     .toArray((err, docs) => {
       if (err) {

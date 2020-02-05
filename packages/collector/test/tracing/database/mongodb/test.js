@@ -211,70 +211,75 @@ describe('tracing/mongodb', function() {
         )
       ));
 
-  // regression test for https://instana.zendesk.com/agent/tickets/5263
-  it('must not corrupt traces by adding unrelated entries', () =>
-    controls
-      .sendRequest({
+  // originally, this was intended as potential regression test for
+  // - https://instana.zendesk.com/agent/tickets/5263 and
+  // - https://instana.zendesk.com/agent/tickets/11530
+  // (but it does not quite reproduce the symptoms)..
+  it('must not corrupt traces by adding unrelated entries', () => {
+    const firstRequest = controls.sendRequest({
+      method: 'POST',
+      path: '/long-find?call=1',
+      body: {
+        param: 'one'
+      }
+    });
+    const secondRequest = new Promise(resolve => {
+      // Add a little delay (smaller than the delay in app.js, so it will happen while that trace is still active).
+      setTimeout(resolve, 100);
+    }).then(() =>
+      // Trigger another HTTP request, this one must _not_ appear in the first trace triggered by POST /long-find.
+      controls.sendRequest({
         method: 'POST',
-        path: '/long-find',
+        path: '/long-find?call=2',
         body: {
-          fitze: 'fatze'
+          param: 'two'
         }
       })
-      // Add a little delay (smaller than the delay in app.js, so it will happen while that trace is still active).
-      .then(
-        () =>
-          new Promise(resolve => {
-            setTimeout(resolve, 100);
-          })
-      )
-      // Trigger another HTTP request, this one must _not_ appear in the first trace triggered by POST /long-find.
-      .then(() =>
-        controls.sendRequest({
-          method: 'GET',
-          path: '/ping'
+    );
+    return Promise.all([firstRequest, secondRequest]).then(() =>
+      utils.retry(() =>
+        agentStubControls.getSpans().then(spans => {
+          const entrySpan1 = expectHttpEntry(spans, '/long-find', 'call=1');
+          const entrySpan2 = expectHttpEntry(spans, '/long-find', 'call=2');
+
+          expect(entrySpan1.t).to.not.equal(entrySpan2.t);
+
+          expect(entrySpan1.p).to.not.exist;
+          expectMongoExit(
+            spans,
+            entrySpan1,
+            'find',
+            JSON.stringify({
+              param: 'one'
+            })
+          );
+          expectHttpExit(spans, entrySpan1, 'param=one');
+
+          expect(entrySpan2.p).to.not.exist;
+          expectMongoExit(
+            spans,
+            entrySpan2,
+            'find',
+            JSON.stringify({
+              param: 'two'
+            })
+          );
+          expectHttpExit(spans, entrySpan2, 'param=two');
         })
       )
-      .then(() =>
-        utils.retry(() =>
-          agentStubControls.getSpans().then(spans => {
-            const entrySpan = expectHttpEntry(spans, '/long-find');
+    );
+  });
 
-            // check that the other entry span is unrelated
-            utils.expectOneMatching(spans, span => {
-              expect(span.n).to.equal('node.http.server');
-              expect(span.data.http.url).to.equal('/ping');
-              expect(span.data.http.method).to.equal('GET');
-              expect(span.f.e).to.equal(String(controls.getPid()));
-              expect(span.f.h).to.equal('agent-stub-uuid');
-              expect(span.async).to.equal(false);
-              expect(span.error).to.equal(false);
-              expect(span.t).to.not.equal(entrySpan.t);
-              expect(span.p).to.not.exist;
-            });
-
-            expectMongoExit(
-              spans,
-              entrySpan,
-              'find',
-              JSON.stringify({
-                fitze: 'fatze'
-              })
-            );
-
-            expectHttpExit(spans, entrySpan);
-          })
-        )
-      ));
-
-  it('must trace find requests with cursors', () =>
-    Promise.all(
+  it('must trace find requests with cursors', () => {
+    const unique = uuid();
+    return Promise.all(
       _.range(10).map(i =>
         controls.sendRequest({
           method: 'POST',
           path: '/insert-one',
           body: {
-            type: `foobar-${i}`
+            unique,
+            type: `item-${i}`
           }
         })
       )
@@ -284,19 +289,21 @@ describe('tracing/mongodb', function() {
       .then(() =>
         controls.sendRequest({
           method: 'GET',
-          path: '/findall'
+          path: `/findall?unique=${unique}`
         })
       )
-      .then(() =>
-        utils.retry(() =>
+      .then(docs => {
+        expect(docs).to.have.lengthOf(10);
+        return utils.retry(() =>
           agentStubControls.getSpans().then(spans => {
             const entrySpan = expectHttpEntry(spans, '/findall');
-            expectMongoExit(spans, entrySpan, 'find', '{}');
+            expectMongoExit(spans, entrySpan, 'find', JSON.stringify({ unique }));
             expectMongoExit(spans, entrySpan, 'getMore');
             expectHttpExit(spans, entrySpan);
           })
-        )
-      ));
+        );
+      });
+  });
 
   function insertDoc(unique) {
     return controls.sendRequest({
@@ -319,7 +326,7 @@ describe('tracing/mongodb', function() {
     });
   }
 
-  function expectHttpEntry(spans, url) {
+  function expectHttpEntry(spans, url, params) {
     return utils.expectOneMatching(spans, span => {
       expect(span.n).to.equal('node.http.server');
       expect(span.p).to.not.exist;
@@ -328,6 +335,9 @@ describe('tracing/mongodb', function() {
       expect(span.async).to.equal(false);
       expect(span.error).to.equal(false);
       expect(span.data.http.url).to.equal(url);
+      if (params) {
+        expect(span.data.http.params).to.equal(params);
+      }
     });
   }
 
