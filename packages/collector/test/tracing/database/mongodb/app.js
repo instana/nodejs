@@ -148,22 +148,38 @@ app.get('/find-one', (req, res) => {
 // An operation with an artificial delay to check that we do not by mistake inject other incoming http entries into the
 // current trace.
 app.post('/long-find', (req, res) => {
+  const call = req.query.call;
+  const unique = req.query.unique;
+  if (!call || !unique) {
+    log('Query parameters call and unique must be provided.');
+    res.sendStatus(500);
+  }
+
+  const startedAt = Date.now();
   let mongoResponse = null;
-  collection
-    .findOne(req.body)
+
+  const array = Array.from(Array(10000).keys());
+  const sequencePromise = array.reduce(previousPromise => {
+    return previousPromise.then(() => {
+      if (Date.now() > startedAt + 1500) {
+        return Promise.resolve();
+      } else {
+        return collection.findOne({ unique }).then(r => {
+          mongoResponse = r;
+        });
+      }
+    });
+  }, Promise.resolve());
+
+  return sequencePromise
     .then(r => {
       mongoResponse = r;
-      // add an artificial delay and let the test start another HTTP entry, then make sure it is not put into the
-      // currently active trace.
-      return new Promise(resolve => {
-        setTimeout(resolve, 500);
-      });
-    })
-    .then(() =>
       // Execute another traced call to verify that we keep the tracing context.
-      request(`http://127.0.0.1:${agentPort}?param=${req.body.param}`)
-    )
-    .then(() => res.json(mongoResponse))
+      return request(`http://127.0.0.1:${agentPort}?call=${call}`);
+    })
+    .then(() => {
+      return res.json(mongoResponse);
+    })
     .catch(e => {
       log('Failed to find document', e);
       res.sendStatus(500);
