@@ -251,7 +251,7 @@ function sendData(path, data, cb, ignore404) {
     },
     function(res) {
       if (res.statusCode < 200 || res.statusCode >= 300) {
-        if (!(ignore404 && res.statusCode === 404)) {
+        if (res.statusCode !== 404 || !ignore404) {
           cb(new Error('Failed to send data to agent via POST ' + path + '. Got status code ' + res.statusCode + '.'));
           return;
         }
