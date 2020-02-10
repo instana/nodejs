@@ -42,11 +42,12 @@ describe('tracing/http(s) server', function() {
 
 function registerTests(useHttps) {
   const controls = new Controls({
-    agentControls
+    agentControls,
+    env: {
+      USE_HTTPS: useHttps
+    }
   });
-  controls.registerTestHooks({
-    useHttps
-  });
+  controls.registerTestHooks();
 
   it(`must capture incoming calls and start a new trace (HTTPS: ${useHttps})`, () =>
     controls

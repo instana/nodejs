@@ -6,13 +6,32 @@ require('../../../../')();
 
 const logPrefix = `HTTP: Server (${process.pid}):\t`;
 
-const http = require('http');
 const url = require('url');
+const fs = require('fs');
+const path = require('path');
 
 const port = process.env.APP_PORT || 3000;
-const app = new http.Server();
 
-app.on('request', (req, res) => {
+let server;
+if (process.env.USE_HTTPS === 'true') {
+  const sslDir = path.join(__dirname, '..', '..', '..', 'apps', 'ssl');
+  server = require('https')
+    .createServer({
+      key: fs.readFileSync(path.join(sslDir, 'key')),
+      cert: fs.readFileSync(path.join(sslDir, 'cert'))
+    })
+    .listen(port, () => {
+      log(`Listening (HTTPS!) on port: ${port}`);
+    });
+} else {
+  server = require('http')
+    .createServer()
+    .listen(port, () => {
+      log(`Listening (HTTP) on port: ${port}`);
+    });
+}
+
+server.on('request', (req, res) => {
   if (process.env.WITH_STDOUT) {
     log(`${req.method} ${req.url}`);
   }
@@ -67,10 +86,6 @@ function endResponse(query, res) {
   // - res#close
   res.end();
 }
-
-app.listen(port, () => {
-  log(`Listening on port: ${port}`);
-});
 
 function log() {
   const args = Array.prototype.slice.call(arguments);
