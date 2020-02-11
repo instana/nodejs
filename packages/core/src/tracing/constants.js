@@ -16,6 +16,11 @@ exports.kafkaTraceLevelHeaderName = 'X_INSTANA_L';
 exports.kafkaTraceLevelValueSuppressed = Buffer.from([0]);
 exports.kafkaTraceLevelValueInherit = Buffer.from([1]);
 
+exports.w3cTraceParent = 'traceparent';
+exports.w3cTraceState = 'tracestate';
+exports.w3cInstana = 'in';
+exports.w3cInstanaEquals = exports.w3cInstana + '=';
+
 exports.serviceNameHeaderName = 'X-Instana-Service';
 exports.serviceNameHeaderNameLowerCase = exports.serviceNameHeaderName.toLowerCase();
 
