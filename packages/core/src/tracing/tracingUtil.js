@@ -21,6 +21,10 @@ exports.generateRandomTraceId = function generateRandomTraceId() {
   return exports.generateRandomId(16);
 };
 
+exports.generateRandomLongTraceId = function generateRandomLongTraceId() {
+  return exports.generateRandomId(32);
+};
+
 exports.generateRandomSpanId = function generateRandomSpanId() {
   return exports.generateRandomId(16);
 };
