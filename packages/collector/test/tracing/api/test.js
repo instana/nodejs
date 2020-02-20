@@ -49,6 +49,25 @@ describe('tracing/api', function() {
         });
     });
 
+    it('must annotate the active span', () => {
+      return controls
+        .sendRequest({
+          method: 'GET',
+          path: '/span/annotate'
+        })
+        .then(response => {
+          const span = response.span;
+          expect(span).to.exist;
+          expect(span.traceId).to.be.not.null;
+          expect(span.spanId).to.be.not.null;
+          expect(span.parentSpanId).to.not.exist;
+          expect(span.name).to.equal('node.http.server');
+          expect(span.data.key1).to.equal('custom tag value 1');
+          expect(span.data.key2).to.equal('custom tag value 2');
+          expect(span.handleConstructorName).to.equal('SpanHandle');
+        });
+    });
+
     it('must manually end the currently active span', () => {
       const now = Date.now();
       return controls
@@ -124,6 +143,18 @@ describe('tracing/api', function() {
           expect(span.duration).to.equal(0);
           expect(span.errorCount).to.equal(0);
           expect(span.handleConstructorName).to.equal('NoopSpanHandle');
+        }));
+
+    it('must do nothing when trying to annotate', () =>
+      controls
+        .sendRequest({
+          method: 'GET',
+          path: '/span/annotate'
+        })
+        .then(response => {
+          const span = response.span;
+          expect(span).to.exist;
+          expect(span.data).to.not.exist;
         }));
   });
 });

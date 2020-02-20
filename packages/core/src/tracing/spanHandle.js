@@ -79,6 +79,13 @@ SpanHandle.prototype.getErrorCount = function getErrorCount() {
   return this.span.ec;
 };
 
+SpanHandle.prototype.annotate = function annotate(key, value) {
+  if (key == null) {
+    return;
+  }
+  this.span.data[key] = value;
+};
+
 /**
  * Switches the span into manual-end-mode. Calls to span#transmit() as used by automatic tracing instrumentation will be
  * ignored. Instead, client code needs to finish the span (and trigger transmission) by calling spanHandle#end();
@@ -150,6 +157,8 @@ NoopSpanHandle.prototype.getDuration = function getDuration() {
 NoopSpanHandle.prototype.getErrorCount = function getErrorCount() {
   return 0;
 };
+
+NoopSpanHandle.prototype.annotate = function annotate() {};
 
 NoopSpanHandle.prototype.disableAutoEnd = function disableAutoEnd() {
   // provide dummy operation when automatic tracing is not enabled
