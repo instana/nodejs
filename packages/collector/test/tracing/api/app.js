@@ -28,6 +28,15 @@ app.get('/span/active', (req, res) => {
   });
 });
 
+app.get('/span/annotate', (req, res) => {
+  const span = instana.currentSpan();
+  span.annotate('key1', 'custom tag value 1');
+  span.annotate('key2', 'custom tag value 2');
+  res.json({
+    span: serialize(span)
+  });
+});
+
 app.get('/span/manuallyended', (req, res) => {
   const span = instana.currentSpan();
   span.disableAutoEnd();
@@ -55,6 +64,7 @@ function serialize(span) {
     timestamp: span.getTimestamp(),
     duration: span.getDuration(),
     errorCount: span.getErrorCount(),
+    data: span.span ? span.span.data : null,
     handleConstructorName: span.constructor.name
   };
 }
