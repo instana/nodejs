@@ -10,11 +10,12 @@ logger = require('../logger').getLogger('tracing/cls', function(newLogger) {
   logger = newLogger;
 });
 
-var currentEntrySpanKey = (exports.currentEntrySpanKey = 'com.instana.entrySpan');
+var currentEntrySpanKey = (exports.currentEntrySpanKey = 'com.instana.entry');
 var currentSpanKey = (exports.currentSpanKey = 'com.instana.span');
 var reducedSpanKey = (exports.reducedSpanKey = 'com.instana.reduced');
-
 var tracingLevelKey = (exports.tracingLevelKey = 'com.instana.tl');
+var w3cTraceContextKey = (exports.w3cTraceContextKey = 'com.instana.w3ctc');
+
 // eslint-disable-next-line no-undef-init
 var serviceName = undefined;
 var processIdentityProvider = null;
@@ -39,43 +40,59 @@ exports.init = function init(config, _processIdentityProvider) {
 /*
  * Start a new span and set it as the current span.
  */
-exports.startSpan = function startSpan(spanName, kind, traceId, parentSpanId, modifyAsyncContext) {
+exports.startSpan = function startSpan(spanName, kind, traceId, parentSpanId, w3cTraceContext) {
   tracingMetrics.incrementOpened();
   if (!kind || (kind !== constants.ENTRY && kind !== constants.EXIT && kind !== constants.INTERMEDIATE)) {
     logger.warn('Invalid span (%s) without kind/with invalid kind: %s, assuming EXIT.', spanName, kind);
     kind = constants.EXIT;
   }
-  modifyAsyncContext = modifyAsyncContext !== false;
   var span = new InstanaSpan(spanName);
-  var parentSpan = exports.ns.get(currentSpanKey);
   span.k = kind;
 
-  // If specified, use params
-  if (traceId && parentSpanId) {
+  var parentSpan = exports.getCurrentSpan();
+  var parentW3cTraceContext = exports.getW3cTraceContext();
+
+  // If the client code has specified a trace ID/parent ID, use the provided IDs.
+  if (traceId) {
     span.t = traceId;
-    span.p = parentSpanId;
-    // else use pre-existing context (if any)
+    if (parentSpanId) {
+      span.p = parentSpanId;
+    }
   } else if (parentSpan) {
+    // Otherwise, use the currently active span (if any) as parent.
     span.t = parentSpan.t;
     span.p = parentSpan.s;
-    // last resort, use newly generated Ids
   } else {
+    // If no IDs have been provided, we start a new trace by generating a new trace ID. We do not set a parent ID in
+    // this case.
     span.t = tracingUtil.generateRandomTraceId();
   }
+
+  // Always generate a new span ID for the new span.
   span.s = tracingUtil.generateRandomSpanId();
 
-  if (span.k === constants.ENTRY) {
-    if (modifyAsyncContext) {
-      // Make the entry span available independently (even if getCurrentSpan would return an intermediate or an exit at
-      // any given moment). This is used in the error handlers of web frameworks like Express to attach path templates
-      // and errors messages.
-      span.addCleanup(exports.ns.set(currentEntrySpanKey, span));
-    }
+  if (!w3cTraceContext && parentW3cTraceContext) {
+    // If there is no incoming W3C trace context that has been read from HTTP headers, but there is a parent trace
+    // context associated with a parent span, we will create an updated copy of that parent W3C trace context. We must
+    // make sure that the parent trace context in the parent cls context is not modified.
+    w3cTraceContext = parentW3cTraceContext.clone();
   }
 
-  if (modifyAsyncContext) {
-    span.addCleanup(exports.ns.set(currentSpanKey, span));
+  if (w3cTraceContext) {
+    w3cTraceContext.updateParent(span.t, span.s);
+    span.addCleanup(exports.ns.set(w3cTraceContextKey, w3cTraceContext));
   }
+
+  if (span.k === constants.ENTRY) {
+    // Make the entry span available independently (even if getCurrentSpan would return an intermediate or an exit at
+    // any given moment). This is used by the instrumentations of web frameworks like Express.js to add path templates
+    // and error messages to the entry span.
+    span.addCleanup(exports.ns.set(currentEntrySpanKey, span));
+  }
+
+  // Set the span object as the currently active span in the active CLS context and also add a cleanup hook for when
+  // this span is transmitted.
+  span.addCleanup(exports.ns.set(currentSpanKey, span));
   return span;
 };
 
@@ -108,6 +125,20 @@ exports.getReducedSpan = function getReducedSpan() {
 };
 
 /*
+ * Stores the W3C trace context object.
+ */
+exports.setW3cTraceContext = function setW3cTraceContext(traceContext) {
+  exports.ns.set(w3cTraceContextKey, traceContext);
+};
+
+/*
+ * Returns the W3C trace context object.
+ */
+exports.getW3cTraceContext = function getW3cTraceContext() {
+  return exports.ns.get(w3cTraceContextKey);
+};
+
+/*
  * Determine if we're currently tracing or not.
  */
 exports.isTracing = function isTracing() {
@@ -133,7 +164,7 @@ exports.tracingLevel = function tracingLevel() {
  */
 exports.tracingSuppressed = function tracingSuppressed() {
   var tl = exports.tracingLevel();
-  return tl && tl === '0';
+  return typeof tl === 'string' && tl.indexOf('0') === 0;
 };
 
 /*

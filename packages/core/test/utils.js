@@ -57,6 +57,10 @@ exports.expectOneMatching = function expectOneMatching(arr, fn) {
   }
 };
 
+exports.retryUntilSpansMatch = function retryUntilSpansMatch(agentControls, fn) {
+  return exports.retry(() => agentControls.getSpans().then(spans => fn(spans)));
+};
+
 exports.stringifySpans = function stringifySpans(spans) {
   if (spans === null) {
     return 'null';
