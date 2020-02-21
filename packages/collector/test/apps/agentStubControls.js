@@ -133,7 +133,7 @@ exports.waitUntilAppIsCompletelyInitialized = pid =>
     exports.getRetrievedData().then(data => {
       for (let i = 0, len = data.runtime.length; i < len; i++) {
         const d = data.runtime[i];
-        if (d.pid) {
+        if (d.pid === pid) {
           return true;
         }
       }
