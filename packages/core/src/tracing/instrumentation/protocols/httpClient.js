@@ -74,14 +74,17 @@ function instrument(coreModule) {
       callbackIndex = 2;
     }
 
+    var w3cTraceContext = cls.getW3cTraceContext();
+
     if (!isActive || !cls.isTracing()) {
       var traceLevelHeaderHasBeenAdded = false;
       if (cls.tracingLevel()) {
-        traceLevelHeaderHasBeenAdded = tryToAddTraceLevelAddHeaderToOpts(options, cls.tracingLevel());
+        traceLevelHeaderHasBeenAdded = tryToAddTraceLevelAddHeaderToOpts(options, cls.tracingLevel(), w3cTraceContext);
       }
       clientRequest = originalRequest.apply(coreModule, arguments);
       if (cls.tracingLevel() && !traceLevelHeaderHasBeenAdded) {
         clientRequest.setHeader(constants.traceLevelHeaderName, cls.tracingLevel());
+        setW3cHeadersOnRequest(clientRequest, w3cTraceContext);
       }
       return clientRequest;
     }
@@ -90,17 +93,22 @@ function instrument(coreModule) {
 
     if (constants.isExitSpan(parentSpan)) {
       if (cls.tracingSuppressed()) {
-        traceLevelHeaderHasBeenAdded = tryToAddTraceLevelAddHeaderToOpts(options, '0');
+        traceLevelHeaderHasBeenAdded = tryToAddTraceLevelAddHeaderToOpts(options, '0', w3cTraceContext);
       }
       clientRequest = originalRequest.apply(coreModule, arguments);
       if (cls.tracingSuppressed() && !traceLevelHeaderHasBeenAdded) {
         clientRequest.setHeader(constants.traceLevelHeaderName, '0');
+        setW3cHeadersOnRequest(clientRequest, w3cTraceContext);
       }
       return clientRequest;
     }
 
     cls.ns.run(function() {
       var span = cls.startSpan('node.http.client', constants.EXIT);
+
+      // startSpan updates the W3C trace context and writes it back to CLS, so we have to refetch the updated context
+      // object from CLS.
+      w3cTraceContext = cls.getW3cTraceContext();
 
       var completeCallUrl;
       var params;
@@ -143,7 +151,7 @@ function instrument(coreModule) {
       }
 
       try {
-        var instanaHeadersHaveBeenAdded = tryToAddHeadersToOpts(options, span);
+        var instanaHeadersHaveBeenAdded = tryToAddHeadersToOpts(options, span, w3cTraceContext);
         clientRequest = originalRequest.apply(coreModule, originalArgs);
       } catch (e) {
         // A synchronous exception indicates a failure that is not covered by the listeners. Using a malformed URL for
@@ -161,7 +169,7 @@ function instrument(coreModule) {
 
       cls.ns.bindEmitter(clientRequest);
       if (!instanaHeadersHaveBeenAdded) {
-        instanaHeadersHaveBeenAdded = setHeadersOnRequest(clientRequest, span);
+        instanaHeadersHaveBeenAdded = setHeadersOnRequest(clientRequest, span, w3cTraceContext);
       }
 
       var isTimeout = false;
@@ -245,7 +253,7 @@ function isUrlObject(argument) {
   return URL && argument instanceof url.URL;
 }
 
-function tryToAddHeadersToOpts(options, span) {
+function tryToAddHeadersToOpts(options, span, w3cTraceContext) {
   // Some HTTP spec background: If the request has a header Expect: 100-continue, the client will first send the
   // request headers, without the body. The client is then ought to wait for the server to send a first, preliminary
   // response with the status code 100 Continue (if all is well). Only then will the client send the actual request
@@ -261,8 +269,9 @@ function tryToAddHeadersToOpts(options, span) {
   // Thus, at the very least, when this header is present in the incoming request options arguments, we need to add our
   // INSTANA-... HTTP headers to options.headers instead of calling request.setHeader later. In fact, we opt for the
   // slightly more general solution: If there is an options object parameter with a `headers` object, we just always
-  // add our headers there. Only when this object is missing do we use request.setHeader on the ClientRequest object
+  // add our headers there. We use request.setHeader on the ClientRequest object only when the headers object is missing
   // (see setHeadersOnRequest).
+
   if (hasHeadersOption(options)) {
     if (!isItSafeToModifiyHeadersInOptions(options)) {
       return true;
@@ -270,33 +279,55 @@ function tryToAddHeadersToOpts(options, span) {
     options.headers[constants.spanIdHeaderName] = span.s;
     options.headers[constants.traceIdHeaderName] = span.t;
     options.headers[constants.traceLevelHeaderName] = '1';
+    tryToAddW3cHeaderToOpts(options, w3cTraceContext);
     return true;
   }
+
   return false;
 }
 
-function tryToAddTraceLevelAddHeaderToOpts(options, level) {
+function tryToAddTraceLevelAddHeaderToOpts(options, level, w3cTraceContext) {
   if (hasHeadersOption(options)) {
     if (!isItSafeToModifiyHeadersInOptions(options)) {
       return true;
     }
     options.headers[constants.traceLevelHeaderName] = level;
+    tryToAddW3cHeaderToOpts(options, w3cTraceContext);
     return true;
   }
   return false;
+}
+
+function tryToAddW3cHeaderToOpts(options, w3cTraceContext) {
+  if (w3cTraceContext) {
+    options.headers[constants.w3cTraceParent] = w3cTraceContext.renderTraceParent();
+    if (w3cTraceContext.hasTraceState()) {
+      options.headers[constants.w3cTraceState] = w3cTraceContext.renderTraceState();
+    }
+  }
 }
 
 function hasHeadersOption(options) {
   return options && typeof options === 'object' && options.headers && typeof options.headers === 'object';
 }
 
-function setHeadersOnRequest(clientRequest, span) {
+function setHeadersOnRequest(clientRequest, span, w3cTraceContext) {
   if (!isItSafeToModifiyHeadersForRequest(clientRequest)) {
     return;
   }
   clientRequest.setHeader(constants.spanIdHeaderName, span.s);
   clientRequest.setHeader(constants.traceIdHeaderName, span.t);
   clientRequest.setHeader(constants.traceLevelHeaderName, '1');
+  setW3cHeadersOnRequest(clientRequest, w3cTraceContext);
+}
+
+function setW3cHeadersOnRequest(clientRequest, w3cTraceContext) {
+  if (w3cTraceContext) {
+    clientRequest.setHeader(constants.w3cTraceParent, w3cTraceContext.renderTraceParent());
+    if (w3cTraceContext.hasTraceState()) {
+      clientRequest.setHeader(constants.w3cTraceState, w3cTraceContext.renderTraceState());
+    }
+  }
 }
 
 function isItSafeToModifiyHeadersInOptions(options) {

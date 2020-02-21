@@ -4,6 +4,7 @@ var coreHttpsModule = require('https');
 var coreHttpModule = require('http');
 
 var constants = require('../../constants');
+var tracingHeaders = require('../../tracingHeaders');
 var urlUtil = require('../../../util/url');
 var httpCommon = require('./_http');
 var shimmer = require('shimmer');
@@ -44,22 +45,37 @@ function shimEmit(realEmit) {
         cls.ns.bindEmitter(res);
       }
 
-      // Respect any incoming tracing level headers
-      if (req && req.headers && req.headers[constants.traceLevelHeaderNameLowerCase] === '0') {
-        cls.setTracingLevel(req.headers[constants.traceLevelHeaderNameLowerCase]);
+      var headers = tracingHeaders.fromHttpRequest(req);
+      var w3cTraceContext = headers.w3cTraceContext;
+
+      if (typeof headers.level === 'string' && headers.level.indexOf('0') === 0) {
+        cls.setTracingLevel('0');
+        if (w3cTraceContext) {
+          w3cTraceContext.disableSampling();
+        }
+      }
+
+      if (w3cTraceContext) {
+        // Ususally we commit the W3C trace context to CLS in start span, but in some cases (e.g. when suppressed),
+        // we don't call startSpan, so we write to CLS here unconditionally. If we also write an update trace context
+        // later, the one written here will be overwritten.
+        cls.setW3cTraceContext(w3cTraceContext);
       }
 
       if (cls.tracingSuppressed()) {
+        // We still need to forward X-INSTANA-L and the W3C trace context; this happens in exit instrumentations
+        // (like httpClient.js).
         return realEmit.apply(originalThis, originalArgs);
       }
 
-      var incomingTraceId = getExistingTraceId(req);
-      var incomingParentSpanId = getExistingSpanId(req);
-      var span = cls.startSpan(exports.spanName, constants.ENTRY, incomingTraceId, incomingParentSpanId);
+      var span = cls.startSpan(exports.spanName, constants.ENTRY, headers.traceId, headers.parentId, w3cTraceContext);
 
-      // Grab the URL before application code gets access to the incoming message.
-      // We are doing this because libs like express are manipulating req.url when
-      // using routers.
+      if (headers.foreignParent) {
+        span.fp = headers.foreignParent;
+      }
+
+      // Capture the URL before application code gets access to the incoming message. Libraries like express manipulate
+      // req.url when routers are used.
       var urlParts = req.url.split('?');
       if (urlParts.length >= 1) {
         urlParts[1] = filterParams(urlParts[1]);
@@ -77,8 +93,11 @@ function shimEmit(realEmit) {
         span.data.service = incomingServiceName;
       }
 
-      // Handle client / backend eum correlation.
+      // Handle client/back end eum correlation.
       if (!span.p) {
+        // We add the trace ID to the incoming request so a customer's app can render it into the EUM snippet, see
+        // eslint-disable-next-line max-len
+        // https://docs.instana.io/products/website_monitoring/backendCorrelation/#retrieve-the-backend-trace-id-in-nodejs
         req.headers['x-instana-t'] = span.t;
 
         // support for automatic client/back end EUM correlation
@@ -142,22 +161,6 @@ exports.activate = function() {
 exports.deactivate = function() {
   isActive = false;
 };
-
-function getExistingSpanId(req) {
-  var spanId = req.headers[constants.spanIdHeaderNameLowerCase];
-  if (spanId == null) {
-    return null;
-  }
-  return spanId;
-}
-
-function getExistingTraceId(req) {
-  var traceId = req.headers[constants.traceIdHeaderNameLowerCase];
-  if (traceId == null) {
-    return null;
-  }
-  return traceId;
-}
 
 exports.setExtraHttpHeadersToCapture = function setExtraHttpHeadersToCapture(_extraHeaders) {
   extraHttpHeadersToCapture = _extraHeaders;
