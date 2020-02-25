@@ -8,6 +8,7 @@ const constants = require('@instana/core').tracing.constants;
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('../../../../../core/test/config');
 const utils = require('../../../../../core/test/utils');
+const ProcessControls = require('../../ProcessControls');
 
 describe('tracing/bluebird', function() {
   if (!supportedVersion(process.versions.node)) {
@@ -15,13 +16,13 @@ describe('tracing/bluebird', function() {
   }
 
   const agentControls = require('../../../apps/agentStubControls');
-  const BluebirdControls = require('./controls');
 
   this.timeout(config.getTestTimeout());
 
   agentControls.registerTestHooks();
 
-  const bluebirdControls = new BluebirdControls({
+  const bluebirdControls = new ProcessControls({
+    dirname: __dirname,
     agentControls
   });
   bluebirdControls.registerTestHooks();
