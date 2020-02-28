@@ -1,11 +1,13 @@
 'use strict';
 
+const path = require('path');
 const semver = require('semver');
 const expect = require('chai').expect;
 
 const constants = require('@instana/core').tracing.constants;
 const config = require('../../../../../core/test/config');
 const utils = require('../../../../../core/test/utils');
+const ProcessControls = require('../../ProcessControls');
 
 describe('tracing/hapi', function() {
   if (!semver.satisfies(process.versions.node, '>=8.2.1')) {
@@ -13,16 +15,15 @@ describe('tracing/hapi', function() {
   }
 
   const agentControls = require('../../../apps/agentStubControls');
-  const Controls = require('./controls');
 
   this.timeout(config.getTestTimeout());
 
   agentControls.registerTestHooks();
 
-  const controls = new Controls({
+  const controls = new ProcessControls({
+    appPath: path.join(__dirname, 'app'),
     agentControls
-  });
-  controls.registerTestHooks();
+  }).registerTestHooks();
 
   describe('hapi path templates', () => {
     check('/route/mandatory/value', '/route/mandatory/{param}');

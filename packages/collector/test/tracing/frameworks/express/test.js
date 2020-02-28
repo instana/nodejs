@@ -1,11 +1,14 @@
 'use strict';
 
+const path = require('path');
 const expect = require('chai').expect;
 
 const constants = require('@instana/core').tracing.constants;
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
+const tracingUtil = require('../../../../../core/src/tracing/tracingUtil');
 const config = require('../../../../../core/test/config');
 const utils = require('../../../../../core/test/utils');
+const ProcessControls = require('../../ProcessControls');
 
 describe('tracing/express', function() {
   if (!supportedVersion(process.versions.node)) {
@@ -13,40 +16,46 @@ describe('tracing/express', function() {
   }
 
   const agentControls = require('../../../apps/agentStubControls');
-  const Controls = require('./controls');
 
   this.timeout(config.getTestTimeout());
 
   agentControls.registerTestHooks();
 
-  const controls = new Controls({
+  const controls = new ProcessControls({
+    appPath: path.join(__dirname, 'app'),
     agentControls
-  });
-  controls.registerTestHooks();
+  }).registerTestHooks();
 
   describe('express.js path templates', () => {
-    check('/blub', '/blub');
-    check('/sub/bar/42', '/sub/bar/:id');
-    check('/sub/sub/bar/42', '/sub/sub/bar/:id');
+    check('/blub', '/blub', true);
+    check('/sub/bar/42', '/sub/bar/:id', true);
+    check('/sub/sub/bar/42', '/sub/sub/bar/:id', true);
+    check('/sub/sub/bar/42', '/sub/sub/bar/:id', false);
 
-    function check(actualPath, expectedTemplate) {
-      it(`must report express path templates for actual path: ${actualPath}`, () =>
-        controls
-          .sendRequest({
-            method: 'GET',
-            path: actualPath
-          })
-          .then(() =>
-            utils.retry(() =>
-              agentControls.getSpans().then(spans => {
-                utils.expectOneMatching(spans, span => {
-                  expect(span.n).to.equal('node.http.server');
-                  expect(span.k).to.equal(constants.ENTRY);
-                  expect(span.data.http.path_tpl).to.equal(expectedTemplate);
-                });
-              })
-            )
-          ));
+    function check(actualPath, expectedTemplate, isRootSpan) {
+      it(`must report express path templates for actual path: ${actualPath}`, () => {
+        const request = {
+          method: 'GET',
+          path: actualPath
+        };
+        if (!isRootSpan) {
+          request.headers = {
+            'X-INSTANA-T': tracingUtil.generateRandomTraceId(),
+            'X-INSTANA-S': tracingUtil.generateRandomSpanId()
+          };
+        }
+        return controls.sendRequest(request).then(() =>
+          utils.retry(() =>
+            agentControls.getSpans().then(spans => {
+              utils.expectOneMatching(spans, span => {
+                expect(span.n).to.equal('node.http.server');
+                expect(span.k).to.equal(constants.ENTRY);
+                expect(span.data.http.path_tpl).to.equal(expectedTemplate);
+              });
+            })
+          )
+        );
+      });
     }
   });
 });

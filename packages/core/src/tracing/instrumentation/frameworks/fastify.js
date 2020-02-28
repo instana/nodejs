@@ -92,7 +92,7 @@ function annotateHttpEntrySpanWithPathTemplate(app, opts) {
     return;
   }
 
-  var span = cls.getCurrentRootSpan();
+  var span = cls.getCurrentEntrySpan();
   if (!span || span.n !== httpServer.spanName) {
     return;
   }

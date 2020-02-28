@@ -1,5 +1,8 @@
 # Changelog
 
+## Unreleased
+- Fix: Annotate path templates (Express.js, Koa, Hapi, ...) and error messages (Express.js) on all HTTP entry spans, not only on root spans.
+
 ## 1.90.0
 - Add API method to annotate spans with custom tags.
 

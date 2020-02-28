@@ -1,11 +1,14 @@
 'use strict';
 
+const path = require('path');
 const expect = require('chai').expect;
 
 const constants = require('@instana/core').tracing.constants;
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
+const tracingUtil = require('../../../../../core/src/tracing/tracingUtil');
 const config = require('../../../../../core/test/config');
 const utils = require('../../../../../core/test/utils');
+const ProcessControls = require('../../ProcessControls');
 
 describe('tracing/express with uncaught errors', function() {
   if (!supportedVersion(process.versions.node)) {
@@ -13,26 +16,21 @@ describe('tracing/express with uncaught errors', function() {
   }
 
   const agentControls = require('../../../apps/agentStubControls');
-  const ExpressUncaughtErrorsControls = require('./controls');
 
   this.timeout(config.getTestTimeout());
 
   agentControls.registerTestHooks();
 
-  const expressUncaughtErrorsControls = new ExpressUncaughtErrorsControls({
+  const expressUncaughtErrorsControls = new ProcessControls({
+    appPath: path.join(__dirname, 'app'),
     agentControls
-  });
-  expressUncaughtErrorsControls.registerTestHooks();
+  }).registerTestHooks();
 
-  it('must record result of default express uncaught error function', () =>
-    expressUncaughtErrorsControls
-      .sendRequest({
-        method: 'GET',
-        path: '/defaultErrorHandler',
-        simple: false,
-        resolveWithFullResponse: true
-      })
-      .then(response => {
+  [false, true].forEach(isRootSpan => registerTests(isRootSpan));
+
+  function registerTests(isRootSpan) {
+    it(`must record result of default express uncaught error function (root span: ${isRootSpan})`, () =>
+      expressUncaughtErrorsControls.sendRequest(createRequest(false, isRootSpan)).then(response => {
         expect(response.statusCode).to.equal(500);
 
         return utils.retry(() =>
@@ -50,15 +48,8 @@ describe('tracing/express with uncaught errors', function() {
         );
       }));
 
-  it('must record result of custom express uncaught error function', () =>
-    expressUncaughtErrorsControls
-      .sendRequest({
-        method: 'GET',
-        path: '/customErrorHandler',
-        simple: false,
-        resolveWithFullResponse: true
-      })
-      .then(response => {
+    it(`must record result of custom express uncaught error function (root span: ${isRootSpan})`, () =>
+      expressUncaughtErrorsControls.sendRequest(createRequest(true, isRootSpan)).then(response => {
         expect(response.statusCode).to.equal(400);
 
         return utils.retry(() =>
@@ -75,4 +66,21 @@ describe('tracing/express with uncaught errors', function() {
           })
         );
       }));
+  }
 });
+
+function createRequest(customErrorHandler, isRootSpan) {
+  const request = {
+    method: 'GET',
+    path: customErrorHandler ? '/customErrorHandler' : '/defaultErrorHandler',
+    simple: false,
+    resolveWithFullResponse: true
+  };
+  if (!isRootSpan) {
+    request.headers = {
+      'X-INSTANA-T': tracingUtil.generateRandomTraceId(),
+      'X-INSTANA-S': tracingUtil.generateRandomSpanId()
+    };
+  }
+  return request;
+}

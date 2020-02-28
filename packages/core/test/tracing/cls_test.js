@@ -198,29 +198,29 @@ describe('tracing/cls', () => {
 
   it('must clean up span data from contexts once the span has been transmitted', () => {
     cls.ns.run(context => {
-      expect(context[cls.currentRootSpanKey]).to.equal(undefined);
+      expect(context[cls.currentEntrySpanKey]).to.equal(undefined);
       expect(context[cls.currentSpanKey]).to.equal(undefined);
 
       const span = cls.startSpan('node.http.server', constants.ENTRY);
-      expect(context[cls.currentRootSpanKey]).to.equal(span);
+      expect(context[cls.currentEntrySpanKey]).to.equal(span);
       expect(context[cls.currentSpanKey]).to.equal(span);
 
       span.cleanup();
 
-      expect(context[cls.currentRootSpanKey]).to.equal(undefined);
+      expect(context[cls.currentEntrySpanKey]).to.equal(undefined);
       expect(context[cls.currentSpanKey]).to.equal(undefined);
     });
   });
 
   it('must store reduced backup of span data on cleanup', () => {
     cls.ns.run(context => {
-      expect(context[cls.currentRootSpanKey]).to.equal(undefined);
+      expect(context[cls.currentEntrySpanKey]).to.equal(undefined);
       expect(context[cls.currentSpanKey]).to.equal(undefined);
 
       const span = cls.startSpan('node.http.server', constants.ENTRY);
       span.data.much = 'data';
       span.stack = ['a', 'b', 'c'];
-      expect(context[cls.currentRootSpanKey]).to.equal(span);
+      expect(context[cls.currentEntrySpanKey]).to.equal(span);
       expect(context[cls.currentSpanKey]).to.equal(span);
 
       span.cleanup();

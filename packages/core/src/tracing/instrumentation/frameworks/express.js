@@ -58,7 +58,7 @@ function shimExpress4Handle(realHandle) {
 function wrapExpress4HandleFn(fn) {
   return function wrappedHandleFn(err) {
     if (err && err.message && err.stack) {
-      annotateHttpRootSpanWithError(err);
+      annotateHttpEntrySpanWithError(err);
     }
     return fn.apply(this, arguments);
   };
@@ -85,22 +85,22 @@ function shimExpress4Use(originalUse) {
 }
 
 function wrapExpress4ErrorHandlingFn(fn) {
-  // DO NOT REMOVE THE UNUSED PARAMETERS IN THE FOLLOWING LINE
-  // express is checking the existence for four parameters on the function to identify that this is an error
-  // handling function. Defining less than four parameter would change application behavior.
+  // Do not remove the unused parameters in the following line! Express.js uses the number of parameters on the function
+  // to check whether this is an error handling function. Defining less than four parameter would change application
+  // behavior.
   // eslint-disable-next-line no-unused-vars
   return function wrappedErrorHandlingFn(err, req, res, next) {
-    annotateHttpRootSpanWithError(err);
+    annotateHttpEntrySpanWithError(err);
     return fn.apply(this, arguments);
   };
 }
 
-function annotateHttpRootSpanWithError(err) {
+function annotateHttpEntrySpanWithError(err) {
   if (!err || !active) {
     return;
   }
 
-  var span = cls.getCurrentRootSpan();
+  var span = cls.getCurrentEntrySpan();
   if (!span || span.n !== httpServer.spanName) {
     return;
   }
@@ -150,7 +150,7 @@ function annotateHttpEntrySpanWithPathTemplate(req) {
     return;
   }
 
-  var span = cls.getCurrentRootSpan();
+  var span = cls.getCurrentEntrySpan();
   if (!span || span.n !== httpServer.spanName) {
     return;
   }

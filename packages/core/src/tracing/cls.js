@@ -10,7 +10,7 @@ logger = require('../logger').getLogger('tracing/cls', function(newLogger) {
   logger = newLogger;
 });
 
-var currentRootSpanKey = (exports.currentRootSpanKey = 'com.instana.rootSpan');
+var currentEntrySpanKey = (exports.currentEntrySpanKey = 'com.instana.entrySpan');
 var currentSpanKey = (exports.currentSpanKey = 'com.instana.span');
 var reducedSpanKey = (exports.reducedSpanKey = 'com.instana.reduced');
 
@@ -66,8 +66,11 @@ exports.startSpan = function startSpan(spanName, kind, traceId, parentSpanId, mo
   span.s = tracingUtil.generateRandomSpanId();
 
   if (span.k === constants.ENTRY) {
-    if (!span.p && modifyAsyncContext) {
-      span.addCleanup(exports.ns.set(currentRootSpanKey, span));
+    if (modifyAsyncContext) {
+      // Make the entry span available independently (even if getCurrentSpan would return an intermediate or an exit at
+      // any given moment). This is used in the error handlers of web frameworks like Express to attach path templates
+      // and errors messages.
+      span.addCleanup(exports.ns.set(currentEntrySpanKey, span));
     }
   }
 
@@ -78,10 +81,10 @@ exports.startSpan = function startSpan(spanName, kind, traceId, parentSpanId, mo
 };
 
 /*
- * Get the currently active root span.
+ * Get the currently active entry span.
  */
-exports.getCurrentRootSpan = function getCurrentRootSpan() {
-  return exports.ns.get(currentRootSpanKey);
+exports.getCurrentEntrySpan = function getCurrentEntrySpan() {
+  return exports.ns.get(currentEntrySpanKey);
 };
 
 /*

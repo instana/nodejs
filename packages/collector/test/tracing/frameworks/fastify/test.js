@@ -1,11 +1,13 @@
 'use strict';
 
+const path = require('path');
 const expect = require('chai').expect;
 const semver = require('semver');
 
 const constants = require('@instana/core').tracing.constants;
 const config = require('../../../../../core/test/config');
 const utils = require('../../../../../core/test/utils');
+const ProcessControls = require('../../ProcessControls');
 
 describe('tracing/fastify', function() {
   if (semver.lt(process.versions.node, '8.0.0')) {
@@ -13,16 +15,15 @@ describe('tracing/fastify', function() {
   }
 
   const agentControls = require('../../../apps/agentStubControls');
-  const Controls = require('./controls');
 
   this.timeout(config.getTestTimeout());
 
   agentControls.registerTestHooks();
 
-  const controls = new Controls({
+  const controls = new ProcessControls({
+    appPath: path.join(__dirname, 'app'),
     agentControls
-  });
-  controls.registerTestHooks();
+  }).registerTestHooks();
 
   describe('path templates', () => {
     check('/', 200, { hello: 'world' }, '/');
