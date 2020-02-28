@@ -20,13 +20,12 @@ var serviceName = undefined;
 var processIdentityProvider = null;
 
 /*
- * Access the Instana namespace in context local storage.
+ * Access the Instana namespace in continuation local storage.
  *
  * Usage:
  *   cls.ns.get(key);
  *   cls.ns.set(key);
  *   cls.ns.run(function() {});
- *
  */
 exports.ns = hooked.createNamespace('instana.collector');
 
@@ -92,7 +91,6 @@ exports.getCurrentEntrySpan = function getCurrentEntrySpan() {
  */
 exports.setCurrentSpan = function setCurrentSpan(span) {
   exports.ns.set(currentSpanKey, span);
-  return span;
 };
 
 /*
@@ -121,7 +119,6 @@ exports.isTracing = function isTracing() {
  */
 exports.setTracingLevel = function setTracingLevel(level) {
   exports.ns.set(tracingLevelKey, level);
-  return level;
 };
 
 /*
