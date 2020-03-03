@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.91.0
 - Support for [W3C Trace Context](https://www.w3.org/TR/trace-context/).
 - Fix: Annotate path templates (Express.js, Koa, Hapi, ...) and error messages (Express.js) on all HTTP entry spans, not only on root spans.
 
