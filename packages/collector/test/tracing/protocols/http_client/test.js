@@ -24,7 +24,12 @@ describe('tracing/http client', function() {
   this.timeout(config.getTestTimeout() * 2);
 
   agentControls.registerTestHooks({
-    extraHeaders: ['fooBaR'] // relevant for test "must not record custom headers"
+    extraHeaders: [
+      //
+      'X-My-Exit-Options-Request-Header',
+      'X-My-Exit-Set-On-Request-Header',
+      'X-My-Exit-Response-Header'
+    ]
   });
 
   describe('http', function() {
@@ -402,12 +407,11 @@ function registerTests(useHttps) {
         )
       ));
 
-  it('must not record custom headers', () =>
-    // only http entries are supposed to capture headers, not http exits
+  it('must capture request headers on outgoing HTTP calls via request options', () =>
     clientControls
       .sendRequest({
         method: 'GET',
-        path: '/request-options-only'
+        path: '/request-options-only?withHeader=request-via-options'
       })
       .then(() =>
         utils.retry(() =>
@@ -415,7 +419,52 @@ function registerTests(useHttps) {
             utils.expectOneMatching(spans, span => {
               expect(span.n).to.equal('node.http.client');
               expect(span.k).to.equal(constants.EXIT);
-              expect(span.data.http.header).to.not.exist;
+              expect(span.data.http.header).to.exist;
+              expect(span.data.http.header['x-my-exit-options-request-header']).to.equal(
+                'x-my-exit-options-request-header-value'
+              );
+              expect(span.data.http.url).to.match(/\/request-only-opts/);
+            });
+          })
+        )
+      ));
+
+  it('must capture request headers on outgoing HTTP calls when they are set on the request object', () =>
+    clientControls
+      .sendRequest({
+        method: 'GET',
+        path: '/request-options-only?withHeader=set-on-request'
+      })
+      .then(() =>
+        utils.retry(() =>
+          agentControls.getSpans().then(spans => {
+            utils.expectOneMatching(spans, span => {
+              expect(span.n).to.equal('node.http.client');
+              expect(span.k).to.equal(constants.EXIT);
+              expect(span.data.http.header).to.exist;
+              expect(span.data.http.header['x-my-exit-set-on-request-header']).to.equal(
+                'x-my-exit-set-on-request-header-value'
+              );
+              expect(span.data.http.url).to.match(/\/request-only-opts/);
+            });
+          })
+        )
+      ));
+
+  it('must capture response headers on outgoing HTTP calls', () =>
+    clientControls
+      .sendRequest({
+        method: 'GET',
+        path: '/request-options-only?withHeader=response'
+      })
+      .then(() =>
+        utils.retry(() =>
+          agentControls.getSpans().then(spans => {
+            utils.expectOneMatching(spans, span => {
+              expect(span.n).to.equal('node.http.client');
+              expect(span.k).to.equal(constants.EXIT);
+              expect(span.data.http.header).to.exist;
+              expect(span.data.http.header['x-my-exit-response-header']).to.equal('x-my-exit-response-header-value');
               expect(span.data.http.url).to.match(/\/request-only-opts/);
             });
           })

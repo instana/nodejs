@@ -2,6 +2,7 @@
 
 ## Unreleased
 - Support for new website monitoring/mobile back end correlation via extended X-INSTANA-L header.
+- Capture request and response headers on outgoing HTTP calls.
 
 ## 1.91.0
 - Support for [W3C Trace Context](https://www.w3.org/TR/trace-context/).

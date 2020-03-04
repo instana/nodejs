@@ -8,6 +8,7 @@ var URL = require('url').URL;
 
 var tracingUtil = require('../../tracingUtil');
 var urlUtil = require('../../../util/url');
+var httpCommon = require('./_http');
 var constants = require('../../constants');
 var cls = require('../../cls');
 var url = require('url');
@@ -15,9 +16,10 @@ var url = require('url');
 var discardUrlParameters = urlUtil.discardUrlParameters;
 var filterParams = urlUtil.filterParams;
 
+var extraHttpHeadersToCapture;
 var isActive = false;
 
-exports.init = function() {
+exports.init = function(config) {
   instrument(coreHttpModule);
 
   // Up until Node 8, the core https module uses the http module internally, so https calls are traced automatically
@@ -33,6 +35,11 @@ exports.init = function() {
   if (semver.gte(process.versions.node, '9.0.0') || process.versions.node === '8.9.0') {
     instrument(coreHttpsModule);
   }
+  extraHttpHeadersToCapture = config.tracing.http.extraHttpHeadersToCapture;
+};
+
+exports.updateConfig = function(config) {
+  extraHttpHeadersToCapture = config.tracing.http.extraHttpHeadersToCapture;
 };
 
 function instrument(coreModule) {
@@ -134,6 +141,11 @@ function instrument(coreModule) {
           status: res.statusCode,
           params: params
         };
+        var headers = captureRequestHeaders(options, clientRequest, res);
+
+        if (headers) {
+          span.data.http.header = headers;
+        }
         span.d = Date.now() - span.ts;
         span.error = res.statusCode >= 500;
         span.ec = span.error ? 1 : 0;
@@ -230,6 +242,10 @@ exports.activate = function() {
 
 exports.deactivate = function() {
   isActive = false;
+};
+
+exports.setExtraHttpHeadersToCapture = function setExtraHttpHeadersToCapture(_extraHeaders) {
+  extraHttpHeadersToCapture = _extraHeaders;
 };
 
 function constructFromUrlOpts(options, self) {
@@ -377,4 +393,15 @@ function dropLeadingQuestionMark(params) {
     return params.substring(1);
   }
   return params;
+}
+
+function captureRequestHeaders(options, clientRequest, response) {
+  var headers = httpCommon.getExtraHeadersCaseInsensitive(options, extraHttpHeadersToCapture);
+  headers = httpCommon.mergeExtraHeadersFromServerResponseOrClientResponse(
+    headers,
+    clientRequest,
+    extraHttpHeadersToCapture
+  );
+  headers = httpCommon.mergeExtraHeadersFromIncomingMessage(headers, response, extraHttpHeadersToCapture);
+  return headers;
 }

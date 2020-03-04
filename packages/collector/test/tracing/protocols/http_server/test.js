@@ -25,8 +25,8 @@ describe('tracing/http(s) server', function() {
   agentControls.registerTestHooks({
     extraHeaders: [
       //
-      'X-My-Fancy-Request-Header',
-      'X-My-Fancy-Response-Header',
+      'X-My-Entry-Request-Header',
+      'X-My-Entry-Response-Header',
       'X-Write-Head-Response-Header'
     ],
     secretsList: ['secret', 'Enigma', 'CIPHER']
@@ -192,7 +192,7 @@ function registerTests(useHttps) {
         method: 'GET',
         path: '/',
         headers: {
-          'X-MY-FANCY-REQUEST-HEADER': requestHeaderValue
+          'X-MY-ENTRY-REQUEST-HEADER': requestHeaderValue
         }
       })
       .then(() =>
@@ -200,7 +200,7 @@ function registerTests(useHttps) {
           agentControls.getSpans().then(spans => {
             const span = verifyThereIsExactlyOneHttpEntry(spans);
             expect(span.data.http.header).to.be.an('object');
-            expect(span.data.http.header['x-my-fancy-request-header']).to.equal(requestHeaderValue);
+            expect(span.data.http.header['x-my-entry-request-header']).to.equal(requestHeaderValue);
             expect(Object.keys(span.data.http.header)).to.have.lengthOf(1);
           })
         )
@@ -219,7 +219,7 @@ function registerTests(useHttps) {
           agentControls.getSpans().then(spans => {
             const span = verifyThereIsExactlyOneHttpEntry(spans);
             expect(span.data.http.header).to.be.an('object');
-            expect(span.data.http.header['x-my-fancy-response-header']).to.equal(expectedResponeHeaderValue);
+            expect(span.data.http.header['x-my-entry-response-header']).to.equal(expectedResponeHeaderValue);
             expect(Object.keys(span.data.http.header)).to.have.lengthOf(1);
           })
         )
@@ -253,7 +253,7 @@ function registerTests(useHttps) {
         method: 'GET',
         path: '/?responseHeader=true',
         headers: {
-          'X-MY-FANCY-REQUEST-HEADER': requestHeaderValue
+          'X-MY-ENTRY-REQUEST-HEADER': requestHeaderValue
         }
       })
       .then(() =>
@@ -261,8 +261,8 @@ function registerTests(useHttps) {
           agentControls.getSpans().then(spans => {
             const span = verifyThereIsExactlyOneHttpEntry(spans);
             expect(span.data.http.header).to.be.an('object');
-            expect(span.data.http.header['x-my-fancy-request-header']).to.equal(requestHeaderValue);
-            expect(span.data.http.header['x-my-fancy-response-header']).to.equal(expectedResponeHeaderValue);
+            expect(span.data.http.header['x-my-entry-request-header']).to.equal(requestHeaderValue);
+            expect(span.data.http.header['x-my-entry-response-header']).to.equal(expectedResponeHeaderValue);
             expect(Object.keys(span.data.http.header)).to.have.lengthOf(2);
           })
         )
@@ -279,7 +279,7 @@ function registerTests(useHttps) {
         method: 'GET',
         path: '/?responseHeader=true&writeHead=true',
         headers: {
-          'X-MY-FANCY-REQUEST-HEADER': requestHeaderValue
+          'X-MY-ENTRY-REQUEST-HEADER': requestHeaderValue
         }
       })
       .then(() =>
@@ -287,9 +287,9 @@ function registerTests(useHttps) {
           agentControls.getSpans().then(spans => {
             const span = verifyThereIsExactlyOneHttpEntry(spans);
             expect(span.data.http.header).to.be.an('object');
-            expect(span.data.http.header['x-my-fancy-request-header']).to.equal(requestHeaderValue);
+            expect(span.data.http.header['x-my-entry-request-header']).to.equal(requestHeaderValue);
             expect(span.data.http.header['x-write-head-response-header']).to.equal(expectedResponeHeaderValue1);
-            expect(span.data.http.header['x-my-fancy-response-header']).to.equal(expectedResponeHeaderValue2);
+            expect(span.data.http.header['x-my-entry-response-header']).to.equal(expectedResponeHeaderValue2);
             expect(Object.keys(span.data.http.header)).to.have.lengthOf(3);
           })
         )
