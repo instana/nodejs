@@ -15,13 +15,25 @@ exports.fromHttpRequest = function fromHttpRequest(req) {
 
   var xInstanaT = readInstanaTraceId(req);
   var xInstanaS = readInstanaParentId(req);
-  var level = readInstanaLevel(req);
+  var levelAndCorrelation = readLevelAndCorrelation(req);
+  var level = levelAndCorrelation.level;
+  var correlationType = levelAndCorrelation.correlationType;
+  var correlationId = levelAndCorrelation.correlationId;
   var w3cTraceContext = readW3cTraceContext(req);
+
+  if (correlationType && correlationId) {
+    // Ignore X-INSTANA-T/-S and force starting a new span if we received correlation info.
+    xInstanaT = null;
+    xInstanaS = null;
+  }
 
   if (isSuppressed(level)) {
     // Ignore X-INSTANA-T/-S if X-INSTANA-L: 0 is also present.
     xInstanaT = null;
     xInstanaS = null;
+    // Also discard correlation info when level is 0.
+    correlationType = null;
+    correlationId = null;
   }
 
   if (xInstanaT && xInstanaS && w3cTraceContext) {
@@ -31,6 +43,8 @@ exports.fromHttpRequest = function fromHttpRequest(req) {
       traceId: xInstanaT,
       parentId: xInstanaS,
       level: level,
+      correlationType: correlationType,
+      correlationId: correlationId,
       w3cTraceContext: w3cTraceContext
     };
     if (traceStateHasInstanaKeyValuePair(w3cTraceContext) && w3cTraceContext.traceStateHead) {
@@ -48,6 +62,8 @@ exports.fromHttpRequest = function fromHttpRequest(req) {
       traceId: xInstanaT,
       parentId: xInstanaS,
       level: level,
+      correlationType: correlationType,
+      correlationId: correlationId,
       w3cTraceContext: w3c.create(xInstanaT, xInstanaS, !isSuppressed(level))
     };
   } else if (w3cTraceContext) {
@@ -58,6 +74,8 @@ exports.fromHttpRequest = function fromHttpRequest(req) {
         traceId: !isSuppressed(level) ? w3cTraceContext.instanaTraceId : null,
         parentId: !isSuppressed(level) ? w3cTraceContext.instanaParentId : null,
         level: level,
+        correlationType: correlationType,
+        correlationId: correlationId,
         w3cTraceContext: w3cTraceContext,
         foreignParent: {
           t: w3cTraceContext.foreignTraceId,
@@ -75,6 +93,8 @@ exports.fromHttpRequest = function fromHttpRequest(req) {
         traceId: !isSuppressed(level) ? tracingUtil.generateRandomTraceId() : null,
         parentId: null,
         level: level,
+        correlationType: correlationType,
+        correlationId: correlationId,
         w3cTraceContext: w3cTraceContext,
         foreignParent: {
           t: w3cTraceContext.foreignTraceId,
@@ -87,8 +107,8 @@ exports.fromHttpRequest = function fromHttpRequest(req) {
     // Neither X-INSTANA- headers nor W3C trace context headers are present.
     // eslint-disable-next-line no-lonely-if
     if (isSuppressed(level)) {
-      // If tracing is suppressed an no headers are incoming, we need to create a new random parent ID (and pass it down
-      // in the traceparent header); this parent ID is not actually associated with any existing span (Instana or
+      // If tracing is suppressed and no headers are incoming, we need to create a new random parent ID (and pass it
+      // down in the traceparent header); this parent ID is not actually associated with any existing span (Instana or
       // foreign). This can't be helped, the spec mandates to always set the traceparent header on outgoing requests,
       // even if we didn't sample and it has to have a parent ID field.
       return {
@@ -112,6 +132,8 @@ exports.fromHttpRequest = function fromHttpRequest(req) {
         traceId: xInstanaT,
         parentId: null,
         level: level,
+        correlationType: correlationType,
+        correlationId: correlationId,
         w3cTraceContext: w3cTraceContext
         // We do not add foreignParent header here because we didn't receive any W3C trace context spec headers.
       };
@@ -135,8 +157,48 @@ function readInstanaParentId(req) {
   return xInstanaS;
 }
 
-function readInstanaLevel(req) {
-  return req.headers[constants.traceLevelHeaderNameLowerCase];
+function readLevelAndCorrelation(req) {
+  var xInstanaL = req.headers[constants.traceLevelHeaderNameLowerCase];
+  if (xInstanaL == null) {
+    // fast path for when we did not receive the header at all
+    return {};
+  }
+  if (xInstanaL.length === 1 && (xInstanaL === '0' || xInstanaL === '1')) {
+    // fast path for valid header without correlation information
+    return { level: xInstanaL };
+  } else if (xInstanaL.length === 1) {
+    // invalid value, ignore
+    return {};
+  }
+
+  var level = xInstanaL[0];
+  var correlationType = null;
+  var correlationId = null;
+  if (level !== '0' && level !== '1') {
+    level = null;
+  }
+
+  var parts = xInstanaL.split(',');
+  if (parts.length > 1) {
+    var idxType = parts[1].indexOf('correlationType=');
+    var idxSemi = parts[1].indexOf(';');
+    var idxId = parts[1].indexOf('correlationId=');
+    if (idxType >= 0 && idxSemi > 0 && idxId > 0) {
+      correlationType = parts[1].substring(idxType + 16, idxSemi);
+      if (correlationType) {
+        correlationType = correlationType.trim();
+      }
+      correlationId = parts[1].substring(idxId + 14);
+      if (correlationId) {
+        correlationId = correlationId.trim();
+      }
+    }
+  }
+  return {
+    level: level,
+    correlationType: correlationType,
+    correlationId: correlationId
+  };
 }
 
 function isSuppressed(level) {

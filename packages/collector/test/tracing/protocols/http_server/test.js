@@ -7,6 +7,7 @@ const constants = require('@instana/core').tracing.constants;
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('../../../../../core/test/config');
 const utils = require('../../../../../core/test/utils');
+const delay = require('../../../../../core/test/test_util/delay');
 
 let agentControls;
 let Controls;
@@ -62,6 +63,8 @@ function registerTests(useHttps) {
         utils.retry(() =>
           agentControls.getSpans().then(spans => {
             const span = verifyThereIsExactlyOneHttpEntry(spans, '/checkout', 'POST', 201);
+            expect(span.t).to.be.a('string');
+            expect(span.t).to.have.lengthOf(16);
             expect(span.p).to.not.exist;
           })
         )
@@ -112,6 +115,72 @@ function registerTests(useHttps) {
             const span = verifyThereIsExactlyOneHttpEntry(spans, '/checkout', 'POST', 201);
             expect(span.t).to.equal('6636f38f0f3dd0996636f38f0f3dd099');
             expect(span.p).to.equal('fb2bb293ac206c05');
+          })
+        )
+      ));
+
+  it(`must suppress (HTTPS: ${useHttps})`, () =>
+    controls
+      .sendRequest({
+        method: 'POST',
+        path: '/checkout',
+        qs: {
+          responseStatus: 201
+        },
+        headers: {
+          'X-INSTANA-L': '0'
+        }
+      })
+      .then(() => delay(500))
+      .then(() =>
+        agentControls.getSpans().then(spans => {
+          expect(spans).to.have.lengthOf(0);
+        })
+      ));
+
+  it(`must suppress when X-INSTANA-L has trailing content (HTTPS: ${useHttps})`, () =>
+    controls
+      .sendRequest({
+        method: 'POST',
+        path: '/checkout',
+        qs: {
+          responseStatus: 201
+        },
+        headers: {
+          'X-INSTANA-L': '0trailingcontet'
+        }
+      })
+      .then(() => delay(500))
+      .then(() =>
+        agentControls.getSpans().then(spans => {
+          expect(spans).to.have.lengthOf(0);
+        })
+      ));
+
+  it(`must start a new trace with correlation ID (HTTPS: ${useHttps})`, () =>
+    controls
+      .sendRequest({
+        method: 'POST',
+        path: '/checkout',
+        qs: {
+          responseStatus: 201
+        },
+        headers: {
+          'X-INSTANA-T': '84e588b697868fee',
+          'X-INSTANA-S': '5e734f51bce69eca',
+          'X-INSTANA-L': '1,correlationType=web;correlationId=abcdef0123456789'
+        }
+      })
+      .then(() =>
+        utils.retry(() =>
+          agentControls.getSpans().then(spans => {
+            const span = verifyThereIsExactlyOneHttpEntry(spans, '/checkout', 'POST', 201);
+            expect(span.t).to.be.a('string');
+            expect(span.t).to.have.lengthOf(16);
+            expect(span.t).to.not.equal('84e588b697868fee');
+            expect(span.p).to.not.exist;
+            expect(span.data.correlationType).to.equal('web');
+            expect(span.data.correlationId).to.equal('abcdef0123456789');
           })
         )
       ));

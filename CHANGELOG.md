@@ -1,5 +1,8 @@
 # Changelog
 
+## Unreleased
+- Support for new website monitoring/mobile back end correlation via extended X-INSTANA-L header.
+
 ## 1.91.0
 - Support for [W3C Trace Context](https://www.w3.org/TR/trace-context/).
 - Fix: Annotate path templates (Express.js, Koa, Hapi, ...) and error messages (Express.js) on all HTTP entry spans, not only on root spans.

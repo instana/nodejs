@@ -70,6 +70,10 @@ function shimEmit(realEmit) {
 
       var span = cls.startSpan(exports.spanName, constants.ENTRY, headers.traceId, headers.parentId, w3cTraceContext);
 
+      if (headers.correlationType && headers.correlationId) {
+        span.data.correlationType = headers.correlationType;
+        span.data.correlationId = headers.correlationId;
+      }
       if (headers.foreignParent) {
         span.fp = headers.foreignParent;
       }
