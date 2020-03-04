@@ -8,7 +8,7 @@ const semver = require('semver');
 const constants = require('@instana/core').tracing.constants;
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('../../../../../core/test/config');
-const delay = require('../../../test_util/delay');
+const delay = require('../../../../../core/test/test_util/delay');
 const utils = require('../../../../../core/test/utils');
 
 let agentControls;

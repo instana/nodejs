@@ -4,7 +4,7 @@
 
 const instana = require('../..');
 
-const delay = require('../../../serverless/test/util/delay');
+const delay = require('../../../core/test/test_util/delay');
 
 // In production, the package @instana/aws-lambda is located in
 // /var/task/node_modules/@instana/aws-lambda/src/metrics while the main package.json of the Lambda is in

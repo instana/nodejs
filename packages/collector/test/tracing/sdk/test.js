@@ -1,6 +1,5 @@
 'use strict';
 
-const delay = require('bluebird').delay;
 const expect = require('chai').expect;
 const fail = require('chai').assert.fail;
 
@@ -8,6 +7,7 @@ const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const constants = require('@instana/core').tracing.constants;
 const config = require('../../../../core/test/config');
 const utils = require('../../../../core/test/utils');
+const delay = require('../../../../core/test/test_util/delay');
 
 const waitForSpans = process.env.CI ? 1000 : 200;
 

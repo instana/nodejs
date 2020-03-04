@@ -7,7 +7,7 @@ const path = require('path');
 const constants = require('@instana/core').tracing.constants;
 
 const config = require('../../../serverless/test/config');
-const delay = require('../../../serverless/test/util/delay');
+const delay = require('../../../core/test/test_util/delay');
 const expectOneMatching = require('../../../serverless/test/util/expect_matching');
 const retry = require('../../../serverless/test/util/retry');
 

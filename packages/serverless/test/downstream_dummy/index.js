@@ -6,7 +6,7 @@ const morgan = require('morgan');
 const pino = require('pino')();
 
 const sendToParent = require('../util/send_to_parent');
-const delay = require('../util/delay');
+const delay = require('../../../core/test/test_util/delay');
 
 const logPrefix = 'downstream-dummy';
 const logger = pino.child({ name: logPrefix, pid: process.pid });

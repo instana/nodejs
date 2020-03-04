@@ -13,7 +13,7 @@ const morgan = require('morgan');
 const path = require('path');
 const request = require('request-promise');
 
-const delay = require('../../test_util/delay');
+const delay = require('../../../../core/test/test_util/delay');
 const DummyEmitter = require('./dummyEmitter');
 
 const app = express();
