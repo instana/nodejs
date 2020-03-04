@@ -33,6 +33,9 @@ app.get('/', (req, res) => {
   '/get-only-opts'
 ].forEach(p => {
   app.get(p, (req, res) => {
+    if (req.query && req.query.withHeader === 'response') {
+      res.setHeader('X-MY-EXIT-RESPONSE-HEADER', 'x-my-exit-response-header-value');
+    }
     res.sendStatus(200);
   });
 });

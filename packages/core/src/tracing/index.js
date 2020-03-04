@@ -17,7 +17,6 @@ var config = null;
 var extraHeaders = [];
 var processIdentityProvider = null;
 
-var httpServerInstrumentation = './instrumentation/protocols/httpServer';
 var instrumentations = [
   './instrumentation/control_flow/bluebird',
   './instrumentation/control_flow/graphqlSubscriptions',
@@ -49,7 +48,7 @@ var instrumentations = [
   './instrumentation/protocols/graphql',
   './instrumentation/protocols/grpc',
   './instrumentation/protocols/httpClient',
-  httpServerInstrumentation
+  './instrumentation/protocols/httpServer'
 ];
 var instrumentationModules = {};
 
@@ -166,7 +165,12 @@ exports._debugCurrentSpanName = function _debugCurrentSpanName() {
 
 exports.setExtraHttpHeadersToCapture = function setExtraHttpHeadersToCapture(_extraHeaders) {
   extraHeaders = _extraHeaders;
-  if (instrumentationModules[httpServerInstrumentation]) {
-    instrumentationModules[httpServerInstrumentation].setExtraHttpHeadersToCapture(extraHeaders);
-  }
+  instrumentations.forEach(function(instrumentationKey) {
+    if (
+      instrumentationModules[instrumentationKey] &&
+      typeof instrumentationModules[instrumentationKey].setExtraHttpHeadersToCapture === 'function'
+    ) {
+      instrumentationModules[instrumentationKey].setExtraHttpHeadersToCapture(extraHeaders);
+    }
+  });
 };

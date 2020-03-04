@@ -48,18 +48,35 @@ app.get('/request-url-only', (req, res) => {
 });
 
 app.get('/request-options-only', (req, res) => {
-  httpModule
-    .request(
-      {
-        hostname: '127.0.0.1',
-        port: process.env.SERVER_PORT,
-        method: 'GET',
-        path: `/request-only-opts${req.query.withQuery ? '?q1=some&pass=verysecret&q2=value' : ''}`,
-        rejectUnauthorized: false
-      },
-      () => res.sendStatus(200)
-    )
-    .end();
+  const downStreamQuery = {};
+  if (req.query.withQuery) {
+    downStreamQuery.q1 = 'some';
+    downStreamQuery.q2 = 'value';
+  }
+  if (req.query.withHeader === 'response') {
+    downStreamQuery.withHeader = 'response';
+  }
+  let downStreamQueryString = Object.keys(downStreamQuery)
+    .map(k => `${k}=${downStreamQuery[k]}`)
+    .join('&');
+  if (downStreamQueryString.length > 0) {
+    downStreamQueryString = `?${downStreamQueryString}`;
+  }
+  const downstreamRequest = {
+    hostname: '127.0.0.1',
+    port: process.env.SERVER_PORT,
+    method: 'GET',
+    path: `/request-only-opts${downStreamQueryString}`,
+    rejectUnauthorized: false
+  };
+  if (req.query.withHeader === 'request-via-options') {
+    downstreamRequest.headers = { 'x-my-exit-options-request-header': 'x-my-exit-options-request-header-value' };
+  }
+  const requestObject = httpModule.request(downstreamRequest, () => res.sendStatus(200));
+  if (req.query.withHeader === 'set-on-request') {
+    requestObject.setHeader('X-MY-EXIT-SET-ON-REQUEST-HEADER', 'x-my-exit-set-on-request-header-value');
+  }
+  requestObject.end();
 });
 
 app.get('/request-options-only-null-headers', (req, res) => {

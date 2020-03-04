@@ -62,7 +62,7 @@ server.on('request', (req, res) => {
   const delay = parseInt(query.delay || 0, 10);
 
   if (query.responseHeader) {
-    res.setHeader('X-MY-FANCY-RESPONSE-HEADER', 'Response Header Value');
+    res.setHeader('X-MY-ENTRY-RESPONSE-HEADER', 'Response Header Value');
   }
 
   if (delay === 0) {
