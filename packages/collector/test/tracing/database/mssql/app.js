@@ -25,6 +25,16 @@ const dbUser = process.env.MSSQL_USER ? process.env.MSSQL_USER : 'sa';
 const dbPassword = process.env.MSSQL_PW ? process.env.MSSQL_PW : 'stanCanHazMsSQL1';
 const initConnectString = `mssql://${dbUser}:${dbPassword}@${dbUrl}/tempdb`;
 const dbName = 'nodejscollector';
+const actualConnectString = `mssql://${dbUser}:${dbPassword}@${dbUrl}/${dbName}`;
+const connectConfig = {
+  user: dbUser,
+  password: dbPassword,
+  server: dbHost,
+  port: dbPort,
+  database: dbName
+};
+const connectionParam = Math.random() > 0.5 ? connectConfig : actualConnectString;
+
 let preparedStatementGlobal = new sql.PreparedStatement();
 let ready = false;
 
@@ -35,15 +45,7 @@ sql
   )
   .then(() => new sql.Request().query(`CREATE DATABASE ${dbName}`))
   .then(() => sql.close())
-  .then(() =>
-    sql.connect({
-      user: dbUser,
-      password: dbPassword,
-      server: dbHost,
-      port: dbPort,
-      database: dbName
-    })
-  )
+  .then(() => sql.connect(connectionParam))
   .then(_pool => {
     pool = _pool;
     return new sql.Request().query(
