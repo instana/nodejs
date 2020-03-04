@@ -55,13 +55,98 @@ describe('tracing/headers', () => {
     expect(w3cTraceContext.instanaParentId).to.equal(instanaSpanId);
   });
 
-  it('should read X-INSTANA-L', () => {
-    const context = tracingHeaders.fromHttpRequest({
-      headers: {
-        'x-instana-l': '0'
-      }
+  describe('X-INSTANA-L', () => {
+    it('should read level 0 from X-INSTANA-L', () => {
+      const context = tracingHeaders.fromHttpRequest({
+        headers: {
+          'x-instana-l': '0'
+        }
+      });
+      expect(context.level).to.equal('0');
     });
-    expect(context.level).to.equal('0');
+
+    it('should read level 1 from X-INSTANA-L', () => {
+      const context = tracingHeaders.fromHttpRequest({
+        headers: {
+          'x-instana-l': '1'
+        }
+      });
+      expect(context.level).to.equal('1');
+    });
+
+    it('should ignore invalid one char values from X-INSTANA-L', () => {
+      const context = tracingHeaders.fromHttpRequest({
+        headers: {
+          'x-instana-l': '2'
+        }
+      });
+      expect(context.level).to.not.exist;
+    });
+
+    it('should read level from X-INSTANA-L with trailing content', () => {
+      const context = tracingHeaders.fromHttpRequest({
+        headers: {
+          'x-instana-l': '0trailing'
+        }
+      });
+      expect(context.level).to.equal('0');
+    });
+
+    it('should ignore invalid level in X-INSTANA-L with trailing content', () => {
+      const context = tracingHeaders.fromHttpRequest({
+        headers: {
+          'x-instana-l': '2trailing'
+        }
+      });
+      expect(context.level).to.not.exist;
+    });
+
+    it('should read level and correlation info from X-INSTANA-L', () => {
+      const context = tracingHeaders.fromHttpRequest({
+        headers: {
+          'x-instana-l': '1,correlationType=web;correlationId=abcdef123456789'
+        }
+      });
+      expect(context.level).to.equal('1');
+      expect(context.correlationType).to.equal('web');
+      expect(context.correlationId).to.equal('abcdef123456789');
+    });
+
+    it('should read level and correlation info from X-INSTANA-L with whitespaces', () => {
+      const context = tracingHeaders.fromHttpRequest({
+        headers: {
+          'x-instana-l': '1 ,  correlationType=  web  ;  correlationId=  abcdef123456789  '
+        }
+      });
+      expect(context.level).to.equal('1');
+      expect(context.correlationType).to.equal('web');
+      expect(context.correlationId).to.equal('abcdef123456789');
+    });
+
+    it('should ignore X-INSTANA-T/-S when correlation info is present', () => {
+      const context = tracingHeaders.fromHttpRequest({
+        headers: {
+          'x-instana-l': '1,correlationType=web;correlationId=abcdef123456789',
+          'x-instana-t': instana32CharTraceId,
+          'x-instana-s': instanaSpanId
+        }
+      });
+      expect(context.traceId).to.be.a('string');
+      expect(context.traceId).to.have.lengthOf(16);
+      expect(context.traceId).to.not.equal(instana32CharTraceId);
+      expect(context.parentId).to.not.exist;
+    });
+
+    it('should discard correlation info is not sampling', () => {
+      const context = tracingHeaders.fromHttpRequest({
+        headers: {
+          'x-instana-l': '0,correlationType=web;correlationId=abcdef123456789'
+        }
+      });
+      expect(context.level).to.equal('0');
+      expect(context.correlationType).to.not.exist;
+      expect(context.correlationId).to.not.exist;
+    });
   });
 
   it('should read W3C trace context headers without an in key-value pair', () => {
