@@ -7,7 +7,7 @@ const { Kafka } = require('kafkajs');
 const request = require('request-promise');
 const uuid = require('uuid/v4');
 
-const delay = require('../../../test_util/delay');
+const delay = require('../../../../../core/test/test_util/delay');
 
 const appPort = process.env.APP_PORT || 3215;
 const agentPort = process.env.INSTANA_AGENT_PORT || 42699;

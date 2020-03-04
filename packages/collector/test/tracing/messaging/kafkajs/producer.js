@@ -9,7 +9,7 @@ const bodyParser = require('body-parser');
 const express = require('express');
 const { Kafka } = require('kafkajs');
 
-const delay = require('../../../test_util/delay');
+const delay = require('../../../../../core/test/test_util/delay');
 
 const appPort = process.env.APP_PORT || 3216;
 const agentPort = process.env.INSTANA_AGENT_PORT || 42699;
