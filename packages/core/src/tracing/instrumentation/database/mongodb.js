@@ -12,7 +12,10 @@ var isActive = false;
 var commands = ['delete', 'find', 'findAndModify', 'getMore', 'insert', 'update'];
 
 exports.init = function() {
+  // mongodb >= 3.3.x
   requireHook.onFileLoad(/\/mongodb\/lib\/core\/connection\/pool.js/, instrumentPool);
+  // mongodb < 3.3.x
+  requireHook.onFileLoad(/\/mongodb-core\/lib\/connection\/pool.js/, instrumentPool);
 };
 
 function instrumentPool(Pool) {
@@ -38,8 +41,8 @@ function instrumentedWrite(ctx, originalWrite, originalArgs) {
     return originalWrite.apply(ctx, originalArgs);
   }
 
-  // mongodb/lib/core/connection/pool.js#write throws a sync error if there is no callback, so we can safely assume
-  // there is one. If there isn't one, we wouldn't be able to finish the span, so we won't start one.
+  // pool.js#write throws a sync error if there is no callback, so we can safely assume there is one. If there no
+  // callback, we wouldn't be able to finish the span, so we won't start one.
   var originalCallback;
   var callbackIndex = -1;
   for (var i = 1; i < originalArgs.length; i++) {
@@ -78,24 +81,36 @@ function instrumentedWrite(ctx, originalWrite, originalArgs) {
         port = message.options.session.topology.s.port;
       }
 
-      var cmdObj = message ? message.command : null;
-      if (cmdObj.collection) {
-        // only getMore commands have the collection attribute
-        collection = cmdObj.collection;
+      if ((!hostname || !port) && ctx.options) {
+        // fallback for older versions of mongodb package
+        if (!hostname) {
+          hostname = ctx.options.host;
+        }
+        if (!port) {
+          port = ctx.options.port;
+        }
+      }
+
+      var cmdObj = message.command;
+      if (!cmdObj) {
+        // fallback for older mongodb versions
+        cmdObj = message.query;
       }
       if (cmdObj) {
-        for (var j = 0; j < commands.length; j++) {
-          if (cmdObj[commands[j]]) {
-            command = commands[j];
-            if (typeof cmdObj[commands[j]] === 'string') {
-              // most commands (except for getMore) add the collection as the value for the command-specific key
-              collection = cmdObj[commands[j]];
-            }
-            break;
-          }
+        if (cmdObj.collection) {
+          // only getMore commands have the collection attribute
+          collection = cmdObj.collection;
         }
-
+        if (!collection) {
+          collection = findCollection(cmdObj);
+        }
+        command = findCommand(cmdObj);
         database = cmdObj.$db;
+      }
+
+      if (!database && typeof message.ns === 'string') {
+        // fallback for older mongodb versions
+        database = message.ns.split('.')[0];
       }
     }
 
@@ -147,11 +162,34 @@ function instrumentedWrite(ctx, originalWrite, originalArgs) {
   });
 }
 
+function findCollection(cmdObj) {
+  for (var j = 0; j < commands.length; j++) {
+    if (cmdObj[commands[j]] && typeof cmdObj[commands[j]] === 'string') {
+      // most commands (except for getMore) add the collection as the value for the command-specific key
+      return cmdObj[commands[j]];
+    }
+  }
+}
+
+function findCommand(cmdObj) {
+  for (var j = 0; j < commands.length; j++) {
+    if (cmdObj[commands[j]]) {
+      return commands[j];
+    }
+  }
+}
+
 function readJsonOrFilter(message, span) {
-  if (!message || !message.command) {
+  if (!message) {
     return;
   }
   var cmdObj = message.command;
+  if (!cmdObj) {
+    cmdObj = message.query;
+  }
+  if (!cmdObj) {
+    return;
+  }
   var json;
   var filter = cmdObj.filter || cmdObj.query;
 
