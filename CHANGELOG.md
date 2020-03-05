@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.92.0
 - Support for new website monitoring/mobile back end correlation via extended X-INSTANA-L header.
 - Capture request and response headers on outgoing HTTP calls.
 
