@@ -52,7 +52,7 @@ exports.expectOneMatching = function expectOneMatching(arr, fn) {
     throw new Error(
       `Could not find an item which matches all the criteria. Got ${arr.length} items. Last error: ${
         error.message
-      }. All Items:\n${exports.stringifySpans(arr)}. Error stack trace: ${stack}`
+      }. All Items:\n${exports.stringifyItems(arr)}. Error stack trace: ${stack}`
     );
   }
 };
@@ -61,32 +61,33 @@ exports.retryUntilSpansMatch = function retryUntilSpansMatch(agentControls, fn) 
   return exports.retry(() => agentControls.getSpans().then(spans => fn(spans)));
 };
 
-exports.stringifySpans = function stringifySpans(spans) {
-  if (spans === null) {
+exports.stringifyItems = function stringifyItems(items) {
+  if (items === null) {
     return 'null';
-  } else if (spans === undefined) {
+  } else if (items === undefined) {
     return 'undefined';
-  } else if (!spans) {
-    return JSON.stringify(spans);
-  } else if (Array.isArray(spans)) {
-    const shortenedSpans = spans.map(shortenStackTrace);
+  } else if (!items) {
+    return JSON.stringify(items);
+  } else if (Array.isArray(items)) {
+    const shortenedSpans = items.map(shortenStackTrace);
     if (shortenedSpans.length > MAX_SPANS_IN_ERROR) {
-      return `!! Only listing the first ${MAX_SPANS_IN_ERROR} of ${spans.length} total spans: ${JSON.stringify(
+      return `!! Only listing the first ${MAX_SPANS_IN_ERROR} of ${items.length} total items: ${JSON.stringify(
         shortenedSpans.slice(0, MAX_SPANS_IN_ERROR),
         null,
         2
       )}`;
     }
     return JSON.stringify(shortenedSpans, null, 2);
-  } else if (spans.n) {
-    return JSON.stringify(shortenStackTrace(spans), null, 2);
   } else {
-    return JSON.stringify(spans, null, 2);
+    return JSON.stringify(shortenStackTrace(items), null, 2);
   }
 };
 
-function shortenStackTrace(span) {
-  const clone = Object.assign({}, span);
+function shortenStackTrace(item) {
+  if (!item.stack) {
+    return item;
+  }
+  const clone = Object.assign({}, item);
   clone.stack = '<redacted for readability in mocha output>';
   return clone;
 }
