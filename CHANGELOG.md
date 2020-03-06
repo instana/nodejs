@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.92.2
 - Do not remove tags from lower priority spans when changing the span type (e.g. http -> graphql)
 
 ## 1.92.1
