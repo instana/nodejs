@@ -178,9 +178,13 @@ describe('tracing/graphql', function() {
 });
 
 function registerQuerySuite({ apollo, withError, queryShorthand, useAlias, communicationProtocol }) {
-  // prettier-ignore
-  describe(`queries (apollo: ${apollo}, with error: ${withError}, shorthand: ${queryShorthand}, alias: ${useAlias}, ` +
-      `over: ${communicationProtocol})`, function() {
+  const titleSuffix =
+    `(${apollo ? 'apollo' : 'raw'}, ` +
+    `${withError ? 'with error' : 'without error'}, ` +
+    `${queryShorthand ? 'query shorthand' : 'no query shorthand'}, ` +
+    `${useAlias ? 'alias' : 'no alias'}, ` +
+    `over ${communicationProtocol})`;
+  describe(`queries ${titleSuffix}`, function() {
     agentControls.registerTestHooks();
     const serverControls = apollo
       ? new ApolloServerControls({ agentControls })
@@ -194,29 +198,14 @@ function registerQuerySuite({ apollo, withError, queryShorthand, useAlias, commu
     });
     clientControls.registerTestHooks();
 
-    it(
-      'must trace a query with a value resolver ' +
-        `(apollo: ${apollo}, with error: ${withError}, shorthand: ${queryShorthand}, alias: ${useAlias}, ` +
-        `over: ${communicationProtocol})`, () => testQuery(clientControls, 'value')
-    );
+    it(`must trace a query with a value resolver ${titleSuffix}`, () => testQuery(clientControls, 'value'));
 
-    it(
-      'must trace a query with a promise resolver ' +
-        `(apollo: ${apollo}, with error: ${withError}, shorthand: ${queryShorthand}, alias: ${useAlias}, ` +
-        `over: ${communicationProtocol})`, () => testQuery(clientControls, 'promise')
-    );
+    it(`must trace a query with a promise resolver ${titleSuffix}`, () => testQuery(clientControls, 'promise'));
 
-    it(
-      'must trace a query which resolves to an array of promises ' +
-        `(apollo: ${apollo}, with error: ${withError}, shorthand: ${queryShorthand}, alias: ${useAlias}, ` +
-        `over: ${communicationProtocol})`, () => testQuery(clientControls, 'array')
-    );
+    it(`must trace a query which resolves to an array of promises ${titleSuffix}`, () =>
+      testQuery(clientControls, 'array'));
 
-    it(
-      'must trace a query with multiple entities ' +
-        `(apollo: ${apollo}, with error: ${withError}, shorthand: ${queryShorthand}, alias: ${useAlias}, ` +
-        `over: ${communicationProtocol})`, () => testQuery(clientControls, 'promise', true)
-    );
+    it(`must trace a query with multiple entities ${titleSuffix}`, () => testQuery(clientControls, 'promise', true));
   });
 
   function testQuery(clientControls, resolverType, multipleEntities) {
@@ -264,7 +253,7 @@ function registerQuerySuite({ apollo, withError, queryShorthand, useAlias, commu
 }
 
 function registerMutationSuite(apollo) {
-  describe(`mutations (apollo: ${apollo})`, function() {
+  describe(`mutations (${apollo ? 'apollo' : 'raw'})`, function() {
     agentControls.registerTestHooks();
     const serverControls = apollo
       ? new ApolloServerControls({ agentControls })
@@ -278,7 +267,7 @@ function registerMutationSuite(apollo) {
     });
     clientControls.registerTestHooks();
 
-    it(`must trace a mutation (apollo: ${apollo})`, () => testMutation(clientControls));
+    it(`must trace a mutation (${apollo ? 'apollo' : 'raw'})`, () => testMutation(clientControls));
   });
 
   function testMutation(clientControls) {
@@ -290,13 +279,13 @@ function registerMutationSuite(apollo) {
       })
       .then(response => {
         checkMutationResponse(response);
-        return utils.retry(() => agentControls.getSpans().then(verifySpansForMutation.bind(null)));
+        return utils.retry(() => agentControls.getSpans().then(verifySpansForMutation));
       });
   }
 }
 
 function registerSubscriptionOperationNotTracedSuite(apollo) {
-  describe(`subscriptions (apollo: ${apollo})`, function() {
+  describe(`subscriptions (${apollo ? 'apollo' : 'raw'})`, function() {
     agentControls.registerTestHooks();
     const serverControls = apollo
       ? new ApolloServerControls({ agentControls })
@@ -310,7 +299,7 @@ function registerSubscriptionOperationNotTracedSuite(apollo) {
     });
     clientControls.registerTestHooks();
 
-    it(`must not trace the subscription establishment (apollo: ${apollo})`, () =>
+    it(`must not trace the subscription establishment (${apollo ? 'apollo' : 'raw'})`, () =>
       testSubscriptionIsNotTraced(clientControls));
   });
 
@@ -565,7 +554,11 @@ function verifyAmqpExit(parentSpan, queueName, spans) {
   });
 }
 
-function verifyGraphQLQueryEntry({ entityName, withError, queryShorthand, multipleEntities }, parentSpan, spans) {
+function verifyGraphQLQueryEntry(
+  { entityName, withError, queryShorthand, multipleEntities, communicationProtocol },
+  parentSpan,
+  spans
+) {
   return utils.expectOneMatching(spans, span => {
     expect(span.n).to.equal('graphql.server');
     expect(span.k).to.equal(constants.ENTRY);
@@ -613,6 +606,19 @@ function verifyGraphQLQueryEntry({ entityName, withError, queryShorthand, multip
       expect(span.data.graphql.fields.ships).to.deep.equal(['id', 'name', 'origin']);
       expect(span.data.graphql.args.ships).to.not.exist;
     }
+
+    if (communicationProtocol === 'http') {
+      expect(span.data.http).to.be.an('object');
+      expect(span.data.http.url).to.match(/\/graphql/);
+      expect(span.data.http.method).to.equal('POST');
+    } else if (communicationProtocol === 'amqp') {
+      expect(span.data.rabbitmq).to.be.an('object');
+      expect(span.data.rabbitmq.sort).to.equal('consume');
+      expect(span.data.rabbitmq.address).to.equal('amqp://127.0.0.1:5672');
+      expect(span.data.rabbitmq.key).to.equal('graphql-request-queue');
+    } else {
+      throw new Error(`Unknown protocol: ${communicationProtocol}`);
+    }
   });
 }
 
@@ -635,6 +641,10 @@ function verifyGraphQLMutationEntry(parentSpan, spans) {
     expect(span.data.graphql.args).to.exist;
     expect(span.data.graphql.fields.updateCharacter).to.deep.equal(['name', 'profession']);
     expect(span.data.graphql.args.updateCharacter).to.deep.equal(['input']);
+
+    expect(span.data.http).to.be.an('object');
+    expect(span.data.http.url).to.match(/\/graphql/);
+    expect(span.data.http.method).to.equal('POST');
   });
 }
 
