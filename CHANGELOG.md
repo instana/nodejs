@@ -1,5 +1,8 @@
 # Changelog
 
+## Unreleased
+- Do not remove tags from lower priority spans when changing the span type (e.g. http -> graphql)
+
 ## 1.92.1
 - Fix mongodb tracing for outdated versions of the mongodb package.
 

@@ -121,7 +121,6 @@ function traceQueryOrMutation(
     // entry span still have the the correct parent span ID.
     span = activeEntrySpan;
     span.n = 'graphql.server';
-    span.resetData();
   }
 
   return cls.ns.runAndReturn(function() {
