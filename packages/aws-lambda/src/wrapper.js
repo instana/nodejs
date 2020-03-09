@@ -191,13 +191,12 @@ function shimmedHandler(originalHandler, originalThis, originalArgs, _config) {
  * Initialize the wrapper.
  */
 function init(event, arnInfo, _config) {
-  /* eslint-disable dot-notation */
   config = _config || {};
 
   if (config.logger) {
     logger = config.logger;
-  } else if (config.level || process.env['INSTANA_LOG_LEVEL']) {
-    logger.setLevel(config.level || process.env['INSTANA_LOG_LEVEL']);
+  } else if (process.env.INSTANA_DEBUG || config.level || process.env.INSTANA_LOG_LEVEL) {
+    logger.setLevel(process.env.INSTANA_DEBUG ? 'debug' : config.level || process.env.INSTANA_LOG_LEVEL);
   }
   identityProvider.init(arnInfo);
   backendConnector.init(identityProvider, logger);
