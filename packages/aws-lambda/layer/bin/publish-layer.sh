@@ -25,9 +25,9 @@ EOF
 }
 
 PACKAGE_NAMES="@instana/aws-lambda instana-aws-lambda-auto-wrap"
-LAYER_NAME=instana
+LAYER_NAME=instana-nodejs
 LICENSE=MIT
-ZIP_PREFIX=instana-layer
+ZIP_PREFIX=instana-nodejs-layer
 ZIP_NAME=$ZIP_PREFIX.zip
 TMP_ZIP_DIR=tmp
 
@@ -97,7 +97,7 @@ while read -r region; do
     if [[ -n $LAMBDA_DOCS_PAGE_PATH ]]; then
       if [[ -f $LAMBDA_DOCS_PAGE_PATH ]]; then
         echo "Updating: $LAMBDA_DOCS_PAGE_PATH"
-        sed -i '' "s/arn:aws:lambda:$region:\([0-9]*\):layer:instana:[0-9][0-9]*\` | v[0-9\.][0-9\.]* |/arn:aws:lambda:$region:\1:layer:instana:$lambda_layer_version\` | v$VERSION |/g" $LAMBDA_DOCS_PAGE_PATH
+        sed -i '' "s/arn:aws:lambda:$region:\([0-9]*\):layer:instana-nodejs:[0-9][0-9]*\` | v[0-9\.][0-9\.]* |/arn:aws:lambda:$region:\1:layer:instana-nodejs:$lambda_layer_version\` | v$VERSION |/g" $LAMBDA_DOCS_PAGE_PATH
         echo "Updated $LAMBDA_DOCS_PAGE_PATH – do not forget to commit and push that change."
       else
         echo "Not found: $LAMBDA_DOCS_PAGE_PATH. Will not update documenation."
