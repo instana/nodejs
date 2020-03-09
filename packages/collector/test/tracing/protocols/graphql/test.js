@@ -565,7 +565,7 @@ function verifyGraphQLQueryEntry(
     expect(span.t).to.equal(parentSpan.t);
     expect(span.p).to.equal(parentSpan.s);
     expect(span.ts).to.be.a('number');
-    expect(span.d).to.be.a('number');
+    expect(span.d).to.be.greaterThan(0);
     expect(span.stack).to.be.an('array');
 
     expect(span.data.graphql).to.exist;
@@ -629,7 +629,7 @@ function verifyGraphQLMutationEntry(parentSpan, spans) {
     expect(span.t).to.equal(parentSpan.t);
     expect(span.p).to.equal(parentSpan.s);
     expect(span.ts).to.be.a('number');
-    expect(span.d).to.be.a('number');
+    expect(span.d).to.be.greaterThan(0);
     expect(span.stack).to.be.an('array');
     expect(span.data.graphql).to.exist;
     expect(span.data.graphql.operationType).to.equal('mutation');
