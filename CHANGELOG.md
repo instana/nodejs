@@ -1,8 +1,8 @@
 # Changelog
 
-## Unreleased
+## 1.92.3
 - Always capture duration of GraphQL calls.
-- Support INSTANA_DEBUG in native serverless tracing.
+- Support `INSTANA_DEBUG` in native serverless tracing.
 
 ## 1.92.2
 - Do not remove tags from lower priority spans when changing the span type (e.g. http -> graphql)
