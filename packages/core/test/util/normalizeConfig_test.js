@@ -110,11 +110,13 @@ describe('util.normalizeConfig', () => {
     const config = normalizeConfig({
       tracing: {
         maxBufferedSpans: 13,
-        forceTransmissionStartingAt: 2
+        forceTransmissionStartingAt: 2,
+        transmissionDelay: 9753
       }
     });
     expect(config.tracing.maxBufferedSpans).to.equal(13);
     expect(config.tracing.forceTransmissionStartingAt).to.equal(2);
+    expect(config.tracing.transmissionDelay).to.equal(9753);
   });
 
   it('should use extra http headers (and normalize to lower case)', () => {
@@ -244,6 +246,7 @@ describe('util.normalizeConfig', () => {
     expect(config.tracing.enabled).to.be.true;
     expect(config.tracing.automaticTracingEnabled).to.be.true;
     expect(config.tracing.disableAutomaticTracing).to.not.exist;
+    expect(config.tracing.transmissionDelay).to.equal(1000);
     expect(config.tracing.forceTransmissionStartingAt).to.equal(500);
     expect(config.tracing.maxBufferedSpans).to.equal(1000);
     expect(config.tracing.disabledTracers).to.deep.equal([]);

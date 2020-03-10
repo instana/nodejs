@@ -3,18 +3,21 @@
 // eslint-disable-next-line import/order
 const environmentUtil = require('./environment');
 
-// backend_connector is required from aws_lambda/wrapper before initializing @instana/core, that is, in particular,
-// before tracing is initialized. Thus we always get an uninstrumented https module here.
-const https = environmentUtil.sendUnencrypted ? require('http') : require('https');
+const uninstrumented = require('@instana/core').uninstrumentedHttp;
+
 const semver = require('semver');
 
 const constants = require('./constants');
 let logger = require('./console_logger');
 
+const https = environmentUtil.sendUnencrypted ? uninstrumented.http : uninstrumented.https;
+
 const timeoutEnvVar = 'INSTANA_TIMEOUT';
 const defaultTimeout = 500;
 let backendTimeout = defaultTimeout;
 
+const stopSendingOnFailure = true;
+let requestHasFailed = false;
 let warningsHaveBeenLogged = false;
 
 const needsEcdhCurveFix = semver.lt(process.version, '10.0.0');
@@ -53,6 +56,14 @@ exports.sendSpans = function sendSpans(spans, callback) {
 };
 
 function send(resourcePath, payload, callback) {
+  if (requestHasFailed && stopSendingOnFailure) {
+    logger.info(
+      `Not attempting to send data to ${resourcePath} as a previous request has already timed out or failed.`
+    );
+
+    callback();
+    return;
+  }
   if (!warningsHaveBeenLogged) {
     warningsHaveBeenLogged = true;
     if (environmentUtil.sendUnencrypted) {
@@ -106,6 +117,7 @@ function send(resourcePath, payload, callback) {
   const req = https.request(options);
 
   req.setTimeout(backendTimeout, () => {
+    requestHasFailed = true;
     callback(
       new Error(
         `The Instana back end did not respond in the configured timeout of ${backendTimeout} ms. The timeout can be ` +
@@ -115,6 +127,7 @@ function send(resourcePath, payload, callback) {
   });
 
   req.on('error', e => {
+    requestHasFailed = true;
     callback(e);
   });
 

@@ -23,7 +23,7 @@
     "url": "git+https://github.com/instana/nodejs-sensor.git"
   },
   "scripts": {
-    "audit": "npm audit --production",
+    "audit": "bin/prepare-audit.sh && npm audit --production; AUDIT_RESULT=$?; git checkout package-lock.json; exit $AUDIT_RESULT",
     "test": "npm run test:mocha",
     "test:mocha": "mocha --reporter spec $(find test -iname '*test.js')",
     "test:debug": "WITH_STDOUT=true npm run test:mocha",
@@ -56,6 +56,7 @@
   },
   "license": "MIT",
   "dependencies": {
+    "@instana/core": "^1.92.3",
     "semver": "^5.6.0"
   },
   "devDependencies": {

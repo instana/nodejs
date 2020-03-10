@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+- [AWS Lambda] Do not try to send data to the Instana back end when a previous request to it has already failed.
+- [AWS Lambda] Change span offloading intervall to 5 seconds.
+- [AWS Lambda] Make sure that an uninstrumented https connection is used for span offloading.
+
 ## 1.92.3
 - Always capture duration of GraphQL calls.
 - Support `INSTANA_DEBUG` in native serverless tracing.

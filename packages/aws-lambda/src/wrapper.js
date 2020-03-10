@@ -198,6 +198,17 @@ function init(event, arnInfo, _config) {
   } else if (process.env.INSTANA_DEBUG || config.level || process.env.INSTANA_LOG_LEVEL) {
     logger.setLevel(process.env.INSTANA_DEBUG ? 'debug' : config.level || process.env.INSTANA_LOG_LEVEL);
   }
+
+  // @instana/collector sends span data every second. To reduce HTTP overhead, in particular for long running Lambdas,
+  // we throttle this back to once every 5 seconds. We guarantee to send everything (metrics and all remaining spans)
+  // with POST /bundle after the Lambda handler has finished.
+  if (!config.tracing) {
+    config.tracing = {};
+  }
+  if (config.tracing.transmissionDelay == null) {
+    config.tracing.transmissionDelay = 5000;
+  }
+
   identityProvider.init(arnInfo);
   backendConnector.init(identityProvider, logger);
 

@@ -94,7 +94,7 @@ function registerTests(handlerDefinitionPath) {
   describe('when everything is peachy', function() {
     // - INSTANA_ENDPOINT_URL is configured
     // - INSTANA_AGENT_KEY is configured
-    // - backend is reachable
+    // - back end is reachable
     // - lambda function ends with success
     const control = prelude.bind(this)({
       handlerDefinitionPath,
@@ -110,7 +110,7 @@ function registerTests(handlerDefinitionPath) {
     // - function is called with alias
     // - INSTANA_ENDPOINT_URL is configured
     // - INSTANA_AGENT_KEY is configured
-    // - backend is reachable
+    // - back end is reachable
     // - lambda function ends with success
     const control = prelude.bind(this)({
       handlerDefinitionPath,
@@ -126,7 +126,7 @@ function registerTests(handlerDefinitionPath) {
   describe('when deprecated env var keys are used', function() {
     // - INSTANA_URL is configured (instead of INSTANA_ENDPOINT_URL)
     // - INSTANA_KEY is configured (instead of INSTANA_AGENT_KEY)
-    // - backend is reachable
+    // - back end is reachable
     // - lambda function ends with success
     const control = prelude.bind(this)({
       handlerDefinitionPath,
@@ -140,7 +140,7 @@ function registerTests(handlerDefinitionPath) {
 
   describe('when lambda function yields an error', function() {
     // - INSTANA_ENDPOINT_URL is configured
-    // - backend is reachable
+    // - back end is reachable
     // - lambda function ends with an error
     const control = prelude.bind(this)({
       handlerDefinitionPath,
@@ -155,7 +155,7 @@ function registerTests(handlerDefinitionPath) {
 
   describe('when lambda function throws a synchronous error', function() {
     // - INSTANA_ENDPOINT_URL is configured
-    // - backend is reachable
+    // - back end is reachable
     // - lambda function ends with an error
     const control = prelude.bind(this)({
       handlerDefinitionPath,
@@ -170,7 +170,7 @@ function registerTests(handlerDefinitionPath) {
 
   describe('with config', function() {
     // - INSTANA_ENDPOINT_URL is configured
-    // - backend is reachable
+    // - back end is reachable
     // - client provides a config object
     // - lambda function ends with success
     const control = prelude.bind(this)({
@@ -186,7 +186,7 @@ function registerTests(handlerDefinitionPath) {
 
   describe('with config, when lambda function yields an error', function() {
     // - INSTANA_ENDPOINT_URL is configured
-    // - backend is reachable
+    // - back end is reachable
     // - client provides a config object
     // - lambda function ends with an error
     const control = prelude.bind(this)({
@@ -265,9 +265,9 @@ function registerTests(handlerDefinitionPath) {
       verify(control, { error: 'lambda-asynchronous', expectMetrics: false, expectSpans: false }));
   });
 
-  describe('when backend is down', function() {
+  describe('when the back end is down', function() {
     // - INSTANA_ENDPOINT_URL is configured
-    // - backend is not reachable
+    // - back end is not reachable
     // - lambda function ends with success
     const control = prelude.bind(this)({
       handlerDefinitionPath,
@@ -280,9 +280,9 @@ function registerTests(handlerDefinitionPath) {
       verify(control, { error: false, expectMetrics: false, expectSpans: false }));
   });
 
-  describe('when backend is down and the lambda function yields an error', function() {
+  describe('when the back end is down and the lambda function yields an error', function() {
     // - INSTANA_ENDPOINT_URL is configured
-    // - backend is not reachable
+    // - back end is not reachable
     // - lambda function ends with an error
     const control = prelude.bind(this)({
       handlerDefinitionPath,
@@ -296,9 +296,9 @@ function registerTests(handlerDefinitionPath) {
       verify(control, { error: 'lambda-asynchronous', expectMetrics: false, expectSpans: false }));
   });
 
-  describe('when backend is reachable but does not respond', function() {
+  describe('when the back end is reachable but does not respond', function() {
     // - INSTANA_ENDPOINT_URL is configured
-    // - backend is reachable, but will never respond (verifies that a reasonable timeout is applied -
+    // - back end is reachable, but will never respond (verifies that a reasonable timeout is applied -
     //   the default timeout would be two minutes)
     // - lambda function ends with success
     const control = prelude.bind(this)({

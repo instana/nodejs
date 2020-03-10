@@ -51,7 +51,7 @@ describe('Using the API', () => {
   describe('when everything is peachy', function() {
     // - INSTANA_ENDPOINT_URL is configured
     // - INSTANA_AGENT_KEY is configured
-    // - backend is reachable
+    // - back end is reachable
     // - lambda function ends with success
     const control = prelude.bind(this)({
       handlerDefinitionPath,
@@ -64,7 +64,7 @@ describe('Using the API', () => {
 
   describe('when lambda function yields an error', function() {
     // - INSTANA_ENDPOINT_URL is configured
-    // - backend is reachable
+    // - back end is reachable
     // - lambda function ends with an error
     const control = prelude.bind(this)({
       handlerDefinitionPath,
@@ -78,7 +78,7 @@ describe('Using the API', () => {
 
   describe('with config', function() {
     // - INSTANA_ENDPOINT_URL is configured
-    // - backend is reachable
+    // - back end is reachable
     // - client provides a config object
     // - lambda function ends with success
     const control = prelude.bind(this)({
@@ -93,7 +93,7 @@ describe('Using the API', () => {
 
   describe('with config, when lambda function yields an error', function() {
     // - INSTANA_ENDPOINT_URL is configured
-    // - backend is reachable
+    // - back end is reachable
     // - client provides a config object
     // - lambda function ends with an error
     const control = prelude.bind(this)({

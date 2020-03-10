@@ -12,6 +12,7 @@ const config = require('../config');
 
 function Control(opts = {}) {
   this.opts = opts;
+  this.opts.timeout = this.opts.timeout || config.getTestTimeout();
   this.reset();
 }
 
@@ -73,6 +74,7 @@ Control.prototype.registerTestHooks = function registerTestHooks() {
 
     return Promise.all([backendPromise, downstreamDummyPromise])
       .then(() => {
+        this.startedAt = Date.now();
         this.faasRuntime = fork(this.opts.faasRuntimePath, {
           stdio: config.getAppStdio(),
           env: Object.assign(
@@ -143,7 +145,7 @@ Control.prototype.isDownstreamDummyUp = function isDownstreamDummyUp() {
 };
 
 Control.prototype.waitUntilRuntimeHasTerminated = function waitUntilRuntimeHasTerminated() {
-  return retry(() => this.hasRuntimeTerminatedPromise());
+  return retry(() => this.hasRuntimeTerminatedPromise(), this.opts.timeout / 2);
 };
 
 Control.prototype.hasRuntimeTerminatedPromise = function hasRuntimeTerminatedPromise() {
@@ -197,23 +199,34 @@ Control.prototype.getLambdaErrors = function getLambdaErrors() {
 };
 
 Control.prototype.getSpans = function getSpans() {
-  if (this.opts.startBackend) {
-    return request({
-      method: 'GET',
-      url: `${config.backendBaseUrl}/received/spans`,
-      json: true,
-      strictSSL: false
-    });
-  } else {
-    return Promise.resolve([]);
-  }
+  return this._getFromBackend('/received/spans');
 };
 
 Control.prototype.getMetrics = function getMetrics() {
+  return this._getFromBackend('/received/metrics');
+};
+
+Control.prototype.getRawBundles = function getRawBundles() {
+  return this._getFromBackend('/received/raw/bundles');
+};
+
+Control.prototype.getRawMetrics = function getRawMetrics() {
+  return this._getFromBackend('/received/raw/metrics');
+};
+
+Control.prototype.getRawSpanArrays = function getRawSpanArrays() {
+  return this._getFromBackend('/received/raw/spanArrays');
+};
+
+Control.prototype.getMetrics = function getMetrics() {
+  return this._getFromBackend('/received/metrics');
+};
+
+Control.prototype._getFromBackend = function _getFromBackend(url) {
   if (this.opts.startBackend) {
     return request({
       method: 'GET',
-      url: `${config.backendBaseUrl}/received/metrics`,
+      url: `${config.backendBaseUrl}${url}`,
       json: true,
       strictSSL: false
     });
