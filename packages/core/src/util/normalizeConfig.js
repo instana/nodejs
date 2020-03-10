@@ -20,6 +20,7 @@ var defaults = {
     automaticTracingEnabled: true,
     forceTransmissionStartingAt: 500,
     maxBufferedSpans: 1000,
+    transmissionDelay: 1000,
     http: {
       extraHttpHeadersToCapture: []
     },
@@ -142,6 +143,7 @@ function normalizeAutomaticTracingEnabled(config) {
 
 function normalizeTracingTransmission(config) {
   config.tracing.maxBufferedSpans = config.tracing.maxBufferedSpans || defaults.tracing.maxBufferedSpans;
+  config.tracing.transmissionDelay = config.tracing.transmissionDelay || defaults.tracing.transmissionDelay;
 
   var originalValue = config.tracing.forceTransmissionStartingAt;
   if (

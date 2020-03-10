@@ -20,7 +20,8 @@ if (process.env.INSTANA_DEV_MIN_DELAY_BEFORE_SENDING_SPANS != null) {
 } else {
   minDelayBeforeSendingSpans = 1000;
 }
-var initialDelayBeforeSendingSpans = Math.max(minDelayBeforeSendingSpans, 1000);
+var initialDelayBeforeSendingSpans;
+var transmissionDelay;
 var maxBufferedSpans;
 var forceTransmissionStartingAt;
 
@@ -32,6 +33,8 @@ exports.init = function(config, _downstreamConnection) {
   downstreamConnection = _downstreamConnection;
   maxBufferedSpans = config.tracing.maxBufferedSpans;
   forceTransmissionStartingAt = config.tracing.forceTransmissionStartingAt;
+  transmissionDelay = config.tracing.transmissionDelay;
+  initialDelayBeforeSendingSpans = Math.max(transmissionDelay, minDelayBeforeSendingSpans);
 };
 
 exports.activate = function() {
@@ -84,7 +87,7 @@ function transmitSpans() {
   clearTimeout(transmissionTimeoutHandle);
 
   if (spans.length === 0) {
-    transmissionTimeoutHandle = setTimeout(transmitSpans, 1000);
+    transmissionTimeoutHandle = setTimeout(transmitSpans, transmissionDelay);
     transmissionTimeoutHandle.unref();
     return;
   }
@@ -99,7 +102,7 @@ function transmitSpans() {
       removeSpansIfNecessary();
     }
 
-    transmissionTimeoutHandle = setTimeout(transmitSpans, 1000);
+    transmissionTimeoutHandle = setTimeout(transmitSpans, transmissionDelay);
     transmissionTimeoutHandle.unref();
   });
 }

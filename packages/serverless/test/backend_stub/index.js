@@ -40,6 +40,7 @@ app.use(
 
 app.post('/serverless/bundle', (req, res) => {
   logger.trace('incoming bundle', req.body);
+  receivedData.rawBundles.push(req.body);
   if (unresponsive) {
     // intentionally not responding for tests that verify proper timeout handling
     return;
@@ -68,6 +69,7 @@ app.post('/serverless/bundle', (req, res) => {
 
 app.post('/serverless/metrics', (req, res) => {
   logger.debug('incoming metrics', req.body);
+  receivedData.rawMetrics.push(req.body);
   if (unresponsive) {
     // intentionally not responding for tests that verify proper timeout handling
     return;
@@ -86,6 +88,7 @@ app.post('/serverless/metrics', (req, res) => {
 
 app.post('/serverless/traces', (req, res) => {
   logger.debug('incoming spans', req.body);
+  receivedData.rawSpanArrays.push(req.body);
   if (unresponsive) {
     // intentionally not responding for tests that verify proper timeout handling
     return;
@@ -120,6 +123,27 @@ app.delete('/serverless/received/spans', (req, res) => {
   return res.sendStatus('204');
 });
 
+app.get('/serverless/received/raw/bundles', (req, res) => res.json(receivedData.rawBundles));
+
+app.delete('/serverless/received/raw/bundles', (req, res) => {
+  receivedData.rawBundles = [];
+  return res.sendStatus('204');
+});
+
+app.get('/serverless/received/raw/metrics', (req, res) => res.json(receivedData.rawMetrics));
+
+app.delete('/serverless/received/raw/metrics', (req, res) => {
+  receivedData.rawMetrics = [];
+  return res.sendStatus('204');
+});
+
+app.get('/serverless/received/raw/spanArrays', (req, res) => res.json(receivedData.rawSpanArrays));
+
+app.delete('/serverless/received/raw/spanArrays', (req, res) => {
+  receivedData.rawSpanArrays = [];
+  return res.sendStatus('204');
+});
+
 https.createServer(options, app).listen(port, error => {
   if (error) {
     logger.error(error);
@@ -144,6 +168,9 @@ function addHeaders(req, payload) {
 function resetReceivedData() {
   return {
     metrics: [],
-    spans: []
+    spans: [],
+    rawBundles: [],
+    rawMetrics: [],
+    rawSpanArrays: []
   };
 }
