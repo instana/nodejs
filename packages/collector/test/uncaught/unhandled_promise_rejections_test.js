@@ -45,7 +45,7 @@ describe('unhandled promise rejections', function() {
               expect(span.n).to.equal('node.http.server');
               expect(span.f.e).to.equal(String(serverControls.getPid()));
               expect(span.f.h).to.equal('agent-stub-uuid');
-              expect(span.error).to.be.false;
+              expect(span.error).to.not.exist;
               expect(span.ec).to.equal(0);
               expect(span.stack).to.be.empty;
             });

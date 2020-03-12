@@ -237,7 +237,6 @@ module.exports = exports = function(isCallbackApi) {
 
     if (error) {
       span.ec = 1;
-      span.error = true;
     }
 
     if (span.data.sdk.custom && tags) {

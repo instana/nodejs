@@ -28,8 +28,8 @@ describe('tracing/cls', () => {
       expect(span.t).to.be.a('string');
       expect(span.s).to.be.a('string');
       expect(span.k).to.equal(constants.EXIT);
-      expect(span.async).to.be.false;
-      expect(span.error).to.be.false;
+      expect(span.async).to.not.exist;
+      expect(span.error).to.not.exist;
       expect(span.ec).to.equal(0);
       expect(span.ts).to.be.a('number');
       expect(span.d).to.equal(0);
@@ -47,8 +47,8 @@ describe('tracing/cls', () => {
       expect(span.t).to.be.a('string');
       expect(span.s).to.be.a('string');
       expect(span.k).to.equal(2);
-      expect(span.async).to.be.false;
-      expect(span.error).to.be.false;
+      expect(span.async).to.not.exist;
+      expect(span.error).to.not.exist;
       expect(span.ec).to.equal(0);
       expect(span.ts).to.be.a('number');
       expect(span.d).to.equal(0);

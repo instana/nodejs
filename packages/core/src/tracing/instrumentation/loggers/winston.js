@@ -169,7 +169,6 @@ function createSpan(ctx, originalMethod, originalArgs, message, markAsError) {
     };
     if (markAsError) {
       span.ec = 1;
-      span.error = true;
     }
     try {
       return originalMethod.apply(ctx, originalArgs);

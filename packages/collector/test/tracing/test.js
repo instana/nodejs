@@ -108,8 +108,8 @@ describe('tracing', function() {
             agentStubControls.getSpans().then(spans => {
               utils.expectOneMatching(spans, span => {
                 expect(span.n).to.equal('node.http.server');
-                expect(span.async).to.equal(false);
-                expect(span.error).to.equal(false);
+                expect(span.async).to.not.exist;
+                expect(span.error).to.not.exist;
                 expect(span.ec).to.equal(0);
                 expect(span.data.http.method).to.equal('POST');
                 expect(span.data.http.url).to.equal('/checkout');
@@ -130,8 +130,8 @@ describe('tracing', function() {
             agentStubControls.getSpans().then(spans => {
               utils.expectOneMatching(spans, span => {
                 expect(span.n).to.equal('node.http.server');
-                expect(span.async).to.equal(false);
-                expect(span.error).to.equal(false);
+                expect(span.async).to.not.exist;
+                expect(span.error).to.not.exist;
                 expect(span.ec).to.equal(0);
                 expect(span.data.http.method).to.equal('POST');
                 expect(span.data.http.url).to.equal('/checkout');
@@ -155,8 +155,8 @@ describe('tracing', function() {
             agentStubControls.getSpans().then(spans => {
               utils.expectOneMatching(spans, span => {
                 expect(span.n).to.equal('node.http.server');
-                expect(span.async).to.equal(false);
-                expect(span.error).to.equal(true);
+                expect(span.async).to.not.exist;
+                expect(span.error).to.not.exist;
                 expect(span.ec).to.equal(1);
                 expect(span.data.http.method).to.equal('POST');
                 expect(span.data.http.url).to.equal('/checkout');
@@ -232,8 +232,9 @@ describe('tracing', function() {
                   expect(span.f.e).to.equal(String(expressProxyControls.getPid()));
                   expect(span.f.h).to.equal('agent-stub-uuid');
                   expect(span.f.h).to.equal('agent-stub-uuid');
-                  expect(span.async).to.equal(false);
-                  expect(span.error).to.equal(false);
+                  expect(span.async).to.not.exist;
+                  expect(span.error).to.not.exist;
+                  expect(span.ec).to.equal(0);
                   expect(span.data.http.method).to.equal('POST');
                   expect(span.data.http.url).to.equal('/checkout');
                   expect(span.data.http.status).to.equal(201);
@@ -247,8 +248,9 @@ describe('tracing', function() {
                   expect(span.f.e).to.equal(String(expressProxyControls.getPid()));
                   expect(span.f.h).to.equal('agent-stub-uuid');
                   expect(span.f.h).to.equal('agent-stub-uuid');
-                  expect(span.async).to.equal(false);
-                  expect(span.error).to.equal(false);
+                  expect(span.async).to.not.exist;
+                  expect(span.error).to.not.exist;
+                  expect(span.ec).to.equal(0);
                   expect(span.data.http.method).to.equal('POST');
                   expect(span.data.http.url).to.equal('http://127.0.0.1:3211/proxy-call/checkout');
                   expect(span.data.http.status).to.equal(201);
@@ -261,8 +263,9 @@ describe('tracing', function() {
                   expect(span.f.e).to.equal(String(expressControls.getPid()));
                   expect(span.f.h).to.equal('agent-stub-uuid');
                   expect(span.f.h).to.equal('agent-stub-uuid');
-                  expect(span.async).to.equal(false);
-                  expect(span.error).to.equal(false);
+                  expect(span.async).to.not.exist;
+                  expect(span.error).to.not.exist;
+                  expect(span.ec).to.equal(0);
                   expect(span.data.http.method).to.equal('POST');
                   expect(span.data.http.url).to.equal('/proxy-call/checkout');
                   expect(span.data.http.status).to.equal(201);
@@ -290,8 +293,9 @@ describe('tracing', function() {
                   expect(span.f.e).to.equal(String(expressProxyControls.getPid()));
                   expect(span.f.h).to.equal('agent-stub-uuid');
                   expect(span.f.h).to.equal('agent-stub-uuid');
-                  expect(span.async).to.equal(false);
-                  expect(span.error).to.equal(false);
+                  expect(span.async).to.not.exist;
+                  expect(span.error).to.not.exist;
+                  expect(span.ec).to.equal(0);
                   expect(span.data.http.method).to.equal('POST');
                   expect(span.data.http.url).to.equal('/checkout');
                   expect(span.data.http.status).to.equal(200);
@@ -305,8 +309,9 @@ describe('tracing', function() {
                   expect(span.f.e).to.equal(String(expressProxyControls.getPid()));
                   expect(span.f.h).to.equal('agent-stub-uuid');
                   expect(span.f.h).to.equal('agent-stub-uuid');
-                  expect(span.async).to.equal(false);
-                  expect(span.error).to.equal(false);
+                  expect(span.async).to.not.exist;
+                  expect(span.error).to.not.exist;
+                  expect(span.ec).to.equal(0);
                   expect(span.data.http.method).to.equal('POST');
                   expect(span.data.http.url).to.equal('http://127.0.0.1:3211/proxy-call/checkout');
                   expect(span.data.http.status).to.equal(200);
@@ -318,8 +323,9 @@ describe('tracing', function() {
                   expect(span.n).to.equal('node.http.server');
                   expect(span.f.e).to.equal(String(expressControls.getPid()));
                   expect(span.f.h).to.equal('agent-stub-uuid');
-                  expect(span.async).to.equal(false);
-                  expect(span.error).to.equal(false);
+                  expect(span.async).to.not.exist;
+                  expect(span.error).to.not.exist;
+                  expect(span.ec).to.equal(0);
                   expect(span.data.http.method).to.equal('POST');
                   expect(span.data.http.url).to.equal('/proxy-call/checkout');
                   expect(span.data.http.status).to.equal(200);
@@ -358,11 +364,11 @@ describe('tracing', function() {
               agentStubControls.getSpans().then(spans => {
                 utils.expectOneMatching(spans, span => {
                   expect(span.n).to.equal('node.http.client');
-                  expect(span.error).to.equal(true);
+                  expect(span.error).to.not.exist;
                   expect(span.ec).to.equal(1);
                   expect(span.f.e).to.equal(String(expressProxyControls.getPid()));
                   expect(span.f.h).to.equal('agent-stub-uuid');
-                  expect(span.async).to.equal(false);
+                  expect(span.async).to.not.exist;
                   expect(span.data.http.error).to.be.a('string');
                   expect(span.data.http.method).to.equal('POST');
                   expect(span.data.http.url).to.equal('http://127.0.0.2:49162/foobar');
@@ -386,7 +392,7 @@ describe('tracing', function() {
 
                 utils.expectOneMatching(spans, span => {
                   expect(span.n).to.equal('node.http.server');
-                  expect(span.error).to.equal(true);
+                  expect(span.error).to.not.exist;
                   expect(span.ec).to.equal(1);
                 });
               })
@@ -419,8 +425,9 @@ describe('tracing', function() {
                 expect(span.n).to.equal('node.http.server');
                 expect(span.f.e).to.equal(String(expressProxyControls.getPid()));
                 expect(span.f.h).to.equal('agent-stub-uuid');
-                expect(span.async).to.equal(false);
-                expect(span.error).to.equal(false);
+                expect(span.async).to.not.exist;
+                expect(span.error).to.not.exist;
+                expect(span.ec).to.equal(0);
                 expect(span.data.http.method).to.equal('POST');
                 expect(span.data.http.url).to.equal(`/call-${call}`);
                 expect(span.data.http.status).to.equal((call % 20) + 200);
@@ -433,8 +440,9 @@ describe('tracing', function() {
                 expect(span.n).to.equal('node.http.client');
                 expect(span.f.e).to.equal(String(expressProxyControls.getPid()));
                 expect(span.f.h).to.equal('agent-stub-uuid');
-                expect(span.async).to.equal(false);
-                expect(span.error).to.equal(false);
+                expect(span.async).to.not.exist;
+                expect(span.error).to.not.exist;
+                expect(span.ec).to.equal(0);
                 expect(span.data.http.method).to.equal('POST');
                 expect(span.data.http.url).to.equal(`http://127.0.0.1:3211/proxy-call/call-${call}`);
                 expect(span.data.http.status).to.equal((call % 20) + 200);
@@ -446,8 +454,9 @@ describe('tracing', function() {
                 expect(span.n).to.equal('node.http.server');
                 expect(span.f.e).to.equal(String(expressControls.getPid()));
                 expect(span.f.h).to.equal('agent-stub-uuid');
-                expect(span.async).to.equal(false);
-                expect(span.error).to.equal(false);
+                expect(span.async).to.not.exist;
+                expect(span.error).to.not.exist;
+                expect(span.ec).to.equal(0);
                 expect(span.data.http.method).to.equal('POST');
                 expect(span.data.http.url).to.equal(`/proxy-call/call-${call}`);
                 expect(span.data.http.status).to.equal((call % 20) + 200);

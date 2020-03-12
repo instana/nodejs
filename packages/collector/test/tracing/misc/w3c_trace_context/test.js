@@ -724,8 +724,8 @@ function verifyHttpEntry(spans, parentSpan, url, foreignParent) {
   return expectOneMatching(spans, span => {
     expect(span.n).to.equal('node.http.server');
     expect(span.k).to.equal(constants.ENTRY);
-    expect(span.async).to.equal(false);
-    expect(span.error).to.equal(false);
+    expect(span.async).to.not.exist;
+    expect(span.error).to.not.exist;
     expect(span.ec).to.equal(0);
     expect(span.t).to.be.a('string');
     expect(span.s).to.be.a('string');
@@ -752,8 +752,8 @@ function verifyHttpExit(spans, parentSpan, url) {
   return expectOneMatching(spans, span => {
     expect(span.n).to.equal('node.http.client');
     expect(span.k).to.equal(constants.EXIT);
-    expect(span.async).to.equal(false);
-    expect(span.error).to.equal(false);
+    expect(span.async).to.not.exist;
+    expect(span.error).to.not.exist;
     expect(span.ec).to.equal(0);
     expect(span.t).to.be.a('string');
     expect(span.s).to.be.a('string');

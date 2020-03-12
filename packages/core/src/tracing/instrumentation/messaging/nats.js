@@ -180,8 +180,7 @@ function instrumentedSubscribeCallback(natsUrl, subject, originalSubscribeCallba
 
 function addErrorToSpan(err, span) {
   if (err) {
-    span.error = true;
-    span.ec++;
+    span.ec = 1;
 
     var errMsg = null;
     if (err.message) {

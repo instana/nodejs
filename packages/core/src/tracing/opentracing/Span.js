@@ -40,8 +40,6 @@ function Span(tracer, name, fields) {
     s: spanId,
     t: traceId,
     p: parentId,
-    async: false,
-    error: false,
     ec: 0,
     ts: (fields ? fields.startTime : null) || Date.now(),
     d: 0,
@@ -108,7 +106,6 @@ Span.prototype._addTags = function _addTags(keyValuePairs) {
 Span.prototype._addTag = function _addTag(key, value) {
   if (key === opentracing.Tags.ERROR) {
     if (value) {
-      this.span.error = true;
       this.span.ec = 1;
     }
   } else if (key === opentracing.Tags.SPAN_KIND) {

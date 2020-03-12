@@ -69,8 +69,8 @@ function test() {
             expect(span.k).to.equal(constants.EXIT);
             expect(span.f.e).to.equal(String(controls.getPid()));
             expect(span.f.h).to.equal('agent-stub-uuid');
-            expect(span.async).to.equal(false);
-            expect(span.error).to.equal(false);
+            expect(span.async).to.not.exist;
+            expect(span.error).to.not.exist;
             expect(span.ec).to.equal(0);
             expect(span.data.mysql.stmt).to.equal('INSERT INTO random_values (value) VALUES (?)');
           });
@@ -101,8 +101,8 @@ function test() {
               expect(span.k).to.equal(constants.EXIT);
               expect(span.f.e).to.equal(String(controls.getPid()));
               expect(span.f.h).to.equal('agent-stub-uuid');
-              expect(span.async).to.equal(false);
-              expect(span.error).to.equal(false);
+              expect(span.async).to.not.exist;
+              expect(span.error).to.not.exist;
               expect(span.ec).to.equal(0);
               expect(span.data.mysql.stmt).to.equal('INSERT INTO random_values (value) VALUES (?)');
               expect(span.data.mysql.host).to.equal(process.env.MYSQL_HOST);
@@ -123,8 +123,8 @@ function test() {
               expect(span.k).to.equal(constants.EXIT);
               expect(span.f.e).to.equal(String(controls.getPid()));
               expect(span.f.h).to.equal('agent-stub-uuid');
-              expect(span.async).to.equal(false);
-              expect(span.error).to.equal(false);
+              expect(span.async).to.not.exist;
+              expect(span.error).to.not.exist;
               expect(span.ec).to.equal(0);
               expect(span.data.mysql.stmt).to.equal('SELECT value FROM random_values');
               expect(span.data.mysql.host).to.equal(process.env.MYSQL_HOST);
@@ -159,8 +159,8 @@ function test() {
             expect(span.k).to.equal(constants.EXIT);
             expect(span.f.e).to.equal(String(controls.getPid()));
             expect(span.f.h).to.equal('agent-stub-uuid');
-            expect(span.async).to.equal(false);
-            expect(span.error).to.equal(false);
+            expect(span.async).to.not.exist;
+            expect(span.error).to.not.exist;
             expect(span.ec).to.equal(0);
             expect(span.data.mysql.stmt).to.equal('INSERT INTO random_values (value) VALUES (?)');
             expect(span.data.mysql.host).to.equal(process.env.MYSQL_HOST);
@@ -176,8 +176,9 @@ function test() {
             expect(span.k).to.equal(constants.EXIT);
             expect(span.f.e).to.equal(String(controls.getPid()));
             expect(span.f.h).to.equal('agent-stub-uuid');
-            expect(span.async).to.equal(false);
-            expect(span.error).to.equal(false);
+            expect(span.async).to.not.exist;
+            expect(span.error).to.not.exist;
+            expect(span.ec).to.equal(0);
             expect(span.data.http.method).to.equal('GET');
             expect(span.data.http.url).to.match(/http:\/\/127\.0\.0\.1:/);
             expect(span.data.http.status).to.equal(200);

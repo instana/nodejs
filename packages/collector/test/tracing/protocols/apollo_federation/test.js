@@ -292,11 +292,11 @@ function verifyGraphQLQueryEntry(span, parentSpan, source, testConfig) {
 
   if (withError) {
     expect(span.ec).to.equal(1);
-    expect(span.error).to.be.true;
+    expect(span.error).to.not.exist;
     expect(span.data.graphql.errors).to.equal('Deliberately throwing an error in account service.');
   } else {
     expect(span.ec).to.equal(0);
-    expect(span.error).to.be.false;
+    expect(span.error).to.not.exist;
     expect(span.data.graphql.errors).to.not.exist;
   }
 }

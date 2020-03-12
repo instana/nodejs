@@ -185,8 +185,6 @@ function InstanaSpan(name) {
   if (processIdentityProvider && typeof processIdentityProvider.getFrom === 'function') {
     this.f = processIdentityProvider.getFrom();
   }
-  this.async = false;
-  this.error = false;
   this.ec = 0;
   this.ts = Date.now();
   this.d = 0;

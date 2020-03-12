@@ -150,8 +150,7 @@ function shimEmit(realEmit) {
             res,
             extraHttpHeadersToCapture
           );
-          span.error = res.statusCode >= 500;
-          span.ec = span.error ? 1 : 0;
+          span.ec = res.statusCode >= 500 ? 1 : 0;
           span.d = Date.now() - span.ts;
           span.transmit();
         }

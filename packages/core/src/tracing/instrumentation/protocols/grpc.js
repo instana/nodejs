@@ -94,7 +94,6 @@ function createInstrumentedServerHandler(name, type, originalHandler) {
         var originalCallback = originalArgs[1];
         originalArgs[1] = cls.ns.bind(function(err) {
           if (err) {
-            span.error = true;
             span.ec = 1;
             if (err.message || err.details) {
               span.data.rpc.error = err.message || err.details;
@@ -117,7 +116,6 @@ function createInstrumentedServerHandler(name, type, originalHandler) {
           return originalEnd.apply(this, arguments);
         };
         call.on('error', function(err) {
-          span.error = true;
           span.ec = 1;
           if (err.message || err.details) {
             span.data.rpc.error = err.message || err.details;
@@ -252,7 +250,6 @@ function instrumentedClientMethod(
         span.d = Date.now() - span.ts;
         var errorMessage = err.details || err.message;
         if (errorMessage !== 'Cancelled') {
-          span.error = true;
           span.ec = 1;
           if (errorMessage) {
             span.data.rpc.error = errorMessage;
@@ -302,7 +299,6 @@ function modifyArgs(originalArgs, span, responseStream) {
       if (err) {
         var errorMessage = err.details || err.message;
         if (errorMessage !== 'Cancelled') {
-          span.error = true;
           span.ec = 1;
           if (errorMessage) {
             span.data.rpc.error = errorMessage;

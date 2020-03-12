@@ -40,8 +40,8 @@ describe('tracing/elasticsearch', function() {
               expect(span.n).to.equal('node.http.server');
               expect(span.f.e).to.equal(String(expressElasticsearchControls.getPid()));
               expect(span.f.h).to.equal('agent-stub-uuid');
-              expect(span.async).to.equal(false);
-              expect(span.error).to.equal(true);
+              expect(span.async).to.not.exist;
+              expect(span.error).to.not.exist;
               expect(span.ec).to.equal(1);
             });
 
@@ -51,8 +51,8 @@ describe('tracing/elasticsearch', function() {
               expect(span.n).to.equal('elasticsearch');
               expect(span.f.e).to.equal(String(expressElasticsearchControls.getPid()));
               expect(span.f.h).to.equal('agent-stub-uuid');
-              expect(span.async).to.equal(false);
-              expect(span.error).to.equal(true);
+              expect(span.async).to.not.exist;
+              expect(span.error).to.not.exist;
               expect(span.ec).to.equal(1);
               expect(span.data.elasticsearch.cluster).to.be.a('string');
               expect(span.data.elasticsearch.action).to.equal('get');
@@ -79,8 +79,9 @@ describe('tracing/elasticsearch', function() {
               expect(span.n).to.equal('node.http.server');
               expect(span.f.e).to.equal(String(expressElasticsearchControls.getPid()));
               expect(span.f.h).to.equal('agent-stub-uuid');
-              expect(span.async).to.equal(false);
-              expect(span.error).to.equal(false);
+              expect(span.async).to.not.exist;
+              expect(span.error).to.not.exist;
+              expect(span.ec).to.equal(0);
             });
 
             utils.expectOneMatching(spans, span => {
@@ -89,8 +90,9 @@ describe('tracing/elasticsearch', function() {
               expect(span.n).to.equal('elasticsearch');
               expect(span.f.e).to.equal(String(expressElasticsearchControls.getPid()));
               expect(span.f.h).to.equal('agent-stub-uuid');
-              expect(span.async).to.equal(false);
-              expect(span.error).to.equal(false);
+              expect(span.async).to.not.exist;
+              expect(span.error).to.not.exist;
+              expect(span.ec).to.equal(0);
               expect(span.data.elasticsearch.cluster).to.be.a('string');
               expect(span.data.elasticsearch.action).to.equal('index');
               expect(span.data.elasticsearch.type).to.equal('mytype');
@@ -126,8 +128,9 @@ describe('tracing/elasticsearch', function() {
               expect(span.n).to.equal('node.http.server');
               expect(span.f.e).to.equal(String(expressElasticsearchControls.getPid()));
               expect(span.f.h).to.equal('agent-stub-uuid');
-              expect(span.async).to.equal(false);
-              expect(span.error).to.equal(false);
+              expect(span.async).to.not.exist;
+              expect(span.error).to.not.exist;
+              expect(span.ec).to.equal(0);
               expect(span.data.http.url).to.equal('/index');
             });
 
@@ -137,8 +140,9 @@ describe('tracing/elasticsearch', function() {
               expect(span.n).to.equal('elasticsearch');
               expect(span.f.e).to.equal(String(expressElasticsearchControls.getPid()));
               expect(span.f.h).to.equal('agent-stub-uuid');
-              expect(span.async).to.equal(false);
-              expect(span.error).to.equal(false);
+              expect(span.async).to.not.exist;
+              expect(span.error).to.not.exist;
+              expect(span.ec).to.equal(0);
               expect(span.data.elasticsearch.cluster).to.be.a('string');
               expect(span.data.elasticsearch.action).to.equal('index');
               expect(span.data.elasticsearch.type).to.equal('mytype');
@@ -149,8 +153,9 @@ describe('tracing/elasticsearch', function() {
               expect(span.n).to.equal('node.http.server');
               expect(span.f.e).to.equal(String(expressElasticsearchControls.getPid()));
               expect(span.f.h).to.equal('agent-stub-uuid');
-              expect(span.async).to.equal(false);
-              expect(span.error).to.equal(false);
+              expect(span.async).to.not.exist;
+              expect(span.error).to.not.exist;
+              expect(span.ec).to.equal(0);
               expect(span.data.http.url).to.equal('/get');
             });
 
@@ -160,8 +165,9 @@ describe('tracing/elasticsearch', function() {
               expect(span.n).to.equal('elasticsearch');
               expect(span.f.e).to.equal(String(expressElasticsearchControls.getPid()));
               expect(span.f.h).to.equal('agent-stub-uuid');
-              expect(span.async).to.equal(false);
-              expect(span.error).to.equal(false);
+              expect(span.async).to.not.exist;
+              expect(span.error).to.not.exist;
+              expect(span.ec).to.equal(0);
               expect(span.data.elasticsearch.cluster).to.be.a('string');
               expect(span.data.elasticsearch.action).to.equal('get');
               expect(span.data.elasticsearch.type).to.equal('mytype');
@@ -214,8 +220,9 @@ describe('tracing/elasticsearch', function() {
               expect(span.n).to.equal('elasticsearch');
               expect(span.f.e).to.equal(String(expressElasticsearchControls.getPid()));
               expect(span.f.h).to.equal('agent-stub-uuid');
-              expect(span.async).to.equal(false);
-              expect(span.error).to.equal(false);
+              expect(span.async).to.not.exist;
+              expect(span.error).to.not.exist;
+              expect(span.ec).to.equal(0);
               expect(span.data.elasticsearch.cluster).to.be.a('string');
               expect(span.data.elasticsearch.action).to.equal('index');
               expect(span.data.elasticsearch.type).to.equal('mytype');
@@ -227,8 +234,9 @@ describe('tracing/elasticsearch', function() {
               expect(span.n).to.equal('elasticsearch');
               expect(span.f.e).to.equal(String(expressElasticsearchControls.getPid()));
               expect(span.f.h).to.equal('agent-stub-uuid');
-              expect(span.async).to.equal(false);
-              expect(span.error).to.equal(false);
+              expect(span.async).to.not.exist;
+              expect(span.error).to.not.exist;
+              expect(span.ec).to.equal(0);
               expect(span.data.elasticsearch.cluster).to.be.a('string');
               expect(span.data.elasticsearch.action).to.equal('index');
               expect(span.data.elasticsearch.type).to.equal('mytype');
@@ -239,8 +247,9 @@ describe('tracing/elasticsearch', function() {
               expect(span.n).to.equal('node.http.server');
               expect(span.f.e).to.equal(String(expressElasticsearchControls.getPid()));
               expect(span.f.h).to.equal('agent-stub-uuid');
-              expect(span.async).to.equal(false);
-              expect(span.error).to.equal(false);
+              expect(span.async).to.not.exist;
+              expect(span.error).to.not.exist;
+              expect(span.ec).to.equal(0);
               expect(span.data.http.url).to.equal('/search');
             });
 
@@ -250,8 +259,9 @@ describe('tracing/elasticsearch', function() {
               expect(span.n).to.equal('elasticsearch');
               expect(span.f.e).to.equal(String(expressElasticsearchControls.getPid()));
               expect(span.f.h).to.equal('agent-stub-uuid');
-              expect(span.async).to.equal(false);
-              expect(span.error).to.equal(false);
+              expect(span.async).to.not.exist;
+              expect(span.error).to.not.exist;
+              expect(span.ec).to.equal(0);
               expect(span.data.elasticsearch.cluster).to.be.a('string');
               expect(span.data.elasticsearch.action).to.equal('search');
               expect(span.data.elasticsearch.type).to.equal('mytype');
@@ -335,8 +345,9 @@ describe('tracing/elasticsearch', function() {
               expect(span.n).to.equal('elasticsearch');
               expect(span.f.e).to.equal(String(expressElasticsearchControls.getPid()));
               expect(span.f.h).to.equal('agent-stub-uuid');
-              expect(span.async).to.equal(false);
-              expect(span.error).to.equal(false);
+              expect(span.async).to.not.exist;
+              expect(span.error).to.not.exist;
+              expect(span.ec).to.equal(0);
               expect(span.data.elasticsearch.cluster).to.be.a('string');
               expect(span.data.elasticsearch.action).to.equal('index');
               expect(span.data.elasticsearch.type).to.equal('mytype');
@@ -347,8 +358,9 @@ describe('tracing/elasticsearch', function() {
               expect(span.n).to.equal('elasticsearch');
               expect(span.f.e).to.equal(String(expressElasticsearchControls.getPid()));
               expect(span.f.h).to.equal('agent-stub-uuid');
-              expect(span.async).to.equal(false);
-              expect(span.error).to.equal(false);
+              expect(span.async).to.not.exist;
+              expect(span.error).to.not.exist;
+              expect(span.ec).to.equal(0);
               expect(span.data.elasticsearch.cluster).to.be.a('string');
               expect(span.data.elasticsearch.action).to.equal('index');
               expect(span.data.elasticsearch.type).to.equal('mytype');
@@ -358,8 +370,9 @@ describe('tracing/elasticsearch', function() {
               expect(span.n).to.equal('node.http.server');
               expect(span.f.e).to.equal(String(expressElasticsearchControls.getPid()));
               expect(span.f.h).to.equal('agent-stub-uuid');
-              expect(span.async).to.equal(false);
-              expect(span.error).to.equal(false);
+              expect(span.async).to.not.exist;
+              expect(span.error).to.not.exist;
+              expect(span.ec).to.equal(0);
               expect(span.data.http.url).to.equal('/mget1');
             });
             utils.expectOneMatching(spans, span => {
@@ -368,8 +381,9 @@ describe('tracing/elasticsearch', function() {
               expect(span.n).to.equal('elasticsearch');
               expect(span.f.e).to.equal(String(expressElasticsearchControls.getPid()));
               expect(span.f.h).to.equal('agent-stub-uuid');
-              expect(span.async).to.equal(false);
-              expect(span.error).to.equal(false);
+              expect(span.async).to.not.exist;
+              expect(span.error).to.not.exist;
+              expect(span.ec).to.equal(0);
               expect(span.data.elasticsearch.cluster).to.be.a('string');
               expect(span.data.elasticsearch.action).to.equal('mget');
               expect(span.data.elasticsearch.type).to.equal('mytype');
@@ -380,8 +394,9 @@ describe('tracing/elasticsearch', function() {
               expect(span.n).to.equal('node.http.server');
               expect(span.f.e).to.equal(String(expressElasticsearchControls.getPid()));
               expect(span.f.h).to.equal('agent-stub-uuid');
-              expect(span.async).to.equal(false);
-              expect(span.error).to.equal(false);
+              expect(span.async).to.not.exist;
+              expect(span.error).to.not.exist;
+              expect(span.ec).to.equal(0);
               expect(span.data.http.url).to.equal('/mget2');
             });
             utils.expectOneMatching(spans, span => {
@@ -390,8 +405,9 @@ describe('tracing/elasticsearch', function() {
               expect(span.n).to.equal('elasticsearch');
               expect(span.f.e).to.equal(String(expressElasticsearchControls.getPid()));
               expect(span.f.h).to.equal('agent-stub-uuid');
-              expect(span.async).to.equal(false);
-              expect(span.error).to.equal(false);
+              expect(span.async).to.not.exist;
+              expect(span.error).to.not.exist;
+              expect(span.ec).to.equal(0);
               expect(span.data.elasticsearch.cluster).to.be.a('string');
               expect(span.data.elasticsearch.action).to.equal('mget');
               expect(span.data.elasticsearch.type).to.equal('mytype');
@@ -456,8 +472,9 @@ describe('tracing/elasticsearch', function() {
               expect(span.n).to.equal('elasticsearch');
               expect(span.f.e).to.equal(String(expressElasticsearchControls.getPid()));
               expect(span.f.h).to.equal('agent-stub-uuid');
-              expect(span.async).to.equal(false);
-              expect(span.error).to.equal(false);
+              expect(span.async).to.not.exist;
+              expect(span.error).to.not.exist;
+              expect(span.ec).to.equal(0);
               expect(span.data.elasticsearch.cluster).to.be.a('string');
               expect(span.data.elasticsearch.action).to.equal('index');
               expect(span.data.elasticsearch.type).to.equal('mytype');
@@ -468,8 +485,9 @@ describe('tracing/elasticsearch', function() {
               expect(span.n).to.equal('elasticsearch');
               expect(span.f.e).to.equal(String(expressElasticsearchControls.getPid()));
               expect(span.f.h).to.equal('agent-stub-uuid');
-              expect(span.async).to.equal(false);
-              expect(span.error).to.equal(false);
+              expect(span.async).to.not.exist;
+              expect(span.error).to.not.exist;
+              expect(span.ec).to.equal(0);
               expect(span.data.elasticsearch.cluster).to.be.a('string');
               expect(span.data.elasticsearch.action).to.equal('index');
               expect(span.data.elasticsearch.type).to.equal('mytype');
@@ -479,8 +497,9 @@ describe('tracing/elasticsearch', function() {
               expect(span.n).to.equal('node.http.server');
               expect(span.f.e).to.equal(String(expressElasticsearchControls.getPid()));
               expect(span.f.h).to.equal('agent-stub-uuid');
-              expect(span.async).to.equal(false);
-              expect(span.error).to.equal(false);
+              expect(span.async).to.not.exist;
+              expect(span.error).to.not.exist;
+              expect(span.ec).to.equal(0);
               expect(span.data.http.url).to.equal('/msearch');
             });
             utils.expectOneMatching(spans, span => {
@@ -489,8 +508,9 @@ describe('tracing/elasticsearch', function() {
               expect(span.n).to.equal('elasticsearch');
               expect(span.f.e).to.equal(String(expressElasticsearchControls.getPid()));
               expect(span.f.h).to.equal('agent-stub-uuid');
-              expect(span.async).to.equal(false);
-              expect(span.error).to.equal(false);
+              expect(span.async).to.not.exist;
+              expect(span.error).to.not.exist;
+              expect(span.ec).to.equal(0);
               expect(span.data.elasticsearch.cluster).to.be.a('string');
               expect(span.data.elasticsearch.action).to.equal('msearch');
               expect(span.data.elasticsearch.type).to.equal('mytype');
@@ -527,8 +547,9 @@ describe('tracing/elasticsearch', function() {
               expect(span.n).to.equal('elasticsearch');
               expect(span.f.e).to.equal(String(expressElasticsearchControls.getPid()));
               expect(span.f.h).to.equal('agent-stub-uuid');
-              expect(span.async).to.equal(false);
-              expect(span.error).to.equal(false);
+              expect(span.async).to.not.exist;
+              expect(span.error).to.not.exist;
+              expect(span.ec).to.equal(0);
               expect(span.data.elasticsearch.cluster).to.be.a('string');
               expect(span.data.elasticsearch.action).to.equal('search');
               expect(span.data.elasticsearch.type).to.equal('mytype');

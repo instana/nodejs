@@ -42,8 +42,9 @@ describe('tracing/mongoose', function() {
               expect(span.n).to.equal('node.http.server');
               expect(span.f.e).to.equal(String(mongooseControls.getPid()));
               expect(span.f.h).to.equal('agent-stub-uuid');
-              expect(span.async).to.equal(false);
-              expect(span.error).to.equal(false);
+              expect(span.async).to.not.exist;
+              expect(span.error).to.not.exist;
+              expect(span.ec).to.equal(0);
             });
 
             utils.expectOneMatching(spans, span => {
@@ -53,8 +54,9 @@ describe('tracing/mongoose', function() {
               expect(span.k).to.equal(constants.EXIT);
               expect(span.f.e).to.equal(String(mongooseControls.getPid()));
               expect(span.f.h).to.equal('agent-stub-uuid');
-              expect(span.async).to.equal(false);
-              expect(span.error).to.equal(false);
+              expect(span.async).to.not.exist;
+              expect(span.error).to.not.exist;
+              expect(span.ec).to.equal(0);
               expect(span.data.mongo.command).to.equal('insert');
               expect(span.data.mongo.service).to.equal(process.env.MONGODB);
               expect(span.data.mongo.namespace).to.equal('mongoose.people');
@@ -92,8 +94,9 @@ describe('tracing/mongoose', function() {
               expect(span.n).to.equal('node.http.server');
               expect(span.f.e).to.equal(String(mongooseControls.getPid()));
               expect(span.f.h).to.equal('agent-stub-uuid');
-              expect(span.async).to.equal(false);
-              expect(span.error).to.equal(false);
+              expect(span.async).to.not.exist;
+              expect(span.error).to.not.exist;
+              expect(span.ec).to.equal(0);
             });
 
             utils.expectOneMatching(spans, span => {
@@ -103,8 +106,9 @@ describe('tracing/mongoose', function() {
               expect(span.k).to.equal(constants.EXIT);
               expect(span.f.e).to.equal(String(mongooseControls.getPid()));
               expect(span.f.h).to.equal('agent-stub-uuid');
-              expect(span.async).to.equal(false);
-              expect(span.error).to.equal(false);
+              expect(span.async).to.not.exist;
+              expect(span.error).to.not.exist;
+              expect(span.ec).to.equal(0);
               expect(span.data.mongo.command).to.equal('find');
               expect(span.data.mongo.service).to.equal(process.env.MONGODB);
               expect(span.data.mongo.namespace).to.equal('mongoose.people');

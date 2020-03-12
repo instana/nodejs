@@ -99,7 +99,6 @@ function instrumentCommand(command, original) {
       span.d = Date.now() - span.ts;
 
       if (error) {
-        span.error = true;
         span.ec = 1;
         span.data.redis.error = tracingUtil.getErrorDetails(error);
       }
@@ -163,7 +162,6 @@ function instrumentMultiExec(isAtomic, original) {
       };
     }
     span.ec = 0;
-    span.error = false;
 
     return original.apply(this, args);
 
@@ -187,7 +185,6 @@ function buildSubCommandCallback(span, userProvidedCallback) {
   return function subCommandCallback(err) {
     if (err) {
       span.ec++;
-      span.error = true;
 
       if (!span.data.redis.error) {
         span.data.redis.error = tracingUtil.getErrorDetails(err);

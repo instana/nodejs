@@ -131,8 +131,8 @@ describe('tracing/logger/pino', function() {
     expect(span.f.e).to.equal(String(appControls.getPid()));
     expect(span.f.h).to.equal('agent-stub-uuid');
     expect(span.n).to.equal('log.pino');
-    expect(span.async).to.equal(false);
-    expect(span.error).to.equal(expectErroneous);
+    expect(span.async).to.not.exist;
+    expect(span.error).to.not.exist;
     expect(span.ec).to.equal(expectErroneous ? 1 : 0);
     expect(span.data).to.exist;
     expect(span.data.log).to.exist;

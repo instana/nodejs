@@ -314,9 +314,9 @@ describe('tracing/sdk', function() {
       expect(span.k).to.equal(constants.ENTRY);
       expect(span.f.e).to.equal(String(pid));
       expect(span.f.h).to.equal('agent-stub-uuid');
-      expect(span.async).to.equal(false);
+      expect(span.async).to.not.exist;
       // eslint-disable-next-line no-unneeded-ternary
-      expect(span.error).to.equal(error ? true : false);
+      expect(span.error).to.not.exist;
       expect(span.ec).to.equal(error ? 1 : 0);
       expect(span.data.sdk).to.exist;
       expect(span.data.sdk.name).to.equal('custom-entry');
@@ -363,8 +363,9 @@ describe('tracing/sdk', function() {
       expect(span.k).to.equal(constants.EXIT);
       expect(span.f.e).to.equal(String(pid));
       expect(span.f.h).to.equal('agent-stub-uuid');
-      expect(span.async).to.equal(false);
-      expect(span.error).to.equal(false);
+      expect(span.async).to.not.exist;
+      expect(span.error).to.not.exist;
+      expect(span.ec).to.equal(0);
       expect(span.data.http.method).to.equal('GET');
       expect(span.data.http.url).to.match(/http:\/\/127\.0\.0\.1:/);
       expect(span.data.http.status).to.equal(200);
@@ -387,9 +388,9 @@ describe('tracing/sdk', function() {
       expect(span.k).to.equal(constants[kind]);
       expect(span.f.e).to.equal(String(pid));
       expect(span.f.h).to.equal('agent-stub-uuid');
-      expect(span.async).to.equal(false);
+      expect(span.async).to.not.exist;
       // eslint-disable-next-line no-unneeded-ternary
-      expect(span.error).to.equal(error ? true : false);
+      expect(span.error).to.not.exist;
       expect(span.ec).to.equal(error ? 1 : 0);
       expect(span.data.sdk).to.exist;
       expect(span.data.sdk.name).to.equal(kind === 'INTERMEDIATE' ? 'intermediate-file-access' : 'file-access');
@@ -416,8 +417,8 @@ describe('tracing/sdk', function() {
       expect(span.k).to.equal(constants.INTERMEDIATE);
       expect(span.f.e).to.equal(String(pid));
       expect(span.f.h).to.equal('agent-stub-uuid');
-      expect(span.async).to.equal(false);
-      expect(span.error).to.be.false;
+      expect(span.async).to.not.exist;
+      expect(span.error).to.not.exist;
       expect(span.ec).to.equal(0);
       expect(span.stack[0].c).to.match(/test\/tracing\/sdk\/app.js$/);
       expect(span.stack[0].m).to.match(/createIntermediate/);
@@ -436,8 +437,8 @@ describe('tracing/sdk', function() {
       expect(span.k).to.equal(constants.EXIT);
       expect(span.f.e).to.equal(String(pid));
       expect(span.f.h).to.equal('agent-stub-uuid');
-      expect(span.async).to.equal(false);
-      expect(span.error).to.be.false;
+      expect(span.async).to.not.exist;
+      expect(span.error).to.not.exist;
       expect(span.ec).to.equal(0);
       expect(span.stack[0].c).to.match(/test\/tracing\/sdk\/app.js$/);
       expect(span.stack[0].m).to.match(/createExit/);

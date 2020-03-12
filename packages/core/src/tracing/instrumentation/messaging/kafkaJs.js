@@ -77,7 +77,6 @@ function instrumentedSend(ctx, originalSend, originalArgs, topic, messages) {
       })
       .catch(function(error) {
         span.ec = 1;
-        span.error = true;
         span.data.kafka.error = error.message;
         span.d = Date.now() - span.ts;
         span.transmit();
@@ -149,7 +148,6 @@ function instrumentedSendBatch(ctx, originalSendBatch, originalArgs, topicMessag
       })
       .catch(function(error) {
         span.ec = 1;
-        span.error = true;
         span.data.kafka.error = error.message;
         span.d = Date.now() - span.ts;
         span.transmit();

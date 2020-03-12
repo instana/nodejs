@@ -1,5 +1,8 @@
 # Changelog
 
+## Unreleased
+- Remove deprecated span attributes `span.error` and `span.async`.
+
 ## 1.92.4
 - [AWS Lambda] Do not try to send data to the Instana back end when a previous request to it has already failed.
 - [AWS Lambda] Change span offloading intervall to 5 seconds.

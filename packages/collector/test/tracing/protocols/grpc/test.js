@@ -240,11 +240,11 @@ function checkGrpcClientSpan(httpEntry, url, cancel, erroneous, span) {
   expect(span.data.rpc.port).to.equal('50051');
   if (erroneous) {
     expect(span.ec).to.be.equal(1);
-    expect(span.error).to.be.true;
+    expect(span.error).to.not.exist;
     expect(span.data.rpc.error).to.equal('Boom!');
   } else {
     expect(span.ec).to.be.equal(0);
-    expect(span.error).to.be.false;
+    expect(span.error).to.not.exist;
     expect(span.data.rpc.error).to.not.exist;
   }
 }
@@ -260,11 +260,11 @@ function checkGrpcServerSpan(grpcExit, url, cancel, erroneous, span) {
   expect(span.data.rpc.call).to.equal(rpcCallNameForUrl(url));
   if (erroneous) {
     expect(span.ec).to.be.equal(1);
-    expect(span.error).to.be.true;
+    expect(span.error).to.not.exist;
     expect(span.data.rpc.error).to.equal('Boom!');
   } else {
     expect(span.ec).to.be.equal(0);
-    expect(span.error).to.be.false;
+    expect(span.error).to.not.exist;
     expect(span.data.rpc.error).to.not.exist;
   }
 }
