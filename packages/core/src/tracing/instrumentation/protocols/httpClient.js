@@ -147,8 +147,7 @@ function instrument(coreModule) {
           span.data.http.header = headers;
         }
         span.d = Date.now() - span.ts;
-        span.error = res.statusCode >= 500;
-        span.ec = span.error ? 1 : 0;
+        span.ec = res.statusCode >= 500 ? 1 : 0;
         span.transmit();
 
         if (callback) {
@@ -173,7 +172,6 @@ function instrument(coreModule) {
           error: e ? e.message : ''
         };
         span.d = Date.now() - span.ts;
-        span.error = true;
         span.ec = 1;
         span.transmit();
         throw e;
@@ -221,7 +219,6 @@ function instrument(coreModule) {
           error: errorMessage
         };
         span.d = Date.now() - span.ts;
-        span.error = true;
         span.ec = 1;
         span.transmit();
       });

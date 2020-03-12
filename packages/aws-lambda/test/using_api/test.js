@@ -219,16 +219,16 @@ describe('Using the API', () => {
       expect(span.f.hl).to.be.true;
       expect(span.f.cp).to.equal('aws');
       expect(span.f.e).to.equal(qualifiedArn);
-      expect(span.async).to.equal(false);
+      expect(span.async).to.not.exist;
       expect(span.data.lambda).to.be.an('object');
       expect(span.data.lambda.runtime).to.equal('nodejs');
       if (error) {
         expect(span.data.lambda.error).to.equal('Boom!');
-        expect(span.error).to.be.true;
+        expect(span.error).to.not.exist;
         expect(span.ec).to.equal(1);
       } else {
         expect(span.data.lambda.error).to.not.exist;
-        expect(span.error).to.be.false;
+        expect(span.error).to.not.exist;
         expect(span.ec).to.equal(0);
       }
       verifyHeaders(span);
@@ -247,7 +247,7 @@ describe('Using the API', () => {
       expect(span.f.cp).to.equal('aws');
       expect(span.f.hl).to.be.true;
       expect(span.f.e).to.equal(qualifiedArn);
-      expect(span.async).to.equal(false);
+      expect(span.async).to.not.exist;
       expect(span.data.sdk).to.be.an('object');
       expect(span.data.sdk.name).to.equal('custom-span');
       expect(span.data.sdk.type).to.equal('exit');

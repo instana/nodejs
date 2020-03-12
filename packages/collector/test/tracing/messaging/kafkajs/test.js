@@ -191,8 +191,9 @@ describe('tracing/kafkajs', function() {
     return utils.expectOneMatching(spans, span => {
       expect(span.n).to.equal('node.http.server');
       expect(span.f.h).to.equal('agent-stub-uuid');
-      expect(span.async).to.equal(false);
-      expect(span.error).to.equal(false);
+      expect(span.async).to.not.exist;
+      expect(span.error).to.not.exist;
+      expect(span.ec).to.equal(0);
     });
   }
 
@@ -208,14 +209,14 @@ describe('tracing/kafkajs', function() {
       expect(span.n).to.equal('kafka');
       expect(span.k).to.equal(constants.EXIT);
       expect(span.f.h).to.equal('agent-stub-uuid');
-      expect(span.async).to.equal(false);
+      expect(span.async).to.not.exist;
       if (error === 'sender') {
         expect(span.ec).to.equal(1);
-        expect(span.error).to.be.true;
+        expect(span.error).to.not.exist;
         expect(span.data.kafka.error).to.contain('Invalid message without value for topic');
       } else {
         expect(span.ec).to.equal(0);
-        expect(span.error).to.be.false;
+        expect(span.error).to.not.exist;
         expect(span.data.kafka.error).to.not.exist;
         // We always send 2 messages for topic 1 (also via the normal send method), no matter if useSendBatch is true.
         // With useSendBatch === true, we use a different API which allows sending messages to multiple topics
@@ -249,16 +250,16 @@ describe('tracing/kafkajs', function() {
       expect(span.n).to.equal('kafka');
       expect(span.k).to.equal(constants.ENTRY);
       expect(span.f.h).to.equal('agent-stub-uuid');
-      expect(span.async).to.equal(false);
+      expect(span.async).to.not.exist;
       expect(span.data.kafka.access).to.equal('consume');
       expect(span.data.kafka.service).to.equal(`${topicPrefix}-1`);
       if (error === 'receiver') {
         expect(span.ec).to.equal(1);
-        expect(span.error).to.be.true;
+        expect(span.error).to.not.exist;
       } else {
         expect(span.d).to.be.greaterThan(99);
         expect(span.ec).to.equal(0);
-        expect(span.error).to.be.false;
+        expect(span.error).to.not.exist;
       }
       if (useEachBatch) {
         expect(span.b).to.deep.equal({ s: 2 });
@@ -279,17 +280,17 @@ describe('tracing/kafkajs', function() {
         expect(span.k).to.equal(constants.ENTRY);
 
         expect(span.f.h).to.equal('agent-stub-uuid');
-        expect(span.async).to.equal(false);
+        expect(span.async).to.not.exist;
         expect(span.data.kafka.access).to.equal('consume');
         expect(span.data.kafka.service).to.equal(`${topicPrefix}-1`);
         expect(span.b).to.not.exist;
         if (error === 'receiver') {
           expect(span.ec).to.equal(1);
-          expect(span.error).to.be.true;
+          expect(span.error).to.not.exist;
         } else {
           expect(span.d).to.be.greaterThan(99);
           expect(span.ec).to.equal(0);
-          expect(span.error).to.be.false;
+          expect(span.error).to.not.exist;
         }
       });
       if (error !== 'receiver') {
@@ -304,16 +305,16 @@ describe('tracing/kafkajs', function() {
         expect(span.n).to.equal('kafka');
         expect(span.k).to.equal(constants.ENTRY);
         expect(span.f.h).to.equal('agent-stub-uuid');
-        expect(span.async).to.equal(false);
+        expect(span.async).to.not.exist;
         expect(span.data.kafka.access).to.equal('consume');
         expect(span.data.kafka.service).to.equal(`${topicPrefix}-2`);
         if (error === 'receiver') {
           expect(span.ec).to.equal(1);
-          expect(span.error).to.be.true;
+          expect(span.error).to.not.exist;
         } else {
           expect(span.d).to.be.greaterThan(99);
           expect(span.ec).to.equal(0);
-          expect(span.error).to.be.false;
+          expect(span.error).to.not.exist;
         }
         if (useEachBatch) {
           expect(span.b).to.deep.equal({ s: 1 });

@@ -34,8 +34,8 @@ describe('tracing/opentracing/Span', () => {
     expect(span.span.s).to.be.a('string');
     expect(span.span.s).to.equal(span.span.t);
     expect(span.span.p).to.equal(undefined);
-    expect(span.span.async).to.equal(false);
-    expect(span.span.error).to.equal(false);
+    expect(span.span.async).to.not.exist;
+    expect(span.span.error).to.not.exist;
     expect(span.span.ec).to.equal(0);
     expect(span.span.ts).to.be.at.least(now);
     expect(span.span.d).to.equal(0);
@@ -94,15 +94,15 @@ describe('tracing/opentracing/Span', () => {
     it('must handle error tag differently', () => {
       const span = new Span(tracerInstance, 'rpc');
       span.setTag(opentracing.Tags.ERROR, true);
-      expect(span.span.error).to.equal(true);
       expect(span.span.ec).to.equal(1);
+      expect(span.span.error).to.not.exist;
     });
 
     it('must support setting error to false', () => {
       const span = new Span(tracerInstance, 'rpc');
       span.setTag(opentracing.Tags.ERROR, false);
-      expect(span.span.error).to.equal(false);
       expect(span.span.ec).to.equal(0);
+      expect(span.span.error).to.not.exist;
     });
 
     it('must change direction to exit for client rpc kind', () => {
@@ -266,8 +266,8 @@ describe('tracing/opentracing/Span', () => {
       expect(span.span.data.sdk.custom.tags).to.deep.equal({
         foo: 'bar'
       });
-      expect(span.span.error).to.equal(true);
       expect(span.span.data.sdk.type).to.equal('exit');
+      expect(span.span.error).to.not.exist;
     });
 
     it('must use operation name passed via fields when available', () => {

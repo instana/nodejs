@@ -330,8 +330,9 @@ describe('tracing/mongodb', function() {
       expect(span.p).to.not.exist;
       expect(span.f.e).to.equal(String(controls.getPid()));
       expect(span.f.h).to.equal('agent-stub-uuid');
-      expect(span.async).to.equal(false);
-      expect(span.error).to.equal(false);
+      expect(span.async).to.not.exist;
+      expect(span.error).to.not.exist;
+      expect(span.ec).to.equal(0);
       expect(span.data.http.url).to.equal(url);
       if (params) {
         expect(span.data.http.params).to.equal(params);
@@ -347,8 +348,9 @@ describe('tracing/mongodb', function() {
       expect(span.k).to.equal(constants.EXIT);
       expect(span.f.e).to.equal(String(controls.getPid()));
       expect(span.f.h).to.equal('agent-stub-uuid');
-      expect(span.async).to.equal(false);
-      expect(span.error).to.equal(false);
+      expect(span.async).to.not.exist;
+      expect(span.error).to.not.exist;
+      expect(span.ec).to.equal(0);
       expect(span.data.peer.hostname).to.equal('127.0.0.1');
       expect(span.data.peer.port).to.equal(27017);
       expect(span.data.mongo.command).to.equal(command);
@@ -380,8 +382,9 @@ describe('tracing/mongodb', function() {
       expect(span.k).to.equal(constants.EXIT);
       expect(span.f.e).to.equal(String(controls.getPid()));
       expect(span.f.h).to.equal('agent-stub-uuid');
-      expect(span.async).to.equal(false);
-      expect(span.error).to.equal(false);
+      expect(span.async).to.not.exist;
+      expect(span.error).to.not.exist;
+      expect(span.ec).to.equal(0);
       expect(span.data.http.method).to.equal('GET');
       expect(span.data.http.url).to.match(/http:\/\/127\.0\.0\.1:/);
       expect(span.data.http.status).to.equal(200);

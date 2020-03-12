@@ -147,7 +147,6 @@ function instrumentedWrite(ctx, originalWrite, originalArgs) {
     var wrappedCallback = function(error) {
       if (error) {
         span.ec = 1;
-        span.error = true;
         span.data.mongo.error = tracingUtil.getErrorDetails(error);
       }
 

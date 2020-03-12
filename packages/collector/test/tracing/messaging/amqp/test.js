@@ -57,8 +57,9 @@ function registerTests(apiType) {
             expect(span.n).to.equal('node.http.server');
             expect(span.f.e).to.equal(String(publisherControls.getPid()));
             expect(span.f.h).to.equal('agent-stub-uuid');
-            expect(span.async).to.equal(false);
-            expect(span.error).to.equal(false);
+            expect(span.async).to.not.exist;
+            expect(span.error).to.not.exist;
+            expect(span.ec).to.equal(0);
           });
 
           utils.expectOneMatching(spans, span => {
@@ -68,8 +69,9 @@ function registerTests(apiType) {
             expect(span.n).to.equal('rabbitmq');
             expect(span.f.e).to.equal(String(publisherControls.getPid()));
             expect(span.f.h).to.equal('agent-stub-uuid');
-            expect(span.async).to.equal(false);
-            expect(span.error).to.equal(false);
+            expect(span.async).to.not.exist;
+            expect(span.error).to.not.exist;
+            expect(span.ec).to.equal(0);
             expect(span.data.rabbitmq.sort).to.equal('publish');
             expect(span.data.rabbitmq.exchange).to.not.exist;
             expect(span.data.rabbitmq.key).to.equal(queueName);
@@ -95,8 +97,9 @@ function registerTests(apiType) {
             expect(span.n).to.equal('node.http.server');
             expect(span.f.e).to.equal(String(publisherControls.getPid()));
             expect(span.f.h).to.equal('agent-stub-uuid');
-            expect(span.async).to.equal(false);
-            expect(span.error).to.equal(false);
+            expect(span.async).to.not.exist;
+            expect(span.error).to.not.exist;
+            expect(span.ec).to.equal(0);
           });
 
           utils.expectOneMatching(spans, span => {
@@ -106,8 +109,9 @@ function registerTests(apiType) {
             expect(span.n).to.equal('rabbitmq');
             expect(span.f.e).to.equal(String(publisherControls.getPid()));
             expect(span.f.h).to.equal('agent-stub-uuid');
-            expect(span.async).to.equal(false);
-            expect(span.error).to.equal(false);
+            expect(span.async).to.not.exist;
+            expect(span.error).to.not.exist;
+            expect(span.ec).to.equal(0);
             expect(span.data.rabbitmq.sort).to.equal('publish');
             expect(span.data.rabbitmq.exchange).to.equal(exchange);
             expect(span.data.rabbitmq.address).to.equal('amqp://127.0.0.1:5672');
@@ -141,8 +145,9 @@ function registerTests(apiType) {
             expect(span.d).to.be.greaterThan(99);
             expect(span.f.e).to.equal(String(consumerControls.getPid()));
             expect(span.f.h).to.equal('agent-stub-uuid');
-            expect(span.async).to.equal(false);
-            expect(span.error).to.equal(false);
+            expect(span.async).to.not.exist;
+            expect(span.error).to.not.exist;
+            expect(span.ec).to.equal(0);
             expect(span.data.rabbitmq.sort).to.equal('consume');
             expect(span.data.rabbitmq.key).to.equal(queueName);
             expect(span.data.rabbitmq.address).to.equal('amqp://127.0.0.1:5672');
@@ -176,8 +181,9 @@ function registerTests(apiType) {
             expect(span.d).to.be.greaterThan(99);
             expect(span.f.e).to.equal(String(consumerControls.getPid()));
             expect(span.f.h).to.equal('agent-stub-uuid');
-            expect(span.async).to.equal(false);
-            expect(span.error).to.equal(false);
+            expect(span.async).to.not.exist;
+            expect(span.error).to.not.exist;
+            expect(span.ec).to.equal(0);
             expect(span.data.rabbitmq.sort).to.equal('consume');
             expect(span.data.rabbitmq.exchange).to.equal(exchange);
             expect(span.data.rabbitmq.address).to.equal('amqp://127.0.0.1:5672');
@@ -211,8 +217,9 @@ function registerTests(apiType) {
             expect(span.d).to.be.greaterThan(99);
             expect(span.f.e).to.equal(String(consumerControls.getPid()));
             expect(span.f.h).to.equal('agent-stub-uuid');
-            expect(span.async).to.equal(false);
-            expect(span.error).to.equal(false);
+            expect(span.async).to.not.exist;
+            expect(span.error).to.not.exist;
+            expect(span.ec).to.equal(0);
             expect(span.data.rabbitmq.sort).to.equal('consume');
             expect(span.data.rabbitmq.key).to.equal(queueNameGet);
             expect(span.data.rabbitmq.address).to.equal('amqp://127.0.0.1:5672');
@@ -237,8 +244,9 @@ function registerTests(apiType) {
             expect(span.n).to.equal('node.http.server');
             expect(span.f.e).to.equal(String(publisherControls.getPid()));
             expect(span.f.h).to.equal('agent-stub-uuid');
-            expect(span.async).to.equal(false);
-            expect(span.error).to.equal(false);
+            expect(span.async).to.not.exist;
+            expect(span.error).to.not.exist;
+            expect(span.ec).to.equal(0);
           });
 
           utils.expectOneMatching(spans, span => {
@@ -248,8 +256,9 @@ function registerTests(apiType) {
             expect(span.n).to.equal('rabbitmq');
             expect(span.f.e).to.equal(String(publisherControls.getPid()));
             expect(span.f.h).to.equal('agent-stub-uuid');
-            expect(span.async).to.equal(false);
-            expect(span.error).to.equal(false);
+            expect(span.async).to.not.exist;
+            expect(span.error).to.not.exist;
+            expect(span.ec).to.equal(0);
             expect(span.data.rabbitmq.sort).to.equal('publish');
             expect(span.data.rabbitmq.exchange).to.not.exist;
             expect(span.data.rabbitmq.key).to.equal(queueNameConfirm);
@@ -283,8 +292,9 @@ function registerTests(apiType) {
             expect(span.k).to.equal(constants.ENTRY);
             expect(span.f.e).to.equal(String(consumerControls.getPid()));
             expect(span.f.h).to.equal('agent-stub-uuid');
-            expect(span.async).to.equal(false);
-            expect(span.error).to.equal(false);
+            expect(span.async).to.not.exist;
+            expect(span.error).to.not.exist;
+            expect(span.ec).to.equal(0);
             expect(span.data.rabbitmq.sort).to.equal('consume');
             expect(span.data.rabbitmq.key).to.equal(queueNameConfirm);
             expect(span.data.rabbitmq.address).to.equal('amqp://127.0.0.1:5672');

@@ -60,8 +60,9 @@ describe('tracing/kafka-node', function() {
                   expect(span.n).to.equal('node.http.server');
                   expect(span.f.e).to.equal(String(producerControls.getPid()));
                   expect(span.f.h).to.equal('agent-stub-uuid');
-                  expect(span.async).to.equal(false);
-                  expect(span.error).to.equal(false);
+                  expect(span.async).to.not.exist;
+                  expect(span.error).to.not.exist;
+                  expect(span.ec).to.equal(0);
                 });
 
                 utils.expectOneMatching(spans, span => {
@@ -71,8 +72,9 @@ describe('tracing/kafka-node', function() {
                   expect(span.k).to.equal(constants.EXIT);
                   expect(span.f.e).to.equal(String(producerControls.getPid()));
                   expect(span.f.h).to.equal('agent-stub-uuid');
-                  expect(span.async).to.equal(false);
-                  expect(span.error).to.equal(false);
+                  expect(span.async).to.not.exist;
+                  expect(span.error).to.not.exist;
+                  expect(span.ec).to.equal(0);
                   expect(span.data.kafka.access).to.equal('send');
                   expect(span.data.kafka.service).to.equal('test');
                 });
@@ -134,8 +136,9 @@ describe('tracing/kafka-node', function() {
                   expect(span.n).to.equal('node.http.server');
                   expect(span.f.e).to.equal(String(producerControls.getPid()));
                   expect(span.f.h).to.equal('agent-stub-uuid');
-                  expect(span.async).to.equal(false);
-                  expect(span.error).to.equal(false);
+                  expect(span.async).to.not.exist;
+                  expect(span.error).to.not.exist;
+                  expect(span.ec).to.equal(0);
                 });
                 utils.expectOneMatching(spans, span => {
                   expect(span.t).to.equal(entrySpan.t);
@@ -144,8 +147,9 @@ describe('tracing/kafka-node', function() {
                   expect(span.k).to.equal(constants.EXIT);
                   expect(span.f.e).to.equal(String(producerControls.getPid()));
                   expect(span.f.h).to.equal('agent-stub-uuid');
-                  expect(span.async).to.equal(false);
-                  expect(span.error).to.equal(false);
+                  expect(span.async).to.not.exist;
+                  expect(span.error).to.not.exist;
+                  expect(span.ec).to.equal(0);
                   expect(span.data.kafka.access).to.equal('send');
                   expect(span.data.kafka.service).to.equal('test');
                 });
@@ -162,8 +166,9 @@ describe('tracing/kafka-node', function() {
                   expect(span.d).to.be.greaterThan(99);
                   expect(span.f.e).to.equal(String(consumerControls.getPid()));
                   expect(span.f.h).to.equal('agent-stub-uuid');
-                  expect(span.async).to.equal(false);
-                  expect(span.error).to.equal(false);
+                  expect(span.async).to.not.exist;
+                  expect(span.error).to.not.exist;
+                  expect(span.ec).to.equal(0);
                   expect(span.data.kafka.access).to.equal('consume');
                   expect(span.data.kafka.service).to.equal('test');
                 });

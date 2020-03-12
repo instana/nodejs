@@ -60,8 +60,9 @@ describe('tracing/redis', function() {
               expect(span.k).to.equal(constants.EXIT);
               expect(span.f.e).to.equal(String(redisControls.getPid()));
               expect(span.f.h).to.equal('agent-stub-uuid');
-              expect(span.async).to.equal(false);
-              expect(span.error).to.equal(false);
+              expect(span.async).to.not.exist;
+              expect(span.error).to.not.exist;
+              expect(span.ec).to.equal(0);
               expect(span.data.redis.connection).to.equal(process.env.REDIS);
               expect(span.data.redis.command).to.equal('set');
             });
@@ -80,8 +81,9 @@ describe('tracing/redis', function() {
               expect(span.k).to.equal(constants.EXIT);
               expect(span.f.e).to.equal(String(redisControls.getPid()));
               expect(span.f.h).to.equal('agent-stub-uuid');
-              expect(span.async).to.equal(false);
-              expect(span.error).to.equal(false);
+              expect(span.async).to.not.exist;
+              expect(span.error).to.not.exist;
+              expect(span.ec).to.equal(0);
               expect(span.data.redis.connection).to.equal(process.env.REDIS);
               expect(span.data.redis.command).to.equal('get');
             });
@@ -113,8 +115,8 @@ describe('tracing/redis', function() {
               expect(span.k).to.equal(constants.EXIT);
               expect(span.f.e).to.equal(String(redisControls.getPid()));
               expect(span.f.h).to.equal('agent-stub-uuid');
-              expect(span.async).to.equal(false);
-              expect(span.error).to.equal(true);
+              expect(span.async).to.not.exist;
+              expect(span.error).to.not.exist;
               expect(span.ec).to.equal(1);
               expect(span.data.redis.connection).to.equal(process.env.REDIS);
               expect(span.data.redis.command).to.equal('get');
@@ -145,8 +147,8 @@ describe('tracing/redis', function() {
               expect(span.k).to.equal(constants.EXIT);
               expect(span.f.e).to.equal(String(redisControls.getPid()));
               expect(span.f.h).to.equal('agent-stub-uuid');
-              expect(span.async).to.equal(false);
-              expect(span.error).to.equal(false);
+              expect(span.async).to.not.exist;
+              expect(span.error).to.not.exist;
               expect(span.ec).to.equal(0);
               expect(span.b.s).to.equal(2);
               expect(span.b.u).to.not.exist;
@@ -182,8 +184,8 @@ describe('tracing/redis', function() {
               expect(span.k).to.equal(constants.EXIT);
               expect(span.f.e).to.equal(String(redisControls.getPid()));
               expect(span.f.h).to.equal('agent-stub-uuid');
-              expect(span.async).to.equal(false);
-              expect(span.error).to.equal(true);
+              expect(span.async).to.not.exist;
+              expect(span.error).to.not.exist;
               expect(span.ec).to.equal(2);
               expect(span.b.s).to.equal(2);
               expect(span.b.u).to.not.exist;
@@ -219,8 +221,8 @@ describe('tracing/redis', function() {
               expect(span.k).to.equal(constants.EXIT);
               expect(span.f.e).to.equal(String(redisControls.getPid()));
               expect(span.f.h).to.equal('agent-stub-uuid');
-              expect(span.async).to.equal(false);
-              expect(span.error).to.equal(true);
+              expect(span.async).to.not.exist;
+              expect(span.error).to.not.exist;
               expect(span.ec).to.equal(1);
               expect(span.b.s).to.equal(2);
               expect(span.b.u).to.not.exist;

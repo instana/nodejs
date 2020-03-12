@@ -299,7 +299,7 @@ describe('tracing/pg', function() {
   function verifyPgExit(spans, parent, statement) {
     return utils.expectOneMatching(spans, span => {
       verifyPgExitBase(span, parent, statement);
-      expect(span.error).to.equal(false);
+      expect(span.error).to.not.exist;
       expect(span.ec).to.equal(0);
     });
   }
@@ -307,7 +307,7 @@ describe('tracing/pg', function() {
   function verifyPgExitWithError(spans, parent, statement, errorMessage) {
     return utils.expectOneMatching(spans, span => {
       verifyPgExitBase(span, parent, statement);
-      expect(span.error).to.equal(true);
+      expect(span.error).to.not.exist;
       expect(span.ec).to.equal(1);
       expect(span.data.pg.error).to.contain(errorMessage);
     });
@@ -320,7 +320,7 @@ describe('tracing/pg', function() {
     expect(span.p).to.equal(parent.s);
     expect(span.f.e).to.equal(String(controls.getPid()));
     expect(span.f.h).to.equal('agent-stub-uuid');
-    expect(span.async).to.equal(false);
+    expect(span.async).to.not.exist;
     expect(span.data).to.exist;
     expect(span.data.pg).to.exist;
     expect(span.data.pg.host).to.equal('127.0.0.1');

@@ -99,14 +99,14 @@ describe('tracing/nats', function() {
                     expect(span.n).to.equal('nats');
                     expect(span.f.e).to.equal(String(publisherControls.getPid()));
                     expect(span.f.h).to.equal('agent-stub-uuid');
-                    expect(span.async).to.equal(false);
+                    expect(span.async).to.not.exist;
                     expect(span.ts).to.be.a('number');
                     expect(span.d).to.be.a('number');
                     if (withError) {
-                      expect(span.error).to.be.true;
+                      expect(span.error).to.not.exist;
                       expect(span.ec).to.equal(1);
                     } else {
-                      expect(span.error).to.be.false;
+                      expect(span.error).to.not.exist;
                       expect(span.ec).to.equal(0);
                     }
                     expect(span.data.nats).to.be.an('object');
@@ -183,14 +183,14 @@ describe('tracing/nats', function() {
                   expect(span.n).to.equal('nats');
                   expect(span.f.e).to.equal(String(subscriberControls.getPid()));
                   expect(span.f.h).to.equal('agent-stub-uuid');
-                  expect(span.async).to.equal(false);
+                  expect(span.async).to.not.exist;
                   expect(span.ts).to.be.a('number');
                   expect(span.d).to.be.a('number');
                   if (withError) {
-                    expect(span.error).to.be.true;
+                    expect(span.error).to.not.exist;
                     expect(span.ec).to.equal(1);
                   } else {
-                    expect(span.error).to.be.false;
+                    expect(span.error).to.not.exist;
                     expect(span.ec).to.equal(0);
                   }
                   expect(span.data.nats).to.be.an('object');
@@ -244,10 +244,10 @@ describe('tracing/nats', function() {
             expect(span.n).to.equal('nats');
             expect(span.f.e).to.equal(String(subscriberControls.getPid()));
             expect(span.f.h).to.equal('agent-stub-uuid');
-            expect(span.async).to.equal(false);
+            expect(span.async).to.not.exist;
             expect(span.ts).to.be.a('number');
             expect(span.d).to.be.a('number');
-            expect(span.error).to.be.false;
+            expect(span.error).to.not.exist;
             expect(span.ec).to.equal(0);
             expect(span.data.nats).to.be.an('object');
             expect(span.data.nats.sort).to.equal('consume');

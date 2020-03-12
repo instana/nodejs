@@ -579,8 +579,8 @@ function verifyGraphQLQueryEntry(
     if (withError) {
       const isArray = entityName.indexOf('array') === 0;
       if (isArray) {
-        expect(span.ec).to.equal(isArray ? 3 : 1);
-        expect(span.error).to.be.true;
+        expect(span.ec).to.equal(1);
+        expect(span.error).to.not.exist;
         if (isArray) {
           expect(span.data.graphql.errors).to.equal('Boom, Boom, Boom');
         } else {
@@ -588,12 +588,12 @@ function verifyGraphQLQueryEntry(
         }
       } else {
         expect(span.ec).to.equal(1);
-        expect(span.error).to.be.true;
+        expect(span.error).to.not.exist;
         expect(span.data.graphql.errors).to.equal('Boom');
       }
     } else {
       expect(span.ec).to.equal(0);
-      expect(span.error).to.be.false;
+      expect(span.error).to.not.exist;
       expect(span.data.graphql.errors).to.not.exist;
     }
 
@@ -635,7 +635,7 @@ function verifyGraphQLMutationEntry(parentSpan, spans) {
     expect(span.data.graphql.operationType).to.equal('mutation');
     expect(span.data.graphql.operationName).to.equal('UpdateCharacter');
     expect(span.ec).to.equal(0);
-    expect(span.error).to.be.false;
+    expect(span.error).to.not.exist;
     expect(span.data.graphql.errors).to.not.exist;
     expect(span.data.graphql.fields).to.exist;
     expect(span.data.graphql.args).to.exist;
@@ -660,7 +660,7 @@ function verifyGraphQLSubscriptionUpdateExit(parentSpan, span) {
   expect(span.data.graphql.operationType).to.equal('subscription-update');
   expect(span.data.graphql.operationName).to.equal('onCharacterUpdated');
   expect(span.ec).to.equal(0);
-  expect(span.error).to.be.false;
+  expect(span.error).to.not.exist;
   expect(span.data.graphql.errors).to.not.exist;
   expect(span.data.graphql.fields).to.exist;
   expect(span.data.graphql.fields.characterUpdated).to.deep.equal(['id', 'name', 'profession']);

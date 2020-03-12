@@ -82,7 +82,6 @@ function instrumentSendCommand(original) {
         span.d = Date.now() - span.ts;
 
         if (error) {
-          span.error = true;
           span.ec = 1;
           span.data.redis.error = error.message;
         }
@@ -172,7 +171,6 @@ function multiCommandEndCallback(clsContextForMultiOrPipeline, span, error) {
   };
 
   if (error) {
-    span.error = true;
     span.ec = commandCount;
     span.data.redis.error = error.message;
   }
@@ -193,7 +191,6 @@ function pipelineCommandEndCallback(clsContextForMultiOrPipeline, span, error, r
 
   if (error) {
     // ioredis docs mention that this should never be possible, but better be safe than sorry
-    span.error = true;
     span.ec = commandCount;
     span.data.redis.error = tracingUtil.getErrorDetails(error);
   } else {
@@ -210,7 +207,6 @@ function pipelineCommandEndCallback(clsContextForMultiOrPipeline, span, error, r
     }
 
     if (numberOfErrors > 0) {
-      span.error = true;
       span.ec = numberOfErrors;
       span.data.redis.error = tracingUtil.getErrorDetails(sampledError);
     }

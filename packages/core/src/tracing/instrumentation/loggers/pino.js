@@ -54,7 +54,6 @@ function shimGenLog(originalGenLog) {
               };
               if (level >= 50) {
                 span.ec = 1;
-                span.error = true;
               }
               try {
                 return originalLoggingFunction.apply(ctx, originalArgs);

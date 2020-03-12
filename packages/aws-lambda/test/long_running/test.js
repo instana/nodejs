@@ -65,7 +65,7 @@ describe('long running lambdas', () => {
       instanaEndpointUrl: config.backendBaseUrl,
       instanaAgentKey: config.instanaAgentKey,
       delay: 1000,
-      iterations: 15
+      iterations: 13
     };
     const control = prelude.bind(this)(opts);
 
@@ -82,7 +82,7 @@ describe('long running lambdas', () => {
       ]).then(([spans, metrics, rawBundles, rawSpanArrays]) => {
         verifySpans(spans, opts);
         verifyMetrics(metrics);
-        // The lambda runs 15 seconds and creates a span every second. We also send spans to serverless acceptor
+        // The lambda runs 13 seconds and creates a span every second. We also send spans to serverless acceptor
         // every 5 seconds + the final bundle. Thus, we should see two intermittent POST requests to /traces and
         // one to /bundle.
         expect(rawSpanArrays).to.be.an('array');
@@ -184,11 +184,11 @@ describe('long running lambdas', () => {
       expect(span.f.hl).to.be.true;
       expect(span.f.cp).to.equal('aws');
       expect(span.f.e).to.equal(qualifiedArn);
-      expect(span.async).to.equal(false);
+      expect(span.async).to.not.exist;
       expect(span.data.lambda).to.be.an('object');
       expect(span.data.lambda.runtime).to.equal('nodejs');
       expect(span.data.lambda.error).to.not.exist;
-      expect(span.error).to.be.false;
+      expect(span.error).to.not.exist;
       expect(span.ec).to.equal(0);
     });
   }

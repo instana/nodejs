@@ -809,7 +809,7 @@ function registerTests(handlerDefinitionPath) {
       expect(span.f.hl).to.be.true;
       expect(span.f.cp).to.equal('aws');
       expect(span.f.e).to.equal(qualifiedArn);
-      expect(span.async).to.equal(false);
+      expect(span.async).to.not.exist;
       expect(span.data.lambda).to.be.an('object');
       expect(span.data.lambda.arn).to.equal(qualifiedArn);
       if (expectations.alias) {
@@ -824,15 +824,15 @@ function registerTests(handlerDefinitionPath) {
       const { error } = expectations;
       if (error && error.startsWith('lambda')) {
         expect(span.data.lambda.error).to.equal('Boom!');
-        expect(span.error).to.be.true;
+        expect(span.error).to.not.exist;
         expect(span.ec).to.equal(1);
       } else if (error === 'http') {
         expect(span.data.lambda.error).to.equal('HTTP status 502');
-        expect(span.error).to.be.true;
+        expect(span.error).to.not.exist;
         expect(span.ec).to.equal(1);
       } else if (error === false) {
         expect(span.data.lambda.error).to.not.exist;
-        expect(span.error).to.be.false;
+        expect(span.error).to.not.exist;
         expect(span.ec).to.equal(0);
       } else {
         throw new Error(`Unknown error expectation type, don't know how to verify: ${error}`);
@@ -853,7 +853,7 @@ function registerTests(handlerDefinitionPath) {
       expect(span.f.cp).to.equal('aws');
       expect(span.f.hl).to.be.true;
       expect(span.f.e).to.equal(qualifiedArn);
-      expect(span.async).to.equal(false);
+      expect(span.async).to.not.exist;
       expect(span.data.http).to.be.an('object');
       expect(span.data.http.method).to.equal('GET');
       expect(span.data.http.url).to.equal(config.downstreamDummyUrl);

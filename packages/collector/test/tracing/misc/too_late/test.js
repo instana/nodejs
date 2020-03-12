@@ -76,8 +76,8 @@ describe('tracing/too late', function() {
                   utils.expectOneMatching(spans, span => {
                     expect(span.n).to.equal('node.http.server');
                     expect(span.k).to.equal(constants.ENTRY);
-                    expect(span.async).to.equal(false);
-                    expect(span.error).to.equal(false);
+                    expect(span.async).to.not.exist;
+                    expect(span.error).to.not.exist;
                     expect(span.ec).to.equal(0);
                     expect(span.p).to.not.exist;
                     expect(span.data.http.method).to.equal('GET');

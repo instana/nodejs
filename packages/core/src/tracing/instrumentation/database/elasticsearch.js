@@ -106,14 +106,12 @@ function instrumentApi(client, action, info) {
         }, 0);
       }
       span.d = Date.now() - span.ts;
-      span.error = false;
       span.transmit();
       return response;
     }
 
     function onError(error) {
       span.d = Date.now() - span.ts;
-      span.error = true;
       span.ec = 1;
       span.data.elasticsearch.error = tracingUtil.getErrorDetails(error);
       span.transmit();

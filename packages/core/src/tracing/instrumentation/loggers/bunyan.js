@@ -82,7 +82,6 @@ function instrumentedLog(ctx, originalLog, originalArgs, markAsError) {
     };
     if (markAsError) {
       span.ec = 1;
-      span.error = true;
     }
     try {
       return originalLog.apply(ctx, originalArgs);

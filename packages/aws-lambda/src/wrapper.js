@@ -244,7 +244,6 @@ function postHandler(entrySpan, error, result, callback) {
 
     processResult(result, entrySpan);
 
-    entrySpan.error = entrySpan.ec > 0;
     entrySpan.d = Date.now() - entrySpan.ts;
 
     entrySpan.transmit();

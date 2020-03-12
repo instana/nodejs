@@ -260,8 +260,7 @@ function runOriginalAndFinish(originalFunction, originalThis, originalArgs, span
 }
 
 function finishSpan(span, result) {
-  span.ec = result.errors ? result.errors.length : 0;
-  span.error = span.ec > 0;
+  span.ec = result.errors && result.errors.length >= 1 ? 1 : 0;
   span.d = Date.now() - span.ts;
   if (Array.isArray(result.errors)) {
     span.data.graphql.errors = result.errors
@@ -280,7 +279,6 @@ function finishSpan(span, result) {
 
 function finishWithException(span, err) {
   span.ec = 1;
-  span.error = true;
   span.d = Date.now() - span.ts;
   span.data.graphql.errors = err.message;
   span.transmit();
