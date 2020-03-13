@@ -10,7 +10,10 @@ describe('util.normalizeConfig', () => {
 
   function resetEnv() {
     delete process.env.INSTANA_SERVICE_NAME;
+    delete process.env.INSTANA_METRICS_TRANSMISSION_DELAY;
     delete process.env.INSTANA_DISABLE_TRACING;
+    delete process.env.INSTANA_FORCE_TRANSMISSION_STARTING_AT;
+    delete process.env.INSTANA_TRACING_TRANSMISSION_DELAY;
     delete process.env.INSTANA_DISABLE_AUTO_INSTR;
     delete process.env.INSTANA_STACK_TRACE_LENGTH;
     delete process.env.INSTANA_DISABLED_TRACERS;
@@ -37,6 +40,27 @@ describe('util.normalizeConfig', () => {
   it('should not accept non-string service name', () => {
     const config = normalizeConfig({ serviceName: 42 });
     expect(config.serviceName).to.not.exist;
+  });
+
+  it('should use custom metrics transmission settings from config', () => {
+    const config = normalizeConfig({
+      metrics: {
+        transmissionDelay: 9753
+      }
+    });
+    expect(config.metrics.transmissionDelay).to.equal(9753);
+  });
+
+  it('should use custom metrics transmission settings from env vars', () => {
+    process.env.INSTANA_METRICS_TRANSMISSION_DELAY = '2500';
+    const config = normalizeConfig();
+    expect(config.metrics.transmissionDelay).to.equal(2500);
+  });
+
+  it('should use default metrics transmission settings when env vars are non-numerical', () => {
+    process.env.INSTANA_METRICS_TRANSMISSION_DELAY = 'x2500';
+    const config = normalizeConfig();
+    expect(config.metrics.transmissionDelay).to.equal(1000);
   });
 
   it('should use custom config.metrics.timeBetweenHealthcheckCalls', () => {
@@ -103,7 +127,7 @@ describe('util.normalizeConfig', () => {
     expect(config.tracing.disableAutomaticTracing).to.not.exist;
   });
 
-  it('should use custom transmission settings', () => {
+  it('should use custom tracing transmission settings from config', () => {
     const config = normalizeConfig({
       tracing: {
         maxBufferedSpans: 13,
@@ -114,6 +138,22 @@ describe('util.normalizeConfig', () => {
     expect(config.tracing.maxBufferedSpans).to.equal(13);
     expect(config.tracing.forceTransmissionStartingAt).to.equal(2);
     expect(config.tracing.transmissionDelay).to.equal(9753);
+  });
+
+  it('should use custom tracing transmission settings from env vars', () => {
+    process.env.INSTANA_FORCE_TRANSMISSION_STARTING_AT = '2468';
+    process.env.INSTANA_TRACING_TRANSMISSION_DELAY = '2500';
+    const config = normalizeConfig();
+    expect(config.tracing.forceTransmissionStartingAt).to.equal(2468);
+    expect(config.tracing.transmissionDelay).to.equal(2500);
+  });
+
+  it('should use default tracing transmission settings when env vars are non-numerical', () => {
+    process.env.INSTANA_FORCE_TRANSMISSION_STARTING_AT = 'a2468';
+    process.env.INSTANA_TRACING_TRANSMISSION_DELAY = 'x2500';
+    const config = normalizeConfig();
+    expect(config.tracing.forceTransmissionStartingAt).to.equal(500);
+    expect(config.tracing.transmissionDelay).to.equal(1000);
   });
 
   it('should use extra http headers (and normalize to lower case)', () => {
@@ -243,6 +283,7 @@ describe('util.normalizeConfig', () => {
     expect(config).to.be.an('object');
     expect(config.serviceName).to.not.exist;
     expect(config.metrics).to.be.an('object');
+    expect(config.metrics.transmissionDelay).to.equal(1000);
     expect(config.metrics.timeBetweenHealthcheckCalls).to.equal(3000);
     expect(config.tracing).to.be.an('object');
     expect(config.tracing.enabled).to.be.true;

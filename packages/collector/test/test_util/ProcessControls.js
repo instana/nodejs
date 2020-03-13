@@ -22,13 +22,13 @@ const ProcessControls = (module.exports = function ProcessControls(opts = {}) {
 
   // absolute path to .js file that should be executed
   this.appPath = opts.appPath;
+  this.dontKillInAfterHook = opts.dontKillInAfterHook;
   this.args = opts.args;
   this.port = opts.port || process.env.APP_PORT || 3215;
-  this.tracingEnabled = opts.tracingEnabled !== false;
-  this.dontKillInAfterHook = opts.dontKillInAfterHook;
   this.useHttps = opts.env && !!opts.env.USE_HTTPS;
-  this.usePreInit = opts.usePreInit === true;
   this.baseUrl = `${this.useHttps ? 'https' : 'http'}://127.0.0.1:${this.port}`;
+  this.tracingEnabled = opts.tracingEnabled !== false;
+  this.usePreInit = opts.usePreInit === true;
   // optional agent controls which will result in a beforeEach call which ensures that the
   // collector is successfully connected to the agent.
   this.agentControls = opts.agentControls;

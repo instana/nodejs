@@ -161,8 +161,8 @@ function checkWhetherResponseForPathIsOkay(path, cb) {
   req.end();
 }
 
-exports.sendDataToAgent = function sendDataToAgent(data, cb) {
-  cb = atMostOnce('callback for sendDataToAgent', cb);
+exports.sendMetrics = function sendMetrics(data, cb) {
+  cb = atMostOnce('callback for sendMetrics', cb);
 
   sendData('/com.instana.plugin.nodejs.' + pidStore.pid, data, function(err, body) {
     if (err) {

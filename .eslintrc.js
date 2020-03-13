@@ -13,6 +13,7 @@ module.exports = {
 
   rules: {
     'block-scoped-var': 'off',
+    'class-methods-use-this': 'off',
     'comma-dangle': 'off',
     'consistent-return': 'off',
     eqeqeq: ['error', 'allow-null'],

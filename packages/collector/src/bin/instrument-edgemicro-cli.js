@@ -72,7 +72,7 @@ module.exports = exports = function instrumentEdgemicroCli(edgemicroPath, collec
       );
     }
     console.log('    * Global edgemicro installation should be in:', edgemicroPath);
-    console.log('- Path to edgemicro has not been provided, I will assume it it:', edgemicroPath);
+    console.log('- Path to edgemicro has not been provided, I will assume it is:', edgemicroPath);
   }
   if (typeof edgemicroPath !== 'string') {
     return callback(

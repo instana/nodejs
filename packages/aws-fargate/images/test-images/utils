@@ -1,0 +1,19 @@
+function setImageTag {
+  local prefix=$1
+  local nodeJsVersion=$2
+  local distribution=$3
+  if [[ -z "${distribution-}" ]]; then
+    distribution=standard
+  fi
+  image_tag=$prefix-$nodeJsVersion-$distribution
+}
+
+function setContainerName {
+  local prefix=$1
+  local nodeJsVersion=$2
+  local distribution=$3
+  if [[ -z "${distribution-}" ]]; then
+    distribution=standard
+  fi
+  container_name=$prefix-$nodeJsVersion-$distribution
+}

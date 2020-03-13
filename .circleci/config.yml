@@ -32,8 +32,20 @@ shared: &shared
           - v3-root-dependencies-{{ .Environment.CIRCLE_JOB }}-
     - restore_cache:
         keys:
-          - v3-core-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "packages/core/package-lock.json" }}
-          - v3-core-dependencies-{{ .Environment.CIRCLE_JOB }}-
+          - v3-autoprofile-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "packages/autoprofile/package-lock.json" }}
+          - v3-autoprofile-dependencies-{{ .Environment.CIRCLE_JOB }}-
+    - restore_cache:
+        keys:
+          - v3-aws-fargate-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "packages/aws-fargate/package-lock.json" }}
+          - v3-aws-fargate-dependencies-{{ .Environment.CIRCLE_JOB }}-
+    - restore_cache:
+        keys:
+          - v3-aws-lambda-auto-wrap-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "packages/aws-lambda-auto-wrap/package-lock.json" }}
+          - v3-aws-lambda-auto-wrap-dependencies-{{ .Environment.CIRCLE_JOB }}-
+    - restore_cache:
+        keys:
+          - v3-aws-lambda-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "packages/aws-lambda/package-lock.json" }}
+          - v3-aws-lambda-dependencies-{{ .Environment.CIRCLE_JOB }}-
     - restore_cache:
         keys:
           - v3-collector-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "packages/collector/package-lock.json" }}
@@ -44,19 +56,22 @@ shared: &shared
           - v3-babel-typescript-dependencies-{{ .Environment.CIRCLE_JOB }}-
     - restore_cache:
         keys:
+          - v3-core-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "packages/core/package-lock.json" }}
+          - v3-core-dependencies-{{ .Environment.CIRCLE_JOB }}-
+    - restore_cache:
+        keys:
           - v3-legacy-sensor-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "packages/legacy-sensor/package-lock.json" }}
           - v3-legacy-sensor-dependencies-{{ .Environment.CIRCLE_JOB }}-
     - restore_cache:
         keys:
-          - v3-aws-lambda-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "packages/aws-lambda/package-lock.json" }}
-          - v3-aws-lambda-dependencies-{{ .Environment.CIRCLE_JOB }}-
+          - v3-serverless-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "packages/serverless/package-lock.json" }}
+          - v3-serverless-dependencies-{{ .Environment.CIRCLE_JOB }}-
     - restore_cache:
         keys:
-          - v3-aws-lambda-auto-wrap-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "packages/aws-lambda-auto-wrap/package-lock.json" }}
-          - v3-aws-lambda-auto-wrap-dependencies-{{ .Environment.CIRCLE_JOB }}-
+          - v3-shared-metrics-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "packages/shared-metrics/package-lock.json" }}
+          - v3-shared-metrics-dependencies-{{ .Environment.CIRCLE_JOB }}-
 
     - run: npm install
-    - run: ls -la packages/collector/node_modules
 
     # When running tests in Node.js 8, we pin grpc to exactly 1.10.1.
     # For more recent Node.js versions (>= 10) we use the latest 1.x as stated in package.json. We can't use grcp@1.10.1
@@ -70,31 +85,45 @@ shared: &shared
         key: v3-root-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "package-lock.json" }}
     - save_cache:
         paths:
-          - packages/core/node_modules
-        key: v3-core-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "packages/core/package-lock.json" }}
+          - packages/autoprofile/node_modules
+        key: v3-autoprofile-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "packages/autoprofile/package-lock.json" }}
+    - save_cache:
+        paths:
+          - packages/aws-fargate/node_modules
+        key: v3-aws-fargate-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "packages/aws-fargate/package-lock.json" }}
+    - save_cache:
+        paths:
+          - packages/aws-lambda-auto-wrap/node_modules
+        key: v3-aws-lambda-auto-wrap-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "packages/aws-lambda-auto-wrap/package-lock.json" }}
+    - save_cache:
+        paths:
+          - packages/aws-lambda/node_modules
+        key: v3-aws-lambda-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "packages/aws-lambda/package-lock.json" }}
     - save_cache:
         paths:
           - packages/collector/node_modules
         key: v3-collector-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "packages/collector/package-lock.json" }}
     - save_cache:
         paths:
-            - packages/legacy-sensor/node_modules
+          - packages/core/node_modules
+        key: v3-core-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "packages/core/package-lock.json" }}
+    - save_cache:
+        paths:
+          - packages/legacy-sensor/node_modules
         key: v3-legacy-sensor-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "packages/legacy-sensor/package-lock.json" }}
     - save_cache:
         paths:
-            - packages/aws-lambda/node_modules
-        key: v3-aws-lambda-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "packages/aws-lambda/package-lock.json" }}
+          - packages/serverless/node_modules
+        key: v3-serverless-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "packages/serverless/package-lock.json" }}
     - save_cache:
         paths:
-            - packages/aws-lambda-auto-wrap/node_modules
-        key: v3-aws-lambda-auto-wrap-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "packages/aws-lambda-auto-wrap/package-lock.json" }}
+          - packages/shared-metrics/node_modules
+        key: v3-shared-metrics-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "packages/shared-metrics/package-lock.json" }}
 
-    # Only run audit with the most recent Node.js version - one Node version is enough (plus Node 12.7.0 is the first
-    # Node version that brings a new new enough npm as its default npm version to support the --production flag
-    # for npm audit.
+    # Only run audit with the most recent Node.js version - one Node version is enough.
     - run: '([[ $(node -v) =~ ^v14.*$ ]] && npm run audit) || [[ ! $(node -v) =~ ^v14.*$ ]]'
-    # Run linting first, we don't want to wait ages for the test suite to finish only to end with the CI job with a
-    # linting error.
+    # Run linting first, we don't want to wait ages for the test suite to finish only to end the CI job with a linting
+    # error.
     - run: npm run lint
     - run: npm test
 

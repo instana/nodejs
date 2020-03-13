@@ -1,0 +1,77 @@
+{
+  "name": "@instana/aws-fargate",
+  "version": "1.98.1",
+  "description": "Instana tracing and monitoring for Node.js based AWS Fargate tasks",
+  "author": {
+    "name": "Bastian Krol",
+    "email": "bastian.krol@instana.com"
+  },
+  "homepage": "https://github.com/instana/nodejs-sensor/blob/master/packages/aws-fargate/README.md",
+  "main": "src/index.js",
+  "files": [
+    "src"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "directories": {
+    "lib": "src",
+    "test": "test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/instana/nodejs-sensor.git"
+  },
+  "scripts": {
+    "audit": "bin/prepare-audit.sh && npm audit --production; AUDIT_RESULT=$?; git checkout package-lock.json; exit $AUDIT_RESULT",
+    "test": "echo \"$(node -v)\" | grep v6 > /dev/null || npm run test:mocha",
+    "test:mocha": "mocha --reporter spec $(find test -iname '*test.js')",
+    "test:debug": "WITH_STDOUT=true npm run test:mocha",
+    "lint": "eslint src test images",
+    "verify": "npm run lint && npm test",
+    "prettier": "prettier --write 'src/**/*.js' 'test/**/*.js' 'images/**/*.js'"
+  },
+  "keywords": [
+    "distributed-tracing",
+    "aws",
+    "fargate",
+    "caas",
+    "instana",
+    "memory",
+    "metrics",
+    "monitoring",
+    "opentracing",
+    "performance",
+    "sensor",
+    "tracing"
+  ],
+  "contributors": [
+    {
+      "name": "Bastian Krol",
+      "email": "bastian.krol@instana.com"
+    }
+  ],
+  "bugs": {
+    "url": "https://github.com/instana/nodejs-sensor/issues"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "@instana/core": "^1.98.1",
+    "@instana/serverless": "^1.98.1",
+    "@instana/shared-metrics": "^1.98.1",
+    "node-fetch": "^2.6.0"
+  },
+  "devDependencies": {
+    "eslint": "^5.16.0",
+    "eslint-config-airbnb-base": "^13.1.0",
+    "eslint-plugin-import": "^2.17.2",
+    "eslint-plugin-mocha": "^5.3.0",
+    "express": "^4.16.4",
+    "mocha": "^6.0.2",
+    "pino": "^5.12.3",
+    "prettier": "^1.17.1"
+  },
+  "engines": {
+    "node": ">=8.6.0"
+  }
+}

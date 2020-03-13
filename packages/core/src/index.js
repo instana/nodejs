@@ -15,6 +15,10 @@ module.exports = exports = {
   util: require('./util')
 };
 
+exports.registerAdditionalInstrumentations = function(additionalInstrumentationModules) {
+  exports.tracing.registerAdditionalInstrumentations(additionalInstrumentationModules);
+};
+
 exports.preInit = function() {
   var preliminaryConfig = normalizeConfig();
   exports.util.requireHook.init(preliminaryConfig);

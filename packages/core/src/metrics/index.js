@@ -5,12 +5,20 @@ var path = require('path');
 
 var config;
 
+exports.init = function(_config) {
+  config = _config;
+};
+
 exports.findAndRequire = function findAndRequire(baseDir) {
   return fs
     .readdirSync(baseDir)
     .filter(function(moduleName) {
-      // ignore non-JS files and index.js
-      return moduleName.indexOf('.js') === moduleName.length - 3 && moduleName.indexOf('index.js') < 0;
+      // ignore non-JS files and non-metric modules
+      return (
+        moduleName.indexOf('.js') === moduleName.length - 3 &&
+        moduleName.indexOf('index.js') < 0 &&
+        moduleName.indexOf('transmissionCycle.js') < 0
+      );
     })
     .map(function(moduleName) {
       return require(path.join(baseDir, moduleName));
@@ -21,10 +29,6 @@ var metricsModules = exports.findAndRequire(__dirname);
 
 exports.registerAdditionalMetrics = function registerAdditionalMetrics(additionalMetricsModules) {
   metricsModules = metricsModules.concat(additionalMetricsModules);
-};
-
-exports.init = function(_config) {
-  config = _config;
 };
 
 exports.activate = function() {
@@ -51,4 +55,12 @@ exports.gatherData = function gatherData() {
   });
 
   return payload;
+};
+
+exports.setLogger = function setLogger(logger) {
+  metricsModules.forEach(function(metricModule) {
+    if (typeof metricModule.setLogger === 'function') {
+      metricModule.setLogger(logger);
+    }
+  });
 };

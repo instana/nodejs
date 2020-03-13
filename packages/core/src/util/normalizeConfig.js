@@ -1,4 +1,4 @@
-/* eslint-disable dot-notation */
+/* eslint-disable */
 
 'use strict';
 
@@ -13,6 +13,7 @@ var defaults = {
   serviceName: null,
 
   metrics: {
+    transmissionDelay: 1000,
     timeBetweenHealthcheckCalls: 3000
   },
   tracing: {
@@ -66,6 +67,13 @@ function normalizeMetricsConfig(config) {
   if (config.metrics == null) {
     config.metrics = {};
   }
+
+  config.metrics.transmissionDelay = normalizeSingleValue(
+    config.metrics.transmissionDelay,
+    defaults.metrics.transmissionDelay,
+    'config.metrics.transmissionDelay',
+    'INSTANA_METRICS_TRANSMISSION_DELAY'
+  );
 
   // The correct location for this is config.metrics.timeBetweenHealthcheckCalls but previous versions accepted
   // config.timeBetweenHealthcheckCalls. We still accept that to not break applications relying on that.
@@ -143,35 +151,20 @@ function normalizeAutomaticTracingEnabled(config) {
 
 function normalizeTracingTransmission(config) {
   config.tracing.maxBufferedSpans = config.tracing.maxBufferedSpans || defaults.tracing.maxBufferedSpans;
-  config.tracing.transmissionDelay = config.tracing.transmissionDelay || defaults.tracing.transmissionDelay;
 
-  var originalValue = config.tracing.forceTransmissionStartingAt;
-  if (
-    config.tracing.forceTransmissionStartingAt == null &&
-    process.env['INSTANA_FORCE_TRANSMISSION_STARTING_AT'] == null
-  ) {
-    config.tracing.forceTransmissionStartingAt = defaults.tracing.forceTransmissionStartingAt;
-    return;
-  } else if (
-    config.tracing.forceTransmissionStartingAt == null &&
-    process.env['INSTANA_FORCE_TRANSMISSION_STARTING_AT'] != null
-  ) {
-    originalValue = process.env['INSTANA_FORCE_TRANSMISSION_STARTING_AT'];
-    config.tracing.forceTransmissionStartingAt = parseInt(originalValue, 10);
-  }
+  config.tracing.transmissionDelay = normalizeSingleValue(
+    config.tracing.transmissionDelay,
+    defaults.tracing.transmissionDelay,
+    'config.tracing.transmissionDelay',
+    'INSTANA_TRACING_TRANSMISSION_DELAY'
+  );
 
-  if (
-    typeof config.tracing.forceTransmissionStartingAt !== 'number' ||
-    isNaN(config.tracing.forceTransmissionStartingAt)
-  ) {
-    logger.warn(
-      'The value of config.tracing.forceTransmissionStartingAt (or INSTANA_FORCE_TRANSMISSION_STARTING_AT) ("%s") is ' +
-        'not numerical or cannot be parsed to a numerical value. Assuming the default value %s.',
-      originalValue,
-      defaults.tracing.forceTransmissionStartingAt
-    );
-    config.tracing.forceTransmissionStartingAt = defaults.tracing.forceTransmissionStartingAt;
-  }
+  config.tracing.forceTransmissionStartingAt = normalizeSingleValue(
+    config.tracing.forceTransmissionStartingAt,
+    defaults.tracing.forceTransmissionStartingAt,
+    'config.tracing.forceTransmissionStartingAt',
+    'INSTANA_FORCE_TRANSMISSION_STARTING_AT'
+  );
 }
 
 function normalizeTracingHttp(config) {
@@ -315,4 +308,28 @@ function normalizeSecrets(config) {
     );
     config.secrets.keywords = defaults.secrets.keywords;
   }
+}
+
+function normalizeSingleValue(configValue, defaultValue, configPath, envVarKey) {
+  var envVarVal = process.env[envVarKey];
+  var originalValue = configValue;
+  if (configValue == null && envVarVal == null) {
+    return defaultValue;
+  } else if (configValue == null && envVarVal != null) {
+    originalValue = envVarVal;
+    configValue = parseInt(originalValue, 10);
+  }
+
+  if (typeof configValue !== 'number' || isNaN(configValue)) {
+    logger.warn(
+      'The value of %s (or %s) ("%s") is ' +
+        'not numerical or cannot be parsed to a numerical value. Assuming the default value %s.',
+      configPath,
+      envVarKey,
+      originalValue,
+      defaultValue
+    );
+    return defaultValue;
+  }
+  return configValue;
 }

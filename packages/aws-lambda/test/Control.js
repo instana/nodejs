@@ -41,6 +41,7 @@ Control.prototype.registerTestHooks = function registerTestHooks() {
       fail('opts.handlerDefinitionPath is unspecified.');
     }
   });
+  return this;
 };
 
 Control.prototype.startAdditionalAuxiliaryProcesses = function startAdditionalAuxiliaryProcesses() {

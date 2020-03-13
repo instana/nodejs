@@ -68,10 +68,10 @@ app.post('/set-logger', (req, res) => {
     return res.sendStatus(400);
   }
   const dummyLogger = {
-    debug: writeToDummyLogFile('debug', logFilePath),
-    info: writeToDummyLogFile('info', logFilePath),
-    warn: writeToDummyLogFile('warn', logFilePath),
-    error: writeToDummyLogFile('error', logFilePath)
+    debug: appendToDummyLogFile('debug', logFilePath),
+    info: appendToDummyLogFile('info', logFilePath),
+    warn: appendToDummyLogFile('warn', logFilePath),
+    error: appendToDummyLogFile('error', logFilePath)
   };
 
   instana.setLogger(dummyLogger);
@@ -79,10 +79,10 @@ app.post('/set-logger', (req, res) => {
   res.send('OK');
 });
 
-function writeToDummyLogFile(level, logFilePath) {
+function appendToDummyLogFile(level, logFilePath) {
   return message => {
     const content = typeof messsage === 'string' ? message : JSON.stringify(message);
-    fs.writeFile(logFilePath, `[${level}]: ${content}`, err => {
+    fs.appendFile(logFilePath, `[${level}]: ${content}\n`, err => {
       if (err) {
         console.error(err);
       }

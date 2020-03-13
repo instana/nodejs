@@ -97,7 +97,7 @@ function transmitSpans() {
 
   downstreamConnection.sendSpans(spansToSend, function sendSpans(error) {
     if (error) {
-      logger.warn('Failed to transmit spans', { error: error });
+      logger.warn('Failed to transmit spans, will retry in ' + transmissionDelay + ' ms.', error.message);
       spans = spans.concat(spansToSend);
       removeSpansIfNecessary();
     }
@@ -119,6 +119,8 @@ exports.getAndResetSpans = function getAndResetSpans() {
 
 function removeSpansIfNecessary() {
   if (spans.length > maxBufferedSpans) {
+    var droppedCount = spans.length - maxBufferedSpans;
+    logger.warn('Span buffer is over capacity, dropping ' + droppedCount + ' spans.');
     tracingMetrics.incrementDropped(spans.length - maxBufferedSpans);
     // retain the last maxBufferedSpans elements, drop everything before that
     spans = spans.slice(-maxBufferedSpans);
