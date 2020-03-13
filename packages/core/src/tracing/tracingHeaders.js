@@ -112,10 +112,10 @@ exports.fromHttpRequest = function fromHttpRequest(req) {
     // Neither X-INSTANA- headers nor W3C trace context headers are present.
     // eslint-disable-next-line no-lonely-if
     if (isSuppressed(level)) {
-      // If tracing is suppressed and no headers are incoming, we need to create a new random parent ID (and pass it
-      // down in the traceparent header); this parent ID is not actually associated with any existing span (Instana or
-      // foreign). This can't be helped, the spec mandates to always set the traceparent header on outgoing requests,
-      // even if we didn't sample and it has to have a parent ID field.
+      // If tracing is suppressed and no headers are incoming, we need to create new random trace and parent IDs (and
+      // pass them down in the traceparent header); this trace and parent IDs ares not actually associated with any
+      // existing span (Instana or foreign). This can't be helped, the spec mandates to always set the traceparent
+      // header on outgoing requests, even if we didn't sample and it has to have a parent ID field.
       return {
         level: level,
         synthetic: synthetic,

@@ -13,29 +13,19 @@ let logger = require('./console_logger');
 const https = environmentUtil.sendUnencrypted ? uninstrumented.http : uninstrumented.https;
 
 const timeoutEnvVar = 'INSTANA_TIMEOUT';
-const defaultTimeout = 500;
+let defaultTimeout = 500;
 let backendTimeout = defaultTimeout;
 
 const proxyEnvVar = 'INSTANA_ENDPOINT_PROXY';
 let proxyAgent;
 
-const stopSendingOnFailure = true;
+let stopSendingOnFailure = true;
+let propagateErrorsUpstream = false;
 let requestHasFailed = false;
 let warningsHaveBeenLogged = false;
 
-const needsEcdhCurveFix = semver.lt(process.version, '10.0.0');
+const needsEcdhCurveFix = semver.gte(process.version, '8.6.0') && semver.lt(process.version, '10.0.0');
 const legacyTimeoutHandling = semver.lt(process.version, '10.0.0');
-
-if (process.env[timeoutEnvVar]) {
-  backendTimeout = parseInt(process.env[timeoutEnvVar], 10);
-  if (isNaN(backendTimeout) || backendTimeout < 0) {
-    logger.warn(
-      `The value of ${timeoutEnvVar} (${process.env[timeoutEnvVar]}) cannot be parsed to a valid numerical value. ` +
-        `Will fall back to the default timeout (${defaultTimeout} ms).`
-    );
-    backendTimeout = defaultTimeout;
-  }
-}
 
 const disableCaCheckEnvVar = 'INSTANA_DISABLE_CA_CHECK';
 const disableCaCheck = process.env[disableCaCheckEnvVar] === 'true';
@@ -56,16 +46,44 @@ if (process.env[proxyEnvVar] && !environmentUtil.sendUnencrypted) {
   );
 }
 
-let identityProvider;
+let hostHeader;
 
-exports.init = function init(identityProvider_, logger_) {
-  identityProvider = identityProvider_;
-  logger = logger_;
+exports.init = function init(
+  identityProvider,
+  _logger,
+  _stopSendingOnFailure,
+  _propagateErrorsUpstream,
+  _defaultTimeout
+) {
+  stopSendingOnFailure = _stopSendingOnFailure == null ? true : _stopSendingOnFailure;
+  propagateErrorsUpstream = _propagateErrorsUpstream == null ? false : _propagateErrorsUpstream;
+  defaultTimeout = _defaultTimeout == null ? defaultTimeout : _defaultTimeout;
+
+  backendTimeout = defaultTimeout;
+  if (process.env[timeoutEnvVar]) {
+    backendTimeout = parseInt(process.env[timeoutEnvVar], 10);
+    if (isNaN(backendTimeout) || backendTimeout < 0) {
+      logger.warn(
+        `The value of ${timeoutEnvVar} (${process.env[timeoutEnvVar]}) cannot be parsed to a valid numerical value. ` +
+          `Will fall back to the default timeout (${defaultTimeout} ms).`
+      );
+      backendTimeout = defaultTimeout;
+    }
+  }
+
+  if (identityProvider) {
+    hostHeader = identityProvider.getHostHeader();
+    if (hostHeader == null) {
+      hostHeader = 'nodejs-serverless';
+    }
+  }
+
+  logger = _logger;
   requestHasFailed = false;
 };
 
-exports.setLogger = function setLogger(logger_) {
-  logger = logger_;
+exports.setLogger = function setLogger(_logger) {
+  logger = _logger;
 };
 
 exports.sendBundle = function sendBundle(bundle, destroySocketAfterwards, callback) {
@@ -115,7 +133,9 @@ function send(resourcePath, payload, destroySocketAfterwards, callback) {
     resourcePath = environmentUtil.getBackendPath() + resourcePath;
   }
 
+  // serialize the payload object
   payload = JSON.stringify(payload);
+
   const options = {
     hostname: environmentUtil.getBackendHost(),
     port: environmentUtil.getBackendPort(),
@@ -124,7 +144,7 @@ function send(resourcePath, payload, destroySocketAfterwards, callback) {
     headers: {
       'Content-Type': 'application/json',
       'Content-Length': Buffer.byteLength(payload),
-      [constants.xInstanaHost]: identityProvider ? identityProvider.getHostHeader() : 'nodejs-aws-lambda',
+      [constants.xInstanaHost]: hostHeader,
       [constants.xInstanaKey]: environmentUtil.getInstanaAgentKey(),
       [constants.xInstanaTime]: Date.now()
     },
@@ -163,9 +183,10 @@ function send(resourcePath, payload, destroySocketAfterwards, callback) {
 
   req.on('error', e => {
     requestHasFailed = true;
-    logger.warn('Could not send traces and metrics to Instana. The Instana back end seems to be unavailable.', e);
-    // Deliberately not propagating the error because we have already handled it.
-    callback();
+    if (!propagateErrorsUpstream) {
+      logger.warn('Could not send traces and metrics to Instana. The Instana back end seems to be unavailable.', e);
+    }
+    callback(propagateErrorsUpstream ? e : undefined);
   });
 
   req.end(payload);
@@ -173,9 +194,12 @@ function send(resourcePath, payload, destroySocketAfterwards, callback) {
 
 function onTimeout(callback) {
   requestHasFailed = true;
-  logger.warn(
+  const message =
     'Could not send traces and metrics to Instana. The Instana back end did not respond in the configured timeout ' +
-      `of ${backendTimeout} ms. The timeout can be configured by setting the environment variable ${timeoutEnvVar}.`
-  );
-  callback();
+    `of ${backendTimeout} ms. The timeout can be configured by setting the environment variable ${timeoutEnvVar}.`;
+
+  if (!propagateErrorsUpstream) {
+    logger.warn(message);
+  }
+  callback(propagateErrorsUpstream ? new Error(message) : undefined);
 }

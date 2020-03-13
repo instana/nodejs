@@ -29,9 +29,8 @@ exports.getMainPackageJson = function getMainPackageJson(startDirectory, cb) {
       return process.nextTick(cb, err, null);
     }
     if (packageJsonPath == null) {
-      parsedMainPackageJson = null;
       // fs.readFile would have called cb asynchronously later, so we use process.nextTick here to make all paths async.
-      return process.nextTick(cb, null, null);
+      return process.nextTick(cb);
     }
 
     fs.readFile(packageJsonPath, { encoding: 'utf8' }, function(readFileErr, contents) {
@@ -65,12 +64,15 @@ exports.getMainPackageJsonPath = function getMainPackageJsonPath(startDirectory,
     // No explicit starting directory for searching for the main package.json has been provided, use the Node.js
     // process' main module as the starting point.
     var mainModule = process.mainModule;
-    // this may happen when the Node CLI is evaluating an expression or when the REPL is used
+
     if (!mainModule) {
-      mainPackageJsonPath = null;
-      // searchForPackageJsonInDirectoryTreeUpwards would have called cb asynchronously later,
-      // so we use process.nextTick here to make all paths async.
-      return process.nextTick(cb, null, null);
+      // This happens
+      // a) when the Node CLI is evaluating an expression, or
+      // b) when the REPL is used, or
+      // c) when we have been pre-required with the --require/-r command line flag
+      // In particular for case (c) we want to try again later. This is handled in the individual metrics that rely on
+      // evaluating the package.json file.
+      return process.nextTick(cb);
     }
     startDirectory = path.dirname(mainModule.filename);
   }

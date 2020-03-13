@@ -4,7 +4,7 @@ const expect = require('chai').expect;
 const compression = require('../../src/util/compression');
 
 describe('compression', () => {
-  it('should comparse primitive values', () => {
+  it('should compress primitive values', () => {
     expect(compression(42, 43)).to.deep.equal(43);
     expect(compression(true, false)).to.deep.equal(false);
   });
@@ -31,6 +31,16 @@ describe('compression', () => {
       expect(compression({ a: { b: 7 } }, { a: { b: 7, c: 3 } })).to.deep.equal({ a: { c: 3 } });
     });
 
+    it('should remove the same object completely', () => {
+      const object = { a: { b: { c: 42 } } };
+      expect(compression(object, object)).to.deep.equal({});
+    });
+
+    it('should remove the same object also when blacklisting', () => {
+      const object = { a: { b: { c: 42 } } };
+      expect(compression(object, object, [['unrelated', 'blacklist']])).to.deep.equal({});
+    });
+
     it('should mark all values as new', () => {
       expect(compression(undefined, { a: { b: 7, c: 3 } })).to.deep.equal({ a: { b: 7, c: 3 } });
     });
@@ -54,6 +64,95 @@ describe('compression', () => {
 
     it('should resend the whole array when any of the values changes', () => {
       expect(compression({ data: [1, 2, 3] }, { data: [1, 2, 4] })).to.deep.equal({ data: [1, 2, 4] });
+    });
+  });
+
+  describe('blacklisting', () => {
+    it('should always report properties which have been blacklisted for compression', () => {
+      expect(
+        compression(
+          {
+            blacklistedPrimitiveRoot: 12,
+            nonBlacklistedPrimitiveRoot: 13,
+            changingPrimitiveRoot: 14,
+            path: {
+              nonBlacklistedPrimitive: 42,
+              nonBlacklistedObject: { foo: 'bar' },
+              nonBlacklistedArray: [1, 2, 3],
+              blacklistedPrimitive: 43,
+              blacklistedObject: { foo: 'baz' },
+              blacklistedArray: [1, 2, 3],
+              changingPrimitive: 42,
+              changingObject: { bar: 'foo' },
+              changingArray: [1, 2, 3]
+            }
+          },
+          {
+            blacklistedPrimitiveRoot: 12,
+            nonBlacklistedPrimitiveRoot: 13,
+            changingPrimitiveRoot: 15,
+            path: {
+              nonBlacklistedPrimitive: 42,
+              nonBlacklistedObject: { foo: 'bar' },
+              nonBlacklistedArray: [1, 2, 3],
+              blacklistedPrimitive: 43,
+              blacklistedObject: { foo: 'baz' },
+              blacklistedArray: [1, 2, 3],
+              changingPrimitive: 666,
+              changingObject: { bar: 'boo' },
+              changingArray: [1, 2, 3, 4]
+            }
+          },
+          [
+            ['blacklistedPrimitiveRoot'],
+            ['path', 'blacklistedPrimitive'],
+            ['path', 'blacklistedObject'],
+            ['path', 'blacklistedArray']
+          ]
+        )
+      ).to.deep.equal({
+        blacklistedPrimitiveRoot: 12,
+        changingPrimitiveRoot: 15,
+        path: {
+          blacklistedPrimitive: 43,
+          blacklistedObject: { foo: 'baz' },
+          blacklistedArray: [1, 2, 3],
+          changingPrimitive: 666,
+          changingObject: { bar: 'boo' },
+          changingArray: [1, 2, 3, 4]
+        }
+      });
+    });
+
+    it('blacklisting should work for the same object, too', () => {
+      const object = {
+        blacklistedPrimitiveRoot: 12,
+        nonBlacklistedPrimitiveRoot: 13,
+        path: {
+          nonBlacklistedPrimitive: 42,
+          nonBlacklistedObject: { foo: 'bar' },
+          nonBlacklistedArray: [1, 2, 3],
+          blacklistedPrimitive: 43,
+          blacklistedObject: { foo: 'baz' },
+          blacklistedArray: [1, 2, 3]
+        }
+      };
+
+      expect(
+        compression(object, object, [
+          ['blacklistedPrimitiveRoot'],
+          ['path', 'blacklistedPrimitive'],
+          ['path', 'blacklistedObject'],
+          ['path', 'blacklistedArray']
+        ])
+      ).to.deep.equal({
+        blacklistedPrimitiveRoot: 12,
+        path: {
+          blacklistedPrimitive: 43,
+          blacklistedObject: { foo: 'baz' },
+          blacklistedArray: [1, 2, 3]
+        }
+      });
     });
   });
 });

@@ -83,10 +83,17 @@ exports.unsignedHexStringsToBuffer = function unsignedHexStringsToBuffer(traceId
 };
 
 /**
- * Writes characters from a hex string directly to a buffer, without converting the hex string to a BigInt beforehand.
+ * Writes characters from a hex string directly to a buffer. The buffer will contain a binary representation of the
+ * given hex string after this operation. No length checks are executed, so the caller is responsible for writing within
+ * the bounds of the given buffer.
+ *
  * The string hexString must only contain the characters [0-9a-f].
  */
 function writeHexToBuffer(hexString, buffer, offset) {
+  // This implementation uses Node.js buffer internals directly:
+  // https://github.com/nodejs/node/blob/92cef79779d121d934dcb161c068bdac35e6a963/lib/internal/buffer.js#L1005 ->
+  // https://github.com/nodejs/node/blob/master/src/node_buffer.cc#L1196 /
+  // https://github.com/nodejs/node/blob/master/src/node_buffer.cc#L681
   buffer.hexWrite(hexString, offset, hexString.length / 2);
 }
 

@@ -3,6 +3,7 @@
 var path = require('path');
 var instanaNodeJsCore = require('@instana/core');
 
+require('./tracing'); // load additional instrumentations
 var log = require('./logger');
 var normalizeConfig = require('./util/normalizeConfig');
 

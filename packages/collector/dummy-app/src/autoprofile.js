@@ -1,6 +1,14 @@
 'use strict';
 
-require('../..')({ autoProfile: true });
+const config = require('./config');
+
+let packageToRequire = '../..';
+if (config.mode === 'npm') {
+  packageToRequire = '@instana/collector';
+}
+
+console.log(`enabling @instana/collector (requiring ${packageToRequire})`);
+require(packageToRequire)({ autoProfile: true });
 
 const fs = require('fs');
 const http = require('http');

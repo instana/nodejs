@@ -1,15 +1,16 @@
 'use strict';
 
 var semver = require('semver');
-var clone = require('@instana/core').util.clone;
-var compression = require('@instana/core').util.compression;
-var tracing = require('@instana/core').tracing;
-var autoprofile;
+var instanaCore = require('@instana/core');
 
+var transmissionCycle = require('../metrics/transmissionCycle');
 var agentOpts = require('../agent/opts');
 var pidStore = require('../pidStore');
 var metrics = require('../metrics');
 var uncaught = require('../uncaught');
+
+var autoprofile;
+var tracing = instanaCore.tracing;
 
 if (semver.gte(process.version, '6.4.0')) {
   autoprofile = require('@instana/autoprofile');
@@ -23,11 +24,6 @@ var requestHandler = require('../agent/requestHandler');
 var agentConnection = require('../agentConnection');
 
 var ctx;
-
-var resendFullDataEveryXTransmissions = 300; /* about every 5 minutes */
-
-var transmissionsSinceLastFullDataEmit = 0;
-var previousTransmittedValue;
 
 var tracingMetricsDelay = 1000;
 if (typeof process.env.INSTANA_TRACER_METRICS_INTERVAL === 'string') {
@@ -45,12 +41,20 @@ module.exports = exports = {
 
 function enter(_ctx) {
   ctx = _ctx;
-  transmissionsSinceLastFullDataEmit = 0;
   uncaught.activate();
   metrics.activate();
+  transmissionCycle.activate(
+    metrics,
+    agentConnection,
+    function onSuccess(requests) {
+      requestHandler.handleRequests(requests);
+    },
+    function onError() {
+      ctx.transitionTo('unannounced');
+    }
+  );
   tracing.activate();
   requestHandler.activate();
-  sendData();
   scheduleTracingMetrics();
 
   if (agentOpts.autoProfile && autoprofile) {
@@ -73,44 +77,13 @@ function enter(_ctx) {
 function leave() {
   uncaught.deactivate();
   metrics.deactivate();
+  transmissionCycle.deactivate();
   tracing.deactivate();
   requestHandler.deactivate();
-  previousTransmittedValue = undefined;
   if (tracingMetricsTimeout) {
     clearTimeout(tracingMetricsTimeout);
     tracingMetricsTimeout = null;
   }
-}
-
-function sendData() {
-  // clone retrieved objects to allow mutations in metric retrievers
-  var newValueToTransmit = clone(metrics.gatherData());
-
-  var payload;
-  var isFullTransmission = transmissionsSinceLastFullDataEmit > resendFullDataEveryXTransmissions;
-  if (isFullTransmission) {
-    payload = newValueToTransmit;
-  } else {
-    payload = compression(previousTransmittedValue, newValueToTransmit);
-  }
-
-  agentConnection.sendDataToAgent(payload, onDataHasBeenSent.bind(null, isFullTransmission, newValueToTransmit));
-}
-
-function onDataHasBeenSent(isFullTransmission, transmittedValue, error, requests) {
-  if (error) {
-    logger.error('Error received while trying to send raw payload to agent: %s', error.message);
-    ctx.transitionTo('unannounced');
-    return;
-  }
-  previousTransmittedValue = transmittedValue;
-  if (isFullTransmission) {
-    transmissionsSinceLastFullDataEmit = 0;
-  } else {
-    transmissionsSinceLastFullDataEmit++;
-  }
-  requestHandler.handleRequests(requests);
-  setTimeout(sendData, 1000).unref();
 }
 
 function sendTracingMetrics() {

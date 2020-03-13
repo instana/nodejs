@@ -28,7 +28,8 @@ describe('setLogger', function() {
   });
 
   it('must reinitialize all loggers on setLogger', () => {
-    expressControls.setLogger(false, dummyLogFile);
+    setTimeout(() => expressControls.setLogger(false, dummyLogFile), 500);
+
     return testUtils.retry(
       () =>
         new Promise((resolve, reject) => {

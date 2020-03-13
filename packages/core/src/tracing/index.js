@@ -44,14 +44,13 @@ var instrumentations = [
   './instrumentation/messaging/kafkaNode',
   './instrumentation/messaging/nats',
   './instrumentation/messaging/natsStreaming',
-  './instrumentation/process/childProcess',
-  './instrumentation/process/edgemicro',
   './instrumentation/process/memored',
   './instrumentation/protocols/graphql',
   './instrumentation/protocols/grpc',
   './instrumentation/protocols/httpClient',
   './instrumentation/protocols/httpServer'
 ];
+var additionalInstrumentationModules = [];
 var instrumentationModules = {};
 
 exports.constants = constants;
@@ -59,6 +58,10 @@ exports.opentracing = opentracing;
 exports.sdk = sdk;
 exports.spanBuffer = spanBuffer;
 exports.supportedVersion = supportedVersion;
+
+exports.registerAdditionalInstrumentations = function(_additionalInstrumentationModules) {
+  additionalInstrumentationModules = additionalInstrumentationModules.concat(_additionalInstrumentationModules);
+};
 
 exports.preInit = function(preliminaryConfig) {
   initInstrumenations(preliminaryConfig);
@@ -91,6 +94,9 @@ function initInstrumenations(_config) {
     instrumentations.forEach(function(instrumentationKey) {
       instrumentationModules[instrumentationKey] = require(instrumentationKey);
       instrumentationModules[instrumentationKey].init(_config);
+    });
+    additionalInstrumentationModules.forEach(function(instrumentationModule) {
+      instrumentationModule.init(_config);
     });
     instrumenationsInitialized = true;
   } else {

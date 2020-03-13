@@ -43,39 +43,30 @@ AbstractServerlessControl.prototype.registerTestHooks = function registerTestHoo
 
     let backendPromise;
     if (this.opts.startBackend) {
-      this.backend = fork(path.join(__dirname, '../backend_stub'), {
+      backendPromise = this.startBackendAndWaitForIt();
+    } else {
+      backendPromise = Promise.resolve();
+    }
+
+    let downstreamDummyPromise;
+    if (this.opts.startDownstreamDummy !== false) {
+      this.downstreamDummy = fork(path.join(__dirname, '../downstream_dummy'), {
         stdio: config.getAppStdio(),
         env: Object.assign(
           {
-            BACKEND_PORT: this.backendPort,
-            BACKEND_UNRESPONSIVE: this.opts.startBackend === 'unresponsive'
+            DOWNSTREAM_DUMMY_PORT: this.downstreamDummyPort
           },
           process.env,
           this.opts.env
         )
       });
-      this.backend.on('message', message => {
-        this.messagesFromBackend.push(message);
+      this.downstreamDummy.on('message', message => {
+        this.messagesFromDownstreamDummy.push(message);
       });
-      backendPromise = this.waitUntilBackendIsUp();
+      downstreamDummyPromise = this.waitUntilDownstreamDummyIsUp();
     } else {
-      backendPromise = Promise.resolve();
+      downstreamDummyPromise = Promise.resolve();
     }
-
-    this.downstreamDummy = fork(path.join(__dirname, '../downstream_dummy'), {
-      stdio: config.getAppStdio(),
-      env: Object.assign(
-        {
-          DOWNSTREAM_DUMMY_PORT: this.downstreamDummyPort
-        },
-        process.env,
-        this.opts.env
-      )
-    });
-    this.downstreamDummy.on('message', message => {
-      this.messagesFromDownstreamDummy.push(message);
-    });
-    const downstreamDummyPromise = this.waitUntilDownstreamDummyIsUp();
 
     const allAuxiliaryProcesses = [backendPromise, downstreamDummyPromise].concat(
       this.startAdditionalAuxiliaryProcesses()
@@ -97,6 +88,25 @@ AbstractServerlessControl.prototype.registerTestHooks = function registerTestHoo
         fail(`A child process did not terminate properly: ${e}`);
       })
   );
+};
+
+AbstractServerlessControl.prototype.startBackendAndWaitForIt = function startBackendAndWaitForIt() {
+  this.backendHasBeenStarted = true;
+  this.backend = fork(path.join(__dirname, '../backend_stub'), {
+    stdio: config.getAppStdio(),
+    env: Object.assign(
+      {
+        BACKEND_PORT: this.backendPort,
+        BACKEND_UNRESPONSIVE: this.opts.startBackend === 'unresponsive'
+      },
+      process.env,
+      this.opts.env
+    )
+  });
+  this.backend.on('message', message => {
+    this.messagesFromBackend.push(message);
+  });
+  return this.waitUntilBackendIsUp();
 };
 
 AbstractServerlessControl.prototype.waitUntilBackendIsUp = function waitUntilBackendIsUp() {
@@ -232,7 +242,7 @@ AbstractServerlessControl.prototype.getMetrics = function getMetrics() {
 };
 
 AbstractServerlessControl.prototype._getFromBackend = function _getFromBackend(url) {
-  if (this.opts.startBackend) {
+  if (this.backendHasBeenStarted) {
     return request({
       method: 'GET',
       url: `${this.backendBaseUrl}${url}`,
@@ -245,7 +255,7 @@ AbstractServerlessControl.prototype._getFromBackend = function _getFromBackend(u
 };
 
 AbstractServerlessControl.prototype.resetBackend = function resetBackend() {
-  if (this.opts.startBackend) {
+  if (this.backendHasBeenStarted) {
     return request({
       method: 'DELETE',
       url: `${this.backendBaseUrl}/received`,
@@ -260,7 +270,7 @@ AbstractServerlessControl.prototype.setResponsive = function setResponsive(respo
   if (responsive == null) {
     responsive = true;
   }
-  if (this.opts.startBackend) {
+  if (this.backendHasBeenStarted) {
     return request({
       method: 'POST',
       url: `${this.backendBaseUrl}/responsive?responsive=${responsive}`,

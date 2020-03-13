@@ -5,7 +5,7 @@
 let minLevel = 30;
 
 module.exports = exports = {
-  debug: createLogFn(20, console.debug),
+  debug: createLogFn(20, console.debug || console.log),
   info: createLogFn(30, console.log),
   warn: createLogFn(40, console.warn),
   error: createLogFn(50, console.error)

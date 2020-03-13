@@ -1,0 +1,16 @@
+FROM node:12.16.3-buster AS instana-aws-fargate-build-nodejs
+WORKDIR /instana
+COPY package.json ./
+COPY .npmrc ./
+COPY setup.sh ./
+
+RUN npm install --only=production
+
+RUN rm -f instana-*.tgz
+RUN rm -f package.json
+RUN rm -f .npmrc
+
+FROM scratch
+
+COPY --from=instana-aws-fargate-build-nodejs /instana /instana
+

@@ -49,11 +49,6 @@ describe('actions/profiling/cpu', () => {
   });
 
   describe('integration-test', function() {
-    if (semver.satisfies(process.versions.node, '>=12.0.0')) {
-      // Skipping test, v8-profiler-node8 needs to be updated for Node.js 12.
-      return;
-    }
-
     this.timeout(config.getTestTimeout());
 
     const agentControls = require('../../apps/agentStubControls');

@@ -54,7 +54,7 @@ const handler = async event => {
     currentSpan.span.manualEndMode = false;
   }
 
-  // check the opentracing is available
+  // check that the opentracing API is available
   instana.opentracing.createTracer();
 
   // use Instana SDK

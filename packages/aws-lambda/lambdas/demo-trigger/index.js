@@ -9,6 +9,7 @@ const uuid = require('uuid/v4');
 
 const bucket = process.env.BUCKET_NAME || 'instana-lambda-demo';
 const apiUrl = process.env.API_URL || 'https://wn69a84ebf.execute-api.us-east-2.amazonaws.com';
+const fargateUrl = process.env.FARGATE_URL;
 
 const logger = pino();
 
@@ -20,6 +21,21 @@ exports.handler = (event, context, callback) => {
 
   logger.info('Triggering API request.');
   triggerHttpRequest()
+    .then(() => {
+      if (fargateUrl) {
+        logger.info(`Fargate URL is set, sending request to: ${fargateUrl}`);
+        return request({
+          url: fargateUrl
+        })
+          .then(response => logger.info(`Fargate request successful: ${fargateUrl} => ${response}`))
+          .catch(e => {
+            logger.warn(`Fargate request failed: ${fargateUrl}.`, e.message);
+          });
+      } else {
+        logger.info('Fargate URL is not set, skipping.');
+        return Promise.resolve();
+      }
+    })
     .then(() => {
       async_.waterfall(
         [
@@ -109,7 +125,6 @@ function triggerHttpRequest() {
   })
     .then(() => logger.info(`API request successful: ${method} ${url} ${body ? JSON.stringify(body) : ''}`))
     .catch(e => {
-      console.log('XXX', JSON.stringify(e));
       if (e.name === 'StatusCodeError' && e.statusCode === 404) {
         // convert 404s into non-errors
         logger.warn(`Not found: ${url}.`);
