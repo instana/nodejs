@@ -2,6 +2,7 @@
 
 ## Unreleased
 - Remove deprecated span attributes `span.error` and `span.async`.
+- Remove obsolete configuration option `config.agentName`/`INSTANA_AGENT_NAME`.
 
 ## 1.92.4
 - [AWS Lambda] Do not try to send data to the Instana back end when a previous request to it has already failed.

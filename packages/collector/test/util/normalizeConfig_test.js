@@ -14,7 +14,6 @@ describe('util.normalizeConfig', () => {
   function resetEnv() {
     delete process.env['INSTANA_AGENT_HOST'];
     delete process.env['INSTANA_AGENT_PORT'];
-    delete process.env['INSTANA_AGENT_NAME'];
   }
 
   it('should apply all defaults', () => {
@@ -26,23 +25,19 @@ describe('util.normalizeConfig', () => {
   it('should accept custom agent connection configuration', () => {
     const config = normalizeConfig({
       agentHost: 'LOKAL_HORST',
-      agentPort: 1207,
-      agentName: 'Joe'
+      agentPort: 1207
     });
     expect(config.agentHost).to.equal('LOKAL_HORST');
     expect(config.agentPort).to.equal(1207);
-    expect(config.agentName).to.equal('Joe');
   });
 
   it('should accept custom agent connection configuration from environment', () => {
     process.env['INSTANA_AGENT_HOST'] = 'yadayada';
     process.env['INSTANA_AGENT_PORT'] = '1357';
-    process.env['INSTANA_AGENT_NAME'] = 'Cthulhu';
     const config = normalizeConfig();
     expect(config.agentHost).to.equal('yadayada');
     expect(config.agentPort).to.equal(1357);
     expect(config.agentPort).to.be.a('number');
-    expect(config.agentName).to.equal('Cthulhu');
   });
 
   it('should custom stack trace length', () => {
@@ -83,7 +78,6 @@ describe('util.normalizeConfig', () => {
     expect(config).to.be.an('object');
     expect(config.agentHost).to.equal('127.0.0.1');
     expect(config.agentPort).to.equal(42699);
-    expect(config.agentName).to.equal('Instana Agent');
     expect(config.tracing).to.be.an('object');
     expect(config.tracing.stackTraceLength).to.equal(10);
     expect(config.reportUncaughtException).to.be.false;

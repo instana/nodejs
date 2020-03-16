@@ -6,6 +6,8 @@ var http = require('@instana/core').uninstrumentedHttp.http;
 
 var agentOpts = require('../agent/opts');
 
+var EXPECTED_SERVER_HEADER = 'Instana Agent';
+
 var logger;
 logger = require('../logger').getLogger('announceCycle/agentHostLookup', function(newLogger) {
   logger = newLogger;
@@ -103,7 +105,7 @@ function checkHost(host, cb) {
         method: 'GET'
       },
       function(res) {
-        if (res.headers.server === agentOpts.serverHeader) {
+        if (res.headers.server === EXPECTED_SERVER_HEADER) {
           cb(null);
         } else {
           cb(new Error('Host ' + host + ' did not respond with expected agent header. Got: ' + res.headers.server));
