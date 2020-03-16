@@ -5,7 +5,6 @@
 var defaults = {
   agentHost: '127.0.0.1',
   agentPort: 42699,
-  agentName: 'Instana Agent',
   tracing: {
     stackTraceLength: 10
   }
@@ -19,7 +18,6 @@ module.exports = exports = function normalizeConfig(config) {
 
   config.agentHost = config.agentHost || process.env.INSTANA_AGENT_HOST || defaults.agentHost;
   config.agentPort = config.agentPort || parseToPositiveInteger(process.env.INSTANA_AGENT_PORT, defaults.agentPort);
-  config.agentName = config.agentName || process.env.INSTANA_AGENT_NAME || defaults.agentName;
 
   normalizeConfigForUncaughtExceptions(config);
 
