@@ -1,5 +1,3 @@
-/* eslint-disable */
-
 'use strict';
 
 // This is a tiny express app which responds to all methods and has configurable
@@ -76,6 +74,7 @@ app.listen(process.env.APP_PORT, () => {
 });
 
 function log() {
+  /* eslint-disable no-console */
   const args = Array.prototype.slice.call(arguments);
   args[0] = `Express Proxy (${process.pid}):\t${args[0]}`;
   console.log.apply(console, args);
