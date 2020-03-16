@@ -1,6 +1,3 @@
-/* eslint-env mocha */
-/* eslint-disable dot-notation */
-
 'use strict';
 
 const expect = require('chai').expect;
@@ -12,11 +9,11 @@ describe('util.normalizeConfig', () => {
   afterEach(resetEnv);
 
   function resetEnv() {
-    delete process.env['INSTANA_SERVICE_NAME'];
-    delete process.env['INSTANA_DISABLE_TRACING'];
-    delete process.env['INSTANA_DISABLE_AUTO_INSTR'];
-    delete process.env['INSTANA_STACK_TRACE_LENGTH'];
-    delete process.env['INSTANA_DISABLED_TRACERS'];
+    delete process.env.INSTANA_SERVICE_NAME;
+    delete process.env.INSTANA_DISABLE_TRACING;
+    delete process.env.INSTANA_DISABLE_AUTO_INSTR;
+    delete process.env.INSTANA_STACK_TRACE_LENGTH;
+    delete process.env.INSTANA_DISABLED_TRACERS;
   }
 
   it('should apply all defaults', () => {
@@ -32,7 +29,7 @@ describe('util.normalizeConfig', () => {
   });
 
   it('should accept service name from env var', () => {
-    process.env['INSTANA_SERVICE_NAME'] = 'very-custom-service-name';
+    process.env.INSTANA_SERVICE_NAME = 'very-custom-service-name';
     const config = normalizeConfig();
     expect(config.serviceName).to.equal('very-custom-service-name');
   });
@@ -66,7 +63,7 @@ describe('util.normalizeConfig', () => {
   });
 
   it('should disable tracing via INSTANA_DISABLE_TRACING', () => {
-    process.env['INSTANA_DISABLE_TRACING'] = true;
+    process.env.INSTANA_DISABLE_TRACING = true;
     const config = normalizeConfig();
     expect(config.tracing.enabled).to.be.false;
     expect(config.tracing.automaticTracingEnabled).to.be.false;
@@ -87,7 +84,7 @@ describe('util.normalizeConfig', () => {
   });
 
   it('should disable automatic tracing via INSTANA_DISABLE_AUTO_INSTR', () => {
-    process.env['INSTANA_DISABLE_AUTO_INSTR'] = 'true';
+    process.env.INSTANA_DISABLE_AUTO_INSTR = 'true';
     const config = normalizeConfig();
     expect(config.tracing.enabled).to.be.true;
     expect(config.tracing.automaticTracingEnabled).to.be.false;
@@ -178,7 +175,7 @@ describe('util.normalizeConfig', () => {
   });
 
   it('should read stack trace length from INSTANA_STACK_TRACE_LENGTH', () => {
-    process.env['INSTANA_STACK_TRACE_LENGTH'] = '3';
+    process.env.INSTANA_STACK_TRACE_LENGTH = '3';
     const config = normalizeConfig();
     expect(config.tracing.stackTraceLength).to.equal(3);
   });
@@ -194,14 +191,14 @@ describe('util.normalizeConfig', () => {
   });
 
   it('should disable individual tracers via env var', () => {
-    process.env['INSTANA_DISABLED_TRACERS'] = 'graphQL   , GRPC';
+    process.env.INSTANA_DISABLED_TRACERS = 'graphQL   , GRPC';
     const config = normalizeConfig();
     // values will be normalized to lower case
     expect(config.tracing.disabledTracers).to.deep.equal(['graphql', 'grpc']);
   });
 
   it('config should take precedence over env vars when disabling individual tracers', () => {
-    process.env['INSTANA_DISABLED_TRACERS'] = 'foo, bar';
+    process.env.INSTANA_DISABLED_TRACERS = 'foo, bar';
     const config = normalizeConfig({
       tracing: {
         disabledTracers: ['baz', 'fizz']

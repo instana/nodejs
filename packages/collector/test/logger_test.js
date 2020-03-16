@@ -1,6 +1,3 @@
-/* eslint-env mocha */
-/* eslint-disable no-console, dot-notation */
-
 'use strict';
 
 const expect = require('chai').expect;
@@ -19,8 +16,8 @@ describe('logger', () => {
   afterEach(resetEnv);
 
   function resetEnv() {
-    delete process.env['INSTANA_LOG_LEVEL'];
-    delete process.env['INSTANA_DEBUG'];
+    delete process.env.INSTANA_LOG_LEVEL;
+    delete process.env.INSTANA_DEBUG;
   }
 
   it('should return the default parent logger if no config is available', () => {
@@ -70,14 +67,14 @@ describe('logger', () => {
   });
 
   it('should use log level from env var', () => {
-    process.env['INSTANA_LOG_LEVEL'] = 'warn';
+    process.env.INSTANA_LOG_LEVEL = 'warn';
     log.init({});
     const logger = log.getLogger('childName');
     expect(logger.level()).to.equal(40);
   });
 
   it('should use debug log level when INSTANA_DEBUG is set', () => {
-    process.env['INSTANA_DEBUG'] = 'true';
+    process.env.INSTANA_DEBUG = 'true';
     log.init({});
     const logger = log.getLogger('childName');
     expect(logger.level()).to.equal(20);

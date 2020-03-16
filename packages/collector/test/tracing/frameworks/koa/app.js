@@ -1,6 +1,3 @@
-/* eslint-env es6 */
-/* eslint-disable no-console */
-
 'use strict';
 
 require('../../../../')();
@@ -55,6 +52,7 @@ app.listen(port, () => {
 });
 
 function log() {
+  /* eslint-disable no-console */
   const args = Array.prototype.slice.call(arguments);
   args[0] = logPrefix + args[0];
   console.log.apply(console, args);

@@ -1,6 +1,10 @@
 module.exports = {
   extends: '../.eslintrc.js',
 
+  env: {
+    mocha: true
+  },
+
   rules: {
     'func-names': 'off',
     'no-unused-expressions': 'off',

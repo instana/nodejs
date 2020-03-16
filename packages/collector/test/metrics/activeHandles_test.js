@@ -1,5 +1,4 @@
 /* global Promise */
-/* eslint-env mocha */
 
 'use strict';
 

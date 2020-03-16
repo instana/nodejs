@@ -1,6 +1,3 @@
-/* eslint-env mocha */
-/* eslint-disable dot-notation */
-
 'use strict';
 
 const expect = require('chai').expect;
@@ -12,8 +9,8 @@ describe('util.normalizeConfig', () => {
   afterEach(resetEnv);
 
   function resetEnv() {
-    delete process.env['INSTANA_AGENT_HOST'];
-    delete process.env['INSTANA_AGENT_PORT'];
+    delete process.env.INSTANA_AGENT_HOST;
+    delete process.env.INSTANA_AGENT_PORT;
   }
 
   it('should apply all defaults', () => {
@@ -32,8 +29,8 @@ describe('util.normalizeConfig', () => {
   });
 
   it('should accept custom agent connection configuration from environment', () => {
-    process.env['INSTANA_AGENT_HOST'] = 'yadayada';
-    process.env['INSTANA_AGENT_PORT'] = '1357';
+    process.env.INSTANA_AGENT_HOST = 'yadayada';
+    process.env.INSTANA_AGENT_PORT = '1357';
     const config = normalizeConfig();
     expect(config.agentHost).to.equal('yadayada');
     expect(config.agentPort).to.equal(1357);

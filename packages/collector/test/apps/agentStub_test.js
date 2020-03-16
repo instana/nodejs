@@ -1,5 +1,3 @@
-/* eslint-env mocha */
-
 'use strict';
 
 const supportedVersion = require('@instana/core').tracing.supportedVersion;

@@ -1,5 +1,3 @@
-/* eslint-env mocha */
-
 'use strict';
 
 const urlUtils = require('../../src/util/url');
