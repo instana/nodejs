@@ -1,5 +1,4 @@
 /* eslint-disable no-console */
-/* global Promise */
 
 'use strict';
 

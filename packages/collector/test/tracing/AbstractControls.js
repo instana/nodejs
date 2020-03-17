@@ -1,5 +1,3 @@
-/* global Promise */
-
 'use strict';
 
 const fork = require('child_process').fork;

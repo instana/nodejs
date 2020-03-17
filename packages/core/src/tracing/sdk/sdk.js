@@ -1,5 +1,3 @@
-/* global Promise */
-
 'use strict';
 
 var deepMerge = require('../../util/deepMerge');
