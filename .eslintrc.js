@@ -46,5 +46,9 @@ module.exports = {
     'vars-on-top': 'off',
     'wrap-iife': 'off',
     yoda: 'off'
+  },
+
+  globals: {
+    Promise: true
   }
 };

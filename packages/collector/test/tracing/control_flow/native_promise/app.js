@@ -1,6 +1,3 @@
-/* eslint-disable no-console */
-/* global Promise */
-
 'use strict';
 
 const instana = require('../../../../')();
@@ -88,16 +85,17 @@ app.listen(process.env.APP_PORT, () => {
   log(`Listening on port: ${process.env.APP_PORT}`);
 });
 
-function log() {
-  const args = Array.prototype.slice.call(arguments);
-  args[0] = logPrefix + args[0];
-  console.log.apply(console, args);
-}
-
 function delay(ms) {
   return new Promise(resolve => {
     setTimeout(() => {
       resolve();
     }, ms);
   });
+}
+
+function log() {
+  /* eslint-disable no-console */
+  const args = Array.prototype.slice.call(arguments);
+  args[0] = logPrefix + args[0];
+  console.log.apply(console, args);
 }

@@ -1,5 +1,3 @@
-/* global Promise */
-
 'use strict';
 
 // Deliberately not using Express.js here to avoid conflicts with Express.js' error handling.
