@@ -57,7 +57,7 @@ function deploy_zip {
         --output json \
         | jq ".Layers")
 
-    if [[ "$current_layers" =~ ":instana:" ]]; then
+    if [[ "$current_layers" =~ ":instana-nodejs:" ]]; then
       echo "This lambda function definition currently has the Instana layer configured, removing it now. I'll also set the standard handler index.handler (just in in case the auto-wrap handler had been configured previously)."
       aws --region $REGION lambda update-function-configuration \
         --function-name $function_name \
@@ -87,8 +87,8 @@ function deploy_zip {
         --output json \
         | jq ".Layers")
 
-    if [[ "$current_layers" =~ ":instana:" ]]; then
-      if [[ "$current_layers" =~ ":instana:$LAYER_VERSION" ]]; then
+    if [[ "$current_layers" =~ ":instana-nodejs:" ]]; then
+      if [[ "$current_layers" =~ ":instana-nodejs:$LAYER_VERSION" ]]; then
         echo This lambda function definition already has the specified version of the Instana layer, doing nothing.
       else
         echo "This lambda function definition already has the Instana layer configured but uses a version ($current_layers) that is different from the one you specified ($LAYER_VERSION). I'll try to replace this with the specified layer. I'll also set the auto-wrap handler."
