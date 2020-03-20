@@ -29,7 +29,12 @@ function main() {
   // eslint-disable-next-line import/no-dynamic-require
   lambdaDefinition = require(definitionPath);
   validateDefinition(lambdaDefinition);
-  runHandler(lambdaDefinition.handler, process.env.LAMDBA_ERROR);
+  process.on('message', cmd => {
+    if (cmd === 'run-handler') {
+      runHandler(lambdaDefinition.handler, process.env.LAMDBA_ERROR);
+    }
+  });
+  sendToParent('runtime: started');
 }
 
 /**
@@ -79,9 +84,7 @@ function runHandler(handler, error) {
         error: true,
         payload: { message: err.message }
       });
-
-      // eslint-disable-next-line consistent-return
-      return terminate(true);
+      return;
     }
     log(`Lambda ${definitionPath} handler has returned successfully, result: ${JSON.stringify(result)}.`);
     sendToParent({
@@ -89,8 +92,6 @@ function runHandler(handler, error) {
       error: false,
       payload: result
     });
-    // eslint-disable-next-line consistent-return
-    return terminate();
   };
 
   const context = createContext(callback);
@@ -113,7 +114,6 @@ function runHandler(handler, error) {
           error: false,
           payload: result
         });
-        return terminate();
       },
       err => {
         if (handlerHasFinished) {
@@ -130,7 +130,6 @@ function runHandler(handler, error) {
           error: true,
           payload: { message: err.message }
         });
-        return terminate(true);
       }
     );
   }
@@ -420,7 +419,6 @@ function onUncaughtException(error) {
       error: true,
       payload: { message: error.message }
     });
-    return terminate(error);
   }
 
   log(`! Lambda ${definitionPath} handler has failed with an unexpected runtime error: ${error.message}`);
