@@ -180,7 +180,14 @@ describe('Using the API', () => {
       expect(body.currentSpan).to.be.an('object');
 
       if (expectSpansAndMetrics) {
-        expect(body.logs.info).to.deep.equal(['Traces and metrics have been sent to Instana.']);
+        expect(body.logs.debug).to.deep.equal(['Sending data to Instana (/bundle).']);
+        expect(body.logs.info).to.be.empty;
+        expect(body.logs.warn).to.be.empty;
+        expect(body.logs.error).to.deep.equal([
+          'INSTANA_DEV_ACCEPT_SELF_SIGNED_CERT is set, which means that the server certificate will not be verified ' +
+            'against the list of known CAs. This makes your lambda vulnerable to MITM attacks when connecting to ' +
+            'Instana. This setting should never be used in production.'
+        ]);
         expect(body.currentSpanConstructor).to.equal('SpanHandle');
         expect(body.currentSpan).to.exist;
         expect(body.currentSpan.span).to.exist;

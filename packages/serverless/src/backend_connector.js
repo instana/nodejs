@@ -41,6 +41,11 @@ let identityProvider;
 exports.init = function init(identityProvider_, logger_) {
   identityProvider = identityProvider_;
   logger = logger_;
+  requestHasFailed = false;
+};
+
+exports.setLogger = function setLogger(logger_) {
+  logger = logger_;
 };
 
 exports.sendBundle = function sendBundle(bundle, callback) {
@@ -60,10 +65,12 @@ function send(resourcePath, payload, callback) {
     logger.info(
       `Not attempting to send data to ${resourcePath} as a previous request has already timed out or failed.`
     );
-
     callback();
     return;
+  } else {
+    logger.debug(`Sending data to Instana (${resourcePath}).`);
   }
+
   if (!warningsHaveBeenLogged) {
     warningsHaveBeenLogged = true;
     if (environmentUtil.sendUnencrypted) {
@@ -118,17 +125,17 @@ function send(resourcePath, payload, callback) {
 
   req.setTimeout(backendTimeout, () => {
     requestHasFailed = true;
-    callback(
-      new Error(
-        `The Instana back end did not respond in the configured timeout of ${backendTimeout} ms. The timeout can be ` +
-          `configured by setting the environment variable ${timeoutEnvVar}.`
-      )
+    logger.warn(
+      'Could not send traces and metrics to Instana. The Instana back end did not respond in the configured timeout ' +
+        `of ${backendTimeout} ms. The timeout can be configured by setting the environment variable ${timeoutEnvVar}.`
     );
   });
 
   req.on('error', e => {
     requestHasFailed = true;
-    callback(e);
+    logger.warn('Could not send traces and metrics to Instana. The Instana back end seems to be unavailable.', e);
+    // Deliberately not propagating the error because we have already handled it.
+    callback();
   });
 
   req.end(payload, () =>

@@ -257,17 +257,13 @@ function postHandler(entrySpan, error, result, callback) {
     plugins: [{ name: 'com.instana.plugin.aws.lambda', entityId: identityProvider.getEntityId(), data: metricsData }]
   };
 
-  backendConnector.sendBundle({ spans, metrics: metricsPayload }, err => {
-    if (err) {
-      // We intentionally do not propagate the error from the backend request - the customer's lambda needs to finish
-      // successfully, no matter if we have been able to report metrics and spans.
-      logger.warn('Could not send traces and metrics to Instana.', err.message);
-      logger.debug('Could not send traces and metrics to Instana.', err);
-    } else {
-      logger.info('Traces and metrics have been sent to Instana.');
-    }
-    callback();
-  });
+  // Sending data from an AWS Lambda is always a fire and forget operation. We do not wait for the response from the
+  // Instana back end. This reduces the delay we add to the runtime of a Lambda handler significantly. The drawback we
+  // need to accept for that reduced runtime penalty is that we cannot know if the data has reached the Instana back
+  // end or not. Thus, the callback we pass to sendBundle is never called with an error.
+  // Also, we would not want to propagate an error from the backend request anyway - the customer's lambda handler needs
+  // to finish successfully, no matter if we have been able to report metrics and spans.
+  backendConnector.sendBundle({ spans, metrics: metricsPayload }, callback);
 }
 
 exports.currentSpan = function getHandleForCurrentSpan() {
@@ -280,6 +276,7 @@ exports.setLogger = function setLogger(_logger) {
   logger = _logger;
   config.logger = logger;
   instanaCore.logger.init(config);
+  backendConnector.setLogger(logger);
 };
 
 exports.opentracing = tracing.opentracing;

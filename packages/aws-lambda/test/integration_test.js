@@ -318,6 +318,27 @@ function registerTests(handlerDefinitionPath) {
     it('must finish swiftly', () => verify(control, { error: false, expectMetrics: false, expectSpans: false }));
   });
 
+  describe('when the back end becomes responsive again after a timeout in a previous handler run', function() {
+    // - INSTANA_ENDPOINT_URL is configured
+    // - back end will not respond for the first lambda handler run, but for the second one
+    const control = prelude.bind(this)({
+      handlerDefinitionPath,
+      instanaEndpointUrl: config.backendBaseUrl,
+      instanaAgentKey: config.instanaAgentKey,
+      startBackend: 'unresponsive'
+    });
+
+    it('must start reporting again on next handler run', () =>
+      control
+        .runHandler()
+        .then(() => verifyAfterRunningHandler(control, { error: false, expectMetrics: false, expectSpans: false }))
+        .then(() => control.resetBackend())
+        .then(() => control.setResponsive(true))
+        .then(() => control.reset())
+        .then(() => control.runHandler())
+        .then(() => verifyAfterRunningHandler(control, { error: false, expectMetrics: true, expectSpans: true })));
+  });
+
   describe('triggered by API Gateway (Lambda Proxy)', function() {
     // - same as "everything is peachy"
     // - but triggered by AWS API Gateway (with Lambda Proxy)
