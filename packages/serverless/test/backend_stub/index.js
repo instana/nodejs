@@ -22,7 +22,7 @@ const options = {
 };
 
 const port = process.env.BACKEND_PORT || 8443;
-const unresponsive = process.env.BACKEND_UNRESPONSIVE === 'true';
+let unresponsive = process.env.BACKEND_UNRESPONSIVE === 'true';
 const app = express();
 
 const dropAllData = process.env.DROP_DATA === 'true';
@@ -100,6 +100,11 @@ app.post('/serverless/traces', (req, res) => {
     receivedData.spans = receivedData.spans.concat(addHeaders(req, req.body));
   }
   return res.sendStatus(201);
+});
+
+app.post('/serverless/responsive', (req, res) => {
+  unresponsive = req.query.responsive !== 'true';
+  return res.sendStatus(204);
 });
 
 app.get('/serverless/received', (req, res) => res.json(receivedData));

@@ -1,6 +1,9 @@
 # Changelog
 
 ## Unreleased
+- [AWS Lambda] Reset `requestHasFailed` flag on start of Lambda handler.
+- [AWS Lambda] Improve logging for data reporting timeouts.
+- [AWS Lambda] Remove misleading "Traces and metrics have been sent to Instana." message.
 - Remove deprecated span attributes `span.error` and `span.async`.
 - Remove obsolete configuration option `config.agentName`/`INSTANA_AGENT_NAME`.
 
@@ -8,6 +11,7 @@
 - [AWS Lambda] Do not try to send data to the Instana back end when a previous request to it has already failed.
 - [AWS Lambda] Change span offloading intervall to 5 seconds.
 - [AWS Lambda] Make sure that an uninstrumented https connection is used for span offloading.
+- [AWS Lambda] Change layer name from `instana` to `instana-nodejs` to prepare for the extension of native AWS Lambda tracing to other runtimes.
 
 ## 1.92.3
 - Always capture duration of GraphQL calls.

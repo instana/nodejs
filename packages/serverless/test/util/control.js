@@ -80,6 +80,7 @@ Control.prototype.registerTestHooks = function registerTestHooks() {
           stdio: config.getAppStdio(),
           env: Object.assign(
             {
+              INSTANA_DEBUG: true,
               HANDLER_DEFINITION_PATH: this.opts.handlerDefinitionPath,
               INSTANA_DEV_ACCEPT_SELF_SIGNED_CERT: true
             },
@@ -273,6 +274,21 @@ Control.prototype._getFromBackend = function _getFromBackend(url) {
       method: 'GET',
       url: `${config.backendBaseUrl}${url}`,
       json: true,
+      strictSSL: false
+    });
+  } else {
+    return Promise.resolve([]);
+  }
+};
+
+Control.prototype.setResponsive = function setResponsive(responsive) {
+  if (responsive == null) {
+    responsive = true;
+  }
+  if (this.opts.startBackend) {
+    return request({
+      method: 'POST',
+      url: `${config.backendBaseUrl}/responsive?responsive=${responsive}`,
       strictSSL: false
     });
   } else {

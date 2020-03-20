@@ -132,7 +132,7 @@ Before you deploy zip files, you need to actually build them, see above.
 
 Use `bin/deploy-demo.sh` to deploy all four demo Lambda zip files. They will be deployed to region `us-east-2` by default. You can repeat that step as often as you like if the Lambda code has changed or you want to deploy zip files with a more recent npm package/local package.
 
-If you have built the zip files with `BUILD_LAMBDAS_WITH=layer`, the script will try to add the Lambda layer "instana" in the version, but you need to supply `LAYER_VERSION` and `LAYER_ARN` in that case (e.g. run something like `LAYER_VERSION=12 LAYER_ARN=arn:aws:lambda:us-east-2:410797082306:layer:instana:12 bin/deploy-demo.sh`).
+If you have built the zip files with `BUILD_LAMBDAS_WITH=layer`, the script will try to add the Lambda layer "instana" in the version, but you need to supply `LAYER_VERSION` and `LAYER_ARN` in that case (e.g. run something like `LAYER_VERSION=23 LAYER_ARN=arn:aws:lambda:us-east-2:410797082306:layer:instana-nodejs:23 bin/deploy-demo.sh`).
 
 Note that if you have use `BUILD_LAMBDAS_WITH=npm` or `BUILD_LAMBDAS_WITH=local` and the function already has the Instana Lambda layer, the deploy script will not try to remove it, you will need to take care of that manually to avoid conflicts between the Lambda layer and the npm package.
 
