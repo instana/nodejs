@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.92.5
 - [AWS Lambda] Reset `requestHasFailed` flag on start of Lambda handler.
 - [AWS Lambda] Improve logging for data reporting timeouts.
 - [AWS Lambda] Remove misleading "Traces and metrics have been sent to Instana." message.
