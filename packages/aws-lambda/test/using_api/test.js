@@ -142,15 +142,17 @@ describe('Using the API', () => {
   });
 
   function verify(control, error, expectSpansAndMetrics) {
-    verifyResponse(control, error, expectSpansAndMetrics);
+    return control.runHandler().then(() => {
+      verifyResponse(control, error, expectSpansAndMetrics);
 
-    if (expectSpansAndMetrics) {
-      return retry(() => getAndVerifySpans(control, error).then(() => getAndVerifyMetrics(control)));
-    } else {
-      return delay(1000)
-        .then(() => verifyNoSpans(control))
-        .then(() => verifyNoMetrics(control));
-    }
+      if (expectSpansAndMetrics) {
+        return retry(() => getAndVerifySpans(control, error).then(() => getAndVerifyMetrics(control)));
+      } else {
+        return delay(1000)
+          .then(() => verifyNoSpans(control))
+          .then(() => verifyNoMetrics(control));
+      }
+    });
   }
 
   function verifyResponse(control, error, expectSpansAndMetrics) {

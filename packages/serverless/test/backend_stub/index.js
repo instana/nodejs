@@ -104,7 +104,7 @@ app.post('/serverless/traces', (req, res) => {
 
 app.get('/serverless/received', (req, res) => res.json(receivedData));
 
-app.delete('/received', (req, res) => {
+app.delete('/serverless/received', (req, res) => {
   receivedData = resetReceivedData();
   return res.sendStatus(204);
 });

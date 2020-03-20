@@ -67,28 +67,29 @@ describe('long running lambdas', () => {
     };
     const control = prelude.bind(this)(opts);
 
-    it('must capture metrics and spans', () => {
-      verifyResponse(control);
-      const duration = Date.now() - control.startedAt;
-      expect(duration).to.be.at.most(opts.expectedLambdaRuntime);
-      return Promise.all([
-        //
-        control.getSpans(),
-        control.getMetrics(),
-        control.getRawBundles(),
-        control.getRawSpanArrays()
-      ]).then(([spans, metrics, rawBundles, rawSpanArrays]) => {
-        verifySpans(spans, opts);
-        verifyMetrics(metrics);
-        // The lambda runs 13 seconds and creates a span every second. We also send spans to serverless acceptor
-        // every 5 seconds + the final bundle. Thus, we should see two intermittent POST requests to /traces and
-        // one to /bundle.
-        expect(rawSpanArrays).to.be.an('array');
-        expect(rawSpanArrays).to.have.lengthOf(2);
-        expect(rawBundles).to.be.an('array');
-        expect(rawBundles).to.have.lengthOf(1);
-      });
-    });
+    it('must capture metrics and spans', () =>
+      control.runHandler().then(() => {
+        const duration = Date.now() - control.startedAt;
+        verifyResponse(control);
+        expect(duration).to.be.at.most(opts.expectedLambdaRuntime);
+        return Promise.all([
+          //
+          control.getSpans(),
+          control.getMetrics(),
+          control.getRawBundles(),
+          control.getRawSpanArrays()
+        ]).then(([spans, metrics, rawBundles, rawSpanArrays]) => {
+          verifySpans(spans, opts);
+          verifyMetrics(metrics);
+          // The lambda runs 13 seconds and creates a span every second. We also send spans to serverless acceptor
+          // every 5 seconds + the final bundle. Thus, we should see two intermittent POST requests to /traces and
+          // one to /bundle.
+          expect(rawSpanArrays).to.be.an('array');
+          expect(rawSpanArrays).to.have.lengthOf(2);
+          expect(rawBundles).to.be.an('array');
+          expect(rawBundles).to.have.lengthOf(1);
+        });
+      }));
   });
 
   describe('when the back end is down', function() {
@@ -103,11 +104,12 @@ describe('long running lambdas', () => {
     };
     const control = prelude.bind(this)(opts);
 
-    it('must ignore the failed requests gracefully', () => {
-      verifyResponse(control);
-      const duration = Date.now() - control.startedAt;
-      expect(duration).to.be.at.most(opts.expectedLambdaRuntime);
-    });
+    it('must ignore the failed requests gracefully', () =>
+      control.runHandler().then(() => {
+        const duration = Date.now() - control.startedAt;
+        verifyResponse(control);
+        expect(duration).to.be.at.most(opts.expectedLambdaRuntime);
+      }));
   });
 
   describe('when the back end is reachable but does not respond', function() {
@@ -122,32 +124,33 @@ describe('long running lambdas', () => {
     };
     const control = prelude.bind(this)(opts);
 
-    it('must stop trying after first timed out request', () => {
-      verifyResponse(control);
-      const duration = Date.now() - control.startedAt;
-      expect(duration).to.be.at.most(opts.expectedLambdaRuntime);
-      return Promise.all([
-        //
-        control.getSpans(),
-        control.getMetrics(),
-        control.getRawBundles(),
-        control.getRawSpanArrays(),
-        control.getRawMetrics()
-      ]).then(([spans, metrics, rawBundles, rawSpanArrays, rawMetrics]) => {
-        expect(spans).to.have.lengthOf(0);
-        expect(metrics).to.have.lengthOf(0);
+    it('must stop trying after first timed out request', () =>
+      control.runHandler().then(() => {
+        const duration = Date.now() - control.startedAt;
+        verifyResponse(control);
+        expect(duration).to.be.at.most(opts.expectedLambdaRuntime);
+        return Promise.all([
+          //
+          control.getSpans(),
+          control.getMetrics(),
+          control.getRawBundles(),
+          control.getRawSpanArrays(),
+          control.getRawMetrics()
+        ]).then(([spans, metrics, rawBundles, rawSpanArrays, rawMetrics]) => {
+          expect(spans).to.have.lengthOf(0);
+          expect(metrics).to.have.lengthOf(0);
 
-        // The first POST /spans (after 5 seconds) fails...
-        expect(rawSpanArrays).to.have.lengthOf(1);
-        // ...and we expect @instana/aws-lambda to stop sending spans after that. In particular, we expect the
-        // POST /bundle at the end to not happen.
-        expect(rawBundles).to.have.lengthOf(0);
+          // The first POST /spans (after 5 seconds) fails...
+          expect(rawSpanArrays).to.have.lengthOf(1);
+          // ...and we expect @instana/aws-lambda to stop sending spans after that. In particular, we expect the
+          // POST /bundle at the end to not happen.
+          expect(rawBundles).to.have.lengthOf(0);
 
-        // @instana/aws-lambda never sends metrics while running, it only reports them at the end together with the
-        // bundle.
-        expect(rawMetrics).to.have.lengthOf(0);
-      });
-    });
+          // @instana/aws-lambda never sends metrics while running, it only reports them at the end together with the
+          // bundle.
+          expect(rawMetrics).to.have.lengthOf(0);
+        });
+      }));
   });
 
   function verifyResponse(control) {

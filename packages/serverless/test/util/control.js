@@ -22,6 +22,8 @@ Control.prototype.reset = function reset() {
   this.messagesFromFaasRuntime = [];
   this.lambdaErrors = [];
   this.lambdaResults = [];
+  this.expectedHandlerRuns = 0;
+  this.startedAt = 0;
 };
 
 Control.prototype.registerTestHooks = function registerTestHooks() {
@@ -74,7 +76,6 @@ Control.prototype.registerTestHooks = function registerTestHooks() {
 
     return Promise.all([backendPromise, downstreamDummyPromise])
       .then(() => {
-        this.startedAt = Date.now();
         this.faasRuntime = fork(this.opts.faasRuntimePath, {
           stdio: config.getAppStdio(),
           env: Object.assign(
@@ -99,7 +100,7 @@ Control.prototype.registerTestHooks = function registerTestHooks() {
           }
         });
 
-        return this.waitUntilRuntimeHasTerminated();
+        return this.waitUntilRuntimeHasStarted();
       })
       .catch(e => {
         fail(`A child process did not start properly: ${e}`);
@@ -144,8 +145,52 @@ Control.prototype.isDownstreamDummyUp = function isDownstreamDummyUp() {
   return this.messagesFromDownstreamDummy.indexOf('downstream dummy: started') >= 0;
 };
 
-Control.prototype.waitUntilRuntimeHasTerminated = function waitUntilRuntimeHasTerminated() {
-  return retry(() => this.hasRuntimeTerminatedPromise(), this.opts.timeout / 2);
+Control.prototype.waitUntilRuntimeHasStarted = function waitUntilRuntimeHasStarted() {
+  return retry(() => this.hasRuntimeStartedPromise(), this.opts.timeout / 2);
+};
+
+Control.prototype.hasRuntimeStartedPromise = function hasRuntimeStartedPromise() {
+  if (this.hasRuntimeStarted()) {
+    return Promise.resolve();
+  } else {
+    return Promise.reject(new Error('The monitored process has still not started.'));
+  }
+};
+
+Control.prototype.hasRuntimeStarted = function hasRuntimeStarted() {
+  return this.messagesFromFaasRuntime.indexOf('runtime: started') >= 0;
+};
+
+Control.prototype.runHandler = function runHandler() {
+  this.startedAt = Date.now();
+  this.faasRuntime.send('run-handler');
+  this.expectedHandlerRuns++;
+  return this.waitUntilHandlerHasRun();
+};
+
+Control.prototype.waitUntilHandlerHasRun = function waitUntilHandlerHasRun() {
+  return retry(() => this.hasHandlerRunPromise(), this.opts.timeout / 2);
+};
+
+Control.prototype.hasHandlerRunPromise = function hasHandlerRunPromise() {
+  if (this.hasHandlerRun()) {
+    return Promise.resolve();
+  } else {
+    return Promise.reject(
+      new Error(
+        `Expected the handler to have been running ${this.expectedHandlerRuns} time(s), ` +
+          `but it ran only ${this.countHandlerRuns()} time(s).`
+      )
+    );
+  }
+};
+
+Control.prototype.hasHandlerRun = function hasHandlerRun() {
+  return this.countHandlerRuns() >= this.expectedHandlerRuns;
+};
+
+Control.prototype.countHandlerRuns = function countHandlerRuns() {
+  return this.lambdaErrors.length + this.lambdaResults.length;
 };
 
 Control.prototype.hasRuntimeTerminatedPromise = function hasRuntimeTerminatedPromise() {
@@ -228,6 +273,18 @@ Control.prototype._getFromBackend = function _getFromBackend(url) {
       method: 'GET',
       url: `${config.backendBaseUrl}${url}`,
       json: true,
+      strictSSL: false
+    });
+  } else {
+    return Promise.resolve([]);
+  }
+};
+
+Control.prototype.resetBackend = function resetBackend() {
+  if (this.opts.startBackend) {
+    return request({
+      method: 'DELETE',
+      url: `${config.backendBaseUrl}/received`,
       strictSSL: false
     });
   } else {

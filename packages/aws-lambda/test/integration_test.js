@@ -102,6 +102,15 @@ function registerTests(handlerDefinitionPath) {
 
     it('must capture metrics and spans', () =>
       verify(control, { error: false, expectMetrics: true, expectSpans: true }));
+
+    it('must run the handler two times', () =>
+      control
+        .runHandler()
+        .then(() => verifyAfterRunningHandler(control, { error: false, expectMetrics: true, expectSpans: true }))
+        .then(() => control.resetBackend())
+        .then(() => control.reset())
+        .then(() => control.runHandler())
+        .then(() => verifyAfterRunningHandler(control, { error: false, expectMetrics: true, expectSpans: true })));
   });
 
   describe('when called with alias', function() {
@@ -734,6 +743,10 @@ function registerTests(handlerDefinitionPath) {
   });
 
   function verify(control, expectations) {
+    return control.runHandler().then(() => verifyAfterRunningHandler(control, expectations));
+  }
+
+  function verifyAfterRunningHandler(control, expectations) {
     const { error, expectMetrics, expectSpans } = expectations;
     /* eslint-disable no-console */
     if (error && error.startsWith('lambda')) {
