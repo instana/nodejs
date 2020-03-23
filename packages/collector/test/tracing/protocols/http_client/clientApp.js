@@ -1,5 +1,3 @@
-/* eslint-disable no-console */
-
 'use strict';
 
 require('../../../../')();
@@ -131,6 +129,25 @@ app.get('/timeout', (req, res) => {
     });
 });
 
+app.get('/deferred-http-exit', (req, res) => {
+  // Send the response back first...
+  res.sendStatus(200);
+  setTimeout(
+    () =>
+      // ... and make another outgoing HTTP call after that.
+      httpModule
+        .request({
+          hostname: '127.0.0.1',
+          port: process.env.SERVER_PORT,
+          method: 'GET',
+          path: '/request-only-opts',
+          rejectUnauthorized: false
+        })
+        .end(),
+    100
+  );
+});
+
 app.get('/abort', (req, res) => {
   const clientRequest = httpModule.request({
     method: 'GET',
@@ -156,6 +173,7 @@ app.get('/request-malformed-url', (req, res) => {
         'ha-te-te-peh://999.0.0.1:not-a-port/malformed-url', //
         { rejectUnauthorized: false }, //
         () => {
+          // eslint-disable-next-line no-console
           console.log('This should not have happend!');
         }
       )
@@ -228,14 +246,17 @@ if (process.env.USE_HTTPS === 'true') {
 
 app.post('/upload-s3', (req, res) => {
   if (!process.env.AWS_ACCESS_KEY_ID) {
+    // eslint-disable-next-line no-console
     console.error('ERROR: AWS_ACCESS_KEY_ID is not set.');
     return res.sendStatus(500);
   }
   if (!process.env.AWS_SECRET_ACCESS_KEY) {
+    // eslint-disable-next-line no-console
     console.error('ERROR: AWS_SECRET_ACCESS_KEY is not set.');
     return res.sendStatus(500);
   }
   if (!process.env.AWS_S3_BUCKET_NAME) {
+    // eslint-disable-next-line no-console
     console.error('ERROR: AWS_S3_BUCKET_NAME is not set.');
     return res.sendStatus(500);
   }
@@ -251,6 +272,7 @@ app.post('/upload-s3', (req, res) => {
   log(`Uploading to bucket ${bucketName} in region ${awsRegion}`);
   s3.upload(params, function(err, result) {
     if (err) {
+      // eslint-disable-next-line no-console
       console.error(err);
       return res.sendStatus(500);
     } else {
@@ -265,6 +287,7 @@ function createUrl(req, urlPath) {
 }
 
 function log() {
+  /* eslint-disable no-console */
   const args = Array.prototype.slice.call(arguments);
   args[0] = logPrefix + args[0];
   console.log.apply(console, args);
