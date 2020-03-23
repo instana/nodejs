@@ -1,5 +1,8 @@
 # Changelog
 
+## Unreleased
+- Support tracing of deferred HTTP exits (that is, capture HTTP exits if the entry that triggered it has already finished).
+
 ## 1.92.5
 - [AWS Lambda] Reset `requestHasFailed` flag on start of Lambda handler.
 - [AWS Lambda] Improve logging for data reporting timeouts.

@@ -82,23 +82,10 @@ function instrument(coreModule) {
     }
 
     var w3cTraceContext = cls.getW3cTraceContext();
+    var parentSpan = cls.getCurrentSpan() || cls.getReducedSpan();
 
-    if (!isActive || !cls.isTracing()) {
+    if (!isActive || !parentSpan || constants.isExitSpan(parentSpan)) {
       var traceLevelHeaderHasBeenAdded = false;
-      if (cls.tracingLevel()) {
-        traceLevelHeaderHasBeenAdded = tryToAddTraceLevelAddHeaderToOpts(options, cls.tracingLevel(), w3cTraceContext);
-      }
-      clientRequest = originalRequest.apply(coreModule, arguments);
-      if (cls.tracingLevel() && !traceLevelHeaderHasBeenAdded) {
-        clientRequest.setHeader(constants.traceLevelHeaderName, cls.tracingLevel());
-        setW3cHeadersOnRequest(clientRequest, w3cTraceContext);
-      }
-      return clientRequest;
-    }
-
-    var parentSpan = cls.getCurrentSpan();
-
-    if (constants.isExitSpan(parentSpan)) {
       if (cls.tracingSuppressed()) {
         traceLevelHeaderHasBeenAdded = tryToAddTraceLevelAddHeaderToOpts(options, '0', w3cTraceContext);
       }

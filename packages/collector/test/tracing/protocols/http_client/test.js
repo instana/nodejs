@@ -491,6 +491,26 @@ function registerTests(useHttps) {
         )
       ));
 
+  it('must capture deferred outgoing HTTP calls that are executed after the triggering HTTP entry has finished', () =>
+    clientControls.sendRequest({ path: '/deferred-http-exit' }).then(() =>
+      utils.retry(() =>
+        agentControls.getSpans().then(spans => {
+          const clientSpan = utils.expectOneMatching(spans, span => {
+            expect(span.n).to.equal('node.http.client');
+            expect(span.k).to.equal(constants.EXIT);
+            expect(span.data.http.url).to.match(/\/request-only-opts/);
+          });
+          utils.expectOneMatching(spans, span => {
+            expect(span.n).to.equal('node.http.server');
+            expect(span.k).to.equal(constants.ENTRY);
+            expect(span.data.http.url).to.match(/\/request-only-opts/);
+            expect(span.t).to.equal(clientSpan.t);
+            expect(span.p).to.equal(clientSpan.s);
+          });
+        })
+      )
+    ));
+
   // This test is always skipped on CI, it is meant to be only activated for manual execution because it needs three
   // additional environment variables that provide access to an S3 bucket. The env vars that need to be set are:
   // AWS_ACCESS_KEY_ID,
