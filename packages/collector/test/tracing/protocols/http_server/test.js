@@ -1,5 +1,6 @@
 'use strict';
 
+const path = require('path');
 const { expect } = require('chai');
 const { fail } = expect;
 
@@ -8,9 +9,9 @@ const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('../../../../../core/test/config');
 const utils = require('../../../../../core/test/utils');
 const delay = require('../../../../../core/test/test_util/delay');
+const ProcessControls = require('../../ProcessControls');
 
 let agentControls;
-let Controls;
 
 describe('tracing/http(s) server', function() {
   if (!supportedVersion(process.versions.node)) {
@@ -18,7 +19,6 @@ describe('tracing/http(s) server', function() {
   }
 
   agentControls = require('../../../apps/agentStubControls');
-  Controls = require('./controls');
 
   this.timeout(config.getTestTimeout());
 
@@ -42,13 +42,13 @@ describe('tracing/http(s) server', function() {
 });
 
 function registerTests(useHttps) {
-  const controls = new Controls({
+  const controls = new ProcessControls({
+    appPath: path.join(__dirname, 'app'),
     agentControls,
     env: {
       USE_HTTPS: useHttps
     }
-  });
-  controls.registerTestHooks();
+  }).registerTestHooks();
 
   it(`must capture incoming calls and start a new trace (HTTPS: ${useHttps})`, () =>
     controls
@@ -393,6 +393,6 @@ function verifyHttpEntry(span, url = '/', method = 'GET', status = 200) {
   expect(span.s).to.be.a('string');
   expect(span.data.http.method).to.equal(method);
   expect(span.data.http.url).to.equal(url);
-  expect(span.data.http.host).to.equal('127.0.0.1:3215');
+  expect(span.data.http.host).to.equal('127.0.0.1:3216');
   expect(span.data.http.status).to.equal(status);
 }
