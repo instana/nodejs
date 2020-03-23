@@ -530,7 +530,7 @@ function verifyHttpEntry(parentSpan, urlRegex, spans) {
 }
 
 function verifyHttpExit(parentSpan, urlRegex, spans) {
-  return utils.expectOneMatching(spans, span => {
+  return utils.expectExactlyOneMatching(spans, span => {
     expect(span.n).to.equal('node.http.client');
     expect(span.k).to.equal(constants.EXIT);
     expect(span.t).to.equal(parentSpan.t);
@@ -541,7 +541,7 @@ function verifyHttpExit(parentSpan, urlRegex, spans) {
 }
 
 function verifyAmqpExit(parentSpan, queueName, spans) {
-  return utils.expectOneMatching(spans, span => {
+  return utils.expectExactlyOneMatching(spans, span => {
     expect(span.t).to.equal(parentSpan.t);
     expect(span.p).to.equal(parentSpan.s);
     expect(span.k).to.equal(constants.EXIT);
@@ -557,7 +557,7 @@ function verifyGraphQLQueryEntry(
   parentSpan,
   spans
 ) {
-  return utils.expectOneMatching(spans, span => {
+  return utils.expectExactlyOneMatching(spans, span => {
     expect(span.n).to.equal('graphql.server');
     expect(span.k).to.equal(constants.ENTRY);
     expect(span.t).to.equal(parentSpan.t);
@@ -621,7 +621,7 @@ function verifyGraphQLQueryEntry(
 }
 
 function verifyGraphQLMutationEntry(parentSpan, spans) {
-  return utils.expectOneMatching(spans, span => {
+  return utils.expectExactlyOneMatching(spans, span => {
     expect(span.n).to.equal('graphql.server');
     expect(span.k).to.equal(constants.ENTRY);
     expect(span.t).to.equal(parentSpan.t);
@@ -667,7 +667,7 @@ function verifyGraphQLSubscriptionUpdateExit(parentSpan, span) {
 }
 
 function verifyFollowUpLogExit(parentSpan, expectedMessage, spans) {
-  return utils.expectOneMatching(spans, span => {
+  return utils.expectExactlyOneMatching(spans, span => {
     expect(span.n).to.equal('log.pino');
     expect(span.k).to.equal(constants.EXIT);
     expect(span.t).to.equal(parentSpan.t);
