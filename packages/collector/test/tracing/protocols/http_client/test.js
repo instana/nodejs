@@ -1,5 +1,6 @@
 'use strict';
 
+const path = require('path');
 const expect = require('chai').expect;
 const semver = require('semver');
 
@@ -7,10 +8,9 @@ const constants = require('@instana/core').tracing.constants;
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('../../../../../core/test/config');
 const utils = require('../../../../../core/test/utils');
+const ProcessControls = require('../../ProcessControls');
 
 let agentControls;
-let ClientControls;
-let ServerControls;
 
 describe('tracing/http client', function() {
   if (!supportedVersion(process.versions.node)) {
@@ -18,8 +18,6 @@ describe('tracing/http client', function() {
   }
 
   agentControls = require('../../../apps/agentStubControls');
-  ClientControls = require('./clientControls');
-  ServerControls = require('./serverControls');
 
   this.timeout(config.getTestTimeout() * 2);
 
@@ -42,22 +40,24 @@ describe('tracing/http client', function() {
 });
 
 function registerTests(useHttps) {
-  const serverControls = new ServerControls({
+  const serverControls = new ProcessControls({
+    appPath: path.join(__dirname, 'serverApp'),
+    port: 3217,
     agentControls,
     env: {
       USE_HTTPS: useHttps
     }
-  });
-  serverControls.registerTestHooks();
+  }).registerTestHooks();
 
-  const clientControls = new ClientControls({
+  const clientControls = new ProcessControls({
+    appPath: path.join(__dirname, 'clientApp'),
+    port: 3216,
     agentControls,
     env: {
       SERVER_PORT: serverControls.port,
       USE_HTTPS: useHttps
     }
-  });
-  clientControls.registerTestHooks();
+  }).registerTestHooks();
 
   // HTTP requests can be triggered via http.request(...) + request.end(...) or http.get(...).
   // Both http.request and http.get accept
