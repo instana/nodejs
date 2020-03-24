@@ -12,7 +12,7 @@ const backendPort = process.env.INSTANA_PORT || 8989;
 const backendTimeout = 5000;
 // eslint-disable-next-line no-unneeded-ternary
 const sendUnencrypted = process.env.INSTANA_DEV_SEND_UNENCRYPTED === 'false' ? false : true;
-const acceptSelfSignedCert = false;
+const disableCaCheck = false;
 
 const instanaKeyEnvVar = 'INSTANA_AGENT_KEY';
 const instanaKey = process.env[instanaKeyEnvVar];
@@ -107,7 +107,7 @@ function sendPayload(callback) {
       [constants.xInstanaKey]: instanaKey,
       [constants.xInstanaTime]: Date.now()
     },
-    rejectUnauthorized: !acceptSelfSignedCert
+    rejectUnauthorized: !disableCaCheck
   };
 
   const req = https.request(options, res => {

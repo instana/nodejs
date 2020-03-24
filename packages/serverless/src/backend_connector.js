@@ -33,8 +33,8 @@ if (process.env[timeoutEnvVar]) {
   }
 }
 
-const acceptSelfSignedCertEnvVar = 'INSTANA_DEV_ACCEPT_SELF_SIGNED_CERT';
-const acceptSelfSignedCert = process.env[acceptSelfSignedCertEnvVar] === 'true';
+const disableCaCheckEnvVar = 'INSTANA_DISABLE_CA_CHECK';
+const disableCaCheck = process.env[disableCaCheckEnvVar] === 'true';
 
 let identityProvider;
 
@@ -80,11 +80,12 @@ function send(resourcePath, payload, callback) {
           'should never be used in production.'
       );
     }
-    if (acceptSelfSignedCert) {
-      logger.error(
-        `${acceptSelfSignedCertEnvVar} is set, which means that the server certificate will not be verified against ` +
+    if (disableCaCheck) {
+      logger.warn(
+        `${disableCaCheckEnvVar} is set, which means that the server certificate will not be verified against ` +
           'the list of known CAs. This makes your lambda vulnerable to MITM attacks when connecting to Instana. ' +
-          'This setting should never be used in production.'
+          'This setting should never be used in production, unless you use our on-premises product and are unable to ' +
+          'operate the Instana back end with a certificate with a known root CA.'
       );
     }
   }
@@ -107,7 +108,7 @@ function send(resourcePath, payload, callback) {
       [constants.xInstanaKey]: environmentUtil.getInstanaAgentKey(),
       [constants.xInstanaTime]: Date.now()
     },
-    rejectUnauthorized: !acceptSelfSignedCert
+    rejectUnauthorized: !disableCaCheck
   };
 
   if (needsEcdhCurveFix) {
