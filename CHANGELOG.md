@@ -2,6 +2,7 @@
 
 ## Unreleased
 - Support tracing of deferred HTTP exits (that is, capture HTTP exits if the entry that triggered it has already finished).
+- [AWS Lambda] Add support for INSTANA_DISABLE_CA_CHECK.
 
 ## 1.92.5
 - [AWS Lambda] Reset `requestHasFailed` flag on start of Lambda handler.

@@ -82,7 +82,7 @@ Control.prototype.registerTestHooks = function registerTestHooks() {
             {
               INSTANA_DEBUG: true,
               HANDLER_DEFINITION_PATH: this.opts.handlerDefinitionPath,
-              INSTANA_DEV_ACCEPT_SELF_SIGNED_CERT: true
+              INSTANA_DISABLE_CA_CHECK: true
             },
             process.env,
             this.opts.env

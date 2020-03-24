@@ -182,12 +182,13 @@ describe('Using the API', () => {
       if (expectSpansAndMetrics) {
         expect(body.logs.debug).to.deep.equal(['Sending data to Instana (/bundle).']);
         expect(body.logs.info).to.be.empty;
-        expect(body.logs.warn).to.be.empty;
-        expect(body.logs.error).to.deep.equal([
-          'INSTANA_DEV_ACCEPT_SELF_SIGNED_CERT is set, which means that the server certificate will not be verified ' +
-            'against the list of known CAs. This makes your lambda vulnerable to MITM attacks when connecting to ' +
-            'Instana. This setting should never be used in production.'
+        expect(body.logs.warn).to.deep.equal([
+          'INSTANA_DISABLE_CA_CHECK is set, which means that the server certificate will not be verified against the ' +
+            'list of known CAs. This makes your lambda vulnerable to MITM attacks when connecting to Instana. ' +
+            'This setting should never be used in production, unless you use our on-premises product and are unable ' +
+            'to operate the Instana back end with a certificate with a known root CA.'
         ]);
+        expect(body.logs.error).to.be.empty;
         expect(body.currentSpanConstructor).to.equal('SpanHandle');
         expect(body.currentSpan).to.exist;
         expect(body.currentSpan.span).to.exist;
