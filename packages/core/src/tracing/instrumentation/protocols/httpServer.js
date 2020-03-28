@@ -77,6 +77,9 @@ function shimEmit(realEmit) {
       if (headers.foreignParent) {
         span.fp = headers.foreignParent;
       }
+      if (headers.synthetic) {
+        span.sy = true;
+      }
 
       // Capture the URL before application code gets access to the incoming message. Libraries like express manipulate
       // req.url when routers are used.

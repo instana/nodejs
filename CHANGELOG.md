@@ -1,5 +1,8 @@
 # Changelog
 
+## Unreleased
+- Support X-INSTANA-SYNTHETIC.
+
 ## 1.93.0
 - Support tracing of deferred HTTP exits (that is, capture HTTP exits if the entry that triggered it has already finished).
 - [AWS Lambda] Add support for INSTANA_DISABLE_CA_CHECK.
