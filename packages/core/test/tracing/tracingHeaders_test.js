@@ -147,6 +147,17 @@ describe('tracing/headers', () => {
     });
   });
 
+  describe('X-INSTANA-SYNTHETIC', () => {
+    it('should read the synthetic marker from headers', () => {
+      const context = tracingHeaders.fromHttpRequest({
+        headers: {
+          'x-instana-synthetic': '1'
+        }
+      });
+      expect(context.synthetic).to.be.true;
+    });
+  });
+
   it('should read W3C trace context headers without an in key-value pair', () => {
     const context = tracingHeaders.fromHttpRequest({
       headers: {

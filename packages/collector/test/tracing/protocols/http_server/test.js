@@ -185,6 +185,22 @@ function registerTests(useHttps) {
         )
       ));
 
+  it(`must mark HTTP entry as synthetic (HTTPS: ${useHttps})`, () =>
+    controls
+      .sendRequest({
+        method: 'GET',
+        path: '/health',
+        headers: {
+          'X-INSTANA-SYNTHETIC': '1'
+        }
+      })
+      .then(() => delay(500))
+      .then(() =>
+        agentControls.getSpans().then(spans => {
+          verifyThereIsExactlyOneHttpEntry(spans, '/health', 'GET', 200, true);
+        })
+      ));
+
   it(`must capture configured request headers when present (HTTPS: ${useHttps})`, () => {
     const requestHeaderValue = 'Request Header Value';
     return controls
@@ -376,14 +392,14 @@ function registerTests(useHttps) {
       }));
 }
 
-function verifyThereIsExactlyOneHttpEntry(spans, url = '/', method = 'GET', status = 200) {
+function verifyThereIsExactlyOneHttpEntry(spans, url = '/', method = 'GET', status = 200, synthetic = false) {
   expect(spans.length).to.equal(1);
   const span = spans[0];
-  verifyHttpEntry(span, url, method, status);
+  verifyHttpEntry(span, url, method, status, synthetic);
   return span;
 }
 
-function verifyHttpEntry(span, url = '/', method = 'GET', status = 200) {
+function verifyHttpEntry(span, url = '/', method = 'GET', status = 200, synthetic = false) {
   expect(span.n).to.equal('node.http.server');
   expect(span.k).to.equal(constants.ENTRY);
   expect(span.async).to.not.exist;
@@ -391,6 +407,11 @@ function verifyHttpEntry(span, url = '/', method = 'GET', status = 200) {
   expect(span.ec).to.equal(0);
   expect(span.t).to.be.a('string');
   expect(span.s).to.be.a('string');
+  if (!synthetic) {
+    expect(span.sy).to.not.exist;
+  } else {
+    expect(span.sy).to.be.true;
+  }
   expect(span.data.http.method).to.equal(method);
   expect(span.data.http.url).to.equal(url);
   expect(span.data.http.host).to.equal('127.0.0.1:3216');

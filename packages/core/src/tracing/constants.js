@@ -9,6 +9,9 @@ exports.traceIdHeaderNameLowerCase = exports.traceIdHeaderName.toLowerCase();
 exports.traceLevelHeaderName = 'X-INSTANA-L';
 exports.traceLevelHeaderNameLowerCase = exports.traceLevelHeaderName.toLowerCase();
 
+exports.syntheticHeaderName = 'X-INSTANA-SYNTHETIC';
+exports.syntheticHeaderNameLowerCase = exports.syntheticHeaderName.toLowerCase();
+
 exports.kafkaTraceContextHeaderName = 'X_INSTANA_C';
 exports.kafkaTraceLevelHeaderName = 'X_INSTANA_L';
 

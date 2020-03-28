@@ -19,6 +19,7 @@ exports.fromHttpRequest = function fromHttpRequest(req) {
   var level = levelAndCorrelation.level;
   var correlationType = levelAndCorrelation.correlationType;
   var correlationId = levelAndCorrelation.correlationId;
+  var synthetic = readSyntheticMarker(req);
   var w3cTraceContext = readW3cTraceContext(req);
 
   if (correlationType && correlationId) {
@@ -45,6 +46,7 @@ exports.fromHttpRequest = function fromHttpRequest(req) {
       level: level,
       correlationType: correlationType,
       correlationId: correlationId,
+      synthetic: synthetic,
       w3cTraceContext: w3cTraceContext
     };
     if (traceStateHasInstanaKeyValuePair(w3cTraceContext) && w3cTraceContext.traceStateHead) {
@@ -64,6 +66,7 @@ exports.fromHttpRequest = function fromHttpRequest(req) {
       level: level,
       correlationType: correlationType,
       correlationId: correlationId,
+      synthetic: synthetic,
       w3cTraceContext: w3c.create(xInstanaT, xInstanaS, !isSuppressed(level))
     };
   } else if (w3cTraceContext) {
@@ -76,6 +79,7 @@ exports.fromHttpRequest = function fromHttpRequest(req) {
         level: level,
         correlationType: correlationType,
         correlationId: correlationId,
+        synthetic: synthetic,
         w3cTraceContext: w3cTraceContext,
         foreignParent: {
           t: w3cTraceContext.foreignTraceId,
@@ -95,6 +99,7 @@ exports.fromHttpRequest = function fromHttpRequest(req) {
         level: level,
         correlationType: correlationType,
         correlationId: correlationId,
+        synthetic: synthetic,
         w3cTraceContext: w3cTraceContext,
         foreignParent: {
           t: w3cTraceContext.foreignTraceId,
@@ -113,6 +118,7 @@ exports.fromHttpRequest = function fromHttpRequest(req) {
       // even if we didn't sample and it has to have a parent ID field.
       return {
         level: level,
+        synthetic: synthetic,
         w3cTraceContext: w3c.createEmptyUnsampled(
           tracingUtil.generateRandomTraceId(),
           tracingUtil.generateRandomSpanId()
@@ -134,6 +140,7 @@ exports.fromHttpRequest = function fromHttpRequest(req) {
         level: level,
         correlationType: correlationType,
         correlationId: correlationId,
+        synthetic: synthetic,
         w3cTraceContext: w3cTraceContext
         // We do not add foreignParent header here because we didn't receive any W3C trace context spec headers.
       };
@@ -203,6 +210,10 @@ function readLevelAndCorrelation(req) {
 
 function isSuppressed(level) {
   return typeof level === 'string' && level.indexOf('0') === 0;
+}
+
+function readSyntheticMarker(req) {
+  return req.headers[constants.syntheticHeaderNameLowerCase] === '1';
 }
 
 function traceStateHasInstanaKeyValuePair(w3cTraceContext) {
