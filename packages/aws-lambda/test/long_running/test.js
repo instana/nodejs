@@ -6,6 +6,7 @@ const path = require('path');
 const semver = require('semver');
 const constants = require('@instana/core').tracing.constants;
 
+const Control = require('../Control');
 const config = require('../../../serverless/test/config');
 const expectOneMatching = require('../../../serverless/test/util/expect_matching');
 
@@ -13,6 +14,12 @@ const functionName = 'functionName';
 const unqualifiedArn = `arn:aws:lambda:us-east-2:410797082306:function:${functionName}`;
 const version = '$LATEST';
 const qualifiedArn = `${unqualifiedArn}:${version}`;
+
+const backendPort = 8443;
+const backendBaseUrl = `https://localhost:${backendPort}/serverless`;
+const downstreamDummyPort = 3456;
+const downstreamDummyUrl = `http://localhost:${downstreamDummyPort}/`;
+const instanaAgentKey = 'aws-lambda-dummy-key';
 
 function prelude(opts) {
   // The lambda under test creates an SDK span every ${opts.delay} milliseconds.
@@ -42,11 +49,13 @@ function prelude(opts) {
     env.WITH_CONFIG = 'true';
   }
 
-  const Control = require('../../../serverless/test/util/control');
   const control = new Control({
     faasRuntimePath: path.join(__dirname, '../runtime_mock'),
     handlerDefinitionPath: opts.handlerDefinitionPath,
     startBackend: opts.startBackend,
+    backendPort,
+    backendBaseUrl,
+    downstreamDummyUrl,
     env,
     timeout
   });
@@ -60,8 +69,8 @@ describe('long running lambdas', () => {
   describe('when the back end is responsive', function() {
     const opts = {
       handlerDefinitionPath,
-      instanaEndpointUrl: config.backendBaseUrl,
-      instanaAgentKey: config.instanaAgentKey,
+      instanaEndpointUrl: backendBaseUrl,
+      instanaAgentKey,
       delay: 1000,
       iterations: 13
     };
@@ -95,8 +104,8 @@ describe('long running lambdas', () => {
   describe('when the back end is down', function() {
     const opts = {
       handlerDefinitionPath,
-      instanaEndpointUrl: config.backendBaseUrl,
-      instanaAgentKey: config.instanaAgentKey,
+      instanaEndpointUrl: backendBaseUrl,
+      instanaAgentKey,
       startBackend: false,
       // Run for 70 seconds, create a span every 250 ms.
       delay: 250,
@@ -115,8 +124,8 @@ describe('long running lambdas', () => {
   describe('when the back end is reachable but does not respond', function() {
     const opts = {
       handlerDefinitionPath,
-      instanaEndpointUrl: config.backendBaseUrl,
-      instanaAgentKey: config.instanaAgentKey,
+      instanaEndpointUrl: backendBaseUrl,
+      instanaAgentKey,
       startBackend: 'unresponsive',
       // run for 30 seconds, create a span every second
       delay: 1000,

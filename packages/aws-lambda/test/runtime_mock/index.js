@@ -419,6 +419,7 @@ function onUncaughtException(error) {
       error: true,
       payload: { message: error.message }
     });
+    return;
   }
 
   log(`! Lambda ${definitionPath} handler has failed with an unexpected runtime error: ${error.message}`);

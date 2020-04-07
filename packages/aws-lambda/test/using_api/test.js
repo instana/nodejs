@@ -4,6 +4,7 @@ const expect = require('chai').expect;
 const path = require('path');
 const constants = require('@instana/core').tracing.constants;
 
+const Control = require('../Control');
 const config = require('../../../serverless/test/config');
 const delay = require('../../../core/test/test_util/delay');
 const expectOneMatching = require('../../../serverless/test/util/expect_matching');
@@ -13,6 +14,12 @@ const functionName = 'functionName';
 const unqualifiedArn = `arn:aws:lambda:us-east-2:410797082306:function:${functionName}`;
 const version = '$LATEST';
 const qualifiedArn = `${unqualifiedArn}:${version}`;
+
+const backendPort = 8443;
+const backendBaseUrl = `https://localhost:${backendPort}/serverless`;
+const downstreamDummyPort = 3456;
+const downstreamDummyUrl = `http://localhost:${downstreamDummyPort}/`;
+const instanaAgentKey = 'aws-lambda-dummy-key';
 
 function prelude(opts) {
   this.timeout(config.getTestTimeout());
@@ -32,11 +39,13 @@ function prelude(opts) {
     env.WITH_CONFIG = 'true';
   }
 
-  const Control = require('../../../serverless/test/util/control');
   const control = new Control({
     faasRuntimePath: path.join(__dirname, '../runtime_mock'),
     handlerDefinitionPath: opts.handlerDefinitionPath,
     startBackend: true,
+    backendPort,
+    backendBaseUrl,
+    downstreamDummyUrl,
     env
   });
   control.registerTestHooks();
@@ -53,8 +62,8 @@ describe('Using the API', () => {
     // - lambda function ends with success
     const control = prelude.bind(this)({
       handlerDefinitionPath,
-      instanaEndpointUrl: config.backendBaseUrl,
-      instanaAgentKey: config.instanaAgentKey
+      instanaEndpointUrl: backendBaseUrl,
+      instanaAgentKey
     });
 
     it('must capture metrics and spans', () => verify(control, false, true));
@@ -66,8 +75,8 @@ describe('Using the API', () => {
     // - lambda function ends with an error
     const control = prelude.bind(this)({
       handlerDefinitionPath,
-      instanaEndpointUrl: config.backendBaseUrl,
-      instanaAgentKey: config.instanaAgentKey,
+      instanaEndpointUrl: backendBaseUrl,
+      instanaAgentKey,
       error: true
     });
 
@@ -81,8 +90,8 @@ describe('Using the API', () => {
     // - lambda function ends with success
     const control = prelude.bind(this)({
       handlerDefinitionPath,
-      instanaEndpointUrl: config.backendBaseUrl,
-      instanaAgentKey: config.instanaAgentKey,
+      instanaEndpointUrl: backendBaseUrl,
+      instanaAgentKey,
       withConfig: true
     });
 
@@ -96,8 +105,8 @@ describe('Using the API', () => {
     // - lambda function ends with an error
     const control = prelude.bind(this)({
       handlerDefinitionPath,
-      instanaEndpointUrl: config.backendBaseUrl,
-      instanaAgentKey: config.instanaAgentKey,
+      instanaEndpointUrl: backendBaseUrl,
+      instanaAgentKey,
       withConfig: true,
       error: true
     });
@@ -110,7 +119,7 @@ describe('Using the API', () => {
     // - lambda function ends with success
     const control = prelude.bind(this)({
       handlerDefinitionPath,
-      instanaAgentKey: config.instanaAgentKey
+      instanaAgentKey
     });
 
     it('must ignore the missing URL gracefully', () => verify(control, false, false));
@@ -121,7 +130,7 @@ describe('Using the API', () => {
     // - lambda function ends with an error
     const control = prelude.bind(this)({
       handlerDefinitionPath,
-      instanaAgentKey: config.instanaAgentKey,
+      instanaAgentKey,
       error: true
     });
 
@@ -134,7 +143,7 @@ describe('Using the API', () => {
     // - lambda function ends with success
     const control = prelude.bind(this)({
       handlerDefinitionPath,
-      instanaAgentKey: config.instanaAgentKey,
+      instanaAgentKey,
       withConfig: true
     });
 
@@ -301,7 +310,7 @@ describe('Using the API', () => {
     const headers = payload._receivedHeaders;
     expect(headers).to.exist;
     expect(headers['x-instana-host']).to.equal(qualifiedArn);
-    expect(headers['x-instana-key']).to.equal('dummy-key');
+    expect(headers['x-instana-key']).to.equal(instanaAgentKey);
     expect(headers['x-instana-time']).to.be.a('string');
   }
 });

@@ -12,7 +12,7 @@ require('../../src/metrics/rootDir').root = require('path').resolve(__dirname, '
 
 const http = require('http');
 
-const config = require('../../../serverless/test/config');
+const downstreamDummyUrl = process.env.DOWNSTREAM_DUMMY_URL;
 
 const response = {
   headers: {
@@ -40,7 +40,7 @@ const handler = function handler(event, context, callback) {
   if (event.error === 'synchronous') {
     throw new Error('Boom!');
   }
-  const req = http.get(config.downstreamDummyUrl, res => {
+  const req = http.get(downstreamDummyUrl, res => {
     res.resume();
     res.on('end', () => {
       if (event.error === 'asynchronous') {
