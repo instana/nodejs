@@ -5,7 +5,7 @@ const semver = require('semver');
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 
 const config = require('../../../core/test/config');
-const utils = require('../../../core/test/utils');
+const testUtils = require('../../../core/test/test_util');
 
 describe('actions/getModuleAnalysis', function() {
   if (semver.satisfies(process.versions.node, '<4')) {
@@ -33,9 +33,9 @@ describe('actions/getModuleAnalysis', function() {
         args: {}
       })
       .then(() =>
-        utils.retry(() =>
+        testUtils.retry(() =>
           agentStubControls.getResponses().then(responses => {
-            utils.expectOneMatching(responses, response => {
+            testUtils.expectAtLeastOneMatching(responses, response => {
               expect(response.messageId).to.equal(messageId);
               expect(response.data.data.cwd).to.be.a('string');
               expect(response.data.data['require.main.filename']).to.be.a('string');

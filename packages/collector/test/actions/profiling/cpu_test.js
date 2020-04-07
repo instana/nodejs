@@ -8,7 +8,7 @@ const fs = require('fs');
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const cpu = require('../../../src/actions/profiling/cpu');
 const config = require('../../../../core/test/config');
-const utils = require('../../../../core/test/utils');
+const testUtils = require('../../../../core/test/test_util');
 
 describe('actions/profiling/cpu', () => {
   if (!semver.satisfies(process.versions.node, '>=4.0.0')) {
@@ -75,14 +75,14 @@ describe('actions/profiling/cpu', () => {
           }
         })
         .then(() =>
-          utils.retry(() =>
+          testUtils.retry(() =>
             agentStubControls.getResponses().then(responses => {
-              utils.expectOneMatching(responses, response => {
+              testUtils.expectAtLeastOneMatching(responses, response => {
                 expect(response.messageId).to.equal(messageId);
                 expect(response.data.data).to.match(/Profiling successfully started/i);
               });
 
-              utils.expectOneMatching(responses, response => {
+              testUtils.expectAtLeastOneMatching(responses, response => {
                 expect(response.messageId).to.equal(messageId);
                 expect(response.data.data.f).to.equal('(root)');
                 expect(response.data.data.sh).to.equal(0);
@@ -113,19 +113,19 @@ describe('actions/profiling/cpu', () => {
           })
         )
         .then(() =>
-          utils.retry(() =>
+          testUtils.retry(() =>
             agentStubControls.getResponses().then(responses => {
-              utils.expectOneMatching(responses, response => {
+              testUtils.expectAtLeastOneMatching(responses, response => {
                 expect(response.messageId).to.equal(stopMessageId);
                 expect(response.data.data).to.match(/CPU profiling successfully stopped/i);
               });
 
-              utils.expectOneMatching(responses, response => {
+              testUtils.expectAtLeastOneMatching(responses, response => {
                 expect(response.messageId).to.equal(startMessageId);
                 expect(response.data.data).to.match(/Profiling successfully started/i);
               });
 
-              utils.expectOneMatching(responses, response => {
+              testUtils.expectAtLeastOneMatching(responses, response => {
                 expect(response.messageId).to.equal(startMessageId);
                 expect(response.data.data.f).to.equal('(root)');
               });
@@ -155,14 +155,14 @@ describe('actions/profiling/cpu', () => {
           })
         )
         .then(() =>
-          utils.retry(() =>
+          testUtils.retry(() =>
             agentStubControls.getResponses().then(responses => {
-              utils.expectOneMatching(responses, response => {
+              testUtils.expectAtLeastOneMatching(responses, response => {
                 expect(response.messageId).to.equal(stopMessageId);
                 expect(response.data.data).to.match(/CPU profiling successfully aborted/i);
               });
 
-              utils.expectOneMatching(responses, response => {
+              testUtils.expectAtLeastOneMatching(responses, response => {
                 expect(response.messageId).to.equal(startMessageId);
                 expect(response.data.data).to.match(/Profiling successfully started/i);
               });
@@ -182,9 +182,9 @@ describe('actions/profiling/cpu', () => {
           }
         })
         .then(() =>
-          utils.retry(() =>
+          testUtils.retry(() =>
             agentStubControls.getResponses().then(responses => {
-              utils.expectOneMatching(responses, response => {
+              testUtils.expectAtLeastOneMatching(responses, response => {
                 expect(response.messageId).to.equal(stopMessageId);
                 expect(response.data.data).to.match(/No active CPU profiling session found/i);
               });

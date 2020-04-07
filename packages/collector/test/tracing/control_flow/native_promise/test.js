@@ -5,7 +5,7 @@ const expect = require('chai').expect;
 const constants = require('@instana/core').tracing.constants;
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('../../../../../core/test/config');
-const utils = require('../../../../../core/test/utils');
+const testUtils = require('../../../../../core/test/test_util');
 const ProcessControls = require('../../ProcessControls');
 
 describe('tracing/native-promise', function() {
@@ -46,7 +46,7 @@ describe('tracing/native-promise', function() {
 
         // validate the data
         .then(spanContext =>
-          utils
+          testUtils
             .retry(() =>
               agentControls.getSpans().then(spans => {
                 checker(spanContext, spans, path);
@@ -76,7 +76,7 @@ describe('tracing/native-promise', function() {
   }
 
   function getEntySpan(spans, path) {
-    return utils.expectOneMatching(spans, span => {
+    return testUtils.expectAtLeastOneMatching(spans, span => {
       expect(span.p).to.equal(undefined);
       expect(span.n).to.equal('node.http.server');
       expect(span.k).to.equal(constants.ENTRY);

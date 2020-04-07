@@ -6,7 +6,7 @@ const expect = require('chai').expect;
 const constants = require('@instana/core').tracing.constants;
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('../../../../../core/test/config');
-const utils = require('../../../../../core/test/utils');
+const testUtils = require('../../../../../core/test/test_util');
 
 let controls;
 let agentStubControls;
@@ -54,15 +54,15 @@ function test() {
 
   it('must trace queries', () =>
     controls.addValue(42).then(() =>
-      utils.retry(() =>
+      testUtils.retry(() =>
         agentStubControls.getSpans().then(spans => {
-          const entrySpan = utils.expectOneMatching(spans, span => {
+          const entrySpan = testUtils.expectAtLeastOneMatching(spans, span => {
             expect(span.n).to.equal('node.http.server');
             expect(span.f.e).to.equal(String(controls.getPid()));
             expect(span.f.h).to.equal('agent-stub-uuid');
           });
 
-          utils.expectOneMatching(spans, span => {
+          testUtils.expectAtLeastOneMatching(spans, span => {
             expect(span.t).to.equal(entrySpan.t);
             expect(span.p).to.equal(entrySpan.s);
             expect(span.n).to.equal('mysql');
@@ -86,15 +86,15 @@ function test() {
         expect(values).to.contain(43);
 
         // controls.getValues().then(() => {
-        return utils.retry(() =>
+        return testUtils.retry(() =>
           agentStubControls.getSpans().then(spans => {
-            const postEntrySpan = utils.expectOneMatching(spans, span => {
+            const postEntrySpan = testUtils.expectAtLeastOneMatching(spans, span => {
               expect(span.n).to.equal('node.http.server');
               expect(span.f.e).to.equal(String(controls.getPid()));
               expect(span.f.h).to.equal('agent-stub-uuid');
               expect(span.data.http.method).to.equal('POST');
             });
-            utils.expectOneMatching(spans, span => {
+            testUtils.expectAtLeastOneMatching(spans, span => {
               expect(span.t).to.equal(postEntrySpan.t);
               expect(span.p).to.equal(postEntrySpan.s);
               expect(span.n).to.equal('mysql');
@@ -110,13 +110,13 @@ function test() {
               expect(span.data.mysql.user).to.equal(process.env.MYSQL_USER);
               expect(span.data.mysql.db).to.equal(process.env.MYSQL_DB);
             });
-            const getEntrySpan = utils.expectOneMatching(spans, span => {
+            const getEntrySpan = testUtils.expectAtLeastOneMatching(spans, span => {
               expect(span.n).to.equal('node.http.server');
               expect(span.f.e).to.equal(String(controls.getPid()));
               expect(span.f.h).to.equal('agent-stub-uuid');
               expect(span.data.http.method).to.equal('GET');
             });
-            utils.expectOneMatching(spans, span => {
+            testUtils.expectAtLeastOneMatching(spans, span => {
               expect(span.t).to.equal(getEntrySpan.t);
               expect(span.p).to.equal(getEntrySpan.s);
               expect(span.n).to.equal('mysql');
@@ -143,16 +143,16 @@ function test() {
       expect(spanContext.s).to.exist;
       expect(spanContext.t).to.exist;
 
-      return utils.retry(() =>
+      return testUtils.retry(() =>
         agentStubControls.getSpans().then(spans => {
-          const postEntrySpan = utils.expectOneMatching(spans, span => {
+          const postEntrySpan = testUtils.expectAtLeastOneMatching(spans, span => {
             expect(span.n).to.equal('node.http.server');
             expect(span.f.e).to.equal(String(controls.getPid()));
             expect(span.f.h).to.equal('agent-stub-uuid');
             expect(span.data.http.method).to.equal('POST');
           });
 
-          utils.expectOneMatching(spans, span => {
+          testUtils.expectAtLeastOneMatching(spans, span => {
             expect(span.t).to.equal(postEntrySpan.t);
             expect(span.p).to.equal(postEntrySpan.s);
             expect(span.n).to.equal('mysql');
@@ -169,7 +169,7 @@ function test() {
             expect(span.data.mysql.db).to.equal(process.env.MYSQL_DB);
           });
 
-          utils.expectOneMatching(spans, span => {
+          testUtils.expectAtLeastOneMatching(spans, span => {
             expect(span.t).to.equal(postEntrySpan.t);
             expect(span.p).to.equal(postEntrySpan.s);
             expect(span.n).to.equal('node.http.client');

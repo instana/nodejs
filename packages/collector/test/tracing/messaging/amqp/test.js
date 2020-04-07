@@ -4,7 +4,7 @@ const expect = require('chai').expect;
 
 const constants = require('@instana/core').tracing.constants;
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
-const utils = require('../../../../../core/test/utils');
+const testUtils = require('../../../../../core/test/test_util');
 const exchange = require('./amqpUtil').exchange;
 const queueName = require('./amqpUtil').queueName;
 const queueNameGet = require('./amqpUtil').queueNameGet;
@@ -49,9 +49,9 @@ function registerTests(apiType) {
 
   it('must record an exit span for sendToQueue', () =>
     publisherControls.sendToQueue('Ohai!').then(() =>
-      utils.retry(() =>
+      testUtils.retry(() =>
         agentStubControls.getSpans().then(spans => {
-          const entrySpan = utils.expectOneMatching(spans, span => {
+          const entrySpan = testUtils.expectAtLeastOneMatching(spans, span => {
             expect(span.n).to.equal('node.http.server');
             expect(span.f.e).to.equal(String(publisherControls.getPid()));
             expect(span.f.h).to.equal('agent-stub-uuid');
@@ -60,7 +60,7 @@ function registerTests(apiType) {
             expect(span.ec).to.equal(0);
           });
 
-          utils.expectOneMatching(spans, span => {
+          testUtils.expectAtLeastOneMatching(spans, span => {
             expect(span.t).to.equal(entrySpan.t);
             expect(span.p).to.equal(entrySpan.s);
             expect(span.k).to.equal(constants.EXIT);
@@ -77,7 +77,7 @@ function registerTests(apiType) {
           });
 
           // verify that subsequent calls are correctly traced
-          utils.expectOneMatching(spans, span => {
+          testUtils.expectAtLeastOneMatching(spans, span => {
             expect(span.n).to.equal('node.http.client');
             expect(span.t).to.equal(entrySpan.t);
             expect(span.p).to.equal(entrySpan.s);
@@ -89,9 +89,9 @@ function registerTests(apiType) {
 
   it('must record an exit span for publish', () =>
     publisherControls.publish('Ohai!').then(() =>
-      utils.retry(() =>
+      testUtils.retry(() =>
         agentStubControls.getSpans().then(spans => {
-          const entrySpan = utils.expectOneMatching(spans, span => {
+          const entrySpan = testUtils.expectAtLeastOneMatching(spans, span => {
             expect(span.n).to.equal('node.http.server');
             expect(span.f.e).to.equal(String(publisherControls.getPid()));
             expect(span.f.h).to.equal('agent-stub-uuid');
@@ -100,7 +100,7 @@ function registerTests(apiType) {
             expect(span.ec).to.equal(0);
           });
 
-          utils.expectOneMatching(spans, span => {
+          testUtils.expectAtLeastOneMatching(spans, span => {
             expect(span.t).to.equal(entrySpan.t);
             expect(span.p).to.equal(entrySpan.s);
             expect(span.k).to.equal(constants.EXIT);
@@ -116,7 +116,7 @@ function registerTests(apiType) {
           });
 
           // verify that subsequent calls are correctly traced
-          utils.expectOneMatching(spans, span => {
+          testUtils.expectAtLeastOneMatching(spans, span => {
             expect(span.n).to.equal('node.http.client');
             expect(span.t).to.equal(entrySpan.t);
             expect(span.p).to.equal(entrySpan.s);
@@ -128,14 +128,14 @@ function registerTests(apiType) {
 
   it('must record an entry span for consume without exchange', () =>
     publisherControls.sendToQueue('Ohai').then(() =>
-      utils.retry(() =>
+      testUtils.retry(() =>
         agentStubControls.getSpans().then(spans => {
-          const rabbitMqExit = utils.expectOneMatching(spans, span => {
+          const rabbitMqExit = testUtils.expectAtLeastOneMatching(spans, span => {
             expect(span.k).to.equal(constants.EXIT);
             expect(span.n).to.equal('rabbitmq');
           });
 
-          const rabbitMqEntry = utils.expectOneMatching(spans, span => {
+          const rabbitMqEntry = testUtils.expectAtLeastOneMatching(spans, span => {
             expect(span.t).to.equal(rabbitMqExit.t);
             expect(span.p).to.equal(rabbitMqExit.s);
             expect(span.n).to.equal('rabbitmq');
@@ -152,7 +152,7 @@ function registerTests(apiType) {
           });
 
           // verify that subsequent calls are correctly traced
-          utils.expectOneMatching(spans, span => {
+          testUtils.expectAtLeastOneMatching(spans, span => {
             expect(span.n).to.equal('node.http.client');
             expect(span.t).to.equal(rabbitMqExit.t);
             expect(span.p).to.equal(rabbitMqEntry.s);
@@ -164,14 +164,14 @@ function registerTests(apiType) {
 
   it('must record an entry span for consume with exchange', () =>
     publisherControls.publish('Ohai').then(() =>
-      utils.retry(() =>
+      testUtils.retry(() =>
         agentStubControls.getSpans().then(spans => {
-          const rabbitMqExit = utils.expectOneMatching(spans, span => {
+          const rabbitMqExit = testUtils.expectAtLeastOneMatching(spans, span => {
             expect(span.k).to.equal(constants.EXIT);
             expect(span.n).to.equal('rabbitmq');
           });
 
-          const rabbitMqEntry = utils.expectOneMatching(spans, span => {
+          const rabbitMqEntry = testUtils.expectAtLeastOneMatching(spans, span => {
             expect(span.t).to.equal(rabbitMqExit.t);
             expect(span.p).to.equal(rabbitMqExit.s);
             expect(span.n).to.equal('rabbitmq');
@@ -188,7 +188,7 @@ function registerTests(apiType) {
           });
 
           // verify that subsequent calls are correctly traced
-          utils.expectOneMatching(spans, span => {
+          testUtils.expectAtLeastOneMatching(spans, span => {
             expect(span.n).to.equal('node.http.client');
             expect(span.t).to.equal(rabbitMqExit.t);
             expect(span.p).to.equal(rabbitMqEntry.s);
@@ -200,14 +200,14 @@ function registerTests(apiType) {
 
   it('must record an entry span for channel#get', () =>
     publisherControls.sendToGetQueue('Ohai').then(() =>
-      utils.retry(() =>
+      testUtils.retry(() =>
         agentStubControls.getSpans().then(spans => {
-          const rabbitMqExit = utils.expectOneMatching(spans, span => {
+          const rabbitMqExit = testUtils.expectAtLeastOneMatching(spans, span => {
             expect(span.k).to.equal(constants.EXIT);
             expect(span.n).to.equal('rabbitmq');
           });
 
-          const rabbitMqEntry = utils.expectOneMatching(spans, span => {
+          const rabbitMqEntry = testUtils.expectAtLeastOneMatching(spans, span => {
             expect(span.t).to.equal(rabbitMqExit.t);
             expect(span.p).to.equal(rabbitMqExit.s);
             expect(span.n).to.equal('rabbitmq');
@@ -224,7 +224,7 @@ function registerTests(apiType) {
           });
 
           // verify that subsequent calls are correctly traced
-          utils.expectOneMatching(spans, span => {
+          testUtils.expectAtLeastOneMatching(spans, span => {
             expect(span.n).to.equal('node.http.client');
             expect(span.t).to.equal(rabbitMqExit.t);
             expect(span.p).to.equal(rabbitMqEntry.s);
@@ -236,9 +236,9 @@ function registerTests(apiType) {
 
   it('must record an exit span for ConfirmChannel#sendToQueue', () =>
     publisherControls.sendToConfirmQueue('Ohai!').then(() =>
-      utils.retry(() =>
+      testUtils.retry(() =>
         agentStubControls.getSpans().then(spans => {
-          const entrySpan = utils.expectOneMatching(spans, span => {
+          const entrySpan = testUtils.expectAtLeastOneMatching(spans, span => {
             expect(span.n).to.equal('node.http.server');
             expect(span.f.e).to.equal(String(publisherControls.getPid()));
             expect(span.f.h).to.equal('agent-stub-uuid');
@@ -247,7 +247,7 @@ function registerTests(apiType) {
             expect(span.ec).to.equal(0);
           });
 
-          utils.expectOneMatching(spans, span => {
+          testUtils.expectAtLeastOneMatching(spans, span => {
             expect(span.t).to.equal(entrySpan.t);
             expect(span.p).to.equal(entrySpan.s);
             expect(span.k).to.equal(constants.EXIT);
@@ -264,7 +264,7 @@ function registerTests(apiType) {
           });
 
           // verify that subsequent calls are correctly traced
-          utils.expectOneMatching(spans, span => {
+          testUtils.expectAtLeastOneMatching(spans, span => {
             expect(span.n).to.equal('node.http.client');
             expect(span.t).to.equal(entrySpan.t);
             expect(span.p).to.equal(entrySpan.s);
@@ -276,14 +276,14 @@ function registerTests(apiType) {
 
   it('must record an entry span for ConfirmChannel.consume', () =>
     publisherControls.sendToConfirmQueue('Ohai').then(() =>
-      utils.retry(() =>
+      testUtils.retry(() =>
         agentStubControls.getSpans().then(spans => {
-          const rabbitMqExit = utils.expectOneMatching(spans, span => {
+          const rabbitMqExit = testUtils.expectAtLeastOneMatching(spans, span => {
             expect(span.k).to.equal(constants.EXIT);
             expect(span.n).to.equal('rabbitmq');
           });
 
-          const rabbitMqEntry = utils.expectOneMatching(spans, span => {
+          const rabbitMqEntry = testUtils.expectAtLeastOneMatching(spans, span => {
             expect(span.t).to.equal(rabbitMqExit.t);
             expect(span.p).to.equal(rabbitMqExit.s);
             expect(span.n).to.equal('rabbitmq');
@@ -299,7 +299,7 @@ function registerTests(apiType) {
           });
 
           // verify that subsequent calls are correctly traced
-          utils.expectOneMatching(spans, span => {
+          testUtils.expectAtLeastOneMatching(spans, span => {
             expect(span.n).to.equal('node.http.client');
             expect(span.t).to.equal(rabbitMqExit.t);
             expect(span.p).to.equal(rabbitMqEntry.s);

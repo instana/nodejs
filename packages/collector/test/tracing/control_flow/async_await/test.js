@@ -5,7 +5,7 @@ const semver = require('semver');
 
 const constants = require('@instana/core').tracing.constants;
 const config = require('../../../../../core/test/config');
-const utils = require('../../../../../core/test/utils');
+const testUtils = require('../../../../../core/test/test_util');
 
 describe('tracing/asyncAwait', function() {
   if (!semver.satisfies(process.versions.node, '>= 8.2.1')) {
@@ -47,11 +47,11 @@ describe('tracing/asyncAwait', function() {
   function testAsyncControlFlow() {
     it('must follow async control flow', () =>
       expressAsyncAwaitControls.sendRequest().then(() =>
-        utils.retry(() =>
+        testUtils.retry(() =>
           agentStubControls.getSpans().then(spans => {
             expect(spans.length).to.equal(5, 'Expecting five spans');
 
-            const rootSpan = utils.expectOneMatching(spans, span => {
+            const rootSpan = testUtils.expectAtLeastOneMatching(spans, span => {
               expect(span.n).to.equal('node.http.server');
               expect(span.k).to.equal(constants.ENTRY);
               expect(span.data.http.url).to.match(/\/getSomething/);
@@ -59,7 +59,7 @@ describe('tracing/asyncAwait', function() {
               expect(span.f.h).to.equal('agent-stub-uuid');
             });
 
-            const client1Span = utils.expectOneMatching(spans, span => {
+            const client1Span = testUtils.expectAtLeastOneMatching(spans, span => {
               expect(span.n).to.equal('node.http.client');
               expect(span.p).to.equal(rootSpan.s);
               expect(span.k).to.equal(constants.EXIT);
@@ -68,7 +68,7 @@ describe('tracing/asyncAwait', function() {
               expect(span.data.http.url).to.have.string('/foo');
             });
 
-            utils.expectOneMatching(spans, span => {
+            testUtils.expectAtLeastOneMatching(spans, span => {
               expect(span.n).to.equal('node.http.server');
               expect(span.k).to.equal(constants.ENTRY);
               expect(span.p).to.equal(client1Span.s);
@@ -76,7 +76,7 @@ describe('tracing/asyncAwait', function() {
               expect(span.f.h).to.equal('agent-stub-uuid');
             });
 
-            const client2Span = utils.expectOneMatching(spans, span => {
+            const client2Span = testUtils.expectAtLeastOneMatching(spans, span => {
               expect(span.n).to.equal('node.http.client');
               expect(span.p).to.equal(rootSpan.s);
               expect(span.k).to.equal(constants.EXIT);
@@ -85,7 +85,7 @@ describe('tracing/asyncAwait', function() {
               expect(span.data.http.url).to.have.string('/bar');
             });
 
-            utils.expectOneMatching(spans, span => {
+            testUtils.expectAtLeastOneMatching(spans, span => {
               expect(span.n).to.equal('node.http.server');
               expect(span.p).to.equal(client2Span.s);
               expect(span.k).to.equal(constants.ENTRY);

@@ -5,7 +5,7 @@ const expect = require('chai').expect;
 const constants = require('@instana/core').tracing.constants;
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('../../../../../core/test/config');
-const utils = require('../../../../../core/test/utils');
+const testUtils = require('../../../../../core/test/test_util');
 
 describe('tracing/ioredis', function() {
   if (!supportedVersion(process.versions.node)) {
@@ -46,14 +46,14 @@ describe('tracing/ioredis', function() {
       .then(response => {
         expect(String(response)).to.equal('42');
 
-        return utils.retry(() =>
+        return testUtils.retry(() =>
           agentControls.getSpans().then(spans => {
-            const writeEntrySpan = utils.expectOneMatching(spans, span => {
+            const writeEntrySpan = testUtils.expectAtLeastOneMatching(spans, span => {
               expect(span.n).to.equal('node.http.server');
               expect(span.data.http.method).to.equal('POST');
             });
 
-            utils.expectOneMatching(spans, span => {
+            testUtils.expectAtLeastOneMatching(spans, span => {
               expect(span.t).to.equal(writeEntrySpan.t);
               expect(span.p).to.equal(writeEntrySpan.s);
               expect(span.n).to.equal('redis');
@@ -67,12 +67,12 @@ describe('tracing/ioredis', function() {
               expect(span.data.redis.command).to.equal('set');
             });
 
-            const readEntrySpan = utils.expectOneMatching(spans, span => {
+            const readEntrySpan = testUtils.expectAtLeastOneMatching(spans, span => {
               expect(span.n).to.equal('node.http.server');
               expect(span.data.http.method).to.equal('GET');
             });
 
-            utils.expectOneMatching(spans, span => {
+            testUtils.expectAtLeastOneMatching(spans, span => {
               expect(span.t).to.equal(readEntrySpan.t);
               expect(span.p).to.equal(readEntrySpan.s);
               expect(span.n).to.equal('redis');
@@ -111,14 +111,14 @@ describe('tracing/ioredis', function() {
       .then(response => {
         expect(String(response)).to.equal('OK;13');
 
-        return utils.retry(() =>
+        return testUtils.retry(() =>
           agentControls.getSpans().then(spans => {
-            const writeEntrySpan = utils.expectOneMatching(spans, span => {
+            const writeEntrySpan = testUtils.expectAtLeastOneMatching(spans, span => {
               expect(span.n).to.equal('node.http.server');
               expect(span.data.http.method).to.equal('POST');
             });
 
-            utils.expectOneMatching(spans, span => {
+            testUtils.expectAtLeastOneMatching(spans, span => {
               expect(span.t).to.equal(writeEntrySpan.t);
               expect(span.p).to.equal(writeEntrySpan.s);
               expect(span.n).to.equal('redis');
@@ -132,12 +132,12 @@ describe('tracing/ioredis', function() {
               expect(span.data.redis.command).to.equal('set');
             });
 
-            const readEntrySpan = utils.expectOneMatching(spans, span => {
+            const readEntrySpan = testUtils.expectAtLeastOneMatching(spans, span => {
               expect(span.n).to.equal('node.http.server');
               expect(span.data.http.method).to.equal('GET');
             });
 
-            utils.expectOneMatching(spans, span => {
+            testUtils.expectAtLeastOneMatching(spans, span => {
               expect(span.t).to.equal(readEntrySpan.t);
               expect(span.p).to.equal(readEntrySpan.s);
               expect(span.n).to.equal('redis');
@@ -151,7 +151,7 @@ describe('tracing/ioredis', function() {
               expect(span.data.redis.command).to.equal('get');
             });
 
-            utils.expectOneMatching(spans, span => {
+            testUtils.expectAtLeastOneMatching(spans, span => {
               expect(span.t).to.equal(readEntrySpan.t);
               expect(span.p).to.equal(readEntrySpan.s);
               expect(span.n).to.equal('node.http.client');
@@ -191,14 +191,14 @@ describe('tracing/ioredis', function() {
       .then(response => {
         expect(String(response)).to.equal('OK;13');
 
-        return utils.retry(() =>
+        return testUtils.retry(() =>
           agentControls.getSpans().then(spans => {
-            const writeEntrySpan = utils.expectOneMatching(spans, span => {
+            const writeEntrySpan = testUtils.expectAtLeastOneMatching(spans, span => {
               expect(span.n).to.equal('node.http.server');
               expect(span.data.http.method).to.equal('POST');
             });
 
-            utils.expectOneMatching(spans, span => {
+            testUtils.expectAtLeastOneMatching(spans, span => {
               expect(span.t).to.equal(writeEntrySpan.t);
               expect(span.p).to.equal(writeEntrySpan.s);
               expect(span.n).to.equal('redis');
@@ -212,12 +212,12 @@ describe('tracing/ioredis', function() {
               expect(span.data.redis.command).to.equal('set');
             });
 
-            const readEntrySpan = utils.expectOneMatching(spans, span => {
+            const readEntrySpan = testUtils.expectAtLeastOneMatching(spans, span => {
               expect(span.n).to.equal('node.http.server');
               expect(span.data.http.method).to.equal('GET');
             });
 
-            utils.expectOneMatching(spans, span => {
+            testUtils.expectAtLeastOneMatching(spans, span => {
               expect(span.t).to.equal(readEntrySpan.t);
               expect(span.p).to.equal(readEntrySpan.s);
               expect(span.n).to.equal('redis');
@@ -231,7 +231,7 @@ describe('tracing/ioredis', function() {
               expect(span.data.redis.command).to.equal('get');
             });
 
-            utils.expectOneMatching(spans, span => {
+            testUtils.expectAtLeastOneMatching(spans, span => {
               expect(span.t).to.equal(readEntrySpan.t);
               expect(span.p).to.equal(readEntrySpan.s);
               expect(span.n).to.equal('node.http.client');
@@ -259,14 +259,14 @@ describe('tracing/ioredis', function() {
         // ignore errors
       })
       .then(() =>
-        utils.retry(() =>
+        testUtils.retry(() =>
           agentControls.getSpans().then(spans => {
-            const writeEntrySpan = utils.expectOneMatching(spans, span => {
+            const writeEntrySpan = testUtils.expectAtLeastOneMatching(spans, span => {
               expect(span.n).to.equal('node.http.server');
               expect(span.data.http.method).to.equal('GET');
             });
 
-            utils.expectOneMatching(spans, span => {
+            testUtils.expectAtLeastOneMatching(spans, span => {
               expect(span.t).to.equal(writeEntrySpan.t);
               expect(span.p).to.equal(writeEntrySpan.s);
               expect(span.n).to.equal('redis');
@@ -291,14 +291,14 @@ describe('tracing/ioredis', function() {
         path: '/multi'
       })
       .then(() =>
-        utils.retry(() =>
+        testUtils.retry(() =>
           agentControls.getSpans().then(spans => {
-            const writeEntrySpan = utils.expectOneMatching(spans, span => {
+            const writeEntrySpan = testUtils.expectAtLeastOneMatching(spans, span => {
               expect(span.n).to.equal('node.http.server');
               expect(span.data.http.method).to.equal('GET');
             });
 
-            utils.expectOneMatching(spans, span => {
+            testUtils.expectAtLeastOneMatching(spans, span => {
               expect(span.t).to.equal(writeEntrySpan.t);
               expect(span.p).to.equal(writeEntrySpan.s);
               expect(span.n).to.equal('redis');
@@ -328,14 +328,14 @@ describe('tracing/ioredis', function() {
         // ignore errors
       })
       .then(() =>
-        utils.retry(() =>
+        testUtils.retry(() =>
           agentControls.getSpans().then(spans => {
-            const writeEntrySpan = utils.expectOneMatching(spans, span => {
+            const writeEntrySpan = testUtils.expectAtLeastOneMatching(spans, span => {
               expect(span.n).to.equal('node.http.server');
               expect(span.data.http.method).to.equal('GET');
             });
 
-            utils.expectOneMatching(spans, span => {
+            testUtils.expectAtLeastOneMatching(spans, span => {
               expect(span.t).to.equal(writeEntrySpan.t);
               expect(span.p).to.equal(writeEntrySpan.s);
               expect(span.n).to.equal('redis');
@@ -363,14 +363,14 @@ describe('tracing/ioredis', function() {
         path: '/multiKeepTracing'
       })
       .then(() =>
-        utils.retry(() =>
+        testUtils.retry(() =>
           agentControls.getSpans().then(spans => {
-            const entrySpan = utils.expectOneMatching(spans, span => {
+            const entrySpan = testUtils.expectAtLeastOneMatching(spans, span => {
               expect(span.n).to.equal('node.http.server');
               expect(span.data.http.method).to.equal('POST');
             });
 
-            utils.expectOneMatching(spans, span => {
+            testUtils.expectAtLeastOneMatching(spans, span => {
               expect(span.t).to.equal(entrySpan.t);
               expect(span.p).to.equal(entrySpan.s);
               expect(span.n).to.equal('redis');
@@ -387,7 +387,7 @@ describe('tracing/ioredis', function() {
               expect(span.data.redis.subCommands).to.deep.equal(['hset', 'hget']);
             });
 
-            utils.expectOneMatching(spans, span => {
+            testUtils.expectAtLeastOneMatching(spans, span => {
               expect(span.t).to.equal(entrySpan.t);
               expect(span.p).to.equal(entrySpan.s);
               expect(span.n).to.equal('node.http.client');
@@ -412,14 +412,14 @@ describe('tracing/ioredis', function() {
         path: '/pipeline'
       })
       .then(() =>
-        utils.retry(() =>
+        testUtils.retry(() =>
           agentControls.getSpans().then(spans => {
-            const writeEntrySpan = utils.expectOneMatching(spans, span => {
+            const writeEntrySpan = testUtils.expectAtLeastOneMatching(spans, span => {
               expect(span.n).to.equal('node.http.server');
               expect(span.data.http.method).to.equal('GET');
             });
 
-            utils.expectOneMatching(spans, span => {
+            testUtils.expectAtLeastOneMatching(spans, span => {
               expect(span.t).to.equal(writeEntrySpan.t);
               expect(span.p).to.equal(writeEntrySpan.s);
               expect(span.n).to.equal('redis');
@@ -446,14 +446,14 @@ describe('tracing/ioredis', function() {
         path: '/pipelineFailure'
       })
       .then(() =>
-        utils.retry(() =>
+        testUtils.retry(() =>
           agentControls.getSpans().then(spans => {
-            const writeEntrySpan = utils.expectOneMatching(spans, span => {
+            const writeEntrySpan = testUtils.expectAtLeastOneMatching(spans, span => {
               expect(span.n).to.equal('node.http.server');
               expect(span.data.http.method).to.equal('GET');
             });
 
-            utils.expectOneMatching(spans, span => {
+            testUtils.expectAtLeastOneMatching(spans, span => {
               expect(span.t).to.equal(writeEntrySpan.t);
               expect(span.p).to.equal(writeEntrySpan.s);
               expect(span.n).to.equal('redis');
@@ -481,14 +481,14 @@ describe('tracing/ioredis', function() {
         path: '/pipelineKeepTracing'
       })
       .then(() =>
-        utils.retry(() =>
+        testUtils.retry(() =>
           agentControls.getSpans().then(spans => {
-            const entrySpan = utils.expectOneMatching(spans, span => {
+            const entrySpan = testUtils.expectAtLeastOneMatching(spans, span => {
               expect(span.n).to.equal('node.http.server');
               expect(span.data.http.method).to.equal('POST');
             });
 
-            utils.expectOneMatching(spans, span => {
+            testUtils.expectAtLeastOneMatching(spans, span => {
               expect(span.t).to.equal(entrySpan.t);
               expect(span.p).to.equal(entrySpan.s);
               expect(span.n).to.equal('redis');
@@ -505,7 +505,7 @@ describe('tracing/ioredis', function() {
               expect(span.data.redis.subCommands).to.deep.equal(['hset', 'hget']);
             });
 
-            utils.expectOneMatching(spans, span => {
+            testUtils.expectAtLeastOneMatching(spans, span => {
               expect(span.t).to.equal(entrySpan.t);
               expect(span.p).to.equal(entrySpan.s);
               expect(span.n).to.equal('node.http.client');

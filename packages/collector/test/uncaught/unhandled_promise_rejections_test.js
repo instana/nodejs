@@ -5,7 +5,7 @@ const expect = chai.expect;
 
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('../../../core/test/config');
-const utils = require('../../../core/test/utils');
+const testUtils = require('../../../core/test/test_util');
 
 describe('unhandled promise rejections', function() {
   if (!supportedVersion(process.versions.node)) {
@@ -39,9 +39,9 @@ describe('unhandled promise rejections', function() {
       })
       .then(response => {
         expect(response.body).to.equal('Rejected.');
-        return utils.retry(() =>
+        return testUtils.retry(() =>
           agentControls.getSpans().then(spans => {
-            utils.expectOneMatching(spans, span => {
+            testUtils.expectAtLeastOneMatching(spans, span => {
               expect(span.n).to.equal('node.http.server');
               expect(span.f.e).to.equal(String(serverControls.getPid()));
               expect(span.f.h).to.equal('agent-stub-uuid');
@@ -63,9 +63,9 @@ describe('unhandled promise rejections', function() {
       })
       .then(response => {
         expect(response.body).to.equal('Rejected.');
-        return utils.retry(() =>
+        return testUtils.retry(() =>
           agentControls.getEvents().then(events => {
-            utils.expectOneMatching(events, event => {
+            testUtils.expectAtLeastOneMatching(events, event => {
               expect(event.title).to.equal('An unhandled promise rejection occured in a Node.js process.');
               expect(event.text).to.contain('Unhandled Promise Rejection');
               expect(event.plugin).to.equal('com.instana.forge.infrastructure.runtime.nodejs.NodeJsRuntimePlatform');

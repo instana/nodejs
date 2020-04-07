@@ -5,7 +5,7 @@ const expect = require('chai').expect;
 const constants = require('@instana/core').tracing.constants;
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('../../../../../core/test/config');
-const utils = require('../../../../../core/test/utils');
+const testUtils = require('../../../../../core/test/test_util');
 
 describe('tracing/pg', function() {
   if (!supportedVersion(process.versions.node)) {
@@ -32,7 +32,7 @@ describe('tracing/pg', function() {
       })
       .then(response => {
         verifySimpleSelectResponse(response);
-        return utils.retry(() =>
+        return testUtils.retry(() =>
           agentControls.getSpans().then(spans => {
             const httpEntry = verifyHttpEntry(spans, '/select-now-pool');
             verifyPgExit(spans, httpEntry, 'SELECT NOW()');
@@ -48,7 +48,7 @@ describe('tracing/pg', function() {
       })
       .then(response => {
         verifySimpleSelectResponse(response);
-        return utils.retry(() =>
+        return testUtils.retry(() =>
           agentControls.getSpans().then(spans => {
             const httpEntry = verifyHttpEntry(spans, '/select-now-no-pool-callback');
             verifyPgExit(spans, httpEntry, 'SELECT NOW()');
@@ -64,7 +64,7 @@ describe('tracing/pg', function() {
       })
       .then(response => {
         verifySimpleSelectResponse(response);
-        return utils.retry(() =>
+        return testUtils.retry(() =>
           agentControls.getSpans().then(spans => {
             const httpEntry = verifyHttpEntry(spans, '/select-now-no-pool-promise');
             verifyPgExit(spans, httpEntry, 'SELECT NOW()');
@@ -98,7 +98,7 @@ describe('tracing/pg', function() {
       })
       .then(response => {
         verifySimpleSelectResponse(response);
-        return utils.retry(() =>
+        return testUtils.retry(() =>
           agentControls.getSpans().then(spans => {
             const httpEntryLong = verifyHttpEntry(spans, '/long-running-query');
             const httpEntriesQuick = [];
@@ -125,7 +125,7 @@ describe('tracing/pg', function() {
       })
       .then(response => {
         verifyInsertResponse(response);
-        return utils.retry(() =>
+        return testUtils.retry(() =>
           agentControls.getSpans().then(spans => {
             const httpEntry = verifyHttpEntry(spans, '/pool-string-insert');
             verifyPgExit(spans, httpEntry, 'INSERT INTO users(name, email) VALUES($1, $2) RETURNING *');
@@ -144,7 +144,7 @@ describe('tracing/pg', function() {
         expect(response.command).to.equal('SELECT');
         expect(response.rowCount).to.be.a('number');
 
-        return utils.retry(() =>
+        return testUtils.retry(() =>
           agentControls.getSpans().then(spans => {
             const httpEntry = verifyHttpEntry(spans, '/pool-config-select');
             verifyPgExit(spans, httpEntry, 'SELECT name, email FROM users');
@@ -160,7 +160,7 @@ describe('tracing/pg', function() {
       })
       .then(response => {
         verifyInsertResponse(response);
-        return utils.retry(() =>
+        return testUtils.retry(() =>
           agentControls.getSpans().then(spans => {
             const httpEntry = verifyHttpEntry(spans, '/pool-config-select-promise');
             verifyPgExit(spans, httpEntry, 'INSERT INTO users(name, email) VALUES($1, $2) RETURNING *');
@@ -176,7 +176,7 @@ describe('tracing/pg', function() {
       })
       .then(response => {
         verifyInsertResponse(response);
-        return utils.retry(() =>
+        return testUtils.retry(() =>
           agentControls.getSpans().then(spans => {
             const httpEntry = verifyHttpEntry(spans, '/client-string-insert');
             verifyPgExit(spans, httpEntry, 'INSERT INTO users(name, email) VALUES($1, $2) RETURNING *');
@@ -195,7 +195,7 @@ describe('tracing/pg', function() {
         expect(response.command).to.equal('SELECT');
         expect(response.rowCount).to.be.a('number');
 
-        return utils.retry(() =>
+        return testUtils.retry(() =>
           agentControls.getSpans().then(spans => {
             const httpEntry = verifyHttpEntry(spans, '/client-config-select');
             verifyPgExit(spans, httpEntry, 'SELECT name, email FROM users');
@@ -216,7 +216,7 @@ describe('tracing/pg', function() {
         // 42P01 -> PostgreSQL's code for "relation does not exist"
         expect(response.code).to.equal('42P01');
 
-        return utils.retry(() =>
+        return testUtils.retry(() =>
           agentControls.getSpans().then(spans => {
             const httpEntry = verifyHttpEntry(spans, '/table-doesnt-exist');
             verifyPgExitWithError(
@@ -238,11 +238,11 @@ describe('tracing/pg', function() {
       })
       .then(response => {
         verifyInsertResponse(response);
-        return utils.retry(() =>
+        return testUtils.retry(() =>
           agentControls.getSpans().then(spans => {
-            const entrySpans = utils.getSpansByName(spans, 'node.http.server');
+            const entrySpans = testUtils.getSpansByName(spans, 'node.http.server');
             expect(entrySpans).to.have.lengthOf(0);
-            const pgExits = utils.getSpansByName(spans, 'postgres');
+            const pgExits = testUtils.getSpansByName(spans, 'postgres');
             expect(pgExits).to.have.lengthOf(0);
           })
         );
@@ -256,10 +256,10 @@ describe('tracing/pg', function() {
       })
       .then(response => {
         verifyInsertResponse(response, 'trans2', 'nodejstests@blah');
-        return utils.retry(() =>
+        return testUtils.retry(() =>
           agentControls.getSpans().then(spans => {
             const httpEntry = verifyHttpEntry(spans, '/transaction');
-            expect(utils.getSpansByName(spans, 'postgres')).to.have.lengthOf(4);
+            expect(testUtils.getSpansByName(spans, 'postgres')).to.have.lengthOf(4);
             verifyPgExit(spans, httpEntry, 'BEGIN');
             verifyPgExit(spans, httpEntry, 'INSERT INTO users(name, email) VALUES($1, $2) RETURNING *');
             verifyPgExit(spans, httpEntry, 'INSERT INTO users(name, email) VALUES($1, $2) RETURNING *');
@@ -286,7 +286,7 @@ describe('tracing/pg', function() {
   }
 
   function verifyHttpEntry(spans, url) {
-    return utils.expectOneMatching(spans, span => {
+    return testUtils.expectAtLeastOneMatching(spans, span => {
       expect(span.p).to.not.exist;
       expect(span.k).to.equal(constants.ENTRY);
       expect(span.f.e).to.equal(String(controls.getPid()));
@@ -297,7 +297,7 @@ describe('tracing/pg', function() {
   }
 
   function verifyPgExit(spans, parent, statement) {
-    return utils.expectOneMatching(spans, span => {
+    return testUtils.expectAtLeastOneMatching(spans, span => {
       verifyPgExitBase(span, parent, statement);
       expect(span.error).to.not.exist;
       expect(span.ec).to.equal(0);
@@ -305,7 +305,7 @@ describe('tracing/pg', function() {
   }
 
   function verifyPgExitWithError(spans, parent, statement, errorMessage) {
-    return utils.expectOneMatching(spans, span => {
+    return testUtils.expectAtLeastOneMatching(spans, span => {
       verifyPgExitBase(span, parent, statement);
       expect(span.error).to.not.exist;
       expect(span.ec).to.equal(1);
@@ -331,7 +331,7 @@ describe('tracing/pg', function() {
   }
 
   function verifyUniqueHttpEntry(spans, method, url, other) {
-    return utils.expectOneMatching(spans, span => {
+    return testUtils.expectAtLeastOneMatching(spans, span => {
       expect(span.p).to.not.exist;
       expect(span.k).to.equal(constants.ENTRY);
       expect(span.f.e).to.equal(String(controls.getPid()));

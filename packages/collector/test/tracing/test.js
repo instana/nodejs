@@ -5,7 +5,7 @@ const Promise = require('bluebird');
 
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('../../../core/test/config');
-const utils = require('../../../core/test/utils');
+const testUtils = require('../../../core/test/test_util');
 
 /**
  * Tests general tracing functionality without having a focus on specific instrumentations.
@@ -34,7 +34,7 @@ describe('tracing', function() {
         responseStatus: 201
       })
       .then(() =>
-        utils.retry(() =>
+        testUtils.retry(() =>
           agentStubControls.getSpans().then(spans => {
             expect(spans.length).to.be.above(0, 'Expecting at least one span');
           })
@@ -49,9 +49,9 @@ describe('tracing', function() {
         responseStatus: 200
       })
       .then(() =>
-        utils.retry(() =>
+        testUtils.retry(() =>
           agentStubControls.getSpans().then(spans => {
-            utils.expectOneMatching(spans, span => {
+            testUtils.expectAtLeastOneMatching(spans, span => {
               expect(span.data.http.url).to.equal('/routed/subPath');
             });
           })
@@ -104,9 +104,9 @@ describe('tracing', function() {
           responseStatus: 201
         })
         .then(() =>
-          utils.retry(() =>
+          testUtils.retry(() =>
             agentStubControls.getSpans().then(spans => {
-              utils.expectOneMatching(spans, span => {
+              testUtils.expectAtLeastOneMatching(spans, span => {
                 expect(span.n).to.equal('node.http.server');
                 expect(span.async).to.not.exist;
                 expect(span.error).to.not.exist;
@@ -126,9 +126,9 @@ describe('tracing', function() {
           path: '/checkout?stan=isalwayswatching&neversleeps'
         })
         .then(() =>
-          utils.retry(() =>
+          testUtils.retry(() =>
             agentStubControls.getSpans().then(spans => {
-              utils.expectOneMatching(spans, span => {
+              testUtils.expectAtLeastOneMatching(spans, span => {
                 expect(span.n).to.equal('node.http.server');
                 expect(span.async).to.not.exist;
                 expect(span.error).to.not.exist;
@@ -151,9 +151,9 @@ describe('tracing', function() {
           responseStatus: 503
         })
         .then(() =>
-          utils.retry(() =>
+          testUtils.retry(() =>
             agentStubControls.getSpans().then(spans => {
-              utils.expectOneMatching(spans, span => {
+              testUtils.expectAtLeastOneMatching(spans, span => {
                 expect(span.n).to.equal('node.http.server');
                 expect(span.async).to.not.exist;
                 expect(span.error).to.not.exist;
@@ -193,11 +193,11 @@ describe('tracing', function() {
           const traceId = response.body;
           expect(traceId).to.be.a('string');
 
-          return utils.retry(() =>
+          return testUtils.retry(() =>
             agentStubControls.getSpans().then(spans => {
               expect(spans).to.have.lengthOf(1);
 
-              utils.expectOneMatching(spans, span => {
+              testUtils.expectAtLeastOneMatching(spans, span => {
                 expect(span.t).to.equal(traceId);
                 expect(span.f.e).to.equal(String(expressControls.getPid()));
                 expect(span.f.h).to.equal('agent-stub-uuid');
@@ -222,12 +222,12 @@ describe('tracing', function() {
             responseStatus: 201
           })
           .then(() =>
-            utils.retry(() =>
+            testUtils.retry(() =>
               agentStubControls.getSpans().then(spans => {
                 expect(spans.length).to.equal(3, 'Expecting at most three spans');
 
                 // proxy entry span
-                const proxyEntrySpan = utils.expectOneMatching(spans, span => {
+                const proxyEntrySpan = testUtils.expectAtLeastOneMatching(spans, span => {
                   expect(span.n).to.equal('node.http.server');
                   expect(span.f.e).to.equal(String(expressProxyControls.getPid()));
                   expect(span.f.h).to.equal('agent-stub-uuid');
@@ -241,7 +241,7 @@ describe('tracing', function() {
                 });
 
                 // proxy exit span
-                const proxyExitSpan = utils.expectOneMatching(spans, span => {
+                const proxyExitSpan = testUtils.expectAtLeastOneMatching(spans, span => {
                   expect(span.t).to.equal(proxyEntrySpan.t);
                   expect(span.p).to.equal(proxyEntrySpan.s);
                   expect(span.n).to.equal('node.http.client');
@@ -256,7 +256,7 @@ describe('tracing', function() {
                   expect(span.data.http.status).to.equal(201);
                 });
 
-                utils.expectOneMatching(spans, span => {
+                testUtils.expectAtLeastOneMatching(spans, span => {
                   expect(span.t).to.equal(proxyEntrySpan.t);
                   expect(span.p).to.equal(proxyExitSpan.s);
                   expect(span.n).to.equal('node.http.server');
@@ -283,12 +283,12 @@ describe('tracing', function() {
             httpLib: 'node-fetch'
           })
           .then(() =>
-            utils.retry(() =>
+            testUtils.retry(() =>
               agentStubControls.getSpans().then(spans => {
                 expect(spans.length).to.equal(3, 'Expecting at most three spans');
 
                 // proxy entry span
-                const proxyEntrySpan = utils.expectOneMatching(spans, span => {
+                const proxyEntrySpan = testUtils.expectAtLeastOneMatching(spans, span => {
                   expect(span.n).to.equal('node.http.server');
                   expect(span.f.e).to.equal(String(expressProxyControls.getPid()));
                   expect(span.f.h).to.equal('agent-stub-uuid');
@@ -302,7 +302,7 @@ describe('tracing', function() {
                 });
 
                 // proxy exit span
-                const proxyExitSpan = utils.expectOneMatching(spans, span => {
+                const proxyExitSpan = testUtils.expectAtLeastOneMatching(spans, span => {
                   expect(span.t).to.equal(proxyEntrySpan.t);
                   expect(span.p).to.equal(proxyEntrySpan.s);
                   expect(span.n).to.equal('node.http.client');
@@ -317,7 +317,7 @@ describe('tracing', function() {
                   expect(span.data.http.status).to.equal(200);
                 });
 
-                utils.expectOneMatching(spans, span => {
+                testUtils.expectAtLeastOneMatching(spans, span => {
                   expect(span.t).to.equal(proxyEntrySpan.t);
                   expect(span.p).to.equal(proxyExitSpan.s);
                   expect(span.n).to.equal('node.http.server');
@@ -344,7 +344,7 @@ describe('tracing', function() {
           })
           .then(Promise.delay(200))
           .then(() =>
-            utils.retry(() =>
+            testUtils.retry(() =>
               agentStubControls.getSpans().then(spans => {
                 expect(spans).to.have.lengthOf(0, `Spans: ${JSON.stringify(spans, 0, 2)}`);
               })
@@ -360,9 +360,9 @@ describe('tracing', function() {
             target: 'http://127.0.0.2:49162/foobar'
           })
           .then(() =>
-            utils.retry(() =>
+            testUtils.retry(() =>
               agentStubControls.getSpans().then(spans => {
-                utils.expectOneMatching(spans, span => {
+                testUtils.expectAtLeastOneMatching(spans, span => {
                   expect(span.n).to.equal('node.http.client');
                   expect(span.error).to.not.exist;
                   expect(span.ec).to.equal(1);
@@ -386,11 +386,11 @@ describe('tracing', function() {
             target: '://127.0.0.2:49162/foobar'
           })
           .then(() =>
-            utils.retry(() =>
+            testUtils.retry(() =>
               agentStubControls.getSpans().then(spans => {
                 expect(spans).to.have.lengthOf(1);
 
-                utils.expectOneMatching(spans, span => {
+                testUtils.expectAtLeastOneMatching(spans, span => {
                   expect(span.n).to.equal('node.http.server');
                   expect(span.error).to.not.exist;
                   expect(span.ec).to.equal(1);
@@ -418,10 +418,10 @@ describe('tracing', function() {
       );
 
       return calls.then(() =>
-        utils.retry(() =>
+        testUtils.retry(() =>
           agentStubControls.getSpans().then(spans => {
             callsNumbers.forEach(call => {
-              const proxyEntrySpan = utils.expectOneMatching(spans, span => {
+              const proxyEntrySpan = testUtils.expectAtLeastOneMatching(spans, span => {
                 expect(span.n).to.equal('node.http.server');
                 expect(span.f.e).to.equal(String(expressProxyControls.getPid()));
                 expect(span.f.h).to.equal('agent-stub-uuid');
@@ -434,7 +434,7 @@ describe('tracing', function() {
               });
 
               // proxy exit span
-              const proxyExitSpan = utils.expectOneMatching(spans, span => {
+              const proxyExitSpan = testUtils.expectAtLeastOneMatching(spans, span => {
                 expect(span.t).to.equal(proxyEntrySpan.t);
                 expect(span.p).to.equal(proxyEntrySpan.s);
                 expect(span.n).to.equal('node.http.client');
@@ -448,7 +448,7 @@ describe('tracing', function() {
                 expect(span.data.http.status).to.equal((call % 20) + 200);
               });
 
-              utils.expectOneMatching(spans, span => {
+              testUtils.expectAtLeastOneMatching(spans, span => {
                 expect(span.t).to.equal(proxyEntrySpan.t);
                 expect(span.p).to.equal(proxyExitSpan.s);
                 expect(span.n).to.equal('node.http.server');

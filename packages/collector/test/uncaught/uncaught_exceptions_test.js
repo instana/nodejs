@@ -7,7 +7,7 @@ const assert = chai.assert;
 
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('../../../core/test/config');
-const utils = require('../../../core/test/utils');
+const testUtils = require('../../../core/test/test_util');
 
 describe('uncaught exceptions', function() {
   if (!supportedVersion(process.versions.node)) {
@@ -51,10 +51,10 @@ describe('uncaught exceptions', function() {
       .catch(err => {
         expect(err.name).to.equal('RequestError');
         expect(err.message).to.equal('Error: socket hang up');
-        return utils.retry(
+        return testUtils.retry(
           () =>
             agentControls.getSpans().then(spans => {
-              utils.expectOneMatching(spans, span => {
+              testUtils.expectAtLeastOneMatching(spans, span => {
                 expect(span.n).to.equal('node.http.server');
                 expect(span.f.e).to.equal(String(serverControls.getPid()));
                 expect(span.f.h).to.equal('agent-stub-uuid');
@@ -82,10 +82,10 @@ describe('uncaught exceptions', function() {
       .catch(err => {
         expect(err.name).to.equal('RequestError');
         expect(err.message).to.equal('Error: socket hang up');
-        return utils.retry(
+        return testUtils.retry(
           () =>
             agentControls.getEvents().then(events => {
-              utils.expectOneMatching(events, event => {
+              testUtils.expectAtLeastOneMatching(events, event => {
                 expect(event.title).to.equal('A Node.js process terminated abnormally due to an uncaught exception.');
                 expect(event.text).to.contain('Boom');
                 expect(event.plugin).to.equal('com.instana.forge.infrastructure.runtime.nodejs.NodeJsRuntimePlatform');
@@ -133,14 +133,14 @@ describe('uncaught exceptions', function() {
 
         // Wait until the event has arrived and make sure that the other HTTP request has not been accepted/processed
         // in the meantime.
-        return utils.retry(
+        return testUtils.retry(
           () =>
             agentControls.getEvents().then(events => {
               expect(serverAcceptedAnotherResponse, "Unexpected response, server shouldn't have accepted another call.")
                 .to.be.false;
               expect(errorFromSecondHttpRequest).to.exist;
               expect(errorFromSecondHttpRequest.message).to.equal('Error: read ECONNRESET');
-              utils.expectOneMatching(events, event => {
+              testUtils.expectAtLeastOneMatching(events, event => {
                 expect(event.title).to.equal('A Node.js process terminated abnormally due to an uncaught exception.');
                 expect(event.text).to.contain('Boom');
               });

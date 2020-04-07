@@ -7,8 +7,8 @@ const semver = require('semver');
 const constants = require('@instana/core').tracing.constants;
 
 const Control = require('../Control');
+const expectExactlyOneMatching = require('../../../core/test/test_util/expectExactlyOneMatching');
 const config = require('../../../serverless/test/config');
-const expectOneMatching = require('../../../serverless/test/util/expect_matching');
 
 const functionName = 'functionName';
 const unqualifiedArn = `arn:aws:lambda:us-east-2:410797082306:function:${functionName}`;
@@ -183,7 +183,7 @@ describe('long running lambdas', () => {
   }
 
   function verifyLambdaEntry(spans) {
-    return expectOneMatching(spans, span => {
+    return expectExactlyOneMatching(spans, span => {
       expect(span.t).to.exist;
       expect(span.p).to.not.exist;
       expect(span.s).to.exist;

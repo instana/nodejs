@@ -5,7 +5,7 @@ const errors = require('request-promise/errors');
 const request = require('request-promise');
 const path = require('path');
 
-const utils = require('../../../core/test/utils');
+const testUtils = require('../../../core/test/test_util');
 const config = require('../../../core/test/config');
 const agentPort = require('./agentStubControls').agentPort;
 const appPort = (exports.appPort = 3211);
@@ -38,7 +38,7 @@ exports.registerTestHooks = opts => {
 };
 
 function waitUntilServerIsUp(useHttps) {
-  return utils.retry(() =>
+  return testUtils.retry(() =>
     request({
       method: 'GET',
       url: getBaseUrl(useHttps),

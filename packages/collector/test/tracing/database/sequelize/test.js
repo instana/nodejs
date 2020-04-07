@@ -6,7 +6,7 @@ const { fail } = require('chai').assert;
 const constants = require('@instana/core').tracing.constants;
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('../../../../../core/test/config');
-const utils = require('../../../../../core/test/utils');
+const testUtils = require('../../../../../core/test/test_util');
 
 let agentControls;
 let Controls;
@@ -57,7 +57,7 @@ function registerTests(usePgNative) {
         expect(response[0].firstName).to.equal('Irene');
         expect(response[0].lastName).to.equal('Sarantapechaina');
 
-        return utils.retry(() =>
+        return testUtils.retry(() =>
           agentControls.getSpans().then(spans => {
             const httpEntry = verifyHttpEntry(spans, 'GET', '/regents');
             verifyPgExit(spans, httpEntry, /SELECT "firstName", "lastName" FROM "regents" AS "regent";/);
@@ -87,7 +87,7 @@ function registerTests(usePgNative) {
         expect(response.length).to.be.gte(1);
         expect(response[0].firstName).to.equal('Martina');
         expect(response[0].lastName).to.equal('-');
-        return utils.retry(() =>
+        return testUtils.retry(() =>
           agentControls.getSpans().then(spans => {
             const httpEntryWrite = verifyHttpEntry(spans, 'POST', '/regents');
             const httpEntryRead = verifyHttpEntry(spans, 'GET', '/regents');
@@ -149,7 +149,7 @@ function registerTests(usePgNative) {
         expect(response[0].now).to.exist;
 
         let spans;
-        return utils
+        return testUtils
           .retry(() =>
             agentControls.getSpans().then(_spans => {
               spans = _spans;
@@ -212,7 +212,7 @@ function registerTests(usePgNative) {
         }
 
         let spans;
-        return utils
+        return testUtils
           .retry(() =>
             agentControls.getSpans().then(_spans => {
               spans = _spans;
@@ -234,7 +234,7 @@ function registerTests(usePgNative) {
   });
 
   function verifyHttpEntry(spans, method, url) {
-    return utils.expectOneMatching(spans, span => {
+    return testUtils.expectAtLeastOneMatching(spans, span => {
       expect(span.p).to.not.exist;
       expect(span.k).to.equal(constants.ENTRY);
       expect(span.f.e).to.equal(String(controls.getPid()));
@@ -246,7 +246,7 @@ function registerTests(usePgNative) {
   }
 
   function verifyUniqueHttpEntry(spans, method, url, other) {
-    return utils.expectOneMatching(spans, span => {
+    return testUtils.expectAtLeastOneMatching(spans, span => {
       expect(span.p).to.not.exist;
       expect(span.k).to.equal(constants.ENTRY);
       expect(span.f.e).to.equal(String(controls.getPid()));
@@ -262,7 +262,7 @@ function registerTests(usePgNative) {
   }
 
   function verifyPgExit(spans, parent, statement) {
-    return utils.expectOneMatching(spans, span => {
+    return testUtils.expectAtLeastOneMatching(spans, span => {
       expect(span.n).to.equal('postgres');
       expect(span.k).to.equal(constants.EXIT);
       expect(span.t).to.equal(parent.t);

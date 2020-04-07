@@ -7,7 +7,7 @@ const Promise = require('bluebird');
 
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('../../../core/test/config');
-const utils = require('../../../core/test/utils');
+const testUtils = require('../../../core/test/test_util');
 
 describe('uncaught exception reporting disabled', function() {
   if (!supportedVersion(process.versions.node)) {
@@ -42,7 +42,7 @@ describe('uncaught exception reporting disabled', function() {
         expect(err.message).to.equal('Error: socket hang up');
 
         return Promise.delay(1000).then(() =>
-          utils.retry(() =>
+          testUtils.retry(() =>
             agentControls.getSpans().then(spans => {
               expect(spans).to.have.lengthOf(0);
             })
@@ -65,7 +65,7 @@ describe('uncaught exception reporting disabled', function() {
         expect(err.name).to.equal('RequestError');
         expect(err.message).to.equal('Error: socket hang up');
         return Promise.delay(1000).then(() =>
-          utils.retry(() =>
+          testUtils.retry(() =>
             agentControls.getEvents().then(events => {
               expect(events).to.have.lengthOf(0);
             })

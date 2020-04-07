@@ -5,7 +5,7 @@ const { expect } = require('chai');
 const constants = require('@instana/core').tracing.constants;
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('../../../../../core/test/config');
-const utils = require('../../../../../core/test/utils');
+const testUtils = require('../../../../../core/test/test_util');
 const ProcessControls = require('../../ProcessControls');
 
 describe('tracing/logger/log4js', function() {
@@ -34,17 +34,17 @@ describe('tracing/logger/log4js', function() {
 
     it(`must not trace info ${suffix}`, () =>
       trigger('info', 'Info message - must not be traced.', useLogMethod).then(() =>
-        utils.retry(() =>
+        testUtils.retry(() =>
           agentControls.getSpans().then(spans => {
-            const entrySpan = utils.expectOneMatching(spans, span => {
+            const entrySpan = testUtils.expectAtLeastOneMatching(spans, span => {
               expect(span.n).to.equal('node.http.server');
               expect(span.f.e).to.equal(String(controls.getPid()));
               expect(span.f.h).to.equal('agent-stub-uuid');
             });
-            utils.expectOneMatching(spans, span => {
+            testUtils.expectAtLeastOneMatching(spans, span => {
               checkNextExitSpan(span, entrySpan);
             });
-            const log4jsSpans = utils.getSpansByName(spans, 'log.log4js');
+            const log4jsSpans = testUtils.getSpansByName(spans, 'log.log4js');
             expect(log4jsSpans).to.be.empty;
           })
         )
@@ -59,17 +59,17 @@ describe('tracing/logger/log4js', function() {
 
   function runTest(level, message, useLogMethod, expectErroneous) {
     return trigger(level, message, useLogMethod).then(() =>
-      utils.retry(() =>
+      testUtils.retry(() =>
         agentControls.getSpans().then(spans => {
-          const entrySpan = utils.expectOneMatching(spans, span => {
+          const entrySpan = testUtils.expectAtLeastOneMatching(spans, span => {
             expect(span.n).to.equal('node.http.server');
             expect(span.f.e).to.equal(String(controls.getPid()));
             expect(span.f.h).to.equal('agent-stub-uuid');
           });
-          utils.expectOneMatching(spans, span => {
+          testUtils.expectAtLeastOneMatching(spans, span => {
             checkLog4jsSpan(span, entrySpan, expectErroneous, message);
           });
-          utils.expectOneMatching(spans, span => {
+          testUtils.expectAtLeastOneMatching(spans, span => {
             checkNextExitSpan(span, entrySpan);
           });
         })

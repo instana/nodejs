@@ -2,7 +2,7 @@
 
 const expect = require('chai').expect;
 
-const utils = require('../../../core/test/utils');
+const testUtils = require('../../../core/test/test_util');
 const directDependencies = require('../../src/metrics/directDependencies');
 
 describe('metrics.directDependencies', () => {
@@ -19,7 +19,7 @@ describe('metrics.directDependencies', () => {
   it('should provide the set of depencies with versions', () => {
     directDependencies.activate();
 
-    return utils.retry(() => {
+    return testUtils.retry(() => {
       // Testing against Mocha dependencies as mocha is the main module when running the tests and dependencies are
       // evaluated as the content of the node_modules directory relative to the main module.
       const deps = directDependencies.currentPayload.dependencies;

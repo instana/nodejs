@@ -6,7 +6,7 @@ const semver = require('semver');
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 
 const config = require('../../../core/test/config');
-const utils = require('../../../core/test/utils');
+const testUtils = require('../../../core/test/test_util');
 
 describe('actions/source', function() {
   if (semver.satisfies(process.versions.node, '<4')) {
@@ -36,9 +36,9 @@ describe('actions/source', function() {
         }
       })
       .then(() =>
-        utils.retry(() =>
+        testUtils.retry(() =>
           agentStubControls.getResponses().then(responses => {
-            utils.expectOneMatching(responses, response => {
+            testUtils.expectAtLeastOneMatching(responses, response => {
               expect(response.messageId).to.equal(messageId);
               expect(response.data.data).to.be.a('string');
               expect(response.data.data).to.match(/SEMVER_SPEC_VERSION/i);
@@ -59,9 +59,9 @@ describe('actions/source', function() {
         }
       })
       .then(() =>
-        utils.retry(() =>
+        testUtils.retry(() =>
           agentStubControls.getResponses().then(responses => {
-            utils.expectOneMatching(responses, response => {
+            testUtils.expectAtLeastOneMatching(responses, response => {
               expect(response.messageId).to.equal(messageId);
               expect(response.data.data).to.be.a('string');
               expect(response.data.data).to.match(/"name": "@instana\/collector"/i);
@@ -82,9 +82,9 @@ describe('actions/source', function() {
         }
       })
       .then(() =>
-        utils.retry(() =>
+        testUtils.retry(() =>
           agentStubControls.getResponses().then(responses => {
-            utils.expectOneMatching(responses, response => {
+            testUtils.expectAtLeastOneMatching(responses, response => {
               expect(response.messageId).to.equal(messageId);
               expect(response.data.error).to.match(/JavaScript file/i);
             });

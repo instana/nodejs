@@ -5,7 +5,7 @@ const expect = require('chai').expect;
 const constants = require('@instana/core').tracing.constants;
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('../../../../../core/test/config');
-const utils = require('../../../../../core/test/utils');
+const testUtils = require('../../../../../core/test/test_util');
 
 let agentControls;
 let ProducerControls;
@@ -40,7 +40,7 @@ describe('tracing/kafka-node', function() {
 
       it(`must trace sending messages (producer type: ${producerType})`, () =>
         send(producerControls, 'someKey', 'someMessage').then(() =>
-          utils.retry(() =>
+          testUtils.retry(() =>
             getErrors(consumerControls)
               .then(errors => {
                 expect(errors).to.be.an('array');
@@ -56,7 +56,7 @@ describe('tracing/kafka-node', function() {
                 return agentControls.getSpans();
               })
               .then(spans => {
-                const entrySpan = utils.expectOneMatching(spans, span => {
+                const entrySpan = testUtils.expectAtLeastOneMatching(spans, span => {
                   expect(span.n).to.equal('node.http.server');
                   expect(span.f.e).to.equal(String(producerControls.getPid()));
                   expect(span.f.h).to.equal('agent-stub-uuid');
@@ -65,7 +65,7 @@ describe('tracing/kafka-node', function() {
                   expect(span.ec).to.equal(0);
                 });
 
-                utils.expectOneMatching(spans, span => {
+                testUtils.expectAtLeastOneMatching(spans, span => {
                   expect(span.t).to.equal(entrySpan.t);
                   expect(span.p).to.equal(entrySpan.s);
                   expect(span.n).to.equal('kafka');
@@ -80,7 +80,7 @@ describe('tracing/kafka-node', function() {
                 });
 
                 // verify that subsequent calls are correctly traced
-                utils.expectOneMatching(spans, span => {
+                testUtils.expectAtLeastOneMatching(spans, span => {
                   expect(span.n).to.equal('node.http.client');
                   expect(span.t).to.equal(entrySpan.t);
                   expect(span.p).to.equal(entrySpan.s);
@@ -116,7 +116,7 @@ describe('tracing/kafka-node', function() {
 
       it(`must trace receiving messages (consumer type: ${consumerType})`, () =>
         send(producerControls, 'someKey', 'someMessage').then(() =>
-          utils.retry(() =>
+          testUtils.retry(() =>
             getErrors(consumerControls)
               .then(errors => {
                 expect(errors).to.be.an('array');
@@ -132,7 +132,7 @@ describe('tracing/kafka-node', function() {
                 return agentControls.getSpans();
               })
               .then(spans => {
-                const entrySpan = utils.expectOneMatching(spans, span => {
+                const entrySpan = testUtils.expectAtLeastOneMatching(spans, span => {
                   expect(span.n).to.equal('node.http.server');
                   expect(span.f.e).to.equal(String(producerControls.getPid()));
                   expect(span.f.h).to.equal('agent-stub-uuid');
@@ -140,7 +140,7 @@ describe('tracing/kafka-node', function() {
                   expect(span.error).to.not.exist;
                   expect(span.ec).to.equal(0);
                 });
-                utils.expectOneMatching(spans, span => {
+                testUtils.expectAtLeastOneMatching(spans, span => {
                   expect(span.t).to.equal(entrySpan.t);
                   expect(span.p).to.equal(entrySpan.s);
                   expect(span.n).to.equal('kafka');
@@ -159,7 +159,7 @@ describe('tracing/kafka-node', function() {
                 // Node.js/kafka. See
                 // https://github.com/SOHU-Co/kafka-node/issues/763
                 // So for now, span.p is undefined (new root span) and span.t is not equal to entrySpan.t.
-                const kafkaConsumeEntry = utils.expectOneMatching(spans, span => {
+                const kafkaConsumeEntry = testUtils.expectAtLeastOneMatching(spans, span => {
                   expect(span.p).to.equal(undefined);
                   expect(span.n).to.equal('kafka');
                   expect(span.k).to.equal(constants.ENTRY);
@@ -173,7 +173,7 @@ describe('tracing/kafka-node', function() {
                   expect(span.data.kafka.service).to.equal('test');
                 });
                 // verify that subsequent calls are correctly traced
-                utils.expectOneMatching(spans, span => {
+                testUtils.expectAtLeastOneMatching(spans, span => {
                   expect(span.n).to.equal('node.http.client');
                   expect(span.t).to.equal(kafkaConsumeEntry.t);
                   expect(span.p).to.equal(kafkaConsumeEntry.s);

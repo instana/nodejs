@@ -5,7 +5,7 @@ const expect = require('chai').expect;
 const constants = require('@instana/core').tracing.constants;
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('../../../../../core/test/config');
-const utils = require('../../../../../core/test/utils');
+const testUtils = require('../../../../../core/test/test_util');
 
 describe('tracing/pg-native', function() {
   if (!supportedVersion(process.versions.node)) {
@@ -32,7 +32,7 @@ describe('tracing/pg-native', function() {
       })
       .then(response => {
         verifySimpleSelectResponse(response);
-        return utils.retry(() =>
+        return testUtils.retry(() =>
           agentControls.getSpans().then(spans => {
             const httpEntry = verifyHttpEntry(spans, '/select');
             verifyPgExit(spans, httpEntry, 'SELECT NOW()');
@@ -48,7 +48,7 @@ describe('tracing/pg-native', function() {
       })
       .then(response => {
         verifySimpleSelectResponse(response);
-        return utils.retry(() =>
+        return testUtils.retry(() =>
           agentControls.getSpans().then(spans => {
             const httpEntry = verifyHttpEntry(spans, '/select-sync');
             verifyPgExit(spans, httpEntry, 'SELECT NOW()');
@@ -64,7 +64,7 @@ describe('tracing/pg-native', function() {
       })
       .then(response => {
         verifyInsertResponse(response);
-        return utils.retry(() =>
+        return testUtils.retry(() =>
           agentControls.getSpans().then(spans => {
             const httpEntry = verifyHttpEntry(spans, '/insert');
             verifyPgExit(spans, httpEntry, 'INSERT INTO users(name, email) VALUES($1, $2) RETURNING *');
@@ -80,7 +80,7 @@ describe('tracing/pg-native', function() {
       })
       .then(response => {
         verifyInsertResponse(response, 'gonzo', 'gonzo@muppets.com');
-        return utils.retry(() =>
+        return testUtils.retry(() =>
           agentControls.getSpans().then(spans => {
             const httpEntry = verifyHttpEntry(spans, '/prepared-statement');
             verifyPgExit(spans, httpEntry, 'INSERT INTO users(name, email) VALUES($1, $2) RETURNING *');
@@ -96,7 +96,7 @@ describe('tracing/pg-native', function() {
       })
       .then(response => {
         verifyInsertResponse(response, 'scooter', 'scooter@muppets.com');
-        return utils.retry(() =>
+        return testUtils.retry(() =>
           agentControls.getSpans().then(spans => {
             const httpEntry = verifyHttpEntry(spans, '/prepared-statement-sync');
             verifyPgExit(spans, httpEntry, 'INSERT INTO users(name, email) VALUES($1, $2) RETURNING *');
@@ -116,7 +116,7 @@ describe('tracing/pg-native', function() {
         expect(response.error).to.contain('Error: ERROR:');
         expect(response.error).to.contain('relation "nonexistanttable" does not exist');
 
-        return utils.retry(() =>
+        return testUtils.retry(() =>
           agentControls.getSpans().then(spans => {
             const httpEntry = verifyHttpEntry(spans, '/error');
             verifyPgExitWithError(
@@ -140,7 +140,7 @@ describe('tracing/pg-native', function() {
         expect(response).to.exist;
         expect(response.error).to.contain('Error: ERROR:');
         expect(response.error).to.contain('relation "nonexistanttable" does not exist');
-        return utils.retry(() =>
+        return testUtils.retry(() =>
           agentControls.getSpans().then(spans => {
             const httpEntry = verifyHttpEntry(spans, '/error-sync');
             verifyPgExitWithError(
@@ -162,11 +162,11 @@ describe('tracing/pg-native', function() {
       })
       .then(response => {
         verifyInsertResponse(response);
-        return utils.retry(() =>
+        return testUtils.retry(() =>
           agentControls.getSpans().then(spans => {
-            const entrySpans = utils.getSpansByName(spans, 'node.http.server');
+            const entrySpans = testUtils.getSpansByName(spans, 'node.http.server');
             expect(entrySpans).to.have.lengthOf(0);
-            const pgExits = utils.getSpansByName(spans, 'postgres');
+            const pgExits = testUtils.getSpansByName(spans, 'postgres');
             expect(pgExits).to.have.lengthOf(0);
           })
         );
@@ -180,10 +180,10 @@ describe('tracing/pg-native', function() {
       })
       .then(response => {
         verifyInsertResponse(response, 'animal', 'animal@muppets.com');
-        return utils.retry(() =>
+        return testUtils.retry(() =>
           agentControls.getSpans().then(spans => {
             const httpEntry = verifyHttpEntry(spans, '/transaction');
-            expect(utils.getSpansByName(spans, 'postgres')).to.have.lengthOf(4);
+            expect(testUtils.getSpansByName(spans, 'postgres')).to.have.lengthOf(4);
             verifyPgExit(spans, httpEntry, 'BEGIN');
             verifyPgExit(spans, httpEntry, 'INSERT INTO users(name, email) VALUES($1, $2) RETURNING *');
             verifyPgExit(spans, httpEntry, 'INSERT INTO users(name, email) VALUES($1, $2) RETURNING *');
@@ -203,7 +203,7 @@ describe('tracing/pg-native', function() {
         expect(response.results).to.be.an('array');
         expect(response.results).to.be.empty;
         expect(response.hasBeenCancelled).to.be.true;
-        return utils.retry(() =>
+        return testUtils.retry(() =>
           agentControls.getSpans().then(spans => {
             const httpEntry = verifyHttpEntry(spans, '/cancel');
             verifyPgExitWithError(
@@ -230,7 +230,7 @@ describe('tracing/pg-native', function() {
   }
 
   function verifyHttpEntry(spans, url) {
-    return utils.expectOneMatching(spans, span => {
+    return testUtils.expectAtLeastOneMatching(spans, span => {
       expect(span.p).to.not.exist;
       expect(span.k).to.equal(constants.ENTRY);
       expect(span.f.e).to.equal(String(controls.getPid()));
@@ -241,7 +241,7 @@ describe('tracing/pg-native', function() {
   }
 
   function verifyPgExit(spans, parent, statement) {
-    return utils.expectOneMatching(spans, span => {
+    return testUtils.expectAtLeastOneMatching(spans, span => {
       verifyPgExitBase(span, parent, statement);
       expect(span.error).to.not.exist;
       expect(span.ec).to.equal(0);
@@ -249,7 +249,7 @@ describe('tracing/pg-native', function() {
   }
 
   function verifyPgExitWithError(spans, parent, statement, errorMessage) {
-    return utils.expectOneMatching(spans, span => {
+    return testUtils.expectAtLeastOneMatching(spans, span => {
       verifyPgExitBase(span, parent, statement);
       expect(span.error).to.not.exist;
       expect(span.ec).to.equal(1);

@@ -5,7 +5,7 @@ const { expect, fail } = require('chai');
 const constants = require('@instana/core').tracing.constants;
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('../../../../../core/test/config');
-const utils = require('../../../../../core/test/utils');
+const testUtils = require('../../../../../core/test/test_util');
 const ProcessControls = require('../../ProcessControls');
 
 describe('tracing/logger/express-winston', function() {
@@ -27,14 +27,14 @@ describe('tracing/logger/express-winston', function() {
         path: '/200'
       })
       .then(() =>
-        utils.retry(() =>
+        testUtils.retry(() =>
           agentControls.getSpans().then(spans => {
-            utils.expectOneMatching(spans, span => {
+            testUtils.expectAtLeastOneMatching(spans, span => {
               expect(span.n).to.equal('node.http.server');
               expect(span.f.e).to.equal(String(controls.getPid()));
               expect(span.f.h).to.equal('agent-stub-uuid');
             });
-            const winstonSpans = utils.getSpansByName(spans, 'log.winston');
+            const winstonSpans = testUtils.getSpansByName(spans, 'log.winston');
             expect(winstonSpans).to.be.empty;
           })
         )
@@ -47,14 +47,14 @@ describe('tracing/logger/express-winston', function() {
         simple: false
       })
       .then(() =>
-        utils.retry(() =>
+        testUtils.retry(() =>
           agentControls.getSpans().then(spans => {
-            const entrySpan = utils.expectOneMatching(spans, span => {
+            const entrySpan = testUtils.expectAtLeastOneMatching(spans, span => {
               expect(span.n).to.equal('node.http.server');
               expect(span.f.e).to.equal(String(controls.getPid()));
               expect(span.f.h).to.equal('agent-stub-uuid');
             });
-            utils.expectOneMatching(spans, span => {
+            testUtils.expectAtLeastOneMatching(spans, span => {
               checkWinstonSpan(span, entrySpan, false, 'HTTP GET /400');
             });
           })
@@ -68,14 +68,14 @@ describe('tracing/logger/express-winston', function() {
         simple: false
       })
       .then(() =>
-        utils.retry(() =>
+        testUtils.retry(() =>
           agentControls.getSpans().then(spans => {
-            const entrySpan = utils.expectOneMatching(spans, span => {
+            const entrySpan = testUtils.expectAtLeastOneMatching(spans, span => {
               expect(span.n).to.equal('node.http.server');
               expect(span.f.e).to.equal(String(controls.getPid()));
               expect(span.f.h).to.equal('agent-stub-uuid');
             });
-            utils.expectOneMatching(spans, span => {
+            testUtils.expectAtLeastOneMatching(spans, span => {
               checkWinstonSpan(span, entrySpan, true, 'HTTP GET /500');
             });
           })

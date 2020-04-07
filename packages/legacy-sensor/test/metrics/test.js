@@ -4,7 +4,7 @@ const expect = require('chai').expect;
 const _ = require('lodash');
 
 const config = require('../../../core/test/config');
-const utils = require('../../../core/test/utils');
+const testUtils = require('../../../core/test/test_util');
 
 describe('legacy sensor/metrics', function() {
   this.timeout(config.getTestTimeout());
@@ -21,7 +21,7 @@ describe('legacy sensor/metrics', function() {
   beforeEach(() => agentControls.waitUntilAppIsCompletelyInitialized(appControls.getPid()));
 
   it('must report metrics', () =>
-    utils.retry(() =>
+    testUtils.retry(() =>
       agentControls.getAllMetrics(appControls.getPid()).then(allMetrics => {
         expect(findMetric(allMetrics, ['activeHandles'])).to.exist;
         expect(findMetric(allMetrics, ['gc', 'minorGcs'])).to.exist;

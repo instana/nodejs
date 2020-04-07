@@ -7,7 +7,7 @@ const constants = require('@instana/core').tracing.constants;
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('../../../../../core/test/config');
 const delay = require('../../../../../core/test/test_util/delay');
-const { retryUntilSpansMatch, expectOneMatching } = require('../../../../../core/test/utils');
+const { retryUntilSpansMatch, expectAtLeastOneMatching } = require('../../../../../core/test/test_util');
 const ProcessControls = require('../../ProcessControls');
 
 let agentControls;
@@ -721,7 +721,7 @@ function extraceIdsFromTraceParent(traceparent) {
 }
 
 function verifyHttpEntry(spans, parentSpan, url, foreignParent) {
-  return expectOneMatching(spans, span => {
+  return expectAtLeastOneMatching(spans, span => {
     expect(span.n).to.equal('node.http.server');
     expect(span.k).to.equal(constants.ENTRY);
     expect(span.async).to.not.exist;
@@ -749,7 +749,7 @@ function verifyHttpEntry(spans, parentSpan, url, foreignParent) {
 }
 
 function verifyHttpExit(spans, parentSpan, url) {
-  return expectOneMatching(spans, span => {
+  return expectAtLeastOneMatching(spans, span => {
     expect(span.n).to.equal('node.http.client');
     expect(span.k).to.equal(constants.EXIT);
     expect(span.async).to.not.exist;

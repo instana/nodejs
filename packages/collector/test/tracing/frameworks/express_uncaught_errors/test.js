@@ -7,7 +7,7 @@ const constants = require('@instana/core').tracing.constants;
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const tracingUtil = require('../../../../../core/src/tracing/tracingUtil');
 const config = require('../../../../../core/test/config');
-const utils = require('../../../../../core/test/utils');
+const testUtils = require('../../../../../core/test/test_util');
 const ProcessControls = require('../../ProcessControls');
 
 describe('tracing/express with uncaught errors', function() {
@@ -33,9 +33,9 @@ describe('tracing/express with uncaught errors', function() {
       expressUncaughtErrorsControls.sendRequest(createRequest(false, isRootSpan)).then(response => {
         expect(response.statusCode).to.equal(500);
 
-        return utils.retry(() =>
+        return testUtils.retry(() =>
           agentControls.getSpans().then(spans => {
-            utils.expectOneMatching(spans, span => {
+            testUtils.expectAtLeastOneMatching(spans, span => {
               expect(span.n).to.equal('node.http.server');
               expect(span.k).to.equal(constants.ENTRY);
               expect(span.f.e).to.equal(String(expressUncaughtErrorsControls.getPid()));
@@ -52,9 +52,9 @@ describe('tracing/express with uncaught errors', function() {
       expressUncaughtErrorsControls.sendRequest(createRequest(true, isRootSpan)).then(response => {
         expect(response.statusCode).to.equal(400);
 
-        return utils.retry(() =>
+        return testUtils.retry(() =>
           agentControls.getSpans().then(spans => {
-            utils.expectOneMatching(spans, span => {
+            testUtils.expectAtLeastOneMatching(spans, span => {
               expect(span.n).to.equal('node.http.server');
               expect(span.k).to.equal(constants.ENTRY);
               expect(span.f.e).to.equal(String(expressUncaughtErrorsControls.getPid()));

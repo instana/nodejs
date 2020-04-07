@@ -7,7 +7,7 @@ const constants = require('@instana/core').tracing.constants;
 const Control = require('./Control');
 const config = require('../../serverless/test/config');
 const delay = require('../../core/test/test_util/delay');
-const expectOneMatching = require('../../serverless/test/util/expect_matching');
+const expectExactlyOneMatching = require('../../core/test/test_util/expectExactlyOneMatching');
 const retry = require('../../serverless/test/util/retry');
 
 const functionName = 'functionName';
@@ -363,7 +363,7 @@ function registerTests(handlerDefinitionPath) {
       verify(control, { error: false, expectMetrics: true, expectSpans: true, trigger: 'aws:api.gateway' })
         .then(() => control.getSpans())
         .then(spans =>
-          expectOneMatching(spans, span => {
+          expectExactlyOneMatching(spans, span => {
             expect(span.n).to.equal('aws.lambda.entry');
             expect(span.k).to.equal(constants.ENTRY);
             expect(span.data.http).to.be.an('object');
@@ -408,7 +408,7 @@ function registerTests(handlerDefinitionPath) {
       })
         .then(() => control.getSpans())
         .then(spans =>
-          expectOneMatching(spans, span => {
+          expectExactlyOneMatching(spans, span => {
             expect(span.n).to.equal('aws.lambda.entry');
             expect(span.k).to.equal(constants.ENTRY);
             expect(span.data.http).to.be.an('object');
@@ -450,7 +450,7 @@ function registerTests(handlerDefinitionPath) {
       verify(control, { error: 'http', expectMetrics: true, expectSpans: true, trigger: 'aws:api.gateway' })
         .then(() => control.getSpans())
         .then(spans =>
-          expectOneMatching(spans, span => {
+          expectExactlyOneMatching(spans, span => {
             expect(span.n).to.equal('aws.lambda.entry');
             expect(span.k).to.equal(constants.ENTRY);
             expect(span.data.http).to.be.an('object');
@@ -482,7 +482,7 @@ function registerTests(handlerDefinitionPath) {
         })
         .then(() => control.getSpans())
         .then(spans =>
-          expectOneMatching(spans, span => {
+          expectExactlyOneMatching(spans, span => {
             expect(span.n).to.equal('aws.lambda.entry');
             expect(span.k).to.equal(constants.ENTRY);
             expect(/^intid;desc=([0-9a-f]+)$/.exec(serverTimingValue)[1]).to.equal(span.t);
@@ -510,7 +510,7 @@ function registerTests(handlerDefinitionPath) {
         })
         .then(() => control.getSpans())
         .then(spans =>
-          expectOneMatching(spans, span => {
+          expectExactlyOneMatching(spans, span => {
             expect(span.n).to.equal('aws.lambda.entry');
             expect(span.k).to.equal(constants.ENTRY);
             expect(/^cache;desc="Cache Read";dur=23.2, intid;desc=([0-9a-f]+)$/.exec(serverTimingValue)[1]).to.equal(
@@ -543,7 +543,7 @@ function registerTests(handlerDefinitionPath) {
         })
         .then(() => control.getSpans())
         .then(spans =>
-          expectOneMatching(spans, span => {
+          expectExactlyOneMatching(spans, span => {
             expect(span.n).to.equal('aws.lambda.entry');
             expect(span.k).to.equal(constants.ENTRY);
             expect(/^cache;desc="Cache Read";dur=23.2, intid;desc=([0-9a-f]+)$/.exec(serverTimingValue)[1]).to.equal(
@@ -568,7 +568,7 @@ function registerTests(handlerDefinitionPath) {
       verify(control, { error: false, expectMetrics: true, expectSpans: true, trigger: 'aws:api.gateway.noproxy' })
         .then(() => control.getSpans())
         .then(spans =>
-          expectOneMatching(spans, span => {
+          expectExactlyOneMatching(spans, span => {
             expect(span.n).to.equal('aws.lambda.entry');
             expect(span.k).to.equal(constants.ENTRY);
             expect(span.data.http).to.not.exist;
@@ -595,7 +595,7 @@ function registerTests(handlerDefinitionPath) {
       })
         .then(() => control.getSpans())
         .then(spans =>
-          expectOneMatching(spans, span => {
+          expectExactlyOneMatching(spans, span => {
             expect(span.n).to.equal('aws.lambda.entry');
             expect(span.k).to.equal(constants.ENTRY);
             expect(span.data.http).to.be.an('object');
@@ -638,7 +638,7 @@ function registerTests(handlerDefinitionPath) {
       })
         .then(() => control.getSpans())
         .then(spans =>
-          expectOneMatching(spans, span => {
+          expectExactlyOneMatching(spans, span => {
             expect(span.n).to.equal('aws.lambda.entry');
             expect(span.k).to.equal(constants.ENTRY);
             expect(span.data.http).to.be.an('object');
@@ -665,7 +665,7 @@ function registerTests(handlerDefinitionPath) {
       verify(control, { error: false, expectMetrics: true, expectSpans: true, trigger: 'aws:cloudwatch.events' })
         .then(() => control.getSpans())
         .then(spans =>
-          expectOneMatching(spans, span => {
+          expectExactlyOneMatching(spans, span => {
             expect(span.n).to.equal('aws.lambda.entry');
             expect(span.k).to.equal(constants.ENTRY);
             expect(span.data.lambda.cw).to.be.an('object');
@@ -692,7 +692,7 @@ function registerTests(handlerDefinitionPath) {
       verify(control, { error: false, expectMetrics: true, expectSpans: true, trigger: 'aws:cloudwatch.logs' })
         .then(() => control.getSpans())
         .then(spans =>
-          expectOneMatching(spans, span => {
+          expectExactlyOneMatching(spans, span => {
             expect(span.n).to.equal('aws.lambda.entry');
             expect(span.k).to.equal(constants.ENTRY);
             expect(span.data.lambda.cw).to.be.an('object');
@@ -724,7 +724,7 @@ function registerTests(handlerDefinitionPath) {
       verify(control, { error: false, expectMetrics: true, expectSpans: true, trigger: 'aws:s3' })
         .then(() => control.getSpans())
         .then(spans =>
-          expectOneMatching(spans, span => {
+          expectExactlyOneMatching(spans, span => {
             expect(span.n).to.equal('aws.lambda.entry');
             expect(span.k).to.equal(constants.ENTRY);
             expect(span.data.lambda.s3).to.be.an('object');
@@ -758,7 +758,7 @@ function registerTests(handlerDefinitionPath) {
       verify(control, { error: false, expectMetrics: true, expectSpans: true, trigger: 'aws:sqs' })
         .then(() => control.getSpans())
         .then(spans =>
-          expectOneMatching(spans, span => {
+          expectExactlyOneMatching(spans, span => {
             expect(span.n).to.equal('aws.lambda.entry');
             expect(span.k).to.equal(constants.ENTRY);
             expect(span.data.lambda.sqs).to.be.an('object');
@@ -834,7 +834,7 @@ function registerTests(handlerDefinitionPath) {
   }
 
   function verifyLambdaEntry(spans, expectations) {
-    return expectOneMatching(spans, span => {
+    return expectExactlyOneMatching(spans, span => {
       if (expectations.parent) {
         expect(span.t).to.equal(expectations.parent.t);
         expect(span.p).to.equal(expectations.parent.s);
@@ -883,7 +883,7 @@ function registerTests(handlerDefinitionPath) {
   }
 
   function verifyHttpExit(spans, entry) {
-    return expectOneMatching(spans, span => {
+    return expectExactlyOneMatching(spans, span => {
       expect(span.t).to.equal(entry.t);
       expect(span.p).to.equal(entry.s);
       expect(span.s).to.exist;

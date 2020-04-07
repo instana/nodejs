@@ -7,7 +7,7 @@ const constants = require('@instana/core').tracing.constants;
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('../../../../../core/test/config');
 const delay = require('../../../../../core/test/test_util/delay');
-const utils = require('../../../../../core/test/utils');
+const testUtils = require('../../../../../core/test/test_util');
 
 describe('tracing/kafkajs', function() {
   // kafkajs uses async/await style which is only available on Node.js >= 8.
@@ -54,7 +54,7 @@ describe('tracing/kafkajs', function() {
             useSendBatch,
             useEachBatch
           }).then(() =>
-            utils.retry(() =>
+            testUtils.retry(() =>
               getMessages(consumerControls)
                 .then(messages => {
                   checkMessages(messages, parameters);
@@ -82,7 +82,7 @@ describe('tracing/kafkajs', function() {
               useEachBatch,
               suppressTracing: true
             }).then(() =>
-              utils.retry(() =>
+              testUtils.retry(() =>
                 getMessages(consumerControls)
                   .then(messages => {
                     checkMessages(messages, parameters);
@@ -125,7 +125,7 @@ describe('tracing/kafkajs', function() {
         useSendBatch: false,
         useEachBatch: false
       }).then(() =>
-        utils.retry(() =>
+        testUtils.retry(() =>
           getMessages(consumerControls)
             .then(messages => {
               checkMessages(messages, parameters);
@@ -188,7 +188,7 @@ describe('tracing/kafkajs', function() {
   }
 
   function verifyHttpEntry(spans) {
-    return utils.expectOneMatching(spans, span => {
+    return testUtils.expectAtLeastOneMatching(spans, span => {
       expect(span.n).to.equal('node.http.server');
       expect(span.f.h).to.equal('agent-stub-uuid');
       expect(span.async).to.not.exist;
@@ -203,7 +203,7 @@ describe('tracing/kafkajs', function() {
 
     const expectedTopics = useSendBatch ? `${topicPrefix}-1,${topicPrefix}-2` : `${topicPrefix}-1`;
     const expectedBatchCount = useSendBatch ? 3 : 2;
-    const kafkaExit = utils.expectOneMatching(spans, span => {
+    const kafkaExit = testUtils.expectAtLeastOneMatching(spans, span => {
       expect(span.t).to.equal(httpEntry.t);
       expect(span.p).to.equal(httpEntry.s);
       expect(span.n).to.equal('kafka');
@@ -231,7 +231,7 @@ describe('tracing/kafkajs', function() {
 
   function verifyFollowUpHttpExit(spans, entry) {
     // verify that subsequent calls are correctly traced after creating a kafka entry/exit
-    utils.expectOneMatching(spans, span => {
+    testUtils.expectAtLeastOneMatching(spans, span => {
       expect(span.n).to.equal('node.http.client');
       expect(span.t).to.equal(entry.t);
       expect(span.p).to.equal(entry.s);
@@ -244,7 +244,7 @@ describe('tracing/kafkajs', function() {
       return;
     }
     const topicPrefix = getTopicPrefix(useEachBatch);
-    const firstKafkaEntry = utils.expectOneMatching(spans, span => {
+    const firstKafkaEntry = testUtils.expectAtLeastOneMatching(spans, span => {
       expect(span.t).to.equal(parentKafkaExit.t);
       expect(span.p).to.equal(parentKafkaExit.s);
       expect(span.n).to.equal('kafka');
@@ -272,7 +272,7 @@ describe('tracing/kafkajs', function() {
     }
 
     if (!useEachBatch) {
-      const secondKafkaEntry = utils.expectOneMatching(spans, span => {
+      const secondKafkaEntry = testUtils.expectAtLeastOneMatching(spans, span => {
         expect(span.t).to.equal(parentKafkaExit.t);
         expect(span.p).to.equal(parentKafkaExit.s);
         expect(span.n).to.equal('kafka');
@@ -299,7 +299,7 @@ describe('tracing/kafkajs', function() {
     }
 
     if (useSendBatch) {
-      const thirdKafkaEntry = utils.expectOneMatching(spans, span => {
+      const thirdKafkaEntry = testUtils.expectAtLeastOneMatching(spans, span => {
         expect(span.t).to.equal(parentKafkaExit.t);
         expect(span.p).to.equal(parentKafkaExit.s);
         expect(span.n).to.equal('kafka');

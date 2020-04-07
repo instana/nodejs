@@ -6,7 +6,7 @@ const { expect, fail } = require('chai');
 const constants = require('@instana/core').tracing.constants;
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('../../../../../core/test/config');
-const utils = require('../../../../../core/test/utils');
+const testUtils = require('../../../../../core/test/test_util');
 const ProcessControls = require('../../ProcessControls');
 
 describe('tracing/logger/winston', function() {
@@ -91,22 +91,22 @@ describe('tracing/logger/winston', function() {
           path: `/log?${queryString}`
         })
         .then(() =>
-          utils.retry(() =>
+          testUtils.retry(() =>
             agentControls.getSpans().then(spans => {
-              const entrySpan = utils.expectOneMatching(spans, span => {
+              const entrySpan = testUtils.expectAtLeastOneMatching(spans, span => {
                 expect(span.n).to.equal('node.http.server');
                 expect(span.f.e).to.equal(String(controls.getPid()));
                 expect(span.f.h).to.equal('agent-stub-uuid');
               });
               if (shouldTrace) {
-                utils.expectOneMatching(spans, span => {
+                testUtils.expectAtLeastOneMatching(spans, span => {
                   checkWinstonSpan(span, entrySpan, expectErroneous, expectedMessage);
                 });
               } else {
-                const winstonSpans = utils.getSpansByName(spans, 'log.winston');
+                const winstonSpans = testUtils.getSpansByName(spans, 'log.winston');
                 expect(winstonSpans).to.be.empty;
               }
-              utils.expectOneMatching(spans, span => {
+              testUtils.expectAtLeastOneMatching(spans, span => {
                 checkNextExitSpan(span, entrySpan);
               });
             })

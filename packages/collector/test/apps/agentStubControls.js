@@ -5,7 +5,7 @@ const request = require('request-promise');
 const path = require('path');
 const _ = require('lodash');
 
-const utils = require('../../../core/test/utils');
+const testUtils = require('../../../core/test/test_util');
 const config = require('../../../core/test/config');
 
 const agentPort = (exports.agentPort = 3210);
@@ -43,7 +43,7 @@ exports.registerTestHooks = opts => {
 };
 
 function waitUntilServerIsUp() {
-  return utils.retry(() =>
+  return testUtils.retry(() =>
     request({
       method: 'GET',
       url: `http://127.0.0.1:${agentPort}`
@@ -127,7 +127,7 @@ exports.getTracingMetrics = () =>
   });
 
 exports.waitUntilAppIsCompletelyInitialized = pid =>
-  utils.retry(() =>
+  testUtils.retry(() =>
     exports.getRetrievedData().then(data => {
       for (let i = 0, len = data.runtime.length; i < len; i++) {
         const d = data.runtime[i];

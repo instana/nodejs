@@ -4,7 +4,7 @@ const expect = require('chai').expect;
 const semver = require('semver');
 
 const config = require('../../../../core/test/config');
-const utils = require('../../../../core/test/utils');
+const testUtils = require('../../../../core/test/test_util');
 
 describe('tracing/requireHook', function() {
   if (semver.lt(process.versions.node, '8.0.0')) {
@@ -31,9 +31,9 @@ describe('tracing/requireHook', function() {
           path: '/requireRequestPromiseMultipleTimes'
         })
         .then(() =>
-          utils.retry(() =>
+          testUtils.retry(() =>
             agentControls.getSpans().then(spans => {
-              utils.expectOneMatching(spans, span => {
+              testUtils.expectAtLeastOneMatching(spans, span => {
                 expect(span.n).to.equal('node.http.server');
                 expect(span.data.http.status).to.equal(200);
               });

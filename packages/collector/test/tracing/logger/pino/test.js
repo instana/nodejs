@@ -6,7 +6,7 @@ const expect = require('chai').expect;
 const constants = require('@instana/core').tracing.constants;
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('../../../../../core/test/config');
-const utils = require('../../../../../core/test/utils');
+const testUtils = require('../../../../../core/test/test_util');
 
 describe('tracing/logger/pino', function() {
   // Pino 5 does not support Node.js 4, it uses EcmaScript language features that only work in more recent versions.
@@ -30,17 +30,17 @@ describe('tracing/logger/pino', function() {
 
     it(`must not trace info${suffix}`, () =>
       appControls.trigger('info', useExpressPino).then(() =>
-        utils.retry(() =>
+        testUtils.retry(() =>
           agentControls.getSpans().then(spans => {
-            const entrySpan = utils.expectOneMatching(spans, span => {
+            const entrySpan = testUtils.expectAtLeastOneMatching(spans, span => {
               expect(span.n).to.equal('node.http.server');
               expect(span.f.e).to.equal(String(appControls.getPid()));
               expect(span.f.h).to.equal('agent-stub-uuid');
             });
-            utils.expectOneMatching(spans, span => {
+            testUtils.expectAtLeastOneMatching(spans, span => {
               checkNextExitSpan(span, entrySpan);
             });
-            const pinoSpans = utils.getSpansByName(spans, 'log.pino');
+            const pinoSpans = testUtils.getSpansByName(spans, 'log.pino');
             expect(pinoSpans).to.be.empty;
           })
         )
@@ -77,17 +77,17 @@ describe('tracing/logger/pino', function() {
 
     it(`must not trace custom info${suffix}`, () =>
       appControls.trigger('custom-info', useExpressPino).then(() =>
-        utils.retry(() =>
+        testUtils.retry(() =>
           agentControls.getSpans().then(spans => {
-            const entrySpan = utils.expectOneMatching(spans, span => {
+            const entrySpan = testUtils.expectAtLeastOneMatching(spans, span => {
               expect(span.n).to.equal('node.http.server');
               expect(span.f.e).to.equal(String(appControls.getPid()));
               expect(span.f.h).to.equal('agent-stub-uuid');
             });
-            utils.expectOneMatching(spans, span => {
+            testUtils.expectAtLeastOneMatching(spans, span => {
               checkNextExitSpan(span, entrySpan);
             });
-            const pinoSpans = utils.getSpansByName(spans, 'log.pino');
+            const pinoSpans = testUtils.getSpansByName(spans, 'log.pino');
             expect(pinoSpans).to.be.empty;
           })
         )
@@ -106,17 +106,17 @@ describe('tracing/logger/pino', function() {
 
   function runTest(level, useExpressPino, expectErroneous, message) {
     return appControls.trigger(level, useExpressPino).then(() =>
-      utils.retry(() =>
+      testUtils.retry(() =>
         agentControls.getSpans().then(spans => {
-          const entrySpan = utils.expectOneMatching(spans, span => {
+          const entrySpan = testUtils.expectAtLeastOneMatching(spans, span => {
             expect(span.n).to.equal('node.http.server');
             expect(span.f.e).to.equal(String(appControls.getPid()));
             expect(span.f.h).to.equal('agent-stub-uuid');
           });
-          utils.expectOneMatching(spans, span => {
+          testUtils.expectAtLeastOneMatching(spans, span => {
             checkPinoSpan(span, entrySpan, expectErroneous, message);
           });
-          utils.expectOneMatching(spans, span => {
+          testUtils.expectAtLeastOneMatching(spans, span => {
             checkNextExitSpan(span, entrySpan);
           });
         })

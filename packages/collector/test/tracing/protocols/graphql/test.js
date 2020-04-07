@@ -7,7 +7,7 @@ const constants = require('@instana/core').tracing.constants;
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('../../../../../core/test/config');
 const delay = require('../../../../../core/test/test_util/delay');
-const utils = require('../../../../../core/test/utils');
+const testUtils = require('../../../../../core/test/test_util');
 
 let agentControls;
 let ClientControls;
@@ -159,7 +159,7 @@ describe('tracing/graphql', function() {
         })
         .then(response => {
           checkQueryResponse('value', false, false, response);
-          return utils.retry(() =>
+          return testUtils.retry(() =>
             agentControls.getSpans().then(spans => {
               const httpEntryInClientApp = verifyHttpEntry(null, /\/value/, spans);
               const httpExitInClientApp = verifyHttpExit(httpEntryInClientApp, /\/graphql/, spans);
@@ -167,8 +167,8 @@ describe('tracing/graphql', function() {
               verifyFollowUpLogExit(httpEntryInServerApp, 'value', spans);
               // No graphql span has been recorded but graphql since we have explicitly disabled graphql tracing, but
               // processing has worked (as we have verified via checkQueryResponse).
-              expect(utils.getSpansByName(spans, 'graphql.server')).to.be.empty;
-              expect(utils.getSpansByName(spans, 'graphql.client')).to.be.empty;
+              expect(testUtils.getSpansByName(spans, 'graphql.server')).to.be.empty;
+              expect(testUtils.getSpansByName(spans, 'graphql.client')).to.be.empty;
             })
           );
         }));
@@ -234,7 +234,7 @@ function registerQuerySuite({ apollo, withError, queryShorthand, useAlias, commu
         const entityNameWithAlias = useAlias ? `${entityName}Alias` : entityName;
 
         checkQueryResponse(entityNameWithAlias, withError, multipleEntities, response);
-        return utils.retry(() =>
+        return testUtils.retry(() =>
           agentControls.getSpans().then(
             verifySpansForQuery.bind(null, {
               resolverType,
@@ -277,7 +277,7 @@ function registerMutationSuite(apollo) {
       })
       .then(response => {
         checkMutationResponse(response);
-        return utils.retry(() => agentControls.getSpans().then(verifySpansForMutation));
+        return testUtils.retry(() => agentControls.getSpans().then(verifySpansForMutation));
       });
   }
 }
@@ -310,8 +310,8 @@ function registerSubscriptionOperationNotTracedSuite(apollo) {
       .then(() => delay(config.getTestTimeout() / 4))
       .then(() =>
         agentControls.getSpans().then(spans => {
-          expect(utils.getSpansByName(spans, 'graphql.server')).to.have.lengthOf(0);
-          expect(utils.getSpansByName(spans, 'log.pino')).to.have.lengthOf(0);
+          expect(testUtils.getSpansByName(spans, 'graphql.server')).to.have.lengthOf(0);
+          expect(testUtils.getSpansByName(spans, 'log.pino')).to.have.lengthOf(0);
         })
       );
   }
@@ -430,7 +430,7 @@ function checkMutationResponse(response) {
 }
 
 function checkSubscriptionUpdatesAndSpans(client1, client2, triggerUpdateVia) {
-  return utils.retry(() => {
+  return testUtils.retry(() => {
     const receivedUpdatesClient1 = client1.getIpcMessages();
     expect(receivedUpdatesClient1).to.not.be.empty;
     const receivedUpdatesClient2 = client2.getIpcMessages();
@@ -508,14 +508,14 @@ function verifySpansForSubscriptionUpdates(spans, triggerUpdateVia) {
       ? verifyHttpEntry(httpExitInClientApp, /\/publish-update/, spans)
       : verifyGraphQLMutationEntry(httpExitInClientApp, spans);
 
-  const graphQLSubscriptionUpdateExits = utils.getSpansByName(spans, 'graphql.client');
+  const graphQLSubscriptionUpdateExits = testUtils.getSpansByName(spans, 'graphql.client');
   expect(graphQLSubscriptionUpdateExits).to.have.lengthOf(2);
   graphQLSubscriptionUpdateExits.forEach(exitSpan => verifyGraphQLSubscriptionUpdateExit(entryInServerApp, exitSpan));
   verifyFollowUpLogExit(entryInServerApp, 'update: 1: Updated Name Updated Profession', spans);
 }
 
 function verifyHttpEntry(parentSpan, urlRegex, spans) {
-  return utils.expectOneMatching(spans, span => {
+  return testUtils.expectAtLeastOneMatching(spans, span => {
     expect(span.n).to.equal('node.http.server');
     expect(span.k).to.equal(constants.ENTRY);
     if (parentSpan) {
@@ -530,7 +530,7 @@ function verifyHttpEntry(parentSpan, urlRegex, spans) {
 }
 
 function verifyHttpExit(parentSpan, urlRegex, spans) {
-  return utils.expectExactlyOneMatching(spans, span => {
+  return testUtils.expectExactlyOneMatching(spans, span => {
     expect(span.n).to.equal('node.http.client');
     expect(span.k).to.equal(constants.EXIT);
     expect(span.t).to.equal(parentSpan.t);
@@ -541,7 +541,7 @@ function verifyHttpExit(parentSpan, urlRegex, spans) {
 }
 
 function verifyAmqpExit(parentSpan, queueName, spans) {
-  return utils.expectExactlyOneMatching(spans, span => {
+  return testUtils.expectExactlyOneMatching(spans, span => {
     expect(span.t).to.equal(parentSpan.t);
     expect(span.p).to.equal(parentSpan.s);
     expect(span.k).to.equal(constants.EXIT);
@@ -557,7 +557,7 @@ function verifyGraphQLQueryEntry(
   parentSpan,
   spans
 ) {
-  return utils.expectExactlyOneMatching(spans, span => {
+  return testUtils.expectExactlyOneMatching(spans, span => {
     expect(span.n).to.equal('graphql.server');
     expect(span.k).to.equal(constants.ENTRY);
     expect(span.t).to.equal(parentSpan.t);
@@ -621,7 +621,7 @@ function verifyGraphQLQueryEntry(
 }
 
 function verifyGraphQLMutationEntry(parentSpan, spans) {
-  return utils.expectExactlyOneMatching(spans, span => {
+  return testUtils.expectExactlyOneMatching(spans, span => {
     expect(span.n).to.equal('graphql.server');
     expect(span.k).to.equal(constants.ENTRY);
     expect(span.t).to.equal(parentSpan.t);
@@ -667,7 +667,7 @@ function verifyGraphQLSubscriptionUpdateExit(parentSpan, span) {
 }
 
 function verifyFollowUpLogExit(parentSpan, expectedMessage, spans) {
-  return utils.expectExactlyOneMatching(spans, span => {
+  return testUtils.expectExactlyOneMatching(spans, span => {
     expect(span.n).to.equal('log.pino');
     expect(span.k).to.equal(constants.EXIT);
     expect(span.t).to.equal(parentSpan.t);

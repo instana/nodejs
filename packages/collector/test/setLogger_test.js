@@ -6,7 +6,7 @@ const path = require('path');
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 
 const config = require('../../core/test/config');
-const utils = require('../../core/test/utils');
+const testUtils = require('../../core/test/test_util');
 
 describe('setLogger', function() {
   if (!supportedVersion(process.versions.node)) {
@@ -29,7 +29,7 @@ describe('setLogger', function() {
 
   it('must reinitialize all loggers on setLogger', () => {
     expressControls.setLogger(false, dummyLogFile);
-    return utils.retry(
+    return testUtils.retry(
       () =>
         new Promise((resolve, reject) => {
           fs.readFile(dummyLogFile, 'utf-8', (err, data) => {

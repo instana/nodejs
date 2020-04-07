@@ -6,7 +6,7 @@ const constants = require('@instana/core').tracing.constants;
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('../../../../../core/test/config');
 const delay = require('../../../../../core/test/test_util/delay');
-const utils = require('../../../../../core/test/utils');
+const testUtils = require('../../../../../core/test/test_util');
 
 describe('tracing/nats', function() {
   if (!supportedVersion(process.versions.node)) {
@@ -74,7 +74,7 @@ describe('tracing/nats', function() {
               } else {
                 expect(res).to.equal('OK');
               }
-              return utils.retry(() => {
+              return testUtils.retry(() => {
                 const receivedMessages = subscriberControls.getIpcMessages();
                 if (withError) {
                   expect(receivedMessages).to.have.lengthOf(0);
@@ -87,12 +87,12 @@ describe('tracing/nats', function() {
                   }
                 }
                 return agentControls.getSpans().then(spans => {
-                  const entrySpan = utils.expectOneMatching(spans, span => {
+                  const entrySpan = testUtils.expectAtLeastOneMatching(spans, span => {
                     expect(span.n).to.equal('node.http.server');
                     expect(span.f.e).to.equal(String(publisherControls.getPid()));
                     expect(span.p).to.not.exist;
                   });
-                  utils.expectOneMatching(spans, span => {
+                  testUtils.expectAtLeastOneMatching(spans, span => {
                     expect(span.t).to.equal(entrySpan.t);
                     expect(span.p).to.equal(entrySpan.s);
                     expect(span.k).to.equal(constants.EXIT);
@@ -123,7 +123,7 @@ describe('tracing/nats', function() {
                     }
                   });
                   // verify that subsequent calls are correctly traced
-                  utils.expectOneMatching(spans, span => {
+                  testUtils.expectAtLeastOneMatching(spans, span => {
                     expect(span.n).to.equal('node.http.client');
                     expect(span.t).to.equal(entrySpan.t);
                     expect(span.p).to.equal(entrySpan.s);
@@ -167,16 +167,16 @@ describe('tracing/nats', function() {
               expect(receivedMessages[0]).to.equal("It's nuts, ain't it?!");
             }
 
-            return utils.retry(() => {
+            return testUtils.retry(() => {
               return agentControls.getSpans().then(spans => {
-                const httpSpan = utils.expectOneMatching(spans, span => {
+                const httpSpan = testUtils.expectAtLeastOneMatching(spans, span => {
                   expect(span.n).to.equal('node.http.server');
                   expect(span.f.e).to.equal(String(publisherControls.getPid()));
                   expect(span.p).to.not.exist;
                 });
 
                 // NATS does not support headers or metadata, so we do not have trace continuity.
-                const natsEntry = utils.expectOneMatching(spans, span => {
+                const natsEntry = testUtils.expectAtLeastOneMatching(spans, span => {
                   expect(span.t).to.not.equal(httpSpan.t);
                   expect(span.p).to.not.exist;
                   expect(span.k).to.equal(constants.ENTRY);
@@ -204,7 +204,7 @@ describe('tracing/nats', function() {
                   }
                 });
                 // verify that subsequent calls are correctly traced
-                utils.expectOneMatching(spans, span => {
+                testUtils.expectAtLeastOneMatching(spans, span => {
                   expect(span.n).to.equal('node.http.client');
                   expect(span.t).to.equal(natsEntry.t);
                   expect(span.p).to.equal(natsEntry.s);
@@ -237,7 +237,7 @@ describe('tracing/nats', function() {
           // (Since we cannot transmit X-INSTANA-L=0 over nats due to lack of metadata, the receive entry will be
           // there):
           expect(spans).to.have.lengthOf(1);
-          utils.expectOneMatching(spans, span => {
+          testUtils.expectAtLeastOneMatching(spans, span => {
             expect(span.t).to.be.a('string');
             expect(span.p).to.not.exist;
             expect(span.k).to.equal(constants.ENTRY);

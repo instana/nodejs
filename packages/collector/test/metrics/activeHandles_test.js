@@ -6,7 +6,7 @@ const net = require('net');
 
 const config = require('../../../core/test/config');
 const activeHandles = require('../../src/metrics/activeHandles');
-const utils = require('../../../core/test/utils');
+const testUtils = require('../../../core/test/test_util');
 
 describe('metrics.activeHandles', function() {
   this.timeout(config.getTestTimeout());
@@ -61,7 +61,7 @@ describe('metrics.activeHandles', function() {
     });
 
     it('should update handle count for net client and connection', () =>
-      utils.retry(
+      testUtils.retry(
         () =>
           new Promise((resolve, reject) => {
             if (clients.length >= maxClients) {

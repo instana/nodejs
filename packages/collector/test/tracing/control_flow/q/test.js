@@ -5,7 +5,7 @@ const expect = require('chai').expect;
 const constants = require('@instana/core').tracing.constants;
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('../../../../../core/test/config');
-const utils = require('../../../../../core/test/utils');
+const testUtils = require('../../../../../core/test/test_util');
 const ProcessControls = require('../../ProcessControls');
 
 describe('tracing/q', function() {
@@ -64,7 +64,7 @@ describe('tracing/q', function() {
   function verifySingleEntry(response, path) {
     expect(response.span).to.be.an('object');
     expect(response.error).to.not.exist;
-    return utils.retry(() =>
+    return testUtils.retry(() =>
       agentControls.getSpans().then(spans => {
         const entrySpan = verifyRootEntrySpan(spans, path);
         expect(response.span.t).to.equal(entrySpan.t);
@@ -76,7 +76,7 @@ describe('tracing/q', function() {
   function verifySingleEntryWithError(response, path) {
     expect(response.span).to.be.an('object');
     expect(response.error).to.equal('Boom!');
-    return utils.retry(() =>
+    return testUtils.retry(() =>
       agentControls.getSpans().then(spans => {
         const entrySpan = verifyRootEntrySpan(spans, path);
         expect(response.span.t).to.equal(entrySpan.t);
@@ -86,7 +86,7 @@ describe('tracing/q', function() {
   }
 
   function verifyEntryAndExit(response, path) {
-    return utils.retry(() =>
+    return testUtils.retry(() =>
       agentControls.getSpans().then(spans => {
         expect(response.span).to.be.an('object');
         expect(response.error).to.not.exist;
@@ -98,7 +98,7 @@ describe('tracing/q', function() {
   }
 
   function verifyRootEntrySpan(spans, path) {
-    return utils.expectOneMatching(spans, span => {
+    return testUtils.expectAtLeastOneMatching(spans, span => {
       expect(span.p).to.equal(undefined);
       expect(span.n).to.equal('node.http.server');
       expect(span.k).to.equal(constants.ENTRY);
@@ -107,7 +107,7 @@ describe('tracing/q', function() {
   }
 
   function verifyExitSpan(spans, parentSpan) {
-    return utils.expectOneMatching(spans, span => {
+    return testUtils.expectAtLeastOneMatching(spans, span => {
       expect(span.t).to.equal(parentSpan.t);
       expect(span.p).to.equal(parentSpan.s);
       expect(span.n).to.equal('node.http.client');

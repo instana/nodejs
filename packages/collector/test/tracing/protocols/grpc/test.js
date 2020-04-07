@@ -6,7 +6,7 @@ const semver = require('semver');
 const constants = require('@instana/core').tracing.constants;
 const config = require('../../../../../core/test/config');
 const delay = require('../../../../../core/test/test_util/delay');
-const utils = require('../../../../../core/test/utils');
+const testUtils = require('../../../../../core/test/test_util');
 
 let agentControls;
 let ClientControls;
@@ -86,11 +86,11 @@ describe('tracing/grpc', function() {
         })
         .then(response => {
           expect(response.reply).to.equal('received: request');
-          return utils.retry(() =>
+          return testUtils.retry(() =>
             agentControls.getSpans().then(spans => {
-              utils.expectOneMatching(spans, checkHttpEntry.bind(null, '/unary-call'));
-              expect(utils.getSpansByName(spans, 'rpc-client')).to.be.empty;
-              expect(utils.getSpansByName(spans, 'rpc-server')).to.be.empty;
+              testUtils.expectAtLeastOneMatching(spans, checkHttpEntry.bind(null, '/unary-call'));
+              expect(testUtils.getSpansByName(spans, 'rpc-client')).to.be.empty;
+              expect(testUtils.getSpansByName(spans, 'rpc-server')).to.be.empty;
             })
           );
         }));
@@ -192,7 +192,7 @@ function registerSuite(codeGenMode, withMetadata, withOptions) {
   }
 
   function waitForTrace(url, cancel, erroneous) {
-    return utils.retry(() =>
+    return testUtils.retry(() =>
       agentControls.getSpans().then(spans => {
         checkTrace(spans, url, cancel, erroneous);
       })
@@ -200,24 +200,27 @@ function registerSuite(codeGenMode, withMetadata, withOptions) {
   }
 
   function checkTrace(spans, url, cancel, erroneous) {
-    const httpEntry = utils.expectOneMatching(spans, checkHttpEntry.bind(null, url));
-    const grpcExit = utils.expectOneMatching(spans, checkGrpcClientSpan.bind(null, httpEntry, url, cancel, erroneous));
+    const httpEntry = testUtils.expectAtLeastOneMatching(spans, checkHttpEntry.bind(null, url));
+    const grpcExit = testUtils.expectAtLeastOneMatching(
+      spans,
+      checkGrpcClientSpan.bind(null, httpEntry, url, cancel, erroneous)
+    );
     // Except for server-streaming and bidi-streaming, we cancel the call immediately on the client, so it usually never
     // reaches the server (depends on the timing). Therefore we also do not expect any GRPC server spans to exist. For
     // server-streaming and bidi-streaming we have a communcation channel from the server to the client so that the
     // server can signal to the client when to cancel the call after it has already reached the server, such a channel
     // does not exist for unary call and client side streaming.
     if (!cancel || url === '/server-stream' || url === '/bidi-stream') {
-      const grpcEntry = utils.expectOneMatching(
+      const grpcEntry = testUtils.expectAtLeastOneMatching(
         spans,
         checkGrpcServerSpan.bind(null, grpcExit, url, cancel, erroneous)
       );
-      utils.expectOneMatching(spans, checkLogSpanDuringGrpcEntry.bind(null, grpcEntry, url, erroneous));
+      testUtils.expectAtLeastOneMatching(spans, checkLogSpanDuringGrpcEntry.bind(null, grpcEntry, url, erroneous));
     }
     // Would be nice to also check for the log span from the interceptor but will actually never be created because at
     // that time, the parent span is an exit span (the GRPC exit). If only log spans were intermediate spans :-)
-    // utils.expectOneMatching(spans, checkLogSpanFromClientInterceptor.bind(null, httpEntry));
-    utils.expectOneMatching(spans, checkLogSpanAfterGrpcExit.bind(null, httpEntry, url, cancel, erroneous));
+    // testUtils.expectAtLeastOneMatching(spans, checkLogSpanFromClientInterceptor.bind(null, httpEntry));
+    testUtils.expectAtLeastOneMatching(spans, checkLogSpanAfterGrpcExit.bind(null, httpEntry, url, cancel, erroneous));
   }
 }
 

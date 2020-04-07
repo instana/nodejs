@@ -3,7 +3,7 @@
 const expect = require('chai').expect;
 const semver = require('semver');
 const config = require('../../../core/test/config');
-const utils = require('../../../core/test/utils');
+const testUtils = require('../../../core/test/test_util');
 
 describe('metrics/healthchecks', function() {
   // admin uses JavaScript language features which aren't available in all
@@ -28,7 +28,7 @@ describe('metrics/healthchecks', function() {
 
   it('must report health status', () => {
     let healthyTimestamp;
-    return utils
+    return testUtils
       .retry(() =>
         agentStubControls.getLastMetricValue(expressControls.getPid(), ['healthchecks']).then(healthchecks => {
           expect(healthchecks.configurable.healthy).to.equal(1);
@@ -38,7 +38,7 @@ describe('metrics/healthchecks', function() {
       )
       .then(() => expressControls.setUnhealthy())
       .then(() =>
-        utils.retry(() =>
+        testUtils.retry(() =>
           agentStubControls.getLastMetricValue(expressControls.getPid(), ['healthchecks']).then(healthchecks => {
             expect(healthchecks.configurable.healthy).to.equal(0);
             expect(healthchecks.configurable.since).to.be.gt(healthyTimestamp);

@@ -3,7 +3,7 @@
 const expect = require('chai').expect;
 
 const config = require('../../../core/test/config');
-const utils = require('../../../core/test/utils');
+const testUtils = require('../../../core/test/test_util');
 
 describe('legacy sensor/API', function() {
   this.timeout(config.getTestTimeout());
@@ -20,7 +20,7 @@ describe('legacy sensor/API', function() {
   beforeEach(() => agentControls.waitUntilAppIsCompletelyInitialized(appControls.getPid()));
 
   it('all exports', () =>
-    utils.retry(() =>
+    testUtils.retry(() =>
       appControls
         .sendRequest({
           method: 'GET',

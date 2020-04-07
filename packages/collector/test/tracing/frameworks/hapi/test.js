@@ -6,7 +6,7 @@ const expect = require('chai').expect;
 
 const constants = require('@instana/core').tracing.constants;
 const config = require('../../../../../core/test/config');
-const utils = require('../../../../../core/test/utils');
+const testUtils = require('../../../../../core/test/test_util');
 const ProcessControls = require('../../ProcessControls');
 
 describe('tracing/hapi', function() {
@@ -44,9 +44,9 @@ describe('tracing/hapi', function() {
           .then(response => {
             expect(response.statusCode).to.equal(200);
             expect(response.body).to.equal(expectedTemplate);
-            return utils.retry(() =>
+            return testUtils.retry(() =>
               agentControls.getSpans().then(spans => {
-                utils.expectOneMatching(spans, span => {
+                testUtils.expectAtLeastOneMatching(spans, span => {
                   expect(span.n).to.equal('node.http.server');
                   expect(span.k).to.equal(constants.ENTRY);
                   expect(span.data.http.path_tpl).to.equal(expectedTemplate);

@@ -7,7 +7,7 @@ const semver = require('semver');
 const constants = require('@instana/core').tracing.constants;
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('../../../../../core/test/config');
-const utils = require('../../../../../core/test/utils');
+const testUtils = require('../../../../../core/test/test_util');
 const ProcessControls = require('../../ProcessControls');
 
 let agentControls;
@@ -45,7 +45,9 @@ function testQuery(allControls, testConfig) {
     })
     .then(response => {
       verifyQueryResponse(response, testConfig);
-      return utils.retry(() => agentControls.getSpans().then(verifySpansForQuery.bind(null, allControls, testConfig)));
+      return testUtils.retry(() =>
+        agentControls.getSpans().then(verifySpansForQuery.bind(null, allControls, testConfig))
+      );
     });
 }
 
@@ -198,7 +200,7 @@ function verifySpansForQuery(allControls, testConfig, spans) {
 }
 
 function verifyHttpEntry(source, spans) {
-  return utils.expectOneMatching(spans, span => {
+  return testUtils.expectAtLeastOneMatching(spans, span => {
     expect(span.n).to.equal('node.http.server');
     expect(span.k).to.equal(constants.ENTRY);
     expect(span.p).to.not.exist;
@@ -209,7 +211,7 @@ function verifyHttpEntry(source, spans) {
 }
 
 function verifyHttpExit(parentSpan, source, targetPort, spans) {
-  return utils.expectOneMatching(spans, span => {
+  return testUtils.expectAtLeastOneMatching(spans, span => {
     expect(span.n).to.equal('node.http.client');
     expect(span.k).to.equal(constants.EXIT);
     expect(span.t).to.equal(parentSpan.t);
@@ -222,7 +224,7 @@ function verifyHttpExit(parentSpan, source, targetPort, spans) {
 
 function verifyGraphQLGatewayEntry(parentSpan, allControls, testConfig, spans) {
   const { gatewayControls } = allControls;
-  return utils.expectOneMatching(spans, span => {
+  return testUtils.expectAtLeastOneMatching(spans, span => {
     verifyGraphQLQueryEntry(span, parentSpan, gatewayControls, testConfig);
     // excludes 'GetServiceDefinition' or 'IntrospectionQuery' queries
     expect(span.data.graphql.operationName).to.not.exist;
@@ -233,7 +235,7 @@ function verifyGraphQLGatewayEntry(parentSpan, allControls, testConfig, spans) {
 
 function verifyGraphQLAccountEntry(parentSpan, allControls, testConfig, spans) {
   const { accountServiceControls } = allControls;
-  return utils.expectOneMatching(spans, span => {
+  return testUtils.expectAtLeastOneMatching(spans, span => {
     verifyGraphQLQueryEntry(span, parentSpan, accountServiceControls, testConfig);
     // excludes 'GetServiceDefinition' or 'IntrospectionQuery' queries
     expect(span.data.graphql.operationName).to.not.exist;
@@ -244,7 +246,7 @@ function verifyGraphQLAccountEntry(parentSpan, allControls, testConfig, spans) {
 
 function verifyGraphQLInventoryEntry(parentSpan, allControls, testConfig, spans) {
   const { inventoryServiceControls } = allControls;
-  return utils.expectOneMatching(spans, span => {
+  return testUtils.expectAtLeastOneMatching(spans, span => {
     verifyGraphQLQueryEntry(span, parentSpan, inventoryServiceControls, testConfig);
     // excludes 'GetServiceDefinition' or 'IntrospectionQuery' queries
     expect(span.data.graphql.operationName).to.not.exist;
@@ -255,7 +257,7 @@ function verifyGraphQLInventoryEntry(parentSpan, allControls, testConfig, spans)
 
 function verifyGraphQLProductsEntry(parentSpan, allControls, testConfig, spans) {
   const { productsServiceControls } = allControls;
-  return utils.expectOneMatching(spans, span => {
+  return testUtils.expectAtLeastOneMatching(spans, span => {
     verifyGraphQLQueryEntry(span, parentSpan, productsServiceControls, testConfig);
     // excludes 'GetServiceDefinition' or 'IntrospectionQuery' queries
     expect(span.data.graphql.operationName).to.not.exist;
@@ -266,7 +268,7 @@ function verifyGraphQLProductsEntry(parentSpan, allControls, testConfig, spans) 
 
 function verifyGraphQLReviewsEntry(parentSpan, allControls, testConfig, spans) {
   const { reviewsServiceControls } = allControls;
-  return utils.expectOneMatching(spans, span => {
+  return testUtils.expectAtLeastOneMatching(spans, span => {
     verifyGraphQLQueryEntry(span, parentSpan, reviewsServiceControls, testConfig);
     // excludes 'GetServiceDefinition' or 'IntrospectionQuery' queries
     expect(span.data.graphql.operationName).to.not.exist;

@@ -4,7 +4,7 @@ const expect = require('chai').expect;
 const semver = require('semver');
 
 const config = require('../../core/test/config');
-const utils = require('../../core/test/utils');
+const testUtils = require('../../core/test/test_util');
 
 describe('agentCommunication', function() {
   if (semver.satisfies(process.versions.node, '<4')) {
@@ -20,7 +20,7 @@ describe('agentCommunication', function() {
   expressControls.registerTestHooks();
 
   it('must announce itself to the agent', () =>
-    utils.retry(() =>
+    testUtils.retry(() =>
       agentStubControls.getDiscoveries().then(discoveries => {
         const discovery = discoveries[expressControls.getPid()];
         expect(discovery.pid).to.be.a('number');
@@ -32,14 +32,14 @@ describe('agentCommunication', function() {
     ));
 
   it('must send data to the agent', () =>
-    utils.retry(() =>
+    testUtils.retry(() =>
       agentStubControls.getLastMetricValue(expressControls.getPid(), ['pid']).then(pid => {
         expect(pid).to.equal(expressControls.getPid());
       })
     ));
 
   it('must reannounce itself to the agent once discoveries are cleared', () =>
-    utils
+    testUtils
       .retry(() =>
         agentStubControls.getDiscoveries().then(discoveries => {
           expect(discoveries[expressControls.getPid()].pid).to.be.a('number');
@@ -49,7 +49,7 @@ describe('agentCommunication', function() {
         agentStubControls.deleteDiscoveries();
       })
       .then(() =>
-        utils.retry(() =>
+        testUtils.retry(() =>
           agentStubControls.getDiscoveries().then(discoveries => {
             expect(discoveries[expressControls.getPid()].pid).to.be.a('number');
           })

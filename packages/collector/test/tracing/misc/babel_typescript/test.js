@@ -11,7 +11,7 @@ const rimraf = require('rimraf');
 const constants = require('@instana/core').tracing.constants;
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('../../../../../core/test/config');
-const utils = require('../../../../../core/test/utils');
+const testUtils = require('../../../../../core/test/test_util');
 
 const babelAppDir = path.join(__dirname, '../../../apps/babel-typescript');
 const babelLibDir = path.join(babelAppDir, 'lib');
@@ -64,9 +64,9 @@ describe('tracing a babel/typescript setup', function() {
           path: '/'
         })
         .then(() =>
-          utils.retry(() =>
+          testUtils.retry(() =>
             agentControls.getSpans().then(spans => {
-              utils.expectOneMatching(spans, span => {
+              testUtils.expectAtLeastOneMatching(spans, span => {
                 expect(span.n).to.equal('node.http.server');
                 expect(span.k).to.equal(constants.ENTRY);
                 expect(span.p).to.not.exist;

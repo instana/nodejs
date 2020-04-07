@@ -7,7 +7,7 @@ const constants = require('@instana/core').tracing.constants;
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const tracingUtil = require('../../../../../core/src/tracing/tracingUtil');
 const config = require('../../../../../core/test/config');
-const utils = require('../../../../../core/test/utils');
+const testUtils = require('../../../../../core/test/test_util');
 const ProcessControls = require('../../ProcessControls');
 
 describe('tracing/express', function() {
@@ -45,9 +45,9 @@ describe('tracing/express', function() {
           };
         }
         return controls.sendRequest(request).then(() =>
-          utils.retry(() =>
+          testUtils.retry(() =>
             agentControls.getSpans().then(spans => {
-              utils.expectOneMatching(spans, span => {
+              testUtils.expectAtLeastOneMatching(spans, span => {
                 expect(span.n).to.equal('node.http.server');
                 expect(span.k).to.equal(constants.ENTRY);
                 expect(span.data.http.path_tpl).to.equal(expectedTemplate);

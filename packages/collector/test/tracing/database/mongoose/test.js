@@ -6,7 +6,7 @@ const uuid = require('uuid/v4');
 const constants = require('@instana/core').tracing.constants;
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('../../../../../core/test/config');
-const utils = require('../../../../../core/test/utils');
+const testUtils = require('../../../../../core/test/test_util');
 
 describe('tracing/mongoose', function() {
   if (!supportedVersion(process.versions.node)) {
@@ -36,9 +36,9 @@ describe('tracing/mongoose', function() {
         }
       })
       .then(() =>
-        utils.retry(() =>
+        testUtils.retry(() =>
           agentControls.getSpans().then(spans => {
-            const entrySpan = utils.expectOneMatching(spans, span => {
+            const entrySpan = testUtils.expectAtLeastOneMatching(spans, span => {
               expect(span.n).to.equal('node.http.server');
               expect(span.f.e).to.equal(String(mongooseControls.getPid()));
               expect(span.f.h).to.equal('agent-stub-uuid');
@@ -47,7 +47,7 @@ describe('tracing/mongoose', function() {
               expect(span.ec).to.equal(0);
             });
 
-            utils.expectOneMatching(spans, span => {
+            testUtils.expectAtLeastOneMatching(spans, span => {
               expect(span.t).to.equal(entrySpan.t);
               expect(span.p).to.equal(entrySpan.s);
               expect(span.n).to.equal('mongo');
@@ -87,9 +87,9 @@ describe('tracing/mongoose', function() {
         })
       )
       .then(() =>
-        utils.retry(() =>
+        testUtils.retry(() =>
           agentControls.getSpans().then(spans => {
-            const entrySpan = utils.expectOneMatching(spans, span => {
+            const entrySpan = testUtils.expectAtLeastOneMatching(spans, span => {
               expect(span.data.http.url).to.equal('/find');
               expect(span.n).to.equal('node.http.server');
               expect(span.f.e).to.equal(String(mongooseControls.getPid()));
@@ -99,7 +99,7 @@ describe('tracing/mongoose', function() {
               expect(span.ec).to.equal(0);
             });
 
-            utils.expectOneMatching(spans, span => {
+            testUtils.expectAtLeastOneMatching(spans, span => {
               expect(span.t).to.equal(entrySpan.t);
               expect(span.p).to.equal(entrySpan.s);
               expect(span.n).to.equal('mongo');

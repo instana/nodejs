@@ -7,7 +7,7 @@ const semver = require('semver');
 const constants = require('@instana/core').tracing.constants;
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('../../../../../core/test/config');
-const utils = require('../../../../../core/test/utils');
+const testUtils = require('../../../../../core/test/test_util');
 const ProcessControls = require('../../ProcessControls');
 
 let agentControls;
@@ -83,15 +83,15 @@ function registerTests(useHttps) {
             path: constructPath('/request-url-and-options', urlObject, withQuery)
           })
           .then(() =>
-            utils.retry(() =>
+            testUtils.retry(() =>
               agentControls.getSpans().then(spans => {
-                const clientSpan = utils.expectOneMatching(spans, span => {
+                const clientSpan = testUtils.expectAtLeastOneMatching(spans, span => {
                   expect(span.n).to.equal('node.http.client');
                   expect(span.k).to.equal(constants.EXIT);
                   expect(span.data.http.url).to.match(/\/request-url-opts/);
                   checkQuery(span, withQuery);
                 });
-                utils.expectOneMatching(spans, span => {
+                testUtils.expectAtLeastOneMatching(spans, span => {
                   expect(span.n).to.equal('node.http.server');
                   expect(span.k).to.equal(constants.ENTRY);
                   expect(span.data.http.url).to.match(/\/request-url-opts/);
@@ -124,15 +124,15 @@ function registerTests(useHttps) {
             path: constructPath('/request-url-only', urlObject, withQuery)
           })
           .then(() =>
-            utils.retry(() =>
+            testUtils.retry(() =>
               agentControls.getSpans().then(spans => {
-                const clientSpan = utils.expectOneMatching(spans, span => {
+                const clientSpan = testUtils.expectAtLeastOneMatching(spans, span => {
                   expect(span.n).to.equal('node.http.client');
                   expect(span.k).to.equal(constants.EXIT);
                   expect(span.data.http.url).to.match(/\/request-only-url/);
                   checkQuery(span, withQuery);
                 });
-                utils.expectOneMatching(spans, span => {
+                testUtils.expectAtLeastOneMatching(spans, span => {
                   expect(span.n).to.equal('node.http.server');
                   expect(span.k).to.equal(constants.ENTRY);
                   expect(span.data.http.url).to.match(/\/request-only-url/);
@@ -154,15 +154,15 @@ function registerTests(useHttps) {
           path: constructPath('/request-options-only', false, withQuery)
         })
         .then(() =>
-          utils.retry(() =>
+          testUtils.retry(() =>
             agentControls.getSpans().then(spans => {
-              const clientSpan = utils.expectOneMatching(spans, span => {
+              const clientSpan = testUtils.expectAtLeastOneMatching(spans, span => {
                 expect(span.n).to.equal('node.http.client');
                 expect(span.k).to.equal(constants.EXIT);
                 expect(span.data.http.url).to.match(/\/request-only-opts/);
                 checkQuery(span, withQuery);
               });
-              utils.expectOneMatching(spans, span => {
+              testUtils.expectAtLeastOneMatching(spans, span => {
                 expect(span.n).to.equal('node.http.server');
                 expect(span.k).to.equal(constants.ENTRY);
                 expect(span.data.http.url).to.match(/\/request-only-opts/);
@@ -181,15 +181,15 @@ function registerTests(useHttps) {
         path: '/request-malformed-url'
       })
       .then(() =>
-        utils.retry(() =>
+        testUtils.retry(() =>
           agentControls.getSpans().then(spans => {
-            const entrySpan = utils.expectOneMatching(spans, span => {
+            const entrySpan = testUtils.expectAtLeastOneMatching(spans, span => {
               expect(span.n).to.equal('node.http.server');
               expect(span.k).to.equal(constants.ENTRY);
               expect(span.data.http.url).to.match(/\/request-malformed-url/);
             });
 
-            utils.expectOneMatching(spans, span => {
+            testUtils.expectAtLeastOneMatching(spans, span => {
               expect(span.n).to.equal('node.http.client');
               expect(span.k).to.equal(constants.EXIT);
               expect(span.ec).to.equal(1);
@@ -199,7 +199,7 @@ function registerTests(useHttps) {
               expect(span.p).to.equal(entrySpan.s);
             });
 
-            utils.expectOneMatching(spans, span => {
+            testUtils.expectAtLeastOneMatching(spans, span => {
               expect(span.n).to.equal('node.http.client');
               expect(span.k).to.equal(constants.EXIT);
               expect(span.data.http.url).to.match(/\/request-only-opts/);
@@ -219,15 +219,15 @@ function registerTests(useHttps) {
           path: constructPath('/request-options-only-null-headers', false, withQuery)
         })
         .then(() =>
-          utils.retry(() =>
+          testUtils.retry(() =>
             agentControls.getSpans().then(spans => {
-              const clientSpan = utils.expectOneMatching(spans, span => {
+              const clientSpan = testUtils.expectAtLeastOneMatching(spans, span => {
                 expect(span.n).to.equal('node.http.client');
                 expect(span.k).to.equal(constants.EXIT);
                 expect(span.data.http.url).to.match(/\/request-only-opts/);
                 checkQuery(span, withQuery);
               });
-              utils.expectOneMatching(spans, span => {
+              testUtils.expectAtLeastOneMatching(spans, span => {
                 expect(span.n).to.equal('node.http.server');
                 expect(span.k).to.equal(constants.ENTRY);
                 expect(span.data.http.url).to.match(/\/request-only-opts/);
@@ -253,15 +253,15 @@ function registerTests(useHttps) {
             path: constructPath('/get-url-and-options', urlObject, withQuery)
           })
           .then(() =>
-            utils.retry(() =>
+            testUtils.retry(() =>
               agentControls.getSpans().then(spans => {
-                const clientSpan = utils.expectOneMatching(spans, span => {
+                const clientSpan = testUtils.expectAtLeastOneMatching(spans, span => {
                   expect(span.n).to.equal('node.http.client');
                   expect(span.k).to.equal(constants.EXIT);
                   expect(span.data.http.url).to.match(/\/get-url-opts/);
                   checkQuery(span, withQuery);
                 });
-                utils.expectOneMatching(spans, span => {
+                testUtils.expectAtLeastOneMatching(spans, span => {
                   expect(span.n).to.equal('node.http.server');
                   expect(span.k).to.equal(constants.ENTRY);
                   expect(span.data.http.url).to.match(/\/get-url-opts/);
@@ -294,15 +294,15 @@ function registerTests(useHttps) {
             path: constructPath('/get-url-only', urlObject, withQuery)
           })
           .then(() =>
-            utils.retry(() =>
+            testUtils.retry(() =>
               agentControls.getSpans().then(spans => {
-                const clientSpan = utils.expectOneMatching(spans, span => {
+                const clientSpan = testUtils.expectAtLeastOneMatching(spans, span => {
                   expect(span.n).to.equal('node.http.client');
                   expect(span.k).to.equal(constants.EXIT);
                   expect(span.data.http.url).to.match(/\/get-only-url/);
                   checkQuery(span, withQuery);
                 });
-                utils.expectOneMatching(spans, span => {
+                testUtils.expectAtLeastOneMatching(spans, span => {
                   expect(span.n).to.equal('node.http.server');
                   expect(span.k).to.equal(constants.ENTRY);
                   expect(span.data.http.url).to.match(/\/get-only-url/);
@@ -324,15 +324,15 @@ function registerTests(useHttps) {
           path: constructPath('/get-options-only', false, withQuery)
         })
         .then(() =>
-          utils.retry(() =>
+          testUtils.retry(() =>
             agentControls.getSpans().then(spans => {
-              const clientSpan = utils.expectOneMatching(spans, span => {
+              const clientSpan = testUtils.expectAtLeastOneMatching(spans, span => {
                 expect(span.n).to.equal('node.http.client');
                 expect(span.k).to.equal(constants.EXIT);
                 expect(span.data.http.url).to.match(/\/get-only-opts/);
                 checkQuery(span, withQuery);
               });
-              utils.expectOneMatching(spans, span => {
+              testUtils.expectAtLeastOneMatching(spans, span => {
                 expect(span.n).to.equal('node.http.server');
                 expect(span.k).to.equal(constants.ENTRY);
                 expect(span.data.http.url).to.match(/\/get-only-opts/);
@@ -355,9 +355,9 @@ function registerTests(useHttps) {
         })
       )
       .then(() =>
-        utils.retry(() =>
+        testUtils.retry(() =>
           agentControls.getSpans().then(spans => {
-            utils.expectOneMatching(spans, span => {
+            testUtils.expectAtLeastOneMatching(spans, span => {
               expect(span.n).to.equal('node.http.client');
               expect(span.k).to.equal(constants.EXIT);
               expect(span.ec).to.equal(1);
@@ -375,9 +375,9 @@ function registerTests(useHttps) {
         simple: false
       })
       .then(() =>
-        utils.retry(() =>
+        testUtils.retry(() =>
           agentControls.getSpans().then(spans => {
-            utils.expectOneMatching(spans, span => {
+            testUtils.expectAtLeastOneMatching(spans, span => {
               expect(span.n).to.equal('node.http.client');
               expect(span.k).to.equal(constants.EXIT);
               expect(span.ec).to.equal(1);
@@ -395,9 +395,9 @@ function registerTests(useHttps) {
         simple: false
       })
       .then(() =>
-        utils.retry(() =>
+        testUtils.retry(() =>
           agentControls.getSpans().then(spans => {
-            utils.expectOneMatching(spans, span => {
+            testUtils.expectAtLeastOneMatching(spans, span => {
               expect(span.n).to.equal('node.http.client');
               expect(span.k).to.equal(constants.EXIT);
               expect(span.ec).to.equal(1);
@@ -414,9 +414,9 @@ function registerTests(useHttps) {
         path: '/request-options-only?withHeader=request-via-options'
       })
       .then(() =>
-        utils.retry(() =>
+        testUtils.retry(() =>
           agentControls.getSpans().then(spans => {
-            utils.expectOneMatching(spans, span => {
+            testUtils.expectAtLeastOneMatching(spans, span => {
               expect(span.n).to.equal('node.http.client');
               expect(span.k).to.equal(constants.EXIT);
               expect(span.data.http.header).to.exist;
@@ -436,9 +436,9 @@ function registerTests(useHttps) {
         path: '/request-options-only?withHeader=set-on-request'
       })
       .then(() =>
-        utils.retry(() =>
+        testUtils.retry(() =>
           agentControls.getSpans().then(spans => {
-            utils.expectOneMatching(spans, span => {
+            testUtils.expectAtLeastOneMatching(spans, span => {
               expect(span.n).to.equal('node.http.client');
               expect(span.k).to.equal(constants.EXIT);
               expect(span.data.http.header).to.exist;
@@ -458,9 +458,9 @@ function registerTests(useHttps) {
         path: '/request-options-only?withHeader=response'
       })
       .then(() =>
-        utils.retry(() =>
+        testUtils.retry(() =>
           agentControls.getSpans().then(spans => {
-            utils.expectOneMatching(spans, span => {
+            testUtils.expectAtLeastOneMatching(spans, span => {
               expect(span.n).to.equal('node.http.client');
               expect(span.k).to.equal(constants.EXIT);
               expect(span.data.http.header).to.exist;
@@ -478,9 +478,9 @@ function registerTests(useHttps) {
         path: '/expect-continue'
       })
       .then(() =>
-        utils.retry(() =>
+        testUtils.retry(() =>
           agentControls.getSpans().then(spans => {
-            utils.expectOneMatching(spans, span => {
+            testUtils.expectAtLeastOneMatching(spans, span => {
               expect(span.n).to.equal('node.http.client');
               expect(span.k).to.equal(constants.EXIT);
               expect(span.data.http.method).to.equal('PUT');
@@ -493,14 +493,14 @@ function registerTests(useHttps) {
 
   it('must capture deferred outgoing HTTP calls that are executed after the triggering HTTP entry has finished', () =>
     clientControls.sendRequest({ path: '/deferred-http-exit' }).then(() =>
-      utils.retry(() =>
+      testUtils.retry(() =>
         agentControls.getSpans().then(spans => {
-          const clientSpan = utils.expectOneMatching(spans, span => {
+          const clientSpan = testUtils.expectAtLeastOneMatching(spans, span => {
             expect(span.n).to.equal('node.http.client');
             expect(span.k).to.equal(constants.EXIT);
             expect(span.data.http.url).to.match(/\/request-only-opts/);
           });
-          utils.expectOneMatching(spans, span => {
+          testUtils.expectAtLeastOneMatching(spans, span => {
             expect(span.n).to.equal('node.http.server');
             expect(span.k).to.equal(constants.ENTRY);
             expect(span.data.http.url).to.match(/\/request-only-opts/);

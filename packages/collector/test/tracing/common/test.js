@@ -6,7 +6,7 @@ const constants = require('@instana/core').tracing.constants;
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('../../../../core/test/config');
 const delay = require('../../../../core/test/test_util/delay');
-const utils = require('../../../../core/test/utils');
+const testUtils = require('../../../../core/test/test_util');
 
 let Controls;
 const extendedTimeout = Math.max(config.getTestTimeout(), 10000);
@@ -60,7 +60,7 @@ describe('tracing/common', function() {
           })
           // verify that spans arrive after the minimum delay
           .then(() =>
-            utils.retry(
+            testUtils.retry(
               () =>
                 agentControls.getSpans().then(spans => {
                   expect(spans.length).to.equal(1);
@@ -85,7 +85,7 @@ describe('tracing/common', function() {
     }
 
     function verifyNoMinimalDelay(agentControls) {
-      return utils.retry(() =>
+      return testUtils.retry(() =>
         agentControls.getSpans().then(spans => {
           expect(spans.length).to.equal(1);
 
@@ -160,7 +160,7 @@ describe('tracing/common', function() {
     }
 
     function verifyServiceName(agentControls, expectServiceNameOnSpan) {
-      return utils.retry(() =>
+      return testUtils.retry(() =>
         agentControls.getSpans().then(spans => {
           expect(spans.length).to.equal(1);
           const span = spans[0];

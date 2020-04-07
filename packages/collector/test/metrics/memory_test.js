@@ -2,7 +2,7 @@
 
 const expect = require('chai').expect;
 
-const utils = require('../../../core/test/utils');
+const testUtils = require('../../../core/test/test_util');
 const memory = require('../../src/metrics/memory');
 
 describe('metrics.memory', () => {
@@ -34,7 +34,7 @@ describe('metrics.memory', () => {
       garbage.push(new Date());
     }
 
-    return utils.retry(() => {
+    return testUtils.retry(() => {
       const newPayload = memory.currentPayload;
       expect(newPayload.heapUsed).to.be.gt(previousPayload.heapUsed);
     });

@@ -7,7 +7,7 @@ const { fail } = expect;
 const constants = require('@instana/core').tracing.constants;
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('../../../../../core/test/config');
-const utils = require('../../../../../core/test/utils');
+const testUtils = require('../../../../../core/test/test_util');
 const delay = require('../../../../../core/test/test_util/delay');
 const ProcessControls = require('../../ProcessControls');
 
@@ -60,7 +60,7 @@ function registerTests(useHttps) {
         }
       })
       .then(() =>
-        utils.retry(() =>
+        testUtils.retry(() =>
           agentControls.getSpans().then(spans => {
             const span = verifyThereIsExactlyOneHttpEntry(spans, '/checkout', 'POST', 201);
             expect(span.t).to.be.a('string');
@@ -85,7 +85,7 @@ function registerTests(useHttps) {
         }
       })
       .then(() =>
-        utils.retry(() =>
+        testUtils.retry(() =>
           agentControls.getSpans().then(spans => {
             const span = verifyThereIsExactlyOneHttpEntry(spans, '/checkout', 'POST', 201);
             expect(span.t).to.equal('84e588b697868fee');
@@ -110,7 +110,7 @@ function registerTests(useHttps) {
         }
       })
       .then(() =>
-        utils.retry(() =>
+        testUtils.retry(() =>
           agentControls.getSpans().then(spans => {
             const span = verifyThereIsExactlyOneHttpEntry(spans, '/checkout', 'POST', 201);
             expect(span.t).to.equal('6636f38f0f3dd0996636f38f0f3dd099');
@@ -172,7 +172,7 @@ function registerTests(useHttps) {
         }
       })
       .then(() =>
-        utils.retry(() =>
+        testUtils.retry(() =>
           agentControls.getSpans().then(spans => {
             const span = verifyThereIsExactlyOneHttpEntry(spans, '/checkout', 'POST', 201);
             expect(span.t).to.be.a('string');
@@ -212,7 +212,7 @@ function registerTests(useHttps) {
         }
       })
       .then(() =>
-        utils.retry(() =>
+        testUtils.retry(() =>
           agentControls.getSpans().then(spans => {
             const span = verifyThereIsExactlyOneHttpEntry(spans);
             expect(span.data.http.header).to.be.an('object');
@@ -231,7 +231,7 @@ function registerTests(useHttps) {
         path: '/?responseHeader=true'
       })
       .then(() =>
-        utils.retry(() =>
+        testUtils.retry(() =>
           agentControls.getSpans().then(spans => {
             const span = verifyThereIsExactlyOneHttpEntry(spans);
             expect(span.data.http.header).to.be.an('object');
@@ -250,7 +250,7 @@ function registerTests(useHttps) {
         path: '/?writeHead=true'
       })
       .then(() =>
-        utils.retry(() =>
+        testUtils.retry(() =>
           agentControls.getSpans().then(spans => {
             const span = verifyThereIsExactlyOneHttpEntry(spans);
             expect(span.data.http.header).to.be.an('object');
@@ -273,7 +273,7 @@ function registerTests(useHttps) {
         }
       })
       .then(() =>
-        utils.retry(() =>
+        testUtils.retry(() =>
           agentControls.getSpans().then(spans => {
             const span = verifyThereIsExactlyOneHttpEntry(spans);
             expect(span.data.http.header).to.be.an('object');
@@ -299,7 +299,7 @@ function registerTests(useHttps) {
         }
       })
       .then(() =>
-        utils.retry(() =>
+        testUtils.retry(() =>
           agentControls.getSpans().then(spans => {
             const span = verifyThereIsExactlyOneHttpEntry(spans);
             expect(span.data.http.header).to.be.an('object');
@@ -320,7 +320,7 @@ function registerTests(useHttps) {
         path: '/'
       })
       .then(() =>
-        utils.retry(() =>
+        testUtils.retry(() =>
           agentControls.getSpans().then(spans => {
             const span = verifyThereIsExactlyOneHttpEntry(spans);
             expect(span.data.http.header).to.not.exist;
@@ -336,7 +336,7 @@ function registerTests(useHttps) {
         path: '/?param1=value1&TheSecreT=classified&param2=value2&enIgmAtic=occult&param3=value4&cipher=veiled'
       })
       .then(() =>
-        utils.retry(() =>
+        testUtils.retry(() =>
           agentControls.getSpans().then(spans => {
             const span = verifyThereIsExactlyOneHttpEntry(spans);
             expect(span.data.http.params).to.equal('param1=value1&param2=value2&param3=value4');
@@ -358,7 +358,7 @@ function registerTests(useHttps) {
         if (err.error && err.error.code === 'ESOCKETTIMEDOUT') {
           // We actually expect the request to time out. But we still want to verify that an entry span has been created
           // for it.
-          return utils.retry(() =>
+          return testUtils.retry(() =>
             agentControls.getSpans().then(spans => {
               verifyThereIsExactlyOneHttpEntry(spans, '/dont-respond');
             })
@@ -381,7 +381,7 @@ function registerTests(useHttps) {
         if (err.error && err.error.code === 'ECONNRESET') {
           // We actually expect the request to time out. But we still want to verify that an entry span has been created
           // for it.
-          return utils.retry(() =>
+          return testUtils.retry(() =>
             agentControls.getSpans().then(spans => {
               verifyThereIsExactlyOneHttpEntry(spans, '/destroy-socket');
             })

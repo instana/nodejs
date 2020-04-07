@@ -4,7 +4,7 @@ const expect = require('chai').expect;
 
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('../../../../core/test/config');
-const utils = require('../../../../core/test/utils');
+const testUtils = require('../../../../core/test/test_util');
 
 describe('tracing/opentracing/integration', function() {
   const agentStubControls = require('../../apps/agentStubControls');
@@ -21,7 +21,7 @@ describe('tracing/opentracing/integration', function() {
 
     it('must not generate opentracing traces when OT is not used', () =>
       expressOpentracingControls.sendRequest({ path: '/' }).then(() =>
-        utils.retry(() =>
+        testUtils.retry(() =>
           agentStubControls.getSpans().then(spans => {
             if (supportedVersion(process.versions.node)) {
               expect(spans).to.have.lengthOf(1);
@@ -35,9 +35,9 @@ describe('tracing/opentracing/integration', function() {
 
     it('must generate opentracing traces', () =>
       expressOpentracingControls.sendRequest({ path: '/withOpentracing' }).then(() =>
-        utils.retry(() =>
+        testUtils.retry(() =>
           agentStubControls.getSpans().then(spans => {
-            const serviceSpan = utils.expectOneMatching(spans, span => {
+            const serviceSpan = testUtils.expectAtLeastOneMatching(spans, span => {
               expect(span.t).to.be.a('string');
               expect(span.s).to.be.a('string');
               expect(span.s).to.equal(span.t);
@@ -50,7 +50,7 @@ describe('tracing/opentracing/integration', function() {
               expect(span.data.sdk.type).to.equal('entry');
             });
 
-            utils.expectOneMatching(spans, span => {
+            testUtils.expectAtLeastOneMatching(spans, span => {
               expect(span.t).to.equal(serviceSpan.t);
               expect(span.p).to.equal(serviceSpan.s);
               expect(span.s).to.be.a('string');
@@ -76,17 +76,17 @@ describe('tracing/opentracing/integration', function() {
     if (supportedVersion(process.versions.node)) {
       it('must connect instana trace to opentracing spans', () =>
         expressOpentracingControls.sendRequest({ path: '/withOpentracingConnectedToInstanaTrace' }).then(() =>
-          utils.retry(() =>
+          testUtils.retry(() =>
             agentStubControls.getSpans().then(spans => {
               expect(spans).to.have.lengthOf(2);
 
-              const httpSpan = utils.expectOneMatching(spans, span => {
+              const httpSpan = testUtils.expectAtLeastOneMatching(spans, span => {
                 expect(span.n).to.equal('node.http.server');
                 expect(span.f.e).to.equal(String(expressOpentracingControls.getPid()));
                 expect(span.f.h).to.equal('agent-stub-uuid');
               });
 
-              utils.expectOneMatching(spans, span => {
+              testUtils.expectAtLeastOneMatching(spans, span => {
                 expect(span.t).to.equal(httpSpan.t);
                 expect(span.p).to.equal(httpSpan.s);
                 expect(span.s).to.be.a('string');
@@ -116,9 +116,9 @@ describe('tracing/opentracing/integration', function() {
 
     it('must only generate opentracing traces', () =>
       expressOpentracingControls.sendRequest({ path: '/withOpentracing' }).then(() =>
-        utils.retry(() =>
+        testUtils.retry(() =>
           agentStubControls.getSpans().then(spans => {
-            const serviceSpan = utils.expectOneMatching(spans, span => {
+            const serviceSpan = testUtils.expectAtLeastOneMatching(spans, span => {
               expect(span.t).to.be.a('string');
               expect(span.s).to.be.a('string');
               expect(span.s).to.equal(span.t);
@@ -131,7 +131,7 @@ describe('tracing/opentracing/integration', function() {
               expect(span.data.sdk.type).to.equal('entry');
             });
 
-            utils.expectOneMatching(spans, span => {
+            testUtils.expectAtLeastOneMatching(spans, span => {
               expect(span.t).to.equal(serviceSpan.t);
               expect(span.p).to.equal(serviceSpan.s);
               expect(span.s).to.be.a('string');

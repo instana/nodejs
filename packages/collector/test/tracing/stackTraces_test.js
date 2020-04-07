@@ -4,7 +4,7 @@ const expect = require('chai').expect;
 
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('../../../core/test/config');
-const utils = require('../../../core/test/utils');
+const testUtils = require('../../../core/test/test_util');
 
 describe('tracing/stackTraces', function() {
   if (!supportedVersion(process.versions.node)) {
@@ -33,14 +33,14 @@ describe('tracing/stackTraces', function() {
           responseStatus: 201
         })
         .then(() =>
-          utils.retry(() =>
+          testUtils.retry(() =>
             agentStubControls.getSpans().then(spans => {
-              utils.expectOneMatching(spans, span => {
+              testUtils.expectAtLeastOneMatching(spans, span => {
                 expect(span.n).to.equal('node.http.server');
                 expect(span.stack).to.have.lengthOf(0);
               });
 
-              utils.expectOneMatching(spans, span => {
+              testUtils.expectAtLeastOneMatching(spans, span => {
                 expect(span.n).to.equal('node.http.client');
                 expect(span.stack).to.have.lengthOf(0);
               });
@@ -64,9 +64,9 @@ describe('tracing/stackTraces', function() {
           responseStatus: 201
         })
         .then(() =>
-          utils.retry(() =>
+          testUtils.retry(() =>
             agentStubControls.getSpans().then(spans => {
-              utils.expectOneMatching(spans, span => {
+              testUtils.expectAtLeastOneMatching(spans, span => {
                 expect(span.n).to.equal('node.http.server');
                 expect(span.stack).to.have.lengthOf(0);
               });
@@ -82,9 +82,9 @@ describe('tracing/stackTraces', function() {
           responseStatus: 201
         })
         .then(() =>
-          utils.retry(() =>
+          testUtils.retry(() =>
             agentStubControls.getSpans().then(spans => {
-              utils.expectOneMatching(spans, span => {
+              testUtils.expectAtLeastOneMatching(spans, span => {
                 expect(span.n).to.equal('node.http.client');
                 expect(span.stack[0].m).to.equal('Request.Request.start [as start]');
                 expect(span.stack[0].c).to.match(/request\.js$/i);

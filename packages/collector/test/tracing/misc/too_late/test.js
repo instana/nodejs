@@ -9,7 +9,7 @@ const semver = require('semver');
 const constants = require('@instana/core').tracing.constants;
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('../../../../../core/test/config');
-const utils = require('../../../../../core/test/utils');
+const testUtils = require('../../../../../core/test/test_util');
 
 let agentControls;
 let Controls;
@@ -68,10 +68,10 @@ describe('tracing/too late', function() {
             path: '/'
           })
           .then(() =>
-            utils.retry(() =>
+            testUtils.retry(() =>
               Promise.all([agentControls.getSpans(), agentControls.getAllMetrics(controls.getPid())]).then(
                 ([spans, metrics]) => {
-                  utils.expectOneMatching(spans, span => {
+                  testUtils.expectAtLeastOneMatching(spans, span => {
                     expect(span.n).to.equal('node.http.server');
                     expect(span.k).to.equal(constants.ENTRY);
                     expect(span.async).to.not.exist;
@@ -83,7 +83,7 @@ describe('tracing/too late', function() {
                   });
 
                   // expect HTTP client call to be not captured
-                  const httpExits = utils.getSpansByName(spans, 'node.http.client');
+                  const httpExits = testUtils.getSpansByName(spans, 'node.http.client');
                   expect(httpExits).to.have.lengthOf(0);
 
                   // expect initTooLate to have been recorded
@@ -120,10 +120,10 @@ describe('tracing/too late', function() {
           path: '/'
         })
         .then(() =>
-          utils.retry(() =>
+          testUtils.retry(() =>
             Promise.all([agentControls.getSpans(), agentControls.getAllMetrics(controls.getPid())]).then(
               ([spans, metrics]) => {
-                const httpEntry = utils.expectOneMatching(spans, span => {
+                const httpEntry = testUtils.expectAtLeastOneMatching(spans, span => {
                   expect(span.n).to.equal('node.http.server');
                   expect(span.k).to.equal(constants.ENTRY);
                   expect(span.p).to.not.exist;
@@ -132,7 +132,7 @@ describe('tracing/too late', function() {
                 });
 
                 // expect HTTP client call to have been captured
-                utils.expectOneMatching(spans, span => {
+                testUtils.expectAtLeastOneMatching(spans, span => {
                   expect(span.n).to.equal('node.http.client');
                   expect(span.k).to.equal(constants.EXIT);
                   expect(span.p).to.equal(httpEntry.s);

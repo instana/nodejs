@@ -6,7 +6,7 @@ const _ = require('lodash');
 
 const agentPort = require('../apps/agentStubControls').agentPort;
 const config = require('../../../core/test/config');
-const utils = require('../../../core/test/utils');
+const testUtils = require('../../../core/test/test_util');
 
 const AbstractControls = (module.exports = function AbstractControls(opts = {}) {
   // absolute path to .js file that should be executed
@@ -74,7 +74,7 @@ AbstractControls.prototype.kill = function kill() {
 };
 
 AbstractControls.prototype.waitUntilServerIsUp = function waitUntilServerIsUp() {
-  return utils.retry(() => {
+  return testUtils.retry(() => {
     return request({
       method: 'GET',
       url: this.baseUrl,

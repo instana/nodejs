@@ -8,7 +8,7 @@ const _ = require('lodash');
 const constants = require('@instana/core').tracing.constants;
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('../../../../../core/test/config');
-const utils = require('../../../../../core/test/utils');
+const testUtils = require('../../../../../core/test/test_util');
 
 describe('tracing/mongodb', function() {
   if (!supportedVersion(process.versions.node)) {
@@ -35,7 +35,7 @@ describe('tracing/mongodb', function() {
         }
       })
       .then(() =>
-        utils.retry(() =>
+        testUtils.retry(() =>
           agentStubControls.getSpans().then(spans => {
             const entrySpan = expectHttpEntry(spans, '/insert-one');
             expectMongoExit(spans, entrySpan, 'insert');
@@ -66,7 +66,7 @@ describe('tracing/mongodb', function() {
         expect(response._id).to.exist;
         expect(response.unique).to.equal(unique);
         expect(response.content).to.equal('updated content');
-        return utils.retry(() =>
+        return testUtils.retry(() =>
           agentStubControls.getSpans().then(spans => {
             const entrySpanUpdate = expectHttpEntry(spans, '/update-one');
             expectMongoExit(
@@ -117,7 +117,7 @@ describe('tracing/mongodb', function() {
         expect(response._id).to.exist;
         expect(response.unique).to.equal(unique);
         expect(response.somethingElse).to.equal('replaced');
-        return utils.retry(() =>
+        return testUtils.retry(() =>
           agentStubControls.getSpans().then(spans => {
             const entrySpanUpdate = expectHttpEntry(spans, '/replace-one');
             expectMongoExit(
@@ -161,7 +161,7 @@ describe('tracing/mongodb', function() {
       .then(() => findDoc(unique))
       .then(response => {
         expect(response).to.not.exist;
-        return utils.retry(() =>
+        return testUtils.retry(() =>
           agentStubControls.getSpans().then(spans => {
             const entrySpanUpdate = expectHttpEntry(spans, '/delete-one');
             expectMongoExit(
@@ -195,7 +195,7 @@ describe('tracing/mongodb', function() {
         }
       })
       .then(() =>
-        utils.retry(() =>
+        testUtils.retry(() =>
           agentStubControls.getSpans().then(spans => {
             const entrySpan = expectHttpEntry(spans, '/find-one');
             expectMongoExit(
@@ -235,7 +235,7 @@ describe('tracing/mongodb', function() {
     return insertDoc(unique)
       .then(() => Promise.all([firstRequest, secondRequest]))
       .then(() =>
-        utils.retry(() =>
+        testUtils.retry(() =>
           agentStubControls.getSpans().then(spans => {
             const entrySpan1 = expectHttpEntry(spans, '/long-find', `call=1&unique=${unique}`);
             const entrySpan2 = expectHttpEntry(spans, '/long-find', `call=2&unique=${unique}`);
@@ -292,7 +292,7 @@ describe('tracing/mongodb', function() {
       )
       .then(docs => {
         expect(docs).to.have.lengthOf(10);
-        return utils.retry(() =>
+        return testUtils.retry(() =>
           agentStubControls.getSpans().then(spans => {
             const entrySpan = expectHttpEntry(spans, '/findall');
             expectMongoExit(spans, entrySpan, 'find', JSON.stringify({ unique }));
@@ -325,7 +325,7 @@ describe('tracing/mongodb', function() {
   }
 
   function expectHttpEntry(spans, url, params) {
-    return utils.expectOneMatching(spans, span => {
+    return testUtils.expectAtLeastOneMatching(spans, span => {
       expect(span.n).to.equal('node.http.server');
       expect(span.p).to.not.exist;
       expect(span.f.e).to.equal(String(controls.getPid()));
@@ -341,7 +341,7 @@ describe('tracing/mongodb', function() {
   }
 
   function expectMongoExit(spans, parentSpan, command, filter, query, json) {
-    return utils.expectOneMatching(spans, span => {
+    return testUtils.expectAtLeastOneMatching(spans, span => {
       expect(span.t).to.equal(parentSpan.t);
       expect(span.p).to.equal(parentSpan.s);
       expect(span.n).to.equal('mongo');
@@ -375,7 +375,7 @@ describe('tracing/mongodb', function() {
   }
 
   function expectHttpExit(spans, parentSpan, params) {
-    return utils.expectOneMatching(spans, span => {
+    return testUtils.expectAtLeastOneMatching(spans, span => {
       expect(span.t).to.equal(parentSpan.t);
       expect(span.p).to.equal(parentSpan.s);
       expect(span.n).to.equal('node.http.client');

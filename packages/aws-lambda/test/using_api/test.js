@@ -5,9 +5,9 @@ const path = require('path');
 const constants = require('@instana/core').tracing.constants;
 
 const Control = require('../Control');
-const config = require('../../../serverless/test/config');
 const delay = require('../../../core/test/test_util/delay');
-const expectOneMatching = require('../../../serverless/test/util/expect_matching');
+const expectExactlyOneMatching = require('../../../core/test/test_util/expectExactlyOneMatching');
+const config = require('../../../serverless/test/config');
 const retry = require('../../../serverless/test/util/retry');
 
 const functionName = 'functionName';
@@ -225,7 +225,7 @@ describe('Using the API', () => {
   }
 
   function verifyLambdaEntry(spans, error) {
-    return expectOneMatching(spans, span => {
+    return expectExactlyOneMatching(spans, span => {
       expect(span.t).to.exist;
       expect(span.p).to.not.exist;
       expect(span.s).to.exist;
@@ -253,7 +253,7 @@ describe('Using the API', () => {
   }
 
   function verifySdkExit(spans, entry) {
-    return expectOneMatching(spans, span => {
+    return expectExactlyOneMatching(spans, span => {
       expect(span.t).to.equal(entry.t);
       expect(span.p).to.equal(entry.s);
       expect(span.s).to.exist;

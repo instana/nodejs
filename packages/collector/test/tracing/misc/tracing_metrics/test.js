@@ -7,7 +7,7 @@ const supportedVersion = require('@instana/core').tracing.supportedVersion;
 
 const config = require('../../../../../core/test/config');
 const delay = require('../../../../../core/test/test_util/delay');
-const utils = require('../../../../../core/test/utils');
+const testUtils = require('../../../../../core/test/test_util');
 
 describe('tracing/tracing metrics', function() {
   if (!supportedVersion(process.versions.node)) {
@@ -35,7 +35,7 @@ describe('tracing/tracing metrics', function() {
         })
         .then(response => {
           expect(response).to.equal('OK');
-          return utils.retry(() =>
+          return testUtils.retry(() =>
             agentControls.getSpans().then(spans => {
               const httpEntry = expectHttpEntry(spans, '/create-spans');
               expectExit(spans, httpEntry, 'exit-1');
@@ -45,7 +45,7 @@ describe('tracing/tracing metrics', function() {
           );
         })
         .then(() => {
-          return utils.retry(
+          return testUtils.retry(
             () =>
               agentControls.getTracingMetrics().then(tracingMetrics => {
                 expect(tracingMetrics).to.have.lengthOf.at.least(3);
@@ -64,7 +64,7 @@ describe('tracing/tracing metrics', function() {
         })
         .then(response => {
           expect(response).to.equal('OK');
-          return utils.retry(() =>
+          return testUtils.retry(() =>
             agentControls.getSpans().then(spans => {
               const httpEntry = expectHttpEntry(spans, '/create-unfinished-spans');
               expectExit(spans, httpEntry, 'exit-1');
@@ -72,7 +72,7 @@ describe('tracing/tracing metrics', function() {
           );
         })
         .then(() => {
-          return utils.retry(
+          return testUtils.retry(
             () =>
               agentControls.getTracingMetrics().then(tracingMetrics => {
                 expect(tracingMetrics).to.have.lengthOf.at.least(3);
@@ -103,7 +103,7 @@ describe('tracing/tracing metrics', function() {
         })
         .then(response => {
           expect(response).to.equal('OK');
-          return utils.retry(() =>
+          return testUtils.retry(() =>
             agentControls.getSpans().then(spans => {
               const httpEntry = expectHttpEntry(spans, '/create-spans');
               expectExit(spans, httpEntry, 'exit-1');
@@ -114,7 +114,7 @@ describe('tracing/tracing metrics', function() {
         })
         .then(() => delay(1000))
         .then(() => {
-          return utils.retry(() =>
+          return testUtils.retry(() =>
             agentControls.getTracingMetrics().then(tracingMetrics => {
               expect(tracingMetrics).to.have.lengthOf.at.least(10);
             })
@@ -140,7 +140,7 @@ describe('tracing/tracing metrics', function() {
         })
         .then(response => {
           expect(response).to.equal('OK');
-          return utils.retry(
+          return testUtils.retry(
             () =>
               agentControls.getTracingMetrics().then(tracingMetrics => {
                 expect(tracingMetrics).to.have.lengthOf.at.least(3);
@@ -176,7 +176,7 @@ describe('tracing/tracing metrics', function() {
         })
         .then(response => {
           expect(response).to.equal('OK');
-          return utils.retry(
+          return testUtils.retry(
             () =>
               agentControls.getTracingMetrics().then(tracingMetrics => {
                 expect(tracingMetrics).to.have.lengthOf.at.least(3);
@@ -213,7 +213,7 @@ describe('tracing/tracing metrics', function() {
           })
           .then(response => {
             expect(response).to.equal('OK');
-            return utils.retry(() =>
+            return testUtils.retry(() =>
               agentControls.getSpans().then(spans => {
                 const httpEntry = expectHttpEntry(spans, '/create-spans');
                 expectExit(spans, httpEntry, 'exit-1');
@@ -255,7 +255,7 @@ function expectCumulativeTracingMetrics(tracingMetrics, expectedPid, expectedOpe
 }
 
 function expectHttpEntry(spans, url) {
-  return utils.expectOneMatching(spans, span => {
+  return testUtils.expectAtLeastOneMatching(spans, span => {
     expect(span.n).to.equal('node.http.server');
     expect(span.data.http.method).to.equal('POST');
     expect(span.data.http.url).to.equal(url);
@@ -263,7 +263,7 @@ function expectHttpEntry(spans, url) {
 }
 
 function expectExit(spans, parentSpan, expectedName) {
-  return utils.expectOneMatching(spans, span => {
+  return testUtils.expectAtLeastOneMatching(spans, span => {
     expect(span.t).to.equal(parentSpan.t);
     expect(span.p).to.equal(parentSpan.s);
     expect(span.n).to.equal('sdk');
