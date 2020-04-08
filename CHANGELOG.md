@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.94.0
 - [AWS Lambda] Fix stale timeout events on socket object induced by AWS Lambda runtime freezing and thawing the process.
 - Support X-INSTANA-SYNTHETIC.
 
