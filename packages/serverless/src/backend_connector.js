@@ -48,19 +48,19 @@ exports.setLogger = function setLogger(logger_) {
   logger = logger_;
 };
 
-exports.sendBundle = function sendBundle(bundle, callback) {
-  send('/bundle', bundle, callback);
+exports.sendBundle = function sendBundle(bundle, destroySocketAfterwards, callback) {
+  send('/bundle', bundle, destroySocketAfterwards, callback);
 };
 
 exports.sendMetrics = function sendMetrics(metrics, callback) {
-  send('/metrics', metrics, callback);
+  send('/metrics', metrics, false, callback);
 };
 
 exports.sendSpans = function sendSpans(spans, callback) {
-  send('/traces', spans, callback);
+  send('/traces', spans, false, callback);
 };
 
-function send(resourcePath, payload, callback) {
+function send(resourcePath, payload, destroySocketAfterwards, callback) {
   if (requestHasFailed && stopSendingOnFailure) {
     logger.info(
       `Not attempting to send data to ${resourcePath} as a previous request has already timed out or failed.`
@@ -118,11 +118,16 @@ function send(resourcePath, payload, callback) {
     options.ecdhCurve = 'auto';
   }
 
-  // We deliberately do not pass a callback when calling https.request but instead we pass the callback to req.end.
-  // This way, we do not wait for the HTTP _response_, but we still make sure the request data is written to the network
-  // completely. This reduces the delay we add to the Lambda execution time to report metrics and traces quite a bit.
-  // The (acceptable) downside is that we do not get to examine the response for HTTP status codes.
-  const req = https.request(options);
+  const req = https.request(options, () => {
+    if (destroySocketAfterwards) {
+      // This is the final request from an AWS Lambda. In some scenarios we might get a stale timeout event on the
+      // socket object from a previous invocation of the Lambda handler, that is, from before the AWS Lambda runtime
+      // froze the Node.js process. Manually destroying the socket at the end of the Lambda invocation is a workaround
+      // for that.
+      req.socket.destroy();
+    }
+    callback();
+  });
 
   req.setTimeout(backendTimeout, () => {
     requestHasFailed = true;
@@ -130,6 +135,7 @@ function send(resourcePath, payload, callback) {
       'Could not send traces and metrics to Instana. The Instana back end did not respond in the configured timeout ' +
         `of ${backendTimeout} ms. The timeout can be configured by setting the environment variable ${timeoutEnvVar}.`
     );
+    callback();
   });
 
   req.on('error', e => {
@@ -139,8 +145,5 @@ function send(resourcePath, payload, callback) {
     callback();
   });
 
-  req.end(payload, () =>
-    // We finish as soon as the request has been flushed, without waiting for the response.
-    callback()
-  );
+  req.end(payload);
 }
