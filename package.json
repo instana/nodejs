@@ -2,10 +2,19 @@
   "name": "@instana/root",
   "private": true,
   "description": "A monorepo for various Instana Node.js tracing and metrics collector packages",
+  "author": {
+    "name": "Bastian Krol",
+    "email": "bastian.krol@instana.com"
+  },
+  "homepage": "https://github.com/instana/nodejs-sensor",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/instana/nodejs-sensor.git"
   },
+  "bugs": {
+    "url": "https://github.com/instana/nodejs-sensor/issues"
+  },
+  "license": "MIT",
   "scripts": {
     "audit": "lerna run audit --stream && npm audit --production",
     "bootstrap": "lerna bootstrap",
