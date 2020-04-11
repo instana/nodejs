@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.95.0
 - Support deployment scenario in which the whole application is installed from a registry via npm install instead of only its dependencies.
 
 ## 1.94.0
