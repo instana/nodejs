@@ -20,8 +20,8 @@ describe('metrics.directDependencies', () => {
     directDependencies.activate();
 
     return testUtils.retry(() => {
-      // Testing against Mocha dependencies as mocha is the main module when running the tests and dependencies are
-      // evaluated as the content of the node_modules directory relative to the main module.
+      // Mocha is the main module when running the tests and direct dependencies are evaluated as the content of the
+      // the main modules accompanying package.json file. Thus testing against Mocha dependencies here.
       const deps = directDependencies.currentPayload.dependencies;
       expect(deps).to.exist;
       expect(deps['browser-stdout']).to.equal('1.3.1');

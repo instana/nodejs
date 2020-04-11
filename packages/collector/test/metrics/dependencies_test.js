@@ -14,11 +14,13 @@ describe('metrics.dependencies', () => {
     dependencies.activate();
 
     return testUtils.retry(() => {
-      // Testing against Mocha dependencies as mocha is the main module when running the tests and dependencies are
-      // evaluated as the content of the node_modules directory relative to the main module.
-      expect(dependencies.currentPayload.glob).to.equal('7.1.3');
-      expect(dependencies.currentPayload.ms).to.equal('2.1.1');
-      expect(dependencies.currentPayload['supports-color']).to.equal('6.0.0');
+      // Mocha is the main module when running the tests. Without the check for `appInstalledIntoNodeModules` in
+      // core/src/util/applicationUnderMonitoring, dependencies would be evaluated as the content of the node_modules
+      // directory relative to the main module. But with this check in place, we end up evaluating the dependencies of
+      // packages/collector/node_modules.
+      expect(dependencies.currentPayload['event-loop-lag']).to.equal('1.4.0');
+      expect(dependencies.currentPayload.semver).to.equal('5.5.1');
+      expect(dependencies.currentPayload['serialize-error']).to.equal('2.1.0');
     });
   });
 });

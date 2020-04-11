@@ -2,7 +2,7 @@
 
 'use strict';
 
-require('../../')();
+require('../../../')();
 
 const express = require('express');
 const morgan = require('morgan');

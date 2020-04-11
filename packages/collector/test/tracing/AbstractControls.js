@@ -11,6 +11,7 @@ const testUtils = require('../../../core/test/test_util');
 const AbstractControls = (module.exports = function AbstractControls(opts = {}) {
   // absolute path to .js file that should be executed
   this.appPath = opts.appPath;
+  this.args = opts.args;
   this.port = opts.port || process.env.APP_PORT || 3215;
   this.tracingEnabled = opts.tracingEnabled !== false;
   this.useHttps = opts.env && !!opts.env.USE_HTTPS;
@@ -43,10 +44,12 @@ AbstractControls.prototype.registerTestHooks = function registerTestHooks() {
     const that = this;
     this.receivedIpcMessages = [];
 
-    this.process = fork(this.appPath, {
+    const forkConfig = {
       stdio: config.getAppStdio(),
       env: this.env
-    });
+    };
+
+    this.process = this.args ? fork(this.appPath, this.args, forkConfig) : fork(this.appPath, forkConfig);
 
     this.process.on('message', message => {
       that.receivedIpcMessages.push(message);

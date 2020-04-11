@@ -20,7 +20,13 @@ exports.activate = function() {
       return logger.warn('Main package.json could not be found. Stopping dependency analysis.');
     }
 
-    addDependenciesFromDir(path.join(path.dirname(packageJsonPath), 'node_modules'));
+    var dependencyDir;
+    if (applicationUnderMonitoring.isAppInstalledIntoNodeModules()) {
+      dependencyDir = path.join(path.dirname(packageJsonPath), '..', '..', 'node_modules');
+    } else {
+      dependencyDir = path.join(path.dirname(packageJsonPath), 'node_modules');
+    }
+    addDependenciesFromDir(dependencyDir);
   });
 };
 

@@ -7,6 +7,11 @@ var path = require('path');
 // and identification of these values is expensive.
 var parsedMainPackageJson;
 var mainPackageJsonPath;
+var appInstalledIntoNodeModules = false;
+
+exports.isAppInstalledIntoNodeModules = function isAppInstalledIntoNodeModules() {
+  return appInstalledIntoNodeModules;
+};
 
 exports.getMainPackageJson = function getMainPackageJson(startDirectory, cb) {
   if (typeof startDirectory === 'function') {
@@ -94,9 +99,19 @@ function searchForPackageJsonInDirectoryTreeUpwards(dir, cb) {
       }
     }
 
+    appInstalledIntoNodeModules = dir.indexOf('node_modules') >= 0;
+    if (appInstalledIntoNodeModules) {
+      // Some users do not deploy their app by cloning/copying the app's sources to the target system and installing its
+      // dependencies via npm/yarn there. Instead, they publish the whole app into an npm-compatible registry and use
+      // npm install $appName on the target system to deploy the app including its dependencies. In this scenario, we
+      // need to skip the check for an accompanying node_modules folder (see below). We can recognize this pattern
+      // (heuristically) by the fact that the segment 'node_modules' already appears in the path to the main module.
+      return process.nextTick(cb, null, fileToCheck);
+    }
+
     // If the package.json file actually exists, we also need to make sure that there is a node_modules directory
     // located next to it. This way we can be relatively certain that we did not encounter a component package.json
-    // (as used by the React for example). It is highly unlikely that the application has no dependencies, because
+    // (as used by React for example). It is highly unlikely that the application has no dependencies, because
     // @instana/core is a dependency itself.
     if (stats.isFile()) {
       var potentialNodeModulesDir = path.join(dir, 'node_modules');
