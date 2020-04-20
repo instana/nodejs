@@ -235,6 +235,17 @@ module.exports = exports = function(isCallbackApi) {
 
     if (error) {
       span.ec = 1;
+      if (!span.data.sdk.custom) {
+        span.data.sdk.custom = {
+          tags: {}
+        };
+      }
+      if (!span.data.sdk.custom.tags) {
+        span.data.sdk.custom.tags = {};
+      }
+      if (span.data.sdk.custom.tags.message == null) {
+        span.data.sdk.custom.tags.message = tracingUtil.getErrorDetails(error);
+      }
     }
 
     if (span.data.sdk.custom && tags) {
