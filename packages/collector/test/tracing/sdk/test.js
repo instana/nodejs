@@ -8,6 +8,7 @@ const constants = require('@instana/core').tracing.constants;
 const config = require('../../../../core/test/config');
 const testUtils = require('../../../../core/test/test_util');
 const delay = require('../../../../core/test/test_util/delay');
+const ProcessControls = require('../ProcessControls');
 
 const waitForSpans = process.env.CI ? 1000 : 200;
 
@@ -17,16 +18,14 @@ describe('tracing/sdk', function() {
   }
 
   const agentControls = require('../../apps/agentStubControls');
-  const Controls = require('./controls');
-
   this.timeout(config.getTestTimeout());
 
   describe('when tracing is enabled', () => {
     agentControls.registerTestHooks();
-    const controls = new Controls({
+    const controls = new ProcessControls({
+      dirname: __dirname,
       agentControls
-    });
-    controls.registerTestHooks();
+    }).registerTestHooks();
 
     ['callback', 'promise'].forEach(function(apiType) {
       registerSuite.bind(this)(apiType);
@@ -234,11 +233,11 @@ describe('tracing/sdk', function() {
 
   describe('when tracing is not enabled', () => {
     agentControls.registerTestHooks();
-    const controls = new Controls({
+    const controls = new ProcessControls({
+      dirname: __dirname,
       tracingEnabled: false,
       agentControls
-    });
-    controls.registerTestHooks();
+    }).registerTestHooks();
 
     ['callback', 'promise'].forEach(function(apiType) {
       registerSuite.bind(this)(apiType);
@@ -317,7 +316,13 @@ describe('tracing/sdk', function() {
       expect(span.async).to.not.exist;
       // eslint-disable-next-line no-unneeded-ternary
       expect(span.error).to.not.exist;
-      expect(span.ec).to.equal(error ? 1 : 0);
+      if (error) {
+        expect(span.ec).to.equal(1);
+        expect(span.data.sdk.custom.tags.message).to.contain('Error: Boom!\n');
+        expect(span.data.sdk.custom.tags.message).to.contain('packages/collector/test/tracing/sdk/app.js:102:35');
+      } else {
+        expect(span.ec).to.equal(0);
+      }
       expect(span.data.sdk).to.exist;
       expect(span.data.sdk.name).to.equal('custom-entry');
       expect(span.data.sdk.type).to.equal(constants.SDK.ENTRY);
@@ -326,18 +331,28 @@ describe('tracing/sdk', function() {
       tagsAt = tagsAt || 'none';
       switch (tagsAt) {
         case 'none':
-          expect(span.data.sdk.custom).to.not.exist;
+          if (!error) {
+            expect(span.data.sdk.custom).to.not.exist;
+          } else {
+            expect(span.data.sdk.custom).to.exist;
+            expect(span.data.sdk.custom.tags).to.exist;
+            expect(span.data.sdk.custom.tags.start).to.not.exist;
+            expect(span.data.sdk.custom.tags.end).to.not.exist;
+          }
           break;
         case 'start':
           expect(span.data.sdk.custom).to.exist;
+          expect(span.data.sdk.custom.tags).to.exist;
           expect(span.data.sdk.custom.tags.start).to.equal('whatever');
           break;
         case 'end':
           expect(span.data.sdk.custom).to.exist;
+          expect(span.data.sdk.custom.tags).to.exist;
           expect(span.data.sdk.custom.tags.end).to.equal('some value');
           break;
         case 'both':
           expect(span.data.sdk.custom).to.exist;
+          expect(span.data.sdk.custom.tags).to.exist;
           expect(span.data.sdk.custom.tags.start).to.equal('whatever');
           expect(span.data.sdk.custom.tags.end).to.equal('some value');
           break;

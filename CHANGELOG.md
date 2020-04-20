@@ -1,5 +1,8 @@
 # Changelog
 
+## Unreleased
+- Capture the error message and/or stack trace when completing and SDK span with an error.
+
 ## 1.95.0
 - Support deployment scenario in which the whole application is installed from a registry via npm install instead of only its dependencies.
 
