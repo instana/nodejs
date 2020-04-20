@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.95.1
 - Capture the error message and/or stack trace when completing and SDK span with an error.
 
 ## 1.95.0
