@@ -44,13 +44,17 @@ function deploy_zip {
     --zip-file fileb://$lambda_zip_file
 
   set +e
-  unzip -l $lambda_zip_file | grep node_modules/@instana/aws-lambda/package.json > /dev/null
-  needs_layer=$?
+  needs_layer=0
+  unzip -l $lambda_zip_file | grep .dont-add-instana > /dev/null
+  if [[ $? == 1 ]]; then
+    unzip -l $lambda_zip_file | grep node_modules/@instana/aws-lambda/package.json > /dev/null
+    needs_layer=$?
+  fi
   set -e
 
   echo
   if [[ $needs_layer == 0 ]]; then
-    echo "The zip file $lambda_zip_file seems to contain the package @instana/aws-lambda, so I won't add the Lambda layer to it. I'll check if it currently has a layer that needs to be removed."
+    echo "The zip file $lambda_zip_file seems to contain the package @instana/aws-lambda (or a .dont-add-instana marker file), so I won't add the Lambda layer to it. I'll check if it currently has a layer that needs to be removed."
 
     current_layers=$(aws --region $REGION lambda get-function-configuration \
         --function-name $function_name \
@@ -74,9 +78,9 @@ function deploy_zip {
       echo "I just found out that I'm supposed to add the Instana layer to the function I have just deployed. But you neglected to provide either LAYER_VERSION or LAYER_ARN as an environment variable, so I do not know which layer version I should deploy or what the ARN of that layer version is. The lambda zip file I have just deployed will probably be in a broken state now. Please fix this manually or provide LAYER_VERSION and LAYER_ARN and run this script again."
       echo
       echo "For your convenience, here are the commands to figure out the latest layer:"
-      echo "  aws --region $REGION lambda list-layer-versions --layer-name instana"
+      echo "  aws --region $REGION lambda list-layer-versions --layer-name instana-nodejs"
       echo "If this ^ gives you a NextToken, ask again with:"
-      echo "  aws --region $REGION lambda list-layer-versions --layer-name instana --starting-token"
+      echo "  aws --region $REGION lambda list-layer-versions --layer-name instana-nodejs --starting-token"
       echo "until you have seen all versions."
       echo Aborting.
       exit 1

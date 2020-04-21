@@ -21,6 +21,7 @@ let requestHasFailed = false;
 let warningsHaveBeenLogged = false;
 
 const needsEcdhCurveFix = semver.lt(process.version, '10.0.0');
+const legacyTimeoutHandling = semver.lt(process.version, '10.0.0');
 
 if (process.env[timeoutEnvVar]) {
   backendTimeout = parseInt(process.env[timeoutEnvVar], 10);
@@ -110,6 +111,9 @@ function send(resourcePath, payload, destroySocketAfterwards, callback) {
     },
     rejectUnauthorized: !disableCaCheck
   };
+  if (!legacyTimeoutHandling) {
+    options.timeout = backendTimeout;
+  }
 
   if (needsEcdhCurveFix) {
     // Requests to K8s based back ends fail on Node.js 8.10 without this option, due to a bug in all
@@ -129,14 +133,11 @@ function send(resourcePath, payload, destroySocketAfterwards, callback) {
     callback();
   });
 
-  req.setTimeout(backendTimeout, () => {
-    requestHasFailed = true;
-    logger.warn(
-      'Could not send traces and metrics to Instana. The Instana back end did not respond in the configured timeout ' +
-        `of ${backendTimeout} ms. The timeout can be configured by setting the environment variable ${timeoutEnvVar}.`
-    );
-    callback();
-  });
+  if (legacyTimeoutHandling) {
+    req.setTimeout(backendTimeout, () => onTimeout(callback));
+  } else {
+    req.on('timeout', () => onTimeout(callback));
+  }
 
   req.on('error', e => {
     requestHasFailed = true;
@@ -146,4 +147,13 @@ function send(resourcePath, payload, destroySocketAfterwards, callback) {
   });
 
   req.end(payload);
+}
+
+function onTimeout(callback) {
+  requestHasFailed = true;
+  logger.warn(
+    'Could not send traces and metrics to Instana. The Instana back end did not respond in the configured timeout ' +
+      `of ${backendTimeout} ms. The timeout can be configured by setting the environment variable ${timeoutEnvVar}.`
+  );
+  callback();
 }
