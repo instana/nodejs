@@ -1,5 +1,8 @@
 # Changelog
 
+## Unreleased
+- [AWS Lambda] Fix: Add a connection timeout in addition to the read/idle timeout.
+
 ## 1.95.1
 - Capture the error message and/or stack trace when completing and SDK span with an error.
 
