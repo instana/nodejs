@@ -59,7 +59,7 @@ describe('actions/profiling/cpu', () => {
     const agentControls = require('../../apps/agentStubControls');
     agentControls.registerTestHooks();
     const controls = new ProcessControls({
-      appPath: path.join(__dirname, '..', '..', 'tracing', 'database', 'elasticsearch', 'app'),
+      appPath: path.join(__dirname, '..', '..', 'tracing', 'database', 'elasticsearch_legacy', 'app'),
       agentControls
     }).registerTestHooks({
       enableTracing: supportedVersion(process.versions.node)
