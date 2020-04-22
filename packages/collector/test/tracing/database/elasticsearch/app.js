@@ -11,17 +11,24 @@ require('../../../../')({
   }
 });
 
-const elasticsearch = require('elasticsearch');
 const bodyParser = require('body-parser');
-const request = require('request-promise-native');
 const express = require('express');
+const morgan = require('morgan');
+const request = require('request-promise-native');
+const elasticsearch = require('elasticsearch');
+
 const app = express();
+const logPrefix = `Elasticsearch (Legacy Client) (${process.pid}):\t`;
+
+if (process.env.WITH_STDOUT) {
+  app.use(morgan(`${logPrefix}:method :url :status`));
+}
 
 app.use(bodyParser.json());
 
 const client = new elasticsearch.Client({
   host: process.env.ELASTICSEARCH,
-  log: 'info'
+  log: 'warning'
 });
 
 app.get('/', (req, res) => {
@@ -36,11 +43,7 @@ app.get('/get', (req, res) => {
       id: req.query.id
     },
     (error, response) => {
-      if (error) {
-        res.status(500).json(error);
-      } else {
-        res.json(response);
-      }
+      res.json({ error, response });
     }
   );
 });
@@ -54,10 +57,10 @@ app.get('/search', (req, res) => {
     })
     .then(
       response => {
-        res.json(response);
+        res.json({ response });
       },
       error => {
-        res.status(500).json(error);
+        res.json({ error });
       }
     );
 });
@@ -78,9 +81,9 @@ app.get('/mget1', (req, res) => {
     },
     (error, response) => {
       if (error) {
-        res.status(500).json(error);
+        res.json({ error });
       } else {
-        res.json(response);
+        res.json({ response });
       }
     }
   );
@@ -101,9 +104,9 @@ app.get('/mget2', (req, res) => {
     },
     (error, response) => {
       if (error) {
-        res.status(500).json(error);
+        res.json({ error });
       } else {
-        res.json(response);
+        res.json({ response });
       }
     }
   );
@@ -124,10 +127,10 @@ app.get('/msearch', (req, res) => {
   };
   client.msearch(query).then(
     response => {
-      res.json(response);
+      res.json({ response });
     },
     error => {
-      res.status(500).json(error);
+      res.json({ error });
     }
   );
 });
@@ -143,8 +146,7 @@ app.post('/index', (req, res) => {
       client.indices
         .refresh({
           index: '_all',
-          ignoreUnavailable: true,
-          force: true
+          ignoreUnavailable: true
         })
         .then(
           () => response,
@@ -156,11 +158,10 @@ app.post('/index', (req, res) => {
     )
     .then(
       response => {
-        res.json(response);
+        res.json({ response });
       },
       error => {
-        log('Sending indexing error.', error);
-        res.status(500).json(error);
+        res.json({ error });
       }
     );
 });
@@ -179,10 +180,10 @@ app.get('/searchAndGet', (req, res) => {
       })
     )
     .then(response => {
-      res.json(response);
+      res.json({ response });
     })
     .catch(error => {
-      res.status(500).json(error);
+      res.json({ error });
     });
 });
 
@@ -201,10 +202,10 @@ app.delete('/database', (req, res) => {
       });
     })
     .then(response => {
-      res.json(response);
+      res.json({ response });
     })
     .catch(error => {
-      res.status(500).json(error);
+      res.json({ error });
     });
 });
 
@@ -214,6 +215,6 @@ app.listen(process.env.APP_PORT, () => {
 
 function log() {
   const args = Array.prototype.slice.call(arguments);
-  args[0] = `Express / Elasticsearch (${process.pid}):\t${args[0]}`;
+  args[0] = logPrefix + args[0];
   console.log.apply(console, args);
 }
