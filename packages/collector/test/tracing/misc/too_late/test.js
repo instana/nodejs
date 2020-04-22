@@ -29,31 +29,36 @@ describe('tracing/too late', function() {
   [
     '@hapi/call',
     'amqplib',
+    'aws-sdk',
     'bluebird',
     'elasticsearch',
     'express',
     'fastify',
-    'graphql-subscriptions',
     'graphql',
+    'graphql-subscriptions',
     'grpc',
     'ioredis',
     'kafka-node',
+    'kafkajs',
     'koa-router',
+    'log4js',
     'mongodb',
     'mssql',
-    'mysql2',
-    'mysql2',
     'mysql',
+    'mysql2',
+    'mysql2',
     'nats',
     'node-nats-streaming',
     'pg',
+    'pg-native',
     'pino',
     'redis',
-    'request'
+    'request',
+    'winston'
   ].forEach(moduleName => registerTooLateTest.bind(this)(moduleName));
 
   function registerTooLateTest(moduleName) {
-    describe('@instana/collector is initialized too late', function() {
+    describe(`@instana/collector is initialized too late (${moduleName})`, function() {
       const controls = new Controls({
         agentControls,
         env: {
@@ -71,6 +76,7 @@ describe('tracing/too late', function() {
             testUtils.retry(() =>
               Promise.all([agentControls.getSpans(), agentControls.getAllMetrics(controls.getPid())]).then(
                 ([spans, metrics]) => {
+                  // expect HTTP entry to be captured
                   testUtils.expectAtLeastOneMatching(spans, span => {
                     expect(span.n).to.equal('node.http.server');
                     expect(span.k).to.equal(constants.ENTRY);
@@ -82,7 +88,7 @@ describe('tracing/too late', function() {
                     expect(span.data.http.url).to.equal('/');
                   });
 
-                  // expect HTTP client call to be not captured
+                  // expect HTTP exit to not be captured
                   const httpExits = testUtils.getSpansByName(spans, 'node.http.client');
                   expect(httpExits).to.have.lengthOf(0);
 
@@ -131,7 +137,7 @@ describe('tracing/too late', function() {
                   expect(span.data.http.url).to.equal('/');
                 });
 
-                // expect HTTP client call to have been captured
+                // expect HTTP exit to have been captured
                 testUtils.expectAtLeastOneMatching(spans, span => {
                   expect(span.n).to.equal('node.http.client');
                   expect(span.k).to.equal(constants.EXIT);
