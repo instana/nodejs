@@ -58,7 +58,7 @@ fi
 
 popd > /dev/null
 
-if [[ -z $1 ]]; then
+if [[ -z "${1-}" ]]; then
   echo Creating *all* zip files.
   echo
   for lambda_directory in */ ; do
