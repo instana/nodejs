@@ -4,6 +4,7 @@ var firstCall = true;
 var patterns = [
   /\/@hapi\/call\/lib\//,
   /\/amqplib\/lib\//,
+  /\/aws-sdk\/lib\/aws.js/,
   /\/bluebird\/js\/release\//,
   // deliberately not including bunyan because we depend on bunyan ourselves
   /\/elasticsearch\/src\/elasticsearch.js/,
@@ -14,7 +15,10 @@ var patterns = [
   /\/grpc\/src\//,
   /\/ioredis\/built\//,
   /\/kafka-node\/lib\//,
+  /\/kafkajs\/index.js/,
   /\/koa-router\/lib\//,
+  /\/log4js\/lib\/log4js.js/,
+  /\/memored\/index.js/,
   /\/mongodb\/index.js/,
   /\/mssql\/index.js/,
   /\/mysql2\/index.js/,
@@ -22,10 +26,12 @@ var patterns = [
   /\/mysql\/index.js/,
   /\/nats\/index.js/,
   /\/node-nats-streaming\/index.js/,
+  /\/pg-native\/index.js/,
   /\/pg\/lib\//,
   /\/pino\/lib\//,
   /\/redis\/index.js/,
-  /\/request\/index.js/
+  /\/request\/index.js/,
+  /\/winston\/lib\/winston.js/
 ];
 
 var hasBeenInitializedTooLate = false;

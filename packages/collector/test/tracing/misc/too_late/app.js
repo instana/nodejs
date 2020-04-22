@@ -27,10 +27,7 @@ app.on('request', (req, res) => {
   if (process.env.WITH_STDOUT) {
     log(`${req.method} ${req.url}`);
   }
-  httpGet(`http://127.0.0.1:${agentPort}`, err => {
-    if (err) {
-      log(err);
-    }
+  httpGet(`http://127.0.0.1:${agentPort}`, () => {
     res.end();
   });
 });

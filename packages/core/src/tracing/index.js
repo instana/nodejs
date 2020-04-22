@@ -17,6 +17,7 @@ var config = null;
 var extraHeaders = [];
 var processIdentityProvider = null;
 
+// Note: Also update initializedTooLateHeuristic.js and the accompanying test when adding instrumentations.
 var instrumentations = [
   './instrumentation/control_flow/bluebird',
   './instrumentation/control_flow/graphqlSubscriptions',
