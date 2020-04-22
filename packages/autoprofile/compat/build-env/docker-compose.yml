@@ -1,0 +1,17 @@
+version: "3.7"
+
+services:
+
+  ubuntu18-node-prebuild:
+    build:
+      context: .
+      dockerfile: Dockerfile-ubuntu18
+    volumes:
+      - ../..:/opt/autoprofile
+
+  win-node-prebuild:
+    build:
+      context: .
+      dockerfile: Dockerfile-win
+    volumes:
+      - ../..:/opt/autoprofile

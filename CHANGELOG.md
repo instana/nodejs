@@ -1,5 +1,8 @@
 # Changelog
 
+# Unreleased
+- Add `@instana/autoprofile` to support [Instana AutoProfile™](https://docs.instana.io/profiling/) (automated and continuous production profiler). Instana AutoProfile is currently opt-in and can be enabled with the config option `autoProfile: true` or via the environment variable `INSTANA_AUTO_PROFILE=true`.
+
 ## 1.97.1
 - Update to `netlinkwrapper@1.2.0`.
 - Fix `span.annotate` to support paths to nested properties (paths can be strings as well as arrays).

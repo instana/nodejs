@@ -1,0 +1,20 @@
+FROM centos:6.10
+
+RUN yum update -y
+RUN yum install -y java-1.8.0-openjdk
+
+# Maven
+ARG MAVEN_VERSION=3.5.4
+RUN curl -fsSL https://archive.apache.org/dist/maven/maven-3/$MAVEN_VERSION/binaries/apache-maven-$MAVEN_VERSION-bin.tar.gz | tar xzf - -C /usr/share \
+  && mv /usr/share/apache-maven-$MAVEN_VERSION /usr/share/maven \
+  && ln -s /usr/share/maven/bin/mvn /usr/bin/mvn
+
+ENV MAVEN_VERSION=${MAVEN_VERSION}
+ENV M2_HOME /usr/share/maven
+ENV maven.home $M2_HOME
+ENV M2 $M2_HOME/bin
+ENV PATH $M2:$PATH
+
+WORKDIR /opt/sensors/java-profile-parent/sensor-java-profile-javaagent
+ENV JAVA_HOME=/etc/alternatives/jre
+CMD mvn surefire:test -DtrimStackTrace=false

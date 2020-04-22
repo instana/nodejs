@@ -7,7 +7,8 @@ var defaults = {
   agentPort: 42699,
   tracing: {
     stackTraceLength: 10
-  }
+  },
+  autoProfile: false
 };
 
 /**
@@ -18,6 +19,7 @@ module.exports = exports = function normalizeConfig(config) {
 
   config.agentHost = config.agentHost || process.env.INSTANA_AGENT_HOST || defaults.agentHost;
   config.agentPort = config.agentPort || parseToPositiveInteger(process.env.INSTANA_AGENT_PORT, defaults.agentPort);
+  config.autoProfile = config.autoProfile || process.env.INSTANA_AUTO_PROFILE || defaults.autoProfile;
 
   normalizeConfigForUncaughtExceptions(config);
 

@@ -120,6 +120,7 @@
   },
   "dependencies": {
     "@instana/core": "^1.97.1",
+    "@instana/autoprofile": "^1.97.1",
     "bunyan": "^1.8.12",
     "event-loop-lag": "^1.4.0",
     "semver": "5.5.1",
