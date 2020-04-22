@@ -99,10 +99,19 @@ function instrumentApi(client, action, info) {
 
     function onSuccess(response) {
       if (response.hits != null && response.hits.total != null) {
-        span.data.elasticsearch.hits = response.hits.total;
+        if (typeof response.hits.total === 'number') {
+          span.data.elasticsearch.hits = response.hits.total;
+        } else if (typeof response.hits.total.value === 'number') {
+          span.data.elasticsearch.hits = response.hits.total.value;
+        }
       } else if (response.responses != null && Array.isArray(response.responses)) {
         span.data.elasticsearch.hits = response.responses.reduce(function(hits, res) {
-          return hits + (res.hits && typeof res.hits.total === 'number' ? res.hits.total : 0);
+          if (res.hits && typeof res.hits.total === 'number') {
+            return hits + res.hits.total;
+          } else if (res.hits && res.hits.total && typeof res.hits.total.value === 'number') {
+            return hits + res.hits.total.value;
+          }
+          return hits;
         }, 0);
       }
       span.d = Date.now() - span.ts;

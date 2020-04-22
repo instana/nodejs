@@ -9,14 +9,12 @@ const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const cpu = require('../../../src/actions/profiling/cpu');
 const config = require('../../../../core/test/config');
 const testUtils = require('../../../../core/test/test_util');
+const ProcessControls = require('../../tracing/ProcessControls');
 
 describe('actions/profiling/cpu', () => {
   if (!semver.satisfies(process.versions.node, '>=4.0.0')) {
     return;
   }
-
-  const elasticSearchControls = require('../../tracing/database/elasticsearch/controls');
-  const agentStubControls = require('../../apps/agentStubControls');
 
   describe('toTreeWithTiming', () => {
     let rawCpuProfile;
@@ -52,22 +50,25 @@ describe('actions/profiling/cpu', () => {
 
   describe('integration-test', function() {
     if (semver.satisfies(process.versions.node, '>=12.0.0')) {
-      // TODO Skipping test, v8-profiler-node8 needs to be updated for Node.js 12.
+      // Skipping test, v8-profiler-node8 needs to be updated for Node.js 12.
       return;
     }
+
     this.timeout(config.getTestTimeout());
 
-    agentStubControls.registerTestHooks();
-    elasticSearchControls.registerTestHooks({
+    const agentControls = require('../../apps/agentStubControls');
+    agentControls.registerTestHooks();
+    const controls = new ProcessControls({
+      appPath: path.join(__dirname, '..', '..', 'tracing', 'database', 'elasticsearch', 'app'),
+      agentControls
+    }).registerTestHooks({
       enableTracing: supportedVersion(process.versions.node)
     });
 
-    beforeEach(() => agentStubControls.waitUntilAppIsCompletelyInitialized(elasticSearchControls.getPid()));
-
     it('must inform about start of CPU profile', () => {
       const messageId = 'a';
-      return agentStubControls
-        .addRequestForPid(elasticSearchControls.getPid(), {
+      return agentControls
+        .addRequestForPid(controls.getPid(), {
           action: 'node.startCpuProfiling',
           messageId,
           args: {
@@ -76,7 +77,7 @@ describe('actions/profiling/cpu', () => {
         })
         .then(() =>
           testUtils.retry(() =>
-            agentStubControls.getResponses().then(responses => {
+            agentControls.getResponses().then(responses => {
               testUtils.expectAtLeastOneMatching(responses, response => {
                 expect(response.messageId).to.equal(messageId);
                 expect(response.data.data).to.match(/Profiling successfully started/i);
@@ -97,8 +98,8 @@ describe('actions/profiling/cpu', () => {
     it('must stop running CPU profiles and provide the results', () => {
       const startMessageId = 'start';
       const stopMessageId = 'stop';
-      return agentStubControls
-        .addRequestForPid(elasticSearchControls.getPid(), {
+      return agentControls
+        .addRequestForPid(controls.getPid(), {
           action: 'node.startCpuProfiling',
           messageId: startMessageId,
           args: {
@@ -106,7 +107,7 @@ describe('actions/profiling/cpu', () => {
           }
         })
         .then(() =>
-          agentStubControls.addRequestForPid(elasticSearchControls.getPid(), {
+          agentControls.addRequestForPid(controls.getPid(), {
             action: 'node.stopCpuProfiling',
             messageId: stopMessageId,
             args: {}
@@ -114,7 +115,7 @@ describe('actions/profiling/cpu', () => {
         )
         .then(() =>
           testUtils.retry(() =>
-            agentStubControls.getResponses().then(responses => {
+            agentControls.getResponses().then(responses => {
               testUtils.expectAtLeastOneMatching(responses, response => {
                 expect(response.messageId).to.equal(stopMessageId);
                 expect(response.data.data).to.match(/CPU profiling successfully stopped/i);
@@ -137,8 +138,8 @@ describe('actions/profiling/cpu', () => {
     it('must abort running CPU profiles', () => {
       const startMessageId = 'start';
       const stopMessageId = 'stop';
-      return agentStubControls
-        .addRequestForPid(elasticSearchControls.getPid(), {
+      return agentControls
+        .addRequestForPid(controls.getPid(), {
           action: 'node.startCpuProfiling',
           messageId: startMessageId,
           args: {
@@ -146,7 +147,7 @@ describe('actions/profiling/cpu', () => {
           }
         })
         .then(() =>
-          agentStubControls.addRequestForPid(elasticSearchControls.getPid(), {
+          agentControls.addRequestForPid(controls.getPid(), {
             action: 'node.stopCpuProfiling',
             messageId: stopMessageId,
             args: {
@@ -156,7 +157,7 @@ describe('actions/profiling/cpu', () => {
         )
         .then(() =>
           testUtils.retry(() =>
-            agentStubControls.getResponses().then(responses => {
+            agentControls.getResponses().then(responses => {
               testUtils.expectAtLeastOneMatching(responses, response => {
                 expect(response.messageId).to.equal(stopMessageId);
                 expect(response.data.data).to.match(/CPU profiling successfully aborted/i);
@@ -173,8 +174,8 @@ describe('actions/profiling/cpu', () => {
 
     it('must do nothing when there is no active CPU profile', () => {
       const stopMessageId = 'stop';
-      return agentStubControls
-        .addRequestForPid(elasticSearchControls.getPid(), {
+      return agentControls
+        .addRequestForPid(controls.getPid(), {
           action: 'node.stopCpuProfiling',
           messageId: stopMessageId,
           args: {
@@ -183,7 +184,7 @@ describe('actions/profiling/cpu', () => {
         })
         .then(() =>
           testUtils.retry(() =>
-            agentStubControls.getResponses().then(responses => {
+            agentControls.getResponses().then(responses => {
               testUtils.expectAtLeastOneMatching(responses, response => {
                 expect(response.messageId).to.equal(stopMessageId);
                 expect(response.data.data).to.match(/No active CPU profiling session found/i);

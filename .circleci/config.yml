@@ -103,7 +103,9 @@ shared: &shared
         key: v3-babel-typescript-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "packages/collector/test/apps/babel-typescript/package-lock.json" }}
 
 elasticsearch: &elasticsearch
-  - image: elasticsearch:2.3.5
+  - image: elasticsearch:7.6.2
+    environment:
+      - discovery.type=single-node
 
 kafka: &kafka
   - image: wurstmeister/kafka:2.12-2.2.1

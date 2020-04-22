@@ -10,7 +10,7 @@ const morgan = require('morgan');
 const redis = require('redis');
 
 const app = express();
-const logPrefix = `Express / Redis App (${process.pid}):\t`;
+const logPrefix = `Redis App (${process.pid}):\t`;
 let connectedToRedis = false;
 
 const client = redis.createClient(`//${process.env.REDIS}`);
