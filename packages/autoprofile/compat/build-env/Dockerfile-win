@@ -1,0 +1,12 @@
+# THIS IS NOT YET WORKING
+
+FROM ubuntu:18.04
+
+RUN apt-get update
+RUN apt-get install -y build-essential python curl gnupg
+RUN curl -sL https://deb.nodesource.com/setup_12.x  | bash -
+RUN apt-get -y install nodejs
+RUN apt-get -y install gcc-mingw-w64 g++-mingw-w64
+
+WORKDIR /opt/autoprofile
+CMD ["env", "CC=/usr/bin/x86_64-w64-mingw32-gcc", "CXX=/usr/bin/x86_64-w64-mingw32-g++", "nodejs", "build-addons.js", "win32"]

@@ -3,7 +3,10 @@
 var clone = require('@instana/core').util.clone;
 var compression = require('@instana/core').util.compression;
 var tracing = require('@instana/core').tracing;
+var autoprofile = require('@instana/autoprofile');
 
+var agentOpts = require('../agent/opts');
+var pidStore = require('../pidStore');
 var metrics = require('../metrics');
 var uncaught = require('../uncaught');
 
@@ -44,6 +47,21 @@ function enter(_ctx) {
   requestHandler.activate();
   sendData();
   scheduleTracingMetrics();
+
+  if (agentOpts.autoProfile) {
+    var profiler = autoprofile.start();
+    profiler.sendProfiles = function(profiles, callback) {
+      agentConnection.sendProfiles(profiles, callback);
+    };
+    profiler.getExternalPid = function() {
+      return pidStore.pid;
+    };
+    profiler.getLogger = function() {
+      return logger;
+    };
+    profiler.start();
+  }
+
   logger.info('The Instana Node.js collector is now fully initialized.');
 }
 

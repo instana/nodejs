@@ -1,0 +1,13 @@
+{
+	"parserOptions": {
+	   "ecmaVersion": 6
+	},
+	"env": {
+    	"es6": true
+    },
+	"rules": {
+		"class-methods-use-this": "off",
+		"no-continue": "off",
+		"no-restricted-syntax": "off"
+	 }
+ }

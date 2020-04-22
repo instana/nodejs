@@ -1,5 +1,7 @@
 'use strict';
 
+var agentOpts = require('../../agent/opts');
+
 var logger;
 logger = require('../../logger').getLogger('actions/profiling/cpu', function(newLogger) {
   logger = newLogger;
@@ -28,6 +30,13 @@ exports.init = function() {
 };
 
 exports.startProfiling = function(request, multiCb) {
+  if (agentOpts.autoProfile) {
+    multiCb({
+      error: 'On-demand profiling is not allowed when AutoProfile is enabled.'
+    });
+    return;
+  }
+
   if (!profiler) {
     multiCb({
       error: 'v8-profiler-node8 was not properly installed. Cannot gather CPU profile.'

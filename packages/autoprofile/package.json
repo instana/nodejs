@@ -1,0 +1,41 @@
+{
+  "name": "@instana/autoprofile",
+  "version": "1.97.1",
+  "description": "Automatic Node.js Profiler",
+  "keywords": [
+    "production profiler",
+    "v8 profiler",
+    "cpu profiler",
+    "cpu sampler",
+    "cpu hot spots",
+    "memory profiler",
+    "memory sampler",
+    "memory leak",
+    "async profiler",
+    "error monitoring"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/instana/nodejs-sensor.git"
+  },
+  "scripts": {
+    "install": "node node-gyp-fallback.js",
+    "test": "mocha --recursive",
+    "lint": "eslint lib"
+  },
+  "dependencies": {
+    "nan": "^2.14.0",
+    "node-abi": "*",
+    "node-gyp": "^6.1.0"
+  },
+  "devDependencies": {
+    "eslint": "^5.16.0",
+    "mocha": "^6.2.2",
+    "async": "^3.2.0"
+  },
+  "main": "index.js",
+  "engines": {
+    "node": ">=4.0.0"
+  },
+  "license": "BSD-3-Clause"
+}

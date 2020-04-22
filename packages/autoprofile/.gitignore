@@ -1,0 +1,6 @@
+.DS_Store
+._
+._.*
+build
+node_modules
+npm-debug.log
