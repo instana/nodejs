@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.95.2
 - [AWS Lambda] Fix: Add a connection timeout in addition to the read/idle timeout.
 
 ## 1.95.1
