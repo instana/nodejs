@@ -2,14 +2,9 @@
 
 'use strict';
 
-require('../../../../')({
-  agentPort: process.env.AGENT_PORT,
-  level: 'warn',
-  tracing: {
-    enabled: process.env.TRACING_ENABLED !== 'false',
-    forceTransmissionStartingAt: 1
-  }
-});
+const agentPort = process.env.INSTANA_AGENT_PORT;
+
+require('../../../../')();
 
 const bodyParser = require('body-parser');
 const express = require('express');
@@ -167,10 +162,7 @@ app.post('/index', (req, res) => {
 });
 
 app.get('/searchAndGet', (req, res) => {
-  request({
-    method: 'GET',
-    url: 'http://google.com'
-  })
+  request(`http://127.0.0.1:${agentPort}`)
     .then(() =>
       client.search({
         index: req.query.index || 'myindex',
