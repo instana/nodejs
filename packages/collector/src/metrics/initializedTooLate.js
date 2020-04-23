@@ -5,6 +5,7 @@ logger = require('../logger').getLogger('metrics/initializedTooLate', function(n
   logger = newLogger;
 });
 var hasThePackageBeenInitializedTooLate = require('@instana/core').util.hasThePackageBeenInitializedTooLate;
+var downstreamConnection = require('../agentConnection');
 
 exports.payloadPrefix = 'initTooLate';
 exports.currentPayload = undefined;
@@ -12,6 +13,12 @@ var warningHasBeenLogged = false;
 
 exports.activate = function() {
   if (hasThePackageBeenInitializedTooLate()) {
+    downstreamConnection.sendAgentMonitoringEvent('nodejs_collector_initialized_too_late', function(error) {
+      if (error) {
+        logger.error('Error received while trying to send Agent Monitoring Event to agent: %s', error.message);
+      }
+    });
+
     exports.currentPayload = true;
     if (!warningHasBeenLogged) {
       logger.warn(
