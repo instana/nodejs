@@ -5,10 +5,10 @@ const expect = require('chai').expect;
 const constants = require('@instana/core').tracing.constants;
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('../../../../../core/test/config');
-const testUtils = require('../../../../../core/test/test_util');
+const { expectExactlyOneMatching, retry } = require('../../../../../core/test/test_util');
 const ProcessControls = require('../../ProcessControls');
 
-describe('tracing/elasticsearch', function() {
+describe('tracing/elasticsearch (legacy client)', function() {
   if (!supportedVersion(process.versions.node)) {
     return;
   }
@@ -29,20 +29,16 @@ describe('tracing/elasticsearch', function() {
       index: 'thisIndexDoesNotExist'
     }).then(res => {
       expect(res.error.msg).to.contain('index_not_found_exception');
-      return testUtils.retry(() =>
+      return retry(() =>
         agentControls.getSpans().then(spans => {
           expect(spans).to.have.lengthOf(
             2,
             `Should not generate an exit span when there is already one. Spans: ${JSON.stringify(spans, 0, 2)}`
           );
-          const entrySpan = testUtils.expectAtLeastOneMatching(spans, span => {
-            expect(span.n).to.equal('node.http.server');
-            expect(span.f.e).to.equal(String(controls.getPid()));
-            expect(span.f.h).to.equal('agent-stub-uuid');
-            expect(span.async).to.not.exist;
-            expect(span.error).to.not.exist;
-          });
-          testUtils.expectAtLeastOneMatching(spans, span => {
+
+          const entrySpan = verifyHttpEntry(spans, '/get');
+
+          expectExactlyOneMatching(spans, span => {
             expect(span.t).to.equal(entrySpan.t);
             expect(span.p).to.equal(entrySpan.s);
             expect(span.n).to.equal('elasticsearch');
@@ -70,31 +66,10 @@ describe('tracing/elasticsearch', function() {
     }).then(res => {
       expect(res.response._index).to.equal('myindex');
       expect(res.response._shards.successful).to.equal(1);
-      return testUtils.retry(() =>
+      return retry(() =>
         agentControls.getSpans().then(spans => {
-          const entrySpan = testUtils.expectAtLeastOneMatching(spans, span => {
-            expect(span.n).to.equal('node.http.server');
-            expect(span.f.e).to.equal(String(controls.getPid()));
-            expect(span.f.h).to.equal('agent-stub-uuid');
-            expect(span.async).to.not.exist;
-            expect(span.error).to.not.exist;
-            expect(span.ec).to.equal(0);
-          });
-
-          testUtils.expectAtLeastOneMatching(spans, span => {
-            expect(span.t).to.equal(entrySpan.t);
-            expect(span.p).to.equal(entrySpan.s);
-            expect(span.n).to.equal('elasticsearch');
-            expect(span.f.e).to.equal(String(controls.getPid()));
-            expect(span.f.h).to.equal('agent-stub-uuid');
-            expect(span.async).to.not.exist;
-            expect(span.error).to.not.exist;
-            expect(span.ec).to.equal(0);
-            expect(span.data.elasticsearch.cluster).to.be.a('string');
-            expect(span.data.elasticsearch.action).to.equal('index');
-            expect(span.data.elasticsearch.type).to.equal('mytype');
-            expect(span.data.elasticsearch.index).to.equal('myindex');
-          });
+          const entrySpan = verifyHttpEntry(spans, '/index');
+          verifyElasticSearchExit(spans, entrySpan, 'index');
         })
       );
     }));
@@ -109,7 +84,7 @@ describe('tracing/elasticsearch', function() {
       .then(res1 => {
         expect(res1.response._index).to.equal('myindex');
         expect(res1.response._shards.successful).to.equal(1);
-        return testUtils.retry(() =>
+        return retry(() =>
           get({
             id: res1.response._id
           }).then(res2 => {
@@ -119,58 +94,14 @@ describe('tracing/elasticsearch', function() {
         );
       })
       .then(documentId =>
-        testUtils.retry(() =>
+        retry(() =>
           agentControls.getSpans().then(spans => {
-            const indexEntrySpan = testUtils.expectAtLeastOneMatching(spans, span => {
-              expect(span.n).to.equal('node.http.server');
-              expect(span.f.e).to.equal(String(controls.getPid()));
-              expect(span.f.h).to.equal('agent-stub-uuid');
-              expect(span.async).to.not.exist;
-              expect(span.error).to.not.exist;
-              expect(span.ec).to.equal(0);
-              expect(span.data.http.url).to.equal('/index');
-            });
+            const indexEntrySpan = verifyHttpEntry(spans, '/index');
+            verifyElasticSearchExit(spans, indexEntrySpan, 'index');
 
-            testUtils.expectAtLeastOneMatching(spans, span => {
-              expect(span.t).to.equal(indexEntrySpan.t);
-              expect(span.p).to.equal(indexEntrySpan.s);
-              expect(span.n).to.equal('elasticsearch');
-              expect(span.f.e).to.equal(String(controls.getPid()));
-              expect(span.f.h).to.equal('agent-stub-uuid');
-              expect(span.async).to.not.exist;
-              expect(span.error).to.not.exist;
-              expect(span.ec).to.equal(0);
-              expect(span.data.elasticsearch.cluster).to.be.a('string');
-              expect(span.data.elasticsearch.action).to.equal('index');
-              expect(span.data.elasticsearch.type).to.equal('mytype');
-              expect(span.data.elasticsearch.index).to.equal('myindex');
-            });
-
-            const getEntrySpan = testUtils.expectAtLeastOneMatching(spans, span => {
-              expect(span.n).to.equal('node.http.server');
-              expect(span.f.e).to.equal(String(controls.getPid()));
-              expect(span.f.h).to.equal('agent-stub-uuid');
-              expect(span.async).to.not.exist;
-              expect(span.error).to.not.exist;
-              expect(span.ec).to.equal(0);
-              expect(span.data.http.url).to.equal('/get');
-            });
-
-            testUtils.expectAtLeastOneMatching(spans, span => {
-              expect(span.t).to.equal(getEntrySpan.t);
-              expect(span.p).to.equal(getEntrySpan.s);
-              expect(span.n).to.equal('elasticsearch');
-              expect(span.f.e).to.equal(String(controls.getPid()));
-              expect(span.f.h).to.equal('agent-stub-uuid');
-              expect(span.async).to.not.exist;
-              expect(span.error).to.not.exist;
-              expect(span.ec).to.equal(0);
-              expect(span.data.elasticsearch.cluster).to.be.a('string');
-              expect(span.data.elasticsearch.action).to.equal('get');
-              expect(span.data.elasticsearch.type).to.equal('mytype');
-              expect(span.data.elasticsearch.index).to.equal('myindex');
-              expect(span.data.elasticsearch.id).to.equal(documentId);
-            });
+            const getEntrySpan = verifyHttpEntry(spans, '/get');
+            const getExitSpan = verifyElasticSearchExit(spans, getEntrySpan, 'get');
+            expect(getExitSpan.data.elasticsearch.id).to.equal(documentId);
 
             expect(spans).to.have.lengthOf(4, `Spans: ${JSON.stringify(spans, 0, 2)}`);
           })
@@ -199,7 +130,7 @@ describe('tracing/elasticsearch', function() {
         })
       )
       .then(() =>
-        testUtils.retry(() =>
+        retry(() =>
           search({
             q: `title:${titleA}`
           })
@@ -213,61 +144,14 @@ describe('tracing/elasticsearch', function() {
         expect(res.response.hits.hits).to.be.an('array');
         expect(res.response.hits.hits[0]._source.title).to.equal(titleA);
 
-        return testUtils.retry(() =>
+        return retry(() =>
           agentControls.getSpans().then(spans => {
-            testUtils.expectAtLeastOneMatching(spans, span => {
-              expect(span.t).to.equal('42');
-              expect(span.n).to.equal('elasticsearch');
-              expect(span.f.e).to.equal(String(controls.getPid()));
-              expect(span.f.h).to.equal('agent-stub-uuid');
-              expect(span.async).to.not.exist;
-              expect(span.error).to.not.exist;
-              expect(span.ec).to.equal(0);
-              expect(span.data.elasticsearch.cluster).to.be.a('string');
-              expect(span.data.elasticsearch.action).to.equal('index');
-              expect(span.data.elasticsearch.type).to.equal('mytype');
-              expect(span.data.elasticsearch.index).to.equal('myindex');
-            });
+            verifyElasticSearchExit(spans, null, 'index', '42');
+            verifyElasticSearchExit(spans, null, 'index', '43');
 
-            testUtils.expectAtLeastOneMatching(spans, span => {
-              expect(span.t).to.equal('43');
-              expect(span.n).to.equal('elasticsearch');
-              expect(span.f.e).to.equal(String(controls.getPid()));
-              expect(span.f.h).to.equal('agent-stub-uuid');
-              expect(span.async).to.not.exist;
-              expect(span.error).to.not.exist;
-              expect(span.ec).to.equal(0);
-              expect(span.data.elasticsearch.cluster).to.be.a('string');
-              expect(span.data.elasticsearch.action).to.equal('index');
-              expect(span.data.elasticsearch.type).to.equal('mytype');
-              expect(span.data.elasticsearch.index).to.equal('myindex');
-            });
-
-            const getEntrySpan = testUtils.expectAtLeastOneMatching(spans, span => {
-              expect(span.n).to.equal('node.http.server');
-              expect(span.f.e).to.equal(String(controls.getPid()));
-              expect(span.f.h).to.equal('agent-stub-uuid');
-              expect(span.async).to.not.exist;
-              expect(span.error).to.not.exist;
-              expect(span.ec).to.equal(0);
-              expect(span.data.http.url).to.equal('/search');
-            });
-
-            testUtils.expectAtLeastOneMatching(spans, span => {
-              expect(span.t).to.equal(getEntrySpan.t);
-              expect(span.p).to.equal(getEntrySpan.s);
-              expect(span.n).to.equal('elasticsearch');
-              expect(span.f.e).to.equal(String(controls.getPid()));
-              expect(span.f.h).to.equal('agent-stub-uuid');
-              expect(span.async).to.not.exist;
-              expect(span.error).to.not.exist;
-              expect(span.ec).to.equal(0);
-              expect(span.data.elasticsearch.cluster).to.be.a('string');
-              expect(span.data.elasticsearch.action).to.equal('search');
-              expect(span.data.elasticsearch.type).to.equal('mytype');
-              expect(span.data.elasticsearch.index).to.equal('myindex');
-              expect(span.data.elasticsearch.hits).to.equal(1);
-            });
+            const searchEntrySpan = verifyHttpEntry(spans, '/search');
+            const searchExitSpan = verifyElasticSearchExit(spans, searchEntrySpan, 'search');
+            expect(searchExitSpan.data.elasticsearch.hits).to.equal(1);
           })
         );
       });
@@ -312,7 +196,7 @@ describe('tracing/elasticsearch', function() {
       })
       .then(res => {
         idC = res.response._id;
-        return testUtils.retry(() =>
+        return retry(() =>
           mget1({
             id: [idA, idB]
           })
@@ -320,7 +204,7 @@ describe('tracing/elasticsearch', function() {
       })
       .then(res => {
         response1 = res.response;
-        return testUtils.retry(() =>
+        return retry(() =>
           mget2({
             id: [idB, idC]
           })
@@ -332,82 +216,18 @@ describe('tracing/elasticsearch', function() {
         expect(response1.docs[1]._source.title).to.deep.equal(titleB);
         expect(response2.docs[0]._source.title).to.deep.equal(titleB);
         expect(response2.docs[1]._source.title).to.deep.equal(titleC);
-        return testUtils.retry(() =>
+        return retry(() =>
           agentControls.getSpans().then(spans => {
-            testUtils.expectAtLeastOneMatching(spans, span => {
-              expect(span.t).to.equal('42');
-              expect(span.n).to.equal('elasticsearch');
-              expect(span.f.e).to.equal(String(controls.getPid()));
-              expect(span.f.h).to.equal('agent-stub-uuid');
-              expect(span.async).to.not.exist;
-              expect(span.error).to.not.exist;
-              expect(span.ec).to.equal(0);
-              expect(span.data.elasticsearch.cluster).to.be.a('string');
-              expect(span.data.elasticsearch.action).to.equal('index');
-              expect(span.data.elasticsearch.type).to.equal('mytype');
-              expect(span.data.elasticsearch.index).to.equal('myindex');
-            });
-            testUtils.expectAtLeastOneMatching(spans, span => {
-              expect(span.t).to.equal('43');
-              expect(span.n).to.equal('elasticsearch');
-              expect(span.f.e).to.equal(String(controls.getPid()));
-              expect(span.f.h).to.equal('agent-stub-uuid');
-              expect(span.async).to.not.exist;
-              expect(span.error).to.not.exist;
-              expect(span.ec).to.equal(0);
-              expect(span.data.elasticsearch.cluster).to.be.a('string');
-              expect(span.data.elasticsearch.action).to.equal('index');
-              expect(span.data.elasticsearch.type).to.equal('mytype');
-              expect(span.data.elasticsearch.index).to.equal('myindex');
-            });
-            const mget1HttpEntry = testUtils.expectAtLeastOneMatching(spans, span => {
-              expect(span.n).to.equal('node.http.server');
-              expect(span.f.e).to.equal(String(controls.getPid()));
-              expect(span.f.h).to.equal('agent-stub-uuid');
-              expect(span.async).to.not.exist;
-              expect(span.error).to.not.exist;
-              expect(span.ec).to.equal(0);
-              expect(span.data.http.url).to.equal('/mget1');
-            });
-            testUtils.expectAtLeastOneMatching(spans, span => {
-              expect(span.t).to.equal(mget1HttpEntry.t);
-              expect(span.p).to.equal(mget1HttpEntry.s);
-              expect(span.n).to.equal('elasticsearch');
-              expect(span.f.e).to.equal(String(controls.getPid()));
-              expect(span.f.h).to.equal('agent-stub-uuid');
-              expect(span.async).to.not.exist;
-              expect(span.error).to.not.exist;
-              expect(span.ec).to.equal(0);
-              expect(span.data.elasticsearch.cluster).to.be.a('string');
-              expect(span.data.elasticsearch.action).to.equal('mget');
-              expect(span.data.elasticsearch.type).to.equal('mytype');
-              expect(span.data.elasticsearch.index).to.equal('myindex');
-              expect(span.data.elasticsearch.id).to.equal(`${idA},${idB}`);
-            });
-            const mget2HttpEntry = testUtils.expectAtLeastOneMatching(spans, span => {
-              expect(span.n).to.equal('node.http.server');
-              expect(span.f.e).to.equal(String(controls.getPid()));
-              expect(span.f.h).to.equal('agent-stub-uuid');
-              expect(span.async).to.not.exist;
-              expect(span.error).to.not.exist;
-              expect(span.ec).to.equal(0);
-              expect(span.data.http.url).to.equal('/mget2');
-            });
-            testUtils.expectAtLeastOneMatching(spans, span => {
-              expect(span.t).to.equal(mget2HttpEntry.t);
-              expect(span.p).to.equal(mget2HttpEntry.s);
-              expect(span.n).to.equal('elasticsearch');
-              expect(span.f.e).to.equal(String(controls.getPid()));
-              expect(span.f.h).to.equal('agent-stub-uuid');
-              expect(span.async).to.not.exist;
-              expect(span.error).to.not.exist;
-              expect(span.ec).to.equal(0);
-              expect(span.data.elasticsearch.cluster).to.be.a('string');
-              expect(span.data.elasticsearch.action).to.equal('mget');
-              expect(span.data.elasticsearch.type).to.equal('mytype');
-              expect(span.data.elasticsearch.index).to.equal('myindex');
-              expect(span.data.elasticsearch.id).to.equal(`${idB},${idC}`);
-            });
+            verifyElasticSearchExit(spans, null, 'index', '42');
+            verifyElasticSearchExit(spans, null, 'index', '43');
+
+            const mget1HttpEntry = verifyHttpEntry(spans, '/mget1');
+            const mget1Exit = verifyElasticSearchExit(spans, mget1HttpEntry, 'mget');
+            expect(mget1Exit.data.elasticsearch.id).to.equal(`${idA},${idB}`);
+
+            const mget2HttpEntry = verifyHttpEntry(spans, '/mget2');
+            const mget2Exit = verifyElasticSearchExit(spans, mget2HttpEntry, 'mget');
+            expect(mget2Exit.data.elasticsearch.id).to.equal(`${idB},${idC}`);
           })
         );
       });
@@ -444,7 +264,7 @@ describe('tracing/elasticsearch', function() {
         })
       )
       .then(() =>
-        testUtils.retry(() =>
+        retry(() =>
           msearch({
             q: [`title:${titleA}`, `title:${titleB}`]
           })
@@ -458,58 +278,14 @@ describe('tracing/elasticsearch', function() {
         expect(res.response.responses[1].hits.total.value).to.equal(1);
         expect(res.response.responses[0].hits.hits[0]._source.title).to.be.oneOf([titleA, titleB]);
         expect(res.response.responses[1].hits.hits[0]._source.title).to.be.oneOf([titleA, titleB]);
-        return testUtils.retry(() =>
+        return retry(() =>
           agentControls.getSpans().then(spans => {
-            testUtils.expectAtLeastOneMatching(spans, span => {
-              expect(span.t).to.equal('42');
-              expect(span.n).to.equal('elasticsearch');
-              expect(span.f.e).to.equal(String(controls.getPid()));
-              expect(span.f.h).to.equal('agent-stub-uuid');
-              expect(span.async).to.not.exist;
-              expect(span.error).to.not.exist;
-              expect(span.ec).to.equal(0);
-              expect(span.data.elasticsearch.cluster).to.be.a('string');
-              expect(span.data.elasticsearch.action).to.equal('index');
-              expect(span.data.elasticsearch.type).to.equal('mytype');
-              expect(span.data.elasticsearch.index).to.equal('myindex');
-            });
-            testUtils.expectAtLeastOneMatching(spans, span => {
-              expect(span.t).to.equal('43');
-              expect(span.n).to.equal('elasticsearch');
-              expect(span.f.e).to.equal(String(controls.getPid()));
-              expect(span.f.h).to.equal('agent-stub-uuid');
-              expect(span.async).to.not.exist;
-              expect(span.error).to.not.exist;
-              expect(span.ec).to.equal(0);
-              expect(span.data.elasticsearch.cluster).to.be.a('string');
-              expect(span.data.elasticsearch.action).to.equal('index');
-              expect(span.data.elasticsearch.type).to.equal('mytype');
-              expect(span.data.elasticsearch.index).to.equal('myindex');
-            });
-            const getEntrySpan = testUtils.expectAtLeastOneMatching(spans, span => {
-              expect(span.n).to.equal('node.http.server');
-              expect(span.f.e).to.equal(String(controls.getPid()));
-              expect(span.f.h).to.equal('agent-stub-uuid');
-              expect(span.async).to.not.exist;
-              expect(span.error).to.not.exist;
-              expect(span.ec).to.equal(0);
-              expect(span.data.http.url).to.equal('/msearch');
-            });
-            testUtils.expectAtLeastOneMatching(spans, span => {
-              expect(span.t).to.equal(getEntrySpan.t);
-              expect(span.p).to.equal(getEntrySpan.s);
-              expect(span.n).to.equal('elasticsearch');
-              expect(span.f.e).to.equal(String(controls.getPid()));
-              expect(span.f.h).to.equal('agent-stub-uuid');
-              expect(span.async).to.not.exist;
-              expect(span.error).to.not.exist;
-              expect(span.ec).to.equal(0);
-              expect(span.data.elasticsearch.cluster).to.be.a('string');
-              expect(span.data.elasticsearch.action).to.equal('msearch');
-              expect(span.data.elasticsearch.type).to.equal('mytype');
-              expect(span.data.elasticsearch.index).to.equal('myindex');
-              expect(span.data.elasticsearch.hits).to.equal(2);
-            });
+            verifyElasticSearchExit(spans, null, 'index', '42');
+            verifyElasticSearchExit(spans, null, 'index', '43');
+
+            const msearchEntrySpan = verifyHttpEntry(spans, '/msearch');
+            const msearchExitSpan = verifyElasticSearchExit(spans, msearchEntrySpan, 'msearch');
+            expect(msearchExitSpan.data.elasticsearch.hits).to.equal(2);
           })
         );
       });
@@ -524,7 +300,7 @@ describe('tracing/elasticsearch', function() {
       traceSpanId: 42
     })
       .then(() =>
-        testUtils.retry(() =>
+        retry(() =>
           search({
             q: 'title:Z'
           })
@@ -533,21 +309,10 @@ describe('tracing/elasticsearch', function() {
       .then(res => {
         expect(res.response.hits.total.value).to.equal(0);
         expect(res.response.hits.hits).to.have.lengthOf(0);
-        return testUtils.retry(() =>
+        return retry(() =>
           agentControls.getSpans().then(spans => {
-            testUtils.expectAtLeastOneMatching(spans, span => {
-              expect(span.n).to.equal('elasticsearch');
-              expect(span.f.e).to.equal(String(controls.getPid()));
-              expect(span.f.h).to.equal('agent-stub-uuid');
-              expect(span.async).to.not.exist;
-              expect(span.error).to.not.exist;
-              expect(span.ec).to.equal(0);
-              expect(span.data.elasticsearch.cluster).to.be.a('string');
-              expect(span.data.elasticsearch.action).to.equal('search');
-              expect(span.data.elasticsearch.type).to.equal('mytype');
-              expect(span.data.elasticsearch.index).to.equal('myindex');
-              expect(span.data.elasticsearch.hits).to.equal(0);
-            });
+            const searchExit = verifyElasticSearchExit(spans, null, 'search');
+            expect(searchExit.data.elasticsearch.hits).to.equal(0);
           })
         );
       }));
@@ -558,21 +323,21 @@ describe('tracing/elasticsearch', function() {
     }).then(res => {
       expect(res.response.hits.total.value).to.equal(0);
       expect(res.response.hits.hits).to.have.lengthOf(0);
-      return testUtils.retry(() =>
+      return retry(() =>
         agentControls.getSpans().then(spans => {
-          const httpEntrySpan = testUtils.expectAtLeastOneMatching(spans, span => {
+          const httpEntrySpan = expectExactlyOneMatching(spans, span => {
             expect(span.n).to.equal('node.http.server');
             expect(span.k).to.equal(constants.ENTRY);
           });
 
-          testUtils.expectAtLeastOneMatching(spans, span => {
+          expectExactlyOneMatching(spans, span => {
             expect(span.t).to.equal(httpEntrySpan.t);
             expect(span.p).to.equal(httpEntrySpan.s);
             expect(span.n).to.equal('elasticsearch');
             expect(span.k).to.equal(constants.EXIT);
           });
 
-          testUtils.expectAtLeastOneMatching(spans, span => {
+          expectExactlyOneMatching(spans, span => {
             expect(span.t).to.equal(httpEntrySpan.t);
             expect(span.p).to.equal(httpEntrySpan.s);
             expect(span.n).to.equal('node.http.client');
@@ -629,5 +394,38 @@ describe('tracing/elasticsearch', function() {
       opts.headers = headers;
     }
     return controls.sendRequest(opts);
+  }
+
+  function verifyHttpEntry(spans, url) {
+    return expectExactlyOneMatching(spans, span => {
+      expect(span.n).to.equal('node.http.server');
+      expect(span.f.e).to.equal(String(controls.getPid()));
+      expect(span.f.h).to.equal('agent-stub-uuid');
+      expect(span.async).to.not.exist;
+      expect(span.error).to.not.exist;
+      expect(span.ec).to.equal(0);
+      expect(span.data.http.url).to.equal(url);
+    });
+  }
+
+  function verifyElasticSearchExit(spans, parent, action, traceId) {
+    return expectExactlyOneMatching(spans, span => {
+      if (parent) {
+        expect(span.t).to.equal(parent.t);
+        expect(span.p).to.equal(parent.s);
+      } else if (traceId) {
+        expect(span.t).to.equal(traceId);
+      }
+      expect(span.n).to.equal('elasticsearch');
+      expect(span.f.e).to.equal(String(controls.getPid()));
+      expect(span.f.h).to.equal('agent-stub-uuid');
+      expect(span.async).to.not.exist;
+      expect(span.error).to.not.exist;
+      expect(span.ec).to.equal(0);
+      expect(span.data.elasticsearch.cluster).to.be.a('string');
+      expect(span.data.elasticsearch.action).to.equal(action);
+      expect(span.data.elasticsearch.type).to.equal('mytype');
+      expect(span.data.elasticsearch.index).to.equal('myindex');
+    });
   }
 });
