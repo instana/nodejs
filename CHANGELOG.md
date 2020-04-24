@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+- Make instrumentation robust against https://github.com/montagejs/collections/issues/178.
+- Make check for disabled instrumentation stricter (the keys provided in config.tracing.disabledTracers/INSTANA_DISABLED_TRACERS need to be an exact, case-insensitive match of the instrumentation file now). If you have used this configuration option and relied on the fact that this was a string.contains check previously, you might need to update your config.
+
 ## 1.95.2
 - [AWS Lambda] Fix: Add a connection timeout in addition to the read/idle timeout.
 
