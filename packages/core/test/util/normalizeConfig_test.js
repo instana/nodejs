@@ -180,6 +180,11 @@ describe('util.normalizeConfig', () => {
     expect(config.tracing.stackTraceLength).to.equal(3);
   });
 
+  it('should not disable individual tracers by default', () => {
+    const config = normalizeConfig();
+    expect(config.tracing.disabledTracers).to.deep.equal([]);
+  });
+
   it('should disable individual tracers via config', () => {
     const config = normalizeConfig({
       tracing: {

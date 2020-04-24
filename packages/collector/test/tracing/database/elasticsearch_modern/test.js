@@ -1,9 +1,9 @@
 'use strict';
 
 const expect = require('chai').expect;
+const semver = require('semver');
 
 const constants = require('@instana/core').tracing.constants;
-const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('../../../../../core/test/config');
 const {
   stringifyItems,
@@ -15,8 +15,8 @@ const ProcessControls = require('../../ProcessControls');
 
 const ES_API_VERSION = '7.6';
 
-describe('tracing/elasticsearch (legacy client)', function() {
-  if (!supportedVersion(process.versions.node)) {
+describe('tracing/elasticsearch (modern client)', function() {
+  if (!semver.gte(process.versions.node, '8.0.0')) {
     return;
   }
 
@@ -39,7 +39,7 @@ describe('tracing/elasticsearch (legacy client)', function() {
       index: 'thisIndexDoesNotExist'
     }).then(res => {
       expect(res.error).to.exist;
-      expect(res.error.msg).to.contain('index_not_found_exception');
+      expect(res.error.meta.body.error.root_cause[0].type).to.equal('index_not_found_exception');
       return retry(() =>
         agentControls.getSpans().then(spans => {
           const entrySpan = verifyHttpEntry(spans, '/get');
@@ -55,12 +55,9 @@ describe('tracing/elasticsearch (legacy client)', function() {
             expect(span.ec).to.equal(1);
             expect(span.data.elasticsearch.cluster).to.be.a('string');
             expect(span.data.elasticsearch.action).to.equal('get');
-            if (needsType()) {
-              expect(span.data.elasticsearch.type).to.equal('legacy_type');
-            }
             expect(span.data.elasticsearch.index).to.equal('thisIndexDoesNotExist');
             expect(span.data.elasticsearch.id).to.equal('thisDocumentWillNotExist');
-            expect(span.data.elasticsearch.error).to.match(/no such index|missing/gi);
+            expect(span.data.elasticsearch.error).to.match(/index_not_found_exception/);
           });
 
           verifyHttpExit(spans, entrySpan);
@@ -83,8 +80,8 @@ describe('tracing/elasticsearch (legacy client)', function() {
     }).then(res => {
       expect(res.error).to.not.exist;
       expect(res.response).to.exist;
-      expect(res.response._index).to.equal('legacy_index');
-      expect(res.response._shards.successful).to.equal(1);
+      expect(res.response.body._index).to.equal('modern_index');
+      expect(res.response.body._shards.successful).to.equal(1);
       return retry(() =>
         agentControls.getSpans().then(spans => {
           const entrySpan = verifyHttpEntry(spans, '/index');
@@ -105,16 +102,17 @@ describe('tracing/elasticsearch (legacy client)', function() {
       .then(res1 => {
         expect(res1.error).to.not.exist;
         expect(res1.response).to.exist;
-        expect(res1.response._index).to.equal('legacy_index');
-        expect(res1.response._shards.successful).to.equal(1);
+        expect(res1.response.statusCode).to.equal(201);
+        expect(res1.response.body._index).to.equal('modern_index');
+        expect(res1.response.body._shards.successful).to.equal(1);
         return retry(() =>
           get({
-            id: res1.response._id
+            id: res1.response.body._id
           }).then(res2 => {
             expect(res2.error).to.not.exist;
             expect(res2.response).to.exist;
-            expect(res2.response._source.title).to.equal(titleA);
-            return res2.response._id;
+            expect(res2.response.body._source.title).to.equal(titleA);
+            return res2.response.body._id;
           })
         );
       })
@@ -167,16 +165,16 @@ describe('tracing/elasticsearch (legacy client)', function() {
       .then(res => {
         expect(res.error).to.not.exist;
         expect(res.response).to.exist;
-        expect(res.response).to.be.an('object');
-        expect(res.response.timed_out).to.be.false;
-        expect(res.response.hits).to.be.an('object');
+        expect(res.response.body).to.be.an('object');
+        expect(res.response.body.timed_out).to.be.false;
+        expect(res.response.body.hits).to.be.an('object');
         if (hasTotalValue()) {
-          expect(res.response.hits.total.value).to.equal(1);
+          expect(res.response.body.hits.total.value).to.equal(1);
         } else {
-          expect(res.response.hits.total).to.equal(1);
+          expect(res.response.body.hits.total).to.equal(1);
         }
-        expect(res.response.hits.hits).to.be.an('array');
-        expect(res.response.hits.hits[0]._source.title).to.equal(titleA);
+        expect(res.response.body.hits.hits).to.be.an('array');
+        expect(res.response.body.hits.hits[0]._source.title).to.equal(titleA);
 
         return retry(() =>
           agentControls.getSpans().then(spans => {
@@ -221,7 +219,7 @@ describe('tracing/elasticsearch (legacy client)', function() {
       .then(res => {
         expect(res.error).to.not.exist;
         expect(res.response).to.exist;
-        idA = res.response._id;
+        idA = res.response.body._id;
         return index({
           body: {
             title: titleB
@@ -233,7 +231,7 @@ describe('tracing/elasticsearch (legacy client)', function() {
       .then(res => {
         expect(res.error).to.not.exist;
         expect(res.response).to.exist;
-        idB = res.response._id;
+        idB = res.response.body._id;
         return index({
           body: {
             title: titleC
@@ -245,7 +243,7 @@ describe('tracing/elasticsearch (legacy client)', function() {
       .then(res => {
         expect(res.error).to.not.exist;
         expect(res.response).to.exist;
-        idC = res.response._id;
+        idC = res.response.body._id;
         return retry(() =>
           mget1({
             id: [idA, idB]
@@ -255,7 +253,7 @@ describe('tracing/elasticsearch (legacy client)', function() {
       .then(res => {
         expect(res.error).to.not.exist;
         expect(res.response).to.exist;
-        response1 = res.response;
+        response1 = res.response.body;
         return retry(() =>
           mget2({
             id: [idB, idC]
@@ -265,7 +263,7 @@ describe('tracing/elasticsearch (legacy client)', function() {
       .then(res => {
         expect(res.error).to.not.exist;
         expect(res.response).to.exist;
-        response2 = res.response;
+        response2 = res.response.body;
         expect(response1.docs[0]._source.title).to.deep.equal(titleA);
         expect(response1.docs[1]._source.title).to.deep.equal(titleB);
         expect(response2.docs[0]._source.title).to.deep.equal(titleB);
@@ -333,18 +331,18 @@ describe('tracing/elasticsearch (legacy client)', function() {
       .then(res => {
         expect(res.error).to.not.exist;
         expect(res.response).to.exist;
-        expect(res.response).to.be.an('object');
-        expect(res.response.responses).to.exist;
-        expect(res.response.responses).to.have.lengthOf(2);
+        expect(res.response.body).to.be.an('object');
+        expect(res.response.body.responses).to.exist;
+        expect(res.response.body.responses).to.have.lengthOf(2);
         if (hasTotalValue()) {
-          expect(res.response.responses[0].hits.total.value).to.equal(1);
-          expect(res.response.responses[1].hits.total.value).to.equal(1);
+          expect(res.response.body.responses[0].hits.total.value).to.equal(1);
+          expect(res.response.body.responses[1].hits.total.value).to.equal(1);
         } else {
-          expect(res.response.responses[0].hits.total).to.equal(1);
-          expect(res.response.responses[1].hits.total).to.equal(1);
+          expect(res.response.body.responses[0].hits.total).to.equal(1);
+          expect(res.response.body.responses[1].hits.total).to.equal(1);
         }
-        expect(res.response.responses[0].hits.hits[0]._source.title).to.be.oneOf([titleA, titleB]);
-        expect(res.response.responses[1].hits.hits[0]._source.title).to.be.oneOf([titleA, titleB]);
+        expect(res.response.body.responses[0].hits.hits[0]._source.title).to.be.oneOf([titleA, titleB]);
+        expect(res.response.body.responses[1].hits.hits[0]._source.title).to.be.oneOf([titleA, titleB]);
         return retry(() =>
           agentControls.getSpans().then(spans => {
             verifyElasticsearchExit(spans, null, 'index', '42');
@@ -383,11 +381,11 @@ describe('tracing/elasticsearch (legacy client)', function() {
         expect(res.error).to.not.exist;
         expect(res.response).to.exist;
         if (hasTotalValue()) {
-          expect(res.response.hits.total.value).to.equal(0);
+          expect(res.response.body.hits.total.value).to.equal(0);
         } else {
-          expect(res.response.hits.total).to.equal(0);
+          expect(res.response.body.hits.total).to.equal(0);
         }
-        expect(res.response.hits.hits).to.have.lengthOf(0);
+        expect(res.response.body.hits.hits).to.have.lengthOf(0);
         return retry(() =>
           agentControls.getSpans().then(spans => {
             const entrySpan = verifyHttpEntry(spans, '/index');
@@ -401,42 +399,6 @@ describe('tracing/elasticsearch (legacy client)', function() {
           })
         );
       }));
-
-  it('must trace across native promise boundaries', () =>
-    searchAndGet({
-      q: 'name:foo'
-    }).then(res => {
-      expect(res.error).to.not.exist;
-      expect(res.response).to.exist;
-      if (hasTotalValue()) {
-        expect(res.response.hits.total.value).to.equal(0);
-      } else {
-        expect(res.response.hits.total).to.equal(0);
-      }
-      expect(res.response.hits.hits).to.have.lengthOf(0);
-      return retry(() =>
-        agentControls.getSpans().then(spans => {
-          const httpEntrySpan = expectExactlyOneMatching(spans, span => {
-            expect(span.n).to.equal('node.http.server');
-            expect(span.k).to.equal(constants.ENTRY);
-          });
-
-          expectExactlyOneMatching(spans, span => {
-            expect(span.t).to.equal(httpEntrySpan.t);
-            expect(span.p).to.equal(httpEntrySpan.s);
-            expect(span.n).to.equal('elasticsearch');
-            expect(span.k).to.equal(constants.EXIT);
-          });
-
-          expectExactlyOneMatching(spans, span => {
-            expect(span.t).to.equal(httpEntrySpan.t);
-            expect(span.p).to.equal(httpEntrySpan.s);
-            expect(span.n).to.equal('node.http.client');
-            expect(span.k).to.equal(constants.EXIT);
-          });
-        })
-      );
-    }));
 
   function get(opts) {
     return sendRequest('GET', '/get', opts);
@@ -456,10 +418,6 @@ describe('tracing/elasticsearch (legacy client)', function() {
 
   function msearch(opts) {
     return sendRequest('GET', '/msearch', opts);
-  }
-
-  function searchAndGet(opts) {
-    return sendRequest('GET', '/searchAndGet', opts);
   }
 
   function index(opts) {
@@ -522,9 +480,9 @@ describe('tracing/elasticsearch (legacy client)', function() {
       expect(span.ec).to.equal(0);
       expect(span.data.elasticsearch.cluster).to.be.a('string');
       expect(span.data.elasticsearch.action).to.equal(action);
-      expect(span.data.elasticsearch.index).to.equal(indexName || 'legacy_index');
+      expect(span.data.elasticsearch.index).to.equal(indexName || 'modern_index');
       if (needsType() && indexName !== '_all') {
-        expect(span.data.elasticsearch.type).to.equal('legacy_type');
+        expect(span.data.elasticsearch.type).to.equal('modern_type');
       }
     });
   }

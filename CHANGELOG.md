@@ -1,6 +1,8 @@
 # Changelog
 
 ## Unreleased
+- Instrument [@elastic/elasticsearch](https://www.npmjs.com/package/@elastic/elasticsearch) (aka modern Elasticsearch client).
+- Fix instrumentation for legacy Elasticsearch client (https://www.npmjs.com/package/elasticsearch), do not discard subsequent exit spans.
 - Make instrumentation robust against https://github.com/montagejs/collections/issues/178.
 - Make check for disabled instrumentation stricter (the keys provided in config.tracing.disabledTracers/INSTANA_DISABLED_TRACERS need to be an exact, case-insensitive match of the instrumentation file now). If you have used this configuration option and relied on the fact that this was a string.contains check previously, you might need to update your config.
 

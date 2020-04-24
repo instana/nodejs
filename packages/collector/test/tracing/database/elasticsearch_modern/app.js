@@ -10,10 +10,10 @@ const bodyParser = require('body-parser');
 const express = require('express');
 const morgan = require('morgan');
 const request = require('request-promise-native');
-const elasticsearch = require('elasticsearch');
+const { Client } = require('@elastic/elasticsearch');
 
 const app = express();
-const logPrefix = `Elasticsearch (Legacy Client) (${process.pid}):\t`;
+const logPrefix = `Elasticsearch (Modern Client) (${process.pid}):\t`;
 
 if (process.env.WITH_STDOUT) {
   app.use(morgan(`${logPrefix}:method :url :status`));
@@ -21,19 +21,18 @@ if (process.env.WITH_STDOUT) {
 
 app.use(bodyParser.json());
 
-const esConfig = {
-  host: process.env.ELASTICSEARCH,
-  log: 'warning'
-};
+const client = new Client({
+  node: `http://${process.env.ELASTICSEARCH}`
+});
 
 const ES_API_VERSION = process.env.ES_API_VERSION || '7.6';
 
 if (process.env.ES_API_VERSION) {
-  esConfig.apiVersion = ES_API_VERSION;
+  log(
+    `Using Elasticsearch API version ${process.env.ES_API_VERSION}, make sure @elastic/elasticsearch is installed ` +
+      'in a matching version.'
+  );
 }
-
-const client = new elasticsearch.Client(esConfig);
-
 app.get('/', (req, res) => {
   res.sendStatus(200);
 });
@@ -41,10 +40,11 @@ app.get('/', (req, res) => {
 app.get('/get', (req, res) => {
   client.get(
     {
-      index: req.query.index || 'legacy_index',
+      index: req.query.index || 'modern_index',
       type: type(),
       id: req.query.id
     },
+    {},
     (error, response) => {
       // Execute another traced call to verify that we keep the tracing context.
       request(`http://127.0.0.1:${agentPort}`).then(() => {
@@ -58,7 +58,7 @@ app.get('/search', (req, res) => {
   let searchResponse;
   client
     .search({
-      index: req.query.index || 'legacy_index',
+      index: req.query.index || 'modern_index',
       type: type(),
       q: req.query.q
     })
@@ -84,8 +84,8 @@ app.get('/mget1', (req, res) => {
     {
       body: {
         docs: [
-          { _index: req.query.index || 'legacy_index', _type: type(), _id: ids[0] },
-          { _index: req.query.index || 'legacy_index', _type: type(), _id: ids[1] }
+          { _index: req.query.index || 'modern_index', _id: ids[0] },
+          { _index: req.query.index || 'modern_index', _id: ids[1] }
         ]
       }
     },
@@ -106,8 +106,7 @@ app.get('/mget2', (req, res) => {
   }
   client.mget(
     {
-      index: req.query.index || 'legacy_index',
-      type: type(),
+      index: req.query.index || 'modern_index',
       body: {
         ids
       }
@@ -129,9 +128,9 @@ app.get('/msearch', (req, res) => {
   }
   const query = {
     body: [
-      { index: req.query.index || 'legacy_index', type: type() },
+      { index: req.query.index || 'modern_index' },
       { query: { query_string: { query: req.query.q[0] } } },
-      { index: req.query.index || 'legacy_index', type: type() },
+      { index: req.query.index || 'modern_index' },
       { query: { query_string: { query: req.query.q[1] } } }
     ]
   };
@@ -148,7 +147,7 @@ app.get('/msearch', (req, res) => {
 app.post('/index', (req, res) => {
   client
     .index({
-      index: req.query.index || 'legacy_index',
+      index: req.query.index || 'modern_index',
       type: type(),
       body: req.body
     })
@@ -176,24 +175,6 @@ app.post('/index', (req, res) => {
     );
 });
 
-app.get('/searchAndGet', (req, res) => {
-  request(`http://127.0.0.1:${agentPort}`)
-    .then(() =>
-      client.search({
-        index: req.query.index || 'legacy_index',
-        type: type(),
-        q: req.query.q,
-        ignoreUnavailable: true
-      })
-    )
-    .then(response => {
-      res.json({ response });
-    })
-    .catch(error => {
-      res.json({ error });
-    });
-});
-
 app.listen(process.env.APP_PORT, () => {
   log(`Listening on port: ${process.env.APP_PORT}`);
 });
@@ -205,7 +186,7 @@ function log() {
 }
 
 function type() {
-  return needsType() ? 'legacy_type' : undefined;
+  return needsType() ? 'modern_type' : undefined;
 }
 
 function needsType() {

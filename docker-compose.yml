@@ -10,12 +10,38 @@ services:
     ports:
       - 27017:27017
 
+  # Elasticsearch 2.3
+  # elasticsearch:
+  #   image: elasticsearch:2.3.5
+  #   ports:
+  #     - 9200:9200
+
+  # Elasticsearch 5.6
+  # elasticsearch:
+  #   image: elasticsearch:5.6.16
+  #   ports:
+  #     - 9200:9200
+  #   environment:
+  #    discovery.type: single-node
+  #    ES_JAVA_OPTS: "-Xms500m -Xmx500m"
+
+  # Elasticsearch 6.8
+  # elasticsearch:
+  #   image: elasticsearch:6.8.8
+  #   ports:
+  #     - 9200:9200
+  #   environment:
+  #    discovery.type: single-node
+  #    ES_JAVA_OPTS: "-Xms500m -Xmx500m"
+
+  # Elasticsearch 7.6
   elasticsearch:
-    image: elasticsearch:7.6.2
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.6.2
     ports:
       - 9200:9200
     environment:
-      - discovery.type=single-node
+      discovery.type: single-node
+      ES_JAVA_OPTS: "-Xms500m -Xmx500m"
 
   # Kafka test will sometimes fail because Zookeeper won't start due to
   # java.io.IOException: Unable to create data directory /opt/zookeeper-3.4.9/data/version-2, which seems to be a known issue:
