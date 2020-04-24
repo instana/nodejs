@@ -10,10 +10,10 @@ const bodyParser = require('body-parser');
 const express = require('express');
 const morgan = require('morgan');
 const request = require('request-promise-native');
-const elasticsearch = require('elasticsearch');
+const { Client } = require('@elastic/elasticsearch');
 
 const app = express();
-const logPrefix = `Elasticsearch (Legacy Client) (${process.pid}):\t`;
+const logPrefix = `Elasticsearch (Modern Client) (${process.pid}):\t`;
 
 if (process.env.WITH_STDOUT) {
   app.use(morgan(`${logPrefix}:method :url :status`));
@@ -21,17 +21,18 @@ if (process.env.WITH_STDOUT) {
 
 app.use(bodyParser.json());
 
-const esConfig = {
-  host: process.env.ELASTICSEARCH,
-  log: 'warning'
-};
+const client = new Client({
+  node: `http://${process.env.ELASTICSEARCH}`
+});
+
+const ES_API_VERSION = process.env.ES_API_VERSION || '7.6';
 
 if (process.env.ES_API_VERSION) {
-  esConfig.apiVersion = process.env.ES_API_VERSION;
+  log(
+    `Using Elasticsearch API version ${process.env.ES_API_VERSION}, make sure @elastic/elasticsearch is installed ` +
+      'in a matching version.'
+  );
 }
-
-const client = new elasticsearch.Client(esConfig);
-
 app.get('/', (req, res) => {
   res.sendStatus(200);
 });
@@ -40,9 +41,10 @@ app.get('/get', (req, res) => {
   client.get(
     {
       index: req.query.index || 'myindex',
-      type: 'mytype',
+      type: type(),
       id: req.query.id
     },
+    {},
     (error, response) => {
       // Execute another traced call to verify that we keep the tracing context.
       request(`http://127.0.0.1:${agentPort}`).then(() => {
@@ -57,7 +59,7 @@ app.get('/search', (req, res) => {
   client
     .search({
       index: req.query.index || 'myindex',
-      type: 'mytype',
+      type: type(),
       q: req.query.q
     })
     .then(response => {
@@ -82,8 +84,8 @@ app.get('/mget1', (req, res) => {
     {
       body: {
         docs: [
-          { _index: req.query.index || 'myindex', _type: 'mytype', _id: ids[0] },
-          { _index: req.query.index || 'myindex', _type: 'mytype', _id: ids[1] }
+          { _index: req.query.index || 'myindex', _id: ids[0] },
+          { _index: req.query.index || 'myindex', _id: ids[1] }
         ]
       }
     },
@@ -105,7 +107,6 @@ app.get('/mget2', (req, res) => {
   client.mget(
     {
       index: req.query.index || 'myindex',
-      type: 'mytype',
       body: {
         ids
       }
@@ -127,9 +128,9 @@ app.get('/msearch', (req, res) => {
   }
   const query = {
     body: [
-      { index: req.query.index || 'myindex', type: 'mytype' },
+      { index: req.query.index || 'myindex' },
       { query: { query_string: { query: req.query.q[0] } } },
-      { index: req.query.index || 'myindex', type: 'mytype' },
+      { index: req.query.index || 'myindex' },
       { query: { query_string: { query: req.query.q[1] } } }
     ]
   };
@@ -147,7 +148,7 @@ app.post('/index', (req, res) => {
   client
     .index({
       index: req.query.index || 'myindex',
-      type: 'mytype',
+      type: type(),
       body: req.body
     })
     .then(response =>
@@ -174,24 +175,6 @@ app.post('/index', (req, res) => {
     );
 });
 
-app.get('/searchAndGet', (req, res) => {
-  request(`http://127.0.0.1:${agentPort}`)
-    .then(() =>
-      client.search({
-        index: req.query.index || 'myindex',
-        type: 'mytype',
-        q: req.query.q,
-        ignoreUnavailable: true
-      })
-    )
-    .then(response => {
-      res.json({ response });
-    })
-    .catch(error => {
-      res.json({ error });
-    });
-});
-
 app.listen(process.env.APP_PORT, () => {
   log(`Listening on port: ${process.env.APP_PORT}`);
 });
@@ -200,4 +183,12 @@ function log() {
   const args = Array.prototype.slice.call(arguments);
   args[0] = logPrefix + args[0];
   console.log.apply(console, args);
+}
+
+function type() {
+  return needsType() ? 'mytype' : undefined;
+}
+
+function needsType() {
+  return ES_API_VERSION.indexOf('5') === 0 || ES_API_VERSION.indexOf('6') === 0;
 }

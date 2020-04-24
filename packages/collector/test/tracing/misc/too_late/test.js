@@ -27,6 +27,7 @@ describe('tracing/too late', function() {
   agentControls.registerTestHooks();
 
   [
+    '@elastic/elasticsearch',
     '@hapi/call',
     'amqplib',
     'aws-sdk',

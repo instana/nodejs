@@ -8,7 +8,7 @@ var cls = require('../../cls');
 var isActive = false;
 
 exports.init = function() {
-  requireHook.onModuleLoad('elasticsearch', instrument);
+  requireHook.onModuleLoad('@elastic/elasticsearch', instrument);
 };
 
 function instrument(es) {
@@ -17,19 +17,28 @@ function instrument(es) {
     return;
   }
 
+  var actionPaths = [];
+  forEachApiAction(function(actionPath) {
+    actionPaths.push(actionPath);
+  });
+
   es.Client = function InstrumentedClient() {
-    var client = OriginalClient.apply(OriginalClient, arguments);
+    // We are patching a native ES6 constructor, the following approach works without relying on ES6 language features.
+    //
+    // Once we drop support for Node.js 4, this could be simply:
+    // return new OriginalClient(...arguments);
+    // See https://stackoverflow.com/a/33195176/2565264 and
+    // https://node.green/#ES2015-syntax-spread-syntax-for-iterable-objects.
+    var client = new (Function.prototype.bind.apply(
+      OriginalClient,
+      [null].concat(Array.prototype.slice.call(arguments))
+    ))();
+
     var clusterInfo = {};
-
     gatherClusterInfo(client, clusterInfo);
-
-    instrumentApi(client, ['search'], clusterInfo);
-    instrumentApi(client, ['index'], clusterInfo);
-    instrumentApi(client, ['indices', 'refresh'], clusterInfo);
-    instrumentApi(client, ['get'], clusterInfo);
-    instrumentApi(client, ['msearch'], clusterInfo);
-    instrumentApi(client, ['mget'], clusterInfo);
-
+    actionPaths.forEach(function(actionPath) {
+      instrumentApi(client, actionPath, clusterInfo);
+    });
     return client;
   };
 }
@@ -37,27 +46,44 @@ function instrument(es) {
 function gatherClusterInfo(client, clusterInfo) {
   client.info().then(
     function(_clusterInfo) {
-      clusterInfo.clusterName = _clusterInfo.cluster_name;
+      if (_clusterInfo && _clusterInfo.body) {
+        clusterInfo.clusterName = _clusterInfo.body.cluster_name;
+      }
     },
     function() {
       setTimeout(function() {
         gatherClusterInfo(client, clusterInfo);
-      }, 30000).unref();
+      }, 60000).unref();
     }
   );
 }
 
 function instrumentApi(client, actionPath, clusterInfo) {
   var action = actionPath.join('.');
-  var parent = actionPath.length === 2 ? client[actionPath[0]] : client;
-  var originalFunction = actionPath.length === 2 ? client[actionPath[0]][actionPath[1]] : client[actionPath[0]];
+  var parent = getParentByPath(action, client, actionPath);
+  var originalFunction = getByPath(action, client, actionPath);
 
-  if (typeof originalFunction !== 'function') {
+  if (!parent || typeof originalFunction !== 'function') {
     return;
   }
-  parent[actionPath[actionPath.length - 1]] = function instrumentedAction(params, cb) {
+
+  parent[actionPath[actionPath.length - 1]] = function instrumentedAction(params, options, originalCallback) {
     if (!isActive || !cls.isTracing()) {
       return originalFunction.apply(this, arguments);
+    }
+
+    var callbackIndex = typeof originalCallback === 'function' ? 2 : -1;
+    options = options || {};
+    if (typeof options === 'function') {
+      originalCallback = options;
+      options = {};
+      callbackIndex = 1;
+    }
+    if (typeof params === 'function' || params == null) {
+      originalCallback = params;
+      params = {};
+      options = {};
+      callbackIndex = 0;
     }
 
     var ctx = this;
@@ -90,16 +116,15 @@ function instrumentApi(client, actionPath, clusterInfo) {
         }
       }
 
-      if (originalArgs.length === 2) {
-        originalArgs[1] = cls.ns.bind(function(error, response) {
+      if (callbackIndex >= 0) {
+        originalArgs[callbackIndex] = cls.ns.bind(function(error, result) {
           if (error) {
             onError(span, error);
           } else {
-            onSuccess(span, response);
+            onSuccess(span, result);
           }
-          return cb.apply(this, arguments);
+          return originalCallback.apply(this, arguments);
         });
-
         return originalFunction.apply(ctx, originalArgs);
       } else {
         try {
@@ -116,26 +141,29 @@ function instrumentApi(client, actionPath, clusterInfo) {
   };
 }
 
-function onSuccess(span, response) {
-  if (response.hits != null && response.hits.total != null) {
-    if (typeof response.hits.total === 'number') {
-      span.data.elasticsearch.hits = response.hits.total;
-    } else if (typeof response.hits.total.value === 'number') {
-      span.data.elasticsearch.hits = response.hits.total.value;
-    }
-  } else if (response.responses != null && Array.isArray(response.responses)) {
-    span.data.elasticsearch.hits = response.responses.reduce(function(hits, res) {
-      if (res.hits && typeof res.hits.total === 'number') {
-        return hits + res.hits.total;
-      } else if (res.hits && res.hits.total && typeof res.hits.total.value === 'number') {
-        return hits + res.hits.total.value;
+function onSuccess(span, result) {
+  if (result.body) {
+    var body = result.body;
+    if (body.hits != null && body.hits.total != null) {
+      if (typeof body.hits.total === 'number') {
+        span.data.elasticsearch.hits = body.hits.total;
+      } else if (typeof body.hits.total.value === 'number') {
+        span.data.elasticsearch.hits = body.hits.total.value;
       }
-      return hits;
-    }, 0);
+    } else if (body.responses != null && Array.isArray(body.responses)) {
+      span.data.elasticsearch.hits = body.responses.reduce(function(hits, res) {
+        if (res.hits && typeof res.hits.total === 'number') {
+          return hits + res.hits.total;
+        } else if (res.hits && res.hits.total && typeof res.hits.total.value === 'number') {
+          return hits + res.hits.total.value;
+        }
+        return hits;
+      }, 0);
+    }
   }
   span.d = Date.now() - span.ts;
   span.transmit();
-  return response;
+  return result;
 }
 
 function onError(span, error) {
@@ -212,6 +240,44 @@ function collectParamFrom(bodyItem, key, accumulator) {
       accumulator.push(value);
     }
   }
+}
+
+function forEachApiAction(fn) {
+  var esApi = require('@elastic/elasticsearch/api')({
+    makeRequest: function dummyMakeRequest() {},
+    ConfigurationError: function DummyConfigurationError() {},
+    result: {}
+  });
+  forEachKeyRecursive(esApi, [], fn);
+}
+
+function forEachKeyRecursive(obj, path, fn) {
+  if (!obj || typeof obj !== 'object') {
+    return false;
+  }
+  var hadSubKeys = false;
+  Object.keys(obj).forEach(function(key) {
+    var nextPath = path.concat(key);
+    hadSubKeys = forEachKeyRecursive(obj[key], nextPath, fn);
+    if (!hadSubKeys) {
+      fn(nextPath);
+    }
+  });
+  return true;
+}
+
+function getByPath(action, obj, path) {
+  if (path.length === 0) {
+    return obj;
+  }
+  return getByPath(action, obj[path[0]], path.slice(1));
+}
+
+function getParentByPath(action, obj, path) {
+  if (path.length === 1) {
+    return obj;
+  }
+  return getParentByPath(action, obj[path[0]], path.slice(1));
 }
 
 exports.activate = function() {

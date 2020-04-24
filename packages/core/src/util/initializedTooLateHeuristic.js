@@ -2,6 +2,7 @@
 
 var firstCall = true;
 var patterns = [
+  /\/@elastic\/elasticsearch\/index.js/,
   /\/@hapi\/call\/lib\//,
   /\/amqplib\/lib\//,
   /\/aws-sdk\/lib\/aws.js/,
