@@ -105,7 +105,8 @@ shared: &shared
 elasticsearch: &elasticsearch
   - image: elasticsearch:7.6.2
     environment:
-      - discovery.type=single-node
+      discovery.type: single-node
+      ES_JAVA_OPTS: "-Xms750m -Xmx750m"
 
 kafka: &kafka
   - image: wurstmeister/kafka:2.12-2.2.1

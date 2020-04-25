@@ -40,7 +40,7 @@ app.get('/', (req, res) => {
 app.get('/get', (req, res) => {
   client.get(
     {
-      index: req.query.index || 'myindex',
+      index: req.query.index || 'modern_index',
       type: type(),
       id: req.query.id
     },
@@ -58,7 +58,7 @@ app.get('/search', (req, res) => {
   let searchResponse;
   client
     .search({
-      index: req.query.index || 'myindex',
+      index: req.query.index || 'modern_index',
       type: type(),
       q: req.query.q
     })
@@ -84,8 +84,8 @@ app.get('/mget1', (req, res) => {
     {
       body: {
         docs: [
-          { _index: req.query.index || 'myindex', _id: ids[0] },
-          { _index: req.query.index || 'myindex', _id: ids[1] }
+          { _index: req.query.index || 'modern_index', _id: ids[0] },
+          { _index: req.query.index || 'modern_index', _id: ids[1] }
         ]
       }
     },
@@ -106,7 +106,7 @@ app.get('/mget2', (req, res) => {
   }
   client.mget(
     {
-      index: req.query.index || 'myindex',
+      index: req.query.index || 'modern_index',
       body: {
         ids
       }
@@ -128,9 +128,9 @@ app.get('/msearch', (req, res) => {
   }
   const query = {
     body: [
-      { index: req.query.index || 'myindex' },
+      { index: req.query.index || 'modern_index' },
       { query: { query_string: { query: req.query.q[0] } } },
-      { index: req.query.index || 'myindex' },
+      { index: req.query.index || 'modern_index' },
       { query: { query_string: { query: req.query.q[1] } } }
     ]
   };
@@ -147,7 +147,7 @@ app.get('/msearch', (req, res) => {
 app.post('/index', (req, res) => {
   client
     .index({
-      index: req.query.index || 'myindex',
+      index: req.query.index || 'modern_index',
       type: type(),
       body: req.body
     })
@@ -186,7 +186,7 @@ function log() {
 }
 
 function type() {
-  return needsType() ? 'mytype' : undefined;
+  return needsType() ? 'modern_type' : undefined;
 }
 
 function needsType() {

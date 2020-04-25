@@ -26,8 +26,10 @@ const esConfig = {
   log: 'warning'
 };
 
+const ES_API_VERSION = process.env.ES_API_VERSION || '7.6';
+
 if (process.env.ES_API_VERSION) {
-  esConfig.apiVersion = process.env.ES_API_VERSION;
+  esConfig.apiVersion = ES_API_VERSION;
 }
 
 const client = new elasticsearch.Client(esConfig);
@@ -39,8 +41,8 @@ app.get('/', (req, res) => {
 app.get('/get', (req, res) => {
   client.get(
     {
-      index: req.query.index || 'myindex',
-      type: 'mytype',
+      index: req.query.index || 'legacy_index',
+      type: type(),
       id: req.query.id
     },
     (error, response) => {
@@ -56,8 +58,8 @@ app.get('/search', (req, res) => {
   let searchResponse;
   client
     .search({
-      index: req.query.index || 'myindex',
-      type: 'mytype',
+      index: req.query.index || 'legacy_index',
+      type: type(),
       q: req.query.q
     })
     .then(response => {
@@ -82,8 +84,8 @@ app.get('/mget1', (req, res) => {
     {
       body: {
         docs: [
-          { _index: req.query.index || 'myindex', _type: 'mytype', _id: ids[0] },
-          { _index: req.query.index || 'myindex', _type: 'mytype', _id: ids[1] }
+          { _index: req.query.index || 'legacy_index', _type: type(), _id: ids[0] },
+          { _index: req.query.index || 'legacy_index', _type: type(), _id: ids[1] }
         ]
       }
     },
@@ -104,8 +106,8 @@ app.get('/mget2', (req, res) => {
   }
   client.mget(
     {
-      index: req.query.index || 'myindex',
-      type: 'mytype',
+      index: req.query.index || 'legacy_index',
+      type: type(),
       body: {
         ids
       }
@@ -127,9 +129,9 @@ app.get('/msearch', (req, res) => {
   }
   const query = {
     body: [
-      { index: req.query.index || 'myindex', type: 'mytype' },
+      { index: req.query.index || 'legacy_index', type: type() },
       { query: { query_string: { query: req.query.q[0] } } },
-      { index: req.query.index || 'myindex', type: 'mytype' },
+      { index: req.query.index || 'legacy_index', type: type() },
       { query: { query_string: { query: req.query.q[1] } } }
     ]
   };
@@ -146,8 +148,8 @@ app.get('/msearch', (req, res) => {
 app.post('/index', (req, res) => {
   client
     .index({
-      index: req.query.index || 'myindex',
-      type: 'mytype',
+      index: req.query.index || 'legacy_index',
+      type: type(),
       body: req.body
     })
     .then(response =>
@@ -178,8 +180,8 @@ app.get('/searchAndGet', (req, res) => {
   request(`http://127.0.0.1:${agentPort}`)
     .then(() =>
       client.search({
-        index: req.query.index || 'myindex',
-        type: 'mytype',
+        index: req.query.index || 'legacy_index',
+        type: type(),
         q: req.query.q,
         ignoreUnavailable: true
       })
@@ -200,4 +202,12 @@ function log() {
   const args = Array.prototype.slice.call(arguments);
   args[0] = logPrefix + args[0];
   console.log.apply(console, args);
+}
+
+function type() {
+  return needsType() ? 'legacy_type' : undefined;
+}
+
+function needsType() {
+  return ES_API_VERSION.indexOf('5') === 0 || ES_API_VERSION.indexOf('6') === 0;
 }

@@ -55,7 +55,9 @@ describe('tracing/elasticsearch (legacy client)', function() {
             expect(span.ec).to.equal(1);
             expect(span.data.elasticsearch.cluster).to.be.a('string');
             expect(span.data.elasticsearch.action).to.equal('get');
-            expect(span.data.elasticsearch.type).to.equal('mytype');
+            if (needsType()) {
+              expect(span.data.elasticsearch.type).to.equal('legacy_type');
+            }
             expect(span.data.elasticsearch.index).to.equal('thisIndexDoesNotExist');
             expect(span.data.elasticsearch.id).to.equal('thisDocumentWillNotExist');
             expect(span.data.elasticsearch.error).to.match(/no such index|missing/gi);
@@ -81,7 +83,7 @@ describe('tracing/elasticsearch (legacy client)', function() {
     }).then(res => {
       expect(res.error).to.not.exist;
       expect(res.response).to.exist;
-      expect(res.response._index).to.equal('myindex');
+      expect(res.response._index).to.equal('legacy_index');
       expect(res.response._shards.successful).to.equal(1);
       return retry(() =>
         agentControls.getSpans().then(spans => {
@@ -103,7 +105,7 @@ describe('tracing/elasticsearch (legacy client)', function() {
       .then(res1 => {
         expect(res1.error).to.not.exist;
         expect(res1.response).to.exist;
-        expect(res1.response._index).to.equal('myindex');
+        expect(res1.response._index).to.equal('legacy_index');
         expect(res1.response._shards.successful).to.equal(1);
         return retry(() =>
           get({
@@ -520,10 +522,10 @@ describe('tracing/elasticsearch (legacy client)', function() {
       expect(span.ec).to.equal(0);
       expect(span.data.elasticsearch.cluster).to.be.a('string');
       expect(span.data.elasticsearch.action).to.equal(action);
-      if (indexName !== '_all') {
-        expect(span.data.elasticsearch.type).to.equal('mytype');
+      expect(span.data.elasticsearch.index).to.equal(indexName || 'legacy_index');
+      if (needsType() && indexName !== '_all') {
+        expect(span.data.elasticsearch.type).to.equal('legacy_type');
       }
-      expect(span.data.elasticsearch.index).to.equal(indexName || 'myindex');
     });
   }
 
@@ -554,4 +556,8 @@ describe('tracing/elasticsearch (legacy client)', function() {
 
 function hasTotalValue() {
   return ES_API_VERSION.indexOf('2') !== 0 && ES_API_VERSION.indexOf('5') !== 0 && ES_API_VERSION.indexOf('6') !== 0;
+}
+
+function needsType() {
+  return ES_API_VERSION.indexOf('5') === 0 || ES_API_VERSION.indexOf('6') === 0;
 }

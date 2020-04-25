@@ -1,9 +1,9 @@
 'use strict';
 
 const expect = require('chai').expect;
+const semver = require('semver');
 
 const constants = require('@instana/core').tracing.constants;
-const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('../../../../../core/test/config');
 const {
   stringifyItems,
@@ -16,7 +16,7 @@ const ProcessControls = require('../../ProcessControls');
 const ES_API_VERSION = '7.6';
 
 describe('tracing/elasticsearch (modern client)', function() {
-  if (!supportedVersion(process.versions.node)) {
+  if (!semver.gte(process.versions.node, '8.0.0')) {
     return;
   }
 
@@ -80,7 +80,7 @@ describe('tracing/elasticsearch (modern client)', function() {
     }).then(res => {
       expect(res.error).to.not.exist;
       expect(res.response).to.exist;
-      expect(res.response.body._index).to.equal('myindex');
+      expect(res.response.body._index).to.equal('modern_index');
       expect(res.response.body._shards.successful).to.equal(1);
       return retry(() =>
         agentControls.getSpans().then(spans => {
@@ -103,7 +103,7 @@ describe('tracing/elasticsearch (modern client)', function() {
         expect(res1.error).to.not.exist;
         expect(res1.response).to.exist;
         expect(res1.response.statusCode).to.equal(201);
-        expect(res1.response.body._index).to.equal('myindex');
+        expect(res1.response.body._index).to.equal('modern_index');
         expect(res1.response.body._shards.successful).to.equal(1);
         return retry(() =>
           get({
@@ -480,7 +480,10 @@ describe('tracing/elasticsearch (modern client)', function() {
       expect(span.ec).to.equal(0);
       expect(span.data.elasticsearch.cluster).to.be.a('string');
       expect(span.data.elasticsearch.action).to.equal(action);
-      expect(span.data.elasticsearch.index).to.equal(indexName || 'myindex');
+      expect(span.data.elasticsearch.index).to.equal(indexName || 'modern_index');
+      if (needsType() && indexName !== '_all') {
+        expect(span.data.elasticsearch.type).to.equal('modern_type');
+      }
     });
   }
 
@@ -511,4 +514,8 @@ describe('tracing/elasticsearch (modern client)', function() {
 
 function hasTotalValue() {
   return ES_API_VERSION.indexOf('2') !== 0 && ES_API_VERSION.indexOf('5') !== 0 && ES_API_VERSION.indexOf('6') !== 0;
+}
+
+function needsType() {
+  return ES_API_VERSION.indexOf('5') === 0 || ES_API_VERSION.indexOf('6') === 0;
 }
