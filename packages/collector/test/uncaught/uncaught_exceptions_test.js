@@ -54,7 +54,7 @@ describe('uncaught exceptions', function() {
         return testUtils.retry(
           () =>
             agentControls.getSpans().then(spans => {
-              testUtils.expectAtLeastOneMatching(spans, span => {
+              return testUtils.expectAtLeastOneMatching(spans, span => {
                 expect(span.n).to.equal('node.http.server');
                 expect(span.f.e).to.equal(String(serverControls.getPid()));
                 expect(span.f.h).to.equal('agent-stub-uuid');
