@@ -103,11 +103,10 @@ shared: &shared
         key: v3-babel-typescript-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "packages/collector/test/apps/babel-typescript/package-lock.json" }}
 
 elasticsearch: &elasticsearch
-  - image: elasticsearch:7.6.2
+  - image: docker.elastic.co/elasticsearch/elasticsearch:7.6.2
     environment:
       - discovery.type=single-node
-      - xpack.security.enabled=false
-      - ES_JAVA_OPTS=-Xms750m -Xmx750m
+      - "ES_JAVA_OPTS=-Xms500m -Xmx500m"
 
 kafka: &kafka
   - image: wurstmeister/kafka:2.12-2.2.1
@@ -245,9 +244,9 @@ workflows:
   version: 2
   build:
     jobs:
-      # - "node-13"
-      # - "node-12"
-      # - "node-10"
-      # - "node-8"
+      - "node-13"
+      - "node-12"
+      - "node-10"
+      - "node-8"
       - "node-6"
 
