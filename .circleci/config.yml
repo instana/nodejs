@@ -89,9 +89,10 @@ shared: &shared
             - packages/aws-lambda-auto-wrap/node_modules
         key: v3-aws-lambda-auto-wrap-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "packages/aws-lambda-auto-wrap/package-lock.json" }}
 
-    # Only run audit in Node.js 13 - one Node version is enough and Node 12.7.0 is the first Node version that brings
-    # a new new enough npm as its default npm version to support the --production flag for npm audit.
-    - run: '([[ $(node -v) =~ ^v13.*$ ]] && npm run audit) || [[ ! $(node -v) =~ ^v13.*$ ]]'
+    # Only run audit with the most recent Node.js version - one Node version is enough (plus Node 12.7.0 is the first
+    # Node version that brings a new new enough npm as its default npm version to support the --production flag
+    # for npm audit.
+    - run: '([[ $(node -v) =~ ^v14.*$ ]] && npm run audit) || [[ ! $(node -v) =~ ^v14.*$ ]]'
     # Run linting first, we don't want to wait ages for the test suite to finish only to end with the CI job with a
     # linting error.
     - run: npm run lint
@@ -160,9 +161,9 @@ nats-streaming: &nats-streaming
       - 8223:8223
 
 jobs:
-  "node-13":
+  "node-14":
     docker:
-      - image: circleci/node:13
+      - image: circleci/node:14
       - <<: *zookeeper
       - <<: *elasticsearch
       - <<: *mongo
@@ -244,7 +245,7 @@ workflows:
   version: 2
   build:
     jobs:
-      - "node-13"
+      - "node-14"
       - "node-12"
       - "node-10"
       - "node-8"

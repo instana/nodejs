@@ -16,7 +16,7 @@ describe('uncaught exceptions', function() {
   if (semver.satisfies(process.versions.node, '>=13.0.0')) {
     // eslint-disable-next-line no-console
     console.error(
-      'SKIPPING UNCAUGHT EXCEPTIONS TEST BECAUSE OPTIONAL DEPENDENCY netlinkwrapper IS NOT YET AVAILABLE FOR NODE 13'
+      'SKIPPING UNCAUGHT EXCEPTIONS TEST BECAUSE OPTIONAL DEPENDENCY netlinkwrapper IS NOT YET AVAILABLE FOR NODE 14'
     );
     return;
   }
