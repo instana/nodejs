@@ -109,13 +109,6 @@ elasticsearch: &elasticsearch
       - xpack.security.enabled=false
       - ES_JAVA_OPTS=-Xms750m -Xmx750m
 
-# elasticsearch_5: &elasticsearch_5
-#   - image: elasticsearch:5.6.16
-#     environment:
-#       discovery.type: single-node
-#       ES_JAVA_OPTS: "-Xms750m -Xmx750m"
-#
-
 kafka: &kafka
   - image: wurstmeister/kafka:2.12-2.2.1
     environment:
