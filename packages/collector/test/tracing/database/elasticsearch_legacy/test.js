@@ -15,7 +15,7 @@ const ProcessControls = require('../../ProcessControls');
 
 const ES_API_VERSION = '7.6';
 
-describe('tracing/elasticsearch (legacy client)', function() {
+describe.only('tracing/elasticsearch (legacy client)', function() {
   if (!supportedVersion(process.versions.node)) {
     return;
   }

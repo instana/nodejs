@@ -15,7 +15,7 @@ const ProcessControls = require('../../ProcessControls');
 
 const ES_API_VERSION = '7.6';
 
-describe('tracing/elasticsearch (modern client)', function() {
+describe.only('tracing/elasticsearch (modern client)', function() {
   if (!semver.gte(process.versions.node, '8.0.0')) {
     return;
   }
