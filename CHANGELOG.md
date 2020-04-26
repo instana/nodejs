@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.96.0
 - Instrument [@elastic/elasticsearch](https://www.npmjs.com/package/@elastic/elasticsearch) (aka modern Elasticsearch client).
 - Fix instrumentation for legacy Elasticsearch client (https://www.npmjs.com/package/elasticsearch), do not discard subsequent exit spans.
 - Make instrumentation robust against https://github.com/montagejs/collections/issues/178.
