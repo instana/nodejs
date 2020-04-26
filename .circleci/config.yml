@@ -245,9 +245,9 @@ workflows:
   version: 2
   build:
     jobs:
-      - "node-13"
-      - "node-12"
-      - "node-10"
-      - "node-8"
+      # - "node-13"
+      # - "node-12"
+      # - "node-10"
+      # - "node-8"
       - "node-6"
 
