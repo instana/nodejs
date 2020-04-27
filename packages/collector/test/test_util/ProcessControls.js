@@ -1,5 +1,6 @@
 'use strict';
 
+const path = require('path');
 const fork = require('child_process').fork;
 const request = require('request-promise');
 const _ = require('lodash');
@@ -8,12 +9,23 @@ const agentPort = require('../apps/agentStubControls').agentPort;
 const config = require('../../../core/test/config');
 const testUtils = require('../../../core/test/test_util');
 
-const AbstractControls = (module.exports = function AbstractControls(opts = {}) {
+const ProcessControls = (module.exports = function ProcessControls(opts = {}) {
+  if (!opts.appPath && !opts.dirname) {
+    throw new Error('Missing mandatory config option, either appPath or dirname needs to be provided.');
+  }
+  if (opts.appPath && opts.dirname) {
+    throw new Error('Invalid config, appPath and dirname are mutually exclusive.');
+  }
+  if (!opts.appPath && opts.dirname) {
+    opts.appPath = path.join(opts.dirname, 'app');
+  }
+
   // absolute path to .js file that should be executed
   this.appPath = opts.appPath;
   this.args = opts.args;
   this.port = opts.port || process.env.APP_PORT || 3215;
   this.tracingEnabled = opts.tracingEnabled !== false;
+  this.dontKillInAfterHook = opts.dontKillInAfterHook;
   this.useHttps = opts.env && !!opts.env.USE_HTTPS;
   this.usePreInit = opts.usePreInit === true;
   this.baseUrl = `${this.useHttps ? 'https' : 'http'}://127.0.0.1:${this.port}`;
@@ -39,7 +51,7 @@ const AbstractControls = (module.exports = function AbstractControls(opts = {}) 
   this.receivedIpcMessages = [];
 });
 
-AbstractControls.prototype.registerTestHooks = function registerTestHooks() {
+ProcessControls.prototype.registerTestHooks = function registerTestHooks() {
   beforeEach(() => {
     const that = this;
     this.receivedIpcMessages = [];
@@ -66,7 +78,7 @@ AbstractControls.prototype.registerTestHooks = function registerTestHooks() {
   return this;
 };
 
-AbstractControls.prototype.kill = function kill() {
+ProcessControls.prototype.kill = function kill() {
   if (this.process.killed || this.dontKillInAfterHook) {
     return Promise.resolve();
   }
@@ -76,7 +88,7 @@ AbstractControls.prototype.kill = function kill() {
   });
 };
 
-AbstractControls.prototype.waitUntilServerIsUp = function waitUntilServerIsUp() {
+ProcessControls.prototype.waitUntilServerIsUp = function waitUntilServerIsUp() {
   return testUtils.retry(() => {
     return request({
       method: 'GET',
@@ -89,11 +101,14 @@ AbstractControls.prototype.waitUntilServerIsUp = function waitUntilServerIsUp() 
   });
 };
 
-AbstractControls.prototype.getPid = function getPid() {
+ProcessControls.prototype.getPid = function getPid() {
+  if (!this.process) {
+    return 'no process, no PID';
+  }
   return this.process.pid;
 };
 
-AbstractControls.prototype.sendRequest = function(opts) {
+ProcessControls.prototype.sendRequest = function(opts) {
   if (opts.suppressTracing === true) {
     opts.headers = opts.headers || {};
     opts.headers['X-INSTANA-L'] = '0';
@@ -105,10 +120,12 @@ AbstractControls.prototype.sendRequest = function(opts) {
   return request(opts);
 };
 
-AbstractControls.prototype.sendViaIpc = function(message) {
+ProcessControls.prototype.sendViaIpc = function(message) {
   this.process.send(message);
 };
 
-AbstractControls.prototype.getIpcMessages = function() {
+ProcessControls.prototype.getIpcMessages = function() {
   return this.receivedIpcMessages;
 };
+
+module.exports = ProcessControls;

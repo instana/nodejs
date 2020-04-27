@@ -7,9 +7,9 @@ const constants = require('@instana/core').tracing.constants;
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('../../../../../core/test/config');
 const testUtils = require('../../../../../core/test/test_util');
+const ProcessControls = require('../../../test_util/ProcessControls');
 
 let agentControls;
-let Controls;
 
 describe('tracing/sequelize', function() {
   if (!supportedVersion(process.versions.node)) {
@@ -17,7 +17,6 @@ describe('tracing/sequelize', function() {
   }
 
   agentControls = require('../../../apps/agentStubControls');
-  Controls = require('./controls');
 
   this.timeout(config.getTestTimeout());
 
@@ -38,11 +37,11 @@ function registerTests(usePgNative) {
         USE_PG_NATIVE: true
       }
     : {};
-  const controls = new Controls({
+  const controls = new ProcessControls({
+    dirname: __dirname,
     agentControls,
     env
-  });
-  controls.registerTestHooks();
+  }).registerTestHooks();
 
   it(`must fetch (pg-native: ${usePgNative})`, () =>
     controls

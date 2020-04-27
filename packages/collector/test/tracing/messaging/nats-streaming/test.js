@@ -1,5 +1,6 @@
 'use strict';
 
+const path = require('path');
 const expect = require('chai').expect;
 const uuid = require('uuid/v4');
 
@@ -8,6 +9,7 @@ const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('../../../../../core/test/config');
 const delay = require('../../../../../core/test/test_util/delay');
 const testUtils = require('../../../../../core/test/test_util');
+const ProcessControls = require('../../../test_util/ProcessControls');
 
 describe('tracing/nats-streaming', function() {
   if (!supportedVersion(process.versions.node)) {
@@ -15,20 +17,19 @@ describe('tracing/nats-streaming', function() {
   }
 
   const agentControls = require('../../../apps/agentStubControls');
-  const PublisherControls = require('./publisherControls');
-  const SubscriberControls = require('./subscriberControls');
-  const publisherControls = new PublisherControls({
-    agentControls
-  });
-  const subscriberControls = new SubscriberControls({
-    agentControls
-  });
-
   this.timeout(config.getTestTimeout() * 2);
 
   agentControls.registerTestHooks();
-  publisherControls.registerTestHooks();
-  subscriberControls.registerTestHooks();
+
+  const publisherControls = new ProcessControls({
+    appPath: path.join(__dirname, 'publisher'),
+    port: 3216,
+    agentControls
+  }).registerTestHooks();
+  const subscriberControls = new ProcessControls({
+    appPath: path.join(__dirname, 'subscriber'),
+    agentControls
+  }).registerTestHooks();
 
   describe('publish et al.', function() {
     [false, true].forEach(withError => {
@@ -201,22 +202,21 @@ describe('tracing/nats-streaming', function() {
 
 describe('disabled', function() {
   const agentControls = require('../../../apps/agentStubControls');
-  const PublisherControls = require('./publisherControls');
-  const SubscriberControls = require('./subscriberControls');
-  const publisherControls = new PublisherControls({
-    agentControls,
-    tracingEnabled: false
-  });
-  const subscriberControls = new SubscriberControls({
-    agentControls,
-    tracingEnabled: false
-  });
-
   this.timeout(config.getTestTimeout() * 2);
 
   agentControls.registerTestHooks();
-  publisherControls.registerTestHooks();
-  subscriberControls.registerTestHooks();
+
+  const publisherControls = new ProcessControls({
+    appPath: path.join(__dirname, 'publisher'),
+    port: 3216,
+    agentControls,
+    tracingEnabled: false
+  }).registerTestHooks();
+  new ProcessControls({
+    appPath: path.join(__dirname, 'subscriber'),
+    agentControls,
+    tracingEnabled: false
+  }).registerTestHooks();
 
   it('should not trace when disabled', () =>
     publisherControls

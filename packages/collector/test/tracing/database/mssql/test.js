@@ -8,6 +8,7 @@ const constants = require('@instana/core').tracing.constants;
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('../../../../../core/test/config');
 const testUtils = require('../../../../../core/test/test_util');
+const ProcessControls = require('../../../test_util/ProcessControls');
 
 describe('tracing/mssql', function() {
   if (!supportedVersion(process.versions.node)) {
@@ -24,14 +25,13 @@ describe('tracing/mssql', function() {
   this.timeout(config.getTestTimeout());
   const agentControls = require('../../../apps/agentStubControls');
   agentControls.registerTestHooks();
-  const AppControls = require('./controls');
-  const appControls = new AppControls({
+  const controls = new ProcessControls({
+    dirname: __dirname,
     agentControls
-  });
-  appControls.registerTestHooks();
+  }).registerTestHooks();
 
   it('must trace dummy select', () =>
-    appControls
+    controls
       .sendRequest({
         method: 'GET',
         path: '/select-getdate'
@@ -56,7 +56,7 @@ describe('tracing/mssql', function() {
       }));
 
   it('must trace static dummy select', () =>
-    appControls
+    controls
       .sendRequest({
         method: 'GET',
         path: '/select-static'
@@ -81,7 +81,7 @@ describe('tracing/mssql', function() {
       }));
 
   it('must trace errors', () =>
-    appControls
+    controls
       .sendRequest({
         method: 'GET',
         path: '/error-callback'
@@ -107,7 +107,7 @@ describe('tracing/mssql', function() {
       }));
 
   it('must trace select via promise', () =>
-    appControls
+    controls
       .sendRequest({
         method: 'GET',
         path: '/select-promise'
@@ -132,7 +132,7 @@ describe('tracing/mssql', function() {
       }));
 
   it('must trace errors via promise', () =>
-    appControls
+    controls
       .sendRequest({
         method: 'GET',
         path: '/error-promise'
@@ -158,7 +158,7 @@ describe('tracing/mssql', function() {
       }));
 
   it('must trace standard pool', () =>
-    appControls
+    controls
       .sendRequest({
         method: 'GET',
         path: '/select-standard-pool'
@@ -183,7 +183,7 @@ describe('tracing/mssql', function() {
       }));
 
   it('must trace custom pool', () =>
-    appControls
+    controls
       .sendRequest({
         method: 'GET',
         path: '/select-custom-pool'
@@ -208,19 +208,19 @@ describe('tracing/mssql', function() {
       }));
 
   it('must trace insert and select', () =>
-    appControls
+    controls
       .sendRequest({
         method: 'POST',
         path: '/insert'
       })
       .then(() =>
-        appControls.sendRequest({
+        controls.sendRequest({
           method: 'POST',
           path: '/insert-params'
         })
       )
       .then(() =>
-        appControls.sendRequest({
+        controls.sendRequest({
           method: 'GET',
           path: '/select'
         })
@@ -268,13 +268,13 @@ describe('tracing/mssql', function() {
       }));
 
   it('must trace prepared statements via callback', () =>
-    appControls
+    controls
       .sendRequest({
         method: 'POST',
         path: '/insert-prepared-callback'
       })
       .then(() =>
-        appControls.sendRequest({
+        controls.sendRequest({
           method: 'GET',
           path: '/select-by-name/tiberius'
         })
@@ -307,13 +307,13 @@ describe('tracing/mssql', function() {
       }));
 
   it('must trace prepared statements via promise', () =>
-    appControls
+    controls
       .sendRequest({
         method: 'POST',
         path: '/insert-prepared-promise'
       })
       .then(() =>
-        appControls.sendRequest({
+        controls.sendRequest({
           method: 'GET',
           path: '/select-by-name/caligula'
         })
@@ -346,7 +346,7 @@ describe('tracing/mssql', function() {
       }));
 
   it('must trace errors in prepared statements via callback', () =>
-    appControls
+    controls
       .sendRequest({
         method: 'POST',
         path: '/insert-prepared-error-callback'
@@ -375,7 +375,7 @@ describe('tracing/mssql', function() {
       }));
 
   it('must trace errors in prepared statements via promise', () =>
-    appControls
+    controls
       .sendRequest({
         method: 'POST',
         path: '/insert-prepared-error-promise'
@@ -404,7 +404,7 @@ describe('tracing/mssql', function() {
       }));
 
   it('must trace transactions with callbacks', () =>
-    appControls
+    controls
       .sendRequest({
         method: 'POST',
         path: '/transaction-callback'
@@ -431,7 +431,7 @@ describe('tracing/mssql', function() {
       }));
 
   it('must trace transactions with promises', () =>
-    appControls
+    controls
       .sendRequest({
         method: 'POST',
         path: '/transaction-promise'
@@ -458,7 +458,7 @@ describe('tracing/mssql', function() {
       }));
 
   it('must trace stored procedure execution', () =>
-    appControls
+    controls
       .sendRequest({
         method: 'GET',
         path: '/stored-procedure-callback'
@@ -483,7 +483,7 @@ describe('tracing/mssql', function() {
       }));
 
   it('must trace the streaming API', () =>
-    appControls
+    controls
       .sendRequest({
         method: 'GET',
         path: '/streaming'
@@ -509,7 +509,7 @@ describe('tracing/mssql', function() {
       }));
 
   it('must trace the pipe API', () =>
-    appControls
+    controls
       .sendRequest({
         method: 'GET',
         path: '/pipe'
@@ -532,7 +532,7 @@ describe('tracing/mssql', function() {
       ));
 
   it('must trace batch with callback', () =>
-    appControls
+    controls
       .sendRequest({
         method: 'GET',
         path: '/batch-callback'
@@ -557,7 +557,7 @@ describe('tracing/mssql', function() {
       }));
 
   it('must trace batch with promise', () =>
-    appControls
+    controls
       .sendRequest({
         method: 'GET',
         path: '/batch-promise'
@@ -582,7 +582,7 @@ describe('tracing/mssql', function() {
       }));
 
   it('must trace bulk operations', () =>
-    appControls
+    controls
       .sendRequest({
         method: 'GET',
         path: '/bulk'
@@ -607,7 +607,7 @@ describe('tracing/mssql', function() {
       }));
 
   it('must trace cancel', () =>
-    appControls
+    controls
       .sendRequest({
         method: 'GET',
         path: '/cancel'
@@ -645,7 +645,7 @@ describe('tracing/mssql', function() {
     expect(span.t).to.equal(parent.t);
     expect(span.p).to.equal(parent.s);
     expect(span.k).to.equal(constants.EXIT);
-    expect(span.f.e).to.equal(String(appControls.getPid()));
+    expect(span.f.e).to.equal(String(controls.getPid()));
     expect(span.f.h).to.equal('agent-stub-uuid');
     expect(span.n).to.equal('mssql');
     expect(span.async).to.not.exist;

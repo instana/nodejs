@@ -5,24 +5,24 @@ const _ = require('lodash');
 
 const config = require('../../../core/test/config');
 const testUtils = require('../../../core/test/test_util');
+const ProcessControls = require('../../../collector/test/test_util/ProcessControls');
 
 describe('legacy sensor/metrics', function() {
   this.timeout(config.getTestTimeout());
 
   const agentControls = require('../../../collector/test/apps/agentStubControls');
-  const AppControls = require('./controls');
-  const appControls = new AppControls({
-    agentControls
-  });
-
   agentControls.registerTestHooks();
-  appControls.registerTestHooks();
 
-  beforeEach(() => agentControls.waitUntilAppIsCompletelyInitialized(appControls.getPid()));
+  const controls = new ProcessControls({
+    dirname: __dirname,
+    agentControls
+  }).registerTestHooks();
+
+  beforeEach(() => agentControls.waitUntilAppIsCompletelyInitialized(controls.getPid()));
 
   it('must report metrics', () =>
     testUtils.retry(() =>
-      agentControls.getAllMetrics(appControls.getPid()).then(allMetrics => {
+      agentControls.getAllMetrics(controls.getPid()).then(allMetrics => {
         expect(findMetric(allMetrics, ['activeHandles'])).to.exist;
         expect(findMetric(allMetrics, ['gc', 'minorGcs'])).to.exist;
         expect(findMetric(allMetrics, ['gc', 'majorGcs'])).to.exist;

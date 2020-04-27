@@ -3,25 +3,25 @@
 const expect = require('chai').expect;
 const semver = require('semver');
 
-const config = require('../../../../core/test/config');
-const testUtils = require('../../../../core/test/test_util');
+const config = require('../../../../../core/test/config');
+const testUtils = require('../../../../../core/test/test_util');
+const ProcessControls = require('../../../test_util/ProcessControls');
 
 describe('tracing/requireHook', function() {
   if (semver.lt(process.versions.node, '8.0.0')) {
     return;
   }
 
-  const agentControls = require('../../apps/agentStubControls');
-  const Controls = require('./controls');
+  const agentControls = require('../../../apps/agentStubControls');
 
   this.timeout(config.getTestTimeout());
 
   agentControls.registerTestHooks();
 
-  const controls = new Controls({
+  const controls = new ProcessControls({
+    dirname: __dirname,
     agentControls
-  });
-  controls.registerTestHooks();
+  }).registerTestHooks();
 
   describe('stealthy require', () => {
     it('must not apply caching when not necessary / or when something is fishy', () =>

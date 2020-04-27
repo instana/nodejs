@@ -1,5 +1,6 @@
 'use strict';
 
+const path = require('path');
 const semver = require('semver');
 const chai = require('chai');
 const expect = chai.expect;
@@ -8,6 +9,7 @@ const assert = chai.assert;
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('../../../core/test/config');
 const testUtils = require('../../../core/test/test_util');
+const ProcessControls = require('../test_util/ProcessControls');
 
 describe('uncaught exceptions', function() {
   if (!supportedVersion(process.versions.node)) {
@@ -22,23 +24,23 @@ describe('uncaught exceptions', function() {
   }
 
   const agentControls = require('../apps/agentStubControls');
-  const ServerControls = require('./apps/serverControls');
 
   this.timeout(config.getTestTimeout() * 2);
 
   agentControls.registerTestHooks();
 
-  const serverControls = new ServerControls({
+  const serverControls = new ProcessControls({
+    appPath: path.join(__dirname, 'apps', 'server'),
+    dontKillInAfterHook: true,
     agentControls,
     env: {
       ENABLE_REPORT_UNCAUGHT_EXCEPTION: true,
       ENABLE_REPORT_UNHANDLED_REJECTIONS: false
     }
-  });
-  serverControls.registerTestHooks();
+  }).registerTestHooks();
 
   it('must finish the current span and mark it as an error', function() {
-    serverControls
+    return serverControls
       .sendRequest({
         method: 'GET',
         path: '/boom',
@@ -69,7 +71,7 @@ describe('uncaught exceptions', function() {
   });
 
   it('must be reported as an issue', function() {
-    serverControls
+    return serverControls
       .sendRequest({
         method: 'GET',
         path: '/boom',

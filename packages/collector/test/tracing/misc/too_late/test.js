@@ -10,9 +10,9 @@ const constants = require('@instana/core').tracing.constants;
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('../../../../../core/test/config');
 const testUtils = require('../../../../../core/test/test_util');
+const ProcessControls = require('../../../test_util/ProcessControls');
 
 let agentControls;
-let Controls;
 
 describe('tracing/too late', function() {
   if (!supportedVersion(process.versions.node) || semver.lt(process.versions.node, '8.0.0')) {
@@ -20,7 +20,6 @@ describe('tracing/too late', function() {
   }
 
   agentControls = require('../../../apps/agentStubControls');
-  Controls = require('./controls');
 
   this.timeout(config.getTestTimeout());
 
@@ -60,13 +59,13 @@ describe('tracing/too late', function() {
 
   function registerTooLateTest(moduleName) {
     describe(`@instana/collector is initialized too late (${moduleName})`, function() {
-      const controls = new Controls({
+      const controls = new ProcessControls({
+        dirname: __dirname,
         agentControls,
         env: {
           REQUIRE_BEFORE_COLLECTOR: moduleName
         }
-      });
-      controls.registerTestHooks();
+      }).registerTestHooks();
 
       it(`should warn when module ${moduleName} has been require before @instana/collector`, () =>
         controls
@@ -116,10 +115,10 @@ describe('tracing/too late', function() {
   }
 
   describe('@instana/collector is initialized properly', function() {
-    const controls = new Controls({
+    const controls = new ProcessControls({
+      dirname: __dirname,
       agentControls
-    });
-    controls.registerTestHooks();
+    }).registerTestHooks();
 
     it('should not warn about being initialized too late', () =>
       controls

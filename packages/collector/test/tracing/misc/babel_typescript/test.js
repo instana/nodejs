@@ -12,11 +12,11 @@ const constants = require('@instana/core').tracing.constants;
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('../../../../../core/test/config');
 const testUtils = require('../../../../../core/test/test_util');
+const ProcessControls = require('../../../test_util/ProcessControls');
 
 const babelAppDir = path.join(__dirname, '../../../apps/babel-typescript');
 const babelLibDir = path.join(babelAppDir, 'lib');
 let agentControls;
-let Controls;
 
 describe('tracing a babel/typescript setup', function() {
   if (!supportedVersion(process.versions.node) || semver.lt(process.versions.node, '8.0.0')) {
@@ -34,6 +34,8 @@ describe('tracing a babel/typescript setup', function() {
       const command = 'npm install && npm run build';
       process.chdir(babelAppDir);
       console.log(`About to run "${command}" in ${process.cwd()} now, this might take a while.`);
+      // If this fails with "Error: Cannot find module './testUtils'" there might be left over node_modules installed by
+      // a different Node.js version. rm -rf packages/collector/test/apps/babel-typescript/node_modules and run again.
       childProcess.exec(command, (error, stdout, stderr) => {
         console.log(`STDOUT of ${command}: ${stdout}`);
         console.error(`STDERR of ${command}: ${stderr}`);
@@ -48,14 +50,15 @@ describe('tracing a babel/typescript setup', function() {
   });
 
   agentControls = require('../../../apps/agentStubControls');
-  Controls = require('./controls');
 
   this.timeout(config.getTestTimeout());
 
   agentControls.registerTestHooks();
 
-  const controls = new Controls({ agentControls });
-  controls.registerTestHooks();
+  const controls = new ProcessControls({
+    appPath: path.join(__dirname, '../../../apps/babel-typescript'),
+    agentControls
+  }).registerTestHooks();
 
   describe('@instana/collector used in a babel-transpiled typescript app', function() {
     it('should trace when imported with workaround according to our docs', () =>

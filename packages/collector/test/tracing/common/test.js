@@ -7,7 +7,7 @@ const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('../../../../core/test/config');
 const delay = require('../../../../core/test/test_util/delay');
 const testUtils = require('../../../../core/test/test_util');
-const ProcessControls = require('../ProcessControls');
+const ProcessControls = require('../../test_util/ProcessControls');
 
 const extendedTimeout = Math.max(config.getTestTimeout(), 10000);
 
@@ -79,7 +79,7 @@ describe('tracing/common', function() {
                   expect(span.data.http.method).to.equal('GET');
                   expect(span.data.http.url).to.equal('/');
                   expect(span.data.http.status).to.equal(200);
-                  expect(span.data.http.host).to.equal('127.0.0.1:3216');
+                  expect(span.data.http.host).to.equal('127.0.0.1:3215');
                 }),
               Math.max(extendedTimeout / 2, 10000)
             )
@@ -104,7 +104,7 @@ describe('tracing/common', function() {
           expect(span.data.http.method).to.equal('GET');
           expect(span.data.http.url).to.equal('/');
           expect(span.data.http.status).to.equal(200);
-          expect(span.data.http.host).to.equal('127.0.0.1:3216');
+          expect(span.data.http.host).to.equal('127.0.0.1:3215');
         })
       );
     }

@@ -9,7 +9,7 @@ const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const cpu = require('../../../src/actions/profiling/cpu');
 const config = require('../../../../core/test/config');
 const testUtils = require('../../../../core/test/test_util');
-const ProcessControls = require('../../tracing/ProcessControls');
+const ProcessControls = require('../../test_util/ProcessControls');
 
 describe('actions/profiling/cpu', () => {
   if (!semver.satisfies(process.versions.node, '>=4.0.0')) {

@@ -6,6 +6,7 @@ const constants = require('@instana/core').tracing.constants;
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('../../../../../core/test/config');
 const testUtils = require('../../../../../core/test/test_util');
+const ProcessControls = require('../../../test_util/ProcessControls');
 
 describe('tracing/redis', function() {
   if (!supportedVersion(process.versions.node)) {
@@ -13,19 +14,18 @@ describe('tracing/redis', function() {
   }
 
   const agentControls = require('../../../apps/agentStubControls');
-  const RedisControls = require('./controls');
 
   this.timeout(config.getTestTimeout());
 
   agentControls.registerTestHooks();
 
-  const redisControls = new RedisControls({
+  const controls = new ProcessControls({
+    dirname: __dirname,
     agentControls
-  });
-  redisControls.registerTestHooks();
+  }).registerTestHooks();
 
   it('must trace set/get calls', () =>
-    redisControls
+    controls
       .sendRequest({
         method: 'POST',
         path: '/values',
@@ -35,7 +35,7 @@ describe('tracing/redis', function() {
         }
       })
       .then(() =>
-        redisControls.sendRequest({
+        controls.sendRequest({
           method: 'GET',
           path: '/values',
           qs: {
@@ -58,7 +58,7 @@ describe('tracing/redis', function() {
               expect(span.p).to.equal(writeEntrySpan.s);
               expect(span.n).to.equal('redis');
               expect(span.k).to.equal(constants.EXIT);
-              expect(span.f.e).to.equal(String(redisControls.getPid()));
+              expect(span.f.e).to.equal(String(controls.getPid()));
               expect(span.f.h).to.equal('agent-stub-uuid');
               expect(span.async).to.not.exist;
               expect(span.error).to.not.exist;
@@ -70,7 +70,7 @@ describe('tracing/redis', function() {
             const readEntrySpan = testUtils.expectAtLeastOneMatching(spans, span => {
               expect(span.n).to.equal('node.http.server');
               expect(span.data.http.method).to.equal('GET');
-              expect(span.f.e).to.equal(String(redisControls.getPid()));
+              expect(span.f.e).to.equal(String(controls.getPid()));
               expect(span.f.h).to.equal('agent-stub-uuid');
             });
 
@@ -79,7 +79,7 @@ describe('tracing/redis', function() {
               expect(span.p).to.equal(readEntrySpan.s);
               expect(span.n).to.equal('redis');
               expect(span.k).to.equal(constants.EXIT);
-              expect(span.f.e).to.equal(String(redisControls.getPid()));
+              expect(span.f.e).to.equal(String(controls.getPid()));
               expect(span.f.h).to.equal('agent-stub-uuid');
               expect(span.async).to.not.exist;
               expect(span.error).to.not.exist;
@@ -92,7 +92,7 @@ describe('tracing/redis', function() {
       }));
 
   it('must trace failed redis calls', () =>
-    redisControls
+    controls
       .sendRequest({
         method: 'GET',
         path: '/failure'
@@ -113,7 +113,7 @@ describe('tracing/redis', function() {
               expect(span.p).to.equal(writeEntrySpan.s);
               expect(span.n).to.equal('redis');
               expect(span.k).to.equal(constants.EXIT);
-              expect(span.f.e).to.equal(String(redisControls.getPid()));
+              expect(span.f.e).to.equal(String(controls.getPid()));
               expect(span.f.h).to.equal('agent-stub-uuid');
               expect(span.async).to.not.exist;
               expect(span.error).to.not.exist;
@@ -127,7 +127,7 @@ describe('tracing/redis', function() {
       ));
 
   it('must trace multi calls', () =>
-    redisControls
+    controls
       .sendRequest({
         method: 'GET',
         path: '/multi'
@@ -145,7 +145,7 @@ describe('tracing/redis', function() {
               expect(span.p).to.equal(writeEntrySpan.s);
               expect(span.n).to.equal('redis');
               expect(span.k).to.equal(constants.EXIT);
-              expect(span.f.e).to.equal(String(redisControls.getPid()));
+              expect(span.f.e).to.equal(String(controls.getPid()));
               expect(span.f.h).to.equal('agent-stub-uuid');
               expect(span.async).to.not.exist;
               expect(span.error).to.not.exist;
@@ -161,7 +161,7 @@ describe('tracing/redis', function() {
       ));
 
   it('must trace failed multi calls', () =>
-    redisControls
+    controls
       .sendRequest({
         method: 'GET',
         path: '/multiFailure'
@@ -182,7 +182,7 @@ describe('tracing/redis', function() {
               expect(span.p).to.equal(writeEntrySpan.s);
               expect(span.n).to.equal('redis');
               expect(span.k).to.equal(constants.EXIT);
-              expect(span.f.e).to.equal(String(redisControls.getPid()));
+              expect(span.f.e).to.equal(String(controls.getPid()));
               expect(span.f.h).to.equal('agent-stub-uuid');
               expect(span.async).to.not.exist;
               expect(span.error).to.not.exist;
@@ -198,7 +198,7 @@ describe('tracing/redis', function() {
       ));
 
   it('must trace failed batch calls', () =>
-    redisControls
+    controls
       .sendRequest({
         method: 'GET',
         path: '/batchFailure'
@@ -219,7 +219,7 @@ describe('tracing/redis', function() {
               expect(span.p).to.equal(writeEntrySpan.s);
               expect(span.n).to.equal('redis');
               expect(span.k).to.equal(constants.EXIT);
-              expect(span.f.e).to.equal(String(redisControls.getPid()));
+              expect(span.f.e).to.equal(String(controls.getPid()));
               expect(span.f.h).to.equal('agent-stub-uuid');
               expect(span.async).to.not.exist;
               expect(span.error).to.not.exist;
@@ -235,7 +235,7 @@ describe('tracing/redis', function() {
       ));
 
   it('must trace call sequences', () =>
-    redisControls
+    controls
       .sendRequest({
         method: 'GET',
         path: '/callSequence'
@@ -254,7 +254,7 @@ describe('tracing/redis', function() {
               expect(span.n).to.equal('redis');
               expect(span.k).to.equal(constants.EXIT);
               expect(span.data.redis.command).to.equal('set');
-              expect(span.f.e).to.equal(String(redisControls.getPid()));
+              expect(span.f.e).to.equal(String(controls.getPid()));
               expect(span.f.h).to.equal('agent-stub-uuid');
             });
 
@@ -263,7 +263,7 @@ describe('tracing/redis', function() {
               expect(span.p).to.equal(writeEntrySpan.s);
               expect(span.n).to.equal('redis');
               expect(span.data.redis.command).to.equal('get');
-              expect(span.f.e).to.equal(String(redisControls.getPid()));
+              expect(span.f.e).to.equal(String(controls.getPid()));
               expect(span.f.h).to.equal('agent-stub-uuid');
             });
           })

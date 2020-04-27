@@ -6,6 +6,7 @@ const constants = require('@instana/core').tracing.constants;
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('../../../../../core/test/config');
 const testUtils = require('../../../../../core/test/test_util');
+const ProcessControls = require('../../../test_util/ProcessControls');
 
 describe('tracing/pg-native', function() {
   if (!supportedVersion(process.versions.node)) {
@@ -13,16 +14,15 @@ describe('tracing/pg-native', function() {
   }
 
   const agentControls = require('../../../apps/agentStubControls');
-  const Controls = require('./controls');
 
   this.timeout(config.getTestTimeout());
 
   agentControls.registerTestHooks();
 
-  const controls = new Controls({
+  const controls = new ProcessControls({
+    dirname: __dirname,
     agentControls
-  });
-  controls.registerTestHooks();
+  }).registerTestHooks();
 
   it('must trace select', () =>
     controls

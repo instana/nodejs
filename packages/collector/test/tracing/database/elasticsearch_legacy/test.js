@@ -11,7 +11,7 @@ const {
   getSpansByName,
   retry
 } = require('../../../../../core/test/test_util');
-const ProcessControls = require('../../ProcessControls');
+const ProcessControls = require('../../../test_util/ProcessControls');
 
 const ES_API_VERSION = '7.6';
 

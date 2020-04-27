@@ -1,6 +1,5 @@
 'use strict';
 
-const path = require('path');
 const { expect } = require('chai');
 const { fail } = expect;
 
@@ -9,7 +8,7 @@ const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('../../../../../core/test/config');
 const testUtils = require('../../../../../core/test/test_util');
 const delay = require('../../../../../core/test/test_util/delay');
-const ProcessControls = require('../../ProcessControls');
+const ProcessControls = require('../../../test_util/ProcessControls');
 
 let agentControls;
 
@@ -43,7 +42,7 @@ describe('tracing/http(s) server', function() {
 
 function registerTests(useHttps) {
   const controls = new ProcessControls({
-    appPath: path.join(__dirname, 'app'),
+    dirname: __dirname,
     agentControls,
     env: {
       USE_HTTPS: useHttps
@@ -414,6 +413,6 @@ function verifyHttpEntry(span, url = '/', method = 'GET', status = 200, syntheti
   }
   expect(span.data.http.method).to.equal(method);
   expect(span.data.http.url).to.equal(url);
-  expect(span.data.http.host).to.equal('127.0.0.1:3216');
+  expect(span.data.http.host).to.equal('127.0.0.1:3215');
   expect(span.data.http.status).to.equal(status);
 }

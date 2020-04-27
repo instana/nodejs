@@ -1,7 +1,7 @@
 'use strict';
 
 // Deliberately not calling the initialization function right awy to test the INSTANA_EARLY_INSTRUMENTATION flag.
-const instana = require('../../../');
+const instana = require('../../../../');
 
 const logPrefix = `PreInit (${process.env.INSTANA_EARLY_INSTRUMENTATION === 'true' ? 'true' : 'false'}) (${
   process.pid

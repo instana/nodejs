@@ -8,7 +8,7 @@ const constants = require('@instana/core').tracing.constants;
 const config = require('../../../../core/test/config');
 const testUtils = require('../../../../core/test/test_util');
 const delay = require('../../../../core/test/test_util/delay');
-const ProcessControls = require('../ProcessControls');
+const ProcessControls = require('../../test_util/ProcessControls');
 
 const waitForSpans = process.env.CI ? 1000 : 200;
 

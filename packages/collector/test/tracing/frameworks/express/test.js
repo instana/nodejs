@@ -8,7 +8,7 @@ const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const tracingUtil = require('../../../../../core/src/tracing/tracingUtil');
 const config = require('../../../../../core/test/config');
 const testUtils = require('../../../../../core/test/test_util');
-const ProcessControls = require('../../ProcessControls');
+const ProcessControls = require('../../../test_util/ProcessControls');
 
 describe('tracing/express', function() {
   if (!supportedVersion(process.versions.node)) {
