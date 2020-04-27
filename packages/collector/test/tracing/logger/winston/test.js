@@ -7,7 +7,7 @@ const constants = require('@instana/core').tracing.constants;
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('../../../../../core/test/config');
 const testUtils = require('../../../../../core/test/test_util');
-const ProcessControls = require('../../ProcessControls');
+const ProcessControls = require('../../../test_util/ProcessControls');
 
 describe('tracing/logger/winston', function() {
   // Winston 3 has no guaranteed support for Node.js 4, code will be migrated to ES6 over time

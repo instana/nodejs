@@ -8,13 +8,12 @@ const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('../../../../../core/test/config');
 const delay = require('../../../../../core/test/test_util/delay');
 const testUtils = require('../../../../../core/test/test_util');
+const ProcessControls = require('../../../test_util/ProcessControls');
 
 describe('tracing/tracing metrics', function() {
   if (!supportedVersion(process.versions.node)) {
     return;
   }
-
-  const Controls = require('./controls');
 
   this.timeout(config.getTestTimeout() * 2);
   const retryTimeout = this.timeout() * 0.8;
@@ -22,10 +21,10 @@ describe('tracing/tracing metrics', function() {
   describe('when tracing is enabled', function() {
     const agentControls = require('../../../apps/agentStubControls');
     agentControls.registerTestHooks();
-    const controls = new Controls({
+    const controls = new ProcessControls({
+      dirname: __dirname,
       agentControls
-    });
-    controls.registerTestHooks();
+    }).registerTestHooks();
 
     it('must send internal tracing metrics to agent', function() {
       return controls
@@ -87,13 +86,13 @@ describe('tracing/tracing metrics', function() {
   describe('when INSTANA_TRACER_METRICS_INTERVAL is configured explicitly', function() {
     const agentControls = require('../../../apps/agentStubControls');
     agentControls.registerTestHooks();
-    const controls = new Controls({
+    const controls = new ProcessControls({
+      dirname: __dirname,
       agentControls,
       env: {
         INSTANA_TRACER_METRICS_INTERVAL: 100
       }
-    });
-    controls.registerTestHooks();
+    }).registerTestHooks();
 
     it('must send internal tracing metrics every 100 ms', function() {
       return controls
@@ -126,11 +125,11 @@ describe('tracing/tracing metrics', function() {
   describe('when tracing is not enabled', function() {
     const agentControls = require('../../../apps/agentStubControls');
     agentControls.registerTestHooks();
-    const controls = new Controls({
+    const controls = new ProcessControls({
+      dirname: __dirname,
       agentControls,
       tracingEnabled: false
-    });
-    controls.registerTestHooks();
+    }).registerTestHooks();
 
     it('must not collect any tracing metrics', function() {
       return controls
@@ -158,15 +157,15 @@ describe('tracing/tracing metrics', function() {
       // The trace endpoint will return an HTTP error code, triggering the removeSpansIfNecessary function.
       rejectTraces: true
     });
-    const controls = new Controls({
+    const controls = new ProcessControls({
+      dirname: __dirname,
       agentControls,
       tracingEnabled: true,
       env: {
         FORCE_TRANSMISSION_STARTING_AT: 500,
         MAX_BUFFERED_SPANS: 1
       }
-    });
-    controls.registerTestHooks();
+    }).registerTestHooks();
 
     it('must reveal dropped spans', function() {
       return controls
@@ -195,14 +194,14 @@ describe('tracing/tracing metrics', function() {
     agentControls.registerTestHooks({
       tracingMetrics: false
     });
-    const controls = new Controls({
+    const controls = new ProcessControls({
+      dirname: __dirname,
       agentControls,
       tracingEnabled: true,
       env: {
         INSTANA_TRACER_METRICS_INTERVAL: 100
       }
-    });
-    controls.registerTestHooks();
+    }).registerTestHooks();
 
     it('must not call POST /tracermetrics multiple times', function() {
       return (

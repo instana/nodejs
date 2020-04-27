@@ -1,11 +1,13 @@
 'use strict';
 
+const path = require('path');
 const chai = require('chai');
 const expect = chai.expect;
 
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('../../../core/test/config');
 const testUtils = require('../../../core/test/test_util');
+const ProcessControls = require('../test_util/ProcessControls');
 
 describe('unhandled promise rejections', function() {
   if (!supportedVersion(process.versions.node)) {
@@ -13,21 +15,20 @@ describe('unhandled promise rejections', function() {
   }
 
   const agentControls = require('../apps/agentStubControls');
-  const ServerControls = require('./apps/serverControls');
 
   this.timeout(config.getTestTimeout());
 
   agentControls.registerTestHooks();
 
-  const serverControls = new ServerControls({
-    agentControls,
+  const serverControls = new ProcessControls({
+    appPath: path.join(__dirname, 'apps', 'server'),
     dontKillInAfterHook: false,
+    agentControls,
     env: {
       ENABLE_REPORT_UNCAUGHT_EXCEPTION: false,
       ENABLE_REPORT_UNHANDLED_REJECTIONS: true
     }
-  });
-  serverControls.registerTestHooks();
+  }).registerTestHooks();
 
   it('must not interfere with tracing', () =>
     serverControls

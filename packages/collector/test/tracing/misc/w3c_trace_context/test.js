@@ -8,7 +8,7 @@ const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('../../../../../core/test/config');
 const delay = require('../../../../../core/test/test_util/delay');
 const { retryUntilSpansMatch, expectAtLeastOneMatching } = require('../../../../../core/test/test_util');
-const ProcessControls = require('../../ProcessControls');
+const ProcessControls = require('../../../test_util/ProcessControls');
 
 let agentControls;
 

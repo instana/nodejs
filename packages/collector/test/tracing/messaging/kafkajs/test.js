@@ -1,5 +1,6 @@
 'use strict';
 
+const path = require('path');
 const expect = require('chai').expect;
 const semver = require('semver');
 
@@ -8,6 +9,7 @@ const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('../../../../../core/test/config');
 const delay = require('../../../../../core/test/test_util/delay');
 const testUtils = require('../../../../../core/test/test_util');
+const ProcessControls = require('../../../test_util/ProcessControls');
 
 describe('tracing/kafkajs', function() {
   // kafkajs uses async/await style which is only available on Node.js >= 8.
@@ -25,12 +27,15 @@ describe('tracing/kafkajs', function() {
     agentControls = require('../../../apps/agentStubControls');
     agentControls.registerTestHooks();
 
-    const ProducerControls = require('./producerControls');
-    producerControls = new ProducerControls({ agentControls });
-    producerControls.registerTestHooks();
-    const ConsumerControls = require('./consumerControls');
-    consumerControls = new ConsumerControls({ agentControls });
-    consumerControls.registerTestHooks();
+    producerControls = new ProcessControls({
+      appPath: path.join(__dirname, 'producer'),
+      port: 3216,
+      agentControls
+    }).registerTestHooks();
+    consumerControls = new ProcessControls({
+      appPath: path.join(__dirname, 'consumer'),
+      agentControls
+    }).registerTestHooks();
 
     [false, 'sender', 'receiver'].forEach(error =>
       [false, true].forEach(useSendBatch =>
@@ -102,18 +107,17 @@ describe('tracing/kafkajs', function() {
     agentControls = require('../../../apps/agentStubControls');
     agentControls.registerTestHooks();
 
-    const ProducerControls = require('./producerControls');
-    producerControls = new ProducerControls({
+    producerControls = new ProcessControls({
+      appPath: path.join(__dirname, 'producer'),
+      port: 3216,
       agentControls,
       tracingEnabled: false
-    });
-    producerControls.registerTestHooks();
-    const ConsumerControls = require('./consumerControls');
-    consumerControls = new ConsumerControls({
+    }).registerTestHooks();
+    consumerControls = new ProcessControls({
+      appPath: path.join(__dirname, 'consumer'),
       agentControls,
       tracingEnabled: false
-    });
-    consumerControls.registerTestHooks();
+    }).registerTestHooks();
 
     it('must not trace when disabled', () => {
       const parameters = { error: false, useSendBatch: false, useEachBatch: false };

@@ -4,7 +4,7 @@ const expect = require('chai').expect;
 
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('../../../../../core/test/config');
-const ProcessControls = require('../../ProcessControls');
+const ProcessControls = require('../../../test_util/ProcessControls');
 
 describe('tracing/graphql-subscriptions - PubSub/async iterator (pull before push)', function() {
   if (!supportedVersion(process.versions.node)) {

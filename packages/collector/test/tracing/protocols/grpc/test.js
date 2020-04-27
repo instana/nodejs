@@ -1,5 +1,6 @@
 'use strict';
 
+const path = require('path');
 const expect = require('chai').expect;
 const semver = require('semver');
 
@@ -7,12 +8,9 @@ const constants = require('@instana/core').tracing.constants;
 const config = require('../../../../../core/test/config');
 const delay = require('../../../../../core/test/test_util/delay');
 const testUtils = require('../../../../../core/test/test_util');
+const ProcessControls = require('../../../test_util/ProcessControls');
 
 let agentControls;
-let ClientControls;
-let clientControls;
-let ServerControls;
-let serverControls;
 
 describe('tracing/grpc', function() {
   if (!semver.satisfies(process.versions.node, '>=8.2.1')) {
@@ -20,8 +18,6 @@ describe('tracing/grpc', function() {
   }
 
   agentControls = require('../../../apps/agentStubControls');
-  ClientControls = require('./clientControls');
-  ServerControls = require('./serverControls');
 
   this.timeout(config.getTestTimeout());
 
@@ -36,10 +32,15 @@ describe('tracing/grpc', function() {
 
   describe('suppressed', () => {
     agentControls.registerTestHooks();
-    serverControls = new ServerControls({ agentControls });
-    serverControls.registerTestHooks();
-    clientControls = new ClientControls({ agentControls });
-    clientControls.registerTestHooks();
+    new ProcessControls({
+      appPath: path.join(__dirname, 'server'),
+      agentControls
+    }).registerTestHooks();
+    const clientControls = new ProcessControls({
+      appPath: path.join(__dirname, 'client'),
+      port: 3216,
+      agentControls
+    }).registerTestHooks();
 
     it('should not trace when suppressed', () =>
       clientControls
@@ -63,20 +64,21 @@ describe('tracing/grpc', function() {
 
   describe('individually disabled', () => {
     agentControls.registerTestHooks();
-    serverControls = new ServerControls({
+    new ProcessControls({
+      appPath: path.join(__dirname, 'server'),
       agentControls,
       env: {
         INSTANA_DISABLED_TRACERS: 'GRPC'
       }
-    });
-    serverControls.registerTestHooks();
-    clientControls = new ClientControls({
+    }).registerTestHooks();
+    const clientControls = new ProcessControls({
+      appPath: path.join(__dirname, 'client'),
+      port: 3216,
       agentControls,
       env: {
         INSTANA_DISABLED_TRACERS: 'GRPC'
       }
-    });
-    clientControls.registerTestHooks();
+    }).registerTestHooks();
 
     it('should not trace when GRPC tracing is individually disabled', () =>
       clientControls
@@ -110,45 +112,51 @@ function registerSuite(codeGenMode, withMetadata, withOptions) {
       env.GRPC_WITH_OPTIONS = true;
     }
     agentControls.registerTestHooks();
-    serverControls = new ServerControls({
+    const serverControls = new ProcessControls({
+      appPath: path.join(__dirname, 'server'),
       agentControls,
       env
-    });
-    serverControls.registerTestHooks();
-    clientControls = new ClientControls({
+    }).registerTestHooks();
+    const clientControls = new ProcessControls({
+      appPath: path.join(__dirname, 'client'),
+      port: 3216,
       agentControls,
       env
-    });
-    clientControls.registerTestHooks();
+    }).registerTestHooks();
 
     it('must trace an unary call', () => {
       const expectedReply = `received: request${withMetadata ? ' & test-content' : ''}`;
-      return runTest('/unary-call', expectedReply);
+      return runTest('/unary-call', serverControls, clientControls, expectedReply);
     });
 
-    it('must cancel an unary call', () => runTest('/unary-call', null, true, false));
+    it('must cancel an unary call', () => runTest('/unary-call', serverControls, clientControls, null, true, false));
 
-    it('must mark unary call as erroneous', () => runTest('/unary-call', null, false, true));
+    it('must mark unary call as erroneous', () =>
+      runTest('/unary-call', serverControls, clientControls, null, false, true));
 
     it('must trace server-side streaming', () => {
       const expectedReply = withMetadata
         ? ['received: request & test-content', 'streaming', 'more', 'data']
         : ['received: request', 'streaming', 'more', 'data'];
-      return runTest('/server-stream', expectedReply);
+      return runTest('/server-stream', serverControls, clientControls, expectedReply);
     });
 
-    it('must cancel server-side streaming', () => runTest('/server-stream', null, true, false));
+    it('must cancel server-side streaming', () =>
+      runTest('/server-stream', serverControls, clientControls, null, true, false));
 
-    it('must mark server-side streaming as erroneous', () => runTest('/server-stream', null, false, true));
+    it('must mark server-side streaming as erroneous', () =>
+      runTest('/server-stream', serverControls, clientControls, null, false, true));
 
     it('must trace client-side streaming', () => {
       const expectedReply = 'first; second; third';
-      return runTest('/client-stream', expectedReply);
+      return runTest('/client-stream', serverControls, clientControls, expectedReply);
     });
 
-    it('must cancel client-side streaming', () => runTest('/client-stream', null, true, false));
+    it('must cancel client-side streaming', () =>
+      runTest('/client-stream', serverControls, clientControls, null, true, false));
 
-    it('must mark client-side streaming as erroneous', () => runTest('/client-stream', null, false, true));
+    it('must mark client-side streaming as erroneous', () =>
+      runTest('/client-stream', serverControls, clientControls, null, false, true));
 
     it('must trace bidi streaming', () => {
       const expectedReply = withMetadata
@@ -159,15 +167,16 @@ function registerSuite(codeGenMode, withMetadata, withOptions) {
             'STOP'
           ]
         : ['received: first', 'received: second', 'received: third', 'STOP'];
-      return runTest('/bidi-stream', expectedReply);
+      return runTest('/bidi-stream', serverControls, clientControls, expectedReply);
     });
 
-    it('must cancel bidi streaming', () => runTest('/bidi-stream', null, true, false));
+    it('must cancel bidi streaming', () => runTest('/bidi-stream', serverControls, clientControls, null, true, false));
 
-    it('must mark bidi streaming as erroneous', () => runTest('/bidi-stream', null, false, true));
+    it('must mark bidi streaming as erroneous', () =>
+      runTest('/bidi-stream', serverControls, clientControls, null, false, true));
   });
 
-  function runTest(url, expectedReply, cancel, erroneous) {
+  function runTest(url, serverControls, clientControls, expectedReply, cancel, erroneous) {
     return clientControls
       .sendRequest({
         method: 'POST',
@@ -177,7 +186,7 @@ function registerSuite(codeGenMode, withMetadata, withOptions) {
         if (!erroneous && !cancel) {
           expect(response.reply).to.deep.equal(expectedReply);
         }
-        return waitForTrace(url, cancel, erroneous);
+        return waitForTrace(serverControls, clientControls, url, cancel, erroneous);
       });
   }
 
@@ -191,19 +200,19 @@ function registerSuite(codeGenMode, withMetadata, withOptions) {
     }
   }
 
-  function waitForTrace(url, cancel, erroneous) {
+  function waitForTrace(serverControls, clientControls, url, cancel, erroneous) {
     return testUtils.retry(() =>
       agentControls.getSpans().then(spans => {
-        checkTrace(spans, url, cancel, erroneous);
+        checkTrace(serverControls, clientControls, spans, url, cancel, erroneous);
       })
     );
   }
 
-  function checkTrace(spans, url, cancel, erroneous) {
+  function checkTrace(serverControls, clientControls, spans, url, cancel, erroneous) {
     const httpEntry = testUtils.expectAtLeastOneMatching(spans, checkHttpEntry.bind(null, url));
     const grpcExit = testUtils.expectAtLeastOneMatching(
       spans,
-      checkGrpcClientSpan.bind(null, httpEntry, url, cancel, erroneous)
+      checkGrpcClientSpan.bind(null, httpEntry, clientControls, url, cancel, erroneous)
     );
     // Except for server-streaming and bidi-streaming, we cancel the call immediately on the client, so it usually never
     // reaches the server (depends on the timing). Therefore we also do not expect any GRPC server spans to exist. For
@@ -213,7 +222,7 @@ function registerSuite(codeGenMode, withMetadata, withOptions) {
     if (!cancel || url === '/server-stream' || url === '/bidi-stream') {
       const grpcEntry = testUtils.expectAtLeastOneMatching(
         spans,
-        checkGrpcServerSpan.bind(null, grpcExit, url, cancel, erroneous)
+        checkGrpcServerSpan.bind(null, grpcExit, serverControls, url, cancel, erroneous)
       );
       testUtils.expectAtLeastOneMatching(spans, checkLogSpanDuringGrpcEntry.bind(null, grpcEntry, url, erroneous));
     }
@@ -230,12 +239,13 @@ function checkHttpEntry(url, span) {
   expect(span.data.http.url).to.equal(url);
 }
 
-function checkGrpcClientSpan(httpEntry, url, cancel, erroneous, span) {
+function checkGrpcClientSpan(httpEntry, clientControls, url, cancel, erroneous, span) {
   expect(span.n).to.equal('rpc-client');
   expect(span.k).to.equal(constants.EXIT);
   expect(span.t).to.equal(httpEntry.t);
   expect(span.p).to.equal(httpEntry.s);
   expect(span.s).to.be.not.empty;
+  expect(span.f.e).to.equal(String(clientControls.getPid()));
   expect(span.data.rpc).to.exist;
   expect(span.data.rpc.flavor).to.equal('grpc');
   expect(span.data.rpc.call).to.equal(rpcCallNameForUrl(url));
@@ -252,12 +262,13 @@ function checkGrpcClientSpan(httpEntry, url, cancel, erroneous, span) {
   }
 }
 
-function checkGrpcServerSpan(grpcExit, url, cancel, erroneous, span) {
+function checkGrpcServerSpan(grpcExit, serverControls, url, cancel, erroneous, span) {
   expect(span.n).to.equal('rpc-server');
   expect(span.k).to.equal(constants.ENTRY);
   expect(span.t).to.equal(grpcExit.t);
   expect(span.p).to.equal(grpcExit.s);
   expect(span.s).to.be.not.empty;
+  expect(span.f.e).to.equal(String(serverControls.getPid()));
   expect(span.data.rpc).to.exist;
   expect(span.data.rpc.flavor).to.equal('grpc');
   expect(span.data.rpc.call).to.equal(rpcCallNameForUrl(url));

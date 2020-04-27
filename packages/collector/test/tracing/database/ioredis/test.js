@@ -6,6 +6,7 @@ const constants = require('@instana/core').tracing.constants;
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('../../../../../core/test/config');
 const testUtils = require('../../../../../core/test/test_util');
+const ProcessControls = require('../../../test_util/ProcessControls');
 
 describe('tracing/ioredis', function() {
   if (!supportedVersion(process.versions.node)) {
@@ -13,19 +14,18 @@ describe('tracing/ioredis', function() {
   }
 
   const agentControls = require('../../../apps/agentStubControls');
-  const IoRedisControls = require('./controls');
 
   this.timeout(config.getTestTimeout());
 
   agentControls.registerTestHooks();
 
-  const ioRedisControls = new IoRedisControls({
+  const controls = new ProcessControls({
+    dirname: __dirname,
     agentControls
-  });
-  ioRedisControls.registerTestHooks();
+  }).registerTestHooks();
 
   it('must trace set/get calls', () =>
-    ioRedisControls
+    controls
       .sendRequest({
         method: 'POST',
         path: '/values',
@@ -35,7 +35,7 @@ describe('tracing/ioredis', function() {
         }
       })
       .then(() =>
-        ioRedisControls.sendRequest({
+        controls.sendRequest({
           method: 'GET',
           path: '/values',
           qs: {
@@ -58,7 +58,7 @@ describe('tracing/ioredis', function() {
               expect(span.p).to.equal(writeEntrySpan.s);
               expect(span.n).to.equal('redis');
               expect(span.k).to.equal(constants.EXIT);
-              expect(span.f.e).to.equal(String(ioRedisControls.getPid()));
+              expect(span.f.e).to.equal(String(controls.getPid()));
               expect(span.f.h).to.equal('agent-stub-uuid');
               expect(span.async).to.not.exist;
               expect(span.error).to.not.exist;
@@ -77,7 +77,7 @@ describe('tracing/ioredis', function() {
               expect(span.p).to.equal(readEntrySpan.s);
               expect(span.n).to.equal('redis');
               expect(span.k).to.equal(constants.EXIT);
-              expect(span.f.e).to.equal(String(ioRedisControls.getPid()));
+              expect(span.f.e).to.equal(String(controls.getPid()));
               expect(span.f.h).to.equal('agent-stub-uuid');
               expect(span.async).to.not.exist;
               expect(span.error).to.not.exist;
@@ -90,7 +90,7 @@ describe('tracing/ioredis', function() {
       }));
 
   it('must keep the tracing context', () =>
-    ioRedisControls
+    controls
       .sendRequest({
         method: 'POST',
         path: '/values',
@@ -100,7 +100,7 @@ describe('tracing/ioredis', function() {
         }
       })
       .then(() =>
-        ioRedisControls.sendRequest({
+        controls.sendRequest({
           method: 'GET',
           path: '/keepTracing',
           qs: {
@@ -123,7 +123,7 @@ describe('tracing/ioredis', function() {
               expect(span.p).to.equal(writeEntrySpan.s);
               expect(span.n).to.equal('redis');
               expect(span.k).to.equal(constants.EXIT);
-              expect(span.f.e).to.equal(String(ioRedisControls.getPid()));
+              expect(span.f.e).to.equal(String(controls.getPid()));
               expect(span.f.h).to.equal('agent-stub-uuid');
               expect(span.async).to.not.exist;
               expect(span.error).to.not.exist;
@@ -142,7 +142,7 @@ describe('tracing/ioredis', function() {
               expect(span.p).to.equal(readEntrySpan.s);
               expect(span.n).to.equal('redis');
               expect(span.k).to.equal(constants.EXIT);
-              expect(span.f.e).to.equal(String(ioRedisControls.getPid()));
+              expect(span.f.e).to.equal(String(controls.getPid()));
               expect(span.f.h).to.equal('agent-stub-uuid');
               expect(span.async).to.not.exist;
               expect(span.error).to.not.exist;
@@ -156,7 +156,7 @@ describe('tracing/ioredis', function() {
               expect(span.p).to.equal(readEntrySpan.s);
               expect(span.n).to.equal('node.http.client');
               expect(span.k).to.equal(constants.EXIT);
-              expect(span.f.e).to.equal(String(ioRedisControls.getPid()));
+              expect(span.f.e).to.equal(String(controls.getPid()));
               expect(span.f.h).to.equal('agent-stub-uuid');
               expect(span.async).to.not.exist;
               expect(span.error).to.not.exist;
@@ -170,7 +170,7 @@ describe('tracing/ioredis', function() {
       }));
 
   it('must keep the tracing context with ioredis via callback', () =>
-    ioRedisControls
+    controls
       .sendRequest({
         method: 'POST',
         path: '/values',
@@ -180,7 +180,7 @@ describe('tracing/ioredis', function() {
         }
       })
       .then(() =>
-        ioRedisControls.sendRequest({
+        controls.sendRequest({
           method: 'GET',
           path: '/keepTracingCallback',
           qs: {
@@ -203,7 +203,7 @@ describe('tracing/ioredis', function() {
               expect(span.p).to.equal(writeEntrySpan.s);
               expect(span.n).to.equal('redis');
               expect(span.k).to.equal(constants.EXIT);
-              expect(span.f.e).to.equal(String(ioRedisControls.getPid()));
+              expect(span.f.e).to.equal(String(controls.getPid()));
               expect(span.f.h).to.equal('agent-stub-uuid');
               expect(span.async).to.not.exist;
               expect(span.error).to.not.exist;
@@ -222,7 +222,7 @@ describe('tracing/ioredis', function() {
               expect(span.p).to.equal(readEntrySpan.s);
               expect(span.n).to.equal('redis');
               expect(span.k).to.equal(constants.EXIT);
-              expect(span.f.e).to.equal(String(ioRedisControls.getPid()));
+              expect(span.f.e).to.equal(String(controls.getPid()));
               expect(span.f.h).to.equal('agent-stub-uuid');
               expect(span.async).to.not.exist;
               expect(span.error).to.not.exist;
@@ -236,7 +236,7 @@ describe('tracing/ioredis', function() {
               expect(span.p).to.equal(readEntrySpan.s);
               expect(span.n).to.equal('node.http.client');
               expect(span.k).to.equal(constants.EXIT);
-              expect(span.f.e).to.equal(String(ioRedisControls.getPid()));
+              expect(span.f.e).to.equal(String(controls.getPid()));
               expect(span.f.h).to.equal('agent-stub-uuid');
               expect(span.async).to.not.exist;
               expect(span.error).to.not.exist;
@@ -250,7 +250,7 @@ describe('tracing/ioredis', function() {
       }));
 
   it('must trace failed redis calls', () =>
-    ioRedisControls
+    controls
       .sendRequest({
         method: 'GET',
         path: '/failure'
@@ -271,7 +271,7 @@ describe('tracing/ioredis', function() {
               expect(span.p).to.equal(writeEntrySpan.s);
               expect(span.n).to.equal('redis');
               expect(span.k).to.equal(constants.EXIT);
-              expect(span.f.e).to.equal(String(ioRedisControls.getPid()));
+              expect(span.f.e).to.equal(String(controls.getPid()));
               expect(span.f.h).to.equal('agent-stub-uuid');
               expect(span.async).to.not.exist;
               expect(span.error).to.not.exist;
@@ -285,7 +285,7 @@ describe('tracing/ioredis', function() {
       ));
 
   it('must trace multi calls', () =>
-    ioRedisControls
+    controls
       .sendRequest({
         method: 'GET',
         path: '/multi'
@@ -303,7 +303,7 @@ describe('tracing/ioredis', function() {
               expect(span.p).to.equal(writeEntrySpan.s);
               expect(span.n).to.equal('redis');
               expect(span.k).to.equal(constants.EXIT);
-              expect(span.f.e).to.equal(String(ioRedisControls.getPid()));
+              expect(span.f.e).to.equal(String(controls.getPid()));
               expect(span.f.h).to.equal('agent-stub-uuid');
               expect(span.async).to.not.exist;
               expect(span.error).to.not.exist;
@@ -319,7 +319,7 @@ describe('tracing/ioredis', function() {
       ));
 
   it('must trace failed multi calls', () =>
-    ioRedisControls
+    controls
       .sendRequest({
         method: 'GET',
         path: '/multiFailure'
@@ -340,7 +340,7 @@ describe('tracing/ioredis', function() {
               expect(span.p).to.equal(writeEntrySpan.s);
               expect(span.n).to.equal('redis');
               expect(span.k).to.equal(constants.EXIT);
-              expect(span.f.e).to.equal(String(ioRedisControls.getPid()));
+              expect(span.f.e).to.equal(String(controls.getPid()));
               expect(span.f.h).to.equal('agent-stub-uuid');
               expect(span.async).to.not.exist;
               expect(span.error).to.not.exist;
@@ -357,7 +357,7 @@ describe('tracing/ioredis', function() {
       ));
 
   it('must keep the tracing context after multi', () =>
-    ioRedisControls
+    controls
       .sendRequest({
         method: 'POST',
         path: '/multiKeepTracing'
@@ -375,7 +375,7 @@ describe('tracing/ioredis', function() {
               expect(span.p).to.equal(entrySpan.s);
               expect(span.n).to.equal('redis');
               expect(span.k).to.equal(constants.EXIT);
-              expect(span.f.e).to.equal(String(ioRedisControls.getPid()));
+              expect(span.f.e).to.equal(String(controls.getPid()));
               expect(span.f.h).to.equal('agent-stub-uuid');
               expect(span.async).to.not.exist;
               expect(span.error).to.not.exist;
@@ -392,7 +392,7 @@ describe('tracing/ioredis', function() {
               expect(span.p).to.equal(entrySpan.s);
               expect(span.n).to.equal('node.http.client');
               expect(span.k).to.equal(constants.EXIT);
-              expect(span.f.e).to.equal(String(ioRedisControls.getPid()));
+              expect(span.f.e).to.equal(String(controls.getPid()));
               expect(span.f.h).to.equal('agent-stub-uuid');
               expect(span.async).to.not.exist;
               expect(span.error).to.not.exist;
@@ -406,7 +406,7 @@ describe('tracing/ioredis', function() {
       ));
 
   it('must trace pipeline calls', () =>
-    ioRedisControls
+    controls
       .sendRequest({
         method: 'GET',
         path: '/pipeline'
@@ -424,7 +424,7 @@ describe('tracing/ioredis', function() {
               expect(span.p).to.equal(writeEntrySpan.s);
               expect(span.n).to.equal('redis');
               expect(span.k).to.equal(constants.EXIT);
-              expect(span.f.e).to.equal(String(ioRedisControls.getPid()));
+              expect(span.f.e).to.equal(String(controls.getPid()));
               expect(span.f.h).to.equal('agent-stub-uuid');
               expect(span.async).to.not.exist;
               expect(span.error).to.not.exist;
@@ -440,7 +440,7 @@ describe('tracing/ioredis', function() {
       ));
 
   it('must trace partially failed pipeline calls', () =>
-    ioRedisControls
+    controls
       .sendRequest({
         method: 'GET',
         path: '/pipelineFailure'
@@ -458,7 +458,7 @@ describe('tracing/ioredis', function() {
               expect(span.p).to.equal(writeEntrySpan.s);
               expect(span.n).to.equal('redis');
               expect(span.k).to.equal(constants.EXIT);
-              expect(span.f.e).to.equal(String(ioRedisControls.getPid()));
+              expect(span.f.e).to.equal(String(controls.getPid()));
               expect(span.f.h).to.equal('agent-stub-uuid');
               expect(span.async).to.not.exist;
               expect(span.error).to.not.exist;
@@ -475,7 +475,7 @@ describe('tracing/ioredis', function() {
       ));
 
   it('must keep the tracing context after pipeline', () =>
-    ioRedisControls
+    controls
       .sendRequest({
         method: 'POST',
         path: '/pipelineKeepTracing'
@@ -493,7 +493,7 @@ describe('tracing/ioredis', function() {
               expect(span.p).to.equal(entrySpan.s);
               expect(span.n).to.equal('redis');
               expect(span.k).to.equal(constants.EXIT);
-              expect(span.f.e).to.equal(String(ioRedisControls.getPid()));
+              expect(span.f.e).to.equal(String(controls.getPid()));
               expect(span.f.h).to.equal('agent-stub-uuid');
               expect(span.async).to.not.exist;
               expect(span.error).to.not.exist;
@@ -510,7 +510,7 @@ describe('tracing/ioredis', function() {
               expect(span.p).to.equal(entrySpan.s);
               expect(span.n).to.equal('node.http.client');
               expect(span.k).to.equal(constants.EXIT);
-              expect(span.f.e).to.equal(String(ioRedisControls.getPid()));
+              expect(span.f.e).to.equal(String(controls.getPid()));
               expect(span.f.h).to.equal('agent-stub-uuid');
               expect(span.async).to.not.exist;
               expect(span.error).to.not.exist;

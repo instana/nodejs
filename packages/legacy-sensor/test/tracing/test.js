@@ -1,16 +1,18 @@
 'use strict';
 
+const path = require('path');
 const expect = require('chai').expect;
 const semver = require('semver');
 const constants = require('@instana/core').tracing.constants;
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
+const ProcessControls = require('../../../collector/test/test_util/ProcessControls');
 
 const config = require('../../../core/test/config');
 const testUtils = require('../../../core/test/test_util');
 
+const serverPort = 3216;
+
 let agentControls;
-let ClientControls;
-let ServerControls;
 
 describe('legacy sensor/tracing', function() {
   if (!supportedVersion(process.versions.node) || (process.env.CI && semver.lt(process.versions.node, '7.0.0'))) {
@@ -18,25 +20,24 @@ describe('legacy sensor/tracing', function() {
   }
 
   agentControls = require('../../../collector/test/apps/agentStubControls');
-  ClientControls = require('./clientControls');
-  ServerControls = require('./serverControls');
 
   this.timeout(config.getTestTimeout() * 2);
 
   agentControls.registerTestHooks();
 
-  const serverControls = new ServerControls({
+  const serverControls = new ProcessControls({
+    appPath: path.join(__dirname, 'serverApp'),
+    port: serverPort,
     agentControls
-  });
-  serverControls.registerTestHooks();
+  }).registerTestHooks();
 
-  const clientControls = new ClientControls({
+  const clientControls = new ProcessControls({
+    appPath: path.join(__dirname, 'clientApp'),
     agentControls,
     env: {
-      SERVER_PORT: serverControls.port
+      SERVER_PORT: serverPort
     }
-  });
-  clientControls.registerTestHooks();
+  }).registerTestHooks();
 
   it('must trace request(<string>, options, cb)', () => {
     if (semver.lt(process.versions.node, '10.9.0')) {

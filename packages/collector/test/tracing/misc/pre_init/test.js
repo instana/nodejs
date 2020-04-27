@@ -4,19 +4,18 @@ const expect = require('chai').expect;
 
 const constants = require('@instana/core').tracing.constants;
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
-const config = require('../../../../core/test/config');
-const testUtils = require('../../../../core/test/test_util');
+const config = require('../../../../../core/test/config');
+const testUtils = require('../../../../../core/test/test_util');
+const ProcessControls = require('../../../test_util/ProcessControls');
 
 let agentControls;
-let Controls;
 
 describe('tracing/preInit', function() {
   if (!supportedVersion(process.versions.node)) {
     return;
   }
 
-  agentControls = require('../../apps/agentStubControls');
-  Controls = require('./controls');
+  agentControls = require('../../../apps/agentStubControls');
 
   this.timeout(config.getTestTimeout());
 
@@ -32,11 +31,11 @@ describe('tracing/preInit', function() {
 });
 
 function registerTests(usePreInit) {
-  const controls = new Controls({
+  const controls = new ProcessControls({
+    dirname: __dirname,
     agentControls,
     usePreInit
-  });
-  controls.registerTestHooks();
+  }).registerTestHooks();
 
   it(`must ${usePreInit ? '' : 'not'} init instrumentations early and ${
     usePreInit ? '' : 'not'

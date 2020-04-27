@@ -130,7 +130,6 @@ function finishCurrentSpan(jsonStackTrace) {
     return [];
   }
 
-  currentSpan.error = true;
   currentSpan.ec = 1;
   currentSpan.d = Date.now() - currentSpan.ts;
   currentSpan.stack = jsonStackTrace;

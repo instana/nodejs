@@ -4,24 +4,24 @@ const expect = require('chai').expect;
 
 const config = require('../../../core/test/config');
 const testUtils = require('../../../core/test/test_util');
+const ProcessControls = require('../../../collector/test/test_util/ProcessControls');
 
 describe('legacy sensor/API', function() {
   this.timeout(config.getTestTimeout());
 
   const agentControls = require('../../../collector/test/apps/agentStubControls');
-  const AppControls = require('./controls');
-  const appControls = new AppControls({
-    agentControls
-  });
-
   agentControls.registerTestHooks();
-  appControls.registerTestHooks();
 
-  beforeEach(() => agentControls.waitUntilAppIsCompletelyInitialized(appControls.getPid()));
+  const controls = new ProcessControls({
+    dirname: __dirname,
+    agentControls
+  }).registerTestHooks();
+
+  beforeEach(() => agentControls.waitUntilAppIsCompletelyInitialized(controls.getPid()));
 
   it('all exports', () =>
     testUtils.retry(() =>
-      appControls
+      controls
         .sendRequest({
           method: 'GET',
           path: '/api'

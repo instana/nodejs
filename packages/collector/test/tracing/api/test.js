@@ -4,6 +4,7 @@ const expect = require('chai').expect;
 
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('../../../../core/test/config');
+const ProcessControls = require('../../test_util/ProcessControls');
 
 describe('tracing/api', function() {
   if (!supportedVersion(process.versions.node)) {
@@ -11,17 +12,16 @@ describe('tracing/api', function() {
   }
 
   const agentControls = require('../../apps/agentStubControls');
-  const Controls = require('./controls');
 
   this.timeout(config.getTestTimeout());
 
   agentControls.registerTestHooks();
 
   describe('when tracing is enabled', () => {
-    const controls = new Controls({
+    const controls = new ProcessControls({
+      dirname: __dirname,
       agentControls
-    });
-    controls.registerTestHooks();
+    }).registerTestHooks();
 
     it('must provide details for currently active span', () => {
       const now = Date.now();
@@ -95,11 +95,11 @@ describe('tracing/api', function() {
   });
 
   describe('when tracing is not enabled', () => {
-    const controls = new Controls({
+    const controls = new ProcessControls({
+      dirname: __dirname,
       agentControls,
       tracingEnabled: false
-    });
-    controls.registerTestHooks();
+    }).registerTestHooks();
 
     it('must provide a noop span handle', () =>
       controls

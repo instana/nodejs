@@ -1,15 +1,15 @@
 'use strict';
 
+const path = require('path');
 const expect = require('chai').expect;
 
 const constants = require('@instana/core').tracing.constants;
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('../../../../../core/test/config');
 const testUtils = require('../../../../../core/test/test_util');
+const ProcessControls = require('../../../test_util/ProcessControls');
 
 let agentControls;
-let ProducerControls;
-let ConsumerControls;
 
 describe('tracing/kafka-node', function() {
   if (!supportedVersion(process.versions.node)) {
@@ -22,21 +22,21 @@ describe('tracing/kafka-node', function() {
   this.timeout(config.getTestTimeout() * 2);
   agentControls = require('../../../apps/agentStubControls');
 
-  ProducerControls = require('./producerControls');
-  ConsumerControls = require('./consumerControls');
-
   ['plain', 'highLevel'].forEach(producerType => {
     describe(`producing via: ${producerType}`, function() {
       agentControls.registerTestHooks();
-      const producerControls = new ProducerControls({
+      const producerControls = new ProcessControls({
+        appPath: path.join(__dirname, 'producer'),
+        port: 3216,
         agentControls,
         env: {
           PRODUCER_TYPE: producerType
         }
-      });
-      producerControls.registerTestHooks();
-      const consumerControls = new ConsumerControls({ agentControls });
-      consumerControls.registerTestHooks();
+      }).registerTestHooks();
+      const consumerControls = new ProcessControls({
+        appPath: path.join(__dirname, 'consumer'),
+        agentControls
+      }).registerTestHooks();
 
       it(`must trace sending messages (producer type: ${producerType})`, () =>
         send(producerControls, 'someKey', 'someMessage').then(() =>
@@ -99,20 +99,21 @@ describe('tracing/kafka-node', function() {
   ['plain' /* 'highLevel', 'consumerGroup' */].forEach(consumerType => {
     describe(`consuming via: ${consumerType}`, () => {
       agentControls.registerTestHooks();
-      const producerControls = new ProducerControls({
+      const producerControls = new ProcessControls({
+        appPath: path.join(__dirname, 'producer'),
+        port: 3216,
         agentControls,
         env: {
           PRODUCER_TYPE: 'plain'
         }
-      });
-      producerControls.registerTestHooks();
-      const consumerControls = new ConsumerControls({
+      }).registerTestHooks();
+      const consumerControls = new ProcessControls({
+        appPath: path.join(__dirname, 'consumer'),
         agentControls,
         env: {
           CONSUMER_TYPE: consumerType
         }
-      });
-      consumerControls.registerTestHooks();
+      }).registerTestHooks();
 
       it(`must trace receiving messages (consumer type: ${consumerType})`, () =>
         send(producerControls, 'someKey', 'someMessage').then(() =>

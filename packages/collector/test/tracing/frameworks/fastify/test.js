@@ -7,7 +7,7 @@ const semver = require('semver');
 const constants = require('@instana/core').tracing.constants;
 const config = require('../../../../../core/test/config');
 const testUtils = require('../../../../../core/test/test_util');
-const ProcessControls = require('../../ProcessControls');
+const ProcessControls = require('../../../test_util/ProcessControls');
 
 describe('tracing/fastify', function() {
   if (semver.lt(process.versions.node, '8.0.0')) {

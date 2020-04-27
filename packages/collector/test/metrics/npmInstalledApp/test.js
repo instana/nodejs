@@ -6,7 +6,7 @@ const _ = require('lodash');
 
 const config = require('../../../../core/test/config');
 const testUtils = require('../../../../core/test/test_util');
-const ProcessControls = require('../../tracing/ProcessControls');
+const ProcessControls = require('../../test_util/ProcessControls');
 
 describe('snapshot data and metrics/app deployed via npm install', function() {
   this.timeout(config.getTestTimeout());

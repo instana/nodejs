@@ -1,5 +1,6 @@
 'use strict';
 
+const path = require('path');
 const expect = require('chai').expect;
 const semver = require('semver');
 
@@ -8,11 +9,9 @@ const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('../../../../../core/test/config');
 const delay = require('../../../../../core/test/test_util/delay');
 const testUtils = require('../../../../../core/test/test_util');
+const ProcessControls = require('../../../test_util/ProcessControls');
 
 let agentControls;
-let ClientControls;
-let ApolloServerControls;
-let RawGraphQLServerControls;
 
 describe('tracing/graphql', function() {
   if (!supportedVersion(process.versions.node) || semver.lt(process.versions.node, '8.5.0')) {
@@ -20,9 +19,6 @@ describe('tracing/graphql', function() {
   }
 
   agentControls = require('../../../apps/agentStubControls');
-  ClientControls = require('./clientControls');
-  ApolloServerControls = require('./apolloServerControls');
-  RawGraphQLServerControls = require('./rawGraphQLServerControls');
 
   this.timeout(config.getTestTimeout() * 2);
 
@@ -71,19 +67,21 @@ describe('tracing/graphql', function() {
 
   describe('disabled', () => {
     agentControls.registerTestHooks();
-    const serverControls = new RawGraphQLServerControls({
+    const serverControls = new ProcessControls({
+      appPath: path.join(__dirname, 'rawGraphQLServer'),
+      port: 3217,
       agentControls,
       tracingEnabled: false
-    });
-    serverControls.registerTestHooks();
-    const clientControls = new ClientControls({
+    }).registerTestHooks();
+    const clientControls = new ProcessControls({
+      appPath: path.join(__dirname, 'client'),
+      port: 3216,
       agentControls,
       tracingEnabled: false,
       env: {
         SERVER_PORT: serverControls.port
       }
-    });
-    clientControls.registerTestHooks();
+    }).registerTestHooks();
 
     it('should not trace when disabled', () =>
       clientControls
@@ -104,15 +102,19 @@ describe('tracing/graphql', function() {
 
   describe('suppressed', () => {
     agentControls.registerTestHooks();
-    const serverControls = new RawGraphQLServerControls({ agentControls });
-    serverControls.registerTestHooks();
-    const clientControls = new ClientControls({
+    const serverControls = new ProcessControls({
+      appPath: path.join(__dirname, 'rawGraphQLServer'),
+      port: 3217,
+      agentControls
+    }).registerTestHooks();
+    const clientControls = new ProcessControls({
+      appPath: path.join(__dirname, 'client'),
+      port: 3216,
       agentControls,
       env: {
         SERVER_PORT: serverControls.port
       }
-    });
-    clientControls.registerTestHooks();
+    }).registerTestHooks();
 
     it('should not trace when suppressed', () =>
       clientControls
@@ -136,20 +138,22 @@ describe('tracing/graphql', function() {
 
   describe('individually disabled', () => {
     agentControls.registerTestHooks();
-    const serverControls = new RawGraphQLServerControls({
+    const serverControls = new ProcessControls({
+      appPath: path.join(__dirname, 'rawGraphQLServer'),
+      port: 3217,
       agentControls,
       env: {
         INSTANA_DISABLED_TRACERS: 'graphQL'
       }
-    });
-    serverControls.registerTestHooks();
-    const clientControls = new ClientControls({
+    }).registerTestHooks();
+    const clientControls = new ProcessControls({
+      appPath: path.join(__dirname, 'client'),
+      port: 3216,
       agentControls,
       env: {
         SERVER_PORT: serverControls.port
       }
-    });
-    clientControls.registerTestHooks();
+    }).registerTestHooks();
 
     it('should not trace graphql when that tracer is disabled individually but still trace all other calls', () =>
       clientControls
@@ -185,16 +189,25 @@ function registerQuerySuite({ apollo, withError, queryShorthand, useAlias, commu
   describe(`queries ${titleSuffix}`, function() {
     agentControls.registerTestHooks();
     const serverControls = apollo
-      ? new ApolloServerControls({ agentControls })
-      : new RawGraphQLServerControls({ agentControls });
+      ? new ProcessControls({
+          appPath: path.join(__dirname, 'apolloServer'),
+          port: 3217,
+          agentControls
+        })
+      : new ProcessControls({
+          appPath: path.join(__dirname, 'rawGraphQLServer'),
+          port: 3217,
+          agentControls
+        });
     serverControls.registerTestHooks();
-    const clientControls = new ClientControls({
+    const clientControls = new ProcessControls({
+      appPath: path.join(__dirname, 'client'),
+      port: 3216,
       agentControls,
       env: {
         SERVER_PORT: serverControls.port
       }
-    });
-    clientControls.registerTestHooks();
+    }).registerTestHooks();
 
     it(`must trace a query with a value resolver ${titleSuffix}`, () => testQuery(clientControls, 'value'));
 
@@ -254,16 +267,25 @@ function registerMutationSuite(apollo) {
   describe(`mutations (${apollo ? 'apollo' : 'raw'})`, function() {
     agentControls.registerTestHooks();
     const serverControls = apollo
-      ? new ApolloServerControls({ agentControls })
-      : new RawGraphQLServerControls({ agentControls });
+      ? new ProcessControls({
+          appPath: path.join(__dirname, 'apolloServer'),
+          port: 3217,
+          agentControls
+        })
+      : new ProcessControls({
+          appPath: path.join(__dirname, 'rawGraphQLServer'),
+          port: 3217,
+          agentControls
+        });
     serverControls.registerTestHooks();
-    const clientControls = new ClientControls({
+    const clientControls = new ProcessControls({
+      appPath: path.join(__dirname, 'client'),
+      port: 3216,
       agentControls,
       env: {
         SERVER_PORT: serverControls.port
       }
-    });
-    clientControls.registerTestHooks();
+    }).registerTestHooks();
 
     it(`must trace a mutation (${apollo ? 'apollo' : 'raw'})`, () => testMutation(clientControls));
   });
@@ -286,16 +308,25 @@ function registerSubscriptionOperationNotTracedSuite(apollo) {
   describe(`subscriptions (${apollo ? 'apollo' : 'raw'})`, function() {
     agentControls.registerTestHooks();
     const serverControls = apollo
-      ? new ApolloServerControls({ agentControls })
-      : new RawGraphQLServerControls({ agentControls });
+      ? new ProcessControls({
+          appPath: path.join(__dirname, 'apolloServer'),
+          port: 3217,
+          agentControls
+        })
+      : new ProcessControls({
+          appPath: path.join(__dirname, 'rawGraphQLServer'),
+          port: 3217,
+          agentControls
+        });
     serverControls.registerTestHooks();
-    const clientControls = new ClientControls({
+    const clientControls = new ProcessControls({
+      appPath: path.join(__dirname, 'client'),
+      port: 3216,
       agentControls,
       env: {
         SERVER_PORT: serverControls.port
       }
-    });
-    clientControls.registerTestHooks();
+    }).registerTestHooks();
 
     it(`must not trace the subscription establishment (${apollo ? 'apollo' : 'raw'})`, () =>
       testSubscriptionIsNotTraced(clientControls));
@@ -320,25 +351,29 @@ function registerSubscriptionOperationNotTracedSuite(apollo) {
 function registerSubscriptionUpdatesAreTracedSuite(triggerUpdateVia) {
   describe(`subscriptions (via: ${triggerUpdateVia})`, function() {
     agentControls.registerTestHooks();
-    const serverControls = new ApolloServerControls({ agentControls });
-    serverControls.registerTestHooks();
+    const serverControls = new ProcessControls({
+      appPath: path.join(__dirname, 'apolloServer'),
+      port: 3217,
+      agentControls
+    }).registerTestHooks();
     // client 1
-    const clientControls1 = new ClientControls({
+    const clientControls1 = new ProcessControls({
+      appPath: path.join(__dirname, 'client'),
+      port: 3216,
       agentControls,
       env: {
         SERVER_PORT: serverControls.port
       }
-    });
-    clientControls1.registerTestHooks();
+    }).registerTestHooks();
     // client 2
-    const clientControls2 = new ClientControls({
+    const clientControls2 = new ProcessControls({
+      appPath: path.join(__dirname, 'client'),
       agentControls,
       port: 3226,
       env: {
         SERVER_PORT: serverControls.port
       }
-    });
-    clientControls2.registerTestHooks();
+    }).registerTestHooks();
 
     it(`must trace updates for subscriptions (via: ${triggerUpdateVia})`, () =>
       testUpdatesInSubscriptionsAreTraced(clientControls1, clientControls2));

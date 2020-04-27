@@ -7,6 +7,7 @@ const constants = require('@instana/core').tracing.constants;
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('../../../../../core/test/config');
 const testUtils = require('../../../../../core/test/test_util');
+const ProcessControls = require('../../../test_util/ProcessControls');
 
 describe('tracing/mongoose', function() {
   if (!supportedVersion(process.versions.node)) {
@@ -14,19 +15,18 @@ describe('tracing/mongoose', function() {
   }
 
   const agentControls = require('../../../apps/agentStubControls');
-  const MongooseControls = require('./controls');
 
   this.timeout(config.getTestTimeout());
 
   agentControls.registerTestHooks();
 
-  const mongooseControls = new MongooseControls({
+  const controls = new ProcessControls({
+    dirname: __dirname,
     agentControls
-  });
-  mongooseControls.registerTestHooks();
+  }).registerTestHooks();
 
   it('must trace create calls', () =>
-    mongooseControls
+    controls
       .sendRequest({
         method: 'POST',
         path: '/insert',
@@ -40,7 +40,7 @@ describe('tracing/mongoose', function() {
           agentControls.getSpans().then(spans => {
             const entrySpan = testUtils.expectAtLeastOneMatching(spans, span => {
               expect(span.n).to.equal('node.http.server');
-              expect(span.f.e).to.equal(String(mongooseControls.getPid()));
+              expect(span.f.e).to.equal(String(controls.getPid()));
               expect(span.f.h).to.equal('agent-stub-uuid');
               expect(span.async).to.not.exist;
               expect(span.error).to.not.exist;
@@ -52,7 +52,7 @@ describe('tracing/mongoose', function() {
               expect(span.p).to.equal(entrySpan.s);
               expect(span.n).to.equal('mongo');
               expect(span.k).to.equal(constants.EXIT);
-              expect(span.f.e).to.equal(String(mongooseControls.getPid()));
+              expect(span.f.e).to.equal(String(controls.getPid()));
               expect(span.f.h).to.equal('agent-stub-uuid');
               expect(span.async).to.not.exist;
               expect(span.error).to.not.exist;
@@ -67,7 +67,7 @@ describe('tracing/mongoose', function() {
 
   it('must trace findOne calls', () => {
     const randomName = uuid();
-    return mongooseControls
+    return controls
       .sendRequest({
         method: 'POST',
         path: '/insert',
@@ -77,7 +77,7 @@ describe('tracing/mongoose', function() {
         }
       })
       .then(() =>
-        mongooseControls.sendRequest({
+        controls.sendRequest({
           method: 'POST',
           path: '/find',
           body: {
@@ -92,7 +92,7 @@ describe('tracing/mongoose', function() {
             const entrySpan = testUtils.expectAtLeastOneMatching(spans, span => {
               expect(span.data.http.url).to.equal('/find');
               expect(span.n).to.equal('node.http.server');
-              expect(span.f.e).to.equal(String(mongooseControls.getPid()));
+              expect(span.f.e).to.equal(String(controls.getPid()));
               expect(span.f.h).to.equal('agent-stub-uuid');
               expect(span.async).to.not.exist;
               expect(span.error).to.not.exist;
@@ -104,7 +104,7 @@ describe('tracing/mongoose', function() {
               expect(span.p).to.equal(entrySpan.s);
               expect(span.n).to.equal('mongo');
               expect(span.k).to.equal(constants.EXIT);
-              expect(span.f.e).to.equal(String(mongooseControls.getPid()));
+              expect(span.f.e).to.equal(String(controls.getPid()));
               expect(span.f.h).to.equal('agent-stub-uuid');
               expect(span.async).to.not.exist;
               expect(span.error).to.not.exist;
