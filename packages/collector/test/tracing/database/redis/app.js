@@ -8,12 +8,16 @@ const bodyParser = require('body-parser');
 const express = require('express');
 const morgan = require('morgan');
 const redis = require('redis');
+const request = require('request-promise-native');
 
 const app = express();
 const logPrefix = `Redis App (${process.pid}):\t`;
 let connectedToRedis = false;
 
+const agentPort = process.env.INSTANA_AGENT_PORT;
+
 const client = redis.createClient(`//${process.env.REDIS}`);
+
 client.on('ready', () => {
   connectedToRedis = true;
 });
@@ -40,7 +44,9 @@ app.post('/values', (req, res) => {
       log('Set with key %s, value %s failed', key, value, err);
       res.sendStatus(500);
     } else {
-      res.sendStatus(200);
+      request(`http://127.0.0.1:${agentPort}`).then(() => {
+        res.sendStatus(200);
+      });
     }
   });
 });
@@ -52,7 +58,9 @@ app.get('/values', (req, res) => {
       log('Get with key %s failed', key, err);
       res.sendStatus(500);
     } else {
-      res.send(redisRes);
+      request(`http://127.0.0.1:${agentPort}`).then(() => {
+        res.send(redisRes);
+      });
     }
   });
 });
@@ -61,7 +69,9 @@ app.get('/failure', (req, res) => {
   // simulating wrong get usage
   client.get('someCollection', 'someKey', 'someValue', (err, redisRes) => {
     if (err) {
-      res.sendStatus(500);
+      request(`http://127.0.0.1:${agentPort}`).then(() => {
+        res.sendStatus(500);
+      });
     } else {
       res.send(redisRes);
     }
@@ -78,7 +88,9 @@ app.get('/multi', (req, res) => {
         log('Multi failed', err);
         res.sendStatus(500);
       } else {
-        res.sendStatus(200);
+        request(`http://127.0.0.1:${agentPort}`).then(() => {
+          res.sendStatus(200);
+        });
       }
     });
 });
@@ -92,7 +104,9 @@ app.get('/multiFailure', (req, res) => {
     .exec(err => {
       if (err) {
         log('Multi failed', err);
-        res.sendStatus(500);
+        request(`http://127.0.0.1:${agentPort}`).then(() => {
+          res.sendStatus(500);
+        });
       } else {
         res.sendStatus(200);
       }
@@ -110,7 +124,9 @@ app.get('/batchFailure', (req, res) => {
         log('batch failed', err);
         res.sendStatus(500);
       } else {
-        res.sendStatus(200);
+        request(`http://127.0.0.1:${agentPort}`).then(() => {
+          res.sendStatus(200);
+        });
       }
     });
 });
@@ -132,7 +148,9 @@ app.get('/callSequence', (req, res) => {
         return;
       }
 
-      res.send(result);
+      request(`http://127.0.0.1:${agentPort}`).then(() => {
+        res.send(result);
+      });
     });
   });
 });

@@ -5,7 +5,12 @@ const expect = require('chai').expect;
 const constants = require('@instana/core').tracing.constants;
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('../../../../../core/test/config');
-const testUtils = require('../../../../../core/test/test_util');
+const {
+  retry,
+  getSpansByName,
+  expectAtLeastOneMatching,
+  expectExactlyOneMatching
+} = require('../../../../../core/test/test_util');
 const ProcessControls = require('../../../test_util/ProcessControls');
 
 describe('tracing/pg', function() {
@@ -32,10 +37,11 @@ describe('tracing/pg', function() {
       })
       .then(response => {
         verifySimpleSelectResponse(response);
-        return testUtils.retry(() =>
+        return retry(() =>
           agentControls.getSpans().then(spans => {
             const httpEntry = verifyHttpEntry(spans, '/select-now-pool');
             verifyPgExit(spans, httpEntry, 'SELECT NOW()');
+            verifyHttpExit(spans, httpEntry);
           })
         );
       }));
@@ -48,10 +54,11 @@ describe('tracing/pg', function() {
       })
       .then(response => {
         verifySimpleSelectResponse(response);
-        return testUtils.retry(() =>
+        return retry(() =>
           agentControls.getSpans().then(spans => {
             const httpEntry = verifyHttpEntry(spans, '/select-now-no-pool-callback');
             verifyPgExit(spans, httpEntry, 'SELECT NOW()');
+            verifyHttpExit(spans, httpEntry);
           })
         );
       }));
@@ -64,10 +71,11 @@ describe('tracing/pg', function() {
       })
       .then(response => {
         verifySimpleSelectResponse(response);
-        return testUtils.retry(() =>
+        return retry(() =>
           agentControls.getSpans().then(spans => {
             const httpEntry = verifyHttpEntry(spans, '/select-now-no-pool-promise');
             verifyPgExit(spans, httpEntry, 'SELECT NOW()');
+            verifyHttpExit(spans, httpEntry);
           })
         );
       }));
@@ -98,7 +106,7 @@ describe('tracing/pg', function() {
       })
       .then(response => {
         verifySimpleSelectResponse(response);
-        return testUtils.retry(() =>
+        return retry(() =>
           agentControls.getSpans().then(spans => {
             const httpEntryLong = verifyHttpEntry(spans, '/long-running-query');
             const httpEntriesQuick = [];
@@ -125,10 +133,11 @@ describe('tracing/pg', function() {
       })
       .then(response => {
         verifyInsertResponse(response);
-        return testUtils.retry(() =>
+        return retry(() =>
           agentControls.getSpans().then(spans => {
             const httpEntry = verifyHttpEntry(spans, '/pool-string-insert');
             verifyPgExit(spans, httpEntry, 'INSERT INTO users(name, email) VALUES($1, $2) RETURNING *');
+            verifyHttpExit(spans, httpEntry);
           })
         );
       }));
@@ -144,10 +153,11 @@ describe('tracing/pg', function() {
         expect(response.command).to.equal('SELECT');
         expect(response.rowCount).to.be.a('number');
 
-        return testUtils.retry(() =>
+        return retry(() =>
           agentControls.getSpans().then(spans => {
             const httpEntry = verifyHttpEntry(spans, '/pool-config-select');
             verifyPgExit(spans, httpEntry, 'SELECT name, email FROM users');
+            verifyHttpExit(spans, httpEntry);
           })
         );
       }));
@@ -160,10 +170,11 @@ describe('tracing/pg', function() {
       })
       .then(response => {
         verifyInsertResponse(response);
-        return testUtils.retry(() =>
+        return retry(() =>
           agentControls.getSpans().then(spans => {
             const httpEntry = verifyHttpEntry(spans, '/pool-config-select-promise');
             verifyPgExit(spans, httpEntry, 'INSERT INTO users(name, email) VALUES($1, $2) RETURNING *');
+            verifyHttpExit(spans, httpEntry);
           })
         );
       }));
@@ -176,10 +187,11 @@ describe('tracing/pg', function() {
       })
       .then(response => {
         verifyInsertResponse(response);
-        return testUtils.retry(() =>
+        return retry(() =>
           agentControls.getSpans().then(spans => {
             const httpEntry = verifyHttpEntry(spans, '/client-string-insert');
             verifyPgExit(spans, httpEntry, 'INSERT INTO users(name, email) VALUES($1, $2) RETURNING *');
+            verifyHttpExit(spans, httpEntry);
           })
         );
       }));
@@ -195,10 +207,11 @@ describe('tracing/pg', function() {
         expect(response.command).to.equal('SELECT');
         expect(response.rowCount).to.be.a('number');
 
-        return testUtils.retry(() =>
+        return retry(() =>
           agentControls.getSpans().then(spans => {
             const httpEntry = verifyHttpEntry(spans, '/client-config-select');
             verifyPgExit(spans, httpEntry, 'SELECT name, email FROM users');
+            verifyHttpExit(spans, httpEntry);
           })
         );
       }));
@@ -216,7 +229,7 @@ describe('tracing/pg', function() {
         // 42P01 -> PostgreSQL's code for "relation does not exist"
         expect(response.code).to.equal('42P01');
 
-        return testUtils.retry(() =>
+        return retry(() =>
           agentControls.getSpans().then(spans => {
             const httpEntry = verifyHttpEntry(spans, '/table-doesnt-exist');
             verifyPgExitWithError(
@@ -225,6 +238,7 @@ describe('tracing/pg', function() {
               'SELECT name, email FROM nonexistanttable',
               'relation "nonexistanttable" does not exist'
             );
+            verifyHttpExit(spans, httpEntry);
           })
         );
       }));
@@ -238,11 +252,11 @@ describe('tracing/pg', function() {
       })
       .then(response => {
         verifyInsertResponse(response);
-        return testUtils.retry(() =>
+        return retry(() =>
           agentControls.getSpans().then(spans => {
-            const entrySpans = testUtils.getSpansByName(spans, 'node.http.server');
+            const entrySpans = getSpansByName(spans, 'node.http.server');
             expect(entrySpans).to.have.lengthOf(0);
-            const pgExits = testUtils.getSpansByName(spans, 'postgres');
+            const pgExits = getSpansByName(spans, 'postgres');
             expect(pgExits).to.have.lengthOf(0);
           })
         );
@@ -256,14 +270,15 @@ describe('tracing/pg', function() {
       })
       .then(response => {
         verifyInsertResponse(response, 'trans2', 'nodejstests@blah');
-        return testUtils.retry(() =>
+        return retry(() =>
           agentControls.getSpans().then(spans => {
             const httpEntry = verifyHttpEntry(spans, '/transaction');
-            expect(testUtils.getSpansByName(spans, 'postgres')).to.have.lengthOf(4);
+            expect(getSpansByName(spans, 'postgres')).to.have.lengthOf(4);
             verifyPgExit(spans, httpEntry, 'BEGIN');
             verifyPgExit(spans, httpEntry, 'INSERT INTO users(name, email) VALUES($1, $2) RETURNING *');
             verifyPgExit(spans, httpEntry, 'INSERT INTO users(name, email) VALUES($1, $2) RETURNING *');
             verifyPgExit(spans, httpEntry, 'COMMIT');
+            verifyHttpExit(spans, httpEntry);
           })
         );
       }));
@@ -286,7 +301,7 @@ describe('tracing/pg', function() {
   }
 
   function verifyHttpEntry(spans, url) {
-    return testUtils.expectAtLeastOneMatching(spans, span => {
+    return expectAtLeastOneMatching(spans, span => {
       expect(span.p).to.not.exist;
       expect(span.k).to.equal(constants.ENTRY);
       expect(span.f.e).to.equal(String(controls.getPid()));
@@ -297,7 +312,7 @@ describe('tracing/pg', function() {
   }
 
   function verifyPgExit(spans, parent, statement) {
-    return testUtils.expectAtLeastOneMatching(spans, span => {
+    return expectAtLeastOneMatching(spans, span => {
       verifyPgExitBase(span, parent, statement);
       expect(span.error).to.not.exist;
       expect(span.ec).to.equal(0);
@@ -305,7 +320,7 @@ describe('tracing/pg', function() {
   }
 
   function verifyPgExitWithError(spans, parent, statement, errorMessage) {
-    return testUtils.expectAtLeastOneMatching(spans, span => {
+    return expectAtLeastOneMatching(spans, span => {
       verifyPgExitBase(span, parent, statement);
       expect(span.error).to.not.exist;
       expect(span.ec).to.equal(1);
@@ -331,7 +346,7 @@ describe('tracing/pg', function() {
   }
 
   function verifyUniqueHttpEntry(spans, method, url, other) {
-    return testUtils.expectAtLeastOneMatching(spans, span => {
+    return expectAtLeastOneMatching(spans, span => {
       expect(span.p).to.not.exist;
       expect(span.k).to.equal(constants.ENTRY);
       expect(span.f.e).to.equal(String(controls.getPid()));
@@ -343,6 +358,23 @@ describe('tracing/pg', function() {
         expect(span.t).to.not.equal(other[i].t);
         expect(span.s).to.not.equal(other[i].s);
       }
+    });
+  }
+
+  function verifyHttpExit(spans, parent) {
+    expectExactlyOneMatching(spans, span => {
+      expect(span.t).to.equal(parent.t);
+      expect(span.p).to.equal(parent.s);
+      expect(span.n).to.equal('node.http.client');
+      expect(span.k).to.equal(constants.EXIT);
+      expect(span.f.e).to.equal(String(controls.getPid()));
+      expect(span.f.h).to.equal('agent-stub-uuid');
+      expect(span.async).to.not.exist;
+      expect(span.error).to.not.exist;
+      expect(span.ec).to.equal(0);
+      expect(span.data.http.method).to.equal('GET');
+      expect(span.data.http.url).to.match(/http:\/\/127\.0\.0\.1:3210/);
+      expect(span.data.http.status).to.equal(200);
     });
   }
 });
