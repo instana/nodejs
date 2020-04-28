@@ -2,9 +2,14 @@
 
 const config = require('./config');
 
+let packageToRequire = '../..';
+if (config.mode === 'npm') {
+  packageToRequire = '@instana/collector';
+}
+
 if (config.collectorEnabled) {
-  console.log('enabling @instana/collector');
-  require('../..')({
+  console.log(`enabling @instana/collector (requiring ${packageToRequire})`);
+  require(packageToRequire)({
     level: 'info',
     agentPort: config.agentPort,
     tracing: {
