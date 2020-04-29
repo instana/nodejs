@@ -2,6 +2,7 @@
 
 ## Unreleased
 - Add support for Node.js 14.
+- Update to `event-loop-stats@1.3.0`.
 
 ## 1.96.0
 - Instrument [@elastic/elasticsearch](https://www.npmjs.com/package/@elastic/elasticsearch) (aka modern Elasticsearch client).
