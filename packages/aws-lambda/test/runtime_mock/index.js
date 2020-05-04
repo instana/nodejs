@@ -3,6 +3,7 @@
 /**
  * Simulates the AWS Lambda runtime.
  */
+
 const path = require('path');
 
 const sendToParent = require('../../../serverless/test/util/send_to_parent');

@@ -1,8 +1,9 @@
 # Changelog
 
 ## Unreleased
+- [AWS Lambda] Add support for `INSTANA_ENDPOINT_PROXY` (send data to Instana via a proxy).
 - Add support for Node.js 14.
-- Update to `event-loop-stats@1.3.0`.
+- Update to `event-loop-stats@1.3.0`, to support detecting synchronous event loop blocking.
 
 ## 1.96.0
 - Instrument [@elastic/elasticsearch](https://www.npmjs.com/package/@elastic/elasticsearch) (aka modern Elasticsearch client).
