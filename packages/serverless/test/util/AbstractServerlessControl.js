@@ -25,8 +25,11 @@ AbstractServerlessControl.prototype.registerTestHooks = function registerTestHoo
   if (typeof this.startMonitoredProcess !== 'function') {
     fail('Control does not implement startMonitoredProcess.');
   }
-  if (typeof this.hasMonitoredProcessStarted !== 'function') {
-    fail('Control does not implement hasMonitoredProcessStarted.');
+  if (
+    typeof this.hasMonitoredProcessStartedPromise !== 'function' &&
+    typeof this.hasMonitoredProcessStarted !== 'function'
+  ) {
+    fail('Control neither implements hasMonitoredProcessStartedPromise nor hasMonitoredProcessStarted.');
   }
   if (typeof this.hasMonitoredProcessTerminated !== 'function') {
     fail('Control does not implement hasMonitoredProcessTerminated.');
@@ -74,7 +77,10 @@ AbstractServerlessControl.prototype.registerTestHooks = function registerTestHoo
     });
     const downstreamDummyPromise = this.waitUntilDownstreamDummyIsUp();
 
-    return Promise.all([backendPromise, downstreamDummyPromise])
+    const allAuxiliaryProcesses = [backendPromise, downstreamDummyPromise].concat(
+      this.startAdditionalAuxiliaryProcesses()
+    );
+    return Promise.all(allAuxiliaryProcesses)
       .then(() => {
         this.startMonitoredProcess();
         return this.waitUntilMonitoredProcessHasStarted();
@@ -94,35 +100,15 @@ AbstractServerlessControl.prototype.registerTestHooks = function registerTestHoo
 };
 
 AbstractServerlessControl.prototype.waitUntilBackendIsUp = function waitUntilBackendIsUp() {
-  return retry(() => this.isBackendUpPromise());
-};
-
-AbstractServerlessControl.prototype.isBackendUpPromise = function isBackendUpPromise() {
-  if (this.isBackendUp()) {
-    return Promise.resolve();
-  } else {
-    return Promise.reject(new Error('The backend mock is still not up.'));
-  }
-};
-
-AbstractServerlessControl.prototype.isBackendUp = function isBackendUp() {
-  return this.messagesFromBackend.indexOf('backend: started') >= 0;
+  return this.waitUntilProcessIsUp('backend mock', this.messagesFromBackend, 'backend: started');
 };
 
 AbstractServerlessControl.prototype.waitUntilDownstreamDummyIsUp = function waitUntilDownstreamDummyIsUp() {
-  return retry(() => this.isDownstreamDummyUpPromise());
-};
-
-AbstractServerlessControl.prototype.isDownstreamDummyUpPromise = function isDownstreamDummyUpPromise() {
-  if (this.isDownstreamDummyUp()) {
-    return Promise.resolve();
-  } else {
-    return Promise.reject(new Error('The downstream dummy app is still not up.'));
-  }
-};
-
-AbstractServerlessControl.prototype.isDownstreamDummyUp = function isDownstreamDummyUp() {
-  return this.messagesFromDownstreamDummy.indexOf('downstream dummy: started') >= 0;
+  return this.waitUntilProcessIsUp(
+    'downstream dummy app',
+    this.messagesFromDownstreamDummy,
+    'downstream dummy: started'
+  );
 };
 
 // prettier-ignore
@@ -132,11 +118,38 @@ function waitUntilMonitoredProcessHasStarted() {
 };
 
 AbstractServerlessControl.prototype.hasMonitoredProcessStartedPromise = function hasMonitoredProcessStartedPromise() {
+  // Subclasses can either override hasMonitoredProcessStartedPromise directly (then hasMonitoredProcessStarted does not
+  // need to be implemented) or, if they do not need an asynchronous operation to determine if the monitored process has
+  // started, they can also override hasMonitoredProcessStarted.
   if (this.hasMonitoredProcessStarted()) {
     return Promise.resolve();
   } else {
     return Promise.reject(new Error('The monitored process has still not started.'));
   }
+};
+
+AbstractServerlessControl.prototype.waitUntilProcessIsUp = function waitUntilProcessIsUp(
+  label,
+  allMessagesFromProcess,
+  processStartMessage
+) {
+  return retry(() => this.isProcessUpPromise(label, allMessagesFromProcess, processStartMessage));
+};
+
+AbstractServerlessControl.prototype.isProcessUpPromise = function isProcessUpPromise(
+  label,
+  allMessagesFromProcess,
+  processStartMessage
+) {
+  if (this.isProcessUp(allMessagesFromProcess, processStartMessage)) {
+    return Promise.resolve();
+  } else {
+    return Promise.reject(new Error(`The process ${label} is still not up.`));
+  }
+};
+
+AbstractServerlessControl.prototype.isProcessUp = function isProcessUp(allMessagesFromProcess, processStartMessage) {
+  return allMessagesFromProcess.indexOf(processStartMessage) >= 0;
 };
 
 // prettier-ignore
@@ -156,7 +169,14 @@ function hasMonitoredProcessTerminatedPromise() {
 };
 
 AbstractServerlessControl.prototype.kill = function kill() {
-  return Promise.all([this.killBackend(), this.killDownstreamDummy(), this.killMonitoredProcess()]);
+  return Promise.all(
+    [
+      //
+      this.killBackend(),
+      this.killDownstreamDummy(),
+      this.killMonitoredProcess()
+    ].concat(this.killAdditionalAuxiliaryProcesses())
+  );
 };
 
 AbstractServerlessControl.prototype.killBackend = function killBackend() {
@@ -165,6 +185,15 @@ AbstractServerlessControl.prototype.killBackend = function killBackend() {
 
 AbstractServerlessControl.prototype.killDownstreamDummy = function killDownstreamDummy() {
   return this.killChildProcess(this.downstreamDummy);
+};
+
+AbstractServerlessControl.prototype.startAdditionalAuxiliaryProcesses = function startAdditionalAuxiliaryProcesses() {
+  // Subclasses may override this and fork additional processes there. Return a promise that waits for the process or an
+  // array of promises.
+};
+
+AbstractServerlessControl.prototype.killAdditionalAuxiliaryProcesses = function killAdditionalAuxiliaryProcesses() {
+  // Subclasses may override this. Everything started in startAdditionalAuxiliaryProcesses needs to be terminated here.
 };
 
 AbstractServerlessControl.prototype.killChildProcess = function killChildProcess(childProcess) {
