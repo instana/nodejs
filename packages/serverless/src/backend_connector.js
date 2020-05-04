@@ -16,6 +16,9 @@ const timeoutEnvVar = 'INSTANA_TIMEOUT';
 const defaultTimeout = 500;
 let backendTimeout = defaultTimeout;
 
+const proxyEnvVar = 'INSTANA_ENDPOINT_PROXY';
+let proxyAgent;
+
 const stopSendingOnFailure = true;
 let requestHasFailed = false;
 let warningsHaveBeenLogged = false;
@@ -36,6 +39,22 @@ if (process.env[timeoutEnvVar]) {
 
 const disableCaCheckEnvVar = 'INSTANA_DISABLE_CA_CHECK';
 const disableCaCheck = process.env[disableCaCheckEnvVar] === 'true';
+
+if (process.env[proxyEnvVar] && !environmentUtil.sendUnencrypted) {
+  const proxyUrl = process.env[proxyEnvVar];
+  logger.info(
+    `The environment variable ${proxyEnvVar} is set. Requests to the Instana back end will be routed via a proxy ` +
+      `server: ${proxyUrl}.`
+  );
+
+  const HttpsProxyAgent = require('https-proxy-agent');
+  proxyAgent = new HttpsProxyAgent(proxyUrl);
+} else if (process.env[proxyEnvVar] && environmentUtil.sendUnencrypted) {
+  logger.warn(
+    `Both ${proxyEnvVar} and ${environmentUtil.sendUnencryptedEnvVar} are set, but this combination is not supported.` +
+      ' Requests to the Instana back end will not be routed via a proxy server.'
+  );
+}
 
 let identityProvider;
 
@@ -113,6 +132,9 @@ function send(resourcePath, payload, destroySocketAfterwards, callback) {
   };
   if (!legacyTimeoutHandling) {
     options.timeout = backendTimeout;
+  }
+  if (proxyAgent) {
+    options.agent = proxyAgent;
   }
 
   if (needsEcdhCurveFix) {

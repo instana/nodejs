@@ -62,6 +62,9 @@ function prelude(opts) {
   if (opts.instanaKey) {
     env.INSTANA_KEY = opts.instanaKey;
   }
+  if (opts.proxy) {
+    env.INSTANA_ENDPOINT_PROXY = opts.proxy;
+  }
   if (opts.withConfig) {
     env.WITH_CONFIG = 'true';
   }
@@ -91,6 +94,8 @@ function prelude(opts) {
     backendPort,
     backendBaseUrl,
     downstreamDummyUrl,
+    proxy: opts.proxy,
+    proxyRequiresAuthorization: opts.proxyRequiresAuthorization,
     env
   });
   control.registerTestHooks();
@@ -346,6 +351,31 @@ function registerTests(handlerDefinitionPath) {
         .then(() => control.reset())
         .then(() => control.runHandler())
         .then(() => verifyAfterRunningHandler(control, { error: false, expectMetrics: true, expectSpans: true })));
+  });
+
+  describe('when using a proxy without authentication', function() {
+    const control = prelude.bind(this)({
+      handlerDefinitionPath,
+      instanaEndpointUrl: backendBaseUrl,
+      instanaAgentKey,
+      proxy: 'http://localhost:3128'
+    });
+
+    it('must capture metrics and spans', () =>
+      verify(control, { error: false, expectMetrics: true, expectSpans: true }));
+  });
+
+  describe('when using a proxy with authentication', function() {
+    const control = prelude.bind(this)({
+      handlerDefinitionPath,
+      instanaEndpointUrl: backendBaseUrl,
+      instanaAgentKey,
+      proxy: 'http://user:password@localhost:3128',
+      proxyRequiresAuthorization: true
+    });
+
+    it('must capture metrics and spans', () =>
+      verify(control, { error: false, expectMetrics: true, expectSpans: true }));
   });
 
   describe('triggered by API Gateway (Lambda Proxy)', function() {

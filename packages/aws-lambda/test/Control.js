@@ -1,6 +1,7 @@
 'use strict';
 
 const { fork } = require('child_process');
+const path = require('path');
 const {
   assert: { fail }
 } = require('chai');
@@ -15,6 +16,8 @@ function Control(opts) {
   this.backendBaseUrl = this.opts.backendBaseUrl || `https://localhost:${this.backendPort}/serverless`;
   this.downstreamDummyPort = this.opts.downstreamDummyPort || 3456;
   this.downstreamDummyUrl = this.opts.downstreamDummyUrl || `http://localhost:${this.downstreamDummyPort}`;
+  this.proxyPort = this.opts.proxyPort || 3128;
+  this.proxyUrl = this.opts.proxyUrl || `http://localhost:${this.proxyPort}`;
 }
 
 Control.prototype = Object.create(AbstractServerlessControl.prototype);
@@ -25,6 +28,7 @@ Control.prototype.reset = function reset() {
   this.lambdaErrors = [];
   this.lambdaResults = [];
   this.expectedHandlerRuns = 0;
+  this.messagesFromProxy = [];
   this.startedAt = 0;
 };
 
@@ -37,6 +41,33 @@ Control.prototype.registerTestHooks = function registerTestHooks() {
       fail('opts.handlerDefinitionPath is unspecified.');
     }
   });
+};
+
+Control.prototype.startAdditionalAuxiliaryProcesses = function startAdditionalAuxiliaryProcesses() {
+  if (this.opts.proxy) {
+    const env = {
+      PROXY_PORT: this.proxyPort
+    };
+    if (this.opts.proxyRequiresAuthorization) {
+      env.PROXY_REQUIRES_AUTHORIZATION = 'true';
+    }
+    this.proxy = fork(path.join(__dirname, './proxy'), {
+      stdio: config.getAppStdio(),
+      env: Object.assign(env, process.env, this.opts.env)
+    });
+    this.proxy.on('message', message => {
+      this.messagesFromProxy.push(message);
+    });
+    return this.waitUntilProcessIsUp('proxy', this.messagesFromProxy, 'proxy: started');
+  }
+  return Promise.resolve();
+};
+
+Control.prototype.killAdditionalAuxiliaryProcesses = function killAdditionalAuxiliaryProcesses() {
+  if (this.opts.proxy) {
+    return this.killChildProcess(this.proxy);
+  }
+  return Promise.resolve();
 };
 
 Control.prototype.startMonitoredProcess = function startMonitoredProcess() {
