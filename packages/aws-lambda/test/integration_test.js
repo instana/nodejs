@@ -914,7 +914,7 @@ function registerTests(handlerDefinitionPath) {
 
   function verifyMetrics(allMetrics, expectations) {
     expect(allMetrics).to.exist;
-    expect(Array.isArray(allMetrics)).to.be.true;
+    expect(allMetrics).to.be.an('array');
     expect(allMetrics).to.have.lengthOf(1);
     const allPlugins = allMetrics[0];
     expect(allPlugins.plugins).to.have.lengthOf(1);
