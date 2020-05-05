@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.97.0
 - [AWS Lambda] Add support for `INSTANA_ENDPOINT_PROXY` (send data to Instana via a proxy).
 - Add support for Node.js 14.
 - Update to `event-loop-stats@1.3.0`, to support detecting synchronous event loop blocking.
