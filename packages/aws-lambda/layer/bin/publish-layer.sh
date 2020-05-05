@@ -4,7 +4,7 @@ set -eo pipefail
 
 cd `dirname $BASH_SOURCE`/..
 
-LAMBDA_DOCS_PAGE_PATH=../../../../docs/src/pages/ecosystem/aws-lambda-native-tracing/nodejs/index.md
+LAMBDA_DOCS_PAGE_PATH=../../../../docs/src/pages/ecosystem/aws-lambda/nodejs/index.md
 UI_INSTALL_HELP=../../../../ui-client/packages/in-waiting-for-deployment/components/OnboardingWidget/content.js
 
 command -v aws >/dev/null 2>&1 || {
