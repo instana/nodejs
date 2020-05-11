@@ -40,6 +40,10 @@ function instrumentWinston3(createLogger) {
     // npm levels
     shimLevelMethod(derivedLogger, 'error', true);
     shimLevelMethod(derivedLogger, 'warn', false);
+    
+    // custom levels for using upper case log level
+    shimLevelMethod(derivedLogger, 'ERROR', true);
+    shimLevelMethod(derivedLogger, 'WARN', false);
 
     // syslog levels (RFC5424)
     shimLevelMethod(derivedLogger, 'emerg', true);
