@@ -44,7 +44,7 @@ Control.prototype.registerTestHooks = function registerTestHooks() {
 };
 
 Control.prototype.startAdditionalAuxiliaryProcesses = function startAdditionalAuxiliaryProcesses() {
-  if (this.opts.proxy) {
+  if (this.opts.startProxy) {
     const env = {
       PROXY_PORT: this.proxyPort
     };

@@ -95,6 +95,7 @@ function prelude(opts) {
     backendBaseUrl,
     downstreamDummyUrl,
     proxy: opts.proxy,
+    startProxy: opts.startProxy,
     proxyRequiresAuthorization: opts.proxyRequiresAuthorization,
     env
   });
@@ -358,6 +359,7 @@ function registerTests(handlerDefinitionPath) {
       handlerDefinitionPath,
       instanaEndpointUrl: backendBaseUrl,
       instanaAgentKey,
+      startProxy: true,
       proxy: 'http://localhost:3128'
     });
 
@@ -370,12 +372,53 @@ function registerTests(handlerDefinitionPath) {
       handlerDefinitionPath,
       instanaEndpointUrl: backendBaseUrl,
       instanaAgentKey,
+      startProxy: true,
       proxy: 'http://user:password@localhost:3128',
       proxyRequiresAuthorization: true
     });
 
     it('must capture metrics and spans', () =>
       verify(control, { error: false, expectMetrics: true, expectSpans: true }));
+  });
+
+  describe('when proxy authentication fails due to the wrong password', function() {
+    const control = prelude.bind(this)({
+      handlerDefinitionPath,
+      instanaEndpointUrl: backendBaseUrl,
+      instanaAgentKey,
+      startProxy: true,
+      proxy: 'http://user:wrong-password@localhost:3128',
+      proxyRequiresAuthorization: true
+    });
+
+    it('must not impact the original handler', () =>
+      verify(control, { error: false, expectMetrics: false, expectSpans: false }));
+  });
+
+  describe('when proxy authentication fails because no credentials have been provided', function() {
+    const control = prelude.bind(this)({
+      handlerDefinitionPath,
+      instanaEndpointUrl: backendBaseUrl,
+      instanaAgentKey,
+      startProxy: true,
+      proxy: 'http://localhost:3128',
+      proxyRequiresAuthorization: true
+    });
+
+    it('must not impact the original handler', () =>
+      verify(control, { error: false, expectMetrics: false, expectSpans: false }));
+  });
+
+  describe('when the proxy is not up', function() {
+    const control = prelude.bind(this)({
+      handlerDefinitionPath,
+      instanaEndpointUrl: backendBaseUrl,
+      instanaAgentKey,
+      proxy: 'http://localhost:3128'
+    });
+
+    it('must not impact the original handler', () =>
+      verify(control, { error: false, expectMetrics: false, expectSpans: false }));
   });
 
   describe('triggered by API Gateway (Lambda Proxy)', function() {
