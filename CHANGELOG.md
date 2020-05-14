@@ -1,9 +1,9 @@
 # Changelog
 
-## Unreleased
+## 1.97.1
 - Update to `netlinkwrapper@1.2.0`.
 - Fix `span.annotate` to support paths to nested properties (paths can be strings as well as arrays).
-- Add `span.freezePathTemplate` method to protect a custom path template from being overwritten by instrumented middleware running later.
+- Fix: Protect a custom path template from being overwritten by instrumented middleware running later.
 
 ## 1.97.0
 - [AWS Lambda] Add support for `INSTANA_ENDPOINT_PROXY` (send data to Instana via a proxy).
