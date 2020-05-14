@@ -204,6 +204,11 @@ function InstanaSpan(name) {
     writable: true,
     enumerable: false
   });
+  Object.defineProperty(this, 'pathTplFrozen', {
+    value: false,
+    writable: true,
+    enumerable: false
+  });
   Object.defineProperty(this, 'manualEndMode', {
     value: false,
     writable: true,
@@ -244,6 +249,10 @@ InstanaSpan.prototype.cancel = function cancel() {
 InstanaSpan.prototype.cleanup = function cleanup() {
   this.cleanupFunctions.forEach(call);
   this.cleanupFunctions.length = 0;
+};
+
+InstanaSpan.prototype.freezePathTemplate = function freezePathTemplate() {
+  this.pathTplFrozen = true;
 };
 
 InstanaSpan.prototype.disableAutoEnd = function disableAutoEnd() {

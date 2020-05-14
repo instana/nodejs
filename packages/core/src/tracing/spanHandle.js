@@ -85,8 +85,14 @@ SpanHandle.prototype.annotate = function annotate(path, value) {
   }
   if (typeof path === 'string') {
     _annotateWithString(this.span.data, path, value);
+    if (path === 'http.path_tpl') {
+      this.span.freezePathTemplate();
+    }
   } else if (Array.isArray(path)) {
     _annotateWithArray(this.span.data, path, value);
+    if (path[0] === 'http' && path[1] === 'path_tpl') {
+      this.span.freezePathTemplate();
+    }
   }
 };
 

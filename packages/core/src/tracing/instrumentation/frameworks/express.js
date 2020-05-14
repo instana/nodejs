@@ -151,7 +151,7 @@ function annotateHttpEntrySpanWithPathTemplate(req) {
   }
 
   var span = cls.getCurrentEntrySpan();
-  if (!span || span.n !== httpServer.spanName) {
+  if (!span || span.n !== httpServer.spanName || span.pathTplFrozen) {
     return;
   }
 

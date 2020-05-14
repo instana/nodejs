@@ -81,10 +81,15 @@ describe('tracing/express', function() {
     it('must report custom path template with additional middleware', () => {
       const request = {
         method: 'GET',
-        path: '/annotate-with-middleware'
+        path: '/annotate-with-middleware',
+        qs: {
+          authenticated: true
+        },
+        resolveWithFullResponse: true
       };
-      return controls.sendRequest(request).then(() =>
-        testUtils.retry(() =>
+      return controls.sendRequest(request).then(response => {
+        expect(response.statusCode).to.equal(200);
+        return testUtils.retry(() =>
           agentControls.getSpans().then(spans => {
             testUtils.expectAtLeastOneMatching(spans, span => {
               expect(span.n).to.equal('node.http.server');
@@ -92,8 +97,32 @@ describe('tracing/express', function() {
               expect(span.data.http.path_tpl).to.equal('/user/{id}/details');
             });
           })
-        )
-      );
+        );
+      });
+    });
+
+    it('must report custom path template when middleware rejects the request early', () => {
+      const request = {
+        method: 'GET',
+        path: '/annotate-with-middleware',
+        qs: {
+          authenticated: false
+        },
+        simple: false,
+        resolveWithFullResponse: true
+      };
+      return controls.sendRequest(request).then(response => {
+        expect(response.statusCode).to.equal(403);
+        return testUtils.retry(() =>
+          agentControls.getSpans().then(spans => {
+            testUtils.expectAtLeastOneMatching(spans, span => {
+              expect(span.n).to.equal('node.http.server');
+              expect(span.k).to.equal(constants.ENTRY);
+              expect(span.data.http.path_tpl).to.equal('/user/{id}/details');
+            });
+          })
+        );
+      });
     });
   });
 });

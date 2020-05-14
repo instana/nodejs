@@ -112,7 +112,7 @@ function normalizeLayerPath(p) {
 
 function annotateHttpEntrySpanWithPathTemplate(pathTemplate) {
   var span = cls.getCurrentEntrySpan();
-  if (!span || span.n !== httpServer.spanName) {
+  if (!span || span.n !== httpServer.spanName || span.pathTplFrozen) {
     return;
   }
   span.data.http.path_tpl = pathTemplate;
