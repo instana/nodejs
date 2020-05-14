@@ -79,12 +79,55 @@ SpanHandle.prototype.getErrorCount = function getErrorCount() {
   return this.span.ec;
 };
 
-SpanHandle.prototype.annotate = function annotate(key, value) {
-  if (key == null) {
+SpanHandle.prototype.annotate = function annotate(path, value) {
+  if (path == null) {
     return;
   }
-  this.span.data[key] = value;
+  if (typeof path === 'string') {
+    _annotateWithString(this.span.data, path, value);
+  } else if (Array.isArray(path)) {
+    _annotateWithArray(this.span.data, path, value);
+  }
 };
+
+function _annotateWithString(target, path, value) {
+  // remove trailing dots first
+  if (path.charAt(path.length - 1) === '.') {
+    return _annotateWithString(target, path.substring(0, path.length - 1), value);
+  }
+  var idx = path.indexOf('.');
+  if (idx === 0) {
+    // key with leading "."
+    _annotateWithString(target, path.substring(1), value);
+  } else if (idx >= 1) {
+    var head = path.substring(0, idx);
+    var tail = path.substring(idx + 1);
+    var nestedTarget = target[head];
+    if (nestedTarget == null || typeof nestedTarget !== 'object') {
+      target[head] = nestedTarget = {};
+    }
+    _annotateWithString(nestedTarget, tail, value);
+  } else {
+    target[path] = value;
+  }
+}
+
+function _annotateWithArray(target, path, value) {
+  if (path.length === 0) {
+    // eslint-disable-next-line no-useless-return
+    return;
+  } else if (path.length === 1) {
+    _annotateWithString(target, path[0], value);
+  } else {
+    var head = path[0];
+    var tail = path.slice(1);
+    var nestedTarget = target[head];
+    if (nestedTarget == null || typeof nestedTarget !== 'object') {
+      target[head] = nestedTarget = {};
+    }
+    _annotateWithArray(nestedTarget, tail, value);
+  }
+}
 
 /**
  * Switches the span into manual-end-mode. Calls to span#transmit() as used by automatic tracing instrumentation will be

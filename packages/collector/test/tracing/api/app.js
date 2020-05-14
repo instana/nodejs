@@ -28,10 +28,20 @@ app.get('/span/active', (req, res) => {
   });
 });
 
-app.get('/span/annotate', (req, res) => {
+app.get('/span/annotate-path-flat-string', (req, res) => {
   const span = instana.currentSpan();
-  span.annotate('key1', 'custom tag value 1');
-  span.annotate('key2', 'custom tag value 2');
+  span.annotate('custom.sdk.tags.key', 'custom nested tag value');
+  span.annotate('http.path_tpl', '/custom/{template}');
+  span.annotate('..redundant....dots..', 'will be silently dropped');
+  res.json({
+    span: serialize(span)
+  });
+});
+
+app.get('/span/annotate-path-array', (req, res) => {
+  const span = instana.currentSpan();
+  span.annotate(['custom', 'sdk', 'tags', 'key'], 'custom nested tag value');
+  span.annotate(['http', 'path_tpl'], '/custom/{template}');
   res.json({
     span: serialize(span)
   });

@@ -2,7 +2,7 @@
 
 'use strict';
 
-require('../../../../')();
+const instana = require('../../../../')();
 
 const bodyParser = require('body-parser');
 const express = require('express');
@@ -33,6 +33,20 @@ subRoutes.use('/sub', subSubRoutes);
 
 function sendRoute(req, res) {
   res.send(req.baseUrl + req.route.path);
+}
+
+app.get('/with-annotate', (req, res) => {
+  instana.currentSpan().annotate('http.path_tpl', '/user/{id}/details');
+  res.send();
+});
+
+app.get('/annotate-with-middleware', dummyMiddleware(), (req, res) => {
+  instana.currentSpan().annotate('http.path_tpl', '/user/{id}/details');
+  res.send();
+});
+
+function dummyMiddleware() {
+  return (req, res, next) => next();
 }
 
 app.listen(process.env.APP_PORT, () => {
