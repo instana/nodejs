@@ -153,7 +153,7 @@ amqp
               span.end(1);
               confirmChannel.nack(msg);
             });
-        });
+        }, 100);
       }
     })
   )

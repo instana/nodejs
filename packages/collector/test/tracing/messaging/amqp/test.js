@@ -4,6 +4,7 @@ const expect = require('chai').expect;
 
 const constants = require('@instana/core').tracing.constants;
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
+const config = require('../../../../../core/test/config');
 const testUtils = require('../../../../../core/test/test_util');
 const exchange = require('./amqpUtil').exchange;
 const queueName = require('./amqpUtil').queueName;
@@ -14,10 +15,12 @@ let publisherControls;
 let consumerControls;
 let agentStubControls;
 
-describe('tracing/amqp', () => {
+describe('tracing/amqp', function() {
   if (!supportedVersion(process.versions.node)) {
     return;
   }
+
+  this.timeout(config.getTestTimeout());
 
   agentStubControls = require('../../../apps/agentStubControls');
   publisherControls = require('./publisherControls');
@@ -51,38 +54,11 @@ function registerTests(apiType) {
     publisherControls.sendToQueue('Ohai!').then(() =>
       testUtils.retry(() =>
         agentStubControls.getSpans().then(spans => {
-          const entrySpan = testUtils.expectAtLeastOneMatching(spans, span => {
-            expect(span.n).to.equal('node.http.server');
-            expect(span.f.e).to.equal(String(publisherControls.getPid()));
-            expect(span.f.h).to.equal('agent-stub-uuid');
-            expect(span.async).to.not.exist;
-            expect(span.error).to.not.exist;
-            expect(span.ec).to.equal(0);
-          });
-
-          testUtils.expectAtLeastOneMatching(spans, span => {
-            expect(span.t).to.equal(entrySpan.t);
-            expect(span.p).to.equal(entrySpan.s);
-            expect(span.k).to.equal(constants.EXIT);
-            expect(span.n).to.equal('rabbitmq');
-            expect(span.f.e).to.equal(String(publisherControls.getPid()));
-            expect(span.f.h).to.equal('agent-stub-uuid');
-            expect(span.async).to.not.exist;
-            expect(span.error).to.not.exist;
-            expect(span.ec).to.equal(0);
-            expect(span.data.rabbitmq.sort).to.equal('publish');
-            expect(span.data.rabbitmq.exchange).to.not.exist;
-            expect(span.data.rabbitmq.key).to.equal(queueName);
-            expect(span.data.rabbitmq.address).to.equal('amqp://127.0.0.1:5672');
-          });
-
-          // verify that subsequent calls are correctly traced
-          testUtils.expectAtLeastOneMatching(spans, span => {
-            expect(span.n).to.equal('node.http.client');
-            expect(span.t).to.equal(entrySpan.t);
-            expect(span.p).to.equal(entrySpan.s);
-            expect(span.k).to.equal(constants.EXIT);
-          });
+          const httpEntry = verifyHttpEntry(spans);
+          const rabbitMqExit = verifyRabbitMqExit(spans, httpEntry);
+          expect(rabbitMqExit.data.rabbitmq.exchange).to.not.exist;
+          expect(rabbitMqExit.data.rabbitmq.key).to.equal(queueName);
+          verifyHttpExit(spans, httpEntry);
         })
       )
     ));
@@ -91,37 +67,11 @@ function registerTests(apiType) {
     publisherControls.publish('Ohai!').then(() =>
       testUtils.retry(() =>
         agentStubControls.getSpans().then(spans => {
-          const entrySpan = testUtils.expectAtLeastOneMatching(spans, span => {
-            expect(span.n).to.equal('node.http.server');
-            expect(span.f.e).to.equal(String(publisherControls.getPid()));
-            expect(span.f.h).to.equal('agent-stub-uuid');
-            expect(span.async).to.not.exist;
-            expect(span.error).to.not.exist;
-            expect(span.ec).to.equal(0);
-          });
-
-          testUtils.expectAtLeastOneMatching(spans, span => {
-            expect(span.t).to.equal(entrySpan.t);
-            expect(span.p).to.equal(entrySpan.s);
-            expect(span.k).to.equal(constants.EXIT);
-            expect(span.n).to.equal('rabbitmq');
-            expect(span.f.e).to.equal(String(publisherControls.getPid()));
-            expect(span.f.h).to.equal('agent-stub-uuid');
-            expect(span.async).to.not.exist;
-            expect(span.error).to.not.exist;
-            expect(span.ec).to.equal(0);
-            expect(span.data.rabbitmq.sort).to.equal('publish');
-            expect(span.data.rabbitmq.exchange).to.equal(exchange);
-            expect(span.data.rabbitmq.address).to.equal('amqp://127.0.0.1:5672');
-          });
-
-          // verify that subsequent calls are correctly traced
-          testUtils.expectAtLeastOneMatching(spans, span => {
-            expect(span.n).to.equal('node.http.client');
-            expect(span.t).to.equal(entrySpan.t);
-            expect(span.p).to.equal(entrySpan.s);
-            expect(span.k).to.equal(constants.EXIT);
-          });
+          const httpEntry = verifyHttpEntry(spans);
+          const rabbitMqExit = verifyRabbitMqExit(spans, httpEntry);
+          expect(rabbitMqExit.data.rabbitmq.exchange).to.equal(exchange);
+          expect(rabbitMqExit.data.rabbitmq.key).to.not.exist;
+          verifyHttpExit(spans, httpEntry);
         })
       )
     ));
@@ -130,34 +80,12 @@ function registerTests(apiType) {
     publisherControls.sendToQueue('Ohai').then(() =>
       testUtils.retry(() =>
         agentStubControls.getSpans().then(spans => {
-          const rabbitMqExit = testUtils.expectAtLeastOneMatching(spans, span => {
-            expect(span.k).to.equal(constants.EXIT);
-            expect(span.n).to.equal('rabbitmq');
-          });
-
-          const rabbitMqEntry = testUtils.expectAtLeastOneMatching(spans, span => {
-            expect(span.t).to.equal(rabbitMqExit.t);
-            expect(span.p).to.equal(rabbitMqExit.s);
-            expect(span.n).to.equal('rabbitmq');
-            expect(span.k).to.equal(constants.ENTRY);
-            expect(span.d).to.be.greaterThan(99);
-            expect(span.f.e).to.equal(String(consumerControls.getPid()));
-            expect(span.f.h).to.equal('agent-stub-uuid');
-            expect(span.async).to.not.exist;
-            expect(span.error).to.not.exist;
-            expect(span.ec).to.equal(0);
-            expect(span.data.rabbitmq.sort).to.equal('consume');
-            expect(span.data.rabbitmq.key).to.equal(queueName);
-            expect(span.data.rabbitmq.address).to.equal('amqp://127.0.0.1:5672');
-          });
-
-          // verify that subsequent calls are correctly traced
-          testUtils.expectAtLeastOneMatching(spans, span => {
-            expect(span.n).to.equal('node.http.client');
-            expect(span.t).to.equal(rabbitMqExit.t);
-            expect(span.p).to.equal(rabbitMqEntry.s);
-            expect(span.k).to.equal(constants.EXIT);
-          });
+          const httpEntry = verifyHttpEntry(spans);
+          const rabbitMqExit = verifyRabbitMqExit(spans, httpEntry);
+          const rabbitMqEntry = verifyRabbitMqEntry(spans, rabbitMqExit);
+          expect(rabbitMqEntry.data.rabbitmq.exchange).to.not.exist;
+          expect(rabbitMqEntry.data.rabbitmq.key).to.equal(queueName);
+          verifyHttpExit(spans, rabbitMqEntry);
         })
       )
     ));
@@ -166,34 +94,12 @@ function registerTests(apiType) {
     publisherControls.publish('Ohai').then(() =>
       testUtils.retry(() =>
         agentStubControls.getSpans().then(spans => {
-          const rabbitMqExit = testUtils.expectAtLeastOneMatching(spans, span => {
-            expect(span.k).to.equal(constants.EXIT);
-            expect(span.n).to.equal('rabbitmq');
-          });
-
-          const rabbitMqEntry = testUtils.expectAtLeastOneMatching(spans, span => {
-            expect(span.t).to.equal(rabbitMqExit.t);
-            expect(span.p).to.equal(rabbitMqExit.s);
-            expect(span.n).to.equal('rabbitmq');
-            expect(span.k).to.equal(constants.ENTRY);
-            expect(span.d).to.be.greaterThan(99);
-            expect(span.f.e).to.equal(String(consumerControls.getPid()));
-            expect(span.f.h).to.equal('agent-stub-uuid');
-            expect(span.async).to.not.exist;
-            expect(span.error).to.not.exist;
-            expect(span.ec).to.equal(0);
-            expect(span.data.rabbitmq.sort).to.equal('consume');
-            expect(span.data.rabbitmq.exchange).to.equal(exchange);
-            expect(span.data.rabbitmq.address).to.equal('amqp://127.0.0.1:5672');
-          });
-
-          // verify that subsequent calls are correctly traced
-          testUtils.expectAtLeastOneMatching(spans, span => {
-            expect(span.n).to.equal('node.http.client');
-            expect(span.t).to.equal(rabbitMqExit.t);
-            expect(span.p).to.equal(rabbitMqEntry.s);
-            expect(span.k).to.equal(constants.EXIT);
-          });
+          const httpEntry = verifyHttpEntry(spans);
+          const rabbitMqExit = verifyRabbitMqExit(spans, httpEntry);
+          const rabbitMqEntry = verifyRabbitMqEntry(spans, rabbitMqExit);
+          expect(rabbitMqEntry.data.rabbitmq.exchange).to.equal(exchange);
+          expect(rabbitMqEntry.data.rabbitmq.key).to.not.exist;
+          verifyHttpExit(spans, rabbitMqEntry);
         })
       )
     ));
@@ -202,34 +108,12 @@ function registerTests(apiType) {
     publisherControls.sendToGetQueue('Ohai').then(() =>
       testUtils.retry(() =>
         agentStubControls.getSpans().then(spans => {
-          const rabbitMqExit = testUtils.expectAtLeastOneMatching(spans, span => {
-            expect(span.k).to.equal(constants.EXIT);
-            expect(span.n).to.equal('rabbitmq');
-          });
-
-          const rabbitMqEntry = testUtils.expectAtLeastOneMatching(spans, span => {
-            expect(span.t).to.equal(rabbitMqExit.t);
-            expect(span.p).to.equal(rabbitMqExit.s);
-            expect(span.n).to.equal('rabbitmq');
-            expect(span.k).to.equal(constants.ENTRY);
-            expect(span.d).to.be.greaterThan(99);
-            expect(span.f.e).to.equal(String(consumerControls.getPid()));
-            expect(span.f.h).to.equal('agent-stub-uuid');
-            expect(span.async).to.not.exist;
-            expect(span.error).to.not.exist;
-            expect(span.ec).to.equal(0);
-            expect(span.data.rabbitmq.sort).to.equal('consume');
-            expect(span.data.rabbitmq.key).to.equal(queueNameGet);
-            expect(span.data.rabbitmq.address).to.equal('amqp://127.0.0.1:5672');
-          });
-
-          // verify that subsequent calls are correctly traced
-          testUtils.expectAtLeastOneMatching(spans, span => {
-            expect(span.n).to.equal('node.http.client');
-            expect(span.t).to.equal(rabbitMqExit.t);
-            expect(span.p).to.equal(rabbitMqEntry.s);
-            expect(span.k).to.equal(constants.EXIT);
-          });
+          const httpEntry = verifyHttpEntry(spans);
+          const rabbitMqExit = verifyRabbitMqExit(spans, httpEntry);
+          const rabbitMqEntry = verifyRabbitMqEntry(spans, rabbitMqExit);
+          expect(rabbitMqEntry.data.rabbitmq.exchange).to.not.exist;
+          expect(rabbitMqEntry.data.rabbitmq.key).to.equal(queueNameGet);
+          verifyHttpExit(spans, rabbitMqEntry);
         })
       )
     ));
@@ -238,38 +122,11 @@ function registerTests(apiType) {
     publisherControls.sendToConfirmQueue('Ohai!').then(() =>
       testUtils.retry(() =>
         agentStubControls.getSpans().then(spans => {
-          const entrySpan = testUtils.expectAtLeastOneMatching(spans, span => {
-            expect(span.n).to.equal('node.http.server');
-            expect(span.f.e).to.equal(String(publisherControls.getPid()));
-            expect(span.f.h).to.equal('agent-stub-uuid');
-            expect(span.async).to.not.exist;
-            expect(span.error).to.not.exist;
-            expect(span.ec).to.equal(0);
-          });
-
-          testUtils.expectAtLeastOneMatching(spans, span => {
-            expect(span.t).to.equal(entrySpan.t);
-            expect(span.p).to.equal(entrySpan.s);
-            expect(span.k).to.equal(constants.EXIT);
-            expect(span.n).to.equal('rabbitmq');
-            expect(span.f.e).to.equal(String(publisherControls.getPid()));
-            expect(span.f.h).to.equal('agent-stub-uuid');
-            expect(span.async).to.not.exist;
-            expect(span.error).to.not.exist;
-            expect(span.ec).to.equal(0);
-            expect(span.data.rabbitmq.sort).to.equal('publish');
-            expect(span.data.rabbitmq.exchange).to.not.exist;
-            expect(span.data.rabbitmq.key).to.equal(queueNameConfirm);
-            expect(span.data.rabbitmq.address).to.equal('amqp://127.0.0.1:5672');
-          });
-
-          // verify that subsequent calls are correctly traced
-          testUtils.expectAtLeastOneMatching(spans, span => {
-            expect(span.n).to.equal('node.http.client');
-            expect(span.t).to.equal(entrySpan.t);
-            expect(span.p).to.equal(entrySpan.s);
-            expect(span.k).to.equal(constants.EXIT);
-          });
+          const httpEntry = verifyHttpEntry(spans);
+          const rabbitMqExit = verifyRabbitMqExit(spans, httpEntry);
+          expect(rabbitMqExit.data.rabbitmq.exchange).to.not.exist;
+          expect(rabbitMqExit.data.rabbitmq.key).to.equal(queueNameConfirm);
+          verifyHttpExit(spans, httpEntry);
         })
       )
     ));
@@ -278,34 +135,67 @@ function registerTests(apiType) {
     publisherControls.sendToConfirmQueue('Ohai').then(() =>
       testUtils.retry(() =>
         agentStubControls.getSpans().then(spans => {
-          const rabbitMqExit = testUtils.expectAtLeastOneMatching(spans, span => {
-            expect(span.k).to.equal(constants.EXIT);
-            expect(span.n).to.equal('rabbitmq');
-          });
-
-          const rabbitMqEntry = testUtils.expectAtLeastOneMatching(spans, span => {
-            expect(span.t).to.equal(rabbitMqExit.t);
-            expect(span.p).to.equal(rabbitMqExit.s);
-            expect(span.n).to.equal('rabbitmq');
-            expect(span.k).to.equal(constants.ENTRY);
-            expect(span.f.e).to.equal(String(consumerControls.getPid()));
-            expect(span.f.h).to.equal('agent-stub-uuid');
-            expect(span.async).to.not.exist;
-            expect(span.error).to.not.exist;
-            expect(span.ec).to.equal(0);
-            expect(span.data.rabbitmq.sort).to.equal('consume');
-            expect(span.data.rabbitmq.key).to.equal(queueNameConfirm);
-            expect(span.data.rabbitmq.address).to.equal('amqp://127.0.0.1:5672');
-          });
-
-          // verify that subsequent calls are correctly traced
-          testUtils.expectAtLeastOneMatching(spans, span => {
-            expect(span.n).to.equal('node.http.client');
-            expect(span.t).to.equal(rabbitMqExit.t);
-            expect(span.p).to.equal(rabbitMqEntry.s);
-            expect(span.k).to.equal(constants.EXIT);
-          });
+          const httpEntry = verifyHttpEntry(spans);
+          const rabbitMqExit = verifyRabbitMqExit(spans, httpEntry);
+          const rabbitMqEntry = verifyRabbitMqEntry(spans, rabbitMqExit);
+          expect(rabbitMqEntry.data.rabbitmq.exchange).to.not.exist;
+          expect(rabbitMqEntry.data.rabbitmq.key).to.equal(queueNameConfirm);
+          verifyHttpExit(spans, rabbitMqEntry);
         })
       )
     ));
+
+  function verifyHttpEntry(spans) {
+    return testUtils.expectAtLeastOneMatching(spans, span => {
+      expect(span.n).to.equal('node.http.server');
+      expect(span.f.e).to.equal(String(publisherControls.getPid()));
+      expect(span.f.h).to.equal('agent-stub-uuid');
+      expect(span.async).to.not.exist;
+      expect(span.error).to.not.exist;
+      expect(span.ec).to.equal(0);
+    });
+  }
+
+  function verifyRabbitMqExit(spans, parentSpan) {
+    return testUtils.expectAtLeastOneMatching(spans, span => {
+      expect(span.t).to.equal(parentSpan.t);
+      expect(span.p).to.equal(parentSpan.s);
+      expect(span.k).to.equal(constants.EXIT);
+      expect(span.n).to.equal('rabbitmq');
+      expect(span.f.e).to.equal(String(publisherControls.getPid()));
+      expect(span.f.h).to.equal('agent-stub-uuid');
+      expect(span.async).to.not.exist;
+      expect(span.error).to.not.exist;
+      expect(span.ec).to.equal(0);
+      expect(span.data.rabbitmq.sort).to.equal('publish');
+      expect(span.data.rabbitmq.address).to.equal('amqp://127.0.0.1:5672');
+    });
+  }
+
+  function verifyRabbitMqEntry(spans, parentSpan) {
+    return testUtils.expectAtLeastOneMatching(spans, span => {
+      expect(span.t).to.equal(parentSpan.t);
+      expect(span.p).to.equal(parentSpan.s);
+      expect(span.n).to.equal('rabbitmq');
+      expect(span.k).to.equal(constants.ENTRY);
+      expect(span.d).to.be.greaterThan(99);
+      expect(span.f.e).to.equal(String(consumerControls.getPid()));
+      expect(span.f.h).to.equal('agent-stub-uuid');
+      expect(span.async).to.not.exist;
+      expect(span.error).to.not.exist;
+      expect(span.ec).to.equal(0);
+      expect(span.data.rabbitmq.sort).to.equal('consume');
+      expect(span.data.rabbitmq.address).to.equal('amqp://127.0.0.1:5672');
+    });
+  }
+
+  function verifyHttpExit(spans, parentSpan) {
+    // verify that subsequent calls are correctly traced
+    return testUtils.expectAtLeastOneMatching(spans, span => {
+      expect(span.n).to.equal('node.http.client');
+      expect(span.t).to.equal(parentSpan.t);
+      expect(span.p).to.equal(parentSpan.s);
+      expect(span.k).to.equal(constants.EXIT);
+    });
+  }
 }
