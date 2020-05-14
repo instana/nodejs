@@ -58,4 +58,42 @@ describe('tracing/express', function() {
       });
     }
   });
+
+  describe('custom path templates via annotate', () => {
+    it('must report custom path template', () => {
+      const request = {
+        method: 'GET',
+        path: '/with-annotate'
+      };
+      return controls.sendRequest(request).then(() =>
+        testUtils.retry(() =>
+          agentControls.getSpans().then(spans => {
+            testUtils.expectAtLeastOneMatching(spans, span => {
+              expect(span.n).to.equal('node.http.server');
+              expect(span.k).to.equal(constants.ENTRY);
+              expect(span.data.http.path_tpl).to.equal('/user/{id}/details');
+            });
+          })
+        )
+      );
+    });
+
+    it('must report custom path template with additional middleware', () => {
+      const request = {
+        method: 'GET',
+        path: '/annotate-with-middleware'
+      };
+      return controls.sendRequest(request).then(() =>
+        testUtils.retry(() =>
+          agentControls.getSpans().then(spans => {
+            testUtils.expectAtLeastOneMatching(spans, span => {
+              expect(span.n).to.equal('node.http.server');
+              expect(span.k).to.equal(constants.ENTRY);
+              expect(span.data.http.path_tpl).to.equal('/user/{id}/details');
+            });
+          })
+        )
+      );
+    });
+  });
 });

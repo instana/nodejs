@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+- Update to `netlinkwrapper@1.2.0`.
+- Fix `span.annotate` to support paths to nested properties (paths can be strings as well as arrays).
+
 ## 1.97.0
 - [AWS Lambda] Add support for `INSTANA_ENDPOINT_PROXY` (send data to Instana via a proxy).
 - Add support for Node.js 14.
