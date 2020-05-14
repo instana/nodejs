@@ -44,7 +44,7 @@ function annotateHttpEntrySpanWithPathTemplate(routeObject) {
     return;
   }
   var span = cls.getCurrentEntrySpan();
-  if (!span || span.n !== httpServer.spanName) {
+  if (!span || span.n !== httpServer.spanName || span.pathTplFrozen) {
     return;
   }
   span.data.http.path_tpl = routeObject.route.path;

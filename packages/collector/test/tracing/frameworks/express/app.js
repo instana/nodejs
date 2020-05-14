@@ -40,13 +40,30 @@ app.get('/with-annotate', (req, res) => {
   res.send();
 });
 
-app.get('/annotate-with-middleware', dummyMiddleware(), (req, res) => {
-  instana.currentSpan().annotate('http.path_tpl', '/user/{id}/details');
-  res.send();
-});
+app.get(
+  '/annotate-with-middleware',
+  annotateWithPathTemplate('/user/{id}/details'),
+  authenticationMiddleware(),
+  (req, res) => {
+    res.sendStatus(200);
+  }
+);
 
-function dummyMiddleware() {
-  return (req, res, next) => next();
+function annotateWithPathTemplate(pathTemplate) {
+  return (req, res, next) => {
+    instana.currentSpan().annotate('http.path_tpl', pathTemplate);
+    next();
+  };
+}
+
+function authenticationMiddleware() {
+  return (req, res, next) => {
+    if (req.query.authenticated === 'true') {
+      next();
+    } else {
+      res.sendStatus(403);
+    }
+  };
 }
 
 app.listen(process.env.APP_PORT, () => {
