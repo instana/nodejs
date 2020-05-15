@@ -2,110 +2,97 @@
 
 class SamplerScheduler {
   constructor(profiler, sampler, config) {
-    let self = this;
-
-    self.profiler = profiler;
-    self.sampler = sampler;
-    self.config = config;
-    self.started = false;
-    self.spanTimer = undefined;
-    self.randomTimer = undefined;
-    self.reportTimer = undefined;
-    self.profileStartTs = undefined;
-    self.profileDuration = undefined;
+    this.profiler = profiler;
+    this.sampler = sampler;
+    this.config = config;
+    this.started = false;
+    this.spanTimer = undefined;
+    this.randomTimer = undefined;
+    this.reportTimer = undefined;
+    this.profileStartTs = undefined;
+    this.profileDuration = undefined;
   }
-
 
   start() {
-    let self = this;
-
-    if (!self.sampler.test()) {
+    if (!this.sampler.test()) {
       return;
     }
 
-    if (self.started) {
+    if (this.started) {
       return;
     }
-    self.started = true;
+    this.started = true;
 
-    self.reset();
+    this.reset();
 
-    self.spanTimer = self.profiler.setInterval(() => {
-      self.randomTimer = self.profiler.setTimeout(() => {
-        self.profile(false, true);
-      }, Math.round(Math.random() * (self.config.spanInterval - self.config.maxSpanDuration)));
-    }, self.config.spanInterval);
+    this.spanTimer = this.profiler.setInterval(() => {
+      this.randomTimer = this.profiler.setTimeout(() => {
+        this.profile(false, true);
+      }, Math.round(Math.random() * (this.config.spanInterval - this.config.maxSpanDuration)));
+    }, this.config.spanInterval);
 
-    self.reportTimer = self.profiler.setInterval(() => {
-      self.report();
-    }, self.config.reportInterval);
+    this.reportTimer = this.profiler.setInterval(() => {
+      this.report();
+    }, this.config.reportInterval);
   }
-
 
   stop() {
-    let self = this;
-
-    if (!self.started) {
+    if (!this.started) {
       return;
     }
-    self.started = false;
+    this.started = false;
 
-    if (self.spanTimer) {
-      clearInterval(self.spanTimer);
-      self.spanTimer = undefined;
+    if (this.spanTimer) {
+      clearInterval(this.spanTimer);
+      this.spanTimer = undefined;
     }
 
-    if (self.randomTimer) {
-      clearTimeout(self.randomTimer);
-      self.randomTimer = undefined;
+    if (this.randomTimer) {
+      clearTimeout(this.randomTimer);
+      this.randomTimer = undefined;
     }
 
-    if (self.reportTimer) {
-      clearInterval(self.reportTimer);
-      self.reportTimer = undefined;
+    if (this.reportTimer) {
+      clearInterval(this.reportTimer);
+      this.reportTimer = undefined;
     }
   }
-
 
   reset() {
-    let self = this;
-
-    self.sampler.reset();
-    self.profileStartTs = Date.now();
-    self.profileDuration = 0;
+    this.sampler.reset();
+    this.profileStartTs = Date.now();
+    this.profileDuration = 0;
   }
 
-
   profile() {
-    let self = this;
-
-    if (!self.started) {
+    if (!this.started) {
       return null;
     }
 
-    if (self.profileDuration > self.config.maxProfileDuration) {
-      self.profiler.debug(self.config.logPrefix + ': max profiling duration reached.');
+    if (this.profileDuration > this.config.maxProfileDuration) {
+      this.profiler.debug(this.config.logPrefix + ': max profiling duration reached.');
       return null;
     }
 
-    if (self.profiler.samplerActive) {
-      self.profiler.debug(self.config.logPrefix + ': sampler lock exists.');
+    if (this.profiler.samplerActive) {
+      this.profiler.debug(this.config.logPrefix + ': sampler lock exists.');
       return null;
     }
-    self.profiler.samplerActive = true;
-    self.profiler.debug(self.config.logPrefix + ': started.');
+    this.profiler.samplerActive = true;
+    this.profiler.debug(this.config.logPrefix + ': started.');
 
     try {
-      self.sampler.startSampler();
+      this.sampler.startSampler();
     } catch (err) {
-      self.profiler.samplerActive = false;
-      self.profiler.exception(err);
+      this.profiler.samplerActive = false;
+      this.profiler.exception(err);
       return null;
     }
 
     let spanStart = Date.now();
 
     let stopped = false;
+    const self = this;
     function _stop() {
       if (stopped) {
         return;
@@ -123,35 +110,32 @@ class SamplerScheduler {
       }
     }
 
-    self.profiler.setTimeout(() => {
+    this.profiler.setTimeout(() => {
       _stop();
-    }, self.config.maxSpanDuration);
+    }, this.config.maxSpanDuration);
   }
 
-
   report() {
-    let self = this;
-
-    if (!self.started) {
+    if (!this.started) {
       return;
     }
 
-    if (self.profileDuration === 0) {
+    if (this.profileDuration === 0) {
       return;
     }
 
-    self.profiler.debug(self.config.logPrefix + ': reporting profile.');
+    this.profiler.debug(this.config.logPrefix + ': reporting profile.');
 
-    let profile = self.sampler.buildProfile(self.profileDuration, Date.now() - self.profileStartTs);
+    let profile = this.sampler.buildProfile(this.profileDuration, Date.now() - this.profileStartTs);
 
-    let externalPid = self.profiler.getExternalPid();
+    let externalPid = this.profiler.getExternalPid();
     if (externalPid) {
       profile.processPid = externalPid;
     }
 
-    self.profiler.profileRecorder.record(profile.toJson());
+    this.profiler.profileRecorder.record(profile.toJson());
 
-    self.reset();
+    this.reset();
   }
 }
 

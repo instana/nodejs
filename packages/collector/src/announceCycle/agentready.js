@@ -1,14 +1,19 @@
 'use strict';
 
+var semver = require('semver');
 var clone = require('@instana/core').util.clone;
 var compression = require('@instana/core').util.compression;
 var tracing = require('@instana/core').tracing;
-var autoprofile = require('@instana/autoprofile');
+var autoprofile;
 
 var agentOpts = require('../agent/opts');
 var pidStore = require('../pidStore');
 var metrics = require('../metrics');
 var uncaught = require('../uncaught');
+
+if (semver.gte(process.version, '6.4.0')) {
+  autoprofile = require('@instana/autoprofile');
+}
 
 var logger;
 logger = require('../logger').getLogger('announceCycle/agentready', function(newLogger) {
@@ -48,7 +53,7 @@ function enter(_ctx) {
   sendData();
   scheduleTracingMetrics();
 
-  if (agentOpts.autoProfile) {
+  if (agentOpts.autoProfile && autoprofile) {
     var profiler = autoprofile.start();
     profiler.sendProfiles = function(profiles, callback) {
       agentConnection.sendProfiles(profiles, callback);

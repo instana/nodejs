@@ -2,11 +2,23 @@
 
 const AsyncSampler = require('../../lib/samplers/async_sampler').AsyncSampler;
 
+const { Writable } = require('stream');
 const assert = require('assert');
 const http = require('http');
 const fs = require('fs');
-const util = require('util');
 
+class DevNull extends Writable {
+  constructor(opts) {
+    opts = opts || {};
+    super(opts);
+  }
+
+  _write(chunk, encoding, cb) {
+    setImmediate(cb);
+  }
+}
+
+const devNull = new DevNull();
 
 describe('AsyncSampler', () => {
   let profiler;
@@ -16,7 +28,7 @@ describe('AsyncSampler', () => {
   });
 
   describe('extractFrames()', () => {
-    it('should extract frames', (done) => {
+    it('should extract frames', done => {
       let sampler = new AsyncSampler(profiler);
       if (!sampler.test()) {
         done();
@@ -52,11 +64,11 @@ describe('AsyncSampler', () => {
       let frames = sampler.createStackTrace(sample, true);
 
       let found = false;
-      for (let frame of frames) {
+      frames.forEach(frame => {
         if (frame.getFileName().match(/async_sampler.test.js/)) {
           found = true;
         }
-      }
+      });
 
       assert(found);
 
@@ -64,9 +76,8 @@ describe('AsyncSampler', () => {
     });
   });
 
-
   describe('startProfiling()', () => {
-    it('should record async profile', (done) => {
+    it('should record async profile', done => {
       let sampler = new AsyncSampler(profiler);
       if (!sampler.test()) {
         done();
@@ -89,29 +100,27 @@ describe('AsyncSampler', () => {
         setTimeout(() => {
           sampler.stopSampler();
           let profile = sampler.buildProfile(1000, 10);
-
-          // let endCpuTime = process.cpuUsage(startCpuTime)
-          // console.log('CPU time:', (endCpuTime.user + endCpuTime.system) / 1e6);
-
-          // console.log(profiles[0].profile.dump());
           assert(JSON.stringify(profile.toJson()).match(/async_sampler.test.js/));
-
           done();
         }, 1000);
 
         timer = setInterval(() => {
-          http.get('http://localhost:5001', (resp) => {
-            let data = '';
+          http
+            .get('http://localhost:5001', resp => {
+              let data = '';
 
-            resp.on('data', (chunk) => {
-              data += chunk;
-            });
+              resp.on('data', chunk => {
+                data += chunk;
+              });
 
-            resp.on('end', () => {
+              resp.on('end', () => {
+                devNull.write(data);
+              });
+            })
+            .on('error', err => {
+              // eslint-disable-next-line no-console
+              console.log('error', err.message);
             });
-          }).on('error', (err) => {
-            console.log('Error: ' + err.message);
-          });
         }, 10);
       });
 

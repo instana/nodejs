@@ -2,7 +2,6 @@
 
 const AllocationSampler = require('../../lib/samplers/allocation_sampler').AllocationSampler;
 const assert = require('assert');
-const util = require('util');
 const async = require('async');
 
 describe('AllocationSampler', () => {
@@ -12,9 +11,8 @@ describe('AllocationSampler', () => {
     profiler = global.profiler;
   });
 
-
   describe('startSampler()', () => {
-    it('should record allocation profile', (done) => {
+    it('should record allocation profile', done => {
       if (!profiler.matchVersion('v8.6.0', null)) {
         done();
         return;
@@ -37,7 +35,6 @@ describe('AllocationSampler', () => {
           callback(null, JSON.stringify(profile.toJson()).match(/allocation_sampler.test.js/));
         }, 1000);
 
-
         let mem1 = [];
         function memLeak() {
           let mem2 = [];
@@ -50,12 +47,10 @@ describe('AllocationSampler', () => {
         memLeak();
       }
 
-      async.retry({times: 5}, runTest, (err, success) => {
+      async.retry({ times: 5 }, runTest, (err, success) => {
         assert(success);
         done();
       });
     });
   });
 });
-
-

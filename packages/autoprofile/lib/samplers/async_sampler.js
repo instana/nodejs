@@ -1,3 +1,5 @@
+/* eslint-disable no-restricted-syntax, no-continue */
+
 'use strict';
 
 const fs = require('fs');
@@ -5,50 +7,42 @@ const util = require('util');
 const CallSite = require('../profile').CallSite;
 const Profile = require('../profile').Profile;
 
-
-
 class AsyncSampler {
   constructor(profiler) {
-    let self = this;
-
-    self.EXCLUDE_SAMPLE_TYPES = {
+    this.EXCLUDE_SAMPLE_TYPES = {
       TIMERWRAP: true,
       Timeout: true,
       Immediate: true,
       TickObject: true,
       PROMISE: true
     };
-    self.MAX_FRAMES = 50;
-    self.SAMPLE_LIMIT = 500;
+    this.MAX_FRAMES = 50;
+    this.SAMPLE_LIMIT = 500;
 
-    self.profiler = profiler;
-    self.top = undefined;
-    self.profileDuration = undefined;
-    self.spanStart = undefined;
-    self.asyncHook = undefined;
-    self.samples = undefined;
-    self.sampleLimitReached = false;
+    this.profiler = profiler;
+    this.top = undefined;
+    this.profileDuration = undefined;
+    this.spanStart = undefined;
+    this.asyncHook = undefined;
+    this.samples = undefined;
+    this.sampleLimitReached = false;
   }
 
-
   test() {
-    let self = this;
-
-    if (self.profiler.getOption('asyncSamplerDisabled')) {
+    if (this.profiler.getOption('asyncSamplerDisabled')) {
       return false;
     }
 
-    if (!self.profiler.matchVersion('v8.1.0', null)) {
-      self.profiler.log('Async sampler is supported starting Node.js v8.1.0');
+    if (!this.profiler.matchVersion('v8.1.0', null)) {
+      this.profiler.log('Async sampler is supported starting Node.js v8.1.0');
       return false;
     }
 
     return true;
   }
 
-
   initSampler() {
-    let self = this;
+    const self = this;
 
     self.samples = new Map();
 
@@ -76,7 +70,6 @@ class AsyncSampler {
       }
     }
 
-
     function init(asyncId, type, triggerAsyncId) {
       try {
         if (self.sampleLimitReached) {
@@ -101,7 +94,6 @@ class AsyncSampler {
       }
     }
 
-
     function before(asyncId) {
       try {
         let sample = self.samples.get(asyncId);
@@ -119,40 +111,31 @@ class AsyncSampler {
     self.asyncHook = asyncHooks.createHook({ init, before });
   }
 
-
   reset() {
-    let self = this;
-
-    if (!self.asyncHook) {
-      self.initSampler();
+    if (!this.asyncHook) {
+      this.initSampler();
     }
 
-    self.top = new CallSite(self.profiler, '', '', 0);
-    self.profileDuration = 0;
+    this.top = new CallSite(this.profiler, '', '', 0);
+    this.profileDuration = 0;
   }
-
 
   startSampler() {
-    let self = this;
-
-    self.sampleLimitReached = false;
-    self.samples.clear();
-    self.asyncHook.enable();
-    self.spanStart = self.hrmillis();
+    this.sampleLimitReached = false;
+    this.samples.clear();
+    this.asyncHook.enable();
+    this.spanStart = this.hrmillis();
   }
 
-
   stopSampler() {
-    let self = this;
-
-    self.asyncHook.disable();
+    this.asyncHook.disable();
 
     // calculate actual record duration
-    if (!self.sampleLimitReached) {
-      self.profileDuration += self.hrmillis() - self.spanStart;
+    if (!this.sampleLimitReached) {
+      this.profileDuration += this.hrmillis() - this.spanStart;
     } else {
-      let spanEnd = self.spanStart;
-      for (let sample of self.samples.values()) {
+      let spanEnd = this.spanStart;
+      for (let sample of this.samples.values()) {
         if (sample.time) {
           let sampleEnd = sample.start + sample.time;
           if (sampleEnd > spanEnd) {
@@ -161,42 +144,38 @@ class AsyncSampler {
         }
       }
 
-      if (spanEnd <= self.spanStart) {
-        spanEnd = self.hrmillis();
+      if (spanEnd <= this.spanStart) {
+        spanEnd = this.hrmillis();
       }
 
-      self.profileDuration += spanEnd - self.spanStart;
+      this.profileDuration += spanEnd - this.spanStart;
     }
 
-    self.updateProfile();
+    this.updateProfile();
 
-    self.samples.clear();
+    this.samples.clear();
   }
 
-
   updateProfile() {
-    let self = this;
+    let includeAgentFrames = this.profiler.getOption('includeAgentFrames');
 
-    let includeAgentFrames = self.profiler.getOption('includeAgentFrames');
-
-    for (let sample of self.samples.values()) {
+    for (let sample of this.samples.values()) {
       if (!sample.time) {
         continue;
       }
 
-      if (self.EXCLUDE_SAMPLE_TYPES[sample.type]) {
+      if (this.EXCLUDE_SAMPLE_TYPES[sample.type]) {
         continue;
       }
 
-      let frames = self.createStackTrace(sample, includeAgentFrames);
+      let frames = this.createStackTrace(sample, includeAgentFrames);
       if (frames.length === 0) {
         continue;
       }
       frames = frames.reverse();
 
-
       // update profile
-      let node = self.top;
+      let node = this.top;
       for (let frame of frames) {
         let methodName = '';
         if (frame.getFunctionName()) {
@@ -213,10 +192,7 @@ class AsyncSampler {
     }
   }
 
-
   createStackTrace(sample, includeAgentFrames) {
-    let self = this;
-
     let frames = new Map();
     let processed = new Set();
 
@@ -224,26 +200,23 @@ class AsyncSampler {
       processed.add(sample.asyncId);
 
       if (sample.stack) {
-        self.extractFrames(frames, sample.stack, includeAgentFrames);
-        if (frames.size > self.MAX_FRAMES) {
+        this.extractFrames(frames, sample.stack, includeAgentFrames);
+        if (frames.size > this.MAX_FRAMES) {
           break;
         }
       }
 
-      sample = self.samples.get(sample.triggerAsyncId);
+      sample = this.samples.get(sample.triggerAsyncId);
     }
 
     return Array.from(frames.values());
   }
 
-
   extractFrames(frames, stack, includeAgentFrames) {
-    let self = this;
-
     if (!includeAgentFrames) {
       let profilerStack = false;
-      stack.forEach((frame) => {
-        if (self.profiler.AGENT_FRAME_REGEXP.exec(frame.getFileName())) {
+      stack.forEach(frame => {
+        if (this.profiler.AGENT_FRAME_REGEXP.exec(frame.getFileName())) {
           profilerStack = true;
         }
       });
@@ -252,7 +225,7 @@ class AsyncSampler {
       }
     }
 
-    stack.forEach((frame) => {
+    stack.forEach(frame => {
       let key = '';
       if (frame.getFunctionName()) {
         key = frame.getFunctionName();
@@ -270,27 +243,24 @@ class AsyncSampler {
     });
   }
 
-
   buildProfile(duration, timespan) {
-    let self = this;
-
     let roots = new Set();
-    for (let child of self.top.children.values()) {
+    for (let child of this.top.children.values()) {
       roots.add(child);
     }
 
     let profile = new Profile(
-      self.profiler,
+      this.profiler,
       Profile.c.CATEGORY_TIME,
       Profile.c.TYPE_ASYNC_CALLS,
       Profile.c.UNIT_MILLISECOND,
       roots,
       duration,
-      timespan);
+      timespan
+    );
 
     return profile;
   }
-
 
   hrmillis() {
     const t = process.hrtime();

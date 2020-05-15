@@ -19,9 +19,14 @@
     "url": "git+https://github.com/instana/nodejs-sensor.git"
   },
   "scripts": {
+    "audit": "npm audit --production",
     "install": "node node-gyp-fallback.js",
-    "test": "mocha --recursive",
-    "lint": "eslint lib"
+    "test": "npm run test:mocha",
+    "test:debug": "WITH_STDOUT=true npm run test:mocha",
+    "test:mocha": "mocha --recursive",
+    "lint": "eslint lib test",
+    "verify": "npm run lint && npm test",
+    "prettier": "prettier --write 'lib/**/*.js' 'test/**/*.js'"
   },
   "dependencies": {
     "nan": "^2.14.0",
@@ -35,7 +40,7 @@
   },
   "main": "index.js",
   "engines": {
-    "node": ">=4.0.0"
+    "node": ">=6.4.0"
   },
   "license": "BSD-3-Clause"
 }

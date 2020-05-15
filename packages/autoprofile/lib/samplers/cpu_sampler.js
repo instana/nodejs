@@ -3,91 +3,69 @@
 const CallSite = require('../profile').CallSite;
 const Profile = require('../profile').Profile;
 
-
 class CpuSampler {
   constructor(profiler) {
-    let self = this;
+    this.profiler = profiler;
 
-    self.profiler = profiler;
-
-    self.top = undefined;
-    self.profileSamples = undefined;
+    this.top = undefined;
+    this.profileSamples = undefined;
   }
 
-
   test() {
-    let self = this;
-
-    if (self.profiler.getOption('cpuSamplerDisabled')) {
+    if (this.profiler.getOption('cpuSamplerDisabled')) {
       return false;
     }
 
     return true;
   }
 
-
   reset() {
-    let self = this;
-
-    self.top = new CallSite(self.profiler, '', '', 0);
-    self.profileSamples = 0;
+    this.top = new CallSite(this.profiler, '', '', 0);
+    this.profileSamples = 0;
   }
-
 
   startSampler() {
-    let self = this;
-
-    self.profiler.addon.startCpuSampler();
+    this.profiler.addon.startCpuSampler();
   }
 
-
   stopSampler() {
-    let self = this;
-
-    let cpuProfileRoot = self.profiler.addon.stopCpuSampler();
+    let cpuProfileRoot = this.profiler.addon.stopCpuSampler();
     if (cpuProfileRoot) {
-      let includeAgentFrames = self.profiler.getOption('includeAgentFrames');
-      self.updateProfile(self.top, cpuProfileRoot.children, includeAgentFrames);
+      let includeAgentFrames = this.profiler.getOption('includeAgentFrames');
+      this.updateProfile(this.top, cpuProfileRoot.children, includeAgentFrames);
     }
   }
 
-
   buildProfile(duration, timespan) {
-    let self = this;
-
-
     let roots = new Set();
-    for (let child of self.top.children.values()) {
+    // eslint-disable-next-line no-restricted-syntax
+    for (let child of this.top.children.values()) {
       roots.add(child);
     }
 
     let profile = new Profile(
-      self.profiler,
+      this.profiler,
       Profile.c.CATEGORY_CPU,
       Profile.c.TYPE_CPU_USAGE,
       Profile.c.UNIT_SAMPLE,
       roots,
       duration,
-      timespan);
+      timespan
+    );
 
     return profile;
   }
 
-
   updateProfile(parent, nodes, includeAgentFrames) {
-    let self = this;
-
-    nodes.forEach((node) => {
-      self.profileSamples += node.hit_count;
+    nodes.forEach(node => {
+      this.profileSamples += node.hit_count;
 
       if (node.func_name === '(program)') {
         return;
       }
 
       // exclude/include profiler frames
-      if (node.file_name &&
-          !includeAgentFrames &&
-          self.profiler.AGENT_FRAME_REGEXP.exec(node.file_name)) {
+      if (node.file_name && !includeAgentFrames && this.profiler.AGENT_FRAME_REGEXP.exec(node.file_name)) {
         return;
       }
 
@@ -96,10 +74,9 @@ class CpuSampler {
       child.measurement += node.hit_count;
       child.numSamples += node.hit_count;
 
-      self.updateProfile(child, node.children, includeAgentFrames);
+      this.updateProfile(child, node.children, includeAgentFrames);
     });
   }
 }
 
 exports.CpuSampler = CpuSampler;
-

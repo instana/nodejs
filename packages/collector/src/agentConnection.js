@@ -237,7 +237,7 @@ function sendData(path, data, cb, ignore404) {
   }
 
   var payload = JSON.stringify(data, circularReferenceRemover());
-  logger.debug({ payload: data }, 'Sending payload to %s', path);
+  logger.debug('Sending data to %s', path);
 
   // manually turn into a buffer to correctly identify content-length
   payload = buffer.fromString(payload, 'utf8');
@@ -444,7 +444,7 @@ function logLargeSpans(spans) {
       );
     });
   logger.warn(
-    'A batch of spans has been rejected because they are too large to be sent to the agent. Here are the top five ' +
+    'A batch of spans have been rejected because they are too large to be sent to the agent. Here are the top five ' +
       'largest spans of the rejected batch and their largest attribute. This detailed information will only be ' +
       'logged once. ' +
       topFiveLargestSpans.join('; ')

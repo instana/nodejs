@@ -4,25 +4,20 @@ const crypto = require('crypto');
 
 class Utils {
   constructor(profiler) {
-    let self = this;
-
-    self.profiler = profiler;
+    this.profiler = profiler;
   }
-
 
   millis() {
     return Date.now();
   }
 
   timestamp() {
-      return Math.floor(Date.now() / 1000);
+    return Math.floor(Date.now() / 1000);
   }
-
 
   generateUuid() {
-      return crypto.randomBytes(16).toString('hex');
+    return crypto.randomBytes(16).toString('hex');
   }
-
 
   generateSha1(text) {
     let h = crypto.createHash('sha1');

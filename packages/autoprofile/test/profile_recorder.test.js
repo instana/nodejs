@@ -2,7 +2,6 @@
 
 const assert = require('assert');
 
-
 describe('ProfileRecorder', () => {
   let profiler;
 
@@ -10,9 +9,8 @@ describe('ProfileRecorder', () => {
     profiler = global.profiler;
   });
 
-
   describe('flush()', () => {
-    it('should send profiles and empty the queue', (done) => {
+    it('should send profiles and empty the queue', done => {
       let lastProfiles;
 
       profiler.profileRecorder.reset();
@@ -28,8 +26,7 @@ describe('ProfileRecorder', () => {
         }, 1);
       };
 
-      profiler.profileRecorder.record({a: 1});
-
+      profiler.profileRecorder.record({ a: 1 });
 
       profiler.profileRecorder.flush(() => {
         assert.equal(lastProfiles[0].a, 1);
