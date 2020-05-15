@@ -1,11 +1,8 @@
-
 'use strict';
 
 const CpuSampler = require('../../lib/samplers/cpu_sampler').CpuSampler;
 const assert = require('assert');
-const util = require('util');
 const async = require('async');
-
 
 describe('CpuSampler', () => {
   let profiler;
@@ -14,9 +11,8 @@ describe('CpuSampler', () => {
     profiler = global.profiler;
   });
 
-
   describe('startProfile()', () => {
-    it('should record profile', (done) => {
+    it('should record profile', done => {
       let sampler = new CpuSampler(profiler);
       if (!sampler.test()) {
         done();
@@ -31,17 +27,18 @@ describe('CpuSampler', () => {
           sampler.stopSampler();
           let profile = sampler.buildProfile(500, 10);
 
-          // console.log(util.inspect(profile.toJson(), {showHidden: false, depth: null}))
           callback(null, JSON.stringify(profile.toJson()).match(/cpu_sampler.test.js/));
         }, 500);
 
+        // do some work
         for (let i = 0; i < 60 * 20000; i++) {
+          /* eslint-disable no-unused-vars */
           let text = 'text' + i;
           text += 'text2';
         }
       }
 
-      async.retry({times: 5}, runTest, (err, success) => {
+      async.retry({ times: 5 }, runTest, (err, success) => {
         assert(success);
         done();
       });

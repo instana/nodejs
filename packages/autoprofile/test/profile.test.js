@@ -1,10 +1,8 @@
 'use strict';
 
 const assert = require('assert');
-const util = require('util');
 const CallSite = require('../lib/profile').CallSite;
 const Profile = require('../lib/profile').Profile;
-
 
 describe('Profile', () => {
   let profiler;
@@ -14,7 +12,7 @@ describe('Profile', () => {
   });
 
   describe('toJson()', () => {
-    it('should convert profile to json', (done) => {
+    it('should convert profile to json', done => {
       let roots = new Set();
 
       let root1 = new CallSite(profiler, 'meth1', 'file1', 1);
@@ -34,7 +32,8 @@ describe('Profile', () => {
         Profile.c.UNIT_SAMPLE,
         roots,
         20000,
-        120000);
+        120000
+      );
 
       // console.log(util.inspect(profile.toJson(), {showHidden: false, depth: null}))
 
@@ -45,23 +44,25 @@ describe('Profile', () => {
         category: 'cpu',
         type: 'cpu-usage',
         unit: 'sample',
-        roots:
-         [{
- method_name: 'meth1',
-             file_name: 'file1',
-             file_line: 1,
-             measurement: 10,
-             num_samples: 1,
-             children:
-              [{
- method_name: 'meth2',
-                  file_name: 'file2',
-                  file_line: 2,
-                  measurement: 5,
-                  num_samples: 1,
-                  children: []
-}]
-}],
+        roots: [
+          {
+            method_name: 'meth1',
+            file_name: 'file1',
+            file_line: 1,
+            measurement: 10,
+            num_samples: 1,
+            children: [
+              {
+                method_name: 'meth2',
+                file_name: 'file2',
+                file_line: 2,
+                measurement: 5,
+                num_samples: 1,
+                children: []
+              }
+            ]
+          }
+        ],
         duration: 20000,
         timespan: 120000,
         timestamp: profile.timestamp
@@ -72,7 +73,6 @@ describe('Profile', () => {
   });
 });
 
-
 describe('CallSite', () => {
   let profiler;
 
@@ -80,9 +80,8 @@ describe('CallSite', () => {
     profiler = global.profiler;
   });
 
-
   describe('depth()', () => {
-    it('should return max depth', (done) => {
+    it('should return max depth', done => {
       let root = new CallSite(profiler, 'root', '', 0);
 
       let child1 = new CallSite(profiler, 'child1', '', 0);
@@ -102,9 +101,8 @@ describe('CallSite', () => {
     });
   });
 
-
   describe('addChild()', () => {
-    it('should add child', (done) => {
+    it('should add child', done => {
       let root = new CallSite(profiler, 'root', '', 0);
 
       let child1 = new CallSite(profiler, 'child1', '', 0);
@@ -116,9 +114,8 @@ describe('CallSite', () => {
     });
   });
 
-
   describe('removeChild()', () => {
-    it('should remove child', (done) => {
+    it('should remove child', done => {
       let root = new CallSite(profiler, 'root', '', 0);
 
       let child1 = new CallSite(profiler, 'child1', '', 0);
@@ -130,9 +127,8 @@ describe('CallSite', () => {
     });
   });
 
-
   describe('increment()', () => {
-    it('should increment value', (done) => {
+    it('should increment value', done => {
       let b = new CallSite(profiler, 'root', '', 0);
       b.increment(0.1, 1);
       b.increment(0.2, 2);

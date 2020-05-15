@@ -6,7 +6,8 @@ const AutoProfiler = require('../lib/auto_profiler').AutoProfiler;
 beforeEach(() => {
   global.profiler = new AutoProfiler();
 
-  global.profiler.sendProfiles = function(profiles, callback) {
+  global.profiler.sendProfiles = function(profiles) {
+    // eslint-disable-next-line no-console
     console.log('Received profiles', profiles);
   };
 
@@ -14,14 +15,13 @@ beforeEach(() => {
     return '123';
   };
 
-  global.profiler.start({debug: true});
+  global.profiler.start({ debug: true });
 });
 
 afterEach(() => {
   global.profiler.destroy();
   global.profiler = undefined;
 });
-
 
 describe('AutoProfiler', () => {
   let profiler;
@@ -30,9 +30,8 @@ describe('AutoProfiler', () => {
     profiler = global.profiler;
   });
 
-
   describe('matchVersion()', () => {
-    it('should match version', (done) => {
+    it('should match version', done => {
       assert.equal(profiler.matchVersion(null, null), true);
       assert.equal(profiler.matchVersion('0.0.0', 'v100.100.100'), true);
       assert.equal(profiler.matchVersion('v100.100.100', 'v110.110.110'), false);

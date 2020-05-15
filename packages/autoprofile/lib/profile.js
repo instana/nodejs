@@ -1,7 +1,8 @@
+/* eslint-disable no-restricted-syntax */
+
 'use strict';
 
 const process = require('process');
-
 
 const profileConstants = {
   CATEGORY_CPU: 'cpu',
@@ -21,76 +22,54 @@ const profileConstants = {
   RUNTIME_NODEJS: 'nodejs'
 };
 
-
 class CallSite {
   constructor(profiler, methodName, fileName, fileLine, columnNumber) {
-    let self = this;
-
-    self.profiler = profiler;
-    self.methodName = methodName;
-    self.fileName = fileName;
-    self.fileLine = fileLine;
-    self.columnNumber = columnNumber;
-    self.measurement = 0;
-    self.numSamples = 0;
-    self.children = new Map();
+    this.profiler = profiler;
+    this.methodName = methodName;
+    this.fileName = fileName;
+    this.fileLine = fileLine;
+    this.columnNumber = columnNumber;
+    this.measurement = 0;
+    this.numSamples = 0;
+    this.children = new Map();
   }
-
 
   createKey(methodName, fileName, fileLine) {
     return methodName + ' (' + fileName + ':' + fileLine + ')';
   }
 
-
   findChild(methodName, fileName, fileLine) {
-    let self = this;
-
-    return self.children.get(self.createKey(methodName, fileName, fileLine));
+    return this.children.get(this.createKey(methodName, fileName, fileLine));
   }
-
 
   addChild(child) {
-    let self = this;
-
-    self.children.set(self.createKey(child.methodName, child.fileName, child.fileLine), child);
+    this.children.set(this.createKey(child.methodName, child.fileName, child.fileLine), child);
   }
-
 
   removeChild(child) {
-    let self = this;
-
-    self.children.delete(self.createKey(child.methodName, child.fileName, child.fileLine));
+    this.children.delete(this.createKey(child.methodName, child.fileName, child.fileLine));
   }
 
-
   findOrAddChild(methodName, fileName, fileLine) {
-    let self = this;
-
-    let child = self.findChild(methodName, fileName, fileLine);
+    let child = this.findChild(methodName, fileName, fileLine);
     if (!child) {
-      child = new CallSite(self.profiler, methodName, fileName, fileLine);
-      self.addChild(child);
+      child = new CallSite(this.profiler, methodName, fileName, fileLine);
+      this.addChild(child);
     }
 
     return child;
   }
 
-
   increment(value, count) {
-    let self = this;
-
-    self.measurement += value;
-    self.numSamples += count;
+    this.measurement += value;
+    this.numSamples += count;
   }
 
-
   depth() {
-    let self = this;
-
     let max = 0;
 
-    for (let child of self.children.values()) {
-      let d = child.depth();
+    for (let child of this.children.values()) {
+      const d = child.depth();
       if (d > max) {
         max = d;
       }
@@ -99,21 +78,18 @@ class CallSite {
     return max + 1;
   }
 
-
   toJson() {
-    let self = this;
-
-    let childrenJson = [];
-    for (let child of self.children.values()) {
+    const childrenJson = [];
+    for (let child of this.children.values()) {
       childrenJson.push(child.toJson());
     }
 
-    let callSiteJson = {
-      method_name: self.methodName,
-      file_name: self.fileName,
-      file_line: self.fileLine,
-      measurement: self.measurement,
-      num_samples: self.numSamples,
+    const callSiteJson = {
+      method_name: this.methodName,
+      file_name: this.fileName,
+      file_line: this.fileLine,
+      measurement: this.measurement,
+      num_samples: this.numSamples,
       children: childrenJson
     };
 
@@ -121,24 +97,19 @@ class CallSite {
   }
 }
 
-exports.CallSite = CallSite;
-
-
 class Profile {
   constructor(profiler, category, type, unit, roots, duration, timespan) {
-    let self = this;
-
-    self.profiler = profiler;
-    self.processId = '' + process.pid;
-    self.id = profiler.utils.generateUuid();
-    self.runtime = Profile.c.RUNTIME_NODEJS;
-    self.category = category;
-    self.type = type;
-    self.unit = unit;
-    self.roots = roots;
-    self.duration = duration;
-    self.timespan = timespan;
-    self.timestamp = profiler.utils.millis();
+    this.profiler = profiler;
+    this.processId = '' + process.pid;
+    this.id = profiler.utils.generateUuid();
+    this.runtime = Profile.c.RUNTIME_NODEJS;
+    this.category = category;
+    this.type = type;
+    this.unit = unit;
+    this.roots = roots;
+    this.duration = duration;
+    this.timespan = timespan;
+    this.timestamp = profiler.utils.millis();
   }
 
   static get c() {
@@ -146,28 +117,27 @@ class Profile {
   }
 
   toJson() {
-    let self = this;
-
-    let rootsJson = [];
-    for (let root of self.roots.values()) {
+    const rootsJson = [];
+    for (let root of this.roots.values()) {
       rootsJson.push(root.toJson());
     }
 
-    let profileJson = {
-      pid: self.processId,
-      id: self.id,
-      runtime: self.runtime,
-      category: self.category,
-      type: self.type,
-      unit: self.unit,
+    const profileJson = {
+      pid: this.processId,
+      id: this.id,
+      runtime: this.runtime,
+      category: this.category,
+      type: this.type,
+      unit: this.unit,
       roots: rootsJson,
-      duration: self.duration,
-      timespan: self.timespan,
-      timestamp: self.timestamp
+      duration: this.duration,
+      timespan: this.timespan,
+      timestamp: this.timestamp
     };
 
     return profileJson;
   }
 }
 
+exports.CallSite = CallSite;
 exports.Profile = Profile;

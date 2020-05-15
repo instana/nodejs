@@ -1,10 +1,9 @@
 'use strict';
 
-require('../..')({level: 'debug', autoProfile: true});
+require('../..')({ level: 'debug', autoProfile: true });
 
 const fs = require('fs');
 const http = require('http');
-
 
 function cpuWork(usage, duration) {
   let usageTimer = setInterval(() => {
@@ -20,7 +19,6 @@ function cpuWork(usage, duration) {
   }
 }
 
-
 function simulateCpu() {
   cpuWork(5);
 
@@ -28,7 +26,6 @@ function simulateCpu() {
     cpuWork(25, 240);
   }, 1200 * 1000);
 }
-
 
 function simulateMemLeak() {
   let mem1 = [];
@@ -42,7 +39,7 @@ function simulateMemLeak() {
     }
 
     for (let i = 0; i < 5000; i++) {
-      let obj1 = {v: Math.random()};
+      let obj1 = { v: Math.random() };
       mem1.push(obj1);
     }
   }, 1000);
@@ -51,12 +48,11 @@ function simulateMemLeak() {
   setInterval(() => {
     let mem2 = [];
     for (let i = 0; i < 500; i++) {
-      let obj2 = {v: Math.random()};
+      let obj2 = { v: Math.random() };
       mem2.push(obj2);
     }
   }, 5000);
 }
-
 
 function simulateHttp() {
   setInterval(() => {
@@ -72,7 +68,6 @@ function simulateHttp() {
     });
   }, 1000);
 }
-
 
 const server = http.createServer((req, res) => {
   fs.readFile('/tmp', () => {

@@ -37,7 +37,7 @@ describe('setLogger', function() {
               return reject(err);
             }
             // wait for arbitrary number of characters to be written
-            if (data.length > 50) {
+            if (data.length > 15) {
               resolve(data);
             } else {
               reject(new Error(`Did not log enough: ${data}`));

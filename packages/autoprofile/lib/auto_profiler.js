@@ -11,39 +11,36 @@ const CpuSampler = require('./samplers/cpu_sampler').CpuSampler;
 const AllocationSampler = require('./samplers/allocation_sampler').AllocationSampler;
 const AsyncSampler = require('./samplers/async_sampler').AsyncSampler;
 
-
-var profiler = null;
+let profiler = null;
 
 class AutoProfiler {
   constructor() {
-    let self = this;
+    this.AGENT_FRAME_REGEXP = /node_modules\/@instana\//;
 
-    self.AGENT_FRAME_REGEXP = /node_modules\/@instana\//;
+    this.version = pkg.version;
 
-    self.version = pkg.version;
+    this.addon = undefined;
 
-    self.addon = undefined;
+    this.profilerStarted = false;
+    this.profilerDestroyed = false;
 
-    self.profilerStarted = false;
-    self.profilerDestroyed = false;
-
-    self.utils = new Utils(self);
-    self.profileRecorder = new ProfileRecorder(self);
-    self.cpuSamplerScheduler = new SamplerScheduler(self, new CpuSampler(self), {
+    this.utils = new Utils(this);
+    this.profileRecorder = new ProfileRecorder(this);
+    this.cpuSamplerScheduler = new SamplerScheduler(this, new CpuSampler(this), {
       logPrefix: 'CPU profiler',
       maxProfileDuration: 10 * 1000,
       maxSpanDuration: 2 * 1000,
       spanInterval: 16 * 1000,
-      reportInterval: 120 * 1000,
+      reportInterval: 120 * 1000
     });
-    self.allocationSamplerScheduler = new SamplerScheduler(self, new AllocationSampler(self), {
+    this.allocationSamplerScheduler = new SamplerScheduler(this, new AllocationSampler(this), {
       logPrefix: 'Allocation profiler',
       maxProfileDuration: 20 * 1000,
       maxSpanDuration: 4 * 1000,
       spanInterval: 16 * 1000,
       reportInterval: 120 * 1000
     });
-    self.asyncSamplerScheduler = new SamplerScheduler(self, new AsyncSampler(self), {
+    this.asyncSamplerScheduler = new SamplerScheduler(this, new AsyncSampler(this), {
       logPrefix: 'Async profiler',
       maxProfileDuration: 20 * 1000,
       maxSpanDuration: 4 * 1000,
@@ -51,11 +48,11 @@ class AutoProfiler {
       reportInterval: 120 * 1000
     });
 
-    self.options = undefined;
+    this.options = undefined;
 
-    self.samplerActive = false;
+    this.samplerActive = false;
 
-    self.exitHandlerFunc = undefined;
+    this.exitHandlerFunc = undefined;
   }
 
   getLogger() {
@@ -78,59 +75,53 @@ class AutoProfiler {
   }
 
   getOption(name, defaultVal) {
-    let self = this;
-
-    if (!self.options || !self.options[name]) {
+    if (!this.options || !this.options[name]) {
       return defaultVal;
     } else {
-      return self.options[name];
+      return this.options[name];
     }
   }
 
-
   loadAddon(addonPath) {
-    let self = this;
-
     try {
-      self.addon = require(addonPath);
+      this.addon = require(addonPath);
       return true;
-     } catch (err) {
+    } catch (err) {
       // not found
     }
 
     return false;
   }
 
-
   start(opts) {
-    let self = this;
-
-    if (self.profilerStarted) {
+    if (this.profilerStarted) {
       return;
     }
 
     if (opts) {
-      self.options = opts;
+      this.options = opts;
     } else {
-      self.options = {};
+      this.options = {};
     }
 
-    if (!self.matchVersion('v4.0.0', null)) {
-      self.error('Supported Node.js version 4.0.0 or higher');
+    if (!this.matchVersion('v4.0.0', null)) {
+      this.error('Supported Node.js version 4.0.0 or higher');
       return;
     }
 
     // disable CPU profiler by default for 7.0.0-8.9.3 because of the memory leak.
-    if (self.options.cpuProfilerDisabled === undefined &&
-        (self.matchVersion('v7.0.0', 'v8.9.3') || self.matchVersion('v9.0.0', 'v9.2.1'))) {
-      self.log('CPU profiler disabled.');
-      self.options.cpuProfilerDisabled = true;
+    if (
+      this.options.cpuProfilerDisabled === undefined &&
+      (this.matchVersion('v7.0.0', 'v8.9.3') || this.matchVersion('v9.0.0', 'v9.2.1'))
+    ) {
+      this.log('CPU profiler disabled.');
+      this.options.cpuProfilerDisabled = true;
     }
 
     // disable allocation profiler by default up to version 8.5.0 because of segfaults.
-    if (self.options.allocationProfilerDisabled === undefined && self.matchVersion(null, 'v8.5.0')) {
-      self.log('Allocation profiler disabled.');
-      self.options.allocationProfilerDisabled = true;
+    if (this.options.allocationProfilerDisabled === undefined && this.matchVersion(null, 'v8.5.0')) {
+      this.log('Allocation profiler disabled.');
+      this.options.allocationProfilerDisabled = true;
     }
 
     // load native addon
@@ -139,79 +130,75 @@ class AutoProfiler {
     let abi = abiMap[process.version];
     if (abi) {
       let addonPath = `../addons/${os.platform()}-${process.arch}/autoprofile-addon-v${abi}.node`;
-      if (self.loadAddon(addonPath)) {
+      if (this.loadAddon(addonPath)) {
         addonFound = true;
-        self.log('Using pre-built native addon.');
+        this.log('Using pre-built native addon.');
       } else {
-        self.log('Could not find pre-built addon: ' + addonPath);
+        this.log('Could not find pre-built addon: ' + addonPath);
       }
     }
 
     if (!addonFound) {
-      if (self.loadAddon('../build/Release/autoprofile-addon.node')) {
-        self.log('Using built native addon.');
+      if (this.loadAddon('../build/Release/autoprofile-addon.node')) {
+        this.log('Using built native addon.');
       } else {
-        self.error('Finding/loading of native addon failed. Profiler will not start.');
+        this.error('Finding/loading of native addon failed. Profiler will not start.');
         return;
       }
     }
 
-    if (self.profilerDestroyed) {
-      self.log('Destroyed profiler cannot be started');
+    if (this.profilerDestroyed) {
+      this.log('Destroyed profiler cannot be started');
       return;
     }
 
-    if (!self.options.dashboardAddress) {
-      self.options.dashboardAddress = self.SAAS_DASHBOARD_ADDRESS;
+    if (!this.options.dashboardAddress) {
+      this.options.dashboardAddress = this.SAAS_DASHBOARD_ADDRESS;
     }
 
-    self.cpuSamplerScheduler.start();
-    self.allocationSamplerScheduler.start();
-    self.asyncSamplerScheduler.start();
-    self.profileRecorder.start();
+    this.cpuSamplerScheduler.start();
+    this.allocationSamplerScheduler.start();
+    this.asyncSamplerScheduler.start();
+    this.profileRecorder.start();
 
-    self.exitHandlerFunc = function() {
-      if (!self.profilerStarted || self.profilerDestroyed) {
+    this.exitHandlerFunc = () => {
+      if (!this.profilerStarted || this.profilerDestroyed) {
         return;
       }
 
       try {
-        self.destroy();
+        this.destroy();
       } catch (err) {
-        self.exception(err);
+        this.exception(err);
       }
     };
 
-    process.once('exit', self.exitHandlerFunc);
+    process.once('exit', this.exitHandlerFunc);
 
-    self.profilerStarted = true;
-    self.log('Profiler started');
+    this.profilerStarted = true;
+    this.log('Profiler started');
   }
-
 
   destroy() {
-    let self = this;
-
-    if (!self.profilerStarted) {
-      self.log('Profiler has not been started');
+    if (!this.profilerStarted) {
+      this.log('Profiler has not been started');
       return;
     }
 
-    if (self.profilerDestroyed) {
+    if (this.profilerDestroyed) {
       return;
     }
 
-    process.removeListener('exit', self.exitHandlerFunc);
+    process.removeListener('exit', this.exitHandlerFunc);
 
-    self.cpuSamplerScheduler.stop();
-    self.allocationSamplerScheduler.stop();
-    self.asyncSamplerScheduler.stop();
-    self.profileRecorder.stop();
+    this.cpuSamplerScheduler.stop();
+    this.allocationSamplerScheduler.stop();
+    this.asyncSamplerScheduler.stop();
+    this.profileRecorder.stop();
 
-    self.profilerDestroyed = true;
-    self.log('Profiler destroyed');
+    this.profilerDestroyed = true;
+    this.log('Profiler destroyed');
   }
-
 
   matchVersion(min, max) {
     let versionRegexp = /v?(\d+)\.(\d+)\.(\d+)/;
@@ -234,55 +221,38 @@ class AutoProfiler {
     return currN >= minN && currN <= maxN;
   }
 
-
   debug(message) {
-    let self = this;
-
-    self.getLogger().debug(message);
+    this.getLogger().debug(message);
   }
 
   log(message) {
-    let self = this;
-
-    self.getLogger().info(message);
+    this.getLogger().info(message);
   }
-
 
   error(message) {
-    let self = this;
-
-    self.getLogger().error(message);
+    this.getLogger().error(message);
   }
-
 
   exception(err) {
-    let self = this;
-
-    self.getLogger().error(err.message, err.stack);
+    this.getLogger().error(err.message, err.stack);
   }
 
-
   setTimeout(func, t) {
-    let self = this;
-
     return setTimeout(() => {
       try {
         func.call(this);
       } catch (err) {
-        self.exception(err);
+        this.exception(err);
       }
     }, t);
   }
 
-
   setInterval(func, t) {
-    let self = this;
-
     return setInterval(() => {
       try {
         func.call(this);
       } catch (err) {
-        self.exception(err);
+        this.exception(err);
       }
     }, t);
   }
