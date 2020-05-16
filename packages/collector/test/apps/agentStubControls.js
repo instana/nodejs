@@ -25,6 +25,9 @@ exports.registerTestHooks = opts => {
     if (opts.rejectTraces) {
       env.REJECT_TRACES = 'true';
     }
+    if (opts.doesntHandleProfiles) {
+      env.DOESNT_HANDLE_PROFILES = 'true';
+    }
     if (typeof opts.tracingMetrics === 'boolean') {
       env.TRACING_METRICS = opts.tracingMetrics.toString();
     }
@@ -90,6 +93,9 @@ exports.getSpans = () =>
   exports
     .getRetrievedData()
     .then(data => data.traces.reduce((result, traceMessage) => result.concat(traceMessage.data), []));
+
+exports.getProfiles = () =>
+  exports.getRetrievedData().then(data => data.profiles.reduce((result, profile) => result.concat(profile.data), []));
 
 exports.getResponses = () => exports.getRetrievedData().then(data => data.responses);
 
