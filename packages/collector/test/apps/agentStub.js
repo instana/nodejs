@@ -14,7 +14,9 @@ const secretsMatcher = process.env.SECRETS_MATCHER ? process.env.SECRETS_MATCHER
 const secretsList = process.env.SECRETS_LIST ? process.env.SECRETS_LIST.split(',') : ['key', 'pass', 'secret'];
 const dropAllData = process.env.DROP_DATA === 'true';
 const logTraces = process.env.LOG_TRACES === 'true';
+const logProfiles = process.env.LOG_PROFILES === 'true';
 const rejectTraces = process.env.REJECT_TRACES === 'true';
+const doesntHandleProfiles = process.env.DOESNT_HANDLE_PROFILES === 'true';
 const tracingMetrics = process.env.TRACING_METRICS !== 'false';
 
 let discoveries = {};
@@ -22,6 +24,7 @@ const requests = {};
 let retrievedData = {
   runtime: [],
   traces: [],
+  profiles: [],
   responses: [],
   events: [],
   tracingMetrics: []
@@ -113,6 +116,28 @@ app.post(
 );
 
 app.post(
+  '/com.instana.plugin.nodejs/profiles.:pid',
+  checkExistenceOfKnownPid(function handleProfiles(req, res) {
+    if (doesntHandleProfiles) {
+      return res.sendStatus(404);
+    }
+    if (!dropAllData) {
+      retrievedData.profiles.push({
+        pid: parseInt(req.params.pid, 10),
+        time: Date.now(),
+        data: req.body
+      });
+    }
+    if (logProfiles) {
+      /* eslint-disable no-console */
+      console.log(JSON.stringify(req.body, null, 2));
+      console.log('--\n');
+    }
+    res.send('OK');
+  })
+);
+
+app.post(
   '/com.instana.plugin.nodejs/response.:pid',
   checkExistenceOfKnownPid(function handleResponse(req, res) {
     if (!dropAllData) {
@@ -164,6 +189,10 @@ app.get('/retrievedTraces', (req, res) => {
   res.json(retrievedData.traces);
 });
 
+app.get('/retrievedProfiles', (req, res) => {
+  res.json(retrievedData.profiles);
+});
+
 app.get('/retrievedEvents', (req, res) => {
   res.json(retrievedData.events);
 });
@@ -176,6 +205,7 @@ app.delete('/retrievedData', (req, res) => {
   retrievedData = {
     runtime: [],
     traces: [],
+    profiles: [],
     responses: [],
     events: [],
     tracingMetrics: []

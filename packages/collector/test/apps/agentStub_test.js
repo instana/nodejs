@@ -20,17 +20,6 @@ describe('agentStub', function() {
       expect(discoveries).to.deep.equal({});
     }));
 
-  it('must respond without any data upon start', () =>
-    agentStubControls.getRetrievedData().then(data => {
-      expect(data).to.deep.equal({
-        runtime: [],
-        traces: [],
-        responses: [],
-        events: [],
-        tracingMetrics: []
-      });
-    }));
-
   it('must return requests when retrieving entity data', () => {
     const pid = 23;
     const params = { foo: 'bar' };
