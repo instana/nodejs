@@ -1,6 +1,6 @@
 'use strict';
 
-require('../..')({ level: 'debug', autoProfile: true });
+require('../..')({ autoProfile: true });
 
 const fs = require('fs');
 const http = require('http');

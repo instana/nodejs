@@ -183,25 +183,30 @@ exports.sendDataToAgent = function sendDataToAgent(data, cb) {
 };
 
 exports.sendSpans = function sendSpans(spans, cb) {
-  var callback = atMostOnce('callback for sendSpans', function(err, responseBody) {
+  var callback = atMostOnce('callback for sendSpans', function(err) {
     if (err && !maxContentErrorHasBeenLogged && err instanceof PayloadTooLargeError) {
       logLargeSpans(spans);
     }
-    cb(err, responseBody);
+    cb(err);
   });
 
   sendData('/com.instana.plugin.nodejs/traces.' + pidStore.pid, spans, callback, true);
 };
 
 exports.sendProfiles = function sendProfiles(profiles, cb) {
-  var callback = atMostOnce('callback for sendProfiles', function(err, responseBody) {
+  var callback = atMostOnce('callback for sendProfiles', function(err) {
     if (err && err instanceof PayloadTooLargeError) {
-      logger.warn('Profiles are too too large to be sent');
+      logger.warn('Profiles are too too large to be sent.');
+    } else if (err && err.statusCode === 404) {
+      logger.warn(
+        'You have enabled autoProfiling but the Instana agent this process reports to does not yet support ' +
+          'autoProfiling for Node.js. Please update the Instana agent. (Node.js Sensor 1.2.14 or newer is required.)'
+      );
     }
-    cb(err, responseBody);
+    cb(err);
   });
 
-  sendData('/com.instana.plugin.nodejs/profiles.' + pidStore.pid, profiles, callback, true);
+  sendData('/com.instana.plugin.nodejs/profiles.' + pidStore.pid, profiles, callback);
 };
 
 exports.sendEvent = function sendEvent(eventData, cb) {
@@ -263,7 +268,11 @@ function sendData(path, data, cb, ignore404) {
     function(res) {
       if (res.statusCode < 200 || res.statusCode >= 300) {
         if (res.statusCode !== 404 || !ignore404) {
-          cb(new Error('Failed to send data to agent via POST ' + path + '. Got status code ' + res.statusCode + '.'));
+          var statusCodeError = new Error(
+            'Failed to send data to agent via POST ' + path + '. Got status code ' + res.statusCode + '.'
+          );
+          statusCodeError.statusCode = res.statusCode;
+          cb(statusCodeError);
           return;
         }
       }
