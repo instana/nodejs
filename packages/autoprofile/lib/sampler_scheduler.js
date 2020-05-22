@@ -130,7 +130,7 @@ class SamplerScheduler {
 
     let externalPid = this.profiler.getExternalPid();
     if (externalPid) {
-      profile.processPid = externalPid;
+      profile.processId = '' + externalPid;
     }
 
     this.profiler.profileRecorder.record(profile.toJson());
