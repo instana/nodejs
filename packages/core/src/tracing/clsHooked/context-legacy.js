@@ -265,7 +265,7 @@ function reset() {
   process.namespaces = Object.create(null);
 }
 
-process.namespaces = {};
+process.namespaces = process.namespaces || {};
 
 if (asyncHook._state && !asyncHook._state.enabled) {
   asyncHook.enable();
