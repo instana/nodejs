@@ -63,8 +63,8 @@ Namespace.prototype.createContext = function createContext() {
   return context;
 };
 
-Namespace.prototype.run = function run(fn) {
-  let context = this.createContext();
+Namespace.prototype.run = function run(fn, ctx) {
+  let context = ctx || this.createContext();
   this.enter(context);
   try {
     fn(context);
@@ -74,11 +74,11 @@ Namespace.prototype.run = function run(fn) {
   }
 };
 
-Namespace.prototype.runAndReturn = function runAndReturn(fn) {
+Namespace.prototype.runAndReturn = function runAndReturn(fn, ctx) {
   var value;
   this.run(function(context) {
     value = fn(context);
-  });
+  }, ctx);
   return value;
 };
 
@@ -87,8 +87,8 @@ Namespace.prototype.runAndReturn = function runAndReturn(fn) {
  * @param {function} fn
  * @returns {*}
  */
-Namespace.prototype.runPromise = function runPromise(fn) {
-  let context = this.createContext();
+Namespace.prototype.runPromise = function runPromise(fn, ctx) {
+  let context = ctx || this.createContext();
   this.enter(context);
 
   let promise = fn(context);

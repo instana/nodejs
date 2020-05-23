@@ -167,14 +167,67 @@ exports.tracingSuppressed = function tracingSuppressed() {
   return typeof tl === 'string' && tl.indexOf('0') === 0;
 };
 
-/*
- * Instead of creating a span object via {}, we use new InstanaSpan().
- * This will support better debugging, especially in cases where we need
- * to analyse heap dumps.
+exports.getAsyncContext = function getAsyncContext() {
+  if (!exports.ns) {
+    return null;
+  }
+  return exports.ns.active;
+};
+
+/**
+ * Do not use enterAsyncContext unless you absolutely have to. Instead, use one of the methods provided in the sdk,
+ * that is, runInAsyncContext or runPromiseInAsyncContext.
  *
- * Furthermore, it allows us to add CLS cleanup logic to the span and to
- * manipulate JSON serialization logic.
+ * If you use enterAsyncContext anyway, you are responsible for also calling leaveAsyncContext later on. Leaving the
+ * async context is managed automatically for you with the runXxxInAsyncContext functions.
  */
+exports.enterAsyncContext = function enterAsyncContext(context) {
+  if (!exports.ns) {
+    return;
+  }
+  if (context == null) {
+    logger.warn('Ignoring enterAsyncContext call because passed context was null or undefined.');
+    return;
+  }
+  exports.ns.enter(context);
+};
+
+/**
+ * Needs to be called if and only if enterAsyncContext has been used earlier.
+ */
+exports.leaveAsyncContext = function leaveAsyncContext(context) {
+  if (!exports.ns) {
+    return;
+  }
+  if (context == null) {
+    logger.warn('Ignoring leaveAsyncContext call because passed context was null or undefined.');
+    return;
+  }
+  exports.ns.exit(context);
+};
+
+exports.runInAsyncContext = function runInAsyncContext(context, fn) {
+  if (!exports.ns) {
+    return null;
+  }
+  if (context == null) {
+    logger.warn('Ignoring runInAsyncContext call because passed context was null or undefined.');
+    return fn();
+  }
+  return exports.ns.runAndReturn(fn, context);
+};
+
+exports.runPromiseInAsyncContext = function runPromiseInAsyncContext(context, fn) {
+  if (!exports.ns) {
+    return null;
+  }
+  if (context == null) {
+    logger.warn('Ignoring runPromiseInAsyncContext call because passed context was null or undefined.');
+    return fn();
+  }
+  return exports.ns.runPromise(fn, context);
+};
+
 function InstanaSpan(name) {
   // properties that part of our span model
   this.t = undefined;

@@ -42,8 +42,8 @@ function registerTests(usePreInit) {
   } capture log exits`, () =>
     controls
       .sendRequest({
-        method: 'GET',
-        path: '/'
+        method: 'POST',
+        path: '/trigger'
       })
       .then(() => verify()));
 
@@ -60,8 +60,8 @@ function registerTests(usePreInit) {
           expect(span.n).to.equal('node.http.server');
           expect(span.k).to.equal(constants.ENTRY);
           expect(span.p).to.not.exist;
-          expect(span.data.http.method).to.equal('GET');
-          expect(span.data.http.url).to.equal('/');
+          expect(span.data.http.method).to.equal('POST');
+          expect(span.data.http.url).to.equal('/trigger');
         });
 
         if (usePreInit) {

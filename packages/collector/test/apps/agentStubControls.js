@@ -132,8 +132,8 @@ exports.getTracingMetrics = () =>
     json: true
   });
 
-exports.waitUntilAppIsCompletelyInitialized = pid =>
-  testUtils.retry(() =>
+exports.waitUntilAppIsCompletelyInitialized = function waitUntilAppIsCompletelyInitialized(pid) {
+  return testUtils.retry(() =>
     exports.getRetrievedData().then(data => {
       for (let i = 0, len = data.runtime.length; i < len; i++) {
         const d = data.runtime[i];
@@ -145,6 +145,7 @@ exports.waitUntilAppIsCompletelyInitialized = pid =>
       throw new Error(`PID ${pid} never sent any data to the agent.`);
     })
   );
+};
 
 exports.simulateDiscovery = pid =>
   request({
