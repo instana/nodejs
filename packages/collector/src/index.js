@@ -51,6 +51,8 @@ exports.setLogger = function(logger) {
   log.init(config, true);
 };
 
+exports.core = instanaNodeJsCore;
+
 if (process.env.INSTANA_IMMEDIATE_INIT != null && process.env.INSTANA_IMMEDIATE_INIT.toLowerCase() === 'true') {
   module.exports();
 } else if (

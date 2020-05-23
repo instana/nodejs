@@ -80,8 +80,8 @@ Namespace.prototype.createContext = function createContext() {
  * If you aren't 100% certain that the function never returns a value or that client code never relies on that value,
  * use runAndReturn instead.
  */
-Namespace.prototype.run = function run(fn) {
-  let context = this.createContext();
+Namespace.prototype.run = function run(fn, ctx) {
+  let context = ctx || this.createContext();
   this.enter(context);
 
   try {
@@ -96,11 +96,11 @@ Namespace.prototype.run = function run(fn) {
  * Runs a function in a new CLS context and returns its return value. The context is left after the function
  * terminates. Asynchronous work started in this function will happen in that new context.
  */
-Namespace.prototype.runAndReturn = function runAndReturn(fn) {
+Namespace.prototype.runAndReturn = function runAndReturn(fn, ctx) {
   let value;
   this.run(function(context) {
     value = fn(context);
-  });
+  }, ctx);
   return value;
 };
 
@@ -113,8 +113,8 @@ Namespace.prototype.runAndReturn = function runAndReturn(fn) {
  *
  * This function assumes that the returned promise is CLS-friendly or wrapped already.
  */
-Namespace.prototype.runPromise = function runPromise(fn) {
-  let context = this.createContext();
+Namespace.prototype.runPromise = function runPromise(fn, ctx) {
+  let context = ctx || this.createContext();
   this.enter(context);
 
   let promise = fn(context);
@@ -140,10 +140,10 @@ Namespace.prototype.runPromise = function runPromise(fn) {
  *
  * This function assumes that the returned promise (if any) is CLS-friendly or wrapped already.
  */
-Namespace.prototype.runPromiseOrRunAndReturn = function runPromiseOrRunAndReturn(fn) {
+Namespace.prototype.runPromiseOrRunAndReturn = function runPromiseOrRunAndReturn(fn, ctx) {
   let isPromise = false;
   let valueOrPromise;
-  const context = this.createContext();
+  const context = ctx || this.createContext();
   this.enter(context);
 
   try {

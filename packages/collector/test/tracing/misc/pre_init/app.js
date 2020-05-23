@@ -22,8 +22,26 @@ app.on('request', (req, res) => {
   if (process.env.WITH_STDOUT) {
     log(`${req.method} ${req.url}`);
   }
-  pino.warn('Should be traced if INSTANA_EARLY_INSTRUMENTATION has been set.');
-  res.end();
+
+  if (req.url === '/') {
+    if (req.method === 'GET') {
+      return res.end();
+    } else {
+      res.statusCode = 405;
+      return res.end();
+    }
+  } else if (req.url === '/trigger') {
+    if (req.method === 'POST') {
+      pino.warn('Should be traced if INSTANA_EARLY_INSTRUMENTATION has been set.');
+      return res.end();
+    } else {
+      res.statusCode = 405;
+      return res.end();
+    }
+  } else {
+    res.statusCode = 404;
+    return res.end();
+  }
 });
 
 app.listen(port, () => {
