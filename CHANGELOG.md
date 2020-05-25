@@ -1,7 +1,7 @@
 # Changelog
 
-## Unreleased
-- [AWS Fargate]: In-process data collection for AWS Fargate tasks via new package @instana/aws-fargate (alpha). Requires at least Instana back end version 178. @instana/aws-fargate supports Node.js 8.6.0 or later.
+## 1.99.0
+- [AWS Fargate]: In-process data collection for AWS Fargate tasks via new package `@instana/aws-fargate` (alpha). Requires at least Instana back end version 178. `@instana/aws-fargate` supports Node.js 8.6.0 or later.
 
 ## 1.98.1
 - Fix PID used in profiling payload when running in a container.
