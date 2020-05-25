@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.98.1
+- Fix PID used in profiling payload when running in a container.
+
 ## 1.98.0
 - Add `@instana/autoprofile` to support [Instana AutoProfile™](https://docs.instana.io/profiling/) (automated and continuous production profiler). Instana AutoProfile is currently opt-in and can be enabled with the config option `autoProfile: true` or via the environment variable `INSTANA_AUTO_PROFILE=true`.
 
