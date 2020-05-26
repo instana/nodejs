@@ -8,8 +8,7 @@ source utils
 
 NODEJS_VERSION=$1
 if [[ -z "${NODEJS_VERSION-}" ]]; then
-  echo 'Missing parameter: Node.js version'
-  exit 1
+  NODEJS_VERSION=12.16.3
 fi
 
 LINUX_DISTRIBUTION=$2

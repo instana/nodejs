@@ -1,0 +1,98 @@
+#!groovy
+
+SLACK_CHANNEL = "team-node"
+DOCKER_REGISTRY_INTERNAL = "containers.instana.io"
+IMAGE_NAME = 'instana-aws-fargate-nodejs'
+REGISTRY_PATH = "${DOCKER_REGISTRY_INTERNAL}/instana/release/aws/fargate/nodejs"
+
+AWS_FARGATE_ROOT_PATH = 'packages/aws-fargate'
+AWS_FARGATE_PACKAGE_JSON_FILE = "${AWS_FARGATE_ROOT_PATH}/package.json"
+AWS_FARGATE_IMAGE_PATH = "${AWS_FARGATE_ROOT_PATH}/images/instana-aws-fargate"
+
+node {
+
+  def packageVersion = getPackageVersion()
+
+  currentBuild.displayName = "#${BUILD_NUMBER}:${packageVersion}"
+
+  stage ('Checkout Git Repo') {
+    deleteDir()
+    checkout scm
+  }
+
+  stage ('Build Docker Image') {
+    println "building the docker image for package version ${packageVersion}"
+    buildImage(packageVersion)
+  }
+
+  stage('Push Image') {
+    if (env.DRY_RUN.toBoolean()) {
+      println "skipping: pushing ${IMAGE_NAME} to ${REGISTRY_PATH} – this is a dry run"
+    } else {
+      println "pushing ${IMAGE_NAME} to ${REGISTRY_PATH}"
+      pushImage(packageVersion)
+    }
+  }
+
+  cleanUp()
+
+  if (!env.DRY_RUN.toBoolean()) {
+    slackSend channel: "#${SLACK_CHANNEL}", color: "#389a07", message: "Successfully built and pushed Instana AWS Fargate Node.js Docker image as ${REGISTRY_PATH}:latest and ${REGISTRY_PATH}:${packageVersion} \n(<${env.BUILD_URL}|Open>)"
+  }
+}
+
+def getPackageVersion() {
+  def packageJsonObject = readJSON file: AWS_FARGATE_PACKAGE_JSON_FILE
+  assert packageJsonObject instanceof Map
+  assert packageJsonObject.version instanceof String
+  return packageJsonObject.version
+}
+
+def buildImage(packageVersion) {
+  try {
+    sh """
+      cd ${AWS_FARGATE_IMAGE_PATH}
+      cp package.json.npm package.json
+      docker build -f Dockerfile-npm --label version=${packageVersion} -t ${IMAGE_NAME}:${packageVersion} .
+    """
+  } catch(e) {
+    slackSend channel: "#${SLACK_CHANNEL}",
+                color: "#ff5d00",
+              message: """
+      Failed to build Instana AWS Fargate Node.js Docker image for ${packageVersion}.
+      Reason: ${e.message}
+      (<${env.BUILD_URL}|Open>)
+      """
+    cleanUp()
+    throw e;
+  }
+}
+
+def pushImage(packageVersion) {
+  try {
+    sh """
+      docker tag ${IMAGE_NAME}:${packageVersion} ${REGISTRY_PATH}:${packageVersion}
+      docker tag ${IMAGE_NAME}:${packageVersion} ${REGISTRY_PATH}:latest
+      docker push ${REGISTRY_PATH}:${packageVersion}
+      docker push ${REGISTRY_PATH}:latest
+    """
+  } catch(e) {
+    slackSend channel: "#${SLACK_CHANNEL}",
+                color: "#ff5d00",
+              message: """
+      Failed to tag and push Instana AWS Fargate Node.js Docker image for ${packageVersion}.
+      Reason: ${e.message}
+      (<${env.BUILD_URL}|Open>)
+    """
+    cleanUp()
+    throw e;
+  }
+}
+
+def cleanUp() {
+  println "Cleaning up docker images"
+  sh '''
+    IMAGES=$(docker images --format='{{.Repository}} {{.ID}}' | grep -E '.*instana-aws-fargate-nodejs.*' | cut -d ' ' -f 2 | uniq | tr '\n' ' ' | sed -e 's/[[:space:]]*$//')
+    docker rmi --force $IMAGES
+  '''
+}
