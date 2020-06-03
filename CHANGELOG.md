@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.100.0
 - Provide an API to manually restore the asynchronous context (async_hooks/AsyncWrap continuity) as a workaround for libraries that break it.
 
 ## 1.99.0
