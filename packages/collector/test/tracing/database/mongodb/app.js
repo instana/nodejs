@@ -54,6 +54,17 @@ app.get('/', (req, res) => {
   }
 });
 
+app.post('/count', (req, res) => {
+  collection.count(req.body, (err, mongoResponse) => {
+    if (err) {
+      log('Failed to count', err);
+      res.sendStatus(500);
+      return;
+    }
+    res.json(mongoResponse);
+  });
+});
+
 app.post('/insert-one', (req, res) => {
   let mongoResponse = null;
   collection
