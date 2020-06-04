@@ -9,7 +9,19 @@ var cls = require('../../cls');
 
 var isActive = false;
 
-var commands = ['delete', 'find', 'findAndModify', 'getMore', 'insert', 'update'];
+var commands = [
+  //
+  'count',
+  'delete',
+  'distinct',
+  'find',
+  'findAndModify',
+  'findandmodify',
+  'getMore',
+  'getmore',
+  'insert',
+  'update'
+];
 
 exports.init = function() {
   // mongodb >= 3.3.x
@@ -41,7 +53,7 @@ function instrumentedWrite(ctx, originalWrite, originalArgs) {
     return originalWrite.apply(ctx, originalArgs);
   }
 
-  // pool.js#write throws a sync error if there is no callback, so we can safely assume there is one. If there no
+  // pool.js#write throws a sync error if there is no callback, so we can safely assume there is one. If there was no
   // callback, we wouldn't be able to finish the span, so we won't start one.
   var originalCallback;
   var callbackIndex = -1;

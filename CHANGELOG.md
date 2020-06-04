@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.100.1
+- Add more mongodb command names for collection lookup.
+
 ## 1.100.0
 - Provide an API to manually restore the asynchronous context (async_hooks/AsyncWrap continuity) as a workaround for libraries that break it.
 

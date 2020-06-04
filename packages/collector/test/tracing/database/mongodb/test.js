@@ -25,6 +25,32 @@ describe('tracing/mongodb', function() {
 
   beforeEach(() => agentStubControls.waitUntilAppIsCompletelyInitialized(controls.getPid()));
 
+  it('must count', () =>
+    controls
+      .sendRequest({
+        method: 'POST',
+        path: '/count',
+        body: {
+          foo: 'bar'
+        }
+      })
+      .then(res => {
+        expect(res).to.be.a('number');
+        return testUtils.retry(() =>
+          agentStubControls.getSpans().then(spans => {
+            const entrySpan = expectHttpEntry(spans, '/count');
+            expectMongoExit(
+              spans,
+              entrySpan,
+              'count',
+              JSON.stringify({
+                foo: 'bar'
+              })
+            );
+          })
+        );
+      }));
+
   it('must trace insert requests', () =>
     controls
       .sendRequest({
