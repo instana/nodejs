@@ -36,11 +36,11 @@ app.get('/', (req, res) => {
     res.send('OK');
   } else {
     requestPromise('http://localhost:8000/v1/helloworld')
-      .then(downstreamRespons => {
+      .then(downstreamResponse => {
         if (config.logRequests) {
           console.log(`downstream request successful (${new Date()})`);
         }
-        res.json(downstreamRespons);
+        res.json(downstreamResponse);
       })
       .catch(err => {
         console.error(`downstream request finished with error (${new Date()})`);

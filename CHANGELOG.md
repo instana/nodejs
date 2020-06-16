@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.100.2
+- Fix: Only require @instana/autoprofile if profiling has been enabled.
+- Fix: Recover gracefully from absence of @instana/autoprofile (since it is an optional dependency).
+
 ## 1.100.1
 - Add more mongodb command names for collection lookup.
 

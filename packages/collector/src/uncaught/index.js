@@ -77,8 +77,7 @@ function activateUncaughtExceptionHandling() {
             'not be reported to Instana for this application. This typically occurs when native addons could not be ' +
             'compiled during module installation (npm install/yarn). See the instructions to learn more about the ' +
             'requirements of the collector: ' +
-            // eslint-disable-next-line max-len
-            'https://github.com/instana/nodejs-sensor/blob/master/packages/collector/README.md#cpu-profiling-garbage-collection-and-event-loop-information'
+            'https://www.instana.com/docs/ecosystem/node-js/installation/#native-addons'
         );
       }
     } catch (notResolved) {
@@ -88,8 +87,7 @@ function activateUncaughtExceptionHandling() {
           'not be reported to Instana for this application. This typically occurs when native addons could not be ' +
           'compiled during module installation (npm install/yarn). See the instructions to learn more about the ' +
           'requirements of the collector: ' +
-          // eslint-disable-next-line max-len
-          'https://github.com/instana/nodejs-sensor/blob/master/packages/collector/https://github.com/instana/nodejs-sensor/blob/master/packages/collector/README.md#cpu-profiling-garbage-collection-and-event-loop-information'
+          'https://www.instana.com/docs/ecosystem/node-js/installation/#native-addons'
       );
     }
   } else {

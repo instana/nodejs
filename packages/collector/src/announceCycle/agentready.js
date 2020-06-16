@@ -12,14 +12,25 @@ var uncaught = require('../uncaught');
 var autoprofile;
 var tracing = instanaCore.tracing;
 
-if (semver.gte(process.version, '6.4.0')) {
-  autoprofile = require('@instana/autoprofile');
-}
-
 var logger;
 logger = require('../logger').getLogger('announceCycle/agentready', function(newLogger) {
   logger = newLogger;
 });
+
+if (agentOpts.autoProfile && semver.gte(process.version, '6.4.0')) {
+  try {
+    autoprofile = require('@instana/autoprofile');
+  } catch (e) {
+    logger.info(
+      'Could not load @instana/autoprofile. You will not get profiling information for this Node.js app in Instana, ' +
+        'although autoprofiling has been enabled. This typically occurs when native addons could not be installed ' +
+        'during module installation (npm install/yarn). See the instructions to learn more about the requirements of ' +
+        'the collector: ' +
+        'https://www.instana.com/docs/ecosystem/node-js/installation/#native-addons'
+    );
+  }
+}
+
 var requestHandler = require('../agent/requestHandler');
 var agentConnection = require('../agentConnection');
 
