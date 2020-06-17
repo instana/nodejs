@@ -11,6 +11,7 @@ const path = require('path');
 const pino = require('pino')();
 
 const sendToParent = require('../util/send_to_parent');
+const deepMerge = require('../../../core/src/util/deepMerge');
 
 const logPrefix = 'backend-stub';
 const logger = pino.child({ name: logPrefix, pid: process.pid });
@@ -62,6 +63,7 @@ app.post('/serverless/bundle', (req, res) => {
   }
   if (!dropAllData) {
     receivedData.metrics.push(addHeaders(req, req.body.metrics));
+    aggregateMetrics(req.body.metrics);
     receivedData.spans = receivedData.spans.concat(addHeaders(req, req.body.spans));
   }
   return res.sendStatus(201);
@@ -82,6 +84,7 @@ app.post('/serverless/metrics', (req, res) => {
   }
   if (!dropAllData) {
     receivedData.metrics.push(addHeaders(req, req.body));
+    aggregateMetrics(req.body);
   }
   return res.sendStatus(201);
 });
@@ -116,15 +119,18 @@ app.delete('/serverless/received', (req, res) => {
 
 app.get('/serverless/received/metrics', (req, res) => res.json(receivedData.metrics));
 
+app.get('/serverless/received/aggregated/metrics', (req, res) => res.json(receivedData.aggregatedMetrics));
+
 app.delete('/received/metrics', (req, res) => {
   receivedData.metrics = [];
+  receivedData.aggregatedMetrics = [];
   return res.sendStatus('204');
 });
 
 app.get('/serverless/received/spans', (req, res) => res.json(receivedData.spans));
 
 app.delete('/serverless/received/spans', (req, res) => {
-  receivedData.metrics = [];
+  receivedData.spans = [];
   return res.sendStatus('204');
 });
 
@@ -170,9 +176,27 @@ function addHeaders(req, payload) {
   return payload;
 }
 
+function aggregateMetrics(newMetrics) {
+  if (receivedData.aggregatedMetrics.length === 0) {
+    receivedData.aggregatedMetrics = newMetrics.plugins;
+  } else {
+    newMetrics.plugins.forEach(snapshotUpdate => {
+      const existingSnapshot = receivedData.aggregatedMetrics.find(
+        snapshot => snapshotUpdate.name === snapshot.name && snapshotUpdate.entityId === snapshot.entityId
+      );
+      if (!existingSnapshot) {
+        receivedData.aggregatedMetrics.push(snapshotUpdate);
+      } else {
+        deepMerge(existingSnapshot, snapshotUpdate);
+      }
+    });
+  }
+}
+
 function resetReceivedData() {
   return {
     metrics: [],
+    aggregatedMetrics: [],
     spans: [],
     rawBundles: [],
     rawMetrics: [],

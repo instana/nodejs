@@ -27,17 +27,14 @@ class SecondaryContainerFactory extends DataProcessor {
       taskMetadata.TaskARN == null ||
       !taskMetadata.Containers
     ) {
-      return;
+      return {};
     }
-    const instrumentedContainerName = rootMetadata.Name;
+    const instrumentedDockerId = rootMetadata.DockerId;
     const taskArn = taskMetadata.TaskARN;
-    const allContainerNames = taskMetadata.Containers.map(c => c.Name);
-    const secondaryContainerNames = allContainerNames.filter(name => name !== instrumentedContainerName);
-    const secondaryContainers = secondaryContainerNames.map(containerName => ({
-      containerName,
-      containerId: `${taskArn}::${containerName}`
-    }));
-
+    const secondaryContainers = taskMetadata.Containers.map(c => ({
+      dockerId: c.DockerId,
+      containerId: `${taskArn}::${c.Name}`
+    })).filter(({ dockerId }) => dockerId !== instrumentedDockerId);
     return { secondaryContainers };
   }
 }

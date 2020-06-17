@@ -2,12 +2,13 @@
 
 const DataProcessor = require('../DataProcessor');
 const { convert } = require('./containerUtil');
+const { dataForSecondaryContainer } = require('./containerUtil');
 
 class SecondaryEcsContainerProcessor extends DataProcessor {
-  constructor(dataSource, containerName, containerId) {
+  constructor(taskDataSource, dockerId, containerId) {
     super('com.instana.plugin.aws.ecs.container');
-    this.addSource('task', dataSource);
-    this.containerName = containerName;
+    this.addSource('task', taskDataSource);
+    this.dockerId = dockerId;
     this.entityId = containerId;
   }
 
@@ -16,15 +17,8 @@ class SecondaryEcsContainerProcessor extends DataProcessor {
   }
 
   processData(rawDataPerSource) {
-    const metadata = rawDataPerSource.task;
-    if (!metadata || !metadata.Containers) {
-      return {};
-    }
-    const dataForThisContainer = metadata.Containers.find(container => container.Name === this.containerName);
-    if (!dataForThisContainer) {
-      return {};
-    }
-    return convert(dataForThisContainer);
+    const snapshotDataForThisContainer = dataForSecondaryContainer(rawDataPerSource.task, this.dockerId);
+    return convert(snapshotDataForThisContainer);
   }
 }
 

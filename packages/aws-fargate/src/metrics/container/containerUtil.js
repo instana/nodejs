@@ -4,6 +4,11 @@ exports.fullyQualifiedContainerId = function fullyQualifiedContainerId(taskArn, 
   return taskArn + '::' + containerName;
 };
 
+exports.dataForSecondaryContainer = function dataForSecondaryContainer(all, dockerId) {
+  let dataForThisContainer = all && all.Containers && all.Containers.find(container => container.DockerId === dockerId);
+  return dataForThisContainer || {};
+};
+
 exports.convert = function convert(metadata) {
   return {
     dockerId: metadata.DockerId,
@@ -17,6 +22,7 @@ exports.convert = function convert(metadata) {
     clusterArn: metadata.Labels ? metadata.Labels['com.amazonaws.ecs.cluster'] : undefined,
     desiredStatus: metadata.DesiredStatus,
     knownStatus: metadata.KnownStatus,
+    ports: metadata.Ports,
     limits: {
       cpu: metadata.Limits ? metadata.Limits.CPU : undefined,
       memory: metadata.Limits ? metadata.Limits.Memory : undefined

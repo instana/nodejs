@@ -19,12 +19,15 @@ exports.init = function init(config, metadataUri, onReady) {
   const oneMinute = 60 * 1000;
   const metadataRootDataSource = new HttpDataSource(metadataUri, oneMinute);
   const metadataTaskDataSource = new HttpDataSource(`${metadataUri}/task`, oneMinute);
+  const metadataRootStatsDataSource = new HttpDataSource(`${metadataUri}/stats`);
+  const metadataTaskStatsDataSource = new HttpDataSource(`${metadataUri}/task/stats`);
 
   const ecsTaskProcessor = new EcsTaskProcessor(metadataTaskDataSource);
   allProcessors.push(ecsTaskProcessor);
   const instrumentedEcsContainerProcessor = new InstrumentedEcsContainerProcessor(metadataRootDataSource);
   allProcessors.push(instrumentedEcsContainerProcessor);
-  allProcessors.push(new InstrumentedDockerProcessor(metadataRootDataSource));
+  allProcessors.push(new InstrumentedDockerProcessor(metadataRootDataSource, metadataRootStatsDataSource));
+
   const processProcessor = new ProcessProcessor();
   allProcessors.push(processProcessor);
   allProcessors.push(new NodeJsProcessor(coreAndShared, process.pid));
@@ -41,15 +44,20 @@ exports.init = function init(config, metadataUri, onReady) {
 
   const secondaryEcsContainerFactory = new SecondaryEcsContainerFactory(metadataRootDataSource, metadataTaskDataSource);
   secondaryEcsContainerFactory.once('ready', secondaryContainers => {
-    secondaryContainers.data.secondaryContainers.forEach(({ containerName, containerId }) => {
+    secondaryContainers.data.secondaryContainers.forEach(({ dockerId, containerId }) => {
       const secondaryEcsContainerProcessor = new SecondaryEcsContainerProcessor(
         metadataTaskDataSource,
-        containerName,
+        dockerId,
         containerId
       );
       secondaryEcsContainerProcessor.activate();
       allProcessors.push(secondaryEcsContainerProcessor);
-      const secondaryDockerProcessor = new SecondaryDockerProcessor(metadataTaskDataSource, containerName, containerId);
+      const secondaryDockerProcessor = new SecondaryDockerProcessor(
+        metadataTaskDataSource,
+        metadataTaskStatsDataSource,
+        dockerId,
+        containerId
+      );
       secondaryDockerProcessor.activate();
       allProcessors.push(secondaryDockerProcessor);
     });

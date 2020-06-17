@@ -225,6 +225,10 @@ AbstractServerlessControl.prototype.getMetrics = function getMetrics() {
   return this._getFromBackend('/received/metrics');
 };
 
+AbstractServerlessControl.prototype.getAggregatedMetrics = function getMetrics() {
+  return this._getFromBackend('/received/aggregated/metrics');
+};
+
 AbstractServerlessControl.prototype.getRawBundles = function getRawBundles() {
   return this._getFromBackend('/received/raw/bundles');
 };

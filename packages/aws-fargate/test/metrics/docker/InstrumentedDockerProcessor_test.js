@@ -16,6 +16,7 @@ describe('Docker processor', function() {
 
   const metadataMockPort = 1604;
   const metadataMockUrl = `http://localhost:${metadataMockPort}`;
+  const metadataStatsMockUrl = `${metadataMockUrl}/stats`;
   let messagesFromMetadataMock = [];
   let metadataMock;
 
@@ -39,7 +40,10 @@ describe('Docker processor', function() {
   });
 
   beforeEach(() => {
-    dataProcessor = new InstrumentedDockerProcessor(new HttpDataSource(metadataMockUrl));
+    dataProcessor = new InstrumentedDockerProcessor(
+      new HttpDataSource(metadataMockUrl),
+      new HttpDataSource(metadataStatsMockUrl)
+    );
   });
 
   afterEach(() => {
