@@ -30,12 +30,18 @@ function main() {
   // eslint-disable-next-line import/no-dynamic-require
   lambdaDefinition = require(definitionPath);
   validateDefinition(lambdaDefinition);
-  process.on('message', cmd => {
-    if (cmd === 'run-handler') {
-      runHandler(lambdaDefinition.handler, process.env.LAMDBA_ERROR);
-    }
-  });
-  sendToParent('runtime: started');
+  if (process.env.WAIT_FOR_MESSAGE !== 'true') {
+    // Run handler immediately if started runtime mock has been started directly via CLI.
+    runHandler(lambdaDefinition.handler, process.env.LAMDBA_ERROR);
+  } else {
+    // Wait for an explicit command to start the handler when used in the context of automated tests.
+    process.on('message', cmd => {
+      if (cmd === 'run-handler') {
+        runHandler(lambdaDefinition.handler, process.env.LAMDBA_ERROR);
+      }
+    });
+    sendToParent('runtime: started');
+  }
 }
 
 /**

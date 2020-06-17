@@ -28,10 +28,14 @@ const clusterName = 'nodejs-fargate-test-cluster';
 const taskDefinitionName = 'nodejs-fargate-test-task-definition';
 const taskDefinitionVersion = '42';
 const containerName = 'nodejs-fargate-test-container';
+const dockerId = '01234567890abcdef01234567890abcdef01234567890abcdef01234567890ab';
+
+let requestCount = 0;
 
 app.get('/', (req, res) => {
+  requestCount++;
   res.json({
-    DockerId: '01234567890abcdef01234567890abcdef01234567890abcdef01234567890ab',
+    DockerId: dockerId,
     Name: containerName,
     DockerName: `ecs-${taskDefinitionName}-${taskDefinitionVersion}-${containerName}-abcdefg0123456789012`,
     Image: `${awsAccount}.dkr.ecr.us-east-2.amazonaws.com/${taskDefinitionName}:latest`,
@@ -62,6 +66,7 @@ app.get('/', (req, res) => {
 });
 
 app.get('/task', (req, res) => {
+  requestCount++;
   res.json({
     Cluster: `arn:aws:ecs:us-east-2:${awsAccount}:cluster/${clusterName}`,
     TaskARN: `arn:aws:ecs:us-east-2:${awsAccount}:task/55566677-c1e5-5780-9806-aabbccddeeff`,
@@ -75,7 +80,7 @@ app.get('/task', (req, res) => {
         Name: '~internal~ecs~pause',
         DockerName: `ecs-${taskDefinitionName}-${taskDefinitionVersion}-internalecspause-ae908be6e2a8f2a42600`,
         Image: 'fg-proxy:tinyproxy',
-        ImageID: '',
+        ImageID: 'sha256:2ffe52a8f590e72b96dd5c586252afac8de923673c5b2fd0b04e081684c47f6b',
         Labels: {
           'com.amazonaws.ecs.cluster': `arn:aws:ecs:us-east-2:${awsAccount}:cluster/${clusterName}`,
           'com.amazonaws.ecs.container-name': '~internal~ecs~pause',
@@ -100,11 +105,11 @@ app.get('/task', (req, res) => {
         ]
       },
       {
-        DockerId: '997e57ae749f276626b99f81aa8a193183580d327145aeb22cf1a675decaedba',
+        DockerId: dockerId,
         Name: containerName,
         DockerName: `ecs-${taskDefinitionName}-${taskDefinitionVersion}-${containerName}-ece0aff5d49f9a96b501`,
         Image: `${awsAccount}.dkr.ecr.us-east-2.amazonaws.com/${taskDefinitionName}:latest`,
-        ImageID: 'sha256:2ffe52a8f590e72b96dd5c586252afac8de923673c5b2fd0b04e081684c47f6b',
+        ImageID: 'sha256:fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210',
         Labels: {
           'com.amazonaws.ecs.cluster': `arn:aws:ecs:us-east-2:${awsAccount}:cluster/${clusterName}`,
           'com.amazonaws.ecs.container-name': containerName,
@@ -139,6 +144,7 @@ app.get('/task', (req, res) => {
 });
 
 app.get('/stats', (req, res) => {
+  requestCount++;
   res.json({
     read: '2020-03-25T14:35:20.355666414Z',
     preread: '2020-03-25T14:35:19.342026094Z',
@@ -146,7 +152,38 @@ app.get('/stats', (req, res) => {
       current: 7
     },
     blkio_stats: {
-      io_service_bytes_recursive: [],
+      io_service_bytes_recursive: [
+        {
+          major: 202,
+          minor: 26368,
+          op: 'Read',
+          value: 5890048 + requestCount * 300
+        },
+        {
+          major: 202,
+          minor: 26368,
+          op: 'Write',
+          value: 12288 + requestCount * 30
+        },
+        {
+          major: 202,
+          minor: 26368,
+          op: 'Sync',
+          value: 5902336
+        },
+        {
+          major: 202,
+          minor: 26368,
+          op: 'Async',
+          value: 0
+        },
+        {
+          major: 202,
+          minor: 26368,
+          op: 'Total',
+          value: 5902336
+        }
+      ],
       io_serviced_recursive: [],
       io_queue_recursive: [],
       io_service_time_recursive: [],
@@ -159,17 +196,17 @@ app.get('/stats', (req, res) => {
     storage_stats: {},
     cpu_stats: {
       cpu_usage: {
-        total_usage: 298079958,
+        total_usage: 298079958 + requestCount * 5678,
         percpu_usage: [110074358, 188005600, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        usage_in_kernelmode: 30000000,
-        usage_in_usermode: 220000000
+        usage_in_kernelmode: 30000000 + requestCount * 1234,
+        usage_in_usermode: 220000000 + requestCount * 4444
       },
-      system_cpu_usage: 192900000000,
+      system_cpu_usage: 192900000123 + requestCount * 100000,
       online_cpus: 2,
       throttling_data: {
-        periods: 0,
+        periods: Math.random(5),
         throttled_periods: 0,
-        throttled_time: 0
+        throttled_time: Math.random(1357)
       }
     },
     precpu_stats: {
@@ -179,7 +216,7 @@ app.get('/stats', (req, res) => {
         usage_in_kernelmode: 30000000,
         usage_in_usermode: 220000000
       },
-      system_cpu_usage: 190880000000,
+      system_cpu_usage: 190880000000 + requestCount * 100000,
       online_cpus: 2,
       throttling_data: {
         periods: 0,
@@ -226,12 +263,35 @@ app.get('/stats', (req, res) => {
       },
       limit: 4134825984
     },
+    networks: {
+      eth0: {
+        rx_bytes: 20000000 + requestCount * 128,
+        rx_packets: 100000 + requestCount * 8,
+        rx_errors: requestCount,
+        rx_dropped: requestCount * 3,
+        tx_bytes: 10000000 + requestCount * 256,
+        tx_packets: 100000 + requestCount * 4,
+        tx_errors: requestCount * 2,
+        tx_dropped: requestCount
+      },
+      eth1: {
+        rx_bytes: 20000000 + requestCount * 129,
+        rx_packets: 100000 + requestCount * 9,
+        rx_errors: requestCount,
+        rx_dropped: requestCount * 4,
+        tx_bytes: 10000000 + requestCount * 255,
+        tx_packets: 100000 + requestCount * 3,
+        tx_errors: requestCount * 3,
+        tx_dropped: requestCount
+      }
+    },
     name: `/ecs-${taskDefinitionName}-${taskDefinitionVersion}-${containerName}-ece0aff5d49f9a96b501`,
     id: '997e57ae749f276626b99f81aa8a193183580d327145aeb22cf1a675decaedba'
   });
 });
 
 app.get('/task/stats', (req, res) => {
+  requestCount++;
   res.json({
     '1f11d3be4668926ba50c5a6049bf75103f9c708cb70ad967d96e27fd914067ec': {
       read: '2020-03-25T14:35:20.354472882Z',
@@ -245,13 +305,13 @@ app.get('/task/stats', (req, res) => {
             major: 202,
             minor: 26368,
             op: 'Read',
-            value: 5890048
+            value: 5890048 + requestCount * 300
           },
           {
             major: 202,
             minor: 26368,
             op: 'Write',
-            value: 12288
+            value: 12288 + requestCount * 30
           },
           {
             major: 202,
@@ -315,12 +375,12 @@ app.get('/task/stats', (req, res) => {
       storage_stats: {},
       cpu_stats: {
         cpu_usage: {
-          total_usage: 382891193,
+          total_usage: 382891193 + requestCount * 4567,
           percpu_usage: [279795620, 103095573, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-          usage_in_kernelmode: 130000000,
-          usage_in_usermode: 220000000
+          usage_in_kernelmode: 130000000 + requestCount * 1234,
+          usage_in_usermode: 220000000 + requestCount * 4444
         },
-        system_cpu_usage: 192890000000,
+        system_cpu_usage: 192900000123 + requestCount * 100000,
         online_cpus: 2,
         throttling_data: {
           periods: 0,
@@ -382,6 +442,28 @@ app.get('/task/stats', (req, res) => {
         },
         limit: 4134825984
       },
+      networks: {
+        eth0: {
+          rx_bytes: 20000000 + requestCount * 128,
+          rx_packets: 100000 + requestCount * 8,
+          rx_errors: requestCount,
+          rx_dropped: requestCount * 3,
+          tx_bytes: 10000000 + requestCount * 256,
+          tx_packets: 100000 + requestCount * 4,
+          tx_errors: requestCount * 2,
+          tx_dropped: requestCount
+        },
+        eth1: {
+          rx_bytes: 20000000 + requestCount * 129,
+          rx_packets: 100000 + requestCount * 9,
+          rx_errors: requestCount,
+          rx_dropped: requestCount * 4,
+          tx_bytes: 10000000 + requestCount * 255,
+          tx_packets: 100000 + requestCount * 3,
+          tx_errors: requestCount * 3,
+          tx_dropped: requestCount
+        }
+      },
       name: `/ecs-${taskDefinitionName}-${taskDefinitionVersion}-internalecspause-ae908be6e2a8f2a42600`,
       id: '1f11d3be4668926ba50c5a6049bf75103f9c708cb70ad967d96e27fd914067ec'
     },
@@ -392,7 +474,38 @@ app.get('/task/stats', (req, res) => {
         current: 7
       },
       blkio_stats: {
-        io_service_bytes_recursive: [],
+        io_service_bytes_recursive: [
+          {
+            major: 202,
+            minor: 26368,
+            op: 'Read',
+            value: 5890048
+          },
+          {
+            major: 202,
+            minor: 26368,
+            op: 'Write',
+            value: 12288
+          },
+          {
+            major: 202,
+            minor: 26368,
+            op: 'Sync',
+            value: 5902336
+          },
+          {
+            major: 202,
+            minor: 26368,
+            op: 'Async',
+            value: 0
+          },
+          {
+            major: 202,
+            minor: 26368,
+            op: 'Total',
+            value: 5902336
+          }
+        ],
         io_serviced_recursive: [],
         io_queue_recursive: [],
         io_service_time_recursive: [],

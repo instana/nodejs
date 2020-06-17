@@ -1,14 +1,15 @@
 'use strict';
 
 const DataProcessor = require('../DataProcessor');
-
 const { convert } = require('./dockerUtil');
+const { dataForSecondaryContainer } = require('../container/containerUtil');
 
 class SecondaryDockerProcessor extends DataProcessor {
-  constructor(dataSource, containerName, containerId) {
+  constructor(taskDataSource, taskStatsDataSource, dockerId, containerId) {
     super('com.instana.plugin.docker');
-    this.addSource('task', dataSource);
-    this.containerName = containerName;
+    this.addSource('task', taskDataSource);
+    this.addSource('stats', taskStatsDataSource, false);
+    this.dockerId = dockerId;
     this.entityId = containerId;
   }
 
@@ -16,17 +17,10 @@ class SecondaryDockerProcessor extends DataProcessor {
     return this.entityId;
   }
 
-  processData(rawDataPerSource) {
-    const metadata = rawDataPerSource.task;
-    if (!metadata || !metadata.Containers) {
-      return {};
-    }
-    const dataForThisContainer = metadata.Containers.find(container => container.Name === this.containerName);
-    if (!dataForThisContainer) {
-      return {};
-    }
-    const r = convert(dataForThisContainer);
-    return r;
+  processData(rawDataPerSource, previous, next) {
+    const snapshotDataForThisContainer = dataForSecondaryContainer(rawDataPerSource.task, this.dockerId);
+    const metricsForThisContainer = rawDataPerSource.stats ? rawDataPerSource.stats[this.dockerId] : {};
+    return convert(snapshotDataForThisContainer, metricsForThisContainer, previous, next);
   }
 }
 

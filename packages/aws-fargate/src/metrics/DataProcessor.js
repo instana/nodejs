@@ -18,10 +18,15 @@ let processorIdx = 0;
 class DataProcessor extends EventEmitter {
   constructor(pluginName, compressionBlacklist) {
     super();
+    // all data sources
     this.dataSources = {};
+    // data sources that need to have refreshed before the processor is ready
+    this.essentialDataSources = {};
     this.compressionBlacklist = compressionBlacklist;
     this.pluginName = pluginName;
     this.id = `${this.pluginName}--${processorIdx++}`;
+    this.previous = {};
+    this.next = {};
     this._resetCompressionState();
 
     // We send snapshot data and metrics every second, so with sendUncompressedEveryXTransmissions = 300 we get an
@@ -33,11 +38,14 @@ class DataProcessor extends EventEmitter {
     return this.id;
   }
 
-  addSource(id, source) {
+  addSource(id, source, essential = true) {
     this.dataSources[id] = source;
-    source.on('firstRefresh', () => {
-      this._emitReadyEvent();
-    });
+    if (essential) {
+      this.essentialDataSources[id] = source;
+      source.on('firstRefresh', () => {
+        this._potentiallyEmitReadyEvent();
+      });
+    }
   }
 
   activate() {
@@ -60,21 +68,21 @@ class DataProcessor extends EventEmitter {
   }
 
   isReady() {
-    const ids = Object.keys(this.dataSources);
-    if (ids.length === 0) {
+    const essentialDataSourceIds = Object.keys(this.essentialDataSources);
+    if (essentialDataSourceIds.length === 0) {
       // no data sources connected
       return false;
     }
 
-    if (Object.keys(this.dataSources).find(id => !this.dataSources[id].hasRefreshedAtLeastOnce()) != null) {
-      // We found at least one data source which has not successfully refreshed at least once.
-      // This processor is not ready yet.
+    if (essentialDataSourceIds.find(id => !this.dataSources[id].hasRefreshedAtLeastOnce()) != null) {
+      // We found at least one essential data source which has not successfully refreshed at least once. This processor
+      // is not ready yet.
       return false;
     }
     return true;
   }
 
-  _emitReadyEvent() {
+  _potentiallyEmitReadyEvent() {
     if (this.isReady()) {
       this.emit('ready', this._getFullPayload());
     }
@@ -158,7 +166,10 @@ class DataProcessor extends EventEmitter {
   }
 
   _getProcessedData(withSkip) {
-    return this.processData(this._compileRawData(withSkip));
+    this.next = {};
+    const processed = this.processData(this._compileRawData(withSkip), this.previous, this.next);
+    this.previous = this.next;
+    return processed;
   }
 
   processData() {

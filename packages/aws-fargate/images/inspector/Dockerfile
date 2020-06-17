@@ -6,4 +6,7 @@ RUN npm install --only=production
 
 COPY . .
 
+EXPOSE 3000
+EXPOSE 3001
+
 ENTRYPOINT [ "node", "." ]

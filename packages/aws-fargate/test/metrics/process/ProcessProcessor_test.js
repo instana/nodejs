@@ -82,6 +82,7 @@ describe('Process processor', function() {
     return retry(() => {
       const payload = getPayload();
       expect(payload).to.exist;
+      expect(payload.data.cpu).to.be.an('object');
       expect(payload.data.cpu.user).to.be.a('number');
       expect(payload.data.cpu.sys).to.be.a('number');
     });

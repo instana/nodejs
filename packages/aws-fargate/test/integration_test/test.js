@@ -1,6 +1,7 @@
 'use strict';
 
-const expect = require('chai').expect;
+const { expect, assert } = require('chai');
+const { fail } = assert;
 const path = require('path');
 const constants = require('@instana/core').tracing.constants;
 
@@ -114,37 +115,37 @@ describe('AWS fargate integration test', function() {
   }
 
   function getAndVerifySnapshotDataAndMetrics(control) {
-    return control.getMetrics().then(metrics => verifySnapshotDataAndMetrics(metrics));
+    return Promise.all([control.getAggregatedMetrics(), control.getMetrics()]).then(verifySnapshotDataAndMetrics);
   }
 
-  function verifySnapshotDataAndMetrics(allMetrics) {
-    /* eslint-disable no-console */
-    expect(allMetrics).to.exist;
-    expect(allMetrics).to.be.an('array');
-    expect(allMetrics).to.have.lengthOf.at.least(1);
-    const allPlugins = allMetrics[0];
-    expect(allPlugins.plugins).to.be.an('array');
-    if (allPlugins.plugins.length < 5) {
-      console.log('Error: Received less entities than expected.');
-      console.log(JSON.stringify(allPlugins, null, 2));
+  function verifySnapshotDataAndMetrics([allEntities, allSnapshotUpdates]) {
+    expect(allEntities).to.be.an('array');
+    const expectedNumberOfPlugins = 7;
+    if (allEntities.length < expectedNumberOfPlugins) {
+      fail(
+        'Error: Received less entities than expected: ' +
+          `Wanted: ${expectedNumberOfPlugins}, got: ${allEntities.length}. ` +
+          'Here are the entities that have been received: ' +
+          JSON.stringify(allEntities.map(({ name, entityId }) => ({ name, entityId })), null, 2)
+      );
     }
-    expect(allPlugins.plugins).to.have.lengthOf.at.least(5);
+    expect(allEntities).to.have.lengthOf.at.least(expectedNumberOfPlugins);
 
-    verifyEcsTask(allPlugins);
-    verifyInstrumentedEcsContainer(allPlugins);
-    verifyInstrumentedDockerPayload(allPlugins);
-    const processData = verifyProcessPayload(allPlugins, allMetrics);
-    verifyNodeJsPayload(allPlugins, allMetrics, processData);
+    verifyEcsTask(allEntities);
+    verifyInstrumentedEcsContainer(allEntities);
+    verifyInstrumentedDockerPayload(allEntities);
 
-    verifyHeaders(allPlugins);
+    const processData = verifyProcessPayload(allEntities);
+    verifyNodeJsPayload(allEntities, processData);
 
-    // Data for the secondary ECS container and secondary Docker entity might come later.
-    verifySecondaryEcsContainerPayload(allMetrics);
-    verifySecondaryDockerPayload(allMetrics);
+    verifySecondaryEcsContainerPayload(allEntities);
+    verifySecondaryDockerPayload(allEntities);
+
+    verifyHeadersForSnapshotUpdates(allSnapshotUpdates);
   }
 
-  function verifyEcsTask(allPlugins) {
-    const ecsTaskPayload = allPlugins.plugins.find(
+  function verifyEcsTask(allEntities) {
+    const ecsTaskPayload = allEntities.find(
       pluginPayload => pluginPayload.name === 'com.instana.plugin.aws.ecs.task' && pluginPayload.entityId === taskArn
     );
     expect(ecsTaskPayload).to.exist;
@@ -162,8 +163,8 @@ describe('AWS fargate integration test', function() {
     expect(ecsTaskData.pullStoppedAt).to.equal('2020-03-25T14:34:29.92587709Z');
   }
 
-  function verifyInstrumentedEcsContainer(allPlugins) {
-    const instrumentedEcsContainerPayload = allPlugins.plugins.find(
+  function verifyInstrumentedEcsContainer(allEntities) {
+    const instrumentedEcsContainerPayload = allEntities.find(
       pluginPayload =>
         pluginPayload.name === 'com.instana.plugin.aws.ecs.container' &&
         pluginPayload.entityId === instrumentedContainerId
@@ -185,8 +186,8 @@ describe('AWS fargate integration test', function() {
     expect(instrumentedEcsContainerData.startedAt).to.equal('2020-03-25T14:34:31.56264157Z');
   }
 
-  function verifyInstrumentedDockerPayload(allPlugins) {
-    const instrumentedDockerPayload = allPlugins.plugins.find(
+  function verifyInstrumentedDockerPayload(allEntities) {
+    const instrumentedDockerPayload = allEntities.find(
       pluginPayload =>
         pluginPayload.name === 'com.instana.plugin.docker' && pluginPayload.entityId === instrumentedContainerId
     );
@@ -197,32 +198,23 @@ describe('AWS fargate integration test', function() {
     expect(instrumentedDockerData.Id).to.equal(dockerId);
     expect(instrumentedDockerData.Created).to.equal('2020-03-25T14:34:29.936120727Z');
     expect(instrumentedDockerData.Started).to.equal('2020-03-25T14:34:31.56264157Z');
-    expect(instrumentedDockerData.Image).to.equal(
-      '555123456789.dkr.ecr.us-east-2.amazonaws.com/nodejs-fargate-test-task-definition:latest'
-    );
+    expect(instrumentedDockerData.Image).to.equal(image);
     expect(instrumentedDockerData.Labels).to.be.an('object');
-    expect(instrumentedDockerData.Labels['com.amazonaws.ecs.cluster']).to.equal(
-      'arn:aws:ecs:us-east-2:555123456789:cluster/nodejs-fargate-test-cluster'
-    );
-    expect(instrumentedDockerData.Labels['com.amazonaws.ecs.container-name']).to.equal('nodejs-fargate-test-container');
-    expect(instrumentedDockerData.Labels['com.amazonaws.ecs.task-arn']).to.equal(
-      'arn:aws:ecs:us-east-2:555123456789:task/55566677-c1e5-5780-9806-aabbccddeeff'
-    );
+    expect(instrumentedDockerData.Labels['com.amazonaws.ecs.cluster']).to.equal(clusterArn);
+    expect(instrumentedDockerData.Labels['com.amazonaws.ecs.container-name']).to.equal(instrumentedContainerName);
+    expect(instrumentedDockerData.Labels['com.amazonaws.ecs.task-arn']).to.equal(taskArn);
     expect(instrumentedDockerData.Labels['com.amazonaws.ecs.task-definition-family']).to.equal(taskDefinition);
     expect(instrumentedDockerData.Labels['com.amazonaws.ecs.task-definition-version']).to.equal(taskDefinitionVersion);
-    expect(instrumentedDockerData.NetworkMode).to.equal('awsvpc');
-    expect(instrumentedDockerData.memory).to.deep.equal({ limit: 0 });
+
+    verifyDockerMetrics(instrumentedDockerData);
   }
 
-  function verifyProcessPayload(allPlugins, allMetrics) {
-    const processPayload = allPlugins.plugins.find(
-      pluginPayload => pluginPayload.name === 'com.instana.plugin.process'
-    );
+  function verifyProcessPayload(allEntities) {
+    const processPayload = allEntities.find(pluginPayload => pluginPayload.name === 'com.instana.plugin.process');
     expect(Object.keys(processPayload)).to.have.lengthOf(3);
     const processData = processPayload.data;
     expect(processData).to.exist;
     expect(processData.pid).to.be.a('number');
-    const pid = processData.pid;
     expect(processData.env).to.be.an('object');
     expect(processData.exec).to.contain('node');
     expect(processData.args).to.be.an('array');
@@ -231,19 +223,14 @@ describe('AWS fargate integration test', function() {
     expect(processData.start).to.be.at.least(1589205531697);
     expect(processData.containerType).to.equal('docker');
     expect(processData['com.instana.plugin.host.pid']).to.equal(processData.pid);
-
-    expectToArriveLater(
-      allMetrics,
-      pluginPayload => pluginPayload.name === 'com.instana.plugin.process' && pluginPayload.entityId === pid,
-      data => data.container === dockerId && data['com.instana.plugin.host.name'] === taskArn
-    );
-
+    expect(processData.container).to.equal(dockerId);
+    expect(processData['com.instana.plugin.host.name']).to.equal(taskArn);
     return processData;
   }
 
-  function verifyNodeJsPayload(allPlugins, allMetrics, processData) {
+  function verifyNodeJsPayload(allEntities, processData) {
     const isNode = pluginPayload => pluginPayload.name === 'com.instana.plugin.nodejs';
-    const nodeJsPayload = allPlugins.plugins.find(isNode);
+    const nodeJsPayload = allEntities.find(isNode);
     expect(nodeJsPayload).to.exist;
     expect(Object.keys(nodeJsPayload)).to.have.lengthOf(3);
     const nodeJsData = nodeJsPayload.data;
@@ -257,12 +244,8 @@ describe('AWS fargate integration test', function() {
     expect(nodeJsData.versions.uv).to.match(/\d+\.\d+\.\d+/);
     expect(nodeJsData.versions.zlib).to.match(/\d+\.\d+\.\d+/);
 
-    expectToArriveLater(allMetrics, isNode, data => {
-      return (
-        data.name === '@instana/aws-fargate' &&
-        data.description === 'Instana tracing and monitoring for Node.js based AWS Fargate tasks'
-      );
-    });
+    expect(nodeJsData.name).to.equal('@instana/aws-fargate');
+    expect(nodeJsData.description).to.equal('Instana tracing and monitoring for Node.js based AWS Fargate tasks');
 
     expect(nodeJsData.activeHandles).to.exist;
     expect(nodeJsData.gc.minorGcs).to.exist;
@@ -270,42 +253,92 @@ describe('AWS fargate integration test', function() {
     expect(nodeJsData.healthchecks).to.exist;
   }
 
-  function verifySecondaryEcsContainerPayload(allMetrics) {
-    expectToArriveLater(
-      allMetrics,
+  function verifySecondaryEcsContainerPayload(allEntities) {
+    const secondaryEcsContainerPayload = allEntities.find(
       pluginPayload =>
-        pluginPayload.name === 'com.instana.plugin.aws.ecs.container' &&
-        pluginPayload.entityId === secondaryContainerId,
-      secondaryEcsContainerData =>
-        secondaryEcsContainerData.instrumented == null &&
-        secondaryEcsContainerData.runtime == null &&
-        secondaryEcsContainerData.dockerId === secondaryDockerId
+        pluginPayload.name === 'com.instana.plugin.aws.ecs.container' && pluginPayload.entityId === secondaryContainerId
     );
+    expect(secondaryEcsContainerPayload).to.exist;
+    const secondaryEcsContainerData = secondaryEcsContainerPayload.data;
+    expect(secondaryEcsContainerData).to.exist;
+    expect(Object.keys(secondaryEcsContainerPayload)).to.have.lengthOf(3);
+    expect(secondaryEcsContainerData.containerName).to.equal(secondaryContainerName);
+
+    expect(secondaryEcsContainerData.instrumented).to.be.not.exist;
+    expect(secondaryEcsContainerData.runtime).to.not.exist;
+    expect(secondaryEcsContainerData.dockerId).to.equal(secondaryDockerId);
+
+    expect(secondaryEcsContainerData.image).to.equal('fg-proxy:tinyproxy');
+    expect(secondaryEcsContainerData.imageId).to.equal(
+      'sha256:2ffe52a8f590e72b96dd5c586252afac8de923673c5b2fd0b04e081684c47f6b'
+    );
+    expect(secondaryEcsContainerData.taskArn).to.equal(taskArn);
+    expect(secondaryEcsContainerData.taskDefinition).to.equal(taskDefinition);
+    expect(secondaryEcsContainerData.taskDefinitionVersion).to.equal(taskDefinitionVersion);
+    expect(secondaryEcsContainerData.clusterArn).to.equal(clusterArn);
+    expect(secondaryEcsContainerData.limits.cpu).to.equal(0);
+    expect(secondaryEcsContainerData.limits.memory).to.equal(0);
+    expect(secondaryEcsContainerData.createdAt).to.equal('2020-03-25T14:34:24.398289614Z');
+    expect(secondaryEcsContainerData.startedAt).to.equal('2020-03-25T14:34:25.640268364Z');
   }
 
-  function verifySecondaryDockerPayload(allMetrics) {
-    expectToArriveLater(
-      allMetrics,
+  function verifySecondaryDockerPayload(allEntities) {
+    const secondaryDockerPayload = allEntities.find(
       pluginPayload =>
-        pluginPayload.name === 'com.instana.plugin.docker' && pluginPayload.entityId === secondaryContainerId,
-      secondaryDockerData => {
-        return secondaryDockerData.Id === secondaryDockerId;
-      }
+        pluginPayload.name === 'com.instana.plugin.docker' && pluginPayload.entityId === secondaryContainerId
     );
+    expect(secondaryDockerPayload).to.exist;
+    expect(Object.keys(secondaryDockerPayload)).to.have.lengthOf(3);
+    const secondaryDockerData = secondaryDockerPayload.data;
+    expect(secondaryDockerData).to.exist;
+    expect(secondaryDockerData.Id).to.equal(secondaryDockerId);
+    expect(secondaryDockerData.Created).to.equal('2020-03-25T14:34:24.398289614Z');
+    expect(secondaryDockerData.Started).to.equal('2020-03-25T14:34:25.640268364Z');
+    expect(secondaryDockerData.Image).to.equal('fg-proxy:tinyproxy');
+    expect(secondaryDockerData.Labels).to.be.an('object');
+    expect(secondaryDockerData.Labels['com.amazonaws.ecs.cluster']).to.equal(clusterArn);
+    expect(secondaryDockerData.Labels['com.amazonaws.ecs.container-name']).to.equal(secondaryContainerName);
+    expect(secondaryDockerData.Labels['com.amazonaws.ecs.task-arn']).to.equal(taskArn);
+    expect(secondaryDockerData.Labels['com.amazonaws.ecs.task-definition-family']).to.equal(taskDefinition);
+    expect(secondaryDockerData.Labels['com.amazonaws.ecs.task-definition-version']).to.equal(taskDefinitionVersion);
+
+    verifyDockerMetrics(secondaryDockerData);
   }
 
-  function expectToArriveLater(allMetrics, findPluginData, checkValues) {
-    let found;
-    for (let i = 0; i < allMetrics.length; i++) {
-      const payload = allMetrics[i].plugins.find(findPluginData);
-      if (payload) {
-        if (checkValues(payload.data)) {
-          found = true;
-          break;
-        }
-      }
-    }
-    expect(found).to.be.true;
+  function verifyDockerMetrics(dockerData) {
+    expect(dockerData.network).to.be.an('object');
+    expect(dockerData.network.rx).to.be.an('object');
+    expect(dockerData.network.tx).to.be.an('object');
+    expect(dockerData.network.tx.bytes).to.be.a('number');
+    expect(dockerData.network.tx.dropped).to.be.a('number');
+    expect(dockerData.network.tx.errors).to.be.a('number');
+    expect(dockerData.network.tx.packets).to.be.a('number');
+    expect(dockerData.network.rx.bytes).to.be.a('number');
+    expect(dockerData.network.rx.dropped).to.be.a('number');
+    expect(dockerData.network.rx.errors).to.be.a('number');
+    expect(dockerData.network.rx.packets).to.be.a('number');
+
+    expect(dockerData.cpu).to.be.an('object');
+    expect(dockerData.cpu.throttling_count).to.be.a('number');
+    expect(dockerData.cpu.throttling_time).to.be.a('number');
+    expect(dockerData.cpu.total_usage).to.be.a('number');
+    expect(dockerData.cpu.user_usage).to.be.a('number');
+    expect(dockerData.cpu.system_usage).to.be.a('number');
+
+    expect(dockerData.memory).to.be.an('object');
+    expect(dockerData.memory.active_anon).to.be.a('number');
+    expect(dockerData.memory.active_file).to.be.a('number');
+    expect(dockerData.memory.inactive_anon).to.be.a('number');
+    expect(dockerData.memory.inactive_file).to.be.a('number');
+    expect(dockerData.memory.total_cache).to.be.a('number');
+    expect(dockerData.memory.total_rss).to.be.a('number');
+    expect(dockerData.memory.usage).to.be.a('number');
+    expect(dockerData.memory.max_usage).to.be.a('number');
+    expect(dockerData.memory.limit).to.be.a('number');
+
+    expect(dockerData.blkio).to.be.an('object');
+    expect(dockerData.blkio.blk_read).to.be.a('number');
+    expect(dockerData.blkio.blk_write).to.be.a('number');
   }
 
   function getAndVerifySpans(control) {
@@ -355,6 +388,13 @@ describe('AWS fargate integration test', function() {
       expect(span.data.http.url).to.equal(downstreamDummyUrl);
       expect(span.ec).to.equal(0);
       verifyHeaders(span);
+    });
+  }
+
+  function verifyHeadersForSnapshotUpdates(allSnapshotUpdates) {
+    allSnapshotUpdates.forEach(update => {
+      expect(update.plugins).to.be.an('array');
+      verifyHeaders(update);
     });
   }
 

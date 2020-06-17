@@ -6,9 +6,10 @@ const { convert } = require('./dockerUtil');
 const { fullyQualifiedContainerId } = require('../container/containerUtil');
 
 class InstrumentedDockerProcessor extends DataProcessor {
-  constructor(dataSource) {
+  constructor(rootDataSource, statsDataSource) {
     super('com.instana.plugin.docker');
-    this.addSource('root', dataSource);
+    this.addSource('root', rootDataSource);
+    this.addSource('rootStats', statsDataSource, false);
   }
 
   getEntityId() {
@@ -28,9 +29,8 @@ class InstrumentedDockerProcessor extends DataProcessor {
     return this.entityId;
   }
 
-  processData(rawDataPerSource) {
-    const data = rawDataPerSource.root;
-    return convert(data);
+  processData(rawDataPerSource, previous, next) {
+    return convert(rawDataPerSource.root, rawDataPerSource.rootStats, previous, next);
   }
 }
 
