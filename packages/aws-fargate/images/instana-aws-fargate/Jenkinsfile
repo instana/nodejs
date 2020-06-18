@@ -11,9 +11,7 @@ AWS_FARGATE_IMAGE_PATH = "${AWS_FARGATE_ROOT_PATH}/images/instana-aws-fargate"
 
 node {
 
-  def packageVersion = getPackageVersion()
-
-  currentBuild.displayName = "#${BUILD_NUMBER}:${packageVersion}"
+  def packageVersion
 
   stage ('Checkout Git Repo') {
     deleteDir()
@@ -21,8 +19,10 @@ node {
   }
 
   stage ('Build Docker Image') {
+    packageVersion = getPackageVersion()
+    currentBuild.displayName = "#${BUILD_NUMBER}:${packageVersion}"
     println "building the docker image for package version ${packageVersion}"
-    buildImage(packageVersion)
+    buildImage()
   }
 
   stage('Push Image') {
@@ -30,7 +30,7 @@ node {
       println "skipping: pushing ${IMAGE_NAME} to ${REGISTRY_PATH} – this is a dry run"
     } else {
       println "pushing ${IMAGE_NAME} to ${REGISTRY_PATH}"
-      pushImage(packageVersion)
+      pushImage()
     }
   }
 
@@ -48,7 +48,7 @@ def getPackageVersion() {
   return packageJsonObject.version
 }
 
-def buildImage(packageVersion) {
+def buildImage() {
   try {
     sh """
       cd ${AWS_FARGATE_IMAGE_PATH}
@@ -68,7 +68,7 @@ def buildImage(packageVersion) {
   }
 }
 
-def pushImage(packageVersion) {
+def pushImage() {
   try {
     sh """
       docker tag ${IMAGE_NAME}:${packageVersion} ${REGISTRY_PATH}:${packageVersion}
