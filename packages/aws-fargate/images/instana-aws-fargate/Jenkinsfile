@@ -1,9 +1,12 @@
 #!groovy
 
 SLACK_CHANNEL = "team-node"
+DOCKER_REGISTRY_PUBLIC = "docker.io"
+REGISTRY_PATH_PUBLIC = "${DOCKER_REGISTRY_PUBLIC}/instana/aws-fargate-nodejs"
 DOCKER_REGISTRY_INTERNAL = "containers.instana.io"
+REGISTRY_PATH_INTERNAL = "${DOCKER_REGISTRY_INTERNAL}/instana/release/aws/fargate/nodejs"
+
 IMAGE_NAME = 'instana-aws-fargate-nodejs'
-REGISTRY_PATH = "${DOCKER_REGISTRY_INTERNAL}/instana/release/aws/fargate/nodejs"
 
 AWS_FARGATE_ROOT_PATH = 'packages/aws-fargate'
 AWS_FARGATE_PACKAGE_JSON_FILE = "${AWS_FARGATE_ROOT_PATH}/package.json"
@@ -27,9 +30,9 @@ node {
 
   stage('Push Image') {
     if (env.DRY_RUN.toBoolean()) {
-      println "skipping: pushing ${IMAGE_NAME} to ${REGISTRY_PATH} – this is a dry run"
+      println "skipping: pushing ${IMAGE_NAME} to ${REGISTRY_PATH_INTERNAL} and ${REGISTRY_PATH_PUBLIC} – this is a dry run"
     } else {
-      println "pushing ${IMAGE_NAME} to ${REGISTRY_PATH}"
+      println "pushing ${IMAGE_NAME} to ${REGISTRY_PATH_INTERNAL} and ${REGISTRY_PATH_PUBLIC}"
       pushImage()
     }
   }
@@ -37,7 +40,16 @@ node {
   cleanUp()
 
   if (!env.DRY_RUN.toBoolean()) {
-    slackSend channel: "#${SLACK_CHANNEL}", color: "#389a07", message: "Successfully built and pushed Instana AWS Fargate Node.js Docker image as ${REGISTRY_PATH}:latest and ${REGISTRY_PATH}:${packageVersion} \n(<${env.BUILD_URL}|Open>)"
+    slackSend channel: "#${SLACK_CHANNEL}",
+                color: "#389a07",
+              message: """
+      Successfully built and pushed Instana AWS Fargate Node.js Docker image as
+      - ${REGISTRY_PATH_PUBLIC}:${packageVersion},
+      - ${REGISTRY_PATH_PUBLIC}:latest,
+      - ${REGISTRY_PATH_INTERNAL}:${packageVersion}, and
+      - ${REGISTRY_PATH_INTERNAL}:latest.
+      (<${env.BUILD_URL}|Open>)
+    """
   }
 }
 
@@ -71,10 +83,15 @@ def buildImage() {
 def pushImage() {
   try {
     sh """
-      docker tag ${IMAGE_NAME}:${packageVersion} ${REGISTRY_PATH}:${packageVersion}
-      docker tag ${IMAGE_NAME}:${packageVersion} ${REGISTRY_PATH}:latest
-      docker push ${REGISTRY_PATH}:${packageVersion}
-      docker push ${REGISTRY_PATH}:latest
+      docker tag ${IMAGE_NAME}:${packageVersion} ${REGISTRY_PATH_PUBLIC}:${packageVersion}
+      docker tag ${IMAGE_NAME}:${packageVersion} ${REGISTRY_PATH_PUBLIC}:latest
+      docker push ${REGISTRY_PATH_PUBLIC}:${packageVersion}
+      docker push ${REGISTRY_PATH_PUBLIC}:latest
+
+      docker tag ${IMAGE_NAME}:${packageVersion} ${REGISTRY_PATH_INTERNAL}:${packageVersion}
+      docker tag ${IMAGE_NAME}:${packageVersion} ${REGISTRY_PATH_INTERNAL}:latest
+      docker push ${REGISTRY_PATH_INTERNAL}:${packageVersion}
+      docker push ${REGISTRY_PATH_INTERNAL}:latest
     """
   } catch(e) {
     slackSend channel: "#${SLACK_CHANNEL}",

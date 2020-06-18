@@ -1,10 +1,11 @@
 function normalizeArgs {
   local instanaLayerMode=$1
-  # instana-aws-fargate-nodejs-local
-  # containers.instana.io/instana/release/aws/fargate/nodejs
   if [[ -z "${instanaLayerMode-}" || $instanaLayerMode = released ]]; then
-    INSTANA_LAYER=containers.instana.io/instana/release/aws/fargate/nodejs
+    INSTANA_LAYER=instana/aws-fargate-nodejs
     INSTANA_LAYER_MODE=released
+  elif [[ $instanaLayerMode = authenticated ]]; then
+    INSTANA_LAYER=containers.instana.io/instana/release/aws/fargate/nodejs
+    INSTANA_LAYER_MODE=authenticated
   elif [[ $instanaLayerMode = local ]]; then
     INSTANA_LAYER=instana-aws-fargate-nodejs-local
     INSTANA_LAYER_MODE=local
