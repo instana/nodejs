@@ -1,19 +1,70 @@
+function normalizeArgs {
+  local instanaLayerMode=$1
+  # instana-aws-fargate-nodejs-local
+  # containers.instana.io/instana/release/aws/fargate/nodejs
+  if [[ -z "${instanaLayerMode-}" || $instanaLayerMode = released ]]; then
+    INSTANA_LAYER=containers.instana.io/instana/release/aws/fargate/nodejs
+    INSTANA_LAYER_MODE=released
+  elif [[ $instanaLayerMode = local ]]; then
+    INSTANA_LAYER=instana-aws-fargate-nodejs-local
+    INSTANA_LAYER_MODE=local
+  else
+    echo "Unknown option for Instana layer: $instanaLayerMode"
+    exit 1
+  fi
+
+  local nodeJsVersion=$2
+  if [[ -z "${nodeJsVersion-}" || $nodeJsVersion = 12 ]]; then
+    NODEJS_VERSION=12.16.3
+  elif [[ $nodeJsVersion = 10 ]]; then
+    NODEJS_VERSION=10.20.1
+  elif [[ $nodeJsVersion = 8 ]]; then
+    NODEJS_VERSION=8.6.0
+  else
+    NODEJS_VERSION=$nodeJsVersion
+  fi
+
+  local distribution=$3
+  if [[ -z "${distribution-}" || $distribution = standard ]]; then
+    LINUX_DISTRIBUTION=standard
+  elif [[ $distribution = alpine ]]; then
+    LINUX_DISTRIBUTION=alpine
+  else
+    echo "Unknown option for Linux distribution: $distribution"
+    exit 1
+  fi
+}
+
 function setImageTag {
   local prefix=$1
   local nodeJsVersion=$2
   local distribution=$3
-  if [[ -z "${distribution-}" ]]; then
-    distribution=standard
+  if [[ $distribution = standard ]]; then
+    distribution=""
+  elif [[ $distribution = alpine ]]; then
+    distribution=-alpine
+  else
+    echo "Unknown option for Linux distribution: $distribution"
+    exit 1
   fi
-  image_tag=$prefix-$nodeJsVersion-$distribution
+  local instanaLayerMode=$4
+
+  image_tag=$prefix-$nodeJsVersion$distribution-$instanaLayerMode
 }
 
 function setContainerName {
   local prefix=$1
   local nodeJsVersion=$2
   local distribution=$3
-  if [[ -z "${distribution-}" ]]; then
-    distribution=standard
+  if [[ $distribution = standard ]]; then
+    distribution=""
+  elif [[ $distribution = alpine ]]; then
+    distribution=-alpine
+  else
+    echo "Unknown option for Linux distribution: $distribution"
+    exit 1
   fi
-  container_name=$prefix-$nodeJsVersion-$distribution
+  local instanaLayerMode=$4
+
+  container_name=$prefix-$nodeJsVersion$distribution-$instanaLayerMode
 }

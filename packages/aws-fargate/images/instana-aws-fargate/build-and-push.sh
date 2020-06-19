@@ -30,7 +30,10 @@ fi
 
 setImageTag $image_tag_prefix $build_mode
 
-
 echo "Pushing image $image_tag to $ecr_repository"
 docker push $ecr_repository/$image_tag
 
+if [[ $build_mode = npm ]]; then
+  package_version=$(npm show @instana/aws-fargate version)
+  docker push $ecr_repository/$image_tag:$package_version
+fi

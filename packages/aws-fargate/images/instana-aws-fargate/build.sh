@@ -31,7 +31,7 @@ setImageTag $image_tag_prefix $build_mode
 
 echo "Building $image_tag from $dockerfile"
 
-if [[ "${build_mode}" == "local" ]]; then
+if [[ $build_mode = local ]]; then
   rm -rf instana-*.tgz
 
   pushd ../../../core > /dev/null
@@ -59,7 +59,7 @@ if [[ "${build_mode}" == "local" ]]; then
   popd > /dev/null
 
   cp package.json.local package.json
-elif [[ "${build_mode-npm}" == "npm" ]]; then
+elif [[ $build_mode = npm ]]; then
   cp package.json.npm package.json
 else
   echo "Unknown option for build_mode: $build_mode"
@@ -73,5 +73,11 @@ docker rmi -f $image_tag
 echo "Building $dockerfile -> $image_tag"
 docker build -f $dockerfile -t $image_tag -t $ecr_repository/$image_tag .
 echo "docker build exit status: $?"
+
+if [[ $build_mode = npm ]]; then
+  package_version=$(npm show @instana/aws-fargate version)
+  docker tag $image_tag:latest $image_tag:$package_version
+  docker tag $ecr_repository/$image_tag:latest $ecr_repository/$image_tag:$package_version
+fi
 
 rm -f package.json

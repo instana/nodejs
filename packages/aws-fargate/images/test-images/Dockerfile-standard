@@ -1,4 +1,9 @@
-FROM node:8.6.0
+ARG INSTANA_LAYER=containers.instana.io/instana/release/aws/fargate/nodejs
+ARG NODEJS_VERSION=12.16.3
+
+FROM ${INSTANA_LAYER} as instanaLayer
+
+FROM node:${NODEJS_VERSION}
 WORKDIR /usr/src/app
 
 COPY package*.json ./
@@ -6,7 +11,7 @@ RUN npm install --only=production
 
 COPY . .
 
-COPY --from=instana-aws-fargate-nodejs-local /instana /instana
+COPY --from=instanaLayer /instana /instana
 RUN /instana/setup.sh
 ENV NODE_OPTIONS="--require /instana/node_modules/@instana/aws-fargate"
 

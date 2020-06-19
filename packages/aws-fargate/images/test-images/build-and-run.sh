@@ -6,15 +6,7 @@ cd `dirname $BASH_SOURCE`
 
 source utils
 
-NODEJS_VERSION=$1
-if [[ -z "${NODEJS_VERSION-}" ]]; then
-  NODEJS_VERSION=12.16.3
-fi
-
-LINUX_DISTRIBUTION=$2
-if [[ -z "${LINUX_DISTRIBUTION-}" ]]; then
-  LINUX_DISTRIBUTION=standard
-fi
+normalizeArgs $1 $2 $3
 
 if [[ ! -f .env ]]; then
   echo .env file is missing
@@ -43,10 +35,10 @@ if [[ -z "${metadata_v3-}" ]]; then
   exit 1
 fi
 
-./build.sh $NODEJS_VERSION $LINUX_DISTRIBUTION
+./build.sh $INSTANA_LAYER_MODE $NODEJS_VERSION $LINUX_DISTRIBUTION
 
-setImageTag $image_tag_prefix $NODEJS_VERSION $LINUX_DISTRIBUTION
-setContainerName $container_name_prefix $NODEJS_VERSION $LINUX_DISTRIBUTION
+setImageTag $image_tag_prefix $NODEJS_VERSION $LINUX_DISTRIBUTION $INSTANA_LAYER_MODE
+setContainerName $container_name_prefix $NODEJS_VERSION $LINUX_DISTRIBUTION $INSTANA_LAYER_MODE
 
 echo "Running container $container_name from image $image_tag (reporting to $instana_endpoint_url/$instana_agent_key)"
 docker \
