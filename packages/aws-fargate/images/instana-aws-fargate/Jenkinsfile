@@ -1,6 +1,6 @@
 #!groovy
 
-SLACK_CHANNEL = "team-node"
+SLACK_CHANNEL = "brewery-fargate"
 DOCKER_REGISTRY_PUBLIC = "docker.io"
 REGISTRY_PATH_PUBLIC = "${DOCKER_REGISTRY_PUBLIC}/instana/aws-fargate-nodejs"
 DOCKER_REGISTRY_INTERNAL = "containers.instana.io"
