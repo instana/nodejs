@@ -9,7 +9,8 @@ const { promises: fs } = require('fs');
 const fetch = require('node-fetch');
 
 const metadataFileEnvVar = 'ECS_CONTAINER_METADATA_FILE';
-const metadataUriEnvVar = 'ECS_CONTAINER_METADATA_URI';
+const metadataUriEnvVarV3 = 'ECS_CONTAINER_METADATA_URI';
+const metadataUriEnvVarV4 = 'ECS_CONTAINER_METADATA_URI_V4';
 
 async function inspect() {
   let result = ['\n================\nInspecting Task Environment:\n'];
@@ -25,13 +26,33 @@ async function inspect() {
   }
 
   result.push('Inspecting: Task metadata endpoint version 3');
-  const metadataUri = process.env[metadataUriEnvVar];
-  if (metadataUri) {
-    result.push(`Environment variable ${metadataUriEnvVar} is set to: ${metadataUri}`);
-    await inspectMetadataEndpointV3(result, metadataUri);
+  const metadataUriV3 = process.env[metadataUriEnvVarV3];
+  if (metadataUriV3) {
+    result.push(`Environment variable ${metadataUriEnvVarV3} is set to: ${metadataUriV3}`);
+    await inspectMetadataEndpoint(result, metadataUriV3);
   } else {
-    result.push(`Environment variable ${metadataUriEnvVar} is not set.`);
+    result.push(`Environment variable ${metadataUriEnvVarV3} is not set.`);
   }
+
+  result.push('Inspecting: Task metadata endpoint version 4');
+  const metadataUriV4 = process.env[metadataUriEnvVarV4];
+  if (metadataUriV4) {
+    result.push(`Environment variable ${metadataUriEnvVarV4} is set to: ${metadataUriV4}`);
+    await inspectMetadataEndpoint(result, metadataUriV4);
+  } else {
+    result.push(`Environment variable ${metadataUriEnvVarV4} is not set.`);
+  }
+
+  dumpEnvVar('AWS_INSTANCE_IPV4', result);
+  dumpEnvVar('AWS_INSTANCE_PORT', result);
+  dumpEnvVar('AVAILABILITY_ZONE', result);
+  dumpEnvVar('REGION', result);
+  dumpEnvVar('ECS_SERVICE_NAME', result);
+  dumpEnvVar('ECS_CLUSTER_NAME', result);
+  dumpEnvVar('EC2_INSTANCE_ID', result);
+  dumpEnvVar('ECS_TASK_DEFINITION_FAMILY', result);
+  dumpEnvVar('ECS_TASK_SET_EXTERNAL_ID', result);
+  dumpEnvVar('EC2_INSTANCE_ID', result);
 
   return result;
 }
@@ -49,7 +70,7 @@ async function inspectMetadataFile(result, metadataFile) {
   }
 }
 
-async function inspectMetadataEndpointV3(result, metadataUri) {
+async function inspectMetadataEndpoint(result, metadataUri) {
   try {
     result.push(await dumpHttpResponse(result, metadataUri));
     result.push(await dumpHttpResponse(result, `${metadataUri}/task`));
@@ -76,6 +97,15 @@ async function dumpHttpResponse(result, uri) {
   }
 }
 
+function dumpEnvVar(envVarKey, result) {
+  const value = process.env[envVarKey];
+  if (value) {
+    result.push(`Environment variable: ${envVarKey} = ${value}`);
+  } else {
+    result.push(`Environment variable ${envVarKey} is not set.`);
+  }
+}
+
 function dump(result, title, text) {
   result.push(`${title}: <<<`);
   result.push(text);
@@ -99,3 +129,4 @@ app.listen(port, () => {
   // eslint-disable-next-line no-console
   console.log(`Listening on port ${port}.`);
 });
+

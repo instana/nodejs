@@ -11,10 +11,12 @@ const fetch = require('node-fetch');
 const app = new http.Server();
 const port = 4816;
 
+const disableDownstreamRequests = process.env.DISABLE_DOWNSTREAM_REQUESTS === 'false';
+
 app.on('request', (req, res) => {
   // eslint-disable-next-line no-console
   console.log('incoming request');
-  if (Math.random() >= 0.7) {
+  if (!disableDownstreamRequests && Math.random() >= 0.7) {
     // eslint-disable-next-line no-console
     console.log('outgoing request');
     fetch('http://example.com')
