@@ -155,6 +155,7 @@ describe('AWS fargate integration test', function() {
     expect(ecsTaskData.clusterArn).to.equal(clusterArn);
     expect(ecsTaskData.taskDefinition).to.equal(taskDefinition);
     expect(ecsTaskData.taskDefinitionVersion).to.equal(taskDefinitionVersion);
+    expect(ecsTaskData.availabilityZone).to.equal('us-east-2b');
     expect(ecsTaskData.desiredStatus).to.equal('RUNNING');
     expect(ecsTaskData.knownStatus).to.equal('RUNNING');
     expect(ecsTaskData.limits.cpu).to.equal(0.25);

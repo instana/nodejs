@@ -139,7 +139,8 @@ app.get('/task', (req, res) => {
       Memory: 512
     },
     PullStartedAt: '2020-03-25T14:34:25.75886719Z',
-    PullStoppedAt: '2020-03-25T14:34:29.92587709Z'
+    PullStoppedAt: '2020-03-25T14:34:29.92587709Z',
+    AvailabilityZone: 'us-east-2b'
   });
 });
 

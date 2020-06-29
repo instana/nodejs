@@ -31,6 +31,7 @@ class EcsTaskProcessor extends DataProcessor {
       clusterArn: metadata.Cluster,
       taskDefinition: metadata.Family,
       taskDefinitionVersion: metadata.Revision,
+      availabilityZone: metadata.AvailabilityZone,
       desiredStatus: metadata.DesiredStatus,
       knownStatus: metadata.KnownStatus,
       limits: {
