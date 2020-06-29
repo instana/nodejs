@@ -9,7 +9,7 @@ const http = require('http');
 const fetch = require('node-fetch');
 
 const app = new http.Server();
-const port = 4816;
+const port = process.env.PORT || 4816;
 
 const disableDownstreamRequests = process.env.DISABLE_DOWNSTREAM_REQUESTS === 'false';
 
