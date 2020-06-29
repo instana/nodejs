@@ -278,5 +278,4 @@ workflows:
       - "node-12"
       - "node-10"
       - "node-8"
-      - "node-6"
 
