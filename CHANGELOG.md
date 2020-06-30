@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.101.1
 - [AWS Fargate]: Collect Docker metrics on platform version 1.4.0, too.
 
 ## 1.101.0
