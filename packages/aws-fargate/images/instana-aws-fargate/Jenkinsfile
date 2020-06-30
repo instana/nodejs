@@ -64,7 +64,7 @@ def buildImage() {
   try {
     sh """
       cd ${AWS_FARGATE_IMAGE_PATH}
-      cp package.json.npm package.json
+      sed -e 's/VERSION/${packageVersion}/g' package.json.npm > package.json
       docker build -f Dockerfile-npm --label version=${packageVersion} -t ${IMAGE_NAME}:${packageVersion} .
     """
   } catch(e) {

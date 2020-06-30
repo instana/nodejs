@@ -60,7 +60,8 @@ if [[ $build_mode = local ]]; then
 
   cp package.json.local package.json
 elif [[ $build_mode = npm ]]; then
-  cp package.json.npm package.json
+  package_version=$(npm show @instana/aws-fargate version)
+  sed -e "s/VERSION/$package_version/g" package.json.npm > package.json
 else
   echo "Unknown option for build_mode: $build_mode"
   echo Aborting.
@@ -75,7 +76,6 @@ docker build -f $dockerfile -t $image_tag -t $ecr_repository/$image_tag .
 echo "docker build exit status: $?"
 
 if [[ $build_mode = npm ]]; then
-  package_version=$(npm show @instana/aws-fargate version)
   docker tag $image_tag:latest $image_tag:$package_version
   docker tag $ecr_repository/$image_tag:latest $ecr_repository/$image_tag:$package_version
 fi

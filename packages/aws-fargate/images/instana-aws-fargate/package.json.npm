@@ -1,6 +1,6 @@
 {
   "name": "instana-aws-fargate-docker-image",
-  "version": "1.0.0",
+  "version": "VERSION",
   "description": "Provides @instana/aws-fargate as an image for multi stage Dockerfiles",
   "repository": {
     "type": "git",
@@ -9,6 +9,6 @@
   "author": "Bastian Krol <bastian.krol@instana.com>",
   "license": "ISC",
   "dependencies": {
-    "@instana/aws-fargate": "latest"
+    "@instana/aws-fargate": "VERSION"
   }
 }
