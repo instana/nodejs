@@ -16,6 +16,10 @@ exports.convert = function convert(metadata, stats, previous, next) {
 
   // Metrics
   if (stats) {
+    if (stats[metadata.DockerId]) {
+      stats = stats[metadata.DockerId];
+    }
+
     // Network metrics (usually only available if NetworkMode == bridge)
     if (stats.networks) {
       converted.network = {

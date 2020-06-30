@@ -48,8 +48,24 @@ function prelude(opts = {}) {
 }
 
 describe('AWS fargate integration test', function() {
-  describe('when the back end is up', function() {
+  describe('when the back end is up (platform version 1.3.0)', function() {
     const control = prelude.bind(this)({
+      platformVersion: '1.3.0',
+      startBackend: true
+    });
+
+    it('should collect metrics and trace http requests', () =>
+      control
+        .sendRequest({
+          method: 'GET',
+          path: '/'
+        })
+        .then(response => verify(control, response, true)));
+  });
+
+  describe('when the back end is up (platform version 1.4.0)', function() {
+    const control = prelude.bind(this)({
+      platformVersion: '1.4.0',
       startBackend: true
     });
 

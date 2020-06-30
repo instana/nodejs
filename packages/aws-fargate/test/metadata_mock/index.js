@@ -14,6 +14,7 @@ const logger = pino.child({ name: logPrefix, pid: process.pid });
 logger.level = 'info';
 
 const port = process.env.METADATA_MOCK_PORT || 1604;
+const platformVersion = process.env.PLATFORM_VERSION || '1.3.0';
 
 const app = express();
 
@@ -146,7 +147,7 @@ app.get('/task', (req, res) => {
 
 app.get('/stats', (req, res) => {
   requestCount++;
-  res.json({
+  const stats = {
     read: '2020-03-25T14:35:20.355666414Z',
     preread: '2020-03-25T14:35:19.342026094Z',
     pids_stats: {
@@ -288,7 +289,13 @@ app.get('/stats', (req, res) => {
     },
     name: `/ecs-${taskDefinitionName}-${taskDefinitionVersion}-${containerName}-ece0aff5d49f9a96b501`,
     id: '997e57ae749f276626b99f81aa8a193183580d327145aeb22cf1a675decaedba'
-  });
+  };
+
+  if (platformVersion === '1.4.0') {
+    res.json({ [dockerId]: stats });
+  } else {
+    res.json(stats);
+  }
 });
 
 app.get('/task/stats', (req, res) => {

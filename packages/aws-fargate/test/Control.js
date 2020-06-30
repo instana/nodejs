@@ -22,6 +22,7 @@ function Control(opts) {
   this.downstreamDummyUrl = this.opts.downstreamDummyUrl || `http://localhost:${this.downstreamDummyPort}`;
   this.metadataMockPort = this.opts.metadataMockPort || 1604;
   this.metadataMockUrl = this.opts.metadataMockUrl || `http://localhost:${this.metadataMockPort}`;
+  this.platformVersion = this.opts.platformVersion || '1.3.0';
   this.instanaAgentKey = this.opts.instanaAgentKey || 'aws-fargate-dummy-key';
 }
 
@@ -51,7 +52,8 @@ Control.prototype.startAdditionalAuxiliaryProcesses = function startAdditionalAu
     stdio: config.getAppStdio(),
     env: Object.assign(
       {
-        METADATA_MOCK_PORT: this.metadataMockPort
+        METADATA_MOCK_PORT: this.metadataMockPort,
+        PLATFORM_VERSION: this.platformVersion
       },
       process.env,
       this.opts.env
