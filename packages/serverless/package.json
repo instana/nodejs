@@ -6,7 +6,7 @@
     "name": "Bastian Krol",
     "email": "bastian.krol@instana.com"
   },
-  "homepage": "https://github.com/instana/nodejs-sensor/blob/master/packages/serverless/README.md",
+  "homepage": "https://github.com/instana/nodejs-sensor/blob/main/packages/serverless/README.md",
   "main": "src/index.js",
   "files": [
     "src"

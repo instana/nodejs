@@ -6,7 +6,7 @@
     "name": "Bastian Krol",
     "email": "bastian.krol@instana.com"
   },
-  "homepage": "https://github.com/instana/nodejs-sensor/blob/master/packages/shared-metrics/README.md",
+  "homepage": "https://github.com/instana/nodejs-sensor/blob/main/packages/shared-metrics/README.md",
   "main": "src/index.js",
   "files": [
     "src"
