@@ -104,7 +104,7 @@ function shimEmit(realEmit) {
       if (!span.p) {
         // We add the trace ID to the incoming request so a customer's app can render it into the EUM snippet, see
         // eslint-disable-next-line max-len
-        // https://docs.instana.io/products/website_monitoring/backendCorrelation/#retrieve-the-backend-trace-id-in-nodejs
+        // https://www.instana.com/docs/products/website_monitoring/backendCorrelation/#retrieve-the-backend-trace-id-in-nodejs
         req.headers['x-instana-t'] = span.t;
 
         // support for automatic client/back end EUM correlation

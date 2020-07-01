@@ -20,7 +20,7 @@ The AWS Lambda Demo
 -------------------
 
 The AWS Lambda demo is comprised of all Lambda functions in this folder prefixed with `demo-`. The Node.js app `plain-ec2-app` is also part of the demo, although it is not a Lambda function. The full setup also includes
-* an Instana agent running in AWS monitoring mode that provides infrastructure data about the Lambda functions – with the correct credentials for monitoring the region the demo Lambdas are running in (usually deployed on an EC2 instance, see [Installing the Agent on AWS](https://docs.instana.io/quick_start/agent_setup/aws/) in the Instana documentation),
+* an Instana agent running in AWS monitoring mode that provides infrastructure data about the Lambda functions – with the correct credentials for monitoring the region the demo Lambdas are running in (usually deployed on an EC2 instance, see [Installing the Agent on AWS](https://www.instana.com/docs/quick_start/agent_setup/aws/) in the Instana documentation),
 * an RDS PostgreSQL database (see below),
 * an S3 bucket named `instana-lambda-demo` in the same region, and
 * a Node.js/Express app (`plain-ec2-app`) deployed "somewhere" (for example on the EC2 instance that runs the agent).
