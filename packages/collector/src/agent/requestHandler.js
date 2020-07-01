@@ -1,7 +1,5 @@
 'use strict';
 
-var semver = require('semver');
-
 var logger;
 logger = require('../logger').getLogger('agent/requestHandler', function(newLogger) {
   logger = newLogger;
@@ -13,12 +11,6 @@ var actionMapping = {
   'node.source': require('../actions/source').getSourceFile,
   'node.getModuleAnalysis': require('../actions/getModuleAnalysis').getModuleAnalysis
 };
-
-if (semver.satisfies(process.versions.node, '>=4.0.0')) {
-  var cpuProfiling = require('../actions/profiling/cpu');
-  actionMapping['node.startCpuProfiling'] = cpuProfiling.startProfiling;
-  actionMapping['node.stopCpuProfiling'] = cpuProfiling.stopProfiling;
-}
 
 exports.handleRequests = function(requests) {
   if (requests) {
