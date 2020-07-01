@@ -128,8 +128,7 @@
   },
   "optionalDependencies": {
     "@instana/autoprofile": "^1.102.0",
-    "netlinkwrapper": "^1.2.0",
-    "v8-profiler-node8": "^6.2.0"
+    "netlinkwrapper": "^1.2.0"
   },
   "devDependencies": {
     "eslint": "^5.16.0",
