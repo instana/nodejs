@@ -16,8 +16,8 @@ exports.check = function check() {
       logger.warn(
         'It seems you have initialized the @instana/collector package too late. Please check our documentation on ' +
           'that, in particular ' +
-          'https://docs.instana.io/ecosystem/node-js/installation/#installing-the-nodejs-collector-package and ' +
-          'https://docs.instana.io/ecosystem/node-js/installation/#common-pitfalls. Tracing might only work ' +
+          'https://www.instana.com/docs/ecosystem/node-js/installation/#installing-the-nodejs-collector-package and ' +
+          'https://www.instana.com/docs/ecosystem/node-js/installation/#common-pitfalls. Tracing might only work ' +
           'partially with this setup, that is, some calls will not be captured.'
       );
       warningHasBeenLogged = true;

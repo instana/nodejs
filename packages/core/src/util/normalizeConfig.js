@@ -140,7 +140,7 @@ function normalizeAutomaticTracingEnabled(config) {
   if (!supportedTracingVersion(process.versions.node)) {
     logger.warn(
       'Not enabling automatic tracing, this is an unsupported version of Node.js. ' +
-        'See: https://docs.instana.io/ecosystem/node-js/#supported-nodejs-versions'
+        'See: https://www.instana.com/docs/ecosystem/node-js/#supported-nodejs-versions'
     );
     config.tracing.automaticTracingEnabled = false;
     return;

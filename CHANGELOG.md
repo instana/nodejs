@@ -28,7 +28,7 @@
 - Fix PID used in profiling payload when running in a container.
 
 ## 1.98.0
-- Add `@instana/autoprofile` to support [Instana AutoProfile™](https://docs.instana.io/profiling/) (automated and continuous production profiler). Instana AutoProfile is currently opt-in and can be enabled with the config option `autoProfile: true` or via the environment variable `INSTANA_AUTO_PROFILE=true`.
+- Add `@instana/autoprofile` to support [Instana AutoProfile™](https://www.instana.com/docs/profiling/) (automated and continuous production profiler). Instana AutoProfile is currently opt-in and can be enabled with the config option `autoProfile: true` or via the environment variable `INSTANA_AUTO_PROFILE=true`.
 
 ## 1.97.1
 - Update to `netlinkwrapper@1.2.0`.
@@ -102,7 +102,7 @@
 
 ## 1.89.0
 - Instrument [Apigee Microgateway/edgemicro's](https://www.npmjs.com/package/edgemicro) worker processes automatically when they are spawned.
-- Provide an executable for static instrumentation of a globally installed [edgemicro](https://www.npmjs.com/package/edgemicro) CLI (see [our docs](https://docs.instana.io/ecosystem/node-js/edgemicro) for details).
+- Provide an executable for static instrumentation of a globally installed [edgemicro](https://www.npmjs.com/package/edgemicro) CLI (see [our docs](https://www.instana.com/docs/ecosystem/node-js/edgemicro) for details).
 - Keep asynchronous context across [memored](https://www.npmjs.com/package/memored) IPC communication gaps.
 
 ## 1.88.1
