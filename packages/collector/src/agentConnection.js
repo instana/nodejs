@@ -217,27 +217,21 @@ exports.sendEvent = function sendEvent(eventData, cb) {
   sendData('/com.instana.plugin.generic.event', eventData, callback);
 };
 
-exports.sendAgentMonitoringEvent = function sendAgentMonitoringEvent(code, cb) {
-  var callback = atMostOnce('callback for sendEvent', function(err, responseBody) {
+exports.sendAgentMonitoringEvent = function sendAgentMonitoringEvent(code, category, cb) {
+  var event = {
+    plugin: 'com.instana.forge.infrastructure.runtime.nodejs.NodeJsRuntimePlatform',
+    pid: pidStore.pid,
+    code: code,
+    duration: 660000, // 11 minutes
+    category: category
+  };
+
+  var callback = atMostOnce('callback for sendAgentMonitoringEvent', function(err, responseBody) {
     cb(err, responseBody);
   });
 
-  sendData(
-    '/com.instana.plugin.generic.agent-monitoring-event',
-    createAgentMonitoringEvent(pidStore.pid, code),
-    callback
-  );
+  sendData('/com.instana.plugin.generic.agent-monitoring-event', event, callback);
 };
-
-function createAgentMonitoringEvent(pid, code) {
-  return {
-    plugin: 'com.instana.forge.infrastructure.runtime.nodejs.NodeJsRuntimePlatform',
-    pid: pid,
-    code: code,
-    category: 'TRACER',
-    metadata: {}
-  };
-}
 
 exports.sendAgentResponseToAgent = function sendAgentResponseToAgent(messageId, response, cb) {
   cb = atMostOnce('callback for sendAgentResponseToAgent', cb);

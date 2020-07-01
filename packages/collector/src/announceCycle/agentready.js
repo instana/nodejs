@@ -7,6 +7,7 @@ var transmissionCycle = require('../metrics/transmissionCycle');
 var agentOpts = require('../agent/opts');
 var pidStore = require('../pidStore');
 var metrics = require('../metrics');
+var initializedTooLate = require('../util/initializedTooLate');
 var uncaught = require('../uncaught');
 
 var autoprofile;
@@ -54,6 +55,7 @@ function enter(_ctx) {
   ctx = _ctx;
   uncaught.activate();
   metrics.activate();
+  initializedTooLate.check();
   transmissionCycle.activate(
     metrics,
     agentConnection,

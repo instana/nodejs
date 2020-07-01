@@ -82,6 +82,13 @@ exports.getEvents = () =>
     json: true
   });
 
+exports.getMonitoringEvents = () =>
+  request({
+    method: 'GET',
+    url: `http://127.0.0.1:${agentPort}/retrievedMonitoringEvents`,
+    json: true
+  });
+
 exports.clearRetrievedData = () =>
   request({
     method: 'DELETE',
