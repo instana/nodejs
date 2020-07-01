@@ -76,7 +76,7 @@ describe('Process processor', function() {
     });
   });
 
-  it('should provide CPU metrics', () => {
+  it.skip('should provide CPU metrics', () => {
     dataProcessor.activate();
 
     return retry(() => {
