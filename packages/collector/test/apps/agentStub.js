@@ -27,6 +27,7 @@ let retrievedData = {
   profiles: [],
   responses: [],
   events: [],
+  monitoringEvents: [],
   tracingMetrics: []
 };
 
@@ -163,6 +164,20 @@ app.post('/tracermetrics', function handleTracermetrics(req, res) {
   }
 });
 
+app.post('/com.instana.plugin.generic.event', function postEvent(req, res) {
+  if (!dropAllData) {
+    retrievedData.events.push(req.body);
+  }
+  res.send('OK');
+});
+
+app.post('/com.instana.plugin.generic.agent-monitoring-event', function postMonitoringEvent(req, res) {
+  if (!dropAllData) {
+    retrievedData.monitoringEvents.push(req.body);
+  }
+  res.send('OK');
+});
+
 function checkExistenceOfKnownPid(fn) {
   return (req, res) => {
     const pid = req.params.pid;
@@ -173,13 +188,6 @@ function checkExistenceOfKnownPid(fn) {
     fn(req, res);
   };
 }
-
-app.post('/com.instana.plugin.generic.event', function postEvent(req, res) {
-  if (!dropAllData) {
-    retrievedData.events.push(req.body);
-  }
-  res.send('OK');
-});
 
 app.get('/retrievedData', (req, res) => {
   res.json(retrievedData);
@@ -197,6 +205,10 @@ app.get('/retrievedEvents', (req, res) => {
   res.json(retrievedData.events);
 });
 
+app.get('/retrievedMonitoringEvents', (req, res) => {
+  res.json(retrievedData.monitoringEvents);
+});
+
 app.get('/retrievedTracingMetrics', (req, res) => {
   res.json(retrievedData.tracingMetrics);
 });
@@ -208,6 +220,7 @@ app.delete('/retrievedData', (req, res) => {
     profiles: [],
     responses: [],
     events: [],
+    monitoringEvents: [],
     tracingMetrics: []
   };
   res.sendStatus(200);

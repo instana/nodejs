@@ -74,41 +74,55 @@ describe('tracing/too late', function() {
           })
           .then(() =>
             testUtils.retry(() =>
-              Promise.all([agentControls.getSpans(), agentControls.getAllMetrics(controls.getPid())]).then(
-                ([spans, metrics]) => {
-                  // expect HTTP entry to be captured
-                  testUtils.expectAtLeastOneMatching(spans, span => {
-                    expect(span.n).to.equal('node.http.server');
-                    expect(span.k).to.equal(constants.ENTRY);
-                    expect(span.async).to.not.exist;
-                    expect(span.error).to.not.exist;
-                    expect(span.ec).to.equal(0);
-                    expect(span.p).to.not.exist;
-                    expect(span.data.http.method).to.equal('GET');
-                    expect(span.data.http.url).to.equal('/');
-                  });
+              Promise.all([
+                agentControls.getSpans(),
+                agentControls.getMonitoringEvents(),
+                agentControls.getAllMetrics(controls.getPid())
+              ]).then(([spans, monitoringEvents, metrics]) => {
+                // expect HTTP entry to be captured
+                testUtils.expectAtLeastOneMatching(spans, span => {
+                  expect(span.n).to.equal('node.http.server');
+                  expect(span.k).to.equal(constants.ENTRY);
+                  expect(span.async).to.not.exist;
+                  expect(span.error).to.not.exist;
+                  expect(span.ec).to.equal(0);
+                  expect(span.p).to.not.exist;
+                  expect(span.data.http.method).to.equal('GET');
+                  expect(span.data.http.url).to.equal('/');
+                });
 
-                  // expect HTTP exit to not be captured
-                  const httpExits = testUtils.getSpansByName(spans, 'node.http.client');
-                  expect(httpExits).to.have.lengthOf(0);
+                // expect HTTP exit to not be captured
+                const httpExits = testUtils.getSpansByName(spans, 'node.http.client');
+                expect(httpExits).to.have.lengthOf(0);
 
-                  // expect initTooLate to have been recorded
-                  let initTooLateFound = false;
-                  metrics.forEach(m => {
-                    if (m && m.data) {
-                      if (m.data.initTooLate === true) {
-                        initTooLateFound = true;
-                      } else if (m.data.initTooLate !== undefined) {
-                        fail(
-                          `Found invalid value (${m.data.initTooLate}, type: ${typeof m.data
-                            .initTooLate}) for initTooLate metric, should be either undefined or true.`
-                        );
-                      }
+                // expect the initialized-too-late monitoring event to have been fired
+                expect(monitoringEvents).to.deep.include(
+                  {
+                    plugin: 'com.instana.forge.infrastructure.runtime.nodejs.NodeJsRuntimePlatform',
+                    pid: controls.getPid(),
+                    code: 'nodejs_collector_initialized_too_late',
+                    duration: 660000,
+                    category: 'TRACER'
+                  },
+                  JSON.stringify(monitoringEvents)
+                );
+
+                // expect initTooLate to have been recorded via snapshot data too (until that mechanism is removed)
+                let initTooLateFound = false;
+                metrics.forEach(m => {
+                  if (m && m.data) {
+                    if (m.data.initTooLate === true) {
+                      initTooLateFound = true;
+                    } else if (m.data.initTooLate !== undefined) {
+                      fail(
+                        `Found invalid value (${m.data.initTooLate}, type: ${typeof m.data
+                          .initTooLate}) for initTooLate metric, should be either undefined or true.`
+                      );
                     }
-                  });
-                  expect(initTooLateFound).to.be.true;
-                }
-              )
+                  }
+                });
+                expect(initTooLateFound).to.be.true;
+              })
             )
           ));
     });
@@ -127,42 +141,47 @@ describe('tracing/too late', function() {
         })
         .then(() =>
           testUtils.retry(() =>
-            Promise.all([agentControls.getSpans(), agentControls.getAllMetrics(controls.getPid())]).then(
-              ([spans, metrics]) => {
-                const httpEntry = testUtils.expectAtLeastOneMatching(spans, span => {
-                  expect(span.n).to.equal('node.http.server');
-                  expect(span.k).to.equal(constants.ENTRY);
-                  expect(span.p).to.not.exist;
-                  expect(span.data.http.method).to.equal('GET');
-                  expect(span.data.http.url).to.equal('/');
-                });
+            Promise.all([
+              agentControls.getSpans(),
+              agentControls.getMonitoringEvents(),
+              agentControls.getAllMetrics(controls.getPid())
+            ]).then(([spans, monitoringEvents, metrics]) => {
+              const httpEntry = testUtils.expectAtLeastOneMatching(spans, span => {
+                expect(span.n).to.equal('node.http.server');
+                expect(span.k).to.equal(constants.ENTRY);
+                expect(span.p).to.not.exist;
+                expect(span.data.http.method).to.equal('GET');
+                expect(span.data.http.url).to.equal('/');
+              });
 
-                // expect HTTP exit to have been captured
-                testUtils.expectAtLeastOneMatching(spans, span => {
-                  expect(span.n).to.equal('node.http.client');
-                  expect(span.k).to.equal(constants.EXIT);
-                  expect(span.p).to.equal(httpEntry.s);
-                  expect(span.data.http.method).to.equal('GET');
-                  expect(span.data.http.url).to.match(/http:\/\/127\.0\.0\.1:[0-9]+/);
-                });
+              // expect HTTP exit to have been captured
+              testUtils.expectAtLeastOneMatching(spans, span => {
+                expect(span.n).to.equal('node.http.client');
+                expect(span.k).to.equal(constants.EXIT);
+                expect(span.p).to.equal(httpEntry.s);
+                expect(span.data.http.method).to.equal('GET');
+                expect(span.data.http.url).to.match(/http:\/\/127\.0\.0\.1:[0-9]+/);
+              });
 
-                // expect initTooLate to NOT have been recorded
-                let initTooLateFound = false;
-                metrics.forEach(m => {
-                  if (m && m.data) {
-                    if (m.data.initTooLate === true) {
-                      initTooLateFound = true;
-                    } else if (m.data.initTooLate !== undefined) {
-                      fail(
-                        `Found invalid value (${m.data.initTooLate}, type: ${typeof m.data
-                          .initTooLate}) for initTooLate metric, should be either undefined or true.`
-                      );
-                    }
+              // expect initTooLate monitoring event to NOT have been fired
+              expect(monitoringEvents).to.be.empty;
+
+              // expect initTooLate to NOT have been recorded in the snapshot data
+              let initTooLateFound = false;
+              metrics.forEach(m => {
+                if (m && m.data) {
+                  if (m.data.initTooLate === true) {
+                    initTooLateFound = true;
+                  } else if (m.data.initTooLate !== undefined) {
+                    fail(
+                      `Found invalid value (${m.data.initTooLate}, type: ${typeof m.data
+                        .initTooLate}) for initTooLate metric, should be either undefined or true.`
+                    );
                   }
-                });
-                expect(initTooLateFound).to.be.false;
-              }
-            )
+                }
+              });
+              expect(initTooLateFound).to.be.false;
+            })
           )
         ));
   });
