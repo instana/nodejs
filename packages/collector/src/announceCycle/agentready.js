@@ -3,11 +3,13 @@
 var semver = require('semver');
 var instanaCore = require('@instana/core');
 
-var transmissionCycle = require('../metrics/transmissionCycle');
+var agentConnection = require('../agentConnection');
 var agentOpts = require('../agent/opts');
-var pidStore = require('../pidStore');
-var metrics = require('../metrics');
 var initializedTooLate = require('../util/initializedTooLate');
+var metrics = require('../metrics');
+var pidStore = require('../pidStore');
+var requestHandler = require('../agent/requestHandler');
+var transmissionCycle = require('../metrics/transmissionCycle');
 var uncaught = require('../uncaught');
 
 var autoprofile;
@@ -29,11 +31,10 @@ if (agentOpts.autoProfile && semver.gte(process.version, '6.4.0')) {
         'the collector: ' +
         'https://www.instana.com/docs/ecosystem/node-js/installation/#native-addons'
     );
+    fireMonitoringEvent();
+    setInterval(fireMonitoringEvent, 600000).unref();
   }
 }
-
-var requestHandler = require('../agent/requestHandler');
-var agentConnection = require('../agentConnection');
 
 var ctx;
 
@@ -116,4 +117,14 @@ function sendTracingMetrics() {
 function scheduleTracingMetrics() {
   tracingMetricsTimeout = setTimeout(sendTracingMetrics, tracingMetricsDelay);
   tracingMetricsTimeout.unref();
+}
+
+function fireMonitoringEvent() {
+  agentConnection.sendAgentMonitoringEvent('nodejs_collector_native_addon_autoprofile_missing', 'PROFILER', function(
+    error
+  ) {
+    if (error) {
+      logger.error('Error received while trying to send Agent Monitoring Event to agent: %s', error.message);
+    }
+  });
 }
