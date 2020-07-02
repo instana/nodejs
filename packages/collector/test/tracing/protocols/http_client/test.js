@@ -37,6 +37,10 @@ describe('tracing/http client', function() {
   describe('https', function() {
     registerTests.call(this, true);
   });
+
+  describe('superagent', function() {
+    registerSuperagentTest.call(this);
+  });
 });
 
 function registerTests(useHttps) {
@@ -529,6 +533,49 @@ function registerTests(useHttps) {
         expect(response.key).to.exist;
         expect(response.Key).to.exist;
       }));
+}
+
+function registerSuperagentTest() {
+  const serverControls = new ProcessControls({
+    appPath: path.join(__dirname, 'serverApp'),
+    port: 3217,
+    agentControls
+  }).registerTestHooks();
+
+  const clientControls = new ProcessControls({
+    appPath: path.join(__dirname, 'superagentApp'),
+    port: 3216,
+    agentControls,
+    env: {
+      SERVER_PORT: serverControls.port
+    }
+  }).registerTestHooks();
+
+  it('must trace superagent requests', () => {
+    return clientControls
+      .sendRequest({
+        method: 'GET',
+        path: constructPath('/request')
+      })
+      .then(() =>
+        testUtils.retry(() =>
+          agentControls.getSpans().then(spans => {
+            const clientSpan = testUtils.expectAtLeastOneMatching(spans, span => {
+              expect(span.n).to.equal('node.http.client');
+              expect(span.k).to.equal(constants.EXIT);
+              expect(span.data.http.url).to.match(/\/request-url-opts/);
+            });
+            testUtils.expectAtLeastOneMatching(spans, span => {
+              expect(span.n).to.equal('node.http.server');
+              expect(span.k).to.equal(constants.ENTRY);
+              expect(span.data.http.url).to.match(/\/request-url-opts/);
+              expect(span.t).to.equal(clientSpan.t);
+              expect(span.p).to.equal(clientSpan.s);
+            });
+          })
+        )
+      );
+  });
 }
 
 function constructPath(basePath, urlObject, withQuery) {
