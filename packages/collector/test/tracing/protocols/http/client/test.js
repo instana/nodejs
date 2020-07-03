@@ -6,9 +6,9 @@ const semver = require('semver');
 
 const constants = require('@instana/core').tracing.constants;
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
-const config = require('../../../../../core/test/config');
-const testUtils = require('../../../../../core/test/test_util');
-const ProcessControls = require('../../../test_util/ProcessControls');
+const config = require('../../../../../../core/test/config');
+const testUtils = require('../../../../../../core/test/test_util');
+const ProcessControls = require('../../../../test_util/ProcessControls');
 
 let agentControls;
 
@@ -17,7 +17,7 @@ describe('tracing/http client', function() {
     return;
   }
 
-  agentControls = require('../../../apps/agentStubControls');
+  agentControls = require('../../../../apps/agentStubControls');
 
   this.timeout(config.getTestTimeout() * 2);
 

@@ -1,6 +1,6 @@
 'use strict';
 
-require('../../../../')();
+require('../../../../..')();
 
 const bodyParser = require('body-parser');
 const rp = require('request-promise');
@@ -226,7 +226,7 @@ app.put('/expect-continue', (req, res) => {
 });
 
 if (process.env.USE_HTTPS === 'true') {
-  const sslDir = path.join(__dirname, '..', '..', '..', 'apps', 'ssl');
+  const sslDir = path.join(__dirname, '..', '..', '..', '..', 'apps', 'ssl');
   require('https')
     .createServer(
       {

@@ -5,10 +5,10 @@ const { fail } = expect;
 
 const constants = require('@instana/core').tracing.constants;
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
-const config = require('../../../../../core/test/config');
-const testUtils = require('../../../../../core/test/test_util');
-const delay = require('../../../../../core/test/test_util/delay');
-const ProcessControls = require('../../../test_util/ProcessControls');
+const config = require('../../../../../../core/test/config');
+const testUtils = require('../../../../../../core/test/test_util');
+const delay = require('../../../../../../core/test/test_util/delay');
+const ProcessControls = require('../../../../test_util/ProcessControls');
 
 let agentControls;
 
@@ -17,7 +17,7 @@ describe('tracing/http(s) server', function() {
     return;
   }
 
-  agentControls = require('../../../apps/agentStubControls');
+  agentControls = require('../../../../apps/agentStubControls');
 
   this.timeout(config.getTestTimeout());
 
