@@ -31,7 +31,7 @@ app.use((req, res) => {
     if (req.query.url) {
       url = req.query.url;
     } else {
-      url = `http://127.0.0.1:${process.env.UPSTREAM_PORT}/proxy-call${req.url}`;
+      url = `http://localhost:${process.env.UPSTREAM_PORT}/proxy-call${req.url}`;
     }
 
     if (req.query.httpLib === 'node-fetch') {

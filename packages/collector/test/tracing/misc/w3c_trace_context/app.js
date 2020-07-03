@@ -125,7 +125,7 @@ server.on('request', (req, res) => {
     downstreamPath = depth > 1 ? 'continue' : 'end';
     return rp
       .get({
-        uri: `http://127.0.0.1:${downstreamPort}/${downstreamPath}`,
+        uri: `http://localhost:${downstreamPort}/${downstreamPath}`,
         headers: outgoingHeaders,
         qs: query
       })
@@ -142,7 +142,7 @@ server.on('request', (req, res) => {
     downstreamPath = depth > 1 ? 'continue' : 'end';
     return rp
       .get({
-        uri: `http://127.0.0.1:${downstreamPort}/${downstreamPath}`,
+        uri: `http://localhost:${downstreamPort}/${downstreamPath}`,
         headers: outgoingHeaders,
         qs: query
       })

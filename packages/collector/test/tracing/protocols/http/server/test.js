@@ -413,6 +413,6 @@ function verifyHttpEntry(span, url = '/', method = 'GET', status = 200, syntheti
   }
   expect(span.data.http.method).to.equal(method);
   expect(span.data.http.url).to.equal(url);
-  expect(span.data.http.host).to.equal('127.0.0.1:3215');
+  expect(span.data.http.host).to.equal('localhost:3215');
   expect(span.data.http.status).to.equal(status);
 }

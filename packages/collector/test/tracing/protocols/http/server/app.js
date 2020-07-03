@@ -4,12 +4,11 @@
 
 require('../../../../../')();
 
-const logPrefix = `HTTP: Server (${process.pid}):\t`;
-
-const url = require('url');
 const fs = require('fs');
 const path = require('path');
+const url = require('url');
 
+const logPrefix = `HTTP: Server (${process.pid}):\t`;
 const port = process.env.APP_PORT || 3000;
 
 let server;

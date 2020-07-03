@@ -114,7 +114,7 @@ describe('tracing', function() {
                 expect(span.data.http.method).to.equal('POST');
                 expect(span.data.http.url).to.equal('/checkout');
                 expect(span.data.http.status).to.equal(201);
-                expect(span.data.http.host).to.equal('127.0.0.1:3211');
+                expect(span.data.http.host).to.equal('localhost:3211');
               });
             })
           )
@@ -137,7 +137,7 @@ describe('tracing', function() {
                 expect(span.data.http.url).to.equal('/checkout');
                 expect(span.data.http.params).to.equal('stan=isalwayswatching&neversleeps');
                 expect(span.data.http.status).to.equal(200);
-                expect(span.data.http.host).to.equal('127.0.0.1:3211');
+                expect(span.data.http.host).to.equal('localhost:3211');
               });
             })
           )
@@ -252,7 +252,7 @@ describe('tracing', function() {
                   expect(span.error).to.not.exist;
                   expect(span.ec).to.equal(0);
                   expect(span.data.http.method).to.equal('POST');
-                  expect(span.data.http.url).to.equal('http://127.0.0.1:3211/proxy-call/checkout');
+                  expect(span.data.http.url).to.equal('http://localhost:3211/proxy-call/checkout');
                   expect(span.data.http.status).to.equal(201);
                 });
 
@@ -313,7 +313,7 @@ describe('tracing', function() {
                   expect(span.error).to.not.exist;
                   expect(span.ec).to.equal(0);
                   expect(span.data.http.method).to.equal('POST');
-                  expect(span.data.http.url).to.equal('http://127.0.0.1:3211/proxy-call/checkout');
+                  expect(span.data.http.url).to.equal('http://localhost:3211/proxy-call/checkout');
                   expect(span.data.http.status).to.equal(200);
                 });
 
@@ -444,7 +444,7 @@ describe('tracing', function() {
                 expect(span.error).to.not.exist;
                 expect(span.ec).to.equal(0);
                 expect(span.data.http.method).to.equal('POST');
-                expect(span.data.http.url).to.equal(`http://127.0.0.1:3211/proxy-call/call-${call}`);
+                expect(span.data.http.url).to.equal(`http://localhost:3211/proxy-call/call-${call}`);
                 expect(span.data.http.status).to.equal((call % 20) + 200);
               });
 

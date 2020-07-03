@@ -1,13 +1,17 @@
 'use strict';
 
-const path = require('path');
-const fork = require('child_process').fork;
-const request = require('request-promise');
 const _ = require('lodash');
+const fork = require('child_process').fork;
+const fs = require('fs');
+const path = require('path');
+const request = require('request-promise');
 
 const agentPort = require('../apps/agentStubControls').agentPort;
 const config = require('../../../core/test/config');
 const testUtils = require('../../../core/test/test_util');
+
+const sslDir = path.join(__dirname, '..', 'apps', 'ssl');
+const cert = fs.readFileSync(path.join(sslDir, 'cert'));
 
 const ProcessControls = (module.exports = function ProcessControls(opts = {}) {
   if (!opts.appPath && !opts.dirname) {
@@ -26,7 +30,7 @@ const ProcessControls = (module.exports = function ProcessControls(opts = {}) {
   this.args = opts.args;
   this.port = opts.port || process.env.APP_PORT || 3215;
   this.useHttps = opts.env && !!opts.env.USE_HTTPS;
-  this.baseUrl = `${this.useHttps ? 'https' : 'http'}://127.0.0.1:${this.port}`;
+  this.baseUrl = `${this.useHttps ? 'https' : 'http'}://localhost:${this.port}`;
   this.tracingEnabled = opts.tracingEnabled !== false;
   this.usePreInit = opts.usePreInit === true;
   // optional agent controls which will result in a beforeEach call which ensures that the
@@ -96,7 +100,7 @@ ProcessControls.prototype.waitUntilServerIsUp = function waitUntilServerIsUp() {
       headers: {
         'X-INSTANA-L': '0'
       },
-      strictSSL: false
+      ca: cert
     });
   });
 };
@@ -116,7 +120,7 @@ ProcessControls.prototype.sendRequest = function(opts) {
 
   opts.url = this.baseUrl + opts.path;
   opts.json = true;
-  opts.strictSSL = false;
+  opts.ca = cert;
   return request(opts);
 };
 
