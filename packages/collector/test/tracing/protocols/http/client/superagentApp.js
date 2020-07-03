@@ -1,6 +1,6 @@
 'use strict';
 
-require('../../../../')();
+require('../../../../../')();
 
 const bodyParser = require('body-parser');
 const superagent = require('superagent');

@@ -2,7 +2,7 @@
 
 'use strict';
 
-require('../../../../')();
+require('../../../../../')();
 
 const logPrefix = `HTTP: Server (${process.pid}):\t`;
 
@@ -14,7 +14,7 @@ const port = process.env.APP_PORT || 3000;
 
 let server;
 if (process.env.USE_HTTPS === 'true') {
-  const sslDir = path.join(__dirname, '..', '..', '..', 'apps', 'ssl');
+  const sslDir = path.join(__dirname, '..', '..', '..', '..', 'apps', 'ssl');
   server = require('https')
     .createServer({
       key: fs.readFileSync(path.join(sslDir, 'key')),
