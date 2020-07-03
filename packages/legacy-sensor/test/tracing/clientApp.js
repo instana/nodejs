@@ -34,8 +34,7 @@ app.use(bodyParser.json());
 app.get('/', (req, res) => {
   rp({
     method: 'GET',
-    url: `${baseUrl}/`,
-    strictSSL: false
+    url: `${baseUrl}/`
   })
     .then(() => {
       res.sendStatus(200);
@@ -46,7 +45,7 @@ app.get('/', (req, res) => {
 });
 
 app.get('/request-url-and-options', (req, res) => {
-  http.request(createUrl(req, '/request-url-opts'), { rejectUnauthorized: false }, () => res.sendStatus(200)).end();
+  http.request(createUrl(req, '/request-url-opts'), {}, () => res.sendStatus(200)).end();
 });
 
 app.get('/request-url-only', (req, res) => {
@@ -106,8 +105,7 @@ app.get('/timeout', (req, res) => {
   rp({
     method: 'GET',
     url: `${baseUrl}/timeout`,
-    timeout: 500,
-    strictSSL: false
+    timeout: 500
   })
     .then(() => {
       res.sendStatus(200);

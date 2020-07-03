@@ -1,14 +1,18 @@
 'use strict';
 
-const spawn = require('child_process').spawn;
 const errors = require('request-promise/errors');
-const request = require('request-promise');
+const fs = require('fs');
 const path = require('path');
+const request = require('request-promise');
+const spawn = require('child_process').spawn;
 
 const testUtils = require('../../../core/test/test_util');
 const config = require('../../../core/test/config');
 const agentPort = require('./agentStubControls').agentPort;
 const appPort = (exports.appPort = 3211);
+
+const sslDir = path.join(__dirname, 'ssl');
+const cert = fs.readFileSync(path.join(sslDir, 'cert'));
 
 let expressApp;
 
@@ -45,7 +49,7 @@ function waitUntilServerIsUp(useHttps) {
       headers: {
         'X-INSTANA-L': '0'
       },
-      strictSSL: false
+      ca: cert
     })
   );
 }
@@ -57,7 +61,7 @@ exports.sendBasicRequest = opts =>
     method: opts.method,
     url: getBaseUrl(opts.useHttps) + opts.path,
     resolveWithFullResponse: opts.resolveWithFullResponse,
-    strictSSL: false
+    ca: cert
   });
 
 exports.sendRequest = opts => {
@@ -76,7 +80,7 @@ exports.sendRequest = opts => {
     },
     headers: opts.headers,
     resolveWithFullResponse: opts.resolveWithFullResponse,
-    strictSSL: false
+    ca: cert
   }).catch(errors.StatusCodeError, reason => {
     if (reason.statusCode === opts.responseStatus) {
       return true;
@@ -89,23 +93,23 @@ exports.setHealthy = useHttps =>
   request({
     method: 'POST',
     url: `${getBaseUrl(useHttps)}/admin/set-to-healthy`,
-    strictSSL: false
+    ca: cert
   });
 
 exports.setUnhealthy = useHttps =>
   request({
     method: 'POST',
     url: `${getBaseUrl(useHttps)}/admin/set-to-unhealthy`,
-    strictSSL: false
+    ca: cert
   });
 
 exports.setLogger = (useHttps, logFilePath) =>
   request({
     method: 'POST',
     url: `${getBaseUrl(useHttps)}/set-logger?logFilePath=${encodeURIComponent(logFilePath)}`,
-    strictSSL: false
+    ca: cert
   });
 
 function getBaseUrl(useHttps) {
-  return `http${useHttps ? 's' : ''}://127.0.0.1:${appPort}`;
+  return `http${useHttps ? 's' : ''}://localhost:${appPort}`;
 }

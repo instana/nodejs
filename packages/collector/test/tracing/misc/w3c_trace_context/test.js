@@ -737,7 +737,7 @@ function verifyHttpEntry(spans, parentSpan, url, foreignParent) {
     }
     expect(span.data.http.method).to.equal('GET');
     expect(span.data.http.url).to.equal(url);
-    expect(span.data.http.host).to.equal(`127.0.0.1:${instanaAppPort}`);
+    expect(span.data.http.host).to.equal(`localhost:${instanaAppPort}`);
     expect(span.data.http.status).to.equal(200);
 
     if (typeof foreignParent === 'object') {

@@ -119,7 +119,7 @@ function registerTests(useHttps) {
         }
         if (useHttps) {
           // Can't execute this test with a self signed certificate because without an options object, there is no place
-          // where we can specify the `rejectUnauthorized: false` option.
+          // where we can specify the `ca` option.
           return;
         }
         return clientControls
@@ -289,7 +289,7 @@ function registerTests(useHttps) {
         }
         if (useHttps) {
           // Can't execute this test with a self signed certificate because without an options object, there is no place
-          // where we can specify the `rejectUnauthorized: false` option.
+          // where we can specify the `ca` option.
           return;
         }
         return clientControls

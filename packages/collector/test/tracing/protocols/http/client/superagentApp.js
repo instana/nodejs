@@ -7,7 +7,7 @@ const superagent = require('superagent');
 const express = require('express');
 const morgan = require('morgan');
 
-const baseUrl = `http://127.0.0.1:${process.env.SERVER_PORT}`;
+const baseUrl = `http://localhost:${process.env.SERVER_PORT}`;
 
 const app = express();
 
