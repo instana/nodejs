@@ -20,7 +20,7 @@ var extraHttpHeadersToCapture;
 var isActive = false;
 
 exports.init = function(config) {
-  instrument(coreHttpModule);
+  instrument(coreHttpModule, false);
 
   // Up until Node 8, the core https module uses the http module internally, so https calls are traced automatically
   // without instrumenting https. Beginning with Node 9, the core https module started to use the internal core module
@@ -33,7 +33,7 @@ exports.init = function(config) {
   // that immediately in Node.js 8.9.1 a few days later. So we must only apply this for exactly 8.9.0, but for no other
   // 8.x.x version.
   if (semver.gte(process.versions.node, '9.0.0') || process.versions.node === '8.9.0') {
-    instrument(coreHttpsModule);
+    instrument(coreHttpsModule, true);
   }
   extraHttpHeadersToCapture = config.tracing.http.extraHttpHeadersToCapture;
 };
@@ -42,7 +42,7 @@ exports.updateConfig = function(config) {
   extraHttpHeadersToCapture = config.tracing.http.extraHttpHeadersToCapture;
 };
 
-function instrument(coreModule) {
+function instrument(coreModule, forceHttps) {
   var originalRequest = coreModule.request;
   coreModule.request = function request() {
     var clientRequest;
@@ -114,7 +114,7 @@ function instrument(coreModule) {
         completeCallUrl = discardUrlParameters(url.format(urlArg));
         params = dropLeadingQuestionMark(filterParams(urlArg.search));
       } else if (options) {
-        var urlAndQuery = constructFromUrlOpts(options, coreModule);
+        var urlAndQuery = constructFromUrlOpts(options, coreModule, forceHttps);
         completeCallUrl = urlAndQuery[0];
         params = urlAndQuery[1];
       }
@@ -232,7 +232,7 @@ exports.setExtraHttpHeadersToCapture = function setExtraHttpHeadersToCapture(_ex
   extraHttpHeadersToCapture = _extraHeaders;
 };
 
-function constructFromUrlOpts(options, self) {
+function constructFromUrlOpts(options, self, forceHttps) {
   if (options.href) {
     return [discardUrlParameters(options.href), splitAndFilter(options.href)];
   }
@@ -240,7 +240,12 @@ function constructFromUrlOpts(options, self) {
   try {
     var agent = options.agent || self.agent;
     var port = options.port || options.defaultPort || (agent && agent.defaultPort) || 80;
-    var protocol = (port === 443 && 'https:') || options.protocol || (agent && agent.protocol) || 'http:';
+    var protocol =
+      (port === 443 && 'https:') ||
+      options.protocol ||
+      (agent && agent.protocol) ||
+      (forceHttps && 'https:') ||
+      'http:';
     var host = options.hostname || options.host || 'localhost';
     var path = options.path || '/';
     return [discardUrlParameters(protocol + '//' + host + ':' + port + path), splitAndFilter(path)];
@@ -289,6 +294,8 @@ function tryToAddHeadersToOpts(options, span, w3cTraceContext) {
 function tryToAddTraceLevelAddHeaderToOpts(options, level, w3cTraceContext) {
   if (hasHeadersOption(options)) {
     if (!isItSafeToModifiyHeadersInOptions(options)) {
+      // Return true to convince the caller that headers have been added although we have in fact not added them. This
+      // will result in no headers being added. See isItSafeToModifiyHeadersInOptions for the motivation behind this.
       return true;
     }
     options.headers[constants.traceLevelHeaderName] = level;

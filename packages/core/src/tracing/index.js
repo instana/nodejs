@@ -48,7 +48,8 @@ var instrumentations = [
   './instrumentation/protocols/graphql',
   './instrumentation/protocols/grpc',
   './instrumentation/protocols/httpClient',
-  './instrumentation/protocols/httpServer'
+  './instrumentation/protocols/httpServer',
+  './instrumentation/protocols/superagent'
 ];
 var additionalInstrumentationModules = [];
 var instrumentationModules = {};
@@ -152,27 +153,6 @@ exports.getCls = function getCls() {
   return cls;
 };
 
-exports._getAndResetTracingMetrics = function _getAndResetTracingMetrics() {
-  return {
-    pid:
-      processIdentityProvider && typeof processIdentityProvider.getEntityId === 'function'
-        ? processIdentityProvider.getEntityId()
-        : undefined,
-    metrics: tracingMetrics.getAndReset()
-  };
-};
-
-exports._debugCurrentSpanName = function _debugCurrentSpanName() {
-  if (!cls) {
-    return 'current: no cls';
-  }
-  var s = cls.ns.get('com.instana.span');
-  if (!s) {
-    return 'current: no span';
-  }
-  return 'current:' + s.n;
-};
-
 exports.setExtraHttpHeadersToCapture = function setExtraHttpHeadersToCapture(_extraHeaders) {
   extraHeaders = _extraHeaders;
   instrumentations.forEach(function(instrumentationKey) {
@@ -183,4 +163,33 @@ exports.setExtraHttpHeadersToCapture = function setExtraHttpHeadersToCapture(_ex
       instrumentationModules[instrumentationKey].setExtraHttpHeadersToCapture(extraHeaders);
     }
   });
+};
+
+exports._getAndResetTracingMetrics = function _getAndResetTracingMetrics() {
+  return {
+    pid:
+      processIdentityProvider && typeof processIdentityProvider.getEntityId === 'function'
+        ? processIdentityProvider.getEntityId()
+        : undefined,
+    metrics: tracingMetrics.getAndReset()
+  };
+};
+
+exports._instrument = function _instrument(name, module_) {
+  if (name === 'superagent') {
+    require('./instrumentation/protocols/superagent').instrument(module_);
+  } else {
+    throw new Error('An unknown or unsupported instrumentation has been requested: ' + name);
+  }
+};
+
+exports._debugCurrentSpanName = function _debugCurrentSpanName() {
+  if (!cls) {
+    return 'current: no cls';
+  }
+  var s = cls.ns.get('com.instana.span');
+  if (!s) {
+    return 'current: no span';
+  }
+  return 'current: ' + s.n;
 };
