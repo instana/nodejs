@@ -604,9 +604,11 @@ function verifyHttpExit(spans, parent, url = '/', method = 'GET', status = 200, 
 }
 
 function serverUrl(useHttps, path_) {
-  return `http${
-    useHttps && semver.satisfies(process.versions.node, '8.x && !8.9.0') ? 's' : ''
-  }://${serverHost}${path_}`;
+  return `http${shouldHaveProtocolHttps(useHttps) ? 's' : ''}://${serverHost}${path_}`;
+}
+
+function shouldHaveProtocolHttps(useHttps) {
+  return useHttps && (semver.gte(process.versions.node, '9.0.0') || semver.satisfies(process.versions.node, '8.9.0'));
 }
 
 function checkQuery(span, withQuery) {
