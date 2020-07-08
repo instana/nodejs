@@ -11,7 +11,7 @@ class AllocationSampler {
   }
 
   test() {
-    if (this.profiler.getOption('allocationSamplerDisabled')) {
+    if (this.profiler.getOption('disableAllocationSampler')) {
       return false;
     }
 

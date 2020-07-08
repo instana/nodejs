@@ -30,7 +30,7 @@
   },
   "dependencies": {
     "nan": "^2.14.0",
-    "node-abi": "*",
+    "node-abi": "^2.18.0",
     "node-gyp": "^6.1.0"
   },
   "devDependencies": {

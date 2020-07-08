@@ -111,17 +111,17 @@ class AutoProfiler {
 
     // disable CPU profiler by default for 7.0.0-8.9.3 because of the memory leak.
     if (
-      this.options.cpuProfilerDisabled === undefined &&
+      this.options.disableCpuSampler === undefined &&
       (this.matchVersion('v7.0.0', 'v8.9.3') || this.matchVersion('v9.0.0', 'v9.2.1'))
     ) {
       this.log('CPU profiler disabled.');
-      this.options.cpuProfilerDisabled = true;
+      this.options.disableCpuSampler = true;
     }
 
     // disable allocation profiler by default up to version 8.5.0 because of segfaults.
-    if (this.options.allocationProfilerDisabled === undefined && this.matchVersion(null, 'v8.5.0')) {
+    if (this.options.disableAllocationSampler === undefined && this.matchVersion(null, 'v8.5.0')) {
       this.log('Allocation profiler disabled.');
-      this.options.allocationProfilerDisabled = true;
+      this.options.disableAllocationSampler = true;
     }
 
     // load native addon
@@ -150,10 +150,6 @@ class AutoProfiler {
     if (this.profilerDestroyed) {
       this.log('Destroyed profiler cannot be started');
       return;
-    }
-
-    if (!this.options.dashboardAddress) {
-      this.options.dashboardAddress = this.SAAS_DASHBOARD_ADDRESS;
     }
 
     this.cpuSamplerScheduler.start();
@@ -198,6 +194,76 @@ class AutoProfiler {
 
     this.profilerDestroyed = true;
     this.log('Profiler destroyed');
+  }
+
+  profile() {
+    const self = this;
+
+    if (!self.profilerStarted || self.samplerActive) {
+      return {
+        stop: function(callback) {
+          callback();
+        }
+      };
+    }
+
+    let schedulers = [];
+    if (self.cpuSamplerScheduler.started) {
+      schedulers.push(self.cpuSamplerScheduler);
+    }
+    if (self.allocationSamplerScheduler.started) {
+      schedulers.push(self.allocationSamplerScheduler);
+    }
+    if (self.asyncSamplerScheduler.started) {
+      schedulers.push(self.asyncSamplerScheduler);
+    }
+
+    let span = null;
+    let scheduler = null;
+    if (schedulers.length === 1) {
+      scheduler = schedulers[0];
+    } else if (schedulers.length > 1) {
+      scheduler = schedulers[Math.floor(Math.random() * schedulers.length)];
+    }
+
+    if (scheduler) {
+      span = scheduler.profile();
+    }
+
+    return {
+      stop: function(callback) {
+        if (span) {
+          span.stop();
+        }
+        if (scheduler && self.getOption('disableTimers')) {
+          scheduler.report();
+          self.profileRecorder.flush((err) => {
+            if (err) {
+              self.exception(err);
+            }
+            callback();
+          });
+        } else {
+          callback();
+        }
+      }
+    };
+  }
+
+  _report(scheduler, callback) {
+    const self = this;
+
+    if (scheduler) {
+      scheduler.report();
+    }
+
+    self.profileRecorder.flush((err) => {
+      if (err) {
+        self.exception(err);
+      }
+
+      callback();
+    });
   }
 
   matchVersion(min, max) {
