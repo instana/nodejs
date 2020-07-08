@@ -6,6 +6,7 @@ var instanaNodeJsCore = require('@instana/core');
 require('./tracing'); // load additional instrumentations
 var log = require('./logger');
 var normalizeConfig = require('./util/normalizeConfig');
+var experimental = require('./experimental');
 
 var config;
 
@@ -38,13 +39,9 @@ module.exports = exports = function init(_config) {
   return exports;
 };
 
-exports.opentracing = instanaNodeJsCore.tracing.opentracing;
-
 exports.currentSpan = function getHandleForCurrentSpan() {
   return instanaNodeJsCore.tracing.getHandleForCurrentSpan();
 };
-
-exports.sdk = instanaNodeJsCore.tracing.sdk;
 
 exports.setLogger = function(logger) {
   config.logger = logger;
@@ -52,6 +49,9 @@ exports.setLogger = function(logger) {
 };
 
 exports.core = instanaNodeJsCore;
+exports.experimental = experimental;
+exports.opentracing = instanaNodeJsCore.tracing.opentracing;
+exports.sdk = instanaNodeJsCore.tracing.sdk;
 
 if (process.env.INSTANA_IMMEDIATE_INIT != null && process.env.INSTANA_IMMEDIATE_INIT.toLowerCase() === 'true') {
   module.exports();

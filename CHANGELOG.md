@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+- Instrument superagent's custom thenable to keep asynchronous context.
+- Provide experimental API to instrument specific modules on demand for non-standard build/deployment scenarios (e.g. bundling dependencies).
+- Fix captured protocol for https URLs in some HTTP exit spans
+
 ## 1.101.1
 - [AWS Fargate]: Collect Docker metrics on platform version 1.4.0, too.
 

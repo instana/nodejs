@@ -1,14 +1,18 @@
 'use strict';
 
-require('../../../../../')();
+// Deliberately requiring superagent before instana to test experimental on-demand instrumentation for it.
+const superagent = require('superagent');
+
+const instana = require('../../../../../')();
 
 const bodyParser = require('body-parser');
-const superagent = require('superagent');
 const express = require('express');
 const morgan = require('morgan');
 
-const baseUrl = `http://localhost:${process.env.SERVER_PORT}`;
+const asyncRoute = require('../../../../test_util/asyncExpressRoute');
 
+const agentPort = process.env.INSTANA_AGENT_PORT;
+const baseUrl = `http://localhost:${process.env.SERVER_PORT}`;
 const app = express();
 
 const logPrefix = `HTTP client (superagent): (${process.pid}):\t`;
@@ -21,19 +25,74 @@ app.use(bodyParser.json());
 
 app.get('/', (req, res) => res.sendStatus(200));
 
-app.get('/request', (req, res) => {
+app.get('/callback', (req, res) => {
+  superagent.get(createUrl('/request-url-opts'), err => {
+    if (err) {
+      log(err);
+      return res.sendStatus(500);
+    }
+    superagent.get(`http://127.0.0.1:${agentPort}`, err2 => {
+      if (err2) {
+        log(err2);
+        return res.sendStatus(500);
+      }
+      res.sendStatus(200);
+    });
+  });
+});
+
+app.get('/then', async (req, res) => {
   superagent
     .get(createUrl('/request-url-opts'))
-    .then(() => {
-      res.sendStatus(200);
-    })
+    .then(() => superagent.get(`http://127.0.0.1:${agentPort}`))
+    .then(() => res.sendStatus(200))
     .catch(err => {
       log(err);
       res.sendStatus(500);
     });
 });
 
+app.get('/catch', async (req, res) => {
+  superagent
+    .get(createUrl('/does-not-exist'))
+    .then(() => {
+      res.sendStatus(500);
+    })
+    .catch(() => superagent.get(`http://127.0.0.1:${agentPort}`).then(() => res.sendStatus(200)));
+});
+
+app.get(
+  '/await',
+  asyncRoute(async (req, res) => {
+    try {
+      await superagent.get(createUrl('/request-url-opts'));
+      await superagent.get(`http://127.0.0.1:${agentPort}`);
+      res.sendStatus(200);
+    } catch (err) {
+      log(err);
+      res.sendStatus(500);
+    }
+  })
+);
+
+app.get(
+  '/await-fail',
+  asyncRoute(async (req, res) => {
+    try {
+      await superagent.get(createUrl('/does-not-exist'));
+      res.sendStatus(500);
+    } catch (err) {
+      await superagent.get(`http://127.0.0.1:${agentPort}`);
+      res.sendStatus(200);
+    }
+  })
+);
+
 app.listen(process.env.APP_PORT, () => {
+  // Instrumenting superagent late on demand. That we do it in app.listen is quite arbitrary but since this happens
+  // aynchronously after bootstrapping the app, it emulates a common real world usage.
+  instana.experimental.instrument('superagent', superagent);
+
   log(`Listening on port: ${process.env.APP_PORT}`);
 });
 
