@@ -25,15 +25,17 @@ class SamplerScheduler {
 
     this.reset();
 
-    this.spanTimer = this.profiler.setInterval(() => {
-      this.randomTimer = this.profiler.setTimeout(() => {
-        this.profile(false, true);
-      }, Math.round(Math.random() * (this.config.spanInterval - this.config.maxSpanDuration)));
-    }, this.config.spanInterval);
+    if (!this.profiler.getOption('disableTimers')) {
+      this.spanTimer = this.profiler.setInterval(() => {
+        this.randomTimer = this.profiler.setTimeout(() => {
+          this.profile(false, true);
+        }, Math.round(Math.random() * (this.config.spanInterval - this.config.maxSpanDuration)));
+      }, this.config.spanInterval);
 
-    this.reportTimer = this.profiler.setInterval(() => {
-      this.report();
-    }, this.config.reportInterval);
+      this.reportTimer = this.profiler.setInterval(() => {
+        this.report();
+      }, this.config.reportInterval);
+    }
   }
 
   stop() {
@@ -110,9 +112,17 @@ class SamplerScheduler {
       }
     }
 
-    this.profiler.setTimeout(() => {
-      _stop();
-    }, this.config.maxSpanDuration);
+    if (!this.profiler.getOption('disableTimers')) {
+      this.profiler.setTimeout(() => {
+        _stop();
+      }, this.config.maxSpanDuration);
+    } else {
+      return {
+        stop: function() {
+          _stop();
+        }
+      };
+    }
   }
 
   report() {
@@ -124,6 +134,12 @@ class SamplerScheduler {
       return;
     }
 
+    if (this.profileStartTs > Date.now() - this.config.reportInterval) {
+      return;
+    } else if (this.profileStartTs < Date.now() - 2 * this.config.reportInterval) {
+      this.reset();
+      return;
+    }
     this.profiler.debug(this.config.logPrefix + ': reporting profile.');
 
     let profile = this.sampler.buildProfile(this.profileDuration, Date.now() - this.profileStartTs);

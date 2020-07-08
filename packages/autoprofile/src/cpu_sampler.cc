@@ -50,7 +50,11 @@ namespace cpu_profiler {
 #else
     cpu_profiler = info.GetIsolate()->GetCpuProfiler();
 #endif
-    cpu_profiler->SetSamplingInterval(10 * 1000);
+    int sampling_interval = 10000;
+    if (info.Length() > 0) {
+      sampling_interval = info[0]->Int32Value(Nan::GetCurrentContext()).FromJust();
+    }
+    cpu_profiler->SetSamplingInterval(sampling_interval);
     cpu_profiler->StartProfiling(title, false);
   }
 

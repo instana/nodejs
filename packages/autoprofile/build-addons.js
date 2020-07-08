@@ -284,6 +284,7 @@ if (!fs.existsSync(addonDir)) {
 }
 
 versions.forEach(version => {
+  console.log(`Compiling version ${version}.`)
   let abi = nodeAbi.getAbi(version);
 
   // not compiling very old versions on Mac

@@ -3,6 +3,8 @@
 const CallSite = require('../profile').CallSite;
 const Profile = require('../profile').Profile;
 
+const DEFAULT_SAMPLING_INTERVAL = 10000; // microseconds
+
 class CpuSampler {
   constructor(profiler) {
     this.profiler = profiler;
@@ -12,7 +14,7 @@ class CpuSampler {
   }
 
   test() {
-    if (this.profiler.getOption('cpuSamplerDisabled')) {
+    if (this.profiler.getOption('disableCpuSampler')) {
       return false;
     }
 
@@ -25,7 +27,12 @@ class CpuSampler {
   }
 
   startSampler() {
-    this.profiler.addon.startCpuSampler();
+    // cpuSamplingInterval is in microseconds
+    let samplingInterval = this.profiler.getOption('cpuSamplingInterval');
+    if (!samplingInterval || samplingInterval < 100 || samplingInterval > 100000) {
+      samplingInterval = DEFAULT_SAMPLING_INTERVAL;
+    }
+    this.profiler.addon.startCpuSampler(samplingInterval);
   }
 
   stopSampler() {

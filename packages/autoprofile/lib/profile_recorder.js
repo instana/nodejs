@@ -13,16 +13,20 @@ class ProfileRecorder {
   }
 
   start() {
+    const self = this;
+
     this.reset();
 
-    this.flushTimer = this.profiler.setInterval(() => {
-      this.flush(err => {
-        if (err) {
-          this.profiler.error('Error uploading messages');
-          this.profiler.exception(err);
-        }
-      });
-    }, this.FLUSH_INTERVAL);
+    if (!this.profiler.getOption('disableTimers')) {
+      this.flushTimer = this.profiler.setInterval(() => {
+        self.flush(err => {
+          if (err) {
+            self.profiler.error('Error uploading messages');
+            self.profiler.exception(err);
+          }
+        });
+      }, this.FLUSH_INTERVAL);
+    }
   }
 
   stop() {
@@ -46,7 +50,7 @@ class ProfileRecorder {
       this.queue = this.queue.shift();
     }
 
-    this.profiler.debug('Added a record profile to the queue');
+    this.profiler.debug('Added a profile record to the queue');
   }
 
   flush(callback) {

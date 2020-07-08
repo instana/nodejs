@@ -9,9 +9,9 @@ services:
     volumes:
       - ../..:/opt/autoprofile
 
-  win-node-prebuild:
-    build:
-      context: .
-      dockerfile: Dockerfile-win
-    volumes:
-      - ../..:/opt/autoprofile
+#  win-node-prebuild:
+#    build:
+#      context: .
+#      dockerfile: Dockerfile-win
+#    volumes:
+#      - ../..:/opt/autoprofile

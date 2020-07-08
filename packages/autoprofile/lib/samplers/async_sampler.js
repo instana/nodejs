@@ -29,7 +29,7 @@ class AsyncSampler {
   }
 
   test() {
-    if (this.profiler.getOption('asyncSamplerDisabled')) {
+    if (this.profiler.getOption('disableAsyncSampler')) {
       return false;
     }
 
