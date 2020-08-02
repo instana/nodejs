@@ -84,15 +84,15 @@ function shimEmit(realEmit) {
       // Capture the URL before application code gets access to the incoming message. Libraries like express manipulate
       // req.url when routers are used.
       var urlParts = req.url.split('?');
-      if (urlParts.length >= 1) {
+      if (urlParts.length >= 2) {
         urlParts[1] = filterParams(urlParts[1]);
       }
       span.data.http = {
         method: req.method,
         url: discardUrlParameters(urlParts.shift()),
-        params: urlParts.join('?'),
+        params: urlParts.length > 0 ? urlParts.join('?') : undefined,
         host: req.headers.host,
-        header: httpCommon.getExtraHeaders(req, extraHttpHeadersToCapture)
+        header: httpCommon.getExtraHeadersFromMessage(req, extraHttpHeadersToCapture)
       };
       var incomingServiceName =
         span.data.http.header && span.data.http.header[constants.serviceNameHeaderNameLowerCase];

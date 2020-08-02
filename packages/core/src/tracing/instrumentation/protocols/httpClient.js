@@ -373,7 +373,7 @@ function isItSafeToModifiyHeadersForRequest(clientRequest) {
 
 function splitAndFilter(fullUrl) {
   var parts = fullUrl.split('?');
-  if (parts.length >= 1) {
+  if (parts.length >= 2) {
     return filterParams(parts[1]);
   }
   return null;
@@ -387,7 +387,7 @@ function dropLeadingQuestionMark(params) {
 }
 
 function captureRequestHeaders(options, clientRequest, response) {
-  var headers = httpCommon.getExtraHeadersCaseInsensitive(options, extraHttpHeadersToCapture);
+  var headers = httpCommon.getExtraHeadersFromOptions(options, extraHttpHeadersToCapture);
   headers = httpCommon.mergeExtraHeadersFromServerResponseOrClientResponse(
     headers,
     clientRequest,

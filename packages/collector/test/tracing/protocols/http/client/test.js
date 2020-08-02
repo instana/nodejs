@@ -530,7 +530,8 @@ function verifySpans(spans, useHttps, clientEndpoint, serverEndpoint, withQuery)
   const entryInClient = verifyRootHttpEntry(spans, clientHost, clientEndpoint);
   const exitInClient = verifyHttpExit(spans, entryInClient, serverUrl(useHttps, serverEndpoint));
   checkQuery(exitInClient, withQuery);
-  verifyHttpEntry(spans, exitInClient, serverHost, serverEndpoint);
+  const entryInServer = verifyHttpEntry(spans, exitInClient, serverHost, serverEndpoint);
+  checkQuery(entryInServer, withQuery);
   expect(spans).to.have.lengthOf(3);
 }
 

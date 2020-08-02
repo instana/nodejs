@@ -8,25 +8,32 @@ const fs = require('fs');
 const path = require('path');
 const url = require('url');
 
+const readSymbolProperty = require('../../../../../../core/src/util/readSymbolProperty');
+const streamSymbol = 'Symbol(stream)';
+
 const logPrefix = `HTTP: Server (${process.pid}):\t`;
 const port = process.env.APP_PORT || 3000;
+
+if (process.env.USE_HTTP2 === 'true' && process.env.USE_HTTPS === 'false') {
+  throw new Error('Using the HTTP2 compat API without HTTPS is not supported by this test app.');
+}
 
 let server;
 if (process.env.USE_HTTPS === 'true') {
   const sslDir = path.join(__dirname, '..', '..', '..', '..', 'apps', 'ssl');
-  server = require('https')
-    .createServer({
-      key: fs.readFileSync(path.join(sslDir, 'key')),
-      cert: fs.readFileSync(path.join(sslDir, 'cert'))
-    })
-    .listen(port, () => {
-      log(`Listening (HTTPS!) on port: ${port}`);
-    });
+  const createServer =
+    process.env.USE_HTTP2 === 'true' ? require('http2').createSecureServer : require('https').createServer;
+  server = createServer({
+    key: fs.readFileSync(path.join(sslDir, 'key')),
+    cert: fs.readFileSync(path.join(sslDir, 'cert'))
+  }).listen(port, () => {
+    log(`Listening on port ${port} (TLS: true, HTTP2: ${process.env.USE_HTTP2}).`);
+  });
 } else {
   server = require('http')
     .createServer()
     .listen(port, () => {
-      log(`Listening (HTTP) on port: ${port}`);
+      log(`Listening on port ${port} (TLS: false, HTTP2: false).`);
     });
 }
 
@@ -51,6 +58,13 @@ server.on('request', (req, res) => {
     // - req#aborted
     // - res#close
     req.destroy();
+    const underlyingStream = readSymbolProperty(req, streamSymbol);
+    if (underlyingStream && !underlyingStream.destroyed) {
+      // According to https://nodejs.org/api/http2.html#http2_request_destroy_error the req.destroy() call should also
+      // destroy the underlying HTTP 2 stream (if this is HTTP 2 in compat mode) but apparently it does not, so we do it
+      // explicitly.
+      underlyingStream.destroy();
+    }
     return;
   }
 
