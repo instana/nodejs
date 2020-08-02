@@ -49,6 +49,8 @@ var instrumentations = [
   './instrumentation/protocols/grpc',
   './instrumentation/protocols/httpClient',
   './instrumentation/protocols/httpServer',
+  './instrumentation/protocols/http2Client',
+  './instrumentation/protocols/http2Server',
   './instrumentation/protocols/superagent'
 ];
 var additionalInstrumentationModules = [];

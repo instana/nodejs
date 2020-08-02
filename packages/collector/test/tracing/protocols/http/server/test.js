@@ -32,20 +32,26 @@ describe('tracing/http(s) server', function() {
   });
 
   describe('http', function() {
-    registerTests.call(this, false);
+    registerTests.call(this, false, false);
   });
 
   describe('https', function() {
-    registerTests.call(this, true);
+    registerTests.call(this, true, false);
+  });
+
+  describe('http2 compat mode', function() {
+    registerTests.call(this, true, true);
   });
 });
 
-function registerTests(useHttps) {
+function registerTests(useHttps, useHttp2CompatApi) {
   const controls = new ProcessControls({
     dirname: __dirname,
+    http2: useHttp2CompatApi,
     agentControls,
     env: {
-      USE_HTTPS: useHttps
+      USE_HTTPS: useHttps,
+      USE_HTTP2: useHttp2CompatApi
     }
   }).registerTestHooks();
 
@@ -184,6 +190,27 @@ function registerTests(useHttps) {
         )
       ));
 
+  it(`must mark HTTP entry as erroneous (HTTPS: ${useHttps})`, () =>
+    controls
+      .sendRequest({
+        method: 'POST',
+        path: '/checkout',
+        simple: false,
+        qs: {
+          responseStatus: 500
+        }
+      })
+      .then(() =>
+        testUtils.retry(() =>
+          agentControls.getSpans().then(spans => {
+            const span = verifyThereIsExactlyOneHttpEntry(spans, '/checkout', 'POST', 500, true);
+            expect(span.t).to.be.a('string');
+            expect(span.t).to.have.lengthOf(16);
+            expect(span.p).to.not.exist;
+          })
+        )
+      ));
+
   it(`must mark HTTP entry as synthetic (HTTPS: ${useHttps})`, () =>
     controls
       .sendRequest({
@@ -196,7 +223,7 @@ function registerTests(useHttps) {
       .then(() => delay(500))
       .then(() =>
         agentControls.getSpans().then(spans => {
-          verifyThereIsExactlyOneHttpEntry(spans, '/health', 'GET', 200, true);
+          verifyThereIsExactlyOneHttpEntry(spans, '/health', 'GET', 200, false, true);
         })
       ));
 
@@ -213,7 +240,7 @@ function registerTests(useHttps) {
       .then(() =>
         testUtils.retry(() =>
           agentControls.getSpans().then(spans => {
-            const span = verifyThereIsExactlyOneHttpEntry(spans);
+            const span = verifyThereIsExactlyOneHttpEntry(spans, '/', 'GET', 200);
             expect(span.data.http.header).to.be.an('object');
             expect(span.data.http.header['x-my-entry-request-header']).to.equal(requestHeaderValue);
             expect(Object.keys(span.data.http.header)).to.have.lengthOf(1);
@@ -232,7 +259,7 @@ function registerTests(useHttps) {
       .then(() =>
         testUtils.retry(() =>
           agentControls.getSpans().then(spans => {
-            const span = verifyThereIsExactlyOneHttpEntry(spans);
+            const span = verifyThereIsExactlyOneHttpEntry(spans, '/', 'GET', 200);
             expect(span.data.http.header).to.be.an('object');
             expect(span.data.http.header['x-my-entry-response-header']).to.equal(expectedResponeHeaderValue);
             expect(Object.keys(span.data.http.header)).to.have.lengthOf(1);
@@ -251,7 +278,7 @@ function registerTests(useHttps) {
       .then(() =>
         testUtils.retry(() =>
           agentControls.getSpans().then(spans => {
-            const span = verifyThereIsExactlyOneHttpEntry(spans);
+            const span = verifyThereIsExactlyOneHttpEntry(spans, '/', 'GET', 200);
             expect(span.data.http.header).to.be.an('object');
             expect(span.data.http.header['x-write-head-response-header']).to.equal(expectedResponeHeaderValue);
             expect(Object.keys(span.data.http.header)).to.have.lengthOf(1);
@@ -274,7 +301,7 @@ function registerTests(useHttps) {
       .then(() =>
         testUtils.retry(() =>
           agentControls.getSpans().then(spans => {
-            const span = verifyThereIsExactlyOneHttpEntry(spans);
+            const span = verifyThereIsExactlyOneHttpEntry(spans, '/', 'GET', 200);
             expect(span.data.http.header).to.be.an('object');
             expect(span.data.http.header['x-my-entry-request-header']).to.equal(requestHeaderValue);
             expect(span.data.http.header['x-my-entry-response-header']).to.equal(expectedResponeHeaderValue);
@@ -300,7 +327,7 @@ function registerTests(useHttps) {
       .then(() =>
         testUtils.retry(() =>
           agentControls.getSpans().then(spans => {
-            const span = verifyThereIsExactlyOneHttpEntry(spans);
+            const span = verifyThereIsExactlyOneHttpEntry(spans, '/', 'GET', 200);
             expect(span.data.http.header).to.be.an('object');
             expect(span.data.http.header['x-my-entry-request-header']).to.equal(requestHeaderValue);
             expect(span.data.http.header['x-write-head-response-header']).to.equal(expectedResponeHeaderValue1);
@@ -321,7 +348,7 @@ function registerTests(useHttps) {
       .then(() =>
         testUtils.retry(() =>
           agentControls.getSpans().then(spans => {
-            const span = verifyThereIsExactlyOneHttpEntry(spans);
+            const span = verifyThereIsExactlyOneHttpEntry(spans, '/', 'GET', 200);
             expect(span.data.http.header).to.not.exist;
           })
         )
@@ -337,7 +364,7 @@ function registerTests(useHttps) {
       .then(() =>
         testUtils.retry(() =>
           agentControls.getSpans().then(spans => {
-            const span = verifyThereIsExactlyOneHttpEntry(spans);
+            const span = verifyThereIsExactlyOneHttpEntry(spans, '/', 'GET', 200);
             expect(span.data.http.params).to.equal('param1=value1&param2=value2&param3=value4');
           })
         )
@@ -359,7 +386,14 @@ function registerTests(useHttps) {
           // for it.
           return testUtils.retry(() =>
             agentControls.getSpans().then(spans => {
-              verifyThereIsExactlyOneHttpEntry(spans, '/dont-respond');
+              // Note: For HTTP 1, the captured HTTP status will be 200 even for a client timeout, because the we take
+              // the status from the response object which is created before the request is processed by user code. The
+              // default for the status attribute is 200 and so this is what we capture (or whatever the user code sets
+              // on the response object before running the request is aborted due to the timeout). For HTTP 2, the
+              // situation is different because we inspect a response header of the stream (HTTP2_HEADER_STATUS), which
+              // does not exist until a response is actually sent. Thus, for HTTP 2, span.data.http.status will be
+              // undefined.
+              verifyThereIsExactlyOneHttpEntry(spans, '/dont-respond', 'GET', useHttp2CompatApi ? undefined : 200);
             })
           );
         } else {
@@ -382,7 +416,14 @@ function registerTests(useHttps) {
           // for it.
           return testUtils.retry(() =>
             agentControls.getSpans().then(spans => {
-              verifyThereIsExactlyOneHttpEntry(spans, '/destroy-socket');
+              // Note: For HTTP 1, the captured HTTP status will be 200 even when the server destroys the socket before
+              // responding, because the we take the status from the response object which is created before the request
+              // is processed by user code. The default for the status attribute is 200 and so this is what we capture
+              // (or whatever the user code sets on the response object before running the request is aborted due to the
+              // timeout). For HTTP 2, the situation is different because we inspect a response header of the stream
+              // (HTTP2_HEADER_STATUS), which does not exist until a response is actually sent. Thus, for HTTP 2,
+              // span.data.http.status will be undefined.
+              verifyThereIsExactlyOneHttpEntry(spans, '/destroy-socket', 'GET', useHttp2CompatApi ? undefined : 200);
             })
           );
         } else {
@@ -391,19 +432,23 @@ function registerTests(useHttps) {
       }));
 }
 
-function verifyThereIsExactlyOneHttpEntry(spans, url = '/', method = 'GET', status = 200, synthetic = false) {
+function verifyThereIsExactlyOneHttpEntry(spans, url = '/', method = 'GET', status, erroneous, synthetic) {
   expect(spans.length).to.equal(1);
   const span = spans[0];
-  verifyHttpEntry(span, url, method, status, synthetic);
+  verifyHttpEntry(span, url, method, status, erroneous, synthetic);
   return span;
 }
 
-function verifyHttpEntry(span, url = '/', method = 'GET', status = 200, synthetic = false) {
+function verifyHttpEntry(span, url = '/', method = 'GET', status, erroneous = false, synthetic = false) {
   expect(span.n).to.equal('node.http.server');
   expect(span.k).to.equal(constants.ENTRY);
   expect(span.async).to.not.exist;
   expect(span.error).to.not.exist;
-  expect(span.ec).to.equal(0);
+  if (erroneous) {
+    expect(span.ec).to.equal(1);
+  } else {
+    expect(span.ec).to.equal(0);
+  }
   expect(span.t).to.be.a('string');
   expect(span.s).to.be.a('string');
   if (!synthetic) {

@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.103.0
+- Instrument Node.js core [http2 module](https://nodejs.org/api/http2.html) to trace HTTP/2 communication (except for server push/`pushStream`).
+
 ## 1.102.0
 - Instrument [superagent's](https://www.npmjs.com/package/superagent) custom thenable to keep asynchronous context.
 - Provide experimental API to instrument specific modules on demand for non-standard build/deployment scenarios (e.g. bundling dependencies).

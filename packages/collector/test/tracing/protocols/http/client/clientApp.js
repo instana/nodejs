@@ -29,7 +29,7 @@ const app = express();
 const awsRegion = process.env.AWS_REGION || 'eu-central-1';
 const s3 = new AWS.S3({ apiVersion: '2006-03-01', region: awsRegion });
 
-const logPrefix = `Express HTTP client: Client (${process.pid}):\t`;
+const logPrefix = `Express/${protocol} Client (${process.pid}):\t`;
 
 if (process.env.WITH_STDOUT) {
   app.use(morgan(`${logPrefix}:method :url :status`));

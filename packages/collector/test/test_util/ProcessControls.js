@@ -8,6 +8,7 @@ const request = require('request-promise');
 
 const agentPort = require('../apps/agentStubControls').agentPort;
 const config = require('../../../core/test/config');
+const http2Promise = require('./http2Promise');
 const testUtils = require('../../../core/test/test_util');
 
 const sslDir = path.join(__dirname, '..', 'apps', 'ssl');
@@ -28,9 +29,10 @@ const ProcessControls = (module.exports = function ProcessControls(opts = {}) {
   this.appPath = opts.appPath;
   this.dontKillInAfterHook = opts.dontKillInAfterHook;
   this.args = opts.args;
+  this.http2 = opts.http2;
   this.port = opts.port || process.env.APP_PORT || 3215;
   this.useHttps = opts.env && !!opts.env.USE_HTTPS;
-  this.baseUrl = `${this.useHttps ? 'https' : 'http'}://localhost:${this.port}`;
+  this.baseUrl = `${this.useHttps || this.http2 ? 'https' : 'http'}://localhost:${this.port}`;
   this.tracingEnabled = opts.tracingEnabled !== false;
   this.usePreInit = opts.usePreInit === true;
   // optional agent controls which will result in a beforeEach call which ensures that the
@@ -93,16 +95,12 @@ ProcessControls.prototype.kill = function kill() {
 };
 
 ProcessControls.prototype.waitUntilServerIsUp = function waitUntilServerIsUp() {
-  return testUtils.retry(() => {
-    return request({
+  return testUtils.retry(() =>
+    this.sendRequest({
       method: 'GET',
-      url: this.baseUrl,
-      headers: {
-        'X-INSTANA-L': '0'
-      },
-      ca: cert
-    });
-  });
+      suppressTracing: true
+    })
+  );
 };
 
 ProcessControls.prototype.getPid = function getPid() {
@@ -113,15 +111,23 @@ ProcessControls.prototype.getPid = function getPid() {
 };
 
 ProcessControls.prototype.sendRequest = function(opts) {
-  if (opts.suppressTracing === true) {
-    opts.headers = opts.headers || {};
-    opts.headers['X-INSTANA-L'] = '0';
-  }
+  if (this.http2) {
+    return http2Promise.request({
+      ...opts,
+      baseUrl: this.baseUrl
+    });
+  } else {
+    if (opts.suppressTracing === true) {
+      opts.headers = opts.headers || {};
+      opts.headers['X-INSTANA-L'] = '0';
+    }
 
-  opts.url = this.baseUrl + opts.path;
-  opts.json = true;
-  opts.ca = cert;
-  return request(opts);
+    opts.url = this.baseUrl + (opts.path || '');
+    opts.json = true;
+    opts.ca = cert;
+
+    return request(opts);
+  }
 };
 
 ProcessControls.prototype.sendViaIpc = function(message) {

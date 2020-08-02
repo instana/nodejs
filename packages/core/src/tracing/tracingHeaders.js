@@ -12,15 +12,22 @@ exports.fromHttpRequest = function fromHttpRequest(req) {
   if (!req || !req.headers) {
     req = { headers: {} };
   }
+  return exports.fromHeaders(req.headers);
+};
 
-  var xInstanaT = readInstanaTraceId(req);
-  var xInstanaS = readInstanaParentId(req);
-  var levelAndCorrelation = readLevelAndCorrelation(req);
+/**
+ * Inspects the given headers for X-INSTANA-T, X-INSTANA-S, X-INSTANA-L, as well as the W3C trace
+ * context headers traceparent and tracestate.
+ */
+exports.fromHeaders = function fromHeaders(headers) {
+  var xInstanaT = readInstanaTraceId(headers);
+  var xInstanaS = readInstanaParentId(headers);
+  var levelAndCorrelation = readLevelAndCorrelation(headers);
   var level = levelAndCorrelation.level;
   var correlationType = levelAndCorrelation.correlationType;
   var correlationId = levelAndCorrelation.correlationId;
-  var synthetic = readSyntheticMarker(req);
-  var w3cTraceContext = readW3cTraceContext(req);
+  var synthetic = readSyntheticMarker(headers);
+  var w3cTraceContext = readW3cTraceContext(headers);
 
   if (correlationType && correlationId) {
     // Ignore X-INSTANA-T/-S and force starting a new span if we received correlation info.
@@ -148,24 +155,24 @@ exports.fromHttpRequest = function fromHttpRequest(req) {
   }
 };
 
-function readInstanaTraceId(req) {
-  var xInstanaT = req.headers[constants.traceIdHeaderNameLowerCase];
+function readInstanaTraceId(headers) {
+  var xInstanaT = headers[constants.traceIdHeaderNameLowerCase];
   if (xInstanaT == null) {
     return null;
   }
   return xInstanaT;
 }
 
-function readInstanaParentId(req) {
-  var xInstanaS = req.headers[constants.spanIdHeaderNameLowerCase];
+function readInstanaParentId(headers) {
+  var xInstanaS = headers[constants.spanIdHeaderNameLowerCase];
   if (xInstanaS == null) {
     return null;
   }
   return xInstanaS;
 }
 
-function readLevelAndCorrelation(req) {
-  var xInstanaL = req.headers[constants.traceLevelHeaderNameLowerCase];
+function readLevelAndCorrelation(headers) {
+  var xInstanaL = headers[constants.traceLevelHeaderNameLowerCase];
   if (xInstanaL == null) {
     // fast path for when we did not receive the header at all
     return {};
@@ -212,19 +219,19 @@ function isSuppressed(level) {
   return typeof level === 'string' && level.indexOf('0') === 0;
 }
 
-function readSyntheticMarker(req) {
-  return req.headers[constants.syntheticHeaderNameLowerCase] === '1';
+function readSyntheticMarker(headers) {
+  return headers[constants.syntheticHeaderNameLowerCase] === '1';
 }
 
 function traceStateHasInstanaKeyValuePair(w3cTraceContext) {
   return w3cTraceContext.instanaTraceId && w3cTraceContext.instanaParentId;
 }
 
-function readW3cTraceContext(req) {
-  var traceParent = req.headers[constants.w3cTraceParent];
+function readW3cTraceContext(headers) {
+  var traceParent = headers[constants.w3cTraceParent];
   // The spec mandates that multiple tracestate headers should be treated by concatenating them. Node.js' http core
   // library takes care of that already.
-  var traceState = req.headers[constants.w3cTraceState];
+  var traceState = headers[constants.w3cTraceState];
   var traceContext;
   if (traceParent) {
     traceContext = w3c.parse(traceParent, traceState);
