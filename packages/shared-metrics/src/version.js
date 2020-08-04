@@ -1,22 +1,22 @@
 'use strict';
 
-var applicationUnderMonitoring = require('@instana/core').util.applicationUnderMonitoring;
+const applicationUnderMonitoring = require('@instana/core').util.applicationUnderMonitoring;
 
-var logger = require('@instana/core').logger.getLogger('metrics');
-exports.setLogger = function(_logger) {
+let logger = require('@instana/core').logger.getLogger('metrics');
+exports.setLogger = function setLogger(_logger) {
   logger = _logger;
 };
 
 exports.payloadPrefix = 'version';
 exports.currentPayload = undefined;
 
-var MAX_ATTEMPTS = 20;
-var DELAY = 1000;
-var attempts = 0;
+const MAX_ATTEMPTS = 20;
+const DELAY = 1000;
+let attempts = 0;
 
-exports.activate = function() {
+exports.activate = function activate() {
   attempts++;
-  applicationUnderMonitoring.getMainPackageJson(function(err, packageJson) {
+  applicationUnderMonitoring.getMainPackageJson((err, packageJson) => {
     if (err) {
       return logger.warn('Failed to determine main package json. Reason: ', err.message, err.stack);
     } else if (!packageJson && attempts < MAX_ATTEMPTS) {

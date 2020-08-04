@@ -11,7 +11,7 @@ exports.init = function init(config) {
   coreMetrics.init(config);
 };
 
-exports.setLogger = function(_logger) {
+exports.setLogger = function setLogger(_logger) {
   coreMetrics.setLogger(_logger);
 };
 

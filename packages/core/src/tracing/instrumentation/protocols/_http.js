@@ -18,11 +18,11 @@ exports.getExtraHeadersFromHeaders = function getExtraHeadersFromHeaders(headers
     return undefined;
   }
 
-  var extraHeadersFound = false;
-  var extraHeaders = {};
-  for (var i = 0; i < extraHttpHeadersToCapture.length; i++) {
-    var key = extraHttpHeadersToCapture[i];
-    var value = headers[key];
+  let extraHeadersFound = false;
+  const extraHeaders = {};
+  for (let i = 0; i < extraHttpHeadersToCapture.length; i++) {
+    const key = extraHttpHeadersToCapture[i];
+    const value = headers[key];
     if (value) {
       extraHeaders[key] = value;
       extraHeadersFound = true;
@@ -54,14 +54,15 @@ exports.getExtraHeadersCaseInsensitive = function getExtraHeadersCaseInsensitive
     return undefined;
   }
 
-  var keys = Object.keys(headers).map(function(key) {
-    return { orig: key, low: key.toLowerCase() };
-  });
-  var extraHeadersFound = false;
-  var extraHeaders = {};
-  for (var i = 0; i < extraHttpHeadersToCapture.length; i++) {
-    var keyToCapture = extraHttpHeadersToCapture[i];
-    for (var j = 0; j < keys.length; j++) {
+  const keys = Object.keys(headers).map(key => ({
+    orig: key,
+    low: key.toLowerCase()
+  }));
+  let extraHeadersFound = false;
+  const extraHeaders = {};
+  for (let i = 0; i < extraHttpHeadersToCapture.length; i++) {
+    const keyToCapture = extraHttpHeadersToCapture[i];
+    for (let j = 0; j < keys.length; j++) {
       if (keys[j].low === keyToCapture) {
         extraHeaders[keys[j].low] = headers[keys[j].orig];
         extraHeadersFound = true;
@@ -80,9 +81,9 @@ exports.mergeExtraHeadersFromServerResponseOrClientResponse = function mergeExtr
   serverResponse,
   extraHttpHeadersToCapture
 ) {
-  return mergeExtraHeaders(headersAlreadyCapturedIfAny, extraHttpHeadersToCapture, function(key) {
-    return serverResponse.getHeader(key);
-  });
+  return mergeExtraHeaders(headersAlreadyCapturedIfAny, extraHttpHeadersToCapture, key =>
+    serverResponse.getHeader(key)
+  );
 };
 
 exports.mergeExtraHeadersFromIncomingMessage = function mergeExtraHeadersFromIncomingMessage(
@@ -105,9 +106,7 @@ exports.mergeExtraHeadersFromHeaders = function mergeExtraHeadersFromHeaders(
   if (!headers) {
     return headersAlreadyCapturedIfAny;
   }
-  return mergeExtraHeaders(headersAlreadyCapturedIfAny, extraHttpHeadersToCapture, function(key) {
-    return headers[key];
-  });
+  return mergeExtraHeaders(headersAlreadyCapturedIfAny, extraHttpHeadersToCapture, key => headers[key]);
 };
 
 exports.mergeExtraHeadersCaseInsensitive = function mergeExtraHeadersCaseInsensitive(
@@ -119,12 +118,13 @@ exports.mergeExtraHeadersCaseInsensitive = function mergeExtraHeadersCaseInsensi
     return headersAlreadyCapturedIfAny;
   }
 
-  var keys = Object.keys(headers).map(function(key) {
-    return { orig: key, low: key.toLowerCase() };
-  });
+  const keys = Object.keys(headers).map(key => ({
+    orig: key,
+    low: key.toLowerCase()
+  }));
 
-  return mergeExtraHeaders(headersAlreadyCapturedIfAny, extraHttpHeadersToCapture, function(keyToCapture) {
-    for (var j = 0; j < keys.length; j++) {
+  return mergeExtraHeaders(headersAlreadyCapturedIfAny, extraHttpHeadersToCapture, keyToCapture => {
+    for (let j = 0; j < keys.length; j++) {
       if (keys[j].low === keyToCapture) {
         return headers[keys[j].orig];
       }
@@ -138,11 +138,11 @@ function mergeExtraHeaders(headersAlreadyCapturedIfAny, extraHttpHeadersToCaptur
     return headersAlreadyCapturedIfAny;
   }
 
-  var additionalHeadersFound = false;
-  var additionalHeaders = {};
-  for (var i = 0; i < extraHttpHeadersToCapture.length; i++) {
-    var key = extraHttpHeadersToCapture[i];
-    var value = getHeader(key);
+  let additionalHeadersFound = false;
+  let additionalHeaders = {};
+  for (let i = 0; i < extraHttpHeadersToCapture.length; i++) {
+    const key = extraHttpHeadersToCapture[i];
+    const value = getHeader(key);
     if (value) {
       additionalHeaders[key] = value;
       additionalHeadersFound = true;

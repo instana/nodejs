@@ -97,7 +97,15 @@ describe('tracing/sdk', function() {
             expect(ipcMessages.length).to.equal(1);
             expect(ipcMessages[0]).to.equal('done: start-entry');
             return agentControls.getSpans().then(spans => {
-              const customEntry = expectCustomEntry(spans, controls.getPid(), 'none', null, null, null, true);
+              const customEntry = expectCustomEntry(
+                spans,
+                controls.getPid(),
+                'none',
+                undefined,
+                undefined,
+                undefined,
+                true
+              );
               expectHttpExit(spans, customEntry, controls.getPid());
             });
           });
@@ -206,7 +214,14 @@ describe('tracing/sdk', function() {
             expect(ipcMessages.length).to.equal(1);
             expect(ipcMessages[0]).to.equal('done: nest-entry-exit');
             return agentControls.getSpans().then(spans => {
-              const customEntry = expectCustomEntry(spans, controls.getPid(), null, null, null, /^nestEntryExit/);
+              const customEntry = expectCustomEntry(
+                spans,
+                controls.getPid(),
+                undefined,
+                undefined,
+                undefined,
+                /^nestEntryExit/
+              );
               expectCustomExit(spans, customEntry, controls.getPid());
             });
           });
@@ -296,8 +311,7 @@ describe('tracing/sdk', function() {
     }
   });
 
-  function expectCustomEntry(spans, pid, tagsAt, traceId, parentSpanId, functionName, error) {
-    functionName = functionName || /^createEntry/;
+  function expectCustomEntry(spans, pid, tagsAt, traceId, parentSpanId, functionName = /^createEntry/, error) {
     return testUtils.expectAtLeastOneMatching(spans, span => {
       if (traceId) {
         expect(span.t).to.equal(traceId);

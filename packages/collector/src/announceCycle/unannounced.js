@@ -1,17 +1,17 @@
 'use strict';
 
-var secrets = require('@instana/core').secrets;
-var tracing = require('@instana/core').tracing;
+const secrets = require('@instana/core').secrets;
+const tracing = require('@instana/core').tracing;
 
-var logger;
-logger = require('../logger').getLogger('announceCycle/unannounced', function(newLogger) {
+let logger;
+logger = require('../logger').getLogger('announceCycle/unannounced', newLogger => {
   logger = newLogger;
 });
-var agentConnection = require('../agentConnection');
-var agentOpts = require('../agent/opts');
-var pidStore = require('../pidStore');
+const agentConnection = require('../agentConnection');
+const agentOpts = require('../agent/opts');
+const pidStore = require('../pidStore');
 
-var retryDelay = 60 * 1000;
+const retryDelay = 60 * 1000;
 
 module.exports = {
   enter: function(ctx) {
@@ -22,14 +22,14 @@ module.exports = {
 };
 
 function tryToAnnounce(ctx) {
-  agentConnection.announceNodeCollector(function(err, rawResponse) {
+  agentConnection.announceNodeCollector((err, rawResponse) => {
     if (err) {
       logger.info('Announce attempt failed: %s. Will retry in %sms', err.message, retryDelay);
       setTimeout(tryToAnnounce, retryDelay, ctx).unref();
       return;
     }
 
-    var response;
+    let response;
     try {
       response = JSON.parse(rawResponse);
     } catch (e) {
@@ -43,17 +43,15 @@ function tryToAnnounce(ctx) {
       return;
     }
 
-    var pid = response.pid;
+    const pid = response.pid;
     logger.info('Overwriting pid for reporting purposes to: %s', pid);
     pidStore.pid = pid;
 
     agentOpts.agentUuid = response.agentUuid;
     if (Array.isArray(response.extraHeaders)) {
       tracing.setExtraHttpHeadersToCapture(
-        response.extraHeaders.map(function(s) {
-          // Node.js HTTP API turns all incoming HTTP headers into lowercase.
-          return s.toLowerCase();
-        })
+        // Node.js HTTP API turns all incoming HTTP headers into lowercase.
+        response.extraHeaders.map(s => s.toLowerCase())
       );
     }
 

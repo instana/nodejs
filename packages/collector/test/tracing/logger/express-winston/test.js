@@ -106,7 +106,7 @@ describe('tracing/logger/express-winston', function() {
       found = found || callSite.c.indexOf('express-winston/app.js') >= 0;
     });
     if (!found) {
-      fail('Did not find the expected call site express-winston/app.js in ' + JSON.stringify(span.stack, null, 2));
+      fail(`Did not find the expected call site express-winston/app.js in ${JSON.stringify(span.stack, null, 2)}`);
     }
   }
 });

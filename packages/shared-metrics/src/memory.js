@@ -3,9 +3,9 @@
 exports.payloadPrefix = 'memory';
 exports.currentPayload = {};
 
-var activeIntervalHandle = null;
+let activeIntervalHandle = null;
 
-exports.activate = function() {
+exports.activate = function activate() {
   gatherMemoryUsageStatistics();
   activeIntervalHandle = setInterval(gatherMemoryUsageStatistics, 1000);
   activeIntervalHandle.unref();
@@ -15,7 +15,7 @@ function gatherMemoryUsageStatistics() {
   exports.currentPayload = process.memoryUsage();
 }
 
-exports.deactivate = function() {
+exports.deactivate = function deactivate() {
   exports.currentPayload = {};
   if (activeIntervalHandle) {
     clearInterval(activeIntervalHandle);

@@ -1,18 +1,18 @@
 'use strict';
 
-var instrument = require('cls-bluebird');
-var requireHook = require('../../../util/requireHook');
-var cls = require('../../cls');
+const instrument = require('cls-bluebird');
+const requireHook = require('../../../util/requireHook');
+const cls = require('../../cls');
 
-exports.activate = function() {
+exports.activate = function activate() {
   // nothing to do
 };
 
-exports.deactivate = function() {
+exports.deactivate = function deactivate() {
   // nothing to do
 };
 
-exports.init = function() {
+exports.init = function init() {
   requireHook.onModuleLoad('bluebird', patchBluebird);
 };
 

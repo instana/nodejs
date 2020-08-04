@@ -340,8 +340,8 @@ function registerTests(useHttps, useHttp2CompatApi) {
   });
 
   // eslint-disable-next-line max-len
-  it(`must not contain the header field when neither request nor response headers are present (HTTPS: ${useHttps})`, () => {
-    return controls
+  it(`must not contain the header field when neither request nor response headers are present (HTTPS: ${useHttps})`, () =>
+    controls
       .sendRequest({
         method: 'GET',
         path: '/'
@@ -353,8 +353,7 @@ function registerTests(useHttps, useHttp2CompatApi) {
             expect(span.data.http.header).to.not.exist;
           })
         )
-      );
-  });
+      ));
 
   it(`must remove secrets from query parameters (HTTPS: ${useHttps})`, () =>
     controls

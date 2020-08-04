@@ -54,8 +54,8 @@ mochaSuiteFn('tracing/http2', function() {
   }).registerTestHooks();
 
   [false, true].forEach(withQuery => {
-    it(`must trace http2 GET with${withQuery ? '' : 'out'} query`, () => {
-      return clientControls
+    it(`must trace http2 GET with${withQuery ? '' : 'out'} query`, () =>
+      clientControls
         .sendRequest({
           method: 'GET',
           path: constructPath('/trigger-downstream', withQuery)
@@ -67,15 +67,14 @@ mochaSuiteFn('tracing/http2', function() {
           expect(responsePayload.message).to.equal('Ohai HTTP2!');
 
           return retry(() => agentControls.getSpans().then(spans => verifySpans(spans, 'GET', false, withQuery)));
-        });
-    });
+        }));
   });
 
   ['POST', 'PUT', 'PATCH', 'DELETE'].forEach(method => {
-    it(`must trace http2 ${method}`, () => {
-      return clientControls
+    it(`must trace http2 ${method}`, () =>
+      clientControls
         .sendRequest({
-          method: method,
+          method,
           path: '/trigger-downstream'
         })
         .then(res => {
@@ -85,12 +84,11 @@ mochaSuiteFn('tracing/http2', function() {
           expect(responsePayload.message).to.equal('Ohai HTTP2!');
 
           return retry(() => agentControls.getSpans().then(spans => verifySpans(spans, method, false)));
-        });
-    });
+        }));
   });
 
-  it('must trace an errorneous http2 request', () => {
-    return clientControls
+  it('must trace an errorneous http2 request', () =>
+    clientControls
       .sendRequest({
         method: 'GET',
         path: '/trigger-downstream?error=true',
@@ -103,8 +101,7 @@ mochaSuiteFn('tracing/http2', function() {
         expect(responsePayload.message).to.equal('Oops!');
 
         return retry(() => agentControls.getSpans().then(spans => verifySpans(spans, 'GET', true)));
-      });
-  });
+      }));
 });
 
 function constructPath(basePath, withQuery) {

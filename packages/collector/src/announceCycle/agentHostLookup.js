@@ -1,15 +1,15 @@
 'use strict';
 
-var atMostOnce = require('@instana/core').util.atMostOnce;
-var exec = require('child_process').exec;
-var http = require('@instana/core').uninstrumentedHttp.http;
+const atMostOnce = require('@instana/core').util.atMostOnce;
+const exec = require('child_process').exec;
+const http = require('@instana/core').uninstrumentedHttp.http;
 
-var agentOpts = require('../agent/opts');
+const agentOpts = require('../agent/opts');
 
-var EXPECTED_SERVER_HEADER = 'Instana Agent';
+const EXPECTED_SERVER_HEADER = 'Instana Agent';
 
-var logger;
-logger = require('../logger').getLogger('announceCycle/agentHostLookup', function(newLogger) {
+let logger;
+logger = require('../logger').getLogger('announceCycle/agentHostLookup', newLogger => {
   logger = newLogger;
 });
 
@@ -23,15 +23,15 @@ logger = require('../logger').getLogger('announceCycle/agentHostLookup', functio
 // The host differs, when the collector is running inside a Docker container and the
 // agent is running on the host.
 
-var retryTimeoutMillis = 60 * 1000;
+const retryTimeoutMillis = 60 * 1000;
 
 module.exports = {
-  enter: enter,
+  enter,
   leave: function() {}
 };
 
 function enter(ctx) {
-  var agentHost = agentOpts.host;
+  const agentHost = agentOpts.host;
 
   checkHost(agentHost, function onCheckHost(localhostCheckErr) {
     if (!localhostCheckErr) {
@@ -53,7 +53,7 @@ function enter(ctx) {
           agentHost,
           retryTimeoutMillis
         );
-        var defaultGatewayRetryTimeout = setTimeout(enter, retryTimeoutMillis, ctx);
+        const defaultGatewayRetryTimeout = setTimeout(enter, retryTimeoutMillis, ctx);
         defaultGatewayRetryTimeout.unref();
         return;
       }
@@ -75,7 +75,7 @@ function enter(ctx) {
           defaultGateway,
           retryTimeoutMillis
         );
-        var checkHostRetryTimeout = setTimeout(enter, retryTimeoutMillis, ctx);
+        const checkHostRetryTimeout = setTimeout(enter, retryTimeoutMillis, ctx);
         checkHostRetryTimeout.unref();
       });
     });
@@ -83,9 +83,9 @@ function enter(ctx) {
 }
 
 function getDefaultGateway(cb) {
-  exec("/sbin/ip route | awk '/default/ { print $3 }'", function(error, stdout, stderr) {
+  exec("/sbin/ip route | awk '/default/ { print $3 }'", (error, stdout, stderr) => {
     if (error !== null || stderr.length > 0) {
-      cb(new Error('Failed to retrieve default gateway: ' + stderr));
+      cb(new Error(`Failed to retrieve default gateway: ${stderr}`));
     } else {
       cb(null, stdout.trim());
     }
@@ -93,28 +93,29 @@ function getDefaultGateway(cb) {
 }
 
 function checkHost(host, cb) {
-  cb = atMostOnce('callback for checkHost: ' + host, cb);
+  cb = atMostOnce(`callback for checkHost: ${host}`, cb);
 
+  let req;
   try {
-    var req = http.request(
+    req = http.request(
       {
-        host: host,
+        host,
         port: agentOpts.port,
         path: '/',
         agent: http.agent,
         method: 'GET'
       },
-      function(res) {
+      res => {
         if (res.headers.server === EXPECTED_SERVER_HEADER) {
           cb(null);
         } else {
-          cb(new Error('Host ' + host + ' did not respond with expected agent header. Got: ' + res.headers.server));
+          cb(new Error(`Host ${host} did not respond with expected agent header. Got: ${res.headers.server}`));
         }
         res.resume();
       }
     );
   } catch (e) {
-    cb(new Error('Host lookup failed due to: ' + e.message));
+    cb(new Error(`Host lookup failed due to: ${e.message}`));
     return;
   }
 
@@ -122,8 +123,8 @@ function checkHost(host, cb) {
     cb(new Error('Host check timed out'));
   });
 
-  req.on('error', function(err) {
-    cb(new Error('Host check failed: ' + err.message));
+  req.on('error', err => {
+    cb(new Error(`Host check failed: ${err.message}`));
   });
 
   req.end();

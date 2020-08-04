@@ -61,7 +61,7 @@ describe('tracing/w3c-trace-context parser', () => {
     });
 
     it('should reject trailing content for spec version 00', () => {
-      const parsed = parse(validTraceParent + ' ');
+      const parsed = parse(`${validTraceParent} `);
       expect(parsed.traceParentValid).to.be.false;
     });
 
@@ -181,13 +181,9 @@ describe('tracing/w3c-trace-context parser', () => {
       it('should only accept 32 key-value pairs and drop the rest', () => {
         const tooManyPairs = new Array(35)
           .fill('')
-          .map((ignored, i) => {
-            return `vendor-${i}=value-${i}`;
-          })
+          .map((ignored, i) => `vendor-${i}=value-${i}`)
           .join(',');
-        const expected = new Array(32).fill('').map((ignored, i) => {
-          return `vendor-${i}=value-${i}`;
-        });
+        const expected = new Array(32).fill('').map((ignored, i) => `vendor-${i}=value-${i}`);
         const parsed = parse(validTraceParent, tooManyPairs);
         expect(parsed.traceStateHead).to.deep.equal(expected);
         expect(parsed.traceStateTail).to.not.exist;
@@ -230,9 +226,8 @@ describe('tracing/w3c-trace-context parser', () => {
         const testTitleSuffix = `(${idLengthTitle(shortTraceId)})`;
 
         it(`should parse the in key-value pair when it's leftmost ${testTitleSuffix}`, () => {
-          const traceStateWithInstana =
-            ` ${constants.w3cInstana}=${instanaValue}, philo=verygreen, rojo=00f067aa0ba902b7,` +
-            'congo=t61rcWkgMzE, dendron=whats-with-the-plants';
+          // eslint-disable-next-line max-len
+          const traceStateWithInstana = `${` ${constants.w3cInstana}=${instanaValue}, philo=verygreen, rojo=00f067aa0ba902b7,`}congo=t61rcWkgMzE, dendron=whats-with-the-plants`;
           const parsed = parse(validTraceParent, traceStateWithInstana);
           expect(parsed.traceStateValid).to.be.true;
           expect(parsed.traceStateHead).to.not.exist;
@@ -247,9 +242,8 @@ describe('tracing/w3c-trace-context parser', () => {
         });
 
         it(`should parse the in key-value pair in the middle ${testTitleSuffix}`, () => {
-          const traceStateWithInstana =
-            `philo=verygreen, rojo=00f067aa0ba902b7, ${constants.w3cInstana}=${instanaValue}, congo=t61rcWkgMzE, ` +
-            'dendron=whats-with-the-plants';
+          // eslint-disable-next-line max-len
+          const traceStateWithInstana = `${`philo=verygreen, rojo=00f067aa0ba902b7, ${constants.w3cInstana}=${instanaValue}, congo=t61rcWkgMzE, `}dendron=whats-with-the-plants`;
           const parsed = parse(validTraceParent, traceStateWithInstana);
           expect(parsed.traceStateValid).to.be.true;
           expect(parsed.traceStateHead).to.deep.equal(['philo=verygreen', 'rojo=00f067aa0ba902b7']);
@@ -259,9 +253,8 @@ describe('tracing/w3c-trace-context parser', () => {
         });
 
         it(`should parse the in key-value pair when it's rightmost ${testTitleSuffix}`, () => {
-          const traceStateWithInstana =
-            ' philo=verygreen, rojo=00f067aa0ba902b7,congo=t61rcWkgMzE, ' +
-            `dendron=whats-with-the-plants,   ${constants.w3cInstana}=${instanaValue},`;
+          // eslint-disable-next-line max-len
+          const traceStateWithInstana = ` philo=verygreen, rojo=00f067aa0ba902b7,congo=t61rcWkgMzE, ${`dendron=whats-with-the-plants,   ${constants.w3cInstana}=${instanaValue},`}`;
           const parsed = parse(validTraceParent, traceStateWithInstana);
           expect(parsed.traceStateValid).to.be.true;
           expect(parsed.traceStateHead).to.deep.equal([
@@ -292,50 +285,34 @@ describe('tracing/w3c-trace-context parser', () => {
           ]);
         });
 
-        it(
-          'should capture in key-value pair before dropping excessive key-value pairs if in ' +
-            `comes late ${testTitleSuffix}`,
-          () => {
-            const tooManyPairs = new Array(35)
-              .fill('')
-              .map((ignored, i) => {
-                return `vendor-${i}=value-${i}`;
-              })
-              .concat(`${constants.w3cInstana}=${instanaValue}`)
-              .concat('vendor-99=value-99')
-              .join(',');
-            const expected = new Array(31).fill('').map((ignored, i) => {
-              return `vendor-${i}=value-${i}`;
-            });
-            const parsed = parse(validTraceParent, tooManyPairs);
-            expect(parsed.traceStateHead).to.deep.equal(expected);
-            expect(parsed.instanaTraceId).to.equal(expectedTraceId);
-            expect(parsed.instanaParentId).to.equal(instanaSpanId);
-            expect(parsed.traceStateTail).to.not.exist;
-          }
-        );
+        // eslint-disable-next-line max-len
+        it(`should capture in key-value pair before dropping excessive key-value pairs if in ${`comes late ${testTitleSuffix}`}`, () => {
+          const tooManyPairs = new Array(35)
+            .fill('')
+            .map((ignored, i) => `vendor-${i}=value-${i}`)
+            .concat(`${constants.w3cInstana}=${instanaValue}`)
+            .concat('vendor-99=value-99')
+            .join(',');
+          const expected = new Array(31).fill('').map((ignored, i) => `vendor-${i}=value-${i}`);
+          const parsed = parse(validTraceParent, tooManyPairs);
+          expect(parsed.traceStateHead).to.deep.equal(expected);
+          expect(parsed.instanaTraceId).to.equal(expectedTraceId);
+          expect(parsed.instanaParentId).to.equal(instanaSpanId);
+          expect(parsed.traceStateTail).to.not.exist;
+        });
 
-        it(
-          'should capture in key-value pair before dropping excessive key-value pairs if in ' +
-            `comes early ${testTitleSuffix}`,
-          () => {
-            const tooManyPairs = [`${constants.w3cInstana}=${instanaValue}`]
-              .concat(
-                new Array(35).fill('').map((ignored, i) => {
-                  return `vendor-${i}=value-${i}`;
-                })
-              )
-              .join(',');
-            const expected = new Array(31).fill('').map((ignored, i) => {
-              return `vendor-${i}=value-${i}`;
-            });
-            const parsed = parse(validTraceParent, tooManyPairs);
-            expect(parsed.traceStateHead).to.not.exist;
-            expect(parsed.instanaTraceId).to.equal(expectedTraceId);
-            expect(parsed.instanaParentId).to.equal(instanaSpanId);
-            expect(parsed.traceStateTail).to.deep.equal(expected);
-          }
-        );
+        // eslint-disable-next-line max-len
+        it(`should capture in key-value pair before dropping excessive key-value pairs if in ${`comes early ${testTitleSuffix}`}`, () => {
+          const tooManyPairs = [`${constants.w3cInstana}=${instanaValue}`]
+            .concat(new Array(35).fill('').map((ignored, i) => `vendor-${i}=value-${i}`))
+            .join(',');
+          const expected = new Array(31).fill('').map((ignored, i) => `vendor-${i}=value-${i}`);
+          const parsed = parse(validTraceParent, tooManyPairs);
+          expect(parsed.traceStateHead).to.not.exist;
+          expect(parsed.instanaTraceId).to.equal(expectedTraceId);
+          expect(parsed.instanaParentId).to.equal(instanaSpanId);
+          expect(parsed.traceStateTail).to.deep.equal(expected);
+        });
 
         it(`should render the tracestate value ${testTitleSuffix}`, () => {
           const parsed = parse(
@@ -349,9 +326,8 @@ describe('tracing/w3c-trace-context parser', () => {
         });
 
         it('should extract the most recent foreign trace state key-value pair', () => {
-          const traceStateWithInstana =
-            `   philo=verygreen , rojo=00f067aa0ba902b7, ${constants.w3cInstana}=${instanaValue}, congo=t61rcWkgMzE, ` +
-            'dendron=whats-with-the-plants';
+          // eslint-disable-next-line max-len
+          const traceStateWithInstana = `${`   philo=verygreen , rojo=00f067aa0ba902b7, ${constants.w3cInstana}=${instanaValue}, congo=t61rcWkgMzE, `}dendron=whats-with-the-plants`;
           const parsed = parse(validTraceParent, traceStateWithInstana);
           expect(parsed.getMostRecentForeignTraceStateMember()).to.equal('philo=verygreen');
         });

@@ -23,8 +23,8 @@ describe('tracing/graphql-subscriptions - PubSub/async iterator (pull before pus
   });
   controls.registerTestHooks();
 
-  it('should keep cls context when pulling before pushing', () => {
-    return controls
+  it('should keep cls context when pulling before pushing', () =>
+    controls
       .sendRequest({
         method: 'GET',
         path: '/pull-before-push'
@@ -34,6 +34,5 @@ describe('tracing/graphql-subscriptions - PubSub/async iterator (pull before pus
         expect(valuesReadFromCls[0]).to.equal('test-value');
         expect(valuesReadFromCls[1]).to.equal('test-value');
         expect(valuesReadFromCls[2]).to.equal('test-value');
-      });
-  });
+      }));
 });

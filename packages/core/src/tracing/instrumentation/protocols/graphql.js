@@ -1,27 +1,27 @@
 'use strict';
 
-var shimmer = require('shimmer');
+const shimmer = require('shimmer');
 
-var logger;
-logger = require('../../../logger').getLogger('tracing/graphql', function(newLogger) {
+let logger;
+logger = require('../../../logger').getLogger('tracing/graphql', newLogger => {
   logger = newLogger;
 });
 
-var requireHook = require('../../../util/requireHook');
-var tracingUtil = require('../../tracingUtil');
-var constants = require('../../constants');
-var cls = require('../../cls');
+const requireHook = require('../../../util/requireHook');
+const tracingUtil = require('../../tracingUtil');
+const constants = require('../../constants');
+const cls = require('../../cls');
 
-var isActive = false;
+let isActive = false;
 
-var queryOperationType = 'query';
-var mutationOperationType = 'mutation';
-var subscriptionOperationType = 'subscription';
-var operationTypes = [queryOperationType, mutationOperationType, subscriptionOperationType];
+const queryOperationType = 'query';
+const mutationOperationType = 'mutation';
+const subscriptionOperationType = 'subscription';
+const operationTypes = [queryOperationType, mutationOperationType, subscriptionOperationType];
 
-var subscriptionUpdate = 'subscription-update';
+const subscriptionUpdate = 'subscription-update';
 
-exports.init = function() {
+exports.init = function init() {
   requireHook.onFileLoad(/\/graphql\/execution\/execute.js/, instrumentExecute);
   requireHook.onFileLoad(/\/@apollo\/gateway\/dist\/executeQueryPlan.js/, instrumentApolloGatewayExecuteQueryPlan);
 };
@@ -38,10 +38,10 @@ function shimExecuteFunction(originalFunction) {
       return originalFunction.apply(this, arguments);
     }
 
-    var originalThis = this;
-    var originalArgs = arguments;
-    var doc;
-    var operationName;
+    const originalThis = this;
+    const originalArgs = arguments;
+    let doc;
+    let operationName;
 
     if (originalArgs.length === 1 && typeof originalArgs[0] === 'object') {
       doc = originalArgs[0].document;
@@ -51,14 +51,14 @@ function shimExecuteFunction(originalFunction) {
       operationName = originalArgs[5];
     }
 
-    var operationDefinition = findOperationDefinition(doc, operationName);
+    const operationDefinition = findOperationDefinition(doc, operationName);
     if (!operationDefinition) {
       logger.debug('No operation definition, GraphQL call will not be traced.');
       return originalFunction.apply(this, arguments);
     }
     if (!operationDefinition.operation) {
       logger.debug(
-        'Operation definition has no operation, GraphQL call will not be traced. ' + JSON.stringify(operationDefinition)
+        `Operation definition has no operation, GraphQL call will not be traced. ${JSON.stringify(operationDefinition)}`
       );
       return originalFunction.apply(this, arguments);
     }
@@ -93,8 +93,8 @@ function traceQueryOrMutation(
   operationDefinition,
   operationName
 ) {
-  var activeEntrySpan = cls.getCurrentSpan();
-  var span;
+  const activeEntrySpan = cls.getCurrentSpan();
+  let span;
   if (activeEntrySpan && activeEntrySpan.k === constants.ENTRY && activeEntrySpan.n !== 'graphql.server') {
     // For now, we assume that the GraphQL operation is the only relevant operation that is happening while processing
     // the incoming request.
@@ -123,7 +123,7 @@ function traceQueryOrMutation(
     span.n = 'graphql.server';
   }
 
-  return cls.ns.runAndReturn(function() {
+  return cls.ns.runAndReturn(() => {
     if (!span) {
       // If there hasn't been an entry span that we repurposed into a graphql.server entry span, we need to start a new
       // root entry span here.
@@ -154,10 +154,10 @@ function traceSubscriptionUpdate(
   if (!isActive) {
     return originalFunction.apply(originalThis, originalArgs);
   }
-  var parentSpan = cls.getCurrentSpan() || cls.getReducedSpan();
+  const parentSpan = cls.getCurrentSpan() || cls.getReducedSpan();
   if (parentSpan && !constants.isExitSpan(parentSpan) && parentSpan.t && parentSpan.s) {
-    return cls.ns.runAndReturn(function() {
-      var span = cls.startSpan('graphql.client', constants.EXIT, parentSpan.t, parentSpan.s);
+    return cls.ns.runAndReturn(() => {
+      const span = cls.startSpan('graphql.client', constants.EXIT, parentSpan.t, parentSpan.s);
       span.ts = Date.now();
       span.stack = tracingUtil.getStackTrace(stackTraceRef);
       span.data.graphql = {
@@ -178,36 +178,30 @@ function findOperationDefinition(doc, operationNameFromArgs) {
   if (doc && Array.isArray(doc.definitions)) {
     if (operationNameFromArgs) {
       return doc.definitions
-        .filter(function(definition) {
-          return operationTypes.indexOf(definition.operation) !== -1;
-        })
-        .find(function(definition) {
-          var name = definition.name ? definition.name.value : null;
+        .filter(definition => operationTypes.indexOf(definition.operation) !== -1)
+        .find(definition => {
+          const name = definition.name ? definition.name.value : null;
           return name && operationNameFromArgs === name;
         });
     } else {
-      return doc.definitions.find(function(definition) {
-        return operationTypes.indexOf(definition.operation) !== -1;
-      });
+      return doc.definitions.find(definition => operationTypes.indexOf(definition.operation) !== -1);
     }
   }
   return null;
 }
 
 function addFieldsAndArguments(span, definition) {
-  traverseSelections(definition, function(entities) {
+  traverseSelections(definition, entities => {
     entities.forEach(function(entity) {
-      var entityName = entity.name.value;
-      traverseSelections(entity, function(fields) {
-        span.data.graphql.fields[entityName] = fields.map(function(field) {
-          return field.name.value;
-        });
+      const entityName = entity.name.value;
+      traverseSelections(entity, fields => {
+        span.data.graphql.fields[entityName] = fields.map(field => field.name.value);
       });
 
       if (Array.isArray(entity.arguments) && entity.arguments.length > 0) {
-        span.data.graphql.args[entityName] = entity.arguments.map(function(arg) {
-          return arg.name && typeof arg.name.value === 'string' ? arg.name.value : '?';
-        });
+        span.data.graphql.args[entityName] = entity.arguments.map(arg =>
+          arg.name && typeof arg.name.value === 'string' ? arg.name.value : '?'
+        );
       }
     });
   });
@@ -221,16 +215,17 @@ function traverseSelections(definition, selectionPostProcessor) {
   ) {
     return null;
   }
-  var candidates = definition.selectionSet.selections.filter(function(selection) {
-    return selection && selection.kind === 'Field' && selection.name && typeof selection.name.value === 'string';
-  });
+  const candidates = definition.selectionSet.selections.filter(
+    selection => selection && selection.kind === 'Field' && selection.name && typeof selection.name.value === 'string'
+  );
 
   return selectionPostProcessor(candidates);
 }
 
 function runOriginalAndFinish(originalFunction, originalThis, originalArgs, span) {
+  let result;
   try {
-    var result = originalFunction.apply(originalThis, originalArgs);
+    result = originalFunction.apply(originalThis, originalArgs);
   } catch (e) {
     // A synchronous exception happened when resolving the GraphQL query, finish immediately.
     finishWithException(span, e);
@@ -242,11 +237,11 @@ function runOriginalAndFinish(originalFunction, originalThis, originalArgs, span
   // the promise and value cases.
   if (result && typeof result.then === 'function') {
     return result.then(
-      function(promiseResult) {
+      promiseResult => {
         finishSpan(span, promiseResult);
         return promiseResult;
       },
-      function(err) {
+      err => {
         finishWithException(span, err);
         throw err;
       }
@@ -264,12 +259,8 @@ function finishSpan(span, result) {
   span.d = Date.now() - span.ts;
   if (Array.isArray(result.errors)) {
     span.data.graphql.errors = result.errors
-      .map(function(singleError) {
-        return typeof singleError.message === 'string' ? singleError.message : null;
-      })
-      .filter(function(msg) {
-        return !!msg;
-      })
+      .map(singleError => (typeof singleError.message === 'string' ? singleError.message : null))
+      .filter(msg => !!msg)
       .join(', ');
   }
   if (!span.postponeTransmit) {
@@ -297,7 +288,7 @@ function shimApolloGatewayExecuteQueryPlanFunction(originalFunction) {
     if (!isActive || cls.tracingSuppressed()) {
       return originalFunction.apply(this, arguments);
     }
-    var activeEntrySpan = cls.getCurrentSpan();
+    const activeEntrySpan = cls.getCurrentSpan();
     if (activeEntrySpan && activeEntrySpan.k === constants.ENTRY) {
       // Most of the heavy lifting to trace Apollo Federation gateways (implemented by @apollo/gateway) is done by our
       // standard GraphQL tracing, because those gateway queries are all also run through normal resolvers, which we
@@ -315,15 +306,15 @@ function shimApolloGatewayExecuteQueryPlanFunction(originalFunction) {
       });
     }
 
-    var resultPromise = originalFunction.apply(this, arguments);
+    const resultPromise = originalFunction.apply(this, arguments);
     if (resultPromise && typeof resultPromise.then === 'function') {
       return resultPromise.then(
-        function(promiseResult) {
+        promiseResult => {
           delete activeEntrySpan.postponeTransmit;
           finishSpan(activeEntrySpan, promiseResult);
           return promiseResult;
         },
-        function(err) {
+        err => {
           delete activeEntrySpan.postponeTransmit;
           finishWithException(activeEntrySpan, err);
           throw err;
@@ -334,7 +325,7 @@ function shimApolloGatewayExecuteQueryPlanFunction(originalFunction) {
   };
 }
 
-exports.activate = function() {
+exports.activate = function activate() {
   isActive = true;
 };
 

@@ -1,11 +1,11 @@
 'use strict';
 
-var requireHook = require('../../../util/requireHook');
-var cls = require('../../cls');
+const requireHook = require('../../../util/requireHook');
+const cls = require('../../cls');
 
-var isActive = false;
+let isActive = false;
 
-exports.init = function() {
+exports.init = function init() {
   requireHook.onFileLoad(/\/memored\/index.js/, instrumentMemored);
 };
 
@@ -37,28 +37,29 @@ function instrumentMemoredFunction(memored, fnName) {
     return;
   }
 
-  var original = memored[fnName];
+  const original = memored[fnName];
   memored[fnName] = function() {
     if (!isActive) {
       return original.apply(this, arguments);
     }
 
     // copy the arguments
-    var originalArgs = new Array(arguments.length);
-    for (var i = 0; i < arguments.length; i++) {
+    const originalArgs = new Array(arguments.length);
+    for (let i = 0; i < arguments.length; i++) {
       originalArgs[i] = arguments[i];
     }
     // find the callback (if one has been provided)
-    var originalCb;
-    for (i = originalArgs.length - 1; i >= 0; i--) {
-      if (typeof originalArgs[i] === 'function') {
+    let originalCb;
+    let j;
+    for (j = originalArgs.length - 1; j >= 0; j--) {
+      if (typeof originalArgs[j] === 'function') {
         // bind callback so the CLS context is kept
-        originalCb = originalArgs[i];
+        originalCb = originalArgs[j];
         break;
       }
     }
     if (originalCb) {
-      originalArgs[i] = cls.ns.bind(function() {
+      originalArgs[j] = cls.ns.bind(function() {
         originalCb.apply(this, arguments);
       });
     }
@@ -67,10 +68,10 @@ function instrumentMemoredFunction(memored, fnName) {
   };
 }
 
-exports.activate = function() {
+exports.activate = function activate() {
   isActive = true;
 };
 
-exports.deactivate = function() {
+exports.deactivate = function deactivate() {
   isActive = false;
 };

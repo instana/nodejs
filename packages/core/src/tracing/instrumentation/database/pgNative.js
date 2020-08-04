@@ -1,24 +1,24 @@
 'use strict';
 
-var LRU = require('lru-cache');
-var shimmer = require('shimmer');
+const LRU = require('lru-cache');
+const shimmer = require('shimmer');
 
-var requireHook = require('../../../util/requireHook');
-var tracingUtil = require('../../tracingUtil');
-var constants = require('../../constants');
-var cls = require('../../cls');
+const requireHook = require('../../../util/requireHook');
+const tracingUtil = require('../../tracingUtil');
+const constants = require('../../constants');
+const cls = require('../../cls');
 
-var isActive = false;
+let isActive = false;
 
-var preparedStatements = new LRU(100000);
+const preparedStatements = new LRU(100000);
 
 // See https://www.postgresql.org/docs/9.3/libpq-connect.html#AEN39692
 // Pattern: postgresql://[user[:password]@][netloc][:port][/dbname][?param1=value1&...]
 // eslint-disable-next-line max-len
-var connectionUriRegex = /^\s*postgres(?:ql)?:\/\/(?:([^:@]+)?(?::.+)?@)?([^:/?#]+)?(?::(\d+))?(?:\/([^?]+))?(?:\?.*)?$/;
+const connectionUriRegex = /^\s*postgres(?:ql)?:\/\/(?:([^:@]+)?(?::.+)?@)?([^:/?#]+)?(?::(\d+))?(?:\/([^?]+))?(?:\?.*)?$/;
 //                            ^protocol  user+pass^  ^user    ^pass      ^netloc     ^port      ^db           ^params
 
-exports.init = function() {
+exports.init = function init() {
   requireHook.onModuleLoad('pg-native', instrumentPgNative);
 };
 
@@ -36,7 +36,7 @@ function instrumentPgNative(Client) {
 
 function shimConnect(original) {
   return function(connectionString) {
-    var connectionParams = exports.parseConnectionParameters(connectionString);
+    const connectionParams = exports.parseConnectionParameters(connectionString);
     if (Object.keys(connectionParams).length > 0) {
       this._instana = connectionParams;
     }
@@ -49,9 +49,9 @@ function shimAwaitResult(original) {
     if (!isActive || !cls.isTracing() || typeof arguments[0] !== 'function') {
       return original.apply(this, arguments);
     }
-    var originalArgs = new Array(arguments.length);
+    const originalArgs = new Array(arguments.length);
     originalArgs[0] = cls.ns.bind(arguments[0]);
-    for (var i = 1; i < arguments.length; i++) {
+    for (let i = 1; i < arguments.length; i++) {
       originalArgs[i] = arguments[i];
     }
     return original.apply(this, originalArgs);
@@ -70,8 +70,8 @@ function shimQueryOrExecute(instrumented, original) {
     if (!isActive || !cls.isTracing()) {
       return original.apply(this, arguments);
     }
-    var originalArgs = new Array(arguments.length);
-    for (var i = 0; i < arguments.length; i++) {
+    const originalArgs = new Array(arguments.length);
+    for (let i = 0; i < arguments.length; i++) {
       originalArgs[i] = arguments[i];
     }
     return instrumented(this, original, originalArgs);
@@ -79,22 +79,22 @@ function shimQueryOrExecute(instrumented, original) {
 }
 
 function instrumentedQuery(ctx, originalQuery, originalArgs) {
-  var parentSpan = cls.getCurrentSpan();
+  const parentSpan = cls.getCurrentSpan();
   if (constants.isExitSpan(parentSpan)) {
     return originalQuery.apply(ctx, originalArgs);
   }
-  var statement = originalArgs[0];
-  var stackTraceRef = instrumentedQuery;
+  const statement = originalArgs[0];
+  const stackTraceRef = instrumentedQuery;
   return startSpan(ctx, originalQuery, originalArgs, statement, stackTraceRef);
 }
 
 function instrumentedExecute(ctx, originalExecute, originalArgs) {
-  var parentSpan = cls.getCurrentSpan();
+  const parentSpan = cls.getCurrentSpan();
   if (constants.isExitSpan(parentSpan)) {
     return originalExecute.apply(ctx, originalArgs);
   }
-  var statement = preparedStatements.get(originalArgs[0]);
-  var stackTraceRef = instrumentedExecute;
+  const statement = preparedStatements.get(originalArgs[0]);
+  const stackTraceRef = instrumentedExecute;
   return startSpan(ctx, originalExecute, originalArgs, statement, stackTraceRef);
 }
 
@@ -104,13 +104,13 @@ function shimQueryOrExecuteSync(isExecute, original) {
       return original.apply(this, arguments);
     }
 
-    var originalArgs = new Array(arguments.length);
-    for (var i = 0; i < arguments.length; i++) {
+    const originalArgs = new Array(arguments.length);
+    for (let i = 0; i < arguments.length; i++) {
       originalArgs[i] = arguments[i];
     }
 
-    var statement = isExecute ? preparedStatements.get(originalArgs[0]) : originalArgs[0];
-    var resultAndSpan = startSpanBeforeSync(this, original, originalArgs, statement, shimQueryOrExecuteSync);
+    const statement = isExecute ? preparedStatements.get(originalArgs[0]) : originalArgs[0];
+    const resultAndSpan = startSpanBeforeSync(this, original, originalArgs, statement, shimQueryOrExecuteSync);
     finishSpan(resultAndSpan.error, resultAndSpan.span);
     if (resultAndSpan.error) {
       throw resultAndSpan.error;
@@ -120,8 +120,8 @@ function shimQueryOrExecuteSync(isExecute, original) {
 }
 
 function startSpan(ctx, originalFn, originalArgs, statement, stackTraceRef) {
-  return cls.ns.runAndReturn(function() {
-    var span = cls.startSpan('postgres', constants.EXIT);
+  return cls.ns.runAndReturn(() => {
+    const span = cls.startSpan('postgres', constants.EXIT);
     span.stack = tracingUtil.getStackTrace(stackTraceRef);
     span.data.pg = {
       stmt: tracingUtil.shortenDatabaseStatement(statement),
@@ -131,9 +131,9 @@ function startSpan(ctx, originalFn, originalArgs, statement, stackTraceRef) {
       db: ctx._instana ? ctx._instana.db : undefined
     };
 
-    var originalCallback;
-    var callbackIndex = -1;
-    for (var i = 1; i < originalArgs.length; i++) {
+    let originalCallback;
+    let callbackIndex = -1;
+    for (let i = 1; i < originalArgs.length; i++) {
       if (typeof originalArgs[i] === 'function') {
         originalCallback = originalArgs[i];
         callbackIndex = i;
@@ -142,7 +142,7 @@ function startSpan(ctx, originalFn, originalArgs, statement, stackTraceRef) {
     }
 
     if (callbackIndex >= 0) {
-      var wrappedCallback = function(error) {
+      const wrappedCallback = function(error) {
         finishSpan(error, span);
         return originalCallback.apply(this, arguments);
       };
@@ -154,8 +154,8 @@ function startSpan(ctx, originalFn, originalArgs, statement, stackTraceRef) {
 }
 
 function startSpanBeforeSync(ctx, originalFn, originalArgs, statement, stackTraceRef) {
-  return cls.ns.runAndReturn(function() {
-    var span = cls.startSpan('postgres', constants.EXIT);
+  return cls.ns.runAndReturn(() => {
+    const span = cls.startSpan('postgres', constants.EXIT);
     span.stack = tracingUtil.getStackTrace(stackTraceRef);
     span.data.pg = {
       stmt: tracingUtil.shortenDatabaseStatement(statement),
@@ -165,8 +165,8 @@ function startSpanBeforeSync(ctx, originalFn, originalArgs, statement, stackTrac
       db: ctx._instana ? ctx._instana.db : undefined
     };
 
-    var result;
-    var error;
+    let result;
+    let error;
     try {
       result = originalFn.apply(ctx, originalArgs);
     } catch (_error) {
@@ -174,9 +174,9 @@ function startSpanBeforeSync(ctx, originalFn, originalArgs, statement, stackTrac
     }
 
     return {
-      result: result,
-      error: error,
-      span: span
+      result,
+      error,
+      span
     };
   });
 }
@@ -193,7 +193,7 @@ function finishSpan(error, span) {
 
 // exported for testability
 exports.parseConnectionParameters = function parseConnectionParameters(connectionString) {
-  var connectionParams = {};
+  const connectionParams = {};
   if (typeof connectionString === 'string') {
     connectionString = connectionString.trim();
     if (connectionString.indexOf('postgres') === 0) {
@@ -218,7 +218,7 @@ exports.parseConnectionParameters = function parseConnectionParameters(connectio
 
 function parseConnectionUri(connectionString, connectionParams) {
   // See https://www.postgresql.org/docs/9.3/libpq-connect.html#AEN39692
-  var matchResult = connectionUriRegex.exec(connectionString);
+  const matchResult = connectionUriRegex.exec(connectionString);
   if (matchResult) {
     readConnectionParamFromRegexMatch(connectionParams, matchResult, 1, 'user');
     readConnectionParamFromRegexMatch(connectionParams, matchResult, 2, 'host');
@@ -238,18 +238,16 @@ function parseKeyValueConnectionString(connectionString, connectionParams) {
   // See https://www.postgresql.org/docs/9.3/libpq-connect.html#LIBPQ-CONNSTRING and https://www.postgresql.org/docs/9.3/libpq-connect.html#LIBPQ-PARAMKEYWORDS
   connectionString
     .split(' ')
-    .map(function(pair) {
-      return pair.trim();
-    })
-    .forEach(function(pair) {
-      return ['host', 'hostaddr', 'port', 'dbname', 'user'].forEach(function(key) {
-        return parseConnectStringKeyValuePair(connectionParams, pair, key);
-      });
-    });
+    .map(pair => pair.trim())
+    .forEach(pair =>
+      ['host', 'hostaddr', 'port', 'dbname', 'user'].forEach(key =>
+        parseConnectStringKeyValuePair(connectionParams, pair, key)
+      )
+    );
 }
 
 function parseConnectStringKeyValuePair(connectionParams, pair, key) {
-  if (pair.toLowerCase().indexOf(key + '=') === 0) {
+  if (pair.toLowerCase().indexOf(`${key}=`) === 0) {
     connectionParams[key] = pair.split('=')[1];
   }
 }
@@ -269,10 +267,10 @@ function parseEnvVar(connectionParams, keyEnvVar, keyConnectionParams) {
   }
 }
 
-exports.activate = function() {
+exports.activate = function activate() {
   isActive = true;
 };
 
-exports.deactivate = function() {
+exports.deactivate = function deactivate() {
   isActive = false;
 };

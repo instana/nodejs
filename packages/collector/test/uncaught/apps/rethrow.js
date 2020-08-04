@@ -11,7 +11,7 @@ process.on('uncaughtException', err => {
 });
 
 function throwUncaughtError() {
-  setTimeout(function() {
+  setTimeout(() => {
     throw new Error('Boom');
   }, 100);
 }

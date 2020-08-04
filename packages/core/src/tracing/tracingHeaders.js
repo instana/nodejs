@@ -1,8 +1,8 @@
 'use strict';
 
-var constants = require('./constants');
-var tracingUtil = require('./tracingUtil');
-var w3c = require('./w3c_trace_context');
+const constants = require('./constants');
+const tracingUtil = require('./tracingUtil');
+const w3c = require('./w3c_trace_context');
 
 /**
  * Inspects the headers of an incoming HTTP request for X-INSTANA-T, X-INSTANA-S, X-INSTANA-L, as well as the W3C trace
@@ -20,14 +20,14 @@ exports.fromHttpRequest = function fromHttpRequest(req) {
  * context headers traceparent and tracestate.
  */
 exports.fromHeaders = function fromHeaders(headers) {
-  var xInstanaT = readInstanaTraceId(headers);
-  var xInstanaS = readInstanaParentId(headers);
-  var levelAndCorrelation = readLevelAndCorrelation(headers);
-  var level = levelAndCorrelation.level;
-  var correlationType = levelAndCorrelation.correlationType;
-  var correlationId = levelAndCorrelation.correlationId;
-  var synthetic = readSyntheticMarker(headers);
-  var w3cTraceContext = readW3cTraceContext(headers);
+  let xInstanaT = readInstanaTraceId(headers);
+  let xInstanaS = readInstanaParentId(headers);
+  const levelAndCorrelation = readLevelAndCorrelation(headers);
+  const level = levelAndCorrelation.level;
+  let correlationType = levelAndCorrelation.correlationType;
+  let correlationId = levelAndCorrelation.correlationId;
+  const synthetic = readSyntheticMarker(headers);
+  let w3cTraceContext = readW3cTraceContext(headers);
 
   if (correlationType && correlationId) {
     // Ignore X-INSTANA-T/-S and force starting a new span if we received correlation info.
@@ -47,14 +47,14 @@ exports.fromHeaders = function fromHeaders(headers) {
   if (xInstanaT && xInstanaS && w3cTraceContext) {
     // X-INSTANA- headers *and* W3C trace context headers are present. We use the X-NSTANA- values for tracing and also
     // keep the received W3C trace context around.
-    var result = {
+    const result = {
       traceId: xInstanaT,
       parentId: xInstanaS,
-      level: level,
-      correlationType: correlationType,
-      correlationId: correlationId,
-      synthetic: synthetic,
-      w3cTraceContext: w3cTraceContext
+      level,
+      correlationType,
+      correlationId,
+      synthetic,
+      w3cTraceContext
     };
     if (traceStateHasInstanaKeyValuePair(w3cTraceContext) && w3cTraceContext.traceStateHead) {
       result.foreignParent = {
@@ -70,10 +70,10 @@ exports.fromHeaders = function fromHeaders(headers) {
     return {
       traceId: xInstanaT,
       parentId: xInstanaS,
-      level: level,
-      correlationType: correlationType,
-      correlationId: correlationId,
-      synthetic: synthetic,
+      level,
+      correlationType,
+      correlationId,
+      synthetic,
       w3cTraceContext: w3c.create(xInstanaT, xInstanaS, !isSuppressed(level))
     };
   } else if (w3cTraceContext) {
@@ -83,11 +83,11 @@ exports.fromHeaders = function fromHeaders(headers) {
       return {
         traceId: !isSuppressed(level) ? w3cTraceContext.instanaTraceId : null,
         parentId: !isSuppressed(level) ? w3cTraceContext.instanaParentId : null,
-        level: level,
-        correlationType: correlationType,
-        correlationId: correlationId,
-        synthetic: synthetic,
-        w3cTraceContext: w3cTraceContext,
+        level,
+        correlationType,
+        correlationId,
+        synthetic,
+        w3cTraceContext,
         foreignParent: {
           t: w3cTraceContext.foreignTraceId,
           p: w3cTraceContext.foreignParentId,
@@ -103,11 +103,11 @@ exports.fromHeaders = function fromHeaders(headers) {
       return {
         traceId: !isSuppressed(level) ? tracingUtil.generateRandomTraceId() : null,
         parentId: null,
-        level: level,
-        correlationType: correlationType,
-        correlationId: correlationId,
-        synthetic: synthetic,
-        w3cTraceContext: w3cTraceContext,
+        level,
+        correlationType,
+        correlationId,
+        synthetic,
+        w3cTraceContext,
         foreignParent: {
           t: w3cTraceContext.foreignTraceId,
           p: w3cTraceContext.foreignParentId,
@@ -124,8 +124,8 @@ exports.fromHeaders = function fromHeaders(headers) {
       // existing span (Instana or foreign). This can't be helped, the spec mandates to always set the traceparent
       // header on outgoing requests, even if we didn't sample and it has to have a parent ID field.
       return {
-        level: level,
-        synthetic: synthetic,
+        level,
+        synthetic,
         w3cTraceContext: w3c.createEmptyUnsampled(
           tracingUtil.generateRandomTraceId(),
           tracingUtil.generateRandomSpanId()
@@ -144,11 +144,11 @@ exports.fromHeaders = function fromHeaders(headers) {
       return {
         traceId: xInstanaT,
         parentId: null,
-        level: level,
-        correlationType: correlationType,
-        correlationId: correlationId,
-        synthetic: synthetic,
-        w3cTraceContext: w3cTraceContext
+        level,
+        correlationType,
+        correlationId,
+        synthetic,
+        w3cTraceContext
         // We do not add foreignParent header here because we didn't receive any W3C trace context spec headers.
       };
     }
@@ -156,7 +156,7 @@ exports.fromHeaders = function fromHeaders(headers) {
 };
 
 function readInstanaTraceId(headers) {
-  var xInstanaT = headers[constants.traceIdHeaderNameLowerCase];
+  const xInstanaT = headers[constants.traceIdHeaderNameLowerCase];
   if (xInstanaT == null) {
     return null;
   }
@@ -164,7 +164,7 @@ function readInstanaTraceId(headers) {
 }
 
 function readInstanaParentId(headers) {
-  var xInstanaS = headers[constants.spanIdHeaderNameLowerCase];
+  const xInstanaS = headers[constants.spanIdHeaderNameLowerCase];
   if (xInstanaS == null) {
     return null;
   }
@@ -172,7 +172,7 @@ function readInstanaParentId(headers) {
 }
 
 function readLevelAndCorrelation(headers) {
-  var xInstanaL = headers[constants.traceLevelHeaderNameLowerCase];
+  const xInstanaL = headers[constants.traceLevelHeaderNameLowerCase];
   if (xInstanaL == null) {
     // fast path for when we did not receive the header at all
     return {};
@@ -185,18 +185,18 @@ function readLevelAndCorrelation(headers) {
     return {};
   }
 
-  var level = xInstanaL[0];
-  var correlationType = null;
-  var correlationId = null;
+  let level = xInstanaL[0];
+  let correlationType = null;
+  let correlationId = null;
   if (level !== '0' && level !== '1') {
     level = null;
   }
 
-  var parts = xInstanaL.split(',');
+  const parts = xInstanaL.split(',');
   if (parts.length > 1) {
-    var idxType = parts[1].indexOf('correlationType=');
-    var idxSemi = parts[1].indexOf(';');
-    var idxId = parts[1].indexOf('correlationId=');
+    const idxType = parts[1].indexOf('correlationType=');
+    const idxSemi = parts[1].indexOf(';');
+    const idxId = parts[1].indexOf('correlationId=');
     if (idxType >= 0 && idxSemi > 0 && idxId > 0) {
       correlationType = parts[1].substring(idxType + 16, idxSemi);
       if (correlationType) {
@@ -209,9 +209,9 @@ function readLevelAndCorrelation(headers) {
     }
   }
   return {
-    level: level,
-    correlationType: correlationType,
-    correlationId: correlationId
+    level,
+    correlationType,
+    correlationId
   };
 }
 
@@ -228,11 +228,11 @@ function traceStateHasInstanaKeyValuePair(w3cTraceContext) {
 }
 
 function readW3cTraceContext(headers) {
-  var traceParent = headers[constants.w3cTraceParent];
+  const traceParent = headers[constants.w3cTraceParent];
   // The spec mandates that multiple tracestate headers should be treated by concatenating them. Node.js' http core
   // library takes care of that already.
-  var traceState = headers[constants.w3cTraceState];
-  var traceContext;
+  const traceState = headers[constants.w3cTraceState];
+  let traceContext;
   if (traceParent) {
     traceContext = w3c.parse(traceParent, traceState);
   }

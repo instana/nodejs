@@ -1,10 +1,10 @@
 'use strict';
 
-var pidStore = require('../pidStore');
+const pidStore = require('../pidStore');
 
 exports.payloadPrefix = 'pid';
 exports.currentPayload = pidStore.pid;
 
-pidStore.onPidChange(function(pid) {
+pidStore.onPidChange(pid => {
   exports.currentPayload = pid;
 });

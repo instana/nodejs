@@ -1,17 +1,17 @@
 'use strict';
 
-var log = require('./log');
+const log = require('./log');
 
-var pidStore = require('../pidStore/internalPidStore');
+const pidStore = require('../pidStore/internalPidStore');
 
 module.exports = exports = {
   write: function write(record) {
-    var logLevel = getAgentLogLevel(record.level);
-    var message = 'Node.js collector (pid: ' + process.pid + ', reporting pid: ' + pidStore.pid + '): ' + record.msg;
-    var stack = null;
+    const logLevel = getAgentLogLevel(record.level);
+    let message = `Node.js collector (pid: ${process.pid}, reporting pid: ${pidStore.pid}): ${record.msg}`;
+    let stack = null;
 
     if (record.err) {
-      message += ': ' + record.err.message;
+      message += `: ${record.err.message}`;
       stack = record.err.stack;
     }
 

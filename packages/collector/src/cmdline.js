@@ -1,18 +1,18 @@
 'use strict';
 
-var fs = require('fs');
+const fs = require('fs');
 
-var logger;
-logger = require('./logger').getLogger('cmdline', function(newLogger) {
+let logger;
+logger = require('./logger').getLogger('cmdline', newLogger => {
   logger = newLogger;
 });
 
 exports.getCmdline = function getCmdline() {
-  var name;
-  var args;
+  let name;
+  let args;
 
   try {
-    var cmdline = fs.readFileSync('/proc/' + process.pid + '/cmdline', { encoding: 'utf8' });
+    let cmdline = fs.readFileSync(`/proc/${process.pid}/cmdline`, { encoding: 'utf8' });
 
     cmdline = cmdline.split('\u0000');
     if (cmdline.length > 0) {
@@ -33,7 +33,7 @@ exports.getCmdline = function getCmdline() {
   }
 
   return {
-    name: name,
-    args: args
+    name,
+    args
   };
 };

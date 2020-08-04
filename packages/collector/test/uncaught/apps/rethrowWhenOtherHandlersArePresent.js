@@ -6,29 +6,29 @@
 // error), handlers that have been registered after the throwing handler will
 // not be called. All handlers that were registered earlier will be run.
 
-process.on('uncaughtException', function() {
+process.on('uncaughtException', () => {
   console.log('HANDLER 1');
 });
 
-process.on('uncaughtException', function() {
+process.on('uncaughtException', () => {
   console.log('HANDLER 2');
 });
 
-process.on('uncaughtException', function(err) {
+process.on('uncaughtException', err => {
   console.log('HANDLER 3');
   throw err;
 });
 
-process.on('uncaughtException', function() {
+process.on('uncaughtException', () => {
   console.log('HANDLER 4');
 });
 
-process.on('uncaughtException', function() {
+process.on('uncaughtException', () => {
   console.log('HANDLER 5');
 });
 
 function throwUncaughtError() {
-  setTimeout(function() {
+  setTimeout(() => {
     throw new Error('Boom');
   }, 100);
 }

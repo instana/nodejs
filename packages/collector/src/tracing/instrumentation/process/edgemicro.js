@@ -1,12 +1,12 @@
 'use strict';
 
-var cluster = require('cluster');
+const cluster = require('cluster');
 
-var requireHook = require('@instana/core').util.requireHook;
-var selfPath = require('./selfPath');
+const requireHook = require('@instana/core').util.requireHook;
+const selfPath = require('./selfPath');
 
-var logger;
-logger = require('../../../logger').getLogger('tracing/edgemicro', function(newLogger) {
+let logger;
+logger = require('../../../logger').getLogger('tracing/edgemicro', newLogger => {
   logger = newLogger;
 });
 
@@ -24,26 +24,25 @@ function instrumentReloadCluster(reloadClusterModule) {
   return function() {
     if (!selfPath.immediate) {
       logger.warn(
-        "Detected a call to 'edgemicro/cli/lib/reload-cluster', but the path to @instana/collector is not available, " +
-          'so the edgemicro workers will not be instrumented.'
+        // eslint-disable-next-line max-len
+        "Detected a call to 'edgemicro/cli/lib/reload-cluster', but the path to @instana/collector is not available, so the edgemicro workers will not be instrumented."
       );
       return reloadClusterModule.apply(this, arguments);
     }
 
     // Deliberately not using the isActive pattern here because the edgemicro workers are started immediately by the
     // edgemicro CLI, before the connection to the Instana agent is established (and thus isActive becoming true).
-    var clusterManager = reloadClusterModule.apply(this, arguments);
+    const clusterManager = reloadClusterModule.apply(this, arguments);
     cluster.settings.execArgv = cluster.settings.execArgv || [];
-    for (var i = 0; i < cluster.settings.execArgv.length; i++) {
+    for (let i = 0; i < cluster.settings.execArgv.length; i++) {
       if (cluster.settings.execArgv[i].indexOf('--require') >= 0) {
         return clusterManager;
       }
     }
 
     logger.debug(
-      "Detected a call to 'edgemicro/cli/lib/reload-cluster', instrumenting edgemicro workers by adding --require " +
-        selfPath.immediate +
-        ' to cluster.settings.execArgv.'
+      // eslint-disable-next-line max-len
+      `Detected a call to 'edgemicro/cli/lib/reload-cluster', instrumenting edgemicro workers by adding --require ${selfPath.immediate} to cluster.settings.execArgv.`
     );
     cluster.settings.execArgv.push('--require');
     cluster.settings.execArgv.push(selfPath.immediate);

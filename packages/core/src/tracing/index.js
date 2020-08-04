@@ -1,24 +1,24 @@
 'use strict';
 
-var sdk = require('./sdk');
-var constants = require('./constants');
-var tracingMetrics = require('./metrics');
-var opentracing = require('./opentracing');
-var spanHandle = require('./spanHandle');
-var tracingUtil = require('./tracingUtil');
-var spanBuffer = require('./spanBuffer');
-var supportedVersion = require('./supportedVersion');
+const sdk = require('./sdk');
+const constants = require('./constants');
+const tracingMetrics = require('./metrics');
+const opentracing = require('./opentracing');
+const spanHandle = require('./spanHandle');
+const tracingUtil = require('./tracingUtil');
+const spanBuffer = require('./spanBuffer');
+const supportedVersion = require('./supportedVersion');
 
-var tracingEnabled = false;
-var instrumenationsInitialized = false;
-var automaticTracingEnabled = false;
-var cls = null;
-var config = null;
-var extraHeaders = [];
-var processIdentityProvider = null;
+let tracingEnabled = false;
+let instrumenationsInitialized = false;
+let automaticTracingEnabled = false;
+let cls = null;
+let config = null;
+let extraHeaders = [];
+let processIdentityProvider = null;
 
 // Note: Also update initializedTooLateHeuristic.js and the accompanying test when adding instrumentations.
-var instrumentations = [
+const instrumentations = [
   './instrumentation/control_flow/bluebird',
   './instrumentation/control_flow/graphqlSubscriptions',
   './instrumentation/database/elasticsearchLegacy',
@@ -53,8 +53,8 @@ var instrumentations = [
   './instrumentation/protocols/http2Server',
   './instrumentation/protocols/superagent'
 ];
-var additionalInstrumentationModules = [];
-var instrumentationModules = {};
+let additionalInstrumentationModules = [];
+const instrumentationModules = {};
 
 exports.constants = constants;
 exports.opentracing = opentracing;
@@ -62,15 +62,17 @@ exports.sdk = sdk;
 exports.spanBuffer = spanBuffer;
 exports.supportedVersion = supportedVersion;
 
-exports.registerAdditionalInstrumentations = function(_additionalInstrumentationModules) {
+exports.registerAdditionalInstrumentations = function registerAdditionalInstrumentations(
+  _additionalInstrumentationModules
+) {
   additionalInstrumentationModules = additionalInstrumentationModules.concat(_additionalInstrumentationModules);
 };
 
-exports.preInit = function(preliminaryConfig) {
+exports.preInit = function preInit(preliminaryConfig) {
   initInstrumenations(preliminaryConfig);
 };
 
-exports.init = function(_config, downstreamConnection, _processIdentityProvider) {
+exports.init = function init(_config, downstreamConnection, _processIdentityProvider) {
   config = _config;
   processIdentityProvider = _processIdentityProvider;
 
@@ -94,16 +96,16 @@ exports.init = function(_config, downstreamConnection, _processIdentityProvider)
 function initInstrumenations(_config) {
   // initialize all instrumentations
   if (!instrumenationsInitialized) {
-    instrumentations.forEach(function(instrumentationKey) {
+    instrumentations.forEach(instrumentationKey => {
       instrumentationModules[instrumentationKey] = require(instrumentationKey);
       instrumentationModules[instrumentationKey].init(_config);
     });
-    additionalInstrumentationModules.forEach(function(instrumentationModule) {
+    additionalInstrumentationModules.forEach(instrumentationModule => {
       instrumentationModule.init(_config);
     });
     instrumenationsInitialized = true;
   } else {
-    instrumentations.forEach(function(instrumentationKey) {
+    instrumentations.forEach(instrumentationKey => {
       if (instrumentationModules[instrumentationKey].updateConfig) {
         instrumentationModules[instrumentationKey].updateConfig(_config);
       }
@@ -111,19 +113,18 @@ function initInstrumenations(_config) {
   }
 }
 
-exports.activate = function() {
+exports.activate = function activate() {
   if (tracingEnabled) {
     spanBuffer.activate();
     opentracing.activate();
     sdk.activate();
 
     if (automaticTracingEnabled) {
-      instrumentations.forEach(function(instrumentationKey) {
-        var instrumentationName = /.\/instrumentation\/[^/]*\/(.*)/.exec(instrumentationKey)[1];
-        var isDisabled =
-          config.tracing.disabledTracers.findIndex(function(disabledKey) {
-            return instrumentationName.toLowerCase() === disabledKey;
-          }) !== -1;
+      instrumentations.forEach(instrumentationKey => {
+        const instrumentationName = /.\/instrumentation\/[^/]*\/(.*)/.exec(instrumentationKey)[1];
+        const isDisabled =
+          config.tracing.disabledTracers.findIndex(disabledKey => instrumentationName.toLowerCase() === disabledKey) !==
+          -1;
         if (!isDisabled) {
           instrumentationModules[instrumentationKey].activate();
         }
@@ -132,10 +133,10 @@ exports.activate = function() {
   }
 };
 
-exports.deactivate = function() {
+exports.deactivate = function deactivate() {
   if (tracingEnabled) {
     if (automaticTracingEnabled) {
-      instrumentations.forEach(function(instrumentationKey) {
+      instrumentations.forEach(instrumentationKey => {
         instrumentationModules[instrumentationKey].deactivate();
       });
     }
@@ -157,7 +158,7 @@ exports.getCls = function getCls() {
 
 exports.setExtraHttpHeadersToCapture = function setExtraHttpHeadersToCapture(_extraHeaders) {
   extraHeaders = _extraHeaders;
-  instrumentations.forEach(function(instrumentationKey) {
+  instrumentations.forEach(instrumentationKey => {
     if (
       instrumentationModules[instrumentationKey] &&
       typeof instrumentationModules[instrumentationKey].setExtraHttpHeadersToCapture === 'function'
@@ -181,7 +182,7 @@ exports._instrument = function _instrument(name, module_) {
   if (name === 'superagent') {
     require('./instrumentation/protocols/superagent').instrument(module_);
   } else {
-    throw new Error('An unknown or unsupported instrumentation has been requested: ' + name);
+    throw new Error(`An unknown or unsupported instrumentation has been requested: ${name}`);
   }
 };
 
@@ -189,9 +190,9 @@ exports._debugCurrentSpanName = function _debugCurrentSpanName() {
   if (!cls) {
     return 'current: no cls';
   }
-  var s = cls.ns.get('com.instana.span');
+  const s = cls.ns.get('com.instana.span');
   if (!s) {
     return 'current: no span';
   }
-  return 'current: ' + s.n;
+  return `current: ${s.n}`;
 };

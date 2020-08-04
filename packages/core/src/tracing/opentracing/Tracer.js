@@ -1,16 +1,16 @@
 'use strict';
 
-var opentracing = require('opentracing');
-var constants = require('../constants');
-var Span = require('./Span');
+const opentracing = require('opentracing');
+const constants = require('../constants');
+const Span = require('./Span');
 
-var baggageKeyPrefix = 'x-instana-b-';
+const baggageKeyPrefix = 'x-instana-b-';
 
-var valueEncoders = {};
+const valueEncoders = {};
 valueEncoders[opentracing.FORMAT_TEXT_MAP] = identity;
 valueEncoders[opentracing.FORMAT_HTTP_HEADERS] = encodeURIComponent;
 
-var valueDecoders = {};
+const valueDecoders = {};
 valueDecoders[opentracing.FORMAT_TEXT_MAP] = identity;
 valueDecoders[opentracing.FORMAT_HTTP_HEADERS] = decodeURIComponent;
 
@@ -41,8 +41,8 @@ Tracer.prototype._inject = function _inject(spanContext, format, carrier) {
   carrier[constants.traceIdHeaderNameLowerCase] = spanContext.t;
   carrier[constants.traceLevelHeaderNameLowerCase] = String(spanContext.samplingPriority);
 
-  var valueEncoder = valueEncoders[format];
-  Object.keys(spanContext.baggage).forEach(function(baggageKey) {
+  const valueEncoder = valueEncoders[format];
+  Object.keys(spanContext.baggage).forEach(baggageKey => {
     carrier[baggageKeyPrefix + baggageKey] = valueEncoder(spanContext.baggage[baggageKey]);
   });
 };
@@ -58,9 +58,9 @@ Tracer.prototype._extract = function _extract(format, carrier) {
     return null;
   }
 
-  var valueDecoder = valueDecoders[format];
+  const valueDecoder = valueDecoders[format];
 
-  var spanContext = new opentracing.SpanContext();
+  const spanContext = new opentracing.SpanContext();
   spanContext.s = carrier[constants.spanIdHeaderNameLowerCase];
   spanContext.t = carrier[constants.traceIdHeaderNameLowerCase];
   spanContext.samplingPriority = Number(carrier[constants.traceLevelHeaderNameLowerCase]);
@@ -69,12 +69,12 @@ Tracer.prototype._extract = function _extract(format, carrier) {
   }
 
   spanContext.baggage = {};
-  Object.keys(carrier).forEach(function(carrierKey) {
+  Object.keys(carrier).forEach(carrierKey => {
     if (carrierKey.indexOf(baggageKeyPrefix) !== 0) {
       return;
     }
 
-    var baggageKey = carrierKey.substring(baggageKeyPrefix.length);
+    const baggageKey = carrierKey.substring(baggageKeyPrefix.length);
     spanContext.baggage[baggageKey] = valueDecoder(carrier[carrierKey]);
   });
 

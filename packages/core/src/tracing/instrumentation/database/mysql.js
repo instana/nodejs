@@ -1,15 +1,15 @@
 'use strict';
 
-var shimmer = require('shimmer');
+const shimmer = require('shimmer');
 
-var requireHook = require('../../../util/requireHook');
-var tracingUtil = require('../../tracingUtil');
-var constants = require('../../constants');
-var cls = require('../../cls');
+const requireHook = require('../../../util/requireHook');
+const tracingUtil = require('../../tracingUtil');
+const constants = require('../../constants');
+const cls = require('../../cls');
 
-var isActive = false;
+let isActive = false;
 
-exports.init = function() {
+exports.init = function init() {
   requireHook.onModuleLoad('mysql', instrumentMysql);
   requireHook.onModuleLoad('mysql2', instrumentMysql2);
   requireHook.onModuleLoad('mysql2/promise', instrumentMysql2WithPromises);
@@ -46,16 +46,19 @@ function instrumentConnection(Connection, mysql2) {
 }
 
 function instrumentPoolWithPromises(mysql) {
-  shimmer.wrap(mysql, 'createPool', function(original) {
-    return function() {
-      var Pool = original.apply(this, arguments);
-      var poolPrototype = Object.getPrototypeOf(Pool);
-      shimmer.wrap(poolPrototype, 'getConnection', shimPromiseConnection);
-      shimmer.wrap(poolPrototype, 'query', shimPromiseQuery);
-      shimmer.wrap(poolPrototype, 'execute', shimPromiseExecute);
-      return Pool;
-    };
-  });
+  shimmer.wrap(
+    mysql,
+    'createPool',
+    original =>
+      function() {
+        const Pool = original.apply(this, arguments);
+        const poolPrototype = Object.getPrototypeOf(Pool);
+        shimmer.wrap(poolPrototype, 'getConnection', shimPromiseConnection);
+        shimmer.wrap(poolPrototype, 'query', shimPromiseQuery);
+        shimmer.wrap(poolPrototype, 'execute', shimPromiseExecute);
+        return Pool;
+      }
+  );
 }
 
 function shimQuery(original) {
@@ -102,23 +105,23 @@ function instrumentedAccessFunction(
   optCallback,
   isPromiseImpl
 ) {
-  var originalArgs = [statementOrOpts, valuesOrCallback];
+  const originalArgs = [statementOrOpts, valuesOrCallback];
   if (typeof optCallback !== 'undefined') {
     originalArgs.push(optCallback);
   }
 
-  var parentSpan = cls.getCurrentSpan();
+  const parentSpan = cls.getCurrentSpan();
   if (constants.isExitSpan(parentSpan)) {
     return originalFunction.apply(ctx, originalArgs);
   }
 
-  var host;
-  var port;
-  var user;
-  var db;
+  let host;
+  let port;
+  let user;
+  let db;
 
   // if ctx.connection is defined, we are in a PromiseConnection context
-  var config = ctx.connection != null ? ctx.connection.config : ctx.config;
+  const config = ctx.connection != null ? ctx.connection.config : ctx.config;
   if (config) {
     if (config.connectionConfig) {
       host = config.connectionConfig.host;
@@ -133,30 +136,30 @@ function instrumentedAccessFunction(
     }
   }
 
-  return cls.ns.runAndReturn(function() {
-    var span = cls.startSpan('mysql', constants.EXIT);
+  return cls.ns.runAndReturn(() => {
+    const span = cls.startSpan('mysql', constants.EXIT);
     span.b = { s: 1 };
     span.stack = tracingUtil.getStackTrace(instrumentedAccessFunction);
     span.data.mysql = {
       stmt: tracingUtil.shortenDatabaseStatement(
         typeof statementOrOpts === 'string' ? statementOrOpts : statementOrOpts.sql
       ),
-      host: host,
-      port: port,
-      user: user,
-      db: db
+      host,
+      port,
+      user,
+      db
     };
 
     if (isPromiseImpl) {
-      var resultPromise = originalFunction.apply(ctx, originalArgs);
+      const resultPromise = originalFunction.apply(ctx, originalArgs);
 
       resultPromise
-        .then(function(result) {
+        .then(result => {
           span.d = Date.now() - span.ts;
           span.transmit();
           return result;
         })
-        .catch(function(error) {
+        .catch(error => {
           span.ec = 1;
           span.data.mysql.error = tracingUtil.getErrorDetails(error);
 
@@ -168,7 +171,7 @@ function instrumentedAccessFunction(
     }
 
     // no promise, continue with standard instrumentation
-    var originalCallback;
+    let originalCallback;
 
     function onResult(error) {
       if (error) {
@@ -206,7 +209,7 @@ function shimGetConnection(original) {
 
 function shimPromiseConnection(original) {
   return function getConnection() {
-    return original.apply(this, arguments).then(function(connection) {
+    return original.apply(this, arguments).then(connection => {
       shimmer.wrap(connection, 'query', shimPromiseQuery);
       shimmer.wrap(connection, 'execute', shimPromiseExecute);
 
@@ -215,10 +218,10 @@ function shimPromiseConnection(original) {
   };
 }
 
-exports.activate = function() {
+exports.activate = function activate() {
   isActive = true;
 };
 
-exports.deactivate = function() {
+exports.deactivate = function deactivate() {
   isActive = false;
 };

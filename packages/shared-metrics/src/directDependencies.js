@@ -1,11 +1,11 @@
 'use strict';
 
-var fs = require('fs');
+const fs = require('fs');
 
-var applicationUnderMonitoring = require('@instana/core').util.applicationUnderMonitoring;
+const applicationUnderMonitoring = require('@instana/core').util.applicationUnderMonitoring;
 
-var logger = require('@instana/core').logger.getLogger('metrics');
-exports.setLogger = function(_logger) {
+let logger = require('@instana/core').logger.getLogger('metrics');
+exports.setLogger = function setLogger(_logger) {
   logger = _logger;
 };
 
@@ -16,13 +16,13 @@ exports.currentPayload = {
   optionalDependencies: {}
 };
 
-var MAX_ATTEMPTS = 20;
-var DELAY = 1000;
-var attempts = 0;
+const MAX_ATTEMPTS = 20;
+const DELAY = 1000;
+let attempts = 0;
 
-exports.activate = function() {
+exports.activate = function activate() {
   attempts++;
-  applicationUnderMonitoring.getMainPackageJsonPath(function(err, packageJsonPath) {
+  applicationUnderMonitoring.getMainPackageJsonPath((err, packageJsonPath) => {
     if (err) {
       return logger.info(
         'Failed to determine main package.json for analysis of direct dependencies. Reason: %s %s ',
@@ -42,13 +42,13 @@ exports.activate = function() {
 };
 
 function addDirectDependenciesFromMainPackageJson(packageJsonPath) {
-  fs.readFile(packageJsonPath, { encoding: 'utf8' }, function(err, contents) {
+  fs.readFile(packageJsonPath, { encoding: 'utf8' }, (err, contents) => {
     if (err) {
       return logger.debug('Failed to analyze direct dependencies dependency due to: %s.', err.message);
     }
 
     try {
-      var pckg = JSON.parse(contents);
+      const pckg = JSON.parse(contents);
       exports.currentPayload.dependencies = pckg.dependencies || {};
       exports.currentPayload.peerDependencies = pckg.peerDependencies || {};
       exports.currentPayload.optionalDependencies = pckg.optionalDependencies || {};

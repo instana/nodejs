@@ -34,9 +34,7 @@ describe('tracing/bluebird', function() {
   check('/map');
   check('/eventEmitterBased');
 
-  function check(path, checker) {
-    checker = checker || defaultChecker;
-
+  function check(path, checker = defaultChecker) {
     it(`must trace: ${path}`, () =>
       // trigger tracing
       bluebirdControls

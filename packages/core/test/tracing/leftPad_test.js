@@ -1,10 +1,10 @@
 'use strict';
 
-var expect = require('chai').expect;
-var leftPad = require('../../src/tracing/leftPad');
+const expect = require('chai').expect;
+const leftPad = require('../../src/tracing/leftPad');
 
-describe('tracing/leftPad', function() {
-  it('must left-pad to 16', function() {
+describe('tracing/leftPad', () => {
+  it('must left-pad to 16', () => {
     expect(leftPad('', 16)).to.equal('0000000000000000');
     expect(leftPad('a', 16)).to.equal('000000000000000a');
     expect(leftPad('aa', 16)).to.equal('00000000000000aa');
@@ -24,7 +24,7 @@ describe('tracing/leftPad', function() {
     expect(leftPad('aaaaaaaaaaaaaaaa', 16)).to.equal('aaaaaaaaaaaaaaaa');
   });
 
-  it('must left-pad to 32', function() {
+  it('must left-pad to 32', () => {
     expect(leftPad('', 32)).to.equal('00000000000000000000000000000000');
     expect(leftPad('a', 32)).to.equal('0000000000000000000000000000000a');
     expect(leftPad('aa', 32)).to.equal('000000000000000000000000000000aa');
@@ -60,7 +60,7 @@ describe('tracing/leftPad', function() {
     expect(leftPad('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', 32)).to.equal('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa');
   });
 
-  it('must left-pad to arbitrary lengths', function() {
+  it('must left-pad to arbitrary lengths', () => {
     expect(leftPad('aaaaaaaa', 41)).to.equal('000000000000000000000000000000000aaaaaaaa');
     expect(leftPad('aaaaaaaa', 42)).to.equal('0000000000000000000000000000000000aaaaaaaa');
     expect(leftPad('aaaaaaaa', 43)).to.equal('00000000000000000000000000000000000aaaaaaaa');

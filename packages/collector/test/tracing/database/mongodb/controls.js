@@ -12,8 +12,7 @@ const appPort = (exports.appPort = 3214);
 
 let expressMongodbApp;
 
-exports.registerTestHooks = opts => {
-  opts = opts || {};
+exports.registerTestHooks = (opts = {}) => {
   beforeEach(() => {
     const env = Object.create(process.env);
     env.AGENT_PORT = agentPort;

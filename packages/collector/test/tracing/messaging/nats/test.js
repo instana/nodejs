@@ -166,8 +166,8 @@ describe('tracing/nats', function() {
               expect(receivedMessages[0]).to.equal("It's nuts, ain't it?!");
             }
 
-            return testUtils.retry(() => {
-              return agentControls.getSpans().then(spans => {
+            return testUtils.retry(() =>
+              agentControls.getSpans().then(spans => {
                 const httpSpan = testUtils.expectAtLeastOneMatching(spans, span => {
                   expect(span.n).to.equal('node.http.server');
                   expect(span.f.e).to.equal(String(publisherControls.getPid()));
@@ -209,8 +209,8 @@ describe('tracing/nats', function() {
                   expect(span.p).to.equal(natsEntry.s);
                   expect(span.k).to.equal(constants.EXIT);
                 });
-              });
-            });
+              })
+            );
           });
       });
     }

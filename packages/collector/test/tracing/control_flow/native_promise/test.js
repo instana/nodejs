@@ -33,9 +33,7 @@ describe('tracing/native-promise', function() {
   check('/childHttpCall');
   check('/eventEmitterBased');
 
-  function check(path, checker) {
-    checker = checker || defaultChecker;
-
+  function check(path, checker = defaultChecker) {
     it(`must trace: ${path}`, () =>
       // trigger tracing
       promiseControls

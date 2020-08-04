@@ -1,31 +1,33 @@
 'use strict';
 
-var log = require('./logger');
-var normalizeConfig = require('./util/normalizeConfig');
+const log = require('./logger');
+const normalizeConfig = require('./util/normalizeConfig');
 
 // Require this first to ensure that we have non-instrumented http available.
-var uninstrumentedHttp = require('./uninstrumentedHttp');
+const uninstrumentedHttp = require('./uninstrumentedHttp');
 
 module.exports = exports = {
   logger: log,
   metrics: require('./metrics'),
   secrets: require('./secrets'),
   tracing: require('./tracing'),
-  uninstrumentedHttp: uninstrumentedHttp,
+  uninstrumentedHttp,
   util: require('./util')
 };
 
-exports.registerAdditionalInstrumentations = function(additionalInstrumentationModules) {
+exports.registerAdditionalInstrumentations = function registerAdditionalInstrumentations(
+  additionalInstrumentationModules
+) {
   exports.tracing.registerAdditionalInstrumentations(additionalInstrumentationModules);
 };
 
-exports.preInit = function() {
+exports.preInit = function preInit() {
   var preliminaryConfig = normalizeConfig();
   exports.util.requireHook.init(preliminaryConfig);
   exports.tracing.preInit(preliminaryConfig);
 };
 
-exports.init = function(config, downstreamConnection, processIdentityProvider) {
+exports.init = function init(config, downstreamConnection, processIdentityProvider) {
   log.init(config);
   exports.util.hasThePackageBeenInitializedTooLate();
   config = normalizeConfig(config);

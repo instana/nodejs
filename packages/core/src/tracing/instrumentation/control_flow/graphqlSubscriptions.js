@@ -2,16 +2,16 @@
 
 'use strict';
 
-var shimmer = require('shimmer');
+const shimmer = require('shimmer');
 
-var requireHook = require('../../../util/requireHook');
-var cls = require('../../cls');
+const requireHook = require('../../../util/requireHook');
+const cls = require('../../cls');
 
-var isActive = false;
+let isActive = false;
 
-var CLS_CONTEXT_SYMBOL = Symbol('_instana_cls_context');
+const CLS_CONTEXT_SYMBOL = Symbol('_instana_cls_context');
 
-exports.init = function() {
+exports.init = () => {
   requireHook.onModuleLoad('graphql-subscriptions', instrumentModule);
   requireHook.onFileLoad(/\/graphql-subscriptions\/dist\/pubsub-async-iterator\.js/, instrumentAsyncIterator);
 };
@@ -48,13 +48,13 @@ function shimPushValue(originalFunction) {
 
 function shimPullValue(originalFunction) {
   return function() {
-    var pullPromise = originalFunction.apply(this, arguments);
-    return pullPromise.then(function(result) {
+    const pullPromise = originalFunction.apply(this, arguments);
+    return pullPromise.then(result => {
       if (result && result.value && result.value[CLS_CONTEXT_SYMBOL]) {
-        var clsContext = result.value[CLS_CONTEXT_SYMBOL];
+        const clsContext = result.value[CLS_CONTEXT_SYMBOL];
         if (isActive && clsContext) {
           cls.ns.enter(clsContext);
-          setImmediate(function() {
+          setImmediate(() => {
             cls.ns.exit(clsContext);
           });
         }
@@ -64,10 +64,10 @@ function shimPullValue(originalFunction) {
   };
 }
 
-exports.activate = function() {
+exports.activate = () => {
   isActive = true;
 };
 
-exports.deactivate = function() {
+exports.deactivate = () => {
   isActive = false;
 };

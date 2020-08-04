@@ -12,9 +12,7 @@ const agentPort = (exports.agentPort = 3210);
 
 let agentStub;
 
-exports.registerTestHooks = opts => {
-  opts = opts || {};
-
+exports.registerTestHooks = (opts = {}) => {
   beforeEach(() => {
     const env = Object.create(process.env);
     env.AGENT_PORT = agentPort;

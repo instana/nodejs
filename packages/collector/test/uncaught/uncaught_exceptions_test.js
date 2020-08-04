@@ -47,16 +47,16 @@ describe('uncaught exceptions', function() {
         expect(err.message).to.equal('Error: socket hang up');
         return testUtils.retry(
           () =>
-            agentControls.getSpans().then(spans => {
-              return testUtils.expectAtLeastOneMatching(spans, span => {
+            agentControls.getSpans().then(spans =>
+              testUtils.expectAtLeastOneMatching(spans, span => {
                 expect(span.n).to.equal('node.http.server');
                 expect(span.f.e).to.equal(String(serverControls.getPid()));
                 expect(span.f.h).to.equal('agent-stub-uuid');
                 expect(span.error).to.not.exist;
                 expect(span.ec).to.equal(1);
                 expect(JSON.stringify(span.stack)).to.contain('test/uncaught/apps/server.js');
-              });
-            }),
+              })
+            ),
           this.timeout() * 0.8
         );
       });

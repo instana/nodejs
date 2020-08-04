@@ -1,15 +1,15 @@
 'use strict';
 
-var Module = require('module');
-var path = require('path');
+const Module = require('module');
+const path = require('path');
 
-var executedHooks = {};
-var byModuleNameTransformers = {};
-var byFileNamePatternTransformers = [];
-var origLoad = Module._load;
+let executedHooks = {};
+let byModuleNameTransformers = {};
+let byFileNamePatternTransformers = [];
+const origLoad = Module._load;
 
-var logger;
-logger = require('../logger').getLogger('util/requireHook', function(newLogger) {
+let logger;
+logger = require('../logger').getLogger('util/requireHook', newLogger => {
   logger = newLogger;
 });
 
@@ -18,18 +18,18 @@ exports.init = function() {
 };
 
 function patchedModuleLoad(moduleName) {
-  var i;
+  let i;
 
   // First attempt to always get the module via the original implementation
   // as this action may fail. The original function populates the module cache.
-  var moduleExports = origLoad.apply(Module, arguments);
-  var filename = Module._resolveFilename.apply(Module, arguments);
+  const moduleExports = origLoad.apply(Module, arguments);
+  const filename = Module._resolveFilename.apply(Module, arguments);
 
   // We are not directly manipulating the global module cache because there might be other tools fiddling with
   // Module._load. We don't want to break any of them.
-  var cacheEntry = (executedHooks[filename] = executedHooks[filename] || {
+  const cacheEntry = (executedHooks[filename] = executedHooks[filename] || {
     originalModuleExports: moduleExports,
-    moduleExports: moduleExports,
+    moduleExports,
 
     // We might have already seen and processed, i.e. manipulated, this require statement. This is something we
     // are checking using these fields.
@@ -50,10 +50,10 @@ function patchedModuleLoad(moduleName) {
     return moduleExports;
   }
 
-  var applicableByModuleNameTransformers = byModuleNameTransformers[moduleName];
+  const applicableByModuleNameTransformers = byModuleNameTransformers[moduleName];
   if (applicableByModuleNameTransformers && cacheEntry.appliedByModuleNameTransformers.indexOf(moduleName) === -1) {
     for (i = 0; i < applicableByModuleNameTransformers.length; i++) {
-      var transformerFn = applicableByModuleNameTransformers[i];
+      const transformerFn = applicableByModuleNameTransformers[i];
       if (typeof transformerFn === 'function') {
         cacheEntry.moduleExports = transformerFn(cacheEntry.moduleExports) || cacheEntry.moduleExports;
       } else {
@@ -99,18 +99,18 @@ exports.onModuleLoad = function on(moduleName, fn) {
 
 exports.onFileLoad = function onFileLoad(pattern, fn) {
   byFileNamePatternTransformers.push({
-    pattern: pattern,
-    fn: fn
+    pattern,
+    fn
   });
 };
 
 exports.buildFileNamePattern = function buildFileNamePattern(arr) {
-  return new RegExp(arr.reduce(buildFileNamePatternReducer, '') + '$');
+  return new RegExp(`${arr.reduce(buildFileNamePatternReducer, '')}$`);
 };
 
 function buildFileNamePatternReducer(agg, pathSegment) {
   if (agg.length > 0) {
-    agg += '\\' + path.sep;
+    agg += `\\${path.sep}`;
   }
   agg += pathSegment;
   return agg;

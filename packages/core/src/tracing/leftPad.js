@@ -9,7 +9,7 @@ module.exports = leftPad;
 
 // Even with 128 bit trace IDs we will only ever want to pad to max 32 characters, so keep a cache of the padding
 // strings for padding lengths 0 to 32.
-var cache = [
+const cache = [
   '',
   '0',
   '00',
@@ -47,7 +47,7 @@ var cache = [
 
 function leftPad(str, len) {
   // use '0' as the padding char, always
-  var ch = '0';
+  let ch = '0';
   // `len` is the `pad`'s length now
   len -= str.length;
   // doesn't need to pad
@@ -55,7 +55,7 @@ function leftPad(str, len) {
   // use cached/precreated padding strings for common use cases (up to length 32)
   if (len < 33) return cache[len] + str;
   // `pad` starts with an empty string
-  var pad = '';
+  let pad = '';
   // eslint-disable-next-line no-constant-condition
   while (true) {
     // add `ch` to `pad` if `len` is odd

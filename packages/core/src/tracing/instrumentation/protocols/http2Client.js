@@ -1,29 +1,29 @@
 'use strict';
 
-var semver = require('semver');
+const semver = require('semver');
 
-var cls = require('../../cls');
-var constants = require('../../constants');
-var httpCommon = require('./_http');
-var readSymbolProperty = require('../../../util/readSymbolProperty');
-var tracingUtil = require('../../tracingUtil');
-var urlUtil = require('../../../util/url');
+const cls = require('../../cls');
+const constants = require('../../constants');
+const httpCommon = require('./_http');
+const readSymbolProperty = require('../../../util/readSymbolProperty');
+const tracingUtil = require('../../tracingUtil');
+const urlUtil = require('../../../util/url');
 
-var discardUrlParameters = urlUtil.discardUrlParameters;
-var filterParams = urlUtil.filterParams;
+const discardUrlParameters = urlUtil.discardUrlParameters;
+const filterParams = urlUtil.filterParams;
 
-var extraHttpHeadersToCapture;
-var isActive = false;
+let extraHttpHeadersToCapture;
+let isActive = false;
 
-var originS = 'Symbol(origin)';
-var sentHeadersS = 'Symbol(sent-headers)';
-var HTTP2_HEADER_METHOD;
-var HTTP2_HEADER_PATH;
-var HTTP2_HEADER_STATUS;
+const originS = 'Symbol(origin)';
+const sentHeadersS = 'Symbol(sent-headers)';
+let HTTP2_HEADER_METHOD;
+let HTTP2_HEADER_PATH;
+let HTTP2_HEADER_STATUS;
 
-exports.init = function(config) {
+exports.init = function init(config) {
   if (semver.gte(process.versions.node, '8.4.0')) {
-    var http2 = require('http2');
+    const http2 = require('http2');
     HTTP2_HEADER_METHOD = http2.constants.HTTP2_HEADER_METHOD;
     HTTP2_HEADER_PATH = http2.constants.HTTP2_HEADER_PATH;
     HTTP2_HEADER_STATUS = http2.constants.HTTP2_HEADER_STATUS;
@@ -32,24 +32,24 @@ exports.init = function(config) {
   extraHttpHeadersToCapture = config.tracing.http.extraHttpHeadersToCapture;
 };
 
-exports.updateConfig = function(config) {
+exports.updateConfig = config => {
   extraHttpHeadersToCapture = config.tracing.http.extraHttpHeadersToCapture;
 };
 
 function instrument(coreModule) {
-  var originalConnect = coreModule.connect;
+  const originalConnect = coreModule.connect;
   coreModule.connect = function connect() {
-    var clientHttp2Session = originalConnect.apply(this, arguments);
+    const clientHttp2Session = originalConnect.apply(this, arguments);
     instrumentClientHttp2Session(clientHttp2Session);
     return clientHttp2Session;
   };
 }
 
 function instrumentClientHttp2Session(clientHttp2Session) {
-  var originalRequest = clientHttp2Session.request;
+  const originalRequest = clientHttp2Session.request;
   clientHttp2Session.request = function request(headers) {
-    var parentSpan = cls.getCurrentSpan() || cls.getReducedSpan();
-    var w3cTraceContext = cls.getW3cTraceContext();
+    const parentSpan = cls.getCurrentSpan() || cls.getReducedSpan();
+    const w3cTraceContext = cls.getW3cTraceContext();
 
     if (!isActive || !parentSpan || constants.isExitSpan(parentSpan)) {
       if (cls.tracingSuppressed()) {
@@ -58,26 +58,26 @@ function instrumentClientHttp2Session(clientHttp2Session) {
       return originalRequest.apply(this, arguments);
     }
 
-    var originalThis = this;
-    var originalArgs = new Array(arguments.length);
-    for (var i = 0; i < arguments.length; i++) {
+    const originalThis = this;
+    const originalArgs = new Array(arguments.length);
+    for (let i = 0; i < arguments.length; i++) {
       originalArgs[i] = arguments[i];
     }
 
-    return cls.ns.runAndReturn(function() {
-      var span = cls.startSpan('node.http.client', constants.EXIT);
+    return cls.ns.runAndReturn(() => {
+      const span = cls.startSpan('node.http.client', constants.EXIT);
 
       addHeaders(headers, span, w3cTraceContext);
 
-      var stream = originalRequest.apply(originalThis, originalArgs);
+      const stream = originalRequest.apply(originalThis, originalArgs);
 
-      var origin = readSymbolProperty(stream, originS);
-      var reqHeaders = readSymbolProperty(stream, sentHeadersS);
-      var capturedHeaders = httpCommon.getExtraHeadersCaseInsensitive(reqHeaders, extraHttpHeadersToCapture);
+      const origin = readSymbolProperty(stream, originS);
+      const reqHeaders = readSymbolProperty(stream, sentHeadersS);
+      let capturedHeaders = httpCommon.getExtraHeadersCaseInsensitive(reqHeaders, extraHttpHeadersToCapture);
 
-      var method;
-      var path;
-      var status;
+      let method;
+      let path;
+      let status;
       if (reqHeaders) {
         method = reqHeaders[HTTP2_HEADER_METHOD];
         path = reqHeaders[HTTP2_HEADER_PATH];
@@ -85,18 +85,18 @@ function instrumentClientHttp2Session(clientHttp2Session) {
       method = method || 'GET';
       path = path || '/';
 
-      var pathWithoutQuery = discardUrlParameters(path);
-      var params = splitAndFilter(path);
+      const pathWithoutQuery = discardUrlParameters(path);
+      const params = splitAndFilter(path);
 
       span.stack = tracingUtil.getStackTrace(request);
 
       span.data.http = {
-        method: method,
+        method,
         url: origin + pathWithoutQuery,
-        params: params
+        params
       };
 
-      stream.on('response', function(resHeaders) {
+      stream.on('response', resHeaders => {
         status = resHeaders[HTTP2_HEADER_STATUS];
         capturedHeaders = httpCommon.mergeExtraHeadersFromHeaders(
           capturedHeaders,
@@ -105,7 +105,7 @@ function instrumentClientHttp2Session(clientHttp2Session) {
         );
       });
 
-      stream.on('end', function() {
+      stream.on('end', () => {
         span.d = Date.now() - span.ts;
         span.ec = status >= 500 ? 1 : 0;
         span.data.http.status = status;
@@ -147,11 +147,11 @@ function addW3cHeaders(headers, w3cTraceContext) {
   }
 }
 
-exports.activate = function() {
+exports.activate = function activate() {
   isActive = true;
 };
 
-exports.deactivate = function() {
+exports.deactivate = function deactivate() {
   isActive = false;
 };
 
@@ -160,7 +160,7 @@ exports.setExtraHttpHeadersToCapture = function setExtraHttpHeadersToCapture(_ex
 };
 
 function splitAndFilter(path) {
-  var parts = path.split('?');
+  const parts = path.split('?');
   if (parts.length >= 2) {
     return filterParams(parts[1]);
   }

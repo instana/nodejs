@@ -29,8 +29,8 @@ const ES_API_VERSION = process.env.ES_API_VERSION || '7.6';
 
 if (process.env.ES_API_VERSION) {
   log(
-    `Using Elasticsearch API version ${process.env.ES_API_VERSION}, make sure @elastic/elasticsearch is installed ` +
-      'in a matching version.'
+    // eslint-disable-next-line max-len
+    `${`Using Elasticsearch API version ${process.env.ES_API_VERSION}, make sure @elastic/elasticsearch is installed `}in a matching version.`
   );
 }
 app.get('/', (req, res) => {

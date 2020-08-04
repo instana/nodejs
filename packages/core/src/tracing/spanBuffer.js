@@ -1,17 +1,17 @@
 'use strict';
 
-var tracingMetrics = require('./metrics');
+const tracingMetrics = require('./metrics');
 
-var logger;
-logger = require('../logger').getLogger('tracing/spanBuffer', function(newLogger) {
+let logger;
+logger = require('../logger').getLogger('tracing/spanBuffer', newLogger => {
   logger = newLogger;
 });
 
-var downstreamConnection = null;
-var isActive = false;
-var activatedAt = null;
+let downstreamConnection = null;
+let isActive = false;
+let activatedAt = null;
 
-var minDelayBeforeSendingSpans;
+let minDelayBeforeSendingSpans;
 if (process.env.INSTANA_DEV_MIN_DELAY_BEFORE_SENDING_SPANS != null) {
   minDelayBeforeSendingSpans = parseInt(process.env.INSTANA_DEV_MIN_DELAY_BEFORE_SENDING_SPANS, 10);
   if (isNaN(minDelayBeforeSendingSpans)) {
@@ -20,14 +20,14 @@ if (process.env.INSTANA_DEV_MIN_DELAY_BEFORE_SENDING_SPANS != null) {
 } else {
   minDelayBeforeSendingSpans = 1000;
 }
-var initialDelayBeforeSendingSpans;
-var transmissionDelay;
-var maxBufferedSpans;
-var forceTransmissionStartingAt;
+let initialDelayBeforeSendingSpans;
+let transmissionDelay;
+let maxBufferedSpans;
+let forceTransmissionStartingAt;
 
-var spans = [];
+let spans = [];
 
-var transmissionTimeoutHandle;
+let transmissionTimeoutHandle;
 
 exports.init = function(config, _downstreamConnection) {
   downstreamConnection = _downstreamConnection;
@@ -92,12 +92,12 @@ function transmitSpans() {
     return;
   }
 
-  var spansToSend = spans;
+  const spansToSend = spans;
   spans = [];
 
   downstreamConnection.sendSpans(spansToSend, function sendSpans(error) {
     if (error) {
-      logger.warn('Failed to transmit spans, will retry in ' + transmissionDelay + ' ms.', error.message);
+      logger.warn(`Failed to transmit spans, will retry in ${transmissionDelay} ms.`, error.message);
       spans = spans.concat(spansToSend);
       removeSpansIfNecessary();
     }
@@ -112,15 +112,15 @@ function transmitSpans() {
  * array.
  */
 exports.getAndResetSpans = function getAndResetSpans() {
-  var spansToSend = spans;
+  const spansToSend = spans;
   spans = [];
   return spansToSend;
 };
 
 function removeSpansIfNecessary() {
   if (spans.length > maxBufferedSpans) {
-    var droppedCount = spans.length - maxBufferedSpans;
-    logger.warn('Span buffer is over capacity, dropping ' + droppedCount + ' spans.');
+    const droppedCount = spans.length - maxBufferedSpans;
+    logger.warn(`Span buffer is over capacity, dropping ${droppedCount} spans.`);
     tracingMetrics.incrementDropped(spans.length - maxBufferedSpans);
     // retain the last maxBufferedSpans elements, drop everything before that
     spans = spans.slice(-maxBufferedSpans);

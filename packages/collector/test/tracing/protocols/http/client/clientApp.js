@@ -265,7 +265,7 @@ app.post('/upload-s3', (req, res) => {
   const bucketName = process.env.AWS_S3_BUCKET_NAME;
   const params = { Bucket: process.env.AWS_S3_BUCKET_NAME, Key: 'test-file', Body: readStream };
   log(`Uploading to bucket ${bucketName} in region ${awsRegion}`);
-  s3.upload(params, function(err, result) {
+  s3.upload(params, (err, result) => {
     if (err) {
       // eslint-disable-next-line no-console
       console.error(err);

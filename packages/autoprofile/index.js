@@ -2,7 +2,7 @@ let AutoProfiler = require('./lib/auto_profiler').AutoProfiler;
 
 let profiler = null;
 
-exports.start = function(opts) {
+exports.start = function start(opts) {
   if (!profiler) {
     profiler = new AutoProfiler();
   }
