@@ -1,7 +1,7 @@
 # Changelog
 
 ## Unrelased
-- Drop support for Node.js versions 4 (which was EOL 2018-04-30) and 5 (EOL 2016-06-30). If you want to use `@instana/collector` with Node.js version 4 or 5 please use `@instana/collector@1.103.0`.
+- Drop support for Node.js versions 4 (which was EOL 2018-04-30) and 5 (EOL 2016-06-30) in `@instana/collector`. If you want to use `@instana/collector` with Node.js version 4 or 5 please pin `@instana/collector` to version `1.103.0`.
 
 ## 1.103.0
 - Instrument Node.js core [http2 module](https://nodejs.org/api/http2.html) to trace HTTP/2 communication (except for server push/`pushStream`).
