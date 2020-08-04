@@ -110,7 +110,7 @@ while read -r region; do
     if [[ -n $UI_INSTALL_HELP ]]; then
       if [[ -f $UI_INSTALL_HELP ]]; then
         echo "Updating: $UI_INSTALL_HELP"
-        sed -i '' "s/const layerVersion = \'[0-9][0-9]*\';/const layerVersion = \'$lambda_layer_version\';/g" $UI_INSTALL_HELP
+        sed -i '' "s/const nodejsLayerVersion = \'[0-9][0-9]*\';/const nodejsLayerVersion = \'$lambda_layer_version\';/g" $UI_INSTALL_HELP
         echo "Updated $UI_INSTALL_HELP – do not forget to commit and push that change."
       else
         echo "Not found: $UI_INSTALL_HELP. Will not update UI install help."
