@@ -1,5 +1,6 @@
 'use strict';
 
+const semver = require('semver');
 const { expect } = require('chai');
 const { fail } = expect;
 
@@ -39,7 +40,7 @@ describe('tracing/http(s) server', function() {
     registerTests.call(this, true, false);
   });
 
-  describe('http2 compat mode', function() {
+  (semver.gte(process.versions.node, '8.4.0') ? describe : describe.skip)('http2 compat mode', function() {
     registerTests.call(this, true, true);
   });
 });

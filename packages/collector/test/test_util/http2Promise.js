@@ -53,11 +53,10 @@ exports.request = function request(opts) {
 
     let responseHasEnded = false;
     client.on('connect', () => {
-      const stream = client.request({
-        [HTTP2_HEADER_PATH]: urlPath,
-        [HTTP2_HEADER_METHOD]: method,
-        ...requestHeader
-      });
+      const requestOptions = Object.assign({}, requestHeader);
+      requestOptions[HTTP2_HEADER_PATH] = urlPath;
+      requestOptions[HTTP2_HEADER_METHOD] = method;
+      const stream = client.request(requestOptions);
 
       stream.setEncoding('utf8');
 

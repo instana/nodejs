@@ -111,11 +111,10 @@ ProcessControls.prototype.getPid = function getPid() {
 };
 
 ProcessControls.prototype.sendRequest = function(opts) {
+  const requestOptions = Object.assign({}, opts);
+  requestOptions.baseUrl = this.baseUrl;
   if (this.http2) {
-    return http2Promise.request({
-      ...opts,
-      baseUrl: this.baseUrl
-    });
+    return http2Promise.request(requestOptions);
   } else {
     if (opts.suppressTracing === true) {
       opts.headers = opts.headers || {};
