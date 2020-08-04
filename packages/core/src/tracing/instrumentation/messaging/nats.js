@@ -1,16 +1,16 @@
 'use strict';
 
-var shimmer = require('shimmer');
+const shimmer = require('shimmer');
 
-var requireHook = require('../../../util/requireHook');
-var tracingUtil = require('../../tracingUtil');
-var constants = require('../../constants');
-var cls = require('../../cls');
+const requireHook = require('../../../util/requireHook');
+const tracingUtil = require('../../tracingUtil');
+const constants = require('../../constants');
+const cls = require('../../cls');
 
-var isActive = false;
-var clientHasBeenInstrumented = false;
+let isActive = false;
+let clientHasBeenInstrumented = false;
 
-exports.init = function() {
+exports.init = function init() {
   requireHook.onModuleLoad('nats', instrumentNats);
 };
 
@@ -20,7 +20,7 @@ function instrumentNats(natsModule) {
 
 function shimConnect(originalFunction) {
   return function() {
-    var client = originalFunction.apply(this, arguments);
+    const client = originalFunction.apply(this, arguments);
     if (!clientHasBeenInstrumented) {
       shimmer.wrap(client.constructor.prototype, 'publish', shimPublish.bind(null, client.options.url));
 
@@ -37,8 +37,8 @@ function shimConnect(originalFunction) {
 function shimPublish(natsUrl, originalFunction) {
   return function() {
     if (isActive && cls.isTracing()) {
-      var originalArgs = new Array(arguments.length);
-      for (var i = 0; i < arguments.length; i++) {
+      const originalArgs = new Array(arguments.length);
+      for (let i = 0; i < arguments.length; i++) {
         originalArgs[i] = arguments[i];
       }
       return instrumentedPublish(this, originalFunction, originalArgs, natsUrl);
@@ -48,29 +48,29 @@ function shimPublish(natsUrl, originalFunction) {
 }
 
 function instrumentedPublish(ctx, originalPublish, originalArgs, natsUrl) {
-  var parentSpan = cls.getCurrentSpan();
+  const parentSpan = cls.getCurrentSpan();
 
   if (!cls.isTracing() || !parentSpan || constants.isExitSpan(parentSpan)) {
     return originalPublish.apply(ctx, originalArgs);
   }
 
-  var subject = typeof originalArgs[0] !== 'function' ? originalArgs[0] : '';
-  var callbackIndex = -1;
-  for (var i = 3; i >= 0; i--) {
+  const subject = typeof originalArgs[0] !== 'function' ? originalArgs[0] : '';
+  let callbackIndex = -1;
+  for (let i = 3; i >= 0; i--) {
     if (typeof originalArgs[i] === 'function') {
       callbackIndex = i;
     }
   }
-  var originalCallback = callbackIndex >= 0 ? originalArgs[callbackIndex] : null;
+  const originalCallback = callbackIndex >= 0 ? originalArgs[callbackIndex] : null;
 
-  return cls.ns.runAndReturn(function() {
-    var span = cls.startSpan('nats', constants.EXIT);
+  return cls.ns.runAndReturn(() => {
+    const span = cls.startSpan('nats', constants.EXIT);
     span.ts = Date.now();
     span.stack = tracingUtil.getStackTrace(instrumentedPublish);
     span.data.nats = {
       sort: 'publish',
       address: natsUrl,
-      subject: subject
+      subject
     };
 
     if (originalCallback) {
@@ -100,7 +100,7 @@ function shimRequest(originalFunction) {
   // published). Everything else is taken care of by the instrumentation of nats.publish.
   return function() {
     if (isActive && cls.isTracing()) {
-      for (var i = 3; i >= 0; i--) {
+      for (let i = 3; i >= 0; i--) {
         if (typeof arguments[i] === 'function') {
           arguments[i] = cls.ns.bind(arguments[i]);
           break;
@@ -113,8 +113,8 @@ function shimRequest(originalFunction) {
 
 function shimSubscribe(natsUrl, originalFunction) {
   return function() {
-    var originalSubscribeArgs = new Array(arguments.length);
-    for (var i = 0; i < arguments.length; i++) {
+    const originalSubscribeArgs = new Array(arguments.length);
+    for (let i = 0; i < arguments.length; i++) {
       originalSubscribeArgs[i] = arguments[i];
     }
     return instrumentedSubscribe(this, originalFunction, originalSubscribeArgs, natsUrl);
@@ -122,10 +122,10 @@ function shimSubscribe(natsUrl, originalFunction) {
 }
 
 function instrumentedSubscribe(ctx, originalSubscribe, originalSubscribeArgs, natsUrl) {
-  var subject = originalSubscribeArgs[0];
-  for (var i = 2; i >= 1; i--) {
+  const subject = originalSubscribeArgs[0];
+  for (let i = 2; i >= 1; i--) {
     if (typeof originalSubscribeArgs[i] === 'function') {
-      var originalSubscribeCallback = originalSubscribeArgs[i];
+      const originalSubscribeCallback = originalSubscribeArgs[i];
       originalSubscribeArgs[i] = instrumentedSubscribeCallback(natsUrl, subject, originalSubscribeCallback);
       break;
     }
@@ -136,9 +136,9 @@ function instrumentedSubscribe(ctx, originalSubscribe, originalSubscribeArgs, na
 
 function instrumentedSubscribeCallback(natsUrl, subject, originalSubscribeCallback) {
   return function() {
-    var originalCallbackThis = this;
-    var originalCallbackArgs = new Array(arguments.length);
-    for (var i = 0; i < arguments.length; i++) {
+    const originalCallbackThis = this;
+    const originalCallbackArgs = new Array(arguments.length);
+    for (let i = 0; i < arguments.length; i++) {
       originalCallbackArgs[i] = arguments[i];
     }
 
@@ -146,9 +146,9 @@ function instrumentedSubscribeCallback(natsUrl, subject, originalSubscribeCallba
     // contain wildcards.
     subject = typeof originalCallbackArgs[2] === 'string' ? originalCallbackArgs[2] : subject;
 
-    return cls.ns.runAndReturn(function() {
+    return cls.ns.runAndReturn(() => {
       if (isActive) {
-        var span = cls.startSpan('nats', constants.ENTRY);
+        const span = cls.startSpan('nats', constants.ENTRY);
         span.ts = Date.now();
         span.stack = tracingUtil.getStackTrace(instrumentedSubscribeCallback);
 
@@ -156,7 +156,7 @@ function instrumentedSubscribeCallback(natsUrl, subject, originalSubscribeCallba
         span.data.nats = {
           sort: 'consume',
           address: natsUrl,
-          subject: subject
+          subject
         };
 
         try {
@@ -165,7 +165,7 @@ function instrumentedSubscribeCallback(natsUrl, subject, originalSubscribeCallba
           addErrorToSpan(e, span);
           throw e;
         } finally {
-          setImmediate(function() {
+          setImmediate(() => {
             // Client code is expected to end the span manually, end it automatically in case client code doesn't. Child
             // exit spans won't be captured, but at least the NATS entry span is there.
             finishSpan(span, 'nats');
@@ -182,14 +182,14 @@ function addErrorToSpan(err, span) {
   if (err) {
     span.ec = 1;
 
-    var errMsg = null;
+    let errMsg = null;
     if (err.message) {
       errMsg = err.message;
     } else if (typeof err === 'string') {
       errMsg = err;
     }
     if (errMsg && span.data.nats.error) {
-      span.data.nats.error += ', ' + errMsg;
+      span.data.nats.error += `, ${errMsg}`;
     } else if (errMsg) {
       span.data.nats.error = errMsg;
     }
@@ -205,10 +205,10 @@ function finishSpan(span, expectedName) {
   }
 }
 
-exports.activate = function() {
+exports.activate = function activate() {
   isActive = true;
 };
 
-exports.deactivate = function() {
+exports.deactivate = function deactivate() {
   isActive = false;
 };

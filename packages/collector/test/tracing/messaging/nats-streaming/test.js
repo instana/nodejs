@@ -147,8 +147,8 @@ describe('tracing/nats-streaming', function() {
               expect(receivedMessages[receivedMessages.length - 1]).to.equal(uniqueId);
             }
 
-            return testUtils.retry(() => {
-              return agentControls.getSpans().then(spans => {
+            return testUtils.retry(() =>
+              agentControls.getSpans().then(spans => {
                 const httpSpan = testUtils.expectAtLeastOneMatching(spans, span => {
                   expect(span.n).to.equal('node.http.server');
                   expect(span.f.e).to.equal(String(publisherControls.getPid()));
@@ -178,7 +178,7 @@ describe('tracing/nats-streaming', function() {
                   expect(span.data.nats.subject).to.equal('subscribe-test-subject');
                   expect(span.data.nats.address).to.equal('nats://localhost:4223');
                   if (withError) {
-                    expect(span.data.nats.error).to.equal('Boom: ' + uniqueId);
+                    expect(span.data.nats.error).to.equal(`Boom: ${uniqueId}`);
                   } else {
                     expect(span.data.nats.error).to.not.exist;
                   }
@@ -192,8 +192,8 @@ describe('tracing/nats-streaming', function() {
                   expect(span.f.e).to.equal(String(subscriberControls.getPid()));
                   expect(span.f.h).to.equal('agent-stub-uuid');
                 });
-              });
-            });
+              })
+            );
           });
       });
     }

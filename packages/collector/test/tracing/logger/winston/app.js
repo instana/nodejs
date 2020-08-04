@@ -99,7 +99,7 @@ app.get('/log', (req, res) => {
   } else if (variant === 'object-with-message') {
     args.push({ message: 'the message' });
   } else if (variant === 'object-with-level') {
-    args.push({ level: level, message: 'the message' });
+    args.push({ level, message: 'the message' });
   } else {
     throw new Error(`unknown variant: ${variant}`);
   }

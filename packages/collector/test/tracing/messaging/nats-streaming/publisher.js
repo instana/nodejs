@@ -15,11 +15,11 @@ const client = natsStreaming.connect('test-cluster', 'test-client-publisher', {
 const port = process.env.APP_PORT || 3216;
 let connected = false;
 
-client.on('connect', function() {
+client.on('connect', () => {
   connected = true;
 });
 
-client.on('close', function() {
+client.on('close', () => {
   process.exit();
 });
 
@@ -34,7 +34,7 @@ app.get('/', (req, res) => {
 app.post('/publish', (req, res) => {
   const withError = req.query.withError;
   const isSubscribeTest = req.query.subscribeTest;
-  const message = isSubscribeTest && withError ? req.query.id + ' trigger an error' : req.query.id;
+  const message = isSubscribeTest && withError ? `${req.query.id} trigger an error` : req.query.id;
   let subject;
   if (isSubscribeTest) {
     subject = 'subscribe-test-subject';
@@ -45,12 +45,12 @@ app.post('/publish', (req, res) => {
     subject = 'publish-test-subject';
   }
 
-  client.publish(subject, message, function(err, guid) {
+  client.publish(subject, message, (err, guid) => {
     if (err) {
-      log('publish failed: ' + err);
+      log(`publish failed: ${err}`);
       afterPublish(res, err);
     } else {
-      log('published message with guid: ' + guid);
+      log(`published message with guid: ${guid}`);
       afterPublish(res);
     }
   });

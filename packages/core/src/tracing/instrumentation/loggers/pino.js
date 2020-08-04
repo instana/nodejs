@@ -2,16 +2,16 @@
 
 'use strict';
 
-var shimmer = require('shimmer');
+const shimmer = require('shimmer');
 
-var requireHook = require('../../../util/requireHook');
-var tracingUtil = require('../../tracingUtil');
-var constants = require('../../constants');
-var cls = require('../../cls');
+const requireHook = require('../../../util/requireHook');
+const tracingUtil = require('../../tracingUtil');
+const constants = require('../../constants');
+const cls = require('../../cls');
 
-var isActive = false;
+let isActive = false;
 
-exports.init = function() {
+exports.init = function init() {
   requireHook.onFileLoad(/\/pino\/lib\/tools\.js/, instrumentPinoTools);
 };
 
@@ -26,23 +26,23 @@ function shimGenLog(originalGenLog) {
       // we are not interested in anything below warn
       return originalGenLog.apply(this, arguments);
     } else {
-      var originalLoggingFunction = originalGenLog.apply(this, arguments);
+      const originalLoggingFunction = originalGenLog.apply(this, arguments);
       return function log(mergingObject, message) {
         if (isActive && cls.isTracing()) {
-          var parentSpan = cls.getCurrentSpan();
+          const parentSpan = cls.getCurrentSpan();
           if (parentSpan && !constants.isExitSpan(parentSpan)) {
-            var originalArgs = new Array(arguments.length);
-            for (var i = 0; i < arguments.length; i++) {
+            const originalArgs = new Array(arguments.length);
+            for (let i = 0; i < arguments.length; i++) {
               originalArgs[i] = arguments[i];
             }
-            var ctx = this;
-            return cls.ns.runAndReturn(function() {
-              var span = cls.startSpan('log.pino', constants.EXIT);
+            const ctx = this;
+            return cls.ns.runAndReturn(() => {
+              const span = cls.startSpan('log.pino', constants.EXIT);
               span.stack = tracingUtil.getStackTrace(log);
               if (typeof mergingObject === 'string') {
                 message = mergingObject;
               } else if (mergingObject && typeof mergingObject.message === 'string' && typeof message === 'string') {
-                message = mergingObject.message + ' -- ' + message;
+                message = `${mergingObject.message} -- ${message}`;
               } else if (mergingObject && typeof mergingObject.message === 'string') {
                 message = mergingObject.message;
               } else if (typeof message !== 'string') {
@@ -50,7 +50,7 @@ function shimGenLog(originalGenLog) {
                   'Log call without message. The Pino mergingObject argument will not be serialized by Instana for performance reasons.';
               }
               span.data.log = {
-                message: message
+                message
               };
               if (level >= 50) {
                 span.ec = 1;
@@ -73,10 +73,10 @@ function shimGenLog(originalGenLog) {
   };
 }
 
-exports.activate = function() {
+exports.activate = function activate() {
   isActive = true;
 };
 
-exports.deactivate = function() {
+exports.deactivate = function deactivate() {
   isActive = false;
 };

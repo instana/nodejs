@@ -1,27 +1,27 @@
 'use strict';
 
-var logger;
-logger = require('../logger').getLogger('agent/requestHandler', function(newLogger) {
+let logger;
+logger = require('../logger').getLogger('agent/requestHandler', newLogger => {
   logger = newLogger;
 });
 
-var agentConnection = require('../agentConnection');
+const agentConnection = require('../agentConnection');
 
-var actionMapping = {
+const actionMapping = {
   'node.source': require('../actions/source').getSourceFile,
   'node.getModuleAnalysis': require('../actions/getModuleAnalysis').getModuleAnalysis
 };
 
-exports.handleRequests = function(requests) {
+exports.handleRequests = function handleRequests(requests) {
   if (requests) {
     requests.forEach(handleRequest);
   }
 };
 
 function handleRequest(request) {
-  var action = actionMapping[request.action];
+  const action = actionMapping[request.action];
   if (!action) {
-    sendResponse(request, { error: "Don't know how to handle action: " + action + '.' });
+    sendResponse(request, { error: `Don't know how to handle action: ${action}.` });
     return;
   }
 
@@ -29,18 +29,18 @@ function handleRequest(request) {
 }
 
 function sendResponse(request, response) {
-  agentConnection.sendAgentResponseToAgent(request.messageId, response, function(error) {
+  agentConnection.sendAgentResponseToAgent(request.messageId, response, error => {
     if (error) {
       logger.warn('Failed to send agent response for action %s and message ID %s', request.action, request.messageId, {
-        error: error
+        error
       });
     }
   });
 }
 
-exports.activate = function() {
+exports.activate = function activate() {
   /* noop */
 };
-exports.deactivate = function() {
+exports.deactivate = function deactivate() {
   /* noop */
 };

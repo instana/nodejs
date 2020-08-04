@@ -3,30 +3,30 @@
 exports.payloadPrefix = 'http';
 exports.currentPayload = {};
 
-exports.activate = function() {};
-exports.deactivate = function() {};
+exports.activate = function activate() {};
+exports.deactivate = function deactivate() {};
 
 instrumentHttpModule('http');
 instrumentHttpModule('https');
 
 function instrumentHttpModule(httpModuleName) {
-  var coreHttpModule = require(httpModuleName);
-  var originalCreateServer = coreHttpModule.createServer;
+  const coreHttpModule = require(httpModuleName);
+  const originalCreateServer = coreHttpModule.createServer;
 
   coreHttpModule.createServer = function createServer() {
-    var server = originalCreateServer.apply(coreHttpModule, arguments);
-    var payloadContext = {
+    const server = originalCreateServer.apply(coreHttpModule, arguments);
+    const payloadContext = {
       type: httpModuleName
     };
-    var key;
+    let key;
 
-    server.on('listening', function() {
+    server.on('listening', () => {
       payloadContext.address = server.address();
       key = payloadContext.address.address + payloadContext.address.port;
       exports.currentPayload[key] = payloadContext;
     });
 
-    server.on('close', function() {
+    server.on('close', () => {
       delete exports.currentPayload[key];
     });
 

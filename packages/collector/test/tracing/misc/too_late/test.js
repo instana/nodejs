@@ -128,7 +128,7 @@ describe('tracing/too late', function() {
     });
   }
 
-  describe('@instana/collector is initialized properly', function() {
+  describe('@instana/collector is initialized properly', () => {
     const controls = new ProcessControls({
       dirname: __dirname,
       agentControls

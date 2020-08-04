@@ -1,6 +1,6 @@
 'use strict';
 
-var metrics = {
+const metrics = {
   opened: 0,
   closed: 0,
   dropped: 0
@@ -23,7 +23,7 @@ exports.incrementDropped = function incrementDropped(dropped) {
 };
 
 exports.getAndReset = function getAndReset() {
-  var m = Object.assign({}, metrics);
+  const m = Object.assign({}, metrics);
   metrics.opened = 0;
   metrics.closed = 0;
   metrics.dropped = 0;

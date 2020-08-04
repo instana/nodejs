@@ -17,7 +17,7 @@ describe('tracing/w3c-trace-context create', () => {
 
   function registerFromInstanaIdTest(longTraceId, sampled) {
     const instanaTraceId = longTraceId ? traceId32Char : traceid16Char;
-    const expectedTraceId = longTraceId ? traceId32Char : '0000000000000000' + traceid16Char;
+    const expectedTraceId = longTraceId ? traceId32Char : `0000000000000000${traceid16Char}`;
     const expectedSampled = sampled !== false;
     const expectedFlags = sampled !== false ? '01' : '00';
 
@@ -49,7 +49,7 @@ describe('tracing/w3c-trace-context create', () => {
 
   function registerEmptyUnsampledTest(longTraceId) {
     const traceId = longTraceId ? traceId32Char : traceid16Char;
-    const expectedTraceId = longTraceId ? traceId32Char : '0000000000000000' + traceid16Char;
+    const expectedTraceId = longTraceId ? traceId32Char : `0000000000000000${traceid16Char}`;
 
     const testTitleSuffix = `(${idLengthTitle(longTraceId)})`;
 

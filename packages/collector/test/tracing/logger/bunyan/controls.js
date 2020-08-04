@@ -12,8 +12,7 @@ const appPort = (exports.appPort = 3215);
 
 let appProcess;
 
-exports.registerTestHooks = opts => {
-  opts = opts || {};
+exports.registerTestHooks = (opts = {}) => {
   let appName = 'app.js';
   if (opts.instanaLoggingMode) {
     switch (opts.instanaLoggingMode) {

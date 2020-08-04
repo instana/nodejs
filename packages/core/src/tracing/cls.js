@@ -1,24 +1,24 @@
 'use strict';
 
-var spanBuffer = require('./spanBuffer');
-var tracingUtil = require('./tracingUtil');
-var constants = require('./constants');
-var hooked = require('./clsHooked');
-var tracingMetrics = require('./metrics');
-var logger;
-logger = require('../logger').getLogger('tracing/cls', function(newLogger) {
+const spanBuffer = require('./spanBuffer');
+const tracingUtil = require('./tracingUtil');
+const constants = require('./constants');
+const hooked = require('./clsHooked');
+const tracingMetrics = require('./metrics');
+let logger;
+logger = require('../logger').getLogger('tracing/cls', newLogger => {
   logger = newLogger;
 });
 
-var currentEntrySpanKey = (exports.currentEntrySpanKey = 'com.instana.entry');
-var currentSpanKey = (exports.currentSpanKey = 'com.instana.span');
-var reducedSpanKey = (exports.reducedSpanKey = 'com.instana.reduced');
-var tracingLevelKey = (exports.tracingLevelKey = 'com.instana.tl');
-var w3cTraceContextKey = (exports.w3cTraceContextKey = 'com.instana.w3ctc');
+const currentEntrySpanKey = (exports.currentEntrySpanKey = 'com.instana.entry');
+const currentSpanKey = (exports.currentSpanKey = 'com.instana.span');
+const reducedSpanKey = (exports.reducedSpanKey = 'com.instana.reduced');
+const tracingLevelKey = (exports.tracingLevelKey = 'com.instana.tl');
+const w3cTraceContextKey = (exports.w3cTraceContextKey = 'com.instana.w3ctc');
 
 // eslint-disable-next-line no-undef-init
-var serviceName = undefined;
-var processIdentityProvider = null;
+let serviceName = undefined;
+let processIdentityProvider = null;
 
 /*
  * Access the Instana namespace in continuation local storage.
@@ -46,11 +46,11 @@ exports.startSpan = function startSpan(spanName, kind, traceId, parentSpanId, w3
     logger.warn('Invalid span (%s) without kind/with invalid kind: %s, assuming EXIT.', spanName, kind);
     kind = constants.EXIT;
   }
-  var span = new InstanaSpan(spanName);
+  const span = new InstanaSpan(spanName);
   span.k = kind;
 
-  var parentSpan = exports.getCurrentSpan();
-  var parentW3cTraceContext = exports.getW3cTraceContext();
+  const parentSpan = exports.getCurrentSpan();
+  const parentW3cTraceContext = exports.getW3cTraceContext();
 
   // If the client code has specified a trace ID/parent ID, use the provided IDs.
   if (traceId) {
@@ -163,7 +163,7 @@ exports.tracingLevel = function tracingLevel() {
  * Determine if tracing is suppressed (via tracing level) for this request.
  */
 exports.tracingSuppressed = function tracingSuppressed() {
-  var tl = exports.tracingLevel();
+  const tl = exports.tracingLevel();
   return typeof tl === 'string' && tl.indexOf('0') === 0;
 };
 

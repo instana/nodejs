@@ -169,17 +169,19 @@ app.post('/long-find', (req, res) => {
   let mongoResponse = null;
 
   const array = Array.from(Array(10000).keys());
-  const sequencePromise = array.reduce(previousPromise => {
-    return previousPromise.then(() => {
-      if (Date.now() > startedAt + 1500) {
-        return Promise.resolve();
-      } else {
-        return collection.findOne({ unique }).then(r => {
-          mongoResponse = r;
-        });
-      }
-    });
-  }, Promise.resolve());
+  const sequencePromise = array.reduce(
+    previousPromise =>
+      previousPromise.then(() => {
+        if (Date.now() > startedAt + 1500) {
+          return Promise.resolve();
+        } else {
+          return collection.findOne({ unique }).then(r => {
+            mongoResponse = r;
+          });
+        }
+      }),
+    Promise.resolve()
+  );
 
   return sequencePromise
     .then(r => {
@@ -187,9 +189,7 @@ app.post('/long-find', (req, res) => {
       // Execute another traced call to verify that we keep the tracing context.
       return request(`http://127.0.0.1:${agentPort}?call=${call}`);
     })
-    .then(() => {
-      return res.json(mongoResponse);
-    })
+    .then(() => res.json(mongoResponse))
     .catch(e => {
       log('Failed to find document', e);
       res.sendStatus(500);

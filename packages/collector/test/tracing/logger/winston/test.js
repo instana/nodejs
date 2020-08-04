@@ -62,7 +62,7 @@ describe('tracing/logger/winston', function() {
       testName += level;
       query.useLevelMethod = true;
     } else {
-      testName += 'log/' + level;
+      testName += `log/${level}`;
       query.useLevelMethod = false;
     }
     if (shouldTrace) {
@@ -70,7 +70,7 @@ describe('tracing/logger/winston', function() {
     } else {
       testName += ' must not trace (';
     }
-    testName += variant + ')';
+    testName += `${variant})`;
 
     const queryString = Object.keys(query)
       .map(key => `${key}=${query[key]}`)
@@ -139,7 +139,7 @@ describe('tracing/logger/winston', function() {
       found = found || callSite.c.indexOf('winston/app.js') >= 0;
     });
     if (!found) {
-      fail('Did not find the expected call site winston/app.js in ' + JSON.stringify(span.stack, null, 2));
+      fail(`Did not find the expected call site winston/app.js in ${JSON.stringify(span.stack, null, 2)}`);
     }
   }
 

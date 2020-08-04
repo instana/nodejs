@@ -80,8 +80,8 @@ function registerTests(useHttps) {
 
       // The (url, options[, callback]) API only exists since Node 10.9.0:
       const mochaFn = semver.lt(process.versions.node, '10.9.0') ? it.skip : it;
-      mochaFn(`must trace request(${urlParam}, options, cb) with query: ${withQuery}`, () => {
-        return clientControls
+      mochaFn(`must trace request(${urlParam}, options, cb) with query: ${withQuery}`, () =>
+        clientControls
           .sendRequest({
             method: 'GET',
             path: constructPath('/request-url-and-options', urlObject, withQuery)
@@ -92,8 +92,8 @@ function registerTests(useHttps) {
                 .getSpans()
                 .then(spans => verifySpans(spans, useHttps, '/request-url-and-options', '/request-url-opts', withQuery))
             )
-          );
-      });
+          )
+      );
     });
   });
 
@@ -105,8 +105,8 @@ function registerTests(useHttps) {
       //   where we can specify the `ca` option.
       // - WHATWG URL objects can only be passed since 7.5.0
       const mochaFn = useHttps || (urlObject && semver.lt(process.versions.node, '7.5.0')) ? it.skip : it;
-      mochaFn(`must trace request(${urlParam}, cb) with query: ${withQuery}`, () => {
-        return clientControls
+      mochaFn(`must trace request(${urlParam}, cb) with query: ${withQuery}`, () =>
+        clientControls
           .sendRequest({
             method: 'GET',
             path: constructPath('/request-url-only', urlObject, withQuery)
@@ -117,8 +117,8 @@ function registerTests(useHttps) {
                 .getSpans()
                 .then(spans => verifySpans(spans, useHttps, '/request-url-only', '/request-only-url', withQuery))
             )
-          );
-      });
+          )
+      );
     });
   });
 
@@ -193,8 +193,8 @@ function registerTests(useHttps) {
 
       // The (url, options[, callback]) API only exists since Node 10.9.0.
       const mochaFn = semver.lt(process.versions.node, '10.9.0') ? it.skip : it;
-      mochaFn(`must trace get(${urlParam}, options, cb) with query: ${withQuery}`, () => {
-        return clientControls
+      mochaFn(`must trace get(${urlParam}, options, cb) with query: ${withQuery}`, () =>
+        clientControls
           .sendRequest({
             method: 'GET',
             path: constructPath('/get-url-and-options', urlObject, withQuery)
@@ -205,8 +205,8 @@ function registerTests(useHttps) {
                 .getSpans()
                 .then(spans => verifySpans(spans, useHttps, '/get-url-and-options', '/get-url-opts', withQuery))
             )
-          );
-      });
+          )
+      );
     });
   });
 
@@ -218,8 +218,8 @@ function registerTests(useHttps) {
       //   where we can specify the `ca` option.
       // - WHATWG URL objects can only be passed since 7.5.0
       const mochaFn = useHttps || (urlObject && semver.lt(process.versions.node, '7.5.0')) ? it.skip : it;
-      mochaFn(`must trace get(${urlParam}, cb) with query: ${withQuery}`, () => {
-        return clientControls
+      mochaFn(`must trace get(${urlParam}, cb) with query: ${withQuery}`, () =>
+        clientControls
           .sendRequest({
             method: 'GET',
             path: constructPath('/get-url-only', urlObject, withQuery)
@@ -230,8 +230,8 @@ function registerTests(useHttps) {
                 .getSpans()
                 .then(spans => verifySpans(spans, useHttps, '/get-url-only', '/get-only-url', withQuery))
             )
-          );
-      });
+          )
+      );
     });
   });
 
@@ -454,8 +454,8 @@ function registerSuperagentTest() {
     }
   }).registerTestHooks();
 
-  it('must trace superagent callbacks', () => {
-    return clientControls
+  it('must trace superagent callbacks', () =>
+    clientControls
       .sendRequest({
         method: 'GET',
         path: constructPath('/callback')
@@ -464,44 +464,40 @@ function registerSuperagentTest() {
         retry(() =>
           agentControls.getSpans().then(spans => verifySuperagentSpans(spans, '/callback', '/request-url-opts'))
         )
-      );
-  });
+      ));
 
-  it('must trace superagent promises', () => {
-    return clientControls
+  it('must trace superagent promises', () =>
+    clientControls
       .sendRequest({
         method: 'GET',
         path: constructPath('/then')
       })
       .then(() =>
         retry(() => agentControls.getSpans().then(spans => verifySuperagentSpans(spans, '/then', '/request-url-opts')))
-      );
-  });
+      ));
 
-  it('must trace superagent promises/catch', () => {
-    return clientControls
+  it('must trace superagent promises/catch', () =>
+    clientControls
       .sendRequest({
         method: 'GET',
         path: constructPath('/catch')
       })
       .then(() =>
         retry(() => agentControls.getSpans().then(spans => verifySuperagentSpans(spans, '/catch', '/does-not-exist')))
-      );
-  });
+      ));
 
-  it('must trace superagent with async/await', () => {
-    return clientControls
+  it('must trace superagent with async/await', () =>
+    clientControls
       .sendRequest({
         method: 'GET',
         path: constructPath('/await')
       })
       .then(() =>
         retry(() => agentControls.getSpans().then(spans => verifySuperagentSpans(spans, '/await', '/request-url-opts')))
-      );
-  });
+      ));
 
-  it('must trace superagent with async/await and error', () => {
-    return clientControls
+  it('must trace superagent with async/await and error', () =>
+    clientControls
       .sendRequest({
         method: 'GET',
         path: constructPath('/await-fail')
@@ -510,8 +506,7 @@ function registerSuperagentTest() {
         retry(() =>
           agentControls.getSpans().then(spans => verifySuperagentSpans(spans, '/await-fail', '/does-not-exist'))
         )
-      );
-  });
+      ));
 }
 
 function constructPath(basePath, urlObject, withQuery) {

@@ -33,7 +33,7 @@ exports.request = function request(opts) {
     return Promise.reject(new Error('Cannot combine opts.qs with an opts.path that already contains a query.'));
   } else if (qs && Object.keys(qs).length > 0) {
     urlPath = `${urlPath}?${Object.keys(qs)
-      .map(k => k + '=' + qs[k])
+      .map(k => `${k}=${qs[k]}`)
       .join('&')}`;
   }
 

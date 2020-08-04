@@ -1,32 +1,32 @@
 'use strict';
 
-var semver = require('semver');
+const semver = require('semver');
 
-var cls = require('../../cls');
-var constants = require('../../constants');
-var httpCommon = require('./_http');
-var readSymbolProperty = require('../../../util/readSymbolProperty');
-var shimmer = require('shimmer');
-var tracingHeaders = require('../../tracingHeaders');
-var urlUtil = require('../../../util/url');
+const cls = require('../../cls');
+const constants = require('../../constants');
+const httpCommon = require('./_http');
+const readSymbolProperty = require('../../../util/readSymbolProperty');
+const shimmer = require('shimmer');
+const tracingHeaders = require('../../tracingHeaders');
+const urlUtil = require('../../../util/url');
 
-var discardUrlParameters = urlUtil.discardUrlParameters;
-var filterParams = urlUtil.filterParams;
+const discardUrlParameters = urlUtil.discardUrlParameters;
+const filterParams = urlUtil.filterParams;
 
-var extraHttpHeadersToCapture;
-var isActive = false;
+let extraHttpHeadersToCapture;
+let isActive = false;
 
 exports.spanName = 'node.http.server';
 
-var sentHeadersS = 'Symbol(sent-headers)';
-var HTTP2_HEADER_AUTHORITY;
-var HTTP2_HEADER_METHOD;
-var HTTP2_HEADER_PATH;
-var HTTP2_HEADER_STATUS;
+const sentHeadersS = 'Symbol(sent-headers)';
+let HTTP2_HEADER_AUTHORITY;
+let HTTP2_HEADER_METHOD;
+let HTTP2_HEADER_PATH;
+let HTTP2_HEADER_STATUS;
 
-exports.init = function(config) {
+exports.init = function init(config) {
   if (semver.gte(process.versions.node, '8.4.0')) {
-    var http2 = require('http2');
+    const http2 = require('http2');
     HTTP2_HEADER_AUTHORITY = http2.constants.HTTP2_HEADER_AUTHORITY;
     HTTP2_HEADER_METHOD = http2.constants.HTTP2_HEADER_METHOD;
     HTTP2_HEADER_PATH = http2.constants.HTTP2_HEADER_PATH;
@@ -42,9 +42,9 @@ function instrument(coreModule) {
 }
 
 function instrumentCreateServer(coreModule, name) {
-  var original = coreModule[name];
+  const original = coreModule[name];
   coreModule[name] = function createHttp2Server() {
-    var server = original.apply(this, arguments);
+    const server = original.apply(this, arguments);
     shimmer.wrap(server, 'emit', shimEmit);
     return server;
   };
@@ -56,16 +56,16 @@ function shimEmit(realEmit) {
       return realEmit.apply(this, arguments);
     }
 
-    var originalThis = this;
-    var originalArgs = arguments;
+    const originalThis = this;
+    const originalArgs = arguments;
 
-    return cls.ns.runAndReturn(function() {
+    return cls.ns.runAndReturn(() => {
       if (stream && stream.on && stream.addListener && stream.emit) {
         cls.ns.bindEmitter(stream);
       }
 
-      var processedHeaders = tracingHeaders.fromHeaders(headers);
-      var w3cTraceContext = processedHeaders.w3cTraceContext;
+      const processedHeaders = tracingHeaders.fromHeaders(headers);
+      const w3cTraceContext = processedHeaders.w3cTraceContext;
 
       if (typeof processedHeaders.level === 'string' && processedHeaders.level.indexOf('0') === 0) {
         cls.setTracingLevel('0');
@@ -87,7 +87,7 @@ function shimEmit(realEmit) {
         return realEmit.apply(originalThis, originalArgs);
       }
 
-      var span = cls.startSpan(
+      const span = cls.startSpan(
         exports.spanName,
         constants.ENTRY,
         processedHeaders.traceId,
@@ -106,28 +106,28 @@ function shimEmit(realEmit) {
         span.sy = true;
       }
 
-      var authority = headers[HTTP2_HEADER_AUTHORITY];
-      var path = headers[HTTP2_HEADER_PATH] || '/';
-      var method = headers[HTTP2_HEADER_METHOD] || 'GET';
+      const authority = headers[HTTP2_HEADER_AUTHORITY];
+      const path = headers[HTTP2_HEADER_PATH] || '/';
+      const method = headers[HTTP2_HEADER_METHOD] || 'GET';
 
-      var pathParts = path.split('?');
+      const pathParts = path.split('?');
       if (pathParts.length >= 2) {
         pathParts[1] = filterParams(pathParts[1]);
       }
 
       span.data.http = {
-        method: method,
+        method,
         url: discardUrlParameters(pathParts.shift()),
         params: pathParts.length > 0 ? pathParts.join('?') : undefined,
         host: authority,
         header: httpCommon.getExtraHeadersCaseInsensitive(headers, extraHttpHeadersToCapture)
       };
 
-      stream.on('aborted', function() {
+      stream.on('aborted', () => {
         finishSpan();
       });
 
-      stream.on('close', function() {
+      stream.on('close', () => {
         finishSpan();
       });
 
@@ -137,8 +137,8 @@ function shimEmit(realEmit) {
         // Check if a span with higher priority (like graphql.server) already finished this span, only overwrite
         // span attributes if that is not the case.
         if (!span.transmitted) {
-          var status;
-          var resHeaders = readSymbolProperty(stream, sentHeadersS);
+          let status;
+          const resHeaders = readSymbolProperty(stream, sentHeadersS);
           if (resHeaders) {
             status = resHeaders[HTTP2_HEADER_STATUS];
           }
@@ -163,15 +163,15 @@ function shimEmit(realEmit) {
   };
 }
 
-exports.updateConfig = function(config) {
+exports.updateConfig = function updateConfig(config) {
   extraHttpHeadersToCapture = config.tracing.http.extraHttpHeadersToCapture;
 };
 
-exports.activate = function() {
+exports.activate = function activate() {
   isActive = true;
 };
 
-exports.deactivate = function() {
+exports.deactivate = function deactivate() {
   isActive = false;
 };
 

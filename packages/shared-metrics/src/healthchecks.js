@@ -1,18 +1,18 @@
 'use strict';
 
-var requireHook = require('@instana/core').util.requireHook;
+const requireHook = require('@instana/core').util.requireHook;
 
-var logger = require('@instana/core').logger.getLogger('metrics');
-exports.setLogger = function(_logger) {
+let logger = require('@instana/core').logger.getLogger('metrics');
+exports.setLogger = function setLogger(_logger) {
   logger = _logger;
 };
 
-var timeBetweenHealthcheckCalls;
-var healthy = 1;
-var unhealthy = 0;
+let timeBetweenHealthcheckCalls;
+const healthy = 1;
+const unhealthy = 0;
 
-var adminPluginHealthcheck;
-var timeoutHandle;
+let adminPluginHealthcheck;
+let timeoutHandle;
 
 exports.payloadPrefix = 'healthchecks';
 exports.currentPayload = {};
@@ -21,7 +21,7 @@ requireHook.onModuleLoad('admin-plugin-healthcheck', function onAdminPluginHealt
   adminPluginHealthcheck = _adminPluginHealthcheck;
 });
 
-exports.activate = function(config) {
+exports.activate = function activate(config) {
   timeBetweenHealthcheckCalls = config.metrics.timeBetweenHealthcheckCalls;
 
   if (adminPluginHealthcheck != null) {
@@ -33,16 +33,16 @@ function gatherHealthcheckResults() {
   adminPluginHealthcheck
     .getHealthCheckResult()
     .then(function onHealthcheckResults(adminHealthcheckResults) {
-      var results = {};
-      var previousResults = exports.currentPayload;
+      const results = {};
+      const previousResults = exports.currentPayload;
 
       // eslint-disable-next-line no-restricted-syntax
-      for (var key in adminHealthcheckResults) {
+      for (const key in adminHealthcheckResults) {
         // eslint-disable-next-line no-prototype-builtins
         if (adminHealthcheckResults.hasOwnProperty(key)) {
-          var result = adminHealthcheckResults[key];
-          var checkHealthy = result.healthy ? healthy : unhealthy;
-          var changed = previousResults[key] == null || previousResults[key].healthy !== checkHealthy;
+          const result = adminHealthcheckResults[key];
+          const checkHealthy = result.healthy ? healthy : unhealthy;
+          const changed = previousResults[key] == null || previousResults[key].healthy !== checkHealthy;
           results[key] = {
             healthy: checkHealthy,
             since: changed ? new Date().getTime() : previousResults[key].since
@@ -62,6 +62,6 @@ function gatherHealthcheckResults() {
     });
 }
 
-exports.deactivate = function() {
+exports.deactivate = function deactivate() {
   clearTimeout(timeoutHandle);
 };

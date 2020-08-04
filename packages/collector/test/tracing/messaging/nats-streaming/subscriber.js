@@ -15,10 +15,10 @@ const client = natsStreaming.connect('test-cluster', 'test-client-subscriber', {
 });
 let connected = false;
 
-client.on('connect', function() {
+client.on('connect', () => {
   const opts1 = client.subscriptionOptions().setStartWithLastReceived();
   const subscriptionForPublishTest = client.subscribe('publish-test-subject', opts1);
-  subscriptionForPublishTest.on('message', function(msg) {
+  subscriptionForPublishTest.on('message', msg => {
     log(`received: [${msg.getSequence()}] ${msg.getData()}`);
     if (process.send) {
       process.send(msg.getData());
@@ -34,7 +34,7 @@ client.on('connect', function() {
     .setManualAckMode(true)
     .setAckWait(5 * 1000);
   const subscriptionForSubscribeTest = client.subscribe('subscribe-test-subject', opts2);
-  subscriptionForSubscribeTest.on('message', function(msg) {
+  subscriptionForSubscribeTest.on('message', msg => {
     log(`received: [${msg.getSequence()}] ${msg.getData()}`);
     msg.ack();
     const span = instana.currentSpan();
@@ -46,7 +46,7 @@ client.on('connect', function() {
       if (msg.getData().indexOf('trigger an error') >= 0) {
         log('triggering an error...');
         // attach unique message ID to error text
-        throw new Error('Boom: ' + msg.getData().substring(0, 36));
+        throw new Error(`Boom: ${msg.getData().substring(0, 36)}`);
       }
     } finally {
       setTimeout(() => {

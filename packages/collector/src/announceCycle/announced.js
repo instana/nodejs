@@ -1,13 +1,13 @@
 'use strict';
 
-var logger;
-logger = require('../logger').getLogger('announceCycle/announced', function(newLogger) {
+let logger;
+logger = require('../logger').getLogger('announceCycle/announced', newLogger => {
   logger = newLogger;
 });
 
-var MAX_RETRIES = 60;
+const MAX_RETRIES = 60;
 
-var agentConnection = require('../agentConnection');
+const agentConnection = require('../agentConnection');
 
 module.exports = {
   enter: function(ctx) {
@@ -18,7 +18,7 @@ module.exports = {
 };
 
 function checkWhetherAgentIsReadyToAccept(totalNumberOfAttempts, ctx) {
-  agentConnection.checkWhetherAgentIsReadyToAcceptData(function(ready) {
+  agentConnection.checkWhetherAgentIsReadyToAcceptData(ready => {
     if (ready) {
       logger.info('Agent is ready to accept.');
       ctx.transitionTo('agentready');

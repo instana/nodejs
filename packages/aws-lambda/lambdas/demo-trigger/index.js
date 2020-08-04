@@ -4,7 +4,7 @@ const async_ = require('async');
 const pino = require('pino');
 const request = require('request-promise');
 // eslint-disable-next-line import/no-extraneous-dependencies
-const s3 = new (require('aws-sdk')).S3(); // this is provided by AWS, so it is not listed in package.json
+const s3 = new (require('aws-sdk').S3)(); // this is provided by AWS, so it is not listed in package.json
 const uuid = require('uuid/v4');
 
 const bucket = process.env.BUCKET_NAME || 'instana-lambda-demo';

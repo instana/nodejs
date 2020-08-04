@@ -1,14 +1,14 @@
 'use strict';
 
-var shimmer = require('shimmer');
+const shimmer = require('shimmer');
 
-var logger;
-logger = require('../../../logger').getLogger('tracing/grpc', function(newLogger) {
+let logger;
+logger = require('../../../logger').getLogger('tracing/grpc', newLogger => {
   logger = newLogger;
 });
 
-var requireHook = require('../../../util/requireHook');
-var cls = require('../../cls');
+const requireHook = require('../../../util/requireHook');
+const cls = require('../../cls');
 
 exports.init = function() {
   requireHook.onModuleLoad('superagent', exports.instrument);
@@ -27,7 +27,7 @@ exports.init = function() {
 // Request#then.
 
 exports.instrument = function instrument(superagent) {
-  var OriginalRequest = superagent.Request;
+  const OriginalRequest = superagent.Request;
   if (!OriginalRequest || typeof OriginalRequest !== 'function') {
     logger.debug('Failed to instrument superagent. The provided object has no function named "Request".');
     return;
@@ -40,7 +40,7 @@ exports.instrument = function instrument(superagent) {
 
   // Instrument the superagent.Request constructor function to attach the async context to the request object.
   superagent.Request = function InstrumentedRequest() {
-    var request = new (Function.prototype.bind.apply(
+    const request = new (Function.prototype.bind.apply(
       OriginalRequest,
       [null].concat(Array.prototype.slice.call(arguments))
     ))();
@@ -62,14 +62,12 @@ function instrumentThen(originalThen) {
     if (!this.__inctx) {
       return originalThen.apply(this, arguments);
     } else {
-      var originalThis = this;
-      var originalArgs = new Array(arguments.length);
-      for (var i = 0; i < arguments.length; i++) {
+      const originalThis = this;
+      const originalArgs = new Array(arguments.length);
+      for (let i = 0; i < arguments.length; i++) {
         originalArgs[i] = arguments[i];
       }
-      return cls.runInAsyncContext(this.__inctx, function() {
-        return originalThen.apply(originalThis, originalArgs);
-      });
+      return cls.runInAsyncContext(this.__inctx, () => originalThen.apply(originalThis, originalArgs));
     }
   };
 }

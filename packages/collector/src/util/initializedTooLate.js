@@ -1,14 +1,14 @@
 'use strict';
 
-var logger;
-logger = require('../logger').getLogger('util/initializedTooLate', function(newLogger) {
+let logger;
+logger = require('../logger').getLogger('util/initializedTooLate', newLogger => {
   logger = newLogger;
 });
 
-var hasThePackageBeenInitializedTooLate = require('@instana/core').util.hasThePackageBeenInitializedTooLate;
-var agentConnection = require('../agentConnection');
+const hasThePackageBeenInitializedTooLate = require('@instana/core').util.hasThePackageBeenInitializedTooLate;
+const agentConnection = require('../agentConnection');
 
-var warningHasBeenLogged = false;
+let warningHasBeenLogged = false;
 
 exports.check = function check() {
   if (hasThePackageBeenInitializedTooLate()) {
@@ -29,7 +29,7 @@ exports.check = function check() {
 };
 
 function fireMonitoringEvent() {
-  agentConnection.sendAgentMonitoringEvent('nodejs_collector_initialized_too_late', 'TRACER', function(error) {
+  agentConnection.sendAgentMonitoringEvent('nodejs_collector_initialized_too_late', 'TRACER', error => {
     if (error) {
       logger.error('Error received while trying to send Agent Monitoring Event to agent: %s', error.message);
     }

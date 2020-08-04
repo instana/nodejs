@@ -1,28 +1,28 @@
 'use strict';
 
-var coreMetrics = require('@instana/core').metrics;
-var sharedMetrics = require('@instana/shared-metrics');
-var transmissionCycle = require('./transmissionCycle');
+const coreMetrics = require('@instana/core').metrics;
+const sharedMetrics = require('@instana/shared-metrics');
+const transmissionCycle = require('./transmissionCycle');
 
 coreMetrics.registerAdditionalMetrics(sharedMetrics.allMetrics);
-var additionalCollectorMetrics = coreMetrics.findAndRequire(__dirname);
+const additionalCollectorMetrics = coreMetrics.findAndRequire(__dirname);
 coreMetrics.registerAdditionalMetrics(additionalCollectorMetrics);
 
-var logger = require('../logger').getLogger('metrics', function(newLogger) {
+const logger = require('../logger').getLogger('metrics', newLogger => {
   coreMetrics.setLogger(newLogger);
 });
 coreMetrics.setLogger(logger);
 
-exports.init = function(config) {
+exports.init = function init(config) {
   coreMetrics.init(config);
   transmissionCycle.init(config);
 };
 
-exports.activate = function() {
+exports.activate = function activate() {
   coreMetrics.activate();
 };
 
-exports.deactivate = function() {
+exports.deactivate = function deactivate() {
   coreMetrics.deactivate();
 };
 

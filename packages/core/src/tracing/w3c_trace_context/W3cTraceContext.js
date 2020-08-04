@@ -1,11 +1,11 @@
 'use strict';
 
-var constants = require('../constants');
-var tracingUtil = require('../tracingUtil');
+const constants = require('../constants');
+const tracingUtil = require('../tracingUtil');
 
-var VERSION00 = '00';
-var LEFT_PAD_16 = '0000000000000000';
-var SAMPLED_BITMASK = 0x00000001;
+const VERSION00 = '00';
+const LEFT_PAD_16 = '0000000000000000';
+const SAMPLED_BITMASK = 0x00000001;
 
 function W3cTraceContext() {
   // whether the traceparent header is valid
@@ -32,11 +32,11 @@ function W3cTraceContext() {
 }
 
 W3cTraceContext.fromInstanaIds = function fromInstanaIds(instanaTraceId, instanaParentId, sampled) {
-  var paddedTraceId = instanaTraceId.length === 16 ? LEFT_PAD_16 + instanaTraceId : instanaTraceId;
+  const paddedTraceId = instanaTraceId.length === 16 ? LEFT_PAD_16 + instanaTraceId : instanaTraceId;
   sampled = typeof sampled === 'boolean' ? sampled : true;
-  var traceContext = new W3cTraceContext(
-    VERSION00 + '-' + paddedTraceId + '-' + instanaParentId + '-' + (sampled ? '01' : '00'),
-    constants.w3cInstanaEquals + instanaTraceId + ';' + instanaParentId
+  const traceContext = new W3cTraceContext(
+    `${VERSION00}-${paddedTraceId}-${instanaParentId}-${sampled ? '01' : '00'}`,
+    `${constants.w3cInstanaEquals + instanaTraceId};${instanaParentId}`
   );
   traceContext.traceParentValid = true;
   traceContext.version = VERSION00;
@@ -52,8 +52,8 @@ W3cTraceContext.fromInstanaIds = function fromInstanaIds(instanaTraceId, instana
 };
 
 W3cTraceContext.createEmptyUnsampled = function createEmptyUnsampled(traceId, parentId) {
-  var paddedTraceId = traceId.length === 16 ? LEFT_PAD_16 + traceId : traceId;
-  var traceContext = new W3cTraceContext(VERSION00 + '-' + paddedTraceId + '-' + parentId + '-00');
+  const paddedTraceId = traceId.length === 16 ? LEFT_PAD_16 + traceId : traceId;
+  const traceContext = new W3cTraceContext(`${VERSION00}-${paddedTraceId}-${parentId}-00`);
   traceContext.traceParentValid = true;
   traceContext.version = VERSION00;
   traceContext.foreignTraceId = paddedTraceId;
@@ -68,7 +68,7 @@ W3cTraceContext.prototype.renderTraceParent = function renderTraceParent() {
     return '';
   }
   // Since we only support version 00, we must always downgrade to 00 if we have updated any value.
-  return '00-' + this.foreignTraceId + '-' + this.foreignParentId + '-' + this.renderFlags();
+  return `00-${this.foreignTraceId}-${this.foreignParentId}-${this.renderFlags()}`;
 };
 
 W3cTraceContext.prototype.renderFlags = function renderFlags() {
@@ -83,8 +83,8 @@ W3cTraceContext.prototype.renderTraceState = function renderTraceState() {
   if (!this.traceStateValid) {
     return '';
   }
-  var allKeyValuePairs = [];
-  var instanaKeyValuePair = this.renderInstanaTraceStateValue();
+  let allKeyValuePairs = [];
+  const instanaKeyValuePair = this.renderInstanaTraceStateValue();
   if (this.traceStateHead) {
     allKeyValuePairs = allKeyValuePairs.concat(this.traceStateHead);
   }
@@ -99,7 +99,7 @@ W3cTraceContext.prototype.renderTraceState = function renderTraceState() {
 
 W3cTraceContext.prototype.renderInstanaTraceStateValue = function renderInstanaTraceStateValue() {
   if (this.instanaTraceId && this.instanaParentId) {
-    return constants.w3cInstanaEquals + this.instanaTraceId + ';' + this.instanaParentId;
+    return `${constants.w3cInstanaEquals + this.instanaTraceId};${this.instanaParentId}`;
   } else {
     return null;
   }
@@ -166,7 +166,7 @@ W3cTraceContext.prototype.clone = function clone() {
 };
 
 W3cTraceContext.prototype.getMostRecentForeignTraceStateMember = function getMostRecentForeignTraceStateMember() {
-  var traceStateToInspect = this.traceStateHead ? this.traceStateHead : this.traceStateTail;
+  const traceStateToInspect = this.traceStateHead ? this.traceStateHead : this.traceStateTail;
   if (!traceStateToInspect || traceStateToInspect.length === 0) {
     return undefined;
   }

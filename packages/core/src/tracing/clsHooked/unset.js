@@ -1,7 +1,7 @@
 'use strict';
 
-var currentSpanKey = 'com.instana.span';
-var reducedSpanKey = 'com.instana.reduced';
+const currentSpanKey = 'com.instana.span';
+const reducedSpanKey = 'com.instana.reduced';
 
 module.exports = exports = function unset(context, key, value) {
   if (context[key] === value) {
@@ -26,7 +26,7 @@ function storeReducedSpan(context, key, span) {
   // processed. By keeping the reduced span around, we can still provide trace continuity. The reduced span will
   // automatically be removed when its async context is finally destroyed.
   if (key === currentSpanKey && span != null) {
-    var gqd = span.gqd;
+    const gqd = span.gqd;
     context[reducedSpanKey] = {
       n: span.n,
       t: span.t,

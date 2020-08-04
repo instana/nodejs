@@ -15,7 +15,7 @@ if (process.env.SCREW_AROUND_WITH_UP_ARRAY_FIND) {
   Object.defineProperty(Array.prototype, 'find', {
     value: function(value, equals) {
       equals = equals || this.contentEquals || Object.equals;
-      for (var index = 0; index < this.length; index++) {
+      for (let index = 0; index < this.length; index++) {
         if (index in this && equals(this[index], value)) {
           return index;
         }

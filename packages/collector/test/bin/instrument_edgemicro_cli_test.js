@@ -11,9 +11,9 @@ const instrumentEdgemicro = require('../../src/bin/instrument-edgemicro-cli');
 const pathToEdgemicroDir = path.join(__dirname, 'edgemicroResources');
 const pathOfOriginal = path.join(pathToEdgemicroDir, 'cli', 'edgemicro.original');
 const pathOfFileToInstrument = path.join(pathToEdgemicroDir, 'cli', 'edgemicro');
-const pathOfBackup = pathOfFileToInstrument + '.backup';
+const pathOfBackup = `${pathOfFileToInstrument}.backup`;
 const pathToCollector = path.resolve(__dirname, '..', '..');
-const anotherPathToCollector = pathToCollector + '/../collector';
+const anotherPathToCollector = `${pathToCollector}/../collector`;
 
 describe('binary to statically instrument the edgemicro cli', () => {
   beforeEach(done => {
@@ -119,7 +119,7 @@ describe('binary to statically instrument the edgemicro cli', () => {
 });
 
 function verifyFileHasBeenInstrumented(file, done) {
-  fs.readFile(file, 'utf8', function(readErr, content) {
+  fs.readFile(file, 'utf8', (readErr, content) => {
     if (readErr) {
       return done(readErr);
     }
@@ -133,8 +133,8 @@ function verifyFileHasBeenInstrumented(file, done) {
 }
 
 function copyFile(source, target, callback) {
-  var readStream = fs.createReadStream(source);
-  var writeStream = fs.createWriteStream(target);
+  const readStream = fs.createReadStream(source);
+  const writeStream = fs.createWriteStream(target);
   writeStream.on('finish', callback);
   readStream.pipe(writeStream);
 }

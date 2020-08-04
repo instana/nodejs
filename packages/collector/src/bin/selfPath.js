@@ -1,5 +1,5 @@
 'use strict';
 
-var path = require('path');
+const path = require('path');
 
 exports.collectorPath = path.join(__dirname, '..', '..');

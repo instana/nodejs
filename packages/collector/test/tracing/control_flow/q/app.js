@@ -27,42 +27,28 @@ app.get('/', (req, res) => {
   res.sendStatus(200);
 });
 
-app.get('/fcall', (req, res) => {
-  return Q.fcall(function() {
-    return 'value';
-  }).then(() => {
-    return sendResponse(res);
-  });
-});
+app.get('/fcall', (req, res) => Q.fcall(() => 'value').then(() => sendResponse(res)));
 
-app.get('/reject-fcall', (req, res) => {
-  return Q.fcall(function() {
+app.get('/reject-fcall', (req, res) =>
+  Q.fcall(() => {
     throw new Error('test error');
-  }).catch(() => {
-    return sendResponse(res);
-  });
-});
+  }).catch(() => sendResponse(res))
+);
 
 app.get('/deferred', (req, res) => {
-  doSomethingAsync().then(() => {
-    return sendResponse(res);
-  });
+  doSomethingAsync().then(() => sendResponse(res));
 });
 
 app.get('/reject-deferred', (req, res) => {
   doSomethingAsyncWithError()
-    .then(() => {
-      return sendResponse(res);
-    })
+    .then(() => sendResponse(res))
     .catch(err => sendResponse(res, err));
 });
 
 app.get('/promise', (req, res) => {
   Q.Promise(resolve => {
     setTimeout(() => resolve(), 10);
-  }).then(() => {
-    return sendResponse(res);
-  });
+  }).then(() => sendResponse(res));
 });
 
 app.get('/sequence', (req, res) => {
@@ -182,7 +168,10 @@ app.get('/nodeify', (req, res) => {
 app.get('/make-node-resolver', (req, res) => {
   const deferred = Q.defer();
   fs.readFile(path.join(__dirname, 'app.js'), deferred.makeNodeResolver());
-  deferred.promise.then(() => sendResponse(res), err => sendResponse(res, err));
+  deferred.promise.then(
+    () => sendResponse(res),
+    err => sendResponse(res, err)
+  );
 });
 
 app.get('/with-event-emitter', (req, res) => {
@@ -198,7 +187,7 @@ app.get('/with-event-emitter', (req, res) => {
 });
 
 app.get('/entry-exit', (req, res) => {
-  var deferred = Q.defer();
+  const deferred = Q.defer();
   request(`http://127.0.0.1:${agentPort}`)
     .then(() => deferred.resolve())
     .catch(e => deferred.reject(e));

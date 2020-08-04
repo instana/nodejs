@@ -1,6 +1,6 @@
 'use strict';
 
-var W3cTraceContext = require('./W3cTraceContext');
+const W3cTraceContext = require('./W3cTraceContext');
 
 module.exports = exports = W3cTraceContext.fromInstanaIds;
 

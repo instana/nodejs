@@ -26,8 +26,8 @@ describe('tracing/tracing metrics', function() {
       agentControls
     }).registerTestHooks();
 
-    it('must send internal tracing metrics to agent', function() {
-      return controls
+    it('must send internal tracing metrics to agent', () =>
+      controls
         .sendRequest({
           method: 'POST',
           path: '/create-spans'
@@ -43,20 +43,19 @@ describe('tracing/tracing metrics', function() {
             })
           );
         })
-        .then(() => {
-          return testUtils.retry(
+        .then(() =>
+          testUtils.retry(
             () =>
               agentControls.getTracingMetrics().then(tracingMetrics => {
                 expect(tracingMetrics).to.have.lengthOf.at.least(3);
                 expectCumulativeTracingMetrics(tracingMetrics, controls.getPid(), 4, 4, 0);
               }),
             retryTimeout
-          );
-        });
-    });
+          )
+        ));
 
-    it('must reveal non-finished spans', function() {
-      return controls
+    it('must reveal non-finished spans', () =>
+      controls
         .sendRequest({
           method: 'POST',
           path: '/create-unfinished-spans'
@@ -70,20 +69,19 @@ describe('tracing/tracing metrics', function() {
             })
           );
         })
-        .then(() => {
-          return testUtils.retry(
+        .then(() =>
+          testUtils.retry(
             () =>
               agentControls.getTracingMetrics().then(tracingMetrics => {
                 expect(tracingMetrics).to.have.lengthOf.at.least(3);
                 expectCumulativeTracingMetrics(tracingMetrics, controls.getPid(), 3, 2, 0);
               }),
             retryTimeout
-          );
-        });
-    });
+          )
+        ));
   });
 
-  describe('when INSTANA_TRACER_METRICS_INTERVAL is configured explicitly', function() {
+  describe('when INSTANA_TRACER_METRICS_INTERVAL is configured explicitly', () => {
     const agentControls = require('../../../apps/agentStubControls');
     agentControls.registerTestHooks();
     const controls = new ProcessControls({
@@ -94,8 +92,8 @@ describe('tracing/tracing metrics', function() {
       }
     }).registerTestHooks();
 
-    it('must send internal tracing metrics every 100 ms', function() {
-      return controls
+    it('must send internal tracing metrics every 100 ms', () =>
+      controls
         .sendRequest({
           method: 'POST',
           path: '/create-spans'
@@ -112,17 +110,16 @@ describe('tracing/tracing metrics', function() {
           );
         })
         .then(() => delay(1000))
-        .then(() => {
-          return testUtils.retry(() =>
+        .then(() =>
+          testUtils.retry(() =>
             agentControls.getTracingMetrics().then(tracingMetrics => {
               expect(tracingMetrics).to.have.lengthOf.at.least(10);
             })
-          );
-        });
-    });
+          )
+        ));
   });
 
-  describe('when tracing is not enabled', function() {
+  describe('when tracing is not enabled', () => {
     const agentControls = require('../../../apps/agentStubControls');
     agentControls.registerTestHooks();
     const controls = new ProcessControls({
@@ -131,8 +128,8 @@ describe('tracing/tracing metrics', function() {
       tracingEnabled: false
     }).registerTestHooks();
 
-    it('must not collect any tracing metrics', function() {
-      return controls
+    it('must not collect any tracing metrics', () =>
+      controls
         .sendRequest({
           method: 'POST',
           path: '/create-spans'
@@ -147,11 +144,10 @@ describe('tracing/tracing metrics', function() {
               }),
             retryTimeout
           );
-        });
-    });
+        }));
   });
 
-  describe('when dropping spans', function() {
+  describe('when dropping spans', () => {
     const agentControls = require('../../../apps/agentStubControls');
     agentControls.registerTestHooks({
       // The trace endpoint will return an HTTP error code, triggering the removeSpansIfNecessary function.
@@ -167,8 +163,8 @@ describe('tracing/tracing metrics', function() {
       }
     }).registerTestHooks();
 
-    it('must reveal dropped spans', function() {
-      return controls
+    it('must reveal dropped spans', () =>
+      controls
         .sendRequest({
           method: 'POST',
           path: '/create-spans'
@@ -185,11 +181,10 @@ describe('tracing/tracing metrics', function() {
               }),
             retryTimeout
           );
-        });
-    });
+        }));
   });
 
-  describe('when agent does not support the tracermetrics endpoint', function() {
+  describe('when agent does not support the tracermetrics endpoint', () => {
     const agentControls = require('../../../apps/agentStubControls');
     agentControls.registerTestHooks({
       tracingMetrics: false
@@ -203,37 +198,34 @@ describe('tracing/tracing metrics', function() {
       }
     }).registerTestHooks();
 
-    it('must not call POST /tracermetrics multiple times', function() {
-      return (
-        controls
-          .sendRequest({
-            method: 'POST',
-            path: '/create-spans'
+    it('must not call POST /tracermetrics multiple times', () =>
+      controls
+        .sendRequest({
+          method: 'POST',
+          path: '/create-spans'
+        })
+        .then(response => {
+          expect(response).to.equal('OK');
+          return testUtils.retry(() =>
+            agentControls.getSpans().then(spans => {
+              const httpEntry = expectHttpEntry(spans, '/create-spans');
+              expectExit(spans, httpEntry, 'exit-1');
+              expectExit(spans, httpEntry, 'exit-2');
+              expectExit(spans, httpEntry, 'exit-3');
+            })
+          );
+        })
+        // Wait a bit to give the tracer a chance to call POST /tracermetrics multiple times (which it should not, but
+        // we need to make sure the not only passes because we terminated it to soon).
+        // Note that we configured INSTANA_TRACER_METRICS_INTERVAL=100 so waiting 500 ms should be plenty.
+        .then(() => delay(500))
+        .then(() =>
+          agentControls.getTracingMetrics().then(tracingMetrics => {
+            // Make sure the tracer only called the tracermetrics endpoint once and then stopped doing that after
+            // receiving an HTTP 404.
+            expect(tracingMetrics).to.have.lengthOf(1);
           })
-          .then(response => {
-            expect(response).to.equal('OK');
-            return testUtils.retry(() =>
-              agentControls.getSpans().then(spans => {
-                const httpEntry = expectHttpEntry(spans, '/create-spans');
-                expectExit(spans, httpEntry, 'exit-1');
-                expectExit(spans, httpEntry, 'exit-2');
-                expectExit(spans, httpEntry, 'exit-3');
-              })
-            );
-          })
-          // Wait a bit to give the tracer a chance to call POST /tracermetrics multiple times (which it should not, but
-          // we need to make sure the not only passes because we terminated it to soon).
-          // Note that we configured INSTANA_TRACER_METRICS_INTERVAL=100 so waiting 500 ms should be plenty.
-          .then(() => delay(500))
-          .then(() => {
-            return agentControls.getTracingMetrics().then(tracingMetrics => {
-              // Make sure the tracer only called the tracermetrics endpoint once and then stopped doing that after
-              // receiving an HTTP 404.
-              expect(tracingMetrics).to.have.lengthOf(1);
-            });
-          })
-      );
-    });
+        ));
   });
 });
 

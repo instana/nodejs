@@ -56,8 +56,8 @@ describe('tracing/W3C Trace Context (with processes instrumented by a different 
     // trace to be started. We also expect the correct spec headers to be passed downstream by the Instana/ service.
     // In particular, it should keep the same foreign trace ID it received when passing down spec headers, even though
     // the Instana trace uses a different one.
-    it('Instana continues a spec trace and passes the correct spec headers downstream', () => {
-      return startRequest({ app: instanaAppControls, depth: 1, withSpecHeaders: 'valid' }).then(response => {
+    it('Instana continues a spec trace and passes the correct spec headers downstream', () =>
+      startRequest({ app: instanaAppControls, depth: 1, withSpecHeaders: 'valid' }).then(response => {
         const { traceparent, tracestate } = verifySpecHeadersExistOnLastHttpRequest(response);
         return retryUntilSpansMatch(agentControls, spans => {
           const instanaHttpEntryRoot = verifyHttpEntry(spans, null, '/start', {
@@ -73,16 +73,15 @@ describe('tracing/W3C Trace Context (with processes instrumented by a different 
           expect(tracestate).to.match(new RegExp(`in=${instanaTraceId};${instanaExitSpanId}`));
           expect(instanaTraceId).to.not.equal(foreignTraceId);
         });
-      });
-    });
+      }));
 
     // First request to Instana already has spec headers with sampled=0, simulating a (spec) trace in progress where
     // the most recent upstream service did not record tracing data. We still expect an Instana trace to be started.
     // We also expect the correct spec headers to be passed downstream by the Instana service. In particular, it
     // should keep the same foreign trace ID it received when passing down spec headers, even though the Instana trace
     // uses a different one.
-    it('Instana continues a spec trace with sampled=0', () => {
-      return startRequest({ app: instanaAppControls, depth: 1, withSpecHeaders: 'not-sampled' }).then(response => {
+    it('Instana continues a spec trace with sampled=0', () =>
+      startRequest({ app: instanaAppControls, depth: 1, withSpecHeaders: 'not-sampled' }).then(response => {
         const { traceparent, tracestate } = verifySpecHeadersExistOnLastHttpRequest(response);
         return retryUntilSpansMatch(agentControls, spans => {
           const instanaHttpEntryRoot = verifyHttpEntry(spans, null, '/start', {
@@ -98,76 +97,66 @@ describe('tracing/W3C Trace Context (with processes instrumented by a different 
           expect(tracestate).to.match(new RegExp(`in=${instanaTraceId};${instanaExitSpanId}`));
           expect(instanaTraceId).to.not.equal(foreignTraceId);
         });
-      });
-    });
+      }));
 
     // First request to Instana has an invalid traceparent header. We expect the spec trace to be restarted and an
     // Instana trace to be started.
-    it('Instana restarts the trace when receiving an invalid traceparent', () => {
-      return startRequest({ app: instanaAppControls, depth: 1, withSpecHeaders: 'invalid-traceparent' }).then(
-        response => {
-          const { traceparent, tracestate } = verifySpecHeadersExistOnLastHttpRequest(response);
-          return retryUntilSpansMatch(agentControls, spans => {
-            const instanaHttpEntryRoot = verifyHttpEntry(spans, null, '/start', 'none');
-            const instanaHttpExit = verifyHttpExit(spans, instanaHttpEntryRoot, '/end');
+    it('Instana restarts the trace when receiving an invalid traceparent', () =>
+      startRequest({ app: instanaAppControls, depth: 1, withSpecHeaders: 'invalid-traceparent' }).then(response => {
+        const { traceparent, tracestate } = verifySpecHeadersExistOnLastHttpRequest(response);
+        return retryUntilSpansMatch(agentControls, spans => {
+          const instanaHttpEntryRoot = verifyHttpEntry(spans, null, '/start', 'none');
+          const instanaHttpExit = verifyHttpExit(spans, instanaHttpEntryRoot, '/end');
 
-            const instanaTraceId = instanaHttpEntryRoot.t;
-            const instanaExitSpanId = instanaHttpExit.s;
-            expect(traceparent).to.match(new RegExp(`00-${LEFT_PAD_16}${instanaTraceId}-${instanaExitSpanId}-01`));
-            expect(tracestate).to.match(new RegExp(`in=${instanaTraceId};${instanaExitSpanId}`));
-          });
-        }
-      );
-    });
+          const instanaTraceId = instanaHttpEntryRoot.t;
+          const instanaExitSpanId = instanaHttpExit.s;
+          expect(traceparent).to.match(new RegExp(`00-${LEFT_PAD_16}${instanaTraceId}-${instanaExitSpanId}-01`));
+          expect(tracestate).to.match(new RegExp(`in=${instanaTraceId};${instanaExitSpanId}`));
+        });
+      }));
 
     // First request to Instana has an traceparent header with a newer version than we support.
     // We expect the parts of the headers that we understand (in particular, the foreign trace ID from traceparent
     // and the tracestate key-value pairs to be reused.
-    it('Instana uses the known parts of the traceparent header when the spec version is newer', () => {
-      return startRequest({ app: instanaAppControls, depth: 1, withSpecHeaders: 'too-new-traceparent' }).then(
-        response => {
-          const { traceparent, tracestate } = verifySpecHeadersExistOnLastHttpRequest(response);
+    it('Instana uses the known parts of the traceparent header when the spec version is newer', () =>
+      startRequest({ app: instanaAppControls, depth: 1, withSpecHeaders: 'too-new-traceparent' }).then(response => {
+        const { traceparent, tracestate } = verifySpecHeadersExistOnLastHttpRequest(response);
 
-          return retryUntilSpansMatch(agentControls, spans => {
-            const instanaHttpEntryRoot = verifyHttpEntry(spans, null, '/start', {
-              t: foreignTraceId,
-              p: foreignParentId,
-              lts: 'thing=foo'
-            });
-            const instanaHttpExit = verifyHttpExit(spans, instanaHttpEntryRoot, '/end');
-
-            const instanaTraceId = instanaHttpEntryRoot.t;
-            const instanaExitSpanId = instanaHttpExit.s;
-            expect(traceparent).to.match(new RegExp(`00-${foreignTraceId}-${instanaExitSpanId}-01`));
-            expect(tracestate).to.match(new RegExp(`in=${instanaTraceId};${instanaExitSpanId},thing=foo,bar=baz`));
+        return retryUntilSpansMatch(agentControls, spans => {
+          const instanaHttpEntryRoot = verifyHttpEntry(spans, null, '/start', {
+            t: foreignTraceId,
+            p: foreignParentId,
+            lts: 'thing=foo'
           });
-        }
-      );
-    });
+          const instanaHttpExit = verifyHttpExit(spans, instanaHttpEntryRoot, '/end');
+
+          const instanaTraceId = instanaHttpEntryRoot.t;
+          const instanaExitSpanId = instanaHttpExit.s;
+          expect(traceparent).to.match(new RegExp(`00-${foreignTraceId}-${instanaExitSpanId}-01`));
+          expect(tracestate).to.match(new RegExp(`in=${instanaTraceId};${instanaExitSpanId},thing=foo,bar=baz`));
+        });
+      }));
 
     // First request to Instana has a valid traceparent but an invalid tracestate header. We expect the an Instanj
     // trace to be started but the trace ID from traceparent needs to be propagated.
-    it('Instana propagates the trace ID from traceparent when tracestate is invalid', () => {
-      return startRequest({ app: instanaAppControls, depth: 1, withSpecHeaders: 'invalid-tracestate' }).then(
-        response => {
-          const { traceparent, tracestate } = verifySpecHeadersExistOnLastHttpRequest(response);
+    it('Instana propagates the trace ID from traceparent when tracestate is invalid', () =>
+      startRequest({ app: instanaAppControls, depth: 1, withSpecHeaders: 'invalid-tracestate' }).then(response => {
+        const { traceparent, tracestate } = verifySpecHeadersExistOnLastHttpRequest(response);
 
-          return retryUntilSpansMatch(agentControls, spans => {
-            const instanaHttpEntryRoot = verifyHttpEntry(spans, null, '/start', {
-              t: foreignTraceId,
-              p: foreignParentId
-            });
-            const instanaHttpExit = verifyHttpExit(spans, instanaHttpEntryRoot, '/end');
-
-            const instanaTraceId = instanaHttpEntryRoot.t;
-            const instanaExitSpanId = instanaHttpExit.s;
-            expect(traceparent).to.match(new RegExp(`00-${foreignTraceId}-${instanaExitSpanId}-01`));
-            expect(tracestate).to.match(new RegExp(`in=${instanaTraceId};${instanaExitSpanId}`));
-            expect(instanaTraceId).to.not.equal(foreignTraceId);
+        return retryUntilSpansMatch(agentControls, spans => {
+          const instanaHttpEntryRoot = verifyHttpEntry(spans, null, '/start', {
+            t: foreignTraceId,
+            p: foreignParentId
           });
-        }
-      );
-    });
+          const instanaHttpExit = verifyHttpExit(spans, instanaHttpEntryRoot, '/end');
+
+          const instanaTraceId = instanaHttpEntryRoot.t;
+          const instanaExitSpanId = instanaHttpExit.s;
+          expect(traceparent).to.match(new RegExp(`00-${foreignTraceId}-${instanaExitSpanId}-01`));
+          expect(tracestate).to.match(new RegExp(`in=${instanaTraceId};${instanaExitSpanId}`));
+          expect(instanaTraceId).to.not.equal(foreignTraceId);
+        });
+      }));
 
     // First request to Instana has X-INSTANA-L and no spec headers. We expect no trace to be started and
     // X-INSTANA-L and spec headers with sampled=0 to be passed down.

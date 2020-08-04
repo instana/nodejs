@@ -17,41 +17,31 @@ const init = async () => {
   server.route({
     method: 'GET',
     path: '/',
-    handler: (request, h) => {
-      return h.response().code(200);
-    }
+    handler: (request, h) => h.response().code(200)
   });
 
   server.route({
     method: 'GET',
     path: '/route/mandatory/{param}',
-    handler: () => {
-      return '/route/mandatory/{param}';
-    }
+    handler: () => '/route/mandatory/{param}'
   });
 
   server.route({
     method: 'GET',
     path: '/route/optional/{param?}',
-    handler: () => {
-      return '/route/optional/{param?}';
-    }
+    handler: () => '/route/optional/{param?}'
   });
 
   server.route({
     method: 'GET',
     path: '/route/partial{param}/resource',
-    handler: () => {
-      return '/route/partial{param}/resource';
-    }
+    handler: () => '/route/partial{param}/resource'
   });
 
   server.route({
     method: 'GET',
     path: '/route/multi-segment/{param*2}',
-    handler: () => {
-      return '/route/multi-segment/{param*2}';
-    }
+    handler: () => '/route/multi-segment/{param*2}'
   });
 
   await server.start();

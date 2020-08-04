@@ -1,14 +1,14 @@
 'use strict';
 
-var requireHook = require('../../../util/requireHook');
-var constants = require('../../constants');
+const requireHook = require('../../../util/requireHook');
+const constants = require('../../constants');
 
 /**
  * This module currently does _not_ instrument the aws-sdk. It only adds the Instana tracing headers to the list of
  * headers that should be ignored when signing requests
  * (see https://docs.aws.amazon.com/general/latest/gr/signing_aws_api_requests.html).
  */
-exports.init = function() {
+exports.init = function init() {
   requireHook.onFileLoad(/\/aws-sdk\/lib\/signers\/v4.js/, addInstanaHeadersToUnsignableHeaders);
 };
 
@@ -23,10 +23,10 @@ function addInstanaHeadersToUnsignableHeaders(v4SignerModule) {
   }
 }
 
-exports.activate = function() {
+exports.activate = function activate() {
   // no-op
 };
 
-exports.deactivate = function() {
+exports.deactivate = function deactivate() {
   // no-op
 };

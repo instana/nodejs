@@ -1,24 +1,24 @@
 'use strict';
 
-var requireHook = require('../../../util/requireHook');
-var tracingUtil = require('../../tracingUtil');
-var constants = require('../../constants');
-var cls = require('../../cls');
+const requireHook = require('../../../util/requireHook');
+const tracingUtil = require('../../tracingUtil');
+const constants = require('../../constants');
+const cls = require('../../cls');
 
-var isActive = false;
+let isActive = false;
 
-exports.init = function() {
+exports.init = function init() {
   requireHook.onModuleLoad('@elastic/elasticsearch', instrument);
 };
 
 function instrument(es) {
-  var OriginalClient = es.Client;
+  const OriginalClient = es.Client;
   if (!OriginalClient || typeof OriginalClient !== 'function') {
     return;
   }
 
-  var actionPaths = [];
-  forEachApiAction(function(actionPath) {
+  const actionPaths = [];
+  forEachApiAction(actionPath => {
     actionPaths.push(actionPath);
   });
 
@@ -29,14 +29,14 @@ function instrument(es) {
     // return new OriginalClient(...arguments);
     // See https://stackoverflow.com/a/33195176/2565264 and
     // https://node.green/#ES2015-syntax-spread-syntax-for-iterable-objects.
-    var client = new (Function.prototype.bind.apply(
+    const client = new (Function.prototype.bind.apply(
       OriginalClient,
       [null].concat(Array.prototype.slice.call(arguments))
     ))();
 
-    var clusterInfo = {};
+    const clusterInfo = {};
     gatherClusterInfo(client, clusterInfo);
-    actionPaths.forEach(function(actionPath) {
+    actionPaths.forEach(actionPath => {
       instrumentApi(client, actionPath, clusterInfo);
     });
     return client;
@@ -45,13 +45,13 @@ function instrument(es) {
 
 function gatherClusterInfo(client, clusterInfo) {
   client.info().then(
-    function(_clusterInfo) {
+    _clusterInfo => {
       if (_clusterInfo && _clusterInfo.body) {
         clusterInfo.clusterName = _clusterInfo.body.cluster_name;
       }
     },
-    function() {
-      setTimeout(function() {
+    () => {
+      setTimeout(() => {
         gatherClusterInfo(client, clusterInfo);
       }, 60000).unref();
     }
@@ -59,9 +59,9 @@ function gatherClusterInfo(client, clusterInfo) {
 }
 
 function instrumentApi(client, actionPath, clusterInfo) {
-  var action = actionPath.join('.');
-  var parent = getParentByPath(action, client, actionPath);
-  var originalFunction = getByPath(action, client, actionPath);
+  const action = actionPath.join('.');
+  const parent = getParentByPath(action, client, actionPath);
+  const originalFunction = getByPath(action, client, actionPath);
 
   if (!parent || typeof originalFunction !== 'function') {
     return;
@@ -72,7 +72,7 @@ function instrumentApi(client, actionPath, clusterInfo) {
       return originalFunction.apply(this, arguments);
     }
 
-    var callbackIndex = typeof originalCallback === 'function' ? 2 : -1;
+    let callbackIndex = typeof originalCallback === 'function' ? 2 : -1;
     options = options || {};
     if (typeof options === 'function') {
       originalCallback = options;
@@ -86,17 +86,17 @@ function instrumentApi(client, actionPath, clusterInfo) {
       callbackIndex = 0;
     }
 
-    var ctx = this;
-    var originalArgs = new Array(arguments.length);
-    for (var i = 0; i < arguments.length; i++) {
+    const ctx = this;
+    const originalArgs = new Array(arguments.length);
+    for (let i = 0; i < arguments.length; i++) {
       originalArgs[i] = arguments[i];
     }
 
-    return cls.ns.runAndReturn(function() {
-      var span = cls.startSpan('elasticsearch', constants.EXIT);
+    return cls.ns.runAndReturn(() => {
+      const span = cls.startSpan('elasticsearch', constants.EXIT);
       span.stack = tracingUtil.getStackTrace(instrumentedAction);
       span.data.elasticsearch = {
-        action: action,
+        action,
         cluster: clusterInfo.clusterName
       };
 
@@ -128,7 +128,7 @@ function instrumentApi(client, actionPath, clusterInfo) {
         return originalFunction.apply(ctx, originalArgs);
       } else {
         try {
-          return originalFunction.apply(ctx, originalArgs).then(onSuccess.bind(null, span), function(error) {
+          return originalFunction.apply(ctx, originalArgs).then(onSuccess.bind(null, span), error => {
             onError(span, error);
             throw error;
           });
@@ -143,7 +143,7 @@ function instrumentApi(client, actionPath, clusterInfo) {
 
 function onSuccess(span, result) {
   if (result.body) {
-    var body = result.body;
+    const body = result.body;
     if (body.hits != null && body.hits.total != null) {
       if (typeof body.hits.total === 'number') {
         span.data.elasticsearch.hits = body.hits.total;
@@ -151,7 +151,7 @@ function onSuccess(span, result) {
         span.data.elasticsearch.hits = body.hits.total.value;
       }
     } else if (body.responses != null && Array.isArray(body.responses)) {
-      span.data.elasticsearch.hits = body.responses.reduce(function(hits, res) {
+      span.data.elasticsearch.hits = body.responses.reduce((hits, res) => {
         if (res.hits && typeof res.hits.total === 'number') {
           return hits + res.hits.total;
         } else if (res.hits && res.hits.total && typeof res.hits.total.value === 'number') {
@@ -193,11 +193,11 @@ function toStringEsMultiParameter(param) {
 }
 
 function getSpanDataFromMget1(span, docs) {
-  var indices = [];
-  var types = [];
-  var stats = [];
-  var ids = [];
-  for (var i = 0; i < docs.length; i++) {
+  const indices = [];
+  const types = [];
+  const stats = [];
+  const ids = [];
+  for (let i = 0; i < docs.length; i++) {
     collectParamFrom(docs[i], '_index', indices);
     collectParamFrom(docs[i], '_type', types);
     collectParamFrom(docs[i], '_stats', stats);
@@ -217,11 +217,11 @@ function getSpanDataFromMget2(span, params) {
 }
 
 function getSpanDataFromMsearch(span, body) {
-  var indices = [];
-  var types = [];
-  var stats = [];
-  var query = [];
-  for (var i = 0; i < body.length; i++) {
+  const indices = [];
+  const types = [];
+  const stats = [];
+  const query = [];
+  for (let i = 0; i < body.length; i++) {
     collectParamFrom(body[i], 'index', indices);
     collectParamFrom(body[i], 'type', types);
     collectParamFrom(body[i], 'stats', stats);
@@ -235,7 +235,7 @@ function getSpanDataFromMsearch(span, body) {
 
 function collectParamFrom(bodyItem, key, accumulator) {
   if (bodyItem && bodyItem[key]) {
-    var value = toStringEsMultiParameter(bodyItem[key]);
+    const value = toStringEsMultiParameter(bodyItem[key]);
     if (value != null && accumulator.indexOf(value) < 0) {
       accumulator.push(value);
     }
@@ -243,7 +243,7 @@ function collectParamFrom(bodyItem, key, accumulator) {
 }
 
 function forEachApiAction(fn) {
-  var esApi = require('@elastic/elasticsearch/api')({
+  const esApi = require('@elastic/elasticsearch/api')({
     makeRequest: function dummyMakeRequest() {},
     ConfigurationError: function DummyConfigurationError() {},
     result: {}
@@ -255,9 +255,9 @@ function forEachKeyRecursive(obj, path, fn) {
   if (!obj || typeof obj !== 'object') {
     return false;
   }
-  var hadSubKeys = false;
-  Object.keys(obj).forEach(function(key) {
-    var nextPath = path.concat(key);
+  let hadSubKeys = false;
+  Object.keys(obj).forEach(key => {
+    const nextPath = path.concat(key);
     hadSubKeys = forEachKeyRecursive(obj[key], nextPath, fn);
     if (!hadSubKeys) {
       fn(nextPath);
@@ -280,10 +280,10 @@ function getParentByPath(action, obj, path) {
   return getParentByPath(action, obj[path[0]], path.slice(1));
 }
 
-exports.activate = function() {
+exports.activate = function activate() {
   isActive = true;
 };
 
-exports.deactivate = function() {
+exports.deactivate = function deactivate() {
   isActive = false;
 };

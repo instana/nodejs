@@ -1,22 +1,22 @@
 'use strict';
 
-var opentracing = require('opentracing');
-var spanBuffer = require('../spanBuffer');
-var tracingUtil = require('../tracingUtil');
+const opentracing = require('opentracing');
+const spanBuffer = require('../spanBuffer');
+const tracingUtil = require('../tracingUtil');
 
 // can be set via config
-var serviceName;
+let serviceName;
 
-var processIdentityProvider = null;
+let processIdentityProvider = null;
 
 function Span(tracer, name, fields) {
   opentracing.Span.call(this);
   this.tracerImpl = tracer;
 
-  var parentContext;
+  let parentContext;
   if (fields && fields.references) {
-    for (var i = 0, length = fields.references.length; i < length; i++) {
-      var reference = fields.references[i];
+    for (let i = 0, length = fields.references.length; i < length; i++) {
+      const reference = fields.references[i];
 
       if (
         reference.type() === opentracing.REFERENCE_CHILD_OF ||
@@ -27,9 +27,9 @@ function Span(tracer, name, fields) {
     }
   }
 
-  var spanId = tracingUtil.generateRandomSpanId();
-  var traceId = (parentContext ? parentContext.t : null) || spanId;
-  var parentId = (parentContext ? parentContext.s : null) || undefined;
+  const spanId = tracingUtil.generateRandomSpanId();
+  const traceId = (parentContext ? parentContext.t : null) || spanId;
+  const parentId = (parentContext ? parentContext.s : null) || undefined;
   this._contextImpl = new opentracing.SpanContext();
   this._contextImpl.s = spanId;
   this._contextImpl.t = traceId;
@@ -49,7 +49,7 @@ function Span(tracer, name, fields) {
       service: serviceName,
       sdk: {
         type: 'local',
-        name: name,
+        name,
         custom: {
           tags: {},
           logs: {}
@@ -96,9 +96,9 @@ Span.prototype._getBaggageItem = function _getBaggageItem(key) {
 };
 
 Span.prototype._addTags = function _addTags(keyValuePairs) {
-  var keys = Object.keys(keyValuePairs);
-  for (var i = 0, length = keys.length; i < length; i++) {
-    var key = keys[i];
+  const keys = Object.keys(keyValuePairs);
+  for (let i = 0, length = keys.length; i < length; i++) {
+    const key = keys[i];
     this._addTag(key, keyValuePairs[key]);
   }
 };
@@ -126,14 +126,14 @@ Span.prototype._log = function _log(keyValuePairs, timestamp) {
     timestamp = Date.now();
   }
 
-  var timestampData = this.span.data.sdk.custom.logs[timestamp];
+  let timestampData = this.span.data.sdk.custom.logs[timestamp];
   if (!timestampData) {
     timestampData = this.span.data.sdk.custom.logs[timestamp] = {};
   }
 
-  var keys = Object.keys(keyValuePairs);
-  for (var i = 0, length = keys.length; i < length; i++) {
-    var key = keys[i];
+  const keys = Object.keys(keyValuePairs);
+  for (let i = 0, length = keys.length; i < length; i++) {
+    const key = keys[i];
     timestampData[key] = keyValuePairs[key];
   }
 };
@@ -155,11 +155,11 @@ function copyBaggage(baggage) {
     return {};
   }
 
-  var copy = {};
+  const copy = {};
 
-  var keys = Object.keys(baggage);
-  for (var i = 0, length = keys.length; i < length; i++) {
-    var key = keys[i];
+  const keys = Object.keys(baggage);
+  for (let i = 0, length = keys.length; i < length; i++) {
+    const key = keys[i];
     copy[key] = baggage[key];
   }
 

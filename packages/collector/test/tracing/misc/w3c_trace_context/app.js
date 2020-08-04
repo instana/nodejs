@@ -129,12 +129,8 @@ server.on('request', (req, res) => {
         headers: outgoingHeaders,
         qs: query
       })
-      .then(response => {
-        return endWithPayload(req, res, response);
-      })
-      .catch(e => {
-        return endWithError(req, res, e);
-      });
+      .then(response => endWithPayload(req, res, response))
+      .catch(e => endWithError(req, res, e));
   } else if (pathname === '/continue') {
     if (req.method !== 'GET') {
       return endWithStatus(req, res, 405);
@@ -146,12 +142,8 @@ server.on('request', (req, res) => {
         headers: outgoingHeaders,
         qs: query
       })
-      .then(response => {
-        return endWithPayload(req, res, response);
-      })
-      .catch(e => {
-        return endWithError(req, res, e);
-      });
+      .then(response => endWithPayload(req, res, response))
+      .catch(e => endWithError(req, res, e));
   } else if (pathname === '/end') {
     if (req.method !== 'GET') {
       return endWithStatus(req, res, 405);

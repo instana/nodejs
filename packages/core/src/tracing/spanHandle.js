@@ -1,6 +1,6 @@
 'use strict';
 
-var constants = require('./constants');
+const constants = require('./constants');
 
 /**
  * Provides very limited access from client code to the current active span.
@@ -101,14 +101,14 @@ function _annotateWithString(target, path, value) {
   if (path.charAt(path.length - 1) === '.') {
     return _annotateWithString(target, path.substring(0, path.length - 1), value);
   }
-  var idx = path.indexOf('.');
+  const idx = path.indexOf('.');
   if (idx === 0) {
     // key with leading "."
     _annotateWithString(target, path.substring(1), value);
   } else if (idx >= 1) {
-    var head = path.substring(0, idx);
-    var tail = path.substring(idx + 1);
-    var nestedTarget = target[head];
+    const head = path.substring(0, idx);
+    const tail = path.substring(idx + 1);
+    let nestedTarget = target[head];
     if (nestedTarget == null || typeof nestedTarget !== 'object') {
       target[head] = nestedTarget = {};
     }
@@ -125,9 +125,9 @@ function _annotateWithArray(target, path, value) {
   } else if (path.length === 1) {
     _annotateWithString(target, path[0], value);
   } else {
-    var head = path[0];
-    var tail = path.slice(1);
-    var nestedTarget = target[head];
+    const head = path[0];
+    const tail = path.slice(1);
+    let nestedTarget = target[head];
     if (nestedTarget == null || typeof nestedTarget !== 'object') {
       target[head] = nestedTarget = {};
     }

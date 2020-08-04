@@ -1,27 +1,27 @@
 'use strict';
 
-var path = require('path');
-var instanaNodeJsCore = require('@instana/core');
+const path = require('path');
+const instanaNodeJsCore = require('@instana/core');
 
 require('./tracing'); // load additional instrumentations
-var log = require('./logger');
-var normalizeConfig = require('./util/normalizeConfig');
-var experimental = require('./experimental');
+const log = require('./logger');
+const normalizeConfig = require('./util/normalizeConfig');
+const experimental = require('./experimental');
 
-var config;
+let config;
 
 module.exports = exports = function init(_config) {
   config = normalizeConfig(_config);
 
   log.init(config, false);
 
-  var agentConnection = require('./agentConnection');
-  var agentOpts = require('./agent/opts');
-  var pidStore = require('./pidStore');
-  var uncaught = require('./uncaught');
+  const agentConnection = require('./agentConnection');
+  const agentOpts = require('./agent/opts');
+  const pidStore = require('./pidStore');
+  const uncaught = require('./uncaught');
 
-  var logger;
-  logger = log.getLogger('index', function(newLogger) {
+  let logger;
+  logger = log.getLogger('index', newLogger => {
     logger = newLogger;
   });
   if (!config.logger) {
@@ -42,7 +42,7 @@ exports.currentSpan = function getHandleForCurrentSpan() {
   return instanaNodeJsCore.tracing.getHandleForCurrentSpan();
 };
 
-exports.setLogger = function(logger) {
+exports.setLogger = function setLogger(logger) {
   config.logger = logger;
   log.init(config, true);
 };

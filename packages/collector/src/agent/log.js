@@ -1,12 +1,12 @@
 'use strict';
 
-var buffer = require('@instana/core').util.buffer;
-var http = require('@instana/core').uninstrumentedHttp.http;
+const buffer = require('@instana/core').util.buffer;
+const http = require('@instana/core').uninstrumentedHttp.http;
 
-var agentOpts = require('./opts');
+const agentOpts = require('./opts');
 
 module.exports = exports = function log(logLevel, message, stackTrace) {
-  var payload = {
+  let payload = {
     m: message.trim()
   };
   if (stackTrace) {
@@ -15,7 +15,7 @@ module.exports = exports = function log(logLevel, message, stackTrace) {
 
   payload = buffer.fromString(JSON.stringify(payload), 'utf8');
 
-  var req = http.request(
+  const req = http.request(
     {
       host: agentOpts.host,
       port: agentOpts.port,
@@ -28,7 +28,7 @@ module.exports = exports = function log(logLevel, message, stackTrace) {
         'x-log-level': logLevel
       }
     },
-    function(res) {
+    res => {
       res.resume();
     }
   );

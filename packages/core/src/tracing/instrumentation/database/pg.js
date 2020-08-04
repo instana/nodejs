@@ -1,15 +1,15 @@
 'use strict';
 
-var shimmer = require('shimmer');
+const shimmer = require('shimmer');
 
-var requireHook = require('../../../util/requireHook');
-var tracingUtil = require('../../tracingUtil');
-var constants = require('../../constants');
-var cls = require('../../cls');
+const requireHook = require('../../../util/requireHook');
+const tracingUtil = require('../../tracingUtil');
+const constants = require('../../constants');
+const cls = require('../../cls');
 
-var isActive = false;
+let isActive = false;
 
-exports.init = function() {
+exports.init = function init() {
   requireHook.onModuleLoad('pg', instrumentPg);
 };
 
@@ -25,8 +25,8 @@ function shimQuery(original) {
   return function() {
     if (isActive && cls.isTracing()) {
       // slightly more performant version of the usual Array.prototype.slice trick.
-      var argsForOriginalQuery = new Array(arguments.length);
-      for (var i = 0; i < arguments.length; i++) {
+      const argsForOriginalQuery = new Array(arguments.length);
+      for (let i = 0; i < arguments.length; i++) {
         argsForOriginalQuery[i] = arguments[i];
       }
       return instrumentedQuery(this, original, argsForOriginalQuery);
@@ -36,33 +36,33 @@ function shimQuery(original) {
 }
 
 function instrumentedQuery(ctx, originalQuery, argsForOriginalQuery) {
-  var parentSpan = cls.getCurrentSpan();
+  const parentSpan = cls.getCurrentSpan();
 
   if (constants.isExitSpan(parentSpan)) {
     return originalQuery.apply(ctx, argsForOriginalQuery);
   }
 
-  var host = ctx.connectionParameters.host;
-  var port = ctx.connectionParameters.port;
-  var user = ctx.connectionParameters.user;
-  var db = ctx.connectionParameters.database;
+  const host = ctx.connectionParameters.host;
+  const port = ctx.connectionParameters.port;
+  const user = ctx.connectionParameters.user;
+  const db = ctx.connectionParameters.database;
 
-  var config = argsForOriginalQuery[0];
+  const config = argsForOriginalQuery[0];
 
-  return cls.ns.runAndReturn(function() {
-    var span = cls.startSpan('postgres', constants.EXIT);
+  return cls.ns.runAndReturn(() => {
+    const span = cls.startSpan('postgres', constants.EXIT);
     span.stack = tracingUtil.getStackTrace(instrumentedQuery);
     span.data.pg = {
       stmt: tracingUtil.shortenDatabaseStatement(typeof config === 'string' ? config : config.text),
-      host: host,
-      port: port,
-      user: user,
-      db: db
+      host,
+      port,
+      user,
+      db
     };
 
-    var originalCallback;
-    var callbackIndex = -1;
-    for (var i = 1; i < argsForOriginalQuery.length; i++) {
+    let originalCallback;
+    let callbackIndex = -1;
+    for (let i = 1; i < argsForOriginalQuery.length; i++) {
       if (typeof argsForOriginalQuery[i] === 'function') {
         originalCallback = argsForOriginalQuery[i];
         callbackIndex = i;
@@ -71,21 +71,21 @@ function instrumentedQuery(ctx, originalQuery, argsForOriginalQuery) {
     }
 
     if (callbackIndex >= 0) {
-      var wrappedCallback = function(error) {
+      const wrappedCallback = function(error) {
         finishSpan(error, span);
         return originalCallback.apply(this, arguments);
       };
       argsForOriginalQuery[callbackIndex] = cls.ns.bind(wrappedCallback);
     }
 
-    var promise = originalQuery.apply(ctx, argsForOriginalQuery);
+    const promise = originalQuery.apply(ctx, argsForOriginalQuery);
     if (promise && typeof promise.then === 'function') {
       promise
-        .then(function(value) {
+        .then(value => {
           finishSpan(null, span);
           return value;
         })
-        .catch(function(error) {
+        .catch(error => {
           finishSpan(error, span);
           return error;
         });
@@ -104,10 +104,10 @@ function finishSpan(error, span) {
   span.transmit();
 }
 
-exports.activate = function() {
+exports.activate = function activate() {
   isActive = true;
 };
 
-exports.deactivate = function() {
+exports.deactivate = function deactivate() {
   isActive = false;
 };
