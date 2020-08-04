@@ -40,7 +40,7 @@ mochaSuiteFn('tracing/http client', function() {
     registerTests.call(this, true);
   });
 
-  describe('superagent', function() {
+  (semver.gte(process.versions.node, '8.2.1') ? describe : describe.skip)('superagent', function() {
     registerSuperagentTest.call(this);
   });
 });
