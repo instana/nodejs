@@ -3,9 +3,5 @@ module.exports = {
 
   env: {
     mocha: true
-  },
-
-  rules: {
-    'object-curly-newline': 'off'
   }
 };
