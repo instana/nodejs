@@ -42,6 +42,10 @@ exports.currentSpan = function getHandleForCurrentSpan() {
   return instanaNodeJsCore.tracing.getHandleForCurrentSpan();
 };
 
+exports.isTracing = function isTracing() {
+  return instanaNodeJsCore.tracing.getCls() ? instanaNodeJsCore.tracing.getCls().isTracing() : false;
+};
+
 exports.setLogger = function setLogger(logger) {
   config.logger = logger;
   log.init(config, true);

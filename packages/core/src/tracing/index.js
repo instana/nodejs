@@ -25,6 +25,7 @@ const instrumentations = [
   './instrumentation/database/elasticsearchModern',
   './instrumentation/database/ioredis',
   './instrumentation/database/mongodb',
+  './instrumentation/database/mongoose',
   './instrumentation/database/mssql',
   './instrumentation/database/mysql',
   './instrumentation/database/pg',

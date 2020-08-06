@@ -11,6 +11,7 @@ let isActive = false;
 
 const commands = [
   //
+  'aggregate',
   'count',
   'delete',
   'distinct',
@@ -208,6 +209,8 @@ function readJsonOrFilter(message, span) {
     json = cmdObj.updates;
   } else if (Array.isArray(cmdObj.deletes) && cmdObj.deletes.length >= 1) {
     json = cmdObj.deletes;
+  } else if (Array.isArray(cmdObj.pipeline) && cmdObj.pipeline.length >= 1) {
+    json = cmdObj.pipeline;
   }
 
   // The back end will process exactly one of json, query, or filter, so it does not matter too much which one we
