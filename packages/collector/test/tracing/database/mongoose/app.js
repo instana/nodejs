@@ -8,6 +8,7 @@ const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
 const express = require('express');
 const morgan = require('morgan');
+const uuid = require('uuid/v4');
 
 const app = express();
 const logPrefix = `Express / Mongoose App (${process.pid}):\t`;
@@ -19,7 +20,8 @@ mongoose.model(
   'Person',
   new mongoose.Schema({
     name: String,
-    age: Number
+    age: Number,
+    status: String
   })
 );
 const Person = mongoose.model('Person');
@@ -65,6 +67,61 @@ app.post('/find', (req, res) => {
     })
     .catch(e => {
       log('Failed to find document', e);
+      res.sendStatus(500);
+    });
+});
+
+app.post('/aggregate', (req, res) => {
+  const status1 = uuid();
+  const status2 = uuid();
+  Promise.all([
+    Person.create({
+      name: uuid(),
+      status: status1,
+      age: 33
+    }),
+    Person.create({
+      name: uuid(),
+      status: status1,
+      age: 33
+    }),
+    Person.create({
+      name: uuid(),
+      status: status1,
+      age: 77
+    }),
+    Person.create({
+      name: uuid(),
+      status: status2,
+      age: 89
+    })
+  ])
+    .then(() => {
+      return Person.aggregate([
+        {
+          $match: { status: status1 }
+        },
+        {
+          $group: {
+            _id: '$age',
+            totalCount: { $sum: 1 },
+            totalAge: { $sum: '$age' }
+          }
+        },
+        {
+          $project: {
+            _id: true,
+            totalCount: true,
+            totalAge: true
+          }
+        }
+      ]);
+    })
+    .then(r => {
+      res.json(r);
+    })
+    .catch(e => {
+      log('Create/aggregate failed', e);
       res.sendStatus(500);
     });
 });
