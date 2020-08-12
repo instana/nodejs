@@ -12,8 +12,8 @@ exports.init = function(config) {
   stackTraceLength = config.tracing.stackTraceLength;
 };
 
-exports.getStackTrace = function getStackTrace(referenceFunction) {
-  return stackTrace.captureStackTrace(stackTraceLength, referenceFunction);
+exports.getStackTrace = function getStackTrace(referenceFunction, drop) {
+  return stackTrace.captureStackTrace(stackTraceLength, referenceFunction, drop);
 };
 
 exports.generateRandomTraceId = function generateRandomTraceId() {

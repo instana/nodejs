@@ -1,7 +1,7 @@
 'use strict';
 
-const requireHook = require('../../../util/requireHook');
-const constants = require('../../constants');
+const requireHook = require('../../../../util/requireHook');
+const constants = require('../../../constants');
 
 /**
  * This module currently does _not_ instrument the aws-sdk. It only adds the Instana tracing headers to the list of

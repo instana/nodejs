@@ -3,7 +3,7 @@
 // See v8 Error API docs at
 // https://v8.dev/docs/stack-trace-api
 
-exports.captureStackTrace = function captureStackTrace(length, referenceFunction) {
+exports.captureStackTrace = function captureStackTrace(length, referenceFunction, drop = 0) {
   if (length <= 0) {
     return [];
   }
@@ -11,7 +11,7 @@ exports.captureStackTrace = function captureStackTrace(length, referenceFunction
   referenceFunction = referenceFunction || captureStackTrace;
   const originalLimit = Error.stackTraceLimit;
   const originalPrepareStackTrace = Error.prepareStackTrace;
-  Error.stackTraceLimit = length;
+  Error.stackTraceLimit = length + drop;
   Error.prepareStackTrace = jsonPrepareStackTrace;
   const stackTraceTarget = {};
   Error.captureStackTrace(stackTraceTarget, referenceFunction);
@@ -25,6 +25,9 @@ exports.captureStackTrace = function captureStackTrace(length, referenceFunction
   Error.stackTraceLimit = originalLimit;
   Error.prepareStackTrace = originalPrepareStackTrace;
 
+  if (drop > 0) {
+    stack.splice(0, drop);
+  }
   return stack;
 };
 

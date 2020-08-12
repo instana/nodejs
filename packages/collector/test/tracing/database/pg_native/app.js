@@ -1,5 +1,3 @@
-/* eslint-disable no-console */
-
 'use strict';
 
 const agentPort = process.env.INSTANA_AGENT_PORT;
@@ -201,6 +199,7 @@ app.listen(process.env.APP_PORT, () => {
 });
 
 function log() {
+  /* eslint-disable no-console */
   const args = Array.prototype.slice.call(arguments);
   args[0] = logPrefix + args[0];
   console.log.apply(console, args);
