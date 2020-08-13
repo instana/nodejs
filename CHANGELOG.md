@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.105.0
 - Add instrumentation the [Google Cloud Storage client](https://googleapis.dev/nodejs/storage/latest/index.html).
 
 ## 1.104.0
