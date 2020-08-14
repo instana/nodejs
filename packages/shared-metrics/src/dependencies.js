@@ -27,7 +27,20 @@ exports.activate = function activate() {
       setTimeout(exports.activate, DELAY).unref();
       return;
     } else if (!packageJsonPath) {
-      return logger.warn('Main package.json could not be found. Stopping dependency analysis.');
+      logger.info(
+        `Main package.json could not be found after ${attempts} retries. Looking for node_modules folder now.`
+      );
+      applicationUnderMonitoring.findNodeModulesFolder((errNodeModules, nodeModulesFolder) => {
+        if (errNodeModules) {
+          return logger.warn('Failed to determine node_modules folder. Reason: %s %s ', err.message, err.stack);
+        } else if (!nodeModulesFolder) {
+          return logger.warn(
+            'Neither the package.json file nor the node_modules folder could be found. Stopping dependency analysis.'
+          );
+        }
+        addDependenciesFromDir(path.join(nodeModulesFolder));
+      });
+      return;
     }
 
     let dependencyDir;

@@ -24,8 +24,13 @@ exports.activate = function activate() {
       setTimeout(exports.activate, DELAY).unref();
       return;
     } else if (!packageJson) {
+      if (process.mainModule) {
+        exports.currentPayload = process.mainModule.filename;
+      }
       return logger.warn(
-        'Main package.json could not be found. This Node.js app will be labelled "Unknown" in Instana.'
+        `Main package.json could not be found. This Node.js app will be labeled "${
+          exports.currentPayload ? exports.currentPayload : 'Unknown'
+        }" in Instana.`
       );
     }
 

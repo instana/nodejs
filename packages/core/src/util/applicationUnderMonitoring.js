@@ -7,6 +7,7 @@ const path = require('path');
 // and identification of these values is expensive.
 let parsedMainPackageJson;
 let mainPackageJsonPath;
+let nodeModulesPath;
 let appInstalledIntoNodeModules = false;
 
 exports.isAppInstalledIntoNodeModules = function isAppInstalledIntoNodeModules() {
@@ -88,12 +89,12 @@ exports.getMainPackageJsonPath = function getMainPackageJsonPath(startDirectory,
 };
 
 function searchForPackageJsonInDirectoryTreeUpwards(dir, cb) {
-  const fileToCheck = path.join(dir, 'package.json');
+  const pathToCheck = path.join(dir, 'package.json');
 
-  fs.stat(fileToCheck, (err, stats) => {
+  fs.stat(pathToCheck, (err, stats) => {
     if (err) {
       if (err.code === 'ENOENT') {
-        return searchInParentDir();
+        return searchInParentDir(dir, searchForPackageJsonInDirectoryTreeUpwards, cb);
       } else {
         // searchInParentDir would have called cb asynchronously,
         // so we use process.nextTick here to make all paths async.
@@ -108,7 +109,7 @@ function searchForPackageJsonInDirectoryTreeUpwards(dir, cb) {
       // npm install $appName on the target system to deploy the app including its dependencies. In this scenario, we
       // need to skip the check for an accompanying node_modules folder (see below). We can recognize this pattern
       // (heuristically) by the fact that the segment 'node_modules' already appears in the path to the main module.
-      return process.nextTick(cb, null, fileToCheck);
+      return process.nextTick(cb, null, pathToCheck);
     }
 
     // If the package.json file actually exists, we also need to make sure that there is a node_modules directory
@@ -120,7 +121,7 @@ function searchForPackageJsonInDirectoryTreeUpwards(dir, cb) {
       fs.stat(potentialNodeModulesDir, (statErr, potentialNodeModulesDirStats) => {
         if (statErr) {
           if (statErr.code === 'ENOENT') {
-            return searchInParentDir();
+            return searchInParentDir(dir, searchForPackageJsonInDirectoryTreeUpwards, cb);
           }
           // searchInParentDir would have called cb asynchronously,
           // so we use process.nextTick here to make all paths async.
@@ -133,25 +134,69 @@ function searchForPackageJsonInDirectoryTreeUpwards(dir, cb) {
 
           // Also, searchInParentDir would have called cb asynchronously,
           // so we use process.nextTick here to make all paths async.
-          return process.nextTick(cb, null, fileToCheck);
+          return process.nextTick(cb, null, pathToCheck);
         } else {
-          return searchInParentDir();
+          return searchInParentDir(dir, searchForPackageJsonInDirectoryTreeUpwards, cb);
         }
       });
     } else {
-      return searchInParentDir();
+      return searchInParentDir(dir, searchForPackageJsonInDirectoryTreeUpwards, cb);
     }
   });
+}
 
-  function searchInParentDir() {
-    // this happens when we cannot find a package.json
-    const parentDir = path.resolve(dir, '..');
-    if (dir === parentDir) {
-      // searchForPackageJsonInDirectoryTreeUpwards would have called cb asynchronously,
-      // so we use process.nextTick here to make all paths async.
-      return process.nextTick(cb, null, null);
+exports.findNodeModulesFolder = function findNodeModulesFolder(cb) {
+  if (nodeModulesPath !== undefined) {
+    return process.nextTick(cb, null, nodeModulesPath);
+  }
+
+  const mainModule = process.mainModule;
+  if (!mainModule) {
+    return process.nextTick(cb);
+  }
+  const startDirectory = path.dirname(mainModule.filename);
+
+  searchForNodeModulesInDirectoryTreeUpwards(startDirectory, (err, nodeModulesPath_) => {
+    if (err) {
+      return cb(err, null);
     }
 
-    return searchForPackageJsonInDirectoryTreeUpwards(parentDir, cb);
+    nodeModulesPath = nodeModulesPath_;
+    return cb(null, nodeModulesPath);
+  });
+};
+
+function searchForNodeModulesInDirectoryTreeUpwards(dir, cb) {
+  const pathToCheck = path.join(dir, 'node_modules');
+
+  fs.stat(pathToCheck, (err, stats) => {
+    if (err) {
+      if (err.code === 'ENOENT') {
+        return searchInParentDir(dir, searchForNodeModulesInDirectoryTreeUpwards, cb);
+      } else {
+        // searchInParentDir would have called cb asynchronously,
+        // so we use process.nextTick here to make all paths async.
+        return process.nextTick(cb, err, null);
+      }
+    }
+
+    if (stats.isDirectory()) {
+      return process.nextTick(cb, null, pathToCheck);
+    } else {
+      return searchInParentDir(dir, searchForNodeModulesInDirectoryTreeUpwards, cb);
+    }
+  });
+}
+
+function searchInParentDir(dir, onParentDir, cb) {
+  const parentDir = path.resolve(dir, '..');
+  if (dir === parentDir) {
+    // We have arrived at the root of the file system hierarchy.
+    //
+    // searchForPackageJsonInDirectoryTreeUpwards would have called cb asynchronously,
+    // so we use process.nextTick here to make all paths async.
+    return process.nextTick(cb, null, null);
   }
+
+  return onParentDir(parentDir, cb);
 }
