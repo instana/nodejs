@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.105.1
+- Fall back to `process.mainModule.filename` as the Node.js app's name when the `package.json` file is not present.
+- Capture dependencies of an app even if the `package.json` file is not present, by inspecting the `node_modules` folder that is closest to `process.mainModule` in the file system.
+
 ## 1.105.0
 - Add instrumentation the [Google Cloud Storage client](https://googleapis.dev/nodejs/storage/latest/index.html).
 
