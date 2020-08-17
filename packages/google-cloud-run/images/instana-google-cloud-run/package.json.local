@@ -1,0 +1,17 @@
+{
+  "name": "instana-google-cloud-run-docker-image",
+  "version": "1.0.0",
+  "description": "Provides @instana/google-cloud-run as an image for multi stage Dockerfiles",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/instana/nodejs-sensor.git"
+  },
+  "author": "Bastian Krol <bastian.krol@instana.com>",
+  "license": "ISC",
+  "dependencies": {
+    "@instana/google-cloud-run": "instana-google-cloud-run.tgz",
+    "@instana/core": "instana-core.tgz",
+    "@instana/serverless": "instana-serverless.tgz",
+    "@instana/shared-metrics": "instana-shared-metrics.tgz"
+  }
+}

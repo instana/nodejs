@@ -1,15 +1,17 @@
 'use strict';
 
-const HttpDataSource = require('./HttpDataSource');
+const {
+  HttpDataSource,
+  nodejs: { coreAndShared, NodeJsProcessor },
+  process: { ProcessProcessor }
+} = require('@instana/metrics-util');
+
 const InstrumentedEcsContainerProcessor = require('./container/InstrumentedEcsContainerProcessor');
 const SecondaryEcsContainerFactory = require('./container/SecondaryEcsContainerFactory');
 const SecondaryEcsContainerProcessor = require('./container/SecondaryEcsContainerProcessor');
 const EcsTaskProcessor = require('./task/EcsTaskProcessor');
 const InstrumentedDockerProcessor = require('./docker/InstrumentedDockerProcessor');
 const SecondaryDockerProcessor = require('./docker/SecondaryDockerProcessor');
-const ProcessProcessor = require('./process/ProcessProcessor');
-const coreAndShared = require('./nodejs/coreAndShared');
-const NodeJsProcessor = require('./nodejs/NodeJsProcessor');
 
 const allProcessors = [];
 
@@ -76,7 +78,8 @@ exports.deactivate = function deactivate() {
 };
 
 function setAdditionalMetadata(processProcessor, ecsContainerPayload) {
-  processProcessor.setExternalSnapshotData(ecsContainerPayload.data);
+  const ecsContainerData = ecsContainerPayload.data || {};
+  processProcessor.setExternalSnapshotData(ecsContainerData.dockerId, ecsContainerData.taskArn);
 }
 
 exports.forEachProcessor = function forEachProcessor(fn) {

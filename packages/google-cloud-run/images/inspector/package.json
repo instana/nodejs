@@ -1,0 +1,19 @@
+{
+  "name": "google-cloud-run-nodejs-inspector",
+  "version": "1.0.0",
+  "description": "inspects the container's environment",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/instana/nodejs-sensor.git"
+  },
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Bastian Krol <bastian.krol@instana.com>",
+  "license": "ISC",
+  "dependencies": {
+    "is-whitespace": "0.3.0",
+    "node-fetch": "^2.6.0"
+  }
+}

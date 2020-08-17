@@ -58,7 +58,7 @@
   "dependencies": {
     "@instana/core": "^1.106.0",
     "@instana/serverless": "^1.106.0",
-    "@instana/shared-metrics": "^1.106.0",
+    "@instana/metrics-util": "^1.106.0",
     "node-fetch": "^2.6.0"
   },
   "devDependencies": {

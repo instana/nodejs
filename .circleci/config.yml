@@ -60,8 +60,16 @@ shared: &shared
           - v3-core-dependencies-{{ .Environment.CIRCLE_JOB }}-
     - restore_cache:
         keys:
+          - v3-google-cloud-run-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "packages/google-cloud-run/package-lock.json" }}
+          - v3-google-cloud-run-dependencies-{{ .Environment.CIRCLE_JOB }}-
+    - restore_cache:
+        keys:
           - v3-legacy-sensor-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "packages/legacy-sensor/package-lock.json" }}
           - v3-legacy-sensor-dependencies-{{ .Environment.CIRCLE_JOB }}-
+    - restore_cache:
+        keys:
+          - v3-metrics-util-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "packages/metrics-util/package-lock.json" }}
+          - v3-metrics-util-dependencies-{{ .Environment.CIRCLE_JOB }}-
     - restore_cache:
         keys:
           - v3-serverless-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "packages/serverless/package-lock.json" }}
@@ -109,8 +117,16 @@ shared: &shared
         key: v3-core-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "packages/core/package-lock.json" }}
     - save_cache:
         paths:
+          - packages/google-cloud-run/node_modules
+        key: v3-google-cloud-run-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "packages/google-cloud-run/package-lock.json" }}
+    - save_cache:
+        paths:
           - packages/legacy-sensor/node_modules
         key: v3-legacy-sensor-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "packages/legacy-sensor/package-lock.json" }}
+    - save_cache:
+        paths:
+          - packages/metrics-util/node_modules
+        key: v3-metrics-util-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "packages/metrics-util/package-lock.json" }}
     - save_cache:
         paths:
           - packages/serverless/node_modules

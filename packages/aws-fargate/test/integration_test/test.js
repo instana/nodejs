@@ -32,6 +32,7 @@ const secondaryDockerId = '1f11d3be4668926ba50c5a6049bf75103f9c708cb70ad967d96e2
 
 const containerAppPath = path.join(__dirname, './app');
 const instanaAgentKey = 'aws-fargate-dummy-key';
+const testStartedAt = Date.now();
 
 const requestHeaders = {
   'X-Entry-Request-Header-1': 'entry request header value 1',
@@ -358,7 +359,7 @@ describe('AWS fargate integration test', function() {
     expect(processData.args).to.be.an('array');
     expect(processData.user).to.be.a('string');
     expect(processData.group).to.be.a('number');
-    expect(processData.start).to.be.at.least(1589205531697);
+    expect(processData.start).to.be.at.least(testStartedAt);
     expect(processData.containerType).to.equal('docker');
     expect(processData['com.instana.plugin.host.pid']).to.equal(processData.pid);
     expect(processData.container).to.equal(dockerId);

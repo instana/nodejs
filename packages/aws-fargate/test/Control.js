@@ -32,9 +32,8 @@ Control.prototype = Object.create(AbstractServerlessControl.prototype);
 
 Control.prototype.reset = function reset() {
   AbstractServerlessControl.prototype.reset.call(this);
-  this.messageFromFargateTask = [];
+  this.messagesFromFargateTask = [];
   this.messagesFromMetadataMock = [];
-
   this.fargateContainerAppHasStarted = false;
   this.fargateContainerAppHasTerminated = false;
 };
@@ -104,12 +103,12 @@ Control.prototype.startMonitoredProcess = function startMonitoredProcess() {
   });
 
   this.fargateContainerApp.on('message', message => {
-    this.messageFromFargateTask.push(message);
+    this.messagesFromFargateTask.push(message);
   });
 };
 
 Control.prototype.hasMonitoredProcessStarted = function hasMonitoredProcessStarted() {
-  return this.messageFromFargateTask.indexOf('fargate-task: listening') >= 0 && !this.fargateContainerAppHasTerminated;
+  return this.messagesFromFargateTask.indexOf('fargate-task: listening') >= 0 && !this.fargateContainerAppHasTerminated;
 };
 
 Control.prototype.hasMonitoredProcessTerminated = function hasMonitoredProcessTerminated() {

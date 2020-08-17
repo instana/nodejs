@@ -1,0 +1,22 @@
+'use strict';
+
+const http = require('http');
+const fetch = require('node-fetch');
+
+const sendToParent = require('../../../serverless/test/util/send_to_parent');
+
+const downstreamDummyUrl = process.env.DOWNSTREAM_DUMMY_URL;
+
+const port = process.env.PORT || 4216;
+
+const app = new http.Server();
+
+app.on('request', (req, res) => {
+  fetch(downstreamDummyUrl).then(() => res.end('Hello Google Cloud Run!'));
+});
+
+app.listen(port, () => {
+  sendToParent('cloud-run-service: listening');
+  // eslint-disable-next-line no-console
+  console.log(`Listening on port ${port}.`);
+});

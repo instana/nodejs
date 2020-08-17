@@ -40,8 +40,26 @@ function init() {
     }
 
     try {
-      const taskArn = ecsContainerPayload.data.taskArn;
-      const containerId = fullyQualifiedContainerId(taskArn, ecsContainerPayload.data.containerName);
+      const taskArn = ecsContainerPayload && ecsContainerPayload.data ? ecsContainerPayload.data.taskArn : null;
+      if (!taskArn) {
+        logger.error(
+          'Initializing @instana/aws-fargate failed, the metadata did not have a task ARN. This fargate task will ' +
+            'not be monitored.'
+        );
+        metrics.deactivate();
+        return;
+      }
+      const containerId = ecsContainerPayload.data.containerName
+        ? fullyQualifiedContainerId(taskArn, ecsContainerPayload.data.containerName)
+        : null;
+      if (!containerId) {
+        logger.error(
+          'Initializing @instana/aws-fargate failed, the metadata did not have a container name. This fargate task ' +
+            'will not be monitored.'
+        );
+        metrics.deactivate();
+        return;
+      }
 
       identityProvider.init(taskArn, containerId);
       backendConnector.init(identityProvider, logger, false, true, 950);

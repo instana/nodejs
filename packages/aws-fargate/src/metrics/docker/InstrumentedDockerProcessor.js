@@ -1,6 +1,6 @@
 'use strict';
 
-const DataProcessor = require('../DataProcessor');
+const { DataProcessor } = require('@instana/metrics-util');
 
 const { convert } = require('./dockerUtil');
 const { fullyQualifiedContainerId } = require('../container/containerUtil');
