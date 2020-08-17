@@ -1,8 +1,7 @@
 'use strict';
 
 const { environment: environmentUtil } = require('@instana/serverless');
-
-const DataProcessor = require('../DataProcessor');
+const { DataProcessor } = require('@instana/metrics-util');
 
 class EcsTaskProcessor extends DataProcessor {
   constructor(dataSource) {

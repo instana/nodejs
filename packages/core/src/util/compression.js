@@ -102,8 +102,8 @@ function isExcluded(path, excludeList) {
         continue outer;
       }
     }
-    // This excludeList entry and the given path have the same number of segments and all segments are identical, so this
-    // is a match, that is, this path has been excludeListed for compression.
+    // This excludeList entry and the given path have the same number of segments and all segments are identical, so
+    // this is a match, that is, this path has been excludeListed for compression.
     return true;
   }
   return false;

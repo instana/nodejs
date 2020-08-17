@@ -1,6 +1,7 @@
 'use strict';
 
-const DataProcessor = require('../DataProcessor');
+const { DataProcessor } = require('@instana/metrics-util');
+
 const { convert, fullyQualifiedContainerId } = require('./containerUtil');
 
 class InstrumentedEcsContainerProcessor extends DataProcessor {

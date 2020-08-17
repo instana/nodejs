@@ -1,0 +1,3 @@
+cd /instana
+npm rebuild
+

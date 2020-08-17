@@ -4,10 +4,11 @@ const path = require('path');
 const { fork } = require('child_process');
 const { expect } = require('chai');
 
+const { HttpDataSource } = require('@instana/metrics-util');
+
 const { delay, retry } = require('../../../../core/test/test_util');
 const config = require('../../../../serverless/test/config');
 
-const HttpDataSource = require('../../../src/metrics/HttpDataSource');
 const InstrumentedDockerProcessor = require('../../../src/metrics/docker/InstrumentedDockerProcessor');
 
 describe('Docker processor', function() {

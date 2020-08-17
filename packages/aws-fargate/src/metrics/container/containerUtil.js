@@ -1,7 +1,7 @@
 'use strict';
 
 exports.fullyQualifiedContainerId = function fullyQualifiedContainerId(taskArn, containerName) {
-  return taskArn + '::' + containerName;
+  return `${taskArn}::${containerName}`;
 };
 
 exports.dataForSecondaryContainer = function dataForSecondaryContainer(all, dockerId) {

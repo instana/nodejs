@@ -1,6 +1,6 @@
 'use strict';
 
-const DataProcessor = require('../DataProcessor');
+const { DataProcessor } = require('@instana/metrics-util');
 
 /**
  * Uses the response from ${metadataUri}/task to create processors for all secondary (non-instrumented containers).
