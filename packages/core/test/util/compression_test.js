@@ -36,9 +36,9 @@ describe('compression', () => {
       expect(compression(object, object)).to.deep.equal({});
     });
 
-    it('should remove the same object also when blacklisting', () => {
+    it('should remove the same object also with exclude list', () => {
       const object = { a: { b: { c: 42 } } };
-      expect(compression(object, object, [['unrelated', 'blacklist']])).to.deep.equal({});
+      expect(compression(object, object, [['unrelated', 'exclude']])).to.deep.equal({});
     });
 
     it('should mark all values as new', () => {
@@ -67,56 +67,56 @@ describe('compression', () => {
     });
   });
 
-  describe('blacklisting', () => {
-    it('should always report properties which have been blacklisted for compression', () => {
+  describe('excluding attributes from compression', () => {
+    it('should always report properties which have been excluded from compression', () => {
       expect(
         compression(
           {
-            blacklistedPrimitiveRoot: 12,
-            nonBlacklistedPrimitiveRoot: 13,
+            excludedPrimitiveRoot: 12,
+            notExcludedPrimitiveRoot: 13,
             changingPrimitiveRoot: 14,
             path: {
-              nonBlacklistedPrimitive: 42,
-              nonBlacklistedObject: { foo: 'bar' },
-              nonBlacklistedArray: [1, 2, 3],
-              blacklistedPrimitive: 43,
-              blacklistedObject: { foo: 'baz' },
-              blacklistedArray: [1, 2, 3],
+              notExcludedPrimitive: 42,
+              notExcludedObject: { foo: 'bar' },
+              notExcludedArray: [1, 2, 3],
+              excludedPrimitive: 43,
+              excludedObject: { foo: 'baz' },
+              excludedArray: [1, 2, 3],
               changingPrimitive: 42,
               changingObject: { bar: 'foo' },
               changingArray: [1, 2, 3]
             }
           },
           {
-            blacklistedPrimitiveRoot: 12,
-            nonBlacklistedPrimitiveRoot: 13,
+            excludedPrimitiveRoot: 12,
+            notExcludedPrimitiveRoot: 13,
             changingPrimitiveRoot: 15,
             path: {
-              nonBlacklistedPrimitive: 42,
-              nonBlacklistedObject: { foo: 'bar' },
-              nonBlacklistedArray: [1, 2, 3],
-              blacklistedPrimitive: 43,
-              blacklistedObject: { foo: 'baz' },
-              blacklistedArray: [1, 2, 3],
+              notExcludedPrimitive: 42,
+              notExcludedObject: { foo: 'bar' },
+              notExcludedArray: [1, 2, 3],
+              excludedPrimitive: 43,
+              excludedObject: { foo: 'baz' },
+              excludedArray: [1, 2, 3],
               changingPrimitive: 666,
               changingObject: { bar: 'boo' },
               changingArray: [1, 2, 3, 4]
             }
           },
           [
-            ['blacklistedPrimitiveRoot'],
-            ['path', 'blacklistedPrimitive'],
-            ['path', 'blacklistedObject'],
-            ['path', 'blacklistedArray']
+            ['excludedPrimitiveRoot'],
+            ['path', 'excludedPrimitive'],
+            ['path', 'excludedObject'],
+            ['path', 'excludedArray']
           ]
         )
       ).to.deep.equal({
-        blacklistedPrimitiveRoot: 12,
+        excludedPrimitiveRoot: 12,
         changingPrimitiveRoot: 15,
         path: {
-          blacklistedPrimitive: 43,
-          blacklistedObject: { foo: 'baz' },
-          blacklistedArray: [1, 2, 3],
+          excludedPrimitive: 43,
+          excludedObject: { foo: 'baz' },
+          excludedArray: [1, 2, 3],
           changingPrimitive: 666,
           changingObject: { bar: 'boo' },
           changingArray: [1, 2, 3, 4]
@@ -124,33 +124,33 @@ describe('compression', () => {
       });
     });
 
-    it('blacklisting should work for the same object, too', () => {
+    it('excluding should work for the same object, too', () => {
       const object = {
-        blacklistedPrimitiveRoot: 12,
-        nonBlacklistedPrimitiveRoot: 13,
+        excludedPrimitiveRoot: 12,
+        notExcludedPrimitiveRoot: 13,
         path: {
-          nonBlacklistedPrimitive: 42,
-          nonBlacklistedObject: { foo: 'bar' },
-          nonBlacklistedArray: [1, 2, 3],
-          blacklistedPrimitive: 43,
-          blacklistedObject: { foo: 'baz' },
-          blacklistedArray: [1, 2, 3]
+          notExcludedPrimitive: 42,
+          notExcludedObject: { foo: 'bar' },
+          notExcludedArray: [1, 2, 3],
+          excludedPrimitive: 43,
+          excludedObject: { foo: 'baz' },
+          excludedArray: [1, 2, 3]
         }
       };
 
       expect(
         compression(object, object, [
-          ['blacklistedPrimitiveRoot'],
-          ['path', 'blacklistedPrimitive'],
-          ['path', 'blacklistedObject'],
-          ['path', 'blacklistedArray']
+          ['excludedPrimitiveRoot'],
+          ['path', 'excludedPrimitive'],
+          ['path', 'excludedObject'],
+          ['path', 'excludedArray']
         ])
       ).to.deep.equal({
-        blacklistedPrimitiveRoot: 12,
+        excludedPrimitiveRoot: 12,
         path: {
-          blacklistedPrimitive: 43,
-          blacklistedObject: { foo: 'baz' },
-          blacklistedArray: [1, 2, 3]
+          excludedPrimitive: 43,
+          excludedObject: { foo: 'baz' },
+          excludedArray: [1, 2, 3]
         }
       });
     });

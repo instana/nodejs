@@ -1,7 +1,7 @@
 'use strict';
 
-module.exports = exports = function applyCompressionRoot(prev, next, blacklist) {
-  const result = applyCompression([], prev, next, blacklist);
+module.exports = exports = function applyCompressionRoot(prev, next, excludeList) {
+  const result = applyCompression([], prev, next, excludeList);
 
   // the root object needs to be at least an empty object.
   if (result === undefined) {
@@ -10,14 +10,14 @@ module.exports = exports = function applyCompressionRoot(prev, next, blacklist) 
   return result;
 };
 
-function applyCompression(path, prev, next, blacklist) {
-  if (isBlacklisted(path, blacklist)) {
+function applyCompression(path, prev, next, excludeList) {
+  if (isExcluded(path, excludeList)) {
     return next;
   }
 
-  if (blacklist == null && prev === next) {
+  if (excludeList == null && prev === next) {
     // Shortcut: If it is the same object, remove it completely. We can only take this shortcut safely, if there is no
-    // blacklist, otherwise we might accidentally remove attributes that would be blacklisted for compression.
+    // excludeList, otherwise we might accidentally remove attributes that would be excluded for compression.
     return undefined;
   }
 
@@ -29,7 +29,7 @@ function applyCompression(path, prev, next, blacklist) {
   } else if (Array.isArray(next)) {
     return applyCompressionToArray(prev, next);
   } else if (nType === 'object') {
-    return applyCompressionToObject(path, prev, next, blacklist);
+    return applyCompressionToObject(path, prev, next, excludeList);
   } else if (prev !== next) {
     return next;
   }
@@ -37,7 +37,7 @@ function applyCompression(path, prev, next, blacklist) {
   return undefined;
 }
 
-function applyCompressionToObject(path, prev, next, blacklist) {
+function applyCompressionToObject(path, prev, next, excludeList) {
   const result = {};
   let addedProps = 0;
 
@@ -48,7 +48,7 @@ function applyCompressionToObject(path, prev, next, blacklist) {
       const nValue = next[nKey];
       const pValue = prev[nKey];
 
-      const compressed = applyCompression(path.concat(nKey), pValue, nValue, blacklist);
+      const compressed = applyCompression(path.concat(nKey), pValue, nValue, excludeList);
       if (compressed !== undefined) {
         result[nKey] = compressed;
         addedProps++;
@@ -80,30 +80,30 @@ function applyCompressionToArray(prev, next) {
   return undefined;
 }
 
-function isBlacklisted(path, blacklist) {
-  if (blacklist == null) {
+function isExcluded(path, excludeList) {
+  if (excludeList == null) {
     return false;
   }
 
-  // Compare the given path to all blacklist entries.
+  // Compare the given path to all excludeList entries.
   // eslint-disable-next-line no-restricted-syntax
-  outer: for (let i = 0; i < blacklist.length; i++) {
-    if (blacklist[i].length !== path.length) {
-      // The blacklist entry and then given path have different lengths, this cannot be a match. Continue with next
-      // blacklist entry.
+  outer: for (let i = 0; i < excludeList.length; i++) {
+    if (excludeList[i].length !== path.length) {
+      // The excludeList entry and then given path have different lengths, this cannot be a match. Continue with next
+      // excludeList entry.
       // eslint-disable-next-line no-continue
       continue;
     }
-    for (let j = 0; j < blacklist[i].length; j++) {
-      if (blacklist[i][j] !== path[j]) {
-        // We found a path segment that is differnt for this blacklist entry and then given path, this cannot be a
-        // match. Continue with next blacklist entry.
+    for (let j = 0; j < excludeList[i].length; j++) {
+      if (excludeList[i][j] !== path[j]) {
+        // We found a path segment that is differnt for this excludeList entry and then given path, this cannot be a
+        // match. Continue with next excludeList entry.
         // eslint-disable-next-line no-continue
         continue outer;
       }
     }
-    // This blacklist entry and the given path have the same number of segments and all segments are identical, so this
-    // is a match, that is, this path has been blacklisted for compression.
+    // This excludeList entry and the given path have the same number of segments and all segments are identical, so this
+    // is a match, that is, this path has been excludeListed for compression.
     return true;
   }
   return false;

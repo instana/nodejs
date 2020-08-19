@@ -16,13 +16,13 @@ let processorIdx = 0;
  * plug-in ID and entity ID.
  */
 class DataProcessor extends EventEmitter {
-  constructor(pluginName, compressionBlacklist) {
+  constructor(pluginName, compressionExcludeList) {
     super();
     // all data sources
     this.dataSources = {};
     // data sources that need to have refreshed before the processor is ready
     this.essentialDataSources = {};
-    this.compressionBlacklist = compressionBlacklist;
+    this.compressionExcludeList = compressionExcludeList;
     this.pluginName = pluginName;
     this.id = `${this.pluginName}--${processorIdx++}`;
     this.previous = {};
@@ -147,7 +147,7 @@ class DataProcessor extends EventEmitter {
     if (shouldSendUncompressedUpdate) {
       dataToBeSent = uncompressedData;
     } else {
-      dataToBeSent = applyCompression(this.lastTransmittedPayload, uncompressedData, this.compressionBlacklist);
+      dataToBeSent = applyCompression(this.lastTransmittedPayload, uncompressedData, this.compressionExcludeList);
     }
 
     if (this.compressedTransmissionsSinceLastUncompressed >= this.sendUncompressedEveryXTransmissions) {
