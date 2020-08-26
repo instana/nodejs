@@ -2,10 +2,12 @@ module.exports = {
   extends: 'airbnb/legacy',
 
   env: {
+    es6: true,
     node: true
   },
 
   parserOptions: {
+    ecmaVersion: 2016,
     sourceType: 'strict'
   },
 

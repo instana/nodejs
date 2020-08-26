@@ -231,7 +231,7 @@ describe('tracing/headers', () => {
     expect(context.parentId).to.not.exist;
     const w3cTraceContext = context.w3cTraceContext;
     expect(w3cTraceContext).to.be.an('object');
-    expect(w3cTraceContext.foreignTraceId).to.equal('0000000000000000' + context.traceId);
+    expect(w3cTraceContext.foreignTraceId).to.equal(`0000000000000000${context.traceId}`);
     expect(w3cTraceContext.foreignParentId).to.equal('0000000000000000');
     expect(w3cTraceContext.sampled).to.be.true;
     expect(w3cTraceContext.instanaTraceId).to.equal(context.traceId);
@@ -247,7 +247,7 @@ describe('tracing/headers', () => {
     expect(context.parentId).to.not.exist;
     const w3cTraceContext = context.w3cTraceContext;
     expect(w3cTraceContext).to.be.an('object');
-    expect(w3cTraceContext.foreignTraceId).to.equal('0000000000000000' + context.traceId);
+    expect(w3cTraceContext.foreignTraceId).to.equal(`0000000000000000${context.traceId}`);
     expect(w3cTraceContext.foreignParentId).to.equal('0000000000000000');
     expect(w3cTraceContext.sampled).to.be.true;
     expect(w3cTraceContext.instanaTraceId).to.equal(context.traceId);
@@ -263,7 +263,7 @@ describe('tracing/headers', () => {
     expect(context.parentId).to.not.exist;
     const w3cTraceContext = context.w3cTraceContext;
     expect(w3cTraceContext).to.be.an('object');
-    expect(w3cTraceContext.foreignTraceId).to.equal('0000000000000000' + context.traceId);
+    expect(w3cTraceContext.foreignTraceId).to.equal(`0000000000000000${context.traceId}`);
     expect(w3cTraceContext.foreignParentId).to.equal('0000000000000000');
     expect(w3cTraceContext.sampled).to.be.true;
     expect(w3cTraceContext.instanaTraceId).to.equal(context.traceId);
@@ -337,7 +337,7 @@ describe('tracing/headers', () => {
         expect(w3cTraceContext.foreignTraceId).to.equal(foreignTraceId);
         expect(w3cTraceContext.foreignParentId).to.equal(foreignParentId);
       } else if (withInstanaHeaders && withInstanaLevel !== '0') {
-        expect(w3cTraceContext.foreignTraceId).to.equal('0000000000000000' + instana16CharTraceId);
+        expect(w3cTraceContext.foreignTraceId).to.equal(`0000000000000000${instana16CharTraceId}`);
         expect(w3cTraceContext.foreignParentId).to.equal(instanaSpanId);
       } else {
         // No foreign trace/parent ID available, new IDs will be generated.

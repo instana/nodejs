@@ -13,9 +13,9 @@ const port = process.env.APP_PORT || 3216;
 const nats = NATS.connect();
 let connected = false;
 
-nats.on('connect', function() {
+nats.on('connect', () => {
   connected = true;
-  nats.on('error', function(err) {
+  nats.on('error', err => {
     log('NATS error', err);
   });
 });
@@ -90,7 +90,7 @@ function afterPublish(res, err, msg) {
 app.post('/request', (req, res) => {
   const withError = req.query.withError;
   const requestOne = req.query.requestOne;
-  const requestCallback = function(reply) {
+  const requestCallback = reply => {
     afterPublish(res, null, reply);
   };
 

@@ -1,7 +1,7 @@
 'use strict';
 
 module.exports = exports = function applyCompressionRoot(prev, next, blacklist) {
-  var result = applyCompression([], prev, next, blacklist);
+  const result = applyCompression([], prev, next, blacklist);
 
   // the root object needs to be at least an empty object.
   if (result === undefined) {
@@ -21,8 +21,8 @@ function applyCompression(path, prev, next, blacklist) {
     return undefined;
   }
 
-  var pType = typeof prev;
-  var nType = typeof next;
+  const pType = typeof prev;
+  const nType = typeof next;
 
   if (pType !== nType) {
     return next;
@@ -38,17 +38,17 @@ function applyCompression(path, prev, next, blacklist) {
 }
 
 function applyCompressionToObject(path, prev, next, blacklist) {
-  var result = {};
-  var addedProps = 0;
+  const result = {};
+  let addedProps = 0;
 
   // eslint-disable-next-line no-restricted-syntax
-  for (var nKey in next) {
+  for (const nKey in next) {
     // eslint-disable-next-line no-prototype-builtins
     if (next.hasOwnProperty(nKey)) {
-      var nValue = next[nKey];
-      var pValue = prev[nKey];
+      const nValue = next[nKey];
+      const pValue = prev[nKey];
 
-      var compressed = applyCompression(path.concat(nKey), pValue, nValue, blacklist);
+      const compressed = applyCompression(path.concat(nKey), pValue, nValue, blacklist);
       if (compressed !== undefined) {
         result[nKey] = compressed;
         addedProps++;
@@ -68,9 +68,9 @@ function applyCompressionToArray(prev, next) {
     return next;
   }
 
-  var hasChanges = false;
+  let hasChanges = false;
 
-  for (var i = 0, len = next.length; i < len && !hasChanges; i++) {
+  for (let i = 0, len = next.length; i < len && !hasChanges; i++) {
     hasChanges = prev[i] !== next[i];
   }
 
@@ -87,14 +87,14 @@ function isBlacklisted(path, blacklist) {
 
   // Compare the given path to all blacklist entries.
   // eslint-disable-next-line no-restricted-syntax
-  outer: for (var i = 0; i < blacklist.length; i++) {
+  outer: for (let i = 0; i < blacklist.length; i++) {
     if (blacklist[i].length !== path.length) {
       // The blacklist entry and then given path have different lengths, this cannot be a match. Continue with next
       // blacklist entry.
       // eslint-disable-next-line no-continue
       continue;
     }
-    for (var j = 0; j < blacklist[i].length; j++) {
+    for (let j = 0; j < blacklist[i].length; j++) {
       if (blacklist[i][j] !== path[j]) {
         // We found a path segment that is differnt for this blacklist entry and then given path, this cannot be a
         // match. Continue with next blacklist entry.

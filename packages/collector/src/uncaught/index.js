@@ -1,30 +1,30 @@
 'use strict';
 
-var serializeError = require('serialize-error');
+const serializeError = require('serialize-error');
 
-var logger;
-logger = require('../logger').getLogger('util/uncaughtExceptionHandler', function(newLogger) {
+let logger;
+logger = require('../logger').getLogger('util/uncaughtExceptionHandler', newLogger => {
   logger = newLogger;
 });
 
-var instanaNodeJsCore = require('@instana/core');
-var tracing = instanaNodeJsCore.tracing;
-var spanBuffer = tracing.spanBuffer;
-var stackTraceUtil = instanaNodeJsCore.util.stackTrace;
+const instanaNodeJsCore = require('@instana/core');
+const tracing = instanaNodeJsCore.tracing;
+const spanBuffer = tracing.spanBuffer;
+const stackTraceUtil = instanaNodeJsCore.util.stackTrace;
 
-var downstreamConnection = null;
-var processIdentityProvider = null;
-var uncaughtExceptionEventName = 'uncaughtException';
-var unhandledRejectionEventName = 'unhandledRejection';
-var unhandledRejectionDeprecationWarningHasBeenEmitted = false;
-var stackTraceLength = 10;
-var config;
+let downstreamConnection = null;
+let processIdentityProvider = null;
+const uncaughtExceptionEventName = 'uncaughtException';
+const unhandledRejectionEventName = 'unhandledRejection';
+let unhandledRejectionDeprecationWarningHasBeenEmitted = false;
+const stackTraceLength = 10;
+let config;
 
 // see
 // https://nodejs.org/api/cli.html#cli_unhandled_rejections_mode /
 // https://github.com/nodejs/node/pull/26599
-var unhandledRejectionsMode = 'warn/default';
-for (var i = 0; i < process.execArgv.length; i++) {
+let unhandledRejectionsMode = 'warn/default';
+for (let i = 0; i < process.execArgv.length; i++) {
   if (process.execArgv[i] === '--unhandled-rejections=none') {
     unhandledRejectionsMode = 'none';
   } else if (process.execArgv[i] === '--unhandled-rejections=strict') {
@@ -103,14 +103,14 @@ exports.deactivate = function() {
 function onUncaughtException(uncaughtError) {
   // because of the way Error.prepareStackTrace works and how error.stack is only created once and then cached it is
   // important to create the JSON formatted stack trace first, before anything else accesses error.stack.
-  var jsonStackTrace = stackTraceUtil.getStackTraceAsJson(stackTraceLength, uncaughtError);
+  const jsonStackTrace = stackTraceUtil.getStackTraceAsJson(stackTraceLength, uncaughtError);
   finishCurrentSpanAndReportEvent(uncaughtError, jsonStackTrace);
   logAndRethrow(uncaughtError);
 }
 
 function finishCurrentSpanAndReportEvent(uncaughtError, jsonStackTrace) {
-  var spans = finishCurrentSpan(jsonStackTrace);
-  var eventPayload = createEventForUncaughtException(uncaughtError);
+  const spans = finishCurrentSpan(jsonStackTrace);
+  const eventPayload = createEventForUncaughtException(uncaughtError);
   downstreamConnection.reportUncaughtExceptionToAgentSync(eventPayload, spans);
 }
 
@@ -119,11 +119,11 @@ function createEventForUncaughtException(uncaughtError) {
 }
 
 function finishCurrentSpan(jsonStackTrace) {
-  var cls = tracing.getCls();
+  const cls = tracing.getCls();
   if (!cls) {
     return [];
   }
-  var currentSpan = cls.getCurrentSpan();
+  const currentSpan = cls.getCurrentSpan();
   if (!currentSpan) {
     return [];
   }
@@ -137,9 +137,9 @@ function finishCurrentSpan(jsonStackTrace) {
 
 function logAndRethrow(err) {
   // Remove all listeners now, so the final throw err won't trigger other registered listeners a second time.
-  var registeredListeners = process.listeners(uncaughtExceptionEventName);
+  const registeredListeners = process.listeners(uncaughtExceptionEventName);
   if (registeredListeners) {
-    registeredListeners.forEach(function(listener) {
+    registeredListeners.forEach(listener => {
       process.removeListener(uncaughtExceptionEventName, listener);
     });
   }
@@ -191,7 +191,7 @@ function onUnhandledRejection(reason) {
     }
   }
 
-  downstreamConnection.sendEvent(createEventForUnhandledRejection(reason), function(error) {
+  downstreamConnection.sendEvent(createEventForUnhandledRejection(reason), error => {
     if (error) {
       logger.error('Error received while trying to send event to agent: %s', error.message);
     }
@@ -203,9 +203,9 @@ function createEventForUnhandledRejection(reason) {
 }
 
 function createEvent(error, title, severity) {
-  var eventText = errorToMarkdown(error);
+  const eventText = errorToMarkdown(error);
   return {
-    title: title,
+    title,
     text: eventText,
     plugin: 'com.instana.forge.infrastructure.runtime.nodejs.NodeJsRuntimePlatform',
     id:
@@ -214,29 +214,26 @@ function createEvent(error, title, severity) {
         : undefined,
     timestamp: Date.now(),
     duration: 1,
-    severity: severity
+    severity
   };
 }
 
 function errorToMarkdown(error) {
-  var serializedError = serializeError(error);
+  /* eslint-disable max-len */
+  const serializedError = serializeError(error);
   if (serializedError.name && serializedError.message && typeof serializedError.stack === 'string') {
     // prettier-ignore
-    return (
-      '### ' + serializedError.name + '\n\n' +
-      '#### Message: \n\n' + serializedError.message + '\n\n' +
-      '#### Stack:\n\n' + stackTraceToMarkdown(serializedError.stack)
-    );
+    return `### ${serializedError.name}\n\n#### Message: \n\n${serializedError.message}\n\n#### Stack:\n\n${stackTraceToMarkdown(serializedError.stack)}`;
   } else {
     return JSON.stringify(serializedError);
   }
 }
 
 function stackTraceToMarkdown(stackTrace) {
-  var formatted = '';
-  var callSites = stackTrace.split('\n');
-  callSites.forEach(function(callSite) {
-    formatted = formatted + '* `' + callSite.trim() + '`\n';
+  let formatted = '';
+  const callSites = stackTrace.split('\n');
+  callSites.forEach(callSite => {
+    formatted = `${formatted}* \`${callSite.trim()}\`\n`;
   });
   return formatted;
 }

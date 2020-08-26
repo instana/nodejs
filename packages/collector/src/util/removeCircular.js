@@ -3,8 +3,8 @@
 'use strict';
 
 module.exports = exports = function createCircularReferencesRemover() {
-  var seen = new WeakSet();
-  return function(_, value) {
+  const seen = new WeakSet();
+  return (_, value) => {
     if (typeof value === 'object' && value !== null) {
       if (seen.has(value)) {
         return;

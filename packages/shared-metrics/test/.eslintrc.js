@@ -5,10 +5,6 @@ module.exports = {
     mocha: true
   },
 
-  parserOptions: {
-    ecmaVersion: 6
-  },
-
   rules: {
     'object-curly-newline': 'off'
   }

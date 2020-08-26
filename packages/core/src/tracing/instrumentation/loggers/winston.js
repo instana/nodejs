@@ -1,13 +1,13 @@
 'use strict';
 
-var requireHook = require('../../../util/requireHook');
-var tracingUtil = require('../../tracingUtil');
-var constants = require('../../constants');
-var cls = require('../../cls');
+const requireHook = require('../../../util/requireHook');
+const tracingUtil = require('../../tracingUtil');
+const constants = require('../../constants');
+const cls = require('../../cls');
 
-var isActive = false;
+let isActive = false;
 
-exports.init = function() {
+exports.init = function init() {
   // Winston 2.x
   requireHook.onFileLoad(/\/winston\/lib\/winston\/logger\.js/, instrumentWinston2);
   // Winston >= 3.x
@@ -29,13 +29,13 @@ function instrumentWinston3(createLogger) {
   }
 
   // copy further exported properties
-  Object.keys(createLogger).forEach(function(k) {
+  Object.keys(createLogger).forEach(k => {
     instrumentedCreateLogger[k] = createLogger[k];
   });
   return instrumentedCreateLogger;
 
   function instrumentedCreateLogger() {
-    var derivedLogger = createLogger.apply(this, arguments);
+    const derivedLogger = createLogger.apply(this, arguments);
 
     // npm levels
     shimLevelMethod(derivedLogger, 'error', true);
@@ -54,7 +54,7 @@ function instrumentWinston3(createLogger) {
 }
 
 function shimLevelMethod(derivedLogger, key, markAsError) {
-  var originalMethod = derivedLogger[key];
+  const originalMethod = derivedLogger[key];
   if (typeof originalMethod !== 'function') {
     return;
   }
@@ -64,10 +64,10 @@ function shimLevelMethod(derivedLogger, key, markAsError) {
 function instrumentedLevelMethod(originalMethod, markAsError) {
   return function(message) {
     if (isActive && cls.isTracing()) {
-      var parentSpan = cls.getCurrentSpan();
+      const parentSpan = cls.getCurrentSpan();
       if (parentSpan && !constants.isExitSpan(parentSpan)) {
-        var originalArgs = new Array(arguments.length);
-        for (var i = 0; i < arguments.length; i++) {
+        const originalArgs = new Array(arguments.length);
+        for (let i = 0; i < arguments.length; i++) {
           originalArgs[i] = arguments[i];
         }
 
@@ -80,14 +80,14 @@ function instrumentedLevelMethod(originalMethod, markAsError) {
           // this is the case logger.$level({ message: '...'})
           message = arguments[0].message;
         } else if (arguments.length >= 1) {
-          for (var j = arguments.length - 1; j >= 1; j--) {
+          for (let j = arguments.length - 1; j >= 1; j--) {
             if (!!arguments[j] && typeof arguments[j] === 'object' && typeof arguments[j].message === 'string') {
               message += arguments[j].message;
             }
           }
         }
 
-        var ctx = this;
+        const ctx = this;
         return createSpan(ctx, originalMethod, originalArgs, message, markAsError);
       } else {
         return originalMethod.apply(this, arguments);
@@ -99,7 +99,7 @@ function instrumentedLevelMethod(originalMethod, markAsError) {
 }
 
 function shimLogMethod(derivedLogger) {
-  var originalMethod = derivedLogger.log;
+  const originalMethod = derivedLogger.log;
   if (typeof originalMethod !== 'function') {
     return;
   }
@@ -127,7 +127,7 @@ function instrumentedLog(originalMethod) {
     ) {
       message = arguments[1].message;
     } else if (arguments.length >= 2) {
-      for (var i = arguments.length - 1; i >= 1; i--) {
+      for (let i = arguments.length - 1; i >= 1; i--) {
         if (!!arguments[i] && typeof arguments[i] === 'object' && typeof arguments[i].message === 'string') {
           message += arguments[i].message;
         }
@@ -135,13 +135,13 @@ function instrumentedLog(originalMethod) {
     }
 
     if (levelIsTraced(level) && isActive && cls.isTracing()) {
-      var parentSpan = cls.getCurrentSpan();
+      const parentSpan = cls.getCurrentSpan();
       if (parentSpan && !constants.isExitSpan(parentSpan)) {
-        var originalArgs = new Array(arguments.length);
-        for (var j = 0; j < arguments.length; j++) {
+        const originalArgs = new Array(arguments.length);
+        for (let j = 0; j < arguments.length; j++) {
           originalArgs[j] = arguments[j];
         }
-        var ctx = this;
+        const ctx = this;
         return createSpan(ctx, originalMethod, originalArgs, message, levelIsError(level));
       } else {
         return originalMethod.apply(this, arguments);
@@ -161,11 +161,11 @@ function levelIsError(level) {
 }
 
 function createSpan(ctx, originalMethod, originalArgs, message, markAsError) {
-  return cls.ns.runAndReturn(function() {
-    var span = cls.startSpan('log.winston', constants.EXIT);
+  return cls.ns.runAndReturn(() => {
+    const span = cls.startSpan('log.winston', constants.EXIT);
     span.stack = tracingUtil.getStackTrace(createSpan);
     span.data.log = {
-      message: message
+      message
     };
     if (markAsError) {
       span.ec = 1;
@@ -179,10 +179,10 @@ function createSpan(ctx, originalMethod, originalArgs, message, markAsError) {
   });
 }
 
-exports.activate = function() {
+exports.activate = function activate() {
   isActive = true;
 };
 
-exports.deactivate = function() {
+exports.deactivate = function deactivate() {
   isActive = false;
 };

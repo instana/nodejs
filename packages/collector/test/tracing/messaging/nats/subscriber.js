@@ -13,13 +13,13 @@ const port = process.env.APP_PORT || 3215;
 const nats = NATS.connect();
 let connected = false;
 
-nats.on('connect', function() {
+nats.on('connect', () => {
   connected = true;
-  nats.on('error', function(err) {
+  nats.on('error', err => {
     log('NATS error', err);
   });
 
-  nats.subscribe('publish-test-subject', function(msg, replyTo) {
+  nats.subscribe('publish-test-subject', (msg, replyTo) => {
     log(`received: "${msg}"`);
     if (process.send) {
       process.send(msg);
@@ -30,7 +30,7 @@ nats.on('connect', function() {
     }
   });
 
-  nats.subscribe('subscribe-test-subject', function(msg) {
+  nats.subscribe('subscribe-test-subject', msg => {
     log(`received: "${msg}"`);
     const span = instana.currentSpan();
     span.disableAutoEnd();

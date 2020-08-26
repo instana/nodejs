@@ -1,15 +1,15 @@
 'use strict';
 
-var shimmer = require('shimmer');
+const shimmer = require('shimmer');
 
-var requireHook = require('../../../util/requireHook');
-var tracingUtil = require('../../tracingUtil');
-var constants = require('../../constants');
-var cls = require('../../cls');
+const requireHook = require('../../../util/requireHook');
+const tracingUtil = require('../../tracingUtil');
+const constants = require('../../constants');
+const cls = require('../../cls');
 
-var isActive = false;
+let isActive = false;
 
-exports.init = function() {
+exports.init = function init() {
   requireHook.onModuleLoad('mssql', instrumentMssql);
 };
 
@@ -29,8 +29,8 @@ function instrumentRequest(Request) {
 function shimMethod(instrumentedFunction, originalFunction) {
   return function() {
     if (isActive && cls.isTracing()) {
-      var originalArgs = new Array(arguments.length);
-      for (var i = 0; i < arguments.length; i++) {
+      const originalArgs = new Array(arguments.length);
+      for (let i = 0; i < arguments.length; i++) {
         originalArgs[i] = arguments[i];
       }
       return instrumentedFunction(this, originalFunction, originalArgs);
@@ -40,28 +40,24 @@ function shimMethod(instrumentedFunction, originalFunction) {
 }
 
 function instrumentedRequestMethod(ctx, originalFunction, originalArgs) {
-  return instrumentedMethod(ctx, originalFunction, originalArgs, instrumentedRequestMethod, function(args) {
-    return args[0];
-  });
+  return instrumentedMethod(ctx, originalFunction, originalArgs, instrumentedRequestMethod, args => args[0]);
 }
 
 function instrumentedBulk(ctx, originalFunction, originalArgs) {
-  return instrumentedMethod(ctx, originalFunction, originalArgs, instrumentedBulk, function() {
-    return 'MSSQL bulk operation';
-  });
+  return instrumentedMethod(ctx, originalFunction, originalArgs, instrumentedBulk, () => 'MSSQL bulk operation');
 }
 
 function instrumentedMethod(ctx, originalFunction, originalArgs, stackTraceRef, commandProvider) {
-  var parentSpan = cls.getCurrentSpan();
+  const parentSpan = cls.getCurrentSpan();
 
   if (constants.isExitSpan(parentSpan)) {
     return originalFunction.apply(ctx, originalArgs);
   }
 
-  var connectionParameters = findConnectionParameters(ctx);
-  var command = commandProvider(originalArgs);
-  return cls.ns.runAndReturn(function() {
-    var span = cls.startSpan('mssql', constants.EXIT);
+  const connectionParameters = findConnectionParameters(ctx);
+  const command = commandProvider(originalArgs);
+  return cls.ns.runAndReturn(() => {
+    const span = cls.startSpan('mssql', constants.EXIT);
     span.stack = tracingUtil.getStackTrace(stackTraceRef);
     span.data.mssql = {
       stmt: tracingUtil.shortenDatabaseStatement(command),
@@ -71,28 +67,28 @@ function instrumentedMethod(ctx, originalFunction, originalArgs, stackTraceRef, 
       db: connectionParameters.db
     };
 
-    var originalCallback;
+    let originalCallback;
     if (originalArgs.length >= 2 && typeof originalArgs[1] === 'function') {
       originalCallback = originalArgs[1];
     }
 
     if (originalCallback) {
       // original call had a callback argument, replace it with our wrapper
-      var wrappedCallback = function(error) {
+      const wrappedCallback = function(error) {
         finishSpan(error, span);
         return originalCallback.apply(this, arguments);
       };
       originalArgs[1] = cls.ns.bind(wrappedCallback);
     }
 
-    var promise = originalFunction.apply(ctx, originalArgs);
+    const promise = originalFunction.apply(ctx, originalArgs);
     if (typeof promise.then === 'function') {
       promise
-        .then(function(value) {
+        .then(value => {
           finishSpan(null, span);
           return value;
         })
-        .catch(function(error) {
+        .catch(error => {
           finishSpan(error, span);
           return error;
         });
@@ -111,8 +107,8 @@ function shimPrepare(originalFunction) {
     // Statements can be prepared globally at application startup, there is not necessarily any HTTP request active, so
     // we explicitly do not check for cls.isTracing() here.
     if (isActive) {
-      var originalArgs = new Array(arguments.length);
-      for (var i = 0; i < arguments.length; i++) {
+      const originalArgs = new Array(arguments.length);
+      for (let i = 0; i < arguments.length; i++) {
         originalArgs[i] = arguments[i];
       }
       if (originalArgs.length >= 2 && typeof originalArgs[1] === 'function') {
@@ -127,9 +123,7 @@ function shimPrepare(originalFunction) {
 }
 
 function instrumentedExecute(ctx, originalFunction, originalArgs) {
-  return instrumentedMethod(ctx, originalFunction, originalArgs, instrumentedExecute, function() {
-    return ctx.__instanaStatement;
-  });
+  return instrumentedMethod(ctx, originalFunction, originalArgs, instrumentedExecute, () => ctx.__instanaStatement);
 }
 
 function instrumentTransaction(Transaction) {
@@ -139,8 +133,8 @@ function instrumentTransaction(Transaction) {
 function shimBeginTransaction(originalFunction) {
   return function() {
     if (isActive && cls.isTracing()) {
-      var originalArgs = new Array(arguments.length);
-      for (var i = 0; i < arguments.length; i++) {
+      const originalArgs = new Array(arguments.length);
+      for (let i = 0; i < arguments.length; i++) {
         originalArgs[i] = arguments[i];
       }
       if (typeof originalArgs[1] === 'function') {
@@ -186,10 +180,10 @@ function findConnectionParameters(ctx) {
   }
 }
 
-exports.activate = function() {
+exports.activate = function activate() {
   isActive = true;
 };
 
-exports.deactivate = function() {
+exports.deactivate = function deactivate() {
   isActive = false;
 };

@@ -1,9 +1,9 @@
 'use strict';
 
-const spawn = require('child_process').spawn;
 const errors = require('request-promise/errors');
-const request = require('request-promise');
 const path = require('path');
+const request = require('request-promise');
+const spawn = require('child_process').spawn;
 
 const testUtils = require('../../../core/test/test_util');
 const config = require('../../../core/test/config');
@@ -13,8 +13,7 @@ const appPort = (exports.appPort = 3212);
 
 let expressProxyApp;
 
-exports.registerTestHooks = opts => {
-  opts = opts || {};
+exports.registerTestHooks = (opts = {}) => {
   beforeEach(() => {
     const env = Object.create(process.env);
     env.AGENT_PORT = agentPort;
@@ -39,7 +38,7 @@ function waitUntilServerIsUp() {
   return testUtils.retry(() =>
     request({
       method: 'GET',
-      url: `http://127.0.0.1:${appPort}`,
+      url: `http://localhost:${appPort}`,
       headers: {
         'X-INSTANA-L': '0'
       }
@@ -60,7 +59,7 @@ exports.sendRequest = opts => {
 
   return request({
     method: opts.method,
-    url: `http://127.0.0.1:${appPort}${opts.path}`,
+    url: `http://localhost:${appPort}${opts.path}`,
     qs: {
       responseStatus: opts.responseStatus,
       delay: opts.delay,

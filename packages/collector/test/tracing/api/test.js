@@ -49,8 +49,8 @@ describe('tracing/api', function() {
         });
     });
 
-    it('must annotate a nested value (path given as flat string)', () => {
-      return controls
+    it('must annotate a nested value (path given as flat string)', () =>
+      controls
         .sendRequest({
           method: 'GET',
           path: '/span/annotate-path-flat-string'
@@ -66,11 +66,10 @@ describe('tracing/api', function() {
           expect(span.data.http.path_tpl).to.equal('/custom/{template}');
           expect(span.data.redundant.dots).to.equal('will be silently dropped');
           expect(span.handleConstructorName).to.equal('SpanHandle');
-        });
-    });
+        }));
 
-    it('must annotate a nested value (path given as array)', () => {
-      return controls
+    it('must annotate a nested value (path given as array)', () =>
+      controls
         .sendRequest({
           method: 'GET',
           path: '/span/annotate-path-array'
@@ -85,8 +84,7 @@ describe('tracing/api', function() {
           expect(span.data.custom.sdk.tags.key).to.equal('custom nested tag value');
           expect(span.data.http.path_tpl).to.equal('/custom/{template}');
           expect(span.handleConstructorName).to.equal('SpanHandle');
-        });
-    });
+        }));
 
     it('must manually end the currently active span', () => {
       const now = Date.now();

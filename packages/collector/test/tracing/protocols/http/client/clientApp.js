@@ -1,22 +1,26 @@
 'use strict';
 
-require('../../../../')();
+require('../../../../..')();
 
-const bodyParser = require('body-parser');
-const rp = require('request-promise');
-const express = require('express');
-const semver = require('semver');
-const morgan = require('morgan');
 const AWS = require('aws-sdk');
-const path = require('path');
+const bodyParser = require('body-parser');
+const express = require('express');
 const fs = require('fs');
+const morgan = require('morgan');
+const path = require('path');
+const rp = require('request-promise');
+const semver = require('semver');
 
 // WHATWG URL class is globally availabe as of Node.js 10.0.0, needs to be required in older versions.
 const URL = semver.lt(process.versions.node, '10.0.0') ? require('url').URL : global.URL;
 
 const httpModule = process.env.USE_HTTPS === 'true' ? require('https') : require('http');
 const protocol = process.env.USE_HTTPS === 'true' ? 'https' : 'http';
-const baseUrl = `${protocol}://127.0.0.1:${process.env.SERVER_PORT}`;
+const baseUrl = `${protocol}://localhost:${process.env.SERVER_PORT}`;
+
+const sslDir = path.join(__dirname, '..', '..', '..', '..', 'apps', 'ssl');
+const key = fs.readFileSync(path.join(sslDir, 'key'));
+const cert = fs.readFileSync(path.join(sslDir, 'cert'));
 
 const app = express();
 
@@ -25,7 +29,7 @@ const app = express();
 const awsRegion = process.env.AWS_REGION || 'eu-central-1';
 const s3 = new AWS.S3({ apiVersion: '2006-03-01', region: awsRegion });
 
-const logPrefix = `Express HTTP client: Client (${process.pid}):\t`;
+const logPrefix = `Express/${protocol} Client (${process.pid}):\t`;
 
 if (process.env.WITH_STDOUT) {
   app.use(morgan(`${logPrefix}:method :url :status`));
@@ -36,9 +40,7 @@ app.use(bodyParser.json());
 app.get('/', (req, res) => res.sendStatus(200));
 
 app.get('/request-url-and-options', (req, res) => {
-  httpModule
-    .request(createUrl(req, '/request-url-opts'), { rejectUnauthorized: false }, () => res.sendStatus(200))
-    .end();
+  httpModule.request(createUrl(req, '/request-url-opts'), { ca: cert }, () => res.sendStatus(200)).end();
 });
 
 app.get('/request-url-only', (req, res) => {
@@ -61,11 +63,11 @@ app.get('/request-options-only', (req, res) => {
     downStreamQueryString = `?${downStreamQueryString}`;
   }
   const downstreamRequest = {
-    hostname: '127.0.0.1',
+    hostname: 'localhost',
     port: process.env.SERVER_PORT,
     method: 'GET',
     path: `/request-only-opts${downStreamQueryString}`,
-    rejectUnauthorized: false
+    ca: cert
   };
   if (req.query.withHeader === 'request-via-options') {
     downstreamRequest.headers = { 'x-my-exit-options-request-header': 'x-my-exit-options-request-header-value' };
@@ -81,11 +83,11 @@ app.get('/request-options-only-null-headers', (req, res) => {
   httpModule
     .request(
       {
-        hostname: '127.0.0.1',
+        hostname: 'localhost',
         port: process.env.SERVER_PORT,
         method: 'GET',
         path: `/request-only-opts${req.query.withQuery ? '?q1=some&pass=verysecret&q2=value' : ''}`,
-        rejectUnauthorized: false,
+        ca: cert,
         headers: null
       },
       () => res.sendStatus(200)
@@ -94,7 +96,7 @@ app.get('/request-options-only-null-headers', (req, res) => {
 });
 
 app.get('/get-url-and-options', (req, res) => {
-  httpModule.get(createUrl(req, '/get-url-opts'), { rejectUnauthorized: false }, () => res.sendStatus(200));
+  httpModule.get(createUrl(req, '/get-url-opts'), { ca: cert }, () => res.sendStatus(200));
 });
 
 app.get('/get-url-only', (req, res) => {
@@ -104,11 +106,11 @@ app.get('/get-url-only', (req, res) => {
 app.get('/get-options-only', (req, res) => {
   httpModule.get(
     {
-      hostname: '127.0.0.1',
+      hostname: 'localhost',
       port: process.env.SERVER_PORT,
       method: 'GET',
       path: `/get-only-opts${req.query.withQuery ? '?q1=some&pass=verysecret&q2=value' : ''}`,
-      rejectUnauthorized: false
+      ca: cert
     },
     () => res.sendStatus(200)
   );
@@ -119,7 +121,7 @@ app.get('/timeout', (req, res) => {
     method: 'GET',
     url: `${baseUrl}/timeout`,
     timeout: 500,
-    strictSSL: false
+    ca: cert
   })
     .then(() => {
       res.sendStatus(200);
@@ -137,11 +139,11 @@ app.get('/deferred-http-exit', (req, res) => {
       // ... and make another outgoing HTTP call after that.
       httpModule
         .request({
-          hostname: '127.0.0.1',
+          hostname: 'localhost',
           port: process.env.SERVER_PORT,
           method: 'GET',
           path: '/request-only-opts',
-          rejectUnauthorized: false
+          ca: cert
         })
         .end(),
     100
@@ -151,10 +153,10 @@ app.get('/deferred-http-exit', (req, res) => {
 app.get('/abort', (req, res) => {
   const clientRequest = httpModule.request({
     method: 'GET',
-    hostname: '127.0.0.1',
+    hostname: 'localhost',
     port: process.env.SERVER_PORT,
     path: '/timeout',
-    rejectUnauthorized: false
+    ca: cert
   });
 
   clientRequest.end();
@@ -171,7 +173,7 @@ app.get('/request-malformed-url', (req, res) => {
       .request(
         //
         'ha-te-te-peh://999.0.0.1:not-a-port/malformed-url', //
-        { rejectUnauthorized: false }, //
+        { ca: cert }, //
         () => {
           // eslint-disable-next-line no-console
           console.log('This should not have happend!');
@@ -182,11 +184,11 @@ app.get('/request-malformed-url', (req, res) => {
     httpModule
       .request(
         {
-          hostname: '127.0.0.1',
+          hostname: 'localhost',
           port: process.env.SERVER_PORT,
           method: 'GET',
           path: `/request-only-opts${req.query.withQuery ? '?q1=some&pass=verysecret&q2=value' : ''}`,
-          rejectUnauthorized: false
+          ca: cert
         },
         () => res.sendStatus(200)
       )
@@ -197,11 +199,11 @@ app.get('/request-malformed-url', (req, res) => {
 app.put('/expect-continue', (req, res) => {
   const continueRequest = httpModule.request(
     {
-      hostname: '127.0.0.1',
+      hostname: 'localhost',
       port: process.env.SERVER_PORT,
       method: 'PUT',
       path: '/continue',
-      rejectUnauthorized: false,
+      ca: cert,
       headers: {
         Accept: 'application/json',
         'Content-Type': 'application/json',
@@ -226,15 +228,8 @@ app.put('/expect-continue', (req, res) => {
 });
 
 if (process.env.USE_HTTPS === 'true') {
-  const sslDir = path.join(__dirname, '..', '..', '..', 'apps', 'ssl');
   require('https')
-    .createServer(
-      {
-        key: fs.readFileSync(path.join(sslDir, 'key')),
-        cert: fs.readFileSync(path.join(sslDir, 'cert'))
-      },
-      app
-    )
+    .createServer({ key, cert }, app)
     .listen(process.env.APP_PORT, () => {
       log(`Listening (HTTPS!) on port: ${process.env.APP_PORT}`);
     });
@@ -270,7 +265,7 @@ app.post('/upload-s3', (req, res) => {
   const bucketName = process.env.AWS_S3_BUCKET_NAME;
   const params = { Bucket: process.env.AWS_S3_BUCKET_NAME, Key: 'test-file', Body: readStream };
   log(`Uploading to bucket ${bucketName} in region ${awsRegion}`);
-  s3.upload(params, function(err, result) {
+  s3.upload(params, (err, result) => {
     if (err) {
       // eslint-disable-next-line no-console
       console.error(err);

@@ -2,15 +2,15 @@
 
 'use strict';
 
-var bunyan = require('bunyan');
-var instanaNodeJsCore = require('@instana/core');
+const bunyan = require('bunyan');
+const instanaNodeJsCore = require('@instana/core');
 
-var bunyanToAgentStream = require('./agent/bunyanToAgentStream');
+const bunyanToAgentStream = require('./agent/bunyanToAgentStream');
 
-var parentLogger = null;
-var registry = {};
+let parentLogger = null;
+const registry = {};
 
-exports.init = function(config, isReInit) {
+exports.init = function init(config, isReInit) {
   if (config.logger && typeof config.logger.child === 'function') {
     // A bunyan or pino logger has been provided via config. In either case we create a child logger directly under the
     // given logger which serves as the parent for all loggers we create later on.
@@ -47,8 +47,8 @@ exports.init = function(config, isReInit) {
   }
 
   if (isReInit) {
-    Object.keys(registry).forEach(function(loggerName) {
-      var reInitFn = registry[loggerName];
+    Object.keys(registry).forEach(loggerName => {
+      const reInitFn = registry[loggerName];
       reInitFn(exports.getLogger(loggerName));
     });
     // cascade re-init to @instana/core
@@ -56,12 +56,12 @@ exports.init = function(config, isReInit) {
   }
 };
 
-exports.getLogger = function(loggerName, reInitFn) {
+exports.getLogger = function getLogger(loggerName, reInitFn) {
   if (!parentLogger) {
     exports.init({});
   }
 
-  var logger;
+  let logger;
 
   if (typeof parentLogger.child === 'function') {
     // Either bunyan or pino, both support parent-child relationships between loggers.

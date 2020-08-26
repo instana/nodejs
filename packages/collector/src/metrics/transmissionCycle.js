@@ -1,25 +1,25 @@
 'use strict';
 
-var clone = require('@instana/core').util.clone;
-var compression = require('@instana/core').util.compression;
+const clone = require('@instana/core').util.clone;
+const compression = require('@instana/core').util.compression;
 
-var logger;
-logger = require('../logger').getLogger('metrics/sender', function(newLogger) {
+let logger;
+logger = require('../logger').getLogger('metrics/sender', newLogger => {
   logger = newLogger;
 });
 
-var resendFullDataEveryXTransmissions = 300; /* about every 5 minutes */
-var transmissionsSinceLastFullDataEmit = 0;
+const resendFullDataEveryXTransmissions = 300; /* about every 5 minutes */
+let transmissionsSinceLastFullDataEmit = 0;
 
-var metrics;
-var downstreamConnection;
-var onSuccess;
-var onError;
+let metrics;
+let downstreamConnection;
+let onSuccess;
+let onError;
 
-var previousTransmittedValue;
-var transmissionTimeoutHandle;
-var transmissionDelay = 1000;
-var isActive = false;
+let previousTransmittedValue;
+let transmissionTimeoutHandle;
+let transmissionDelay = 1000;
+let isActive = false;
 
 exports.init = function init(config) {
   transmissionDelay = config.metrics.transmissionDelay;
@@ -68,10 +68,10 @@ function sendMetrics() {
   }
 
   // clone retrieved objects to allow mutations in metric retrievers
-  var newValueToTransmit = clone(metrics.gatherData());
+  const newValueToTransmit = clone(metrics.gatherData());
 
-  var payload;
-  var isFullTransmission = transmissionsSinceLastFullDataEmit > resendFullDataEveryXTransmissions;
+  let payload;
+  const isFullTransmission = transmissionsSinceLastFullDataEmit > resendFullDataEveryXTransmissions;
   if (isFullTransmission) {
     payload = newValueToTransmit;
   } else {
@@ -102,7 +102,7 @@ function onMetricsHaveBeenSent(isFullTransmission, transmittedValue, error, resp
   transmissionTimeoutHandle.unref();
 }
 
-exports.deactivate = function() {
+exports.deactivate = function deactivate() {
   isActive = false;
   previousTransmittedValue = undefined;
   clearTimeout(transmissionTimeoutHandle);

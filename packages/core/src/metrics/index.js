@@ -1,46 +1,45 @@
 'use strict';
 
-var fs = require('fs');
-var path = require('path');
+const fs = require('fs');
+const path = require('path');
 
-var config;
+let config;
 
-exports.init = function(_config) {
+exports.init = _config => {
   config = _config;
 };
 
 exports.findAndRequire = function findAndRequire(baseDir) {
-  return fs
-    .readdirSync(baseDir)
-    .filter(function(moduleName) {
+  return (
+    fs
+      .readdirSync(baseDir)
       // ignore non-JS files and non-metric modules
-      return (
-        moduleName.indexOf('.js') === moduleName.length - 3 &&
-        moduleName.indexOf('index.js') < 0 &&
-        moduleName.indexOf('transmissionCycle.js') < 0
-      );
-    })
-    .map(function(moduleName) {
-      return require(path.join(baseDir, moduleName));
-    });
+      .filter(
+        moduleName =>
+          moduleName.indexOf('.js') === moduleName.length - 3 &&
+          moduleName.indexOf('index.js') < 0 &&
+          moduleName.indexOf('transmissionCycle.js') < 0
+      )
+      .map(moduleName => require(path.join(baseDir, moduleName)))
+  );
 };
 
-var metricsModules = exports.findAndRequire(__dirname);
+let metricsModules = exports.findAndRequire(__dirname);
 
 exports.registerAdditionalMetrics = function registerAdditionalMetrics(additionalMetricsModules) {
   metricsModules = metricsModules.concat(additionalMetricsModules);
 };
 
-exports.activate = function() {
-  metricsModules.forEach(function(metricsModule) {
+exports.activate = () => {
+  metricsModules.forEach(metricsModule => {
     if (metricsModule.activate) {
       metricsModule.activate(config);
     }
   });
 };
 
-exports.deactivate = function() {
-  metricsModules.forEach(function(metricsModule) {
+exports.deactivate = () => {
+  metricsModules.forEach(metricsModule => {
     if (metricsModule.deactivate) {
       metricsModule.deactivate();
     }
@@ -48,9 +47,9 @@ exports.deactivate = function() {
 };
 
 exports.gatherData = function gatherData() {
-  var payload = {};
+  const payload = {};
 
-  metricsModules.forEach(function(metricsModule) {
+  metricsModules.forEach(metricsModule => {
     payload[metricsModule.payloadPrefix] = metricsModule.currentPayload;
   });
 
@@ -58,7 +57,7 @@ exports.gatherData = function gatherData() {
 };
 
 exports.setLogger = function setLogger(logger) {
-  metricsModules.forEach(function(metricModule) {
+  metricsModules.forEach(metricModule => {
     if (typeof metricModule.setLogger === 'function') {
       metricModule.setLogger(logger);
     }

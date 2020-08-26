@@ -1,25 +1,25 @@
 'use strict';
 
-var requireHook = require('../../../util/requireHook');
-var tracingUtil = require('../../tracingUtil');
-var constants = require('../../constants');
-var cls = require('../../cls');
+const requireHook = require('../../../util/requireHook');
+const tracingUtil = require('../../tracingUtil');
+const constants = require('../../constants');
+const cls = require('../../cls');
 
-var isActive = false;
+let isActive = false;
 
-exports.init = function() {
+exports.init = function init() {
   requireHook.onModuleLoad('elasticsearch', instrument);
 };
 
 function instrument(es) {
-  var OriginalClient = es.Client;
+  const OriginalClient = es.Client;
   if (!OriginalClient || typeof OriginalClient !== 'function') {
     return;
   }
 
   es.Client = function InstrumentedClient() {
-    var client = OriginalClient.apply(OriginalClient, arguments);
-    var clusterInfo = {};
+    const client = OriginalClient.apply(OriginalClient, arguments);
+    const clusterInfo = {};
 
     gatherClusterInfo(client, clusterInfo);
 
@@ -36,11 +36,11 @@ function instrument(es) {
 
 function gatherClusterInfo(client, clusterInfo) {
   client.info().then(
-    function(_clusterInfo) {
+    _clusterInfo => {
       clusterInfo.clusterName = _clusterInfo.cluster_name;
     },
-    function() {
-      setTimeout(function() {
+    () => {
+      setTimeout(() => {
         gatherClusterInfo(client, clusterInfo);
       }, 30000).unref();
     }
@@ -48,9 +48,9 @@ function gatherClusterInfo(client, clusterInfo) {
 }
 
 function instrumentApi(client, actionPath, clusterInfo) {
-  var action = actionPath.join('.');
-  var parent = actionPath.length === 2 ? client[actionPath[0]] : client;
-  var originalFunction = actionPath.length === 2 ? client[actionPath[0]][actionPath[1]] : client[actionPath[0]];
+  const action = actionPath.join('.');
+  const parent = actionPath.length === 2 ? client[actionPath[0]] : client;
+  const originalFunction = actionPath.length === 2 ? client[actionPath[0]][actionPath[1]] : client[actionPath[0]];
 
   if (typeof originalFunction !== 'function') {
     return;
@@ -60,17 +60,17 @@ function instrumentApi(client, actionPath, clusterInfo) {
       return originalFunction.apply(this, arguments);
     }
 
-    var ctx = this;
-    var originalArgs = new Array(arguments.length);
-    for (var i = 0; i < arguments.length; i++) {
+    const ctx = this;
+    const originalArgs = new Array(arguments.length);
+    for (let i = 0; i < arguments.length; i++) {
       originalArgs[i] = arguments[i];
     }
 
-    return cls.ns.runAndReturn(function() {
-      var span = cls.startSpan('elasticsearch', constants.EXIT);
+    return cls.ns.runAndReturn(() => {
+      const span = cls.startSpan('elasticsearch', constants.EXIT);
       span.stack = tracingUtil.getStackTrace(instrumentedAction);
       span.data.elasticsearch = {
-        action: action,
+        action,
         cluster: clusterInfo.clusterName
       };
 
@@ -103,7 +103,7 @@ function instrumentApi(client, actionPath, clusterInfo) {
         return originalFunction.apply(ctx, originalArgs);
       } else {
         try {
-          return originalFunction.apply(ctx, originalArgs).then(onSuccess.bind(null, span), function(error) {
+          return originalFunction.apply(ctx, originalArgs).then(onSuccess.bind(null, span), error => {
             onError(span, error);
             throw error;
           });
@@ -124,7 +124,7 @@ function onSuccess(span, response) {
       span.data.elasticsearch.hits = response.hits.total.value;
     }
   } else if (response.responses != null && Array.isArray(response.responses)) {
-    span.data.elasticsearch.hits = response.responses.reduce(function(hits, res) {
+    span.data.elasticsearch.hits = response.responses.reduce((hits, res) => {
       if (res.hits && typeof res.hits.total === 'number') {
         return hits + res.hits.total;
       } else if (res.hits && res.hits.total && typeof res.hits.total.value === 'number') {
@@ -165,11 +165,11 @@ function toStringEsMultiParameter(param) {
 }
 
 function getSpanDataFromMget1(span, docs) {
-  var indices = [];
-  var types = [];
-  var stats = [];
-  var ids = [];
-  for (var i = 0; i < docs.length; i++) {
+  const indices = [];
+  const types = [];
+  const stats = [];
+  const ids = [];
+  for (let i = 0; i < docs.length; i++) {
     collectParamFrom(docs[i], '_index', indices);
     collectParamFrom(docs[i], '_type', types);
     collectParamFrom(docs[i], '_stats', stats);
@@ -189,11 +189,11 @@ function getSpanDataFromMget2(span, params) {
 }
 
 function getSpanDataFromMsearch(span, body) {
-  var indices = [];
-  var types = [];
-  var stats = [];
-  var query = [];
-  for (var i = 0; i < body.length; i++) {
+  const indices = [];
+  const types = [];
+  const stats = [];
+  const query = [];
+  for (let i = 0; i < body.length; i++) {
     collectParamFrom(body[i], 'index', indices);
     collectParamFrom(body[i], 'type', types);
     collectParamFrom(body[i], 'stats', stats);
@@ -207,17 +207,17 @@ function getSpanDataFromMsearch(span, body) {
 
 function collectParamFrom(bodyItem, key, accumulator) {
   if (bodyItem && bodyItem[key]) {
-    var value = toStringEsMultiParameter(bodyItem[key]);
+    const value = toStringEsMultiParameter(bodyItem[key]);
     if (value != null && accumulator.indexOf(value) < 0) {
       accumulator.push(value);
     }
   }
 }
 
-exports.activate = function() {
+exports.activate = function activate() {
   isActive = true;
 };
 
-exports.deactivate = function() {
+exports.deactivate = function deactivate() {
   isActive = false;
 };

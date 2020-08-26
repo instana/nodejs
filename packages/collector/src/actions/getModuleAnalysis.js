@@ -1,6 +1,6 @@
 'use strict';
 
-exports.getModuleAnalysis = function(request, multiCb) {
+exports.getModuleAnalysis = function getModuleAnalysis(request, multiCb) {
   multiCb({
     data: {
       cwd: process.cwd(),

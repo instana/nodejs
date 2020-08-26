@@ -1,18 +1,18 @@
 'use strict';
 
-var util = require('util');
-var shimmer = require('shimmer');
+const util = require('util');
+const shimmer = require('shimmer');
 
-var requireHook = require('../../../util/requireHook');
-var tracingUtil = require('../../tracingUtil');
-var constants = require('../../constants');
-var cls = require('../../cls');
+const requireHook = require('../../../util/requireHook');
+const tracingUtil = require('../../tracingUtil');
+const constants = require('../../constants');
+const cls = require('../../cls');
 
-var isActive = false;
+let isActive = false;
 
-var levels;
+let levels;
 
-exports.init = function() {
+exports.init = function init() {
   requireHook.onFileLoad(/\/log4js\/lib\/levels\.js/, saveLevelsRef);
   requireHook.onFileLoad(/\/log4js\/lib\/logger\.js/, instrumentLog4jsLogger);
 };
@@ -33,18 +33,18 @@ function shimLog(originalLog) {
       return originalLog.apply(this, arguments);
     }
 
-    var parentSpan = cls.getCurrentSpan();
+    const parentSpan = cls.getCurrentSpan();
     if (!parentSpan || constants.isExitSpan(parentSpan)) {
       return originalLog.apply(this, arguments);
     }
 
-    var actualLevel = levels && levels.getLevel(level, levels.INFO);
+    const actualLevel = levels && levels.getLevel(level, levels.INFO);
     if (actualLevel == null || typeof actualLevel.level !== 'number' || actualLevel.level < 30000) {
       return originalLog.apply(this, arguments);
     }
 
-    var originalArgs = new Array(arguments.length);
-    for (var i = 0; i < arguments.length; i++) {
+    const originalArgs = new Array(arguments.length);
+    for (let i = 0; i < arguments.length; i++) {
       originalArgs[i] = arguments[i];
     }
 
@@ -53,8 +53,8 @@ function shimLog(originalLog) {
 }
 
 function instrumentedLog(ctx, originalArgs, originalLog, markAsError) {
-  return cls.ns.runAndReturn(function() {
-    var message;
+  return cls.ns.runAndReturn(() => {
+    let message;
 
     // fast path for single string log call
     if (originalArgs.length === 2 && typeof originalArgs[1] === 'string') {
@@ -63,14 +63,14 @@ function instrumentedLog(ctx, originalArgs, originalLog, markAsError) {
       // The original log4js log method takes (level, ...data) as arguments and creates the actually logged message via
       // util.format(...data). The following is equivalent, but Node.js 4 compliant (spread syntax is available
       // beginning with Node.js 5).
-      var messageArgs = originalArgs.slice(1);
+      const messageArgs = originalArgs.slice(1);
       message = util.format.apply(util, messageArgs);
     }
 
-    var span = cls.startSpan('log.log4js', constants.EXIT);
+    const span = cls.startSpan('log.log4js', constants.EXIT);
     span.stack = tracingUtil.getStackTrace(instrumentedLog);
     span.data.log = {
-      message: message
+      message
     };
     if (markAsError) {
       span.ec = 1;
@@ -84,10 +84,10 @@ function instrumentedLog(ctx, originalArgs, originalLog, markAsError) {
   });
 }
 
-exports.activate = function() {
+exports.activate = function activate() {
   isActive = true;
 };
 
-exports.deactivate = function() {
+exports.deactivate = function deactivate() {
   isActive = false;
 };

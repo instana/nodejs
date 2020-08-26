@@ -1,18 +1,18 @@
 'use strict';
 
-var requireHook = require('../../../util/requireHook');
-var tracingUtil = require('../../tracingUtil');
-var constants = require('../../constants');
-var cls = require('../../cls');
+const requireHook = require('../../../util/requireHook');
+const tracingUtil = require('../../tracingUtil');
+const constants = require('../../constants');
+const cls = require('../../cls');
 
-var logger;
-logger = require('../../../logger').getLogger('tracing/kafkajs', function(newLogger) {
+let logger;
+logger = require('../../../logger').getLogger('tracing/kafkajs', newLogger => {
   logger = newLogger;
 });
 
-var isActive = false;
+let isActive = false;
 
-exports.init = function() {
+exports.init = function init() {
   requireHook.onFileLoad(/\/kafkajs\/src\/producer\/messageProducer\.js/, instrumentProducer);
   requireHook.onFileLoad(/\/kafkajs\/src\/consumer\/runner\.js/, instrumentConsumer);
 };
@@ -23,7 +23,7 @@ function instrumentProducer(createProducer) {
   }
 
   return function() {
-    var producer = createProducer.apply(this, arguments);
+    const producer = createProducer.apply(this, arguments);
     producer.send = shimmedSend(producer.send);
     producer.sendBatch = shimmedSendBatch(producer.sendBatch);
     return producer;
@@ -33,8 +33,8 @@ function instrumentProducer(createProducer) {
 function shimmedSend(originalSend) {
   // After dropping Node 4 support, we should make this an async function, since the original is also an async function.
   return /* async */ function(config /* { topic, messages } */) {
-    var topic = config.topic;
-    var messages = config.messages;
+    const topic = config.topic;
+    const messages = config.messages;
 
     if (cls.tracingSuppressed()) {
       addTraceLevelSuppressionToAllMessages(messages);
@@ -43,12 +43,12 @@ function shimmedSend(originalSend) {
     if (!isActive || !cls.isTracing() || !messages || messages.length === 0) {
       return originalSend.apply(this, arguments);
     }
-    var parentSpan = cls.getCurrentSpan();
+    const parentSpan = cls.getCurrentSpan();
     if (!parentSpan || constants.isExitSpan(parentSpan)) {
       return originalSend.apply(this, arguments);
     }
-    var originalArgs = new Array(arguments.length);
-    for (var argsIdx = 0; argsIdx < arguments.length; argsIdx++) {
+    const originalArgs = new Array(arguments.length);
+    for (let argsIdx = 0; argsIdx < arguments.length; argsIdx++) {
       originalArgs[argsIdx] = arguments[argsIdx];
     }
     return instrumentedSend(this, originalSend, originalArgs, topic, messages);
@@ -56,8 +56,8 @@ function shimmedSend(originalSend) {
 }
 
 function instrumentedSend(ctx, originalSend, originalArgs, topic, messages) {
-  return cls.ns.runAndReturn(function() {
-    var span = cls.startSpan('kafka', constants.EXIT);
+  return cls.ns.runAndReturn(() => {
+    const span = cls.startSpan('kafka', constants.EXIT);
     if (Array.isArray(messages)) {
       span.b = { s: messages.length };
       addTraceContextHeaderToAllMessages(messages, span);
@@ -70,12 +70,12 @@ function instrumentedSend(ctx, originalSend, originalArgs, topic, messages) {
 
     return originalSend
       .apply(ctx, originalArgs)
-      .then(function(result) {
+      .then(result => {
         span.d = Date.now() - span.ts;
         span.transmit();
         return result;
       })
-      .catch(function(error) {
+      .catch(error => {
         span.ec = 1;
         span.data.kafka.error = error.message;
         span.d = Date.now() - span.ts;
@@ -88,10 +88,10 @@ function instrumentedSend(ctx, originalSend, originalArgs, topic, messages) {
 function shimmedSendBatch(originalSendBatch) {
   // After dropping Node 4 support, we should make this an async function, since the original is also an async function.
   return /* async */ function(config /* { topicMessages } */) {
-    var topicMessages = config.topicMessages;
+    const topicMessages = config.topicMessages;
 
     if (cls.tracingSuppressed()) {
-      topicMessages.forEach(function(topicMessage) {
+      topicMessages.forEach(topicMessage => {
         addTraceLevelSuppressionToAllMessages(topicMessage.messages);
       });
       return originalSendBatch.apply(this, arguments);
@@ -99,12 +99,12 @@ function shimmedSendBatch(originalSendBatch) {
     if (!isActive || !cls.isTracing() || !topicMessages || topicMessages.length === 0) {
       return originalSendBatch.apply(this, arguments);
     }
-    var parentSpan = cls.getCurrentSpan();
+    const parentSpan = cls.getCurrentSpan();
     if (!parentSpan || constants.isExitSpan(parentSpan)) {
       return originalSendBatch.apply(this, arguments);
     }
-    var originalArgs = new Array(arguments.length);
-    for (var i = 0; i < arguments.length; i++) {
+    const originalArgs = new Array(arguments.length);
+    for (let i = 0; i < arguments.length; i++) {
       originalArgs[i] = arguments[i];
     }
 
@@ -113,9 +113,9 @@ function shimmedSendBatch(originalSendBatch) {
 }
 
 function instrumentedSendBatch(ctx, originalSendBatch, originalArgs, topicMessages) {
-  var topics = [];
-  var messageCount = 0;
-  topicMessages.forEach(function(topicMessage) {
+  const topics = [];
+  let messageCount = 0;
+  topicMessages.forEach(topicMessage => {
     if (topicMessage.topic && topics.indexOf(topicMessage.topic) < 0) {
       topics.push(topicMessage.topic);
     }
@@ -124,10 +124,10 @@ function instrumentedSendBatch(ctx, originalSendBatch, originalArgs, topicMessag
     }
   });
 
-  return cls.ns.runAndReturn(function() {
-    var span = cls.startSpan('kafka', constants.EXIT);
+  return cls.ns.runAndReturn(() => {
+    const span = cls.startSpan('kafka', constants.EXIT);
     span.stack = tracingUtil.getStackTrace(instrumentedSend);
-    topicMessages.forEach(function(topicMessage) {
+    topicMessages.forEach(topicMessage => {
       addTraceContextHeaderToAllMessages(topicMessage.messages, span);
     });
 
@@ -141,12 +141,12 @@ function instrumentedSendBatch(ctx, originalSendBatch, originalArgs, topicMessag
 
     return originalSendBatch
       .apply(ctx, originalArgs)
-      .then(function(result) {
+      .then(result => {
         span.d = Date.now() - span.ts;
         span.transmit();
         return result;
       })
-      .catch(function(error) {
+      .catch(error => {
         span.ec = 1;
         span.data.kafka.error = error.message;
         span.d = Date.now() - span.ts;
@@ -163,16 +163,16 @@ function instrumentConsumer(Runner) {
   return function() {
     // We need to convert the arguments to a proper array, otherwise the concat call would append them as one object,
     // effectively passing them on wrapped in an object.
-    var args = Array.prototype.slice.call(arguments);
+    const args = Array.prototype.slice.call(arguments);
 
-    var argObject = args[0];
+    const argObject = args[0];
     if (argObject && argObject.eachMessage) {
       // In kafkajs, eachMessage takes precedence and eachBatch is ignored if both eachMessage and eachBatch are
       // present.
-      var originalEachMessage = argObject.eachMessage;
+      const originalEachMessage = argObject.eachMessage;
       argObject.eachMessage = instrumentedEachMessage(originalEachMessage);
     } else if (argObject && argObject.eachBatch) {
-      var originalEachBatch = argObject.eachBatch;
+      const originalEachBatch = argObject.eachBatch;
       argObject.eachBatch = instrumentedEachBatch(originalEachBatch);
     }
 
@@ -189,46 +189,47 @@ function instrumentConsumer(Runner) {
 
 function instrumentedEachMessage(originalEachMessage) {
   return /* async */ function(config /* { topic, message } */) {
-    var topic = config.topic;
-    var message = config.message;
+    const topic = config.topic;
+    const message = config.message;
 
     if (!isActive) {
       return originalEachMessage.apply(this, arguments);
     }
-    var parentSpan = cls.getCurrentSpan();
+    const parentSpan = cls.getCurrentSpan();
     if (parentSpan) {
       logger.warn(
-        'Cannot start a Kafka entry span when another span is already active. Currently, the following span is ' +
-          'active: ' +
-          JSON.stringify(parentSpan)
+        // eslint-disable-next-line max-len
+        `Cannot start a Kafka entry span when another span is already active. Currently, the following span is active: ${JSON.stringify(
+          parentSpan
+        )}`
       );
       return originalEachMessage.apply(this, arguments);
     }
 
-    var ctx = this;
-    var originalArgs = new Array(arguments.length);
-    for (var i = 0; i < arguments.length; i++) {
+    const ctx = this;
+    const originalArgs = new Array(arguments.length);
+    for (let i = 0; i < arguments.length; i++) {
       originalArgs[i] = arguments[i];
     }
 
-    var traceId;
-    var parentSpanId;
+    let traceId;
+    let parentSpanId;
     if (message && message.headers && message.headers[constants.kafkaTraceContextHeaderName]) {
-      var traceContextBuffer = message.headers[constants.kafkaTraceContextHeaderName];
+      const traceContextBuffer = message.headers[constants.kafkaTraceContextHeaderName];
       if (Buffer.isBuffer(traceContextBuffer) && traceContextBuffer.length === 24) {
-        var traceContext = tracingUtil.readTraceContextFromBuffer(traceContextBuffer);
+        const traceContext = tracingUtil.readTraceContextFromBuffer(traceContextBuffer);
         traceId = traceContext.t;
         parentSpanId = traceContext.s;
       }
     }
 
-    return cls.ns.runAndReturn(function() {
+    return cls.ns.runAndReturn(() => {
       if (isSuppressed(message)) {
         cls.setTracingLevel('0');
         return originalEachMessage.apply(ctx, originalArgs);
       }
 
-      var span = cls.startSpan('kafka', constants.ENTRY, traceId, parentSpanId);
+      const span = cls.startSpan('kafka', constants.ENTRY, traceId, parentSpanId);
       span.stack = [];
       span.data.kafka = {
         access: 'consume',
@@ -238,7 +239,7 @@ function instrumentedEachMessage(originalEachMessage) {
       try {
         return originalEachMessage.apply(ctx, originalArgs);
       } finally {
-        setImmediate(function() {
+        setImmediate(() => {
           span.d = Date.now() - span.ts;
           span.transmit();
         });
@@ -249,34 +250,35 @@ function instrumentedEachMessage(originalEachMessage) {
 
 function instrumentedEachBatch(originalEachBatch) {
   return /* async */ function(config /* { batch } */) {
-    var batch = config.batch;
+    const batch = config.batch;
     if (!isActive) {
       return originalEachBatch.apply(this, arguments);
     }
-    var parentSpan = cls.getCurrentSpan();
+    const parentSpan = cls.getCurrentSpan();
     if (parentSpan) {
       logger.warn(
-        'Cannot start a Kafka entry span when another span is already active. Currently, the following span is ' +
-          'active: ' +
-          JSON.stringify(parentSpan)
+        // eslint-disable-next-line max-len
+        `Cannot start a Kafka entry span when another span is already active. Currently, the following span is active: ${JSON.stringify(
+          parentSpan
+        )}`
       );
       return originalEachBatch.apply(this, arguments);
     }
 
-    var ctx = this;
-    var originalArgs = new Array(arguments.length);
-    for (var argsIdx = 0; argsIdx < arguments.length; argsIdx++) {
+    const ctx = this;
+    const originalArgs = new Array(arguments.length);
+    for (let argsIdx = 0; argsIdx < arguments.length; argsIdx++) {
       originalArgs[argsIdx] = arguments[argsIdx];
     }
 
-    var traceId;
-    var parentSpanId;
+    let traceId;
+    let parentSpanId;
     if (batch.messages) {
-      for (var msgIdx = 0; msgIdx < batch.messages.length; msgIdx++) {
+      for (let msgIdx = 0; msgIdx < batch.messages.length; msgIdx++) {
         if (batch.messages[msgIdx].headers && batch.messages[msgIdx].headers[constants.kafkaTraceContextHeaderName]) {
-          var traceContextBuffer = batch.messages[msgIdx].headers[constants.kafkaTraceContextHeaderName];
+          const traceContextBuffer = batch.messages[msgIdx].headers[constants.kafkaTraceContextHeaderName];
           if (Buffer.isBuffer(traceContextBuffer) && traceContextBuffer.length === 24) {
-            var traceContext = tracingUtil.readTraceContextFromBuffer(traceContextBuffer);
+            const traceContext = tracingUtil.readTraceContextFromBuffer(traceContextBuffer);
             traceId = traceContext.t;
             parentSpanId = traceContext.s;
             break;
@@ -285,13 +287,13 @@ function instrumentedEachBatch(originalEachBatch) {
       }
     }
 
-    return cls.ns.runAndReturn(function() {
+    return cls.ns.runAndReturn(() => {
       if (batch.messages && isSuppressed(batch.messages[0])) {
         cls.setTracingLevel('0');
         return originalEachBatch.apply(ctx, originalArgs);
       }
 
-      var span = cls.startSpan('kafka', constants.ENTRY, traceId, parentSpanId);
+      const span = cls.startSpan('kafka', constants.ENTRY, traceId, parentSpanId);
       span.stack = [];
       span.data.kafka = {
         access: 'consume',
@@ -305,7 +307,7 @@ function instrumentedEachBatch(originalEachBatch) {
       try {
         return originalEachBatch.apply(ctx, originalArgs);
       } finally {
-        setImmediate(function() {
+        setImmediate(() => {
           span.d = Date.now() - span.ts;
           span.transmit();
         });
@@ -316,7 +318,7 @@ function instrumentedEachBatch(originalEachBatch) {
 
 function isSuppressed(message) {
   if (message && message.headers && message.headers[constants.kafkaTraceLevelHeaderName]) {
-    var traceLevelBuffer = message.headers[constants.kafkaTraceLevelHeaderName];
+    const traceLevelBuffer = message.headers[constants.kafkaTraceLevelHeaderName];
     return Buffer.isBuffer(traceLevelBuffer) && traceLevelBuffer.length >= 1 && traceLevelBuffer.readInt8() === 0;
   }
   return false;
@@ -324,7 +326,7 @@ function isSuppressed(message) {
 
 function addTraceContextHeaderToAllMessages(messages, span) {
   if (Array.isArray(messages)) {
-    for (var msgIdx = 0; msgIdx < messages.length; msgIdx++) {
+    for (let msgIdx = 0; msgIdx < messages.length; msgIdx++) {
       if (messages[msgIdx].headers == null) {
         // messages[msgIdx].headers = {
         //   [constants.kafkaTraceContextHeaderName]: tracingUtil.renderTraceContextToBuffer(span)
@@ -343,7 +345,7 @@ function addTraceContextHeaderToAllMessages(messages, span) {
 
 function addTraceLevelSuppressionToAllMessages(messages) {
   if (Array.isArray(messages)) {
-    for (var msgIdx = 0; msgIdx < messages.length; msgIdx++) {
+    for (let msgIdx = 0; msgIdx < messages.length; msgIdx++) {
       if (messages[msgIdx].headers == null) {
         // messages[msgIdx].headers = {
         //   [constants.kafkaTraceLevelHeaderName]: constants.kafkaTraceLevelValueSuppressed
@@ -357,10 +359,10 @@ function addTraceLevelSuppressionToAllMessages(messages) {
   }
 }
 
-exports.activate = function() {
+exports.activate = function activate() {
   isActive = true;
 };
 
-exports.deactivate = function() {
+exports.deactivate = function deactivate() {
   isActive = false;
 };

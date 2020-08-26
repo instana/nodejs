@@ -1,19 +1,19 @@
 'use strict';
 
-var crypto = require('crypto');
-var StringDecoder = require('string_decoder').StringDecoder;
-var hexDecoder = new StringDecoder('hex');
+const crypto = require('crypto');
+const StringDecoder = require('string_decoder').StringDecoder;
+const hexDecoder = new StringDecoder('hex');
 
-var stackTrace = require('../util/stackTrace');
+const stackTrace = require('../util/stackTrace');
 
-var stackTraceLength = 10;
+let stackTraceLength = 10;
 
 exports.init = function(config) {
   stackTraceLength = config.tracing.stackTraceLength;
 };
 
-exports.getStackTrace = function getStackTrace(referenceFunction) {
-  return stackTrace.captureStackTrace(stackTraceLength, referenceFunction);
+exports.getStackTrace = function getStackTrace(referenceFunction, drop) {
+  return stackTrace.captureStackTrace(stackTraceLength, referenceFunction, drop);
 };
 
 exports.generateRandomTraceId = function generateRandomTraceId() {
@@ -38,10 +38,10 @@ exports.generateRandomId = function(length) {
 
 exports.readTraceContextFromBuffer = function readTraceContextFromBuffer(buffer) {
   if (!Buffer.isBuffer(buffer)) {
-    throw new Error('Not a buffer: ' + buffer);
+    throw new Error(`Not a buffer: ${buffer}`);
   }
   if (buffer.length !== 24) {
-    throw new Error('Only buffers of length 24 are supported: ' + buffer);
+    throw new Error(`Only buffers of length 24 are supported: ${buffer}`);
   }
   // Check if the first 8 bytes are all zeroes:
   // (Beginning with Node.js 12, this check could be simply `buffer.readBigInt64BE(0) !== 0n) {`.)
@@ -57,7 +57,7 @@ function readHexFromBuffer(buffer, offset, length) {
 }
 
 exports.unsignedHexStringToBuffer = function unsignedHexStringToBuffer(hexString, buffer, offsetFromRight) {
-  var offset;
+  let offset;
   if (buffer && offsetFromRight != null) {
     offset = buffer.length - hexString.length / 2 - offsetFromRight;
   } else {
@@ -69,14 +69,14 @@ exports.unsignedHexStringToBuffer = function unsignedHexStringToBuffer(hexString
   } else if (hexString.length === 32) {
     buffer = buffer || Buffer.alloc(16);
   } else {
-    throw new Error('Only supported hex string lengths are 16 and 32, got: ' + hexString);
+    throw new Error(`Only supported hex string lengths are 16 and 32, got: ${hexString}`);
   }
   writeHexToBuffer(hexString, buffer, offset);
   return buffer;
 };
 
 exports.unsignedHexStringsToBuffer = function unsignedHexStringsToBuffer(traceId, spanId) {
-  var buffer = Buffer.alloc(24);
+  const buffer = Buffer.alloc(24);
   exports.unsignedHexStringToBuffer(traceId, buffer, 8);
   exports.unsignedHexStringToBuffer(spanId, buffer, 0);
   return buffer;
@@ -120,9 +120,9 @@ exports.readAttribCaseInsensitive = function readAttribCaseInsensitive(object, k
   if (!object || typeof object !== 'object' || typeof key !== 'string') {
     return null;
   }
-  var keyUpper = key.toUpperCase();
-  var allKeys = Object.keys(object);
-  for (var i = 0; i < allKeys.length; i++) {
+  const keyUpper = key.toUpperCase();
+  const allKeys = Object.keys(object);
+  for (let i = 0; i < allKeys.length; i++) {
     if (typeof allKeys[i] === 'string' && allKeys[i].toUpperCase() === keyUpper) {
       return object[allKeys[i]];
     }

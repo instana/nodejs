@@ -45,7 +45,7 @@ const logPrefix = `Express / MySQL App (${process.pid}):\t`;
 let pool;
 
 if (useCluster) {
-  var poolCluster = mysql.createPoolCluster({});
+  const poolCluster = mysql.createPoolCluster({});
   poolCluster.add({
     connectionLimit: 5,
     host: process.env.MYSQL_HOST,

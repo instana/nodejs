@@ -14,13 +14,13 @@ process.on('uncaughtException', () => {
 });
 
 function throwUncaughtError() {
-  setTimeout(function() {
+  setTimeout(() => {
     throw new Error('Boom');
   }, 100);
 }
 
 throwUncaughtError();
 
-setTimeout(function() {
+setTimeout(() => {
   console.log('Bye, bye');
 }, 200);

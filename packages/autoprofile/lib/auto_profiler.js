@@ -324,7 +324,7 @@ class AutoProfiler {
   }
 }
 
-exports.start = function(opts) {
+exports.start = function start(opts) {
   if (!profiler) {
     profiler = new AutoProfiler();
     profiler.start(opts);
@@ -332,7 +332,7 @@ exports.start = function(opts) {
   return profiler;
 };
 
-exports.destroy = function() {
+exports.destroy = function destroy() {
   if (profiler) {
     profiler.destroy();
   }

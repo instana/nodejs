@@ -1,11 +1,11 @@
 'use strict';
 
-var logger = require('@instana/core').logger.getLogger('metrics');
-exports.setLogger = function(_logger) {
+let logger = require('@instana/core').logger.getLogger('metrics');
+exports.setLogger = function setLogger(_logger) {
   logger = _logger;
 };
 
-var eventLoopStats;
+let eventLoopStats;
 try {
   eventLoopStats = require('event-loop-stats');
 } catch (e) {
@@ -17,14 +17,14 @@ try {
       'https://www.instana.com/docs/ecosystem/node-js/installation/#native-addons'
   );
 }
-var lag = require('event-loop-lag')(1000);
+const lag = require('event-loop-lag')(1000);
 
 exports.payloadPrefix = 'libuv';
 exports.currentPayload = {};
 
 Object.defineProperty(exports, 'currentPayload', {
   get: function() {
-    var stats = sense();
+    const stats = sense();
     stats.lag = Math.round(lag() * 100) / 100;
     return stats;
   }
@@ -32,7 +32,7 @@ Object.defineProperty(exports, 'currentPayload', {
 
 function sense() {
   if (eventLoopStats) {
-    var stats = eventLoopStats.sense();
+    const stats = eventLoopStats.sense();
     stats.statsSupported = true;
     return stats;
   }

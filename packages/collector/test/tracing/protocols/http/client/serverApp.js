@@ -2,7 +2,7 @@
 
 'use strict';
 
-require('../../../../')();
+require('../../../../../')();
 
 const bodyParser = require('body-parser');
 const express = require('express');
@@ -10,8 +10,10 @@ const fs = require('fs');
 const morgan = require('morgan');
 const path = require('path');
 
+const protocol = process.env.USE_HTTPS === 'true' ? 'https' : 'http';
+const logPrefix = `Express/${protocol} Server (${process.pid}):\t`;
+
 const app = express();
-const logPrefix = `Express HTTP client: Server (${process.pid}):\t`;
 
 if (process.env.WITH_STDOUT) {
   app.use(morgan(`${logPrefix}:method :url :status`));
@@ -54,7 +56,7 @@ app.put('/continue', (req, res) => {
 });
 
 if (process.env.USE_HTTPS === 'true') {
-  const sslDir = path.join(__dirname, '..', '..', '..', 'apps', 'ssl');
+  const sslDir = path.join(__dirname, '..', '..', '..', '..', 'apps', 'ssl');
   require('https')
     .createServer(
       {
@@ -64,11 +66,11 @@ if (process.env.USE_HTTPS === 'true') {
       app
     )
     .listen(process.env.APP_PORT, () => {
-      log(`Listening (HTTPS!) on port: ${process.env.APP_PORT}`);
+      log(`Listening on port ${process.env.APP_PORT} (TLS: true).`);
     });
 } else {
   app.listen(process.env.APP_PORT, () => {
-    log(`Listening on port: ${process.env.APP_PORT}`);
+    log(`Listening on port ${process.env.APP_PORT} (TLS: false).`);
   });
 }
 

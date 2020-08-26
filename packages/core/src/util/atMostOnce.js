@@ -2,8 +2,8 @@
 
 'use strict';
 
-var logger;
-logger = require('../logger').getLogger('util/atMostOnce', function(newLogger) {
+let logger;
+logger = require('../logger').getLogger('util/atMostOnce', newLogger => {
   logger = newLogger;
 });
 
@@ -19,7 +19,7 @@ logger = require('../logger').getLogger('util/atMostOnce', function(newLogger) {
  *   and log any successive calls.
  */
 module.exports = function atMostOnce(name, cb) {
-  var callCount = 0;
+  let callCount = 0;
   return function callbackWrappedForAtMostOneExecution() {
     callCount++;
     if (callCount === 1) {

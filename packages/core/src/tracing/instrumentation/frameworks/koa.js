@@ -1,22 +1,22 @@
 'use strict';
 
-var shimmer = require('shimmer');
+const shimmer = require('shimmer');
 
-var requireHook = require('../../../util/requireHook');
-var httpServer = require('../protocols/httpServer');
-var cls = require('../../cls');
+const requireHook = require('../../../util/requireHook');
+const httpServer = require('../protocols/httpServer');
+const cls = require('../../cls');
 
-var active = false;
+let active = false;
 
-exports.activate = function() {
+exports.activate = function activate() {
   active = true;
 };
 
-exports.deactivate = function() {
+exports.deactivate = function deactivate() {
   active = false;
 };
 
-exports.init = function() {
+exports.init = function init() {
   requireHook.onModuleLoad('koa-router', instrumentRouter);
 };
 
@@ -33,7 +33,7 @@ function shimRoutes(originalFunction) {
 function instrumentedRoutes(thisContext, originalRoutes, originalArgs) {
   // We need to hook into the dispatch function, which does not exist on Router.prototype but is created on the fly in
   // Router.routes, so we need to hook into Router.routes to get access to the dispatch function.
-  var dispatch = originalRoutes.apply(thisContext, originalArgs);
+  const dispatch = originalRoutes.apply(thisContext, originalArgs);
 
   // Actually, we could just use ctx._matchedRoute, which would be the path template we are looking for and which gets
   // set by koa-router. Unfortunately, this is broken, see
@@ -41,14 +41,14 @@ function instrumentedRoutes(thisContext, originalRoutes, originalArgs) {
   // https://github.com/ZijianHe/koa-router/issues/444.
 
   // eslint-disable-next-line no-unused-vars
-  var instrumentedDispatch = function(ctx, next) {
+  const instrumentedDispatch = function(ctx, next) {
     if (active && cls.isTracing()) {
-      var dispatchResult = dispatch.apply(this, arguments);
-      return dispatchResult.then(function(resolvedValue) {
+      const dispatchResult = dispatch.apply(this, arguments);
+      return dispatchResult.then(resolvedValue => {
         if (ctx.matched && ctx.matched.length && ctx.matched.length > 0) {
-          var matchedRouteLayers = ctx.matched.slice();
+          const matchedRouteLayers = ctx.matched.slice();
           matchedRouteLayers.sort(byLeastSpecificLayer);
-          var mostSpecificPath = normalizeLayerPath(matchedRouteLayers[matchedRouteLayers.length - 1].path);
+          const mostSpecificPath = normalizeLayerPath(matchedRouteLayers[matchedRouteLayers.length - 1].path);
           annotateHttpEntrySpanWithPathTemplate(mostSpecificPath);
         }
         return resolvedValue;
@@ -76,12 +76,12 @@ function instrumentedRoutes(thisContext, originalRoutes, originalArgs) {
  * @param {Layer} b
  */
 function byLeastSpecificLayer(a, b) {
-  var regexpA = a.path && typeof a.path === 'object';
-  var regexpB = b.path && typeof b.path === 'object';
-  var pathA = normalizeLayerPath(a.path);
-  var pathB = normalizeLayerPath(b.path);
-  var wildA = pathA.endsWith('(.*)');
-  var wildB = pathB.endsWith('(.*)');
+  const regexpA = a.path && typeof a.path === 'object';
+  const regexpB = b.path && typeof b.path === 'object';
+  let pathA = normalizeLayerPath(a.path);
+  let pathB = normalizeLayerPath(b.path);
+  const wildA = pathA.endsWith('(.*)');
+  const wildB = pathB.endsWith('(.*)');
   if (wildA && wildB) return pathA.length - pathB.length;
   pathA = wildA ? pathA.slice(0, -4) : pathA;
   pathB = wildB ? pathB.slice(0, -4) : pathB;
@@ -111,7 +111,7 @@ function normalizeLayerPath(p) {
 }
 
 function annotateHttpEntrySpanWithPathTemplate(pathTemplate) {
-  var span = cls.getCurrentEntrySpan();
+  const span = cls.getCurrentEntrySpan();
   if (!span || span.n !== httpServer.spanName || span.pathTplFrozen) {
     return;
   }

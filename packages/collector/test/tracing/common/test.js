@@ -79,7 +79,7 @@ describe('tracing/common', function() {
                   expect(span.data.http.method).to.equal('GET');
                   expect(span.data.http.url).to.equal('/');
                   expect(span.data.http.status).to.equal(200);
-                  expect(span.data.http.host).to.equal('127.0.0.1:3215');
+                  expect(span.data.http.host).to.equal('localhost:3215');
                 }),
               Math.max(extendedTimeout / 2, 10000)
             )
@@ -104,7 +104,7 @@ describe('tracing/common', function() {
           expect(span.data.http.method).to.equal('GET');
           expect(span.data.http.url).to.equal('/');
           expect(span.data.http.status).to.equal(200);
-          expect(span.data.http.host).to.equal('127.0.0.1:3215');
+          expect(span.data.http.host).to.equal('localhost:3215');
         })
       );
     }
@@ -207,14 +207,14 @@ describe('tracing/common', function() {
           .sendRequest({
             path: '/with-log'
           })
-          .then(() => {
-            return testUtils.retry(() =>
+          .then(() =>
+            testUtils.retry(() =>
               agentControls.getSpans().then(spans => {
                 expect(spans.length).to.equal(1);
                 expect(spans[0].n).to.equal('node.http.server');
               })
-            );
-          }));
+            )
+          ));
     });
 
     describe('robustness against overriding Array.find', () => {
@@ -244,14 +244,14 @@ describe('tracing/common', function() {
           .sendRequest({
             path: '/'
           })
-          .then(() => {
-            return testUtils.retry(() =>
+          .then(() =>
+            testUtils.retry(() =>
               agentControls.getSpans().then(spans => {
                 expect(spans.length).to.equal(1);
                 expect(spans[0].n).to.equal('node.http.server');
               })
-            );
-          }));
+            )
+          ));
     });
   });
 

@@ -1,20 +1,20 @@
 'use strict';
 
-var shimmer = require('shimmer');
+const shimmer = require('shimmer');
 
-var requireHook = require('../../../util/requireHook');
-var tracingUtil = require('../../tracingUtil');
-var constants = require('../../constants');
-var cls = require('../../cls');
+const requireHook = require('../../../util/requireHook');
+const tracingUtil = require('../../tracingUtil');
+const constants = require('../../constants');
+const cls = require('../../cls');
 
-var logger;
-logger = require('../../../logger').getLogger('tracing/amqp', function(newLogger) {
+let logger;
+logger = require('../../../logger').getLogger('tracing/amqp', newLogger => {
   logger = newLogger;
 });
 
-var isActive = false;
+let isActive = false;
 
-exports.init = function() {
+exports.init = function init() {
   requireHook.onFileLoad(/\/amqplib\/lib\/channel\.js/, instrumentChannel);
   requireHook.onFileLoad(/\/amqplib\/lib\/channel_model\.js/, instrumentChannelModel);
   requireHook.onFileLoad(/\/amqplib\/lib\/callback_model\.js/, instrumentCallbackModel);
@@ -38,8 +38,8 @@ function instrumentCallbackModel(callbackModelModule) {
 function shimSendMessage(originalFunction) {
   return function() {
     if (isActive && cls.isTracing()) {
-      var originalArgs = new Array(arguments.length);
-      for (var i = 0; i < arguments.length; i++) {
+      const originalArgs = new Array(arguments.length);
+      for (let i = 0; i < arguments.length; i++) {
         originalArgs[i] = arguments[i];
       }
       return instrumentedSendMessage(this, originalFunction, originalArgs);
@@ -49,7 +49,7 @@ function shimSendMessage(originalFunction) {
 }
 
 function instrumentedSendMessage(ctx, originalSendMessage, originalArgs) {
-  var parentSpan = cls.getCurrentSpan();
+  const parentSpan = cls.getCurrentSpan();
 
   if (
     !cls.isTracing() || //
@@ -68,8 +68,8 @@ function instrumentedSendMessage(ctx, originalSendMessage, originalArgs) {
     // the span is finished and transmitted in instrumentedChannelModelPublish
   } else {
     // Otherwise, a normal channel was used and we need to create the context here as usual.
-    return cls.ns.runAndReturn(function() {
-      var span = cls.startSpan('rabbitmq', constants.EXIT);
+    return cls.ns.runAndReturn(() => {
+      const span = cls.startSpan('rabbitmq', constants.EXIT);
       processExitSpan(ctx, span, originalArgs);
       try {
         return originalSendMessage.apply(ctx, originalArgs);
@@ -90,12 +90,10 @@ function processExitSpan(ctx, span, originalArgs) {
   if (ctx.connection.stream) {
     // prettier-ignore
     span.data.rabbitmq.address =
-      (typeof ctx.connection.stream.getProtocol === 'function' ? 'amqps://' : 'amqp://') + //
-      ctx.connection.stream.remoteAddress +
-      ':' +
-      ctx.connection.stream.remotePort;
+      `${(typeof ctx.connection.stream.getProtocol === 'function' ? 'amqps://' : 'amqp://') + //
+ctx.connection.stream.remoteAddress}:${ctx.connection.stream.remotePort}`;
   }
-  var fieldsAndProperties = originalArgs[0] || {};
+  const fieldsAndProperties = originalArgs[0] || {};
   if (fieldsAndProperties.exchange) {
     span.data.rabbitmq.exchange = fieldsAndProperties.exchange;
   }
@@ -122,8 +120,8 @@ function setHeaders(map, span) {
 function shimDispatchMessage(originalFunction) {
   return function() {
     if (isActive) {
-      var originalArgs = new Array(arguments.length);
-      for (var i = 0; i < arguments.length; i++) {
+      const originalArgs = new Array(arguments.length);
+      for (let i = 0; i < arguments.length; i++) {
         originalArgs[i] = arguments[i];
       }
       return instrumentedDispatchMessage(this, originalFunction, originalArgs);
@@ -133,36 +131,37 @@ function shimDispatchMessage(originalFunction) {
 }
 
 function instrumentedDispatchMessage(ctx, originalDispatchMessage, originalArgs) {
-  var fields = originalArgs[0] || {};
-  var consumerTag = fields.consumerTag;
-  var consumer = ctx.consumers[consumerTag];
+  const fields = originalArgs[0] || {};
+  const consumerTag = fields.consumerTag;
+  const consumer = ctx.consumers[consumerTag];
   if (!consumer) {
     // amqplib will throw an error for this call because it can't be routed, so we don't create a span for it.
     return originalDispatchMessage.apply(ctx, originalArgs);
   }
 
-  var parentSpan = cls.getCurrentSpan();
+  const parentSpan = cls.getCurrentSpan();
   if (parentSpan) {
     logger.warn(
-      'Cannot start an AMQP entry span when another span is already active. Currently, the following span is ' +
-        'active: ' +
-        JSON.stringify(parentSpan)
+      // eslint-disable-next-line max-len
+      `Cannot start an AMQP entry span when another span is already active. Currently, the following span is active: ${JSON.stringify(
+        parentSpan
+      )}`
     );
     return originalDispatchMessage.apply(ctx, originalArgs);
   }
 
-  var headers =
+  const headers =
     originalArgs[1] && originalArgs[1].properties && originalArgs[1].properties.headers
       ? originalArgs[1].properties.headers
       : {};
 
-  return cls.ns.runAndReturn(function() {
+  return cls.ns.runAndReturn(() => {
     if (tracingUtil.readAttribCaseInsensitive(headers, constants.traceLevelHeaderName) === '0') {
       cls.setTracingLevel('0');
       return originalDispatchMessage.apply(ctx, originalArgs);
     }
 
-    var span = cls.startSpan(
+    const span = cls.startSpan(
       'rabbitmq',
       constants.ENTRY,
       tracingUtil.readAttribCaseInsensitive(headers, constants.traceIdHeaderName),
@@ -177,10 +176,8 @@ function instrumentedDispatchMessage(ctx, originalDispatchMessage, originalArgs)
     if (ctx.connection.stream) {
       // prettier-ignore
       span.data.rabbitmq.address =
-        (typeof ctx.connection.stream.getProtocol === 'function' ? 'amqps://' : 'amqp://') + //
-        ctx.connection.stream.remoteAddress +
-        ':' +
-        ctx.connection.stream.remotePort;
+        `${(typeof ctx.connection.stream.getProtocol === 'function' ? 'amqps://' : 'amqp://') + //
+ctx.connection.stream.remoteAddress}:${ctx.connection.stream.remotePort}`;
     }
     if (fields.exchange) {
       span.data.rabbitmq.exchange = fields.exchange;
@@ -192,7 +189,7 @@ function instrumentedDispatchMessage(ctx, originalDispatchMessage, originalArgs)
     try {
       return originalDispatchMessage.apply(ctx, originalArgs);
     } finally {
-      setImmediate(function() {
+      setImmediate(() => {
         // Client code is expected to end the span manually, end it automatically in case client code doesn't. Child
         // exit spans won't be captured, but at least the RabbitMQ entry span is there.
         span.d = Date.now() - span.ts;
@@ -205,8 +202,8 @@ function instrumentedDispatchMessage(ctx, originalDispatchMessage, originalArgs)
 function shimChannelModelGet(originalFunction) {
   return function() {
     if (isActive) {
-      var originalArgs = new Array(arguments.length);
-      for (var i = 0; i < arguments.length; i++) {
+      const originalArgs = new Array(arguments.length);
+      for (let i = 0; i < arguments.length; i++) {
         originalArgs[i] = arguments[i];
       }
       return instrumentedChannelModelGet(this, originalFunction, originalArgs);
@@ -219,16 +216,16 @@ function instrumentedChannelModelGet(ctx, originalGet, originalArgs) {
   // Each call to get has the potential to fetch a new message. We must create a new context and start a new span
   // *before* get is called, in case it indeed ends up fetching a new message. If the call ends up fetching no message,
   // we simply cancel the span instead of transmitting it.
-  return cls.ns.runPromise(function() {
-    var span = cls.startSpan('rabbitmq', constants.ENTRY);
-    return originalGet.apply(ctx, originalArgs).then(function(result) {
+  return cls.ns.runPromise(() => {
+    const span = cls.startSpan('rabbitmq', constants.ENTRY);
+    return originalGet.apply(ctx, originalArgs).then(result => {
       if (!result) {
         // get did not fetch a new message from RabbitMQ (because the queue has no messages), no need to create a span.
         span.cancel();
         return result;
       }
-      var fields = result.fields || {};
-      var headers = result.properties && result.properties.headers ? result.properties.headers : {};
+      const fields = result.fields || {};
+      const headers = result.properties && result.properties.headers ? result.properties.headers : {};
 
       if (tracingUtil.readAttribCaseInsensitive(headers, constants.traceLevelHeaderName) === '0') {
         cls.setTracingLevel('0');
@@ -236,8 +233,8 @@ function instrumentedChannelModelGet(ctx, originalGet, originalArgs) {
         return result;
       }
 
-      var traceId = tracingUtil.readAttribCaseInsensitive(headers, constants.traceIdHeaderName);
-      var parentSpanId = tracingUtil.readAttribCaseInsensitive(headers, constants.spanIdHeaderName);
+      const traceId = tracingUtil.readAttribCaseInsensitive(headers, constants.traceIdHeaderName);
+      const parentSpanId = tracingUtil.readAttribCaseInsensitive(headers, constants.spanIdHeaderName);
       if (traceId && parentSpanId) {
         span.t = traceId;
         span.p = parentSpanId;
@@ -253,10 +250,8 @@ function instrumentedChannelModelGet(ctx, originalGet, originalArgs) {
         span.data.rabbitmq.address =
           typeof ctx.connection.stream.getProtocol === 'function'
             ? 'amqps://'
-            : 'amqp://' + //
-              ctx.connection.stream.remoteAddress +
-              ':' +
-              ctx.connection.stream.remotePort;
+            : //
+              `amqp://${ctx.connection.stream.remoteAddress}:${ctx.connection.stream.remotePort}`;
       }
       if (fields.exchange) {
         span.data.rabbitmq.exchange = fields.exchange;
@@ -265,7 +260,7 @@ function instrumentedChannelModelGet(ctx, originalGet, originalArgs) {
         span.data.rabbitmq.key = fields.routingKey;
       }
 
-      setImmediate(function() {
+      setImmediate(() => {
         // Client code is expected to end the span manually, end it automatically in case client code doesn't. Child
         // exit spans won't be captured, but at least the RabbitMQ entry span is there.
         span.d = Date.now() - span.ts;
@@ -279,8 +274,8 @@ function instrumentedChannelModelGet(ctx, originalGet, originalArgs) {
 function shimCallbackModelGet(originalFunction) {
   return function() {
     if (isActive) {
-      var originalArgs = new Array(arguments.length);
-      for (var i = 0; i < arguments.length; i++) {
+      const originalArgs = new Array(arguments.length);
+      for (let i = 0; i < arguments.length; i++) {
         originalArgs[i] = arguments[i];
       }
       return instrumentedCallbackModelGet(this, originalFunction, originalArgs);
@@ -290,12 +285,12 @@ function shimCallbackModelGet(originalFunction) {
 }
 
 function instrumentedCallbackModelGet(ctx, originalGet, originalArgs) {
-  var originalCallback = null;
+  let originalCallback = null;
   if (originalArgs.length >= 3 && typeof originalArgs[2] === 'function') {
     originalCallback = originalArgs[2];
   }
 
-  originalArgs[2] = function(err, result) {
+  originalArgs[2] = (err, result) => {
     if (err || !result) {
       // get did not fetch a new message from RabbitMQ (because the queue has no messages), no need to create a span.
       if (originalCallback) {
@@ -304,19 +299,20 @@ function instrumentedCallbackModelGet(ctx, originalGet, originalArgs) {
       return;
     }
     // get did fetch a message, create a new cls context and a span
-    var parentSpan = cls.getCurrentSpan();
+    const parentSpan = cls.getCurrentSpan();
     if (parentSpan) {
       logger.warn(
-        'Cannot start an AMQP entry span when another span is already active. Currently, the following span is ' +
-          'active: ' +
-          JSON.stringify(parentSpan)
+        // eslint-disable-next-line max-len
+        `Cannot start an AMQP entry span when another span is already active. Currently, the following span is active: ${JSON.stringify(
+          parentSpan
+        )}`
       );
       return originalCallback(err, result);
     }
 
-    return cls.ns.runAndReturn(function() {
-      var fields = result.fields || {};
-      var headers = result.properties && result.properties.headers ? result.properties.headers : {};
+    return cls.ns.runAndReturn(() => {
+      const fields = result.fields || {};
+      const headers = result.properties && result.properties.headers ? result.properties.headers : {};
 
       if (tracingUtil.readAttribCaseInsensitive(headers, constants.traceLevelHeaderName) === '0') {
         cls.setTracingLevel('0');
@@ -326,7 +322,7 @@ function instrumentedCallbackModelGet(ctx, originalGet, originalArgs) {
         return;
       }
 
-      var span = cls.startSpan(
+      const span = cls.startSpan(
         'rabbitmq',
         constants.ENTRY,
         tracingUtil.readAttribCaseInsensitive(headers, constants.traceIdHeaderName),
@@ -342,10 +338,8 @@ function instrumentedCallbackModelGet(ctx, originalGet, originalArgs) {
         span.data.rabbitmq.address =
           typeof ctx.connection.stream.getProtocol === 'function'
             ? 'amqps://'
-            : 'amqp://' + //
-              ctx.connection.stream.remoteAddress +
-              ':' +
-              ctx.connection.stream.remotePort;
+            : //
+              `amqp://${ctx.connection.stream.remoteAddress}:${ctx.connection.stream.remotePort}`;
       }
       if (fields.exchange) {
         span.data.rabbitmq.exchange = fields.exchange;
@@ -354,7 +348,7 @@ function instrumentedCallbackModelGet(ctx, originalGet, originalArgs) {
         span.data.rabbitmq.key = fields.routingKey;
       }
 
-      setImmediate(function() {
+      setImmediate(() => {
         // Client code is expected to end the span manually, end it automatically in case client code doesn't. Child
         // exit spans won't be captured, but at least the RabbitMQ entry span is there.
         span.d = Date.now() - span.ts;
@@ -373,8 +367,8 @@ function instrumentedCallbackModelGet(ctx, originalGet, originalArgs) {
 function shimChannelModelPublish(originalFunction) {
   return function() {
     if (isActive) {
-      var originalArgs = new Array(arguments.length);
-      for (var i = 0; i < arguments.length; i++) {
+      const originalArgs = new Array(arguments.length);
+      for (let i = 0; i < arguments.length; i++) {
         originalArgs[i] = arguments[i];
       }
       return instrumentedChannelModelPublish(this, originalFunction, originalArgs);
@@ -386,17 +380,17 @@ function shimChannelModelPublish(originalFunction) {
 function instrumentedChannelModelPublish(ctx, originalFunction, originalArgs) {
   // The main work is actually done in instrumentedSendMessage which will be called by ConfirmChannel.publish
   // internally. We only instrument ConfirmChannel.publish to hook into the callback.
-  var parentSpan = cls.getCurrentSpan();
+  const parentSpan = cls.getCurrentSpan();
 
   if (!cls.isTracing() || constants.isExitSpan(parentSpan)) {
     return originalFunction.apply(ctx, originalArgs);
   }
 
-  return cls.ns.runAndReturn(function() {
-    var span = cls.startSpan('rabbitmq', constants.EXIT);
+  return cls.ns.runAndReturn(() => {
+    const span = cls.startSpan('rabbitmq', constants.EXIT);
     // everything else is handled in instrumentedSendMessage/processExitSpan
     if (originalArgs.length >= 5 && typeof originalArgs[4] === 'function') {
-      var originalCb = originalArgs[4];
+      const originalCb = originalArgs[4];
       originalArgs[4] = cls.ns.bind(function() {
         span.d = Date.now() - span.ts;
         span.transmit();
@@ -410,8 +404,8 @@ function instrumentedChannelModelPublish(ctx, originalFunction, originalArgs) {
 function shimCallbackModelPublish(originalFunction) {
   return function() {
     if (isActive) {
-      var originalArgs = new Array(arguments.length);
-      for (var i = 0; i < arguments.length; i++) {
+      const originalArgs = new Array(arguments.length);
+      for (let i = 0; i < arguments.length; i++) {
         originalArgs[i] = arguments[i];
       }
       return instrumentedCallbackModelPublish(this, originalFunction, originalArgs);
@@ -423,17 +417,17 @@ function shimCallbackModelPublish(originalFunction) {
 function instrumentedCallbackModelPublish(ctx, originalFunction, originalArgs) {
   // The main work is actually done in instrumentedSendMessage which will be called by ConfirmChannel.publish
   // internally. We only instrument ConfirmChannel.publish to hook into the callback.
-  var parentSpan = cls.getCurrentSpan();
+  const parentSpan = cls.getCurrentSpan();
 
   if (!cls.isTracing() || constants.isExitSpan(parentSpan)) {
     return originalFunction.apply(ctx, originalArgs);
   }
 
-  return cls.ns.runAndReturn(function() {
-    var span = cls.startSpan('rabbitmq', constants.EXIT);
+  return cls.ns.runAndReturn(() => {
+    const span = cls.startSpan('rabbitmq', constants.EXIT);
     // everything else is handled in instrumentedSendMessage/processExitSpan
     if (originalArgs.length >= 5 && typeof originalArgs[4] === 'function') {
-      var originalCb = originalArgs[4];
+      const originalCb = originalArgs[4];
       originalArgs[4] = cls.ns.bind(function() {
         span.d = Date.now() - span.ts;
         span.transmit();
@@ -444,10 +438,10 @@ function instrumentedCallbackModelPublish(ctx, originalFunction, originalArgs) {
   });
 }
 
-exports.activate = function() {
+exports.activate = function activate() {
   isActive = true;
 };
 
-exports.deactivate = function() {
+exports.deactivate = function deactivate() {
   isActive = false;
 };

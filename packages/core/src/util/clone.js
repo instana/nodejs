@@ -1,7 +1,7 @@
 'use strict';
 
 module.exports = function clone(x) {
-  var r;
+  let r;
   if (x === null || x === undefined) {
     return x;
   }
@@ -9,7 +9,7 @@ module.exports = function clone(x) {
   if (x.constructor === Array) {
     r = [];
 
-    for (var i = 0, n = x.length; i < n; i++) {
+    for (let i = 0, n = x.length; i < n; i++) {
       r[i] = clone(x[i]);
     }
 
@@ -20,7 +20,7 @@ module.exports = function clone(x) {
     r = {};
 
     // eslint-disable-next-line no-restricted-syntax
-    for (var key in x) {
+    for (let key in x) {
       // eslint-disable-next-line no-prototype-builtins
       if (x.hasOwnProperty(key)) {
         r[key] = clone(x[key]);

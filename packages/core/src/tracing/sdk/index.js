@@ -1,8 +1,8 @@
 'use strict';
 
-var callback = require('./sdk')(true);
-var promise = require('./sdk')(false);
-var cls;
+const callback = require('./sdk')(true);
+const promise = require('./sdk')(false);
+let cls;
 
 exports.init = function init(_cls) {
   cls = _cls;

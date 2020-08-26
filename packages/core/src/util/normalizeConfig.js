@@ -2,14 +2,14 @@
 
 'use strict';
 
-var supportedTracingVersion = require('../tracing/supportedVersion');
+const supportedTracingVersion = require('../tracing/supportedVersion');
 
-var logger;
-logger = require('../logger').getLogger('configuration', function(newLogger) {
+let logger;
+logger = require('../logger').getLogger('configuration', newLogger => {
   logger = newLogger;
 });
 
-var defaults = {
+const defaults = {
   serviceName: null,
 
   metrics: {
@@ -34,7 +34,7 @@ var defaults = {
   }
 };
 
-var validSecretsMatcherModes = ['equals-ignore-case', 'equals', 'contains-ignore-case', 'contains', 'regex', 'none'];
+const validSecretsMatcherModes = ['equals-ignore-case', 'equals', 'contains-ignore-case', 'contains', 'regex', 'none'];
 
 /**
  * Merges the config that was passed to the init function with environment variables and default values.
@@ -57,7 +57,7 @@ function normalizeServiceName(config) {
   }
   if (config.serviceName != null && typeof config.serviceName !== 'string') {
     logger.warn(
-      'Invalid configuration: config.serviceName is not a string, the value will be ignored: ' + config.serviceName
+      `Invalid configuration: config.serviceName is not a string, the value will be ignored: ${config.serviceName}`
     );
     config.serviceName = defaults.serviceName;
   }
@@ -140,7 +140,7 @@ function normalizeAutomaticTracingEnabled(config) {
   if (!supportedTracingVersion(process.versions.node)) {
     logger.warn(
       'Not enabling automatic tracing, this is an unsupported version of Node.js. ' +
-        'See: https://docs.instana.io/ecosystem/node-js/#supported-nodejs-versions'
+        'See: https://www.instana.com/docs/ecosystem/node-js/#supported-nodejs-versions'
     );
     config.tracing.automaticTracingEnabled = false;
     return;
@@ -176,18 +176,17 @@ function normalizeTracingHttp(config) {
   }
   if (!Array.isArray(config.tracing.http.extraHttpHeadersToCapture)) {
     logger.warn(
-      'Invalid configuration: config.tracing.http.extraHttpHeadersToCapture is not an array, ' +
-        'the value will be ignored: ' +
-        JSON.stringify(config.tracing.http.extraHttpHeadersToCapture)
+      `Invalid configuration: config.tracing.http.extraHttpHeadersToCapture is not an array, the value will be ignored: ${JSON.stringify(
+        config.tracing.http.extraHttpHeadersToCapture
+      )}`
     );
     config.tracing.http.extraHttpHeadersToCapture = defaults.tracing.http.extraHttpHeadersToCapture;
     return;
   }
 
-  config.tracing.http.extraHttpHeadersToCapture = config.tracing.http.extraHttpHeadersToCapture.map(function(s) {
-    // Node.js HTTP API turns all incoming HTTP headers into lowercase.
-    return s.toLowerCase();
-  });
+  config.tracing.http.extraHttpHeadersToCapture = config.tracing.http.extraHttpHeadersToCapture.map((
+    s // Node.js HTTP API turns all incoming HTTP headers into lowercase.
+  ) => s.toLowerCase());
 }
 
 function normalizeTracingStackTraceLength(config) {
@@ -231,7 +230,7 @@ function parseStringStackTraceLength(config, value) {
 
 function normalizeNumericalStackTraceLength(numericalLength) {
   // just in case folks provide non-integral numbers or negative numbers
-  var normalized = Math.abs(Math.round(numericalLength));
+  const normalized = Math.abs(Math.round(numericalLength));
   if (normalized !== numericalLength) {
     logger.warn(
       'Normalized the provided value of config.tracing.stackTraceLength (%s) to %s.',
@@ -250,12 +249,8 @@ function normalizeDisabledTracers(config) {
   ) {
     config.tracing.disabledTracers = process.env['INSTANA_DISABLED_TRACERS']
       .split(',')
-      .map(function(key) {
-        return key.trim().toLowerCase();
-      })
-      .filter(function(key) {
-        return key.length >= 0;
-      });
+      .map(key => key.trim().toLowerCase())
+      .filter(key => key.length >= 0);
   }
 
   if (!config.tracing.disabledTracers) {
@@ -264,18 +259,17 @@ function normalizeDisabledTracers(config) {
 
   if (!Array.isArray(config.tracing.disabledTracers)) {
     logger.warn(
-      'Invalid configuration: config.tracing.disabledTracers is not an array, ' +
-        'the value will be ignored: ' +
-        JSON.stringify(config.tracing.disabledTracers)
+      `Invalid configuration: config.tracing.disabledTracers is not an array, the value will be ignored: ${JSON.stringify(
+        config.tracing.disabledTracers
+      )}`
     );
     config.tracing.disabledTracers = defaults.tracing.disabledTracers;
     return;
   }
 
-  config.tracing.disabledTracers = config.tracing.disabledTracers.map(function(s) {
-    // We'll check for matches in an case-insensitive fashion
-    return s.toLowerCase();
-  });
+  config.tracing.disabledTracers = config.tracing.disabledTracers.map((
+    s // We'll check for matches in an case-insensitive fashion
+  ) => s.toLowerCase());
 }
 
 function normalizeSecrets(config) {
@@ -311,8 +305,8 @@ function normalizeSecrets(config) {
 }
 
 function normalizeSingleValue(configValue, defaultValue, configPath, envVarKey) {
-  var envVarVal = process.env[envVarKey];
-  var originalValue = configValue;
+  const envVarVal = process.env[envVarKey];
+  let originalValue = configValue;
   if (configValue == null && envVarVal == null) {
     return defaultValue;
   } else if (configValue == null && envVarVal != null) {

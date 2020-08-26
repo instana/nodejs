@@ -1,18 +1,18 @@
 'use strict';
 
-var slidingWindow = require('@instana/core').util.slidingWindow;
+const slidingWindow = require('@instana/core').util.slidingWindow;
 
-var logger = require('@instana/core').logger.getLogger('metrics');
-exports.setLogger = function(_logger) {
+let logger = require('@instana/core').logger.getLogger('metrics');
+exports.setLogger = function setLogger(_logger) {
   logger = _logger;
 };
 
-var windowOpts = { duration: 1000 };
-var minorGcWindow = slidingWindow.create(windowOpts);
-var majorGcWindow = slidingWindow.create(windowOpts);
-var incrementalMarkingsWindow = slidingWindow.create(windowOpts);
-var processWeakCallbacksWindow = slidingWindow.create(windowOpts);
-var gcPauseWindow = slidingWindow.create(windowOpts);
+const windowOpts = { duration: 1000 };
+const minorGcWindow = slidingWindow.create(windowOpts);
+const majorGcWindow = slidingWindow.create(windowOpts);
+const incrementalMarkingsWindow = slidingWindow.create(windowOpts);
+const processWeakCallbacksWindow = slidingWindow.create(windowOpts);
+const gcPauseWindow = slidingWindow.create(windowOpts);
 
 exports.payloadPrefix = 'gc';
 exports.currentPayload = {
@@ -25,13 +25,13 @@ exports.currentPayload = {
 };
 
 try {
-  var gcStats = require('gcstats.js');
-  gcStats.on('stats', function(stats) {
+  const gcStats = require('gcstats.js');
+  gcStats.on('stats', stats => {
     // gcstats exposes start and end in nanoseconds
-    var pause = (stats.end - stats.start) / 1000000;
+    const pause = (stats.end - stats.start) / 1000000;
     gcPauseWindow.addPoint(pause);
 
-    var type = stats.gctype;
+    const type = stats.gctype;
     if (type === 1) {
       minorGcWindow.addPoint(1);
     } else if (type === 2) {
@@ -61,11 +61,10 @@ try {
   );
 }
 
-var reducingIntervalHandle;
+let reducingIntervalHandle;
 
-// always active
-exports.activate = function() {
-  reducingIntervalHandle = setInterval(function() {
+exports.activate = function activate() {
+  reducingIntervalHandle = setInterval(() => {
     exports.currentPayload.minorGcs = minorGcWindow.sum();
     exports.currentPayload.majorGcs = majorGcWindow.sum();
     exports.currentPayload.incrementalMarkings = incrementalMarkingsWindow.sum();
@@ -75,6 +74,6 @@ exports.activate = function() {
   reducingIntervalHandle.unref();
 };
 
-exports.deactivate = function() {
+exports.deactivate = function deactivate() {
   clearInterval(reducingIntervalHandle);
 };

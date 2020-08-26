@@ -1,5 +1,33 @@
 # Changelog
 
+## Unreleased
+- Fix(HTTP1/Server): Also set Server-Timing header when X-INSTANA-T is incoming (that is, not only when we start a fresh trace).
+- Fix(HTTP/Server): Do not append another intid key-value pair to Server-Timing if it is already present.
+- Fix(HTTP2/Server): Add support for website monitoring back end correlation via Server-Timing header.
+- Fix(HTTP2/Server): Add support for X-Instana-Service.
+- Fix(HTTP2/Server): Inject the trace ID into the request to enable application code to inject it into the response body.
+- Fix(HTTP2/Server): Use case-insensitive header matching as incoming headers are already normalized to lower case (performance improvement).
+
+## 1.105.1
+- Fall back to `process.mainModule.filename` as the Node.js app's name when the `package.json` file is not present.
+- Capture dependencies of an app even if the `package.json` file is not present, by inspecting the `node_modules` folder that is closest to `process.mainModule` in the file system.
+
+## 1.105.0
+- Add instrumentation the [Google Cloud Storage client](https://googleapis.dev/nodejs/storage/latest/index.html).
+
+## 1.104.0
+- Drop support for Node.js versions 4 (which was EOL 2018-04-30) and 5 (EOL 2016-06-30) in `@instana/collector`. If you want to use `@instana/collector` with Node.js version 4 or 5 please pin `@instana/collector` to version `1.103.0`.
+- Fix: Capture MongoDB aggregate operations correctly.
+- Fix: Keep async context across Mongoose custom thenables.
+
+## 1.103.0
+- Instrument Node.js core [http2 module](https://nodejs.org/api/http2.html) to trace HTTP/2 communication (except for server push/`pushStream`).
+
+## 1.102.0
+- Instrument [superagent's](https://www.npmjs.com/package/superagent) custom thenable to keep asynchronous context.
+- Provide experimental API to instrument specific modules on demand for non-standard build/deployment scenarios (e.g. bundling dependencies).
+- Fix captured protocol for https URLs in some HTTP exit spans.
+
 ## 1.101.1
 - [AWS Fargate]: Collect Docker metrics on platform version 1.4.0, too.
 
@@ -23,7 +51,7 @@
 - Fix PID used in profiling payload when running in a container.
 
 ## 1.98.0
-- Add `@instana/autoprofile` to support [Instana AutoProfile™](https://docs.instana.io/profiling/) (automated and continuous production profiler). Instana AutoProfile is currently opt-in and can be enabled with the config option `autoProfile: true` or via the environment variable `INSTANA_AUTO_PROFILE=true`.
+- Add `@instana/autoprofile` to support [Instana AutoProfile™](https://www.instana.com/docs/profiling/) (automated and continuous production profiler). Instana AutoProfile is currently opt-in and can be enabled with the config option `autoProfile: true` or via the environment variable `INSTANA_AUTO_PROFILE=true`.
 
 ## 1.97.1
 - Update to `netlinkwrapper@1.2.0`.
@@ -97,7 +125,7 @@
 
 ## 1.89.0
 - Instrument [Apigee Microgateway/edgemicro's](https://www.npmjs.com/package/edgemicro) worker processes automatically when they are spawned.
-- Provide an executable for static instrumentation of a globally installed [edgemicro](https://www.npmjs.com/package/edgemicro) CLI (see [our docs](https://docs.instana.io/ecosystem/node-js/edgemicro) for details).
+- Provide an executable for static instrumentation of a globally installed [edgemicro](https://www.npmjs.com/package/edgemicro) CLI (see [our docs](https://www.instana.com/docs/ecosystem/node-js/edgemicro) for details).
 - Keep asynchronous context across [memored](https://www.npmjs.com/package/memored) IPC communication gaps.
 
 ## 1.88.1

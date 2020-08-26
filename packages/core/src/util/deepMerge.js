@@ -16,8 +16,8 @@ module.exports = function deepMerge(target, source) {
   }
 
   if (isObject(target) && isObject(source)) {
-    for (var i = 0; i < Object.keys(source).length; i++) {
-      var key = Object.keys(source)[i];
+    for (let i = 0; i < Object.keys(source).length; i++) {
+      const key = Object.keys(source)[i];
       if (source[key] == null && target[key] != null) {
         // nothing to do, keep target[key] in place instead of overwriting it with null/undefined
       } else if (target[key] == null || !isObject(source[key]) || !isObject(target[key])) {

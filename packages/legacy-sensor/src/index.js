@@ -1,6 +1,6 @@
 'use strict';
 
-var instanaNodeJsCollector = require('@instana/collector');
+const instanaNodeJsCollector = require('@instana/collector');
 
 // eslint-disable-next-line no-console
 console.warn(

@@ -206,9 +206,7 @@ app.get('/transaction', (req, res) => {
             log('Failed to execute client transaction', err4);
             return res.status(500).json(err4);
           }
-          request(`http://127.0.0.1:${agentPort}`).then(() => {
-            return res.json(result3);
-          });
+          request(`http://127.0.0.1:${agentPort}`).then(() => res.json(result3));
         });
       });
     });

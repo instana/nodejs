@@ -1,20 +1,20 @@
 'use strict';
 
-var shimmer = require('shimmer');
+const shimmer = require('shimmer');
 
-var requireHook = require('../../../util/requireHook');
-var tracingUtil = require('../../tracingUtil');
-var constants = require('../../constants');
-var cls = require('../../cls');
+const requireHook = require('../../../util/requireHook');
+const tracingUtil = require('../../tracingUtil');
+const constants = require('../../constants');
+const cls = require('../../cls');
 
-var logger;
-logger = require('../../../logger').getLogger('tracing/kafka-node', function(newLogger) {
+let logger;
+logger = require('../../../logger').getLogger('tracing/kafka-node', newLogger => {
   logger = newLogger;
 });
 
-var isActive = false;
+let isActive = false;
 
-exports.init = function() {
+exports.init = function init() {
   requireHook.onModuleLoad('kafka-node', instrument);
 };
 
@@ -41,8 +41,8 @@ function shimSend(original) {
 }
 
 function instrumentedSend(ctx, originalSend, produceRequests, cb) {
-  var parentSpan = cls.getCurrentSpan();
-  var args = [produceRequests];
+  const parentSpan = cls.getCurrentSpan();
+  const args = [produceRequests];
 
   // Possibly bail early
   if (!cls.isTracing() || constants.isExitSpan(parentSpan) || !produceRequests || produceRequests.length === 0) {
@@ -53,9 +53,9 @@ function instrumentedSend(ctx, originalSend, produceRequests, cb) {
     return originalSend.apply(ctx, args);
   }
 
-  return cls.ns.runAndReturn(function() {
-    var span = cls.startSpan('kafka', constants.EXIT);
-    var produceRequest = produceRequests[0];
+  return cls.ns.runAndReturn(() => {
+    const span = cls.startSpan('kafka', constants.EXIT);
+    const produceRequest = produceRequests[0];
     span.b = { s: produceRequests.length };
     span.stack = tracingUtil.getStackTrace(instrumentedSend);
     span.data.kafka = {
@@ -89,21 +89,22 @@ function shimEmit(original) {
       return original.apply(this, arguments);
     }
 
-    var originalThis = this;
-    var originalArgs = arguments;
+    const originalThis = this;
+    const originalArgs = arguments;
 
-    var parentSpan = cls.getCurrentSpan();
+    const parentSpan = cls.getCurrentSpan();
     if (parentSpan) {
       logger.warn(
-        'Cannot start a Kafka entry span when another span is already active. Currently, the following span is ' +
-          'active: ' +
-          JSON.stringify(parentSpan)
+        // eslint-disable-next-line max-len
+        `Cannot start a Kafka entry span when another span is already active. Currently, the following span is active: ${JSON.stringify(
+          parentSpan
+        )}`
       );
       return original.apply(originalThis, originalArgs);
     }
 
-    return cls.ns.runAndReturn(function() {
-      var span = cls.startSpan('kafka', constants.ENTRY);
+    return cls.ns.runAndReturn(() => {
+      const span = cls.startSpan('kafka', constants.ENTRY);
       span.stack = [];
       span.data.kafka = {
         access: 'consume',
@@ -113,7 +114,7 @@ function shimEmit(original) {
       try {
         return original.apply(originalThis, originalArgs);
       } finally {
-        setImmediate(function() {
+        setImmediate(() => {
           span.d = Date.now() - span.ts;
           span.transmit();
         });
@@ -122,10 +123,10 @@ function shimEmit(original) {
   };
 }
 
-exports.activate = function() {
+exports.activate = function activate() {
   isActive = true;
 };
 
-exports.deactivate = function() {
+exports.deactivate = function deactivate() {
   isActive = false;
 };

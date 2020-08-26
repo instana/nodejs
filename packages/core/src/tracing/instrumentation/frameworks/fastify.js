@@ -1,20 +1,20 @@
 'use strict';
 
-var requireHook = require('../../../util/requireHook');
-var httpServer = require('../protocols/httpServer');
-var cls = require('../../cls');
+const requireHook = require('../../../util/requireHook');
+const httpServer = require('../protocols/httpServer');
+const cls = require('../../cls');
 
-var active = false;
+let active = false;
 
-exports.activate = function() {
+exports.activate = function activate() {
   active = true;
 };
 
-exports.deactivate = function() {
+exports.deactivate = function deactivate() {
   active = false;
 };
 
-exports.init = function() {
+exports.init = function init() {
   requireHook.onModuleLoad('fastify', instrument);
 };
 
@@ -33,28 +33,28 @@ function instrument(build) {
   }
 
   // copy further exported properties
-  Object.keys(build).forEach(function(k) {
+  Object.keys(build).forEach(k => {
     overwrittenBuild[k] = build[k];
   });
 
   return overwrittenBuild;
 
   function overwrittenBuild() {
-    var app = build.apply(this, arguments);
+    const app = build.apply(this, arguments);
 
     if (app.route) {
-      var originalRoute = app.route;
+      const originalRoute = app.route;
       app.route = function shimmedRoute(opts) {
         if (opts.handler) {
-          var originalHandler = opts.handler;
+          const originalHandler = opts.handler;
           opts.handler = function shimmedHandler() {
             annotateHttpEntrySpanWithPathTemplate(app, opts);
             return originalHandler.apply(this, arguments);
           };
         }
 
-        var preHandler;
-        var preHandlerKey;
+        let preHandler;
+        let preHandlerKey;
         if (opts.preHandler) {
           // In Fastify 2.x, the attribute is called preHandler.
           preHandler = opts.preHandler;
@@ -92,12 +92,12 @@ function annotateHttpEntrySpanWithPathTemplate(app, opts) {
     return;
   }
 
-  var span = cls.getCurrentEntrySpan();
+  const span = cls.getCurrentEntrySpan();
   if (!span || span.n !== httpServer.spanName || span.pathTplFrozen) {
     return;
   }
 
-  var basePathDescriptor = Object.getOwnPropertyDescriptor(app, 'basePath');
-  var basePathOrPrefix = basePathDescriptor && basePathDescriptor.get ? app.prefix : app.basePath;
+  const basePathDescriptor = Object.getOwnPropertyDescriptor(app, 'basePath');
+  const basePathOrPrefix = basePathDescriptor && basePathDescriptor.get ? app.prefix : app.basePath;
   span.data.http.path_tpl = (basePathOrPrefix || '') + (opts.url || opts.path || '/');
 }

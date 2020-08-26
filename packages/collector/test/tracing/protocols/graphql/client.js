@@ -65,13 +65,13 @@ app.post('/promise', (req, res) => runQuery(req, res, 'promise'));
 
 app.post('/array', (req, res) => runQuery(req, res, 'array'));
 
-app.post('/mutation', (req, res) => {
-  return runMutation(req, res, {
+app.post('/mutation', (req, res) =>
+  runMutation(req, res, {
     id: 4,
     name: 'The Investigator',
     profession: 'Zombie Protomolecule Hallucination'
-  });
-});
+  })
+);
 
 app.post('/subscription', (req, res) => establishSubscription(req, res));
 
@@ -172,7 +172,7 @@ function runQueryViaAmqp(query, res) {
   const requestBody = JSON.stringify({ query });
 
   channel.sendToQueue(requestQueueName, Buffer.from(requestBody), {
-    correlationId: correlationId,
+    correlationId,
     replyTo: responseQueueName
   });
 }
@@ -243,8 +243,8 @@ function createSubscriptionObservable(webSocketUrl, query, variables) {
   const webSocketClient = new SubscriptionClient(webSocketUrl, { reconnect: true }, ws);
   const webSocketLink = new WebSocketLink(webSocketClient);
   return execute(webSocketLink, {
-    query: query,
-    variables: variables
+    query,
+    variables
   });
 }
 

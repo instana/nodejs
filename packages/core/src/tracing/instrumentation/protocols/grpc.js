@@ -1,29 +1,29 @@
 'use strict';
 
-var shimmer = require('shimmer');
+const shimmer = require('shimmer');
 
-var logger;
-logger = require('../../../logger').getLogger('tracing/grpc', function(newLogger) {
+let logger;
+logger = require('../../../logger').getLogger('tracing/grpc', newLogger => {
   logger = newLogger;
 });
 
-var requireHook = require('../../../util/requireHook');
-var tracingUtil = require('../../tracingUtil');
-var constants = require('../../constants');
-var cls = require('../../cls');
+const requireHook = require('../../../util/requireHook');
+const tracingUtil = require('../../tracingUtil');
+const constants = require('../../constants');
+const cls = require('../../cls');
 
-var Metadata;
-var isActive = false;
+let Metadata;
+let isActive = false;
 
-var typeUnary = 'unary';
-var typeServerStream = 'server_stream';
-var typeClientStream = 'client_stream';
-var typeBidi = 'bidi';
-var addressRegex = /^(.*):(\d+)$/;
+const typeUnary = 'unary';
+const typeServerStream = 'server_stream';
+const typeClientStream = 'client_stream';
+const typeBidi = 'bidi';
+const addressRegex = /^(.*):(\d+)$/;
 
-var supportedTypes = [typeUnary, typeServerStream, typeClientStream, typeBidi];
-var typesWithCallback = [typeUnary, typeClientStream];
-var typesWithCallEnd = [typeServerStream, typeBidi];
+const supportedTypes = [typeUnary, typeServerStream, typeClientStream, typeBidi];
+const typesWithCallback = [typeUnary, typeClientStream];
+const typesWithCallEnd = [typeServerStream, typeBidi];
 
 exports.init = function() {
   requireHook.onModuleLoad('grpc', instrumentGrpc);
@@ -42,15 +42,15 @@ function instrumentServer(serverModule) {
 function shimServerRegister(originalFunction) {
   return function(name, handler, serialize, deserialize, type) {
     if (supportedTypes.indexOf(type) < 0) {
-      logger.warn('Failed to instrument GRPC entry ' + name + ', type is unsupported: ' + type);
+      logger.warn(`Failed to instrument GRPC entry ${name}, type is unsupported: ${type}`);
       return originalFunction.apply(this, arguments);
     }
-    var originalArgs = new Array(arguments.length);
-    for (var i = 0; i < arguments.length; i++) {
+    const originalArgs = new Array(arguments.length);
+    for (let i = 0; i < arguments.length; i++) {
       originalArgs[i] = arguments[i];
     }
     // wrap handler for service method that is being registered
-    var originalHandler = originalArgs[1];
+    const originalHandler = originalArgs[1];
     originalArgs[1] = createInstrumentedServerHandler(name, type, originalHandler);
     return originalFunction.apply(this, originalArgs);
   };
@@ -58,10 +58,10 @@ function shimServerRegister(originalFunction) {
 
 function createInstrumentedServerHandler(name, type, originalHandler) {
   return function(call) {
-    var originalThis = this;
-    var originalArgs = arguments;
+    const originalThis = this;
+    const originalArgs = arguments;
 
-    var parentSpan = cls.getCurrentSpan();
+    const parentSpan = cls.getCurrentSpan();
     if (parentSpan) {
       logger.warn(
         'Cannot start a GRPC entry span when another span is already active. Currently, the following span is ' +
@@ -71,9 +71,9 @@ function createInstrumentedServerHandler(name, type, originalHandler) {
       return originalHandler.apply(originalThis, originalArgs);
     }
 
-    return cls.ns.runAndReturn(function() {
-      var metadata = call.metadata;
-      var level = readMetadata(metadata, constants.traceLevelHeaderName);
+    return cls.ns.runAndReturn(() => {
+      const metadata = call.metadata;
+      const level = readMetadata(metadata, constants.traceLevelHeaderName);
       if (level === '0') {
         cls.setTracingLevel('0');
       }
@@ -83,15 +83,15 @@ function createInstrumentedServerHandler(name, type, originalHandler) {
 
       cls.ns.bindEmitter(call);
 
-      var incomingTraceId = readMetadata(metadata, constants.traceIdHeaderName);
-      var incomingSpanId = readMetadata(metadata, constants.spanIdHeaderName);
-      var span = cls.startSpan('rpc-server', constants.ENTRY, incomingTraceId, incomingSpanId);
+      const incomingTraceId = readMetadata(metadata, constants.traceIdHeaderName);
+      const incomingSpanId = readMetadata(metadata, constants.spanIdHeaderName);
+      const span = cls.startSpan('rpc-server', constants.ENTRY, incomingTraceId, incomingSpanId);
       span.data.rpc = {
         call: dropLeadingSlash(name),
         flavor: 'grpc'
       };
       if (typesWithCallback.indexOf(type) >= 0) {
-        var originalCallback = originalArgs[1];
+        const originalCallback = originalArgs[1];
         originalArgs[1] = cls.ns.bind(function(err) {
           if (err) {
             span.ec = 1;
@@ -105,23 +105,23 @@ function createInstrumentedServerHandler(name, type, originalHandler) {
         });
       }
       if (typesWithCallEnd.indexOf(type) >= 0) {
-        var originalEnd = call.end;
+        const originalEnd = call.end;
         call.end = function() {
           span.d = Date.now() - span.ts;
-          process.nextTick(function() {
+          process.nextTick(() => {
             // If the server emits an error, grpc calls call.end before the 'error' event handlers are processed, so we
             // give on('error') a chance to fire and mark the span erroneous before transmitting it.
             span.transmit();
           });
           return originalEnd.apply(this, arguments);
         };
-        call.on('error', function(err) {
+        call.on('error', err => {
           span.ec = 1;
           if (err.message || err.details) {
             span.data.rpc.error = err.message || err.details;
           }
         });
-        call.on('cancelled', function() {
+        call.on('cancelled', () => {
           span.d = Date.now() - span.ts;
           span.transmit();
         });
@@ -142,13 +142,13 @@ function instrumentClient(clientModule) {
 
 function instrumentedMakeClientConstructor(originalFunction) {
   return function(methods) {
-    var address = {
+    const address = {
       host: undefined,
       port: undefined
     };
-    var ServiceClient = originalFunction.apply(this, arguments);
-    var InstrumentedServiceClient = function(addressString) {
-      var parseResult = addressRegex.exec(addressString);
+    const ServiceClient = originalFunction.apply(this, arguments);
+    const InstrumentedServiceClient = function(addressString) {
+      const parseResult = addressRegex.exec(addressString);
       if (parseResult && parseResult.length === 3) {
         address.host = parseResult[1];
         address.port = parseResult[2];
@@ -162,10 +162,10 @@ function instrumentedMakeClientConstructor(originalFunction) {
     // Re-set the original constructor.
     InstrumentedServiceClient.prototype.constructor = InstrumentedServiceClient;
 
-    Object.keys(methods).forEach(function(name) {
-      var methodDefinition = methods[name];
-      var rpcPath = methodDefinition.path;
-      var shimFn = shimClientMethod.bind(
+    Object.keys(methods).forEach(name => {
+      const methodDefinition = methods[name];
+      const rpcPath = methodDefinition.path;
+      const shimFn = shimClientMethod.bind(
         null,
         address,
         rpcPath,
@@ -185,12 +185,12 @@ function instrumentedMakeClientConstructor(originalFunction) {
 
 function shimClientMethod(address, rpcPath, requestStream, responseStream, originalFunction) {
   function shimmedFunction() {
-    var parentSpan = cls.getCurrentSpan();
-    var isTracing = isActive && cls.isTracing() && parentSpan && !constants.isExitSpan(parentSpan);
-    var isSuppressed = cls.tracingLevel() === '0';
+    const parentSpan = cls.getCurrentSpan();
+    const isTracing = isActive && cls.isTracing() && parentSpan && !constants.isExitSpan(parentSpan);
+    const isSuppressed = cls.tracingLevel() === '0';
     if (isTracing || isSuppressed) {
-      var originalArgs = new Array(arguments.length);
-      for (var i = 0; i < arguments.length; i++) {
+      const originalArgs = new Array(arguments.length);
+      for (let i = 0; i < arguments.length; i++) {
         originalArgs[i] = arguments[i];
       }
 
@@ -224,8 +224,8 @@ function instrumentedClientMethod(
   requestStream,
   responseStream
 ) {
-  return cls.ns.runAndReturn(function() {
-    var span = cls.startSpan('rpc-client', constants.EXIT);
+  return cls.ns.runAndReturn(() => {
+    const span = cls.startSpan('rpc-client', constants.EXIT);
     span.ts = Date.now();
     span.stack = tracingUtil.getStackTrace(instrumentedClientMethod);
     span.data.rpc = {
@@ -237,18 +237,18 @@ function instrumentedClientMethod(
 
     modifyArgs(originalArgs, span, responseStream);
 
-    var call = originalFunction.apply(ctx, originalArgs);
+    const call = originalFunction.apply(ctx, originalArgs);
     if (requestStream || responseStream) {
       cls.ns.bindEmitter(call);
     }
     if (responseStream) {
-      call.on('end', function() {
+      call.on('end', () => {
         span.d = Date.now() - span.ts;
         span.transmit();
       });
-      call.on('error', function(err) {
+      call.on('error', err => {
         span.d = Date.now() - span.ts;
-        var errorMessage = err.details || err.message;
+        const errorMessage = err.details || err.message;
         if (errorMessage !== 'Cancelled') {
           span.ec = 1;
           if (errorMessage) {
@@ -275,10 +275,10 @@ function modifyArgs(originalArgs, span, responseStream) {
   // Find callback, metadata and options in original arguments, the parameters can be:
   // (message, metadata, options, callback) but all of them except the message can be optional.
   // All of
-  var metadataIndex = -1;
-  var optionsIndex = -1;
-  var callbackIndex = -1;
-  for (var i = originalArgs.length - 1; i >= 0; i--) {
+  let metadataIndex = -1;
+  let optionsIndex = -1;
+  let callbackIndex = -1;
+  for (let i = originalArgs.length - 1; i >= 0; i--) {
     if (originalArgs[i] && originalArgs[i].constructor && originalArgs[i].constructor.name === 'Metadata') {
       metadataIndex = i;
     } else if (!responseStream && typeof originalArgs[i] === 'function') {
@@ -293,11 +293,11 @@ function modifyArgs(originalArgs, span, responseStream) {
   // callbackIndex will only be >= 0 if !responseStream
   if (span && callbackIndex >= 0) {
     // we are tracing, so we wrap the original callback to get notified when the GRPC call finishes
-    var originalCallback = originalArgs[callbackIndex];
+    const originalCallback = originalArgs[callbackIndex];
     originalArgs[callbackIndex] = cls.ns.bind(function(err) {
       span.d = Date.now() - span.ts;
       if (err) {
-        var errorMessage = err.details || err.message;
+        const errorMessage = err.details || err.message;
         if (errorMessage !== 'Cancelled') {
           span.ec = 1;
           if (errorMessage) {
@@ -310,7 +310,7 @@ function modifyArgs(originalArgs, span, responseStream) {
     });
   }
 
-  var metadata;
+  let metadata;
   if (metadataIndex >= 0) {
     // If metadata has been provided, modify the existing metadata object.
     metadata = originalArgs[metadataIndex];
@@ -344,7 +344,7 @@ function modifyArgs(originalArgs, span, responseStream) {
 function readMetadata(metadata, key) {
   // The grpc library normalizes keys internally to lower-case, so we do not need to take care of reading
   // them case-insensitive ourselves.
-  var values = metadata.get(key);
+  const values = metadata.get(key);
   if (values && values.length > 0) {
     return values[0];
   }
@@ -362,7 +362,7 @@ function dropLeadingSlash(rpcPath) {
 }
 
 function copyAttributes(from, to) {
-  Object.keys(from).forEach(function(attribute) {
+  Object.keys(from).forEach(attribute => {
     to[attribute] = from[attribute];
   });
   return to;

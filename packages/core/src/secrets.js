@@ -1,12 +1,12 @@
 'use strict';
 
-var logger;
-logger = require('./logger').getLogger('secrets', function(newLogger) {
+let logger;
+logger = require('./logger').getLogger('secrets', newLogger => {
   logger = newLogger;
 });
 
-var defaultMatcherMode = 'contains-ignore-case';
-var defaultSecrets = ['key', 'pass', 'secret'];
+const defaultMatcherMode = 'contains-ignore-case';
+const defaultSecrets = ['key', 'pass', 'secret'];
 
 exports.matchers = {
   'equals-ignore-case': function createEqualsIgnoreCaseMatcher(secrets) {
@@ -15,7 +15,7 @@ exports.matchers = {
       if (key == null || typeof key !== 'string') {
         return false;
       }
-      for (var i = 0; i < secrets.length; i++) {
+      for (let i = 0; i < secrets.length; i++) {
         if (key.toLowerCase() === secrets[i]) {
           return true;
         }
@@ -30,7 +30,7 @@ exports.matchers = {
       if (key == null || typeof key !== 'string') {
         return false;
       }
-      for (var i = 0; i < secrets.length; i++) {
+      for (let i = 0; i < secrets.length; i++) {
         if (key === secrets[i]) {
           return true;
         }
@@ -45,7 +45,7 @@ exports.matchers = {
       if (key == null || typeof key !== 'string') {
         return false;
       }
-      for (var i = 0; i < secrets.length; i++) {
+      for (let i = 0; i < secrets.length; i++) {
         if (key.toLowerCase().indexOf(secrets[i]) >= 0) {
           return true;
         }
@@ -60,7 +60,7 @@ exports.matchers = {
       if (key == null || typeof key !== 'string') {
         return false;
       }
-      for (var i = 0; i < secrets.length; i++) {
+      for (let i = 0; i < secrets.length; i++) {
         if (key.indexOf(secrets[i]) >= 0) {
           return true;
         }
@@ -71,13 +71,13 @@ exports.matchers = {
 
   regex: function createRegexMatcher(secrets) {
     secrets = checkSecrets(secrets);
-    var regexes = [];
-    secrets.forEach(function(regexString) {
+    const regexes = [];
+    secrets.forEach(regexString => {
       try {
         // The Java regex matcher only matches if the whole string is a match, JS RegExp.test matches if the regex is
         // found as a substring. To achieve parity with the Java functionality, we enclose the regex in '^' and '$'.
         if (regexString.indexOf('^') !== 0) {
-          regexString = '^' + regexString;
+          regexString = `^${regexString}`;
         }
         if (regexString.indexOf('$') !== regexString.length - 1) {
           regexString += '$';
@@ -95,7 +95,7 @@ exports.matchers = {
       if (key == null || typeof key !== 'string') {
         return false;
       }
-      for (var i = 0; i < regexes.length; i++) {
+      for (let i = 0; i < regexes.length; i++) {
         if (regexes[i].test(key)) {
           return true;
         }
@@ -115,8 +115,8 @@ function checkSecrets(configuredSecrets) {
   if (!Array.isArray(configuredSecrets)) {
     return defaultSecrets;
   }
-  var secrets = [];
-  configuredSecrets.forEach(function(s) {
+  const secrets = [];
+  configuredSecrets.forEach(s => {
     if (typeof s === 'string') {
       secrets.push(s);
     } else {
@@ -130,8 +130,8 @@ function toLowerCase(configuredSecrets) {
   if (!Array.isArray(configuredSecrets)) {
     return defaultSecrets;
   }
-  var secrets = [];
-  configuredSecrets.forEach(function(s) {
+  const secrets = [];
+  configuredSecrets.forEach(s => {
     if (typeof s === 'string') {
       secrets.push(s.toLowerCase());
     } else {

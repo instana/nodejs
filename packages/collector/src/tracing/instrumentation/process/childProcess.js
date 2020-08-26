@@ -1,12 +1,12 @@
 'use strict';
 
-var coreChildProcess = require('child_process');
-var shimmer = require('shimmer');
+const coreChildProcess = require('child_process');
+const shimmer = require('shimmer');
 
-var selfPath = require('./selfPath');
+const selfPath = require('./selfPath');
 
-var logger;
-logger = require('../../../logger').getLogger('tracing/child_process', function(newLogger) {
+let logger;
+logger = require('../../../logger').getLogger('tracing/child_process', newLogger => {
   logger = newLogger;
 });
 
@@ -41,9 +41,7 @@ function shimSpawn(original) {
         );
       } else {
         logger.debug(
-          'Detected a child_process.spawn of edgemicro/app, instrumenting it by adding --require ' +
-            selfPath.immediate +
-            '.'
+          `Detected a child_process.spawn of edgemicro/app, instrumenting it by adding --require ${selfPath.immediate}.`
         );
         args.unshift(selfPath.immediate);
         args.unshift('--require');

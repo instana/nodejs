@@ -88,7 +88,7 @@ describe('W3cTraceContext API', () => {
         oldTraceStateValue = `rojo=00f067aa0ba902b7,congo=t61rcWkgMzE,${constants.w3cInstana}=${oldInstanaValue}`;
         oldPositionTitle = 'an in key-value pair at the end';
       } else {
-        throw new Error('Unknown position: ' + existingInstanaKeyPair);
+        throw new Error(`Unknown position: ${existingInstanaKeyPair}`);
       }
 
       const wideNarrow = `${idLengthTitle(oldTraceIdIsShort)} => ${idLengthTitle(newTraceIdIsShort)}`;
@@ -148,7 +148,7 @@ describe('W3cTraceContext API', () => {
         if (longTraceId) {
           expect(traceContext.foreignTraceId).to.equal(traceContext.instanaTraceId);
         } else {
-          expect(traceContext.foreignTraceId).to.equal('0000000000000000' + traceContext.instanaTraceId);
+          expect(traceContext.foreignTraceId).to.equal(`0000000000000000${traceContext.instanaTraceId}`);
         }
         expect(traceContext.foreignParentId).to.have.lengthOf(16);
         expect(traceContext.foreignParentId).to.equal(traceContext.instanaParentId);

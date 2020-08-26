@@ -7,10 +7,10 @@ module.exports = function uniq(arr) {
 
   arr.sort();
 
-  var cleaned = [arr[0]];
-  var previous = arr[0];
-  for (var i = 1, len = arr.length; i < len; i++) {
-    var val = arr[i];
+  const cleaned = [arr[0]];
+  let previous = arr[0];
+  for (let i = 1, len = arr.length; i < len; i++) {
+    const val = arr[i];
     if (previous !== val) {
       previous = val;
       cleaned.push(val);

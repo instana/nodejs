@@ -12,6 +12,9 @@ require('../../../../')({
 });
 
 const express = require('express');
+
+const asyncRoute = require('../../../test_util/asyncExpressRoute');
+
 const app = express();
 
 app.get('/', (req, res) => res.sendStatus(200));
@@ -19,11 +22,9 @@ app.get('/', (req, res) => res.sendStatus(200));
 // simulating async middleware
 app.use((req, res, next) => setTimeout(() => next(), 50));
 
-const asyncHandler = fn => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
-
 app.get(
   '/getSomething',
-  asyncHandler(async (req, res) => {
+  asyncRoute(async (req, res) => {
     try {
       const statusCode = await executeCallSequence();
       res.sendStatus(statusCode);

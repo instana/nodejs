@@ -12,9 +12,7 @@ const agentPort = (exports.agentPort = 3210);
 
 let agentStub;
 
-exports.registerTestHooks = opts => {
-  opts = opts || {};
-
+exports.registerTestHooks = (opts = {}) => {
   beforeEach(() => {
     const env = Object.create(process.env);
     env.AGENT_PORT = agentPort;
@@ -79,6 +77,13 @@ exports.getEvents = () =>
   request({
     method: 'GET',
     url: `http://127.0.0.1:${agentPort}/retrievedEvents`,
+    json: true
+  });
+
+exports.getMonitoringEvents = () =>
+  request({
+    method: 'GET',
+    url: `http://127.0.0.1:${agentPort}/retrievedMonitoringEvents`,
     json: true
   });
 

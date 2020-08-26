@@ -99,7 +99,7 @@ consumer.on('error', err => {
   }, 100);
 });
 
-consumer.on('message', function({ topic, key, value }) {
+consumer.on('message', ({ topic, key, value }) => {
   const span = instana.currentSpan();
   span.disableAutoEnd();
   receivedMessages.push({ topic, key, value });

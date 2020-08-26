@@ -7,17 +7,17 @@ module.exports = function propertySizes(object, prefix) {
   if (prefix == null) {
     prefix = '';
   }
-  var sizes = [];
-  Object.keys(object).forEach(function(property) {
-    var value = object[property];
+  let sizes = [];
+  Object.keys(object).forEach(property => {
+    const value = object[property];
     if (value == null) {
       return;
     }
     if (!Array.isArray(value) && typeof value === 'object') {
-      sizes = sizes.concat(propertySizes(value, prefix + property + '.'));
+      sizes = sizes.concat(propertySizes(value, `${prefix + property}.`));
       return;
     }
-    var serializedProperty = JSON.stringify(object[property]);
+    const serializedProperty = JSON.stringify(object[property]);
     sizes.push({
       property: prefix + property,
       length: serializedProperty ? serializedProperty.length : 0

@@ -1,30 +1,30 @@
 'use strict';
 
-var coreHttpsModule = require('https');
-var coreHttpModule = require('http');
+const coreHttpsModule = require('https');
+const coreHttpModule = require('http');
 
-var constants = require('../../constants');
-var tracingHeaders = require('../../tracingHeaders');
-var urlUtil = require('../../../util/url');
-var httpCommon = require('./_http');
-var shimmer = require('shimmer');
-var cls = require('../../cls');
+const constants = require('../../constants');
+const tracingHeaders = require('../../tracingHeaders');
+const urlUtil = require('../../../util/url');
+const httpCommon = require('./_http');
+const shimmer = require('shimmer');
+const cls = require('../../cls');
 
-var discardUrlParameters = urlUtil.discardUrlParameters;
-var filterParams = urlUtil.filterParams;
+const discardUrlParameters = urlUtil.discardUrlParameters;
+const filterParams = urlUtil.filterParams;
 
-var extraHttpHeadersToCapture;
-var isActive = false;
+let extraHttpHeadersToCapture;
+let isActive = false;
 
 exports.spanName = 'node.http.server';
 
-exports.init = function(config) {
+exports.init = function init(config) {
   shimmer.wrap(coreHttpModule.Server && coreHttpModule.Server.prototype, 'emit', shimEmit);
   shimmer.wrap(coreHttpsModule.Server && coreHttpsModule.Server.prototype, 'emit', shimEmit);
   extraHttpHeadersToCapture = config.tracing.http.extraHttpHeadersToCapture;
 };
 
-exports.updateConfig = function(config) {
+exports.updateConfig = function updateConfig(config) {
   extraHttpHeadersToCapture = config.tracing.http.extraHttpHeadersToCapture;
 };
 
@@ -34,10 +34,10 @@ function shimEmit(realEmit) {
       return realEmit.apply(this, arguments);
     }
 
-    var originalThis = this;
-    var originalArgs = arguments;
+    const originalThis = this;
+    const originalArgs = arguments;
 
-    return cls.ns.runAndReturn(function() {
+    return cls.ns.runAndReturn(() => {
       if (req && req.on && req.addListener && req.emit) {
         cls.ns.bindEmitter(req);
       }
@@ -45,8 +45,8 @@ function shimEmit(realEmit) {
         cls.ns.bindEmitter(res);
       }
 
-      var headers = tracingHeaders.fromHttpRequest(req);
-      var w3cTraceContext = headers.w3cTraceContext;
+      const headers = tracingHeaders.fromHttpRequest(req);
+      const w3cTraceContext = headers.w3cTraceContext;
 
       if (typeof headers.level === 'string' && headers.level.indexOf('0') === 0) {
         cls.setTracingLevel('0');
@@ -68,7 +68,7 @@ function shimEmit(realEmit) {
         return realEmit.apply(originalThis, originalArgs);
       }
 
-      var span = cls.startSpan(exports.spanName, constants.ENTRY, headers.traceId, headers.parentId, w3cTraceContext);
+      const span = cls.startSpan(exports.spanName, constants.ENTRY, headers.traceId, headers.parentId, w3cTraceContext);
 
       if (headers.correlationType && headers.correlationId) {
         span.data.correlationType = headers.correlationType;
@@ -83,58 +83,76 @@ function shimEmit(realEmit) {
 
       // Capture the URL before application code gets access to the incoming message. Libraries like express manipulate
       // req.url when routers are used.
-      var urlParts = req.url.split('?');
-      if (urlParts.length >= 1) {
+      const urlParts = req.url.split('?');
+      if (urlParts.length >= 2) {
         urlParts[1] = filterParams(urlParts[1]);
       }
       span.data.http = {
         method: req.method,
         url: discardUrlParameters(urlParts.shift()),
-        params: urlParts.join('?'),
+        params: urlParts.length > 0 ? urlParts.join('?') : undefined,
         host: req.headers.host,
-        header: httpCommon.getExtraHeaders(req, extraHttpHeadersToCapture)
+        header: httpCommon.getExtraHeadersFromMessage(req, extraHttpHeadersToCapture)
       };
-      var incomingServiceName =
+
+      const incomingServiceName =
         span.data.http.header && span.data.http.header[constants.serviceNameHeaderNameLowerCase];
       if (incomingServiceName != null) {
         span.data.service = incomingServiceName;
       }
 
-      // Handle client/back end eum correlation.
-      if (!span.p) {
-        // We add the trace ID to the incoming request so a customer's app can render it into the EUM snippet, see
+      if (!req.headers['x-instana-t']) {
+        // In cases where we have started a fresh trace (that is, there is no X-INSTANA-T in the incoming request
+        // headers, we add the new trace ID to the incoming request so a customer's app can render it reliably into the
+        // EUM snippet, see
         // eslint-disable-next-line max-len
-        // https://docs.instana.io/products/website_monitoring/backendCorrelation/#retrieve-the-backend-trace-id-in-nodejs
+        // https://www.instana.com/docs/products/website_monitoring/backendCorrelation/#retrieve-the-backend-trace-id-in-nodejs
         req.headers['x-instana-t'] = span.t;
-
-        // support for automatic client/back end EUM correlation
-        // intid = instana trace id
-        // This abbreviation is small enough to not incur a notable overhead while at the same
-        // time being unique enough to avoid name collisions.
-        var serverTimingValue = 'intid;desc=' + span.t;
-        res.setHeader('Server-Timing', serverTimingValue);
-        shimmer.wrap(res, 'setHeader', function(realSetHeader) {
-          return function shimmedSetHeader(key, value) {
-            if (key.toLowerCase() === 'server-timing') {
-              if (Array.isArray(value)) {
-                return realSetHeader.call(this, key, value.concat(serverTimingValue));
-              }
-              return realSetHeader.call(this, key, value + ', ' + serverTimingValue);
-            }
-            return realSetHeader.apply(this, arguments);
-          };
-        });
       }
 
-      req.on('aborted', function() {
+      // Support for automatic client/back end EUM correlation: We add our key-value pair to the Server-Timing header
+      // (the key intid is short for INstana Trace ID). This abbreviation is small enough to not incur a notable
+      // overhead while at the same time being unique enough to avoid name collisions.
+      const serverTimingValue = `intid;desc=${span.t}`;
+      res.setHeader('Server-Timing', serverTimingValue);
+      shimmer.wrap(
+        res,
+        'setHeader',
+        realSetHeader =>
+          function shimmedSetHeader(key, value) {
+            if (key.toLowerCase() === 'server-timing') {
+              if (value == null) {
+                return realSetHeader.call(this, key, serverTimingValue);
+              } else if (Array.isArray(value)) {
+                if (value.find(kv => kv.indexOf('intid;') === 0)) {
+                  // If the application code sets intid, do not append another intid value. Actually, the application
+                  // has no business setting an intid key-value pair, but it could happen theoretically for a proxy-like
+                  // Node.js app (which blindly copies headers from downstream responses) in combination with a
+                  // downstream service that is also instrumented by Instana (and adds the intid key-value pair).
+                  return realSetHeader.apply(this, arguments);
+                } else {
+                  return realSetHeader.call(this, key, value.concat(serverTimingValue));
+                }
+              } else if (typeof value === 'string' && value.indexOf('intid;') >= 0) {
+                // Do not add another intid key-value pair, see above.
+                return realSetHeader.apply(this, arguments);
+              } else {
+                return realSetHeader.call(this, key, `${value}, ${serverTimingValue}`);
+              }
+            }
+            return realSetHeader.apply(this, arguments);
+          }
+      );
+
+      req.on('aborted', () => {
         finishSpan();
       });
 
-      res.on('finish', function() {
+      res.on('finish', () => {
         finishSpan();
       });
 
-      res.on('close', function() {
+      res.on('close', () => {
         // This is purely a safe guard: in all known scenarios, one of the other events that finishes the HTTP entry
         // span should have been called before (res#finish or req#aborted).
         finishSpan();
@@ -164,11 +182,11 @@ function shimEmit(realEmit) {
   };
 }
 
-exports.activate = function() {
+exports.activate = function activate() {
   isActive = true;
 };
 
-exports.deactivate = function() {
+exports.deactivate = function deactivate() {
   isActive = false;
 };
 

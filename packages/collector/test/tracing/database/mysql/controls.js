@@ -12,8 +12,7 @@ const appPort = (exports.appPort = 3215);
 
 let expressMysqlApp;
 
-exports.registerTestHooks = opts => {
-  opts = opts || {};
+exports.registerTestHooks = (opts = {}) => {
   beforeEach(() => {
     const env = Object.create(process.env);
     env.AGENT_PORT = agentPort;

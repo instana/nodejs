@@ -1,20 +1,20 @@
 'use strict';
 
-var uniq = require('./uniq');
+const uniq = require('./uniq');
 
 exports.create = function createSlidingWindow(opts) {
-  var duration = opts.duration;
+  const duration = opts.duration;
 
-  var values = [];
+  let values = [];
 
   return {
-    addPoint: addPoint,
-    reduce: reduce,
-    sum: sum,
-    clear: clear,
-    getValues: getValues,
+    addPoint,
+    reduce,
+    sum,
+    clear,
+    getValues,
     getUniqueValues: getUnqiueValues,
-    getPercentiles: getPercentiles
+    getPercentiles
   };
 
   function addPoint(v) {
@@ -24,15 +24,13 @@ exports.create = function createSlidingWindow(opts) {
 
   function reduce(reducer, initial) {
     cleanup();
-    return values.reduce(function(prev, curr) {
-      return reducer(prev, curr[1]);
-    }, initial);
+    return values.reduce((prev, curr) => reducer(prev, curr[1]), initial);
   }
 
   function sum() {
     cleanup();
-    var localSum = 0;
-    for (var i = 0, len = values.length; i < len; i++) {
+    let localSum = 0;
+    for (let i = 0, len = values.length; i < len; i++) {
       localSum += values[i][1];
     }
     return localSum;
@@ -48,9 +46,9 @@ exports.create = function createSlidingWindow(opts) {
 
   function getValues() {
     cleanup();
-    var valuesCopy = [];
+    const valuesCopy = [];
 
-    for (var i = 0, len = values.length; i < len; i++) {
+    for (let i = 0, len = values.length; i < len; i++) {
       valuesCopy[i] = values[i][1];
     }
 
@@ -60,13 +58,13 @@ exports.create = function createSlidingWindow(opts) {
   function getPercentiles(percentiles) {
     cleanup();
 
-    var sortedValues = getValues();
-    var sortedValuesLength = sortedValues.length;
+    const sortedValues = getValues();
+    const sortedValuesLength = sortedValues.length;
     sortedValues.sort();
 
-    var result = [];
+    const result = [];
 
-    for (var i = 0, len = percentiles.length; i < len; i++) {
+    for (let i = 0, len = percentiles.length; i < len; i++) {
       if (sortedValuesLength === 0) {
         result[i] = 0;
       } else if (sortedValuesLength === 1) {
@@ -85,10 +83,10 @@ exports.create = function createSlidingWindow(opts) {
 };
 
 function removeOldPoints(values, duration) {
-  var itemsToRemove = 0;
-  var threshold = Date.now() - duration;
+  let itemsToRemove = 0;
+  const threshold = Date.now() - duration;
 
-  for (var i = 0, len = values.length; i < len; i++) {
+  for (let i = 0, len = values.length; i < len; i++) {
     if (values[i][0] < threshold) {
       itemsToRemove++;
     } else {

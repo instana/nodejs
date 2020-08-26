@@ -1,16 +1,17 @@
 'use strict';
 
-var shimmer = require('shimmer');
+const shimmer = require('shimmer');
 
-var requireHook = require('../../../util/requireHook');
-var tracingUtil = require('../../tracingUtil');
-var constants = require('../../constants');
-var cls = require('../../cls');
+const requireHook = require('../../../util/requireHook');
+const tracingUtil = require('../../tracingUtil');
+const constants = require('../../constants');
+const cls = require('../../cls');
 
-var isActive = false;
+let isActive = false;
 
-var commands = [
+const commands = [
   //
+  'aggregate',
   'count',
   'delete',
   'distinct',
@@ -23,7 +24,7 @@ var commands = [
   'update'
 ];
 
-exports.init = function() {
+exports.init = function init() {
   // mongodb >= 3.3.x
   requireHook.onFileLoad(/\/mongodb\/lib\/core\/connection\/pool.js/, instrumentPool);
   // mongodb < 3.3.x
@@ -39,8 +40,8 @@ function shimWrite(original) {
     if (!isActive || !cls.isTracing()) {
       return original.apply(this, arguments);
     }
-    var originalArgs = new Array(arguments.length);
-    for (var i = 0; i < arguments.length; i++) {
+    const originalArgs = new Array(arguments.length);
+    for (let i = 0; i < arguments.length; i++) {
       originalArgs[i] = arguments[i];
     }
     return instrumentedWrite(this, original, originalArgs);
@@ -48,16 +49,16 @@ function shimWrite(original) {
 }
 
 function instrumentedWrite(ctx, originalWrite, originalArgs) {
-  var parentSpan = cls.getCurrentSpan();
+  const parentSpan = cls.getCurrentSpan();
   if (constants.isExitSpan(parentSpan)) {
     return originalWrite.apply(ctx, originalArgs);
   }
 
   // pool.js#write throws a sync error if there is no callback, so we can safely assume there is one. If there was no
   // callback, we wouldn't be able to finish the span, so we won't start one.
-  var originalCallback;
-  var callbackIndex = -1;
-  for (var i = 1; i < originalArgs.length; i++) {
+  let originalCallback;
+  let callbackIndex = -1;
+  for (let i = 1; i < originalArgs.length; i++) {
     if (typeof originalArgs[i] === 'function') {
       originalCallback = originalArgs[i];
       callbackIndex = i;
@@ -68,19 +69,19 @@ function instrumentedWrite(ctx, originalWrite, originalArgs) {
     return originalWrite.apply(ctx, originalArgs);
   }
 
-  return cls.ns.runAndReturn(function() {
-    var span = cls.startSpan('mongo', constants.EXIT);
+  return cls.ns.runAndReturn(() => {
+    const span = cls.startSpan('mongo', constants.EXIT);
     span.stack = tracingUtil.getStackTrace(instrumentedWrite);
 
-    var hostname;
-    var port;
-    var service;
-    var command;
-    var database;
-    var collection;
-    var namespace;
+    let hostname;
+    let port;
+    let service;
+    let command;
+    let database;
+    let collection;
+    let namespace;
 
-    var message = originalArgs[0];
+    const message = originalArgs[0];
     if (message && typeof message === 'object') {
       if (
         message.options &&
@@ -103,7 +104,7 @@ function instrumentedWrite(ctx, originalWrite, originalArgs) {
         }
       }
 
-      var cmdObj = message.command;
+      let cmdObj = message.command;
       if (!cmdObj) {
         // fallback for older mongodb versions
         cmdObj = message.query;
@@ -127,36 +128,36 @@ function instrumentedWrite(ctx, originalWrite, originalArgs) {
     }
 
     if (database && collection) {
-      namespace = database + '.' + collection;
+      namespace = `${database}.${collection}`;
     } else if (database) {
-      namespace = database + '.?';
+      namespace = `${database}.?`;
     } else if (collection) {
-      namespace = '?.' + collection;
+      namespace = `?.${collection}`;
     }
 
     if (hostname || port) {
       span.data.peer = {
-        hostname: hostname,
-        port: port
+        hostname,
+        port
       };
     }
 
     if (hostname && port) {
-      service = hostname + ':' + port;
+      service = `${hostname}:${port}`;
     } else if (hostname) {
-      service = hostname + ':27017';
+      service = `${hostname}:27017`;
     } else if (port) {
       service = '?:27017';
     }
 
     span.data.mongo = {
-      command: command,
-      service: service,
-      namespace: namespace
+      command,
+      service,
+      namespace
     };
     readJsonOrFilter(message, span);
 
-    var wrappedCallback = function(error) {
+    const wrappedCallback = function(error) {
       if (error) {
         span.ec = 1;
         span.data.mongo.error = tracingUtil.getErrorDetails(error);
@@ -174,7 +175,7 @@ function instrumentedWrite(ctx, originalWrite, originalArgs) {
 }
 
 function findCollection(cmdObj) {
-  for (var j = 0; j < commands.length; j++) {
+  for (let j = 0; j < commands.length; j++) {
     if (cmdObj[commands[j]] && typeof cmdObj[commands[j]] === 'string') {
       // most commands (except for getMore) add the collection as the value for the command-specific key
       return cmdObj[commands[j]];
@@ -183,7 +184,7 @@ function findCollection(cmdObj) {
 }
 
 function findCommand(cmdObj) {
-  for (var j = 0; j < commands.length; j++) {
+  for (let j = 0; j < commands.length; j++) {
     if (cmdObj[commands[j]]) {
       return commands[j];
     }
@@ -194,20 +195,22 @@ function readJsonOrFilter(message, span) {
   if (!message) {
     return;
   }
-  var cmdObj = message.command;
+  let cmdObj = message.command;
   if (!cmdObj) {
     cmdObj = message.query;
   }
   if (!cmdObj) {
     return;
   }
-  var json;
-  var filter = cmdObj.filter || cmdObj.query;
+  let json;
+  const filter = cmdObj.filter || cmdObj.query;
 
   if (Array.isArray(cmdObj.updates) && cmdObj.updates.length >= 1) {
     json = cmdObj.updates;
   } else if (Array.isArray(cmdObj.deletes) && cmdObj.deletes.length >= 1) {
     json = cmdObj.deletes;
+  } else if (Array.isArray(cmdObj.pipeline) && cmdObj.pipeline.length >= 1) {
+    json = cmdObj.pipeline;
   }
 
   // The back end will process exactly one of json, query, or filter, so it does not matter too much which one we
@@ -228,10 +231,10 @@ function stringifyWhenNecessary(obj) {
   return tracingUtil.shortenDatabaseStatement(JSON.stringify(obj));
 }
 
-exports.activate = function() {
+exports.activate = function activate() {
   isActive = true;
 };
 
-exports.deactivate = function() {
+exports.deactivate = function deactivate() {
   isActive = false;
 };

@@ -36,9 +36,7 @@ app.post('/run', (req, res) => {
 
 app.post('/run-promise', (req, res) => {
   const activeContext = instana.sdk.getAsyncContext();
-  customPromiseQueue.push(() => {
-    return instana.sdk.runPromiseInAsyncContext(activeContext, createPromise.bind(null, res));
-  });
+  customPromiseQueue.push(() => instana.sdk.runPromiseInAsyncContext(activeContext, createPromise.bind(null, res)));
 });
 
 app.post('/enter-and-leave', (req, res) => {

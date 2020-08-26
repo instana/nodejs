@@ -1,7 +1,7 @@
 'use strict';
 
-var firstCall = true;
-var patterns = [
+let firstCall = true;
+const patterns = [
   /\/@elastic\/elasticsearch\/index.js/,
   /\/@hapi\/call\/lib\//,
   /\/amqplib\/lib\//,
@@ -35,14 +35,14 @@ var patterns = [
   /\/winston\/lib\/winston.js/
 ];
 
-var hasBeenInitializedTooLate = false;
+let hasBeenInitializedTooLate = false;
 
 module.exports = exports = function hasThePackageBeenInitializedTooLate() {
   if (firstCall) {
-    var loadedModules = Object.keys(require.cache);
+    const loadedModules = Object.keys(require.cache);
     // eslint-disable-next-line no-restricted-syntax
-    outer: for (var i = 0; i < loadedModules.length; i++) {
-      for (var j = 0; j < patterns.length; j++) {
+    outer: for (let i = 0; i < loadedModules.length; i++) {
+      for (let j = 0; j < patterns.length; j++) {
         if (patterns[j].test(loadedModules[i])) {
           hasBeenInitializedTooLate = true;
           break outer;

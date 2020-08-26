@@ -1,7 +1,7 @@
 'use strict';
 
-var http = require('http');
-var https = require('https');
+const http = require('http');
+const https = require('https');
 
 module.exports = exports = {
   http: Object.create(http),

@@ -1,5 +1,3 @@
-/* eslint-disable no-console */
-
 'use strict';
 
 const agentPort = process.env.INSTANA_AGENT_PORT;
@@ -89,9 +87,7 @@ app.post('/insert', (req, res) => {
 app.post('/error', (req, res) => {
   client.query('SELECT name, email FROM nonexistanttable', (err, results) => {
     if (err) {
-      request(`http://127.0.0.1:${agentPort}`).then(() => {
-        return res.status(500).json({ error: err.toString() });
-      });
+      request(`http://127.0.0.1:${agentPort}`).then(() => res.status(500).json({ error: err.toString() }));
     } else {
       res.json(results);
     }
@@ -103,9 +99,7 @@ app.post('/error-sync', (req, res) => {
     const results = client.querySync('SELECT name, email FROM nonexistanttable');
     return res.json(results);
   } catch (err) {
-    request(`http://127.0.0.1:${agentPort}`).then(() => {
-      return res.status(500).json({ error: err.toString() });
-    });
+    request(`http://127.0.0.1:${agentPort}`).then(() => res.status(500).json({ error: err.toString() }));
   }
 });
 
@@ -163,9 +157,7 @@ app.post('/transaction', (req, res) => {
                 log('Failed to COMMIT transaction', err4);
                 return res.status(500).json(err4);
               }
-              request(`http://127.0.0.1:${agentPort}`).then(() => {
-                return res.json(result3);
-              });
+              request(`http://127.0.0.1:${agentPort}`).then(() => res.json(result3));
             });
           }
         );
@@ -191,17 +183,13 @@ app.post('/cancel', (req, res) => {
       // is called. So we wait a few milliseconds more and only then send the response - by then, the cancel callback
       // will have been called, too, and hasBeenCancelled has the correct value.
       setTimeout(() => {
-        request(`http://127.0.0.1:${agentPort}`).then(() => {
-          return res.json({ results, hasBeenCancelled });
-        });
+        request(`http://127.0.0.1:${agentPort}`).then(() => res.json({ results, hasBeenCancelled }));
       }, 100);
     } else if (err2) {
       log('Failed to execute query', err2);
       return res.sendStatus(500);
     } else {
-      request(`http://127.0.0.1:${agentPort}`).then(() => {
-        return res.json({ results, hasBeenCancelled });
-      });
+      request(`http://127.0.0.1:${agentPort}`).then(() => res.json({ results, hasBeenCancelled }));
     }
   });
 });
@@ -211,6 +199,7 @@ app.listen(process.env.APP_PORT, () => {
 });
 
 function log() {
+  /* eslint-disable no-console */
   const args = Array.prototype.slice.call(arguments);
   args[0] = logPrefix + args[0];
   console.log.apply(console, args);

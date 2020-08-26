@@ -1,26 +1,26 @@
 'use strict';
 
-var coreHttpModule = require('http');
-var coreHttpsModule = require('https');
+const coreHttpModule = require('http');
+const coreHttpsModule = require('https');
 
-var semver = require('semver');
-var URL = require('url').URL;
+const semver = require('semver');
+const URL = require('url').URL;
 
-var tracingUtil = require('../../tracingUtil');
-var urlUtil = require('../../../util/url');
-var httpCommon = require('./_http');
-var constants = require('../../constants');
-var cls = require('../../cls');
-var url = require('url');
+const tracingUtil = require('../../tracingUtil');
+const urlUtil = require('../../../util/url');
+const httpCommon = require('./_http');
+const constants = require('../../constants');
+const cls = require('../../cls');
+const url = require('url');
 
-var discardUrlParameters = urlUtil.discardUrlParameters;
-var filterParams = urlUtil.filterParams;
+const discardUrlParameters = urlUtil.discardUrlParameters;
+const filterParams = urlUtil.filterParams;
 
-var extraHttpHeadersToCapture;
-var isActive = false;
+let extraHttpHeadersToCapture;
+let isActive = false;
 
-exports.init = function(config) {
-  instrument(coreHttpModule);
+exports.init = function init(config) {
+  instrument(coreHttpModule, false);
 
   // Up until Node 8, the core https module uses the http module internally, so https calls are traced automatically
   // without instrumenting https. Beginning with Node 9, the core https module started to use the internal core module
@@ -33,19 +33,19 @@ exports.init = function(config) {
   // that immediately in Node.js 8.9.1 a few days later. So we must only apply this for exactly 8.9.0, but for no other
   // 8.x.x version.
   if (semver.gte(process.versions.node, '9.0.0') || process.versions.node === '8.9.0') {
-    instrument(coreHttpsModule);
+    instrument(coreHttpsModule, true);
   }
   extraHttpHeadersToCapture = config.tracing.http.extraHttpHeadersToCapture;
 };
 
-exports.updateConfig = function(config) {
+exports.updateConfig = function updateConfig(config) {
   extraHttpHeadersToCapture = config.tracing.http.extraHttpHeadersToCapture;
 };
 
-function instrument(coreModule) {
-  var originalRequest = coreModule.request;
+function instrument(coreModule, forceHttps) {
+  const originalRequest = coreModule.request;
   coreModule.request = function request() {
-    var clientRequest;
+    let clientRequest;
 
     // When http.request is called with http.request(options, undefined) (happens with request-promise, for example),
     // arguments.length will still be 2 but there is no callback. Even though we push a callback into the arguments
@@ -54,15 +54,15 @@ function instrument(coreModule) {
     while (arguments.length > 0 && arguments[arguments.length - 1] == null) {
       arguments.length--;
     }
-    var originalArgs = new Array(arguments.length);
-    for (var i = 0; i < arguments.length; i++) {
+    const originalArgs = new Array(arguments.length);
+    for (let i = 0; i < arguments.length; i++) {
       originalArgs[i] = arguments[i];
     }
 
-    var urlArg = null;
-    var options = null;
-    var callback = null;
-    var callbackIndex = -1;
+    let urlArg = null;
+    let options = null;
+    let callback = null;
+    let callbackIndex = -1;
 
     if (typeof originalArgs[0] === 'string' || isUrlObject(originalArgs[0])) {
       urlArg = originalArgs[0];
@@ -81,11 +81,11 @@ function instrument(coreModule) {
       callbackIndex = 2;
     }
 
-    var w3cTraceContext = cls.getW3cTraceContext();
-    var parentSpan = cls.getCurrentSpan() || cls.getReducedSpan();
+    let w3cTraceContext = cls.getW3cTraceContext();
+    const parentSpan = cls.getCurrentSpan() || cls.getReducedSpan();
 
     if (!isActive || !parentSpan || constants.isExitSpan(parentSpan)) {
-      var traceLevelHeaderHasBeenAdded = false;
+      let traceLevelHeaderHasBeenAdded = false;
       if (cls.tracingSuppressed()) {
         traceLevelHeaderHasBeenAdded = tryToAddTraceLevelAddHeaderToOpts(options, '0', w3cTraceContext);
       }
@@ -97,15 +97,15 @@ function instrument(coreModule) {
       return clientRequest;
     }
 
-    cls.ns.run(function() {
-      var span = cls.startSpan('node.http.client', constants.EXIT);
+    cls.ns.run(() => {
+      const span = cls.startSpan('node.http.client', constants.EXIT);
 
       // startSpan updates the W3C trace context and writes it back to CLS, so we have to refetch the updated context
       // object from CLS.
       w3cTraceContext = cls.getW3cTraceContext();
 
-      var completeCallUrl;
-      var params;
+      let completeCallUrl;
+      let params;
       if (urlArg && typeof urlArg === 'string') {
         // just one string....
         completeCallUrl = discardUrlParameters(urlArg);
@@ -114,21 +114,21 @@ function instrument(coreModule) {
         completeCallUrl = discardUrlParameters(url.format(urlArg));
         params = dropLeadingQuestionMark(filterParams(urlArg.search));
       } else if (options) {
-        var urlAndQuery = constructFromUrlOpts(options, coreModule);
+        const urlAndQuery = constructFromUrlOpts(options, coreModule, forceHttps);
         completeCallUrl = urlAndQuery[0];
         params = urlAndQuery[1];
       }
 
       span.stack = tracingUtil.getStackTrace(request);
 
-      var boundCallback = cls.ns.bind(function boundCallback(res) {
+      const boundCallback = cls.ns.bind(function boundCallback(res) {
         span.data.http = {
           method: clientRequest.method,
           url: completeCallUrl,
           status: res.statusCode,
-          params: params
+          params
         };
-        var headers = captureRequestHeaders(options, clientRequest, res);
+        const headers = captureRequestHeaders(options, clientRequest, res);
 
         if (headers) {
           span.data.http.header = headers;
@@ -148,8 +148,9 @@ function instrument(coreModule) {
         originalArgs.push(boundCallback);
       }
 
+      let instanaHeadersHaveBeenAdded = false;
       try {
-        var instanaHeadersHaveBeenAdded = tryToAddHeadersToOpts(options, span, w3cTraceContext);
+        instanaHeadersHaveBeenAdded = tryToAddHeadersToOpts(options, span, w3cTraceContext);
         clientRequest = originalRequest.apply(coreModule, originalArgs);
       } catch (e) {
         // A synchronous exception indicates a failure that is not covered by the listeners. Using a malformed URL for
@@ -169,8 +170,8 @@ function instrument(coreModule) {
         instanaHeadersHaveBeenAdded = setHeadersOnRequest(clientRequest, span, w3cTraceContext);
       }
 
-      var isTimeout = false;
-      clientRequest.on('timeout', function() {
+      let isTimeout = false;
+      clientRequest.on('timeout', () => {
         // From the Node.js HTTP client documentation:
         //
         //  > Emitted when the underlying socket times out from inactivity. This **only notifies** that the socket
@@ -189,8 +190,8 @@ function instrument(coreModule) {
         isTimeout = true;
       });
 
-      clientRequest.on('error', function(err) {
-        var errorMessage = err.message;
+      clientRequest.on('error', err => {
+        let errorMessage = err.message;
         if (isTimeout) {
           errorMessage = 'Timeout exceeded';
 
@@ -214,17 +215,17 @@ function instrument(coreModule) {
   };
 
   coreModule.get = function get() {
-    var req = coreModule.request.apply(coreModule, arguments);
+    const req = coreModule.request.apply(coreModule, arguments);
     req.end();
     return req;
   };
 }
 
-exports.activate = function() {
+exports.activate = function activate() {
   isActive = true;
 };
 
-exports.deactivate = function() {
+exports.deactivate = function deactivate() {
   isActive = false;
 };
 
@@ -232,18 +233,23 @@ exports.setExtraHttpHeadersToCapture = function setExtraHttpHeadersToCapture(_ex
   extraHttpHeadersToCapture = _extraHeaders;
 };
 
-function constructFromUrlOpts(options, self) {
+function constructFromUrlOpts(options, self, forceHttps) {
   if (options.href) {
     return [discardUrlParameters(options.href), splitAndFilter(options.href)];
   }
 
   try {
-    var agent = options.agent || self.agent;
-    var port = options.port || options.defaultPort || (agent && agent.defaultPort) || 80;
-    var protocol = (port === 443 && 'https:') || options.protocol || (agent && agent.protocol) || 'http:';
-    var host = options.hostname || options.host || 'localhost';
-    var path = options.path || '/';
-    return [discardUrlParameters(protocol + '//' + host + ':' + port + path), splitAndFilter(path)];
+    const agent = options.agent || self.agent;
+    const port = options.port || options.defaultPort || (agent && agent.defaultPort) || 80;
+    const protocol =
+      (port === 443 && 'https:') ||
+      options.protocol ||
+      (agent && agent.protocol) ||
+      (forceHttps && 'https:') ||
+      'http:';
+    const host = options.hostname || options.host || 'localhost';
+    const path = options.path || '/';
+    return [discardUrlParameters(`${protocol}//${host}:${port}${path}`), splitAndFilter(path)];
   } catch (e) {
     return [undefined, undefined];
   }
@@ -289,6 +295,8 @@ function tryToAddHeadersToOpts(options, span, w3cTraceContext) {
 function tryToAddTraceLevelAddHeaderToOpts(options, level, w3cTraceContext) {
   if (hasHeadersOption(options)) {
     if (!isItSafeToModifiyHeadersInOptions(options)) {
+      // Return true to convince the caller that headers have been added although we have in fact not added them. This
+      // will result in no headers being added. See isItSafeToModifiyHeadersInOptions for the motivation behind this.
       return true;
     }
     options.headers[constants.traceLevelHeaderName] = level;
@@ -331,9 +339,9 @@ function setW3cHeadersOnRequest(clientRequest, w3cTraceContext) {
 }
 
 function isItSafeToModifiyHeadersInOptions(options) {
-  var keys = Object.keys(options.headers);
-  var key;
-  for (var i = 0; i < keys.length; i++) {
+  const keys = Object.keys(options.headers);
+  let key;
+  for (let i = 0; i < keys.length; i++) {
     key = keys[i];
     if (
       'authorization' === key.toLowerCase() &&
@@ -359,14 +367,14 @@ function isItSafeToModifiyHeadersInOptions(options) {
 }
 
 function isItSafeToModifiyHeadersForRequest(clientRequest) {
-  var authHeader = clientRequest.getHeader('Authorization');
+  const authHeader = clientRequest.getHeader('Authorization');
   // see comment in isItSafeToModifiyHeadersInOptions
   return !authHeader || authHeader.indexOf('AWS') !== 0;
 }
 
 function splitAndFilter(fullUrl) {
-  var parts = fullUrl.split('?');
-  if (parts.length >= 1) {
+  const parts = fullUrl.split('?');
+  if (parts.length >= 2) {
     return filterParams(parts[1]);
   }
   return null;
@@ -380,7 +388,7 @@ function dropLeadingQuestionMark(params) {
 }
 
 function captureRequestHeaders(options, clientRequest, response) {
-  var headers = httpCommon.getExtraHeadersCaseInsensitive(options, extraHttpHeadersToCapture);
+  let headers = httpCommon.getExtraHeadersFromOptions(options, extraHttpHeadersToCapture);
   headers = httpCommon.mergeExtraHeadersFromServerResponseOrClientResponse(
     headers,
     clientRequest,

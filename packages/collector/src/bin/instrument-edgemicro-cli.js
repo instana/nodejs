@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-/* eslint-disable no-console */
+/* eslint-disable no-console, max-len */
 
 'use strict';
 
@@ -11,8 +11,8 @@
 // edgemicro start -o $org -e $env -k $key -s $secret
 //
 // Thus, there is no user controlled code when that Node.js process is starting up, and in turn our usual installation
-// documented at https://docs.instana.io/ecosystem/node-js/installation/ can not be performed (in particular, there is
-// no user controlled code to put the require('@instana/collector')(); into.
+// documented at https://www.instana.com/docs/ecosystem/node-js/installation/ can not be performed (in particular, there
+// is no user controlled code to put the require('@instana/collector')(); into.
 //
 // The purpose of this executable is to fill this gap. It needs to be called after the edgemicro package has been
 // installed. The package @instana/collector also needs to be installed. This executable will statically instrument the
@@ -28,13 +28,13 @@
 // started. The plug-in code would also be evaluated in each worker process, but again, too late, that is tracing would
 // only work partially.
 
-var childProcess = require('child_process');
-var fs = require('fs');
-var path = require('path');
+const childProcess = require('child_process');
+const fs = require('fs');
+const path = require('path');
 
-var selfPath = require('./selfPath');
+const selfPath = require('./selfPath');
 
-var edgemicroCliMain = 'cli/edgemicro';
+const edgemicroCliMain = 'cli/edgemicro';
 
 module.exports = exports = function instrumentEdgemicroCli(edgemicroPath, collectorPath, callback) {
   if (typeof edgemicroPath === 'function') {
@@ -51,12 +51,12 @@ module.exports = exports = function instrumentEdgemicroCli(edgemicroPath, collec
     throw new Error('Mandatory argument callback is missing.');
   }
   if (typeof callback !== 'function') {
-    throw new Error('The callback argument is not a function but of type ' + typeof callback + '.');
+    throw new Error(`The callback argument is not a function but of type ${typeof callback}.`);
   }
 
   if (!edgemicroPath) {
     console.log('- Path to edgemicro has not been provided, I will try to figure it out now.');
-    var globalNodeModules = childProcess
+    const globalNodeModules = childProcess
       .execSync('npm root -g')
       .toString()
       .trim();
@@ -65,9 +65,7 @@ module.exports = exports = function instrumentEdgemicroCli(edgemicroPath, collec
     if (!fs.existsSync(edgemicroPath)) {
       return callback(
         new Error(
-          'It seems there is no edgemicro installation at ' +
-            edgemicroPath +
-            '. You can also provide the path to your edgemicro installation explicitly as a command line argument.'
+          `It seems there is no edgemicro installation at ${edgemicroPath}. You can also provide the path to your edgemicro installation explicitly as a command line argument.`
         )
       );
     }
@@ -76,7 +74,7 @@ module.exports = exports = function instrumentEdgemicroCli(edgemicroPath, collec
   }
   if (typeof edgemicroPath !== 'string') {
     return callback(
-      new Error('The path to edgemicro needs to be a string but was of type ' + typeof edgemicroPath) + '.'
+      `${new Error(`The path to edgemicro needs to be a string but was of type ${typeof edgemicroPath}`)}.`
     );
   }
 
@@ -86,7 +84,7 @@ module.exports = exports = function instrumentEdgemicroCli(edgemicroPath, collec
   }
   if (typeof collectorPath !== 'string') {
     return callback(
-      new Error('The path to @instana/collector needs to be a string but was of type ' + typeof collectorPath + '.')
+      new Error(`The path to @instana/collector needs to be a string but was of type ${typeof collectorPath}.`)
     );
   }
 
@@ -102,36 +100,31 @@ module.exports = exports = function instrumentEdgemicroCli(edgemicroPath, collec
     console.log('    * resolved absolute path for @instana/collector:', collectorPath);
   }
 
-  console.log('- Checking if @instana/collector exists at ' + collectorPath + '.');
-  fs.access(collectorPath, fs.constants.F_OK, function(fsAccessError) {
+  console.log(`- Checking if @instana/collector exists at ${collectorPath}.`);
+  fs.access(collectorPath, fs.constants.F_OK, fsAccessError => {
     if (fsAccessError) {
       console.log(fsAccessError);
       return callback(fsAccessError);
     }
 
     try {
-      var collectorPackageJson = require(path.join(collectorPath, 'package.json'));
+      const collectorPackageJson = require(path.join(collectorPath, 'package.json'));
       if (collectorPackageJson.name !== '@instana/collector') {
         return callback(
           new Error(
-            'The provided path for @instana/collector does not seem to be valid, expected the package name to be ' +
-              '@instana/collector, instead the name "' +
-              collectorPackageJson.name +
-              '" has been found.'
+            `The provided path for @instana/collector does not seem to be valid, expected the package name to be @instana/collector, instead the name "${collectorPackageJson.name}" has been found.`
           )
         );
       }
     } catch (packageJsonError) {
       return callback(
         new Error(
-          'The provided path for @instana/collector does not seem to be valid, there is no package.json at the ' +
-            'expected location or it cannot be parsed: ' +
-            packageJsonError.stack
+          `The provided path for @instana/collector does not seem to be valid, there is no package.json at the expected location or it cannot be parsed: ${packageJsonError.stack}`
         )
       );
     }
 
-    var edgemicroCliMainFullPath = path.resolve(edgemicroPath, edgemicroCliMain);
+    const edgemicroCliMainFullPath = path.resolve(edgemicroPath, edgemicroCliMain);
     console.log('- Will instrument the following file:', edgemicroCliMainFullPath);
 
     createBackupAndInstrument(edgemicroCliMainFullPath, collectorPath, callback);
@@ -139,9 +132,9 @@ module.exports = exports = function instrumentEdgemicroCli(edgemicroPath, collec
 };
 
 function createBackupAndInstrument(edgemicroCliMainFullPath, collectorPath, callback) {
-  var backupFullPath = edgemicroCliMainFullPath + '.backup';
+  const backupFullPath = `${edgemicroCliMainFullPath}.backup`;
   console.log('- Creating a backup at:', backupFullPath);
-  copyFile(edgemicroCliMainFullPath, backupFullPath, function(copyErr) {
+  copyFile(edgemicroCliMainFullPath, backupFullPath, copyErr => {
     if (copyErr) {
       console.error(copyErr);
       return callback(copyErr);
@@ -151,22 +144,22 @@ function createBackupAndInstrument(edgemicroCliMainFullPath, collectorPath, call
 }
 
 function copyFile(source, target, copyCallback) {
-  var callbackHasBeenCalled = false;
-  var readStream = fs.createReadStream(source);
-  var writeBackupStream = fs.createWriteStream(target);
-  readStream.on('error', function(err) {
+  let callbackHasBeenCalled = false;
+  const readStream = fs.createReadStream(source);
+  const writeBackupStream = fs.createWriteStream(target);
+  readStream.on('error', err => {
     if (!callbackHasBeenCalled) {
       callbackHasBeenCalled = true;
       copyCallback(err);
     }
   });
-  writeBackupStream.on('error', function(err) {
+  writeBackupStream.on('error', err => {
     if (!callbackHasBeenCalled) {
       callbackHasBeenCalled = true;
       copyCallback(err);
     }
   });
-  writeBackupStream.on('finish', function() {
+  writeBackupStream.on('finish', () => {
     if (!callbackHasBeenCalled) {
       callbackHasBeenCalled = true;
       copyCallback();
@@ -177,28 +170,25 @@ function copyFile(source, target, copyCallback) {
 
 function instrument(fileToBeInstrumented, collectorPath, callback) {
   console.log('- Reading:', fileToBeInstrumented);
-  fs.readFile(fileToBeInstrumented, 'utf8', function(readErr, content) {
+  fs.readFile(fileToBeInstrumented, 'utf8', (readErr, content) => {
     if (readErr) {
       console.error(readErr);
       return callback(readErr);
     }
 
-    var result;
+    let result;
 
-    var match = /\nrequire[^\n]*collector[^\n]*\n/.exec(content);
+    const match = /\nrequire[^\n]*collector[^\n]*\n/.exec(content);
     if (match) {
-      result =
-        content.substring(0, match.index + 1) +
-        "require('" +
-        collectorPath +
-        "')();\n" +
-        content.substring(match.index + match[0].length);
+      result = `${content.substring(0, match.index + 1)}require('${collectorPath}')();\n${content.substring(
+        match.index + match[0].length
+      )}`;
     } else {
-      result = content.replace(/\n'use strict';\n/, "\n'use strict';\nrequire('" + collectorPath + "')();\n");
+      result = content.replace(/\n'use strict';\n/, `\n'use strict';\nrequire('${collectorPath}')();\n`);
     }
 
     console.log('- Writing:', fileToBeInstrumented);
-    fs.writeFile(fileToBeInstrumented, result, 'utf8', function(writeErr) {
+    fs.writeFile(fileToBeInstrumented, result, 'utf8', writeErr => {
       if (writeErr) {
         console.error(writeErr);
         return callback(writeErr);
@@ -211,7 +201,7 @@ function instrument(fileToBeInstrumented, collectorPath, callback) {
 
 if (require.main === module) {
   // The file is running as a script, kick off the instrumentation directly.
-  module.exports(process.argv[2], process.argv[3], function(err) {
+  module.exports(process.argv[2], process.argv[3], err => {
     if (err) {
       console.error('Failed to instrument the edgemicro module', err);
       process.exit(1);
@@ -223,9 +213,9 @@ if (require.main === module) {
 } else {
   // Not running as a script, wait for client code to trigger the instrumentation.
   console.warn(
-    'The file ' +
-      path.join(__dirname, 'instrument-edgemicro-cli.js') +
-      ' has been required by another module instead of being run directly as a script. ' +
-      'You need to call the exported function yourself to start the instrumentation in this scenario.'
+    `The file ${path.join(
+      __dirname,
+      'instrument-edgemicro-cli.js'
+    )} has been required by another module instead of being run directly as a script. You need to call the exported function yourself to start the instrumentation in this scenario.`
   );
 }

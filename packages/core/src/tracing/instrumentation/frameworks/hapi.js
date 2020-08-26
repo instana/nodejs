@@ -1,19 +1,19 @@
 'use strict';
 
-var shimmer = require('shimmer');
+const shimmer = require('shimmer');
 
-var requireHook = require('../../../util/requireHook');
-var httpServer = require('../protocols/httpServer');
-var cls = require('../../cls');
+const requireHook = require('../../../util/requireHook');
+const httpServer = require('../protocols/httpServer');
+const cls = require('../../cls');
 
-var logger;
-logger = require('../../../logger').getLogger('tracing/hapi', function(newLogger) {
+let logger;
+logger = require('../../../logger').getLogger('tracing/hapi', newLogger => {
   logger = newLogger;
 });
 
-var isActive = false;
+let isActive = false;
 
-exports.init = function() {
+exports.init = function init() {
   requireHook.onModuleLoad('@hapi/call', instrumentHapiCall);
 };
 
@@ -33,7 +33,7 @@ function shimRoute(originalFunction) {
     if (!isActive || !cls.isTracing()) {
       return originalFunction.apply(this, arguments);
     }
-    var routeObject = originalFunction.apply(this, arguments);
+    const routeObject = originalFunction.apply(this, arguments);
     annotateHttpEntrySpanWithPathTemplate(routeObject);
     return routeObject;
   };
@@ -43,17 +43,17 @@ function annotateHttpEntrySpanWithPathTemplate(routeObject) {
   if (routeObject == null || !routeObject.route || typeof routeObject.route.path !== 'string') {
     return;
   }
-  var span = cls.getCurrentEntrySpan();
+  const span = cls.getCurrentEntrySpan();
   if (!span || span.n !== httpServer.spanName || span.pathTplFrozen) {
     return;
   }
   span.data.http.path_tpl = routeObject.route.path;
 }
 
-exports.activate = function() {
+exports.activate = function activate() {
   isActive = true;
 };
 
-exports.deactivate = function() {
+exports.deactivate = function deactivate() {
   isActive = false;
 };

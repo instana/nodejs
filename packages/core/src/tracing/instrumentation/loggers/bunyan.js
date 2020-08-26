@@ -2,16 +2,16 @@
 
 'use strict';
 
-var shimmer = require('shimmer');
+const shimmer = require('shimmer');
 
-var requireHook = require('../../../util/requireHook');
-var tracingUtil = require('../../tracingUtil');
-var constants = require('../../constants');
-var cls = require('../../cls');
+const requireHook = require('../../../util/requireHook');
+const tracingUtil = require('../../tracingUtil');
+const constants = require('../../constants');
+const cls = require('../../cls');
 
-var isActive = false;
+let isActive = false;
 
-exports.init = function() {
+exports.init = function init() {
   requireHook.onModuleLoad('bunyan', instrument);
 };
 
@@ -22,8 +22,8 @@ function instrument(Logger) {
 }
 
 function shimLog(markAsError) {
-  return function(originalLog) {
-    return function() {
+  return originalLog =>
+    function() {
       if (arguments.length === 0 || (this.fields && !!this.fields.__in)) {
         // * arguments.length === 0 -> This is a logger.warn() type of call (without arguments), this will not log
         // anything but simply return whether the log level in question is enabled for this logger.
@@ -31,10 +31,10 @@ function shimLog(markAsError) {
         return originalLog.apply(this, arguments);
       }
       if (isActive && cls.isTracing()) {
-        var parentSpan = cls.getCurrentSpan();
+        const parentSpan = cls.getCurrentSpan();
         if (parentSpan && !constants.isExitSpan(parentSpan)) {
-          var originalArgs = new Array(arguments.length);
-          for (var i = 0; i < arguments.length; i++) {
+          const originalArgs = new Array(arguments.length);
+          for (let i = 0; i < arguments.length; i++) {
             originalArgs[i] = arguments[i];
           }
           instrumentedLog(this, originalLog, originalArgs, markAsError);
@@ -45,19 +45,18 @@ function shimLog(markAsError) {
         return originalLog.apply(this, arguments);
       }
     };
-  };
 }
 
 function instrumentedLog(ctx, originalLog, originalArgs, markAsError) {
-  return cls.ns.runAndReturn(function() {
-    var span = cls.startSpan('log.bunyan', constants.EXIT);
+  return cls.ns.runAndReturn(() => {
+    const span = cls.startSpan('log.bunyan', constants.EXIT);
     span.stack = tracingUtil.getStackTrace(instrumentedLog);
-    var fields = originalArgs[0];
-    var message = originalArgs[1];
+    const fields = originalArgs[0];
+    let message = originalArgs[1];
     if (typeof fields === 'string') {
       message = fields;
     } else if (fields && typeof fields.message === 'string' && typeof message === 'string') {
-      message = fields.message + ' -- ' + message;
+      message = `${fields.message} -- ${message}`;
     } else if (fields && typeof fields.message === 'string') {
       message = fields.message;
     } else if (
@@ -70,7 +69,7 @@ function instrumentedLog(ctx, originalLog, originalArgs, markAsError) {
       // Support for fields.err.message based on the last example given in
       // https://github.com/trentm/node-bunyan#log-method-api - quote: "To pass in an Error *and* other fields, use the
       // `err` field name for the Error instance..."
-      message = fields.err.message + ' -- ' + message;
+      message = `${fields.err.message} -- ${message}`;
     } else if (fields && fields.err && typeof fields.err === 'object' && typeof fields.err.message === 'string') {
       message = fields.err.message;
     } else if (typeof message !== 'string') {
@@ -78,7 +77,7 @@ function instrumentedLog(ctx, originalLog, originalArgs, markAsError) {
         'Log call without message. The Bunyan "fields" argument will not be serialized by Instana for performance reasons.';
     }
     span.data.log = {
-      message: message
+      message
     };
     if (markAsError) {
       span.ec = 1;
@@ -92,10 +91,10 @@ function instrumentedLog(ctx, originalLog, originalArgs, markAsError) {
   });
 }
 
-exports.activate = function() {
+exports.activate = function activate() {
   isActive = true;
 };
 
-exports.deactivate = function() {
+exports.deactivate = function deactivate() {
   isActive = false;
 };

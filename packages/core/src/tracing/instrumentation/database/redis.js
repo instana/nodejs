@@ -1,30 +1,30 @@
 'use strict';
 
-var commands = require('redis-commands');
-var shimmer = require('shimmer');
+const commands = require('redis-commands');
+const shimmer = require('shimmer');
 
-var requireHook = require('../../../util/requireHook');
-var tracingUtil = require('../../tracingUtil');
-var constants = require('../../constants');
-var cls = require('../../cls');
+const requireHook = require('../../../util/requireHook');
+const tracingUtil = require('../../tracingUtil');
+const constants = require('../../constants');
+const cls = require('../../cls');
 
-var isActive = false;
+let isActive = false;
 
-exports.activate = function() {
+exports.activate = function activate() {
   isActive = true;
 };
 
-exports.deactivate = function() {
+exports.deactivate = function deactivate() {
   isActive = false;
 };
 
-exports.init = function() {
+exports.init = function init() {
   requireHook.onModuleLoad('redis', instrument);
 };
 
 function instrument(redis) {
-  var redisClientProto = redis.RedisClient.prototype;
-  commands.list.forEach(function(name) {
+  const redisClientProto = redis.RedisClient.prototype;
+  commands.list.forEach(name => {
     // some commands are not added or are renamed. Ignore them for now.
     if (
       !redisClientProto[name] &&
@@ -34,7 +34,7 @@ function instrument(redis) {
       return;
     }
 
-    var boundInstrumentCommand = instrumentCommand.bind(null, name);
+    const boundInstrumentCommand = instrumentCommand.bind(null, name);
     shimmer.wrap(redisClientProto, name, boundInstrumentCommand);
     shimmer.wrap(redisClientProto, name.toUpperCase(), boundInstrumentCommand);
   });
@@ -47,7 +47,7 @@ function instrument(redis) {
       shimmer.wrap(redis.Multi.prototype, 'exec_transaction', instrumentMultiExec.bind(null, true));
     }
 
-    var instrumentedBatch = instrumentMultiExec.bind(null, false);
+    const instrumentedBatch = instrumentMultiExec.bind(null, false);
     if (typeof redis.Multi.prototype.exec_batch === 'function') {
       // Old versions of redis also do not have exec_batch. See above (exec_transaction).
       shimmer.wrap(redis.Multi.prototype, 'exec_batch', instrumentedBatch);
@@ -59,33 +59,33 @@ function instrument(redis) {
 
 function instrumentCommand(command, original) {
   return function wrappedCommand() {
-    var client = this;
+    const client = this;
 
     if (!isActive || !cls.isTracing()) {
       return original.apply(this, arguments);
     }
 
-    var parentSpan = cls.getCurrentSpan();
+    const parentSpan = cls.getCurrentSpan();
     if (constants.isExitSpan(parentSpan)) {
       return original.apply(this, arguments);
     }
 
-    var span = cls.startSpan('redis', constants.EXIT);
+    const span = cls.startSpan('redis', constants.EXIT);
     // do not set the redis span as the current span
     cls.setCurrentSpan(parentSpan);
     span.stack = tracingUtil.getStackTrace(wrappedCommand);
     span.data.redis = {
       connection: client.address,
-      command: command
+      command
     };
 
-    var callback = cls.ns.bind(onResult);
-    var args = [];
-    for (var i = 0; i < arguments.length; i++) {
+    const callback = cls.ns.bind(onResult);
+    const args = [];
+    for (let i = 0; i < arguments.length; i++) {
       args[i] = arguments[i];
     }
 
-    var userProvidedCallback = args[args.length - 1];
+    let userProvidedCallback = args[args.length - 1];
     if (typeof userProvidedCallback !== 'function') {
       userProvidedCallback = null;
       args.push(callback);
@@ -114,18 +114,18 @@ function instrumentCommand(command, original) {
 
 function instrumentMultiExec(isAtomic, original) {
   return function instrumentedMultiExec() {
-    var multi = this;
+    const multi = this;
 
     if (!isActive || !cls.isTracing()) {
       return original.apply(this, arguments);
     }
 
-    var parentSpan = cls.getCurrentSpan();
+    const parentSpan = cls.getCurrentSpan();
     if (constants.isExitSpan(parentSpan)) {
       return original.apply(this, arguments);
     }
 
-    var span = cls.startSpan('redis', constants.EXIT);
+    const span = cls.startSpan('redis', constants.EXIT);
     // do not set the redis span as the current span
     cls.setCurrentSpan(parentSpan);
     span.stack = tracingUtil.getStackTrace(instrumentedMultiExec);
@@ -134,13 +134,13 @@ function instrumentMultiExec(isAtomic, original) {
       command: isAtomic ? 'multi' : 'pipeline'
     };
 
-    var callback = cls.ns.bind(onResult);
-    var args = [];
-    for (var i = 0; i < arguments.length; i++) {
+    const callback = cls.ns.bind(onResult);
+    const args = [];
+    for (let i = 0; i < arguments.length; i++) {
       args[i] = arguments[i];
     }
 
-    var userProvidedCallback = args[args.length - 1];
+    let userProvidedCallback = args[args.length - 1];
     if (typeof userProvidedCallback !== 'function') {
       userProvidedCallback = null;
       args.push(callback);
@@ -148,10 +148,10 @@ function instrumentMultiExec(isAtomic, original) {
       args[args.length - 1] = callback;
     }
 
-    var subCommands = (span.data.redis.subCommands = []);
-    var len = multi.queue.length;
-    for (i = 0; i < len; i++) {
-      var subCommand = multi.queue.get(i);
+    const subCommands = (span.data.redis.subCommands = []);
+    const len = multi.queue.length;
+    for (let i = 0; i < len; i++) {
+      const subCommand = multi.queue.get(i);
       subCommands[i] = subCommand.command;
       subCommand.callback = buildSubCommandCallback(span, subCommand.callback);
     }

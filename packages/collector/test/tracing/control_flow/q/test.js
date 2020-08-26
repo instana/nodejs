@@ -49,9 +49,7 @@ describe('tracing/q', function() {
   runTest('/with-event-emitter');
   runTest('/entry-exit', verifyEntryAndExit);
 
-  function runTest(path, verification) {
-    verification = verification || verifySingleEntry;
-
+  function runTest(path, verification = verifySingleEntry) {
     it(`must trace: ${path}`, () =>
       appControls
         .sendRequest({

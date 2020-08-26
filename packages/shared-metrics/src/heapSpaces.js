@@ -1,6 +1,6 @@
 'use strict';
 
-var v8;
+let v8;
 try {
   v8 = require('v8');
 } catch (e) {
@@ -11,9 +11,9 @@ try {
 exports.payloadPrefix = 'heapSpaces';
 exports.currentPayload = {};
 
-var activeIntervalHandle = null;
+let activeIntervalHandle = null;
 
-exports.activate = function() {
+exports.activate = function activate() {
   // Heap space statistics are available from Node.js v5.5.0 on.
   if (v8 && v8.getHeapSpaceStatistics) {
     gatherHeapSpaceStatistics();
@@ -23,14 +23,14 @@ exports.activate = function() {
 };
 
 function gatherHeapSpaceStatistics() {
-  var rawStats = v8.getHeapSpaceStatistics();
+  const rawStats = v8.getHeapSpaceStatistics();
 
   // We are changing the native format to a format which can be more
   // efficiently compressed and processed in the backend.
-  var processedStats = {};
+  const processedStats = {};
 
-  for (var i = 0, len = rawStats.length; i < len; i++) {
-    var rawStat = rawStats[i];
+  for (let i = 0, len = rawStats.length; i < len; i++) {
+    const rawStat = rawStats[i];
     processedStats[rawStat.space_name] = {
       current: rawStat.space_size,
       available: rawStat.space_available_size,
@@ -42,7 +42,7 @@ function gatherHeapSpaceStatistics() {
   exports.currentPayload = processedStats;
 }
 
-exports.deactivate = function() {
+exports.deactivate = function deactivate() {
   exports.currentPayload = {};
   if (activeIntervalHandle) {
     clearInterval(activeIntervalHandle);

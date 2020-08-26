@@ -18,10 +18,10 @@ const CONTEXTS_SYMBOL = 'instanaClsHooked@contexts';
 let currentUid = -1;
 
 module.exports = {
-  getNamespace: getNamespace,
-  createNamespace: createNamespace,
-  destroyNamespace: destroyNamespace,
-  reset: reset
+  getNamespace,
+  createNamespace,
+  destroyNamespace,
+  reset
 };
 
 /**
@@ -46,7 +46,7 @@ Namespace.prototype.set = function set(key, value) {
     throw new Error('No context available. ns.run() or ns.bind() must be called first.');
   }
 
-  var context = this.active;
+  const context = this.active;
   context[key] = value;
 
   return unset.bind(null, context, key, value);
@@ -98,7 +98,7 @@ Namespace.prototype.run = function run(fn, ctx) {
  */
 Namespace.prototype.runAndReturn = function runAndReturn(fn, ctx) {
   let value;
-  this.run(function(context) {
+  this.run(context => {
     value = fn(context);
   }, ctx);
   return value;
@@ -203,7 +203,7 @@ Namespace.prototype.bindEmitter = function bindEmitter(emitter) {
   assert.ok(emitter.on && emitter.addListener && emitter.emit, 'can only bind real EEs');
 
   let namespace = this;
-  let thisSymbol = 'context@' + this.name;
+  let thisSymbol = `context@${this.name}`;
 
   // Capture the context active at the time the emitter is bound.
   function attach(listener) {
@@ -215,7 +215,7 @@ Namespace.prototype.bindEmitter = function bindEmitter(emitter) {
     }
 
     listener[CONTEXTS_SYMBOL][thisSymbol] = {
-      namespace: namespace,
+      namespace,
       context: namespace.active
     };
   }
@@ -228,7 +228,7 @@ Namespace.prototype.bindEmitter = function bindEmitter(emitter) {
 
     let wrapped = unwrapped;
     let unwrappedContexts = unwrapped[CONTEXTS_SYMBOL];
-    Object.keys(unwrappedContexts).forEach(function(name) {
+    Object.keys(unwrappedContexts).forEach(name => {
       let thunk = unwrappedContexts[name];
       wrapped = thunk.namespace.bind(wrapped, thunk.context);
     });
@@ -260,7 +260,7 @@ Namespace.prototype.exit = function exit(context) {
   if (index < 0) {
     assert.ok(
       index >= 0,
-      "context not currently entered; can't exit. \n" + util.inspect(this) + '\n' + util.inspect(context)
+      `context not currently entered; can't exit. \n${util.inspect(this)}\n${util.inspect(context)}`
     );
   } else {
     assert.ok(index, "can't remove top context");
@@ -330,8 +330,8 @@ function createNamespace(name) {
 function destroyNamespace(name) {
   let namespace = getNamespace(name);
 
-  assert.ok(namespace, 'can\'t delete nonexistent namespace! "' + name + '"');
-  assert.ok(namespace.id, "don't assign to process.namespaces directly! " + util.inspect(namespace));
+  assert.ok(namespace, `can't delete nonexistent namespace! "${name}"`);
+  assert.ok(namespace.id, `don't assign to process.namespaces directly! ${util.inspect(namespace)}`);
 
   process.namespaces[name] = null;
 }
@@ -339,7 +339,7 @@ function destroyNamespace(name) {
 function reset() {
   // must unregister async listeners
   if (process.namespaces) {
-    Object.keys(process.namespaces).forEach(function(name) {
+    Object.keys(process.namespaces).forEach(name => {
       destroyNamespace(name);
     });
   }

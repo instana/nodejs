@@ -1,19 +1,22 @@
 'use strict';
 
-var semver = require('semver');
-var instanaCore = require('@instana/core');
+const semver = require('semver');
+const instanaCore = require('@instana/core');
 
-var transmissionCycle = require('../metrics/transmissionCycle');
-var agentOpts = require('../agent/opts');
-var pidStore = require('../pidStore');
-var metrics = require('../metrics');
-var uncaught = require('../uncaught');
+const agentConnection = require('../agentConnection');
+const agentOpts = require('../agent/opts');
+const initializedTooLate = require('../util/initializedTooLate');
+const metrics = require('../metrics');
+const pidStore = require('../pidStore');
+const requestHandler = require('../agent/requestHandler');
+const transmissionCycle = require('../metrics/transmissionCycle');
+const uncaught = require('../uncaught');
 
-var autoprofile;
-var tracing = instanaCore.tracing;
+let autoprofile;
+const tracing = instanaCore.tracing;
 
-var logger;
-logger = require('../logger').getLogger('announceCycle/agentready', function(newLogger) {
+let logger;
+logger = require('../logger').getLogger('announceCycle/agentready', newLogger => {
   logger = newLogger;
 });
 
@@ -28,32 +31,32 @@ if (agentOpts.autoProfile && semver.gte(process.version, '6.4.0')) {
         'the collector: ' +
         'https://www.instana.com/docs/ecosystem/node-js/installation/#native-addons'
     );
+    fireMonitoringEvent();
+    setInterval(fireMonitoringEvent, 600000).unref();
   }
 }
 
-var requestHandler = require('../agent/requestHandler');
-var agentConnection = require('../agentConnection');
+let ctx;
 
-var ctx;
-
-var tracingMetricsDelay = 1000;
+let tracingMetricsDelay = 1000;
 if (typeof process.env.INSTANA_TRACER_METRICS_INTERVAL === 'string') {
   tracingMetricsDelay = parseInt(process.env.INSTANA_TRACER_METRICS_INTERVAL, 10);
   if (isNaN(tracingMetricsDelay) || tracingMetricsDelay <= 0) {
     tracingMetricsDelay = 1000;
   }
 }
-var tracingMetricsTimeout = null;
+let tracingMetricsTimeout = null;
 
 module.exports = exports = {
-  enter: enter,
-  leave: leave
+  enter,
+  leave
 };
 
 function enter(_ctx) {
   ctx = _ctx;
   uncaught.activate();
   metrics.activate();
+  initializedTooLate.check();
   transmissionCycle.activate(
     metrics,
     agentConnection,
@@ -69,16 +72,12 @@ function enter(_ctx) {
   scheduleTracingMetrics();
 
   if (agentOpts.autoProfile && autoprofile) {
-    var profiler = autoprofile.start();
-    profiler.sendProfiles = function(profiles, callback) {
+    const profiler = autoprofile.start();
+    profiler.sendProfiles = (profiles, callback) => {
       agentConnection.sendProfiles(profiles, callback);
     };
-    profiler.getExternalPid = function() {
-      return pidStore.pid;
-    };
-    profiler.getLogger = function() {
-      return logger;
-    };
+    profiler.getExternalPid = () => pidStore.pid;
+    profiler.getLogger = () => logger;
     profiler.start();
   }
 
@@ -98,8 +97,8 @@ function leave() {
 }
 
 function sendTracingMetrics() {
-  var payload = tracing._getAndResetTracingMetrics();
-  agentConnection.sendTracingMetricsToAgent(payload, function(error) {
+  const payload = tracing._getAndResetTracingMetrics();
+  agentConnection.sendTracingMetricsToAgent(payload, error => {
     if (error) {
       logger.warn('Error received while trying to send tracing metrics to agent: %s', error.message);
       if (typeof error.message === 'string' && error.message.indexOf('Got status code 404')) {
@@ -114,4 +113,12 @@ function sendTracingMetrics() {
 function scheduleTracingMetrics() {
   tracingMetricsTimeout = setTimeout(sendTracingMetrics, tracingMetricsDelay);
   tracingMetricsTimeout.unref();
+}
+
+function fireMonitoringEvent() {
+  agentConnection.sendAgentMonitoringEvent('nodejs_collector_native_addon_autoprofile_missing', 'PROFILER', error => {
+    if (error) {
+      logger.error('Error received while trying to send Agent Monitoring Event to agent: %s', error.message);
+    }
+  });
 }

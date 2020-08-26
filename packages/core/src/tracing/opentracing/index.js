@@ -1,11 +1,11 @@
 'use strict';
 
-var opentracing = require('opentracing');
+const opentracing = require('opentracing');
 
-var isActive = false;
-var tracer;
-var cls;
-var automaticTracingEnabled = false;
+let isActive = false;
+let tracer;
+let cls;
+let automaticTracingEnabled = false;
 
 exports.init = function init(config, _automaticTracingEnabled, processIdentityProvider) {
   automaticTracingEnabled = _automaticTracingEnabled;
@@ -14,7 +14,7 @@ exports.init = function init(config, _automaticTracingEnabled, processIdentityPr
 
 exports.createTracer = function createTracer() {
   if (!tracer) {
-    var Tracer = require('./Tracer');
+    const Tracer = require('./Tracer');
     tracer = new Tracer(isActive);
   }
   return tracer;
@@ -44,18 +44,18 @@ exports.getCurrentlyActiveInstanaSpanContext = function getCurrentlyActiveInstan
     cls = require('../cls');
   }
 
-  var currentSpan = cls.getCurrentSpan();
+  const currentSpan = cls.getCurrentSpan();
   if (!currentSpan) {
     return null;
   }
 
-  var t = currentSpan.t;
-  var s = currentSpan.s;
+  const t = currentSpan.t;
+  const s = currentSpan.s;
   if (!t || !s) {
     return null;
   }
 
-  var spanContext = new opentracing.SpanContext();
+  const spanContext = new opentracing.SpanContext();
   spanContext.s = s;
   spanContext.t = t;
   spanContext.samplingPriority = cls.tracingLevel() === '0' ? 0 : 1;

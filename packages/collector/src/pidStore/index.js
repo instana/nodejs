@@ -1,18 +1,18 @@
 'use strict';
 
-var fs = require('fs');
-var EventEmitter = require('events').EventEmitter;
+const fs = require('fs');
+const EventEmitter = require('events').EventEmitter;
 
-var internalPidStore = require('./internalPidStore');
-var agentOpts = require('../agent/opts');
+const internalPidStore = require('./internalPidStore');
+const agentOpts = require('../agent/opts');
 
-var logger;
-logger = require('../logger').getLogger('pidStore', function(newLogger) {
+let logger;
+logger = require('../logger').getLogger('pidStore', newLogger => {
   logger = newLogger;
 });
 
-var eventName = 'pidChanged';
-var eventEmitter = new EventEmitter();
+const eventName = 'pidChanged';
+const eventEmitter = new EventEmitter();
 exports.onPidChange = eventEmitter.on.bind(eventEmitter, eventName);
 
 logger.info('Starting with pid %s', internalPidStore.pid);
@@ -42,7 +42,7 @@ exports.getFrom = function getFrom() {
 };
 
 if (!process.env.CONTINUOUS_INTEGRATION) {
-  var pidInParentNamespace = getPidFromParentNamespace();
+  const pidInParentNamespace = getPidFromParentNamespace();
   if (pidInParentNamespace) {
     internalPidStore.pid = pidInParentNamespace;
     logger.info('Changing pid to %s due to successful identification of PID in parent namespace', pidInParentNamespace);
@@ -51,15 +51,15 @@ if (!process.env.CONTINUOUS_INTEGRATION) {
 
 function getPidFromParentNamespace() {
   try {
-    var schedFileContent = fs.readFileSync('/proc/' + process.pid + '/sched', { encoding: 'utf8' });
+    const schedFileContent = fs.readFileSync(`/proc/${process.pid}/sched`, { encoding: 'utf8' });
 
-    var match = schedFileContent.match(/^[^(]+\((\d+),/im);
+    const match = schedFileContent.match(/^[^(]+\((\d+),/im);
     if (!match) {
       logger.debug('Could not locate PID in sched file');
       return null;
     }
 
-    var pidInSchedFile = parseInt(match[1], 10);
+    const pidInSchedFile = parseInt(match[1], 10);
     if (pidInSchedFile === process.pid) {
       logger.debug('PID in sched file matches process.pid. Probably not running inside a PID namespace');
       return null;
