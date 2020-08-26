@@ -52,6 +52,10 @@ exports.startSpan = function startSpan(spanName, kind, traceId, parentSpanId, w3
   const parentSpan = exports.getCurrentSpan();
   const parentW3cTraceContext = exports.getW3cTraceContext();
 
+  if (serviceName != null && !parentSpan) {
+    span.data.service = serviceName;
+  }
+
   // If the client code has specified a trace ID/parent ID, use the provided IDs.
   if (traceId) {
     span.t = traceId;
@@ -242,7 +246,7 @@ function InstanaSpan(name) {
   this.ts = Date.now();
   this.d = 0;
   this.stack = [];
-  this.data = serviceName != null ? { service: serviceName } : {};
+  this.data = {};
 
   // properties used within the collector that should not be transmitted to the agent/backend
   // NOTE: If you add a new property, make sure that it is not enumerable, as it may otherwise be transmitted
