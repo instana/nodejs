@@ -7,7 +7,7 @@ const semver = require('semver');
 const constants = require('@instana/core').tracing.constants;
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('../../../../../core/test/config');
-const { expectExactlyOneMatching, retry } = require('../../../../../core/test/test_util');
+const { delay, expectExactlyOneMatching, retry } = require('../../../../../core/test/test_util');
 const ProcessControls = require('../../../test_util/ProcessControls');
 
 let agentControls;
@@ -31,7 +31,8 @@ mochaSuiteFn('tracing/http2', function() {
     extraHeaders: [
       //
       'X-My-Request-Header',
-      'X-My-Response-Header'
+      'X-My-Response-Header',
+      'x-iNsTanA-sErViCe'
     ],
     secretsList: ['remove']
   });
@@ -102,6 +103,189 @@ mochaSuiteFn('tracing/http2', function() {
 
         return retry(() => agentControls.getSpans().then(spans => verifySpans(spans, 'GET', true)));
       }));
+
+  it('must suppress', () =>
+    clientControls
+      .sendRequest({
+        method: 'GET',
+        path: '/trigger-downstream',
+        headers: {
+          'X-INSTANA-L': '0'
+        }
+      })
+      .then(() => delay(500))
+      .then(() =>
+        agentControls.getSpans().then(spans => {
+          expect(spans).to.have.lengthOf(0);
+        })
+      ));
+
+  it('must suppress when X-INSTANA-L has trailing content', () =>
+    clientControls
+      .sendRequest({
+        method: 'POST',
+        path: '/trigger-downstream',
+        headers: {
+          'X-INSTANA-L': '0trailingcontet'
+        }
+      })
+      .then(() => delay(500))
+      .then(() =>
+        agentControls.getSpans().then(spans => {
+          expect(spans).to.have.lengthOf(0);
+        })
+      ));
+
+  it('must start a new trace with correlation ID', () =>
+    serverControls
+      .sendRequest({
+        method: 'GET',
+        path: '/request',
+        headers: {
+          'X-INSTANA-T': '84e588b697868fee',
+          'X-INSTANA-S': '5e734f51bce69eca',
+          'X-INSTANA-L': '1,correlationType=web;correlationId=abcdef0123456789'
+        }
+      })
+      .then(() =>
+        retry(() =>
+          agentControls.getSpans().then(spans => {
+            const entryInClient = verifyRootHttpEntry(spans, `localhost:${serverPort}`, '/request');
+            expect(entryInClient.t).to.be.a('string');
+            expect(entryInClient.t).to.have.lengthOf(16);
+            expect(entryInClient.t).to.not.equal('84e588b697868fee');
+            expect(entryInClient.p).to.not.exist;
+            expect(entryInClient.data.correlationType).to.equal('web');
+            expect(entryInClient.data.correlationId).to.equal('abcdef0123456789');
+          })
+        )
+      ));
+
+  it('must mark entries as synthetic', () =>
+    serverControls
+      .sendRequest({
+        method: 'GET',
+        path: '/request',
+        headers: {
+          'X-INSTANA-SYNTHETIC': '1'
+        }
+      })
+      .then(() =>
+        retry(() =>
+          agentControls.getSpans().then(spans => {
+            verifyRootHttpEntry(spans, `localhost:${serverPort}`, '/request', 'GET', 200, false, true);
+          })
+        )
+      ));
+
+  it('must use x-service-service', () =>
+    serverControls
+      .sendRequest({
+        method: 'GET',
+        path: '/request',
+        headers: {
+          'x-instanA-SERVICE': 'Custom Service'
+        }
+      })
+      .then(() =>
+        retry(() =>
+          agentControls.getSpans().then(spans => {
+            const entry = verifyRootHttpEntry(spans, `localhost:${serverPort}`, '/request');
+            expect(entry.data.service).to.equal('Custom Service');
+          })
+        )
+      ));
+
+  describe('Server-Timing header', () => {
+    it('must expose trace id as Server-Timing header', () =>
+      serverControls
+        .sendRequest({
+          method: 'POST',
+          path: '/request'
+        })
+        .then(res => {
+          expect(res.headers['server-timing']).to.match(/^intid;desc=[a-f0-9]+$/);
+        }));
+
+    it('must also expose trace id as Server-Timing header when X-INSTANA-T and -S are incoming', () =>
+      serverControls
+        .sendRequest({
+          method: 'POST',
+          path: '/request',
+          headers: {
+            'X-INSTANA-T': '84e588b697868fee',
+            'X-INSTANA-S': '5e734f51bce69eca'
+          }
+        })
+        .then(res => {
+          expect(res.headers['server-timing']).to.equal('intid;desc=84e588b697868fee');
+        }));
+
+    it('must expose trace id as Server-Timing header: Custom server-timing string', () =>
+      serverControls
+        .sendRequest({
+          method: 'POST',
+          path: '/request?server-timing-string=true'
+        })
+        .then(res => {
+          expect(res.headers['server-timing']).to.match(/^myServerTimingKey, intid;desc=[a-f0-9]+$/);
+        }));
+
+    it('must expose trace id as Server-Timing header: Custom server-timing array', () =>
+      serverControls
+        .sendRequest({
+          method: 'POST',
+          path: '/request?server-timing-array=true'
+        })
+        .then(res => {
+          expect(res.headers['server-timing']).to.match(/^key1, key2;dur=42, intid;desc=[a-f0-9]+$/);
+        }));
+
+    it(
+      'must not append another key-value pair when the (string) Server-Timing header already has intid: ' +
+        'Custom server-timing string',
+      () =>
+        serverControls
+          .sendRequest({
+            method: 'POST',
+            path: '/request?server-timing-string-with-intid=true'
+          })
+          .then(res => {
+            expect(res.headers['server-timing']).to.equal('myServerTimingKey, intid;desc=1234567890abcdef');
+          })
+    );
+
+    it(
+      'must not append another key-value pair when the (array) Server-Timing header already has intid: ' +
+        'Custom server-timing string',
+      () =>
+        serverControls
+          .sendRequest({
+            method: 'POST',
+            path: '/request?server-timing-array-with-intid=true'
+          })
+          .then(res => {
+            expect(res.headers['server-timing']).to.equal('key1, key2;dur=42, intid;desc=1234567890abcdef');
+          })
+    );
+  });
+
+  it('must expose trace ID on incoming HTTP request', () =>
+    serverControls
+      .sendRequest({
+        method: 'GET',
+        path: '/inject-trace-id'
+      })
+      .then(response => {
+        expect(response.body).to.match(/^Instana Trace ID: [a-f0-9]{16}$/);
+        const traceId = /^Instana Trace ID: ([a-f0-9]{16})$/.exec(response.body)[1];
+        return retry(() =>
+          agentControls.getSpans().then(spans => {
+            const span = verifyRootHttpEntry(spans, `localhost:${serverPort}`, '/inject-trace-id');
+            expect(span.t).to.equal(traceId);
+          })
+        );
+      }));
 });
 
 function constructPath(basePath, withQuery) {
@@ -145,7 +329,7 @@ function verifySpans(spans, method, erroneous, withQuery) {
   expect(spans).to.have.lengthOf(3);
 }
 
-function verifyRootHttpEntry(spans, host, url, method, status, erroneous, synthetic) {
+function verifyRootHttpEntry(spans, host, url, method = 'GET', status = 200, erroneous, synthetic) {
   return verifyHttpEntry(spans, null, host, url, method, false, status, erroneous, synthetic);
 }
 

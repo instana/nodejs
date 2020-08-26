@@ -38,33 +38,49 @@ const routes = {
     PUT: (stream, query) => respond(stream, query),
     PATCH: (stream, query) => respond(stream, query),
     DELETE: (stream, query) => respond(stream, query)
+  },
+  '/inject-trace-id': {
+    GET: respondWithTraceId
   }
 };
 
 function respond(stream, query) {
+  const responseHeaders = {
+    'content-type': 'application/json; charset=UTF-8',
+    'X-My-ReSpoNse-HeadeR': 'x-my-response-header-value'
+  };
+  if (query['server-timing-string']) {
+    responseHeaders['sErver-tiMING'] = 'myServerTimingKey';
+  } else if (query['server-timing-array']) {
+    responseHeaders['sErver-tiMING'] = ['key1', 'key2;dur=42'];
+  } else if (query['server-timing-string-with-intid']) {
+    responseHeaders['sErver-tiMING'] = 'myServerTimingKey, intid;desc=1234567890abcdef';
+  } else if (query['server-timing-array-with-intid']) {
+    responseHeaders['sErver-tiMING'] = ['key1', 'key2;dur=42', 'intid;desc=1234567890abcdef'];
+  }
+
   if (query.error) {
-    stream.respond({
-      'content-type': 'application/json; charset=UTF-8',
-      [HTTP2_HEADER_STATUS]: 500,
-      'X-My-ReSpoNse-HeadeR': 'x-my-response-header-value'
-    });
+    responseHeaders[HTTP2_HEADER_STATUS] = 500;
+    stream.respond(responseHeaders);
     stream.end(
       JSON.stringify({
         message: 'Oops!'
       })
     );
   } else {
-    stream.respond({
-      'content-type': 'application/json; charset=UTF-8',
-      [HTTP2_HEADER_STATUS]: 200,
-      'X-My-ReSpoNse-HeadeR': 'x-my-response-header-value'
-    });
+    responseHeaders[HTTP2_HEADER_STATUS] = 200;
+    stream.respond(responseHeaders);
     stream.end(
       JSON.stringify({
         message: 'Ohai HTTP2!'
       })
     );
   }
+}
+
+function respondWithTraceId(stream, query, headers) {
+  stream.respond({ [HTTP2_HEADER_STATUS]: 200 });
+  stream.end(`Instana Trace ID: ${headers['x-instana-t']}`);
 }
 
 server.on('stream', (stream, headers) => {

@@ -120,8 +120,31 @@ function shimEmit(realEmit) {
         url: discardUrlParameters(pathParts.shift()),
         params: pathParts.length > 0 ? pathParts.join('?') : undefined,
         host: authority,
-        header: httpCommon.getExtraHeadersCaseInsensitive(headers, extraHttpHeadersToCapture)
+        header: httpCommon.getExtraHeadersFromHeaders(headers, extraHttpHeadersToCapture)
       };
+
+      const incomingServiceName =
+        span.data.http.header && span.data.http.header[constants.serviceNameHeaderNameLowerCase];
+      if (incomingServiceName != null) {
+        span.data.service = incomingServiceName;
+      }
+
+      if (!headers['x-instana-t']) {
+        // In cases where we have started a fresh trace (that is, there is no X-INSTANA-T in the incoming request
+        // headers, we add the new trace ID to the incoming request so a customer's app can render it reliably into the
+        // EUM snippet, see
+        // eslint-disable-next-line max-len
+        // https://www.instana.com/docs/products/website_monitoring/backendCorrelation/#retrieve-the-backend-trace-id-in-nodejs
+        headers['x-instana-t'] = span.t;
+      }
+
+      // Support for automatic client/back end EUM correlation: We add our key-value pair to the Server-Timing header
+      // (the key intid is short for INstana Trace ID). This abbreviation is small enough to not incur a notable
+      // overhead while at the same time being unique enough to avoid name collisions.
+      const serverTimingValue = `intid;desc=${span.t}`;
+      instrumentResponseMethod(stream, 'respond', 0, serverTimingValue);
+      instrumentResponseMethod(stream, 'respondWithFD', 1, serverTimingValue);
+      instrumentResponseMethod(stream, 'respondWithFile', 1, serverTimingValue);
 
       stream.on('aborted', () => {
         finishSpan();
@@ -161,6 +184,35 @@ function shimEmit(realEmit) {
       return realEmit.apply(originalThis, originalArgs);
     });
   };
+}
+
+function instrumentResponseMethod(stream, method, headerArgumentIndex, serverTimingValue) {
+  if (typeof stream[method] === 'function') {
+    shimmer.wrap(
+      stream,
+      method,
+      original =>
+        function() {
+          const headers = arguments[headerArgumentIndex];
+          if (!headers || typeof headers !== 'object' || !headers[HTTP2_HEADER_STATUS]) {
+            return original.apply(this, arguments);
+          }
+          const existingKey = Object.keys(headers).filter(key => key.toLowerCase() === 'server-timing')[0];
+
+          const existingValue = existingKey ? headers[existingKey] : null;
+          if (existingValue == null) {
+            headers['Server-Timing'] = serverTimingValue;
+          } else if (Array.isArray(existingValue)) {
+            if (!existingValue.find(kv => kv.indexOf('intid;') === 0)) {
+              headers[existingKey] = existingValue.concat(serverTimingValue);
+            }
+          } else if (typeof existingValue === 'string' && existingValue.indexOf('intid;') < 0) {
+            headers[existingKey] = `${existingValue}, ${serverTimingValue}`;
+          }
+          return original.apply(this, arguments);
+        }
+    );
+  }
 }
 
 exports.updateConfig = function updateConfig(config) {

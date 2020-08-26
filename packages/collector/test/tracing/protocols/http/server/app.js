@@ -42,6 +42,7 @@ server.on('request', (req, res) => {
     log(`${req.method} ${req.url}`);
   }
   const query = url.parse(req.url, true).query || {};
+  let body = null;
 
   if (req.url === '/dont-respond') {
     // Deliberately not sending a response in time so that the request times out client side. This will lead to the
@@ -66,28 +67,41 @@ server.on('request', (req, res) => {
       underlyingStream.destroy();
     }
     return;
+  } else if (req.url === '/inject-instana-trace-id') {
+    body = `Instana Trace ID: ${req.headers['x-instana-t']}`;
   }
 
   if (query.responseStatus) {
     res.statusCode = parseInt(query.responseStatus || 200, 10);
   }
-
-  const delay = parseInt(query.delay || 0, 10);
-
   if (query.responseHeader) {
     res.setHeader('X-MY-ENTRY-RESPONSE-HEADER', 'Response Header Value');
   }
+  if (query.cookie) {
+    res.setHeader('sEt-CooKie', query.cookie);
+  }
+  if (query['server-timing-string']) {
+    res.setHeader('sErver-tiMING', 'myServerTimingKey');
+  } else if (query['server-timing-array']) {
+    res.setHeader('sErver-tiMING', ['key1', 'key2;dur=42']);
+  } else if (query['server-timing-string-with-intid']) {
+    res.setHeader('sErver-tiMING', 'myServerTimingKey, intid;desc=1234567890abcdef');
+  } else if (query['server-timing-array-with-intid']) {
+    res.setHeader('sErver-tiMING', ['key1', 'key2;dur=42', 'intid;desc=1234567890abcdef']);
+  }
+
+  const delay = parseInt(query.delay || 0, 10);
 
   if (delay === 0) {
-    endResponse(query, res);
+    endResponse(query, res, body);
   } else {
     setTimeout(() => {
-      endResponse(query, res);
+      endResponse(query, res, body);
     }, delay);
   }
 });
 
-function endResponse(query, res) {
+function endResponse(query, res, body) {
   if (query.writeHead) {
     res.writeHead(200, {
       'X-WRITE-HEAD-RESPONSE-HEADER': 'Write Head Response Header Value'
@@ -97,7 +111,7 @@ function endResponse(query, res) {
   // Regularly ending the response will emit the following events:
   // - res#finish
   // - res#close
-  res.end();
+  res.end(body);
 }
 
 function log() {

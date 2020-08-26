@@ -94,40 +94,55 @@ function shimEmit(realEmit) {
         host: req.headers.host,
         header: httpCommon.getExtraHeadersFromMessage(req, extraHttpHeadersToCapture)
       };
+
       const incomingServiceName =
         span.data.http.header && span.data.http.header[constants.serviceNameHeaderNameLowerCase];
       if (incomingServiceName != null) {
         span.data.service = incomingServiceName;
       }
 
-      // Handle client/back end eum correlation.
-      if (!span.p) {
-        // We add the trace ID to the incoming request so a customer's app can render it into the EUM snippet, see
+      if (!req.headers['x-instana-t']) {
+        // In cases where we have started a fresh trace (that is, there is no X-INSTANA-T in the incoming request
+        // headers, we add the new trace ID to the incoming request so a customer's app can render it reliably into the
+        // EUM snippet, see
         // eslint-disable-next-line max-len
         // https://www.instana.com/docs/products/website_monitoring/backendCorrelation/#retrieve-the-backend-trace-id-in-nodejs
         req.headers['x-instana-t'] = span.t;
+      }
 
-        // support for automatic client/back end EUM correlation
-        // intid = instana trace id
-        // This abbreviation is small enough to not incur a notable overhead while at the same
-        // time being unique enough to avoid name collisions.
-        const serverTimingValue = `intid;desc=${span.t}`;
-        res.setHeader('Server-Timing', serverTimingValue);
-        shimmer.wrap(
-          res,
-          'setHeader',
-          realSetHeader =>
-            function shimmedSetHeader(key, value) {
-              if (key.toLowerCase() === 'server-timing') {
-                if (Array.isArray(value)) {
+      // Support for automatic client/back end EUM correlation: We add our key-value pair to the Server-Timing header
+      // (the key intid is short for INstana Trace ID). This abbreviation is small enough to not incur a notable
+      // overhead while at the same time being unique enough to avoid name collisions.
+      const serverTimingValue = `intid;desc=${span.t}`;
+      res.setHeader('Server-Timing', serverTimingValue);
+      shimmer.wrap(
+        res,
+        'setHeader',
+        realSetHeader =>
+          function shimmedSetHeader(key, value) {
+            if (key.toLowerCase() === 'server-timing') {
+              if (value == null) {
+                return realSetHeader.call(this, key, serverTimingValue);
+              } else if (Array.isArray(value)) {
+                if (value.find(kv => kv.indexOf('intid;') === 0)) {
+                  // If the application code sets intid, do not append another intid value. Actually, the application
+                  // has no business setting an intid key-value pair, but it could happen theoretically for a proxy-like
+                  // Node.js app (which blindly copies headers from downstream responses) in combination with a
+                  // downstream service that is also instrumented by Instana (and adds the intid key-value pair).
+                  return realSetHeader.apply(this, arguments);
+                } else {
                   return realSetHeader.call(this, key, value.concat(serverTimingValue));
                 }
+              } else if (typeof value === 'string' && value.indexOf('intid;') >= 0) {
+                // Do not add another intid key-value pair, see above.
+                return realSetHeader.apply(this, arguments);
+              } else {
                 return realSetHeader.call(this, key, `${value}, ${serverTimingValue}`);
               }
-              return realSetHeader.apply(this, arguments);
             }
-        );
-      }
+            return realSetHeader.apply(this, arguments);
+          }
+      );
 
       req.on('aborted', () => {
         finishSpan();
