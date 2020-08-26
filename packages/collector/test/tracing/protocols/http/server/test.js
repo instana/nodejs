@@ -7,8 +7,7 @@ const { fail } = expect;
 const constants = require('@instana/core').tracing.constants;
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('../../../../../../core/test/config');
-const testUtils = require('../../../../../../core/test/test_util');
-const delay = require('../../../../../../core/test/test_util/delay');
+const { delay, retry } = require('../../../../../../core/test/test_util');
 const ProcessControls = require('../../../../test_util/ProcessControls');
 
 let agentControls;
@@ -66,7 +65,7 @@ function registerTests(useHttps, useHttp2CompatApi) {
         }
       })
       .then(() =>
-        testUtils.retry(() =>
+        retry(() =>
           agentControls.getSpans().then(spans => {
             const span = verifyThereIsExactlyOneHttpEntry(spans, '/checkout', 'POST', 201);
             expect(span.t).to.be.a('string');
@@ -91,7 +90,7 @@ function registerTests(useHttps, useHttp2CompatApi) {
         }
       })
       .then(() =>
-        testUtils.retry(() =>
+        retry(() =>
           agentControls.getSpans().then(spans => {
             const span = verifyThereIsExactlyOneHttpEntry(spans, '/checkout', 'POST', 201);
             expect(span.t).to.equal('84e588b697868fee');
@@ -116,7 +115,7 @@ function registerTests(useHttps, useHttp2CompatApi) {
         }
       })
       .then(() =>
-        testUtils.retry(() =>
+        retry(() =>
           agentControls.getSpans().then(spans => {
             const span = verifyThereIsExactlyOneHttpEntry(spans, '/checkout', 'POST', 201);
             expect(span.t).to.equal('6636f38f0f3dd0996636f38f0f3dd099');
@@ -178,7 +177,7 @@ function registerTests(useHttps, useHttp2CompatApi) {
         }
       })
       .then(() =>
-        testUtils.retry(() =>
+        retry(() =>
           agentControls.getSpans().then(spans => {
             const span = verifyThereIsExactlyOneHttpEntry(spans, '/checkout', 'POST', 201);
             expect(span.t).to.be.a('string');
@@ -202,7 +201,7 @@ function registerTests(useHttps, useHttp2CompatApi) {
         }
       })
       .then(() =>
-        testUtils.retry(() =>
+        retry(() =>
           agentControls.getSpans().then(spans => {
             const span = verifyThereIsExactlyOneHttpEntry(spans, '/checkout', 'POST', 500, true);
             expect(span.t).to.be.a('string');
@@ -239,7 +238,7 @@ function registerTests(useHttps, useHttp2CompatApi) {
         }
       })
       .then(() =>
-        testUtils.retry(() =>
+        retry(() =>
           agentControls.getSpans().then(spans => {
             const span = verifyThereIsExactlyOneHttpEntry(spans, '/', 'GET', 200);
             expect(span.data.http.header).to.be.an('object');
@@ -258,7 +257,7 @@ function registerTests(useHttps, useHttp2CompatApi) {
         path: '/?responseHeader=true'
       })
       .then(() =>
-        testUtils.retry(() =>
+        retry(() =>
           agentControls.getSpans().then(spans => {
             const span = verifyThereIsExactlyOneHttpEntry(spans, '/', 'GET', 200);
             expect(span.data.http.header).to.be.an('object');
@@ -277,7 +276,7 @@ function registerTests(useHttps, useHttp2CompatApi) {
         path: '/?writeHead=true'
       })
       .then(() =>
-        testUtils.retry(() =>
+        retry(() =>
           agentControls.getSpans().then(spans => {
             const span = verifyThereIsExactlyOneHttpEntry(spans, '/', 'GET', 200);
             expect(span.data.http.header).to.be.an('object');
@@ -300,7 +299,7 @@ function registerTests(useHttps, useHttp2CompatApi) {
         }
       })
       .then(() =>
-        testUtils.retry(() =>
+        retry(() =>
           agentControls.getSpans().then(spans => {
             const span = verifyThereIsExactlyOneHttpEntry(spans, '/', 'GET', 200);
             expect(span.data.http.header).to.be.an('object');
@@ -326,7 +325,7 @@ function registerTests(useHttps, useHttp2CompatApi) {
         }
       })
       .then(() =>
-        testUtils.retry(() =>
+        retry(() =>
           agentControls.getSpans().then(spans => {
             const span = verifyThereIsExactlyOneHttpEntry(spans, '/', 'GET', 200);
             expect(span.data.http.header).to.be.an('object');
@@ -347,10 +346,25 @@ function registerTests(useHttps, useHttp2CompatApi) {
         path: '/'
       })
       .then(() =>
-        testUtils.retry(() =>
+        retry(() =>
           agentControls.getSpans().then(spans => {
             const span = verifyThereIsExactlyOneHttpEntry(spans, '/', 'GET', 200);
             expect(span.data.http.header).to.not.exist;
+          })
+        )
+      ));
+
+  it('must capture request params', () =>
+    controls
+      .sendRequest({
+        method: 'POST',
+        path: '/resource?stan=isalwayswatching&neversleeps'
+      })
+      .then(() =>
+        retry(() =>
+          agentControls.getSpans().then(spans => {
+            const span = verifyThereIsExactlyOneHttpEntry(spans, '/resource', 'POST', 200);
+            expect(span.data.http.params).to.equal('stan=isalwayswatching&neversleeps');
           })
         )
       ));
@@ -362,13 +376,27 @@ function registerTests(useHttps, useHttp2CompatApi) {
         path: '/?param1=value1&TheSecreT=classified&param2=value2&enIgmAtic=occult&param3=value4&cipher=veiled'
       })
       .then(() =>
-        testUtils.retry(() =>
+        retry(() =>
           agentControls.getSpans().then(spans => {
             const span = verifyThereIsExactlyOneHttpEntry(spans, '/', 'GET', 200);
             expect(span.data.http.params).to.equal('param1=value1&param2=value2&param3=value4');
           })
         )
       ));
+
+  it('must not touch headers set by the application', () => {
+    const expectedCookie = 'sessionId=42';
+    return controls
+      .sendRequest({
+        qs: {
+          cookie: expectedCookie
+        },
+        resolveWithFullResponse: true
+      })
+      .then(response => {
+        expect(response.headers['set-cookie']).to.deep.equal([expectedCookie]);
+      });
+  });
 
   it(`must capture an HTTP entry when the client closes the connection (HTTPS: ${useHttps})`, () =>
     controls
@@ -384,7 +412,7 @@ function registerTests(useHttps, useHttp2CompatApi) {
         if (err.error && err.error.code === 'ESOCKETTIMEDOUT') {
           // We actually expect the request to time out. But we still want to verify that an entry span has been created
           // for it.
-          return testUtils.retry(() =>
+          return retry(() =>
             agentControls.getSpans().then(spans => {
               // Note: For HTTP 1, the captured HTTP status will be 200 even for a client timeout, because the we take
               // the status from the response object which is created before the request is processed by user code. The
@@ -414,7 +442,7 @@ function registerTests(useHttps, useHttp2CompatApi) {
         if (err.error && err.error.code === 'ECONNRESET') {
           // We actually expect the request to time out. But we still want to verify that an entry span has been created
           // for it.
-          return testUtils.retry(() =>
+          return retry(() =>
             agentControls.getSpans().then(spans => {
               // Note: For HTTP 1, the captured HTTP status will be 200 even when the server destroys the socket before
               // responding, because the we take the status from the response object which is created before the request
@@ -429,6 +457,105 @@ function registerTests(useHttps, useHttp2CompatApi) {
         } else {
           throw err;
         }
+      }));
+
+  describe('Server-Timing header', () => {
+    it('must expose trace id as Server-Timing header', () =>
+      controls
+        .sendRequest({
+          method: 'POST',
+          path: '/checkout',
+          resolveWithFullResponse: true
+        })
+        .then(res => {
+          expect(res.headers['server-timing']).to.match(/^intid;desc=[a-f0-9]+$/);
+        }));
+
+    it('must also expose trace id as Server-Timing header when X-INSTANA-T and -S are incoming', () =>
+      controls
+        .sendRequest({
+          method: 'POST',
+          path: '/checkout',
+          resolveWithFullResponse: true,
+          headers: {
+            'X-INSTANA-T': '84e588b697868fee',
+            'X-INSTANA-S': '5e734f51bce69eca'
+          }
+        })
+        .then(res => {
+          expect(res.headers['server-timing']).to.equal('intid;desc=84e588b697868fee');
+        }));
+
+    it('must expose trace id as Server-Timing header: Custom server-timing string', () =>
+      controls
+        .sendRequest({
+          method: 'POST',
+          path: '/checkout?server-timing-string=true',
+          resolveWithFullResponse: true
+        })
+        .then(res => {
+          expect(res.headers['server-timing']).to.match(/^myServerTimingKey, intid;desc=[a-f0-9]+$/);
+        }));
+
+    it('must expose trace id as Server-Timing header: Custom server-timing array', () =>
+      controls
+        .sendRequest({
+          method: 'POST',
+          path: '/checkout?server-timing-array=true',
+          resolveWithFullResponse: true
+        })
+        .then(res => {
+          expect(res.headers['server-timing']).to.match(/^key1, key2;dur=42, intid;desc=[a-f0-9]+$/);
+        }));
+
+    it(
+      'must not append another key-value pair when the (string) Server-Timing header already has intid: ' +
+        'Custom server-timing string',
+      () =>
+        controls
+          .sendRequest({
+            method: 'POST',
+            path: '/checkout?server-timing-string-with-intid=true',
+            resolveWithFullResponse: true
+          })
+          .then(res => {
+            expect(res.headers['server-timing']).to.equal('myServerTimingKey, intid;desc=1234567890abcdef');
+          })
+    );
+
+    it(
+      'must not append another key-value pair when the (array) Server-Timing header already has intid: ' +
+        'Custom server-timing string',
+      () =>
+        controls
+          .sendRequest({
+            method: 'POST',
+            path: '/checkout?server-timing-array-with-intid=true',
+            resolveWithFullResponse: true
+          })
+          .then(res => {
+            expect(res.headers['server-timing']).to.equal('key1, key2;dur=42, intid;desc=1234567890abcdef');
+          })
+    );
+  });
+
+  it('must expose trace ID on incoming HTTP request', () =>
+    controls
+      .sendRequest({
+        method: 'GET',
+        path: '/inject-instana-trace-id',
+        responseStatus: 200,
+        resolveWithFullResponse: true
+      })
+      .then(response => {
+        expect(response.body).to.match(/^Instana Trace ID: [a-f0-9]{16}$/);
+        const traceId = /^Instana Trace ID: ([a-f0-9]{16})$/.exec(response.body)[1];
+        return retry(() =>
+          agentControls.getSpans().then(spans => {
+            const span = verifyThereIsExactlyOneHttpEntry(spans, '/inject-instana-trace-id', 'GET', 200);
+            expect(span.t).to.equal(traceId);
+          })
+        );
       }));
 }
 

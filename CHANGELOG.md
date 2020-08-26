@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+- Fix(HTTP1/Server): Also set Server-Timing header when X-INSTANA-T is incoming (that is, not only when we start a fresh trace).
+- Fix(HTTP/Server): Do not append another intid key-value pair to Server-Timing if it is already present.
+- Fix(HTTP2/Server): Add support for website monitoring back end correlation via Server-Timing header.
+- Fix(HTTP2/Server): Add support for X-Instana-Service.
+- Fix(HTTP2/Server): Inject the trace ID into the request to enable application code to inject it into the response body.
+- Fix(HTTP2/Server): Use case-insensitive header matching as incoming headers are already normalized to lower case (performance improvement).
+
 ## 1.105.1
 - Fall back to `process.mainModule.filename` as the Node.js app's name when the `package.json` file is not present.
 - Capture dependencies of an app even if the `package.json` file is not present, by inspecting the `node_modules` folder that is closest to `process.mainModule` in the file system.
