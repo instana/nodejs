@@ -1,5 +1,7 @@
 'use strict';
 
+const { environment: environmentUtil } = require('@instana/serverless');
+
 const DataProcessor = require('../DataProcessor');
 
 class EcsTaskProcessor extends DataProcessor {
@@ -32,6 +34,7 @@ class EcsTaskProcessor extends DataProcessor {
       taskDefinition: metadata.Family,
       taskDefinitionVersion: metadata.Revision,
       availabilityZone: metadata.AvailabilityZone,
+      instanaZone: environmentUtil.getCustomZone(),
       desiredStatus: metadata.DesiredStatus,
       knownStatus: metadata.KnownStatus,
       limits: {

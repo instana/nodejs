@@ -142,11 +142,7 @@ describe('AWS fargate integration test', function() {
         'Error: Received less entities than expected: ' +
           `Wanted: ${expectedNumberOfPlugins}, got: ${allEntities.length}. ` +
           'Here are the entities that have been received: ' +
-          JSON.stringify(
-            allEntities.map(({ name, entityId }) => ({ name, entityId })),
-            null,
-            2
-          )
+          JSON.stringify(allEntities.map(({ name, entityId }) => ({ name, entityId })), null, 2)
       );
     }
     expect(allEntities).to.have.lengthOf.at.least(expectedNumberOfPlugins);
@@ -176,6 +172,7 @@ describe('AWS fargate integration test', function() {
     expect(ecsTaskData.taskDefinition).to.equal(taskDefinition);
     expect(ecsTaskData.taskDefinitionVersion).to.equal(taskDefinitionVersion);
     expect(ecsTaskData.availabilityZone).to.equal('us-east-2b');
+    expect(ecsTaskData.instanaZone).to.equal('custom-zone');
     expect(ecsTaskData.desiredStatus).to.equal('RUNNING');
     expect(ecsTaskData.knownStatus).to.equal('RUNNING');
     expect(ecsTaskData.limits.cpu).to.equal(0.25);

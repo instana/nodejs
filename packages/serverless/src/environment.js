@@ -18,6 +18,8 @@ const instanaAgentKeyEnvVar = 'INSTANA_AGENT_KEY';
 // The following two environment variables are deprecated and will be removed soon.
 const deprecatedInstanaUrlEnvVar = 'INSTANA_URL';
 const deprecatedInstanaKeyEnvVar = 'INSTANA_KEY';
+const instanaZoneEnvVar = 'INSTANA_ZONE';
+
 let valid = false;
 let backendHost = null;
 let backendPort = null;
@@ -26,6 +28,8 @@ let instanaAgentKey = null;
 
 exports.sendUnencryptedEnvVar = 'INSTANA_DEV_SEND_UNENCRYPTED';
 exports.sendUnencrypted = process.env[exports.sendUnencryptedEnvVar] === 'true';
+
+const customZone = process.env[instanaZoneEnvVar] ? process.env[instanaZoneEnvVar] : undefined;
 
 exports.validate = function validate() {
   exports._validate(
@@ -123,6 +127,10 @@ exports.getBackendPath = function getBackendPath() {
 
 exports.getInstanaAgentKey = function getInstanaAgentKey() {
   return instanaAgentKey;
+};
+
+exports.getCustomZone = function getCustomZone() {
+  return customZone;
 };
 
 function parseUrl(value) {
