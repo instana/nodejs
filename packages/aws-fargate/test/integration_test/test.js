@@ -179,6 +179,10 @@ describe('AWS fargate integration test', function() {
     expect(ecsTaskData.limits.memory).to.equal(512);
     expect(ecsTaskData.pullStartedAt).to.equal('2020-03-25T14:34:25.75886719Z');
     expect(ecsTaskData.pullStoppedAt).to.equal('2020-03-25T14:34:29.92587709Z');
+    expect(ecsTaskData.tags).to.deep.equal({
+      tag_with_value: ' a value with spaces ',
+      tag_without_value: null
+    });
   }
 
   function verifyInstrumentedEcsContainer(allEntities) {

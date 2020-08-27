@@ -8,6 +8,7 @@
 - Fix(HTTP2/Server): Inject the trace ID into the request to enable application code to inject it into the response body.
 - Fix(HTTP2/Server): Use case-insensitive header matching as incoming headers are already normalized to lower case (performance improvement).
 - [AWS Fargate] Add support for `INSTANA_ZONE`.
+- [AWS Fargate] Add support for `INSTANA_TAGS`.
 
 ## 1.105.1
 - Fall back to `process.mainModule.filename` as the Node.js app's name when the `package.json` file is not present.
