@@ -125,7 +125,32 @@ shared: &shared
     # Run linting first, we don't want to wait ages for the test suite to finish only to end the CI job with a linting
     # error.
     - run: npm run lint
-    - run: npm test
+
+    - run: |
+        # tell the operating system to remove the file size limit on core dump files before running tests
+        ulimit -c unlimited
+        # run all tests
+        npm test
+    - run:
+        # save core dumps in case there have been any
+        command: |
+          mkdir -p /tmp/core_dumps
+          cp core.* /tmp/core_dumps || :
+          cp packages/shared-metrics/core.* /tmp/core_dumps || :
+          cp packages/autoprofile/core.* /tmp/core_dumps || :
+          cp packages/aws-fargate/core.* /tmp/core_dumps || :
+          cp packages/aws-lambda-auto-wrap/core.* /tmp/core_dumps || :
+          cp packages/aws-lambda/core.* /tmp/core_dumps || :
+          cp packages/collector/core.* /tmp/core_dumps || :
+          cp packages/core/core.* /tmp/core_dumps || :
+          cp packages/google-cloud-run/core.* /tmp/core_dumps || :
+          cp packages/legacy-sensor/core.* /tmp/core_dumps || :
+          cp packages/metrics-util/core.* /tmp/core_dumps || :
+          cp packages/serverless/core.* /tmp/core_dumps || :
+          cp packages/shared-metrics/core.* /tmp/core_dumps || :
+        when: on_fail
+    - store_artifacts:
+        path: /tmp/core_dumps
 
     - save_cache:
         paths:
