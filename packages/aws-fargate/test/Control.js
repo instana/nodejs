@@ -77,6 +77,7 @@ Control.prototype.startMonitoredProcess = function startMonitoredProcess() {
       DOWNSTREAM_DUMMY_URL: this.downstreamDummyUrl,
       INSTANA_DISABLE_CA_CHECK: true,
       INSTANA_TRACING_TRANSMISSION_DELAY: 500,
+      INSTANA_ZONE: 'custom-zone',
       INSTANA_LOG_LEVEL: 'debug'
     },
     process.env,

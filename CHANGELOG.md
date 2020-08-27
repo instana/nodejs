@@ -7,6 +7,7 @@
 - Fix(HTTP2/Server): Add support for X-Instana-Service.
 - Fix(HTTP2/Server): Inject the trace ID into the request to enable application code to inject it into the response body.
 - Fix(HTTP2/Server): Use case-insensitive header matching as incoming headers are already normalized to lower case (performance improvement).
+- [AWS Fargate] Add support for `INSTANA_ZONE`.
 
 ## 1.105.1
 - Fall back to `process.mainModule.filename` as the Node.js app's name when the `package.json` file is not present.
@@ -29,10 +30,10 @@
 - Fix captured protocol for https URLs in some HTTP exit spans.
 
 ## 1.101.1
-- [AWS Fargate]: Collect Docker metrics on platform version 1.4.0, too.
+- [AWS Fargate] Collect Docker metrics on platform version 1.4.0, too.
 
 ## 1.101.0
-- [AWS Fargate]: Collect and report Docker metrics.
+- [AWS Fargate] Collect and report Docker metrics.
 
 ## 1.100.2
 - Fix: Only require @instana/autoprofile if profiling has been enabled.
@@ -45,7 +46,7 @@
 - Provide an API to manually restore the asynchronous context (async_hooks/AsyncWrap continuity) as a workaround for libraries that break it.
 
 ## 1.99.0
-- [AWS Fargate]: In-process data collection for AWS Fargate tasks via new package `@instana/aws-fargate` (alpha). Requires at least Instana back end version 178. `@instana/aws-fargate` supports Node.js 8.6.0 or later.
+- [AWS Fargate] In-process data collection for AWS Fargate tasks via new package `@instana/aws-fargate` (alpha). Requires at least Instana back end version 178. `@instana/aws-fargate` supports Node.js 8.6.0 or later.
 
 ## 1.98.1
 - Fix PID used in profiling payload when running in a container.
@@ -157,7 +158,7 @@
 
 ## 1.84.0
 - Add support for the [log4js](https://www.npmjs.com/package/log4js) logging package.
-- [AWS Lambda]: Instrument deprecated legacy Lambda API (context.done, context.succeed, and context.fail).
+- [AWS Lambda] Instrument deprecated legacy Lambda API (context.done, context.succeed, and context.fail).
 - Fix stack trace capturing for Winston log calls.
 
 ## 1.83.0
@@ -181,7 +182,7 @@
 - Add ability to disable individual tracers via `config.tracing.disabledTracers` or `INSTANA_DISABLED_TRACERS`.
 
 ## 1.79.1
-- [AWS Lambda]: Cache target handler across invocations.
+- [AWS Lambda] Cache target handler across invocations.
 
 ## 1.79.0
 - Add auto-wrap package for AWS Lambda to enable Lambda tracing without code modification.
@@ -194,7 +195,7 @@
 - Support `X-Instana-Service` HTTP header.
 
 ## 1.77.0
-- [AWS Lambda]: Inject EUM back end correlation header in AWS Lambda responses if possible.
+- [AWS Lambda] Inject EUM back end correlation header in AWS Lambda responses if possible.
 
 ## 1.76.0
 - Do not add tracing headers to signed aws-sdk HTTP requests.
@@ -205,13 +206,13 @@
 - Capture HTTP response headers for HTTP entry spans.
 
 ## 1.74.2
-- [AWS Lambda]: Support new environment variables `INSTANA_ENDPOINT_URL` and `INSTANA_AGENT_KEY` in addition to the now deprecated variables `INSTANA_URL` and `INSTANA_KEY`.
+- [AWS Lambda] Support new environment variables `INSTANA_ENDPOINT_URL` and `INSTANA_AGENT_KEY` in addition to the now deprecated variables `INSTANA_URL` and `INSTANA_KEY`.
 
 ## 1.74.1
-- [AWS Lambda]: Improve logging.
+- [AWS Lambda] Improve logging.
 
 ## 1.74.0
-- [AWS Lambda]: In-process data collection for AWS Lambdas via new package @instana/aws-lambda (beta).
+- [AWS Lambda] In-process data collection for AWS Lambdas via new package @instana/aws-lambda (beta).
 
 ## 1.73.2
 - Move some metrics from core to collector package.
