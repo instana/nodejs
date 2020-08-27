@@ -42,7 +42,8 @@ class EcsTaskProcessor extends DataProcessor {
         memory: metadata.Limits.Memory
       },
       pullStartedAt: metadata.PullStartedAt,
-      pullStoppedAt: metadata.PullStoppedAt
+      pullStoppedAt: metadata.PullStoppedAt,
+      tags: environmentUtil.getTags()
     };
   }
 }

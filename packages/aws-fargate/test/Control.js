@@ -78,6 +78,7 @@ Control.prototype.startMonitoredProcess = function startMonitoredProcess() {
       INSTANA_DISABLE_CA_CHECK: true,
       INSTANA_TRACING_TRANSMISSION_DELAY: 500,
       INSTANA_ZONE: 'custom-zone',
+      INSTANA_TAGS: ' tag_with_value = a value with spaces , tag_without_value ',
       INSTANA_LOG_LEVEL: 'debug'
     },
     process.env,

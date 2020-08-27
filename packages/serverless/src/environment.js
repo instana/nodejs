@@ -26,13 +26,16 @@ let backendPort = null;
 let backendPath = null;
 let instanaAgentKey = null;
 
+// eslint-disable-next-line no-undef-init
+let tags = undefined;
+
 exports.sendUnencryptedEnvVar = 'INSTANA_DEV_SEND_UNENCRYPTED';
 exports.sendUnencrypted = process.env[exports.sendUnencryptedEnvVar] === 'true';
 
 const customZone = process.env[instanaZoneEnvVar] ? process.env[instanaZoneEnvVar] : undefined;
 
 exports.validate = function validate() {
-  exports._validate(
+  _validate(
     process.env[instanaEndpointUrlEnvVar] || process.env[deprecatedInstanaUrlEnvVar],
     process.env[instanaAgentKeyEnvVar] || process.env[deprecatedInstanaKeyEnvVar]
   );
@@ -45,8 +48,7 @@ exports._reset = function _reset() {
   backendPort = null;
 };
 
-// exposed for testing
-exports._validate = function _validate(instanaEndpointUrl, _instanaAgentKey) {
+function _validate(instanaEndpointUrl, _instanaAgentKey) {
   logger.debug(`${instanaEndpointUrlEnvVar}: ${instanaEndpointUrl}`);
 
   if (!instanaEndpointUrl) {
@@ -107,7 +109,7 @@ exports._validate = function _validate(instanaEndpointUrl, _instanaAgentKey) {
   logger.debug(`INSTANA ENDPOINT PATH: ${backendPath}`);
   logger.debug(`INSTANA AGENT KEY: ${instanaAgentKey}`);
   valid = true;
-};
+}
 
 exports.isValid = function isValid() {
   return valid;
@@ -131,6 +133,37 @@ exports.getInstanaAgentKey = function getInstanaAgentKey() {
 
 exports.getCustomZone = function getCustomZone() {
   return customZone;
+};
+
+// exposed for testing
+exports._parseTags = function _parseTags() {
+  let tagsRaw = process.env.INSTANA_TAGS;
+  if (!tagsRaw) {
+    return;
+  }
+  tagsRaw = tagsRaw.trim();
+  if (tagsRaw.length === 0) {
+    return;
+  }
+  tags = tagsRaw
+    .split(',')
+    .map(kvPairString => kvPairString.split('='), 2)
+    .reduce((collectedTags, kvPair) => {
+      const tagName = kvPair[0].trim();
+      if (kvPair.length === 1) {
+        collectedTags[tagName] = null;
+      } else {
+        collectedTags[tagName] = kvPair[1];
+      }
+      return collectedTags;
+    }, {});
+};
+
+// execute tag parsing immediately
+exports._parseTags();
+
+exports.getTags = function getTags() {
+  return tags;
 };
 
 function parseUrl(value) {
