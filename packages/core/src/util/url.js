@@ -23,12 +23,12 @@ exports.filterParams = function filterParams(queryString) {
   }
   return queryString
     .split('&')
-    .filter(param => {
+    .map(param => {
       const key = param.split('=')[0];
-      if (key) {
-        return !secrets.isSecret(key);
+      if (key && secrets.isSecret(key)) {
+        return `${key}=<redacted>`;
       }
-      return true;
+      return param;
     })
     .join('&');
 };

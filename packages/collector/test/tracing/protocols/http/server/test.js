@@ -379,7 +379,9 @@ function registerTests(useHttps, useHttp2CompatApi) {
         retry(() =>
           agentControls.getSpans().then(spans => {
             const span = verifyThereIsExactlyOneHttpEntry(spans, '/', 'GET', 200);
-            expect(span.data.http.params).to.equal('param1=value1&param2=value2&param3=value4');
+            expect(span.data.http.params).to.equal(
+              'param1=value1&TheSecreT=<redacted>&param2=value2&enIgmAtic=<redacted>&param3=value4&cipher=<redacted>'
+            );
           })
         )
       ));
