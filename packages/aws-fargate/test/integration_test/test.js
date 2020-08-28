@@ -38,12 +38,16 @@ function prelude(opts = {}) {
   this.slow(config.getTestTimeout() / 2);
 
   const controlOpts = {
+    env: {},
     ...opts,
     containerAppPath,
     downstreamDummyPort,
     downstreamDummyUrl,
     instanaAgentKey
   };
+  if (opts.proxy) {
+    controlOpts.env.INSTANA_ENDPOINT_PROXY = opts.proxy;
+  }
   return new Control(controlOpts).registerTestHooks();
 }
 
@@ -119,6 +123,75 @@ describe('AWS fargate integration test', function() {
           return verify(control, response, true);
         });
     });
+  });
+
+  describe('when using a proxy without authentication', function() {
+    const control = prelude.bind(this)({
+      platformVersion: '1.3.0',
+      startBackend: true,
+      startProxy: true,
+      proxy: 'http://localhost:4128'
+    });
+
+    it('should collect metrics and trace http requests', () =>
+      control
+        .sendRequest({
+          method: 'GET',
+          path: '/'
+        })
+        .then(response => verify(control, response, true)));
+  });
+
+  describe('when using a proxy with authentication', function() {
+    const control = prelude.bind(this)({
+      platformVersion: '1.3.0',
+      startBackend: true,
+      startProxy: true,
+      proxy: 'http://user:password@localhost:4128',
+      proxyRequiresAuthorization: true
+    });
+
+    it('should collect metrics and trace http requests', () =>
+      control
+        .sendRequest({
+          method: 'GET',
+          path: '/'
+        })
+        .then(response => verify(control, response, true)));
+  });
+
+  describe('when proxy authentication fails due to the wrong password', function() {
+    const control = prelude.bind(this)({
+      platformVersion: '1.3.0',
+      startBackend: true,
+      startProxy: true,
+      proxy: 'http://user:wrong-password@localhost:4128',
+      proxyRequiresAuthorization: true
+    });
+
+    it('the fargate container must not be impacted', () =>
+      control
+        .sendRequest({
+          method: 'GET',
+          path: '/'
+        })
+        .then(response => verify(control, response, false)));
+  });
+
+  describe('when the proxy is not up', function() {
+    const control = prelude.bind(this)({
+      platformVersion: '1.3.0',
+      startBackend: true,
+      proxy: 'http://localhost:4128'
+    });
+
+    it('the fargate container must not be impacted', () =>
+      control
+        .sendRequest({
+          method: 'GET',
+          path: '/'
+        })
+        .then(response => verify(control, response, false)));
   });
 
   function verify(control, response, expectMetricsAndSpans) {

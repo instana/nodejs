@@ -19,6 +19,7 @@ function AbstractServerlessControl(opts = {}) {
 AbstractServerlessControl.prototype.reset = function reset() {
   this.messagesFromBackend = [];
   this.messagesFromDownstreamDummy = [];
+  this.messagesFromProxy = [];
 };
 
 AbstractServerlessControl.prototype.registerTestHooks = function registerTestHooks() {
@@ -68,7 +69,27 @@ AbstractServerlessControl.prototype.registerTestHooks = function registerTestHoo
       downstreamDummyPromise = Promise.resolve();
     }
 
-    const allAuxiliaryProcesses = [backendPromise, downstreamDummyPromise].concat(
+    let proxyPromise;
+    if (this.opts.startProxy) {
+      const env = {
+        PROXY_PORT: this.proxyPort
+      };
+      if (this.opts.proxyRequiresAuthorization) {
+        env.PROXY_REQUIRES_AUTHORIZATION = 'true';
+      }
+      this.proxy = fork(path.join(__dirname, '../proxy'), {
+        stdio: config.getAppStdio(),
+        env: Object.assign(env, process.env, this.opts.env)
+      });
+      this.proxy.on('message', message => {
+        this.messagesFromProxy.push(message);
+      });
+      proxyPromise = this.waitUntilProcessIsUp('proxy', this.messagesFromProxy, 'proxy: started');
+    } else {
+      proxyPromise = Promise.resolve();
+    }
+
+    const allAuxiliaryProcesses = [backendPromise, downstreamDummyPromise, proxyPromise].concat(
       this.startAdditionalAuxiliaryProcesses()
     );
     return Promise.all(allAuxiliaryProcesses)
@@ -184,7 +205,8 @@ AbstractServerlessControl.prototype.kill = function kill() {
       //
       this.killBackend(),
       this.killDownstreamDummy(),
-      this.killMonitoredProcess()
+      this.killMonitoredProcess(),
+      this.killProxy()
     ].concat(this.killAdditionalAuxiliaryProcesses())
   );
 };
@@ -195,6 +217,13 @@ AbstractServerlessControl.prototype.killBackend = function killBackend() {
 
 AbstractServerlessControl.prototype.killDownstreamDummy = function killDownstreamDummy() {
   return this.killChildProcess(this.downstreamDummy);
+};
+
+AbstractServerlessControl.prototype.killProxy = function killProxy() {
+  if (this.proxy) {
+    return this.killChildProcess(this.proxy);
+  }
+  return Promise.resolve();
 };
 
 AbstractServerlessControl.prototype.startAdditionalAuxiliaryProcesses = function startAdditionalAuxiliaryProcesses() {
