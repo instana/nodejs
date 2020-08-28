@@ -17,6 +17,7 @@ describe('util.normalizeConfig', () => {
     delete process.env.INSTANA_DISABLE_AUTO_INSTR;
     delete process.env.INSTANA_STACK_TRACE_LENGTH;
     delete process.env.INSTANA_DISABLED_TRACERS;
+    delete process.env.INSTANA_SECRETS;
   }
 
   it('should apply all defaults', () => {
@@ -264,19 +265,60 @@ describe('util.normalizeConfig', () => {
     expect(config.secrets.keywords).to.deep.equal(['custom-secret', 'sheesh']);
   });
 
+  it("should set keywords to empty array for matcher mode 'none'", () => {
+    const config = normalizeConfig({
+      secrets: {
+        matcherMode: 'none'
+      }
+    });
+    expect(config.secrets.matcherMode).to.equal('none');
+    expect(config.secrets.keywords).to.deep.equal([]);
+  });
+
   it('should reject non-string matcher mode', () => {
     const config = normalizeConfig({ secrets: { matcherMode: 43 } });
     expect(config.secrets.matcherMode).to.equal('contains-ignore-case');
+    expect(config.secrets.keywords).to.deep.equal(['key', 'pass', 'secret']);
   });
 
-  it('should reject unknown string matcher mode', () => {
+  it('should reject unknown matcher mode from config', () => {
     const config = normalizeConfig({ secrets: { matcherMode: 'whatever' } });
     expect(config.secrets.matcherMode).to.equal('contains-ignore-case');
+    expect(config.secrets.keywords).to.deep.equal(['key', 'pass', 'secret']);
   });
 
   it('should reject non-array keywords', () => {
     const config = normalizeConfig({ secrets: { keywords: 'yes' } });
+    expect(config.secrets.matcherMode).to.equal('contains-ignore-case');
     expect(config.secrets.keywords).to.deep.equal(['key', 'pass', 'secret']);
+  });
+
+  it('should parse secrets from env var', () => {
+    process.env.INSTANA_SECRETS = ' eQuaLs-igNore-case  :  concealed  ,  hush  ';
+    const config = normalizeConfig();
+    expect(config.secrets.matcherMode).to.equal('equals-ignore-case');
+    expect(config.secrets.keywords).to.deep.equal(['concealed', 'hush']);
+  });
+
+  it('must use default secrets when INSTANA_SECRETS is invalid', () => {
+    process.env.INSTANA_SECRETS = 'whatever';
+    const config = normalizeConfig();
+    expect(config.secrets.matcherMode).to.equal('contains-ignore-case');
+    expect(config.secrets.keywords).to.deep.equal(['key', 'pass', 'secret']);
+  });
+
+  it("must accept INSTANA_SECRETS without secrets list if matcher mode is 'none'", () => {
+    process.env.INSTANA_SECRETS = 'NONE';
+    const config = normalizeConfig();
+    expect(config.secrets.matcherMode).to.equal('none');
+    expect(config.secrets.keywords).to.deep.equal([]);
+  });
+
+  it('should reject unknown matcher mode from INSTANA_SECRETS', () => {
+    process.env.INSTANA_SECRETS = 'unknown-matcher:nope,never';
+    const config = normalizeConfig();
+    expect(config.secrets.matcherMode).to.equal('contains-ignore-case');
+    expect(config.secrets.keywords).to.deep.equal(['nope', 'never']);
   });
 
   function checkDefaults(config) {

@@ -1,6 +1,7 @@
 'use strict';
 
 const tracingConstants = require('@instana/core').tracing.constants;
+const secrets = require('@instana/core').secrets;
 const zlib = require('zlib');
 
 const maxCloudwatchEventsResources = 3;
@@ -70,7 +71,11 @@ function readHttpQueryParams(event) {
     return Object.keys(event.multiValueQueryStringParameters)
       .map(key =>
         event.multiValueQueryStringParameters[key].reduce((paramsPerKey, value) => {
-          paramsPerKey.push(`${key}=${value}`);
+          if (secrets.isSecret(key)) {
+            paramsPerKey.push(`${key}=<redacted>`);
+          } else {
+            paramsPerKey.push(`${key}=${value}`);
+          }
           return paramsPerKey;
         }, [])
       )
@@ -78,7 +83,12 @@ function readHttpQueryParams(event) {
       .join('&');
   } else if (event.queryStringParameters) {
     return Object.keys(event.queryStringParameters)
-      .map(key => `${key}=${event.queryStringParameters[key]}`)
+      .map(key => {
+        if (secrets.isSecret(key)) {
+          return `${key}=<redacted>`;
+        }
+        return `${key}=${event.queryStringParameters[key]}`;
+      })
       .join('&');
   }
   return undefined;

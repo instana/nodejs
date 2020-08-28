@@ -10,6 +10,8 @@
 - [AWS Fargate] Add support for `INSTANA_ZONE`.
 - [AWS Fargate] Add support for `INSTANA_TAGS`.
 - Secrets Filtering: Replace values for filtered query parameters with `<redacted>` instead of removing the whole key-value pair.
+- [AWS Fargate] Add support for `INSTANA_SECRETS`.
+- [AWS Lambda] Add support for `INSTANA_SECRETS`.
 
 ## 1.105.1
 - Fall back to `process.mainModule.filename` as the Node.js app's name when the `package.json` file is not present.

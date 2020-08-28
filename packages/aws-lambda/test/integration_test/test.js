@@ -41,7 +41,8 @@ function prelude(opts) {
   }
 
   const env = {
-    INSTANA_EXTRA_HTTP_HEADERS: 'x-My-Favorite-Header;ANOTHER-HEADER'
+    INSTANA_EXTRA_HTTP_HEADERS: 'x-My-Favorite-Header;ANOTHER-HEADER',
+    ...opts.env
   };
   if (opts.error) {
     env.LAMDBA_ERROR = opts.error;
@@ -626,6 +627,29 @@ function registerTests(handlerDefinitionPath) {
           })
         );
     });
+  });
+
+  describe('API Gateway - with custom secrets', function() {
+    const control = prelude.bind(this)({
+      handlerDefinitionPath,
+      trigger: 'api-gateway-proxy',
+      instanaEndpointUrl: backendBaseUrl,
+      instanaAgentKey,
+      env: {
+        INSTANA_SECRETS: 'equals:param1,param2'
+      }
+    });
+
+    it('must filter secrets from query params', () =>
+      verify(control, { error: false, expectMetrics: true, expectSpans: true, trigger: 'aws:api.gateway' })
+        .then(() => control.getSpans())
+        .then(spans => {
+          expectExactlyOneMatching(spans, span => {
+            expect(span.n).to.equal('aws.lambda.entry');
+            expect(span.k).to.equal(constants.ENTRY);
+            expect(span.data.http.params).to.equal('param1=<redacted>&param1=<redacted>&param2=<redacted>');
+          });
+        }));
   });
 
   describe('triggered by API Gateway (no Lambda Proxy)', function() {

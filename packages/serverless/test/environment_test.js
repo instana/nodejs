@@ -13,8 +13,7 @@ describe('environment util', () => {
     'INSTANA_URL',
     'INSTANA_KEY',
     'INSTANA_ZONE',
-    'INSTANA_TAGS',
-    'INSTANA_SECRETS'
+    'INSTANA_TAGS'
   ];
 
   before(() => {
