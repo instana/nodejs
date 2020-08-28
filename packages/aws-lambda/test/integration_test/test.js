@@ -4,11 +4,11 @@ const expect = require('chai').expect;
 const path = require('path');
 const constants = require('@instana/core').tracing.constants;
 
-const Control = require('./Control');
-const config = require('../../serverless/test/config');
-const delay = require('../../core/test/test_util/delay');
-const expectExactlyOneMatching = require('../../core/test/test_util/expectExactlyOneMatching');
-const retry = require('../../serverless/test/util/retry');
+const Control = require('../Control');
+const config = require('../../../serverless/test/config');
+const delay = require('../../../core/test/test_util/delay');
+const expectExactlyOneMatching = require('../../../core/test/test_util/expectExactlyOneMatching');
+const retry = require('../../../serverless/test/util/retry');
 
 const functionName = 'functionName';
 const unqualifiedArn = `arn:aws:lambda:us-east-2:410797082306:function:${functionName}`;
@@ -28,7 +28,8 @@ const instanaAgentKey = 'aws-lambda-dummy-key';
   'legacy_api',
   'promise'
 ].forEach(lambdaType => {
-  describe(`aws/lambda/${lambdaType}`, () => registerTests.bind(this)(path.join(__dirname, 'lambdas', lambdaType)));
+  describe(`aws/lambda/${lambdaType}`, () =>
+    registerTests.bind(this)(path.join(__dirname, '..', 'lambdas', lambdaType)));
 });
 
 function prelude(opts) {
@@ -88,7 +89,7 @@ function prelude(opts) {
   }
 
   const control = new Control({
-    faasRuntimePath: path.join(__dirname, './runtime_mock'),
+    faasRuntimePath: path.join(__dirname, '../runtime_mock'),
     handlerDefinitionPath: opts.handlerDefinitionPath,
     startBackend: opts.startBackend,
     backendPort,
