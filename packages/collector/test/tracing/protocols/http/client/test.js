@@ -609,7 +609,7 @@ function shouldHaveProtocolHttps(useHttps) {
 
 function checkQuery(span, withQuery) {
   if (withQuery) {
-    expect(span.data.http.params).to.equal('q1=some&q2=value');
+    expect(span.data.http.params).to.equal('q1=some&pass=<redacted>&q2=value');
   } else {
     expect(span.data.http.params).to.not.exist;
   }

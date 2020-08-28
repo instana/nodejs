@@ -51,6 +51,7 @@ app.get('/request-options-only', (req, res) => {
   const downStreamQuery = {};
   if (req.query.withQuery) {
     downStreamQuery.q1 = 'some';
+    downStreamQuery.pass = 'verysecret';
     downStreamQuery.q2 = 'value';
   }
   if (req.query.withHeader === 'response') {

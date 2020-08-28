@@ -421,7 +421,7 @@ function verifyHttpExit(
 
 function checkQuery(span, withQuery, erroneous) {
   if (withQuery) {
-    expect(span.data.http.params).to.equal('q1=some&q2=value');
+    expect(span.data.http.params).to.equal('q1=some&q2=value&rEmoVeThis=<redacted>');
   } else if (erroneous) {
     expect(span.data.http.params).to.equal('error=true');
   } else {
