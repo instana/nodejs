@@ -277,8 +277,13 @@ function normalizeSecrets(config) {
     config.secrets = {};
   }
 
-  config.secrets.matcherMode = config.secrets.matcherMode || defaults.secrets.matcherMode;
-  config.secrets.keywords = config.secrets.keywords || defaults.secrets.keywords;
+  let fromEnvVar = {};
+  if (process.env.INSTANA_SECRETS) {
+    fromEnvVar = parseSecretsEnvVar(process.env.INSTANA_SECRETS);
+  }
+
+  config.secrets.matcherMode = config.secrets.matcherMode || fromEnvVar.matcherMode || defaults.secrets.matcherMode;
+  config.secrets.keywords = config.secrets.keywords || fromEnvVar.keywords || defaults.secrets.keywords;
 
   if (typeof config.secrets.matcherMode !== 'string') {
     logger.warn(
@@ -289,7 +294,7 @@ function normalizeSecrets(config) {
     config.secrets.matcherMode = defaults.secrets.matcherMode;
   } else if (validSecretsMatcherModes.indexOf(config.secrets.matcherMode) < 0) {
     logger.warn(
-      'The value of config.secrets.matcherMode (%s) is not a supported matcher mode. Assuming the default value %s.',
+      'The value of config.secrets.matcherMode (or the matcher mode parsed from INSTANA_SECRETS) (%s) is not a supported matcher mode. Assuming the default value %s.',
       config.secrets.matcherMode,
       defaults.secrets.matcherMode
     );
@@ -302,6 +307,35 @@ function normalizeSecrets(config) {
     );
     config.secrets.keywords = defaults.secrets.keywords;
   }
+  if (config.secrets.matcherMode === 'none') {
+    config.secrets.keywords = [];
+  }
+}
+
+function parseSecretsEnvVar(envVarValue) {
+  let [matcherMode, keywords] = envVarValue.split(':', 2);
+  matcherMode = matcherMode.trim().toLowerCase();
+
+  if (matcherMode === 'none') {
+    return {
+      matcherMode,
+      keywords: []
+    };
+  }
+
+  if (!keywords) {
+    // a list of keywords (with at least one element) is mandatory for all matcher modes except "none"
+    logger.warn(
+      'The value of INSTANA_SECRETS (%s) cannot be parsed. Please use the following format: INSTANA_SECRETS=<matcher>:<secret>[,<secret>]. This setting will be ignored.',
+      envVarValue
+    );
+    return {};
+  }
+  keywords = keywords.split(',').map(word => word.trim());
+  return {
+    matcherMode,
+    keywords
+  };
 }
 
 function normalizeSingleValue(configValue, defaultValue, configPath, envVarKey) {

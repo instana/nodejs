@@ -37,6 +37,11 @@ function prelude(opts = {}) {
   this.timeout(config.getTestTimeout());
   this.slow(config.getTestTimeout() / 2);
 
+  opts.platformVersion = opts.platformVersion || '1.3.0';
+  if (opts.startBackend == null) {
+    opts.startBackend = true;
+  }
+
   const controlOpts = {
     env: {},
     ...opts,
@@ -54,8 +59,7 @@ function prelude(opts = {}) {
 describe('AWS fargate integration test', function() {
   describe('when the back end is up (platform version 1.3.0)', function() {
     const control = prelude.bind(this)({
-      platformVersion: '1.3.0',
-      startBackend: true
+      platformVersion: '1.3.0'
     });
 
     it('should collect metrics and trace http requests', () =>
@@ -69,8 +73,7 @@ describe('AWS fargate integration test', function() {
 
   describe('when the back end is up (platform version 1.4.0)', function() {
     const control = prelude.bind(this)({
-      platformVersion: '1.4.0',
-      startBackend: true
+      platformVersion: '1.4.0'
     });
 
     it('should collect metrics and trace http requests', () =>
@@ -127,8 +130,6 @@ describe('AWS fargate integration test', function() {
 
   describe('when using a proxy without authentication', function() {
     const control = prelude.bind(this)({
-      platformVersion: '1.3.0',
-      startBackend: true,
       startProxy: true,
       proxy: 'http://localhost:4128'
     });
@@ -144,8 +145,6 @@ describe('AWS fargate integration test', function() {
 
   describe('when using a proxy with authentication', function() {
     const control = prelude.bind(this)({
-      platformVersion: '1.3.0',
-      startBackend: true,
       startProxy: true,
       proxy: 'http://user:password@localhost:4128',
       proxyRequiresAuthorization: true
@@ -162,8 +161,6 @@ describe('AWS fargate integration test', function() {
 
   describe('when proxy authentication fails due to the wrong password', function() {
     const control = prelude.bind(this)({
-      platformVersion: '1.3.0',
-      startBackend: true,
       startProxy: true,
       proxy: 'http://user:wrong-password@localhost:4128',
       proxyRequiresAuthorization: true
@@ -180,8 +177,6 @@ describe('AWS fargate integration test', function() {
 
   describe('when the proxy is not up', function() {
     const control = prelude.bind(this)({
-      platformVersion: '1.3.0',
-      startBackend: true,
       proxy: 'http://localhost:4128'
     });
 
@@ -192,6 +187,26 @@ describe('AWS fargate integration test', function() {
           path: '/'
         })
         .then(response => verify(control, response, false)));
+  });
+
+  describe('with custom secrets configuration', function() {
+    const control = prelude.bind(this)({
+      env: {
+        INSTANA_SECRETS: 'equals:confidential'
+      }
+    });
+
+    it('must filter secrets from query params', () =>
+      control
+        .sendRequest({
+          method: 'GET',
+          path: '/?q1=some&confidential=topsecret&q2=value'
+        })
+        .then(response =>
+          verify(control, response, true).then(([entry]) => {
+            expect(entry.data.http.params).to.equal('q1=some&confidential=<redacted>&q2=value');
+          })
+        ));
   });
 
   function verify(control, response, expectMetricsAndSpans) {
@@ -442,7 +457,8 @@ describe('AWS fargate integration test', function() {
 
   function verifySpans(spans) {
     const entry = verifyHttpEntry(spans);
-    verifyHttpExit(spans, entry);
+    const exit = verifyHttpExit(spans, entry);
+    return [entry, exit];
   }
 
   function verifyHttpEntry(spans) {
