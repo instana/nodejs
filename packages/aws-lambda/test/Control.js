@@ -1,7 +1,6 @@
 'use strict';
 
 const { fork } = require('child_process');
-const path = require('path');
 const {
   assert: { fail }
 } = require('chai');
@@ -28,7 +27,6 @@ Control.prototype.reset = function reset() {
   this.lambdaErrors = [];
   this.lambdaResults = [];
   this.expectedHandlerRuns = 0;
-  this.messagesFromProxy = [];
   this.startedAt = 0;
 };
 
@@ -42,33 +40,6 @@ Control.prototype.registerTestHooks = function registerTestHooks() {
     }
   });
   return this;
-};
-
-Control.prototype.startAdditionalAuxiliaryProcesses = function startAdditionalAuxiliaryProcesses() {
-  if (this.opts.startProxy) {
-    const env = {
-      PROXY_PORT: this.proxyPort
-    };
-    if (this.opts.proxyRequiresAuthorization) {
-      env.PROXY_REQUIRES_AUTHORIZATION = 'true';
-    }
-    this.proxy = fork(path.join(__dirname, './proxy'), {
-      stdio: config.getAppStdio(),
-      env: Object.assign(env, process.env, this.opts.env)
-    });
-    this.proxy.on('message', message => {
-      this.messagesFromProxy.push(message);
-    });
-    return this.waitUntilProcessIsUp('proxy', this.messagesFromProxy, 'proxy: started');
-  }
-  return Promise.resolve();
-};
-
-Control.prototype.killAdditionalAuxiliaryProcesses = function killAdditionalAuxiliaryProcesses() {
-  if (this.opts.proxy) {
-    return this.killChildProcess(this.proxy);
-  }
-  return Promise.resolve();
 };
 
 Control.prototype.startMonitoredProcess = function startMonitoredProcess() {

@@ -22,6 +22,8 @@ function Control(opts) {
   this.downstreamDummyUrl = this.opts.downstreamDummyUrl || `http://localhost:${this.downstreamDummyPort}`;
   this.metadataMockPort = this.opts.metadataMockPort || 1604;
   this.metadataMockUrl = this.opts.metadataMockUrl || `http://localhost:${this.metadataMockPort}`;
+  this.proxyPort = this.opts.proxyPort || 4128;
+  this.proxyUrl = this.opts.proxyUrl || `http://localhost:${this.proxyPort}`;
   this.platformVersion = this.opts.platformVersion || '1.3.0';
   this.instanaAgentKey = this.opts.instanaAgentKey || 'aws-fargate-dummy-key';
 }
