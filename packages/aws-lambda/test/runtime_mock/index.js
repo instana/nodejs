@@ -202,12 +202,12 @@ function createEvent(error) {
         event.path = '/path/to/path-xxx/path-yyy';
         event.httpMethod = 'POST';
         event.headers = {
-          'X-mY-favorite-header': 'A Header Value',
-          'Another-Header': 'Another Header Value'
+          'X-Request-Header-1': 'A Header Value',
+          'X-Request-Header-3': 'not configured to capture this'
         };
         event.multiValueHeaders = {
-          'x-test-header-1': ['header-value', 'another-header-value'],
-          'x-test-header-2': ['header-value']
+          'X-Request-Header-2': ['Multi Value', 'Header Value'],
+          'X-Request-Header-4': ['not', 'configured', 'to', 'be', 'captured']
         };
         event.queryStringParameters = {
           param1: 'another-param-value',
@@ -247,8 +247,12 @@ function createEvent(error) {
           'x-forwarded-for': '2.204.181.152',
           'x-forwarded-port': '80',
           'x-forwarded-proto': 'http',
-          'X-mY-favorite-header': 'A Header Value',
-          'Another-Header': 'Another Header Value'
+          'X-Request-HeadeR-1': 'A Header Value',
+          'X-Request-HeadEr-3': 'not configured to capture this'
+        };
+        event.multiValueHeaders = {
+          'X-ReqUest-Header-2': ['Multi Value', 'Header Value'],
+          'X-Request-HeAder-4': ['not', 'configured', 'to', 'be', 'captured']
         };
         event.body = '';
         event.isBase64Encoded = false;

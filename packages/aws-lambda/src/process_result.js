@@ -2,11 +2,14 @@
 
 const { headers: headersUtil } = require('@instana/serverless');
 
+const { captureHeaders } = require('./capture_headers');
+
 const serverTimingHeader = 'Server-Timing';
 
 module.exports = exports = function procesResult(result, entrySpan) {
   if (result && typeof result === 'object') {
     captureStatusCode(result, entrySpan);
+    captureResponseHeaders(result, entrySpan);
     injectEumBackendCorrelationHeader(result, entrySpan);
   }
 };
@@ -35,6 +38,24 @@ function captureStringStatusCode(result, entrySpan) {
     entrySpan.ec = entrySpan.ec ? entrySpan.ec + 1 : 1;
     entrySpan.data.lambda.error = entrySpan.data.lambda.error || `HTTP status ${result.statusCode}`;
   }
+}
+
+function captureResponseHeaders(result, entrySpan) {
+  if (!entrySpan.data.http) {
+    // This was not recognized as http by ./trigger.js, skip capturing headers.
+    return;
+  }
+  const responseHeaders = captureHeaders(result);
+  if (!responseHeaders) {
+    return;
+  }
+  if (!entrySpan.data.http.header) {
+    entrySpan.data.http.header = responseHeaders;
+  }
+  entrySpan.data.http.header = {
+    ...entrySpan.data.http.header,
+    ...responseHeaders
+  };
 }
 
 function injectEumBackendCorrelationHeader(result, entrySpan) {

@@ -4,6 +4,8 @@ const tracingConstants = require('@instana/core').tracing.constants;
 const secrets = require('@instana/core').secrets;
 const zlib = require('zlib');
 
+const { captureHeaders } = require('./capture_headers');
+
 const maxCloudwatchEventsResources = 3;
 const maxCloudwatchEventsLength = 200;
 const maxCloudwatchLogsEvents = 3;
@@ -11,8 +13,6 @@ const maxCloudwatchLogsEventLength = 200;
 const maxS3Records = 3;
 const maxS3ObjectKeyLength = 200;
 const maxSQSRecords = 3;
-
-let extraHttpHeadersToCapture = null;
 
 exports.enrichSpanWithTriggerData = function enrichSpanWithTriggerData(event, span) {
   if (isApiGatewayProxyTrigger(event)) {
@@ -62,7 +62,7 @@ function extractHttpFromApiGatewwayProxyEvent(event, span) {
     url: event.path,
     path_tpl: event.resource,
     params: readHttpQueryParams(event),
-    header: getExtraHeaders(event)
+    header: captureHeaders(event)
   };
 }
 
@@ -105,7 +105,7 @@ function extractHttpFromApplicationLoadBalancerEvent(event, span) {
     method: event.httpMethod,
     url: event.path,
     params: readHttpQueryParams(event),
-    header: getExtraHeaders(event)
+    header: captureHeaders(event)
   };
 }
 
@@ -201,36 +201,6 @@ function extractEventFromSQS(event, span) {
     }))
   };
   span.data.lambda.sqs.more = event.Records.length > maxSQSRecords;
-}
-
-function getExtraHeaders(event) {
-  if (!Array.isArray(extraHttpHeadersToCapture)) {
-    if (!process.env.INSTANA_EXTRA_HTTP_HEADERS) {
-      extraHttpHeadersToCapture = [];
-      return undefined;
-    } else {
-      extraHttpHeadersToCapture = process.env.INSTANA_EXTRA_HTTP_HEADERS.split(';').map(header => header.toLowerCase());
-    }
-  }
-
-  if (extraHttpHeadersToCapture.length === 0) {
-    return undefined;
-  }
-  if (!event.headers || typeof event.headers !== 'object') {
-    return undefined;
-  }
-
-  const extraHeaders = {};
-  Object.keys(event.headers).forEach(key => {
-    if (typeof key === 'string') {
-      for (let i = 0; i < extraHttpHeadersToCapture.length; i++) {
-        if (key.toLowerCase() === extraHttpHeadersToCapture[i]) {
-          extraHeaders[key] = event.headers[key];
-        }
-      }
-    }
-  });
-  return extraHeaders;
 }
 
 exports.readTracingHeaders = function readTracingHeaders(event) {
