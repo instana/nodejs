@@ -27,7 +27,9 @@ mochaSuiteFn('tracing/http client', function() {
     extraHeaders: [
       //
       'X-My-Exit-Options-Request-Header',
+      'X-My-Exit-Options-Request-Multi-Header',
       'X-My-Exit-Set-On-Request-Header',
+      'X-My-Exit-Set-On-Request-Multi-Header',
       'X-My-Exit-Response-Header'
     ]
   });
@@ -326,10 +328,11 @@ function registerTests(useHttps) {
             expectExactlyOneMatching(spans, span => {
               expect(span.n).to.equal('node.http.client');
               expect(span.k).to.equal(constants.EXIT);
-              expect(span.data.http.header).to.exist;
-              expect(span.data.http.header['x-my-exit-options-request-header']).to.equal(
-                'x-my-exit-options-request-header-value'
-              );
+              expect(span.data.http.header).to.deep.equal({
+                'x-my-exit-options-request-header': 'x-my-exit-options-request-header-value',
+                'x-my-exit-options-request-multi-header':
+                  'x-my-exit-options-request-multi-header-value-1, x-my-exit-options-request-multi-header-value-2'
+              });
               expect(span.data.http.url).to.match(/\/request-only-opts/);
             });
           })
@@ -348,10 +351,11 @@ function registerTests(useHttps) {
             expectExactlyOneMatching(spans, span => {
               expect(span.n).to.equal('node.http.client');
               expect(span.k).to.equal(constants.EXIT);
-              expect(span.data.http.header).to.exist;
-              expect(span.data.http.header['x-my-exit-set-on-request-header']).to.equal(
-                'x-my-exit-set-on-request-header-value'
-              );
+              expect(span.data.http.header).to.deep.equal({
+                'x-my-exit-set-on-request-header': 'x-my-exit-set-on-request-header-value',
+                'x-my-exit-set-on-request-multi-header':
+                  'x-my-exit-set-on-request-multi-header-value-1, x-my-exit-set-on-request-multi-header-value-2'
+              });
               expect(span.data.http.url).to.match(/\/request-only-opts/);
             });
           })

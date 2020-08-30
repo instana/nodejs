@@ -25,8 +25,11 @@ describe('tracing/http(s) server', function() {
     extraHeaders: [
       //
       'X-My-Entry-Request-Header',
+      'X-My-Entry-Request-Multi-Header',
       'X-My-Entry-Response-Header',
-      'X-Write-Head-Response-Header'
+      'X-My-Entry-Response-Multi-Header',
+      'X-Write-Head-Response-Header',
+      'X-Write-Head-Response-Multi-Header'
     ],
     secretsList: ['secret', 'Enigma', 'CIPHER']
   });
@@ -234,7 +237,9 @@ function registerTests(useHttps, useHttp2CompatApi) {
         method: 'GET',
         path: '/',
         headers: {
-          'X-MY-ENTRY-REQUEST-HEADER': requestHeaderValue
+          'X-MY-ENTRY-REQUEST-HEADER': requestHeaderValue,
+          'X-MY-ENTRY-REQUEST-MULTI-HEADER': ['value1', 'value2'],
+          'X-MY-ENTRY-REQUEST-NOT-CAPTURED-HEADER': requestHeaderValue
         }
       })
       .then(() =>
@@ -242,8 +247,10 @@ function registerTests(useHttps, useHttp2CompatApi) {
           agentControls.getSpans().then(spans => {
             const span = verifyThereIsExactlyOneHttpEntry(spans, '/', 'GET', 200);
             expect(span.data.http.header).to.be.an('object');
-            expect(span.data.http.header['x-my-entry-request-header']).to.equal(requestHeaderValue);
-            expect(Object.keys(span.data.http.header)).to.have.lengthOf(1);
+            expect(span.data.http.header).to.deep.equal({
+              'x-my-entry-request-header': requestHeaderValue,
+              'x-my-entry-request-multi-header': 'value1, value2'
+            });
           })
         )
       );
@@ -261,8 +268,10 @@ function registerTests(useHttps, useHttp2CompatApi) {
           agentControls.getSpans().then(spans => {
             const span = verifyThereIsExactlyOneHttpEntry(spans, '/', 'GET', 200);
             expect(span.data.http.header).to.be.an('object');
-            expect(span.data.http.header['x-my-entry-response-header']).to.equal(expectedResponeHeaderValue);
-            expect(Object.keys(span.data.http.header)).to.have.lengthOf(1);
+            expect(span.data.http.header).to.deep.equal({
+              'x-my-entry-response-header': expectedResponeHeaderValue,
+              'x-my-entry-response-multi-header': 'value1, value2'
+            });
           })
         )
       );
@@ -280,8 +289,10 @@ function registerTests(useHttps, useHttp2CompatApi) {
           agentControls.getSpans().then(spans => {
             const span = verifyThereIsExactlyOneHttpEntry(spans, '/', 'GET', 200);
             expect(span.data.http.header).to.be.an('object');
-            expect(span.data.http.header['x-write-head-response-header']).to.equal(expectedResponeHeaderValue);
-            expect(Object.keys(span.data.http.header)).to.have.lengthOf(1);
+            expect(span.data.http.header).to.deep.equal({
+              'x-write-head-response-header': expectedResponeHeaderValue,
+              'x-write-head-response-multi-header': 'value1, value2'
+            });
           })
         )
       );
@@ -295,7 +306,9 @@ function registerTests(useHttps, useHttp2CompatApi) {
         method: 'GET',
         path: '/?responseHeader=true',
         headers: {
-          'X-MY-ENTRY-REQUEST-HEADER': requestHeaderValue
+          'X-MY-ENTRY-REQUEST-HEADER': requestHeaderValue,
+          'X-MY-ENTRY-REQUEST-MULTI-HEADER': ['value1', 'value2'],
+          'X-MY-ENTRY-REQUEST-NOT-CAPTURED-HEADER': requestHeaderValue
         }
       })
       .then(() =>
@@ -303,9 +316,12 @@ function registerTests(useHttps, useHttp2CompatApi) {
           agentControls.getSpans().then(spans => {
             const span = verifyThereIsExactlyOneHttpEntry(spans, '/', 'GET', 200);
             expect(span.data.http.header).to.be.an('object');
-            expect(span.data.http.header['x-my-entry-request-header']).to.equal(requestHeaderValue);
-            expect(span.data.http.header['x-my-entry-response-header']).to.equal(expectedResponeHeaderValue);
-            expect(Object.keys(span.data.http.header)).to.have.lengthOf(2);
+            expect(span.data.http.header).to.deep.equal({
+              'x-my-entry-request-header': requestHeaderValue,
+              'x-my-entry-request-multi-header': 'value1, value2',
+              'x-my-entry-response-header': expectedResponeHeaderValue,
+              'x-my-entry-response-multi-header': 'value1, value2'
+            });
           })
         )
       );
@@ -314,14 +330,16 @@ function registerTests(useHttps, useHttp2CompatApi) {
   it(//
   `must capture both response headers written directly to the response and other headers (HTTPS: ${useHttps})`, () => {
     const requestHeaderValue = 'Request Header Value';
-    const expectedResponeHeaderValue1 = 'Write Head Response Header Value';
-    const expectedResponeHeaderValue2 = 'Response Header Value';
+    const expectedResponeHeaderValue1 = 'Response Header Value';
+    const expectedResponeHeaderValue2 = 'Write Head Response Header Value';
     return controls
       .sendRequest({
         method: 'GET',
         path: '/?responseHeader=true&writeHead=true',
         headers: {
-          'X-MY-ENTRY-REQUEST-HEADER': requestHeaderValue
+          'X-MY-ENTRY-REQUEST-HEADER': requestHeaderValue,
+          'X-MY-ENTRY-REQUEST-MULTI-HEADER': ['value1', 'value2'],
+          'X-MY-ENTRY-REQUEST-NOT-CAPTURED-HEADER': requestHeaderValue
         }
       })
       .then(() =>
@@ -329,10 +347,14 @@ function registerTests(useHttps, useHttp2CompatApi) {
           agentControls.getSpans().then(spans => {
             const span = verifyThereIsExactlyOneHttpEntry(spans, '/', 'GET', 200);
             expect(span.data.http.header).to.be.an('object');
-            expect(span.data.http.header['x-my-entry-request-header']).to.equal(requestHeaderValue);
-            expect(span.data.http.header['x-write-head-response-header']).to.equal(expectedResponeHeaderValue1);
-            expect(span.data.http.header['x-my-entry-response-header']).to.equal(expectedResponeHeaderValue2);
-            expect(Object.keys(span.data.http.header)).to.have.lengthOf(3);
+            expect(span.data.http.header).to.deep.equal({
+              'x-my-entry-request-header': requestHeaderValue,
+              'x-my-entry-request-multi-header': 'value1, value2',
+              'x-my-entry-response-header': expectedResponeHeaderValue1,
+              'x-my-entry-response-multi-header': 'value1, value2',
+              'x-write-head-response-header': expectedResponeHeaderValue2,
+              'x-write-head-response-multi-header': 'value1, value2'
+            });
           })
         )
       );

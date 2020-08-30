@@ -71,11 +71,23 @@ app.get('/request-options-only', (req, res) => {
     ca: cert
   };
   if (req.query.withHeader === 'request-via-options') {
-    downstreamRequest.headers = { 'x-my-exit-options-request-header': 'x-my-exit-options-request-header-value' };
+    downstreamRequest.headers = {
+      'x-my-exit-options-request-header': 'x-my-exit-options-request-header-value',
+      'x-my-exit-options-request-multi-header': [
+        'x-my-exit-options-request-multi-header-value-1',
+        'x-my-exit-options-request-multi-header-value-2'
+      ],
+      'x-exit-options-not-captured-header': 'whatever'
+    };
   }
   const requestObject = httpModule.request(downstreamRequest, () => res.sendStatus(200));
   if (req.query.withHeader === 'set-on-request') {
     requestObject.setHeader('X-MY-EXIT-SET-ON-REQUEST-HEADER', 'x-my-exit-set-on-request-header-value');
+    requestObject.setHeader('X-My-Exit-Set-On-Request-Multi-Header', [
+      'x-my-exit-set-on-request-multi-header-value-1',
+      'x-my-exit-set-on-request-multi-header-value-2'
+    ]);
+    requestObject.setHeader('x-my-exit-set-on-request-not-captured-jeader', 'whatever');
   }
   requestObject.end();
 });

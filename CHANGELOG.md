@@ -2,11 +2,13 @@
 
 ## Unreleased
 - Fix(HTTP1/Server): Also set Server-Timing header when X-INSTANA-T is incoming (that is, not only when we start a fresh trace).
-- Fix(HTTP/Server): Do not append another intid key-value pair to Server-Timing if it is already present.
+- Fix(HTTP1/Server): Do not append another intid key-value pair to Server-Timing if it is already present.
 - Fix(HTTP2/Server): Add support for website monitoring back end correlation via Server-Timing header.
 - Fix(HTTP2/Server): Add support for X-Instana-Service.
 - Fix(HTTP2/Server): Inject the trace ID into the request to enable application code to inject it into the response body.
 - Fix(HTTP2/Server): Use case-insensitive header matching as incoming headers are already normalized to lower case (performance improvement).
+- Add support for `INSTANA_EXTRA_HTTP_HEADERS` variable.
+- Fix(HTTP1/HTTP2): Fix handling for headers of type array (normalize to string, separated by 0x2C 0x20.
 - [AWS Fargate] Add support for `INSTANA_ZONE`.
 - [AWS Fargate] Add support for `INSTANA_TAGS`.
 - Secrets Filtering: Replace values for filtered query parameters with `<redacted>` instead of removing the whole key-value pair.

@@ -170,9 +170,16 @@ function normalizeTracingTransmission(config) {
 function normalizeTracingHttp(config) {
   config.tracing.http = config.tracing.http || {};
 
-  if (!config.tracing.http.extraHttpHeadersToCapture) {
+  let fromEnvVar = {};
+  if (process.env.INSTANA_EXTRA_HTTP_HEADERS) {
+    fromEnvVar = parseHeadersEnvVar(process.env.INSTANA_EXTRA_HTTP_HEADERS);
+  }
+
+  if (!config.tracing.http.extraHttpHeadersToCapture && !fromEnvVar) {
     config.tracing.http.extraHttpHeadersToCapture = defaults.tracing.http.extraHttpHeadersToCapture;
     return;
+  } else if (!config.tracing.http.extraHttpHeadersToCapture && fromEnvVar) {
+    config.tracing.http.extraHttpHeadersToCapture = fromEnvVar;
   }
   if (!Array.isArray(config.tracing.http.extraHttpHeadersToCapture)) {
     logger.warn(
@@ -187,6 +194,13 @@ function normalizeTracingHttp(config) {
   config.tracing.http.extraHttpHeadersToCapture = config.tracing.http.extraHttpHeadersToCapture.map((
     s // Node.js HTTP API turns all incoming HTTP headers into lowercase.
   ) => s.toLowerCase());
+}
+
+function parseHeadersEnvVar(envVarValue) {
+  return envVarValue
+    .split(/[;,]/)
+    .map(header => header.trim())
+    .filter(header => header !== '');
 }
 
 function normalizeTracingStackTraceLength(config) {
