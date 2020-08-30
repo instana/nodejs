@@ -8,6 +8,7 @@ const identityProvider = require('./identity_provider');
 const metrics = require('./metrics');
 const triggers = require('./triggers');
 const processResult = require('./process_result');
+const captureHeaders = require('./capture_headers');
 
 const { tracing } = instanaCore;
 const { constants, spanBuffer } = tracing;
@@ -212,8 +213,10 @@ function init(event, arnInfo, _config) {
   identityProvider.init(arnInfo);
   backendConnector.init(identityProvider, logger, true, false, 500);
 
+  // instanaCore.init also normalizes the config as a side effect
   instanaCore.init(config, backendConnector, identityProvider);
 
+  captureHeaders.init(config);
   metrics.init(config);
   metrics.activate();
   tracing.activate();

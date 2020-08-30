@@ -41,7 +41,8 @@ function prelude(opts) {
   }
 
   const env = {
-    INSTANA_EXTRA_HTTP_HEADERS: 'x-My-Favorite-Header;ANOTHER-HEADER',
+    INSTANA_EXTRA_HTTP_HEADERS:
+      'x-request-header-1; X-REQUEST-HEADER-2 ; x-response-header-1;X-RESPONSE-HEADER-2 , x-downstream-header  ',
     ...opts.env
   };
   if (opts.error) {
@@ -447,8 +448,10 @@ function registerTests(handlerDefinitionPath) {
             expect(span.data.http.path_tpl).to.equal('/path/to/{param1}/{param2}');
             expect(span.data.http.params).to.equal('param1=param-value&param1=another-param-value&param2=param-value');
             expect(span.data.http.header).to.deep.equal({
-              'X-mY-favorite-header': 'A Header Value',
-              'Another-Header': 'Another Header Value'
+              'x-request-header-1': 'A Header Value',
+              'x-request-header-2': 'Multi Value,Header Value',
+              'x-response-header-1': 'response header value 1',
+              'x-response-header-2': 'response,header,value 2'
             });
             expect(span.data.http.host).to.not.exist;
             expect(span.data.http.status).to.equal(200);
@@ -552,7 +555,7 @@ function registerTests(handlerDefinitionPath) {
       return verify(control, { error: false, expectMetrics: true, expectSpans: true, trigger: 'aws:api.gateway' })
         .then(() => {
           const response = control.getLambdaResults()[0];
-          serverTimingValue = getHeaderCaseInsensitive(response.headers, 'server-timing');
+          serverTimingValue = getHeaderCaseInsensitive(response.multiValueHeaders, 'server-timing');
           expect(serverTimingValue).to.match(/^intid;desc=[0-9a-f]+$/);
         })
         .then(() => control.getSpans())
@@ -702,8 +705,10 @@ function registerTests(handlerDefinitionPath) {
             expect(span.data.http.path_tpl).to.not.exist;
             expect(span.data.http.params).to.equal('param1=value1&param2=value2');
             expect(span.data.http.header).to.deep.equal({
-              'X-mY-favorite-header': 'A Header Value',
-              'Another-Header': 'Another Header Value'
+              'x-request-header-1': 'A Header Value',
+              'x-request-header-2': 'Multi Value,Header Value',
+              'x-response-header-1': 'response header value 1',
+              'x-response-header-2': 'response,header,value 2'
             });
             expect(span.data.http.host).to.not.exist;
           })
@@ -894,7 +899,11 @@ function registerTests(handlerDefinitionPath) {
       const result = control.getLambdaResults()[0];
       expect(result).to.exist;
       expect(result.headers).to.be.an('object');
-      expect(result.headers['x-custom-header']).to.equal('custom header value');
+      expect(result.headers['X-Response-Header-1']).to.equal('response header value 1');
+      expect(result.headers['X-Response-Header-3']).to.equal('response header value 3');
+      expect(result.multiValueHeaders).to.be.an('object');
+      expect(result.multiValueHeaders['X-Response-Header-2']).to.deep.equal(['response', 'header', 'value 2']);
+      expect(result.multiValueHeaders['X-Response-Header-4']).to.deep.equal(['response', 'header', 'value 4']);
       expect(result.body).to.deep.equal({ message: 'Stan says hi!' });
     }
 
@@ -996,6 +1005,9 @@ function registerTests(handlerDefinitionPath) {
       expect(span.data.http).to.be.an('object');
       expect(span.data.http.method).to.equal('GET');
       expect(span.data.http.url).to.equal(downstreamDummyUrl);
+      expect(span.data.http.header).to.deep.equal({
+        'x-downstream-header': 'yes'
+      });
       verifyHeaders(span);
     });
   }

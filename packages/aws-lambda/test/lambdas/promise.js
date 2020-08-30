@@ -16,7 +16,12 @@ const downstreamDummyUrl = process.env.DOWNSTREAM_DUMMY_URL;
 
 const response = {
   headers: {
-    'x-custom-header': 'custom header value'
+    'X-Response-Header-1': 'response header value 1',
+    'X-Response-Header-3': 'response header value 3'
+  },
+  multiValueHeaders: {
+    'X-Response-Header-2': ['response', 'header', 'value 2'],
+    'X-Response-Header-4': ['response', 'header', 'value 4']
   },
   body: {
     message: 'Stan says hi!'
@@ -27,9 +32,7 @@ if (process.env.SERVER_TIMING_HEADER) {
   if (process.env.SERVER_TIMING_HEADER === 'string') {
     response.headers['sErveR-tIming'] = 'cache;desc="Cache Read";dur=23.2';
   } else if (process.env.SERVER_TIMING_HEADER === 'array') {
-    response.multiValueHeaders = {
-      'ServEr-TiminG': ['cache;desc="Cache Read";dur=23.2', 'cpu;dur=2.4']
-    };
+    response.multiValueHeaders['ServEr-TiminG'] = ['cache;desc="Cache Read";dur=23.2', 'cpu;dur=2.4'];
   } else {
     throw new Error(`Unknown SERVER_TIMING_HEADER value: ${process.env.SERVER_TIMING_HEADER}.`);
   }
@@ -41,7 +44,7 @@ const handler = event => {
   if (event.error === 'synchronous') {
     throw new Error('Boom!');
   }
-  return fetch(downstreamDummyUrl).then(() => {
+  return fetch(downstreamDummyUrl, { headers: { 'X-Downstream-Header': 'yes' } }).then(() => {
     if (event.error === 'asynchronous') {
       throw new Error('Boom!');
     }
