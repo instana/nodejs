@@ -13,6 +13,7 @@
 - [AWS Fargate] Add support for `INSTANA_TAGS`.
 - Secrets Filtering: Replace values for filtered query parameters with `<redacted>` instead of removing the whole key-value pair.
 - [AWS Fargate] Add support for `INSTANA_SECRETS`.
+- [AWS Fargate] Add support for `INSTANA_EXTRA_HTTP_HEADERS`.
 - [AWS Lambda] Add support for `INSTANA_SECRETS`.
 - [AWS Lambda] Make `INSTANA_EXTRA_HTTP_HEADERS` also apply to HTTP exits.
 - [AWS Lambda] Improve handling for `event.multiValueHeaders`.
