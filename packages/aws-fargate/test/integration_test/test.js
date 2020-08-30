@@ -33,6 +33,13 @@ const secondaryDockerId = '1f11d3be4668926ba50c5a6049bf75103f9c708cb70ad967d96e2
 const containerAppPath = path.join(__dirname, './app');
 const instanaAgentKey = 'aws-fargate-dummy-key';
 
+const requestHeaders = {
+  'X-Entry-Request-Header-1': 'entry request header value 1',
+  'X-Entry-Request-Header-2': ['entry', 'request', 'header', 'value 2'],
+  'X-Entry-Request-Header-3': 'not configured to capture this',
+  'X-Entry-Request-Header-4': ['not', 'configured', 'to', 'be', 'captured']
+};
+
 function prelude(opts = {}) {
   this.timeout(config.getTestTimeout());
   this.slow(config.getTestTimeout() / 2);
@@ -42,9 +49,21 @@ function prelude(opts = {}) {
     opts.startBackend = true;
   }
 
+  let env = {
+    INSTANA_EXTRA_HTTP_HEADERS:
+      'x-entry-request-header-1; X-ENTRY-REQUEST-HEADER-2 ; x-entry-response-header-1;X-ENTRY-RESPONSE-HEADER-2 , ' +
+      'x-eXit-Request-Header-1; X-EXIT-REQUEST-HEADER-2 '
+  };
+  if (opts.env) {
+    env = {
+      ...env,
+      ...opts.env
+    };
+  }
+
   const controlOpts = {
-    env: {},
     ...opts,
+    env,
     containerAppPath,
     downstreamDummyPort,
     downstreamDummyUrl,
@@ -66,7 +85,8 @@ describe('AWS fargate integration test', function() {
       control
         .sendRequest({
           method: 'GET',
-          path: '/'
+          path: '/',
+          headers: requestHeaders
         })
         .then(response => verify(control, response, true)));
   });
@@ -80,7 +100,8 @@ describe('AWS fargate integration test', function() {
       control
         .sendRequest({
           method: 'GET',
-          path: '/'
+          path: '/',
+          headers: requestHeaders
         })
         .then(response => verify(control, response, true)));
   });
@@ -94,7 +115,8 @@ describe('AWS fargate integration test', function() {
       control
         .sendRequest({
           method: 'GET',
-          path: '/'
+          path: '/',
+          headers: requestHeaders
         })
         .then(response => verify(control, response, false)));
   });
@@ -110,7 +132,8 @@ describe('AWS fargate integration test', function() {
       return control
         .sendRequest({
           method: 'GET',
-          path: '/'
+          path: '/',
+          headers: requestHeaders
         })
         .then(_response => {
           response = _response;
@@ -138,7 +161,8 @@ describe('AWS fargate integration test', function() {
       control
         .sendRequest({
           method: 'GET',
-          path: '/'
+          path: '/',
+          headers: requestHeaders
         })
         .then(response => verify(control, response, true)));
   });
@@ -154,7 +178,8 @@ describe('AWS fargate integration test', function() {
       control
         .sendRequest({
           method: 'GET',
-          path: '/'
+          path: '/',
+          headers: requestHeaders
         })
         .then(response => verify(control, response, true)));
   });
@@ -170,7 +195,8 @@ describe('AWS fargate integration test', function() {
       control
         .sendRequest({
           method: 'GET',
-          path: '/'
+          path: '/',
+          headers: requestHeaders
         })
         .then(response => verify(control, response, false)));
   });
@@ -184,7 +210,8 @@ describe('AWS fargate integration test', function() {
       control
         .sendRequest({
           method: 'GET',
-          path: '/'
+          path: '/',
+          headers: requestHeaders
         })
         .then(response => verify(control, response, false)));
   });
@@ -200,7 +227,8 @@ describe('AWS fargate integration test', function() {
       control
         .sendRequest({
           method: 'GET',
-          path: '/?q1=some&confidential=topsecret&q2=value'
+          path: '/?q1=some&confidential=topsecret&q2=value',
+          headers: requestHeaders
         })
         .then(response =>
           verify(control, response, true).then(([entry]) => {
@@ -477,6 +505,12 @@ describe('AWS fargate integration test', function() {
       expect(span.data.http.url).to.equal('/');
       expect(span.data.http.host).to.equal('127.0.0.1:4215');
       expect(span.data.http.status).to.equal(200);
+      expect(span.data.http.header).to.deep.equal({
+        'x-entry-request-header-1': 'entry request header value 1',
+        'x-entry-request-header-2': 'entry, request, header, value 2',
+        'x-entry-response-header-1': 'entry response header value 1',
+        'x-entry-response-header-2': 'entry, response, header, value 2'
+      });
       expect(span.ec).to.equal(0);
       verifyHeaders(span);
     });
@@ -497,6 +531,13 @@ describe('AWS fargate integration test', function() {
       expect(span.data.http).to.be.an('object');
       expect(span.data.http.method).to.equal('GET');
       expect(span.data.http.url).to.equal(downstreamDummyUrl);
+      expect(span.data.http.header).to.deep.equal({
+        'x-exit-request-header-1': 'exit request header value 1',
+        // This should be
+        // 'x-exit-request-header-2': 'exit, request, header, value 2'
+        // but node-fetch handles this case inconsistently, so it is actually
+        'x-exit-request-header-2': 'exit,request,header,value 2'
+      });
       expect(span.ec).to.equal(0);
       verifyHeaders(span);
     });
