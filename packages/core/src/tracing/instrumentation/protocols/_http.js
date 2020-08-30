@@ -24,6 +24,8 @@ exports.getExtraHeadersFromHeaders = function getExtraHeadersFromHeaders(headers
     const key = extraHttpHeadersToCapture[i];
     const value = headers[key];
     if (value) {
+      // If the client has set the same header multiple times, Node.js has already normalized
+      // this to "value 1, value 2, ..."
       extraHeaders[key] = value;
       extraHeadersFound = true;
     }
@@ -64,7 +66,9 @@ exports.getExtraHeadersCaseInsensitive = function getExtraHeadersCaseInsensitive
     const keyToCapture = extraHttpHeadersToCapture[i];
     for (let j = 0; j < keys.length; j++) {
       if (keys[j].low === keyToCapture) {
-        extraHeaders[keys[j].low] = headers[keys[j].orig];
+        extraHeaders[keys[j].low] = Array.isArray(headers[keys[j].orig])
+          ? headers[keys[j].orig].join(', ')
+          : headers[keys[j].orig];
         extraHeadersFound = true;
       }
     }
@@ -143,7 +147,10 @@ function mergeExtraHeaders(headersAlreadyCapturedIfAny, extraHttpHeadersToCaptur
   for (let i = 0; i < extraHttpHeadersToCapture.length; i++) {
     const key = extraHttpHeadersToCapture[i];
     const value = getHeader(key);
-    if (value) {
+    if (Array.isArray(value)) {
+      additionalHeaders[key] = value.join(', ');
+      additionalHeadersFound = true;
+    } else if (value) {
       additionalHeaders[key] = value;
       additionalHeadersFound = true;
     }

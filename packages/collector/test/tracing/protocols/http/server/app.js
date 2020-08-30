@@ -76,6 +76,8 @@ server.on('request', (req, res) => {
   }
   if (query.responseHeader) {
     res.setHeader('X-MY-ENTRY-RESPONSE-HEADER', 'Response Header Value');
+    res.setHeader('x-my-entry-response-multi-header', ['value1', 'value2']);
+    res.setHeader('x-my-entry-response-not-captured--header', 'nope');
   }
   if (query.cookie) {
     res.setHeader('sEt-CooKie', query.cookie);
@@ -104,7 +106,9 @@ server.on('request', (req, res) => {
 function endResponse(query, res, body) {
   if (query.writeHead) {
     res.writeHead(200, {
-      'X-WRITE-HEAD-RESPONSE-HEADER': 'Write Head Response Header Value'
+      'X-WRITE-HEAD-RESPONSE-HEADER': 'Write Head Response Header Value',
+      'x-write-head-response-multi-header': ['value1', 'value2'],
+      'x-write-head-response-not-captured-header': "just don't"
     });
   }
 

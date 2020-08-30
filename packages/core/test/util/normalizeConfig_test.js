@@ -9,15 +9,16 @@ describe('util.normalizeConfig', () => {
   afterEach(resetEnv);
 
   function resetEnv() {
-    delete process.env.INSTANA_SERVICE_NAME;
-    delete process.env.INSTANA_METRICS_TRANSMISSION_DELAY;
-    delete process.env.INSTANA_DISABLE_TRACING;
-    delete process.env.INSTANA_FORCE_TRANSMISSION_STARTING_AT;
-    delete process.env.INSTANA_TRACING_TRANSMISSION_DELAY;
-    delete process.env.INSTANA_DISABLE_AUTO_INSTR;
-    delete process.env.INSTANA_STACK_TRACE_LENGTH;
     delete process.env.INSTANA_DISABLED_TRACERS;
+    delete process.env.INSTANA_DISABLE_AUTO_INSTR;
+    delete process.env.INSTANA_DISABLE_TRACING;
+    delete process.env.INSTANA_EXTRA_HTTP_HEADERS;
+    delete process.env.INSTANA_FORCE_TRANSMISSION_STARTING_AT;
+    delete process.env.INSTANA_METRICS_TRANSMISSION_DELAY;
     delete process.env.INSTANA_SECRETS;
+    delete process.env.INSTANA_SERVICE_NAME;
+    delete process.env.INSTANA_STACK_TRACE_LENGTH;
+    delete process.env.INSTANA_TRACING_TRANSMISSION_DELAY;
   }
 
   it('should apply all defaults', () => {
@@ -178,6 +179,18 @@ describe('util.normalizeConfig', () => {
     });
     expect(config.tracing.http.extraHttpHeadersToCapture).to.be.an('array');
     expect(config.tracing.http.extraHttpHeadersToCapture).to.be.empty;
+  });
+
+  it('should parse extra headers from env var', () => {
+    process.env.INSTANA_EXTRA_HTTP_HEADERS = ' X-Header-1 ; X-hEADer-2 , X-Whatever ';
+    const config = normalizeConfig();
+    expect(config.tracing.http.extraHttpHeadersToCapture).to.deep.equal(['x-header-1', 'x-header-2', 'x-whatever']);
+  });
+
+  it('must use default extra headers (empty list) when INSTANA_EXTRA_HTTP_HEADERS is invalid', () => {
+    process.env.INSTANA_EXTRA_HTTP_HEADERS = ' \n \t ';
+    const config = normalizeConfig();
+    expect(config.tracing.http.extraHttpHeadersToCapture).to.deep.equal([]);
   });
 
   it('should accept numerical custom stack trace length', () => {

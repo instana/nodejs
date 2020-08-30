@@ -38,6 +38,7 @@ app.get('/', (req, res) => {
     if (req.query && req.query.withHeader === 'response') {
       res.setHeader('X-MY-EXIT-RESPONSE-HEADER', 'x-my-exit-response-header-value');
     }
+    res.setHeader('x-my-exit-response-not-captured-header', 'something');
     res.sendStatus(200);
   });
 });
