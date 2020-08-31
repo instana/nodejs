@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.106.0
 - Fix(HTTP1/Server): Also set Server-Timing header when X-INSTANA-T is incoming (that is, not only when we start a fresh trace).
 - Fix(HTTP1/Server): Do not append another intid key-value pair to Server-Timing if it is already present.
 - Fix(HTTP2/Server): Add support for website monitoring back end correlation via Server-Timing header.
