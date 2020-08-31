@@ -29,28 +29,22 @@ node {
   }
 
   stage('Push Image') {
-    if (env.DRY_RUN.toBoolean()) {
-      println "skipping: pushing ${IMAGE_NAME} to ${REGISTRY_PATH_INTERNAL} and ${REGISTRY_PATH_PUBLIC} – this is a dry run"
-    } else {
-      println "pushing ${IMAGE_NAME} to ${REGISTRY_PATH_INTERNAL} and ${REGISTRY_PATH_PUBLIC}"
-      pushImage()
-    }
+    println "pushing ${IMAGE_NAME} to ${REGISTRY_PATH_INTERNAL} and ${REGISTRY_PATH_PUBLIC}"
+    pushImage()
   }
 
   cleanUp()
 
-  if (!env.DRY_RUN.toBoolean()) {
-    slackSend channel: "#${SLACK_CHANNEL}",
-                color: "#389a07",
-              message: """
-      Successfully built and pushed Instana AWS Fargate Node.js Docker image as
-      - ${REGISTRY_PATH_PUBLIC}:${packageVersion},
-      - ${REGISTRY_PATH_PUBLIC}:latest,
-      - ${REGISTRY_PATH_INTERNAL}:${packageVersion}, and
-      - ${REGISTRY_PATH_INTERNAL}:latest.
-      (<${env.BUILD_URL}|Open>)
-    """
-  }
+  slackSend channel: "#${SLACK_CHANNEL}",
+              color: "#389a07",
+            message: """
+    Successfully built and pushed Instana AWS Fargate Node.js Docker image as
+    - ${REGISTRY_PATH_PUBLIC}:${packageVersion},
+    - ${REGISTRY_PATH_PUBLIC}:latest,
+    - ${REGISTRY_PATH_INTERNAL}:${packageVersion}, and
+    - ${REGISTRY_PATH_INTERNAL}:latest.
+    (<${env.BUILD_URL}|Open>)
+  """
 }
 
 def getPackageVersion() {

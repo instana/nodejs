@@ -32,7 +32,7 @@ To make a release, you first need to ensure that the released version will eithe
     - `NPM_CONFIG_OTP={your token} lerna publish --force-publish="*" patch && lerna bootstrap`, or
     - `NPM_CONFIG_OTP={your token} lerna publish --force-publish="*" minor && lerna bootstrap`.
 
-Consider also publishing a new Lambda layer with this release, see `packages/aws-lambda/layer/bin/publish-layer.sh`.
+For each package release, we also publishing a new Lambda layer and a Fargate Docker image layer. This happens automatically via CI.
 
 #### Separate lerna version And lerna publish
 
