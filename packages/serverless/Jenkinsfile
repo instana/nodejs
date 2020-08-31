@@ -68,7 +68,7 @@ def triggerFargateJob(publishedAwsFargatePackageVersion, localAwsFargatePackageV
 }
 
 def triggerLambdaJob(publishedAwsLambdaLayerPackageVersion, localAwsLambdaLayerPackageVersion) {
-  println "Checking if a new AWS Lambda layer needs to be published ${localAwsLambdaLayerPackageVersion} vs. ${publishedAwsLambdaLayerPackageVersion}."
+  println "Checking if a new AWS Lambda layer needs to be published. Local package version: ${localAwsLambdaLayerPackageVersion} – package version in published AWS Lambda layer: ${publishedAwsLambdaLayerPackageVersion}."
   if (localAwsLambdaLayerPackageVersion != publishedAwsLambdaLayerPackageVersion) {
      println "Versions are different, triggering the job to publish the latest package version for AWS Lambda."
      build job: 'aws-lambda-nodejs'
