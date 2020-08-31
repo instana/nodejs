@@ -4,6 +4,9 @@ set -eo pipefail
 
 cd `dirname $BASH_SOURCE`/..
 
+LAMBDA_DOCS_PAGE_PATH=../../../../docs/src/pages/ecosystem/aws-lambda/nodejs/index.md
+UI_INSTALL_HELP=../../../../ui-client/packages/in-waiting-for-deployment/components/OnboardingWidget/content.js
+
 command -v aws >/dev/null 2>&1 || {
   cat <<EOF >&2
 The AWS command line tool needs to be installed but it isn't. See https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-install.html or https://docs.aws.amazon.com/cli/latest/userguide/install-macos.html etc. for instructions.
@@ -89,6 +92,34 @@ while read -r region; do
       --principal \* \
       --action lambda:GetLayerVersion \
       --output text
+
+    # Update documentation with latest version:
+    if [[ -n $LAMBDA_DOCS_PAGE_PATH ]]; then
+      if [[ -f $LAMBDA_DOCS_PAGE_PATH ]]; then
+        echo "Updating: $LAMBDA_DOCS_PAGE_PATH"
+        sed -i '' "s/arn:aws:lambda:$region:\([0-9]*\):layer:instana-nodejs:[0-9][0-9]*\` | v[0-9\.][0-9\.]* |/arn:aws:lambda:$region:\1:layer:instana-nodejs:$lambda_layer_version\` | v$VERSION |/g" $LAMBDA_DOCS_PAGE_PATH
+        echo "Updated $LAMBDA_DOCS_PAGE_PATH – do not forget to commit and push that change."
+      else
+        echo "Not found: $LAMBDA_DOCS_PAGE_PATH. Will not update documenation."
+      fi
+    else
+      echo "LAMBDA_DOCS_PAGE_PATH not set. Will not update documenation."
+    fi
+
+    # Update interactive install help with latest version:
+    if [[ -n $UI_INSTALL_HELP ]]; then
+      if [[ -f $UI_INSTALL_HELP ]]; then
+        echo "Updating: $UI_INSTALL_HELP"
+        sed -i '' "s/const nodejsLayerVersion = \'[0-9][0-9]*\';/const nodejsLayerVersion = \'$lambda_layer_version\';/g" $UI_INSTALL_HELP
+        echo "Updated $UI_INSTALL_HELP – do not forget to commit and push that change."
+      else
+        echo "Not found: $UI_INSTALL_HELP. Will not update UI install help."
+      fi
+    else
+      echo "UI_INSTALL_HELP not set. Will not update UI install help."
+    fi
+
+
   else
     echo "   + WARNING: Lambda layer version $lambda_layer_version does not seem to be numeric, will not set permissions in region $region"
   fi

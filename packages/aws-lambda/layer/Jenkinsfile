@@ -1,0 +1,13 @@
+#!groovy
+
+node {
+  stage ('Checkout Git Repo') {
+    deleteDir()
+    checkout scm
+  }
+
+  stage ('Publishing Lambda layer') {
+    return sh(returnStdout: true, script: "packages/aws-lambda/layer/bin/publish-layer.sh").trim()
+  }
+}
+

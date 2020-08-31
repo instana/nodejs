@@ -1,0 +1,79 @@
+#!groovy
+
+AWS_FARGATE_ROOT_PATH = 'packages/aws-fargate'
+AWS_FARGATE_PACKAGE_JSON_FILE = "${AWS_FARGATE_ROOT_PATH}/package.json"
+AWS_LAMBDA_WRAPPER_ROOT_PATH = 'packages/aws-lambda-auto-wrap'
+AWS_LAMBDA_WRAPPER_PACKAGE_JSON_FILE = "${AWS_LAMBDA_WRAPPER_ROOT_PATH}/package.json"
+
+node {
+
+  def localAwsFargatePackageVersion
+  def publishedAwsFargatePackageVersion
+  def fargateDockerImageLayerNeedsToBeReleased
+
+  def localAwsLambdaLayerPackageVersion
+  def publishedAwsLambdaLayerPackageVersion
+  def lambdaLayerNeedsToBeReleased
+
+  stage ('Checkout Git Repo') {
+    deleteDir()
+    checkout scm
+  }
+
+  stage ('Identify versions of published artefacts') {
+    localAwsFargatePackageVersion = getLocalPackageVersion(AWS_FARGATE_PACKAGE_JSON_FILE)
+    publishedAwsFargatePackageVersion = getPublishedAwsFargateDockerImageLayerPackageVersion()
+
+    localAwsLambdaLayerPackageVersion = getLocalPackageVersion(AWS_LAMBDA_WRAPPER_PACKAGE_JSON_FILE)
+    publishedAwsLambdaLayerPackageVersion = getPublishedAwsLambdaLayerPackageVersion()
+
+    currentBuild.displayName = "#${BUILD_NUMBER}:${publishedAwsFargatePackageVersion}:${publishedAwsLambdaLayerPackageVersion}:${localAwsFargatePackageVersion}"
+  }
+
+  stage ('Trigger downstream build jobs') {
+    triggerFargateJob(publishedAwsFargatePackageVersion, localAwsFargatePackageVersion)
+    triggerLambdaJob(publishedAwsLambdaLayerPackageVersion, localAwsLambdaLayerPackageVersion)
+  }
+}
+
+def getLocalPackageVersion(packageJsonFile) {
+  def packageJsonObject = readJSON file: packageJsonFile
+  assert packageJsonObject instanceof Map
+  assert packageJsonObject.version instanceof String
+  return packageJsonObject.version
+}
+
+def getPublishedAwsFargateDockerImageLayerPackageVersion() {
+  return sh(returnStdout: true, script: "curl https://registry.hub.docker.com/v1/repositories/instana/aws-fargate-nodejs/tags | jq -r '.[].name' | sort -r | head -n2 | tail -n1").trim()
+}
+
+def getPublishedAwsLambdaLayerPackageVersion() {
+   def description = sh(returnStdout: true, script: "aws lambda list-layer-versions --layer-name instana-nodejs --max-items 1 --output json | jq .LayerVersions\\[0\\].Description").trim()
+   println "Parsing version from AWS Lambda layer description: ${description}"
+   def matcher = description =~ '.*\\(@instana/aws-lambda@(?<version>\\d+\\.\\d+\\.\\d+)\\).*'
+   if (matcher.matches()) {
+     return matcher.group("version")
+   }
+   return null;
+}
+
+def triggerFargateJob(publishedAwsFargatePackageVersion, localAwsFargatePackageVersion) {
+  println "Checking if a new AWS Fargate Docker image layer needs to be published. Local package version: ${localAwsFargatePackageVersion} – package version in published AWS Fargate Docker image layer: ${publishedAwsFargatePackageVersion}."
+  if (localAwsFargatePackageVersion != publishedAwsFargatePackageVersion) {
+     println "Versions are different, triggering the job to publish the latest package version for AWS Fargate."
+     build job: 'aws-fargate-nodejs'
+  } else {
+     println "Versions are identical, doing nothing."
+  }
+}
+
+def triggerLambdaJob(publishedAwsLambdaLayerPackageVersion, localAwsLambdaLayerPackageVersion) {
+  println "Checking if a new AWS Lambda layer needs to be published ${localAwsLambdaLayerPackageVersion} vs. ${publishedAwsLambdaLayerPackageVersion}."
+  if (localAwsLambdaLayerPackageVersion != publishedAwsLambdaLayerPackageVersion) {
+     println "Versions are different, triggering the job to publish the latest package version for AWS Lambda."
+     build job: 'aws-lambda-nodejs'
+  } else {
+     println "Versions are identical, doing nothing."
+  }
+}
+
