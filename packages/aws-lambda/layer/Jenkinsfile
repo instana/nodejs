@@ -10,7 +10,7 @@ node {
 
   stage ('Publishing Lambda layer') {
     try {
-      sh(script: "packages/aws-lambda/layer/bin/publish-layer.sh").trim()
+      sh(script: "packages/aws-lambda/layer/bin/publish-layer.sh")
       slackSend channel: "#${SLACK_CHANNEL}",
                   color: "#389a07",
                 message: """
