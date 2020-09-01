@@ -1,0 +1,11 @@
+# Bare Node.js 14 image.
+# Native addons will work since the base image (Debian Stretch) has all
+# dependenciesinstalled out of the box.
+
+FROM node:14.9.0
+WORKDIR /usr/src/app
+COPY package*.json ./
+RUN npm install --only=production
+COPY . .
+EXPOSE 3333
+CMD [ "npm", "start" ]

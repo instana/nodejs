@@ -1,0 +1,12 @@
+# Bare Node.js 12 image, using yarn.
+# Native addons will work since the base image (Debian Stretch) has all
+# dependencies installed out of the box.
+
+FROM node:12.18.3
+WORKDIR /usr/src/app
+COPY package*.json ./
+# RUN yarn global add node-gyp
+RUN yarn
+COPY . .
+EXPOSE 3333
+CMD [ "yarn", "start" ]

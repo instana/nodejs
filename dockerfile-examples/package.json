@@ -1,6 +1,6 @@
 {
-  "name": "dockerfiles",
-  "version": "1.0.0",
+  "name": "instana-collector-example-dockerfiles",
+  "version": "1.1.0",
   "description": "",
   "main": "server.js",
   "scripts": {

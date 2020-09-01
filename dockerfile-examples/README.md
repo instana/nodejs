@@ -10,7 +10,7 @@ This is probably relevant for you
 - see `node-gyp` errors during your Docker build (in particular the `npm install`/`yarn install` step).
 
 Note that all native dependencies are optional, so your Docker build will never fail due to missing operating system packages. The Node.js collector will also do its work just fine, but certain features might not be available:
-- CPU profiling
 - garbage collection information
 - event loop information
 - reporting uncaught exceptions
+- auto profiling

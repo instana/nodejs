@@ -5,6 +5,7 @@ require('@instana/collector')({
 });
 
 const http = require('http');
+
 const port = 3333;
 const app = new http.Server();
 
