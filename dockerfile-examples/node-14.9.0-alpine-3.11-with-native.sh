@@ -2,5 +2,5 @@
 set -e
 
 source ./build-and-run.sh
-buildAndRun node-10.6-jessie
+buildAndRun node-14.9.0-alpine-3.11-with-native
 

@@ -2,5 +2,5 @@
 set -e
 
 source ./build-and-run.sh
-buildAndRun node-10.10-jessie-yarn
+buildAndRun node-14.9.0
 
