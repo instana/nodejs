@@ -170,7 +170,7 @@ function normalizeTracingTransmission(config) {
 function normalizeTracingHttp(config) {
   config.tracing.http = config.tracing.http || {};
 
-  let fromEnvVar = {};
+  let fromEnvVar;
   if (process.env.INSTANA_EXTRA_HTTP_HEADERS) {
     fromEnvVar = parseHeadersEnvVar(process.env.INSTANA_EXTRA_HTTP_HEADERS);
   }

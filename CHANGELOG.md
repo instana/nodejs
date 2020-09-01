@@ -1,5 +1,8 @@
 # Changelog
 
+## Unreleased
+- Fix bogus warning about invalid configuration emitted during startup (`"Invalid configuration: config.tracing.http.extraHttpHeadersToCapture is not an array, the value will be ignored: {}"`).
+
 ## 1.106.0
 - Fix(HTTP1/Server): Also set Server-Timing header when X-INSTANA-T is incoming (that is, not only when we start a fresh trace).
 - Fix(HTTP1/Server): Do not append another intid key-value pair to Server-Timing if it is already present.
