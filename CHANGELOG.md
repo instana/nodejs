@@ -1,5 +1,8 @@
 # Changelog
 
+## Unreleased
+- Fix: Propagate `X-INSTANA-L: 0` downstream with AMQP headers.
+
 ## 1.106.1
 - Fix bogus warning about invalid configuration emitted during startup (`"Invalid configuration: config.tracing.http.extraHttpHeadersToCapture is not an array, the value will be ignored: {}"`).
 - [Google Cloud Run]: *Experimental* in-process data collection for Google Cloud Run services via the new package `@instana/google-cloud-run`. Requires at least Instana back end version 185. `@instana/google-cloud-run` supports Node.js 8.6.0 or later. Note that this is an early technical preview and not ready for general usage. At this time, no support can be provided for this new package. This will change once Google Cloud Run support becomes generally available with Instana.

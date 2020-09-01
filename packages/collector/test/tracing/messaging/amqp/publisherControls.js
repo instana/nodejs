@@ -47,45 +47,49 @@ function waitUntilServerIsUp() {
 
 exports.getPid = () => app.pid;
 
-exports.sendToQueue = message =>
+exports.sendToQueue = (message, headers) =>
   request({
     method: 'POST',
     url: `http://127.0.0.1:${appPort}/send-to-queue`,
     json: true,
     simple: true,
+    headers,
     body: {
       message
     }
   });
 
-exports.publish = message =>
+exports.publish = (message, headers) =>
   request({
     method: 'POST',
     url: `http://127.0.0.1:${appPort}/publish`,
     json: true,
     simple: true,
+    headers,
     body: {
       message
     }
   });
 
-exports.sendToGetQueue = message =>
+exports.sendToGetQueue = (message, headers) =>
   request({
     method: 'POST',
     url: `http://127.0.0.1:${appPort}/send-to-get-queue`,
     json: true,
     simple: true,
+    headers,
     body: {
       message
     }
   });
 
-exports.sendToConfirmQueue = message =>
+exports.sendToConfirmQueue = (message, headers) =>
   request({
     method: 'POST',
     url: `http://127.0.0.1:${appPort}/send-to-confirm-queue`,
     json: true,
     simple: true,
+    headers,
     body: {
       message
     }
