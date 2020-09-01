@@ -37,7 +37,7 @@ function instrumentCallbackModel(callbackModelModule) {
 
 function shimSendMessage(originalFunction) {
   return function() {
-    if (isActive && cls.isTracing()) {
+    if (isActive) {
       const originalArgs = new Array(arguments.length);
       for (let i = 0; i < arguments.length; i++) {
         originalArgs[i] = arguments[i];
@@ -51,8 +51,12 @@ function shimSendMessage(originalFunction) {
 function instrumentedSendMessage(ctx, originalSendMessage, originalArgs) {
   const parentSpan = cls.getCurrentSpan();
 
+  if (cls.tracingSuppressed()) {
+    propagateSuppression(originalArgs[0]);
+    propagateSuppression(originalArgs[1]);
+  }
+
   if (
-    !cls.isTracing() || //
     !parentSpan || //
     // allow rabbitmq parent exit spans, this is actually the span started in instrumentedChannelModelPublish
     (constants.isExitSpan(parentSpan) && parentSpan.n !== 'rabbitmq')
@@ -109,12 +113,19 @@ ctx.connection.stream.remoteAddress}:${ctx.connection.stream.remotePort}`;
 }
 
 function setHeaders(map, span) {
-  if (!map || !map.headers || tracingUtil.readAttribCaseInsensitive(map.headers, constants.traceLevelHeaderName)) {
+  if (!map || !map.headers) {
     return;
   }
   map.headers[constants.traceIdHeaderName] = span.t;
   map.headers[constants.spanIdHeaderName] = span.s;
   map.headers[constants.traceLevelHeaderName] = '1';
+}
+
+function propagateSuppression(map) {
+  if (!map || !map.headers) {
+    return;
+  }
+  map.headers[constants.traceLevelHeaderName] = '0';
 }
 
 function shimDispatchMessage(originalFunction) {
@@ -382,7 +393,7 @@ function instrumentedChannelModelPublish(ctx, originalFunction, originalArgs) {
   // internally. We only instrument ConfirmChannel.publish to hook into the callback.
   const parentSpan = cls.getCurrentSpan();
 
-  if (!cls.isTracing() || constants.isExitSpan(parentSpan)) {
+  if (!parentSpan || constants.isExitSpan(parentSpan)) {
     return originalFunction.apply(ctx, originalArgs);
   }
 

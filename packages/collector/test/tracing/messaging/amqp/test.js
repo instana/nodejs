@@ -5,7 +5,7 @@ const expect = require('chai').expect;
 const constants = require('@instana/core').tracing.constants;
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('../../../../../core/test/config');
-const testUtils = require('../../../../../core/test/test_util');
+const { delay, expectExactlyOneMatching, retry } = require('../../../../../core/test/test_util');
 const exchange = require('./amqpUtil').exchange;
 const queueName = require('./amqpUtil').queueName;
 const queueNameGet = require('./amqpUtil').queueNameGet;
@@ -52,7 +52,7 @@ function registerTests(apiType) {
 
   it('must record an exit span for sendToQueue', () =>
     publisherControls.sendToQueue('Ohai!').then(() =>
-      testUtils.retry(() =>
+      retry(() =>
         agentStubControls.getSpans().then(spans => {
           const httpEntry = verifyHttpEntry(spans);
           const rabbitMqExit = verifyRabbitMqExit(spans, httpEntry);
@@ -65,7 +65,7 @@ function registerTests(apiType) {
 
   it('must record an exit span for publish', () =>
     publisherControls.publish('Ohai!').then(() =>
-      testUtils.retry(() =>
+      retry(() =>
         agentStubControls.getSpans().then(spans => {
           const httpEntry = verifyHttpEntry(spans);
           const rabbitMqExit = verifyRabbitMqExit(spans, httpEntry);
@@ -78,7 +78,7 @@ function registerTests(apiType) {
 
   it('must record an entry span for consume without exchange', () =>
     publisherControls.sendToQueue('Ohai').then(() =>
-      testUtils.retry(() =>
+      retry(() =>
         agentStubControls.getSpans().then(spans => {
           const httpEntry = verifyHttpEntry(spans);
           const rabbitMqExit = verifyRabbitMqExit(spans, httpEntry);
@@ -92,7 +92,7 @@ function registerTests(apiType) {
 
   it('must record an entry span for consume with exchange', () =>
     publisherControls.publish('Ohai').then(() =>
-      testUtils.retry(() =>
+      retry(() =>
         agentStubControls.getSpans().then(spans => {
           const httpEntry = verifyHttpEntry(spans);
           const rabbitMqExit = verifyRabbitMqExit(spans, httpEntry);
@@ -106,7 +106,7 @@ function registerTests(apiType) {
 
   it('must record an entry span for channel#get', () =>
     publisherControls.sendToGetQueue('Ohai').then(() =>
-      testUtils.retry(() =>
+      retry(() =>
         agentStubControls.getSpans().then(spans => {
           const httpEntry = verifyHttpEntry(spans);
           const rabbitMqExit = verifyRabbitMqExit(spans, httpEntry);
@@ -120,7 +120,7 @@ function registerTests(apiType) {
 
   it('must record an exit span for ConfirmChannel#sendToQueue', () =>
     publisherControls.sendToConfirmQueue('Ohai!').then(() =>
-      testUtils.retry(() =>
+      retry(() =>
         agentStubControls.getSpans().then(spans => {
           const httpEntry = verifyHttpEntry(spans);
           const rabbitMqExit = verifyRabbitMqExit(spans, httpEntry);
@@ -133,7 +133,7 @@ function registerTests(apiType) {
 
   it('must record an entry span for ConfirmChannel.consume', () =>
     publisherControls.sendToConfirmQueue('Ohai').then(() =>
-      testUtils.retry(() =>
+      retry(() =>
         agentStubControls.getSpans().then(spans => {
           const httpEntry = verifyHttpEntry(spans);
           const rabbitMqExit = verifyRabbitMqExit(spans, httpEntry);
@@ -145,8 +145,24 @@ function registerTests(apiType) {
       )
     ));
 
+  describe('with suppression', () => {
+    it('must propagate suppression downstream for sendToQueue', () =>
+      publisherControls
+        .sendToQueue('Ohai', { 'X-INSTANA-L': 0 })
+        .then(() => delay(500))
+        .then(() => agentStubControls.getSpans())
+        .then(spans => expect(spans).to.be.empty));
+
+    it('must propagate suppression downstream for publish', () =>
+      publisherControls
+        .publish('Ohai!', { 'X-INSTANA-L': 0 })
+        .then(() => delay(500))
+        .then(() => agentStubControls.getSpans())
+        .then(spans => expect(spans).to.be.empty));
+  });
+
   function verifyHttpEntry(spans) {
-    return testUtils.expectAtLeastOneMatching(spans, span => {
+    return expectExactlyOneMatching(spans, span => {
       expect(span.n).to.equal('node.http.server');
       expect(span.f.e).to.equal(String(publisherControls.getPid()));
       expect(span.f.h).to.equal('agent-stub-uuid');
@@ -157,7 +173,7 @@ function registerTests(apiType) {
   }
 
   function verifyRabbitMqExit(spans, parentSpan) {
-    return testUtils.expectAtLeastOneMatching(spans, span => {
+    return expectExactlyOneMatching(spans, span => {
       expect(span.t).to.equal(parentSpan.t);
       expect(span.p).to.equal(parentSpan.s);
       expect(span.k).to.equal(constants.EXIT);
@@ -173,7 +189,7 @@ function registerTests(apiType) {
   }
 
   function verifyRabbitMqEntry(spans, parentSpan) {
-    return testUtils.expectAtLeastOneMatching(spans, span => {
+    return expectExactlyOneMatching(spans, span => {
       expect(span.t).to.equal(parentSpan.t);
       expect(span.p).to.equal(parentSpan.s);
       expect(span.n).to.equal('rabbitmq');
@@ -191,7 +207,7 @@ function registerTests(apiType) {
 
   function verifyHttpExit(spans, parentSpan) {
     // verify that subsequent calls are correctly traced
-    return testUtils.expectAtLeastOneMatching(spans, span => {
+    return expectExactlyOneMatching(spans, span => {
       expect(span.n).to.equal('node.http.client');
       expect(span.t).to.equal(parentSpan.t);
       expect(span.p).to.equal(parentSpan.s);
