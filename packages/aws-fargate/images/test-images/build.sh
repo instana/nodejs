@@ -6,6 +6,18 @@ cd `dirname $BASH_SOURCE`
 
 source utils
 
+# $1: Instana Layer Mode, aka which base image to use. One of:
+#     - released      -> public Dockerhub base image
+#     - authenticated -> containers.io base image
+#     - local         -> local Docker base image
+# $2: Node.js version. One of:
+#     - 12.16.3
+#     - 10.20.1
+#     - 8.6.0
+# $3: Linux distribution. One of:
+#     - standard               -> (uses node:$version, that is, Debian)
+#     - alpine                 -> (uses node:$version-alpine, that is, Alpine, and installs build dependencies)
+#     - alpine-no-build-deps   -> (uses node:$version-alpine, that is, Alpine, and does not install build dependencies)
 normalizeArgs $1 $2 $3
 
 if [[ ! -f .env ]]; then

@@ -30,6 +30,8 @@ function normalizeArgs {
     LINUX_DISTRIBUTION=standard
   elif [[ $distribution = alpine ]]; then
     LINUX_DISTRIBUTION=alpine
+  elif [[ $distribution = alpine-no-build-deps ]]; then
+    LINUX_DISTRIBUTION=alpine-no-build-deps
   else
     echo "Unknown option for Linux distribution: $distribution"
     exit 1
@@ -44,6 +46,8 @@ function setImageTag {
     distribution=""
   elif [[ $distribution = alpine ]]; then
     distribution=-alpine
+  elif [[ $distribution = alpine-no-build-deps ]]; then
+    distribution=-alpine-no-build-deps
   else
     echo "Unknown option for Linux distribution: $distribution"
     exit 1
@@ -61,6 +65,8 @@ function setContainerName {
     distribution=""
   elif [[ $distribution = alpine ]]; then
     distribution=-alpine
+  elif [[ $distribution = alpine-no-build-deps ]]; then
+    distribution=-alpine-no-build-deps
   else
     echo "Unknown option for Linux distribution: $distribution"
     exit 1

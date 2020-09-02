@@ -1,0 +1,17 @@
+ARG INSTANA_LAYER=instana/aws-fargate-nodejs:latest
+ARG NODEJS_VERSION=12.16.3
+
+FROM ${INSTANA_LAYER} as instanaLayer
+
+FROM node:${NODEJS_VERSION}-alpine
+WORKDIR /usr/src/app
+
+COPY . .
+
+COPY --from=instanaLayer /instana /instana
+RUN /instana/setup.sh
+ENV NODE_OPTIONS="--require /instana/node_modules/@instana/aws-fargate"
+
+EXPOSE 4816
+
+ENTRYPOINT [ "node", "." ]
