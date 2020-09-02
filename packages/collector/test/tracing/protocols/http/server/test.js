@@ -433,7 +433,7 @@ function registerTests(useHttps, useHttp2CompatApi) {
         fail('Expected the HTTP call to time out.');
       })
       .catch(err => {
-        if (err.error && err.error.code === 'ESOCKETTIMEDOUT') {
+        if (err.error && (err.error.code === 'ESOCKETTIMEDOUT' || err.error.code === 'ETIMEDOUT')) {
           // We actually expect the request to time out. But we still want to verify that an entry span has been created
           // for it.
           return retry(() =>
