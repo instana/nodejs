@@ -1,6 +1,7 @@
 # Changelog
 
-## Unreleased
+## 1.106.2
+- [AWS Fargate]: Make optional dependencies on native add-ons truely optional (do not break the Docker build on `RUN /instana/setup.sh`).
 - Fix: Propagate `X-INSTANA-L: 0` downstream with AMQP headers.
 
 ## 1.106.1
