@@ -47,7 +47,7 @@
 - Fix(HTTP2/Server): Inject the trace ID into the request to enable application code to inject it into the response body.
 - Fix(HTTP2/Server): Use case-insensitive header matching as incoming headers are already normalized to lower case (performance improvement).
 - Add support for `INSTANA_EXTRA_HTTP_HEADERS` variable.
-- Fix(HTTP1/HTTP2): Fix handling for headers of type array (normalize to string, separated by 0x2C 0x20.
+- Fix(HTTP1/HTTP2): Fix handling for headers of type array (normalize to string, separated by 0x2C 0x20).
 - [AWS Fargate] Add support for `INSTANA_ZONE`.
 - [AWS Fargate] Add support for `INSTANA_TAGS`.
 - Secrets Filtering: Replace values for filtered query parameters with `<redacted>` instead of removing the whole key-value pair.
