@@ -1,0 +1,4 @@
+ARG BASE_IMAGE
+FROM ${BASE_IMAGE}
+WORKDIR /instana
+RUN npm install @instana/collector@latest
