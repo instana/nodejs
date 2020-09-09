@@ -1,0 +1,7 @@
+ARG BASE_IMAGE
+FROM ${BASE_IMAGE}
+WORKDIR /instana
+RUN apk add --no-cache --virtual .gyp \
+        build-base \
+        python
+RUN npm install @instana/collector@latest
