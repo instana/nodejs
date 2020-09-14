@@ -6,7 +6,7 @@ const fail = require('chai').assert.fail;
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const constants = require('@instana/core').tracing.constants;
 const config = require('../../../../core/test/config');
-const testUtils = require('../../../../core/test/test_util');
+const { expectExactlyOneMatching, retry } = require('../../../../core/test/test_util');
 const delay = require('../../../../core/test/test_util/delay');
 const ProcessControls = require('../../test_util/ProcessControls');
 
@@ -35,7 +35,7 @@ describe('tracing/sdk', function() {
       describe(`${apiType} API`, () => {
         it('must create an entry span without custom tags', () => {
           controls.sendViaIpc({ command: 'start-entry', type: apiType });
-          return testUtils.retry(() => {
+          return retry(() => {
             const ipcMessages = controls.getIpcMessages();
             checkForErrors(ipcMessages);
             expect(ipcMessages.length).to.equal(1);
@@ -49,7 +49,7 @@ describe('tracing/sdk', function() {
 
         it('must create an entry span with tags provided at start', () => {
           controls.sendViaIpc({ command: 'start-entry', type: apiType, withData: 'start' });
-          return testUtils.retry(() => {
+          return retry(() => {
             const ipcMessages = controls.getIpcMessages();
             checkForErrors(ipcMessages);
             expect(ipcMessages.length).to.equal(1);
@@ -63,7 +63,7 @@ describe('tracing/sdk', function() {
 
         it('must create an entry span with tags provided at completion', () => {
           controls.sendViaIpc({ command: 'start-entry', type: apiType, withData: 'end' });
-          return testUtils.retry(() => {
+          return retry(() => {
             const ipcMessages = controls.getIpcMessages();
             checkForErrors(ipcMessages);
             expect(ipcMessages.length).to.equal(1);
@@ -77,7 +77,7 @@ describe('tracing/sdk', function() {
 
         it('must create an entry span with tags provided at start and completion', () => {
           controls.sendViaIpc({ command: 'start-entry', type: apiType, withData: 'both' });
-          return testUtils.retry(() => {
+          return retry(() => {
             const ipcMessages = controls.getIpcMessages();
             checkForErrors(ipcMessages);
             expect(ipcMessages.length).to.equal(1);
@@ -91,7 +91,7 @@ describe('tracing/sdk', function() {
 
         it('must create an entry span with an error', () => {
           controls.sendViaIpc({ command: 'start-entry', type: apiType, error: true });
-          return testUtils.retry(() => {
+          return retry(() => {
             const ipcMessages = controls.getIpcMessages();
             checkForErrors(ipcMessages);
             expect(ipcMessages.length).to.equal(1);
@@ -120,7 +120,7 @@ describe('tracing/sdk', function() {
             traceId,
             parentSpanId
           });
-          return testUtils.retry(() => {
+          return retry(() => {
             const ipcMessages = controls.getIpcMessages();
             checkForErrors(ipcMessages);
             expect(ipcMessages.length).to.equal(1);
@@ -141,7 +141,7 @@ describe('tracing/sdk', function() {
             .then(response => {
               expect(response).does.exist;
               expect(response.indexOf('The MIT License')).to.equal(0);
-              return testUtils.retry(() =>
+              return retry(() =>
                 agentControls.getSpans().then(spans => {
                   const httpEntry = expectHttpEntry(spans, `/${apiType}/create-intermediate`);
                   const intermediateSpan = expectCustomFsIntermediate(
@@ -164,7 +164,7 @@ describe('tracing/sdk', function() {
             .then(response => {
               expect(response).does.exist;
               expect(response.indexOf('The MIT License')).to.equal(0);
-              return testUtils.retry(() =>
+              return retry(() =>
                 agentControls.getSpans().then(spans => {
                   const httpEntry = expectHttpEntry(spans, `/${apiType}/create-exit`);
                   expectCustomFsExit(spans, httpEntry, controls.getPid(), /\/LICENSE$/);
@@ -183,7 +183,7 @@ describe('tracing/sdk', function() {
             .then(response => {
               expect(response).does.exist;
               expect(response).to.equal('Not Found');
-              return testUtils.retry(() =>
+              return retry(() =>
                 agentControls.getSpans().then(spans => {
                   const httpEntry = expectHttpEntry(spans, `/${apiType}/create-exit`);
                   expectCustomFsExit(spans, httpEntry, controls.getPid(), /\/does-not-exist$/, true);
@@ -194,7 +194,7 @@ describe('tracing/sdk', function() {
 
         it('must keep the trace context when binding an event emitter', () => {
           controls.sendViaIpc({ command: 'event-emitter', type: apiType });
-          return testUtils.retry(() => {
+          return retry(() => {
             const ipcMessages = controls.getIpcMessages();
             checkForErrors(ipcMessages);
             expect(ipcMessages.length).to.equal(1);
@@ -208,7 +208,7 @@ describe('tracing/sdk', function() {
 
         it('must nest entries and exits correctly', () => {
           controls.sendViaIpc({ command: 'nest-entry-exit', type: apiType });
-          return testUtils.retry(() => {
+          return retry(() => {
             const ipcMessages = controls.getIpcMessages();
             checkForErrors(ipcMessages);
             expect(ipcMessages.length).to.equal(1);
@@ -229,7 +229,7 @@ describe('tracing/sdk', function() {
 
         it('must nest intermediates correctly', () => {
           controls.sendViaIpc({ command: 'nest-intermediates', type: apiType });
-          return testUtils.retry(() => {
+          return retry(() => {
             const ipcMessages = controls.getIpcMessages();
             checkForErrors(ipcMessages);
             expect(ipcMessages.length).to.equal(1);
@@ -244,6 +244,70 @@ describe('tracing/sdk', function() {
         });
       });
     }
+
+    it('must create an exit span for a synchronous operation and return the result', () =>
+      controls
+        .sendRequest({
+          method: 'POST',
+          path: '/callback/create-exit-synchronous-result'
+        })
+        .then(response => {
+          expect(response).does.exist;
+          expect(response.result).to.equal(42);
+          return retry(() =>
+            agentControls.getSpans().then(spans => {
+              const httpEntry = expectHttpEntry(spans, '/callback/create-exit-synchronous-result');
+              expectExactlyOneMatching(spans, span => {
+                expect(span.t).to.equal(httpEntry.t);
+                expect(span.p).to.equal(httpEntry.s);
+                expect(span.n).to.equal('sdk');
+                expect(span.k).to.equal(constants.EXIT);
+                expect(span.data.sdk).to.exist;
+                expect(span.data.sdk.name).to.equal('synchronous-exit');
+                expect(span.data.sdk.type).to.equal(constants.SDK.EXIT);
+              });
+              expectHttpExit(spans, httpEntry, controls.getPid());
+            })
+          );
+        }));
+
+    it('must return results from all startXxxSpan methods', () => {
+      controls.sendViaIpc({ command: 'synchronous-operations' });
+      return retry(() => {
+        const ipcMessages = controls.getIpcMessages();
+        checkForErrors(ipcMessages);
+        expect(ipcMessages.length).to.equal(1);
+        expect(ipcMessages[0]).to.equal('done: 4711');
+        return retry(() =>
+          agentControls.getSpans().then(spans => {
+            const customEntry = expectExactlyOneMatching(spans, span => {
+              expect(span.t).to.exist;
+              expect(span.p).to.not.exist;
+              expect(span.n).to.equal('sdk');
+              expect(span.k).to.equal(constants.ENTRY);
+              expect(span.data.sdk.name).to.equal('synchronous-entry');
+              expect(span.data.sdk.type).to.equal(constants.SDK.ENTRY);
+            });
+            const customIntermediate = expectExactlyOneMatching(spans, span => {
+              expect(span.t).to.equal(customEntry.t);
+              expect(span.p).to.equal(customEntry.s);
+              expect(span.n).to.equal('sdk');
+              expect(span.k).to.equal(constants.INTERMEDIATE);
+              expect(span.data.sdk.name).to.equal('synchronous-intermediate');
+              expect(span.data.sdk.type).to.equal(constants.SDK.INTERMEDIATE);
+            });
+            expectExactlyOneMatching(spans, span => {
+              expect(span.t).to.equal(customIntermediate.t);
+              expect(span.p).to.equal(customIntermediate.s);
+              expect(span.n).to.equal('sdk');
+              expect(span.k).to.equal(constants.EXIT);
+              expect(span.data.sdk.name).to.equal('synchronous-exit');
+              expect(span.data.sdk.type).to.equal(constants.SDK.EXIT);
+            });
+          })
+        );
+      });
+    });
   });
 
   describe('when tracing is not enabled', () => {
@@ -262,13 +326,12 @@ describe('tracing/sdk', function() {
       describe(`${apiType} API`, () => {
         it('must not create entry spans', () => {
           controls.sendViaIpc({ command: 'start-entry', type: apiType });
-          return testUtils
-            .retry(() => {
-              const ipcMessages = controls.getIpcMessages();
-              checkForErrors(ipcMessages);
-              expect(ipcMessages.length).to.equal(1);
-              expect(ipcMessages[0]).to.equal('done: start-entry');
-            })
+          return retry(() => {
+            const ipcMessages = controls.getIpcMessages();
+            checkForErrors(ipcMessages);
+            expect(ipcMessages.length).to.equal(1);
+            expect(ipcMessages[0]).to.equal('done: start-entry');
+          })
             .then(() => delay(waitForSpans))
             .then(() => agentControls.getSpans())
             .then(spans => {
@@ -312,7 +375,7 @@ describe('tracing/sdk', function() {
   });
 
   function expectCustomEntry(spans, pid, tagsAt, traceId, parentSpanId, functionName = /^createEntry/, error) {
-    return testUtils.expectAtLeastOneMatching(spans, span => {
+    return expectExactlyOneMatching(spans, span => {
       if (traceId) {
         expect(span.t).to.equal(traceId);
       } else {
@@ -333,7 +396,7 @@ describe('tracing/sdk', function() {
       if (error) {
         expect(span.ec).to.equal(1);
         expect(span.data.sdk.custom.tags.message).to.contain('Error: Boom!\n');
-        expect(span.data.sdk.custom.tags.message).to.contain('packages/collector/test/tracing/sdk/app.js:102:35');
+        expect(span.data.sdk.custom.tags.message).to.contain('packages/collector/test/tracing/sdk/app.js:104:35');
       } else {
         expect(span.ec).to.equal(0);
       }
@@ -377,7 +440,7 @@ describe('tracing/sdk', function() {
   }
 
   function expectHttpEntry(spans, path) {
-    return testUtils.expectAtLeastOneMatching(spans, span => {
+    return expectExactlyOneMatching(spans, span => {
       expect(span.n).to.equal('node.http.server');
       expect(span.data.http.method).to.equal('POST');
       expect(span.data.http.url).to.equal(path);
@@ -385,7 +448,7 @@ describe('tracing/sdk', function() {
   }
 
   function expectHttpExit(spans, parentEntry, pid) {
-    testUtils.expectAtLeastOneMatching(spans, span => {
+    expectExactlyOneMatching(spans, span => {
       expect(span.t).to.equal(parentEntry.t);
       expect(span.p).to.equal(parentEntry.s);
       expect(span.n).to.equal('node.http.client');
@@ -410,7 +473,7 @@ describe('tracing/sdk', function() {
   }
 
   function expectCustomFsSpan(spans, kind, functionName, parentEntry, pid, path, error) {
-    return testUtils.expectAtLeastOneMatching(spans, span => {
+    return expectExactlyOneMatching(spans, span => {
       expect(span.t).to.equal(parentEntry.t);
       expect(span.p).to.equal(parentEntry.s);
       expect(span.n).to.equal('sdk');
@@ -439,7 +502,7 @@ describe('tracing/sdk', function() {
   }
 
   function expectIntermediate(spans, parentEntry, name, pid) {
-    return testUtils.expectAtLeastOneMatching(spans, span => {
+    return expectExactlyOneMatching(spans, span => {
       expect(span.t).to.equal(parentEntry.t);
       expect(span.p).to.equal(parentEntry.s);
       expect(span.n).to.equal('sdk');
@@ -459,7 +522,7 @@ describe('tracing/sdk', function() {
   }
 
   function expectCustomExit(spans, parentEntry, pid) {
-    return testUtils.expectAtLeastOneMatching(spans, span => {
+    return expectExactlyOneMatching(spans, span => {
       expect(span.t).to.equal(parentEntry.t);
       expect(span.p).to.equal(parentEntry.s);
       expect(span.n).to.equal('sdk');

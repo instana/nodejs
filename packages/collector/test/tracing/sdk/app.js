@@ -49,7 +49,9 @@ process.on('message', message => {
     case 'nest-intermediates':
       nestIntermediates(message);
       break;
-
+    case 'synchronous-operations':
+      synchronousOperations();
+      break;
     default:
       process.send(`error: unknown command: ${message.command}`);
   }
@@ -170,6 +172,17 @@ app.post('/callback/create-exit', function createExitCallback(req, res) {
       afterCreateExit(instana.sdk.callback, file, encoding, res);
     }
   );
+});
+
+app.post('/callback/create-exit-synchronous-result', function createExitCallback(req, res) {
+  const result = instana.sdk.callback.startExitSpan('synchronous-exit', () => {
+    instana.sdk.callback.completeExitSpan(null, { success: true });
+    return 42;
+  });
+  // follow-up with an IO action that is auto-traced to validate tracing context integrity
+  request(`http://127.0.0.1:${agentPort}`).then(() => {
+    res.send({ result });
+  });
 });
 
 app.post('/promise/create-exit', function createExitPromise(req, res) {
@@ -380,6 +393,20 @@ function nestIntermediatesPromise(message) {
             });
         });
     });
+}
+
+function synchronousOperations() {
+  const result = instana.sdk.callback.startEntrySpan('synchronous-entry', () => {
+    return instana.sdk.callback.startIntermediateSpan('synchronous-intermediate', () => {
+      return instana.sdk.callback.startExitSpan('synchronous-exit', () => {
+        instana.sdk.callback.completeExitSpan();
+        instana.sdk.callback.completeIntermediateSpan();
+        instana.sdk.callback.completeEntrySpan();
+        return '4711';
+      });
+    });
+  });
+  process.send(`done: ${result}`);
 }
 
 app.listen(process.env.APP_PORT, () => {
