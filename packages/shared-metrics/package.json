@@ -43,6 +43,10 @@
     {
       "name": "Bastian Krol",
       "email": "bastian.krol@instana.com"
+    },
+    {
+      "name": "Emelia Smith",
+      "email": "ThisIsMissEm@users.noreply.github.com"
     }
   ],
   "bugs": {
@@ -50,7 +54,8 @@
   },
   "license": "MIT",
   "dependencies": {
-    "@instana/core": "^1.106.2"
+    "@instana/core": "^1.106.2",
+    "event-loop-lag": "^1.4.0"
   },
   "devDependencies": {
     "eslint": "^5.16.0",
@@ -61,7 +66,6 @@
     "prettier": "^1.17.1"
   },
   "optionalDependencies": {
-    "event-loop-lag": "^1.4.0",
     "event-loop-stats": "1.3.0",
     "gcstats.js": "1.0.0"
   }
