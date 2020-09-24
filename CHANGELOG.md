@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.106.3
+- Fix: Move `event-loop-lag` from optionalDependencies to dependencies, so installations with `--ignore-optional` will work correctly. ([#258](https://github.com/instana/nodejs-sensor/pull/258), thanks to @ThisIsMissEm).
+- [AWS Fargate]: Update dependency `node-fetch` version 2.6.1 (fixes https://www.npmjs.com/advisories/1556).
+
 ## 1.106.2
 - [AWS Fargate]: Make optional dependencies on native add-ons truely optional (do not break the Docker build on `RUN /instana/setup.sh`).
 - Fix: Propagate `X-INSTANA-L: 0` downstream with AMQP headers.
