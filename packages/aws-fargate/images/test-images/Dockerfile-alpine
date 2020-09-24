@@ -19,7 +19,7 @@ RUN /instana/setup.sh
 ENV NODE_OPTIONS="--require /instana/node_modules/@instana/aws-fargate"
 
 # The additional packages needed to compile native add-ons can be removed after
-# running /instana/setup.sh (results in smaller image).
+# running "npm installl" and /instana/setup.sh (results in smaller image).
 RUN apk del .gyp python
 
 EXPOSE 4816
