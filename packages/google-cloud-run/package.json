@@ -58,7 +58,6 @@
     "@instana/core": "^1.106.3",
     "@instana/metrics-util": "^1.106.3",
     "@instana/serverless": "^1.106.3",
-    "node-fetch": "^2.6.0",
     "uuid": "^8.3.0"
   },
   "devDependencies": {
@@ -68,6 +67,7 @@
     "eslint-plugin-mocha": "^5.3.0",
     "express": "^4.16.4",
     "mocha": "^6.0.2",
+    "node-fetch": "^2.6.1",
     "pino": "^5.12.3",
     "prettier": "^1.17.1"
   },

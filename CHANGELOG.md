@@ -1,5 +1,8 @@
 # Changelog
 
+## Unreleased
+* Remove direct `node-fetch` dependency from `@instana/aws-fargate` as well as `@instana/google-cloud-run` and move it to `@instana/metrics-util` instead.
+
 ## 1.106.3
 - Fix: Move `event-loop-lag` from optionalDependencies to dependencies, so installations with `--ignore-optional` will work correctly. ([#258](https://github.com/instana/nodejs-sensor/pull/258), thanks to @ThisIsMissEm).
 - [AWS Fargate]: Update dependency `node-fetch` version 2.6.1 (fixes https://www.npmjs.com/advisories/1556).

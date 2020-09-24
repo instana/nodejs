@@ -53,7 +53,8 @@
   "dependencies": {
     "@instana/core": "^1.106.3",
     "@instana/serverless": "^1.106.3",
-    "@instana/shared-metrics": "^1.106.3"
+    "@instana/shared-metrics": "^1.106.3",
+    "node-fetch": "^2.6.1"
   },
   "devDependencies": {
     "eslint": "^5.16.0",
