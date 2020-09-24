@@ -1,6 +1,6 @@
 {
   "name": "@instana/metrics-util",
-  "version": "1.106.2",
+  "version": "1.106.3",
   "description": "Internal utility library for Instana metric collection",
   "author": {
     "name": "Bastian Krol",
@@ -51,9 +51,9 @@
   },
   "license": "MIT",
   "dependencies": {
-    "@instana/core": "^1.106.2",
-    "@instana/serverless": "^1.106.2",
-    "@instana/shared-metrics": "^1.106.2"
+    "@instana/core": "^1.106.3",
+    "@instana/serverless": "^1.106.3",
+    "@instana/shared-metrics": "^1.106.3"
   },
   "devDependencies": {
     "eslint": "^5.16.0",
