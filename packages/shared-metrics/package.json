@@ -1,6 +1,6 @@
 {
   "name": "@instana/shared-metrics",
-  "version": "1.106.3",
+  "version": "1.106.4",
   "description": "Internal metrics plug-in package for Node.js monitoring with Instana",
   "author": {
     "name": "Bastian Krol",
@@ -54,7 +54,7 @@
   },
   "license": "MIT",
   "dependencies": {
-    "@instana/core": "^1.106.3",
+    "@instana/core": "^1.106.4",
     "event-loop-lag": "^1.4.0"
   },
   "devDependencies": {
