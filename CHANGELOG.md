@@ -1,7 +1,7 @@
 # Changelog
 
-## Unreleased
-* Remove direct `node-fetch` dependency from `@instana/aws-fargate` as well as `@instana/google-cloud-run` and move it to `@instana/metrics-util` instead.
+## 1.106.4
+- Remove direct `node-fetch` dependency from `@instana/aws-fargate` as well as `@instana/google-cloud-run` and move it to `@instana/metrics-util` instead.
 - Optimization: Only set `span.data.service` on first span.
 - Send `span.crid`/`span.crtp` instead of `span.data.correlationId`/`span.data.correlationType`.
 
