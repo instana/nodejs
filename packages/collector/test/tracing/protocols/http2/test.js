@@ -155,8 +155,8 @@ mochaSuiteFn('tracing/http2', function() {
             expect(entryInClient.t).to.have.lengthOf(16);
             expect(entryInClient.t).to.not.equal('84e588b697868fee');
             expect(entryInClient.p).to.not.exist;
-            expect(entryInClient.data.correlationType).to.equal('web');
-            expect(entryInClient.data.correlationId).to.equal('abcdef0123456789');
+            expect(entryInClient.crtp).to.equal('web');
+            expect(entryInClient.crid).to.equal('abcdef0123456789');
           })
         )
       ));

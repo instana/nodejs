@@ -3,6 +3,7 @@
 ## Unreleased
 * Remove direct `node-fetch` dependency from `@instana/aws-fargate` as well as `@instana/google-cloud-run` and move it to `@instana/metrics-util` instead.
 - Optimization: Only set `span.data.service` on first span.
+- Send `span.crid`/`span.crtp` instead of `span.data.correlationId`/`span.data.correlationType`.
 
 ## 1.106.3
 - Fix: Move `event-loop-lag` from optionalDependencies to dependencies, so installations with `--ignore-optional` will work correctly. ([#258](https://github.com/instana/nodejs-sensor/pull/258), thanks to @ThisIsMissEm).
