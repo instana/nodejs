@@ -187,8 +187,8 @@ function registerTests(useHttps, useHttp2CompatApi) {
             expect(span.t).to.have.lengthOf(16);
             expect(span.t).to.not.equal('84e588b697868fee');
             expect(span.p).to.not.exist;
-            expect(span.data.correlationType).to.equal('web');
-            expect(span.data.correlationId).to.equal('abcdef0123456789');
+            expect(span.crtp).to.equal('web');
+            expect(span.crid).to.equal('abcdef0123456789');
           })
         )
       ));

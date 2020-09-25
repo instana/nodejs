@@ -71,8 +71,8 @@ function shimEmit(realEmit) {
       const span = cls.startSpan(exports.spanName, constants.ENTRY, headers.traceId, headers.parentId, w3cTraceContext);
 
       if (headers.correlationType && headers.correlationId) {
-        span.data.correlationType = headers.correlationType;
-        span.data.correlationId = headers.correlationId;
+        span.crtp = headers.correlationType;
+        span.crid = headers.correlationId;
       }
       if (headers.foreignParent) {
         span.fp = headers.foreignParent;
