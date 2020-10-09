@@ -57,6 +57,35 @@ describe('Process processor', function() {
     });
   });
 
+  it('should use default container type and no host by default', () => {
+    dataProcessor.activate();
+    return retry(() => {
+      const processedData = dataProcessor._getProcessedData();
+      expect(processedData.containerType).to.equal('docker');
+      expect(processedData['com.instana.plugin.host.name']).to.not.exist;
+    });
+  });
+
+  it('should use provided container type and host name (via constructor)', () => {
+    dataProcessor = new ProcessProcessor('custom-container-type', 'custom-host-name');
+    dataProcessor.activate();
+    return retry(() => {
+      const processedData = dataProcessor._getProcessedData();
+      expect(processedData.containerType).to.equal('custom-container-type');
+      expect(processedData['com.instana.plugin.host.name']).to.equal('custom-host-name');
+    });
+  });
+
+  it('should use provided containerInstanceId and host name (via setExternalSnapshotData)', () => {
+    dataProcessor.setExternalSnapshotData('12345', 'custom-host-name');
+    dataProcessor.activate();
+    return retry(() => {
+      const processedData = dataProcessor._getProcessedData();
+      expect(processedData.container).to.equal('12345');
+      expect(processedData['com.instana.plugin.host.name']).to.equal('custom-host-name');
+    });
+  });
+
   it('should provide snapshot data when ready', () => {
     dataProcessor.activate();
 

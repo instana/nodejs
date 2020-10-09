@@ -14,14 +14,14 @@ const downstreamDummyPort = 4568;
 const downstreamDummyUrl = `http://localhost:${downstreamDummyPort}/`;
 
 const region = 'us-central1';
-const zone = `${region}-1`;
 const instanceId =
   // eslint-disable-next-line max-len
   '00bf4bf02da23aa66c43a397044cc49beeeade73374388d5cae046c298189b6398dab7d53d8f906fa9456f94da85c2c9fbf6d701234567890123456789';
 const projectId = 'test-gcp-project';
-const numericProjectId = '13027872031';
+const numericProjectId = 13027872031;
 const service = 'nodejs-google-cloud-run-test';
 const revision = `${service}-00042-heq`;
+const host = `gcp:cloud-run:revision:${revision}`;
 
 const containerAppPath = path.join(__dirname, './app');
 const instanaAgentKey = 'google-cloud-run-dummy-key';
@@ -115,7 +115,7 @@ describe('Google Cloud Run integration test', function() {
 
   function verifySnapshotDataAndMetrics([allEntities, allSnapshotUpdates]) {
     expect(allEntities).to.be.an('array');
-    const expectedNumberOfPlugins = 4;
+    const expectedNumberOfPlugins = 3;
     if (allEntities.length < expectedNumberOfPlugins) {
       fail(
         'Error: Received less entities than expected: ' +
@@ -126,8 +126,7 @@ describe('Google Cloud Run integration test', function() {
     }
     expect(allEntities).to.have.lengthOf.at.least(expectedNumberOfPlugins);
 
-    verifyGoogleCloudRunServiceRevision(allEntities);
-    verifyGoogleCloudRunDockerPayload(allEntities);
+    verifyGoogleCloudRunServiceRevisionInstance(allEntities);
 
     const processData = verifyProcessPayload(allEntities);
     verifyNodeJsPayload(allEntities, processData);
@@ -135,32 +134,19 @@ describe('Google Cloud Run integration test', function() {
     verifyHeadersForSnapshotUpdates(allSnapshotUpdates);
   }
 
-  function verifyGoogleCloudRunServiceRevision(allEntities) {
-    const googleCloudRunServiceRevisionPayload = allEntities.find(
-      pluginPayload => pluginPayload.name === 'com.instana.plugin.gcp.run.revision'
+  function verifyGoogleCloudRunServiceRevisionInstance(allEntities) {
+    const googleCloudRunServiceRevisionInstancePayload = allEntities.find(
+      pluginPayload => pluginPayload.name === 'com.instana.plugin.gcp.run.revision.instance'
     );
-    expect(googleCloudRunServiceRevisionPayload).to.exist;
-    expect(googleCloudRunServiceRevisionPayload.entityId).to.equal(revision);
-    expect(Object.keys(googleCloudRunServiceRevisionPayload)).to.have.lengthOf(3);
-    const containerData = googleCloudRunServiceRevisionPayload.data;
-    expect(containerData).to.exist;
-    expect(containerData.region).to.equal(region);
-    expect(containerData.availabilityZone).to.equal(zone);
-    expect(containerData.instanceId).to.equal(instanceId);
-    expect(containerData.projectId).to.equal(projectId);
-    expect(containerData.numericProjectId).to.equal(numericProjectId);
-  }
-
-  function verifyGoogleCloudRunDockerPayload(allEntities) {
-    const googleCloudRunDockerPayload = allEntities.find(
-      pluginPayload => pluginPayload.name === 'com.instana.plugin.docker'
-    );
-    expect(googleCloudRunDockerPayload).to.exist;
-    expect(googleCloudRunDockerPayload.entityId).to.equal(instanceId);
-    expect(Object.keys(googleCloudRunDockerPayload)).to.have.lengthOf(3);
-    const dockerData = googleCloudRunDockerPayload.data;
-    expect(dockerData).to.exist;
-    expect(dockerData.Id).to.equal(instanceId);
+    expect(googleCloudRunServiceRevisionInstancePayload).to.exist;
+    expect(googleCloudRunServiceRevisionInstancePayload.entityId).to.equal(instanceId);
+    expect(Object.keys(googleCloudRunServiceRevisionInstancePayload)).to.have.lengthOf(3);
+    const instanceData = googleCloudRunServiceRevisionInstancePayload.data;
+    expect(instanceData).to.exist;
+    expect(instanceData.region).to.equal(region);
+    expect(instanceData.instanceId).to.equal(instanceId);
+    expect(instanceData.projectId).to.equal(projectId);
+    expect(instanceData.numericProjectId).to.equal(numericProjectId);
   }
 
   function verifyProcessPayload(allEntities) {
@@ -175,10 +161,10 @@ describe('Google Cloud Run integration test', function() {
     expect(processData.user).to.be.a('string');
     expect(processData.group).to.be.a('number');
     expect(processData.start).to.be.at.least(testStartedAt);
-    expect(processData.containerType).to.equal('docker');
+    expect(processData.containerType).to.equal('gcpCloudRunInstance');
     expect(processData['com.instana.plugin.host.pid']).to.equal(processData.pid);
     expect(processData.container).to.equal(instanceId);
-    expect(processData['com.instana.plugin.host.name']).to.equal(revision);
+    expect(processData['com.instana.plugin.host.name']).to.equal(host);
     return processData;
   }
 
@@ -269,7 +255,7 @@ describe('Google Cloud Run integration test', function() {
   function verifyHeaders(payload) {
     const headers = payload._receivedHeaders;
     expect(headers).to.exist;
-    expect(headers['x-instana-host']).to.equal(revision);
+    expect(headers['x-instana-host']).to.equal(host);
     expect(headers['x-instana-key']).to.equal(instanaAgentKey);
     expect(headers['x-instana-time']).to.be.a('string');
   }

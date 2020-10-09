@@ -10,6 +10,19 @@ if [[ ! -f .env ]]; then
 fi
 source .env
 
+if [[ ${INSTANCE_2-} ]]; then
+  if [[ ! ${instance_2_metadata_v1-} ]]; then
+    echo definition of instance_2_metadata_v1 is missing
+    exit 1
+  fi
+  if [[ ! ${instance_2_port-} ]]; then
+    echo definition of instance_2_port is missing
+    exit 1
+  fi
+  metadata_v1=$instance_2_metadata_v1
+  port=$instance_2_port
+fi
+
 INSTANA_ENDPOINT_URL=$instana_endpoint_url \
 INSTANA_AGENT_KEY=$instana_agent_key \
 INSTANA_DISABLE_CA_CHECK=$instana_disable_ca_check \

@@ -5,9 +5,9 @@ const ProcessSnapshotDataSource = require('./ProcessSnapshotDataSource');
 const ProcessMetricsSource = require('./ProcessMetricsSource');
 
 class ProcessProcessor extends DataProcessor {
-  constructor() {
-    super('com.instana.plugin.process');
-    this.snapshotDataSource = new ProcessSnapshotDataSource(5 * 60 * 1000);
+  constructor(containerType, hostName) {
+    super('com.instana.plugin.process', [['com.instana.plugin.host.name'], ['containerType'], ['container']]);
+    this.snapshotDataSource = new ProcessSnapshotDataSource(containerType, hostName);
     this.addSource('snapshot', this.snapshotDataSource);
     this.addSource('metrics', new ProcessMetricsSource());
   }

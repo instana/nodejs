@@ -4,7 +4,7 @@ SLACK_CHANNEL = "project-google-cloud-run"
 DOCKER_REGISTRY_PUBLIC = "docker.io"
 REGISTRY_PATH_PUBLIC = "${DOCKER_REGISTRY_PUBLIC}/instana/google-cloud-run-nodejs"
 DOCKER_REGISTRY_INTERNAL = "containers.instana.io"
-REGISTRY_PATH_INTERNAL = "${DOCKER_REGISTRY_INTERNAL}/instana/release/gcp/cloud-run/nodejs"
+REGISTRY_PATH_INTERNAL = "${DOCKER_REGISTRY_INTERNAL}/instana/release/google/cloud-run/nodejs"
 
 IMAGE_NAME = 'instana-google-cloud-run-nodejs'
 

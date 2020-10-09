@@ -45,6 +45,35 @@ describe('process snapshot data source', function() {
     });
   });
 
+  it('should use default container type and no host by default', () => {
+    dataSource.activate();
+    return retry(() => {
+      const rawData = dataSource.getRawData();
+      expect(rawData.containerType).to.equal('docker');
+      expect(rawData['com.instana.plugin.host.name']).to.not.exist;
+    });
+  });
+
+  it('should use provided container type and host name (via constructor)', () => {
+    dataSource = new ProcessSnapshotDataSource('custom-container-type', 'custom-host-name');
+    dataSource.activate();
+    return retry(() => {
+      const rawData = dataSource.getRawData();
+      expect(rawData.containerType).to.equal('custom-container-type');
+      expect(rawData['com.instana.plugin.host.name']).to.equal('custom-host-name');
+    });
+  });
+
+  it('should use provided containerInstanceId and host name (via setExternalSnapshotData)', () => {
+    dataSource.setExternalSnapshotData('12345', 'custom-host-name');
+    dataSource.activate();
+    return retry(() => {
+      const rawData = dataSource.getRawData();
+      expect(rawData.container).to.equal('12345');
+      expect(rawData['com.instana.plugin.host.name']).to.equal('custom-host-name');
+    });
+  });
+
   it('should emit firstRefresh event', () => {
     let emittedData;
     dataSource.on('firstRefresh', data => {

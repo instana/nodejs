@@ -1,5 +1,8 @@
 # Changelog
 
+## Unreleased
+- [Google Cloud Run]: Minor changes for the upcoming Google Cloud Run support. Requires at least Instana back end version 189.
+
 ## 1.106.4
 - Remove direct `node-fetch` dependency from `@instana/aws-fargate` as well as `@instana/google-cloud-run` and move it to `@instana/metrics-util` instead.
 - Optimization: Only set `span.data.service` on first span.

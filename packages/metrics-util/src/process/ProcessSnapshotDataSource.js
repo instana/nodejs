@@ -19,35 +19,41 @@ try {
 }
 const start = Math.floor(Date.now() - process.uptime() * 1000);
 
-const snapshotData = {
-  pid,
-  env,
-  exec,
-  args,
-  user,
-  group,
-  start,
-
-  containerType: 'docker',
-  'com.instana.plugin.host.pid': pid
-};
-
 /**
  * A source for snapshot data for the process entity.
  */
 class ProcessSnapshotDataSource extends DataSource {
-  constructor() {
+  constructor(containerType, hostName) {
     super(5 * 60 * 1000);
+
+    this.snapshotData = {
+      pid,
+      env,
+      exec,
+      args,
+      user,
+      group,
+      start,
+
+      containerType: containerType || 'docker',
+      'com.instana.plugin.host.pid': pid
+    };
+
+    if (hostName) {
+      this.snapshotData['com.instana.plugin.host.name'] = hostName;
+    }
   }
 
   setExternalSnapshotData(containerInstanceId, hostName) {
-    snapshotData.container = containerInstanceId;
-    snapshotData['com.instana.plugin.host.name'] = hostName;
+    this.snapshotData.container = containerInstanceId;
+    if (hostName) {
+      this.snapshotData['com.instana.plugin.host.name'] = hostName;
+    }
     this._refresh();
   }
 
   doRefresh(callback) {
-    process.nextTick(() => callback(null, snapshotData));
+    process.nextTick(() => callback(null, this.snapshotData));
   }
 }
 

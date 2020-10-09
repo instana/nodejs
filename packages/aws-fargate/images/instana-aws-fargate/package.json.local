@@ -11,6 +11,7 @@
   "dependencies": {
     "@instana/aws-fargate": "instana-aws-fargate.tgz",
     "@instana/core": "instana-core.tgz",
+    "@instana/metrics-util": "instana-metrics-util.tgz",
     "@instana/serverless": "instana-serverless.tgz",
     "@instana/shared-metrics": "instana-shared-metrics.tgz"
   }

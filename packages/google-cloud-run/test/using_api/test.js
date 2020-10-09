@@ -14,6 +14,7 @@ const instanceId =
   '00bf4bf02da23aa66c43a397044cc49beeeade73374388d5cae046c298189b6398dab7d53d8f906fa9456f94da85c2c9fbf6d701234567890123456789';
 const service = 'nodejs-google-cloud-run-test';
 const revision = `${service}-00042-heq`;
+const host = `gcp:cloud-run:revision:${revision}`;
 
 const containerAppPath = path.join(__dirname, './app');
 const instanaAgentKey = 'google-cloud-run-dummy-key';
@@ -129,7 +130,7 @@ describe('Using the API', function() {
   function verifyHeaders(payload) {
     const headers = payload._receivedHeaders;
     expect(headers).to.exist;
-    expect(headers['x-instana-host']).to.equal(revision);
+    expect(headers['x-instana-host']).to.equal(host);
     expect(headers['x-instana-key']).to.equal(instanaAgentKey);
     expect(headers['x-instana-time']).to.be.a('string');
   }
