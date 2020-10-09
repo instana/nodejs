@@ -23,9 +23,9 @@ function createZip {
       #   "instana-aws-lambda-auto-wrap": "file:../../instana-aws-lambda-auto-wrap.tgz"
       # }
       # ...then those need to be removed:
-      npm uninstall -S @instana/aws-lambda
-      npm uninstall -S @instana/serverless
-      npm uninstall -S instana-aws-lambda-auto-wrap
+      npm uninstall --production -S @instana/aws-lambda
+      npm uninstall --production -S @instana/serverless
+      npm uninstall --production -S instana-aws-lambda-auto-wrap
 
     elif [[ "${BUILD_LAMBDAS_WITH-}" == "local" ]]; then
       # The lambda's package.json might or might not already have a dependency to the local tar files:
@@ -35,9 +35,9 @@ function createZip {
       # }
       # but only doing an npm install will use a stale copy of the tgz files from npm's cache, so we force npm to use a
       # fresh copy by installing the tgz files again explicitly.
-      npm --loglevel=warn install -S "file:../../instana-serverless.tgz"
-      npm --loglevel=warn install -S "file:../../instana-aws-lambda.tgz"
-      npm --loglevel=warn install -S "file:../../instana-aws-lambda-auto-wrap.tgz"
+      npm --loglevel=warn --production install -S "file:../../instana-serverless.tgz"
+      npm --loglevel=warn --production install -S "file:../../instana-aws-lambda.tgz"
+      npm --loglevel=warn --production install -S "file:../../instana-aws-lambda-auto-wrap.tgz"
 
     elif [[ "${BUILD_LAMBDAS_WITH-npm}" == "npm" ]]; then
       # The lambda's package.json might or might not already have a dependency to the local tar files:
@@ -46,9 +46,9 @@ function createZip {
       #   "@instana/aws-lambda": "file:../../instana-aws-lambda.tgz"
       # }
       # this needs to be removed and then we install the latest published package from npm
-      npm uninstall -S @instana/aws-lambda
-      npm uninstall -S @instana/serverless
-      npm install -S @instana/aws-lambda
+      npm uninstall --production -S @instana/aws-lambda
+      npm uninstall --production -S @instana/serverless
+      npm install --production -S @instana/aws-lambda
     else
       echo "Unknown option for BUILD_LAMBDAS_WITH: $BUILD_LAMBDAS_WITH"
       echo Aborting.
@@ -59,7 +59,8 @@ function createZip {
   fi
 
   # Now install everything else.
-  npm --loglevel=warn install
+  npm --loglevel=warn --production install
+
   # And create the zip file that can be deployed to AWS.
   zip -qr $name . -x bin/*.sh -x \*.swp
   mv $name.zip ../zip

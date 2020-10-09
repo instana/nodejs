@@ -20,6 +20,14 @@ Aborting.
 EOF
   exit 1
 }
+command -v curl >/dev/null 2>&1 || {
+  cat <<EOF >&2
+The executable curl needs to be installed but it isn't.
+
+Aborting.
+EOF
+  exit 1
+}
 
 
 REGION=us-east-2
@@ -72,10 +80,19 @@ function deploy_zip {
     fi
 
   else
-    echo "It appears $lambda_zip_file does not contain package @instana/aws-lambda, so I'll check if the \"instana\" Lambda layer needs to be added to it."
+    echo "It appears $lambda_zip_file does not contain package @instana/aws-lambda, so I'll add the \"instana-nodejs\" Lambda layer to the function."
 
-    if [[ -z "${LAYER_VERSION-}" || -z "${LAYER_ARN-}" ]]; then
-      echo "I just found out that I'm supposed to add the Instana layer to the function I have just deployed. But you neglected to provide either LAYER_VERSION or LAYER_ARN as an environment variable, so I do not know which layer version I should deploy or what the ARN of that layer version is. The lambda zip file I have just deployed will probably be in a broken state now. Please fix this manually or provide LAYER_VERSION and LAYER_ARN and run this script again."
+    LAYER_INFO=$( curl https://dfd6bfhs8c.execute-api.us-east-2.amazonaws.com/default/nodejs?region=us-east-2 2> /dev/null )
+
+    echo layer info: $LAYER_INFO
+    LAYER_VERSION=$(echo $LAYER_INFO | jq .version)
+    LAYER_ARN=$(echo $LAYER_INFO | jq .arn)
+
+    echo Using layer version: $LAYER_VERSION
+    echo Using layer ARN: $LAYER_ARN
+
+    if [[ -z $LAYER_VERSION || -z $LAYER_ARN || $LAYER_VERSION = null || $LAYER_ARN = null ]]; then
+      echo "I just found out that I'm supposed to add the Instana layer to the function I have just deployed. But I could not find out which LAYER_VERSION or LAYER_ARN to use, so I do not know which layer version I should deploy or what the ARN of that layer version is. The lambda zip file I have just deployed will probably be in a broken state now. Please fix this manually."
       echo
       echo "For your convenience, here are the commands to figure out the latest layer:"
       echo "  aws --region $REGION lambda list-layer-versions --layer-name instana-nodejs"
