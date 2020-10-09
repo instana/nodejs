@@ -6,8 +6,7 @@ const {
   nodejs: { coreAndShared, NodeJsProcessor }
 } = require('@instana/metrics-util');
 
-const CloudRunServiceRevisionProcessor = require('./revision/CloudRunServiceRevisionProcessor');
-const CloudRunDockerProcessor = require('./docker/CloudRunDockerProcessor');
+const CloudRunServiceRevisionInstanceProcessor = require('./instance/CloudRunServiceRevisionInstanceProcessor');
 const identityProvider = require('../identity_provider');
 
 const allProcessors = [];
@@ -26,11 +25,13 @@ exports.init = function init(config, metadataBaseUrl, onReady) {
     fetchOptions
   );
 
-  const cloudRunServiceRevisionProcessor = new CloudRunServiceRevisionProcessor(projectDataSource, instanceDataSource);
+  const cloudRunServiceRevisionProcessor = new CloudRunServiceRevisionInstanceProcessor(
+    projectDataSource,
+    instanceDataSource
+  );
   allProcessors.push(cloudRunServiceRevisionProcessor);
-  allProcessors.push(new CloudRunDockerProcessor(instanceDataSource));
 
-  const processProcessor = new ProcessProcessor();
+  const processProcessor = new ProcessProcessor('gcpCloudRunInstance', identityProvider.getHostHeader());
   allProcessors.push(processProcessor);
   allProcessors.push(new NodeJsProcessor(coreAndShared, process.pid));
 
@@ -58,7 +59,7 @@ exports.deactivate = function deactivate() {
 };
 
 function setAdditionalMetadata(processProcessor, containerInstanceId) {
-  processProcessor.setExternalSnapshotData(containerInstanceId, identityProvider.getRevision());
+  processProcessor.setExternalSnapshotData(containerInstanceId);
 }
 
 exports.forEachProcessor = function forEachProcessor(fn) {

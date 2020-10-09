@@ -1,6 +1,7 @@
 'use strict';
 
 const revision = process.env.K_REVISION;
+const host = `gcp:cloud-run:revision:${revision}`;
 let containerInstanceId;
 
 exports.init = function init(containerInstanceId_) {
@@ -8,7 +9,7 @@ exports.init = function init(containerInstanceId_) {
 };
 
 exports.getHostHeader = function getHostHeader() {
-  return revision;
+  return host;
 };
 
 exports.getRevision = function getRevision() {

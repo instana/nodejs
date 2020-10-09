@@ -17,12 +17,13 @@ const baseUrl = '/computeMetadata/v1/';
 const port = process.env.METADATA_MOCK_PORT || 1605;
 
 const projectId = 'test-gcp-project';
-const numericProjectId = '13027872031';
+const numericProjectId = 13027872031;
 const region = 'us-central1';
 const zone = `${region}-1`;
 const fullyQualifiedRegion = `projects/${numericProjectId}/regions/${region}`;
 const fullyQualifiedZone = `projects/${numericProjectId}/zones/${zone}`;
 const instanceId =
+  process.env.INSTANCE_ID ||
   // eslint-disable-next-line max-len
   '00bf4bf02da23aa66c43a397044cc49beeeade73374388d5cae046c298189b6398dab7d53d8f906fa9456f94da85c2c9fbf6d701234567890123456789';
 

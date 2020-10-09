@@ -2,6 +2,8 @@
 
 AWS_FARGATE_ROOT_PATH = 'packages/aws-fargate'
 AWS_FARGATE_PACKAGE_JSON_FILE = "${AWS_FARGATE_ROOT_PATH}/package.json"
+GOOGLE_CLOUD_RUN_ROOT_PATH = 'packages/google-cloud-run'
+GOOGLE_CLOUD_RUN_PACKAGE_JSON_FILE = "${GOOGLE_CLOUD_RUN_ROOT_PATH}/package.json"
 AWS_LAMBDA_WRAPPER_ROOT_PATH = 'packages/aws-lambda-auto-wrap'
 AWS_LAMBDA_WRAPPER_PACKAGE_JSON_FILE = "${AWS_LAMBDA_WRAPPER_ROOT_PATH}/package.json"
 
@@ -10,6 +12,10 @@ node {
   def localAwsFargatePackageVersion
   def publishedAwsFargatePackageVersion
   def fargateDockerImageLayerNeedsToBeReleased
+
+  def localGoogleCloudRunPackageVersion
+  def publishedGoogleCloudRunPackageVersion
+  def cloudRunDockerImageLayerNeedsToBeReleased
 
   def localAwsLambdaLayerPackageVersion
   def publishedAwsLambdaLayerPackageVersion
@@ -22,16 +28,20 @@ node {
 
   stage ('Identify versions of published artefacts') {
     localAwsFargatePackageVersion = getLocalPackageVersion(AWS_FARGATE_PACKAGE_JSON_FILE)
-    publishedAwsFargatePackageVersion = getPublishedAwsFargateDockerImageLayerPackageVersion()
+    publishedAwsFargatePackageVersion = getPublishedDockerImageLayerPackageVersion('aws-fargate-nodejs')
+
+    localGoogleCloudRunPackageVersion = getLocalPackageVersion(GOOGLE_CLOUD_RUN_PACKAGE_JSON_FILE)
+    publishedGoogleCloudRunPackageVersion = getPublishedDockerImageLayerPackageVersion('google-cloud-run-nodejs')
 
     localAwsLambdaLayerPackageVersion = getLocalPackageVersion(AWS_LAMBDA_WRAPPER_PACKAGE_JSON_FILE)
     publishedAwsLambdaLayerPackageVersion = getPublishedAwsLambdaLayerPackageVersion()
 
-    currentBuild.displayName = "#${BUILD_NUMBER}:${publishedAwsFargatePackageVersion}:${publishedAwsLambdaLayerPackageVersion}:${localAwsFargatePackageVersion}"
+    currentBuild.displayName = "#${BUILD_NUMBER}:${publishedAwsFargatePackageVersion}:${localAwsFargatePackageVersion}"
   }
 
   stage ('Trigger downstream build jobs') {
     triggerFargateJob(publishedAwsFargatePackageVersion, localAwsFargatePackageVersion)
+    triggerCloudRunJob(publishedGoogleCloudRunPackageVersion, localGoogleCloudRunPackageVersion)
     triggerLambdaJob(publishedAwsLambdaLayerPackageVersion, localAwsLambdaLayerPackageVersion)
   }
 }
@@ -43,8 +53,8 @@ def getLocalPackageVersion(packageJsonFile) {
   return packageJsonObject.version
 }
 
-def getPublishedAwsFargateDockerImageLayerPackageVersion() {
-  return sh(returnStdout: true, script: "curl https://registry.hub.docker.com/v1/repositories/instana/aws-fargate-nodejs/tags | jq -r '.[].name' | sort -r | head -n2 | tail -n1").trim()
+def getPublishedDockerImageLayerPackageVersion(name) {
+  return sh(returnStdout: true, script: "curl https://registry.hub.docker.com/v1/repositories/instana/${name}/tags | jq -r '.[].name' | sort -r | head -n2 | tail -n1").trim()
 }
 
 def getPublishedAwsLambdaLayerPackageVersion() {
@@ -62,6 +72,16 @@ def triggerFargateJob(publishedAwsFargatePackageVersion, localAwsFargatePackageV
   if (localAwsFargatePackageVersion != publishedAwsFargatePackageVersion) {
      println "Versions are different, triggering the job to publish the latest package version for AWS Fargate."
      build job: 'aws-fargate-nodejs'
+  } else {
+     println "Versions are identical, doing nothing."
+  }
+}
+
+def triggerCloudRunJob(publishedGoogleCloudRunPackageVersion, localGoogleCloudRunPackageVersion) {
+  println "Checking if a new Google Cloud Run Docker image layer needs to be published. Local package version: ${localGoogleCloudRunPackageVersion} – package version in published Google Cloud Run Docker image layer: ${publishedGoogleCloudRunPackageVersion}."
+  if (localGoogleCloudRunPackageVersion != publishedGoogleCloudRunPackageVersion) {
+     println "Versions are different, triggering the job to publish the latest package version for Google Cloud Run."
+     build job: 'google-cloud-run-nodejs'
   } else {
      println "Versions are identical, doing nothing."
   }

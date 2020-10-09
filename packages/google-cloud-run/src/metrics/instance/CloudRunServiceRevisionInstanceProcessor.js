@@ -8,15 +8,15 @@ const port = process.env.PORT;
 const service = process.env.K_SERVICE;
 const configuration = process.env.K_CONFIGURATION;
 
-class CloudRunServiceRevisionProcessor extends DataProcessor {
+class CloudRunServiceRevisionInstanceProcessor extends DataProcessor {
   constructor(projectDataSource, instanceDataSource) {
-    super('com.instana.plugin.gcp.run.revision');
+    super('com.instana.plugin.gcp.run.revision.instance');
     this.addSource('project', projectDataSource);
     this.addSource('instance', instanceDataSource);
   }
 
   getEntityId() {
-    return identityProvider.getRevision();
+    return identityProvider.getContainerInstanceId();
   }
 
   processData(rawDataPerSource) {
@@ -24,19 +24,19 @@ class CloudRunServiceRevisionProcessor extends DataProcessor {
     const instance = rawDataPerSource.instance;
     return {
       runtime: 'node',
-      region: extractRegionOrZone(instance.region),
-      availabilityZone: extractRegionOrZone(instance.zone),
+      region: extractRegion(instance.region),
       instanceId: instance.id,
       service,
       configuration,
       revision: identityProvider.getRevision(),
       port,
+      // ...project provides two attribtues, numericProjectId and projectId.
       ...project
     };
   }
 }
 
-function extractRegionOrZone(fullyQualified) {
+function extractRegion(fullyQualified) {
   if (typeof fullyQualified !== 'string') {
     return undefined;
   } else {
@@ -48,4 +48,4 @@ function extractRegionOrZone(fullyQualified) {
   }
 }
 
-module.exports = exports = CloudRunServiceRevisionProcessor;
+module.exports = exports = CloudRunServiceRevisionInstanceProcessor;

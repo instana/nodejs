@@ -52,6 +52,12 @@ if [[ $build_mode = local ]]; then
   mv instana-shared-metrics-*.tgz ../aws-fargate/images/instana-aws-fargate/instana-shared-metrics.tgz
   popd > /dev/null
 
+  pushd ../../../metrics-util > /dev/null
+  rm -f instana-metrics-util-*.tgz
+  npm pack
+  mv instana-metrics-util-*.tgz ../aws-fargate/images/instana-aws-fargate/instana-metrics-util.tgz
+  popd > /dev/null
+
   pushd ../.. > /dev/null
   rm -f instana-aws-fargate-*.tgz
   npm pack

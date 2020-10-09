@@ -77,7 +77,7 @@ describe('transmission cycle', function() {
     return retry(() => {
       expect(onReadyError).to.not.exist;
       expect(onReadyPayload).to.exist;
-      expect(onReadyPayload.name).to.equal('com.instana.plugin.gcp.run.revision');
+      expect(onReadyPayload.name).to.equal('com.instana.plugin.gcp.run.revision.instance');
     });
   });
 

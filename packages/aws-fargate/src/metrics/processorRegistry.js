@@ -30,7 +30,7 @@ exports.init = function init(config, metadataUri, onReady) {
   allProcessors.push(instrumentedEcsContainerProcessor);
   allProcessors.push(new InstrumentedDockerProcessor(metadataRootDataSource, metadataRootStatsDataSource));
 
-  const processProcessor = new ProcessProcessor();
+  const processProcessor = new ProcessProcessor('docker');
   allProcessors.push(processProcessor);
   allProcessors.push(new NodeJsProcessor(coreAndShared, process.pid));
 
