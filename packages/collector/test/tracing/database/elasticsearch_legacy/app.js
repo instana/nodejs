@@ -21,18 +21,13 @@ if (process.env.WITH_STDOUT) {
 
 app.use(bodyParser.json());
 
-const esConfig = {
-  host: process.env.ELASTICSEARCH,
-  log: 'warning'
-};
-
 const ES_API_VERSION = process.env.ES_API_VERSION || '7.6';
 
-if (process.env.ES_API_VERSION) {
-  esConfig.apiVersion = ES_API_VERSION;
-}
-
-const client = new elasticsearch.Client(esConfig);
+const client = new elasticsearch.Client({
+  host: process.env.ELASTICSEARCH,
+  log: 'warning',
+  apiVersion: ES_API_VERSION
+});
 
 app.get('/', (req, res) => {
   res.sendStatus(200);

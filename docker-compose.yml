@@ -10,13 +10,13 @@ services:
     ports:
       - 27017:27017
 
-  # Elasticsearch 2.3
+  # # Elasticsearch 2.3
   # elasticsearch:
   #   image: elasticsearch:2.3.5
   #   ports:
   #     - 9200:9200
 
-  # Elasticsearch 5.6
+  # # Elasticsearch 5.6
   # elasticsearch:
   #   image: elasticsearch:5.6.16
   #   ports:
@@ -25,7 +25,7 @@ services:
   #    discovery.type: single-node
   #    ES_JAVA_OPTS: "-Xms500m -Xmx500m"
 
-  # Elasticsearch 6.8
+  # # Elasticsearch 6.8
   # elasticsearch:
   #   image: elasticsearch:6.8.8
   #   ports:

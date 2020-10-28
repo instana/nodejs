@@ -21,18 +21,19 @@ if (process.env.WITH_STDOUT) {
 
 app.use(bodyParser.json());
 
+const ES_API_VERSION = process.env.ES_API_VERSION || '7.9';
+
 const client = new Client({
   node: `http://${process.env.ELASTICSEARCH}`
 });
 
-const ES_API_VERSION = process.env.ES_API_VERSION || '7.6';
+log(
+  // eslint-disable-next-line max-len
+  `Using Elasticsearch API version ${ES_API_VERSION}, please make sure the installed client library @elastic/elasticsearch@${
+    require('@elastic/elasticsearch/package.json').version
+  } the Elasticsearch Docker container match that API version.`
+);
 
-if (process.env.ES_API_VERSION) {
-  log(
-    // eslint-disable-next-line max-len
-    `${`Using Elasticsearch API version ${process.env.ES_API_VERSION}, make sure @elastic/elasticsearch is installed `}in a matching version.`
-  );
-}
 app.get('/', (req, res) => {
   res.sendStatus(200);
 });
@@ -107,6 +108,7 @@ app.get('/mget2', (req, res) => {
   client.mget(
     {
       index: req.query.index || 'modern_index',
+      type: type(),
       body: {
         ids
       }
