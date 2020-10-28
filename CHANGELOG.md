@@ -1,5 +1,8 @@
 # Changelog
 
+## Unreleased
+- Remove longer span reporting interval for serverless tracers, use standard interval instead.
+
 ## 1.106.5
 - [Google Cloud Run]: Minor changes for the upcoming Google Cloud Run support. Requires at least Instana back end version 189.
 

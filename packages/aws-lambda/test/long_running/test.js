@@ -91,10 +91,11 @@ describe('long running lambdas', () => {
           verifySpans(spans, opts);
           verifyMetrics(metrics);
           // The lambda runs 13 seconds and creates a span every second. We also send spans to serverless acceptor
-          // every 5 seconds + the final bundle. Thus, we should see two intermittent POST requests to /traces and
+          // every second + the final bundle. Thus, we should see around 11-12 intermittent POST requests to /traces and
           // one to /bundle.
           expect(rawSpanArrays).to.be.an('array');
-          expect(rawSpanArrays).to.have.lengthOf(2);
+          expect(rawSpanArrays).to.have.lengthOf.at.least(10);
+          expect(rawSpanArrays).to.have.lengthOf.at.most(13);
           expect(rawBundles).to.be.an('array');
           expect(rawBundles).to.have.lengthOf(1);
         });
@@ -149,7 +150,7 @@ describe('long running lambdas', () => {
           expect(spans).to.have.lengthOf(0);
           expect(metrics).to.have.lengthOf(0);
 
-          // The first POST /spans (after 5 seconds) fails...
+          // The first POST /spans fails...
           expect(rawSpanArrays).to.have.lengthOf(1);
           // ...and we expect @instana/aws-lambda to stop sending spans after that. In particular, we expect the
           // POST /bundle at the end to not happen.

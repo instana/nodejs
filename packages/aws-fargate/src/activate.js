@@ -12,18 +12,7 @@ const { normalizeConfig } = coreUtil;
 
 let logger = consoleLogger;
 
-let config = {};
-
-// @instana/collector sends metric and span data every second. To reduce HTTP overhead we throttle this back:
-// Metrics will be send every second, spans every 5 seconds.
-
-if (!process.env.INSTANA_TRACING_TRANSMISSION_DELAY) {
-  config.tracing = {
-    transmissionDelay: 5000
-  };
-}
-
-config = normalizeConfig(config);
+let config = normalizeConfig({});
 
 function init() {
   if (process.env.INSTANA_DEBUG || process.env.INSTANA_LOG_LEVEL) {
