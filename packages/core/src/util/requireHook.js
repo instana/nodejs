@@ -55,7 +55,17 @@ function patchedModuleLoad(moduleName) {
     for (i = 0; i < applicableByModuleNameTransformers.length; i++) {
       const transformerFn = applicableByModuleNameTransformers[i];
       if (typeof transformerFn === 'function') {
-        cacheEntry.moduleExports = transformerFn(cacheEntry.moduleExports) || cacheEntry.moduleExports;
+        try {
+          cacheEntry.moduleExports = transformerFn(cacheEntry.moduleExports) || cacheEntry.moduleExports;
+        } catch (e) {
+          logger.error(`Cannot instrument ${moduleName} due to an error in instrumentation: ${e}`);
+          if (e.message) {
+            logger.error(e.message);
+          }
+          if (e.stack) {
+            logger.error(e.stack);
+          }
+        }
       } else {
         logger.error(
           'A requireHook invariant has been violated for module name %s, index %s. The transformer is not a function ' +

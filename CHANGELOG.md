@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased
+- Fix (Elasticsearch): Adapt instrumentation for `@elastic/elasticsearch` for refactoring of `api` submodule introduced in `@elastic/elasticsearch@7.9.1`. (Fixes `TypeError: Cannot set property 'Symbol(configuration error)' of undefined`.) Also, remove obsolete `stats` annotation for `elasticsearch` spans.
 - Remove longer span reporting interval for serverless tracers, use standard interval instead.
 
 ## 1.106.5
