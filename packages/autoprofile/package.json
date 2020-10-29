@@ -1,6 +1,6 @@
 {
   "name": "@instana/autoprofile",
-  "version": "1.106.5",
+  "version": "1.106.6",
   "description": "Automatic Node.js Profiler",
   "keywords": [
     "production profiler",
