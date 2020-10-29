@@ -2,7 +2,6 @@
 
 const expect = require('chai').expect;
 const path = require('path');
-const semver = require('semver');
 
 const constants = require('@instana/core').tracing.constants;
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
@@ -11,6 +10,8 @@ const testUtils = require('../../../../../core/test/test_util');
 const ProcessControls = require('../../../test_util/ProcessControls');
 
 let agentControls;
+
+const appName = 'custom-queueing-app';
 
 describe('tracing/restore context', function() {
   if (!supportedVersion(process.versions.node)) {
@@ -25,25 +26,15 @@ describe('tracing/restore context', function() {
 
   [
     //
-    'sharp-app',
-    'custom-queueing-app'
-  ].forEach(appName => {
-    [
-      //
-      'run',
-      'run-promise',
-      'enter-and-leave'
-    ].forEach(apiVariant => {
-      if (appName === 'sharp-app' && semver.gte(process.versions.node, '12.0.0')) {
-        // The version of sharp we are using is not compatible with Node.js >= 12.x
-        return;
-      }
-      registerSuite(appName, apiVariant);
-    });
+    'run',
+    'run-promise',
+    'enter-and-leave'
+  ].forEach(apiVariant => {
+    registerSuite(apiVariant);
   });
 
-  function registerSuite(appName, apiVariant) {
-    describe(`restore context (${appName})`, function() {
+  function registerSuite(apiVariant) {
+    describe('restore context', function() {
       const controls = new ProcessControls({
         appPath: path.join(__dirname, appName),
         agentControls,
