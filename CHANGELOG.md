@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.107.0
 - Add instrumentation for [`@google-cloud/pubsub`](https://www.npmjs.com/package/@google-cloud/pubsub).
 
 ## 1.106.6
