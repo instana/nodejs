@@ -1,6 +1,6 @@
 {
   "name": "@instana/core",
-  "version": "1.106.6",
+  "version": "1.107.0",
   "description": "Core library for Instana's Node.js packages",
   "main": "src/index.js",
   "files": [
