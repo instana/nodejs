@@ -7,7 +7,7 @@ const express = require('express');
 const morgan = require('morgan');
 const pino = require('pino')();
 
-const sendToParent = require('../../../serverless/test/util/send_to_parent');
+const { sendToParent } = require('../../../core/test/test_util');
 
 const logPrefix = 'metadata-v3';
 const logger = pino.child({ name: logPrefix, pid: process.pid });

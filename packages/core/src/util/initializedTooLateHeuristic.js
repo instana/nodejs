@@ -3,6 +3,9 @@
 let firstCall = true;
 const patterns = [
   /\/@elastic\/elasticsearch\/index.js/,
+  /\/@google-cloud\/pubsub\/build\/src\/publisher\/index.js/,
+  /\/@google-cloud\/pubsub\/build\/src\/subscriber.js/,
+  /\/@google-cloud\/storage\/build\/src\/index.js/,
   /\/@hapi\/call\/lib\//,
   /\/amqplib\/lib\//,
   /\/aws-sdk\/lib\/aws.js/,
@@ -32,6 +35,7 @@ const patterns = [
   /\/pino\/lib\//,
   /\/redis\/index.js/,
   /\/request\/index.js/,
+  /\/superagent\/lib\/node\/index.js/,
   /\/winston\/lib\/winston.js/
 ];
 

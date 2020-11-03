@@ -258,7 +258,7 @@ describe('tracing/nats', function() {
   });
 });
 
-describe('disabled', function() {
+describe('tracing/nats disabled', function() {
   this.timeout(config.getTestTimeout() * 2);
   const agentControls = require('../../../apps/agentStubControls');
   agentControls.registerTestHooks();

@@ -6,7 +6,7 @@
 
 const path = require('path');
 
-const sendToParent = require('../../../serverless/test/util/send_to_parent');
+const { sendToParent } = require('../../../core/test/test_util');
 
 const logPrefix = `aws-lambda-runtime-mock (${process.pid})`;
 const log = require('../../../serverless/test/util/log')(logPrefix);

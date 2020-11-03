@@ -4,7 +4,7 @@ const http = require('http');
 const proxy = require('proxy');
 const basicAuthParser = require('basic-auth-parser');
 
-const sendToParent = require('../../../serverless/test/util/send_to_parent');
+const { sendToParent } = require('../../../core/test/test_util');
 const log = require('../../../serverless/test/util/log')(`proxy (${process.pid})`);
 
 const port = process.env.PROXY_PORT;

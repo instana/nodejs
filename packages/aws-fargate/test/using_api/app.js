@@ -8,8 +8,7 @@
  */
 
 const http = require('http');
-const sendToParent = require('../../../serverless/test/util/send_to_parent');
-const { delay } = require('../../../core/test/test_util');
+const { delay, sendToParent } = require('../../../core/test/test_util');
 
 const instana = require('../..');
 

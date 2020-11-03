@@ -49,13 +49,12 @@ function shimSendMessage(originalFunction) {
 }
 
 function instrumentedSendMessage(ctx, originalSendMessage, originalArgs) {
-  const parentSpan = cls.getCurrentSpan();
-
   if (cls.tracingSuppressed()) {
     propagateSuppression(originalArgs[0]);
     propagateSuppression(originalArgs[1]);
   }
 
+  const parentSpan = cls.getCurrentSpan();
   if (
     !parentSpan || //
     // allow rabbitmq parent exit spans, this is actually the span started in instrumentedChannelModelPublish
@@ -108,17 +107,8 @@ ctx.connection.stream.remoteAddress}:${ctx.connection.stream.remotePort}`;
   // amqplib's sendMessage(fields, properties, ...) has two distinct parametes fields and properties but usually they
   // are the same object and used interchangeably. amqplib relies on the server to pick what it needs from either
   // fields or properties.
-  setHeaders(originalArgs[0], span);
-  setHeaders(originalArgs[1], span);
-}
-
-function setHeaders(map, span) {
-  if (!map || !map.headers) {
-    return;
-  }
-  map.headers[constants.traceIdHeaderName] = span.t;
-  map.headers[constants.spanIdHeaderName] = span.s;
-  map.headers[constants.traceLevelHeaderName] = '1';
+  propagateTraceContext(originalArgs[0], span);
+  propagateTraceContext(originalArgs[1], span);
 }
 
 function propagateSuppression(map) {
@@ -126,6 +116,15 @@ function propagateSuppression(map) {
     return;
   }
   map.headers[constants.traceLevelHeaderName] = '0';
+}
+
+function propagateTraceContext(map, span) {
+  if (!map || !map.headers) {
+    return;
+  }
+  map.headers[constants.traceIdHeaderName] = span.t;
+  map.headers[constants.spanIdHeaderName] = span.s;
+  map.headers[constants.traceLevelHeaderName] = '1';
 }
 
 function shimDispatchMessage(originalFunction) {

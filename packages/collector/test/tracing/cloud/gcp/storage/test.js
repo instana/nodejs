@@ -134,7 +134,7 @@ mochaSuiteFn('tracing/cloud/gcp/storage', function() {
             attributes: {
               destinationBucket: bucketName,
               destinationObject: 'combine-error.gz',
-              error: /.*No such object: nodejs-tracer-test-bucket\/does-not-exist.*/
+              error: /.*Error: Object does-not-exist.*?not found\..*/
             }
           }
         ]
@@ -706,7 +706,7 @@ mochaSuiteFn('tracing/cloud/gcp/storage', function() {
       }
       expect(span.async).to.not.exist;
       expect(span.data).to.exist;
-      expect(span.data.gcs).to.exist;
+      expect(span.data.gcs).to.be.an('object');
       expect(span.data.gcs.op).to.equal(operation);
       if (additionalExpectations) {
         additionalExpectations(span);
