@@ -10,5 +10,6 @@ module.exports = exports = {
   getSpansByName: require('./getSpansByName'),
   retry: require('./retry'),
   retryUntilSpansMatch: require('./retryUntilSpansMatch'),
+  sendToParent: require('./sendToParent'),
   stringifyItems: require('./stringifyItems')
 };

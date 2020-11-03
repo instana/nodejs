@@ -57,7 +57,7 @@ const ProcessControls = (module.exports = function ProcessControls(opts = {}) {
   this.receivedIpcMessages = [];
 });
 
-ProcessControls.prototype.registerTestHooks = function registerTestHooks() {
+ProcessControls.prototype.registerTestHooks = function registerTestHooks(retryTime) {
   beforeEach(() => {
     const that = this;
     this.receivedIpcMessages = [];
@@ -72,7 +72,7 @@ ProcessControls.prototype.registerTestHooks = function registerTestHooks() {
     this.process.on('message', message => {
       that.receivedIpcMessages.push(message);
     });
-    return this.waitUntilServerIsUp();
+    return this.waitUntilServerIsUp(retryTime);
   });
 
   if (this.agentControls) {
@@ -94,12 +94,14 @@ ProcessControls.prototype.kill = function kill() {
   });
 };
 
-ProcessControls.prototype.waitUntilServerIsUp = function waitUntilServerIsUp() {
-  return testUtils.retry(() =>
-    this.sendRequest({
-      method: 'GET',
-      suppressTracing: true
-    })
+ProcessControls.prototype.waitUntilServerIsUp = function waitUntilServerIsUp(retryTime) {
+  return testUtils.retry(
+    () =>
+      this.sendRequest({
+        method: 'GET',
+        suppressTracing: true
+      }),
+    retryTime
   );
 };
 

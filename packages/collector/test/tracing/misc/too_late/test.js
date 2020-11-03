@@ -27,6 +27,8 @@ describe('tracing/too late', function() {
 
   [
     '@elastic/elasticsearch',
+    '@google-cloud/pubsub',
+    '@google-cloud/storage',
     '@hapi/call',
     'amqplib',
     'aws-sdk',
@@ -54,6 +56,7 @@ describe('tracing/too late', function() {
     'pino',
     'redis',
     'request',
+    'superagent',
     'winston'
   ].forEach(moduleName => registerTooLateTest.bind(this)(moduleName));
 

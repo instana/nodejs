@@ -3,7 +3,7 @@
 const http = require('http');
 const fetch = require('node-fetch');
 
-const sendToParent = require('../../../serverless/test/util/send_to_parent');
+const { sendToParent } = require('../../../core/test/test_util');
 
 const downstreamDummyUrl = process.env.DOWNSTREAM_DUMMY_URL;
 

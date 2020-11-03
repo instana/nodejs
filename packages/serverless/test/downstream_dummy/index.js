@@ -5,7 +5,7 @@ const http = require('http');
 const morgan = require('morgan');
 const pino = require('pino')();
 
-const sendToParent = require('../util/send_to_parent');
+const { sendToParent } = require('../../../core/test/test_util');
 const delay = require('../../../core/test/test_util/delay');
 
 const logPrefix = 'downstream-dummy';

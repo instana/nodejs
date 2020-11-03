@@ -10,7 +10,7 @@ const morgan = require('morgan');
 const path = require('path');
 const pino = require('pino')();
 
-const sendToParent = require('../util/send_to_parent');
+const { sendToParent } = require('../../../core/test/test_util');
 const deepMerge = require('../../../core/src/util/deepMerge');
 
 const logPrefix = 'backend-stub';
