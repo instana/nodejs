@@ -24,6 +24,7 @@ let mochaSuiteFn;
 if (
   //
   !supportedVersion(process.versions.node) ||
+  // Disable this suite if no GCP project has been supplied.
   !projectId ||
   // @google-cloud/pubsub@2.0.0 dropped support for Node.js 8
   (semver.lt(process.version, '10.0.0') && semver.gte(require('@google-cloud/pubsub/package.json').version, '2.0.0'))

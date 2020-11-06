@@ -26,7 +26,7 @@ exports.createTopic = async function createTopic(log) {
     log(`checking for topic ${topicName}`);
 
     const [topics] = await pubsub.getTopics();
-    let topic = topics.filter(top => top.name.includes(topicName))[0];
+    let topic = topics.filter(top => new RegExp(`/${topicName}$`).test(top.name))[0];
     if (topic) {
       log(`topic ${topic.name} already exists, using it`);
     } else {
@@ -48,7 +48,7 @@ exports.createTopicAndSubscription = async function createTopicAndSubscription(l
 
     log(`checking for subscription ${subscriptionName}`);
     const [subscriptions] = await pubsub.getSubscriptions();
-    let subscription = subscriptions.filter(sub => sub.name.includes(subscriptionName))[0];
+    let subscription = subscriptions.filter(sub => new RegExp(`/${subscriptionName}$`).test(sub.name))[0];
     if (subscription) {
       log(`subscription ${subscription.name} already exists, using it`);
       log('purging existing messages now');
