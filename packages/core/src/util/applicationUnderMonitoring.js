@@ -3,6 +3,11 @@
 const fs = require('fs');
 const path = require('path');
 
+let logger;
+logger = require('../logger').getLogger('util/atMostOnce', newLogger => {
+  logger = newLogger;
+});
+
 // Cache determined main package json as these will be referenced often
 // and identification of these values is expensive.
 let parsedMainPackageJson;
@@ -42,6 +47,7 @@ exports.getMainPackageJson = function getMainPackageJson(startDirectory, cb) {
       try {
         parsedMainPackageJson = JSON.parse(contents);
       } catch (e) {
+        logger.warn('Main package.json file %s cannot be parsed: %s', packageJsonPath, e);
         return cb(e, null);
       }
       return cb(null, parsedMainPackageJson);
