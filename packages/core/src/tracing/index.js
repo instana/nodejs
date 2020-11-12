@@ -102,6 +102,9 @@ function initInstrumenations(_config) {
     instrumentations.forEach(instrumentationKey => {
       instrumentationModules[instrumentationKey] = require(instrumentationKey);
       instrumentationModules[instrumentationKey].init(_config);
+      if (instrumentationModules[instrumentationKey].batchable && instrumentationModules[instrumentationKey].spanName) {
+        spanBuffer.addBatchableSpanName(instrumentationModules[instrumentationKey].spanName);
+      }
     });
     additionalInstrumentationModules.forEach(instrumentationModule => {
       instrumentationModule.init(_config);
@@ -169,6 +172,11 @@ exports.setExtraHttpHeadersToCapture = function setExtraHttpHeadersToCapture(_ex
       instrumentationModules[instrumentationKey].setExtraHttpHeadersToCapture(extraHeaders);
     }
   });
+};
+
+// This will be removed again after the opt-in transition phase.
+exports.enableSpanBatching = function enableSpanBatching() {
+  spanBuffer.enableSpanBatching();
 };
 
 exports._getAndResetTracingMetrics = function _getAndResetTracingMetrics() {

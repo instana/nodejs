@@ -18,6 +18,9 @@ const preparedStatements = new LRU(100000);
 const connectionUriRegex = /^\s*postgres(?:ql)?:\/\/(?:([^:@]+)?(?::.+)?@)?([^:/?#]+)?(?::(\d+))?(?:\/([^?]+))?(?:\?.*)?$/;
 //                            ^protocol  user+pass^  ^user    ^pass      ^netloc     ^port      ^db           ^params
 
+exports.spanName = 'postgres';
+exports.batchable = true;
+
 exports.init = function init() {
   requireHook.onModuleLoad('pg-native', instrumentPgNative);
 };
@@ -121,7 +124,7 @@ function shimQueryOrExecuteSync(isExecute, original) {
 
 function startSpan(ctx, originalFn, originalArgs, statement, stackTraceRef) {
   return cls.ns.runAndReturn(() => {
-    const span = cls.startSpan('postgres', constants.EXIT);
+    const span = cls.startSpan(exports.spanName, constants.EXIT);
     span.stack = tracingUtil.getStackTrace(stackTraceRef);
     span.data.pg = {
       stmt: tracingUtil.shortenDatabaseStatement(statement),
@@ -155,7 +158,7 @@ function startSpan(ctx, originalFn, originalArgs, statement, stackTraceRef) {
 
 function startSpanBeforeSync(ctx, originalFn, originalArgs, statement, stackTraceRef) {
   return cls.ns.runAndReturn(() => {
-    const span = cls.startSpan('postgres', constants.EXIT);
+    const span = cls.startSpan(exports.spanName, constants.EXIT);
     span.stack = tracingUtil.getStackTrace(stackTraceRef);
     span.data.pg = {
       stmt: tracingUtil.shortenDatabaseStatement(statement),

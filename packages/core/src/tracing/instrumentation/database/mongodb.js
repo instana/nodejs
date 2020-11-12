@@ -24,6 +24,9 @@ const commands = [
   'update'
 ];
 
+exports.spanName = 'mongo';
+exports.batchable = true;
+
 exports.init = function init() {
   // mongodb >= 3.3.x
   requireHook.onFileLoad(/\/mongodb\/lib\/core\/connection\/pool.js/, instrumentPool);
@@ -70,7 +73,7 @@ function instrumentedWrite(ctx, originalWrite, originalArgs) {
   }
 
   return cls.ns.runAndReturn(() => {
-    const span = cls.startSpan('mongo', constants.EXIT);
+    const span = cls.startSpan(exports.spanName, constants.EXIT);
     span.stack = tracingUtil.getStackTrace(instrumentedWrite);
 
     let hostname;
