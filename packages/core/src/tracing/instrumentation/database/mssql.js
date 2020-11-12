@@ -9,6 +9,9 @@ const cls = require('../../cls');
 
 let isActive = false;
 
+exports.spanName = 'mssql';
+exports.batchable = true;
+
 exports.init = function init() {
   requireHook.onModuleLoad('mssql', instrumentMssql);
 };
@@ -57,7 +60,7 @@ function instrumentedMethod(ctx, originalFunction, originalArgs, stackTraceRef, 
   const connectionParameters = findConnectionParameters(ctx);
   const command = commandProvider(originalArgs);
   return cls.ns.runAndReturn(() => {
-    const span = cls.startSpan('mssql', constants.EXIT);
+    const span = cls.startSpan(exports.spanName, constants.EXIT);
     span.stack = tracingUtil.getStackTrace(stackTraceRef);
     span.data.mssql = {
       stmt: tracingUtil.shortenDatabaseStatement(command),

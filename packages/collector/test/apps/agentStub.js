@@ -18,6 +18,7 @@ const logProfiles = process.env.LOG_PROFILES === 'true';
 const rejectTraces = process.env.REJECT_TRACES === 'true';
 const doesntHandleProfiles = process.env.DOESNT_HANDLE_PROFILES === 'true';
 const tracingMetrics = process.env.TRACING_METRICS !== 'false';
+const enableSpanBatching = process.env.ENABLE_SPANBATCHING === 'true';
 
 let discoveries = {};
 const requests = {};
@@ -58,7 +59,7 @@ app.put('/com.instana.plugin.nodejs.discovery', (req, res) => {
 
   logger.debug('New discovery %s with params', pid, req.body);
 
-  res.send({
+  const response = {
     agentUuid: 'agent-stub-uuid',
     pid,
     extraHeaders,
@@ -66,7 +67,13 @@ app.put('/com.instana.plugin.nodejs.discovery', (req, res) => {
       matcher: secretsMatcher,
       list: secretsList
     }
-  });
+  };
+
+  if (enableSpanBatching) {
+    response.spanBatchingEnabled = true;
+  }
+
+  res.send(response);
 });
 
 app.head(

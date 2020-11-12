@@ -54,6 +54,10 @@ function tryToAnnounce(ctx) {
         response.extraHeaders.map(s => s.toLowerCase())
       );
     }
+    if (response.spanBatchingEnabled === true || response.spanBatchingEnabled === 'true') {
+      logger.info('Enabling span batching via agent configuration.');
+      tracing.enableSpanBatching();
+    }
 
     if (response.secrets) {
       if (!(typeof response.secrets.matcher === 'string')) {

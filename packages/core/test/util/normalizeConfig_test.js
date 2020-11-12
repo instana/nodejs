@@ -19,6 +19,8 @@ describe('util.normalizeConfig', () => {
     delete process.env.INSTANA_SERVICE_NAME;
     delete process.env.INSTANA_STACK_TRACE_LENGTH;
     delete process.env.INSTANA_TRACING_TRANSMISSION_DELAY;
+    delete process.env.INSTANA_SPANBATCHING_ENABLED;
+    delete process.env.INSTANA_DISABLE_SPANBATCHING;
   }
 
   it('should apply all defaults', () => {
@@ -267,6 +269,38 @@ describe('util.normalizeConfig', () => {
     expect(config.tracing.disabledTracers).to.deep.equal(['baz', 'fizz']);
   });
 
+  // delete this test when we switch to opt-out
+  it('should enable span batching via config in transition phase', () => {
+    const config = normalizeConfig({ tracing: { spanBatchingEnabled: true } });
+    expect(config.tracing.spanBatchingEnabled).to.be.true;
+  });
+
+  // delete this test when we switch to opt-out
+  it('should enable span batching via INSTANA_SPANBATCHING_ENABLED in transition phase', () => {
+    process.env.INSTANA_SPANBATCHING_ENABLED = 'true';
+    const config = normalizeConfig();
+    expect(config.tracing.spanBatchingEnabled).to.be.true;
+  });
+
+  it('should ignore non-boolean span batching config value', () => {
+    const config = normalizeConfig({ tracing: { spanBatchingEnabled: 73 } });
+    // test needs to be updated once we switch to opt-out
+    expect(config.tracing.spanBatchingEnabled).to.be.false;
+  });
+
+  it('should disable span batching', () => {
+    // test only becomes relevant once we switch to opt-out
+    const config = normalizeConfig({ tracing: { spanBatchingEnabled: false } });
+    expect(config.tracing.spanBatchingEnabled).to.be.false;
+  });
+
+  it('should disable span batching via INSTANA_DISABLE_SPANBATCHING', () => {
+    // test only becomes relevant once we switch to opt-out
+    process.env.INSTANA_DISABLE_SPANBATCHING = 'true';
+    const config = normalizeConfig();
+    expect(config.tracing.spanBatchingEnabled).to.be.false;
+  });
+
   it('should accept custom secrets config', () => {
     const config = normalizeConfig({
       secrets: {
@@ -354,6 +388,7 @@ describe('util.normalizeConfig', () => {
     expect(config.tracing.http.extraHttpHeadersToCapture).to.be.empty;
     expect(config.tracing.http.extraHttpHeadersToCapture).to.be.empty;
     expect(config.tracing.stackTraceLength).to.equal(10);
+    expect(config.tracing.spanBatchingEnabled).to.be.false;
     expect(config.secrets).to.be.an('object');
     expect(config.secrets.matcherMode).to.equal('contains-ignore-case');
     expect(config.secrets.keywords).to.deep.equal(['key', 'pass', 'secret']);

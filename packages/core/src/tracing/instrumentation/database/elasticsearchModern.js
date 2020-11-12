@@ -18,6 +18,9 @@ const endpointToIdRegex = /^\/[^/]+\/_doc\/([^/]+)$/;
 
 let isActive = false;
 
+exports.spanName = 'elasticsearch';
+exports.batchable = true;
+
 exports.init = function init() {
   requireHook.onModuleLoad('@elastic/elasticsearch', instrument);
 };
@@ -113,7 +116,7 @@ function instrumentApi(client, actionPath, clusterInfo) {
     }
 
     return cls.ns.runAndReturn(() => {
-      const span = cls.startSpan('elasticsearch', constants.EXIT);
+      const span = cls.startSpan(exports.spanName, constants.EXIT);
       span.stack = tracingUtil.getStackTrace(instrumentedAction);
       span.data.elasticsearch = {
         action,
@@ -338,7 +341,7 @@ function instrumentedRequest(ctx, origEsReq, originalArgs) {
   const httpPath = params.path;
 
   return cls.ns.runAndReturn(() => {
-    const span = cls.startSpan('elasticsearch', constants.EXIT);
+    const span = cls.startSpan(exports.spanName, constants.EXIT);
     span.stack = tracingUtil.getStackTrace(instrumentedRequest, 1);
     span.data.elasticsearch = {
       endpoint: httpPath

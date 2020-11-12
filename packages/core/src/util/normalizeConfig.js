@@ -26,7 +26,8 @@ const defaults = {
       extraHttpHeadersToCapture: []
     },
     stackTraceLength: 10,
-    disabledTracers: []
+    disabledTracers: [],
+    spanBatchingEnabled: false
   },
   secrets: {
     matcherMode: 'contains-ignore-case',
@@ -94,6 +95,7 @@ function normalizeTracingConfig(config) {
   normalizeTracingHttp(config);
   normalizeTracingStackTraceLength(config);
   normalizeDisabledTracers(config);
+  normalizeSpanBatchingEnabled(config);
 }
 
 function normalizeTracingEnabled(config) {
@@ -284,6 +286,31 @@ function normalizeDisabledTracers(config) {
   config.tracing.disabledTracers = config.tracing.disabledTracers.map((
     s // We'll check for matches in an case-insensitive fashion
   ) => s.toLowerCase());
+}
+
+function normalizeSpanBatchingEnabled(config) {
+  if (config.tracing.spanBatchingEnabled != null) {
+    if (typeof config.tracing.spanBatchingEnabled === 'boolean') {
+      if (config.tracing.spanBatchingEnabled) {
+        logger.info('Span batching is enabled via config.');
+      }
+      return;
+    } else {
+      logger.warn(
+        `Invalid configuration: config.tracing.spanBatchingEnabled is not a boolean value, will be ignored: ${JSON.stringify(
+          config.tracing.spanBatchingEnabled
+        )}`
+      );
+    }
+  }
+
+  if (process.env['INSTANA_SPANBATCHING_ENABLED'] === 'true') {
+    logger.info('Span batching is enabled via environment variable INSTANA_SPANBATCHING_ENABLED.');
+    config.tracing.spanBatchingEnabled = true;
+    return;
+  }
+
+  config.tracing.spanBatchingEnabled = defaults.tracing.spanBatchingEnabled;
 }
 
 function normalizeSecrets(config) {

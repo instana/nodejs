@@ -9,6 +9,9 @@ const cls = require('../../cls');
 
 let isActive = false;
 
+exports.spanName = 'mysql';
+exports.batchable = true;
+
 exports.init = function init() {
   requireHook.onModuleLoad('mysql', instrumentMysql);
   requireHook.onModuleLoad('mysql2', instrumentMysql2);
@@ -137,7 +140,7 @@ function instrumentedAccessFunction(
   }
 
   return cls.ns.runAndReturn(() => {
-    const span = cls.startSpan('mysql', constants.EXIT);
+    const span = cls.startSpan(exports.spanName, constants.EXIT);
     span.b = { s: 1 };
     span.stack = tracingUtil.getStackTrace(instrumentedAccessFunction);
     span.data.mysql = {

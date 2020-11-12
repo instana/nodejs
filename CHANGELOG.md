@@ -1,5 +1,16 @@
 # Changelog
 
+## Unreleased
+- Implement batching for very short (< 10 ms), high-frequency database spans (opt-in in this release, will be switched to default behaviour in one of the next releases). To enabled it right now, any of the three following methods can be used:
+    - Set the environment variable `INSTANA_SPANBATCHING_ENABLED=true`.
+    - Use in-code configuration: `config.tracing.spanBatchingEnabled: true`.
+    - Add this to the agent's `configuration.yaml`:
+
+      ```
+      com.instana.plugin.nodejs:
+        span-batching-enabled: true
+      ```
+
 ## 1.107.0
 - Add instrumentation for [`@google-cloud/pubsub`](https://www.npmjs.com/package/@google-cloud/pubsub).
 

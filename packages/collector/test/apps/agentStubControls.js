@@ -29,6 +29,9 @@ exports.registerTestHooks = (opts = {}) => {
     if (typeof opts.tracingMetrics === 'boolean') {
       env.TRACING_METRICS = opts.tracingMetrics.toString();
     }
+    if (opts.enableSpanBatching) {
+      env.ENABLE_SPANBATCHING = 'true';
+    }
 
     agentStub = spawn('node', [path.join(__dirname, 'agentStub.js')], {
       stdio: config.getAppStdio(),

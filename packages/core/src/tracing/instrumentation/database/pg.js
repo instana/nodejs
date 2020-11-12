@@ -9,6 +9,9 @@ const cls = require('../../cls');
 
 let isActive = false;
 
+exports.spanName = 'postgres';
+exports.batchable = true;
+
 exports.init = function init() {
   requireHook.onModuleLoad('pg', instrumentPg);
 };
@@ -50,7 +53,7 @@ function instrumentedQuery(ctx, originalQuery, argsForOriginalQuery) {
   const config = argsForOriginalQuery[0];
 
   return cls.ns.runAndReturn(() => {
-    const span = cls.startSpan('postgres', constants.EXIT);
+    const span = cls.startSpan(exports.spanName, constants.EXIT);
     span.stack = tracingUtil.getStackTrace(instrumentedQuery);
     span.data.pg = {
       stmt: tracingUtil.shortenDatabaseStatement(typeof config === 'string' ? config : config.text),
