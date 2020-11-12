@@ -10,6 +10,9 @@ const cls = require('../../cls');
 
 let isActive = false;
 
+exports.spanName = 'redis';
+exports.batchable = true;
+
 exports.activate = function activate() {
   isActive = true;
 };
@@ -70,7 +73,7 @@ function instrumentCommand(command, original) {
       return original.apply(this, arguments);
     }
 
-    const span = cls.startSpan('redis', constants.EXIT);
+    const span = cls.startSpan(exports.spanName, constants.EXIT);
     // do not set the redis span as the current span
     cls.setCurrentSpan(parentSpan);
     span.stack = tracingUtil.getStackTrace(wrappedCommand);
@@ -125,7 +128,7 @@ function instrumentMultiExec(isAtomic, original) {
       return original.apply(this, arguments);
     }
 
-    const span = cls.startSpan('redis', constants.EXIT);
+    const span = cls.startSpan(exports.spanName, constants.EXIT);
     // do not set the redis span as the current span
     cls.setCurrentSpan(parentSpan);
     span.stack = tracingUtil.getStackTrace(instrumentedMultiExec);

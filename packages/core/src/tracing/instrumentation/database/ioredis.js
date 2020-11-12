@@ -9,6 +9,9 @@ const cls = require('../../cls');
 
 let isActive = false;
 
+exports.spanName = 'redis';
+exports.batchable = true;
+
 exports.activate = function activate() {
   isActive = true;
 };
@@ -39,7 +42,7 @@ function instrumentSendCommand(original) {
     const parentSpan = cls.getCurrentSpan();
 
     if (
-      parentSpan.n === 'redis' &&
+      parentSpan.n === exports.spanName &&
       (parentSpan.data.redis.command === 'multi' || parentSpan.data.redis.command === 'pipeline') &&
       // the multi call is handled in instrumentMultiCommand but since multi is also send to Redis it will also
       // trigger instrumentSendCommand, which is why we filter it out.
@@ -57,7 +60,7 @@ function instrumentSendCommand(original) {
 
     const argsForOriginal = arguments;
     return cls.ns.runAndReturn(() => {
-      const span = cls.startSpan('redis', constants.EXIT);
+      const span = cls.startSpan(exports.spanName, constants.EXIT);
       span.stack = tracingUtil.getStackTrace(wrappedInternalSendCommand);
       span.data.redis = {
         connection: `${client.options.host}:${client.options.port}`,
@@ -116,7 +119,7 @@ function instrumentMultiOrPipelineCommand(commandName, original) {
     // create a new cls context parent to track the multi/pipeline child calls
     const clsContextForMultiOrPipeline = cls.ns.createContext();
     cls.ns.enter(clsContextForMultiOrPipeline);
-    const span = cls.startSpan('redis', constants.EXIT);
+    const span = cls.startSpan(exports.spanName, constants.EXIT);
     span.stack = tracingUtil.getStackTrace(wrappedInternalMultiOrPipelineCommand);
     span.data.redis = {
       connection: `${client.options.host}:${client.options.port}`,
