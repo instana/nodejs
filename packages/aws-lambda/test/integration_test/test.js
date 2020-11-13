@@ -10,6 +10,8 @@ const delay = require('../../../core/test/test_util/delay');
 const expectExactlyOneMatching = require('../../../core/test/test_util/expectExactlyOneMatching');
 const retry = require('../../../serverless/test/util/retry');
 
+const { fail } = expect;
+
 const functionName = 'functionName';
 const unqualifiedArn = `arn:aws:lambda:us-east-2:410797082306:function:${functionName}`;
 const version = '$LATEST';
@@ -887,8 +889,14 @@ function registerTests(handlerDefinitionPath) {
       expect(control.getLambdaResults()).to.be.empty;
       const lambdaError = control.getLambdaErrors()[0];
       expect(lambdaError).to.exist;
-      expect(lambdaError.message).to.equal('Boom!');
-      // other error cases like 'http' are checked in verifyLambdaEntry
+      if (typeof lambdaError.message === 'string') {
+        expect(lambdaError.message).to.equal('Boom!');
+      } else if (typeof lambdaError.message === 'object') {
+        expect(lambdaError.message.content).to.equal('Boom!');
+      } else {
+        fail(`Unexpected type of error returned from Lambda handler ${typeof error} – ${error}`);
+      }
+      // other error cases like error='http' are checked in verifyLambdaEntry
     } else {
       if (control.getLambdaErrors() && control.getLambdaErrors().length > 0) {
         console.log('Unexpected Errors:');
@@ -958,6 +966,7 @@ function registerTests(handlerDefinitionPath) {
       expect(span.f.cp).to.equal('aws');
       expect(span.f.e).to.equal(qualifiedArn);
       expect(span.async).to.not.exist;
+      expect(span.error).to.not.exist;
       expect(span.data.lambda).to.be.an('object');
       expect(span.data.lambda.arn).to.equal(qualifiedArn);
       if (expectations.alias) {
@@ -971,16 +980,14 @@ function registerTests(handlerDefinitionPath) {
       }
       const { error } = expectations;
       if (error && error.startsWith('lambda')) {
-        expect(span.data.lambda.error).to.equal('Boom!');
-        expect(span.error).to.not.exist;
+        expect(span.data.lambda.error).to.be.a('string');
+        expect(span.data.lambda.error).to.include('Boom!');
         expect(span.ec).to.equal(1);
       } else if (error === 'http') {
         expect(span.data.lambda.error).to.equal('HTTP status 502');
-        expect(span.error).to.not.exist;
         expect(span.ec).to.equal(1);
       } else if (error === false) {
         expect(span.data.lambda.error).to.not.exist;
-        expect(span.error).to.not.exist;
         expect(span.ec).to.equal(0);
       } else {
         throw new Error(`Unknown error expectation type, don't know how to verify: ${error}`);

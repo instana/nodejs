@@ -45,7 +45,10 @@ const handler = async event => {
   }
   await fetch(downstreamDummyUrl, { headers: { 'X-Downstream-Header': 'yes' } });
   if (event.error === 'asynchronous') {
-    throw new Error('Boom!');
+    const error = new Error('Boom!');
+    // deliberately setting error.message to a non-string value to test this case
+    error.message = { content: 'Boom!' };
+    throw error;
   } else {
     if (event.requestedStatusCode) {
       response.statusCode = parseInt(event.requestedStatusCode, 10);
