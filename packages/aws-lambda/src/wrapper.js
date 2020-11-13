@@ -232,7 +232,15 @@ function postHandler(entrySpan, error, result, callback) {
   if (entrySpan) {
     if (error) {
       entrySpan.ec = 1;
-      entrySpan.data.lambda.error = error.message ? error.message : error.toString();
+      if (error.message) {
+        if (typeof error.message === 'string') {
+          entrySpan.data.lambda.error = error.message;
+        } else {
+          entrySpan.data.lambda.error = JSON.stringify(error.message);
+        }
+      } else {
+        entrySpan.data.lambda.error = error.toString();
+      }
     }
 
     processResult(result, entrySpan);

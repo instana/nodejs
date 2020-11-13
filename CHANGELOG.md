@@ -10,6 +10,7 @@
       com.instana.plugin.nodejs:
         span-batching-enabled: true
       ```
+- [AWS Lambda] Check type of Lambda error messages and stringify if necessary.
 
 ## 1.107.0
 - Add instrumentation for [`@google-cloud/pubsub`](https://www.npmjs.com/package/@google-cloud/pubsub).
