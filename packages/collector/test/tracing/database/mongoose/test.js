@@ -9,21 +9,23 @@ const config = require('../../../../../core/test/config');
 const { expectExactlyOneMatching, retry } = require('../../../../../core/test/test_util');
 const ProcessControls = require('../../../test_util/ProcessControls');
 
+const USE_ATLAS = process.env.USE_ATLAS === 'true';
+
 describe('tracing/mongoose', function() {
   if (!supportedVersion(process.versions.node)) {
     return;
   }
 
   const agentControls = require('../../../apps/agentStubControls');
-
-  this.timeout(config.getTestTimeout());
+  const timeout = USE_ATLAS ? config.getTestTimeout() * 2 : config.getTestTimeout();
+  this.timeout(timeout);
 
   agentControls.registerTestHooks();
 
   const controls = new ProcessControls({
     dirname: __dirname,
     agentControls
-  }).registerTestHooks();
+  }).registerTestHooks(timeout);
 
   it('must trace create calls', () =>
     controls
@@ -126,9 +128,18 @@ describe('tracing/mongoose', function() {
       expect(span.async).to.not.exist;
       expect(span.error).to.not.exist;
       expect(span.ec).to.equal(0);
-      expect(span.data.mongo.command).to.equal(command);
-      expect(span.data.mongo.service).to.equal(process.env.MONGODB);
       expect(span.data.mongo.namespace).to.equal('mongoose.people');
+      expect(span.data.mongo.command).to.equal(command);
+
+      if (USE_ATLAS) {
+        expect(span.data.peer.hostname).to.include('.mongodb.net');
+        expect(span.data.peer.port).to.equal(27017);
+        expect(span.data.mongo.service).to.include('.mongodb.net:27017');
+      } else {
+        expect(span.data.peer.hostname).to.equal('127.0.0.1');
+        expect(span.data.peer.port).to.equal(27017);
+        expect(span.data.mongo.service).to.equal(process.env.MONGODB);
+      }
     });
   }
 });

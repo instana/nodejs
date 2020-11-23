@@ -1,5 +1,3 @@
-/* eslint-disable no-console */
-
 'use strict';
 
 require('../../../../')();
@@ -16,6 +14,20 @@ let connectedToMongo = false;
 
 mongoose.Promise = global.Promise;
 
+const ATLAS_CLUSTER = process.env.ATLAS_CLUSTER;
+const ATLAS_USER = process.env.ATLAS_USER || '';
+const ATLAS_PASSWORD = process.env.ATLAS_PASSWORD || '';
+const USE_ATLAS = process.env.USE_ATLAS === 'true';
+
+let connectString;
+if (USE_ATLAS) {
+  connectString = `mongodb+srv://${ATLAS_USER}:${ATLAS_PASSWORD}@${ATLAS_CLUSTER}/mongoose?retryWrites=true&w=majority`;
+  log(`Using MongoDB Atlas: ${connectString}`);
+} else {
+  connectString = `mongodb://${process.env.MONGODB}/mongoose`;
+  log(`Using local MongoDB: ${connectString}`);
+}
+
 mongoose.model(
   'Person',
   new mongoose.Schema({
@@ -26,7 +38,7 @@ mongoose.model(
 );
 const Person = mongoose.model('Person');
 
-mongoose.connect(`mongodb://${process.env.MONGODB}/mongoose`, err => {
+mongoose.connect(connectString, err => {
   if (err) {
     log('Failed to connect to Mongodb', err);
     process.exit(1);
@@ -131,6 +143,7 @@ app.listen(process.env.APP_PORT, () => {
 });
 
 function log() {
+  /* eslint-disable no-console */
   const args = Array.prototype.slice.call(arguments);
   args[0] = logPrefix + args[0];
   console.log.apply(console, args);

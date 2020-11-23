@@ -1,11 +1,8 @@
-/* eslint-disable no-console */
-
 'use strict';
 
-const agentPort = process.env.AGENT_PORT;
+const agentPort = process.env.INSTANA_AGENT_PORT;
 
 require('../../../../')({
-  agentPort,
   level: 'warn',
   tracing: {
     enabled: process.env.TRACING_ENABLED !== 'false',
@@ -31,7 +28,23 @@ if (process.env.WITH_STDOUT) {
 
 app.use(bodyParser.json());
 
-MongoClient.connect(`mongodb://${process.env.MONGODB}/myproject`, (err, client) => {
+const ATLAS_CLUSTER = process.env.ATLAS_CLUSTER;
+const ATLAS_USER = process.env.ATLAS_USER || '';
+const ATLAS_PASSWORD = process.env.ATLAS_PASSWORD || '';
+const USE_ATLAS = process.env.USE_ATLAS === 'true';
+
+let connectString;
+if (USE_ATLAS) {
+  connectString =
+    //
+    `mongodb+srv://${ATLAS_USER}:${ATLAS_PASSWORD}@${ATLAS_CLUSTER}/myproject?retryWrites=true&w=majority`;
+  log(`Using MongoDB Atlas: ${connectString}`);
+} else {
+  connectString = `mongodb://${process.env.MONGODB}/myproject`;
+  log(`Using local MongoDB: ${connectString}`);
+}
+
+MongoClient.connect(connectString, (err, client) => {
   assert.equal(null, err);
   if (client.constructor.name === 'Db') {
     // mongodb versions < 3.x
@@ -225,6 +238,7 @@ app.listen(process.env.APP_PORT, () => {
 });
 
 function log() {
+  /* eslint-disable no-console */
   const args = Array.prototype.slice.call(arguments);
   args[0] = logPrefix + args[0];
   console.log.apply(console, args);

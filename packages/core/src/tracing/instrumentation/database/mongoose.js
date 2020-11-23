@@ -15,7 +15,7 @@ exports.init = function() {
 };
 
 // This instruments the Aggregate object exported by Mongoose. The Mongoose library uses the standard MongoDB driver
-// under the hood and thus would not need custom instrumentation to capture MongoDB exit spans. But: It's Aggregate
+// under the hood and thus would not need custom instrumentation to capture MongoDB exit spans. But: Its Aggregate
 // object is a custom thenable, and async_hooks currently does not propagate the async context for those (only for
 // actual promise instances).
 //

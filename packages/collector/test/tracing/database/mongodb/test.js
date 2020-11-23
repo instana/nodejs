@@ -9,21 +9,25 @@ const constants = require('@instana/core').tracing.constants;
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('../../../../../core/test/config');
 const testUtils = require('../../../../../core/test/test_util');
+const ProcessControls = require('../../../test_util/ProcessControls');
+
+const USE_ATLAS = process.env.USE_ATLAS === 'true';
 
 describe('tracing/mongodb', function() {
   if (!supportedVersion(process.versions.node)) {
     return;
   }
 
-  const controls = require('./controls');
-  const agentStubControls = require('../../../apps/agentStubControls');
+  const agentControls = require('../../../apps/agentStubControls');
+  const timeout = USE_ATLAS ? config.getTestTimeout() * 2 : config.getTestTimeout();
+  this.timeout(timeout);
 
-  this.timeout(config.getTestTimeout());
+  agentControls.registerTestHooks();
 
-  agentStubControls.registerTestHooks();
-  controls.registerTestHooks();
-
-  beforeEach(() => agentStubControls.waitUntilAppIsCompletelyInitialized(controls.getPid()));
+  const controls = new ProcessControls({
+    dirname: __dirname,
+    agentControls
+  }).registerTestHooks(timeout);
 
   it('must count', () =>
     controls
@@ -37,7 +41,7 @@ describe('tracing/mongodb', function() {
       .then(res => {
         expect(res).to.be.a('number');
         return testUtils.retry(() =>
-          agentStubControls.getSpans().then(spans => {
+          agentControls.getSpans().then(spans => {
             const entrySpan = expectHttpEntry(spans, '/count');
             expectMongoExit(
               spans,
@@ -62,7 +66,7 @@ describe('tracing/mongodb', function() {
       })
       .then(() =>
         testUtils.retry(() =>
-          agentStubControls.getSpans().then(spans => {
+          agentControls.getSpans().then(spans => {
             const entrySpan = expectHttpEntry(spans, '/insert-one');
             expectMongoExit(spans, entrySpan, 'insert');
             expectHttpExit(spans, entrySpan);
@@ -93,7 +97,7 @@ describe('tracing/mongodb', function() {
         expect(response.unique).to.equal(unique);
         expect(response.content).to.equal('updated content');
         return testUtils.retry(() =>
-          agentStubControls.getSpans().then(spans => {
+          agentControls.getSpans().then(spans => {
             const entrySpanUpdate = expectHttpEntry(spans, '/update-one');
             expectMongoExit(
               spans,
@@ -144,7 +148,7 @@ describe('tracing/mongodb', function() {
         expect(response.unique).to.equal(unique);
         expect(response.somethingElse).to.equal('replaced');
         return testUtils.retry(() =>
-          agentStubControls.getSpans().then(spans => {
+          agentControls.getSpans().then(spans => {
             const entrySpanUpdate = expectHttpEntry(spans, '/replace-one');
             expectMongoExit(
               spans,
@@ -188,7 +192,7 @@ describe('tracing/mongodb', function() {
       .then(response => {
         expect(response).to.not.exist;
         return testUtils.retry(() =>
-          agentStubControls.getSpans().then(spans => {
+          agentControls.getSpans().then(spans => {
             const entrySpanUpdate = expectHttpEntry(spans, '/delete-one');
             expectMongoExit(
               spans,
@@ -222,7 +226,7 @@ describe('tracing/mongodb', function() {
       })
       .then(() =>
         testUtils.retry(() =>
-          agentStubControls.getSpans().then(spans => {
+          agentControls.getSpans().then(spans => {
             const entrySpan = expectHttpEntry(spans, '/find-one');
             expectMongoExit(
               spans,
@@ -262,7 +266,7 @@ describe('tracing/mongodb', function() {
       .then(() => Promise.all([firstRequest, secondRequest]))
       .then(() =>
         testUtils.retry(() =>
-          agentStubControls.getSpans().then(spans => {
+          agentControls.getSpans().then(spans => {
             const entrySpan1 = expectHttpEntry(spans, '/long-find', `call=1&unique=${unique}`);
             const entrySpan2 = expectHttpEntry(spans, '/long-find', `call=2&unique=${unique}`);
 
@@ -309,7 +313,7 @@ describe('tracing/mongodb', function() {
       )
     )
       .then(() => Promise.delay(1000))
-      .then(agentStubControls.clearRetrievedData)
+      .then(agentControls.clearRetrievedData)
       .then(() =>
         controls.sendRequest({
           method: 'GET',
@@ -319,7 +323,7 @@ describe('tracing/mongodb', function() {
       .then(docs => {
         expect(docs).to.have.lengthOf(10);
         return testUtils.retry(() =>
-          agentStubControls.getSpans().then(spans => {
+          agentControls.getSpans().then(spans => {
             const entrySpan = expectHttpEntry(spans, '/findall');
             expectMongoExit(spans, entrySpan, 'find', JSON.stringify({ unique }));
             expectMongoExit(spans, entrySpan, 'getMore');
@@ -377,11 +381,17 @@ describe('tracing/mongodb', function() {
       expect(span.async).to.not.exist;
       expect(span.error).to.not.exist;
       expect(span.ec).to.equal(0);
-      expect(span.data.peer.hostname).to.equal('127.0.0.1');
-      expect(span.data.peer.port).to.equal(27017);
       expect(span.data.mongo.command).to.equal(command);
-      expect(span.data.mongo.service).to.equal(process.env.MONGODB);
       expect(span.data.mongo.namespace).to.equal('myproject.mydocs');
+      if (USE_ATLAS) {
+        expect(span.data.peer.hostname).to.include('.mongodb.net');
+        expect(span.data.peer.port).to.equal(27017);
+        expect(span.data.mongo.service).to.include('.mongodb.net:27017');
+      } else {
+        expect(span.data.peer.hostname).to.equal('127.0.0.1');
+        expect(span.data.peer.port).to.equal(27017);
+        expect(span.data.mongo.service).to.equal(process.env.MONGODB);
+      }
       if (filter != null) {
         expect(span.data.mongo.filter).to.equal(filter);
       } else {
