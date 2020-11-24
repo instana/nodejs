@@ -9,7 +9,8 @@
   "homepage": "https://github.com/instana/nodejs-sensor/blob/main/packages/shared-metrics/README.md",
   "main": "src/index.js",
   "files": [
-    "src"
+    "src",
+    "addons/linux"
   ],
   "publishConfig": {
     "access": "public"
@@ -55,7 +56,10 @@
   "license": "MIT",
   "dependencies": {
     "@instana/core": "^1.108.0",
-    "event-loop-lag": "^1.4.0"
+    "detect-libc": "^1.0.3",
+    "event-loop-lag": "^1.4.0",
+    "recursive-copy": "^2.0.11",
+    "tar": "^6.0.5"
   },
   "devDependencies": {
     "eslint": "^5.16.0",
@@ -67,6 +71,7 @@
   },
   "optionalDependencies": {
     "event-loop-stats": "1.3.0",
-    "gcstats.js": "1.0.0"
+    "gcstats.js": "1.0.0",
+    "node-gyp": "^7.1.0"
   }
 }

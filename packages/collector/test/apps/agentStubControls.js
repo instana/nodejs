@@ -69,56 +69,63 @@ exports.deleteDiscoveries = () =>
     json: true
   });
 
-exports.getRetrievedData = () =>
+exports.getReceivedData = () =>
   request({
     method: 'GET',
-    url: `http://127.0.0.1:${agentPort}/retrievedData`,
+    url: `http://127.0.0.1:${agentPort}/received/data`,
+    json: true
+  });
+
+exports.getAggregatedMetrics = pid =>
+  request({
+    method: 'GET',
+    url: `http://127.0.0.1:${agentPort}/received/aggregated/metrics/${pid}`,
     json: true
   });
 
 exports.getEvents = () =>
   request({
     method: 'GET',
-    url: `http://127.0.0.1:${agentPort}/retrievedEvents`,
+    url: `http://127.0.0.1:${agentPort}/received/events`,
     json: true
   });
 
 exports.getMonitoringEvents = () =>
   request({
     method: 'GET',
-    url: `http://127.0.0.1:${agentPort}/retrievedMonitoringEvents`,
+    url: `http://127.0.0.1:${agentPort}/received/monitoringEvents`,
     json: true
   });
 
-exports.clearRetrievedData = () =>
+exports.clearReceivedData = () =>
   request({
     method: 'DELETE',
-    url: `http://127.0.0.1:${agentPort}/retrievedData`,
+    url: `http://127.0.0.1:${agentPort}/received/data`,
     json: true
   });
 
 exports.getSpans = () =>
   exports
-    .getRetrievedData()
+    .getReceivedData()
     .then(data => data.traces.reduce((result, traceMessage) => result.concat(traceMessage.data), []));
 
 exports.getProfiles = () =>
-  exports.getRetrievedData().then(data => data.profiles.reduce((result, profile) => result.concat(profile.data), []));
+  exports.getReceivedData().then(data => data.profiles.reduce((result, profile) => result.concat(profile.data), []));
 
-exports.getResponses = () => exports.getRetrievedData().then(data => data.responses);
+exports.getResponses = () => exports.getReceivedData().then(data => data.responses);
 
 exports.getLastMetricValue = (pid, _path) =>
-  exports.getRetrievedData().then(data => getLastMetricValue(pid, data, _path));
+  exports.getReceivedData().then(data => getLastMetricValue(pid, data, _path));
 
 function getLastMetricValue(pid, data, _path) {
-  for (let i = data.runtime.length - 1; i >= 0; i--) {
-    const runtimeMessage = data.runtime[i];
-    if (runtimeMessage.pid !== pid) {
+  for (let i = data.metrics.length - 1; i >= 0; i--) {
+    const metricsMessage = data.metrics[i];
+    if (metricsMessage.pid !== pid) {
       // eslint-disable-next-line no-continue
       continue;
     }
 
-    const value = _.get(runtimeMessage.data, _path, undefined);
+    const value = _.get(metricsMessage.data, _path, undefined);
     if (value !== undefined) {
       return value;
     }
@@ -127,24 +134,24 @@ function getLastMetricValue(pid, data, _path) {
   return undefined;
 }
 
-exports.getAllMetrics = pid => exports.getRetrievedData().then(data => getAllMetrics(pid, data));
+exports.getAllMetrics = pid => exports.getReceivedData().then(data => getAllMetrics(pid, data));
 
 function getAllMetrics(pid, data) {
-  return data.runtime.filter(runtimeMessage => runtimeMessage.pid === pid);
+  return data.metrics.filter(metricsMessage => metricsMessage.pid === pid);
 }
 
 exports.getTracingMetrics = () =>
   request({
     method: 'GET',
-    url: `http://127.0.0.1:${agentPort}/retrievedTracingMetrics`,
+    url: `http://127.0.0.1:${agentPort}/received/tracingMetrics`,
     json: true
   });
 
 exports.waitUntilAppIsCompletelyInitialized = function waitUntilAppIsCompletelyInitialized(pid) {
   return testUtils.retry(() =>
-    exports.getRetrievedData().then(data => {
-      for (let i = 0, len = data.runtime.length; i < len; i++) {
-        const d = data.runtime[i];
+    exports.getReceivedData().then(data => {
+      for (let i = 0, len = data.metrics.length; i < len; i++) {
+        const d = data.metrics[i];
         if (d.pid === pid) {
           return true;
         }
