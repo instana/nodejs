@@ -18,8 +18,6 @@ exports.init = function() {
 };
 
 function patchedModuleLoad(moduleName) {
-  let i;
-
   // First attempt to always get the module via the original implementation
   // as this action may fail. The original function populates the module cache.
   const moduleExports = origLoad.apply(Module, arguments);
@@ -52,7 +50,7 @@ function patchedModuleLoad(moduleName) {
 
   const applicableByModuleNameTransformers = byModuleNameTransformers[moduleName];
   if (applicableByModuleNameTransformers && cacheEntry.appliedByModuleNameTransformers.indexOf(moduleName) === -1) {
-    for (i = 0; i < applicableByModuleNameTransformers.length; i++) {
+    for (let i = 0; i < applicableByModuleNameTransformers.length; i++) {
       const transformerFn = applicableByModuleNameTransformers[i];
       if (typeof transformerFn === 'function') {
         try {
@@ -83,7 +81,7 @@ function patchedModuleLoad(moduleName) {
   }
 
   if (!cacheEntry.byFileNamePatternTransformersApplied) {
-    for (i = 0; i < byFileNamePatternTransformers.length; i++) {
+    for (let i = 0; i < byFileNamePatternTransformers.length; i++) {
       if (byFileNamePatternTransformers[i].pattern.test(filename)) {
         cacheEntry.moduleExports =
           byFileNamePatternTransformers[i].fn(cacheEntry.moduleExports) || cacheEntry.moduleExports;

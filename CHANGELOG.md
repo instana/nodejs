@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+- Improve user experience around native add-on dependencies of `@instana/collector`:
+    - Add precompiled archives for some combination of OS, architecture, libc-flavour and ABI-version.
+    - Try to use the precompiled native add-on if loading a native add-on fails initially.
+    - Try to rebuild the native add-on on demand as a fallback.
+
 ## 1.108.0
 - Implement batching for very short (< 10 ms), high-frequency database spans (opt-in in this release, will be switched to default behaviour in one of the next releases). To enabled it right now, any of the three following methods can be used:
     - Set the environment variable `INSTANA_SPANBATCHING_ENABLED=true`.

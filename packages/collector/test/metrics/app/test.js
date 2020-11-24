@@ -1,11 +1,11 @@
 'use strict';
 
-const path = require('path');
-const expect = require('chai').expect;
 const _ = require('lodash');
+const expect = require('chai').expect;
+const path = require('path');
 
 const config = require('../../../../core/test/config');
-const testUtils = require('../../../../core/test/test_util');
+const { retry } = require('../../../../core/test/test_util');
 const ProcessControls = require('../../test_util/ProcessControls');
 
 describe('snapshot data and metrics', function() {
@@ -13,14 +13,19 @@ describe('snapshot data and metrics', function() {
 
   const agentControls = require('../../apps/agentStubControls');
   agentControls.registerTestHooks();
+
   const controls = new ProcessControls({
     appPath: path.join(__dirname, 'app'),
     args: ['foo', 'bar', 'baz']
   }).registerTestHooks();
 
   it('must report metrics from a running process', () =>
-    testUtils.retry(() =>
-      agentControls.getAllMetrics(controls.getPid()).then(allMetrics => {
+    retry(() =>
+      Promise.all([
+        //
+        agentControls.getAllMetrics(controls.getPid()),
+        agentControls.getAggregatedMetrics(controls.getPid())
+      ]).then(([allMetrics, aggregated]) => {
         expect(findMetric(allMetrics, ['activeHandles'])).to.exist;
         expect(findMetric(allMetrics, ['activeRequests'])).to.exist;
 
@@ -56,7 +61,14 @@ describe('snapshot data and metrics', function() {
         expect(findMetric(allMetrics, ['heapSpaces'])).to.exist;
         expect(findMetric(allMetrics, ['http'])).to.exist;
         expect(findMetric(allMetrics, ['keywords'])).to.deep.equal(['keyword1', 'keyword2']);
-        expect(findMetric(allMetrics, ['libuv'])).to.exist;
+        const libuv = aggregated.libuv;
+        expect(libuv).to.exist;
+        expect(libuv).to.be.an('object');
+        expect(libuv.statsSupported).to.be.true;
+        expect(libuv.min).to.be.a('number');
+        expect(libuv.max).to.be.a('number');
+        expect(libuv.sum).to.be.a('number');
+        expect(libuv.lag).to.be.a('number');
         expect(findMetric(allMetrics, ['memory'])).to.exist;
         expect(findMetric(allMetrics, ['name'])).to.equal('metrics-test-app');
         expect(findMetric(allMetrics, ['pid'])).to.equal(controls.getPid());

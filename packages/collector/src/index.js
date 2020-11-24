@@ -2,6 +2,7 @@
 
 const path = require('path');
 const instanaNodeJsCore = require('@instana/core');
+const instanaSharedMetrics = require('@instana/shared-metrics');
 
 require('./tracing'); // load additional instrumentations
 const log = require('./logger');
@@ -30,6 +31,7 @@ module.exports = exports = function init(_config) {
 
   agentOpts.init(config);
   instanaNodeJsCore.init(config, agentConnection, pidStore);
+  instanaSharedMetrics.setLogger(logger);
   uncaught.init(config, agentConnection, pidStore);
   require('./metrics').init(config);
 
@@ -52,6 +54,7 @@ exports.setLogger = function setLogger(logger) {
 };
 
 exports.core = instanaNodeJsCore;
+exports.sharedMetrics = instanaSharedMetrics;
 exports.experimental = experimental;
 exports.opentracing = instanaNodeJsCore.tracing.opentracing;
 exports.sdk = instanaNodeJsCore.tracing.sdk;

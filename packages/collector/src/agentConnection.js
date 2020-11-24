@@ -315,6 +315,11 @@ function sendData(path, data, cb, ignore404) {
   req.end();
 }
 
+exports.setNetLink = function setNetLink(_netLink) {
+  netLink = _netLink();
+  netLinkHasBeenRequired = true;
+};
+
 /**
  * Sends the given event data and trace data synchronously to the agent via HTTP. This function is synchronous, that is,
  * it blocks the event loop!

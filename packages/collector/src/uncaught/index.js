@@ -1,5 +1,6 @@
 'use strict';
 
+const path = require('path');
 const serializeError = require('serialize-error');
 
 let logger;
@@ -8,6 +9,8 @@ logger = require('../logger').getLogger('util/uncaughtExceptionHandler', newLogg
 });
 
 const instanaNodeJsCore = require('@instana/core');
+const instanaSharedMetrics = require('@instana/shared-metrics');
+const agentConnection = require('../agentConnection');
 const tracing = instanaNodeJsCore.tracing;
 const spanBuffer = tracing.spanBuffer;
 const stackTraceUtil = instanaNodeJsCore.util.stackTrace;
@@ -56,40 +59,30 @@ exports.activate = function() {
 function activateUncaughtExceptionHandling() {
   if (config.reportUncaughtException) {
     process.once(uncaughtExceptionEventName, onUncaughtException);
-    try {
-      if (require.resolve('netlinkwrapper')) {
-        logger.info('Reporting uncaught exceptions is enabled.');
-        if (process.version === 'v12.6.0') {
-          logger.warn(
-            'You are running Node.js v12.6.0 and have enabled reporting uncaught exceptions. To enable this feature, ' +
-              '@instana/collector will register an uncaughtException handler. Due to a bug in Node.js v12.6.0, the ' +
-              'original stack trace will get lost when this process is terminated with an uncaught exception. ' +
-              'Instana recommends to use a different Node.js version (<= v12.5.0 or >= v12.6.1). See ' +
-              'https://github.com/nodejs/node/issues/28550 for details.'
-          );
-        }
-      } else {
-        // This should actually not happen as require.resolve should either return a resolved filename or throw an
-        // exception.
+    const nativeModuleLoader = instanaSharedMetrics.util.nativeModuleRetry({
+      nativeModuleName: 'netlinkwrapper',
+      moduleRoot: path.join(__dirname, '..', '..'),
+      message:
+        'Reporting uncaught exceptions is enabled, but netlinkwrapper could not be loaded. Uncaught exceptions will ' +
+        'not be reported to Instana for this application. This typically occurs when native addons could not be ' +
+        'compiled during module installation (npm install/yarn). See the instructions to learn more about the ' +
+        'requirements of the collector: ' +
+        'https://www.instana.com/docs/ecosystem/node-js/installation/#native-addons'
+    });
+
+    nativeModuleLoader.on('loaded', netlinkwrapper => {
+      agentConnection.setNetLink(netlinkwrapper);
+      logger.info('Reporting uncaught exceptions is enabled.');
+      if (process.version === 'v12.6.0') {
         logger.warn(
-          'Reporting uncaught exceptions is enabled, but netlinkwrapper could not be loaded ' +
-            "(require.resolve('netlinkwrapper') returned a falsy value). Uncaught exceptions will " +
-            'not be reported to Instana for this application. This typically occurs when native addons could not be ' +
-            'compiled during module installation (npm install/yarn). See the instructions to learn more about the ' +
-            'requirements of the collector: ' +
-            'https://www.instana.com/docs/ecosystem/node-js/installation/#native-addons'
+          'You are running Node.js v12.6.0 and have enabled reporting uncaught exceptions. To enable this feature, ' +
+            '@instana/collector will register an uncaughtException handler. Due to a bug in Node.js v12.6.0, the ' +
+            'original stack trace will get lost when this process is terminated with an uncaught exception. ' +
+            'Instana recommends to use a different Node.js version (<= v12.5.0 or >= v12.6.1). See ' +
+            'https://github.com/nodejs/node/issues/28550 for details.'
         );
       }
-    } catch (notResolved) {
-      // This happens if netlinkwrapper is not available (it is an optional dependency).
-      logger.warn(
-        'Reporting uncaught exceptions is enabled, but netlinkwrapper could not be loaded. Uncaught exceptions will ' +
-          'not be reported to Instana for this application. This typically occurs when native addons could not be ' +
-          'compiled during module installation (npm install/yarn). See the instructions to learn more about the ' +
-          'requirements of the collector: ' +
-          'https://www.instana.com/docs/ecosystem/node-js/installation/#native-addons'
-      );
-    }
+    });
   } else {
     logger.info('Reporting uncaught exceptions is disabled.');
   }

@@ -13,7 +13,8 @@
     "instana-instrument-edgemicro-cli": "src/bin/instrument-edgemicro-cli.js"
   },
   "files": [
-    "src"
+    "src",
+    "addons/linux"
   ],
   "publishConfig": {
     "access": "public"

@@ -1,10 +1,13 @@
 'use strict';
 
 const bodyParser = require('body-parser');
-const express = require('express');
-// const morgan = require('morgan');
 const bunyan = require('bunyan');
+const express = require('express');
+const _ = require('lodash');
+// const morgan = require('morgan');
 const app = express();
+
+const deepMerge = require('../../../core/src/util/deepMerge');
 
 const logger = bunyan.createLogger({ name: 'agent-stub', pid: process.pid });
 // logger.level('debug');
@@ -22,15 +25,7 @@ const enableSpanBatching = process.env.ENABLE_SPANBATCHING === 'true';
 
 let discoveries = {};
 const requests = {};
-let retrievedData = {
-  runtime: [],
-  traces: [],
-  profiles: [],
-  responses: [],
-  events: [],
-  monitoringEvents: [],
-  tracingMetrics: []
-};
+let receivedData = resetReceivedData();
 
 // We usually do not activate morgan in the agent stub because it creates a lot of noise with little benefit. Activate
 // it on demand if required.
@@ -88,11 +83,12 @@ app.post(
   '/com.instana.plugin.nodejs.:pid',
   checkExistenceOfKnownPid(function handleEntityData(req, res) {
     if (!dropAllData) {
-      retrievedData.runtime.push({
+      receivedData.metrics.push({
         pid: parseInt(req.params.pid, 10),
         time: Date.now(),
         data: req.body
       });
+      aggregateMetrics(req.params.pid, req.body);
     }
 
     const requestsForPid = requests[req.params.pid] || [];
@@ -108,7 +104,7 @@ app.post(
       return res.sendStatus(400);
     }
     if (!dropAllData) {
-      retrievedData.traces.push({
+      receivedData.traces.push({
         pid: parseInt(req.params.pid, 10),
         time: Date.now(),
         data: req.body
@@ -130,7 +126,7 @@ app.post(
       return res.sendStatus(404);
     }
     if (!dropAllData) {
-      retrievedData.profiles.push({
+      receivedData.profiles.push({
         pid: parseInt(req.params.pid, 10),
         time: Date.now(),
         data: req.body
@@ -149,7 +145,7 @@ app.post(
   '/com.instana.plugin.nodejs/response.:pid',
   checkExistenceOfKnownPid(function handleResponse(req, res) {
     if (!dropAllData) {
-      retrievedData.responses.push({
+      receivedData.responses.push({
         pid: parseInt(req.params.pid, 10),
         time: Date.now(),
         messageId: req.query.messageId,
@@ -162,7 +158,7 @@ app.post(
 
 app.post('/tracermetrics', function handleTracermetrics(req, res) {
   if (!dropAllData) {
-    retrievedData.tracingMetrics.push(req.body);
+    receivedData.tracingMetrics.push(req.body);
   }
   if (!tracingMetrics) {
     res.sendStatus(404);
@@ -173,14 +169,14 @@ app.post('/tracermetrics', function handleTracermetrics(req, res) {
 
 app.post('/com.instana.plugin.generic.event', function postEvent(req, res) {
   if (!dropAllData) {
-    retrievedData.events.push(req.body);
+    receivedData.events.push(req.body);
   }
   res.send('OK');
 });
 
 app.post('/com.instana.plugin.generic.agent-monitoring-event', function postMonitoringEvent(req, res) {
   if (!dropAllData) {
-    retrievedData.monitoringEvents.push(req.body);
+    receivedData.monitoringEvents.push(req.body);
   }
   res.send('OK');
 });
@@ -196,46 +192,26 @@ function checkExistenceOfKnownPid(fn) {
   };
 }
 
-app.get('/retrievedData', (req, res) => {
-  res.json(retrievedData);
-});
+app.get('/received/data', (req, res) => res.json(receivedData));
 
-app.get('/retrievedTraces', (req, res) => {
-  res.json(retrievedData.traces);
-});
-
-app.get('/retrievedProfiles', (req, res) => {
-  res.json(retrievedData.profiles);
-});
-
-app.get('/retrievedEvents', (req, res) => {
-  res.json(retrievedData.events);
-});
-
-app.get('/retrievedMonitoringEvents', (req, res) => {
-  res.json(retrievedData.monitoringEvents);
-});
-
-app.get('/retrievedTracingMetrics', (req, res) => {
-  res.json(retrievedData.tracingMetrics);
-});
-
-app.delete('/retrievedData', (req, res) => {
-  retrievedData = {
-    runtime: [],
-    traces: [],
-    profiles: [],
-    responses: [],
-    events: [],
-    monitoringEvents: [],
-    tracingMetrics: []
-  };
+app.delete('/received/data', (req, res) => {
+  receivedData = resetReceivedData();
   res.sendStatus(200);
 });
 
-app.get('/discoveries', (req, res) => {
-  res.json(discoveries);
-});
+app.get('/received/aggregated/metrics/:pid', (req, res) => res.json(receivedData.aggregatedMetrics[req.params.pid]));
+
+app.get('/received/traces', (req, res) => res.json(receivedData.traces));
+
+app.get('/received/profiles', (req, res) => res.json(receivedData.profiles));
+
+app.get('/received/events', (req, res) => res.json(receivedData.events));
+
+app.get('/received/monitoringEvents', (req, res) => res.json(receivedData.monitoringEvents));
+
+app.get('/received/tracingMetrics', (req, res) => res.json(receivedData.tracingMetrics));
+
+app.get('/discoveries', (req, res) => res.json(discoveries));
 
 app.delete('/discoveries', (req, res) => {
   discoveries = {};
@@ -251,3 +227,24 @@ app.post('/request/:pid', (req, res) => {
 app.listen(process.env.AGENT_PORT, () => {
   logger.info('Listening on port: %s', process.env.AGENT_PORT);
 });
+
+function aggregateMetrics(entityId, snapshotUpdate) {
+  if (!receivedData.aggregatedMetrics[entityId]) {
+    receivedData.aggregatedMetrics[entityId] = _.cloneDeep(snapshotUpdate);
+  } else {
+    deepMerge(receivedData.aggregatedMetrics[entityId], snapshotUpdate);
+  }
+}
+
+function resetReceivedData() {
+  return {
+    metrics: [],
+    aggregatedMetrics: {},
+    traces: [],
+    profiles: [],
+    responses: [],
+    events: [],
+    monitoringEvents: [],
+    tracingMetrics: []
+  };
+}
