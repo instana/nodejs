@@ -2,7 +2,6 @@
 
 const path = require('path');
 const pkg = require(path.join(__dirname, '/../package.json'));
-const abiMap = require(path.join(__dirname, '/../abi-map.json'));
 const os = require('os');
 const Utils = require('./utils').Utils;
 const ProfileRecorder = require('./profile_recorder').ProfileRecorder;
@@ -127,15 +126,31 @@ class AutoProfiler {
     // load native addon
     let addonFound = false;
 
-    let abi = abiMap[process.version];
-    if (abi) {
-      let addonPath = `../addons/${os.platform()}-${process.arch}/autoprofile-addon-v${abi}.node`;
-      if (this.loadAddon(addonPath)) {
-        addonFound = true;
-        this.log('Using pre-built native addon.');
-      } else {
-        this.log('Could not find pre-built addon: ' + addonPath);
+    const platform = os.platform();
+    const arch = process.arch;
+    const abi = process.versions.modules;
+
+    let family = null;
+    if (platform === 'linux') {
+      const detectLibc = require('detect-libc');
+      family = detectLibc.family;
+      if (!family) {
+        family = detectLibc.GLIBC;
       }
+    }
+
+    let addonPath;
+    if (family) {
+      addonPath = path.join(__dirname, '..', 'addons', platform, arch, family, abi, 'autoprofile.node');
+    } else {
+      addonPath = path.join(__dirname, '..', 'addons', platform, arch, abi, 'autoprofile.node');
+    }
+
+    if (this.loadAddon(addonPath)) {
+      addonFound = true;
+      this.log(`Using pre-built native addon from ${addonPath}.`);
+    } else {
+      this.log(`Could not find pre-built addon at ${addonPath}.`);
     }
 
     if (!addonFound) {
@@ -237,7 +252,7 @@ class AutoProfiler {
         }
         if (scheduler && self.getOption('disableTimers')) {
           scheduler.report();
-          self.profileRecorder.flush((err) => {
+          self.profileRecorder.flush(err => {
             if (err) {
               self.exception(err);
             }
@@ -257,7 +272,7 @@ class AutoProfiler {
       scheduler.report();
     }
 
-    self.profileRecorder.flush((err) => {
+    self.profileRecorder.flush(err => {
       if (err) {
         self.exception(err);
       }

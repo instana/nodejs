@@ -28,7 +28,7 @@ function buildAndCopyModulesLinux {
   docker run -t -d --name $dockertag $dockertag
   echo "Waiting 5 seconds for the container to come up"
   sleep 5
-  echo "Copying node_modules from container $dockertag to to node_modules_$label"
+  echo "Copying node_modules from container $dockertag to node_modules_$label"
   docker cp $dockertag:/instana/node_modules node_modules_$label
   mkdir -p ../packages/shared-metrics/addons/linux/x64/$libcflavour/$abi/
   mkdir -p ../packages/collector/addons/linux/x64/$libcflavour/$abi/
