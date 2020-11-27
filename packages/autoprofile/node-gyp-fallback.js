@@ -1,20 +1,33 @@
-var fs = require('fs');
-var os = require('os');
-var child_process = require('child_process');
-var abiMap = require('./abi-map.json');
+const fs = require('fs');
+const path = require('path');
+const os = require('os');
+const child_process = require('child_process');
 
-var abi = abiMap[process.version];
+const platform = os.platform();
+const arch = process.arch;
+const abi = process.versions.modules;
 
-if (abi) {
-  var addonPath = `./addons/${os.platform()}-${process.arch}/autoprofile-addon-v${abi}.node`;
-  if (fs.existsSync(addonPath)) {
-    console.log('Pre-built version of AutoProfile addon found, not building.');
-    return;
-  } else {
-    console.log('Pre-built version of AutoProfile is not available, fallback to node-gyp.');
+let family = null;
+if (platform === 'linux') {
+  const detectLibc = require('detect-libc');
+  family = detectLibc.family;
+  if (!family) {
+    family = detectLibc.GLIBC;
   }
+}
+
+let addonPath;
+if (family) {
+  addonPath = path.join(__dirname, 'addons', platform, arch, family, abi, 'autoprofile.node');
 } else {
-  console.log('Pre-built version of AutoProfile is not available (ABI not found), fallback to node-gyp.');
+  addonPath = path.join(__dirname, 'addons', platform, arch, abi, 'autoprofile.node');
+}
+
+if (fs.existsSync(addonPath)) {
+  console.log(`Pre-built version of AutoProfile addon found at ${addonPath}, not building.`);
+  return;
+} else {
+  console.log('Pre-built version of AutoProfile addon is not available, falling back to node-gyp.');
 }
 
 var gyp = child_process.spawn('node-gyp', ['rebuild'], { cwd: process.cwd(), env: process.env, stdio: 'inherit' });

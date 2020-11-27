@@ -24,11 +24,13 @@
     "test": "npm run test:mocha",
     "test:debug": "WITH_STDOUT=true npm run test:mocha",
     "test:mocha": "mocha --recursive",
+    "prepack": "node precompile/build-all-addons",
     "lint": "eslint lib test",
     "verify": "npm run lint && npm test",
     "prettier": "prettier --write 'lib/**/*.js' 'test/**/*.js'"
   },
   "dependencies": {
+    "detect-libc": "^1.0.3",
     "nan": "^2.14.0",
     "node-abi": "^2.19.1",
     "node-gyp": "^6.1.0"
@@ -36,11 +38,24 @@
   "devDependencies": {
     "async": "^3.2.0",
     "eslint": "^5.16.0",
+    "mkdirp": "^1.0.4",
     "mocha": "^6.2.2"
   },
   "main": "index.js",
+  "files": [
+    "src",
+    "lib",
+    "addons",
+    "binding.gyp",
+    "index.js",
+    "node-gyp-fallback.js",
+    "README.md"
+  ],
   "engines": {
     "node": ">=6.4.0"
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "license": "BSD-3-Clause"
 }
