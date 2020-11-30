@@ -165,7 +165,7 @@ describe('tracing/batching', function() {
                 expect(span.b.d).to.be.greaterThan(0);
 
                 expect(span.data.redis.error).to.be.a('string');
-                expect(span.data.redis.error).to.contain("wrong number of arguments for 'get' command");
+                expect(span.data.redis.error).to.contain('wrong number of arguments for');
               });
 
               verifyHttpExit(controls, spans, entrySpan);
