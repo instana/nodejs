@@ -8,7 +8,12 @@ const constants = require('@instana/core').tracing.constants;
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('../../../../../core/test/config');
 const delay = require('../../../../../core/test/test_util/delay');
-const testUtils = require('../../../../../core/test/test_util');
+const {
+  getSpansByName,
+  expectAtLeastOneMatching,
+  expectExactlyOneMatching,
+  retry
+} = require('../../../../../core/test/test_util');
 const ProcessControls = require('../../../test_util/ProcessControls');
 
 let agentControls;
@@ -163,7 +168,7 @@ describe('tracing/graphql', function() {
         })
         .then(response => {
           checkQueryResponse('value', false, false, response);
-          return testUtils.retry(() =>
+          return retry(() =>
             agentControls.getSpans().then(spans => {
               const httpEntryInClientApp = verifyHttpEntry(null, /\/value/, spans);
               const httpExitInClientApp = verifyHttpExit(httpEntryInClientApp, /\/graphql/, spans);
@@ -171,8 +176,8 @@ describe('tracing/graphql', function() {
               verifyFollowUpLogExit(httpEntryInServerApp, 'value', spans);
               // No graphql span has been recorded but graphql since we have explicitly disabled graphql tracing, but
               // processing has worked (as we have verified via checkQueryResponse).
-              expect(testUtils.getSpansByName(spans, 'graphql.server')).to.be.empty;
-              expect(testUtils.getSpansByName(spans, 'graphql.client')).to.be.empty;
+              expect(getSpansByName(spans, 'graphql.server')).to.be.empty;
+              expect(getSpansByName(spans, 'graphql.client')).to.be.empty;
             })
           );
         }));
@@ -247,7 +252,7 @@ function registerQuerySuite({ apollo, withError, queryShorthand, useAlias, commu
         const entityNameWithAlias = useAlias ? `${entityName}Alias` : entityName;
 
         checkQueryResponse(entityNameWithAlias, withError, multipleEntities, response);
-        return testUtils.retry(() =>
+        return retry(() =>
           agentControls.getSpans().then(
             verifySpansForQuery.bind(null, {
               resolverType,
@@ -299,7 +304,7 @@ function registerMutationSuite(apollo) {
       })
       .then(response => {
         checkMutationResponse(response);
-        return testUtils.retry(() => agentControls.getSpans().then(verifySpansForMutation));
+        return retry(() => agentControls.getSpans().then(verifySpansForMutation));
       });
   }
 }
@@ -341,8 +346,8 @@ function registerSubscriptionOperationNotTracedSuite(apollo) {
       .then(() => delay(config.getTestTimeout() / 4))
       .then(() =>
         agentControls.getSpans().then(spans => {
-          expect(testUtils.getSpansByName(spans, 'graphql.server')).to.have.lengthOf(0);
-          expect(testUtils.getSpansByName(spans, 'log.pino')).to.have.lengthOf(0);
+          expect(getSpansByName(spans, 'graphql.server')).to.have.lengthOf(0);
+          expect(getSpansByName(spans, 'log.pino')).to.have.lengthOf(0);
         })
       );
   }
@@ -465,7 +470,7 @@ function checkMutationResponse(response) {
 }
 
 function checkSubscriptionUpdatesAndSpans(client1, client2, triggerUpdateVia) {
-  return testUtils.retry(() => {
+  return retry(() => {
     const receivedUpdatesClient1 = client1.getIpcMessages();
     expect(receivedUpdatesClient1).to.not.be.empty;
     const receivedUpdatesClient2 = client2.getIpcMessages();
@@ -543,48 +548,45 @@ function verifySpansForSubscriptionUpdates(spans, triggerUpdateVia) {
       ? verifyHttpEntry(httpExitInClientApp, /\/publish-update/, spans)
       : verifyGraphQLMutationEntry(httpExitInClientApp, spans);
 
-  const graphQLSubscriptionUpdateExits = testUtils.getSpansByName(spans, 'graphql.client');
+  const graphQLSubscriptionUpdateExits = getSpansByName(spans, 'graphql.client');
   expect(graphQLSubscriptionUpdateExits).to.have.lengthOf(2);
   graphQLSubscriptionUpdateExits.forEach(exitSpan => verifyGraphQLSubscriptionUpdateExit(entryInServerApp, exitSpan));
   verifyFollowUpLogExit(entryInServerApp, 'update: 1: Updated Name Updated Profession', spans);
 }
 
 function verifyHttpEntry(parentSpan, urlRegex, spans) {
-  return testUtils.expectAtLeastOneMatching(spans, span => {
-    expect(span.n).to.equal('node.http.server');
-    expect(span.k).to.equal(constants.ENTRY);
-    if (parentSpan) {
-      expect(span.t).to.equal(parentSpan.t);
-      expect(span.p).to.equal(parentSpan.s);
-    } else {
-      expect(span.p).to.not.exist;
-    }
-    expect(span.data.http.method).to.equal('POST');
-    expect(span.data.http.url).to.match(urlRegex);
-  });
+  return expectAtLeastOneMatching(spans, [
+    span => expect(span.n).to.equal('node.http.server'),
+    span => expect(span.k).to.equal(constants.ENTRY),
+    span => parentSpan && expect(span.t).to.equal(parentSpan.t),
+    span => parentSpan && expect(span.p).to.equal(parentSpan.s),
+    span => !parentSpan && expect(span.p).to.not.exist,
+    span => expect(span.data.http.method).to.equal('POST'),
+    span => expect(span.data.http.url).to.match(urlRegex)
+  ]);
 }
 
 function verifyHttpExit(parentSpan, urlRegex, spans) {
-  return testUtils.expectExactlyOneMatching(spans, span => {
-    expect(span.n).to.equal('node.http.client');
-    expect(span.k).to.equal(constants.EXIT);
-    expect(span.t).to.equal(parentSpan.t);
-    expect(span.p).to.equal(parentSpan.s);
-    expect(span.data.http.url).to.match(urlRegex);
-    expect(span.data.http.method).to.equal('POST');
-  });
+  return expectExactlyOneMatching(spans, [
+    span => expect(span.n).to.equal('node.http.client'),
+    span => expect(span.k).to.equal(constants.EXIT),
+    span => expect(span.t).to.equal(parentSpan.t),
+    span => expect(span.p).to.equal(parentSpan.s),
+    span => expect(span.data.http.url).to.match(urlRegex),
+    span => expect(span.data.http.method).to.equal('POST')
+  ]);
 }
 
 function verifyAmqpExit(parentSpan, queueName, spans) {
-  return testUtils.expectExactlyOneMatching(spans, span => {
-    expect(span.t).to.equal(parentSpan.t);
-    expect(span.p).to.equal(parentSpan.s);
-    expect(span.k).to.equal(constants.EXIT);
-    expect(span.n).to.equal('rabbitmq');
-    expect(span.data.rabbitmq.sort).to.equal('publish');
-    expect(span.data.rabbitmq.address).to.equal('amqp://127.0.0.1:5672');
-    expect(span.data.rabbitmq.key).to.equal(queueName);
-  });
+  return expectExactlyOneMatching(spans, [
+    span => expect(span.t).to.equal(parentSpan.t),
+    span => expect(span.p).to.equal(parentSpan.s),
+    span => expect(span.k).to.equal(constants.EXIT),
+    span => expect(span.n).to.equal('rabbitmq'),
+    span => expect(span.data.rabbitmq.sort).to.equal('publish'),
+    span => expect(span.data.rabbitmq.address).to.equal('amqp://127.0.0.1:5672'),
+    span => expect(span.data.rabbitmq.key).to.equal(queueName)
+  ]);
 }
 
 function verifyGraphQLQueryEntry(
@@ -592,93 +594,109 @@ function verifyGraphQLQueryEntry(
   parentSpan,
   spans
 ) {
-  return testUtils.expectExactlyOneMatching(spans, span => {
-    expect(span.n).to.equal('graphql.server');
-    expect(span.k).to.equal(constants.ENTRY);
-    expect(span.t).to.equal(parentSpan.t);
-    expect(span.p).to.equal(parentSpan.s);
-    expect(span.ts).to.be.a('number');
-    expect(span.d).to.be.greaterThan(0);
-    expect(span.stack).to.be.an('array');
+  let expectations = [
+    span => expect(span.n).to.equal('graphql.server'),
+    span => expect(span.k).to.equal(constants.ENTRY),
+    span => expect(span.t).to.equal(parentSpan.t),
+    span => expect(span.p).to.equal(parentSpan.s),
+    span => expect(span.ts).to.be.a('number'),
+    span => expect(span.d).to.be.greaterThan(0),
+    span => expect(span.stack).to.be.an('array'),
+    span => expect(span.data.graphql).to.exist,
+    span => expect(span.data.graphql.operationType).to.equal('query')
+  ];
 
-    expect(span.data.graphql).to.exist;
-    expect(span.data.graphql.operationType).to.equal('query');
-    if (queryShorthand) {
-      expect(span.data.graphql.operationName).to.not.exist;
-    } else {
-      expect(span.data.graphql.operationName).to.equal('OperationName');
-    }
+  if (queryShorthand) {
+    expectations.push(span => expect(span.data.graphql.operationName).to.not.exist);
+  } else {
+    expectations.push(span => expect(span.data.graphql.operationName).to.equal('OperationName'));
+  }
 
-    if (withError) {
-      const isArray = entityName.indexOf('array') === 0;
+  if (withError) {
+    const isArray = entityName.indexOf('array') === 0;
+    if (isArray) {
+      expectations = expectations.concat([
+        //
+        span => expect(span.ec).to.equal(1),
+        span => expect(span.error).to.not.exist
+      ]);
       if (isArray) {
-        expect(span.ec).to.equal(1);
-        expect(span.error).to.not.exist;
-        if (isArray) {
-          expect(span.data.graphql.errors).to.equal('Boom, Boom, Boom');
-        } else {
-          expect(span.data.graphql.errors).to.equal('Boom');
-        }
+        expectations.push(span => expect(span.data.graphql.errors).to.equal('Boom, Boom, Boom'));
       } else {
-        expect(span.ec).to.equal(1);
-        expect(span.error).to.not.exist;
-        expect(span.data.graphql.errors).to.equal('Boom');
+        expectations.push(span => expect(span.data.graphql.errors).to.equal('Boom'));
       }
     } else {
-      expect(span.ec).to.equal(0);
-      expect(span.error).to.not.exist;
-      expect(span.data.graphql.errors).to.not.exist;
+      expectations = expectations.concat([
+        span => expect(span.ec).to.equal(1),
+        span => expect(span.error).to.not.exist,
+        span => expect(span.data.graphql.errors).to.equal('Boom')
+      ]);
     }
+  } else {
+    expectations = expectations.concat([
+      span => expect(span.ec).to.equal(0),
+      span => expect(span.error).to.not.exist,
+      span => expect(span.data.graphql.errors).to.not.exist
+    ]);
+  }
 
-    expect(span.data.graphql.fields).to.exist;
-    expect(span.data.graphql.fields[entityName]).to.deep.equal(['id', 'name', 'profession']);
-    expect(span.data.graphql.args).to.exist;
-    expect(span.data.graphql.args[entityName]).to.deep.equal(['crewMember']);
+  expectations = expectations.concat([
+    span => expect(span.data.graphql.fields).to.exist,
+    span => expect(span.data.graphql.fields[entityName]).to.deep.equal(['id', 'name', 'profession']),
+    span => expect(span.data.graphql.args).to.exist,
+    span => expect(span.data.graphql.args[entityName]).to.deep.equal(['crewMember'])
+  ]);
 
-    if (multipleEntities) {
-      expect(span.data.graphql.fields.ships).to.deep.equal(['id', 'name', 'origin']);
-      expect(span.data.graphql.args.ships).to.not.exist;
-    }
+  if (multipleEntities) {
+    expectations = expectations.concat([
+      span => expect(span.data.graphql.fields.ships).to.deep.equal(['id', 'name', 'origin']),
+      span => expect(span.data.graphql.args.ships).to.not.exist
+    ]);
+  }
 
-    if (communicationProtocol === 'http') {
-      expect(span.data.http).to.be.an('object');
-      expect(span.data.http.url).to.match(/\/graphql/);
-      expect(span.data.http.method).to.equal('POST');
-    } else if (communicationProtocol === 'amqp') {
-      expect(span.data.rabbitmq).to.be.an('object');
-      expect(span.data.rabbitmq.sort).to.equal('consume');
-      expect(span.data.rabbitmq.address).to.equal('amqp://127.0.0.1:5672');
-      expect(span.data.rabbitmq.key).to.equal('graphql-request-queue');
-    } else {
-      throw new Error(`Unknown protocol: ${communicationProtocol}`);
-    }
-  });
+  if (communicationProtocol === 'http') {
+    expectations = expectations.concat([
+      span => expect(span.data.http).to.be.an('object'),
+      span => expect(span.data.http.url).to.match(/\/graphql/),
+      span => expect(span.data.http.method).to.equal('POST')
+    ]);
+  } else if (communicationProtocol === 'amqp') {
+    expectations = expectations.concat([
+      span => expect(span.data.rabbitmq).to.be.an('object'),
+      span => expect(span.data.rabbitmq.sort).to.equal('consume'),
+      span => expect(span.data.rabbitmq.address).to.equal('amqp://127.0.0.1:5672'),
+      span => expect(span.data.rabbitmq.key).to.equal('graphql-request-queue')
+    ]);
+  } else {
+    throw new Error(`Unknown protocol: ${communicationProtocol}`);
+  }
+  return expectExactlyOneMatching(spans, expectations);
 }
 
 function verifyGraphQLMutationEntry(parentSpan, spans) {
-  return testUtils.expectExactlyOneMatching(spans, span => {
-    expect(span.n).to.equal('graphql.server');
-    expect(span.k).to.equal(constants.ENTRY);
-    expect(span.t).to.equal(parentSpan.t);
-    expect(span.p).to.equal(parentSpan.s);
-    expect(span.ts).to.be.a('number');
-    expect(span.d).to.be.greaterThan(0);
-    expect(span.stack).to.be.an('array');
-    expect(span.data.graphql).to.exist;
-    expect(span.data.graphql.operationType).to.equal('mutation');
-    expect(span.data.graphql.operationName).to.equal('UpdateCharacter');
-    expect(span.ec).to.equal(0);
-    expect(span.error).to.not.exist;
-    expect(span.data.graphql.errors).to.not.exist;
-    expect(span.data.graphql.fields).to.exist;
-    expect(span.data.graphql.args).to.exist;
-    expect(span.data.graphql.fields.updateCharacter).to.deep.equal(['name', 'profession']);
-    expect(span.data.graphql.args.updateCharacter).to.deep.equal(['input']);
+  return expectExactlyOneMatching(spans, [
+    span => expect(span.n).to.equal('graphql.server'),
+    span => expect(span.k).to.equal(constants.ENTRY),
+    span => expect(span.t).to.equal(parentSpan.t),
+    span => expect(span.p).to.equal(parentSpan.s),
+    span => expect(span.ts).to.be.a('number'),
+    span => expect(span.d).to.be.greaterThan(0),
+    span => expect(span.stack).to.be.an('array'),
+    span => expect(span.data.graphql).to.exist,
+    span => expect(span.data.graphql.operationType).to.equal('mutation'),
+    span => expect(span.data.graphql.operationName).to.equal('UpdateCharacter'),
+    span => expect(span.ec).to.equal(0),
+    span => expect(span.error).to.not.exist,
+    span => expect(span.data.graphql.errors).to.not.exist,
+    span => expect(span.data.graphql.fields).to.exist,
+    span => expect(span.data.graphql.args).to.exist,
+    span => expect(span.data.graphql.fields.updateCharacter).to.deep.equal(['name', 'profession']),
+    span => expect(span.data.graphql.args.updateCharacter).to.deep.equal(['input']),
 
-    expect(span.data.http).to.be.an('object');
-    expect(span.data.http.url).to.match(/\/graphql/);
-    expect(span.data.http.method).to.equal('POST');
-  });
+    span => expect(span.data.http).to.be.an('object'),
+    span => expect(span.data.http.url).to.match(/\/graphql/),
+    span => expect(span.data.http.method).to.equal('POST')
+  ]);
 }
 
 function verifyGraphQLSubscriptionUpdateExit(parentSpan, span) {
@@ -702,11 +720,11 @@ function verifyGraphQLSubscriptionUpdateExit(parentSpan, span) {
 }
 
 function verifyFollowUpLogExit(parentSpan, expectedMessage, spans) {
-  return testUtils.expectExactlyOneMatching(spans, span => {
-    expect(span.n).to.equal('log.pino');
-    expect(span.k).to.equal(constants.EXIT);
-    expect(span.t).to.equal(parentSpan.t);
-    expect(span.p).to.equal(parentSpan.s);
-    expect(span.data.log.message).to.equal(expectedMessage);
-  });
+  return expectExactlyOneMatching(spans, [
+    span => expect(span.n).to.equal('log.pino'),
+    span => expect(span.k).to.equal(constants.EXIT),
+    span => expect(span.t).to.equal(parentSpan.t),
+    span => expect(span.p).to.equal(parentSpan.s),
+    span => expect(span.data.log.message).to.equal(expectedMessage)
+  ]);
 }
