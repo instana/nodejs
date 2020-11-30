@@ -24,7 +24,6 @@
     "test": "npm run test:mocha",
     "test:debug": "WITH_STDOUT=true npm run test:mocha",
     "test:mocha": "mocha --recursive",
-    "prepack": "node precompile/build-all-addons",
     "lint": "eslint lib test",
     "verify": "npm run lint && npm test",
     "prettier": "prettier --write 'lib/**/*.js' 'test/**/*.js'"
