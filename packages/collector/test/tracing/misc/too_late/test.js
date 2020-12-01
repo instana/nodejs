@@ -83,16 +83,16 @@ describe('tracing/too late', function() {
                 agentControls.getAllMetrics(controls.getPid())
               ]).then(([spans, monitoringEvents, metrics]) => {
                 // expect HTTP entry to be captured
-                testUtils.expectAtLeastOneMatching(spans, span => {
-                  expect(span.n).to.equal('node.http.server');
-                  expect(span.k).to.equal(constants.ENTRY);
-                  expect(span.async).to.not.exist;
-                  expect(span.error).to.not.exist;
-                  expect(span.ec).to.equal(0);
-                  expect(span.p).to.not.exist;
-                  expect(span.data.http.method).to.equal('GET');
-                  expect(span.data.http.url).to.equal('/');
-                });
+                testUtils.expectAtLeastOneMatching(spans, [
+                  span => expect(span.n).to.equal('node.http.server'),
+                  span => expect(span.k).to.equal(constants.ENTRY),
+                  span => expect(span.async).to.not.exist,
+                  span => expect(span.error).to.not.exist,
+                  span => expect(span.ec).to.equal(0),
+                  span => expect(span.p).to.not.exist,
+                  span => expect(span.data.http.method).to.equal('GET'),
+                  span => expect(span.data.http.url).to.equal('/')
+                ]);
 
                 // expect HTTP exit to not be captured
                 const httpExits = testUtils.getSpansByName(spans, 'node.http.client');
@@ -149,22 +149,22 @@ describe('tracing/too late', function() {
               agentControls.getMonitoringEvents(),
               agentControls.getAllMetrics(controls.getPid())
             ]).then(([spans, monitoringEvents, metrics]) => {
-              const httpEntry = testUtils.expectAtLeastOneMatching(spans, span => {
-                expect(span.n).to.equal('node.http.server');
-                expect(span.k).to.equal(constants.ENTRY);
-                expect(span.p).to.not.exist;
-                expect(span.data.http.method).to.equal('GET');
-                expect(span.data.http.url).to.equal('/');
-              });
+              const httpEntry = testUtils.expectAtLeastOneMatching(spans, [
+                span => expect(span.n).to.equal('node.http.server'),
+                span => expect(span.k).to.equal(constants.ENTRY),
+                span => expect(span.p).to.not.exist,
+                span => expect(span.data.http.method).to.equal('GET'),
+                span => expect(span.data.http.url).to.equal('/')
+              ]);
 
               // expect HTTP exit to have been captured
-              testUtils.expectAtLeastOneMatching(spans, span => {
-                expect(span.n).to.equal('node.http.client');
-                expect(span.k).to.equal(constants.EXIT);
-                expect(span.p).to.equal(httpEntry.s);
-                expect(span.data.http.method).to.equal('GET');
-                expect(span.data.http.url).to.match(/http:\/\/127\.0\.0\.1:[0-9]+/);
-              });
+              testUtils.expectAtLeastOneMatching(spans, [
+                span => expect(span.n).to.equal('node.http.client'),
+                span => expect(span.k).to.equal(constants.EXIT),
+                span => expect(span.p).to.equal(httpEntry.s),
+                span => expect(span.data.http.method).to.equal('GET'),
+                span => expect(span.data.http.url).to.match(/http:\/\/127\.0\.0\.1:[0-9]+/)
+              ]);
 
               // expect initTooLate monitoring event to NOT have been fired
               expect(monitoringEvents).to.be.empty;

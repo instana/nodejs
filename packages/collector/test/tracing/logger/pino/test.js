@@ -32,11 +32,11 @@ describe('tracing/logger/pino', function() {
       appControls.trigger('info', useExpressPino).then(() =>
         testUtils.retry(() =>
           agentControls.getSpans().then(spans => {
-            const entrySpan = testUtils.expectAtLeastOneMatching(spans, span => {
-              expect(span.n).to.equal('node.http.server');
-              expect(span.f.e).to.equal(String(appControls.getPid()));
-              expect(span.f.h).to.equal('agent-stub-uuid');
-            });
+            const entrySpan = testUtils.expectAtLeastOneMatching(spans, [
+              span => expect(span.n).to.equal('node.http.server'),
+              span => expect(span.f.e).to.equal(String(appControls.getPid())),
+              span => expect(span.f.h).to.equal('agent-stub-uuid')
+            ]);
             testUtils.expectAtLeastOneMatching(spans, span => {
               checkNextExitSpan(span, entrySpan);
             });
@@ -79,11 +79,11 @@ describe('tracing/logger/pino', function() {
       appControls.trigger('custom-info', useExpressPino).then(() =>
         testUtils.retry(() =>
           agentControls.getSpans().then(spans => {
-            const entrySpan = testUtils.expectAtLeastOneMatching(spans, span => {
-              expect(span.n).to.equal('node.http.server');
-              expect(span.f.e).to.equal(String(appControls.getPid()));
-              expect(span.f.h).to.equal('agent-stub-uuid');
-            });
+            const entrySpan = testUtils.expectAtLeastOneMatching(spans, [
+              span => expect(span.n).to.equal('node.http.server'),
+              span => expect(span.f.e).to.equal(String(appControls.getPid())),
+              span => expect(span.f.h).to.equal('agent-stub-uuid')
+            ]);
             testUtils.expectAtLeastOneMatching(spans, span => {
               checkNextExitSpan(span, entrySpan);
             });
@@ -108,11 +108,11 @@ describe('tracing/logger/pino', function() {
     return appControls.trigger(level, useExpressPino).then(() =>
       testUtils.retry(() =>
         agentControls.getSpans().then(spans => {
-          const entrySpan = testUtils.expectAtLeastOneMatching(spans, span => {
-            expect(span.n).to.equal('node.http.server');
-            expect(span.f.e).to.equal(String(appControls.getPid()));
-            expect(span.f.h).to.equal('agent-stub-uuid');
-          });
+          const entrySpan = testUtils.expectAtLeastOneMatching(spans, [
+            span => expect(span.n).to.equal('node.http.server'),
+            span => expect(span.f.e).to.equal(String(appControls.getPid())),
+            span => expect(span.f.h).to.equal('agent-stub-uuid')
+          ]);
           testUtils.expectAtLeastOneMatching(spans, span => {
             checkPinoSpan(span, entrySpan, expectErroneous, message);
           });

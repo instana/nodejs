@@ -75,11 +75,11 @@ describe('tracing/bluebird', function() {
   }
 
   function getEntrySpans(spans, path) {
-    return testUtils.expectAtLeastOneMatching(spans, span => {
-      expect(span.p).to.equal(undefined);
-      expect(span.n).to.equal('node.http.server');
-      expect(span.k).to.equal(constants.ENTRY);
-      expect(span.data.http.url).to.equal(path);
-    });
+    return testUtils.expectAtLeastOneMatching(spans, [
+      span => expect(span.p).to.equal(undefined),
+      span => expect(span.n).to.equal('node.http.server'),
+      span => expect(span.k).to.equal(constants.ENTRY),
+      span => expect(span.data.http.url).to.equal(path)
+    ]);
   }
 });

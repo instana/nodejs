@@ -58,20 +58,20 @@ describe('tracing/restore context', function() {
 function verify(url) {
   return testUtils.retry(() =>
     agentControls.getSpans().then(spans => {
-      const httpEntry = testUtils.expectAtLeastOneMatching(spans, span => {
-        expect(span.n).to.equal('node.http.server');
-        expect(span.k).to.equal(constants.ENTRY);
-        expect(span.p).to.not.exist;
-        expect(span.data.http.method).to.equal('POST');
-        expect(span.data.http.url).to.equal(url);
-      });
+      const httpEntry = testUtils.expectAtLeastOneMatching(spans, [
+        span => expect(span.n).to.equal('node.http.server'),
+        span => expect(span.k).to.equal(constants.ENTRY),
+        span => expect(span.p).to.not.exist,
+        span => expect(span.data.http.method).to.equal('POST'),
+        span => expect(span.data.http.url).to.equal(url)
+      ]);
 
-      testUtils.expectAtLeastOneMatching(spans, span => {
-        expect(span.n).to.equal('log.pino');
-        expect(span.k).to.equal(constants.EXIT);
-        expect(span.p).to.equal(httpEntry.s);
-        expect(span.data.log.message).to.equal('Should be traced.');
-      });
+      testUtils.expectAtLeastOneMatching(spans, [
+        span => expect(span.n).to.equal('log.pino'),
+        span => expect(span.k).to.equal(constants.EXIT),
+        span => expect(span.p).to.equal(httpEntry.s),
+        span => expect(span.data.log.message).to.equal('Should be traced.')
+      ]);
     })
   );
 }

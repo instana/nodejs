@@ -150,15 +150,16 @@ function registerTests(useHttps) {
         retry(() =>
           agentControls.getSpans().then(spans => {
             const entrySpan = verifyRootHttpEntry(spans, clientHost, '/request-malformed-url');
-            expectExactlyOneMatching(spans, span => {
-              expect(span.n).to.equal('node.http.client');
-              expect(span.k).to.equal(constants.EXIT);
-              expect(span.ec).to.equal(1);
-              expect(span.data.http.url).to.match(/ha-te-te-peh:\/\/999\.0\.0\.1(?:\/)?:not-a-port\/malformed-url/);
-              expect(span.data.http.error).to.match(/Protocol .* not supported./);
-              expect(span.t).to.equal(entrySpan.t);
-              expect(span.p).to.equal(entrySpan.s);
-            });
+            expectExactlyOneMatching(spans, [
+              span => expect(span.n).to.equal('node.http.client'),
+              span => expect(span.k).to.equal(constants.EXIT),
+              span => expect(span.ec).to.equal(1),
+              span =>
+                expect(span.data.http.url).to.match(/ha-te-te-peh:\/\/999\.0\.0\.1(?:\/)?:not-a-port\/malformed-url/),
+              span => expect(span.data.http.error).to.match(/Protocol .* not supported./),
+              span => expect(span.t).to.equal(entrySpan.t),
+              span => expect(span.p).to.equal(entrySpan.s)
+            ]);
             expectExactlyOneMatching(spans, span => {
               expect(span.n).to.equal('node.http.client');
               expect(span.k).to.equal(constants.EXIT);
@@ -266,12 +267,12 @@ function registerTests(useHttps) {
       .then(() =>
         retry(() =>
           agentControls.getSpans().then(spans => {
-            expectExactlyOneMatching(spans, span => {
-              expect(span.n).to.equal('node.http.client');
-              expect(span.k).to.equal(constants.EXIT);
-              expect(span.ec).to.equal(1);
-              expect(span.data.http.error).to.match(/ECONNREFUSED/);
-            });
+            expectExactlyOneMatching(spans, [
+              span => expect(span.n).to.equal('node.http.client'),
+              span => expect(span.k).to.equal(constants.EXIT),
+              span => expect(span.ec).to.equal(1),
+              span => expect(span.data.http.error).to.match(/ECONNREFUSED/)
+            ]);
           })
         )
       ));
@@ -286,12 +287,12 @@ function registerTests(useHttps) {
       .then(() =>
         retry(() =>
           agentControls.getSpans().then(spans => {
-            expectExactlyOneMatching(spans, span => {
-              expect(span.n).to.equal('node.http.client');
-              expect(span.k).to.equal(constants.EXIT);
-              expect(span.ec).to.equal(1);
-              expect(span.data.http.error).to.match(/Timeout/);
-            });
+            expectExactlyOneMatching(spans, [
+              span => expect(span.n).to.equal('node.http.client'),
+              span => expect(span.k).to.equal(constants.EXIT),
+              span => expect(span.ec).to.equal(1),
+              span => expect(span.data.http.error).to.match(/Timeout/)
+            ]);
           })
         )
       ));
@@ -306,12 +307,12 @@ function registerTests(useHttps) {
       .then(() =>
         retry(() =>
           agentControls.getSpans().then(spans => {
-            expectExactlyOneMatching(spans, span => {
-              expect(span.n).to.equal('node.http.client');
-              expect(span.k).to.equal(constants.EXIT);
-              expect(span.ec).to.equal(1);
-              expect(span.data.http.error).to.match(/aborted/);
-            });
+            expectExactlyOneMatching(spans, [
+              span => expect(span.n).to.equal('node.http.client'),
+              span => expect(span.k).to.equal(constants.EXIT),
+              span => expect(span.ec).to.equal(1),
+              span => expect(span.data.http.error).to.match(/aborted/)
+            ]);
           })
         )
       ));
@@ -325,16 +326,17 @@ function registerTests(useHttps) {
       .then(() =>
         retry(() =>
           agentControls.getSpans().then(spans => {
-            expectExactlyOneMatching(spans, span => {
-              expect(span.n).to.equal('node.http.client');
-              expect(span.k).to.equal(constants.EXIT);
-              expect(span.data.http.header).to.deep.equal({
-                'x-my-exit-options-request-header': 'x-my-exit-options-request-header-value',
-                'x-my-exit-options-request-multi-header':
-                  'x-my-exit-options-request-multi-header-value-1, x-my-exit-options-request-multi-header-value-2'
-              });
-              expect(span.data.http.url).to.match(/\/request-only-opts/);
-            });
+            expectExactlyOneMatching(spans, [
+              span => expect(span.n).to.equal('node.http.client'),
+              span => expect(span.k).to.equal(constants.EXIT),
+              span =>
+                expect(span.data.http.header).to.deep.equal({
+                  'x-my-exit-options-request-header': 'x-my-exit-options-request-header-value',
+                  'x-my-exit-options-request-multi-header':
+                    'x-my-exit-options-request-multi-header-value-1, x-my-exit-options-request-multi-header-value-2'
+                }),
+              span => expect(span.data.http.url).to.match(/\/request-only-opts/)
+            ]);
           })
         )
       ));
@@ -348,16 +350,17 @@ function registerTests(useHttps) {
       .then(() =>
         retry(() =>
           agentControls.getSpans().then(spans => {
-            expectExactlyOneMatching(spans, span => {
-              expect(span.n).to.equal('node.http.client');
-              expect(span.k).to.equal(constants.EXIT);
-              expect(span.data.http.header).to.deep.equal({
-                'x-my-exit-set-on-request-header': 'x-my-exit-set-on-request-header-value',
-                'x-my-exit-set-on-request-multi-header':
-                  'x-my-exit-set-on-request-multi-header-value-1, x-my-exit-set-on-request-multi-header-value-2'
-              });
-              expect(span.data.http.url).to.match(/\/request-only-opts/);
-            });
+            expectExactlyOneMatching(spans, [
+              span => expect(span.n).to.equal('node.http.client'),
+              span => expect(span.k).to.equal(constants.EXIT),
+              span =>
+                expect(span.data.http.header).to.deep.equal({
+                  'x-my-exit-set-on-request-header': 'x-my-exit-set-on-request-header-value',
+                  'x-my-exit-set-on-request-multi-header':
+                    'x-my-exit-set-on-request-multi-header-value-1, x-my-exit-set-on-request-multi-header-value-2'
+                }),
+              span => expect(span.data.http.url).to.match(/\/request-only-opts/)
+            ]);
           })
         )
       ));
@@ -371,13 +374,14 @@ function registerTests(useHttps) {
       .then(() =>
         retry(() =>
           agentControls.getSpans().then(spans => {
-            expectExactlyOneMatching(spans, span => {
-              expect(span.n).to.equal('node.http.client');
-              expect(span.k).to.equal(constants.EXIT);
-              expect(span.data.http.header).to.exist;
-              expect(span.data.http.header['x-my-exit-response-header']).to.equal('x-my-exit-response-header-value');
-              expect(span.data.http.url).to.match(/\/request-only-opts/);
-            });
+            expectExactlyOneMatching(spans, [
+              span => expect(span.n).to.equal('node.http.client'),
+              span => expect(span.k).to.equal(constants.EXIT),
+              span => expect(span.data.http.header).to.exist,
+              span =>
+                expect(span.data.http.header['x-my-exit-response-header']).to.equal('x-my-exit-response-header-value'),
+              span => expect(span.data.http.url).to.match(/\/request-only-opts/)
+            ]);
           })
         )
       ));
@@ -391,13 +395,13 @@ function registerTests(useHttps) {
       .then(() =>
         retry(() =>
           agentControls.getSpans().then(spans => {
-            expectExactlyOneMatching(spans, span => {
-              expect(span.n).to.equal('node.http.client');
-              expect(span.k).to.equal(constants.EXIT);
-              expect(span.data.http.method).to.equal('PUT');
-              expect(span.data.http.status).to.equal(200);
-              expect(span.data.http.url).to.match(/\/continue/);
-            });
+            expectExactlyOneMatching(spans, [
+              span => expect(span.n).to.equal('node.http.client'),
+              span => expect(span.k).to.equal(constants.EXIT),
+              span => expect(span.data.http.method).to.equal('PUT'),
+              span => expect(span.data.http.status).to.equal(200),
+              span => expect(span.data.http.url).to.match(/\/continue/)
+            ]);
           })
         )
       ));
@@ -406,18 +410,18 @@ function registerTests(useHttps) {
     clientControls.sendRequest({ path: '/deferred-http-exit' }).then(() =>
       retry(() =>
         agentControls.getSpans().then(spans => {
-          const clientSpan = expectExactlyOneMatching(spans, span => {
-            expect(span.n).to.equal('node.http.client');
-            expect(span.k).to.equal(constants.EXIT);
-            expect(span.data.http.url).to.match(/\/request-only-opts/);
-          });
-          expectExactlyOneMatching(spans, span => {
-            expect(span.n).to.equal('node.http.server');
-            expect(span.k).to.equal(constants.ENTRY);
-            expect(span.data.http.url).to.match(/\/request-only-opts/);
-            expect(span.t).to.equal(clientSpan.t);
-            expect(span.p).to.equal(clientSpan.s);
-          });
+          const clientSpan = expectExactlyOneMatching(spans, [
+            span => expect(span.n).to.equal('node.http.client'),
+            span => expect(span.k).to.equal(constants.EXIT),
+            span => expect(span.data.http.url).to.match(/\/request-only-opts/)
+          ]);
+          expectExactlyOneMatching(spans, [
+            span => expect(span.n).to.equal('node.http.server'),
+            span => expect(span.k).to.equal(constants.ENTRY),
+            span => expect(span.data.http.url).to.match(/\/request-only-opts/),
+            span => expect(span.t).to.equal(clientSpan.t),
+            span => expect(span.p).to.equal(clientSpan.s)
+          ]);
         })
       )
     ));

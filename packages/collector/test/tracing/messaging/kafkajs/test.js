@@ -192,13 +192,13 @@ describe('tracing/kafkajs', function() {
   }
 
   function verifyHttpEntry(spans) {
-    return testUtils.expectAtLeastOneMatching(spans, span => {
-      expect(span.n).to.equal('node.http.server');
-      expect(span.f.h).to.equal('agent-stub-uuid');
-      expect(span.async).to.not.exist;
-      expect(span.error).to.not.exist;
-      expect(span.ec).to.equal(0);
-    });
+    return testUtils.expectAtLeastOneMatching(spans, [
+      span => expect(span.n).to.equal('node.http.server'),
+      span => expect(span.f.h).to.equal('agent-stub-uuid'),
+      span => expect(span.async).to.not.exist,
+      span => expect(span.error).to.not.exist,
+      span => expect(span.ec).to.equal(0)
+    ]);
   }
 
   function verifyKafkaExits(spans, httpEntry, parameters) {
@@ -235,11 +235,11 @@ describe('tracing/kafkajs', function() {
 
   function verifyFollowUpHttpExit(spans, entry) {
     // verify that subsequent calls are correctly traced after creating a kafka entry/exit
-    testUtils.expectAtLeastOneMatching(spans, span => {
-      expect(span.n).to.equal('node.http.client');
-      expect(span.t).to.equal(entry.t);
-      expect(span.p).to.equal(entry.s);
-    });
+    testUtils.expectAtLeastOneMatching(spans, [
+      span => expect(span.n).to.equal('node.http.client'),
+      span => expect(span.t).to.equal(entry.t),
+      span => expect(span.p).to.equal(entry.s)
+    ]);
   }
 
   function verifyKafkaEntries(spans, parentKafkaExit, parameters) {

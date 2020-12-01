@@ -233,15 +233,15 @@ function registerTests(usePgNative) {
   });
 
   function verifyHttpEntry(spans, method, url) {
-    return testUtils.expectAtLeastOneMatching(spans, span => {
-      expect(span.p).to.not.exist;
-      expect(span.k).to.equal(constants.ENTRY);
-      expect(span.f.e).to.equal(String(controls.getPid()));
-      expect(span.f.h).to.equal('agent-stub-uuid');
-      expect(span.n).to.equal('node.http.server');
-      expect(span.data.http.method).to.equal(method);
-      expect(span.data.http.url).to.equal(url);
-    });
+    return testUtils.expectAtLeastOneMatching(spans, [
+      span => expect(span.p).to.not.exist,
+      span => expect(span.k).to.equal(constants.ENTRY),
+      span => expect(span.f.e).to.equal(String(controls.getPid())),
+      span => expect(span.f.h).to.equal('agent-stub-uuid'),
+      span => expect(span.n).to.equal('node.http.server'),
+      span => expect(span.data.http.method).to.equal(method),
+      span => expect(span.data.http.url).to.equal(url)
+    ]);
   }
 
   function verifyUniqueHttpEntry(spans, method, url, other) {

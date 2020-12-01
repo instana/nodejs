@@ -246,21 +246,21 @@ function expectCumulativeTracingMetrics(tracingMetrics, expectedPid, expectedOpe
 }
 
 function expectHttpEntry(spans, url) {
-  return testUtils.expectAtLeastOneMatching(spans, span => {
-    expect(span.n).to.equal('node.http.server');
-    expect(span.data.http.method).to.equal('POST');
-    expect(span.data.http.url).to.equal(url);
-  });
+  return testUtils.expectAtLeastOneMatching(spans, [
+    span => expect(span.n).to.equal('node.http.server'),
+    span => expect(span.data.http.method).to.equal('POST'),
+    span => expect(span.data.http.url).to.equal(url)
+  ]);
 }
 
 function expectExit(spans, parentSpan, expectedName) {
-  return testUtils.expectAtLeastOneMatching(spans, span => {
-    expect(span.t).to.equal(parentSpan.t);
-    expect(span.p).to.equal(parentSpan.s);
-    expect(span.n).to.equal('sdk');
-    expect(span.k).to.equal(constants.EXIT);
-    expect(span.data.sdk).to.exist;
-    expect(span.data.sdk.type).to.equal('exit');
-    expect(span.data.sdk.name).to.equal(expectedName);
-  });
+  return testUtils.expectAtLeastOneMatching(spans, [
+    span => expect(span.t).to.equal(parentSpan.t),
+    span => expect(span.p).to.equal(parentSpan.s),
+    span => expect(span.n).to.equal('sdk'),
+    span => expect(span.k).to.equal(constants.EXIT),
+    span => expect(span.data.sdk).to.exist,
+    span => expect(span.data.sdk.type).to.equal('exit'),
+    span => expect(span.data.sdk.name).to.equal(expectedName)
+  ]);
 }

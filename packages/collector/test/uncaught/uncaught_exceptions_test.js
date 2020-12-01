@@ -47,16 +47,18 @@ describe('uncaught exceptions', function() {
         expect(err.message).to.equal('Error: socket hang up');
         return testUtils.retry(
           () =>
-            agentControls.getSpans().then(spans =>
-              testUtils.expectAtLeastOneMatching(spans, span => {
-                expect(span.n).to.equal('node.http.server');
-                expect(span.f.e).to.equal(String(serverControls.getPid()));
-                expect(span.f.h).to.equal('agent-stub-uuid');
-                expect(span.error).to.not.exist;
-                expect(span.ec).to.equal(1);
-                expect(JSON.stringify(span.stack)).to.contain('test/uncaught/apps/server.js');
-              })
-            ),
+            agentControls
+              .getSpans()
+              .then(spans =>
+                testUtils.expectAtLeastOneMatching(spans, [
+                  span => expect(span.n).to.equal('node.http.server'),
+                  span => expect(span.f.e).to.equal(String(serverControls.getPid())),
+                  span => expect(span.f.h).to.equal('agent-stub-uuid'),
+                  span => expect(span.error).to.not.exist,
+                  span => expect(span.ec).to.equal(1),
+                  span => expect(JSON.stringify(span.stack)).to.contain('test/uncaught/apps/server.js')
+                ])
+              ),
           this.timeout() * 0.8
         );
       });
@@ -79,15 +81,19 @@ describe('uncaught exceptions', function() {
         return testUtils.retry(
           () =>
             agentControls.getEvents().then(events => {
-              testUtils.expectAtLeastOneMatching(events, event => {
-                expect(event.title).to.equal('A Node.js process terminated abnormally due to an uncaught exception.');
-                expect(event.text).to.contain('Boom');
-                expect(event.plugin).to.equal('com.instana.forge.infrastructure.runtime.nodejs.NodeJsRuntimePlatform');
-                expect(event.id).to.equal(serverControls.getPid());
-                expect(event.timestamp).to.exist;
-                expect(event.duration).to.equal(1);
-                expect(event.severity).to.equal(10);
-              });
+              testUtils.expectAtLeastOneMatching(events, [
+                event =>
+                  expect(event.title).to.equal('A Node.js process terminated abnormally due to an uncaught exception.'),
+                event => expect(event.text).to.contain('Boom'),
+                event =>
+                  expect(event.plugin).to.equal(
+                    'com.instana.forge.infrastructure.runtime.nodejs.NodeJsRuntimePlatform'
+                  ),
+                event => expect(event.id).to.equal(serverControls.getPid()),
+                event => expect(event.timestamp).to.exist,
+                event => expect(event.duration).to.equal(1),
+                event => expect(event.severity).to.equal(10)
+              ]);
             }),
           this.timeout() * 0.8
         );
@@ -134,10 +140,11 @@ describe('uncaught exceptions', function() {
                 .to.be.false;
               expect(errorFromSecondHttpRequest).to.exist;
               expect(errorFromSecondHttpRequest.message).to.equal('Error: read ECONNRESET');
-              testUtils.expectAtLeastOneMatching(events, event => {
-                expect(event.title).to.equal('A Node.js process terminated abnormally due to an uncaught exception.');
-                expect(event.text).to.contain('Boom');
-              });
+              testUtils.expectAtLeastOneMatching(events, [
+                event =>
+                  expect(event.title).to.equal('A Node.js process terminated abnormally due to an uncaught exception.'),
+                event => expect(event.text).to.contain('Boom')
+              ]);
             }),
           this.timeout() * 0.8
         );

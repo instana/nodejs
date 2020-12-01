@@ -33,10 +33,10 @@ describe('tracing/requireHook', function() {
         .then(() =>
           testUtils.retry(() =>
             agentControls.getSpans().then(spans => {
-              testUtils.expectAtLeastOneMatching(spans, span => {
-                expect(span.n).to.equal('node.http.server');
-                expect(span.data.http.status).to.equal(200);
-              });
+              testUtils.expectAtLeastOneMatching(spans, [
+                span => expect(span.n).to.equal('node.http.server'),
+                span => expect(span.data.http.status).to.equal(200)
+              ]);
             })
           )
         ));

@@ -162,56 +162,56 @@ function registerTests(apiType) {
   });
 
   function verifyHttpEntry(spans) {
-    return expectExactlyOneMatching(spans, span => {
-      expect(span.n).to.equal('node.http.server');
-      expect(span.f.e).to.equal(String(publisherControls.getPid()));
-      expect(span.f.h).to.equal('agent-stub-uuid');
-      expect(span.async).to.not.exist;
-      expect(span.error).to.not.exist;
-      expect(span.ec).to.equal(0);
-    });
+    return expectExactlyOneMatching(spans, [
+      span => expect(span.n).to.equal('node.http.server'),
+      span => expect(span.f.e).to.equal(String(publisherControls.getPid())),
+      span => expect(span.f.h).to.equal('agent-stub-uuid'),
+      span => expect(span.async).to.not.exist,
+      span => expect(span.error).to.not.exist,
+      span => expect(span.ec).to.equal(0)
+    ]);
   }
 
   function verifyRabbitMqExit(spans, parentSpan) {
-    return expectExactlyOneMatching(spans, span => {
-      expect(span.t).to.equal(parentSpan.t);
-      expect(span.p).to.equal(parentSpan.s);
-      expect(span.k).to.equal(constants.EXIT);
-      expect(span.n).to.equal('rabbitmq');
-      expect(span.f.e).to.equal(String(publisherControls.getPid()));
-      expect(span.f.h).to.equal('agent-stub-uuid');
-      expect(span.async).to.not.exist;
-      expect(span.error).to.not.exist;
-      expect(span.ec).to.equal(0);
-      expect(span.data.rabbitmq.sort).to.equal('publish');
-      expect(span.data.rabbitmq.address).to.equal('amqp://127.0.0.1:5672');
-    });
+    return expectExactlyOneMatching(spans, [
+      span => expect(span.t).to.equal(parentSpan.t),
+      span => expect(span.p).to.equal(parentSpan.s),
+      span => expect(span.k).to.equal(constants.EXIT),
+      span => expect(span.n).to.equal('rabbitmq'),
+      span => expect(span.f.e).to.equal(String(publisherControls.getPid())),
+      span => expect(span.f.h).to.equal('agent-stub-uuid'),
+      span => expect(span.async).to.not.exist,
+      span => expect(span.error).to.not.exist,
+      span => expect(span.ec).to.equal(0),
+      span => expect(span.data.rabbitmq.sort).to.equal('publish'),
+      span => expect(span.data.rabbitmq.address).to.equal('amqp://127.0.0.1:5672')
+    ]);
   }
 
   function verifyRabbitMqEntry(spans, parentSpan) {
-    return expectExactlyOneMatching(spans, span => {
-      expect(span.t).to.equal(parentSpan.t);
-      expect(span.p).to.equal(parentSpan.s);
-      expect(span.n).to.equal('rabbitmq');
-      expect(span.k).to.equal(constants.ENTRY);
-      expect(span.d).to.be.greaterThan(99);
-      expect(span.f.e).to.equal(String(consumerControls.getPid()));
-      expect(span.f.h).to.equal('agent-stub-uuid');
-      expect(span.async).to.not.exist;
-      expect(span.error).to.not.exist;
-      expect(span.ec).to.equal(0);
-      expect(span.data.rabbitmq.sort).to.equal('consume');
-      expect(span.data.rabbitmq.address).to.equal('amqp://127.0.0.1:5672');
-    });
+    return expectExactlyOneMatching(spans, [
+      span => expect(span.t).to.equal(parentSpan.t),
+      span => expect(span.p).to.equal(parentSpan.s),
+      span => expect(span.n).to.equal('rabbitmq'),
+      span => expect(span.k).to.equal(constants.ENTRY),
+      span => expect(span.d).to.be.greaterThan(99),
+      span => expect(span.f.e).to.equal(String(consumerControls.getPid())),
+      span => expect(span.f.h).to.equal('agent-stub-uuid'),
+      span => expect(span.async).to.not.exist,
+      span => expect(span.error).to.not.exist,
+      span => expect(span.ec).to.equal(0),
+      span => expect(span.data.rabbitmq.sort).to.equal('consume'),
+      span => expect(span.data.rabbitmq.address).to.equal('amqp://127.0.0.1:5672')
+    ]);
   }
 
   function verifyHttpExit(spans, parentSpan) {
     // verify that subsequent calls are correctly traced
-    return expectExactlyOneMatching(spans, span => {
-      expect(span.n).to.equal('node.http.client');
-      expect(span.t).to.equal(parentSpan.t);
-      expect(span.p).to.equal(parentSpan.s);
-      expect(span.k).to.equal(constants.EXIT);
-    });
+    return expectExactlyOneMatching(spans, [
+      span => expect(span.n).to.equal('node.http.client'),
+      span => expect(span.t).to.equal(parentSpan.t),
+      span => expect(span.p).to.equal(parentSpan.s),
+      span => expect(span.k).to.equal(constants.EXIT)
+    ]);
   }
 }

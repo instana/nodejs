@@ -86,11 +86,11 @@ describe('tracing/nats', function() {
                   }
                 }
                 return agentControls.getSpans().then(spans => {
-                  const entrySpan = testUtils.expectAtLeastOneMatching(spans, span => {
-                    expect(span.n).to.equal('node.http.server');
-                    expect(span.f.e).to.equal(String(publisherControls.getPid()));
-                    expect(span.p).to.not.exist;
-                  });
+                  const entrySpan = testUtils.expectAtLeastOneMatching(spans, [
+                    span => expect(span.n).to.equal('node.http.server'),
+                    span => expect(span.f.e).to.equal(String(publisherControls.getPid())),
+                    span => expect(span.p).to.not.exist
+                  ]);
                   testUtils.expectAtLeastOneMatching(spans, span => {
                     expect(span.t).to.equal(entrySpan.t);
                     expect(span.p).to.equal(entrySpan.s);
@@ -122,12 +122,12 @@ describe('tracing/nats', function() {
                     }
                   });
                   // verify that subsequent calls are correctly traced
-                  testUtils.expectAtLeastOneMatching(spans, span => {
-                    expect(span.n).to.equal('node.http.client');
-                    expect(span.t).to.equal(entrySpan.t);
-                    expect(span.p).to.equal(entrySpan.s);
-                    expect(span.k).to.equal(constants.EXIT);
-                  });
+                  testUtils.expectAtLeastOneMatching(spans, [
+                    span => expect(span.n).to.equal('node.http.client'),
+                    span => expect(span.t).to.equal(entrySpan.t),
+                    span => expect(span.p).to.equal(entrySpan.s),
+                    span => expect(span.k).to.equal(constants.EXIT)
+                  ]);
                 });
               });
             });
@@ -168,11 +168,11 @@ describe('tracing/nats', function() {
 
             return testUtils.retry(() =>
               agentControls.getSpans().then(spans => {
-                const httpSpan = testUtils.expectAtLeastOneMatching(spans, span => {
-                  expect(span.n).to.equal('node.http.server');
-                  expect(span.f.e).to.equal(String(publisherControls.getPid()));
-                  expect(span.p).to.not.exist;
-                });
+                const httpSpan = testUtils.expectAtLeastOneMatching(spans, [
+                  span => expect(span.n).to.equal('node.http.server'),
+                  span => expect(span.f.e).to.equal(String(publisherControls.getPid())),
+                  span => expect(span.p).to.not.exist
+                ]);
 
                 // NATS does not support headers or metadata, so we do not have trace continuity.
                 const natsEntry = testUtils.expectAtLeastOneMatching(spans, span => {
@@ -203,12 +203,12 @@ describe('tracing/nats', function() {
                   }
                 });
                 // verify that subsequent calls are correctly traced
-                testUtils.expectAtLeastOneMatching(spans, span => {
-                  expect(span.n).to.equal('node.http.client');
-                  expect(span.t).to.equal(natsEntry.t);
-                  expect(span.p).to.equal(natsEntry.s);
-                  expect(span.k).to.equal(constants.EXIT);
-                });
+                testUtils.expectAtLeastOneMatching(spans, [
+                  span => expect(span.n).to.equal('node.http.client'),
+                  span => expect(span.t).to.equal(natsEntry.t),
+                  span => expect(span.p).to.equal(natsEntry.s),
+                  span => expect(span.k).to.equal(constants.EXIT)
+                ]);
               })
             );
           });
@@ -236,24 +236,24 @@ describe('tracing/nats', function() {
           // (Since we cannot transmit X-INSTANA-L=0 over nats due to lack of metadata, the receive entry will be
           // there):
           expect(spans).to.have.lengthOf(1);
-          testUtils.expectAtLeastOneMatching(spans, span => {
-            expect(span.t).to.be.a('string');
-            expect(span.p).to.not.exist;
-            expect(span.k).to.equal(constants.ENTRY);
-            expect(span.n).to.equal('nats');
-            expect(span.f.e).to.equal(String(subscriberControls.getPid()));
-            expect(span.f.h).to.equal('agent-stub-uuid');
-            expect(span.async).to.not.exist;
-            expect(span.ts).to.be.a('number');
-            expect(span.d).to.be.a('number');
-            expect(span.error).to.not.exist;
-            expect(span.ec).to.equal(0);
-            expect(span.data.nats).to.be.an('object');
-            expect(span.data.nats.sort).to.equal('consume');
-            expect(span.data.nats.subject).to.equal('publish-test-subject');
-            expect(span.data.nats.address).to.equal('nats://localhost:4222');
-            expect(span.data.nats.error).to.not.exist;
-          });
+          testUtils.expectAtLeastOneMatching(spans, [
+            span => expect(span.t).to.be.a('string'),
+            span => expect(span.p).to.not.exist,
+            span => expect(span.k).to.equal(constants.ENTRY),
+            span => expect(span.n).to.equal('nats'),
+            span => expect(span.f.e).to.equal(String(subscriberControls.getPid())),
+            span => expect(span.f.h).to.equal('agent-stub-uuid'),
+            span => expect(span.async).to.not.exist,
+            span => expect(span.ts).to.be.a('number'),
+            span => expect(span.d).to.be.a('number'),
+            span => expect(span.error).to.not.exist,
+            span => expect(span.ec).to.equal(0),
+            span => expect(span.data.nats).to.be.an('object'),
+            span => expect(span.data.nats.sort).to.equal('consume'),
+            span => expect(span.data.nats.subject).to.equal('publish-test-subject'),
+            span => expect(span.data.nats.address).to.equal('nats://localhost:4222'),
+            span => expect(span.data.nats.error).to.not.exist
+          ]);
         }));
   });
 });

@@ -112,14 +112,14 @@ mochaSuiteFn('tracing/cloud/gcp/pubsub', function() {
     }
 
     function verifyHttpEntry(spans, apiPath) {
-      return expectExactlyOneMatching(spans, span => {
-        expect(span.p).to.not.exist;
-        expect(span.k).to.equal(constants.ENTRY);
-        expect(span.f.e).to.equal(String(publisherControls.getPid()));
-        expect(span.f.h).to.equal('agent-stub-uuid');
-        expect(span.n).to.equal('node.http.server');
-        expect(span.data.http.url).to.equal(apiPath);
-      });
+      return expectExactlyOneMatching(spans, [
+        span => expect(span.p).to.not.exist,
+        span => expect(span.k).to.equal(constants.ENTRY),
+        span => expect(span.f.e).to.equal(String(publisherControls.getPid())),
+        span => expect(span.f.h).to.equal('agent-stub-uuid'),
+        span => expect(span.n).to.equal('node.http.server'),
+        span => expect(span.data.http.url).to.equal(apiPath)
+      ]);
     }
 
     function verifyGoogleCloudPubSubExit(spans, parent, messageId, withError) {

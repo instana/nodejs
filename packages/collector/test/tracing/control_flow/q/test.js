@@ -96,20 +96,20 @@ describe('tracing/q', function() {
   }
 
   function verifyRootEntrySpan(spans, path) {
-    return testUtils.expectAtLeastOneMatching(spans, span => {
-      expect(span.p).to.equal(undefined);
-      expect(span.n).to.equal('node.http.server');
-      expect(span.k).to.equal(constants.ENTRY);
-      expect(span.data.http.url).to.equal(path);
-    });
+    return testUtils.expectAtLeastOneMatching(spans, [
+      span => expect(span.p).to.equal(undefined),
+      span => expect(span.n).to.equal('node.http.server'),
+      span => expect(span.k).to.equal(constants.ENTRY),
+      span => expect(span.data.http.url).to.equal(path)
+    ]);
   }
 
   function verifyExitSpan(spans, parentSpan) {
-    return testUtils.expectAtLeastOneMatching(spans, span => {
-      expect(span.t).to.equal(parentSpan.t);
-      expect(span.p).to.equal(parentSpan.s);
-      expect(span.n).to.equal('node.http.client');
-      expect(span.k).to.equal(constants.EXIT);
-    });
+    return testUtils.expectAtLeastOneMatching(spans, [
+      span => expect(span.t).to.equal(parentSpan.t),
+      span => expect(span.p).to.equal(parentSpan.s),
+      span => expect(span.n).to.equal('node.http.client'),
+      span => expect(span.k).to.equal(constants.EXIT)
+    ]);
   }
 });

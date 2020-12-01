@@ -52,12 +52,12 @@ describe('tracing/fastify', function() {
             expect(response.body).to.deep.equal(expectedResponse);
             return testUtils.retry(() =>
               agentControls.getSpans().then(spans => {
-                testUtils.expectAtLeastOneMatching(spans, span => {
-                  expect(span.data.http.path_tpl).to.equal(expectedTemplate);
-                  expect(span.data.http.status).to.equal(expectedStatusCode);
-                  expect(span.data.http.url).to.equal(actualPath);
-                  expect(span.k).to.equal(constants.ENTRY);
-                });
+                testUtils.expectAtLeastOneMatching(spans, [
+                  span => expect(span.data.http.path_tpl).to.equal(expectedTemplate),
+                  span => expect(span.data.http.status).to.equal(expectedStatusCode),
+                  span => expect(span.data.http.url).to.equal(actualPath),
+                  span => expect(span.k).to.equal(constants.ENTRY)
+                ]);
               })
             );
           }));

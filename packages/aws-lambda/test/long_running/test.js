@@ -184,24 +184,24 @@ describe('long running lambdas', () => {
   }
 
   function verifyLambdaEntry(spans) {
-    return expectExactlyOneMatching(spans, span => {
-      expect(span.t).to.exist;
-      expect(span.p).to.not.exist;
-      expect(span.s).to.exist;
-      expect(span.n).to.equal('aws.lambda.entry');
-      expect(span.k).to.equal(constants.ENTRY);
-      expect(span.f).to.be.an('object');
-      expect(span.f.h).to.not.exist;
-      expect(span.f.hl).to.be.true;
-      expect(span.f.cp).to.equal('aws');
-      expect(span.f.e).to.equal(qualifiedArn);
-      expect(span.async).to.not.exist;
-      expect(span.data.lambda).to.be.an('object');
-      expect(span.data.lambda.runtime).to.equal('nodejs');
-      expect(span.data.lambda.error).to.not.exist;
-      expect(span.error).to.not.exist;
-      expect(span.ec).to.equal(0);
-    });
+    return expectExactlyOneMatching(spans, [
+      span => expect(span.t).to.exist,
+      span => expect(span.p).to.not.exist,
+      span => expect(span.s).to.exist,
+      span => expect(span.n).to.equal('aws.lambda.entry'),
+      span => expect(span.k).to.equal(constants.ENTRY),
+      span => expect(span.f).to.be.an('object'),
+      span => expect(span.f.h).to.not.exist,
+      span => expect(span.f.hl).to.be.true,
+      span => expect(span.f.cp).to.equal('aws'),
+      span => expect(span.f.e).to.equal(qualifiedArn),
+      span => expect(span.async).to.not.exist,
+      span => expect(span.data.lambda).to.be.an('object'),
+      span => expect(span.data.lambda.runtime).to.equal('nodejs'),
+      span => expect(span.data.lambda.error).to.not.exist,
+      span => expect(span.error).to.not.exist,
+      span => expect(span.ec).to.equal(0)
+    ]);
   }
   /**
    * Verify that our http requests to the back end (for offloading bundles, spans, metrics) are not

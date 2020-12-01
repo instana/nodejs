@@ -114,10 +114,10 @@ describe('retry loading native addons', function() {
           .catch(() => {
             const events = data[2];
             expect(events).to.have.lengthOf(1);
-            expectAtLeastOneMatching(events, event => {
-              expect(event.text).to.contain('Boom');
-              expect(event.severity).to.equal(10);
-            });
+            expectAtLeastOneMatching(events, [
+              event => expect(event.text).to.contain('Boom'),
+              event => expect(event.severity).to.equal(10)
+            ]);
           })
     };
   }

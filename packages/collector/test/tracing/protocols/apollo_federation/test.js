@@ -200,26 +200,26 @@ function verifySpansForQuery(allControls, testConfig, spans) {
 }
 
 function verifyHttpEntry(source, spans) {
-  return testUtils.expectAtLeastOneMatching(spans, span => {
-    expect(span.n).to.equal('node.http.server');
-    expect(span.k).to.equal(constants.ENTRY);
-    expect(span.p).to.not.exist;
-    expect(span.f.e).to.equal(String(source.getPid()));
-    expect(span.data.http.method).to.equal('POST');
-    expect(span.data.http.url).to.equal('/query');
-  });
+  return testUtils.expectAtLeastOneMatching(spans, [
+    span => expect(span.n).to.equal('node.http.server'),
+    span => expect(span.k).to.equal(constants.ENTRY),
+    span => expect(span.p).to.not.exist,
+    span => expect(span.f.e).to.equal(String(source.getPid())),
+    span => expect(span.data.http.method).to.equal('POST'),
+    span => expect(span.data.http.url).to.equal('/query')
+  ]);
 }
 
 function verifyHttpExit(parentSpan, source, targetPort, spans) {
-  return testUtils.expectAtLeastOneMatching(spans, span => {
-    expect(span.n).to.equal('node.http.client');
-    expect(span.k).to.equal(constants.EXIT);
-    expect(span.t).to.equal(parentSpan.t);
-    expect(span.p).to.equal(parentSpan.s);
-    expect(span.f.e).to.equal(String(source.getPid()));
-    expect(span.data.http.url).to.match(new RegExp(`${targetPort}/graphql`));
-    expect(span.data.http.method).to.equal('POST');
-  });
+  return testUtils.expectAtLeastOneMatching(spans, [
+    span => expect(span.n).to.equal('node.http.client'),
+    span => expect(span.k).to.equal(constants.EXIT),
+    span => expect(span.t).to.equal(parentSpan.t),
+    span => expect(span.p).to.equal(parentSpan.s),
+    span => expect(span.f.e).to.equal(String(source.getPid())),
+    span => expect(span.data.http.url).to.match(new RegExp(`${targetPort}/graphql`)),
+    span => expect(span.data.http.method).to.equal('POST')
+  ]);
 }
 
 function verifyGraphQLGatewayEntry(parentSpan, allControls, testConfig, spans) {

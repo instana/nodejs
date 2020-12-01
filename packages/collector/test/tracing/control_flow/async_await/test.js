@@ -51,47 +51,47 @@ describe('tracing/asyncAwait', function() {
           agentStubControls.getSpans().then(spans => {
             expect(spans.length).to.equal(5, 'Expecting five spans');
 
-            const rootSpan = testUtils.expectAtLeastOneMatching(spans, span => {
-              expect(span.n).to.equal('node.http.server');
-              expect(span.k).to.equal(constants.ENTRY);
-              expect(span.data.http.url).to.match(/\/getSomething/);
-              expect(span.f.e).to.equal(String(expressAsyncAwaitControls.getPid()));
-              expect(span.f.h).to.equal('agent-stub-uuid');
-            });
+            const rootSpan = testUtils.expectAtLeastOneMatching(spans, [
+              span => expect(span.n).to.equal('node.http.server'),
+              span => expect(span.k).to.equal(constants.ENTRY),
+              span => expect(span.data.http.url).to.match(/\/getSomething/),
+              span => expect(span.f.e).to.equal(String(expressAsyncAwaitControls.getPid())),
+              span => expect(span.f.h).to.equal('agent-stub-uuid')
+            ]);
 
-            const client1Span = testUtils.expectAtLeastOneMatching(spans, span => {
-              expect(span.n).to.equal('node.http.client');
-              expect(span.p).to.equal(rootSpan.s);
-              expect(span.k).to.equal(constants.EXIT);
-              expect(span.f.e).to.equal(String(expressAsyncAwaitControls.getPid()));
-              expect(span.f.h).to.equal('agent-stub-uuid');
-              expect(span.data.http.url).to.have.string('/foo');
-            });
+            const client1Span = testUtils.expectAtLeastOneMatching(spans, [
+              span => expect(span.n).to.equal('node.http.client'),
+              span => expect(span.p).to.equal(rootSpan.s),
+              span => expect(span.k).to.equal(constants.EXIT),
+              span => expect(span.f.e).to.equal(String(expressAsyncAwaitControls.getPid())),
+              span => expect(span.f.h).to.equal('agent-stub-uuid'),
+              span => expect(span.data.http.url).to.have.string('/foo')
+            ]);
 
-            testUtils.expectAtLeastOneMatching(spans, span => {
-              expect(span.n).to.equal('node.http.server');
-              expect(span.k).to.equal(constants.ENTRY);
-              expect(span.p).to.equal(client1Span.s);
-              expect(span.f.e).to.equal(String(expressControls.getPid()));
-              expect(span.f.h).to.equal('agent-stub-uuid');
-            });
+            testUtils.expectAtLeastOneMatching(spans, [
+              span => expect(span.n).to.equal('node.http.server'),
+              span => expect(span.k).to.equal(constants.ENTRY),
+              span => expect(span.p).to.equal(client1Span.s),
+              span => expect(span.f.e).to.equal(String(expressControls.getPid())),
+              span => expect(span.f.h).to.equal('agent-stub-uuid')
+            ]);
 
-            const client2Span = testUtils.expectAtLeastOneMatching(spans, span => {
-              expect(span.n).to.equal('node.http.client');
-              expect(span.p).to.equal(rootSpan.s);
-              expect(span.k).to.equal(constants.EXIT);
-              expect(span.f.e).to.equal(String(expressAsyncAwaitControls.getPid()));
-              expect(span.f.h).to.equal('agent-stub-uuid');
-              expect(span.data.http.url).to.have.string('/bar');
-            });
+            const client2Span = testUtils.expectAtLeastOneMatching(spans, [
+              span => expect(span.n).to.equal('node.http.client'),
+              span => expect(span.p).to.equal(rootSpan.s),
+              span => expect(span.k).to.equal(constants.EXIT),
+              span => expect(span.f.e).to.equal(String(expressAsyncAwaitControls.getPid())),
+              span => expect(span.f.h).to.equal('agent-stub-uuid'),
+              span => expect(span.data.http.url).to.have.string('/bar')
+            ]);
 
-            testUtils.expectAtLeastOneMatching(spans, span => {
-              expect(span.n).to.equal('node.http.server');
-              expect(span.p).to.equal(client2Span.s);
-              expect(span.k).to.equal(constants.ENTRY);
-              expect(span.f.e).to.equal(String(expressControls.getPid()));
-              expect(span.f.h).to.equal('agent-stub-uuid');
-            });
+            testUtils.expectAtLeastOneMatching(spans, [
+              span => expect(span.n).to.equal('node.http.server'),
+              span => expect(span.p).to.equal(client2Span.s),
+              span => expect(span.k).to.equal(constants.ENTRY),
+              span => expect(span.f.e).to.equal(String(expressControls.getPid())),
+              span => expect(span.f.h).to.equal('agent-stub-uuid')
+            ]);
           })
         )
       ));

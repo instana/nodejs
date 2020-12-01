@@ -56,21 +56,22 @@ function registerTests(usePreInit) {
           expect(spans.length).to.equal(1);
         }
 
-        const httpEntry = testUtils.expectAtLeastOneMatching(spans, span => {
-          expect(span.n).to.equal('node.http.server');
-          expect(span.k).to.equal(constants.ENTRY);
-          expect(span.p).to.not.exist;
-          expect(span.data.http.method).to.equal('POST');
-          expect(span.data.http.url).to.equal('/trigger');
-        });
+        const httpEntry = testUtils.expectAtLeastOneMatching(spans, [
+          span => expect(span.n).to.equal('node.http.server'),
+          span => expect(span.k).to.equal(constants.ENTRY),
+          span => expect(span.p).to.not.exist,
+          span => expect(span.data.http.method).to.equal('POST'),
+          span => expect(span.data.http.url).to.equal('/trigger')
+        ]);
 
         if (usePreInit) {
-          testUtils.expectAtLeastOneMatching(spans, span => {
-            expect(span.n).to.equal('log.pino');
-            expect(span.k).to.equal(constants.EXIT);
-            expect(span.p).to.equal(httpEntry.s);
-            expect(span.data.log.message).to.equal('Should be traced if INSTANA_EARLY_INSTRUMENTATION has been set.');
-          });
+          testUtils.expectAtLeastOneMatching(spans, [
+            span => expect(span.n).to.equal('log.pino'),
+            span => expect(span.k).to.equal(constants.EXIT),
+            span => expect(span.p).to.equal(httpEntry.s),
+            span =>
+              expect(span.data.log.message).to.equal('Should be traced if INSTANA_EARLY_INSTRUMENTATION has been set.')
+          ]);
         }
       })
     );

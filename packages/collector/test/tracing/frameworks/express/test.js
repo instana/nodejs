@@ -47,11 +47,11 @@ describe('tracing/express', function() {
         return controls.sendRequest(request).then(() =>
           testUtils.retry(() =>
             agentControls.getSpans().then(spans => {
-              testUtils.expectAtLeastOneMatching(spans, span => {
-                expect(span.n).to.equal('node.http.server');
-                expect(span.k).to.equal(constants.ENTRY);
-                expect(span.data.http.path_tpl).to.equal(expectedTemplate);
-              });
+              testUtils.expectAtLeastOneMatching(spans, [
+                span => expect(span.n).to.equal('node.http.server'),
+                span => expect(span.k).to.equal(constants.ENTRY),
+                span => expect(span.data.http.path_tpl).to.equal(expectedTemplate)
+              ]);
             })
           )
         );
@@ -68,11 +68,11 @@ describe('tracing/express', function() {
       return controls.sendRequest(request).then(() =>
         testUtils.retry(() =>
           agentControls.getSpans().then(spans => {
-            testUtils.expectAtLeastOneMatching(spans, span => {
-              expect(span.n).to.equal('node.http.server');
-              expect(span.k).to.equal(constants.ENTRY);
-              expect(span.data.http.path_tpl).to.equal('/user/{id}/details');
-            });
+            testUtils.expectAtLeastOneMatching(spans, [
+              span => expect(span.n).to.equal('node.http.server'),
+              span => expect(span.k).to.equal(constants.ENTRY),
+              span => expect(span.data.http.path_tpl).to.equal('/user/{id}/details')
+            ]);
           })
         )
       );
@@ -91,11 +91,11 @@ describe('tracing/express', function() {
         expect(response.statusCode).to.equal(200);
         return testUtils.retry(() =>
           agentControls.getSpans().then(spans => {
-            testUtils.expectAtLeastOneMatching(spans, span => {
-              expect(span.n).to.equal('node.http.server');
-              expect(span.k).to.equal(constants.ENTRY);
-              expect(span.data.http.path_tpl).to.equal('/user/{id}/details');
-            });
+            testUtils.expectAtLeastOneMatching(spans, [
+              span => expect(span.n).to.equal('node.http.server'),
+              span => expect(span.k).to.equal(constants.ENTRY),
+              span => expect(span.data.http.path_tpl).to.equal('/user/{id}/details')
+            ]);
           })
         );
       });
@@ -115,11 +115,11 @@ describe('tracing/express', function() {
         expect(response.statusCode).to.equal(403);
         return testUtils.retry(() =>
           agentControls.getSpans().then(spans => {
-            testUtils.expectAtLeastOneMatching(spans, span => {
-              expect(span.n).to.equal('node.http.server');
-              expect(span.k).to.equal(constants.ENTRY);
-              expect(span.data.http.path_tpl).to.equal('/user/{id}/details');
-            });
+            testUtils.expectAtLeastOneMatching(spans, [
+              span => expect(span.n).to.equal('node.http.server'),
+              span => expect(span.k).to.equal(constants.ENTRY),
+              span => expect(span.data.http.path_tpl).to.equal('/user/{id}/details')
+            ]);
           })
         );
       });

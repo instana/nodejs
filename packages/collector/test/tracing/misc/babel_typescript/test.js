@@ -69,13 +69,13 @@ describe('tracing a babel/typescript setup', function() {
         .then(() =>
           testUtils.retry(() =>
             agentControls.getSpans().then(spans => {
-              testUtils.expectAtLeastOneMatching(spans, span => {
-                expect(span.n).to.equal('node.http.server');
-                expect(span.k).to.equal(constants.ENTRY);
-                expect(span.p).to.not.exist;
-                expect(span.data.http.method).to.equal('GET');
-                expect(span.data.http.url).to.equal('/');
-              });
+              testUtils.expectAtLeastOneMatching(spans, [
+                span => expect(span.n).to.equal('node.http.server'),
+                span => expect(span.k).to.equal(constants.ENTRY),
+                span => expect(span.p).to.not.exist,
+                span => expect(span.data.http.method).to.equal('GET'),
+                span => expect(span.data.http.url).to.equal('/')
+              ]);
             })
           )
         ));
