@@ -158,7 +158,7 @@ describe('tracing/batching', function() {
 
                 span => expect(span.b).to.be.an('object'),
                 span => expect(span.b.s).to.equal(3),
-                span => expect(span.b.d).to.be.greaterThan(0),
+                span => expect(span.b.d).to.be.a('number'),
 
                 span => expect(span.data.redis.error).to.be.a('string'),
                 span => expect(span.data.redis.error).to.contain('wrong number of arguments for')
