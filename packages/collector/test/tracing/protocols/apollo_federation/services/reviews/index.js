@@ -39,10 +39,7 @@ const typeDefs = gql`
   }
 `;
 
-const usernames = [
-  { id: '1', username: '@ada' },
-  { id: '2', username: '@complete' }
-];
+const usernames = [{ id: '1', username: '@ada' }, { id: '2', username: '@complete' }];
 const reviews = [
   {
     id: '1',

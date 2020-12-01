@@ -121,7 +121,11 @@ describe('Google Cloud Run integration test', function() {
         'Error: Received less entities than expected: ' +
           `Wanted: ${expectedNumberOfPlugins}, got: ${allEntities.length}. ` +
           'Here are the entities that have been received: ' +
-          JSON.stringify(allEntities.map(({ name, entityId }) => ({ name, entityId })), null, 2)
+          JSON.stringify(
+            allEntities.map(({ name, entityId }) => ({ name, entityId })),
+            null,
+            2
+          )
       );
     }
     expect(allEntities).to.have.lengthOf.at.least(expectedNumberOfPlugins);

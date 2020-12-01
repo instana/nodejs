@@ -98,10 +98,7 @@ function sendViaSend(key, value, error, topicPrefix) {
   } else {
     return producer.send({
       topic: `${topicPrefix}-1`,
-      messages: [
-        { key, value },
-        { key, value }
-      ]
+      messages: [{ key, value }, { key, value }]
     });
   }
 }
@@ -125,10 +122,7 @@ function sendViaSendBatch(key, value, error, topicPrefix) {
       topicMessages: [
         {
           topic: `${topicPrefix}-1`,
-          messages: [
-            { key, value },
-            { key, value }
-          ]
+          messages: [{ key, value }, { key, value }]
         },
         {
           topic: `${topicPrefix}-2`,

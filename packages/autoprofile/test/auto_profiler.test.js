@@ -18,7 +18,7 @@ beforeEach(() => {
   global.profiler.start({
     debug: true,
     disableTimers: true
-   });
+  });
 });
 
 afterEach(() => {

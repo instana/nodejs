@@ -168,10 +168,7 @@ app.get('/nodeify', (req, res) => {
 app.get('/make-node-resolver', (req, res) => {
   const deferred = Q.defer();
   fs.readFile(path.join(__dirname, 'app.js'), deferred.makeNodeResolver());
-  deferred.promise.then(
-    () => sendResponse(res),
-    err => sendResponse(res, err)
-  );
+  deferred.promise.then(() => sendResponse(res), err => sendResponse(res, err));
 });
 
 app.get('/with-event-emitter', (req, res) => {
