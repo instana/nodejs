@@ -441,23 +441,27 @@ function registerTests(handlerDefinitionPath) {
       verify(control, { error: false, expectMetrics: true, expectSpans: true, trigger: 'aws:api.gateway' })
         .then(() => control.getSpans())
         .then(spans =>
-          expectExactlyOneMatching(spans, span => {
-            expect(span.n).to.equal('aws.lambda.entry');
-            expect(span.k).to.equal(constants.ENTRY);
-            expect(span.data.http).to.be.an('object');
-            expect(span.data.http.method).to.equal('POST');
-            expect(span.data.http.url).to.equal('/path/to/path-xxx/path-yyy');
-            expect(span.data.http.path_tpl).to.equal('/path/to/{param1}/{param2}');
-            expect(span.data.http.params).to.equal('param1=param-value&param1=another-param-value&param2=param-value');
-            expect(span.data.http.header).to.deep.equal({
-              'x-request-header-1': 'A Header Value',
-              'x-request-header-2': 'Multi Value,Header Value',
-              'x-response-header-1': 'response header value 1',
-              'x-response-header-2': 'response,header,value 2'
-            });
-            expect(span.data.http.host).to.not.exist;
-            expect(span.data.http.status).to.equal(200);
-          })
+          expectExactlyOneMatching(spans, [
+            span => expect(span.n).to.equal('aws.lambda.entry'),
+            span => expect(span.k).to.equal(constants.ENTRY),
+            span => expect(span.data.http).to.be.an('object'),
+            span => expect(span.data.http.method).to.equal('POST'),
+            span => expect(span.data.http.url).to.equal('/path/to/path-xxx/path-yyy'),
+            span => expect(span.data.http.path_tpl).to.equal('/path/to/{param1}/{param2}'),
+            span =>
+              expect(span.data.http.params).to.equal(
+                'param1=param-value&param1=another-param-value&param2=param-value'
+              ),
+            span =>
+              expect(span.data.http.header).to.deep.equal({
+                'x-request-header-1': 'A Header Value',
+                'x-request-header-2': 'Multi Value,Header Value',
+                'x-response-header-1': 'response header value 1',
+                'x-response-header-2': 'response,header,value 2'
+              }),
+            span => expect(span.data.http.host).to.not.exist,
+            span => expect(span.data.http.status).to.equal(200)
+          ])
         ));
   });
 
@@ -488,17 +492,20 @@ function registerTests(handlerDefinitionPath) {
       })
         .then(() => control.getSpans())
         .then(spans =>
-          expectExactlyOneMatching(spans, span => {
-            expect(span.n).to.equal('aws.lambda.entry');
-            expect(span.k).to.equal(constants.ENTRY);
-            expect(span.data.http).to.be.an('object');
-            expect(span.data.http.method).to.equal('POST');
-            expect(span.data.http.url).to.equal('/path/to/path-xxx/path-yyy');
-            expect(span.data.http.path_tpl).to.equal('/path/to/{param1}/{param2}');
-            expect(span.data.http.params).to.equal('param1=param-value&param1=another-param-value&param2=param-value');
-            expect(span.data.http.host).to.not.exist;
-            expect(span.data.http.status).to.equal(201);
-          })
+          expectExactlyOneMatching(spans, [
+            span => expect(span.n).to.equal('aws.lambda.entry'),
+            span => expect(span.k).to.equal(constants.ENTRY),
+            span => expect(span.data.http).to.be.an('object'),
+            span => expect(span.data.http.method).to.equal('POST'),
+            span => expect(span.data.http.url).to.equal('/path/to/path-xxx/path-yyy'),
+            span => expect(span.data.http.path_tpl).to.equal('/path/to/{param1}/{param2}'),
+            span =>
+              expect(span.data.http.params).to.equal(
+                'param1=param-value&param1=another-param-value&param2=param-value'
+              ),
+            span => expect(span.data.http.host).to.not.exist,
+            span => expect(span.data.http.status).to.equal(201)
+          ])
         ));
   });
 
@@ -530,17 +537,20 @@ function registerTests(handlerDefinitionPath) {
       verify(control, { error: 'http', expectMetrics: true, expectSpans: true, trigger: 'aws:api.gateway' })
         .then(() => control.getSpans())
         .then(spans =>
-          expectExactlyOneMatching(spans, span => {
-            expect(span.n).to.equal('aws.lambda.entry');
-            expect(span.k).to.equal(constants.ENTRY);
-            expect(span.data.http).to.be.an('object');
-            expect(span.data.http.method).to.equal('POST');
-            expect(span.data.http.url).to.equal('/path/to/path-xxx/path-yyy');
-            expect(span.data.http.path_tpl).to.equal('/path/to/{param1}/{param2}');
-            expect(span.data.http.params).to.equal('param1=param-value&param1=another-param-value&param2=param-value');
-            expect(span.data.http.host).to.not.exist;
-            expect(span.data.http.status).to.equal(502);
-          })
+          expectExactlyOneMatching(spans, [
+            span => expect(span.n).to.equal('aws.lambda.entry'),
+            span => expect(span.k).to.equal(constants.ENTRY),
+            span => expect(span.data.http).to.be.an('object'),
+            span => expect(span.data.http.method).to.equal('POST'),
+            span => expect(span.data.http.url).to.equal('/path/to/path-xxx/path-yyy'),
+            span => expect(span.data.http.path_tpl).to.equal('/path/to/{param1}/{param2}'),
+            span =>
+              expect(span.data.http.params).to.equal(
+                'param1=param-value&param1=another-param-value&param2=param-value'
+              ),
+            span => expect(span.data.http.host).to.not.exist,
+            span => expect(span.data.http.status).to.equal(502)
+          ])
         ));
   });
 
@@ -562,11 +572,11 @@ function registerTests(handlerDefinitionPath) {
         })
         .then(() => control.getSpans())
         .then(spans =>
-          expectExactlyOneMatching(spans, span => {
-            expect(span.n).to.equal('aws.lambda.entry');
-            expect(span.k).to.equal(constants.ENTRY);
-            expect(/^intid;desc=([0-9a-f]+)$/.exec(serverTimingValue)[1]).to.equal(span.t);
-          })
+          expectExactlyOneMatching(spans, [
+            span => expect(span.n).to.equal('aws.lambda.entry'),
+            span => expect(span.k).to.equal(constants.ENTRY),
+            span => expect(/^intid;desc=([0-9a-f]+)$/.exec(serverTimingValue)[1]).to.equal(span.t)
+          ])
         );
     });
   });
@@ -590,13 +600,14 @@ function registerTests(handlerDefinitionPath) {
         })
         .then(() => control.getSpans())
         .then(spans =>
-          expectExactlyOneMatching(spans, span => {
-            expect(span.n).to.equal('aws.lambda.entry');
-            expect(span.k).to.equal(constants.ENTRY);
-            expect(/^cache;desc="Cache Read";dur=23.2, intid;desc=([0-9a-f]+)$/.exec(serverTimingValue)[1]).to.equal(
-              span.t
-            );
-          })
+          expectExactlyOneMatching(spans, [
+            span => expect(span.n).to.equal('aws.lambda.entry'),
+            span => expect(span.k).to.equal(constants.ENTRY),
+            span =>
+              expect(/^cache;desc="Cache Read";dur=23.2, intid;desc=([0-9a-f]+)$/.exec(serverTimingValue)[1]).to.equal(
+                span.t
+              )
+          ])
         );
     });
   });
@@ -623,13 +634,14 @@ function registerTests(handlerDefinitionPath) {
         })
         .then(() => control.getSpans())
         .then(spans =>
-          expectExactlyOneMatching(spans, span => {
-            expect(span.n).to.equal('aws.lambda.entry');
-            expect(span.k).to.equal(constants.ENTRY);
-            expect(/^cache;desc="Cache Read";dur=23.2, intid;desc=([0-9a-f]+)$/.exec(serverTimingValue)[1]).to.equal(
-              span.t
-            );
-          })
+          expectExactlyOneMatching(spans, [
+            span => expect(span.n).to.equal('aws.lambda.entry'),
+            span => expect(span.k).to.equal(constants.ENTRY),
+            span =>
+              expect(/^cache;desc="Cache Read";dur=23.2, intid;desc=([0-9a-f]+)$/.exec(serverTimingValue)[1]).to.equal(
+                span.t
+              )
+          ])
         );
     });
   });
@@ -649,11 +661,11 @@ function registerTests(handlerDefinitionPath) {
       verify(control, { error: false, expectMetrics: true, expectSpans: true, trigger: 'aws:api.gateway' })
         .then(() => control.getSpans())
         .then(spans => {
-          expectExactlyOneMatching(spans, span => {
-            expect(span.n).to.equal('aws.lambda.entry');
-            expect(span.k).to.equal(constants.ENTRY);
-            expect(span.data.http.params).to.equal('param1=<redacted>&param1=<redacted>&param2=<redacted>');
-          });
+          expectExactlyOneMatching(spans, [
+            span => expect(span.n).to.equal('aws.lambda.entry'),
+            span => expect(span.k).to.equal(constants.ENTRY),
+            span => expect(span.data.http.params).to.equal('param1=<redacted>&param1=<redacted>&param2=<redacted>')
+          ]);
         }));
   });
 
@@ -671,11 +683,11 @@ function registerTests(handlerDefinitionPath) {
       verify(control, { error: false, expectMetrics: true, expectSpans: true, trigger: 'aws:api.gateway.noproxy' })
         .then(() => control.getSpans())
         .then(spans =>
-          expectExactlyOneMatching(spans, span => {
-            expect(span.n).to.equal('aws.lambda.entry');
-            expect(span.k).to.equal(constants.ENTRY);
-            expect(span.data.http).to.not.exist;
-          })
+          expectExactlyOneMatching(spans, [
+            span => expect(span.n).to.equal('aws.lambda.entry'),
+            span => expect(span.k).to.equal(constants.ENTRY),
+            span => expect(span.data.http).to.not.exist
+          ])
         ));
   });
 
@@ -698,22 +710,23 @@ function registerTests(handlerDefinitionPath) {
       })
         .then(() => control.getSpans())
         .then(spans =>
-          expectExactlyOneMatching(spans, span => {
-            expect(span.n).to.equal('aws.lambda.entry');
-            expect(span.k).to.equal(constants.ENTRY);
-            expect(span.data.http).to.be.an('object');
-            expect(span.data.http.method).to.equal('GET');
-            expect(span.data.http.url).to.equal('/path/to/resource');
-            expect(span.data.http.path_tpl).to.not.exist;
-            expect(span.data.http.params).to.equal('param1=value1&param2=value2');
-            expect(span.data.http.header).to.deep.equal({
-              'x-request-header-1': 'A Header Value',
-              'x-request-header-2': 'Multi Value,Header Value',
-              'x-response-header-1': 'response header value 1',
-              'x-response-header-2': 'response,header,value 2'
-            });
-            expect(span.data.http.host).to.not.exist;
-          })
+          expectExactlyOneMatching(spans, [
+            span => expect(span.n).to.equal('aws.lambda.entry'),
+            span => expect(span.k).to.equal(constants.ENTRY),
+            span => expect(span.data.http).to.be.an('object'),
+            span => expect(span.data.http.method).to.equal('GET'),
+            span => expect(span.data.http.url).to.equal('/path/to/resource'),
+            span => expect(span.data.http.path_tpl).to.not.exist,
+            span => expect(span.data.http.params).to.equal('param1=value1&param2=value2'),
+            span =>
+              expect(span.data.http.header).to.deep.equal({
+                'x-request-header-1': 'A Header Value',
+                'x-request-header-2': 'Multi Value,Header Value',
+                'x-response-header-1': 'response header value 1',
+                'x-response-header-2': 'response,header,value 2'
+              }),
+            span => expect(span.data.http.host).to.not.exist
+          ])
         ));
   });
 
@@ -743,16 +756,16 @@ function registerTests(handlerDefinitionPath) {
       })
         .then(() => control.getSpans())
         .then(spans =>
-          expectExactlyOneMatching(spans, span => {
-            expect(span.n).to.equal('aws.lambda.entry');
-            expect(span.k).to.equal(constants.ENTRY);
-            expect(span.data.http).to.be.an('object');
-            expect(span.data.http.method).to.equal('GET');
-            expect(span.data.http.url).to.equal('/path/to/resource');
-            expect(span.data.http.path_tpl).to.not.exist;
-            expect(span.data.http.params).to.equal('param1=value1&param2=value2');
-            expect(span.data.http.host).to.not.exist;
-          })
+          expectExactlyOneMatching(spans, [
+            span => expect(span.n).to.equal('aws.lambda.entry'),
+            span => expect(span.k).to.equal(constants.ENTRY),
+            span => expect(span.data.http).to.be.an('object'),
+            span => expect(span.data.http.method).to.equal('GET'),
+            span => expect(span.data.http.url).to.equal('/path/to/resource'),
+            span => expect(span.data.http.path_tpl).to.not.exist,
+            span => expect(span.data.http.params).to.equal('param1=value1&param2=value2'),
+            span => expect(span.data.http.host).to.not.exist
+          ])
         ));
   });
 
@@ -770,16 +783,17 @@ function registerTests(handlerDefinitionPath) {
       verify(control, { error: false, expectMetrics: true, expectSpans: true, trigger: 'aws:cloudwatch.events' })
         .then(() => control.getSpans())
         .then(spans =>
-          expectExactlyOneMatching(spans, span => {
-            expect(span.n).to.equal('aws.lambda.entry');
-            expect(span.k).to.equal(constants.ENTRY);
-            expect(span.data.lambda.cw).to.be.an('object');
-            expect(span.data.lambda.cw.events).to.be.an('object');
-            expect(span.data.lambda.cw.events.resources).to.deep.equal([
-              'arn:aws:events:us-east-2:XXXXXXXXXXXX:rule/lambda-tracing-trigger-test'
-            ]);
-            expect(span.data.lambda.cw.events.more).to.be.false;
-          })
+          expectExactlyOneMatching(spans, [
+            span => expect(span.n).to.equal('aws.lambda.entry'),
+            span => expect(span.k).to.equal(constants.ENTRY),
+            span => expect(span.data.lambda.cw).to.be.an('object'),
+            span => expect(span.data.lambda.cw.events).to.be.an('object'),
+            span =>
+              expect(span.data.lambda.cw.events.resources).to.deep.equal([
+                'arn:aws:events:us-east-2:XXXXXXXXXXXX:rule/lambda-tracing-trigger-test'
+              ]),
+            span => expect(span.data.lambda.cw.events.more).to.be.false
+          ])
         ));
   });
 
@@ -797,21 +811,23 @@ function registerTests(handlerDefinitionPath) {
       verify(control, { error: false, expectMetrics: true, expectSpans: true, trigger: 'aws:cloudwatch.logs' })
         .then(() => control.getSpans())
         .then(spans =>
-          expectExactlyOneMatching(spans, span => {
-            expect(span.n).to.equal('aws.lambda.entry');
-            expect(span.k).to.equal(constants.ENTRY);
-            expect(span.data.lambda.cw).to.be.an('object');
-            expect(span.data.lambda.cw.logs).to.be.an('object');
-            expect(span.data.lambda.cw.logs.group).to.equal('/aws/lambda/callback_8_10');
-            expect(span.data.lambda.cw.logs.stream).to.equal('2019/09/08/[$LATEST]3b71b6b86c614431bd1e42974f8eb981');
-            expect(span.data.lambda.cw.logs.events).to.deep.equal([
-              '2019-09-08T21:34:37.973Z\te390347f-34be-4a56-89bf-75a219fda2b3\tStarting up\n',
-              '2019-09-08T21:34:37.975Z\te390347f-34be-4a56-89bf-75a219fda2b3\t' +
-                'TypeError: callback is not a function\n    at exports.handler (/var/task/index.js:7:3)\n',
-              'END RequestId: e390347f-34be-4a56-89bf-75a219fda2b3\n'
-            ]);
-            expect(span.data.lambda.cw.logs.more).to.be.true;
-          })
+          expectExactlyOneMatching(spans, [
+            span => expect(span.n).to.equal('aws.lambda.entry'),
+            span => expect(span.k).to.equal(constants.ENTRY),
+            span => expect(span.data.lambda.cw).to.be.an('object'),
+            span => expect(span.data.lambda.cw.logs).to.be.an('object'),
+            span => expect(span.data.lambda.cw.logs.group).to.equal('/aws/lambda/callback_8_10'),
+            span =>
+              expect(span.data.lambda.cw.logs.stream).to.equal('2019/09/08/[$LATEST]3b71b6b86c614431bd1e42974f8eb981'),
+            span =>
+              expect(span.data.lambda.cw.logs.events).to.deep.equal([
+                '2019-09-08T21:34:37.973Z\te390347f-34be-4a56-89bf-75a219fda2b3\tStarting up\n',
+                '2019-09-08T21:34:37.975Z\te390347f-34be-4a56-89bf-75a219fda2b3\t' +
+                  'TypeError: callback is not a function\n    at exports.handler (/var/task/index.js:7:3)\n',
+                'END RequestId: e390347f-34be-4a56-89bf-75a219fda2b3\n'
+              ]),
+            span => expect(span.data.lambda.cw.logs.more).to.be.true
+          ])
         ));
   });
 
@@ -829,23 +845,23 @@ function registerTests(handlerDefinitionPath) {
       verify(control, { error: false, expectMetrics: true, expectSpans: true, trigger: 'aws:s3' })
         .then(() => control.getSpans())
         .then(spans =>
-          expectExactlyOneMatching(spans, span => {
-            expect(span.n).to.equal('aws.lambda.entry');
-            expect(span.k).to.equal(constants.ENTRY);
-            expect(span.data.lambda.s3).to.be.an('object');
-            expect(span.data.lambda.s3.events).to.be.an('array');
-            expect(span.data.lambda.s3.events).to.have.length(3);
-            expect(span.data.lambda.s3.events[0].event).to.equal('ObjectCreated:Put');
-            expect(span.data.lambda.s3.events[0].bucket).to.equal('lambda-tracing-test');
-            expect(span.data.lambda.s3.events[0].object).to.equal('test/');
-            expect(span.data.lambda.s3.events[1].event).to.equal('ObjectCreated:Put');
-            expect(span.data.lambda.s3.events[1].bucket).to.equal('lambda-tracing-test-2');
-            expect(span.data.lambda.s3.events[1].object).to.equal('test/two');
-            expect(span.data.lambda.s3.events[2].event).to.equal('ObjectCreated:Put');
-            expect(span.data.lambda.s3.events[2].bucket).to.equal('lambda-tracing-test-3');
-            expect(span.data.lambda.s3.events[2].object).to.equal('test/three');
-            expect(span.data.lambda.s3.more).to.be.true;
-          })
+          expectExactlyOneMatching(spans, [
+            span => expect(span.n).to.equal('aws.lambda.entry'),
+            span => expect(span.k).to.equal(constants.ENTRY),
+            span => expect(span.data.lambda.s3).to.be.an('object'),
+            span => expect(span.data.lambda.s3.events).to.be.an('array'),
+            span => expect(span.data.lambda.s3.events).to.have.length(3),
+            span => expect(span.data.lambda.s3.events[0].event).to.equal('ObjectCreated:Put'),
+            span => expect(span.data.lambda.s3.events[0].bucket).to.equal('lambda-tracing-test'),
+            span => expect(span.data.lambda.s3.events[0].object).to.equal('test/'),
+            span => expect(span.data.lambda.s3.events[1].event).to.equal('ObjectCreated:Put'),
+            span => expect(span.data.lambda.s3.events[1].bucket).to.equal('lambda-tracing-test-2'),
+            span => expect(span.data.lambda.s3.events[1].object).to.equal('test/two'),
+            span => expect(span.data.lambda.s3.events[2].event).to.equal('ObjectCreated:Put'),
+            span => expect(span.data.lambda.s3.events[2].bucket).to.equal('lambda-tracing-test-3'),
+            span => expect(span.data.lambda.s3.events[2].object).to.equal('test/three'),
+            span => expect(span.data.lambda.s3.more).to.be.true
+          ])
         ));
   });
 
@@ -863,17 +879,18 @@ function registerTests(handlerDefinitionPath) {
       verify(control, { error: false, expectMetrics: true, expectSpans: true, trigger: 'aws:sqs' })
         .then(() => control.getSpans())
         .then(spans =>
-          expectExactlyOneMatching(spans, span => {
-            expect(span.n).to.equal('aws.lambda.entry');
-            expect(span.k).to.equal(constants.ENTRY);
-            expect(span.data.lambda.sqs).to.be.an('object');
-            expect(span.data.lambda.sqs.messages).to.be.an('array');
-            expect(span.data.lambda.sqs.messages).to.have.length(1);
-            expect(span.data.lambda.sqs.messages[0].queue).to.equal(
-              'arn:aws:sqs:us-east-2:XXXXXXXXXXXX:lambda-tracing-test-queue'
-            );
-            expect(span.data.lambda.sqs.more).to.be.false;
-          })
+          expectExactlyOneMatching(spans, [
+            span => expect(span.n).to.equal('aws.lambda.entry'),
+            span => expect(span.k).to.equal(constants.ENTRY),
+            span => expect(span.data.lambda.sqs).to.be.an('object'),
+            span => expect(span.data.lambda.sqs.messages).to.be.an('array'),
+            span => expect(span.data.lambda.sqs.messages).to.have.length(1),
+            span =>
+              expect(span.data.lambda.sqs.messages[0].queue).to.equal(
+                'arn:aws:sqs:us-east-2:XXXXXXXXXXXX:lambda-tracing-test-queue'
+              ),
+            span => expect(span.data.lambda.sqs.more).to.be.false
+          ])
         ));
   });
 

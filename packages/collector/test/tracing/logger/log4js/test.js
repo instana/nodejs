@@ -36,11 +36,11 @@ describe('tracing/logger/log4js', function() {
       trigger('info', 'Info message - must not be traced.', useLogMethod).then(() =>
         testUtils.retry(() =>
           agentControls.getSpans().then(spans => {
-            const entrySpan = testUtils.expectAtLeastOneMatching(spans, span => {
-              expect(span.n).to.equal('node.http.server');
-              expect(span.f.e).to.equal(String(controls.getPid()));
-              expect(span.f.h).to.equal('agent-stub-uuid');
-            });
+            const entrySpan = testUtils.expectAtLeastOneMatching(spans, [
+              span => expect(span.n).to.equal('node.http.server'),
+              span => expect(span.f.e).to.equal(String(controls.getPid())),
+              span => expect(span.f.h).to.equal('agent-stub-uuid')
+            ]);
             testUtils.expectAtLeastOneMatching(spans, span => {
               checkNextExitSpan(span, entrySpan);
             });
@@ -61,11 +61,11 @@ describe('tracing/logger/log4js', function() {
     return trigger(level, message, useLogMethod).then(() =>
       testUtils.retry(() =>
         agentControls.getSpans().then(spans => {
-          const entrySpan = testUtils.expectAtLeastOneMatching(spans, span => {
-            expect(span.n).to.equal('node.http.server');
-            expect(span.f.e).to.equal(String(controls.getPid()));
-            expect(span.f.h).to.equal('agent-stub-uuid');
-          });
+          const entrySpan = testUtils.expectAtLeastOneMatching(spans, [
+            span => expect(span.n).to.equal('node.http.server'),
+            span => expect(span.f.e).to.equal(String(controls.getPid())),
+            span => expect(span.f.h).to.equal('agent-stub-uuid')
+          ]);
           testUtils.expectAtLeastOneMatching(spans, span => {
             checkLog4jsSpan(span, entrySpan, expectErroneous, message);
           });

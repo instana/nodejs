@@ -48,43 +48,43 @@ describe('tracing/ioredis', function() {
 
         return testUtils.retry(() =>
           agentControls.getSpans().then(spans => {
-            const writeEntrySpan = testUtils.expectAtLeastOneMatching(spans, span => {
-              expect(span.n).to.equal('node.http.server');
-              expect(span.data.http.method).to.equal('POST');
-            });
+            const writeEntrySpan = testUtils.expectAtLeastOneMatching(spans, [
+              span => expect(span.n).to.equal('node.http.server'),
+              span => expect(span.data.http.method).to.equal('POST')
+            ]);
 
-            testUtils.expectAtLeastOneMatching(spans, span => {
-              expect(span.t).to.equal(writeEntrySpan.t);
-              expect(span.p).to.equal(writeEntrySpan.s);
-              expect(span.n).to.equal('redis');
-              expect(span.k).to.equal(constants.EXIT);
-              expect(span.f.e).to.equal(String(controls.getPid()));
-              expect(span.f.h).to.equal('agent-stub-uuid');
-              expect(span.async).to.not.exist;
-              expect(span.error).to.not.exist;
-              expect(span.ec).to.equal(0);
-              expect(span.data.redis.connection).to.equal(process.env.REDIS);
-              expect(span.data.redis.command).to.equal('set');
-            });
+            testUtils.expectAtLeastOneMatching(spans, [
+              span => expect(span.t).to.equal(writeEntrySpan.t),
+              span => expect(span.p).to.equal(writeEntrySpan.s),
+              span => expect(span.n).to.equal('redis'),
+              span => expect(span.k).to.equal(constants.EXIT),
+              span => expect(span.f.e).to.equal(String(controls.getPid())),
+              span => expect(span.f.h).to.equal('agent-stub-uuid'),
+              span => expect(span.async).to.not.exist,
+              span => expect(span.error).to.not.exist,
+              span => expect(span.ec).to.equal(0),
+              span => expect(span.data.redis.connection).to.equal(process.env.REDIS),
+              span => expect(span.data.redis.command).to.equal('set')
+            ]);
 
-            const readEntrySpan = testUtils.expectAtLeastOneMatching(spans, span => {
-              expect(span.n).to.equal('node.http.server');
-              expect(span.data.http.method).to.equal('GET');
-            });
+            const readEntrySpan = testUtils.expectAtLeastOneMatching(spans, [
+              span => expect(span.n).to.equal('node.http.server'),
+              span => expect(span.data.http.method).to.equal('GET')
+            ]);
 
-            testUtils.expectAtLeastOneMatching(spans, span => {
-              expect(span.t).to.equal(readEntrySpan.t);
-              expect(span.p).to.equal(readEntrySpan.s);
-              expect(span.n).to.equal('redis');
-              expect(span.k).to.equal(constants.EXIT);
-              expect(span.f.e).to.equal(String(controls.getPid()));
-              expect(span.f.h).to.equal('agent-stub-uuid');
-              expect(span.async).to.not.exist;
-              expect(span.error).to.not.exist;
-              expect(span.ec).to.equal(0);
-              expect(span.data.redis.connection).to.equal(process.env.REDIS);
-              expect(span.data.redis.command).to.equal('get');
-            });
+            testUtils.expectAtLeastOneMatching(spans, [
+              span => expect(span.t).to.equal(readEntrySpan.t),
+              span => expect(span.p).to.equal(readEntrySpan.s),
+              span => expect(span.n).to.equal('redis'),
+              span => expect(span.k).to.equal(constants.EXIT),
+              span => expect(span.f.e).to.equal(String(controls.getPid())),
+              span => expect(span.f.h).to.equal('agent-stub-uuid'),
+              span => expect(span.async).to.not.exist,
+              span => expect(span.error).to.not.exist,
+              span => expect(span.ec).to.equal(0),
+              span => expect(span.data.redis.connection).to.equal(process.env.REDIS),
+              span => expect(span.data.redis.command).to.equal('get')
+            ]);
           })
         );
       }));
@@ -113,58 +113,58 @@ describe('tracing/ioredis', function() {
 
         return testUtils.retry(() =>
           agentControls.getSpans().then(spans => {
-            const writeEntrySpan = testUtils.expectAtLeastOneMatching(spans, span => {
-              expect(span.n).to.equal('node.http.server');
-              expect(span.data.http.method).to.equal('POST');
-            });
+            const writeEntrySpan = testUtils.expectAtLeastOneMatching(spans, [
+              span => expect(span.n).to.equal('node.http.server'),
+              span => expect(span.data.http.method).to.equal('POST')
+            ]);
 
-            testUtils.expectAtLeastOneMatching(spans, span => {
-              expect(span.t).to.equal(writeEntrySpan.t);
-              expect(span.p).to.equal(writeEntrySpan.s);
-              expect(span.n).to.equal('redis');
-              expect(span.k).to.equal(constants.EXIT);
-              expect(span.f.e).to.equal(String(controls.getPid()));
-              expect(span.f.h).to.equal('agent-stub-uuid');
-              expect(span.async).to.not.exist;
-              expect(span.error).to.not.exist;
-              expect(span.ec).to.equal(0);
-              expect(span.data.redis.connection).to.equal(process.env.REDIS);
-              expect(span.data.redis.command).to.equal('set');
-            });
+            testUtils.expectAtLeastOneMatching(spans, [
+              span => expect(span.t).to.equal(writeEntrySpan.t),
+              span => expect(span.p).to.equal(writeEntrySpan.s),
+              span => expect(span.n).to.equal('redis'),
+              span => expect(span.k).to.equal(constants.EXIT),
+              span => expect(span.f.e).to.equal(String(controls.getPid())),
+              span => expect(span.f.h).to.equal('agent-stub-uuid'),
+              span => expect(span.async).to.not.exist,
+              span => expect(span.error).to.not.exist,
+              span => expect(span.ec).to.equal(0),
+              span => expect(span.data.redis.connection).to.equal(process.env.REDIS),
+              span => expect(span.data.redis.command).to.equal('set')
+            ]);
 
-            const readEntrySpan = testUtils.expectAtLeastOneMatching(spans, span => {
-              expect(span.n).to.equal('node.http.server');
-              expect(span.data.http.method).to.equal('GET');
-            });
+            const readEntrySpan = testUtils.expectAtLeastOneMatching(spans, [
+              span => expect(span.n).to.equal('node.http.server'),
+              span => expect(span.data.http.method).to.equal('GET')
+            ]);
 
-            testUtils.expectAtLeastOneMatching(spans, span => {
-              expect(span.t).to.equal(readEntrySpan.t);
-              expect(span.p).to.equal(readEntrySpan.s);
-              expect(span.n).to.equal('redis');
-              expect(span.k).to.equal(constants.EXIT);
-              expect(span.f.e).to.equal(String(controls.getPid()));
-              expect(span.f.h).to.equal('agent-stub-uuid');
-              expect(span.async).to.not.exist;
-              expect(span.error).to.not.exist;
-              expect(span.ec).to.equal(0);
-              expect(span.data.redis.connection).to.equal(process.env.REDIS);
-              expect(span.data.redis.command).to.equal('get');
-            });
+            testUtils.expectAtLeastOneMatching(spans, [
+              span => expect(span.t).to.equal(readEntrySpan.t),
+              span => expect(span.p).to.equal(readEntrySpan.s),
+              span => expect(span.n).to.equal('redis'),
+              span => expect(span.k).to.equal(constants.EXIT),
+              span => expect(span.f.e).to.equal(String(controls.getPid())),
+              span => expect(span.f.h).to.equal('agent-stub-uuid'),
+              span => expect(span.async).to.not.exist,
+              span => expect(span.error).to.not.exist,
+              span => expect(span.ec).to.equal(0),
+              span => expect(span.data.redis.connection).to.equal(process.env.REDIS),
+              span => expect(span.data.redis.command).to.equal('get')
+            ]);
 
-            testUtils.expectAtLeastOneMatching(spans, span => {
-              expect(span.t).to.equal(readEntrySpan.t);
-              expect(span.p).to.equal(readEntrySpan.s);
-              expect(span.n).to.equal('node.http.client');
-              expect(span.k).to.equal(constants.EXIT);
-              expect(span.f.e).to.equal(String(controls.getPid()));
-              expect(span.f.h).to.equal('agent-stub-uuid');
-              expect(span.async).to.not.exist;
-              expect(span.error).to.not.exist;
-              expect(span.ec).to.equal(0);
-              expect(span.data.http.method).to.equal('GET');
-              expect(span.data.http.url).to.match(/http:\/\/127\.0\.0\.1:/);
-              expect(span.data.http.status).to.equal(200);
-            });
+            testUtils.expectAtLeastOneMatching(spans, [
+              span => expect(span.t).to.equal(readEntrySpan.t),
+              span => expect(span.p).to.equal(readEntrySpan.s),
+              span => expect(span.n).to.equal('node.http.client'),
+              span => expect(span.k).to.equal(constants.EXIT),
+              span => expect(span.f.e).to.equal(String(controls.getPid())),
+              span => expect(span.f.h).to.equal('agent-stub-uuid'),
+              span => expect(span.async).to.not.exist,
+              span => expect(span.error).to.not.exist,
+              span => expect(span.ec).to.equal(0),
+              span => expect(span.data.http.method).to.equal('GET'),
+              span => expect(span.data.http.url).to.match(/http:\/\/127\.0\.0\.1:/),
+              span => expect(span.data.http.status).to.equal(200)
+            ]);
           })
         );
       }));
@@ -193,58 +193,58 @@ describe('tracing/ioredis', function() {
 
         return testUtils.retry(() =>
           agentControls.getSpans().then(spans => {
-            const writeEntrySpan = testUtils.expectAtLeastOneMatching(spans, span => {
-              expect(span.n).to.equal('node.http.server');
-              expect(span.data.http.method).to.equal('POST');
-            });
+            const writeEntrySpan = testUtils.expectAtLeastOneMatching(spans, [
+              span => expect(span.n).to.equal('node.http.server'),
+              span => expect(span.data.http.method).to.equal('POST')
+            ]);
 
-            testUtils.expectAtLeastOneMatching(spans, span => {
-              expect(span.t).to.equal(writeEntrySpan.t);
-              expect(span.p).to.equal(writeEntrySpan.s);
-              expect(span.n).to.equal('redis');
-              expect(span.k).to.equal(constants.EXIT);
-              expect(span.f.e).to.equal(String(controls.getPid()));
-              expect(span.f.h).to.equal('agent-stub-uuid');
-              expect(span.async).to.not.exist;
-              expect(span.error).to.not.exist;
-              expect(span.ec).to.equal(0);
-              expect(span.data.redis.connection).to.equal(process.env.REDIS);
-              expect(span.data.redis.command).to.equal('set');
-            });
+            testUtils.expectAtLeastOneMatching(spans, [
+              span => expect(span.t).to.equal(writeEntrySpan.t),
+              span => expect(span.p).to.equal(writeEntrySpan.s),
+              span => expect(span.n).to.equal('redis'),
+              span => expect(span.k).to.equal(constants.EXIT),
+              span => expect(span.f.e).to.equal(String(controls.getPid())),
+              span => expect(span.f.h).to.equal('agent-stub-uuid'),
+              span => expect(span.async).to.not.exist,
+              span => expect(span.error).to.not.exist,
+              span => expect(span.ec).to.equal(0),
+              span => expect(span.data.redis.connection).to.equal(process.env.REDIS),
+              span => expect(span.data.redis.command).to.equal('set')
+            ]);
 
-            const readEntrySpan = testUtils.expectAtLeastOneMatching(spans, span => {
-              expect(span.n).to.equal('node.http.server');
-              expect(span.data.http.method).to.equal('GET');
-            });
+            const readEntrySpan = testUtils.expectAtLeastOneMatching(spans, [
+              span => expect(span.n).to.equal('node.http.server'),
+              span => expect(span.data.http.method).to.equal('GET')
+            ]);
 
-            testUtils.expectAtLeastOneMatching(spans, span => {
-              expect(span.t).to.equal(readEntrySpan.t);
-              expect(span.p).to.equal(readEntrySpan.s);
-              expect(span.n).to.equal('redis');
-              expect(span.k).to.equal(constants.EXIT);
-              expect(span.f.e).to.equal(String(controls.getPid()));
-              expect(span.f.h).to.equal('agent-stub-uuid');
-              expect(span.async).to.not.exist;
-              expect(span.error).to.not.exist;
-              expect(span.ec).to.equal(0);
-              expect(span.data.redis.connection).to.equal(process.env.REDIS);
-              expect(span.data.redis.command).to.equal('get');
-            });
+            testUtils.expectAtLeastOneMatching(spans, [
+              span => expect(span.t).to.equal(readEntrySpan.t),
+              span => expect(span.p).to.equal(readEntrySpan.s),
+              span => expect(span.n).to.equal('redis'),
+              span => expect(span.k).to.equal(constants.EXIT),
+              span => expect(span.f.e).to.equal(String(controls.getPid())),
+              span => expect(span.f.h).to.equal('agent-stub-uuid'),
+              span => expect(span.async).to.not.exist,
+              span => expect(span.error).to.not.exist,
+              span => expect(span.ec).to.equal(0),
+              span => expect(span.data.redis.connection).to.equal(process.env.REDIS),
+              span => expect(span.data.redis.command).to.equal('get')
+            ]);
 
-            testUtils.expectAtLeastOneMatching(spans, span => {
-              expect(span.t).to.equal(readEntrySpan.t);
-              expect(span.p).to.equal(readEntrySpan.s);
-              expect(span.n).to.equal('node.http.client');
-              expect(span.k).to.equal(constants.EXIT);
-              expect(span.f.e).to.equal(String(controls.getPid()));
-              expect(span.f.h).to.equal('agent-stub-uuid');
-              expect(span.async).to.not.exist;
-              expect(span.error).to.not.exist;
-              expect(span.ec).to.equal(0);
-              expect(span.data.http.method).to.equal('GET');
-              expect(span.data.http.url).to.match(/http:\/\/127\.0\.0\.1:/);
-              expect(span.data.http.status).to.equal(200);
-            });
+            testUtils.expectAtLeastOneMatching(spans, [
+              span => expect(span.t).to.equal(readEntrySpan.t),
+              span => expect(span.p).to.equal(readEntrySpan.s),
+              span => expect(span.n).to.equal('node.http.client'),
+              span => expect(span.k).to.equal(constants.EXIT),
+              span => expect(span.f.e).to.equal(String(controls.getPid())),
+              span => expect(span.f.h).to.equal('agent-stub-uuid'),
+              span => expect(span.async).to.not.exist,
+              span => expect(span.error).to.not.exist,
+              span => expect(span.ec).to.equal(0),
+              span => expect(span.data.http.method).to.equal('GET'),
+              span => expect(span.data.http.url).to.match(/http:\/\/127\.0\.0\.1:/),
+              span => expect(span.data.http.status).to.equal(200)
+            ]);
           })
         );
       }));
@@ -261,25 +261,25 @@ describe('tracing/ioredis', function() {
       .then(() =>
         testUtils.retry(() =>
           agentControls.getSpans().then(spans => {
-            const writeEntrySpan = testUtils.expectAtLeastOneMatching(spans, span => {
-              expect(span.n).to.equal('node.http.server');
-              expect(span.data.http.method).to.equal('GET');
-            });
+            const writeEntrySpan = testUtils.expectAtLeastOneMatching(spans, [
+              span => expect(span.n).to.equal('node.http.server'),
+              span => expect(span.data.http.method).to.equal('GET')
+            ]);
 
-            testUtils.expectAtLeastOneMatching(spans, span => {
-              expect(span.t).to.equal(writeEntrySpan.t);
-              expect(span.p).to.equal(writeEntrySpan.s);
-              expect(span.n).to.equal('redis');
-              expect(span.k).to.equal(constants.EXIT);
-              expect(span.f.e).to.equal(String(controls.getPid()));
-              expect(span.f.h).to.equal('agent-stub-uuid');
-              expect(span.async).to.not.exist;
-              expect(span.error).to.not.exist;
-              expect(span.ec).to.equal(1);
-              expect(span.data.redis.connection).to.equal(process.env.REDIS);
-              expect(span.data.redis.command).to.equal('get');
-              expect(span.data.redis.error).to.be.a('string');
-            });
+            testUtils.expectAtLeastOneMatching(spans, [
+              span => expect(span.t).to.equal(writeEntrySpan.t),
+              span => expect(span.p).to.equal(writeEntrySpan.s),
+              span => expect(span.n).to.equal('redis'),
+              span => expect(span.k).to.equal(constants.EXIT),
+              span => expect(span.f.e).to.equal(String(controls.getPid())),
+              span => expect(span.f.h).to.equal('agent-stub-uuid'),
+              span => expect(span.async).to.not.exist,
+              span => expect(span.error).to.not.exist,
+              span => expect(span.ec).to.equal(1),
+              span => expect(span.data.redis.connection).to.equal(process.env.REDIS),
+              span => expect(span.data.redis.command).to.equal('get'),
+              span => expect(span.data.redis.error).to.be.a('string')
+            ]);
           })
         )
       ));
@@ -293,27 +293,27 @@ describe('tracing/ioredis', function() {
       .then(() =>
         testUtils.retry(() =>
           agentControls.getSpans().then(spans => {
-            const writeEntrySpan = testUtils.expectAtLeastOneMatching(spans, span => {
-              expect(span.n).to.equal('node.http.server');
-              expect(span.data.http.method).to.equal('GET');
-            });
+            const writeEntrySpan = testUtils.expectAtLeastOneMatching(spans, [
+              span => expect(span.n).to.equal('node.http.server'),
+              span => expect(span.data.http.method).to.equal('GET')
+            ]);
 
-            testUtils.expectAtLeastOneMatching(spans, span => {
-              expect(span.t).to.equal(writeEntrySpan.t);
-              expect(span.p).to.equal(writeEntrySpan.s);
-              expect(span.n).to.equal('redis');
-              expect(span.k).to.equal(constants.EXIT);
-              expect(span.f.e).to.equal(String(controls.getPid()));
-              expect(span.f.h).to.equal('agent-stub-uuid');
-              expect(span.async).to.not.exist;
-              expect(span.error).to.not.exist;
-              expect(span.ec).to.equal(0);
-              expect(span.b.s).to.equal(2);
-              expect(span.b.u).to.not.exist;
-              expect(span.data.redis.connection).to.equal(process.env.REDIS);
-              expect(span.data.redis.command).to.equal('multi');
-              expect(span.data.redis.subCommands).to.deep.equal(['hset', 'hget']);
-            });
+            testUtils.expectAtLeastOneMatching(spans, [
+              span => expect(span.t).to.equal(writeEntrySpan.t),
+              span => expect(span.p).to.equal(writeEntrySpan.s),
+              span => expect(span.n).to.equal('redis'),
+              span => expect(span.k).to.equal(constants.EXIT),
+              span => expect(span.f.e).to.equal(String(controls.getPid())),
+              span => expect(span.f.h).to.equal('agent-stub-uuid'),
+              span => expect(span.async).to.not.exist,
+              span => expect(span.error).to.not.exist,
+              span => expect(span.ec).to.equal(0),
+              span => expect(span.b.s).to.equal(2),
+              span => expect(span.b.u).to.not.exist,
+              span => expect(span.data.redis.connection).to.equal(process.env.REDIS),
+              span => expect(span.data.redis.command).to.equal('multi'),
+              span => expect(span.data.redis.subCommands).to.deep.equal(['hset', 'hget'])
+            ]);
           })
         )
       ));
@@ -330,28 +330,28 @@ describe('tracing/ioredis', function() {
       .then(() =>
         testUtils.retry(() =>
           agentControls.getSpans().then(spans => {
-            const writeEntrySpan = testUtils.expectAtLeastOneMatching(spans, span => {
-              expect(span.n).to.equal('node.http.server');
-              expect(span.data.http.method).to.equal('GET');
-            });
+            const writeEntrySpan = testUtils.expectAtLeastOneMatching(spans, [
+              span => expect(span.n).to.equal('node.http.server'),
+              span => expect(span.data.http.method).to.equal('GET')
+            ]);
 
-            testUtils.expectAtLeastOneMatching(spans, span => {
-              expect(span.t).to.equal(writeEntrySpan.t);
-              expect(span.p).to.equal(writeEntrySpan.s);
-              expect(span.n).to.equal('redis');
-              expect(span.k).to.equal(constants.EXIT);
-              expect(span.f.e).to.equal(String(controls.getPid()));
-              expect(span.f.h).to.equal('agent-stub-uuid');
-              expect(span.async).to.not.exist;
-              expect(span.error).to.not.exist;
-              expect(span.ec).to.equal(2);
-              expect(span.b.s).to.equal(2);
-              expect(span.b.u).to.not.exist;
-              expect(span.data.redis.connection).to.equal(process.env.REDIS);
-              expect(span.data.redis.command).to.equal('multi');
-              expect(span.data.redis.subCommands).to.deep.equal(['hset', 'hget']);
-              expect(span.data.redis.error).to.be.a('string');
-            });
+            testUtils.expectAtLeastOneMatching(spans, [
+              span => expect(span.t).to.equal(writeEntrySpan.t),
+              span => expect(span.p).to.equal(writeEntrySpan.s),
+              span => expect(span.n).to.equal('redis'),
+              span => expect(span.k).to.equal(constants.EXIT),
+              span => expect(span.f.e).to.equal(String(controls.getPid())),
+              span => expect(span.f.h).to.equal('agent-stub-uuid'),
+              span => expect(span.async).to.not.exist,
+              span => expect(span.error).to.not.exist,
+              span => expect(span.ec).to.equal(2),
+              span => expect(span.b.s).to.equal(2),
+              span => expect(span.b.u).to.not.exist,
+              span => expect(span.data.redis.connection).to.equal(process.env.REDIS),
+              span => expect(span.data.redis.command).to.equal('multi'),
+              span => expect(span.data.redis.subCommands).to.deep.equal(['hset', 'hget']),
+              span => expect(span.data.redis.error).to.be.a('string')
+            ]);
           })
         )
       ));
@@ -365,42 +365,42 @@ describe('tracing/ioredis', function() {
       .then(() =>
         testUtils.retry(() =>
           agentControls.getSpans().then(spans => {
-            const entrySpan = testUtils.expectAtLeastOneMatching(spans, span => {
-              expect(span.n).to.equal('node.http.server');
-              expect(span.data.http.method).to.equal('POST');
-            });
+            const entrySpan = testUtils.expectAtLeastOneMatching(spans, [
+              span => expect(span.n).to.equal('node.http.server'),
+              span => expect(span.data.http.method).to.equal('POST')
+            ]);
 
-            testUtils.expectAtLeastOneMatching(spans, span => {
-              expect(span.t).to.equal(entrySpan.t);
-              expect(span.p).to.equal(entrySpan.s);
-              expect(span.n).to.equal('redis');
-              expect(span.k).to.equal(constants.EXIT);
-              expect(span.f.e).to.equal(String(controls.getPid()));
-              expect(span.f.h).to.equal('agent-stub-uuid');
-              expect(span.async).to.not.exist;
-              expect(span.error).to.not.exist;
-              expect(span.ec).to.equal(0);
-              expect(span.b.s).to.equal(2);
-              expect(span.b.u).to.not.exist;
-              expect(span.data.redis.connection).to.equal(process.env.REDIS);
-              expect(span.data.redis.command).to.equal('multi');
-              expect(span.data.redis.subCommands).to.deep.equal(['hset', 'hget']);
-            });
+            testUtils.expectAtLeastOneMatching(spans, [
+              span => expect(span.t).to.equal(entrySpan.t),
+              span => expect(span.p).to.equal(entrySpan.s),
+              span => expect(span.n).to.equal('redis'),
+              span => expect(span.k).to.equal(constants.EXIT),
+              span => expect(span.f.e).to.equal(String(controls.getPid())),
+              span => expect(span.f.h).to.equal('agent-stub-uuid'),
+              span => expect(span.async).to.not.exist,
+              span => expect(span.error).to.not.exist,
+              span => expect(span.ec).to.equal(0),
+              span => expect(span.b.s).to.equal(2),
+              span => expect(span.b.u).to.not.exist,
+              span => expect(span.data.redis.connection).to.equal(process.env.REDIS),
+              span => expect(span.data.redis.command).to.equal('multi'),
+              span => expect(span.data.redis.subCommands).to.deep.equal(['hset', 'hget'])
+            ]);
 
-            testUtils.expectAtLeastOneMatching(spans, span => {
-              expect(span.t).to.equal(entrySpan.t);
-              expect(span.p).to.equal(entrySpan.s);
-              expect(span.n).to.equal('node.http.client');
-              expect(span.k).to.equal(constants.EXIT);
-              expect(span.f.e).to.equal(String(controls.getPid()));
-              expect(span.f.h).to.equal('agent-stub-uuid');
-              expect(span.async).to.not.exist;
-              expect(span.error).to.not.exist;
-              expect(span.ec).to.equal(0);
-              expect(span.data.http.method).to.equal('GET');
-              expect(span.data.http.url).to.match(/http:\/\/127\.0\.0\.1:/);
-              expect(span.data.http.status).to.equal(200);
-            });
+            testUtils.expectAtLeastOneMatching(spans, [
+              span => expect(span.t).to.equal(entrySpan.t),
+              span => expect(span.p).to.equal(entrySpan.s),
+              span => expect(span.n).to.equal('node.http.client'),
+              span => expect(span.k).to.equal(constants.EXIT),
+              span => expect(span.f.e).to.equal(String(controls.getPid())),
+              span => expect(span.f.h).to.equal('agent-stub-uuid'),
+              span => expect(span.async).to.not.exist,
+              span => expect(span.error).to.not.exist,
+              span => expect(span.ec).to.equal(0),
+              span => expect(span.data.http.method).to.equal('GET'),
+              span => expect(span.data.http.url).to.match(/http:\/\/127\.0\.0\.1:/),
+              span => expect(span.data.http.status).to.equal(200)
+            ]);
           })
         )
       ));
@@ -414,27 +414,27 @@ describe('tracing/ioredis', function() {
       .then(() =>
         testUtils.retry(() =>
           agentControls.getSpans().then(spans => {
-            const writeEntrySpan = testUtils.expectAtLeastOneMatching(spans, span => {
-              expect(span.n).to.equal('node.http.server');
-              expect(span.data.http.method).to.equal('GET');
-            });
+            const writeEntrySpan = testUtils.expectAtLeastOneMatching(spans, [
+              span => expect(span.n).to.equal('node.http.server'),
+              span => expect(span.data.http.method).to.equal('GET')
+            ]);
 
-            testUtils.expectAtLeastOneMatching(spans, span => {
-              expect(span.t).to.equal(writeEntrySpan.t);
-              expect(span.p).to.equal(writeEntrySpan.s);
-              expect(span.n).to.equal('redis');
-              expect(span.k).to.equal(constants.EXIT);
-              expect(span.f.e).to.equal(String(controls.getPid()));
-              expect(span.f.h).to.equal('agent-stub-uuid');
-              expect(span.async).to.not.exist;
-              expect(span.error).to.not.exist;
-              expect(span.ec).to.equal(0);
-              expect(span.b.s).to.equal(3);
-              expect(span.b.u).to.not.exist;
-              expect(span.data.redis.connection).to.equal(process.env.REDIS);
-              expect(span.data.redis.command).to.equal('pipeline');
-              expect(span.data.redis.subCommands).to.deep.equal(['hset', 'hset', 'hget']);
-            });
+            testUtils.expectAtLeastOneMatching(spans, [
+              span => expect(span.t).to.equal(writeEntrySpan.t),
+              span => expect(span.p).to.equal(writeEntrySpan.s),
+              span => expect(span.n).to.equal('redis'),
+              span => expect(span.k).to.equal(constants.EXIT),
+              span => expect(span.f.e).to.equal(String(controls.getPid())),
+              span => expect(span.f.h).to.equal('agent-stub-uuid'),
+              span => expect(span.async).to.not.exist,
+              span => expect(span.error).to.not.exist,
+              span => expect(span.ec).to.equal(0),
+              span => expect(span.b.s).to.equal(3),
+              span => expect(span.b.u).to.not.exist,
+              span => expect(span.data.redis.connection).to.equal(process.env.REDIS),
+              span => expect(span.data.redis.command).to.equal('pipeline'),
+              span => expect(span.data.redis.subCommands).to.deep.equal(['hset', 'hset', 'hget'])
+            ]);
           })
         )
       ));
@@ -448,28 +448,28 @@ describe('tracing/ioredis', function() {
       .then(() =>
         testUtils.retry(() =>
           agentControls.getSpans().then(spans => {
-            const writeEntrySpan = testUtils.expectAtLeastOneMatching(spans, span => {
-              expect(span.n).to.equal('node.http.server');
-              expect(span.data.http.method).to.equal('GET');
-            });
+            const writeEntrySpan = testUtils.expectAtLeastOneMatching(spans, [
+              span => expect(span.n).to.equal('node.http.server'),
+              span => expect(span.data.http.method).to.equal('GET')
+            ]);
 
-            testUtils.expectAtLeastOneMatching(spans, span => {
-              expect(span.t).to.equal(writeEntrySpan.t);
-              expect(span.p).to.equal(writeEntrySpan.s);
-              expect(span.n).to.equal('redis');
-              expect(span.k).to.equal(constants.EXIT);
-              expect(span.f.e).to.equal(String(controls.getPid()));
-              expect(span.f.h).to.equal('agent-stub-uuid');
-              expect(span.async).to.not.exist;
-              expect(span.error).to.not.exist;
-              expect(span.ec).to.equal(1);
-              expect(span.b.s).to.equal(3);
-              expect(span.b.u).to.not.exist;
-              expect(span.data.redis.connection).to.equal(process.env.REDIS);
-              expect(span.data.redis.command).to.equal('pipeline');
-              expect(span.data.redis.subCommands).to.deep.equal(['hset', 'hset', 'hget']);
-              expect(span.data.redis.error).to.be.a('string');
-            });
+            testUtils.expectAtLeastOneMatching(spans, [
+              span => expect(span.t).to.equal(writeEntrySpan.t),
+              span => expect(span.p).to.equal(writeEntrySpan.s),
+              span => expect(span.n).to.equal('redis'),
+              span => expect(span.k).to.equal(constants.EXIT),
+              span => expect(span.f.e).to.equal(String(controls.getPid())),
+              span => expect(span.f.h).to.equal('agent-stub-uuid'),
+              span => expect(span.async).to.not.exist,
+              span => expect(span.error).to.not.exist,
+              span => expect(span.ec).to.equal(1),
+              span => expect(span.b.s).to.equal(3),
+              span => expect(span.b.u).to.not.exist,
+              span => expect(span.data.redis.connection).to.equal(process.env.REDIS),
+              span => expect(span.data.redis.command).to.equal('pipeline'),
+              span => expect(span.data.redis.subCommands).to.deep.equal(['hset', 'hset', 'hget']),
+              span => expect(span.data.redis.error).to.be.a('string')
+            ]);
           })
         )
       ));
@@ -483,42 +483,42 @@ describe('tracing/ioredis', function() {
       .then(() =>
         testUtils.retry(() =>
           agentControls.getSpans().then(spans => {
-            const entrySpan = testUtils.expectAtLeastOneMatching(spans, span => {
-              expect(span.n).to.equal('node.http.server');
-              expect(span.data.http.method).to.equal('POST');
-            });
+            const entrySpan = testUtils.expectAtLeastOneMatching(spans, [
+              span => expect(span.n).to.equal('node.http.server'),
+              span => expect(span.data.http.method).to.equal('POST')
+            ]);
 
-            testUtils.expectAtLeastOneMatching(spans, span => {
-              expect(span.t).to.equal(entrySpan.t);
-              expect(span.p).to.equal(entrySpan.s);
-              expect(span.n).to.equal('redis');
-              expect(span.k).to.equal(constants.EXIT);
-              expect(span.f.e).to.equal(String(controls.getPid()));
-              expect(span.f.h).to.equal('agent-stub-uuid');
-              expect(span.async).to.not.exist;
-              expect(span.error).to.not.exist;
-              expect(span.ec).to.equal(0);
-              expect(span.b.s).to.equal(2);
-              expect(span.b.u).to.not.exist;
-              expect(span.data.redis.connection).to.equal(process.env.REDIS);
-              expect(span.data.redis.command).to.equal('pipeline');
-              expect(span.data.redis.subCommands).to.deep.equal(['hset', 'hget']);
-            });
+            testUtils.expectAtLeastOneMatching(spans, [
+              span => expect(span.t).to.equal(entrySpan.t),
+              span => expect(span.p).to.equal(entrySpan.s),
+              span => expect(span.n).to.equal('redis'),
+              span => expect(span.k).to.equal(constants.EXIT),
+              span => expect(span.f.e).to.equal(String(controls.getPid())),
+              span => expect(span.f.h).to.equal('agent-stub-uuid'),
+              span => expect(span.async).to.not.exist,
+              span => expect(span.error).to.not.exist,
+              span => expect(span.ec).to.equal(0),
+              span => expect(span.b.s).to.equal(2),
+              span => expect(span.b.u).to.not.exist,
+              span => expect(span.data.redis.connection).to.equal(process.env.REDIS),
+              span => expect(span.data.redis.command).to.equal('pipeline'),
+              span => expect(span.data.redis.subCommands).to.deep.equal(['hset', 'hget'])
+            ]);
 
-            testUtils.expectAtLeastOneMatching(spans, span => {
-              expect(span.t).to.equal(entrySpan.t);
-              expect(span.p).to.equal(entrySpan.s);
-              expect(span.n).to.equal('node.http.client');
-              expect(span.k).to.equal(constants.EXIT);
-              expect(span.f.e).to.equal(String(controls.getPid()));
-              expect(span.f.h).to.equal('agent-stub-uuid');
-              expect(span.async).to.not.exist;
-              expect(span.error).to.not.exist;
-              expect(span.ec).to.equal(0);
-              expect(span.data.http.method).to.equal('GET');
-              expect(span.data.http.url).to.match(/http:\/\/127\.0\.0\.1:/);
-              expect(span.data.http.status).to.equal(200);
-            });
+            testUtils.expectAtLeastOneMatching(spans, [
+              span => expect(span.t).to.equal(entrySpan.t),
+              span => expect(span.p).to.equal(entrySpan.s),
+              span => expect(span.n).to.equal('node.http.client'),
+              span => expect(span.k).to.equal(constants.EXIT),
+              span => expect(span.f.e).to.equal(String(controls.getPid())),
+              span => expect(span.f.h).to.equal('agent-stub-uuid'),
+              span => expect(span.async).to.not.exist,
+              span => expect(span.error).to.not.exist,
+              span => expect(span.ec).to.equal(0),
+              span => expect(span.data.http.method).to.equal('GET'),
+              span => expect(span.data.http.url).to.match(/http:\/\/127\.0\.0\.1:/),
+              span => expect(span.data.http.status).to.equal(200)
+            ]);
           })
         )
       ));

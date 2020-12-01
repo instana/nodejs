@@ -38,11 +38,11 @@ describe('actions/source', function() {
       .then(() =>
         testUtils.retry(() =>
           agentStubControls.getResponses().then(responses => {
-            testUtils.expectAtLeastOneMatching(responses, response => {
-              expect(response.messageId).to.equal(messageId);
-              expect(response.data.data).to.be.a('string');
-              expect(response.data.data).to.match(/SEMVER_SPEC_VERSION/i);
-            });
+            testUtils.expectAtLeastOneMatching(responses, [
+              response => expect(response.messageId).to.equal(messageId),
+              response => expect(response.data.data).to.be.a('string'),
+              response => expect(response.data.data).to.match(/SEMVER_SPEC_VERSION/i)
+            ]);
           })
         )
       );
@@ -61,11 +61,11 @@ describe('actions/source', function() {
       .then(() =>
         testUtils.retry(() =>
           agentStubControls.getResponses().then(responses => {
-            testUtils.expectAtLeastOneMatching(responses, response => {
-              expect(response.messageId).to.equal(messageId);
-              expect(response.data.data).to.be.a('string');
-              expect(response.data.data).to.match(/"name": "@instana\/collector"/i);
-            });
+            testUtils.expectAtLeastOneMatching(responses, [
+              response => expect(response.messageId).to.equal(messageId),
+              response => expect(response.data.data).to.be.a('string'),
+              response => expect(response.data.data).to.match(/"name": "@instana\/collector"/i)
+            ]);
           })
         )
       );
@@ -84,10 +84,10 @@ describe('actions/source', function() {
       .then(() =>
         testUtils.retry(() =>
           agentStubControls.getResponses().then(responses => {
-            testUtils.expectAtLeastOneMatching(responses, response => {
-              expect(response.messageId).to.equal(messageId);
-              expect(response.data.error).to.match(/JavaScript file/i);
-            });
+            testUtils.expectAtLeastOneMatching(responses, [
+              response => expect(response.messageId).to.equal(messageId),
+              response => expect(response.data.error).to.match(/JavaScript file/i)
+            ]);
           })
         )
       );

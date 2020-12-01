@@ -669,14 +669,14 @@ mochaSuiteFn('tracing/cloud/gcp/storage', function() {
   }
 
   function verifyHttpEntry(spans, url) {
-    return expectExactlyOneMatching(spans, span => {
-      expect(span.p).to.not.exist;
-      expect(span.k).to.equal(constants.ENTRY);
-      expect(span.f.e).to.equal(String(controls.getPid()));
-      expect(span.f.h).to.equal('agent-stub-uuid');
-      expect(span.n).to.equal('node.http.server');
-      expect(span.data.http.url).to.equal(url);
-    });
+    return expectExactlyOneMatching(spans, [
+      span => expect(span.p).to.not.exist,
+      span => expect(span.k).to.equal(constants.ENTRY),
+      span => expect(span.f.e).to.equal(String(controls.getPid())),
+      span => expect(span.f.h).to.equal('agent-stub-uuid'),
+      span => expect(span.n).to.equal('node.http.server'),
+      span => expect(span.data.http.url).to.equal(url)
+    ]);
   }
 
   function verifyGoogleCloudStorageExit(

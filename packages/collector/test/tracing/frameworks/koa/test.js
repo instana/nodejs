@@ -53,11 +53,11 @@ describe('tracing/koa', function() {
             );
             return testUtils.retry(() =>
               agentControls.getSpans().then(spans => {
-                testUtils.expectAtLeastOneMatching(spans, span => {
-                  expect(span.n).to.equal('node.http.server');
-                  expect(span.k).to.equal(constants.ENTRY);
-                  expect(span.data.http.path_tpl).to.equal(expectedTemplate);
-                });
+                testUtils.expectAtLeastOneMatching(spans, [
+                  span => expect(span.n).to.equal('node.http.server'),
+                  span => expect(span.k).to.equal(constants.ENTRY),
+                  span => expect(span.data.http.path_tpl).to.equal(expectedTemplate)
+                ]);
               })
             );
           }));

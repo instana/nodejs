@@ -93,11 +93,11 @@ describe('tracing/logger/winston', function() {
         .then(() =>
           testUtils.retry(() =>
             agentControls.getSpans().then(spans => {
-              const entrySpan = testUtils.expectAtLeastOneMatching(spans, span => {
-                expect(span.n).to.equal('node.http.server');
-                expect(span.f.e).to.equal(String(controls.getPid()));
-                expect(span.f.h).to.equal('agent-stub-uuid');
-              });
+              const entrySpan = testUtils.expectAtLeastOneMatching(spans, [
+                span => expect(span.n).to.equal('node.http.server'),
+                span => expect(span.f.e).to.equal(String(controls.getPid())),
+                span => expect(span.f.h).to.equal('agent-stub-uuid')
+              ]);
               if (shouldTrace) {
                 testUtils.expectAtLeastOneMatching(spans, span => {
                   checkWinstonSpan(span, entrySpan, expectErroneous, expectedMessage);

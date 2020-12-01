@@ -35,15 +35,15 @@ describe('tracing/express with uncaught errors', function() {
 
         return testUtils.retry(() =>
           agentControls.getSpans().then(spans => {
-            testUtils.expectAtLeastOneMatching(spans, span => {
-              expect(span.n).to.equal('node.http.server');
-              expect(span.k).to.equal(constants.ENTRY);
-              expect(span.f.e).to.equal(String(expressUncaughtErrorsControls.getPid()));
-              expect(span.f.h).to.equal('agent-stub-uuid');
-              expect(span.error).to.not.exist;
-              expect(span.ec).to.equal(1);
-              expect(span.data.http.error).to.match(/To be caught by default error handler/);
-            });
+            testUtils.expectAtLeastOneMatching(spans, [
+              span => expect(span.n).to.equal('node.http.server'),
+              span => expect(span.k).to.equal(constants.ENTRY),
+              span => expect(span.f.e).to.equal(String(expressUncaughtErrorsControls.getPid())),
+              span => expect(span.f.h).to.equal('agent-stub-uuid'),
+              span => expect(span.error).to.not.exist,
+              span => expect(span.ec).to.equal(1),
+              span => expect(span.data.http.error).to.match(/To be caught by default error handler/)
+            ]);
           })
         );
       }));
@@ -54,15 +54,15 @@ describe('tracing/express with uncaught errors', function() {
 
         return testUtils.retry(() =>
           agentControls.getSpans().then(spans => {
-            testUtils.expectAtLeastOneMatching(spans, span => {
-              expect(span.n).to.equal('node.http.server');
-              expect(span.k).to.equal(constants.ENTRY);
-              expect(span.f.e).to.equal(String(expressUncaughtErrorsControls.getPid()));
-              expect(span.f.h).to.equal('agent-stub-uuid');
-              expect(span.error).to.not.exist;
-              expect(span.ec).to.equal(0);
-              expect(span.data.http.error).to.match(/To be caught by custom error handler/);
-            });
+            testUtils.expectAtLeastOneMatching(spans, [
+              span => expect(span.n).to.equal('node.http.server'),
+              span => expect(span.k).to.equal(constants.ENTRY),
+              span => expect(span.f.e).to.equal(String(expressUncaughtErrorsControls.getPid())),
+              span => expect(span.f.h).to.equal('agent-stub-uuid'),
+              span => expect(span.error).to.not.exist,
+              span => expect(span.ec).to.equal(0),
+              span => expect(span.data.http.error).to.match(/To be caught by custom error handler/)
+            ]);
           })
         );
       }));

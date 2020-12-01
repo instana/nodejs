@@ -42,14 +42,14 @@ describe('unhandled promise rejections', function() {
         expect(response.body).to.equal('Rejected.');
         return testUtils.retry(() =>
           agentControls.getSpans().then(spans => {
-            testUtils.expectAtLeastOneMatching(spans, span => {
-              expect(span.n).to.equal('node.http.server');
-              expect(span.f.e).to.equal(String(serverControls.getPid()));
-              expect(span.f.h).to.equal('agent-stub-uuid');
-              expect(span.error).to.not.exist;
-              expect(span.ec).to.equal(0);
-              expect(span.stack).to.be.empty;
-            });
+            testUtils.expectAtLeastOneMatching(spans, [
+              span => expect(span.n).to.equal('node.http.server'),
+              span => expect(span.f.e).to.equal(String(serverControls.getPid())),
+              span => expect(span.f.h).to.equal('agent-stub-uuid'),
+              span => expect(span.error).to.not.exist,
+              span => expect(span.ec).to.equal(0),
+              span => expect(span.stack).to.be.empty
+            ]);
           })
         );
       }));
@@ -66,15 +66,16 @@ describe('unhandled promise rejections', function() {
         expect(response.body).to.equal('Rejected.');
         return testUtils.retry(() =>
           agentControls.getEvents().then(events => {
-            testUtils.expectAtLeastOneMatching(events, event => {
-              expect(event.title).to.equal('An unhandled promise rejection occured in a Node.js process.');
-              expect(event.text).to.contain('Unhandled Promise Rejection');
-              expect(event.plugin).to.equal('com.instana.forge.infrastructure.runtime.nodejs.NodeJsRuntimePlatform');
-              expect(event.id).to.equal(serverControls.getPid());
-              expect(event.timestamp).to.exist;
-              expect(event.duration).to.equal(1);
-              expect(event.severity).to.equal(5);
-            });
+            testUtils.expectAtLeastOneMatching(events, [
+              event => expect(event.title).to.equal('An unhandled promise rejection occured in a Node.js process.'),
+              event => expect(event.text).to.contain('Unhandled Promise Rejection'),
+              event =>
+                expect(event.plugin).to.equal('com.instana.forge.infrastructure.runtime.nodejs.NodeJsRuntimePlatform'),
+              event => expect(event.id).to.equal(serverControls.getPid()),
+              event => expect(event.timestamp).to.exist,
+              event => expect(event.duration).to.equal(1),
+              event => expect(event.severity).to.equal(5)
+            ]);
           })
         );
       }));

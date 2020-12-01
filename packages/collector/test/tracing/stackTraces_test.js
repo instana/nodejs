@@ -35,15 +35,15 @@ describe('tracing/stackTraces', function() {
         .then(() =>
           testUtils.retry(() =>
             agentStubControls.getSpans().then(spans => {
-              testUtils.expectAtLeastOneMatching(spans, span => {
-                expect(span.n).to.equal('node.http.server');
-                expect(span.stack).to.have.lengthOf(0);
-              });
+              testUtils.expectAtLeastOneMatching(spans, [
+                span => expect(span.n).to.equal('node.http.server'),
+                span => expect(span.stack).to.have.lengthOf(0)
+              ]);
 
-              testUtils.expectAtLeastOneMatching(spans, span => {
-                expect(span.n).to.equal('node.http.client');
-                expect(span.stack).to.have.lengthOf(0);
-              });
+              testUtils.expectAtLeastOneMatching(spans, [
+                span => expect(span.n).to.equal('node.http.client'),
+                span => expect(span.stack).to.have.lengthOf(0)
+              ]);
             })
           )
         ));
@@ -66,10 +66,10 @@ describe('tracing/stackTraces', function() {
         .then(() =>
           testUtils.retry(() =>
             agentStubControls.getSpans().then(spans => {
-              testUtils.expectAtLeastOneMatching(spans, span => {
-                expect(span.n).to.equal('node.http.server');
-                expect(span.stack).to.have.lengthOf(0);
-              });
+              testUtils.expectAtLeastOneMatching(spans, [
+                span => expect(span.n).to.equal('node.http.server'),
+                span => expect(span.stack).to.have.lengthOf(0)
+              ]);
             })
           )
         ));
@@ -84,11 +84,11 @@ describe('tracing/stackTraces', function() {
         .then(() =>
           testUtils.retry(() =>
             agentStubControls.getSpans().then(spans => {
-              testUtils.expectAtLeastOneMatching(spans, span => {
-                expect(span.n).to.equal('node.http.client');
-                expect(span.stack[0].m).to.equal('Request.Request.start [as start]');
-                expect(span.stack[0].c).to.match(/request\.js$/i);
-              });
+              testUtils.expectAtLeastOneMatching(spans, [
+                span => expect(span.n).to.equal('node.http.client'),
+                span => expect(span.stack[0].m).to.equal('Request.Request.start [as start]'),
+                span => expect(span.stack[0].c).to.match(/request\.js$/i)
+              ]);
             })
           )
         ));

@@ -53,18 +53,18 @@ describe('legacy sensor/tracing', function() {
       .then(() =>
         testUtils.retry(() =>
           agentControls.getSpans().then(spans => {
-            const clientSpan = testUtils.expectAtLeastOneMatching(spans, span => {
-              expect(span.n).to.equal('node.http.client');
-              expect(span.k).to.equal(constants.EXIT);
-              expect(span.data.http.url).to.match(/\/request-url-opts/);
-            });
-            testUtils.expectAtLeastOneMatching(spans, span => {
-              expect(span.n).to.equal('node.http.server');
-              expect(span.k).to.equal(constants.ENTRY);
-              expect(span.data.http.url).to.match(/\/request-url-opts/);
-              expect(span.t).to.equal(clientSpan.t);
-              expect(span.p).to.equal(clientSpan.s);
-            });
+            const clientSpan = testUtils.expectAtLeastOneMatching(spans, [
+              span => expect(span.n).to.equal('node.http.client'),
+              span => expect(span.k).to.equal(constants.EXIT),
+              span => expect(span.data.http.url).to.match(/\/request-url-opts/)
+            ]);
+            testUtils.expectAtLeastOneMatching(spans, [
+              span => expect(span.n).to.equal('node.http.server'),
+              span => expect(span.k).to.equal(constants.ENTRY),
+              span => expect(span.data.http.url).to.match(/\/request-url-opts/),
+              span => expect(span.t).to.equal(clientSpan.t),
+              span => expect(span.p).to.equal(clientSpan.s)
+            ]);
           })
         )
       );
@@ -79,18 +79,18 @@ describe('legacy sensor/tracing', function() {
       .then(() =>
         testUtils.retry(() =>
           agentControls.getSpans().then(spans => {
-            const clientSpan = testUtils.expectAtLeastOneMatching(spans, span => {
-              expect(span.n).to.equal('node.http.client');
-              expect(span.k).to.equal(constants.EXIT);
-              expect(span.data.http.url).to.match(/\/request-only-url/);
-            });
-            testUtils.expectAtLeastOneMatching(spans, span => {
-              expect(span.n).to.equal('node.http.server');
-              expect(span.k).to.equal(constants.ENTRY);
-              expect(span.data.http.url).to.match(/\/request-only-url/);
-              expect(span.t).to.equal(clientSpan.t);
-              expect(span.p).to.equal(clientSpan.s);
-            });
+            const clientSpan = testUtils.expectAtLeastOneMatching(spans, [
+              span => expect(span.n).to.equal('node.http.client'),
+              span => expect(span.k).to.equal(constants.EXIT),
+              span => expect(span.data.http.url).to.match(/\/request-only-url/)
+            ]);
+            testUtils.expectAtLeastOneMatching(spans, [
+              span => expect(span.n).to.equal('node.http.server'),
+              span => expect(span.k).to.equal(constants.ENTRY),
+              span => expect(span.data.http.url).to.match(/\/request-only-url/),
+              span => expect(span.t).to.equal(clientSpan.t),
+              span => expect(span.p).to.equal(clientSpan.s)
+            ]);
           })
         )
       ));
@@ -104,18 +104,18 @@ describe('legacy sensor/tracing', function() {
       .then(() =>
         testUtils.retry(() =>
           agentControls.getSpans().then(spans => {
-            const clientSpan = testUtils.expectAtLeastOneMatching(spans, span => {
-              expect(span.n).to.equal('node.http.client');
-              expect(span.k).to.equal(constants.EXIT);
-              expect(span.data.http.url).to.match(/\/request-only-opts/);
-            });
-            testUtils.expectAtLeastOneMatching(spans, span => {
-              expect(span.n).to.equal('node.http.server');
-              expect(span.k).to.equal(constants.ENTRY);
-              expect(span.data.http.url).to.match(/\/request-only-opts/);
-              expect(span.t).to.equal(clientSpan.t);
-              expect(span.p).to.equal(clientSpan.s);
-            });
+            const clientSpan = testUtils.expectAtLeastOneMatching(spans, [
+              span => expect(span.n).to.equal('node.http.client'),
+              span => expect(span.k).to.equal(constants.EXIT),
+              span => expect(span.data.http.url).to.match(/\/request-only-opts/)
+            ]);
+            testUtils.expectAtLeastOneMatching(spans, [
+              span => expect(span.n).to.equal('node.http.server'),
+              span => expect(span.k).to.equal(constants.ENTRY),
+              span => expect(span.data.http.url).to.match(/\/request-only-opts/),
+              span => expect(span.t).to.equal(clientSpan.t),
+              span => expect(span.p).to.equal(clientSpan.s)
+            ]);
           })
         )
       ));
@@ -129,29 +129,29 @@ describe('legacy sensor/tracing', function() {
       .then(() =>
         testUtils.retry(() =>
           agentControls.getSpans().then(spans => {
-            const entrySpan = testUtils.expectAtLeastOneMatching(spans, span => {
-              expect(span.n).to.equal('node.http.server');
-              expect(span.k).to.equal(constants.ENTRY);
-              expect(span.data.http.url).to.match(/\/request-malformed-url/);
-            });
+            const entrySpan = testUtils.expectAtLeastOneMatching(spans, [
+              span => expect(span.n).to.equal('node.http.server'),
+              span => expect(span.k).to.equal(constants.ENTRY),
+              span => expect(span.data.http.url).to.match(/\/request-malformed-url/)
+            ]);
 
-            testUtils.expectAtLeastOneMatching(spans, span => {
-              expect(span.n).to.equal('node.http.client');
-              expect(span.k).to.equal(constants.EXIT);
-              expect(span.ec).to.equal(1);
-              expect(span.data.http.url).to.match(/ha-te-te-peh/);
-              expect(span.data.http.error).to.match(/Protocol .* not supported./);
-              expect(span.t).to.equal(entrySpan.t);
-              expect(span.p).to.equal(entrySpan.s);
-            });
+            testUtils.expectAtLeastOneMatching(spans, [
+              span => expect(span.n).to.equal('node.http.client'),
+              span => expect(span.k).to.equal(constants.EXIT),
+              span => expect(span.ec).to.equal(1),
+              span => expect(span.data.http.url).to.match(/ha-te-te-peh/),
+              span => expect(span.data.http.error).to.match(/Protocol .* not supported./),
+              span => expect(span.t).to.equal(entrySpan.t),
+              span => expect(span.p).to.equal(entrySpan.s)
+            ]);
 
-            testUtils.expectAtLeastOneMatching(spans, span => {
-              expect(span.n).to.equal('node.http.client');
-              expect(span.k).to.equal(constants.EXIT);
-              expect(span.data.http.url).to.match(/\/request-only-opts/);
-              expect(span.t).to.equal(entrySpan.t);
-              expect(span.p).to.equal(entrySpan.s);
-            });
+            testUtils.expectAtLeastOneMatching(spans, [
+              span => expect(span.n).to.equal('node.http.client'),
+              span => expect(span.k).to.equal(constants.EXIT),
+              span => expect(span.data.http.url).to.match(/\/request-only-opts/),
+              span => expect(span.t).to.equal(entrySpan.t),
+              span => expect(span.p).to.equal(entrySpan.s)
+            ]);
           })
         )
       ));
@@ -165,18 +165,18 @@ describe('legacy sensor/tracing', function() {
       .then(() =>
         testUtils.retry(() =>
           agentControls.getSpans().then(spans => {
-            const clientSpan = testUtils.expectAtLeastOneMatching(spans, span => {
-              expect(span.n).to.equal('node.http.client');
-              expect(span.k).to.equal(constants.EXIT);
-              expect(span.data.http.url).to.match(/\/request-only-opts/);
-            });
-            testUtils.expectAtLeastOneMatching(spans, span => {
-              expect(span.n).to.equal('node.http.server');
-              expect(span.k).to.equal(constants.ENTRY);
-              expect(span.data.http.url).to.match(/\/request-only-opts/);
-              expect(span.t).to.equal(clientSpan.t);
-              expect(span.p).to.equal(clientSpan.s);
-            });
+            const clientSpan = testUtils.expectAtLeastOneMatching(spans, [
+              span => expect(span.n).to.equal('node.http.client'),
+              span => expect(span.k).to.equal(constants.EXIT),
+              span => expect(span.data.http.url).to.match(/\/request-only-opts/)
+            ]);
+            testUtils.expectAtLeastOneMatching(spans, [
+              span => expect(span.n).to.equal('node.http.server'),
+              span => expect(span.k).to.equal(constants.ENTRY),
+              span => expect(span.data.http.url).to.match(/\/request-only-opts/),
+              span => expect(span.t).to.equal(clientSpan.t),
+              span => expect(span.p).to.equal(clientSpan.s)
+            ]);
           })
         )
       ));
@@ -194,18 +194,18 @@ describe('legacy sensor/tracing', function() {
       .then(() =>
         testUtils.retry(() =>
           agentControls.getSpans().then(spans => {
-            const clientSpan = testUtils.expectAtLeastOneMatching(spans, span => {
-              expect(span.n).to.equal('node.http.client');
-              expect(span.k).to.equal(constants.EXIT);
-              expect(span.data.http.url).to.match(/\/get-url-opts/);
-            });
-            testUtils.expectAtLeastOneMatching(spans, span => {
-              expect(span.n).to.equal('node.http.server');
-              expect(span.k).to.equal(constants.ENTRY);
-              expect(span.data.http.url).to.match(/\/get-url-opts/);
-              expect(span.t).to.equal(clientSpan.t);
-              expect(span.p).to.equal(clientSpan.s);
-            });
+            const clientSpan = testUtils.expectAtLeastOneMatching(spans, [
+              span => expect(span.n).to.equal('node.http.client'),
+              span => expect(span.k).to.equal(constants.EXIT),
+              span => expect(span.data.http.url).to.match(/\/get-url-opts/)
+            ]);
+            testUtils.expectAtLeastOneMatching(spans, [
+              span => expect(span.n).to.equal('node.http.server'),
+              span => expect(span.k).to.equal(constants.ENTRY),
+              span => expect(span.data.http.url).to.match(/\/get-url-opts/),
+              span => expect(span.t).to.equal(clientSpan.t),
+              span => expect(span.p).to.equal(clientSpan.s)
+            ]);
           })
         )
       );
@@ -220,18 +220,18 @@ describe('legacy sensor/tracing', function() {
       .then(() =>
         testUtils.retry(() =>
           agentControls.getSpans().then(spans => {
-            const clientSpan = testUtils.expectAtLeastOneMatching(spans, span => {
-              expect(span.n).to.equal('node.http.client');
-              expect(span.k).to.equal(constants.EXIT);
-              expect(span.data.http.url).to.match(/\/get-only-url/);
-            });
-            testUtils.expectAtLeastOneMatching(spans, span => {
-              expect(span.n).to.equal('node.http.server');
-              expect(span.k).to.equal(constants.ENTRY);
-              expect(span.data.http.url).to.match(/\/get-only-url/);
-              expect(span.t).to.equal(clientSpan.t);
-              expect(span.p).to.equal(clientSpan.s);
-            });
+            const clientSpan = testUtils.expectAtLeastOneMatching(spans, [
+              span => expect(span.n).to.equal('node.http.client'),
+              span => expect(span.k).to.equal(constants.EXIT),
+              span => expect(span.data.http.url).to.match(/\/get-only-url/)
+            ]);
+            testUtils.expectAtLeastOneMatching(spans, [
+              span => expect(span.n).to.equal('node.http.server'),
+              span => expect(span.k).to.equal(constants.ENTRY),
+              span => expect(span.data.http.url).to.match(/\/get-only-url/),
+              span => expect(span.t).to.equal(clientSpan.t),
+              span => expect(span.p).to.equal(clientSpan.s)
+            ]);
           })
         )
       ));
@@ -245,18 +245,18 @@ describe('legacy sensor/tracing', function() {
       .then(() =>
         testUtils.retry(() =>
           agentControls.getSpans().then(spans => {
-            const clientSpan = testUtils.expectAtLeastOneMatching(spans, span => {
-              expect(span.n).to.equal('node.http.client');
-              expect(span.k).to.equal(constants.EXIT);
-              expect(span.data.http.url).to.match(/\/get-only-opts/);
-            });
-            testUtils.expectAtLeastOneMatching(spans, span => {
-              expect(span.n).to.equal('node.http.server');
-              expect(span.k).to.equal(constants.ENTRY);
-              expect(span.data.http.url).to.match(/\/get-only-opts/);
-              expect(span.t).to.equal(clientSpan.t);
-              expect(span.p).to.equal(clientSpan.s);
-            });
+            const clientSpan = testUtils.expectAtLeastOneMatching(spans, [
+              span => expect(span.n).to.equal('node.http.client'),
+              span => expect(span.k).to.equal(constants.EXIT),
+              span => expect(span.data.http.url).to.match(/\/get-only-opts/)
+            ]);
+            testUtils.expectAtLeastOneMatching(spans, [
+              span => expect(span.n).to.equal('node.http.server'),
+              span => expect(span.k).to.equal(constants.ENTRY),
+              span => expect(span.data.http.url).to.match(/\/get-only-opts/),
+              span => expect(span.t).to.equal(clientSpan.t),
+              span => expect(span.p).to.equal(clientSpan.s)
+            ]);
           })
         )
       ));
@@ -274,12 +274,12 @@ describe('legacy sensor/tracing', function() {
       .then(() =>
         testUtils.retry(() =>
           agentControls.getSpans().then(spans => {
-            testUtils.expectAtLeastOneMatching(spans, span => {
-              expect(span.n).to.equal('node.http.client');
-              expect(span.k).to.equal(constants.EXIT);
-              expect(span.ec).to.equal(1);
-              expect(span.data.http.error).to.match(/ECONNREFUSED/);
-            });
+            testUtils.expectAtLeastOneMatching(spans, [
+              span => expect(span.n).to.equal('node.http.client'),
+              span => expect(span.k).to.equal(constants.EXIT),
+              span => expect(span.ec).to.equal(1),
+              span => expect(span.data.http.error).to.match(/ECONNREFUSED/)
+            ]);
           })
         )
       ));
@@ -294,12 +294,12 @@ describe('legacy sensor/tracing', function() {
       .then(() =>
         testUtils.retry(() =>
           agentControls.getSpans().then(spans => {
-            testUtils.expectAtLeastOneMatching(spans, span => {
-              expect(span.n).to.equal('node.http.client');
-              expect(span.k).to.equal(constants.EXIT);
-              expect(span.ec).to.equal(1);
-              expect(span.data.http.error).to.match(/Timeout/);
-            });
+            testUtils.expectAtLeastOneMatching(spans, [
+              span => expect(span.n).to.equal('node.http.client'),
+              span => expect(span.k).to.equal(constants.EXIT),
+              span => expect(span.ec).to.equal(1),
+              span => expect(span.data.http.error).to.match(/Timeout/)
+            ]);
           })
         )
       ));
@@ -314,12 +314,12 @@ describe('legacy sensor/tracing', function() {
       .then(() =>
         testUtils.retry(() =>
           agentControls.getSpans().then(spans => {
-            testUtils.expectAtLeastOneMatching(spans, span => {
-              expect(span.n).to.equal('node.http.client');
-              expect(span.k).to.equal(constants.EXIT);
-              expect(span.ec).to.equal(1);
-              expect(span.data.http.error).to.match(/aborted/);
-            });
+            testUtils.expectAtLeastOneMatching(spans, [
+              span => expect(span.n).to.equal('node.http.client'),
+              span => expect(span.k).to.equal(constants.EXIT),
+              span => expect(span.ec).to.equal(1),
+              span => expect(span.data.http.error).to.match(/aborted/)
+            ]);
           })
         )
       ));

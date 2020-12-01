@@ -106,15 +106,15 @@ describe('tracing/mongoose', function() {
   });
 
   function expectEntry(spans, url) {
-    return expectExactlyOneMatching(spans, span => {
-      expect(span.n).to.equal('node.http.server');
-      expect(span.data.http.url).to.equal(url);
-      expect(span.f.e).to.equal(String(controls.getPid()));
-      expect(span.f.h).to.equal('agent-stub-uuid');
-      expect(span.async).to.not.exist;
-      expect(span.error).to.not.exist;
-      expect(span.ec).to.equal(0);
-    });
+    return expectExactlyOneMatching(spans, [
+      span => expect(span.n).to.equal('node.http.server'),
+      span => expect(span.data.http.url).to.equal(url),
+      span => expect(span.f.e).to.equal(String(controls.getPid())),
+      span => expect(span.f.h).to.equal('agent-stub-uuid'),
+      span => expect(span.async).to.not.exist,
+      span => expect(span.error).to.not.exist,
+      span => expect(span.ec).to.equal(0)
+    ]);
   }
 
   function expectMongoExit(spans, parent, command) {

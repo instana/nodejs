@@ -39,49 +39,49 @@ describe('http with proxy', function() {
               expect(spans.length).to.equal(3, 'Expecting at most three spans');
 
               // proxy entry span
-              const proxyEntrySpan = expectAtLeastOneMatching(spans, span => {
-                expect(span.n).to.equal('node.http.server');
-                expect(span.f.e).to.equal(String(expressProxyControls.getPid()));
-                expect(span.f.h).to.equal('agent-stub-uuid');
-                expect(span.f.h).to.equal('agent-stub-uuid');
-                expect(span.async).to.not.exist;
-                expect(span.error).to.not.exist;
-                expect(span.ec).to.equal(0);
-                expect(span.data.http.method).to.equal('POST');
-                expect(span.data.http.url).to.equal('/checkout');
-                expect(span.data.http.status).to.equal(201);
-              });
+              const proxyEntrySpan = expectAtLeastOneMatching(spans, [
+                span => expect(span.n).to.equal('node.http.server'),
+                span => expect(span.f.e).to.equal(String(expressProxyControls.getPid())),
+                span => expect(span.f.h).to.equal('agent-stub-uuid'),
+                span => expect(span.f.h).to.equal('agent-stub-uuid'),
+                span => expect(span.async).to.not.exist,
+                span => expect(span.error).to.not.exist,
+                span => expect(span.ec).to.equal(0),
+                span => expect(span.data.http.method).to.equal('POST'),
+                span => expect(span.data.http.url).to.equal('/checkout'),
+                span => expect(span.data.http.status).to.equal(201)
+              ]);
 
               // proxy exit span
-              const proxyExitSpan = expectAtLeastOneMatching(spans, span => {
-                expect(span.t).to.equal(proxyEntrySpan.t);
-                expect(span.p).to.equal(proxyEntrySpan.s);
-                expect(span.n).to.equal('node.http.client');
-                expect(span.f.e).to.equal(String(expressProxyControls.getPid()));
-                expect(span.f.h).to.equal('agent-stub-uuid');
-                expect(span.f.h).to.equal('agent-stub-uuid');
-                expect(span.async).to.not.exist;
-                expect(span.error).to.not.exist;
-                expect(span.ec).to.equal(0);
-                expect(span.data.http.method).to.equal('POST');
-                expect(span.data.http.url).to.equal('http://localhost:3211/proxy-call/checkout');
-                expect(span.data.http.status).to.equal(201);
-              });
+              const proxyExitSpan = expectAtLeastOneMatching(spans, [
+                span => expect(span.t).to.equal(proxyEntrySpan.t),
+                span => expect(span.p).to.equal(proxyEntrySpan.s),
+                span => expect(span.n).to.equal('node.http.client'),
+                span => expect(span.f.e).to.equal(String(expressProxyControls.getPid())),
+                span => expect(span.f.h).to.equal('agent-stub-uuid'),
+                span => expect(span.f.h).to.equal('agent-stub-uuid'),
+                span => expect(span.async).to.not.exist,
+                span => expect(span.error).to.not.exist,
+                span => expect(span.ec).to.equal(0),
+                span => expect(span.data.http.method).to.equal('POST'),
+                span => expect(span.data.http.url).to.equal('http://localhost:3211/proxy-call/checkout'),
+                span => expect(span.data.http.status).to.equal(201)
+              ]);
 
-              expectAtLeastOneMatching(spans, span => {
-                expect(span.t).to.equal(proxyEntrySpan.t);
-                expect(span.p).to.equal(proxyExitSpan.s);
-                expect(span.n).to.equal('node.http.server');
-                expect(span.f.e).to.equal(String(expressControls.getPid()));
-                expect(span.f.h).to.equal('agent-stub-uuid');
-                expect(span.f.h).to.equal('agent-stub-uuid');
-                expect(span.async).to.not.exist;
-                expect(span.error).to.not.exist;
-                expect(span.ec).to.equal(0);
-                expect(span.data.http.method).to.equal('POST');
-                expect(span.data.http.url).to.equal('/proxy-call/checkout');
-                expect(span.data.http.status).to.equal(201);
-              });
+              expectAtLeastOneMatching(spans, [
+                span => expect(span.t).to.equal(proxyEntrySpan.t),
+                span => expect(span.p).to.equal(proxyExitSpan.s),
+                span => expect(span.n).to.equal('node.http.server'),
+                span => expect(span.f.e).to.equal(String(expressControls.getPid())),
+                span => expect(span.f.h).to.equal('agent-stub-uuid'),
+                span => expect(span.f.h).to.equal('agent-stub-uuid'),
+                span => expect(span.async).to.not.exist,
+                span => expect(span.error).to.not.exist,
+                span => expect(span.ec).to.equal(0),
+                span => expect(span.data.http.method).to.equal('POST'),
+                span => expect(span.data.http.url).to.equal('/proxy-call/checkout'),
+                span => expect(span.data.http.status).to.equal(201)
+              ]);
             })
           )
         ));
@@ -100,48 +100,48 @@ describe('http with proxy', function() {
               expect(spans.length).to.equal(3, 'Expecting at most three spans');
 
               // proxy entry span
-              const proxyEntrySpan = expectAtLeastOneMatching(spans, span => {
-                expect(span.n).to.equal('node.http.server');
-                expect(span.f.e).to.equal(String(expressProxyControls.getPid()));
-                expect(span.f.h).to.equal('agent-stub-uuid');
-                expect(span.f.h).to.equal('agent-stub-uuid');
-                expect(span.async).to.not.exist;
-                expect(span.error).to.not.exist;
-                expect(span.ec).to.equal(0);
-                expect(span.data.http.method).to.equal('POST');
-                expect(span.data.http.url).to.equal('/checkout');
-                expect(span.data.http.status).to.equal(200);
-              });
+              const proxyEntrySpan = expectAtLeastOneMatching(spans, [
+                span => expect(span.n).to.equal('node.http.server'),
+                span => expect(span.f.e).to.equal(String(expressProxyControls.getPid())),
+                span => expect(span.f.h).to.equal('agent-stub-uuid'),
+                span => expect(span.f.h).to.equal('agent-stub-uuid'),
+                span => expect(span.async).to.not.exist,
+                span => expect(span.error).to.not.exist,
+                span => expect(span.ec).to.equal(0),
+                span => expect(span.data.http.method).to.equal('POST'),
+                span => expect(span.data.http.url).to.equal('/checkout'),
+                span => expect(span.data.http.status).to.equal(200)
+              ]);
 
               // proxy exit span
-              const proxyExitSpan = expectAtLeastOneMatching(spans, span => {
-                expect(span.t).to.equal(proxyEntrySpan.t);
-                expect(span.p).to.equal(proxyEntrySpan.s);
-                expect(span.n).to.equal('node.http.client');
-                expect(span.f.e).to.equal(String(expressProxyControls.getPid()));
-                expect(span.f.h).to.equal('agent-stub-uuid');
-                expect(span.f.h).to.equal('agent-stub-uuid');
-                expect(span.async).to.not.exist;
-                expect(span.error).to.not.exist;
-                expect(span.ec).to.equal(0);
-                expect(span.data.http.method).to.equal('POST');
-                expect(span.data.http.url).to.equal('http://localhost:3211/proxy-call/checkout');
-                expect(span.data.http.status).to.equal(200);
-              });
+              const proxyExitSpan = expectAtLeastOneMatching(spans, [
+                span => expect(span.t).to.equal(proxyEntrySpan.t),
+                span => expect(span.p).to.equal(proxyEntrySpan.s),
+                span => expect(span.n).to.equal('node.http.client'),
+                span => expect(span.f.e).to.equal(String(expressProxyControls.getPid())),
+                span => expect(span.f.h).to.equal('agent-stub-uuid'),
+                span => expect(span.f.h).to.equal('agent-stub-uuid'),
+                span => expect(span.async).to.not.exist,
+                span => expect(span.error).to.not.exist,
+                span => expect(span.ec).to.equal(0),
+                span => expect(span.data.http.method).to.equal('POST'),
+                span => expect(span.data.http.url).to.equal('http://localhost:3211/proxy-call/checkout'),
+                span => expect(span.data.http.status).to.equal(200)
+              ]);
 
-              expectAtLeastOneMatching(spans, span => {
-                expect(span.t).to.equal(proxyEntrySpan.t);
-                expect(span.p).to.equal(proxyExitSpan.s);
-                expect(span.n).to.equal('node.http.server');
-                expect(span.f.e).to.equal(String(expressControls.getPid()));
-                expect(span.f.h).to.equal('agent-stub-uuid');
-                expect(span.async).to.not.exist;
-                expect(span.error).to.not.exist;
-                expect(span.ec).to.equal(0);
-                expect(span.data.http.method).to.equal('POST');
-                expect(span.data.http.url).to.equal('/proxy-call/checkout');
-                expect(span.data.http.status).to.equal(200);
-              });
+              expectAtLeastOneMatching(spans, [
+                span => expect(span.t).to.equal(proxyEntrySpan.t),
+                span => expect(span.p).to.equal(proxyExitSpan.s),
+                span => expect(span.n).to.equal('node.http.server'),
+                span => expect(span.f.e).to.equal(String(expressControls.getPid())),
+                span => expect(span.f.h).to.equal('agent-stub-uuid'),
+                span => expect(span.async).to.not.exist,
+                span => expect(span.error).to.not.exist,
+                span => expect(span.ec).to.equal(0),
+                span => expect(span.data.http.method).to.equal('POST'),
+                span => expect(span.data.http.url).to.equal('/proxy-call/checkout'),
+                span => expect(span.data.http.status).to.equal(200)
+              ]);
             })
           )
         ));
@@ -175,17 +175,17 @@ describe('http with proxy', function() {
         .then(() =>
           retry(() =>
             agentStubControls.getSpans().then(spans => {
-              expectAtLeastOneMatching(spans, span => {
-                expect(span.n).to.equal('node.http.client');
-                expect(span.error).to.not.exist;
-                expect(span.ec).to.equal(1);
-                expect(span.f.e).to.equal(String(expressProxyControls.getPid()));
-                expect(span.f.h).to.equal('agent-stub-uuid');
-                expect(span.async).to.not.exist;
-                expect(span.data.http.error).to.be.a('string');
-                expect(span.data.http.method).to.equal('POST');
-                expect(span.data.http.url).to.equal('http://127.0.0.2:49162/foobar');
-              });
+              expectAtLeastOneMatching(spans, [
+                span => expect(span.n).to.equal('node.http.client'),
+                span => expect(span.error).to.not.exist,
+                span => expect(span.ec).to.equal(1),
+                span => expect(span.f.e).to.equal(String(expressProxyControls.getPid())),
+                span => expect(span.f.h).to.equal('agent-stub-uuid'),
+                span => expect(span.async).to.not.exist,
+                span => expect(span.data.http.error).to.be.a('string'),
+                span => expect(span.data.http.method).to.equal('POST'),
+                span => expect(span.data.http.url).to.equal('http://127.0.0.2:49162/foobar')
+              ]);
             })
           )
         ));
@@ -203,11 +203,11 @@ describe('http with proxy', function() {
             agentStubControls.getSpans().then(spans => {
               expect(spans).to.have.lengthOf(1);
 
-              expectAtLeastOneMatching(spans, span => {
-                expect(span.n).to.equal('node.http.server');
-                expect(span.error).to.not.exist;
-                expect(span.ec).to.equal(1);
-              });
+              expectAtLeastOneMatching(spans, [
+                span => expect(span.n).to.equal('node.http.server'),
+                span => expect(span.error).to.not.exist,
+                span => expect(span.ec).to.equal(1)
+              ]);
             })
           )
         ));
@@ -234,46 +234,46 @@ describe('http with proxy', function() {
       retry(() =>
         agentStubControls.getSpans().then(spans => {
           callsNumbers.forEach(call => {
-            const proxyEntrySpan = expectAtLeastOneMatching(spans, span => {
-              expect(span.n).to.equal('node.http.server');
-              expect(span.f.e).to.equal(String(expressProxyControls.getPid()));
-              expect(span.f.h).to.equal('agent-stub-uuid');
-              expect(span.async).to.not.exist;
-              expect(span.error).to.not.exist;
-              expect(span.ec).to.equal(0);
-              expect(span.data.http.method).to.equal('POST');
-              expect(span.data.http.url).to.equal(`/call-${call}`);
-              expect(span.data.http.status).to.equal((call % 20) + 200);
-            });
+            const proxyEntrySpan = expectAtLeastOneMatching(spans, [
+              span => expect(span.n).to.equal('node.http.server'),
+              span => expect(span.f.e).to.equal(String(expressProxyControls.getPid())),
+              span => expect(span.f.h).to.equal('agent-stub-uuid'),
+              span => expect(span.async).to.not.exist,
+              span => expect(span.error).to.not.exist,
+              span => expect(span.ec).to.equal(0),
+              span => expect(span.data.http.method).to.equal('POST'),
+              span => expect(span.data.http.url).to.equal(`/call-${call}`),
+              span => expect(span.data.http.status).to.equal((call % 20) + 200)
+            ]);
 
             // proxy exit span
-            const proxyExitSpan = expectAtLeastOneMatching(spans, span => {
-              expect(span.t).to.equal(proxyEntrySpan.t);
-              expect(span.p).to.equal(proxyEntrySpan.s);
-              expect(span.n).to.equal('node.http.client');
-              expect(span.f.e).to.equal(String(expressProxyControls.getPid()));
-              expect(span.f.h).to.equal('agent-stub-uuid');
-              expect(span.async).to.not.exist;
-              expect(span.error).to.not.exist;
-              expect(span.ec).to.equal(0);
-              expect(span.data.http.method).to.equal('POST');
-              expect(span.data.http.url).to.equal(`http://localhost:3211/proxy-call/call-${call}`);
-              expect(span.data.http.status).to.equal((call % 20) + 200);
-            });
+            const proxyExitSpan = expectAtLeastOneMatching(spans, [
+              span => expect(span.t).to.equal(proxyEntrySpan.t),
+              span => expect(span.p).to.equal(proxyEntrySpan.s),
+              span => expect(span.n).to.equal('node.http.client'),
+              span => expect(span.f.e).to.equal(String(expressProxyControls.getPid())),
+              span => expect(span.f.h).to.equal('agent-stub-uuid'),
+              span => expect(span.async).to.not.exist,
+              span => expect(span.error).to.not.exist,
+              span => expect(span.ec).to.equal(0),
+              span => expect(span.data.http.method).to.equal('POST'),
+              span => expect(span.data.http.url).to.equal(`http://localhost:3211/proxy-call/call-${call}`),
+              span => expect(span.data.http.status).to.equal((call % 20) + 200)
+            ]);
 
-            expectAtLeastOneMatching(spans, span => {
-              expect(span.t).to.equal(proxyEntrySpan.t);
-              expect(span.p).to.equal(proxyExitSpan.s);
-              expect(span.n).to.equal('node.http.server');
-              expect(span.f.e).to.equal(String(expressControls.getPid()));
-              expect(span.f.h).to.equal('agent-stub-uuid');
-              expect(span.async).to.not.exist;
-              expect(span.error).to.not.exist;
-              expect(span.ec).to.equal(0);
-              expect(span.data.http.method).to.equal('POST');
-              expect(span.data.http.url).to.equal(`/proxy-call/call-${call}`);
-              expect(span.data.http.status).to.equal((call % 20) + 200);
-            });
+            expectAtLeastOneMatching(spans, [
+              span => expect(span.t).to.equal(proxyEntrySpan.t),
+              span => expect(span.p).to.equal(proxyExitSpan.s),
+              span => expect(span.n).to.equal('node.http.server'),
+              span => expect(span.f.e).to.equal(String(expressControls.getPid())),
+              span => expect(span.f.h).to.equal('agent-stub-uuid'),
+              span => expect(span.async).to.not.exist,
+              span => expect(span.error).to.not.exist,
+              span => expect(span.ec).to.equal(0),
+              span => expect(span.data.http.method).to.equal('POST'),
+              span => expect(span.data.http.url).to.equal(`/proxy-call/call-${call}`),
+              span => expect(span.data.http.status).to.equal((call % 20) + 200)
+            ]);
           });
         })
       )

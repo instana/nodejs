@@ -56,35 +56,35 @@ describe('tracing/kafka-node', function() {
                 return agentControls.getSpans();
               })
               .then(spans => {
-                const entrySpan = testUtils.expectAtLeastOneMatching(spans, span => {
-                  expect(span.n).to.equal('node.http.server');
-                  expect(span.f.e).to.equal(String(producerControls.getPid()));
-                  expect(span.f.h).to.equal('agent-stub-uuid');
-                  expect(span.async).to.not.exist;
-                  expect(span.error).to.not.exist;
-                  expect(span.ec).to.equal(0);
-                });
+                const entrySpan = testUtils.expectAtLeastOneMatching(spans, [
+                  span => expect(span.n).to.equal('node.http.server'),
+                  span => expect(span.f.e).to.equal(String(producerControls.getPid())),
+                  span => expect(span.f.h).to.equal('agent-stub-uuid'),
+                  span => expect(span.async).to.not.exist,
+                  span => expect(span.error).to.not.exist,
+                  span => expect(span.ec).to.equal(0)
+                ]);
 
-                testUtils.expectAtLeastOneMatching(spans, span => {
-                  expect(span.t).to.equal(entrySpan.t);
-                  expect(span.p).to.equal(entrySpan.s);
-                  expect(span.n).to.equal('kafka');
-                  expect(span.k).to.equal(constants.EXIT);
-                  expect(span.f.e).to.equal(String(producerControls.getPid()));
-                  expect(span.f.h).to.equal('agent-stub-uuid');
-                  expect(span.async).to.not.exist;
-                  expect(span.error).to.not.exist;
-                  expect(span.ec).to.equal(0);
-                  expect(span.data.kafka.access).to.equal('send');
-                  expect(span.data.kafka.service).to.equal('test');
-                });
+                testUtils.expectAtLeastOneMatching(spans, [
+                  span => expect(span.t).to.equal(entrySpan.t),
+                  span => expect(span.p).to.equal(entrySpan.s),
+                  span => expect(span.n).to.equal('kafka'),
+                  span => expect(span.k).to.equal(constants.EXIT),
+                  span => expect(span.f.e).to.equal(String(producerControls.getPid())),
+                  span => expect(span.f.h).to.equal('agent-stub-uuid'),
+                  span => expect(span.async).to.not.exist,
+                  span => expect(span.error).to.not.exist,
+                  span => expect(span.ec).to.equal(0),
+                  span => expect(span.data.kafka.access).to.equal('send'),
+                  span => expect(span.data.kafka.service).to.equal('test')
+                ]);
 
                 // verify that subsequent calls are correctly traced
-                testUtils.expectAtLeastOneMatching(spans, span => {
-                  expect(span.n).to.equal('node.http.client');
-                  expect(span.t).to.equal(entrySpan.t);
-                  expect(span.p).to.equal(entrySpan.s);
-                });
+                testUtils.expectAtLeastOneMatching(spans, [
+                  span => expect(span.n).to.equal('node.http.client'),
+                  span => expect(span.t).to.equal(entrySpan.t),
+                  span => expect(span.p).to.equal(entrySpan.s)
+                ]);
               })
           )
         ));
@@ -133,52 +133,52 @@ describe('tracing/kafka-node', function() {
                 return agentControls.getSpans();
               })
               .then(spans => {
-                const entrySpan = testUtils.expectAtLeastOneMatching(spans, span => {
-                  expect(span.n).to.equal('node.http.server');
-                  expect(span.f.e).to.equal(String(producerControls.getPid()));
-                  expect(span.f.h).to.equal('agent-stub-uuid');
-                  expect(span.async).to.not.exist;
-                  expect(span.error).to.not.exist;
-                  expect(span.ec).to.equal(0);
-                });
-                testUtils.expectAtLeastOneMatching(spans, span => {
-                  expect(span.t).to.equal(entrySpan.t);
-                  expect(span.p).to.equal(entrySpan.s);
-                  expect(span.n).to.equal('kafka');
-                  expect(span.k).to.equal(constants.EXIT);
-                  expect(span.f.e).to.equal(String(producerControls.getPid()));
-                  expect(span.f.h).to.equal('agent-stub-uuid');
-                  expect(span.async).to.not.exist;
-                  expect(span.error).to.not.exist;
-                  expect(span.ec).to.equal(0);
-                  expect(span.data.kafka.access).to.equal('send');
-                  expect(span.data.kafka.service).to.equal('test');
-                });
+                const entrySpan = testUtils.expectAtLeastOneMatching(spans, [
+                  span => expect(span.n).to.equal('node.http.server'),
+                  span => expect(span.f.e).to.equal(String(producerControls.getPid())),
+                  span => expect(span.f.h).to.equal('agent-stub-uuid'),
+                  span => expect(span.async).to.not.exist,
+                  span => expect(span.error).to.not.exist,
+                  span => expect(span.ec).to.equal(0)
+                ]);
+                testUtils.expectAtLeastOneMatching(spans, [
+                  span => expect(span.t).to.equal(entrySpan.t),
+                  span => expect(span.p).to.equal(entrySpan.s),
+                  span => expect(span.n).to.equal('kafka'),
+                  span => expect(span.k).to.equal(constants.EXIT),
+                  span => expect(span.f.e).to.equal(String(producerControls.getPid())),
+                  span => expect(span.f.h).to.equal('agent-stub-uuid'),
+                  span => expect(span.async).to.not.exist,
+                  span => expect(span.error).to.not.exist,
+                  span => expect(span.ec).to.equal(0),
+                  span => expect(span.data.kafka.access).to.equal('send'),
+                  span => expect(span.data.kafka.service).to.equal('test')
+                ]);
 
                 // Actually, we would want the trace started at the HTTP entry to continue here but as of 2019-07-31,
                 // version 4.1.3, kafka-node _still_ has no support for message headers, so we are out of luck in
                 // Node.js/kafka. See
                 // https://github.com/SOHU-Co/kafka-node/issues/763
                 // So for now, span.p is undefined (new root span) and span.t is not equal to entrySpan.t.
-                const kafkaConsumeEntry = testUtils.expectAtLeastOneMatching(spans, span => {
-                  expect(span.p).to.equal(undefined);
-                  expect(span.n).to.equal('kafka');
-                  expect(span.k).to.equal(constants.ENTRY);
-                  expect(span.d).to.be.greaterThan(99);
-                  expect(span.f.e).to.equal(String(consumerControls.getPid()));
-                  expect(span.f.h).to.equal('agent-stub-uuid');
-                  expect(span.async).to.not.exist;
-                  expect(span.error).to.not.exist;
-                  expect(span.ec).to.equal(0);
-                  expect(span.data.kafka.access).to.equal('consume');
-                  expect(span.data.kafka.service).to.equal('test');
-                });
+                const kafkaConsumeEntry = testUtils.expectAtLeastOneMatching(spans, [
+                  span => expect(span.p).to.equal(undefined),
+                  span => expect(span.n).to.equal('kafka'),
+                  span => expect(span.k).to.equal(constants.ENTRY),
+                  span => expect(span.d).to.be.greaterThan(99),
+                  span => expect(span.f.e).to.equal(String(consumerControls.getPid())),
+                  span => expect(span.f.h).to.equal('agent-stub-uuid'),
+                  span => expect(span.async).to.not.exist,
+                  span => expect(span.error).to.not.exist,
+                  span => expect(span.ec).to.equal(0),
+                  span => expect(span.data.kafka.access).to.equal('consume'),
+                  span => expect(span.data.kafka.service).to.equal('test')
+                ]);
                 // verify that subsequent calls are correctly traced
-                testUtils.expectAtLeastOneMatching(spans, span => {
-                  expect(span.n).to.equal('node.http.client');
-                  expect(span.t).to.equal(kafkaConsumeEntry.t);
-                  expect(span.p).to.equal(kafkaConsumeEntry.s);
-                });
+                testUtils.expectAtLeastOneMatching(spans, [
+                  span => expect(span.n).to.equal('node.http.client'),
+                  span => expect(span.t).to.equal(kafkaConsumeEntry.t),
+                  span => expect(span.p).to.equal(kafkaConsumeEntry.s)
+                ]);
               })
           )
         ));

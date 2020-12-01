@@ -738,18 +738,18 @@ function verifyHttpEntry(spans, parentSpan, url, foreignParent) {
 }
 
 function verifyHttpExit(spans, parentSpan, url) {
-  return expectAtLeastOneMatching(spans, span => {
-    expect(span.n).to.equal('node.http.client');
-    expect(span.k).to.equal(constants.EXIT);
-    expect(span.async).to.not.exist;
-    expect(span.error).to.not.exist;
-    expect(span.ec).to.equal(0);
-    expect(span.t).to.be.a('string');
-    expect(span.s).to.be.a('string');
-    expect(span.p).to.equal(parentSpan.s);
-    expect(span.data.http.method).to.equal('GET');
-    expect(span.data.http.url).to.match(RegExp(`^.*:${otherVendorAppPort}${url}$`));
-    expect(span.data.http.status).to.equal(200);
-    expect(span.fp).to.not.exist;
-  });
+  return expectAtLeastOneMatching(spans, [
+    span => expect(span.n).to.equal('node.http.client'),
+    span => expect(span.k).to.equal(constants.EXIT),
+    span => expect(span.async).to.not.exist,
+    span => expect(span.error).to.not.exist,
+    span => expect(span.ec).to.equal(0),
+    span => expect(span.t).to.be.a('string'),
+    span => expect(span.s).to.be.a('string'),
+    span => expect(span.p).to.equal(parentSpan.s),
+    span => expect(span.data.http.method).to.equal('GET'),
+    span => expect(span.data.http.url).to.match(RegExp(`^.*:${otherVendorAppPort}${url}$`)),
+    span => expect(span.data.http.status).to.equal(200),
+    span => expect(span.fp).to.not.exist
+  ]);
 }

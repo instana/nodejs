@@ -29,11 +29,11 @@ describe('tracing/logger/express-winston', function() {
       .then(() =>
         testUtils.retry(() =>
           agentControls.getSpans().then(spans => {
-            testUtils.expectAtLeastOneMatching(spans, span => {
-              expect(span.n).to.equal('node.http.server');
-              expect(span.f.e).to.equal(String(controls.getPid()));
-              expect(span.f.h).to.equal('agent-stub-uuid');
-            });
+            testUtils.expectAtLeastOneMatching(spans, [
+              span => expect(span.n).to.equal('node.http.server'),
+              span => expect(span.f.e).to.equal(String(controls.getPid())),
+              span => expect(span.f.h).to.equal('agent-stub-uuid')
+            ]);
             const winstonSpans = testUtils.getSpansByName(spans, 'log.winston');
             expect(winstonSpans).to.be.empty;
           })
@@ -49,11 +49,11 @@ describe('tracing/logger/express-winston', function() {
       .then(() =>
         testUtils.retry(() =>
           agentControls.getSpans().then(spans => {
-            const entrySpan = testUtils.expectAtLeastOneMatching(spans, span => {
-              expect(span.n).to.equal('node.http.server');
-              expect(span.f.e).to.equal(String(controls.getPid()));
-              expect(span.f.h).to.equal('agent-stub-uuid');
-            });
+            const entrySpan = testUtils.expectAtLeastOneMatching(spans, [
+              span => expect(span.n).to.equal('node.http.server'),
+              span => expect(span.f.e).to.equal(String(controls.getPid())),
+              span => expect(span.f.h).to.equal('agent-stub-uuid')
+            ]);
             testUtils.expectAtLeastOneMatching(spans, span => {
               checkWinstonSpan(span, entrySpan, false, 'HTTP GET /400');
             });
@@ -70,11 +70,11 @@ describe('tracing/logger/express-winston', function() {
       .then(() =>
         testUtils.retry(() =>
           agentControls.getSpans().then(spans => {
-            const entrySpan = testUtils.expectAtLeastOneMatching(spans, span => {
-              expect(span.n).to.equal('node.http.server');
-              expect(span.f.e).to.equal(String(controls.getPid()));
-              expect(span.f.h).to.equal('agent-stub-uuid');
-            });
+            const entrySpan = testUtils.expectAtLeastOneMatching(spans, [
+              span => expect(span.n).to.equal('node.http.server'),
+              span => expect(span.f.e).to.equal(String(controls.getPid())),
+              span => expect(span.f.h).to.equal('agent-stub-uuid')
+            ]);
             testUtils.expectAtLeastOneMatching(spans, span => {
               checkWinstonSpan(span, entrySpan, true, 'HTTP GET /500');
             });

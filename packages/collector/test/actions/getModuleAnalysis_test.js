@@ -35,13 +35,13 @@ describe('actions/getModuleAnalysis', function() {
       .then(() =>
         testUtils.retry(() =>
           agentStubControls.getResponses().then(responses => {
-            testUtils.expectAtLeastOneMatching(responses, response => {
-              expect(response.messageId).to.equal(messageId);
-              expect(response.data.data.cwd).to.be.a('string');
-              expect(response.data.data['require.main.filename']).to.be.a('string');
-              expect(response.data.data['require.main.paths']).to.be.an('array');
-              expect(response.data.data['require.cache']).to.be.an('array');
-            });
+            testUtils.expectAtLeastOneMatching(responses, [
+              response => expect(response.messageId).to.equal(messageId),
+              response => expect(response.data.data.cwd).to.be.a('string'),
+              response => expect(response.data.data['require.main.filename']).to.be.a('string'),
+              response => expect(response.data.data['require.main.paths']).to.be.an('array'),
+              response => expect(response.data.data['require.cache']).to.be.an('array')
+            ]);
           })
         )
       );

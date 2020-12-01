@@ -257,15 +257,15 @@ describe('tracing/sdk', function() {
           return retry(() =>
             agentControls.getSpans().then(spans => {
               const httpEntry = expectHttpEntry(spans, '/callback/create-exit-synchronous-result');
-              expectExactlyOneMatching(spans, span => {
-                expect(span.t).to.equal(httpEntry.t);
-                expect(span.p).to.equal(httpEntry.s);
-                expect(span.n).to.equal('sdk');
-                expect(span.k).to.equal(constants.EXIT);
-                expect(span.data.sdk).to.exist;
-                expect(span.data.sdk.name).to.equal('synchronous-exit');
-                expect(span.data.sdk.type).to.equal(constants.SDK.EXIT);
-              });
+              expectExactlyOneMatching(spans, [
+                span => expect(span.t).to.equal(httpEntry.t),
+                span => expect(span.p).to.equal(httpEntry.s),
+                span => expect(span.n).to.equal('sdk'),
+                span => expect(span.k).to.equal(constants.EXIT),
+                span => expect(span.data.sdk).to.exist,
+                span => expect(span.data.sdk.name).to.equal('synchronous-exit'),
+                span => expect(span.data.sdk.type).to.equal(constants.SDK.EXIT)
+              ]);
               expectHttpExit(spans, httpEntry, controls.getPid());
             })
           );
@@ -280,30 +280,30 @@ describe('tracing/sdk', function() {
         expect(ipcMessages[0]).to.equal('done: 4711');
         return retry(() =>
           agentControls.getSpans().then(spans => {
-            const customEntry = expectExactlyOneMatching(spans, span => {
-              expect(span.t).to.exist;
-              expect(span.p).to.not.exist;
-              expect(span.n).to.equal('sdk');
-              expect(span.k).to.equal(constants.ENTRY);
-              expect(span.data.sdk.name).to.equal('synchronous-entry');
-              expect(span.data.sdk.type).to.equal(constants.SDK.ENTRY);
-            });
-            const customIntermediate = expectExactlyOneMatching(spans, span => {
-              expect(span.t).to.equal(customEntry.t);
-              expect(span.p).to.equal(customEntry.s);
-              expect(span.n).to.equal('sdk');
-              expect(span.k).to.equal(constants.INTERMEDIATE);
-              expect(span.data.sdk.name).to.equal('synchronous-intermediate');
-              expect(span.data.sdk.type).to.equal(constants.SDK.INTERMEDIATE);
-            });
-            expectExactlyOneMatching(spans, span => {
-              expect(span.t).to.equal(customIntermediate.t);
-              expect(span.p).to.equal(customIntermediate.s);
-              expect(span.n).to.equal('sdk');
-              expect(span.k).to.equal(constants.EXIT);
-              expect(span.data.sdk.name).to.equal('synchronous-exit');
-              expect(span.data.sdk.type).to.equal(constants.SDK.EXIT);
-            });
+            const customEntry = expectExactlyOneMatching(spans, [
+              span => expect(span.t).to.exist,
+              span => expect(span.p).to.not.exist,
+              span => expect(span.n).to.equal('sdk'),
+              span => expect(span.k).to.equal(constants.ENTRY),
+              span => expect(span.data.sdk.name).to.equal('synchronous-entry'),
+              span => expect(span.data.sdk.type).to.equal(constants.SDK.ENTRY)
+            ]);
+            const customIntermediate = expectExactlyOneMatching(spans, [
+              span => expect(span.t).to.equal(customEntry.t),
+              span => expect(span.p).to.equal(customEntry.s),
+              span => expect(span.n).to.equal('sdk'),
+              span => expect(span.k).to.equal(constants.INTERMEDIATE),
+              span => expect(span.data.sdk.name).to.equal('synchronous-intermediate'),
+              span => expect(span.data.sdk.type).to.equal(constants.SDK.INTERMEDIATE)
+            ]);
+            expectExactlyOneMatching(spans, [
+              span => expect(span.t).to.equal(customIntermediate.t),
+              span => expect(span.p).to.equal(customIntermediate.s),
+              span => expect(span.n).to.equal('sdk'),
+              span => expect(span.k).to.equal(constants.EXIT),
+              span => expect(span.data.sdk.name).to.equal('synchronous-exit'),
+              span => expect(span.data.sdk.type).to.equal(constants.SDK.EXIT)
+            ]);
           })
         );
       });
@@ -440,28 +440,28 @@ describe('tracing/sdk', function() {
   }
 
   function expectHttpEntry(spans, path) {
-    return expectExactlyOneMatching(spans, span => {
-      expect(span.n).to.equal('node.http.server');
-      expect(span.data.http.method).to.equal('POST');
-      expect(span.data.http.url).to.equal(path);
-    });
+    return expectExactlyOneMatching(spans, [
+      span => expect(span.n).to.equal('node.http.server'),
+      span => expect(span.data.http.method).to.equal('POST'),
+      span => expect(span.data.http.url).to.equal(path)
+    ]);
   }
 
   function expectHttpExit(spans, parentEntry, pid) {
-    expectExactlyOneMatching(spans, span => {
-      expect(span.t).to.equal(parentEntry.t);
-      expect(span.p).to.equal(parentEntry.s);
-      expect(span.n).to.equal('node.http.client');
-      expect(span.k).to.equal(constants.EXIT);
-      expect(span.f.e).to.equal(String(pid));
-      expect(span.f.h).to.equal('agent-stub-uuid');
-      expect(span.async).to.not.exist;
-      expect(span.error).to.not.exist;
-      expect(span.ec).to.equal(0);
-      expect(span.data.http.method).to.equal('GET');
-      expect(span.data.http.url).to.match(/http:\/\/127\.0\.0\.1:/);
-      expect(span.data.http.status).to.equal(200);
-    });
+    expectExactlyOneMatching(spans, [
+      span => expect(span.t).to.equal(parentEntry.t),
+      span => expect(span.p).to.equal(parentEntry.s),
+      span => expect(span.n).to.equal('node.http.client'),
+      span => expect(span.k).to.equal(constants.EXIT),
+      span => expect(span.f.e).to.equal(String(pid)),
+      span => expect(span.f.h).to.equal('agent-stub-uuid'),
+      span => expect(span.async).to.not.exist,
+      span => expect(span.error).to.not.exist,
+      span => expect(span.ec).to.equal(0),
+      span => expect(span.data.http.method).to.equal('GET'),
+      span => expect(span.data.http.url).to.match(/http:\/\/127\.0\.0\.1:/),
+      span => expect(span.data.http.status).to.equal(200)
+    ]);
   }
 
   function expectCustomFsIntermediate(spans, parentEntry, pid, path, error) {
@@ -502,43 +502,43 @@ describe('tracing/sdk', function() {
   }
 
   function expectIntermediate(spans, parentEntry, name, pid) {
-    return expectExactlyOneMatching(spans, span => {
-      expect(span.t).to.equal(parentEntry.t);
-      expect(span.p).to.equal(parentEntry.s);
-      expect(span.n).to.equal('sdk');
-      expect(span.k).to.equal(constants.INTERMEDIATE);
-      expect(span.f.e).to.equal(String(pid));
-      expect(span.f.h).to.equal('agent-stub-uuid');
-      expect(span.async).to.not.exist;
-      expect(span.error).to.not.exist;
-      expect(span.ec).to.equal(0);
-      expect(span.stack[0].c).to.match(/test\/tracing\/sdk\/app.js$/);
-      expect(span.stack[0].m).to.match(/createIntermediate/);
-      expect(span.data.sdk).to.exist;
-      expect(span.data.sdk.name).to.equal(name);
-      expect(span.data.sdk.type).to.equal(constants.SDK.INTERMEDIATE);
-      expect(span.data.sdk.custom).to.not.exist;
-    });
+    return expectExactlyOneMatching(spans, [
+      span => expect(span.t).to.equal(parentEntry.t),
+      span => expect(span.p).to.equal(parentEntry.s),
+      span => expect(span.n).to.equal('sdk'),
+      span => expect(span.k).to.equal(constants.INTERMEDIATE),
+      span => expect(span.f.e).to.equal(String(pid)),
+      span => expect(span.f.h).to.equal('agent-stub-uuid'),
+      span => expect(span.async).to.not.exist,
+      span => expect(span.error).to.not.exist,
+      span => expect(span.ec).to.equal(0),
+      span => expect(span.stack[0].c).to.match(/test\/tracing\/sdk\/app.js$/),
+      span => expect(span.stack[0].m).to.match(/createIntermediate/),
+      span => expect(span.data.sdk).to.exist,
+      span => expect(span.data.sdk.name).to.equal(name),
+      span => expect(span.data.sdk.type).to.equal(constants.SDK.INTERMEDIATE),
+      span => expect(span.data.sdk.custom).to.not.exist
+    ]);
   }
 
   function expectCustomExit(spans, parentEntry, pid) {
-    return expectExactlyOneMatching(spans, span => {
-      expect(span.t).to.equal(parentEntry.t);
-      expect(span.p).to.equal(parentEntry.s);
-      expect(span.n).to.equal('sdk');
-      expect(span.k).to.equal(constants.EXIT);
-      expect(span.f.e).to.equal(String(pid));
-      expect(span.f.h).to.equal('agent-stub-uuid');
-      expect(span.async).to.not.exist;
-      expect(span.error).to.not.exist;
-      expect(span.ec).to.equal(0);
-      expect(span.stack[0].c).to.match(/test\/tracing\/sdk\/app.js$/);
-      expect(span.stack[0].m).to.match(/createExit/);
-      expect(span.data.sdk).to.exist;
-      expect(span.data.sdk.name).to.equal('custom-exit');
-      expect(span.data.sdk.type).to.equal(constants.SDK.EXIT);
-      expect(span.data.sdk.custom).to.not.exist;
-    });
+    return expectExactlyOneMatching(spans, [
+      span => expect(span.t).to.equal(parentEntry.t),
+      span => expect(span.p).to.equal(parentEntry.s),
+      span => expect(span.n).to.equal('sdk'),
+      span => expect(span.k).to.equal(constants.EXIT),
+      span => expect(span.f.e).to.equal(String(pid)),
+      span => expect(span.f.h).to.equal('agent-stub-uuid'),
+      span => expect(span.async).to.not.exist,
+      span => expect(span.error).to.not.exist,
+      span => expect(span.ec).to.equal(0),
+      span => expect(span.stack[0].c).to.match(/test\/tracing\/sdk\/app.js$/),
+      span => expect(span.stack[0].m).to.match(/createExit/),
+      span => expect(span.data.sdk).to.exist,
+      span => expect(span.data.sdk.name).to.equal('custom-exit'),
+      span => expect(span.data.sdk.type).to.equal(constants.SDK.EXIT),
+      span => expect(span.data.sdk.custom).to.not.exist
+    ]);
   }
 
   function checkForErrors(ipcMessages) {

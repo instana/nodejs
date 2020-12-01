@@ -56,24 +56,24 @@ function test() {
     controls.addValue(42).then(() =>
       testUtils.retry(() =>
         agentStubControls.getSpans().then(spans => {
-          const entrySpan = testUtils.expectAtLeastOneMatching(spans, span => {
-            expect(span.n).to.equal('node.http.server');
-            expect(span.f.e).to.equal(String(controls.getPid()));
-            expect(span.f.h).to.equal('agent-stub-uuid');
-          });
+          const entrySpan = testUtils.expectAtLeastOneMatching(spans, [
+            span => expect(span.n).to.equal('node.http.server'),
+            span => expect(span.f.e).to.equal(String(controls.getPid())),
+            span => expect(span.f.h).to.equal('agent-stub-uuid')
+          ]);
 
-          testUtils.expectAtLeastOneMatching(spans, span => {
-            expect(span.t).to.equal(entrySpan.t);
-            expect(span.p).to.equal(entrySpan.s);
-            expect(span.n).to.equal('mysql');
-            expect(span.k).to.equal(constants.EXIT);
-            expect(span.f.e).to.equal(String(controls.getPid()));
-            expect(span.f.h).to.equal('agent-stub-uuid');
-            expect(span.async).to.not.exist;
-            expect(span.error).to.not.exist;
-            expect(span.ec).to.equal(0);
-            expect(span.data.mysql.stmt).to.equal('INSERT INTO random_values (value) VALUES (?)');
-          });
+          testUtils.expectAtLeastOneMatching(spans, [
+            span => expect(span.t).to.equal(entrySpan.t),
+            span => expect(span.p).to.equal(entrySpan.s),
+            span => expect(span.n).to.equal('mysql'),
+            span => expect(span.k).to.equal(constants.EXIT),
+            span => expect(span.f.e).to.equal(String(controls.getPid())),
+            span => expect(span.f.h).to.equal('agent-stub-uuid'),
+            span => expect(span.async).to.not.exist,
+            span => expect(span.error).to.not.exist,
+            span => expect(span.ec).to.equal(0),
+            span => expect(span.data.mysql.stmt).to.equal('INSERT INTO random_values (value) VALUES (?)')
+          ]);
         })
       )
     ));
@@ -88,50 +88,50 @@ function test() {
         // controls.getValues().then(() => {
         return testUtils.retry(() =>
           agentStubControls.getSpans().then(spans => {
-            const postEntrySpan = testUtils.expectAtLeastOneMatching(spans, span => {
-              expect(span.n).to.equal('node.http.server');
-              expect(span.f.e).to.equal(String(controls.getPid()));
-              expect(span.f.h).to.equal('agent-stub-uuid');
-              expect(span.data.http.method).to.equal('POST');
-            });
-            testUtils.expectAtLeastOneMatching(spans, span => {
-              expect(span.t).to.equal(postEntrySpan.t);
-              expect(span.p).to.equal(postEntrySpan.s);
-              expect(span.n).to.equal('mysql');
-              expect(span.k).to.equal(constants.EXIT);
-              expect(span.f.e).to.equal(String(controls.getPid()));
-              expect(span.f.h).to.equal('agent-stub-uuid');
-              expect(span.async).to.not.exist;
-              expect(span.error).to.not.exist;
-              expect(span.ec).to.equal(0);
-              expect(span.data.mysql.stmt).to.equal('INSERT INTO random_values (value) VALUES (?)');
-              expect(span.data.mysql.host).to.equal(process.env.MYSQL_HOST);
-              expect(span.data.mysql.port).to.equal(Number(process.env.MYSQL_PORT));
-              expect(span.data.mysql.user).to.equal(process.env.MYSQL_USER);
-              expect(span.data.mysql.db).to.equal(process.env.MYSQL_DB);
-            });
-            const getEntrySpan = testUtils.expectAtLeastOneMatching(spans, span => {
-              expect(span.n).to.equal('node.http.server');
-              expect(span.f.e).to.equal(String(controls.getPid()));
-              expect(span.f.h).to.equal('agent-stub-uuid');
-              expect(span.data.http.method).to.equal('GET');
-            });
-            testUtils.expectAtLeastOneMatching(spans, span => {
-              expect(span.t).to.equal(getEntrySpan.t);
-              expect(span.p).to.equal(getEntrySpan.s);
-              expect(span.n).to.equal('mysql');
-              expect(span.k).to.equal(constants.EXIT);
-              expect(span.f.e).to.equal(String(controls.getPid()));
-              expect(span.f.h).to.equal('agent-stub-uuid');
-              expect(span.async).to.not.exist;
-              expect(span.error).to.not.exist;
-              expect(span.ec).to.equal(0);
-              expect(span.data.mysql.stmt).to.equal('SELECT value FROM random_values');
-              expect(span.data.mysql.host).to.equal(process.env.MYSQL_HOST);
-              expect(span.data.mysql.port).to.equal(Number(process.env.MYSQL_PORT));
-              expect(span.data.mysql.user).to.equal(process.env.MYSQL_USER);
-              expect(span.data.mysql.db).to.equal(process.env.MYSQL_DB);
-            });
+            const postEntrySpan = testUtils.expectAtLeastOneMatching(spans, [
+              span => expect(span.n).to.equal('node.http.server'),
+              span => expect(span.f.e).to.equal(String(controls.getPid())),
+              span => expect(span.f.h).to.equal('agent-stub-uuid'),
+              span => expect(span.data.http.method).to.equal('POST')
+            ]);
+            testUtils.expectAtLeastOneMatching(spans, [
+              span => expect(span.t).to.equal(postEntrySpan.t),
+              span => expect(span.p).to.equal(postEntrySpan.s),
+              span => expect(span.n).to.equal('mysql'),
+              span => expect(span.k).to.equal(constants.EXIT),
+              span => expect(span.f.e).to.equal(String(controls.getPid())),
+              span => expect(span.f.h).to.equal('agent-stub-uuid'),
+              span => expect(span.async).to.not.exist,
+              span => expect(span.error).to.not.exist,
+              span => expect(span.ec).to.equal(0),
+              span => expect(span.data.mysql.stmt).to.equal('INSERT INTO random_values (value) VALUES (?)'),
+              span => expect(span.data.mysql.host).to.equal(process.env.MYSQL_HOST),
+              span => expect(span.data.mysql.port).to.equal(Number(process.env.MYSQL_PORT)),
+              span => expect(span.data.mysql.user).to.equal(process.env.MYSQL_USER),
+              span => expect(span.data.mysql.db).to.equal(process.env.MYSQL_DB)
+            ]);
+            const getEntrySpan = testUtils.expectAtLeastOneMatching(spans, [
+              span => expect(span.n).to.equal('node.http.server'),
+              span => expect(span.f.e).to.equal(String(controls.getPid())),
+              span => expect(span.f.h).to.equal('agent-stub-uuid'),
+              span => expect(span.data.http.method).to.equal('GET')
+            ]);
+            testUtils.expectAtLeastOneMatching(spans, [
+              span => expect(span.t).to.equal(getEntrySpan.t),
+              span => expect(span.p).to.equal(getEntrySpan.s),
+              span => expect(span.n).to.equal('mysql'),
+              span => expect(span.k).to.equal(constants.EXIT),
+              span => expect(span.f.e).to.equal(String(controls.getPid())),
+              span => expect(span.f.h).to.equal('agent-stub-uuid'),
+              span => expect(span.async).to.not.exist,
+              span => expect(span.error).to.not.exist,
+              span => expect(span.ec).to.equal(0),
+              span => expect(span.data.mysql.stmt).to.equal('SELECT value FROM random_values'),
+              span => expect(span.data.mysql.host).to.equal(process.env.MYSQL_HOST),
+              span => expect(span.data.mysql.port).to.equal(Number(process.env.MYSQL_PORT)),
+              span => expect(span.data.mysql.user).to.equal(process.env.MYSQL_USER),
+              span => expect(span.data.mysql.db).to.equal(process.env.MYSQL_DB)
+            ]);
           })
         );
       }));
@@ -145,47 +145,46 @@ function test() {
 
       return testUtils.retry(() =>
         agentStubControls.getSpans().then(spans => {
-          const postEntrySpan = testUtils.expectAtLeastOneMatching(spans, span => {
-            expect(span.n).to.equal('node.http.server');
-            expect(span.f.e).to.equal(String(controls.getPid()));
-            expect(span.f.h).to.equal('agent-stub-uuid');
-            expect(span.data.http.method).to.equal('POST');
-          });
+          const postEntrySpan = testUtils.expectAtLeastOneMatching(spans, [
+            span => expect(span.n).to.equal('node.http.server'),
+            span => expect(span.f.e).to.equal(String(controls.getPid())),
+            span => expect(span.f.h).to.equal('agent-stub-uuid'),
+            span => expect(span.data.http.method).to.equal('POST')
+          ]);
 
-          testUtils.expectAtLeastOneMatching(spans, span => {
-            expect(span.t).to.equal(postEntrySpan.t);
-            expect(span.p).to.equal(postEntrySpan.s);
-            expect(span.n).to.equal('mysql');
-            expect(span.k).to.equal(constants.EXIT);
-            expect(span.f.e).to.equal(String(controls.getPid()));
-            expect(span.f.h).to.equal('agent-stub-uuid');
-            expect(span.async).to.not.exist;
-            expect(span.error).to.not.exist;
-            expect(span.ec).to.equal(0);
-            expect(span.data.mysql.stmt).to.equal('INSERT INTO random_values (value) VALUES (?)');
-            expect(span.data.mysql.host).to.equal(process.env.MYSQL_HOST);
-            expect(span.data.mysql.port).to.equal(Number(process.env.MYSQL_PORT));
-            expect(span.data.mysql.user).to.equal(process.env.MYSQL_USER);
-            expect(span.data.mysql.db).to.equal(process.env.MYSQL_DB);
-          });
+          testUtils.expectAtLeastOneMatching(spans, [
+            span => expect(span.t).to.equal(postEntrySpan.t),
+            span => expect(span.p).to.equal(postEntrySpan.s),
+            span => expect(span.n).to.equal('mysql'),
+            span => expect(span.k).to.equal(constants.EXIT),
+            span => expect(span.f.e).to.equal(String(controls.getPid())),
+            span => expect(span.f.h).to.equal('agent-stub-uuid'),
+            span => expect(span.async).to.not.exist,
+            span => expect(span.error).to.not.exist,
+            span => expect(span.ec).to.equal(0),
+            span => expect(span.data.mysql.stmt).to.equal('INSERT INTO random_values (value) VALUES (?)'),
+            span => expect(span.data.mysql.host).to.equal(process.env.MYSQL_HOST),
+            span => expect(span.data.mysql.port).to.equal(Number(process.env.MYSQL_PORT)),
+            span => expect(span.data.mysql.user).to.equal(process.env.MYSQL_USER),
+            span => expect(span.data.mysql.db).to.equal(process.env.MYSQL_DB)
+          ]);
 
-          testUtils.expectAtLeastOneMatching(spans, span => {
-            expect(span.t).to.equal(postEntrySpan.t);
-            expect(span.p).to.equal(postEntrySpan.s);
-            expect(span.n).to.equal('node.http.client');
-            expect(span.k).to.equal(constants.EXIT);
-            expect(span.f.e).to.equal(String(controls.getPid()));
-            expect(span.f.h).to.equal('agent-stub-uuid');
-            expect(span.async).to.not.exist;
-            expect(span.error).to.not.exist;
-            expect(span.ec).to.equal(0);
-            expect(span.data.http.method).to.equal('GET');
-            expect(span.data.http.url).to.match(/http:\/\/127\.0\.0\.1:/);
-            expect(span.data.http.status).to.equal(200);
-
-            expect(span.t).to.equal(spanContext.t);
-            expect(span.p).to.equal(spanContext.s);
-          });
+          testUtils.expectAtLeastOneMatching(spans, [
+            span => expect(span.t).to.equal(postEntrySpan.t),
+            span => expect(span.p).to.equal(postEntrySpan.s),
+            span => expect(span.n).to.equal('node.http.client'),
+            span => expect(span.k).to.equal(constants.EXIT),
+            span => expect(span.f.e).to.equal(String(controls.getPid())),
+            span => expect(span.f.h).to.equal('agent-stub-uuid'),
+            span => expect(span.async).to.not.exist,
+            span => expect(span.error).to.not.exist,
+            span => expect(span.ec).to.equal(0),
+            span => expect(span.data.http.method).to.equal('GET'),
+            span => expect(span.data.http.url).to.match(/http:\/\/127\.0\.0\.1:/),
+            span => expect(span.data.http.status).to.equal(200),
+            span => expect(span.t).to.equal(spanContext.t),
+            span => expect(span.p).to.equal(spanContext.s)
+          ]);
         })
       );
     }));
