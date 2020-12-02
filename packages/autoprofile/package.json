@@ -38,7 +38,7 @@
     "async": "^3.2.0",
     "eslint": "^5.16.0",
     "mkdirp": "^1.0.4",
-    "mocha": "^6.2.2"
+    "mocha": "^7.2.0"
   },
   "main": "index.js",
   "files": [
