@@ -13,6 +13,7 @@ const tar = require('tar');
 const config = require('../../../core/test/config');
 const { expectAtLeastOneMatching, retry } = require('../../../core/test/test_util');
 const ProcessControls = require('../test_util/ProcessControls');
+const globalAgent = require('../globalAgent');
 
 const sharedMetricsNodeModules = path.join(__dirname, '..', '..', '..', 'shared-metrics', 'node_modules');
 const collectorNodeModules = path.join(__dirname, '..', '..', 'node_modules');
@@ -23,8 +24,8 @@ describe('retry loading native addons', function() {
   this.timeout(timeout);
   const retryTimeout = timeout / 2;
 
-  const agentControls = require('../apps/agentStubControls');
-  agentControls.registerTestHooks();
+  globalAgent.setUpCleanUpHooks();
+  const agentControls = globalAgent.instance;
 
   const metricAddonsTestConfigs = [
     {
@@ -125,7 +126,11 @@ describe('retry loading native addons', function() {
   describe('metrics are activated lazily by copying precompiled binaries when they are initially missing', () => {
     const controls = new ProcessControls({
       appPath: path.join(__dirname, 'app'),
-      env: { INSTANA_DEV_DISABLE_REBUILD_NATIVE_ADDONS: 'true' }
+      agentControls,
+      useGlobalAgent: true,
+      env: {
+        INSTANA_DEV_DISABLE_REBUILD_NATIVE_ADDONS: 'true'
+      }
     }).registerTestHooks();
 
     metricAddonsTestConfigs.forEach(
@@ -137,7 +142,10 @@ describe('retry loading native addons', function() {
   mochaSuiteFn('metrics are activated lazily by compiling on demand when they are initially missing', () => {
     const controls = new ProcessControls({
       appPath: path.join(__dirname, 'app'),
-      env: { INSTANA_DEV_DISABLE_PRECOMPILED_NATIVE_ADDONS: 'true' }
+      useGlobalAgent: true,
+      env: {
+        INSTANA_DEV_DISABLE_PRECOMPILED_NATIVE_ADDONS: 'true'
+      }
     }).registerTestHooks();
 
     metricAddonsTestConfigs.forEach(
@@ -149,7 +157,10 @@ describe('retry loading native addons', function() {
     const controls = new ProcessControls({
       appPath: path.join(__dirname, 'app'),
       dontKillInAfterHook: true,
-      env: { INSTANA_DEV_DISABLE_REBUILD_NATIVE_ADDONS: 'true' }
+      useGlobalAgent: true,
+      env: {
+        INSTANA_DEV_DISABLE_REBUILD_NATIVE_ADDONS: 'true'
+      }
     }).registerTestHooks();
 
     runCopyPrecompiledForNativeAddonTest(agentControls, controls, retryTimeout, netlinkwrapperTestConfig(controls));

@@ -5,22 +5,20 @@ const expect = require('chai').expect;
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('../../../../core/test/config');
 const ProcessControls = require('../../test_util/ProcessControls');
+const globalAgent = require('../../globalAgent');
 
 describe('tracing/api', function() {
   if (!supportedVersion(process.versions.node)) {
     return;
   }
 
-  const agentControls = require('../../apps/agentStubControls');
-
+  globalAgent.setUpCleanUpHooks();
   this.timeout(config.getTestTimeout());
-
-  agentControls.registerTestHooks();
 
   describe('when tracing is enabled', () => {
     const controls = new ProcessControls({
       dirname: __dirname,
-      agentControls
+      useGlobalAgent: true
     }).registerTestHooks();
 
     it('must provide details for currently active span', () => {
@@ -115,7 +113,7 @@ describe('tracing/api', function() {
   describe('when tracing is not enabled', () => {
     const controls = new ProcessControls({
       dirname: __dirname,
-      agentControls,
+      useGlobalAgent: true,
       tracingEnabled: false
     }).registerTestHooks();
 

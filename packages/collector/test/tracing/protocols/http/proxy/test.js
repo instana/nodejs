@@ -12,18 +12,18 @@ describe('http with proxy', function() {
     return;
   }
 
-  const expressProxyControls = require('../../../../apps/expressProxyControls');
   const agentStubControls = require('../../../../apps/agentStubControls');
+  const expressProxyControls = require('./expressProxyControls');
   const expressControls = require('../../../../apps/expressControls');
 
   this.timeout(config.getTestTimeout());
 
   agentStubControls.registerTestHooks();
-  expressControls.registerTestHooks();
   expressProxyControls.registerTestHooks();
+  expressControls.registerTestHooks();
 
-  beforeEach(() => agentStubControls.waitUntilAppIsCompletelyInitialized(expressControls.getPid()));
   beforeEach(() => agentStubControls.waitUntilAppIsCompletelyInitialized(expressProxyControls.getPid()));
+  beforeEach(() => agentStubControls.waitUntilAppIsCompletelyInitialized(expressControls.getPid()));
 
   describe('httpClient', () => {
     it('must stitch together HTTP server -> client -> server calls', () =>
@@ -64,7 +64,7 @@ describe('http with proxy', function() {
                 span => expect(span.error).to.not.exist,
                 span => expect(span.ec).to.equal(0),
                 span => expect(span.data.http.method).to.equal('POST'),
-                span => expect(span.data.http.url).to.equal('http://localhost:3211/proxy-call/checkout'),
+                span => expect(span.data.http.url).to.equal('http://localhost:3213/proxy-call/checkout'),
                 span => expect(span.data.http.status).to.equal(201)
               ]);
 
@@ -125,7 +125,7 @@ describe('http with proxy', function() {
                 span => expect(span.error).to.not.exist,
                 span => expect(span.ec).to.equal(0),
                 span => expect(span.data.http.method).to.equal('POST'),
-                span => expect(span.data.http.url).to.equal('http://localhost:3211/proxy-call/checkout'),
+                span => expect(span.data.http.url).to.equal('http://localhost:3213/proxy-call/checkout'),
                 span => expect(span.data.http.status).to.equal(200)
               ]);
 
@@ -170,7 +170,7 @@ describe('http with proxy', function() {
           method: 'POST',
           path: '/callNonExistingTarget',
           responseStatus: 503,
-          target: 'http://127.0.0.2:49162/foobar'
+          target: 'http://10.123.456.555:49162/foobar'
         })
         .then(() =>
           retry(() =>
@@ -184,19 +184,19 @@ describe('http with proxy', function() {
                 span => expect(span.async).to.not.exist,
                 span => expect(span.data.http.error).to.be.a('string'),
                 span => expect(span.data.http.method).to.equal('POST'),
-                span => expect(span.data.http.url).to.equal('http://127.0.0.2:49162/foobar')
+                span => expect(span.data.http.url).to.equal('http://10.123.456.555:49162/foobar')
               ]);
             })
           )
         ));
 
-    it('must not explode when asked to request unknown hosts', () =>
+    it('must not explode when asked to request a malformed url', () =>
       expressProxyControls
         .sendRequest({
           method: 'POST',
           path: '/callInvalidUrl',
           responseStatus: 503,
-          target: '://127.0.0.2:49162/foobar'
+          target: '://127.0.0.555:49162/foobar'
         })
         .then(() =>
           retry(() =>
@@ -257,7 +257,7 @@ describe('http with proxy', function() {
               span => expect(span.error).to.not.exist,
               span => expect(span.ec).to.equal(0),
               span => expect(span.data.http.method).to.equal('POST'),
-              span => expect(span.data.http.url).to.equal(`http://localhost:3211/proxy-call/call-${call}`),
+              span => expect(span.data.http.url).to.equal(`http://localhost:3213/proxy-call/call-${call}`),
               span => expect(span.data.http.status).to.equal((call % 20) + 200)
             ]);
 

@@ -28,12 +28,11 @@ describe('metrics.directDependencies', () => {
       expect(deps.debug).to.equal('3.2.6');
       expect(deps.diff).to.equal('3.5.0');
       expect(deps['escape-string-regexp']).to.equal('1.0.5');
-      expect(deps['find-up']).to.equal('3.0.0');
       expect(deps.glob).to.equal('7.1.3');
       expect(deps.growl).to.equal('1.10.5');
       expect(deps.he).to.equal('1.2.0');
       expect(deps.minimatch).to.equal('3.0.4');
-      expect(deps.mkdirp).to.equal('0.5.4');
+      expect(deps.mkdirp).to.equal('0.5.5');
       expect(deps['supports-color']).to.equal('6.0.0');
       expect(directDependencies.currentPayload.peerDependencies).to.deep.equal({});
       expect(directDependencies.currentPayload.optionalDependencies).to.deep.equal({});

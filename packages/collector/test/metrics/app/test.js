@@ -7,16 +7,18 @@ const path = require('path');
 const config = require('../../../../core/test/config');
 const { retry } = require('../../../../core/test/test_util');
 const ProcessControls = require('../../test_util/ProcessControls');
+const globalAgent = require('../../globalAgent');
 
 describe('snapshot data and metrics', function() {
   this.timeout(config.getTestTimeout());
 
-  const agentControls = require('../../apps/agentStubControls');
-  agentControls.registerTestHooks();
+  globalAgent.setUpCleanUpHooks();
+  const agentControls = globalAgent.instance;
 
   const controls = new ProcessControls({
     appPath: path.join(__dirname, 'app'),
-    args: ['foo', 'bar', 'baz']
+    args: ['foo', 'bar', 'baz'],
+    useGlobalAgent: true
   }).registerTestHooks();
 
   it('must report metrics from a running process', () =>
@@ -30,6 +32,7 @@ describe('snapshot data and metrics', function() {
         expect(findMetric(allMetrics, ['activeRequests'])).to.exist;
 
         const args = findMetric(allMetrics, ['args']);
+        expect(args).to.be.an('array');
         expect(args).to.have.lengthOf(5);
         expect(args[0]).to.contain('node');
         expect(args[1]).to.contain('packages/collector/test/metrics/app/app');

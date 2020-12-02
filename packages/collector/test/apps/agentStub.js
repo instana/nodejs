@@ -12,6 +12,7 @@ const deepMerge = require('../../../core/src/util/deepMerge');
 const logger = bunyan.createLogger({ name: 'agent-stub', pid: process.pid });
 // logger.level('debug');
 
+const port = process.env.AGENT_PORT || 42699;
 const extraHeaders = process.env.EXTRA_HEADERS ? process.env.EXTRA_HEADERS.split(',') : [];
 const secretsMatcher = process.env.SECRETS_MATCHER ? process.env.SECRETS_MATCHER : 'contains-ignore-case';
 const secretsList = process.env.SECRETS_LIST ? process.env.SECRETS_LIST.split(',') : ['key', 'pass', 'secret'];
@@ -24,7 +25,7 @@ const tracingMetrics = process.env.TRACING_METRICS !== 'false';
 const enableSpanBatching = process.env.ENABLE_SPANBATCHING === 'true';
 
 let discoveries = {};
-const requests = {};
+let requests = {};
 let receivedData = resetReceivedData();
 
 // We usually do not activate morgan in the agent stub because it creates a lot of noise with little benefit. Activate
@@ -192,6 +193,13 @@ function checkExistenceOfKnownPid(fn) {
   };
 }
 
+app.delete('/', (req, res) => {
+  receivedData = resetReceivedData();
+  discoveries = {};
+  requests = {};
+  res.sendStatus(200);
+});
+
 app.get('/received/data', (req, res) => res.json(receivedData));
 
 app.delete('/received/data', (req, res) => {
@@ -203,7 +211,17 @@ app.get('/received/aggregated/metrics/:pid', (req, res) => res.json(receivedData
 
 app.get('/received/traces', (req, res) => res.json(receivedData.traces));
 
+app.delete('/received/traces', (req, res) => {
+  receivedData.traces = [];
+  res.sendStatus(200);
+});
+
 app.get('/received/profiles', (req, res) => res.json(receivedData.profiles));
+
+app.delete('/received/profiles', (req, res) => {
+  receivedData.profiles = [];
+  res.sendStatus(200);
+});
 
 app.get('/received/events', (req, res) => res.json(receivedData.events));
 
@@ -224,8 +242,8 @@ app.post('/request/:pid', (req, res) => {
   res.send('OK');
 });
 
-app.listen(process.env.AGENT_PORT, () => {
-  logger.info('Listening on port: %s', process.env.AGENT_PORT);
+app.listen(port, () => {
+  logger.info('Agent stub listening on port: %s', port);
 });
 
 function aggregateMetrics(entityId, snapshotUpdate) {

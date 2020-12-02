@@ -5,17 +5,29 @@ const request = require('request-promise');
 const path = require('path');
 const _ = require('lodash');
 
-const testUtils = require('../../../core/test/test_util');
+const { retry } = require('../../../core/test/test_util');
 const config = require('../../../core/test/config');
 
-const agentPort = (exports.agentPort = 3210);
+const DEFAULT_AGENT_PORT = 3210;
 
-let agentStub;
+class AgentStubControls {
+  constructor(agentPort) {
+    this.agentPort = agentPort || DEFAULT_AGENT_PORT;
+  }
 
-exports.registerTestHooks = (opts = {}) => {
-  beforeEach(() => {
+  registerTestHooks(opts = {}) {
+    beforeEach(async () => {
+      await this.startAgent(opts);
+    });
+
+    afterEach(async () => {
+      await this.stopAgent(opts);
+    });
+  }
+
+  async startAgent(opts = {}) {
     const env = Object.create(process.env);
-    env.AGENT_PORT = agentPort;
+    env.AGENT_PORT = this.agentPort;
     env.EXTRA_HEADERS = (opts.extraHeaders || []).join(',');
     env.SECRETS_MATCHER = opts.secretsMatcher || 'contains-ignore-case';
     env.SECRETS_LIST = (opts.secretsList || []).join(',');
@@ -33,91 +45,241 @@ exports.registerTestHooks = (opts = {}) => {
       env.ENABLE_SPANBATCHING = 'true';
     }
 
-    agentStub = spawn('node', [path.join(__dirname, 'agentStub.js')], {
+    this.agentStub = spawn('node', [path.join(__dirname, 'agentStub.js')], {
       stdio: config.getAppStdio(),
       env
     });
 
-    return waitUntilServerIsUp();
-  });
+    await this.waitUntilAgentHasStarted();
+  }
 
-  afterEach(() => {
-    agentStub.kill();
-  });
-};
+  stopAgent() {
+    this.agentStub.kill();
+  }
 
-function waitUntilServerIsUp() {
-  return testUtils.retry(() =>
-    request({
+  async waitUntilAgentHasStarted() {
+    await retry(() =>
+      request({
+        method: 'GET',
+        url: `http://127.0.0.1:${this.agentPort}`
+      })
+    );
+  }
+
+  async waitUntilAppIsCompletelyInitialized(pid) {
+    await retry(() =>
+      this.getReceivedData().then(data => {
+        for (let i = 0, len = data.metrics.length; i < len; i++) {
+          const d = data.metrics[i];
+          if (d.pid === pid) {
+            return true;
+          }
+        }
+
+        throw new Error(`PID ${pid} never sent any data to the agent.`);
+      })
+    );
+  }
+
+  getDiscoveries() {
+    return request({
       method: 'GET',
-      url: `http://127.0.0.1:${agentPort}`
-    })
-  );
+      url: `http://127.0.0.1:${this.agentPort}/discoveries`,
+      json: true
+    });
+  }
+
+  deleteDiscoveries() {
+    return request({
+      method: 'DELETE',
+      url: `http://127.0.0.1:${this.agentPort}/discoveries`,
+      json: true
+    });
+  }
+
+  getReceivedData() {
+    return request({
+      method: 'GET',
+      url: `http://127.0.0.1:${this.agentPort}/received/data`,
+      json: true
+    });
+  }
+
+  getAggregatedMetrics(pid) {
+    return request({
+      method: 'GET',
+      url: `http://127.0.0.1:${this.agentPort}/received/aggregated/metrics/${pid}`,
+      json: true
+    });
+  }
+
+  getEvents() {
+    return request({
+      method: 'GET',
+      url: `http://127.0.0.1:${this.agentPort}/received/events`,
+      json: true
+    });
+  }
+
+  getMonitoringEvents() {
+    return request({
+      method: 'GET',
+      url: `http://127.0.0.1:${this.agentPort}/received/monitoringEvents`,
+      json: true
+    });
+  }
+
+  reset() {
+    return request({
+      method: 'DELETE',
+      url: `http://127.0.0.1:${this.agentPort}/`,
+      json: true
+    });
+  }
+
+  clearReceivedData() {
+    return request({
+      method: 'DELETE',
+      url: `http://127.0.0.1:${this.agentPort}/received/data`,
+      json: true
+    });
+  }
+
+  clearReceivedTraceData() {
+    return request({
+      method: 'DELETE',
+      url: `http://127.0.0.1:${this.agentPort}/received/traces`,
+      json: true
+    });
+  }
+
+  clearReceivedProfilingData() {
+    return request({
+      method: 'DELETE',
+      url: `http://127.0.0.1:${this.agentPort}/received/profiles`,
+      json: true
+    });
+  }
+
+  async getSpans() {
+    const data = await this.getReceivedData();
+    return data.traces.reduce((result, traceMessage) => result.concat(traceMessage.data), []);
+  }
+
+  async getProfiles() {
+    const data = await this.getReceivedData();
+    return data.profiles.reduce((result, profile) => result.concat(profile.data), []);
+  }
+
+  async getResponses() {
+    const data = await this.getReceivedData();
+    return data.responses;
+  }
+
+  getTracingMetrics() {
+    return request({
+      method: 'GET',
+      url: `http://127.0.0.1:${this.agentPort}/received/tracingMetrics`,
+      json: true
+    });
+  }
+
+  async waitUntilAppIsCompletelyInitialized(pid) {
+    await retry(() =>
+      this.getReceivedData().then(data => {
+        for (let i = 0, len = data.metrics.length; i < len; i++) {
+          const d = data.metrics[i];
+          if (d.pid === pid) {
+            return true;
+          }
+        }
+
+        throw new Error(`PID ${pid} never sent any data to the agent.`);
+      })
+    );
+  }
+
+  simulateDiscovery(pid) {
+    return request({
+      method: 'PUT',
+      url: `http://127.0.0.1:${this.agentPort}/com.instana.plugin.nodejs.discovery`,
+      json: true,
+      body: {
+        pid
+      }
+    });
+  }
+
+  addEntityData(pid, data) {
+    return request({
+      method: 'POST',
+      url: `http://127.0.0.1:${this.agentPort}/com.instana.plugin.nodejs.${pid}`,
+      json: true,
+      body: data
+    });
+  }
+
+  addRequestForPid(pid, r) {
+    return request({
+      method: 'POST',
+      url: `http://127.0.0.1:${this.agentPort}/request/${pid}`,
+      json: true,
+      body: r
+    });
+  }
+
+  async getLastMetricValue(pid, _path) {
+    const data = await this.getReceivedData();
+    return findLastMetricValueInResponse(pid, data, _path);
+  }
+
+  async getAllMetrics(pid) {
+    const data = await this.getReceivedData();
+    return filterByPid(pid, data);
+  }
 }
 
-exports.getDiscoveries = () =>
-  request({
-    method: 'GET',
-    url: `http://127.0.0.1:${agentPort}/discoveries`,
-    json: true
-  });
+const legacySingletonInstance = new AgentStubControls();
 
-exports.deleteDiscoveries = () =>
-  request({
-    method: 'DELETE',
-    url: `http://127.0.0.1:${agentPort}/discoveries`,
-    json: true
-  });
+module.exports = exports = {
+  get agentPort() {
+    return legacySingletonInstance.agentPort;
+  }
+};
 
-exports.getReceivedData = () =>
-  request({
-    method: 'GET',
-    url: `http://127.0.0.1:${agentPort}/received/data`,
-    json: true
-  });
+exports.AgentStubControls = AgentStubControls;
 
-exports.getAggregatedMetrics = pid =>
-  request({
-    method: 'GET',
-    url: `http://127.0.0.1:${agentPort}/received/aggregated/metrics/${pid}`,
-    json: true
-  });
+// In a previous life, agentStubControls was a singleton module which started an agent before each individual test and
+// stopped it afterwards. This became prohibitive in terms of test suite duration. The following exports are in place
+// for legacy tests that still use this facility and have not been refactored to create an instance of AgentStubControls
+// for themselves.
+exports.registerTestHooks = opts => legacySingletonInstance.registerTestHooks(opts);
+exports.startAgent = opts => legacySingletonInstance.startAgent(opts);
+exports.stopAgent = () => legacySingletonInstance.stopAgent();
+exports.waitUntilAgentHasStarted = () => legacySingletonInstance.waitUntilAgentHasStarted();
+exports.waitUntilAppIsCompletelyInitialized = pid => legacySingletonInstance.waitUntilAppIsCompletelyInitialized(pid);
+exports.getDiscoveries = () => legacySingletonInstance.getDiscoveries();
+exports.deleteDiscoveries = () => legacySingletonInstance.deleteDiscoveries();
+exports.getReceivedData = () => legacySingletonInstance.getReceivedData();
+exports.getAggregatedMetrics = pid => legacySingletonInstance.getAggregatedMetrics(pid);
+exports.getEvents = () => legacySingletonInstance.getEvents();
+exports.getMonitoringEvents = () => legacySingletonInstance.getMonitoringEvents();
+exports.clearReceivedData = () => legacySingletonInstance.clearReceivedData();
+exports.clearReceivedTraceData = () => legacySingletonInstance.clearReceivedTraceData();
+exports.clearReceivedProfilingData = () => legacySingletonInstance.clearReceivedProfilingData();
+exports.reset = () => legacySingletonInstance.reset();
+exports.getSpans = () => legacySingletonInstance.getSpans();
+exports.getProfiles = () => legacySingletonInstance.getProfiles();
+exports.getResponses = () => legacySingletonInstance.getResponses();
+exports.getTracingMetrics = () => legacySingletonInstance.getTracingMetrics();
+exports.waitUntilAppIsCompletelyInitialized = pid => legacySingletonInstance.waitUntilAppIsCompletelyInitialized(pid);
+exports.simulateDiscovery = pid => legacySingletonInstance.simulateDiscovery(pid);
+exports.addEntityData = (pid, data) => legacySingletonInstance.addEntityData(pid, data);
+exports.addRequestForPid = (pid, r) => legacySingletonInstance.addRequestForPid(pid, r);
+exports.getLastMetricValue = (pid, _path) => legacySingletonInstance.getLastMetricValue(pid, _path);
+exports.getAllMetrics = pid => legacySingletonInstance.getAllMetrics(pid);
 
-exports.getEvents = () =>
-  request({
-    method: 'GET',
-    url: `http://127.0.0.1:${agentPort}/received/events`,
-    json: true
-  });
-
-exports.getMonitoringEvents = () =>
-  request({
-    method: 'GET',
-    url: `http://127.0.0.1:${agentPort}/received/monitoringEvents`,
-    json: true
-  });
-
-exports.clearReceivedData = () =>
-  request({
-    method: 'DELETE',
-    url: `http://127.0.0.1:${agentPort}/received/data`,
-    json: true
-  });
-
-exports.getSpans = () =>
-  exports
-    .getReceivedData()
-    .then(data => data.traces.reduce((result, traceMessage) => result.concat(traceMessage.data), []));
-
-exports.getProfiles = () =>
-  exports.getReceivedData().then(data => data.profiles.reduce((result, profile) => result.concat(profile.data), []));
-
-exports.getResponses = () => exports.getReceivedData().then(data => data.responses);
-
-exports.getLastMetricValue = (pid, _path) =>
-  exports.getReceivedData().then(data => getLastMetricValue(pid, data, _path));
-
-function getLastMetricValue(pid, data, _path) {
+function findLastMetricValueInResponse(pid, data, _path) {
   for (let i = data.metrics.length - 1; i >= 0; i--) {
     const metricsMessage = data.metrics[i];
     if (metricsMessage.pid !== pid) {
@@ -134,56 +296,6 @@ function getLastMetricValue(pid, data, _path) {
   return undefined;
 }
 
-exports.getAllMetrics = pid => exports.getReceivedData().then(data => getAllMetrics(pid, data));
-
-function getAllMetrics(pid, data) {
+function filterByPid(pid, data) {
   return data.metrics.filter(metricsMessage => metricsMessage.pid === pid);
 }
-
-exports.getTracingMetrics = () =>
-  request({
-    method: 'GET',
-    url: `http://127.0.0.1:${agentPort}/received/tracingMetrics`,
-    json: true
-  });
-
-exports.waitUntilAppIsCompletelyInitialized = function waitUntilAppIsCompletelyInitialized(pid) {
-  return testUtils.retry(() =>
-    exports.getReceivedData().then(data => {
-      for (let i = 0, len = data.metrics.length; i < len; i++) {
-        const d = data.metrics[i];
-        if (d.pid === pid) {
-          return true;
-        }
-      }
-
-      throw new Error(`PID ${pid} never sent any data to the agent.`);
-    })
-  );
-};
-
-exports.simulateDiscovery = pid =>
-  request({
-    method: 'PUT',
-    url: `http://127.0.0.1:${agentPort}/com.instana.plugin.nodejs.discovery`,
-    json: true,
-    body: {
-      pid
-    }
-  });
-
-exports.addEntityData = (pid, data) =>
-  request({
-    method: 'POST',
-    url: `http://127.0.0.1:${agentPort}/com.instana.plugin.nodejs.${pid}`,
-    json: true,
-    body: data
-  });
-
-exports.addRequestForPid = (pid, r) =>
-  request({
-    method: 'POST',
-    url: `http://127.0.0.1:${agentPort}/request/${pid}`,
-    json: true,
-    body: r
-  });
