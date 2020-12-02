@@ -6,8 +6,9 @@ const constants = require('@instana/core').tracing.constants;
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('../../../../core/test/config');
 const delay = require('../../../../core/test/test_util/delay');
-const testUtils = require('../../../../core/test/test_util');
+const { retry, stringifyItems } = require('../../../../core/test/test_util');
 const ProcessControls = require('../../test_util/ProcessControls');
+const globalAgent = require('../../globalAgent');
 
 const extendedTimeout = Math.max(config.getTestTimeout(), 10000);
 
@@ -16,31 +17,29 @@ describe('tracing/common', function() {
     return;
   }
 
+  globalAgent.setUpCleanUpHooks();
+
   describe('delay', function() {
     describe('with minimal delay', function() {
       this.timeout(extendedTimeout);
-      const agentControls = setupAgentControls();
       const controls = new ProcessControls({
-        agentControls,
+        useGlobalAgent: true,
         dirname: __dirname,
         minimalDelay: 6000
-      });
-      registerDelayTest.call(this, agentControls, controls, true);
+      }).registerTestHooks();
+      registerDelayTest.call(this, globalAgent.instance, controls, true);
     });
 
     describe('without minimal delay', function() {
       this.timeout(config.getTestTimeout());
-      const agentControls = setupAgentControls();
       const controls = new ProcessControls({
-        agentControls,
+        useGlobalAgent: true,
         dirname: __dirname
-      });
-      registerDelayTest.call(this, agentControls, controls, false);
+      }).registerTestHooks();
+      registerDelayTest.call(this, globalAgent.instance, controls, false);
     });
 
     function registerDelayTest(agentControls, controls, withMinimalDelay) {
-      controls.registerTestHooks();
-
       it(`must respect delay (with minimal delay: ${withMinimalDelay})`, () =>
         controls
           .sendRequest({
@@ -57,16 +56,18 @@ describe('tracing/common', function() {
           .then(() => agentControls.getSpans())
           // verify there are no spans yet
           .then(spans => {
-            // eslint-disable-next-line no-console
-            console.log(JSON.stringify(spans, null, 2));
+            if (spans.length > 0) {
+              // eslint-disable-next-line no-console
+              console.log(JSON.stringify(spans, null, 2));
+            }
             return expect(spans).to.be.empty;
           })
           // verify that spans arrive after the minimum delay
           .then(() =>
-            testUtils.retry(
+            retry(
               () =>
                 agentControls.getSpans().then(spans => {
-                  expect(spans.length).to.equal(1);
+                  expect(spans).to.have.lengthOf(1);
                   const span = spans[0];
                   expect(span.n).to.equal('node.http.server');
                   expect(span.k).to.equal(constants.ENTRY);
@@ -88,9 +89,13 @@ describe('tracing/common', function() {
     }
 
     function verifyNoMinimalDelay(agentControls) {
-      return testUtils.retry(() =>
+      return retry(() =>
         agentControls.getSpans().then(spans => {
-          expect(spans.length).to.equal(1);
+          if (spans.length !== 1) {
+            // eslint-disable-next-line no-console
+            console.log(`Unexpected number of spans (${spans.length}): ${stringifyItems(spans)}`);
+          }
+          expect(spans).to.have.lengthOf(1);
 
           const span = spans[0];
           expect(span.n).to.equal('node.http.server');
@@ -112,51 +117,47 @@ describe('tracing/common', function() {
 
   describe('service name', function() {
     describe('with env var', function() {
-      const agentControls = setupAgentControls();
       const controls = new ProcessControls({
-        agentControls,
+        useGlobalAgent: true,
         dirname: __dirname,
         env: {
           INSTANA_SERVICE_NAME: 'much-custom-very-wow service'
         }
-      });
-      registerServiceNameTest.call(this, agentControls, controls, 'env var', true);
+      }).registerTestHooks();
+      registerServiceNameTest.call(this, globalAgent.instance, controls, 'env var', true);
     });
 
     describe('with config', function() {
-      const agentControls = setupAgentControls();
       const controls = new ProcessControls({
-        agentControls,
+        useGlobalAgent: true,
         dirname: __dirname,
         env: {
           // this makes the app set the serviceName per config object
           SERVICE_CONFIG: 'much-custom-very-wow service'
         }
-      });
-      registerServiceNameTest.call(this, agentControls, controls, 'config object', true);
+      }).registerTestHooks();
+      registerServiceNameTest.call(this, globalAgent.instance, controls, 'config object', true);
     });
 
     describe('with header when agent is configured to capture the header', function() {
-      const agentControls = setupAgentControls(true);
+      const agentControls = setupCustomAgentControls(true);
       const controls = new ProcessControls({
         agentControls,
         dirname: __dirname
-      });
+      }).registerTestHooks();
       registerServiceNameTest.call(this, agentControls, controls, 'X-Instana-Service header', true);
     });
 
     describe('with header when agent is _not_ configured to capture the header', function() {
-      const agentControls = setupAgentControls(false);
+      const agentControls = setupCustomAgentControls(false);
       const controls = new ProcessControls({
         agentControls,
         dirname: __dirname
-      });
+      }).registerTestHooks();
       registerServiceNameTest.call(this, agentControls, controls, 'X-Instana-Service header', false);
     });
 
     function registerServiceNameTest(agentControls, controls, configMethod, expectServiceNameOnSpan) {
-      controls.registerTestHooks();
-
       it(`must ${expectServiceNameOnSpan ? '' : '_not_'} respect service name configured via: ${configMethod})`, () => {
         const req = {
           path: '/'
@@ -171,7 +172,7 @@ describe('tracing/common', function() {
     }
 
     function verifyServiceName(agentControls, expectServiceNameOnSpan) {
-      return testUtils.retry(() =>
+      return retry(() =>
         agentControls.getSpans().then(spans => {
           expect(spans.length).to.equal(1);
           const span = spans[0];
@@ -192,15 +193,13 @@ describe('tracing/common', function() {
     this.timeout(config.getTestTimeout());
 
     describe('disable an individual tracer', () => {
-      const agentControls = setupAgentControls();
       const controls = new ProcessControls({
-        agentControls,
+        useGlobalAgent: true,
         dirname: __dirname,
         env: {
           INSTANA_DISABLED_TRACERS: 'pino'
         }
-      });
-      controls.registerTestHooks();
+      }).registerTestHooks();
 
       it('can disable a single instrumentation', () =>
         controls
@@ -208,8 +207,8 @@ describe('tracing/common', function() {
             path: '/with-log'
           })
           .then(() =>
-            testUtils.retry(() =>
-              agentControls.getSpans().then(spans => {
+            retry(() =>
+              globalAgent.instance.getSpans().then(spans => {
                 expect(spans.length).to.equal(1);
                 expect(spans[0].n).to.equal('node.http.server');
               })
@@ -218,15 +217,13 @@ describe('tracing/common', function() {
     });
 
     describe('robustness against overriding Array.find', () => {
-      const agentControls = setupAgentControls();
       const controls = new ProcessControls({
-        agentControls,
+        useGlobalAgent: true,
         dirname: __dirname,
         env: {
           SCREW_AROUND_WITH_UP_ARRAY_FIND: 'sure why not?'
         }
-      });
-      controls.registerTestHooks();
+      }).registerTestHooks();
 
       // Story time: There is a package out there that overrides Array.find with different behaviour that, once upon a
       // time, as a random side effect, disabled our auto tracing. This is a regression test to make sure we are now
@@ -245,8 +242,8 @@ describe('tracing/common', function() {
             path: '/'
           })
           .then(() =>
-            testUtils.retry(() =>
-              agentControls.getSpans().then(spans => {
+            retry(() =>
+              globalAgent.instance.getSpans().then(spans => {
                 expect(spans.length).to.equal(1);
                 expect(spans[0].n).to.equal('node.http.server');
               })
@@ -255,7 +252,7 @@ describe('tracing/common', function() {
     });
   });
 
-  function setupAgentControls(captureXInstanaServiceHeader) {
+  function setupCustomAgentControls(captureXInstanaServiceHeader) {
     const agentControls = require('../../apps/agentStubControls');
     const agentConfig = captureXInstanaServiceHeader ? { extraHeaders: ['x-iNsTanA-sErViCe'] } : {};
     agentControls.registerTestHooks(agentConfig);

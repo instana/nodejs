@@ -3,26 +3,29 @@
 const expect = require('chai').expect;
 
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
-const config = require('../../../core/test/config');
-const testUtils = require('../../../core/test/test_util');
+const config = require('../../../../../core/test/config');
+const testUtils = require('../../../../../core/test/test_util');
 
 describe('tracing/stackTraces', function() {
   if (!supportedVersion(process.versions.node)) {
     return;
   }
 
-  const agentStubControls = require('../apps/agentStubControls');
-  const expressProxyControls = require('../apps/expressProxyControls');
+  const agentStubControls = require('../../../apps/agentStubControls');
+  const expressProxyControls = require('../../protocols/http/proxy/expressProxyControls');
+  const expressControls = require('../../../apps/expressControls');
 
   this.timeout(config.getTestTimeout());
 
   agentStubControls.registerTestHooks();
 
   describe('with stack trace lenght of 0', () => {
+    expressControls.registerTestHooks();
     expressProxyControls.registerTestHooks({
       stackTraceLength: 0
     });
 
+    beforeEach(() => agentStubControls.waitUntilAppIsCompletelyInitialized(expressControls.getPid()));
     beforeEach(() => agentStubControls.waitUntilAppIsCompletelyInitialized(expressProxyControls.getPid()));
 
     it('must not add stack traces to the spans', () =>
@@ -50,10 +53,12 @@ describe('tracing/stackTraces', function() {
   });
 
   describe('with enabled stack traces', () => {
+    expressControls.registerTestHooks();
     expressProxyControls.registerTestHooks({
       stackTraceLength: 10
     });
 
+    beforeEach(() => agentStubControls.waitUntilAppIsCompletelyInitialized(expressControls.getPid()));
     beforeEach(() => agentStubControls.waitUntilAppIsCompletelyInitialized(expressProxyControls.getPid()));
 
     it('must not add stack traces to entry spans', () =>

@@ -5,11 +5,11 @@ const path = require('path');
 const request = require('request-promise');
 const spawn = require('child_process').spawn;
 
-const testUtils = require('../../../core/test/test_util');
-const config = require('../../../core/test/config');
-const agentPort = require('./agentStubControls').agentPort;
-const upstreamPort = require('./expressControls').appPort;
-const appPort = (exports.appPort = 3212);
+const testUtils = require('../../../../../../core/test/test_util');
+const config = require('../../../../../../core/test/config');
+const agentPort = require('../../../../apps/agentStubControls').agentPort;
+const upstreamPort = require('../../../../apps/expressControls').appPort;
+const appPort = (exports.appPort = 3214);
 
 let expressProxyApp;
 
@@ -29,9 +29,7 @@ exports.registerTestHooks = (opts = {}) => {
     return waitUntilServerIsUp();
   });
 
-  afterEach(() => {
-    expressProxyApp.kill();
-  });
+  afterEach(() => expressProxyApp.kill());
 };
 
 function waitUntilServerIsUp() {

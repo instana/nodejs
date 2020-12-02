@@ -9,8 +9,7 @@ const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('../../../../../../core/test/config');
 const { expectExactlyOneMatching, retry } = require('../../../../../../core/test/test_util');
 const ProcessControls = require('../../../../test_util/ProcessControls');
-
-let agentControls;
+const globalAgent = require('../../../../globalAgent');
 
 const clientPort = 3216;
 const clientHost = `localhost:${clientPort}`;
@@ -19,20 +18,7 @@ const serverHost = `localhost:${serverPort}`;
 
 const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 mochaSuiteFn('tracing/http client', function() {
-  agentControls = require('../../../../apps/agentStubControls');
-
   this.timeout(config.getTestTimeout() * 2);
-
-  agentControls.registerTestHooks({
-    extraHeaders: [
-      //
-      'X-My-Exit-Options-Request-Header',
-      'X-My-Exit-Options-Request-Multi-Header',
-      'X-My-Exit-Set-On-Request-Header',
-      'X-My-Exit-Set-On-Request-Multi-Header',
-      'X-My-Exit-Response-Header'
-    ]
-  });
 
   describe('http', function() {
     registerTests.call(this, false);
@@ -41,6 +27,9 @@ mochaSuiteFn('tracing/http client', function() {
   describe('https', function() {
     registerTests.call(this, true);
   });
+
+  registerConnectionRefusalTest.call(this, false);
+  registerConnectionRefusalTest.call(this, true);
 
   (semver.gte(process.versions.node, '8.2.1') ? describe : describe.skip)('superagent', function() {
     registerSuperagentTest.call(this);
@@ -51,21 +40,23 @@ function registerTests(useHttps) {
   const serverControls = new ProcessControls({
     appPath: path.join(__dirname, 'serverApp'),
     port: serverPort,
-    agentControls,
+    useGlobalAgent: true,
     env: {
       USE_HTTPS: useHttps
     }
-  }).registerTestHooks();
+  });
 
   const clientControls = new ProcessControls({
     appPath: path.join(__dirname, 'clientApp'),
     port: clientPort,
-    agentControls,
+    useGlobalAgent: true,
     env: {
       SERVER_PORT: serverControls.port,
       USE_HTTPS: useHttps
     }
-  }).registerTestHooks();
+  });
+
+  setUpTestHooks(serverControls, clientControls);
 
   // HTTP requests can be triggered via http.request(...) + request.end(...) or http.get(...).
   // Both http.request and http.get accept
@@ -90,7 +81,7 @@ function registerTests(useHttps) {
           })
           .then(() =>
             retry(() =>
-              agentControls
+              globalAgent.instance
                 .getSpans()
                 .then(spans => verifySpans(spans, useHttps, '/request-url-and-options', '/request-url-opts', withQuery))
             )
@@ -115,7 +106,7 @@ function registerTests(useHttps) {
           })
           .then(() =>
             retry(() =>
-              agentControls
+              globalAgent.instance
                 .getSpans()
                 .then(spans => verifySpans(spans, useHttps, '/request-url-only', '/request-only-url', withQuery))
             )
@@ -133,7 +124,7 @@ function registerTests(useHttps) {
         })
         .then(() =>
           retry(() =>
-            agentControls
+            globalAgent.instance
               .getSpans()
               .then(spans => verifySpans(spans, useHttps, '/request-options-only', '/request-only-opts', withQuery))
           )
@@ -148,7 +139,7 @@ function registerTests(useHttps) {
       })
       .then(() =>
         retry(() =>
-          agentControls.getSpans().then(spans => {
+          globalAgent.instance.getSpans().then(spans => {
             const entrySpan = verifyRootHttpEntry(spans, clientHost, '/request-malformed-url');
             expectExactlyOneMatching(spans, [
               span => expect(span.n).to.equal('node.http.client'),
@@ -181,7 +172,7 @@ function registerTests(useHttps) {
         })
         .then(() =>
           retry(() =>
-            agentControls
+            globalAgent.instance
               .getSpans()
               .then(spans =>
                 verifySpans(spans, useHttps, '/request-options-only-null-headers', '/request-only-opts', withQuery)
@@ -204,7 +195,7 @@ function registerTests(useHttps) {
           })
           .then(() =>
             retry(() =>
-              agentControls
+              globalAgent.instance
                 .getSpans()
                 .then(spans => verifySpans(spans, useHttps, '/get-url-and-options', '/get-url-opts', withQuery))
             )
@@ -229,7 +220,7 @@ function registerTests(useHttps) {
           })
           .then(() =>
             retry(() =>
-              agentControls
+              globalAgent.instance
                 .getSpans()
                 .then(spans => verifySpans(spans, useHttps, '/get-url-only', '/get-only-url', withQuery))
             )
@@ -247,35 +238,12 @@ function registerTests(useHttps) {
         })
         .then(() =>
           retry(() =>
-            agentControls
+            globalAgent.instance
               .getSpans()
               .then(spans => verifySpans(spans, useHttps, '/get-options-only', '/get-only-opts', withQuery))
           )
         ));
   });
-
-  it('must trace calls that fail due to connection refusal', () =>
-    serverControls
-      .kill()
-      .then(() =>
-        clientControls.sendRequest({
-          method: 'GET',
-          path: '/timeout',
-          simple: false
-        })
-      )
-      .then(() =>
-        retry(() =>
-          agentControls.getSpans().then(spans => {
-            expectExactlyOneMatching(spans, [
-              span => expect(span.n).to.equal('node.http.client'),
-              span => expect(span.k).to.equal(constants.EXIT),
-              span => expect(span.ec).to.equal(1),
-              span => expect(span.data.http.error).to.match(/ECONNREFUSED/)
-            ]);
-          })
-        )
-      ));
 
   it('must trace calls that fail due to timeouts', () =>
     clientControls
@@ -286,7 +254,7 @@ function registerTests(useHttps) {
       })
       .then(() =>
         retry(() =>
-          agentControls.getSpans().then(spans => {
+          globalAgent.instance.getSpans().then(spans => {
             expectExactlyOneMatching(spans, [
               span => expect(span.n).to.equal('node.http.client'),
               span => expect(span.k).to.equal(constants.EXIT),
@@ -306,7 +274,7 @@ function registerTests(useHttps) {
       })
       .then(() =>
         retry(() =>
-          agentControls.getSpans().then(spans => {
+          globalAgent.instance.getSpans().then(spans => {
             expectExactlyOneMatching(spans, [
               span => expect(span.n).to.equal('node.http.client'),
               span => expect(span.k).to.equal(constants.EXIT),
@@ -325,7 +293,7 @@ function registerTests(useHttps) {
       })
       .then(() =>
         retry(() =>
-          agentControls.getSpans().then(spans => {
+          globalAgent.instance.getSpans().then(spans => {
             expectExactlyOneMatching(spans, [
               span => expect(span.n).to.equal('node.http.client'),
               span => expect(span.k).to.equal(constants.EXIT),
@@ -349,7 +317,7 @@ function registerTests(useHttps) {
       })
       .then(() =>
         retry(() =>
-          agentControls.getSpans().then(spans => {
+          globalAgent.instance.getSpans().then(spans => {
             expectExactlyOneMatching(spans, [
               span => expect(span.n).to.equal('node.http.client'),
               span => expect(span.k).to.equal(constants.EXIT),
@@ -373,7 +341,7 @@ function registerTests(useHttps) {
       })
       .then(() =>
         retry(() =>
-          agentControls.getSpans().then(spans => {
+          globalAgent.instance.getSpans().then(spans => {
             expectExactlyOneMatching(spans, [
               span => expect(span.n).to.equal('node.http.client'),
               span => expect(span.k).to.equal(constants.EXIT),
@@ -394,7 +362,7 @@ function registerTests(useHttps) {
       })
       .then(() =>
         retry(() =>
-          agentControls.getSpans().then(spans => {
+          globalAgent.instance.getSpans().then(spans => {
             expectExactlyOneMatching(spans, [
               span => expect(span.n).to.equal('node.http.client'),
               span => expect(span.k).to.equal(constants.EXIT),
@@ -409,7 +377,7 @@ function registerTests(useHttps) {
   it('must capture deferred outgoing HTTP calls that are executed after the triggering HTTP entry has finished', () =>
     clientControls.sendRequest({ path: '/deferred-http-exit' }).then(() =>
       retry(() =>
-        agentControls.getSpans().then(spans => {
+        globalAgent.instance.getSpans().then(spans => {
           const clientSpan = expectExactlyOneMatching(spans, [
             span => expect(span.n).to.equal('node.http.client'),
             span => expect(span.k).to.equal(constants.EXIT),
@@ -446,21 +414,72 @@ function registerTests(useHttps) {
       }));
 }
 
+function registerConnectionRefusalTest(useHttps) {
+  // This needs to be in a suite of its own because the test terminates the server app.
+  describe('connection refusal', function() {
+    const serverControls = new ProcessControls({
+      appPath: path.join(__dirname, 'serverApp'),
+      port: serverPort,
+      useGlobalAgent: true,
+      env: {
+        USE_HTTPS: useHttps
+      }
+    });
+
+    const clientControls = new ProcessControls({
+      appPath: path.join(__dirname, 'clientApp'),
+      port: clientPort,
+      useGlobalAgent: true,
+      env: {
+        SERVER_PORT: serverControls.port,
+        USE_HTTPS: useHttps
+      }
+    });
+
+    setUpTestHooks(serverControls, clientControls);
+
+    it('must trace calls that fail due to connection refusal', () =>
+      serverControls
+        .kill()
+        .then(() =>
+          clientControls.sendRequest({
+            method: 'GET',
+            path: '/timeout',
+            simple: false
+          })
+        )
+        .then(() =>
+          retry(() =>
+            globalAgent.instance.getSpans().then(spans => {
+              expectExactlyOneMatching(spans, [
+                span => expect(span.n).to.equal('node.http.client'),
+                span => expect(span.k).to.equal(constants.EXIT),
+                span => expect(span.ec).to.equal(1),
+                span => expect(span.data.http.error).to.match(/ECONNREFUSED/)
+              ]);
+            })
+          )
+        ));
+  });
+}
+
 function registerSuperagentTest() {
   const serverControls = new ProcessControls({
     appPath: path.join(__dirname, 'serverApp'),
     port: serverPort,
-    agentControls
-  }).registerTestHooks();
+    useGlobalAgent: true
+  });
 
   const clientControls = new ProcessControls({
     appPath: path.join(__dirname, 'superagentApp'),
     port: clientPort,
-    agentControls,
+    useGlobalAgent: true,
     env: {
       SERVER_PORT: serverControls.port
     }
-  }).registerTestHooks();
+  });
+
+  setUpTestHooks(serverControls, clientControls);
 
   it('must trace superagent callbacks', () =>
     clientControls
@@ -470,7 +489,7 @@ function registerSuperagentTest() {
       })
       .then(() =>
         retry(() =>
-          agentControls.getSpans().then(spans => verifySuperagentSpans(spans, '/callback', '/request-url-opts'))
+          globalAgent.instance.getSpans().then(spans => verifySuperagentSpans(spans, '/callback', '/request-url-opts'))
         )
       ));
 
@@ -481,7 +500,9 @@ function registerSuperagentTest() {
         path: constructPath('/then')
       })
       .then(() =>
-        retry(() => agentControls.getSpans().then(spans => verifySuperagentSpans(spans, '/then', '/request-url-opts')))
+        retry(() =>
+          globalAgent.instance.getSpans().then(spans => verifySuperagentSpans(spans, '/then', '/request-url-opts'))
+        )
       ));
 
   it('must trace superagent promises/catch', () =>
@@ -491,7 +512,9 @@ function registerSuperagentTest() {
         path: constructPath('/catch')
       })
       .then(() =>
-        retry(() => agentControls.getSpans().then(spans => verifySuperagentSpans(spans, '/catch', '/does-not-exist')))
+        retry(() =>
+          globalAgent.instance.getSpans().then(spans => verifySuperagentSpans(spans, '/catch', '/does-not-exist'))
+        )
       ));
 
   it('must trace superagent with async/await', () =>
@@ -501,7 +524,9 @@ function registerSuperagentTest() {
         path: constructPath('/await')
       })
       .then(() =>
-        retry(() => agentControls.getSpans().then(spans => verifySuperagentSpans(spans, '/await', '/request-url-opts')))
+        retry(() =>
+          globalAgent.instance.getSpans().then(spans => verifySuperagentSpans(spans, '/await', '/request-url-opts'))
+        )
       ));
 
   it('must trace superagent with async/await and error', () =>
@@ -512,9 +537,27 @@ function registerSuperagentTest() {
       })
       .then(() =>
         retry(() =>
-          agentControls.getSpans().then(spans => verifySuperagentSpans(spans, '/await-fail', '/does-not-exist'))
+          globalAgent.instance.getSpans().then(spans => verifySuperagentSpans(spans, '/await-fail', '/does-not-exist'))
         )
       ));
+}
+
+function setUpTestHooks(serverControls, clientControls) {
+  // Wipe the agent stub data completely (including announced processes/known PIDs) before and after running a full
+  // test suite.
+  before(async () => {
+    await globalAgent.instance.reset();
+    await serverControls.startAndWaitForAgentConnection();
+    await clientControls.startAndWaitForAgentConnection();
+  });
+  after(async () => {
+    await serverControls.stop();
+    await clientControls.stop();
+    await globalAgent.instance.reset();
+  });
+
+  // Discard all spans before and after each test, but let the agent stub keep the announced processes/PIDs and metrics.
+  globalAgent.setUpTestCaseCleanUpHooks();
 }
 
 function constructPath(basePath, urlObject, withQuery) {
@@ -547,7 +590,7 @@ function verifySuperagentSpans(spans, clientEndpoint, serverEndpoint) {
     'GET',
     serverEndpoint === '/does-not-exist' ? 404 : 200
   );
-  verifyHttpExit(spans, entryInClient, 'http://127.0.0.1:3210/');
+  verifyHttpExit(spans, entryInClient, `http://127.0.0.1:${globalAgent.PORT}/`);
   verifyHttpEntry(
     spans,
     firstExitInClient,
@@ -564,47 +607,44 @@ function verifyRootHttpEntry(spans, host, url = '/', method = 'GET', status = 20
 }
 
 function verifyHttpEntry(spans, parent, host, url = '/', method = 'GET', status = 200, synthetic = false) {
-  return expectExactlyOneMatching(spans, span => {
-    expect(span.n).to.equal('node.http.server');
-    expect(span.k).to.equal(constants.ENTRY);
-    expect(span.ec).to.equal(0);
-    if (parent) {
-      expect(span.t).to.equal(parent.t);
-      expect(span.s).to.be.a('string');
-      expect(span.p).to.equal(parent.s);
-    } else {
-      expect(span.t).to.be.a('string');
-      expect(span.s).to.be.a('string');
-      expect(span.p).to.not.exist;
-    }
-    if (!synthetic) {
-      expect(span.sy).to.not.exist;
-    } else {
-      expect(span.sy).to.be.true;
-    }
-    expect(span.data.http.url).to.equal(url);
-    expect(span.data.http.method).to.equal(method);
-    expect(span.data.http.host).to.equal(host);
-    expect(span.data.http.status).to.equal(status);
-  });
+  let expectations = [
+    span => expect(span.n).to.equal('node.http.server'),
+    span => expect(span.k).to.equal(constants.ENTRY),
+    span => expect(span.ec).to.equal(0),
+    span => expect(span.data.http.url).to.equal(url),
+    span => expect(span.data.http.method).to.equal(method),
+    span => expect(span.data.http.host).to.equal(host),
+    span => expect(span.data.http.status).to.equal(status)
+  ];
+  if (parent) {
+    expectations = expectations.concat([
+      span => expect(span.t).to.equal(parent.t),
+      span => expect(span.s).to.be.a('string'),
+      span => expect(span.p).to.equal(parent.s)
+    ]);
+  } else {
+    expectations = expectations.concat([
+      span => expect(span.t).to.be.a('string'),
+      span => expect(span.s).to.be.a('string'),
+      span => expect(span.p).to.not.exist
+    ]);
+  }
+  expectations.push(span => (synthetic ? expect(span.sy).to.be.true : expect(span.sy).to.not.exist));
+  return expectExactlyOneMatching(spans, expectations);
 }
 
 function verifyHttpExit(spans, parent, url = '/', method = 'GET', status = 200, synthetic = false) {
-  return expectExactlyOneMatching(spans, span => {
-    expect(span.n).to.equal('node.http.client');
-    expect(span.k).to.equal(constants.EXIT);
-    expect(span.t).to.equal(parent.t);
-    expect(span.p).to.equal(parent.s);
-    expect(span.s).to.be.a('string');
-    expect(span.data.http.url).to.equal(url);
-    expect(span.data.http.method).to.equal(method);
-    expect(span.data.http.status).to.equal(status);
-    if (!synthetic) {
-      expect(span.sy).to.not.exist;
-    } else {
-      expect(span.sy).to.be.true;
-    }
-  });
+  return expectExactlyOneMatching(spans, [
+    span => expect(span.n).to.equal('node.http.client'),
+    span => expect(span.k).to.equal(constants.EXIT),
+    span => expect(span.t).to.equal(parent.t),
+    span => expect(span.p).to.equal(parent.s),
+    span => expect(span.s).to.be.a('string'),
+    span => expect(span.data.http.url).to.equal(url),
+    span => expect(span.data.http.method).to.equal(method),
+    span => expect(span.data.http.status).to.equal(status),
+    span => (!synthetic ? expect(span.sy).to.not.exist : expect(span.sy).to.be.true)
+  ]);
 }
 
 function serverUrl(useHttps, path_) {

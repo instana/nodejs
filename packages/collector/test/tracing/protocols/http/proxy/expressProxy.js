@@ -4,7 +4,7 @@
 // latency and response codes. This can be used a baselines for many tests, e.g.
 // to test distributed tracing.
 
-require('../../')({
+require('../../../../..')({
   agentPort: process.env.AGENT_PORT,
   level: 'warn',
   tracing: {
@@ -70,7 +70,7 @@ app.use((req, res) => {
 });
 
 app.listen(process.env.APP_PORT, () => {
-  log(`Listening on port: ${process.env.APP_PORT}`);
+  log(`Listening on port: ${process.env.APP_PORT}, proxying to ${process.env.UPSTREAM_PORT}.`);
 });
 
 function log() {

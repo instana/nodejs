@@ -9,7 +9,7 @@ const spawn = require('child_process').spawn;
 const testUtils = require('../../../core/test/test_util');
 const config = require('../../../core/test/config');
 const agentPort = require('./agentStubControls').agentPort;
-const appPort = (exports.appPort = 3211);
+const appPort = (exports.appPort = 3213);
 
 const sslDir = path.join(__dirname, 'ssl');
 const cert = fs.readFileSync(path.join(sslDir, 'cert'));
@@ -36,9 +36,7 @@ exports.registerTestHooks = opts => {
     return waitUntilServerIsUp(opts.useHttps);
   });
 
-  afterEach(() => {
-    expressApp.kill();
-  });
+  afterEach(() => expressApp.kill());
 };
 
 function waitUntilServerIsUp(useHttps) {

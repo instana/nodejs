@@ -5,7 +5,7 @@ const { expect } = require('chai');
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const { delay, retry } = require('../../../core/test/test_util');
 const ProcessControls = require('../test_util/ProcessControls');
-const agentControls = require('../apps/agentStubControls');
+const globalAgent = require('..//globalAgent');
 
 describe('profiling', function() {
   if (!supportedVersion(process.versions.node)) {
@@ -18,13 +18,14 @@ describe('profiling', function() {
 
   this.timeout(testTimeout);
 
+  globalAgent.setUpCleanUpHooks();
+  const agentControls = globalAgent.instance;
+
   describe('profiling', function() {
     describe('agent is up to date', function() {
-      agentControls.registerTestHooks();
-
       const controls = new ProcessControls({
         dirname: __dirname,
-        agentControls,
+        useGlobalAgent: true,
         env: {
           INSTANA_AUTO_PROFILE: true
         }
@@ -75,7 +76,7 @@ describe('profiling', function() {
 
       const controls = new ProcessControls({
         dirname: __dirname,
-        agentControls,
+        useGlobalAgent: true,
         env: {
           INSTANA_AUTO_PROFILE: true
         }

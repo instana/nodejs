@@ -4,7 +4,7 @@ const expect = require('chai').expect;
 const Promise = require('bluebird');
 
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
-const config = require('../../../core/test/config');
+const config = require('../../../../../core/test/config');
 
 /**
  * Tests behaviour when the Instana Node.js collector is active but tracing is disabled.
@@ -14,8 +14,8 @@ describe('disabled tracing', function() {
     return;
   }
 
-  const agentStubControls = require('../apps/agentStubControls');
-  const expressControls = require('../apps/expressControls');
+  const agentStubControls = require('../../../apps/agentStubControls');
+  const expressControls = require('../../../apps/expressControls');
 
   this.timeout(config.getTestTimeout());
 
