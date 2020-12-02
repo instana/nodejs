@@ -48,9 +48,10 @@ function enter(ctx) {
       if (getDefaultGatewayErr) {
         logger.debug('Error while trying to determine default gateway.', { error: getDefaultGatewayErr });
         logger.warn(
-          'Agent cannot be contacted via %s and default gateway cannot be determined. ' +
+          'Agent cannot be contacted via %s:%s and default gateway cannot be determined. ' +
             'Scheduling reattempt of agent host lookup in %s millis.',
           agentHost,
+          agentOpts.port,
           retryTimeoutMillis
         );
         const defaultGatewayRetryTimeout = setTimeout(enter, retryTimeoutMillis, ctx);
@@ -69,10 +70,12 @@ function enter(ctx) {
           error: defaultGatewayCheckErr
         });
         logger.warn(
-          'Agent cannot be contacted via %s nor via default gateway %s. ' +
+          'Agent cannot be contacted via %s:%s nor via default gateway %s:%s. ' +
             'Scheduling reattempt of agent host lookup in %s millis.',
           agentHost,
+          agentOpts.port,
           defaultGateway,
+          agentOpts.port,
           retryTimeoutMillis
         );
         const checkHostRetryTimeout = setTimeout(enter, retryTimeoutMillis, ctx);
@@ -109,7 +112,11 @@ function checkHost(host, cb) {
         if (res.headers.server === EXPECTED_SERVER_HEADER) {
           cb(null);
         } else {
-          cb(new Error(`Host ${host} did not respond with expected agent header. Got: ${res.headers.server}`));
+          cb(
+            new Error(
+              `Host ${host}:${agentOpts.port} did not respond with expected agent header. Got: ${res.headers.server}`
+            )
+          );
         }
         res.resume();
       }
