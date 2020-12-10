@@ -8,7 +8,8 @@ const spawn = require('child_process').spawn;
 
 const testUtils = require('../../../core/test/test_util');
 const config = require('../../../core/test/config');
-const agentPort = require('./agentStubControls').agentPort;
+const legacyAgentPort = require('./agentStubControls').agentPort;
+const globalAgentPort = require('../globalAgent').PORT;
 const appPort = (exports.appPort = 3213);
 
 const sslDir = path.join(__dirname, 'ssl');
@@ -21,7 +22,7 @@ exports.registerTestHooks = opts => {
     opts = opts || {};
 
     const env = Object.create(process.env);
-    env.AGENT_PORT = agentPort;
+    env.AGENT_PORT = opts.useGlobalAgent ? globalAgentPort : legacyAgentPort;
     env.APP_PORT = appPort;
     env.TRACING_ENABLED = opts.enableTracing !== false;
     env.STACK_TRACE_LENGTH = opts.stackTraceLength || 0;

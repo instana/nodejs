@@ -9,21 +9,21 @@ const tracingUtil = require('../../../../../core/src/tracing/tracingUtil');
 const config = require('../../../../../core/test/config');
 const testUtils = require('../../../../../core/test/test_util');
 const ProcessControls = require('../../../test_util/ProcessControls');
+const globalAgent = require('../../../globalAgent');
 
 describe('tracing/express with uncaught errors', function() {
   if (!supportedVersion(process.versions.node)) {
     return;
   }
 
-  const agentControls = require('../../../apps/agentStubControls');
+  const agentControls = globalAgent.instance;
+  globalAgent.setUpCleanUpHooks();
 
   this.timeout(config.getTestTimeout());
 
-  agentControls.registerTestHooks();
-
   const expressUncaughtErrorsControls = new ProcessControls({
     appPath: path.join(__dirname, 'app'),
-    agentControls
+    useGlobalAgent: true
   }).registerTestHooks();
 
   [false, true].forEach(isRootSpan => registerTests(isRootSpan));

@@ -5,24 +5,25 @@ const expect = require('chai').expect;
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('../../../../core/test/config');
 const testUtils = require('../../../../core/test/test_util');
+const globalAgent = require('../../globalAgent');
 
 describe('tracing/opentracing/integration', function() {
-  const agentStubControls = require('../../apps/agentStubControls');
-  const expressOpentracingControls = require('./controls');
-
   this.timeout(config.getTestTimeout());
 
-  agentStubControls.registerTestHooks();
+  const agentControls = globalAgent.instance;
+  globalAgent.setUpCleanUpHooks();
+
+  const expressOpentracingControls = require('./controls');
 
   describe('with automatic tracing', () => {
     expressOpentracingControls.registerTestHooks();
 
-    beforeEach(() => agentStubControls.waitUntilAppIsCompletelyInitialized(expressOpentracingControls.getPid()));
+    beforeEach(() => agentControls.waitUntilAppIsCompletelyInitialized(expressOpentracingControls.getPid()));
 
     it('must not generate opentracing traces when OT is not used', () =>
       expressOpentracingControls.sendRequest({ path: '/' }).then(() =>
         testUtils.retry(() =>
-          agentStubControls.getSpans().then(spans => {
+          agentControls.getSpans().then(spans => {
             if (supportedVersion(process.versions.node)) {
               expect(spans).to.have.lengthOf(1);
               expect(spans[0].n).to.equal('node.http.server');
@@ -36,7 +37,7 @@ describe('tracing/opentracing/integration', function() {
     it('must generate opentracing traces', () =>
       expressOpentracingControls.sendRequest({ path: '/withOpentracing' }).then(() =>
         testUtils.retry(() =>
-          agentStubControls.getSpans().then(spans => {
+          agentControls.getSpans().then(spans => {
             const serviceSpan = testUtils.expectAtLeastOneMatching(spans, [
               span => expect(span.t).to.be.a('string'),
               span => expect(span.s).to.be.a('string'),
@@ -77,7 +78,7 @@ describe('tracing/opentracing/integration', function() {
       it('must connect instana trace to opentracing spans', () =>
         expressOpentracingControls.sendRequest({ path: '/withOpentracingConnectedToInstanaTrace' }).then(() =>
           testUtils.retry(() =>
-            agentStubControls.getSpans().then(spans => {
+            agentControls.getSpans().then(spans => {
               expect(spans).to.have.lengthOf(2);
 
               const httpSpan = testUtils.expectAtLeastOneMatching(spans, [
@@ -112,12 +113,12 @@ describe('tracing/opentracing/integration', function() {
   describe('without automatic tracing', () => {
     expressOpentracingControls.registerTestHooks({ disableAutomaticTracing: true });
 
-    beforeEach(() => agentStubControls.waitUntilAppIsCompletelyInitialized(expressOpentracingControls.getPid()));
+    beforeEach(() => agentControls.waitUntilAppIsCompletelyInitialized(expressOpentracingControls.getPid()));
 
     it('must only generate opentracing traces', () =>
       expressOpentracingControls.sendRequest({ path: '/withOpentracing' }).then(() =>
         testUtils.retry(() =>
-          agentStubControls.getSpans().then(spans => {
+          agentControls.getSpans().then(spans => {
             const serviceSpan = testUtils.expectAtLeastOneMatching(spans, [
               span => expect(span.t).to.be.a('string'),
               span => expect(span.s).to.be.a('string'),

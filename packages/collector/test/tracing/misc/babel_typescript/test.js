@@ -13,10 +13,11 @@ const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('../../../../../core/test/config');
 const testUtils = require('../../../../../core/test/test_util');
 const ProcessControls = require('../../../test_util/ProcessControls');
+const globalAgent = require('../../../globalAgent');
 
 const babelAppDir = path.join(__dirname, '../../../apps/babel-typescript');
 const babelLibDir = path.join(babelAppDir, 'lib');
-let agentControls;
+const agentControls = globalAgent.instance;
 
 describe('tracing a babel/typescript setup', function() {
   if (!supportedVersion(process.versions.node) || semver.lt(process.versions.node, '8.0.0')) {
@@ -24,6 +25,8 @@ describe('tracing a babel/typescript setup', function() {
   }
 
   this.timeout(60000);
+
+  globalAgent.setUpCleanUpHooks();
 
   before(done => {
     rimraf(babelLibDir, err => {
@@ -49,15 +52,11 @@ describe('tracing a babel/typescript setup', function() {
     rimraf(babelLibDir, done);
   });
 
-  agentControls = require('../../../apps/agentStubControls');
-
   this.timeout(config.getTestTimeout());
-
-  agentControls.registerTestHooks();
 
   const controls = new ProcessControls({
     appPath: path.join(__dirname, '../../../apps/babel-typescript'),
-    agentControls
+    useGlobalAgent: true
   }).registerTestHooks();
 
   describe('@instana/collector used in a babel-transpiled typescript app', function() {

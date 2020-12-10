@@ -7,19 +7,18 @@ const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('../../../../../core/test/config');
 const testUtils = require('../../../../../core/test/test_util');
 const ProcessControls = require('../../../test_util/ProcessControls');
+const globalAgent = require('../../../globalAgent');
 
-let agentControls;
+const agentControls = globalAgent.instance;
 
 describe('tracing/preInit', function() {
   if (!supportedVersion(process.versions.node)) {
     return;
   }
 
-  agentControls = require('../../../apps/agentStubControls');
-
   this.timeout(config.getTestTimeout());
 
-  agentControls.registerTestHooks();
+  globalAgent.setUpCleanUpHooks();
 
   describe('without preInit', function() {
     registerTests.call(this, false);
@@ -33,7 +32,7 @@ describe('tracing/preInit', function() {
 function registerTests(usePreInit) {
   const controls = new ProcessControls({
     dirname: __dirname,
-    agentControls,
+    useGlobalAgent: true,
     usePreInit
   }).registerTestHooks();
 

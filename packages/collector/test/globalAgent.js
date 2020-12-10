@@ -46,12 +46,8 @@ exports.setUpCleanUpHooks = function setUpCleanUpHooks() {
  * this in the outermost describe in test suites that use the global agent.
  */
 exports.setUpSuiteCleanUpHooks = function setUpSuiteCleanUpHooks() {
-  before(async () => {
-    await exports.instance.reset();
-  });
-  after(async () => {
-    await exports.instance.reset();
-  });
+  before(() => exports.instance.reset());
+  after(() => exports.instance.reset());
 };
 
 /**
@@ -59,12 +55,6 @@ exports.setUpSuiteCleanUpHooks = function setUpSuiteCleanUpHooks() {
  * use the global agent.
  */
 exports.setUpTestCaseCleanUpHooks = function setUpTestCaseCleanUpHooks() {
-  beforeEach(async () => {
-    await exports.instance.clearReceivedTraceData();
-    await exports.instance.clearReceivedProfilingData();
-  });
-  afterEach(async () => {
-    await exports.instance.clearReceivedTraceData();
-    await exports.instance.clearReceivedProfilingData();
-  });
+  beforeEach(() => exports.instance.clearReceivedData());
+  afterEach(() => exports.instance.clearReceivedData());
 };

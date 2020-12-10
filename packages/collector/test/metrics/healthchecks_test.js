@@ -3,43 +3,45 @@
 const expect = require('chai').expect;
 const semver = require('semver');
 const config = require('../../../core/test/config');
-const testUtils = require('../../../core/test/test_util');
+const { retry } = require('../../../core/test/test_util');
+const globalAgent = require('../globalAgent');
 
 describe('metrics/healthchecks', function() {
-  // admin uses JavaScript language features which aren't available in all
+  // The npm package `admin` uses JavaScript language features which aren't available in all
   // Node.js versions
   if (!semver.satisfies(process.versions.node, '>=6.0.0')) {
     return;
   }
 
-  const agentStubControls = require('../apps/agentStubControls');
   const expressControls = require('../apps/expressControls');
 
   this.timeout(config.getTestTimeout());
 
   const start = new Date().getTime();
 
-  agentStubControls.registerTestHooks();
+  const agentControls = globalAgent.instance;
+  globalAgent.setUpCleanUpHooks();
+
   expressControls.registerTestHooks({
+    useGlobalAgent: true,
     enableTracing: false
   });
 
-  beforeEach(() => agentStubControls.waitUntilAppIsCompletelyInitialized(expressControls.getPid()));
+  beforeEach(() => agentControls.waitUntilAppIsCompletelyInitialized(expressControls.getPid()));
 
   it('must report health status', () => {
     let healthyTimestamp;
-    return testUtils
-      .retry(() =>
-        agentStubControls.getLastMetricValue(expressControls.getPid(), ['healthchecks']).then(healthchecks => {
-          expect(healthchecks.configurable.healthy).to.equal(1);
-          expect(healthchecks.configurable.since).to.be.gte(start);
-          healthyTimestamp = healthchecks.configurable.since;
-        })
-      )
+    return retry(() =>
+      agentControls.getLastMetricValue(expressControls.getPid(), ['healthchecks']).then(healthchecks => {
+        expect(healthchecks.configurable.healthy).to.equal(1);
+        expect(healthchecks.configurable.since).to.be.gte(start);
+        healthyTimestamp = healthchecks.configurable.since;
+      })
+    )
       .then(() => expressControls.setUnhealthy())
       .then(() =>
-        testUtils.retry(() =>
-          agentStubControls.getLastMetricValue(expressControls.getPid(), ['healthchecks']).then(healthchecks => {
+        retry(() =>
+          agentControls.getLastMetricValue(expressControls.getPid(), ['healthchecks']).then(healthchecks => {
             expect(healthchecks.configurable.healthy).to.equal(0);
             expect(healthchecks.configurable.since).to.be.gt(healthyTimestamp);
           })

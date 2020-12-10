@@ -11,19 +11,18 @@ const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('../../../../../core/test/config');
 const testUtils = require('../../../../../core/test/test_util');
 const ProcessControls = require('../../../test_util/ProcessControls');
+const globalAgent = require('../../../globalAgent');
 
-let agentControls;
+const agentControls = globalAgent.instance;
 
 describe('tracing/too late', function() {
   if (!supportedVersion(process.versions.node) || semver.lt(process.versions.node, '8.0.0')) {
     return;
   }
 
-  agentControls = require('../../../apps/agentStubControls');
-
   this.timeout(config.getTestTimeout());
 
-  agentControls.registerTestHooks();
+  globalAgent.setUpCleanUpHooks();
 
   [
     '@elastic/elasticsearch',
@@ -64,7 +63,7 @@ describe('tracing/too late', function() {
     describe(`@instana/collector is initialized too late (${moduleName})`, function() {
       const controls = new ProcessControls({
         dirname: __dirname,
-        agentControls,
+        useGlobalAgent: true,
         env: {
           REQUIRE_BEFORE_COLLECTOR: moduleName
         }
@@ -134,7 +133,7 @@ describe('tracing/too late', function() {
   describe('@instana/collector is initialized properly', () => {
     const controls = new ProcessControls({
       dirname: __dirname,
-      agentControls
+      useGlobalAgent: true
     }).registerTestHooks();
 
     it('should not warn about being initialized too late', () =>

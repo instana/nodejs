@@ -13,21 +13,21 @@ const {
 } = require('../../../../../core/test/test_util');
 
 const ProcessControls = require('../../../test_util/ProcessControls');
+const globalAgent = require('../../../globalAgent');
 
 describe('tracing/pg-native', function() {
   if (!supportedVersion(process.versions.node)) {
     return;
   }
 
-  const agentControls = require('../../../apps/agentStubControls');
+  const agentControls = globalAgent.instance;
+  globalAgent.setUpCleanUpHooks();
 
   this.timeout(config.getTestTimeout());
 
-  agentControls.registerTestHooks();
-
   const controls = new ProcessControls({
     dirname: __dirname,
-    agentControls
+    useGlobalAgent: true
   }).registerTestHooks();
 
   it('must trace select', () =>
@@ -301,7 +301,7 @@ describe('tracing/pg-native', function() {
       span => expect(span.error).to.not.exist,
       span => expect(span.ec).to.equal(0),
       span => expect(span.data.http.method).to.equal('GET'),
-      span => expect(span.data.http.url).to.match(/http:\/\/127\.0\.0\.1:3210/),
+      span => expect(span.data.http.url).to.match(/http:\/\/127\.0\.0\.1:/),
       span => expect(span.data.http.status).to.equal(200)
     ]);
   }

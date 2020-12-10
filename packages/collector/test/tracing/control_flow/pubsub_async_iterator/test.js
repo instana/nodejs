@@ -5,21 +5,22 @@ const expect = require('chai').expect;
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('../../../../../core/test/config');
 const ProcessControls = require('../../../test_util/ProcessControls');
+const globalAgent = require('../../../globalAgent');
 
 describe('tracing/graphql-subscriptions - PubSub/async iterator (pull before push)', function() {
   if (!supportedVersion(process.versions.node)) {
     return;
   }
 
-  const agentControls = require('../../../apps/agentStubControls');
+  const agentControls = globalAgent.instance;
+  globalAgent.setUpCleanUpHooks();
 
   this.timeout(config.getTestTimeout());
 
-  agentControls.registerTestHooks();
-
   const controls = new ProcessControls({
     dirname: __dirname,
-    agentControls
+    agentControls,
+    useGlobalAgent: true
   });
   controls.registerTestHooks();
 

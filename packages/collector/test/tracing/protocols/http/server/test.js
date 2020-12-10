@@ -9,6 +9,7 @@ const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('../../../../../../core/test/config');
 const { delay, retry } = require('../../../../../../core/test/test_util');
 const ProcessControls = require('../../../../test_util/ProcessControls');
+const { AgentStubControls } = require('../../../../apps/agentStubControls');
 
 let agentControls;
 
@@ -17,11 +18,9 @@ describe('tracing/http(s) server', function() {
     return;
   }
 
-  agentControls = require('../../../../apps/agentStubControls');
-
   this.timeout(config.getTestTimeout());
 
-  agentControls.registerTestHooks({
+  agentControls = new AgentStubControls().registerHooksForSuite({
     extraHeaders: [
       //
       'X-My-Entry-Request-Header',

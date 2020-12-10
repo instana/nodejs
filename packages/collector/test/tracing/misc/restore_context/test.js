@@ -8,8 +8,9 @@ const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('../../../../../core/test/config');
 const testUtils = require('../../../../../core/test/test_util');
 const ProcessControls = require('../../../test_util/ProcessControls');
+const globalAgent = require('../../../globalAgent');
 
-let agentControls;
+const agentControls = globalAgent.instance;
 
 const appName = 'custom-queueing-app';
 
@@ -18,11 +19,9 @@ describe('tracing/restore context', function() {
     return;
   }
 
-  agentControls = require('../../../apps/agentStubControls');
-
   this.timeout(config.getTestTimeout());
 
-  agentControls.registerTestHooks();
+  globalAgent.setUpCleanUpHooks();
 
   [
     //
@@ -37,7 +36,7 @@ describe('tracing/restore context', function() {
     describe('restore context', function() {
       const controls = new ProcessControls({
         appPath: path.join(__dirname, appName),
-        agentControls,
+        useGlobalAgent: true,
         port: 3222
       }).registerTestHooks();
 

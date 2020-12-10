@@ -1,29 +1,37 @@
 'use strict';
 
-const expect = require('chai').expect;
+const { expect } = require('chai');
 
 const constants = require('@instana/core').tracing.constants;
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('../../../../../core/test/config');
-const { getSpansByName, expectExactlyOneMatching, retry } = require('../../../../../core/test/test_util');
+const {
+  getSpansByName,
+  expectExactlyOneMatching,
+  retry,
+  stringifyItems
+} = require('../../../../../core/test/test_util');
 
 const ProcessControls = require('../../../test_util/ProcessControls');
+const { AgentStubControls } = require('../../../apps/agentStubControls');
+const globalAgent = require('../../../globalAgent');
+
+const { fail } = expect;
 
 describe('tracing/batching', function() {
   if (!supportedVersion(process.versions.node)) {
     return;
   }
 
-  const agentControls = require('../../../apps/agentStubControls');
+  globalAgent.setUpCleanUpHooks();
 
   this.timeout(config.getTestTimeout());
 
   describe('enabled via env var', function() {
-    agentControls.registerTestHooks();
-
+    const agentControls = globalAgent.instance;
     const controls = new ProcessControls({
       dirname: __dirname,
-      agentControls,
+      useGlobalAgent: true,
       env: {
         INSTANA_FORCE_TRANSMISSION_STARTING_AT: 500,
         INSTANA_DEV_BATCH_THRESHOLD: 250, // make sure redis calls are batched even when stuff is slow
@@ -31,30 +39,29 @@ describe('tracing/batching', function() {
       }
     }).registerTestHooks();
 
-    runTests(controls);
+    runTests(controls, agentControls);
   });
 
   describe('enabled via agent config', function() {
-    agentControls.registerTestHooks({ enableSpanBatching: true });
-
+    const customAgentControls = new AgentStubControls();
+    customAgentControls.registerTestHooks({ enableSpanBatching: true });
     const controls = new ProcessControls({
       dirname: __dirname,
-      agentControls,
+      agentControls: customAgentControls,
       env: {
         INSTANA_FORCE_TRANSMISSION_STARTING_AT: 500,
         INSTANA_DEV_BATCH_THRESHOLD: 250 // make sure redis calls are batched even when stuff is slow
       }
     }).registerTestHooks();
 
-    runTests(controls);
+    runTests(controls, customAgentControls);
   });
 
   describe('span batching is not enabled', function() {
-    agentControls.registerTestHooks();
-
+    const agentControls = globalAgent.instance;
     const controls = new ProcessControls({
       dirname: __dirname,
-      agentControls,
+      useGlobalAgent: true,
       env: {
         INSTANA_FORCE_TRANSMISSION_STARTING_AT: 500,
         INSTANA_DEV_BATCH_THRESHOLD: 250 // make sure redis calls are batched even when stuff is slow
@@ -76,8 +83,15 @@ describe('tracing/batching', function() {
 
           return retry(() =>
             agentControls.getSpans().then(spans => {
+              if (spans.length !== 5) {
+                fail(`Expected 5 spans, but got ${spans.length}: ${stringifyItems(spans)}`);
+              }
               expect(spans).to.have.lengthOf(5);
               const redisSpans = getSpansByName(spans, 'redis');
+
+              if (redisSpans.length !== 3) {
+                fail(`Expected 3 Redis spans, but got ${redisSpans.length}: ${stringifyItems(redisSpans)}`);
+              }
               expect(redisSpans).to.have.lengthOf(3);
               spans.forEach(s => expect(s.b).to.not.exist);
             })
@@ -85,7 +99,7 @@ describe('tracing/batching', function() {
         }));
   });
 
-  function runTests(controls) {
+  function runTests(controls, agentControls) {
     it('must batch quick short successive calls into one span', () =>
       controls
         .sendRequest({
@@ -106,6 +120,9 @@ describe('tracing/batching', function() {
                 span => expect(span.data.http.method).to.equal('POST')
               ]);
 
+              if (spans.length !== 3) {
+                fail(`Expected 3 spans, but got ${spans.length}: ${stringifyItems(spans)}`);
+              }
               expect(spans).to.have.lengthOf(3);
 
               expectExactlyOneMatching(spans, [
@@ -142,6 +159,9 @@ describe('tracing/batching', function() {
                 span => expect(span.data.http.method).to.equal('POST')
               ]);
 
+              if (spans.length !== 3) {
+                fail(`Expected 3 spans, but got ${spans.length}: ${stringifyItems(spans)}`);
+              }
               expect(spans).to.have.lengthOf(3);
 
               expectExactlyOneMatching(spans, [
@@ -182,7 +202,7 @@ describe('tracing/batching', function() {
       span => expect(span.error).to.not.exist,
       span => expect(span.ec).to.equal(0),
       span => expect(span.data.http.method).to.equal('GET'),
-      span => expect(span.data.http.url).to.match(/http:\/\/127\.0\.0\.1:3210/),
+      span => expect(span.data.http.url).to.match(/http:\/\/127\.0\.0\.1:/),
       span => expect(span.data.http.status).to.equal(200)
     ]);
   }

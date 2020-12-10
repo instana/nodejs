@@ -5,7 +5,7 @@ const Promise = require('bluebird');
 const path = require('path');
 
 const config = require('../../../../../core/test/config');
-const agentPort = require('../../../apps/agentStubControls').agentPort;
+const agentPort = require('../../../globalAgent').PORT;
 
 let app;
 

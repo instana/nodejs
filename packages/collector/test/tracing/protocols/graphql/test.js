@@ -15,17 +15,18 @@ const {
   retry
 } = require('../../../../../core/test/test_util');
 const ProcessControls = require('../../../test_util/ProcessControls');
+const globalAgent = require('../../../globalAgent');
 
-let agentControls;
+const agentControls = globalAgent.instance;
 
 describe('tracing/graphql', function() {
   if (!supportedVersion(process.versions.node) || semver.lt(process.versions.node, '8.5.0')) {
     return;
   }
 
-  agentControls = require('../../../apps/agentStubControls');
-
   this.timeout(config.getTestTimeout() * 2);
+
+  globalAgent.setUpCleanUpHooks();
 
   const useAlias = Math.random >= 0.5;
 
@@ -71,17 +72,16 @@ describe('tracing/graphql', function() {
   // registerSubscriptionUpdatesAreTracedSuite.bind(this)('graphql');
 
   describe('disabled', () => {
-    agentControls.registerTestHooks();
     const serverControls = new ProcessControls({
       appPath: path.join(__dirname, 'rawGraphQLServer'),
       port: 3217,
-      agentControls,
+      useGlobalAgent: true,
       tracingEnabled: false
     }).registerTestHooks();
     const clientControls = new ProcessControls({
       appPath: path.join(__dirname, 'client'),
       port: 3216,
-      agentControls,
+      useGlobalAgent: true,
       tracingEnabled: false,
       env: {
         SERVER_PORT: serverControls.port
@@ -106,16 +106,15 @@ describe('tracing/graphql', function() {
   });
 
   describe('suppressed', () => {
-    agentControls.registerTestHooks();
     const serverControls = new ProcessControls({
       appPath: path.join(__dirname, 'rawGraphQLServer'),
       port: 3217,
-      agentControls
+      useGlobalAgent: true
     }).registerTestHooks();
     const clientControls = new ProcessControls({
       appPath: path.join(__dirname, 'client'),
       port: 3216,
-      agentControls,
+      useGlobalAgent: true,
       env: {
         SERVER_PORT: serverControls.port
       }
@@ -142,11 +141,10 @@ describe('tracing/graphql', function() {
   });
 
   describe('individually disabled', () => {
-    agentControls.registerTestHooks();
     const serverControls = new ProcessControls({
       appPath: path.join(__dirname, 'rawGraphQLServer'),
       port: 3217,
-      agentControls,
+      useGlobalAgent: true,
       env: {
         INSTANA_DISABLED_TRACERS: 'graphQL'
       }
@@ -154,7 +152,7 @@ describe('tracing/graphql', function() {
     const clientControls = new ProcessControls({
       appPath: path.join(__dirname, 'client'),
       port: 3216,
-      agentControls,
+      useGlobalAgent: true,
       env: {
         SERVER_PORT: serverControls.port
       }
@@ -192,23 +190,22 @@ function registerQuerySuite({ apollo, withError, queryShorthand, useAlias, commu
     `${useAlias ? 'alias' : 'no alias'}, ` +
     `over ${communicationProtocol})`;
   describe(`queries ${titleSuffix}`, function() {
-    agentControls.registerTestHooks();
     const serverControls = apollo
       ? new ProcessControls({
           appPath: path.join(__dirname, 'apolloServer'),
           port: 3217,
-          agentControls
+          useGlobalAgent: true
         })
       : new ProcessControls({
           appPath: path.join(__dirname, 'rawGraphQLServer'),
           port: 3217,
-          agentControls
+          useGlobalAgent: true
         });
     serverControls.registerTestHooks();
     const clientControls = new ProcessControls({
       appPath: path.join(__dirname, 'client'),
       port: 3216,
-      agentControls,
+      useGlobalAgent: true,
       env: {
         SERVER_PORT: serverControls.port
       }
@@ -270,23 +267,22 @@ function registerQuerySuite({ apollo, withError, queryShorthand, useAlias, commu
 
 function registerMutationSuite(apollo) {
   describe(`mutations (${apollo ? 'apollo' : 'raw'})`, function() {
-    agentControls.registerTestHooks();
     const serverControls = apollo
       ? new ProcessControls({
           appPath: path.join(__dirname, 'apolloServer'),
           port: 3217,
-          agentControls
+          useGlobalAgent: true
         })
       : new ProcessControls({
           appPath: path.join(__dirname, 'rawGraphQLServer'),
           port: 3217,
-          agentControls
+          useGlobalAgent: true
         });
     serverControls.registerTestHooks();
     const clientControls = new ProcessControls({
       appPath: path.join(__dirname, 'client'),
       port: 3216,
-      agentControls,
+      useGlobalAgent: true,
       env: {
         SERVER_PORT: serverControls.port
       }
@@ -311,23 +307,22 @@ function registerMutationSuite(apollo) {
 
 function registerSubscriptionOperationNotTracedSuite(apollo) {
   describe(`subscriptions (${apollo ? 'apollo' : 'raw'})`, function() {
-    agentControls.registerTestHooks();
     const serverControls = apollo
       ? new ProcessControls({
           appPath: path.join(__dirname, 'apolloServer'),
           port: 3217,
-          agentControls
+          useGlobalAgent: true
         })
       : new ProcessControls({
           appPath: path.join(__dirname, 'rawGraphQLServer'),
           port: 3217,
-          agentControls
+          useGlobalAgent: true
         });
     serverControls.registerTestHooks();
     const clientControls = new ProcessControls({
       appPath: path.join(__dirname, 'client'),
       port: 3216,
-      agentControls,
+      useGlobalAgent: true,
       env: {
         SERVER_PORT: serverControls.port
       }
@@ -355,17 +350,16 @@ function registerSubscriptionOperationNotTracedSuite(apollo) {
 
 function registerSubscriptionUpdatesAreTracedSuite(triggerUpdateVia) {
   describe(`subscriptions (via: ${triggerUpdateVia})`, function() {
-    agentControls.registerTestHooks();
     const serverControls = new ProcessControls({
       appPath: path.join(__dirname, 'apolloServer'),
       port: 3217,
-      agentControls
+      useGlobalAgent: true
     }).registerTestHooks();
     // client 1
     const clientControls1 = new ProcessControls({
       appPath: path.join(__dirname, 'client'),
       port: 3216,
-      agentControls,
+      useGlobalAgent: true,
       env: {
         SERVER_PORT: serverControls.port
       }
@@ -373,7 +367,7 @@ function registerSubscriptionUpdatesAreTracedSuite(triggerUpdateVia) {
     // client 2
     const clientControls2 = new ProcessControls({
       appPath: path.join(__dirname, 'client'),
-      agentControls,
+      useGlobalAgent: true,
       port: 3226,
       env: {
         SERVER_PORT: serverControls.port

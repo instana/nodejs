@@ -7,7 +7,8 @@ const spawn = require('child_process').spawn;
 
 const testUtils = require('../../../../../../core/test/test_util');
 const config = require('../../../../../../core/test/config');
-const agentPort = require('../../../../apps/agentStubControls').agentPort;
+const legacyAgentPort = require('../../../../apps/agentStubControls').agentPort;
+const globalAgentPort = require('../../../../globalAgent').PORT;
 const upstreamPort = require('../../../../apps/expressControls').appPort;
 const appPort = (exports.appPort = 3214);
 
@@ -16,7 +17,7 @@ let expressProxyApp;
 exports.registerTestHooks = (opts = {}) => {
   beforeEach(() => {
     const env = Object.create(process.env);
-    env.AGENT_PORT = agentPort;
+    env.AGENT_PORT = opts.useGlobalAgent ? globalAgentPort : legacyAgentPort;
     env.APP_PORT = appPort;
     env.UPSTREAM_PORT = upstreamPort;
     env.STACK_TRACE_LENGTH = opts.stackTraceLength || 0;

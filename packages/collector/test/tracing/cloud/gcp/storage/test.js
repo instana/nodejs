@@ -14,6 +14,7 @@ const {
 } = require('../../../../../../core/test/test_util');
 
 const ProcessControls = require('../../../../test_util/ProcessControls');
+const globalAgent = require('../../../../globalAgent');
 
 const bucketName = 'nodejs-tracer-test-bucket';
 
@@ -25,15 +26,14 @@ mochaSuiteFn('tracing/cloud/gcp/storage', function() {
     return;
   }
 
-  const agentControls = require('../../../../apps/agentStubControls');
+  const agentControls = globalAgent.instance;
+  globalAgent.setUpCleanUpHooks();
 
   this.timeout(config.getTestTimeout() * 2);
 
-  agentControls.registerTestHooks();
-
   const controls = new ProcessControls({
     dirname: __dirname,
-    agentControls
+    useGlobalAgent: true
   }).registerTestHooks();
 
   ['promise', 'callback'].forEach(apiVariant => {

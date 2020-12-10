@@ -216,6 +216,13 @@ app.delete('/received/traces', (req, res) => {
   res.sendStatus(200);
 });
 
+app.get('/received/events', (req, res) => res.json(receivedData.events));
+
+app.delete('/received/events', (req, res) => {
+  receivedData.events = [];
+  res.sendStatus(200);
+});
+
 app.get('/received/profiles', (req, res) => res.json(receivedData.profiles));
 
 app.delete('/received/profiles', (req, res) => {
@@ -223,9 +230,12 @@ app.delete('/received/profiles', (req, res) => {
   res.sendStatus(200);
 });
 
-app.get('/received/events', (req, res) => res.json(receivedData.events));
-
 app.get('/received/monitoringEvents', (req, res) => res.json(receivedData.monitoringEvents));
+
+app.delete('/received/monitoringEvents', (req, res) => {
+  receivedData.monitoringEvents = [];
+  res.sendStatus(200);
+});
 
 app.get('/received/tracingMetrics', (req, res) => res.json(receivedData.tracingMetrics));
 

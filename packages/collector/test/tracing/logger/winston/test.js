@@ -1,6 +1,5 @@
 'use strict';
 
-const semver = require('semver');
 const { expect, fail } = require('chai');
 
 const constants = require('@instana/core').tracing.constants;
@@ -8,20 +7,21 @@ const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('../../../../../core/test/config');
 const testUtils = require('../../../../../core/test/test_util');
 const ProcessControls = require('../../../test_util/ProcessControls');
+const globalAgent = require('../../../globalAgent');
 
 describe('tracing/logger/winston', function() {
-  // Winston 3 has no guaranteed support for Node.js 4, code will be migrated to ES6 over time
-  // (see https://github.com/winstonjs/winston/blob/master/CHANGELOG.md#v300-rc0--2017-10-02)
-  if (!supportedVersion(process.versions.node) || semver.lt(process.versions.node, '6.0.0')) {
+  if (!supportedVersion(process.versions.node)) {
     return;
   }
 
   this.timeout(config.getTestTimeout());
-  const agentControls = require('../../../apps/agentStubControls');
-  agentControls.registerTestHooks();
+
+  const agentControls = globalAgent.instance;
+  globalAgent.setUpCleanUpHooks();
+
   const controls = new ProcessControls({
     dirname: __dirname,
-    agentControls
+    useGlobalAgent: true
   }).registerTestHooks();
 
   [false, true].forEach(useGlobalLogger =>

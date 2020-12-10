@@ -10,6 +10,7 @@ const config = require('../../../../../core/test/config');
 const delay = require('../../../../../core/test/test_util/delay');
 const testUtils = require('../../../../../core/test/test_util');
 const ProcessControls = require('../../../test_util/ProcessControls');
+const globalAgent = require('../../../globalAgent');
 
 describe('tracing/kafkajs', function() {
   // kafkajs uses async/await style which is only available on Node.js >= 8.
@@ -19,22 +20,21 @@ describe('tracing/kafkajs', function() {
 
   this.timeout(config.getTestTimeout() * 2);
 
-  let agentControls;
+  const agentControls = globalAgent.instance;
+  globalAgent.setUpCleanUpHooks();
+
   let producerControls;
   let consumerControls;
 
   describe('tracing enabled ', function() {
-    agentControls = require('../../../apps/agentStubControls');
-    agentControls.registerTestHooks();
-
     producerControls = new ProcessControls({
       appPath: path.join(__dirname, 'producer'),
       port: 3216,
-      agentControls
+      useGlobalAgent: true
     }).registerTestHooks();
     consumerControls = new ProcessControls({
       appPath: path.join(__dirname, 'consumer'),
-      agentControls
+      useGlobalAgent: true
     }).registerTestHooks();
 
     [false, 'sender', 'receiver'].forEach(error =>
@@ -104,18 +104,15 @@ describe('tracing/kafkajs', function() {
   });
 
   describe('kafkajs disabled', () => {
-    agentControls = require('../../../apps/agentStubControls');
-    agentControls.registerTestHooks();
-
     producerControls = new ProcessControls({
       appPath: path.join(__dirname, 'producer'),
       port: 3216,
-      agentControls,
+      useGlobalAgent: true,
       tracingEnabled: false
     }).registerTestHooks();
     consumerControls = new ProcessControls({
       appPath: path.join(__dirname, 'consumer'),
-      agentControls,
+      useGlobalAgent: true,
       tracingEnabled: false
     }).registerTestHooks();
 

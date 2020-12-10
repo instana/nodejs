@@ -8,19 +8,18 @@ const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('../../../../../core/test/config');
 const testUtils = require('../../../../../core/test/test_util');
 const ProcessControls = require('../../../test_util/ProcessControls');
+const globalAgent = require('../../../globalAgent');
 
-let agentControls;
+const agentControls = globalAgent.instance;
 
 describe('tracing/sequelize', function() {
   if (!supportedVersion(process.versions.node)) {
     return;
   }
 
-  agentControls = require('../../../apps/agentStubControls');
+  globalAgent.setUpCleanUpHooks();
 
   this.timeout(config.getTestTimeout());
-
-  agentControls.registerTestHooks();
 
   describe('with pg', function() {
     registerTests.call(this, false);
@@ -39,7 +38,7 @@ function registerTests(usePgNative) {
     : {};
   const controls = new ProcessControls({
     dirname: __dirname,
-    agentControls,
+    useGlobalAgent: true,
     env
   }).registerTestHooks();
 

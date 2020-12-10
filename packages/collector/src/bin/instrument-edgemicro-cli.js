@@ -211,6 +211,15 @@ if (require.main === module) {
     );
   });
 } else {
+  if (
+    module.parent &&
+    typeof module.parent.id === 'string' &&
+    module.parent.id.indexOf('instrument_edgemicro_cli_test') >= 0
+  ) {
+    // skip printing warnings in tests
+    return;
+  }
+
   // Not running as a script, wait for client code to trigger the instrumentation.
   console.warn(
     `The file ${path.join(

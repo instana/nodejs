@@ -10,6 +10,7 @@ const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('../../../../../../core/test/config');
 const { delay, expectExactlyOneMatching, retry, stringifyItems } = require('../../../../../../core/test/test_util');
 const ProcessControls = require('../../../../test_util/ProcessControls');
+const globalAgent = require('../../../../globalAgent');
 
 const projectId = process.env.GCP_PROJECT;
 // We use different topics/subscriptions per Node.js major version so tests on CI run independently of each other.
@@ -41,17 +42,17 @@ const retryTime = config.getTestTimeout() * 2;
 mochaSuiteFn('tracing/cloud/gcp/pubsub', function() {
   this.timeout(config.getTestTimeout() * 3);
 
-  describe('tracing enabled, no suppression', function() {
-    const agentControls = require('../../../../apps/agentStubControls');
-    agentControls.registerTestHooks(retryTime);
+  const agentControls = globalAgent.instance;
+  globalAgent.setUpCleanUpHooks();
 
+  describe('tracing enabled, no suppression', function() {
     const topicName = defaultTopicName;
     const subscriptionName = defaultSubscriptionName;
 
     const publisherControls = new ProcessControls({
       appPath: path.join(__dirname, 'publisher'),
       port: 3216,
-      agentControls,
+      useGlobalAgent: true,
       env: {
         GCP_PROJECT: projectId,
         GCP_PUBSUB_TOPIC: topicName,
@@ -60,7 +61,7 @@ mochaSuiteFn('tracing/cloud/gcp/pubsub', function() {
     }).registerTestHooks(retryTime);
     const subscriberControls = new ProcessControls({
       appPath: path.join(__dirname, 'subscriber'),
-      agentControls,
+      useGlobalAgent: true,
       env: {
         GCP_PROJECT: projectId,
         GCP_PUBSUB_TOPIC: topicName,
@@ -176,16 +177,13 @@ mochaSuiteFn('tracing/cloud/gcp/pubsub', function() {
   });
 
   describe('tracing enabled but suppressed', () => {
-    const agentControls = require('../../../../apps/agentStubControls');
-    agentControls.registerTestHooks(retryTime);
-
     const topicName = `${defaultTopicName}-suppression`;
     const subscriptionName = `${defaultSubscriptionName}-suppression`;
 
     const publisherControls = new ProcessControls({
       appPath: path.join(__dirname, 'publisher'),
       port: 3216,
-      agentControls,
+      useGlobalAgent: true,
       env: {
         GCP_PROJECT: projectId,
         GCP_PUBSUB_TOPIC: topicName,
@@ -194,7 +192,7 @@ mochaSuiteFn('tracing/cloud/gcp/pubsub', function() {
     }).registerTestHooks(retryTime);
     const subscriberControls = new ProcessControls({
       appPath: path.join(__dirname, 'subscriber'),
-      agentControls,
+      useGlobalAgent: true,
       env: {
         GCP_PROJECT: projectId,
         GCP_PUBSUB_TOPIC: topicName,
@@ -224,9 +222,7 @@ mochaSuiteFn('tracing/cloud/gcp/pubsub', function() {
   });
 
   describe('tracing disabled', function() {
-    const agentControls = require('../../../../apps/agentStubControls');
     this.timeout(config.getTestTimeout() * 2);
-    agentControls.registerTestHooks(retryTime);
 
     const topicName = defaultTopicName;
     const subscriptionName = defaultSubscriptionName;
@@ -234,7 +230,7 @@ mochaSuiteFn('tracing/cloud/gcp/pubsub', function() {
     const publisherControls = new ProcessControls({
       appPath: path.join(__dirname, 'publisher'),
       port: 3216,
-      agentControls,
+      useGlobalAgent: true,
       tracingEnabled: false,
       env: {
         GCP_PROJECT: projectId,
@@ -244,7 +240,7 @@ mochaSuiteFn('tracing/cloud/gcp/pubsub', function() {
     }).registerTestHooks(retryTime);
     const subscriberControls = new ProcessControls({
       appPath: path.join(__dirname, 'subscriber'),
-      agentControls,
+      useGlobalAgent: true,
       tracingEnabled: false,
       env: {
         GCP_PROJECT: projectId,

@@ -2,17 +2,9 @@
 
 'use strict';
 
-const agentPort = process.env.AGENT_PORT;
+const agentPort = process.env.INSTANA_AGENT_PORT;
 
-const instana = require('../../../../');
-instana({
-  agentPort,
-  level: 'warn',
-  tracing: {
-    enabled: process.env.TRACING_ENABLED !== 'false',
-    forceTransmissionStartingAt: 1
-  }
-});
+const instana = require('../../../../')();
 
 const accessFunction = process.env.USE_EXECUTE ? 'execute' : 'query';
 const driverModeEnvVar = process.env.DRIVER_MODE;
@@ -158,7 +150,9 @@ app.post('/valuesAndCall', (req, res) => {
 });
 
 app.listen(process.env.APP_PORT, () => {
-  log(`Listening on port: ${process.env.APP_PORT} (driver: ${driver}, access: ${accessFunction})`);
+  log(
+    `Listening on port: ${process.env.APP_PORT} (driver: ${driver}, access: ${accessFunction}, cluster: ${useCluster})`
+  );
 });
 
 function fetchValues(req, res) {

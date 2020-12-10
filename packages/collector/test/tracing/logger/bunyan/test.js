@@ -6,6 +6,7 @@ const constants = require('@instana/core').tracing.constants;
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('../../../../../core/test/config');
 const testUtils = require('../../../../../core/test/test_util');
+const globalAgent = require('../../../globalAgent');
 
 describe('tracing/logger/bunyan', function() {
   if (!supportedVersion(process.versions.node)) {
@@ -13,11 +14,13 @@ describe('tracing/logger/bunyan', function() {
   }
 
   this.timeout(config.getTestTimeout());
-  const agentControls = require('../../../apps/agentStubControls');
+
+  const agentControls = globalAgent.instance;
+  globalAgent.setUpCleanUpHooks();
+
   const appControls = require('./controls');
 
   describe('trace log calls', () => {
-    agentControls.registerTestHooks();
     appControls.registerTestHooks();
 
     beforeEach(() => agentControls.waitUntilAppIsCompletelyInitialized(appControls.getPid()));
@@ -75,7 +78,6 @@ describe('tracing/logger/bunyan', function() {
   // verify that Instana's own Bunyan logging does not get traced
   describe('do not trace Instana log calls', () => {
     describe('Instana creates a new Bunyan logger', () => {
-      agentControls.registerTestHooks();
       appControls.registerTestHooks({
         instanaLoggingMode: 'instana-creates-bunyan-logger'
       });
@@ -86,7 +88,6 @@ describe('tracing/logger/bunyan', function() {
     });
 
     describe('Instana receives a Bunyan logger', () => {
-      agentControls.registerTestHooks();
       appControls.registerTestHooks({
         instanaLoggingMode: 'instana-receives-bunyan-logger'
       });
@@ -97,7 +98,6 @@ describe('tracing/logger/bunyan', function() {
     });
 
     describe('Instana receives a non-Bunyan logger', () => {
-      agentControls.registerTestHooks();
       appControls.registerTestHooks({
         instanaLoggingMode: 'instana-receives-non-bunyan-logger'
       });

@@ -9,6 +9,7 @@ const config = require('../../../../core/test/config');
 const { expectExactlyOneMatching, retry } = require('../../../../core/test/test_util');
 const delay = require('../../../../core/test/test_util/delay');
 const ProcessControls = require('../../test_util/ProcessControls');
+const globalAgent = require('../../globalAgent');
 
 const waitForSpans = process.env.CI ? 1000 : 200;
 
@@ -17,14 +18,15 @@ describe('tracing/sdk', function() {
     return;
   }
 
-  const agentControls = require('../../apps/agentStubControls');
   this.timeout(config.getTestTimeout());
 
+  const agentControls = globalAgent.instance;
+  globalAgent.setUpCleanUpHooks();
+
   describe('when tracing is enabled', () => {
-    agentControls.registerTestHooks();
     const controls = new ProcessControls({
       dirname: __dirname,
-      agentControls
+      useGlobalAgent: true
     }).registerTestHooks();
 
     ['callback', 'promise'].forEach(function(apiType) {
@@ -311,11 +313,10 @@ describe('tracing/sdk', function() {
   });
 
   describe('when tracing is not enabled', () => {
-    agentControls.registerTestHooks();
     const controls = new ProcessControls({
       dirname: __dirname,
       tracingEnabled: false,
-      agentControls
+      useGlobalAgent: true
     }).registerTestHooks();
 
     ['callback', 'promise'].forEach(function(apiType) {

@@ -6,21 +6,21 @@ const semver = require('semver');
 const config = require('../../../../../core/test/config');
 const testUtils = require('../../../../../core/test/test_util');
 const ProcessControls = require('../../../test_util/ProcessControls');
+const globalAgent = require('../../../globalAgent');
 
 describe('tracing/requireHook', function() {
   if (semver.lt(process.versions.node, '8.0.0')) {
     return;
   }
 
-  const agentControls = require('../../../apps/agentStubControls');
-
   this.timeout(config.getTestTimeout());
 
-  agentControls.registerTestHooks();
+  const agentControls = globalAgent.instance;
+  globalAgent.setUpCleanUpHooks();
 
   const controls = new ProcessControls({
     dirname: __dirname,
-    agentControls
+    useGlobalAgent: true
   }).registerTestHooks();
 
   describe('stealthy require', () => {

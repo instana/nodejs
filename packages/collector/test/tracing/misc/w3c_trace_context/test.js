@@ -9,8 +9,9 @@ const config = require('../../../../../core/test/config');
 const delay = require('../../../../../core/test/test_util/delay');
 const { retryUntilSpansMatch, expectAtLeastOneMatching } = require('../../../../../core/test/test_util');
 const ProcessControls = require('../../../test_util/ProcessControls');
+const globalAgent = require('../../../globalAgent');
 
-let agentControls;
+const agentControls = globalAgent.instance;
 
 const instanaAppPort = 4200;
 const otherVendorAppPort = 4201;
@@ -26,9 +27,9 @@ describe('tracing/W3C Trace Context (with processes instrumented by a different 
     return;
   }
 
-  agentControls = require('../../../apps/agentStubControls');
-
   this.timeout(config.getTestTimeout() * 2);
+
+  globalAgent.setUpCleanUpHooks();
 
   const allControls = startApps();
   const { instanaAppControls, otherVendorAppControls } = allControls;
@@ -550,11 +551,10 @@ describe('tracing/W3C Trace Context (with processes instrumented by a different 
 });
 
 function startApps() {
-  agentControls.registerTestHooks();
   const instanaAppControls = new ProcessControls({
     appPath: path.join(__dirname, 'app'),
     port: instanaAppPort,
-    agentControls,
+    useGlobalAgent: true,
     env: {
       APM_VENDOR: 'instana',
       DOWNSTREAM_PORT: otherVendorAppPort

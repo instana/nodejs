@@ -6,24 +6,26 @@ const Promise = require('bluebird');
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('../../../../../../core/test/config');
 const { expectAtLeastOneMatching, retry } = require('../../../../../../core/test/test_util');
+const globalAgent = require('../../../../globalAgent');
 
 describe('http with proxy', function() {
   if (!supportedVersion(process.versions.node)) {
     return;
   }
 
-  const agentStubControls = require('../../../../apps/agentStubControls');
+  this.timeout(config.getTestTimeout());
+
+  const agentControls = globalAgent.instance;
+  globalAgent.setUpCleanUpHooks();
+
   const expressProxyControls = require('./expressProxyControls');
   const expressControls = require('../../../../apps/expressControls');
 
-  this.timeout(config.getTestTimeout());
+  expressProxyControls.registerTestHooks({ useGlobalAgent: true });
+  expressControls.registerTestHooks({ useGlobalAgent: true });
 
-  agentStubControls.registerTestHooks();
-  expressProxyControls.registerTestHooks();
-  expressControls.registerTestHooks();
-
-  beforeEach(() => agentStubControls.waitUntilAppIsCompletelyInitialized(expressProxyControls.getPid()));
-  beforeEach(() => agentStubControls.waitUntilAppIsCompletelyInitialized(expressControls.getPid()));
+  beforeEach(() => agentControls.waitUntilAppIsCompletelyInitialized(expressProxyControls.getPid()));
+  beforeEach(() => agentControls.waitUntilAppIsCompletelyInitialized(expressControls.getPid()));
 
   describe('httpClient', () => {
     it('must stitch together HTTP server -> client -> server calls', () =>
@@ -35,7 +37,7 @@ describe('http with proxy', function() {
         })
         .then(() =>
           retry(() =>
-            agentStubControls.getSpans().then(spans => {
+            agentControls.getSpans().then(spans => {
               expect(spans.length).to.equal(3, 'Expecting at most three spans');
 
               // proxy entry span
@@ -96,7 +98,7 @@ describe('http with proxy', function() {
         })
         .then(() =>
           retry(() =>
-            agentStubControls.getSpans().then(spans => {
+            agentControls.getSpans().then(spans => {
               expect(spans.length).to.equal(3, 'Expecting at most three spans');
 
               // proxy entry span
@@ -158,7 +160,7 @@ describe('http with proxy', function() {
         .then(Promise.delay(200))
         .then(() =>
           retry(() =>
-            agentStubControls.getSpans().then(spans => {
+            agentControls.getSpans().then(spans => {
               expect(spans).to.have.lengthOf(0, `Spans: ${JSON.stringify(spans, 0, 2)}`);
             })
           )
@@ -174,7 +176,7 @@ describe('http with proxy', function() {
         })
         .then(() =>
           retry(() =>
-            agentStubControls.getSpans().then(spans => {
+            agentControls.getSpans().then(spans => {
               expectAtLeastOneMatching(spans, [
                 span => expect(span.n).to.equal('node.http.client'),
                 span => expect(span.error).to.not.exist,
@@ -200,7 +202,7 @@ describe('http with proxy', function() {
         })
         .then(() =>
           retry(() =>
-            agentStubControls.getSpans().then(spans => {
+            agentControls.getSpans().then(spans => {
               expect(spans).to.have.lengthOf(1);
 
               expectAtLeastOneMatching(spans, [
@@ -232,7 +234,7 @@ describe('http with proxy', function() {
 
     return calls.then(() =>
       retry(() =>
-        agentStubControls.getSpans().then(spans => {
+        agentControls.getSpans().then(spans => {
           callsNumbers.forEach(call => {
             const proxyEntrySpan = expectAtLeastOneMatching(spans, [
               span => expect(span.n).to.equal('node.http.server'),

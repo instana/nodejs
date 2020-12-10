@@ -8,6 +8,7 @@ const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('../../../../../core/test/config');
 const { expectExactlyOneMatching, retry } = require('../../../../../core/test/test_util');
 const ProcessControls = require('../../../test_util/ProcessControls');
+const globalAgent = require('../../../globalAgent');
 
 const USE_ATLAS = process.env.USE_ATLAS === 'true';
 
@@ -16,15 +17,15 @@ describe('tracing/mongoose', function() {
     return;
   }
 
-  const agentControls = require('../../../apps/agentStubControls');
+  const agentControls = globalAgent.instance;
+  globalAgent.setUpCleanUpHooks();
+
   const timeout = USE_ATLAS ? config.getTestTimeout() * 2 : config.getTestTimeout();
   this.timeout(timeout);
 
-  agentControls.registerTestHooks();
-
   const controls = new ProcessControls({
     dirname: __dirname,
-    agentControls
+    useGlobalAgent: true
   }).registerTestHooks(timeout);
 
   it('must trace create calls', () =>

@@ -1,27 +1,23 @@
 'use strict';
 
 const expect = require('chai').expect;
-const semver = require('semver');
 
 const config = require('../../core/test/config');
 const testUtils = require('../../core/test/test_util');
+const globalAgent = require('./globalAgent');
 
 describe('agentCommunication', function() {
-  if (semver.satisfies(process.versions.node, '<4')) {
-    return;
-  }
-
-  const agentStubControls = require('./apps/agentStubControls');
-  const expressControls = require('./apps/expressControls');
-
   this.timeout(config.getTestTimeout());
 
-  agentStubControls.registerTestHooks();
-  expressControls.registerTestHooks();
+  const agentControls = globalAgent.instance;
+  globalAgent.setUpCleanUpHooks();
+
+  const expressControls = require('./apps/expressControls');
+  expressControls.registerTestHooks({ useGlobalAgent: true });
 
   it('must announce itself to the agent', () =>
     testUtils.retry(() =>
-      agentStubControls.getDiscoveries().then(discoveries => {
+      agentControls.getDiscoveries().then(discoveries => {
         const discovery = discoveries[expressControls.getPid()];
         expect(discovery.pid).to.be.a('number');
         expect(discovery.fd).to.be.a('string');
@@ -33,7 +29,7 @@ describe('agentCommunication', function() {
 
   it('must send data to the agent', () =>
     testUtils.retry(() =>
-      agentStubControls.getLastMetricValue(expressControls.getPid(), ['pid']).then(pid => {
+      agentControls.getLastMetricValue(expressControls.getPid(), ['pid']).then(pid => {
         expect(pid).to.equal(expressControls.getPid());
       })
     ));
@@ -41,16 +37,16 @@ describe('agentCommunication', function() {
   it('must reannounce itself to the agent once discoveries are cleared', () =>
     testUtils
       .retry(() =>
-        agentStubControls.getDiscoveries().then(discoveries => {
+        agentControls.getDiscoveries().then(discoveries => {
           expect(discoveries[expressControls.getPid()].pid).to.be.a('number');
         })
       )
       .then(() => {
-        agentStubControls.deleteDiscoveries();
+        agentControls.deleteDiscoveries();
       })
       .then(() =>
         testUtils.retry(() =>
-          agentStubControls.getDiscoveries().then(discoveries => {
+          agentControls.getDiscoveries().then(discoveries => {
             expect(discoveries[expressControls.getPid()].pid).to.be.a('number');
           })
         )
