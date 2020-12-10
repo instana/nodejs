@@ -14,6 +14,7 @@ const {
   retry
 } = require('../../../../../core/test/test_util');
 const ProcessControls = require('../../../test_util/ProcessControls');
+const globalAgent = require('../../../globalAgent');
 
 const { fail } = expect;
 
@@ -70,12 +71,12 @@ mochaSuiteFn('tracing/elasticsearch (modern client)', function() {
       function() {
         before(done => installLibraryVersion(esClientVersionRangeUnderTest, done));
 
-        const agentControls = require('../../../apps/agentStubControls');
+        const agentControls = globalAgent.instance;
+        globalAgent.setUpCleanUpHooks();
 
-        agentControls.registerTestHooks();
         const controls = new ProcessControls({
           dirname: __dirname,
-          agentControls,
+          useGlobalAgent: true,
           env: { ES_API_VERSION: apiVersion }
         }).registerTestHooks();
 
@@ -606,7 +607,7 @@ mochaSuiteFn('tracing/elasticsearch (modern client)', function() {
             span => expect(span.error).to.not.exist,
             span => expect(span.ec).to.equal(0),
             span => expect(span.data.http.method).to.equal('GET'),
-            span => expect(span.data.http.url).to.match(/http:\/\/127\.0\.0\.1:3210/),
+            span => expect(span.data.http.url).to.match(/http:\/\/127\.0\.0\.1:/),
             span => expect(span.data.http.status).to.equal(200)
           ]);
         }

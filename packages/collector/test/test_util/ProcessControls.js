@@ -84,7 +84,7 @@ class ProcessControls {
    */
   registerTestHooks(retryTime) {
     if (this.agentControls) {
-      beforeEach(() => this.startAndWaitForAgentConnection());
+      beforeEach(() => this.startAndWaitForAgentConnection(retryTime));
     } else {
       beforeEach(() => this.start(retryTime));
     }
@@ -128,7 +128,8 @@ class ProcessControls {
   }
 
   async startAndWaitForAgentConnection(retryTime) {
-    await this.start(retryTime).then(() => this.agentControls.waitUntilAppIsCompletelyInitialized(this.getPid()));
+    await this.start(retryTime);
+    await this.agentControls.waitUntilAppIsCompletelyInitialized(this.getPid());
   }
 
   async waitForAgentConnection() {

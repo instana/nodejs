@@ -7,23 +7,22 @@ const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('../../../../../core/test/config');
 const testUtils = require('../../../../../core/test/test_util');
 const ProcessControls = require('../../../test_util/ProcessControls');
+const globalAgent = require('../../../globalAgent');
 
 describe('tracing/bluebird', function() {
   if (!supportedVersion(process.versions.node)) {
     return;
   }
 
-  const agentControls = require('../../../apps/agentStubControls');
+  const agentControls = globalAgent.instance;
+  globalAgent.setUpCleanUpHooks();
 
   this.timeout(config.getTestTimeout());
 
-  agentControls.registerTestHooks();
-
   const bluebirdControls = new ProcessControls({
     dirname: __dirname,
-    agentControls
-  });
-  bluebirdControls.registerTestHooks();
+    useGlobalAgent: true
+  }).registerTestHooks();
 
   check('/delayed');
   check('/combined');

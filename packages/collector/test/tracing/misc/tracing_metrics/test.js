@@ -9,6 +9,7 @@ const config = require('../../../../../core/test/config');
 const delay = require('../../../../../core/test/test_util/delay');
 const testUtils = require('../../../../../core/test/test_util');
 const ProcessControls = require('../../../test_util/ProcessControls');
+const globalAgent = require('../../../globalAgent');
 
 describe('tracing/tracing metrics', function() {
   if (!supportedVersion(process.versions.node)) {
@@ -18,12 +19,13 @@ describe('tracing/tracing metrics', function() {
   this.timeout(config.getTestTimeout() * 2);
   const retryTimeout = this.timeout() * 0.8;
 
+  const agentControls = globalAgent.instance;
+  globalAgent.setUpCleanUpHooks();
+
   describe('when tracing is enabled', function() {
-    const agentControls = require('../../../apps/agentStubControls');
-    agentControls.registerTestHooks();
     const controls = new ProcessControls({
       dirname: __dirname,
-      agentControls
+      useGlobalAgent: true
     }).registerTestHooks();
 
     it('must send internal tracing metrics to agent', () =>
@@ -82,11 +84,9 @@ describe('tracing/tracing metrics', function() {
   });
 
   describe('when INSTANA_TRACER_METRICS_INTERVAL is configured explicitly', () => {
-    const agentControls = require('../../../apps/agentStubControls');
-    agentControls.registerTestHooks();
     const controls = new ProcessControls({
       dirname: __dirname,
-      agentControls,
+      useGlobalAgent: true,
       env: {
         INSTANA_TRACER_METRICS_INTERVAL: 100
       }
@@ -120,11 +120,9 @@ describe('tracing/tracing metrics', function() {
   });
 
   describe('when tracing is not enabled', () => {
-    const agentControls = require('../../../apps/agentStubControls');
-    agentControls.registerTestHooks();
     const controls = new ProcessControls({
       dirname: __dirname,
-      agentControls,
+      useGlobalAgent: true,
       tracingEnabled: false
     }).registerTestHooks();
 
@@ -148,14 +146,14 @@ describe('tracing/tracing metrics', function() {
   });
 
   describe('when dropping spans', () => {
-    const agentControls = require('../../../apps/agentStubControls');
-    agentControls.registerTestHooks({
+    const customeAgentControls = require('../../../apps/agentStubControls');
+    customeAgentControls.registerTestHooks({
       // The trace endpoint will return an HTTP error code, triggering the removeSpansIfNecessary function.
       rejectTraces: true
     });
     const controls = new ProcessControls({
       dirname: __dirname,
-      agentControls,
+      agentControls: customeAgentControls,
       tracingEnabled: true,
       env: {
         FORCE_TRANSMISSION_STARTING_AT: 500,
@@ -173,7 +171,7 @@ describe('tracing/tracing metrics', function() {
           expect(response).to.equal('OK');
           return testUtils.retry(
             () =>
-              agentControls.getTracingMetrics().then(tracingMetrics => {
+              customeAgentControls.getTracingMetrics().then(tracingMetrics => {
                 expect(tracingMetrics).to.have.lengthOf.at.least(3);
                 // With maxSpanBuffer = 1 we always keep 1 span in the buffer which is not dropped,  the test creates
                 // 4 spans overall (one http entry and three SDK exits), hence we only expect three dropped spans.
@@ -185,13 +183,13 @@ describe('tracing/tracing metrics', function() {
   });
 
   describe('when agent does not support the tracermetrics endpoint', () => {
-    const agentControls = require('../../../apps/agentStubControls');
-    agentControls.registerTestHooks({
+    const customeAgentControls = require('../../../apps/agentStubControls');
+    customeAgentControls.registerTestHooks({
       tracingMetrics: false
     });
     const controls = new ProcessControls({
       dirname: __dirname,
-      agentControls,
+      agentControls: customeAgentControls,
       tracingEnabled: true,
       env: {
         INSTANA_TRACER_METRICS_INTERVAL: 100
@@ -207,7 +205,7 @@ describe('tracing/tracing metrics', function() {
         .then(response => {
           expect(response).to.equal('OK');
           return testUtils.retry(() =>
-            agentControls.getSpans().then(spans => {
+            customeAgentControls.getSpans().then(spans => {
               const httpEntry = expectHttpEntry(spans, '/create-spans');
               expectExit(spans, httpEntry, 'exit-1');
               expectExit(spans, httpEntry, 'exit-2');
@@ -220,7 +218,7 @@ describe('tracing/tracing metrics', function() {
         // Note that we configured INSTANA_TRACER_METRICS_INTERVAL=100 so waiting 500 ms should be plenty.
         .then(() => delay(500))
         .then(() =>
-          agentControls.getTracingMetrics().then(tracingMetrics => {
+          customeAgentControls.getTracingMetrics().then(tracingMetrics => {
             // Make sure the tracer only called the tracermetrics endpoint once and then stopped doing that after
             // receiving an HTTP 404.
             expect(tracingMetrics).to.have.lengthOf(1);

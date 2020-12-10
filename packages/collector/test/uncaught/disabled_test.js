@@ -10,22 +10,22 @@ const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('../../../core/test/config');
 const testUtils = require('../../../core/test/test_util');
 const ProcessControls = require('../test_util/ProcessControls');
+const globalAgent = require('../globalAgent');
 
 describe('uncaught exception reporting disabled', function() {
   if (!supportedVersion(process.versions.node)) {
     return;
   }
 
-  const agentControls = require('../apps/agentStubControls');
-
   this.timeout(config.getTestTimeout());
 
-  agentControls.registerTestHooks();
+  const agentControls = globalAgent.instance;
+  globalAgent.setUpCleanUpHooks();
 
   const serverControls = new ProcessControls({
     appPath: path.join(__dirname, 'apps', 'server'),
     dontKillInAfterHook: true,
-    agentControls
+    useGlobalAgent: true
   }).registerTestHooks();
 
   it('will not finish the current span', () =>

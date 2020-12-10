@@ -8,8 +8,9 @@ const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('../../../../../core/test/config');
 const testUtils = require('../../../../../core/test/test_util');
 const ProcessControls = require('../../../test_util/ProcessControls');
+const globalAgent = require('../../../globalAgent');
 
-let agentControls;
+const agentControls = globalAgent.instance;
 
 describe('tracing/kafka-node', function() {
   if (!supportedVersion(process.versions.node)) {
@@ -20,22 +21,22 @@ describe('tracing/kafka-node', function() {
   // This is especially important since the Kafka client has an
   // exponential backoff implemented.
   this.timeout(config.getTestTimeout() * 2);
-  agentControls = require('../../../apps/agentStubControls');
+
+  globalAgent.setUpCleanUpHooks();
 
   ['plain', 'highLevel'].forEach(producerType => {
     describe(`producing via: ${producerType}`, function() {
-      agentControls.registerTestHooks();
       const producerControls = new ProcessControls({
         appPath: path.join(__dirname, 'producer'),
         port: 3216,
-        agentControls,
+        useGlobalAgent: true,
         env: {
           PRODUCER_TYPE: producerType
         }
       }).registerTestHooks();
       const consumerControls = new ProcessControls({
         appPath: path.join(__dirname, 'consumer'),
-        agentControls
+        useGlobalAgent: true
       }).registerTestHooks();
 
       it(`must trace sending messages (producer type: ${producerType})`, () =>
@@ -98,18 +99,17 @@ describe('tracing/kafka-node', function() {
   // eslint-disable-next-line array-bracket-spacing
   ['plain' /* 'highLevel', 'consumerGroup' */].forEach(consumerType => {
     describe(`consuming via: ${consumerType}`, () => {
-      agentControls.registerTestHooks();
       const producerControls = new ProcessControls({
         appPath: path.join(__dirname, 'producer'),
         port: 3216,
-        agentControls,
+        useGlobalAgent: true,
         env: {
           PRODUCER_TYPE: 'plain'
         }
       }).registerTestHooks();
       const consumerControls = new ProcessControls({
         appPath: path.join(__dirname, 'consumer'),
-        agentControls,
+        useGlobalAgent: true,
         env: {
           CONSUMER_TYPE: consumerType
         }

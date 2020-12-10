@@ -6,7 +6,7 @@ const path = require('path');
 
 const testUtils = require('../../../../../core/test/test_util');
 const config = require('../../../../../core/test/config');
-const agentPort = require('../../../apps/agentStubControls').agentPort;
+const agentPort = require('../../../globalAgent').PORT;
 const appPort = (exports.appPort = 3216);
 
 let app;

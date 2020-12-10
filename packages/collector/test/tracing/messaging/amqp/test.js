@@ -6,14 +6,16 @@ const constants = require('@instana/core').tracing.constants;
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('../../../../../core/test/config');
 const { delay, expectExactlyOneMatching, retry } = require('../../../../../core/test/test_util');
+const globalAgent = require('../../../globalAgent');
+
 const exchange = require('./amqpUtil').exchange;
 const queueName = require('./amqpUtil').queueName;
 const queueNameGet = require('./amqpUtil').queueNameGet;
 const queueNameConfirm = require('./amqpUtil').queueNameConfirm;
 
+const agentControls = globalAgent.instance;
 let publisherControls;
 let consumerControls;
-let agentStubControls;
 
 describe('tracing/amqp', function() {
   if (!supportedVersion(process.versions.node)) {
@@ -22,11 +24,10 @@ describe('tracing/amqp', function() {
 
   this.timeout(config.getTestTimeout());
 
-  agentStubControls = require('../../../apps/agentStubControls');
+  globalAgent.setUpCleanUpHooks();
+
   publisherControls = require('./publisherControls');
   consumerControls = require('./consumerControls');
-
-  agentStubControls.registerTestHooks();
 
   ['Promises', 'Callbacks'].forEach(apiType => {
     describe(apiType, function() {
@@ -45,15 +46,15 @@ function registerTests(apiType) {
 
   beforeEach(() =>
     Promise.all([
-      agentStubControls.waitUntilAppIsCompletelyInitialized(consumerControls.getPid()),
-      agentStubControls.waitUntilAppIsCompletelyInitialized(publisherControls.getPid())
+      agentControls.waitUntilAppIsCompletelyInitialized(consumerControls.getPid()),
+      agentControls.waitUntilAppIsCompletelyInitialized(publisherControls.getPid())
     ])
   );
 
   it('must record an exit span for sendToQueue', () =>
     publisherControls.sendToQueue('Ohai!').then(() =>
       retry(() =>
-        agentStubControls.getSpans().then(spans => {
+        agentControls.getSpans().then(spans => {
           const httpEntry = verifyHttpEntry(spans);
           const rabbitMqExit = verifyRabbitMqExit(spans, httpEntry);
           expect(rabbitMqExit.data.rabbitmq.exchange).to.not.exist;
@@ -66,7 +67,7 @@ function registerTests(apiType) {
   it('must record an exit span for publish', () =>
     publisherControls.publish('Ohai!').then(() =>
       retry(() =>
-        agentStubControls.getSpans().then(spans => {
+        agentControls.getSpans().then(spans => {
           const httpEntry = verifyHttpEntry(spans);
           const rabbitMqExit = verifyRabbitMqExit(spans, httpEntry);
           expect(rabbitMqExit.data.rabbitmq.exchange).to.equal(exchange);
@@ -79,7 +80,7 @@ function registerTests(apiType) {
   it('must record an entry span for consume without exchange', () =>
     publisherControls.sendToQueue('Ohai').then(() =>
       retry(() =>
-        agentStubControls.getSpans().then(spans => {
+        agentControls.getSpans().then(spans => {
           const httpEntry = verifyHttpEntry(spans);
           const rabbitMqExit = verifyRabbitMqExit(spans, httpEntry);
           const rabbitMqEntry = verifyRabbitMqEntry(spans, rabbitMqExit);
@@ -93,7 +94,7 @@ function registerTests(apiType) {
   it('must record an entry span for consume with exchange', () =>
     publisherControls.publish('Ohai').then(() =>
       retry(() =>
-        agentStubControls.getSpans().then(spans => {
+        agentControls.getSpans().then(spans => {
           const httpEntry = verifyHttpEntry(spans);
           const rabbitMqExit = verifyRabbitMqExit(spans, httpEntry);
           const rabbitMqEntry = verifyRabbitMqEntry(spans, rabbitMqExit);
@@ -107,7 +108,7 @@ function registerTests(apiType) {
   it('must record an entry span for channel#get', () =>
     publisherControls.sendToGetQueue('Ohai').then(() =>
       retry(() =>
-        agentStubControls.getSpans().then(spans => {
+        agentControls.getSpans().then(spans => {
           const httpEntry = verifyHttpEntry(spans);
           const rabbitMqExit = verifyRabbitMqExit(spans, httpEntry);
           const rabbitMqEntry = verifyRabbitMqEntry(spans, rabbitMqExit);
@@ -121,7 +122,7 @@ function registerTests(apiType) {
   it('must record an exit span for ConfirmChannel#sendToQueue', () =>
     publisherControls.sendToConfirmQueue('Ohai!').then(() =>
       retry(() =>
-        agentStubControls.getSpans().then(spans => {
+        agentControls.getSpans().then(spans => {
           const httpEntry = verifyHttpEntry(spans);
           const rabbitMqExit = verifyRabbitMqExit(spans, httpEntry);
           expect(rabbitMqExit.data.rabbitmq.exchange).to.not.exist;
@@ -134,7 +135,7 @@ function registerTests(apiType) {
   it('must record an entry span for ConfirmChannel.consume', () =>
     publisherControls.sendToConfirmQueue('Ohai').then(() =>
       retry(() =>
-        agentStubControls.getSpans().then(spans => {
+        agentControls.getSpans().then(spans => {
           const httpEntry = verifyHttpEntry(spans);
           const rabbitMqExit = verifyRabbitMqExit(spans, httpEntry);
           const rabbitMqEntry = verifyRabbitMqEntry(spans, rabbitMqExit);
@@ -150,14 +151,14 @@ function registerTests(apiType) {
       publisherControls
         .sendToQueue('Ohai', { 'X-INSTANA-L': 0 })
         .then(() => delay(500))
-        .then(() => agentStubControls.getSpans())
+        .then(() => agentControls.getSpans())
         .then(spans => expect(spans).to.be.empty));
 
     it('must propagate suppression downstream for publish', () =>
       publisherControls
         .publish('Ohai!', { 'X-INSTANA-L': 0 })
         .then(() => delay(500))
-        .then(() => agentStubControls.getSpans())
+        .then(() => agentControls.getSpans())
         .then(spans => expect(spans).to.be.empty));
   });
 

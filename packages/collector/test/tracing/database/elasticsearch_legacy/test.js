@@ -12,6 +12,7 @@ const {
   retry
 } = require('../../../../../core/test/test_util');
 const ProcessControls = require('../../../test_util/ProcessControls');
+const globalAgent = require('../../../globalAgent');
 
 const ES_API_VERSION = '7.6';
 
@@ -20,14 +21,14 @@ describe('tracing/elasticsearch (legacy client)', function() {
     return;
   }
 
-  const agentControls = require('../../../apps/agentStubControls');
+  const agentControls = globalAgent.instance;
+  globalAgent.setUpCleanUpHooks();
 
   this.timeout(config.getTestTimeout());
 
-  agentControls.registerTestHooks();
   const controls = new ProcessControls({
     dirname: __dirname,
-    agentControls,
+    useGlobalAgent: true,
     env: {
       ES_API_VERSION
     }
@@ -44,24 +45,27 @@ describe('tracing/elasticsearch (legacy client)', function() {
         agentControls.getSpans().then(spans => {
           const entrySpan = verifyHttpEntry(spans, '/get');
 
-          expectExactlyOneMatching(spans, span => {
-            expect(span.t).to.equal(entrySpan.t);
-            expect(span.p).to.equal(entrySpan.s);
-            expect(span.n).to.equal('elasticsearch');
-            expect(span.f.e).to.equal(String(controls.getPid()));
-            expect(span.f.h).to.equal('agent-stub-uuid');
-            expect(span.async).to.not.exist;
-            expect(span.error).to.not.exist;
-            expect(span.ec).to.equal(1);
-            expect(span.data.elasticsearch.cluster).to.be.a('string');
-            expect(span.data.elasticsearch.action).to.equal('get');
-            if (needsType()) {
-              expect(span.data.elasticsearch.type).to.equal('legacy_type');
-            }
-            expect(span.data.elasticsearch.index).to.equal('thisIndexDoesNotExist');
-            expect(span.data.elasticsearch.id).to.equal('thisDocumentWillNotExist');
-            expect(span.data.elasticsearch.error).to.match(/no such index|missing/gi);
-          });
+          const expectations = [
+            span => expect(span.t).to.equal(entrySpan.t),
+            span => expect(span.p).to.equal(entrySpan.s),
+            span => expect(span.n).to.equal('elasticsearch'),
+            span => expect(span.f.e).to.equal(String(controls.getPid())),
+            span => expect(span.f.h).to.equal('agent-stub-uuid'),
+            span => expect(span.async).to.not.exist,
+            span => expect(span.error).to.not.exist,
+            span => expect(span.ec).to.equal(1),
+            span => expect(span.data.elasticsearch.cluster).to.be.a('string'),
+            span => expect(span.data.elasticsearch.action).to.equal('get'),
+            span => expect(span.data.elasticsearch.index).to.equal('thisIndexDoesNotExist'),
+            span => expect(span.data.elasticsearch.id).to.equal('thisDocumentWillNotExist'),
+            span => expect(span.data.elasticsearch.error).to.match(/no such index|missing/gi)
+          ];
+
+          if (needsType()) {
+            expectations.push(span => expect(span.data.elasticsearch.type).to.equal('legacy_type'));
+          }
+
+          expectExactlyOneMatching(spans, expectations);
 
           verifyHttpExit(spans, entrySpan);
 
@@ -541,7 +545,7 @@ describe('tracing/elasticsearch (legacy client)', function() {
       span => expect(span.error).to.not.exist,
       span => expect(span.ec).to.equal(0),
       span => expect(span.data.http.method).to.equal('GET'),
-      span => expect(span.data.http.url).to.match(/http:\/\/127\.0\.0\.1:3210/),
+      span => expect(span.data.http.url).to.match(/http:\/\/127\.0\.0\.1:/),
       span => expect(span.data.http.status).to.equal(200)
     ]);
   }

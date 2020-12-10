@@ -9,6 +9,7 @@ const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('../../../../../core/test/config');
 const { delay, expectExactlyOneMatching, retry } = require('../../../../../core/test/test_util');
 const ProcessControls = require('../../../test_util/ProcessControls');
+const { AgentStubControls } = require('../../../apps/agentStubControls');
 
 let agentControls;
 
@@ -26,11 +27,9 @@ const mochaSuiteFn =
     : describe.skip;
 
 mochaSuiteFn('tracing/http2', function() {
-  agentControls = require('../../../apps/agentStubControls');
-
   this.timeout(config.getTestTimeout() * 2);
 
-  agentControls.registerTestHooks({
+  agentControls = new AgentStubControls().registerHooksForSuite({
     extraHeaders: [
       //
       'X-My-Request-Header',

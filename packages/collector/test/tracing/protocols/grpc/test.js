@@ -9,17 +9,18 @@ const config = require('../../../../../core/test/config');
 const delay = require('../../../../../core/test/test_util/delay');
 const testUtils = require('../../../../../core/test/test_util');
 const ProcessControls = require('../../../test_util/ProcessControls');
+const globalAgent = require('../../../globalAgent');
 
-let agentControls;
+const agentControls = globalAgent.instance;
 
 describe('tracing/grpc', function() {
   if (!semver.satisfies(process.versions.node, '>=8.2.1')) {
     return;
   }
 
-  agentControls = require('../../../apps/agentStubControls');
-
   this.timeout(config.getTestTimeout());
+
+  globalAgent.setUpCleanUpHooks();
 
   ['dynamic', 'static'].forEach(codeGenMode => {
     [false, true].forEach(withMetadata => {
@@ -31,15 +32,14 @@ describe('tracing/grpc', function() {
   // registerSuite.bind(this)('dynamic', false, false);
 
   describe('suppressed', () => {
-    agentControls.registerTestHooks();
     new ProcessControls({
       appPath: path.join(__dirname, 'server'),
-      agentControls
+      useGlobalAgent: true
     }).registerTestHooks();
     const clientControls = new ProcessControls({
       appPath: path.join(__dirname, 'client'),
       port: 3216,
-      agentControls
+      useGlobalAgent: true
     }).registerTestHooks();
 
     it('should not trace when suppressed', () =>
@@ -63,10 +63,9 @@ describe('tracing/grpc', function() {
   });
 
   describe('individually disabled', () => {
-    agentControls.registerTestHooks();
     new ProcessControls({
       appPath: path.join(__dirname, 'server'),
-      agentControls,
+      useGlobalAgent: true,
       env: {
         INSTANA_DISABLED_TRACERS: 'GRPC'
       }
@@ -74,7 +73,7 @@ describe('tracing/grpc', function() {
     const clientControls = new ProcessControls({
       appPath: path.join(__dirname, 'client'),
       port: 3216,
-      agentControls,
+      useGlobalAgent: true,
       env: {
         INSTANA_DISABLED_TRACERS: 'GRPC'
       }
@@ -111,16 +110,15 @@ function registerSuite(codeGenMode, withMetadata, withOptions) {
     if (withOptions) {
       env.GRPC_WITH_OPTIONS = true;
     }
-    agentControls.registerTestHooks();
     const serverControls = new ProcessControls({
       appPath: path.join(__dirname, 'server'),
-      agentControls,
+      useGlobalAgent: true,
       env
     }).registerTestHooks();
     const clientControls = new ProcessControls({
       appPath: path.join(__dirname, 'client'),
       port: 3216,
-      agentControls,
+      useGlobalAgent: true,
       env
     }).registerTestHooks();
 

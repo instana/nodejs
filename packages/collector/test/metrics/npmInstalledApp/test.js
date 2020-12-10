@@ -7,15 +7,17 @@ const _ = require('lodash');
 const config = require('../../../../core/test/config');
 const testUtils = require('../../../../core/test/test_util');
 const ProcessControls = require('../../test_util/ProcessControls');
+const globalAgent = require('../../globalAgent');
 
 describe('snapshot data and metrics/app deployed via npm install', function() {
   this.timeout(config.getTestTimeout());
 
-  const agentControls = require('../../apps/agentStubControls');
-  agentControls.registerTestHooks();
+  globalAgent.setUpCleanUpHooks();
+  const agentControls = globalAgent.instance;
+
   const controls = new ProcessControls({
     appPath: path.join(__dirname, 'node_modules', 'npm-installed-test-app', 'app'),
-    agentControls
+    useGlobalAgent: true
   }).registerTestHooks();
 
   it('must find main package.json and main node_modules', () =>

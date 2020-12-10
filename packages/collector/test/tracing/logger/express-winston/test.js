@@ -7,6 +7,7 @@ const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('../../../../../core/test/config');
 const testUtils = require('../../../../../core/test/test_util');
 const ProcessControls = require('../../../test_util/ProcessControls');
+const globalAgent = require('../../../globalAgent');
 
 describe('tracing/logger/express-winston', function() {
   if (!supportedVersion(process.versions.node)) {
@@ -14,11 +15,13 @@ describe('tracing/logger/express-winston', function() {
   }
 
   this.timeout(config.getTestTimeout());
-  const agentControls = require('../../../apps/agentStubControls');
-  agentControls.registerTestHooks();
+
+  const agentControls = globalAgent.instance;
+  globalAgent.setUpCleanUpHooks();
+
   const controls = new ProcessControls({
     dirname: __dirname,
-    agentControls
+    useGlobalAgent: true
   }).registerTestHooks();
 
   it('should not trace HTTP 200/info', () =>

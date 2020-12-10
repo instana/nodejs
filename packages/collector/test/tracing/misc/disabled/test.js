@@ -5,6 +5,7 @@ const Promise = require('bluebird');
 
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('../../../../../core/test/config');
+const globalAgent = require('../../../globalAgent');
 
 /**
  * Tests behaviour when the Instana Node.js collector is active but tracing is disabled.
@@ -14,17 +15,18 @@ describe('disabled tracing', function() {
     return;
   }
 
-  const agentStubControls = require('../../../apps/agentStubControls');
-  const expressControls = require('../../../apps/expressControls');
-
   this.timeout(config.getTestTimeout());
 
-  agentStubControls.registerTestHooks();
+  const agentControls = globalAgent.instance;
+  globalAgent.setUpCleanUpHooks();
+
+  const expressControls = require('../../../apps/expressControls');
   expressControls.registerTestHooks({
+    useGlobalAgent: true,
     enableTracing: false
   });
 
-  beforeEach(() => agentStubControls.waitUntilAppIsCompletelyInitialized(expressControls.getPid()));
+  beforeEach(() => agentControls.waitUntilAppIsCompletelyInitialized(expressControls.getPid()));
 
   it('must not send any spans to the agent', () =>
     expressControls
@@ -35,7 +37,7 @@ describe('disabled tracing', function() {
       })
       .then(() => Promise.delay(500))
       .then(() =>
-        agentStubControls.getSpans().then(spans => {
+        agentControls.getSpans().then(spans => {
           expect(spans).to.have.lengthOf(0);
         })
       ));

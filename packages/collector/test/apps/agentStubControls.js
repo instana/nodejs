@@ -15,14 +15,21 @@ class AgentStubControls {
     this.agentPort = agentPort || DEFAULT_AGENT_PORT;
   }
 
-  registerTestHooks(opts = {}) {
-    beforeEach(async () => {
-      await this.startAgent(opts);
-    });
+  registerHooksForSuite(opts = {}) {
+    before(() => this.startAgent(opts));
+    after(() => this.stopAgent(opts));
 
-    afterEach(async () => {
-      await this.stopAgent(opts);
-    });
+    beforeEach(() => this.clearReceivedData());
+    afterEach(() => this.clearReceivedData());
+
+    return this;
+  }
+
+  registerTestHooks(opts = {}) {
+    beforeEach(() => this.startAgent(opts));
+    afterEach(() => this.stopAgent(opts));
+
+    return this;
   }
 
   async startAgent(opts = {}) {
@@ -129,6 +136,13 @@ class AgentStubControls {
     });
   }
 
+  clearReceivedMonitoringEvents() {
+    return request({
+      method: 'DELETE',
+      url: `http://127.0.0.1:${this.agentPort}/received/monitoringEvents`
+    });
+  }
+
   reset() {
     return request({
       method: 'DELETE',
@@ -140,24 +154,28 @@ class AgentStubControls {
   clearReceivedData() {
     return request({
       method: 'DELETE',
-      url: `http://127.0.0.1:${this.agentPort}/received/data`,
-      json: true
+      url: `http://127.0.0.1:${this.agentPort}/received/data`
     });
   }
 
   clearReceivedTraceData() {
     return request({
       method: 'DELETE',
-      url: `http://127.0.0.1:${this.agentPort}/received/traces`,
-      json: true
+      url: `http://127.0.0.1:${this.agentPort}/received/traces`
     });
   }
 
   clearReceivedProfilingData() {
     return request({
       method: 'DELETE',
-      url: `http://127.0.0.1:${this.agentPort}/received/profiles`,
-      json: true
+      url: `http://127.0.0.1:${this.agentPort}/received/profiles`
+    });
+  }
+
+  clearReceivedEvents() {
+    return request({
+      method: 'DELETE',
+      url: `http://127.0.0.1:${this.agentPort}/received/events`
     });
   }
 
@@ -266,7 +284,9 @@ exports.getEvents = () => legacySingletonInstance.getEvents();
 exports.getMonitoringEvents = () => legacySingletonInstance.getMonitoringEvents();
 exports.clearReceivedData = () => legacySingletonInstance.clearReceivedData();
 exports.clearReceivedTraceData = () => legacySingletonInstance.clearReceivedTraceData();
+exports.clearReceivedEvents = () => legacySingletonInstance.clearReceivedEvents();
 exports.clearReceivedProfilingData = () => legacySingletonInstance.clearReceivedProfilingData();
+exports.clearReceivedMonitoringEvents = () => legacySingletonInstance.clearReceivedMonitoringEvents();
 exports.reset = () => legacySingletonInstance.reset();
 exports.getSpans = () => legacySingletonInstance.getSpans();
 exports.getProfiles = () => legacySingletonInstance.getProfiles();

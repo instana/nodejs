@@ -9,6 +9,9 @@ const config = require('../../../../../core/test/config');
 const delay = require('../../../../../core/test/test_util/delay');
 const testUtils = require('../../../../../core/test/test_util');
 const ProcessControls = require('../../../test_util/ProcessControls');
+const globalAgent = require('../../../globalAgent');
+
+const agentControls = globalAgent.instance;
 
 describe('tracing/nats', function() {
   if (!supportedVersion(process.versions.node)) {
@@ -16,16 +19,17 @@ describe('tracing/nats', function() {
   }
 
   this.timeout(config.getTestTimeout() * 2);
-  const agentControls = require('../../../apps/agentStubControls');
-  agentControls.registerTestHooks();
+
+  globalAgent.setUpCleanUpHooks();
+
   const publisherControls = new ProcessControls({
     port: 3216,
     appPath: path.join(__dirname, 'publisher'),
-    agentControls
+    useGlobalAgent: true
   }).registerTestHooks();
   const subscriberControls = new ProcessControls({
     appPath: path.join(__dirname, 'subscriber'),
-    agentControls
+    useGlobalAgent: true
   }).registerTestHooks();
 
   describe('publish et al.', function() {
@@ -260,17 +264,15 @@ describe('tracing/nats', function() {
 
 describe('tracing/nats disabled', function() {
   this.timeout(config.getTestTimeout() * 2);
-  const agentControls = require('../../../apps/agentStubControls');
-  agentControls.registerTestHooks();
   const publisherControls = new ProcessControls({
     appPath: path.join(__dirname, 'publisher'),
     port: 3216,
-    agentControls,
+    useGlobalAgent: true,
     tracingEnabled: false
   }).registerTestHooks();
   new ProcessControls({
     appPath: path.join(__dirname, 'subscriber'),
-    agentControls,
+    useGlobalAgent: true,
     tracingEnabled: false
   }).registerTestHooks();
 

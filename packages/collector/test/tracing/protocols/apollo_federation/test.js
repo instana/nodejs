@@ -9,17 +9,18 @@ const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('../../../../../core/test/config');
 const testUtils = require('../../../../../core/test/test_util');
 const ProcessControls = require('../../../test_util/ProcessControls');
+const globalAgent = require('../../../globalAgent');
 
-let agentControls;
+const agentControls = globalAgent.instance;
 
 describe('tracing/apollo-federation', function() {
   if (!supportedVersion(process.versions.node) || semver.lt(process.versions.node, '8.5.0')) {
     return;
   }
 
-  agentControls = require('../../../apps/agentStubControls');
-
   this.timeout(config.getTestTimeout() * 2);
+
+  globalAgent.setUpCleanUpHooks();
 
   [false, true].forEach(withError => registerQuerySuite.bind(this)({ withError }));
   // registerQuerySuite.bind(this)({ withError: false });
@@ -52,32 +53,31 @@ function testQuery(allControls, testConfig) {
 }
 
 function startAllProcesses() {
-  agentControls.registerTestHooks();
   const accountServiceControls = new ProcessControls({
     appPath: path.join(__dirname, 'services', 'accounts'),
     port: 4200,
-    agentControls
+    useGlobalAgent: true
   }).registerTestHooks();
   const inventoryServiceControls = new ProcessControls({
     appPath: path.join(__dirname, 'services', 'inventory'),
     port: 4201,
-    agentControls
+    useGlobalAgent: true
   }).registerTestHooks();
   const productsServiceControls = new ProcessControls({
     appPath: path.join(__dirname, 'services', 'products'),
     port: 4202,
-    agentControls
+    useGlobalAgent: true
   }).registerTestHooks();
   const reviewsServiceControls = new ProcessControls({
     appPath: path.join(__dirname, 'services', 'reviews'),
     port: 4203,
-    agentControls
+    useGlobalAgent: true
   }).registerTestHooks();
 
   const gatewayControls = new ProcessControls({
     appPath: path.join(__dirname, 'gateway'),
     port: 3217,
-    agentControls,
+    useGlobalAgent: true,
     env: {
       SERVICE_PORT_ACCOUNTS: accountServiceControls.port,
       SERVICE_PORT_INVENTORY: inventoryServiceControls.port,
@@ -89,7 +89,7 @@ function startAllProcesses() {
   const clientControls = new ProcessControls({
     appPath: path.join(__dirname, 'client'),
     port: 3216,
-    agentControls,
+    useGlobalAgent: true,
     env: {
       SERVER_PORT: gatewayControls.port
     }

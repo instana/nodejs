@@ -1,26 +1,28 @@
 'use strict';
 
-const semver = require('semver');
 const expect = require('chai').expect;
 
 const constants = require('@instana/core').tracing.constants;
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('../../../../../core/test/config');
 const testUtils = require('../../../../../core/test/test_util');
+const ProcessControls = require('../../../test_util/ProcessControls');
+const globalAgent = require('../../../globalAgent');
 
 describe('tracing/logger/pino', function() {
-  // Pino 5 does not support Node.js 4, it uses EcmaScript language features that only work in more recent versions.
-  if (!supportedVersion(process.versions.node) || semver.lt(process.versions.node, '6.0.0')) {
+  if (!supportedVersion(process.versions.node)) {
     return;
   }
 
   this.timeout(config.getTestTimeout());
-  const agentControls = require('../../../apps/agentStubControls');
-  const appControls = require('./controls');
-  agentControls.registerTestHooks();
-  appControls.registerTestHooks();
 
-  beforeEach(() => agentControls.waitUntilAppIsCompletelyInitialized(appControls.getPid()));
+  const agentControls = globalAgent.instance;
+  globalAgent.setUpCleanUpHooks();
+
+  const controls = new ProcessControls({
+    dirname: __dirname,
+    useGlobalAgent: true
+  }).registerTestHooks();
 
   runTests(false);
   runTests(true);
@@ -29,12 +31,12 @@ describe('tracing/logger/pino', function() {
     const suffix = useExpressPino ? ' (express-pino)' : '';
 
     it(`must not trace info${suffix}`, () =>
-      appControls.trigger('info', useExpressPino).then(() =>
+      trigger('info', useExpressPino).then(() =>
         testUtils.retry(() =>
           agentControls.getSpans().then(spans => {
             const entrySpan = testUtils.expectAtLeastOneMatching(spans, [
               span => expect(span.n).to.equal('node.http.server'),
-              span => expect(span.f.e).to.equal(String(appControls.getPid())),
+              span => expect(span.f.e).to.equal(String(controls.getPid())),
               span => expect(span.f.h).to.equal('agent-stub-uuid')
             ]);
             testUtils.expectAtLeastOneMatching(spans, span => {
@@ -76,12 +78,12 @@ describe('tracing/logger/pino', function() {
       runTest('error-random-object-and-string', useExpressPino, true, 'Error message - should be traced.'));
 
     it(`must not trace custom info${suffix}`, () =>
-      appControls.trigger('custom-info', useExpressPino).then(() =>
+      trigger('custom-info', useExpressPino).then(() =>
         testUtils.retry(() =>
           agentControls.getSpans().then(spans => {
             const entrySpan = testUtils.expectAtLeastOneMatching(spans, [
               span => expect(span.n).to.equal('node.http.server'),
-              span => expect(span.f.e).to.equal(String(appControls.getPid())),
+              span => expect(span.f.e).to.equal(String(controls.getPid())),
               span => expect(span.f.h).to.equal('agent-stub-uuid')
             ]);
             testUtils.expectAtLeastOneMatching(spans, span => {
@@ -105,12 +107,12 @@ describe('tracing/logger/pino', function() {
   }
 
   function runTest(level, useExpressPino, expectErroneous, message) {
-    return appControls.trigger(level, useExpressPino).then(() =>
+    return trigger(level, useExpressPino).then(() =>
       testUtils.retry(() =>
         agentControls.getSpans().then(spans => {
           const entrySpan = testUtils.expectAtLeastOneMatching(spans, [
             span => expect(span.n).to.equal('node.http.server'),
-            span => expect(span.f.e).to.equal(String(appControls.getPid())),
+            span => expect(span.f.e).to.equal(String(controls.getPid())),
             span => expect(span.f.h).to.equal('agent-stub-uuid')
           ]);
           testUtils.expectAtLeastOneMatching(spans, span => {
@@ -124,11 +126,15 @@ describe('tracing/logger/pino', function() {
     );
   }
 
+  function trigger(level, useExpressPino) {
+    return controls.sendRequest({ path: `/${(useExpressPino ? 'express-pino-' : '') + level}` });
+  }
+
   function checkPinoSpan(span, parent, expectErroneous, message) {
     expect(span.t).to.equal(parent.t);
     expect(span.p).to.equal(parent.s);
     expect(span.k).to.equal(constants.EXIT);
-    expect(span.f.e).to.equal(String(appControls.getPid()));
+    expect(span.f.e).to.equal(String(controls.getPid()));
     expect(span.f.h).to.equal('agent-stub-uuid');
     expect(span.n).to.equal('log.pino');
     expect(span.async).to.not.exist;
@@ -143,7 +149,7 @@ describe('tracing/logger/pino', function() {
     expect(span.t).to.equal(parent.t);
     expect(span.p).to.equal(parent.s);
     expect(span.k).to.equal(constants.EXIT);
-    expect(span.f.e).to.equal(String(appControls.getPid()));
+    expect(span.f.e).to.equal(String(controls.getPid()));
     expect(span.f.h).to.equal('agent-stub-uuid');
     expect(span.n).to.equal('node.http.client');
   }
