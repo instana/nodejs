@@ -58,7 +58,7 @@ mochaSuiteFn('tracing/cloud/gcp/pubsub', function() {
         GCP_PUBSUB_TOPIC: topicName,
         GCP_PUBSUB_SUBSCRIPTION: subscriptionName
       }
-    }).registerTestHooks(retryTime);
+    });
     const subscriberControls = new ProcessControls({
       appPath: path.join(__dirname, 'subscriber'),
       useGlobalAgent: true,
@@ -67,7 +67,8 @@ mochaSuiteFn('tracing/cloud/gcp/pubsub', function() {
         GCP_PUBSUB_TOPIC: topicName,
         GCP_PUBSUB_SUBSCRIPTION: subscriptionName
       }
-    }).registerTestHooks(retryTime);
+    });
+    ProcessControls.setUpHooksWithRetryTime(retryTime, publisherControls, subscriberControls);
 
     ['promise', 'callback'].forEach(apiVariant => {
       [false, 'publisher'].forEach(withError => {
@@ -189,7 +190,7 @@ mochaSuiteFn('tracing/cloud/gcp/pubsub', function() {
         GCP_PUBSUB_TOPIC: topicName,
         GCP_PUBSUB_SUBSCRIPTION: subscriptionName
       }
-    }).registerTestHooks(retryTime);
+    });
     const subscriberControls = new ProcessControls({
       appPath: path.join(__dirname, 'subscriber'),
       useGlobalAgent: true,
@@ -198,7 +199,8 @@ mochaSuiteFn('tracing/cloud/gcp/pubsub', function() {
         GCP_PUBSUB_TOPIC: topicName,
         GCP_PUBSUB_SUBSCRIPTION: subscriptionName
       }
-    }).registerTestHooks(retryTime);
+    });
+    ProcessControls.setUpHooksWithRetryTime(retryTime, publisherControls, subscriberControls);
 
     it('should not trace when suppressed', () =>
       publisherControls
@@ -237,7 +239,7 @@ mochaSuiteFn('tracing/cloud/gcp/pubsub', function() {
         GCP_PUBSUB_TOPIC: topicName,
         GCP_PUBSUB_SUBSCRIPTION: subscriptionName
       }
-    }).registerTestHooks(retryTime);
+    });
     const subscriberControls = new ProcessControls({
       appPath: path.join(__dirname, 'subscriber'),
       useGlobalAgent: true,
@@ -247,7 +249,8 @@ mochaSuiteFn('tracing/cloud/gcp/pubsub', function() {
         GCP_PUBSUB_TOPIC: topicName,
         GCP_PUBSUB_SUBSCRIPTION: subscriptionName
       }
-    }).registerTestHooks(retryTime);
+    });
+    ProcessControls.setUpHooksWithRetryTime(retryTime, publisherControls, subscriberControls);
 
     it('should not trace when disabled', () =>
       publisherControls

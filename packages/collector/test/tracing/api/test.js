@@ -7,11 +7,9 @@ const config = require('../../../../core/test/config');
 const ProcessControls = require('../../test_util/ProcessControls');
 const globalAgent = require('../../globalAgent');
 
-describe('tracing/api', function() {
-  if (!supportedVersion(process.versions.node)) {
-    return;
-  }
+const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
+mochaSuiteFn('tracing/api', function() {
   this.timeout(config.getTestTimeout());
 
   globalAgent.setUpCleanUpHooks();
@@ -20,7 +18,8 @@ describe('tracing/api', function() {
     const controls = new ProcessControls({
       dirname: __dirname,
       useGlobalAgent: true
-    }).registerTestHooks();
+    });
+    ProcessControls.setUpHooks(controls);
 
     it('must provide details for currently active span', () => {
       const now = Date.now();
@@ -116,7 +115,8 @@ describe('tracing/api', function() {
       dirname: __dirname,
       useGlobalAgent: true,
       tracingEnabled: false
-    }).registerTestHooks();
+    });
+    ProcessControls.setUpHooks(controls);
 
     it('must provide a noop span handle', () =>
       controls

@@ -48,11 +48,9 @@ const circularSpan = {
 
 const dummySpansWithCircularReference = [dummyExit, circularSpan, dummyEntry];
 
-describe('agent connection', function() {
-  if (!supportedVersion(process.versions.node)) {
-    return;
-  }
+const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
+mochaSuiteFn('agent connection', function() {
   this.timeout(config.getTestTimeout());
 
   const agentControls = require('./apps/agentStubControls');

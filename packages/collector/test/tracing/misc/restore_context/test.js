@@ -1,7 +1,6 @@
 'use strict';
 
 const expect = require('chai').expect;
-const path = require('path');
 
 const constants = require('@instana/core').tracing.constants;
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
@@ -12,36 +11,31 @@ const globalAgent = require('../../../globalAgent');
 
 const agentControls = globalAgent.instance;
 
-const appName = 'custom-queueing-app';
+const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
-describe('tracing/restore context', function() {
-  if (!supportedVersion(process.versions.node)) {
-    return;
-  }
-
+mochaSuiteFn('tracing/restore context', function() {
   this.timeout(config.getTestTimeout());
 
   globalAgent.setUpCleanUpHooks();
+
+  const controls = new ProcessControls({
+    dirname: __dirname,
+    useGlobalAgent: true,
+    port: 3222
+  });
+  ProcessControls.setUpHooks(controls);
 
   [
     //
     'run',
     'run-promise',
     'enter-and-leave'
-  ].forEach(apiVariant => {
-    registerSuite(apiVariant);
-  });
+  ].forEach(apiVariant => registerSuite(apiVariant));
 
   function registerSuite(apiVariant) {
     describe('restore context', function() {
-      const controls = new ProcessControls({
-        appPath: path.join(__dirname, appName),
-        useGlobalAgent: true,
-        port: 3222
-      }).registerTestHooks();
-
       it(//
-      `must capture spans after async context loss when context is manually restored ${appName}/${apiVariant})`, () => {
+      `must capture spans after async context loss when context is manually restored (${apiVariant}))`, () => {
         let url = `/${apiVariant}`;
         return controls
           .sendRequest({

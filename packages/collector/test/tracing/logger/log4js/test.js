@@ -9,11 +9,9 @@ const testUtils = require('../../../../../core/test/test_util');
 const ProcessControls = require('../../../test_util/ProcessControls');
 const globalAgent = require('../../../globalAgent');
 
-describe('tracing/logger/log4js', function() {
-  if (!supportedVersion(process.versions.node)) {
-    return;
-  }
+const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
+mochaSuiteFn('tracing/logger/log4js', function() {
   this.timeout(config.getTestTimeout());
 
   globalAgent.setUpCleanUpHooks();
@@ -22,7 +20,8 @@ describe('tracing/logger/log4js', function() {
   const controls = new ProcessControls({
     dirname: __dirname,
     useGlobalAgent: true
-  }).registerTestHooks();
+  });
+  ProcessControls.setUpHooks(controls);
 
   [false, true].forEach(useLogMethod => runTests(useLogMethod));
 

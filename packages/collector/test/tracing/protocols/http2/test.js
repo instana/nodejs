@@ -11,8 +11,6 @@ const { delay, expectExactlyOneMatching, retry } = require('../../../../../core/
 const ProcessControls = require('../../../test_util/ProcessControls');
 const { AgentStubControls } = require('../../../apps/agentStubControls');
 
-let agentControls;
-
 const clientPort = 3216;
 const serverPort = 3217;
 
@@ -29,7 +27,7 @@ const mochaSuiteFn =
 mochaSuiteFn('tracing/http2', function() {
   this.timeout(config.getTestTimeout() * 2);
 
-  agentControls = new AgentStubControls().registerHooksForSuite({
+  const agentControls = new AgentStubControls().registerHooksForSuite({
     extraHeaders: [
       //
       'X-My-Request-Header',
@@ -44,7 +42,7 @@ mochaSuiteFn('tracing/http2', function() {
     http2: true,
     port: serverPort,
     agentControls
-  }).registerTestHooks();
+  });
 
   const clientControls = new ProcessControls({
     appPath: path.join(__dirname, 'client'),
@@ -54,7 +52,9 @@ mochaSuiteFn('tracing/http2', function() {
     env: {
       SERVER_PORT: serverControls.port
     }
-  }).registerTestHooks();
+  });
+
+  ProcessControls.setUpHooks(serverControls, clientControls);
 
   [false, true].forEach(withQuery => {
     it(`must trace http2 GET with${withQuery ? '' : 'out'} query`, () =>

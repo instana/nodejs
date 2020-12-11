@@ -78,7 +78,8 @@ mochaSuiteFn('tracing/elasticsearch (modern client)', function() {
           dirname: __dirname,
           useGlobalAgent: true,
           env: { ES_API_VERSION: apiVersion }
-        }).registerTestHooks();
+        });
+        ProcessControls.setUpHooks(controls);
 
         it('must report errors caused by missing indices', () =>
           get({ id: 'thisDocumentWillNotExist', index: 'thisIndexDoesNotExist' }).then(res => {

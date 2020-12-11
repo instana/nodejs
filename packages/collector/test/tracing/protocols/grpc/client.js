@@ -1,5 +1,3 @@
-/* eslint-disable no-console */
-
 'use strict';
 
 const port = process.env.APP_PORT || 3216;
@@ -407,5 +405,6 @@ app.listen(port, () => {
 function log() {
   const args = Array.prototype.slice.call(arguments);
   args[0] = logPrefix + args[0];
+  // eslint-disable-next-line no-console
   console.log.apply(console, args);
 }

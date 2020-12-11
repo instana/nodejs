@@ -10,11 +10,9 @@ const config = require('../../../core/test/config');
 const testUtils = require('../../../core/test/test_util');
 const ProcessControls = require('../test_util/ProcessControls');
 
-describe('uncaught exceptions', function() {
-  if (!supportedVersion(process.versions.node)) {
-    return;
-  }
+const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
+mochaSuiteFn('uncaught exceptions', function() {
   const agentControls = require('../apps/agentStubControls');
 
   this.timeout(config.getTestTimeout() * 2);

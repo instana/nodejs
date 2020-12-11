@@ -10,11 +10,9 @@ const { retry, expectAtLeastOneMatching, expectExactlyOneMatching } = require('.
 const ProcessControls = require('../../../test_util/ProcessControls');
 const globalAgent = require('../../../globalAgent');
 
-describe('tracing/redis', function() {
-  if (!supportedVersion(process.versions.node)) {
-    return;
-  }
+const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
+mochaSuiteFn('tracing/redis', function() {
   this.timeout(config.getTestTimeout());
 
   globalAgent.setUpCleanUpHooks();
@@ -23,7 +21,8 @@ describe('tracing/redis', function() {
   const controls = new ProcessControls({
     dirname: __dirname,
     useGlobalAgent: true
-  }).registerTestHooks();
+  });
+  ProcessControls.setUpHooks(controls);
 
   it('must trace set/get calls', () =>
     controls

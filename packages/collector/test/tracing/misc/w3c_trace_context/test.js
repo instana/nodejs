@@ -22,11 +22,9 @@ const LEFT_PAD_16 = '0000000000000000';
 const upstreamInstanaTraceId = 'ffeeddccbbaa9988';
 const upstreamInstanaParentId = '7766554433221100';
 
-describe('tracing/W3C Trace Context (with processes instrumented by a different vendor)', function() {
-  if (!supportedVersion(process.versions.node)) {
-    return;
-  }
+const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
+mochaSuiteFn('tracing/W3C Trace Context (with processes instrumented by a different vendor)', function() {
   this.timeout(config.getTestTimeout() * 2);
 
   globalAgent.setUpCleanUpHooks();
@@ -559,7 +557,9 @@ function startApps() {
       APM_VENDOR: 'instana',
       DOWNSTREAM_PORT: otherVendorAppPort
     }
-  }).registerTestHooks();
+  });
+  ProcessControls.setUpHooks(instanaAppControls);
+
   const otherVendorAppControls = new ProcessControls({
     appPath: path.join(__dirname, 'app'),
     port: otherVendorAppPort,
@@ -568,7 +568,10 @@ function startApps() {
       APM_VENDOR: 'other-spec-compliant',
       DOWNSTREAM_PORT: instanaAppPort
     }
-  }).registerTestHooks();
+  });
+
+  before(() => otherVendorAppControls.start());
+  after(() => otherVendorAppControls.stop());
 
   return {
     instanaAppControls,

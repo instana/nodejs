@@ -7,22 +7,18 @@ const config = require('../../../../../core/test/config');
 const ProcessControls = require('../../../test_util/ProcessControls');
 const globalAgent = require('../../../globalAgent');
 
-describe('tracing/graphql-subscriptions - PubSub/async iterator (pull before push)', function() {
-  if (!supportedVersion(process.versions.node)) {
-    return;
-  }
+const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
+mochaSuiteFn('tracing/graphql-subscriptions - PubSub/async iterator (pull before push)', function() {
   this.timeout(config.getTestTimeout());
 
   globalAgent.setUpCleanUpHooks();
-  const agentControls = globalAgent.instance;
 
   const controls = new ProcessControls({
     dirname: __dirname,
-    agentControls,
     useGlobalAgent: true
   });
-  controls.registerTestHooks();
+  ProcessControls.setUpHooks(controls);
 
   it('should keep cls context when pulling before pushing', () =>
     controls

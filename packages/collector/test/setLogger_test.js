@@ -9,11 +9,9 @@ const config = require('../../core/test/config');
 const testUtils = require('../../core/test/test_util');
 const globalAgent = require('./globalAgent');
 
-describe('setLogger', function() {
-  if (!supportedVersion(process.versions.node)) {
-    return;
-  }
+const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
+mochaSuiteFn('setLogger', function() {
   this.timeout(config.getTestTimeout());
 
   globalAgent.setUpCleanUpHooks();

@@ -12,11 +12,9 @@ const globalAgent = require('../../globalAgent');
 
 const extendedTimeout = Math.max(config.getTestTimeout(), 10000);
 
-describe('tracing/common', function() {
-  if (!supportedVersion(process.versions.node)) {
-    return;
-  }
+const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
+mochaSuiteFn('tracing/common', function() {
   globalAgent.setUpCleanUpHooks();
 
   describe('delay', function() {
@@ -26,7 +24,8 @@ describe('tracing/common', function() {
         useGlobalAgent: true,
         dirname: __dirname,
         minimalDelay: 6000
-      }).registerTestHooks();
+      });
+      ProcessControls.setUpHooks(controls);
       registerDelayTest.call(this, globalAgent.instance, controls, true);
     });
 
@@ -35,7 +34,8 @@ describe('tracing/common', function() {
       const controls = new ProcessControls({
         useGlobalAgent: true,
         dirname: __dirname
-      }).registerTestHooks();
+      });
+      ProcessControls.setUpHooks(controls);
       registerDelayTest.call(this, globalAgent.instance, controls, false);
     });
 
@@ -123,7 +123,8 @@ describe('tracing/common', function() {
         env: {
           INSTANA_SERVICE_NAME: 'much-custom-very-wow service'
         }
-      }).registerTestHooks();
+      });
+      ProcessControls.setUpHooks(controls);
       registerServiceNameTest.call(this, globalAgent.instance, controls, 'env var', true);
     });
 
@@ -135,7 +136,8 @@ describe('tracing/common', function() {
           // this makes the app set the serviceName per config object
           SERVICE_CONFIG: 'much-custom-very-wow service'
         }
-      }).registerTestHooks();
+      });
+      ProcessControls.setUpHooks(controls);
       registerServiceNameTest.call(this, globalAgent.instance, controls, 'config object', true);
     });
 
@@ -158,7 +160,7 @@ describe('tracing/common', function() {
     });
 
     function registerServiceNameTest(agentControls, controls, configMethod, expectServiceNameOnSpan) {
-      it(`must ${expectServiceNameOnSpan ? '' : '_not_'} respect service name configured via: ${configMethod})`, () => {
+      it(`must${expectServiceNameOnSpan ? ' ' : ' _not_ '}respect service name configured via: ${configMethod}`, () => {
         const req = {
           path: '/'
         };
@@ -199,7 +201,8 @@ describe('tracing/common', function() {
         env: {
           INSTANA_DISABLED_TRACERS: 'pino'
         }
-      }).registerTestHooks();
+      });
+      ProcessControls.setUpHooks(controls);
 
       it('can disable a single instrumentation', () =>
         controls
@@ -223,7 +226,8 @@ describe('tracing/common', function() {
         env: {
           SCREW_AROUND_WITH_UP_ARRAY_FIND: 'sure why not?'
         }
-      }).registerTestHooks();
+      });
+      ProcessControls.setUpHooks(controls);
 
       // Story time: There is a package out there that overrides Array.find with different behaviour that, once upon a
       // time, as a random side effect, disabled our auto tracing. This is a regression test to make sure we are now

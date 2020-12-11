@@ -9,20 +9,19 @@ const testUtils = require('../../../../../core/test/test_util');
 const ProcessControls = require('../../../test_util/ProcessControls');
 const globalAgent = require('../../../globalAgent');
 
-describe('tracing/q', function() {
-  if (!supportedVersion(process.versions.node)) {
-    return;
-  }
+const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
+mochaSuiteFn('tracing/q', function() {
   this.timeout(config.getTestTimeout());
 
   globalAgent.setUpCleanUpHooks();
   const agentControls = globalAgent.instance;
 
-  const appControls = new ProcessControls({
+  const controls = new ProcessControls({
     dirname: __dirname,
     useGlobalAgent: true
-  }).registerTestHooks();
+  });
+  ProcessControls.setUpHooks(controls);
 
   runTest('/fcall');
   runTest('/reject-fcall');
@@ -50,7 +49,7 @@ describe('tracing/q', function() {
 
   function runTest(path, verification = verifySingleEntry) {
     it(`must trace: ${path}`, () =>
-      appControls
+      controls
         .sendRequest({
           method: 'GET',
           path

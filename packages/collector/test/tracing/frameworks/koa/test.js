@@ -5,16 +5,16 @@ const semver = require('semver');
 const expect = require('chai').expect;
 
 const constants = require('@instana/core').tracing.constants;
+const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('../../../../../core/test/config');
 const testUtils = require('../../../../../core/test/test_util');
 const ProcessControls = require('../../../test_util/ProcessControls');
 const globalAgent = require('../../../globalAgent');
 
-describe('tracing/koa', function() {
-  if (!semver.satisfies(process.versions.node, '>=6.0.0')) {
-    return;
-  }
+const mochaSuiteFn =
+  supportedVersion(process.versions.node) && semver.gte(process.versions.node, '6.0.0') ? describe : describe.skip;
 
+mochaSuiteFn('tracing/koa', function() {
   this.timeout(config.getTestTimeout());
 
   const agentControls = globalAgent.instance;
@@ -23,7 +23,8 @@ describe('tracing/koa', function() {
   const controls = new ProcessControls({
     appPath: path.join(__dirname, 'app'),
     useGlobalAgent: true
-  }).registerTestHooks();
+  });
+  ProcessControls.setUpHooks(controls);
 
   describe('koa path templates', () => {
     check('/route', '/route');

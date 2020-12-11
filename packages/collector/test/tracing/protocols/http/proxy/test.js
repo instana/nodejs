@@ -8,11 +8,9 @@ const config = require('../../../../../../core/test/config');
 const { expectAtLeastOneMatching, retry } = require('../../../../../../core/test/test_util');
 const globalAgent = require('../../../../globalAgent');
 
-describe('http with proxy', function() {
-  if (!supportedVersion(process.versions.node)) {
-    return;
-  }
+const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
+mochaSuiteFn('http with proxy', function() {
   this.timeout(config.getTestTimeout());
 
   globalAgent.setUpCleanUpHooks();

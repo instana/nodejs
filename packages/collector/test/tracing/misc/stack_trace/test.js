@@ -7,18 +7,16 @@ const config = require('../../../../../core/test/config');
 const testUtils = require('../../../../../core/test/test_util');
 const globalAgent = require('../../../globalAgent');
 
-describe('tracing/stackTraces', function() {
-  if (!supportedVersion(process.versions.node)) {
-    return;
-  }
+const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
+
+mochaSuiteFn('tracing/stackTraces', function() {
+  this.timeout(config.getTestTimeout());
 
   globalAgent.setUpCleanUpHooks();
   const agentControls = globalAgent.instance;
 
   const expressProxyControls = require('../../protocols/http/proxy/expressProxyControls');
   const expressControls = require('../../../apps/expressControls');
-
-  this.timeout(config.getTestTimeout());
 
   describe('with stack trace lenght of 0', () => {
     expressControls.registerTestHooks({ useGlobalAgent: true });

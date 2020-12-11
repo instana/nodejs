@@ -13,11 +13,9 @@ const globalAgent = require('../../../globalAgent');
 
 const agentControls = globalAgent.instance;
 
-describe('tracing/nats', function() {
-  if (!supportedVersion(process.versions.node)) {
-    return;
-  }
+const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
+mochaSuiteFn('tracing/nats', function() {
   this.timeout(config.getTestTimeout() * 2);
 
   globalAgent.setUpCleanUpHooks();
@@ -26,11 +24,12 @@ describe('tracing/nats', function() {
     port: 3216,
     appPath: path.join(__dirname, 'publisher'),
     useGlobalAgent: true
-  }).registerTestHooks();
+  });
   const subscriberControls = new ProcessControls({
     appPath: path.join(__dirname, 'subscriber'),
     useGlobalAgent: true
-  }).registerTestHooks();
+  });
+  ProcessControls.setUpHooks(publisherControls, subscriberControls);
 
   describe('publish et al.', function() {
     [false, true].forEach(withCallback => {
@@ -269,12 +268,13 @@ describe('tracing/nats disabled', function() {
     port: 3216,
     useGlobalAgent: true,
     tracingEnabled: false
-  }).registerTestHooks();
-  new ProcessControls({
+  });
+  const subscriberControls = new ProcessControls({
     appPath: path.join(__dirname, 'subscriber'),
     useGlobalAgent: true,
     tracingEnabled: false
-  }).registerTestHooks();
+  });
+  ProcessControls.setUpHooks(publisherControls, subscriberControls);
 
   it('should not trace when disabled', () =>
     publisherControls

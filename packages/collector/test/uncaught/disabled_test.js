@@ -12,11 +12,9 @@ const testUtils = require('../../../core/test/test_util');
 const ProcessControls = require('../test_util/ProcessControls');
 const globalAgent = require('../globalAgent');
 
-describe('uncaught exception reporting disabled', function() {
-  if (!supportedVersion(process.versions.node)) {
-    return;
-  }
+const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
+mochaSuiteFn('uncaught exception reporting disabled', function() {
   this.timeout(config.getTestTimeout());
 
   globalAgent.setUpCleanUpHooks();

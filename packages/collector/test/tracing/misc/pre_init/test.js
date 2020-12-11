@@ -11,11 +11,9 @@ const globalAgent = require('../../../globalAgent');
 
 const agentControls = globalAgent.instance;
 
-describe('tracing/preInit', function() {
-  if (!supportedVersion(process.versions.node)) {
-    return;
-  }
+const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
+mochaSuiteFn('tracing/preInit', function() {
   this.timeout(config.getTestTimeout());
 
   globalAgent.setUpCleanUpHooks();
@@ -34,7 +32,8 @@ function registerTests(usePreInit) {
     dirname: __dirname,
     useGlobalAgent: true,
     usePreInit
-  }).registerTestHooks();
+  });
+  ProcessControls.setUpHooks(controls);
 
   it(`must ${usePreInit ? '' : 'not'} init instrumentations early and ${
     usePreInit ? '' : 'not'

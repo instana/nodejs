@@ -18,11 +18,9 @@ const globalAgent = require('../../../globalAgent');
 
 const { fail } = expect;
 
-describe('tracing/batching', function() {
-  if (!supportedVersion(process.versions.node)) {
-    return;
-  }
+const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
+mochaSuiteFn('tracing/batching', function() {
   this.timeout(config.getTestTimeout());
 
   globalAgent.setUpCleanUpHooks();

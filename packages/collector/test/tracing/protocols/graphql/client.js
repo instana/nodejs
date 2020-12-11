@@ -27,6 +27,8 @@ const requestQueueName = 'graphql-request-queue';
 let responseQueueName;
 let amqpConnected = false;
 
+const amqpResponseHandlers = {};
+
 // We establish an AMQP connection to test GraphQL queries over non-HTTP protocols.
 amqp
   .connect('amqp://localhost')
@@ -156,13 +158,26 @@ function runQueryViaHttp(query, res) {
 
 function runQueryViaAmqp(query, res) {
   const correlationId = uuid();
+
+  amqpResponseHandlers[correlationId] = msg => {
+    const response = msg.content.toString();
+    res.send(response);
+  };
+
   channel.consume(
     responseQueueName,
     msg => {
-      if (msg.properties.correlationId === correlationId) {
-        const response = msg.content.toString();
-        res.send(response);
+      if (!msg.properties.correlationId) {
+        log('Warning: Got message without correlation ID, ignoring.');
+        return;
       }
+      const responseHandler = amqpResponseHandlers[msg.properties.correlationId];
+      if (!responseHandler) {
+        log(`Warning: No response handler for correlation ID ${msg.properties.correlationId}, ignoring.`);
+        return;
+      }
+
+      responseHandler(msg);
     },
     {
       noAck: true

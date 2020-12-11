@@ -12,11 +12,9 @@ const globalAgent = require('../../../globalAgent');
 
 const USE_ATLAS = process.env.USE_ATLAS === 'true';
 
-describe('tracing/mongoose', function() {
-  if (!supportedVersion(process.versions.node)) {
-    return;
-  }
+const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
+mochaSuiteFn('tracing/mongoose', function() {
   const timeout = USE_ATLAS ? config.getTestTimeout() * 2 : config.getTestTimeout();
   this.timeout(timeout);
 
@@ -26,7 +24,8 @@ describe('tracing/mongoose', function() {
   const controls = new ProcessControls({
     dirname: __dirname,
     useGlobalAgent: true
-  }).registerTestHooks(timeout);
+  });
+  ProcessControls.setUpHooks(controls);
 
   it('must trace create calls', () =>
     controls

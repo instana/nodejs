@@ -5,16 +5,16 @@ const semver = require('semver');
 const expect = require('chai').expect;
 
 const constants = require('@instana/core').tracing.constants;
+const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('../../../../../core/test/config');
 const testUtils = require('../../../../../core/test/test_util');
 const ProcessControls = require('../../../test_util/ProcessControls');
 const globalAgent = require('../../../globalAgent');
 
-describe('tracing/hapi', function() {
-  if (!semver.satisfies(process.versions.node, '>=8.2.1')) {
-    return;
-  }
+const mochaSuiteFn =
+  supportedVersion(process.versions.node) && semver.gte(process.versions.node, '8.2.1') ? describe : describe.skip;
 
+mochaSuiteFn('tracing/hapi', function() {
   this.timeout(config.getTestTimeout());
 
   const agentControls = globalAgent.instance;
@@ -23,7 +23,8 @@ describe('tracing/hapi', function() {
   const controls = new ProcessControls({
     appPath: path.join(__dirname, 'app'),
     useGlobalAgent: true
-  }).registerTestHooks();
+  });
+  ProcessControls.setUpHooks(controls);
 
   describe('hapi path templates', () => {
     check('/route/mandatory/value', '/route/mandatory/{param}');

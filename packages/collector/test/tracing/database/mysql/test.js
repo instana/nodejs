@@ -10,12 +10,14 @@ const testUtils = require('../../../../../core/test/test_util');
 const ProcessControls = require('../../../test_util/ProcessControls');
 const globalAgent = require('../../../globalAgent');
 
-describe('tracing/mysql', function() {
-  if (!supportedVersion(process.versions.node) || semver.lt(process.versions.node, '6.0.0')) {
-    // mysql2 recently started to use ES6 syntax.
-    return;
-  }
+const mochaSuiteFn =
+  supportedVersion(process.versions.node) &&
+  // mysql2 recently started to use ES6 syntax.
+  semver.gte(process.versions.node, '6.0.0')
+    ? describe
+    : describe.skip;
 
+mochaSuiteFn('tracing/mysql', function() {
   this.timeout(config.getTestTimeout());
 
   globalAgent.setUpCleanUpHooks();
@@ -47,7 +49,8 @@ function registerSuite(agentControls, driverMode, useExecute) {
       dirname: __dirname,
       useGlobalAgent: true,
       env
-    }).registerTestHooks();
+    });
+    ProcessControls.setUpHooks(controls);
 
     test(controls, agentControls);
   });

@@ -11,16 +11,12 @@ const { delay, retry } = require('../../../../../../core/test/test_util');
 const ProcessControls = require('../../../../test_util/ProcessControls');
 const { AgentStubControls } = require('../../../../apps/agentStubControls');
 
-let agentControls;
+const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
-describe('tracing/http(s) server', function() {
-  if (!supportedVersion(process.versions.node)) {
-    return;
-  }
-
+mochaSuiteFn('tracing/http(s) server', function() {
   this.timeout(config.getTestTimeout());
 
-  agentControls = new AgentStubControls().registerHooksForSuite({
+  const agentControls = new AgentStubControls().registerHooksForSuite({
     extraHeaders: [
       //
       'X-My-Entry-Request-Header',
@@ -34,19 +30,19 @@ describe('tracing/http(s) server', function() {
   });
 
   describe('http', function() {
-    registerTests.call(this, false, false);
+    registerTests.call(this, agentControls, false, false);
   });
 
   describe('https', function() {
-    registerTests.call(this, true, false);
+    registerTests.call(this, agentControls, true, false);
   });
 
   (semver.gte(process.versions.node, '8.4.0') ? describe : describe.skip)('http2 compat mode', function() {
-    registerTests.call(this, true, true);
+    registerTests.call(this, agentControls, true, true);
   });
 });
 
-function registerTests(useHttps, useHttp2CompatApi) {
+function registerTests(agentControls, useHttps, useHttp2CompatApi) {
   const controls = new ProcessControls({
     dirname: __dirname,
     http2: useHttp2CompatApi,
@@ -55,7 +51,9 @@ function registerTests(useHttps, useHttp2CompatApi) {
       USE_HTTPS: useHttps,
       USE_HTTP2: useHttp2CompatApi
     }
-  }).registerTestHooks();
+  });
+
+  ProcessControls.setUpHooks(controls);
 
   it(`must capture incoming calls and start a new trace (HTTPS: ${useHttps})`, () =>
     controls

@@ -7,14 +7,12 @@ const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('../../../../../core/test/config');
 const globalAgent = require('../../../globalAgent');
 
+const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
+
 /**
  * Tests behaviour when the Instana Node.js collector is active but tracing is disabled.
  */
-describe('disabled tracing', function() {
-  if (!supportedVersion(process.versions.node)) {
-    return;
-  }
-
+mochaSuiteFn('disabled tracing', function() {
   this.timeout(config.getTestTimeout());
 
   globalAgent.setUpCleanUpHooks();

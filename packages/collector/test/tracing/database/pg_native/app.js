@@ -104,12 +104,12 @@ app.post('/error-sync', (req, res) => {
 });
 
 app.post('/prepared-statement', (req, res) => {
-  client.prepare('statement-name', 'INSERT INTO users(name, email) VALUES($1, $2) RETURNING *', 2, e1 => {
+  client.prepare('prepared-statement-1', 'INSERT INTO users(name, email) VALUES($1, $2) RETURNING *', 2, e1 => {
     if (e1) {
       log('Could not prepare statement', e1);
       return res.sendStatus(500);
     }
-    client.execute('statement-name', ['gonzo', 'gonzo@muppets.com'], (e2, results) => {
+    client.execute('prepared-statement-1', ['gonzo', 'gonzo@muppets.com'], (e2, results) => {
       if (e2) {
         log('Failed to execute prepared statement', e2);
         return res.sendStatus(500);
@@ -122,8 +122,8 @@ app.post('/prepared-statement', (req, res) => {
 });
 
 app.post('/prepared-statement-sync', (req, res) => {
-  client.prepareSync('statement-name', 'INSERT INTO users(name, email) VALUES($1, $2) RETURNING *', 2);
-  const results = client.executeSync('statement-name', ['scooter', 'scooter@muppets.com']);
+  client.prepareSync('prepared-statement-2', 'INSERT INTO users(name, email) VALUES($1, $2) RETURNING *', 2);
+  const results = client.executeSync('prepared-statement-2', ['scooter', 'scooter@muppets.com']);
   request(`http://127.0.0.1:${agentPort}`).then(() => {
     res.json(results);
   });

@@ -17,8 +17,11 @@ const serverPort = 3217;
 const serverHost = `localhost:${serverPort}`;
 
 const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
+
 mochaSuiteFn('tracing/http client', function() {
   this.timeout(config.getTestTimeout() * 2);
+
+  globalAgent.setUpTestCaseCleanUpHooks();
 
   describe('http', function() {
     registerTests.call(this, false);
@@ -56,7 +59,7 @@ function registerTests(useHttps) {
     }
   });
 
-  setUpTestHooks(serverControls, clientControls);
+  ProcessControls.setUpHooks(serverControls, clientControls);
 
   // HTTP requests can be triggered via http.request(...) + request.end(...) or http.get(...).
   // Both http.request and http.get accept
@@ -436,7 +439,7 @@ function registerConnectionRefusalTest(useHttps) {
       }
     });
 
-    setUpTestHooks(serverControls, clientControls);
+    ProcessControls.setUpHooks(serverControls, clientControls);
 
     it('must trace calls that fail due to connection refusal', () =>
       serverControls
@@ -479,7 +482,7 @@ function registerSuperagentTest() {
     }
   });
 
-  setUpTestHooks(serverControls, clientControls);
+  ProcessControls.setUpHooks(serverControls, clientControls);
 
   it('must trace superagent callbacks', () =>
     clientControls
@@ -540,24 +543,6 @@ function registerSuperagentTest() {
           globalAgent.instance.getSpans().then(spans => verifySuperagentSpans(spans, '/await-fail', '/does-not-exist'))
         )
       ));
-}
-
-function setUpTestHooks(serverControls, clientControls) {
-  // Wipe the agent stub data completely (including announced processes/known PIDs) before and after running a full
-  // test suite.
-  before(async () => {
-    await globalAgent.instance.reset();
-    await serverControls.startAndWaitForAgentConnection();
-    await clientControls.startAndWaitForAgentConnection();
-  });
-  after(async () => {
-    await serverControls.stop();
-    await clientControls.stop();
-    await globalAgent.instance.reset();
-  });
-
-  // Discard all spans before and after each test, but let the agent stub keep the announced processes/PIDs and metrics.
-  globalAgent.setUpTestCaseCleanUpHooks();
 }
 
 function constructPath(basePath, urlObject, withQuery) {

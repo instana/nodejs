@@ -17,11 +17,9 @@ const agentControls = globalAgent.instance;
 let publisherControls;
 let consumerControls;
 
-describe('tracing/amqp', function() {
-  if (!supportedVersion(process.versions.node)) {
-    return;
-  }
+const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
+mochaSuiteFn('tracing/amqp', function() {
   this.timeout(config.getTestTimeout());
 
   globalAgent.setUpCleanUpHooks();

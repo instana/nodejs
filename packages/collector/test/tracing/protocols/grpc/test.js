@@ -7,17 +7,15 @@ const semver = require('semver');
 const constants = require('@instana/core').tracing.constants;
 const config = require('../../../../../core/test/config');
 const delay = require('../../../../../core/test/test_util/delay');
-const testUtils = require('../../../../../core/test/test_util');
+const { expectExactlyOneMatching, getSpansByName, retry } = require('../../../../../core/test/test_util');
 const ProcessControls = require('../../../test_util/ProcessControls');
 const globalAgent = require('../../../globalAgent');
 
 const agentControls = globalAgent.instance;
 
-describe('tracing/grpc', function() {
-  if (!semver.satisfies(process.versions.node, '>=8.2.1')) {
-    return;
-  }
+const mochaSuiteFn = semver.satisfies(process.versions.node, '>=8.2.1') ? describe : describe.skip;
 
+mochaSuiteFn('tracing/grpc', function() {
   this.timeout(config.getTestTimeout());
 
   globalAgent.setUpCleanUpHooks();
@@ -26,22 +24,14 @@ describe('tracing/grpc', function() {
     [false, true].forEach(withMetadata => {
       [false, true].forEach(function(withOptions) {
         registerSuite.bind(this)(codeGenMode, withMetadata, withOptions);
+        registerCancelSuite.bind(this)(codeGenMode, withMetadata, withOptions);
       });
     });
   });
   // registerSuite.bind(this)('dynamic', false, false);
 
   describe('suppressed', () => {
-    new ProcessControls({
-      appPath: path.join(__dirname, 'server'),
-      useGlobalAgent: true
-    }).registerTestHooks();
-    const clientControls = new ProcessControls({
-      appPath: path.join(__dirname, 'client'),
-      port: 3216,
-      useGlobalAgent: true
-    }).registerTestHooks();
-
+    const { clientControls } = createProcesses();
     it('should not trace when suppressed', () =>
       clientControls
         .sendRequest({
@@ -63,21 +53,9 @@ describe('tracing/grpc', function() {
   });
 
   describe('individually disabled', () => {
-    new ProcessControls({
-      appPath: path.join(__dirname, 'server'),
-      useGlobalAgent: true,
-      env: {
-        INSTANA_DISABLED_TRACERS: 'GRPC'
-      }
-    }).registerTestHooks();
-    const clientControls = new ProcessControls({
-      appPath: path.join(__dirname, 'client'),
-      port: 3216,
-      useGlobalAgent: true,
-      env: {
-        INSTANA_DISABLED_TRACERS: 'GRPC'
-      }
-    }).registerTestHooks();
+    const { clientControls } = createProcesses({
+      INSTANA_DISABLED_TRACERS: 'GRPC'
+    });
 
     it('should not trace when GRPC tracing is individually disabled', () =>
       clientControls
@@ -87,11 +65,11 @@ describe('tracing/grpc', function() {
         })
         .then(response => {
           expect(response.reply).to.equal('received: request');
-          return testUtils.retry(() =>
+          return retry(() =>
             agentControls.getSpans().then(spans => {
-              testUtils.expectAtLeastOneMatching(spans, checkHttpEntry.bind(null, '/unary-call'));
-              expect(testUtils.getSpansByName(spans, 'rpc-client')).to.be.empty;
-              expect(testUtils.getSpansByName(spans, 'rpc-server')).to.be.empty;
+              expectExactlyOneMatching(spans, checkHttpEntry('/unary-call'));
+              expect(getSpansByName(spans, 'rpc-client')).to.be.empty;
+              expect(getSpansByName(spans, 'rpc-server')).to.be.empty;
             })
           );
         }));
@@ -100,34 +78,12 @@ describe('tracing/grpc', function() {
 
 function registerSuite(codeGenMode, withMetadata, withOptions) {
   describe(`codegen: ${codeGenMode}, with metadata: ${withMetadata}, with options: ${withOptions}`, () => {
-    const env = {};
-    if (codeGenMode === 'static') {
-      env.GRPC_STATIC = true;
-    }
-    if (withMetadata) {
-      env.GRPC_WITH_METADATA = true;
-    }
-    if (withOptions) {
-      env.GRPC_WITH_OPTIONS = true;
-    }
-    const serverControls = new ProcessControls({
-      appPath: path.join(__dirname, 'server'),
-      useGlobalAgent: true,
-      env
-    }).registerTestHooks();
-    const clientControls = new ProcessControls({
-      appPath: path.join(__dirname, 'client'),
-      port: 3216,
-      useGlobalAgent: true,
-      env
-    }).registerTestHooks();
+    const { serverControls, clientControls } = createProcessesForOptions(codeGenMode, withMetadata, withOptions);
 
     it('must trace an unary call', () => {
       const expectedReply = `received: request${withMetadata ? ' & test-content' : ''}`;
       return runTest('/unary-call', serverControls, clientControls, expectedReply);
     });
-
-    it('must cancel an unary call', () => runTest('/unary-call', serverControls, clientControls, null, true, false));
 
     it('must mark unary call as erroneous', () =>
       runTest('/unary-call', serverControls, clientControls, null, false, true));
@@ -139,9 +95,6 @@ function registerSuite(codeGenMode, withMetadata, withOptions) {
       return runTest('/server-stream', serverControls, clientControls, expectedReply);
     });
 
-    it('must cancel server-side streaming', () =>
-      runTest('/server-stream', serverControls, clientControls, null, true, false));
-
     it('must mark server-side streaming as erroneous', () =>
       runTest('/server-stream', serverControls, clientControls, null, false, true));
 
@@ -149,9 +102,6 @@ function registerSuite(codeGenMode, withMetadata, withOptions) {
       const expectedReply = 'first; second; third';
       return runTest('/client-stream', serverControls, clientControls, expectedReply);
     });
-
-    it('must cancel client-side streaming', () =>
-      runTest('/client-stream', serverControls, clientControls, null, true, false));
 
     it('must mark client-side streaming as erroneous', () =>
       runTest('/client-stream', serverControls, clientControls, null, false, true));
@@ -168,143 +118,210 @@ function registerSuite(codeGenMode, withMetadata, withOptions) {
       return runTest('/bidi-stream', serverControls, clientControls, expectedReply);
     });
 
-    it('must cancel bidi streaming', () => runTest('/bidi-stream', serverControls, clientControls, null, true, false));
-
     it('must mark bidi streaming as erroneous', () =>
       runTest('/bidi-stream', serverControls, clientControls, null, false, true));
   });
+}
 
-  function runTest(url, serverControls, clientControls, expectedReply, cancel, erroneous) {
-    return clientControls
-      .sendRequest({
-        method: 'POST',
-        path: url + createQueryParams(cancel, erroneous)
-      })
-      .then(response => {
-        if (!erroneous && !cancel) {
-          expect(response.reply).to.deep.equal(expectedReply);
-        }
-        return waitForTrace(serverControls, clientControls, url, cancel, erroneous);
-      });
+function registerCancelSuite(codeGenMode, withMetadata, withOptions) {
+  describe(`codegen: ${codeGenMode}, with metadata: ${withMetadata}, with options: ${withOptions}`, () => {
+    const { serverControls, clientControls } = createProcessesForOptions(codeGenMode, withMetadata, withOptions);
+
+    it('must cancel an unary call', () => runTest('/unary-call', serverControls, clientControls, null, true, false));
+
+    it('must cancel server-side streaming', () =>
+      runTest('/server-stream', serverControls, clientControls, null, true, false));
+
+    it('must cancel client-side streaming', () =>
+      runTest('/client-stream', serverControls, clientControls, null, true, false));
+
+    it('must cancel bidi streaming', () => runTest('/bidi-stream', serverControls, clientControls, null, true, false));
+  });
+}
+
+function createProcessesForOptions(codeGenMode, withMetadata, withOptions) {
+  const env = {};
+  if (codeGenMode === 'static') {
+    env.GRPC_STATIC = true;
+  }
+  if (withMetadata) {
+    env.GRPC_WITH_METADATA = true;
+  }
+  if (withOptions) {
+    env.GRPC_WITH_OPTIONS = true;
   }
 
-  function createQueryParams(cancel, erroneous) {
-    if (erroneous) {
-      return '?error=true';
-    } else if (cancel) {
-      return '?cancel=true';
-    } else {
-      return '';
-    }
-  }
+  return createProcesses(env);
+}
 
-  function waitForTrace(serverControls, clientControls, url, cancel, erroneous) {
-    return testUtils.retry(() =>
-      agentControls.getSpans().then(spans => {
-        checkTrace(serverControls, clientControls, spans, url, cancel, erroneous);
-      })
-    );
-  }
+function createProcesses(env = {}) {
+  const serverControls = new ProcessControls({
+    appPath: path.join(__dirname, 'server'),
+    useGlobalAgent: true,
+    env
+  });
+  const clientControls = new ProcessControls({
+    appPath: path.join(__dirname, 'client'),
+    port: 3216,
+    useGlobalAgent: true,
+    env
+  });
+  ProcessControls.setUpHooks(serverControls, clientControls);
+  return { serverControls, clientControls };
+}
 
-  function checkTrace(serverControls, clientControls, spans, url, cancel, erroneous) {
-    const httpEntry = testUtils.expectAtLeastOneMatching(spans, checkHttpEntry.bind(null, url));
-    const grpcExit = testUtils.expectAtLeastOneMatching(
+function runTest(url, serverControls, clientControls, expectedReply, cancel, erroneous) {
+  return clientControls
+    .sendRequest({
+      method: 'POST',
+      path: url + createQueryParams(cancel, erroneous)
+    })
+    .then(response => {
+      if (!erroneous && !cancel) {
+        expect(response.reply).to.deep.equal(expectedReply);
+      }
+      return waitForTrace(serverControls, clientControls, url, cancel, erroneous);
+    });
+}
+
+function createQueryParams(cancel, erroneous) {
+  if (erroneous) {
+    return '?error=true';
+  } else if (cancel) {
+    return '?cancel=true';
+  } else {
+    return '';
+  }
+}
+
+function waitForTrace(serverControls, clientControls, url, cancel, erroneous) {
+  return retry(() =>
+    agentControls.getSpans().then(spans => {
+      checkTrace(serverControls, clientControls, spans, url, cancel, erroneous);
+    })
+  );
+}
+
+function checkTrace(serverControls, clientControls, spans, url, cancel, erroneous) {
+  const httpEntry = expectExactlyOneMatching(spans, checkHttpEntry(url));
+  const grpcExit = expectExactlyOneMatching(
+    spans,
+    checkGrpcClientSpan(httpEntry, clientControls, url, cancel, erroneous)
+  );
+  // Except for server-streaming and bidi-streaming, we cancel the call immediately on the client, so it usually never
+  // reaches the server (depends on the timing). Therefore we also do not expect any GRPC server spans to exist. For
+  // server-streaming and bidi-streaming we have a communcation channel from the server to the client so that the
+  // server can signal to the client when to cancel the call after it has already reached the server, such a channel
+  // does not exist for unary call and client side streaming.
+  if (!cancel || url === '/server-stream' || url === '/bidi-stream') {
+    const grpcEntry = expectExactlyOneMatching(
       spans,
-      checkGrpcClientSpan.bind(null, httpEntry, clientControls, url, cancel, erroneous)
+      checkGrpcServerSpan(grpcExit, serverControls, url, cancel, erroneous)
     );
-    // Except for server-streaming and bidi-streaming, we cancel the call immediately on the client, so it usually never
-    // reaches the server (depends on the timing). Therefore we also do not expect any GRPC server spans to exist. For
-    // server-streaming and bidi-streaming we have a communcation channel from the server to the client so that the
-    // server can signal to the client when to cancel the call after it has already reached the server, such a channel
-    // does not exist for unary call and client side streaming.
-    if (!cancel || url === '/server-stream' || url === '/bidi-stream') {
-      const grpcEntry = testUtils.expectAtLeastOneMatching(
-        spans,
-        checkGrpcServerSpan.bind(null, grpcExit, serverControls, url, cancel, erroneous)
-      );
-      testUtils.expectAtLeastOneMatching(spans, checkLogSpanDuringGrpcEntry.bind(null, grpcEntry, url, erroneous));
-    }
-    // Would be nice to also check for the log span from the interceptor but will actually never be created because at
-    // that time, the parent span is an exit span (the GRPC exit). If only log spans were intermediate spans :-)
-    // testUtils.expectAtLeastOneMatching(spans, checkLogSpanFromClientInterceptor.bind(null, httpEntry));
-    testUtils.expectAtLeastOneMatching(spans, checkLogSpanAfterGrpcExit.bind(null, httpEntry, url, cancel, erroneous));
+    expectExactlyOneMatching(spans, checkLogSpanDuringGrpcEntry(grpcEntry, url, erroneous));
   }
+  // Would be nice to also check for the log span from the interceptor but will actually never be created because at
+  // that time, the parent span is an exit span (the GRPC exit). If only log spans were intermediate spans :-)
+  // expectExactlyOneMatching(spans, checkLogSpanFromClientInterceptor.bind(null, httpEntry));
+  expectExactlyOneMatching(spans, checkLogSpanAfterGrpcExit(httpEntry, url, cancel, erroneous));
 }
 
-function checkHttpEntry(url, span) {
-  expect(span.n).to.equal('node.http.server');
-  expect(span.k).to.equal(constants.ENTRY);
-  expect(span.data.http.url).to.equal(url);
+function checkHttpEntry(url) {
+  return [
+    span => expect(span.n).to.equal('node.http.server'),
+    span => expect(span.k).to.equal(constants.ENTRY),
+    span => expect(span.data.http.url).to.equal(url)
+  ];
 }
 
-function checkGrpcClientSpan(httpEntry, clientControls, url, cancel, erroneous, span) {
-  expect(span.n).to.equal('rpc-client');
-  expect(span.k).to.equal(constants.EXIT);
-  expect(span.t).to.equal(httpEntry.t);
-  expect(span.p).to.equal(httpEntry.s);
-  expect(span.s).to.be.not.empty;
-  expect(span.f.e).to.equal(String(clientControls.getPid()));
-  expect(span.data.rpc).to.exist;
-  expect(span.data.rpc.flavor).to.equal('grpc');
-  expect(span.data.rpc.call).to.equal(rpcCallNameForUrl(url));
-  expect(span.data.rpc.host).to.equal('localhost');
-  expect(span.data.rpc.port).to.equal('50051');
+function checkGrpcClientSpan(httpEntry, clientControls, url, cancel, erroneous) {
+  let expectations = [
+    span => expect(span.n).to.equal('rpc-client'),
+    span => expect(span.k).to.equal(constants.EXIT),
+    span => expect(span.t).to.equal(httpEntry.t),
+    span => expect(span.p).to.equal(httpEntry.s),
+    span => expect(span.s).to.be.not.empty,
+    span => expect(span.f.e).to.equal(String(clientControls.getPid())),
+    span => expect(span.data.rpc).to.exist,
+    span => expect(span.data.rpc.flavor).to.equal('grpc'),
+    span => expect(span.data.rpc.call).to.equal(rpcCallNameForUrl(url)),
+    span => expect(span.data.rpc.host).to.equal('localhost'),
+    span => expect(span.data.rpc.port).to.equal('50051')
+  ];
   if (erroneous) {
-    expect(span.ec).to.be.equal(1);
-    expect(span.error).to.not.exist;
-    expect(span.data.rpc.error).to.equal('Boom!');
+    expectations = expectations.concat([
+      span => expect(span.ec).to.be.equal(1),
+      span => expect(span.error).to.not.exist,
+      span => expect(span.data.rpc.error).to.equal('Boom!')
+    ]);
   } else {
-    expect(span.ec).to.be.equal(0);
-    expect(span.error).to.not.exist;
-    expect(span.data.rpc.error).to.not.exist;
+    expectations = expectations.concat([
+      span => expect(span.ec).to.be.equal(0),
+      span => expect(span.error).to.not.exist,
+      span => expect(span.data.rpc.error).to.not.exist
+    ]);
   }
+  return expectations;
 }
 
-function checkGrpcServerSpan(grpcExit, serverControls, url, cancel, erroneous, span) {
-  expect(span.n).to.equal('rpc-server');
-  expect(span.k).to.equal(constants.ENTRY);
-  expect(span.t).to.equal(grpcExit.t);
-  expect(span.p).to.equal(grpcExit.s);
-  expect(span.s).to.be.not.empty;
-  expect(span.f.e).to.equal(String(serverControls.getPid()));
-  expect(span.data.rpc).to.exist;
-  expect(span.data.rpc.flavor).to.equal('grpc');
-  expect(span.data.rpc.call).to.equal(rpcCallNameForUrl(url));
+function checkGrpcServerSpan(grpcExit, serverControls, url, cancel, erroneous) {
+  let expectations = [
+    span => expect(span.n).to.equal('rpc-server'),
+    span => expect(span.k).to.equal(constants.ENTRY),
+    span => expect(span.t).to.equal(grpcExit.t),
+    span => expect(span.p).to.equal(grpcExit.s),
+    span => expect(span.s).to.be.not.empty,
+    span => expect(span.f.e).to.equal(String(serverControls.getPid())),
+    span => expect(span.data.rpc).to.exist,
+    span => expect(span.data.rpc.flavor).to.equal('grpc'),
+    span => expect(span.data.rpc.call).to.equal(rpcCallNameForUrl(url))
+  ];
   if (erroneous) {
-    expect(span.ec).to.be.equal(1);
-    expect(span.error).to.not.exist;
-    expect(span.data.rpc.error).to.equal('Boom!');
+    expectations = expectations.concat([
+      span => expect(span.ec).to.be.equal(1),
+      span => expect(span.error).to.not.exist,
+      span => expect(span.data.rpc.error).to.equal('Boom!')
+    ]);
   } else {
-    expect(span.ec).to.be.equal(0);
-    expect(span.error).to.not.exist;
-    expect(span.data.rpc.error).to.not.exist;
+    expectations = expectations.concat([
+      span => expect(span.ec).to.be.equal(0),
+      span => expect(span.error).to.not.exist,
+      span => expect(span.data.rpc.error).to.not.exist
+    ]);
   }
+  return expectations;
 }
 
-function checkLogSpanAfterGrpcExit(httpEntry, url, cancel, erroneous, span) {
-  expect(span.n).to.equal('log.pino');
-  expect(span.k).to.equal(constants.EXIT);
-  expect(span.t).to.equal(httpEntry.t);
-  expect(span.p).to.equal(httpEntry.s);
+function checkLogSpanAfterGrpcExit(httpEntry, url, cancel, erroneous) {
+  const expectations = [
+    span => expect(span.n).to.equal('log.pino'),
+    span => expect(span.k).to.equal(constants.EXIT),
+    span => expect(span.t).to.equal(httpEntry.t),
+    span => expect(span.p).to.equal(httpEntry.s)
+  ];
   if (erroneous) {
-    expect(span.data.log.message).to.contain('Boom!');
+    expectations.push(span => expect(span.data.log.message).to.contain('Boom!'));
   } else if (cancel && url !== '/bidi-stream') {
-    expect(span.data.log.message).to.contain('Cancelled');
+    expectations.push(span => expect(span.data.log.message).to.contain('Cancelled'));
   } else {
-    expect(span.data.log.message).to.equal(url);
+    expectations.push(span => expect(span.data.log.message).to.equal(url));
   }
+  return expectations;
 }
 
-function checkLogSpanDuringGrpcEntry(grpcEntry, url, erroneous, span) {
-  expect(span.n).to.equal('log.pino');
-  expect(span.k).to.equal(constants.EXIT);
-  expect(span.t).to.equal(grpcEntry.t);
-  expect(span.p).to.equal(grpcEntry.s);
+function checkLogSpanDuringGrpcEntry(grpcEntry, url, erroneous) {
+  const expectations = [
+    span => expect(span.n).to.equal('log.pino'),
+    span => expect(span.k).to.equal(constants.EXIT),
+    span => expect(span.t).to.equal(grpcEntry.t),
+    span => expect(span.p).to.equal(grpcEntry.s)
+  ];
   if (erroneous) {
-    expect(span.data.log.message).to.contain('Boom!');
+    expectations.push(span => expect(span.data.log.message).to.contain('Boom!'));
   } else {
-    expect(span.data.log.message).to.equal(url);
+    expectations.push(span => expect(span.data.log.message).to.equal(url));
   }
+  return expectations;
 }
 
 function rpcCallNameForUrl(url) {

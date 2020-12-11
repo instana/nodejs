@@ -11,11 +11,9 @@ const testUtils = require('../../../../../core/test/test_util');
 const ProcessControls = require('../../../test_util/ProcessControls');
 const globalAgent = require('../../../globalAgent');
 
-describe('tracing/express', function() {
-  if (!supportedVersion(process.versions.node)) {
-    return;
-  }
+const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
+mochaSuiteFn('tracing/express', function() {
   this.timeout(config.getTestTimeout());
 
   const agentControls = globalAgent.instance;
@@ -24,7 +22,8 @@ describe('tracing/express', function() {
   const controls = new ProcessControls({
     appPath: path.join(__dirname, 'app'),
     useGlobalAgent: true
-  }).registerTestHooks();
+  });
+  ProcessControls.setUpHooks(controls);
 
   describe('express.js path templates', () => {
     check('/blub', '/blub', true);

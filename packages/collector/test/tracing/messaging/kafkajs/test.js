@@ -12,12 +12,14 @@ const testUtils = require('../../../../../core/test/test_util');
 const ProcessControls = require('../../../test_util/ProcessControls');
 const globalAgent = require('../../../globalAgent');
 
-describe('tracing/kafkajs', function() {
+const mochaSuiteFn =
+  supportedVersion(process.versions.node) &&
   // kafkajs uses async/await style which is only available on Node.js >= 8.
-  if (!supportedVersion(process.versions.node) || semver.lt(process.versions.node, '8.0.0')) {
-    return;
-  }
+  semver.gte(process.versions.node, '8.0.0')
+    ? describe
+    : describe.skip;
 
+mochaSuiteFn('tracing/kafkajs', function() {
   this.timeout(config.getTestTimeout() * 2);
 
   globalAgent.setUpCleanUpHooks();
@@ -31,11 +33,15 @@ describe('tracing/kafkajs', function() {
       appPath: path.join(__dirname, 'producer'),
       port: 3216,
       useGlobalAgent: true
-    }).registerTestHooks();
+    });
     consumerControls = new ProcessControls({
       appPath: path.join(__dirname, 'consumer'),
       useGlobalAgent: true
-    }).registerTestHooks();
+    });
+    ProcessControls.setUpHooks(producerControls, consumerControls);
+
+    beforeEach(() => resetMessages(consumerControls));
+    afterEach(() => resetMessages(consumerControls));
 
     [false, 'sender', 'receiver'].forEach(error =>
       [false, true].forEach(useSendBatch =>
@@ -45,9 +51,9 @@ describe('tracing/kafkajs', function() {
     // registerTestSuite.bind(this)(false, false, false);
 
     function registerTestSuite(error, useSendBatch, useEachBatch) {
-      describe(`kafkajs (${useSendBatch ? 'sendBatch' : 'sendMessage'} => ${
-        useEachBatch ? 'eachBatch' : 'eachMessage'
-      }, error: ${error})`, () => {
+      describe(`kafkajs (${
+        useSendBatch ? 'sendBatch' : 'sendMessage'
+      } => ${useEachBatch ? 'eachBatch' : 'eachMessage'}, error: ${error})`, () => {
         it(`must trace sending and receiving and keep trace continuity (${
           useSendBatch ? 'sendBatch' : 'sendMessage'
         } => ${useEachBatch ? 'eachBatch' : 'eachMessage'}, error: ${error})`, () => {
@@ -109,12 +115,16 @@ describe('tracing/kafkajs', function() {
       port: 3216,
       useGlobalAgent: true,
       tracingEnabled: false
-    }).registerTestHooks();
+    });
     consumerControls = new ProcessControls({
       appPath: path.join(__dirname, 'consumer'),
       useGlobalAgent: true,
       tracingEnabled: false
-    }).registerTestHooks();
+    });
+    ProcessControls.setUpHooks(producerControls, consumerControls);
+
+    beforeEach(() => resetMessages(consumerControls));
+    afterEach(() => resetMessages(consumerControls));
 
     it('must not trace when disabled', () => {
       const parameters = { error: false, useSendBatch: false, useEachBatch: false };
@@ -157,8 +167,19 @@ describe('tracing/kafkajs', function() {
     return producerControls.sendRequest(req);
   }
 
+  function resetMessages(consumer) {
+    return consumer.sendRequest({
+      path: '/messages',
+      method: 'DELETE',
+      suppressTracing: true
+    });
+  }
+
   function getMessages(consumer) {
-    return consumer.sendRequest({ path: '/messages', suppressTracing: true });
+    return consumer.sendRequest({
+      path: '/messages',
+      suppressTracing: true
+    });
   }
 
   function checkMessages(messages, { error, useSendBatch, useEachBatch }) {
