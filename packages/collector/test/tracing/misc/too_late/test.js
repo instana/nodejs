@@ -15,11 +15,10 @@ const globalAgent = require('../../../globalAgent');
 
 const agentControls = globalAgent.instance;
 
-describe('tracing/too late', function() {
-  if (!supportedVersion(process.versions.node) || semver.lt(process.versions.node, '8.0.0')) {
-    return;
-  }
+const mochaSuiteFn =
+  supportedVersion(process.versions.node) && semver.gte(process.versions.node, '8.0.0') ? describe : describe.skip;
 
+mochaSuiteFn('tracing/too late', function() {
   this.timeout(config.getTestTimeout());
 
   globalAgent.setUpCleanUpHooks();

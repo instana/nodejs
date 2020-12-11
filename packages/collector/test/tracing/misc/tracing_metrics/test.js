@@ -11,11 +11,9 @@ const testUtils = require('../../../../../core/test/test_util');
 const ProcessControls = require('../../../test_util/ProcessControls');
 const globalAgent = require('../../../globalAgent');
 
-describe('tracing/tracing metrics', function() {
-  if (!supportedVersion(process.versions.node)) {
-    return;
-  }
+const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
+mochaSuiteFn('tracing/tracing metrics', function() {
   this.timeout(config.getTestTimeout() * 2);
   const retryTimeout = this.timeout() * 0.8;
 
@@ -26,7 +24,8 @@ describe('tracing/tracing metrics', function() {
     const controls = new ProcessControls({
       dirname: __dirname,
       useGlobalAgent: true
-    }).registerTestHooks();
+    });
+    ProcessControls.setUpHooks(controls);
 
     it('must send internal tracing metrics to agent', () =>
       controls
@@ -90,7 +89,8 @@ describe('tracing/tracing metrics', function() {
       env: {
         INSTANA_TRACER_METRICS_INTERVAL: 100
       }
-    }).registerTestHooks();
+    });
+    ProcessControls.setUpHooks(controls);
 
     it('must send internal tracing metrics every 100 ms', () =>
       controls
@@ -124,7 +124,8 @@ describe('tracing/tracing metrics', function() {
       dirname: __dirname,
       useGlobalAgent: true,
       tracingEnabled: false
-    }).registerTestHooks();
+    });
+    ProcessControls.setUpHooks(controls);
 
     it('must not collect any tracing metrics', () =>
       controls

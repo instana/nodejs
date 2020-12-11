@@ -32,7 +32,7 @@ let connected = false;
 
 const app = express();
 
-const receivedMessages = [];
+let receivedMessages = [];
 
 (async function connect() {
   await messageConsumer.connect();
@@ -148,6 +148,11 @@ app.get('/', (req, res) => {
 
 app.get('/messages', (req, res) => {
   res.send(receivedMessages);
+});
+
+app.delete('/messages', (req, res) => {
+  receivedMessages = [];
+  res.sendStatus(209);
 });
 
 app.listen(appPort, () => {

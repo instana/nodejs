@@ -7,11 +7,9 @@ const constants = require('@instana/core').tracing.constants;
 const config = require('../../../../../core/test/config');
 const testUtils = require('../../../../../core/test/test_util');
 
-describe('tracing/asyncAwait', function() {
-  if (!semver.satisfies(process.versions.node, '>= 8.2.1')) {
-    return;
-  }
+const mochaSuiteFn = semver.satisfies(process.versions.node, '>= 8.2.1') ? describe : describe.skip;
 
+mochaSuiteFn('tracing/asyncAwait', function() {
   const expressAsyncAwaitControls = require('./controls');
   const agentStubControls = require('../../../apps/agentStubControls');
   const expressControls = require('../../../apps/expressControls');

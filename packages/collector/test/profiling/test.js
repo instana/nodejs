@@ -7,11 +7,9 @@ const { delay, retry } = require('../../../core/test/test_util');
 const ProcessControls = require('../test_util/ProcessControls');
 const globalAgent = require('..//globalAgent');
 
-describe('profiling', function() {
-  if (!supportedVersion(process.versions.node)) {
-    return;
-  }
+const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
+mochaSuiteFn('profiling', function() {
   // profiles are send every two minutes, so we wait for 2.5 minutes
   const testTimeout = 3 * 60 * 1000; // 3 minutes
   const retryTimeout = 2 * 60 * 1000 + 30 * 1000; // 2.5 minutes

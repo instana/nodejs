@@ -18,14 +18,15 @@ const globalAgent = require('../../../../globalAgent');
 
 const bucketName = 'nodejs-tracer-test-bucket';
 
-// This suite requires GCP credentials and takes very long, thus it is skipped on CI.
-const mochaSuiteFn = process.env.CI ? describe.skip : describe;
+const mochaSuiteFn =
+  supportedVersion(process.versions.node) &&
+  // This suite requires GCP credentials and the app under test is not (yet) equipped to read them from an env var,
+  // thus it is skipped on CI. See ../pubsub for a mechanism to load credentials from an env var.
+  !process.env.CI
+    ? describe
+    : describe.skip;
 
 mochaSuiteFn('tracing/cloud/gcp/storage', function() {
-  if (!supportedVersion(process.versions.node)) {
-    return;
-  }
-
   this.timeout(config.getTestTimeout() * 2);
 
   globalAgent.setUpCleanUpHooks();
@@ -34,7 +35,8 @@ mochaSuiteFn('tracing/cloud/gcp/storage', function() {
   const controls = new ProcessControls({
     dirname: __dirname,
     useGlobalAgent: true
-  }).registerTestHooks();
+  });
+  ProcessControls.setUpHooks(controls);
 
   ['promise', 'callback'].forEach(apiVariant => {
     [

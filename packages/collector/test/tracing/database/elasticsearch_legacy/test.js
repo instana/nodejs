@@ -16,11 +16,9 @@ const globalAgent = require('../../../globalAgent');
 
 const ES_API_VERSION = '7.6';
 
-describe('tracing/elasticsearch (legacy client)', function() {
-  if (!supportedVersion(process.versions.node)) {
-    return;
-  }
+const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
+mochaSuiteFn('tracing/elasticsearch (legacy client)', function() {
   this.timeout(config.getTestTimeout());
 
   globalAgent.setUpCleanUpHooks();
@@ -32,7 +30,8 @@ describe('tracing/elasticsearch (legacy client)', function() {
     env: {
       ES_API_VERSION
     }
-  }).registerTestHooks();
+  });
+  ProcessControls.setUpHooks(controls);
 
   it('must report errors caused by missing indices', () =>
     get({

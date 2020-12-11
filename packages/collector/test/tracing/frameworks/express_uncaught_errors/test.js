@@ -11,26 +11,25 @@ const testUtils = require('../../../../../core/test/test_util');
 const ProcessControls = require('../../../test_util/ProcessControls');
 const globalAgent = require('../../../globalAgent');
 
-describe('tracing/express with uncaught errors', function() {
-  if (!supportedVersion(process.versions.node)) {
-    return;
-  }
+const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
+mochaSuiteFn('tracing/express with uncaught errors', function() {
   this.timeout(config.getTestTimeout());
 
   const agentControls = globalAgent.instance;
   globalAgent.setUpCleanUpHooks();
 
-  const expressUncaughtErrorsControls = new ProcessControls({
+  const controls = new ProcessControls({
     appPath: path.join(__dirname, 'app'),
     useGlobalAgent: true
-  }).registerTestHooks();
+  });
+  ProcessControls.setUpHooks(controls);
 
   [false, true].forEach(isRootSpan => registerTests(isRootSpan));
 
   function registerTests(isRootSpan) {
     it(`must record result of default express uncaught error function (root span: ${isRootSpan})`, () =>
-      expressUncaughtErrorsControls.sendRequest(createRequest(false, isRootSpan)).then(response => {
+      controls.sendRequest(createRequest(false, isRootSpan)).then(response => {
         expect(response.statusCode).to.equal(500);
 
         return testUtils.retry(() =>
@@ -38,7 +37,7 @@ describe('tracing/express with uncaught errors', function() {
             testUtils.expectAtLeastOneMatching(spans, [
               span => expect(span.n).to.equal('node.http.server'),
               span => expect(span.k).to.equal(constants.ENTRY),
-              span => expect(span.f.e).to.equal(String(expressUncaughtErrorsControls.getPid())),
+              span => expect(span.f.e).to.equal(String(controls.getPid())),
               span => expect(span.f.h).to.equal('agent-stub-uuid'),
               span => expect(span.error).to.not.exist,
               span => expect(span.ec).to.equal(1),
@@ -49,7 +48,7 @@ describe('tracing/express with uncaught errors', function() {
       }));
 
     it(`must record result of custom express uncaught error function (root span: ${isRootSpan})`, () =>
-      expressUncaughtErrorsControls.sendRequest(createRequest(true, isRootSpan)).then(response => {
+      controls.sendRequest(createRequest(true, isRootSpan)).then(response => {
         expect(response.statusCode).to.equal(400);
 
         return testUtils.retry(() =>
@@ -57,7 +56,7 @@ describe('tracing/express with uncaught errors', function() {
             testUtils.expectAtLeastOneMatching(spans, [
               span => expect(span.n).to.equal('node.http.server'),
               span => expect(span.k).to.equal(constants.ENTRY),
-              span => expect(span.f.e).to.equal(String(expressUncaughtErrorsControls.getPid())),
+              span => expect(span.f.e).to.equal(String(controls.getPid())),
               span => expect(span.f.h).to.equal('agent-stub-uuid'),
               span => expect(span.error).to.not.exist,
               span => expect(span.ec).to.equal(0),

@@ -12,11 +12,9 @@ const globalAgent = require('../../../globalAgent');
 
 const agentControls = globalAgent.instance;
 
-describe('tracing/kafka-node', function() {
-  if (!supportedVersion(process.versions.node)) {
-    return;
-  }
+const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
+mochaSuiteFn('tracing/kafka-node', function() {
   // Too many moving parts with Kafka involved. Increase the default timeout.
   // This is especially important since the Kafka client has an
   // exponential backoff implemented.
@@ -33,11 +31,12 @@ describe('tracing/kafka-node', function() {
         env: {
           PRODUCER_TYPE: producerType
         }
-      }).registerTestHooks();
+      });
       const consumerControls = new ProcessControls({
         appPath: path.join(__dirname, 'consumer'),
         useGlobalAgent: true
-      }).registerTestHooks();
+      });
+      ProcessControls.setUpHooks(producerControls, consumerControls);
 
       it(`must trace sending messages (producer type: ${producerType})`, () =>
         send(producerControls, 'someKey', 'someMessage').then(() =>
@@ -106,14 +105,15 @@ describe('tracing/kafka-node', function() {
         env: {
           PRODUCER_TYPE: 'plain'
         }
-      }).registerTestHooks();
+      });
       const consumerControls = new ProcessControls({
         appPath: path.join(__dirname, 'consumer'),
         useGlobalAgent: true,
         env: {
           CONSUMER_TYPE: consumerType
         }
-      }).registerTestHooks();
+      });
+      ProcessControls.setUpHooks(producerControls, consumerControls);
 
       it(`must trace receiving messages (consumer type: ${consumerType})`, () =>
         send(producerControls, 'someKey', 'someMessage').then(() =>

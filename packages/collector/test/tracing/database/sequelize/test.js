@@ -12,11 +12,9 @@ const globalAgent = require('../../../globalAgent');
 
 const agentControls = globalAgent.instance;
 
-describe('tracing/sequelize', function() {
-  if (!supportedVersion(process.versions.node)) {
-    return;
-  }
+const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
+mochaSuiteFn('tracing/sequelize', function() {
   this.timeout(config.getTestTimeout());
 
   globalAgent.setUpCleanUpHooks();
@@ -40,7 +38,8 @@ function registerTests(usePgNative) {
     dirname: __dirname,
     useGlobalAgent: true,
     env
-  }).registerTestHooks();
+  });
+  ProcessControls.setUpHooks(controls);
 
   it(`must fetch (pg-native: ${usePgNative})`, () =>
     controls

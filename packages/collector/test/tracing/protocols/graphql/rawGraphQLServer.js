@@ -209,6 +209,7 @@ amqp
   .then(() => {
     channel.prefetch(1);
     channel.consume(requestQueueName, msg => {
+      channel.ackAll();
       const requestContent = JSON.parse(msg.content.toString());
       if (!requestContent || typeof requestContent.query !== 'string') {
         channel.sendToQueue(msg.properties.replyTo, Buffer.from('You need to provide a query.'), {

@@ -4,15 +4,15 @@ const expect = require('chai').expect;
 const semver = require('semver');
 
 const config = require('../../../../../core/test/config');
+const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const testUtils = require('../../../../../core/test/test_util');
 const ProcessControls = require('../../../test_util/ProcessControls');
 const globalAgent = require('../../../globalAgent');
 
-describe('tracing/requireHook', function() {
-  if (semver.lt(process.versions.node, '8.0.0')) {
-    return;
-  }
+const mochaSuiteFn =
+  supportedVersion(process.versions.node) && semver.gte(process.versions.node, '8.0.0') ? describe : describe.skip;
 
+mochaSuiteFn('tracing/requireHook', function() {
   this.timeout(config.getTestTimeout());
 
   globalAgent.setUpCleanUpHooks();
@@ -21,7 +21,8 @@ describe('tracing/requireHook', function() {
   const controls = new ProcessControls({
     dirname: __dirname,
     useGlobalAgent: true
-  }).registerTestHooks();
+  });
+  ProcessControls.setUpHooks(controls);
 
   describe('stealthy require', () => {
     it('must not apply caching when not necessary / or when something is fishy', () =>

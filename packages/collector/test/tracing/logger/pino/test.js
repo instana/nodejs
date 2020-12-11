@@ -9,11 +9,9 @@ const testUtils = require('../../../../../core/test/test_util');
 const ProcessControls = require('../../../test_util/ProcessControls');
 const globalAgent = require('../../../globalAgent');
 
-describe('tracing/logger/pino', function() {
-  if (!supportedVersion(process.versions.node)) {
-    return;
-  }
+const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
+mochaSuiteFn('tracing/logger/pino', function() {
   this.timeout(config.getTestTimeout());
 
   globalAgent.setUpCleanUpHooks();
@@ -22,7 +20,8 @@ describe('tracing/logger/pino', function() {
   const controls = new ProcessControls({
     dirname: __dirname,
     useGlobalAgent: true
-  }).registerTestHooks();
+  });
+  ProcessControls.setUpHooks(controls);
 
   runTests(false);
   runTests(true);
@@ -54,9 +53,11 @@ describe('tracing/logger/pino', function() {
 
     it(`must trace fatal${suffix}`, () => runTest('fatal', useExpressPino, true, 'Fatal message - should be traced.'));
 
+    // prettier-ignore
     it(`must trace error object without message${suffix}`, () =>
       runTest('error-object-only', useExpressPino, true, 'This is an error.'));
 
+    // prettier-ignore
     it(`must not serialize random object${suffix}`, () =>
       runTest(
         'error-random-object-only',
@@ -66,6 +67,7 @@ describe('tracing/logger/pino', function() {
           'The Pino mergingObject argument will not be serialized by Instana for performance reasons.'
       ));
 
+    // prettier-ignore
     it(`must trace error object and string${suffix}`, () =>
       runTest(
         'error-object-and-string',
@@ -74,6 +76,7 @@ describe('tracing/logger/pino', function() {
         'This is an error. -- Error message - should be traced.'
       ));
 
+    // prettier-ignore
     it(`must trace random object and string${suffix}`, () =>
       runTest('error-random-object-and-string', useExpressPino, true, 'Error message - should be traced.'));
 
@@ -95,6 +98,7 @@ describe('tracing/logger/pino', function() {
         )
       ));
 
+    // prettier-ignore
     it(`must trace custom error${suffix}`, () =>
       runTest('custom-error', useExpressPino, true, 'Custom error level message - should be traced.'));
 

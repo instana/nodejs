@@ -19,107 +19,36 @@ const globalAgent = require('../../../globalAgent');
 
 const agentControls = globalAgent.instance;
 
-describe('tracing/graphql', function() {
-  if (!supportedVersion(process.versions.node) || semver.lt(process.versions.node, '8.5.0')) {
-    return;
-  }
+const mochaSuiteFn =
+  !supportedVersion(process.versions.node) || semver.lt(process.versions.node, '8.5.0') ? describe.skip : describe;
 
+mochaSuiteFn('tracing/graphql', function() {
   this.timeout(config.getTestTimeout() * 2);
 
   globalAgent.setUpCleanUpHooks();
 
-  const useAlias = Math.random >= 0.5;
+  describe('raw GraphQL', () => {
+    const { serverControls, clientControls } = createProcesses(false);
 
-  [false, true].forEach(apollo =>
-    [false, true].forEach(withError =>
-      [false, true].forEach(queryShorthand =>
-        registerQuerySuite.bind(this)({
-          apollo,
-          withError,
-          queryShorthand,
-          useAlias,
-          communicationProtocol: 'http'
-        })
-      )
-    )
-  );
-  // registerQuerySuite.bind(this)({
-  //   apollo: true,
-  //   withError: false,
-  //   queryShorthand: false,
-  //   useAlias: false,
-  //   communicationProtocol: 'http'
-  // });
-
-  // Test GraphQL over AMQP
-  registerQuerySuite.bind(this)({
-    apollo: false,
-    withError: false,
-    queryShorthand: false,
-    useAlias: false,
-    communicationProtocol: 'amqp'
+    registerAllQuerySuiteVariations(serverControls, clientControls, false, 'http');
+    registerAllQuerySuiteVariations(serverControls, clientControls, false, 'amqp');
+    registerMutationSuite(serverControls, clientControls, false);
+    registerSubscriptionOperationNotTracedSuite(serverControls, clientControls, false);
   });
 
-  [false, true].forEach(apollo => registerMutationSuite.bind(this)(apollo));
-  // registerMutationSuite.bind(this)(true);
-
-  [false, true].forEach(apollo => registerSubscriptionOperationNotTracedSuite.bind(this)(apollo));
-  // registerSubscriptionOperationNotTracedSuite.bind(this)(true);
+  describe('Apollo', () => {
+    const { serverControls, clientControls } = createProcesses(true);
+    registerAllQuerySuiteVariations(serverControls, clientControls, true, 'http');
+    registerMutationSuite(serverControls, clientControls, true);
+    registerSubscriptionOperationNotTracedSuite(serverControls, clientControls, true);
+  });
 
   ['http', 'graphql'].forEach(triggerUpdateVia =>
     registerSubscriptionUpdatesAreTracedSuite.bind(this)(triggerUpdateVia)
   );
-  // registerSubscriptionUpdatesAreTracedSuite.bind(this)('graphql');
-
-  describe('disabled', () => {
-    const serverControls = new ProcessControls({
-      appPath: path.join(__dirname, 'rawGraphQLServer'),
-      port: 3217,
-      useGlobalAgent: true,
-      tracingEnabled: false
-    }).registerTestHooks();
-    const clientControls = new ProcessControls({
-      appPath: path.join(__dirname, 'client'),
-      port: 3216,
-      useGlobalAgent: true,
-      tracingEnabled: false,
-      env: {
-        SERVER_PORT: serverControls.port
-      }
-    }).registerTestHooks();
-
-    it('should not trace when disabled', () =>
-      clientControls
-        .sendRequest({
-          method: 'POST',
-          path: '/value'
-        })
-        .then(response => {
-          checkQueryResponse('value', false, false, response);
-          return delay(config.getTestTimeout() / 4);
-        })
-        .then(() =>
-          agentControls.getSpans().then(spans => {
-            expect(spans).to.have.lengthOf(0);
-          })
-        ));
-  });
 
   describe('suppressed', () => {
-    const serverControls = new ProcessControls({
-      appPath: path.join(__dirname, 'rawGraphQLServer'),
-      port: 3217,
-      useGlobalAgent: true
-    }).registerTestHooks();
-    const clientControls = new ProcessControls({
-      appPath: path.join(__dirname, 'client'),
-      port: 3216,
-      useGlobalAgent: true,
-      env: {
-        SERVER_PORT: serverControls.port
-      }
-    }).registerTestHooks();
-
+    const { clientControls } = createProcesses(true);
     it('should not trace when suppressed', () =>
       clientControls
         .sendRequest({
@@ -140,6 +69,42 @@ describe('tracing/graphql', function() {
         ));
   });
 
+  describe('disabled', () => {
+    const serverControls = new ProcessControls({
+      appPath: path.join(__dirname, 'rawGraphQLServer'),
+      port: 3217,
+      useGlobalAgent: true,
+      tracingEnabled: false
+    });
+    const clientControls = new ProcessControls({
+      appPath: path.join(__dirname, 'client'),
+      port: 3216,
+      useGlobalAgent: true,
+      tracingEnabled: false,
+      env: {
+        SERVER_PORT: serverControls.port
+      }
+    });
+
+    ProcessControls.setUpHooks(serverControls, clientControls);
+
+    it('should not trace when disabled', () =>
+      clientControls
+        .sendRequest({
+          method: 'POST',
+          path: '/value'
+        })
+        .then(response => {
+          checkQueryResponse('value', false, false, response);
+          return delay(config.getTestTimeout() / 4);
+        })
+        .then(() =>
+          agentControls.getSpans().then(spans => {
+            expect(spans).to.have.lengthOf(0);
+          })
+        ));
+  });
+
   describe('individually disabled', () => {
     const serverControls = new ProcessControls({
       appPath: path.join(__dirname, 'rawGraphQLServer'),
@@ -148,7 +113,7 @@ describe('tracing/graphql', function() {
       env: {
         INSTANA_DISABLED_TRACERS: 'graphQL'
       }
-    }).registerTestHooks();
+    });
     const clientControls = new ProcessControls({
       appPath: path.join(__dirname, 'client'),
       port: 3216,
@@ -156,7 +121,9 @@ describe('tracing/graphql', function() {
       env: {
         SERVER_PORT: serverControls.port
       }
-    }).registerTestHooks();
+    });
+
+    ProcessControls.setUpHooks(serverControls, clientControls);
 
     it('should not trace graphql when that tracer is disabled individually but still trace all other calls', () =>
       clientControls
@@ -182,7 +149,26 @@ describe('tracing/graphql', function() {
   });
 });
 
-function registerQuerySuite({ apollo, withError, queryShorthand, useAlias, communicationProtocol }) {
+function registerAllQuerySuiteVariations(serverControls, clientControls, apollo, communicationProtocol) {
+  const useAlias = Math.random >= 0.5;
+  [false, true].forEach(withError =>
+    [false, true].forEach(queryShorthand =>
+      registerQuerySuite.bind(this)(serverControls, clientControls, {
+        apollo,
+        withError,
+        queryShorthand,
+        useAlias,
+        communicationProtocol
+      })
+    )
+  );
+}
+
+function registerQuerySuite(
+  serverControls,
+  clientControls,
+  { apollo, withError, queryShorthand, useAlias, communicationProtocol }
+) {
   const titleSuffix =
     `(${apollo ? 'apollo' : 'raw'}, ` +
     `${withError ? 'with error' : 'without error'}, ` +
@@ -190,38 +176,16 @@ function registerQuerySuite({ apollo, withError, queryShorthand, useAlias, commu
     `${useAlias ? 'alias' : 'no alias'}, ` +
     `over ${communicationProtocol})`;
   describe(`queries ${titleSuffix}`, function() {
-    const serverControls = apollo
-      ? new ProcessControls({
-          appPath: path.join(__dirname, 'apolloServer'),
-          port: 3217,
-          useGlobalAgent: true
-        })
-      : new ProcessControls({
-          appPath: path.join(__dirname, 'rawGraphQLServer'),
-          port: 3217,
-          useGlobalAgent: true
-        });
-    serverControls.registerTestHooks();
-    const clientControls = new ProcessControls({
-      appPath: path.join(__dirname, 'client'),
-      port: 3216,
-      useGlobalAgent: true,
-      env: {
-        SERVER_PORT: serverControls.port
-      }
-    }).registerTestHooks();
+    it(`must trace a query with a value resolver ${titleSuffix}`, () => testQuery('value'));
 
-    it(`must trace a query with a value resolver ${titleSuffix}`, () => testQuery(clientControls, 'value'));
+    it(`must trace a query with a promise resolver ${titleSuffix}`, () => testQuery('promise'));
 
-    it(`must trace a query with a promise resolver ${titleSuffix}`, () => testQuery(clientControls, 'promise'));
+    it(`must trace a query which resolves to an array of promises ${titleSuffix}`, () => testQuery('array'));
 
-    it(`must trace a query which resolves to an array of promises ${titleSuffix}`, () =>
-      testQuery(clientControls, 'array'));
-
-    it(`must trace a query with multiple entities ${titleSuffix}`, () => testQuery(clientControls, 'promise', true));
+    it(`must trace a query with multiple entities ${titleSuffix}`, () => testQuery('promise', true));
   });
 
-  function testQuery(clientControls, resolverType, multipleEntities) {
+  function testQuery(resolverType, multipleEntities) {
     if (apollo && communicationProtocol === 'amqp') {
       // We do trace this combination (Apollo & AMQP), but the Apollo test app does not connect to AMQP so this
       // scenario is not covered in the regular test suite.
@@ -265,33 +229,12 @@ function registerQuerySuite({ apollo, withError, queryShorthand, useAlias, commu
   }
 }
 
-function registerMutationSuite(apollo) {
+function registerMutationSuite(serverControls, clientControls, apollo) {
   describe(`mutations (${apollo ? 'apollo' : 'raw'})`, function() {
-    const serverControls = apollo
-      ? new ProcessControls({
-          appPath: path.join(__dirname, 'apolloServer'),
-          port: 3217,
-          useGlobalAgent: true
-        })
-      : new ProcessControls({
-          appPath: path.join(__dirname, 'rawGraphQLServer'),
-          port: 3217,
-          useGlobalAgent: true
-        });
-    serverControls.registerTestHooks();
-    const clientControls = new ProcessControls({
-      appPath: path.join(__dirname, 'client'),
-      port: 3216,
-      useGlobalAgent: true,
-      env: {
-        SERVER_PORT: serverControls.port
-      }
-    }).registerTestHooks();
-
-    it(`must trace a mutation (${apollo ? 'apollo' : 'raw'})`, () => testMutation(clientControls));
+    it(`must trace a mutation (${apollo ? 'apollo' : 'raw'})`, () => testMutation());
   });
 
-  function testMutation(clientControls) {
+  function testMutation() {
     const url = '/mutation';
     return clientControls
       .sendRequest({
@@ -305,34 +248,13 @@ function registerMutationSuite(apollo) {
   }
 }
 
-function registerSubscriptionOperationNotTracedSuite(apollo) {
+function registerSubscriptionOperationNotTracedSuite(serverControls, clientControls, apollo) {
   describe(`subscriptions (${apollo ? 'apollo' : 'raw'})`, function() {
-    const serverControls = apollo
-      ? new ProcessControls({
-          appPath: path.join(__dirname, 'apolloServer'),
-          port: 3217,
-          useGlobalAgent: true
-        })
-      : new ProcessControls({
-          appPath: path.join(__dirname, 'rawGraphQLServer'),
-          port: 3217,
-          useGlobalAgent: true
-        });
-    serverControls.registerTestHooks();
-    const clientControls = new ProcessControls({
-      appPath: path.join(__dirname, 'client'),
-      port: 3216,
-      useGlobalAgent: true,
-      env: {
-        SERVER_PORT: serverControls.port
-      }
-    }).registerTestHooks();
-
     it(`must not trace the subscription establishment (${apollo ? 'apollo' : 'raw'})`, () =>
-      testSubscriptionIsNotTraced(clientControls));
+      testSubscriptionIsNotTraced());
   });
 
-  function testSubscriptionIsNotTraced(clientControls) {
+  function testSubscriptionIsNotTraced() {
     return clientControls
       .sendRequest({
         method: 'POST',
@@ -348,13 +270,33 @@ function registerSubscriptionOperationNotTracedSuite(apollo) {
   }
 }
 
+function createProcesses(apollo) {
+  const serverControls = new ProcessControls({
+    appPath: path.join(__dirname, apollo ? 'apolloServer' : 'rawGraphQLServer'),
+    port: 3217,
+    useGlobalAgent: true
+  });
+  const clientControls = new ProcessControls({
+    appPath: path.join(__dirname, 'client'),
+    port: 3216,
+    useGlobalAgent: true,
+    env: {
+      SERVER_PORT: serverControls.port
+    }
+  });
+
+  ProcessControls.setUpHooks(serverControls, clientControls);
+
+  return { serverControls, clientControls };
+}
+
 function registerSubscriptionUpdatesAreTracedSuite(triggerUpdateVia) {
   describe(`subscriptions (via: ${triggerUpdateVia})`, function() {
     const serverControls = new ProcessControls({
       appPath: path.join(__dirname, 'apolloServer'),
       port: 3217,
       useGlobalAgent: true
-    }).registerTestHooks();
+    });
     // client 1
     const clientControls1 = new ProcessControls({
       appPath: path.join(__dirname, 'client'),
@@ -363,7 +305,7 @@ function registerSubscriptionUpdatesAreTracedSuite(triggerUpdateVia) {
       env: {
         SERVER_PORT: serverControls.port
       }
-    }).registerTestHooks();
+    });
     // client 2
     const clientControls2 = new ProcessControls({
       appPath: path.join(__dirname, 'client'),
@@ -372,7 +314,9 @@ function registerSubscriptionUpdatesAreTracedSuite(triggerUpdateVia) {
       env: {
         SERVER_PORT: serverControls.port
       }
-    }).registerTestHooks();
+    });
+
+    ProcessControls.setUpHooks(serverControls, clientControls1, clientControls2);
 
     it(`must trace updates for subscriptions (via: ${triggerUpdateVia})`, () =>
       testUpdatesInSubscriptionsAreTraced(clientControls1, clientControls2));

@@ -4,11 +4,9 @@ const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('../../../core/test/config');
 const expect = require('chai').expect;
 
-describe('agentStub', function() {
-  if (!supportedVersion(process.versions.node)) {
-    return;
-  }
+const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
+mochaSuiteFn('agentStub', function() {
   const agentStubControls = require('./agentStubControls');
 
   this.timeout(config.getTestTimeout());

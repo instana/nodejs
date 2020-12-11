@@ -19,11 +19,10 @@ const babelAppDir = path.join(__dirname, '../../../apps/babel-typescript');
 const babelLibDir = path.join(babelAppDir, 'lib');
 const agentControls = globalAgent.instance;
 
-describe('tracing a babel/typescript setup', function() {
-  if (!supportedVersion(process.versions.node) || semver.lt(process.versions.node, '8.0.0')) {
-    return;
-  }
+const mochaSuiteFn =
+  supportedVersion(process.versions.node) && semver.gte(process.versions.node, '8.0.0') ? describe : describe.skip;
 
+mochaSuiteFn('tracing a babel/typescript setup', function() {
   this.timeout(60000);
 
   globalAgent.setUpCleanUpHooks();
@@ -57,7 +56,8 @@ describe('tracing a babel/typescript setup', function() {
   const controls = new ProcessControls({
     appPath: path.join(__dirname, '../../../apps/babel-typescript'),
     useGlobalAgent: true
-  }).registerTestHooks();
+  });
+  ProcessControls.setUpHooks(controls);
 
   describe('@instana/collector used in a babel-transpiled typescript app', function() {
     it('should trace when imported with workaround according to our docs', () =>

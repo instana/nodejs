@@ -13,23 +13,23 @@ const globalAgent = require('../../../globalAgent');
 
 const agentControls = globalAgent.instance;
 
-describe('tracing/apollo-federation', function() {
-  if (!supportedVersion(process.versions.node) || semver.lt(process.versions.node, '8.5.0')) {
-    return;
-  }
+const mochaSuiteFn =
+  !supportedVersion(process.versions.node) || semver.lt(process.versions.node, '8.5.0') ? describe.skip : describe;
 
+mochaSuiteFn('tracing/apollo-federation', function() {
   this.timeout(config.getTestTimeout() * 2);
 
   globalAgent.setUpCleanUpHooks();
 
-  [false, true].forEach(withError => registerQuerySuite.bind(this)({ withError }));
+  const allControls = startAllProcesses();
+
+  [false, true].forEach(withError => registerQuerySuite.bind(this)(allControls, { withError }));
   // registerQuerySuite.bind(this)({ withError: false });
 });
 
-function registerQuerySuite(testConfig) {
+function registerQuerySuite(allControls, testConfig) {
   const { withError } = testConfig;
   describe(`queries (with error: ${withError})`, function() {
-    const allControls = startAllProcesses();
     it(`must trace a query (with error: ${withError})`, () => testQuery(allControls, testConfig));
   });
 }
@@ -57,22 +57,22 @@ function startAllProcesses() {
     appPath: path.join(__dirname, 'services', 'accounts'),
     port: 4200,
     useGlobalAgent: true
-  }).registerTestHooks();
+  });
   const inventoryServiceControls = new ProcessControls({
     appPath: path.join(__dirname, 'services', 'inventory'),
     port: 4201,
     useGlobalAgent: true
-  }).registerTestHooks();
+  });
   const productsServiceControls = new ProcessControls({
     appPath: path.join(__dirname, 'services', 'products'),
     port: 4202,
     useGlobalAgent: true
-  }).registerTestHooks();
+  });
   const reviewsServiceControls = new ProcessControls({
     appPath: path.join(__dirname, 'services', 'reviews'),
     port: 4203,
     useGlobalAgent: true
-  }).registerTestHooks();
+  });
 
   const gatewayControls = new ProcessControls({
     appPath: path.join(__dirname, 'gateway'),
@@ -84,7 +84,7 @@ function startAllProcesses() {
       SERVICE_PORT_PRODUCTS: productsServiceControls.port,
       SERVICE_PORT_REVIEWS: reviewsServiceControls.port
     }
-  }).registerTestHooks();
+  });
 
   const clientControls = new ProcessControls({
     appPath: path.join(__dirname, 'client'),
@@ -93,7 +93,27 @@ function startAllProcesses() {
     env: {
       SERVER_PORT: gatewayControls.port
     }
-  }).registerTestHooks();
+  });
+
+  // Not using ProcessControls.setUpHooks(...) here because it starts all processes simultaneously, but for Apollo
+  // Federation it is necessary to start the processes sequentially and in order.
+
+  before(async () => {
+    await accountServiceControls.startAndWaitForAgentConnection();
+    await inventoryServiceControls.startAndWaitForAgentConnection();
+    await productsServiceControls.startAndWaitForAgentConnection();
+    await reviewsServiceControls.startAndWaitForAgentConnection();
+    await gatewayControls.startAndWaitForAgentConnection();
+    await clientControls.startAndWaitForAgentConnection();
+  });
+  after(async () => {
+    await accountServiceControls.stop();
+    await inventoryServiceControls.stop();
+    await productsServiceControls.stop();
+    await reviewsServiceControls.stop();
+    await gatewayControls.stop();
+    await clientControls.stop();
+  });
 
   return {
     accountServiceControls,

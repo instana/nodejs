@@ -13,11 +13,9 @@ const globalAgent = require('../../globalAgent');
 
 const waitForSpans = process.env.CI ? 1000 : 200;
 
-describe('tracing/sdk', function() {
-  if (!supportedVersion(process.versions.node)) {
-    return;
-  }
+const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
+mochaSuiteFn('tracing/sdk', function() {
   this.timeout(config.getTestTimeout());
 
   globalAgent.setUpCleanUpHooks();
@@ -27,7 +25,9 @@ describe('tracing/sdk', function() {
     const controls = new ProcessControls({
       dirname: __dirname,
       useGlobalAgent: true
-    }).registerTestHooks();
+    });
+
+    ProcessControls.setUpHooks(controls);
 
     ['callback', 'promise'].forEach(function(apiType) {
       registerSuite.bind(this)(apiType);
@@ -317,7 +317,9 @@ describe('tracing/sdk', function() {
       dirname: __dirname,
       tracingEnabled: false,
       useGlobalAgent: true
-    }).registerTestHooks();
+    });
+
+    ProcessControls.setUpHooks(controls);
 
     ['callback', 'promise'].forEach(function(apiType) {
       registerSuite.bind(this)(apiType);
@@ -330,6 +332,12 @@ describe('tracing/sdk', function() {
           return retry(() => {
             const ipcMessages = controls.getIpcMessages();
             checkForErrors(ipcMessages);
+            if (ipcMessages.length !== 1) {
+              // eslint-disable-next-line no-console
+              console.log(
+                `Wrong number of IPC messages ${ipcMessages.length}: ${JSON.stringify(ipcMessages, null, 2)}.`
+              );
+            }
             expect(ipcMessages.length).to.equal(1);
             expect(ipcMessages[0]).to.equal('done: start-entry');
           })
