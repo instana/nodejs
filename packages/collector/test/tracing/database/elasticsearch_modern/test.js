@@ -71,8 +71,8 @@ mochaSuiteFn('tracing/elasticsearch (modern client)', function() {
       function() {
         before(done => installLibraryVersion(esClientVersionRangeUnderTest, done));
 
-        const agentControls = globalAgent.instance;
         globalAgent.setUpCleanUpHooks();
+        const agentControls = globalAgent.instance;
 
         const controls = new ProcessControls({
           dirname: __dirname,

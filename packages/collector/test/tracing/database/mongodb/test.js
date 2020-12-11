@@ -19,11 +19,11 @@ describe('tracing/mongodb', function() {
     return;
   }
 
-  const agentControls = globalAgent.instance;
-  globalAgent.setUpCleanUpHooks();
-
   const timeout = USE_ATLAS ? config.getTestTimeout() * 2 : config.getTestTimeout();
   this.timeout(timeout);
+
+  globalAgent.setUpCleanUpHooks();
+  const agentControls = globalAgent.instance;
 
   const controls = new ProcessControls({
     dirname: __dirname,

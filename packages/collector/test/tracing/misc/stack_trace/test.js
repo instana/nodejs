@@ -12,8 +12,8 @@ describe('tracing/stackTraces', function() {
     return;
   }
 
-  const agentControls = globalAgent.instance;
   globalAgent.setUpCleanUpHooks();
+  const agentControls = globalAgent.instance;
 
   const expressProxyControls = require('../../protocols/http/proxy/expressProxyControls');
   const expressControls = require('../../../apps/expressControls');

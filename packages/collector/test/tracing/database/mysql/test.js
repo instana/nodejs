@@ -16,10 +16,10 @@ describe('tracing/mysql', function() {
     return;
   }
 
-  const agentControls = globalAgent.instance;
-  globalAgent.setUpCleanUpHooks();
-
   this.timeout(config.getTestTimeout());
+
+  globalAgent.setUpCleanUpHooks();
+  const agentControls = globalAgent.instance;
 
   ['mysql', 'mysql-cluster', 'mysql2', 'mysql2/promises'].forEach(driverMode => {
     [false, true].forEach(function(useExecute) {

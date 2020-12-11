@@ -11,13 +11,14 @@ describe('actions/getModuleAnalysis', function() {
 
   this.timeout(config.getTestTimeout());
 
+  globalAgent.setUpCleanUpHooks();
+  const agentControls = globalAgent.instance;
+
   expressControls.registerTestHooks({
     useGlobalAgent: true
   });
 
-  const agentControls = globalAgent.instance;
   beforeEach(() => agentControls.waitUntilAppIsCompletelyInitialized(expressControls.getPid()));
-  globalAgent.setUpCleanUpHooks();
 
   it('must receive module analysis', () => {
     const messageId = 'a';

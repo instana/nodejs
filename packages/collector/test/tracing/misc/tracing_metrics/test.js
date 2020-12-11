@@ -19,8 +19,8 @@ describe('tracing/tracing metrics', function() {
   this.timeout(config.getTestTimeout() * 2);
   const retryTimeout = this.timeout() * 0.8;
 
-  const agentControls = globalAgent.instance;
   globalAgent.setUpCleanUpHooks();
+  const agentControls = globalAgent.instance;
 
   describe('when tracing is enabled', function() {
     const controls = new ProcessControls({

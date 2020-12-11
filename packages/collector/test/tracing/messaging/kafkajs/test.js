@@ -20,8 +20,8 @@ describe('tracing/kafkajs', function() {
 
   this.timeout(config.getTestTimeout() * 2);
 
-  const agentControls = globalAgent.instance;
   globalAgent.setUpCleanUpHooks();
+  const agentControls = globalAgent.instance;
 
   let producerControls;
   let consumerControls;

@@ -17,10 +17,8 @@ describe('metrics/healthchecks', function() {
 
   this.timeout(config.getTestTimeout());
 
-  const start = new Date().getTime();
-
-  const agentControls = globalAgent.instance;
   globalAgent.setUpCleanUpHooks();
+  const agentControls = globalAgent.instance;
 
   expressControls.registerTestHooks({
     useGlobalAgent: true,
@@ -28,6 +26,8 @@ describe('metrics/healthchecks', function() {
   });
 
   beforeEach(() => agentControls.waitUntilAppIsCompletelyInitialized(expressControls.getPid()));
+
+  const start = new Date().getTime();
 
   it('must report health status', () => {
     let healthyTimestamp;

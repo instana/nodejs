@@ -16,10 +16,10 @@ describe('tracing/express with uncaught errors', function() {
     return;
   }
 
+  this.timeout(config.getTestTimeout());
+
   const agentControls = globalAgent.instance;
   globalAgent.setUpCleanUpHooks();
-
-  this.timeout(config.getTestTimeout());
 
   const expressUncaughtErrorsControls = new ProcessControls({
     appPath: path.join(__dirname, 'app'),

@@ -19,8 +19,8 @@ describe('uncaught exception reporting disabled', function() {
 
   this.timeout(config.getTestTimeout());
 
-  const agentControls = globalAgent.instance;
   globalAgent.setUpCleanUpHooks();
+  const agentControls = globalAgent.instance;
 
   const serverControls = new ProcessControls({
     appPath: path.join(__dirname, 'apps', 'server'),

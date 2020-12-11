@@ -14,10 +14,10 @@ describe('tracing/native-promise', function() {
     return;
   }
 
-  const agentControls = globalAgent.instance;
-  globalAgent.setUpCleanUpHooks();
-
   this.timeout(config.getTestTimeout());
+
+  globalAgent.setUpCleanUpHooks();
+  const agentControls = globalAgent.instance;
 
   const promiseControls = new ProcessControls({
     dirname: __dirname,
