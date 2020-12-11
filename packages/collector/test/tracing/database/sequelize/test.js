@@ -17,9 +17,9 @@ describe('tracing/sequelize', function() {
     return;
   }
 
-  globalAgent.setUpCleanUpHooks();
-
   this.timeout(config.getTestTimeout());
+
+  globalAgent.setUpCleanUpHooks();
 
   describe('with pg', function() {
     registerTests.call(this, false);

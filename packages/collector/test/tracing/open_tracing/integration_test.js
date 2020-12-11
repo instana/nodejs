@@ -10,8 +10,8 @@ const globalAgent = require('../../globalAgent');
 describe('tracing/opentracing/integration', function() {
   this.timeout(config.getTestTimeout());
 
-  const agentControls = globalAgent.instance;
   globalAgent.setUpCleanUpHooks();
+  const agentControls = globalAgent.instance;
 
   const expressOpentracingControls = require('./controls');
 

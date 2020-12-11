@@ -16,8 +16,8 @@ describe('tracing/logger/pino', function() {
 
   this.timeout(config.getTestTimeout());
 
-  const agentControls = globalAgent.instance;
   globalAgent.setUpCleanUpHooks();
+  const agentControls = globalAgent.instance;
 
   const controls = new ProcessControls({
     dirname: __dirname,

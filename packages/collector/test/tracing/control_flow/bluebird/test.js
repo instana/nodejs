@@ -14,10 +14,10 @@ describe('tracing/bluebird', function() {
     return;
   }
 
-  const agentControls = globalAgent.instance;
-  globalAgent.setUpCleanUpHooks();
-
   this.timeout(config.getTestTimeout());
+
+  globalAgent.setUpCleanUpHooks();
+  const agentControls = globalAgent.instance;
 
   const bluebirdControls = new ProcessControls({
     dirname: __dirname,

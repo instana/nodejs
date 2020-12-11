@@ -12,8 +12,9 @@ describe('tracing/api', function() {
     return;
   }
 
-  globalAgent.setUpCleanUpHooks();
   this.timeout(config.getTestTimeout());
+
+  globalAgent.setUpCleanUpHooks();
 
   describe('when tracing is enabled', () => {
     const controls = new ProcessControls({

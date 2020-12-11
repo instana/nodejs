@@ -14,10 +14,10 @@ describe('tracing/q', function() {
     return;
   }
 
-  const agentControls = globalAgent.instance;
-  globalAgent.setUpCleanUpHooks();
-
   this.timeout(config.getTestTimeout());
+
+  globalAgent.setUpCleanUpHooks();
+  const agentControls = globalAgent.instance;
 
   const appControls = new ProcessControls({
     dirname: __dirname,

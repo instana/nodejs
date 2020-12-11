@@ -15,8 +15,8 @@ describe('http with proxy', function() {
 
   this.timeout(config.getTestTimeout());
 
-  const agentControls = globalAgent.instance;
   globalAgent.setUpCleanUpHooks();
+  const agentControls = globalAgent.instance;
 
   const expressProxyControls = require('./expressProxyControls');
   const expressControls = require('../../../../apps/expressControls');

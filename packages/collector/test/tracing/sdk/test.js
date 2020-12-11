@@ -20,8 +20,8 @@ describe('tracing/sdk', function() {
 
   this.timeout(config.getTestTimeout());
 
-  const agentControls = globalAgent.instance;
   globalAgent.setUpCleanUpHooks();
+  const agentControls = globalAgent.instance;
 
   describe('when tracing is enabled', () => {
     const controls = new ProcessControls({

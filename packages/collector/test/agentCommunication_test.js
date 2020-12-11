@@ -9,8 +9,8 @@ const globalAgent = require('./globalAgent');
 describe('agentCommunication', function() {
   this.timeout(config.getTestTimeout());
 
-  const agentControls = globalAgent.instance;
   globalAgent.setUpCleanUpHooks();
+  const agentControls = globalAgent.instance;
 
   const expressControls = require('./apps/expressControls');
   expressControls.registerTestHooks({ useGlobalAgent: true });

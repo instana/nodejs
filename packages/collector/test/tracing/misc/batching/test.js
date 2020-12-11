@@ -23,9 +23,9 @@ describe('tracing/batching', function() {
     return;
   }
 
-  globalAgent.setUpCleanUpHooks();
-
   this.timeout(config.getTestTimeout());
+
+  globalAgent.setUpCleanUpHooks();
 
   describe('enabled via env var', function() {
     const agentControls = globalAgent.instance;

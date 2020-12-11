@@ -42,8 +42,8 @@ const retryTime = config.getTestTimeout() * 2;
 mochaSuiteFn('tracing/cloud/gcp/pubsub', function() {
   this.timeout(config.getTestTimeout() * 3);
 
-  const agentControls = globalAgent.instance;
   globalAgent.setUpCleanUpHooks();
+  const agentControls = globalAgent.instance;
 
   describe('tracing enabled, no suppression', function() {
     const topicName = defaultTopicName;

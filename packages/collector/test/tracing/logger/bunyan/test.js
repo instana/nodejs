@@ -15,8 +15,8 @@ describe('tracing/logger/bunyan', function() {
 
   this.timeout(config.getTestTimeout());
 
-  const agentControls = globalAgent.instance;
   globalAgent.setUpCleanUpHooks();
+  const agentControls = globalAgent.instance;
 
   const appControls = require('./controls');
 

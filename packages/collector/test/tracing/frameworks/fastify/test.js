@@ -15,10 +15,10 @@ describe('tracing/fastify', function() {
     return;
   }
 
+  this.timeout(config.getTestTimeout());
+
   const agentControls = globalAgent.instance;
   globalAgent.setUpCleanUpHooks();
-
-  this.timeout(config.getTestTimeout());
 
   const controls = new ProcessControls({
     appPath: path.join(__dirname, 'app'),

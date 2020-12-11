@@ -26,10 +26,10 @@ mochaSuiteFn('tracing/cloud/gcp/storage', function() {
     return;
   }
 
-  const agentControls = globalAgent.instance;
-  globalAgent.setUpCleanUpHooks();
-
   this.timeout(config.getTestTimeout() * 2);
+
+  globalAgent.setUpCleanUpHooks();
+  const agentControls = globalAgent.instance;
 
   const controls = new ProcessControls({
     dirname: __dirname,

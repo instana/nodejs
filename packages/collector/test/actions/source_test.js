@@ -12,13 +12,14 @@ describe('actions/source', function() {
 
   this.timeout(config.getTestTimeout());
 
+  globalAgent.setUpCleanUpHooks();
+  const agentControls = globalAgent.instance;
+
   expressControls.registerTestHooks({
     useGlobalAgent: true
   });
 
-  const agentControls = globalAgent.instance;
   beforeEach(() => agentControls.waitUntilAppIsCompletelyInitialized(expressControls.getPid()));
-  globalAgent.setUpCleanUpHooks();
 
   it('retrieve fully qualified source file', () => {
     const messageId = 'a';
