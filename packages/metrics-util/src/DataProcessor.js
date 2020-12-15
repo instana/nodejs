@@ -97,8 +97,12 @@ class DataProcessor extends EventEmitter {
   }
 
   canSkipRecompilation() {
-    // subclassed can override this to disable recompilation skipping (important for sources for derived entities)
-    return true;
+    // See getUncompressedData for details on skipping recompilation.
+
+    // Subclassed can override this to disable recompilation skipping completely (important for sources for derived
+    // entities). The default behaviour is: Skipping recompilation is allowed if there is no or an empty
+    // compressionExcludeList. This is what most processors should do.
+    return !this.compressionExcludeList || this.compressionExcludeList.length === 0;
   }
 
   getUncompressedData(withSkip) {

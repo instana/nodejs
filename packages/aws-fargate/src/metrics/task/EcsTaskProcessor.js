@@ -21,10 +21,6 @@ class EcsTaskProcessor extends DataProcessor {
     return this.entityId;
   }
 
-  canSkipRecompilation() {
-    return false;
-  }
-
   processData(rawDataPerSource) {
     const metadata = rawDataPerSource.snapshot;
     return {
