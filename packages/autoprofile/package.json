@@ -23,7 +23,7 @@
     "install": "node node-gyp-fallback.js",
     "test": "npm run test:mocha",
     "test:debug": "WITH_STDOUT=true npm run test:mocha",
-    "test:mocha": "mocha --recursive",
+    "test:mocha": "mocha --sort  --reporter mocha-multi --reporter-options spec=-,xunit=../../test-results/autoprofile/results.xml --recursive",
     "lint": "eslint lib test",
     "verify": "npm run lint && npm test",
     "prettier": "prettier --write 'lib/**/*.js' 'test/**/*.js'"

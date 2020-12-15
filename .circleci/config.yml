@@ -147,6 +147,8 @@ shared: &shared
         ulimit -c unlimited
         # run all tests
         npm test
+    - store_test_results:
+        path: test-results
     - run:
         # save core dumps in case there have been any
         command: |
@@ -167,6 +169,8 @@ shared: &shared
         when: on_fail
     - store_artifacts:
         path: /tmp/core_dumps
+    - store_artifacts:
+        path: test-results
 
     - save_cache:
         paths:
