@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.110.0
+- [Google Cloud Run]: Exclude some revision instance data from compression.
+
 ## 1.109.0
 - Improve user experience around native add-on dependencies of `@instana/collector`:
     - Add precompiled archives for some combination of OS, architecture, libc-flavour and ABI-version.
