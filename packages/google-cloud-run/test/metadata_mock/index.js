@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 /* eslint-disable consistent-return */
 
 'use strict';

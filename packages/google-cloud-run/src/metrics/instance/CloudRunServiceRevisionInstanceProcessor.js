@@ -10,7 +10,12 @@ const configuration = process.env.K_CONFIGURATION;
 
 class CloudRunServiceRevisionInstanceProcessor extends DataProcessor {
   constructor(projectDataSource, instanceDataSource) {
-    super('com.instana.plugin.gcp.run.revision.instance');
+    super('com.instana.plugin.gcp.run.revision.instance', [
+      // compressionExcludeList:
+      ['revision'],
+      ['numericProjectId'],
+      ['region']
+    ]);
     this.addSource('project', projectDataSource);
     this.addSource('instance', instanceDataSource);
   }
