@@ -1,5 +1,8 @@
 # Changelog
 
+## Unreleased
+- Fix Node.js 6 compatibility by downgrading from `tar` dependency of `@instana/shared-metrics` from `tar@6` to `tar@5`.
+
 ## 1.110.0
 - [Google Cloud Run]: Exclude some revision instance data from compression.
 
