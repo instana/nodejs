@@ -1,6 +1,6 @@
 #!groovy
 
-SLACK_CHANNEL = "brewery-google-cloud-run-functions"
+SLACK_CHANNEL = "dev-notification"
 DOCKER_REGISTRY_PUBLIC = "docker.io"
 REGISTRY_PATH_PUBLIC = "${DOCKER_REGISTRY_PUBLIC}/instana/google-cloud-run-nodejs"
 DOCKER_REGISTRY_INTERNAL = "containers.instana.io"

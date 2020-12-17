@@ -1,6 +1,6 @@
 #!groovy
 
-SLACK_CHANNEL = "team-node"
+SLACK_CHANNEL = "dev-notification"
 
 node {
   stage ('Checkout Git Repo') {
