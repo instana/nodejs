@@ -72,7 +72,19 @@ app.get('/error-object-only', (req, res) => {
 });
 
 app.get('/error-random-object-only', (req, res) => {
-  plainVanillaPino.error({ foo: { bar: 'baz' } });
+  plainVanillaPino.error({
+    payload: {
+      statusCode: 404,
+      error: 'Not Found',
+      very: {
+        deeply: {
+          nested: {
+            data: 'that we will not serialize'
+          }
+        }
+      }
+    }
+  });
   finish(res);
 });
 
@@ -128,7 +140,19 @@ app.get('/express-pino-error-object-only', (req, res) => {
 });
 
 app.get('/express-pino-error-random-object-only', (req, res) => {
-  req.log.error({ foo: { bar: 'baz' } });
+  req.log.error({
+    payload: {
+      statusCode: 404,
+      error: 'Not Found',
+      very: {
+        deeply: {
+          nested: {
+            data: 'that we will not serialize'
+          }
+        }
+      }
+    }
+  });
   finish(res);
 });
 
