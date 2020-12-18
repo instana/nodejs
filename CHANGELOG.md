@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.110.2
 - Improve support for pino log calls that only receive a merging object argument.
 
 ## 1.110.1
