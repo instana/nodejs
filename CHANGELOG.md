@@ -1,5 +1,8 @@
 # Changelog
 
+## Unreleased
+- Improve support for pino log calls that only receive a merging object argument.
+
 ## 1.110.1
 - Fix Node.js 6 compatibility by downgrading `tar` dependency of `@instana/shared-metrics` from `tar@6` to `tar@5`.
 

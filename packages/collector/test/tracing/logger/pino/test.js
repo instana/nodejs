@@ -38,9 +38,7 @@ mochaSuiteFn('tracing/logger/pino', function() {
               span => expect(span.f.e).to.equal(String(controls.getPid())),
               span => expect(span.f.h).to.equal('agent-stub-uuid')
             ]);
-            testUtils.expectAtLeastOneMatching(spans, span => {
-              checkNextExitSpan(span, entrySpan);
-            });
+            testUtils.expectAtLeastOneMatching(spans, checkNextExitSpan(entrySpan));
             const pinoSpans = testUtils.getSpansByName(spans, 'log.pino');
             expect(pinoSpans).to.be.empty;
           })
@@ -58,14 +56,12 @@ mochaSuiteFn('tracing/logger/pino', function() {
       runTest('error-object-only', useExpressPino, true, 'This is an error.'));
 
     // prettier-ignore
-    it(`must not serialize random object${suffix}`, () =>
+    it(`should serialize random objects one level deep${suffix}`, () =>
       runTest(
         'error-random-object-only',
         useExpressPino,
         true,
-        'Log call without message. ' +
-          'The Pino mergingObject argument will not be serialized by Instana for performance reasons.'
-      ));
+        ['{ payload: ', 'statusCode: 404', "error: 'Not Found'", 'very: [Object']));
 
     // prettier-ignore
     it(`must trace error object and string${suffix}`, () =>
@@ -89,9 +85,7 @@ mochaSuiteFn('tracing/logger/pino', function() {
               span => expect(span.f.e).to.equal(String(controls.getPid())),
               span => expect(span.f.h).to.equal('agent-stub-uuid')
             ]);
-            testUtils.expectAtLeastOneMatching(spans, span => {
-              checkNextExitSpan(span, entrySpan);
-            });
+            testUtils.expectAtLeastOneMatching(spans, checkNextExitSpan(entrySpan));
             const pinoSpans = testUtils.getSpansByName(spans, 'log.pino');
             expect(pinoSpans).to.be.empty;
           })
@@ -119,12 +113,8 @@ mochaSuiteFn('tracing/logger/pino', function() {
             span => expect(span.f.e).to.equal(String(controls.getPid())),
             span => expect(span.f.h).to.equal('agent-stub-uuid')
           ]);
-          testUtils.expectAtLeastOneMatching(spans, span => {
-            checkPinoSpan(span, entrySpan, expectErroneous, message);
-          });
-          testUtils.expectAtLeastOneMatching(spans, span => {
-            checkNextExitSpan(span, entrySpan);
-          });
+          testUtils.expectAtLeastOneMatching(spans, checkPinoSpan(entrySpan, expectErroneous, message));
+          testUtils.expectAtLeastOneMatching(spans, checkNextExitSpan(entrySpan));
         })
       )
     );
@@ -134,27 +124,38 @@ mochaSuiteFn('tracing/logger/pino', function() {
     return controls.sendRequest({ path: `/${(useExpressPino ? 'express-pino-' : '') + level}` });
   }
 
-  function checkPinoSpan(span, parent, expectErroneous, message) {
-    expect(span.t).to.equal(parent.t);
-    expect(span.p).to.equal(parent.s);
-    expect(span.k).to.equal(constants.EXIT);
-    expect(span.f.e).to.equal(String(controls.getPid()));
-    expect(span.f.h).to.equal('agent-stub-uuid');
-    expect(span.n).to.equal('log.pino');
-    expect(span.async).to.not.exist;
-    expect(span.error).to.not.exist;
-    expect(span.ec).to.equal(expectErroneous ? 1 : 0);
-    expect(span.data).to.exist;
-    expect(span.data.log).to.exist;
-    expect(span.data.log.message).to.equal(message);
+  function checkPinoSpan(parent, expectErroneous, message) {
+    const expectations = [
+      span => expect(span.t).to.equal(parent.t),
+      span => expect(span.p).to.equal(parent.s),
+      span => expect(span.k).to.equal(constants.EXIT),
+      span => expect(span.f.e).to.equal(String(controls.getPid())),
+      span => expect(span.f.h).to.equal('agent-stub-uuid'),
+      span => expect(span.n).to.equal('log.pino'),
+      span => expect(span.async).to.not.exist,
+      span => expect(span.error).to.not.exist,
+      span => expect(span.ec).to.equal(expectErroneous ? 1 : 0),
+      span => expect(span.data).to.exist,
+      span => expect(span.data.log).to.exist
+    ];
+    if (Array.isArray(message)) {
+      message.forEach(messageSubstring =>
+        expectations.push(span => expect(span.data.log.message).to.include(messageSubstring))
+      );
+    } else {
+      expectations.push(span => expect(span.data.log.message).to.equal(message));
+    }
+    return expectations;
   }
 
-  function checkNextExitSpan(span, parent) {
-    expect(span.t).to.equal(parent.t);
-    expect(span.p).to.equal(parent.s);
-    expect(span.k).to.equal(constants.EXIT);
-    expect(span.f.e).to.equal(String(controls.getPid()));
-    expect(span.f.h).to.equal('agent-stub-uuid');
-    expect(span.n).to.equal('node.http.client');
+  function checkNextExitSpan(parent) {
+    return [
+      span => expect(span.t).to.equal(parent.t),
+      span => expect(span.p).to.equal(parent.s),
+      span => expect(span.k).to.equal(constants.EXIT),
+      span => expect(span.f.e).to.equal(String(controls.getPid())),
+      span => expect(span.f.h).to.equal('agent-stub-uuid'),
+      span => expect(span.n).to.equal('node.http.client')
+    ];
   }
 });
