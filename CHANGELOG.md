@@ -1,5 +1,8 @@
 # Changelog
 
+## Unreleased
+- Remove polyfill for Buffer.fromString (for Node.js versions up to 4.5 which we no longer support).
+
 ## 1.110.2
 - Improve support for pino log calls that only receive a merging object argument.
 

@@ -1,7 +1,6 @@
 'use strict';
 
 const atMostOnce = require('@instana/core').util.atMostOnce;
-const buffer = require('@instana/core').util.buffer;
 const fs = require('fs');
 const http = require('@instana/core').uninstrumentedHttp.http;
 const pathUtil = require('path');
@@ -60,7 +59,7 @@ exports.announceNodeCollector = function announceNodeCollector(cb) {
   }
 
   let payloadStr = JSON.stringify(payload);
-  const contentLength = buffer.fromString(payloadStr, 'utf8').length + paddingForInodeAndFileDescriptor;
+  const contentLength = Buffer.from(payloadStr, 'utf8').length + paddingForInodeAndFileDescriptor;
 
   const req = http.request(
     {
@@ -115,7 +114,7 @@ exports.announceNodeCollector = function announceNodeCollector(cb) {
     // Ensure that the payload length matches the length transmitted via the
     // Content-Length header.
     payloadStr = JSON.stringify(payload);
-    const payloadStrBufferLength = buffer.fromString(payloadStr, 'utf8').length;
+    const payloadStrBufferLength = Buffer.from(payloadStr, 'utf8').length;
     if (payloadStrBufferLength < contentLength) {
       const missingChars = contentLength - payloadStrBufferLength;
       for (let i = 0; i < missingChars; i++) {
@@ -123,7 +122,7 @@ exports.announceNodeCollector = function announceNodeCollector(cb) {
       }
     }
 
-    req.write(buffer.fromString(JSON.stringify(payload), 'utf8'));
+    req.write(Buffer.from(JSON.stringify(payload), 'utf8'));
     req.end();
   });
 };
@@ -260,8 +259,8 @@ function sendData(path, data, cb, ignore404) {
   let payload = JSON.stringify(data, circularReferenceRemover());
   logger.debug('Sending data to %s', path);
 
-  // manually turn into a buffer to correctly identify content-length
-  payload = buffer.fromString(payload, 'utf8');
+  // Convert payload to a buffer to correctly identify content-length ahead of time.
+  payload = Buffer.from(payload, 'utf8');
   if (payload.length > maxContentLength) {
     const error = new PayloadTooLargeError(`Request payload is too large. Will not send data to agent. (POST ${path})`);
     return setImmediate(cb.bind(null, error));
@@ -402,7 +401,7 @@ function sendHttpPostRequestSync(port, path, data) {
   let payloadLength;
   try {
     payload = JSON.stringify(data);
-    payloadLength = buffer.fromString(payload, 'utf8').length;
+    payloadLength = Buffer.from(payload, 'utf8').length;
   } catch (payloadSerializationError) {
     logger.warn('Could not serialize payload, uncaught exception will not be reported.', {
       error: payloadSerializationError
