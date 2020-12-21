@@ -1,6 +1,5 @@
 'use strict';
 
-const buffer = require('@instana/core').util.buffer;
 const http = require('@instana/core').uninstrumentedHttp.http;
 
 const agentOpts = require('./opts');
@@ -13,7 +12,7 @@ module.exports = exports = function log(logLevel, message, stackTrace) {
     payload.st = stackTrace.trim();
   }
 
-  payload = buffer.fromString(JSON.stringify(payload), 'utf8');
+  payload = Buffer.from(JSON.stringify(payload), 'utf8');
 
   const req = http.request(
     {
