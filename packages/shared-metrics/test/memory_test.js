@@ -24,7 +24,7 @@ describe('metrics.memory', () => {
 
   // Test is too fragile (especially for CI environments) and should only be used locally
   // to verify the behavior from time to time.
-  it.skip('should update memory information after 1s', () => {
+  it.skip('should update memory information after 1 s', () => {
     memory.activate();
     const previousPayload = memory.currentPayload;
 

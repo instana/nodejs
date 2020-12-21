@@ -27,16 +27,16 @@ describe('slidingWindow', () => {
   });
 
   it('should only include points that are located in the window', () => {
-    w.addPoint(5); // at 0ms
+    w.addPoint(5); // at 0 ms
 
     clock.tick(1000);
-    w.addPoint(4); // at 1000ms
+    w.addPoint(4); // at 1000 ms
 
     clock.tick(3000);
-    w.addPoint(2); // at 4000ms
+    w.addPoint(2); // at 4000 ms
 
     clock.tick(10000);
-    w.addPoint(6); // at 14000ms
+    w.addPoint(6); // at 14000 ms
 
     const result = w.reduce((a, b) => a + b, 0);
     expect(result).to.equal(8);

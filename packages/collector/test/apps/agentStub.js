@@ -25,6 +25,7 @@ const tracingMetrics = process.env.TRACING_METRICS !== 'false';
 const enableSpanBatching = process.env.ENABLE_SPANBATCHING === 'true';
 
 let discoveries = {};
+let rejectAnnounceAttempts = 0;
 let requests = {};
 let receivedData = resetReceivedData();
 
@@ -51,8 +52,14 @@ app.get('/', (req, res) => {
 
 app.put('/com.instana.plugin.nodejs.discovery', (req, res) => {
   const pid = req.body.pid;
-  discoveries[pid] = req.body;
 
+  if (rejectAnnounceAttempts > 0) {
+    rejectAnnounceAttempts--;
+    logger.debug('Rejecting new discovery %s announce attempt test retry mechanism', pid);
+    return res.sendStatus(404);
+  }
+
+  discoveries[pid] = req.body;
   logger.debug('New discovery %s with params', pid, req.body);
 
   const response = {
@@ -241,7 +248,17 @@ app.get('/received/tracingMetrics', (req, res) => res.json(receivedData.tracingM
 
 app.get('/discoveries', (req, res) => res.json(discoveries));
 
+app.post('/reject-announce-attempts', (req, res) => {
+  if (req.query && req.query.attempts) {
+    rejectAnnounceAttempts = parseInt(req.query.attempts, 10);
+  } else {
+    rejectAnnounceAttempts = 1;
+  }
+  res.send('OK');
+});
+
 app.delete('/discoveries', (req, res) => {
+  rejectAnnounceAttempts = 0;
   discoveries = {};
   res.send('OK');
 });
@@ -265,6 +282,7 @@ function aggregateMetrics(entityId, snapshotUpdate) {
 }
 
 function resetReceivedData() {
+  rejectAnnounceAttempts = 0;
   return {
     metrics: [],
     aggregatedMetrics: {},
