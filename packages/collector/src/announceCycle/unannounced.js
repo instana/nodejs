@@ -11,7 +11,9 @@ const agentConnection = require('../agentConnection');
 const agentOpts = require('../agent/opts');
 const pidStore = require('../pidStore');
 
-const retryDelay = 60 * 1000;
+const initialRetryDelay = 10 * 1000; // 10 seconds
+const backoffFactor = 1.5;
+const maxRetryDelay = 60 * 1000; // one minute
 
 module.exports = {
   enter: function(ctx) {
@@ -21,11 +23,17 @@ module.exports = {
   leave: function() {}
 };
 
-function tryToAnnounce(ctx) {
+function tryToAnnounce(ctx, retryDelay = initialRetryDelay) {
+  let nextRetryDelay;
+  if (retryDelay * backoffFactor >= maxRetryDelay) {
+    nextRetryDelay = maxRetryDelay;
+  } else {
+    nextRetryDelay = retryDelay * backoffFactor;
+  }
   agentConnection.announceNodeCollector((err, rawResponse) => {
     if (err) {
-      logger.info('Announce attempt failed: %s. Will retry in %sms', err.message, retryDelay);
-      setTimeout(tryToAnnounce, retryDelay, ctx).unref();
+      logger.info('Announce attempt failed: %s. Will retry in %s ms', err.message, retryDelay);
+      setTimeout(tryToAnnounce, retryDelay, ctx, nextRetryDelay).unref();
       return;
     }
 
@@ -34,12 +42,12 @@ function tryToAnnounce(ctx) {
       response = JSON.parse(rawResponse);
     } catch (e) {
       logger.warn(
-        'Failed to JSON.parse agent response. Response was %s. Will retry in %sms',
+        'Failed to JSON.parse agent response. Response was %s. Will retry in %s ms',
         rawResponse,
         retryDelay,
         e
       );
-      setTimeout(tryToAnnounce, retryDelay, ctx).unref();
+      setTimeout(tryToAnnounce, retryDelay, ctx, nextRetryDelay).unref();
       return;
     }
 

@@ -18,40 +18,49 @@ const cert = fs.readFileSync(path.join(sslDir, 'cert'));
 let expressApp;
 
 exports.registerTestHooks = opts => {
-  beforeEach(() => {
-    opts = opts || {};
-
-    const env = Object.create(process.env);
-    env.AGENT_PORT = opts.useGlobalAgent ? globalAgentPort : legacyAgentPort;
-    env.APP_PORT = appPort;
-    env.TRACING_ENABLED = opts.enableTracing !== false;
-    env.STACK_TRACE_LENGTH = opts.stackTraceLength || 0;
-    env.USE_HTTPS = opts.useHttps === true;
-    env.INSTANA_DEV_MIN_DELAY_BEFORE_SENDING_SPANS = 0;
-
-    expressApp = spawn('node', [path.join(__dirname, 'express.js')], {
-      stdio: config.getAppStdio(),
-      env
-    });
-
-    return waitUntilServerIsUp(opts.useHttps);
-  });
-
-  afterEach(() => expressApp.kill());
+  beforeEach(() => exports.start(opts));
+  afterEach(() => exports.stop());
 };
 
-function waitUntilServerIsUp(useHttps) {
-  return testUtils.retry(() =>
-    request({
-      method: 'GET',
-      url: getBaseUrl(useHttps),
-      headers: {
-        'X-INSTANA-L': '0'
-      },
-      ca: cert
-    })
+exports.start = function start(opts = {}, retryTime) {
+  const env = Object.create(process.env);
+  env.AGENT_PORT = opts.useGlobalAgent ? globalAgentPort : legacyAgentPort;
+  env.APP_PORT = appPort;
+  env.TRACING_ENABLED = opts.enableTracing !== false;
+  env.STACK_TRACE_LENGTH = opts.stackTraceLength || 0;
+  env.USE_HTTPS = opts.useHttps === true;
+  env.INSTANA_DEV_MIN_DELAY_BEFORE_SENDING_SPANS = 0;
+  env.INSTANA_LOG_LEVEL = 'warn';
+  if (opts.env && opts.env.INSTANA_LOG_LEVEL) {
+    env.INSTANA_LOG_LEVEL = opts.env.INSTANA_LOG_LEVEL;
+  }
+
+  expressApp = spawn('node', [path.join(__dirname, 'express.js')], {
+    stdio: config.getAppStdio(),
+    env
+  });
+
+  return waitUntilServerIsUp(opts.useHttps, retryTime);
+};
+
+function waitUntilServerIsUp(useHttps, retryTime) {
+  return testUtils.retry(
+    () =>
+      request({
+        method: 'GET',
+        url: getBaseUrl(useHttps),
+        headers: {
+          'X-INSTANA-L': '0'
+        },
+        ca: cert
+      }),
+    retryTime
   );
 }
+
+exports.stop = function stop() {
+  expressApp.kill();
+};
 
 exports.getPid = () => expressApp.pid;
 

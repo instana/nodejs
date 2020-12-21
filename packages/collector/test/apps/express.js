@@ -1,5 +1,3 @@
-/* eslint-disable */
-
 'use strict';
 
 // This is a tiny express app which responds to all methods and has configurable
@@ -8,7 +6,6 @@
 
 const instana = require('../../')({
   agentPort: process.env.AGENT_PORT,
-  level: 'warn',
   tracing: {
     timeBetweenHealthcheckCalls: 1000,
     enabled: process.env.TRACING_ENABLED !== 'false',
@@ -84,6 +81,7 @@ function appendToDummyLogFile(level, logFilePath) {
     const content = typeof messsage === 'string' ? message : JSON.stringify(message);
     fs.appendFile(logFilePath, `[${level}]: ${content}\n`, err => {
       if (err) {
+        // eslint-disable-next-line no-console
         console.error(err);
       }
     });
@@ -137,5 +135,6 @@ if (process.env.USE_HTTPS === 'true') {
 function log() {
   const args = Array.prototype.slice.call(arguments);
   args[0] = `Express App (${process.pid}):\t${args[0]}`;
+  // eslint-disable-next-line no-console
   console.log.apply(console, args);
 }

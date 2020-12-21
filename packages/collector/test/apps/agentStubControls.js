@@ -96,6 +96,13 @@ class AgentStubControls {
     });
   }
 
+  rejectAnnounceAttempts(rejectedAttempts = 1) {
+    return request({
+      method: 'POST',
+      url: `http://127.0.0.1:${this.agentPort}/reject-announce-attempts?attempts=${rejectedAttempts}`
+    });
+  }
+
   deleteDiscoveries() {
     return request({
       method: 'DELETE',
