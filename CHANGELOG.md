@@ -1,5 +1,8 @@
 # Changelog
 
+## Unreleased
+- Bring back core/util polyfill for Buffer.fromString for backwards compatibility.
+
 ## 1.110.3
 - Exponential backoff retry strategy for failed announce attempts. This helps with agents that have not yet attached to the container (and thereby not seen the process) and thus will reject the very first announce attempt.
 - Remove polyfill for Buffer.fromString (for Node.js versions up to 4.5 which we no longer support).
