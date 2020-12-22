@@ -43,10 +43,10 @@
     "url": "https://github.com/instana/nodejs-sensor/issues"
   },
   "dependencies": {
-    "@instana/collector": "^1.110.3"
+    "@instana/collector": "1.110.3"
   },
   "devDependencies": {
-    "@instana/core": "^1.110.3",
+    "@instana/core": "1.110.3",
     "eslint": "^5.16.0",
     "eslint-config-airbnb": "^17.1.0",
     "eslint-plugin-mocha": "^5.3.0",

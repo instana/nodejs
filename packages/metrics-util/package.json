@@ -51,9 +51,9 @@
   },
   "license": "MIT",
   "dependencies": {
-    "@instana/core": "^1.110.3",
-    "@instana/serverless": "^1.110.3",
-    "@instana/shared-metrics": "^1.110.3",
+    "@instana/core": "1.110.3",
+    "@instana/serverless": "1.110.3",
+    "@instana/shared-metrics": "1.110.3",
     "node-fetch": "^2.6.1"
   },
   "devDependencies": {

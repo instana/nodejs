@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased
+- Depend on exact versions of @instana packages, not a version range.
 - Bring back core/util polyfill for Buffer.fromString for backwards compatibility.
 
 ## 1.110.3

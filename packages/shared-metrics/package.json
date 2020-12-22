@@ -55,7 +55,7 @@
   },
   "license": "MIT",
   "dependencies": {
-    "@instana/core": "^1.110.3",
+    "@instana/core": "1.110.3",
     "detect-libc": "^1.0.3",
     "event-loop-lag": "^1.4.0",
     "recursive-copy": "^2.0.11",

@@ -56,9 +56,9 @@
   },
   "license": "MIT",
   "dependencies": {
-    "@instana/core": "^1.110.3",
-    "@instana/metrics-util": "^1.110.3",
-    "@instana/serverless": "^1.110.3"
+    "@instana/core": "1.110.3",
+    "@instana/metrics-util": "1.110.3",
+    "@instana/serverless": "1.110.3"
   },
   "devDependencies": {
     "eslint": "^5.16.0",
