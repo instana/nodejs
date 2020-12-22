@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.110.5:
+- Depend on exact versions of `@instana` packages, not a version range. This makes sure all `@instana` packages are updated in sync and it avoids internal packages like `core` being updated while consuming packages like `collector` stay on an older version.
+
 ## 1.110.4
 - Bring back core/util polyfill for Buffer.fromString for backwards compatibility.
 
