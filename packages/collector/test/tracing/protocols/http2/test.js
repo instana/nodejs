@@ -66,7 +66,8 @@ mochaSuiteFn('tracing/http2', function() {
       clientControls
         .sendRequest({
           method: 'GET',
-          path: constructPath('/trigger-downstream', withQuery)
+          path: constructPath('/trigger-downstream', withQuery),
+          resolveWithFullResponse: true
         })
         .then(res => {
           expect(res).to.be.an('object');
@@ -83,7 +84,8 @@ mochaSuiteFn('tracing/http2', function() {
       clientControls
         .sendRequest({
           method,
-          path: '/trigger-downstream'
+          path: '/trigger-downstream',
+          resolveWithFullResponse: true
         })
         .then(res => {
           expect(res).to.be.an('object');
@@ -208,7 +210,8 @@ mochaSuiteFn('tracing/http2', function() {
       serverControls
         .sendRequest({
           method: 'POST',
-          path: '/request'
+          path: '/request',
+          resolveWithFullResponse: true
         })
         .then(res => {
           expect(res.headers['server-timing']).to.match(/^intid;desc=[a-f0-9]+$/);
@@ -222,7 +225,8 @@ mochaSuiteFn('tracing/http2', function() {
           headers: {
             'X-INSTANA-T': '84e588b697868fee',
             'X-INSTANA-S': '5e734f51bce69eca'
-          }
+          },
+          resolveWithFullResponse: true
         })
         .then(res => {
           expect(res.headers['server-timing']).to.equal('intid;desc=84e588b697868fee');
@@ -232,7 +236,8 @@ mochaSuiteFn('tracing/http2', function() {
       serverControls
         .sendRequest({
           method: 'POST',
-          path: '/request?server-timing-string=true'
+          path: '/request?server-timing-string=true',
+          resolveWithFullResponse: true
         })
         .then(res => {
           expect(res.headers['server-timing']).to.match(/^myServerTimingKey, intid;desc=[a-f0-9]+$/);
@@ -242,7 +247,8 @@ mochaSuiteFn('tracing/http2', function() {
       serverControls
         .sendRequest({
           method: 'POST',
-          path: '/request?server-timing-array=true'
+          path: '/request?server-timing-array=true',
+          resolveWithFullResponse: true
         })
         .then(res => {
           expect(res.headers['server-timing']).to.match(/^key1, key2;dur=42, intid;desc=[a-f0-9]+$/);
@@ -255,7 +261,8 @@ mochaSuiteFn('tracing/http2', function() {
         serverControls
           .sendRequest({
             method: 'POST',
-            path: '/request?server-timing-string-with-intid=true'
+            path: '/request?server-timing-string-with-intid=true',
+            resolveWithFullResponse: true
           })
           .then(res => {
             expect(res.headers['server-timing']).to.equal('myServerTimingKey, intid;desc=1234567890abcdef');
@@ -269,7 +276,8 @@ mochaSuiteFn('tracing/http2', function() {
         serverControls
           .sendRequest({
             method: 'POST',
-            path: '/request?server-timing-array-with-intid=true'
+            path: '/request?server-timing-array-with-intid=true',
+            resolveWithFullResponse: true
           })
           .then(res => {
             expect(res.headers['server-timing']).to.equal('key1, key2;dur=42, intid;desc=1234567890abcdef');
@@ -281,7 +289,8 @@ mochaSuiteFn('tracing/http2', function() {
     serverControls
       .sendRequest({
         method: 'GET',
-        path: '/inject-trace-id'
+        path: '/inject-trace-id',
+        resolveWithFullResponse: true
       })
       .then(response => {
         expect(response.body).to.match(/^Instana Trace ID: [a-f0-9]{16}$/);

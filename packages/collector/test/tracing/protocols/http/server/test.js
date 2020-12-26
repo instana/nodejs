@@ -123,7 +123,7 @@ function registerTests(agentControls, useHttps, useHttp2CompatApi) {
         retry(() =>
           agentControls.getSpans().then(spans => {
             const span = verifyThereIsExactlyOneHttpEntry(spans, '/checkout', 'POST', 201);
-            expect(span.t).to.equal('6636f38f0f3dd0996636f38f0f3dd099');
+            expect(span.t).to.equal('6636f38f0f3dd099');
             expect(span.p).to.equal('fb2bb293ac206c05');
           })
         )

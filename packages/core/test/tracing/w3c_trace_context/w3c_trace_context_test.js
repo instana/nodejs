@@ -12,12 +12,12 @@ const constants = require('../../../src/tracing/constants');
 const parse = require('../../../src/tracing/w3c_trace_context/parse');
 
 const version00 = '00';
-const foreignTraceId = '0af7651916cd43dd8448eb211c80319c';
-const foreignParentId = 'b7ad6b7169203331';
+const traceParentTraceId = '0af7651916cd43dd8448eb211c80319c';
+const traceParentParentId = 'b7ad6b7169203331';
 const flagsSampled = '01';
 const flagsNotSampled = '00';
-const validTraceParent = `${version00}-${foreignTraceId}-${foreignParentId}-${flagsSampled}`;
-const validTraceParentNotSampled = `${version00}-${foreignTraceId}-${foreignParentId}-${flagsNotSampled}`;
+const validTraceParent = `${version00}-${traceParentTraceId}-${traceParentParentId}-${flagsSampled}`;
+const validTraceParentNotSampled = `${version00}-${traceParentTraceId}-${traceParentParentId}-${flagsNotSampled}`;
 
 const instana32CharTraceId = '0123456789abcdeffedcbc9876543210';
 const instana16CharTraceId = '0123456789abcdef';
@@ -44,8 +44,8 @@ describe('W3cTraceContext API', () => {
 
       expect(cloned.traceParentValid).to.be.true;
       expect(cloned.version).to.equal(version00);
-      expect(cloned.foreignTraceId).to.equal(foreignTraceId);
-      expect(cloned.foreignParentId).to.equal(foreignParentId);
+      expect(cloned.traceParentTraceId).to.equal(traceParentTraceId);
+      expect(cloned.traceParentParentId).to.equal(traceParentParentId);
       expect(cloned.sampled).to.be.true;
 
       expect(cloned.traceStateValid).to.be.true;
@@ -73,7 +73,7 @@ describe('W3cTraceContext API', () => {
       const newInstanaValue = newTraceIdIsShort ? otherInstanaNarrowValue : otherInstanaWideValue;
       const newTraceId = newTraceIdIsShort ? otherInstana16CharTraceId : otherInstana32CharTraceId;
 
-      const expectedTraceParentValue = `${version00}-${foreignTraceId}-${otherInstanaSpanId}-${flagsSampled}`;
+      const expectedTraceParentValue = `${version00}-${traceParentTraceId}-${otherInstanaSpanId}-${flagsSampled}`;
       // prettier-ignore
       const expectedTraceStateValue =
         `${constants.w3cInstana}=${newInstanaValue},rojo=00f067aa0ba902b7,congo=t61rcWkgMzE`;
@@ -108,8 +108,8 @@ describe('W3cTraceContext API', () => {
 
         expect(traceContext.traceParentValid).to.be.true;
         expect(traceContext.version).to.equal(version00);
-        expect(traceContext.foreignTraceId).to.equal(foreignTraceId);
-        expect(traceContext.foreignParentId).to.equal(otherInstanaSpanId);
+        expect(traceContext.traceParentTraceId).to.equal(traceParentTraceId);
+        expect(traceContext.traceParentParentId).to.equal(otherInstanaSpanId);
         expect(traceContext.sampled).to.be.true;
 
         expect(traceContext.traceStateValid).to.be.true;
@@ -149,14 +149,14 @@ describe('W3cTraceContext API', () => {
 
         expect(traceContext.traceParentValid).to.be.true;
         expect(traceContext.version).to.equal(version00);
-        expect(traceContext.foreignTraceId).to.have.lengthOf(32);
+        expect(traceContext.traceParentTraceId).to.have.lengthOf(32);
         if (longTraceId) {
-          expect(traceContext.foreignTraceId).to.equal(traceContext.instanaTraceId);
+          expect(traceContext.traceParentTraceId).to.equal(traceContext.instanaTraceId);
         } else {
-          expect(traceContext.foreignTraceId).to.equal(`0000000000000000${traceContext.instanaTraceId}`);
+          expect(traceContext.traceParentTraceId).to.equal(`0000000000000000${traceContext.instanaTraceId}`);
         }
-        expect(traceContext.foreignParentId).to.have.lengthOf(16);
-        expect(traceContext.foreignParentId).to.equal(traceContext.instanaParentId);
+        expect(traceContext.traceParentParentId).to.have.lengthOf(16);
+        expect(traceContext.traceParentParentId).to.equal(traceContext.instanaParentId);
         expect(traceContext.sampled).to.be.true;
 
         expect(traceContext.traceStateValid).to.be.true;
@@ -179,8 +179,8 @@ describe('W3cTraceContext API', () => {
 
         expect(traceContext.traceParentValid).to.be.true;
         expect(traceContext.version).to.equal(version00);
-        expect(traceContext.foreignTraceId).to.equal(foreignTraceId);
-        expect(traceContext.foreignParentId).to.equal(foreignParentId);
+        expect(traceContext.traceParentTraceId).to.equal(traceParentTraceId);
+        expect(traceContext.traceParentParentId).to.equal(traceParentParentId);
         expect(traceContext.sampled).to.be.true;
 
         expect(traceContext.traceStateValid).to.be.true;
@@ -202,8 +202,8 @@ describe('W3cTraceContext API', () => {
 
       expect(traceContext.traceParentValid).to.be.true;
       expect(traceContext.version).to.equal(version00);
-      expect(traceContext.foreignTraceId).to.equal(foreignTraceId);
-      expect(traceContext.foreignParentId).to.not.equal(foreignParentId);
+      expect(traceContext.traceParentTraceId).to.equal(traceParentTraceId);
+      expect(traceContext.traceParentParentId).to.not.equal(traceParentParentId);
       expect(traceContext.sampled).to.be.false;
     });
 
@@ -214,8 +214,8 @@ describe('W3cTraceContext API', () => {
 
       expect(traceContext.traceParentValid).to.be.true;
       expect(traceContext.version).to.equal(version00);
-      expect(traceContext.foreignTraceId).to.equal(foreignTraceId);
-      expect(traceContext.foreignParentId).to.equal(foreignParentId);
+      expect(traceContext.traceParentTraceId).to.equal(traceParentTraceId);
+      expect(traceContext.traceParentParentId).to.equal(traceParentParentId);
       expect(traceContext.sampled).to.be.false;
     });
   });

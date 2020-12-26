@@ -14,6 +14,7 @@
  */
 
 const vendor = process.env.APM_VENDOR;
+const useHttp2 = process.env.USE_HTTP2 ? process.env.USE_HTTP2 === 'true' : false;
 
 let vendorLabel;
 if (!vendor) {
@@ -35,8 +36,14 @@ if (isInstana()) {
   cls = require('../../../../../core/src/tracing/cls');
 }
 
+const fs = require('fs');
+const path = require('path');
 const rp = require('request-promise');
-const url = require('url');
+const { parse } = require('url');
+
+const http2Promise = require('../../../test_util/http2Promise');
+
+const { HTTP2_HEADER_METHOD, HTTP2_HEADER_PATH, HTTP2_HEADER_STATUS } = require('http2').constants;
 
 const tracingUtil = require('../../../../../core/src/tracing/tracingUtil');
 
@@ -44,7 +51,7 @@ const port = process.env.APP_PORT;
 const downstreamPort = process.env.DOWNSTREAM_PORT;
 
 const otherVendorTraceStateKey = 'other';
-const logPrefix = `${vendorLabel} (${process.pid}):\t`;
+const logPrefix = `${vendorLabel} (${useHttp2 ? 'HTTP2' : 'HTTP1'}) (${process.pid}):\t`;
 
 if (!port) {
   throw new Error('APP_PORT is mandatory for this app.');
@@ -54,24 +61,52 @@ if (!downstreamPort) {
   throw new Error('DOWNSTREAM_PORT is mandatory for this app.');
 }
 
-const server = require('http')
-  .createServer()
-  .listen(port, () => {
-    log(`Listening  on port: ${port}`);
+if (useHttp2) {
+  // HTTP 2
+
+  const http2 = require('http2');
+
+  const sslDir = path.join(__dirname, '..', '..', '..', 'apps', 'ssl');
+
+  const server = http2.createSecureServer({
+    key: fs.readFileSync(path.join(sslDir, 'key')),
+    cert: fs.readFileSync(path.join(sslDir, 'cert'))
   });
 
-server.on('request', (req, res) => {
-  const incomingHeaders = req.headers;
+  server.on('error', err => {
+    log('HTTP2 server error', err);
+  });
+
+  server.on('stream', (stream, headers) => {
+    handleRequest(headers, headers[HTTP2_HEADER_METHOD] || 'GET', headers[HTTP2_HEADER_PATH] || '/', stream);
+  });
+
+  server.listen(port, () => {
+    log(`Listening (HTTP2) on port: ${port}`);
+  });
+} else {
+  // HTTP 1.1
+
+  const server = require('http')
+    .createServer()
+    .listen(port, () => {
+      log(`Listening  on port: ${port}`);
+    });
+
+  server.on('request', (req, res) => handleRequest(req.headers, req.method, req.url, res));
+}
+
+function handleRequest(incomingHeaders, method, url, resOrStream) {
   const loggedHeaders = Object.assign({}, incomingHeaders);
   delete loggedHeaders.host;
   delete loggedHeaders.accept;
   delete loggedHeaders.connection;
 
   if (process.env.WITH_STDOUT) {
-    log(`-> ${req.method} ${req.url} ${JSON.stringify(loggedHeaders)}`);
+    log(`-> ${method} ${url} ${JSON.stringify(loggedHeaders)}`);
   }
 
-  const { pathname, query } = url.parse(req.url, true);
+  const { pathname, query } = parse(url, true);
 
   const outgoingHeaders = {};
 
@@ -111,7 +146,7 @@ server.on('request', (req, res) => {
     } else {
       // eslint-disable-next-line no-console
       console.error(`Unknown otherMode: ${otherMode}`);
-      return endWithStatus(req, res, 400);
+      return endWithStatus(method, url, resOrStream, 400);
     }
   }
 
@@ -119,42 +154,37 @@ server.on('request', (req, res) => {
   query.depth = depth - 1;
   let downstreamPath;
   if (pathname === '/') {
-    if (req.method !== 'GET') {
-      return endWithStatus(req, res, 405);
+    if (method !== 'GET') {
+      return endWithStatus(method, url, resOrStream, 405);
     }
-    return endWithStatus(req, res, 200);
-  } else if (pathname === '/start') {
-    if (req.method !== 'GET') {
-      return endWithStatus(req, res, 405);
-    }
-    downstreamPath = depth > 1 ? 'continue' : 'end';
-    return rp
-      .get({
-        uri: `http://localhost:${downstreamPort}/${downstreamPath}`,
-        headers: outgoingHeaders,
-        qs: query
-      })
-      .then(response => endWithPayload(req, res, response))
-      .catch(e => endWithError(req, res, e));
-  } else if (pathname === '/continue') {
-    if (req.method !== 'GET') {
-      return endWithStatus(req, res, 405);
+    return endWithStatus(method, url, resOrStream, 200);
+  } else if (pathname === '/start' || pathname === '/continue') {
+    if (method !== 'GET') {
+      return endWithStatus(method, url, resOrStream, 405);
     }
     downstreamPath = depth > 1 ? 'continue' : 'end';
-    return rp
-      .get({
-        uri: `http://localhost:${downstreamPort}/${downstreamPath}`,
-        headers: outgoingHeaders,
-        qs: query
-      })
-      .then(response => endWithPayload(req, res, response))
-      .catch(e => endWithError(req, res, e));
+    const requestOptions = {
+      method,
+      headers: outgoingHeaders,
+      qs: query
+    };
+    if (useHttp2) {
+      requestOptions.baseUrl = `https://localhost:${downstreamPort}`;
+      requestOptions.path = `/${downstreamPath}`;
+    } else {
+      requestOptions.uri = `http://localhost:${downstreamPort}/${downstreamPath}`;
+    }
+
+    const requestPromise = useHttp2 ? http2Promise.request(requestOptions) : rp(requestOptions);
+    return requestPromise
+      .then(response => endWithPayload(method, url, resOrStream, response))
+      .catch(e => endWithError(method, url, resOrStream, e));
   } else if (pathname === '/end') {
-    if (req.method !== 'GET') {
-      return endWithStatus(req, res, 405);
+    if (method !== 'GET') {
+      return endWithStatus(method, url, resOrStream, 405);
     }
     const payload = {
-      w3cTaceContext: {
+      w3cTraceContext: {
         receivedHeaders: {
           traceparent: incomingHeaders.traceparent,
           tracestate: incomingHeaders.tracestate
@@ -171,39 +201,63 @@ server.on('request', (req, res) => {
     if (isInstana()) {
       const activeW3cTraceContext = cls.getW3cTraceContext();
       if (activeW3cTraceContext) {
-        payload.w3cTaceContext.active = {
+        payload.w3cTraceContext.active = {
           instanaTraceId: activeW3cTraceContext.instanaTraceId,
           instanaParentId: activeW3cTraceContext.instanaParentId
         };
       }
     }
-    return endWithPayload(req, res, JSON.stringify(payload));
+    return endWithPayload(method, url, resOrStream, JSON.stringify(payload));
   }
 
-  return endWithStatus(req, res, 404);
-});
-
-function endWithStatus(req, res, statusCode) {
-  if (process.env.WITH_STDOUT) {
-    log(`${req.method} ${req.url} -> ${statusCode}`);
-  }
-  res.statusCode = statusCode;
-  res.end();
+  return endWithStatus(method, url, resOrStream, 404);
 }
 
-function endWithPayload(req, res, payload) {
+function endWithPayload(method, url, resOrStream, payload) {
   if (process.env.WITH_STDOUT) {
-    log(`${req.method} ${req.url} -> 200`);
+    log(`${method} ${url} -> 200`);
   }
-  res.end(payload);
+  if (useHttp2) {
+    if (typeof payload === 'object') {
+      payload = JSON.stringify(payload);
+    }
+    resOrStream.respond({
+      [HTTP2_HEADER_STATUS]: 200
+    });
+  } else {
+    resOrStream.statusCode = 200;
+  }
+  resOrStream.end(payload);
 }
 
-function endWithError(req, res, error) {
+function endWithError(method, url, resOrStream, error) {
   if (process.env.WITH_STDOUT) {
-    log(`${req.method} ${req.url} -> 500 – ${error}`);
+    log(`${method} ${url} -> 500 – ${error}`);
   }
-  res.statusCode = 500;
-  res.end();
+  // eslint-disable-next-line no-console
+  console.error(error);
+  _endWithStatus(method, url, resOrStream, 500);
+}
+
+function endWithStatus(method, url, resOrStream, statusCode) {
+  if (process.env.WITH_STDOUT) {
+    log(`${method} ${url} -> ${statusCode}`);
+  }
+  _endWithStatus(method, url, resOrStream, statusCode);
+}
+
+function _endWithStatus(method, url, resOrStream, statusCode) {
+  if (process.env.WITH_STDOUT) {
+    log(`${method} ${url} -> ${statusCode}`);
+  }
+  if (useHttp2) {
+    resOrStream.respond({
+      [HTTP2_HEADER_STATUS]: statusCode
+    });
+  } else {
+    resOrStream.statusCode = statusCode;
+  }
+  resOrStream.end();
 }
 
 function isInstana() {

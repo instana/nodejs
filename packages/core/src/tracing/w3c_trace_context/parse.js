@@ -45,8 +45,8 @@ function parseTraceParent(traceParentRaw, parsed) {
   if (!match) {
     return;
   }
-  parsed.foreignTraceId = match[1];
-  parsed.foreignParentId = match[2];
+  parsed.traceParentTraceId = match[1];
+  parsed.traceParentParentId = match[2];
   const flags = parseInt(match[3], 16);
   // eslint-disable-next-line no-bitwise
   parsed.sampled = (flags & W3cTraceContext.SAMPLED_BITMASK) === W3cTraceContext.SAMPLED_BITMASK;

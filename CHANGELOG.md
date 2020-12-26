@@ -2,6 +2,7 @@
 
 ## Unreleased
 - Add instrumentation for AWS S3.
+- Update handling of W3C trace context headers to improve integration with OpenTelemetry.
 
 ## 1.114.0
 - Introduction of AWS SQS instrumentation for sending and reading messages.

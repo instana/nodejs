@@ -12,10 +12,10 @@ const constants = require('../../../src/tracing/constants');
 const parse = require('../../../src/tracing/w3c_trace_context/parse');
 
 const version00 = '00';
-const foreignTraceId = '0af7651916cd43dd8448eb211c80319c';
-const foreignParentId = 'b7ad6b7169203331';
+const traceParentTraceId = '0af7651916cd43dd8448eb211c80319c';
+const traceParentParentId = 'b7ad6b7169203331';
 const flags = '01';
-const validTraceParent = `${version00}-${foreignTraceId}-${foreignParentId}-${flags}`;
+const validTraceParent = `${version00}-${traceParentTraceId}-${traceParentParentId}-${flags}`;
 const validTraceStateWithoutInstanaArray = ['rojo=00f067aa0ba902b7', 'congo=t61rcWkgMzE'];
 const validTraceStateWithoutInstana = validTraceStateWithoutInstanaArray.join(',');
 
@@ -58,8 +58,8 @@ describe('tracing/w3c-trace-context parser', () => {
     it('should parse a valid traceparent header for spec version 00', () => {
       const parsed = parse(validTraceParent);
       expect(parsed.version).to.equal(version00);
-      expect(parsed.foreignTraceId).to.equal(foreignTraceId);
-      expect(parsed.foreignParentId).to.equal(foreignParentId);
+      expect(parsed.traceParentTraceId).to.equal(traceParentTraceId);
+      expect(parsed.traceParentParentId).to.equal(traceParentParentId);
       expect(parsed.sampled).to.be.true;
       expect(parsed.traceParentValid).to.be.true;
       expect(parsed.traceStateValid).to.be.false;
@@ -71,11 +71,11 @@ describe('tracing/w3c-trace-context parser', () => {
     });
 
     it('should ignore trailing content for spec version > 00', () => {
-      const traceparent = `01-${foreignTraceId}-${foreignParentId}-${flags}Gobbledygook`;
+      const traceparent = `01-${traceParentTraceId}-${traceParentParentId}-${flags}Gobbledygook`;
       const parsed = parse(traceparent);
       expect(parsed.version).to.equal('01');
-      expect(parsed.foreignTraceId).to.equal(foreignTraceId);
-      expect(parsed.foreignParentId).to.equal(foreignParentId);
+      expect(parsed.traceParentTraceId).to.equal(traceParentTraceId);
+      expect(parsed.traceParentParentId).to.equal(traceParentParentId);
       expect(parsed.sampled).to.be.true;
       expect(parsed.traceParentValid).to.be.true;
     });
@@ -83,8 +83,8 @@ describe('tracing/w3c-trace-context parser', () => {
     it('should parse a valid traceparent header when tracestate is invalid', () => {
       const parsed = parse(validTraceParent, 'an invalid tracestate header');
       expect(parsed.version).to.equal(version00);
-      expect(parsed.foreignTraceId).to.equal(foreignTraceId);
-      expect(parsed.foreignParentId).to.equal(foreignParentId);
+      expect(parsed.traceParentTraceId).to.equal(traceParentTraceId);
+      expect(parsed.traceParentParentId).to.equal(traceParentParentId);
       expect(parsed.sampled).to.be.true;
       expect(parsed.traceParentValid).to.be.true;
       expect(parsed.traceStateValid).to.be.false;
