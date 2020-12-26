@@ -79,8 +79,14 @@ function shimEmit(realEmit) {
         span.crtp = headers.correlationType;
         span.crid = headers.correlationId;
       }
-      if (headers.foreignParent) {
-        span.fp = headers.foreignParent;
+      if (headers.instanaAncestor) {
+        span.ia = headers.instanaAncestor;
+      }
+      if (headers.longTraceId) {
+        span.lt = headers.longTraceId;
+      }
+      if (headers.usedTraceParent) {
+        span.tp = true;
       }
       if (headers.synthetic) {
         span.sy = true;

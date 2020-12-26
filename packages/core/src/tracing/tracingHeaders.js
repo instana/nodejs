@@ -10,6 +10,58 @@ const tracingUtil = require('./tracingUtil');
 const w3c = require('./w3c_trace_context');
 
 /**
+ * The functions in this module return an object literal with the following shape:
+ * {
+ *   traceId <string>:
+ *     - the trace ID
+ *     - will be used for span.t
+ *     - will be used for propagating X-INSTANA-T downstream
+ *     - will be used for the trace ID part when propagating traceparent downstream
+ *   longTraceId <string>:
+ *     - the full trace ID, when limiting a 128 bit trace ID to 64 bit has occured
+ *     - when no limiting has been applied, this is unset
+ *     - will be used for span.lt
+ *   usedTraceParent <boolean>:
+ *     - true if and only if trace ID and parent ID have been taken from traceparent instead of X-INSTAN-T/X-INSTANA-S.
+ *   parentId <string>:
+ *     - the parent span ID
+ *     - will be used for span.p
+ *     - will be used for propagating X-INSTANA-S downstream
+ *     - before propagating traceparent another exit span will be created, whose span ID will be used for the parent ID
+ *       part in traceparent
+ *   level: <string>:
+ *     - the tracing level, either '1' (tracing) or '0' (suppressing/not creating spans)
+ *     - progated downstream as the first component of X-INSTANA-L
+ *     - propagted downstream as the sampled flag in traceparent
+ *   correlationType <string>:
+ *     - the correlation type parsed from X-INSTANA-L
+ *     - will be used for span.crtp
+ *     - will not be propagated downstream
+ *   correlationId <string>:
+ *     - the correlation ID parsed from X-INSTANA-L
+ *     - will be used for span.crid
+ *     - will not be propagated downstream
+ *   synthetic <boolean>:
+ *     - true if and only if X-INSTANA-SYNTHETIC=1 was present
+ *     - will be used for span.sy
+ *     - will not be propagated downstream
+ *   w3cTraceContext <object>:
+ *     - see ./w3c_trace_context/W3cTraceContext for documentation of attributes
+ *     - will be used to initialize the internal representation of the incoming traceparent/tracestate
+ *     - will be used to manipulate that internal representation according to the W3C trace context spec when creating
+ *   instanaAncestor <object>:
+ *     - only captured when no X-INSTANA-T/S were incoming, but traceparent plus tracestate with an "in" key-value pair
+ *       child spans of the entry span
+ *     - will be used as span.ia when present
+ *     - structure/attributes:
+ *       {
+ *         t: trace ID from tracestate "in" key-value pair
+ *         p: parent ID from tracestate "in" key-value pair
+ *       }
+ * }
+ */
+
+/**
  * Inspects the headers of an incoming HTTP request for X-INSTANA-T, X-INSTANA-S, X-INSTANA-L, as well as the W3C trace
  * context headers traceparent and tracestate.
  */
@@ -55,71 +107,52 @@ exports.fromHeaders = function fromHeaders(headers) {
     const result = {
       traceId: xInstanaT,
       parentId: xInstanaS,
+      usedTraceParent: false,
       level,
       correlationType,
       correlationId,
       synthetic,
       w3cTraceContext
     };
-    if (traceStateHasInstanaKeyValuePair(w3cTraceContext) && w3cTraceContext.traceStateHead) {
-      result.foreignParent = {
-        t: w3cTraceContext.foreignTraceId,
-        p: w3cTraceContext.foreignParentId,
-        lts: w3cTraceContext.getMostRecentForeignTraceStateMember()
-      };
-    }
-    return result;
+    return limitTraceId(result);
   } else if (xInstanaT && xInstanaS) {
     // X-INSTANA- headers are present but W3C trace context headers are not. Use the received IDs and also create a W3C
     // trace context based on those IDs.
-    return {
+    return limitTraceId({
       traceId: xInstanaT,
       parentId: xInstanaS,
+      usedTraceParent: false,
       level,
       correlationType,
       correlationId,
       synthetic,
       w3cTraceContext: w3c.create(xInstanaT, xInstanaS, !isSuppressed(level))
-    };
+    });
   } else if (w3cTraceContext) {
-    // X-INSTANA- headers are not present but W3C trace context headers are.
-    if (traceStateHasInstanaKeyValuePair(w3cTraceContext)) {
-      // The W3C tracestate header has an in key-value pair. We use the values from it as trace ID and parent ID.
-      return {
-        traceId: !isSuppressed(level) ? w3cTraceContext.instanaTraceId : null,
-        parentId: !isSuppressed(level) ? w3cTraceContext.instanaParentId : null,
-        level,
-        correlationType,
-        correlationId,
-        synthetic,
-        w3cTraceContext,
-        foreignParent: {
-          t: w3cTraceContext.foreignTraceId,
-          p: w3cTraceContext.foreignParentId,
-          lts: w3cTraceContext.getMostRecentForeignTraceStateMember()
-        }
-      };
-    } else {
-      // The W3C tracestate header has no in key-value pair. We start a new Instana trace by generating a trace ID,
-      // at the same time, we keep the W3C trace context we received intact and will propagate it further.
-      // The w3cTraceContext has no instanaTraceId/instanaParentId yet, it will get one as soon as we start a span
-      // and upate it. In case we received X-INSTANA-L: 0 we will not start a span, but we will make sure to toggle the
-      // sampled flag in traceparent off.
-      return {
-        traceId: !isSuppressed(level) ? tracingUtil.generateRandomTraceId() : null,
-        parentId: null,
-        level,
-        correlationType,
-        correlationId,
-        synthetic,
-        w3cTraceContext,
-        foreignParent: {
-          t: w3cTraceContext.foreignTraceId,
-          p: w3cTraceContext.foreignParentId,
-          lts: w3cTraceContext.getMostRecentForeignTraceStateMember()
-        }
+    // There are no X-INSTANA- headers, but there are W3C trace context headers. As of 2021-01, we use the IDs from
+    // traceparent (previously, we would relied on the `in` key value pair or, if that is not present, started a new
+    // Instana trace by generating a trace ID).
+    // If w3cTraceContext has no instanaTraceId/instanaParentId yet, it will get one as soon as we start a span and
+    // upate it. In case we received X-INSTANA-L: 0 we will not start a span, but we will make sure to toggle the
+    // sampled flag in traceparent off.
+    let instanaAncestor;
+    if (traceStateHasInstanaKeyValuePair(w3cTraceContext) && !isSuppressed(level)) {
+      instanaAncestor = {
+        t: w3cTraceContext.instanaTraceId,
+        p: w3cTraceContext.instanaParentId
       };
     }
+    return limitTraceId({
+      traceId: !isSuppressed(level) ? w3cTraceContext.traceParentTraceId : null,
+      parentId: !isSuppressed(level) ? w3cTraceContext.traceParentParentId : null,
+      usedTraceParent: !isSuppressed(level),
+      level,
+      correlationType,
+      correlationId,
+      synthetic,
+      w3cTraceContext,
+      instanaAncestor
+    });
   } else {
     // Neither X-INSTANA- headers nor W3C trace context headers are present.
     // eslint-disable-next-line no-lonely-if
@@ -128,15 +161,15 @@ exports.fromHeaders = function fromHeaders(headers) {
       // pass them down in the traceparent header); this trace and parent IDs ares not actually associated with any
       // existing span (Instana or foreign). This can't be helped, the spec mandates to always set the traceparent
       // header on outgoing requests, even if we didn't sample and it has to have a parent ID field.
-      return {
+      return limitTraceId({
+        usedTraceParent: false,
         level,
         synthetic,
         w3cTraceContext: w3c.createEmptyUnsampled(
           tracingUtil.generateRandomTraceId(),
           tracingUtil.generateRandomSpanId()
         )
-        // We do not add foreignParent header here because we didn't receive any W3C trace context spec headers.
-      };
+      });
     } else {
       // Neither X-INSTANA- headers nor W3C trace context headers are present and tracing is not suppressed
       // via X-INSTANA-L. Start a new trace, that is, generate a trace ID and use it for for our trace ID as well as in
@@ -146,16 +179,16 @@ exports.fromHeaders = function fromHeaders(headers) {
       // cls.startSpan, we will update it so it gets the parent ID of the entry span we create there. The bogus
       // parent ID "000..." will never be transmitted to any other service.
       w3cTraceContext = w3c.create(xInstanaT, '0000000000000000', true);
-      return {
+      return limitTraceId({
         traceId: xInstanaT,
         parentId: null,
+        usedTraceParent: false,
         level,
         correlationType,
         correlationId,
         synthetic,
         w3cTraceContext
-        // We do not add foreignParent header here because we didn't receive any W3C trace context spec headers.
-      };
+      });
     }
   }
 };
@@ -251,4 +284,12 @@ function readW3cTraceContext(headers) {
   }
 
   return traceContext;
+}
+
+function limitTraceId(result) {
+  if (result.traceId && result.traceId.length >= 32) {
+    result.longTraceId = result.traceId;
+    result.traceId = result.traceId.substring(16, 32);
+  }
+  return result;
 }

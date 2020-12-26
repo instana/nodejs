@@ -82,11 +82,19 @@ exports.request = function request(opts) {
               body: responsePayload
             });
           } else if (status >= 100 && status < 300) {
-            resolve({
-              status,
-              headers: responseHeaders,
-              body: responsePayload
-            });
+            if (opts.resolveWithFullResponse) {
+              resolve({
+                status,
+                headers: responseHeaders,
+                body: responsePayload
+              });
+            } else {
+              try {
+                resolve(JSON.parse(responsePayload));
+              } catch (e) {
+                resolve(responsePayload);
+              }
+            }
           } else if (responsePayload && responsePayload.length > 0) {
             reject(new Error(`Unexpected status code ${status}, response payload: ${responsePayload}.`));
           } else {

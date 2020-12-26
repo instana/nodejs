@@ -18,9 +18,9 @@ function W3cTraceContext() {
   // the trace context specification version from the traceparent header
   this.version = undefined;
   // the trace id from the traceparent header
-  this.foreignTraceId = undefined;
+  this.traceParentTraceId = undefined;
   // the parent id from the traceparent header
-  this.foreignParentId = undefined;
+  this.traceParentParentId = undefined;
   // the sampled flag from the traceparent header
   this.sampled = undefined;
 
@@ -45,8 +45,8 @@ W3cTraceContext.fromInstanaIds = function fromInstanaIds(instanaTraceId, instana
   );
   traceContext.traceParentValid = true;
   traceContext.version = VERSION00;
-  traceContext.foreignTraceId = paddedTraceId;
-  traceContext.foreignParentId = instanaParentId;
+  traceContext.traceParentTraceId = paddedTraceId;
+  traceContext.traceParentParentId = instanaParentId;
   traceContext.sampled = sampled;
 
   traceContext.traceStateValid = true;
@@ -61,8 +61,8 @@ W3cTraceContext.createEmptyUnsampled = function createEmptyUnsampled(traceId, pa
   const traceContext = new W3cTraceContext(`${VERSION00}-${paddedTraceId}-${parentId}-00`);
   traceContext.traceParentValid = true;
   traceContext.version = VERSION00;
-  traceContext.foreignTraceId = paddedTraceId;
-  traceContext.foreignParentId = parentId;
+  traceContext.traceParentTraceId = paddedTraceId;
+  traceContext.traceParentParentId = parentId;
   traceContext.sampled = false;
   traceContext.traceStateValid = true;
   return traceContext;
@@ -73,7 +73,7 @@ W3cTraceContext.prototype.renderTraceParent = function renderTraceParent() {
     return '';
   }
   // Since we only support version 00, we must always downgrade to 00 if we have updated any value.
-  return `00-${this.foreignTraceId}-${this.foreignParentId}-${this.renderFlags()}`;
+  return `00-${this.traceParentTraceId}-${this.traceParentParentId}-${this.renderFlags()}`;
 };
 
 W3cTraceContext.prototype.renderFlags = function renderFlags() {
@@ -128,7 +128,7 @@ W3cTraceContext.prototype.resetTraceState = function resetTraceState() {
 W3cTraceContext.prototype.updateParent = function updateParent(instanaTraceId, instanaParentId) {
   this.instanaTraceId = instanaTraceId;
   this.instanaParentId = instanaParentId;
-  this.foreignParentId = instanaParentId;
+  this.traceParentParentId = instanaParentId;
   if (this.traceStateHead && this.traceStateTail) {
     this.traceStateTail = this.traceStateHead.concat(this.traceStateTail);
   } else if (this.traceStateHead) {
@@ -148,8 +148,8 @@ W3cTraceContext.prototype.restartTrace = function restartTrace(longTraceId) {
   this.version = VERSION00;
   this.instanaTraceId = longTraceId ? tracingUtil.generateRandomLongTraceId() : tracingUtil.generateRandomTraceId();
 
-  this.foreignTraceId = longTraceId ? this.instanaTraceId : LEFT_PAD_16 + this.instanaTraceId;
-  this.foreignParentId = this.instanaParentId = tracingUtil.generateRandomSpanId();
+  this.traceParentTraceId = longTraceId ? this.instanaTraceId : LEFT_PAD_16 + this.instanaTraceId;
+  this.traceParentParentId = this.instanaParentId = tracingUtil.generateRandomSpanId();
   this.sampled = true;
 
   this.traceStateValid = true;
@@ -161,7 +161,7 @@ W3cTraceContext.prototype.disableSampling = function disableSampling() {
   if (this.sampled) {
     // See https://www.w3.org/TR/trace-context/#mutating-the-traceparent-field
     // "The parent-id field MUST be set to a new value with the sampled flag update."
-    this.foreignParentId = tracingUtil.generateRandomSpanId();
+    this.traceParentParentId = tracingUtil.generateRandomSpanId();
   }
   this.sampled = false;
 };

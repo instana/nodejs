@@ -53,8 +53,8 @@ function instrument(coreModule) {
 function instrumentClientHttp2Session(clientHttp2Session) {
   const originalRequest = clientHttp2Session.request;
   clientHttp2Session.request = function request(headers) {
+    let w3cTraceContext = cls.getW3cTraceContext();
     const parentSpan = cls.getCurrentSpan() || cls.getReducedSpan();
-    const w3cTraceContext = cls.getW3cTraceContext();
 
     if (!isActive || !parentSpan || constants.isExitSpan(parentSpan)) {
       if (cls.tracingSuppressed()) {
@@ -71,6 +71,10 @@ function instrumentClientHttp2Session(clientHttp2Session) {
 
     return cls.ns.runAndReturn(() => {
       const span = cls.startSpan('node.http.client', constants.EXIT);
+
+      // startSpan updates the W3C trace context and writes it back to CLS, so we have to refetch the updated context
+      // object from CLS.
+      w3cTraceContext = cls.getW3cTraceContext();
 
       addHeaders(headers, span, w3cTraceContext);
 

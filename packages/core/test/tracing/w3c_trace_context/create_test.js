@@ -33,8 +33,8 @@ describe('tracing/w3c-trace-context create', () => {
 
       expect(traceContext.traceParentValid).to.be.true;
       expect(traceContext.version).to.equal(version00);
-      expect(traceContext.foreignTraceId).to.equal(expectedTraceId);
-      expect(traceContext.foreignParentId).to.equal(parentId);
+      expect(traceContext.traceParentTraceId).to.equal(expectedTraceId);
+      expect(traceContext.traceParentParentId).to.equal(parentId);
       expect(traceContext.sampled).to.equal(expectedSampled);
       expect(traceContext.renderTraceParent()).to.equal(`${version00}-${expectedTraceId}-${parentId}-${expectedFlags}`);
 
@@ -63,8 +63,8 @@ describe('tracing/w3c-trace-context create', () => {
 
       expect(traceContext.traceParentValid).to.be.true;
       expect(traceContext.version).to.equal(version00);
-      expect(traceContext.foreignTraceId).to.equal(expectedTraceId);
-      expect(traceContext.foreignParentId).to.equal(parentId);
+      expect(traceContext.traceParentTraceId).to.equal(expectedTraceId);
+      expect(traceContext.traceParentParentId).to.equal(parentId);
       expect(traceContext.sampled).to.be.false;
       expect(traceContext.renderTraceParent()).to.equal(`${version00}-${expectedTraceId}-${parentId}-00`);
 
