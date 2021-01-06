@@ -17,4 +17,4 @@ ENV NODE_OPTIONS="--require /instana/node_modules/@instana/google-cloud-run"
 
 EXPOSE 4816
 
-ENTRYPOINT [ "node", "." ]
+ENTRYPOINT [ "npm", "start" ]

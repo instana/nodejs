@@ -1,10 +1,15 @@
 'use strict';
 
+const { util: coreUtil } = require('@instana/core');
 const { environment: environmentUtil } = require('@instana/serverless');
 
-environmentUtil.validate();
+let isExcludedFromInstrumentation = coreUtil.excludedFromInstrumentation && coreUtil.excludedFromInstrumentation();
 
-if (environmentUtil.isValid()) {
+if (!isExcludedFromInstrumentation) {
+  environmentUtil.validate();
+}
+
+if (!isExcludedFromInstrumentation && environmentUtil.isValid()) {
   module.exports = exports = require('./activate');
 } else {
   module.exports = exports = require('./noop');
