@@ -21,4 +21,4 @@ ENV NODE_OPTIONS="--require /instana/node_modules/@instana/aws-fargate"
 
 EXPOSE 4816
 
-ENTRYPOINT [ "node", "." ]
+ENTRYPOINT [ "npm", "start" ]
