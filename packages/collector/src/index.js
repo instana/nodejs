@@ -14,6 +14,8 @@ const log = require('./logger');
 const normalizeConfig = require('./util/normalizeConfig');
 const experimental = require('./experimental');
 
+let agentConnection;
+
 let config;
 
 module.exports = exports = function init(_config) {
@@ -21,7 +23,7 @@ module.exports = exports = function init(_config) {
 
   log.init(config, false);
 
-  const agentConnection = require('./agentConnection');
+  agentConnection = require('./agentConnection');
   const agentOpts = require('./agent/opts');
   const pidStore = require('./pidStore');
   const uncaught = require('./uncaught');
@@ -51,6 +53,10 @@ exports.currentSpan = function getHandleForCurrentSpan() {
 
 exports.isTracing = function isTracing() {
   return instanaNodeJsCore.tracing.getCls() ? instanaNodeJsCore.tracing.getCls().isTracing() : false;
+};
+
+exports.isConnected = function isConnected() {
+  return agentConnection && agentConnection.isConnected();
 };
 
 exports.setLogger = function setLogger(logger) {

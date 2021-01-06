@@ -2,6 +2,7 @@
 
 ## Unreleased
 - fix: run original function in runInAsyncContext/runPromiseInAsyncContext when tracing is not active.
+- Introduction of AWS SQS instrumentation for sending and reading messages.
 
 ## 1.113.0
 - Instrument MongoDB native driver unified topology.

@@ -47,6 +47,33 @@ exports.updateConfig = function updateConfig(config) {
   extraHttpHeadersToCapture = config.tracing.http.extraHttpHeadersToCapture;
 };
 
+/**
+ * Checks whether an outgoing HTTP request should not be traced. This is intended to suppress the creation of HTTP exits
+ * for which a higher level instrumentation exists, for example, HTTP requests made by AWS SQS that represent the queue
+ * polling when we already created an SQS entry span for it.
+ *
+ * @param {InstanaSpan} parentSpan The currently active parent span
+ * @param {Object} options The standard lib request options:
+ * https://nodejs.org/dist/latest-v14.x/docs/api/http.html#http_http_request_options_callback
+ * @return {boolean} true, if the HTTP request that is about to happen should _not_ create a span.
+ */
+function shouldBeBypassed(parentSpan, options) {
+  if (
+    parentSpan &&
+    parentSpan.n === 'sqs' &&
+    options &&
+    options.headers &&
+    options.headers['User-Agent'] &&
+    options.headers['User-Agent'].toLowerCase().indexOf('aws-sdk-nodejs') > -1 &&
+    // Same regex used by AWS SDK at /lib/services/sqs.js
+    options.headers.Host.match(/^sqs\.(?:.+?)\./)
+  ) {
+    return true;
+  }
+
+  return false;
+}
+
 function instrument(coreModule, forceHttps) {
   const originalRequest = coreModule.request;
   coreModule.request = function request() {
@@ -89,7 +116,13 @@ function instrument(coreModule, forceHttps) {
     let w3cTraceContext = cls.getW3cTraceContext();
     const parentSpan = cls.getCurrentSpan() || cls.getReducedSpan();
 
-    if (!isActive || !parentSpan || constants.isExitSpan(parentSpan)) {
+    if (
+      !isActive ||
+      !parentSpan ||
+      constants.isExitSpan(parentSpan) ||
+      shouldBeBypassed(parentSpan, options) ||
+      cls.tracingSuppressed()
+    ) {
       let traceLevelHeaderHasBeenAdded = false;
       if (cls.tracingSuppressed()) {
         traceLevelHeaderHasBeenAdded = tryToAddTraceLevelAddHeaderToOpts(options, '0', w3cTraceContext);
@@ -101,7 +134,6 @@ function instrument(coreModule, forceHttps) {
       }
       return clientRequest;
     }
-
     cls.ns.run(() => {
       const span = cls.startSpan('node.http.client', constants.EXIT);
 

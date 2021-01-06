@@ -68,6 +68,26 @@ class ProcessControls {
     });
   }
 
+  /**
+   * @param opts {{
+   * appPath: string,
+   *   cwd: string,
+   *   port: number,
+   *   dirname: string,
+   *   dontKillInAfterHook: boolean,
+   *   http2: boolean,
+   *   args: [],
+   *   minimalDelay: number,
+   *   usePreInit: boolean,
+   *   useGlobalAgent: boolean,
+   *   tracingEnabled: boolean,
+   *   agentControls: any,
+   *   env: {
+   *     USE_HTTPS: string | boolean,
+   *     [key: string]: any
+   *   },
+   * }} The available options
+   */
   constructor(opts = {}) {
     if (!opts.appPath && !opts.dirname) {
       throw new Error('Missing mandatory config option, either appPath or dirname needs to be provided.');
@@ -205,6 +225,18 @@ class ProcessControls {
     return this.process.pid;
   }
 
+  /**
+   * @param opts {{
+   *   suppressTracing: boolean,
+   *   url: string,
+   *   json: boolean,
+   *   ca: Buffer,
+   *   headers: {
+   *     'X-INSTANA-L': '0' | '1',
+   *     [key:string]: any
+   *   }
+   * }} The request options
+   */
   sendRequest(opts) {
     const requestOptions = Object.assign({}, opts);
     requestOptions.baseUrl = this.baseUrl;

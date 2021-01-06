@@ -31,6 +31,8 @@ const paddingForInodeAndFileDescriptor = 200;
 const maxContentLength = 1024 * 1024 * 5;
 let maxContentErrorHasBeenLogged = false;
 
+let isConnected = false;
+
 exports.announceNodeCollector = function announceNodeCollector(cb) {
   cb = atMostOnce('callback for announceNodeCollector', cb);
 
@@ -146,18 +148,21 @@ function checkWhetherResponseForPathIsOkay(path, cb) {
       method: 'HEAD'
     },
     res => {
-      cb(199 < res.statusCode && res.statusCode < 300);
+      isConnected = 199 < res.statusCode && res.statusCode < 300;
+      cb(isConnected);
       res.resume();
     }
   );
 
   req.setTimeout(agentOpts.requestTimeout, function onTimeout() {
-    cb(false);
+    isConnected = false;
+    cb(isConnected);
     req.abort();
   });
 
   req.on('error', () => {
-    cb(false);
+    isConnected = false;
+    cb(isConnected);
   });
 
   req.end();
@@ -378,6 +383,10 @@ function sendRequestsSync(path1, data1, path2, data2) {
     logger.warn('Failed to report uncaught exception due to network error.', { error });
   }
 }
+
+exports.isConnected = function() {
+  return isConnected;
+};
 
 function getCpuSetFileContent() {
   try {

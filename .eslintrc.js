@@ -45,6 +45,7 @@ module.exports = {
     'new-cap': 'off',
     'newline-per-chained-call': 'off',
     'no-console': 'error',
+    'no-const-assign': 'error',
     'no-else-return': 'off',
     'no-labels': 'off',
     'no-mixed-operators': 'off',
