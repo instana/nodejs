@@ -133,7 +133,7 @@ exports.reportFailure = function reportFailure(result, lookingFor) {
       result.getExpectations().length
     }) expectations.\n`;
     if (result.getFailedExpectation()) {
-      message += `This expectationt failed: ${result.getFailedExpectation().toString()}\n`;
+      message += `This expectation failed: ${result.getFailedExpectation().toString()}\n`;
       message += `And it failed with this error: ${result.getError().message}\n`;
       errorMessageReported = true;
     }

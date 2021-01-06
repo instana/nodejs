@@ -20,7 +20,7 @@ const requireHook = require('../../../../util/requireHook');
 const tracingUtil = require('../../../tracingUtil');
 
 let logger;
-logger = require('../../../../logger').getLogger('tracing/amqp', newLogger => {
+logger = require('../../../../logger').getLogger('tracing/pubsub', newLogger => {
   logger = newLogger;
 });
 

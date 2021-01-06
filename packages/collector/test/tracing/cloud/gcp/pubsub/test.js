@@ -269,7 +269,7 @@ mochaSuiteFn('tracing/cloud/gcp/pubsub', function() {
             .then(() => agentControls.getSpans())
             .then(spans => {
               if (spans.length > 0) {
-                fail(`Unexpected spans (Google Cloud Run/suppressed: ${stringifyItems(spans)}`);
+                fail(`Unexpected spans (Google Cloud PubSub/suppressed: ${stringifyItems(spans)}`);
               }
             });
         }));
