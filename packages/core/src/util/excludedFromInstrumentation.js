@@ -6,21 +6,11 @@
 // NODE_OPTIONS="--require /usr/src/app/node_modules/@instana/collector/src/immediate" is set, we would instrument both
 // processes, that is, npm/yarn as well as the actual application. Attempting to instrument the npm or yarn process has
 // no value and also creates confusing log output, so we exclude them here explicitly.
-const excludeList = [
-  // Patterns that will prohibit instrumentation:
-  /^.*\/npm/,
-  /^.*\/yarn/
-];
+const excludePattern = /^.*\/(yarn|npm)$/i;
 
 module.exports = exports = function isExcludedFromInstrumentation() {
-  let excludedFromInstrumentation = false;
-  if (process.argv && typeof process.argv[1] === 'string') {
-    excludeList.forEach(pattern => {
-      if (pattern.test(process.argv[1])) {
-        excludedFromInstrumentation = true;
-      }
-    });
-  }
+  const excludedFromInstrumentation =
+    process.argv && typeof process.argv[1] === 'string' && excludePattern.test(process.argv[1]);
 
   if (excludedFromInstrumentation) {
     const logLevelIsDebugOrInfo =
