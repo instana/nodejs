@@ -42,8 +42,7 @@ exports.request = function request(opts) {
   }
 
   return new Promise((resolve, reject) => {
-    let client;
-    client = http2.connect(baseUrl, {
+    const client = http2.connect(baseUrl, {
       ca: cert
     });
 

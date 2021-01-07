@@ -321,7 +321,7 @@ function instrumentedRequest(ctx, origEsReq, originalArgs) {
 
   // normalize arguments
   let params = originalArgs[0] || {};
-  let options = originalArgs[1];
+  const options = originalArgs[1];
   let callbackIndex = 2;
   let originalCallback = originalArgs[callbackIndex];
   if (typeof originalCallback !== 'function') {
@@ -392,7 +392,7 @@ function findActionInStack(span) {
   if (esApiFrames.length === 0) {
     return;
   }
-  let esApiMethod = esApiFrames[esApiFrames.length - 1].m;
+  const esApiMethod = esApiFrames[esApiFrames.length - 1].m;
   if (!esApiMethod) {
     return;
   }

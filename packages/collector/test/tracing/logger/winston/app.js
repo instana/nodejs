@@ -52,7 +52,7 @@ app.get('/log', (req, res) => {
 
   let context = null;
   let method = null;
-  let args = [];
+  const args = [];
 
   if (useGlobalLogger) {
     context = winston;

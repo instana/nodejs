@@ -20,7 +20,7 @@ module.exports = function clone(x) {
     r = {};
 
     // eslint-disable-next-line no-restricted-syntax
-    for (let key in x) {
+    for (const key in x) {
       // eslint-disable-next-line no-prototype-builtins
       if (x.hasOwnProperty(key)) {
         r[key] = clone(x[key]);

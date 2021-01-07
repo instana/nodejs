@@ -55,7 +55,7 @@ const batchBucketWidth = 18;
 // rare, we omit the check, trading better perfomance for a few missed batch opportunities (if any).
 //
 // The batchingBuckets are cleared once the span buffer is flushed downstream.
-let batchingBuckets = new Map();
+const batchingBuckets = new Map();
 
 exports.init = function init(config, _downstreamConnection) {
   downstreamConnection = _downstreamConnection;
@@ -146,7 +146,7 @@ function addToBatch(span) {
   // we check the span's own bucket and the previous bucket.
   const bucketsForTrace = batchingBuckets.get(span.t);
   const key = batchingBucketKey(span);
-  let hasBeenBatched = findBatchPartnerAndMerge(span, bucketsForTrace, key);
+  const hasBeenBatched = findBatchPartnerAndMerge(span, bucketsForTrace, key);
   if (hasBeenBatched) {
     return true;
   }

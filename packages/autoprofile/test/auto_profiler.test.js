@@ -49,7 +49,7 @@ describe('AutoProfiler', () => {
 
   describe('profile()', () => {
     it('should profile with CPU sampler', done => {
-      let span = profiler.profile();
+      const span = profiler.profile();
       assert(span);
 
       // do some work

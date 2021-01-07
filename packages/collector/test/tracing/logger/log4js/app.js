@@ -43,7 +43,7 @@ app.post('/log', (req, res) => {
   const useLogMethod = query.useLogMethod === 'true';
 
   let method = null;
-  let args = [];
+  const args = [];
 
   if (useLogMethod) {
     method = logger.log;

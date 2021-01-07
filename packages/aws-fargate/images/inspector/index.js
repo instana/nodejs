@@ -13,7 +13,7 @@ const metadataUriEnvVarV3 = 'ECS_CONTAINER_METADATA_URI';
 const metadataUriEnvVarV4 = 'ECS_CONTAINER_METADATA_URI_V4';
 
 async function inspect() {
-  let result = ['\n================\nInspecting Task Environment:\n'];
+  const result = ['\n================\nInspecting Task Environment:\n'];
   result.push(`Node.js version: ${process.versions.node}`);
 
   result.push('Inspecting: Amazon ECS container metadata file (opt-in)');

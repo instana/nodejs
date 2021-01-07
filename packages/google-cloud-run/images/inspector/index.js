@@ -12,7 +12,7 @@ const app = new http.Server();
 const port = process.env.PORT || 8080;
 
 async function inspect() {
-  let result = ['\n================\nInspecting Container Instance Environment:\n'];
+  const result = ['\n================\nInspecting Container Instance Environment:\n'];
   result.push(`Node.js version: ${process.versions.node}`);
   const envVars = ['HOSTNAME', 'PORT', 'K_SERVICE', 'K_REVISION', 'K_CONFIGURATION'];
   for (let i = 0; i < envVars.length; i++) {

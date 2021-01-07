@@ -29,7 +29,7 @@ describe('AsyncSampler', () => {
 
   describe('extractFrames()', () => {
     it('should extract frames', done => {
-      let sampler = new AsyncSampler(profiler);
+      const sampler = new AsyncSampler(profiler);
       if (!sampler.test()) {
         done();
         return;
@@ -53,7 +53,7 @@ describe('AsyncSampler', () => {
         }
       }
 
-      let sample = {
+      const sample = {
         asyncId: 1,
         stack: generateStackTrace(0)
       };
@@ -61,7 +61,7 @@ describe('AsyncSampler', () => {
       sampler.samples = new Map();
       sampler.samples.set(1, sample);
 
-      let frames = sampler.createStackTrace(sample, true);
+      const frames = sampler.createStackTrace(sample, true);
 
       let found = false;
       frames.forEach(frame => {
@@ -78,7 +78,7 @@ describe('AsyncSampler', () => {
 
   describe('startProfiling()', () => {
     it('should record async profile', done => {
-      let sampler = new AsyncSampler(profiler);
+      const sampler = new AsyncSampler(profiler);
       if (!sampler.test()) {
         done();
         return;
@@ -99,7 +99,7 @@ describe('AsyncSampler', () => {
         sampler.startSampler();
         setTimeout(() => {
           sampler.stopSampler();
-          let profile = sampler.buildProfile(1000, 10);
+          const profile = sampler.buildProfile(1000, 10);
           assert(JSON.stringify(profile.toJson()).match(/async_sampler.test.js/));
           done();
         }, 1000);
