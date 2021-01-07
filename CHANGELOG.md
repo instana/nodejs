@@ -1,5 +1,8 @@
 # Changelog
 
+## Unreleased:
+- Do not instrument npm or yarn when started via @instana/collector/src/immediate (instead, only instrument the child process started by npm start or yarn start).
+
 ## 1.110.5:
 - Depend on exact versions of `@instana` packages, not a version range. This makes sure all `@instana` packages are updated in sync and it avoids internal packages like `core` being updated while consuming packages like `collector` stay on an older version.
 

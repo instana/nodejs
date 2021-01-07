@@ -1,0 +1,14 @@
+{
+  "name": "immediate",
+  "version": "1.0.0",
+  "description": "test application",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/instana/nodejs-sensor.git"
+  },
+  "main": "app",
+  "scripts": {
+    "start": "node ."
+  }
+}
