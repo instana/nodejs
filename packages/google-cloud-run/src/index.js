@@ -3,7 +3,7 @@
 const { util: coreUtil } = require('@instana/core');
 const { environment: environmentUtil } = require('@instana/serverless');
 
-let isExcludedFromInstrumentation = coreUtil.excludedFromInstrumentation && coreUtil.excludedFromInstrumentation();
+const isExcludedFromInstrumentation = coreUtil.excludedFromInstrumentation && coreUtil.excludedFromInstrumentation();
 
 if (!isExcludedFromInstrumentation) {
   environmentUtil.validate();

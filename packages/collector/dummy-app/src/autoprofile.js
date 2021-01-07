@@ -14,7 +14,7 @@ const fs = require('fs');
 const http = require('http');
 
 function cpuWork(usage, duration) {
-  let usageTimer = setInterval(() => {
+  const usageTimer = setInterval(() => {
     for (let i = 0; i < usage * 300000; i++) {
       Math.random();
     }
@@ -47,16 +47,16 @@ function simulateMemLeak() {
     }
 
     for (let i = 0; i < 5000; i++) {
-      let obj1 = { v: Math.random() };
+      const obj1 = { v: Math.random() };
       mem1.push(obj1);
     }
   }, 1000);
 
   // 5 sec
   setInterval(() => {
-    let mem2 = [];
+    const mem2 = [];
     for (let i = 0; i < 500; i++) {
-      let obj2 = { v: Math.random() };
+      const obj2 = { v: Math.random() };
       mem2.push(obj2);
     }
   }, 5000);

@@ -43,6 +43,12 @@ module.exports = {
     'no-use-before-define': ['error', 'nofunc'],
     'object-curly-spacing': 'off',
     'operator-linebreak': 'off',
+    'prefer-const': [
+      'error',
+      {
+        destructuring: 'all'
+      }
+    ],
     'prefer-arrow-callback': 'off',
     'space-before-function-paren': 'off',
     strict: ['error', 'global'],

@@ -91,7 +91,7 @@ class SamplerScheduler {
       return null;
     }
 
-    let spanStart = Date.now();
+    const spanStart = Date.now();
 
     let stopped = false;
     const self = this;
@@ -142,9 +142,9 @@ class SamplerScheduler {
     }
     this.profiler.debug(this.config.logPrefix + ': reporting profile.');
 
-    let profile = this.sampler.buildProfile(this.profileDuration, Date.now() - this.profileStartTs);
+    const profile = this.sampler.buildProfile(this.profileDuration, Date.now() - this.profileStartTs);
 
-    let externalPid = this.profiler.getExternalPid();
+    const externalPid = this.profiler.getExternalPid();
     if (externalPid) {
       profile.processId = '' + externalPid;
     }

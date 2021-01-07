@@ -105,7 +105,7 @@ class ProcessControls {
     if (!this.agentControls && this.useGlobalAgent) {
       this.agentControls = globalAgent.instance;
     }
-    let agentPort = this.agentControls ? this.agentControls.agentPort : undefined;
+    const agentPort = this.agentControls ? this.agentControls.agentPort : undefined;
 
     this.env = _.assign(
       {},

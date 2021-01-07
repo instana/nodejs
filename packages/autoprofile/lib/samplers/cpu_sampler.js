@@ -36,21 +36,21 @@ class CpuSampler {
   }
 
   stopSampler() {
-    let cpuProfileRoot = this.profiler.addon.stopCpuSampler();
+    const cpuProfileRoot = this.profiler.addon.stopCpuSampler();
     if (cpuProfileRoot) {
-      let includeAgentFrames = this.profiler.getOption('includeAgentFrames');
+      const includeAgentFrames = this.profiler.getOption('includeAgentFrames');
       this.updateProfile(this.top, cpuProfileRoot.children, includeAgentFrames);
     }
   }
 
   buildProfile(duration, timespan) {
-    let roots = new Set();
+    const roots = new Set();
     // eslint-disable-next-line no-restricted-syntax
-    for (let child of this.top.children.values()) {
+    for (const child of this.top.children.values()) {
       roots.add(child);
     }
 
-    let profile = new Profile(
+    const profile = new Profile(
       this.profiler,
       Profile.c.CATEGORY_CPU,
       Profile.c.TYPE_CPU_USAGE,
@@ -76,7 +76,7 @@ class CpuSampler {
         return;
       }
 
-      let child = parent.findOrAddChild(node.func_name, node.file_name, node.line_num);
+      const child = parent.findOrAddChild(node.func_name, node.file_name, node.line_num);
 
       child.measurement += node.hit_count;
       child.numSamples += node.hit_count;

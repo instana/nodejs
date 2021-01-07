@@ -222,7 +222,7 @@ class AutoProfiler {
       };
     }
 
-    let schedulers = [];
+    const schedulers = [];
     if (self.cpuSamplerScheduler.started) {
       schedulers.push(self.cpuSamplerScheduler);
     }
@@ -282,10 +282,10 @@ class AutoProfiler {
   }
 
   matchVersion(min, max) {
-    let versionRegexp = /v?(\d+)\.(\d+)\.(\d+)/;
+    const versionRegexp = /v?(\d+)\.(\d+)\.(\d+)/;
 
     let m = versionRegexp.exec(process.version);
-    let currN = 1e9 * parseInt(m[1], 10) + 1e6 * parseInt(m[2], 10) + 1e3 * parseInt(m[3], 10);
+    const currN = 1e9 * parseInt(m[1], 10) + 1e6 * parseInt(m[2], 10) + 1e3 * parseInt(m[3], 10);
 
     let minN = 0;
     if (min) {

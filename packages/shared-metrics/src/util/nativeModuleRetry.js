@@ -11,7 +11,7 @@ const tar = require('tar');
 const { fork } = require('child_process');
 const detectLibc = require('detect-libc');
 
-let retryMechanisms = [];
+const retryMechanisms = [];
 if (!process.env.INSTANA_DEV_DISABLE_PRECOMPILED_NATIVE_ADDONS) {
   retryMechanisms.push('copy-precompiled');
 }

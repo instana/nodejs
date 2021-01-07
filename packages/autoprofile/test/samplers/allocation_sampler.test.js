@@ -18,7 +18,7 @@ describe('AllocationSampler', () => {
         return;
       }
 
-      let sampler = new AllocationSampler(profiler);
+      const sampler = new AllocationSampler(profiler);
       if (!sampler.test()) {
         done();
         return;
@@ -29,15 +29,15 @@ describe('AllocationSampler', () => {
         sampler.startSampler();
         setTimeout(() => {
           sampler.stopSampler();
-          let profile = sampler.buildProfile(1000, 10);
+          const profile = sampler.buildProfile(1000, 10);
 
           // console.log(util.inspect(profile.toJson(), {showHidden: false, depth: null}))
           callback(null, JSON.stringify(profile.toJson()).match(/allocation_sampler.test.js/));
         }, 1000);
 
-        let mem1 = [];
+        const mem1 = [];
         function memLeak() {
-          let mem2 = [];
+          const mem2 = [];
           for (let i = 0; i < 200000; i++) {
             mem1.push(Math.random());
             mem2.push(Math.random());

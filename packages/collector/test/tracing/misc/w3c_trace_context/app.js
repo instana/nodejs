@@ -49,7 +49,7 @@ if (!downstreamPort) {
   throw new Error('DOWNSTREAM_PORT is mandatory for this app.');
 }
 
-let server = require('http')
+const server = require('http')
   .createServer()
   .listen(port, () => {
     log(`Listening  on port: ${port}`);

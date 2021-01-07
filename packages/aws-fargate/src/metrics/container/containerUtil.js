@@ -5,7 +5,8 @@ exports.fullyQualifiedContainerId = function fullyQualifiedContainerId(taskArn, 
 };
 
 exports.dataForSecondaryContainer = function dataForSecondaryContainer(all, dockerId) {
-  let dataForThisContainer = all && all.Containers && all.Containers.find(container => container.DockerId === dockerId);
+  const dataForThisContainer =
+    all && all.Containers && all.Containers.find(container => container.DockerId === dockerId);
   return dataForThisContainer || {};
 };
 

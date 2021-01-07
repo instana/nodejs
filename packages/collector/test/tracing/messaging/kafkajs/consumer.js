@@ -94,7 +94,7 @@ let receivedMessages = [];
 
       try {
         for (let i = 0; i < batch.messages.length; i++) {
-          let message = batch.messages[i];
+          const message = batch.messages[i];
           if (runAsStandAlone) {
             log(
               'batch message',

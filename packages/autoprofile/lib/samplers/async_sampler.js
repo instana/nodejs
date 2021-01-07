@@ -96,7 +96,7 @@ class AsyncSampler {
 
     function before(asyncId) {
       try {
-        let sample = self.samples.get(asyncId);
+        const sample = self.samples.get(asyncId);
         if (!sample) {
           return;
         }
@@ -135,9 +135,9 @@ class AsyncSampler {
       this.profileDuration += this.hrmillis() - this.spanStart;
     } else {
       let spanEnd = this.spanStart;
-      for (let sample of this.samples.values()) {
+      for (const sample of this.samples.values()) {
         if (sample.time) {
-          let sampleEnd = sample.start + sample.time;
+          const sampleEnd = sample.start + sample.time;
           if (sampleEnd > spanEnd) {
             spanEnd = sampleEnd;
           }
@@ -157,9 +157,9 @@ class AsyncSampler {
   }
 
   updateProfile() {
-    let includeAgentFrames = this.profiler.getOption('includeAgentFrames');
+    const includeAgentFrames = this.profiler.getOption('includeAgentFrames');
 
-    for (let sample of this.samples.values()) {
+    for (const sample of this.samples.values()) {
       if (!sample.time) {
         continue;
       }
@@ -176,7 +176,7 @@ class AsyncSampler {
 
       // update profile
       let node = this.top;
-      for (let frame of frames) {
+      for (const frame of frames) {
         let methodName = '';
         if (frame.getFunctionName()) {
           methodName = frame.getFunctionName();
@@ -193,8 +193,8 @@ class AsyncSampler {
   }
 
   createStackTrace(sample, includeAgentFrames) {
-    let frames = new Map();
-    let processed = new Set();
+    const frames = new Map();
+    const processed = new Set();
 
     while (sample && !processed.has(sample.asyncId)) {
       processed.add(sample.asyncId);
@@ -244,12 +244,12 @@ class AsyncSampler {
   }
 
   buildProfile(duration, timespan) {
-    let roots = new Set();
-    for (let child of this.top.children.values()) {
+    const roots = new Set();
+    for (const child of this.top.children.values()) {
       roots.add(child);
     }
 
-    let profile = new Profile(
+    const profile = new Profile(
       this.profiler,
       Profile.c.CATEGORY_TIME,
       Profile.c.TYPE_ASYNC_CALLS,

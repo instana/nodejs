@@ -6,7 +6,7 @@ const { util: coreUtil } = require('@instana/core');
 // modifying the source code. See
 // https://www.instana.com/docs/ecosystem/node-js/installation#installation-without-modifying-the-source-code
 
-let isExcludedFromInstrumentation = coreUtil.excludedFromInstrumentation && coreUtil.excludedFromInstrumentation();
+const isExcludedFromInstrumentation = coreUtil.excludedFromInstrumentation && coreUtil.excludedFromInstrumentation();
 
 if (!isExcludedFromInstrumentation) {
   require('./index')();

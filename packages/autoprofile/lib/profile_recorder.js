@@ -54,7 +54,7 @@ class ProfileRecorder {
   }
 
   flush(callback) {
-    let now = Date.now();
+    const now = Date.now();
 
     if (this.queue.length === 0) {
       return callback(null);
@@ -66,7 +66,7 @@ class ProfileRecorder {
     }
 
     // read queue
-    let outgoing = this.queue;
+    const outgoing = this.queue;
     this.queue = [];
 
     this.lastFlushTs = now;

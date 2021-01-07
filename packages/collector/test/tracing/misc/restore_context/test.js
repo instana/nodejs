@@ -36,7 +36,7 @@ mochaSuiteFn('tracing/restore context', function() {
     describe('restore context', function() {
       it(//
       `must capture spans after async context loss when context is manually restored (${apiVariant}))`, () => {
-        let url = `/${apiVariant}`;
+        const url = `/${apiVariant}`;
         return controls
           .sendRequest({
             method: 'POST',

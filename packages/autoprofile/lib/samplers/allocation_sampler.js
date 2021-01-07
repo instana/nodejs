@@ -31,10 +31,10 @@ class AllocationSampler {
   }
 
   stopSampler() {
-    let allocationProfileRoot = this.profiler.addon.readAllocationProfile();
+    const allocationProfileRoot = this.profiler.addon.readAllocationProfile();
     this.profiler.addon.stopAllocationSampler();
     if (allocationProfileRoot) {
-      let includeAgentFrames = this.profiler.getOption('includeAgentFrames');
+      const includeAgentFrames = this.profiler.getOption('includeAgentFrames');
       this.updateProfile(this.top, allocationProfileRoot.children, includeAgentFrames);
     }
   }
@@ -46,7 +46,7 @@ class AllocationSampler {
         return;
       }
 
-      let child = parent.findOrAddChild(node.func_name, node.file_name, node.line_num);
+      const child = parent.findOrAddChild(node.func_name, node.file_name, node.line_num);
 
       child.measurement += node.size;
       child.numSamples += node.count;
@@ -56,13 +56,13 @@ class AllocationSampler {
   }
 
   buildProfile(duration, timespan) {
-    let roots = new Set();
+    const roots = new Set();
     // eslint-disable-next-line no-restricted-syntax
-    for (let child of this.top.children.values()) {
+    for (const child of this.top.children.values()) {
       roots.add(child);
     }
 
-    let profile = new Profile(
+    const profile = new Profile(
       this.profiler,
       Profile.c.CATEGORY_MEMORY,
       Profile.c.TYPE_MEMORY_ALLOCATION_RATE,

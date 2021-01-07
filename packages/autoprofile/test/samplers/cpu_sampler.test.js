@@ -13,7 +13,7 @@ describe('CpuSampler', () => {
 
   describe('startProfile()', () => {
     it('should record profile', done => {
-      let sampler = new CpuSampler(profiler);
+      const sampler = new CpuSampler(profiler);
       if (!sampler.test()) {
         done();
         return;
@@ -25,7 +25,7 @@ describe('CpuSampler', () => {
 
         setTimeout(() => {
           sampler.stopSampler();
-          let profile = sampler.buildProfile(500, 10);
+          const profile = sampler.buildProfile(500, 10);
 
           callback(null, JSON.stringify(profile.toJson()).match(/cpu_sampler.test.js/));
         }, 500);

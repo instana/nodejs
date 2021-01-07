@@ -68,7 +68,7 @@ class CallSite {
   depth() {
     let max = 0;
 
-    for (let child of this.children.values()) {
+    for (const child of this.children.values()) {
       const d = child.depth();
       if (d > max) {
         max = d;
@@ -80,7 +80,7 @@ class CallSite {
 
   toJson() {
     const childrenJson = [];
-    for (let child of this.children.values()) {
+    for (const child of this.children.values()) {
       childrenJson.push(child.toJson());
     }
 
@@ -118,7 +118,7 @@ class Profile {
 
   toJson() {
     const rootsJson = [];
-    for (let root of this.roots.values()) {
+    for (const root of this.roots.values()) {
       rootsJson.push(root.toJson());
     }
 

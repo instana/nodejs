@@ -13,19 +13,19 @@ describe('Profile', () => {
 
   describe('toJson()', () => {
     it('should convert profile to json', done => {
-      let roots = new Set();
+      const roots = new Set();
 
-      let root1 = new CallSite(profiler, 'meth1', 'file1', 1);
+      const root1 = new CallSite(profiler, 'meth1', 'file1', 1);
       root1.measurement = 10;
       root1.numSamples = 1;
       roots.add(root1);
 
-      let child1 = new CallSite(profiler, 'meth2', 'file2', 2);
+      const child1 = new CallSite(profiler, 'meth2', 'file2', 2);
       child1.measurement = 5;
       child1.numSamples = 1;
       root1.addChild(child1);
 
-      let profile = new Profile(
+      const profile = new Profile(
         profiler,
         Profile.c.CATEGORY_CPU,
         Profile.c.TYPE_CPU_USAGE,
@@ -82,15 +82,15 @@ describe('CallSite', () => {
 
   describe('depth()', () => {
     it('should return max depth', done => {
-      let root = new CallSite(profiler, 'root', '', 0);
+      const root = new CallSite(profiler, 'root', '', 0);
 
-      let child1 = new CallSite(profiler, 'child1', '', 0);
+      const child1 = new CallSite(profiler, 'child1', '', 0);
       root.addChild(child1);
 
-      let child2 = new CallSite(profiler, 'child2', '', 0);
+      const child2 = new CallSite(profiler, 'child2', '', 0);
       root.addChild(child2);
 
-      let child2child1 = new CallSite(profiler, 'child2child1', '', 0);
+      const child2child1 = new CallSite(profiler, 'child2child1', '', 0);
       child2.addChild(child2child1);
 
       assert.equal(root.depth(), 3);
@@ -103,9 +103,9 @@ describe('CallSite', () => {
 
   describe('addChild()', () => {
     it('should add child', done => {
-      let root = new CallSite(profiler, 'root', '', 0);
+      const root = new CallSite(profiler, 'root', '', 0);
 
-      let child1 = new CallSite(profiler, 'child1', '', 0);
+      const child1 = new CallSite(profiler, 'child1', '', 0);
       root.addChild(child1);
 
       assert.deepEqual(child1, root.findChild('child1', '', 0));
@@ -116,9 +116,9 @@ describe('CallSite', () => {
 
   describe('removeChild()', () => {
     it('should remove child', done => {
-      let root = new CallSite(profiler, 'root', '', 0);
+      const root = new CallSite(profiler, 'root', '', 0);
 
-      let child1 = new CallSite(profiler, 'child1', '', 0);
+      const child1 = new CallSite(profiler, 'child1', '', 0);
       root.removeChild(child1);
 
       assert(!root.findChild('child1', '', 0));
@@ -129,7 +129,7 @@ describe('CallSite', () => {
 
   describe('increment()', () => {
     it('should increment value', done => {
-      let b = new CallSite(profiler, 'root', '', 0);
+      const b = new CallSite(profiler, 'root', '', 0);
       b.increment(0.1, 1);
       b.increment(0.2, 2);
 

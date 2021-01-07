@@ -210,7 +210,7 @@ app.post('/long-find', (req, res) => {
 });
 
 app.get('/findall', (req, res) => {
-  let filter = {};
+  const filter = {};
   if (req.query && req.query.unique) {
     filter.unique = req.query.unique;
   }

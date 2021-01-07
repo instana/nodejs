@@ -20,7 +20,7 @@ class Utils {
   }
 
   generateSha1(text) {
-    let h = crypto.createHash('sha1');
+    const h = crypto.createHash('sha1');
     h.update(text);
     return h.digest('hex');
   }
