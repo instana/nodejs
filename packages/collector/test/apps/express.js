@@ -21,6 +21,8 @@ const path = require('path');
 const fs = require('fs');
 const app = express();
 
+const port = process.env.APP_PORT || 3215;
+
 const logPrefix = `Express App (${process.pid}):\t`;
 
 if (process.env.WITH_STDOUT) {
@@ -123,18 +125,18 @@ if (process.env.USE_HTTPS === 'true') {
       },
       app
     )
-    .listen(process.env.APP_PORT, () => {
-      log(`Listening (HTTPS!) on port: ${process.env.APP_PORT}`);
+    .listen(port, () => {
+      log(`Listening (HTTPS!) on port: ${port}`);
     });
 } else {
-  app.listen(process.env.APP_PORT, () => {
-    log(`Listening on port: ${process.env.APP_PORT}`);
+  app.listen(port, () => {
+    log(`Listening on port: ${port}`);
   });
 }
 
 function log() {
   const args = Array.prototype.slice.call(arguments);
-  args[0] = `Express App (${process.pid}):\t${args[0]}`;
+  args[0] = `${logPrefix} (${process.pid}):\t${args[0]}`;
   // eslint-disable-next-line no-console
   console.log.apply(console, args);
 }

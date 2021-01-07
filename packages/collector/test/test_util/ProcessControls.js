@@ -76,6 +76,8 @@ class ProcessControls {
 
     // absolute path to .js file that should be executed
     this.appPath = opts.appPath;
+    // optional working directory for the child process
+    this.cwd = opts.cwd;
     // for scenarios where the app under tests terminates on its own
     this.dontKillInAfterHook = opts.dontKillInAfterHook;
     // arguments for the app under test
@@ -150,6 +152,9 @@ class ProcessControls {
       stdio: config.getAppStdio(),
       env: this.env
     };
+    if (this.cwd) {
+      forkConfig.cwd = this.cwd;
+    }
 
     this.process = this.args ? fork(this.appPath, this.args, forkConfig) : fork(this.appPath, forkConfig);
 
