@@ -209,7 +209,19 @@ class AgentStubControls {
     });
   }
 
-  async waitUntilAppIsCompletelyInitialized(pid) {
+  async waitUntilAppIsCompletelyInitialized(originalPid) {
+    let pid;
+    if (typeof originalPid === 'string') {
+      pid = parseInt(originalPid, 10);
+      if (isNaN(pid)) {
+        throw new Error(`PID has type string and cannot be parsed to a number: ${originalPid}`);
+      }
+    } else if (typeof originalPid === 'number') {
+      pid = originalPid;
+    } else {
+      throw new Error(`PID ${originalPid} has invalid type ${typeof originalPid}.`);
+    }
+
     await retry(() =>
       this.getReceivedData().then(data => {
         for (let i = 0, len = data.metrics.length; i < len; i++) {

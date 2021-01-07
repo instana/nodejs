@@ -20,6 +20,10 @@ app.get('/', (req, res) => {
   res.send('OK');
 });
 
+app.get('/pid', (req, res) => {
+  res.send(String(process.pid));
+});
+
 app.listen(port, () => {
   log(`Listening on port: ${port}`);
 });
