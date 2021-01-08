@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased:
+## 1.111.0:
 - Do not instrument npm or yarn when started via @instana/collector/src/immediate (instead, only instrument the child process started by npm start or yarn start).
 - Do not instrument npm or yarn on AWS Fargate (instead, only instrument the child process started by npm start or yarn start).
 - Do not instrument npm or yarn on Google Cloud Run (instead, only instrument the child process started by npm start or yarn start).
