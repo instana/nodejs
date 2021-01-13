@@ -1,5 +1,8 @@
 # Changelog
 
+## Unreleased
+- Avoid false positive warning about @instana/core being initialized too late in the presence of other instrumentation packages that need to be loaded before everything else.
+
 ## 1.111.0:
 - Do not instrument npm or yarn when started via @instana/collector/src/immediate (instead, only instrument the child process started by npm start or yarn start).
 - Do not instrument npm or yarn on AWS Fargate (instead, only instrument the child process started by npm start or yarn start).
