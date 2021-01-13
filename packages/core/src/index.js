@@ -23,6 +23,7 @@ exports.registerAdditionalInstrumentations = function registerAdditionalInstrume
 
 exports.preInit = function preInit() {
   var preliminaryConfig = normalizeConfig();
+  exports.util.hasThePackageBeenInitializedTooLate();
   exports.util.requireHook.init(preliminaryConfig);
   exports.tracing.preInit(preliminaryConfig);
 };
