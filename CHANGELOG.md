@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.111.1:
 - Avoid false positive warning about @instana/core being initialized too late in the presence of other instrumentation packages that need to be loaded before everything else.
 
 ## 1.111.0:
