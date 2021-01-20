@@ -5,6 +5,7 @@ const fs = require('fs');
 const http = require('@instana/core').uninstrumentedHttp.http;
 const pathUtil = require('path');
 const propertySizes = require('@instana/core').util.propertySizes;
+const childProcess = require('child_process');
 
 let logger;
 logger = require('./logger').getLogger('agentConnection', newLogger => {
@@ -21,9 +22,6 @@ const cpuSetFileContent = getCpuSetFileContent();
 // How many extra characters are to be reserved for the inode and
 // file descriptor fields in the collector announce cycle.
 const paddingForInodeAndFileDescriptor = 200;
-
-let netLinkHasBeenRequired;
-let netLink;
 
 const maxContentLength = 1024 * 1024 * 5;
 let maxContentErrorHasBeenLogged = false;
@@ -314,11 +312,6 @@ function sendData(path, data, cb, ignore404) {
   req.end();
 }
 
-exports.setNetLink = function setNetLink(_netLink) {
-  netLink = _netLink();
-  netLinkHasBeenRequired = true;
-};
-
 /**
  * Sends the given event data and trace data synchronously to the agent via HTTP. This function is synchronous, that is,
  * it blocks the event loop!
@@ -327,40 +320,21 @@ exports.setNetLink = function setNetLink(_netLink) {
  * (reporting an uncaught exception tot the agent in the process.on('uncaughtException') handler).
  */
 exports.reportUncaughtExceptionToAgentSync = function reportUncaughtExceptionToAgentSync(eventData, spans) {
-  sendRequestsSync([
-    {
-      path: `/com.instana.plugin.nodejs/traces.${pidStore.pid}`,
-      data: spans
-    },
-    {
-      path: '/com.instana.plugin.generic.event',
-      data: eventData
-    }
-  ]);
+  sendRequestsSync(
+    '/com.instana.plugin.generic.event',
+    eventData,
+    `/com.instana.plugin.nodejs/traces.${pidStore.pid}`,
+    spans
+  );
 };
 
 /**
- * Sends multiple HTTP POST requests to the agent. This function is synchronous, that is, it blocks the event loop!
+ * Sends two HTTP POST requests to the agent. This function is synchronous, that is, it blocks the event loop!
  *
  * YOU MUST NOT USE THIS FUNCTION, except for the one use case where it is actually required to block the event loop
  * (reporting an uncaught exception tot the agent in the process.on('uncaughtException') handler).
  */
-function sendRequestsSync(requests) {
-  // only try to require optional dependency netlinkwrapper once
-  if (!netLinkHasBeenRequired) {
-    netLinkHasBeenRequired = true;
-    try {
-      netLink = require('netlinkwrapper')();
-    } catch (requireNetlinkError) {
-      logger.warn(
-        'Failed to require optional dependency netlinkwrapper, uncaught exception will not be reported to Instana.'
-      );
-    }
-  }
-  if (!netLink) {
-    return;
-  }
-
+function sendRequestsSync(path1, data1, path2, data2) {
   let port = agentOpts.port;
   if (typeof port !== 'number') {
     try {
@@ -371,37 +345,11 @@ function sendRequestsSync(requests) {
     }
   }
 
+  let payload1;
+  let payload2;
   try {
-    netLink.connect(port, agentOpts.host);
-    netLink.blocking(false);
-    requests.forEach(request => {
-      sendHttpPostRequestSync(port, request.path, request.data);
-    });
-  } catch (netLinkError) {
-    logger.warn('Failed to report uncaught exception due to network error.', { error: netLinkError });
-  } finally {
-    try {
-      netLink.disconnect();
-    } catch (ignoreDisconnectError) {
-      logger.debug('Failed to disconnect after trying to report uncaught exception.');
-    }
-  }
-}
-
-/**
- * Sends a single, synchronous HTTP POST request to the agent. This function is synchronous, that is, it blocks the
- * event loop!
- *
- * YOU MUST NOT USE THIS FUNCTION, except for the one use case where it is actually required to block the event loop
- * (reporting an uncaught exception tot the agent in the process.on('uncaughtException') handler).
- */
-function sendHttpPostRequestSync(port, path, data) {
-  logger.debug({ payload: data }, 'Sending payload synchronously to %s', path);
-  let payload;
-  let payloadLength;
-  try {
-    payload = JSON.stringify(data);
-    payloadLength = Buffer.from(payload, 'utf8').length;
+    payload1 = JSON.stringify(data1);
+    payload2 = JSON.stringify(data2);
   } catch (payloadSerializationError) {
     logger.warn('Could not serialize payload, uncaught exception will not be reported.', {
       error: payloadSerializationError
@@ -409,15 +357,21 @@ function sendHttpPostRequestSync(port, path, data) {
     return;
   }
 
-  // prettier-ignore
-  netLink.write(
-    'POST ' + path + ' HTTP/1.1\u000d\u000a' +
-    'Host: ' + agentOpts.host + '\u000d\u000a' +
-    'Content-Type: application/json; charset=UTF-8\u000d\u000a' +
-    'Content-Length: ' + payloadLength + '\u000d\u000a' +
-    '\u000d\u000a' + // extra CRLF before body
-    payload
-  );
+  try {
+    childProcess.execFileSync(process.execPath, [pathUtil.join(__dirname, 'uncaught', 'syncHttp.js')], {
+      env: {
+        INSTANA_AGENT_HOST: agentOpts.host,
+        INSTANA_AGENT_PORT: agentOpts.port,
+        PATH1: path1,
+        PAYLOAD1: payload1,
+        PATH2: path2,
+        PAYLOAD2: payload2
+      },
+      timeout: 400
+    });
+  } catch (error) {
+    logger.warn('Failed to report uncaught exception due to network error.', { error });
+  }
 }
 
 function getCpuSetFileContent() {

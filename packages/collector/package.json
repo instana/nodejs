@@ -13,8 +13,7 @@
     "instana-instrument-edgemicro-cli": "src/bin/instrument-edgemicro-cli.js"
   },
   "files": [
-    "src",
-    "addons/linux"
+    "src"
   ],
   "publishConfig": {
     "access": "public"
@@ -132,8 +131,7 @@
     "shimmer": "1.2.0"
   },
   "optionalDependencies": {
-    "@instana/autoprofile": "1.111.1",
-    "netlinkwrapper": "^1.2.0"
+    "@instana/autoprofile": "1.111.1"
   },
   "devDependencies": {
     "eslint": "^5.16.0",

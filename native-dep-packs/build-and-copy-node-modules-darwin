@@ -24,11 +24,6 @@ function buildAndCopyModulesDarwin {
   else
     echo No gcstats.js package for ABI version $ABI_VERSION on MacOS.
   fi
-  if [[ -e netlinkwrapper ]]; then
-    tar -czf ../../../packages/collector/addons/darwin/x64/$ABI_VERSION/netlinkwrapper.tar.gz netlinkwrapper
-  else
-    echo No netlinkwrapper package for ABI version $ABI_VERSION on MacOS.
-  fi
   popd > /dev/null
   popd > /dev/null
   rm -rf tmp

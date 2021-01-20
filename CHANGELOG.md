@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+- Remove `netlinkwrapper` dependency.
+- Deprecate reporting uncaught exceptions as incidents and via span/trace. Prints a warning if the feature (which is opt-in) is enabled.
+
 ## 1.111.1:
 - Avoid false positive warning about @instana/core being initialized too late in the presence of other instrumentation packages that need to be loaded before everything else.
 

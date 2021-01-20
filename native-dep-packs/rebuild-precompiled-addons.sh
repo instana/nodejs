@@ -25,7 +25,6 @@ LIBC_VARIANTS=( \
 if [[ -z "$BUILD_FOR_MACOS" ]]; then
   source ./build-and-copy-node-modules-linux
 
-  rm -rf ../packages/collector/addons/linux
   rm -rf ../packages/shared-metrics/addons/linux
 
   for ABI_VERSION in ${!ABI_VERSIONS[@]}; do
@@ -57,7 +56,6 @@ if [[ ! -z "$BUILD_FOR_MACOS" ]]; then
 
     source ./build-and-copy-node-modules-darwin
 
-    rm -rf ../packages/collector/addons/darwin
     rm -rf ../packages/shared-metrics/addons/darwin
 
     for ABI_VERSION in ${!ABI_VERSIONS[@]}; do
