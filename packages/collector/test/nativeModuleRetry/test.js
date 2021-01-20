@@ -2,7 +2,7 @@
 
 const async = require('async');
 const copy = require('recursive-copy');
-const { assert, expect } = require('chai');
+const { expect } = require('chai');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
@@ -11,12 +11,11 @@ const semver = require('semver');
 const tar = require('tar');
 
 const config = require('../../../core/test/config');
-const { expectAtLeastOneMatching, retry } = require('../../../core/test/test_util');
+const { retry } = require('../../../core/test/test_util');
 const ProcessControls = require('../test_util/ProcessControls');
 const globalAgent = require('../globalAgent');
 
 const sharedMetricsNodeModules = path.join(__dirname, '..', '..', '..', 'shared-metrics', 'node_modules');
-const collectorNodeModules = path.join(__dirname, '..', '..', 'node_modules');
 const resourcesPath = path.join(__dirname, 'resources');
 
 describe('retry loading native addons', function() {
@@ -92,37 +91,6 @@ describe('retry loading native addons', function() {
     }
   ];
 
-  function netlinkwrapperTestConfig(controls) {
-    return {
-      name: 'netlinkwrapper',
-      nodeModulesPath: collectorNodeModules,
-      nativeModulePath: path.join(collectorNodeModules, 'netlinkwrapper'),
-      backupPath: path.join(os.tmpdir(), 'netlinkwrapper-backup'),
-      resourcesPath,
-      corruptTarGzPath: path.join(resourcesPath, 'netlinkwrapper-corrupt.tar.gz'),
-      corruptUnpackedPath: path.join(resourcesPath, 'netlinkwrapper'),
-      check: data =>
-        controls
-          .sendRequest({
-            method: 'POST',
-            path: '/boom',
-            simple: false,
-            resolveWithFullResponse: true
-          })
-          .then(response => {
-            assert.fail(response, 'no response', 'Unexpected response, server should have crashed.');
-          })
-          .catch(() => {
-            const events = data[2];
-            expect(events).to.have.lengthOf(1);
-            expectAtLeastOneMatching(events, [
-              event => expect(event.text).to.contain('Boom'),
-              event => expect(event.severity).to.equal(10)
-            ]);
-          })
-    };
-  }
-
   describe('metrics are activated lazily by copying precompiled binaries when they are initially missing', () => {
     const controls = new ProcessControls({
       appPath: path.join(__dirname, 'app'),
@@ -151,19 +119,6 @@ describe('retry loading native addons', function() {
     metricAddonsTestConfigs.forEach(
       runCompileOnDemandForNativeAddonTest.bind(this, agentControls, controls, retryTimeout)
     );
-  });
-
-  describe('netlinkwrapper is activated lazily by copying precompiled binaries when it is missing initially', () => {
-    const controls = new ProcessControls({
-      appPath: path.join(__dirname, 'app'),
-      dontKillInAfterHook: true,
-      useGlobalAgent: true,
-      env: {
-        INSTANA_DEV_DISABLE_REBUILD_NATIVE_ADDONS: 'true'
-      }
-    }).registerTestHooks();
-
-    runCopyPrecompiledForNativeAddonTest(agentControls, controls, retryTimeout, netlinkwrapperTestConfig(controls));
   });
 });
 
