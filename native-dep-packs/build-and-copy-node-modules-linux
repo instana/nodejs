@@ -31,12 +31,10 @@ function buildAndCopyModulesLinux {
   echo "Copying node_modules from container $dockertag to node_modules_$label"
   docker cp $dockertag:/instana/node_modules node_modules_$label
   mkdir -p ../packages/shared-metrics/addons/linux/x64/$libcflavour/$abi/
-  mkdir -p ../packages/collector/addons/linux/x64/$libcflavour/$abi/
   echo "Creating native addon tar.gz files"
   pushd node_modules_$label > /dev/null
   tar -czf ../../packages/shared-metrics/addons/linux/x64/$libcflavour/$abi/event-loop-stats.tar.gz event-loop-stats
   tar -czf ../../packages/shared-metrics/addons/linux/x64/$libcflavour/$abi/gcstats.js.tar.gz gcstats.js
-  tar -czf ../../packages/collector/addons/linux/x64/$libcflavour/$abi/netlinkwrapper.tar.gz netlinkwrapper
   popd > /dev/null
   rm -rf node_modules_$label
   echo "Stopping $dockertag"
