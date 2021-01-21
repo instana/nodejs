@@ -1,5 +1,8 @@
 # Changelog
 
+## Unreleased
+- Improve heuristic to detect npm or yarn.
+
 ## 1.112.0
 - Remove `netlinkwrapper` dependency.
 - Deprecate reporting uncaught exceptions as incidents and via span/trace. Prints a warning if the feature (which is opt-in) is enabled.
