@@ -6,11 +6,11 @@
 // NODE_OPTIONS="--require /usr/src/app/node_modules/@instana/collector/src/immediate" is set, we would instrument both
 // processes, that is, npm/yarn as well as the actual application. Attempting to instrument the npm or yarn process has
 // no value and also creates confusing log output, so we exclude them here explicitly.
-const excludePattern = /^.*\/(yarn|npm)$/i;
+const excludePattern = /^.*\/(?:npm(?:\.js)?|npm-cli(?:\.js)?|yarn(?:\.js)?|yarn\/lib\/cli(?:\.js)?)$/i;
 
 module.exports = exports = function isExcludedFromInstrumentation() {
-  const excludedFromInstrumentation =
-    process.argv && typeof process.argv[1] === 'string' && excludePattern.test(process.argv[1]);
+  const mainModule = process.argv[1];
+  const excludedFromInstrumentation = typeof mainModule === 'string' && excludePattern.test(mainModule);
 
   if (excludedFromInstrumentation) {
     const logLevelIsDebugOrInfo =
@@ -22,7 +22,7 @@ module.exports = exports = function isExcludedFromInstrumentation() {
     if (logLevelIsDebugOrInfo) {
       // eslint-disable-next-line no-console
       console.log(
-        `[Instana] INFO: Not instrumenting process ${process.pid}: ${process.argv[0]} ${process.argv[1]}` +
+        `[Instana] INFO: Not instrumenting process ${process.pid}: ${process.argv[0]} ${mainModule}` +
           ' - this Node.js process seems to be npm or yarn. A child process started via "npm start" or "yarn start" ' +
           '_will_ be instrumented, but not npm or yarn itself.'
       );
