@@ -1,3 +1,8 @@
+/*
+ * (c) Copyright IBM Corp. 2021
+ * (c) Copyright Instana Inc. 2021
+ */
+
 'use strict';
 
 // This application is deliberately not instrumented manually with require('@instana/collector'), it is meant to be used

@@ -1,3 +1,8 @@
+/*
+ * (c) Copyright IBM Corp. 2021
+ * (c) Copyright Instana Inc. 2020
+ */
+
 'use strict';
 
 // This module manages the global agent stub, that is, the agent that is kept running during the whole test suite.

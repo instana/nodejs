@@ -1,3 +1,8 @@
+/*
+ * (c) Copyright IBM Corp. 2021
+ * (c) Copyright Instana Inc. 2019
+ */
+
 'use strict';
 
 // eslint-disable-next-line import/no-extraneous-dependencies

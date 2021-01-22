@@ -1,3 +1,8 @@
+/*
+ * (c) Copyright IBM Corp. 2021
+ * (c) Copyright Instana Inc. 2020
+ */
+
 'use strict';
 
 // This file defines global (root level) before and after hooks, see https://mochajs.org/#root-level-hooks. When we

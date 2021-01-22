@@ -1,5 +1,10 @@
 #!/usr/bin/env bash
 
+#######################################
+# (c) Copyright IBM Corp. 2021
+# (c) Copyright Instana Inc. 2020
+#######################################
+
 set -eo pipefail
 
 # We can use this once our changes to license-ls are merged.

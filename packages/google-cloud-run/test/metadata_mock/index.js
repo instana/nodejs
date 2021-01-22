@@ -1,4 +1,8 @@
 #!/usr/bin/env node
+/*
+ * (c) Copyright IBM Corp. 2021
+ * (c) Copyright Instana Inc. 2020
+ */
 
 /* eslint-disable consistent-return */
 

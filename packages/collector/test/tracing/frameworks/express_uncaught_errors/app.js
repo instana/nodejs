@@ -1,3 +1,8 @@
+/*
+ * (c) Copyright IBM Corp. 2021
+ * (c) Copyright Instana Inc. 2018
+ */
+
 /* eslint-disable no-console */
 
 'use strict';

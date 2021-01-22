@@ -1,5 +1,10 @@
 #!/usr/bin/env bash
 set -xeEuo pipefail
+#######################################
+# (c) Copyright IBM Corp. 2021
+# (c) Copyright Instana Inc. 2019
+#######################################
+
 
 mkdir -p /opt/demo-app
 cd /opt/demo-app

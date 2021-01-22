@@ -1,3 +1,8 @@
+/*
+ * (c) Copyright IBM Corp. 2021
+ * (c) Copyright Instana Inc. 2018
+ */
+
 'use strict';
 
 // This file exists to avoid dependency cycles between:

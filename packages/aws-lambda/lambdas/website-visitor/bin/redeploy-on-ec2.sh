@@ -1,5 +1,10 @@
 #!/usr/bin/env bash
 set -xu
+#######################################
+# (c) Copyright IBM Corp. 2021
+# (c) Copyright Instana Inc. 2019
+#######################################
+
 
 mkdir -p /opt/website-visitor
 cd /opt/website-visitor
