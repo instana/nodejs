@@ -1,3 +1,8 @@
+/*
+ * (c) Copyright IBM Corp. 2021
+ * (c) Copyright Instana Inc. 2019
+ */
+
 'use strict';
 
 // Deliberately not calling the initialization function right awy to test the INSTANA_EARLY_INSTRUMENTATION flag.

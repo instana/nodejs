@@ -1,3 +1,8 @@
+/*
+ * (c) Copyright IBM Corp. 2021
+ * (c) Copyright Instana Inc. 2018
+ */
+
 module.exports = {
   extends: 'airbnb/legacy',
 
@@ -11,7 +16,7 @@ module.exports = {
     sourceType: 'strict'
   },
 
-  plugins: ['mocha'],
+  plugins: ['header', 'mocha'],
 
   rules: {
     'block-scoped-var': 'off',
@@ -22,6 +27,15 @@ module.exports = {
     'func-names': 'off',
     'function-paren-newline': 'off',
     'global-require': 'off',
+    'header/header': [
+      'error',
+      'block', [
+        { pattern: '' },
+        { pattern: ' \\(c\\) Copyright IBM Corp. \\d{4}' },
+        { pattern: ' \\(c\\) Copyright Instana Inc. \\d{4}' },
+        { pattern: '' },
+      ]
+    ],
     'id-length': 'off',
     'implicit-arrow-linebreak': 'off',
     indent: 'off',

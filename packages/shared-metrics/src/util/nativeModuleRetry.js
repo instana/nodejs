@@ -1,3 +1,8 @@
+/*
+ * (c) Copyright IBM Corp. 2021
+ * (c) Copyright Instana Inc. 2020
+ */
+
 'use strict';
 
 let logger = require('@instana/core').logger.getLogger('shared-metrics/native-module-retry');

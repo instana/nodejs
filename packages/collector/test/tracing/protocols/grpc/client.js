@@ -1,3 +1,8 @@
+/*
+ * (c) Copyright IBM Corp. 2021
+ * (c) Copyright Instana Inc. 2019
+ */
+
 'use strict';
 
 const port = process.env.APP_PORT || 3216;

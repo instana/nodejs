@@ -1,3 +1,8 @@
+/*
+ * (c) Copyright IBM Corp. 2021
+ * (c) Copyright Instana Inc. 2016
+ */
+
 'use strict';
 
 // This is a tiny express app which responds to all methods and has configurable

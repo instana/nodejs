@@ -1,5 +1,10 @@
 #!/usr/bin/env bash
 set -eo pipefail
+#######################################
+# (c) Copyright IBM Corp. 2021
+# (c) Copyright Instana Inc. 2020
+#######################################
+
 
 cd `dirname $BASH_SOURCE`
 

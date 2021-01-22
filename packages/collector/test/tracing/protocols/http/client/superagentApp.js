@@ -1,3 +1,8 @@
+/*
+ * (c) Copyright IBM Corp. 2021
+ * (c) Copyright Instana Inc. 2018
+ */
+
 'use strict';
 
 // Deliberately requiring superagent before instana to test experimental on-demand instrumentation for it.

@@ -1,3 +1,8 @@
+/*
+ * (c) Copyright IBM Corp. 2021
+ * (c) Copyright Instana Inc. 2019
+ */
+
 'use strict';
 
 const expect = require('chai').expect;
@@ -384,68 +389,76 @@ mochaSuiteFn('tracing/sdk', function() {
   });
 
   function expectCustomEntry(spans, pid, tagsAt, traceId, parentSpanId, functionName = /^createEntry/, error) {
-    return expectExactlyOneMatching(spans, span => {
-      if (traceId) {
-        expect(span.t).to.equal(traceId);
-      } else {
-        expect(span.t).to.exist;
-      }
-      if (parentSpanId) {
-        expect(span.p).to.equal(parentSpanId);
-      } else {
-        expect(span.p).to.not.exist;
-      }
-      expect(span.n).to.equal('sdk');
-      expect(span.k).to.equal(constants.ENTRY);
-      expect(span.f.e).to.equal(String(pid));
-      expect(span.f.h).to.equal('agent-stub-uuid');
-      expect(span.async).to.not.exist;
-      // eslint-disable-next-line no-unneeded-ternary
-      expect(span.error).to.not.exist;
-      if (error) {
-        expect(span.ec).to.equal(1);
-        expect(span.data.sdk.custom.tags.message).to.contain('Error: Boom!\n');
-        expect(span.data.sdk.custom.tags.message).to.contain('packages/collector/test/tracing/sdk/app.js:104:35');
-      } else {
-        expect(span.ec).to.equal(0);
-      }
-      expect(span.data.sdk).to.exist;
-      expect(span.data.sdk.name).to.equal('custom-entry');
-      expect(span.data.sdk.type).to.equal(constants.SDK.ENTRY);
-      expect(span.stack[0].c).to.match(/test\/tracing\/sdk\/app.js$/);
-      expect(span.stack[0].m).to.match(functionName);
-      tagsAt = tagsAt || 'none';
-      switch (tagsAt) {
-        case 'none':
-          if (!error) {
-            expect(span.data.sdk.custom).to.not.exist;
-          } else {
-            expect(span.data.sdk.custom).to.exist;
-            expect(span.data.sdk.custom.tags).to.exist;
-            expect(span.data.sdk.custom.tags.start).to.not.exist;
-            expect(span.data.sdk.custom.tags.end).to.not.exist;
-          }
-          break;
-        case 'start':
-          expect(span.data.sdk.custom).to.exist;
-          expect(span.data.sdk.custom.tags).to.exist;
-          expect(span.data.sdk.custom.tags.start).to.equal('whatever');
-          break;
-        case 'end':
-          expect(span.data.sdk.custom).to.exist;
-          expect(span.data.sdk.custom.tags).to.exist;
-          expect(span.data.sdk.custom.tags.end).to.equal('some value');
-          break;
-        case 'both':
-          expect(span.data.sdk.custom).to.exist;
-          expect(span.data.sdk.custom.tags).to.exist;
-          expect(span.data.sdk.custom.tags.start).to.equal('whatever');
-          expect(span.data.sdk.custom.tags.end).to.equal('some value');
-          break;
-        default:
-          throw new Error(`Unknown value for tagsAt: ${tagsAt}`);
-      }
-    });
+    let expectations = [
+      span => (traceId ? expect(span.t).to.equal(traceId) : expect(span.t).to.exist),
+      span => (parentSpanId ? expect(span.p).to.equal(parentSpanId) : expect(span.p).to.not.exist),
+      span => expect(span.n).to.equal('sdk'),
+      span => expect(span.k).to.equal(constants.ENTRY),
+      span => expect(span.f.e).to.equal(String(pid)),
+      span => expect(span.f.h).to.equal('agent-stub-uuid'),
+      span => expect(span.async).to.not.exist,
+      span => expect(span.error).to.not.exist
+    ];
+
+    if (error) {
+      expectations = expectations.concat([
+        span => expect(span.ec).to.equal(1),
+        span => expect(span.data.sdk.custom.tags.message).to.contain('Error: Boom!\n'),
+        span =>
+          expect(span.data.sdk.custom.tags.message).to.contain('packages/collector/test/tracing/sdk/app.js:109:35')
+      ]);
+    } else {
+      expectations.push(span => expect(span.ec).to.equal(0));
+    }
+
+    expectations = expectations.concat([
+      span => expect(span.data.sdk).to.exist,
+      span => expect(span.data.sdk.name).to.equal('custom-entry'),
+      span => expect(span.data.sdk.type).to.equal(constants.SDK.ENTRY),
+      span => expect(span.stack[0].c).to.match(/test\/tracing\/sdk\/app.js$/),
+      span => expect(span.stack[0].m).to.match(functionName)
+    ]);
+
+    tagsAt = tagsAt || 'none';
+    switch (tagsAt) {
+      case 'none':
+        if (!error) {
+          expectations.push(span => expect(span.data.sdk.custom).to.not.exist);
+        } else {
+          expectations = expectations.concat([
+            span => expect(span.data.sdk.custom).to.exist,
+            span => expect(span.data.sdk.custom.tags).to.exist,
+            span => expect(span.data.sdk.custom.tags.start).to.not.exist,
+            span => expect(span.data.sdk.custom.tags.end).to.not.exist
+          ]);
+        }
+        break;
+      case 'start':
+        expectations = expectations.concat([
+          span => expect(span.data.sdk.custom).to.exist,
+          span => expect(span.data.sdk.custom.tags).to.exist,
+          span => expect(span.data.sdk.custom.tags.start).to.equal('whatever')
+        ]);
+        break;
+      case 'end':
+        expectations = expectations.concat([
+          span => expect(span.data.sdk.custom).to.exist,
+          span => expect(span.data.sdk.custom.tags).to.exist,
+          span => expect(span.data.sdk.custom.tags.end).to.equal('some value')
+        ]);
+        break;
+      case 'both':
+        expectations = expectations.concat([
+          span => expect(span.data.sdk.custom).to.exist,
+          span => expect(span.data.sdk.custom.tags).to.exist,
+          span => expect(span.data.sdk.custom.tags.start).to.equal('whatever'),
+          span => expect(span.data.sdk.custom.tags.end).to.equal('some value')
+        ]);
+        break;
+      default:
+        throw new Error(`Unknown value for tagsAt: ${tagsAt}`);
+    }
+    return expectExactlyOneMatching(spans, expectations);
   }
 
   function expectHttpEntry(spans, path) {

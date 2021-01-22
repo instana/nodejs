@@ -1,3 +1,8 @@
+/*
+ * (c) Copyright IBM Corp. 2021
+ * (c) Copyright Instana Inc. 2018
+ */
+
 'use strict';
 
 // Deliberately not using Express.js here to avoid conflicts with Express.js' error handling.

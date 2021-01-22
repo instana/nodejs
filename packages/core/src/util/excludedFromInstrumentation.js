@@ -1,3 +1,8 @@
+/*
+ * (c) Copyright IBM Corp. 2021
+ * (c) Copyright Instana Inc. 2021
+ */
+
 'use strict';
 
 // If a process is started with `npm start` or `yarn start`, two separate processes will be started. The first is

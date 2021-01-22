@@ -1,3 +1,8 @@
+/*
+ * (c) Copyright IBM Corp. 2021
+ * (c) Copyright Instana Inc. 2019
+ */
+
 'use strict';
 
 // We need to require core to provide noop implementations for currentSpan, sdk etc. but neither tracing nor metric

@@ -1,3 +1,8 @@
+/*
+ * (c) Copyright IBM Corp. 2021
+ * (c) Copyright Instana Inc. 2020
+ */
+
 /* eslint-disable no-restricted-syntax, no-continue */
 
 'use strict';
