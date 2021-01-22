@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.112.1
 - Improve heuristic to detect npm or yarn.
 
 ## 1.112.0
