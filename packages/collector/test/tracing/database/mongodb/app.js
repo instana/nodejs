@@ -49,20 +49,29 @@ if (USE_ATLAS) {
   log(`Using local MongoDB: ${connectString}`);
 }
 
-MongoClient.connect(connectString, (err, client) => {
-  assert.equal(null, err);
-  if (client.constructor.name === 'Db') {
-    // mongodb versions < 3.x
-    db = client;
-  } else if (client.constructor.name === 'MongoClient') {
-    // mongodb versions >= 3.x
+if (process.env.USE_LEGACY_3_X_CONNECTION_MECHANISM) {
+  MongoClient.connect(connectString, (err, client) => {
+    assert.equal(null, err);
+    if (client.constructor.name === 'Db') {
+      // mongodb versions < 3.x
+      db = client;
+    } else if (client.constructor.name === 'MongoClient') {
+      // mongodb versions >= 3.x
+      db = client.db();
+    } else {
+      throw new Error('Can not detect mongodb package version.');
+    }
+    collection = db.collection('mydocs');
+    log('Connected to MongoDB');
+  });
+} else {
+  // mongodb versions >= 3.x, newer "unified" topology
+  MongoClient.connect(connectString, { useUnifiedTopology: true }, (err, client) => {
+    assert.equal(null, err);
     db = client.db();
-  } else {
-    throw new Error('Can not detect mongodb package version.');
-  }
-  collection = db.collection('mydocs');
-  log('Connected to MongoDB');
-});
+    collection = db.collection('mydocs');
+  });
+}
 
 app.get('/', (req, res) => {
   if (!db || !collection) {
