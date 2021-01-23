@@ -33,17 +33,223 @@ exports.spanName = 'mongo';
 exports.batchable = true;
 
 exports.init = function init() {
-  // mongodb >= 3.3.x
-  requireHook.onFileLoad(/\/mongodb\/lib\/core\/connection\/pool.js/, instrumentPool);
-  // mongodb < 3.3.x
-  requireHook.onFileLoad(/\/mongodb-core\/lib\/connection\/pool.js/, instrumentPool);
+  // unified topology layer
+  requireHook.onFileLoad(/\/mongodb\/lib\/cmap\/connection.js/, instrumentCmapConnection);
+  // mongodb >= 3.3.x, legacy topology layer
+  requireHook.onFileLoad(/\/mongodb\/lib\/core\/connection\/pool.js/, instrumentLegacyTopologyPool);
+  // mongodb < 3.3.x, legacy topology layer
+  requireHook.onFileLoad(/\/mongodb-core\/lib\/connection\/pool.js/, instrumentLegacyTopologyPool);
 };
 
-function instrumentPool(Pool) {
-  shimmer.wrap(Pool.prototype, 'write', shimWrite);
+function instrumentCmapConnection(connection) {
+  if (connection.Connection && connection.Connection.prototype) {
+    // collection.findOne, collection.find et al.
+    shimmer.wrap(connection.Connection.prototype, 'query', shimCmapQuery);
+    // collection.count et al.
+    shimmer.wrap(connection.Connection.prototype, 'command', shimCmapCommand);
+
+    [
+      'insert', // collection.insertOne et al.
+      'update', // collection.replaceOne et al.
+      'remove' // collection.delete et al.
+    ].forEach(fnName => {
+      if (connection.Connection.prototype[fnName]) {
+        shimmer.wrap(connection.Connection.prototype, fnName, shimCmapMethod);
+      }
+    });
+
+    shimmer.wrap(connection.Connection.prototype, 'getMore', shimCmapGetMore);
+  }
 }
 
-function shimWrite(original) {
+function shimCmapQuery(original) {
+  return function tmp() {
+    if (!isActive || !cls.isTracing()) {
+      return original.apply(this, arguments);
+    }
+
+    const originalArgs = new Array(arguments.length);
+    for (let i = 0; i < arguments.length; i++) {
+      originalArgs[i] = arguments[i];
+    }
+
+    return instrumentedCmapQuery(this, original, originalArgs);
+  };
+}
+
+function shimCmapCommand(original) {
+  return function() {
+    if (!isActive || !cls.isTracing()) {
+      return original.apply(this, arguments);
+    }
+
+    const command = arguments[1] && commands.find(c => arguments[1][c]);
+
+    if (!command) {
+      return original.apply(this, arguments);
+    }
+
+    const originalArgs = new Array(arguments.length);
+    for (let i = 0; i < arguments.length; i++) {
+      originalArgs[i] = arguments[i];
+    }
+
+    return instrumentedCmapMethod(this, original, originalArgs, command);
+  };
+}
+
+function shimCmapMethod(original) {
+  return function() {
+    if (!isActive || !cls.isTracing()) {
+      return original.apply(this, arguments);
+    }
+
+    const originalArgs = new Array(arguments.length);
+    for (let i = 0; i < arguments.length; i++) {
+      originalArgs[i] = arguments[i];
+    }
+
+    return instrumentedCmapMethod(this, original, originalArgs, original.name);
+  };
+}
+
+function shimCmapGetMore(original) {
+  return function() {
+    if (!isActive || !cls.isTracing()) {
+      return original.apply(this, arguments);
+    }
+
+    const originalArgs = new Array(arguments.length);
+    for (let i = 0; i < arguments.length; i++) {
+      originalArgs[i] = arguments[i];
+    }
+
+    return instrumentedCmapGetMore(this, original, originalArgs);
+  };
+}
+
+function instrumentedCmapQuery(ctx, originalQuery, originalArgs) {
+  const parentSpan = cls.getCurrentSpan();
+  if (constants.isExitSpan(parentSpan)) {
+    return originalQuery.apply(ctx, originalArgs);
+  }
+
+  const { originalCallback, callbackIndex } = findCallback(originalArgs);
+  if (callbackIndex < 0) {
+    return originalQuery.apply(ctx, originalArgs);
+  }
+
+  return cls.ns.runAndReturn(() => {
+    const span = cls.startSpan(exports.spanName, constants.EXIT);
+    span.stack = tracingUtil.getStackTrace(instrumentedCmapQuery, 1);
+
+    const namespace = originalArgs[0];
+    const cmd = originalArgs[1];
+
+    let command;
+    if (cmd) {
+      command = findCommand(cmd);
+    }
+
+    let service;
+    if (ctx.address) {
+      service = ctx.address;
+      span.data.peer = splitIntoHostAndPort(ctx.address);
+    }
+
+    span.data.mongo = {
+      command,
+      service,
+      namespace
+    };
+    readJsonOrFilter(cmd, span);
+
+    originalArgs[callbackIndex] = createWrappedCallback(span, originalCallback);
+
+    return originalQuery.apply(ctx, originalArgs);
+  });
+}
+
+function instrumentedCmapMethod(ctx, originalMethod, originalArgs, command) {
+  const parentSpan = cls.getCurrentSpan();
+  if (constants.isExitSpan(parentSpan)) {
+    return originalMethod.apply(ctx, originalArgs);
+  }
+
+  const { originalCallback, callbackIndex } = findCallback(originalArgs);
+  if (callbackIndex < 0) {
+    return originalMethod.apply(ctx, originalArgs);
+  }
+
+  return cls.ns.runAndReturn(() => {
+    const span = cls.startSpan(exports.spanName, constants.EXIT);
+    span.stack = tracingUtil.getStackTrace(instrumentedCmapQuery, 1);
+
+    const namespace = originalArgs[0];
+
+    let service;
+    if (ctx.address) {
+      service = ctx.address;
+      span.data.peer = splitIntoHostAndPort(ctx.address);
+    }
+
+    span.data.mongo = {
+      command,
+      service,
+      namespace
+    };
+
+    if (command && command.indexOf('insert') < 0) {
+      // we do not capture the document for insert commands
+      readJsonOrFilter(originalArgs[1], span);
+    }
+
+    originalArgs[callbackIndex] = createWrappedCallback(span, originalCallback);
+
+    return originalMethod.apply(ctx, originalArgs);
+  });
+}
+
+function instrumentedCmapGetMore(ctx, originalMethod, originalArgs) {
+  const parentSpan = cls.getCurrentSpan();
+  if (constants.isExitSpan(parentSpan)) {
+    return originalMethod.apply(ctx, originalArgs);
+  }
+
+  const { originalCallback, callbackIndex } = findCallback(originalArgs);
+  if (callbackIndex < 0) {
+    return originalMethod.apply(ctx, originalArgs);
+  }
+
+  return cls.ns.runAndReturn(() => {
+    const span = cls.startSpan(exports.spanName, constants.EXIT);
+    span.stack = tracingUtil.getStackTrace(instrumentedCmapQuery, 1);
+
+    const namespace = originalArgs[0];
+
+    let service;
+    if (ctx.address) {
+      service = ctx.address;
+      span.data.peer = splitIntoHostAndPort(ctx.address);
+    }
+
+    span.data.mongo = {
+      command: 'getMore',
+      service,
+      namespace
+    };
+
+    originalArgs[callbackIndex] = createWrappedCallback(span, originalCallback);
+
+    return originalMethod.apply(ctx, originalArgs);
+  });
+}
+
+function instrumentLegacyTopologyPool(Pool) {
+  shimmer.wrap(Pool.prototype, 'write', shimLegacyWrite);
+}
+
+function shimLegacyWrite(original) {
   return function() {
     if (!isActive || !cls.isTracing()) {
       return original.apply(this, arguments);
@@ -52,11 +258,11 @@ function shimWrite(original) {
     for (let i = 0; i < arguments.length; i++) {
       originalArgs[i] = arguments[i];
     }
-    return instrumentedWrite(this, original, originalArgs);
+    return instrumentedLegacyWrite(this, original, originalArgs);
   };
 }
 
-function instrumentedWrite(ctx, originalWrite, originalArgs) {
+function instrumentedLegacyWrite(ctx, originalWrite, originalArgs) {
   const parentSpan = cls.getCurrentSpan();
   if (constants.isExitSpan(parentSpan)) {
     return originalWrite.apply(ctx, originalArgs);
@@ -64,22 +270,14 @@ function instrumentedWrite(ctx, originalWrite, originalArgs) {
 
   // pool.js#write throws a sync error if there is no callback, so we can safely assume there is one. If there was no
   // callback, we wouldn't be able to finish the span, so we won't start one.
-  let originalCallback;
-  let callbackIndex = -1;
-  for (let i = 1; i < originalArgs.length; i++) {
-    if (typeof originalArgs[i] === 'function') {
-      originalCallback = originalArgs[i];
-      callbackIndex = i;
-      break;
-    }
-  }
+  const { originalCallback, callbackIndex } = findCallback(originalArgs);
   if (callbackIndex < 0) {
     return originalWrite.apply(ctx, originalArgs);
   }
 
   return cls.ns.runAndReturn(() => {
     const span = cls.startSpan(exports.spanName, constants.EXIT);
-    span.stack = tracingUtil.getStackTrace(instrumentedWrite);
+    span.stack = tracingUtil.getStackTrace(instrumentedLegacyWrite);
 
     let hostname;
     let port;
@@ -163,23 +361,28 @@ function instrumentedWrite(ctx, originalWrite, originalArgs) {
       service,
       namespace
     };
-    readJsonOrFilter(message, span);
+    readJsonOrFilterFromMessage(message, span);
 
-    const wrappedCallback = function(error) {
-      if (error) {
-        span.ec = 1;
-        span.data.mongo.error = tracingUtil.getErrorDetails(error);
-      }
-
-      span.d = Date.now() - span.ts;
-      span.transmit();
-
-      return originalCallback.apply(this, arguments);
-    };
-    originalArgs[callbackIndex] = cls.ns.bind(wrappedCallback);
+    originalArgs[callbackIndex] = createWrappedCallback(span, originalCallback);
 
     return originalWrite.apply(ctx, originalArgs);
   });
+}
+
+function findCallback(originalArgs) {
+  let originalCallback;
+  let callbackIndex = -1;
+  for (let i = 1; i < originalArgs.length; i++) {
+    if (typeof originalArgs[i] === 'function') {
+      originalCallback = originalArgs[i];
+      callbackIndex = i;
+      break;
+    }
+  }
+  return {
+    originalCallback,
+    callbackIndex
+  };
 }
 
 function findCollection(cmdObj) {
@@ -199,7 +402,30 @@ function findCommand(cmdObj) {
   }
 }
 
-function readJsonOrFilter(message, span) {
+function splitIntoHostAndPort(address) {
+  if (typeof address === 'string') {
+    let hostname;
+    let port;
+    if (address.indexOf(':') >= 0) {
+      const idx = address.indexOf(':');
+      hostname = address.substring(0, idx);
+      port = parseInt(address.substring(idx + 1), 10);
+      if (isNaN(port)) {
+        port = undefined;
+      }
+      return {
+        hostname,
+        port
+      };
+    } else {
+      return {
+        hostname: address
+      };
+    }
+  }
+}
+
+function readJsonOrFilterFromMessage(message, span) {
   if (!message) {
     return;
   }
@@ -210,10 +436,14 @@ function readJsonOrFilter(message, span) {
   if (!cmdObj) {
     return;
   }
-  let json;
-  const filter = cmdObj.filter || cmdObj.query;
+  return readJsonOrFilter(cmdObj, span);
+}
 
-  if (Array.isArray(cmdObj.updates) && cmdObj.updates.length >= 1) {
+function readJsonOrFilter(cmdObj, span) {
+  let json;
+  if (Array.isArray(cmdObj) && cmdObj.length >= 1) {
+    json = cmdObj;
+  } else if (Array.isArray(cmdObj.updates) && cmdObj.updates.length >= 1) {
     json = cmdObj.updates;
   } else if (Array.isArray(cmdObj.deletes) && cmdObj.deletes.length >= 1) {
     json = cmdObj.deletes;
@@ -225,8 +455,8 @@ function readJsonOrFilter(message, span) {
   // provide.
   if (json) {
     span.data.mongo.json = stringifyWhenNecessary(json);
-  } else if (filter) {
-    span.data.mongo.filter = stringifyWhenNecessary(filter);
+  } else if (cmdObj.filter || cmdObj.query) {
+    span.data.mongo.filter = stringifyWhenNecessary(cmdObj.filter || cmdObj.query);
   }
 }
 
@@ -237,6 +467,20 @@ function stringifyWhenNecessary(obj) {
     return tracingUtil.shortenDatabaseStatement(obj);
   }
   return tracingUtil.shortenDatabaseStatement(JSON.stringify(obj));
+}
+
+function createWrappedCallback(span, originalCallback) {
+  return cls.ns.bind(function(error) {
+    if (error) {
+      span.ec = 1;
+      span.data.mongo.error = tracingUtil.getErrorDetails(error);
+    }
+
+    span.d = Date.now() - span.ts;
+    span.transmit();
+
+    return originalCallback.apply(this, arguments);
+  });
 }
 
 exports.activate = function activate() {

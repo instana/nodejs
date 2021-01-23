@@ -1,5 +1,8 @@
 # Changelog
 
+## Unreleased
+- Instrument MongoDB native driver unified topology.
+
 ## 1.112.1
 - Improve heuristic to detect npm or yarn.
 
