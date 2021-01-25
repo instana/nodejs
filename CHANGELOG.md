@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.113.0
 - Instrument MongoDB native driver unified topology.
 - Add configuration mechanism to disable copying of precompiled add-ons (`INSTANA_COPY_PRECOMPILED_NATIVE_ADDONS=false`).
 - Make rebuilding native add-ons via node-gyp an opt-in feature (it is off by default now, use `INSTANA_REBUILD_NATIVE_ADDONS_ON_DEMAND=true` to enable it).
