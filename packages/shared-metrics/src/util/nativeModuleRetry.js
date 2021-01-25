@@ -17,10 +17,16 @@ const { fork } = require('child_process');
 const detectLibc = require('detect-libc');
 
 const retryMechanisms = [];
-if (!process.env.INSTANA_DEV_DISABLE_PRECOMPILED_NATIVE_ADDONS) {
+if (
+  !process.env.INSTANA_COPY_PRECOMPILED_NATIVE_ADDONS ||
+  process.env.INSTANA_COPY_PRECOMPILED_NATIVE_ADDONS.toLowerCase() !== 'false'
+) {
   retryMechanisms.push('copy-precompiled');
 }
-if (!process.env.INSTANA_DEV_DISABLE_REBUILD_NATIVE_ADDONS) {
+if (
+  process.env.INSTANA_REBUILD_NATIVE_ADDONS_ON_DEMAND &&
+  process.env.INSTANA_REBUILD_NATIVE_ADDONS_ON_DEMAND.toLowerCase() === 'true'
+) {
   retryMechanisms.push('rebuild');
 }
 
