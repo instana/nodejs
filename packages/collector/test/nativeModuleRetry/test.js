@@ -100,10 +100,8 @@ describe('retry loading native addons', function() {
     const controls = new ProcessControls({
       appPath: path.join(__dirname, 'app'),
       agentControls,
-      useGlobalAgent: true,
-      env: {
-        INSTANA_DEV_DISABLE_REBUILD_NATIVE_ADDONS: 'true'
-      }
+      useGlobalAgent: true
+      // by default, only copying precompiled binaries is enabled and recompiling them on demand is not
     }).registerTestHooks();
 
     metricAddonsTestConfigs.forEach(
@@ -117,7 +115,8 @@ describe('retry loading native addons', function() {
       appPath: path.join(__dirname, 'app'),
       useGlobalAgent: true,
       env: {
-        INSTANA_DEV_DISABLE_PRECOMPILED_NATIVE_ADDONS: 'true'
+        INSTANA_COPY_PRECOMPILED_NATIVE_ADDONS: 'false',
+        INSTANA_REBUILD_NATIVE_ADDONS_ON_DEMAND: 'true'
       }
     }).registerTestHooks();
 
