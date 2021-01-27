@@ -10,6 +10,16 @@ Some of the tests require infrastructure components (databases etc.) to run loca
 
 If you want to see the Node.js collector's debug output while running the tests, make sure the environment variable `WITH_STDOUT` is set to a non-empty string. You can also use `npm run test:debug` instead of `npm test` to achieve this.
 
+## How to Contribute
+
+This is an open source project, and we appreciate your help!
+
+In order to clarify the intellectual property license granted with contributions from any person or entity, a Contributor License Agreement ("CLA") must be on file that has been signed by each contributor, indicating agreement to the license terms below. This license is for your protection as a contributor as well as the protection of Instana and its customers; it does not change your rights to use your own contributions for any other purpose.
+
+Please print, fill out, and sign the [contributor license agreement](https://github.com/instana/nodejs-sensor/raw/main/misc/instana-nodejs-cla-individual.pdf). Once completed, please scan the document as a PDF file and email to the following email address: bastian.krol@instana.com.
+
+Thank you for your interest in the Instana Node.js project!
+
 ## Release Process
 
 ### When Adding A New Package
