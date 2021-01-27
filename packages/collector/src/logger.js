@@ -1,6 +1,6 @@
 /*
  * (c) Copyright IBM Corp. 2021
- * (c) Copyright Instana Inc. 2016
+ * (c) Copyright Instana Inc. and contributors 2016
  */
 
 /* eslint-disable dot-notation */

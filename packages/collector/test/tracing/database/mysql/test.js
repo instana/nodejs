@@ -1,6 +1,6 @@
 /*
  * (c) Copyright IBM Corp. 2021
- * (c) Copyright Instana Inc. 2017
+ * (c) Copyright Instana Inc. and contributors 2017
  */
 
 'use strict';

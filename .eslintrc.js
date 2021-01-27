@@ -1,6 +1,6 @@
 /*
  * (c) Copyright IBM Corp. 2021
- * (c) Copyright Instana Inc. 2018
+ * (c) Copyright Instana Inc. and contributors 2018
  */
 
 module.exports = {
@@ -29,11 +29,12 @@ module.exports = {
     'global-require': 'off',
     'header/header': [
       'error',
-      'block', [
+      'block',
+      [
         { pattern: '' },
         { pattern: ' \\(c\\) Copyright IBM Corp. \\d{4}' },
-        { pattern: ' \\(c\\) Copyright Instana Inc. \\d{4}' },
-        { pattern: '' },
+        { pattern: ' \\(c\\) Copyright Instana Inc. and contributors \\d{4}' },
+        { pattern: '' }
       ]
     ],
     'id-length': 'off',

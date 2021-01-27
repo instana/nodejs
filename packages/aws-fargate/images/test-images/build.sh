@@ -2,7 +2,7 @@
 
 #######################################
 # (c) Copyright IBM Corp. 2021
-# (c) Copyright Instana Inc. 2020
+# (c) Copyright Instana Inc. and contributors 2020
 #######################################
 
 set -eo pipefail

@@ -2,7 +2,7 @@
 set -e
 #######################################
 # (c) Copyright IBM Corp. 2021
-# (c) Copyright Instana Inc. 2018
+# (c) Copyright Instana Inc. and contributors 2018
 #######################################
 
 
