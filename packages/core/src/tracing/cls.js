@@ -217,7 +217,7 @@ exports.leaveAsyncContext = function leaveAsyncContext(context) {
 
 exports.runInAsyncContext = function runInAsyncContext(context, fn) {
   if (!exports.ns) {
-    return null;
+    return fn();
   }
   if (context == null) {
     logger.warn('Ignoring runInAsyncContext call because passed context was null or undefined.');
@@ -228,7 +228,7 @@ exports.runInAsyncContext = function runInAsyncContext(context, fn) {
 
 exports.runPromiseInAsyncContext = function runPromiseInAsyncContext(context, fn) {
   if (!exports.ns) {
-    return null;
+    return fn();
   }
   if (context == null) {
     logger.warn('Ignoring runPromiseInAsyncContext call because passed context was null or undefined.');

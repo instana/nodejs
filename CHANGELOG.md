@@ -1,5 +1,8 @@
 # Changelog
 
+## Unreleased
+- fix: run original function in runInAsyncContext/runPromiseInAsyncContext when tracing is not active.
+
 ## 1.113.0
 - Instrument MongoDB native driver unified topology.
 - Add configuration mechanism to disable copying of precompiled add-ons (`INSTANA_COPY_PRECOMPILED_NATIVE_ADDONS=false`).

@@ -50,7 +50,7 @@ exports.getAsyncContext = function getAsyncContext() {
  */
 exports.runInAsyncContext = function runInAsyncContext(context, fn) {
   if (!cls) {
-    return;
+    return fn();
   }
   cls.runInAsyncContext(context, fn);
 };
@@ -68,7 +68,7 @@ exports.runInAsyncContext = function runInAsyncContext(context, fn) {
  */
 exports.runPromiseInAsyncContext = function runPromiseInAsyncContext(context, fn) {
   if (!cls) {
-    return null;
+    return fn();
   }
   return cls.runPromiseInAsyncContext(context, fn);
 };

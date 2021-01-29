@@ -34,7 +34,7 @@ app.post('/run', (req, res) => {
   customCallbackQueue.push(() => {
     instana.sdk.runInAsyncContext(activeContext, () => {
       pino.warn('Should be traced.');
-      return res.sendStatus(200);
+      return res.send('Done! ✅');
     });
   });
 });
@@ -47,17 +47,23 @@ app.post('/run-promise', (req, res) => {
 app.post('/enter-and-leave', (req, res) => {
   const activeContext = instana.sdk.getAsyncContext();
   customCallbackQueue.push(() => {
-    instana.core.tracing.getCls().enterAsyncContext(activeContext);
+    // enter/exit async context is not exposed via the SDK
+    // We are testing it here for completeness sake, not because sdk client code can/should actually use it.
+    if (instana.core.tracing.getCls()) {
+      instana.core.tracing.getCls().enterAsyncContext(activeContext);
+    }
     pino.warn('Should be traced.');
-    res.sendStatus(200);
-    instana.core.tracing.getCls().leaveAsyncContext(activeContext);
+    res.send('Done! ✅');
+    if (instana.core.tracing.getCls()) {
+      instana.core.tracing.getCls().leaveAsyncContext(activeContext);
+    }
   });
 });
 
 function createPromise(res) {
   return new Promise(resolve => {
     pino.warn('Should be traced.');
-    res.sendStatus(200);
+    res.send('Done! ✅');
     resolve();
   });
 }
