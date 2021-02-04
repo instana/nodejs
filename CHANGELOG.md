@@ -115,7 +115,7 @@
 - Capture dependencies of an app even if the `package.json` file is not present, by inspecting the `node_modules` folder that is closest to `process.mainModule` in the file system.
 
 ## 1.105.0
-- Add instrumentation the [Google Cloud Storage client](https://googleapis.dev/nodejs/storage/latest/index.html).
+- Add instrumentation for the [Google Cloud Storage client](https://googleapis.dev/nodejs/storage/latest/index.html).
 
 ## 1.104.0
 - Drop support for Node.js versions 4 (which was EOL 2018-04-30) and 5 (EOL 2016-06-30) in `@instana/collector`. If you want to use `@instana/collector` with Node.js version 4 or 5 please pin `@instana/collector` to version `1.103.0`.

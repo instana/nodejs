@@ -26,6 +26,7 @@ describe('util.normalizeConfig', () => {
     delete process.env.INSTANA_TRACING_TRANSMISSION_DELAY;
     delete process.env.INSTANA_SPANBATCHING_ENABLED;
     delete process.env.INSTANA_DISABLE_SPANBATCHING;
+    delete process.env.INSTANA_DISABLE_W3C_TRACE_CORRELATION;
   }
 
   it('should apply all defaults', () => {
@@ -306,6 +307,17 @@ describe('util.normalizeConfig', () => {
     expect(config.tracing.spanBatchingEnabled).to.be.false;
   });
 
+  it('should disable W3C trace correlation', () => {
+    const config = normalizeConfig({ tracing: { disableW3cTraceCorrelation: true } });
+    expect(config.tracing.disableW3cTraceCorrelation).to.be.true;
+  });
+
+  it('should disable W3C trace correlation via INSTANA_DISABLE_W3C_TRACE_CORRELATION', () => {
+    process.env.INSTANA_DISABLE_W3C_TRACE_CORRELATION = 'false'; // any non-empty string will disable, even "false"!
+    const config = normalizeConfig();
+    expect(config.tracing.disableW3cTraceCorrelation).to.be.true;
+  });
+
   it('should accept custom secrets config', () => {
     const config = normalizeConfig({
       secrets: {
@@ -394,6 +406,7 @@ describe('util.normalizeConfig', () => {
     expect(config.tracing.http.extraHttpHeadersToCapture).to.be.empty;
     expect(config.tracing.stackTraceLength).to.equal(10);
     expect(config.tracing.spanBatchingEnabled).to.be.false;
+    expect(config.tracing.disableW3cTraceCorrelation).to.be.false;
     expect(config.secrets).to.be.an('object');
     expect(config.secrets.matcherMode).to.equal('contains-ignore-case');
     expect(config.secrets.keywords).to.deep.equal(['key', 'pass', 'secret']);

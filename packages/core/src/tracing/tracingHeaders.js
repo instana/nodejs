@@ -9,6 +9,12 @@ const constants = require('./constants');
 const tracingUtil = require('./tracingUtil');
 const w3c = require('./w3c_trace_context');
 
+let disableW3cTraceCorrelation = false;
+
+exports.init = function(config) {
+  disableW3cTraceCorrelation = config.tracing.disableW3cTraceCorrelation;
+};
+
 /**
  * The functions in this module return an object literal with the following shape:
  * {
@@ -128,9 +134,9 @@ exports.fromHeaders = function fromHeaders(headers) {
       synthetic,
       w3cTraceContext: w3c.create(xInstanaT, xInstanaS, !isSuppressed(level))
     });
-  } else if (w3cTraceContext) {
-    // There are no X-INSTANA- headers, but there are W3C trace context headers. As of 2021-01, we use the IDs from
-    // traceparent (previously, we would relied on the `in` key value pair or, if that is not present, started a new
+  } else if (w3cTraceContext && !disableW3cTraceCorrelation) {
+    // There are no X-INSTANA- headers, but there are W3C trace context headers. As of 2021-02, we use the IDs from
+    // traceparent (previously, we would rely on the `in` key value pair or, if that is not present, start a new
     // Instana trace by generating a trace ID).
     // If w3cTraceContext has no instanaTraceId/instanaParentId yet, it will get one as soon as we start a span and
     // upate it. In case we received X-INSTANA-L: 0 we will not start a span, but we will make sure to toggle the
@@ -152,6 +158,27 @@ exports.fromHeaders = function fromHeaders(headers) {
       synthetic,
       w3cTraceContext,
       instanaAncestor
+    });
+  } else if (w3cTraceContext) {
+    // There are no X-INSTANA- headers, but there are W3C trace context headers. But picking up the trace context from
+    // traceparent is disabled via config. We either pick up the trace context from tracestate/in (if present) or start
+    // a new trace. Picking up the trace context from tracestate/in is usually not done, it only happens in this legacy
+    // mode.
+    let traceId = null;
+    let parentId = null;
+    if (traceStateHasInstanaKeyValuePair(w3cTraceContext) && !isSuppressed(level)) {
+      traceId = w3cTraceContext.instanaTraceId;
+      parentId = w3cTraceContext.instanaParentId;
+    }
+    return limitTraceId({
+      traceId,
+      parentId,
+      usedTraceParent: false,
+      level,
+      correlationType,
+      correlationId,
+      synthetic,
+      w3cTraceContext
     });
   } else {
     // Neither X-INSTANA- headers nor W3C trace context headers are present.
