@@ -19,7 +19,7 @@ const globalAgent = require('../../../globalAgent');
 const agentControls = globalAgent.instance;
 
 const mochaSuiteFn =
-  !supportedVersion(process.versions.node) || semver.lt(process.versions.node, '8.5.0') ? describe.skip : describe;
+  !supportedVersion(process.versions.node) || semver.lt(process.versions.node, '10.0.0') ? describe.skip : describe;
 
 mochaSuiteFn('tracing/apollo-federation', function() {
   this.timeout(config.getTestTimeout() * 2);
