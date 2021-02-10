@@ -279,6 +279,7 @@ function InstanaSpan(name) {
 }
 
 InstanaSpan.prototype.addCleanup = function addCleanup(fn) {
+  // @ts-expect-error
   this.cleanupFunctions.push(fn);
 };
 
@@ -309,7 +310,9 @@ InstanaSpan.prototype.cancel = function cancel() {
 };
 
 InstanaSpan.prototype.cleanup = function cleanup() {
+  // @ts-expect-error
   this.cleanupFunctions.forEach(call);
+  // @ts-expect-error
   this.cleanupFunctions.length = 0;
 };
 

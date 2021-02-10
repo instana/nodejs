@@ -206,6 +206,7 @@ Namespace.prototype.bindEmitter = function bindEmitter(emitter) {
 };
 
 function getNamespace(name) {
+  // @ts-expect-error
   return process.namespaces[name];
 }
 
@@ -247,6 +248,7 @@ function createNamespace(name) {
     }
   });
 
+  // @ts-expect-error
   process.namespaces[name] = namespace;
   return namespace;
 }
@@ -257,19 +259,24 @@ function destroyNamespace(name) {
   assert.ok(namespace, `can't delete nonexistent namespace! "${name}"`);
   assert.ok(namespace.id, `don't assign to process.namespaces directly! ${util.inspect(namespace)}`);
 
+  // @ts-expect-error
   process.namespaces[name] = null;
 }
 
 function reset() {
   // must unregister async listeners
+  // @ts-expect-error
   if (process.namespaces) {
+    // @ts-expect-error
     Object.keys(process.namespaces).forEach(name => {
       destroyNamespace(name);
     });
   }
+  // @ts-expect-error
   process.namespaces = Object.create(null);
 }
 
+// @ts-expect-error
 process.namespaces = process.namespaces || {};
 
 if (asyncHook._state && !asyncHook._state.enabled) {

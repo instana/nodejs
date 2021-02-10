@@ -1,0 +1,19 @@
+{
+  "compilerOptions": {
+    "module": "commonjs",
+    "target": "ES6",
+    "allowJs": true,
+    "checkJs": true,
+    "lib": ["esnext.asynciterable"],
+    "moduleResolution": "node",
+    "noEmit": true,
+    "noImplicitAny": false
+  },
+  "include": ["./packages/core/**/*.js"],
+  "exclude": [
+    "node_modules",
+    "**/node_modules",
+    "**/node_modules/*",
+    "./packages/core/test/**/*.js"
+  ]
+}

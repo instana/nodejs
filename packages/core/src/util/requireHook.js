@@ -3,10 +3,16 @@
  * (c) Copyright Instana Inc. and contributors 2016
  */
 
+// @ts-nocheck
+
 'use strict';
 
 const Module = require('module');
 const path = require('path');
+
+/**
+ * @interface
+ */
 
 let executedHooks = {};
 let byModuleNameTransformers = {};

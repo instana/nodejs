@@ -347,10 +347,14 @@ function readAttribCaseInsensitive(attributes, key1, key2) {
 }
 
 /**
+ * @typedef {Object.<string, object>} GenericObject
+ */
+
+/**
  * Flattens the AWS SQS MessageAttribute format into a basic object structure.
  *
- * @param sqsAttributes {Object.<string, {DataType: string, StringValue: string}} The AWS SQS MessageAttribute object
- * @returns {Object.<string, string>} The flattened object
+ * @param sqsAttributes {Object.<string, {DataType: string, StringValue: string}>} The AWS SQS MessageAttribute object
+ * @returns {GenericObject} The flattened object
  */
 function convertAttributesFromSQS(sqsAttributes) {
   const attributes = {};
@@ -361,7 +365,7 @@ function convertAttributesFromSQS(sqsAttributes) {
   const keys = Object.keys(sqsAttributes);
 
   for (let i = 0; i < keys.length; i++) {
-    const key = keys[i];
+    const key = keys[i] || '';
 
     if (sqsAttributes[key].DataType === 'String') {
       attributes[key] = sqsAttributes[key].StringValue;
@@ -423,3 +427,26 @@ exports.activate = function activate() {
 exports.deactivate = function deactivate() {
   isActive = false;
 };
+
+/**
+ * @typedef {Object} MyObject
+ * @property {number} a
+ * @property {number} b
+ * @property {string} c
+ */
+
+/**
+ * @param {number} a
+ * @param {number} b
+ * @param {MyObject} c
+ */
+function sum(a, b, c) {
+  console.log(c);
+  return a + b;
+}
+
+sum(1, 3, {
+  a: 1,
+  b: 1,
+  c: '1'
+});
