@@ -8,6 +8,12 @@
 // See v8 Error API docs at
 // https://v8.dev/docs/stack-trace-api
 
+/**
+ * @param {number} length
+ * @param {Function} referenceFunction
+ * @param {number} drop
+ * @returns {object}
+ */
 exports.captureStackTrace = function captureStackTrace(length, referenceFunction, drop = 0) {
   if (length <= 0) {
     return [];
@@ -18,6 +24,9 @@ exports.captureStackTrace = function captureStackTrace(length, referenceFunction
   const originalPrepareStackTrace = Error.prepareStackTrace;
   Error.stackTraceLimit = length + drop;
   Error.prepareStackTrace = jsonPrepareStackTrace;
+  /**
+   * @type {any}
+   */
   const stackTraceTarget = {};
   Error.captureStackTrace(stackTraceTarget, referenceFunction);
   if (stackTraceTarget.stack == null || stackTraceTarget.stack.length === 0) {
@@ -36,6 +45,10 @@ exports.captureStackTrace = function captureStackTrace(length, referenceFunction
   return stack;
 };
 
+/**
+ * @param {number} length
+ * @param {Error} error
+ */
 exports.getStackTraceAsJson = function getStackTraceAsJson(length, error) {
   if (length <= 0) {
     return [];
@@ -49,20 +62,35 @@ exports.getStackTraceAsJson = function getStackTraceAsJson(length, error) {
   error.stack;
   Error.stackTraceLimit = originalLimit;
   Error.prepareStackTrace = originalPrepareStackTrace;
+  // @ts-expect-error
   const jsonStackTrace = error._jsonStackTrace;
+  // @ts-expect-error
   delete error._jsonStackTrace;
   return jsonStackTrace;
 };
 
+/**
+ * @param {Error} error
+ * @param {Array<any>} structuredStackTrace
+ */
 function jsonPrepareStackTrace(error, structuredStackTrace) {
   return jsonifyStackTrace(structuredStackTrace);
 }
 
+/**
+ * @param {Error} error
+ * @param {Array<any>} structuredStackTrace
+ */
 function attachJsonStackTrace(error, structuredStackTrace) {
+  // @ts-expect-error
   error._jsonStackTrace = jsonifyStackTrace(structuredStackTrace);
   return defaultPrepareStackTrace(error, structuredStackTrace);
 }
 
+/**
+ * @param {Array<any>} structuredStackTrace
+ * @returns {object}
+ */
 function jsonifyStackTrace(structuredStackTrace) {
   const len = structuredStackTrace.length;
   const result = new Array(len);
@@ -79,14 +107,22 @@ function jsonifyStackTrace(structuredStackTrace) {
   return result;
 }
 
+/**
+ * @param {Function} callSite
+ */
 exports.buildFunctionIdentifier = function buildFunctionIdentifier(callSite) {
+  // @ts-expect-error
   if (callSite.isConstructor()) {
+    // @ts-expect-error
     return `new ${callSite.getFunctionName()}`;
   }
 
   let name;
+  // @ts-expect-error
   const methodName = callSite.getMethodName();
+  // @ts-expect-error
   const functionName = callSite.getFunctionName();
+  // @ts-expect-error
   const type = callSite.getTypeName();
 
   if (!methodName && !functionName) {
@@ -113,6 +149,10 @@ exports.buildFunctionIdentifier = function buildFunctionIdentifier(callSite) {
   return label;
 };
 
+/**
+ * @param {Error} error
+ * @param {Array<any>} frames
+ */
 function defaultPrepareStackTrace(error, frames) {
   frames.push(error);
   return frames.reverse().join('\n    at ');

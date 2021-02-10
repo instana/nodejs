@@ -5,7 +5,13 @@
 
 'use strict';
 
+/**
+ * @type {*}
+ */
 let parentLogger = null;
+/**
+ * @type {*}
+ */
 const registry = {};
 
 const consoleLogger = {
@@ -16,6 +22,14 @@ const consoleLogger = {
   error: console.error
 };
 
+/**
+ * @typedef {Object} LoggerConfig
+ * @property {*} [logger]
+ */
+
+/**
+ * @param {LoggerConfig} config
+ */
 exports.init = function init(config = {}) {
   if (
     config.logger &&
@@ -47,6 +61,10 @@ exports.init = function init(config = {}) {
   });
 };
 
+/**
+ * @param {string} loggerName
+ * @param {(arg: any) => any} [reInitFn]
+ */
 exports.getLogger = function getLogger(loggerName, reInitFn) {
   if (!parentLogger) {
     exports.init({});
@@ -71,6 +89,9 @@ exports.getLogger = function getLogger(loggerName, reInitFn) {
   return logger;
 };
 
+/**
+ * @param {*} logger
+ */
 function hasLoggingFunctions(logger) {
   return (
     typeof logger.debug === 'function' &&

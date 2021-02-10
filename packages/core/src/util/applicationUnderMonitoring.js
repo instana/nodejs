@@ -8,6 +8,9 @@
 const fs = require('fs');
 const path = require('path');
 
+/**
+ * @type {*}
+ */
 let logger;
 logger = require('../logger').getLogger('util/atMostOnce', newLogger => {
   logger = newLogger;
@@ -15,8 +18,17 @@ logger = require('../logger').getLogger('util/atMostOnce', newLogger => {
 
 // Cache determined main package json as these will be referenced often
 // and identification of these values is expensive.
+/**
+ * @type {*}
+ */
 let parsedMainPackageJson;
+/**
+ * @type {*}
+ */
 let mainPackageJsonPath;
+/**
+ * @type {*}
+ */
 let nodeModulesPath;
 let appInstalledIntoNodeModules = false;
 
@@ -24,17 +36,21 @@ exports.isAppInstalledIntoNodeModules = function isAppInstalledIntoNodeModules()
   return appInstalledIntoNodeModules;
 };
 
-exports.getMainPackageJson = function getMainPackageJson(startDirectory, cb) {
-  if (typeof startDirectory === 'function') {
-    cb = startDirectory;
-    startDirectory = null;
+/**
+ * @param {string | ((err: Error, packageJsonPath: string) => void)} startDirectoryOrFunction
+ * @param {Function} cb
+ */
+exports.getMainPackageJson = function getMainPackageJson(startDirectoryOrFunction, cb) {
+  if (typeof startDirectoryOrFunction === 'function') {
+    cb = startDirectoryOrFunction;
+    startDirectoryOrFunction = null;
   }
 
   if (parsedMainPackageJson !== undefined) {
     return process.nextTick(cb, null, parsedMainPackageJson);
   }
 
-  exports.getMainPackageJsonPath(startDirectory, (err, packageJsonPath) => {
+  exports.getMainPackageJsonPath(startDirectoryOrFunction, (err, packageJsonPath) => {
     if (err) {
       // fs.readFile would have called cb asynchronously later, so we use process.nextTick here to make all paths async.
       return process.nextTick(cb, err, null);
@@ -60,9 +76,14 @@ exports.getMainPackageJson = function getMainPackageJson(startDirectory, cb) {
   });
 };
 
-exports.getMainPackageJsonPath = function getMainPackageJsonPath(startDirectory, cb) {
-  if (typeof startDirectory === 'function') {
-    cb = startDirectory;
+/**
+ * @param {string | ((err: Error, packageJsonPath: string) => void)} startDirectoryOrFunction
+ * @param {(err: Error, packageJsonPath: string) => void} cb
+ */
+exports.getMainPackageJsonPath = function getMainPackageJsonPath(startDirectoryOrFunction, cb) {
+  let startDirectory = '';
+  if (typeof startDirectoryOrFunction === 'function') {
+    cb = startDirectoryOrFunction;
     startDirectory = null;
   }
 
@@ -72,7 +93,7 @@ exports.getMainPackageJsonPath = function getMainPackageJsonPath(startDirectory,
     return process.nextTick(cb, null, mainPackageJsonPath);
   }
 
-  if (!startDirectory) {
+  if (!startDirectoryOrFunction) {
     // No explicit starting directory for searching for the main package.json has been provided, use the Node.js
     // process' main module as the starting point.
     const mainModule = process.mainModule;
@@ -99,6 +120,10 @@ exports.getMainPackageJsonPath = function getMainPackageJsonPath(startDirectory,
   });
 };
 
+/**
+ * @param {string} dir
+ * @param {(err: Error, main: *) => void} cb
+ */
 function searchForPackageJsonInDirectoryTreeUpwards(dir, cb) {
   const pathToCheck = path.join(dir, 'package.json');
 
@@ -156,6 +181,9 @@ function searchForPackageJsonInDirectoryTreeUpwards(dir, cb) {
   });
 }
 
+/**
+ * @param {Function} cb
+ */
 exports.findNodeModulesFolder = function findNodeModulesFolder(cb) {
   if (nodeModulesPath !== undefined) {
     return process.nextTick(cb, null, nodeModulesPath);
@@ -177,6 +205,10 @@ exports.findNodeModulesFolder = function findNodeModulesFolder(cb) {
   });
 };
 
+/**
+ * @param {string} dir
+ * @param {(err: Error, nodeModulesPath: *) => void} cb
+ */
 function searchForNodeModulesInDirectoryTreeUpwards(dir, cb) {
   const pathToCheck = path.join(dir, 'node_modules');
 
@@ -199,6 +231,11 @@ function searchForNodeModulesInDirectoryTreeUpwards(dir, cb) {
   });
 }
 
+/**
+ * @param {string} dir
+ * @param {(parentDir: string, cb: Function) => void} onParentDir
+ * @param {Function} cb
+ */
 function searchInParentDir(dir, onParentDir, cb) {
   const parentDir = path.resolve(dir, '..');
   if (dir === parentDir) {

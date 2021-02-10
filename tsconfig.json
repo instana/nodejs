@@ -7,15 +7,12 @@
     "lib": ["esnext.asynciterable"],
     "moduleResolution": "node",
     "noEmit": true,
-    "noImplicitAny": true
+    "noImplicitAny": true,
   },
   "include": [
-    "./packages/core/**/*.js",
-    "./packages/collector/**/*.js",
+    "packages/core/src/util",
   ],
   "exclude": [
     "node_modules",
-    "**/node_modules",
-    "**/node_modules/*",
   ]
 }
