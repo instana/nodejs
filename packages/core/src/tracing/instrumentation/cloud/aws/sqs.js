@@ -347,7 +347,7 @@ function readAttribCaseInsensitive(attributes, key1, key2) {
 }
 
 /**
- * @typedef {Object.<string, object>} GenericObject
+ * @typedef {Object.<string, any>} GenericObject
  */
 
 /**
@@ -365,7 +365,7 @@ function convertAttributesFromSQS(sqsAttributes) {
   const keys = Object.keys(sqsAttributes);
 
   for (let i = 0; i < keys.length; i++) {
-    const key = keys[i] || '';
+    const key = keys[i];
 
     if (sqsAttributes[key].DataType === 'String') {
       attributes[key] = sqsAttributes[key].StringValue;
