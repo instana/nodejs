@@ -14,12 +14,24 @@ let parentLogger = null;
  */
 const registry = {};
 
+/**
+ * @typedef {Object} GenericLogger
+ * @property {(...args: any) => void} debug
+ * @property {(...args: any) => void} info
+ * @property {(...args: any) => void} warn
+ * @property {(...args: any) => void} error
+ */
+
+/**
+ * @type {GenericLogger}
+ */
 const consoleLogger = {
   /* eslint-disable no-console */
   debug: console.log,
   info: console.log,
   warn: console.warn,
   error: console.error
+  /* eslint-enable no-console */
 };
 
 /**
@@ -64,6 +76,7 @@ exports.init = function init(config = {}) {
 /**
  * @param {string} loggerName
  * @param {(arg: any) => any} [reInitFn]
+ * @returns {GenericLogger}
  */
 exports.getLogger = function getLogger(loggerName, reInitFn) {
   if (!parentLogger) {
@@ -90,7 +103,7 @@ exports.getLogger = function getLogger(loggerName, reInitFn) {
 };
 
 /**
- * @param {*} logger
+ * @param {GenericLogger} logger
  */
 function hasLoggingFunctions(logger) {
   return (

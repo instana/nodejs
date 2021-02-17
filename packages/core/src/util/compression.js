@@ -3,8 +3,15 @@
  * (c) Copyright Instana Inc. and contributors 2015
  */
 
+// @ts-expect-error
+
 'use strict';
 
+/**
+ * @param {Object<string, *>} prev
+ * @param {Object<string, *>} next
+ * @param {Array<*>} excludeList
+ */
 module.exports = exports = function applyCompressionRoot(prev, next, excludeList) {
   const result = applyCompression([], prev, next, excludeList);
 
@@ -15,6 +22,12 @@ module.exports = exports = function applyCompressionRoot(prev, next, excludeList
   return result;
 };
 
+/**
+ * @param {Array<any>} path
+ * @param {*} prev
+ * @param {*} next
+ * @param {*} excludeList
+ */
 function applyCompression(path, prev, next, excludeList) {
   if (isExcluded(path, excludeList)) {
     return next;
@@ -42,7 +55,16 @@ function applyCompression(path, prev, next, excludeList) {
   return undefined;
 }
 
+/**
+ * @param {Array<*>} path
+ * @param {Object<string, *>} prev
+ * @param {Object<string, *>} next
+ * @param {Array<*>} excludeList
+ */
 function applyCompressionToObject(path, prev, next, excludeList) {
+  /**
+   * @type {Object<string, *>}
+   */
   const result = {};
   let addedProps = 0;
 
@@ -68,6 +90,10 @@ function applyCompressionToObject(path, prev, next, excludeList) {
   return undefined;
 }
 
+/**
+ * @param {Object<string, *>} prev
+ * @param {Object<string, *>} next
+ */
 function applyCompressionToArray(prev, next) {
   if (next.length !== prev.length) {
     return next;
@@ -85,6 +111,10 @@ function applyCompressionToArray(prev, next) {
   return undefined;
 }
 
+/**
+ * @param {Array<*>} path
+ * @param {Array<*>} excludeList
+ */
 function isExcluded(path, excludeList) {
   if (excludeList == null) {
     return false;

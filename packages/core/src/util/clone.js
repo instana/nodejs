@@ -5,7 +5,14 @@
 
 'use strict';
 
+/**
+ * @param {Object<string, any>|Array<Object>} x
+ * @returns {Object}
+ */
 module.exports = function clone(x) {
+  /**
+   * @type {Object<string, any>}
+   */
   let r;
   if (x === null || x === undefined) {
     return x;
@@ -28,7 +35,7 @@ module.exports = function clone(x) {
     for (const key in x) {
       // eslint-disable-next-line no-prototype-builtins
       if (x.hasOwnProperty(key)) {
-        r[key] = clone(x[key]);
+        r[key] = clone(/** @type {Object<string, any>} */ (x)[key]);
       }
     }
 
