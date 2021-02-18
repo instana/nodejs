@@ -427,26 +427,3 @@ exports.activate = function activate() {
 exports.deactivate = function deactivate() {
   isActive = false;
 };
-
-/**
- * @typedef {Object} MyObject
- * @property {number} a
- * @property {number} b
- * @property {string} c
- */
-
-/**
- * @param {number} a
- * @param {number} b
- * @param {MyObject} c
- */
-function sum(a, b, c) {
-  console.log(c);
-  return a + b;
-}
-
-sum(1, 3, {
-  a: 1,
-  b: 1,
-  c: '1'
-});
