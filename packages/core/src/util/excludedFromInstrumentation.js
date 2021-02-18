@@ -13,6 +13,10 @@
 // no value and also creates confusing log output, so we exclude them here explicitly.
 const excludePattern = /^.*\/(?:npm(?:\.js)?|npm-cli(?:\.js)?|yarn(?:\.js)?|yarn\/lib\/cli(?:\.js)?)$/i;
 
+/**
+ * @type {Function}
+ * @returns {*}
+ */
 module.exports = exports = function isExcludedFromInstrumentation() {
   const mainModule = process.argv[1];
   const excludedFromInstrumentation = typeof mainModule === 'string' && excludePattern.test(mainModule);

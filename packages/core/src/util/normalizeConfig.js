@@ -9,11 +9,57 @@
 
 const supportedTracingVersion = require('../tracing/supportedVersion');
 
+/**
+ * @typedef {Object} HTTPTracingOption
+ * @property {Array<*>} [extraHttpHeadersToCapture]
+ */
+
+/**
+ * @typedef {Object} SDKTracingOption
+ * @property {boolean} [enabled]
+ * @property {boolean} [automaticTracingEnabled]
+ * @property {number} [forceTransmissionStartingAt]
+ * @property {number} [maxBufferedSpans]
+ * @property {number} [transmissionDelay]
+ * @property {number} [stackTraceLength]
+ * @property {HTTPTracingOption} [http]
+ * @property {Array<*>} [disabledTracers]
+ * @property {boolean} [spanBatchingEnabled]
+ * @property {boolean} [disableAutomaticTracing]
+ */
+
+/**
+ * @typedef {Object} SDKMetricsOption
+ * @property {number} [transmissionDelay]
+ * @property {number} [timeBetweenHealthcheckCalls]
+ */
+
+/**
+ * @typedef {Object} SDKSecretsOption
+ * @property {string} [matcherMode]
+ * @property {Array<string>} [keywords]
+ */
+
+/**
+ * @typedef {Object} SDKConfig
+ * @property {string} [serviceName]
+ * @property {SDKMetricsOption} [metrics]
+ * @property {SDKTracingOption} [tracing]
+ * @property {SDKSecretsOption} [secrets]
+ * @property {number} [timeBetweenHealthcheckCalls]
+ */
+
+/**
+ * @type {import('../logger').GenericLogger}
+ */
 let logger;
 logger = require('../logger').getLogger('configuration', newLogger => {
   logger = newLogger;
 });
 
+/**
+ * @type {SDKConfig}
+ */
 const defaults = {
   serviceName: null,
 
@@ -45,6 +91,11 @@ const validSecretsMatcherModes = ['equals-ignore-case', 'equals', 'contains-igno
 /**
  * Merges the config that was passed to the init function with environment variables and default values.
  */
+
+/**
+ * @type {Function}
+ * @param {SDKConfig} config
+ */
 module.exports = exports = function normalizeConfig(config) {
   if (config == null) {
     config = {};
@@ -57,6 +108,9 @@ module.exports = exports = function normalizeConfig(config) {
   return config;
 };
 
+/**
+ * @param {SDKConfig} config
+ */
 function normalizeServiceName(config) {
   if (config.serviceName == null && process.env['INSTANA_SERVICE_NAME']) {
     config.serviceName = process.env['INSTANA_SERVICE_NAME'];
@@ -69,6 +123,9 @@ function normalizeServiceName(config) {
   }
 }
 
+/**
+ * @param {SDKConfig} config
+ */
 function normalizeMetricsConfig(config) {
   if (config.metrics == null) {
     config.metrics = {};
@@ -90,6 +147,10 @@ function normalizeMetricsConfig(config) {
   delete config.timeBetweenHealthcheckCalls;
 }
 
+/**
+ *
+ * @param {SDKConfig} config
+ */
 function normalizeTracingConfig(config) {
   if (config.tracing == null) {
     config.tracing = {};
@@ -103,6 +164,10 @@ function normalizeTracingConfig(config) {
   normalizeSpanBatchingEnabled(config);
 }
 
+/**
+ *
+ * @param {SDKConfig} config
+ */
 function normalizeTracingEnabled(config) {
   if (config.tracing.enabled === false) {
     logger.info('Not enabling tracing as it is explicitly disabled via config.');
@@ -121,6 +186,10 @@ function normalizeTracingEnabled(config) {
   config.tracing.enabled = defaults.tracing.enabled;
 }
 
+/**
+ *
+ * @param {SDKConfig} config
+ */
 function normalizeAutomaticTracingEnabled(config) {
   if (!config.tracing.enabled) {
     logger.info('Not enabling automatic tracing as tracing in general is explicitly disabled via config.');
@@ -156,6 +225,10 @@ function normalizeAutomaticTracingEnabled(config) {
   config.tracing.automaticTracingEnabled = defaults.tracing.automaticTracingEnabled;
 }
 
+/**
+ *
+ * @param {SDKConfig} config
+ */
 function normalizeTracingTransmission(config) {
   config.tracing.maxBufferedSpans = config.tracing.maxBufferedSpans || defaults.tracing.maxBufferedSpans;
 
@@ -174,6 +247,9 @@ function normalizeTracingTransmission(config) {
   );
 }
 
+/**
+ * @param {SDKConfig} config
+ */
 function normalizeTracingHttp(config) {
   config.tracing.http = config.tracing.http || {};
 
@@ -203,6 +279,10 @@ function normalizeTracingHttp(config) {
   ) => s.toLowerCase());
 }
 
+/**
+ * @param {string} envVarValue
+ * @returns {Array<string>}
+ */
 function parseHeadersEnvVar(envVarValue) {
   return envVarValue
     .split(/[;,]/)
@@ -210,6 +290,9 @@ function parseHeadersEnvVar(envVarValue) {
     .filter(header => header !== '');
 }
 
+/**
+ * @param {SDKConfig} config
+ */
 function normalizeTracingStackTraceLength(config) {
   if (config.tracing.stackTraceLength == null && process.env['INSTANA_STACK_TRACE_LENGTH']) {
     parseStringStackTraceLength(config, process.env['INSTANA_STACK_TRACE_LENGTH']);
@@ -234,6 +317,10 @@ function normalizeTracingStackTraceLength(config) {
   }
 }
 
+/**
+ * @param {SDKConfig} config
+ * @param {string} value
+ */
 function parseStringStackTraceLength(config, value) {
   config.tracing.stackTraceLength = parseInt(value, 10);
   if (!isNaN(config.tracing.stackTraceLength)) {
@@ -249,6 +336,10 @@ function parseStringStackTraceLength(config, value) {
   }
 }
 
+/**
+ * @param {number} numericalLength
+ * @returns {number}
+ */
 function normalizeNumericalStackTraceLength(numericalLength) {
   // just in case folks provide non-integral numbers or negative numbers
   const normalized = Math.abs(Math.round(numericalLength));
@@ -262,6 +353,9 @@ function normalizeNumericalStackTraceLength(numericalLength) {
   return normalized;
 }
 
+/**
+ * @param {SDKConfig} config
+ */
 function normalizeDisabledTracers(config) {
   if (
     config.tracing.disabledTracers == null &&
@@ -293,6 +387,9 @@ function normalizeDisabledTracers(config) {
   ) => s.toLowerCase());
 }
 
+/**
+ * @param {SDKConfig} config
+ */
 function normalizeSpanBatchingEnabled(config) {
   if (config.tracing.spanBatchingEnabled != null) {
     if (typeof config.tracing.spanBatchingEnabled === 'boolean') {
@@ -318,11 +415,17 @@ function normalizeSpanBatchingEnabled(config) {
   config.tracing.spanBatchingEnabled = defaults.tracing.spanBatchingEnabled;
 }
 
+/**
+ * @param {SDKConfig} config
+ */
 function normalizeSecrets(config) {
   if (config.secrets == null) {
     config.secrets = {};
   }
 
+  /**
+   * @type {SDKSecretsOption}
+   */
   let fromEnvVar = {};
   if (process.env.INSTANA_SECRETS) {
     fromEnvVar = parseSecretsEnvVar(process.env.INSTANA_SECRETS);
@@ -358,6 +461,10 @@ function normalizeSecrets(config) {
   }
 }
 
+/**
+ * @param {string} envVarValue
+ * @returns {SDKSecretsOption}
+ */
 function parseSecretsEnvVar(envVarValue) {
   let [matcherMode, keywords] = envVarValue.split(':', 2);
   matcherMode = matcherMode.trim().toLowerCase();
@@ -377,13 +484,20 @@ function parseSecretsEnvVar(envVarValue) {
     );
     return {};
   }
-  keywords = keywords.split(',').map(word => word.trim());
+  const keywordsArray = keywords.split(',').map(word => word.trim());
   return {
     matcherMode,
-    keywords
+    keywords: keywordsArray
   };
 }
 
+/**
+ * @param {*} configValue
+ * @param {*} defaultValue
+ * @param {string} configPath
+ * @param {string} envVarKey
+ * @returns {*}
+ */
 function normalizeSingleValue(configValue, defaultValue, configPath, envVarKey) {
   const envVarVal = process.env[envVarKey];
   let originalValue = configValue;

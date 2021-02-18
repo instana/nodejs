@@ -9,7 +9,7 @@ const fs = require('fs');
 const path = require('path');
 
 /**
- * @type {*}
+ * @type {import('../logger').GenericLogger}
  */
 let logger;
 logger = require('../logger').getLogger('util/atMostOnce', newLogger => {

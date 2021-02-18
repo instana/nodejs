@@ -5,6 +5,9 @@
 
 'use strict';
 
+/**
+ * @type {*}
+ */
 module.exports = exports = {
   applicationUnderMonitoring: require('./applicationUnderMonitoring'),
   atMostOnce: require('./atMostOnce'),

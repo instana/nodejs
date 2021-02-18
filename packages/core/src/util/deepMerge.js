@@ -15,6 +15,11 @@
  * Note that target might be modified by this function. Usually target is returned, but in some edge cases (notably
  * target being null or undefined) source may be returned.
  */
+
+/**
+ * @param {*} target
+ * @param {*} source
+ */
 module.exports = function deepMerge(target, source) {
   if (target == null && source != null) {
     return source;
@@ -38,6 +43,9 @@ module.exports = function deepMerge(target, source) {
   return target;
 };
 
+/**
+ * @param {*} value
+ */
 function isObject(value) {
   return value && typeof value === 'object' && !Array.isArray(value);
 }
