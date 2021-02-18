@@ -37,20 +37,20 @@ exports.isAppInstalledIntoNodeModules = function isAppInstalledIntoNodeModules()
 };
 
 /**
- * @param {string | ((err: Error, packageJsonPath: string) => void)} startDirectoryOrFunction
+ * @param {string} startDirectory
  * @param {Function} cb
  */
-exports.getMainPackageJson = function getMainPackageJson(startDirectoryOrFunction, cb) {
-  if (typeof startDirectoryOrFunction === 'function') {
-    cb = startDirectoryOrFunction;
-    startDirectoryOrFunction = null;
+exports.getMainPackageJson = function getMainPackageJson(startDirectory, cb) {
+  if (typeof startDirectory === 'function') {
+    cb = startDirectory;
+    startDirectory = null;
   }
 
   if (parsedMainPackageJson !== undefined) {
     return process.nextTick(cb, null, parsedMainPackageJson);
   }
 
-  exports.getMainPackageJsonPath(startDirectoryOrFunction, (err, packageJsonPath) => {
+  exports.getMainPackageJsonPath(startDirectory, (err, packageJsonPath) => {
     if (err) {
       // fs.readFile would have called cb asynchronously later, so we use process.nextTick here to make all paths async.
       return process.nextTick(cb, err, null);
@@ -77,13 +77,12 @@ exports.getMainPackageJson = function getMainPackageJson(startDirectoryOrFunctio
 };
 
 /**
- * @param {string | ((err: Error, packageJsonPath: string) => void)} startDirectoryOrFunction
+ * @param {string} startDirectory
  * @param {(err: Error, packageJsonPath: string) => void} cb
  */
-exports.getMainPackageJsonPath = function getMainPackageJsonPath(startDirectoryOrFunction, cb) {
-  let startDirectory = '';
-  if (typeof startDirectoryOrFunction === 'function') {
-    cb = startDirectoryOrFunction;
+exports.getMainPackageJsonPath = function getMainPackageJsonPath(startDirectory, cb) {
+  if (typeof startDirectory === 'function') {
+    cb = startDirectory;
     startDirectory = null;
   }
 
@@ -93,7 +92,7 @@ exports.getMainPackageJsonPath = function getMainPackageJsonPath(startDirectoryO
     return process.nextTick(cb, null, mainPackageJsonPath);
   }
 
-  if (!startDirectoryOrFunction) {
+  if (!startDirectory) {
     // No explicit starting directory for searching for the main package.json has been provided, use the Node.js
     // process' main module as the starting point.
     const mainModule = process.mainModule;
