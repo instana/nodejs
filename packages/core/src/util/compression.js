@@ -3,11 +3,10 @@
  * (c) Copyright Instana Inc. and contributors 2015
  */
 
-// @ts-expect-error
-
 'use strict';
 
 /**
+ * @type {Function}
  * @param {Object<string, *>} prev
  * @param {Object<string, *>} next
  * @param {Array<*>} excludeList
@@ -23,7 +22,7 @@ module.exports = exports = function applyCompressionRoot(prev, next, excludeList
 };
 
 /**
- * @param {Array<any>} path
+ * @param {Array<*>} path
  * @param {*} prev
  * @param {*} next
  * @param {*} excludeList

@@ -9,23 +9,40 @@ const Module = require('module');
 const path = require('path');
 
 /**
- * @type {*}
+ * @typedef {Object} FileNamePatternTransformer
+ * @property {Function} fn
+ * @property {RegExp} pattern
+ */
+
+/**
+ * @typedef {Object} ExecutedHook
+ * @property {*} originalModuleExports
+ * @property {*} moduleExports
+ * @property {Array<string>} appliedByModuleNameTransformers
+ * @property {boolean} byFileNamePatternTransformersApplied
+ */
+
+/**
+ * @typedef {Object.<string, ExecutedHook>} ExecutedHooks
+ */
+
+/**
+ * @type {ExecutedHooks}
  */
 let executedHooks = {};
 /**
- * @type {*}
+ * @type {Object.<string, any>}
  */
 let byModuleNameTransformers = {};
 
 /**
- * @type {Array<any>}
+ * @type {Array<FileNamePatternTransformer>}
  */
 let byFileNamePatternTransformers = [];
-// @ts-expect-error
-const origLoad = Module._load;
+const origLoad = /** @type {*} */ (Module)._load;
 
 /**
- * @type {*}
+ * @type {import('../logger').GenericLogger}
  */
 let logger;
 
@@ -34,8 +51,7 @@ logger = require('../logger').getLogger('util/requireHook', newLogger => {
 });
 
 exports.init = function() {
-  // @ts-expect-error
-  Module._load = patchedModuleLoad;
+  /** @type {*} */ (Module)._load = patchedModuleLoad;
 };
 
 /**
@@ -49,8 +65,7 @@ function patchedModuleLoad(moduleName) {
   /**
    * @type {string}
    */
-  // @ts-expect-error
-  const filename = Module._resolveFilename.apply(Module, arguments);
+  const filename = /** @type {*} */ (Module)._resolveFilename.apply(Module, arguments);
 
   // We are not directly manipulating the global module cache because there might be other tools fiddling with
   // Module._load. We don't want to break any of them.
@@ -123,8 +138,7 @@ function patchedModuleLoad(moduleName) {
 }
 
 exports.teardownForTestPurposes = function() {
-  // @ts-expect-error
-  Module._load = origLoad;
+  /** @type {*} */ (Module)._load = origLoad;
   executedHooks = {};
   byModuleNameTransformers = {};
   byFileNamePatternTransformers = [];
@@ -151,7 +165,7 @@ exports.onFileLoad = function onFileLoad(pattern, fn) {
 };
 
 /**
- * @param {Array<*>} arr
+ * @param {Array<string>} arr
  */
 exports.buildFileNamePattern = function buildFileNamePattern(arr) {
   return new RegExp(`${arr.reduce(buildFileNamePatternReducer, '')}$`);

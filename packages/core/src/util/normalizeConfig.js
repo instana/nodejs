@@ -15,7 +15,7 @@ const supportedTracingVersion = require('../tracing/supportedVersion');
  */
 
 /**
- * @typedef {Object} SDKTracingOption
+ * @typedef {Object} InstanaTracingOption
  * @property {boolean} [enabled]
  * @property {boolean} [automaticTracingEnabled]
  * @property {number} [forceTransmissionStartingAt]
@@ -29,23 +29,23 @@ const supportedTracingVersion = require('../tracing/supportedVersion');
  */
 
 /**
- * @typedef {Object} SDKMetricsOption
+ * @typedef {Object} InstanaMetricsOption
  * @property {number} [transmissionDelay]
  * @property {number} [timeBetweenHealthcheckCalls]
  */
 
 /**
- * @typedef {Object} SDKSecretsOption
+ * @typedef {Object} InstanaSecretsOption
  * @property {string} [matcherMode]
  * @property {Array<string>} [keywords]
  */
 
 /**
- * @typedef {Object} SDKConfig
+ * @typedef {Object} InstanaConfig
  * @property {string} [serviceName]
- * @property {SDKMetricsOption} [metrics]
- * @property {SDKTracingOption} [tracing]
- * @property {SDKSecretsOption} [secrets]
+ * @property {InstanaMetricsOption} [metrics]
+ * @property {InstanaTracingOption} [tracing]
+ * @property {InstanaSecretsOption} [secrets]
  * @property {number} [timeBetweenHealthcheckCalls]
  */
 
@@ -58,7 +58,7 @@ logger = require('../logger').getLogger('configuration', newLogger => {
 });
 
 /**
- * @type {SDKConfig}
+ * @type {InstanaConfig}
  */
 const defaults = {
   serviceName: null,
@@ -94,7 +94,7 @@ const validSecretsMatcherModes = ['equals-ignore-case', 'equals', 'contains-igno
 
 /**
  * @type {Function}
- * @param {SDKConfig} config
+ * @param {InstanaConfig} config
  */
 module.exports = exports = function normalizeConfig(config) {
   if (config == null) {
@@ -109,7 +109,7 @@ module.exports = exports = function normalizeConfig(config) {
 };
 
 /**
- * @param {SDKConfig} config
+ * @param {InstanaConfig} config
  */
 function normalizeServiceName(config) {
   if (config.serviceName == null && process.env['INSTANA_SERVICE_NAME']) {
@@ -124,7 +124,7 @@ function normalizeServiceName(config) {
 }
 
 /**
- * @param {SDKConfig} config
+ * @param {InstanaConfig} config
  */
 function normalizeMetricsConfig(config) {
   if (config.metrics == null) {
@@ -149,7 +149,7 @@ function normalizeMetricsConfig(config) {
 
 /**
  *
- * @param {SDKConfig} config
+ * @param {InstanaConfig} config
  */
 function normalizeTracingConfig(config) {
   if (config.tracing == null) {
@@ -166,7 +166,7 @@ function normalizeTracingConfig(config) {
 
 /**
  *
- * @param {SDKConfig} config
+ * @param {InstanaConfig} config
  */
 function normalizeTracingEnabled(config) {
   if (config.tracing.enabled === false) {
@@ -188,7 +188,7 @@ function normalizeTracingEnabled(config) {
 
 /**
  *
- * @param {SDKConfig} config
+ * @param {InstanaConfig} config
  */
 function normalizeAutomaticTracingEnabled(config) {
   if (!config.tracing.enabled) {
@@ -227,7 +227,7 @@ function normalizeAutomaticTracingEnabled(config) {
 
 /**
  *
- * @param {SDKConfig} config
+ * @param {InstanaConfig} config
  */
 function normalizeTracingTransmission(config) {
   config.tracing.maxBufferedSpans = config.tracing.maxBufferedSpans || defaults.tracing.maxBufferedSpans;
@@ -248,7 +248,7 @@ function normalizeTracingTransmission(config) {
 }
 
 /**
- * @param {SDKConfig} config
+ * @param {InstanaConfig} config
  */
 function normalizeTracingHttp(config) {
   config.tracing.http = config.tracing.http || {};
@@ -291,7 +291,7 @@ function parseHeadersEnvVar(envVarValue) {
 }
 
 /**
- * @param {SDKConfig} config
+ * @param {InstanaConfig} config
  */
 function normalizeTracingStackTraceLength(config) {
   if (config.tracing.stackTraceLength == null && process.env['INSTANA_STACK_TRACE_LENGTH']) {
@@ -318,7 +318,7 @@ function normalizeTracingStackTraceLength(config) {
 }
 
 /**
- * @param {SDKConfig} config
+ * @param {InstanaConfig} config
  * @param {string} value
  */
 function parseStringStackTraceLength(config, value) {
@@ -354,7 +354,7 @@ function normalizeNumericalStackTraceLength(numericalLength) {
 }
 
 /**
- * @param {SDKConfig} config
+ * @param {InstanaConfig} config
  */
 function normalizeDisabledTracers(config) {
   if (
@@ -388,7 +388,7 @@ function normalizeDisabledTracers(config) {
 }
 
 /**
- * @param {SDKConfig} config
+ * @param {InstanaConfig} config
  */
 function normalizeSpanBatchingEnabled(config) {
   if (config.tracing.spanBatchingEnabled != null) {
@@ -416,7 +416,7 @@ function normalizeSpanBatchingEnabled(config) {
 }
 
 /**
- * @param {SDKConfig} config
+ * @param {InstanaConfig} config
  */
 function normalizeSecrets(config) {
   if (config.secrets == null) {
@@ -424,7 +424,7 @@ function normalizeSecrets(config) {
   }
 
   /**
-   * @type {SDKSecretsOption}
+   * @type {InstanaSecretsOption}
    */
   let fromEnvVar = {};
   if (process.env.INSTANA_SECRETS) {
@@ -463,7 +463,7 @@ function normalizeSecrets(config) {
 
 /**
  * @param {string} envVarValue
- * @returns {SDKSecretsOption}
+ * @returns {InstanaSecretsOption}
  */
 function parseSecretsEnvVar(envVarValue) {
   let [matcherMode, keywords] = envVarValue.split(':', 2);

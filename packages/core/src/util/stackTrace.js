@@ -11,7 +11,7 @@
 /**
  * @param {number} length
  * @param {Function} referenceFunction
- * @param {number} drop
+ * @param {number} [drop]
  * @returns {object}
  */
 exports.captureStackTrace = function captureStackTrace(length, referenceFunction, drop = 0) {
@@ -25,7 +25,7 @@ exports.captureStackTrace = function captureStackTrace(length, referenceFunction
   Error.stackTraceLimit = length + drop;
   Error.prepareStackTrace = jsonPrepareStackTrace;
   /**
-   * @type {any}
+   * @type {*}
    */
   const stackTraceTarget = {};
   Error.captureStackTrace(stackTraceTarget, referenceFunction);
@@ -62,16 +62,14 @@ exports.getStackTraceAsJson = function getStackTraceAsJson(length, error) {
   error.stack;
   Error.stackTraceLimit = originalLimit;
   Error.prepareStackTrace = originalPrepareStackTrace;
-  // @ts-expect-error
-  const jsonStackTrace = error._jsonStackTrace;
-  // @ts-expect-error
-  delete error._jsonStackTrace;
+  const jsonStackTrace = /** @type {*} */ (error)._jsonStackTrace;
+  delete /** @type {*} */ (error)._jsonStackTrace;
   return jsonStackTrace;
 };
 
 /**
  * @param {Error} error
- * @param {Array<any>} structuredStackTrace
+ * @param {Array<*>} structuredStackTrace
  */
 function jsonPrepareStackTrace(error, structuredStackTrace) {
   return jsonifyStackTrace(structuredStackTrace);
@@ -79,16 +77,15 @@ function jsonPrepareStackTrace(error, structuredStackTrace) {
 
 /**
  * @param {Error} error
- * @param {Array<any>} structuredStackTrace
+ * @param {Array<*>} structuredStackTrace
  */
 function attachJsonStackTrace(error, structuredStackTrace) {
-  // @ts-expect-error
-  error._jsonStackTrace = jsonifyStackTrace(structuredStackTrace);
+  /** @type {*} */ (error)._jsonStackTrace = jsonifyStackTrace(structuredStackTrace);
   return defaultPrepareStackTrace(error, structuredStackTrace);
 }
 
 /**
- * @param {Array<any>} structuredStackTrace
+ * @param {Array<*>} structuredStackTrace
  * @returns {object}
  */
 function jsonifyStackTrace(structuredStackTrace) {
@@ -108,21 +105,16 @@ function jsonifyStackTrace(structuredStackTrace) {
 }
 
 /**
- * @param {Function} callSite
+ * @param {Function | *} callSite
  */
 exports.buildFunctionIdentifier = function buildFunctionIdentifier(callSite) {
-  // @ts-expect-error
   if (callSite.isConstructor()) {
-    // @ts-expect-error
     return `new ${callSite.getFunctionName()}`;
   }
 
   let name;
-  // @ts-expect-error
   const methodName = callSite.getMethodName();
-  // @ts-expect-error
   const functionName = callSite.getFunctionName();
-  // @ts-expect-error
   const type = callSite.getTypeName();
 
   if (!methodName && !functionName) {
@@ -151,7 +143,7 @@ exports.buildFunctionIdentifier = function buildFunctionIdentifier(callSite) {
 
 /**
  * @param {Error} error
- * @param {Array<any>} frames
+ * @param {Array<*>} frames
  */
 function defaultPrepareStackTrace(error, frames) {
   frames.push(error);

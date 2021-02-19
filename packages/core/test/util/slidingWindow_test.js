@@ -10,9 +10,6 @@ const expect = require('chai').expect;
 const slidingWindow = require('../../src/util/slidingWindow');
 
 describe('slidingWindow', () => {
-  /**
-   * @type {sinon.SinonFakeTimers}
-   */
   let clock;
   let w;
 

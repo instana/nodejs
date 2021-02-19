@@ -16,10 +16,10 @@ const registry = {};
 
 /**
  * @typedef {Object} GenericLogger
- * @property {(...args: any) => void} debug
- * @property {(...args: any) => void} info
- * @property {(...args: any) => void} warn
- * @property {(...args: any) => void} error
+ * @property {(...args: *) => void} debug
+ * @property {(...args: *) => void} info
+ * @property {(...args: *) => void} warn
+ * @property {(...args: *) => void} error
  */
 
 /**
@@ -75,7 +75,7 @@ exports.init = function init(config = {}) {
 
 /**
  * @param {string} loggerName
- * @param {(arg: any) => any} [reInitFn]
+ * @param {(arg: *) => *} [reInitFn]
  * @returns {GenericLogger}
  */
 exports.getLogger = function getLogger(loggerName, reInitFn) {
@@ -104,6 +104,7 @@ exports.getLogger = function getLogger(loggerName, reInitFn) {
 
 /**
  * @param {GenericLogger} logger
+ * @returns {boolean}
  */
 function hasLoggingFunctions(logger) {
   return (

@@ -347,14 +347,7 @@ function readAttribCaseInsensitive(attributes, key1, key2) {
 }
 
 /**
- * @typedef {Object.<string, any>} GenericObject
- */
-
-/**
  * Flattens the AWS SQS MessageAttribute format into a basic object structure.
- *
- * @param sqsAttributes {Object.<string, {DataType: string, StringValue: string}>} The AWS SQS MessageAttribute object
- * @returns {GenericObject} The flattened object
  */
 function convertAttributesFromSQS(sqsAttributes) {
   const attributes = {};

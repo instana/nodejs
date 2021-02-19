@@ -6,8 +6,10 @@
     "checkJs": true,
     "lib": ["esnext.asynciterable"],
     "moduleResolution": "node",
+    "esModuleInterop": true,
     "noEmit": true,
     "noImplicitAny": true,
+    "maxNodeModuleJsDepth": 0
   },
   "include": [
     "packages/core/src/util",

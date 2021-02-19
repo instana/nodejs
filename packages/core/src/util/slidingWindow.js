@@ -19,7 +19,7 @@ exports.create = function createSlidingWindow(opts) {
   const duration = opts.duration;
 
   /**
-   * @type {Array<any>}
+   * @type {Array<*>}
    */
   let values = [];
 
@@ -34,7 +34,7 @@ exports.create = function createSlidingWindow(opts) {
   };
 
   /**
-   * @param {any} v
+   * @param {*} v
    */
   function addPoint(v) {
     values.push([Date.now(), v]);
@@ -43,7 +43,7 @@ exports.create = function createSlidingWindow(opts) {
 
   /**
    * @param {Function} reducer
-   * @param {any} initial
+   * @param {*} initial
    */
   function reduce(reducer, initial) {
     cleanup();
@@ -109,7 +109,7 @@ exports.create = function createSlidingWindow(opts) {
 };
 
 /**
- * @param {Array<any>} values
+ * @param {Array<*>} values
  * @param {number} duration
  */
 function removeOldPoints(values, duration) {

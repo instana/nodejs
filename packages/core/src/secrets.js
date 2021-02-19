@@ -6,7 +6,7 @@
 'use strict';
 
 /**
- * @type {*}
+ * @type {import('./logger').GenericLogger}
  */
 let logger;
 logger = require('./logger').getLogger('secrets', newLogger => {
@@ -198,6 +198,10 @@ function toLowerCase(configuredSecrets) {
   return secrets;
 }
 
+/**
+ * @typedef {'contains' | 'equals-ignore-case' | 'equals' | 'contains-ignore-case' | 'regex'} MatchingOptions
+ */
+
 // We should fix this properly. exports cannot be redefined.
 // @ts-expect-error
 exports.isSecret = exports.matchers[defaultMatcherMode](defaultSecrets);
@@ -205,7 +209,7 @@ exports.isSecret = exports.matchers[defaultMatcherMode](defaultSecrets);
 /**
  * @typedef {Object} Secrets
  * @property {*} keywords
- * @property {'contains' | 'equals-ignore-case' | 'equals' | 'contains-ignore-case' | 'regex'} matcherMode
+ * @property {MatchingOptions} matcherMode
  */
 
 /**
@@ -223,7 +227,7 @@ exports.init = function init(config) {
 };
 
 /**
- * @param {'contains' | 'equals-ignore-case' | 'equals' | 'contains-ignore-case' | 'regex'} matcherId
+ * @param {MatchingOptions} matcherId
  * @param {Array<*>} secretsList
  */
 exports.setMatcher = function setMatcher(matcherId, secretsList) {
