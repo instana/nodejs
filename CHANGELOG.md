@@ -1,5 +1,8 @@
 # Changelog
 
+## Unreleased
+- Add instrumentation for AWS S3.
+
 ## 1.114.0
 - Introduction of AWS SQS instrumentation for sending and reading messages.
 - fix: run original function in runInAsyncContext/runPromiseInAsyncContext when tracing is not active.
