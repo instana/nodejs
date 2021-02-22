@@ -3,6 +3,7 @@
 ## Unreleased
 - Add instrumentation for AWS S3.
 - Update handling of W3C trace context headers to improve integration with OpenTelemetry.
+- [AWS Lambda] Fix timeouts when the Lambda callback API without `context.callbackWaitsForEmptyEventLoop = false` is used and the Instana back end responds too slowly.
 
 ## 1.114.0
 - Introduction of AWS SQS instrumentation for sending and reading messages.
