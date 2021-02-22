@@ -47,7 +47,7 @@ if (!supportedVersion(process.versions.node)) {
 
 const retryTime = config.getTestTimeout() * 2;
 
-mochaSuiteFn.only('tracing/cloud/aws/s3', function() {
+mochaSuiteFn('tracing/cloud/aws/s3', function() {
   this.timeout(config.getTestTimeout() * 3);
 
   globalAgent.setUpCleanUpHooks();
