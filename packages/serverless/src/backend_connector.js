@@ -181,9 +181,9 @@ function send(resourcePath, payload, destroySocketAfterwards, callback) {
   });
 
   if (legacyTimeoutHandling) {
-    req.setTimeout(backendTimeout, () => onTimeout(callback));
+    req.setTimeout(backendTimeout, () => onTimeout(req, callback));
   } else {
-    req.on('timeout', () => onTimeout(callback));
+    req.on('timeout', () => onTimeout(req, callback));
   }
 
   req.on('error', e => {
@@ -197,8 +197,22 @@ function send(resourcePath, payload, destroySocketAfterwards, callback) {
   req.end(payload);
 }
 
-function onTimeout(callback) {
+function onTimeout(req, callback) {
   requestHasFailed = true;
+
+  // We need to destroy the request manually, otherwise it keeps the runtime running (and timing out) when
+  // (a) the wrapped Lambda handler uses the callback API, and
+  // (b) context.callbackWaitsForEmptyEventLoop = false is not set.
+  // Also, the Node.js documentation mandates to destroy the request manually in case of a timeout. See
+  // https://nodejs.org/api/http.html#http_event_timeout.
+  if (req && !req.destroyed) {
+    try {
+      req.destroy();
+    } catch (e) {
+      // ignore
+    }
+  }
+
   const message =
     'Could not send traces and metrics to Instana. The Instana back end did not respond in the configured timeout ' +
     `of ${backendTimeout} ms. The timeout can be configured by setting the environment variable ${timeoutEnvVar}.`;
