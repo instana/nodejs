@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Add instrumentation for AWS DynamoDB.
+
 ## 1.115.0
 - Add instrumentation for AWS S3.
 - Update handling of W3C trace context headers to improve integration with OpenTelemetry.

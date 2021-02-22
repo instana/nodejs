@@ -5,6 +5,7 @@
 
 'use strict';
 
+const checkTableExistence = require('./util').checkTableExistence;
 const semver = require('semver');
 const path = require('path');
 const { expect } = require('chai');
@@ -16,27 +17,38 @@ const { expectExactlyOneMatching, retry, stringifyItems, delay } = require('../.
 const ProcessControls = require('../../../../test_util/ProcessControls');
 const globalAgent = require('../../../../globalAgent');
 
-let bucketName = 'nodejs-team';
+let tableName = 'nodejs-team';
 
-if (process.env.AWS_S3_BUCKET_NAME) {
-  bucketName = `${process.env.AWS_S3_BUCKET_NAME}${semver.major(process.versions.node)}`;
+if (process.env.AWS_DYNAMODB_TABLE_NAME) {
+  tableName = `${process.env.AWS_DYNAMODB_TABLE_NAME}${semver.major(process.versions.node)}`;
 }
 
 let mochaSuiteFn;
+
+const operationsInfo = {
+  createTable: 'create',
+  listTables: 'list',
+  scan: 'scan',
+  query: 'query',
+  getItem: 'get',
+  deleteItem: 'delete',
+  putItem: 'put',
+  updateItem: 'update'
+};
 
 const withErrorOptions = [false, true];
 
 const requestMethods = ['Callback', 'Async'];
 const availableOperations = [
-  'listBuckets',
-  'createBucket',
-  'listObjects',
-  'listObjectsV2',
-  'putObject',
-  'headObject',
-  'getObject',
-  'deleteObject',
-  'deleteBucket'
+  'listTables',
+  'createTable',
+  'putItem',
+  'updateItem',
+  'getItem',
+  'deleteItem',
+  'scan',
+  'query',
+  'deleteTable'
 ];
 
 if (!supportedVersion(process.versions.node)) {
@@ -47,7 +59,7 @@ if (!supportedVersion(process.versions.node)) {
 
 const retryTime = config.getTestTimeout() * 2;
 
-mochaSuiteFn('tracing/cloud/aws/s3', function() {
+mochaSuiteFn('tracing/cloud/aws/dynamodb', function() {
   this.timeout(config.getTestTimeout() * 3);
 
   globalAgent.setUpCleanUpHooks();
@@ -59,7 +71,7 @@ mochaSuiteFn('tracing/cloud/aws/s3', function() {
       port: 3215,
       useGlobalAgent: true,
       env: {
-        AWS_S3_BUCKET_NAME: bucketName
+        AWS_DYNAMODB_TABLE_NAME: tableName
       }
     });
 
@@ -78,22 +90,34 @@ mochaSuiteFn('tracing/cloud/aws/s3', function() {
                 simple: withError === false
               });
 
-              return verify(appControls, response, apiPath, withError);
+              /**
+               * Table takes some time to be available, even though the callback gives a success message
+               */
+              if (operation === 'createTable') {
+                await checkTableExistence(tableName, true);
+              }
+              if (operation === 'deleteTable') {
+                await checkTableExistence(tableName, false);
+              }
+
+              if (operation !== 'deleteTable') {
+                return verify(appControls, response, apiPath, operation, withError);
+              }
             });
           });
         });
       });
     });
 
-    function verify(controls, response, apiPath, withError) {
+    function verify(controls, response, apiPath, operation, withError) {
       return retry(() => {
-        return agentControls.getSpans().then(spans => verifySpans(controls, spans, apiPath, withError));
+        return agentControls.getSpans().then(spans => verifySpans(controls, spans, apiPath, operation, withError));
       }, retryTime);
     }
 
-    function verifySpans(controls, spans, apiPath, withError) {
+    function verifySpans(controls, spans, apiPath, operation, withError) {
       const httpEntry = verifyHttpEntry(spans, apiPath, controls);
-      verifyS3Exit(spans, httpEntry, withError);
+      verifyDynamoDBExit(spans, httpEntry, operation, withError);
 
       if (!withError) {
         verifyHttpExit(spans, httpEntry, controls);
@@ -122,9 +146,9 @@ mochaSuiteFn('tracing/cloud/aws/s3', function() {
       ]);
     }
 
-    function verifyS3Exit(spans, parent, withError) {
+    function verifyDynamoDBExit(spans, parent, operation, withError) {
       return expectExactlyOneMatching(spans, [
-        span => expect(span.n).to.equal('s3'),
+        span => expect(span.n).to.equal('dynamodb'),
         span => expect(span.k).to.equal(constants.EXIT),
         span => expect(span.t).to.equal(parent.t),
         span => expect(span.p).to.equal(parent.s),
@@ -134,8 +158,9 @@ mochaSuiteFn('tracing/cloud/aws/s3', function() {
         span => expect(span.ec).to.equal(withError ? 1 : 0),
         span => expect(span.async).to.not.exist,
         span => expect(span.data).to.exist,
-        span => expect(span.data.s3).to.be.an('object'),
-        span => expect(span.data.s3.op).to.exist
+        span => expect(span.data.dynamodb).to.be.an('object'),
+        span => expect(span.data.dynamodb.op).to.equal(operationsInfo[operation]),
+        span => expect(span.data.dynamodb.table).to.equal(operation !== 'listTables' ? tableName : undefined)
       ]);
     }
   });
@@ -149,7 +174,7 @@ mochaSuiteFn('tracing/cloud/aws/s3', function() {
       useGlobalAgent: true,
       tracingEnabled: false,
       env: {
-        AWS_S3_BUCKET_NAME: bucketName
+        AWS_DYNAMODB_TABLE_NAME: tableName
       }
     });
 
@@ -167,7 +192,7 @@ mochaSuiteFn('tracing/cloud/aws/s3', function() {
               .then(() => agentControls.getSpans())
               .then(spans => {
                 if (spans.length > 0) {
-                  fail(`Unexpected spans (AWS S3 suppressed: ${stringifyItems(spans)}`);
+                  fail(`Unexpected spans (AWS DynamoDB suppressed: ${stringifyItems(spans)}`);
                 }
               });
           });
@@ -182,7 +207,7 @@ mochaSuiteFn('tracing/cloud/aws/s3', function() {
       port: 3215,
       useGlobalAgent: true,
       env: {
-        AWS_S3_BUCKET_NAME: bucketName
+        AWS_DYNAMODB_TABLE_NAME: tableName
       }
     });
 
@@ -202,7 +227,7 @@ mochaSuiteFn('tracing/cloud/aws/s3', function() {
               .then(() => agentControls.getSpans())
               .then(spans => {
                 if (spans.length > 0) {
-                  fail(`Unexpected spans (AWS S3 suppressed: ${stringifyItems(spans)}`);
+                  fail(`Unexpected spans (AWS DynamoDB suppressed: ${stringifyItems(spans)}`);
                 }
               });
           });
