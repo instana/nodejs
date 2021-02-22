@@ -93,7 +93,7 @@ const S3Api = {
       if (!options) {
         options = {};
       }
-      options.Key = '999';
+      options.InvalidS3Key = '999';
     }
 
     return new Promise(async (resolve, reject) => {
