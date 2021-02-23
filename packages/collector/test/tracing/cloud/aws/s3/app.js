@@ -95,7 +95,7 @@ const S3Api = {
       }
       options.InvalidS3Key = '999';
     }
-    log(`Bucket name: ${options.Bucket}`);
+    log(`Bucket name: ${(options && options.Bucket) || 'no bucket name'}`);
 
     return new Promise(async (resolve, reject) => {
       let span;
