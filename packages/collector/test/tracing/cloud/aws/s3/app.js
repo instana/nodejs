@@ -95,6 +95,7 @@ const S3Api = {
       }
       options.InvalidS3Key = '999';
     }
+    log(`Operation params: ${JSON.stringify(options)}`);
 
     return new Promise(async (resolve, reject) => {
       let span;
