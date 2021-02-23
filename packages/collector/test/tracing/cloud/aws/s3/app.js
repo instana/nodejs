@@ -195,7 +195,7 @@ availableOperations.forEach(operation => {
         const data = await S3Api.runOperation(operation, method, withError);
         res.send(data);
       } catch (err) {
-        res.status(500).send({
+        res.status(200).send({
           error: err
         });
       }
