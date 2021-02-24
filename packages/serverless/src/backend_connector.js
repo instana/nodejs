@@ -15,9 +15,12 @@ const semver = require('semver');
 const constants = require('./constants');
 let logger = require('./console_logger');
 
-const https = environmentUtil.sendUnencrypted ? uninstrumented.http : uninstrumented.https;
+const layerExtensionHostname = 'localhost';
+const layerExtensionPort = 7365;
+let useLambdaExtension = false;
 
 const timeoutEnvVar = 'INSTANA_TIMEOUT';
+const layerExtensionTimeout = 100;
 let defaultTimeout = 500;
 let backendTimeout = defaultTimeout;
 
@@ -58,11 +61,13 @@ exports.init = function init(
   _logger,
   _stopSendingOnFailure,
   _propagateErrorsUpstream,
-  _defaultTimeout
+  _defaultTimeout,
+  _useLambdaExtension
 ) {
   stopSendingOnFailure = _stopSendingOnFailure == null ? true : _stopSendingOnFailure;
   propagateErrorsUpstream = _propagateErrorsUpstream == null ? false : _propagateErrorsUpstream;
   defaultTimeout = _defaultTimeout == null ? defaultTimeout : _defaultTimeout;
+  useLambdaExtension = _useLambdaExtension;
 
   backendTimeout = defaultTimeout;
   if (process.env[timeoutEnvVar]) {
@@ -103,6 +108,19 @@ exports.sendSpans = function sendSpans(spans, callback) {
   send('/traces', spans, false, callback);
 };
 
+function getTransport() {
+  if (useLambdaExtension) {
+    // The Lambda extension is always HTTP without TLS on localhost.
+    return uninstrumented.http;
+  } else {
+    return environmentUtil.sendUnencrypted ? uninstrumented.http : uninstrumented.https;
+  }
+}
+
+function getBackendTimeout() {
+  return useLambdaExtension ? layerExtensionTimeout : backendTimeout;
+}
+
 function send(resourcePath, payload, finalLambdaRequest, callback) {
   if (requestHasFailed && stopSendingOnFailure) {
     logger.info(
@@ -118,7 +136,7 @@ function send(resourcePath, payload, finalLambdaRequest, callback) {
     warningsHaveBeenLogged = true;
     if (environmentUtil.sendUnencrypted) {
       logger.error(
-        `${environmentUtil.sendUnencryptedEnvVar} is set, which means that the all traffic to Instana is send ` +
+        `${environmentUtil.sendUnencryptedEnvVar} is set, which means that all traffic to Instana is send ` +
           'unencrypted via plain HTTP, not via HTTPS. This will effectively make that traffic public. This setting ' +
           'should never be used in production.'
       );
@@ -134,21 +152,22 @@ function send(resourcePath, payload, finalLambdaRequest, callback) {
   }
 
   // prepend backend's path if the configured URL has a path component
-  if (environmentUtil.getBackendPath() !== '/') {
-    resourcePath = environmentUtil.getBackendPath() + resourcePath;
-  }
+  const requestPath =
+    useLambdaExtension || environmentUtil.getBackendPath() === '/'
+      ? resourcePath
+      : environmentUtil.getBackendPath() + resourcePath;
 
   // serialize the payload object
-  payload = JSON.stringify(payload);
+  const serializedPayload = JSON.stringify(payload);
 
   const options = {
-    hostname: environmentUtil.getBackendHost(),
-    port: environmentUtil.getBackendPort(),
-    path: resourcePath,
+    hostname: useLambdaExtension ? layerExtensionHostname : environmentUtil.getBackendHost(),
+    port: useLambdaExtension ? layerExtensionPort : environmentUtil.getBackendPort(),
+    path: requestPath,
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Content-Length': Buffer.byteLength(payload),
+      'Content-Length': Buffer.byteLength(serializedPayload),
       [constants.xInstanaHost]: hostHeader,
       [constants.xInstanaKey]: environmentUtil.getInstanaAgentKey(),
       [constants.xInstanaTime]: Date.now()
@@ -167,9 +186,9 @@ function send(resourcePath, payload, finalLambdaRequest, callback) {
     //
     // Side Note about legacyTimeoutHandling: See below at the req.setTimeout usage for an explanation why this is
     // handled differently in Node.js 8 Lambda runtimes.
-    options.timeout = backendTimeout;
+    options.timeout = getBackendTimeout();
   }
-  if (proxyAgent) {
+  if (proxyAgent && !useLambdaExtension) {
     options.agent = proxyAgent;
   }
 
@@ -181,19 +200,31 @@ function send(resourcePath, payload, finalLambdaRequest, callback) {
   }
 
   let req;
+  const skipWaitingForHttpResponse = !proxyAgent && !useLambdaExtension;
+  const transport = getTransport();
+  if (skipWaitingForHttpResponse) {
+    // If the Lambda extension is not available to act as a proxy between the Lambda and serverless-acceptor (and
+    // additionally, if no user-configured proxy is in place), we change the HTTP handling a bit to reduce the time
+    // we keep the Lamdba alive: We deliberately do not pass a callback when calling https.request but instead we pass
+    // the callback to req.end. This way, we do not wait for the HTTP _response_, but we still make sure the request
+    // data is written to the network  completely. This reduces the delay we add to the Lambda execution time to
+    // report metrics and traces quite a bit. The (acceptable) downside is that we do not get to examine the response
+    // for HTTP status codes.
 
-  if (!proxyAgent) {
-    // We deliberately do not pass a callback when calling https.request but instead we pass the callback to req.end.
-    // This way, we do not wait for the HTTP _response_, but we still make sure the request data is written to the
-    // network  completely. This reduces the delay we add to the Lambda execution time to report metrics and traces
-    // quite a bit. The (acceptable) downside is that we do not get to examine the response for HTTP status codes.
-    req = https.request(options);
+    req = transport.request(options);
   } else {
-    // If a proxy is in use, we do *not* apply the optimization outlined above. Instead, we opt for the more traditional
-    // workflow of waiting until the HTTP response has been received. Some proxies interact in weird ways with the HTTP
-    // flow. See the req.end(payload) call below, too. In the non-proxy case, that call has the callback to end the
-    // processing. In the proxy case, the callback is provided here to http.request().
-    req = https.request(options, () => {
+    // If (a) our Lambda extension is available, or if (b) a user-provided proxy is in use, we do *not* apply the
+    // optimization outlined above. Instead, we opt for the more traditional workflow of waiting until the HTTP response
+    // has been received. For the case (a) it is simply not necessary because the request to the Lambda extension is
+    // happening on localhost and will be very fast. For case (b), the reason is that some proxies interact in weird
+    // ways with the HTTP flow.
+    //
+    // See the req.end(serializedPayload) call below, too. In the no-extension/no-proxy case, that call has the callback
+    // to end the processing. Otherwise, the callback is provided here to http.request().
+    req = transport.request(options, () => {
+      // This is the final request from an AWS Lambda. In some scenarios we might get a stale timeout event on the
+      // socket object from a previous invocation of the Lambda handler, that is, from before the AWS Lambda runtime
+      // froze the Node.js process. Explicitly removing all listeners on the req object helps with that.
       if (finalLambdaRequest) {
         req.removeAllListeners();
         req.on('error', () => {});
@@ -207,8 +238,7 @@ function send(resourcePath, payload, finalLambdaRequest, callback) {
     // Node.js 9 and above, that behaviour changed, see
     // https://nodejs.org/api/http.html#http_request_settimeout_timeout_callback -> history:
     // v9.0.0 - Consistently set socket timeout only when the socket connects.
-
-    req.setTimeout(backendTimeout, () => onTimeout(req, callback));
+    req.setTimeout(getBackendTimeout(), () => onTimeout(req, resourcePath, payload, finalLambdaRequest, callback));
   } else {
     // See above for the difference between the timeout attribute in the request options and handling the 'timeout'
     // event. This only adds a read timeout after the connection has been established and we need the timout attribute
@@ -216,28 +246,48 @@ function send(resourcePath, payload, finalLambdaRequest, callback) {
     // see https://nodejs.org/api/http.html#http_request_settimeout_timeout_callback:
     // > Once a socket is assigned to this request **and is connected**
     // > socket.setTimeout() will be called.
-    req.on('timeout', () => onTimeout(req, callback));
+    req.on('timeout', () => onTimeout(req, resourcePath, payload, finalLambdaRequest, callback));
   }
 
   req.on('error', e => {
-    requestHasFailed = true;
-    if (!propagateErrorsUpstream) {
-      if (proxyAgent) {
-        logger.warn(
-          'Could not send traces and metrics to Instana. Could not connect to the configured proxy ' +
-            `${process.env[proxyEnvVar]}.`,
-          e
-        );
-      } else {
-        logger.warn('Could not send traces and metrics to Instana. The Instana back end seems to be unavailable.', e);
-      }
-    }
+    if (useLambdaExtension) {
+      // This is a failure from talking to the Lambda extension on localhost. Most probably it is simply not available
+      // because @instana/aws-lambda has been installed as a normal npm dependency instead of using Instana's
+      // Lambda layer. We use this failure as a signal to not try to the extension again and instead fall back to
+      // talking to serverless-acceptor directly. We also immediately retry the current request with that new downstream
+      // target in place.
+      logger.debug(
+        'Could not connect to the Instana Lambda extension. Falling back to talking to the Instana back end directly.',
+        e
+      );
 
-    callback(propagateErrorsUpstream ? e : undefined);
+      // Make sure we do not try to talk to the Lambda extension again.
+      useLambdaExtension = false;
+
+      // Retry the request immediately, this time sending it to serverless-acceptor directly.
+      send(resourcePath, payload, finalLambdaRequest, callback);
+    } else {
+      // We are not using the Lambda extension, because we are either not in an AWS Lambda, or a previous request to the
+      // extension has already failed. Thus, this is a failure from talking directly to serverless-acceptor
+      // (or a user-provided proxy).
+      requestHasFailed = true;
+      if (!propagateErrorsUpstream) {
+        if (proxyAgent) {
+          logger.warn(
+            'Could not send traces and metrics to Instana. Could not connect to the configured proxy ' +
+              `${process.env[proxyEnvVar]}.`,
+            e
+          );
+        } else {
+          logger.warn('Could not send traces and metrics to Instana. The Instana back end seems to be unavailable.', e);
+        }
+      }
+      callback(propagateErrorsUpstream ? e : undefined);
+    }
   });
 
-  if (!proxyAgent) {
-    req.end(payload, () => {
+  if (skipWaitingForHttpResponse) {
+    req.end(serializedPayload, () => {
       if (finalLambdaRequest) {
         // This is the final request from an AWS Lambda, directly before the Lambda returns its response to the client.
         // The Node.js process might be frozen by the AWS Lambda runtime machinery after that and thawed again later for
@@ -265,32 +315,61 @@ function send(resourcePath, payload, finalLambdaRequest, callback) {
   } else {
     // See above for why the proxy case has no callback on req.end. Instead, it uses the more traditional callback on
     // request creation.
-    req.end(payload);
+    req.end(serializedPayload);
   }
 }
 
-function onTimeout(req, callback) {
-  requestHasFailed = true;
+function onTimeout(req, resourcePath, payload, finalLambdaRequest, callback) {
+  if (useLambdaExtension) {
+    // This is a timeout from talking to the Lambda extension on localhost. Most probably it is simply not available
+    // because @instana/aws-lambda has been installed as a normal npm dependency instead of using Instana's
+    // Lambda layer. We use this failure as a signal to not try to the extension again and instead fall back to
+    // talking to serverless-acceptor directly. We also immediately retry the current request with that new downstream
+    // target in place.
+    logger.debug(
+      'Request timed out while trying to talk to Instana Lambda extension. Falling back to talking to the Instana ' +
+        'back end directly.'
+    );
 
-  // We need to destroy the request manually, otherwise it keeps the runtime running (and timing out) when
-  // (a) the wrapped Lambda handler uses the callback API, and
-  // (b) context.callbackWaitsForEmptyEventLoop = false is not set.
-  // Also, the Node.js documentation mandates to destroy the request manually in case of a timeout. See
-  // https://nodejs.org/api/http.html#http_event_timeout.
-  if (req && !req.destroyed) {
-    try {
-      req.destroy();
-    } catch (e) {
-      // ignore
+    // Make sure we do not try to talk to the Lambda extension again.
+    useLambdaExtension = false;
+
+    if (req && !req.destroyed) {
+      try {
+        req.destroy();
+      } catch (e) {
+        // ignore
+      }
     }
-  }
 
-  const message =
-    'Could not send traces and metrics to Instana. The Instana back end did not respond in the configured timeout ' +
-    `of ${backendTimeout} ms. The timeout can be configured by setting the environment variable ${timeoutEnvVar}.`;
+    // Retry the request immediately, this time sending it to serverless-acceptor directly.
+    send(resourcePath, payload, finalLambdaRequest, callback);
+  } else {
+    // We are not using the Lambda extension, because we are either not in an AWS Lambda, or a previous request to the
+    // extension has already failed. Thus, this is a timeout from talking directly to serverless-acceptor
+    // (or a user-provided proxy).
+    requestHasFailed = true;
 
-  if (!propagateErrorsUpstream) {
-    logger.warn(message);
+    // We need to destroy the request manually, otherwise it keeps the runtime running (and timing out) when
+    // (a) the wrapped Lambda handler uses the callback API, and
+    // (b) context.callbackWaitsForEmptyEventLoop = false is not set.
+    // Also, the Node.js documentation mandates to destroy the request manually in case of a timeout. See
+    // https://nodejs.org/api/http.html#http_event_timeout.
+    if (req && !req.destroyed) {
+      try {
+        req.destroy();
+      } catch (e) {
+        // ignore
+      }
+    }
+
+    const message =
+      'Could not send traces and metrics to Instana. The Instana back end did not respond in the configured timeout ' +
+      `of ${backendTimeout} ms. The timeout can be configured by setting the environment variable ${timeoutEnvVar}.`;
+
+    if (!propagateErrorsUpstream) {
+      logger.warn(message);
+    }
+    callback(propagateErrorsUpstream ? new Error(message) : undefined);
   }
-  callback(propagateErrorsUpstream ? new Error(message) : undefined);
 }

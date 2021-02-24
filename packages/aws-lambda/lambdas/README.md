@@ -132,9 +132,11 @@ Before you deploy zip files, you need to actually build them, see above.
 
 Use `bin/deploy-demo.sh` to deploy all four demo Lambda zip files. They will be deployed to region `us-east-2` by default. You can repeat that step as often as you like if the Lambda code has changed or you want to deploy zip files with a more recent npm package/local package.
 
-If you have built the zip files with `BUILD_LAMBDAS_WITH=layer`, the script will try to add the Lambda layer "instana" in the version, but you need to supply `LAYER_VERSION` and `LAYER_ARN` in that case (e.g. run something like `LAYER_VERSION=23 LAYER_ARN=arn:aws:lambda:us-east-2:410797082306:layer:instana-nodejs:23 bin/deploy-demo.sh`).
+If you have built the zip files with `BUILD_LAMBDAS_WITH=layer`, the script will try to add the Lambda layer "instana-nodejs" to the deployed Lambda functions. The script will try to figure out the latest version of the Instana Node.js Lambda layer. Alternatively, you can also use `LAYER_VERSION` and `LAYER_ARN` to specifiy which layer you want to have added. E.g. run something like `LAYER_VERSION=23 LAYER_ARN=arn:aws:lambda:us-east-2:410797082306:layer:instana-nodejs:23 bin/deploy-demo.sh` or `LAYER_VERSION=10 LAYER_ARN=arn:aws:lambda:us-east-2:410797082306:layer:experimental-instana-nodejs-with-extension:10 bin/deploy-demo.sh`).
 
-Note that if you have use `BUILD_LAMBDAS_WITH=npm` or `BUILD_LAMBDAS_WITH=local` and the function already has the Instana Lambda layer, the deploy script will not try to remove it, you will need to take care of that manually to avoid conflicts between the Lambda layer and the npm package.
+Note that if you have use `BUILD_LAMBDAS_WITH=npm` or `BUILD_LAMBDAS_WITH=local` and the function already has the Instana Lambda layer, the deploy script will try to remove it and revert the handler back to `index.handler`.
+
+If, instead of deploying the demo (consisting of the Lambdas `demo-trigger`, `demo-http-api`, and `demo-s3-watcher`) you just want to deploy a single Lambda function from the `packages/aws-lambda/lambdas` folder, you can use `bin/rebuild-redeploy-single.sh`. That script accepts the same environment variables as `bin/deploy-demo.sh` (`LAYER_VERSION`, `LAYER_ARN`, ...).
 
 ### Rerouting the Demo Traffic
 

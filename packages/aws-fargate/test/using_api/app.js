@@ -52,21 +52,9 @@ instana.setLogger(capturingLogger);
 app.on('request', (req, res) => {
   const currentSpan = instana.currentSpan();
 
-  // we only call disableAutoEnd to verify the function is there
-  currentSpan.disableAutoEnd();
-  // revert disableAutoEnd immediately
-  if (currentSpan.span) {
-    currentSpan.span.manualEndMode = false;
-  }
-
-  // check that the opentracing API is available
-  instana.opentracing.createTracer();
-
-  // use Instana SDK
-  instana.sdk.promise
-    .startExitSpan('custom-span')
-    .then(() => delay(10))
-    .then(() => {
+  // use Instana SDK to create spans manually
+  instana.sdk.callback.startExitSpan('custom-span', () => {
+    delay(10).then(() => {
       instana.sdk.promise.completeExitSpan();
       res.end(
         JSON.stringify({
@@ -77,6 +65,17 @@ app.on('request', (req, res) => {
         })
       );
     });
+  });
+
+  // we only call disableAutoEnd to verify the function is there
+  currentSpan.disableAutoEnd();
+  // revert disableAutoEnd immediately
+  if (currentSpan.span) {
+    currentSpan.span.manualEndMode = false;
+  }
+
+  // check that the opentracing API is available
+  instana.opentracing.createTracer();
 });
 
 app.listen(port, () => {

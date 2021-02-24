@@ -16,8 +16,16 @@ const AbstractServerlessControl = require('../../serverless/test/util/AbstractSe
 
 function Control(opts) {
   AbstractServerlessControl.call(this, opts);
-  this.backendPort = this.opts.backendPort || 8443;
-  this.backendBaseUrl = this.opts.backendBaseUrl || `https://localhost:${this.backendPort}/serverless`;
+  // The option useExtensionPort determines whether the backend stub is started on the port where the Lambda extension
+  // would  usually listen (acting as a mock extension instead of a mock back end in that case).
+  if (this.opts.useExtensionPort) {
+    this.backendPort = 7365;
+  } else {
+    this.backendPort = this.opts.backendPort || 8443;
+  }
+  this.useHttps = !this.opts.useExtensionPort;
+  const protocol = this.useHttps ? 'https' : 'http';
+  this.backendBaseUrl = this.opts.backendBaseUrl || `${protocol}://localhost:${this.backendPort}/serverless`;
   this.downstreamDummyPort = this.opts.downstreamDummyPort || 3456;
   this.downstreamDummyUrl = this.opts.downstreamDummyUrl || `http://localhost:${this.downstreamDummyPort}`;
   this.proxyPort = this.opts.proxyPort || 3128;
@@ -54,7 +62,8 @@ Control.prototype.startMonitoredProcess = function startMonitoredProcess() {
       {
         HANDLER_DEFINITION_PATH: this.opts.handlerDefinitionPath,
         DOWNSTREAM_DUMMY_URL: this.downstreamDummyUrl,
-        INSTANA_DISABLE_CA_CHECK: true,
+        INSTANA_DISABLE_CA_CHECK: this.useHttps,
+        INSTANA_DEV_SEND_UNENCRYPTED: !this.useHttps,
         WAIT_FOR_MESSAGE: true
       },
       process.env,

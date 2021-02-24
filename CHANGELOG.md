@@ -1,5 +1,8 @@
 # Changelog
 
+## Unreleased
+- [AWS Lambda] Include Instana's [AWS Lambda extension](https://docs.aws.amazon.com/lambda/latest/dg/using-extensions.html) in the [Instana Node.js Lambda layer](https://www.instana.com/docs/ecosystem/aws-lambda/nodejs#instana-autotrace-setup). Including a Lambda extension provides the following advantage: The Lambda function's response will be send back to the invoking client immediately when the handler has finished, without waiting for data to be send to the Instana back end. Monitoring data and traces are offloaded to Instana's Lambda extension, which will forward it to the Instana back end (potentially after the response has been sent to the invoking client). This feature is currently limited to Lambda functions configured with 256 MB of memory or more. Using the Instana Lambda extension can be disabled by setting the environment variable `INSTANA_DISABLE_LAMBDA_EXTENSION` to a non-empty string for a Lambda function.
+
 ## 1.120.0
 - Add instrumentation for AWS Kinesis
 

@@ -96,13 +96,22 @@ function prelude(opts) {
   if (opts.serverTiming) {
     env.SERVER_TIMING_HEADER = opts.serverTiming;
   }
+  // The option useExtension controls whether the Lambda under test should try to talk to the extension or to the back
+  // end directly.
+  if (opts.useExtension) {
+    // minimum memory so that the Lambda extension is used
+    env.AWS_LAMBDA_FUNCTION_MEMORY_SIZE = '256';
+  } else {
+    env.INSTANA_DISABLE_LAMBDA_EXTENSION = 'true';
+  }
 
   const control = new Control({
     faasRuntimePath: path.join(__dirname, '../runtime_mock'),
     handlerDefinitionPath: opts.handlerDefinitionPath,
     startBackend: opts.startBackend,
-    backendPort,
-    backendBaseUrl,
+    // The option useExtensionPort determines whether the backend stub is started on the port where the Lambda extension
+    // would  usually listen (acting as a mock extension instead of a mock back end in that case).
+    useExtensionPort: opts.useExtensionPort,
     downstreamDummyUrl,
     proxy: opts.proxy,
     startProxy: opts.startProxy,
@@ -362,6 +371,36 @@ function registerTests(handlerDefinitionPath) {
         .then(() => control.reset())
         .then(() => control.runHandler())
         .then(() => verifyAfterRunningHandler(control, { error: false, expectMetrics: true, expectSpans: true })));
+  });
+
+  describe('when the extension is used but not available', function() {
+    // In this test, backend_connector will try to use the Lambda extension first and then fall back to sending data
+    // directly to the back end.
+    const control = prelude.bind(this)({
+      handlerDefinitionPath,
+      useExtension: true,
+      useExtensionPort: false,
+      instanaEndpointUrl: backendBaseUrl,
+      instanaAgentKey
+    });
+
+    it('must deliver metrics and spans to the extension', () =>
+      verify(control, { error: false, expectMetrics: true, expectSpans: true }));
+  });
+
+  describe('when the extension is used and available', function() {
+    // This starts the backend stub on the extension port, simulating that the Lambda extension is available. The case
+    // that the Lambda extension is _not_ available is tested in "when the extension is used but not available"
+    const control = prelude.bind(this)({
+      handlerDefinitionPath,
+      useExtension: true,
+      useExtensionPort: true,
+      instanaEndpointUrl: backendBaseUrl,
+      instanaAgentKey
+    });
+
+    it('must deliver metrics and spans to the extension', () =>
+      verify(control, { error: false, expectMetrics: true, expectSpans: true }));
   });
 
   describe('when using a proxy without authentication', function() {

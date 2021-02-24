@@ -194,7 +194,9 @@ describe('Using the API', () => {
       expect(body.currentSpan).to.be.an('object');
 
       if (expectSpansAndMetrics) {
-        expect(body.logs.debug).to.deep.equal(['Sending data to Instana (/bundle).']);
+        // eslint-disable-next-line
+        console.log('comparing expected debug logs to:', body.logs.debug);
+        expect(body.logs.debug).to.include('Sending data to Instana (/bundle).');
         expect(body.logs.info).to.be.empty;
         expect(body.logs.warn).to.deep.equal([
           'INSTANA_DISABLE_CA_CHECK is set, which means that the server certificate will not be verified against the ' +
