@@ -109,7 +109,11 @@ const S3Api = {
             span.disableAutoEnd();
 
             if (err) {
-              log(`failed on /${operation}/${method} when receiving response from AWS API`);
+              log(
+                `${
+                  withError ? 'successfully failed' : 'failed'
+                } on /${operation}/${method} when receiving response from AWS API`
+              );
               span.end(1);
               return reject(err);
             } else {
@@ -120,7 +124,11 @@ const S3Api = {
                     return resolve(data);
                   })
                   .catch(err2 => {
-                    log(`failed on /${operation}/${method} when calling localhost server`);
+                    log(
+                      `${
+                        withError ? 'successfully failed' : 'failed'
+                      } on /${operation}/${method} when calling localhost server`
+                    );
                     span.end(1);
                     return reject(err2);
                   });
@@ -135,7 +143,7 @@ const S3Api = {
 
           promise
             .then(data => {
-              log(` /${operation}/${method} - received data from AWS SDK`);
+              log(`/${operation}/${method} - received data from AWS SDK`);
               promiseData = data;
               return delay(200);
             })
@@ -145,7 +153,11 @@ const S3Api = {
               resolve(promiseData);
             })
             .catch(err => {
-              log(`failed on /${operation}/${method}  from AWS SDK or call to localhost server`);
+              log(
+                `${
+                  withError ? 'successfully failed' : 'failed'
+                } on /${operation}/${method}  from AWS SDK or call to localhost server`
+              );
               span.end(-1);
               reject(err);
             });
@@ -155,7 +167,7 @@ const S3Api = {
           span.disableAutoEnd();
           try {
             const data = await s3[operation](options).promise();
-            log(` /${operation}/${method} got data from AWS SDK`);
+            log(`/${operation}/${method} got data from AWS SDK`);
 
             await delay(200);
             await request(`http://127.0.0.1:${agentPort}`);
@@ -163,7 +175,11 @@ const S3Api = {
 
             return resolve(data);
           } catch (err) {
-            log(`failed on /${operation}/${method} from AWS SDK or localhost HTTP server`);
+            log(
+              `${
+                withError ? 'successfully failed' : 'failed'
+              } on /${operation}/${method} from AWS SDK or localhost HTTP server`
+            );
             span.end(1);
             return reject(err);
           }
@@ -195,7 +211,7 @@ availableOperations.forEach(operation => {
         const data = await S3Api.runOperation(operation, method, withError);
         res.send(data);
       } catch (err) {
-        res.status(200).send({
+        res.status(500).send({
           error: err
         });
       }
