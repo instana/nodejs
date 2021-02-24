@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.115.0
+- Add instrumentation for AWS S3.
+- Update handling of W3C trace context headers to improve integration with OpenTelemetry.
+- [AWS Lambda] Fix timeouts when the Lambda callback API without `context.callbackWaitsForEmptyEventLoop = false` is used and the Instana back end responds too slowly.
+
 ## 1.114.0
 - Introduction of AWS SQS instrumentation for sending and reading messages.
 - fix: run original function in runInAsyncContext/runPromiseInAsyncContext when tracing is not active.
@@ -111,7 +116,7 @@
 - Capture dependencies of an app even if the `package.json` file is not present, by inspecting the `node_modules` folder that is closest to `process.mainModule` in the file system.
 
 ## 1.105.0
-- Add instrumentation the [Google Cloud Storage client](https://googleapis.dev/nodejs/storage/latest/index.html).
+- Add instrumentation for the [Google Cloud Storage client](https://googleapis.dev/nodejs/storage/latest/index.html).
 
 ## 1.104.0
 - Drop support for Node.js versions 4 (which was EOL 2018-04-30) and 5 (EOL 2016-06-30) in `@instana/collector`. If you want to use `@instana/collector` with Node.js version 4 or 5 please pin `@instana/collector` to version `1.103.0`.

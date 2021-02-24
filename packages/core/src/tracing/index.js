@@ -10,6 +10,7 @@ const constants = require('./constants');
 const tracingMetrics = require('./metrics');
 const opentracing = require('./opentracing');
 const spanHandle = require('./spanHandle');
+const tracingHeaders = require('./tracingHeaders');
 const tracingUtil = require('./tracingUtil');
 const spanBuffer = require('./spanBuffer');
 const supportedVersion = require('./supportedVersion');
@@ -26,6 +27,7 @@ let processIdentityProvider = null;
 const instrumentations = [
   './instrumentation/cloud/aws/sdk',
   './instrumentation/cloud/aws/sqs',
+  './instrumentation/cloud/aws/s3',
   './instrumentation/cloud/gcp/pubsub',
   './instrumentation/cloud/gcp/storage',
   './instrumentation/control_flow/bluebird',
@@ -90,6 +92,7 @@ exports.init = function init(_config, downstreamConnection, _processIdentityProv
 
   if (tracingEnabled) {
     tracingUtil.init(config);
+    tracingHeaders.init(config);
     spanBuffer.init(config, downstreamConnection);
     opentracing.init(config, automaticTracingEnabled, processIdentityProvider);
     cls = require('./cls');

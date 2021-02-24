@@ -26,6 +26,7 @@ const supportedTracingVersion = require('../tracing/supportedVersion');
  * @property {Array<*>} [disabledTracers]
  * @property {boolean} [spanBatchingEnabled]
  * @property {boolean} [disableAutomaticTracing]
+ * @property {boolean} [disableW3cTraceCorrelation]
  */
 
 /**
@@ -78,7 +79,8 @@ const defaults = {
     },
     stackTraceLength: 10,
     disabledTracers: [],
-    spanBatchingEnabled: false
+    spanBatchingEnabled: false,
+    disableW3cTraceCorrelation: false
   },
   secrets: {
     matcherMode: 'contains-ignore-case',
@@ -162,6 +164,7 @@ function normalizeTracingConfig(config) {
   normalizeTracingStackTraceLength(config);
   normalizeDisabledTracers(config);
   normalizeSpanBatchingEnabled(config);
+  normalizeDisableW3cTraceCorrelation(config);
 }
 
 /**
@@ -413,6 +416,25 @@ function normalizeSpanBatchingEnabled(config) {
   }
 
   config.tracing.spanBatchingEnabled = defaults.tracing.spanBatchingEnabled;
+}
+
+/**
+ * @param {InstanaConfig} config
+ */
+function normalizeDisableW3cTraceCorrelation(config) {
+  if (config.tracing.disableW3cTraceCorrelation === true) {
+    logger.info('W3C trace correlation has been disabled via config.');
+    return;
+  }
+  if (process.env['INSTANA_DISABLE_W3C_TRACE_CORRELATION']) {
+    logger.info(
+      'W3C trace correlation has been disabled via environment variable INSTANA_DISABLE_W3C_TRACE_CORRELATION.'
+    );
+    config.tracing.disableW3cTraceCorrelation = true;
+    return;
+  }
+
+  config.tracing.disableW3cTraceCorrelation = defaults.tracing.disableW3cTraceCorrelation;
 }
 
 /**
