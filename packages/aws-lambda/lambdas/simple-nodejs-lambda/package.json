@@ -1,0 +1,15 @@
+{
+  "name": "simple-lambda",
+  "description": "A simple Lambda with an async-style handler, meant to be instrumented with the Instana Node.js layer, used for basic tests.",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/instana/nodejs-sensor.git"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Bastian Krol <bastian.krol@instana.com>",
+  "license": "MIT"
+}

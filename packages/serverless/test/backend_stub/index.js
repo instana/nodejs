@@ -10,6 +10,7 @@
 const bodyParser = require('body-parser');
 const express = require('express');
 const fs = require('fs');
+const http = require('http');
 const https = require('https');
 const morgan = require('morgan');
 const path = require('path');
@@ -22,6 +23,8 @@ const logPrefix = 'backend-stub';
 const logger = pino.child({ name: logPrefix, pid: process.pid });
 logger.level = 'info';
 
+const useHttps = process.env.USE_HTTPS !== 'false';
+
 const options = {
   key: fs.readFileSync(path.join(__dirname, 'cert/server.key')),
   cert: fs.readFileSync(path.join(__dirname, 'cert/server.crt'))
@@ -29,6 +32,7 @@ const options = {
 
 const port = process.env.BACKEND_PORT || 8443;
 let unresponsive = process.env.BACKEND_UNRESPONSIVE === 'true';
+
 const app = express();
 
 const dropAllData = process.env.DROP_DATA === 'true';
@@ -44,8 +48,16 @@ app.use(
   })
 );
 
-app.post('/serverless/bundle', (req, res) => {
-  logger.trace('incoming bundle', req.body);
+// This endpoint will be called when the Lambda integration test simulates talking directly to serverless-acceptor
+// instead of the Lambda extenstion (default case).
+app.post('/serverless/bundle', acceptBundle);
+
+// This endpoint will be called when the Lambda integration test simulates talking to the Lambda extension instead of
+// serverless-acceptor.
+app.post('/bundle', acceptBundle);
+
+function acceptBundle(req, res) {
+  logger.debug('incoming bundle', req.body);
   receivedData.rawBundles.push(req.body);
   if (unresponsive) {
     // intentionally not responding for tests that verify proper timeout handling
@@ -72,9 +84,17 @@ app.post('/serverless/bundle', (req, res) => {
     receivedData.spans = receivedData.spans.concat(addHeaders(req, req.body.spans));
   }
   return res.sendStatus(201);
-});
+}
 
-app.post('/serverless/metrics', (req, res) => {
+// This endpoint will be called when the Lambda integration test simulates talking directly to serverless-acceptor
+// instead of the Lambda extenstion (default case).
+app.post('/serverless/metrics', acceptMetrics);
+
+// This endpoint will be called when the Lambda integration test simulates talking to the Lambda extension instead of
+// serverless-acceptor.
+app.post('/metrics', acceptMetrics);
+
+function acceptMetrics(req, res) {
   logger.debug('incoming metrics', req.body);
   receivedData.rawMetrics.push(req.body);
   if (unresponsive) {
@@ -92,9 +112,17 @@ app.post('/serverless/metrics', (req, res) => {
     aggregateMetrics(req.body);
   }
   return res.sendStatus(201);
-});
+}
 
-app.post('/serverless/traces', (req, res) => {
+// This endpoint will be called when the Lambda integration test simulates talking directly to serverless-acceptor
+// instead of the Lambda extenstion (default case).
+app.post('/serverless/traces', acceptTraces);
+
+// This endpoint will be called when the Lambda integration test simulates talking to the Lambda extension instead of
+// serverless-acceptor.
+app.post('/traces', acceptTraces);
+
+function acceptTraces(req, res) {
   logger.debug('incoming spans', req.body);
   receivedData.rawSpanArrays.push(req.body);
   if (unresponsive) {
@@ -108,7 +136,7 @@ app.post('/serverless/traces', (req, res) => {
     receivedData.spans = receivedData.spans.concat(addHeaders(req, req.body));
   }
   return res.sendStatus(201);
-});
+}
 
 app.post('/serverless/responsive', (req, res) => {
   unresponsive = req.query.responsive !== 'true';
@@ -160,15 +188,27 @@ app.delete('/serverless/received/raw/spanArrays', (req, res) => {
   return res.sendStatus('204');
 });
 
-https.createServer(options, app).listen(port, error => {
-  if (error) {
-    logger.error(error);
-    return process.exit(1);
-  } else {
-    logger.info('Listening on port: %s', port);
-    sendToParent('backend: started');
-  }
-});
+if (useHttps) {
+  https.createServer(options, app).listen(port, error => {
+    if (error) {
+      logger.error(error);
+      return process.exit(1);
+    } else {
+      logger.info('Listening on port: %s (HTTPS)', port);
+      sendToParent('backend: started');
+    }
+  });
+} else {
+  http.createServer(app).listen(port, error => {
+    if (error) {
+      logger.error(error);
+      return process.exit(1);
+    } else {
+      logger.info('Listening on port: %s (HTTP)', port);
+      sendToParent('backend: started');
+    }
+  });
+}
 
 function addHeaders(req, payload) {
   if (Array.isArray(payload)) {

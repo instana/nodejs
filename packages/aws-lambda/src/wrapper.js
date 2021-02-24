@@ -206,7 +206,17 @@ function init(event, arnInfo, _config) {
   }
 
   identityProvider.init(arnInfo);
-  backendConnector.init(identityProvider, logger, true, false, 500);
+  const useLambdaExtension = shouldUseLambdaExtension();
+  if (useLambdaExtension) {
+    logger.info('@instana/aws-lambda will use the Instana Lambda extension to send data to the Instana back end.');
+  } else {
+    logger.info(
+      '@instana/aws-lambda will not use the Instana Lambda extension, but instead send data to the Instana back end ' +
+        'directly.'
+    );
+  }
+
+  backendConnector.init(identityProvider, logger, true, false, 500, useLambdaExtension);
 
   // instanaCore.init also normalizes the config as a side effect
   instanaCore.init(config, backendConnector, identityProvider);
@@ -215,6 +225,38 @@ function init(event, arnInfo, _config) {
   metrics.init(config);
   metrics.activate();
   tracing.activate();
+}
+
+function shouldUseLambdaExtension() {
+  if (process.env.INSTANA_DISABLE_LAMBDA_EXTENSION) {
+    logger.info('INSTANA_DISABLE_LAMBDA_EXTENSION is set, not using the Lambda extension.');
+    return false;
+  } else {
+    const memorySetting = process.env.AWS_LAMBDA_FUNCTION_MEMORY_SIZE;
+    if (!memorySetting) {
+      logger.debug(
+        'The environment variable AWS_LAMBDA_FUNCTION_MEMORY_SIZE is not present, cannot determine memory settings.'
+      );
+      return true;
+    }
+    const memorySize = parseInt(memorySetting, 10);
+    if (isNaN(memorySize)) {
+      logger.debug(
+        `Could not parse the value of the environment variable AWS_LAMBDA_FUNCTION_MEMORY_SIZE: "${memorySetting}", ` +
+          'cannot determine memory settings, not using the Lambda extension.'
+      );
+      return false;
+    }
+    if (memorySize < 256) {
+      logger.debug(
+        'The Lambda function is configured with less than 256 MB of memory according to the value of ' +
+          `AWS_LAMBDA_FUNCTION_MEMORY_SIZE: ${memorySetting}. Offloading data via a Lambda extension does currently ` +
+          'not work reliably with low memory settings, therefore not using the Lambda extension.'
+      );
+      return false;
+    }
+    return true;
+  }
 }
 
 /**

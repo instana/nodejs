@@ -122,6 +122,7 @@ AbstractServerlessControl.prototype.startBackendAndWaitForIt = function startBac
     stdio: config.getAppStdio(),
     env: Object.assign(
       {
+        USE_HTTPS: this.useHttps == null || this.useHttps,
         BACKEND_PORT: this.backendPort,
         BACKEND_UNRESPONSIVE: this.opts.startBackend === 'unresponsive'
       },

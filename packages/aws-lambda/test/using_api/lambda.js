@@ -59,13 +59,13 @@ const handler = async event => {
     currentSpan.span.manualEndMode = false;
   }
 
+  // use Instana SDK
+  await instana.sdk.promise
+    .startExitSpan('custom-span')
+    .then(() => delay(100).then(() => instana.sdk.promise.completeExitSpan()));
+
   // check that the opentracing API is available
   instana.opentracing.createTracer();
-
-  // use Instana SDK
-  await instana.sdk.async.startExitSpan('custom-span');
-  await delay(100); // give the collector a chance to read the main package.json
-  instana.sdk.async.completeExitSpan();
 
   if (event.error) {
     throw new Error('Boom!');
