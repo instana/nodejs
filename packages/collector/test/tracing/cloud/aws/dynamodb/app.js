@@ -12,12 +12,10 @@ const delay = require('../../../../../../core/test/test_util/delay');
 
 const AWS = require('aws-sdk');
 const express = require('express');
-const logPrefix = `AWS S3 (${process.pid}):\t`;
+const logPrefix = `AWS DynamoDB (${process.pid}):\t`;
 AWS.config.update({ region: 'us-east-2' });
-const s3 = new AWS.S3();
-
-const app = express();
-const port = process.env.APP_SENDER_PORT || 3215;
+const dynamoDB = new AWS.DynamoDB();
+const tableName = process.env.AWS_DYNAMODB_TABLE_NAME || 'nodejs-team';
 
 function log() {
   /* eslint-disable no-console */
@@ -27,19 +25,73 @@ function log() {
   /* eslint-enable no-console */
 }
 
-const bucketName = process.env.AWS_S3_BUCKET_NAME || 'nodejs-team';
+var tableCreationParams = {
+  TableName: tableName,
+  KeySchema: [{ AttributeName: 'year', KeyType: 'HASH' }, { AttributeName: 'title', KeyType: 'RANGE' }],
+  AttributeDefinitions: [{ AttributeName: 'year', AttributeType: 'N' }, { AttributeName: 'title', AttributeType: 'S' }],
+  ProvisionedThroughput: {
+    ReadCapacityUnits: 5,
+    WriteCapacityUnits: 5
+  }
+};
 
-const availableOperations = [
-  'listBuckets',
-  'createBucket',
-  'deleteBucket',
-  'headObject',
-  'putObject',
-  'deleteObject',
-  'getObject',
-  'listObjects',
-  'listObjectsV2'
-];
+const itemKey = {
+  year: {
+    N: '2001'
+  },
+  title: {
+    S: 'new record'
+  }
+};
+
+const operationParams = {
+  createTable: tableCreationParams,
+
+  /**
+   * Deleting table is not part of the instrumentation scope, as seen on Java and Go implementations.
+   * However, we need to have this function in place to clean the table before starting tests
+   */
+  deleteTable: { TableName: tableName },
+  listTables: {},
+  scan: { TableName: tableName },
+  query: {
+    TableName: tableName,
+    KeyConditionExpression: '#yr = :yyyy',
+    ExpressionAttributeNames: {
+      '#yr': 'year'
+    },
+    ExpressionAttributeValues: {
+      ':yyyy': {
+        N: '2001'
+      }
+    }
+  },
+  getItem: {
+    TableName: tableName,
+    Key: itemKey
+  },
+  deleteItem: {
+    TableName: tableName,
+    Key: itemKey
+  },
+  putItem: {
+    TableName: tableName,
+    Item: itemKey
+  },
+  updateItem: {
+    TableName: tableName,
+    Key: itemKey,
+    AttributeUpdates: {
+      author: {
+        Value: {
+          S: 'Neil Gaiman'
+        }
+      }
+    }
+  }
+};
+
+const availableOperations = Object.keys(operationParams);
 
 const methods = {
   CALLBACK: 'Callback',
@@ -49,39 +101,7 @@ const methods = {
 
 const availableMethods = Object.values(methods);
 
-const operationParams = {
-  putObject: {
-    Bucket: bucketName,
-    Key: '1'
-  },
-  headObject: {
-    Bucket: bucketName,
-    Key: '1'
-  },
-  deleteObject: {
-    Bucket: bucketName,
-    Key: '1'
-  },
-  getObject: {
-    Bucket: bucketName,
-    Key: '1'
-  },
-  createBucket: {
-    Bucket: bucketName
-  },
-  deleteBucket: {
-    Bucket: bucketName
-  },
-  listObjectsV2: {
-    Bucket: bucketName
-  },
-  listObjects: {
-    Bucket: bucketName
-  },
-  listBuckets: null
-};
-
-const S3Api = {
+const DynamoDBApi = {
   runOperation(operation, method, withError) {
     const originalOptions = operationParams[operation];
     let options;
@@ -93,9 +113,8 @@ const S3Api = {
       if (!options) {
         options = {};
       }
-      options.InvalidS3Key = '999';
+      options.InvalidDynamoDBKey = '999';
     }
-    log(`Bucket name: ${(options && options.Bucket) || 'no bucket name'}`);
 
     return new Promise(async (resolve, reject) => {
       let promise;
@@ -103,14 +122,11 @@ const S3Api = {
 
       switch (method) {
         case methods.CALLBACK:
-          s3[operation](options, (err, data) => {
+          dynamoDB[operation](options, (err, data) => {
             if (err) {
-              log(
-                `${
-                  withError ? 'successfully failed' : 'failed'
-                } on /${operation}/${method} when receiving response from AWS API`
-              );
               return reject(err);
+            } else if (data && data.code) {
+              return reject(data);
             } else {
               setTimeout(() => {
                 request(`http://127.0.0.1:${agentPort}`)
@@ -118,11 +134,6 @@ const S3Api = {
                     return resolve(data);
                   })
                   .catch(err2 => {
-                    log(
-                      `${
-                        withError ? 'successfully failed' : 'failed'
-                      } on /${operation}/${method} when calling localhost server`
-                    );
                     return reject(err2);
                   });
               });
@@ -130,45 +141,38 @@ const S3Api = {
           });
           break;
         case methods.PROMISE:
-          promise = s3[operation](options).promise();
+          promise = dynamoDB[operation](options).promise();
 
           promise
             .then(data => {
-              log(`/${operation}/${method} - received data from AWS SDK`);
               promiseData = data;
               return delay(200);
             })
             .then(() => request(`http://127.0.0.1:${agentPort}`))
             .then(() => {
-              resolve(promiseData);
+              if (promiseData && promiseData.code) {
+                reject(promiseData);
+              } else {
+                resolve(promiseData);
+              }
             })
             .catch(err => {
-              log(
-                `${
-                  withError ? 'successfully failed' : 'failed'
-                } on /${operation}/${method}  from AWS SDK or call to localhost server`
-              );
-
               reject(err);
             });
           break;
         case methods.ASYNC:
           try {
-            const data = await s3[operation](options).promise();
+            const data = await dynamoDB[operation](options).promise();
 
-            log(`/${operation}/${method} got data from AWS SDK`);
+            if (data && data.code) {
+              return reject(data);
+            }
 
             await delay(200);
             await request(`http://127.0.0.1:${agentPort}`);
 
             return resolve(data);
           } catch (err) {
-            log(
-              `${
-                withError ? 'successfully failed' : 'failed'
-              } on /${operation}/${method} from AWS SDK or localhost HTTP server`
-            );
-
             return reject(err);
           }
         default:
@@ -178,12 +182,15 @@ const S3Api = {
   }
 };
 
+const app = express();
+const port = process.env.APP_SENDER_PORT || 3215;
+
 app.get('/', (_req, res) => {
   res.send('Ok');
 });
 
 /**
- * Expected entries are, eg: /listBuckets/Callback, /headObject/Async, /deleteBucket/Promise
+ * Expected entries are, eg: /listTables/Callback, /createTable/Async, /putItem/Promise
  */
 availableOperations.forEach(operation => {
   app.get(`/${operation}/:method`, async (req, res) => {
@@ -196,10 +203,10 @@ availableOperations.forEach(operation => {
       });
     } else {
       try {
-        const data = await S3Api.runOperation(operation, method, withError);
+        const data = await DynamoDBApi.runOperation(operation, method, withError);
         res.send(data);
       } catch (err) {
-        res.status(500).send({
+        res.send({
           error: err
         });
       }
@@ -213,4 +220,4 @@ availableOperations.forEach(operation => {
   });
 });
 
-app.listen(port, () => log(`AWS S3 server listening to port ${port}`));
+app.listen(port, () => log(`AWS DynamoDB app, listening to port ${port}`));
