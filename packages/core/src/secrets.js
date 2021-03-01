@@ -5,9 +5,7 @@
 
 'use strict';
 
-/**
- * @type {import('./logger').GenericLogger}
- */
+/** @type {import('./logger').GenericLogger} */
 let logger;
 logger = require('./logger').getLogger('secrets', newLogger => {
   logger = newLogger;
@@ -26,9 +24,7 @@ const defaultSecrets = ['key', 'pass', 'secret'];
  * @property {() => () => boolean} none
  */
 
-/**
- * @type {SecretMatchers}
- */
+/** @type {SecretMatchers} */
 exports.matchers = {
   /**
    * @param {Array<string>} secrets
@@ -112,9 +108,7 @@ exports.matchers = {
    */
   regex: function createRegexMatcher(secrets) {
     secrets = checkSecrets(secrets);
-    /**
-     * @type {Array<RegExp>}
-     */
+    /** @type {Array<RegExp>} */
     const regexes = [];
     secrets.forEach(regexString => {
       try {
@@ -163,9 +157,7 @@ function checkSecrets(configuredSecrets) {
   if (!Array.isArray(configuredSecrets)) {
     return defaultSecrets;
   }
-  /**
-   * @type {Array<string>}
-   */
+  /** @type {Array<string>} */
   const secrets = [];
   configuredSecrets.forEach(s => {
     if (typeof s === 'string') {
@@ -184,9 +176,7 @@ function toLowerCase(configuredSecrets) {
   if (!Array.isArray(configuredSecrets)) {
     return defaultSecrets;
   }
-  /**
-   * @type {Array<string>}
-   */
+  /** @type {Array<string>} */
   const secrets = [];
   configuredSecrets.forEach(s => {
     if (typeof s === 'string') {

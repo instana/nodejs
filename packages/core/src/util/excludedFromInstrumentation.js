@@ -15,7 +15,7 @@ const excludePattern = /^.*\/(?:npm(?:\.js)?|npm-cli(?:\.js)?|yarn(?:\.js)?|yarn
 
 /**
  * @type {Function}
- * @returns {*}
+ * @returns {boolean}
  */
 module.exports = exports = function isExcludedFromInstrumentation() {
   const mainModule = process.argv[1];

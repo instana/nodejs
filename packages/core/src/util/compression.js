@@ -61,9 +61,7 @@ function applyCompression(path, prev, next, excludeList) {
  * @param {Array<*>} excludeList
  */
 function applyCompressionToObject(path, prev, next, excludeList) {
-  /**
-   * @type {Object<string, *>}
-   */
+  /** @type {Object<string, *>} */
   const result = {};
   let addedProps = 0;
 

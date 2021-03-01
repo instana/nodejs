@@ -21,9 +21,7 @@ module.exports = function propertySizes(object, prefix) {
     prefix = '';
   }
 
-  /**
-   * @type {Array<PropertySize>}
-   */
+  /** @type {Array<PropertySize>} */
   let sizes = [];
   Object.keys(object).forEach(property => {
     const value = object[property];

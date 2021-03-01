@@ -8,9 +8,7 @@
 const fs = require('fs');
 const path = require('path');
 
-/**
- * @type {import('../logger').GenericLogger}
- */
+/** @type {import('../logger').GenericLogger} */
 let logger;
 logger = require('../logger').getLogger('util/atMostOnce', newLogger => {
   logger = newLogger;
@@ -18,17 +16,11 @@ logger = require('../logger').getLogger('util/atMostOnce', newLogger => {
 
 // Cache determined main package json as these will be referenced often
 // and identification of these values is expensive.
-/**
- * @type {*}
- */
+/** @type {*} */
 let parsedMainPackageJson;
-/**
- * @type {*}
- */
+/** @type {*} */
 let mainPackageJsonPath;
-/**
- * @type {*}
- */
+/** @type {*} */
 let nodeModulesPath;
 let appInstalledIntoNodeModules = false;
 

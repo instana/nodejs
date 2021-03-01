@@ -50,17 +50,13 @@ const supportedTracingVersion = require('../tracing/supportedVersion');
  * @property {number} [timeBetweenHealthcheckCalls]
  */
 
-/**
- * @type {import('../logger').GenericLogger}
- */
+/** @type {import('../logger').GenericLogger} */
 let logger;
 logger = require('../logger').getLogger('configuration', newLogger => {
   logger = newLogger;
 });
 
-/**
- * @type {InstanaConfig}
- */
+/** @type {InstanaConfig} */
 const defaults = {
   serviceName: null,
 
@@ -97,6 +93,7 @@ const validSecretsMatcherModes = ['equals-ignore-case', 'equals', 'contains-igno
 /**
  * @type {Function}
  * @param {InstanaConfig} config
+ * @returns {InstanaConfig}
  */
 module.exports = exports = function normalizeConfig(config) {
   if (config == null) {
@@ -445,9 +442,7 @@ function normalizeSecrets(config) {
     config.secrets = {};
   }
 
-  /**
-   * @type {InstanaSecretsOption}
-   */
+  /** @type {InstanaSecretsOption} */
   let fromEnvVar = {};
   if (process.env.INSTANA_SECRETS) {
     fromEnvVar = parseSecretsEnvVar(process.env.INSTANA_SECRETS);

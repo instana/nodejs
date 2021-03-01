@@ -18,9 +18,7 @@ const uniq = require('./uniq');
 exports.create = function createSlidingWindow(opts) {
   const duration = opts.duration;
 
-  /**
-   * @type {Array<*>}
-   */
+  /** @type {Array<*>} */
   let values = [];
 
   return {

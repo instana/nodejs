@@ -16,7 +16,7 @@ const suppotsBufferFrom = Buffer.from && semver.satisfies(process.versions.node,
 
 /**
  * @param {string} str
- * @param {string} [encoding]
+ * @param {BufferEncoding} [encoding]
  */
 exports.fromString = function fromString(str, encoding = 'utf8') {
   if (suppotsBufferFrom) {

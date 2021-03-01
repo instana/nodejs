@@ -10,9 +10,7 @@
  * @returns {Object}
  */
 module.exports = function clone(x) {
-  /**
-   * @type {Object<string, *>}
-   */
+  /** @type {Object<string, *>} */
   let r;
   if (x === null || x === undefined) {
     return x;

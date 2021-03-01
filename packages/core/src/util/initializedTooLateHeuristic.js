@@ -5,9 +5,7 @@
 
 'use strict';
 
-/**
- * @type {import('../logger').GenericLogger}
- */
+/** @type {import('../logger').GenericLogger} */
 let logger;
 logger = require('../logger').getLogger('util/initializedTooLateHeuristic', newLogger => {
   logger = newLogger;

@@ -5,13 +5,9 @@
 
 'use strict';
 
-/**
- * @type {*}
- */
+/** @type {*} */
 let parentLogger = null;
-/**
- * @type {*}
- */
+/** @type {*} */
 const registry = {};
 
 /**
@@ -22,9 +18,7 @@ const registry = {};
  * @property {(...args: *) => void} error
  */
 
-/**
- * @type {GenericLogger}
- */
+/** @type {GenericLogger} */
 const consoleLogger = {
   /* eslint-disable no-console */
   debug: console.log,

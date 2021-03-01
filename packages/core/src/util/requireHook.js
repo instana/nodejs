@@ -26,24 +26,16 @@ const path = require('path');
  * @typedef {Object.<string, ExecutedHook>} ExecutedHooks
  */
 
-/**
- * @type {ExecutedHooks}
- */
+/** @type {ExecutedHooks} */
 let executedHooks = {};
-/**
- * @type {Object.<string, any>}
- */
+/** @type {Object.<string, *>} */
 let byModuleNameTransformers = {};
 
-/**
- * @type {Array<FileNamePatternTransformer>}
- */
+/** @type {Array<FileNamePatternTransformer>} */
 let byFileNamePatternTransformers = [];
 const origLoad = /** @type {*} */ (Module)._load;
 
-/**
- * @type {import('../logger').GenericLogger}
- */
+/** @type {import('../logger').GenericLogger} */
 let logger;
 
 logger = require('../logger').getLogger('util/requireHook', newLogger => {
@@ -62,9 +54,7 @@ function patchedModuleLoad(moduleName) {
   // as this action may fail. The original function populates the module cache.
   const moduleExports = origLoad.apply(Module, arguments);
 
-  /**
-   * @type {string}
-   */
+  /** @type {string} */
   const filename = /** @type {*} */ (Module)._resolveFilename.apply(Module, arguments);
 
   // We are not directly manipulating the global module cache because there might be other tools fiddling with

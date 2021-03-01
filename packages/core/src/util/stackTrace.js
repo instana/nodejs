@@ -24,9 +24,7 @@ exports.captureStackTrace = function captureStackTrace(length, referenceFunction
   const originalPrepareStackTrace = Error.prepareStackTrace;
   Error.stackTraceLimit = length + drop;
   Error.prepareStackTrace = jsonPrepareStackTrace;
-  /**
-   * @type {*}
-   */
+  /** @type {*} */
   const stackTraceTarget = {};
   Error.captureStackTrace(stackTraceTarget, referenceFunction);
   if (stackTraceTarget.stack == null || stackTraceTarget.stack.length === 0) {
