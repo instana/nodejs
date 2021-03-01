@@ -5,6 +5,9 @@
 
 'use strict';
 
+/**
+ * @param {Array<*>} arr
+ */
 module.exports = function uniq(arr) {
   if (arr.length < 2) {
     return arr;

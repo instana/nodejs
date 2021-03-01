@@ -5,6 +5,7 @@
 
 'use strict';
 
+/** @type {import('./logger').GenericLogger} */
 let logger;
 logger = require('./logger').getLogger('secrets', newLogger => {
   logger = newLogger;
@@ -13,7 +14,22 @@ logger = require('./logger').getLogger('secrets', newLogger => {
 const defaultMatcherMode = 'contains-ignore-case';
 const defaultSecrets = ['key', 'pass', 'secret'];
 
+/**
+ * @typedef {Object} SecretMatchers
+ * @property {(secrets: Array<string>) => (key: string) => boolean} equals-ignore-case
+ * @property {(secrets: Array<string>) => (key: string) => boolean} equals
+ * @property {(secrets: Array<string>) => (key: string) => boolean} contains-ignore-case
+ * @property {(secrets: Array<string>) => (key: string) => boolean} contains
+ * @property {(secrets: Array<string>) => (key: string) => boolean} regex
+ * @property {() => () => boolean} none
+ */
+
+/** @type {SecretMatchers} */
 exports.matchers = {
+  /**
+   * @param {Array<string>} secrets
+   * @returns {(key: string) => boolean}
+   */
   'equals-ignore-case': function createEqualsIgnoreCaseMatcher(secrets) {
     secrets = toLowerCase(secrets);
     return function isSecret(key) {
@@ -29,6 +45,10 @@ exports.matchers = {
     };
   },
 
+  /**
+   * @param {Array<string>} secrets
+   * @returns {(key: string) => boolean}
+   */
   equals: function createEqualsMatcher(secrets) {
     secrets = checkSecrets(secrets);
     return function isSecret(key) {
@@ -44,6 +64,10 @@ exports.matchers = {
     };
   },
 
+  /**
+   * @param {Array<string>} secrets
+   * @returns {(key: string) => boolean}
+   */
   'contains-ignore-case': function createContainsIgnoreCaseMatcher(secrets) {
     secrets = toLowerCase(secrets);
     return function isSecret(key) {
@@ -59,6 +83,10 @@ exports.matchers = {
     };
   },
 
+  /**
+   * @param {Array<string>} secrets
+   * @returns {(key: string) => boolean}
+   */
   contains: function createContainsMatcher(secrets) {
     secrets = checkSecrets(secrets);
     return function isSecret(key) {
@@ -74,8 +102,13 @@ exports.matchers = {
     };
   },
 
+  /**
+   * @param {Array<string>} secrets
+   * @returns {(key: string) => boolean}
+   */
   regex: function createRegexMatcher(secrets) {
     secrets = checkSecrets(secrets);
+    /** @type {Array<RegExp>} */
     const regexes = [];
     secrets.forEach(regexString => {
       try {
@@ -116,10 +149,15 @@ exports.matchers = {
   }
 };
 
+/**
+ * @param {Array<string>} configuredSecrets
+ * @returns {Array<string>}
+ */
 function checkSecrets(configuredSecrets) {
   if (!Array.isArray(configuredSecrets)) {
     return defaultSecrets;
   }
+  /** @type {Array<string>} */
   const secrets = [];
   configuredSecrets.forEach(s => {
     if (typeof s === 'string') {
@@ -131,10 +169,14 @@ function checkSecrets(configuredSecrets) {
   return secrets;
 }
 
+/**
+ * @param {Array<string>} configuredSecrets
+ */
 function toLowerCase(configuredSecrets) {
   if (!Array.isArray(configuredSecrets)) {
     return defaultSecrets;
   }
+  /** @type {Array<string>} */
   const secrets = [];
   configuredSecrets.forEach(s => {
     if (typeof s === 'string') {
@@ -146,13 +188,38 @@ function toLowerCase(configuredSecrets) {
   return secrets;
 }
 
+/**
+ * @typedef {'contains' | 'equals-ignore-case' | 'equals' | 'contains-ignore-case' | 'regex'} MatchingOptions
+ */
+
+// We should fix this properly. exports cannot be redefined.
+// @ts-expect-error
 exports.isSecret = exports.matchers[defaultMatcherMode](defaultSecrets);
 
+/**
+ * @typedef {Object} Secrets
+ * @property {*} keywords
+ * @property {MatchingOptions} matcherMode
+ */
+
+/**
+ * @typedef {Object} SecretOption
+ * @property {Secrets} secrets
+ */
+
+/**
+ * @param {SecretOption} config
+ */
 exports.init = function init(config) {
   // Init from config/env vars. Might be overwritten from agent response later (via setMatcher);
+  // @ts-expect-error
   exports.isSecret = exports.matchers[config.secrets.matcherMode](config.secrets.keywords);
 };
 
+/**
+ * @param {MatchingOptions} matcherId
+ * @param {Array<*>} secretsList
+ */
 exports.setMatcher = function setMatcher(matcherId, secretsList) {
   if (!(typeof matcherId === 'string')) {
     logger.warn('Received invalid secrets configuration, attribute matcher is not a string: $s', matcherId);
@@ -161,6 +228,7 @@ exports.setMatcher = function setMatcher(matcherId, secretsList) {
   } else if (!Array.isArray(secretsList)) {
     logger.warn('Received invalid secrets configuration, attribute list is not an array: $s', secretsList);
   } else {
+    // @ts-expect-error
     exports.isSecret = exports.matchers[matcherId](secretsList);
   }
 };

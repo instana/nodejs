@@ -14,6 +14,10 @@ const semver = require('semver');
 // and < 4.5.0 version Buffer.from doesn't support string as parameter
 const suppotsBufferFrom = Buffer.from && semver.satisfies(process.versions.node, '>=4.5.0');
 
+/**
+ * @param {string} str
+ * @param {BufferEncoding} [encoding]
+ */
 exports.fromString = function fromString(str, encoding = 'utf8') {
   if (suppotsBufferFrom) {
     return Buffer.from(str, encoding);

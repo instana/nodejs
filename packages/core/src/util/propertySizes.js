@@ -6,12 +6,22 @@
 'use strict';
 
 /**
+ * @typedef {Object} PropertySize
+ * @property {string} property
+ * @property {number} length
+ */
+
+/**
  * Calculates the size of the given object's properties when serialized to JSON.
+ * @param {Object.<string, *>} object
+ * @param {string} [prefix]
  */
 module.exports = function propertySizes(object, prefix) {
   if (prefix == null) {
     prefix = '';
   }
+
+  /** @type {Array<PropertySize>} */
   let sizes = [];
   Object.keys(object).forEach(property => {
     const value = object[property];

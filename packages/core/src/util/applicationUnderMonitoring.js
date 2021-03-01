@@ -8,6 +8,7 @@
 const fs = require('fs');
 const path = require('path');
 
+/** @type {import('../logger').GenericLogger} */
 let logger;
 logger = require('../logger').getLogger('util/atMostOnce', newLogger => {
   logger = newLogger;
@@ -15,8 +16,11 @@ logger = require('../logger').getLogger('util/atMostOnce', newLogger => {
 
 // Cache determined main package json as these will be referenced often
 // and identification of these values is expensive.
+/** @type {*} */
 let parsedMainPackageJson;
+/** @type {*} */
 let mainPackageJsonPath;
+/** @type {*} */
 let nodeModulesPath;
 let appInstalledIntoNodeModules = false;
 
@@ -24,6 +28,10 @@ exports.isAppInstalledIntoNodeModules = function isAppInstalledIntoNodeModules()
   return appInstalledIntoNodeModules;
 };
 
+/**
+ * @param {string} startDirectory
+ * @param {Function} cb
+ */
 exports.getMainPackageJson = function getMainPackageJson(startDirectory, cb) {
   if (typeof startDirectory === 'function') {
     cb = startDirectory;
@@ -60,6 +68,10 @@ exports.getMainPackageJson = function getMainPackageJson(startDirectory, cb) {
   });
 };
 
+/**
+ * @param {string} startDirectory
+ * @param {(err: Error, packageJsonPath: string) => void} cb
+ */
 exports.getMainPackageJsonPath = function getMainPackageJsonPath(startDirectory, cb) {
   if (typeof startDirectory === 'function') {
     cb = startDirectory;
@@ -99,6 +111,10 @@ exports.getMainPackageJsonPath = function getMainPackageJsonPath(startDirectory,
   });
 };
 
+/**
+ * @param {string} dir
+ * @param {(err: Error, main: *) => void} cb
+ */
 function searchForPackageJsonInDirectoryTreeUpwards(dir, cb) {
   const pathToCheck = path.join(dir, 'package.json');
 
@@ -156,6 +172,9 @@ function searchForPackageJsonInDirectoryTreeUpwards(dir, cb) {
   });
 }
 
+/**
+ * @param {Function} cb
+ */
 exports.findNodeModulesFolder = function findNodeModulesFolder(cb) {
   if (nodeModulesPath !== undefined) {
     return process.nextTick(cb, null, nodeModulesPath);
@@ -177,6 +196,10 @@ exports.findNodeModulesFolder = function findNodeModulesFolder(cb) {
   });
 };
 
+/**
+ * @param {string} dir
+ * @param {(err: Error, nodeModulesPath: *) => void} cb
+ */
 function searchForNodeModulesInDirectoryTreeUpwards(dir, cb) {
   const pathToCheck = path.join(dir, 'node_modules');
 
@@ -199,6 +222,11 @@ function searchForNodeModulesInDirectoryTreeUpwards(dir, cb) {
   });
 }
 
+/**
+ * @param {string} dir
+ * @param {(parentDir: string, cb: Function) => void} onParentDir
+ * @param {Function} cb
+ */
 function searchInParentDir(dir, onParentDir, cb) {
   const parentDir = path.resolve(dir, '..');
   if (dir === parentDir) {

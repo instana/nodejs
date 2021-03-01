@@ -8,25 +8,54 @@
 const Module = require('module');
 const path = require('path');
 
-let executedHooks = {};
-let byModuleNameTransformers = {};
-let byFileNamePatternTransformers = [];
-const origLoad = Module._load;
+/**
+ * @typedef {Object} FileNamePatternTransformer
+ * @property {Function} fn
+ * @property {RegExp} pattern
+ */
 
+/**
+ * @typedef {Object} ExecutedHook
+ * @property {*} originalModuleExports
+ * @property {*} moduleExports
+ * @property {Array<string>} appliedByModuleNameTransformers
+ * @property {boolean} byFileNamePatternTransformersApplied
+ */
+
+/**
+ * @typedef {Object.<string, ExecutedHook>} ExecutedHooks
+ */
+
+/** @type {ExecutedHooks} */
+let executedHooks = {};
+/** @type {Object.<string, *>} */
+let byModuleNameTransformers = {};
+
+/** @type {Array<FileNamePatternTransformer>} */
+let byFileNamePatternTransformers = [];
+const origLoad = /** @type {*} */ (Module)._load;
+
+/** @type {import('../logger').GenericLogger} */
 let logger;
+
 logger = require('../logger').getLogger('util/requireHook', newLogger => {
   logger = newLogger;
 });
 
 exports.init = function() {
-  Module._load = patchedModuleLoad;
+  /** @type {*} */ (Module)._load = patchedModuleLoad;
 };
 
+/**
+ * @param {string} moduleName
+ */
 function patchedModuleLoad(moduleName) {
   // First attempt to always get the module via the original implementation
   // as this action may fail. The original function populates the module cache.
   const moduleExports = origLoad.apply(Module, arguments);
-  const filename = Module._resolveFilename.apply(Module, arguments);
+
+  /** @type {string} */
+  const filename = /** @type {*} */ (Module)._resolveFilename.apply(Module, arguments);
 
   // We are not directly manipulating the global module cache because there might be other tools fiddling with
   // Module._load. We don't want to break any of them.
@@ -99,17 +128,25 @@ function patchedModuleLoad(moduleName) {
 }
 
 exports.teardownForTestPurposes = function() {
-  Module._load = origLoad;
+  /** @type {*} */ (Module)._load = origLoad;
   executedHooks = {};
   byModuleNameTransformers = {};
   byFileNamePatternTransformers = [];
 };
 
+/**
+ * @param {string} moduleName
+ * @param {Function} fn
+ */
 exports.onModuleLoad = function on(moduleName, fn) {
   byModuleNameTransformers[moduleName] = byModuleNameTransformers[moduleName] || [];
   byModuleNameTransformers[moduleName].push(fn);
 };
 
+/**
+ * @param {RegExp} pattern
+ * @param {Function} fn
+ */
 exports.onFileLoad = function onFileLoad(pattern, fn) {
   byFileNamePatternTransformers.push({
     pattern,
@@ -117,10 +154,18 @@ exports.onFileLoad = function onFileLoad(pattern, fn) {
   });
 };
 
+/**
+ * @param {Array<string>} arr
+ */
 exports.buildFileNamePattern = function buildFileNamePattern(arr) {
   return new RegExp(`${arr.reduce(buildFileNamePatternReducer, '')}$`);
 };
 
+/**
+ * @param {string} agg
+ * @param {string} pathSegment
+ * @returns {string}
+ */
 function buildFileNamePatternReducer(agg, pathSegment) {
   if (agg.length > 0) {
     agg += `\\${path.sep}`;

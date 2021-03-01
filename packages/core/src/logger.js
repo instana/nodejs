@@ -5,17 +5,37 @@
 
 'use strict';
 
+/** @type {*} */
 let parentLogger = null;
+/** @type {*} */
 const registry = {};
 
+/**
+ * @typedef {Object} GenericLogger
+ * @property {(...args: *) => void} debug
+ * @property {(...args: *) => void} info
+ * @property {(...args: *) => void} warn
+ * @property {(...args: *) => void} error
+ */
+
+/** @type {GenericLogger} */
 const consoleLogger = {
   /* eslint-disable no-console */
   debug: console.log,
   info: console.log,
   warn: console.warn,
   error: console.error
+  /* eslint-enable no-console */
 };
 
+/**
+ * @typedef {Object} LoggerConfig
+ * @property {*} [logger]
+ */
+
+/**
+ * @param {LoggerConfig} config
+ */
 exports.init = function init(config = {}) {
   if (
     config.logger &&
@@ -47,6 +67,11 @@ exports.init = function init(config = {}) {
   });
 };
 
+/**
+ * @param {string} loggerName
+ * @param {(arg: *) => *} [reInitFn]
+ * @returns {GenericLogger}
+ */
 exports.getLogger = function getLogger(loggerName, reInitFn) {
   if (!parentLogger) {
     exports.init({});
@@ -71,6 +96,10 @@ exports.getLogger = function getLogger(loggerName, reInitFn) {
   return logger;
 };
 
+/**
+ * @param {GenericLogger} logger
+ * @returns {boolean}
+ */
 function hasLoggingFunctions(logger) {
   return (
     typeof logger.debug === 'function' &&

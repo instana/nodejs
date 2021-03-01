@@ -7,9 +7,18 @@
 
 const uniq = require('./uniq');
 
+/**
+ * @typedef {Object} SlidingWindowOptions
+ * @property {number} [duration]
+ */
+
+/**
+ * @param {SlidingWindowOptions} opts
+ */
 exports.create = function createSlidingWindow(opts) {
   const duration = opts.duration;
 
+  /** @type {Array<*>} */
   let values = [];
 
   return {
@@ -22,11 +31,18 @@ exports.create = function createSlidingWindow(opts) {
     getPercentiles
   };
 
+  /**
+   * @param {*} v
+   */
   function addPoint(v) {
     values.push([Date.now(), v]);
     values = removeOldPoints(values, duration);
   }
 
+  /**
+   * @param {Function} reducer
+   * @param {*} initial
+   */
   function reduce(reducer, initial) {
     cleanup();
     return values.reduce((prev, curr) => reducer(prev, curr[1]), initial);
@@ -60,6 +76,9 @@ exports.create = function createSlidingWindow(opts) {
     return valuesCopy;
   }
 
+  /**
+   * @param {Array<number>} percentiles
+   */
   function getPercentiles(percentiles) {
     cleanup();
 
@@ -87,6 +106,10 @@ exports.create = function createSlidingWindow(opts) {
   }
 };
 
+/**
+ * @param {Array<*>} values
+ * @param {number} duration
+ */
 function removeOldPoints(values, duration) {
   let itemsToRemove = 0;
   const threshold = Date.now() - duration;

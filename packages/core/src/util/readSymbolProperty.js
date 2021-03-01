@@ -5,6 +5,11 @@
 
 'use strict';
 
+/**
+ * @type {Function}
+ * @param {Object.<symbol, *>} object
+ * @param {string} symbolString
+ */
 module.exports = exports = function readSymbolProperty(object, symbolString) {
   const symbol = Object.getOwnPropertySymbols(object).find(sym => sym && sym.toString() === symbolString);
   if (symbol) {

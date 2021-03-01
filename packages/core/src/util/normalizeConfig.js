@@ -9,11 +9,54 @@
 
 const supportedTracingVersion = require('../tracing/supportedVersion');
 
+/**
+ * @typedef {Object} HTTPTracingOption
+ * @property {Array<*>} [extraHttpHeadersToCapture]
+ */
+
+/**
+ * @typedef {Object} InstanaTracingOption
+ * @property {boolean} [enabled]
+ * @property {boolean} [automaticTracingEnabled]
+ * @property {number} [forceTransmissionStartingAt]
+ * @property {number} [maxBufferedSpans]
+ * @property {number} [transmissionDelay]
+ * @property {number} [stackTraceLength]
+ * @property {HTTPTracingOption} [http]
+ * @property {Array<*>} [disabledTracers]
+ * @property {boolean} [spanBatchingEnabled]
+ * @property {boolean} [disableAutomaticTracing]
+ * @property {boolean} [disableW3cTraceCorrelation]
+ */
+
+/**
+ * @typedef {Object} InstanaMetricsOption
+ * @property {number} [transmissionDelay]
+ * @property {number} [timeBetweenHealthcheckCalls]
+ */
+
+/**
+ * @typedef {Object} InstanaSecretsOption
+ * @property {string} [matcherMode]
+ * @property {Array<string>} [keywords]
+ */
+
+/**
+ * @typedef {Object} InstanaConfig
+ * @property {string} [serviceName]
+ * @property {InstanaMetricsOption} [metrics]
+ * @property {InstanaTracingOption} [tracing]
+ * @property {InstanaSecretsOption} [secrets]
+ * @property {number} [timeBetweenHealthcheckCalls]
+ */
+
+/** @type {import('../logger').GenericLogger} */
 let logger;
 logger = require('../logger').getLogger('configuration', newLogger => {
   logger = newLogger;
 });
 
+/** @type {InstanaConfig} */
 const defaults = {
   serviceName: null,
 
@@ -46,6 +89,12 @@ const validSecretsMatcherModes = ['equals-ignore-case', 'equals', 'contains-igno
 /**
  * Merges the config that was passed to the init function with environment variables and default values.
  */
+
+/**
+ * @type {Function}
+ * @param {InstanaConfig} config
+ * @returns {InstanaConfig}
+ */
 module.exports = exports = function normalizeConfig(config) {
   if (config == null) {
     config = {};
@@ -58,6 +107,9 @@ module.exports = exports = function normalizeConfig(config) {
   return config;
 };
 
+/**
+ * @param {InstanaConfig} config
+ */
 function normalizeServiceName(config) {
   if (config.serviceName == null && process.env['INSTANA_SERVICE_NAME']) {
     config.serviceName = process.env['INSTANA_SERVICE_NAME'];
@@ -70,6 +122,9 @@ function normalizeServiceName(config) {
   }
 }
 
+/**
+ * @param {InstanaConfig} config
+ */
 function normalizeMetricsConfig(config) {
   if (config.metrics == null) {
     config.metrics = {};
@@ -91,6 +146,10 @@ function normalizeMetricsConfig(config) {
   delete config.timeBetweenHealthcheckCalls;
 }
 
+/**
+ *
+ * @param {InstanaConfig} config
+ */
 function normalizeTracingConfig(config) {
   if (config.tracing == null) {
     config.tracing = {};
@@ -105,6 +164,10 @@ function normalizeTracingConfig(config) {
   normalizeDisableW3cTraceCorrelation(config);
 }
 
+/**
+ *
+ * @param {InstanaConfig} config
+ */
 function normalizeTracingEnabled(config) {
   if (config.tracing.enabled === false) {
     logger.info('Not enabling tracing as it is explicitly disabled via config.');
@@ -123,6 +186,10 @@ function normalizeTracingEnabled(config) {
   config.tracing.enabled = defaults.tracing.enabled;
 }
 
+/**
+ *
+ * @param {InstanaConfig} config
+ */
 function normalizeAutomaticTracingEnabled(config) {
   if (!config.tracing.enabled) {
     logger.info('Not enabling automatic tracing as tracing in general is explicitly disabled via config.');
@@ -158,6 +225,10 @@ function normalizeAutomaticTracingEnabled(config) {
   config.tracing.automaticTracingEnabled = defaults.tracing.automaticTracingEnabled;
 }
 
+/**
+ *
+ * @param {InstanaConfig} config
+ */
 function normalizeTracingTransmission(config) {
   config.tracing.maxBufferedSpans = config.tracing.maxBufferedSpans || defaults.tracing.maxBufferedSpans;
 
@@ -176,6 +247,9 @@ function normalizeTracingTransmission(config) {
   );
 }
 
+/**
+ * @param {InstanaConfig} config
+ */
 function normalizeTracingHttp(config) {
   config.tracing.http = config.tracing.http || {};
 
@@ -205,6 +279,10 @@ function normalizeTracingHttp(config) {
   ) => s.toLowerCase());
 }
 
+/**
+ * @param {string} envVarValue
+ * @returns {Array<string>}
+ */
 function parseHeadersEnvVar(envVarValue) {
   return envVarValue
     .split(/[;,]/)
@@ -212,6 +290,9 @@ function parseHeadersEnvVar(envVarValue) {
     .filter(header => header !== '');
 }
 
+/**
+ * @param {InstanaConfig} config
+ */
 function normalizeTracingStackTraceLength(config) {
   if (config.tracing.stackTraceLength == null && process.env['INSTANA_STACK_TRACE_LENGTH']) {
     parseStringStackTraceLength(config, process.env['INSTANA_STACK_TRACE_LENGTH']);
@@ -236,6 +317,10 @@ function normalizeTracingStackTraceLength(config) {
   }
 }
 
+/**
+ * @param {InstanaConfig} config
+ * @param {string} value
+ */
 function parseStringStackTraceLength(config, value) {
   config.tracing.stackTraceLength = parseInt(value, 10);
   if (!isNaN(config.tracing.stackTraceLength)) {
@@ -251,6 +336,10 @@ function parseStringStackTraceLength(config, value) {
   }
 }
 
+/**
+ * @param {number} numericalLength
+ * @returns {number}
+ */
 function normalizeNumericalStackTraceLength(numericalLength) {
   // just in case folks provide non-integral numbers or negative numbers
   const normalized = Math.abs(Math.round(numericalLength));
@@ -264,6 +353,9 @@ function normalizeNumericalStackTraceLength(numericalLength) {
   return normalized;
 }
 
+/**
+ * @param {InstanaConfig} config
+ */
 function normalizeDisabledTracers(config) {
   if (
     config.tracing.disabledTracers == null &&
@@ -295,6 +387,9 @@ function normalizeDisabledTracers(config) {
   ) => s.toLowerCase());
 }
 
+/**
+ * @param {InstanaConfig} config
+ */
 function normalizeSpanBatchingEnabled(config) {
   if (config.tracing.spanBatchingEnabled != null) {
     if (typeof config.tracing.spanBatchingEnabled === 'boolean') {
@@ -320,6 +415,9 @@ function normalizeSpanBatchingEnabled(config) {
   config.tracing.spanBatchingEnabled = defaults.tracing.spanBatchingEnabled;
 }
 
+/**
+ * @param {InstanaConfig} config
+ */
 function normalizeDisableW3cTraceCorrelation(config) {
   if (config.tracing.disableW3cTraceCorrelation === true) {
     logger.info('W3C trace correlation has been disabled via config.');
@@ -336,11 +434,15 @@ function normalizeDisableW3cTraceCorrelation(config) {
   config.tracing.disableW3cTraceCorrelation = defaults.tracing.disableW3cTraceCorrelation;
 }
 
+/**
+ * @param {InstanaConfig} config
+ */
 function normalizeSecrets(config) {
   if (config.secrets == null) {
     config.secrets = {};
   }
 
+  /** @type {InstanaSecretsOption} */
   let fromEnvVar = {};
   if (process.env.INSTANA_SECRETS) {
     fromEnvVar = parseSecretsEnvVar(process.env.INSTANA_SECRETS);
@@ -376,6 +478,10 @@ function normalizeSecrets(config) {
   }
 }
 
+/**
+ * @param {string} envVarValue
+ * @returns {InstanaSecretsOption}
+ */
 function parseSecretsEnvVar(envVarValue) {
   let [matcherMode, keywords] = envVarValue.split(':', 2);
   matcherMode = matcherMode.trim().toLowerCase();
@@ -395,13 +501,20 @@ function parseSecretsEnvVar(envVarValue) {
     );
     return {};
   }
-  keywords = keywords.split(',').map(word => word.trim());
+  const keywordsArray = keywords.split(',').map(word => word.trim());
   return {
     matcherMode,
-    keywords
+    keywords: keywordsArray
   };
 }
 
+/**
+ * @param {*} configValue
+ * @param {*} defaultValue
+ * @param {string} configPath
+ * @param {string} envVarKey
+ * @returns {*}
+ */
 function normalizeSingleValue(configValue, defaultValue, configPath, envVarKey) {
   const envVarVal = process.env[envVarKey];
   let originalValue = configValue;

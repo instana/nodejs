@@ -8,6 +8,12 @@
 // See v8 Error API docs at
 // https://v8.dev/docs/stack-trace-api
 
+/**
+ * @param {number} length
+ * @param {Function} referenceFunction
+ * @param {number} [drop]
+ * @returns {object}
+ */
 exports.captureStackTrace = function captureStackTrace(length, referenceFunction, drop = 0) {
   if (length <= 0) {
     return [];
@@ -18,6 +24,7 @@ exports.captureStackTrace = function captureStackTrace(length, referenceFunction
   const originalPrepareStackTrace = Error.prepareStackTrace;
   Error.stackTraceLimit = length + drop;
   Error.prepareStackTrace = jsonPrepareStackTrace;
+  /** @type {*} */
   const stackTraceTarget = {};
   Error.captureStackTrace(stackTraceTarget, referenceFunction);
   if (stackTraceTarget.stack == null || stackTraceTarget.stack.length === 0) {
@@ -36,6 +43,10 @@ exports.captureStackTrace = function captureStackTrace(length, referenceFunction
   return stack;
 };
 
+/**
+ * @param {number} length
+ * @param {Error} error
+ */
 exports.getStackTraceAsJson = function getStackTraceAsJson(length, error) {
   if (length <= 0) {
     return [];
@@ -49,20 +60,32 @@ exports.getStackTraceAsJson = function getStackTraceAsJson(length, error) {
   error.stack;
   Error.stackTraceLimit = originalLimit;
   Error.prepareStackTrace = originalPrepareStackTrace;
-  const jsonStackTrace = error._jsonStackTrace;
-  delete error._jsonStackTrace;
+  const jsonStackTrace = /** @type {*} */ (error)._jsonStackTrace;
+  delete /** @type {*} */ (error)._jsonStackTrace;
   return jsonStackTrace;
 };
 
+/**
+ * @param {Error} error
+ * @param {Array<*>} structuredStackTrace
+ */
 function jsonPrepareStackTrace(error, structuredStackTrace) {
   return jsonifyStackTrace(structuredStackTrace);
 }
 
+/**
+ * @param {Error} error
+ * @param {Array<*>} structuredStackTrace
+ */
 function attachJsonStackTrace(error, structuredStackTrace) {
-  error._jsonStackTrace = jsonifyStackTrace(structuredStackTrace);
+  /** @type {*} */ (error)._jsonStackTrace = jsonifyStackTrace(structuredStackTrace);
   return defaultPrepareStackTrace(error, structuredStackTrace);
 }
 
+/**
+ * @param {Array<*>} structuredStackTrace
+ * @returns {object}
+ */
 function jsonifyStackTrace(structuredStackTrace) {
   const len = structuredStackTrace.length;
   const result = new Array(len);
@@ -79,6 +102,9 @@ function jsonifyStackTrace(structuredStackTrace) {
   return result;
 }
 
+/**
+ * @param {Function | *} callSite
+ */
 exports.buildFunctionIdentifier = function buildFunctionIdentifier(callSite) {
   if (callSite.isConstructor()) {
     return `new ${callSite.getFunctionName()}`;
@@ -113,6 +139,10 @@ exports.buildFunctionIdentifier = function buildFunctionIdentifier(callSite) {
   return label;
 };
 
+/**
+ * @param {Error} error
+ * @param {Array<*>} frames
+ */
 function defaultPrepareStackTrace(error, frames) {
   frames.push(error);
   return frames.reverse().join('\n    at ');
