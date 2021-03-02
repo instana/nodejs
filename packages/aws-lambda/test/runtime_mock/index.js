@@ -426,7 +426,7 @@ function onUncaughtException(error) {
   if (error.message === 'Boom!') {
     // this is an intended error that is part of the test for synchronous error handling.
     log(
-      `! Lambda ${definitionPath} handler has thronw runtime error ` +
+      `! Lambda ${definitionPath} handler has thrown runtime error ` +
         `(possibly an expected error as part of the test): ${error.message}.`
     );
     unregisterErrorHandling();

@@ -142,7 +142,6 @@ mochaSuiteFn('uncaught exceptions', function() {
               expect(serverAcceptedAnotherResponse, "Unexpected response, server shouldn't have accepted another call.")
                 .to.be.false;
               expect(errorFromSecondHttpRequest).to.exist;
-              expect(errorFromSecondHttpRequest.message).to.equal('Error: read ECONNRESET');
               expectExactlyOneMatching(events, [
                 event =>
                   expect(event.title).to.equal('A Node.js process terminated abnormally due to an uncaught exception.'),

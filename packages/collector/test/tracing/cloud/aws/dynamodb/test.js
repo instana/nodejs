@@ -5,7 +5,7 @@
 
 'use strict';
 
-const checkTableExistence = require('./util').checkTableExistence;
+const { checkTableExistence, cleanup } = require('./util');
 const semver = require('semver');
 const path = require('path');
 const { expect } = require('chai');
@@ -66,6 +66,10 @@ mochaSuiteFn('tracing/cloud/aws/dynamodb', function() {
   const agentControls = globalAgent.instance;
 
   describe('tracing enabled, no suppression', function() {
+    before(() => {
+      return cleanup(tableName);
+    });
+
     const appControls = new ProcessControls({
       appPath: path.join(__dirname, 'app'),
       port: 3215,

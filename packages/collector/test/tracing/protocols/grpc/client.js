@@ -222,9 +222,9 @@ function dynamicClientSideStreaming(cancel, triggerError, cb) {
     });
   }
   if (cancel) {
-    setTimeout(() => {
+    setImmediate(() => {
       call.cancel();
-    }, 1);
+    });
   }
 }
 

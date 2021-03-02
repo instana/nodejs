@@ -78,7 +78,7 @@ describe('data source', function() {
     dataSource.activate();
 
     return delay(200).then(() => {
-      expect(refreshCounter).to.be.at.least(16);
+      expect(refreshCounter).to.be.at.least(13);
       expect(refreshCounter).to.be.at.most(24);
     });
   });

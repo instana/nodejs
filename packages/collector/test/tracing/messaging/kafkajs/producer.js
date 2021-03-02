@@ -3,8 +3,6 @@
  * (c) Copyright Instana Inc. and contributors 2019
  */
 
-/* eslint-disable */
-
 'use strict';
 
 require('../../../../')();
@@ -13,8 +11,6 @@ const request = require('request-promise');
 const bodyParser = require('body-parser');
 const express = require('express');
 const { Kafka } = require('kafkajs');
-
-const delay = require('../../../../../core/test/test_util/delay');
 
 const appPort = process.env.APP_PORT || 3216;
 const agentPort = process.env.INSTANA_AGENT_PORT || 42699;
@@ -30,8 +26,6 @@ const kafka = new Kafka({
 });
 const producer = kafka.producer();
 
-const MAX_PREWARMING_RETRIES = 10;
-const PREWARMING_RETRY_DELAY = 750;
 let connected = false;
 
 const app = express();
@@ -43,7 +37,7 @@ const app = express();
 
 app.use(bodyParser.json());
 
-app.get('/', (req, res) => {
+app.get('/', (_req, res) => {
   if (connected) {
     res.send('OK');
   } else {
@@ -65,7 +59,7 @@ app.post('/send-messages', (req, res) => {
   send(req.body)
     .then(() => (runAsStandAlone ? Promise.resolve() : request(`http://127.0.0.1:${agentPort}`)))
     .then(() => res.sendStatus(200))
-    .then(() => console.log('Messages have been sent.'))
+    .then(() => console.log('Messages have been sent.')) // eslint-disable-line
     .catch(err => {
       if (error === 'sender') {
         log('Send error has been triggered.', err.message);
@@ -141,5 +135,5 @@ function sendViaSendBatch(key, value, error, topicPrefix) {
 function log() {
   const args = Array.prototype.slice.call(arguments);
   args[0] = `Kafka Producer (${process.pid}):\t${args[0]}`;
-  console.log.apply(console, args);
+  console.log.apply(console, args); // eslint-disable-line
 }
