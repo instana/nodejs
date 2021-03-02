@@ -1,7 +1,6 @@
 # Changelog
 
-## Unreleased
-
+## 1.116.0
 - Add instrumentation for AWS DynamoDB.
 
 ## 1.115.0
