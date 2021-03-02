@@ -9,6 +9,7 @@ const path = require('path');
 const { expect } = require('chai');
 
 const constants = require('@instana/core').tracing.constants;
+const semver = require('semver');
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('../../../../../core/test/config');
 const delay = require('../../../../../core/test/test_util/delay');
@@ -29,7 +30,15 @@ const LEFT_PAD_16 = '0000000000000000';
 const upstreamInstanaTraceId = 'ffeeddccbbaa9988';
 const upstreamInstanaParentId = '7766554433221100';
 
-const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
+const mochaSuiteFn =
+  supportedVersion(process.versions.node) &&
+  // HTTP2 support was added in Node.js 8.4.0
+  // semver.gte(process.versions.node, '8.4.0') &&
+  // The http2 module seems to trigger spurious segfaults on Node.js 8, so we skip these tests in Node.js 8.
+  // alltogether.
+  semver.gte(process.versions.node, '10.0.0')
+    ? describe
+    : describe.skip;
 
 mochaSuiteFn('tracing/W3C Trace Context', function() {
   this.timeout(config.getTestTimeout() * 2);

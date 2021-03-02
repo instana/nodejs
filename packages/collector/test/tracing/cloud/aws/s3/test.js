@@ -8,6 +8,7 @@
 const semver = require('semver');
 const path = require('path');
 const { expect } = require('chai');
+const { cleanup } = require('./util');
 const { fail } = expect;
 const constants = require('@instana/core').tracing.constants;
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
@@ -49,6 +50,10 @@ const retryTime = config.getTestTimeout() * 2;
 
 mochaSuiteFn('tracing/cloud/aws/s3', function() {
   this.timeout(config.getTestTimeout() * 3);
+
+  before(() => {
+    return cleanup(bucketName);
+  });
 
   globalAgent.setUpCleanUpHooks();
   const agentControls = globalAgent.instance;

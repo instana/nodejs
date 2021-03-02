@@ -37,3 +37,20 @@ exports.checkTableExistence = function checkTableExistence(tableName, expectsToE
     }, interval);
   });
 };
+
+/**
+ * Attempts to delete a previous created table before the test starts
+ * @param {string} tableName
+ */
+exports.cleanup = async function(tableName) {
+  try {
+    await dynamoDB
+      .deleteTable({
+        TableName: tableName
+      })
+      .promise();
+    return exports.checkTableExistence(tableName, false);
+  } catch (err) {
+    return Promise.resolve('Table did not exist');
+  }
+};
