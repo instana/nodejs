@@ -51,7 +51,7 @@ for lambda_directory in demo-* ; do
   echo Reading existing environment variables for function $function_name in region $REGION.
 
   new_variables=$(\
-    aws --region $REGION lambda get-function-configuration \
+    AWS_PAGER="" aws --region $REGION lambda get-function-configuration \
       --function-name $function_name \
       --output json \
       | jq ".Environment.Variables + {INSTANA_ENDPOINT_URL:\"$NEW_INSTANA_ENDPOINT_URL\", INSTANA_AGENT_KEY:\"$NEW_INSTANA_AGENT_KEY\"}"
@@ -61,7 +61,7 @@ for lambda_directory in demo-* ; do
 
   echo Writing updated environment variables: $new_variables
 
-  aws --region $REGION lambda update-function-configuration \
+  AWS_PAGER="" aws --region $REGION lambda update-function-configuration \
     --function-name $function_name \
     --environment "$new_variables"
 
