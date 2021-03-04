@@ -136,7 +136,11 @@ function runHandler(handler, error) {
         handlerHasFinished = true;
         unregisterErrorHandling();
         log(`Lambda ${definitionPath} handler has failed:`);
-        log(err);
+        if (err && err.message && typeof err.message === 'object') {
+          log(err, JSON.stringify(err.message));
+        } else {
+          log(err);
+        }
         sendToParent({
           type: 'lambda-result',
           error: true,
