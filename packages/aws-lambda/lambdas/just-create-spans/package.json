@@ -12,8 +12,8 @@
   "author": "Bastian Krol <bastian.krol@instana.com>",
   "license": "MIT",
   "dependencies": {
-    "@instana/aws-lambda": "file:../../instana-aws-lambda.tgz",
-    "@instana/serverless": "file:../../instana-serverless.tgz",
-    "instana-aws-lambda-auto-wrap": "file:../../instana-aws-lambda-auto-wrap.tgz"
+    "@instana/aws-lambda": "../../instana-aws-lambda.tgz",
+    "@instana/serverless": "../../instana-serverless.tgz",
+    "instana-aws-lambda-auto-wrap": "../../instana-aws-lambda-auto-wrap.tgz"
   }
 }
