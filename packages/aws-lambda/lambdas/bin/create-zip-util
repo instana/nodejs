@@ -12,7 +12,9 @@ function createZip {
     # revert that modification later. Also, we do not want a modified package-lock.json show up in git diff all the
     # time.
     cp package.json package.json.backup
-    cp package-lock.json package-lock.json.backup
+    if [[ -f package-lock.json ]]; then
+      cp package-lock.json package-lock.json.backup
+    fi
 
     if [[ "${BUILD_LAMBDAS_WITH-}" == "layer" ]]; then
       # We want to use the lambda layer and not the locally build npm package tar file.
@@ -35,9 +37,9 @@ function createZip {
       # }
       # but only doing an npm install will use a stale copy of the tgz files from npm's cache, so we force npm to use a
       # fresh copy by installing the tgz files again explicitly.
-      npm --loglevel=warn --production install -S "file:../../instana-serverless.tgz"
-      npm --loglevel=warn --production install -S "file:../../instana-aws-lambda.tgz"
-      npm --loglevel=warn --production install -S "file:../../instana-aws-lambda-auto-wrap.tgz"
+      npm --loglevel=warn --production install -S "../../instana-aws-lambda-auto-wrap.tgz"
+      npm --loglevel=warn --production install -S "../../instana-aws-lambda.tgz"
+      npm --loglevel=warn --production install -S "../../instana-serverless.tgz"
 
     elif [[ "${BUILD_LAMBDAS_WITH-npm}" == "npm" ]]; then
       # The lambda's package.json might or might not already have a dependency to the local tar files:
@@ -49,6 +51,7 @@ function createZip {
       npm uninstall --production -S @instana/aws-lambda
       npm uninstall --production -S @instana/serverless
       npm install --production -S @instana/aws-lambda
+      npm install --production -S @instana/serverless
     else
       echo "Unknown option for BUILD_LAMBDAS_WITH: $BUILD_LAMBDAS_WITH"
       echo Aborting.
@@ -68,7 +71,9 @@ function createZip {
   if [[ ! -e .dont-add-instana  ]]; then
     # revert package.json modification
     mv package.json.backup package.json
-    mv package-lock.json.backup package-lock.json
+    if [[ -e package-lock.json.backup ]]; then
+      mv package-lock.json.backup package-lock.json
+    fi
   fi
 }
 

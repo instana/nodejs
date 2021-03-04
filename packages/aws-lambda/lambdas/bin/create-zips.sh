@@ -1,10 +1,11 @@
 #!/usr/bin/env bash
-set -eEuo pipefail
+
 #######################################
 # (c) Copyright IBM Corp. 2021
 # (c) Copyright Instana Inc. and contributors 2019
 #######################################
 
+set -eEuo pipefail
 
 cd `dirname $BASH_SOURCE`/..
 
@@ -19,9 +20,12 @@ rm -rf instana-aws-lambda*.tgz
 # - BUILD_LAMBDAS_WITH=layer
 # See ../README.md for details.
 
-
 # Note: ${BUILD_LAMBDAS_WITH-xyz} -> default expansion with default xyz, to avoid bash error "unbound variable"
 # when set -u is active.
+
+echo
+echo NOTE: When switching between BUILD_LAMBDAS_WITH=layer on one hand and BUILD_LAMBDAS_WITH=npm or BUILD_LAMBDAS_WITH=local on the other hand, you might need to add \(or remove\) instana.wrap\(\) to \(from\) the individual Lambda handler functions!
+echo
 
 echo Building all local tar.gz files.
 
@@ -83,3 +87,8 @@ else
     echo "Cannot create zip file for $lambda_directory, either the directory does not exist or is a symlink or it has no bin/create-zip.sh script."
   fi
 fi
+
+echo
+echo NOTE: When switching between BUILD_LAMBDAS_WITH=layer on one hand and BUILD_LAMBDAS_WITH=npm or BUILD_LAMBDAS_WITH=local on the other hand, you might need to add \(or remove\) instana.wrap\(\) to \(from\) the individual Lambda handler functions!
+echo
+
