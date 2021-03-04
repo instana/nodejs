@@ -87,11 +87,17 @@ function deploy_zip {
   else
     echo "It appears $lambda_zip_file does not contain package @instana/aws-lambda, so I'll add the \"instana-nodejs\" Lambda layer to the function."
 
-    LAYER_INFO=$( curl https://dfd6bfhs8c.execute-api.us-east-2.amazonaws.com/default/nodejs?region=us-east-2 2> /dev/null )
+    if [[ -z $LAYER_VERSION || -z $LAYER_ARN ]]; then
+      echo "No layer ARN and version specified, will ask for the latest Instana Node.js layer..."
+      LAYER_INFO=$( curl https://dfd6bfhs8c.execute-api.us-east-2.amazonaws.com/default/nodejs?region=us-east-2 2> /dev/null )
 
-    echo layer info: $LAYER_INFO
-    LAYER_VERSION=$(echo $LAYER_INFO | jq .version)
-    LAYER_ARN=$(echo $LAYER_INFO | jq .arn)
+      echo layer info: $LAYER_INFO
+      LAYER_VERSION=$(echo $LAYER_INFO | jq .version)
+      LAYER_ARN=$(echo $LAYER_INFO | jq .arn)
+
+      # remove surrounding quotes from ARN as it trips up the aws lambda update-function-configuration command
+      LAYER_ARN=${LAYER_ARN//\"/}
+    fi
 
     echo Using layer version: $LAYER_VERSION
     echo Using layer ARN: $LAYER_ARN
@@ -113,21 +119,21 @@ function deploy_zip {
         --output json \
         | jq ".Layers")
 
-    if [[ "$current_layers" =~ ":instana-nodejs:" ]]; then
+    if [[ "$current_layers" =~ "instana-nodejs" ]]; then
       if [[ "$current_layers" =~ ":instana-nodejs:$LAYER_VERSION" ]]; then
         echo This lambda function definition already has the specified version of the Instana layer, doing nothing.
       else
         echo "This lambda function definition already has the Instana layer configured but uses a version ($current_layers) that is different from the one you specified ($LAYER_VERSION). I'll try to replace this with the specified layer. I'll also set the auto-wrap handler."
         AWS_PAGER="" aws --region $REGION lambda update-function-configuration \
           --function-name $function_name \
-          --layers "$LAYER_ARN" \
+          --layers $LAYER_ARN \
           --handler instana-aws-lambda-auto-wrap.handler
       fi
     else
       echo "This lambda function definition currently has no Instana layer at all, adding it now. I'll also set the auto-wrap handler."
       AWS_PAGER="" aws --region $REGION lambda update-function-configuration \
         --function-name $function_name \
-        --layers "$LAYER_ARN" \
+        --layers $LAYER_ARN \
         --handler instana-aws-lambda-auto-wrap.handler
     fi
   fi
