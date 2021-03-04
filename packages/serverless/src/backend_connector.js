@@ -155,7 +155,18 @@ function send(resourcePath, payload, destroySocketAfterwards, callback) {
     },
     rejectUnauthorized: !disableCaCheck
   };
+
   if (!legacyTimeoutHandling) {
+    // The timeout specified here in the request options will kick in if *connecting* to the socket takes too long.
+    // From https://nodejs.org/api/http.html#http_http_request_options_callback:
+    // > timeout <number>: A number specifying the socket timeout in milliseconds. This will set the timeout *before* the
+    // > socket is connected.
+    // In contrast, the timeout handling of req.on('timeout', () => { ... }) (see below) will only kick in if the
+    // underlying socket has been inactive for the specified time *after* the connection has been established, but not
+    // if connecting to the socket takes too long.
+    //
+    // Side Note about legacyTimeoutHandling: See below at the req.setTimeout usage for an explanation why this is
+    // handled differently in Node.js 8 Lambda runtimes.
     options.timeout = backendTimeout;
   }
   if (proxyAgent) {
@@ -181,8 +192,19 @@ function send(resourcePath, payload, destroySocketAfterwards, callback) {
   });
 
   if (legacyTimeoutHandling) {
+    // In Node.js 8, this establishes a read timeout as well as a connection timeout (which is what we want). In
+    // Node.js 9 and above, that behaviour changed, see
+    // https://nodejs.org/api/http.html#http_request_settimeout_timeout_callback -> history:
+    // v9.0.0	- Consistently set socket timeout only when the socket connects.
+
     req.setTimeout(backendTimeout, () => onTimeout(req, callback));
   } else {
+    // See above for the difference between the timeout attribute in the request options and handling the 'timeout'
+    // event. This only adds a read timeout after the connection has been established and we need the timout attribute
+    // in the request options additionally for protection against cases where *connecting* to the socket takes too long,
+    // see https://nodejs.org/api/http.html#http_request_settimeout_timeout_callback:
+    // > Once a socket is assigned to this request **and is connected**
+    // > socket.setTimeout() will be called.
     req.on('timeout', () => onTimeout(req, callback));
   }
 
