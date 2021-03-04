@@ -81,7 +81,7 @@ while read -r region; do
       --license-info $LICENSE \
       --zip-file fileb://$ZIP_NAME \
       --output json \
-      --compatible-runtimes nodejs10.x nodejs8.10 nodejs12.x \
+      --compatible-runtimes nodejs8.10 nodejs10.x nodejs12.x nodejs14.x \
       | jq '.Version' \
   )
   echo "   + published version $lambda_layer_version to region $region"
