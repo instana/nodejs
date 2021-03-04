@@ -30,7 +30,7 @@ let requestHasFailed = false;
 let warningsHaveBeenLogged = false;
 
 const needsEcdhCurveFix = semver.gte(process.version, '8.6.0') && semver.lt(process.version, '10.0.0');
-const legacyTimeoutHandling = semver.lt(process.version, '10.0.0');
+const legacyTimeoutHandling = semver.lt(process.version, '9.0.0');
 
 const disableCaCheckEnvVar = 'INSTANA_DISABLE_CA_CHECK';
 const disableCaCheck = process.env[disableCaCheckEnvVar] === 'true';
