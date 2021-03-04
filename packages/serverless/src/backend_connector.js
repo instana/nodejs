@@ -91,8 +91,8 @@ exports.setLogger = function setLogger(_logger) {
   logger = _logger;
 };
 
-exports.sendBundle = function sendBundle(bundle, destroySocketAfterwards, callback) {
-  send('/bundle', bundle, destroySocketAfterwards, callback);
+exports.sendBundle = function sendBundle(bundle, finalLambdaRequest, callback) {
+  send('/bundle', bundle, finalLambdaRequest, callback);
 };
 
 exports.sendMetrics = function sendMetrics(metrics, callback) {
@@ -103,7 +103,7 @@ exports.sendSpans = function sendSpans(spans, callback) {
   send('/traces', spans, false, callback);
 };
 
-function send(resourcePath, payload, destroySocketAfterwards, callback) {
+function send(resourcePath, payload, finalLambdaRequest, callback) {
   if (requestHasFailed && stopSendingOnFailure) {
     logger.info(
       `Not attempting to send data to ${resourcePath} as a previous request has already timed out or failed.`
@@ -159,8 +159,8 @@ function send(resourcePath, payload, destroySocketAfterwards, callback) {
   if (!legacyTimeoutHandling) {
     // The timeout specified here in the request options will kick in if *connecting* to the socket takes too long.
     // From https://nodejs.org/api/http.html#http_http_request_options_callback:
-    // > timeout <number>: A number specifying the socket timeout in milliseconds. This will set the timeout *before* the
-    // > socket is connected.
+    // > timeout <number>: A number specifying the socket timeout in milliseconds. This will set the timeout *before*
+    // > the socket is connected.
     // In contrast, the timeout handling of req.on('timeout', () => { ... }) (see below) will only kick in if the
     // underlying socket has been inactive for the specified time *after* the connection has been established, but not
     // if connecting to the socket takes too long.
@@ -180,22 +180,33 @@ function send(resourcePath, payload, destroySocketAfterwards, callback) {
     options.ecdhCurve = 'auto';
   }
 
-  const req = https.request(options, () => {
-    if (destroySocketAfterwards) {
-      // This is the final request from an AWS Lambda. In some scenarios we might get a stale timeout event on the
-      // socket object from a previous invocation of the Lambda handler, that is, from before the AWS Lambda runtime
-      // froze the Node.js process. Manually destroying the socket at the end of the Lambda invocation is a workaround
-      // for that.
-      req.socket.destroy();
-    }
-    callback();
-  });
+  let req;
+
+  if (!proxyAgent) {
+    // We deliberately do not pass a callback when calling https.request but instead we pass the callback to req.end.
+    // This way, we do not wait for the HTTP _response_, but we still make sure the request data is written to the
+    // network  completely. This reduces the delay we add to the Lambda execution time to report metrics and traces
+    // quite a bit. The (acceptable) downside is that we do not get to examine the response for HTTP status codes.
+    req = https.request(options);
+  } else {
+    // If a proxy is in use, we do *not* apply the optimization outlined above. Instead, we opt for the more traditional
+    // workflow of waiting until the HTTP response has been received. Some proxies interact in weird ways with the HTTP
+    // flow. See the req.end(payload) call below, too. In the non-proxy case, that call has the callback to end the
+    // processing. In the proxy case, the callback is provided here to http.request().
+    req = https.request(options, () => {
+      if (finalLambdaRequest) {
+        req.removeAllListeners();
+        req.on('error', () => {});
+      }
+      callback();
+    });
+  }
 
   if (legacyTimeoutHandling) {
     // In Node.js 8, this establishes a read timeout as well as a connection timeout (which is what we want). In
     // Node.js 9 and above, that behaviour changed, see
     // https://nodejs.org/api/http.html#http_request_settimeout_timeout_callback -> history:
-    // v9.0.0	- Consistently set socket timeout only when the socket connects.
+    // v9.0.0 - Consistently set socket timeout only when the socket connects.
 
     req.setTimeout(backendTimeout, () => onTimeout(req, callback));
   } else {
@@ -211,12 +222,51 @@ function send(resourcePath, payload, destroySocketAfterwards, callback) {
   req.on('error', e => {
     requestHasFailed = true;
     if (!propagateErrorsUpstream) {
-      logger.warn('Could not send traces and metrics to Instana. The Instana back end seems to be unavailable.', e);
+      if (proxyAgent) {
+        logger.warn(
+          'Could not send traces and metrics to Instana. Could not connect to the configured proxy ' +
+            `${process.env[proxyEnvVar]}.`,
+          e
+        );
+      } else {
+        logger.warn('Could not send traces and metrics to Instana. The Instana back end seems to be unavailable.', e);
+      }
     }
+
     callback(propagateErrorsUpstream ? e : undefined);
   });
 
-  req.end(payload);
+  if (!proxyAgent) {
+    req.end(payload, () => {
+      if (finalLambdaRequest) {
+        // This is the final request from an AWS Lambda, directly before the Lambda returns its response to the client.
+        // The Node.js process might be frozen by the AWS Lambda runtime machinery after that and thawed again later for
+        // another invocation. When the Node.js process is frozen while the request is pending, and then thawed later,
+        // this can trigger a stale, bogus timeout event (because from the perspective of the freshly thawed Node.js
+        // runtime, the request has been pending and inactive since a long time). To avoid that, we remove all listeners
+        // (including the timeout listener) on the request. Since the Lambda runtime will be frozen afterwards (or
+        // reused for a different, unrelated invocation), it is safe to assume that  we are no longer interested in any
+        // events emitted by the request or the underlying socket.
+        req.removeAllListeners();
+
+        // We need to have a listener for errors that ignores everything, otherwise aborting the request/socket will
+        // produce an "Unhandled 'error' event"
+        req.on('error', () => {});
+
+        // Finally, abort the request because from our end we are no longer interested in the response and we also do
+        // not want to let pending IO actions linger in the event loop. This will also call request.destoy and
+        // req.socket.destroy() internally.
+        req.abort();
+      }
+
+      // We finish as soon as the request has been flushed, without waiting for the response.
+      callback();
+    });
+  } else {
+    // See above for why the proxy case has no callback on req.end. Instead, it uses the more traditional callback on
+    // request creation.
+    req.end(payload);
+  }
 }
 
 function onTimeout(req, callback) {
