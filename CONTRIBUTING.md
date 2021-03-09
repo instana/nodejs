@@ -2,6 +2,8 @@
 
 ## Local Set Up
 
+Note: You might need to install `libpq-dev`/`postgresql-devel` or a similar package before running `npm install` because `pg-native` depends on it. (`@instana/collector` and friends do not depend on `pg-native` but our test suite depends on it.)
+
 After cloning the repository, run `npm install` in the root of the repository. This will install `lerna` as a local dependency and also bootstrap all packages (by running `npm install` in the individual packages, `packages/core`, `packages/collector`, ...). It can be convenient to have `lerna` installed globally to be able to run lerna commands directly from the command line, but it is not strictly necessary.
 
 Make sure that your IDE is parsing .prettierrc. Otherwise, install the necessary plugins to make it so.
@@ -57,4 +59,17 @@ You might want to separate the version bumping and tagging from publishing to th
 - Acquire an OTP token for 2fa.
 - `NPM_CONFIG_OTP={your token} lerna publish from-package && lerna bootstrap`
 
-This command can also be run if the previous publish command went through for a subset of packages but not for others. Lerna will automatically figure out for which packages the latest version is not present in the registry and only publish those.
+That last command (`lerna publish from-package`) can also be run if the previous publish command went through for a subset of packages but not for others. Lerna will automatically figure out for which packages the latest version is not present in the registry and only publish those.
+
+Be aware that if `lerna version` or `lerna publish` abort with an error in the middle of doing things, you might end up with local changes in the `package.json` files. Lerna adds some metadata there just before trying to publish. These changes can simply be discarded with `git checkout packages` before trying to publish again.
+
+#### Rate Limited OTP
+
+If publishing the packages fails with an error like this:
+
+```
+lerna ERR! E429 Could not authenticate ${npm-user-name}: rate limited otp
+```
+
+you simply need to wait five minutes before trying again. In case some packages have already been published and others have not, refer the advice about `lerna publish from-package` in the previous section.
+

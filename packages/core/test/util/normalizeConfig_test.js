@@ -17,6 +17,7 @@ describe('util.normalizeConfig', () => {
     delete process.env.INSTANA_DISABLED_TRACERS;
     delete process.env.INSTANA_DISABLE_AUTO_INSTR;
     delete process.env.INSTANA_DISABLE_TRACING;
+    delete process.env.INSTANA_TRACE_IMMEDIATELY;
     delete process.env.INSTANA_EXTRA_HTTP_HEADERS;
     delete process.env.INSTANA_FORCE_TRANSMISSION_STARTING_AT;
     delete process.env.INSTANA_METRICS_TRANSMISSION_DELAY;
@@ -135,6 +136,28 @@ describe('util.normalizeConfig', () => {
     expect(config.tracing.enabled).to.be.false;
     expect(config.tracing.automaticTracingEnabled).to.be.false;
     expect(config.tracing.disableAutomaticTracing).to.not.exist;
+  });
+
+  it('should enable immediate tracing activation', () => {
+    const config = normalizeConfig({ tracing: { activateImmediately: true } });
+    expect(config.tracing.activateImmediately).to.be.true;
+  });
+
+  it('should enable immediate tracing activation via INSTANA_TRACE_IMMEDIATELY', () => {
+    process.env.INSTANA_TRACE_IMMEDIATELY = 'true';
+    const config = normalizeConfig();
+    expect(config.tracing.activateImmediately).to.be.true;
+  });
+
+  it('should not enable immediate tracing activation when tracing is disabled in general', () => {
+    const config = normalizeConfig({
+      tracing: {
+        enabled: false,
+        activateImmediately: true
+      }
+    });
+    expect(config.tracing.enabled).to.be.false;
+    expect(config.tracing.activateImmediately).to.be.false;
   });
 
   it('should use custom tracing transmission settings from config', () => {
@@ -395,6 +418,7 @@ describe('util.normalizeConfig', () => {
     expect(config.tracing.enabled).to.be.true;
     expect(config.tracing.automaticTracingEnabled).to.be.true;
     expect(config.tracing.disableAutomaticTracing).to.not.exist;
+    expect(config.tracing.activateImmediately).to.be.false;
     expect(config.tracing.transmissionDelay).to.equal(1000);
     expect(config.tracing.forceTransmissionStartingAt).to.equal(500);
     expect(config.tracing.maxBufferedSpans).to.equal(1000);

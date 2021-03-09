@@ -1,6 +1,16 @@
 # Changelog
 
-## Unreleased
+## 1.117.3
+- Fix garbage collection metrics being reported falsely as not supported when `node_modules/gcstats.js` exists.
+
+## 1.117.2
+- Do not assume type local by default for OpenTracing spans. Instead, assume type entry when no parent context is available and only assume local if a parent context is available.
+- Update to shimmer@1.2.1.
+
+## 1.117.1
+- Fix: Do not attempt to load native addons in a worker thread.
+
+## 1.117.0
 - [AWS Lambda] Reduce execution time overhead for native AWS Lambda tracing even further. (Bring back performance optimzation that was removed in 1.94.0 with a fix for the stale timeout events.)
 
 ## 1.116.0

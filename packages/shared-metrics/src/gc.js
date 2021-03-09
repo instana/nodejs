@@ -16,6 +16,10 @@ const incrementalMarkingsWindow = slidingWindow.create(windowOpts);
 const processWeakCallbacksWindow = slidingWindow.create(windowOpts);
 const gcPauseWindow = slidingWindow.create(windowOpts);
 
+let gcStats;
+let activateHasBeenCalled = false;
+let hasBeenActivated = false;
+
 exports.payloadPrefix = 'gc';
 exports.currentPayload = {
   minorGcs: 0,
@@ -23,6 +27,13 @@ exports.currentPayload = {
   incrementalMarkings: 0,
   weakCallbackProcessing: 0,
   gcPause: 0
+};
+
+exports.activate = function activate() {
+  activateHasBeenCalled = true;
+  if (gcStats) {
+    actuallyActivate();
+  }
 };
 
 const nativeModuleLoader = require('./util/nativeModuleRetry')({
@@ -37,37 +48,46 @@ const nativeModuleLoader = require('./util/nativeModuleRetry')({
 
 let senseIntervalHandle;
 
-exports.activate = function activate() {
-  nativeModuleLoader.on('loaded', gcStats => {
-    exports.currentPayload.statsSupported = true;
-    gcStats.on('stats', stats => {
-      // gcstats exposes start and end in nanoseconds
-      const pause = (stats.end - stats.start) / 1000000;
-      gcPauseWindow.addPoint(pause);
-      const type = stats.gctype;
-      if (type === 1) {
-        minorGcWindow.addPoint(1);
-      } else if (type === 2) {
-        majorGcWindow.addPoint(1);
-      } else if (type === 4) {
-        incrementalMarkingsWindow.addPoint(1);
-      } else if (type === 8) {
-        processWeakCallbacksWindow.addPoint(1);
-      } else if (type === 15) {
-        minorGcWindow.addPoint(1);
-        majorGcWindow.addPoint(1);
-        incrementalMarkingsWindow.addPoint(1);
-        processWeakCallbacksWindow.addPoint(1);
-      }
-      exports.currentPayload.usedHeapSizeAfterGc = stats.after.usedHeapSize;
-    });
-    startSensing();
-  });
+nativeModuleLoader.once('loaded', gcStats_ => {
+  gcStats = gcStats_;
+  exports.currentPayload.statsSupported = true;
+  if (activateHasBeenCalled) {
+    actuallyActivate();
+  }
+});
 
-  nativeModuleLoader.on('failed', () => {
-    exports.currentPayload.statsSupported = false;
+nativeModuleLoader.once('failed', () => {
+  exports.currentPayload.statsSupported = false;
+});
+
+function actuallyActivate() {
+  if (hasBeenActivated) {
+    return;
+  }
+  hasBeenActivated = true;
+  gcStats.on('stats', stats => {
+    // gcstats exposes start and end in nanoseconds
+    const pause = (stats.end - stats.start) / 1000000;
+    gcPauseWindow.addPoint(pause);
+    const type = stats.gctype;
+    if (type === 1) {
+      minorGcWindow.addPoint(1);
+    } else if (type === 2) {
+      majorGcWindow.addPoint(1);
+    } else if (type === 4) {
+      incrementalMarkingsWindow.addPoint(1);
+    } else if (type === 8) {
+      processWeakCallbacksWindow.addPoint(1);
+    } else if (type === 15) {
+      minorGcWindow.addPoint(1);
+      majorGcWindow.addPoint(1);
+      incrementalMarkingsWindow.addPoint(1);
+      processWeakCallbacksWindow.addPoint(1);
+    }
+    exports.currentPayload.usedHeapSizeAfterGc = stats.after.usedHeapSize;
   });
-};
+  startSensing();
+}
 
 function startSensing() {
   senseIntervalHandle = setInterval(() => {
@@ -84,4 +104,6 @@ exports.deactivate = function deactivate() {
   if (senseIntervalHandle) {
     clearInterval(senseIntervalHandle);
   }
+  activateHasBeenCalled = false;
+  hasBeenActivated = false;
 };

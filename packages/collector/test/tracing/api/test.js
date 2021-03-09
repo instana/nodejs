@@ -65,7 +65,7 @@ mochaSuiteFn('tracing/api', function() {
           expect(span.spanId).to.be.not.null;
           expect(span.parentSpanId).to.not.exist;
           expect(span.name).to.equal('node.http.server');
-          expect(span.data.custom.sdk.tags.key).to.equal('custom nested tag value');
+          expect(span.data.sdk.custom.tags.key).to.equal('custom nested tag value');
           expect(span.data.http.path_tpl).to.equal('/custom/{template}');
           expect(span.data.redundant.dots).to.equal('will be silently dropped');
           expect(span.handleConstructorName).to.equal('SpanHandle');
@@ -84,7 +84,7 @@ mochaSuiteFn('tracing/api', function() {
           expect(span.spanId).to.be.not.null;
           expect(span.parentSpanId).to.not.exist;
           expect(span.name).to.equal('node.http.server');
-          expect(span.data.custom.sdk.tags.key).to.equal('custom nested tag value');
+          expect(span.data.sdk.custom.tags.key).to.equal('custom nested tag value');
           expect(span.data.http.path_tpl).to.equal('/custom/{template}');
           expect(span.handleConstructorName).to.equal('SpanHandle');
         }));

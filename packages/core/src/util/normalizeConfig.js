@@ -18,6 +18,7 @@ const supportedTracingVersion = require('../tracing/supportedVersion');
  * @typedef {Object} InstanaTracingOption
  * @property {boolean} [enabled]
  * @property {boolean} [automaticTracingEnabled]
+ * @property {boolean} [activateImmediately]
  * @property {number} [forceTransmissionStartingAt]
  * @property {number} [maxBufferedSpans]
  * @property {number} [transmissionDelay]
@@ -67,6 +68,7 @@ const defaults = {
   tracing: {
     enabled: true,
     automaticTracingEnabled: true,
+    activateImmediately: false,
     forceTransmissionStartingAt: 500,
     maxBufferedSpans: 1000,
     transmissionDelay: 1000,
@@ -156,6 +158,7 @@ function normalizeTracingConfig(config) {
   }
   normalizeTracingEnabled(config);
   normalizeAutomaticTracingEnabled(config);
+  normalizeActivateImmediately(config);
   normalizeTracingTransmission(config);
   normalizeTracingHttp(config);
   normalizeTracingStackTraceLength(config);
@@ -187,7 +190,6 @@ function normalizeTracingEnabled(config) {
 }
 
 /**
- *
  * @param {InstanaConfig} config
  */
 function normalizeAutomaticTracingEnabled(config) {
@@ -226,7 +228,27 @@ function normalizeAutomaticTracingEnabled(config) {
 }
 
 /**
- *
+ * @param {InstanaConfig} config
+ */
+function normalizeActivateImmediately(config) {
+  if (!config.tracing.enabled) {
+    config.tracing.activateImmediately = false;
+    return;
+  }
+
+  if (typeof config.tracing.activateImmediately === 'boolean') {
+    return;
+  }
+
+  if (process.env['INSTANA_TRACE_IMMEDIATELY'] === 'true') {
+    config.tracing.activateImmediately = true;
+    return;
+  }
+
+  config.tracing.activateImmediately = defaults.tracing.activateImmediately;
+}
+
+/**
  * @param {InstanaConfig} config
  */
 function normalizeTracingTransmission(config) {

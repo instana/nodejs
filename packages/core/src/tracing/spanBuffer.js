@@ -31,6 +31,8 @@ let maxBufferedSpans;
 let forceTransmissionStartingAt;
 let transmissionTimeoutHandle;
 
+let preActivationCleanupIntervalHandle;
+
 let spans = [];
 
 let batchThreshold = 10;
@@ -69,6 +71,13 @@ exports.init = function init(config, _downstreamConnection) {
   transmissionDelay = config.tracing.transmissionDelay;
   batchingEnabled = config.tracing.spanBatchingEnabled;
   initialDelayBeforeSendingSpans = Math.max(transmissionDelay, minDelayBeforeSendingSpans);
+
+  if (config.tracing.activateImmediately) {
+    preActivationCleanupIntervalHandle = setInterval(() => {
+      removeSpansIfNecessary();
+    }, transmissionDelay);
+    preActivationCleanupIntervalHandle.unref();
+  }
 };
 
 exports.activate = function activate() {
@@ -94,6 +103,9 @@ exports.activate = function activate() {
   batchingBuckets.clear();
   transmissionTimeoutHandle = setTimeout(transmitSpans, initialDelayBeforeSendingSpans);
   transmissionTimeoutHandle.unref();
+  if (preActivationCleanupIntervalHandle) {
+    clearInterval(preActivationCleanupIntervalHandle);
+  }
 };
 
 exports.deactivate = function deactivate() {
@@ -350,6 +362,10 @@ exports.getAndResetSpans = function getAndResetSpans() {
   spans = [];
   batchingBuckets.clear();
   return spansToSend;
+};
+
+exports.isEmpty = function isEmpty() {
+  return spans.length === 0;
 };
 
 function removeSpansIfNecessary() {
