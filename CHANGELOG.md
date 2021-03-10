@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.117.1
 - [AWS Lambda] Reduce execution time overhead for native AWS Lambda tracing even further. (Bring back performance optimzation that was removed in 1.94.0 with a fix for the stale timeout events.)
 
 ## 1.116.0
