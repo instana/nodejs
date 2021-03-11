@@ -7,7 +7,6 @@
 
 let logger = require('@instana/core').logger.getLogger('shared-metrics/native-module-retry');
 
-const semver = require('semver');
 const EventEmitter = require('events');
 const copy = require('recursive-copy');
 const fs = require('fs');
@@ -51,13 +50,16 @@ function loadNativeAddOn(opts) {
 }
 
 function loadNativeAddOnInternal(opts, loaderEmitter, retryIndex, skipAttempt) {
-  if (semver.gte(process.version, '10.5.0')) {
+  try {
     const { isMainThread } = require('worker_threads');
     if (!isMainThread) {
       logger.warn(opts.message + ' (Native addons are currently not loaded in worker threads)');
       loaderEmitter.emit('failed');
       return;
     }
+  } catch (err) {
+    // worker threads are not available, so we know that this is the main thread
+    (() => {})();
   }
 
   if (skipAttempt) {
