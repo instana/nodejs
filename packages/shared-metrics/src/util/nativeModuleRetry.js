@@ -50,6 +50,17 @@ function loadNativeAddOn(opts) {
 }
 
 function loadNativeAddOnInternal(opts, loaderEmitter, retryIndex, skipAttempt) {
+  try {
+    const { isMainThread } = require('worker_threads');
+    if (!isMainThread) {
+      logger.warn(opts.message + ' (Native addons are currently not loaded in worker threads)');
+      loaderEmitter.emit('failed');
+      return;
+    }
+  } catch (err) {
+    // worker threads are not available, so we know that this is the main thread
+  }
+
   if (skipAttempt) {
     // The logic of the previous retry mechanism figured out that it cannot complete successfully, so there is no reason
     // to try to require the module again. Skip directly to the next retry.
