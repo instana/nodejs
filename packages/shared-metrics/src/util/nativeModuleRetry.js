@@ -59,7 +59,6 @@ function loadNativeAddOnInternal(opts, loaderEmitter, retryIndex, skipAttempt) {
     }
   } catch (err) {
     // worker threads are not available, so we know that this is the main thread
-    (() => {})();
   }
 
   if (skipAttempt) {
