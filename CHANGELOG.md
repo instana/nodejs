@@ -1,6 +1,9 @@
 # Changelog
 
 ## 1.117.1
+- Fix: Do not attempt to load native addons in a worker thread.
+
+## 1.117.0
 - [AWS Lambda] Reduce execution time overhead for native AWS Lambda tracing even further. (Bring back performance optimzation that was removed in 1.94.0 with a fix for the stale timeout events.)
 
 ## 1.116.0
