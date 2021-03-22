@@ -1,8 +1,8 @@
 # Changelog
 
-## Unreleased
-- Update to shimmer@1.2.1.
+## 1.117.2
 - Do not assume type local by default for OpenTracing spans. Instead, assume type entry when no parent context is available and only assume local if a parent context is available.
+- Update to shimmer@1.2.1.
 
 ## 1.117.1
 - Fix: Do not attempt to load native addons in a worker thread.
