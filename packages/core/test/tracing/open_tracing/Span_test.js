@@ -49,8 +49,8 @@ describe('tracing/opentracing/Span', () => {
     expect(span.span.data).to.deep.equal({
       service: undefined,
       sdk: {
-        type: 'local',
         name: 'rpc',
+        type: 'entry',
         custom: {
           tags: {},
           logs: {}
@@ -108,6 +108,11 @@ describe('tracing/opentracing/Span', () => {
       span.setTag(opentracing.Tags.ERROR, false);
       expect(span.span.ec).to.equal(0);
       expect(span.span.error).to.not.exist;
+    });
+
+    it('default type must be entry', () => {
+      const span = new Span(tracerInstance, 'rpc');
+      expect(span.span.data.sdk.type).to.equal('entry');
     });
 
     it('must change direction to exit for client rpc kind', () => {
@@ -297,6 +302,14 @@ describe('tracing/opentracing/Span', () => {
   });
 
   describe('references', () => {
+    it('must set direction to local if parent is present', () => {
+      const entrySpan = new Span(tracerInstance, 'rpc');
+      const childSpan = new Span(tracerInstance, 'rpc', {
+        references: [opentracing.childOf(entrySpan)]
+      });
+      expect(childSpan.span.data.sdk.type).to.equal('local');
+    });
+
     it('must set trace and parent ID based on child of reference', () => {
       const span = new Span(tracerInstance, 'rpc');
       const child = new Span(tracerInstance, 'oauth', {
