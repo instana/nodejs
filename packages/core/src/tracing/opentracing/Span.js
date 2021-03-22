@@ -53,7 +53,7 @@ function Span(tracer, name, fields) {
     data: {
       service: serviceName,
       sdk: {
-        type: 'local',
+        type: parentContext ? 'local' : 'entry',
         name,
         custom: {
           tags: {},

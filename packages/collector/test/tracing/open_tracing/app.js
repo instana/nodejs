@@ -3,8 +3,6 @@
  * (c) Copyright Instana Inc. and contributors 2016
  */
 
-/* eslint-disable */
-
 'use strict';
 
 const instana = require('../../../');
@@ -31,9 +29,7 @@ app.get('/', (req, res) => {
 });
 
 app.get('/withOpentracing', (req, res) => {
-  log('########################## Start span!');
   const serviceSpan = tracer.startSpan('service');
-  log('########################## Started span:', serviceSpan);
   serviceSpan.setTag(opentracing.Tags.SPAN_KIND, opentracing.Tags.SPAN_KIND_RPC_SERVER);
   const authSpan = tracer.startSpan('auth', { childOf: serviceSpan });
   authSpan.finish();
@@ -59,5 +55,6 @@ app.listen(process.env.APP_PORT, () => {
 function log() {
   const args = Array.prototype.slice.call(arguments);
   args[0] = `Express OT App (${process.pid}):\t${args[0]}`;
+  // eslint-disable-next-line no-console
   console.log.apply(console, args);
 }
