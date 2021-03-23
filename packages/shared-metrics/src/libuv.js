@@ -25,11 +25,11 @@ const nativeModuleLoader = require('./util/nativeModuleRetry')({
     'https://www.instana.com/docs/ecosystem/node-js/installation/#native-addons'
 });
 
-nativeModuleLoader.on('loaded', eventLoopStats_ => {
+nativeModuleLoader.once('loaded', eventLoopStats_ => {
   eventLoopStats = eventLoopStats_;
 });
 
-nativeModuleLoader.on('failed', () => {
+nativeModuleLoader.once('failed', () => {
   exports.currentPayload.statsSupported = false;
 });
 

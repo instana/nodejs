@@ -65,6 +65,10 @@ describe('snapshot data and metrics', function() {
         expect(findMetric(allMetrics, ['gc', 'minorGcs'])).to.exist;
         expect(findMetric(allMetrics, ['gc', 'majorGcs'])).to.exist;
 
+        const gc = aggregated.gc;
+        expect(gc).to.be.an('object');
+        expect(gc.statsSupported).to.be.true;
+
         expect(findMetric(allMetrics, ['healthchecks'])).to.exist;
         expect(findMetric(allMetrics, ['heapSpaces'])).to.exist;
         expect(findMetric(allMetrics, ['http'])).to.exist;
