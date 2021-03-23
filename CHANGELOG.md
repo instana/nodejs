@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.117.3
 - Fix garbage collection metrics being reported falsely as not supported when `node_modules/gcstats.js` exists.
 
 ## 1.117.2
