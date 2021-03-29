@@ -30,8 +30,8 @@
   },
   "dependencies": {
     "detect-libc": "^1.0.3",
-    "nan": "^2.14.0",
-    "node-abi": "^2.19.1",
+    "nan": "^2.14.2",
+    "node-abi": "^2.21.0",
     "node-gyp": "^6.1.0"
   },
   "devDependencies": {

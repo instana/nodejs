@@ -23,7 +23,7 @@ const globalAgent = require('../../../globalAgent');
 
 const { fail } = expect;
 
-const mochaSuiteFn = semver.gte(process.versions.node, '8.0.0') ? describe : describe.skip;
+const mochaSuiteFn = semver.gte(process.versions.node, '10.0.0') ? describe : describe.skip;
 
 mochaSuiteFn('tracing/elasticsearch (modern client)', function() {
   let originalEsVersion;
