@@ -3,8 +3,6 @@
  * (c) Copyright Instana Inc. and contributors 2019
  */
 
-/* global WeakSet */
-
 'use strict';
 
 module.exports = exports = function createCircularReferencesRemover() {
