@@ -3,8 +3,6 @@
  * (c) Copyright Instana Inc. and contributors 2019
  */
 
-/* global Symbol */
-
 'use strict';
 
 const shimmer = require('shimmer');
