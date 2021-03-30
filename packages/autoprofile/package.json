@@ -32,7 +32,7 @@
     "detect-libc": "^1.0.3",
     "nan": "^2.14.2",
     "node-abi": "^2.21.0",
-    "node-gyp": "^6.1.0"
+    "node-gyp": "^7.1.2"
   },
   "devDependencies": {
     "async": "^3.2.0",
