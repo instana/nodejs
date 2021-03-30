@@ -10,7 +10,7 @@ const instana = require('../../../../')();
 const express = require('express');
 const { Kafka } = require('kafkajs');
 const request = require('request-promise');
-const uuid = require('uuid/v4');
+const { v4: uuid } = require('uuid');
 
 const delay = require('../../../../../core/test/test_util/delay');
 

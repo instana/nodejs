@@ -110,6 +110,7 @@ function instrumentApi(client, actionPath, clusterInfo) {
 
         return originalFunction.apply(ctx, originalArgs);
       } else {
+        // eslint-disable-next-line no-useless-catch
         try {
           return originalFunction.apply(ctx, originalArgs).then(onSuccess.bind(null, span), error => {
             onError(span, error);

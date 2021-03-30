@@ -7,7 +7,7 @@
 
 const expect = require('chai').expect;
 const Promise = require('bluebird');
-const uuid = require('uuid/v4');
+const { v4: uuid } = require('uuid');
 const _ = require('lodash');
 
 const constants = require('@instana/core').tracing.constants;

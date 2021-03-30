@@ -141,6 +141,7 @@ function instrumentApi(client, actionPath, clusterInfo) {
         });
         return originalFunction.apply(ctx, originalArgs);
       } else {
+        // eslint-disable-next-line no-useless-catch
         try {
           return originalFunction.apply(ctx, originalArgs).then(onSuccess.bind(null, span), error => {
             onError(span, error);
@@ -375,6 +376,7 @@ function instrumentedRequest(ctx, origEsReq, originalArgs) {
       });
       return origEsReq.apply(ctx, originalArgs);
     } else {
+      // eslint-disable-next-line no-useless-catch
       try {
         return origEsReq.apply(ctx, originalArgs).then(onSuccess.bind(null, span), error => {
           onError(span, error);

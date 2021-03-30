@@ -7,6 +7,7 @@ module.exports = {
   extends: '../../.eslintrc.js',
 
   rules: {
-    'class-methods-use-this': 'off'
+    'class-methods-use-this': 'off',
+    'max-classes-per-file': 'off'
   }
 };

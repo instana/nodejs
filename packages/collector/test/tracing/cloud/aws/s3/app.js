@@ -97,6 +97,7 @@ const S3Api = {
     }
     log(`Bucket name: ${(options && options.Bucket) || 'no bucket name'}`);
 
+    // eslint-disable-next-line no-async-promise-executor
     return new Promise(async (resolve, reject) => {
       let promise;
       let promiseData;
