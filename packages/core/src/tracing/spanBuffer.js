@@ -107,13 +107,13 @@ exports.enableSpanBatching = function enableSpanBatching() {
   batchingEnabled = true;
 };
 
-exports.addBatchableSpanName = function(spanName) {
+exports.addBatchableSpanName = function (spanName) {
   if (!batchableSpanNames.includes(spanName)) {
     batchableSpanNames.push(spanName);
   }
 };
 
-exports.addSpan = function(span) {
+exports.addSpan = function (span) {
   if (!isActive) {
     return;
   }
@@ -291,10 +291,7 @@ function addToBucket(span, preComputedBucketKey) {
   if (!batchingBuckets.get(span.t).has(bucketKey)) {
     batchingBuckets.get(span.t).set(bucketKey, []);
   }
-  batchingBuckets
-    .get(span.t)
-    .get(bucketKey)
-    .push(span);
+  batchingBuckets.get(span.t).get(bucketKey).push(span);
 }
 
 function batchingBucketKey(span) {

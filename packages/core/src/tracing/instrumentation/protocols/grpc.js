@@ -30,7 +30,7 @@ const supportedTypes = [typeUnary, typeServerStream, typeClientStream, typeBidi]
 const typesWithCallback = [typeUnary, typeClientStream];
 const typesWithCallEnd = [typeServerStream, typeBidi];
 
-exports.init = function() {
+exports.init = function () {
   requireHook.onModuleLoad('grpc', instrumentGrpc);
   requireHook.onFileLoad(/\/grpc\/src\/server\.js/, instrumentServer);
   requireHook.onFileLoad(/\/grpc\/src\/client\.js/, instrumentClient);
@@ -45,7 +45,7 @@ function instrumentServer(serverModule) {
 }
 
 function shimServerRegister(originalFunction) {
-  return function(name, handler, serialize, deserialize, type) {
+  return function (name, handler, serialize, deserialize, type) {
     if (supportedTypes.indexOf(type) < 0) {
       logger.warn(`Failed to instrument GRPC entry ${name}, type is unsupported: ${type}`);
       return originalFunction.apply(this, arguments);
@@ -62,7 +62,7 @@ function shimServerRegister(originalFunction) {
 }
 
 function createInstrumentedServerHandler(name, type, originalHandler) {
-  return function(call) {
+  return function (call) {
     const originalThis = this;
     const originalArgs = arguments;
 
@@ -97,7 +97,7 @@ function createInstrumentedServerHandler(name, type, originalHandler) {
       };
       if (typesWithCallback.indexOf(type) >= 0) {
         const originalCallback = originalArgs[1];
-        originalArgs[1] = cls.ns.bind(function(err) {
+        originalArgs[1] = cls.ns.bind(function (err) {
           if (err) {
             span.ec = 1;
             if (err.message || err.details) {
@@ -111,7 +111,7 @@ function createInstrumentedServerHandler(name, type, originalHandler) {
       }
       if (typesWithCallEnd.indexOf(type) >= 0) {
         const originalEnd = call.end;
-        call.end = function() {
+        call.end = function () {
           span.d = Date.now() - span.ts;
           process.nextTick(() => {
             // If the server emits an error, grpc calls call.end before the 'error' event handlers are processed, so we
@@ -146,13 +146,13 @@ function instrumentClient(clientModule) {
 }
 
 function instrumentedMakeClientConstructor(originalFunction) {
-  return function(methods) {
+  return function (methods) {
     const address = {
       host: undefined,
       port: undefined
     };
     const ServiceClient = originalFunction.apply(this, arguments);
-    const InstrumentedServiceClient = function(addressString) {
+    const InstrumentedServiceClient = function (addressString) {
       const parseResult = addressRegex.exec(addressString);
       if (parseResult && parseResult.length === 3) {
         address.host = parseResult[1];
@@ -299,7 +299,7 @@ function modifyArgs(originalArgs, span, responseStream) {
   if (span && callbackIndex >= 0) {
     // we are tracing, so we wrap the original callback to get notified when the GRPC call finishes
     const originalCallback = originalArgs[callbackIndex];
-    originalArgs[callbackIndex] = cls.ns.bind(function(err) {
+    originalArgs[callbackIndex] = cls.ns.bind(function (err) {
       span.d = Date.now() - span.ts;
       if (err) {
         const errorMessage = err.details || err.message;
@@ -373,10 +373,10 @@ function copyAttributes(from, to) {
   return to;
 }
 
-exports.activate = function() {
+exports.activate = function () {
   isActive = true;
 };
 
-exports.deactivate = function() {
+exports.deactivate = function () {
   isActive = false;
 };

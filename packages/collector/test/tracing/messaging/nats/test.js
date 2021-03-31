@@ -20,7 +20,7 @@ const agentControls = globalAgent.instance;
 
 const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
-mochaSuiteFn('tracing/nats', function() {
+mochaSuiteFn('tracing/nats', function () {
   this.timeout(config.getTestTimeout() * 2);
 
   globalAgent.setUpCleanUpHooks();
@@ -36,7 +36,7 @@ mochaSuiteFn('tracing/nats', function() {
   });
   ProcessControls.setUpHooks(publisherControls, subscriberControls);
 
-  describe('publish et al.', function() {
+  describe('publish et al.', function () {
     [false, true].forEach(withCallback => {
       [false, true].forEach(withReply => {
         [false, true].forEach(withError => {
@@ -144,7 +144,7 @@ mochaSuiteFn('tracing/nats', function() {
     }
   });
 
-  describe('subscribe', function() {
+  describe('subscribe', function () {
     [false, true].forEach(withError => {
       testSubscribe.call(this, withError);
     });
@@ -266,7 +266,7 @@ mochaSuiteFn('tracing/nats', function() {
   });
 });
 
-describe('tracing/nats disabled', function() {
+describe('tracing/nats disabled', function () {
   this.timeout(config.getTestTimeout() * 2);
   const publisherControls = new ProcessControls({
     appPath: path.join(__dirname, 'publisher'),

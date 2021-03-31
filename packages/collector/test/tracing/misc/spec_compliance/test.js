@@ -33,7 +33,7 @@ allTestCases.forEach(testDefinition => {
 const appPort = 3215;
 const downstreamPort = 3216;
 
-describe('spec compliance', function() {
+describe('spec compliance', function () {
   this.timeout(config.getTestTimeout());
 
   globalAgent.setUpCleanUpHooks();

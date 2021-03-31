@@ -17,7 +17,7 @@ const sharedMetrics = require('@instana/shared-metrics');
 
 const NodeJsProcessor = require('../../src/nodejs/NodeJsProcessor');
 
-describe('Node.js processor', function() {
+describe('Node.js processor', function () {
   this.timeout(config.getTestTimeout());
 
   let dataProcessor;

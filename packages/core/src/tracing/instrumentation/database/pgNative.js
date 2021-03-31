@@ -43,7 +43,7 @@ function instrumentPgNative(Client) {
 }
 
 function shimConnect(original) {
-  return function(connectionString) {
+  return function (connectionString) {
     const connectionParams = exports.parseConnectionParameters(connectionString);
     if (Object.keys(connectionParams).length > 0) {
       this._instana = connectionParams;
@@ -53,7 +53,7 @@ function shimConnect(original) {
 }
 
 function shimAwaitResult(original) {
-  return function() {
+  return function () {
     if (!isActive || !cls.isTracing() || typeof arguments[0] !== 'function') {
       return original.apply(this, arguments);
     }
@@ -67,14 +67,14 @@ function shimAwaitResult(original) {
 }
 
 function shimPrepare(original) {
-  return function(statementName, text) {
+  return function (statementName, text) {
     preparedStatements.set(statementName, text);
     return original.apply(this, arguments);
   };
 }
 
 function shimQueryOrExecute(instrumented, original) {
-  return function() {
+  return function () {
     if (!isActive || !cls.isTracing()) {
       return original.apply(this, arguments);
     }
@@ -107,7 +107,7 @@ function instrumentedExecute(ctx, originalExecute, originalArgs) {
 }
 
 function shimQueryOrExecuteSync(isExecute, original) {
-  return function() {
+  return function () {
     if (!isActive || !cls.isTracing()) {
       return original.apply(this, arguments);
     }
@@ -150,7 +150,7 @@ function startSpan(ctx, originalFn, originalArgs, statement, stackTraceRef) {
     }
 
     if (callbackIndex >= 0) {
-      const wrappedCallback = function(error) {
+      const wrappedCallback = function (error) {
         finishSpan(error, span);
         return originalCallback.apply(this, arguments);
       };

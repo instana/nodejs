@@ -21,7 +21,7 @@ const agentControls = globalAgent.instance;
 const mochaSuiteFn =
   !supportedVersion(process.versions.node) || semver.lt(process.versions.node, '10.0.0') ? describe.skip : describe;
 
-mochaSuiteFn('tracing/apollo-federation', function() {
+mochaSuiteFn('tracing/apollo-federation', function () {
   this.timeout(config.getTestTimeout() * 2);
 
   globalAgent.setUpCleanUpHooks();
@@ -34,7 +34,7 @@ mochaSuiteFn('tracing/apollo-federation', function() {
 
 function registerQuerySuite(allControls, testConfig) {
   const { withError } = testConfig;
-  describe(`queries (with error: ${withError})`, function() {
+  describe(`queries (with error: ${withError})`, function () {
     it(`must trace a query (with error: ${withError})`, () => testQuery(allControls, testConfig));
   });
 }

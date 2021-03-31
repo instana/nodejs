@@ -42,7 +42,7 @@ logger = require('../logger').getLogger('util/requireHook', newLogger => {
   logger = newLogger;
 });
 
-exports.init = function() {
+exports.init = function () {
   /** @type {*} */ (Module)._load = patchedModuleLoad;
 };
 
@@ -127,7 +127,7 @@ function patchedModuleLoad(moduleName) {
   return cacheEntry.moduleExports;
 }
 
-exports.teardownForTestPurposes = function() {
+exports.teardownForTestPurposes = function () {
   /** @type {*} */ (Module)._load = origLoad;
   executedHooks = {};
   byModuleNameTransformers = {};

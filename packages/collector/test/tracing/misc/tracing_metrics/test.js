@@ -18,14 +18,14 @@ const globalAgent = require('../../../globalAgent');
 
 const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
-mochaSuiteFn('tracing/tracing metrics', function() {
+mochaSuiteFn('tracing/tracing metrics', function () {
   this.timeout(config.getTestTimeout() * 2);
   const retryTimeout = this.timeout() * 0.8;
 
   globalAgent.setUpCleanUpHooks();
   const agentControls = globalAgent.instance;
 
-  describe('when tracing is enabled', function() {
+  describe('when tracing is enabled', function () {
     const controls = new ProcessControls({
       dirname: __dirname,
       useGlobalAgent: true

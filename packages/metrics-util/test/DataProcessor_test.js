@@ -15,7 +15,7 @@ const { delay, retry } = require('../../core/test/test_util');
 const DataSource = require('../src/DataSource');
 const DataProcessor = require('../src/DataProcessor');
 
-describe('data processor', function() {
+describe('data processor', function () {
   this.timeout(config.getTestTimeout());
 
   this.slow(1000);

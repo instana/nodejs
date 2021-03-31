@@ -19,7 +19,7 @@ const globalAgent = require('../globalAgent');
 
 const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
-mochaSuiteFn('uncaught exception reporting disabled', function() {
+mochaSuiteFn('uncaught exception reporting disabled', function () {
   this.timeout(config.getTestTimeout());
 
   globalAgent.setUpCleanUpHooks();

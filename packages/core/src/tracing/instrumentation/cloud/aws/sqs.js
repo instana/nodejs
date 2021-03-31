@@ -47,8 +47,8 @@ exports.init = function init() {
 
 function instrumentSQS(AWS) {
   // /aws-sdk/lib/service.js#defineMethods
-  shimmer.wrap(AWS.Service, 'defineMethods', function(original) {
-    return function(svc) {
+  shimmer.wrap(AWS.Service, 'defineMethods', function (original) {
+    return function (svc) {
       const patchedMethod = original.apply(this, arguments);
 
       if (
@@ -68,7 +68,7 @@ function instrumentSQS(AWS) {
 }
 
 function shimSendMessage(originalSendMessage) {
-  return function() {
+  return function () {
     if (isActive) {
       const originalArgs = new Array(arguments.length);
       for (let i = 0; i < originalArgs.length; i++) {
@@ -157,7 +157,7 @@ function instrumentedSendMessage(ctx, originalSendMessage, originalArgs) {
 
     const originalCallback = originalArgs[1];
     if (typeof originalCallback === 'function') {
-      originalArgs[1] = cls.ns.bind(function(err, data) {
+      originalArgs[1] = cls.ns.bind(function (err, data) {
         finishSpan(err, data, span);
         originalCallback.apply(this, arguments);
       });
@@ -217,7 +217,7 @@ function propagateTraceContext(attributes, span) {
 }
 
 function shimReceiveMessage(originalReceiveMessage) {
-  return function() {
+  return function () {
     if (isActive) {
       const parentSpan = cls.getCurrentSpan();
       if (parentSpan) {
@@ -255,7 +255,7 @@ function instrumentedReceiveMessage(ctx, originalReceiveMessage, originalArgs) {
     // callback use case
     const originalCallback = originalArgs[1];
     if (typeof originalCallback === 'function') {
-      originalArgs[1] = cls.ns.bind(function(err, data) {
+      originalArgs[1] = cls.ns.bind(function (err, data) {
         if (err) {
           addErrorToSpan(err, span);
           setImmediate(() => finishSpan(null, null, span));
@@ -288,7 +288,7 @@ function instrumentedReceiveMessage(ctx, originalReceiveMessage, originalArgs) {
     // promise use case
     if (typeof awsRequest.promise === 'function' && typeof originalCallback !== 'function') {
       const originalPromiseFn = awsRequest.promise;
-      awsRequest.promise = cls.ns.bind(function() {
+      awsRequest.promise = cls.ns.bind(function () {
         const promise = originalPromiseFn.apply(awsRequest, arguments);
 
         promise.then(

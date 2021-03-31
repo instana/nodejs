@@ -11,7 +11,7 @@ const config = require('../../../core/test/config');
 const { retry } = require('../../../core/test/test_util');
 const globalAgent = require('../globalAgent');
 
-describe('metrics/healthchecks', function() {
+describe('metrics/healthchecks', function () {
   // The npm package `admin` uses JavaScript language features which aren't available in all
   // Node.js versions
   if (!semver.satisfies(process.versions.node, '>=6.0.0')) {

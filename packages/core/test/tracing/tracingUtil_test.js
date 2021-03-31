@@ -24,7 +24,7 @@ const {
 } = require('../../src/tracing/tracingUtil');
 
 describe('tracing/tracingUtil', () => {
-  describe('generate random IDs', function() {
+  describe('generate random IDs', function () {
     this.timeout(config.getTestTimeout() * 10);
 
     testRandomIds('trace', generateRandomTraceId, 16);
@@ -67,7 +67,7 @@ describe('tracing/tracingUtil', () => {
     }
   });
 
-  describe('benchmark ID generation', function() {
+  describe('benchmark ID generation', function () {
     this.timeout(config.getTestTimeout() * 4);
 
     // generate one million IDs each (64 bit/16 chars, 128 bit/32 chars)

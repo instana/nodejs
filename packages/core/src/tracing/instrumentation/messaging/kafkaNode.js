@@ -37,7 +37,7 @@ function instrument(kafka) {
 }
 
 function shimSend(original) {
-  return function() {
+  return function () {
     if (isActive) {
       return instrumentedSend(this, original, arguments[0], arguments[1]);
     }
@@ -89,7 +89,7 @@ function instrumentedSend(ctx, originalSend, produceRequests, cb) {
 }
 
 function shimEmit(original) {
-  return function(eventType, message) {
+  return function (eventType, message) {
     if (!isActive || eventType !== 'message') {
       return original.apply(this, arguments);
     }

@@ -61,7 +61,7 @@ exports.getStackTraceAsJson = function getStackTraceAsJson(length, error) {
   Error.stackTraceLimit = originalLimit;
   Error.prepareStackTrace = originalPrepareStackTrace;
   const jsonStackTrace = /** @type {*} */ (error)._jsonStackTrace;
-  delete /** @type {*} */ (error)._jsonStackTrace;
+  delete (/** @type {*} */ (error)._jsonStackTrace);
   return jsonStackTrace;
 };
 

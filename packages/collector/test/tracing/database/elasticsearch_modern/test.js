@@ -25,7 +25,7 @@ const { fail } = expect;
 
 const mochaSuiteFn = semver.gte(process.versions.node, '10.0.0') ? describe : describe.skip;
 
-mochaSuiteFn('tracing/elasticsearch (modern client)', function() {
+mochaSuiteFn('tracing/elasticsearch (modern client)', function () {
   let originalEsVersion;
 
   this.timeout(Math.max(config.getTestTimeout() * 4, 30000));
@@ -73,7 +73,7 @@ mochaSuiteFn('tracing/elasticsearch (modern client)', function() {
     describe(
       // eslint-disable-next-line no-useless-concat
       `@elastic/elasticsearch@${esClientVersionRangeUnderTest}/` + `instrumentation flavor: ${instrumentationFlavor}`,
-      function() {
+      function () {
         before(done => installLibraryVersion(esClientVersionRangeUnderTest, done));
 
         globalAgent.setUpCleanUpHooks();

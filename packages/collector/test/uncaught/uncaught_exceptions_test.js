@@ -17,7 +17,7 @@ const ProcessControls = require('../test_util/ProcessControls');
 
 const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
-mochaSuiteFn('uncaught exceptions', function() {
+mochaSuiteFn('uncaught exceptions', function () {
   const agentControls = require('../apps/agentStubControls');
 
   this.timeout(config.getTestTimeout() * 2);
@@ -34,7 +34,7 @@ mochaSuiteFn('uncaught exceptions', function() {
     }
   }).registerTestHooks();
 
-  it('must finish the current span and mark it as an error', function() {
+  it('must finish the current span and mark it as an error', function () {
     return serverControls
       .sendRequest({
         method: 'GET',
@@ -67,7 +67,7 @@ mochaSuiteFn('uncaught exceptions', function() {
       });
   });
 
-  it('must be reported as an issue', function() {
+  it('must be reported as an issue', function () {
     return serverControls
       .sendRequest({
         method: 'GET',
@@ -103,7 +103,7 @@ mochaSuiteFn('uncaught exceptions', function() {
       });
   });
 
-  it('must block the dying process until termination', function() {
+  it('must block the dying process until termination', function () {
     let serverAcceptedAnotherResponse = false;
     let errorFromSecondHttpRequest = null;
     const triggerUncaughtException = serverControls.sendRequest({

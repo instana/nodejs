@@ -23,7 +23,7 @@ const ES_API_VERSION = '7.6';
 
 const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
-mochaSuiteFn('tracing/elasticsearch (legacy client)', function() {
+mochaSuiteFn('tracing/elasticsearch (legacy client)', function () {
   this.timeout(config.getTestTimeout());
 
   globalAgent.setUpCleanUpHooks();

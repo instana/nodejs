@@ -127,7 +127,7 @@ Control.prototype.killMonitoredProcess = function killMonitoredProcess() {
   return Promise.resolve();
 };
 
-Control.prototype.sendRequest = function(opts) {
+Control.prototype.sendRequest = function (opts) {
   if (opts.suppressTracing === true) {
     opts.headers = opts.headers || {};
     opts.headers['X-INSTANA-L'] = '0';

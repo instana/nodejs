@@ -27,7 +27,7 @@ function instrumentProducer(createProducer) {
     return createProducer;
   }
 
-  return function() {
+  return function () {
     const producer = createProducer.apply(this, arguments);
     producer.send = shimmedSend(producer.send);
     producer.sendBatch = shimmedSendBatch(producer.sendBatch);
@@ -37,7 +37,7 @@ function instrumentProducer(createProducer) {
 
 function shimmedSend(originalSend) {
   // After dropping Node 4 support, we should make this an async function, since the original is also an async function.
-  return /* async */ function(config /* { topic, messages } */) {
+  return /* async */ function (config /* { topic, messages } */) {
     const topic = config.topic;
     const messages = config.messages;
 
@@ -92,7 +92,7 @@ function instrumentedSend(ctx, originalSend, originalArgs, topic, messages) {
 
 function shimmedSendBatch(originalSendBatch) {
   // After dropping Node 4 support, we should make this an async function, since the original is also an async function.
-  return /* async */ function(config /* { topicMessages } */) {
+  return /* async */ function (config /* { topicMessages } */) {
     const topicMessages = config.topicMessages;
 
     if (cls.tracingSuppressed()) {
@@ -165,7 +165,7 @@ function instrumentConsumer(Runner) {
   if (typeof Runner !== 'function') {
     return Runner;
   }
-  return function() {
+  return function () {
     // We need to convert the arguments to a proper array, otherwise the concat call would append them as one object,
     // effectively passing them on wrapped in an object.
     const args = Array.prototype.slice.call(arguments);
@@ -193,7 +193,7 @@ function instrumentConsumer(Runner) {
 }
 
 function instrumentedEachMessage(originalEachMessage) {
-  return /* async */ function(config /* { topic, message } */) {
+  return /* async */ function (config /* { topic, message } */) {
     const topic = config.topic;
     const message = config.message;
 
@@ -254,7 +254,7 @@ function instrumentedEachMessage(originalEachMessage) {
 }
 
 function instrumentedEachBatch(originalEachBatch) {
-  return /* async */ function(config /* { batch } */) {
+  return /* async */ function (config /* { batch } */) {
     const batch = config.batch;
     if (!isActive) {
       return originalEachBatch.apply(this, arguments);

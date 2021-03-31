@@ -18,16 +18,16 @@ const agentControls = globalAgent.instance;
 
 const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
-mochaSuiteFn('tracing/preInit', function() {
+mochaSuiteFn('tracing/preInit', function () {
   this.timeout(config.getTestTimeout());
 
   globalAgent.setUpCleanUpHooks();
 
-  describe('without preInit', function() {
+  describe('without preInit', function () {
     registerTests.call(this, false);
   });
 
-  describe('with preInit', function() {
+  describe('with preInit', function () {
     registerTests.call(this, true);
   });
 });

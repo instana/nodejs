@@ -8,7 +8,7 @@
 exports.payloadPrefix = 'activeHandles';
 
 Object.defineProperty(exports, 'currentPayload', {
-  get: function() {
+  get: function () {
     return process._getActiveHandles().length;
   }
 });

@@ -13,7 +13,7 @@ const stackTrace = require('../util/stackTrace');
 
 let stackTraceLength = 10;
 
-exports.init = function(config) {
+exports.init = function (config) {
   stackTraceLength = config.tracing.stackTraceLength;
 };
 
@@ -34,7 +34,7 @@ exports.generateRandomSpanId = function generateRandomSpanId() {
   return exports.generateRandomId(16);
 };
 
-exports.generateRandomId = function(length) {
+exports.generateRandomId = function (length) {
   return crypto
     .randomBytes(Math.ceil(length / 2))
     .toString('hex')

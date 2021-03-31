@@ -17,7 +17,7 @@ const globalAgent = require('../../../globalAgent');
 const mochaSuiteFn =
   supportedVersion(process.versions.node) && semver.gte(process.versions.node, '8.0.0') ? describe : describe.skip;
 
-mochaSuiteFn('tracing/requireHook', function() {
+mochaSuiteFn('tracing/requireHook', function () {
   this.timeout(config.getTestTimeout());
 
   globalAgent.setUpCleanUpHooks();

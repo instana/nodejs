@@ -378,7 +378,7 @@ function instrument(storage) {
 }
 
 function shim(instrumented, original) {
-  return function() {
+  return function () {
     if (!isActive || !cls.isTracing()) {
       return original.apply(this, arguments);
     }
@@ -410,7 +410,7 @@ function instrumentedOperation(operation, extractorPre, extractorPost, ctx, orig
     const callbackIndex = originalArgs.length - 1;
     if (callbackIndex >= 0 && typeof originalArgs[callbackIndex] === 'function') {
       const originalCallback = originalArgs[callbackIndex];
-      originalArgs[callbackIndex] = cls.ns.bind(function(error, result) {
+      originalArgs[callbackIndex] = cls.ns.bind(function (error, result) {
         finishSpan(error, result, span, extractorPost);
         return originalCallback.apply(this, arguments);
       });

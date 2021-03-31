@@ -8,7 +8,7 @@
 exports.payloadPrefix = 'activeRequests';
 
 Object.defineProperty(exports, 'currentPayload', {
-  get: function() {
+  get: function () {
     return process._getActiveRequests().length;
   }
 });

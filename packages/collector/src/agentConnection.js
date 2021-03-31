@@ -384,7 +384,7 @@ function sendRequestsSync(path1, data1, path2, data2) {
   }
 }
 
-exports.isConnected = function() {
+exports.isConnected = function () {
   return isConnected;
 };
 

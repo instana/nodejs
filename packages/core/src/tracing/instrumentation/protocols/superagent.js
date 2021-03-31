@@ -15,7 +15,7 @@ logger = require('../../../logger').getLogger('tracing/grpc', newLogger => {
 const requireHook = require('../../../util/requireHook');
 const cls = require('../../cls');
 
-exports.init = function() {
+exports.init = function () {
   requireHook.onModuleLoad('superagent', exports.instrument);
 };
 
@@ -77,12 +77,12 @@ function instrumentThen(originalThen) {
   };
 }
 
-exports.activate = function() {
+exports.activate = function () {
   // This instrumentation does not record spans on its own, it just helps propagating the async context. Thus the
   // instrumentation is always on and cannot be activted or deactivated.
 };
 
-exports.deactivate = function() {
+exports.deactivate = function () {
   // This instrumentation does not record spans on its own, it just helps propagating the async context. Thus the
   // instrumentation is always on and cannot be activted or deactivated.
 };

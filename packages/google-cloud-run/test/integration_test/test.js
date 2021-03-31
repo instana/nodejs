@@ -46,8 +46,8 @@ function prelude(opts = {}) {
   return new Control(controlOpts).registerTestHooks();
 }
 
-describe('Google Cloud Run integration test', function() {
-  describe('when the back end is up', function() {
+describe('Google Cloud Run integration test', function () {
+  describe('when the back end is up', function () {
     const control = prelude.bind(this)({
       startBackend: true
     });
@@ -61,7 +61,7 @@ describe('Google Cloud Run integration test', function() {
         .then(response => verify(control, response, true)));
   });
 
-  describe('when the back end is down', function() {
+  describe('when the back end is down', function () {
     const control = prelude.bind(this)({
       startBackend: false
     });
@@ -75,7 +75,7 @@ describe('Google Cloud Run integration test', function() {
         .then(response => verify(control, response, false)));
   });
 
-  describe('when the back end becomes available after being down initially', function() {
+  describe('when the back end becomes available after being down initially', function () {
     const control = prelude.bind(this)({
       startBackend: false
     });

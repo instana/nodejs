@@ -14,7 +14,7 @@ const globalAgent = require('../../../globalAgent');
 
 const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
-mochaSuiteFn('tracing/graphql-subscriptions - PubSub/async iterator (pull before push)', function() {
+mochaSuiteFn('tracing/graphql-subscriptions - PubSub/async iterator (pull before push)', function () {
   this.timeout(config.getTestTimeout());
 
   globalAgent.setUpCleanUpHooks();

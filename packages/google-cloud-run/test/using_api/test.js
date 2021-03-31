@@ -38,8 +38,8 @@ function prelude(opts = {}) {
   return new Control(controlOpts).registerTestHooks();
 }
 
-describe('Using the API', function() {
-  describe('when configured properly', function() {
+describe('Using the API', function () {
+  describe('when configured properly', function () {
     const control = prelude.bind(this)();
     it('should collect metrics and trace http requests', () =>
       control
@@ -50,7 +50,7 @@ describe('Using the API', function() {
         .then(response => verify(control, response)));
   });
 
-  describe('when not configured properly', function() {
+  describe('when not configured properly', function () {
     const control = prelude.bind(this)({ unconfigured: false });
     it('should provide a no-op API', () =>
       control

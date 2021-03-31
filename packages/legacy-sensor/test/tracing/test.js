@@ -19,7 +19,7 @@ const serverPort = 3216;
 
 let agentControls;
 
-describe('legacy sensor/tracing', function() {
+describe('legacy sensor/tracing', function () {
   if (!supportedVersion(process.versions.node) || (process.env.CI && semver.lt(process.versions.node, '7.0.0'))) {
     return;
   }

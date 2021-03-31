@@ -11,7 +11,7 @@ const w3c = require('./w3c_trace_context');
 
 let disableW3cTraceCorrelation = false;
 
-exports.init = function(config) {
+exports.init = function (config) {
   disableW3cTraceCorrelation = config.tracing.disableW3cTraceCorrelation;
 };
 

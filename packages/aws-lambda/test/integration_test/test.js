@@ -114,7 +114,7 @@ function prelude(opts) {
 }
 
 function registerTests(handlerDefinitionPath) {
-  describe('when everything is peachy', function() {
+  describe('when everything is peachy', function () {
     // - INSTANA_ENDPOINT_URL is configured
     // - INSTANA_AGENT_KEY is configured
     // - back end is reachable
@@ -138,7 +138,7 @@ function registerTests(handlerDefinitionPath) {
         .then(() => verifyAfterRunningHandler(control, { error: false, expectMetrics: true, expectSpans: true })));
   });
 
-  describe('when called with alias', function() {
+  describe('when called with alias', function () {
     // - function is called with alias
     // - INSTANA_ENDPOINT_URL is configured
     // - INSTANA_AGENT_KEY is configured
@@ -155,7 +155,7 @@ function registerTests(handlerDefinitionPath) {
       verify(control, { error: false, expectMetrics: true, expectSpans: true, alias: 'anAlias' }));
   });
 
-  describe('when deprecated env var keys are used', function() {
+  describe('when deprecated env var keys are used', function () {
     // - INSTANA_URL is configured (instead of INSTANA_ENDPOINT_URL)
     // - INSTANA_KEY is configured (instead of INSTANA_AGENT_KEY)
     // - back end is reachable
@@ -170,7 +170,7 @@ function registerTests(handlerDefinitionPath) {
       verify(control, { error: false, expectMetrics: true, expectSpans: true }));
   });
 
-  describe('when lambda function yields an error', function() {
+  describe('when lambda function yields an error', function () {
     // - INSTANA_ENDPOINT_URL is configured
     // - back end is reachable
     // - lambda function ends with an error
@@ -185,7 +185,7 @@ function registerTests(handlerDefinitionPath) {
       verify(control, { error: 'lambda-asynchronous', expectMetrics: true, expectSpans: true }));
   });
 
-  describe('when lambda function throws a synchronous error', function() {
+  describe('when lambda function throws a synchronous error', function () {
     // - INSTANA_ENDPOINT_URL is configured
     // - back end is reachable
     // - lambda function ends with an error
@@ -200,7 +200,7 @@ function registerTests(handlerDefinitionPath) {
       verify(control, { error: 'lambda-synchronous', expectMetrics: true, expectSpans: true }));
   });
 
-  describe('with config', function() {
+  describe('with config', function () {
     // - INSTANA_ENDPOINT_URL is configured
     // - back end is reachable
     // - client provides a config object
@@ -216,7 +216,7 @@ function registerTests(handlerDefinitionPath) {
       verify(control, { error: false, expectMetrics: true, expectSpans: true }));
   });
 
-  describe('with config, when lambda function yields an error', function() {
+  describe('with config, when lambda function yields an error', function () {
     // - INSTANA_ENDPOINT_URL is configured
     // - back end is reachable
     // - client provides a config object
@@ -233,7 +233,7 @@ function registerTests(handlerDefinitionPath) {
       verify(control, { error: 'lambda-asynchronous', expectMetrics: true, expectSpans: true }));
   });
 
-  describe('when INSTANA_ENDPOINT_URL is missing', function() {
+  describe('when INSTANA_ENDPOINT_URL is missing', function () {
     // - INSTANA_ENDPOINT_URL is missing
     // - lambda function ends with success
     const control = prelude.bind(this)({
@@ -245,7 +245,7 @@ function registerTests(handlerDefinitionPath) {
       verify(control, { error: false, expectMetrics: false, expectSpans: false }));
   });
 
-  describe('when INSTANA_ENDPOINT_URL is missing and the lambda function yields an error', function() {
+  describe('when INSTANA_ENDPOINT_URL is missing and the lambda function yields an error', function () {
     // - INSTANA_ENDPOINT_URL is missing
     // - lambda function ends with an error
     const control = prelude.bind(this)({
@@ -258,7 +258,7 @@ function registerTests(handlerDefinitionPath) {
       verify(control, { error: 'lambda-asynchronous', expectMetrics: false, expectSpans: false }));
   });
 
-  describe('with config, when INSTANA_ENDPOINT_URL is missing', function() {
+  describe('with config, when INSTANA_ENDPOINT_URL is missing', function () {
     // - INSTANA_ENDPOINT_URL is missing
     // - client provides a config
     // - lambda function ends with success
@@ -272,7 +272,7 @@ function registerTests(handlerDefinitionPath) {
       verify(control, { error: false, expectMetrics: false, expectSpans: false }));
   });
 
-  describe('when INSTANA_AGENT_KEY is missing', function() {
+  describe('when INSTANA_AGENT_KEY is missing', function () {
     // - INSTANA_AGENT_KEY is missing
     // - lambda function ends with success
     const control = prelude.bind(this)({
@@ -284,7 +284,7 @@ function registerTests(handlerDefinitionPath) {
       verify(control, { error: false, expectMetrics: false, expectSpans: false }));
   });
 
-  describe('when INSTANA_AGENT_KEY is missing and the lambda function yields an error', function() {
+  describe('when INSTANA_AGENT_KEY is missing and the lambda function yields an error', function () {
     // - INSTANA_AGENT_KEY is missing
     // - lambda function ends with an error
     const control = prelude.bind(this)({
@@ -297,7 +297,7 @@ function registerTests(handlerDefinitionPath) {
       verify(control, { error: 'lambda-asynchronous', expectMetrics: false, expectSpans: false }));
   });
 
-  describe('when the back end is down', function() {
+  describe('when the back end is down', function () {
     // - INSTANA_ENDPOINT_URL is configured
     // - back end is not reachable
     // - lambda function ends with success
@@ -312,7 +312,7 @@ function registerTests(handlerDefinitionPath) {
       verify(control, { error: false, expectMetrics: false, expectSpans: false }));
   });
 
-  describe('when the back end is down and the lambda function yields an error', function() {
+  describe('when the back end is down and the lambda function yields an error', function () {
     // - INSTANA_ENDPOINT_URL is configured
     // - back end is not reachable
     // - lambda function ends with an error
@@ -328,7 +328,7 @@ function registerTests(handlerDefinitionPath) {
       verify(control, { error: 'lambda-asynchronous', expectMetrics: false, expectSpans: false }));
   });
 
-  describe('when the back end is reachable but does not respond', function() {
+  describe('when the back end is reachable but does not respond', function () {
     // - INSTANA_ENDPOINT_URL is configured
     // - back end is reachable, but will never respond (verifies that a reasonable timeout is applied -
     //   the default timeout would be two minutes)
@@ -343,7 +343,7 @@ function registerTests(handlerDefinitionPath) {
     it('must finish swiftly', () => verify(control, { error: false, expectMetrics: false, expectSpans: false }));
   });
 
-  describe('when the back end becomes responsive again after a timeout in a previous handler run', function() {
+  describe('when the back end becomes responsive again after a timeout in a previous handler run', function () {
     // - INSTANA_ENDPOINT_URL is configured
     // - back end will not respond for the first lambda handler run, but for the second one
     const control = prelude.bind(this)({
@@ -364,7 +364,7 @@ function registerTests(handlerDefinitionPath) {
         .then(() => verifyAfterRunningHandler(control, { error: false, expectMetrics: true, expectSpans: true })));
   });
 
-  describe('when using a proxy without authentication', function() {
+  describe('when using a proxy without authentication', function () {
     const control = prelude.bind(this)({
       handlerDefinitionPath,
       instanaEndpointUrl: backendBaseUrl,
@@ -377,7 +377,7 @@ function registerTests(handlerDefinitionPath) {
       verify(control, { error: false, expectMetrics: true, expectSpans: true }));
   });
 
-  describe('when using a proxy with authentication', function() {
+  describe('when using a proxy with authentication', function () {
     const control = prelude.bind(this)({
       handlerDefinitionPath,
       instanaEndpointUrl: backendBaseUrl,
@@ -391,7 +391,7 @@ function registerTests(handlerDefinitionPath) {
       verify(control, { error: false, expectMetrics: true, expectSpans: true }));
   });
 
-  describe('when proxy authentication fails due to the wrong password', function() {
+  describe('when proxy authentication fails due to the wrong password', function () {
     const control = prelude.bind(this)({
       handlerDefinitionPath,
       instanaEndpointUrl: backendBaseUrl,
@@ -405,7 +405,7 @@ function registerTests(handlerDefinitionPath) {
       verify(control, { error: false, expectMetrics: false, expectSpans: false }));
   });
 
-  describe('when proxy authentication fails because no credentials have been provided', function() {
+  describe('when proxy authentication fails because no credentials have been provided', function () {
     const control = prelude.bind(this)({
       handlerDefinitionPath,
       instanaEndpointUrl: backendBaseUrl,
@@ -419,7 +419,7 @@ function registerTests(handlerDefinitionPath) {
       verify(control, { error: false, expectMetrics: false, expectSpans: false }));
   });
 
-  describe('when the proxy is not up', function() {
+  describe('when the proxy is not up', function () {
     const control = prelude.bind(this)({
       handlerDefinitionPath,
       instanaEndpointUrl: backendBaseUrl,
@@ -431,7 +431,7 @@ function registerTests(handlerDefinitionPath) {
       verify(control, { error: false, expectMetrics: false, expectSpans: false }));
   });
 
-  describe('triggered by API Gateway (Lambda Proxy)', function() {
+  describe('triggered by API Gateway (Lambda Proxy)', function () {
     // - same as "everything is peachy"
     // - but triggered by AWS API Gateway (with Lambda Proxy)
     const control = prelude.bind(this)({
@@ -470,7 +470,7 @@ function registerTests(handlerDefinitionPath) {
         ));
   });
 
-  describe('triggered by API Gateway (Lambda Proxy) with parent span', function() {
+  describe('triggered by API Gateway (Lambda Proxy) with parent span', function () {
     // - same as "everything is peachy"
     // - but triggered by AWS API Gateway (with Lambda Proxy)
     // - with an incoming parent span
@@ -514,7 +514,7 @@ function registerTests(handlerDefinitionPath) {
         ));
   });
 
-  describe('triggered by API Gateway (Lambda Proxy) with suppression', function() {
+  describe('triggered by API Gateway (Lambda Proxy) with suppression', function () {
     // - same as triggered by AWS API Gateway (with Lambda Proxy)
     // - but with an incoming trace level header to suppress tracing
     const control = prelude.bind(this)({
@@ -529,7 +529,7 @@ function registerTests(handlerDefinitionPath) {
       verify(control, { error: false, expectMetrics: true, expectSpans: false }));
   });
 
-  describe('HTTP errors', function() {
+  describe('HTTP errors', function () {
     const control = prelude.bind(this)({
       handlerDefinitionPath,
       trigger: 'api-gateway-proxy',
@@ -559,7 +559,7 @@ function registerTests(handlerDefinitionPath) {
         ));
   });
 
-  describe('API Gateway/EUM - no Server-Timing header of its own', function() {
+  describe('API Gateway/EUM - no Server-Timing header of its own', function () {
     const control = prelude.bind(this)({
       handlerDefinitionPath,
       trigger: 'api-gateway-proxy',
@@ -586,7 +586,7 @@ function registerTests(handlerDefinitionPath) {
     });
   });
 
-  describe('API Gateway/EUM - Server-Timing string header already present', function() {
+  describe('API Gateway/EUM - Server-Timing string header already present', function () {
     const control = prelude.bind(this)({
       handlerDefinitionPath,
       trigger: 'api-gateway-proxy',
@@ -617,7 +617,7 @@ function registerTests(handlerDefinitionPath) {
     });
   });
 
-  describe('API Gateway/EUM - Server-Timing array header already present', function() {
+  describe('API Gateway/EUM - Server-Timing array header already present', function () {
     const control = prelude.bind(this)({
       handlerDefinitionPath,
       trigger: 'api-gateway-proxy',
@@ -651,7 +651,7 @@ function registerTests(handlerDefinitionPath) {
     });
   });
 
-  describe('API Gateway - with custom secrets', function() {
+  describe('API Gateway - with custom secrets', function () {
     const control = prelude.bind(this)({
       handlerDefinitionPath,
       trigger: 'api-gateway-proxy',
@@ -674,7 +674,7 @@ function registerTests(handlerDefinitionPath) {
         }));
   });
 
-  describe('triggered by API Gateway (no Lambda Proxy)', function() {
+  describe('triggered by API Gateway (no Lambda Proxy)', function () {
     // - same as "everything is peachy"
     // - but triggered by AWS API Gateway (without Lambda Proxy)
     const control = prelude.bind(this)({
@@ -696,7 +696,7 @@ function registerTests(handlerDefinitionPath) {
         ));
   });
 
-  describe('triggered by an application load balancer', function() {
+  describe('triggered by an application load balancer', function () {
     // - same as "everything is peachy"
     // - but triggered by an application load balancer
     const control = prelude.bind(this)({
@@ -735,7 +735,7 @@ function registerTests(handlerDefinitionPath) {
         ));
   });
 
-  describe('triggered by an application load balancer with parent span', function() {
+  describe('triggered by an application load balancer with parent span', function () {
     // - same as "everything is peachy"
     // - but triggered by an application load balancer
     // - with an incoming parent span
@@ -774,7 +774,7 @@ function registerTests(handlerDefinitionPath) {
         ));
   });
 
-  describe('triggered by CloudWatch Events', function() {
+  describe('triggered by CloudWatch Events', function () {
     // - same as "everything is peachy"
     // - but triggered by AWS CloudWatch events
     const control = prelude.bind(this)({
@@ -802,7 +802,7 @@ function registerTests(handlerDefinitionPath) {
         ));
   });
 
-  describe('triggered by CloudWatch Logs', function() {
+  describe('triggered by CloudWatch Logs', function () {
     // - same as "everything is peachy"
     // - but triggered by AWS CloudWatch logs
     const control = prelude.bind(this)({
@@ -836,7 +836,7 @@ function registerTests(handlerDefinitionPath) {
         ));
   });
 
-  describe('triggered by S3', function() {
+  describe('triggered by S3', function () {
     // - same as "everything is peachy"
     // - but triggered by AWS S3
     const control = prelude.bind(this)({
@@ -870,7 +870,7 @@ function registerTests(handlerDefinitionPath) {
         ));
   });
 
-  describe('triggered by SQS', function() {
+  describe('triggered by SQS', function () {
     // - same as "everything is peachy"
     // - but triggered by AWS SQS
     const control = prelude.bind(this)({

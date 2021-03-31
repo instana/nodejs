@@ -10,7 +10,7 @@
 const agentPort = process.env.AGENT_PORT;
 
 const dummyLogger = {
-  debug: function() {
+  debug: function () {
     // omit debug calls to not pollute test logs
   },
   info: console.log,

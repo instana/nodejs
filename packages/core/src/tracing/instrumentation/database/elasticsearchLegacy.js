@@ -99,7 +99,7 @@ function instrumentApi(client, actionPath, clusterInfo) {
       }
 
       if (originalArgs.length === 2) {
-        originalArgs[1] = cls.ns.bind(function(error, response) {
+        originalArgs[1] = cls.ns.bind(function (error, response) {
           if (error) {
             onError(span, error);
           } else {

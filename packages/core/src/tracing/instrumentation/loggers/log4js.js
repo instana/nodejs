@@ -33,7 +33,7 @@ function instrumentLog4jsLogger(loggerModule) {
 }
 
 function shimLog(originalLog) {
-  return function(level) {
+  return function (level) {
     if (!isActive || !cls.isTracing()) {
       return originalLog.apply(this, arguments);
     }

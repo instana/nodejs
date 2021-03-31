@@ -16,7 +16,7 @@ const config = require('../../../../serverless/test/config');
 
 const InstrumentedDockerProcessor = require('../../../src/metrics/docker/InstrumentedDockerProcessor');
 
-describe('Docker processor', function() {
+describe('Docker processor', function () {
   this.timeout(config.getTestTimeout());
   this.slow(config.getTestTimeout() / 2);
 

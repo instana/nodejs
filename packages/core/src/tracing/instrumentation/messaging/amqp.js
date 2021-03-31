@@ -41,7 +41,7 @@ function instrumentCallbackModel(callbackModelModule) {
 }
 
 function shimSendMessage(originalFunction) {
-  return function() {
+  return function () {
     if (isActive) {
       const originalArgs = new Array(arguments.length);
       for (let i = 0; i < arguments.length; i++) {
@@ -133,7 +133,7 @@ function propagateTraceContext(map, span) {
 }
 
 function shimDispatchMessage(originalFunction) {
-  return function() {
+  return function () {
     if (isActive) {
       const originalArgs = new Array(arguments.length);
       for (let i = 0; i < arguments.length; i++) {
@@ -215,7 +215,7 @@ ctx.connection.stream.remoteAddress}:${ctx.connection.stream.remotePort}`;
 }
 
 function shimChannelModelGet(originalFunction) {
-  return function() {
+  return function () {
     if (isActive) {
       const originalArgs = new Array(arguments.length);
       for (let i = 0; i < arguments.length; i++) {
@@ -287,7 +287,7 @@ function instrumentedChannelModelGet(ctx, originalGet, originalArgs) {
 }
 
 function shimCallbackModelGet(originalFunction) {
-  return function() {
+  return function () {
     if (isActive) {
       const originalArgs = new Array(arguments.length);
       for (let i = 0; i < arguments.length; i++) {
@@ -380,7 +380,7 @@ function instrumentedCallbackModelGet(ctx, originalGet, originalArgs) {
 }
 
 function shimChannelModelPublish(originalFunction) {
-  return function() {
+  return function () {
     if (isActive) {
       const originalArgs = new Array(arguments.length);
       for (let i = 0; i < arguments.length; i++) {
@@ -406,7 +406,7 @@ function instrumentedChannelModelPublish(ctx, originalFunction, originalArgs) {
     // everything else is handled in instrumentedSendMessage/processExitSpan
     if (originalArgs.length >= 5 && typeof originalArgs[4] === 'function') {
       const originalCb = originalArgs[4];
-      originalArgs[4] = cls.ns.bind(function() {
+      originalArgs[4] = cls.ns.bind(function () {
         span.d = Date.now() - span.ts;
         span.transmit();
         originalCb.apply(this, arguments);
@@ -417,7 +417,7 @@ function instrumentedChannelModelPublish(ctx, originalFunction, originalArgs) {
 }
 
 function shimCallbackModelPublish(originalFunction) {
-  return function() {
+  return function () {
     if (isActive) {
       const originalArgs = new Array(arguments.length);
       for (let i = 0; i < arguments.length; i++) {
@@ -443,7 +443,7 @@ function instrumentedCallbackModelPublish(ctx, originalFunction, originalArgs) {
     // everything else is handled in instrumentedSendMessage/processExitSpan
     if (originalArgs.length >= 5 && typeof originalArgs[4] === 'function') {
       const originalCb = originalArgs[4];
-      originalArgs[4] = cls.ns.bind(function() {
+      originalArgs[4] = cls.ns.bind(function () {
         span.d = Date.now() - span.ts;
         span.transmit();
         originalCb.apply(this, arguments);

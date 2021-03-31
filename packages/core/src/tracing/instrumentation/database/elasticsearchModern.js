@@ -131,7 +131,7 @@ function instrumentApi(client, actionPath, clusterInfo) {
       processParams(span, params);
 
       if (callbackIndex >= 0) {
-        originalArgs[callbackIndex] = cls.ns.bind(function(error, result) {
+        originalArgs[callbackIndex] = cls.ns.bind(function (error, result) {
           if (error) {
             onError(span, error);
           } else {
@@ -307,7 +307,7 @@ function instrumentTransport(es) {
 }
 
 function shimRequest(esReq) {
-  return function() {
+  return function () {
     if (!isActive || !cls.isTracing()) {
       return esReq.apply(this, arguments);
     }
@@ -366,7 +366,7 @@ function instrumentedRequest(ctx, origEsReq, originalArgs) {
     }
 
     if (callbackIndex >= 0) {
-      originalArgs[callbackIndex] = cls.ns.bind(function(error, result) {
+      originalArgs[callbackIndex] = cls.ns.bind(function (error, result) {
         if (error) {
           onError(span, error);
         } else {

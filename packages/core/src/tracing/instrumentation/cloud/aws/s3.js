@@ -72,7 +72,7 @@ function instrumentAWS(AWS) {
 }
 
 function shimMakeRequest(originalMakeRequest) {
-  return function() {
+  return function () {
     if (isActive) {
       const originalArgs = new Array(arguments.length);
       for (let i = 0; i < originalArgs.length; i++) {
@@ -113,7 +113,7 @@ function instrumentedMakeRequest(ctx, originalMakeRequest, originalArgs) {
 
     const _originalCallback = originalArgs[2];
 
-    originalArgs[2] = cls.ns.bind(function(err, data) {
+    originalArgs[2] = cls.ns.bind(function (err, data) {
       finishSpan(err, data, span);
       return _originalCallback.apply(this, arguments);
     });
@@ -145,7 +145,7 @@ function instrumentedRequestPromise(ctx, originalPromise, originalArgs) {
     return originalPromise.apply(ctx, originalArgs);
   }
 
-  return cls.ns.runAndReturn(function() {
+  return cls.ns.runAndReturn(function () {
     const span = cls.startSpan('s3', EXIT);
     span.ts = Date.now();
     span.stack = tracingUtil.getStackTrace(instrumentedRequestPromise);

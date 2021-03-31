@@ -81,15 +81,9 @@ if (process.env.WITH_STDOUT) {
 app.use((req, res, next) => {
   const metadataFlavor = req.headers['metadata-flavor'];
   if (!metadataFlavor) {
-    res
-      .status(400)
-      .set('Content-Type', 'text/html')
-      .send('Missing Metadata-Flavor header.');
+    res.status(400).set('Content-Type', 'text/html').send('Missing Metadata-Flavor header.');
   } else if (metadataFlavor !== 'Google') {
-    res
-      .status(400)
-      .set('Content-Type', 'text/html')
-      .send(`Unknown Metadata-Flavor: ${metadataFlavor}`);
+    res.status(400).set('Content-Type', 'text/html').send(`Unknown Metadata-Flavor: ${metadataFlavor}`);
   } else {
     next();
   }

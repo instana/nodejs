@@ -27,6 +27,6 @@ exports.allMetrics = [
 
 exports.util = require('./util');
 
-exports.setLogger = function(logger) {
+exports.setLogger = function (logger) {
   exports.util.setLogger(logger);
 };

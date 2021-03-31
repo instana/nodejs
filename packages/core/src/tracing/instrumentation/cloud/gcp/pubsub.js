@@ -55,7 +55,7 @@ function instrumentSubscriber(subscriber) {
 
 function instrumentConstructor(module, constructorAttribute, methodAttribue, shimmedMethod) {
   const OriginalConstructor = module[constructorAttribute];
-  module[constructorAttribute] = function() {
+  module[constructorAttribute] = function () {
     const newInstance = new OriginalConstructor(...arguments);
     shimmer.wrap(newInstance, methodAttribue, shimmedMethod);
     return newInstance;
@@ -63,7 +63,7 @@ function instrumentConstructor(module, constructorAttribute, methodAttribue, shi
 }
 
 function shimPublishMessage(originalFunction) {
-  return function() {
+  return function () {
     if (isActive) {
       const originalArgs = new Array(arguments.length);
       for (let i = 0; i < arguments.length; i++) {
@@ -107,7 +107,7 @@ function instrumentedPublishMessage(ctx, originalPublishMessage, originalArgs) {
 
     const originalCallback = originalArgs[1];
     if (typeof originalCallback === 'function') {
-      originalArgs[1] = cls.ns.bind(function(err, messageId) {
+      originalArgs[1] = cls.ns.bind(function (err, messageId) {
         finishSpan(err, messageId, span);
         originalCallback.apply(this, arguments);
       });
@@ -147,7 +147,7 @@ function propagateTraceContext(attributes, span) {
 }
 
 function shimSubscriberEmit(originalEmit) {
-  return function(type) {
+  return function (type) {
     if (type !== 'message' || !isActive) {
       return originalEmit.apply(this, arguments);
     }

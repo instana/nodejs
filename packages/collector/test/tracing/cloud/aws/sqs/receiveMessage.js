@@ -67,7 +67,10 @@ function receivePromise() {
         sendToParent(message);
       });
 
-      log('got messages:', data.Messages.map(m => m.MessageId));
+      log(
+        'got messages:',
+        data.Messages.map(m => m.MessageId)
+      );
 
       const messagesForDeletion = data.Messages.map(message => {
         return {
@@ -116,7 +119,10 @@ async function receiveAsync() {
         sendToParent(message);
       });
 
-      log('got messages:', data.Messages.map(m => m.MessageId));
+      log(
+        'got messages:',
+        data.Messages.map(m => m.MessageId)
+      );
 
       const messagesForDeletion = data.Messages.map(message => {
         return {
@@ -159,7 +165,10 @@ function receiveCallback(cb) {
         sendToParent(message);
       });
 
-      log('got messages:', messagesData.Messages.map(m => m.MessageId));
+      log(
+        'got messages:',
+        messagesData.Messages.map(m => m.MessageId)
+      );
 
       const messagesForDeletion = messagesData.Messages.map(message => {
         return {

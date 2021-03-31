@@ -134,7 +134,7 @@ function wrapHandler(fn) {
     // express.js checks parameter count to decide what kind of handler function
     // it should invoke.
     // eslint-disable-next-line no-unused-vars
-    return function(req, res, next) {
+    return function (req, res, next) {
       annotateHttpEntrySpanWithPathTemplate(req);
       return fn.apply(this, arguments);
     };
@@ -144,7 +144,7 @@ function wrapHandler(fn) {
   // express.js checks parameter count to decide what kind of handler function
   // it should invoke.
   // eslint-disable-next-line no-unused-vars
-  return function(err, req, res, next) {
+  return function (err, req, res, next) {
     annotateHttpEntrySpanWithPathTemplate(req);
     return fn.apply(this, arguments);
   };

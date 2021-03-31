@@ -18,7 +18,7 @@ if (process.env.SCREW_AROUND_WITH_UP_ARRAY_FIND) {
   // Yoinked from https://github.com/montagejs/collections/blob/v1.0.0/shim-array.js
   // eslint-disable-next-line no-extend-native
   Object.defineProperty(Array.prototype, 'find', {
-    value: function(value, equals) {
+    value: function (value, equals) {
       equals = equals || this.contentEquals || Object.equals;
       for (let index = 0; index < this.length; index++) {
         if (index in this && equals(this[index], value)) {

@@ -30,7 +30,7 @@ function instrumentRouter(Router) {
 }
 
 function shimRoutes(originalFunction) {
-  return function() {
+  return function () {
     return instrumentedRoutes(this, originalFunction, arguments);
   };
 }
@@ -46,7 +46,7 @@ function instrumentedRoutes(thisContext, originalRoutes, originalArgs) {
   // https://github.com/ZijianHe/koa-router/issues/444.
 
   // eslint-disable-next-line no-unused-vars
-  const instrumentedDispatch = function(ctx, next) {
+  const instrumentedDispatch = function (ctx, next) {
     if (active && cls.isTracing()) {
       const dispatchResult = dispatch.apply(this, arguments);
       return dispatchResult.then(resolvedValue => {

@@ -48,7 +48,7 @@ if (!supportedVersion(process.versions.node)) {
 
 const retryTime = config.getTestTimeout() * 2;
 
-mochaSuiteFn('tracing/cloud/aws/s3', function() {
+mochaSuiteFn('tracing/cloud/aws/s3', function () {
   this.timeout(config.getTestTimeout() * 3);
 
   before(() => {
@@ -58,7 +58,7 @@ mochaSuiteFn('tracing/cloud/aws/s3', function() {
   globalAgent.setUpCleanUpHooks();
   const agentControls = globalAgent.instance;
 
-  describe('tracing enabled, no suppression', function() {
+  describe('tracing enabled, no suppression', function () {
     const appControls = new ProcessControls({
       appPath: path.join(__dirname, 'app'),
       port: 3215,

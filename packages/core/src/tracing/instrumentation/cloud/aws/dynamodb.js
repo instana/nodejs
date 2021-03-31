@@ -27,7 +27,7 @@ const methodList = Object.keys(operationsInfo);
 
 let isActive = false;
 
-exports.isActive = function() {
+exports.isActive = function () {
   return isActive;
 };
 
@@ -48,7 +48,7 @@ function instrumentAWS(AWS) {
 }
 
 function shimMakeRequest(originalMakeRequest) {
-  return function() {
+  return function () {
     if (isActive) {
       const originalArgs = new Array(arguments.length);
       for (let i = 0; i < originalArgs.length; i++) {
@@ -84,7 +84,7 @@ function instrumentedMakeRequest(ctx, originalMakeRequest, originalArgs) {
       // callback case
       const _originalCallback = originalArgs[2];
 
-      originalArgs[2] = cls.ns.bind(function(err, data) {
+      originalArgs[2] = cls.ns.bind(function (err, data) {
         /**
          * DynamoDB can send error data as a successful HTTP response.
          * In this case, the payload should include a code and a statusCode property. eg:
@@ -115,7 +115,7 @@ function instrumentedMakeRequest(ctx, originalMakeRequest, originalArgs) {
       // promise case
       const originalPromise = request.promise;
 
-      request.promise = cls.ns.bind(function() {
+      request.promise = cls.ns.bind(function () {
         const promise = originalPromise.apply(request, arguments);
         return promise
           .then(data => {

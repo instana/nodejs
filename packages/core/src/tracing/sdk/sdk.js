@@ -16,7 +16,7 @@ logger = require('../../logger').getLogger('tracing/sdk', newLogger => {
 
 let isActive = false;
 
-module.exports = exports = function(isCallbackApi) {
+module.exports = exports = function (isCallbackApi) {
   let cls = null;
   let wrapper = null;
 

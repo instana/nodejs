@@ -19,7 +19,7 @@ const states = {
 };
 
 const ctx = {
-  transitionTo: function(newStateName) {
+  transitionTo: function (newStateName) {
     logger.info('Transitioning from %s to %s', currentState || '<init>', newStateName);
 
     if (currentState) {

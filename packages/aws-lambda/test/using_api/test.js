@@ -60,7 +60,7 @@ function prelude(opts) {
 describe('Using the API', () => {
   const handlerDefinitionPath = path.join(__dirname, './lambda');
 
-  describe('when everything is peachy', function() {
+  describe('when everything is peachy', function () {
     // - INSTANA_ENDPOINT_URL is configured
     // - INSTANA_AGENT_KEY is configured
     // - back end is reachable
@@ -74,7 +74,7 @@ describe('Using the API', () => {
     it('must capture metrics and spans', () => verify(control, false, true));
   });
 
-  describe('when lambda function yields an error', function() {
+  describe('when lambda function yields an error', function () {
     // - INSTANA_ENDPOINT_URL is configured
     // - back end is reachable
     // - lambda function ends with an error
@@ -88,7 +88,7 @@ describe('Using the API', () => {
     it('must capture metrics and spans', () => verify(control, true, true));
   });
 
-  describe('with config', function() {
+  describe('with config', function () {
     // - INSTANA_ENDPOINT_URL is configured
     // - back end is reachable
     // - client provides a config object
@@ -103,7 +103,7 @@ describe('Using the API', () => {
     it('must capture metrics and spans', () => verify(control, false, true));
   });
 
-  describe('with config, when lambda function yields an error', function() {
+  describe('with config, when lambda function yields an error', function () {
     // - INSTANA_ENDPOINT_URL is configured
     // - back end is reachable
     // - client provides a config object
@@ -119,7 +119,7 @@ describe('Using the API', () => {
     it('must capture metrics and spans', () => verify(control, true, true));
   });
 
-  describe('when INSTANA_ENDPOINT_URL is missing', function() {
+  describe('when INSTANA_ENDPOINT_URL is missing', function () {
     // - INSTANA_ENDPOINT_URL is missing
     // - lambda function ends with success
     const control = prelude.bind(this)({
@@ -130,7 +130,7 @@ describe('Using the API', () => {
     it('must ignore the missing URL gracefully', () => verify(control, false, false));
   });
 
-  describe('when INSTANA_ENDPOINT_URL is missing and the lambda function yields an error', function() {
+  describe('when INSTANA_ENDPOINT_URL is missing and the lambda function yields an error', function () {
     // - INSTANA_ENDPOINT_URL is missing
     // - lambda function ends with an error
     const control = prelude.bind(this)({
@@ -142,7 +142,7 @@ describe('Using the API', () => {
     it('must ignore the missing URL gracefully', () => verify(control, true, false));
   });
 
-  describe('with config, when INSTANA_ENDPOINT_URL is missing', function() {
+  describe('with config, when INSTANA_ENDPOINT_URL is missing', function () {
     // - INSTANA_ENDPOINT_URL is missing
     // - client provides a config
     // - lambda function ends with success

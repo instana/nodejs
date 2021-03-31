@@ -24,7 +24,7 @@ function instrumentNats(natsModule) {
 }
 
 function shimConnect(originalFunction) {
-  return function() {
+  return function () {
     const client = originalFunction.apply(this, arguments);
     if (!clientHasBeenInstrumented) {
       shimmer.wrap(client.constructor.prototype, 'publish', shimPublish.bind(null, client.options.url));
@@ -40,7 +40,7 @@ function shimConnect(originalFunction) {
 }
 
 function shimPublish(natsUrl, originalFunction) {
-  return function() {
+  return function () {
     if (isActive && cls.isTracing()) {
       const originalArgs = new Array(arguments.length);
       for (let i = 0; i < arguments.length; i++) {
@@ -79,7 +79,7 @@ function instrumentedPublish(ctx, originalPublish, originalArgs, natsUrl) {
     };
 
     if (originalCallback) {
-      originalArgs[callbackIndex] = cls.ns.bind(function(err) {
+      originalArgs[callbackIndex] = cls.ns.bind(function (err) {
         addErrorToSpan(err, span);
         finishSpan(span, 'nats');
         originalCallback.apply(this, arguments);
@@ -103,7 +103,7 @@ function shimRequest(originalFunction) {
   // nats.request uses nats.publish internally, we only need to cls-bind the callback here (it is not passed down to
   // nats.publish because it only fires after the reply has been received, not after the initial messages has been
   // published). Everything else is taken care of by the instrumentation of nats.publish.
-  return function() {
+  return function () {
     if (isActive && cls.isTracing()) {
       for (let i = 3; i >= 0; i--) {
         if (typeof arguments[i] === 'function') {
@@ -117,7 +117,7 @@ function shimRequest(originalFunction) {
 }
 
 function shimSubscribe(natsUrl, originalFunction) {
-  return function() {
+  return function () {
     const originalSubscribeArgs = new Array(arguments.length);
     for (let i = 0; i < arguments.length; i++) {
       originalSubscribeArgs[i] = arguments[i];
@@ -140,7 +140,7 @@ function instrumentedSubscribe(ctx, originalSubscribe, originalSubscribeArgs, na
 }
 
 function instrumentedSubscribeCallback(natsUrl, subject, originalSubscribeCallback) {
-  return function() {
+  return function () {
     const originalCallbackThis = this;
     const originalCallbackArgs = new Array(arguments.length);
     for (let i = 0; i < arguments.length; i++) {

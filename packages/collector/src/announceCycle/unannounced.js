@@ -21,11 +21,11 @@ const backoffFactor = 1.5;
 const maxRetryDelay = 60 * 1000; // one minute
 
 module.exports = {
-  enter: function(ctx) {
+  enter: function (ctx) {
     tryToAnnounce(ctx);
   },
 
-  leave: function() {}
+  leave: function () {}
 };
 
 function tryToAnnounce(ctx, retryDelay = initialRetryDelay) {

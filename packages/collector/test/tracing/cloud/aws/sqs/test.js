@@ -46,13 +46,13 @@ if (!supportedVersion(process.versions.node)) {
 
 const retryTime = config.getTestTimeout() * 2;
 
-mochaSuiteFn('tracing/cloud/aws/sqs', function() {
+mochaSuiteFn('tracing/cloud/aws/sqs', function () {
   this.timeout(config.getTestTimeout() * 3);
 
   globalAgent.setUpCleanUpHooks();
   const agentControls = globalAgent.instance;
 
-  describe('tracing enabled, no suppression', function() {
+  describe('tracing enabled, no suppression', function () {
     const senderControls = new ProcessControls({
       appPath: path.join(__dirname, 'sendMessage'),
       port: 3215,

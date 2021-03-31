@@ -27,8 +27,14 @@ function log() {
 
 var tableCreationParams = {
   TableName: tableName,
-  KeySchema: [{ AttributeName: 'year', KeyType: 'HASH' }, { AttributeName: 'title', KeyType: 'RANGE' }],
-  AttributeDefinitions: [{ AttributeName: 'year', AttributeType: 'N' }, { AttributeName: 'title', AttributeType: 'S' }],
+  KeySchema: [
+    { AttributeName: 'year', KeyType: 'HASH' },
+    { AttributeName: 'title', KeyType: 'RANGE' }
+  ],
+  AttributeDefinitions: [
+    { AttributeName: 'year', AttributeType: 'N' },
+    { AttributeName: 'title', AttributeType: 'S' }
+  ],
   ProvisionedThroughput: {
     ReadCapacityUnits: 5,
     WriteCapacityUnits: 5

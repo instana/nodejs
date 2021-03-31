@@ -60,10 +60,7 @@ module.exports = exports = function instrumentEdgemicroCli(edgemicroPath, collec
 
   if (!edgemicroPath) {
     console.log('- Path to edgemicro has not been provided, I will try to figure it out now.');
-    const globalNodeModules = childProcess
-      .execSync('npm root -g')
-      .toString()
-      .trim();
+    const globalNodeModules = childProcess.execSync('npm root -g').toString().trim();
     console.log('    * Global node_modules directory:', globalNodeModules);
     edgemicroPath = path.join(globalNodeModules, 'edgemicro');
     if (!fs.existsSync(edgemicroPath)) {

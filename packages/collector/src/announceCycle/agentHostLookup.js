@@ -32,7 +32,7 @@ const retryTimeoutMillis = 60 * 1000;
 
 module.exports = {
   enter,
-  leave: function() {}
+  leave: function () {}
 };
 
 function enter(ctx) {

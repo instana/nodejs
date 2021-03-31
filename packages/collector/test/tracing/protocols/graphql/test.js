@@ -27,7 +27,7 @@ const agentControls = globalAgent.instance;
 const mochaSuiteFn =
   !supportedVersion(process.versions.node) || semver.lt(process.versions.node, '8.5.0') ? describe.skip : describe;
 
-mochaSuiteFn('tracing/graphql', function() {
+mochaSuiteFn('tracing/graphql', function () {
   this.timeout(config.getTestTimeout() * 2);
 
   globalAgent.setUpCleanUpHooks();
@@ -180,7 +180,7 @@ function registerQuerySuite(
     `${queryShorthand ? 'query shorthand' : 'no query shorthand'}, ` +
     `${useAlias ? 'alias' : 'no alias'}, ` +
     `over ${communicationProtocol})`;
-  describe(`queries ${titleSuffix}`, function() {
+  describe(`queries ${titleSuffix}`, function () {
     it(`must trace a query with a value resolver ${titleSuffix}`, () => testQuery('value'));
 
     it(`must trace a query with a promise resolver ${titleSuffix}`, () => testQuery('promise'));
@@ -235,7 +235,7 @@ function registerQuerySuite(
 }
 
 function registerMutationSuite(serverControls, clientControls, apollo) {
-  describe(`mutations (${apollo ? 'apollo' : 'raw'})`, function() {
+  describe(`mutations (${apollo ? 'apollo' : 'raw'})`, function () {
     it(`must trace a mutation (${apollo ? 'apollo' : 'raw'})`, () => testMutation());
   });
 
@@ -254,7 +254,7 @@ function registerMutationSuite(serverControls, clientControls, apollo) {
 }
 
 function registerSubscriptionOperationNotTracedSuite(serverControls, clientControls, apollo) {
-  describe(`subscriptions (${apollo ? 'apollo' : 'raw'})`, function() {
+  describe(`subscriptions (${apollo ? 'apollo' : 'raw'})`, function () {
     it(`must not trace the subscription establishment (${apollo ? 'apollo' : 'raw'})`, () =>
       testSubscriptionIsNotTraced());
   });
@@ -296,7 +296,7 @@ function createProcesses(apollo) {
 }
 
 function registerSubscriptionUpdatesAreTracedSuite(triggerUpdateVia) {
-  describe(`subscriptions (via: ${triggerUpdateVia})`, function() {
+  describe(`subscriptions (via: ${triggerUpdateVia})`, function () {
     const serverControls = new ProcessControls({
       appPath: path.join(__dirname, 'apolloServer'),
       port: 3217,

@@ -15,7 +15,7 @@ logger = require('../../../logger').getLogger('tracing/edgemicro', newLogger => 
   logger = newLogger;
 });
 
-exports.init = function() {
+exports.init = function () {
   requireHook.onFileLoad(/\/edgemicro\/cli\/lib\/reload-cluster.js/, instrumentReloadCluster);
 };
 
@@ -26,7 +26,7 @@ exports.init = function() {
 // There is also ./childProcess.js, which is responsible for instrumenting the code path that is used with
 // `edgemicro forever -a start`.
 function instrumentReloadCluster(reloadClusterModule) {
-  return function() {
+  return function () {
     if (!selfPath.immediate) {
       logger.warn(
         // eslint-disable-next-line max-len
@@ -55,10 +55,10 @@ function instrumentReloadCluster(reloadClusterModule) {
   };
 }
 
-exports.activate = function() {
+exports.activate = function () {
   // no-op
 };
 
-exports.deactivate = function() {
+exports.deactivate = function () {
   // no-op
 };

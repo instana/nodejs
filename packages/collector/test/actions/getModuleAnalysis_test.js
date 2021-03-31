@@ -11,7 +11,7 @@ const config = require('../../../core/test/config');
 const testUtils = require('../../../core/test/test_util');
 const globalAgent = require('../globalAgent');
 
-describe('actions/getModuleAnalysis', function() {
+describe('actions/getModuleAnalysis', function () {
   const expressControls = require('../apps/expressControls');
 
   this.timeout(config.getTestTimeout());

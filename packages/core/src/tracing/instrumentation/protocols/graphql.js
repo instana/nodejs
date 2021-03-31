@@ -197,7 +197,7 @@ function findOperationDefinition(doc, operationNameFromArgs) {
 
 function addFieldsAndArguments(span, definition) {
   traverseSelections(definition, entities => {
-    entities.forEach(function(entity) {
+    entities.forEach(function (entity) {
       const entityName = entity.name.value;
       traverseSelections(entity, fields => {
         span.data.graphql.fields[entityName] = fields.map(field => field.name.value);
@@ -334,6 +334,6 @@ exports.activate = function activate() {
   isActive = true;
 };
 
-exports.deactivate = function() {
+exports.deactivate = function () {
   isActive = false;
 };

@@ -12,7 +12,7 @@ const config = require('../../../serverless/test/config');
 
 const ProcessProcessor = require('../../src/process/ProcessProcessor');
 
-describe('Process processor', function() {
+describe('Process processor', function () {
   this.timeout(config.getTestTimeout());
 
   let dataProcessor;
