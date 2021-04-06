@@ -1,6 +1,6 @@
 {
   "name": "@instana/shared-metrics",
-  "version": "1.117.3",
+  "version": "1.118.0",
   "description": "Internal metrics plug-in package for Node.js monitoring with Instana",
   "author": {
     "name": "Bastian Krol",
@@ -55,23 +55,23 @@
   },
   "license": "MIT",
   "dependencies": {
-    "@instana/core": "1.117.3",
+    "@instana/core": "1.118.0",
     "detect-libc": "^1.0.3",
     "event-loop-lag": "^1.4.0",
     "recursive-copy": "^2.0.11",
     "tar": "^5.0.5"
   },
   "devDependencies": {
-    "eslint": "^5.16.0",
+    "eslint": "^6.8.0",
     "eslint-config-airbnb-base": "^13.1.0",
-    "eslint-plugin-import": "^2.17.2",
-    "eslint-plugin-mocha": "^5.3.0",
+    "eslint-plugin-import": "^2.22.1",
+    "eslint-plugin-mocha": "^8.1.0",
     "mocha": "^7.2.0",
-    "prettier": "^1.17.1"
+    "prettier": "^2.2.1"
   },
   "optionalDependencies": {
     "event-loop-stats": "1.3.0",
     "gcstats.js": "1.0.0",
-    "node-gyp": "^7.1.0"
+    "node-gyp": "^7.1.2"
   }
 }

@@ -1,6 +1,6 @@
 {
   "name": "@instana/autoprofile",
-  "version": "1.117.3",
+  "version": "1.118.0",
   "description": "Automatic Node.js Profiler",
   "keywords": [
     "production profiler",
@@ -30,13 +30,13 @@
   },
   "dependencies": {
     "detect-libc": "^1.0.3",
-    "nan": "^2.14.0",
-    "node-abi": "^2.19.1",
-    "node-gyp": "^6.1.0"
+    "nan": "^2.14.2",
+    "node-abi": "^2.21.0",
+    "node-gyp": "^7.1.2"
   },
   "devDependencies": {
     "async": "^3.2.0",
-    "eslint": "^5.16.0",
+    "eslint": "^6.8.0",
     "mkdirp": "^1.0.4",
     "mocha": "^7.2.0"
   },

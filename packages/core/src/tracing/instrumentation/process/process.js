@@ -47,12 +47,7 @@ function shimProcessEmitForBullChildWorker(originalProcessEmit) {
     const traceContext = ipcMessage.job.opts.instanaTracingContext;
     delete ipcMessage.job.opts.instanaTracingContext;
 
-    if (
-      !traceContext ||
-      !traceContext.X_INSTANA_T ||
-      !traceContext.X_INSTANA_S ||
-      ipcMessage.job.opts.X_INSTANA_L === '0'
-    ) {
+    if (!traceContext || !traceContext.X_INSTANA_T || !traceContext.X_INSTANA_S) {
       return originalProcessEmit.apply(this, arguments);
     }
 

@@ -33,7 +33,7 @@ describe('actions/source', function() {
         action: 'node.source',
         messageId,
         args: {
-          file: path.join(process.cwd(), 'node_modules', 'semver', 'semver.js')
+          file: path.join(process.cwd(), 'node_modules', 'semver', 'index.js')
         }
       })
       .then(() =>

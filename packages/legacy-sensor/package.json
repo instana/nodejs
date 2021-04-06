@@ -1,6 +1,6 @@
 {
   "name": "instana-nodejs-sensor",
-  "version": "1.117.3",
+  "version": "1.118.0",
   "description": "The Instana Node.js sensor (legacy adapter for previous package name)",
   "author": {
     "name": "Bastian Krol",
@@ -43,14 +43,14 @@
     "url": "https://github.com/instana/nodejs-sensor/issues"
   },
   "dependencies": {
-    "@instana/collector": "1.117.3"
+    "@instana/collector": "1.118.0"
   },
   "devDependencies": {
-    "@instana/core": "1.117.3",
-    "eslint": "^5.16.0",
-    "eslint-config-airbnb": "^17.1.0",
-    "eslint-plugin-mocha": "^5.3.0",
+    "@instana/core": "1.118.0",
+    "eslint": "^6.8.0",
+    "eslint-config-airbnb": "^18.2.1",
+    "eslint-plugin-mocha": "^8.1.0",
     "mocha": "^7.2.0",
-    "prettier": "^1.17.1"
+    "prettier": "^2.2.1"
   }
 }

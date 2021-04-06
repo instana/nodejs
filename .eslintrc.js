@@ -13,7 +13,7 @@ module.exports = {
 
   parserOptions: {
     ecmaVersion: 2016,
-    sourceType: 'strict'
+    sourceType: 'script'
   },
 
   plugins: ['header', 'mocha'],

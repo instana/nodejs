@@ -32,13 +32,8 @@ if (process.env.BULL_QUEUE_NAME) {
 
 let mochaSuiteFn;
 
-// const concurrencyEnabled = [true, false];
-
-// const sendingOptions = ['bulk=true'];
 const sendingOptions = ['default', 'bulk=true', 'repeat=true'];
-
 const receivingMethods = ['Process', 'Promise', 'Callback'];
-// const receivingMethods = ['Process'];
 
 // Bull relies on EventEmitter.prototype.off, which is available from Node 10 on
 if (!supportedVersion(process.versions.node) || semver.lt(process.version, '10.0.0')) {
@@ -81,7 +76,7 @@ mochaSuiteFn('tracing/messaging/bull', function() {
             BULL_RECEIVE_TYPE: receiveMethod,
             BULL_JOB_NAME: 'steve',
             BULL_JOB_NAME_ENABLED: 'true',
-            BULL_CONCURRENCY_ENABLED: 'false'
+            BULL_CONCURRENCY_ENABLED: 'true'
           }
         });
 
@@ -98,7 +93,6 @@ mochaSuiteFn('tracing/messaging/bull', function() {
               const response = await senderControls.sendRequest({
                 method: 'POST',
                 path: urlWithParams
-                // simple: withError !== 'sender'
               });
 
               return verify({
@@ -280,7 +274,7 @@ mochaSuiteFn('tracing/messaging/bull', function() {
             BULL_RECEIVE_TYPE: receiveMethod,
             BULL_JOB_NAME: 'steve',
             BULL_JOB_NAME_ENABLED: 'true',
-            BULL_CONCURRENCY_ENABLED: 'false'
+            BULL_CONCURRENCY_ENABLED: 'true'
           }
         });
 
@@ -296,11 +290,9 @@ mochaSuiteFn('tracing/messaging/bull', function() {
 
           it(`should not trace for sending(${sendOption}) / receiving(${receiveMethod})`, async () => {
             const urlWithParams = apiPath;
-            // const urlWithParams = withError ? apiPath + '&withError=true' : apiPath;
             const response = await senderControls.sendRequest({
               method: 'POST',
               path: urlWithParams
-              // simple: withError !== 'sender'
             });
 
             return retry(() => verifyResponseAndJobProcessing({ response, testId, isRepeatable, isBulk }), retryTime)
@@ -308,7 +300,7 @@ mochaSuiteFn('tracing/messaging/bull', function() {
               .then(() => agentControls.getSpans())
               .then(spans => {
                 if (spans.length > 0) {
-                  fail(`Unexpected spans (AWS SQS suppressed: ${stringifyItems(spans)}`);
+                  fail(`Unexpected spans (Bull suppressed: ${stringifyItems(spans)}`);
                 }
               });
           });
@@ -343,7 +335,7 @@ mochaSuiteFn('tracing/messaging/bull', function() {
             BULL_RECEIVE_TYPE: receiveMethod,
             BULL_JOB_NAME: 'steve',
             BULL_JOB_NAME_ENABLED: 'true',
-            BULL_CONCURRENCY_ENABLED: 'false'
+            BULL_CONCURRENCY_ENABLED: 'true'
           }
         });
 
@@ -358,7 +350,6 @@ mochaSuiteFn('tracing/messaging/bull', function() {
           const apiPath = `/send?jobName=true&${sendOption}&testId=${testId}`;
           it(`doesn't trace when sending(${sendOption}) and receiving(${receiveMethod})`, async () => {
             const urlWithParams = apiPath;
-            // const urlWithParams = withError ? apiPath + '&withError=true' : apiPath;
 
             const response = await senderControls.sendRequest({
               method: 'POST',
@@ -381,30 +372,6 @@ mochaSuiteFn('tracing/messaging/bull', function() {
       });
     });
   });
-
-  // describe('tracing enabled with wrong queue name', () => {
-  //   const receiverControls = new ProcessControls({
-  //     appPath: path.join(__dirname, 'receiveMessage'),
-  //     port: 3216,
-  //     useGlobalAgent: true,
-  //     env: {
-  //       SQS_RECEIVE_METHOD: 'callback',
-  //       AWS_SQS_QUEUE_URL: queueURL + '-non-existent'
-  //     }
-  //   });
-
-  //   ProcessControls.setUpHooksWithRetryTime(retryTime, receiverControls);
-
-  //   it('reports an error span', async () => {
-  //     await retry(() => delay(config.getTestTimeout() / 4), retryTime);
-  //     const spans = await agentControls.getSpans();
-
-  //     return expectAtLeastOneMatching(spans, [
-  //       span => expect(span.ec).equal(1),
-  //       span => expect(span.data.sqs.error).to.equal('AWS.SimpleQueueService.NonExistentQueue')
-  //     ]);
-  //   });
-  // });
 });
 
 async function verifyResponseAndJobProcessing({ response, testId, isRepeatable, isBulk }) {

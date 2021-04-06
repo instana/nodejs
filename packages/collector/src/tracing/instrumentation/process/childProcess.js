@@ -72,12 +72,12 @@ function shimFork(original) {
     if (typeof modulePath === 'string' && bullMasterProcessMatch.test(modulePath) && args && args.execArgv) {
       if (!selfPath.immediate) {
         logger.warn(
-          "Detected a child_process.spawn of 'Bull processor', but the path to @instana/collector is not available, " +
+          "Detected a child_process.fork of 'Bull processor', but the path to @instana/collector is not available, " +
             'so this Bull processor instance will not be instrumented.'
         );
       } else {
         logger.debug(
-          `Detected a child_process.spawn of Bull, instrumenting it by adding --require ${selfPath.immediate}.`
+          `Detected a child_process.fork of Bull, instrumenting it by adding --require ${selfPath.immediate}.`
         );
 
         process.env.INSTANA_AGENT_UUID = processIdentityProvider.getFrom().h;
@@ -100,8 +100,7 @@ function shimFork(original) {
           typeof message.job === 'object' &&
           message.job.opts &&
           entrySpan &&
-          entrySpan.k === 1 &&
-          processIdentityProvider
+          entrySpan.k === 1
         ) {
           if (message.job.opts == null) {
             message.job.opts = {};

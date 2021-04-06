@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+- Add instrumentation for Bull Messaging Framework.
+
+## 1.118.0
+- Update third party dependencies.
+
 ## 1.117.3
 - Fix garbage collection metrics being reported falsely as not supported when `node_modules/gcstats.js` exists.
 

@@ -21,22 +21,6 @@ const bullJobName = process.env.BULL_JOB_NAME || 'steve';
 const jobNameEnabled = process.env.BULL_JOB_NAME_ENABLED === 'true';
 const concurrencyEnabled = process.env.BULL_CONCURRENCY_ENABLED === 'true';
 
-// sends a reference of instana object to util.js
-// setInstana(instana);
-
-// Cleanup code, may be useful later
-// receiver
-//   .clean(1000)
-//   .then(data => console.log('success', data))
-//   .catch(err => console.log('error', err));
-
-// receiver
-//   .removeRepeatable(bullJobName, {
-//     cron: '* * * * *'
-//   })
-//   .then(data => console.log('success', data))
-//   .catch(err => console.log('error', err));
-
 if (!validCallbackTypes.includes(receiveType)) {
   log(`Callback types must be one of these: ${validCallbackTypes.join(', ')} but got ${receiveType}`);
   process.exit(1);
