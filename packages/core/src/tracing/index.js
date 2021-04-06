@@ -16,6 +16,7 @@ const spanBuffer = require('./spanBuffer');
 const supportedVersion = require('./supportedVersion');
 
 let tracingEnabled = false;
+let tracingActivated = false;
 let instrumenationsInitialized = false;
 let automaticTracingEnabled = false;
 let cls = null;
@@ -56,7 +57,9 @@ const instrumentations = [
   './instrumentation/messaging/kafkaNode',
   './instrumentation/messaging/nats',
   './instrumentation/messaging/natsStreaming',
+  './instrumentation/messaging/bull',
   './instrumentation/process/memored',
+  './instrumentation/process/process',
   './instrumentation/protocols/graphql',
   './instrumentation/protocols/grpc',
   './instrumentation/protocols/httpClient',
@@ -65,6 +68,7 @@ const instrumentations = [
   './instrumentation/protocols/http2Server',
   './instrumentation/protocols/superagent'
 ];
+
 let additionalInstrumentationModules = [];
 const instrumentationModules = {};
 
@@ -104,6 +108,10 @@ exports.init = function init(_config, downstreamConnection, _processIdentityProv
       initInstrumenations(config);
     }
   }
+
+  if (config.tracing.activateImmediately) {
+    exports.activate();
+  }
 };
 
 function initInstrumenations(_config) {
@@ -130,7 +138,8 @@ function initInstrumenations(_config) {
 }
 
 exports.activate = function activate() {
-  if (tracingEnabled) {
+  if (tracingEnabled && !tracingActivated) {
+    tracingActivated = true;
     spanBuffer.activate();
     opentracing.activate();
     sdk.activate();
@@ -150,7 +159,9 @@ exports.activate = function activate() {
 };
 
 exports.deactivate = function deactivate() {
-  if (tracingEnabled) {
+  if (tracingEnabled && tracingActivated) {
+    tracingActivated = false;
+
     if (automaticTracingEnabled) {
       instrumentations.forEach(instrumentationKey => {
         instrumentationModules[instrumentationKey].deactivate();

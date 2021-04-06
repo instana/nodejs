@@ -5,6 +5,8 @@
 
 'use strict';
 
+const processIdentityProvider = require('../../../pidStore');
+const cls = require('../../../../../core/src/tracing/cls');
 const coreChildProcess = require('child_process');
 const shimmer = require('shimmer');
 
@@ -23,6 +25,7 @@ logger = require('../../../logger').getLogger('tracing/child_process', newLogger
 // edgemicro workers.
 exports.init = function() {
   shimmer.wrap(coreChildProcess, 'spawn', shimSpawn);
+  shimmer.wrap(coreChildProcess, 'fork', shimFork);
 };
 
 function shimSpawn(original) {
@@ -54,6 +57,75 @@ function shimSpawn(original) {
     }
 
     return original.apply(this, arguments);
+  };
+}
+
+const bullMasterProcessMatch = /bull\/lib\/process\/master\.js/;
+
+function shimFork(original) {
+  return function() {
+    // args: modulePath, args, options
+    const _args = Array.prototype.slice.call(arguments);
+    const modulePath = _args[0];
+    const args = _args[1];
+
+    if (typeof modulePath === 'string' && bullMasterProcessMatch.test(modulePath) && args && args.execArgv) {
+      if (!selfPath.immediate) {
+        logger.warn(
+          "Detected a child_process.fork of 'Bull processor', but the path to @instana/collector is not available, " +
+            'so this Bull processor instance will not be instrumented.'
+        );
+      } else {
+        logger.debug(
+          `Detected a child_process.fork of Bull, instrumenting it by adding --require ${selfPath.immediate}.`
+        );
+
+        process.env.INSTANA_AGENT_UUID = processIdentityProvider.getFrom().h;
+        args.execArgv.unshift(selfPath.immediate);
+        args.execArgv.unshift('--require');
+      }
+
+      /** @type {import('node:child_process').ChildProcess} */
+      const childProcess = original.apply(this, _args);
+
+      // Retrieve the entry span created by bull.js#instrumentedProcessJob.
+      const originalChildProcessSend = childProcess.send;
+      childProcess.send = function(message) {
+        const entrySpan = cls.getCurrentSpan();
+        if (
+          //
+          message && //
+          message.cmd === 'start' &&
+          message.job &&
+          typeof message.job === 'object' &&
+          message.job.opts &&
+          entrySpan &&
+          entrySpan.k === 1
+        ) {
+          if (message.job.opts == null) {
+            message.job.opts = {};
+          }
+
+          /**
+           * Because this handles the process case, we don't need to care about repeatable jobs and handle
+           * them by job id.
+           * The reason is that here, we treat each job independently of each other, so it's ok to define the
+           * instanaTracingContext object, instead of opts[job.id] as we do for the Callback and Promise case.
+           */
+          if (message.job.opts.instanaTracingContext == null) {
+            message.job.opts.instanaTracingContext = {};
+          }
+          message.job.opts.instanaTracingContext.X_INSTANA_T = entrySpan.t;
+          message.job.opts.instanaTracingContext.X_INSTANA_S = entrySpan.s;
+        }
+
+        originalChildProcessSend.apply(this, arguments);
+      };
+
+      return childProcess;
+    } else {
+      return original.apply(this, arguments);
+    }
   };
 }
 

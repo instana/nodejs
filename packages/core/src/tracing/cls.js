@@ -7,7 +7,7 @@
 
 const spanBuffer = require('./spanBuffer');
 const tracingUtil = require('./tracingUtil');
-const constants = require('./constants');
+const { ENTRY, EXIT, INTERMEDIATE } = require('./constants');
 const hooked = require('./clsHooked');
 const tracingMetrics = require('./metrics');
 let logger;
@@ -42,14 +42,127 @@ exports.init = function init(config, _processIdentityProvider) {
   processIdentityProvider = _processIdentityProvider;
 };
 
+class InstanaSpan {
+  constructor(name) {
+    // properties that part of our span model
+    this.t = undefined;
+    this.s = undefined;
+    this.p = undefined;
+    this.n = name;
+    this.k = undefined;
+    if (processIdentityProvider && typeof processIdentityProvider.getFrom === 'function') {
+      this.f = processIdentityProvider.getFrom();
+    }
+    this.ec = 0;
+    this.ts = Date.now();
+    this.d = 0;
+    this.stack = [];
+    this.data = {};
+
+    // properties used within the collector that should not be transmitted to the agent/backend
+    // NOTE: If you add a new property, make sure that it is not enumerable, as it may otherwise be transmitted
+    // to the backend!
+    Object.defineProperty(this, 'cleanupFunctions', {
+      value: [],
+      writable: false,
+      enumerable: false
+    });
+    Object.defineProperty(this, 'transmitted', {
+      value: false,
+      writable: true,
+      enumerable: false
+    });
+    Object.defineProperty(this, 'pathTplFrozen', {
+      value: false,
+      writable: true,
+      enumerable: false
+    });
+    Object.defineProperty(this, 'manualEndMode', {
+      value: false,
+      writable: true,
+      enumerable: false
+    });
+  }
+
+  addCleanup(fn) {
+    this.cleanupFunctions.push(fn);
+  }
+
+  transmit() {
+    if (!this.transmitted && !this.manualEndMode) {
+      spanBuffer.addSpan(this);
+      this.cleanup();
+      tracingMetrics.incrementClosed();
+      this.transmitted = true;
+    }
+  }
+
+  transmitManual() {
+    if (!this.transmitted) {
+      spanBuffer.addSpan(this);
+      this.cleanup();
+      tracingMetrics.incrementClosed();
+      this.transmitted = true;
+    }
+  }
+
+  cancel() {
+    if (!this.transmitted) {
+      this.cleanup();
+      tracingMetrics.incrementClosed();
+      this.transmitted = true;
+    }
+  }
+
+  cleanup() {
+    this.cleanupFunctions.forEach(call);
+    this.cleanupFunctions.length = 0;
+  }
+
+  freezePathTemplate() {
+    this.pathTplFrozen = true;
+  }
+
+  disableAutoEnd() {
+    this.manualEndMode = true;
+  }
+}
+
+/**
+ * Overrides transmit and cancel so that a pseudo span is not put into the span buffer. All other behaviour is inherited
+ * from InstanaSpan.
+ */
+class InstanaPseudoSpan extends InstanaSpan {
+  transmit() {
+    if (!this.transmitted && !this.manualEndMode) {
+      this.cleanup();
+      this.transmitted = true;
+    }
+  }
+
+  transmitManual() {
+    if (!this.transmitted) {
+      this.cleanup();
+      this.transmitted = true;
+    }
+  }
+
+  cancel() {
+    if (!this.transmitted) {
+      this.cleanup();
+      this.transmitted = true;
+    }
+  }
+}
+
 /*
  * Start a new span and set it as the current span.
  */
 exports.startSpan = function startSpan(spanName, kind, traceId, parentSpanId, w3cTraceContext) {
   tracingMetrics.incrementOpened();
-  if (!kind || (kind !== constants.ENTRY && kind !== constants.EXIT && kind !== constants.INTERMEDIATE)) {
+  if (!kind || (kind !== ENTRY && kind !== EXIT && kind !== INTERMEDIATE)) {
     logger.warn('Invalid span (%s) without kind/with invalid kind: %s, assuming EXIT.', spanName, kind);
-    kind = constants.EXIT;
+    kind = EXIT;
   }
   const span = new InstanaSpan(spanName);
   span.k = kind;
@@ -92,7 +205,44 @@ exports.startSpan = function startSpan(spanName, kind, traceId, parentSpanId, w3
     span.addCleanup(exports.ns.set(w3cTraceContextKey, w3cTraceContext));
   }
 
-  if (span.k === constants.ENTRY) {
+  if (span.k === ENTRY) {
+    // Make the entry span available independently (even if getCurrentSpan would return an intermediate or an exit at
+    // any given moment). This is used by the instrumentations of web frameworks like Express.js to add path templates
+    // and error messages to the entry span.
+    span.addCleanup(exports.ns.set(currentEntrySpanKey, span));
+  }
+
+  // Set the span object as the currently active span in the active CLS context and also add a cleanup hook for when
+  // this span is transmitted.
+  span.addCleanup(exports.ns.set(currentSpanKey, span));
+  return span;
+};
+
+/*
+ * Puts a pseudo span in the CLS context that is simply a holder for a trace ID and span ID. This pseudo span will act
+ * as the parent for other child span that are produced but will not be transmitted to the agent itself.
+ */
+exports.putPseudoSpan = function putPseudoSpan(spanName, kind, traceId, spanId) {
+  if (!kind || (kind !== ENTRY && kind !== EXIT && kind !== INTERMEDIATE)) {
+    logger.warn('Invalid pseudo span (%s) without kind/with invalid kind: %s, assuming EXIT.', spanName, kind);
+    kind = EXIT;
+  }
+  const span = new InstanaPseudoSpan(spanName);
+  span.k = kind;
+
+  if (!traceId) {
+    logger.warn('Cannot start a pseudo span without a trace ID', spanName, kind);
+    return;
+  }
+  if (!spanId) {
+    logger.warn('Cannot start a pseudo span without a span ID', spanName, kind);
+    return;
+  }
+
+  span.t = traceId;
+  span.s = spanId;
+
+  if (span.k === ENTRY) {
     // Make the entry span available independently (even if getCurrentSpan would return an intermediate or an exit at
     // any given moment). This is used by the instrumentations of web frameworks like Express.js to add path templates
     // and error messages to the entry span.
@@ -235,90 +385,6 @@ exports.runPromiseInAsyncContext = function runPromiseInAsyncContext(context, fn
     return fn();
   }
   return exports.ns.runPromise(fn, context);
-};
-
-function InstanaSpan(name) {
-  // properties that part of our span model
-  this.t = undefined;
-  this.s = undefined;
-  this.p = undefined;
-  this.n = name;
-  this.k = undefined;
-  if (processIdentityProvider && typeof processIdentityProvider.getFrom === 'function') {
-    this.f = processIdentityProvider.getFrom();
-  }
-  this.ec = 0;
-  this.ts = Date.now();
-  this.d = 0;
-  this.stack = [];
-  this.data = {};
-
-  // properties used within the collector that should not be transmitted to the agent/backend
-  // NOTE: If you add a new property, make sure that it is not enumerable, as it may otherwise be transmitted
-  // to the backend!
-  Object.defineProperty(this, 'cleanupFunctions', {
-    value: [],
-    writable: false,
-    enumerable: false
-  });
-  Object.defineProperty(this, 'transmitted', {
-    value: false,
-    writable: true,
-    enumerable: false
-  });
-  Object.defineProperty(this, 'pathTplFrozen', {
-    value: false,
-    writable: true,
-    enumerable: false
-  });
-  Object.defineProperty(this, 'manualEndMode', {
-    value: false,
-    writable: true,
-    enumerable: false
-  });
-}
-
-InstanaSpan.prototype.addCleanup = function addCleanup(fn) {
-  this.cleanupFunctions.push(fn);
-};
-
-InstanaSpan.prototype.transmit = function transmit() {
-  if (!this.transmitted && !this.manualEndMode) {
-    spanBuffer.addSpan(this);
-    this.cleanup();
-    tracingMetrics.incrementClosed();
-    this.transmitted = true;
-  }
-};
-
-InstanaSpan.prototype.transmitManual = function transmitManual() {
-  if (!this.transmitted) {
-    spanBuffer.addSpan(this);
-    this.cleanup();
-    tracingMetrics.incrementClosed();
-    this.transmitted = true;
-  }
-};
-
-InstanaSpan.prototype.cancel = function cancel() {
-  if (!this.transmitted) {
-    this.cleanup();
-    tracingMetrics.incrementClosed();
-    this.transmitted = true;
-  }
-};
-
-InstanaSpan.prototype.cleanup = function cleanup() {
-  this.cleanupFunctions.forEach(call);
-  this.cleanupFunctions.length = 0;
-};
-
-InstanaSpan.prototype.freezePathTemplate = function freezePathTemplate() {
-  this.pathTplFrozen = true;
-};
-
-InstanaSpan.prototype.disableAutoEnd = function disableAutoEnd() {
-  this.manualEndMode = true;
 };
 
 function call(fn) {
