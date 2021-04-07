@@ -1,5 +1,8 @@
 # Changelog
 
+## Unreleased
+ - Fixed a call from collector to the core by using @instana/collector instead of relative path
+
 ## 1.119.0
 - Add instrumentation for Bull Messaging Framework.
 

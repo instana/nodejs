@@ -6,7 +6,8 @@
 'use strict';
 
 const processIdentityProvider = require('../../../pidStore');
-const cls = require('../../../../../core/src/tracing/cls');
+
+const getCls = require('@instana/core').tracing.getCls;
 const coreChildProcess = require('child_process');
 const shimmer = require('shimmer');
 
@@ -91,7 +92,13 @@ function shimFork(original) {
       // Retrieve the entry span created by bull.js#instrumentedProcessJob.
       const originalChildProcessSend = childProcess.send;
       childProcess.send = function(message) {
-        const entrySpan = cls.getCurrentSpan();
+        const cls = getCls();
+        let entrySpan = null;
+
+        if (cls) {
+          entrySpan = cls.getCurrentSpan();
+        }
+
         if (
           //
           message && //
