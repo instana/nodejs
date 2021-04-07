@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.119.1
  - Fixed a call from collector to the core by using @instana/collector instead of relative path
 
 ## 1.119.0
