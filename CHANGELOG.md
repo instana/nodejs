@@ -1,7 +1,6 @@
 # Changelog
 
-## Unreleased
-
+## 1.119.0
 - Add instrumentation for Bull Messaging Framework.
 
 ## 1.118.0
