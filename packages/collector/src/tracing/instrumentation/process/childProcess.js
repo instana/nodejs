@@ -6,7 +6,15 @@
 'use strict';
 
 const processIdentityProvider = require('../../../pidStore');
-const cls = require('../../../../../core/src/tracing/cls');
+
+/**
+ * We cannot call cls directly from the core by using relative path with require('../../../../../core/src/tracing/cls')
+ * otherwise customers will get a MODULE NOT FOUND error.
+ * Instead, we have to rely on the @instana/core module and use the tracing.getCls function, which must be invoked
+ * in the `exports.init()` function;
+ */
+const getCls = require('@instana/core').tracing.getCls;
+let cls;
 const coreChildProcess = require('child_process');
 const shimmer = require('shimmer');
 
@@ -24,6 +32,7 @@ logger = require('../../../logger').getLogger('tracing/child_process', newLogger
 // There is also ./edgemicro.js, which is responsible for instrumenting the code that is used to spawn the individual
 // edgemicro workers.
 exports.init = function() {
+  cls = getCls();
   shimmer.wrap(coreChildProcess, 'spawn', shimSpawn);
   shimmer.wrap(coreChildProcess, 'fork', shimFork);
 };
