@@ -5,6 +5,19 @@
 
 'use strict';
 
+const Module = require('module');
+
+const originalLoad = Module._load;
+
+Module._load = function() {
+  const filePath = arguments[0];
+
+  if (filePath.includes('../core/src')) {
+    throw new Error(`Different package import must follow @instana/package. Attempted to require ${filePath} instead`);
+  }
+  return originalLoad.apply(this, arguments);
+};
+
 const path = require('path');
 const instanaNodeJsCore = require('@instana/core');
 const instanaSharedMetrics = require('@instana/shared-metrics');
