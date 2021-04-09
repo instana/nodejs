@@ -34,6 +34,7 @@ const instrumentations = [
   './instrumentation/cloud/aws/sqs',
   './instrumentation/cloud/aws/s3',
   './instrumentation/cloud/aws/dynamodb',
+  './instrumentation/cloud/aws/kinesis',
   './instrumentation/cloud/gcp/pubsub',
   './instrumentation/cloud/gcp/storage',
   './instrumentation/control_flow/bluebird',
