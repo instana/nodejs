@@ -4,7 +4,7 @@
  */
 
 module.exports = {
-  extends: 'airbnb/legacy',
+  extends: ['airbnb/legacy', 'plugin:monorepo-cop/recommended'],
 
   env: {
     es6: true,
@@ -16,7 +16,7 @@ module.exports = {
     sourceType: 'script'
   },
 
-  plugins: ['header', 'mocha'],
+  plugins: ['header', 'mocha', 'monorepo-cop'],
 
   rules: {
     'block-scoped-var': 'off',

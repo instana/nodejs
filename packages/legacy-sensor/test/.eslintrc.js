@@ -3,5 +3,9 @@ module.exports = {
 
   env: {
     mocha: true
+  },
+
+  rules: {
+    'monorepo-cop/no-relative-import-outside-package': 'off'
   }
 };

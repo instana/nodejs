@@ -6,6 +6,7 @@ module.exports = {
   },
 
   rules: {
-    'object-curly-newline': 'off'
+    'object-curly-newline': 'off',
+    'monorepo-cop/no-relative-import-outside-package': 'off'
   }
 };

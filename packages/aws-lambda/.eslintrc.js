@@ -4,7 +4,7 @@
  */
 
 module.exports = {
-  extends: 'airbnb-base',
+  extends: ['airbnb-base', 'plugin:monorepo-cop/recommended'],
 
   env: {
     node: true
@@ -14,7 +14,7 @@ module.exports = {
     sourceType: 'script'
   },
 
-  plugins: ['mocha'],
+  plugins: ['mocha', 'monorepo-cop'],
 
   rules: {
     'arrow-parens': 'off',
