@@ -36,13 +36,16 @@ function W3cTraceContext() {
   this.traceStateTail = undefined;
 }
 
+/**
+ * @param {string} instanaTraceId
+ * @param {string} instanaParentId
+ * @param {boolean | *} sampled
+ * @returns {W3cTraceContext}
+ */
 W3cTraceContext.fromInstanaIds = function fromInstanaIds(instanaTraceId, instanaParentId, sampled) {
   const paddedTraceId = instanaTraceId.length === 16 ? LEFT_PAD_16 + instanaTraceId : instanaTraceId;
   sampled = typeof sampled === 'boolean' ? sampled : true;
-  const traceContext = new W3cTraceContext(
-    `${VERSION00}-${paddedTraceId}-${instanaParentId}-${sampled ? '01' : '00'}`,
-    `${constants.w3cInstanaEquals + instanaTraceId};${instanaParentId}`
-  );
+  const traceContext = new W3cTraceContext();
   traceContext.traceParentValid = true;
   traceContext.version = VERSION00;
   traceContext.traceParentTraceId = paddedTraceId;
@@ -56,9 +59,14 @@ W3cTraceContext.fromInstanaIds = function fromInstanaIds(instanaTraceId, instana
   return traceContext;
 };
 
+/**
+ * @param {string} traceId
+ * @param {string} parentId
+ * @returns
+ */
 W3cTraceContext.createEmptyUnsampled = function createEmptyUnsampled(traceId, parentId) {
   const paddedTraceId = traceId.length === 16 ? LEFT_PAD_16 + traceId : traceId;
-  const traceContext = new W3cTraceContext(`${VERSION00}-${paddedTraceId}-${parentId}-00`);
+  const traceContext = new W3cTraceContext();
   traceContext.traceParentValid = true;
   traceContext.version = VERSION00;
   traceContext.traceParentTraceId = paddedTraceId;
@@ -68,6 +76,9 @@ W3cTraceContext.createEmptyUnsampled = function createEmptyUnsampled(traceId, pa
   return traceContext;
 };
 
+/**
+ * @returns {string}
+ */
 W3cTraceContext.prototype.renderTraceParent = function renderTraceParent() {
   if (!this.traceParentValid) {
     return '';
@@ -76,18 +87,28 @@ W3cTraceContext.prototype.renderTraceParent = function renderTraceParent() {
   return `00-${this.traceParentTraceId}-${this.traceParentParentId}-${this.renderFlags()}`;
 };
 
+/**
+ * @returns {'01' | '00'}
+ */
 W3cTraceContext.prototype.renderFlags = function renderFlags() {
   return this.sampled ? '01' : '00';
 };
 
+/**
+ * @returns {boolean}
+ */
 W3cTraceContext.prototype.hasTraceState = function hasTraceState() {
   return ((this.instanaTraceId && this.instanaParentId) || this.traceStateHead || this.traceStateTail) != null;
 };
 
+/**
+ * @returns {string}
+ */
 W3cTraceContext.prototype.renderTraceState = function renderTraceState() {
   if (!this.traceStateValid) {
     return '';
   }
+  /** @type {Array.<*>} */
   let allKeyValuePairs = [];
   const instanaKeyValuePair = this.renderInstanaTraceStateValue();
   if (this.traceStateHead) {
@@ -124,6 +145,8 @@ W3cTraceContext.prototype.resetTraceState = function resetTraceState() {
  *   foreign trace ID),
  * - sets the sampled flag in traceparent to true,
  * - upserts the in key-value pair in tracestate to the given trace ID and span ID, and moved to the leftmost position.
+ * @param {string} instanaTraceId
+ * @param {string} instanaParentId
  */
 W3cTraceContext.prototype.updateParent = function updateParent(instanaTraceId, instanaParentId) {
   this.instanaTraceId = instanaTraceId;
@@ -143,6 +166,9 @@ W3cTraceContext.prototype.updateParent = function updateParent(instanaTraceId, i
   this.sampled = true;
 };
 
+/**
+ * @param {string} longTraceId
+ */
 W3cTraceContext.prototype.restartTrace = function restartTrace(longTraceId) {
   this.traceParentValid = true;
   this.version = VERSION00;
@@ -178,6 +204,7 @@ W3cTraceContext.prototype.getMostRecentForeignTraceStateMember = function getMos
   return traceStateToInspect[0];
 };
 
-module.exports = exports = W3cTraceContext;
-exports.VERSION00 = VERSION00;
-exports.SAMPLED_BITMASK = SAMPLED_BITMASK;
+W3cTraceContext.VERSION00 = VERSION00;
+W3cTraceContext.SAMPLED_BITMASK = SAMPLED_BITMASK;
+
+module.exports = W3cTraceContext;

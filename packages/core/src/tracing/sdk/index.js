@@ -7,8 +7,12 @@
 
 const callback = require('./sdk')(true);
 const promise = require('./sdk')(false);
+/** @type {import('../cls')} */
 let cls;
 
+/**
+ * @param {import('../cls')} _cls
+ */
 exports.init = function init(_cls) {
   cls = _cls;
   callback.init(_cls);
@@ -47,6 +51,8 @@ exports.getAsyncContext = function getAsyncContext() {
  * continuity. These methods enable users of @instana/collector to work around these issues.
  *
  * This is the variant that you are probably looking for if you need to fix async_hook continuity issues.
+ * @param {import('../clsHooked/context').InstanaCLSContext} context
+ * @param {Function} fn
  */
 exports.runInAsyncContext = function runInAsyncContext(context, fn) {
   if (!cls) {
@@ -65,6 +71,8 @@ exports.runInAsyncContext = function runInAsyncContext(context, fn) {
  *
  * This is the variant that you are probably looking for if you need to fix async_hook continuity issues with a promise
  * based library.
+ * @param {import('../clsHooked/context').InstanaCLSContext} context
+ * @param {Function} fn
  */
 exports.runPromiseInAsyncContext = function runPromiseInAsyncContext(context, fn) {
   if (!cls) {

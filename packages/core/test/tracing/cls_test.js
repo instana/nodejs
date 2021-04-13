@@ -80,7 +80,7 @@ describe('tracing/cls', () => {
     cls.init(
       {},
       {
-        getFrom: function() {
+        getFrom: function () {
           return {
             e: String(process.pid),
             h: undefined

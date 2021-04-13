@@ -8,7 +8,12 @@
 const currentSpanKey = 'com.instana.span';
 const reducedSpanKey = 'com.instana.reduced';
 
-module.exports = exports = function unset(context, key, value) {
+/**
+ * @param {import('./context').InstanaCLSContext} context
+ * @param {string} key
+ * @param {*} value
+ */
+module.exports = function unset(context, key, value) {
   if (context[key] === value) {
     storeReducedSpan(context, key, value);
     delete context[key];
@@ -19,6 +24,9 @@ module.exports = exports = function unset(context, key, value) {
  * Check if the provided object is an Instana span and if so, store a reduced version of the span under a special key.
  * The full span is reduced to a smaller set of attributes necessary to keep trace continuity. Potentially large fields
  * like data, stackTrace, etc. are not stored.
+ * @param {import('./context').InstanaCLSContext} context
+ * @param {string} key
+ * @param {import('../cls').InstanaBaseSpan} span
  */
 function storeReducedSpan(context, key, span) {
   // Keep only a reduced record for spans after transmission. This serves two purposes:

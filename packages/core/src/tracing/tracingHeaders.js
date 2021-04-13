@@ -11,7 +11,10 @@ const w3c = require('./w3c_trace_context');
 
 let disableW3cTraceCorrelation = false;
 
-exports.init = function(config) {
+/**
+ * @param {import('../util/normalizeConfig').InstanaConfig} config
+ */
+exports.init = function (config) {
   disableW3cTraceCorrelation = config.tracing.disableW3cTraceCorrelation;
 };
 
@@ -70,9 +73,11 @@ exports.init = function(config) {
 /**
  * Inspects the headers of an incoming HTTP request for X-INSTANA-T, X-INSTANA-S, X-INSTANA-L, as well as the W3C trace
  * context headers traceparent and tracestate.
+ * @param {import('node:http').IncomingMessage} req
  */
 exports.fromHttpRequest = function fromHttpRequest(req) {
   if (!req || !req.headers) {
+    // @ts-ignore
     req = { headers: {} };
   }
   return exports.fromHeaders(req.headers);
@@ -81,6 +86,7 @@ exports.fromHttpRequest = function fromHttpRequest(req) {
 /**
  * Inspects the given headers for X-INSTANA-T, X-INSTANA-S, X-INSTANA-L, as well as the W3C trace
  * context headers traceparent and tracestate.
+ * @param {import('node:http').IncomingHttpHeaders} headers
  */
 exports.fromHeaders = function fromHeaders(headers) {
   let xInstanaT = readInstanaTraceId(headers);
@@ -111,8 +117,8 @@ exports.fromHeaders = function fromHeaders(headers) {
     // X-INSTANA- headers *and* W3C trace context headers are present. We use the X-NSTANA- values for tracing and also
     // keep the received W3C trace context around.
     const result = {
-      traceId: xInstanaT,
-      parentId: xInstanaS,
+      traceId: /** @type {string} */ (xInstanaT),
+      parentId: /** @type {string} */ (xInstanaS),
       usedTraceParent: false,
       level,
       correlationType,
@@ -125,14 +131,18 @@ exports.fromHeaders = function fromHeaders(headers) {
     // X-INSTANA- headers are present but W3C trace context headers are not. Use the received IDs and also create a W3C
     // trace context based on those IDs.
     return limitTraceId({
-      traceId: xInstanaT,
-      parentId: xInstanaS,
+      traceId: /** @type {string} */ (xInstanaT),
+      parentId: /** @type {string} */ (xInstanaS),
       usedTraceParent: false,
       level,
       correlationType,
       correlationId,
       synthetic,
-      w3cTraceContext: w3c.create(xInstanaT, xInstanaS, !isSuppressed(level))
+      w3cTraceContext: w3c.create(
+        /** @type {string} */ (xInstanaT),
+        /** @type {string} */ (xInstanaS),
+        !isSuppressed(level)
+      )
     });
   } else if (w3cTraceContext && !disableW3cTraceCorrelation) {
     // There are no X-INSTANA- headers, but there are W3C trace context headers. As of 2021-02, we use the IDs from
@@ -220,6 +230,10 @@ exports.fromHeaders = function fromHeaders(headers) {
   }
 };
 
+/**
+ * @param {import('node:http').IncomingHttpHeaders} headers
+ * @returns {string | Array.<string>}
+ */
 function readInstanaTraceId(headers) {
   const xInstanaT = headers[constants.traceIdHeaderNameLowerCase];
   if (xInstanaT == null) {
@@ -228,6 +242,10 @@ function readInstanaTraceId(headers) {
   return xInstanaT;
 }
 
+/**
+ * @param {import('node:http').IncomingHttpHeaders} headers
+ * @returns {string | Array.<string>}
+ */
 function readInstanaParentId(headers) {
   const xInstanaS = headers[constants.spanIdHeaderNameLowerCase];
   if (xInstanaS == null) {
@@ -236,6 +254,9 @@ function readInstanaParentId(headers) {
   return xInstanaS;
 }
 
+/**
+ * @param {import('node:http').IncomingHttpHeaders} headers
+ */
 function readLevelAndCorrelation(headers) {
   const xInstanaL = headers[constants.traceLevelHeaderNameLowerCase];
   if (xInstanaL == null) {
@@ -257,7 +278,7 @@ function readLevelAndCorrelation(headers) {
     level = null;
   }
 
-  const parts = xInstanaL.split(',');
+  const parts = /** @type {string} */ (xInstanaL).split(',');
   if (parts.length > 1) {
     const idxType = parts[1].indexOf('correlationType=');
     const idxSemi = parts[1].indexOf(';');
@@ -280,23 +301,37 @@ function readLevelAndCorrelation(headers) {
   };
 }
 
+/**
+ * @param {string | undefined} level
+ * @returns {boolean}
+ */
 function isSuppressed(level) {
   return typeof level === 'string' && level.indexOf('0') === 0;
 }
 
+/**
+ * @param {import('node:http').IncomingHttpHeaders} headers
+ */
 function readSyntheticMarker(headers) {
   return headers[constants.syntheticHeaderNameLowerCase] === '1';
 }
 
+/**
+ * @param {import('./w3c_trace_context/W3cTraceContext')} w3cTraceContext
+ * @returns {boolean}
+ */
 function traceStateHasInstanaKeyValuePair(w3cTraceContext) {
-  return w3cTraceContext.instanaTraceId && w3cTraceContext.instanaParentId;
+  return !!(w3cTraceContext.instanaTraceId && w3cTraceContext.instanaParentId);
 }
 
+/**
+ * @param {import('node:http').IncomingHttpHeaders} headers
+ */
 function readW3cTraceContext(headers) {
-  const traceParent = headers[constants.w3cTraceParent];
+  const traceParent = /** @type {string} */ (headers[constants.w3cTraceParent]);
   // The spec mandates that multiple tracestate headers should be treated by concatenating them. Node.js' http core
   // library takes care of that already.
-  const traceState = headers[constants.w3cTraceState];
+  const traceState = /** @type {string} */ (headers[constants.w3cTraceState]);
   let traceContext;
   if (traceParent) {
     traceContext = w3c.parse(traceParent, traceState);
@@ -313,6 +348,30 @@ function readW3cTraceContext(headers) {
   return traceContext;
 }
 
+/**
+ * @typedef {Object} InstanaAncestor
+ * @property {string} t
+ * @property {string} p
+ */
+
+/**
+ * @typedef {Object} TracingHeaders
+ * @property {string} [traceId]
+ * @property {string} [longTraceId]
+ * @property {string} [parentId]
+ * @property {boolean} usedTraceParent
+ * @property {import('./w3c_trace_context/W3cTraceContext')} w3cTraceContext
+ * @property {string} level
+ * @property {string} [correlationType]
+ * @property {string} [correlationId]
+ * @property {boolean} synthetic
+ * @property {InstanaAncestor} [instanaAncestor]
+ */
+
+/**
+ * @param {TracingHeaders} result
+ * @returns {TracingHeaders}
+ */
 function limitTraceId(result) {
   if (result.traceId && result.traceId.length >= 32) {
     result.longTraceId = result.traceId;

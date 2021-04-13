@@ -9,11 +9,66 @@ const opentracing = require('opentracing');
 const spanBuffer = require('../spanBuffer');
 const tracingUtil = require('../tracingUtil');
 
+/**
+ * @typedef {Object} OpenTracingSpanDataSdkCustom
+ * @property {*} tags
+ * @property {*} logs
+ */
+
+/**
+ * @typedef {Object} OpenTracingSpanDataSdk
+ * @property {'local' | 'entry' | 'exit'} type
+ * @property {string} name
+ * @property {OpenTracingSpanDataSdkCustom} custom
+ */
+
+/**
+ * @typedef {Object} OpenTracingSpanData
+ * @property {string} service
+ * @property {OpenTracingSpanDataSdk} sdk
+ */
+
+/**
+ * @typedef {Object} OpenTracingSpan
+ * @property {string} s
+ * @property {string} t
+ * @property {string} p
+ * @property {number} ec
+ * @property {number} ts
+ * @property {number} d
+ * @property {string} n
+ * @property {*} stack
+ * @property {OpenTracingSpanData} data
+ * @property {*} [f]
+ */
+
+/**
+ * @typedef {Object} SpanFieldReference
+ * @property {() => string} type
+ * @property {() => *} referencedContext
+ */
+
+/**
+ * @typedef {Object} SpanFields
+ * @property {Array.<SpanFieldReference>} references
+ * @property {number} startTime
+ * @property {string} operationName
+ * @property {*} tags
+ */
+
 // can be set via config
+/** @type {string} */
 let serviceName;
 
+/** @type {import('../../index').ProcessIdentityProvider} */
 let processIdentityProvider = null;
 
+/**
+ *
+ * @param {import('./Tracer')} tracer
+ * @param {string} name
+ * @param {SpanFields} fields
+ */
 function Span(tracer, name, fields) {
   opentracing.Span.call(this);
   this.tracerImpl = tracer;
@@ -33,14 +88,20 @@ function Span(tracer, name, fields) {
   }
 
   const spanId = tracingUtil.generateRandomSpanId();
+  /** @type {string} */
   const traceId = (parentContext ? parentContext.t : null) || spanId;
   const parentId = (parentContext ? parentContext.s : null) || undefined;
   this._contextImpl = new opentracing.SpanContext();
+  // @ts-ignore
   this._contextImpl.s = spanId;
+  // @ts-ignore
   this._contextImpl.t = traceId;
+  // @ts-ignore
   this._contextImpl.baggage = copyBaggage(parentContext && parentContext.baggage);
+  // @ts-ignore
   this._contextImpl.samplingPriority = parentContext ? parentContext.samplingPriority : 1;
 
+  /** @type {OpenTracingSpan} */
   this.span = {
     s: spanId,
     t: traceId,
@@ -76,7 +137,7 @@ function Span(tracer, name, fields) {
   }
 }
 
-module.exports = exports = Span;
+module.exports = Span;
 
 Span.prototype = Object.create(opentracing.Span.prototype);
 
@@ -88,18 +149,33 @@ Span.prototype._tracer = function _tracer() {
   return this.tracerImpl;
 };
 
+/**
+ * @param {string} name
+ */
 Span.prototype._setOperationName = function _setOperationName(name) {
   this.span.data.sdk.name = name;
 };
 
+/**
+ * @param {string} key
+ * @param {*} value
+ */
 Span.prototype._setBaggageItem = function _setBaggageItem(key, value) {
+  // @ts-ignore
   this._contextImpl.baggage[key] = value;
 };
 
+/**
+ * @param {string} key
+ */
 Span.prototype._getBaggageItem = function _getBaggageItem(key) {
+  // @ts-ignore
   return this._contextImpl.baggage[key];
 };
 
+/**
+ * @param {Object.<string, *>} keyValuePairs
+ */
 Span.prototype._addTags = function _addTags(keyValuePairs) {
   const keys = Object.keys(keyValuePairs);
   for (let i = 0, length = keys.length; i < length; i++) {
@@ -108,6 +184,10 @@ Span.prototype._addTags = function _addTags(keyValuePairs) {
   }
 };
 
+/**
+ * @param {string} key
+ * @param {*} value
+ */
 Span.prototype._addTag = function _addTag(key, value) {
   if (key === opentracing.Tags.ERROR) {
     if (value) {
@@ -120,12 +200,17 @@ Span.prototype._addTag = function _addTag(key, value) {
       this.span.data.sdk.type = 'exit';
     }
   } else if (key === opentracing.Tags.SAMPLING_PRIORITY) {
+    // @ts-ignore
     this._contextImpl.samplingPriority = value;
   } else {
     this.span.data.sdk.custom.tags[key] = value;
   }
 };
 
+/**
+ * @param {Object.<string, *>} keyValuePairs
+ * @param {number} timestamp
+ */
 Span.prototype._log = function _log(keyValuePairs, timestamp) {
   if (timestamp == null) {
     timestamp = Date.now();
@@ -143,7 +228,11 @@ Span.prototype._log = function _log(keyValuePairs, timestamp) {
   }
 };
 
+/**
+ * @param {number} finishTime
+ */
 Span.prototype._finish = function _finish(finishTime) {
+  // @ts-ignore
   if (this._contextImpl.samplingPriority <= 0) {
     return;
   }
@@ -155,11 +244,15 @@ Span.prototype._finish = function _finish(finishTime) {
   spanBuffer.addSpan(this.span);
 };
 
+/**
+ * @param {Object.<string, *>} baggage
+ */
 function copyBaggage(baggage) {
   if (!baggage) {
     return {};
   }
 
+  /** @type {Object.<string, *>} */
   const copy = {};
 
   const keys = Object.keys(baggage);
@@ -171,13 +264,20 @@ function copyBaggage(baggage) {
   return copy;
 }
 
-exports.init = function init(config, _processIdentityProvider) {
+/**
+ * @param {import('../../util/normalizeConfig').InstanaConfig} config
+ * @param {import('../../index').ProcessIdentityProvider} _processIdentityProvider
+ */
+Span.init = function init(config, _processIdentityProvider) {
   if (config.serviceName) {
     serviceName = config.serviceName;
   }
   processIdentityProvider = _processIdentityProvider;
 };
 
-exports.setProcessIdentityProvider = function setProcessIdentityProvider(fn) {
+/**
+ * @param {import('../../index').ProcessIdentityProvider} fn
+ */
+Span.setProcessIdentityProvider = function setProcessIdentityProvider(fn) {
   processIdentityProvider = fn;
 };

@@ -8,10 +8,17 @@
 const opentracing = require('opentracing');
 
 let isActive = false;
+/** @type {import('./Tracer')} */
 let tracer;
+/** @type {import('../cls')} */
 let cls;
 let automaticTracingEnabled = false;
 
+/**
+ * @param {import('../../util/normalizeConfig').InstanaConfig} config
+ * @param {boolean} _automaticTracingEnabled
+ * @param {import('../../index').ProcessIdentityProvider} processIdentityProvider
+ */
 exports.init = function init(config, _automaticTracingEnabled, processIdentityProvider) {
   automaticTracingEnabled = _automaticTracingEnabled;
   require('./Span').init(config, processIdentityProvider);
@@ -61,9 +68,13 @@ exports.getCurrentlyActiveInstanaSpanContext = function getCurrentlyActiveInstan
   }
 
   const spanContext = new opentracing.SpanContext();
+  // @ts-ignore
   spanContext.s = s;
+  // @ts-ignore
   spanContext.t = t;
+  // @ts-ignore
   spanContext.samplingPriority = cls.tracingLevel() === '0' ? 0 : 1;
+  // @ts-ignore
   spanContext.baggage = {};
   return spanContext;
 };

@@ -7,14 +7,25 @@
 
 const tracingMetrics = require('./metrics');
 
+/** @type {import('../logger').GenericLogger} */
 let logger;
 logger = require('../logger').getLogger('tracing/spanBuffer', newLogger => {
   logger = newLogger;
 });
 
+/** @type {Array.<string>} */
 const batchableSpanNames = [];
+
+/**
+ * This module will not be typed yet: /nodejs-sensor/packages/collector/src/agentConnection.js
+ * @typedef {Object} TemporaryAgentConnection
+ * @property {(spans: *, cb: Function) => void} sendSpans
+ */
+
+/** @type {TemporaryAgentConnection} */
 let downstreamConnection = null;
 let isActive = false;
+/** @type {number} */
 let activatedAt = null;
 
 let minDelayBeforeSendingSpans = 1000;
@@ -25,14 +36,20 @@ if (process.env.INSTANA_DEV_MIN_DELAY_BEFORE_SENDING_SPANS != null) {
   }
 }
 
+/** @type {number} */
 let initialDelayBeforeSendingSpans;
+/** @type {number} */
 let transmissionDelay;
+/** @type {number} */
 let maxBufferedSpans;
+/** @type {number} */
 let forceTransmissionStartingAt;
+/** @type {NodeJS.Timeout} */
 let transmissionTimeoutHandle;
-
+/** @type {NodeJS.Timeout} */
 let preActivationCleanupIntervalHandle;
 
+/** @type {Array.<import('./cls').InstanaBaseSpan>} */
 let spans = [];
 
 let batchThreshold = 10;
@@ -62,8 +79,21 @@ const batchBucketWidth = 18;
 // rare, we omit the check, trading better perfomance for a few missed batch opportunities (if any).
 //
 // The batchingBuckets are cleared once the span buffer is flushed downstream.
+
+/**
+ * @typedef {Map.<number, Array.<import('./cls').InstanaBaseSpan>>} BatchingBucket
+ */
+/**
+ * @typedef {Map.<string, BatchingBucket>} BatchingBucketMap
+ */
+
+/** @type {BatchingBucketMap} */
 const batchingBuckets = new Map();
 
+/**
+ * @param {import('../util/normalizeConfig').InstanaConfig} config
+ * @param {TemporaryAgentConnection} _downstreamConnection
+ */
 exports.init = function init(config, _downstreamConnection) {
   downstreamConnection = _downstreamConnection;
   maxBufferedSpans = config.tracing.maxBufferedSpans;
@@ -119,13 +149,19 @@ exports.enableSpanBatching = function enableSpanBatching() {
   batchingEnabled = true;
 };
 
-exports.addBatchableSpanName = function(spanName) {
+/**
+ * @param {string} spanName
+ */
+exports.addBatchableSpanName = function (spanName) {
   if (!batchableSpanNames.includes(spanName)) {
     batchableSpanNames.push(spanName);
   }
 };
 
-exports.addSpan = function(span) {
+/**
+ * @param {import('./cls').InstanaBaseSpan} span
+ */
+exports.addSpan = function (span) {
   if (!isActive) {
     return;
   }
@@ -151,6 +187,10 @@ exports.addSpan = function(span) {
   }
 };
 
+/**
+ * @param {import('./cls').InstanaBaseSpan} span
+ * @returns {boolean}
+ */
 function addToBatch(span) {
   if (!batchingBuckets.has(span.t)) {
     // If we do not yet have any spans for this trace, we cannot batch anything either.
@@ -171,6 +211,13 @@ function addToBatch(span) {
   return findBatchPartnerAndMerge(span, bucketsForTrace, previousKey);
 }
 
+/**
+ *
+ * @param {import('./cls').InstanaBaseSpan} newSpan
+ * @param {BatchingBucket} bucketsForTrace
+ * @param {number} bucketKey
+ * @returns
+ */
 function findBatchPartnerAndMerge(newSpan, bucketsForTrace, bucketKey) {
   const bucket = bucketsForTrace.get(bucketKey);
   if (!bucket) {
@@ -202,6 +249,13 @@ function findBatchPartnerAndMerge(newSpan, bucketsForTrace, bucketKey) {
   return false;
 }
 
+/**
+ * @param {import('./cls').InstanaBaseSpan} oldSpan
+ * @param {import('./cls').InstanaBaseSpan} newSpan
+ * @param {Array.<import('./cls').InstanaBaseSpan>} bucket
+ * @param {number} bucketKey
+ * @param {number} indexInBucket
+ */
 function mergeSpansAsBatch(oldSpan, newSpan, bucket, bucketKey, indexInBucket) {
   // Determine, if the new span (about to be added to the buffer) is more significant than the old span that is already
   // in the buffer. Determine significance by:
@@ -232,9 +286,12 @@ function mergeSpansAsBatch(oldSpan, newSpan, bucket, bucketKey, indexInBucket) {
   }
 }
 
-/*
+/**
  * Merges the source span into the target span. Assumes that target is already in the spanBuffer and source can be
  * discarded afterwards.
+ * @param {import('./cls').InstanaBaseSpan} target
+ * @param {import('./cls').InstanaBaseSpan} source
+ * @param {number} originalBucketKey
  */
 function mergeIntoTargetSpan(target, source, originalBucketKey) {
   target.b = target.b || {};
@@ -272,6 +329,10 @@ function mergeIntoTargetSpan(target, source, originalBucketKey) {
   }
 }
 
+/**
+ * @param {import('./cls').InstanaBaseSpan} target
+ * @param {import('./cls').InstanaBaseSpan} source
+ */
 function setBatchSize(target, source) {
   if (target.b && target.b.s && source.b && source.b.s) {
     // Both spans already have a batch size, add them up. Note: It is rare that source already has batch properties,
@@ -293,6 +354,10 @@ function setBatchSize(target, source) {
   }
 }
 
+/**
+ * @param {import('./cls').InstanaBaseSpan} span
+ * @param {number} [preComputedBucketKey]
+ */
 function addToBucket(span, preComputedBucketKey) {
   // Put batcheable spans from the same trace into time-based buckets so we can find them for batching when more
   // spans are added later.
@@ -303,17 +368,22 @@ function addToBucket(span, preComputedBucketKey) {
   if (!batchingBuckets.get(span.t).has(bucketKey)) {
     batchingBuckets.get(span.t).set(bucketKey, []);
   }
-  batchingBuckets
-    .get(span.t)
-    .get(bucketKey)
-    .push(span);
+  batchingBuckets.get(span.t).get(bucketKey).push(span);
 }
 
+/**
+ * @param {import('./cls').InstanaBaseSpan} span
+ * @returns {number}
+ */
 function batchingBucketKey(span) {
   const spanEnd = span.ts + span.d;
   return spanEnd - (spanEnd % batchBucketWidth);
 }
 
+/**
+ * @param {import('./cls').InstanaBaseSpan} span
+ * @returns {boolean}
+ */
 function isBatchable(span) {
   return (
     // Only batch spans shorter than 10 ms.
@@ -341,7 +411,7 @@ function transmitSpans() {
   // batchingBuckets, though. This is deliberate. In the worst case, we might miss some batching opportunities, but
   // since sending spans downstream will take a few milliseconds, even that will be rare (and it is acceptable).
 
-  downstreamConnection.sendSpans(spansToSend, function sendSpans(error) {
+  downstreamConnection.sendSpans(spansToSend, function sendSpans(/** @type {Error} */ error) {
     if (error) {
       logger.warn(`Failed to transmit spans, will retry in ${transmissionDelay} ms.`, error.message);
       spans = spans.concat(spansToSend);

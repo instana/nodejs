@@ -10,6 +10,7 @@ const leftPad = require('../leftPad');
 
 const W3cTraceContext = require('./W3cTraceContext');
 
+/** @type {import('../../logger').GenericLogger} */
 let logger;
 logger = require('../../logger').getLogger('tracing/W3C trace context parser', newLogger => {
   logger = newLogger;
@@ -20,7 +21,12 @@ const regexVersion00 = /^[0-9a-f]{2}-([0-9a-f]{32})-([0-9a-f]{16})-([0-9a-f]{2})
 const regexUnknownVersion = /^[0-9a-f]{2}-([0-9a-f]{32})-([0-9a-f]{16})-([0-9a-f]{2}).*$/;
 const instanaVendorKeyOffset = constants.w3cInstanaEquals.length;
 
-module.exports = exports = function parse(traceParentRaw, traceStateRaw) {
+/**
+ * @param {string} traceParentRaw
+ * @param {string} traceStateRaw
+ * @returns {W3cTraceContext}
+ */
+module.exports = function parse(traceParentRaw, traceStateRaw) {
   const parsed = new W3cTraceContext();
   parseTraceParent(traceParentRaw, parsed);
   if (!parsed.traceParentValid) {
@@ -30,6 +36,10 @@ module.exports = exports = function parse(traceParentRaw, traceStateRaw) {
   return parsed;
 };
 
+/**
+ * @param {string} traceParentRaw
+ * @param {W3cTraceContext} parsed
+ */
 function parseTraceParent(traceParentRaw, parsed) {
   if (typeof traceParentRaw !== 'string') {
     return;
@@ -54,6 +64,10 @@ function parseTraceParent(traceParentRaw, parsed) {
   parsed.traceParentValid = true;
 }
 
+/**
+ * @param {string} traceStateRaw
+ * @param {W3cTraceContext} parsed
+ */
 function parseTraceState(traceStateRaw, parsed) {
   if (typeof traceStateRaw !== 'string') {
     return;
@@ -94,12 +108,21 @@ function parseTraceState(traceStateRaw, parsed) {
   parsed.traceStateValid = true;
 }
 
+/**
+ * @param {W3cTraceContext} parsed
+ * @param {string} instanaKeyValuePair
+ */
 function parseInstanaTraceStateKeyValuePair(parsed, instanaKeyValuePair) {
   const fields = instanaKeyValuePair.substring(instanaVendorKeyOffset).split(';');
   parsed.instanaTraceId = normalizeId(fields[0], true);
   parsed.instanaParentId = normalizeId(fields[1], false);
 }
 
+/**
+ * @param {string} id
+ * @param {boolean} isTraceId
+ * @returns {string | null}
+ */
 function normalizeId(id, isTraceId) {
   if (!id || typeof id !== 'string' || id.trim() === '') {
     logger.warn(`Received an invalid ${isTraceId ? 'trace' : 'span'} ID: "${id}"`);

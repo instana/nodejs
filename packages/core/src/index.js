@@ -3,6 +3,8 @@
  * (c) Copyright Instana Inc. and contributors 2019
  */
 
+// @ts-nocheck
+
 'use strict';
 
 const log = require('./logger');
@@ -10,6 +12,20 @@ const normalizeConfig = require('./util/normalizeConfig');
 
 // Require this first to ensure that we have non-instrumented http available.
 const uninstrumentedHttp = require('./uninstrumentedHttp');
+
+/**
+ * @typedef {{
+    h?: string,
+    e?: string,
+    hl?: boolean,
+    cp?: string,
+   }} PIDData
+ */
+
+/**
+ * @typedef {Object} ProcessIdentityProvider
+ * @property {() => PIDData} getFrom
+ */
 
 module.exports = exports = {
   logger: log,

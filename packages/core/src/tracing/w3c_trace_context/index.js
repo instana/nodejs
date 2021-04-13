@@ -5,8 +5,10 @@
 
 'use strict';
 
-module.exports = exports = {
-  create: require('./create'),
-  createEmptyUnsampled: require('./create').createEmptyUnsampled,
+const { createEmptyUnsampled, fromInstanaIds } = require('./create');
+
+module.exports = {
+  create: fromInstanaIds,
+  createEmptyUnsampled: createEmptyUnsampled,
   parse: require('./parse')
 };

@@ -7,8 +7,7 @@
 
 const { expect } = require('chai');
 
-const create = require('../../../src/tracing/w3c_trace_context/create');
-const { createEmptyUnsampled } = create;
+const { fromInstanaIds, createEmptyUnsampled } = require('../../../src/tracing/w3c_trace_context/create');
 
 const version00 = '00';
 const traceId32Char = '0123456789abcdeffedcbc9876543210';
@@ -29,7 +28,7 @@ describe('tracing/w3c-trace-context create', () => {
     const testTitleSuffix = `(${idLengthTitle(longTraceId)}, sampled: ${sampled})`;
 
     it(`should create a trace context from Instana IDs ${testTitleSuffix}`, () => {
-      const traceContext = create(instanaTraceId, parentId, sampled);
+      const traceContext = fromInstanaIds(instanaTraceId, parentId, sampled);
 
       expect(traceContext.traceParentValid).to.be.true;
       expect(traceContext.version).to.equal(version00);

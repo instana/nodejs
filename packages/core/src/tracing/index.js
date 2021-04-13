@@ -19,9 +19,13 @@ let tracingEnabled = false;
 let tracingActivated = false;
 let instrumenationsInitialized = false;
 let automaticTracingEnabled = false;
+/** @type {import('./cls')} */
 let cls = null;
+/** @type {import('../util/normalizeConfig').InstanaConfig} */
 let config = null;
+/** @type {Array.<string>} */
 let extraHeaders = [];
+/** @type {import('../index').ProcessIdentityProvider} */
 let processIdentityProvider = null;
 
 // Note: Also update initializedTooLateHeuristic.js and the accompanying test when adding instrumentations.
@@ -69,7 +73,22 @@ const instrumentations = [
   './instrumentation/protocols/superagent'
 ];
 
+/**
+ * This is a temporary type definition for instrumented modules until we get to add types to these modules.
+ * For now it is safe to say that these modules are objects with the following methods:
+ * @typedef {Object} InstanaInstrumentedModule
+ * @property {Function} init
+ * @property {Function} activate
+ * @property {Function} deactivate
+ * @property {Function} [updateConfig]
+ * @property {(extraHeaders: Array.<*>) => {}} [setExtraHttpHeadersToCapture]
+ * @property {boolean} [batchable]
+ * @property {string} [spanName]
+ */
+
+/** @type {Array.<InstanaInstrumentedModule>} */
 let additionalInstrumentationModules = [];
+/** @type {Object.<string, InstanaInstrumentedModule>} */
 const instrumentationModules = {};
 
 exports.constants = constants;
@@ -78,16 +97,27 @@ exports.sdk = sdk;
 exports.spanBuffer = spanBuffer;
 exports.supportedVersion = supportedVersion;
 
+/**
+ * @param {Array.<InstanaInstrumentedModule>} _additionalInstrumentationModules
+ */
 exports.registerAdditionalInstrumentations = function registerAdditionalInstrumentations(
   _additionalInstrumentationModules
 ) {
   additionalInstrumentationModules = additionalInstrumentationModules.concat(_additionalInstrumentationModules);
 };
 
+/**
+ * @param {import('../util/normalizeConfig').InstanaConfig} preliminaryConfig
+ */
 exports.preInit = function preInit(preliminaryConfig) {
   initInstrumenations(preliminaryConfig);
 };
 
+/**
+ * @param {import('../util/normalizeConfig').InstanaConfig} _config
+ * @param {import('./spanBuffer').TemporaryAgentConnection} downstreamConnection
+ * @param {import('../index').ProcessIdentityProvider} _processIdentityProvider
+ */
 exports.init = function init(_config, downstreamConnection, _processIdentityProvider) {
   config = _config;
   processIdentityProvider = _processIdentityProvider;
@@ -114,6 +144,9 @@ exports.init = function init(_config, downstreamConnection, _processIdentityProv
   }
 };
 
+/**
+ * @param {import('../util/normalizeConfig').InstanaConfig} _config
+ */
 function initInstrumenations(_config) {
   // initialize all instrumentations
   if (!instrumenationsInitialized) {
@@ -183,6 +216,9 @@ exports.getCls = function getCls() {
   return cls;
 };
 
+/**
+ * @param {Array.<string>} _extraHeaders
+ */
 exports.setExtraHttpHeadersToCapture = function setExtraHttpHeadersToCapture(_extraHeaders) {
   extraHeaders = _extraHeaders;
   instrumentations.forEach(instrumentationKey => {
@@ -203,13 +239,20 @@ exports.enableSpanBatching = function enableSpanBatching() {
 exports._getAndResetTracingMetrics = function _getAndResetTracingMetrics() {
   return {
     pid:
+      // TODO: This is not typed yet -> /nodejs-sensor/packages/collector/src/pidStore/index.js
+      // @ts-ignore
       processIdentityProvider && typeof processIdentityProvider.getEntityId === 'function'
-        ? processIdentityProvider.getEntityId()
+        ? // @ts-ignore
+          processIdentityProvider.getEntityId()
         : undefined,
     metrics: tracingMetrics.getAndReset()
   };
 };
 
+/**
+ * @param {string} name
+ * @param {*} module_
+ */
 exports._instrument = function _instrument(name, module_) {
   if (name === 'superagent') {
     require('./instrumentation/protocols/superagent').instrument(module_);
