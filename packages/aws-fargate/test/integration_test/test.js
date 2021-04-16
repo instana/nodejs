@@ -222,10 +222,13 @@ describe('AWS fargate integration test', function() {
         .then(response => verify(control, response, false)));
   });
 
-  describe('with custom secrets configuration', function() {
+  describe('with default secrets configuration', function() {
     const control = prelude.bind(this)({
       env: {
-        INSTANA_SECRETS: 'equals:confidential'
+        CLOUD_ACCESS_KEY: 'needs to be removed',
+        DB_PASSWORD_ABC: 'needs to be removed',
+        verysecretenvvar: 'needs to be removed',
+        ANOTHER_ENV_VAR: 'this can stay'
       }
     });
 
@@ -233,27 +236,152 @@ describe('AWS fargate integration test', function() {
       control
         .sendRequest({
           method: 'GET',
-          path: '/?q1=some&confidential=topsecret&q2=value',
+          path:
+            '/?q1=whatever&' +
+            'confidential=can-stay&' +
+            'abc-key-xyz=needs-to-be-removed&' +
+            'def-password-uvw=needs-to-be-removed&' +
+            'ghiSeCrETrst=needs-to-be-removed&' +
+            'q2=a-value',
           headers: requestHeaders
         })
         .then(response =>
-          verify(control, response, true).then(([entry]) => {
-            expect(entry.data.http.params).to.equal('q1=some&confidential=<redacted>&q2=value');
+          verify(control, response, true).then(({ entry }) => {
+            expect(entry.data.http.params).to.equal(
+              'q1=whatever&' +
+                'confidential=can-stay&' +
+                'abc-key-xyz=<redacted>&' +
+                'def-password-uvw=<redacted>&' +
+                'ghiSeCrETrst=<redacted>&' +
+                'q2=a-value'
+            );
+          })
+        ));
+
+    it('must filter secrets from env', () =>
+      control
+        .sendRequest({
+          method: 'GET',
+          path: '/',
+          headers: requestHeaders
+        })
+        .then(response =>
+          verify(control, response, true).then(({ allEntities }) => {
+            // verify that we did not accidentally change the value of the env var that the application sees
+            expect(response.env).to.deep.equal({
+              CLOUD_ACCESS_KEY: 'needs to be removed',
+              DB_PASSWORD_ABC: 'needs to be removed',
+              verysecretenvvar: 'needs to be removed',
+              ANOTHER_ENV_VAR: 'this can stay'
+            });
+
+            // verify that we removed secrets from the captured env vars
+            const processEntity = findEntityByName(allEntities, 'com.instana.plugin.process');
+            const env = processEntity.data.env;
+            expect(env).to.be.an('object');
+            expect(env.CLOUD_ACCESS_KEY).to.equal('<redacted>');
+            expect(env.DB_PASSWORD_ABC).to.equal('<redacted>');
+            expect(env.verysecretenvvar).to.equal('<redacted>');
+            expect(env.ANOTHER_ENV_VAR).to.equal('this can stay');
+
+            // always redact the agent key
+            expect(env.INSTANA_AGENT_KEY).to.equal('<redacted>');
+          })
+        ));
+  });
+
+  describe('with custom secrets configuration', function() {
+    const control = prelude.bind(this)({
+      env: {
+        INSTANA_SECRETS: 'equals:confidential',
+        CLOUD_ACCESS_KEY: 'this can stay',
+        DB_PASSWORD_ABC: 'this can stay',
+        verysecretenvvar: 'this can stay',
+        ANOTHER_ENV_VAR: 'this can stay',
+        CONFIDENTIAL: 'this can stay', // we asked for case sensitive comparison
+        confidential: 'needs to be removed'
+      }
+    });
+
+    it('must filter secrets from query params', () =>
+      control
+        .sendRequest({
+          method: 'GET',
+          path:
+            '/?q1=whatever&' +
+            'confidential=needs-to-be-removed&' +
+            'abc-key-xyz=can-stay&' +
+            'def-password-uvw=can-stay&' +
+            'ghiSeCrETrst=can-stay&' +
+            'q2=a-value',
+          headers: requestHeaders
+        })
+        .then(response =>
+          verify(control, response, true).then(({ entry }) => {
+            expect(entry.data.http.params).to.equal(
+              'q1=whatever&' +
+                'confidential=<redacted>&' +
+                'abc-key-xyz=can-stay&' +
+                'def-password-uvw=can-stay&' +
+                'ghiSeCrETrst=can-stay&' +
+                'q2=a-value'
+            );
+          })
+        ));
+
+    it('must filter secrets from env', () =>
+      control
+        .sendRequest({
+          method: 'GET',
+          path: '/',
+          headers: requestHeaders
+        })
+        .then(response =>
+          verify(control, response, true).then(({ allEntities }) => {
+            // verify that we did not accidentally change the value of the env var that the application sees
+            expect(response.env).to.deep.equal({
+              CLOUD_ACCESS_KEY: 'this can stay',
+              DB_PASSWORD_ABC: 'this can stay',
+              verysecretenvvar: 'this can stay',
+              ANOTHER_ENV_VAR: 'this can stay',
+              CONFIDENTIAL: 'this can stay',
+              confidential: 'needs to be removed'
+            });
+
+            // verify that we have removed the secrets from the captured env vars
+            const processEntity = findEntityByName(allEntities, 'com.instana.plugin.process');
+            const env = processEntity.data.env;
+            expect(env).to.be.an('object');
+            expect(env.CLOUD_ACCESS_KEY).to.equal('this can stay');
+            expect(env.DB_PASSWORD_ABC).to.equal('this can stay');
+            expect(env.verysecretenvvar).to.equal('this can stay');
+            expect(env.ANOTHER_ENV_VAR).to.equal('this can stay');
+            expect(env.CONFIDENTIAL).to.equal('this can stay');
+            expect(env.confidential).to.equal('<redacted>');
+
+            // always redact the agent key
+            expect(env.INSTANA_AGENT_KEY).to.equal('<redacted>');
           })
         ));
   });
 
   function verify(control, response, expectMetricsAndSpans) {
-    expect(response).to.equal('Hello Fargate!');
+    expect(response.message).to.equal('Hello Fargate!');
     if (expectMetricsAndSpans) {
-      return retry(() => getAndVerifySnapshotDataAndMetrics(control).then(() => getAndVerifySpans(control)));
+      return retry(async () => {
+        const allEntities = await getAndVerifySnapshotDataAndMetrics(control);
+        const { entry, exit } = await getAndVerifySpans(control);
+        return { allEntities, entry, exit };
+      });
     } else {
       return verifyNoSpansAndMetrics(control);
     }
   }
 
-  function getAndVerifySnapshotDataAndMetrics(control) {
-    return Promise.all([control.getAggregatedMetrics(), control.getMetrics()]).then(verifySnapshotDataAndMetrics);
+  async function getAndVerifySnapshotDataAndMetrics(control) {
+    const [allEntities, allSnapshotUpdates] = await Promise.all([control.getAggregatedMetrics(), control.getMetrics()]);
+    verifySnapshotDataAndMetrics([allEntities, allSnapshotUpdates]);
+    return allEntities;
   }
 
   function verifySnapshotDataAndMetrics([allEntities, allSnapshotUpdates]) {
@@ -264,11 +392,7 @@ describe('AWS fargate integration test', function() {
         'Error: Received less entities than expected: ' +
           `Wanted: ${expectedNumberOfPlugins}, got: ${allEntities.length}. ` +
           'Here are the entities that have been received: ' +
-          JSON.stringify(
-            allEntities.map(({ name, entityId }) => ({ name, entityId })),
-            null,
-            2
-          )
+          JSON.stringify(allEntities.map(({ name, entityId }) => ({ name, entityId })), null, 2)
       );
     }
     expect(allEntities).to.have.lengthOf.at.least(expectedNumberOfPlugins);
@@ -358,7 +482,7 @@ describe('AWS fargate integration test', function() {
   }
 
   function verifyProcessPayload(allEntities) {
-    const processPayload = allEntities.find(pluginPayload => pluginPayload.name === 'com.instana.plugin.process');
+    const processPayload = findEntityByName(allEntities, 'com.instana.plugin.process');
     expect(Object.keys(processPayload)).to.have.lengthOf(3);
     const processData = processPayload.data;
     expect(processData).to.exist;
@@ -377,8 +501,7 @@ describe('AWS fargate integration test', function() {
   }
 
   function verifyNodeJsPayload(allEntities, processData) {
-    const isNode = pluginPayload => pluginPayload.name === 'com.instana.plugin.nodejs';
-    const nodeJsPayload = allEntities.find(isNode);
+    const nodeJsPayload = findEntityByName(allEntities, 'com.instana.plugin.nodejs');
     expect(nodeJsPayload).to.exist;
     expect(Object.keys(nodeJsPayload)).to.have.lengthOf(3);
     const nodeJsData = nodeJsPayload.data;
@@ -489,6 +612,10 @@ describe('AWS fargate integration test', function() {
     expect(dockerData.blkio.blk_write).to.be.a('number');
   }
 
+  function findEntityByName(allEntities, name) {
+    return allEntities.find(pluginPayload => pluginPayload.name === name);
+  }
+
   function getAndVerifySpans(control) {
     return control.getSpans().then(spans => verifySpans(spans));
   }
@@ -496,7 +623,7 @@ describe('AWS fargate integration test', function() {
   function verifySpans(spans) {
     const entry = verifyHttpEntry(spans);
     const exit = verifyHttpExit(spans, entry);
-    return [entry, exit];
+    return { entry, exit };
   }
 
   function verifyHttpEntry(spans) {

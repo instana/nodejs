@@ -29,7 +29,18 @@ app.on('request', (req, res) => {
     res.setHeader('X-Entry-Response-Header-2', ['entry', 'response', 'header', 'value 2']);
     res.setHeader('X-Entry-Response-Header-3', 'not configured to be captured');
     res.setHeader('X-Entry-Response-Header-4', ['not', 'configured', 'to', 'be', 'captured']);
-    res.end('Hello Fargate!');
+    const responsePayload = JSON.stringify({
+      message: 'Hello Fargate!',
+      env: {
+        CLOUD_ACCESS_KEY: process.env.CLOUD_ACCESS_KEY,
+        DB_PASSWORD_ABC: process.env.CLOUD_ACCESS_KEY,
+        verysecretenvvar: process.env.verysecretenvvar,
+        ANOTHER_ENV_VAR: process.env.ANOTHER_ENV_VAR,
+        CONFIDENTIAL: process.env.CONFIDENTIAL,
+        confidential: process.env.confidential
+      }
+    });
+    res.end(responsePayload);
   });
 });
 
