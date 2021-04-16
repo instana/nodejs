@@ -1,7 +1,11 @@
 # Changelog
 
+## Unreleased
+- [AWS Fargate]: Fix secrets filtering for environment variables.
+- [Google Cloud Run]: Fix secrets filtering for environment variables.
+
 ## 1.119.1
- - Fixed a call from collector to the core by using @instana/collector instead of relative path
+- Fixed a call from collector to the core by using @instana/collector instead of relative path
 
 ## 1.119.0
 - Add instrumentation for Bull Messaging Framework.

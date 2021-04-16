@@ -5,6 +5,8 @@
 
 'use strict';
 
+const { secrets } = require('@instana/core');
+
 const DataProcessor = require('../DataProcessor');
 const ProcessSnapshotDataSource = require('./ProcessSnapshotDataSource');
 const ProcessMetricsSource = require('./ProcessMetricsSource');
@@ -48,6 +50,18 @@ class ProcessProcessor extends DataProcessor {
     if (user || sys) {
       cpu = { user, sys };
     }
+
+    if (snapshot && snapshot.env) {
+      // Create a shallow clone of the env vars so we can redact secrets without changing the values in process.env that
+      // the application sees.
+      snapshot.env = Object.assign({}, snapshot.env);
+      Object.keys(snapshot.env).forEach(envVar => {
+        if (secrets.isSecret(envVar) || envVar === 'INSTANA_AGENT_KEY') {
+          snapshot.env[envVar] = '<redacted>';
+        }
+      });
+    }
+
     return {
       ...snapshot,
       cpu

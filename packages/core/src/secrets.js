@@ -149,6 +149,9 @@ exports.matchers = {
   }
 };
 
+/** @type {(key: string) => boolean} */
+let isSecretInternal = exports.matchers[defaultMatcherMode](defaultSecrets);
+
 /**
  * @param {Array<string>} configuredSecrets
  * @returns {Array<string>}
@@ -192,9 +195,10 @@ function toLowerCase(configuredSecrets) {
  * @typedef {'contains' | 'equals-ignore-case' | 'equals' | 'contains-ignore-case' | 'regex'} MatchingOptions
  */
 
-// We should fix this properly. exports cannot be redefined.
-// @ts-expect-error
-exports.isSecret = exports.matchers[defaultMatcherMode](defaultSecrets);
+/** @type {(key: string) => boolean} */
+exports.isSecret = function isSecret(key) {
+  return isSecretInternal(key);
+};
 
 /**
  * @typedef {Object} Secrets
@@ -211,9 +215,7 @@ exports.isSecret = exports.matchers[defaultMatcherMode](defaultSecrets);
  * @param {SecretOption} config
  */
 exports.init = function init(config) {
-  // Init from config/env vars. Might be overwritten from agent response later (via setMatcher);
-  // @ts-expect-error
-  exports.isSecret = exports.matchers[config.secrets.matcherMode](config.secrets.keywords);
+  isSecretInternal = exports.matchers[config.secrets.matcherMode](config.secrets.keywords);
 };
 
 /**
@@ -228,7 +230,6 @@ exports.setMatcher = function setMatcher(matcherId, secretsList) {
   } else if (!Array.isArray(secretsList)) {
     logger.warn('Received invalid secrets configuration, attribute list is not an array: $s', secretsList);
   } else {
-    // @ts-expect-error
-    exports.isSecret = exports.matchers[matcherId](secretsList);
+    isSecretInternal = exports.matchers[matcherId](secretsList);
   }
 };
