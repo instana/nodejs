@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.119.2
 - [AWS Fargate]: Fix secrets filtering for environment variables.
 - [Google Cloud Run]: Fix secrets filtering for environment variables.
 
