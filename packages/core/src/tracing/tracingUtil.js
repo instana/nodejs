@@ -13,10 +13,18 @@ const stackTrace = require('../util/stackTrace');
 
 let stackTraceLength = 10;
 
-exports.init = function(config) {
+/**
+ * @param {import('../util/normalizeConfig').InstanaConfig} config
+ */
+exports.init = function (config) {
   stackTraceLength = config.tracing.stackTraceLength;
 };
 
+/**
+ * @param {Function} referenceFunction
+ * @param {number} [drop]
+ * @returns {Array.<*>}
+ */
 exports.getStackTrace = function getStackTrace(referenceFunction, drop) {
   return stackTrace.captureStackTrace(stackTraceLength, referenceFunction, drop);
 };
@@ -34,13 +42,24 @@ exports.generateRandomSpanId = function generateRandomSpanId() {
   return exports.generateRandomId(16);
 };
 
-exports.generateRandomId = function(length) {
+/**
+ * @param {number} length
+ * @returns {string}
+ */
+exports.generateRandomId = function (length) {
   return crypto
     .randomBytes(Math.ceil(length / 2))
     .toString('hex')
     .slice(0, length);
 };
 
+/**
+ * @param {Buffer} buffer
+ * @returns {{
+ *  t: string,
+ *  s: string
+ * }}
+ */
 exports.readTraceContextFromBuffer = function readTraceContextFromBuffer(buffer) {
   if (!Buffer.isBuffer(buffer)) {
     throw new Error(`Not a buffer: ${buffer}`);
@@ -57,11 +76,24 @@ exports.readTraceContextFromBuffer = function readTraceContextFromBuffer(buffer)
   }
 };
 
+/**
+ * @param {Buffer} buffer
+ * @param {number} offset
+ * @param {number} length
+ * @returns {string}
+ */
 function readHexFromBuffer(buffer, offset, length) {
   return hexDecoder.write(buffer.slice(offset, offset + length));
 }
 
+/**
+ * @param {string} hexString
+ * @param {Buffer} buffer
+ * @param {number} offsetFromRight
+ * @returns {Buffer}
+ */
 exports.unsignedHexStringToBuffer = function unsignedHexStringToBuffer(hexString, buffer, offsetFromRight) {
+  /** @type {number} */
   let offset;
   if (buffer && offsetFromRight != null) {
     offset = buffer.length - hexString.length / 2 - offsetFromRight;
@@ -80,6 +112,11 @@ exports.unsignedHexStringToBuffer = function unsignedHexStringToBuffer(hexString
   return buffer;
 };
 
+/**
+ * @param {string} traceId
+ * @param {string} spanId
+ * @returns {Buffer}
+ */
 exports.unsignedHexStringsToBuffer = function unsignedHexStringsToBuffer(traceId, spanId) {
   const buffer = Buffer.alloc(24);
   exports.unsignedHexStringToBuffer(traceId, buffer, 8);
@@ -93,19 +130,31 @@ exports.unsignedHexStringsToBuffer = function unsignedHexStringsToBuffer(traceId
  * the bounds of the given buffer.
  *
  * The string hexString must only contain the characters [0-9a-f].
+ * @param {string} hexString
+ * @param {Buffer} buffer
+ * @param {number} offset
  */
 function writeHexToBuffer(hexString, buffer, offset) {
   // This implementation uses Node.js buffer internals directly:
   // https://github.com/nodejs/node/blob/92cef79779d121d934dcb161c068bdac35e6a963/lib/internal/buffer.js#L1005 ->
   // https://github.com/nodejs/node/blob/master/src/node_buffer.cc#L1196 /
   // https://github.com/nodejs/node/blob/master/src/node_buffer.cc#L681
+  // @ts-ignore
   buffer.hexWrite(hexString, offset, hexString.length / 2);
 }
 
+/**
+ * @param {import('./cls').InstanaBaseSpan} span
+ * @returns {Buffer}
+ */
 exports.renderTraceContextToBuffer = function renderTraceContextToBuffer(span) {
   return exports.unsignedHexStringsToBuffer(span.t, span.s);
 };
 
+/**
+ * @param {Error} err
+ * @returns {string}
+ */
 exports.getErrorDetails = function getErrorDetails(err) {
   if (err == null) {
     return undefined;
@@ -113,6 +162,10 @@ exports.getErrorDetails = function getErrorDetails(err) {
   return String(err.stack || err.message || err).substring(0, 500);
 };
 
+/**
+ * @param {string} stmt
+ * @returns {string}
+ */
 exports.shortenDatabaseStatement = function shortenDatabaseStatement(stmt) {
   if (stmt == null || typeof stmt !== 'string') {
     return undefined;
@@ -121,6 +174,11 @@ exports.shortenDatabaseStatement = function shortenDatabaseStatement(stmt) {
   return stmt.substring(0, 4000);
 };
 
+/**
+ * @param {*} object
+ * @param {string} key
+ * @returns {*}
+ */
 exports.readAttribCaseInsensitive = function readAttribCaseInsensitive(object, key) {
   if (!object || typeof object !== 'object' || typeof key !== 'string') {
     return null;

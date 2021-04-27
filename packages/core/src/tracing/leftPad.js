@@ -49,7 +49,11 @@ const cache = [
   '0000000000000000000000000000000',
   '00000000000000000000000000000000'
 ];
-
+/**
+ * @param {string} str
+ * @param {number} len
+ * @returns {string}
+ */
 function leftPad(str, len) {
   // use '0' as the padding char, always
   let ch = '0';

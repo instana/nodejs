@@ -12,7 +12,7 @@
  * @param {number} length
  * @param {Function} referenceFunction
  * @param {number} [drop]
- * @returns {object}
+ * @returns {Array.<*>}
  */
 exports.captureStackTrace = function captureStackTrace(length, referenceFunction, drop = 0) {
   if (length <= 0) {
@@ -61,7 +61,7 @@ exports.getStackTraceAsJson = function getStackTraceAsJson(length, error) {
   Error.stackTraceLimit = originalLimit;
   Error.prepareStackTrace = originalPrepareStackTrace;
   const jsonStackTrace = /** @type {*} */ (error)._jsonStackTrace;
-  delete /** @type {*} */ (error)._jsonStackTrace;
+  delete (/** @type {*} */ (error)._jsonStackTrace);
   return jsonStackTrace;
 };
 

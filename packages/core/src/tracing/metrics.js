@@ -19,6 +19,9 @@ exports.incrementClosed = function incrementClosed() {
   metrics.closed++;
 };
 
+/**
+ * @param {number} dropped
+ */
 exports.incrementDropped = function incrementDropped(dropped) {
   if (dropped == null) {
     metrics.dropped++;

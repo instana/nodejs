@@ -13,6 +13,7 @@
   },
   "include": [
     "packages/core/src/util",
+    "packages/core/src/tracing/*.js",
   ],
   "exclude": [
     "node_modules",

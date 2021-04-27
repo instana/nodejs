@@ -10,19 +10,22 @@ const tracingUtil = require('./tracingUtil');
 const { ENTRY, EXIT, INTERMEDIATE } = require('./constants');
 const hooked = require('./clsHooked');
 const tracingMetrics = require('./metrics');
+/** @type {import('../logger').GenericLogger} */
 let logger;
 logger = require('../logger').getLogger('tracing/cls', newLogger => {
   logger = newLogger;
 });
 
-const currentEntrySpanKey = (exports.currentEntrySpanKey = 'com.instana.entry');
-const currentSpanKey = (exports.currentSpanKey = 'com.instana.span');
-const reducedSpanKey = (exports.reducedSpanKey = 'com.instana.reduced');
-const tracingLevelKey = (exports.tracingLevelKey = 'com.instana.tl');
-const w3cTraceContextKey = (exports.w3cTraceContextKey = 'com.instana.w3ctc');
+const currentEntrySpanKey = 'com.instana.entry';
+const currentSpanKey = 'com.instana.span';
+const reducedSpanKey = 'com.instana.reduced';
+const tracingLevelKey = 'com.instana.tl';
+const w3cTraceContextKey = 'com.instana.w3ctc';
 
 // eslint-disable-next-line no-undef-init
-let serviceName = undefined;
+/** @type {String} */
+let serviceName;
+/** @type {import('../index').ProcessIdentityProvider} */
 let processIdentityProvider = null;
 
 /*
@@ -33,16 +36,49 @@ let processIdentityProvider = null;
  *   cls.ns.set(key);
  *   cls.ns.run(function() {});
  */
-exports.ns = hooked.createNamespace('instana.collector');
+const ns = hooked.createNamespace('instana.collector');
 
-exports.init = function init(config, _processIdentityProvider) {
+/**
+ * @param {import('../util/normalizeConfig').InstanaConfig} config
+ * @param {import('../index').ProcessIdentityProvider} _processIdentityProvider
+ */
+function init(config, _processIdentityProvider) {
   if (config && config.serviceName) {
     serviceName = config.serviceName;
   }
   processIdentityProvider = _processIdentityProvider;
-};
+}
+
+/**
+ * This type is to be used across the code base, as we don't have a public explicit type for a span.
+ * Also, it is often that we simply create a literal object and gradually throw few properties on it and
+ * handle them as spans. This type has all span properties, but they are all optional, so we can safely
+ * type these literal objects.
+ * TODO: move InstanaSpan and InstanaPseudoSpan to their own file and make them publicly accessible?
+ * @typedef {Object} InstanaBaseSpan
+ * @property {string} [s]
+ * @property {string} [t]
+ * @property {number} [k]
+ * @property {string} [p]
+ * @property {number} [ec]
+ * @property {number} [ts]
+ * @property {number} [d]
+ * @property {string} [n]
+ * @property {*} [stack]
+ * @property {Object.<string, *>} [data]
+ * @property {{s?: number, d?: number}} [b]
+ * @property {*} [f]
+ * @property {*} [gqd]
+ * @property {Function} [transmit]
+ * @property {Function} [freezePathTemplate]
+ * @property {Function} [disableAutoEnd]
+ * @property {Function} [transmitManual]
+ */
 
 class InstanaSpan {
+  /**
+   * @param {String} name
+   */
   constructor(name) {
     // properties that part of our span model
     this.t = undefined;
@@ -56,7 +92,9 @@ class InstanaSpan {
     this.ec = 0;
     this.ts = Date.now();
     this.d = 0;
+    /** @type {Array.<*>} */
     this.stack = [];
+    /** @type {Object.<string, *>} */
     this.data = {};
 
     // properties used within the collector that should not be transmitted to the agent/backend
@@ -84,7 +122,11 @@ class InstanaSpan {
     });
   }
 
+  /**
+   * @param {Function} fn
+   */
   addCleanup(fn) {
+    // @ts-ignore
     this.cleanupFunctions.push(fn);
   }
 
@@ -115,7 +157,9 @@ class InstanaSpan {
   }
 
   cleanup() {
+    // @ts-ignore
     this.cleanupFunctions.forEach(call);
+    // @ts-ignore
     this.cleanupFunctions.length = 0;
   }
 
@@ -155,10 +199,15 @@ class InstanaPseudoSpan extends InstanaSpan {
   }
 }
 
-/*
+/**
  * Start a new span and set it as the current span.
+ * @param {string} spanName
+ * @param {number} kind
+ * @param {string} traceId
+ * @param {string} parentSpanId
+ * @param {import('./w3c_trace_context/W3cTraceContext')} [w3cTraceContext]
  */
-exports.startSpan = function startSpan(spanName, kind, traceId, parentSpanId, w3cTraceContext) {
+function startSpan(spanName, kind, traceId, parentSpanId, w3cTraceContext) {
   tracingMetrics.incrementOpened();
   if (!kind || (kind !== ENTRY && kind !== EXIT && kind !== INTERMEDIATE)) {
     logger.warn('Invalid span (%s) without kind/with invalid kind: %s, assuming EXIT.', spanName, kind);
@@ -167,8 +216,8 @@ exports.startSpan = function startSpan(spanName, kind, traceId, parentSpanId, w3
   const span = new InstanaSpan(spanName);
   span.k = kind;
 
-  const parentSpan = exports.getCurrentSpan();
-  const parentW3cTraceContext = exports.getW3cTraceContext();
+  const parentSpan = getCurrentSpan();
+  const parentW3cTraceContext = getW3cTraceContext();
 
   if (serviceName != null && !parentSpan) {
     span.data.service = serviceName;
@@ -202,27 +251,31 @@ exports.startSpan = function startSpan(spanName, kind, traceId, parentSpanId, w3
 
   if (w3cTraceContext) {
     w3cTraceContext.updateParent(span.t, span.s);
-    span.addCleanup(exports.ns.set(w3cTraceContextKey, w3cTraceContext));
+    span.addCleanup(ns.set(w3cTraceContextKey, w3cTraceContext));
   }
 
   if (span.k === ENTRY) {
     // Make the entry span available independently (even if getCurrentSpan would return an intermediate or an exit at
     // any given moment). This is used by the instrumentations of web frameworks like Express.js to add path templates
     // and error messages to the entry span.
-    span.addCleanup(exports.ns.set(currentEntrySpanKey, span));
+    span.addCleanup(ns.set(currentEntrySpanKey, span));
   }
 
   // Set the span object as the currently active span in the active CLS context and also add a cleanup hook for when
   // this span is transmitted.
-  span.addCleanup(exports.ns.set(currentSpanKey, span));
+  span.addCleanup(ns.set(currentSpanKey, span));
   return span;
-};
+}
 
-/*
+/**
  * Puts a pseudo span in the CLS context that is simply a holder for a trace ID and span ID. This pseudo span will act
  * as the parent for other child span that are produced but will not be transmitted to the agent itself.
+ * @param {string} spanName
+ * @param {number} kind
+ * @param {string} traceId
+ * @param {string} spanId
  */
-exports.putPseudoSpan = function putPseudoSpan(spanName, kind, traceId, spanId) {
+function putPseudoSpan(spanName, kind, traceId, spanId) {
   if (!kind || (kind !== ENTRY && kind !== EXIT && kind !== INTERMEDIATE)) {
     logger.warn('Invalid pseudo span (%s) without kind/with invalid kind: %s, assuming EXIT.', spanName, kind);
     kind = EXIT;
@@ -246,92 +299,96 @@ exports.putPseudoSpan = function putPseudoSpan(spanName, kind, traceId, spanId) 
     // Make the entry span available independently (even if getCurrentSpan would return an intermediate or an exit at
     // any given moment). This is used by the instrumentations of web frameworks like Express.js to add path templates
     // and error messages to the entry span.
-    span.addCleanup(exports.ns.set(currentEntrySpanKey, span));
+    span.addCleanup(ns.set(currentEntrySpanKey, span));
   }
 
   // Set the span object as the currently active span in the active CLS context and also add a cleanup hook for when
   // this span is transmitted.
-  span.addCleanup(exports.ns.set(currentSpanKey, span));
+  span.addCleanup(ns.set(currentSpanKey, span));
   return span;
-};
+}
 
 /*
  * Get the currently active entry span.
  */
-exports.getCurrentEntrySpan = function getCurrentEntrySpan() {
-  return exports.ns.get(currentEntrySpanKey);
-};
+function getCurrentEntrySpan() {
+  return ns.get(currentEntrySpanKey);
+}
 
-/*
+/**
  * Set the currently active span.
+ * @param {InstanaSpan} span
  */
-exports.setCurrentSpan = function setCurrentSpan(span) {
-  exports.ns.set(currentSpanKey, span);
-};
+function setCurrentSpan(span) {
+  ns.set(currentSpanKey, span);
+}
 
-/*
+/**
  * Get the currently active span.
+ * @returns {InstanaSpan}
  */
-exports.getCurrentSpan = function getCurrentSpan() {
-  return exports.ns.get(currentSpanKey);
-};
+function getCurrentSpan() {
+  return ns.get(currentSpanKey);
+}
 
 /*
  * Get the reduced backup of the last active span in this cls context.
  */
-exports.getReducedSpan = function getReducedSpan() {
-  return exports.ns.get(reducedSpanKey);
-};
+function getReducedSpan() {
+  return ns.get(reducedSpanKey);
+}
 
-/*
+/**
  * Stores the W3C trace context object.
+ * @param {import('./w3c_trace_context/W3cTraceContext')} traceContext
  */
-exports.setW3cTraceContext = function setW3cTraceContext(traceContext) {
-  exports.ns.set(w3cTraceContextKey, traceContext);
-};
+function setW3cTraceContext(traceContext) {
+  ns.set(w3cTraceContextKey, traceContext);
+}
 
 /*
  * Returns the W3C trace context object.
  */
-exports.getW3cTraceContext = function getW3cTraceContext() {
-  return exports.ns.get(w3cTraceContextKey);
-};
+function getW3cTraceContext() {
+  return ns.get(w3cTraceContextKey);
+}
 
 /*
  * Determine if we're currently tracing or not.
  */
-exports.isTracing = function isTracing() {
-  return !!exports.ns.get(currentSpanKey);
-};
+function isTracing() {
+  return !!ns.get(currentSpanKey);
+}
 
-/*
+/**
  * Set the tracing level
+ * @param {string} level
  */
-exports.setTracingLevel = function setTracingLevel(level) {
-  exports.ns.set(tracingLevelKey, level);
-};
+function setTracingLevel(level) {
+  ns.set(tracingLevelKey, level);
+}
 
 /*
  * Get the tracing level (if any)
  */
-exports.tracingLevel = function tracingLevel() {
-  return exports.ns.get(tracingLevelKey);
-};
+function tracingLevel() {
+  return ns.get(tracingLevelKey);
+}
 
 /*
  * Determine if tracing is suppressed (via tracing level) for this request.
  */
-exports.tracingSuppressed = function tracingSuppressed() {
-  const tl = exports.tracingLevel();
+function tracingSuppressed() {
+  const tl = tracingLevel();
   return typeof tl === 'string' && tl.indexOf('0') === 0;
-};
+}
 
-exports.getAsyncContext = function getAsyncContext() {
-  if (!exports.ns) {
+function getAsyncContext() {
+  if (!ns) {
     return null;
   }
-  return exports.ns.active;
-};
+  return ns.active;
+}
 
 /**
  * Do not use enterAsyncContext unless you absolutely have to. Instead, use one of the methods provided in the sdk,
@@ -339,54 +396,95 @@ exports.getAsyncContext = function getAsyncContext() {
  *
  * If you use enterAsyncContext anyway, you are responsible for also calling leaveAsyncContext later on. Leaving the
  * async context is managed automatically for you with the runXxxInAsyncContext functions.
+ * @param {import('./clsHooked/context').InstanaCLSContext} context
  */
-exports.enterAsyncContext = function enterAsyncContext(context) {
-  if (!exports.ns) {
+function enterAsyncContext(context) {
+  if (!ns) {
     return;
   }
   if (context == null) {
     logger.warn('Ignoring enterAsyncContext call because passed context was null or undefined.');
     return;
   }
-  exports.ns.enter(context);
-};
+  ns.enter(context);
+}
 
 /**
  * Needs to be called if and only if enterAsyncContext has been used earlier.
+ * @param {import('./clsHooked/context').InstanaCLSContext} context
  */
-exports.leaveAsyncContext = function leaveAsyncContext(context) {
-  if (!exports.ns) {
+function leaveAsyncContext(context) {
+  if (!ns) {
     return;
   }
   if (context == null) {
     logger.warn('Ignoring leaveAsyncContext call because passed context was null or undefined.');
     return;
   }
-  exports.ns.exit(context);
-};
+  ns.exit(context);
+}
 
-exports.runInAsyncContext = function runInAsyncContext(context, fn) {
-  if (!exports.ns) {
+/**
+ * @param {import('./clsHooked/context').InstanaCLSContext} context
+ * @param {Function} fn
+ */
+function runInAsyncContext(context, fn) {
+  if (!ns) {
     return fn();
   }
   if (context == null) {
     logger.warn('Ignoring runInAsyncContext call because passed context was null or undefined.');
     return fn();
   }
-  return exports.ns.runAndReturn(fn, context);
-};
+  return ns.runAndReturn(fn, context);
+}
 
-exports.runPromiseInAsyncContext = function runPromiseInAsyncContext(context, fn) {
-  if (!exports.ns) {
+/**
+ * @param {import('./clsHooked/context').InstanaCLSContext} context
+ * @param {Function} fn
+ * @returns {Function | *}
+ */
+function runPromiseInAsyncContext(context, fn) {
+  if (!ns) {
     return fn();
   }
   if (context == null) {
     logger.warn('Ignoring runPromiseInAsyncContext call because passed context was null or undefined.');
     return fn();
   }
-  return exports.ns.runPromise(fn, context);
-};
+  return ns.runPromise(fn, context);
+}
 
+/**
+ * @param {Function} fn
+ */
 function call(fn) {
   fn();
 }
+
+module.exports = {
+  currentEntrySpanKey,
+  currentSpanKey,
+  reducedSpanKey,
+  tracingLevelKey,
+  w3cTraceContextKey,
+  ns,
+  init,
+  startSpan,
+  putPseudoSpan,
+  getCurrentEntrySpan,
+  setCurrentSpan,
+  getCurrentSpan,
+  getReducedSpan,
+  setW3cTraceContext,
+  getW3cTraceContext,
+  isTracing,
+  setTracingLevel,
+  tracingLevel,
+  tracingSuppressed,
+  getAsyncContext,
+  enterAsyncContext,
+  leaveAsyncContext,
+  runInAsyncContext,
+  runPromiseInAsyncContext
+};
