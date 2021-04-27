@@ -9,6 +9,7 @@ const constants = require('./constants');
 
 /**
  * Provides very limited access from client code to the current active span.
+ * @param {import('./cls').InstanaBaseSpan} _span
  */
 function SpanHandle(_span) {
   this.span = _span;
@@ -84,6 +85,10 @@ SpanHandle.prototype.getErrorCount = function getErrorCount() {
   return this.span.ec;
 };
 
+/**
+ * @param {string} path
+ * @param {*} value
+ */
 SpanHandle.prototype.annotate = function annotate(path, value) {
   if (path == null) {
     return;
@@ -101,10 +106,16 @@ SpanHandle.prototype.annotate = function annotate(path, value) {
   }
 };
 
+/**
+ * @param {Object.<string, *>} target
+ * @param {string} path
+ * @param {*} value
+ */
 function _annotateWithString(target, path, value) {
   // remove trailing dots first
   if (path.charAt(path.length - 1) === '.') {
-    return _annotateWithString(target, path.substring(0, path.length - 1), value);
+    _annotateWithString(target, path.substring(0, path.length - 1), value);
+    return;
   }
   const idx = path.indexOf('.');
   if (idx === 0) {
@@ -123,6 +134,11 @@ function _annotateWithString(target, path, value) {
   }
 }
 
+/**
+ * @param {Object.<string, *>} target
+ * @param {string} path
+ * @param {*} value
+ */
 function _annotateWithArray(target, path, value) {
   if (path.length === 0) {
     // eslint-disable-next-line no-useless-return
@@ -150,6 +166,7 @@ SpanHandle.prototype.disableAutoEnd = function disableAutoEnd() {
 
 /**
  * Finishes as span that has been switched to manual-end-mode before.
+ * @param {boolean | number} errorCount
  */
 SpanHandle.prototype.end = function end(errorCount) {
   if (this.span.ts) {
@@ -165,22 +182,35 @@ SpanHandle.prototype.end = function end(errorCount) {
 };
 
 /**
+ * TODO: make it as a class
  * Provides noop operation for the SpanHandle API when automatic tracing is not enabled or no span is currently active.
  */
 function NoopSpanHandle() {}
 
+/**
+ * @returns {null}
+ */
 NoopSpanHandle.prototype.getTraceId = function getTraceId() {
   return null;
 };
 
+/**
+ * @returns {null}
+ */
 NoopSpanHandle.prototype.getSpanId = function getSpanId() {
   return null;
 };
 
+/**
+ * @returns {null}
+ */
 NoopSpanHandle.prototype.getParentSpanId = function getParentSpanId() {
   return null;
 };
 
+/**
+ * @returns {null}
+ */
 NoopSpanHandle.prototype.getName = function getName() {
   return null;
 };
@@ -219,6 +249,10 @@ NoopSpanHandle.prototype.end = function end() {
   // provide dummy operation when automatic tracing is not enabled
 };
 
+/**
+ * @param {import ('./cls')} cls
+ * @returns {SpanHandle | NoopSpanHandle}
+ */
 exports.getHandleForCurrentSpan = function getHandleForCurrentSpan(cls) {
   if (cls && cls.isTracing()) {
     return new SpanHandle(cls.getCurrentSpan());

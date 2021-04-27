@@ -9,6 +9,7 @@ const deepMerge = require('../../util/deepMerge');
 const tracingUtil = require('../tracingUtil');
 const constants = require('../constants');
 
+/** @type {import('../../logger').GenericLogger} */
 let logger;
 logger = require('../../logger').getLogger('tracing/sdk', newLogger => {
   logger = newLogger;
@@ -16,10 +17,24 @@ logger = require('../../logger').getLogger('tracing/sdk', newLogger => {
 
 let isActive = false;
 
-module.exports = exports = function(isCallbackApi) {
+/**
+ * @type {Function}
+ * @param {boolean} isCallbackApi
+ */
+module.exports = exports = function (isCallbackApi) {
+  /** @type {import('../cls')} */
   let cls = null;
+  /** @type {Function} */
   let wrapper = null;
 
+  /**
+   * @param {string} name
+   * @param {string} tags
+   * @param {string} traceId
+   * @param {string} parentSpanId
+   * @param {Function | string} callback
+   * @returns {Function | Promise<*>}
+   */
   function startEntrySpan(name, tags, traceId, parentSpanId, callback) {
     if (isCallbackApi && arguments.length === 2 && typeof arguments[1] === 'function') {
       callback = tags;
@@ -30,7 +45,7 @@ module.exports = exports = function(isCallbackApi) {
     }
 
     if (!isActive) {
-      return callNext(callback);
+      return callNext(/** @type {Function} */ (callback));
     }
 
     const parentSpan = cls.getCurrentSpan();
@@ -41,7 +56,7 @@ module.exports = exports = function(isCallbackApi) {
           parentSpan
         )}`
       );
-      return callNext(callback);
+      return callNext(/** @type {Function} */ (callback));
     }
 
     return startSdkSpan(
@@ -52,10 +67,14 @@ module.exports = exports = function(isCallbackApi) {
       tags,
       traceId,
       parentSpanId,
-      callback
+      /** @type {Function} */ (callback)
     );
   }
 
+  /**
+   * @param {Error} error
+   * @param {string} tags
+   */
   function completeEntrySpan(error, tags) {
     if (!isActive) {
       return;
@@ -83,6 +102,12 @@ module.exports = exports = function(isCallbackApi) {
     completeSpan(error, span, tags);
   }
 
+  /**
+   * @param {string} name
+   * @param {string} tags
+   * @param {Function | string} callback
+   * @returns {Function | Promise<*>}
+   */
   function startIntermediateSpan(name, tags, callback) {
     if (isCallbackApi && arguments.length === 2 && typeof arguments[1] === 'function') {
       callback = tags;
@@ -90,7 +115,7 @@ module.exports = exports = function(isCallbackApi) {
     }
 
     if (!isActive) {
-      return callNext(callback);
+      return callNext(/** @type {Function} */ (callback));
     }
 
     const parentSpan = cls.getCurrentSpan();
@@ -100,7 +125,7 @@ module.exports = exports = function(isCallbackApi) {
         // eslint-disable-next-line max-len
         `Cannot start an intermediate span (${name}) as this requires an active entry (or intermediate) span as parent. Currently there is no span active at all.`
       );
-      return callNext(callback);
+      return callNext(/** @type {Function} */ (callback));
     }
     if (constants.isExitSpan(parentSpan)) {
       logger.warn(
@@ -109,7 +134,7 @@ module.exports = exports = function(isCallbackApi) {
           parentSpan
         )}`
       );
-      return callNext(callback);
+      return callNext(/** @type {Function} */ (callback));
     }
 
     return startSdkSpan(
@@ -120,10 +145,14 @@ module.exports = exports = function(isCallbackApi) {
       tags,
       null,
       null,
-      callback
+      /** @type {Function} */ (callback)
     );
   }
 
+  /**
+   * @param {Error} error
+   * @param {string} tags
+   */
   function completeIntermediateSpan(error, tags) {
     if (!isActive) {
       return;
@@ -151,6 +180,12 @@ module.exports = exports = function(isCallbackApi) {
     completeSpan(error, span, tags);
   }
 
+  /**
+   * @param {string} name
+   * @param {string} tags
+   * @param {Function | string} callback
+   * @returns {Function | Promise<*>}
+   */
   function startExitSpan(name, tags, callback) {
     if (isCallbackApi && arguments.length === 2 && typeof arguments[1] === 'function') {
       callback = tags;
@@ -158,7 +193,7 @@ module.exports = exports = function(isCallbackApi) {
     }
 
     if (!isActive) {
-      return callNext(callback);
+      return callNext(/** @type {Function} */ (callback));
     }
 
     const parentSpan = cls.getCurrentSpan();
@@ -168,7 +203,7 @@ module.exports = exports = function(isCallbackApi) {
         // eslint-disable-next-line max-len
         `Cannot start an exit span (${name}) as this requires an active entry (or intermediate) span as parent. Currently there is no span active at all.`
       );
-      return callNext(callback);
+      return callNext(/** @type {Function} */ (callback));
     }
     if (constants.isExitSpan(parentSpan)) {
       logger.warn(
@@ -177,12 +212,25 @@ module.exports = exports = function(isCallbackApi) {
           parentSpan
         )}`
       );
-      return callNext(callback);
+      return callNext(/** @type {Function} */ (callback));
     }
 
-    return startSdkSpan(name, constants.EXIT, constants.SDK.EXIT, startExitSpan, tags, null, null, callback);
+    return startSdkSpan(
+      name,
+      constants.EXIT,
+      constants.SDK.EXIT,
+      startExitSpan,
+      tags,
+      null,
+      null,
+      /** @type {Function} */ (callback)
+    );
   }
 
+  /**
+   * @param {Error} error
+   * @param {string} tags
+   */
   function completeExitSpan(error, tags) {
     if (!isActive) {
       return;
@@ -210,6 +258,17 @@ module.exports = exports = function(isCallbackApi) {
     completeSpan(error, span, tags);
   }
 
+  /**
+   * @param {string} name
+   * @param {number} kind
+   * @param {string} sdkKind
+   * @param {Function} stackTraceRef
+   * @param {string} tags
+   * @param {string} traceId
+   * @param {string} parentSpanId
+   * @param {Function} callback
+   * @returns {Function | Promise<*>}
+   */
   function startSdkSpan(name, kind, sdkKind, stackTraceRef, tags, traceId, parentSpanId, callback) {
     return wrapper(() => {
       const span = cls.startSpan('sdk', kind, traceId, parentSpanId);
@@ -225,6 +284,11 @@ module.exports = exports = function(isCallbackApi) {
     });
   }
 
+  /**
+   * @param {Error} error
+   * @param {import('../cls').InstanaBaseSpan} span
+   * @param {string} tags
+   */
   function completeSpan(error, span, tags) {
     if (!span.data.sdk) {
       logger.warn(
@@ -261,16 +325,26 @@ module.exports = exports = function(isCallbackApi) {
     span.transmit();
   }
 
+  /**
+   * @param {import('node:events').EventEmitter} emitter
+   */
   function bindEmitter(emitter) {
     if (isActive) {
       cls.ns.bindEmitter(emitter);
     }
   }
 
+  /**
+   * @param {Function} callback
+   * @returns {Function | Promise<*>}
+   */
   function callNext(callback) {
     return isCallbackApi ? callback() : Promise.resolve();
   }
 
+  /**
+   * @param {import('../cls')} _cls
+   */
   function init(_cls) {
     cls = _cls;
     wrapper = isCallbackApi ? cls.ns.runAndReturn.bind(cls.ns) : cls.ns.runPromise.bind(cls.ns);

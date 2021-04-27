@@ -7,6 +7,7 @@
 
 const shimmer = require('shimmer');
 
+/** @type {import('../../../logger').GenericLogger} */
 let logger;
 logger = require('../../../logger').getLogger('tracing/grpc', newLogger => {
   logger = newLogger;
@@ -15,7 +16,7 @@ logger = require('../../../logger').getLogger('tracing/grpc', newLogger => {
 const requireHook = require('../../../util/requireHook');
 const cls = require('../../cls');
 
-exports.init = function() {
+exports.init = function () {
   requireHook.onModuleLoad('superagent', exports.instrument);
 };
 
@@ -30,8 +31,11 @@ exports.init = function() {
 //
 // To work around that issue, we attach the async context that is active when _creating_ the request and restore it in
 // Request#then.
-
+/**
+ * @param {import('superagent')} superagent
+ */
 exports.instrument = function instrument(superagent) {
+  // @ts-ignore
   const OriginalRequest = superagent.Request;
   if (!OriginalRequest || typeof OriginalRequest !== 'function') {
     logger.debug('Failed to instrument superagent. The provided object has no function named "Request".');
@@ -44,6 +48,7 @@ exports.instrument = function instrument(superagent) {
   }
 
   // Instrument the superagent.Request constructor function to attach the async context to the request object.
+  // @ts-ignore
   superagent.Request = function InstrumentedRequest() {
     const request = new (Function.prototype.bind.apply(
       OriginalRequest,
@@ -56,12 +61,18 @@ exports.instrument = function instrument(superagent) {
     return request;
   };
 
+  // @ts-ignore
   superagent.Request.__in = true;
+  // @ts-ignore
   superagent.Request.prototype = OriginalRequest.prototype;
 
+  // @ts-ignore
   shimmer.wrap(superagent.Request.prototype, 'then', instrumentThen);
 };
 
+/**
+ * @param {*} originalThen
+ */
 function instrumentThen(originalThen) {
   return function instrumentedThen() {
     if (!this.__inctx) {
@@ -77,12 +88,12 @@ function instrumentThen(originalThen) {
   };
 }
 
-exports.activate = function() {
+exports.activate = function () {
   // This instrumentation does not record spans on its own, it just helps propagating the async context. Thus the
   // instrumentation is always on and cannot be activted or deactivated.
 };
 
-exports.deactivate = function() {
+exports.deactivate = function () {
   // This instrumentation does not record spans on its own, it just helps propagating the async context. Thus the
   // instrumentation is always on and cannot be activted or deactivated.
 };
