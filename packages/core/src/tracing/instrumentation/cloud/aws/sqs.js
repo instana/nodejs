@@ -43,12 +43,13 @@ let isActive = false;
 
 exports.init = function init() {
   requireHook.onModuleLoad('aws-sdk', instrumentSQS);
+  requireHook.onModuleLoad('sqs-consumer', instrumentSQSConsumer);
 };
 
 function instrumentSQS(AWS) {
   // /aws-sdk/lib/service.js#defineMethods
-  shimmer.wrap(AWS.Service, 'defineMethods', function(original) {
-    return function(svc) {
+  shimmer.wrap(AWS.Service, 'defineMethods', function (original) {
+    return function (svc) {
       const patchedMethod = original.apply(this, arguments);
 
       if (
@@ -68,7 +69,7 @@ function instrumentSQS(AWS) {
 }
 
 function shimSendMessage(originalSendMessage) {
-  return function() {
+  return function () {
     if (isActive) {
       const originalArgs = new Array(arguments.length);
       for (let i = 0; i < originalArgs.length; i++) {
@@ -157,7 +158,7 @@ function instrumentedSendMessage(ctx, originalSendMessage, originalArgs) {
 
     const originalCallback = originalArgs[1];
     if (typeof originalCallback === 'function') {
-      originalArgs[1] = cls.ns.bind(function(err, data) {
+      originalArgs[1] = cls.ns.bind(function (err, data) {
         finishSpan(err, data, span);
         originalCallback.apply(this, arguments);
       });
@@ -217,7 +218,7 @@ function propagateTraceContext(attributes, span) {
 }
 
 function shimReceiveMessage(originalReceiveMessage) {
-  return function() {
+  return function () {
     if (isActive) {
       const parentSpan = cls.getCurrentSpan();
       if (parentSpan) {
@@ -252,10 +253,28 @@ function instrumentedReceiveMessage(ctx, originalReceiveMessage, originalArgs) {
       queue: originalArgs[0].QueueUrl || ''
     };
 
+    /**
+     * The MessageAttributeNames attribute is an option that you tell which message attributes you want to see.
+     * As we use message attributes to store Instana headers, if the customer does not set this attribute to All,
+     * we cannot see the Instana headers, so we need to explicitly add them.
+     */
+    const receveingParams = originalArgs[0];
+
+    if (!receveingParams.MessageAttributeNames) {
+      receveingParams.MessageAttributeNames = [];
+    }
+
+    if (
+      !receveingParams.MessageAttributeNames.includes('X_INSTANA*') &&
+      !receveingParams.MessageAttributeNames.includes('All')
+    ) {
+      receveingParams.MessageAttributeNames.push('X_INSTANA*');
+    }
+
     // callback use case
     const originalCallback = originalArgs[1];
     if (typeof originalCallback === 'function') {
-      originalArgs[1] = cls.ns.bind(function(err, data) {
+      originalArgs[1] = cls.ns.bind(function (err, data) {
         if (err) {
           addErrorToSpan(err, span);
           setImmediate(() => finishSpan(null, null, span));
@@ -288,7 +307,7 @@ function instrumentedReceiveMessage(ctx, originalReceiveMessage, originalArgs) {
     // promise use case
     if (typeof awsRequest.promise === 'function' && typeof originalCallback !== 'function') {
       const originalPromiseFn = awsRequest.promise;
-      awsRequest.promise = cls.ns.bind(function() {
+      awsRequest.promise = cls.ns.bind(function () {
         const promise = originalPromiseFn.apply(awsRequest, arguments);
 
         promise.then(
@@ -420,3 +439,72 @@ exports.activate = function activate() {
 exports.deactivate = function deactivate() {
   isActive = false;
 };
+
+/* *********** SQS Consumer ************** */
+
+function instrumentSQSConsumer(SQSConsumer) {
+  shimmer.wrap(SQSConsumer.Consumer.prototype, 'receiveMessage', shimSQSConsumerReceiveMessage);
+  shimmer.wrap(SQSConsumer.Consumer.prototype, 'executeHandler', shimSQSConsumerExecuteHandler);
+  shimmer.wrap(SQSConsumer.Consumer.prototype, 'executeBatchHandler', shimSQSConsumerExecuteHandler);
+}
+
+function shimSQSConsumerExecuteHandler(original) {
+  return function () {
+    if (isActive) {
+      const originalArgs = new Array(arguments.length);
+      for (let i = 0; i < originalArgs.length; i++) {
+        originalArgs[i] = arguments[i];
+      }
+
+      return instrumentedSQSConsumerExecuteHandler(this, original, originalArgs);
+    }
+
+    return original.apply(this, arguments);
+  };
+}
+
+function instrumentedSQSConsumerExecuteHandler(ctx, original, originalArgs) {
+  if (ctx.instanaAsyncContext) {
+    return cls.runInAsyncContext(ctx.instanaAsyncContext, () => {
+      const span = cls.getCurrentSpan();
+      span.disableAutoEnd();
+      const res = original.apply(ctx, originalArgs).then(data => {
+        span.transmitManual();
+        return data;
+      });
+      return res;
+    });
+  } else {
+    return original.apply(ctx, originalArgs);
+  }
+}
+
+function shimSQSConsumerReceiveMessage(original) {
+  return function () {
+    if (isActive) {
+      const originalArgs = new Array(arguments.length);
+      for (let i = 0; i < originalArgs.length; i++) {
+        originalArgs[i] = arguments[i];
+      }
+
+      return instrumentedSQSConsumerReceiveMessage(this, original, originalArgs);
+    }
+
+    return original.apply(this, arguments);
+  };
+}
+
+function instrumentedSQSConsumerReceiveMessage(ctx, original, originalArgs) {
+  const originalSQSReceiveMessage = ctx.sqs.receiveMessage;
+
+  ctx.sqs.receiveMessage = function () {
+    const res = originalSQSReceiveMessage.apply(this, arguments);
+    const p = res.promise();
+    if (p.instanaAsyncContext) {
+      ctx.instanaAsyncContext = p.instanaAsyncContext;
+    }
+    return res;
+  };
+
+  return original.apply(ctx, originalArgs);
+}

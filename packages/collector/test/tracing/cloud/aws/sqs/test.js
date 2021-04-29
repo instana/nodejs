@@ -46,13 +46,13 @@ if (!supportedVersion(process.versions.node)) {
 
 const retryTime = config.getTestTimeout() * 2;
 
-mochaSuiteFn('tracing/cloud/aws/sqs', function() {
+mochaSuiteFn('tracing/cloud/aws/sqs', function () {
   this.timeout(config.getTestTimeout() * 3);
 
   globalAgent.setUpCleanUpHooks();
   const agentControls = globalAgent.instance;
 
-  describe('tracing enabled, no suppression', function() {
+  describe('tracing enabled, no suppression', function () {
     const senderControls = new ProcessControls({
       appPath: path.join(__dirname, 'sendMessage'),
       port: 3215,
@@ -110,6 +110,30 @@ mochaSuiteFn('tracing/cloud/aws/sqs', function() {
             ]);
           }, retryTime);
         }
+      });
+    });
+
+    describe('sqs-consumer API', () => {
+      const sqsConsumerControls = new ProcessControls({
+        appPath: path.join(__dirname, 'sqs-consumer'),
+        port: 3216,
+        useGlobalAgent: true,
+        env: {
+          AWS_SQS_QUEUE_URL: queueURL
+        }
+      });
+
+      ProcessControls.setUpHooksWithRetryTime(retryTime, sqsConsumerControls);
+
+      const apiPath = '/send-callback';
+
+      it('receives message', async () => {
+        const response = await senderControls.sendRequest({
+          method: 'POST',
+          path: apiPath
+        });
+
+        return verify(sqsConsumerControls, response, apiPath, false);
       });
     });
 
