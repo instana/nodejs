@@ -1,5 +1,8 @@
 # Changelog
 
+## Unreleased
+- Instrument `sqs-consumer` to capture exit child spans of SQS entries correctly.
+
 ## 1.119.2
 - [AWS Fargate]: Fix secrets filtering for environment variables.
 - [Google Cloud Run]: Fix secrets filtering for environment variables.
