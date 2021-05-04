@@ -2,6 +2,7 @@
 
 ## Unreleased
 - Instrument `sqs-consumer` to capture exit child spans of SQS entries correctly.
+- Add additional check in instrumentation for `@elastic/elasticsearch` to fix TypeError when no action is present.
 
 ## 1.119.2
 - [AWS Fargate]: Fix secrets filtering for environment variables.

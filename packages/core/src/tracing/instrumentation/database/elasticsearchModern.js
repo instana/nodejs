@@ -219,7 +219,7 @@ function processParams(span, params) {
     span.data.elasticsearch.index = toStringEsMultiParameter(params.index);
     span.data.elasticsearch.type = toStringEsMultiParameter(params.type);
     span.data.elasticsearch.id = params.id;
-    if (action.indexOf('search') === 0) {
+    if (action && action.indexOf('search') === 0) {
       span.data.elasticsearch.query = tracingUtil.shortenDatabaseStatement(JSON.stringify(params));
     }
   }
