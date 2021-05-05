@@ -38,7 +38,7 @@ mochaSuiteFn('uncaught exceptions', function() {
     return serverControls
       .sendRequest({
         method: 'GET',
-        path: '/boom',
+        path: '/throw-error',
         simple: false,
         resolveWithFullResponse: true
       })
@@ -71,7 +71,7 @@ mochaSuiteFn('uncaught exceptions', function() {
     return serverControls
       .sendRequest({
         method: 'GET',
-        path: '/boom',
+        path: '/throw-error',
         simple: false,
         resolveWithFullResponse: true
       })
@@ -103,12 +103,102 @@ mochaSuiteFn('uncaught exceptions', function() {
       });
   });
 
+  it('must handle gracefully when non-error is thrown', function() {
+    return serverControls
+      .sendRequest({
+        method: 'GET',
+        path: '/throw-string',
+        simple: false,
+        resolveWithFullResponse: true
+      })
+      .then(response => {
+        assert.fail(response, 'no response', 'Unexpected response, server should have crashed.');
+      })
+      .catch(err => {
+        expect(err.name).to.equal('RequestError');
+        expect(err.message).to.equal('Error: socket hang up');
+        return retry(
+          () =>
+            Promise.all([agentControls.getSpans(), agentControls.getEvents()]).then(([spans, events]) => {
+              expectExactlyOneMatching(events, [
+                event =>
+                  expect(event.title).to.equal('A Node.js process terminated abnormally due to an uncaught exception.'),
+                event => expect(event.text).to.equal('"Throwing a string instead of a proper error."'),
+                event =>
+                  expect(event.plugin).to.equal(
+                    'com.instana.forge.infrastructure.runtime.nodejs.NodeJsRuntimePlatform'
+                  ),
+                event => expect(event.id).to.equal(serverControls.getPid()),
+                event => expect(event.timestamp).to.exist,
+                event => expect(event.duration).to.equal(1),
+                event => expect(event.severity).to.equal(10)
+              ]);
+
+              expectExactlyOneMatching(spans, [
+                span => expect(span.n).to.equal('node.http.server'),
+                span => expect(span.f.e).to.equal(String(serverControls.getPid())),
+                span => expect(span.f.h).to.equal('agent-stub-uuid'),
+                span => expect(span.error).to.not.exist,
+                span => expect(span.ec).to.equal(1),
+                span => expect(span.stack).to.deep.equal([])
+              ]);
+            }),
+          this.timeout() * 0.8
+        );
+      });
+  });
+
+  it('must handle gracefully when null is thrown', function() {
+    return serverControls
+      .sendRequest({
+        method: 'GET',
+        path: '/throw-null',
+        simple: false,
+        resolveWithFullResponse: true
+      })
+      .then(response => {
+        assert.fail(response, 'no response', 'Unexpected response, server should have crashed.');
+      })
+      .catch(err => {
+        expect(err.name).to.equal('RequestError');
+        expect(err.message).to.equal('Error: socket hang up');
+        return retry(
+          () =>
+            Promise.all([agentControls.getSpans(), agentControls.getEvents()]).then(([spans, events]) => {
+              expectExactlyOneMatching(events, [
+                event =>
+                  expect(event.title).to.equal('A Node.js process terminated abnormally due to an uncaught exception.'),
+                event => expect(event.text).to.equal('A null/undefined value has been thrown.'),
+                event =>
+                  expect(event.plugin).to.equal(
+                    'com.instana.forge.infrastructure.runtime.nodejs.NodeJsRuntimePlatform'
+                  ),
+                event => expect(event.id).to.equal(serverControls.getPid()),
+                event => expect(event.timestamp).to.exist,
+                event => expect(event.duration).to.equal(1),
+                event => expect(event.severity).to.equal(10)
+              ]);
+
+              expectExactlyOneMatching(spans, [
+                span => expect(span.n).to.equal('node.http.server'),
+                span => expect(span.f.e).to.equal(String(serverControls.getPid())),
+                span => expect(span.f.h).to.equal('agent-stub-uuid'),
+                span => expect(span.error).to.not.exist,
+                span => expect(span.ec).to.equal(1),
+                span => expect(span.stack).to.deep.equal([])
+              ]);
+            }),
+          this.timeout() * 0.8
+        );
+      });
+  });
+
   it('must block the dying process until termination', function() {
     let serverAcceptedAnotherResponse = false;
     let errorFromSecondHttpRequest = null;
     const triggerUncaughtException = serverControls.sendRequest({
       method: 'GET',
-      path: '/boom',
+      path: '/throw-error',
       simple: false,
       resolveWithFullResponse: true
     });

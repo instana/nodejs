@@ -87,7 +87,8 @@ exports.deactivate = function() {
 function onUncaughtException(uncaughtError) {
   // because of the way Error.prepareStackTrace works and how error.stack is only created once and then cached it is
   // important to create the JSON formatted stack trace first, before anything else accesses error.stack.
-  const jsonStackTrace = stackTraceUtil.getStackTraceAsJson(stackTraceLength, uncaughtError);
+  const jsonStackTrace =
+    uncaughtError != null ? stackTraceUtil.getStackTraceAsJson(stackTraceLength, uncaughtError) : null;
   finishCurrentSpanAndReportEvent(uncaughtError, jsonStackTrace);
   logAndRethrow(uncaughtError);
 }
@@ -99,7 +100,7 @@ function finishCurrentSpanAndReportEvent(uncaughtError, jsonStackTrace) {
 }
 
 function createEventForUncaughtException(uncaughtError) {
-  return createEvent(uncaughtError, 'A Node.js process terminated abnormally due to an uncaught exception.', 10);
+  return createEvent(uncaughtError, 'A Node.js process terminated abnormally due to an uncaught exception.', 10, false);
 }
 
 function finishCurrentSpan(jsonStackTrace) {
@@ -114,7 +115,9 @@ function finishCurrentSpan(jsonStackTrace) {
 
   currentSpan.ec = 1;
   currentSpan.d = Date.now() - currentSpan.ts;
-  currentSpan.stack = jsonStackTrace;
+  if (jsonStackTrace) {
+    currentSpan.stack = jsonStackTrace;
+  }
   currentSpan.transmit();
   return spanBuffer.getAndResetSpans();
 }
@@ -183,11 +186,18 @@ function onUnhandledRejection(reason) {
 }
 
 function createEventForUnhandledRejection(reason) {
-  return createEvent(reason, 'An unhandled promise rejection occured in a Node.js process.', 5);
+  return createEvent(reason, 'An unhandled promise rejection occured in a Node.js process.', 5, true);
 }
 
-function createEvent(error, title, severity) {
-  const eventText = errorToMarkdown(error);
+function createEvent(error, title, severity, isPromiseRejection) {
+  let eventText;
+  if (error != null) {
+    eventText = errorToMarkdown(error);
+  } else if (isPromiseRejection) {
+    eventText = 'No "reason" parameter has been provided when the promise was rejected.';
+  } else {
+    eventText = 'A null/undefined value has been thrown.';
+  }
   return {
     title,
     text: eventText,
@@ -211,6 +221,7 @@ function errorToMarkdown(error) {
   } else {
     return JSON.stringify(serializedError);
   }
+  /* eslint-enable max-len */
 }
 
 function stackTraceToMarkdown(stackTrace) {
