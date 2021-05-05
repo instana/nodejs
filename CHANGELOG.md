@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.119.4
 - Fix handling of null/undefined values used as exceptions/reasonswhen reporting uncaught exceptions and unhandled promise rejections.
 
 ## 1.119.3
