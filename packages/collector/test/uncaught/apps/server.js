@@ -33,10 +33,18 @@ const requestHandler = (request, response) => {
     return success(response);
   } else if (request.url === '/other') {
     return success(response);
-  } else if (request.url === '/boom') {
-    return uncaughtError(response);
-  } else if (request.url === '/reject') {
-    return uncaughtPromiseRejection(response);
+  } else if (request.url === '/throw-error') {
+    return throwUncaughtError('error');
+  } else if (request.url === '/throw-string') {
+    return throwUncaughtError('string');
+  } else if (request.url === '/throw-null') {
+    return throwUncaughtError('null');
+  } else if (request.url === '/reject-with-error-reason') {
+    return uncaughtPromiseRejection(response, 'error');
+  } else if (request.url === '/reject-with-string-reason') {
+    return uncaughtPromiseRejection(response, 'string');
+  } else if (request.url === '/reject-with-null-reason') {
+    return uncaughtPromiseRejection(response, 'none');
   } else {
     response.statusCode = 404;
     return response.end('Not here :-(');
@@ -49,15 +57,30 @@ function success(response) {
   }, 100);
 }
 
-function uncaughtError() {
+function throwUncaughtError(errorType) {
   process.nextTick(() => {
-    throw new Error('Boom');
+    if (errorType === 'string') {
+      // eslint-disable-next-line no-throw-literal
+      throw 'Throwing a string instead of a proper error.';
+    } else if (errorType === 'null') {
+      // eslint-disable-next-line no-throw-literal
+      throw null;
+    } else {
+      throw new Error('Boom');
+    }
   });
 }
 
-function uncaughtPromiseRejection(response) {
+function uncaughtPromiseRejection(response, reasonType) {
   process.nextTick(() => {
-    Promise.reject(new Error('Unhandled Promise Rejection'));
+    if (reasonType === 'none') {
+      Promise.reject();
+    } else if (reasonType === 'string') {
+      // eslint-disable-next-line prefer-promise-reject-errors
+      Promise.reject('rejecting a promise with a string value');
+    } else {
+      Promise.reject(new Error('Unhandled Promise Rejection'));
+    }
     process.nextTick(() => {
       response.end('Rejected.');
     });

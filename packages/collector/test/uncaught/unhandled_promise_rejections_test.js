@@ -37,7 +37,7 @@ mochaSuiteFn('unhandled promise rejections', function() {
     serverControls
       .sendRequest({
         method: 'GET',
-        path: '/reject',
+        path: '/reject-with-error-reason',
         simple: false,
         resolveWithFullResponse: true
       })
@@ -61,7 +61,7 @@ mochaSuiteFn('unhandled promise rejections', function() {
     serverControls
       .sendRequest({
         method: 'GET',
-        path: '/reject',
+        path: '/reject-with-error-reason',
         simple: false,
         resolveWithFullResponse: true
       })
@@ -72,6 +72,66 @@ mochaSuiteFn('unhandled promise rejections', function() {
             testUtils.expectAtLeastOneMatching(events, [
               event => expect(event.title).to.equal('An unhandled promise rejection occured in a Node.js process.'),
               event => expect(event.text).to.contain('Unhandled Promise Rejection'),
+              event => expect(event.text).to.contain('Stack:'),
+              event =>
+                expect(event.plugin).to.equal('com.instana.forge.infrastructure.runtime.nodejs.NodeJsRuntimePlatform'),
+              event => expect(event.id).to.equal(serverControls.getPid()),
+              event => expect(event.timestamp).to.exist,
+              event => expect(event.duration).to.equal(1),
+              event => expect(event.severity).to.equal(5)
+            ]);
+          })
+        );
+      }));
+
+  it(
+    'must handle promise rejections gracefully when the promise is rejected with a string value for the reason ' +
+      'parameter',
+    () =>
+      serverControls
+        .sendRequest({
+          method: 'GET',
+          path: '/reject-with-string-reason',
+          simple: false,
+          resolveWithFullResponse: true
+        })
+        .then(response => {
+          expect(response.body).to.equal('Rejected.');
+          return testUtils.retry(() =>
+            agentControls.getEvents().then(events => {
+              testUtils.expectAtLeastOneMatching(events, [
+                event => expect(event.title).to.equal('An unhandled promise rejection occured in a Node.js process.'),
+                event => expect(event.text).to.equal('"rejecting a promise with a string value"'),
+                event =>
+                  expect(event.plugin).to.equal(
+                    'com.instana.forge.infrastructure.runtime.nodejs.NodeJsRuntimePlatform'
+                  ),
+                event => expect(event.id).to.equal(serverControls.getPid()),
+                event => expect(event.timestamp).to.exist,
+                event => expect(event.duration).to.equal(1),
+                event => expect(event.severity).to.equal(5)
+              ]);
+            })
+          );
+        })
+  );
+
+  it('must handle promise rejections gracefully when the promise is rejected without reason parameter', () =>
+    serverControls
+      .sendRequest({
+        method: 'GET',
+        path: '/reject-with-null-reason',
+        simple: false,
+        resolveWithFullResponse: true
+      })
+      .then(response => {
+        expect(response.body).to.equal('Rejected.');
+        return testUtils.retry(() =>
+          agentControls.getEvents().then(events => {
+            testUtils.expectAtLeastOneMatching(events, [
+              event => expect(event.title).to.equal('An unhandled promise rejection occured in a Node.js process.'),
+              event =>
+                expect(event.text).to.equal('No "reason" parameter has been provided when the promise was rejected.'),
               event =>
                 expect(event.plugin).to.equal('com.instana.forge.infrastructure.runtime.nodejs.NodeJsRuntimePlatform'),
               event => expect(event.id).to.equal(serverControls.getPid()),

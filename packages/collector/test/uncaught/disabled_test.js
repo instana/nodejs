@@ -35,7 +35,7 @@ mochaSuiteFn('uncaught exception reporting disabled', function() {
     serverControls
       .sendRequest({
         method: 'GET',
-        path: '/boom',
+        path: '/throw-error',
         simple: false,
         resolveWithFullResponse: true
       })
@@ -59,7 +59,7 @@ mochaSuiteFn('uncaught exception reporting disabled', function() {
     serverControls
       .sendRequest({
         method: 'GET',
-        path: '/boom',
+        path: '/throw-error',
         simple: false,
         resolveWithFullResponse: true
       })

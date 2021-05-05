@@ -1,5 +1,8 @@
 # Changelog
 
+## Unreleased
+- Fix handling of null/undefined values used as exceptions/reasonswhen reporting uncaught exceptions and unhandled promise rejections.
+
 ## 1.119.3
 - Instrument `sqs-consumer` to capture exit child spans of SQS entries correctly.
 - Add additional check in instrumentation for `@elastic/elasticsearch` to fix TypeError when no action is present.
