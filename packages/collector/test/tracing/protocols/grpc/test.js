@@ -35,6 +35,19 @@ mochaSuiteFn('tracing/grpc', function() {
   });
   // registerSuite.bind(this)('dynamic', false, false);
 
+  const maliMochaSuiteFn = semver.satisfies(process.versions.node, '>=10.0.0') ? describe : describe.skip;
+
+  maliMochaSuiteFn('with mali@0.20.0', () => {
+    // mali@0.20.0 was the last mali version based on the grpc package, more recent versions are based on @grpc/grpc-js,
+    // which is why we test 0.20.0 explicitly here.
+    const { serverControls, clientControls } = createProcessesForOptions('mali', false, false);
+
+    it('must trace an unary call', () => {
+      const expectedReply = 'received: request';
+      return runTest('/unary-call', serverControls, clientControls, expectedReply);
+    });
+  });
+
   describe('suppressed', () => {
     const { clientControls } = createProcesses();
     it('should not trace when suppressed', () =>
@@ -156,15 +169,22 @@ function createProcessesForOptions(codeGenMode, withMetadata, withOptions) {
     env.GRPC_WITH_OPTIONS = true;
   }
 
-  return createProcesses(env);
+  const isMaliServer = codeGenMode === 'mali';
+  return createProcesses(env, isMaliServer);
 }
 
-function createProcesses(env = {}) {
-  const serverControls = new ProcessControls({
-    appPath: path.join(__dirname, 'server'),
-    useGlobalAgent: true,
-    env
-  });
+function createProcesses(env = {}, isMaliServer = false) {
+  const serverControls = isMaliServer
+    ? new ProcessControls({
+        appPath: path.join(__dirname, 'maliServer'),
+        useGlobalAgent: true,
+        env
+      })
+    : new ProcessControls({
+        appPath: path.join(__dirname, 'server'),
+        useGlobalAgent: true,
+        env
+      });
   const clientControls = new ProcessControls({
     appPath: path.join(__dirname, 'client'),
     port: 3216,
