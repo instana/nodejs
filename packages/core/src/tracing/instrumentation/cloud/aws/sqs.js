@@ -340,6 +340,9 @@ function instrumentedReceiveMessage(ctx, originalReceiveMessage, originalArgs) {
         );
 
         promise.instanaAsyncContext = cls.getAsyncContext();
+        if (originalArgs[0] && originalArgs[0].QueueUrl) {
+          ctx[originalArgs[0].QueueUrl] = promise.instanaAsyncContext;
+        }
 
         // Usually, native promises are handled automatically, that is, their then/catch/finally is executed in the CLS
         // context they have been created in. Apparently, here the promise is created outside the CLS context, thus we
@@ -464,8 +467,10 @@ function shimSQSConsumerExecuteHandler(original) {
 }
 
 function instrumentedSQSConsumerExecuteHandler(ctx, original, originalArgs) {
-  if (ctx.instanaAsyncContext) {
-    return cls.runInAsyncContext(ctx.instanaAsyncContext, () => {
+  const instanaAsyncContext = ctx.sqs[ctx._instanaSqsQueueUrl];
+  delete ctx.sqs[ctx._instanaSqsQueueUrl];
+  if (instanaAsyncContext) {
+    return cls.runInAsyncContext(instanaAsyncContext, () => {
       const span = cls.getCurrentSpan();
       span.disableAutoEnd();
       const res = original.apply(ctx, originalArgs).then(data => {
@@ -495,16 +500,9 @@ function shimSQSConsumerReceiveMessage(original) {
 }
 
 function instrumentedSQSConsumerReceiveMessage(ctx, original, originalArgs) {
-  const originalSQSReceiveMessage = ctx.sqs.receiveMessage;
-
-  ctx.sqs.receiveMessage = function () {
-    const res = originalSQSReceiveMessage.apply(this, arguments);
-    const p = res.promise();
-    if (p.instanaAsyncContext) {
-      ctx.instanaAsyncContext = p.instanaAsyncContext;
-    }
-    return res;
-  };
-
-  return original.apply(ctx, originalArgs);
+  return cls.ns.runAndReturn(() => {
+    // save the queue url to be used in executeHandler
+    ctx._instanaSqsQueueUrl = originalArgs[0].QueueUrl;
+    return original.apply(ctx, originalArgs);
+  });
 }
