@@ -180,15 +180,7 @@ function instrumentConsumer(Runner) {
       const originalEachBatch = argObject.eachBatch;
       argObject.eachBatch = instrumentedEachBatch(originalEachBatch);
     }
-
-    // We are patching a native ES6 constructor, the following approach works without relying on ES6 language features
-    // (but see below for an easier alternative).
-    return new (Function.prototype.bind.apply(Runner, [null].concat(Array.prototype.slice.call(arguments))))();
-
-    // Once we drop support for Node.js 4, this could be simply:
-    // return new Runner(...arguments);
-    // See https://stackoverflow.com/a/33195176/2565264 and
-    // https://node.green/#ES2015-syntax-spread-syntax-for-iterable-objects.
+    return new Runner(...arguments);
   };
 }
 
