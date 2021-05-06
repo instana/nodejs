@@ -3,8 +3,6 @@
  * (c) Copyright Instana Inc. and contributors 2019
  */
 
-/* eslint-disable no-console */
-
 'use strict';
 
 const port = process.env.APP_PORT || 3217;
@@ -297,5 +295,6 @@ app.listen(port, () => {
 function log() {
   const args = Array.prototype.slice.call(arguments);
   args[0] = `GRPC Server (${process.pid}):\t${args[0]}`;
+  // eslint-disable-next-line no-console
   console.log.apply(console, args);
 }

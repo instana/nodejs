@@ -5,6 +5,7 @@
 
 'use strict';
 
+const util = require('util');
 const shimmer = require('shimmer');
 
 let logger;
@@ -142,10 +143,10 @@ function instrumentClient(clientModule) {
   // might be a convenient way to hook into the GRPC client, but the client stubs are created in such a way via lodash
   // that functions like Client.prototype.makeUnaryRequest are not called on the Client object, thus shimming it (that
   // is, replacing it with a wrapper on Client.prototype) is ineffective.
-  shimmer.wrap(clientModule, 'makeClientConstructor', instrumentedMakeClientConstructor);
+  shimmer.wrap(clientModule, 'makeClientConstructor', instrumentedMakeClientConstructor.bind(null, clientModule));
 }
 
-function instrumentedMakeClientConstructor(originalFunction) {
+function instrumentedMakeClientConstructor(clientModule, originalFunction) {
   return function(methods) {
     const address = {
       host: undefined,
@@ -184,6 +185,10 @@ function instrumentedMakeClientConstructor(originalFunction) {
         shimmer.wrap(InstrumentedServiceClient.prototype, methodDefinition.originalName, shimFn);
       }
     });
+
+    // ServiceClient inherits from grpc's base Client, make our instrumented version inherit from Client, too.
+    util.inherits(InstrumentedServiceClient, clientModule.Client);
+
     return InstrumentedServiceClient;
   };
 }
