@@ -1,7 +1,8 @@
 # Changelog
 
-## Unreleased
+## 1.119.5
 - Let instrumented GRPC `ServiceClient` inherit from base client, fixes an issue with [`mali`](https://www.npmjs.com/package/mali) up to version `0.20.0`.
+- AWS SQS: remove duplicated instrumentation of receiveMessage in `sqs-consumer` instrumentation.
 
 ## 1.119.4
 - Fix handling of null/undefined values used as exceptions/reasonswhen reporting uncaught exceptions and unhandled promise rejections.
