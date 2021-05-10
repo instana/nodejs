@@ -32,7 +32,7 @@ const operationsInfo = {
   getShardIterator: 'shardIterator',
   listStreams: 'listStreams',
   putRecord: 'putRecord',
-  putRecords: 'putRecords',
+  putRecords: 'putRecords'
 };
 
 const withErrorOptions = [true, false];
@@ -45,7 +45,7 @@ const availableOperations = [
   'getRecords',
   'getShardIterator',
   'putRecord',
-  'deleteStream',
+  'deleteStream'
 ];
 
 if (!supportedVersion(process.versions.node)) {
@@ -72,8 +72,8 @@ mochaSuiteFn('tracing/cloud/aws/kinesis', function () {
       port: 3215,
       useGlobalAgent: true,
       env: {
-        AWS_KINESIS_STREAM_NAME: streamName,
-      },
+        AWS_KINESIS_STREAM_NAME: streamName
+      }
     });
 
     ProcessControls.setUpHooksWithRetryTime(retryTime, appControls);
@@ -88,7 +88,7 @@ mochaSuiteFn('tracing/cloud/aws/kinesis', function () {
               const response = await appControls.sendRequest({
                 method: 'GET',
                 path: `${apiPath}${withErrorOption}`,
-                simple: withError === false,
+                simple: withError === false
               });
 
               /**
@@ -132,7 +132,7 @@ mochaSuiteFn('tracing/cloud/aws/kinesis', function () {
         span => expect(span.f.e).to.equal(String(controls.getPid())),
         span => expect(span.f.h).to.equal('agent-stub-uuid'),
         span => expect(span.n).to.equal('node.http.server'),
-        span => expect(span.data.http.url).to.equal(apiPath),
+        span => expect(span.data.http.url).to.equal(apiPath)
       ]);
     }
 
@@ -143,7 +143,7 @@ mochaSuiteFn('tracing/cloud/aws/kinesis', function () {
         span => expect(span.k).to.equal(constants.EXIT),
         span => expect(span.f.e).to.equal(String(controls.getPid())),
         span => expect(span.f.h).to.equal('agent-stub-uuid'),
-        span => expect(span.n).to.equal('node.http.client'),
+        span => expect(span.n).to.equal('node.http.client')
       ]);
     }
 
@@ -178,7 +178,7 @@ mochaSuiteFn('tracing/cloud/aws/kinesis', function () {
             expect(span.data.kinesis.shardType).to.equal('AT_SEQUENCE_NUMBER');
             expect(span.data.kinesis.startSequenceNumber).to.exist;
           }
-        },
+        }
       ]);
     }
   });
@@ -192,8 +192,8 @@ mochaSuiteFn('tracing/cloud/aws/kinesis', function () {
       useGlobalAgent: true,
       tracingEnabled: false,
       env: {
-        AWS_KINESIS_STREAM_NAME: streamName,
-      },
+        AWS_KINESIS_STREAM_NAME: streamName
+      }
     });
 
     ProcessControls.setUpHooksWithRetryTime(retryTime, appControls);
@@ -204,7 +204,7 @@ mochaSuiteFn('tracing/cloud/aws/kinesis', function () {
           it(`should not trace (${operation})`, async () => {
             await appControls.sendRequest({
               method: 'GET',
-              path: `/${operation}/${requestMethod}`,
+              path: `/${operation}/${requestMethod}`
             });
 
             if (operation === 'createStream') {
@@ -234,8 +234,8 @@ mochaSuiteFn('tracing/cloud/aws/kinesis', function () {
       port: 3215,
       useGlobalAgent: true,
       env: {
-        AWS_KINESIS_STREAM_NAME: streamName,
-      },
+        AWS_KINESIS_STREAM_NAME: streamName
+      }
     });
 
     ProcessControls.setUpHooksWithRetryTime(retryTime, appControls);
@@ -247,7 +247,7 @@ mochaSuiteFn('tracing/cloud/aws/kinesis', function () {
             await appControls.sendRequest({
               suppressTracing: true,
               method: 'GET',
-              path: `/${operation}/${requestMethod}`,
+              path: `/${operation}/${requestMethod}`
             });
 
             if (operation === 'createStream') {
