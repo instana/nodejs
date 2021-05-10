@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.120.0
 - Add instrumentation for AWS Kinesis
 
 ## 1.119.5
