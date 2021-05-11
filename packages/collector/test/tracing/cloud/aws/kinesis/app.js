@@ -12,52 +12,52 @@ const port = process.env.APP_SENDER_PORT || 3215;
 const streamName = process.env.AWS_KINESIS_STREAM_NAME || 'nodejs-team';
 const agentPort = process.env.INSTANA_AGENT_PORT || 42699;
 const request = require('request-promise');
-
 const AWS = require('aws-sdk');
 const logPrefix = `AWS Kinesis (${process.pid}):\t`;
+const log = require('@instana/core/test/test_util/log').getLogger(logPrefix);
 AWS.config.update({ region: 'us-east-2' });
 const kinesis = new AWS.Kinesis();
 
 const availableOperations = {
   deleteStream: {
-    StreamName: streamName,
+    StreamName: streamName
   },
   createStream: {
     StreamName: streamName,
-    ShardCount: 1,
+    ShardCount: 1
   },
   getRecords: {
     ShardIterator: '',
-    Limit: 3,
+    Limit: 3
   },
   getShardIterator: {
     StreamName: streamName,
     ShardIteratorType: 'AT_SEQUENCE_NUMBER',
     ShardId: '',
-    StartingSequenceNumber: '',
+    StartingSequenceNumber: ''
   },
   listStreams: {},
   listShards: {
-    StreamName: streamName,
+    StreamName: streamName
   },
   putRecord: {
     StreamName: streamName,
     Data: 'I am the data',
-    PartitionKey: 'partition1',
+    PartitionKey: 'partition1'
   },
   putRecords: {
     StreamName: streamName,
     Records: [
       {
         Data: 'I am the data record 1',
-        PartitionKey: 'partition1',
+        PartitionKey: 'partition1'
       },
       {
         Data: 'I am the data record 2',
-        PartitionKey: 'partition1',
-      },
-    ],
-  },
+        PartitionKey: 'partition1'
+      }
+    ]
+  }
 };
 
 const operationNames = Object.keys(availableOperations);
@@ -131,25 +131,17 @@ function execOperation(operation, cb, opts, withError) {
   }
 }
 
-function log() {
-  /* eslint-disable no-console */
-  const args = Array.prototype.slice.call(arguments);
-  args[0] = `${logPrefix}${args[0]}`;
-  console.log.apply(console, args);
-  /* eslint-enable no-console */
-}
-
 function httpError(res, err) {
   res.status(500).send({
     status: 'failed',
-    error: err,
+    error: err
   });
 }
 
 function httpSuccess(res, data) {
   res.send({
     status: 'ok',
-    data: data,
+    data: data
   });
 }
 

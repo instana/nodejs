@@ -5,187 +5,129 @@
 
 'use strict';
 
-const shimmer = require('shimmer');
-const requireHook = require('../../../../util/requireHook');
 const cls = require('../../../cls');
 const { EXIT, isExitSpan } = require('../../../constants');
 const tracingUtil = require('../../../tracingUtil');
+const { InstanaAWSProduct } = require('./instana_aws_product');
+
+const SPAN_NAME = 'kinesis';
 
 const operationsInfo = {
   createStream: {
-    op: 'createStream',
+    op: 'createStream'
   },
   deleteStream: {
-    op: 'deleteStream',
+    op: 'deleteStream'
   },
   getRecords: {
-    op: 'getRecords',
+    op: 'getRecords'
   },
   getShardIterator: {
-    op: 'shardIterator',
+    op: 'shardIterator'
   },
   listStreams: {
-    op: 'listStreams',
+    op: 'listStreams'
   },
   putRecord: {
-    op: 'putRecord',
+    op: 'putRecord'
   },
   putRecords: {
-    op: 'putRecords',
+    op: 'putRecords'
   },
   listShards: {
-    op: 'listShards',
-  },
+    op: 'listShards'
+  }
 };
 
-const methodList = Object.keys(operationsInfo);
+const operations = Object.keys(operationsInfo);
 
-let isActive = false;
+class InstanaAWSKinesis extends InstanaAWSProduct {
+  instrumentedMakeRequest(ctx, originalMakeRequest, originalArgs) {
+    const parentSpan = cls.getCurrentSpan();
+    const self = this;
 
-exports.isActive = function () {
-  return isActive;
-};
+    if (!parentSpan || isExitSpan(parentSpan)) {
+      return originalMakeRequest.apply(ctx, originalArgs);
+    }
 
-exports.init = function init() {
-  requireHook.onModuleLoad('aws-sdk', instrumentAWS);
-};
+    return cls.ns.runAndReturn(() => {
+      const span = cls.startSpan(this.spanName, EXIT);
+      span.ts = Date.now();
+      span.stack = tracingUtil.getStackTrace(this.instrumentedMakeRequest, 1);
+      // Data attribs: op and stream
+      span.data[this.spanName] = this.buildSpanData(originalArgs[0], originalArgs[1]);
 
-exports.activate = function activate() {
-  isActive = true;
-};
+      if (typeof originalArgs[2] === 'function') {
+        // callback case
+        const _originalCallback = originalArgs[2];
 
-exports.deactivate = function deactivate() {
-  isActive = false;
-};
-
-function instrumentAWS(AWS) {
-  shimmer.wrap(AWS.Service.prototype, 'makeRequest', shimMakeRequest);
-}
-
-function shimMakeRequest(originalMakeRequest) {
-  return function () {
-    if (isActive) {
-      const originalArgs = new Array(arguments.length);
-      for (let i = 0; i < originalArgs.length; i++) {
-        originalArgs[i] = arguments[i];
+        originalArgs[2] = cls.ns.bind(function (err, data) {
+          if (data && data.code) {
+            self.finishSpan(data, span);
+          } else {
+            self.finishSpan(err, span);
+          }
+          return _originalCallback.apply(this, arguments);
+        });
       }
 
-      return instrumentedMakeRequest(this, originalMakeRequest, originalArgs);
+      const request = originalMakeRequest.apply(ctx, originalArgs);
+
+      if (typeof request.promise === 'function' && typeof originalArgs[2] !== 'function') {
+        // promise case
+        const originalPromise = request.promise;
+
+        request.promise = cls.ns.bind(() => {
+          const promise = originalPromise.apply(request, arguments);
+          return promise
+            .then(data => {
+              if (data && data.code) {
+                this.finishSpan(data, span);
+              } else {
+                this.finishSpan(null, span);
+              }
+
+              return data;
+            })
+            .catch(err => {
+              this.finishSpan(err, span);
+              return err;
+            });
+        });
+      }
+
+      return request;
+    });
+  }
+
+  buildSpanData(operation, params) {
+    const operationInfo = operationsInfo[operation];
+    const spanData = {
+      op: operationInfo.op
+    };
+
+    // Not present in listStreams and getRecords
+    if (params && params.StreamName) {
+      spanData.stream = params.StreamName;
+    }
+    // Can be present when putRecord operation is called
+    if (params && params.ExplicitHashKey) {
+      spanData.record = params.ExplicitHashKey;
+    }
+    // Present in getShardIterator
+    if (params && params.ShardIteratorType) {
+      spanData.shardType = params.ShardIteratorType;
+    }
+    // Present in getShardIterator when shardType is AT_SEQUENCE_NUMBER and AFTER_SEQUENCE_NUMBER
+    if (params && params.StartingSequenceNumber) {
+      spanData.startSequenceNumber = params.StartingSequenceNumber;
+    }
+    if (params && params.ShardId) {
+      spanData.shard = params.ShardId;
     }
 
-    return originalMakeRequest.apply(this, arguments);
-  };
-}
-
-function instrumentedMakeRequest(ctx, originalMakeRequest, originalArgs) {
-  if (!isOperationShimmable(originalArgs[0]) || cls.tracingSuppressed()) {
-    return originalMakeRequest.apply(ctx, originalArgs);
-  }
-
-  const parentSpan = cls.getCurrentSpan();
-
-  if (!parentSpan || isExitSpan(parentSpan)) {
-    return originalMakeRequest.apply(ctx, originalArgs);
-  }
-
-  return cls.ns.runAndReturn(() => {
-    const span = cls.startSpan('kinesis', EXIT);
-    span.ts = Date.now();
-    span.stack = tracingUtil.getStackTrace(instrumentedMakeRequest);
-    // Data attribs: op and stream
-    span.data.kinesis = buildSpanData(originalArgs[0], originalArgs[1]);
-
-    if (typeof originalArgs[2] === 'function') {
-      // callback case
-      const _originalCallback = originalArgs[2];
-
-      originalArgs[2] = cls.ns.bind(function (err, data) {
-        if (data && data.code) {
-          finishSpan(data, span);
-        } else {
-          finishSpan(err, span);
-        }
-        return _originalCallback.apply(this, arguments);
-      });
-    }
-
-    const request = originalMakeRequest.apply(ctx, originalArgs);
-
-    if (typeof request.promise === 'function' && typeof originalArgs[2] !== 'function') {
-      // promise case
-      const originalPromise = request.promise;
-
-      request.promise = cls.ns.bind(function () {
-        const promise = originalPromise.apply(request, arguments);
-        return promise
-          .then(data => {
-            if (data && data.code) {
-              finishSpan(data, span);
-            } else {
-              finishSpan(null, span);
-            }
-
-            return data;
-          })
-          .catch(err => {
-            finishSpan(err, span);
-            return err;
-          });
-      });
-    }
-
-    return request;
-  });
-}
-
-function finishSpan(err, span) {
-  if (err) {
-    addErrorToSpan(err, span);
-  }
-
-  span.d = Date.now() - span.ts;
-  span.transmit();
-}
-
-function addErrorToSpan(err, span) {
-  if (err) {
-    span.ec = 1;
-    const kinesisData = span.data && span.data.kinesis;
-    if (kinesisData) {
-      kinesisData.error = err.message || err.code || JSON.stringify(err);
-    }
+    return spanData;
   }
 }
 
-function buildSpanData(operation, params) {
-  const operationInfo = operationsInfo[operation];
-  const spanData = {
-    op: operationInfo.op,
-  };
-
-  // Not present in listStreams and getRecords
-  if (params && params.StreamName) {
-    spanData.stream = params.StreamName;
-  }
-  // Can be present when putRecord operation is called
-  if (params && params.ExplicitHashKey) {
-    spanData.record = params.ExplicitHashKey;
-  }
-  // Present in getShardIterator
-  if (params && params.ShardIteratorType) {
-    spanData.shardType = params.ShardIteratorType;
-  }
-  // Present in getShardIterator when shardType is AT_SEQUENCE_NUMBER and AFTER_SEQUENCE_NUMBER
-  if (params && params.StartingSequenceNumber) {
-    spanData.startSequenceNumber = params.StartingSequenceNumber;
-  }
-  if (params && params.ShardId) {
-    spanData.shard = params.ShardId;
-  }
-
-  return spanData;
-}
-
-function isOperationShimmable(operation) {
-  return methodList.includes(operation);
-}
+module.exports = new InstanaAWSKinesis(SPAN_NAME, operations);

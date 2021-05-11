@@ -5,11 +5,10 @@
 
 'use strict';
 
-const shimmer = require('shimmer');
 const cls = require('../../../cls');
 const { EXIT, isExitSpan } = require('../../../constants');
-const requireHook = require('../../../../util/requireHook');
 const tracingUtil = require('../../../tracingUtil');
+const { InstanaAWSProduct } = require('./instana_aws_product');
 
 const s3MethodsInfo = {
   listBuckets: {
@@ -50,161 +49,87 @@ const s3MethodsInfo = {
   }
 };
 
-const methodList = Object.keys(s3MethodsInfo);
+const operations = Object.keys(s3MethodsInfo);
+const SPAN_NAME = 's3';
 
-let isActive = false;
+class InstanaAWSS3 extends InstanaAWSProduct {
+  instrumentedMakeRequest(ctx, originalMakeRequest, originalArgs) {
+    const self = this;
+    /**
+     * Original args for ALL AWS SDK Requets: [method, params, callback]
+     */
 
-exports.init = function init() {
-  requireHook.onModuleLoad('aws-sdk', instrumentAWS);
-};
-
-exports.activate = function activate() {
-  isActive = true;
-};
-
-exports.deactivate = function deactivate() {
-  isActive = false;
-};
-
-function instrumentAWS(AWS) {
-  shimmer.wrap(AWS.Service.prototype, 'makeRequest', shimMakeRequest);
-  shimmer.wrap(AWS.Request.prototype, 'promise', shimRequestPromise);
-}
-
-function shimMakeRequest(originalMakeRequest) {
-  return function() {
-    if (isActive) {
-      const originalArgs = new Array(arguments.length);
-      for (let i = 0; i < originalArgs.length; i++) {
-        originalArgs[i] = arguments[i];
-      }
-
-      return instrumentedMakeRequest(this, originalMakeRequest, originalArgs);
+    if (cls.tracingSuppressed()) {
+      return originalMakeRequest.apply(ctx, originalArgs);
     }
 
-    return originalMakeRequest.apply(this, arguments);
-  };
-}
+    const parentSpan = cls.getCurrentSpan();
 
-function instrumentedMakeRequest(ctx, originalMakeRequest, originalArgs) {
-  /**
-   * Original args for ALL AWS SDK Requets: [method, params, callback]
-   */
+    if (!parentSpan || isExitSpan(parentSpan)) {
+      return originalMakeRequest.apply(ctx, originalArgs);
+    }
 
-  if (!isOperationShimmable(originalArgs[0]) || typeof originalArgs[2] !== 'function') {
-    return originalMakeRequest.apply(ctx, originalArgs);
-  }
+    return cls.ns.runAndReturn(() => {
+      const span = cls.startSpan(SPAN_NAME, EXIT);
+      span.ts = Date.now();
+      span.stack = tracingUtil.getStackTrace(this.instrumentedMakeRequest, 1);
+      span.data[this.spanName] = this.buildSpanData(originalArgs[0], originalArgs[1]);
 
-  if (cls.tracingSuppressed()) {
-    return originalMakeRequest.apply(ctx, originalArgs);
-  }
+      const _originalCallback = originalArgs[2];
 
-  const parentSpan = cls.getCurrentSpan();
-
-  if (!parentSpan || isExitSpan(parentSpan)) {
-    return originalMakeRequest.apply(ctx, originalArgs);
-  }
-
-  return cls.ns.runAndReturn(() => {
-    const span = cls.startSpan('s3', EXIT);
-    span.ts = Date.now();
-    span.stack = tracingUtil.getStackTrace(instrumentedMakeRequest);
-    span.data.s3 = buildS3Data(originalArgs[0], originalArgs[1]);
-
-    const _originalCallback = originalArgs[2];
-
-    originalArgs[2] = cls.ns.bind(function(err, data) {
-      finishSpan(err, data, span);
-      return _originalCallback.apply(this, arguments);
-    });
-
-    return originalMakeRequest.apply(ctx, originalArgs);
-  });
-}
-
-function shimRequestPromise(originalPromise) {
-  return function shimmedPromise() {
-    if (isActive && isOperationShimmable(this.operation)) {
-      const originalArgs = new Array(arguments.length);
-      for (let i = 0; i < originalArgs.length; i++) {
-        originalArgs[i] = arguments[i];
+      // callback case
+      if (_originalCallback) {
+        originalArgs[2] = cls.ns.bind(function (err) {
+          self.finishSpan(err, span);
+          return _originalCallback.apply(this, arguments);
+        });
       }
 
-      return instrumentedRequestPromise(this, originalPromise, originalArgs);
-    }
-    return originalPromise.apply(this, arguments);
-  };
-}
+      const request = originalMakeRequest.apply(ctx, originalArgs);
 
-function instrumentedRequestPromise(ctx, originalPromise, originalArgs) {
-  if (cls.tracingSuppressed()) {
-    return originalPromise.apply(ctx, originalArgs);
-  }
+      if (typeof request.promise === 'function' && typeof originalArgs[2] !== 'function') {
+        // promise case
+        const originalPromise = request.promise;
 
-  if (!isOperationShimmable(ctx.operation)) {
-    return originalPromise.apply(ctx, originalArgs);
-  }
+        request.promise = cls.ns.bind(() => {
+          const promise = originalPromise.apply(request, arguments);
+          return promise
+            .then(data => {
+              if (data && data.code) {
+                this.finishSpan(data, span);
+              } else {
+                this.finishSpan(null, span);
+              }
 
-  return cls.ns.runAndReturn(function() {
-    const span = cls.startSpan('s3', EXIT);
-    span.ts = Date.now();
-    span.stack = tracingUtil.getStackTrace(instrumentedRequestPromise);
-    const _promise = originalPromise;
+              return data;
+            })
+            .catch(err => {
+              this.finishSpan(err, span);
+              return err;
+            });
+        });
+      }
 
-    originalPromise = cls.ns.bind(function patchedPromise() {
-      span.data.s3 = buildS3Data(ctx.operation, ctx.params);
-
-      return new Promise((resolve, reject) => {
-        _promise
-          .apply(ctx, arguments)
-          .then(data => {
-            resolve(data);
-            finishSpan(null, data, span);
-          })
-          .catch(err => {
-            reject(err);
-            finishSpan(err, null, span);
-          });
-      });
+      return request;
     });
-
-    return originalPromise.apply(ctx, originalArgs);
-  });
-}
-
-function finishSpan(err, _data, span) {
-  if (err) {
-    addErrorToSpan(err, span);
   }
 
-  span.d = Date.now() - span.ts;
-  span.transmit();
-}
+  buildSpanData(methodName, params) {
+    const methodInfo = s3MethodsInfo[methodName];
+    const s3Data = {
+      op: methodInfo.op
+    };
 
-function addErrorToSpan(err, span) {
-  if (err) {
-    span.ec = 1;
-    span.data.s3.error = err.message || err.code || JSON.stringify(err);
+    if (params && params.Bucket) {
+      s3Data.bucket = params.Bucket;
+    }
+
+    if (methodInfo.hasKey) {
+      s3Data.key = params.Key;
+    }
+
+    return s3Data;
   }
 }
 
-function buildS3Data(methodName, params) {
-  const methodInfo = s3MethodsInfo[methodName];
-  const s3Data = {
-    op: methodInfo.op
-  };
-
-  if (params && params.Bucket) {
-    s3Data.bucket = params.Bucket;
-  }
-
-  if (methodInfo.hasKey) {
-    s3Data.key = params.Key;
-  }
-
-  return s3Data;
-}
-
-function isOperationShimmable(operation) {
-  return methodList.includes(operation);
-}
+module.exports = new InstanaAWSS3(SPAN_NAME, operations);

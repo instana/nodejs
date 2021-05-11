@@ -30,11 +30,9 @@ let processIdentityProvider = null;
 
 // Note: Also update initializedTooLateHeuristic.js and the accompanying test when adding instrumentations.
 const instrumentations = [
+  './instrumentation/cloud/aws/index',
   './instrumentation/cloud/aws/sdk',
   './instrumentation/cloud/aws/sqs',
-  './instrumentation/cloud/aws/s3',
-  './instrumentation/cloud/aws/dynamodb',
-  './instrumentation/cloud/aws/kinesis',
   './instrumentation/cloud/gcp/pubsub',
   './instrumentation/cloud/gcp/storage',
   './instrumentation/control_flow/bluebird',
