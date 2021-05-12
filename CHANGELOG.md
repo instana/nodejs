@@ -1,5 +1,8 @@
 # Changelog
 
+## Unreleased
+- Instrumentation of AWS Lambda invoke function
+
 ## 1.120.0
 - Add instrumentation for AWS Kinesis
 

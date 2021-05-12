@@ -18,6 +18,8 @@ const log = require('@instana/core/test/test_util/log').getLogger(logPrefix);
 const operations = {
   invoke: {
     FunctionName: functionName,
+    // "Event"|"RequestResponse"|"DryRun"
+    InvocationType: 'RequestResponse',
     Payload: '{"ok": true}'
   },
   invokeAsync: {
@@ -40,7 +42,7 @@ function execOperation(op, cb, withError = false, ctx = false) {
     options.InvalidParameter = 1;
   }
 
-  if (ctx) {
+  if (ctx && op === 'invoke') {
     options.ClientContext = 'eyJzb21lX2NvbnRlbnQiOiAxfQ==';
   }
 

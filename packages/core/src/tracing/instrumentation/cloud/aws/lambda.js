@@ -13,6 +13,8 @@ const tracingUtil = require('../../../tracingUtil');
 
 const MAX_CONTEXT_SIZE = 3582;
 
+const SPAN_NAME = 'aws.lambda.invoke';
+
 const operationsInfo = {
   invoke: { op: 'invoke' },
   invokeAsync: { op: 'invokeAsync' }
@@ -69,10 +71,10 @@ function instrumentedMakeRequest(ctx, originalMakeRequest, originalArgs) {
   }
 
   return cls.ns.runAndReturn(() => {
-    const span = cls.startSpan('aws.sdk.invoke', EXIT);
+    const span = cls.startSpan(SPAN_NAME, EXIT);
     span.ts = Date.now();
     span.stack = tracingUtil.getStackTrace(instrumentedMakeRequest);
-    span.data.invoke = buildSpanData(originalArgs[0], originalArgs[1]);
+    span.data[SPAN_NAME] = buildSpanData(originalArgs[0], originalArgs[1]);
 
     /** @type {import('aws-sdk').Lambda.Types.InvocationRequest | import('aws-sdk').Lambda.Types.InvokeAsyncRequest} */
     const params = originalArgs[1];
@@ -82,34 +84,39 @@ function instrumentedMakeRequest(ctx, originalMakeRequest, originalArgs) {
 
     const instanaCustomHeaders = {
       Custom: {
-        'X-INSTANA-L': '',
-        'X-INSTANA-S': '',
-        'X-INSTANA-T': '',
-        TRACEPARENT: '',
-        TRACESTATE: ''
+        'X-INSTANA-L': cls.tracingSuppressed() ? '0' : '1',
+        'X-INSTANA-S': span.s,
+        'X-INSTANA-T': span.t
       }
     };
 
-    if (params.ClientContext != null) {
-      clientContextContentBase64 = Buffer.from(params.ClientContext, 'base64').toString();
+    // invokeAsync doesn't have the option ClientContext
+    if (originalArgs[0] === 'invoke') {
+      if (params.ClientContext != null) {
+        clientContextContentBase64 = Buffer.from(params.ClientContext, 'base64').toString();
 
-      try {
-        clientContextContentJSON = JSON.parse(clientContextContentBase64);
-        clientContextContentJSON.Custom = instanaCustomHeaders.Custom;
-      } catch (err) {
-        // ClientContext has a value that is not JSON, then we cannot add Instana headers
-        isJSON = false;
+        try {
+          clientContextContentJSON = JSON.parse(clientContextContentBase64);
+          clientContextContentJSON.Custom = instanaCustomHeaders.Custom;
+        } catch (err) {
+          // ClientContext has a value that is not JSON, then we cannot add Instana headers
+          isJSON = false;
+        }
+      } else {
+        clientContextContentJSON = instanaCustomHeaders;
       }
-    } else {
-      clientContextContentJSON = instanaCustomHeaders;
+
+      if (isJSON) {
+        clientContextContentBase64 = Buffer.from(JSON.stringify(clientContextContentJSON), 'utf8').toString('base64');
+
+        if (clientContextContentBase64.length <= MAX_CONTEXT_SIZE) {
+          params.ClientContext = clientContextContentBase64;
+        }
+      }
     }
 
-    if (isJSON) {
-      clientContextContentBase64 = Buffer.from(JSON.stringify(clientContextContentJSON), 'utf8').toString('base64');
-
-      if (clientContextContentBase64.length <= MAX_CONTEXT_SIZE) {
-        params.ClientContext = clientContextContentBase64;
-      }
+    if (cls.tracingSuppressed()) {
+      return originalMakeRequest.apply(ctx, originalArgs);
     }
 
     if (typeof originalArgs[2] === 'function') {
@@ -179,6 +186,10 @@ function buildSpanData(operation, params) {
   const spanData = {
     function: params.FunctionName
   };
+
+  if (params.InvocationType) {
+    spanData.type = params.InvocationType;
+  }
 
   return spanData;
 }
