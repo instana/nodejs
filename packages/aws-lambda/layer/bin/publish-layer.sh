@@ -41,7 +41,7 @@ TMP_ZIP_DIR=tmp
 
 echo Will build Lambda layer with name \"$LAYER_NAME\".
 
-REGIONS='ap-northeast-1\nap-northeast-2\nap-south-1\nap-southeast-1\nap-southeast-2\nca-central-1\neu-central-1\neu-north-1\neu-west-1\neu-west-2\neu-west-3\nsa-east-1\nus-east-1\nus-east-2\nus-west-1\nus-west-2'
+REGIONS=$'ap-northeast-1\nap-northeast-2\nap-south-1\nap-southeast-1\nap-southeast-2\nca-central-1\neu-central-1\neu-north-1\neu-west-1\neu-west-2\neu-west-3\nsa-east-1\nus-east-1\nus-east-2\nus-west-1\nus-west-2'
 
 if [[ -z $SKIP_DOCKER_IMAGE ]]; then
   echo Will build Docker image with name \"$DOCKER_IMAGE_NAME\".
