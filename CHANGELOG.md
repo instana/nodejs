@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.121.0
 - [AWS Lambda] Include Instana's [AWS Lambda extension](https://docs.aws.amazon.com/lambda/latest/dg/using-extensions.html) in the [Instana Node.js Lambda layer](https://www.instana.com/docs/ecosystem/aws-lambda/nodejs#instana-autotrace-setup). Monitoring data and traces are offloaded locally to Instana's Lambda extension, which will then forward it to the Instana back end. This feature is currently limited to Lambda functions configured with 256 MB of memory or more. Using the Instana Lambda extension can be disabled by setting the environment variable `INSTANA_DISABLE_LAMBDA_EXTENSION` to a non-empty string for a Lambda function.
 
 ## 1.120.0
