@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased
+- [AWS Lambda] Detect Lambda cold starts.
 - Instrumentation of AWS Lambda invoke function
 
 ## 1.121.0

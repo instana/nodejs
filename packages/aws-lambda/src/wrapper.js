@@ -20,6 +20,8 @@ const { constants, spanBuffer } = tracing;
 let logger = consoleLogger;
 let config;
 
+let coldStart = true;
+
 // Initialize instrumentations early to allow for require statements after our package has been required but before the
 // actual instana.wrap(...) call.
 instanaCore.preInit();
@@ -95,6 +97,10 @@ function shimmedHandler(originalHandler, originalThis, originalArgs, _config) {
         functionName: context.functionName,
         functionVersion: context.functionVersion
       };
+      if (coldStart) {
+        entrySpan.data.lambda.coldStart = true;
+        coldStart = false;
+      }
       triggers.enrichSpanWithTriggerData(event, entrySpan);
     }
 
