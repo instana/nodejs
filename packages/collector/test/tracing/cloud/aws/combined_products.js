@@ -5,92 +5,26 @@
 
 'use strict';
 
-require('../../../../../')();
+require('../../../../src')();
 const agentPort = process.env.INSTANA_AGENT_PORT || 42699;
 const request = require('request-promise');
-const delay = require('../../../../../../core/test/test_util/delay');
+const delay = require('@instana/core/test/test_util/delay');
 
 const AWS = require('aws-sdk');
 const express = require('express');
-const logPrefix = `AWS DynamoDB (${process.pid}):\t`;
+const logPrefix = `Combined AWS products (${process.pid}):\t`;
 AWS.config.update({ region: 'us-east-2' });
+const s3 = new AWS.S3();
+const lambda = new AWS.Lambda();
 const dynamoDB = new AWS.DynamoDB();
-const tableName = process.env.AWS_DYNAMODB_TABLE_NAME || 'nodejs-team';
+const kinesis = new AWS.Kinesis();
+
+const app = express();
+const port = process.env.APP_SENDER_PORT || 3215;
+
 const log = require('@instana/core/test/test_util/log').getLogger(logPrefix);
 
-var tableCreationParams = {
-  TableName: tableName,
-  KeySchema: [
-    { AttributeName: 'year', KeyType: 'HASH' },
-    { AttributeName: 'title', KeyType: 'RANGE' }
-  ],
-  AttributeDefinitions: [
-    { AttributeName: 'year', AttributeType: 'N' },
-    { AttributeName: 'title', AttributeType: 'S' }
-  ],
-  ProvisionedThroughput: {
-    ReadCapacityUnits: 5,
-    WriteCapacityUnits: 5
-  }
-};
-
-const itemKey = {
-  year: {
-    N: '2001'
-  },
-  title: {
-    S: 'new record'
-  }
-};
-
-const operationParams = {
-  createTable: tableCreationParams,
-
-  /**
-   * Deleting table is not part of the instrumentation scope, as seen on Java and Go implementations.
-   * However, we need to have this function in place to clean the table before starting tests
-   */
-  deleteTable: { TableName: tableName },
-  listTables: {},
-  scan: { TableName: tableName },
-  query: {
-    TableName: tableName,
-    KeyConditionExpression: '#yr = :yyyy',
-    ExpressionAttributeNames: {
-      '#yr': 'year'
-    },
-    ExpressionAttributeValues: {
-      ':yyyy': {
-        N: '2001'
-      }
-    }
-  },
-  getItem: {
-    TableName: tableName,
-    Key: itemKey
-  },
-  deleteItem: {
-    TableName: tableName,
-    Key: itemKey
-  },
-  putItem: {
-    TableName: tableName,
-    Item: itemKey
-  },
-  updateItem: {
-    TableName: tableName,
-    Key: itemKey,
-    AttributeUpdates: {
-      author: {
-        Value: {
-          S: 'Neil Gaiman'
-        }
-      }
-    }
-  }
-};
-
-const availableOperations = Object.keys(operationParams);
+const lambdaFunctionName = process.env.AWS_LAMBDA_FUNCTION_NAME || 'team-nodejs-invoke-function';
 
 const methods = {
   CALLBACK: 'Callback',
@@ -100,7 +34,27 @@ const methods = {
 
 const availableMethods = Object.values(methods);
 
-const DynamoDBApi = {
+const productByOperation = {
+  invoke: lambda,
+  listBuckets: s3,
+  listTables: dynamoDB,
+  listStreams: kinesis
+};
+
+const operationParams = {
+  listBuckets: null,
+  invoke: {
+    FunctionName: lambdaFunctionName,
+    InvocationType: 'RequestResponse',
+    Payload: '{"ok": true}'
+  },
+  listTables: {},
+  listStreams: {}
+};
+
+const availableOperations = Object.keys(operationParams);
+
+const AWSAPI = {
   runOperation(operation, method, withError) {
     const originalOptions = operationParams[operation];
     let options;
@@ -112,7 +66,7 @@ const DynamoDBApi = {
       if (!options) {
         options = {};
       }
-      options.InvalidDynamoDBKey = '999';
+      options.InvalidAWSKey = '999';
     }
 
     return new Promise(async (resolve, reject) => {
@@ -121,11 +75,14 @@ const DynamoDBApi = {
 
       switch (method) {
         case methods.CALLBACK:
-          dynamoDB[operation](options, (err, data) => {
+          productByOperation[operation][operation](options, (err, data) => {
             if (err) {
+              log(
+                `${
+                  withError ? 'successfully failed' : 'failed'
+                } on /${operation}/${method} when receiving response from AWS API`
+              );
               return reject(err);
-            } else if (data && data.code) {
-              return reject(data);
             } else {
               setTimeout(() => {
                 request(`http://127.0.0.1:${agentPort}`)
@@ -133,6 +90,11 @@ const DynamoDBApi = {
                     return resolve(data);
                   })
                   .catch(err2 => {
+                    log(
+                      `${
+                        withError ? 'successfully failed' : 'failed'
+                      } on /${operation}/${method} when calling localhost server`
+                    );
                     return reject(err2);
                   });
               });
@@ -140,38 +102,45 @@ const DynamoDBApi = {
           });
           break;
         case methods.PROMISE:
-          promise = dynamoDB[operation](options).promise();
+          promise = productByOperation[operation][operation](options).promise();
 
           promise
             .then(data => {
+              log(`/${operation}/${method} - received data from AWS SDK`);
               promiseData = data;
               return delay(200);
             })
             .then(() => request(`http://127.0.0.1:${agentPort}`))
             .then(() => {
-              if (promiseData && promiseData.code) {
-                reject(promiseData);
-              } else {
-                resolve(promiseData);
-              }
+              resolve(promiseData);
             })
             .catch(err => {
+              log(
+                `${
+                  withError ? 'successfully failed' : 'failed'
+                } on /${operation}/${method}  from AWS SDK or call to localhost server`
+              );
+
               reject(err);
             });
           break;
         case methods.ASYNC:
           try {
-            const data = await dynamoDB[operation](options).promise();
+            const data = await productByOperation[operation][operation](options).promise();
 
-            if (data && data.code) {
-              return reject(data);
-            }
+            log(`/${operation}/${method} got data from AWS SDK`);
 
             await delay(200);
             await request(`http://127.0.0.1:${agentPort}`);
 
             return resolve(data);
           } catch (err) {
+            log(
+              `${
+                withError ? 'successfully failed' : 'failed'
+              } on /${operation}/${method} from AWS SDK or localhost HTTP server`
+            );
+
             return reject(err);
           }
         default:
@@ -181,15 +150,13 @@ const DynamoDBApi = {
   }
 };
 
-const app = express();
-const port = process.env.APP_SENDER_PORT || 3215;
-
 app.get('/', (_req, res) => {
   res.send('Ok');
 });
 
 /**
- * Expected entries are, eg: /listTables/Callback, /createTable/Async, /putItem/Promise
+ * Expected entries are, eg: /listBuckets/:method, /listStreams/:method, /invoke/:method, /listTables/:method
+ * Methods: Callback, Async, Promise
  */
 availableOperations.forEach(operation => {
   app.get(`/${operation}/:method`, async (req, res) => {
@@ -202,10 +169,10 @@ availableOperations.forEach(operation => {
       });
     } else {
       try {
-        const data = await DynamoDBApi.runOperation(operation, method, withError);
+        const data = await AWSAPI.runOperation(operation, method, withError);
         res.send(data);
       } catch (err) {
-        res.send({
+        res.status(500).send({
           error: err
         });
       }
@@ -219,4 +186,4 @@ availableOperations.forEach(operation => {
   });
 });
 
-app.listen(port, () => log(`AWS DynamoDB app, listening to port ${port}`));
+app.listen(port, () => log(`AWS combined products server listening to port ${port}`));
