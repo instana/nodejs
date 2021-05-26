@@ -140,11 +140,25 @@ function registerTests(handlerDefinitionPath) {
     it('must run the handler two times', () =>
       control
         .runHandler()
-        .then(() => verifyAfterRunningHandler(control, { error: false, expectMetrics: true, expectSpans: true }))
+        .then(() =>
+          verifyAfterRunningHandler(control, {
+            error: false,
+            expectMetrics: true,
+            expectSpans: true,
+            expectColdStart: true
+          })
+        )
         .then(() => control.resetBackend())
         .then(() => control.reset())
         .then(() => control.runHandler())
-        .then(() => verifyAfterRunningHandler(control, { error: false, expectMetrics: true, expectSpans: true })));
+        .then(() =>
+          verifyAfterRunningHandler(control, {
+            error: false,
+            expectMetrics: true,
+            expectSpans: true,
+            expectColdStart: false
+          })
+        ));
   });
 
   describe('when called with alias', function () {
@@ -1052,6 +1066,11 @@ function registerTests(handlerDefinitionPath) {
         expect(span.ec).to.equal(0);
       } else {
         throw new Error(`Unknown error expectation type, don't know how to verify: ${error}`);
+      }
+      if (expectations.expectColdStart) {
+        expect(span.data.lambda.coldStart).to.be.true;
+      } else {
+        expect(span.data.lambda.coldStart).to.not.exist;
       }
       verifyHeaders(span);
     });
