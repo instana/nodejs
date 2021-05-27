@@ -20,8 +20,8 @@ const mochaSuiteFn =
   !supportedVersion(process.versions.node) ||
   // At some point, the mssql container failed to link correctly into the main Node.js container when running the
   // tests on Node.js 8, so all tests would fail because the app cannot connect to the MSSQL database. Since there is
-  // no reasonable way of troubleshooting this we just skip these tests on Node.js 8 on CI. They run in Node.js 6 and
-  // all >= 10 versions though.
+  // no reasonable way of troubleshooting this we just skip these tests on Node.js 8 on CI. They run in all >= 10
+  // versions though.
   (process.env.CI && semver.gte(process.versions.node, '8.0.0') && semver.lt(process.versions.node, '9.0.0'))
     ? describe.skip
     : describe;
@@ -660,7 +660,7 @@ mochaSuiteFn('tracing/mssql', function () {
     expect(span.ec).to.equal(error ? 1 : 0);
     expect(span.data).to.exist;
     expect(span.data.mssql).to.exist;
-    expect(span.data.mssql.host).to.equal('127.0.0.1');
+    expect(span.data.mssql.host).to.equal('localhost');
     expect(span.data.mssql.port).to.equal(1433);
     expect(span.data.mssql.user).to.equal('sa');
     expect(span.data.mssql.db).to.equal('nodejscollector');
