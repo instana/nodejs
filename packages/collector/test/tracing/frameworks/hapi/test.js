@@ -10,14 +10,14 @@ const semver = require('semver');
 const expect = require('chai').expect;
 
 const constants = require('@instana/core').tracing.constants;
-const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('../../../../../core/test/config');
 const testUtils = require('../../../../../core/test/test_util');
 const ProcessControls = require('../../../test_util/ProcessControls');
 const globalAgent = require('../../../globalAgent');
 
 const mochaSuiteFn =
-  supportedVersion(process.versions.node) && semver.gte(process.versions.node, '8.2.1') ? describe : describe.skip;
+  // Hapi 20 requires Node.js 12.
+  semver.gte(process.versions.node, '12.0.0') ? describe : describe.skip;
 
 mochaSuiteFn('tracing/hapi', function () {
   this.timeout(config.getTestTimeout());

@@ -10,7 +10,6 @@ const { expect } = require('chai');
 const semver = require('semver');
 
 const constants = require('@instana/core').tracing.constants;
-const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('../../../../../core/test/config');
 const testUtils = require('../../../../../core/test/test_util');
 const ProcessControls = require('../../../test_util/ProcessControls');
@@ -18,8 +17,8 @@ const globalAgent = require('../../../globalAgent');
 
 const agentControls = globalAgent.instance;
 
-const mochaSuiteFn =
-  !supportedVersion(process.versions.node) || semver.lt(process.versions.node, '10.0.0') ? describe.skip : describe;
+// Apollo Federation 0.25.1 requires Node.js 12.
+const mochaSuiteFn = semver.gte(process.versions.node, '12.0.0') ? describe : describe.skip;
 
 mochaSuiteFn('tracing/apollo-federation', function () {
   this.timeout(config.getTestTimeout() * 2);

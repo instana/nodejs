@@ -29,9 +29,9 @@ mochaSuiteFn('tracing/too late', function () {
   globalAgent.setUpCleanUpHooks();
 
   [
-    '@elastic/elasticsearch',
+    semver.gte(process.version, '10.0.0') && '@elastic/elasticsearch',
     '@google-cloud/pubsub',
-    '@google-cloud/storage',
+    semver.gte(process.version, '10.0.0') && '@google-cloud/storage',
     '@hapi/call',
     'amqplib',
     'aws-sdk',
@@ -44,11 +44,11 @@ mochaSuiteFn('tracing/too late', function () {
     'grpc',
     'ioredis',
     'kafka-node',
-    'kafkajs',
+    semver.gte(process.version, '10.0.0') && 'kafkajs',
     'koa-router',
     'log4js',
     'mongodb',
-    'mssql',
+    semver.gte(process.version, '10.0.0') && 'mssql',
     'mysql',
     'mysql2',
     'mysql2',
@@ -61,7 +61,9 @@ mochaSuiteFn('tracing/too late', function () {
     'request',
     'superagent',
     'winston'
-  ].forEach(moduleName => registerTooLateTest.bind(this)(moduleName));
+  ]
+    .filter(moduleName => !!moduleName)
+    .forEach(moduleName => registerTooLateTest.bind(this)(moduleName));
 
   function registerTooLateTest(moduleName) {
     describe(`@instana/collector is initialized too late (${moduleName})`, function () {

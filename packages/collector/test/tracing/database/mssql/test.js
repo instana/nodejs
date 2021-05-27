@@ -18,11 +18,8 @@ const globalAgent = require('../../../globalAgent');
 
 const mochaSuiteFn =
   !supportedVersion(process.versions.node) ||
-  // At some point, the mssql container failed to link correctly into the main Node.js container when running the
-  // tests on Node.js 8, so all tests would fail because the app cannot connect to the MSSQL database. Since there is
-  // no reasonable way of troubleshooting this we just skip these tests on Node.js 8 on CI. They run in all >= 10
-  // versions though.
-  (process.env.CI && semver.gte(process.versions.node, '8.0.0') && semver.lt(process.versions.node, '9.0.0'))
+  // The latest tedious version dropped support for Node.js 8, so we only run this test in Node.js >= 10.
+  semver.lt(process.versions.node, '10.0.0')
     ? describe.skip
     : describe;
 
