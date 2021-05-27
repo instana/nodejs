@@ -1,3 +1,10 @@
+/*
+ * (c) Copyright IBM Corp. 2021
+ * (c) Copyright Instana Inc. and contributors 2019
+ */
+
+'use strict';
+
 module.exports = {
   rules: {
     // We do not run npm install in the example lambda directories on CI, so this check would fail for all dependencies

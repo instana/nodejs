@@ -69,6 +69,7 @@ const AWSAPI = {
       options.InvalidAWSKey = '999';
     }
 
+    // eslint-disable-next-line no-async-promise-executor
     return new Promise(async (resolve, reject) => {
       let promise;
       let promiseData;
