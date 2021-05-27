@@ -23,34 +23,37 @@ sql.on('error', err => {
   log(err);
 });
 
-const dbHost = process.env.MSSQL_HOST ? process.env.MSSQL_HOST : '127.0.0.1';
+const dbHost = process.env.MSSQL_HOST ? process.env.MSSQL_HOST : 'localhost';
 const dbPort = process.env.MSSQL_PORT ? parseInt(process.env.MSSQL_PORT, 10) : 1433;
-const dbUrl = `${dbHost}:${dbPort}`;
 const dbUser = process.env.MSSQL_USER ? process.env.MSSQL_USER : 'sa';
 const dbPassword = process.env.MSSQL_PW ? process.env.MSSQL_PW : 'stanCanHazMsSQL1';
-const initConnectString = `mssql://${dbUser}:${dbPassword}@${dbUrl}/tempdb`;
-const dbName = 'nodejscollector';
-const actualConnectString = `mssql://${dbUser}:${dbPassword}@${dbUrl}/${dbName}`;
-const connectConfig = {
+
+const connectConfigBase = {
   user: dbUser,
   password: dbPassword,
   server: dbHost,
   port: dbPort,
-  database: dbName
+  trustServerCertificate: true
 };
-const connectionParam = Math.random() > 0.5 ? connectConfig : actualConnectString;
+
+const initConnectConfig = Object.assign({}, connectConfigBase);
+initConnectConfig.database = 'tempdb';
+
+const dbName = 'nodejscollector';
+const connectConfig = Object.assign({}, connectConfigBase);
+connectConfig.database = dbName;
 
 let preparedStatementGlobal = new sql.PreparedStatement();
 let ready = false;
 
 sql
-  .connect(initConnectString)
+  .connect(initConnectConfig)
   .then(() =>
     new sql.Request().query(`IF EXISTS (SELECT * FROM sys.databases WHERE name = N'${dbName}') DROP DATABASE ${dbName}`)
   )
   .then(() => new sql.Request().query(`CREATE DATABASE ${dbName}`))
   .then(() => sql.close())
-  .then(() => sql.connect(connectionParam))
+  .then(() => sql.connect(connectConfig))
   .then(_pool => {
     pool = _pool;
     return new sql.Request().query(
@@ -323,28 +326,19 @@ app.get('/select-standard-pool', (req, res) => {
 });
 
 app.get('/select-custom-pool', (req, res) => {
-  const customPool = new sql.ConnectionPool(
-    {
-      user: dbUser,
-      password: dbPassword,
-      server: dbHost,
-      port: dbPort,
-      database: dbName
-    },
-    err1 => {
-      if (err1) {
-        log('Failed to create a connection pool.', err1);
-        return res.status(500).json(err1);
-      }
-      customPool.request().query('SELECT 1 AS NUMBER', (err2, results) => {
-        if (err2) {
-          log('Failed to execute select.', err2);
-          return res.status(500).json(err2);
-        }
-        return res.json(results.recordset);
-      });
+  const customPool = new sql.ConnectionPool(connectConfig, err1 => {
+    if (err1) {
+      log('Failed to create a connection pool.', err1);
+      return res.status(500).json(err1);
     }
-  );
+    customPool.request().query('SELECT 1 AS NUMBER', (err2, results) => {
+      if (err2) {
+        log('Failed to execute select.', err2);
+        return res.status(500).json(err2);
+      }
+      return res.json(results.recordset);
+    });
+  });
 });
 
 app.post('/transaction-callback', (req, res) => {
