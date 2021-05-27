@@ -10,7 +10,7 @@ const pino = require('pino');
 const request = require('request-promise');
 // eslint-disable-next-line import/no-extraneous-dependencies
 const s3 = new (require('aws-sdk').S3)(); // this is provided by AWS, so it is not listed in package.json
-const uuid = require('uuid/v4');
+const { v4: uuid } = require('uuid');
 
 const bucket = process.env.BUCKET_NAME || 'instana-lambda-demo';
 const apiUrl = process.env.API_URL || 'https://wn69a84ebf.execute-api.us-east-2.amazonaws.com';
