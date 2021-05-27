@@ -3,8 +3,10 @@
  * (c) Copyright Instana Inc. and contributors 2019
  */
 
+'use strict';
+
 module.exports = {
-  extends: 'airbnb-base',
+  extends: ['airbnb-base', 'plugin:monorepo-cop/recommended'],
 
   env: {
     node: true

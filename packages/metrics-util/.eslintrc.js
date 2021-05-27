@@ -3,8 +3,13 @@
  * (c) Copyright Instana Inc. and contributors 2020
  */
 
+'use strict';
+
 module.exports = {
   extends: '../../.eslintrc.js',
+
+  // see https://github.com/eslint/eslint/issues/13385#issuecomment-641252879
+  root: true,
 
   parserOptions: {
     ecmaVersion: 2018

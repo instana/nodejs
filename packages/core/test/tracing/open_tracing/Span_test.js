@@ -160,7 +160,7 @@ describe('tracing/opentracing/Span', () => {
       });
       const keys = Object.keys(span.span.data.sdk.custom.logs);
       expect(keys).to.have.lengthOf(1);
-      expect(parseInt(keys[0], 0)).to.be.at.least(now);
+      expect(parseInt(keys[0], 10)).to.be.at.least(now);
       expect(span.span.data.sdk.custom.logs[keys[0]]).to.deep.equal({
         foo: 'bar'
       });

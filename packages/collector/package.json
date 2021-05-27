@@ -12,7 +12,9 @@
   "bin": {
     "instana-instrument-edgemicro-cli": "src/bin/instrument-edgemicro-cli.js"
   },
-  "files": ["src"],
+  "files": [
+    "src"
+  ],
   "publishConfig": {
     "access": "public"
   },
@@ -35,7 +37,14 @@
     "agent-stub": "AGENT_PORT=3210 node test/apps/agentStub.js",
     "prettier": "prettier --write 'src/**/*.js' 'test/**/*.js' 'dummy-app/**/*.js'"
   },
-  "keywords": ["instana", "agent", "collector", "sensor", "monitoring", "tracing"],
+  "keywords": [
+    "instana",
+    "agent",
+    "collector",
+    "sensor",
+    "monitoring",
+    "tracing"
+  ],
   "contributors": [
     {
       "name": "Bastian Krol",

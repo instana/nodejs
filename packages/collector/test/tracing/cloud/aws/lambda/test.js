@@ -104,16 +104,12 @@ mochaSuiteFn('tracing/cloud/aws/lambda', function () {
           if (operation === 'invoke' && !withError) {
             const clientContextString = Buffer.from(response.data.clientContext || '', 'base64').toString();
 
-            try {
-              const clientContext = JSON.parse(clientContextString);
-              expect(clientContext.Custom['x-instana-s']).to.equal(span.s);
-              expect(clientContext.Custom['x-instana-t']).to.equal(span.t);
-              expect(clientContext.Custom.awesome_company, 'The original Custom values must be untouched').to.equal(
-                'Instana'
-              );
-            } catch (err) {
-              throw err;
-            }
+            const clientContext = JSON.parse(clientContextString);
+            expect(clientContext.Custom['x-instana-s']).to.equal(span.s);
+            expect(clientContext.Custom['x-instana-t']).to.equal(span.t);
+            expect(clientContext.Custom.awesome_company, 'The original Custom values must be untouched').to.equal(
+              'Instana'
+            );
           }
         }
       ]);

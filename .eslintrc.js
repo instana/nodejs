@@ -40,6 +40,7 @@ module.exports = {
     'id-length': 'off',
     'implicit-arrow-linebreak': 'off',
     indent: 'off',
+    'max-classes-per-file': 'off',
     'max-len': ['error', 120, 2],
     'mocha/no-exclusive-tests': 'error',
     'new-cap': 'off',

@@ -3,7 +3,9 @@
   "version": "1.121.0",
   "description": "Core library for Instana's Node.js packages",
   "main": "src/index.js",
-  "files": ["src"],
+  "files": [
+    "src"
+  ],
   "publishConfig": {
     "access": "public"
   },
@@ -20,7 +22,16 @@
     "type": "git",
     "url": "git+https://github.com/instana/nodejs-sensor.git"
   },
-  "keywords": ["instana", "agent", "APM", "metrics", "monitoring", "performance", "sensor", "tracing"],
+  "keywords": [
+    "instana",
+    "agent",
+    "APM",
+    "metrics",
+    "monitoring",
+    "performance",
+    "sensor",
+    "tracing"
+  ],
   "author": {
     "name": "Bastian Krol",
     "email": "bastian.krol@instana.com"
@@ -116,7 +127,7 @@
     "shimmer": "1.2.1"
   },
   "devDependencies": {
-    "eslint": "^6.8.0",
+    "eslint": "^7.27.0",
     "eslint-config-airbnb": "^18.2.1",
     "eslint-plugin-mocha": "^8.1.0",
     "mocha": "^7.2.0",
