@@ -34,10 +34,10 @@ mochaSuiteFn('tracing/koa', function () {
   describe('koa path templates', () => {
     check('/route', '/route');
     check('/route/123', '/route/:id');
-    check('/sub1', '/sub1/');
+    check('/sub1', '/sub1');
     check('/sub1/route', '/sub1/route');
     check('/sub1/route/123', '/sub1/route/:id');
-    check('/sub1/sub2', '/sub1/sub2/');
+    check('/sub1/sub2', '/sub1/sub2');
     check('/sub1/sub2/route', '/sub1/sub2/route');
     check('/sub1/sub2/route/123', '/sub1/sub2/route/:id');
     check('/does-not-exist-so-use-catch-all-regexp', '/.*/');
