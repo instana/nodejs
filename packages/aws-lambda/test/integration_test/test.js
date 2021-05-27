@@ -1024,79 +1024,84 @@ function registerTests(handlerDefinitionPath) {
   }
 
   function verifyLambdaEntry(spans, expectations) {
-    return expectExactlyOneMatching(spans, span => {
-      if (expectations.parent) {
-        expect(span.t).to.equal(expectations.parent.t);
-        expect(span.p).to.equal(expectations.parent.s);
-      } else {
-        expect(span.t).to.exist;
-        expect(span.p).to.not.exist;
-      }
-      expect(span.s).to.exist;
-      expect(span.n).to.equal('aws.lambda.entry');
-      expect(span.k).to.equal(constants.ENTRY);
-      expect(span.f).to.be.an('object');
-      expect(span.f.h).to.not.exist;
-      expect(span.f.hl).to.be.true;
-      expect(span.f.cp).to.equal('aws');
-      expect(span.f.e).to.equal(qualifiedArn);
-      expect(span.async).to.not.exist;
-      expect(span.error).to.not.exist;
-      expect(span.data.lambda).to.be.an('object');
-      expect(span.data.lambda.arn).to.equal(qualifiedArn);
-      if (expectations.alias) {
-        expect(span.data.lambda.alias).to.equal('anAlias');
-      } else {
-        expect(span.data.lambda.alias).to.not.exist;
-      }
-      expect(span.data.lambda.runtime).to.equal('nodejs');
-      if (expectations.trigger) {
-        expect(span.data.lambda.trigger).to.equal(expectations.trigger);
-      }
-      const { error } = expectations;
-      if (error && error.startsWith('lambda')) {
-        expect(span.data.lambda.error).to.be.a('string');
-        expect(span.data.lambda.error).to.include('Boom!');
-        expect(span.ec).to.equal(1);
-      } else if (error === 'http') {
-        expect(span.data.lambda.error).to.equal('HTTP status 502');
-        expect(span.ec).to.equal(1);
-      } else if (error === false) {
-        expect(span.data.lambda.error).to.not.exist;
-        expect(span.ec).to.equal(0);
-      } else {
-        throw new Error(`Unknown error expectation type, don't know how to verify: ${error}`);
-      }
-      if (expectations.expectColdStart) {
-        expect(span.data.lambda.coldStart).to.be.true;
-      } else {
-        expect(span.data.lambda.coldStart).to.not.exist;
-      }
-      verifyHeaders(span);
-    });
+    const checks = [
+      span => expect(span.n).to.equal('aws.lambda.entry'),
+      span => expect(span.s).to.exist,
+      span => expect(span.k).to.equal(constants.ENTRY),
+      span => expect(span.f).to.be.an('object'),
+      span => expect(span.f.h).to.not.exist,
+      span => expect(span.f.hl).to.be.true,
+      span => expect(span.f.cp).to.equal('aws'),
+      span => expect(span.f.e).to.equal(qualifiedArn),
+      span => expect(span.async).to.not.exist,
+      span => expect(span.error).to.not.exist,
+      span => expect(span.data.lambda).to.be.an('object'),
+      span => expect(span.data.lambda.arn).to.equal(qualifiedArn),
+      span => expect(span.data.lambda.runtime).to.equal('nodejs'),
+      verifyHeaders
+    ];
+
+    if (expectations.parent) {
+      checks.push(span => expect(span.t).to.equal(expectations.parent.t));
+      checks.push(span => expect(span.p).to.equal(expectations.parent.s));
+    } else {
+      checks.push(span => expect(span.t).to.exist);
+      checks.push(span => expect(span.p).to.not.exist);
+    }
+
+    if (expectations.alias) {
+      checks.push(span => expect(span.data.lambda.alias).to.equal('anAlias'));
+    } else {
+      checks.push(span => expect(span.data.lambda.alias).to.not.exist);
+    }
+    if (expectations.trigger) {
+      checks.push(span => expect(span.data.lambda.trigger).to.equal(expectations.trigger));
+    }
+    const { error } = expectations;
+    if (error && error.startsWith('lambda')) {
+      checks.push(span => expect(span.data.lambda.error).to.be.a('string'));
+      checks.push(span => expect(span.data.lambda.error).to.include('Boom!'));
+      checks.push(span => expect(span.ec).to.equal(1));
+    } else if (error === 'http') {
+      checks.push(span => expect(span.data.lambda.error).to.equal('HTTP status 502'));
+      checks.push(span => expect(span.ec).to.equal(1));
+    } else if (error === false) {
+      checks.push(span => expect(span.data.lambda.error).to.not.exist);
+      checks.push(span => expect(span.ec).to.equal(0));
+    } else {
+      throw new Error(`Unknown error expectation type, don't know how to verify: ${error}`);
+    }
+    if (expectations.expectColdStart === true) {
+      checks.push(span => expect(span.data.lambda.coldStart).to.be.true);
+    } else if (expectations.expectColdStart === false) {
+      checks.push(span => expect(span.data.lambda.coldStart).to.not.exist);
+    }
+
+    return expectExactlyOneMatching(spans, checks);
   }
 
   function verifyHttpExit(spans, entry) {
-    return expectExactlyOneMatching(spans, span => {
-      expect(span.t).to.equal(entry.t);
-      expect(span.p).to.equal(entry.s);
-      expect(span.s).to.exist;
-      expect(span.n).to.equal('node.http.client');
-      expect(span.k).to.equal(constants.EXIT);
-      expect(span.f).to.be.an('object');
-      expect(span.f.h).to.not.exist;
-      expect(span.f.cp).to.equal('aws');
-      expect(span.f.hl).to.be.true;
-      expect(span.f.e).to.equal(qualifiedArn);
-      expect(span.async).to.not.exist;
-      expect(span.data.http).to.be.an('object');
-      expect(span.data.http.method).to.equal('GET');
-      expect(span.data.http.url).to.equal(downstreamDummyUrl);
-      expect(span.data.http.header).to.deep.equal({
-        'x-downstream-header': 'yes'
-      });
-      verifyHeaders(span);
-    });
+    return expectExactlyOneMatching(spans, [
+      span => expect(span.t).to.equal(entry.t),
+      span => expect(span.p).to.equal(entry.s),
+      span => expect(span.s).to.exist,
+      span => expect(span.n).to.equal('node.http.client'),
+      span => expect(span.k).to.equal(constants.EXIT),
+      span => expect(span.f).to.be.an('object'),
+      span => expect(span.f.h).to.not.exist,
+      span => expect(span.f.cp).to.equal('aws'),
+      span => expect(span.f.hl).to.be.true,
+      span => expect(span.f.e).to.equal(qualifiedArn),
+      span => expect(span.async).to.not.exist,
+      span => expect(span.data.http).to.be.an('object'),
+      span => expect(span.data.http.method).to.equal('GET'),
+      span => expect(span.data.http.url).to.equal(downstreamDummyUrl),
+      span =>
+        expect(span.data.http.header).to.deep.equal({
+          'x-downstream-header': 'yes'
+        }),
+      verifyHeaders
+    ]);
   }
 
   function verifyNoMetrics(control) {
