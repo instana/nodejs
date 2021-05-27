@@ -16,7 +16,7 @@
     "test:debug": "WITH_STDOUT=true npm run test:mocha",
     "lint": "eslint src test",
     "verify": "npm run lint && npm test",
-    "prettier": "prettier --write 'src/**/*.js' 'test/**/*.js' 'bin/**/*.js'"
+    "prettier": "prettier --write 'src/**/*.js' 'test/**/*.js'"
   },
   "repository": {
     "type": "git",
