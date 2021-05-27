@@ -24,7 +24,7 @@ let consumerControls;
 
 const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
-mochaSuiteFn('tracing/amqp', function() {
+mochaSuiteFn('tracing/amqp', function () {
   this.timeout(config.getTestTimeout());
 
   globalAgent.setUpCleanUpHooks();
@@ -33,7 +33,7 @@ mochaSuiteFn('tracing/amqp', function() {
   consumerControls = require('./consumerControls');
 
   ['Promises', 'Callbacks'].forEach(apiType => {
-    describe(apiType, function() {
+    describe(apiType, function () {
       registerTests.call(this, apiType);
     });
   });

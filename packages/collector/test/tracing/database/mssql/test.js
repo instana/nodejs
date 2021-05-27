@@ -26,7 +26,7 @@ const mochaSuiteFn =
     ? describe.skip
     : describe;
 
-mochaSuiteFn('tracing/mssql', function() {
+mochaSuiteFn('tracing/mssql', function () {
   this.timeout(config.getTestTimeout());
 
   globalAgent.setUpCleanUpHooks();

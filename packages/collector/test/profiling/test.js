@@ -14,7 +14,7 @@ const globalAgent = require('..//globalAgent');
 
 const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
-mochaSuiteFn('profiling', function() {
+mochaSuiteFn('profiling', function () {
   // profiles are send every two minutes, so we wait for 2.5 minutes
   const testTimeout = 3 * 60 * 1000; // 3 minutes
   const retryTimeout = 2 * 60 * 1000 + 30 * 1000; // 2.5 minutes
@@ -24,8 +24,8 @@ mochaSuiteFn('profiling', function() {
   globalAgent.setUpCleanUpHooks();
   const agentControls = globalAgent.instance;
 
-  describe('profiling', function() {
-    describe('agent is up to date', function() {
+  describe('profiling', function () {
+    describe('agent is up to date', function () {
       const controls = new ProcessControls({
         dirname: __dirname,
         useGlobalAgent: true,
@@ -72,7 +72,7 @@ mochaSuiteFn('profiling', function() {
     });
 
     // It is unnecessary to include this in the test suite that is run on CI.
-    describe.skip('agent is outdated', function() {
+    describe.skip('agent is outdated', function () {
       agentControls.registerTestHooks({
         doesntHandleProfiles: true
       });

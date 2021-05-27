@@ -34,7 +34,7 @@ let startBidiStreaming;
 
 const loggingInterceptor = (options, nextCall) =>
   new grpc.InterceptingCall(nextCall(options), {
-    sendMessage: function(message, next) {
+    sendMessage: function (message, next) {
       pinoLogger.warn('intercepted', message);
       next(message);
     }

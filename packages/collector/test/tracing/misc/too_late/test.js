@@ -23,7 +23,7 @@ const agentControls = globalAgent.instance;
 const mochaSuiteFn =
   supportedVersion(process.versions.node) && semver.gte(process.versions.node, '8.0.0') ? describe : describe.skip;
 
-mochaSuiteFn('tracing/too late', function() {
+mochaSuiteFn('tracing/too late', function () {
   this.timeout(config.getTestTimeout());
 
   globalAgent.setUpCleanUpHooks();
@@ -64,7 +64,7 @@ mochaSuiteFn('tracing/too late', function() {
   ].forEach(moduleName => registerTooLateTest.bind(this)(moduleName));
 
   function registerTooLateTest(moduleName) {
-    describe(`@instana/collector is initialized too late (${moduleName})`, function() {
+    describe(`@instana/collector is initialized too late (${moduleName})`, function () {
       const controls = new ProcessControls({
         dirname: __dirname,
         useGlobalAgent: true,

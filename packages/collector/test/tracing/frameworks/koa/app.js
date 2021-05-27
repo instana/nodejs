@@ -25,15 +25,9 @@ const router = new Router();
 const subRouter = new Router();
 const subSubRouter = new Router();
 
-subRouter
-  .get('/', respondWithRoute)
-  .get('/route', respondWithRoute)
-  .get('/route/:id', respondWithRoute);
+subRouter.get('/', respondWithRoute).get('/route', respondWithRoute).get('/route/:id', respondWithRoute);
 
-subSubRouter
-  .get('/', respondWithRoute)
-  .get('/route', respondWithRoute)
-  .get('/route/:id', respondWithRoute);
+subSubRouter.get('/', respondWithRoute).get('/route', respondWithRoute).get('/route/:id', respondWithRoute);
 
 router
   // eslint-disable-next-line no-unused-vars

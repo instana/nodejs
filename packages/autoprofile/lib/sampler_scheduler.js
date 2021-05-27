@@ -123,7 +123,7 @@ class SamplerScheduler {
       }, this.config.maxSpanDuration);
     } else {
       return {
-        stop: function() {
+        stop: function () {
           _stop();
         }
       };

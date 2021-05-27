@@ -23,23 +23,23 @@ const serverHost = `localhost:${serverPort}`;
 
 const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
-mochaSuiteFn('tracing/http client', function() {
+mochaSuiteFn('tracing/http client', function () {
   this.timeout(config.getTestTimeout() * 2);
 
   globalAgent.setUpTestCaseCleanUpHooks();
 
-  describe('http', function() {
+  describe('http', function () {
     registerTests.call(this, false);
   });
 
-  describe('https', function() {
+  describe('https', function () {
     registerTests.call(this, true);
   });
 
   registerConnectionRefusalTest.call(this, false);
   registerConnectionRefusalTest.call(this, true);
 
-  (semver.gte(process.versions.node, '8.2.1') ? describe : describe.skip)('superagent', function() {
+  (semver.gte(process.versions.node, '8.2.1') ? describe : describe.skip)('superagent', function () {
     registerSuperagentTest.call(this);
   });
 });
@@ -424,7 +424,7 @@ function registerTests(useHttps) {
 
 function registerConnectionRefusalTest(useHttps) {
   // This needs to be in a suite of its own because the test terminates the server app.
-  describe('connection refusal', function() {
+  describe('connection refusal', function () {
     const serverControls = new ProcessControls({
       appPath: path.join(__dirname, 'serverApp'),
       port: serverPort,

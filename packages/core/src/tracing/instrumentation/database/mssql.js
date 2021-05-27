@@ -35,7 +35,7 @@ function instrumentRequest(Request) {
 }
 
 function shimMethod(instrumentedFunction, originalFunction) {
-  return function() {
+  return function () {
     if (isActive && cls.isTracing()) {
       const originalArgs = new Array(arguments.length);
       for (let i = 0; i < arguments.length; i++) {
@@ -82,7 +82,7 @@ function instrumentedMethod(ctx, originalFunction, originalArgs, stackTraceRef, 
 
     if (originalCallback) {
       // original call had a callback argument, replace it with our wrapper
-      const wrappedCallback = function(error) {
+      const wrappedCallback = function (error) {
         finishSpan(error, span);
         return originalCallback.apply(this, arguments);
       };
@@ -111,7 +111,7 @@ function instrumentPreparedStatement(PreparedStatement) {
 }
 
 function shimPrepare(originalFunction) {
-  return function() {
+  return function () {
     // Statements can be prepared globally at application startup, there is not necessarily any HTTP request active, so
     // we explicitly do not check for cls.isTracing() here.
     if (isActive) {
@@ -139,7 +139,7 @@ function instrumentTransaction(Transaction) {
 }
 
 function shimBeginTransaction(originalFunction) {
-  return function() {
+  return function () {
     if (isActive && cls.isTracing()) {
       const originalArgs = new Array(arguments.length);
       for (let i = 0; i < arguments.length; i++) {

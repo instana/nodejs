@@ -144,9 +144,9 @@ exports._isLambdaProxyResponse = function _isLambdaProxyResponse(result) {
   return (
     !!result &&
     (typeof result.isBase64Encoded === 'boolean' ||
-    typeof result.statusCode === 'number' ||
-    typeof result.statusCode === 'string' ||
-    (result.body != null && result.headers != null && typeof result.headers === 'object') || //
+      typeof result.statusCode === 'number' ||
+      typeof result.statusCode === 'string' ||
+      (result.body != null && result.headers != null && typeof result.headers === 'object') || //
       (result.body != null && result.multiValueHeaders != null && typeof result.multiValueHeaders === 'object'))
   );
 };

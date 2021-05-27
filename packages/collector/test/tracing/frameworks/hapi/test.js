@@ -19,7 +19,7 @@ const globalAgent = require('../../../globalAgent');
 const mochaSuiteFn =
   supportedVersion(process.versions.node) && semver.gte(process.versions.node, '8.2.1') ? describe : describe.skip;
 
-mochaSuiteFn('tracing/hapi', function() {
+mochaSuiteFn('tracing/hapi', function () {
   this.timeout(config.getTestTimeout());
 
   const agentControls = globalAgent.instance;

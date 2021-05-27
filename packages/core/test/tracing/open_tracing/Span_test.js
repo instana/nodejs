@@ -74,7 +74,7 @@ describe('tracing/opentracing/Span', () => {
     Span.init(
       {},
       {
-        getFrom: function() {
+        getFrom: function () {
           return {
             e: String(process.pid),
             h: undefined

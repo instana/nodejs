@@ -11,7 +11,7 @@ const config = require('../../core/test/config');
 const { retry } = require('../../core/test/test_util');
 const globalAgent = require('./globalAgent');
 
-describe('agentCommunication', function() {
+describe('agentCommunication', function () {
   this.timeout(config.getTestTimeout());
 
   globalAgent.setUpCleanUpHooks();
@@ -57,17 +57,17 @@ describe('agentCommunication', function() {
       ));
 });
 
-describe('announce retry', function() {
-  describe('retry once after 10', function() {
+describe('announce retry', function () {
+  describe('retry once after 10', function () {
     runRetryTest.bind(this)(29000, 20000, 1);
   });
 
-  describe('second retry with exponential backoff', function() {
+  describe('second retry with exponential backoff', function () {
     runRetryTest.bind(this)(59000, 40000, 2);
   });
 
   // takes too long to include it in the general test suite
-  describe.skip('lots of retries with exponential backoff', function() {
+  describe.skip('lots of retries with exponential backoff', function () {
     runRetryTest.bind(this)(300000, 290000, 7);
   });
 

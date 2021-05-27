@@ -44,13 +44,13 @@ if (
 
 const retryTime = config.getTestTimeout() * 2;
 
-mochaSuiteFn('tracing/cloud/gcp/pubsub', function() {
+mochaSuiteFn('tracing/cloud/gcp/pubsub', function () {
   this.timeout(config.getTestTimeout() * 3);
 
   globalAgent.setUpCleanUpHooks();
   const agentControls = globalAgent.instance;
 
-  describe('tracing enabled, no suppression', function() {
+  describe('tracing enabled, no suppression', function () {
     const topicName = defaultTopicName;
     const subscriptionName = defaultSubscriptionName;
 
@@ -228,7 +228,7 @@ mochaSuiteFn('tracing/cloud/gcp/pubsub', function() {
         }));
   });
 
-  describe('tracing disabled', function() {
+  describe('tracing disabled', function () {
     this.timeout(config.getTestTimeout() * 2);
 
     const topicName = defaultTopicName;

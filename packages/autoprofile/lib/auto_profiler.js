@@ -62,16 +62,16 @@ class AutoProfiler {
   getLogger() {
     /* eslint-disable no-console */
     return {
-      debug: function(msg) {
+      debug: function (msg) {
         console.log(msg);
       },
-      info: function(msg) {
+      info: function (msg) {
         console.log(msg);
       },
-      error: function(msg) {
+      error: function (msg) {
         console.log(msg);
       },
-      exception: function(err) {
+      exception: function (err) {
         console.log(err.message, err.stack);
       }
     };
@@ -221,7 +221,7 @@ class AutoProfiler {
 
     if (!self.profilerStarted || self.samplerActive) {
       return {
-        stop: function(callback) {
+        stop: function (callback) {
           callback();
         }
       };
@@ -251,7 +251,7 @@ class AutoProfiler {
     }
 
     return {
-      stop: function(callback) {
+      stop: function (callback) {
         if (span) {
           span.stop();
         }

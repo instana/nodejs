@@ -58,7 +58,7 @@ function instrumentPoolWithPromises(mysql) {
     mysql,
     'createPool',
     original =>
-      function() {
+      function () {
         const Pool = original.apply(this, arguments);
         const poolPrototype = Object.getPrototypeOf(Pool);
         shimmer.wrap(poolPrototype, 'getConnection', shimPromiseConnection);
@@ -70,7 +70,7 @@ function instrumentPoolWithPromises(mysql) {
 }
 
 function shimQuery(original) {
-  return function() {
+  return function () {
     if (isActive && cls.isTracing()) {
       return instrumentedAccessFunction(this, original, arguments[0], arguments[1], arguments[2]);
     }
@@ -79,7 +79,7 @@ function shimQuery(original) {
 }
 
 function shimExecute(original) {
-  return function() {
+  return function () {
     if (isActive && cls.isTracing()) {
       return instrumentedAccessFunction(this, original, arguments[0], arguments[1], arguments[2]);
     }
@@ -88,7 +88,7 @@ function shimExecute(original) {
 }
 
 function shimPromiseQuery(originalQuery) {
-  return function() {
+  return function () {
     if (isActive && cls.isTracing()) {
       return instrumentedAccessFunction(this, originalQuery, arguments[0], arguments[1], null, true);
     }
@@ -97,7 +97,7 @@ function shimPromiseQuery(originalQuery) {
 }
 
 function shimPromiseExecute(originalExecute) {
-  return function() {
+  return function () {
     if (isActive && cls.isTracing()) {
       return instrumentedAccessFunction(this, originalExecute, arguments[0], arguments[1], null, true);
     }

@@ -81,8 +81,8 @@ function prelude(opts = {}) {
   return new Control(controlOpts).registerTestHooks();
 }
 
-describe('AWS fargate integration test', function() {
-  describe('when the back end is up (platform version 1.3.0)', function() {
+describe('AWS fargate integration test', function () {
+  describe('when the back end is up (platform version 1.3.0)', function () {
     const control = prelude.bind(this)({
       platformVersion: '1.3.0'
     });
@@ -97,7 +97,7 @@ describe('AWS fargate integration test', function() {
         .then(response => verify(control, response, true)));
   });
 
-  describe('when the back end is up (platform version 1.4.0)', function() {
+  describe('when the back end is up (platform version 1.4.0)', function () {
     const control = prelude.bind(this)({
       platformVersion: '1.4.0'
     });
@@ -112,7 +112,7 @@ describe('AWS fargate integration test', function() {
         .then(response => verify(control, response, true)));
   });
 
-  describe('when the back end is down', function() {
+  describe('when the back end is down', function () {
     const control = prelude.bind(this)({
       startBackend: false
     });
@@ -127,7 +127,7 @@ describe('AWS fargate integration test', function() {
         .then(response => verify(control, response, false)));
   });
 
-  describe('when the back end becomes available after being down initially', function() {
+  describe('when the back end becomes available after being down initially', function () {
     const control = prelude.bind(this)({
       startBackend: false
     });
@@ -157,7 +157,7 @@ describe('AWS fargate integration test', function() {
     });
   });
 
-  describe('when using a proxy without authentication', function() {
+  describe('when using a proxy without authentication', function () {
     const control = prelude.bind(this)({
       startProxy: true,
       proxy: 'http://localhost:4128'
@@ -173,7 +173,7 @@ describe('AWS fargate integration test', function() {
         .then(response => verify(control, response, true)));
   });
 
-  describe('when using a proxy with authentication', function() {
+  describe('when using a proxy with authentication', function () {
     const control = prelude.bind(this)({
       startProxy: true,
       proxy: 'http://user:password@localhost:4128',
@@ -190,7 +190,7 @@ describe('AWS fargate integration test', function() {
         .then(response => verify(control, response, true)));
   });
 
-  describe('when proxy authentication fails due to the wrong password', function() {
+  describe('when proxy authentication fails due to the wrong password', function () {
     const control = prelude.bind(this)({
       startProxy: true,
       proxy: 'http://user:wrong-password@localhost:4128',
@@ -207,7 +207,7 @@ describe('AWS fargate integration test', function() {
         .then(response => verify(control, response, false)));
   });
 
-  describe('when the proxy is not up', function() {
+  describe('when the proxy is not up', function () {
     const control = prelude.bind(this)({
       proxy: 'http://localhost:4128'
     });
@@ -222,7 +222,7 @@ describe('AWS fargate integration test', function() {
         .then(response => verify(control, response, false)));
   });
 
-  describe('with default secrets configuration', function() {
+  describe('with default secrets configuration', function () {
     const control = prelude.bind(this)({
       env: {
         CLOUD_ACCESS_KEY: 'needs to be removed',
@@ -290,7 +290,7 @@ describe('AWS fargate integration test', function() {
         ));
   });
 
-  describe('with custom secrets configuration', function() {
+  describe('with custom secrets configuration', function () {
     const control = prelude.bind(this)({
       env: {
         INSTANA_SECRETS: 'equals:confidential',
@@ -392,7 +392,11 @@ describe('AWS fargate integration test', function() {
         'Error: Received less entities than expected: ' +
           `Wanted: ${expectedNumberOfPlugins}, got: ${allEntities.length}. ` +
           'Here are the entities that have been received: ' +
-          JSON.stringify(allEntities.map(({ name, entityId }) => ({ name, entityId })), null, 2)
+          JSON.stringify(
+            allEntities.map(({ name, entityId }) => ({ name, entityId })),
+            null,
+            2
+          )
       );
     }
     expect(allEntities).to.have.lengthOf.at.least(expectedNumberOfPlugins);

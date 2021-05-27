@@ -19,16 +19,16 @@ const agentControls = globalAgent.instance;
 
 const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
-mochaSuiteFn('tracing/sequelize', function() {
+mochaSuiteFn('tracing/sequelize', function () {
   this.timeout(config.getTestTimeout());
 
   globalAgent.setUpCleanUpHooks();
 
-  describe('with pg', function() {
+  describe('with pg', function () {
     registerTests.call(this, false);
   });
 
-  describe('with pg-native', function() {
+  describe('with pg-native', function () {
     registerTests.call(this, true);
   });
 });

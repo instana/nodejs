@@ -34,7 +34,7 @@ function instrumentHapiCall(hapiCall) {
 }
 
 function shimRoute(originalFunction) {
-  return function() {
+  return function () {
     if (!isActive || !cls.isTracing()) {
       return originalFunction.apply(this, arguments);
     }

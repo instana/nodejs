@@ -15,7 +15,7 @@ const { delay, retry } = require('../../core/test/test_util');
 
 const DataSource = require('../src/DataSource');
 
-describe('data source', function() {
+describe('data source', function () {
   this.timeout(config.getTestTimeout());
 
   this.slow(1000);
@@ -24,7 +24,7 @@ describe('data source', function() {
     let refreshCounter = 0;
 
     const dataSource = new DataSource(20);
-    dataSource.doRefresh = function() {
+    dataSource.doRefresh = function () {
       refreshCounter++;
     };
 
@@ -37,7 +37,7 @@ describe('data source', function() {
     let refreshCounter = 0;
 
     const dataSource = new DataSource(20);
-    dataSource.doRefresh = function() {
+    dataSource.doRefresh = function () {
       refreshCounter++;
     };
     dataSource.activate();
@@ -50,7 +50,7 @@ describe('data source', function() {
     let refreshCounterWhenStopped = -1;
 
     const dataSource = new DataSource(20);
-    dataSource.doRefresh = function() {
+    dataSource.doRefresh = function () {
       refreshCounter++;
     };
     dataSource.activate();
@@ -71,7 +71,7 @@ describe('data source', function() {
     let refreshCounter = 0;
 
     const dataSource = new DataSource(10);
-    dataSource.doRefresh = function() {
+    dataSource.doRefresh = function () {
       refreshCounter++;
     };
     dataSource.activate();
@@ -87,7 +87,7 @@ describe('data source', function() {
     let refreshCounter = 0;
 
     const dataSource = new DataSource(10);
-    dataSource.doRefresh = function() {
+    dataSource.doRefresh = function () {
       refreshCounter++;
     };
     dataSource.activate();

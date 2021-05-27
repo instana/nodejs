@@ -20,14 +20,14 @@ const agentControls = globalAgent.instance;
 
 const mochaSuiteFn = semver.satisfies(process.versions.node, '>=8.2.1') ? describe : describe.skip;
 
-mochaSuiteFn('tracing/grpc', function() {
+mochaSuiteFn('tracing/grpc', function () {
   this.timeout(config.getTestTimeout());
 
   globalAgent.setUpCleanUpHooks();
 
   ['dynamic', 'static'].forEach(codeGenMode => {
     [false, true].forEach(withMetadata => {
-      [false, true].forEach(function(withOptions) {
+      [false, true].forEach(function (withOptions) {
         registerSuite.bind(this)(codeGenMode, withMetadata, withOptions);
         registerCancelSuite.bind(this)(codeGenMode, withMetadata, withOptions);
       });

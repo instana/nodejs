@@ -28,7 +28,7 @@ exports.init = function init(config) {
 };
 
 function shimProcessEmitForBullChildWorker(originalProcessEmit) {
-  return function(event) {
+  return function (event) {
     if (!isActive || event !== 'message') {
       return originalProcessEmit.apply(this, arguments);
     }
@@ -64,7 +64,7 @@ function shimProcessEmitForBullChildWorker(originalProcessEmit) {
 }
 
 function shimProcessSendForBullChildWorker(originalProcessSend) {
-  return function(message) {
+  return function (message) {
     if (!message || !currentlyActiveBullEntrySpan) {
       return originalProcessSend.apply(this, arguments);
     }

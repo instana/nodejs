@@ -24,7 +24,7 @@ function instrumentNatsStreaming(natsStreamingModule) {
 }
 
 function shimConnect(originalFunction) {
-  return function() {
+  return function () {
     const client = originalFunction.apply(this, arguments);
     if (!clientHasBeenInstrumented) {
       shimmer.wrap(client.constructor.prototype, 'publish', shimPublish.bind(null, client.options.url));
@@ -37,7 +37,7 @@ function shimConnect(originalFunction) {
 }
 
 function shimPublish(natsUrl, originalFunction) {
-  return function() {
+  return function () {
     if (isActive && cls.isTracing()) {
       const originalArgs = new Array(arguments.length);
       for (let i = 0; i < arguments.length; i++) {
@@ -70,7 +70,7 @@ function instrumentedPublish(ctx, originalPublish, originalArgs, natsUrl) {
     };
 
     if (originalCallback) {
-      originalArgs[2] = cls.ns.bind(function(err) {
+      originalArgs[2] = cls.ns.bind(function (err) {
         addErrorToSpan(err, span);
         finishSpan(span);
         originalCallback.apply(this, arguments);
@@ -91,7 +91,7 @@ function instrumentedPublish(ctx, originalPublish, originalArgs, natsUrl) {
 }
 
 function shimSubscribe(natsUrl, originalFunction) {
-  return function() {
+  return function () {
     const subscription = originalFunction.apply(this, arguments);
     if (subscription) {
       shimmer.wrap(subscription, 'emit', shimSubscriptionEmit.bind(null, natsUrl, arguments[0]));
@@ -101,7 +101,7 @@ function shimSubscribe(natsUrl, originalFunction) {
 }
 
 function shimSubscriptionEmit(natsUrl, subject, originalFunction) {
-  return function(type) {
+  return function (type) {
     if (isActive && (type === 'message' || type === 'error')) {
       const originalArgs = new Array(arguments.length);
       for (let i = 0; i < arguments.length; i++) {

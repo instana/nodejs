@@ -27,7 +27,7 @@ const agentControls = globalAgent.instance;
 const mochaSuiteFn =
   supportedVersion(process.versions.node) && semver.gte(process.versions.node, '8.0.0') ? describe : describe.skip;
 
-mochaSuiteFn('tracing a babel/typescript setup', function() {
+mochaSuiteFn('tracing a babel/typescript setup', function () {
   this.timeout(60000);
 
   globalAgent.setUpCleanUpHooks();
@@ -64,7 +64,7 @@ mochaSuiteFn('tracing a babel/typescript setup', function() {
   });
   ProcessControls.setUpHooks(controls);
 
-  describe('@instana/collector used in a babel-transpiled typescript app', function() {
+  describe('@instana/collector used in a babel-transpiled typescript app', function () {
     it('should trace when imported with workaround according to our docs', () =>
       controls
         .sendRequest({

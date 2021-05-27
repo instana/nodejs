@@ -17,7 +17,7 @@ const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : descri
 /**
  * Tests behaviour when the Instana Node.js collector is active but tracing is disabled.
  */
-mochaSuiteFn('disabled tracing', function() {
+mochaSuiteFn('disabled tracing', function () {
   this.timeout(config.getTestTimeout());
 
   globalAgent.setUpCleanUpHooks();

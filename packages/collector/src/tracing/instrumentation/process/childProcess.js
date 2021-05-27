@@ -24,13 +24,13 @@ logger = require('../../../logger').getLogger('tracing/child_process', newLogger
 //
 // There is also ./edgemicro.js, which is responsible for instrumenting the code that is used to spawn the individual
 // edgemicro workers.
-exports.init = function() {
+exports.init = function () {
   shimmer.wrap(coreChildProcess, 'spawn', shimSpawn);
   shimmer.wrap(coreChildProcess, 'fork', shimFork);
 };
 
 function shimSpawn(original) {
-  return function(command, args) {
+  return function (command, args) {
     if (
       // check if a command has been specified and it is the Node.js executable
       typeof command === 'string' &&
@@ -64,7 +64,7 @@ function shimSpawn(original) {
 const bullMasterProcessMatch = /bull\/lib\/process\/master\.js/;
 
 function shimFork(original) {
-  return function() {
+  return function () {
     // args: modulePath, args, options
     const _args = Array.prototype.slice.call(arguments);
     const modulePath = _args[0];
@@ -91,7 +91,7 @@ function shimFork(original) {
 
       // Retrieve the entry span created by bull.js#instrumentedProcessJob.
       const originalChildProcessSend = childProcess.send;
-      childProcess.send = function(message) {
+      childProcess.send = function (message) {
         const cls = getCls();
         let entrySpan = null;
 
@@ -136,10 +136,10 @@ function shimFork(original) {
   };
 }
 
-exports.activate = function() {
+exports.activate = function () {
   // no-op
 };
 
-exports.deactivate = function() {
+exports.deactivate = function () {
   // no-op
 };

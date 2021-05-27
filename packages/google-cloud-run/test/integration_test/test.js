@@ -50,8 +50,8 @@ function prelude(opts = {}) {
   return new Control(controlOpts).registerTestHooks();
 }
 
-describe('Google Cloud Run integration test', function() {
-  describe('when the back end is up', function() {
+describe('Google Cloud Run integration test', function () {
+  describe('when the back end is up', function () {
     const control = prelude.bind(this)();
 
     it('should collect metrics and trace http requests', () =>
@@ -63,7 +63,7 @@ describe('Google Cloud Run integration test', function() {
         .then(response => verify(control, response, true)));
   });
 
-  describe('when the back end is down', function() {
+  describe('when the back end is down', function () {
     const control = prelude.bind(this)({
       startBackend: false
     });
@@ -77,7 +77,7 @@ describe('Google Cloud Run integration test', function() {
         .then(response => verify(control, response, false)));
   });
 
-  describe('when the back end becomes available after being down initially', function() {
+  describe('when the back end becomes available after being down initially', function () {
     const control = prelude.bind(this)({
       startBackend: false
     });
@@ -107,7 +107,7 @@ describe('Google Cloud Run integration test', function() {
     });
   });
 
-  describe('with default secrets configuration', function() {
+  describe('with default secrets configuration', function () {
     const control = prelude.bind(this)({
       env: {
         CLOUD_ACCESS_KEY: 'needs to be removed',
@@ -173,7 +173,7 @@ describe('Google Cloud Run integration test', function() {
         ));
   });
 
-  describe('with custom secrets configuration', function() {
+  describe('with custom secrets configuration', function () {
     const control = prelude.bind(this)({
       env: {
         INSTANA_SECRETS: 'equals:confidential',
@@ -273,7 +273,11 @@ describe('Google Cloud Run integration test', function() {
         'Error: Received less entities than expected: ' +
           `Wanted: ${expectedNumberOfPlugins}, got: ${allEntities.length}. ` +
           'Here are the entities that have been received: ' +
-          JSON.stringify(allEntities.map(({ name, entityId }) => ({ name, entityId })), null, 2)
+          JSON.stringify(
+            allEntities.map(({ name, entityId }) => ({ name, entityId })),
+            null,
+            2
+          )
       );
     }
     expect(allEntities).to.have.lengthOf.at.least(expectedNumberOfPlugins);

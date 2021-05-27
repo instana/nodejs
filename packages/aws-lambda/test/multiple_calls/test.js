@@ -51,7 +51,7 @@ function prelude(opts) {
   return control;
 }
 
-describe('multiple lambda handler calls', function() {
+describe('multiple lambda handler calls', function () {
   const handlerDefinitionPath = path.join(__dirname, './lambda');
 
   const opts = {

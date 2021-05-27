@@ -11,12 +11,12 @@ const AutoProfiler = require('../lib/auto_profiler').AutoProfiler;
 beforeEach(() => {
   global.profiler = new AutoProfiler();
 
-  global.profiler.sendProfiles = function(profiles, callback) {
+  global.profiler.sendProfiles = function (profiles, callback) {
     // eslint-disable-next-line no-console
     callback();
   };
 
-  global.profiler.getExternalPid = function() {
+  global.profiler.getExternalPid = function () {
     return '123';
   };
 
@@ -40,7 +40,7 @@ describe('AutoProfiler', () => {
     profiler.allocationSamplerScheduler.started = false;
     profiler.asyncSamplerScheduler.started = false;
     origFlush = profiler.profileRecorder.flush;
-    profiler.profileRecorder.flush = function(callback) {
+    profiler.profileRecorder.flush = function (callback) {
       return callback(null);
     };
   });

@@ -43,7 +43,7 @@ describe('AsyncSampler', () => {
 
       function generateStackTrace(skip) {
         var orig = Error.prepareStackTrace;
-        Error.prepareStackTrace = function(error, structuredStackTrace) {
+        Error.prepareStackTrace = function (error, structuredStackTrace) {
           return structuredStackTrace;
         };
 

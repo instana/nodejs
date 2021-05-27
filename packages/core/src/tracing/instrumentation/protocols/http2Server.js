@@ -56,7 +56,7 @@ function instrumentCreateServer(coreModule, name) {
 }
 
 function shimEmit(realEmit) {
-  return function(eventType, stream, headers) {
+  return function (eventType, stream, headers) {
     if (eventType !== 'stream' || !isActive) {
       return realEmit.apply(this, arguments);
     }
@@ -203,7 +203,7 @@ function instrumentResponseMethod(stream, method, headerArgumentIndex, serverTim
       stream,
       method,
       original =>
-        function() {
+        function () {
           const headers = arguments[headerArgumentIndex];
           if (!headers || typeof headers !== 'object' || !headers[HTTP2_HEADER_STATUS]) {
             return original.apply(this, arguments);

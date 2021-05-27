@@ -24,7 +24,7 @@ exports.checkTableExistence = function checkTableExistence(tableName, expectsToE
       const p = dynamoDB.describeTable({ TableName: tableName }).promise();
 
       p.then(data => {
-        if (expectsToExist && (data && data.Table && data.Table.TableStatus === 'ACTIVE')) {
+        if (expectsToExist && data && data.Table && data.Table.TableStatus === 'ACTIVE') {
           resolve(data);
           clearInterval(intervalId);
         }
@@ -42,7 +42,7 @@ exports.checkTableExistence = function checkTableExistence(tableName, expectsToE
  * Attempts to delete a previous created table before the test starts
  * @param {string} tableName
  */
-exports.cleanup = async function(tableName) {
+exports.cleanup = async function (tableName) {
   try {
     await dynamoDB
       .deleteTable({

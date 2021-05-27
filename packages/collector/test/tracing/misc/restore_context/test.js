@@ -18,7 +18,7 @@ const agentControls = globalAgent.instance;
 
 const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
-mochaSuiteFn('tracing/restore context', function() {
+mochaSuiteFn('tracing/restore context', function () {
   this.timeout(config.getTestTimeout());
 
   globalAgent.setUpCleanUpHooks();

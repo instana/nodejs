@@ -82,7 +82,7 @@ function runHandler(handler, error) {
   log(`Running ${definitionPath}.`);
 
   let handlerHasFinished = false;
-  const callback = function(err, result) {
+  const callback = function (err, result) {
     if (handlerHasFinished) {
       return;
     }

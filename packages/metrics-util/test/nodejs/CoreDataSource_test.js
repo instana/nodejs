@@ -17,7 +17,7 @@ const sharedMetrics = require('@instana/shared-metrics');
 
 const CoreDataSource = require('../../src/nodejs/CoreDataSource');
 
-describe('core data source', function() {
+describe('core data source', function () {
   this.timeout(config.getTestTimeout());
 
   let dataSource;

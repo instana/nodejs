@@ -29,7 +29,7 @@ const mochaSuiteFn =
     ? describe
     : describe.skip;
 
-mochaSuiteFn('tracing/http2', function() {
+mochaSuiteFn('tracing/http2', function () {
   this.timeout(config.getTestTimeout() * 2);
 
   const agentControls = new AgentStubControls().registerHooksForSuite({

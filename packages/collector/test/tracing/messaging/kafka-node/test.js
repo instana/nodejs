@@ -19,7 +19,7 @@ const agentControls = globalAgent.instance;
 
 const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
-mochaSuiteFn('tracing/kafka-node', function() {
+mochaSuiteFn('tracing/kafka-node', function () {
   // Too many moving parts with Kafka involved. Increase the default timeout.
   // This is especially important since the Kafka client has an
   // exponential backoff implemented.
@@ -28,7 +28,7 @@ mochaSuiteFn('tracing/kafka-node', function() {
   globalAgent.setUpCleanUpHooks();
 
   ['plain', 'highLevel'].forEach(producerType => {
-    describe(`producing via: ${producerType}`, function() {
+    describe(`producing via: ${producerType}`, function () {
       const producerControls = new ProcessControls({
         appPath: path.join(__dirname, 'producer'),
         port: 3216,

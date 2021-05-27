@@ -17,7 +17,7 @@ const globalAgent = require('../globalAgent');
 
 const agentControls = globalAgent.instance;
 
-describe('collector/src/immediate', function() {
+describe('collector/src/immediate', function () {
   globalAgent.setUpCleanUpHooks();
 
   this.timeout(config.getTestTimeout());

@@ -14,7 +14,7 @@ const testUtils = require('../../../../core/test/test_util');
 const ProcessControls = require('../../test_util/ProcessControls');
 const globalAgent = require('../../globalAgent');
 
-describe('snapshot data and metrics/app deployed via npm install', function() {
+describe('snapshot data and metrics/app deployed via npm install', function () {
   this.timeout(config.getTestTimeout());
 
   globalAgent.setUpCleanUpHooks();
