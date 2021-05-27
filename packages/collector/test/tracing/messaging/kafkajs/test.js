@@ -19,8 +19,8 @@ const globalAgent = require('../../../globalAgent');
 
 const mochaSuiteFn =
   supportedVersion(process.versions.node) &&
-  // kafkajs uses async/await style which is only available on Node.js >= 8.
-  semver.gte(process.versions.node, '8.0.0')
+  // The latest kafkajs version requires Node.js 10.
+  semver.gte(process.versions.node, '10.0.0')
     ? describe
     : describe.skip;
 

@@ -28,9 +28,7 @@ if (semver.satisfies(process.version, '>=12.2.0')) {
   // Same as above, but use createRequireFromPath instead of createRequire.
   winston1x = moduleModule.createRequireFromPath(expressWinstonLocation)('winston');
 } else {
-  // Fall back to making assumptions about the layout of node_modules for Node.js versions that support neither
-  // createRequire nor createRequireFromPath.
-  winston1x = require('../../../../../../node_modules/express-winston/node_modules/winston');
+  throw new Error('This test only supports Node.js 10.12.0 or later.');
 }
 
 const app = express();
