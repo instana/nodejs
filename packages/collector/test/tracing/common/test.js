@@ -19,11 +19,11 @@ const extendedTimeout = Math.max(config.getTestTimeout(), 10000);
 
 const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
-mochaSuiteFn('tracing/common', function() {
+mochaSuiteFn('tracing/common', function () {
   globalAgent.setUpCleanUpHooks();
 
-  describe('delay', function() {
-    describe('with minimal delay', function() {
+  describe('delay', function () {
+    describe('with minimal delay', function () {
       this.timeout(extendedTimeout);
       const controls = new ProcessControls({
         useGlobalAgent: true,
@@ -34,7 +34,7 @@ mochaSuiteFn('tracing/common', function() {
       registerDelayTest.call(this, globalAgent.instance, controls, true);
     });
 
-    describe('without minimal delay', function() {
+    describe('without minimal delay', function () {
       this.timeout(config.getTestTimeout());
       const controls = new ProcessControls({
         useGlobalAgent: true,
@@ -120,8 +120,8 @@ mochaSuiteFn('tracing/common', function() {
     }
   });
 
-  describe('service name', function() {
-    describe('with env var', function() {
+  describe('service name', function () {
+    describe('with env var', function () {
       const controls = new ProcessControls({
         useGlobalAgent: true,
         dirname: __dirname,
@@ -133,7 +133,7 @@ mochaSuiteFn('tracing/common', function() {
       registerServiceNameTest.call(this, globalAgent.instance, controls, 'env var', true);
     });
 
-    describe('with config', function() {
+    describe('with config', function () {
       const controls = new ProcessControls({
         useGlobalAgent: true,
         dirname: __dirname,
@@ -146,7 +146,7 @@ mochaSuiteFn('tracing/common', function() {
       registerServiceNameTest.call(this, globalAgent.instance, controls, 'config object', true);
     });
 
-    describe('with header when agent is configured to capture the header', function() {
+    describe('with header when agent is configured to capture the header', function () {
       const agentControls = setupCustomAgentControls(true);
       const controls = new ProcessControls({
         agentControls,
@@ -155,7 +155,7 @@ mochaSuiteFn('tracing/common', function() {
       registerServiceNameTest.call(this, agentControls, controls, 'X-Instana-Service header', true);
     });
 
-    describe('with header when agent is _not_ configured to capture the header', function() {
+    describe('with header when agent is _not_ configured to capture the header', function () {
       const agentControls = setupCustomAgentControls(false);
       const controls = new ProcessControls({
         agentControls,
@@ -196,7 +196,7 @@ mochaSuiteFn('tracing/common', function() {
     }
   });
 
-  describe('disable individual tracers', function() {
+  describe('disable individual tracers', function () {
     this.timeout(config.getTestTimeout());
 
     describe('disable an individual tracer', () => {

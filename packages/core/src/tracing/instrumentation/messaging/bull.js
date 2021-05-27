@@ -30,7 +30,7 @@ function instrumentBull(Bull) {
 }
 
 function shimJobCreate(originalJobCreate) {
-  return function() {
+  return function () {
     if (isActive) {
       const originalArgs = new Array(arguments.length);
       for (let i = 0; i < originalArgs.length; i++) {
@@ -103,7 +103,7 @@ function instrumentedJobCreate(ctx, originalJobCreate, originalArgs) {
 }
 
 function shimJobCreateBulk(originalJobCreateBulk) {
-  return function() {
+  return function () {
     if (isActive) {
       const originalArgs = new Array(arguments.length);
       for (let i = 0; i < originalArgs.length; i++) {
@@ -161,7 +161,7 @@ function instrumentedJobCreateBulk(ctx, originalJobCreateBulk, originalArgs) {
 }
 
 function shimProcessJob(originalProcessJob) {
-  return function() {
+  return function () {
     if (isActive) {
       const parentSpan = cls.getCurrentSpan();
       if (parentSpan) {

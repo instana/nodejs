@@ -119,10 +119,10 @@ describe('logger', () => {
 
   it('should accept non-bunyan loggers with necessary logging functions', () => {
     const nonBunyanLogger = {
-      debug: function() {},
-      info: function() {},
-      warn: function() {},
-      error: function() {}
+      debug: function () {},
+      info: function () {},
+      warn: function () {},
+      error: function () {}
     };
 
     log.init({ logger: nonBunyanLogger });

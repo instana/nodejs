@@ -12,7 +12,7 @@ const config = require('../../../../core/test/config');
 const testUtils = require('../../../../core/test/test_util');
 const globalAgent = require('../../globalAgent');
 
-describe('tracing/opentracing/integration', function() {
+describe('tracing/opentracing/integration', function () {
   this.timeout(config.getTestTimeout());
 
   globalAgent.setUpCleanUpHooks();

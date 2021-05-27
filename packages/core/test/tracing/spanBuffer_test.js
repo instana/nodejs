@@ -29,7 +29,7 @@ describe('tracing/spanBuffer', () => {
       },
       {
         /* downstreamConnection */
-        sendSpans: function() {}
+        sendSpans: function () {}
       }
     );
     spanBuffer.addBatchableSpanName('batchable');
@@ -75,7 +75,7 @@ describe('tracing/spanBuffer', () => {
         },
         {
           /* downstreamConnection */
-          sendSpans: function() {}
+          sendSpans: function () {}
         }
       );
       spanBuffer.addBatchableSpanName('batchable');
@@ -418,7 +418,7 @@ describe('tracing/spanBuffer', () => {
         },
         {
           /* downstreamConnection */
-          sendSpans: function() {}
+          sendSpans: function () {}
         }
       );
       spanBuffer.addBatchableSpanName('batchable');

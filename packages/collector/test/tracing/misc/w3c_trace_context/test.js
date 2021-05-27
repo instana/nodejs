@@ -40,7 +40,7 @@ const mochaSuiteFn =
     ? describe
     : describe.skip;
 
-mochaSuiteFn('tracing/W3C Trace Context', function() {
+mochaSuiteFn('tracing/W3C Trace Context', function () {
   this.timeout(config.getTestTimeout() * 2);
 
   globalAgent.setUpCleanUpHooks();

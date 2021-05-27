@@ -11,7 +11,7 @@ const expect = require('chai').expect;
 
 const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
-mochaSuiteFn('agentStub', function() {
+mochaSuiteFn('agentStub', function () {
   const agentStubControls = require('./agentStubControls');
 
   this.timeout(config.getTestTimeout());

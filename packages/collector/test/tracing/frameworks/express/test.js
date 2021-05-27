@@ -18,7 +18,7 @@ const globalAgent = require('../../../globalAgent');
 
 const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
-mochaSuiteFn('tracing/express', function() {
+mochaSuiteFn('tracing/express', function () {
   this.timeout(config.getTestTimeout());
 
   const agentControls = globalAgent.instance;

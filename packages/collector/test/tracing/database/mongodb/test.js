@@ -21,7 +21,7 @@ const USE_ATLAS = process.env.USE_ATLAS === 'true';
 
 const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
-mochaSuiteFn('tracing/mongodb', function() {
+mochaSuiteFn('tracing/mongodb', function () {
   const timeout = USE_ATLAS ? config.getTestTimeout() * 2 : config.getTestTimeout();
   this.timeout(timeout);
 

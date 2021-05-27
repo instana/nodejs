@@ -34,7 +34,7 @@ nativeModuleLoader.once('failed', () => {
 });
 
 Object.defineProperty(exports, 'currentPayload', {
-  get: function() {
+  get: function () {
     const stats = sense();
     stats.lag = Math.round(lag() * 100) / 100;
     return stats;

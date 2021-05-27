@@ -17,7 +17,7 @@ const globalAgent = require('../../../globalAgent');
 
 const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
-mochaSuiteFn('tracing/redis', function() {
+mochaSuiteFn('tracing/redis', function () {
   this.timeout(config.getTestTimeout());
 
   globalAgent.setUpCleanUpHooks();

@@ -14,7 +14,7 @@ const config = require('../../serverless/test/config');
 
 const HttpDataSource = require('../src/HttpDataSource');
 
-describe('HTTP data source', function() {
+describe('HTTP data source', function () {
   this.timeout(config.getTestTimeout());
   this.slow(config.getTestTimeout() / 2);
 

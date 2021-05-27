@@ -20,7 +20,7 @@ describe('ProfileRecorder', () => {
 
       profiler.profileRecorder.reset();
 
-      profiler.sendProfiles = function(profiles, callback) {
+      profiler.sendProfiles = function (profiles, callback) {
         lastProfiles = profiles;
 
         setTimeout(() => {

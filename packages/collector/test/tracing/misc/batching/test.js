@@ -25,12 +25,12 @@ const { fail } = expect;
 
 const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
-mochaSuiteFn('tracing/batching', function() {
+mochaSuiteFn('tracing/batching', function () {
   this.timeout(config.getTestTimeout());
 
   globalAgent.setUpCleanUpHooks();
 
-  describe('enabled via env var', function() {
+  describe('enabled via env var', function () {
     const agentControls = globalAgent.instance;
     const controls = new ProcessControls({
       dirname: __dirname,
@@ -45,7 +45,7 @@ mochaSuiteFn('tracing/batching', function() {
     runTests(controls, agentControls);
   });
 
-  describe('enabled via agent config', function() {
+  describe('enabled via agent config', function () {
     const customAgentControls = new AgentStubControls();
     customAgentControls.registerTestHooks({ enableSpanBatching: true });
     const controls = new ProcessControls({
@@ -60,7 +60,7 @@ mochaSuiteFn('tracing/batching', function() {
     runTests(controls, customAgentControls);
   });
 
-  describe('span batching is not enabled', function() {
+  describe('span batching is not enabled', function () {
     const agentControls = globalAgent.instance;
     const controls = new ProcessControls({
       dirname: __dirname,

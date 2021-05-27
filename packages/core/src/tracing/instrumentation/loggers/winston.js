@@ -67,7 +67,7 @@ function shimLevelMethod(derivedLogger, key, markAsError) {
 }
 
 function instrumentedLevelMethod(originalMethod, markAsError) {
-  return function(message) {
+  return function (message) {
     if (isActive && cls.isTracing()) {
       const parentSpan = cls.getCurrentSpan();
       if (parentSpan && !constants.isExitSpan(parentSpan)) {
@@ -112,7 +112,7 @@ function shimLogMethod(derivedLogger) {
 }
 
 function instrumentedLog(originalMethod) {
-  return function(level, message) {
+  return function (level, message) {
     if (arguments.length === 1 && typeof arguments[0] === 'string') {
       // this is actually level 'info'
       return originalMethod.apply(this, arguments);

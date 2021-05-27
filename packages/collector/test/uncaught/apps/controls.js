@@ -8,23 +8,23 @@
 const spawnSync = require('child_process').spawnSync;
 const path = require('path');
 
-exports.order = function() {
+exports.order = function () {
   return spawnProcess('order.js');
 };
 
-exports.rethrow = function() {
+exports.rethrow = function () {
   return spawnProcess('rethrow.js');
 };
 
-exports.rethrowWhenOtherHandlersArePresent = function() {
+exports.rethrowWhenOtherHandlersArePresent = function () {
   return spawnProcess('rethrowWhenOtherHandlersArePresent.js');
 };
 
-exports.asyncInHandler = function() {
+exports.asyncInHandler = function () {
   return spawnProcess('asyncInHandler.js');
 };
 
-exports.asyncRethrowWhenOtherHandlersArePresent = function() {
+exports.asyncRethrowWhenOtherHandlersArePresent = function () {
   return spawnProcess('asyncRethrowWhenOtherHandlersArePresent.js');
 };
 

@@ -11,7 +11,7 @@ const config = require('../../../core/test/config');
 const testUtils = require('../../../core/test/test_util');
 const ProcessControls = require('../../../collector/test/test_util/ProcessControls');
 
-describe('legacy sensor/API', function() {
+describe('legacy sensor/API', function () {
   this.timeout(config.getTestTimeout());
 
   const agentControls = require('../../../collector/test/apps/agentStubControls');

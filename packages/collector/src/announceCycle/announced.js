@@ -15,11 +15,11 @@ const MAX_RETRIES = 60;
 const agentConnection = require('../agentConnection');
 
 module.exports = {
-  enter: function(ctx) {
+  enter: function (ctx) {
     checkWhetherAgentIsReadyToAccept(0, ctx);
   },
 
-  leave: function() {}
+  leave: function () {}
 };
 
 function checkWhetherAgentIsReadyToAccept(totalNumberOfAttempts, ctx) {

@@ -43,7 +43,7 @@ function instrumentMemoredFunction(memored, fnName) {
   }
 
   const original = memored[fnName];
-  memored[fnName] = function() {
+  memored[fnName] = function () {
     if (!isActive) {
       return original.apply(this, arguments);
     }
@@ -64,7 +64,7 @@ function instrumentMemoredFunction(memored, fnName) {
       }
     }
     if (originalCb) {
-      originalArgs[j] = cls.ns.bind(function() {
+      originalArgs[j] = cls.ns.bind(function () {
         originalCb.apply(this, arguments);
       });
     }

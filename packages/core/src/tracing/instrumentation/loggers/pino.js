@@ -26,7 +26,7 @@ function instrumentPinoTools(toolsModule) {
 }
 
 function shimGenLog(originalGenLog) {
-  return function(level) {
+  return function (level) {
     // pino uses numerical log levels, 40 is 'warn', level increases with severity.
     if (!level || level < 40) {
       // we are not interested in anything below warn

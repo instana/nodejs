@@ -71,7 +71,7 @@ function prelude(opts) {
 describe('long running lambdas', () => {
   const handlerDefinitionPath = path.join(__dirname, './lambda');
 
-  describe('when the back end is responsive', function() {
+  describe('when the back end is responsive', function () {
     const opts = {
       handlerDefinitionPath,
       instanaEndpointUrl: backendBaseUrl,
@@ -107,7 +107,7 @@ describe('long running lambdas', () => {
       }));
   });
 
-  describe('when the back end is down', function() {
+  describe('when the back end is down', function () {
     const opts = {
       handlerDefinitionPath,
       instanaEndpointUrl: backendBaseUrl,
@@ -127,7 +127,7 @@ describe('long running lambdas', () => {
       }));
   });
 
-  describe('when the back end is reachable but does not respond', function() {
+  describe('when the back end is reachable but does not respond', function () {
     const opts = {
       handlerDefinitionPath,
       instanaEndpointUrl: backendBaseUrl,

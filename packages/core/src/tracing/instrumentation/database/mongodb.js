@@ -78,7 +78,7 @@ function shimCmapQuery(original) {
 }
 
 function shimCmapCommand(original) {
-  return function() {
+  return function () {
     if (!isActive || !cls.isTracing()) {
       return original.apply(this, arguments);
     }
@@ -99,7 +99,7 @@ function shimCmapCommand(original) {
 }
 
 function shimCmapMethod(original) {
-  return function() {
+  return function () {
     if (!isActive || !cls.isTracing()) {
       return original.apply(this, arguments);
     }
@@ -114,7 +114,7 @@ function shimCmapMethod(original) {
 }
 
 function shimCmapGetMore(original) {
-  return function() {
+  return function () {
     if (!isActive || !cls.isTracing()) {
       return original.apply(this, arguments);
     }
@@ -250,7 +250,7 @@ function instrumentLegacyTopologyPool(Pool) {
 }
 
 function shimLegacyWrite(original) {
-  return function() {
+  return function () {
     if (!isActive || !cls.isTracing()) {
       return original.apply(this, arguments);
     }
@@ -470,7 +470,7 @@ function stringifyWhenNecessary(obj) {
 }
 
 function createWrappedCallback(span, originalCallback) {
-  return cls.ns.bind(function(error) {
+  return cls.ns.bind(function (error) {
     if (error) {
       span.ec = 1;
       span.data.mongo.error = tracingUtil.getErrorDetails(error);

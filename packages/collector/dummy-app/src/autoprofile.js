@@ -76,7 +76,7 @@ function simulateHttp() {
 
     var req = http.get(options, () => {});
 
-    req.on('error', function(err) {
+    req.on('error', function (err) {
       console.log(err.message);
     });
   }, 1000);

@@ -17,7 +17,7 @@ const config = require('../../../serverless/test/config');
 
 let transmissionCycle;
 
-describe('transmission cycle', function() {
+describe('transmission cycle', function () {
   this.timeout(config.getTestTimeout());
   this.slow(config.getTestTimeout() / 2);
 

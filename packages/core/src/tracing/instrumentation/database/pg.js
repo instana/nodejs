@@ -30,7 +30,7 @@ function instrumentClient(Client) {
 }
 
 function shimQuery(original) {
-  return function() {
+  return function () {
     if (isActive && cls.isTracing()) {
       // slightly more performant version of the usual Array.prototype.slice trick.
       const argsForOriginalQuery = new Array(arguments.length);
@@ -79,7 +79,7 @@ function instrumentedQuery(ctx, originalQuery, argsForOriginalQuery) {
     }
 
     if (callbackIndex >= 0) {
-      const wrappedCallback = function(error) {
+      const wrappedCallback = function (error) {
         finishSpan(error, span);
         return originalCallback.apply(this, arguments);
       };

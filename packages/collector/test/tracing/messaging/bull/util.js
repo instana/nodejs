@@ -99,7 +99,7 @@ exports.processJob = processJob;
  * @param {(...args: *)=>{}} log
  * @param {string} jobName
  */
-exports.buildReceiver = function(queue, processType, log, jobName, isConcurrent) {
+exports.buildReceiver = function (queue, processType, log, jobName, isConcurrent) {
   const processorPath = path.join(__dirname, 'child-processor.js');
 
   const callbackCb = (job, done) => {

@@ -22,14 +22,14 @@ const mochaSuiteFn =
     ? describe
     : describe.skip;
 
-mochaSuiteFn('tracing/mysql', function() {
+mochaSuiteFn('tracing/mysql', function () {
   this.timeout(config.getTestTimeout());
 
   globalAgent.setUpCleanUpHooks();
   const agentControls = globalAgent.instance;
 
   ['mysql', 'mysql-cluster', 'mysql2', 'mysql2/promises'].forEach(driverMode => {
-    [false, true].forEach(function(useExecute) {
+    [false, true].forEach(function (useExecute) {
       // connection.query or connection.execute
       registerSuite.bind(this)(agentControls, driverMode, useExecute);
     });

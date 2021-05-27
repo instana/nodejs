@@ -19,7 +19,7 @@ const globalAgent = require('../../../globalAgent');
 const mochaSuiteFn =
   supportedVersion(process.versions.node) && semver.gte(process.versions.node, '6.0.0') ? describe : describe.skip;
 
-mochaSuiteFn('tracing/koa', function() {
+mochaSuiteFn('tracing/koa', function () {
   this.timeout(config.getTestTimeout());
 
   const agentControls = globalAgent.instance;

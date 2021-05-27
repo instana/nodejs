@@ -12,7 +12,7 @@ const config = require('../../../serverless/test/config');
 
 const ProcessSnapshotDataSource = require('../../src/process/ProcessSnapshotDataSource');
 
-describe('process snapshot data source', function() {
+describe('process snapshot data source', function () {
   this.timeout(config.getTestTimeout());
 
   let dataSource;

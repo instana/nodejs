@@ -18,7 +18,7 @@ const { AgentStubControls } = require('../../../../apps/agentStubControls');
 
 const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
-mochaSuiteFn('tracing/http(s) server', function() {
+mochaSuiteFn('tracing/http(s) server', function () {
   this.timeout(config.getTestTimeout());
 
   const agentControls = new AgentStubControls().registerHooksForSuite({
@@ -34,15 +34,15 @@ mochaSuiteFn('tracing/http(s) server', function() {
     secretsList: ['secret', 'Enigma', 'CIPHER']
   });
 
-  describe('http', function() {
+  describe('http', function () {
     registerTests.call(this, agentControls, false, false);
   });
 
-  describe('https', function() {
+  describe('https', function () {
     registerTests.call(this, agentControls, true, false);
   });
 
-  (semver.gte(process.versions.node, '10.0.0') ? describe : describe.skip)('http2 compat mode', function() {
+  (semver.gte(process.versions.node, '10.0.0') ? describe : describe.skip)('http2 compat mode', function () {
     registerTests.call(this, agentControls, true, true);
   });
 });

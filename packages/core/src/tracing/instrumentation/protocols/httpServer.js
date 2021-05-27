@@ -34,7 +34,7 @@ exports.updateConfig = function updateConfig(config) {
 };
 
 function shimEmit(realEmit) {
-  return function(type, req, res) {
+  return function (type, req, res) {
     if (type !== 'request' || !isActive) {
       return realEmit.apply(this, arguments);
     }

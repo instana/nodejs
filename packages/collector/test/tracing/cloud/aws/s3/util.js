@@ -13,7 +13,7 @@ const s3 = new AWS.S3();
  * Attempts to delete a previous created bucket before the test starts
  * @param {string} bucketName
  */
-exports.cleanup = async function(bucketName) {
+exports.cleanup = async function (bucketName) {
   try {
     await s3
       .deleteBucket({

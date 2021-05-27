@@ -20,7 +20,7 @@ const waitForSpans = process.env.CI ? 1000 : 200;
 
 const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
-mochaSuiteFn('tracing/sdk', function() {
+mochaSuiteFn('tracing/sdk', function () {
   this.timeout(config.getTestTimeout());
 
   globalAgent.setUpCleanUpHooks();
@@ -34,7 +34,7 @@ mochaSuiteFn('tracing/sdk', function() {
 
     ProcessControls.setUpHooks(controls);
 
-    ['callback', 'promise'].forEach(function(apiType) {
+    ['callback', 'promise'].forEach(function (apiType) {
       registerSuite.bind(this)(apiType);
     });
 
@@ -326,7 +326,7 @@ mochaSuiteFn('tracing/sdk', function() {
 
     ProcessControls.setUpHooks(controls);
 
-    ['callback', 'promise'].forEach(function(apiType) {
+    ['callback', 'promise'].forEach(function (apiType) {
       registerSuite.bind(this)(apiType);
     });
 

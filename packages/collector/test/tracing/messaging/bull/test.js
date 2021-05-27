@@ -44,13 +44,13 @@ if (!supportedVersion(process.versions.node) || semver.lt(process.version, '10.0
 
 const retryTime = config.getTestTimeout() * 2;
 
-mochaSuiteFn('tracing/messaging/bull', function() {
+mochaSuiteFn('tracing/messaging/bull', function () {
   this.timeout(config.getTestTimeout() * 3);
 
   globalAgent.setUpCleanUpHooks();
   const agentControls = globalAgent.instance;
 
-  describe('tracing enabled, no suppression', function() {
+  describe('tracing enabled, no suppression', function () {
     const senderControls = new ProcessControls({
       appPath: path.join(__dirname, 'sender'),
       port: 3215,

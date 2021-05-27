@@ -24,7 +24,7 @@ const mochaSuiteFn =
     ? describe
     : describe.skip;
 
-mochaSuiteFn('tracing/kafkajs', function() {
+mochaSuiteFn('tracing/kafkajs', function () {
   this.timeout(config.getTestTimeout() * 2);
 
   globalAgent.setUpCleanUpHooks();
@@ -33,7 +33,7 @@ mochaSuiteFn('tracing/kafkajs', function() {
   let producerControls;
   let consumerControls;
 
-  describe('tracing enabled ', function() {
+  describe('tracing enabled ', function () {
     producerControls = new ProcessControls({
       appPath: path.join(__dirname, 'producer'),
       port: 3216,

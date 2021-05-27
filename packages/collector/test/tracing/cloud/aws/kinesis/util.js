@@ -46,7 +46,7 @@ exports.cleanup = async function (streamName) {
   try {
     await kinesis
       .deleteStream({
-        StreamName: streamName,
+        StreamName: streamName
       })
       .promise();
     return exports.checkStreamExistence(streamName, false);

@@ -41,7 +41,7 @@ if (semver.satisfies(process.versions.node, '>=6.0.0')) {
     plugins: [
       require('admin-plugin-healthcheck')({
         checks: {
-          configurable: function() {
+          configurable: function () {
             healthcheckFunction();
           }
         }

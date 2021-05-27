@@ -24,7 +24,7 @@ function instrumentModule(graphQlSubscriptions) {
 }
 
 function shimPublish(originalPublish) {
-  return function() {
+  return function () {
     if (isActive && cls.isTracing()) {
       // Keep cls context in GraphQL subscriptions by binding the associated event emitters.
       if (this.ee && this.ee.on && this.ee.addListener && this.ee.emit) {
@@ -41,7 +41,7 @@ function instrumentAsyncIterator(pubSubAsyncIterator) {
 }
 
 function shimPushValue(originalFunction) {
-  return function(event) {
+  return function (event) {
     if (isActive && event && typeof event === 'object' && cls.ns.active) {
       event[CLS_CONTEXT_SYMBOL] = cls.ns.active;
     }
@@ -50,7 +50,7 @@ function shimPushValue(originalFunction) {
 }
 
 function shimPullValue(originalFunction) {
-  return function() {
+  return function () {
     const pullPromise = originalFunction.apply(this, arguments);
     return pullPromise.then(result => {
       if (result && result.value && result.value[CLS_CONTEXT_SYMBOL]) {

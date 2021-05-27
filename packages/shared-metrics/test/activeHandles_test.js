@@ -13,7 +13,7 @@ const config = require('../../core/test/config');
 const testUtils = require('../../core/test/test_util');
 const activeHandles = require('../src/activeHandles');
 
-describe('metrics.activeHandles', function() {
+describe('metrics.activeHandles', function () {
   this.timeout(config.getTestTimeout());
 
   it('should export active handle count', () => {

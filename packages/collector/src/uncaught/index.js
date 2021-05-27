@@ -37,7 +37,7 @@ for (let i = 0; i < process.execArgv.length; i++) {
   }
 }
 
-exports.init = function(_config, _downstreamConnection, _processIdentityProvider) {
+exports.init = function (_config, _downstreamConnection, _processIdentityProvider) {
   config = _config;
   downstreamConnection = _downstreamConnection;
   processIdentityProvider = _processIdentityProvider;
@@ -53,7 +53,7 @@ exports.init = function(_config, _downstreamConnection, _processIdentityProvider
   }
 };
 
-exports.activate = function() {
+exports.activate = function () {
   activateUncaughtExceptionHandling();
   activateUnhandledPromiseRejectionHandling();
 };
@@ -79,7 +79,7 @@ function activateUncaughtExceptionHandling() {
   }
 }
 
-exports.deactivate = function() {
+exports.deactivate = function () {
   process.removeListener(uncaughtExceptionEventName, onUncaughtException);
   process.removeListener(unhandledRejectionEventName, onUnhandledRejection);
 };
