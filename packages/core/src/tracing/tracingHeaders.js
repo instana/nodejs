@@ -73,7 +73,7 @@ exports.init = function (config) {
 /**
  * Inspects the headers of an incoming HTTP request for X-INSTANA-T, X-INSTANA-S, X-INSTANA-L, as well as the W3C trace
  * context headers traceparent and tracestate.
- * @param {import('node:http').IncomingMessage} req
+ * @param {import('http').IncomingMessage} req
  */
 exports.fromHttpRequest = function fromHttpRequest(req) {
   if (!req || !req.headers) {
@@ -86,7 +86,7 @@ exports.fromHttpRequest = function fromHttpRequest(req) {
 /**
  * Inspects the given headers for X-INSTANA-T, X-INSTANA-S, X-INSTANA-L, as well as the W3C trace
  * context headers traceparent and tracestate.
- * @param {import('node:http').IncomingHttpHeaders} headers
+ * @param {import('http').IncomingHttpHeaders} headers
  */
 exports.fromHeaders = function fromHeaders(headers) {
   let xInstanaT = readInstanaTraceId(headers);
@@ -231,7 +231,7 @@ exports.fromHeaders = function fromHeaders(headers) {
 };
 
 /**
- * @param {import('node:http').IncomingHttpHeaders} headers
+ * @param {import('http').IncomingHttpHeaders} headers
  * @returns {string | Array.<string>}
  */
 function readInstanaTraceId(headers) {
@@ -243,7 +243,7 @@ function readInstanaTraceId(headers) {
 }
 
 /**
- * @param {import('node:http').IncomingHttpHeaders} headers
+ * @param {import('http').IncomingHttpHeaders} headers
  * @returns {string | Array.<string>}
  */
 function readInstanaParentId(headers) {
@@ -255,7 +255,7 @@ function readInstanaParentId(headers) {
 }
 
 /**
- * @param {import('node:http').IncomingHttpHeaders} headers
+ * @param {import('http').IncomingHttpHeaders} headers
  */
 function readLevelAndCorrelation(headers) {
   const xInstanaL = headers[constants.traceLevelHeaderNameLowerCase];
@@ -310,7 +310,7 @@ function isSuppressed(level) {
 }
 
 /**
- * @param {import('node:http').IncomingHttpHeaders} headers
+ * @param {import('http').IncomingHttpHeaders} headers
  */
 function readSyntheticMarker(headers) {
   return headers[constants.syntheticHeaderNameLowerCase] === '1';
@@ -325,7 +325,7 @@ function traceStateHasInstanaKeyValuePair(w3cTraceContext) {
 }
 
 /**
- * @param {import('node:http').IncomingHttpHeaders} headers
+ * @param {import('http').IncomingHttpHeaders} headers
  */
 function readW3cTraceContext(headers) {
   const traceParent = /** @type {string} */ (headers[constants.w3cTraceParent]);
