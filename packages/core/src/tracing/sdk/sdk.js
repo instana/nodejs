@@ -326,7 +326,7 @@ module.exports = exports = function (isCallbackApi) {
   }
 
   /**
-   * @param {import('node:events').EventEmitter} emitter
+   * @param {import('events').EventEmitter} emitter
    */
   function bindEmitter(emitter) {
     if (isActive) {

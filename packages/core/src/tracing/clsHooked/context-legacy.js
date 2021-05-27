@@ -210,7 +210,7 @@ Namespace.prototype.exit = function exit(context) {
 };
 
 /**
- * @param {import('node:events').EventEmitter} emitter
+ * @param {import('events').EventEmitter} emitter
  */
 Namespace.prototype.bindEmitter = function bindEmitter(emitter) {
   assert.ok(emitter.on && emitter.addListener && emitter.emit, 'can only bind real EEs');
