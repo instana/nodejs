@@ -14,7 +14,7 @@ const fs = require('fs');
 const morgan = require('morgan');
 const path = require('path');
 const { Storage } = require('@google-cloud/storage');
-const uuid = require('uuid/v4');
+const { v4: uuid } = require('uuid');
 
 const asyncRoute = require('../../../../test_util/asyncExpressRoute');
 

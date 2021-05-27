@@ -15,7 +15,7 @@ const instana = require('../../../../')();
 const express = require('express');
 const kafka = require('kafka-node');
 const request = require('request-promise');
-const uuid = require('uuid/v4');
+const { v4: uuid } = require('uuid');
 
 let connected = false;
 

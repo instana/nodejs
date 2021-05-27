@@ -11,7 +11,7 @@ const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
 const express = require('express');
 const morgan = require('morgan');
-const uuid = require('uuid/v4');
+const { v4: uuid } = require('uuid');
 
 const app = express();
 const logPrefix = `Express / Mongoose App (${process.pid}):\t`;

@@ -15,7 +15,7 @@ const execute = require('apollo-link').execute;
 const express = require('express');
 const morgan = require('morgan');
 const rp = require('request-promise');
-const uuid = require('uuid/v4');
+const { v4: uuid } = require('uuid');
 const ws = require('ws');
 
 const serverPort = process.env.SERVER_PORT || 3217;

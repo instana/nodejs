@@ -6,7 +6,7 @@
 'use strict';
 
 const expect = require('chai').expect;
-const uuid = require('uuid/v4');
+const { v4: uuid } = require('uuid');
 
 const constants = require('@instana/core').tracing.constants;
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
