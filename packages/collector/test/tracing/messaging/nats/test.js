@@ -166,15 +166,15 @@ mochaSuiteFn('tracing/nats', function () {
             simple: false
           })
           .then(() => {
-            const receivedMessages = subscriberControls.getIpcMessages();
-            expect(receivedMessages).to.have.lengthOf(1);
-            if (withError) {
-              expect(receivedMessages[0]).to.equal('trigger an error');
-            } else {
-              expect(receivedMessages[0]).to.equal("It's nuts, ain't it?!");
-            }
+            return testUtils.retry(() => {
+              const receivedMessages = subscriberControls.getIpcMessages();
+              expect(receivedMessages).to.have.lengthOf(1);
+              if (withError) {
+                expect(receivedMessages[0]).to.equal('trigger an error');
+              } else {
+                expect(receivedMessages[0]).to.equal("It's nuts, ain't it?!");
+              }
 
-            return testUtils.retry(() =>
               agentControls.getSpans().then(spans => {
                 const httpSpan = testUtils.expectAtLeastOneMatching(spans, [
                   span => expect(span.n).to.equal('node.http.server'),
@@ -217,8 +217,8 @@ mochaSuiteFn('tracing/nats', function () {
                   span => expect(span.p).to.equal(natsEntry.s),
                   span => expect(span.k).to.equal(constants.EXIT)
                 ]);
-              })
-            );
+              });
+            });
           });
       });
     }
