@@ -2,6 +2,7 @@
 
 ## Unreleased
 - [AWS Lambda] Detect Lambda cold starts.
+- [AWS Lambda] Detect imminent Lambda timeouts heuristically.
 - Instrumentation of AWS Lambda invoke function
 
 ## 1.121.0
