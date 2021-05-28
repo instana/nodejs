@@ -96,7 +96,8 @@ Control.prototype.runHandler = function runHandler() {
 };
 
 Control.prototype.waitUntilHandlerHasRun = function waitUntilHandlerHasRun() {
-  return retry(() => this.hasHandlerRunPromise(), this.opts.timeout / 2);
+  const timeout = this.opts.lambdaTimeout || this.opts.timeout / 2;
+  return retry(() => this.hasHandlerRunPromise(), timeout);
 };
 
 Control.prototype.hasHandlerRunPromise = function hasHandlerRunPromise() {

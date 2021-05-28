@@ -42,7 +42,8 @@ function prelude(opts) {
 
   const env = {
     DELAY: opts.delay,
-    ITERATIONS: opts.iterations
+    ITERATIONS: opts.iterations,
+    LAMBDA_TIMEOUT: 300000
   };
   if (opts.instanaEndpointUrl) {
     env.INSTANA_ENDPOINT_URL = opts.instanaEndpointUrl;

@@ -63,25 +63,23 @@ function acceptBundle(req, res) {
     // intentionally not responding for tests that verify proper timeout handling
     return;
   }
-  if (!req.body.metrics) {
-    return res.status(400).send({ error: 'Payload has no metrics.' });
-  }
-  if (typeof req.body.metrics !== 'object') {
+  if (req.body.metrics && typeof req.body.metrics !== 'object') {
     return res.status(400).send({ error: 'The metrics value in the payload is no object.' });
   }
-  if (Array.isArray(req.body.metrics)) {
+  if (req.body.metrics && Array.isArray(req.body.metrics)) {
     return res.status(400).send({ error: 'The metrics value in the payload is an array.' });
   }
-  if (!req.body.spans) {
-    return res.status(400).send({ error: 'Payload has no spans.' });
-  }
-  if (!Array.isArray(req.body.spans)) {
+  if (req.body.spans && !Array.isArray(req.body.spans)) {
     return res.status(400).send({ error: 'The spans value in the payload is no array.' });
   }
   if (!dropAllData) {
-    receivedData.metrics.push(addHeaders(req, req.body.metrics));
-    aggregateMetrics(req.body.metrics);
-    receivedData.spans = receivedData.spans.concat(addHeaders(req, req.body.spans));
+    if (req.body.metrics) {
+      receivedData.metrics.push(addHeaders(req, req.body.metrics));
+      aggregateMetrics(req.body.metrics);
+    }
+    if (req.body.spans) {
+      receivedData.spans = receivedData.spans.concat(addHeaders(req, req.body.spans));
+    }
   }
   return res.sendStatus(201);
 }

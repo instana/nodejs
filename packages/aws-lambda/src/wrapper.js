@@ -157,6 +157,8 @@ function shimmedHandler(originalHandler, originalThis, originalArgs, _config) {
       });
     };
 
+    registerTimeoutDetection(context, entrySpan);
+
     let handlerPromise;
     try {
       handlerPromise = originalHandler.apply(originalThis, originalArgs);
@@ -233,6 +235,50 @@ function init(event, arnInfo, _config) {
   tracing.activate();
 }
 
+function registerTimeoutDetection(context, entrySpan) {
+  // We register the timeout detection directly at the start so getRemainingTimeInMillis basically gives us the
+  // configured timeout for this Lambda function, minus roughly 50 - 100 ms that is spent in bootstrapping.
+  const initialRemainingMillis = getRemainingTimeInMillis(context);
+  if (typeof initialRemainingMillis !== 'number') {
+    return;
+  }
+  if (initialRemainingMillis <= 2500) {
+    logger.debug(
+      'Heuristical timeout detection will be disabled for Lambda functions with a short timeout ' +
+        '(2 seconds and smaller).'
+    );
+    return;
+  }
+
+  let triggerTimeoutHandlingAfter;
+  if (initialRemainingMillis <= 4000) {
+    // For Lambdas configured with a timeout of 3 or 4 seconds we heuristically assume a timeout when only
+    // 10% of time is remaining.
+    triggerTimeoutHandlingAfter = initialRemainingMillis * 0.9;
+  } else {
+    // For Lambdas configured with a timeout of  5 seconds or more we heuristically assume a timeout when only 400 ms of
+    // time are remaining.
+    triggerTimeoutHandlingAfter = initialRemainingMillis - 400;
+  }
+
+  logger.debug(
+    `Registering heuristical timeout detection to be triggered in ${triggerTimeoutHandlingAfter} milliseconds.`
+  );
+
+  setTimeout(() => {
+    postHandlerForTimeout(entrySpan, getRemainingTimeInMillis(context));
+  }, triggerTimeoutHandlingAfter).unref();
+}
+
+function getRemainingTimeInMillis(context) {
+  if (context && typeof context.getRemainingTimeInMillis === 'function') {
+    return context.getRemainingTimeInMillis();
+  } else {
+    logger.warn('context.getRemainingTimeInMillis() is not available, timeout detection will be disabled.');
+    return null;
+  }
+}
+
 function shouldUseLambdaExtension() {
   if (process.env.INSTANA_DISABLE_LAMBDA_EXTENSION) {
     logger.info('INSTANA_DISABLE_LAMBDA_EXTENSION is set, not using the Lambda extension.');
@@ -266,7 +312,8 @@ function shouldUseLambdaExtension() {
 }
 
 /**
- * Code to be executed after the promise returned by the original handler has completed.
+ * A wrapper for post handler for promise based Lambdas (including async style Lambdas), to be executed after the
+ * promise returned by the original handler has completed.
  */
 function postPromise(entrySpan, error, value) {
   return new Promise((resolve, reject) => {
@@ -280,9 +327,24 @@ function postPromise(entrySpan, error, value) {
   });
 }
 
+/**
+ * When the original handler has completed, the postHandler will finish the entry span that represents the Lambda
+ * invocation and makes sure the final batch of data (including the Lambda entry span) is sent to the back end before
+ * letting the Lambda finish (that is, before letting the AWS Lambda runtime process the next invocation or freeze the
+ * current process).
+ */
 function postHandler(entrySpan, error, result, callback) {
   // entrySpan is null when tracing is suppressed due to X-Instana-L
   if (entrySpan) {
+    if (entrySpan.transmitted) {
+      // The only possible reason for the entry span to already have been transmitted is when the timeout detection
+      // kicked in and finished the entry span prematurely. If that happened, we also have already triggered sending
+      // spans to the back end. We do not need to keep the Lambda waiting for another transmission, so we immediately
+      // let it finish.
+      callback();
+      return;
+    }
+
     if (error) {
       entrySpan.ec = 1;
       if (error.message) {
@@ -312,6 +374,28 @@ function postHandler(entrySpan, error, result, callback) {
   };
 
   backendConnector.sendBundle({ spans, metrics: metricsPayload }, true, callback);
+}
+
+/**
+ * When the timeout heuristic detects an imminent timeout, we finish the entry span prematurely and send it to the
+ * back end.
+ */
+function postHandlerForTimeout(entrySpan, remainingMillis) {
+  logger.debug(`Heuristical timeout detection was triggered with ${remainingMillis} milliseconds left.`);
+
+  if (entrySpan) {
+    entrySpan.ec = 1;
+    entrySpan.data.lambda.msleft = remainingMillis;
+    entrySpan.data.lambda.error =
+      `The Lambda function was still running when only ${remainingMillis} ms were left, ` +
+      'it might have ended in a timeout.';
+    entrySpan.d = Date.now() - entrySpan.ts;
+    entrySpan.transmit();
+  }
+
+  // deliberately not gathering metrics but only sending spans.
+  const spans = spanBuffer.getAndResetSpans();
+  backendConnector.sendBundle({ spans }, true, () => {});
 }
 
 exports.currentSpan = function getHandleForCurrentSpan() {

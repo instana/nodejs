@@ -159,12 +159,16 @@ function createContext(callback) {
     ? `arn:aws:lambda:us-east-2:410797082306:function:${functionName}:${process.env.LAMBDA_FUNCTION_ALIAS}`
     : `arn:aws:lambda:us-east-2:410797082306:function:${functionName}`;
 
+  const configuredTimeout = process.env.LAMBDA_TIMEOUT ? parseInt(process.env.LAMBDA_TIMEOUT, 10) : 3000;
+
   const done = (err, result) => {
     callback(err, result);
   };
+
   const succeed = result => {
     done(null, result);
   };
+
   const fail = err => {
     if (err == null) {
       done('handled');
@@ -173,7 +177,7 @@ function createContext(callback) {
     }
   };
 
-  return {
+  const context = {
     callbackWaitsForEmptyEventLoop: false,
     logGroupName: '/aws/lambda/logGroup',
     logStreamName: `2019/03/19/[${functionVersion}]056cc3b39a364bd4959264dba2ed7011`,
@@ -185,8 +189,16 @@ function createContext(callback) {
     invokedFunctionArn,
     done,
     succeed,
-    fail
+    fail,
+    startedAt: Date.now()
   };
+
+  context.getRemainingTimeInMillis = () => {
+    const millisLambdaHasBeenRunningAlready = Date.now() - context.startedAt;
+    return configuredTimeout - millisLambdaHasBeenRunningAlready;
+  };
+
+  return context;
 }
 
 function createEvent(error) {
