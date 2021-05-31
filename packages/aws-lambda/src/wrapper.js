@@ -95,7 +95,8 @@ function shimmedHandler(originalHandler, originalThis, originalArgs, _config) {
         alias,
         runtime: 'nodejs',
         functionName: context.functionName,
-        functionVersion: context.functionVersion
+        functionVersion: context.functionVersion,
+        reqId: context.awsRequestId
       };
       if (coldStart) {
         entrySpan.data.lambda.coldStart = true;

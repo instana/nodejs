@@ -1038,6 +1038,7 @@ function registerTests(handlerDefinitionPath) {
       span => expect(span.data.lambda).to.be.an('object'),
       span => expect(span.data.lambda.arn).to.equal(qualifiedArn),
       span => expect(span.data.lambda.runtime).to.equal('nodejs'),
+      span => expect(span.data.lambda.reqId).to.equal('20024b9e-e726-40e2-915e-f787357738f7'),
       verifyHeaders
     ];
 
