@@ -77,9 +77,15 @@ function validateDefinition() {
  * Runs the given lambda handler.
  */
 function runHandler(handler, error) {
-  const event = createEvent(error);
+  let context;
+  const trigger = process.env.LAMBDA_TRIGGER;
+  const event = createEvent(error, trigger);
   registerErrorHandling();
   log(`Running ${definitionPath}.`);
+
+  function getContext() {
+    return context;
+  }
 
   let handlerHasFinished = false;
   const callback = function (err, result) {
@@ -104,9 +110,15 @@ function runHandler(handler, error) {
       error: false,
       payload: result
     });
+    sendToParent({
+      type: 'lambda-context',
+      error: false,
+      context: getContext()
+    });
   };
 
-  const context = createContext(callback);
+  context = createContext(callback);
+  addHttpTracingToContext(context, trigger);
 
   const promise = handler(event, context, callback);
 
@@ -125,6 +137,11 @@ function runHandler(handler, error) {
           type: 'lambda-result',
           error: false,
           payload: result
+        });
+        sendToParent({
+          type: 'lambda-context',
+          error: false,
+          context: getContext()
         });
       },
       err => {
@@ -155,6 +172,7 @@ function createContext(callback) {
   const functionName = process.env.LAMBDA_FUNCTION_NAME ? process.env.LAMBDA_FUNCTION_NAME : 'functionName';
   const functionVersion = process.env.LAMBDA_FUNCTION_VERSION ? process.env.LAMBDA_FUNCTION_VERSION : '$LATEST';
   const alias = process.env.LAMBDA_FUNCTION_ALIAS;
+
   const invokedFunctionArn = alias
     ? `arn:aws:lambda:us-east-2:410797082306:function:${functionName}:${process.env.LAMBDA_FUNCTION_ALIAS}`
     : `arn:aws:lambda:us-east-2:410797082306:function:${functionName}`;
@@ -184,6 +202,7 @@ function createContext(callback) {
     functionName,
     memoryLimitInMB: '128',
     functionVersion,
+    clientContext: undefined,
     invokeid: '20024b9e-e726-40e2-915e-f787357738f7',
     awsRequestId: '20024b9e-e726-40e2-915e-f787357738f7',
     invokedFunctionArn,
@@ -204,7 +223,7 @@ function createContext(callback) {
   return context;
 }
 
-function createEvent(error) {
+function createEvent(error, trigger) {
   /* eslint-disable default-case */
   const event = {};
 
@@ -215,10 +234,12 @@ function createEvent(error) {
     event.requestedStatusCode = process.env.HTTP_STATUS_CODE;
   }
 
-  const trigger = process.env.LAMBDA_TRIGGER;
   if (trigger != null) {
     switch (trigger) {
       case 'api-gateway-no-proxy':
+        break;
+
+      case 'invoke-function':
         break;
 
       case 'api-gateway-proxy':
@@ -434,6 +455,28 @@ function addHttpTracingHeaders(event) {
   }
   if (process.env.INSTANA_HEADER_L) {
     event.headers['x-InStaNa-l'] = process.env.INSTANA_HEADER_L;
+  }
+}
+
+function addHttpTracingToContext(context, trigger) {
+  const fillContext = process.env.FILL_CONTEXT === 'true';
+  const clientContext = fillContext ? { Custom: { awesome_company: 'Instana' } } : { Custom: {} };
+  context.clientContext = clientContext;
+  const custom = context.clientContext.Custom;
+
+  switch (trigger) {
+    case 'invoke-function':
+      if (process.env.INSTANA_CONTEXT_T) {
+        custom['x-instana-t'] = process.env.INSTANA_CONTEXT_T;
+      }
+      if (process.env.INSTANA_CONTEXT_S) {
+        custom['x-instana-s'] = process.env.INSTANA_CONTEXT_S;
+      }
+      if (process.env.INSTANA_CONTEXT_L) {
+        custom['x-instana-l'] = process.env.INSTANA_CONTEXT_L;
+      }
+      break;
+    default:
   }
 }
 

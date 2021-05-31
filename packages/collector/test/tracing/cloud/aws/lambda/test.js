@@ -17,7 +17,7 @@ const ProcessControls = require('../../../../test_util/ProcessControls');
 const globalAgent = require('../../../../globalAgent');
 
 const SPAN_NAME = 'aws.lambda.invoke';
-const functionName = 'team-nodejs-invoke-function';
+const functionName = 'wrapped-async';
 let mochaSuiteFn;
 
 const withErrorOptions = [false, true];

@@ -36,6 +36,7 @@ Control.prototype = Object.create(AbstractServerlessControl.prototype);
 
 Control.prototype.reset = function reset() {
   AbstractServerlessControl.prototype.reset.call(this);
+  this.clientContext = {};
   this.messagesFromFaasRuntime = [];
   this.lambdaErrors = [];
   this.lambdaResults = [];
@@ -78,6 +79,8 @@ Control.prototype.startMonitoredProcess = function startMonitoredProcess() {
       } else {
         this.lambdaResults.push(message.payload);
       }
+    } else if (message.type === 'lambda-context') {
+      this.clientContext = message.context.clientContext;
     } else {
       this.messagesFromFaasRuntime.push(message);
     }
@@ -138,6 +141,10 @@ Control.prototype.getLambdaResults = function getLambdaResults() {
 
 Control.prototype.getLambdaErrors = function getLambdaErrors() {
   return this.lambdaErrors;
+};
+
+Control.prototype.getClientContext = function getClientContext() {
+  return this.clientContext;
 };
 
 module.exports = Control;

@@ -19,7 +19,7 @@ const maxS3Records = 3;
 const maxS3ObjectKeyLength = 200;
 const maxSQSRecords = 3;
 
-exports.enrichSpanWithTriggerData = function enrichSpanWithTriggerData(event, span) {
+exports.enrichSpanWithTriggerData = function enrichSpanWithTriggerData(event, context, span) {
   if (isApiGatewayProxyTrigger(event)) {
     span.data.lambda.trigger = 'aws:api.gateway';
     extractHttpFromApiGatewwayProxyEvent(event, span);
@@ -43,6 +43,9 @@ exports.enrichSpanWithTriggerData = function enrichSpanWithTriggerData(event, sp
   } else if (isSQSTrigger(event)) {
     span.data.lambda.trigger = 'aws:sqs';
     extractEventFromSQS(event, span);
+    return;
+  } else if (isInvokeFunction(context)) {
+    span.data.lambda.trigger = 'aws:lambda.invoke';
     return;
   }
 
@@ -208,8 +211,20 @@ function extractEventFromSQS(event, span) {
   span.data.lambda.sqs.more = event.Records.length > maxSQSRecords;
 }
 
-exports.readTracingHeaders = function readTracingHeaders(event) {
+function isInvokeFunction(context) {
+  const custom =
+    (context && context.clientContext && context.clientContext.Custom) ||
+    (context && context.clientContext && context.clientContext.custom);
+  return custom && (custom['x-instana-l'] || custom['x-instana-s'] || custom['x-instana-t']);
+}
+
+exports.readTracingHeaders = function readTracingHeaders(event, context) {
   const tracingHeaders = {};
+  // Node.js AWS SDK documentation expects for Custom, with capital "C", but the same is not explicitly said for
+  // other languages, so we test both
+  const custom =
+    (context && context.clientContext && context.clientContext.Custom) ||
+    (context && context.clientContext && context.clientContext.custom);
   if (event.headers && typeof event.headers === 'object') {
     let lowerCaseKey;
     Object.keys(event.headers).forEach(key => {
@@ -224,6 +239,16 @@ exports.readTracingHeaders = function readTracingHeaders(event) {
         }
       }
     });
+  } else if (custom) {
+    if (custom['x-instana-l']) {
+      tracingHeaders.l = custom['x-instana-l'];
+    }
+    if (custom['x-instana-s']) {
+      tracingHeaders.s = custom['x-instana-s'];
+    }
+    if (custom['x-instana-t']) {
+      tracingHeaders.t = custom['x-instana-t'];
+    }
   }
   return tracingHeaders;
 };
