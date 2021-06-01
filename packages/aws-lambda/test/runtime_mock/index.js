@@ -192,6 +192,9 @@ function createContext(callback) {
     fail,
     startedAt: Date.now()
   };
+  if (process.env.AWS_LAMBDA_FUNCTION_MEMORY_SIZE) {
+    context.memoryLimitInMB = process.env.AWS_LAMBDA_FUNCTION_MEMORY_SIZE;
+  }
 
   context.getRemainingTimeInMillis = () => {
     const millisLambdaHasBeenRunningAlready = Date.now() - context.startedAt;
