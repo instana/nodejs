@@ -284,6 +284,9 @@ function shouldUseLambdaExtension() {
     logger.info('INSTANA_DISABLE_LAMBDA_EXTENSION is set, not using the Lambda extension.');
     return false;
   } else {
+    // Note: We could also use context.memoryLimitInMB here instead of the env var AWS_LAMBDA_FUNCTION_MEMORY_SIZE (both
+    // should always yield the same value), but this behaviour needs to be in sync with what the Lambda extension does.
+    // The context object is not available to the extension, so we prefer the env var over the value from the context.
     const memorySetting = process.env.AWS_LAMBDA_FUNCTION_MEMORY_SIZE;
     if (!memorySetting) {
       logger.debug(
