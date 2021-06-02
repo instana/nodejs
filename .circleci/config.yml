@@ -235,6 +235,38 @@ nats-streaming: &nats-streaming
       - 8223:8223
 
 jobs:
+  "node-16":
+    docker:
+      - image: circleci/node:16
+      - <<: *zookeeper
+      - <<: *elasticsearch
+      - <<: *mongo
+      - <<: *redis
+      - <<: *kafka
+      - <<: *mysql
+      - <<: *postgres
+      - <<: *mssql
+      - <<: *rabbitmq
+      - <<: *nats
+      - <<: *nats-streaming
+    <<: *shared
+
+  "node-15":
+    docker:
+      - image: circleci/node:15
+      - <<: *zookeeper
+      - <<: *elasticsearch
+      - <<: *mongo
+      - <<: *redis
+      - <<: *kafka
+      - <<: *mysql
+      - <<: *postgres
+      - <<: *mssql
+      - <<: *rabbitmq
+      - <<: *nats
+      - <<: *nats-streaming
+    <<: *shared
+
   "node-14":
     docker:
       - image: circleci/node:14
@@ -299,26 +331,12 @@ jobs:
       - <<: *nats-streaming
     <<: *shared
 
-  "node-6":
-    docker:
-      - image: circleci/node:6
-      - <<: *zookeeper
-      - <<: *elasticsearch
-      - <<: *mongo
-      - <<: *redis
-      - <<: *kafka
-      - <<: *mysql
-      - <<: *postgres
-      - <<: *mssql
-      - <<: *rabbitmq
-      - <<: *nats
-      - <<: *nats-streaming
-    <<: *shared
-
 workflows:
   version: 2
   build:
     jobs:
+      - "node-16"
+      - "node-15"
       - "node-14"
       - "node-12"
       - "node-10"
