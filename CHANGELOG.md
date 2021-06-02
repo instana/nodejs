@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.122.0
 - [AWS Lambda] Detect Lambda cold starts.
 - [AWS Lambda] Detect imminent Lambda timeouts heuristically.
 - Instrumentation of AWS Lambda invoke function
