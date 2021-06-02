@@ -65,7 +65,7 @@ function shimmedHandler(originalHandler, originalThis, originalArgs, _config) {
   const context = originalArgs[1];
   const lambdaCallback = originalArgs[2];
 
-  const tracingHeaders = triggers.readTracingHeaders(event);
+  const tracingHeaders = triggers.readTracingHeaders(event, context);
   const incomingTraceId = tracingHeaders.t;
   const incomingParentSpanId = tracingHeaders.s;
   const tracingSuppressed = tracingHeaders.l === '0';
@@ -102,7 +102,7 @@ function shimmedHandler(originalHandler, originalThis, originalArgs, _config) {
         entrySpan.data.lambda.coldStart = true;
         coldStart = false;
       }
-      triggers.enrichSpanWithTriggerData(event, entrySpan);
+      triggers.enrichSpanWithTriggerData(event, context, entrySpan);
     }
 
     originalArgs[2] = function wrapper(originalError, originalResult) {

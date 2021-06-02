@@ -93,6 +93,18 @@ function prelude(opts) {
   if (opts.traceLevel) {
     env.INSTANA_HEADER_L = opts.traceLevel;
   }
+  if (opts.traceIdContext) {
+    env.INSTANA_CONTEXT_T = opts.traceIdContext;
+  }
+  if (opts.spanIdContext) {
+    env.INSTANA_CONTEXT_S = opts.spanIdContext;
+  }
+  if (opts.traceLevelContext) {
+    env.INSTANA_CONTEXT_L = opts.traceLevelContext;
+  }
+  if (opts.fillContext) {
+    env.FILL_CONTEXT = 'true';
+  }
   if (opts.serverTiming) {
     env.SERVER_TIMING_HEADER = opts.serverTiming;
   }
@@ -825,6 +837,91 @@ function registerTests(handlerDefinitionPath) {
             span => expect(span.data.http.host).to.not.exist
           ])
         ));
+  });
+
+  describe('triggered by AWS SDK Lambda invoke function with parent span from an empty context', function () {
+    const control = prelude.bind(this)({
+      handlerDefinitionPath,
+      trigger: 'invoke-function',
+      instanaEndpointUrl: backendBaseUrl,
+      instanaAgentKey,
+      traceIdContext: 'test-trace-id',
+      spanIdContext: 'test-span-id',
+      traceLevelContext: '1'
+    });
+
+    it('must instrument with Instana headers coming from clientContext', () =>
+      verify(control, {
+        error: false,
+        expectMetrics: true,
+        expectSpans: true,
+        trigger: 'aws:lambda.invoke',
+        parent: {
+          t: 'test-trace-id',
+          s: 'test-span-id'
+        }
+      })
+        .then(() => control.getSpans())
+        .then(spans =>
+          expectExactlyOneMatching(spans, [
+            span => expect(span.n).to.equal('aws.lambda.entry'),
+            span => expect(span.k).to.equal(constants.ENTRY),
+            span => expect(span.data.http).to.not.exist
+          ])
+        ));
+  });
+
+  describe('triggered by AWS SDK Lambda invoke function with parent span from a non-empty context', function () {
+    const control = prelude.bind(this)({
+      handlerDefinitionPath,
+      trigger: 'invoke-function',
+      instanaEndpointUrl: backendBaseUrl,
+      instanaAgentKey,
+      traceIdContext: 'test-trace-id',
+      spanIdContext: 'test-span-id',
+      traceLevelContext: '1',
+      fillContext: true
+    });
+
+    it('must instrument with Instana headers coming from clientContext', () =>
+      verify(control, {
+        error: false,
+        expectMetrics: true,
+        expectSpans: true,
+        trigger: 'aws:lambda.invoke',
+        parent: {
+          t: 'test-trace-id',
+          s: 'test-span-id'
+        }
+      })
+        .then(() => {
+          const lambdaContext = control.getClientContext();
+          expect(lambdaContext && lambdaContext.Custom).to.exist;
+          expect(lambdaContext && lambdaContext.Custom && lambdaContext.Custom.awesome_company).to.equal('Instana');
+        })
+        .then(() => control.getSpans())
+        .then(spans =>
+          expectExactlyOneMatching(spans, [
+            span => expect(span.n).to.equal('aws.lambda.entry'),
+            span => expect(span.k).to.equal(constants.ENTRY),
+            span => expect(span.data.http).to.not.exist
+          ])
+        ));
+  });
+
+  describe('triggered by AWS SDK Lambda invoke function, but tracing is suppressed', function () {
+    const control = prelude.bind(this)({
+      handlerDefinitionPath,
+      trigger: 'invoke-function',
+      instanaEndpointUrl: backendBaseUrl,
+      instanaAgentKey,
+      traceIdContext: 'test-trace-id',
+      spanIdContext: 'test-span-id',
+      traceLevelContext: '0'
+    });
+
+    it('must not trace when suppressed', () =>
+      verify(control, { error: false, expectMetrics: true, expectSpans: false }));
   });
 
   describe('triggered by CloudWatch Events', function () {

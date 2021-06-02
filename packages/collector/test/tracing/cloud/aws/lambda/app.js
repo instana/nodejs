@@ -12,7 +12,7 @@ const express = require('express');
 const logPrefix = `AWS Lambda (${process.pid}):\t`;
 AWS.config.update({ region: 'us-east-2' });
 const lambda = new AWS.Lambda();
-const functionName = process.env.AWS_LAMBDA_FUNCTION_NAME || 'team-nodejs-invoke-function';
+const functionName = process.env.AWS_LAMBDA_FUNCTION_NAME || 'wrapped-async';
 const log = require('@instana/core/test/test_util/log').getLogger(logPrefix);
 
 const operations = {
