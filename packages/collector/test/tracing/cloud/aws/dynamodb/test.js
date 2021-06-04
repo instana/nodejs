@@ -10,12 +10,17 @@ const semver = require('semver');
 const path = require('path');
 const { expect } = require('chai');
 const { fail } = expect;
-const constants = require('@instana/core').tracing.constants;
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('../../../../../../core/test/config');
-const { expectExactlyOneMatching, retry, stringifyItems, delay } = require('../../../../../../core/test/test_util');
+const { retry, stringifyItems, delay } = require('../../../../../../core/test/test_util');
 const ProcessControls = require('../../../../test_util/ProcessControls');
 const globalAgent = require('../../../../globalAgent');
+const {
+  verifyHttpRootEntry,
+  verifyExitSpan,
+  verifyHttpExit
+} = require('@instana/core/test/test_util/common_verifications');
+const { promisifyNonSequentialCases } = require('../promisify_non_sequential');
 
 let tableName = 'nodejs-team';
 
@@ -40,16 +45,17 @@ const withErrorOptions = [false, true];
 
 const requestMethods = ['Callback', 'Async'];
 const availableOperations = [
-  'listTables',
   'createTable',
   'putItem',
+  'listTables',
   'updateItem',
   'getItem',
-  'deleteItem',
   'scan',
   'query',
-  'deleteTable'
+  'deleteItem'
 ];
+
+const getNextCallMethod = require('@instana/core/test/test_util/circular_list').getCircularList(requestMethods);
 
 if (!supportedVersion(process.versions.node)) {
   mochaSuiteFn = describe.skip;
@@ -81,10 +87,17 @@ mochaSuiteFn('tracing/cloud/aws/dynamodb', function () {
 
     ProcessControls.setUpHooksWithRetryTime(retryTime, appControls);
     withErrorOptions.forEach(withError => {
-      requestMethods.forEach(requestMethod => {
-        describe(`getting result with: ${requestMethod}; with error: ${withError ? 'yes' : 'no'}`, () => {
+      if (withError) {
+        describe(`getting result with error: ${withError ? 'yes' : 'no'}`, () => {
+          it(`should instrument ${availableOperations.join(', ')} with error`, () => {
+            return promisifyNonSequentialCases(verify, availableOperations, appControls, withError, getNextCallMethod);
+          });
+        });
+      } else {
+        describe(`getting result with error: ${withError ? 'yes' : 'no'}`, () => {
           availableOperations.forEach(operation => {
-            it(`operation: ${operation}`, async () => {
+            const requestMethod = getNextCallMethod();
+            it(`operation: ${operation}/${requestMethod}`, async () => {
               const withErrorOption = withError ? '?withError=1' : '';
               const apiPath = `/${operation}/${requestMethod}`;
 
@@ -100,17 +113,11 @@ mochaSuiteFn('tracing/cloud/aws/dynamodb', function () {
               if (operation === 'createTable') {
                 await checkTableExistence(tableName, true);
               }
-              if (operation === 'deleteTable') {
-                await checkTableExistence(tableName, false);
-              }
-
-              if (operation !== 'deleteTable') {
-                return verify(appControls, response, apiPath, operation, withError);
-              }
+              return verify(appControls, response, apiPath, operation, withError);
             });
           });
         });
-      });
+      }
     });
 
     function verify(controls, response, apiPath, operation, withError) {
@@ -120,52 +127,22 @@ mochaSuiteFn('tracing/cloud/aws/dynamodb', function () {
     }
 
     function verifySpans(controls, spans, apiPath, operation, withError) {
-      const httpEntry = verifyHttpEntry(spans, apiPath, controls);
-      verifyDynamoDBExit(spans, httpEntry, operation, withError);
+      const httpEntry = verifyHttpRootEntry({ spans, apiPath, pid: String(controls.getPid()) });
+      verifyExitSpan({
+        spanName: 'dynamodb',
+        spans,
+        parent: httpEntry,
+        withError,
+        pid: String(controls.getPid()),
+        extraTests: [
+          span => expect(span.data.dynamodb.op).to.equal(operationsInfo[operation]),
+          span => expect(span.data.dynamodb.table).to.equal(operation !== 'listTables' ? tableName : undefined)
+        ]
+      });
 
       if (!withError) {
-        verifyHttpExit(spans, httpEntry, controls);
+        verifyHttpExit({ spans, parent: httpEntry, pid: String(controls.getPid()) });
       }
-    }
-
-    function verifyHttpEntry(spans, apiPath, controls) {
-      return expectExactlyOneMatching(spans, [
-        span => expect(span.p).to.not.exist,
-        span => expect(span.k).to.equal(constants.ENTRY),
-        span => expect(span.f.e).to.equal(String(controls.getPid())),
-        span => expect(span.f.h).to.equal('agent-stub-uuid'),
-        span => expect(span.n).to.equal('node.http.server'),
-        span => expect(span.data.http.url).to.equal(apiPath)
-      ]);
-    }
-
-    function verifyHttpExit(spans, parentSpan, controls) {
-      return expectExactlyOneMatching(spans, [
-        span => expect(span.t).to.equal(parentSpan.t),
-        span => expect(span.p).to.equal(parentSpan.s),
-        span => expect(span.k).to.equal(constants.EXIT),
-        span => expect(span.f.e).to.equal(String(controls.getPid())),
-        span => expect(span.f.h).to.equal('agent-stub-uuid'),
-        span => expect(span.n).to.equal('node.http.client')
-      ]);
-    }
-
-    function verifyDynamoDBExit(spans, parent, operation, withError) {
-      return expectExactlyOneMatching(spans, [
-        span => expect(span.n).to.equal('dynamodb'),
-        span => expect(span.k).to.equal(constants.EXIT),
-        span => expect(span.t).to.equal(parent.t),
-        span => expect(span.p).to.equal(parent.s),
-        span => expect(span.f.e).to.equal(String(appControls.getPid())),
-        span => expect(span.f.h).to.equal('agent-stub-uuid'),
-        span => expect(span.error).to.not.exist,
-        span => expect(span.ec).to.equal(withError ? 1 : 0),
-        span => expect(span.async).to.not.exist,
-        span => expect(span.data).to.exist,
-        span => expect(span.data.dynamodb).to.be.an('object'),
-        span => expect(span.data.dynamodb.op).to.equal(operationsInfo[operation]),
-        span => expect(span.data.dynamodb.table).to.equal(operation !== 'listTables' ? tableName : undefined)
-      ]);
     }
   });
 
@@ -184,22 +161,21 @@ mochaSuiteFn('tracing/cloud/aws/dynamodb', function () {
 
     ProcessControls.setUpHooksWithRetryTime(retryTime, appControls);
 
-    requestMethods.forEach(requestMethod => {
-      describe(`attempt to get result with: ${requestMethod}`, () => {
-        availableOperations.forEach(operation => {
-          it(`should not trace (${operation})`, async () => {
-            await appControls.sendRequest({
-              method: 'GET',
-              path: `/${operation}/${requestMethod}`
-            });
-            return retry(() => delay(config.getTestTimeout() / 4))
-              .then(() => agentControls.getSpans())
-              .then(spans => {
-                if (spans.length > 0) {
-                  fail(`Unexpected spans (AWS DynamoDB suppressed: ${stringifyItems(spans)}`);
-                }
-              });
+    describe('attempt to get result', () => {
+      availableOperations.slice(1).forEach(operation => {
+        const requestMethod = getNextCallMethod();
+        it(`should not trace (${operation}/${requestMethod})`, async () => {
+          await appControls.sendRequest({
+            method: 'GET',
+            path: `/${operation}/${requestMethod}`
           });
+          return retry(() => delay(config.getTestTimeout() / 4))
+            .then(() => agentControls.getSpans())
+            .then(spans => {
+              if (spans.length > 0) {
+                fail(`Unexpected spans (AWS DynamoDB suppressed: ${stringifyItems(spans)}`);
+              }
+            });
         });
       });
     });
@@ -217,24 +193,23 @@ mochaSuiteFn('tracing/cloud/aws/dynamodb', function () {
 
     ProcessControls.setUpHooksWithRetryTime(retryTime, appControls);
 
-    requestMethods.forEach(requestMethod => {
-      describe(`attempt to get result with: ${requestMethod}`, () => {
-        availableOperations.forEach(operation => {
-          it(`should not trace (${operation})`, async () => {
-            await appControls.sendRequest({
-              suppressTracing: true,
-              method: 'GET',
-              path: `/${operation}/${requestMethod}`
-            });
-
-            return retry(() => delay(config.getTestTimeout() / 4), retryTime)
-              .then(() => agentControls.getSpans())
-              .then(spans => {
-                if (spans.length > 0) {
-                  fail(`Unexpected spans (AWS DynamoDB suppressed: ${stringifyItems(spans)}`);
-                }
-              });
+    describe('attempt to get result', () => {
+      availableOperations.slice(1).forEach(operation => {
+        const requestMethod = getNextCallMethod();
+        it(`should not trace (${operation}/${requestMethod})`, async () => {
+          await appControls.sendRequest({
+            suppressTracing: true,
+            method: 'GET',
+            path: `/${operation}/${requestMethod}`
           });
+
+          return retry(() => delay(config.getTestTimeout() / 4), retryTime)
+            .then(() => agentControls.getSpans())
+            .then(spans => {
+              if (spans.length > 0) {
+                fail(`Unexpected spans (AWS DynamoDB suppressed: ${stringifyItems(spans)}`);
+              }
+            });
         });
       });
     });

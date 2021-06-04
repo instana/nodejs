@@ -22,6 +22,11 @@ const {
 const ProcessControls = require('../../../../test_util/ProcessControls');
 const globalAgent = require('../../../../globalAgent');
 const { sendMessageWithLegacyHeaders } = require('./sendNonInstrumented');
+const {
+  verifyHttpRootEntry,
+  verifyHttpExit,
+  verifyExitSpan
+} = require('@instana/core/test/test_util/common_verifications');
 
 const queueUrlPrefix = process.env.SQS_QUEUE_URL_PREFIX || 'https://sqs.us-east-2.amazonaws.com/410797082306/';
 
@@ -37,6 +42,9 @@ let mochaSuiteFn;
 
 const sendingMethods = ['callback', 'promise'];
 const receivingMethods = ['callback', 'promise', 'async'];
+
+const getNextSendMethod = require('@instana/core/test/test_util/circular_list').getCircularList(sendingMethods);
+const getNextReceiveMethod = require('@instana/core/test/test_util/circular_list').getCircularList(receivingMethods);
 
 if (!supportedVersion(process.versions.node)) {
   mochaSuiteFn = describe.skip;
@@ -78,20 +86,19 @@ mochaSuiteFn('tracing/cloud/aws/sqs', function () {
 
         ProcessControls.setUpHooksWithRetryTime(retryTime, receiverControls);
 
-        sendingMethods.forEach(sqsSendMethod => {
+        [false, 'sender'].forEach(withError => {
+          const sqsSendMethod = getNextSendMethod();
           const apiPath = `/send-${sqsSendMethod}`;
-          [false, 'sender'].forEach(withError => {
-            const urlWithParams = withError ? apiPath + '?withError=true' : apiPath;
+          const urlWithParams = withError ? apiPath + '?withError=true' : apiPath;
 
-            it(`send(${sqsSendMethod}); receive(${sqsReceiveMethod}); error: ${!!withError}`, async () => {
-              const response = await senderControls.sendRequest({
-                method: 'POST',
-                path: urlWithParams,
-                simple: withError !== 'sender'
-              });
-
-              return verify(receiverControls, response, apiPath, withError);
+          it(`send(${sqsSendMethod}); receive(${sqsReceiveMethod}); error: ${!!withError}`, async () => {
+            const response = await senderControls.sendRequest({
+              method: 'POST',
+              path: urlWithParams,
+              simple: withError !== 'sender'
             });
+
+            return verify(receiverControls, response, apiPath, withError);
           });
         });
 
@@ -151,17 +158,16 @@ mochaSuiteFn('tracing/cloud/aws/sqs', function () {
 
         ProcessControls.setUpHooksWithRetryTime(retryTime, receiverControls);
 
-        sendingMethods.forEach(sqsSendMethod => {
-          const apiPath = `/send-${sqsSendMethod}`;
+        const sqsSendMethod = getNextSendMethod();
+        const apiPath = `/send-${sqsSendMethod}`;
 
-          it(`sending(${sqsSendMethod}); receiving(${sqsReceiveMethod})`, async () => {
-            const response = await senderControls.sendRequest({
-              method: 'POST',
-              path: `${apiPath}?isBatch=1`
-            });
-
-            return verify(receiverControls, response, apiPath, false, true);
+        it(`sending(${sqsSendMethod}); receiving(${sqsReceiveMethod})`, async () => {
+          const response = await senderControls.sendRequest({
+            method: 'POST',
+            path: `${apiPath}?isBatch=1`
           });
+
+          return verify(receiverControls, response, apiPath, false, true);
         });
       });
     });
@@ -184,52 +190,22 @@ mochaSuiteFn('tracing/cloud/aws/sqs', function () {
     }
 
     function verifySpans(receiverControls, spans, apiPath, messageId, withError, isBatch) {
-      const httpEntry = verifyHttpEntry(spans, apiPath);
-      const sqsExit = verifySQSExit(spans, httpEntry, messageId, withError);
+      const httpEntry = verifyHttpRootEntry({ spans, apiPath, pid: String(senderControls.getPid()) });
+      const sqsExit = verifyExitSpan({
+        spanName: 'sqs',
+        spans,
+        parent: httpEntry,
+        withError,
+        pid: String(senderControls.getPid()),
+        extraTests: [
+          span => expect(span.data.sqs.sort).to.equal('exit'),
+          span => expect(span.data.sqs.queue).to.equal(queueURL)
+        ]
+      });
       if (withError !== 'publisher') {
         const sqsEntry = verifySQSEntry(receiverControls, spans, sqsExit, messageId, withError, isBatch);
-        verifyHttpExit(receiverControls, spans, sqsEntry);
+        verifyHttpExit({ spans, parent: sqsEntry, pid: String(receiverControls.getPid()) });
       }
-    }
-
-    function verifyHttpEntry(spans, apiPath) {
-      return expectExactlyOneMatching(spans, [
-        span => expect(span.p).to.not.exist,
-        span => expect(span.k).to.equal(constants.ENTRY),
-        span => expect(span.f.e).to.equal(String(senderControls.getPid())),
-        span => expect(span.f.h).to.equal('agent-stub-uuid'),
-        span => expect(span.n).to.equal('node.http.server'),
-        span => expect(span.data.http.url).to.equal(apiPath)
-      ]);
-    }
-
-    function verifyHttpExit(receiverControls, spans, parentSpan) {
-      return expectExactlyOneMatching(spans, [
-        span => expect(span.t).to.equal(parentSpan.t),
-        span => expect(span.p).to.equal(parentSpan.s),
-        span => expect(span.k).to.equal(constants.EXIT),
-        span => expect(span.f.e).to.equal(String(receiverControls.getPid())),
-        span => expect(span.f.h).to.equal('agent-stub-uuid'),
-        span => expect(span.n).to.equal('node.http.client')
-      ]);
-    }
-
-    function verifySQSExit(spans, parent, messageId, withError) {
-      return expectExactlyOneMatching(spans, [
-        span => expect(span.n).to.equal('sqs'),
-        span => expect(span.k).to.equal(constants.EXIT),
-        span => expect(span.t).to.equal(parent.t),
-        span => expect(span.p).to.equal(parent.s),
-        span => expect(span.f.e).to.equal(String(senderControls.getPid())),
-        span => expect(span.f.h).to.equal('agent-stub-uuid'),
-        span => expect(span.error).to.not.exist,
-        span => expect(span.ec).to.equal(withError ? 1 : 0),
-        span => expect(span.async).to.not.exist,
-        span => expect(span.data).to.exist,
-        span => expect(span.data.sqs).to.be.an('object'),
-        span => expect(span.data.sqs.sort).to.equal('exit'),
-        span => expect(span.data.sqs.queue).to.equal(queueURL)
-      ]);
     }
 
     function verifySQSEntry(receiverControls, spans, parent, messageId, withError, isBatch) {
@@ -278,38 +254,36 @@ mochaSuiteFn('tracing/cloud/aws/sqs', function () {
 
     ProcessControls.setUpHooksWithRetryTime(retryTime, senderControls);
 
-    receivingMethods.forEach(receivingMethod => {
-      describe('sending and receiving', () => {
-        const receiverControls = new ProcessControls({
-          appPath: path.join(__dirname, 'receiveMessage'),
-          port: 3216,
-          useGlobalAgent: true,
-          tracingEnabled: false,
-          env: {
-            SQS_RECEIVE_METHOD: receivingMethod,
-            AWS_SQS_QUEUE_URL: queueURL
-          }
+    const receivingMethod = getNextReceiveMethod();
+    describe('sending and receiving', () => {
+      const receiverControls = new ProcessControls({
+        appPath: path.join(__dirname, 'receiveMessage'),
+        port: 3216,
+        useGlobalAgent: true,
+        tracingEnabled: false,
+        env: {
+          SQS_RECEIVE_METHOD: receivingMethod,
+          AWS_SQS_QUEUE_URL: queueURL
+        }
+      });
+
+      ProcessControls.setUpHooksWithRetryTime(retryTime, receiverControls);
+
+      const sendingMethod = getNextSendMethod();
+      it(`should not trace for sending(${sendingMethod}) / receiving(${receivingMethod})`, async () => {
+        const response = await senderControls.sendRequest({
+          method: 'POST',
+          path: `/send-${sendingMethod}`
         });
 
-        ProcessControls.setUpHooksWithRetryTime(retryTime, receiverControls);
-
-        sendingMethods.forEach(sendingMethod => {
-          it(`should not trace for sending(${sendingMethod}) / receiving(${receivingMethod})`, async () => {
-            const response = await senderControls.sendRequest({
-              method: 'POST',
-              path: `/send-${sendingMethod}`
-            });
-
-            return retry(() => verifyResponseAndMessage(response, receiverControls), retryTime)
-              .then(() => delay(config.getTestTimeout() / 4))
-              .then(() => agentControls.getSpans())
-              .then(spans => {
-                if (spans.length > 0) {
-                  fail(`Unexpected spans (AWS SQS suppressed: ${stringifyItems(spans)}`);
-                }
-              });
+        return retry(() => verifyResponseAndMessage(response, receiverControls), retryTime)
+          .then(() => delay(config.getTestTimeout() / 4))
+          .then(() => agentControls.getSpans())
+          .then(spans => {
+            if (spans.length > 0) {
+              fail(`Unexpected spans (AWS SQS suppressed: ${stringifyItems(spans)}`);
+            }
           });
-        });
       });
     });
   });
@@ -326,42 +300,40 @@ mochaSuiteFn('tracing/cloud/aws/sqs', function () {
 
     ProcessControls.setUpHooksWithRetryTime(retryTime, senderControls);
 
-    receivingMethods.forEach(receivingMethod => {
-      describe('tracing suppressed', () => {
-        const receiverControls = new ProcessControls({
-          appPath: path.join(__dirname, 'receiveMessage'),
-          port: 3216,
-          useGlobalAgent: true,
-          env: {
-            SQS_RECEIVE_METHOD: receivingMethod,
-            AWS_SQS_QUEUE_URL: queueURL
+    const receivingMethod = getNextReceiveMethod();
+    describe('tracing suppressed', () => {
+      const receiverControls = new ProcessControls({
+        appPath: path.join(__dirname, 'receiveMessage'),
+        port: 3216,
+        useGlobalAgent: true,
+        env: {
+          SQS_RECEIVE_METHOD: receivingMethod,
+          AWS_SQS_QUEUE_URL: queueURL
+        }
+      });
+
+      ProcessControls.setUpHooksWithRetryTime(retryTime, receiverControls);
+
+      const sendingMethod = getNextSendMethod();
+      it(`doesn't trace when sending(${sendingMethod}) and receiving(${receivingMethod})`, async () => {
+        const response = await senderControls.sendRequest({
+          method: 'POST',
+          path: `/send-${sendingMethod}`,
+          headers: {
+            'X-INSTANA-L': '0'
           }
         });
 
-        ProcessControls.setUpHooksWithRetryTime(retryTime, receiverControls);
-
-        sendingMethods.forEach(sendingMethod => {
-          it(`doesn't trace when sending(${sendingMethod}) and receiving(${receivingMethod})`, async () => {
-            const response = await senderControls.sendRequest({
-              method: 'POST',
-              path: `/send-${sendingMethod}`,
-              headers: {
-                'X-INSTANA-L': '0'
-              }
-            });
-
-            return retry(() => {
-              verifyResponseAndMessage(response, receiverControls);
-            }, retryTime)
-              .then(() => delay(config.getTestTimeout() / 4))
-              .then(() => agentControls.getSpans())
-              .then(spans => {
-                if (spans.length > 0) {
-                  fail(`Unexpected spans (AWS SQS suppressed: ${stringifyItems(spans)}`);
-                }
-              });
+        return retry(() => {
+          verifyResponseAndMessage(response, receiverControls);
+        }, retryTime)
+          .then(() => delay(config.getTestTimeout() / 4))
+          .then(() => agentControls.getSpans())
+          .then(spans => {
+            if (spans.length > 0) {
+              fail(`Unexpected spans (AWS SQS suppressed: ${stringifyItems(spans)}`);
+            }
           });
-        });
       });
     });
   });

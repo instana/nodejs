@@ -8,12 +8,13 @@
 const path = require('path');
 const { expect } = require('chai');
 const { fail } = expect;
-const constants = require('@instana/core').tracing.constants;
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('../../../../../core/test/config');
-const { expectExactlyOneMatching, retry, stringifyItems, delay } = require('../../../../../core/test/test_util');
+const { retry, stringifyItems, delay } = require('../../../../../core/test/test_util');
 const ProcessControls = require('../../../test_util/ProcessControls');
 const globalAgent = require('../../../globalAgent');
+const { verifyHttpRootEntry, verifyExitSpan } = require('@instana/core/test/test_util/common_verifications');
+const { promisifyNonSequentialCases } = require('./promisify_non_sequential');
 
 const functionName = 'team-nodejs-invoke-function';
 let mochaSuiteFn;
@@ -22,11 +23,7 @@ const withErrorOptions = [false, true];
 const requestMethods = ['Callback', 'Promise', 'Async'];
 const availableOperations = ['invoke', 'listBuckets', 'listTables', 'listStreams'];
 
-let roundRobinIndex = 0;
-function getMethodRoundRobin() {
-  const len = requestMethods.length;
-  return requestMethods[roundRobinIndex++ % len];
-}
+const getNextCallMethod = require('@instana/core/test/test_util/circular_list').getCircularList(requestMethods);
 
 function getSpanName(operation) {
   switch (operation) {
@@ -66,19 +63,9 @@ mochaSuiteFn('tracing/cloud/aws/combined-products', function () {
     });
     ProcessControls.setUpHooksWithRetryTime(retryTime, appControls);
     withErrorOptions.forEach(withError => {
-      describe(`getting result; with error: ${withError ? 'yes' : 'no'}`, () => {
-        availableOperations.forEach(operation => {
-          const requestMethod = getMethodRoundRobin();
-          it(`operation: ${operation}/${requestMethod}`, async () => {
-            const withErrorOption = withError ? '?withError=1' : '';
-            const apiPath = `/${operation}/${requestMethod}`;
-            const response = await appControls.sendRequest({
-              method: 'GET',
-              path: `${apiPath}${withErrorOption}`,
-              simple: withError === false
-            });
-            return verify(appControls, response, apiPath, operation, withError);
-          });
+      describe(`getting result with error: ${withError ? 'yes' : 'no'}`, () => {
+        it(`should instrument ${availableOperations.join(', ')} ${withError ? 'with' : 'without'} errors`, () => {
+          return promisifyNonSequentialCases(verify, availableOperations, appControls, withError, getNextCallMethod);
         });
       });
     });
@@ -88,47 +75,30 @@ mochaSuiteFn('tracing/cloud/aws/combined-products', function () {
       }, retryTime);
     }
     function verifySpans(controls, spans, apiPath, operation, withError) {
-      const httpEntry = verifyHttpEntry(spans, apiPath, controls);
-      verifyAWSProductExit(spans, httpEntry, operation, withError);
-    }
-    function verifyHttpEntry(spans, apiPath, controls) {
-      return expectExactlyOneMatching(spans, [
-        span => expect(span.p).to.not.exist,
-        span => expect(span.k).to.equal(constants.ENTRY),
-        span => expect(span.f.e).to.equal(String(controls.getPid())),
-        span => expect(span.f.h).to.equal('agent-stub-uuid'),
-        span => expect(span.n).to.equal('node.http.server'),
-        span => expect(span.data.http.url).to.equal(apiPath)
-      ]);
-    }
-    function verifyAWSProductExit(spans, parent, operation, withError) {
-      return expectExactlyOneMatching(spans, [
-        span => expect(span.n).to.equal(getSpanName(operation)),
-        span => expect(span.k).to.equal(constants.EXIT),
-        span => expect(span.t).to.equal(parent.t),
-        span => expect(span.p).to.equal(parent.s),
-        span => expect(span.f.e).to.equal(String(appControls.getPid())),
-        span => expect(span.f.h).to.equal('agent-stub-uuid'),
-        span => expect(span.error).to.not.exist,
-        span => expect(span.ec).to.equal(withError ? 1 : 0),
-        span => expect(span.async).to.not.exist,
-        span => expect(span.data).to.exist,
-        span => expect(span.data[getSpanName(operation)]).to.be.an('object'),
-        span => {
-          if (operation === 'invoke') {
-            expect(span.data[getSpanName(operation)].function).to.equal(functionName);
-            expect(span.data[getSpanName(operation)].type).to.equal(
-              span.data[getSpanName(operation)].type ? 'RequestResponse' : undefined
-            );
-          } else if (operation === 'listBuckets') {
-            expect(span.data.s3.op).to.exist;
-          } else if (operation === 'listTables') {
-            expect(span.data.dynamodb.op).to.equal('list');
-          } else if (operation === 'listStreams') {
-            expect(span.data.kinesis.op).to.equal('listStreams');
+      const httpEntry = verifyHttpRootEntry({ spans, apiPath, pid: String(controls.getPid()) });
+      verifyExitSpan({
+        spanName: getSpanName(operation),
+        spans,
+        parent: httpEntry,
+        withError,
+        pid: String(appControls.getPid()),
+        extraTests: [
+          span => {
+            if (operation === 'invoke') {
+              expect(span.data[getSpanName(operation)].function).to.equal(functionName);
+              expect(span.data[getSpanName(operation)].type).to.equal(
+                span.data[getSpanName(operation)].type ? 'RequestResponse' : undefined
+              );
+            } else if (operation === 'listBuckets') {
+              expect(span.data.s3.op).to.exist;
+            } else if (operation === 'listTables') {
+              expect(span.data.dynamodb.op).to.equal('list');
+            } else if (operation === 'listStreams') {
+              expect(span.data.kinesis.op).to.equal('listStreams');
+            }
           }
-        }
-      ]);
+        ]
+      });
     }
   });
 
@@ -145,21 +115,22 @@ mochaSuiteFn('tracing/cloud/aws/combined-products', function () {
     });
     ProcessControls.setUpHooksWithRetryTime(retryTime, appControls);
     describe('attempt to get result', () => {
-      availableOperations.forEach(operation => {
-        const requestMethod = getMethodRoundRobin();
-        it(`should not trace ${operation}/${requestMethod}`, async () => {
-          await appControls.sendRequest({
-            method: 'GET',
-            path: `/${operation}/${requestMethod}`
-          });
-          return retry(() => delay(config.getTestTimeout() / 4))
-            .then(() => agentControls.getSpans())
-            .then(spans => {
-              if (spans.length > 0) {
-                fail(`Unexpected spans AWS Lambda invoke function suppressed: ${stringifyItems(spans)}`);
-              }
-            });
-        });
+      it(`should not trace ${availableOperations.join(', ')}`, () => {
+        return promisifyNonSequentialCases(
+          () => {
+            return retry(() => delay(config.getTestTimeout() / 4))
+              .then(() => agentControls.getSpans())
+              .then(spans => {
+                if (spans.length > 0) {
+                  fail(`Unexpected spans suppressed: ${stringifyItems(spans)}`);
+                }
+              });
+          },
+          availableOperations,
+          appControls,
+          false,
+          getNextCallMethod
+        );
       });
     });
   });
@@ -175,22 +146,23 @@ mochaSuiteFn('tracing/cloud/aws/combined-products', function () {
     });
     ProcessControls.setUpHooksWithRetryTime(retryTime, appControls);
     describe('attempt to get result', () => {
-      availableOperations.forEach(operation => {
-        const requestMethod = getMethodRoundRobin();
-        it(`should not trace ${operation}/${requestMethod}`, async () => {
-          await appControls.sendRequest({
-            suppressTracing: true,
-            method: 'GET',
-            path: `/${operation}/${requestMethod}`
-          });
-          return retry(() => delay(config.getTestTimeout() / 4), retryTime)
-            .then(() => agentControls.getSpans())
-            .then(spans => {
-              if (spans.length > 0) {
-                fail(`Unexpected spans AWS Lambda invoke function suppressed: ${stringifyItems(spans)}`);
-              }
-            });
-        });
+      it(`should not trace ${availableOperations.join(', ')}`, () => {
+        return promisifyNonSequentialCases(
+          () => {
+            return retry(() => delay(config.getTestTimeout() / 4), retryTime)
+              .then(() => agentControls.getSpans())
+              .then(spans => {
+                if (spans.length > 0) {
+                  fail(`Unexpected spans suppressed: ${stringifyItems(spans)}`);
+                }
+              });
+          },
+          availableOperations,
+          appControls,
+          false,
+          getNextCallMethod,
+          { suppressTracing: true }
+        );
       });
     });
   });

@@ -35,13 +35,7 @@ function getJobData(testId, bulkIndex, withError) {
   };
 }
 
-function log() {
-  /* eslint-disable no-console */
-  const args = Array.prototype.slice.call(arguments);
-  args[0] = `${logPrefix}${args[0]}`;
-  console.log.apply(console, args);
-  /* eslint-enable no-console */
-}
+const log = require('@instana/core/test/test_util/log').getLogger(logPrefix);
 
 // curl -X POST "http://127.0.0.1:3215/send?jobName=true&bulk=false&repeat=true"
 app.post('/send', (request, response) => {

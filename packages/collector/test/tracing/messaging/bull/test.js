@@ -33,7 +33,11 @@ if (process.env.BULL_QUEUE_NAME) {
 let mochaSuiteFn;
 
 const sendingOptions = ['default', 'bulk=true', 'repeat=true'];
-const receivingMethods = ['Process', 'Promise', 'Callback'];
+// We don't need to test the callback case, as the Process case is handled as Callback already
+const receivingMethods = ['Process', 'Promise'];
+
+const getNextSendingOption = require('@instana/core/test/test_util/circular_list').getCircularList(sendingOptions);
+const getNextReceivingMethod = require('@instana/core/test/test_util/circular_list').getCircularList(receivingMethods);
 
 // Bull relies on EventEmitter.prototype.off, which is available from Node 10 on
 if (!supportedVersion(process.versions.node) || semver.lt(process.version, '10.0.0')) {
@@ -261,49 +265,48 @@ mochaSuiteFn('tracing/messaging/bull', function () {
 
     ProcessControls.setUpHooksWithRetryTime(retryTime, senderControls);
 
-    receivingMethods.forEach(receiveMethod => {
-      describe('sending and receiving', () => {
-        const receiverControls = new ProcessControls({
-          appPath: path.join(__dirname, 'receiver'),
-          port: 3216,
-          useGlobalAgent: true,
-          tracingEnabled: false,
-          env: {
-            REDIS_SERVER: 'redis://127.0.0.1:6379',
-            BULL_QUEUE_NAME: queueName,
-            BULL_RECEIVE_TYPE: receiveMethod,
-            BULL_JOB_NAME: 'steve',
-            BULL_JOB_NAME_ENABLED: 'true',
-            BULL_CONCURRENCY_ENABLED: 'true'
-          }
-        });
+    const receiveMethod = getNextReceivingMethod();
+    describe('sending and receiving', () => {
+      const receiverControls = new ProcessControls({
+        appPath: path.join(__dirname, 'receiver'),
+        port: 3216,
+        useGlobalAgent: true,
+        tracingEnabled: false,
+        env: {
+          REDIS_SERVER: 'redis://127.0.0.1:6379',
+          BULL_QUEUE_NAME: queueName,
+          BULL_RECEIVE_TYPE: receiveMethod,
+          BULL_JOB_NAME: 'steve',
+          BULL_JOB_NAME_ENABLED: 'true',
+          BULL_CONCURRENCY_ENABLED: 'true'
+        }
+      });
 
-        ProcessControls.setUpHooksWithRetryTime(retryTime, receiverControls);
+      ProcessControls.setUpHooksWithRetryTime(retryTime, receiverControls);
 
-        const testId = uuid();
+      const testId = uuid();
 
-        sendingOptions.forEach(sendOption => {
-          const isRepeatable = sendOption === 'repeat=true';
-          const isBulk = sendOption === 'bulk=true';
+      sendingOptions.forEach(sendOption => {
+        const isRepeatable = sendOption === 'repeat=true';
+        const isBulk = sendOption === 'bulk=true';
 
-          const apiPath = `/send?jobName=true&${sendOption}&testId=${testId}`;
+        const apiPath = `/send?jobName=true&${sendOption}&testId=${testId}`;
 
-          it(`should not trace for sending(${sendOption}) / receiving(${receiveMethod})`, async () => {
-            const urlWithParams = apiPath;
-            const response = await senderControls.sendRequest({
-              method: 'POST',
-              path: urlWithParams
-            });
-
-            return retry(() => verifyResponseAndJobProcessing({ response, testId, isRepeatable, isBulk }), retryTime)
-              .then(() => delay(config.getTestTimeout() / 4))
-              .then(() => agentControls.getSpans())
-              .then(spans => {
-                if (spans.length > 0) {
-                  fail(`Unexpected spans (Bull suppressed: ${stringifyItems(spans)}`);
-                }
-              });
+        it(`should not trace for sending(${sendOption}) / receiving(${receiveMethod})`, async () => {
+          const urlWithParams = apiPath;
+          const response = await senderControls.sendRequest({
+            method: 'POST',
+            path: urlWithParams
           });
+
+          return retry(() => verifyResponseAndJobProcessing({ response, testId, isRepeatable, isBulk }), retryTime)
+            .then(() => delay(config.getTestTimeout() / 4))
+            .then(() => agentControls.getSpans())
+            .then(spans => {
+              if (spans.length > 0) {
+                fail(`Unexpected spans (Bull suppressed: ${stringifyItems(spans)}`);
+              }
+            });
         });
       });
     });
@@ -323,52 +326,50 @@ mochaSuiteFn('tracing/messaging/bull', function () {
 
     ProcessControls.setUpHooksWithRetryTime(retryTime, senderControls);
 
-    receivingMethods.forEach(receiveMethod => {
-      describe('tracing suppressed', () => {
-        const receiverControls = new ProcessControls({
-          appPath: path.join(__dirname, 'receiver'),
-          port: 3216,
-          useGlobalAgent: true,
-          env: {
-            REDIS_SERVER: 'redis://127.0.0.1:6379',
-            BULL_QUEUE_NAME: queueName,
-            BULL_RECEIVE_TYPE: receiveMethod,
-            BULL_JOB_NAME: 'steve',
-            BULL_JOB_NAME_ENABLED: 'true',
-            BULL_CONCURRENCY_ENABLED: 'true'
-          }
+    const receiveMethod = getNextReceivingMethod();
+    describe('tracing suppressed', () => {
+      const receiverControls = new ProcessControls({
+        appPath: path.join(__dirname, 'receiver'),
+        port: 3216,
+        useGlobalAgent: true,
+        env: {
+          REDIS_SERVER: 'redis://127.0.0.1:6379',
+          BULL_QUEUE_NAME: queueName,
+          BULL_RECEIVE_TYPE: receiveMethod,
+          BULL_JOB_NAME: 'steve',
+          BULL_JOB_NAME_ENABLED: 'true',
+          BULL_CONCURRENCY_ENABLED: 'true'
+        }
+      });
+
+      ProcessControls.setUpHooksWithRetryTime(retryTime, receiverControls);
+
+      const testId = uuid();
+
+      const sendOption = getNextSendingOption();
+      const isRepeatable = sendOption === 'repeat=true';
+      const isBulk = sendOption === 'bulk=true';
+
+      const apiPath = `/send?jobName=true&${sendOption}&testId=${testId}`;
+      it(`doesn't trace when sending(${sendOption}) and receiving(${receiveMethod})`, async () => {
+        const urlWithParams = apiPath;
+
+        const response = await senderControls.sendRequest({
+          method: 'POST',
+          path: urlWithParams,
+          suppressTracing: true
         });
 
-        ProcessControls.setUpHooksWithRetryTime(retryTime, receiverControls);
-
-        const testId = uuid();
-
-        sendingOptions.forEach(sendOption => {
-          const isRepeatable = sendOption === 'repeat=true';
-          const isBulk = sendOption === 'bulk=true';
-
-          const apiPath = `/send?jobName=true&${sendOption}&testId=${testId}`;
-          it(`doesn't trace when sending(${sendOption}) and receiving(${receiveMethod})`, async () => {
-            const urlWithParams = apiPath;
-
-            const response = await senderControls.sendRequest({
-              method: 'POST',
-              path: urlWithParams,
-              suppressTracing: true
-            });
-
-            return retry(async () => {
-              await verifyResponseAndJobProcessing({ response, testId, isRepeatable, isBulk });
-            }, retryTime)
-              .then(() => delay(config.getTestTimeout() / 4))
-              .then(() => agentControls.getSpans())
-              .then(spans => {
-                if (spans.length > 0) {
-                  fail(`Unexpected spans (Bull suppressed: ${stringifyItems(spans)}`);
-                }
-              });
+        return retry(async () => {
+          await verifyResponseAndJobProcessing({ response, testId, isRepeatable, isBulk });
+        }, retryTime)
+          .then(() => delay(config.getTestTimeout() / 4))
+          .then(() => agentControls.getSpans())
+          .then(spans => {
+            if (spans.length > 0) {
+              fail(`Unexpected spans (Bull suppressed: ${stringifyItems(spans)}`);
+            }
           });
-        });
       });
     });
   });
