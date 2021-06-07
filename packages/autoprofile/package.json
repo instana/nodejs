@@ -38,13 +38,14 @@
     "async": "^3.2.0",
     "eslint": "^7.27.0",
     "mkdirp": "^1.0.4",
-    "mocha": "^7.2.0"
+    "mocha": "^7.2.0",
+    "semver": "^5.7.1"
   },
   "main": "index.js",
   "files": [
     "src",
     "lib",
-    "addons",
+    "addons/linux",
     "binding.gyp",
     "index.js",
     "node-gyp-fallback.js",

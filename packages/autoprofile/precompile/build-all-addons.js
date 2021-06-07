@@ -7,12 +7,16 @@
 'use strict';
 
 const os = require('os');
+const path = require('path');
 const { copyFileSync, existsSync, mkdirSync } = require('fs');
 const { GLIBC, MUSL } = require('detect-libc');
 
 const buildSingleAddOn = require('./build-single-addon');
 const prepareDockerImages = require('./prepare-docker-images');
 const buildOnDocker = require('./build-on-docker');
+
+// Make packages/autoprofile the current working dir.
+process.chdir(path.join(__dirname, '..'));
 
 const PLATFORMS = ['linux'];
 
@@ -26,13 +30,15 @@ if (os.platform() === 'darwin') {
 
 const LIBC_FAMILIES = [GLIBC, MUSL];
 
+// Maintenance Note:
+// This should be kept in sync with native-dep-packs/rebuild-precompiled-addons.sh -> ABI_VERSIONS.
 const ABI_VERSIONS = {
-  48: '6.17.1',
   57: '8.17.0',
-  64: '10.23.0',
-  72: '12.20.0',
-  83: '14.15.1',
-  88: '15.3.0'
+  64: '10.24.1',
+  72: '12.22.1',
+  83: '14.17.0',
+  88: '15.14.0',
+  93: '16.3.0'
 };
 
 function buildForPlatform(platform) {
@@ -54,10 +60,6 @@ function buildForAllAbis(platform, family) {
 
 function buildOnHostOrDocker(platform, family, abi, version) {
   if (platform === 'darwin') {
-    if (abi < 57) {
-      // Do not compile older versions for MacOS.
-      return;
-    }
     buildSingleAddOn(abi, version);
   } else if (platform === 'linux') {
     buildOnDocker(platform, family, abi, version);

@@ -10,6 +10,7 @@ const { copyFileSync, existsSync } = require('fs');
 const { sync: mkdirpSync } = require('mkdirp');
 const path = require('path');
 const os = require('os');
+const semver = require('semver');
 
 module.exports = exports = function buildSingleAddOn(abi, version) {
   const platform = os.platform();
@@ -29,8 +30,17 @@ module.exports = exports = function buildSingleAddOn(abi, version) {
     mkdirpSync(addonDir);
   }
 
-  execSync(`node node_modules/node-gyp/bin/node-gyp.js rebuild --target=${version} --arch=x64`, {
-    cwd: path.join(__dirname, '..'),
+  let darwinNodeJs10Fix = '';
+  if (platform === 'darwin' && semver.gte(version, '10.0.0') && semver.lt(version, '12.0.0')) {
+    darwinNodeJs10Fix = '--build_v8_with_gn=false';
+  }
+
+  const command = `node node_modules/node-gyp/bin/node-gyp.js rebuild --target=${version} ${darwinNodeJs10Fix} --arch=x64`;
+  const cwd = path.join(__dirname, '..');
+
+  console.log(`Running "${command}" in directory "${cwd}".`);
+  execSync(command, {
+    cwd,
     stdio: 'inherit'
   });
   copyFileSync('build/Release/autoprofile-addon.node', addonPath);
