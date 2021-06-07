@@ -137,7 +137,7 @@ shared: &shared
         key: v3-shared-metrics-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "packages/shared-metrics/package-lock.json" }}
 
     # Only run audit with the most recent Node.js version - one Node version is enough.
-    - run: '([[ $(node -v) =~ ^v14.*$ ]] && npm run audit) || [[ ! $(node -v) =~ ^v14.*$ ]]'
+    - run: '([[ $(node -v) =~ ^v16.*$ ]] && npm run audit) || [[ ! $(node -v) =~ ^v16.*$ ]]'
     # Run linting first, we don't want to wait ages for the test suite to finish only to end the CI job with a linting
     # error.
     - run: npm run lint
