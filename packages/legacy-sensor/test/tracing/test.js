@@ -145,7 +145,13 @@ describe('legacy sensor/tracing', function () {
               span => expect(span.k).to.equal(constants.EXIT),
               span => expect(span.ec).to.equal(1),
               span => expect(span.data.http.url).to.match(/ha-te-te-peh/),
-              span => expect(span.data.http.error).to.match(/Protocol .* not supported./),
+              span => {
+                if (semver.gte(process.version, '16.0.0')) {
+                  expect(span.data.http.error).to.match(/Invalid URL/);
+                } else {
+                  expect(span.data.http.error).to.match(/Protocol .* not supported./);
+                }
+              },
               span => expect(span.t).to.equal(entrySpan.t),
               span => expect(span.p).to.equal(entrySpan.s)
             ]);
