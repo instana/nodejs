@@ -57,6 +57,7 @@
   "license": "MIT",
   "dependencies": {
     "@instana/core": "1.124.0",
+    "agent-base": "^6.0.2",
     "https-proxy-agent": "^5.0.0",
     "semver": "^7.3.5"
   },
