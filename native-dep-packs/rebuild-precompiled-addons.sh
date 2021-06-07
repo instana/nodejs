@@ -8,15 +8,17 @@ set -eo pipefail
 
 cd `dirname $BASH_SOURCE`
 
+# Maintenance Note:
+# This should be kept in sync with packages/autoprofile/precompile/build-all-addons.js-> ABI_VERSIONS.
 declare -A ABI_VERSIONS=( \
-  ["48"]="6.17.1" \
   ["57"]="8.17.0" \
-  ["64"]="10.23.0" \
-  ["72"]="12.20.0" \
-  ["83"]="14.15.1" \
-  ["88"]="15.3.0" \
+  ["64"]="10.24.1" \
+  ["72"]="12.22.1" \
+  ["83"]="14.17.0" \
+  ["88"]="15.14.0" \
+  ["93"]="16.3.0" \
 )
-# Note: We do not provide for older non-LTS versions (Node.js 7, 9, 11, 13).
+# Note: We do not provide for older non-LTS versions (Node.js 9, 11, 13).
 
 LIBC_VARIANTS=( \
   "glibc" \
@@ -44,8 +46,8 @@ fi
 # MacOS #
 #########
 
-# Precompiled versions of the native addons are neither added to version control nor are they part of the published
-# packages. They are only built locally for test purposes.
+# Precompiled versions of the native addons for MacOS are neither added to version control nor are they part of the
+# published packages. They are only built locally for test purposes.
 
 
 if [[ ! -z "$BUILD_FOR_MACOS" ]]; then
@@ -64,11 +66,6 @@ if [[ ! -z "$BUILD_FOR_MACOS" ]]; then
     rm -rf ../packages/shared-metrics/addons/darwin
 
     for ABI_VERSION in ${!ABI_VERSIONS[@]}; do
-      if [[ $ABI_VERSION = 48 ]]; then
-        echo "Skipping ABI version 48 for Darwin."
-        continue
-      fi
-
       NODEJS_VERSION=${ABI_VERSIONS[$ABI_VERSION]}
       buildAndCopyModulesDarwin $ABI_VERSION $NODEJS_VERSION
     done
