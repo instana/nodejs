@@ -14,8 +14,10 @@ const ProcessControls = require('../../../collector/test/test_util/ProcessContro
 
 const config = require('../../../core/test/config');
 const testUtils = require('../../../core/test/test_util');
+const AgentStubControls = require('../../../collector/test/apps/agentStubControls').AgentStubControls;
 
-const serverPort = 3216;
+const clientPort = 5215;
+const serverPort = 5216;
 
 let agentControls;
 
@@ -24,7 +26,7 @@ describe('legacy sensor/tracing', function () {
     return;
   }
 
-  agentControls = require('../../../collector/test/apps/agentStubControls');
+  agentControls = new AgentStubControls(5210);
 
   this.timeout(config.getTestTimeout() * 2);
 
@@ -38,6 +40,7 @@ describe('legacy sensor/tracing', function () {
 
   const clientControls = new ProcessControls({
     appPath: path.join(__dirname, 'clientApp'),
+    port: clientPort,
     agentControls,
     env: {
       SERVER_PORT: serverPort
