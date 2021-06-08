@@ -89,9 +89,16 @@ function registerTests(useHttps) {
           })
           .then(() =>
             retry(() =>
-              globalAgent.instance
-                .getSpans()
-                .then(spans => verifySpans(spans, useHttps, '/request-url-and-options', '/request-url-opts', withQuery))
+              globalAgent.instance.getSpans().then(spans =>
+                verifySpans({
+                  spans,
+                  useHttps,
+                  clientEndpoint: '/request-url-and-options',
+                  serverEndpoint: '/request-url-opts',
+                  withQuery,
+                  urlShouldContainRedactedCredentials: true
+                })
+              )
             )
           )
       );
@@ -114,9 +121,16 @@ function registerTests(useHttps) {
           })
           .then(() =>
             retry(() =>
-              globalAgent.instance
-                .getSpans()
-                .then(spans => verifySpans(spans, useHttps, '/request-url-only', '/request-only-url', withQuery))
+              globalAgent.instance.getSpans().then(spans =>
+                verifySpans({
+                  spans,
+                  useHttps,
+                  clientEndpoint: '/request-url-only',
+                  serverEndpoint: '/request-only-url',
+                  withQuery,
+                  urlShouldContainRedactedCredentials: true
+                })
+              )
             )
           )
       );
@@ -132,9 +146,15 @@ function registerTests(useHttps) {
         })
         .then(() =>
           retry(() =>
-            globalAgent.instance
-              .getSpans()
-              .then(spans => verifySpans(spans, useHttps, '/request-options-only', '/request-only-opts', withQuery))
+            globalAgent.instance.getSpans().then(spans =>
+              verifySpans({
+                spans,
+                useHttps,
+                clientEndpoint: '/request-options-only',
+                serverEndpoint: '/request-only-opts',
+                withQuery
+              })
+            )
           )
         ));
   });
@@ -148,7 +168,7 @@ function registerTests(useHttps) {
       .then(() =>
         retry(() =>
           globalAgent.instance.getSpans().then(spans => {
-            const entrySpan = verifyRootHttpEntry(spans, clientHost, '/request-malformed-url');
+            const entrySpan = verifyRootHttpEntry({ spans, host: clientHost, url: '/request-malformed-url' });
             expectExactlyOneMatching(spans, [
               span => expect(span.n).to.equal('node.http.client'),
               span => expect(span.k).to.equal(constants.EXIT),
@@ -186,11 +206,15 @@ function registerTests(useHttps) {
         })
         .then(() =>
           retry(() =>
-            globalAgent.instance
-              .getSpans()
-              .then(spans =>
-                verifySpans(spans, useHttps, '/request-options-only-null-headers', '/request-only-opts', withQuery)
-              )
+            globalAgent.instance.getSpans().then(spans =>
+              verifySpans({
+                spans,
+                useHttps,
+                clientEndpoint: '/request-options-only-null-headers',
+                serverEndpoint: '/request-only-opts',
+                withQuery
+              })
+            )
           )
         ));
   });
@@ -209,9 +233,16 @@ function registerTests(useHttps) {
           })
           .then(() =>
             retry(() =>
-              globalAgent.instance
-                .getSpans()
-                .then(spans => verifySpans(spans, useHttps, '/get-url-and-options', '/get-url-opts', withQuery))
+              globalAgent.instance.getSpans().then(spans =>
+                verifySpans({
+                  spans,
+                  useHttps,
+                  clientEndpoint: '/get-url-and-options',
+                  serverEndpoint: '/get-url-opts',
+                  withQuery,
+                  urlShouldContainRedactedCredentials: true
+                })
+              )
             )
           )
       );
@@ -234,9 +265,16 @@ function registerTests(useHttps) {
           })
           .then(() =>
             retry(() =>
-              globalAgent.instance
-                .getSpans()
-                .then(spans => verifySpans(spans, useHttps, '/get-url-only', '/get-only-url', withQuery))
+              globalAgent.instance.getSpans().then(spans =>
+                verifySpans({
+                  spans,
+                  useHttps,
+                  clientEndpoint: '/get-url-only',
+                  serverEndpoint: '/get-only-url',
+                  withQuery,
+                  urlShouldContainRedactedCredentials: true
+                })
+              )
             )
           )
       );
@@ -252,9 +290,15 @@ function registerTests(useHttps) {
         })
         .then(() =>
           retry(() =>
-            globalAgent.instance
-              .getSpans()
-              .then(spans => verifySpans(spans, useHttps, '/get-options-only', '/get-only-opts', withQuery))
+            globalAgent.instance.getSpans().then(spans =>
+              verifySpans({
+                spans,
+                useHttps,
+                clientEndpoint: '/get-options-only',
+                serverEndpoint: '/get-only-opts',
+                withQuery
+              })
+            )
           )
         ));
   });
@@ -568,41 +612,52 @@ function constructPath(basePath, urlObject, withQuery) {
   }
 }
 
-function verifySpans(spans, useHttps, clientEndpoint, serverEndpoint, withQuery) {
-  const entryInClient = verifyRootHttpEntry(spans, clientHost, clientEndpoint);
-  const exitInClient = verifyHttpExit(spans, entryInClient, serverUrl(useHttps, serverEndpoint));
+function verifySpans({
+  spans,
+  useHttps,
+  clientEndpoint,
+  serverEndpoint,
+  withQuery,
+  urlShouldContainRedactedCredentials
+}) {
+  const entryInClient = verifyRootHttpEntry({ spans, host: clientHost, url: clientEndpoint });
+  const exitInClient = verifyHttpExit({
+    spans,
+    parent: entryInClient,
+    url: serverUrl(useHttps, urlShouldContainRedactedCredentials, serverEndpoint)
+  });
   checkQuery(exitInClient, withQuery);
-  const entryInServer = verifyHttpEntry(spans, exitInClient, serverHost, serverEndpoint);
+  const entryInServer = verifyHttpEntry({ spans, parent: exitInClient, host: serverHost, url: serverEndpoint });
   checkQuery(entryInServer, withQuery);
   expect(spans).to.have.lengthOf(3);
 }
 
 function verifySuperagentSpans(spans, clientEndpoint, serverEndpoint) {
-  const entryInClient = verifyRootHttpEntry(spans, clientHost, clientEndpoint);
-  const firstExitInClient = verifyHttpExit(
+  const entryInClient = verifyRootHttpEntry({ spans, host: clientHost, url: clientEndpoint });
+  const firstExitInClient = verifyHttpExit({
     spans,
-    entryInClient,
-    serverUrl(false, serverEndpoint),
-    'GET',
-    serverEndpoint === '/does-not-exist' ? 404 : 200
-  );
-  verifyHttpExit(spans, entryInClient, `http://127.0.0.1:${globalAgent.PORT}/`);
-  verifyHttpEntry(
+    parent: entryInClient,
+    url: serverUrl(false, false, serverEndpoint),
+    method: 'GET',
+    status: serverEndpoint === '/does-not-exist' ? 404 : 200
+  });
+  verifyHttpExit({ spans, parent: entryInClient, url: `http://127.0.0.1:${globalAgent.PORT}/` });
+  verifyHttpEntry({
     spans,
-    firstExitInClient,
-    serverHost,
-    serverEndpoint,
-    'GET',
-    serverEndpoint === '/does-not-exist' ? 404 : 200
-  );
+    parent: firstExitInClient,
+    host: serverHost,
+    url: serverEndpoint,
+    method: 'GET',
+    status: serverEndpoint === '/does-not-exist' ? 404 : 200
+  });
   expect(spans).to.have.lengthOf(4);
 }
 
-function verifyRootHttpEntry(spans, host, url = '/', method = 'GET', status = 200, synthetic = false) {
-  return verifyHttpEntry(spans, null, host, url, method, status, synthetic);
+function verifyRootHttpEntry({ spans, host, url = '/', method = 'GET', status = 200, synthetic = false }) {
+  return verifyHttpEntry({ spans, parent: null, host, url, method, status, synthetic });
 }
 
-function verifyHttpEntry(spans, parent, host, url = '/', method = 'GET', status = 200, synthetic = false) {
+function verifyHttpEntry({ spans, parent, host, url = '/', method = 'GET', status = 200, synthetic = false }) {
   let expectations = [
     span => expect(span.n).to.equal('node.http.server'),
     span => expect(span.k).to.equal(constants.ENTRY),
@@ -629,7 +684,7 @@ function verifyHttpEntry(spans, parent, host, url = '/', method = 'GET', status 
   return expectExactlyOneMatching(spans, expectations);
 }
 
-function verifyHttpExit(spans, parent, url = '/', method = 'GET', status = 200, synthetic = false) {
+function verifyHttpExit({ spans, parent, url = '/', method = 'GET', status = 200, synthetic = false }) {
   return expectExactlyOneMatching(spans, [
     span => expect(span.n).to.equal('node.http.client'),
     span => expect(span.k).to.equal(constants.EXIT),
@@ -643,8 +698,10 @@ function verifyHttpExit(spans, parent, url = '/', method = 'GET', status = 200, 
   ]);
 }
 
-function serverUrl(useHttps, path_) {
-  return `http${shouldHaveProtocolHttps(useHttps) ? 's' : ''}://${serverHost}${path_}`;
+function serverUrl(useHttps, urlShouldContainRedactedCredentials, path_) {
+  return `http${shouldHaveProtocolHttps(useHttps) ? 's' : ''}://${
+    urlShouldContainRedactedCredentials ? '<redacted>:<redacted>@' : ''
+  }${serverHost}${path_}`;
 }
 
 function shouldHaveProtocolHttps(useHttps) {

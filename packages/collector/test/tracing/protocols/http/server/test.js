@@ -410,6 +410,23 @@ function registerTests(agentControls, useHttps, useHttp2CompatApi) {
         )
       ));
 
+  it(`must not collect credentials embedded in URLs (HTTPS: ${useHttps})`, () =>
+    controls
+      .sendRequest({
+        method: 'GET',
+        path: '/',
+        embedCredentialsInUrl: 'user:password@'
+      })
+      .then(() =>
+        retry(() =>
+          agentControls.getSpans().then(spans => {
+            const span = verifyThereIsExactlyOneHttpEntry(spans, '/', 'GET', 200);
+            expect(span.data.http.host).to.not.include('user');
+            expect(span.data.http.host).to.not.include('password');
+          })
+        )
+      ));
+
   it('must not touch headers set by the application', () => {
     const expectedCookie = 'sessionId=42';
     return controls

@@ -12,10 +12,7 @@ const constants = require('../../constants');
 const httpCommon = require('./_http');
 const readSymbolProperty = require('../../../util/readSymbolProperty');
 const tracingUtil = require('../../tracingUtil');
-const urlUtil = require('../../../util/url');
-
-const discardUrlParameters = urlUtil.discardUrlParameters;
-const filterParams = urlUtil.filterParams;
+const { filterParams, sanitizeUrl } = require('../../../util/url');
 
 let extraHttpHeadersToCapture;
 let isActive = false;
@@ -94,7 +91,7 @@ function instrumentClientHttp2Session(clientHttp2Session) {
       method = method || 'GET';
       path = path || '/';
 
-      const pathWithoutQuery = discardUrlParameters(path);
+      const pathWithoutQuery = sanitizeUrl(path);
       const params = splitAndFilter(path);
 
       span.stack = tracingUtil.getStackTrace(request);

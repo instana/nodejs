@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+- Redact embedded credentials from captured URLs (that is, remove the user:password part from URLs like http://user:password@example.org).
+- Add Node.js 16 to the test matrix.
+
 ## 1.124.0
 - [AWS Lambda] Detect Lambda cold starts.
 - [AWS Lambda] Detect imminent Lambda timeouts heuristically.

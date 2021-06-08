@@ -113,7 +113,6 @@ class ProcessControls {
     this.useHttps = opts.env && !!opts.env.USE_HTTPS;
     // http/https/http2 port
     this.port = opts.port || process.env.APP_PORT || 3215;
-    this.baseUrl = `${this.useHttps || this.http2 ? 'https' : 'http'}://localhost:${this.port}`;
     this.tracingEnabled = opts.tracingEnabled !== false;
     this.usePreInit = opts.usePreInit === true;
 
@@ -239,7 +238,8 @@ class ProcessControls {
    */
   sendRequest(opts) {
     const requestOptions = Object.assign({}, opts);
-    requestOptions.baseUrl = this.baseUrl;
+    const baseUrl = this.getBaseUrl(opts);
+    requestOptions.baseUrl = baseUrl;
     if (this.http2) {
       return http2Promise.request(requestOptions);
     } else {
@@ -248,12 +248,19 @@ class ProcessControls {
         opts.headers['X-INSTANA-L'] = '0';
       }
 
-      opts.url = this.baseUrl + (opts.path || '');
+      opts.url = baseUrl + (opts.path || '');
       opts.json = true;
       opts.ca = cert;
 
       return request(opts);
     }
+  }
+
+  getBaseUrl({ embedCredentialsInUrl }) {
+    return `${this.useHttps || this.http2 ? 'https' : 'http'}://${
+      // eslint-disable-next-line no-unneeded-ternary
+      embedCredentialsInUrl ? embedCredentialsInUrl : ''
+    }localhost:${this.port}`;
   }
 
   sendViaIpc(message) {

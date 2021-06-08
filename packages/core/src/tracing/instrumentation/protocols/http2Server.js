@@ -13,10 +13,7 @@ const httpCommon = require('./_http');
 const readSymbolProperty = require('../../../util/readSymbolProperty');
 const shimmer = require('shimmer');
 const tracingHeaders = require('../../tracingHeaders');
-const urlUtil = require('../../../util/url');
-
-const discardUrlParameters = urlUtil.discardUrlParameters;
-const filterParams = urlUtil.filterParams;
+const { filterParams, sanitizeUrl } = require('../../../util/url');
 
 let extraHttpHeadersToCapture;
 let isActive = false;
@@ -128,7 +125,7 @@ function shimEmit(realEmit) {
 
       span.data.http = {
         method,
-        url: discardUrlParameters(pathParts.shift()),
+        url: sanitizeUrl(pathParts.shift()),
         params: pathParts.length > 0 ? pathParts.join('?') : undefined,
         host: authority,
         header: httpCommon.getExtraHeadersFromHeaders(headers, extraHttpHeadersToCapture)
