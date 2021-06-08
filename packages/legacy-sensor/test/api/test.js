@@ -10,15 +10,17 @@ const expect = require('chai').expect;
 const config = require('../../../core/test/config');
 const testUtils = require('../../../core/test/test_util');
 const ProcessControls = require('../../../collector/test/test_util/ProcessControls');
+const AgentStubControls = require('../../../collector/test/apps/agentStubControls').AgentStubControls;
 
 describe('legacy sensor/API', function () {
   this.timeout(config.getTestTimeout());
 
-  const agentControls = require('../../../collector/test/apps/agentStubControls');
+  const agentControls = new AgentStubControls(5210);
   agentControls.registerTestHooks();
 
   const controls = new ProcessControls({
     dirname: __dirname,
+    port: 5215,
     agentControls
   }).registerTestHooks();
 
