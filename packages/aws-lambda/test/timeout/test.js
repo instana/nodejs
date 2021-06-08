@@ -96,7 +96,7 @@ describe('timeout heuristic', () => {
   describe('when the Lambda has a short timeout and finishes before the timeout detection', function () {
     runTest.bind(this)({
       lambdaTimeout: 3100,
-      delay: 2700, // timeout is assumed after ~ 3100 ms * 0.9 ~= 2800 ms
+      delay: 2000,
       expectEntrySpan: true,
       expectTimeout: false,
       expectResponseFromLambda: true
@@ -128,7 +128,7 @@ describe('timeout heuristic', () => {
   describe('when the Lambda has a longer timeout and finishes before the timeout detection', function () {
     runTest.bind(this)({
       lambdaTimeout: 10000,
-      delay: 9500,
+      delay: 8000,
       expectEntrySpan: true,
       expectTimeout: false,
       expectResponseFromLambda: true
