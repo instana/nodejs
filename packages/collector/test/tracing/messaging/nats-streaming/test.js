@@ -13,7 +13,7 @@ const constants = require('@instana/core').tracing.constants;
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('../../../../../core/test/config');
 const delay = require('../../../../../core/test/test_util/delay');
-const testUtils = require('../../../../../core/test/test_util');
+const { expectAtLeastOneMatching, retry } = require('../../../../../core/test/test_util');
 const ProcessControls = require('../../../test_util/ProcessControls');
 const globalAgent = require('../../../globalAgent');
 
@@ -65,7 +65,7 @@ mochaSuiteFn('tracing/nats-streaming', function () {
             } else {
               expect(res).to.equal('OK');
             }
-            return testUtils.retry(() => {
+            return retry(() => {
               const receivedMessages = subscriberControls.getIpcMessages();
               if (!withError) {
                 expect(receivedMessages).to.have.lengthOf.at.least(1);
@@ -73,12 +73,12 @@ mochaSuiteFn('tracing/nats-streaming', function () {
               }
 
               return agentControls.getSpans().then(spans => {
-                const entrySpan = testUtils.expectAtLeastOneMatching(spans, [
+                const entrySpan = expectAtLeastOneMatching(spans, [
                   span => expect(span.n).to.equal('node.http.server'),
                   span => expect(span.f.e).to.equal(String(publisherControls.getPid())),
                   span => expect(span.p).to.not.exist
                 ]);
-                testUtils.expectAtLeastOneMatching(spans, span => {
+                expectAtLeastOneMatching(spans, span => {
                   expect(span.t).to.equal(entrySpan.t);
                   expect(span.p).to.equal(entrySpan.s);
                   expect(span.k).to.equal(constants.EXIT);
@@ -110,7 +110,7 @@ mochaSuiteFn('tracing/nats-streaming', function () {
                   }
                 });
                 // verify that subsequent calls are correctly traced
-                testUtils.expectAtLeastOneMatching(spans, [
+                expectAtLeastOneMatching(spans, [
                   span => expect(span.n).to.equal('node.http.client'),
                   span => expect(span.t).to.equal(entrySpan.t),
                   span => expect(span.p).to.equal(entrySpan.s),
@@ -147,22 +147,22 @@ mochaSuiteFn('tracing/nats-streaming', function () {
             simple: false
           })
           .then(() => {
-            const receivedMessages = subscriberControls.getIpcMessages();
-            if (!withError) {
-              expect(receivedMessages).to.have.lengthOf.at.least(1);
-              expect(receivedMessages[receivedMessages.length - 1]).to.equal(uniqueId);
-            }
+            return retry(() => {
+              const receivedMessages = subscriberControls.getIpcMessages();
+              if (!withError) {
+                expect(receivedMessages).to.have.lengthOf.at.least(1);
+                expect(receivedMessages[receivedMessages.length - 1]).to.equal(uniqueId);
+              }
 
-            return testUtils.retry(() =>
               agentControls.getSpans().then(spans => {
-                const httpSpan = testUtils.expectAtLeastOneMatching(spans, [
+                const httpSpan = expectAtLeastOneMatching(spans, [
                   span => expect(span.n).to.equal('node.http.server'),
                   span => expect(span.f.e).to.equal(String(publisherControls.getPid())),
                   span => expect(span.p).to.not.exist
                 ]);
 
                 // NATS does not support headers or metadata, so we do not have trace continuity.
-                const natsEntry = testUtils.expectAtLeastOneMatching(spans, span => {
+                const natsEntry = expectAtLeastOneMatching(spans, span => {
                   expect(span.t).to.not.equal(httpSpan.t);
                   expect(span.p).to.not.exist;
                   expect(span.k).to.equal(constants.ENTRY);
@@ -190,7 +190,7 @@ mochaSuiteFn('tracing/nats-streaming', function () {
                   }
                 });
                 // verify that subsequent calls are correctly traced
-                testUtils.expectAtLeastOneMatching(spans, [
+                expectAtLeastOneMatching(spans, [
                   span => expect(span.n).to.equal('node.http.client'),
                   span => expect(span.t).to.equal(natsEntry.t),
                   span => expect(span.p).to.equal(natsEntry.s),
@@ -198,8 +198,8 @@ mochaSuiteFn('tracing/nats-streaming', function () {
                   span => expect(span.f.e).to.equal(String(subscriberControls.getPid())),
                   span => expect(span.f.h).to.equal('agent-stub-uuid')
                 ]);
-              })
-            );
+              });
+            });
           });
       });
     }
