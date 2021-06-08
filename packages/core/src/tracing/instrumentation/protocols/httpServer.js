@@ -10,13 +10,10 @@ const coreHttpModule = require('http');
 
 const constants = require('../../constants');
 const tracingHeaders = require('../../tracingHeaders');
-const urlUtil = require('../../../util/url');
+const { filterParams, sanitizeUrl } = require('../../../util/url');
 const httpCommon = require('./_http');
 const shimmer = require('shimmer');
 const cls = require('../../cls');
-
-const discardUrlParameters = urlUtil.discardUrlParameters;
-const filterParams = urlUtil.filterParams;
 
 let extraHttpHeadersToCapture;
 let isActive = false;
@@ -100,7 +97,7 @@ function shimEmit(realEmit) {
       }
       span.data.http = {
         method: req.method,
-        url: discardUrlParameters(urlParts.shift()),
+        url: sanitizeUrl(urlParts.shift()),
         params: urlParts.length > 0 ? urlParts.join('?') : undefined,
         host: req.headers.host,
         header: httpCommon.getExtraHeadersFromMessage(req, extraHttpHeadersToCapture)

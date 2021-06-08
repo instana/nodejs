@@ -12,14 +12,11 @@ const semver = require('semver');
 const URL = require('url').URL;
 
 const tracingUtil = require('../../tracingUtil');
-const urlUtil = require('../../../util/url');
+const { filterParams, sanitizeUrl } = require('../../../util/url');
 const httpCommon = require('./_http');
 const constants = require('../../constants');
 const cls = require('../../cls');
 const url = require('url');
-
-const discardUrlParameters = urlUtil.discardUrlParameters;
-const filterParams = urlUtil.filterParams;
 
 let extraHttpHeadersToCapture;
 let isActive = false;
@@ -145,10 +142,10 @@ function instrument(coreModule, forceHttps) {
       let params;
       if (urlArg && typeof urlArg === 'string') {
         // just one string....
-        completeCallUrl = discardUrlParameters(urlArg);
+        completeCallUrl = sanitizeUrl(urlArg);
         params = splitAndFilter(urlArg);
       } else if (urlArg && isUrlObject(urlArg)) {
-        completeCallUrl = discardUrlParameters(url.format(urlArg));
+        completeCallUrl = sanitizeUrl(url.format(urlArg));
         params = dropLeadingQuestionMark(filterParams(urlArg.search));
       } else if (options) {
         const urlAndQuery = constructFromUrlOpts(options, coreModule, forceHttps);
@@ -272,7 +269,7 @@ exports.setExtraHttpHeadersToCapture = function setExtraHttpHeadersToCapture(_ex
 
 function constructFromUrlOpts(options, self, forceHttps) {
   if (options.href) {
-    return [discardUrlParameters(options.href), splitAndFilter(options.href)];
+    return [sanitizeUrl(options.href), splitAndFilter(options.href)];
   }
 
   try {
@@ -286,7 +283,7 @@ function constructFromUrlOpts(options, self, forceHttps) {
       'http:';
     const host = options.hostname || options.host || 'localhost';
     const path = options.path || '/';
-    return [discardUrlParameters(`${protocol}//${host}:${port}${path}`), splitAndFilter(path)];
+    return [sanitizeUrl(`${protocol}//${host}:${port}${path}`), splitAndFilter(path)];
   } catch (e) {
     return [undefined, undefined];
   }

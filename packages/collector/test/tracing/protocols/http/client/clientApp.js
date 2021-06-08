@@ -21,8 +21,7 @@ const URL = semver.lt(process.versions.node, '10.0.0') ? require('url').URL : gl
 
 const httpModule = process.env.USE_HTTPS === 'true' ? require('https') : require('http');
 const protocol = process.env.USE_HTTPS === 'true' ? 'https' : 'http';
-const baseUrl = `${protocol}://localhost:${process.env.SERVER_PORT}`;
-
+const baseUrl = `${protocol}://user:password@localhost:${process.env.SERVER_PORT}`;
 const sslDir = path.join(__dirname, '..', '..', '..', '..', 'apps', 'ssl');
 const key = fs.readFileSync(path.join(sslDir, 'key'));
 const cert = fs.readFileSync(path.join(sslDir, 'cert'));
@@ -295,8 +294,8 @@ app.post('/upload-s3', (req, res) => {
 });
 
 function createUrl(req, urlPath) {
-  urlPath = req.query.withQuery ? `${urlPath}?q1=some&pass=verysecret&q2=value` : urlPath;
-  return req.query.urlObject ? new URL(urlPath, baseUrl) : baseUrl + urlPath;
+  const pathWithQuery = req.query.withQuery ? `${urlPath}?q1=some&pass=verysecret&q2=value` : urlPath;
+  return req.query.urlObject ? new URL(pathWithQuery, baseUrl) : baseUrl + pathWithQuery;
 }
 
 function log() {

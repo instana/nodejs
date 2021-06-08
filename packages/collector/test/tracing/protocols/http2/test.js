@@ -360,39 +360,47 @@ function verifyHttpEntry(
   erroneous = false,
   synthetic = false
 ) {
-  return expectExactlyOneMatching(spans, span => {
-    expect(span.n).to.equal('node.http.server');
-    expect(span.k).to.equal(constants.ENTRY);
-    if (parent) {
-      expect(span.t).to.equal(parent.t);
-      expect(span.s).to.be.a('string');
-      expect(span.p).to.equal(parent.s);
-    } else {
-      expect(span.t).to.be.a('string');
-      expect(span.s).to.be.a('string');
-      expect(span.p).to.not.exist;
-    }
-    if (!synthetic) {
-      expect(span.sy).to.not.exist;
-    } else {
-      expect(span.sy).to.be.true;
-    }
-    if (erroneous) {
-      expect(span.ec).to.equal(1);
-    } else {
-      expect(span.ec).to.equal(0);
-    }
-    expect(span.stack).to.have.lengthOf(0);
-    expect(span.data.http.url).to.equal(url);
-    expect(span.data.http.method).to.equal(method);
-    expect(span.data.http.host).to.equal(host);
-    expect(span.data.http.status).to.equal(status);
-    if (expectHeaders) {
-      expect(span.data.http.header).to.exist;
-      expect(span.data.http.header['x-my-request-header']).to.equal('x-my-request-header-value');
-      expect(span.data.http.header['x-my-response-header']).to.equal('x-my-response-header-value');
-    }
-  });
+  let expectations = [
+    span => expect(span.n).to.equal('node.http.server'),
+    span => expect(span.k).to.equal(constants.ENTRY),
+    span => expect(span.stack).to.have.lengthOf(0),
+    span => expect(span.data.http.url).to.equal(url),
+    span => expect(span.data.http.method).to.equal(method),
+    span => expect(span.data.http.host).to.equal(host),
+    span => expect(span.data.http.status).to.equal(status)
+  ];
+
+  if (parent) {
+    expectations = expectations.concat([
+      span => expect(span.t).to.equal(parent.t),
+      span => expect(span.s).to.be.a('string'),
+      span => expect(span.p).to.equal(parent.s)
+    ]);
+  } else {
+    expectations = expectations.concat([
+      span => expect(span.t).to.be.a('string'),
+      span => expect(span.s).to.be.a('string'),
+      span => expect(span.p).to.not.exist
+    ]);
+  }
+  if (!synthetic) {
+    expectations.push(span => expect(span.sy).to.not.exist);
+  } else {
+    expectations.push(span => expect(span.sy).to.be.true);
+  }
+  if (erroneous) {
+    expectations.push(span => expect(span.ec).to.equal(1));
+  } else {
+    expectations.push(span => expect(span.ec).to.equal(0));
+  }
+  if (expectHeaders) {
+    expectations = expectations.concat([
+      span => expect(span.data.http.header).to.exist,
+      span => expect(span.data.http.header['x-my-request-header']).to.equal('x-my-request-header-value'),
+      span => expect(span.data.http.header['x-my-response-header']).to.equal('x-my-response-header-value')
+    ]);
+  }
+  return expectExactlyOneMatching(spans, expectations);
 }
 
 function verifyHttpExit(
@@ -405,34 +413,38 @@ function verifyHttpExit(
   erroneous = false,
   synthetic = false
 ) {
-  return expectExactlyOneMatching(spans, span => {
-    expect(span.n).to.equal('node.http.client');
-    expect(span.k).to.equal(constants.EXIT);
-    expect(span.t).to.equal(parent.t);
-    expect(span.p).to.equal(parent.s);
-    expect(span.s).to.be.a('string');
-    if (erroneous) {
-      expect(span.ec).to.equal(1);
-    } else {
-      expect(span.ec).to.equal(0);
-    }
-    expect(span.stack).to.be.an('array');
-    expect(span.stack).to.have.lengthOf.at.least(2);
-    expect(span.stack[0].c).to.contain('packages/collector/test/test_util/http2Promise.js');
-    expect(span.data.http.url).to.equal(url);
-    expect(span.data.http.method).to.equal(method);
-    expect(span.data.http.status).to.equal(status);
-    if (!synthetic) {
-      expect(span.sy).to.not.exist;
-    } else {
-      expect(span.sy).to.be.true;
-    }
-    if (expectHeaders) {
-      expect(span.data.http.header).to.exist;
-      expect(span.data.http.header['x-my-request-header']).to.equal('x-my-request-header-value');
-      expect(span.data.http.header['x-my-response-header']).to.equal('x-my-response-header-value');
-    }
-  });
+  let expectations = [
+    span => expect(span.n).to.equal('node.http.client'),
+    span => expect(span.k).to.equal(constants.EXIT),
+    span => expect(span.t).to.equal(parent.t),
+    span => expect(span.p).to.equal(parent.s),
+    span => expect(span.s).to.be.a('string'),
+    span => expect(span.stack).to.be.an('array'),
+    span => expect(span.stack).to.have.lengthOf.at.least(2),
+    span => expect(span.stack[0].c).to.contain('packages/collector/test/test_util/http2Promise.js'),
+    span => expect(span.data.http.url).to.equal(url),
+    span => expect(span.data.http.method).to.equal(method),
+    span => expect(span.data.http.status).to.equal(status)
+  ];
+  if (erroneous) {
+    expectations.push(span => expect(span.ec).to.equal(1));
+  } else {
+    expectations.push(span => expect(span.ec).to.equal(0));
+  }
+  if (!synthetic) {
+    expectations.push(span => expect(span.sy).to.not.exist);
+  } else {
+    expectations.push(span => expect(span.sy).to.be.true);
+  }
+  if (expectHeaders) {
+    expectations = expectations.concat([
+      span => expect(span.data.http.header).to.exist,
+      span => expect(span.data.http.header['x-my-request-header']).to.equal('x-my-request-header-value'),
+      span => expect(span.data.http.header['x-my-response-header']).to.equal('x-my-response-header-value')
+    ]);
+  }
+
+  return expectExactlyOneMatching(spans, expectations);
 }
 
 function checkQuery(span, withQuery, erroneous) {
