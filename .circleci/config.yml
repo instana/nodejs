@@ -276,22 +276,6 @@ jobs:
       - <<: *nats-streaming
     <<: *shared
 
-  "node-15":
-    docker:
-      - image: circleci/node:15
-      - <<: *zookeeper
-      - <<: *elasticsearch
-      - <<: *mongo
-      - <<: *redis
-      - <<: *kafka
-      - <<: *mysql
-      - <<: *postgres
-      - <<: *mssql
-      - <<: *rabbitmq
-      - <<: *nats
-      - <<: *nats-streaming
-    <<: *shared
-
   "node-14":
     docker:
       - image: circleci/node:14
@@ -361,7 +345,6 @@ workflows:
   build:
     jobs:
       - "node-16"
-      - "node-15"
       - "node-14"
       - "node-12"
       - "node-10"
