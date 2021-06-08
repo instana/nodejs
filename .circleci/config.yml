@@ -1,6 +1,6 @@
 # See https://circleci.com/docs/2.0/language-javascript/ for docs.
 
-version: 2
+version: 2.1
 
 shared: &shared
   working_directory: ~/repo
@@ -144,25 +144,26 @@ shared: &shared
     - run: npm run lint
 
     # Only run tests for Node.js 8/Node.js 10 on every other build, alternating, to reduce the number of slots
-    # we are using. Explanation for the weird calculation: There apparently is no environment variable counting the
-    # number of times the whole pipeline has been triggered. The only number available is the individual build number,
-    # that is, the number for the Node 8 build, the Node 10 build, the Node 12 build etc. Since we trigger 5 builds each
-    # time, we first divide by 5 to get the pipeline number. Then we check if it is an even or odd pipeline number
-    # (with "% 2"), then turn it into either 8 or 10 by "* 2 + 8".
+    # we are using. Explanation: Take the pipeline number modulo 2 (to check if it is even or odd), then turn it into
+    # either 8 or 10 by "* 2 + 8".
     - run:
         name: Determine for which EOL Node.js version (8 or 10) the tests are run.
         command: |
-          echo "export RUN_TESTS_FOR_EOL_NODE_VERSION=$(( $(( $(( $CIRCLE_BUILD_NUM / 5 % 2 )) * 2 )) + 8 ))" >> $BASH_ENV
+          echo "export RUN_TESTS_FOR_EOL_NODE_VERSION=$(( $(( $(( << pipeline.number >> % 2 )) * 2 )) + 8 ))" >> $BASH_ENV
+
+    - run:
+        name: Show for which EOL Node.js version (8 or 10) the tests are run.
+        command: echo Running tests for EOL Node.js version $RUN_TESTS_FOR_EOL_NODE_VERSION this time.
 
     - run: |
         if [[ $RUN_TESTS_FOR_EOL_NODE_VERSION = 10 && $(node -v) =~ ^v8.*$ ]]; then
-          echo "Skipping tests for EOL Node.js version 8, running tests for EOL version 10 in this build."
+          echo "Skipping tests for EOL Node.js version 8."
           circleci-agent step halt
         fi
 
     - run: |
         if [[ $RUN_TESTS_FOR_EOL_NODE_VERSION = 8 && $(node -v) =~ ^v10.*$ ]]; then
-          echo "Skipping tests for EOL Node.js version 10, running tests for EOL version 8 in this build."
+          echo "Skipping tests for EOL Node.js version 10."
           circleci-agent step halt
         fi
 
@@ -174,6 +175,7 @@ shared: &shared
 
     - store_test_results:
         path: test-results
+
     - run:
         # save core dumps in case there have been any
         command: |
@@ -255,9 +257,6 @@ nats: &nats
 nats-streaming: &nats-streaming
   - image: nats-streaming:0.15.1-linux
     command: -p 4223 -m 8223
-    ports:
-      - 4223:4223
-      - 8223:8223
 
 jobs:
   "node-16":
