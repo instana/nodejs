@@ -11,7 +11,7 @@ const prefixes = [
   '@instana/collector',
   '@instana/core',
   '@instana/google-cloud-run',
-  '@instana/legacy-sensor',
+  'instana-nodejs-sensor',
   '@instana/metrics-util',
   '@instana/serverless',
   '@instana/shared-metrics'
