@@ -92,7 +92,8 @@ describe('multiple lambda handler calls', function () {
           expect(rawSpanArrays).to.be.an('array');
           expect(rawSpanArrays).to.have.lengthOf(0);
           expect(rawBundles).to.be.an('array');
-          expect(rawBundles).to.have.lengthOf(3);
+          expect(rawBundles).to.have.lengthOf.at.least(3);
+          expect(rawBundles).to.have.lengthOf.at.most(4);
         });
       }));
 
