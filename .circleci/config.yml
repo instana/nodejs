@@ -258,6 +258,9 @@ nats-streaming: &nats-streaming
   - image: nats-streaming:0.15.1-linux
     command: -p 4223 -m 8223
 
+memcached: &memcached
+  - image: memcached:1.6.9
+
 jobs:
   "node-16":
     docker:
@@ -273,6 +276,7 @@ jobs:
       - <<: *rabbitmq
       - <<: *nats
       - <<: *nats-streaming
+      - <<: *memcached
     <<: *shared
 
   "node-14":
@@ -289,6 +293,7 @@ jobs:
       - <<: *rabbitmq
       - <<: *nats
       - <<: *nats-streaming
+      - <<: *memcached
     <<: *shared
 
   "node-12":
@@ -305,6 +310,7 @@ jobs:
       - <<: *rabbitmq
       - <<: *nats
       - <<: *nats-streaming
+      - <<: *memcached
     <<: *shared
 
   "node-10":
@@ -321,6 +327,7 @@ jobs:
       - <<: *rabbitmq
       - <<: *nats
       - <<: *nats-streaming
+      - <<: *memcached
     <<: *shared
 
   "node-8":
@@ -337,6 +344,7 @@ jobs:
       - <<: *rabbitmq
       - <<: *nats
       - <<: *nats-streaming
+      - <<: *memcached
     <<: *shared
 
 workflows:

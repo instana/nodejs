@@ -11,7 +11,7 @@ const bodyParser = require('body-parser');
 const express = require('express');
 const { sqs } = require('./sqsUtil');
 const queueURL = process.env.AWS_SQS_QUEUE_URL;
-const port = process.env.APP_SENDER_PORT || 3215;
+const port = process.env.APP_PORT || 3215;
 const logPrefix = `AWS SQS Message Sender (${process.pid}):\t`;
 
 const app = express();

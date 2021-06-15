@@ -7,7 +7,7 @@
 
 const instana = require('../../../../../')();
 const express = require('express');
-const port = process.env.APP_RECEIVER_PORT || 3216;
+const port = process.env.APP_PORT || 3216;
 const agentPort = process.env.INSTANA_AGENT_PORT || 42699;
 const request = require('request-promise');
 const { sendToParent } = require('../../../../../../core/test/test_util');

@@ -20,7 +20,7 @@ const dynamoDB = new AWS.DynamoDB();
 const kinesis = new AWS.Kinesis();
 
 const app = express();
-const port = process.env.APP_SENDER_PORT || 3215;
+const port = process.env.APP_PORT || 3215;
 
 const log = require('@instana/core/test/test_util/log').getLogger(logPrefix);
 

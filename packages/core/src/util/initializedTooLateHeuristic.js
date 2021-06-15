@@ -46,7 +46,8 @@ let patterns = [
   /\/pg\/lib\//,
   /\/pino\/lib\//,
   /\/redis\/index.js/,
-  /\/superagent\/lib\/node\/index.js/
+  /\/superagent\/lib\/node\/index.js/,
+  /\/memcached\/index.js/
 ];
 
 const extraPatterns = [

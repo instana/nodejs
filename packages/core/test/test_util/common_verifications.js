@@ -19,6 +19,7 @@ const { expect } = require('chai');
  * @property {string} apiPath
  * @property {string} pid
  * @property {Array.<(span: InstanaBaseSpan) => void>} [extraTests]
+ * @property {import('./expectExactlyOneMatching') | import('./expectAtLeastOneMatching')} [testMethod]
  */
 
 /**
@@ -29,6 +30,7 @@ const { expect } = require('chai');
  * @property {boolean} withError
  * @property {string} pid
  * @property {Array.<(span: InstanaBaseSpan) => void>} [extraTests]
+ * @property {import('./expectExactlyOneMatching') | import('./expectAtLeastOneMatching')} [testMethod]
 
  */
 
@@ -38,6 +40,7 @@ const { expect } = require('chai');
  * @property {InstanaBaseSpan} parent
  * @property {string} pid
  * @property {Array.<(span: InstanaBaseSpan) => void>} [extraTests]
+ * @property {import('./expectExactlyOneMatching') | import('./expectAtLeastOneMatching')} [testMethod]
  */
 
 /**
@@ -45,7 +48,13 @@ const { expect } = require('chai');
  * @returns {InstanaBaseSpan}
  */
 // eslint-disable-next-line
-exports.verifyHttpRootEntry = function verifyHttpRootEntry({ spans, apiPath, pid, extraTests }) {
+exports.verifyHttpRootEntry = function verifyHttpRootEntry({
+  spans,
+  apiPath,
+  pid,
+  extraTests,
+  testMethod = expectExactlyOneMatching
+}) {
   /** @type {Array.<(span: InstanaBaseSpan) => void>} */
   const tests = [
     (/** @type {InstanaBaseSpan} */ span) => {
@@ -68,7 +77,7 @@ exports.verifyHttpRootEntry = function verifyHttpRootEntry({ spans, apiPath, pid
     }
   ].concat(extraTests || []);
 
-  return expectExactlyOneMatching(spans, tests);
+  return testMethod(spans, tests);
 };
 
 /**
@@ -76,7 +85,15 @@ exports.verifyHttpRootEntry = function verifyHttpRootEntry({ spans, apiPath, pid
  * @returns {InstanaBaseSpan}
  */
 // eslint-disable-next-line
-exports.verifyExitSpan = function verifyExitSpan({ spanName, spans, parent, withError, pid, extraTests }) {
+exports.verifyExitSpan = function verifyExitSpan({
+  spanName,
+  spans,
+  parent,
+  withError,
+  pid,
+  extraTests,
+  testMethod = expectExactlyOneMatching
+}) {
   const tests = [
     (/** @type {InstanaBaseSpan} */ span) => {
       expect(span.k).to.equal(constants.EXIT);
@@ -107,7 +124,7 @@ exports.verifyExitSpan = function verifyExitSpan({ spanName, spans, parent, with
     }
   ].concat(extraTests || []);
 
-  return expectExactlyOneMatching(spans, tests);
+  return testMethod(spans, tests);
 };
 
 /**
@@ -115,7 +132,13 @@ exports.verifyExitSpan = function verifyExitSpan({ spanName, spans, parent, with
  * @returns {InstanaBaseSpan}
  */
 // eslint-disable-next-line
-exports.verifyHttpExit = function verifyHttpExit({ spans, parent, pid, extraTests }) {
+exports.verifyHttpExit = function verifyHttpExit({
+  spans,
+  parent,
+  pid,
+  extraTests,
+  testMethod = expectExactlyOneMatching
+}) {
   const tests = [
     (/** @type {InstanaBaseSpan} */ span) => {
       expect(span.t).to.equal(parent.t);
@@ -137,5 +160,5 @@ exports.verifyHttpExit = function verifyHttpExit({ spans, parent, pid, extraTest
     }
   ].concat(extraTests || []);
 
-  return expectExactlyOneMatching(spans, tests);
+  return testMethod(spans, tests);
 };

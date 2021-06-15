@@ -40,6 +40,7 @@ const instrumentations = [
   './instrumentation/database/elasticsearchLegacy',
   './instrumentation/database/elasticsearchModern',
   './instrumentation/database/ioredis',
+  './instrumentation/database/memcached',
   './instrumentation/database/mongodb',
   './instrumentation/database/mongoose',
   './instrumentation/database/mssql',
