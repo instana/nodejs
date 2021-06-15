@@ -10,12 +10,17 @@ const semver = require('semver');
 const path = require('path');
 const { expect } = require('chai');
 const { fail } = expect;
-const constants = require('@instana/core').tracing.constants;
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('../../../../../../core/test/config');
-const { expectExactlyOneMatching, retry, stringifyItems, delay } = require('../../../../../../core/test/test_util');
+const { retry, stringifyItems, delay } = require('../../../../../../core/test/test_util');
 const ProcessControls = require('../../../../test_util/ProcessControls');
 const globalAgent = require('../../../../globalAgent');
+const {
+  verifyHttpRootEntry,
+  verifyExitSpan,
+  verifyHttpExit
+} = require('@instana/core/test/test_util/common_verifications');
+const { promisifyNonSequentialCases } = require('../promisify_non_sequential');
 
 let streamName = process.env.AWS_KINESIS_STREAM_NAME || 'nodejs-team';
 
@@ -35,18 +40,19 @@ const operationsInfo = {
   putRecords: 'putRecords'
 };
 
-const withErrorOptions = [true, false];
+const withErrorOptions = [false, true];
 
 const requestMethods = ['Callback', 'Promise'];
 const availableOperations = [
-  'listStreams',
   'createStream',
   'putRecords',
-  'getRecords',
-  'getShardIterator',
   'putRecord',
-  'deleteStream'
+  'listStreams',
+  'getRecords',
+  'getShardIterator'
 ];
+
+const getNextCallMethod = require('@instana/core/test/test_util/circular_list').getCircularList(requestMethods);
 
 if (!supportedVersion(process.versions.node)) {
   mochaSuiteFn = describe.skip;
@@ -78,10 +84,17 @@ mochaSuiteFn('tracing/cloud/aws/kinesis', function () {
 
     ProcessControls.setUpHooksWithRetryTime(retryTime, appControls);
     withErrorOptions.forEach(withError => {
-      requestMethods.forEach(requestMethod => {
-        describe(`getting result with: ${requestMethod}; with error: ${withError ? 'yes' : 'no'}`, () => {
+      if (withError) {
+        describe(`getting result with error: ${withError ? 'yes' : 'no'}`, () => {
+          it(`should instrument ${availableOperations.join(', ')} with error`, () => {
+            return promisifyNonSequentialCases(verify, availableOperations, appControls, withError, getNextCallMethod);
+          });
+        });
+      } else {
+        describe(`getting result with error: ${withError ? 'yes' : 'no'}`, () => {
           availableOperations.forEach(operation => {
-            it(`operation: ${operation}`, async () => {
+            const requestMethod = getNextCallMethod();
+            it(`operation: ${operation}/${requestMethod}`, async () => {
               const withErrorOption = withError ? '?withError=1' : '';
               const apiPath = `/${operation}/${requestMethod}`;
 
@@ -97,17 +110,12 @@ mochaSuiteFn('tracing/cloud/aws/kinesis', function () {
               if (operation === 'createStream') {
                 await checkStreamExistence(streamName, true);
               }
-              if (operation === 'deleteStream') {
-                await checkStreamExistence(streamName, false);
-              }
 
-              if (operation !== 'deleteStream') {
-                return verify(appControls, response, apiPath, operation, withError);
-              }
+              return verify(appControls, response, apiPath, operation, withError);
             });
           });
         });
-      });
+      }
     });
 
     function verify(controls, response, apiPath, operation, withError) {
@@ -117,69 +125,39 @@ mochaSuiteFn('tracing/cloud/aws/kinesis', function () {
     }
 
     function verifySpans(controls, spans, apiPath, operation, withError) {
-      const httpEntry = verifyHttpEntry(spans, apiPath, controls);
-      verifyKinesisExit(spans, httpEntry, operation, withError);
+      const httpEntry = verifyHttpRootEntry({ spans, apiPath, pid: String(controls.getPid()) });
+      verifyExitSpan({
+        spanName: 'kinesis',
+        spans,
+        parent: httpEntry,
+        withError,
+        pid: String(controls.getPid()),
+        extraTests: [
+          // When we force an error into getRecords or getShardIterator, the error will occur in listShards
+          // before even reaching getRecords
+          span =>
+            expect(span.data.kinesis.op).to.equal(
+              withError && operationsInfo[operation].match(/^getRecords$|^shardIterator$/)
+                ? 'listShards'
+                : operationsInfo[operation]
+            ),
+          span =>
+            expect(span.data.kinesis.stream).to.equal(
+              !span.data.kinesis.op.match(/^getRecords$|^listStreams$/) ? streamName : undefined
+            ),
+          span => {
+            if (span.data.kinesis.op === 'shardIterator') {
+              expect(span.data.kinesis.shard).to.equal('shardId-000000000000');
+              expect(span.data.kinesis.shardType).to.equal('AT_SEQUENCE_NUMBER');
+              expect(span.data.kinesis.startSequenceNumber).to.exist;
+            }
+          }
+        ]
+      });
 
       if (!withError) {
-        verifyHttpExit(spans, httpEntry, controls);
+        verifyHttpExit({ spans, parent: httpEntry, pid: String(controls.getPid()) });
       }
-    }
-
-    function verifyHttpEntry(spans, apiPath, controls) {
-      return expectExactlyOneMatching(spans, [
-        span => expect(span.p).to.not.exist,
-        span => expect(span.k).to.equal(constants.ENTRY),
-        span => expect(span.f.e).to.equal(String(controls.getPid())),
-        span => expect(span.f.h).to.equal('agent-stub-uuid'),
-        span => expect(span.n).to.equal('node.http.server'),
-        span => expect(span.data.http.url).to.equal(apiPath)
-      ]);
-    }
-
-    function verifyHttpExit(spans, parentSpan, controls) {
-      return expectExactlyOneMatching(spans, [
-        span => expect(span.t).to.equal(parentSpan.t),
-        span => expect(span.p).to.equal(parentSpan.s),
-        span => expect(span.k).to.equal(constants.EXIT),
-        span => expect(span.f.e).to.equal(String(controls.getPid())),
-        span => expect(span.f.h).to.equal('agent-stub-uuid'),
-        span => expect(span.n).to.equal('node.http.client')
-      ]);
-    }
-
-    function verifyKinesisExit(spans, parent, operation, withError) {
-      return expectExactlyOneMatching(spans, [
-        span => expect(span.n).to.equal('kinesis'),
-        span => expect(span.k).to.equal(constants.EXIT),
-        span => expect(span.t).to.equal(parent.t),
-        span => expect(span.p).to.equal(parent.s),
-        span => expect(span.f.e).to.equal(String(appControls.getPid())),
-        span => expect(span.f.h).to.equal('agent-stub-uuid'),
-        span => expect(span.error).to.not.exist,
-        span => expect(span.ec).to.equal(withError ? 1 : 0),
-        span => expect(span.async).to.not.exist,
-        span => expect(span.data).to.exist,
-        span => expect(span.data.kinesis).to.be.an('object'),
-        // When we force an error into getRecords or getShardIterator, the error will occur in listShards
-        // before even reaching getRecords
-        span =>
-          expect(span.data.kinesis.op).to.equal(
-            withError && operationsInfo[operation].match(/^getRecords$|^shardIterator$/)
-              ? 'listShards'
-              : operationsInfo[operation]
-          ),
-        span =>
-          expect(span.data.kinesis.stream).to.equal(
-            !span.data.kinesis.op.match(/^getRecords$|^listStreams$/) ? streamName : undefined
-          ),
-        span => {
-          if (span.data.kinesis.op === 'shardIterator') {
-            expect(span.data.kinesis.shard).to.equal('shardId-000000000000');
-            expect(span.data.kinesis.shardType).to.equal('AT_SEQUENCE_NUMBER');
-            expect(span.data.kinesis.startSequenceNumber).to.exist;
-          }
-        }
-      ]);
     }
   });
 
@@ -198,31 +176,31 @@ mochaSuiteFn('tracing/cloud/aws/kinesis', function () {
 
     ProcessControls.setUpHooksWithRetryTime(retryTime, appControls);
 
-    requestMethods.forEach(requestMethod => {
-      describe(`attempt to get result with: ${requestMethod}`, () => {
-        availableOperations.forEach(operation => {
-          it(`should not trace (${operation})`, async () => {
-            await appControls.sendRequest({
-              method: 'GET',
-              path: `/${operation}/${requestMethod}`
-            });
-
-            if (operation === 'createStream') {
-              await checkStreamExistence(streamName, true);
-            }
-
-            if (operation === 'deleteStream') {
-              await checkStreamExistence(streamName, false);
-            }
-
-            return retry(() => delay(config.getTestTimeout() / 4))
-              .then(() => agentControls.getSpans())
-              .then(spans => {
-                if (spans.length > 0) {
-                  fail(`Unexpected spans (AWS Kinesis suppressed: ${stringifyItems(spans)}`);
-                }
-              });
+    describe('attempt to get result', () => {
+      // we don't create the stream, as it was created previously
+      availableOperations.slice(1).forEach(operation => {
+        const requestMethod = getNextCallMethod();
+        it(`should not trace (${operation}/${requestMethod})`, async () => {
+          await appControls.sendRequest({
+            method: 'GET',
+            path: `/${operation}/${requestMethod}`
           });
+
+          if (operation === 'createStream') {
+            await checkStreamExistence(streamName, true);
+          }
+
+          if (operation === 'deleteStream') {
+            await checkStreamExistence(streamName, false);
+          }
+
+          return retry(() => delay(config.getTestTimeout() / 4))
+            .then(() => agentControls.getSpans())
+            .then(spans => {
+              if (spans.length > 0) {
+                fail(`Unexpected spans (AWS Kinesis suppressed: ${stringifyItems(spans)}`);
+              }
+            });
         });
       });
     });
@@ -240,32 +218,32 @@ mochaSuiteFn('tracing/cloud/aws/kinesis', function () {
 
     ProcessControls.setUpHooksWithRetryTime(retryTime, appControls);
 
-    requestMethods.forEach(requestMethod => {
-      describe(`attempt to get result with: ${requestMethod}`, () => {
-        availableOperations.forEach(operation => {
-          it(`should not trace (${operation})`, async () => {
-            await appControls.sendRequest({
-              suppressTracing: true,
-              method: 'GET',
-              path: `/${operation}/${requestMethod}`
-            });
-
-            if (operation === 'createStream') {
-              await checkStreamExistence(streamName, true);
-            }
-
-            if (operation === 'deleteStream') {
-              await checkStreamExistence(streamName, false);
-            }
-
-            return retry(() => delay(config.getTestTimeout() / 4), retryTime)
-              .then(() => agentControls.getSpans())
-              .then(spans => {
-                if (spans.length > 0) {
-                  fail(`Unexpected spans (AWS Kinesis suppressed: ${stringifyItems(spans)}`);
-                }
-              });
+    describe('attempt to get result', () => {
+      // we don't create the stream, as it was created previously
+      availableOperations.slice(1).forEach(operation => {
+        const requestMethod = getNextCallMethod();
+        it(`should not trace (${operation}/${requestMethod})`, async () => {
+          await appControls.sendRequest({
+            suppressTracing: true,
+            method: 'GET',
+            path: `/${operation}/${requestMethod}`
           });
+
+          if (operation === 'createStream') {
+            await checkStreamExistence(streamName, true);
+          }
+
+          if (operation === 'deleteStream') {
+            await checkStreamExistence(streamName, false);
+          }
+
+          return retry(() => delay(config.getTestTimeout() / 4), retryTime)
+            .then(() => agentControls.getSpans())
+            .then(spans => {
+              if (spans.length > 0) {
+                fail(`Unexpected spans (AWS Kinesis suppressed: ${stringifyItems(spans)}`);
+              }
+            });
         });
       });
     });

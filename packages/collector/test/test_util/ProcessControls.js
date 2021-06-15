@@ -69,24 +69,24 @@ class ProcessControls {
   }
 
   /**
-   * @param opts {{
-   * appPath: string,
-   *   cwd: string,
-   *   port: number,
-   *   dirname: string,
-   *   dontKillInAfterHook: boolean,
-   *   http2: boolean,
-   *   args: [],
-   *   minimalDelay: number,
-   *   usePreInit: boolean,
-   *   useGlobalAgent: boolean,
-   *   tracingEnabled: boolean,
-   *   agentControls: any,
-   *   env: {
-   *     USE_HTTPS: string | boolean,
-   *     [key: string]: any
-   *   },
-   * }} The available options
+   * @typedef {Object} ProcessControlsOptions
+   * @property {string} [appPath]
+   * @property {string} [cwd]
+   * @property {number} [port]
+   * @property {string} [dirname]
+   * @property {boolean} [dontKillInAfterHook]
+   * @property {boolean} [http2]
+   * @property {Array.<*>} [args]
+   * @property {number} [minimalDelay]
+   * @property {boolean} [usePreInit]
+   * @property {boolean} [useGlobalAgent]
+   * @property {boolean} [tracingEnabled]
+   * @property {*} [agentControls]
+   * @property {Object.<string, *} [env]
+   */
+
+  /**
+   * @param {ProcessControlsOptions} opts
    */
   constructor(opts = {}) {
     if (!opts.appPath && !opts.dirname) {

@@ -20,6 +20,7 @@ const receiver = new Queue(queueName, redisServer);
 const bullJobName = process.env.BULL_JOB_NAME || 'steve';
 const jobNameEnabled = process.env.BULL_JOB_NAME_ENABLED === 'true';
 const concurrencyEnabled = process.env.BULL_CONCURRENCY_ENABLED === 'true';
+const log = require('@instana/core/test/test_util/log').getLogger(logPrefix);
 
 if (!validCallbackTypes.includes(receiveType)) {
   log(`Callback types must be one of these: ${validCallbackTypes.join(', ')} but got ${receiveType}`);
@@ -42,13 +43,5 @@ const app = express();
 app.get('/', (_req, res) => {
   res.send('Ok');
 });
-
-function log() {
-  /* eslint-disable no-console */
-  const args = Array.prototype.slice.call(arguments);
-  args[0] = `${logPrefix}${args[0]}`;
-  console.log.apply(console, args);
-  /* eslint-enable no-console */
-}
 
 app.listen(port, () => log(`Bull receiver app listening on port ${port}`));
