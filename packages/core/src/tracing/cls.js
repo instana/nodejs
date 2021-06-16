@@ -77,7 +77,7 @@ function init(config, _processIdentityProvider) {
 
 class InstanaSpan {
   /**
-   * @param {String} name
+   * @param {string} name
    */
   constructor(name) {
     // properties that part of our span model

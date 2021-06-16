@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+- Reporting correct SQS entry span duration
+- Reporting SQS-Consumer processing error messages to the agent
+
 ## 1.125.0
 - Redact embedded credentials from captured URLs (that is, remove the user:password part from URLs like http://user:password@example.org).
 - Add Node.js 16 to the test matrix.

@@ -15,7 +15,8 @@ const delay = require('../../../../../../core/test/test_util/delay');
 
 AWS.config.update({ region: 'us-east-2' });
 const port = process.env.APP_RECEIVER_PORT || 3216;
-const agentPort = process.env.INSTANA_AGENT_PORT || 80;
+const agentPort = process.env.INSTANA_AGENT_PORT || 42699;
+const withError = process.env.AWS_SQS_RECEIVER_ERROR === 'true';
 const app = express();
 
 const queueURL = process.env.AWS_SQS_QUEUE_URL;
@@ -36,10 +37,16 @@ const consumerApp = Consumer.create({
   queueUrl: queueURL,
   sqs,
   handleMessage: async message => {
+    // make sure the span took at least one second to complete
+    await delay(1000);
     sendToParent(message);
     await delay(200);
     await request(`http://localhost:${agentPort}?msg=${message.Body}`);
     log(`Sent an HTTP request after receiving message of id ${message.MessageId}`);
+
+    if (withError) {
+      throw new Error('Forced error');
+    }
   }
 });
 
