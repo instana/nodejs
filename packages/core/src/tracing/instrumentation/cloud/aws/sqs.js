@@ -427,11 +427,7 @@ function finishSpan(err, data, span) {
 function addErrorToSpan(err, span) {
   if (err) {
     span.ec = 1;
-    if (err.code) {
-      span.data.sqs.error = err.code;
-    } else if (typeof err === 'string') {
-      span.data.sqs.error = err;
-    }
+    span.data.sqs.error = err.message || err.code || JSON.stringify(err);
   }
 }
 
@@ -473,10 +469,18 @@ function instrumentedSQSConsumerExecuteHandler(ctx, original, originalArgs) {
     return cls.runInAsyncContext(instanaAsyncContext, () => {
       const span = cls.getCurrentSpan();
       span.disableAutoEnd();
-      const res = original.apply(ctx, originalArgs).then(data => {
-        span.transmitManual();
-        return data;
-      });
+      const res = original
+        .apply(ctx, originalArgs)
+        .then(data => {
+          span.d = Date.now() - span.ts;
+          span.transmitManual();
+          return data;
+        })
+        .catch(err => {
+          addErrorToSpan(err, span);
+          span.d = Date.now() - span.ts;
+          span.transmitManual();
+        });
       return res;
     });
   } else {

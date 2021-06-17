@@ -22,11 +22,7 @@ const {
 const ProcessControls = require('../../../../test_util/ProcessControls');
 const globalAgent = require('../../../../globalAgent');
 const { sendMessageWithLegacyHeaders } = require('./sendNonInstrumented');
-const {
-  verifyHttpRootEntry,
-  verifyHttpExit,
-  verifyExitSpan
-} = require('@instana/core/test/test_util/common_verifications');
+const { verifyHttpRootEntry, verifyHttpExit } = require('@instana/core/test/test_util/common_verifications');
 
 const queueUrlPrefix = process.env.SQS_QUEUE_URL_PREFIX || 'https://sqs.us-east-2.amazonaws.com/410797082306/';
 
@@ -121,26 +117,53 @@ mochaSuiteFn('tracing/cloud/aws/sqs', function () {
     });
 
     describe('sqs-consumer API', () => {
-      const sqsConsumerControls = new ProcessControls({
-        appPath: path.join(__dirname, 'sqs-consumer'),
-        port: 3216,
-        useGlobalAgent: true,
-        env: {
-          AWS_SQS_QUEUE_URL: queueURL
-        }
-      });
-
-      ProcessControls.setUpHooksWithRetryTime(retryTime, sqsConsumerControls);
-
-      const apiPath = '/send-callback';
-
-      it('receives message', async () => {
-        const response = await senderControls.sendRequest({
-          method: 'POST',
-          path: apiPath
+      describe('message processed with success', () => {
+        const sqsConsumerControls = new ProcessControls({
+          appPath: path.join(__dirname, 'sqs-consumer'),
+          port: 3216,
+          useGlobalAgent: true,
+          env: {
+            AWS_SQS_QUEUE_URL: queueURL
+          }
         });
 
-        return verify(sqsConsumerControls, response, apiPath, false);
+        ProcessControls.setUpHooksWithRetryTime(retryTime, sqsConsumerControls);
+
+        const apiPath = '/send-callback';
+
+        it('receives message', async () => {
+          const response = await senderControls.sendRequest({
+            method: 'POST',
+            path: apiPath
+          });
+
+          return verify(sqsConsumerControls, response, apiPath, false);
+        });
+      });
+
+      describe('message not processed with success', () => {
+        const sqsConsumerControls = new ProcessControls({
+          appPath: path.join(__dirname, 'sqs-consumer'),
+          port: 3216,
+          useGlobalAgent: true,
+          env: {
+            AWS_SQS_QUEUE_URL: queueURL,
+            AWS_SQS_RECEIVER_ERROR: 'true'
+          }
+        });
+
+        ProcessControls.setUpHooksWithRetryTime(retryTime, sqsConsumerControls);
+
+        const apiPath = '/send-callback';
+
+        it('fails to receive a message', async () => {
+          const response = await senderControls.sendRequest({
+            method: 'POST',
+            path: apiPath
+          });
+
+          return verify(sqsConsumerControls, response, apiPath, 'receiver');
+        });
       });
     });
 
@@ -191,17 +214,8 @@ mochaSuiteFn('tracing/cloud/aws/sqs', function () {
 
     function verifySpans(receiverControls, spans, apiPath, messageId, withError, isBatch) {
       const httpEntry = verifyHttpRootEntry({ spans, apiPath, pid: String(senderControls.getPid()) });
-      const sqsExit = verifyExitSpan({
-        spanName: 'sqs',
-        spans,
-        parent: httpEntry,
-        withError,
-        pid: String(senderControls.getPid()),
-        extraTests: [
-          span => expect(span.data.sqs.sort).to.equal('exit'),
-          span => expect(span.data.sqs.queue).to.equal(queueURL)
-        ]
-      });
+      const sqsExit = verifySQSExit(spans, httpEntry, messageId, withError);
+
       if (withError !== 'publisher') {
         const sqsEntry = verifySQSEntry(receiverControls, spans, sqsExit, messageId, withError, isBatch);
         verifyHttpExit({ spans, parent: sqsEntry, pid: String(receiverControls.getPid()) });
@@ -227,14 +241,44 @@ mochaSuiteFn('tracing/cloud/aws/sqs', function () {
         span => expect(span.p).to.equal(parent.s),
         span => expect(span.f.e).to.equal(String(receiverControls.getPid())),
         span => expect(span.f.h).to.equal('agent-stub-uuid'),
-        span => expect(span.error).to.not.exist,
-        span => expect(span.ec).to.equal(withError ? 1 : 0),
+        span => {
+          if (withError === 'receiver') {
+            expect(span.data.sqs.error).to.match(/Forced error/);
+          } else {
+            expect(span.data.sqs.error).to.not.exist;
+          }
+        },
+        span => expect(span.ec).to.equal(withError === 'receiver' ? 1 : 0),
         span => expect(span.async).to.not.exist,
         span => expect(span.data).to.exist,
         span => expect(span.data.sqs).to.be.an('object'),
         span => expect(span.data.sqs.sort).to.equal('entry'),
         span => expect(span.data.sqs.queue).to.equal(queueURL),
-        span => expect(span.data.sqs.size).to.be.an('number')
+        span => expect(span.data.sqs.size).to.be.an('number'),
+        span => {
+          if (!isBatch) {
+            // This makes sure that the span end time is logged properly
+            expect(span.d).to.greaterThan(1000);
+          }
+        }
+      ]);
+    }
+
+    function verifySQSExit(spans, parent, messageId, withError) {
+      return expectExactlyOneMatching(spans, [
+        span => expect(span.n).to.equal('sqs'),
+        span => expect(span.k).to.equal(constants.EXIT),
+        span => expect(span.t).to.equal(parent.t),
+        span => expect(span.p).to.equal(parent.s),
+        span => expect(span.f.e).to.equal(String(senderControls.getPid())),
+        span => expect(span.f.h).to.equal('agent-stub-uuid'),
+        span => expect(span.error).to.not.exist,
+        span => expect(span.ec).to.equal(withError === 'sender' ? 1 : 0),
+        span => expect(span.async).to.not.exist,
+        span => expect(span.data).to.exist,
+        span => expect(span.data.sqs).to.be.an('object'),
+        span => expect(span.data.sqs.sort).to.equal('exit'),
+        span => expect(span.data.sqs.queue).to.equal(queueURL)
       ]);
     }
   });
@@ -357,7 +401,7 @@ mochaSuiteFn('tracing/cloud/aws/sqs', function () {
 
       return expectAtLeastOneMatching(spans, [
         span => expect(span.ec).equal(1),
-        span => expect(span.data.sqs.error).to.equal('AWS.SimpleQueueService.NonExistentQueue')
+        span => expect(span.data.sqs.error).to.equal('The specified queue does not exist for this wsdl version.')
       ]);
     });
   });

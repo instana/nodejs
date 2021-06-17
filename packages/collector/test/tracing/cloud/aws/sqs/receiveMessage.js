@@ -8,7 +8,7 @@
 const instana = require('../../../../../')();
 const express = require('express');
 const port = process.env.APP_RECEIVER_PORT || 3216;
-const agentPort = process.env.INSTANA_AGENT_PORT || 80;
+const agentPort = process.env.INSTANA_AGENT_PORT || 42699;
 const request = require('request-promise');
 const { sendToParent } = require('../../../../../../core/test/test_util');
 
@@ -87,6 +87,7 @@ function receivePromise() {
         .promise()
         .then(() => delay(200))
         .then(() => request(`http://127.0.0.1:${agentPort}`))
+        .then(() => delay(1000))
         .then(() => {
           log('The follow up request after receiving a message has happened.');
           span.end();
@@ -138,7 +139,7 @@ async function receiveAsync() {
         })
         .promise();
 
-      await delay(200);
+      await delay(1000);
       await request(`http://127.0.0.1:${agentPort}`);
       log('The follow up request after receiving a message has happened.');
       span.end();
@@ -200,7 +201,7 @@ function receiveCallback(cb) {
                   span.end(1);
                   cb();
                 });
-            }, 200);
+            }, 1000);
           }
         }
       );
