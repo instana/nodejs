@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.125.1
 - Reporting correct SQS entry span duration
 - Reporting SQS-Consumer processing error messages to the agent
 
