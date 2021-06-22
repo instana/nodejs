@@ -69,7 +69,11 @@ def getPublishedAwsLambdaLayerPackageVersion() {
 
 def triggerFargateJob(publishedAwsFargatePackageVersion, localAwsFargatePackageVersion) {
   println "Checking if a new AWS Fargate Docker image layer needs to be published. Local package version: ${localAwsFargatePackageVersion} – package version in published AWS Fargate Docker image layer: ${publishedAwsFargatePackageVersion}."
-  if (localAwsFargatePackageVersion != publishedAwsFargatePackageVersion) {
+  if (!(publishedAwsFargatePackageVersion ==~ /^\d+\.\d+\.\d+$/)) {
+     println "Published version ${publishedAwsFargatePackageVersion} does not look like a version string, will not triggering a publish for AWS Fargate."
+  } else if (!(localAwsFargatePackageVersion ==~ /^\d+\.\d+\.\d+$/)) {
+     println "Local version ${localAwsFargatePackageVersion} does not look like a version string, will not triggering a publish for AWS Fargate."
+  } else if (localAwsFargatePackageVersion != publishedAwsFargatePackageVersion) {
      println "Versions are different, triggering the job to publish the latest package version for AWS Fargate."
      build job: 'aws-fargate-nodejs'
   } else {
@@ -79,7 +83,11 @@ def triggerFargateJob(publishedAwsFargatePackageVersion, localAwsFargatePackageV
 
 def triggerCloudRunJob(publishedGoogleCloudRunPackageVersion, localGoogleCloudRunPackageVersion) {
   println "Checking if a new Google Cloud Run Docker image layer needs to be published. Local package version: ${localGoogleCloudRunPackageVersion} – package version in published Google Cloud Run Docker image layer: ${publishedGoogleCloudRunPackageVersion}."
-  if (localGoogleCloudRunPackageVersion != publishedGoogleCloudRunPackageVersion) {
+  if (!(publishedGoogleCloudRunPackageVersion ==~ /^\d+\.\d+\.\d+$/)) {
+     println "Published version ${publishedGoogleCloudRunPackageVersion} does not look like a version string, will not triggering a publish for Google Cloud Run."
+  } else if (!(localGoogleCloudRunPackageVersion ==~ /^\d+\.\d+\.\d+$/)) {
+     println "Local version ${localGoogleCloudRunPackageVersion} does not look like a version string, will not triggering a publish for Google Cloud Run."
+  } else if (localGoogleCloudRunPackageVersion != publishedGoogleCloudRunPackageVersion) {
      println "Versions are different, triggering the job to publish the latest package version for Google Cloud Run."
      build job: 'google-cloud-run-nodejs'
   } else {
@@ -89,7 +97,11 @@ def triggerCloudRunJob(publishedGoogleCloudRunPackageVersion, localGoogleCloudRu
 
 def triggerLambdaJob(publishedAwsLambdaLayerPackageVersion, localAwsLambdaLayerPackageVersion) {
   println "Checking if a new AWS Lambda layer needs to be published. Local package version: ${localAwsLambdaLayerPackageVersion} – package version in published AWS Lambda layer: ${publishedAwsLambdaLayerPackageVersion}."
-  if (localAwsLambdaLayerPackageVersion != publishedAwsLambdaLayerPackageVersion) {
+  if (!(publishedAwsLambdaLayerPackageVersion ==~ /^\d+\.\d+\.\d+$/)) {
+     println "Published version ${publishedAwsLambdaLayerPackageVersion} does not look like a version string, will not triggering a publish for AWS Lambda."
+  } else if (!(localAwsLambdaLayerPackageVersion ==~ /^\d+\.\d+\.\d+$/)) {
+     println "Local version ${localAwsLambdaLayerPackageVersion} does not look like a version string, will not triggering a publish for AWS Lambda."
+  } else if (localAwsLambdaLayerPackageVersion != publishedAwsLambdaLayerPackageVersion) {
      println "Versions are different, triggering the job to publish the latest package version for AWS Lambda."
      build job: 'aws-lambda-nodejs'
   } else {
