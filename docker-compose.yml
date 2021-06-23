@@ -116,3 +116,8 @@ services:
       - 4223:4223
       - 8223:8223
 
+  memcached:
+    image: memcached:1.6.9
+    ports:
+      - 11211:11211
+
