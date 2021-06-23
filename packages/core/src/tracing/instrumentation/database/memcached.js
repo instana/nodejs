@@ -90,7 +90,7 @@ function instrumentedCommand(ctx, originalCommand, originaCommandArgs) {
         const err = originalCallbackArgs[0];
         // originalCallbackArgs[1] = some result. eg: true, false, the value of the key
 
-        span.data[SPAN_NAME] = buildSpanData(queryResult);
+        span.data[SPAN_NAME] = buildSpanData(queryResult, ctx.servers);
 
         finishSpan(err, span);
         return originalCallback.apply(this, originalCallbackArgs);
@@ -103,7 +103,7 @@ function instrumentedCommand(ctx, originalCommand, originaCommandArgs) {
   });
 }
 
-function buildSpanData(queryResult) {
+function buildSpanData(queryResult, connections) {
   const { type, key, multi } = queryResult;
 
   let op = type;
@@ -115,7 +115,10 @@ function buildSpanData(queryResult) {
   const validOperation = operationsInfo[op];
 
   const data = {
-    key: Array.isArray(key) ? key.join(', ') : key
+    key: Array.isArray(key) ? key.join(', ') : key,
+    // This may be an issue if the customer sets more than one connection, but our UI expects always only one
+    // So we pick always the first one in the list
+    connection: connections[0]
   };
 
   if (validOperation) {

@@ -157,7 +157,8 @@ mochaSuiteFn('tracing/cache/memcached', function () {
                 expect(span.data.memcached.operation).to.equal(operation);
               }
             }
-          }
+          },
+          span => expect(span.data.memcached.connection).to.match(/localhost|127\.0\.0\.1/)
         ],
         testMethod: operation === 'cas' ? expectAtLeastOneMatching : expectExactlyOneMatching
       });
