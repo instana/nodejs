@@ -6,13 +6,13 @@
     "name": "Bastian Krol",
     "email": "bastian.krol@instana.com"
   },
-  "homepage": "https://github.com/instana/nodejs-sensor",
+  "homepage": "https://github.com/instana/nodejs",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/instana/nodejs-sensor.git"
+    "url": "git+https://github.com/instana/nodejs.git"
   },
   "bugs": {
-    "url": "https://github.com/instana/nodejs-sensor/issues"
+    "url": "https://github.com/instana/nodejs/issues"
   },
   "license": "MIT",
   "scripts": {

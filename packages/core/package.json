@@ -20,7 +20,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/instana/nodejs-sensor.git"
+    "url": "git+https://github.com/instana/nodejs.git"
   },
   "keywords": [
     "instana",
@@ -112,9 +112,9 @@
   ],
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/instana/nodejs-sensor/issues"
+    "url": "https://github.com/instana/nodejs/issues"
   },
-  "homepage": "https://github.com/instana/nodejs-sensor#readme",
+  "homepage": "https://github.com/instana/nodejs#readme",
   "dependencies": {
     "async-hook-jl": "^1.7.6",
     "cls-bluebird": "^2.1.0",

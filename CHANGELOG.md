@@ -148,7 +148,7 @@
 - Send `span.crid`/`span.crtp` instead of `span.data.correlationId`/`span.data.correlationType`.
 
 ## 1.106.3
-- Fix: Move `event-loop-lag` from optionalDependencies to dependencies, so installations with `--ignore-optional` will work correctly. ([#258](https://github.com/instana/nodejs-sensor/pull/258), thanks to @ThisIsMissEm).
+- Fix: Move `event-loop-lag` from optionalDependencies to dependencies, so installations with `--ignore-optional` will work correctly. ([#258](https://github.com/instana/nodejs/pull/258), thanks to @ThisIsMissEm).
 - [AWS Fargate]: Update dependency `node-fetch` version 2.6.1 (fixes https://www.npmjs.com/advisories/1556).
 
 ## 1.106.2
@@ -426,14 +426,14 @@
 - Add graphql instrumentation ([graphql](https://www.npmjs.com/package/graphql)).
 
 ## 1.68.4
-- Require `cls-bluebird` before installing the require hook for `bluebird` so client code can use `cls-bluebird` without conflicts ([#152](https://github.com/instana/nodejs-sensor/pull/152), thanks to @jonathansamines).
+- Require `cls-bluebird` before installing the require hook for `bluebird` so client code can use `cls-bluebird` without conflicts ([#152](https://github.com/instana/nodejs/pull/152), thanks to @jonathansamines).
 - Fix tracing of `https` client calls in Node.js 8.9.0.
 
 ## 1.68.3
 - Add additional check to `requireHook` in case other modules interfering with `require` (like `require-in-the-middle`) are present.
 
 ## 1.68.2
-- Remove circular references from span data before serializing it ([#148](https://github.com/instana/nodejs-sensor/pull/148), thanks to @sklose).
+- Remove circular references from span data before serializing it ([#148](https://github.com/instana/nodejs/pull/148), thanks to @sklose).
 
 ## 1.68.1
 - Log a warning instead of info when running an unsupported Node.js version.
@@ -457,7 +457,7 @@
 - Report unhandled promise rejections as issues (disabled by default, see [configuration guide](https://www.instana.com/docs/ecosystem/node-js/configuration/#reporting-unhandled-promise-rejections)).
 
 ## 1.65.1
-- Fix: Init metrics correctly when no config is passed ([#138](https://github.com/instana/nodejs-sensor/issues/138)).
+- Fix: Init metrics correctly when no config is passed ([#138](https://github.com/instana/nodejs/issues/138)).
 - Add data.rpc.host and data.rpc.port to GRPC exits to improve service discovery.
 
 ## 1.65.0
@@ -503,7 +503,7 @@
 - Fix error when a Pino logger was passed via config (#119).
 
 ## 1.60.0
-- Instrument Elasticsearch operations msearch and mget ([#117](https://github.com/instana/nodejs-sensor/pull/117), thanks to @DtRWoS).
+- Instrument Elasticsearch operations msearch and mget ([#117](https://github.com/instana/nodejs/pull/117), thanks to @DtRWoS).
 
 ## 1.59.0
 - Add GRPC instrumentation ([grpc](https://www.npmjs.com/package/grpc)).
@@ -546,7 +546,7 @@
 
 ## 1.52.0
 - Instrument [Pino](http://getpino.io/).
-- Allow other (non-Bunyan) loggers to be injected ([#88](https://github.com/instana/nodejs-sensor/pull/88), thanks to @SerayaEryn).
+- Allow other (non-Bunyan) loggers to be injected ([#88](https://github.com/instana/nodejs/pull/88), thanks to @SerayaEryn).
 
 ## 1.51.0
 - Instrument amqplib (RabbitMQ tracing).

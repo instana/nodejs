@@ -4,7 +4,7 @@
   "description": "Provides @instana/aws-fargate as an image for multi stage Dockerfiles",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/instana/nodejs-sensor.git"
+    "url": "git+https://github.com/instana/nodejs.git"
   },
   "author": "Bastian Krol <bastian.krol@instana.com>",
   "license": "ISC",

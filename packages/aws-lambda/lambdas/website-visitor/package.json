@@ -6,7 +6,7 @@
   "private": true,
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/instana/nodejs-sensor.git"
+    "url": "git+https://github.com/instana/nodejs.git"
   },
   "scripts": {
     "start": "node .",

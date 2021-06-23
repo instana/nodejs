@@ -17,7 +17,7 @@ logger = require('../logger').getLogger('tracing/spanBuffer', newLogger => {
 const batchableSpanNames = [];
 
 /**
- * This module will not be typed yet: /nodejs-sensor/packages/collector/src/agentConnection.js
+ * This module will not be typed yet: /nodejs/packages/collector/src/agentConnection.js
  * @typedef {Object} TemporaryAgentConnection
  * @property {(spans: *, cb: Function) => void} sendSpans
  */

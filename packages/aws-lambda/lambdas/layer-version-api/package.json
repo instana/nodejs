@@ -8,11 +8,11 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/instana/nodejs-sensor.git"
+    "url": "git+https://github.com/instana/nodejs.git"
   },
   "author": "Bastian Krol <bastian.krol@instana.com>",
   "license": "MIT",
-  "homepage": "https://github.com/instana/nodejs-sensor#readme",
+  "homepage": "https://github.com/instana/nodejs#readme",
   "devDependencies": {
     "aws-sdk": "^2.765.0"
   },
