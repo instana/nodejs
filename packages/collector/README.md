@@ -5,7 +5,7 @@ Monitor your Node.js applications with Instana!
 **[Installation](#installation-and-usage) |**
 **[Configuration](CONFIGURATION.md) |**
 **[API](API.md) |**
-**[Changelog](https://github.com/instana/nodejs-sensor/blob/main/CHANGELOG.md)**
+**[Changelog](https://github.com/instana/nodejs/blob/main/CHANGELOG.md)**
 
 ---
 

@@ -239,7 +239,7 @@ exports.enableSpanBatching = function enableSpanBatching() {
 exports._getAndResetTracingMetrics = function _getAndResetTracingMetrics() {
   return {
     pid:
-      // TODO: This is not typed yet -> /nodejs-sensor/packages/collector/src/pidStore/index.js
+      // TODO: This is not typed yet -> /nodejs/packages/collector/src/pidStore/index.js
       // @ts-ignore
       processIdentityProvider && typeof processIdentityProvider.getEntityId === 'function'
         ? // @ts-ignore

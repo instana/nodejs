@@ -5,7 +5,7 @@
   "description": "This is a test application to test snapshot and metrics data.",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/instana/nodejs-sensor.git"
+    "url": "git+https://github.com/instana/nodejs.git"
   },
   "main": "app.js",
   "author": {

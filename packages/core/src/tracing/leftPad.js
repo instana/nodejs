@@ -7,7 +7,7 @@
 
 // A modified copy (optimized for our particular use case) of
 // https://github.com/stevemao/left-pad/blob/master/index.js, copyright (c) 2018 Steve Mao.
-// The original work is subject to the MIT license, as is the whole instana-nodejs-sensor package, see the LICENSE
+// The original work is subject to the MIT license, as is the whole @instana/core package, see the LICENSE
 // file in the root directory of this package.
 
 module.exports = leftPad;

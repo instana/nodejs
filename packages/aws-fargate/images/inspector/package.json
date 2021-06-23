@@ -4,7 +4,7 @@
   "description": "inspects the tasks environment",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/instana/nodejs-sensor.git"
+    "url": "git+https://github.com/instana/nodejs.git"
   },
   "main": "server.js",
   "scripts": {
