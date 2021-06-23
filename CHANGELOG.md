@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.126.0
 - Instrumentation of memcached
 
 ## 1.125.1
