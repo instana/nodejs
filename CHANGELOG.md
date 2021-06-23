@@ -1,5 +1,8 @@
 # Changelog
 
+## Unreleased
+- The repository was renamed to https://github.com/instana/nodejs (previously: https://github.com/instana/nodejs-sensor).
+
 ## 1.126.0
 - Instrumentation of memcached
 
