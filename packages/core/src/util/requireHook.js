@@ -42,7 +42,11 @@ logger = require('../logger').getLogger('util/requireHook', newLogger => {
   logger = newLogger;
 });
 
-exports.init = function () {
+/**
+ * @param {import('./normalizeConfig').InstanaConfig} [config]
+ */
+// eslint-disable-next-line no-unused-vars
+exports.init = function (config) {
   /** @type {*} */ (Module)._load = patchedModuleLoad;
 };
 

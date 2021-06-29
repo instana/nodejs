@@ -3,8 +3,6 @@
  * (c) Copyright Instana Inc. and contributors 2019
  */
 
-// @ts-nocheck
-
 'use strict';
 
 const log = require('./logger');
@@ -12,6 +10,10 @@ const normalizeConfig = require('./util/normalizeConfig');
 
 // Require this first to ensure that we have non-instrumented http available.
 const uninstrumentedHttp = require('./uninstrumentedHttp');
+const metrics = require('./metrics');
+const secrets = require('./secrets');
+const tracing = require('./tracing');
+const util = require('./util');
 
 /**
  * @typedef {{
@@ -27,36 +29,53 @@ const uninstrumentedHttp = require('./uninstrumentedHttp');
  * @property {() => PIDData} getFrom
  */
 
-module.exports = exports = {
-  logger: log,
-  metrics: require('./metrics'),
-  secrets: require('./secrets'),
-  tracing: require('./tracing'),
-  uninstrumentedHttp,
-  util: require('./util')
-};
+/**
+ * @typedef {Object} InstanaCore
+ * @property {import('./metrics/index')} metrics
+ * @property {import('./secrets')} secrets
+ * @property {import('./tracing/index')} tracing
+ */
 
-exports.registerAdditionalInstrumentations = function registerAdditionalInstrumentations(
-  additionalInstrumentationModules
-) {
-  exports.tracing.registerAdditionalInstrumentations(additionalInstrumentationModules);
-};
+/**
+ * @param {Array.<import('./tracing/index').InstanaInstrumentedModule>} additionalInstrumentationModules
+ */
+function registerAdditionalInstrumentations(additionalInstrumentationModules) {
+  tracing.registerAdditionalInstrumentations(additionalInstrumentationModules);
+}
 
-exports.preInit = function preInit() {
-  var preliminaryConfig = normalizeConfig();
-  exports.util.hasThePackageBeenInitializedTooLate();
-  exports.util.requireHook.init(preliminaryConfig);
-  exports.tracing.preInit(preliminaryConfig);
+function preInit() {
+  const preliminaryConfig = normalizeConfig();
+  util.hasThePackageBeenInitializedTooLate();
+  util.requireHook.init(preliminaryConfig);
+  tracing.preInit(preliminaryConfig);
   // Initialize secrets as early as possible, in particular for env var collection in fargate/google-cloud-run when
   // the config comes from INSTANA_SECRETS.
-  exports.secrets.init(preliminaryConfig);
-};
+  secrets.init(preliminaryConfig);
+}
 
-exports.init = function init(config, downstreamConnection, processIdentityProvider) {
+/**
+ *
+ * @param {*} config
+ * @param {*} downstreamConnection
+ * @param {*} processIdentityProvider
+ */
+function init(config, downstreamConnection, processIdentityProvider) {
   log.init(config);
-  exports.util.hasThePackageBeenInitializedTooLate();
+  util.hasThePackageBeenInitializedTooLate();
   config = normalizeConfig(config);
-  exports.secrets.init(config);
-  exports.util.requireHook.init(config);
-  exports.tracing.init(config, downstreamConnection, processIdentityProvider);
+  secrets.init(config);
+  util.requireHook.init(config);
+  tracing.init(config, downstreamConnection, processIdentityProvider);
+}
+
+module.exports = {
+  logger: log,
+  metrics,
+  secrets,
+  tracing,
+  uninstrumentedHttp,
+  util,
+  init,
+  preInit,
+  registerAdditionalInstrumentations
 };

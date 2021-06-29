@@ -14,7 +14,8 @@
   "include": [
     "packages/core/src/util",
     "packages/core/src/tracing/*.js",
-    "packages/core/test/test_util/common_verifications.js"
+    "packages/core/test/test_util/common_verifications.js",
+    // "packages/collector/src/index.js"
   ],
   "exclude": [
     "node_modules",

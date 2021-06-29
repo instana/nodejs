@@ -60,10 +60,9 @@ const extraPatterns = [
 ];
 
 /**
- * @type {Function}
  * @returns {boolean}
  */
-module.exports = exports = function hasThePackageBeenInitializedTooLate() {
+module.exports = function hasThePackageBeenInitializedTooLate() {
   if (firstCall) {
     const loadedModules = Object.keys(require.cache);
 

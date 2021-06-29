@@ -5,7 +5,7 @@
 
 'use strict';
 
-exports.allMetrics = [
+const allMetrics = [
   require('./activeHandles'),
   require('./activeRequests'),
   require('./args'),
@@ -25,8 +25,21 @@ exports.allMetrics = [
   require('./version')
 ];
 
-exports.util = require('./util');
+const util = require('./util');
 
-exports.setLogger = function (logger) {
-  exports.util.setLogger(logger);
+const setLogger = function (logger) {
+  util.setLogger(logger);
+};
+
+/**
+ * @typedef {Object} InstanaSharedMetrics
+ * @property {*} allMetrics
+ * @property {*} util
+ * @property {*} setLogger
+ */
+
+module.exports = {
+  allMetrics,
+  util,
+  setLogger
 };

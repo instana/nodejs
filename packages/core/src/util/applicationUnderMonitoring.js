@@ -16,23 +16,23 @@ logger = require('../logger').getLogger('util/atMostOnce', newLogger => {
 
 // Cache determined main package json as these will be referenced often
 // and identification of these values is expensive.
-/** @type {*} */
+/** @type {Object.<string, *>} */
 let parsedMainPackageJson;
-/** @type {*} */
+/** @type {string} */
 let mainPackageJsonPath;
-/** @type {*} */
+/** @type {Array.<string>} */
 let nodeModulesPath;
 let appInstalledIntoNodeModules = false;
 
-exports.isAppInstalledIntoNodeModules = function isAppInstalledIntoNodeModules() {
+function isAppInstalledIntoNodeModules() {
   return appInstalledIntoNodeModules;
-};
+}
 
 /**
  * @param {string} startDirectory
  * @param {Function} cb
  */
-exports.getMainPackageJson = function getMainPackageJson(startDirectory, cb) {
+function getMainPackageJson(startDirectory, cb) {
   if (typeof startDirectory === 'function') {
     cb = startDirectory;
     startDirectory = null;
@@ -42,7 +42,7 @@ exports.getMainPackageJson = function getMainPackageJson(startDirectory, cb) {
     return process.nextTick(cb, null, parsedMainPackageJson);
   }
 
-  exports.getMainPackageJsonPath(startDirectory, (err, packageJsonPath) => {
+  getMainPackageJsonPath(startDirectory, (err, packageJsonPath) => {
     if (err) {
       // fs.readFile would have called cb asynchronously later, so we use process.nextTick here to make all paths async.
       return process.nextTick(cb, err, null);
@@ -66,13 +66,13 @@ exports.getMainPackageJson = function getMainPackageJson(startDirectory, cb) {
       return cb(null, parsedMainPackageJson);
     });
   });
-};
+}
 
 /**
  * @param {string} startDirectory
  * @param {(err: Error, packageJsonPath: string) => void} cb
  */
-exports.getMainPackageJsonPath = function getMainPackageJsonPath(startDirectory, cb) {
+function getMainPackageJsonPath(startDirectory, cb) {
   if (typeof startDirectory === 'function') {
     cb = startDirectory;
     startDirectory = null;
@@ -109,7 +109,7 @@ exports.getMainPackageJsonPath = function getMainPackageJsonPath(startDirectory,
     mainPackageJsonPath = main;
     return cb(null, mainPackageJsonPath);
   });
-};
+}
 
 /**
  * @param {string} dir
@@ -175,7 +175,7 @@ function searchForPackageJsonInDirectoryTreeUpwards(dir, cb) {
 /**
  * @param {Function} cb
  */
-exports.findNodeModulesFolder = function findNodeModulesFolder(cb) {
+function findNodeModulesFolder(cb) {
   if (nodeModulesPath !== undefined) {
     return process.nextTick(cb, null, nodeModulesPath);
   }
@@ -194,7 +194,7 @@ exports.findNodeModulesFolder = function findNodeModulesFolder(cb) {
     nodeModulesPath = nodeModulesPath_;
     return cb(null, nodeModulesPath);
   });
-};
+}
 
 /**
  * @param {string} dir
@@ -239,3 +239,10 @@ function searchInParentDir(dir, onParentDir, cb) {
 
   return onParentDir(parentDir, cb);
 }
+
+module.exports = {
+  isAppInstalledIntoNodeModules,
+  getMainPackageJson,
+  getMainPackageJsonPath,
+  findNodeModulesFolder
+};

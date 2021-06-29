@@ -16,18 +16,18 @@ const defaultSecrets = ['key', 'pass', 'secret'];
 
 /**
  * @typedef {Object} SecretMatchers
- * @property {(secrets: Array<string>) => (key: string) => boolean} equals-ignore-case
- * @property {(secrets: Array<string>) => (key: string) => boolean} equals
- * @property {(secrets: Array<string>) => (key: string) => boolean} contains-ignore-case
- * @property {(secrets: Array<string>) => (key: string) => boolean} contains
- * @property {(secrets: Array<string>) => (key: string) => boolean} regex
+ * @property {(secrets: Array.<string>) => (key: string) => boolean} equals-ignore-case
+ * @property {(secrets: Array.<string>) => (key: string) => boolean} equals
+ * @property {(secrets: Array.<string>) => (key: string) => boolean} contains-ignore-case
+ * @property {(secrets: Array.<string>) => (key: string) => boolean} contains
+ * @property {(secrets: Array.<string>) => (key: string) => boolean} regex
  * @property {() => () => boolean} none
  */
 
 /** @type {SecretMatchers} */
 exports.matchers = {
   /**
-   * @param {Array<string>} secrets
+   * @param {Array.<string>} secrets
    * @returns {(key: string) => boolean}
    */
   'equals-ignore-case': function createEqualsIgnoreCaseMatcher(secrets) {
@@ -46,7 +46,7 @@ exports.matchers = {
   },
 
   /**
-   * @param {Array<string>} secrets
+   * @param {Array.<string>} secrets
    * @returns {(key: string) => boolean}
    */
   equals: function createEqualsMatcher(secrets) {
@@ -65,7 +65,7 @@ exports.matchers = {
   },
 
   /**
-   * @param {Array<string>} secrets
+   * @param {Array.<string>} secrets
    * @returns {(key: string) => boolean}
    */
   'contains-ignore-case': function createContainsIgnoreCaseMatcher(secrets) {
@@ -84,7 +84,7 @@ exports.matchers = {
   },
 
   /**
-   * @param {Array<string>} secrets
+   * @param {Array.<string>} secrets
    * @returns {(key: string) => boolean}
    */
   contains: function createContainsMatcher(secrets) {
@@ -103,12 +103,12 @@ exports.matchers = {
   },
 
   /**
-   * @param {Array<string>} secrets
+   * @param {Array.<string>} secrets
    * @returns {(key: string) => boolean}
    */
   regex: function createRegexMatcher(secrets) {
     secrets = checkSecrets(secrets);
-    /** @type {Array<RegExp>} */
+    /** @type {Array.<RegExp>} */
     const regexes = [];
     secrets.forEach(regexString => {
       try {
@@ -153,14 +153,14 @@ exports.matchers = {
 let isSecretInternal = exports.matchers[defaultMatcherMode](defaultSecrets);
 
 /**
- * @param {Array<string>} configuredSecrets
- * @returns {Array<string>}
+ * @param {Array.<string>} configuredSecrets
+ * @returns {Array.<string>}
  */
 function checkSecrets(configuredSecrets) {
   if (!Array.isArray(configuredSecrets)) {
     return defaultSecrets;
   }
-  /** @type {Array<string>} */
+  /** @type {Array.<string>} */
   const secrets = [];
   configuredSecrets.forEach(s => {
     if (typeof s === 'string') {
@@ -173,13 +173,13 @@ function checkSecrets(configuredSecrets) {
 }
 
 /**
- * @param {Array<string>} configuredSecrets
+ * @param {Array.<string>} configuredSecrets
  */
 function toLowerCase(configuredSecrets) {
   if (!Array.isArray(configuredSecrets)) {
     return defaultSecrets;
   }
-  /** @type {Array<string>} */
+  /** @type {Array.<string>} */
   const secrets = [];
   configuredSecrets.forEach(s => {
     if (typeof s === 'string') {
@@ -220,7 +220,7 @@ exports.init = function init(config) {
 
 /**
  * @param {MatchingOptions} matcherId
- * @param {Array<*>} secretsList
+ * @param {Array.<*>} secretsList
  */
 exports.setMatcher = function setMatcher(matcherId, secretsList) {
   if (!(typeof matcherId === 'string')) {
