@@ -16,33 +16,47 @@ logger = require('../logger').getLogger('util/atMostOnce', newLogger => {
 
 // Cache determined main package json as these will be referenced often
 // and identification of these values is expensive.
-/** @type {*} */
+/** @type {Object.<string, *>} */
 let parsedMainPackageJson;
-/** @type {*} */
+/** @type {string} */
 let mainPackageJsonPath;
-/** @type {*} */
+/** @type {Array.<string>} */
 let nodeModulesPath;
 let appInstalledIntoNodeModules = false;
 
-exports.isAppInstalledIntoNodeModules = function isAppInstalledIntoNodeModules() {
+function isAppInstalledIntoNodeModules() {
   return appInstalledIntoNodeModules;
-};
+}
 
 /**
- * @param {string} startDirectory
- * @param {Function} cb
+ * Looks for the app's main package.json file, parses it and returns the parsed content. The search is started at
+ * path.dirname(process.mainModule.filename).
+ *
+ * In case the search is successful, the result will be cached for consecutive invocations.
+ *
+ * @param {(err: Error, parsedMainPackageJson: Object.<string, *>) => void } cb - the callback will be called with an
+ * error or the parsed package.json file as a JS object.
  */
-exports.getMainPackageJson = function getMainPackageJson(startDirectory, cb) {
-  if (typeof startDirectory === 'function') {
-    cb = startDirectory;
-    startDirectory = null;
-  }
+function getMainPackageJsonStartingAtMainModule(cb) {
+  return getMainPackageJsonStartingAtDirectory(null, cb);
+}
 
+/**
+ * Looks for the app's main package.json file, parses it and returns the parsed content. If the given directory is null
+ * or undefined, the search will start at path.dirname(process.mainModule.filename).
+ *
+ * In case the search is successful, the result will be cached for consecutive invocations.
+ *
+ * @param {string} startDirectory - the directory in which to start searching.
+ * @param {(err: Error, parsedMainPackageJson: Object.<string, *>) => void } cb - the callback will be called with an
+ * error or the parsed package.json file as a JS object.
+ */
+function getMainPackageJsonStartingAtDirectory(startDirectory, cb) {
   if (parsedMainPackageJson !== undefined) {
     return process.nextTick(cb, null, parsedMainPackageJson);
   }
 
-  exports.getMainPackageJsonPath(startDirectory, (err, packageJsonPath) => {
+  getMainPackageJsonPathStartingAtDirectory(startDirectory, (err, packageJsonPath) => {
     if (err) {
       // fs.readFile would have called cb asynchronously later, so we use process.nextTick here to make all paths async.
       return process.nextTick(cb, err, null);
@@ -66,18 +80,31 @@ exports.getMainPackageJson = function getMainPackageJson(startDirectory, cb) {
       return cb(null, parsedMainPackageJson);
     });
   });
-};
+}
 
 /**
- * @param {string} startDirectory
- * @param {(err: Error, packageJsonPath: string) => void} cb
+ * Looks for path of the app's main package.json file, starting the search at path.dirname(process.mainModule.filename).
+ *
+ * In case the search is successful, the result will be cached for consecutive invocations.
+ *
+ * @param {(err: Error, packageJsonPath: string) => void} cb - the callback will be called with an error or the path to
+ * the package.json file
  */
-exports.getMainPackageJsonPath = function getMainPackageJsonPath(startDirectory, cb) {
-  if (typeof startDirectory === 'function') {
-    cb = startDirectory;
-    startDirectory = null;
-  }
+function getMainPackageJsonPathStartingAtMainModule(cb) {
+  return getMainPackageJsonPathStartingAtDirectory(null, cb);
+}
 
+/**
+ * Looks for path of the app's main package.json file, starting the search at the given directory. If the given
+ * directory is null or undefined, the search will start at path.dirname(process.mainModule.filename).
+ *
+ * In case the search is successful, the result will be cached for consecutive invocations.
+ *
+ * @param {string} startDirectory - the directory in which to start searching.
+ * @param {(err: Error, packageJsonPath: string) => void} cb - the callback will be called with an error or the path to
+ * the package.json file
+ */
+function getMainPackageJsonPathStartingAtDirectory(startDirectory, cb) {
   if (mainPackageJsonPath !== undefined) {
     // searchForPackageJsonInDirectoryTreeUpwards would have called cb asynchronously later,
     // so we use process.nextTick here to make all paths async.
@@ -109,7 +136,7 @@ exports.getMainPackageJsonPath = function getMainPackageJsonPath(startDirectory,
     mainPackageJsonPath = main;
     return cb(null, mainPackageJsonPath);
   });
-};
+}
 
 /**
  * @param {string} dir
@@ -173,9 +200,9 @@ function searchForPackageJsonInDirectoryTreeUpwards(dir, cb) {
 }
 
 /**
- * @param {Function} cb
+ * @param {(errNodeModules: *, nodeModulesFolder: *) => *} cb
  */
-exports.findNodeModulesFolder = function findNodeModulesFolder(cb) {
+function findNodeModulesFolder(cb) {
   if (nodeModulesPath !== undefined) {
     return process.nextTick(cb, null, nodeModulesPath);
   }
@@ -194,7 +221,7 @@ exports.findNodeModulesFolder = function findNodeModulesFolder(cb) {
     nodeModulesPath = nodeModulesPath_;
     return cb(null, nodeModulesPath);
   });
-};
+}
 
 /**
  * @param {string} dir
@@ -239,3 +266,12 @@ function searchInParentDir(dir, onParentDir, cb) {
 
   return onParentDir(parentDir, cb);
 }
+
+module.exports = {
+  isAppInstalledIntoNodeModules,
+  getMainPackageJsonStartingAtMainModule,
+  getMainPackageJsonStartingAtDirectory,
+  getMainPackageJsonPathStartingAtMainModule,
+  getMainPackageJsonPathStartingAtDirectory,
+  findNodeModulesFolder
+};

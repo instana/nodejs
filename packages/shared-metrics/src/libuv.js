@@ -9,10 +9,10 @@ const path = require('path');
 
 const lag = require('event-loop-lag')(1000);
 
+/** @type {*} */
 let eventLoopStats;
 
 exports.payloadPrefix = 'libuv';
-exports.currentPayload = {};
 
 const nativeModuleLoader = require('./util/nativeModuleRetry')({
   nativeModuleName: 'event-loop-stats',

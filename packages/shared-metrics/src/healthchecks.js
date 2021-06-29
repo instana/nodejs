@@ -5,27 +5,40 @@
 
 'use strict';
 
-const requireHook = require('@instana/core').util.requireHook;
+const { requireHook } = require('@instana/core').util;
 
 let logger = require('@instana/core').logger.getLogger('metrics');
+
+/**
+ * @param {import('@instana/core/src/logger').GenericLogger} _logger
+ */
 exports.setLogger = function setLogger(_logger) {
   logger = _logger;
 };
 
+/** @type {number} */
 let timeBetweenHealthcheckCalls;
 const healthy = 1;
 const unhealthy = 0;
 
+/** @type {*} */
 let adminPluginHealthcheck;
+/** @type {NodeJS.Timeout} */
 let timeoutHandle;
 
 exports.payloadPrefix = 'healthchecks';
+// @ts-ignore
 exports.currentPayload = {};
 
-requireHook.onModuleLoad('admin-plugin-healthcheck', function onAdminPluginHealthcheckLoaded(_adminPluginHealthcheck) {
+requireHook.onModuleLoad('admin-plugin-healthcheck', function onAdminPluginHealthcheckLoaded(
+  /** @type {*} */ _adminPluginHealthcheck
+) {
   adminPluginHealthcheck = _adminPluginHealthcheck;
 });
 
+/**
+ * @param {import('@instana/core/src/util/normalizeConfig').InstanaConfig} config
+ */
 exports.activate = function activate(config) {
   timeBetweenHealthcheckCalls = config.metrics.timeBetweenHealthcheckCalls;
 
@@ -37,8 +50,10 @@ exports.activate = function activate(config) {
 function gatherHealthcheckResults() {
   adminPluginHealthcheck
     .getHealthCheckResult()
-    .then(function onHealthcheckResults(adminHealthcheckResults) {
+    .then(function onHealthcheckResults(/** @type{*} */ adminHealthcheckResults) {
+      /** @type {Object.<string, *>} */
       const results = {};
+      /** @type {Object.<string, *>} */
       const previousResults = exports.currentPayload;
 
       // eslint-disable-next-line no-restricted-syntax
@@ -55,11 +70,13 @@ function gatherHealthcheckResults() {
         }
       }
 
+      // @ts-ignore
       exports.currentPayload = results;
       timeoutHandle = setTimeout(gatherHealthcheckResults, timeBetweenHealthcheckCalls);
       timeoutHandle.unref();
     })
-    .catch(function onHealthcheckResultFailure(err) {
+    .catch(function onHealthcheckResultFailure(/** @type {*} */ err) {
+      // @ts-ignore
       exports.currentPayload = {};
       logger.warn('Unexpected error while getting healthcheck results', err);
       timeoutHandle = setTimeout(gatherHealthcheckResults, timeBetweenHealthcheckCalls);

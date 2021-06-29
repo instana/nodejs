@@ -16,11 +16,22 @@ const incrementalMarkingsWindow = slidingWindow.create(windowOpts);
 const processWeakCallbacksWindow = slidingWindow.create(windowOpts);
 const gcPauseWindow = slidingWindow.create(windowOpts);
 
+/** @type {*} */
 let gcStats;
 let activateHasBeenCalled = false;
 let hasBeenActivated = false;
 
 exports.payloadPrefix = 'gc';
+
+/** @type {{
+ * minorGcs: number
+ * majorGcs: number
+ * incrementalMarkings: number
+ * weakCallbackProcessing: number
+ * gcPause: number
+ * statsSupported?: boolean
+ * usedHeapSizeAfterGc?: number
+ * }} */
 exports.currentPayload = {
   minorGcs: 0,
   majorGcs: 0,
@@ -46,6 +57,7 @@ const nativeModuleLoader = require('./util/nativeModuleRetry')({
     'https://www.instana.com/docs/ecosystem/node-js/installation/#native-addons'
 });
 
+/** @type {NodeJS.Timeout} */
 let senseIntervalHandle;
 
 nativeModuleLoader.once('loaded', gcStats_ => {
@@ -65,7 +77,7 @@ function actuallyActivate() {
     return;
   }
   hasBeenActivated = true;
-  gcStats.on('stats', stats => {
+  gcStats.on('stats', (/** @type {*} */ stats) => {
     // gcstats exposes start and end in nanoseconds
     const pause = (stats.end - stats.start) / 1000000;
     gcPauseWindow.addPoint(pause);

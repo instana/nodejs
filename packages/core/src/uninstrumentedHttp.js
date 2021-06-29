@@ -2,13 +2,19 @@
  * (c) Copyright IBM Corp. 2021
  * (c) Copyright Instana Inc. and contributors 2019
  */
-// @ts-nocheck
 
 'use strict';
 
 const http = require('http');
 const https = require('https');
 
+/**
+ * @typedef {Object} UninstrumentedHTTP
+ * @property {import('http') & {agent: import('http').Agent}} http
+ * @property {import('https')} https
+ */
+
+/** @type {UninstrumentedHTTP} */
 module.exports = exports = {
   http: Object.create(http),
   https: Object.create(https)

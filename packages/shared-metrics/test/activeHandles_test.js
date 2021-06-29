@@ -17,6 +17,7 @@ describe('metrics.activeHandles', function () {
   this.timeout(config.getTestTimeout());
 
   it('should export active handle count', () => {
+    // @ts-ignore
     expect(activeHandles.currentPayload).to.equal(process._getActiveHandles().length);
   });
 
@@ -41,9 +42,13 @@ describe('metrics.activeHandles', function () {
     // https://github.com/nodejs/node/blob/01422769775a2ce7dfef8aa6dbda2d326f002e13/test/parallel/test-process-getactivehandles.js
 
     const maxClients = 8;
+    /** @type {*} */
     let server;
+    /** @type {Array.<*>} */
     const connections = [];
+    /** @type {Array.<*>} */
     const clients = [];
+    /** @type {*} */
     let activeHandlesBefore;
 
     beforeEach(() => {
@@ -93,6 +98,9 @@ describe('metrics.activeHandles', function () {
       });
     }
 
+    /**
+     * @param {*} client
+     */
     function clientConnected(client) {
       clients.push(client);
     }

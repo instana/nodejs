@@ -16,6 +16,17 @@ const tar = require('tar');
 const { fork } = require('child_process');
 const detectLibc = require('detect-libc');
 
+/**
+ * @typedef {Object} InstanaSharedMetricsOptions
+ * @property {string} [nativeModuleName]
+ * @property {string} [nativeModulePath]
+ * @property {string} [nativeModuleParentPath]
+ * @property {string} [moduleRoot]
+ * @property {string} [message]
+ * @property {string} [loadFrom]
+ */
+
+/** @type {Array.<string>} */
 const retryMechanisms = [];
 if (
   !process.env.INSTANA_COPY_PRECOMPILED_NATIVE_ADDONS ||
@@ -40,6 +51,10 @@ if (!family) {
 
 class ModuleLoadEmitter extends EventEmitter {}
 
+/**
+ * @param {InstanaSharedMetricsOptions} opts
+ * @returns {ModuleLoadEmitter}
+ */
 function loadNativeAddOn(opts) {
   const loaderEmitter = new ModuleLoadEmitter();
   // Give clients a chance to register event listeners on the emitter that we return by attempting to load the module
@@ -49,6 +64,13 @@ function loadNativeAddOn(opts) {
   return loaderEmitter;
 }
 
+/**
+ * @param {InstanaSharedMetricsOptions} opts
+ * @param {EventEmitter} loaderEmitter
+ * @param {number} retryIndex
+ * @param {boolean} skipAttempt
+ * @returns
+ */
 function loadNativeAddOnInternal(opts, loaderEmitter, retryIndex, skipAttempt) {
   try {
     const { isMainThread } = require('worker_threads');
@@ -80,6 +102,11 @@ function loadNativeAddOnInternal(opts, loaderEmitter, retryIndex, skipAttempt) {
   }
 }
 
+/**
+ * @param {InstanaSharedMetricsOptions} opts
+ * @param {EventEmitter} loaderEmitter
+ * @param {number} retryIndex
+ */
 function prepareNextRetry(opts, loaderEmitter, retryIndex) {
   // The first pre-condition for all retry mechanisms is that we can find the path to the native add-on that can not be
   // required.
@@ -109,6 +136,11 @@ function prepareNextRetry(opts, loaderEmitter, retryIndex) {
   }
 }
 
+/**
+ * @param {InstanaSharedMetricsOptions} opts
+ * @param {EventEmitter} loaderEmitter
+ * @param {number} retryIndex
+ */
 function copyPrecompiled(opts, loaderEmitter, retryIndex) {
   logger.debug(`Trying to copy precompiled version of ${opts.nativeModuleName} for Node.js ${process.version}.`);
 
@@ -149,15 +181,11 @@ function copyPrecompiled(opts, loaderEmitter, retryIndex) {
         cwd: os.tmpdir(),
         file: precompiledTarGzPath
       })
-      .then(tarErr => {
-        if (tarErr) {
-          logger.warn(`Unpacking the precompiled build for ${opts.nativeModuleName} ${label} failed.`, tarErr);
-          process.nextTick(loadNativeAddOnInternal.bind(null, opts, loaderEmitter, ++retryIndex, true));
-          return;
-        }
-
+      .then(() => {
         // See below for the reason why we append 'precompiled' to the path.
         const targetDir = path.join(opts.nativeModulePath, 'precompiled');
+
+        // @ts-ignore
         copy(
           path.join(os.tmpdir(), opts.nativeModuleName),
           targetDir,
@@ -165,6 +193,7 @@ function copyPrecompiled(opts, loaderEmitter, retryIndex) {
             overwrite: true,
             dot: true
           },
+          // @ts-ignore
           cpErr => {
             if (cpErr) {
               logger.warn(`Copying the precompiled build for ${opts.nativeModuleName} ${label} failed.`, cpErr);
@@ -187,15 +216,26 @@ function copyPrecompiled(opts, loaderEmitter, retryIndex) {
             process.nextTick(loadNativeAddOnInternal.bind(null, opts, loaderEmitter, ++retryIndex));
           }
         );
+      })
+      .catch(tarErr => {
+        logger.warn(`Unpacking the precompiled build for ${opts.nativeModuleName} ${label} failed.`, tarErr);
+        process.nextTick(loadNativeAddOnInternal.bind(null, opts, loaderEmitter, ++retryIndex, true));
       });
   });
 }
 
-// This is mainly for the scenario where @instana/collector and its dependencies has been provided by  an external
-// mechanism (like copying a bundled version contained in the Instana agent package) without running an npm install on
-// the target system. Native addons are present, but might have been build for a different operating system/Node ABI,
-// libc familiy, ...). Thus, they need to be rebuilt.
+/**
+ * This is mainly for the scenario where @instana/collector and its dependencies has been provided by  an external
+ * mechanism (like copying a bundled version contained in the Instana agent package) without running an npm install on
+ * the target system. Native addons are present, but might have been build for a different operating system/Node ABI,
+ * libc familiy, ...). Thus, they need to be rebuilt.
+ *
+ * @param {InstanaSharedMetricsOptions} opts
+ * @param {EventEmitter} loaderEmitter
+ * @param {number} retryIndex
+ */
 function rebuildOnDemand(opts, loaderEmitter, retryIndex) {
+  /** @type {string} */
   let nodeGypExecutable;
   try {
     const nodeGypPath = require.resolve('node-gyp');
@@ -245,6 +285,9 @@ function rebuildOnDemand(opts, loaderEmitter, retryIndex) {
   });
 }
 
+/**
+ * @param {InstanaSharedMetricsOptions} opts
+ */
 function findNativeModulePath(opts) {
   try {
     // Let's first check if there is at least a module directory in node_modules:
@@ -275,11 +318,14 @@ function findNativeModulePath(opts) {
   }
 }
 
+/**
+ * @param {InstanaSharedMetricsOptions} opts
+ */
 function createNativeModulePath(opts) {
   // The module cannot be found at all in node_modules. This can happen for example if npm install --no-optional was
   // used but also if building the native add-on with node-gyp failed. We will try to reconstruct a path that makes
   // sense.
-  if (!exports.selfNodeModulesPath) {
+  if (!loadNativeAddOn.selfNodeModulesPath) {
     const selfPath = path.join(__dirname, '..', '..');
     const idx = selfPath.lastIndexOf('node_modules');
     if (idx < 0) {
@@ -291,16 +337,22 @@ function createNativeModulePath(opts) {
 
     // cut off everything after module path
     const selfPathNormalized = selfPath.substring(0, idx + 'node_modules'.length + __dirname.length + 2);
-    exports.selfNodeModulesPath = path.join(selfPathNormalized, '..', '..');
+    loadNativeAddOn.selfNodeModulesPath = path.join(selfPathNormalized, '..', '..');
   }
   // Find nearest ancestor node_modules directory. Since we use a scoped module (@instana/something) as the reference
   // we need to go up two directory levels.
-  opts.nativeModuleParentPath = exports.selfNodeModulesPath;
-  opts.nativeModulePath = path.join(exports.selfNodeModulesPath, opts.nativeModuleName);
+  opts.nativeModuleParentPath = loadNativeAddOn.selfNodeModulesPath;
+  opts.nativeModulePath = path.join(loadNativeAddOn.selfNodeModulesPath, opts.nativeModuleName);
 }
 
-module.exports = exports = loadNativeAddOn;
+loadNativeAddOn.setLogger = setLogger;
+loadNativeAddOn.selfNodeModulesPath = '';
 
-exports.setLogger = function setLogger(_logger) {
+/**
+ * @param {import('@instana/core/src/logger').GenericLogger} _logger
+ */
+function setLogger(_logger) {
   logger = _logger;
-};
+}
+
+module.exports = loadNativeAddOn;

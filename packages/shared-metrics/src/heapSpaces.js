@@ -5,6 +5,7 @@
 
 'use strict';
 
+/** @type {import('v8')} */
 let v8;
 try {
   v8 = require('v8');
@@ -14,8 +15,10 @@ try {
 }
 
 exports.payloadPrefix = 'heapSpaces';
+// @ts-ignore
 exports.currentPayload = {};
 
+/** @type {NodeJS.Timeout} */
 let activeIntervalHandle = null;
 
 exports.activate = function activate() {
@@ -32,6 +35,7 @@ function gatherHeapSpaceStatistics() {
 
   // We are changing the native format to a format which can be more
   // efficiently compressed and processed in the backend.
+  /** @type {Object.<string, *>} */
   const processedStats = {};
 
   for (let i = 0, len = rawStats.length; i < len; i++) {
@@ -44,10 +48,12 @@ function gatherHeapSpaceStatistics() {
     };
   }
 
+  // @ts-ignore
   exports.currentPayload = processedStats;
 }
 
 exports.deactivate = function deactivate() {
+  // @ts-ignore
   exports.currentPayload = {};
   if (activeIntervalHandle) {
     clearInterval(activeIntervalHandle);
