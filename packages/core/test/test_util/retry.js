@@ -9,7 +9,7 @@ const config = require('../config');
 const delay = require('./delay');
 
 /**
- * @param {Function} fn
+ * @param {(value: *) => *} fn
  * @param {number} [time]
  * @param {number} [until]
  * @returns {Function | Promise<*>}
@@ -28,6 +28,6 @@ module.exports = function retry(fn, time, until) {
   }
 
   return delay(time / 20)
-    .then()
+    .then(fn)
     .catch(() => retry(fn, time, until));
 };
