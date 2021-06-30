@@ -7,14 +7,20 @@
 
 const fs = require('fs');
 
-const applicationUnderMonitoring = require('@instana/core').util.applicationUnderMonitoring;
+const { applicationUnderMonitoring } = require('@instana/core').util;
 
 let logger = require('@instana/core').logger.getLogger('metrics');
+
+/**
+ * @param {import('@instana/core/src/logger').GenericLogger} _logger
+ */
 exports.setLogger = function setLogger(_logger) {
   logger = _logger;
 };
 
 exports.payloadPrefix = 'directDependencies';
+
+/** @type {Object.<string, *>} */
 exports.currentPayload = {
   dependencies: {},
   peerDependencies: {},
@@ -46,6 +52,9 @@ exports.activate = function activate() {
   });
 };
 
+/**
+ * @param {string} packageJsonPath
+ */
 function addDirectDependenciesFromMainPackageJson(packageJsonPath) {
   fs.readFile(packageJsonPath, { encoding: 'utf8' }, (err, contents) => {
     if (err) {

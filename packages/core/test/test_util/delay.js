@@ -7,7 +7,10 @@
 
 /**
  * A simple delay based on native promises.
+ *
+ * @param {number} ms
+ * @returns {Promise.<void>}
  */
-module.exports = exports = function delay(ms) {
+module.exports = function delay(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 };

@@ -18,7 +18,6 @@ let agentConnection;
 
 let config;
 
-/** @type {() => *} */
 module.exports = exports = function init(_config) {
   config = normalizeConfig(_config);
 

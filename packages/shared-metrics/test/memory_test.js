@@ -21,6 +21,7 @@ describe('metrics.memory', () => {
 
   it('should provide memory information', () => {
     memory.activate();
+    /** @type {*} */
     const p = memory.currentPayload;
     expect(p.rss).to.be.a('number');
     expect(p.heapTotal).to.be.a('number');
@@ -31,6 +32,7 @@ describe('metrics.memory', () => {
   // to verify the behavior from time to time.
   it.skip('should update memory information after 1 s', () => {
     memory.activate();
+    /** @type {*} */
     const previousPayload = memory.currentPayload;
 
     // generate some garbage so that memory information changes
@@ -40,6 +42,7 @@ describe('metrics.memory', () => {
     }
 
     return testUtils.retry(() => {
+      /** @type {*} */
       const newPayload = memory.currentPayload;
       expect(newPayload.heapUsed).to.be.gt(previousPayload.heapUsed);
     });

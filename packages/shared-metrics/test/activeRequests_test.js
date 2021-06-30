@@ -12,6 +12,7 @@ const activeRequests = require('../src/activeRequests');
 
 describe('metrics.activeRequests', () => {
   it('should export active requests count', () => {
+    // @ts-ignore
     expect(activeRequests.currentPayload).to.equal(process._getActiveRequests().length);
   });
 

@@ -29,10 +29,10 @@ function isAppInstalledIntoNodeModules() {
 }
 
 /**
- * @param {string} startDirectory
- * @param {Function} cb
+ * @param {(err: Error, parsedMainPackageJson: Object.<string, *>) => void } cb
+ * @param {string} [startDirectory]
  */
-function getMainPackageJson(startDirectory, cb) {
+function getMainPackageJson(cb, startDirectory) {
   if (typeof startDirectory === 'function') {
     cb = startDirectory;
     startDirectory = null;
@@ -42,7 +42,7 @@ function getMainPackageJson(startDirectory, cb) {
     return process.nextTick(cb, null, parsedMainPackageJson);
   }
 
-  getMainPackageJsonPath(startDirectory, (err, packageJsonPath) => {
+  getMainPackageJsonPath((err, packageJsonPath) => {
     if (err) {
       // fs.readFile would have called cb asynchronously later, so we use process.nextTick here to make all paths async.
       return process.nextTick(cb, err, null);
@@ -65,14 +65,14 @@ function getMainPackageJson(startDirectory, cb) {
       }
       return cb(null, parsedMainPackageJson);
     });
-  });
+  }, startDirectory);
 }
 
 /**
- * @param {string} startDirectory
  * @param {(err: Error, packageJsonPath: string) => void} cb
+ * @param {string} [startDirectory]
  */
-function getMainPackageJsonPath(startDirectory, cb) {
+function getMainPackageJsonPath(cb, startDirectory) {
   if (typeof startDirectory === 'function') {
     cb = startDirectory;
     startDirectory = null;
@@ -173,7 +173,7 @@ function searchForPackageJsonInDirectoryTreeUpwards(dir, cb) {
 }
 
 /**
- * @param {Function} cb
+ * @param {(errNodeModules: *, nodeModulesFolder: *) => *} cb
  */
 function findNodeModulesFolder(cb) {
   if (nodeModulesPath !== undefined) {

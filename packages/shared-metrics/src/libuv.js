@@ -9,9 +9,13 @@ const path = require('path');
 
 const lag = require('event-loop-lag')(1000);
 
+/** @type {*} */
 let eventLoopStats;
 
 exports.payloadPrefix = 'libuv';
+
+// This line can probly be removed. On the other hand, this is a 6 year old code, so we should review it anyway.
+// @ts-ignore
 exports.currentPayload = {};
 
 const nativeModuleLoader = require('./util/nativeModuleRetry')({

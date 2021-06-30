@@ -9,6 +9,7 @@ exports.payloadPrefix = 'activeHandles';
 
 Object.defineProperty(exports, 'currentPayload', {
   get: function () {
+    // @ts-ignore
     return process._getActiveHandles().length;
   }
 });

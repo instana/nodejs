@@ -50,20 +50,20 @@ function preInit() {
   tracing.preInit(preliminaryConfig);
   // Initialize secrets as early as possible, in particular for env var collection in fargate/google-cloud-run when
   // the config comes from INSTANA_SECRETS.
-  secrets.init(preliminaryConfig);
+  secrets.init(/** @type {secrets.SecretOption} */ (preliminaryConfig));
 }
 
 /**
  *
- * @param {*} config
- * @param {*} downstreamConnection
- * @param {*} processIdentityProvider
+ * @param {import('./util/normalizeConfig').InstanaConfig} config
+ * @param {tracing.spanBuffer.TemporaryAgentConnection} downstreamConnection
+ * @param {ProcessIdentityProvider} processIdentityProvider
  */
 function init(config, downstreamConnection, processIdentityProvider) {
-  log.init(config);
+  log.init(/** @type {log.LoggerConfig} */ (config));
   util.hasThePackageBeenInitializedTooLate();
   config = normalizeConfig(config);
-  secrets.init(config);
+  secrets.init(/** @type {secrets.SecretOption} */ (config));
   util.requireHook.init(config);
   tracing.init(config, downstreamConnection, processIdentityProvider);
 }

@@ -5,14 +5,19 @@
 
 'use strict';
 
-const applicationUnderMonitoring = require('@instana/core').util.applicationUnderMonitoring;
+const { applicationUnderMonitoring } = require('@instana/core').util;
 
 let logger = require('@instana/core').logger.getLogger('metrics');
+/**
+ * @param {import('@instana/core/src/logger').GenericLogger} _logger
+ */
 exports.setLogger = function setLogger(_logger) {
   logger = _logger;
 };
 
 exports.payloadPrefix = 'keywords';
+/** @type {Array.<*>} */
+// @ts-ignore
 exports.currentPayload = [];
 
 const MAX_ATTEMPTS = 20;
@@ -33,6 +38,7 @@ exports.activate = function activate() {
     }
 
     if (packageJson.keywords) {
+      // @ts-ignore
       exports.currentPayload = packageJson.keywords;
     }
   });

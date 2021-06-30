@@ -7,6 +7,17 @@
 
 const retry = require('./retry');
 
-module.exports = exports = function retryUntilSpansMatch(agentControls, fn) {
-  return retry(() => agentControls.getSpans().then(spans => fn(spans)));
+/**
+ * typedef {import('../../../collector/test/apps/agentStubControls').AgentStubControls} AgentStubControls
+ */
+
+// Ideally, we should use the type above for the agentConrols, but this is currently out of the scope for this ticket
+
+/**
+ * @param {*} agentControls
+ * @param {Function} fn
+ * @returns
+ */
+module.exports = function retryUntilSpansMatch(agentControls, fn) {
+  return retry(() => agentControls.getSpans().then((/** @type {*} */ spans) => fn(spans)));
 };
