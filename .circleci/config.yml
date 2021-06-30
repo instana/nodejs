@@ -221,7 +221,7 @@ mongo: &mongo
   - image: circleci/mongo:4.1.13
 
 mssql: &mssql
-  - image: microsoft/mssql-server-linux:2017-CU13
+  - image: mcr.microsoft.com/mssql/server:2019-CU11-ubuntu-20.04
     environment:
       ACCEPT_EULA: Y
       SA_PASSWORD: stanCanHazMsSQL1
