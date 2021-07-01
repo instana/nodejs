@@ -176,12 +176,20 @@ function copyPrecompiled(opts, loaderEmitter, retryIndex) {
 
     logger.info(`Found a precompiled version for ${opts.nativeModuleName} ${label}, unpacking.`);
 
+    console.log('AAAAAANTES DO tar.x');
     tar
       .x({
         cwd: os.tmpdir(),
         file: precompiledTarGzPath
       })
-      .then(() => {
+      .then(lala => {
+        console.log('!!!!!!!!!!!!! LALAALALALALAALALALALALALALALALALALALALALALALALALALALALALALALALALAL');
+        console.log('!!!!!!!!!!!!! LALAALALALALAALALALALALALALALALALALALALALALALALALALALALALALALALALAL');
+        console.log('!!!!!!!!!!!!! LALAALALALALAALALALALALALALALALALALALALALALALALALALALALALALALALALAL');
+        console.log('!!!!!!!!!!!!! LALAALALALALAALALALALALALALALALALALALALALALALALALALALALALALALALALAL');
+        console.log('!!!!!!!!!!!!! LALAALALALALAALALALALALALALALALALALALALALALALALALALALALALALALALALAL');
+        console.log('!!!!!!!!!!!!! LALAALALALALAALALALALALALALALALALALALALALALALALALALALALALALALALALAL');
+        console.log('!!!!!!!!!!!!! LALAALALALALAALALALALALALALALALALALALALALALALALALALALALALALALALALAL', lala);
         // See below for the reason why we append 'precompiled' to the path.
         const targetDir = path.join(opts.nativeModulePath, 'precompiled');
 

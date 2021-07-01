@@ -34,6 +34,7 @@ nativeModuleLoader.once('loaded', eventLoopStats_ => {
 });
 
 nativeModuleLoader.once('failed', () => {
+  // console.log('VEEEEEM AKI 3 EH FALSE');
   exports.currentPayload.statsSupported = false;
 });
 
@@ -48,6 +49,7 @@ Object.defineProperty(exports, 'currentPayload', {
 function sense() {
   if (eventLoopStats) {
     const stats = eventLoopStats.sense();
+    // console.log('VEEEEEM AKI 4 EH TRUE');
     stats.statsSupported = true;
     return stats;
   }

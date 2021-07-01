@@ -22,14 +22,22 @@ let activateHasBeenCalled = false;
 let hasBeenActivated = false;
 
 exports.payloadPrefix = 'gc';
+
+/** @type {{
+ * minorGcs: number
+ * majorGcs: number
+ * incrementalMarkings: number
+ * weakCallbackProcessing: number
+ * gcPause: number
+ * statsSupported?: boolean
+ * usedHeapSizeAfterGc?: number
+ * }} */
 exports.currentPayload = {
   minorGcs: 0,
   majorGcs: 0,
   incrementalMarkings: 0,
   weakCallbackProcessing: 0,
-  gcPause: 0,
-  statsSupported: false,
-  usedHeapSizeAfterGc: 0
+  gcPause: 0
 };
 
 exports.activate = function activate() {

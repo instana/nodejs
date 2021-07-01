@@ -5,18 +5,23 @@
 
 'use strict';
 
-const nativeModuleRetry = require('./nativeModuleRetry');
-// console.log('>>>>', typeof nativeModuleRetry, '-', nativeModuleRetry, '-', nativeModuleRetry.setLogger);
-// nativeModuleRetry()
+// const nativeModuleRetry = require('./nativeModuleRetry');
+// module.exports = {
+//   nativeModuleRetry,
+//   /**
+//    * @param {import('@instana/core/src/logger').GenericLogger} logger
+//    */
+//   setLogger: function setLogger(logger) {
+//     nativeModuleRetry.setLogger(logger);
+//   }
+// };
 
-// module.exports = exports = {
-module.exports = {
-  // nativeModuleRetry: require('./nativeModuleRetry'),
-  nativeModuleRetry,
+module.exports = exports = {
+  nativeModuleRetry: require('./nativeModuleRetry'),
   /**
    * @param {import('@instana/core/src/logger').GenericLogger} logger
    */
   setLogger: function setLogger(logger) {
-    nativeModuleRetry.setLogger(logger);
+    exports.nativeModuleRetry.setLogger(logger);
   }
 };

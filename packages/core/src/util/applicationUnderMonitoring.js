@@ -33,10 +33,10 @@ function isAppInstalledIntoNodeModules() {
  * @param {string} [startDirectory]
  */
 function getMainPackageJson(cb, startDirectory) {
-  if (typeof startDirectory === 'function') {
-    cb = startDirectory;
-    startDirectory = null;
-  }
+  // if (typeof startDirectory === 'function') {
+  //   cb = startDirectory;
+  //   startDirectory = null;
+  // }
 
   if (parsedMainPackageJson !== undefined) {
     return process.nextTick(cb, null, parsedMainPackageJson);
@@ -73,10 +73,10 @@ function getMainPackageJson(cb, startDirectory) {
  * @param {string} [startDirectory]
  */
 function getMainPackageJsonPath(cb, startDirectory) {
-  if (typeof startDirectory === 'function') {
-    cb = startDirectory;
-    startDirectory = null;
-  }
+  // if (typeof startDirectory === 'function') {
+  //   cb = startDirectory;
+  //   startDirectory = null;
+  // }
 
   if (mainPackageJsonPath !== undefined) {
     // searchForPackageJsonInDirectoryTreeUpwards would have called cb asynchronously later,

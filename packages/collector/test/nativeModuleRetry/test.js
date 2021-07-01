@@ -57,6 +57,7 @@ describe('retry loading native addons', function () {
         const libuv = aggregated.libuv;
         expect(libuv).to.exist;
         expect(libuv).to.be.an('object');
+        // console.log('111111111111111!!!!1111!!!!!!!111!!!!!111!!!11111!!!!11111!!!!111!!!!!', libuv);
         expect(libuv.statsSupported).to.be.true;
         expect(libuv.min).to.be.a('number');
         expect(libuv.max).to.be.a('number');
@@ -77,6 +78,8 @@ describe('retry loading native addons', function () {
         let foundAtLeastOneUnsupported;
         for (let i = 0; i < allMetrics.length; i++) {
           if (allMetrics[i].data.libuv) {
+            // console.log('>>>>>> LIBUV:', allMetrics[i].data.libuv, allMetrics[i].data.gc);
+            // console.log('>>>>>> GC', allMetrics[i].data.gc);
             expect(allMetrics[i].data.gc.statsSupported).to.not.exist;
             foundAtLeastOneUnsupported = true;
             break;
@@ -96,7 +99,7 @@ describe('retry loading native addons', function () {
     }
   ];
 
-  describe('metrics are activated lazily by copying precompiled binaries when they are initially missing', () => {
+  describe.only('metrics are activated lazily by copying precompiled binaries when they are initially missing', () => {
     const controls = new ProcessControls({
       appPath: path.join(__dirname, 'app'),
       agentControls,
