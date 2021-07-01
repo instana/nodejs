@@ -1,5 +1,8 @@
 # Changelog
 
+## Unreleased
+- Fix: AWS SQS headers reading properly checks for strings, numbers and arrays of strings
+
 ## 1.126.1
 - The repository was renamed to https://github.com/instana/nodejs (previously: https://github.com/instana/nodejs-sensor).
 - Memcached: added `connection` property
