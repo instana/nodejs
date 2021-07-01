@@ -99,6 +99,7 @@ describe('retry loading native addons', function () {
     }
   ];
 
+  // eslint-disable-next-line mocha/no-exclusive-tests
   describe.only('metrics are activated lazily by copying precompiled binaries when they are initially missing', () => {
     const controls = new ProcessControls({
       appPath: path.join(__dirname, 'app'),
