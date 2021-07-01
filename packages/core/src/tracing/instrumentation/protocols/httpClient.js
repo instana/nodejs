@@ -45,6 +45,30 @@ exports.updateConfig = function updateConfig(config) {
 };
 
 /**
+ * @param {string | number | Array.<string>} headerValue
+ * @param {(headerValue: string) => boolean} validator
+ * @returns {boolean}
+ */
+function evaluateHeaderValue(headerValue, validator) {
+  if (headerValue == null) {
+    return false;
+  }
+
+  if (typeof headerValue === 'string' || typeof headerValue === 'number') {
+    return validator(String(headerValue));
+  } else if (Array.isArray(headerValue)) {
+    const len = headerValue.length;
+
+    for (let i = 0; i < len; i++) {
+      if (validator(headerValue[i]) === true) {
+        return true;
+      }
+    }
+    return false;
+  }
+}
+
+/**
  * Checks whether an outgoing HTTP request should not be traced. This is intended to suppress the creation of HTTP exits
  * for which a higher level instrumentation exists, for example, HTTP requests made by AWS SQS that represent the queue
  * polling when we already created an SQS entry span for it.
@@ -55,15 +79,25 @@ exports.updateConfig = function updateConfig(config) {
  * @return {boolean} true, if the HTTP request that is about to happen should _not_ create a span.
  */
 function shouldBeBypassed(parentSpan, options) {
+  const isAWSNodeJSHeader = evaluateHeaderValue(
+    options && options.headers && options.headers['User-Agent'],
+    header => header.toLowerCase().indexOf('aws-sdk-nodejs') > -1
+  );
+
+  // Same regex used by AWS SDK at /lib/services/sqs.js
+  const hostMatchesSQS = evaluateHeaderValue(
+    options && options.headers && options.headers.Host,
+    header => header.match(/^sqs\.(?:.+?)\./) !== null
+  );
+
   if (
     parentSpan &&
     parentSpan.n === 'sqs' &&
     options &&
     options.headers &&
     options.headers['User-Agent'] &&
-    options.headers['User-Agent'].toLowerCase().indexOf('aws-sdk-nodejs') > -1 &&
-    // Same regex used by AWS SDK at /lib/services/sqs.js
-    options.headers.Host.match(/^sqs\.(?:.+?)\./)
+    isAWSNodeJSHeader &&
+    hostMatchesSQS
   ) {
     return true;
   }
