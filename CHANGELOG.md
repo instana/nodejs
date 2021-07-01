@@ -1,5 +1,7 @@
 # Changelog
 
+# Bump
+
 ## 1.126.2
 - Fix: AWS SQS headers reading properly checks for strings, numbers and arrays of strings
 
