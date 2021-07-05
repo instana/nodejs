@@ -59,6 +59,7 @@ Control.prototype.registerTestHooks = function registerTestHooks() {
 Control.prototype.startMonitoredProcess = function startMonitoredProcess() {
   this.faasRuntime = fork(this.opts.faasRuntimePath, {
     stdio: config.getAppStdio(),
+    // eslint-disable-next-line prefer-object-spread
     env: Object.assign(
       {
         HANDLER_DEFINITION_PATH: this.opts.handlerDefinitionPath,
