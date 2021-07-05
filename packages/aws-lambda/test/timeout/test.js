@@ -34,6 +34,7 @@ function prelude(opts) {
     opts.startBackend = true;
   }
 
+  // eslint-disable-next-line prefer-object-spread
   const env = Object.assign(
     {
       INSTANA_ENDPOINT_URL: opts.instanaEndpointUrl,
