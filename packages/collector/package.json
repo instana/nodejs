@@ -138,11 +138,11 @@
     "@instana/autoprofile": "1.126.2"
   },
   "devDependencies": {
-    "eslint": "^7.27.0",
+    "eslint": "^7.30.0",
     "eslint-config-airbnb": "^18.2.1",
     "eslint-plugin-mocha": "^9.0.0",
     "mocha": "^7.2.0",
     "opentracing": "^0.14.5",
-    "prettier": "^2.2.1"
+    "prettier": "^2.3.2"
   }
 }
