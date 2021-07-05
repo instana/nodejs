@@ -26,7 +26,8 @@
     "update-deps": "lerna exec '../../node_modules/.bin/ncu --upgrade' && lerna exec 'npm i --package-lock-only' && npm run reinstall-deps",
     "test": "lerna run test --stream",
     "test:debug": "lerna run test:debug --stream",
-    "lint": "node misc/is_eol || (tsc && lerna run lint --stream && eslint misc && eslint dockerfile-examples)",
+    "lint": "node misc/is_eol || (npm run typecheck && lerna run lint --stream && eslint misc && eslint dockerfile-examples)",
+    "typecheck": "tsc",
     "verify": "lerna run verify --stream",
     "version": "lerna clean --yes && lerna bootstrap --ignore-scripts -- --package-lock-only --no-audit && git add packages/*/package-lock.json"
   },
