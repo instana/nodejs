@@ -31,15 +31,15 @@
   "dependencies": {
     "detect-libc": "^1.0.3",
     "nan": "^2.14.2",
-    "node-abi": "^2.21.0",
+    "node-abi": "^2.30.0",
     "node-gyp": "^7.1.2"
   },
   "devDependencies": {
     "async": "^3.2.0",
-    "eslint": "^7.27.0",
+    "eslint": "^7.30.0",
     "mkdirp": "^1.0.4",
     "mocha": "^7.2.0",
-    "semver": "^5.7.1"
+    "semver": "^7.3.5"
   },
   "main": "index.js",
   "files": [
