@@ -23,7 +23,7 @@ const globalAgent = require('../globalAgent');
 const sharedMetricsNodeModules = path.join(__dirname, '..', '..', '..', 'shared-metrics', 'node_modules');
 const resourcesPath = path.join(__dirname, 'resources');
 
-describe('retry loading native addons', function () {
+describe.only('retry loading native addons', function () {
   const timeout = Math.max(config.getTestTimeout(), 20000);
   this.timeout(timeout);
   const retryTimeout = timeout / 2;
