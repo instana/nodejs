@@ -9,6 +9,7 @@ const expect = require('chai').expect;
 const proxyquire = require('proxyquire');
 const sinon = require('sinon');
 
+/** @type {boolean} */
 let doesV8ModuleExist;
 try {
   require('v8');
@@ -18,7 +19,9 @@ try {
 }
 
 describe('metrics.heapSpaces', () => {
+  /** @type {*} */
   let v8;
+  /** @type {*} */
   let heapSpaces;
 
   beforeEach(() => {

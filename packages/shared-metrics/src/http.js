@@ -6,6 +6,7 @@
 'use strict';
 
 exports.payloadPrefix = 'http';
+/** @type {Object.<string, *>} */
 exports.currentPayload = {};
 
 exports.activate = function activate() {};
@@ -14,15 +15,20 @@ exports.deactivate = function deactivate() {};
 instrumentHttpModule('http');
 instrumentHttpModule('https');
 
+/**
+ * @param {string} httpModuleName
+ */
 function instrumentHttpModule(httpModuleName) {
   const coreHttpModule = require(httpModuleName);
   const originalCreateServer = coreHttpModule.createServer;
 
   coreHttpModule.createServer = function createServer() {
     const server = originalCreateServer.apply(coreHttpModule, arguments);
+    /** @type {*} */
     const payloadContext = {
       type: httpModuleName
     };
+    /** @type {string} */
     let key;
 
     server.on('listening', () => {

@@ -8,14 +8,19 @@
 const path = require('path');
 const fs = require('fs');
 
-const applicationUnderMonitoring = require('@instana/core').util.applicationUnderMonitoring;
+const { applicationUnderMonitoring } = require('@instana/core').util;
 
 let logger = require('@instana/core').logger.getLogger('metrics');
+
+/**
+ * @param {import('@instana/core/src/logger').GenericLogger} _logger
+ */
 exports.setLogger = function setLogger(_logger) {
   logger = _logger;
 };
 
 exports.payloadPrefix = 'dependencies';
+/** @type {Object.<string, *>} */
 exports.currentPayload = {};
 
 const MAX_ATTEMPTS = 20;
@@ -24,7 +29,7 @@ let attempts = 0;
 
 exports.activate = function activate() {
   attempts++;
-  applicationUnderMonitoring.getMainPackageJsonPath((err, packageJsonPath) => {
+  applicationUnderMonitoring.getMainPackageJsonPathStartingAtMainModule((err, packageJsonPath) => {
     if (err) {
       return logger.warn('Failed to determine main package.json. Reason: %s %s ', err.message, err.stack);
     } else if (!packageJsonPath && attempts < MAX_ATTEMPTS) {
@@ -58,6 +63,9 @@ exports.activate = function activate() {
   });
 };
 
+/**
+ * @param {string} dependencyDir
+ */
 function addDependenciesFromDir(dependencyDir) {
   fs.readdir(dependencyDir, (readDirErr, dependencies) => {
     if (readDirErr) {
@@ -92,6 +100,10 @@ function addDependenciesFromDir(dependencyDir) {
   });
 }
 
+/**
+ * @param {*} dependency
+ * @param {string} packageJsonPath
+ */
 function addDependency(dependency, packageJsonPath) {
   fs.readFile(packageJsonPath, { encoding: 'utf8' }, (err, contents) => {
     if (err && err.code === 'ENOENT') {

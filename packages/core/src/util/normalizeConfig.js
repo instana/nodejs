@@ -93,11 +93,10 @@ const validSecretsMatcherModes = ['equals-ignore-case', 'equals', 'contains-igno
  */
 
 /**
- * @type {Function}
- * @param {InstanaConfig} config
+ * @param {InstanaConfig} [config]
  * @returns {InstanaConfig}
  */
-module.exports = exports = function normalizeConfig(config) {
+module.exports = function normalizeConfig(config) {
   if (config == null) {
     config = {};
   }

@@ -14,7 +14,7 @@ exports.payloadPrefix = 'npmPackageVersion';
 exports.currentPayload = undefined;
 
 exports.activate = function activate() {
-  coreUtil.applicationUnderMonitoring.getMainPackageJson(rootDir.root, (err, pckg) => {
+  coreUtil.applicationUnderMonitoring.getMainPackageJsonStartingAtDirectory(rootDir.root, (err, pckg) => {
     if (err) {
       logger.warn('Failed to determine main package json. Reason: ', err.message, err.stack);
     }

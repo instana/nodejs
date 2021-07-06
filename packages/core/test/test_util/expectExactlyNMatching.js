@@ -8,7 +8,17 @@
 const { findAllMatchingItems, reportFailure } = require('./matchingItems');
 const stringifyItems = require('./stringifyItems');
 
-module.exports = exports = function expectExactlyNMatching(items, n, expectations) {
+/**
+ * @typedef {import('../../src/tracing/cls').InstanaBaseSpan} InstanaBaseSpan
+ */
+
+/**
+ * @param {Array.<InstanaBaseSpan>} items
+ * @param {number} n
+ * @param {(span: InstanaBaseSpan) => void} expectations
+ * @returns {Array.<InstanaBaseSpan>}
+ */
+module.exports = function expectExactlyNMatching(items, n, expectations) {
   const matchResult = findAllMatchingItems(items, expectations);
   const matches = matchResult.getMatches();
 

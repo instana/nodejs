@@ -2,19 +2,37 @@
  * (c) Copyright IBM Corp. 2021
  * (c) Copyright Instana Inc. and contributors 2019
  */
-// @ts-nocheck
 
 'use strict';
 
 const fs = require('fs');
 const path = require('path');
 
+/** @typedef {import('../util/normalizeConfig').InstanaConfig} InstanaConfig */
+
+/** @type {InstanaConfig} */
 let config;
 
+/**
+ * @param {InstanaConfig} _config
+ */
 exports.init = _config => {
   config = _config;
 };
 
+/**
+ * @typedef {Object} InstanaMetricsModule
+ * @property {string} payloadPrefix
+ * @property {string} currentPayload
+ * @property {(config?: InstanaConfig) => void} activate
+ * @property {() => void} deactivate
+ * @property {(logger: import('../logger').GenericLogger) => void} [setLogger]
+ */
+
+/**
+ * @param {string} baseDir
+ * @returns
+ */
 exports.findAndRequire = function findAndRequire(baseDir) {
   return (
     fs
@@ -30,8 +48,12 @@ exports.findAndRequire = function findAndRequire(baseDir) {
   );
 };
 
+/** @type {Array.<InstanaMetricsModule>} */
 let metricsModules = exports.findAndRequire(__dirname);
 
+/**
+ * @param {Array.<InstanaMetricsModule>} additionalMetricsModules
+ */
 exports.registerAdditionalMetrics = function registerAdditionalMetrics(additionalMetricsModules) {
   metricsModules = metricsModules.concat(additionalMetricsModules);
 };
@@ -52,7 +74,11 @@ exports.deactivate = () => {
   });
 };
 
+/**
+ * @returns {Object.<string, string>}
+ */
 exports.gatherData = function gatherData() {
+  /** @type {Object.<string, string>} */
   const payload = {};
 
   metricsModules.forEach(metricsModule => {
@@ -62,6 +88,9 @@ exports.gatherData = function gatherData() {
   return payload;
 };
 
+/**
+ * @param {import('../logger').GenericLogger} logger
+ */
 exports.setLogger = function setLogger(logger) {
   metricsModules.forEach(metricModule => {
     if (typeof metricModule.setLogger === 'function') {

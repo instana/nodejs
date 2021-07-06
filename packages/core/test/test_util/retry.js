@@ -8,7 +8,13 @@
 const config = require('../config');
 const delay = require('./delay');
 
-module.exports = exports = function retry(fn, time, until) {
+/**
+ * @param {(value: *) => *} fn
+ * @param {number} [time]
+ * @param {number} [until]
+ * @returns {Function | Promise<*>}
+ */
+module.exports = function retry(fn, time, until) {
   if (time == null) {
     time = config.getTestTimeout() / 2;
   }

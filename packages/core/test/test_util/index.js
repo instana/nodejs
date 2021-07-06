@@ -7,7 +7,7 @@
 
 'use strict';
 
-module.exports = exports = {
+module.exports = {
   delay: require('./delay'),
   expectAtLeastOneMatching: require('./expectAtLeastOneMatching'),
   expectExactlyNMatching: require('./expectExactlyNMatching'),
