@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.127.0
 - AWS SDK v3: Instrumentation of DynamoDB
 
 ## 1.126.2
