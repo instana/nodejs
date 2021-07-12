@@ -104,12 +104,6 @@ exports.fromHeaders = function fromHeaders(headers) {
   const synthetic = readSyntheticMarker(headers);
   let w3cTraceContext = readW3cTraceContext(headers);
 
-  if (correlationType && correlationId) {
-    // Ignore X-INSTANA-T/-S and force starting a new span if we received correlation info.
-    xInstanaT = null;
-    xInstanaS = null;
-  }
-
   if (isSuppressed(level)) {
     // Ignore X-INSTANA-T/-S if X-INSTANA-L: 0 is also present.
     xInstanaT = null;
@@ -117,6 +111,12 @@ exports.fromHeaders = function fromHeaders(headers) {
     // Also discard correlation info when level is 0.
     correlationType = null;
     correlationId = null;
+  }
+
+  if (correlationType && correlationId) {
+    // Ignore X-INSTANA-T/-S and force starting a new span if we received correlation info.
+    xInstanaT = null;
+    xInstanaS = null;
   }
 
   if (xInstanaT && xInstanaS && w3cTraceContext) {
