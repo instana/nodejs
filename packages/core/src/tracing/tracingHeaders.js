@@ -186,6 +186,12 @@ exports.fromHeaders = function fromHeaders(headers) {
       traceId = w3cTraceContext.instanaTraceId;
       parentId = w3cTraceContext.instanaParentId;
     }
+    if (!traceId || !parentId) {
+      // No X-INSTANA- headers, using traceparent is disabled and there was also no in key-value pair in tracestate,
+      // thus we start a new trace.
+      traceId = tracingUtil.generateRandomTraceId();
+      parentId = null;
+    }
     return limitTraceId({
       traceId,
       parentId,
