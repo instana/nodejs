@@ -31,12 +31,7 @@ const receiveParams = {
   WaitTimeSeconds: 7
 };
 
-function log() {
-  /* eslint-disable no-console */
-  const args = Array.prototype.slice.call(arguments);
-  args[0] = `${logPrefix}${args[0]}`;
-  console.log.apply(console, args);
-}
+const log = require('@instana/core/test/test_util/log').getLogger(logPrefix);
 
 app.get('/', (_req, res) => {
   if (hasStartedPolling) {
@@ -60,9 +55,6 @@ function receivePromise() {
         return;
       }
 
-      span = instana.currentSpan();
-      span.disableAutoEnd();
-
       data.Messages.forEach(message => {
         sendToParent(message);
       });
@@ -71,6 +63,9 @@ function receivePromise() {
         'got messages:',
         data.Messages.map(m => m.MessageId)
       );
+
+      span = instana.currentSpan();
+      span.disableAutoEnd();
 
       const messagesForDeletion = data.Messages.map(message => {
         return {
@@ -94,7 +89,7 @@ function receivePromise() {
         });
     })
     .catch(err => {
-      log('message receiving failed', err);
+      log('message receiving/deleting failed', err);
       span && span.end(1);
     });
 }
@@ -113,9 +108,6 @@ async function receiveAsync() {
         return;
       }
 
-      span = instana.currentSpan();
-      span.disableAutoEnd();
-
       data.Messages.forEach(message => {
         sendToParent(message);
       });
@@ -124,6 +116,9 @@ async function receiveAsync() {
         'got messages:',
         data.Messages.map(m => m.MessageId)
       );
+
+      span = instana.currentSpan();
+      span.disableAutoEnd();
 
       const messagesForDeletion = data.Messages.map(message => {
         return {
@@ -146,7 +141,7 @@ async function receiveAsync() {
     });
   } catch (err) {
     span && span.end(1);
-    log('error receiving message', err);
+    log('ERROR receiving/deleting message', err);
   }
 }
 
@@ -220,6 +215,7 @@ async function pollForMessages() {
     try {
       await receivePromise();
     } catch (e) {
+      // eslint-disable-next-line
       console.error(e);
       process.exit(1);
     }
@@ -232,6 +228,7 @@ async function pollForMessages() {
     try {
       await receiveAsync();
     } catch (e) {
+      // eslint-disable-next-line
       console.error(e);
       process.exit(1);
     }

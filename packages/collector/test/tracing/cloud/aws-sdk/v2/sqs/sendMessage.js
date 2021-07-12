@@ -13,17 +13,11 @@ const { sqs } = require('./sqsUtil');
 const queueURL = process.env.AWS_SQS_QUEUE_URL;
 const port = process.env.APP_PORT || 3215;
 const logPrefix = `AWS SDK v2 SQS Message Sender (${process.pid}):\t`;
+const log = require('@instana/core/test/test_util/log').getLogger(logPrefix);
 
 const app = express();
 
 app.use(bodyParser.json());
-
-function log() {
-  /* eslint-disable no-console */
-  const args = Array.prototype.slice.call(arguments);
-  args[0] = `${logPrefix}${args[0]}`;
-  console.log.apply(console, args);
-}
 
 app.get('/', (_req, res) => {
   res.send('Ok');
@@ -69,6 +63,7 @@ app.post('/send-callback', (req, res) => {
 
   sqs[method](sendParams, (err, data) => {
     if (err) {
+      // eslint-disable-next-line
       console.log(err);
       res.status(501).send({
         status: 'ERROR',
@@ -96,6 +91,7 @@ app.post('/send-promise', async (req, res) => {
       data
     });
   } catch (err) {
+    // eslint-disable-next-line
     console.log(err);
     res.status(501).send({
       status: 'ERROR',

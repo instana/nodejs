@@ -5,6 +5,7 @@
 
 'use strict';
 
+const { createQueues, deleteQueues, purgeQueues } = require('./sqsUtil');
 const semver = require('semver');
 const path = require('path');
 const { expect } = require('chai');
@@ -23,10 +24,10 @@ const ProcessControls = require('../../../../../test_util/ProcessControls');
 const globalAgent = require('../../../../../globalAgent');
 const { sendMessageWithLegacyHeaders } = require('./sendNonInstrumented');
 const { verifyHttpRootEntry, verifyHttpExit } = require('@instana/core/test/test_util/common_verifications');
+const defaultPrefix = 'https://sqs.us-east-2.amazonaws.com/410797082306/';
+const queueUrlPrefix = process.env.SQS_QUEUE_URL_PREFIX || defaultPrefix;
 
-const queueUrlPrefix = process.env.SQS_QUEUE_URL_PREFIX || 'https://sqs.us-east-2.amazonaws.com/410797082306/';
-
-let queueName = 'node_sensor';
+let queueName = 'team_nodejs';
 
 if (process.env.SQS_QUEUE_NAME) {
   queueName = `${process.env.SQS_QUEUE_NAME}${semver.major(process.versions.node)}`;
@@ -47,10 +48,28 @@ if (!supportedVersion(process.versions.node)) {
 } else {
   mochaSuiteFn = describe;
 }
-
 const retryTime = config.getTestTimeout() * 2;
 
 mochaSuiteFn('tracing/cloud/aws-sdk/v2/sqs', function () {
+  this.timeout(config.getTestTimeout() * 4);
+  before(async () => {
+    await createQueues([queueName, `${queueName}-consumer`, `${queueName}-batch`]);
+    // purges queues if they already existed (not deleted from a previous interrupted CI build)
+    await purgeQueues([
+      `${queueUrlPrefix}${queueName}`,
+      `${queueUrlPrefix}${queueName}-consumer`,
+      `${queueUrlPrefix}${queueName}-batch`
+    ]);
+  });
+
+  after(async () => {
+    await deleteQueues([
+      `${queueUrlPrefix}${queueName}`,
+      `${queueUrlPrefix}${queueName}-consumer`,
+      `${queueUrlPrefix}${queueName}-batch`
+    ]);
+  });
+
   this.timeout(config.getTestTimeout() * 3);
 
   globalAgent.setUpCleanUpHooks();
@@ -62,11 +81,31 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/sqs', function () {
       port: 3215,
       useGlobalAgent: true,
       env: {
-        AWS_SQS_QUEUE_URL: queueURL
+        AWS_SQS_QUEUE_URL: `${queueUrlPrefix}${queueName}`
+      }
+    });
+
+    const senderControlsSQSConsumer = new ProcessControls({
+      appPath: path.join(__dirname, 'sendMessage'),
+      port: 3214,
+      useGlobalAgent: true,
+      env: {
+        AWS_SQS_QUEUE_URL: `${queueUrlPrefix}${queueName}-consumer`
+      }
+    });
+
+    const senderControlsBatch = new ProcessControls({
+      appPath: path.join(__dirname, 'sendMessage'),
+      port: 3213,
+      useGlobalAgent: true,
+      env: {
+        AWS_SQS_QUEUE_URL: `${queueUrlPrefix}${queueName}-batch`
       }
     });
 
     ProcessControls.setUpHooksWithRetryTime(retryTime, senderControls);
+    ProcessControls.setUpHooksWithRetryTime(retryTime, senderControlsSQSConsumer);
+    ProcessControls.setUpHooksWithRetryTime(retryTime, senderControlsBatch);
 
     receivingMethods.forEach(sqsReceiveMethod => {
       describe(`receiving via ${sqsReceiveMethod} API`, () => {
@@ -76,7 +115,7 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/sqs', function () {
           useGlobalAgent: true,
           env: {
             SQS_RECEIVE_METHOD: sqsReceiveMethod,
-            AWS_SQS_QUEUE_URL: queueURL
+            AWS_SQS_QUEUE_URL: `${queueUrlPrefix}${queueName}`
           }
         });
 
@@ -94,7 +133,7 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/sqs', function () {
               simple: withError !== 'sender'
             });
 
-            return verify(receiverControls, response, apiPath, withError);
+            return verify(receiverControls, senderControls, response, apiPath, withError);
           });
         });
 
@@ -123,7 +162,7 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/sqs', function () {
           port: 3216,
           useGlobalAgent: true,
           env: {
-            AWS_SQS_QUEUE_URL: queueURL
+            AWS_SQS_QUEUE_URL: `${queueUrlPrefix}${queueName}-consumer`
           }
         });
 
@@ -132,12 +171,12 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/sqs', function () {
         const apiPath = '/send-callback';
 
         it('receives message', async () => {
-          const response = await senderControls.sendRequest({
+          const response = await senderControlsSQSConsumer.sendRequest({
             method: 'POST',
             path: apiPath
           });
 
-          return verify(sqsConsumerControls, response, apiPath, false);
+          return verify(sqsConsumerControls, senderControlsSQSConsumer, response, apiPath, false);
         });
       });
 
@@ -147,7 +186,7 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/sqs', function () {
           port: 3216,
           useGlobalAgent: true,
           env: {
-            AWS_SQS_QUEUE_URL: queueURL,
+            AWS_SQS_QUEUE_URL: `${queueUrlPrefix}${queueName}-consumer`,
             AWS_SQS_RECEIVER_ERROR: 'true'
           }
         });
@@ -157,45 +196,47 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/sqs', function () {
         const apiPath = '/send-callback';
 
         it('fails to receive a message', async () => {
-          const response = await senderControls.sendRequest({
+          const response = await senderControlsSQSConsumer.sendRequest({
             method: 'POST',
             path: apiPath
           });
 
-          return verify(sqsConsumerControls, response, apiPath, 'receiver');
+          return verify(sqsConsumerControls, senderControlsSQSConsumer, response, apiPath, 'receiver');
         });
       });
     });
 
-    receivingMethods.forEach(sqsReceiveMethod => {
-      describe('batched messages', () => {
-        const receiverControls = new ProcessControls({
-          appPath: path.join(__dirname, 'receiveMessage'),
-          port: 3216,
-          useGlobalAgent: true,
-          env: {
-            SQS_RECEIVE_METHOD: sqsReceiveMethod,
-            AWS_SQS_QUEUE_URL: queueURL
-          }
-        });
-
-        ProcessControls.setUpHooksWithRetryTime(retryTime, receiverControls);
-
-        const sqsSendMethod = getNextSendMethod();
-        const apiPath = `/send-${sqsSendMethod}`;
-
-        it(`sending(${sqsSendMethod}); receiving(${sqsReceiveMethod})`, async () => {
-          const response = await senderControls.sendRequest({
-            method: 'POST',
-            path: `${apiPath}?isBatch=1`
+    describe('messages sent in batch', () => {
+      receivingMethods.forEach(sqsReceiveMethod => {
+        describe(`receiving batched messages: ${sqsReceiveMethod}`, () => {
+          const receiverControls = new ProcessControls({
+            appPath: path.join(__dirname, 'receiveMessage'),
+            port: 3216,
+            useGlobalAgent: true,
+            env: {
+              SQS_RECEIVE_METHOD: sqsReceiveMethod,
+              AWS_SQS_QUEUE_URL: `${queueUrlPrefix}${queueName}-batch`
+            }
           });
 
-          return verify(receiverControls, response, apiPath, false, true);
+          ProcessControls.setUpHooksWithRetryTime(retryTime, receiverControls);
+
+          const sqsSendMethod = getNextSendMethod();
+          const apiPath = `/send-${sqsSendMethod}`;
+
+          it(`sending(${sqsSendMethod}); receiving(${sqsReceiveMethod})`, async () => {
+            const response = await senderControlsBatch.sendRequest({
+              method: 'POST',
+              path: `${apiPath}?isBatch=1`
+            });
+
+            return verify(receiverControls, senderControlsBatch, response, apiPath, false, true);
+          });
         });
       });
     });
 
-    function verify(receiverControls, response, apiPath, withError, isBatch) {
+    function verify(receiverControls, _senderControls, response, apiPath, withError, isBatch) {
       if (withError === 'sender') {
         expect(response.data).to.equal("MissingRequiredParameter: Missing required key 'MessageBody' in params");
       } else {
@@ -207,14 +248,14 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/sqs', function () {
           }
           return agentControls
             .getSpans()
-            .then(spans => verifySpans(receiverControls, spans, apiPath, null, withError, isBatch));
+            .then(spans => verifySpans(receiverControls, _senderControls, spans, apiPath, null, withError, isBatch));
         }, retryTime);
       }
     }
 
-    function verifySpans(receiverControls, spans, apiPath, messageId, withError, isBatch) {
-      const httpEntry = verifyHttpRootEntry({ spans, apiPath, pid: String(senderControls.getPid()) });
-      const sqsExit = verifySQSExit(spans, httpEntry, messageId, withError);
+    function verifySpans(receiverControls, _senderControls, spans, apiPath, messageId, withError, isBatch) {
+      const httpEntry = verifyHttpRootEntry({ spans, apiPath, pid: String(_senderControls.getPid()) });
+      const sqsExit = verifySQSExit(_senderControls, spans, httpEntry, messageId, withError);
 
       if (withError !== 'publisher') {
         const sqsEntry = verifySQSEntry(receiverControls, spans, sqsExit, messageId, withError, isBatch);
@@ -253,7 +294,7 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/sqs', function () {
         span => expect(span.data).to.exist,
         span => expect(span.data.sqs).to.be.an('object'),
         span => expect(span.data.sqs.sort).to.equal('entry'),
-        span => expect(span.data.sqs.queue).to.equal(queueURL),
+        span => expect(span.data.sqs.queue).to.match(new RegExp(`^${queueUrlPrefix}${queueName}`)),
         span => expect(span.data.sqs.size).to.be.an('number'),
         span => {
           if (!isBatch) {
@@ -264,13 +305,13 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/sqs', function () {
       ]);
     }
 
-    function verifySQSExit(spans, parent, messageId, withError) {
+    function verifySQSExit(_senderControls, spans, parent, messageId, withError) {
       return expectExactlyOneMatching(spans, [
         span => expect(span.n).to.equal('sqs'),
         span => expect(span.k).to.equal(constants.EXIT),
         span => expect(span.t).to.equal(parent.t),
         span => expect(span.p).to.equal(parent.s),
-        span => expect(span.f.e).to.equal(String(senderControls.getPid())),
+        span => expect(span.f.e).to.equal(String(_senderControls.getPid())),
         span => expect(span.f.h).to.equal('agent-stub-uuid'),
         span => expect(span.error).to.not.exist,
         span => expect(span.ec).to.equal(withError === 'sender' ? 1 : 0),
@@ -278,7 +319,7 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/sqs', function () {
         span => expect(span.data).to.exist,
         span => expect(span.data.sqs).to.be.an('object'),
         span => expect(span.data.sqs.sort).to.equal('exit'),
-        span => expect(span.data.sqs.queue).to.equal(queueURL)
+        span => expect(span.data.sqs.queue).to.match(new RegExp(`^${queueUrlPrefix}${queueName}`))
       ]);
     }
   });
@@ -292,7 +333,7 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/sqs', function () {
       useGlobalAgent: true,
       tracingEnabled: false,
       env: {
-        AWS_SQS_QUEUE_URL: queueURL
+        AWS_SQS_QUEUE_URL: `${queueUrlPrefix}${queueName}`
       }
     });
 
@@ -307,7 +348,7 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/sqs', function () {
         tracingEnabled: false,
         env: {
           SQS_RECEIVE_METHOD: receivingMethod,
-          AWS_SQS_QUEUE_URL: queueURL
+          AWS_SQS_QUEUE_URL: `${queueUrlPrefix}${queueName}`
         }
       });
 
@@ -338,7 +379,7 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/sqs', function () {
       port: 3215,
       useGlobalAgent: true,
       env: {
-        AWS_SQS_QUEUE_URL: queueURL
+        AWS_SQS_QUEUE_URL: `${queueUrlPrefix}${queueName}`
       }
     });
 
@@ -352,7 +393,7 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/sqs', function () {
         useGlobalAgent: true,
         env: {
           SQS_RECEIVE_METHOD: receivingMethod,
-          AWS_SQS_QUEUE_URL: queueURL
+          AWS_SQS_QUEUE_URL: `${queueUrlPrefix}${queueName}`
         }
       });
 

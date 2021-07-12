@@ -19,13 +19,7 @@ const s3 = new AWS.S3();
 const app = express();
 const port = process.env.APP_PORT || 3215;
 
-function log() {
-  /* eslint-disable no-console */
-  const args = Array.prototype.slice.call(arguments);
-  args[0] = `${logPrefix}${args[0]}`;
-  console.log.apply(console, args);
-  /* eslint-enable no-console */
-}
+const log = require('@instana/core/test/test_util/log').getLogger(logPrefix);
 
 const bucketName = process.env.AWS_S3_BUCKET_NAME || 'nodejs-team';
 
