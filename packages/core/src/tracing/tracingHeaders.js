@@ -20,60 +20,65 @@ exports.init = function (config) {
 
 /**
  * The functions in this module return an object literal with the following shape:
- * {
- *   traceId <string>:
- *     - the trace ID
+ *
+ * @typedef {Object} TracingHeaders
+ * @property {string} [traceId] the trace ID:
  *     - will be used for span.t
  *     - will be used for propagating X-INSTANA-T downstream
  *     - will be used for the trace ID part when propagating traceparent downstream
- *   longTraceId <string>:
+ * @property {string} [longTraceId]
  *     - the full trace ID, when limiting a 128 bit trace ID to 64 bit has occured
  *     - when no limiting has been applied, this is unset
  *     - will be used for span.lt
- *   usedTraceParent <boolean>:
- *     - true if and only if trace ID and parent ID have been taken from traceparent instead of X-INSTAN-T/X-INSTANA-S.
- *   parentId <string>:
+ * @property {boolean} usedTraceParent
+ *     - true if and only if trace ID and parent ID have been taken from the traceparent head (instead of being either
+ *       taken from X-INSTAN-T/X-INSTANA-S or having been generated).
+ * @property {string} [parentId]
  *     - the parent span ID
  *     - will be used for span.p
- *     - will be used for propagating X-INSTANA-S downstream
- *     - before propagating traceparent another exit span will be created, whose span ID will be used for the parent ID
- *       part in traceparent
- *   level: <string>:
+ *     - can be null, when this is a the root entry span of a new trace
+ * @property {string} level
  *     - the tracing level, either '1' (tracing) or '0' (suppressing/not creating spans)
  *     - progated downstream as the first component of X-INSTANA-L
  *     - propagted downstream as the sampled flag in traceparent
- *   correlationType <string>:
+ * @property {string} [correlationType]
  *     - the correlation type parsed from X-INSTANA-L
  *     - will be used for span.crtp
  *     - will not be propagated downstream
- *   correlationId <string>:
+ * @property {string} [correlationId]
  *     - the correlation ID parsed from X-INSTANA-L
  *     - will be used for span.crid
  *     - will not be propagated downstream
- *   synthetic <boolean>:
+ * @property {boolean} synthetic
  *     - true if and only if X-INSTANA-SYNTHETIC=1 was present
  *     - will be used for span.sy
  *     - will not be propagated downstream
- *   w3cTraceContext <object>:
- *     - see ./w3c_trace_context/W3cTraceContext for documentation of attributes
+ * @property {InstanaAncestor} [instanaAncestor]
+ *     - only captured when no X-INSTANA-T/S were incoming, but traceparent plus tracestate with an "in" key-value pair
+ *       were present in the incoming request
+ *     - will be used as span.ia when present
+ * @property {import('./w3c_trace_context/W3cTraceContext')} w3cTraceContext
+ *     - the W3C trace context information that was extracted from the incoming request headers traceparent and
+ *       tracestate or a newly created W3C trace context if those headers were not present or invalid
  *     - will be used to initialize the internal representation of the incoming traceparent/tracestate
  *     - will be used to manipulate that internal representation according to the W3C trace context spec when creating
- *   instanaAncestor <object>:
- *     - only captured when no X-INSTANA-T/S were incoming, but traceparent plus tracestate with an "in" key-value pair
- *       child spans of the entry span
- *     - will be used as span.ia when present
- *     - structure/attributes:
- *       {
- *         t: trace ID from tracestate "in" key-value pair
- *         p: parent ID from tracestate "in" key-value pair
- *       }
- * }
+ *       new child spans and propagating W3C trace context headers downstream
+ *     - see ./w3c_trace_context/W3cTraceContext for documentation of attributes
+ */
+
+/**
+ * @typedef {Object} InstanaAncestor
+ * @property {string} t the trace ID from tracestate "in" key-value pair, that is, the trace ID of the closest ancestor
+ * span in the trace tree that has been created by an Instana tracer
+ * @property {string} p the parent span ID from tracestate "in" key-value pair, that is, the span ID of the closest
+ * ancestor in the trace tree that has been created by an Instana tracer
  */
 
 /**
  * Inspects the headers of an incoming HTTP request for X-INSTANA-T, X-INSTANA-S, X-INSTANA-L, as well as the W3C trace
  * context headers traceparent and tracestate.
  * @param {import('http').IncomingMessage} req
+ * @returns {TracingHeaders}
  */
 exports.fromHttpRequest = function fromHttpRequest(req) {
   if (!req || !req.headers) {
@@ -87,6 +92,7 @@ exports.fromHttpRequest = function fromHttpRequest(req) {
  * Inspects the given headers for X-INSTANA-T, X-INSTANA-S, X-INSTANA-L, as well as the W3C trace
  * context headers traceparent and tracestate.
  * @param {import('http').IncomingHttpHeaders} headers
+ * @returns {TracingHeaders}
  */
 exports.fromHeaders = function fromHeaders(headers) {
   let xInstanaT = readInstanaTraceId(headers);
@@ -347,26 +353,6 @@ function readW3cTraceContext(headers) {
 
   return traceContext;
 }
-
-/**
- * @typedef {Object} InstanaAncestor
- * @property {string} t
- * @property {string} p
- */
-
-/**
- * @typedef {Object} TracingHeaders
- * @property {string} [traceId]
- * @property {string} [longTraceId]
- * @property {string} [parentId]
- * @property {boolean} usedTraceParent
- * @property {import('./w3c_trace_context/W3cTraceContext')} w3cTraceContext
- * @property {string} level
- * @property {string} [correlationType]
- * @property {string} [correlationId]
- * @property {boolean} synthetic
- * @property {InstanaAncestor} [instanaAncestor]
- */
 
 /**
  * @param {TracingHeaders} result
