@@ -42,6 +42,15 @@ exports.SDK = {
   INTERMEDIATE: 'intermediate'
 };
 
+exports.sqsAttributeNames = {
+  TRACE_ID: 'X_INSTANA_T',
+  LEGACY_TRACE_ID: 'X_INSTANA_ST',
+  SPAN_ID: 'X_INSTANA_S',
+  LEGACY_SPAN_ID: 'X_INSTANA_SS',
+  LEVEL: 'X_INSTANA_L',
+  LEGACY_LEVEL: 'X_INSTANA_SL'
+};
+
 /**
  * Determine if <span> is an entry span (server span).
  * @param {import('./cls').InstanaBaseSpan} span
