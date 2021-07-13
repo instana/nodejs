@@ -400,6 +400,8 @@ function createEvent(error, trigger) {
         break;
 
       case 'sqs':
+      // fall through
+      case 'sns-to-sqs':
         event.Records = [
           {
             messageId: '420440d5-8733-43d9-b93c-ad1305889995',
@@ -409,7 +411,7 @@ function createEvent(error, trigger) {
               '6wXhHPl07/UIN5vIvPUhnHvAd37KeVy7dbRBugjq8UQk6APawf9RfNQRLkm9IXeXY8ZRCDDZaVkFDxWXfksaMrBZPNyOitQGvyxmmr' +
               'm0yJbC/SMnh1Dohdwqq6Oc4XYVi7sI7YKt6lermIxF4Y8V3AUjvUte6fyzQZlXgzb4O8us6+yzhHUW9irwNlhWGF4WAgzUFscht2EQ' +
               'fQ==',
-            body: '{\n  "body-1": "value-1",\n  "body-2": value-2"\n}',
+            body: '{\n  "body-1": "value-1",\n  "body-2": "value-2"\n}',
             attributes: {
               ApproximateReceiveCount: '1',
               SentTimestamp: '1569264666807',
@@ -437,7 +439,7 @@ function createEvent(error, trigger) {
             awsRegion: 'us-east-2'
           }
         ];
-        addSqsTracingHeaders(event);
+        addSqsTracingHeaders(event, trigger);
         break;
 
       default:
@@ -481,24 +483,47 @@ function addDirectInvokeTracingCorrelationToContext(context, trigger) {
   }
 }
 
-function addSqsTracingHeaders(event) {
-  if (process.env.INSTANA_HEADER_T) {
-    addSqsMessageAttribute(event, 'x_InStaNa_t', 'INSTANA_HEADER_T');
-  }
-  if (process.env.INSTANA_HEADER_S) {
-    addSqsMessageAttribute(event, 'x_InStaNa_S', 'INSTANA_HEADER_S');
-  }
-  if (process.env.INSTANA_HEADER_L) {
-    addSqsMessageAttribute(event, 'x_InStaNa_l', 'INSTANA_HEADER_L');
-  }
-  if (process.env.INSTANA_SQS_LEGACY_HEADER_T) {
-    addSqsMessageAttribute(event, 'x_InStaNa_st', 'INSTANA_SQS_LEGACY_HEADER_T');
-  }
-  if (process.env.INSTANA_SQS_LEGACY_HEADER_S) {
-    addSqsMessageAttribute(event, 'x_InStaNa_sS', 'INSTANA_SQS_LEGACY_HEADER_S');
-  }
-  if (process.env.INSTANA_SQS_LEGACY_HEADER_L) {
-    addSqsMessageAttribute(event, 'x_InStaNa_Sl', 'INSTANA_SQS_LEGACY_HEADER_L');
+function addSqsTracingHeaders(event, trigger) {
+  if (trigger === 'sqs') {
+    if (process.env.INSTANA_HEADER_T) {
+      addSqsMessageAttribute(event, 'x_InStaNa_t', 'INSTANA_HEADER_T');
+    }
+    if (process.env.INSTANA_HEADER_S) {
+      addSqsMessageAttribute(event, 'x_InStaNa_S', 'INSTANA_HEADER_S');
+    }
+    if (process.env.INSTANA_HEADER_L) {
+      addSqsMessageAttribute(event, 'x_InStaNa_l', 'INSTANA_HEADER_L');
+    }
+    if (process.env.INSTANA_SQS_LEGACY_HEADER_T) {
+      addSqsMessageAttribute(event, 'x_InStaNa_st', 'INSTANA_SQS_LEGACY_HEADER_T');
+    }
+    if (process.env.INSTANA_SQS_LEGACY_HEADER_S) {
+      addSqsMessageAttribute(event, 'x_InStaNa_sS', 'INSTANA_SQS_LEGACY_HEADER_S');
+    }
+    if (process.env.INSTANA_SQS_LEGACY_HEADER_L) {
+      addSqsMessageAttribute(event, 'x_InStaNa_Sl', 'INSTANA_SQS_LEGACY_HEADER_L');
+    }
+  } else if (trigger === 'sns-to-sqs') {
+    if (process.env.INSTANA_HEADER_T) {
+      addSnsPropertyToSqsMessageBody(event, 'x_InStaNa_t', 'INSTANA_HEADER_T');
+    }
+    if (process.env.INSTANA_HEADER_S) {
+      addSnsPropertyToSqsMessageBody(event, 'x_InStaNa_S', 'INSTANA_HEADER_S');
+    }
+    if (process.env.INSTANA_HEADER_L) {
+      addSnsPropertyToSqsMessageBody(event, 'x_InStaNa_l', 'INSTANA_HEADER_L');
+    }
+    if (process.env.INSTANA_SQS_LEGACY_HEADER_T) {
+      addSnsPropertyToSqsMessageBody(event, 'x_InStaNa_st', 'INSTANA_SQS_LEGACY_HEADER_T');
+    }
+    if (process.env.INSTANA_SQS_LEGACY_HEADER_S) {
+      addSnsPropertyToSqsMessageBody(event, 'x_InStaNa_sS', 'INSTANA_SQS_LEGACY_HEADER_S');
+    }
+    if (process.env.INSTANA_SQS_LEGACY_HEADER_L) {
+      addSnsPropertyToSqsMessageBody(event, 'x_InStaNa_Sl', 'INSTANA_SQS_LEGACY_HEADER_L');
+    }
+  } else {
+    throw new Error(`Unknown trigger type: ${trigger}.`);
   }
 }
 
@@ -511,6 +536,20 @@ function addSqsMessageAttribute(event, key, envVar) {
       binaryListValues: [],
       dataType: 'String'
     };
+  }
+}
+
+function addSnsPropertyToSqsMessageBody(event, key, envVar) {
+  if (process.env[envVar]) {
+    const sqsBody = JSON.parse(event.Records[0].body);
+    if (!sqsBody.MessageAttributes) {
+      sqsBody.MessageAttributes = {};
+    }
+    sqsBody.MessageAttributes[key] = {
+      Type: 'String',
+      Value: process.env[envVar]
+    };
+    event.Records[0].body = JSON.stringify(sqsBody);
   }
 }
 

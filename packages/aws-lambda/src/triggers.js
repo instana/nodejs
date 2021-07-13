@@ -244,26 +244,32 @@ exports.readTracingHeaders = function readTracingHeaders(event, context) {
     }
   }
 
-  const sqsMessageAttributes =
-    Array.isArray(event.Records) && event.Records.length > 0 && event.Records[0].eventSource === 'aws:sqs'
-      ? event.Records[0].messageAttributes
-      : null;
-  if (sqsMessageAttributes) {
-    tracingHeaders.t = readSqsMessageAttributeWithFallback(
-      sqsMessageAttributes,
-      tracingConstants.sqsAttributeNames.TRACE_ID,
-      tracingConstants.sqsAttributeNames.LEGACY_TRACE_ID
-    );
-    tracingHeaders.s = readSqsMessageAttributeWithFallback(
-      sqsMessageAttributes,
-      tracingConstants.sqsAttributeNames.SPAN_ID,
-      tracingConstants.sqsAttributeNames.LEGACY_SPAN_ID
-    );
-    tracingHeaders.l = readSqsMessageAttributeWithFallback(
-      sqsMessageAttributes,
-      tracingConstants.sqsAttributeNames.LEVEL,
-      tracingConstants.sqsAttributeNames.LEGACY_LEVEL
-    );
+  if (isSQSTrigger(event)) {
+    const sqsMessageAttributes = event.Records[0].messageAttributes;
+    if (sqsMessageAttributes) {
+      readTracingAttributesFromSqs(sqsMessageAttributes, tracingHeaders);
+      if (hasTracingHeaders(tracingHeaders)) {
+        return tracingHeaders;
+      }
+    }
+
+    const sqsMessageBody = event.Records[0].body;
+    if (typeof sqsMessageBody === 'string' && sqsMessageBody.startsWith('{')) {
+      try {
+        const parsedSqsMessageBody = JSON.parse(sqsMessageBody);
+        const snsAttributes = parsedSqsMessageBody && parsedSqsMessageBody.MessageAttributes;
+        if (snsAttributes) {
+          readTracingAttributesFromSqs(snsAttributes, tracingHeaders);
+          if (hasTracingHeaders(tracingHeaders)) {
+            return tracingHeaders;
+          }
+        }
+      } catch (e) {
+        // The attempt to parse the message body as JSON failed, so this is not an SQS message resulting from an SNS
+        // notification (SNS-to-SQS subscription), in which case we are not interested in the body. Ignore the error and
+        // move on.
+      }
+    }
   }
 
   return tracingHeaders;
@@ -278,6 +284,24 @@ function readClientContextCustom(context) {
   );
 }
 
+function readTracingAttributesFromSqs(attributes, tracingHeaders) {
+  tracingHeaders.t = readSqsMessageAttributeWithFallback(
+    attributes,
+    tracingConstants.sqsAttributeNames.TRACE_ID,
+    tracingConstants.sqsAttributeNames.LEGACY_TRACE_ID
+  );
+  tracingHeaders.s = readSqsMessageAttributeWithFallback(
+    attributes,
+    tracingConstants.sqsAttributeNames.SPAN_ID,
+    tracingConstants.sqsAttributeNames.LEGACY_SPAN_ID
+  );
+  tracingHeaders.l = readSqsMessageAttributeWithFallback(
+    attributes,
+    tracingConstants.sqsAttributeNames.LEVEL,
+    tracingConstants.sqsAttributeNames.LEGACY_LEVEL
+  );
+}
+
 function readSqsMessageAttributeWithFallback(messageAttributes, key, keyFallback) {
   return (
     readSqsStringMessageAttribute(messageAttributes, key) ||
@@ -287,8 +311,9 @@ function readSqsMessageAttributeWithFallback(messageAttributes, key, keyFallback
 
 function readSqsStringMessageAttribute(messageAttributes, key) {
   const attribute = tracingUtil.readAttribCaseInsensitive(messageAttributes, key);
-  if (attribute && attribute.stringValue) {
-    return attribute.stringValue;
+  // attribute.stringValue is used by SQS message attributes, attribute.Value is used by SNS-to-SQS.
+  if (attribute && (attribute.stringValue || attribute.Value)) {
+    return attribute.stringValue || attribute.Value;
   }
   return null;
 }

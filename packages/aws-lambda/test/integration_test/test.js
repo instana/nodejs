@@ -1135,6 +1135,82 @@ function registerTests(handlerDefinitionPath) {
         ));
   });
 
+  describe('triggered by SNS-to-SQS message with parent', function () {
+    const control = prelude.bind(this)({
+      handlerDefinitionPath,
+      trigger: 'sns-to-sqs',
+      instanaEndpointUrl: backendBaseUrl,
+      instanaAgentKey,
+      traceId: 'test-trace-id',
+      spanId: 'test-span-id'
+    });
+
+    it('must continue trace from SQS message created from an SNS notification', () =>
+      verify(control, {
+        error: false,
+        expectMetrics: true,
+        expectSpans: true,
+        trigger: 'aws:sqs',
+        parent: {
+          t: 'test-trace-id',
+          s: 'test-span-id'
+        }
+      })
+        .then(() => control.getSpans())
+        .then(spans =>
+          expectExactlyOneMatching(spans, [
+            span => expect(span.n).to.equal('aws.lambda.entry'),
+            span => expect(span.k).to.equal(constants.ENTRY),
+            span => expect(span.data.lambda.sqs).to.be.an('object'),
+            span => expect(span.data.lambda.sqs.messages).to.be.an('array'),
+            span => expect(span.data.lambda.sqs.messages).to.have.length(1),
+            span =>
+              expect(span.data.lambda.sqs.messages[0].queue).to.equal(
+                'arn:aws:sqs:us-east-2:XXXXXXXXXXXX:lambda-tracing-test-queue'
+              ),
+            span => expect(span.data.lambda.sqs.more).to.be.false
+          ])
+        ));
+  });
+
+  describe('triggered by SNS-to-SQS message with parent (legacy attribute names)', function () {
+    const control = prelude.bind(this)({
+      handlerDefinitionPath,
+      trigger: 'sns-to-sqs',
+      instanaEndpointUrl: backendBaseUrl,
+      instanaAgentKey,
+      sqsLegacyTraceId: 'sqs-legacy-test-trace-id',
+      sqsLegacySpanId: 'sqs-legacy-test-span-id'
+    });
+
+    it('must continue trace from SQS message created from an SNS notification (legacy attribute names)', () =>
+      verify(control, {
+        error: false,
+        expectMetrics: true,
+        expectSpans: true,
+        trigger: 'aws:sqs',
+        parent: {
+          t: 'sqs-legacy-test-trace-id',
+          s: 'sqs-legacy-test-span-id'
+        }
+      })
+        .then(() => control.getSpans())
+        .then(spans =>
+          expectExactlyOneMatching(spans, [
+            span => expect(span.n).to.equal('aws.lambda.entry'),
+            span => expect(span.k).to.equal(constants.ENTRY),
+            span => expect(span.data.lambda.sqs).to.be.an('object'),
+            span => expect(span.data.lambda.sqs.messages).to.be.an('array'),
+            span => expect(span.data.lambda.sqs.messages).to.have.length(1),
+            span =>
+              expect(span.data.lambda.sqs.messages[0].queue).to.equal(
+                'arn:aws:sqs:us-east-2:XXXXXXXXXXXX:lambda-tracing-test-queue'
+              ),
+            span => expect(span.data.lambda.sqs.more).to.be.false
+          ])
+        ));
+  });
+
   function verify(control, expectations) {
     return control.runHandler().then(() => verifyAfterRunningHandler(control, expectations));
   }
