@@ -65,7 +65,7 @@ function shimmedHandler(originalHandler, originalThis, originalArgs, _config) {
   const context = originalArgs[1];
   const lambdaCallback = originalArgs[2];
 
-  const tracingHeaders = triggers.readTracingHeaders(event, context);
+  const tracingHeaders = triggers.readTraceCorrelationData(event, context);
   const incomingTraceId = tracingHeaders.t;
   const incomingParentSpanId = tracingHeaders.s;
   const tracingSuppressed = tracingHeaders.l === '0';
