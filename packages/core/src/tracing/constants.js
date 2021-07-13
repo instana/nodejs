@@ -51,6 +51,8 @@ exports.sqsAttributeNames = {
   LEGACY_LEVEL: 'X_INSTANA_SL'
 };
 
+exports.snsSqsInstanaHeaderPrefixRegex = /"X_INSTANA_/i;
+
 /**
  * Determine if <span> is an entry span (server span).
  * @param {import('./cls').InstanaBaseSpan} span

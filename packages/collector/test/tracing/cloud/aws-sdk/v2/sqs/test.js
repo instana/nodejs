@@ -22,7 +22,7 @@ const {
 } = require('../../../../../../../core/test/test_util');
 const ProcessControls = require('../../../../../test_util/ProcessControls');
 const globalAgent = require('../../../../../globalAgent');
-const { sendMessageWithLegacyHeaders } = require('./sendNonInstrumented');
+const { sendMessageWithLegacyHeaders, sendSnsNotificationToSqsQueue } = require('./sendNonInstrumented');
 const { verifyHttpRootEntry, verifyHttpExit } = require('@instana/core/test/test_util/common_verifications');
 const defaultPrefix = 'https://sqs.us-east-2.amazonaws.com/410797082306/';
 const queueUrlPrefix = process.env.SQS_QUEUE_URL_PREFIX || defaultPrefix;
@@ -138,20 +138,29 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/sqs', function () {
         });
 
         it('falls back to legacy "S" headers if needed. eg: X_INSTANA_ST instead of X_INSTANA_T', async () => {
-          await sendMessageWithLegacyHeaders(queueURL, '1234', '5678');
-          return verifyLegacy();
+          const traceId = '1234';
+          const spanId = '5678';
+          await sendMessageWithLegacyHeaders(queueURL, traceId, spanId);
+          return verifySingleSqsEntrySpanWithParent(traceId, spanId);
         });
 
-        function verifyLegacy() {
-          return retry(async () => {
-            const spans = await agentControls.getSpans();
-            return expectExactlyOneMatching(spans, [
-              span => expect(span.t).to.equal('1234'),
-              span => expect(span.p).to.equal('5678'),
-              span => expect(span.k).to.equal(constants.ENTRY)
-            ]);
-          }, retryTime);
-        }
+        it('continues trace from a SNS notification routed to an SQS queue via SNS-to-SQS subscription', async () => {
+          const traceId = 'abcdef9876543210';
+          const spanId = '9876543210abcdef';
+          await sendSnsNotificationToSqsQueue(queueURL, traceId, spanId);
+          return verifySingleSqsEntrySpanWithParent(traceId, spanId);
+        });
+
+        it(
+          'continues trace from a SNS notification routed to an SQS queue via SNS-to-SQS subscription ' +
+            '(legacy headers)',
+          async () => {
+            const traceId = 'abcdef9876543210';
+            const spanId = '9876543210abcdef';
+            await sendSnsNotificationToSqsQueue(queueURL, traceId, spanId, true);
+            return verifySingleSqsEntrySpanWithParent(traceId, spanId);
+          }
+        );
       });
     });
 
@@ -251,6 +260,17 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/sqs', function () {
             .then(spans => verifySpans(receiverControls, _senderControls, spans, apiPath, null, withError, isBatch));
         }, retryTime);
       }
+    }
+
+    function verifySingleSqsEntrySpanWithParent(traceId, spanId) {
+      return retry(async () => {
+        const spans = await agentControls.getSpans();
+        return expectExactlyOneMatching(spans, [
+          span => expect(span.t).to.equal(traceId),
+          span => expect(span.p).to.equal(spanId),
+          span => expect(span.k).to.equal(constants.ENTRY)
+        ]);
+      }, retryTime);
     }
 
     function verifySpans(receiverControls, _senderControls, spans, apiPath, messageId, withError, isBatch) {

@@ -7,7 +7,7 @@
 
 const shimmer = require('shimmer');
 const cls = require('../../../../cls');
-const { sqsAttributeNames, ENTRY, EXIT, isExitSpan } = require('../../../../constants');
+const { ENTRY, EXIT, isExitSpan, snsSqsInstanaHeaderPrefixRegex, sqsAttributeNames } = require('../../../../constants');
 const requireHook = require('../../../../../util/requireHook');
 const tracingUtil = require('../../../../tracingUtil');
 
@@ -235,8 +235,6 @@ function shimReceiveMessage(originalReceiveMessage) {
 
 function instrumentedReceiveMessage(ctx, originalReceiveMessage, originalArgs) {
   return cls.ns.runAndReturn(() => {
-    let attributes;
-
     const span = cls.startSpan('sqs', ENTRY);
     span.stack = tracingUtil.getStackTrace(instrumentedSendMessage);
     span.data.sqs = {
@@ -275,15 +273,17 @@ function instrumentedReceiveMessage(ctx, originalReceiveMessage, originalArgs) {
           setImmediate(() => finishSpan(null, null, span));
           return originalCallback.apply(this, arguments);
         } else if (data && data.Messages && data.Messages.length > 0) {
-          attributes = convertAttributesFromSQS(data.Messages[0].MessageAttributes);
-          if (readAttribCaseInsensitive(attributes, sqsAttributeNames.LEVEL, sqsAttributeNames.LEGACY_LEVEL) === '0') {
+          let tracingAttributes = readTracingAttributes(data.Messages[0].MessageAttributes);
+          if (!hasTracingAttributes(tracingAttributes)) {
+            tracingAttributes = readTracingAttributesFromSns(data.Messages[0].Body);
+          }
+          if (tracingAttributes.level === '0') {
             cls.setTracingLevel('0');
             setImmediate(() => span.cancel());
             return originalCallback.apply(this, arguments);
           }
 
-          configureEntrySpan(span, data, attributes);
-
+          configureEntrySpan(span, data, tracingAttributes);
           setImmediate(() => finishSpan(null, data, span));
           return originalCallback.apply(this, arguments);
         } else {
@@ -308,17 +308,18 @@ function instrumentedReceiveMessage(ctx, originalReceiveMessage, originalArgs) {
               setImmediate(() => finishSpan(null, null, span));
               return data;
             } else if (data && data.Messages && data.Messages.length > 0) {
-              attributes = convertAttributesFromSQS(data.Messages[0].MessageAttributes);
-              if (
-                readAttribCaseInsensitive(attributes, sqsAttributeNames.LEVEL, sqsAttributeNames.LEGACY_LEVEL) === '0'
-              ) {
+              let tracingAttributes = readTracingAttributes(data.Messages[0].MessageAttributes);
+              if (!hasTracingAttributes(tracingAttributes)) {
+                tracingAttributes = readTracingAttributesFromSns(data.Messages[0].Body);
+              }
+
+              if (tracingAttributes.level === '0') {
                 cls.setTracingLevel('0');
                 setImmediate(() => span.cancel());
                 return data;
               }
 
-              configureEntrySpan(span, data, attributes);
-
+              configureEntrySpan(span, data, tracingAttributes);
               setImmediate(() => finishSpan(null, data, span));
             } else {
               setImmediate(() => span.cancel());
@@ -355,53 +356,103 @@ function instrumentedReceiveMessage(ctx, originalReceiveMessage, originalArgs) {
   });
 }
 
-function readAttribCaseInsensitive(attributes, key1, key2) {
-  return (
-    tracingUtil.readAttribCaseInsensitive(attributes, key1) || tracingUtil.readAttribCaseInsensitive(attributes, key2)
+/**
+ * Reads all trace context relevant message attributes from an incoming message and provides them in a normalized format
+ * for later processing.
+ */
+function readTracingAttributes(sqsAttributes) {
+  const tracingAttributes = {};
+  if (!sqsAttributes) {
+    return tracingAttributes;
+  }
+
+  tracingAttributes.traceId = readMessageAttributeWithFallback(
+    sqsAttributes,
+    sqsAttributeNames.TRACE_ID,
+    sqsAttributeNames.LEGACY_TRACE_ID
   );
+  tracingAttributes.parentId = readMessageAttributeWithFallback(
+    sqsAttributes,
+    sqsAttributeNames.SPAN_ID,
+    sqsAttributeNames.LEGACY_SPAN_ID
+  );
+  tracingAttributes.level = readMessageAttributeWithFallback(
+    sqsAttributes,
+    sqsAttributeNames.LEVEL,
+    sqsAttributeNames.LEGACY_LEVEL
+  );
+
+  return tracingAttributes;
+}
+
+function readTracingAttributesFromSns(messageBody) {
+  const tracingAttributes = {};
+  // Parsing the message body introduces a tiny overhead which we want to avoid unless we are sure that the incoming
+  // message actually has tracing attributes. Thus some preliminary, cheaper checks are executed first.
+  if (
+    typeof messageBody === 'string' &&
+    messageBody.startsWith('{') &&
+    messageBody.includes('"Type":"Notification"') &&
+    snsSqsInstanaHeaderPrefixRegex.test(messageBody)
+  ) {
+    try {
+      const parsedBody = JSON.parse(messageBody);
+      if (parsedBody && parsedBody.MessageAttributes) {
+        tracingAttributes.traceId = readMessageAttributeWithFallback(
+          parsedBody.MessageAttributes,
+          sqsAttributeNames.TRACE_ID,
+          sqsAttributeNames.LEGACY_TRACE_ID
+        );
+        tracingAttributes.parentId = readMessageAttributeWithFallback(
+          parsedBody.MessageAttributes,
+          sqsAttributeNames.SPAN_ID,
+          sqsAttributeNames.LEGACY_SPAN_ID
+        );
+        tracingAttributes.level = readMessageAttributeWithFallback(
+          parsedBody.MessageAttributes,
+          sqsAttributeNames.LEVEL,
+          sqsAttributeNames.LEGACY_LEVEL
+        );
+      }
+    } catch (e) {
+      // The attempt to parse the message body as JSON failed, so this is not an SQS message resulting from an SNS
+      // notification (SNS-to-SQS subscription), in which case we are not interested in the body. Ignore the error and
+      // move on.
+    }
+  }
+  return tracingAttributes;
+}
+
+function readMessageAttributeWithFallback(attributes, key1, key2) {
+  const attribute =
+    tracingUtil.readAttribCaseInsensitive(attributes, key1) || tracingUtil.readAttribCaseInsensitive(attributes, key2);
+  if (attribute) {
+    // attribute.stringValue is used by SQS message attributes, attribute.Value is used by SNS-to-SQS.
+    return attribute.StringValue || attribute.Value;
+  }
 }
 
 /**
- * Flattens the AWS SQS MessageAttribute format into a basic object structure.
+ * Checks whether the given tracingAttributes object has at least one attribute set, that is, if there have been Instana
+ * message attributes present when converting message attributes into this object.
  */
-function convertAttributesFromSQS(sqsAttributes) {
-  const attributes = {};
-  if (!sqsAttributes) {
-    return attributes;
-  }
-
-  const keys = Object.keys(sqsAttributes);
-
-  for (let i = 0; i < keys.length; i++) {
-    const key = keys[i];
-
-    if (sqsAttributes[key].DataType === 'String') {
-      attributes[key] = sqsAttributes[key].StringValue;
-    }
-  }
-
-  return attributes;
+function hasTracingAttributes(tracingAttributes) {
+  return tracingAttributes.traceId != null || tracingAttributes.parentId != null || tracingAttributes.level != null;
 }
 
 /**
  * Add extra info to the entry span after messages are received
  * @param {*} span The SQS Span
  * @param {*} data The data returned by the SQS API
- * @param {*} attributes The SQS Message Attributes
+ * @param {*} tracingAttributes The message attributes relevant for tracing
  */
-function configureEntrySpan(span, data, attributes) {
+function configureEntrySpan(span, data, tracingAttributes) {
   span.data.sqs.size = data.Messages.length;
   span.ts = Date.now();
 
-  const spanT = readAttribCaseInsensitive(attributes, sqsAttributeNames.TRACE_ID, sqsAttributeNames.LEGACY_TRACE_ID);
-  const spanP = readAttribCaseInsensitive(attributes, sqsAttributeNames.SPAN_ID, sqsAttributeNames.LEGACY_SPAN_ID);
-
-  if (spanT) {
-    span.t = spanT;
-  }
-
-  if (spanP) {
-    span.p = spanP;
+  if (tracingAttributes.traceId && tracingAttributes.parentId) {
+    span.t = tracingAttributes.traceId;
+    span.p = tracingAttributes.parentId;
   }
 }
 
