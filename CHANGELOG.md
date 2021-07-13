@@ -1,5 +1,8 @@
 # Changelog
 
+## Unreleased
+- [AWS Lambda] Add trace correlation support for Lambda invokations triggered by SQS messages.
+
 ## 1.127.0
 - AWS SDK v3: Instrumentation of DynamoDB
 

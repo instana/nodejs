@@ -5,8 +5,8 @@
 
 'use strict';
 
-const tracingConstants = require('@instana/core').tracing.constants;
-const secrets = require('@instana/core').secrets;
+const { constants: tracingConstants, util: tracingUtil } = require('@instana/core').tracing;
+const { secrets } = require('@instana/core');
 const zlib = require('zlib');
 
 const { captureHeaders } = require('./capture_headers');
@@ -212,43 +212,87 @@ function extractEventFromSQS(event, span) {
 }
 
 function isInvokeFunction(context) {
-  const custom =
-    (context && context.clientContext && context.clientContext.Custom) ||
-    (context && context.clientContext && context.clientContext.custom);
+  const custom = readClientContextCustom(context);
   return custom && (custom['x-instana-l'] || custom['x-instana-s'] || custom['x-instana-t']);
 }
 
 exports.readTracingHeaders = function readTracingHeaders(event, context) {
   const tracingHeaders = {};
-  // Node.js AWS SDK documentation expects for Custom, with capital "C", but the same is not explicitly said for
-  // other languages, so we test both
-  const custom =
-    (context && context.clientContext && context.clientContext.Custom) ||
-    (context && context.clientContext && context.clientContext.custom);
+
   if (event.headers && typeof event.headers === 'object') {
-    let lowerCaseKey;
-    Object.keys(event.headers).forEach(key => {
-      if (typeof key === 'string') {
-        lowerCaseKey = key.toLowerCase();
-        if (lowerCaseKey === tracingConstants.traceIdHeaderNameLowerCase) {
-          tracingHeaders.t = event.headers[key];
-        } else if (lowerCaseKey === tracingConstants.spanIdHeaderNameLowerCase) {
-          tracingHeaders.s = event.headers[key];
-        } else if (lowerCaseKey === tracingConstants.traceLevelHeaderNameLowerCase) {
-          tracingHeaders.l = event.headers[key];
-        }
-      }
-    });
-  } else if (custom) {
-    if (custom['x-instana-l']) {
-      tracingHeaders.l = custom['x-instana-l'];
-    }
-    if (custom['x-instana-s']) {
-      tracingHeaders.s = custom['x-instana-s'];
-    }
-    if (custom['x-instana-t']) {
-      tracingHeaders.t = custom['x-instana-t'];
+    tracingHeaders.t = tracingUtil.readAttribCaseInsensitive(event.headers, tracingConstants.traceIdHeaderName);
+    tracingHeaders.s = tracingUtil.readAttribCaseInsensitive(event.headers, tracingConstants.spanIdHeaderName);
+    tracingHeaders.l = tracingUtil.readAttribCaseInsensitive(event.headers, tracingConstants.traceLevelHeaderName);
+    if (hasTracingHeaders(tracingHeaders)) {
+      return tracingHeaders;
     }
   }
+
+  const custom = readClientContextCustom(context);
+  if (custom) {
+    if (custom[tracingConstants.traceLevelHeaderNameLowerCase]) {
+      tracingHeaders.l = custom[tracingConstants.traceLevelHeaderNameLowerCase];
+    }
+    if (custom[tracingConstants.spanIdHeaderNameLowerCase]) {
+      tracingHeaders.s = custom[tracingConstants.spanIdHeaderNameLowerCase];
+    }
+    if (custom[tracingConstants.traceIdHeaderNameLowerCase]) {
+      tracingHeaders.t = custom[tracingConstants.traceIdHeaderNameLowerCase];
+    }
+    if (hasTracingHeaders(tracingHeaders)) {
+      return tracingHeaders;
+    }
+  }
+
+  const sqsMessageAttributes =
+    Array.isArray(event.Records) && event.Records.length > 0 && event.Records[0].eventSource === 'aws:sqs'
+      ? event.Records[0].messageAttributes
+      : null;
+  if (sqsMessageAttributes) {
+    tracingHeaders.t = readSqsMessageAttributeWithFallback(
+      sqsMessageAttributes,
+      tracingConstants.sqsAttributeNames.TRACE_ID,
+      tracingConstants.sqsAttributeNames.LEGACY_TRACE_ID
+    );
+    tracingHeaders.s = readSqsMessageAttributeWithFallback(
+      sqsMessageAttributes,
+      tracingConstants.sqsAttributeNames.SPAN_ID,
+      tracingConstants.sqsAttributeNames.LEGACY_SPAN_ID
+    );
+    tracingHeaders.l = readSqsMessageAttributeWithFallback(
+      sqsMessageAttributes,
+      tracingConstants.sqsAttributeNames.LEVEL,
+      tracingConstants.sqsAttributeNames.LEGACY_LEVEL
+    );
+  }
+
   return tracingHeaders;
 };
+
+function readClientContextCustom(context) {
+  // The Node.js AWS SDK documentation expects for Custom, with capital "C", but the same is not explicitly said for
+  // other languages, so we test both.
+  return (
+    (context && context.clientContext && context.clientContext.Custom) ||
+    (context && context.clientContext && context.clientContext.custom)
+  );
+}
+
+function readSqsMessageAttributeWithFallback(messageAttributes, key, keyFallback) {
+  return (
+    readSqsStringMessageAttribute(messageAttributes, key) ||
+    readSqsStringMessageAttribute(messageAttributes, keyFallback)
+  );
+}
+
+function readSqsStringMessageAttribute(messageAttributes, key) {
+  const attribute = tracingUtil.readAttribCaseInsensitive(messageAttributes, key);
+  if (attribute && attribute.stringValue) {
+    return attribute.stringValue;
+  }
+  return null;
+}
+
+function hasTracingHeaders(tracingHeaders) {
+  return tracingHeaders.t || tracingHeaders.s || tracingHeaders.l;
+}

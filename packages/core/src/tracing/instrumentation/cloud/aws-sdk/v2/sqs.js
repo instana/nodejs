@@ -7,18 +7,9 @@
 
 const shimmer = require('shimmer');
 const cls = require('../../../../cls');
-const { ENTRY, EXIT, isExitSpan } = require('../../../../constants');
+const { sqsAttributeNames, ENTRY, EXIT, isExitSpan } = require('../../../../constants');
 const requireHook = require('../../../../../util/requireHook');
 const tracingUtil = require('../../../../tracingUtil');
-
-const headerNames = {
-  TRACE_ID: 'X_INSTANA_T',
-  LEGACY_TRACE_ID: 'X_INSTANA_ST',
-  SPAN_ID: 'X_INSTANA_S',
-  LEGACY_SPAN_ID: 'X_INSTANA_SS',
-  LEVEL: 'X_INSTANA_L',
-  LEGACY_LEVEL: 'X_INSTANA_SL'
-};
 
 // Available call types to be sent into span.data.sqs.type
 const callTypes = {
@@ -190,7 +181,7 @@ function propagateSuppression(attributes) {
     return;
   }
 
-  attributes[headerNames.LEVEL] = {
+  attributes[sqsAttributeNames.LEVEL] = {
     DataType: 'String',
     StringValue: '0'
   };
@@ -201,17 +192,17 @@ function propagateTraceContext(attributes, span) {
     return;
   }
 
-  attributes[headerNames.TRACE_ID] = {
+  attributes[sqsAttributeNames.TRACE_ID] = {
     DataType: 'String',
     StringValue: span.t
   };
 
-  attributes[headerNames.SPAN_ID] = {
+  attributes[sqsAttributeNames.SPAN_ID] = {
     DataType: 'String',
     StringValue: span.s
   };
 
-  attributes[headerNames.LEVEL] = {
+  attributes[sqsAttributeNames.LEVEL] = {
     DataType: 'String',
     StringValue: '1'
   };
@@ -285,7 +276,7 @@ function instrumentedReceiveMessage(ctx, originalReceiveMessage, originalArgs) {
           return originalCallback.apply(this, arguments);
         } else if (data && data.Messages && data.Messages.length > 0) {
           attributes = convertAttributesFromSQS(data.Messages[0].MessageAttributes);
-          if (readAttribCaseInsensitive(attributes, headerNames.LEVEL, headerNames.LEGACY_LEVEL) === '0') {
+          if (readAttribCaseInsensitive(attributes, sqsAttributeNames.LEVEL, sqsAttributeNames.LEGACY_LEVEL) === '0') {
             cls.setTracingLevel('0');
             setImmediate(() => span.cancel());
             return originalCallback.apply(this, arguments);
@@ -318,7 +309,9 @@ function instrumentedReceiveMessage(ctx, originalReceiveMessage, originalArgs) {
               return data;
             } else if (data && data.Messages && data.Messages.length > 0) {
               attributes = convertAttributesFromSQS(data.Messages[0].MessageAttributes);
-              if (readAttribCaseInsensitive(attributes, headerNames.LEVEL, headerNames.LEGACY_LEVEL) === '0') {
+              if (
+                readAttribCaseInsensitive(attributes, sqsAttributeNames.LEVEL, sqsAttributeNames.LEGACY_LEVEL) === '0'
+              ) {
                 cls.setTracingLevel('0');
                 setImmediate(() => span.cancel());
                 return data;
@@ -400,8 +393,8 @@ function configureEntrySpan(span, data, attributes) {
   span.data.sqs.size = data.Messages.length;
   span.ts = Date.now();
 
-  const spanT = readAttribCaseInsensitive(attributes, headerNames.TRACE_ID, headerNames.LEGACY_TRACE_ID);
-  const spanP = readAttribCaseInsensitive(attributes, headerNames.SPAN_ID, headerNames.LEGACY_SPAN_ID);
+  const spanT = readAttribCaseInsensitive(attributes, sqsAttributeNames.TRACE_ID, sqsAttributeNames.LEGACY_TRACE_ID);
+  const spanP = readAttribCaseInsensitive(attributes, sqsAttributeNames.SPAN_ID, sqsAttributeNames.LEGACY_SPAN_ID);
 
   if (spanT) {
     span.t = spanT;

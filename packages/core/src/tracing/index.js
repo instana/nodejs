@@ -97,6 +97,7 @@ exports.opentracing = opentracing;
 exports.sdk = sdk;
 exports.spanBuffer = spanBuffer;
 exports.supportedVersion = supportedVersion;
+exports.util = tracingUtil;
 
 /**
  * @param {Array.<InstanaInstrumentedModule>} _additionalInstrumentationModules

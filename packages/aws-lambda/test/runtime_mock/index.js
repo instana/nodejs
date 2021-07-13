@@ -118,7 +118,7 @@ function runHandler(handler, error) {
   };
 
   context = createContext(callback);
-  addHttpTracingToContext(context, trigger);
+  addDirectInvokeTracingCorrelationToContext(context, trigger);
 
   const promise = handler(event, context, callback);
 
@@ -437,6 +437,7 @@ function createEvent(error, trigger) {
             awsRegion: 'us-east-2'
           }
         ];
+        addSqsTracingHeaders(event);
         break;
 
       default:
@@ -458,7 +459,7 @@ function addHttpTracingHeaders(event) {
   }
 }
 
-function addHttpTracingToContext(context, trigger) {
+function addDirectInvokeTracingCorrelationToContext(context, trigger) {
   const fillContext = process.env.FILL_CONTEXT === 'true';
   const clientContext = fillContext ? { Custom: { awesome_company: 'Instana' } } : { Custom: {} };
   context.clientContext = clientContext;
@@ -477,6 +478,39 @@ function addHttpTracingToContext(context, trigger) {
       }
       break;
     default:
+  }
+}
+
+function addSqsTracingHeaders(event) {
+  if (process.env.INSTANA_HEADER_T) {
+    addSqsMessageAttribute(event, 'x_InStaNa_t', 'INSTANA_HEADER_T');
+  }
+  if (process.env.INSTANA_HEADER_S) {
+    addSqsMessageAttribute(event, 'x_InStaNa_S', 'INSTANA_HEADER_S');
+  }
+  if (process.env.INSTANA_HEADER_L) {
+    addSqsMessageAttribute(event, 'x_InStaNa_l', 'INSTANA_HEADER_L');
+  }
+  if (process.env.INSTANA_SQS_LEGACY_HEADER_T) {
+    addSqsMessageAttribute(event, 'x_InStaNa_st', 'INSTANA_SQS_LEGACY_HEADER_T');
+  }
+  if (process.env.INSTANA_SQS_LEGACY_HEADER_S) {
+    addSqsMessageAttribute(event, 'x_InStaNa_sS', 'INSTANA_SQS_LEGACY_HEADER_S');
+  }
+  if (process.env.INSTANA_SQS_LEGACY_HEADER_L) {
+    addSqsMessageAttribute(event, 'x_InStaNa_Sl', 'INSTANA_SQS_LEGACY_HEADER_L');
+  }
+}
+
+function addSqsMessageAttribute(event, key, envVar) {
+  if (process.env[envVar]) {
+    const messageAttributes = event.Records[0].messageAttributes;
+    messageAttributes[key] = {
+      stringValue: process.env[envVar],
+      stringListValues: [],
+      binaryListValues: [],
+      dataType: 'String'
+    };
   }
 }
 
