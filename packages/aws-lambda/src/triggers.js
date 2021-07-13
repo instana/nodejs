@@ -278,14 +278,12 @@ function readTraceCorrelationFromClientContextCustom(context) {
   return traceCorrelationData;
 }
 
-function readTraceCorrelationFromSqs(event) {
-  let traceCorrelationData = {};
   if (isSQSTrigger(event)) {
     const sqsMessageAttributes = event.Records[0].messageAttributes;
     if (sqsMessageAttributes) {
-      traceCorrelationData = readTraceCorrelationFromSqsAttributes(sqsMessageAttributes);
-      if (hasFoundTraceCorrelationData(traceCorrelationData)) {
-        return traceCorrelationData;
+      readTracingAttributesFromSqs(sqsMessageAttributes, tracingHeaders);
+      if (hasTracingHeaders(tracingHeaders)) {
+        return tracingHeaders;
       }
     }
 
@@ -298,6 +296,25 @@ function readTraceCorrelationFromSqs(event) {
       sqsMessageBody.includes('"Type":"Notification"') &&
       tracingConstants.snsSqsInstanaHeaderPrefixRegex.test(sqsMessageBody)
     ) {
+      try {
+        const parsedSqsMessageBody = JSON.parse(sqsMessageBody);
+        const snsAttributes = parsedSqsMessageBody && parsedSqsMessageBody.MessageAttributes;
+        if (snsAttributes) {
+          readTracingAttributesFromSqs(snsAttributes, tracingHeaders);
+          if (hasTracingHeaders(tracingHeaders)) {
+            return tracingHeaders;
+          }
+        }
+      } catch (e) {
+        // The attempt to parse the message body as JSON failed, so this is not an SQS message resulting from an SNS
+        // notification (SNS-to-SQS subscription), in which case we are not interested in the body. Ignore the error and
+        // move on.
+      }
+    }
+  }
+
+    const sqsMessageBody = event.Records[0].body;
+    if (typeof sqsMessageBody === 'string' && sqsMessageBody.startsWith('{')) {
       try {
         const parsedSqsMessageBody = JSON.parse(sqsMessageBody);
         const snsAttributes = parsedSqsMessageBody && parsedSqsMessageBody.MessageAttributes;
@@ -335,6 +352,24 @@ function readTraceCorrelationFromSqsAttributes(attributes) {
     tracingConstants.sqsAttributeNames.LEGACY_LEVEL
   );
   return traceCorrelationData;
+}
+
+function readTracingAttributesFromSqs(attributes, tracingHeaders) {
+  tracingHeaders.t = readSqsMessageAttributeWithFallback(
+    attributes,
+    tracingConstants.sqsAttributeNames.TRACE_ID,
+    tracingConstants.sqsAttributeNames.LEGACY_TRACE_ID
+  );
+  tracingHeaders.s = readSqsMessageAttributeWithFallback(
+    attributes,
+    tracingConstants.sqsAttributeNames.SPAN_ID,
+    tracingConstants.sqsAttributeNames.LEGACY_SPAN_ID
+  );
+  tracingHeaders.l = readSqsMessageAttributeWithFallback(
+    attributes,
+    tracingConstants.sqsAttributeNames.LEVEL,
+    tracingConstants.sqsAttributeNames.LEGACY_LEVEL
+  );
 }
 
 function readSqsMessageAttributeWithFallback(messageAttributes, key, keyFallback) {
