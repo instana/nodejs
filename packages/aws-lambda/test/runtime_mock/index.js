@@ -504,6 +504,14 @@ function addSqsTracingHeaders(event, trigger) {
       addSqsMessageAttribute(event, 'x_InStaNa_Sl', 'INSTANA_SQS_LEGACY_HEADER_L');
     }
   } else if (trigger === 'sns-to-sqs') {
+    event.Records[0].body = JSON.stringify({
+      Type: 'Notification',
+      MessageId: '99999c55-7d4e-555b-a1ef-4532d06f474c',
+      TopicArn: 'arn:aws:sns:us-east-2:555123456890:sns-topic-with-sqs-subscription',
+      Subject: 'Test Message Subject',
+      Message: "The SNS message's body."
+    });
+
     if (process.env.INSTANA_HEADER_T) {
       addSnsPropertyToSqsMessageBody(event, 'x_InStaNa_t', 'INSTANA_HEADER_T');
     }

@@ -290,7 +290,14 @@ function readTraceCorrelationFromSqs(event) {
     }
 
     const sqsMessageBody = event.Records[0].body;
-    if (typeof sqsMessageBody === 'string' && sqsMessageBody.startsWith('{')) {
+    // Parsing the message body introduces a tiny overhead which we want to avoid unless we are sure that the incoming
+    // message actually has tracing attributes. Thus some preliminary, cheaper checks are executed first.
+    if (
+      typeof sqsMessageBody === 'string' &&
+      sqsMessageBody.startsWith('{') &&
+      sqsMessageBody.includes('"Type":"Notification"') &&
+      tracingConstants.snsSqsInstanaHeaderPrefixRegex.test(sqsMessageBody)
+    ) {
       try {
         const parsedSqsMessageBody = JSON.parse(sqsMessageBody);
         const snsAttributes = parsedSqsMessageBody && parsedSqsMessageBody.MessageAttributes;
