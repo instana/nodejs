@@ -236,7 +236,7 @@ class ProcessControls {
    *   }
    * }} The request options
    */
-  sendRequest(opts) {
+  sendRequest(opts = {}) {
     const requestOptions = Object.assign({}, opts);
     const baseUrl = this.getBaseUrl(opts);
     requestOptions.baseUrl = baseUrl;
