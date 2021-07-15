@@ -15,7 +15,7 @@ const fetch = require('node-fetch');
 const logPrefix = `Memcached (${process.pid}):\t`;
 const log = require('@instana/core/test/test_util/log').getLogger(logPrefix);
 const Memcached = require('memcached');
-const memcached = new Memcached('localhost:11211');
+const memcached = new Memcached(process.env.MEMCACHED || 'localhost:11211');
 
 /**
  * These arrays are used to build the call to the memcached lib, by using apply + a callback function

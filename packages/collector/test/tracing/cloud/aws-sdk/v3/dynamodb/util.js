@@ -6,7 +6,6 @@
 'use strict';
 
 const AWS = require('@aws-sdk/client-dynamodb');
-// AWS.config.update({ region: 'us-east-2' });
 const dynamoDB = new AWS.DynamoDB({ region: 'us-east-2' });
 const interval = 1000;
 const MAX_WAIT_TIME = 10000;

@@ -20,6 +20,7 @@ shared: &shared
     - POSTGRES_USER=node
     - POSTGRES_PASSWORD=nodepw
     - POSTGRES_DB=nodedb
+    - MEMCACHED=localhost:11211
 
   steps:
     - checkout
