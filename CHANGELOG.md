@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.128.0
 - [AWS Lambda] Add trace correlation support for Lambda invocations triggered by SQS messages (including SNS-to-SQS).
 - Add trace continuity support for SNS-to-SQS bridge for SQS tracing.
 
