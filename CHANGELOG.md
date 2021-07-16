@@ -1,7 +1,8 @@
 # Changelog
 
-## Unreleased
+## 1.129.0
 - Bring back `applicationUnderMonitoring#getMainPackageJson` and `applicationUnderMonitoring#getMainPackageJsonPath` for backward compatibility.
+- AWS SDK v3: Instrumentation of S3
 
 ## 1.128.0
 - [AWS Lambda] Add trace correlation support for Lambda invocations triggered by SQS messages (including SNS-to-SQS).
