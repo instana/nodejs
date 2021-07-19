@@ -5,6 +5,7 @@
 
 'use strict';
 
+const { v4: uuid } = require('uuid');
 const { checkTableExistence, cleanup } = require('./util');
 const semver = require('semver');
 const path = require('path');
@@ -25,7 +26,7 @@ const { promisifyNonSequentialCases } = require('../promisify_non_sequential');
 let tableName = 'nodejs-team';
 
 if (process.env.AWS_DYNAMODB_TABLE_NAME) {
-  tableName = `${process.env.AWS_DYNAMODB_TABLE_NAME}${semver.major(process.versions.node)}`;
+  tableName = `${process.env.AWS_DYNAMODB_TABLE_NAME}${semver.major(process.versions.node)}-${uuid()}`;
 }
 
 let mochaSuiteFn;
@@ -71,11 +72,11 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/dynamodb', function () {
   globalAgent.setUpCleanUpHooks();
   const agentControls = globalAgent.instance;
 
-  describe('tracing enabled, no suppression', function () {
-    before(() => {
-      return cleanup(tableName);
-    });
+  after(() => {
+    return cleanup(tableName);
+  });
 
+  describe('tracing enabled, no suppression', function () {
     const appControls = new ProcessControls({
       appPath: path.join(__dirname, 'app'),
       port: 3215,
