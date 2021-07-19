@@ -5,7 +5,8 @@
 
 'use strict';
 
-const { createQueues, deleteQueues, purgeQueues } = require('./sqsUtil');
+const { v4: uuid } = require('uuid');
+const { createQueues, deleteQueues } = require('./sqsUtil');
 const semver = require('semver');
 const path = require('path');
 const { expect } = require('chai');
@@ -30,7 +31,7 @@ const queueUrlPrefix = process.env.SQS_QUEUE_URL_PREFIX || defaultPrefix;
 let queueName = 'team_nodejs';
 
 if (process.env.SQS_QUEUE_NAME) {
-  queueName = `${process.env.SQS_QUEUE_NAME}${semver.major(process.versions.node)}`;
+  queueName = `${process.env.SQS_QUEUE_NAME}${semver.major(process.versions.node)}-${uuid()}`;
 }
 
 const queueURL = `${queueUrlPrefix}${queueName}`;
@@ -39,6 +40,8 @@ let mochaSuiteFn;
 
 const sendingMethods = ['callback', 'promise'];
 const receivingMethods = ['callback', 'promise', 'async'];
+const queueNames = [queueName, `${queueName}-consumer`, `${queueName}-batch`];
+const queueURLs = queueNames.map(name => `${queueUrlPrefix}${name}`);
 
 const getNextSendMethod = require('@instana/core/test/test_util/circular_list').getCircularList(sendingMethods);
 const getNextReceiveMethod = require('@instana/core/test/test_util/circular_list').getCircularList(receivingMethods);
@@ -53,21 +56,11 @@ const retryTime = config.getTestTimeout() * 2;
 mochaSuiteFn('tracing/cloud/aws-sdk/v2/sqs', function () {
   this.timeout(config.getTestTimeout() * 4);
   before(async () => {
-    await createQueues([queueName, `${queueName}-consumer`, `${queueName}-batch`]);
-    // purges queues if they already existed (not deleted from a previous interrupted CI build)
-    await purgeQueues([
-      `${queueUrlPrefix}${queueName}`,
-      `${queueUrlPrefix}${queueName}-consumer`,
-      `${queueUrlPrefix}${queueName}-batch`
-    ]);
+    await createQueues(queueNames);
   });
 
   after(async () => {
-    await deleteQueues([
-      `${queueUrlPrefix}${queueName}`,
-      `${queueUrlPrefix}${queueName}-consumer`,
-      `${queueUrlPrefix}${queueName}-batch`
-    ]);
+    await deleteQueues(queueURLs);
   });
 
   this.timeout(config.getTestTimeout() * 3);

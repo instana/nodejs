@@ -68,10 +68,6 @@ const retryTime = config.getTestTimeout() * 2;
 mochaSuiteFn('tracing/cloud/aws-sdk/v3/s3', function () {
   this.timeout(config.getTestTimeout() * 3);
 
-  before(() => {
-    return cleanup(bucketName);
-  });
-
   after(() => {
     return cleanup(bucketName);
   });

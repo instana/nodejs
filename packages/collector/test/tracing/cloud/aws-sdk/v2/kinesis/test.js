@@ -5,6 +5,7 @@
 
 'use strict';
 
+const { v4: uuid } = require('uuid');
 const { cleanup, checkStreamExistence } = require('./util');
 const semver = require('semver');
 const path = require('path');
@@ -25,7 +26,7 @@ const { promisifyNonSequentialCases } = require('../promisify_non_sequential');
 let streamName = process.env.AWS_KINESIS_STREAM_NAME || 'nodejs-team';
 
 if (process.env.AWS_KINESIS_STREAM_NAME) {
-  streamName = `${process.env.AWS_KINESIS_STREAM_NAME}${semver.major(process.versions.node)}`;
+  streamName = `${process.env.AWS_KINESIS_STREAM_NAME}${semver.major(process.versions.node)}-${uuid()}`;
 }
 
 let mochaSuiteFn;
@@ -68,11 +69,11 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/kinesis', function () {
   globalAgent.setUpCleanUpHooks();
   const agentControls = globalAgent.instance;
 
-  describe('tracing enabled, no suppression', function () {
-    before(() => {
-      return cleanup(streamName);
-    });
+  after(() => {
+    return cleanup(streamName);
+  });
 
+  describe('tracing enabled, no suppression', function () {
     const appControls = new ProcessControls({
       appPath: path.join(__dirname, 'app'),
       port: 3215,

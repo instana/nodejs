@@ -5,6 +5,7 @@
 
 'use strict';
 
+const { v4: uuid } = require('uuid');
 const semver = require('semver');
 const path = require('path');
 const { expect } = require('chai');
@@ -25,7 +26,7 @@ const { promisifyNonSequentialCases } = require('../promisify_non_sequential');
 let bucketName = 'nodejs-team';
 
 if (process.env.AWS_S3_BUCKET_NAME) {
-  bucketName = `${process.env.AWS_S3_BUCKET_NAME}${semver.major(process.versions.node)}`;
+  bucketName = `${process.env.AWS_S3_BUCKET_NAME}${semver.major(process.versions.node)}-${uuid()}`;
 }
 
 let mochaSuiteFn;
@@ -58,7 +59,7 @@ const retryTime = config.getTestTimeout() * 2;
 mochaSuiteFn('tracing/cloud/aws-sdk/v2/s3', function () {
   this.timeout(config.getTestTimeout() * 3);
 
-  before(() => {
+  after(() => {
     return cleanup(bucketName);
   });
 
