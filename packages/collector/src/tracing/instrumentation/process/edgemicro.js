@@ -10,6 +10,7 @@ const cluster = require('cluster');
 const requireHook = require('@instana/core').util.requireHook;
 const selfPath = require('./selfPath');
 
+/** @type {import('@instana/core/src/logger').GenericLogger} */
 let logger;
 logger = require('../../../logger').getLogger('tracing/edgemicro', newLogger => {
   logger = newLogger;
@@ -19,12 +20,17 @@ exports.init = function () {
   requireHook.onFileLoad(/\/edgemicro\/cli\/lib\/reload-cluster.js/, instrumentReloadCluster);
 };
 
-// This instruments the code that is responsible for starting the cluster of edgemicro workers that handle HTTP
-// requests, when edgemicro is started via `edgemicro start`. It adds --require /path/to/@instana/collecor/src/immediate
-// to the arguments, effectively adding Instana instrumentation to the worker processes at the earliest possible moment.
-//
-// There is also ./childProcess.js, which is responsible for instrumenting the code path that is used with
-// `edgemicro forever -a start`.
+/**
+ * This instruments the code that is responsible for starting the cluster of edgemicro workers that handle HTTP
+ * requests, when edgemicro is started via `edgemicro start`. It adds --require /path/to/@instana/collecor/src/immediate
+ * to the arguments, effectively adding Instana instrumentation to the worker processes at the earliest possible moment.
+ *
+ * There is also ./childProcess.js, which is responsible for instrumenting the code path that is used with
+ * `edgemicro forever -a start`.
+ *
+ * @param {*} reloadClusterModule
+ * @returns {*}
+ */
 function instrumentReloadCluster(reloadClusterModule) {
   return function () {
     if (!selfPath.immediate) {

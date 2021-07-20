@@ -6,12 +6,12 @@
 'use strict';
 
 /**
- * @type {Function}
  * @param {Object<string, *>} prev
  * @param {Object<string, *>} next
- * @param {Array<*>} excludeList
+ * @param {Array<*>} [excludeList]
+ * @returns {Object<string, *>}
  */
-module.exports = exports = function applyCompressionRoot(prev, next, excludeList) {
+module.exports = function applyCompressionRoot(prev, next, excludeList) {
   const result = applyCompression([], prev, next, excludeList);
 
   // the root object needs to be at least an empty object.
@@ -23,9 +23,10 @@ module.exports = exports = function applyCompressionRoot(prev, next, excludeList
 
 /**
  * @param {Array<*>} path
- * @param {*} prev
- * @param {*} next
+ * @param {Object<string, *>} prev
+ * @param {Object<string, *>} next
  * @param {*} excludeList
+ * @return {Object<string, *>}
  */
 function applyCompression(path, prev, next, excludeList) {
   if (isExcluded(path, excludeList)) {
@@ -59,6 +60,7 @@ function applyCompression(path, prev, next, excludeList) {
  * @param {Object<string, *>} prev
  * @param {Object<string, *>} next
  * @param {Array<*>} excludeList
+ * @return {Object<string, *>}
  */
 function applyCompressionToObject(path, prev, next, excludeList) {
   /** @type {Object<string, *>} */
@@ -111,6 +113,7 @@ function applyCompressionToArray(prev, next) {
 /**
  * @param {Array<*>} path
  * @param {Array<*>} excludeList
+ * @returns {boolean}
  */
 function isExcluded(path, excludeList) {
   if (excludeList == null) {

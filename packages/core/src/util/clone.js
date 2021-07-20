@@ -7,7 +7,7 @@
 
 /**
  * @param {Object<string, *>|Array<Object>} x
- * @returns {Object}
+ * @returns {Object<string, *>}
  */
 module.exports = function clone(x) {
   /** @type {Object<string, *>} */

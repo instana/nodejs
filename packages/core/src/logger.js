@@ -16,6 +16,7 @@ const registry = {};
  * @property {(...args: *) => void} info
  * @property {(...args: *) => void} warn
  * @property {(...args: *) => void} error
+ * @property {*} [child]
  */
 
 /** @type {GenericLogger} */

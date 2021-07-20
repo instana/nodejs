@@ -5,13 +5,16 @@
 
 'use strict';
 
-const atMostOnce = require('@instana/core').util.atMostOnce;
+const { atMostOnce } = require('@instana/core').util;
 const fs = require('fs');
-const http = require('@instana/core').uninstrumentedHttp.http;
+const { http } = require('@instana/core').uninstrumentedHttp;
 const pathUtil = require('path');
-const propertySizes = require('@instana/core').util.propertySizes;
+const { propertySizes } = require('@instana/core').util;
 const childProcess = require('child_process');
 
+/** @typedef {import('@instana/core/src/tracing/cls').InstanaBaseSpan} InstanaBaseSpan */
+
+/** @type {import('@instana/core/src/logger').GenericLogger} */
 let logger;
 logger = require('./logger').getLogger('agentConnection', newLogger => {
   logger = newLogger;
@@ -33,9 +36,39 @@ let maxContentErrorHasBeenLogged = false;
 
 let isConnected = false;
 
+/**
+ * @typedef {Object} AgentConnectionEvent
+ * @property {string} [title]
+ * @property {string} [text]
+ * @property {string} [plugin]
+ * @property {number} [pid]
+ * @property {number} [id]
+ * @property {string} [code]
+ * @property {string} [category]
+ * @property {number} [timestamp]
+ * @property {number} [duration]
+ * @property {number} [severity]
+ */
+
+/**
+ * @typedef {Object} AgentConnectionPayload
+ * @property {number} pid
+ * @property {string} [inode]
+ * @property {string} [fd]
+ * @property {boolean} pidFromParentNS
+ * @property {string} spacer
+ * @property {string} [name]
+ * @property {string | Array.<*>} [args]
+ * @property {string} [cpuSetFileContent]
+ */
+
+/**
+ * @param {(err: Error, rawResponse?: string) => void} cb
+ */
 exports.announceNodeCollector = function announceNodeCollector(cb) {
   cb = atMostOnce('callback for announceNodeCollector', cb);
 
+  /** @type {AgentConnectionPayload} */
   const payload = {
     // the PID of this process (might be relative to the container or the root PID namespace)
     pid: pidStore.pid,
@@ -44,7 +77,7 @@ exports.announceNodeCollector = function announceNodeCollector(cb) {
     // parent namespace
     pidFromParentNS: pidStore.pid != process.pid, // eslint-disable-line eqeqeq
 
-    // We might need to add the propery `inode` to this JSON payload in the `socket` event handler - that is, *after*
+    // We might need to add the property `inode` to this JSON payload in the `socket` event handler - that is, *after*
     // the Content-Length handler has already been sent. This is problematic because but we do not know how long (as in
     // characters) the file descriptor and inode will be. Still, we need to set a correct Content-Length header before
     // initiating the request. This is what this spacer is used for.
@@ -106,7 +139,9 @@ exports.announceNodeCollector = function announceNodeCollector(cb) {
   });
 
   req.on('socket', socket => {
+    // @ts-ignore - Property '_handle' does not exist on type 'Socket'
     if (socket._handle != null && socket._handle.fd != null) {
+      // @ts-ignore - Property '_handle' does not exist on type 'Socket'
       payload.fd = String(socket._handle.fd);
 
       try {
@@ -132,10 +167,17 @@ exports.announceNodeCollector = function announceNodeCollector(cb) {
   });
 };
 
+/**
+ * @param {(ready: boolean) => void} cb
+ */
 exports.checkWhetherAgentIsReadyToAcceptData = function checkWhetherAgentIsReadyToAcceptData(cb) {
   checkWhetherResponseForPathIsOkay(`/com.instana.plugin.nodejs.${pidStore.pid}`, cb);
 };
 
+/**
+ * @param {string} path
+ * @param {(...args: *) => *} cb
+ */
 function checkWhetherResponseForPathIsOkay(path, cb) {
   cb = atMostOnce('callback for checkWhetherResponseForPathIsOkay', cb);
 
@@ -168,6 +210,10 @@ function checkWhetherResponseForPathIsOkay(path, cb) {
   req.end();
 }
 
+/**
+ * @param {Object<string, *>} data
+ * @param {(...args: *) => *} cb
+ */
 exports.sendMetrics = function sendMetrics(data, cb) {
   cb = atMostOnce('callback for sendMetrics', cb);
 
@@ -189,6 +235,11 @@ exports.sendMetrics = function sendMetrics(data, cb) {
   });
 };
 
+/**
+ *
+ * @param {Array.<InstanaBaseSpan>} spans
+ * @param {(...args: *) => *} cb
+ */
 exports.sendSpans = function sendSpans(spans, cb) {
   const callback = atMostOnce('callback for sendSpans', err => {
     if (err && !maxContentErrorHasBeenLogged && err instanceof PayloadTooLargeError) {
@@ -200,6 +251,10 @@ exports.sendSpans = function sendSpans(spans, cb) {
   sendData(`/com.instana.plugin.nodejs/traces.${pidStore.pid}`, spans, callback, true);
 };
 
+/**
+ * @param {*} profiles
+ * @param {(...args: *) => *} cb
+ */
 exports.sendProfiles = function sendProfiles(profiles, cb) {
   const callback = atMostOnce('callback for sendProfiles', err => {
     if (err && err instanceof PayloadTooLargeError) {
@@ -216,6 +271,10 @@ exports.sendProfiles = function sendProfiles(profiles, cb) {
   sendData(`/com.instana.plugin.nodejs/profiles.${pidStore.pid}`, profiles, callback);
 };
 
+/**
+ * @param {AgentConnectionEvent} eventData
+ * @param {(...args: *) => *} cb
+ */
 exports.sendEvent = function sendEvent(eventData, cb) {
   const callback = atMostOnce('callback for sendEvent', (err, responseBody) => {
     cb(err, responseBody);
@@ -224,7 +283,13 @@ exports.sendEvent = function sendEvent(eventData, cb) {
   sendData('/com.instana.plugin.generic.event', eventData, callback);
 };
 
+/**
+ * @param {string} code
+ * @param {string} category
+ * @param {(...args: *) => *} cb
+ */
 exports.sendAgentMonitoringEvent = function sendAgentMonitoringEvent(code, category, cb) {
+  /** @type {AgentConnectionEvent} */
   const event = {
     plugin: 'com.instana.forge.infrastructure.runtime.nodejs.NodeJsRuntimePlatform',
     pid: pidStore.pid,
@@ -240,6 +305,11 @@ exports.sendAgentMonitoringEvent = function sendAgentMonitoringEvent(code, categ
   sendData('/com.instana.plugin.generic.agent-monitoring-event', event, callback);
 };
 
+/**
+ * @param {string} messageId
+ * @param {*} response
+ * @param {(...args: *) => *} cb
+ */
 exports.sendAgentResponseToAgent = function sendAgentResponseToAgent(messageId, response, cb) {
   cb = atMostOnce('callback for sendAgentResponseToAgent', cb);
 
@@ -250,6 +320,10 @@ exports.sendAgentResponseToAgent = function sendAgentResponseToAgent(messageId, 
   );
 };
 
+/**
+ * @param {import('@instana/core/src/tracing').TracingMetrics} tracingMetrics
+ * @param {(...args: *) => *} cb
+ */
 exports.sendTracingMetricsToAgent = function sendTracingMetricsToAgent(tracingMetrics, cb) {
   const callback = atMostOnce('callback for sendTracingMetricsToAgent', err => {
     cb(err);
@@ -258,17 +332,24 @@ exports.sendTracingMetricsToAgent = function sendTracingMetricsToAgent(tracingMe
   sendData('/tracermetrics', tracingMetrics, callback);
 };
 
+/**
+ * @param {string} path
+ * @param {*} data
+ * @param {(...args: *) => *} cb
+ * @param {boolean} [ignore404]
+ * @returns
+ */
 function sendData(path, data, cb, ignore404) {
   cb = atMostOnce(`callback for sendData: ${path}`, cb);
   if (ignore404 === undefined) {
     ignore404 = false;
   }
 
-  let payload = JSON.stringify(data, circularReferenceRemover());
+  const payloadAsString = JSON.stringify(data, circularReferenceRemover());
   logger.debug('Sending data to %s', path);
 
   // Convert payload to a buffer to correctly identify content-length ahead of time.
-  payload = Buffer.from(payload, 'utf8');
+  const payload = Buffer.from(payloadAsString, 'utf8');
   if (payload.length > maxContentLength) {
     const error = new PayloadTooLargeError(`Request payload is too large. Will not send data to agent. (POST ${path})`);
     return setImmediate(cb.bind(null, error));
@@ -292,6 +373,7 @@ function sendData(path, data, cb, ignore404) {
           const statusCodeError = new Error(
             `Failed to send data to agent via POST ${path}. Got status code ${res.statusCode}.`
           );
+          // @ts-ignore
           statusCodeError.statusCode = res.statusCode;
           cb(statusCodeError);
           return;
@@ -328,6 +410,9 @@ function sendData(path, data, cb, ignore404) {
  *
  * YOU MUST NOT USE THIS FUNCTION, except for the one use case where it is actually required to block the event loop
  * (reporting an uncaught exception tot the agent in the process.on('uncaughtException') handler).
+ *
+ * @param {*} eventData
+ * @param {Array.<InstanaBaseSpan>} spans
  */
 exports.reportUncaughtExceptionToAgentSync = function reportUncaughtExceptionToAgentSync(eventData, spans) {
   sendRequestsSync(
@@ -343,6 +428,11 @@ exports.reportUncaughtExceptionToAgentSync = function reportUncaughtExceptionToA
  *
  * YOU MUST NOT USE THIS FUNCTION, except for the one use case where it is actually required to block the event loop
  * (reporting an uncaught exception tot the agent in the process.on('uncaughtException') handler).
+ *
+ * @param {string} path1
+ * @param {Object} data1
+ * @param {string} path2
+ * @param {Object} data2
  */
 function sendRequestsSync(path1, data1, path2, data2) {
   let port = agentOpts.port;
@@ -371,7 +461,7 @@ function sendRequestsSync(path1, data1, path2, data2) {
     childProcess.execFileSync(process.execPath, [pathUtil.join(__dirname, 'uncaught', 'syncHttp.js')], {
       env: {
         INSTANA_AGENT_HOST: agentOpts.host,
-        INSTANA_AGENT_PORT: agentOpts.port,
+        INSTANA_AGENT_PORT: String(agentOpts.port),
         PATH1: path1,
         PAYLOAD1: payload1,
         PATH2: path2,
@@ -406,18 +496,25 @@ function getCpuSetFileContent() {
   }
 }
 
+/**
+ * @param {string} message
+ */
 function PayloadTooLargeError(message) {
   Error.captureStackTrace(this, this.constructor);
   this.name = this.constructor.name;
   this.message = message;
 }
 
+/**
+ *
+ * @param {Array.<InstanaBaseSpan>} spans
+ */
 function logLargeSpans(spans) {
   maxContentErrorHasBeenLogged = true;
   const topFiveLargestSpans = spans
     .map(span => ({
       span,
-      length: JSON.stringify(span)
+      length: JSON.stringify(span).length
     }))
     .sort((s1, s2) => s2.length - s1.length)
     .slice(0, 4)

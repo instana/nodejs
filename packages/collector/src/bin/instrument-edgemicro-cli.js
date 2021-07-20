@@ -40,7 +40,13 @@ const selfPath = require('./selfPath');
 
 const edgemicroCliMain = 'cli/edgemicro';
 
-module.exports = exports = function instrumentEdgemicroCli(edgemicroPath, collectorPath, callback) {
+/**
+ * @param {string | ((err?: Error) => *) | undefined} edgemicroPath
+ * @param {string | ((err?: Error) => *) | undefined} collectorPath
+ * @param {(err?: Error) => * | undefined} callback
+ * @returns
+ */
+function instrumentEdgemicroCli(edgemicroPath, collectorPath, callback) {
   if (typeof edgemicroPath === 'function') {
     callback = edgemicroPath;
     edgemicroPath = undefined;
@@ -62,6 +68,7 @@ module.exports = exports = function instrumentEdgemicroCli(edgemicroPath, collec
     console.log('- Path to edgemicro has not been provided, I will try to figure it out now.');
     const globalNodeModules = childProcess.execSync('npm root -g').toString().trim();
     console.log('    * Global node_modules directory:', globalNodeModules);
+
     edgemicroPath = path.join(globalNodeModules, 'edgemicro');
     if (!fs.existsSync(edgemicroPath)) {
       return callback(
@@ -74,9 +81,7 @@ module.exports = exports = function instrumentEdgemicroCli(edgemicroPath, collec
     console.log('- Path to edgemicro has not been provided, I will assume it is:', edgemicroPath);
   }
   if (typeof edgemicroPath !== 'string') {
-    return callback(
-      `${new Error(`The path to edgemicro needs to be a string but was of type ${typeof edgemicroPath}`)}.`
-    );
+    return callback(new Error(`The path to edgemicro needs to be a string but was of type ${typeof edgemicroPath}`));
   }
 
   if (!collectorPath) {
@@ -109,7 +114,7 @@ module.exports = exports = function instrumentEdgemicroCli(edgemicroPath, collec
     }
 
     try {
-      const collectorPackageJson = require(path.join(collectorPath, 'package.json'));
+      const collectorPackageJson = require(path.join(/** @type {string} */ (collectorPath), 'package.json'));
       if (collectorPackageJson.name !== '@instana/collector') {
         return callback(
           new Error(
@@ -125,13 +130,20 @@ module.exports = exports = function instrumentEdgemicroCli(edgemicroPath, collec
       );
     }
 
-    const edgemicroCliMainFullPath = path.resolve(edgemicroPath, edgemicroCliMain);
+    const edgemicroCliMainFullPath = path.resolve(/** @type {string} */ (edgemicroPath), edgemicroCliMain);
     console.log('- Will instrument the following file:', edgemicroCliMainFullPath);
 
-    createBackupAndInstrument(edgemicroCliMainFullPath, collectorPath, callback);
+    createBackupAndInstrument(edgemicroCliMainFullPath, /** @type {string} */ (collectorPath), callback);
   });
-};
+}
 
+module.exports = instrumentEdgemicroCli;
+
+/**
+ * @param {string} edgemicroCliMainFullPath
+ * @param {string} collectorPath
+ * @param {(err?: Error) => *} callback
+ */
 function createBackupAndInstrument(edgemicroCliMainFullPath, collectorPath, callback) {
   const backupFullPath = `${edgemicroCliMainFullPath}.backup`;
   console.log('- Creating a backup at:', backupFullPath);
@@ -144,6 +156,11 @@ function createBackupAndInstrument(edgemicroCliMainFullPath, collectorPath, call
   });
 }
 
+/**
+ * @param {string} source
+ * @param {string} target
+ * @param {(err?: Error) => *} copyCallback
+ */
 function copyFile(source, target, copyCallback) {
   let callbackHasBeenCalled = false;
   const readStream = fs.createReadStream(source);
@@ -169,6 +186,11 @@ function copyFile(source, target, copyCallback) {
   readStream.pipe(writeBackupStream);
 }
 
+/**
+ * @param {string} fileToBeInstrumented
+ * @param {string} collectorPath
+ * @param {(err?: Error) => *} callback
+ */
 function instrument(fileToBeInstrumented, collectorPath, callback) {
   console.log('- Reading:', fileToBeInstrumented);
   fs.readFile(fileToBeInstrumented, 'utf8', (readErr, content) => {
@@ -213,11 +235,15 @@ if (require.main === module) {
   });
 } else {
   if (
+    // @ts-ignore - TS doesn't recognize the internal properties of module
     module.parent &&
+    // @ts-ignore
     typeof module.parent.id === 'string' &&
+    // @ts-ignore
     module.parent.id.indexOf('instrument_edgemicro_cli_test') >= 0
   ) {
     // skip printing warnings in tests
+    // @ts-ignore - A 'return' statement can only be used within a function body
     return;
   }
 

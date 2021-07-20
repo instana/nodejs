@@ -5,9 +5,12 @@
 
 'use strict';
 
-module.exports = exports = function createCircularReferencesRemover() {
+/**
+ * @returns {(key: string, value: *) => *}
+ */
+module.exports = function createCircularReferencesRemover() {
   const seen = new WeakSet();
-  return (_, value) => {
+  return (_key, value) => {
     if (typeof value === 'object' && value !== null) {
       if (seen.has(value)) {
         return;

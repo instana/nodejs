@@ -8,8 +8,10 @@
 const pidStore = require('../pidStore');
 
 exports.payloadPrefix = 'pid';
+// @ts-ignore - Cannot redeclare exported variable
 exports.currentPayload = pidStore.pid;
 
-pidStore.onPidChange(pid => {
+pidStore.onPidChange((/** @type {number} */ pid) => {
+  // @ts-ignore - Cannot redeclare exported variable
   exports.currentPayload = pid;
 });

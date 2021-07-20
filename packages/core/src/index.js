@@ -25,11 +25,6 @@ const util = require('./util');
  */
 
 /**
- * @typedef {Object} ProcessIdentityProvider
- * @property {() => PIDData} getFrom
- */
-
-/**
  * @typedef {Object} InstanaCore
  * @property {import('./metrics/index')} metrics
  * @property {import('./secrets')} secrets
@@ -57,7 +52,7 @@ function preInit() {
  *
  * @param {import('./util/normalizeConfig').InstanaConfig} config
  * @param {tracing.spanBuffer.TemporaryAgentConnection} downstreamConnection
- * @param {ProcessIdentityProvider} processIdentityProvider
+ * @param {import('../../collector/src/pidStore')} processIdentityProvider
  */
 function init(config, downstreamConnection, processIdentityProvider) {
   log.init(/** @type {log.LoggerConfig} */ (config));

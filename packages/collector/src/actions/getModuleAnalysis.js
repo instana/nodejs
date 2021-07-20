@@ -5,7 +5,11 @@
 
 'use strict';
 
-exports.getModuleAnalysis = function getModuleAnalysis(request, multiCb) {
+/**
+ * @param {import("../agent/requestHandler").AnnounceRequest} _request
+ * @param {(data: Object.<string, *>) => void} multiCb
+ */
+exports.getModuleAnalysis = function getModuleAnalysis(_request, multiCb) {
   multiCb({
     data: {
       cwd: process.cwd(),

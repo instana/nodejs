@@ -2,6 +2,7 @@
  * (c) Copyright IBM Corp. 2021
  * (c) Copyright Instana Inc. and contributors 2020
  */
+// @ts-nocheck - tracing/instrumentation is out of context for now
 
 'use strict';
 
@@ -13,6 +14,7 @@ const shimmer = require('shimmer');
 
 const selfPath = require('./selfPath');
 
+/** @type {import('@instana/core/src/logger').GenericLogger} */
 let logger;
 logger = require('../../../logger').getLogger('tracing/child_process', newLogger => {
   logger = newLogger;
@@ -86,7 +88,7 @@ function shimFork(original) {
         args.execArgv.unshift('--require');
       }
 
-      /** @type {import('node:child_process').ChildProcess} */
+      /** @type {import('child_process').ChildProcess} */
       const childProcess = original.apply(this, _args);
 
       // Retrieve the entry span created by bull.js#instrumentedProcessJob.

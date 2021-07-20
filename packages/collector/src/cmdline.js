@@ -7,6 +7,7 @@
 
 const fs = require('fs');
 
+/** @type {import('@instana/core/src/logger').GenericLogger} */
 let logger;
 logger = require('./logger').getLogger('cmdline', newLogger => {
   logger = newLogger;
@@ -14,12 +15,13 @@ logger = require('./logger').getLogger('cmdline', newLogger => {
 
 exports.getCmdline = function getCmdline() {
   let name;
+  /** @type {Array.<string>} */
   let args;
 
   try {
-    let cmdline = fs.readFileSync(`/proc/${process.pid}/cmdline`, { encoding: 'utf8' });
+    const cmdlineAsString = fs.readFileSync(`/proc/${process.pid}/cmdline`, { encoding: 'utf8' });
 
-    cmdline = cmdline.split('\u0000');
+    const cmdline = cmdlineAsString.split('\u0000');
     if (cmdline.length > 0) {
       name = cmdline[0];
     }
