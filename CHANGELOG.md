@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.130.0
 - [AWS Lambda] Add W3C trace context support for Lambda tracing.
 
 ## 1.129.0
