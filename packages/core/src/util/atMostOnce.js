@@ -21,8 +21,8 @@ logger = require('../logger').getLogger('util/atMostOnce', newLogger => {
  * Any violations against this contract will be logged for further analysis.
  *
  * @param {String} name The name of the callback to make debugging easier.
- * @param {Function} cb The callback to execute at most once.
- * @return {Function} A wrapped function which will forward the first call to `cb`
+ * @param {(...args: *) => *} cb The callback to execute at most once.
+ * @return {(...args: *) => *} A wrapped function which will forward the first call to `cb`
  *   and log any successive calls.
  */
 module.exports = function atMostOnce(name, cb) {

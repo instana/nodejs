@@ -9,6 +9,8 @@ const opentracing = require('opentracing');
 const spanBuffer = require('../spanBuffer');
 const tracingUtil = require('../tracingUtil');
 
+/** @typedef {import('../../../../collector/src/pidStore')} CollectorPIDStore */
+
 /**
  * @typedef {Object} OpenTracingSpanDataSdkCustom
  * @property {*} tags
@@ -60,7 +62,7 @@ const tracingUtil = require('../tracingUtil');
 /** @type {string} */
 let serviceName;
 
-/** @type {import('../../index').ProcessIdentityProvider} */
+/** @type {CollectorPIDStore} */
 let processIdentityProvider = null;
 
 /**
@@ -266,7 +268,7 @@ function copyBaggage(baggage) {
 
 /**
  * @param {import('../../util/normalizeConfig').InstanaConfig} config
- * @param {import('../../index').ProcessIdentityProvider} _processIdentityProvider
+ * @param {CollectorPIDStore} _processIdentityProvider
  */
 Span.init = function init(config, _processIdentityProvider) {
   if (config.serviceName) {
@@ -276,7 +278,7 @@ Span.init = function init(config, _processIdentityProvider) {
 };
 
 /**
- * @param {import('../../index').ProcessIdentityProvider} fn
+ * @param {CollectorPIDStore} fn
  */
 Span.setProcessIdentityProvider = function setProcessIdentityProvider(fn) {
   processIdentityProvider = fn;

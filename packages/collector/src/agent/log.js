@@ -5,19 +5,24 @@
 
 'use strict';
 
-const http = require('@instana/core').uninstrumentedHttp.http;
-
+const { http } = require('@instana/core').uninstrumentedHttp;
 const agentOpts = require('./opts');
 
-module.exports = exports = function log(logLevel, message, stackTrace) {
-  let payload = {
+/**
+ * @param {'debug' | 'info' | 'warning' | 'error'} logLevel
+ * @param {string} message
+ * @param {*} stackTrace
+ */
+module.exports = function log(logLevel, message, stackTrace) {
+  /** @type {{m: string, st?: string}} */
+  const payloadObject = {
     m: message.trim()
   };
   if (stackTrace) {
-    payload.st = stackTrace.trim();
+    payloadObject.st = stackTrace.trim();
   }
 
-  payload = Buffer.from(JSON.stringify(payload), 'utf8');
+  const payload = Buffer.from(JSON.stringify(payloadObject), 'utf8');
 
   const req = http.request(
     {

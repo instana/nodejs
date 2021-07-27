@@ -11,6 +11,7 @@ const EventEmitter = require('events').EventEmitter;
 const internalPidStore = require('./internalPidStore');
 const agentOpts = require('../agent/opts');
 
+/** @type {import('@instana/core/src/logger').GenericLogger} */
 let logger;
 logger = require('../logger').getLogger('pidStore', newLogger => {
   logger = newLogger;
@@ -42,6 +43,7 @@ exports.getEntityId = function getEntityId() {
 exports.getFrom = function getFrom() {
   return {
     e: String(exports.pid),
+    /** @type {string} */
     h: agentOpts.agentUuid
   };
 };

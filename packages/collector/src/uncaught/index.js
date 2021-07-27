@@ -5,24 +5,32 @@
 
 'use strict';
 
+/**
+ * @typedef {import('@instana/core/src/util/stackTrace').InstanaExtendedError} InstanaExtendedError
+ */
+
+// @ts-ignore @types/serialize-error is deprecated and updating to version 8.1.0 seems to break some stuff on our side
 const serializeError = require('serialize-error');
 
+/** @type {import('@instana/core/src/logger').GenericLogger} */
 let logger;
 logger = require('../logger').getLogger('util/uncaughtExceptionHandler', newLogger => {
   logger = newLogger;
 });
 
-const instanaNodeJsCore = require('@instana/core');
-const tracing = instanaNodeJsCore.tracing;
+const { tracing, util } = require('@instana/core');
 const spanBuffer = tracing.spanBuffer;
-const stackTraceUtil = instanaNodeJsCore.util.stackTrace;
+const stackTraceUtil = util.stackTrace;
 
+/** @type {import('../agentConnection')} */
 let downstreamConnection = null;
+/** @type {import('../pidStore')} */
 let processIdentityProvider = null;
 const uncaughtExceptionEventName = 'uncaughtException';
 const unhandledRejectionEventName = 'unhandledRejection';
 let unhandledRejectionDeprecationWarningHasBeenEmitted = false;
 const stackTraceLength = 10;
+/** @type {import('../util/normalizeConfig').CollectorConfig} */
 let config;
 
 // see
@@ -37,6 +45,18 @@ for (let i = 0; i < process.execArgv.length; i++) {
   }
 }
 
+/**
+ * @typedef {Object} SerializedErrorObject
+ * @property {string} name
+ * @property {string} message
+ * @property {string} stack
+ */
+
+/**
+ * @param {import('../util/normalizeConfig').CollectorConfig} _config
+ * @param {import('../agentConnection')} _downstreamConnection
+ * @param {import('../pidStore')} _processIdentityProvider
+ */
 exports.init = function (_config, _downstreamConnection, _processIdentityProvider) {
   config = _config;
   downstreamConnection = _downstreamConnection;
@@ -84,6 +104,9 @@ exports.deactivate = function () {
   process.removeListener(unhandledRejectionEventName, onUnhandledRejection);
 };
 
+/**
+ * @param {InstanaExtendedError} uncaughtError
+ */
 function onUncaughtException(uncaughtError) {
   // because of the way Error.prepareStackTrace works and how error.stack is only created once and then cached it is
   // important to create the JSON formatted stack trace first, before anything else accesses error.stack.
@@ -93,16 +116,28 @@ function onUncaughtException(uncaughtError) {
   logAndRethrow(uncaughtError);
 }
 
+/**
+ * @param {InstanaExtendedError} uncaughtError
+ * @param {Array.<import('@instana/core/src/util/stackTrace').InstanaCallSite>} jsonStackTrace
+ */
 function finishCurrentSpanAndReportEvent(uncaughtError, jsonStackTrace) {
   const spans = finishCurrentSpan(jsonStackTrace);
   const eventPayload = createEventForUncaughtException(uncaughtError);
   downstreamConnection.reportUncaughtExceptionToAgentSync(eventPayload, spans);
 }
 
+/**
+ * @param {Error} uncaughtError
+ * @returns {import('../agentConnection').AgentConnectionEvent}
+ */
 function createEventForUncaughtException(uncaughtError) {
   return createEvent(uncaughtError, 'A Node.js process terminated abnormally due to an uncaught exception.', 10, false);
 }
 
+/**
+ * @param {Array.<import('@instana/core/src/util/stackTrace').InstanaCallSite>} jsonStackTrace
+ * @returns {Array.<import('@instana/core/src/tracing/cls').InstanaBaseSpan>}
+ */
 function finishCurrentSpan(jsonStackTrace) {
   const cls = tracing.getCls();
   if (!cls) {
@@ -122,6 +157,9 @@ function finishCurrentSpan(jsonStackTrace) {
   return spanBuffer.getAndResetSpans();
 }
 
+/**
+ * @param {Error} err
+ */
 function logAndRethrow(err) {
   // Remove all listeners now, so the final throw err won't trigger other registered listeners a second time.
   const registeredListeners = process.listeners(uncaughtExceptionEventName);
@@ -156,6 +194,9 @@ function activateUnhandledPromiseRejectionHandling() {
   }
 }
 
+/**
+ * @param {Error} reason
+ */
 function onUnhandledRejection(reason) {
   if (unhandledRejectionsMode !== 'none') {
     // Best effort to emit the same log messages that Node.js does by default (when no handler for the
@@ -185,11 +226,23 @@ function onUnhandledRejection(reason) {
   });
 }
 
+/**
+ * @param {Error} reason
+ * @returns {import('../agentConnection').AgentConnectionEvent}
+ */
 function createEventForUnhandledRejection(reason) {
   return createEvent(reason, 'An unhandled promise rejection occured in a Node.js process.', 5, true);
 }
 
+/**
+ * @param {Error} error
+ * @param {string} title
+ * @param {number} severity
+ * @param {boolean} isPromiseRejection
+ * @returns {import('../agentConnection').AgentConnectionEvent}
+ */
 function createEvent(error, title, severity, isPromiseRejection) {
+  /** @type {string} */
   let eventText;
   if (error != null) {
     eventText = errorToMarkdown(error);
@@ -212,8 +265,13 @@ function createEvent(error, title, severity, isPromiseRejection) {
   };
 }
 
+/**
+ * @param {Error} error
+ * @returns {string}
+ */
 function errorToMarkdown(error) {
   /* eslint-disable max-len */
+  /** @type {SerializedErrorObject} */
   const serializedError = serializeError(error);
   if (serializedError.name && serializedError.message && typeof serializedError.stack === 'string') {
     // prettier-ignore
@@ -224,6 +282,10 @@ function errorToMarkdown(error) {
   /* eslint-enable max-len */
 }
 
+/**
+ * @param {string} stackTrace
+ * @returns {string}
+ */
 function stackTraceToMarkdown(stackTrace) {
   let formatted = '';
   const callSites = stackTrace.split('\n');

@@ -7,6 +7,7 @@
 
 const fs = require('fs');
 
+/** @type {import('@instana/core/src/logger').GenericLogger} */
 let logger;
 logger = require('../logger').getLogger('actions/source', newLogger => {
   logger = newLogger;
@@ -14,6 +15,10 @@ logger = require('../logger').getLogger('actions/source', newLogger => {
 
 const validFileRequests = /\.(js|ts|jsx)$|(^|\/)package\.json$/i;
 
+/**
+ * @param {import('../agent/requestHandler').AnnounceRequest} request
+ * @param {(data: Object.<string, *>) => void} multiCb
+ */
 exports.getSourceFile = (request, multiCb) => {
   if (!request.args.file.match(validFileRequests)) {
     multiCb({
@@ -25,6 +30,10 @@ exports.getSourceFile = (request, multiCb) => {
   readFile(request, multiCb);
 };
 
+/**
+ * @param {import('../agent/requestHandler').AnnounceRequest} request
+ * @param {(data: Object.<string, *>) => void} multiCb
+ */
 function readFile(request, multiCb) {
   fs.readFile(request.args.file, { encoding: 'utf8' }, (error, content) => {
     if (error) {

@@ -23,9 +23,9 @@ exports.init = _config => {
 /**
  * @typedef {Object} InstanaMetricsModule
  * @property {string} payloadPrefix
- * @property {string} currentPayload
- * @property {(config?: InstanaConfig) => void} activate
- * @property {() => void} deactivate
+ * @property {string} [currentPayload]
+ * @property {(config?: InstanaConfig) => void} [activate]
+ * @property {() => void} [deactivate]
  * @property {(logger: import('../logger').GenericLogger) => void} [setLogger]
  */
 

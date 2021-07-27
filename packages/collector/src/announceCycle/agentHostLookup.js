@@ -5,14 +5,15 @@
 
 'use strict';
 
-const atMostOnce = require('@instana/core').util.atMostOnce;
-const exec = require('child_process').exec;
-const http = require('@instana/core').uninstrumentedHttp.http;
+const { atMostOnce } = require('@instana/core').util;
+const { exec } = require('child_process');
+const { http } = require('@instana/core').uninstrumentedHttp;
 
 const agentOpts = require('../agent/opts');
 
 const EXPECTED_SERVER_HEADER = 'Instana Agent';
 
+/** @type {import('@instana/core/src/logger').GenericLogger} */
 let logger;
 logger = require('../logger').getLogger('announceCycle/agentHostLookup', newLogger => {
   logger = newLogger;
@@ -35,6 +36,9 @@ module.exports = {
   leave: function () {}
 };
 
+/**
+ * @param {import('./').AnnounceCycleContext} ctx
+ */
 function enter(ctx) {
   const agentHost = agentOpts.host;
 
@@ -90,6 +94,9 @@ function enter(ctx) {
   });
 }
 
+/**
+ * @param {(err: Error, data?: string) => void} cb
+ */
 function getDefaultGateway(cb) {
   exec("/sbin/ip route | awk '/default/ { print $3 }'", (error, stdout, stderr) => {
     if (error !== null || stderr.length > 0) {
@@ -100,6 +107,10 @@ function getDefaultGateway(cb) {
   });
 }
 
+/**
+ * @param {string} host
+ * @param {(...args: *) => *} cb
+ */
 function checkHost(host, cb) {
   cb = atMostOnce(`callback for checkHost: ${host}`, cb);
 
@@ -142,6 +153,9 @@ function checkHost(host, cb) {
   req.end();
 }
 
+/**
+ * @param {string} host
+ */
 function setAgentHost(host) {
   logger.info('Attempting agent communication via %s:%s', host, agentOpts.port);
   agentOpts.host = host;

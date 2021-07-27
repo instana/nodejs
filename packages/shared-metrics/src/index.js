@@ -5,6 +5,7 @@
 
 'use strict';
 
+/** @type {Array.<import('@instana/core/src/metrics').InstanaMetricsModule>} */
 const allMetrics = [
   require('./activeHandles'),
   require('./activeRequests'),
@@ -36,9 +37,9 @@ const setLogger = function (logger) {
 
 /**
  * @typedef {Object} InstanaSharedMetrics
- * @property {Array.<*>} allMetrics
- * @property {*} util
- * @property {*} setLogger
+ * @property {Array.<import('@instana/core/src/metrics').InstanaMetricsModule>} allMetrics
+ * @property {import('./util')} util
+ * @property {(logger: import('@instana/core/src/logger').GenericLogger) => void} setLogger
  */
 
 /** @type {InstanaSharedMetrics} */

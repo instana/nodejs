@@ -5,12 +5,27 @@
 
 'use strict';
 
+/**
+ * @typedef {Object} AnnounceCycleContext
+ * @property {(newStateName: string) => void} transitionTo
+ */
+
+/**
+ * @typedef {Object} AgentState
+ * @property {(ctx: AnnounceCycleContext) => void} enter
+ * @property {(ctx?: AnnounceCycleContext) => void} leave
+ */
+
+/** @type {import('@instana/core/src/logger').GenericLogger} */
 let logger;
 logger = require('../logger').getLogger('announceCycle', newLogger => {
   logger = newLogger;
 });
 
+/** @type {string} */
 let currentState = null;
+
+/** @type {Object.<string, AgentState>} */
 const states = {
   agentHostLookup: require('./agentHostLookup'),
   unannounced: require('./unannounced'),
@@ -18,7 +33,11 @@ const states = {
   agentready: require('./agentready')
 };
 
+/** @type {AnnounceCycleContext} */
 const ctx = {
+  /**
+   * @param {string} newStateName
+   */
   transitionTo: function (newStateName) {
     logger.info('Transitioning from %s to %s', currentState || '<init>', newStateName);
 

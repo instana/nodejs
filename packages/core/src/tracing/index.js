@@ -25,7 +25,16 @@ let cls = null;
 let config = null;
 /** @type {Array.<string>} */
 let extraHeaders = [];
-/** @type {import('../index').ProcessIdentityProvider} */
+
+/** @typedef {import('../../../collector/src/pidStore')} CollectorPIDStore */
+
+/**
+ * @typedef {Object} TracingMetrics
+ * @property {number} pid
+ * @property {{opened: number, closed: number, dropped: number}} metrics
+ */
+
+/** @type {CollectorPIDStore} */
 let processIdentityProvider = null;
 
 // Note: Also update initializedTooLateHeuristic.js and the accompanying test when adding instrumentations.
@@ -119,7 +128,7 @@ exports.preInit = function preInit(preliminaryConfig) {
 /**
  * @param {import('../util/normalizeConfig').InstanaConfig} _config
  * @param {import('./spanBuffer').TemporaryAgentConnection} downstreamConnection
- * @param {import('../index').ProcessIdentityProvider} _processIdentityProvider
+ * @param {CollectorPIDStore} _processIdentityProvider
  */
 exports.init = function init(_config, downstreamConnection, _processIdentityProvider) {
   config = _config;
@@ -239,14 +248,14 @@ exports.enableSpanBatching = function enableSpanBatching() {
   spanBuffer.enableSpanBatching();
 };
 
+/**
+ * @returns {TracingMetrics}
+ */
 exports._getAndResetTracingMetrics = function _getAndResetTracingMetrics() {
   return {
     pid:
-      // TODO: This is not typed yet -> /nodejs/packages/collector/src/pidStore/index.js
-      // @ts-ignore
       processIdentityProvider && typeof processIdentityProvider.getEntityId === 'function'
-        ? // @ts-ignore
-          processIdentityProvider.getEntityId()
+        ? processIdentityProvider.getEntityId()
         : undefined,
     metrics: tracingMetrics.getAndReset()
   };

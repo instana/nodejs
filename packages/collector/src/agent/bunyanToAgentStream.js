@@ -9,7 +9,11 @@ const log = require('./log');
 
 const pidStore = require('../pidStore/internalPidStore');
 
-module.exports = exports = {
+/** @type {NodeJS.WritableStream} */
+module.exports = {
+  /**
+   * @param {*} record
+   */
   write: function write(record) {
     const logLevel = getAgentLogLevel(record.level);
     let message = `Node.js collector (pid: ${process.pid}, reporting pid: ${pidStore.pid}): ${record.msg}`;
@@ -24,6 +28,10 @@ module.exports = exports = {
   }
 };
 
+/**
+ * @param {number} level
+ * @returns {'debug' | 'info' | 'warning' | 'error'}
+ */
 function getAgentLogLevel(level) {
   if (level < 30) {
     return 'debug';

@@ -15,9 +15,11 @@
     "packages/core/src/util",
     "packages/core/src/tracing/*.js",
     "packages/core/test/test_util/common_verifications.js",
-    "packages/shared-metrics"
+    "packages/shared-metrics",
+    "packages/collector/src"
   ],
   "exclude": [
     "node_modules",
+    "packages/collector/tracing/instrumentation"
   ]
 }

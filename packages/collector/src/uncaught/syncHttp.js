@@ -25,6 +25,11 @@ sendRequest(path1, payload1, () => {
   });
 });
 
+/**
+ * @param {string} endpoint
+ * @param {string} payload
+ * @param {() => void} callback
+ */
 function sendRequest(endpoint, payload, callback) {
   if (!endpoint || !payload) {
     return callback();

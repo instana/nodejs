@@ -17,7 +17,7 @@ let automaticTracingEnabled = false;
 /**
  * @param {import('../../util/normalizeConfig').InstanaConfig} config
  * @param {boolean} _automaticTracingEnabled
- * @param {import('../../index').ProcessIdentityProvider} processIdentityProvider
+ * @param {import('../../../../collector/src/pidStore')} processIdentityProvider
  */
 exports.init = function init(config, _automaticTracingEnabled, processIdentityProvider) {
   automaticTracingEnabled = _automaticTracingEnabled;

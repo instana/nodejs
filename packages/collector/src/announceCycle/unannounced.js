@@ -5,9 +5,9 @@
 
 'use strict';
 
-const secrets = require('@instana/core').secrets;
-const tracing = require('@instana/core').tracing;
+const { secrets, tracing } = require('@instana/core');
 
+/** @type {import('@instana/core/src/logger').GenericLogger} */
 let logger;
 logger = require('../logger').getLogger('announceCycle/unannounced', newLogger => {
   logger = newLogger;
@@ -21,6 +21,9 @@ const backoffFactor = 1.5;
 const maxRetryDelay = 60 * 1000; // one minute
 
 module.exports = {
+  /**
+   * @param {import('./').AnnounceCycleContext} ctx
+   */
   enter: function (ctx) {
     tryToAnnounce(ctx);
   },
@@ -28,7 +31,12 @@ module.exports = {
   leave: function () {}
 };
 
+/**
+ * @param {import('./').AnnounceCycleContext} ctx
+ * @param {number} retryDelay
+ */
 function tryToAnnounce(ctx, retryDelay = initialRetryDelay) {
+  /** @type {number} */
   let nextRetryDelay;
   if (retryDelay * backoffFactor >= maxRetryDelay) {
     nextRetryDelay = maxRetryDelay;
@@ -64,7 +72,7 @@ function tryToAnnounce(ctx, retryDelay = initialRetryDelay) {
     if (Array.isArray(response.extraHeaders)) {
       tracing.setExtraHttpHeadersToCapture(
         // Node.js HTTP API turns all incoming HTTP headers into lowercase.
-        response.extraHeaders.map(s => s.toLowerCase())
+        response.extraHeaders.map((/** @type {string} */ s) => s.toLowerCase())
       );
     }
     if (response.spanBatchingEnabled === true || response.spanBatchingEnabled === 'true') {

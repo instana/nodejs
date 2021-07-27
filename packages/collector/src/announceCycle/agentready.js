@@ -6,7 +6,7 @@
 'use strict';
 
 const semver = require('semver');
-const instanaCore = require('@instana/core');
+const { tracing } = require('@instana/core');
 
 const agentConnection = require('../agentConnection');
 const agentOpts = require('../agent/opts');
@@ -17,9 +17,10 @@ const requestHandler = require('../agent/requestHandler');
 const transmissionCycle = require('../metrics/transmissionCycle');
 const uncaught = require('../uncaught');
 
+/** @type {*} */
 let autoprofile;
-const tracing = instanaCore.tracing;
 
+/** @type {import('@instana/core/src/logger').GenericLogger} */
 let logger;
 logger = require('../logger').getLogger('announceCycle/agentready', newLogger => {
   logger = newLogger;
@@ -27,6 +28,7 @@ logger = require('../logger').getLogger('announceCycle/agentready', newLogger =>
 
 if (agentOpts.autoProfile && semver.gte(process.version, '6.4.0')) {
   try {
+    // @ts-ignore - TS cannot find @instana/profile. TODO: @instana/autoprofile is not linted or typed
     autoprofile = require('@instana/autoprofile');
   } catch (e) {
     logger.info(
@@ -41,6 +43,7 @@ if (agentOpts.autoProfile && semver.gte(process.version, '6.4.0')) {
   }
 }
 
+/** @type {import('./').AnnounceCycleContext} */
 let ctx;
 
 let tracingMetricsDelay = 1000;
@@ -50,6 +53,8 @@ if (typeof process.env.INSTANA_TRACER_METRICS_INTERVAL === 'string') {
     tracingMetricsDelay = 1000;
   }
 }
+
+/** @type {NodeJS.Timeout} */
 let tracingMetricsTimeout = null;
 
 module.exports = exports = {
@@ -57,6 +62,9 @@ module.exports = exports = {
   leave
 };
 
+/**
+ * @param {import('./').AnnounceCycleContext} _ctx
+ */
 function enter(_ctx) {
   ctx = _ctx;
   uncaught.activate();
@@ -65,6 +73,9 @@ function enter(_ctx) {
   transmissionCycle.activate(
     metrics,
     agentConnection,
+    /**
+     * @param {Array.<import('../agent/requestHandler').AnnounceRequest>} requests
+     */
     function onSuccess(requests) {
       requestHandler.handleRequests(requests);
     },
@@ -78,6 +89,10 @@ function enter(_ctx) {
 
   if (agentOpts.autoProfile && autoprofile) {
     const profiler = autoprofile.start();
+    /**
+     * @param {*} profiles
+     * @param {(...args: *) => *} callback
+     */
     profiler.sendProfiles = (profiles, callback) => {
       agentConnection.sendProfiles(profiles, callback);
     };

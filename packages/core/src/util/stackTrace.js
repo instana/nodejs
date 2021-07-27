@@ -5,6 +5,10 @@
 
 'use strict';
 
+/**
+ * @typedef {Error & {_jsonStackTrace: Array.<InstanaCallSite>}} InstanaExtendedError
+ */
+
 // See v8 Error API docs at
 // https://v8.dev/docs/stack-trace-api
 
@@ -45,7 +49,7 @@ exports.captureStackTrace = function captureStackTrace(length, referenceFunction
 
 /**
  * @param {number} length
- * @param {Error} error
+ * @param {InstanaExtendedError} error
  */
 exports.getStackTraceAsJson = function getStackTraceAsJson(length, error) {
   if (length <= 0) {
@@ -60,8 +64,8 @@ exports.getStackTraceAsJson = function getStackTraceAsJson(length, error) {
   error.stack;
   Error.stackTraceLimit = originalLimit;
   Error.prepareStackTrace = originalPrepareStackTrace;
-  const jsonStackTrace = /** @type {*} */ (error)._jsonStackTrace;
-  delete (/** @type {*} */ (error)._jsonStackTrace);
+  const jsonStackTrace = error._jsonStackTrace;
+  delete error._jsonStackTrace;
   return jsonStackTrace;
 };
 
@@ -75,19 +79,27 @@ function jsonPrepareStackTrace(error, structuredStackTrace) {
 
 /**
  * @param {Error} error
- * @param {Array<*>} structuredStackTrace
+ * @param {Array<NodeJS.CallSite>} structuredStackTrace
  */
 function attachJsonStackTrace(error, structuredStackTrace) {
-  /** @type {*} */ (error)._jsonStackTrace = jsonifyStackTrace(structuredStackTrace);
+  /** @type {InstanaExtendedError} */ (error)._jsonStackTrace = jsonifyStackTrace(structuredStackTrace);
   return defaultPrepareStackTrace(error, structuredStackTrace);
 }
 
 /**
- * @param {Array<*>} structuredStackTrace
- * @returns {object}
+ * @typedef {Object} InstanaCallSite
+ * @property {string} m
+ * @property {string} c
+ * @property {number} n
+ */
+
+/**
+ * @param {Array<NodeJS.CallSite>} structuredStackTrace
+ * @returns {Array.<InstanaCallSite>}
  */
 function jsonifyStackTrace(structuredStackTrace) {
   const len = structuredStackTrace.length;
+  /** @type {Array.<InstanaCallSite>} */
   const result = new Array(len);
 
   for (let i = 0; i < len; i++) {
@@ -103,7 +115,8 @@ function jsonifyStackTrace(structuredStackTrace) {
 }
 
 /**
- * @param {Function | *} callSite
+ * @param {NodeJS.CallSite} callSite
+ * @returns {string}
  */
 exports.buildFunctionIdentifier = function buildFunctionIdentifier(callSite) {
   if (callSite.isConstructor()) {

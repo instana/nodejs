@@ -18,10 +18,9 @@ logger = require('../../logger').getLogger('tracing/sdk', newLogger => {
 let isActive = false;
 
 /**
- * @type {Function}
  * @param {boolean} isCallbackApi
  */
-module.exports = exports = function (isCallbackApi) {
+module.exports = function (isCallbackApi) {
   /** @type {import('../cls')} */
   let cls = null;
   /** @type {Function} */
@@ -29,11 +28,10 @@ module.exports = exports = function (isCallbackApi) {
 
   /**
    * @param {string} name
-   * @param {string} tags
-   * @param {string} traceId
+   * @param {string | Function} tags
+   * @param {string | Function} traceId
    * @param {string} parentSpanId
    * @param {Function | string} callback
-   * @returns {Function | Promise<*>}
    */
   function startEntrySpan(name, tags, traceId, parentSpanId, callback) {
     if (isCallbackApi && arguments.length === 2 && typeof arguments[1] === 'function') {
@@ -64,8 +62,8 @@ module.exports = exports = function (isCallbackApi) {
       constants.ENTRY,
       constants.SDK.ENTRY,
       startEntrySpan,
-      tags,
-      traceId,
+      /** @type {string | null} */ (tags),
+      /** @type {string | null} */ (traceId),
       parentSpanId,
       /** @type {Function} */ (callback)
     );

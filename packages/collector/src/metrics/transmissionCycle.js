@@ -5,9 +5,9 @@
 
 'use strict';
 
-const clone = require('@instana/core').util.clone;
-const compression = require('@instana/core').util.compression;
+const { clone, compression } = require('@instana/core').util;
 
+/** @type {import('@instana/core/src/logger').GenericLogger} */
 let logger;
 logger = require('../logger').getLogger('metrics/sender', newLogger => {
   logger = newLogger;
@@ -16,20 +16,36 @@ logger = require('../logger').getLogger('metrics/sender', newLogger => {
 const resendFullDataEveryXTransmissions = 300; /* about every 5 minutes */
 let transmissionsSinceLastFullDataEmit = 0;
 
+/** @type {import('./')} */
 let metrics;
+/** @type {import('../agentConnection')} */
 let downstreamConnection;
+/** @type {(requests: Array.<import('../agent/requestHandler').AnnounceRequest>) => void} */
 let onSuccess;
+/** @type {() => void} */
 let onError;
 
+/** @type {Object.<string, *>} */
 let previousTransmittedValue;
+/** @type {NodeJS.Timeout} */
 let transmissionTimeoutHandle;
 let transmissionDelay = 1000;
 let isActive = false;
 
+/**
+ * @param {import('@instana/core/src/metrics').InstanaConfig} config
+ */
 exports.init = function init(config) {
   transmissionDelay = config.metrics.transmissionDelay;
 };
 
+/**
+ * @param {import('./')} _metrics
+ * @param {import('../agentConnection')} _downstreamConnection
+ * @param {(requests: Array.<import('../agent/requestHandler').AnnounceRequest>) => void} _onSuccess
+ * @param {() => void} _onError
+ * @returns
+ */
 exports.activate = function activate(_metrics, _downstreamConnection, _onSuccess, _onError) {
   metrics = _metrics;
   downstreamConnection = _downstreamConnection;
@@ -75,6 +91,7 @@ function sendMetrics() {
   // clone retrieved objects to allow mutations in metric retrievers
   const newValueToTransmit = clone(metrics.gatherData());
 
+  /** @type {Object<string, *>} */
   let payload;
   const isFullTransmission = transmissionsSinceLastFullDataEmit > resendFullDataEveryXTransmissions;
   if (isFullTransmission) {
@@ -86,6 +103,12 @@ function sendMetrics() {
   downstreamConnection.sendMetrics(payload, onMetricsHaveBeenSent.bind(null, isFullTransmission, newValueToTransmit));
 }
 
+/**
+ * @param {boolean} isFullTransmission
+ * @param {Object.<string, *>} transmittedValue
+ * @param {Error} error
+ * @param {Array.<import('../agent/requestHandler').AnnounceRequest>} responsePayload
+ */
 function onMetricsHaveBeenSent(isFullTransmission, transmittedValue, error, responsePayload) {
   if (error) {
     logger.error('Error received while trying to send snapshot data and metrics: %s', error.message);

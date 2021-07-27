@@ -25,7 +25,7 @@ const w3cTraceContextKey = 'com.instana.w3ctc';
 // eslint-disable-next-line no-undef-init
 /** @type {String} */
 let serviceName;
-/** @type {import('../index').ProcessIdentityProvider} */
+/** @type {import('../../../collector/src/pidStore')} */
 let processIdentityProvider = null;
 
 /*
@@ -40,7 +40,7 @@ const ns = hooked.createNamespace('instana.collector');
 
 /**
  * @param {import('../util/normalizeConfig').InstanaConfig} config
- * @param {import('../index').ProcessIdentityProvider} _processIdentityProvider
+ * @param {import('../../../collector/src/pidStore')} _processIdentityProvider
  */
 function init(config, _processIdentityProvider) {
   if (config && config.serviceName) {
