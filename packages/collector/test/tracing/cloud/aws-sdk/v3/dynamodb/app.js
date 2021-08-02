@@ -202,10 +202,12 @@ availableOperations.forEach(op => {
           if (err) {
             res.status(500).send({ error: String(err) });
           } else {
-            fetch(`http://127.0.0.1:${agentPort}`).then(() => {
-              res.send({
-                status: 'ok',
-                result: data
+            setTimeout(() => {
+              fetch(`http://127.0.0.1:${agentPort}`).then(() => {
+                res.send({
+                  status: 'ok',
+                  result: data
+                });
               });
             });
           }

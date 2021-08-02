@@ -15,7 +15,7 @@ class InstanaAWSProduct {
     this.operations = operations;
   }
 
-  instrumentedInnerLoggerMiddleware(/** ctx, originalInnerFunction, originalInnerFuncArgs, originalParentFuncArgs */) {
+  instrumentedSmithySend(/** ctx, originalSend, smithySendArgs */) {
     throw new Error('Not implemented');
   }
 

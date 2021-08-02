@@ -2,6 +2,7 @@
 
 ## Unreleased
 - Fix instrumentation for very old versions of `redis` (0.12.1).
+- AWS SDK v3: Instrumentation of SQS
 
 ## 1.131.0
 - Limit the number of depdendencies collected as snapshot data.
