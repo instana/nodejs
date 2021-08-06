@@ -59,7 +59,7 @@
     "detect-libc": "^1.0.3",
     "event-loop-lag": "^1.4.0",
     "recursive-copy": "^2.0.13",
-    "tar": "^5.0.5"
+    "tar": "^5.0.7"
   },
   "devDependencies": {
     "eslint": "^7.30.0",
