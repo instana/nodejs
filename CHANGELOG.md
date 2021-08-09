@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.130.1
+- Update dependency [`tar`](https://www.npmjs.com/package/tar) ([#367](https://github.com/instana/nodejs/pull/367), thanks to @gebhardtr).
+
 ## 1.130.0
 - [AWS Lambda] Add W3C trace context support for Lambda tracing.
 
