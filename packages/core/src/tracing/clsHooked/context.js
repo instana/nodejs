@@ -314,7 +314,7 @@ Namespace.prototype.exit = function exit(context) {
  */
 function getNamespace(name) {
   // @ts-ignore
-  return process.namespaces[name];
+  return process.instanaNamespaces[name];
 }
 
 /**
@@ -372,7 +372,7 @@ function createNamespace(name) {
   hook.enable();
 
   // @ts-ignore
-  process.namespaces[name] = namespace;
+  process.instanaNamespaces[name] = namespace;
   return namespace;
 }
 
@@ -383,23 +383,23 @@ function destroyNamespace(name) {
   let namespace = getNamespace(name);
 
   assert.ok(namespace, `can't delete nonexistent namespace! "${name}"`);
-  assert.ok(namespace.id, `don't assign to process.namespaces directly! ${util.inspect(namespace)}`);
+  assert.ok(namespace.id, `don't assign to process.instanaNamespaces directly! ${util.inspect(namespace)}`);
 
   // @ts-ignore
-  process.namespaces[name] = null;
+  process.instanaNamespaces[name] = null;
 }
 
 function reset() {
   // must unregister async listeners
   // @ts-ignore
-  if (process.namespaces) {
+  if (process.instanaNamespaces) {
     // @ts-ignore
-    Object.keys(process.namespaces).forEach(name => {
+    Object.keys(process.instanaNamespaces).forEach(name => {
       destroyNamespace(name);
     });
   }
   // @ts-ignore
-  process.namespaces = Object.create(null);
+  process.instanaNamespaces = Object.create(null);
 }
 // @ts-ignore
-process.namespaces = process.namespaces || {};
+process.instanaNamespaces = process.instanaNamespaces || {};
