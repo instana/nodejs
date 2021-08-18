@@ -24,7 +24,7 @@ describe('metrics.dependencies', () => {
       // directory relative to the main module. But with this check in place, we end up evaluating the dependencies of
       // packages/shared-metrics/node_modules.
       expect(dependencies.currentPayload['event-loop-lag']).to.equal('1.4.0');
-      expect(dependencies.currentPayload.semver).to.equal('5.7.1');
+      expect(dependencies.currentPayload.semver).to.equal('7.3.5');
       expect(dependencies.currentPayload.mocha).to.equal('7.2.0');
     });
   });
