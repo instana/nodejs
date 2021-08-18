@@ -1,0 +1,21 @@
+{
+  "name": "dependencies_test_dir_02",
+  "version": "1.0.0",
+  "description": "a test folder",
+  "license": "MIT",
+  "dependencies": {
+    "foo": "1.0.0",
+    "bar": "1.0.0"
+  },
+  "optionalDependencies": {
+    "opt-dep": "1.0.0"
+  },
+  "peerDependencies": {
+    "peer-dep-1": "1.0.0",
+    "peer-dep-2": "1.0.0"
+  },
+  "devDependencies": {
+    "will-be-ignored-1": "1.0.0",
+    "will-be-ignored-2": "1.0.0"
+  }
+}

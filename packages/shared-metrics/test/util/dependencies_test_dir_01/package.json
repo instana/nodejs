@@ -1,0 +1,9 @@
+{
+  "name": "dependencies_test_dir_1",
+  "version": "1.0.0",
+  "description": "a test folder",
+  "license": "MIT",
+  "dependencies": {
+    "does-not-exist": "1.0.0"
+  }
+}

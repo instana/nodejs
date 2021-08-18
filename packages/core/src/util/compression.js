@@ -126,14 +126,12 @@ function isExcluded(path, excludeList) {
     if (excludeList[i].length !== path.length) {
       // The excludeList entry and then given path have different lengths, this cannot be a match. Continue with next
       // excludeList entry.
-      // eslint-disable-next-line no-continue
       continue;
     }
     for (let j = 0; j < excludeList[i].length; j++) {
       if (excludeList[i][j] !== path[j]) {
         // We found a path segment that is differnt for this excludeList entry and then given path, this cannot be a
         // match. Continue with next excludeList entry.
-        // eslint-disable-next-line no-continue
         continue outer;
       }
     }

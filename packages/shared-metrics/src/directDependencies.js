@@ -56,6 +56,7 @@ exports.activate = function activate() {
  * @param {string} packageJsonPath
  */
 function addDirectDependenciesFromMainPackageJson(packageJsonPath) {
+  const started = Date.now();
   fs.readFile(packageJsonPath, { encoding: 'utf8' }, (err, contents) => {
     if (err) {
       return logger.debug('Failed to analyze direct dependencies dependency due to: %s.', err.message);
@@ -67,7 +68,9 @@ function addDirectDependenciesFromMainPackageJson(packageJsonPath) {
       exports.currentPayload.peerDependencies = pckg.peerDependencies || {};
       exports.currentPayload.optionalDependencies = pckg.optionalDependencies || {};
       exports.currentPayload[pckg.name] = pckg.version;
+      logger.debug(`Collection of direct dependencies took ${Date.now() - started} ms.`);
     } catch (subErr) {
+      logger.debug(`Collection of direct dependencies took ${Date.now() - started} ms.`);
       return logger.debug('Failed to parse package.json %s dependency due to: %s', packageJsonPath, subErr.message);
     }
   });

@@ -327,7 +327,6 @@ function findLastMetricValueInResponse(pid, data, _path) {
   for (let i = data.metrics.length - 1; i >= 0; i--) {
     const metricsMessage = data.metrics[i];
     if (metricsMessage.pid !== pid) {
-      // eslint-disable-next-line no-continue
       continue;
     }
 

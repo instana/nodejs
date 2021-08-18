@@ -1,0 +1,11 @@
+{
+  "name": "dependencies_test_dir_03",
+  "version": "1.0.0",
+  "description": "a test folder",
+  "license": "MIT",
+  "dependencies": {
+    "a": "1.0.0",
+    "b": "1.0.0",
+    "c": "1.0.0"
+  }
+}

@@ -28,7 +28,7 @@ const mochaSuiteFn =
   supportedVersion(process.versions.node) && semver.gte(process.versions.node, '8.0.0') ? describe : describe.skip;
 
 mochaSuiteFn('tracing a babel/typescript setup', function () {
-  this.timeout(60000);
+  this.timeout(Math.max(config.getTestTimeout() * 3, 20000));
 
   globalAgent.setUpCleanUpHooks();
 

@@ -5,8 +5,11 @@
 
 'use strict';
 
+/* eslint-disable no-console */
+
 const _ = require('lodash');
 const expect = require('chai').expect;
+const { execSync } = require('child_process');
 const path = require('path');
 
 const config = require('../../../../core/test/config');
@@ -25,6 +28,13 @@ describe('snapshot data and metrics', function () {
     args: ['foo', 'bar', 'baz'],
     useGlobalAgent: true
   }).registerTestHooks();
+
+  before(() => {
+    const cwd = __dirname;
+    console.log(`Running npm install in ${cwd}.`);
+    const npmInstallOutput = execSync('npm install --no-audit', { cwd });
+    console.log(`Done with running npm install in ${cwd}: ${npmInstallOutput}`);
+  });
 
   it('must report metrics from a running process', () =>
     retry(() =>
