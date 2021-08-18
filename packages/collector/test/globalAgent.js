@@ -15,14 +15,31 @@
 
 const { AgentStubControls } = require('./apps/agentStubControls');
 
-exports.PORT = 3211;
+const agentPorts = {
+  collector: 3211,
+  'shared-metrics': 7211
+};
+
+const DEFAULT_PORT = 3211;
+
+// The "global" agent (that keeps running during the whole test suite) in package collector uses port 3211.
+// Individual suites/tests/ that start an agent themselves and tear it down afterwards use 3210. Other packages
+// that use the global agent follow similar pattern, see test-suite-ports.md.
+exports.PORT = DEFAULT_PORT;
+
+const packageNames = Object.keys(agentPorts);
+for (let i = 0; i < packageNames.length; i++) {
+  const packageName = packageNames[i];
+  if (process.argv[1].indexOf(packageName) >= 0) {
+    exports.PORT = agentPorts[packageName];
+    break;
+  }
+}
 
 exports.instance = new AgentStubControls(exports.PORT);
 
 exports.startGlobalAgent = function start() {
   return exports.instance.startAgent({
-    // The "global" agent (that keeps running during the whole test suite) uses port 3211. Individual suites/tests
-    // that start an agent themselves and tear it down afterwards use 3210.
     extraHeaders: [
       //
       'X-My-Exit-Options-Request-Header',

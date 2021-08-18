@@ -20,6 +20,7 @@
   ],
   "exclude": [
     "node_modules",
-    "packages/collector/tracing/instrumentation"
+    "packages/shared-metrics/test/dependencies",
+    "packages/shared-metrics/test/globalHooks_test.js"
   ]
 }

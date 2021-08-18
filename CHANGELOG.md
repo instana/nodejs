@@ -1,5 +1,8 @@
 # Changelog
 
+## Unreleased
+- Limit the number of depdendencies collected as snapshot data.
+
 ## 1.130.1
 - Update dependency [`tar`](https://www.npmjs.com/package/tar) ([#367](https://github.com/instana/nodejs/pull/367), thanks to @gebhardtr).
 
