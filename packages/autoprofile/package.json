@@ -2,6 +2,7 @@
   "name": "@instana/autoprofile",
   "version": "1.130.1",
   "description": "Automatic Node.js Profiler",
+  "homepage": "https://github.com/instana/nodejs/blob/main/packages/autoprofile/README.md",
   "keywords": [
     "production profiler",
     "v8 profiler",

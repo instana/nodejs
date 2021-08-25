@@ -6,7 +6,7 @@
     "name": "Ben Ripkens",
     "email": "ben@instana.com"
   },
-  "homepage": "https://github.com/instana/nodejs#readme",
+  "homepage": "https://github.com/instana/nodejs/blob/main/packages/collector/README.md",
   "license": "MIT",
   "main": "src/index.js",
   "bin": {

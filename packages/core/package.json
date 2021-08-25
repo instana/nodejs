@@ -114,7 +114,7 @@
   "bugs": {
     "url": "https://github.com/instana/nodejs/issues"
   },
-  "homepage": "https://github.com/instana/nodejs#readme",
+  "homepage": "https://github.com/instana/nodejs/blob/main/packages/core/README.md",
   "dependencies": {
     "async-hook-jl": "^1.7.6",
     "cls-bluebird": "^2.1.0",
