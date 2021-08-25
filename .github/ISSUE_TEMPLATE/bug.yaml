@@ -1,0 +1,50 @@
+name: Bug Report
+description: File a bug report.
+title: "[Bug]: "
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for taking the time to fill out this bug report. Please do not submit usage questions, support requests or feature requests here. Those need to be filed at [Instana's support portal](https://support.instana.com).
+
+        Please also refrain from filing issues or support tickets if your audit tool (npm audit, Snyk, etc.) reported a CVE for a dependency an Instana package -- we run these audits with every build and take appropriate action automatically.
+  - type: textarea
+    id: problem-description
+    attributes:
+      label: Problem Description
+      description: What was the issue that caused you to file this bug?
+    validations:
+      required: true
+  - type: textarea
+    id: mcve
+    attributes:
+      label: Minimal, Complete, Verifiable, Example
+      description: Can you provide steps to reproduce this issue outside of your application? Or better yet, can you provide a [short, self contained reproducer](http://sscce.org/) as a zip file?
+    validations:
+      required: false
+  - type: input
+    id: nodejs-version
+    attributes:
+      label: Node.js Version
+      description: Which version of Node.js are you using?
+      placeholder: "Node.js 16.7.0"
+    validations:
+      required: true
+  - type: textarea
+    id: package-json
+    attributes:
+      label: package.json
+      description: Please paste the contents of the package.json for the application that was affected by this bug.
+      render: shell
+    validations:
+      required: true
+  - type: textarea
+    id: package-lockfile
+    attributes:
+      label: package-lock.json
+      description: Please paste the contents of the package-lock.json or yarn.lock file for the application that was affected by this bug.
+      render: shell
+    validations:
+      required: true
+
