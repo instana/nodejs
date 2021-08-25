@@ -6,7 +6,7 @@
     "name": "Bastian Krol",
     "email": "bastian.krol@instana.com"
   },
-  "homepage": "https://github.com/instana/nodejs#readme",
+  "homepage": "https://github.com/instana/nodejs/blob/main/packages/legacy-sensor/README.md",
   "license": "MIT",
   "main": "src/index.js",
   "files": [

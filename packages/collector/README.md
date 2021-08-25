@@ -12,11 +12,11 @@ Monitor your Node.js applications with Instana!
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 
-
 - [Server Only](#server-only)
 - [Installation And Usage](#installation-and-usage)
 - [CPU Profiling, Garbage Collection And Event Loop Information](#cpu-profiling-garbage-collection-and-event-loop-information)
 - [API](#api)
+- [Filing Issues](#filing-issues)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -54,4 +54,8 @@ The Node.js collector uses Native addons for some metrics. Check out the [native
 ## API
 
 In most cases it is enough to require and initialize `@instana/collector` and let it do its work. However, there is an [API](https://www.instana.com/docs/ecosystem/node-js/api/) for more advanced use cases.
+
+## Filing Issues
+
+If something is not working as expected or you have a question, instead of opening an issue in this repository, please open a ticket at <https://support.instana.com/hc/requests/new> instead. Please refrain from filing issues or tickets if your audit tool (npm audit, Snyk, etc.) reported a CVE for a dependency or a transitive dependency of `@instana/collector` -- we run these audits with every build and take appropriate action automatically.
 

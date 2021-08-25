@@ -6,11 +6,33 @@
 
 ---
 
-This repository hosts Instana's Node.js packages. If you are an Instana user, you are probably looking for the package [@instana/collector](packages/collector/README.md) (formerly known as `instana-nodejs-sensor`) to add Instana monitoring and tracing to your Node.js applications.
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 
-## Change of Package Name
+- [Instana npm Packages](#instana-npm-packages)
+- [Filing Issues](#filing-issues)
+- [Direct Links to the @instana/collector Documentation](#direct-links-to-the-instanacollector-documentation)
+  - [Installation and Usage](#installation-and-usage)
+  - [CPU Profiling, Garbage Collection and Event Loop Information](#cpu-profiling-garbage-collection-and-event-loop-information)
+  - [API](#api)
+  - [OpenTracing](#opentracing)
+- [Change of Package Name](#change-of-package-name)
 
-To pave the way for new, exciting times to come, we have changed the name of the package in a more modular fashion: up to release `1.64.0`, our npm package was called `instana-nodejs-sensor`. Beginning with version `1.65.0`, the name has changed to `@instana/collector`. **To prevent breaking changes, we are keeping `instana-nodejs-sensor` as an alias for `@instana/collector`**, so you can continue updating your Node.js applications using the latest Instana Node.js integration without further changes. In the future, **we might make some functionality that needs the newly-introduced modularity available only under the new `@instana/collector` package name**. Such new functionality will not affect existing use cases for the Instana Node.js sensor. Please refer to our [migration guide](https://www.instana.com/docs/ecosystem/node-js/installation/#change-of-package-name) for details.
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
+## Instana npm Packages
+
+This repository hosts Instana's Node.js packages. If you are an Instana user, you are probably looking for the package [@instana/collector](packages/collector/README.md) to add Instana monitoring and tracing to your Node.js applications.
+
+The following packages are meant for direct consumption by Instana users, all  other packages in this repo are for internal use only:
+* `@instana/aws-fargate`: See <https://www.instana.com/docs/ecosystem/aws-fargate/#nodejs>.
+* `@instana/aws-lambda`: See <https://www.instana.com/docs/ecosystem/aws-lambda/nodejs/>.
+* `@instana/collector`: See <https://www.instana.com/docs/ecosystem/node-js/>.
+* `@instana/google-cloud-run`: See <https://www.instana.com/docs/ecosystem/google-cloud-run#instana-cloud-native-buildpack-for-google-cloud-run> or <https://www.instana.com/docs/ecosystem/google-cloud-run#nodejs>.
+
+## Filing Issues
+
+If something is not working as expected or you have a question, instead of opening an issue in this repository, please open a ticket at <https://support.instana.com/hc/requests/new> instead. Please refrain from filing issues or tickets if your audit tool (npm audit, Snyk, etc.) reported a CVE for a dependency or a transitive dependency of `@instana/collector` -- we run these audits with every build and take appropriate action automatically.
 
 ## Direct Links to the @instana/collector Documentation
 
@@ -31,4 +53,8 @@ See [API page](https://www.instana.com/docs/ecosystem/node-js/api/).
 ### OpenTracing
 
 See [OpenTracing section](https://www.instana.com/docs/ecosystem/node-js/api/#opentracing-integration).
+
+## Change of Package Name
+
+Up to release `1.64.0` (April 2019), the package `@instana/collector` was called `instana-nodejs-sensor`. Beginning with version `1.65.0`, the name has changed to `@instana/collector`.lease refer to our [migration guide](https://www.instana.com/docs/ecosystem/node-js/installation/#change-of-package-name) for details.
 
