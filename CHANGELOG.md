@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.131.0
 - Limit the number of depdendencies collected as snapshot data.
 
 ## 1.130.1
