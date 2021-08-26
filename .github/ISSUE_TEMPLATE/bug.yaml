@@ -8,7 +8,7 @@ body:
       value: |
         Thank you for taking the time to fill out this bug report. Please do not submit usage questions, support requests or feature requests here. Those need to be filed at [Instana's support portal](https://support.instana.com).
 
-        Please also refrain from filing issues or support tickets if your audit tool (npm audit, Snyk, etc.) reported a CVE for a dependency an Instana package -- we run these audits with every build and take appropriate action automatically.
+        Please also refrain from filing issues or support tickets if your audit tool (npm audit, Snyk, etc.) reported a CVE for a dependency of an Instana package -- we run these audits with every build and take appropriate action automatically.
   - type: textarea
     id: problem-description
     attributes:
@@ -19,7 +19,7 @@ body:
   - type: textarea
     id: mcve
     attributes:
-      label: Minimal, Complete, Verifiable, Example
+      label: Short, Self Contained Example
       description: Can you provide steps to reproduce this issue outside of your application? Or better yet, can you provide a [short, self contained reproducer](http://sscce.org/) as a zip file?
     validations:
       required: false
