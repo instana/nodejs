@@ -1,6 +1,6 @@
 {
   "name": "@instana/autoprofile",
-  "version": "1.131.0",
+  "version": "1.131.1",
   "description": "Automatic Node.js Profiler",
   "homepage": "https://github.com/instana/nodejs/blob/main/packages/autoprofile/README.md",
   "keywords": [

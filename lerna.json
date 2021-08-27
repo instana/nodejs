@@ -2,7 +2,7 @@
   "packages": [
     "packages/*"
   ],
-  "version": "1.131.0",
+  "version": "1.131.1",
   "command": {
     "publish": {
       "exact": true
