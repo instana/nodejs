@@ -79,29 +79,22 @@ function evaluateHeaderValue(headerValue, validator) {
  * @return {boolean} true, if the HTTP request that is about to happen should _not_ create a span.
  */
 function shouldBeBypassed(parentSpan, options) {
+  const headers = options && options.headers;
+  const userAgent = (headers && headers['User-Agent']) || (headers && headers['user-agent']);
+
   const isAWSNodeJSHeader = evaluateHeaderValue(
-    options && options.headers && options.headers['User-Agent'],
-    header => header.toLowerCase().indexOf('aws-sdk-nodejs') > -1
+    userAgent,
+    header => header.toLowerCase().indexOf('aws-sdk-nodejs') > -1 || header.toLowerCase().indexOf('aws-sdk-js') > -1
   );
+
+  const hostInfo = (headers && headers.Host) || (headers && headers.host);
 
   // Same regex used by AWS SDK at /lib/services/sqs.js
-  const hostMatchesSQS = evaluateHeaderValue(
-    options && options.headers && options.headers.Host,
-    header => header.match(/^sqs\.(?:.+?)\./) !== null
-  );
+  const hostMatchesSQS = evaluateHeaderValue(hostInfo, header => header.match(/^sqs\.(?:.+?)\./) !== null);
 
-  if (
-    parentSpan &&
-    parentSpan.n === 'sqs' &&
-    options &&
-    options.headers &&
-    options.headers['User-Agent'] &&
-    isAWSNodeJSHeader &&
-    hostMatchesSQS
-  ) {
+  if (parentSpan && parentSpan.n === 'sqs' && isAWSNodeJSHeader && hostMatchesSQS) {
     return true;
   }
-
   return false;
 }
 

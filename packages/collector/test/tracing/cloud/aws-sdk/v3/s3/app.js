@@ -20,8 +20,6 @@ const awsRegion = 'us-east-2';
 const s3 = new awsSdk3.S3Client({ region: awsRegion });
 const s3v2 = new awsSdk3.S3({ region: awsRegion });
 
-awsSdk3.PutObjectCommand;
-
 const availableOperations = [
   'createBucket',
   'listBuckets',
@@ -199,15 +197,17 @@ availableOperations.forEach(op => {
           if (err) {
             res.status(500).send({ error: String(err) });
           } else {
-            fetch(`http://127.0.0.1:${agentPort}`).then(() => {
-              if (op === 'getObject') {
-                handleGetObject(res, data);
-              } else {
-                res.send({
-                  status: 'ok',
-                  result: data
-                });
-              }
+            setTimeout(() => {
+              fetch(`http://127.0.0.1:${agentPort}`).then(() => {
+                if (op === 'getObject') {
+                  handleGetObject(res, data);
+                } else {
+                  res.send({
+                    status: 'ok',
+                    result: data
+                  });
+                }
+              });
             });
           }
         });

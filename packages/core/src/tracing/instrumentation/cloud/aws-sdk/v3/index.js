@@ -13,7 +13,8 @@ const { getFunctionArguments } = require('../../../../../util/function_arguments
 const awsProducts = [
   //
   require('./dynamodb'),
-  require('./s3')
+  require('./s3'),
+  require('./sqs')
 ];
 
 /** @type {Object.<string, import('./instana_aws_product').InstanaAWSProduct} */
@@ -26,7 +27,7 @@ awsProducts.forEach(awsProduct => {
 let isActive = false;
 
 exports.init = function init() {
-  requireHook.onFileLoad(/@aws-sdk\/middleware-logger\/dist\/cjs\/loggerMiddleware\.js/, instrumentAWS);
+  requireHook.onFileLoad(/@aws-sdk\/smithy-client\/dist\/cjs\/client\.js/, instrumentGlobalSmithy);
 };
 
 exports.isActive = function () {
@@ -41,43 +42,25 @@ exports.deactivate = function deactivate() {
   isActive = false;
 };
 
-function instrumentAWS(AWS) {
-  shimmer.wrap(AWS, 'loggerMiddleware', shimLoggerMiddleware);
+function instrumentGlobalSmithy(Smithy) {
+  shimmer.wrap(Smithy.Client.prototype, 'send', shimSmithySend);
 }
 
-function shimLoggerMiddleware(originalLoggerMiddleware) {
-  // const loggerMiddleware = () => (next, context) => async (args) => {...}
-
+function shimSmithySend(originalSend) {
   return function () {
     const self = this;
-    const loggerMiddlewareArgs = getFunctionArguments(arguments);
+    const smithySendArgs = getFunctionArguments(arguments);
+    const command = smithySendArgs[0];
 
-    // (next, context) => async (args) => {...}
-    const innerFunction = originalLoggerMiddleware.apply(this, loggerMiddlewareArgs);
+    if (isActive) {
+      const awsProduct = operationMap[command.constructor.name];
 
-    return function () {
-      // async (args) => {...}
-      const innerFunctionArgs = getFunctionArguments(arguments);
-      const anotherInnerFunc = innerFunction.apply(self, innerFunctionArgs);
-      return function () {
-        if (isActive) {
-          const anotherInnerFuncArgs = getFunctionArguments(arguments);
+      if (awsProduct) {
+        return awsProduct.instrumentedSmithySend(self, originalSend, smithySendArgs);
+      }
 
-          const awsProduct = operationMap[innerFunctionArgs[1].commandName];
-
-          if (awsProduct) {
-            return awsProduct.instrumentedInnerLoggerMiddleware(
-              self,
-              anotherInnerFunc,
-              anotherInnerFuncArgs,
-              innerFunctionArgs
-            );
-          }
-
-          return anotherInnerFunc.apply(self, anotherInnerFuncArgs);
-        }
-        return anotherInnerFunc.apply(self, arguments);
-      };
-    };
+      return originalSend.apply(self, smithySendArgs);
+    }
+    return originalSend.apply(self, smithySendArgs);
   };
 }

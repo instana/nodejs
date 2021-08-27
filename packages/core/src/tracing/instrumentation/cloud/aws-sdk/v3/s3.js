@@ -54,33 +54,48 @@ const operations = Object.keys(operationsInfo);
 const SPAN_NAME = 's3';
 
 class InstanaAWSS3 extends InstanaAWSProduct {
-  instrumentedInnerLoggerMiddleware(ctx, originalInnerLoggerMiddleware, originalInnerFuncArgs, originalParentFuncArgs) {
+  instrumentedSmithySend(ctx, originalSend, smithySendArgs) {
     const parentSpan = cls.getCurrentSpan();
+    const command = smithySendArgs[0];
 
     if (!parentSpan || isExitSpan(parentSpan)) {
-      return originalInnerLoggerMiddleware.apply(ctx, originalInnerFuncArgs);
+      return originalSend.apply(ctx, smithySendArgs);
     }
 
     return cls.ns.runAndReturn(() => {
+      const self = this;
       const span = cls.startSpan(this.spanName, EXIT);
       span.ts = Date.now();
-      span.stack = tracingUtil.getStackTrace(this.instrumentedInnerLoggerMiddleware);
-      span.data[this.spanName] = this.buildSpanData(
-        originalParentFuncArgs[1].commandName,
-        originalInnerFuncArgs[0].input
-      );
+      span.stack = tracingUtil.getStackTrace(this.instrumentedSmithySend, 1);
+      span.data[this.spanName] = this.buildSpanData(command.constructor.name, command.input);
 
-      const request = originalInnerLoggerMiddleware.apply(ctx, originalInnerFuncArgs);
+      if (typeof smithySendArgs[1] === 'function') {
+        const _callback = smithySendArgs[1];
 
-      request
-        .then(() => {
-          this.finishSpan(null, span);
-        })
-        .catch(err => {
-          this.finishSpan(err, span);
+        smithySendArgs[1] = cls.ns.bind(function (err /** , data */) {
+          if (err) {
+            _callback.apply(this, arguments);
+            self.finishSpan(err, span);
+          } else {
+            _callback.apply(this, arguments);
+            self.finishSpan(null, span);
+          }
         });
 
-      return request;
+        return originalSend.apply(ctx, smithySendArgs);
+      } else {
+        const request = originalSend.apply(ctx, smithySendArgs);
+
+        request
+          .then(() => {
+            this.finishSpan(null, span);
+          })
+          .catch(err => {
+            this.finishSpan(err, span);
+          });
+
+        return request;
+      }
     });
   }
 
