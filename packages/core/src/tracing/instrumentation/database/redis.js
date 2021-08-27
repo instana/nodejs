@@ -33,10 +33,10 @@ exports.init = function init() {
 function instrument(redis) {
   const redisClientProto = redis.RedisClient.prototype;
   commands.list.forEach(name => {
-    // some commands are not added or are renamed. Ignore them for now.
+    // Some commands are not added or are renamed. Ignore them.
     if (
       !redisClientProto[name] &&
-      // multi commands are handled differently
+      // Multi commands are handled differently.
       name !== 'multi'
     ) {
       return;
@@ -48,10 +48,11 @@ function instrument(redis) {
   });
 
   if (redis.Multi) {
+    // Different version of redis (in particular ancient ones like 0.10.x) have rather different APIs for the multi
+    // operations. Shimming them conditionally is not really necessary (shimmer checks for itself) but supresses a log
+    // statement from shimmer.
+
     if (typeof redis.Multi.prototype.exec_transaction === 'function') {
-      // Very old redis versions (0.10.x) like the one used by a particular edgemicro plug-in (volos-quota-redis) do not
-      // have the exec_transaction method. Shimming this conditionally is not really necessary (shimmer checks for
-      // itself) but supresses a log statement from shimmer.
       shimmer.wrap(redis.Multi.prototype, 'exec_transaction', instrumentMultiExec.bind(null, true));
     }
 
@@ -60,8 +61,12 @@ function instrument(redis) {
       // Old versions of redis also do not have exec_batch. See above (exec_transaction).
       shimmer.wrap(redis.Multi.prototype, 'exec_batch', instrumentedBatch);
     }
-    shimmer.wrap(redis.Multi.prototype, 'EXEC', instrumentedBatch);
-    shimmer.wrap(redis.Multi.prototype, 'exec', instrumentedBatch);
+    if (typeof redis.Multi.prototype.EXEC === 'function') {
+      shimmer.wrap(redis.Multi.prototype, 'EXEC', instrumentedBatch);
+    }
+    if (typeof redis.Multi.prototype.exec === 'function') {
+      shimmer.wrap(redis.Multi.prototype, 'exec', instrumentedBatch);
+    }
   }
 }
 
@@ -138,7 +143,7 @@ function instrumentMultiExec(isAtomic, original) {
     cls.setCurrentSpan(parentSpan);
     span.stack = tracingUtil.getStackTrace(instrumentedMultiExec);
     span.data.redis = {
-      connection: multi._client.address,
+      connection: multi._client != null ? multi._client.address : undefined,
       command: isAtomic ? 'multi' : 'pipeline'
     };
 
@@ -157,11 +162,27 @@ function instrumentMultiExec(isAtomic, original) {
     }
 
     const subCommands = (span.data.redis.subCommands = []);
-    const len = multi.queue.length;
+    const len = multi.queue != null ? multi.queue.length : 0;
+    let legacyMultiMarkerHasBeenSeen = false;
     for (let i = 0; i < len; i++) {
-      const subCommand = multi.queue.get(i);
-      subCommands[i] = subCommand.command;
-      subCommand.callback = buildSubCommandCallback(span, subCommand.callback);
+      let subCommand;
+      if (typeof multi.queue.get === 'function') {
+        subCommand = multi.queue.get(i);
+        subCommands[i] = subCommand.command;
+        subCommand.callback = buildSubCommandCallback(span, subCommand.callback);
+      } else {
+        // Branch for ancient versions of redis (like 0.12.1):
+        subCommand = multi.queue[i];
+        if (!Array.isArray(subCommand) || subCommand.length === 0) {
+          continue;
+        }
+        if (subCommand[0] === 'MULTI') {
+          legacyMultiMarkerHasBeenSeen = true;
+          continue;
+        }
+        const idx = legacyMultiMarkerHasBeenSeen && i >= 1 ? i - 1 : i;
+        subCommands[idx] = subCommand[0];
+      }
     }
     // must not send batch size 0
     if (subCommands.length > 0) {
