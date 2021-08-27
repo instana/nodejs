@@ -2,7 +2,7 @@
 
 ## Unreleased
 - Fix: Rename global attribute from cls-hooked from process.namespaces to process.instanaNamespaces to avoid conflicts with other usages of cls-hooked.
-- Fix: Use fixed version of emitter-listener so that wrapping the same emitter multiple times works correctly.
+- Fix: Vendor the fixed version of `emitter-listener`, so that wrapping the same emitter multiple times works correctly.
 
 ## 1.132.0
 - Fix instrumentation for very old versions of `redis` (0.12.1).
