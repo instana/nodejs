@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.132.1
 - Fix: Rename global attribute from cls-hooked from process.namespaces to process.instanaNamespaces to avoid conflicts with other usages of cls-hooked.
 - Fix: Vendor the fixed version of `emitter-listener`, so that wrapping the same emitter multiple times works correctly.
 
