@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.132.0
 - Fix instrumentation for very old versions of `redis` (0.12.1).
 - AWS SDK v3: Instrumentation of SQS
 
