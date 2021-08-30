@@ -57,6 +57,9 @@ class DependencyDistanceCalculator {
       // Do not descend deeper than maxDepth nesting levels.
       return;
     }
+    if (typeof packageJsonPath !== 'string') {
+      return;
+    }
 
     // For each package.json that we find in the dependency tree, we initially increase the global count down latch
     // by 3, that is, one for each type of dependencies (normal, optional, peer). Once we have in turn queued all
@@ -66,39 +69,52 @@ class DependencyDistanceCalculator {
     this.globalCountDownLatchAllPackages.countUp(3);
 
     // Read the associated package.json and parse it.
-    fs.readFile(packageJsonPath, { encoding: 'utf8' }, (err, contents) => {
-      if (err) {
-        logger.debug(
-          'Failed to calculate transitive distances for some dependencies, could not read package.json file at %s: %s.',
-          packageJsonPath,
-          err.message
-        );
+    try {
+      fs.readFile(packageJsonPath, { encoding: 'utf8' }, (err, contents) => {
+        if (err) {
+          logger.debug(
+            'Failed to calculate transitive distances for some dependencies, could not read package.json file at ' +
+              '%s: %s.',
+            packageJsonPath,
+            err.message
+          );
 
-        // If we cannot parse the package.json or if it does not exist, we need to decrement by 3 immediately because we
-        // increment the latch by 3 for each node (see above).
-        this.globalCountDownLatchAllPackages.countDown(3);
-        return;
-      }
+          // If we cannot parse the package.json or if it does not exist, we need to decrement by 3 immediately because
+          // we increment the latch by 3 for each node (see above).
+          this.globalCountDownLatchAllPackages.countDown(3);
+          return;
+        }
 
-      let parsedPackageJson;
-      try {
-        parsedPackageJson = JSON.parse(contents);
-      } catch (parseErr) {
-        logger.debug(
-          'Failed to calculate transitive distances for some dependencies, could not parse package.json file at %s: %s',
-          packageJsonPath,
-          parseErr.message
-        );
-        this.globalCountDownLatchAllPackages.countDown(3);
-        return;
-      }
+        let parsedPackageJson;
+        try {
+          parsedPackageJson = JSON.parse(contents);
+        } catch (parseErr) {
+          logger.debug(
+            'Failed to calculate transitive distances for some dependencies, could not parse package.json file at ' +
+              '%s: %s',
+            packageJsonPath,
+            parseErr.message
+          );
+          this.globalCountDownLatchAllPackages.countDown(3);
+          return;
+        }
 
-      // Each call to _calculateDistancesForOneType is guaranteed to decrease the global count down latch by exactly
-      // one, to offset the increment of 3 that we did for this node in the dependency tree initially.
-      this._calculateDistancesForOneType(parsedPackageJson.dependencies, distance);
-      this._calculateDistancesForOneType(parsedPackageJson.peerDependencies, distance);
-      this._calculateDistancesForOneType(parsedPackageJson.optionalDependencies, distance);
-    });
+        // Each call to _calculateDistancesForOneType is guaranteed to decrease the global count down latch by exactly
+        // one, to offset the increment of 3 that we did for this node in the dependency tree initially.
+        this._calculateDistancesForOneType(parsedPackageJson.dependencies, distance);
+        this._calculateDistancesForOneType(parsedPackageJson.peerDependencies, distance);
+        this._calculateDistancesForOneType(parsedPackageJson.optionalDependencies, distance);
+      });
+    } catch (fsReadFileErr) {
+      // This catch-block is for synchronous errors from fs.readFile, which can also happen in addition to the callback
+      // being called with an error.
+      logger.debug(
+        'Failed to calculate transitive distances for some dependencies, synchronous error from fs.readFile for %s:',
+        packageJsonPath,
+        fsReadFileErr
+      );
+      this.globalCountDownLatchAllPackages.countDown(3);
+    }
   }
 
   /**
@@ -186,6 +202,14 @@ class DependencyDistanceCalculator {
         );
         return;
       }
+      if (typeof packageJsonPath !== 'string') {
+        localCountDownLatchForThisNode.countDown();
+        logger.debug(
+          `Ignoring failure to find the package.json file for dependency ${dependency} for dependency distance ` +
+            `calculation (package.json path is ${packageJsonPath}/${typeof packageJsonPath}).`
+        );
+        return;
+      }
 
       // Recurse one level deeper and queue the next package.json path for analysis.
       this._calculateDistances(packageJsonPath, distance + 1);
@@ -205,23 +229,30 @@ class DependencyDistanceCalculator {
  * @param {string} dir
  * @param {(err: Error, packageJsonPath: string) => void} callback
  */
+
 function findPackageJsonFor(dir, callback) {
   const pathToCheck = path.join(dir, 'package.json');
-  fs.stat(pathToCheck, (err, stats) => {
-    if (err) {
-      if (err.code === 'ENOENT') {
-        return searchInParentDir(dir, findPackageJsonFor, callback);
-      } else {
-        return process.nextTick(callback, err, null);
+  try {
+    fs.stat(pathToCheck, (err, stats) => {
+      if (err) {
+        if (err.code === 'ENOENT') {
+          return searchInParentDir(dir, findPackageJsonFor, callback);
+        } else {
+          return process.nextTick(callback, err, null);
+        }
       }
-    }
 
-    if (stats.isFile()) {
-      return process.nextTick(callback, null, pathToCheck);
-    } else {
-      return searchInParentDir(dir, findPackageJsonFor, callback);
-    }
-  });
+      if (stats.isFile()) {
+        return process.nextTick(callback, null, pathToCheck);
+      } else {
+        return searchInParentDir(dir, findPackageJsonFor, callback);
+      }
+    });
+  } catch (fsStatErr) {
+    // This catch-block is for synchronous errors from fs.stat, which can also happen in addition to the callback being
+    // called with an error. The error will be logged in _handleTransitiveDependency.
+    return process.nextTick(callback, fsStatErr, null);
+  }
 }
 
 /**

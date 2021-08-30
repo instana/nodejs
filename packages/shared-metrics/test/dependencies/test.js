@@ -126,14 +126,14 @@ describe('dependencies', function () {
           expect(deps.express).to.equal('4.17.1');
           expect(deps.koa).to.equal('2.13.1');
 
-          expect(deps['performance-now']).to.equal('2.1.0');
-          expect(deps.picomatch).to.equal('2.2.2');
-          expect(deps.pify).to.equal('2.3.0');
-          // According to how we sort and limit the collected dependencies, negotiator should be the last package that
-          // is included while pino-std-serializers is the first that is omitted.
-          expect(deps.pinkie).to.not.exist;
-          expect(deps['pinkie-promise']).to.not.exist;
-          expect(deps.pino).to.not.exist;
+          expect(deps.opentracing).to.equal('0.14.5');
+          expect(deps.only).to.equal('0.0.2');
+          // According to how we sort and limit the collected dependencies, the break between packages that are
+          // collected and the ones that are omitted should be somewhere between negotiator should be the somewhere
+          // around the package name pinky (packages are only sorted alphabetically in this test scenario). However, to
+          // make the test a little less fragile, we allow for some leniency with regards to where exactly the break is.
+          expect(deps['queue-microtask']).to.not.exist;
+          expect(deps.qs).to.not.exist;
         })
       ));
   });
