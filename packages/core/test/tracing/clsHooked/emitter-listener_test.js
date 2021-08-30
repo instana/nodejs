@@ -45,7 +45,7 @@ describe('emitter-listener', () => {
       wrapEmitter(ee, nop, passthrough);
     }).to.not.throw();
 
-    expect(ee.__wrapped, 'is marked as being a wrapped emitter').to.be.true;
+    expect(ee.__wrappedInstana, 'is marked as being a wrapped emitter').to.be.true;
 
     ee.on('test', function (value) {
       expect(value, 'value was still passed through').to.equal(8);
@@ -129,7 +129,7 @@ describe('emitter-listener', () => {
     expect(ee.removeListener.__wrapped, 'removeListener is not wrapped').to.not.exist;
 
     expect(function () {
-      ee.__unwrap();
+      ee.__unwrapInstana();
     }).to.not.throw('can unwrap without dying');
 
     expect(ee.addListener.__wrapped, 'addListener is unwrapped').to.not.exist;
