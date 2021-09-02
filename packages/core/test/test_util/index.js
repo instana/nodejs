@@ -7,6 +7,8 @@
 
 'use strict';
 
+const commonVerifications = require('./common_verifications');
+
 module.exports = {
   delay: require('./delay'),
   expectAtLeastOneMatching: require('./expectAtLeastOneMatching'),
@@ -16,5 +18,6 @@ module.exports = {
   retry: require('./retry'),
   retryUntilSpansMatch: require('./retryUntilSpansMatch'),
   sendToParent: require('./sendToParent'),
-  stringifyItems: require('./stringifyItems')
+  stringifyItems: require('./stringifyItems'),
+  ...commonVerifications
 };

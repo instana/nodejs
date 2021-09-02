@@ -16,4 +16,5 @@ For this reason, we maintain an overview of the ports used by the integration te
 | metrics-util         | N.A. (no integration tests, only unit tests) |
 | serverless           | N.A. (no integration tests, only unit tests) |
 | shared-metrics       | app under test: 7215, mock agent: 7211 |
-
+| collector            | app under test: 3215 |
+| opentelemetry-exporter | app under test: 6215, mock back end: 10443 |

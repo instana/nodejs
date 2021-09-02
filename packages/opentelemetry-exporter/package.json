@@ -1,0 +1,64 @@
+{
+  "name": "@instana/opentelemetry-exporter",
+  "version": "1.133.0",
+  "description": "OpenTelemetry Instana Exporter",
+  "keywords": [
+    "opentelemetry",
+    "exporter",
+    "nodejs",
+    "tracing"
+  ],
+  "author": "Willian Carvalho <willian.carvalho@instana.com>",
+  "homepage": "https://github.com/instana/nodejs/blob/main/packages/opentelemetry-exporter/README.md",
+  "license": "MIT",
+  "main": "src/index.js",
+  "directories": {
+    "lib": "src",
+    "test": "test"
+  },
+  "files": [
+    "src"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/instana/nodejs.git"
+  },
+  "scripts": {
+    "start": "node test/app.js",
+    "debug": "node --inspect-brk test/app.js",
+    "test": "echo \"$(node -v)\" | grep v8 > /dev/null || npm run test:mocha",
+    "test:mocha": "mocha --sort --reporter mocha-multi --reporter-options spec=-,xunit=../../test-results/opentelemetry-exporter/results.xml $(find test -iname '*test.js' -not -path '*node_modules*')",
+    "test:debug": "WITH_STDOUT=true npm run test:mocha",
+    "audit": "bin/prepare-audit.sh && npm audit --production; AUDIT_RESULT=$?; git checkout package-lock.json; exit $AUDIT_RESULT",
+    "lint": "eslint src test",
+    "verify": "npm run lint && npm test",
+    "prettier": "prettier --write 'src/**/*.js' 'test/**/*.js'"
+  },
+  "bugs": {
+    "url": "https://github.com/instana/nodejs/issues"
+  },
+  "dependencies": {
+    "@instana/serverless": "1.133.0",
+    "@opentelemetry/core": "0.25.0"
+  },
+  "devDependencies": {
+    "@instana/core": "1.133.0",
+    "eslint-plugin-mocha": "^9.0.0",
+    "mocha": "^7.2.0",
+    "chai-spies": "1.0.0",
+    "@opentelemetry/resources": "0.25.0",
+    "@opentelemetry/sdk-trace-base": "0.25.0",
+    "@opentelemetry/semantic-conventions": "0.25.0",
+    "@opentelemetry/node": "0.24.0",
+    "@opentelemetry/auto-instrumentations-node": "0.24.0",
+    "@opentelemetry/sdk-node": "0.24.0",
+    "@opentelemetry/instrumentation-http": "0.24.0",
+    "@opentelemetry/instrumentation": "0.24.0",
+    "@opentelemetry/sdk-trace-node": "0.24.1-alpha.4",
+    "@opentelemetry/api": "1.0.3",
+    "eslint": "^7.30.0",
+    "eslint-config-airbnb-base": "^14.2.1",
+    "eslint-plugin-import": "^2.23.4",
+    "prettier": "^2.3.2"
+  }
+}

@@ -6,11 +6,9 @@
 'use strict';
 
 // eslint-disable-next-line import/order
-const environmentUtil = require('./environment');
-
-const uninstrumented = require('@instana/core').uninstrumentedHttp;
-
 const semver = require('semver');
+const environmentUtil = require('./environment');
+const uninstrumented = require('./uninstrumentedHttp');
 
 const constants = require('./constants');
 let logger = require('./console_logger');
@@ -86,9 +84,14 @@ exports.init = function init(
     if (hostHeader == null) {
       hostHeader = 'nodejs-serverless';
     }
+  } else {
+    hostHeader = 'nodejs-serverless';
   }
 
-  logger = _logger;
+  if (_logger) {
+    logger = _logger;
+  }
+
   requestHasFailed = false;
 };
 
