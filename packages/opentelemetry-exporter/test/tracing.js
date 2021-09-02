@@ -1,0 +1,47 @@
+/*
+ * (c) Copyright IBM Corp. 2021
+ * (c) Copyright Instana Inc. and contributors 2021
+ */
+
+'use strict';
+
+const process = require('process');
+require('@opentelemetry/api');
+const logPrefix = `OpenTelemetry tracing (${process.pid}):\t`;
+const log = require('@instana/core/test/test_util/log').getLogger(logPrefix);
+const opentelemetry = require('@opentelemetry/sdk-node');
+const { getNodeAutoInstrumentations } = require('@opentelemetry/auto-instrumentations-node');
+const { InstanaExporter } = require('../dist/index');
+const { Resource } = require('@opentelemetry/resources');
+const { SemanticResourceAttributes } = require('@opentelemetry/semantic-conventions');
+
+const pinkAgentKey = '';
+const pinkEndpointUrl = '';
+
+const traceExporter = new InstanaExporter(pinkAgentKey, pinkEndpointUrl);
+
+const nodeAutoInstrumentations = getNodeAutoInstrumentations();
+
+const sdk = new opentelemetry.NodeSDK({
+  resource: new Resource({
+    [SemanticResourceAttributes.SERVICE_NAME]: 'my-service'
+  }),
+  traceExporter: traceExporter,
+  instrumentations: [nodeAutoInstrumentations]
+});
+
+// initialize the SDK and register with the OpenTelemetry API
+// this enables the API to record telemetry
+sdk
+  .start()
+  .then(() => log('Tracing initialized'))
+  .catch(error => log('Error initializing tracing', error));
+
+// gracefully shut down the SDK on process exit
+process.on('SIGTERM', () => {
+  sdk
+    .shutdown()
+    .then(() => log('Tracing terminated'))
+    .catch(error => log('Error terminating tracing', error))
+    .finally(() => process.exit(0));
+});

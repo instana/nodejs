@@ -1,0 +1,53 @@
+{
+  "name": "opentelemetry-exporter",
+  "version": "1.132.2",
+  "description": "OpenTelemetry Instana Exporter",
+  "keywords": [
+    "opentelemetry",
+    "exporter",
+    "nodejs",
+    "tracing"
+  ],
+  "author": "Willian Carvalho <willian.carvalho@instana.com>",
+  "homepage": "https://github.com/instana/nodejs/blob/main/packages/opentelemetry-exporter/README.md",
+  "license": "MIT",
+  "main": "lib/opentelemetry-exporter.js",
+  "directories": {
+    "lib": "src",
+    "test": "test"
+  },
+  "files": [
+    "src"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/instana/nodejs.git"
+  },
+  "scripts": {
+    "build": "tsc",
+    "prepublishOnly": "npm run build",
+    "start": "npm run build && node -r ./test/tracing.js test/app.js",
+    "debug": "npm run build && node -r ./test/tracing.js --inspect-brk test/app.js",
+    "test": "echo \"Error: run tests from root\" && exit 1"
+  },
+  "bugs": {
+    "url": "https://github.com/instana/nodejs/issues"
+  },
+  "dependencies": {
+    "@instana/serverless": "1.132.2",
+    "@opentelemetry/core": "0.25.0",
+    "@opentelemetry/resources": "0.25.0",
+    "@opentelemetry/sdk-trace-base": "0.25.0",
+    "@opentelemetry/semantic-conventions": "0.25.0",
+    "@opentelemetry/node": "0.24.0",
+    "@opentelemetry/auto-instrumentations-node": "0.24.0",
+    "@opentelemetry/sdk-node": "0.24.0",
+    "@opentelemetry/instrumentation-http": "0.24.0",
+    "@opentelemetry/instrumentation": "0.24.0",
+    "@opentelemetry/sdk-trace-node": "0.24.1-alpha.4",
+    "@opentelemetry/api": "1.0.3"
+  },
+  "devDependencies": {
+    "typescript": "4.3.5"
+  }
+}

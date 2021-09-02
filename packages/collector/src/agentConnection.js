@@ -377,6 +377,11 @@ function sendData(path, data, cb, ignore404) {
           statusCodeError.statusCode = res.statusCode;
           cb(statusCodeError);
           return;
+        } else {
+          const statusCodeError = new Error(res.statusMessage);
+          // @ts-ignore
+          statusCodeError.statusCode = res.statusCode;
+          cb(statusCodeError);
         }
       }
 

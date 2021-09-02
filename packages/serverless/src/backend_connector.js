@@ -8,7 +8,7 @@
 // eslint-disable-next-line import/order
 const environmentUtil = require('./environment');
 
-const uninstrumented = require('@instana/core').uninstrumentedHttp;
+const { uninstrumentedHttp: uninstrumented } = require('@instana/core');
 
 const semver = require('semver');
 
@@ -86,9 +86,14 @@ exports.init = function init(
     if (hostHeader == null) {
       hostHeader = 'nodejs-serverless';
     }
+  } else {
+    hostHeader = 'nodejs-serverless';
   }
 
-  logger = _logger;
+  if (_logger) {
+    logger = _logger;
+  }
+
   requestHasFailed = false;
 };
 
@@ -105,7 +110,11 @@ exports.sendMetrics = function sendMetrics(metrics, callback) {
 };
 
 exports.sendSpans = function sendSpans(spans, callback) {
-  send('/traces', spans, false, callback);
+  try {
+    send('/traces', spans, false, callback);
+  } catch (err) {
+    callback(err);
+  }
 };
 
 function getTransport() {
