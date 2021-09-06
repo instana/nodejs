@@ -21,7 +21,7 @@ const DEFAULT_ENV_VALUES = {
   POSTGRES_PASSWORD: 'nodepw',
   POSTGRES_DB: 'nodedb',
   POSTGRES_HOST: '127.0.0.1',
-  MSSQL_HOST: '127.0.0.1',
+  MSSQL_HOST: 'localhost',
   MSSQL_PORT: '1433',
   MSSQL_USER: 'sa',
   MSSQL_PW: 'stanCanHazMsSQL1'
