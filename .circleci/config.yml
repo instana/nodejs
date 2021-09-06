@@ -21,6 +21,10 @@ shared: &shared
     - POSTGRES_PASSWORD=nodepw
     - POSTGRES_DB=nodedb
     - MEMCACHED=localhost:11211
+    - MSSQL_HOST=localhost
+    - MSSQL_PORT=1433
+    - MSSQL_USER=sa
+    - MSSQL_PW=stanCanHazMsSQL1
 
   steps:
     - checkout
@@ -86,7 +90,7 @@ shared: &shared
     # For more recent Node.js versions (>= 10) we use the latest 1.x as stated in package.json. We can't use grcp@1.10.1
     # in Node.js 10 since it fails to build under Node.js >= 10. We still want to explicitly test the combination of
     # Node.js 8 with grpc@1.10.1 for reasons.
-    - run: '([[ $(node -v) =~ ^v8.*$ ]] && npm install grpc@1.10.1) || true'
+    - run: "([[ $(node -v) =~ ^v8.*$ ]] && npm install grpc@1.10.1) || true"
 
     - save_cache:
         paths:
@@ -138,7 +142,7 @@ shared: &shared
         key: v3-shared-metrics-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "packages/shared-metrics/package-lock.json" }}
 
     # Only run audit with the most recent Node.js version - one Node version is enough.
-    - run: '([[ $(node -v) =~ ^v16.*$ ]] && npm run audit) || [[ ! $(node -v) =~ ^v16.*$ ]]'
+    - run: "([[ $(node -v) =~ ^v16.*$ ]] && npm run audit) || [[ ! $(node -v) =~ ^v16.*$ ]]"
 
     # Run linting first, we don't want to wait ages for the test suite to finish only to end the CI job with a linting
     # error.
@@ -333,4 +337,3 @@ workflows:
       - "node-12"
       - "node-10"
       - "node-8"
-
