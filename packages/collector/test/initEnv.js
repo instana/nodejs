@@ -6,6 +6,7 @@
 'use strict';
 
 // NOTE: default docker compose hosts, ports and credentials
+//       We could later add dotenv if there are more use cases
 const DEFAULT_ENV_VALUES = {
   MONGODB: '127.0.0.1:27017',
   ELASTICSEARCH: '127.0.0.1:9200',
