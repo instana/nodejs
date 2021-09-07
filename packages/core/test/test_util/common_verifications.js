@@ -25,6 +25,7 @@ const { expect } = require('chai');
 /**
  * @typedef {Object} ExitSpanOptions
  * @property {string} spanName
+ * @property {string} dataProperty
  * @property {Array.<InstanaBaseSpan>} spans
  * @property {InstanaBaseSpan} parent
  * @property {boolean} withError
@@ -92,7 +93,8 @@ exports.verifyExitSpan = function verifyExitSpan({
   withError,
   pid,
   extraTests,
-  testMethod = expectExactlyOneMatching
+  testMethod = expectExactlyOneMatching,
+  dataProperty
 }) {
   const tests = [
     (/** @type {InstanaBaseSpan} */ span) => {
@@ -120,7 +122,7 @@ exports.verifyExitSpan = function verifyExitSpan({
       expect(span.data).to.exist;
     },
     (/** @type {InstanaBaseSpan} */ span) => {
-      expect(span.data[spanName]).to.be.an('object');
+      expect(span.data[dataProperty || spanName]).to.be.an('object');
     }
   ].concat(extraTests || []);
 

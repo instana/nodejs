@@ -120,6 +120,11 @@ mochaSuiteFn('tracing/logger/pino', function () {
           ]);
           testUtils.expectAtLeastOneMatching(spans, checkPinoSpan(entrySpan, expectErroneous, message));
           testUtils.expectAtLeastOneMatching(spans, checkNextExitSpan(entrySpan));
+
+          // entry + exit + pino log
+          // NOTE: Pino uses process.stdout directly
+          //       Length of 3 just ensures that our console.* instrumentation isn't counted when customer uses pino
+          expect(spans.length).to.eql(3);
         })
       )
     );

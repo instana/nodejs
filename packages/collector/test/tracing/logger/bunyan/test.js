@@ -130,6 +130,11 @@ mochaSuiteFn('tracing/logger/bunyan', function () {
           // verify that nothing logged by Instana has been traced
           const allBunyanSpans = testUtils.getSpansByName(spans, 'log.bunyan');
           expect(allBunyanSpans.length).to.equal(1);
+
+          // entry + exit + bunyan log
+          // NOTE: Bunyan uses process.stdout directly
+          //       Length of 3 just ensures that our console.* instrumentation isn't counted when customer uses Bunyan
+          expect(spans.length).to.eql(3);
         })
       )
     );
