@@ -16,6 +16,7 @@ const recursiveCopy = require('recursive-copy');
 const os = require('os');
 const path = require('path');
 const rimraf = require('rimraf');
+const semver = require('semver');
 
 const config = require('../../../core/test/config');
 const { retry } = require('../../../core/test/test_util');
@@ -50,9 +51,9 @@ describe('dependencies', function () {
           expect(deps).to.be.an('object');
           expect(Object.keys(deps)).to.have.lengthOf(75);
 
-          expect(deps.fastify).to.equal('3.20.2');
-          expect(deps.express).to.equal('4.17.1');
-          expect(deps.koa).to.equal('2.13.1');
+          expectVersion(deps.fastify, '^3.20.2');
+          expectVersion(deps.express, '^4.17.1');
+          expectVersion(deps.koa, '^2.13.1');
 
           expect(deps.mime).to.exist;
           expect(deps.negotiator).to.exist;
@@ -122,12 +123,13 @@ describe('dependencies', function () {
           expect(deps['@instana/collector']).to.exist;
           expect(deps['@instana/autoprofile']).to.exist;
 
-          expect(deps.fastify).to.equal('3.20.2');
-          expect(deps.express).to.equal('4.17.1');
-          expect(deps.koa).to.equal('2.13.1');
+          expectVersion(deps.fastify, '^3.20.2');
+          expectVersion(deps.express, '^4.17.1');
+          expectVersion(deps.koa, '^2.13.1');
 
-          expect(deps.opentracing).to.equal('0.14.5');
-          expect(deps.only).to.equal('0.0.2');
+          expectVersion(deps.opentracing, '^0.14.5');
+          expectVersion(deps.only, '^0.0.2');
+
           // According to how we sort and limit the collected dependencies, the break between packages that are
           // collected and the ones that are omitted should be somewhere between negotiator should be the somewhere
           // around the package name pinky (packages are only sorted alphabetically in this test scenario). However, to
@@ -181,17 +183,17 @@ describe('dependencies', function () {
           expect(deps['@instana/collector']).to.exist;
           expect(deps['@instana/autoprofile']).to.exist;
 
-          expect(deps.fastify).to.equal('3.20.2');
-          expect(deps.express).to.equal('4.17.1');
-          expect(deps.koa).to.equal('2.13.1');
+          expectVersion(deps.fastify, '^3.20.2');
+          expectVersion(deps.express, '^4.17.1');
+          expectVersion(deps.koa, '^2.13.1');
 
           // number-is-nan is one of the most distant deps (10 levels deep), but with the limit used in this test, it
           // should be included.
-          expect(deps['number-is-nan']).to.equal('1.0.1');
+          expectVersion(deps['number-is-nan'], '^1.0.1');
 
           // eslint is a dev dependency (see above why it is included at all), but it should also be included with the
           // limit of 300 that we apply.
-          expect(deps.eslint).to.equal('7.30.0');
+          expectVersion(deps.eslint, '^7.30.0');
 
           // growl is in the dependencies but it is past the point that is imposed by the limit so it should not be in
           // the collected dependencies.
@@ -215,6 +217,13 @@ function findMetric(allMetrics, _path) {
     }
   }
   return undefined;
+}
+
+function expectVersion(actualVersion, expectedRange) {
+  expect(
+    semver.satisfies(actualVersion, expectedRange),
+    `${actualVersion} does not satisfy the expected range ${expectedRange}.`
+  ).to.be.true;
 }
 
 /**
