@@ -42,6 +42,11 @@ cd ../serverless
 npm --loglevel=warn pack
 mv instana-serverless-*.tgz ../aws-lambda/instana-serverless.tgz
 
+echo "Building local tar.gz for @instana/core."
+cd ../core
+npm --loglevel=warn pack
+mv instana-core-*.tgz ../aws-lambda/instana-core.tgz
+
 echo "Building local tar.gz for @instana/aws-lambda."
 cd ../aws-lambda
 npm --loglevel=warn pack

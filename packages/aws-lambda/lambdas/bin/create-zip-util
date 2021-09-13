@@ -25,6 +25,7 @@ function createZip {
       #   "instana-aws-lambda-auto-wrap": "file:../../instana-aws-lambda-auto-wrap.tgz"
       # }
       # ...then those need to be removed:
+      npm uninstall --production -S @instana/core
       npm uninstall --production -S @instana/aws-lambda
       npm uninstall --production -S @instana/serverless
       npm uninstall --production -S instana-aws-lambda-auto-wrap
@@ -37,6 +38,13 @@ function createZip {
       # }
       # but only doing an npm install will use a stale copy of the tgz files from npm's cache, so we force npm to use a
       # fresh copy by installing the tgz files again explicitly.
+      #
+      # Furthermore we have to ensure that instana packages, which uses other instana packages, also will use the local version.
+      # We can achieve that by installing our local core version first and ensuring npm will use the root installation for sub packages
+      # We have to remove the lock file otherwise the integrity will fail.
+      rm package-lock.json
+
+      npm --loglevel=warn --production install -S "../../instana-core.tgz"
       npm --loglevel=warn --production install -S "../../instana-aws-lambda-auto-wrap.tgz"
       npm --loglevel=warn --production install -S "../../instana-aws-lambda.tgz"
       npm --loglevel=warn --production install -S "../../instana-serverless.tgz"
@@ -48,8 +56,10 @@ function createZip {
       #   "@instana/aws-lambda": "file:../../instana-aws-lambda.tgz"
       # }
       # this needs to be removed and then we install the latest published package from npm
+      npm uninstall --production -S @instana/core
       npm uninstall --production -S @instana/aws-lambda
       npm uninstall --production -S @instana/serverless
+      npm install --production -S @instana/core
       npm install --production -S @instana/aws-lambda
       npm install --production -S @instana/serverless
     else
