@@ -29,6 +29,7 @@ mochaSuiteFn('tracing/logger/console', function () {
     dirname: __dirname,
     useGlobalAgent: true
   });
+
   ProcessControls.setUpHooks(controls);
 
   /**
@@ -49,8 +50,6 @@ mochaSuiteFn('tracing/logger/console', function () {
    *      - e.g. bunyan -> logger.info -> our instrumentation uses console.warn -> parent span is exit span
    */
   describe('log calls', () => {
-    beforeEach(() => agentControls.waitUntilAppIsCompletelyInitialized(controls.getPid()));
-
     it('must not trace info', () => runAndDoNotTrace('info'));
     it('must not trace log', () => runAndDoNotTrace('log'));
     it('must not trace debug', () => runAndDoNotTrace('debug'));

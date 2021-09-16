@@ -49,6 +49,7 @@ class ProcessControls {
    */
   static setUpSuiteHooksWithRetryTime(retryTime, ...allControls) {
     before(() => {
+      // NOTE: ...app + agent
       return Promise.all(allControls.map(control => control.startAndWaitForAgentConnection(retryTime)));
     });
     after(() => {
