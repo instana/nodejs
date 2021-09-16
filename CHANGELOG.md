@@ -1,5 +1,8 @@
 # Changelog
 
+## Unreleased
+- [AWS Lambda] Increase retries and timeout in Lambda extension binary.
+
 ## 1.132.2
 - Fix `path must be a string of Buffer` error in dependency distance calculator.
 - Fix: Use different attribute names in vendored version of `emitter-listener`, to avoid conflicts if the unfixed `emitter-listener` package is still installed and being used by other packages.
