@@ -54,34 +54,39 @@ function instrumentedLog(ctx, originalLog, originalArgs, options) {
     const span = cls.startSpan('log.console', constants.EXIT);
 
     span.stack = tracingUtil.getStackTrace(instrumentedLog);
-    const fields = originalArgs[0];
-    let message = originalArgs[1];
+    const firstArg = originalArgs[0];
+    let secondArg = originalArgs[1];
 
-    if (typeof fields === 'string') {
-      message = fields;
-    } else if (fields && typeof fields.message === 'string' && typeof message === 'string') {
+    if (typeof firstArg === 'string') {
+      secondArg = firstArg;
+    } else if (firstArg && typeof firstArg.message === 'string' && typeof secondArg === 'string') {
       // CASE: e.g. console.error(new Error('err msg'), 'Another message')
-      message = `${fields.message} -- ${message}`;
-    } else if (fields && typeof fields.message === 'string') {
+      secondArg = `${firstArg.message} -- ${secondArg}`;
+    } else if (firstArg && typeof firstArg.message === 'string') {
       // CASE: e.g. console.error(new Error('err msg'))
-      message = fields.message;
+      secondArg = firstArg.message;
     } else if (
-      fields &&
-      fields.err &&
-      typeof fields.err === 'object' &&
-      typeof fields.err.message === 'string' &&
-      typeof message === 'string'
+      firstArg &&
+      firstArg.err &&
+      typeof firstArg.err === 'object' &&
+      typeof firstArg.err.message === 'string' &&
+      typeof secondArg === 'string'
     ) {
       // CASE: e.g. console.error({err: new Error(..)}, 'Another message')
-      message = `${fields.err.message} -- ${message}`;
-    } else if (fields && fields.err && typeof fields.err === 'object' && typeof fields.err.message === 'string') {
-      message = fields.err.message;
-    } else if (typeof message !== 'string') {
+      secondArg = `${firstArg.err.message} -- ${secondArg}`;
+    } else if (
+      firstArg &&
+      firstArg.err &&
+      typeof firstArg.err === 'object' &&
+      typeof firstArg.err.message === 'string'
+    ) {
+      secondArg = firstArg.err.message;
+    } else if (typeof secondArg !== 'string') {
       // CASE: e.g. console.error({x:y})
-      message = "Log call without message. Call won't be serialized by Instana for performance reasons.";
+      secondArg = "Log call without message. Call won't be serialized by Instana for performance reasons.";
     }
     span.data.log = {
-      message,
+      message: secondArg,
       level: options.level
     };
 
