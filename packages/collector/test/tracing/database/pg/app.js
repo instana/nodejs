@@ -44,6 +44,103 @@ pool.query(createTableQuery, err => {
   }
 });
 
+const { Sequelize, DataTypes } = require('sequelize');
+const sequelize = new Sequelize(
+  `postgres://${process.env.POSTGRES_USER}:${process.env.POSTGRES_PASSWORD}@${process.env.POSTGRES_HOST}:5432/${process.env.POSTGRES_DB}`
+);
+
+(async () => {
+  const User = sequelize.define(
+    'User',
+    {
+      // Model attributes are defined here
+      firstName: {
+        type: DataTypes.STRING,
+        allowNull: false
+      },
+      lastName: {
+        type: DataTypes.STRING
+        // allowNull defaults to true
+      }
+    },
+    {
+      freezeTableName: true
+    }
+  );
+
+  await User.sync({ force: true });
+
+  await User.create(
+    {
+      firstName: 'alice123'
+    },
+    { fields: ['firstName'] }
+  );
+})();
+
+const knex = require('knex')({
+  client: 'pg',
+  connection: {
+    host: process.env.POSTGRES_HOST,
+    user: process.env.POSTGRES_USER,
+    password: process.env.POSTGRES_PASSWORD,
+    database: process.env.POSTGRES_DB,
+    charset: 'utf8'
+  }
+});
+const bookshelf = require('bookshelf')(knex);
+
+// Defining models
+const BookShelfUser = bookshelf.model('User', {
+  tableName: 'users'
+});
+
+const typeorm = require('typeorm');
+
+class UserTypeOrm {
+  constructor(id, firstName) {
+    this.id = id;
+    this.firstName = firstName;
+  }
+}
+
+const EntitySchema = require('typeorm').EntitySchema;
+
+const UserTypeOrmEntity = new EntitySchema({
+  name: 'User',
+  target: UserTypeOrm,
+  columns: {
+    id: {
+      primary: true,
+      type: 'int',
+      generated: true
+    },
+    firstName: {
+      type: 'varchar'
+    }
+  }
+});
+
+let typeormconnection;
+
+(async () => {
+  typeorm
+    .createConnection({
+      type: 'postgres',
+      host: process.env.POSTGRES_HOST,
+      username: process.env.POSTGRES_USER,
+      password: process.env.POSTGRES_PASSWORD,
+      database: process.env.POSTGRES_DB,
+      synchronize: true,
+      logging: false,
+      entities: [UserTypeOrmEntity]
+    })
+    .then(connection => {
+      console.log('CONNECTION ESTABLISHED');
+      typeormconnection = connection;
+    });
+})();
+
 if (process.env.WITH_STDOUT) {
   app.use(morgan(`${logPrefix}:method :url :status`));
 }
@@ -93,6 +190,56 @@ app.get('/select-now-no-pool-promise', (req, res) => {
         return res.sendStatus(500);
       }
     });
+});
+
+/**
+ * https://github.com/sequelize/sequelize/pull/9431
+ * Sequilize does not support it yet, just for inserts and raw queries
+ */
+app.get('/sequelize', async (req, res) => {
+  const result = await sequelize.models.User.findOne({
+    // plain: true,
+    where: {
+      firstName: 'alice123'
+    },
+    bind: {}
+  });
+
+  res.json();
+});
+app.get('/sequelize-insert', async (req, res) => {
+  await sequelize.models.User.create(
+    {
+      firstName: 'xxx'
+    },
+    { fields: ['firstName'] }
+  );
+
+  res.json();
+});
+app.get('/bookshelf-select', async (req, res) => {
+  new BookShelfUser({ id: 1 })
+    .fetch()
+    .then(user => {
+      console.log(user);
+      res.json();
+    })
+    .catch(error => {
+      res.json();
+    });
+});
+app.get('/typeorm-select', async (req, res) => {
+  const repo = typeormconnection.getRepository(UserTypeOrm);
+  const user = await repo.findOne({ id: 1 });
+
+  res.json();
+});
+
+app.get('/pg-where', async (req, res) => {
+  client.query('SELECT * FROM users WHERE name = $1', ['trans1'], (err, results) => {
+    console.log(err);
+    res.json();
+  });
 });
 
 app.get('/pool-string-insert', (req, res) => {

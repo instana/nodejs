@@ -19,7 +19,7 @@ const {
 const ProcessControls = require('../../../test_util/ProcessControls');
 const globalAgent = require('../../../globalAgent');
 
-const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
+const mochaSuiteFn = supportedVersion(process.versions.node) ? describe.only : describe.skip;
 
 mochaSuiteFn('tracing/pg', function () {
   this.timeout(config.getTestTimeout());
@@ -32,6 +32,75 @@ mochaSuiteFn('tracing/pg', function () {
     useGlobalAgent: true
   });
   ProcessControls.setUpHooks(controls);
+
+  it.skip('bookshelf');
+
+  it.only('typeorm-select', () =>
+    controls
+      .sendRequest({
+        method: 'GET',
+        path: '/typeorm-select'
+      })
+      .then(response => {
+        return retry(() =>
+          agentControls.getSpans().then(spans => {
+            console.log(spans[0]);
+          })
+        );
+      }));
+  it('bookshelf-select', () =>
+    controls
+      .sendRequest({
+        method: 'GET',
+        path: '/bookshelf-select'
+      })
+      .then(response => {
+        return retry(() =>
+          agentControls.getSpans().then(spans => {
+            console.log(spans[1]);
+          })
+        );
+      }));
+  it('sequelize-select', () =>
+    controls
+      .sendRequest({
+        method: 'GET',
+        path: '/sequelize'
+      })
+      .then(response => {
+        return retry(() =>
+          agentControls.getSpans().then(spans => {
+            console.log(spans[0]);
+          })
+        );
+      }));
+  it('sequelize-insert', () =>
+    controls
+      .sendRequest({
+        method: 'GET',
+        path: '/sequelize-insert'
+      })
+      .then(response => {
+        return retry(() =>
+          agentControls.getSpans().then(spans => {
+            console.log(spans[0]);
+          })
+        );
+      }));
+
+  it('pg where', () =>
+    controls
+      .sendRequest({
+        method: 'GET',
+        path: '/pg-where'
+      })
+      .then(response => {
+        return retry(() =>
+          agentControls.getSpans().then(spans => {
+            console.log(spans[0]);
+          })
+        );
+      }));
 
   it('must trace pooled select now', () =>
     controls
