@@ -48,6 +48,11 @@ mochaSuiteFn('tracing/logger/console', function () {
    *  - in theory we as developers could put a console.* inside instrumentations,
    *    but they would not get tracked because the parent span would always be an exit span
    *      - e.g. bunyan -> logger.info -> our instrumentation uses console.warn -> parent span is exit span
+   *  - serverless package uses a console logger
+   *    - serverless is used by aws-lambda & customer use aws-lambda (not serverless)
+   *    - aws-lambda initialises serverless before core
+   *    - thats why serverless internal console logs are never instrumented
+   *    - see test: aws-lambda/test/logging
    */
   describe('log calls', () => {
     it('must not trace info', () => runAndDoNotTrace('info'));
