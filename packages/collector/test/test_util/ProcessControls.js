@@ -45,7 +45,7 @@ class ProcessControls {
 
   /**
    * Starts the corresponding child process for all given controls before starting the suite and stops them after the
-   * suite has finished.
+   * suite has finished. Ensures that app and agent is booted before the test can start.
    */
   static setUpSuiteHooksWithRetryTime(retryTime, ...allControls) {
     before(() => {

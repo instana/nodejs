@@ -106,6 +106,11 @@ mochaSuiteFn('tracing/logger/winston', function () {
                 testUtils.expectAtLeastOneMatching(spans, span => {
                   checkWinstonSpan(span, entrySpan, expectErroneous, expectedMessage);
                 });
+
+                // entry + exit + winston log
+                // NOTE: winston uses process.stdout (console._stdout) directly
+                //       The check just ensures that our console.* instrumentation isn't used when customer uses winston
+                expect(spans.length).to.eql(3);
               } else {
                 const winstonSpans = testUtils.getSpansByName(spans, 'log.winston');
                 expect(winstonSpans).to.be.empty;

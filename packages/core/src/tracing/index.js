@@ -66,6 +66,7 @@ const instrumentations = [
   './instrumentation/loggers/log4js',
   './instrumentation/loggers/pino',
   './instrumentation/loggers/winston',
+  './instrumentation/loggers/console',
   './instrumentation/messaging/amqp',
   './instrumentation/messaging/kafkaJs',
   './instrumentation/messaging/kafkaNode',
