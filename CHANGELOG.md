@@ -1,7 +1,8 @@
 # Changelog
 
-## Unreleased
+## 1.133.0
 - [AWS Lambda] Increase retries and timeout in Lambda extension binary.
+- Added console.warn & console.error instrumentation
 
 ## 1.132.2
 - Fix `path must be a string of Buffer` error in dependency distance calculator.
