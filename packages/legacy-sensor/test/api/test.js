@@ -24,8 +24,6 @@ describe('legacy sensor/API', function () {
     agentControls
   }).registerTestHooks();
 
-  beforeEach(() => agentControls.waitUntilAppIsCompletelyInitialized(controls.getPid()));
-
   it('all exports', () =>
     testUtils.retry(() =>
       controls
