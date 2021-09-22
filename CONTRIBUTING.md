@@ -50,6 +50,7 @@ To make a release, you first need to ensure that the released version will eithe
 
 - Update `CHANGELOG.md` so that the unreleased section gets its version number. Commit and push this change.
 - Acquire an OTP token for 2fa.
+- Ensure you are logged in with npm in your shell (`npm whoami`)
 - Run either
     - `NPM_CONFIG_OTP={your token} lerna publish --force-publish="*" patch && lerna bootstrap`, or
     - `NPM_CONFIG_OTP={your token} lerna publish --force-publish="*" minor && lerna bootstrap`.
