@@ -25,8 +25,6 @@ describe('legacy sensor/metrics', function () {
     agentControls
   }).registerTestHooks();
 
-  beforeEach(() => agentControls.waitUntilAppIsCompletelyInitialized(controls.getPid()));
-
   it('must report metrics', () =>
     testUtils.retry(() =>
       agentControls.getAllMetrics(controls.getPid()).then(allMetrics => {
