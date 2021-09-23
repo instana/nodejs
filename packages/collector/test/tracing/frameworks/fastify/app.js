@@ -8,18 +8,81 @@
 require('../../../../')();
 
 const fastify = require('fastify');
+const semver = require('semver');
+const FASTIFY_VERSION = process.env.FASTIFY_VERSION || '1.14.6';
+
+// NOTE: preHandler got deprecated in v2 and removed in v3
+//       see https://github.com/fastify/fastify/pull/1750
+let handlerKey = 'beforeHandler';
+if ([2, 3].indexOf(semver.major(FASTIFY_VERSION)) !== -1) {
+  handlerKey = 'preHandler';
+}
 
 const app = fastify();
 const logPrefix = `Fastify (${process.pid}):\t`;
+const jsonResponse = { hello: 'world' };
+
+async function ok() {
+  return jsonResponse;
+}
 
 app.get('/', ok);
 
 app.get('/foo/:id', ok);
 
+app.register((instance, opts, next) => {
+  let called = false;
+
+  instance.addHook('onRequest', (request, reply, done) => {
+    called = true;
+    done();
+  });
+
+  instance.get('/hooks', async () => {
+    if (!called) {
+      throw new Error('onRequest hook was not called.');
+    }
+
+    return jsonResponse;
+  });
+
+  next();
+});
+
+app.register((instance, opts, next) => {
+  instance.addHook('preHandler', (request, reply) => {
+    reply.send(jsonResponse);
+  });
+
+  instance.get('/hooks-early-reply', async () => {
+    throw new Error('Execution should not reach this line.');
+  });
+
+  next();
+});
+
+app.route({
+  method: 'GET',
+  url: '/route',
+  schema: {
+    response: {
+      200: {
+        type: 'object',
+        properties: {
+          hello: { type: 'string' }
+        }
+      }
+    }
+  },
+  handler: (req, reply) => {
+    reply.send(jsonResponse);
+  }
+});
+
 app.get(
   '/before-handler/:id',
   {
-    beforeHandler: (request, reply) => {
+    [handlerKey]: (request, reply) => {
       // This tests that we record the path template even if a beforeHandler exits early
       // (before the handler is executed).
       reply.send({ before: 'handler' });
@@ -31,7 +94,7 @@ app.get(
 app.get(
   '/before-handler-array/:id',
   {
-    beforeHandler: [
+    [handlerKey]: [
       async () => {
         // This tests that we record the path template even if a beforeHandler exits early
         // (before the handler is executed).
@@ -45,17 +108,13 @@ app.get(
   ok
 );
 
-app.register(subRouter, { prefix: '/sub' });
-
-async function ok() {
-  return { hello: 'world' };
-}
-
 function subRouter(fstfy, opts, next) {
   fstfy.get('/', ok);
   fstfy.get('/bar/:id', ok);
   next();
 }
+
+app.register(subRouter, { prefix: '/sub' });
 
 const start = async () => {
   try {
@@ -66,6 +125,7 @@ const start = async () => {
     process.exit(1);
   }
 };
+
 start();
 
 function log() {

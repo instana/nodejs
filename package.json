@@ -32,6 +32,7 @@
     "verify": "lerna run verify --stream",
     "version": "lerna clean --yes && lerna bootstrap --ignore-scripts -- --package-lock-only --no-audit && git add packages/*/package-lock.json"
   },
+  "dependencies": {},
   "devDependencies": {
     "@apollo/federation": "^0.25.1",
     "@apollo/gateway": "^0.28.2",
@@ -83,7 +84,6 @@
     "express": "^4.17.1",
     "express-pino-logger": "^6.0.0",
     "express-winston": "^4.1.0",
-    "fastify": "^1.14.6",
     "google-protobuf": "^3.17.1",
     "graphql": "^14.7.0",
     "graphql-subscriptions": "^1.2.1",
