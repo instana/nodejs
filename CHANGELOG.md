@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.134.0
+- [OpenTelemetry] Added new package `@instana/opentelemetry-exporter` that offers an Instana exporter for OpenTelemetry spans
+
 ## 1.133.0
 - [AWS Lambda] Increase retries and timeout in Lambda extension binary.
 - Added console.warn & console.error instrumentation
