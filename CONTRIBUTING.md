@@ -36,13 +36,75 @@ Thank you for your interest in the Instana Node.js project!
 
 Reminder for all new packages: Check if `.circleci/config.yml` has `save_cache`/`restore_cache` entries for the new package.
 
-When adding a new _scoped_ package (that is, `@instana/something` in contrast to `instana-something`), it needs to be configured to have public access, because scoped packages are private by default. Thus the publish would fail with something like `npm ERR! You must sign up for private packages: @instana/something`. To prevent this, you can the configure access level beforehand globablly:
+When adding a new _scoped_ package (that is, `@instana/something` in contrast to `instana-something`), it needs to be configured to have public access, because scoped packages are private by default. Thus the publish would fail with something like `npm ERR! You must sign up for private packages: @instana/something`. To prevent this, you can configure the access level beforehand globablly:
 
 * Run `npm config list` and check if the global section (e.g. `/Users/$yourname/.npmrc`) contains `access = "public"`.
 * If not, run `npm config set access public` and check again.
 * Following that, all packages can be published as usual (see below).
 * See also: https://github.com/lerna/lerna/issues/1821.
 * Many roads lead to rome, you can also set the access level on a package level instead of globally. Or you can issue `lerna version` separately and then publish only the new package directly via `npm` from within its directory with `NPM_CONFIG_OTP={your token} npm publish --access public` before publishing all the remaining package from the root directory with `NPM_CONFIG_OTP={your token} lerna publish from-package && lerna bootstrap`. This is also the way to remedy a situation where some of the packages have been published and some have not been published because you forgot to take care of the new package beforehand and the aforementioned error stopped the `lerna publish` in the middle. See [here](#separate-lerna-version-and-lerna-publish).
+* Add the relevant npm scripts to the `package.json` (see details below).
+
+#### Package.json
+
+For all new packages, make sure that a handful of npm scripts are part of package.json.
+These scripts can be used by lerna, specially during CI builds:
+
+```javascript
+"scripts": {
+  "test": "echo \"$(node -v)\" | grep v8 > /dev/null || npm run test:mocha",
+  "test:mocha": "mocha --sort --reporter mocha-multi --reporter-options spec=-,xunit=../../test-results/opentelemetry-exporter/results.xml $(find test -iname '*test.js' -not -path '*node_modules*')",
+  "test:debug": "WITH_STDOUT=true npm run test:mocha",
+  "audit": "npm run audit --production",
+  "lint": "eslint src test",
+  "verify": "npm run lint && npm test",
+  "prettier": "prettier --write 'src/**/*.js' 'test/**/*.js'"
+}
+```
+
+This also means, of course, that you will need to add the corresponding libraries to run these scripts:
+
+ * lint
+ * prettier
+ * mocha (which you may have already installed in order to run unit/integration tests)
+
+> If the new package has internal dependencies to one or more sibling packages (eg: @instana/core), the `audit` script should be replaced by:
+>
+> ```bin/prepare-audit.sh && npm audit --production; AUDIT_RESULT=$?; git checkout package-lock.json; exit $AUDIT_RESULT```
+>
+> Additionally, the corresponding `bin/prepare-audit.sh` (see more info below) must be created in the root of the new package, and the sibling packages must be marked to be
+
+#### Lerna and `npm audit`
+
+The Node.js tracer is structured in a monorepo.
+That's how we manage to publish multiple packages in the `@instana/package` fashion, and for that we use [lerna](https://www.npmjs.com/package/lerna).
+
+Among other things, lerna manages the dependency between internal packages in the root project.
+When a package depends on another internal package (eg: `@instana/collector` depends on `@instana/core`), its package-lock.json does **not** have a reference
+to the dependent package. This information lies in the package-lock.json of the root project, controlled by lerna.
+
+However, in cases where there is this dependency between sibling packages, the `npm audit` command will fail when run in that particular package.
+That's because `npm audit` won't find the dependency in the package-lock.json file, since this dependency lies in the package-lock.json of the root project only.
+
+To work around this issue, we make use of a small shell script that temporarily adds the missing dependencies to package-lock.json, so `npm audit` can work as intended.
+Then, the package-lock.json is reverted to its original state.
+
+This script must be created in the package that depends on its sibling. By convention, we create the file in the root folder of the new package under `bin/prepare-audit.sh`.
+Its contents must look like this:
+
+```bash
+set -eo pipefail
+
+cd `dirname $BASH_SOURCE`/..
+# Imports the function that changes package-lock.json temporarily
+source ../../bin/add-to-package-lock
+# Calls the function adding whatever internal package the package depends on
+# In the exmaple below, it adds a dependency to @instana/serverless to the package-lock.json
+# You can add as many lines as you need
+addToPackageLock package-lock.json @instana/serverless false
+```
+
+Later on, the original package-lock.json is restored when `git checkout package-lock.json;` is run from the `audit` npm script that you added before (see the package.json section above)
 
 ### Making A New Release
 

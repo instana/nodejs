@@ -6,9 +6,7 @@
 'use strict';
 
 const instanaCore = require('@instana/core');
-const { tracingHeaders } = require('@instana/core').tracing;
 const { backendConnector, consoleLogger } = require('@instana/serverless');
-
 const arnParser = require('./arn');
 const identityProvider = require('./identity_provider');
 const metrics = require('./metrics');
@@ -17,7 +15,7 @@ const processResult = require('./process_result');
 const captureHeaders = require('./capture_headers');
 
 const { tracing } = instanaCore;
-const { constants, spanBuffer } = tracing;
+const { tracingHeaders, constants, spanBuffer } = tracing;
 let logger = consoleLogger;
 let config;
 
