@@ -6,23 +6,15 @@
 'use strict';
 
 const FASTIFY_VERSION = process.env.FASTIFY_VERSION || '1.14.6';
-const FASTIFY_REQUIRE = process.env.FASTIFY_REQUIRE || 'fastify1';
+const FASTIFY_REQUIRE = process.env.FASTIFY_REQUIRE || 'fastify';
 
-const Module = require('module');
-const path = require('path');
 const mock = require('mock-require');
-const orig = Module._resolveFilename;
 
-Module._resolveFilename = function () {
-  if (arguments[0] === 'fastify') {
-    return path.join(__dirname, '..', '..', '..', '..', '..', '..', 'node_modules', FASTIFY_REQUIRE);
-  }
+// NOTE: Link e.g. fastify2 to fastify or fastify3 to fastify
+if (FASTIFY_REQUIRE !== 'fastify') {
+  mock('fastify', FASTIFY_REQUIRE);
+}
 
-  return orig.apply(this, arguments);
-};
-
-// NOTE: Link e.g. fastify1 to fastify
-mock('fastify', FASTIFY_REQUIRE);
 require('../../../../')();
 
 const semver = require('semver');

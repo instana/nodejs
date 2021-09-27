@@ -60,14 +60,12 @@ describe('dependencies', function () {
           expect(deps['mime-types']).to.exist;
           expect(deps.negotiator).to.exist;
 
-          // TODO: why has the order changed?
-          expect(deps['raw-body']).to.exist;
-
           // According to how we sort and limit the collected dependencies, negotiator should be the last package that
           // is included while pino-std-serializers is the first that is omitted.
 
           expect(deps['pino-std-serializers']).to.not.exist;
           expect(deps['quick-format-unescaped']).to.not.exist;
+          expect(deps['raw-body']).to.not.exist;
           expect(deps['readable-stream']).to.not.exist;
         })
       ));

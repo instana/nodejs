@@ -35,7 +35,7 @@ mochaSuiteFn('tracing/fastify', function () {
           useGlobalAgent: true,
           env: {
             FASTIFY_VERSION: version,
-            FASTIFY_REQUIRE: `fastify${semver.major(version)}`
+            FASTIFY_REQUIRE: semver.major(version) === 1 ? 'fastify' : `fastify${semver.major(version)}`
           }
         });
 

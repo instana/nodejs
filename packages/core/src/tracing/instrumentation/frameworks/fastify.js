@@ -27,8 +27,11 @@ exports.init = function init() {
 };
 
 /**
- * We register a custom hook and capture data we need for
- * our span.
+ * Fastify is auto instrumend by our http server instrumention.
+ *
+ * In this instrumentation, we want to capture extra data on top.
+ * We register a custom hook via the framework API and add this data to the
+ * target http entry span.
  *
  * See https://www.fastify.io/docs/latest/Hooks
  */
@@ -61,7 +64,7 @@ function instrument(build) {
 
         annotateHttpEntrySpanWithPathTemplate(app, { url });
       } catch (err) {
-        logger.warn('Instana was not able to retrieve path template.');
+        logger.warn('Instana was not able to retrieve the path template.');
       }
 
       done();
@@ -72,9 +75,6 @@ function instrument(build) {
 }
 
 /**
- * Fastify is auto instrumend by our http server instrumention.
- * But on top of that we want to capture the original registered template path.
- *
  * A request comes in GET /foo/22
  * We want to trace GET /foo/:id
  */

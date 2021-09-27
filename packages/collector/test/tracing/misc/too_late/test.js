@@ -38,8 +38,7 @@ mochaSuiteFn('tracing/too late', function () {
     'bluebird',
     'elasticsearch',
     'express',
-    // TODO: Why do we have to test that behaviour for all frameworks?
-    // 'fastify',
+    'fastify',
     'graphql',
     'graphql-subscriptions',
     'grpc',

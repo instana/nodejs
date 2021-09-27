@@ -71,7 +71,7 @@
     "basic-auth-parser": "0.0.2",
     "bluebird": "^3.7.2",
     "body-parser": "^1.19.0",
-    "fastify1": "npm:fastify@1.14.6",
+    "fastify": "1.14.6",
     "fastify2": "npm:fastify@2.15.3",
     "fastify3": "npm:fastify@3.21.5",
     "bull": "3.22.6",
