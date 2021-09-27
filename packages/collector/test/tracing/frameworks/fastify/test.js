@@ -8,7 +8,6 @@
 const path = require('path');
 const expect = require('chai').expect;
 const semver = require('semver');
-const { exec } = require('child_process');
 
 const constants = require('@instana/core').tracing.constants;
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
@@ -23,16 +22,10 @@ const mochaSuiteFn =
 mochaSuiteFn('tracing/fastify', function () {
   this.timeout(Math.max(config.getTestTimeout() * 4, 30000));
 
-  after(done => {
-    uninstallLibraryVersion(done);
-  });
-
   ['1.14.6', '2.15.3', '3.21.5'].forEach(version => {
     describe(`${version}`, () => {
       const agentControls = globalAgent.instance;
       let processControls;
-
-      before(done => installLibraryVersion(version, done));
 
       describe('path templates', () => {
         globalAgent.setUpCleanUpHooks();
@@ -41,7 +34,8 @@ mochaSuiteFn('tracing/fastify', function () {
           appPath: path.join(__dirname, 'app'),
           useGlobalAgent: true,
           env: {
-            FASTIFY_VERSION: version
+            FASTIFY_VERSION: version,
+            FASTIFY_REQUIRE: `fastify${semver.major(version)}`
           }
         });
 
@@ -90,33 +84,3 @@ mochaSuiteFn('tracing/fastify', function () {
     });
   });
 });
-
-function uninstallLibraryVersion(done) {
-  const cmd = 'npm uninstall fastify --silent';
-  return runShellCommand(cmd, done);
-}
-function installLibraryVersion(version, done) {
-  const cmd = `npm install --no-save --silent fastify@${version}`;
-  return runShellCommand(cmd, done);
-}
-
-function runShellCommand(cmd, done) {
-  const cwd = path.join(__dirname, '..', '..', '..', '..', '..', '..');
-
-  // eslint-disable-next-line no-console
-  console.log(`Executing: ${cmd}`);
-  exec(cmd, { cwd, windowsHide: true }, (error, stdout, stderr) => {
-    if (error) {
-      done(error);
-      return;
-    }
-    // eslint-disable-next-line no-console
-    console.log(`stdout from ${cmd}: ${stdout}`);
-    if (stderr) {
-      // eslint-disable-next-line no-console
-      console.log(`stderr from ${cmd}: ${stderr}`);
-    }
-
-    done();
-  });
-}
