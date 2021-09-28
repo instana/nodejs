@@ -5,8 +5,9 @@
 
 'use strict';
 
+const semver = require('semver');
 const FASTIFY_VERSION = process.env.FASTIFY_VERSION || '1.14.6';
-const FASTIFY_REQUIRE = process.env.FASTIFY_REQUIRE || 'fastify';
+const FASTIFY_REQUIRE = semver.major(FASTIFY_VERSION) === 1 ? 'fastify' : `fastify${semver.major(FASTIFY_VERSION)}`;
 
 const mock = require('mock-require');
 
@@ -16,8 +17,6 @@ if (FASTIFY_REQUIRE !== 'fastify') {
 }
 
 require('../../../../')();
-
-const semver = require('semver');
 const fastify = require('fastify');
 
 // NOTE: preHandler got deprecated in v2 and removed in v3
@@ -128,7 +127,7 @@ app.register(subRouter, { prefix: '/sub' });
 const start = async () => {
   try {
     await app.listen(process.env.APP_PORT);
-    log(`listening on ${app.server.address().port}`);
+    log(`listening on ${app.server.address().port} with Fastify version ${FASTIFY_VERSION}`);
   } catch (err) {
     log('startup failure', err);
     process.exit(1);

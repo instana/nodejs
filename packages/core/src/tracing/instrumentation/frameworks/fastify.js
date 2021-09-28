@@ -52,7 +52,7 @@ function instrument(build) {
 
     // NOTE: all major versions support `addHook` - this is just a safe protection
     if (!app.addHook) {
-      logger.warn('Instana was not able to instrument Fastify.');
+      logger.warn('Instana was not able to instrument Fastify. The instrumention of http requests is still working.');
       return app;
     }
 
@@ -64,7 +64,9 @@ function instrument(build) {
 
         annotateHttpEntrySpanWithPathTemplate(app, { url });
       } catch (err) {
-        logger.warn('Instana was not able to retrieve the path template.');
+        logger.warn(
+          'Instana was not able to retrieve the path template. The instrumention of http requests is still working.'
+        );
       }
 
       done();
