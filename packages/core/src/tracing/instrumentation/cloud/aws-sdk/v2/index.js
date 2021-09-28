@@ -14,7 +14,8 @@ const awsProducts = [
   require('./lambda'),
   require('./dynamodb'),
   require('./kinesis'),
-  require('./s3')
+  require('./s3'),
+  require('./sns')
 ];
 
 /** @type {Object.<string, import('./instana_aws_product').InstanaAWSProduct} */
