@@ -36,6 +36,19 @@ let maxContentErrorHasBeenLogged = false;
 
 let isConnected = false;
 
+exports.AgentEventSeverity = {
+  SLI_EVENT: -4,
+  INFO: -2,
+  CHANGE: -1,
+  WARNING: 5,
+  CRITICAL: 10
+};
+
+/**
+ * Options: SLI_EVENT (-4, deprecated), INFO (-2), CHANGE (-1), WARNING (5), CRITICAL (10)
+ * @typedef {-4 | -2 | -1 | 5 | 10 | number} ProblemSeverity
+ * */
+
 /**
  * @typedef {Object} AgentConnectionEvent
  * @property {string} [title]
@@ -47,7 +60,7 @@ let isConnected = false;
  * @property {string} [category]
  * @property {number} [timestamp]
  * @property {number} [duration]
- * @property {number} [severity]
+ * @property {ProblemSeverity} [severity]
  */
 
 /**
@@ -339,11 +352,8 @@ exports.sendTracingMetricsToAgent = function sendTracingMetricsToAgent(tracingMe
  * @param {boolean} [ignore404]
  * @returns
  */
-function sendData(path, data, cb, ignore404) {
+function sendData(path, data, cb, ignore404 = false) {
   cb = atMostOnce(`callback for sendData: ${path}`, cb);
-  if (ignore404 === undefined) {
-    ignore404 = false;
-  }
 
   const payloadAsString = JSON.stringify(data, circularReferenceRemover());
   logger.debug('Sending data to %s', path);

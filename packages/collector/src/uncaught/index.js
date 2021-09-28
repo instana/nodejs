@@ -237,7 +237,7 @@ function createEventForUnhandledRejection(reason) {
 /**
  * @param {Error} error
  * @param {string} title
- * @param {number} severity
+ * @param {import('../agentConnection').ProblemSeverity} severity
  * @param {boolean} isPromiseRejection
  * @returns {import('../agentConnection').AgentConnectionEvent}
  */

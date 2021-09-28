@@ -31,6 +31,15 @@ const util = require('./util');
  * @property {import('./tracing/index')} tracing
  */
 
+/** @typedef {import('../../collector/src/agentConnection').AgentConnectionEvent} AgentConnectionEvent */
+
+/**
+ * This type is based on /nodejs/packages/collector/src/agentConnection.js
+ * @typedef {Object} DownstreamConnection
+ * @property {(spans: *, cb: Function) => void} sendSpans
+ * @property {(eventData: AgentConnectionEvent, cb: (...args: *) => *) => void} sendEvent
+ */
+
 /**
  * @param {Array.<import('./tracing/index').InstanaInstrumentedModule>} additionalInstrumentationModules
  */
@@ -51,7 +60,7 @@ function preInit() {
 /**
  *
  * @param {import('./util/normalizeConfig').InstanaConfig} config
- * @param {tracing.spanBuffer.TemporaryAgentConnection} downstreamConnection
+ * @param {DownstreamConnection} downstreamConnection
  * @param {import('../../collector/src/pidStore')} processIdentityProvider
  */
 function init(config, downstreamConnection, processIdentityProvider) {

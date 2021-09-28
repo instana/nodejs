@@ -7,7 +7,7 @@
 
 const expect = require('chai').expect;
 
-const testUtils = require('../../core/test/test_util');
+const testUtils = require('@instana/core/test/test_util');
 const directDependencies = require('../src/directDependencies');
 
 describe('metrics.directDependencies', () => {

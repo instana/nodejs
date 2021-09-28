@@ -8,7 +8,7 @@
 'use strict';
 
 const _ = require('lodash');
-const expect = require('chai').expect;
+const { expect } = require('chai');
 const { execSync } = require('child_process');
 const { mkdtempSync, symlinkSync, unlinkSync } = require('fs');
 const mkdirp = require('mkdirp');
@@ -16,10 +16,10 @@ const recursiveCopy = require('recursive-copy');
 const os = require('os');
 const path = require('path');
 const rimraf = require('rimraf');
-const semver = require('semver');
+const { satisfies } = require('semver');
 
-const config = require('../../../core/test/config');
-const { retry } = require('../../../core/test/test_util');
+const config = require('@instana/core/test/config');
+const { retry } = require('@instana/core/test/test_util');
 const ProcessControls = require('../../../collector/test/test_util/ProcessControls');
 const globalAgent = require('../../../collector/test/globalAgent');
 
@@ -211,7 +211,7 @@ function findMetric(allMetrics, _path) {
 
 function expectVersion(actualVersion, expectedRange) {
   expect(
-    semver.satisfies(actualVersion, expectedRange),
+    satisfies(actualVersion, expectedRange),
     `${actualVersion} does not satisfy the expected range ${expectedRange}.`
   ).to.be.true;
 }
