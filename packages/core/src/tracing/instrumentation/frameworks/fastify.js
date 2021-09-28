@@ -62,7 +62,7 @@ function instrument(build) {
         //       v2/v3 uses context https://github.com/fastify/fastify/blob/2.x/test/handler-context.test.js#L41
         const url = reply._context ? reply._context.config.url : reply.context.config.url;
 
-        annotateHttpEntrySpanWithPathTemplate(app, { url });
+        annotateHttpEntrySpanWithPathTemplate(app, url);
       } catch (err) {
         logger.warn(
           'Instana was not able to retrieve the path template. The instrumention of http requests is still working.'
@@ -80,7 +80,7 @@ function instrument(build) {
  * A request comes in GET /foo/22
  * We want to trace GET /foo/:id
  */
-function annotateHttpEntrySpanWithPathTemplate(app, opts) {
+function annotateHttpEntrySpanWithPathTemplate(app, url) {
   if (!active) {
     return;
   }
@@ -92,5 +92,5 @@ function annotateHttpEntrySpanWithPathTemplate(app, opts) {
 
   const basePathDescriptor = Object.getOwnPropertyDescriptor(app, 'basePath');
   const basePathOrPrefix = basePathDescriptor && basePathDescriptor.get ? app.prefix : app.basePath;
-  span.data.http.path_tpl = (basePathOrPrefix || '') + (opts.url || opts.path || '/');
+  span.data.http.path_tpl = (basePathOrPrefix || '') + (url || '/');
 }

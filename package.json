@@ -32,7 +32,6 @@
     "verify": "lerna run verify --stream",
     "version": "lerna clean --yes && lerna bootstrap --ignore-scripts -- --package-lock-only --no-audit && git add packages/*/package-lock.json"
   },
-  "dependencies": {},
   "devDependencies": {
     "@apollo/federation": "^0.25.1",
     "@apollo/gateway": "^0.28.2",

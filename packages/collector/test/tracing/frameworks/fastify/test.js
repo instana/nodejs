@@ -20,7 +20,7 @@ const mochaSuiteFn =
   supportedVersion(process.versions.node) && semver.gte(process.versions.node, '8.0.0') ? describe : describe.skip;
 
 mochaSuiteFn('tracing/fastify', function () {
-  this.timeout(Math.max(config.getTestTimeout() * 4, 30000));
+  this.timeout(config.getTestTimeout());
 
   ['1.14.6', '2.15.3', '3.21.5'].forEach(version => {
     describe(`${version}`, () => {

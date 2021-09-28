@@ -11,7 +11,12 @@ const FASTIFY_REQUIRE = semver.major(FASTIFY_VERSION) === 1 ? 'fastify' : `fasti
 
 const mock = require('mock-require');
 
-// NOTE: Link e.g. fastify2 to fastify or fastify3 to fastify
+/**
+ * NOTE:
+ * Link e.g. fastify2 to fastify or fastify3 to fastify
+ * We have to create the link otherwise the fastify instrumentation
+ * will no longer work because we use ´onModuleLoad('fastify')`
+ */
 if (FASTIFY_REQUIRE !== 'fastify') {
   mock('fastify', FASTIFY_REQUIRE);
 }
@@ -19,7 +24,7 @@ if (FASTIFY_REQUIRE !== 'fastify') {
 require('../../../../')();
 const fastify = require('fastify');
 
-// NOTE: preHandler got deprecated in v2 and removed in v3
+// NOTE: beforeHandler got deprecated in v2 and removed in v3
 //       see https://github.com/fastify/fastify/pull/1750
 let handlerKey = 'beforeHandler';
 if ([2, 3].indexOf(semver.major(FASTIFY_VERSION)) !== -1) {
