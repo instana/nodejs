@@ -8,6 +8,9 @@
 const requireHook = require('../../../util/requireHook');
 const httpServer = require('../protocols/httpServer');
 const cls = require('../../cls');
+let logger = require('../../../logger').getLogger('tracing/fastify', newLogger => {
+  logger = newLogger;
+});
 
 let active = false;
 
@@ -23,15 +26,15 @@ exports.init = function init() {
   requireHook.onModuleLoad('fastify', instrument);
 };
 
-// Fastify exposes a function as its module's export. We are replacing
-// this exposed function so that we gain access to the created fastify
-// object. This is necessary so that we can overwrite the fastify.route
-// method. fastify.route is the central routing registration method to
-// which all other functions delegate.
-//
-// We overwrite fastify.route so that we can wrap users's request
-// handlers. During request handler execution time, we can identify the
-// full path template.
+/**
+ * Fastify is auto instrumend by our http server instrumention.
+ *
+ * In this instrumentation, we want to capture extra data on top.
+ * We register a custom hook via the framework API and add this data to the
+ * target http entry span.
+ *
+ * See https://www.fastify.io/docs/latest/Hooks
+ */
 function instrument(build) {
   if (typeof build !== 'function') {
     return build;
@@ -47,52 +50,37 @@ function instrument(build) {
   function overwrittenBuild() {
     const app = build.apply(this, arguments);
 
-    if (app.route) {
-      const originalRoute = app.route;
-      app.route = function shimmedRoute(opts) {
-        if (opts.handler) {
-          const originalHandler = opts.handler;
-          opts.handler = function shimmedHandler() {
-            annotateHttpEntrySpanWithPathTemplate(app, opts);
-            return originalHandler.apply(this, arguments);
-          };
-        }
-
-        let preHandler;
-        let preHandlerKey;
-        if (opts.preHandler) {
-          // In Fastify 2.x, the attribute is called preHandler.
-          preHandler = opts.preHandler;
-          preHandlerKey = 'preHandler';
-        } else if (opts.beforeHandler) {
-          // In Fastify 1.x, the attribute is called beforeHandler.
-          preHandler = opts.beforeHandler;
-          preHandlerKey = 'beforeHandler';
-        }
-
-        if (preHandler) {
-          if (typeof preHandler === 'function') {
-            opts[preHandlerKey] = function shimmedPreHandler() {
-              annotateHttpEntrySpanWithPathTemplate(app, opts);
-              return preHandler.apply(this, arguments);
-            };
-          } else if (Array.isArray(preHandler)) {
-            opts[preHandlerKey].unshift(function prependedBeforeHandler(request, reply, done) {
-              annotateHttpEntrySpanWithPathTemplate(app, opts);
-              done();
-            });
-          }
-        }
-
-        return originalRoute.apply(this, arguments);
-      };
+    // NOTE: all major versions support `addHook` - this is just a safe protection
+    if (!app.addHook) {
+      logger.warn('Instana was not able to instrument Fastify. The instrumention of http requests is still working.');
+      return app;
     }
+
+    app.addHook('onRequest', function onRequest(request, reply, done) {
+      try {
+        // NOTE: v1 uses _context https://github.com/fastify/fastify/blob/1.x/fastify.js#L276
+        //       v2/v3 uses context https://github.com/fastify/fastify/blob/2.x/test/handler-context.test.js#L41
+        const url = reply._context ? reply._context.config.url : reply.context.config.url;
+
+        annotateHttpEntrySpanWithPathTemplate(app, url);
+      } catch (err) {
+        logger.warn(
+          'Instana was not able to retrieve the path template. The instrumention of http requests is still working.'
+        );
+      }
+
+      done();
+    });
 
     return app;
   }
 }
 
-function annotateHttpEntrySpanWithPathTemplate(app, opts) {
+/**
+ * A request comes in GET /foo/22
+ * We want to trace GET /foo/:id
+ */
+function annotateHttpEntrySpanWithPathTemplate(app, url) {
   if (!active) {
     return;
   }
@@ -104,5 +92,5 @@ function annotateHttpEntrySpanWithPathTemplate(app, opts) {
 
   const basePathDescriptor = Object.getOwnPropertyDescriptor(app, 'basePath');
   const basePathOrPrefix = basePathDescriptor && basePathDescriptor.get ? app.prefix : app.basePath;
-  span.data.http.path_tpl = (basePathOrPrefix || '') + (opts.url || opts.path || '/');
+  span.data.http.path_tpl = (basePathOrPrefix || '') + (url || '/');
 }
