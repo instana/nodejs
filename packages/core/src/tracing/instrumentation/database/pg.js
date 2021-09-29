@@ -37,7 +37,6 @@ function shimQuery(original) {
       for (let i = 0; i < arguments.length; i++) {
         argsForOriginalQuery[i] = arguments[i];
       }
-      console.log(argsForOriginalQuery);
       return instrumentedQuery(this, original, argsForOriginalQuery);
     }
     return original.apply(this, arguments);

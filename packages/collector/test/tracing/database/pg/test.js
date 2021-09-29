@@ -13,13 +13,14 @@ const config = require('../../../../../core/test/config');
 const {
   retry,
   getSpansByName,
+  verifyHttpRootEntry,
   expectAtLeastOneMatching,
   expectExactlyOneMatching
 } = require('../../../../../core/test/test_util');
 const ProcessControls = require('../../../test_util/ProcessControls');
 const globalAgent = require('../../../globalAgent');
 
-const mochaSuiteFn = supportedVersion(process.versions.node) ? describe.only : describe.skip;
+const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
 mochaSuiteFn('tracing/pg', function () {
   this.timeout(config.getTestTimeout());
@@ -33,71 +34,21 @@ mochaSuiteFn('tracing/pg', function () {
   });
   ProcessControls.setUpHooks(controls);
 
-  it.skip('bookshelf');
-
-  it.only('typeorm-select', () =>
-    controls
-      .sendRequest({
-        method: 'GET',
-        path: '/typeorm-select'
-      })
-      .then(response => {
-        return retry(() =>
-          agentControls.getSpans().then(spans => {
-            console.log(spans[0]);
-          })
-        );
-      }));
-  it('bookshelf-select', () =>
-    controls
-      .sendRequest({
-        method: 'GET',
-        path: '/bookshelf-select'
-      })
-      .then(response => {
-        return retry(() =>
-          agentControls.getSpans().then(spans => {
-            console.log(spans[1]);
-          })
-        );
-      }));
-  it('sequelize-select', () =>
-    controls
-      .sendRequest({
-        method: 'GET',
-        path: '/sequelize'
-      })
-      .then(response => {
-        return retry(() =>
-          agentControls.getSpans().then(spans => {
-            console.log(spans[0]);
-          })
-        );
-      }));
-  it('sequelize-insert', () =>
-    controls
-      .sendRequest({
-        method: 'GET',
-        path: '/sequelize-insert'
-      })
-      .then(response => {
-        return retry(() =>
-          agentControls.getSpans().then(spans => {
-            console.log(spans[0]);
-          })
-        );
-      }));
-
-  it('pg where', () =>
+  it.only('parameterized bindings', () =>
     controls
       .sendRequest({
         method: 'GET',
         path: '/pg-where'
       })
-      .then(response => {
+      .then(() => {
         return retry(() =>
           agentControls.getSpans().then(spans => {
-            console.log(spans[0]);
+            const httpEntry = verifyHttpRootEntry({
+              spans,
+              apiPath: '/pg-where',
+              pid: String(controls.getPid())
+            });
+            verifyPgExit(spans, httpEntry, 'SELECT * FROM users WHERE name = $1');
           })
         );
       }));
