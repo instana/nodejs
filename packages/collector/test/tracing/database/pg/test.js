@@ -34,7 +34,7 @@ mochaSuiteFn('tracing/pg', function () {
   });
   ProcessControls.setUpHooks(controls);
 
-  it.only('parameterized bindings', () =>
+  it('parameterized bindings', () =>
     controls
       .sendRequest({
         method: 'GET',
