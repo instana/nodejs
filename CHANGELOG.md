@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- [Fastify] Added support for 2.x and 3.x
+
 ## 1.134.0
 - [OpenTelemetry] Added new package `@instana/opentelemetry-exporter` that offers an Instana exporter for OpenTelemetry spans
 
