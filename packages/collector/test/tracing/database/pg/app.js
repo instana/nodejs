@@ -97,7 +97,6 @@ app.get('/select-now-no-pool-promise', (req, res) => {
 
 app.get('/pg-where', async (req, res) => {
   client.query('SELECT * FROM users WHERE name = $1', ['trans1'], (err, results) => {
-    console.log(err);
     res.json();
   });
 });
