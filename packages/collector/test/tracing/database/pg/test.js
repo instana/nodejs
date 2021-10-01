@@ -14,6 +14,7 @@ const {
   retry,
   getSpansByName,
   verifyHttpRootEntry,
+  verifyExitSpan,
   expectAtLeastOneMatching,
   expectExactlyOneMatching
 } = require('../../../../../core/test/test_util');
@@ -49,7 +50,20 @@ mochaSuiteFn('tracing/pg', function () {
               pid: String(controls.getPid())
             });
 
-            verifyPgExit(spans, httpEntry, 'SELECT * FROM users WHERE name = $1');
+            const query = 'SELECT * FROM users WHERE name = $1';
+            verifyExitSpan({
+              spanName: 'postgres',
+              spans,
+              parent: httpEntry,
+              withError: false,
+              pid: String(controls.getPid()),
+              dataProperty: 'pg',
+              extraTests: [
+                span => {
+                  expect(span.data.pg.stmt).to.equal(query);
+                }
+              ]
+            });
           })
         );
       }));
