@@ -14,7 +14,7 @@ const morgan = require('morgan');
 const bodyParser = require('body-parser');
 
 const app = express();
-const logPrefix = `Express / Postgres App (${process.pid}):\t`;
+const logPrefix = `Sequilize App (${process.pid}):\t`;
 
 const { Sequelize, DataTypes } = require('sequelize');
 const sequelize = new Sequelize({
