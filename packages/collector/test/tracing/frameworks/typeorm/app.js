@@ -19,9 +19,9 @@ const logPrefix = `Express / Postgres App (${process.pid}):\t`;
 const typeorm = require('typeorm');
 
 class UserTypeOrm {
-  constructor(id, firstName) {
+  constructor(id, name) {
     this.id = id;
-    this.firstName = firstName;
+    this.name = name;
   }
 }
 
@@ -36,7 +36,7 @@ const UserTypeOrmEntity = new EntitySchema({
       type: 'int',
       generated: true
     },
-    firstName: {
+    name: {
       type: 'varchar'
     }
   }
@@ -45,20 +45,16 @@ const UserTypeOrmEntity = new EntitySchema({
 let typeormconnection;
 
 (async () => {
-  typeorm
-    .createConnection({
-      type: 'postgres',
-      host: process.env.POSTGRES_HOST,
-      username: process.env.POSTGRES_USER,
-      password: process.env.POSTGRES_PASSWORD,
-      database: process.env.POSTGRES_DB,
-      synchronize: true,
-      logging: false,
-      entities: [UserTypeOrmEntity]
-    })
-    .then(connection => {
-      typeormconnection = connection;
-    });
+  typeormconnection = await typeorm.createConnection({
+    type: 'postgres',
+    host: process.env.POSTGRES_HOST,
+    username: process.env.POSTGRES_USER,
+    password: process.env.POSTGRES_PASSWORD,
+    database: process.env.POSTGRES_DB,
+    synchronize: true,
+    logging: false,
+    entities: [UserTypeOrmEntity]
+  });
 })();
 
 if (process.env.WITH_STDOUT) {
@@ -71,9 +67,9 @@ app.get('/', (req, res) => {
   res.sendStatus(200);
 });
 
-app.get('/typeorm-select', async (req, res) => {
+app.get('/param-bindings', async (req, res) => {
   const repo = typeormconnection.getRepository(UserTypeOrm);
-  await repo.findOne({ id: 1 });
+  await repo.findOne({ name: 'parapeter' });
 
   res.json();
 });

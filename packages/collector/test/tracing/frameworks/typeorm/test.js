@@ -10,12 +10,7 @@ const constants = require('@instana/core').tracing.constants;
 
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('../../../../../core/test/config');
-const {
-  retry,
-  verifyHttpRootEntry,
-  expectAtLeastOneMatching,
-  verifyExitSpan
-} = require('../../../../../core/test/test_util');
+const { retry, verifyHttpRootEntry, expectAtLeastOneMatching } = require('../../../../../core/test/test_util');
 const ProcessControls = require('../../../test_util/ProcessControls');
 const globalAgent = require('../../../globalAgent');
 
@@ -37,25 +32,26 @@ mochaSuiteFn('frameworks/typeorm', function () {
     controls
       .sendRequest({
         method: 'GET',
-        path: '/typeorm-select'
+        path: '/param-bindings'
       })
       .then(() => {
         return retry(() =>
           agentControls.getSpans().then(spans => {
+            expect(spans.length).to.equal(2);
+
             const httpEntry = verifyHttpRootEntry({
               spans,
-              apiPath: '/typeorm-select',
+              apiPath: '/param-bindings',
               pid: String(controls.getPid())
             });
 
             verifyPgExit(
               spans,
               httpEntry,
-              'SELECT "UserTypeOrm"."id" AS "UserTypeOrm_id", "UserTypeOrm"."firstName" AS "UserTypeOrm_firstName" FROM "user_type_orm" "UserTypeOrm" WHERE "UserTypeOrm"."id" = $1 LIMIT 1'
+              'SELECT "UserTypeOrm"."id" AS "UserTypeOrm_id", "UserTypeOrm"."name" ' +
+                'AS "UserTypeOrm_name" FROM "user_type_orm" "UserTypeOrm" WHERE ' +
+                '"UserTypeOrm"."name" = $1 LIMIT 1'
             );
-
-            // TODO: ?
-            // verifyExitSpan(spans, httpEntry);
           })
         );
       }));

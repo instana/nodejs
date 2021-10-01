@@ -38,16 +38,17 @@ mochaSuiteFn('tracing/pg', function () {
     controls
       .sendRequest({
         method: 'GET',
-        path: '/pg-where'
+        path: '/param-bindings'
       })
       .then(() => {
         return retry(() =>
           agentControls.getSpans().then(spans => {
             const httpEntry = verifyHttpRootEntry({
               spans,
-              apiPath: '/pg-where',
+              apiPath: '/param-bindings',
               pid: String(controls.getPid())
             });
+
             verifyPgExit(spans, httpEntry, 'SELECT * FROM users WHERE name = $1');
           })
         );

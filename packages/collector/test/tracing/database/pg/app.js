@@ -95,10 +95,9 @@ app.get('/select-now-no-pool-promise', (req, res) => {
     });
 });
 
-app.get('/pg-where', async (req, res) => {
-  client.query('SELECT * FROM users WHERE name = $1', ['trans1'], (err, results) => {
-    res.json();
-  });
+app.get('/param-bindings', async (req, res) => {
+  await client.query('SELECT * FROM users WHERE name = $1', ['parapeter']);
+  res.json();
 });
 
 app.get('/pool-string-insert', (req, res) => {

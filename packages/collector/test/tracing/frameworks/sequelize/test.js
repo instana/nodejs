@@ -10,12 +10,7 @@ const constants = require('@instana/core').tracing.constants;
 
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('../../../../../core/test/config');
-const {
-  retry,
-  verifyHttpRootEntry,
-  expectAtLeastOneMatching,
-  verifyExitSpan
-} = require('../../../../../core/test/test_util');
+const { retry, verifyHttpRootEntry, expectAtLeastOneMatching } = require('../../../../../core/test/test_util');
 const ProcessControls = require('../../../test_util/ProcessControls');
 const globalAgent = require('../../../globalAgent');
 
@@ -38,25 +33,24 @@ mochaSuiteFn('frameworks/sequilize', function () {
       controls
         .sendRequest({
           method: 'GET',
-          path: '/sequelize-select'
+          path: '/param-bindings-select'
         })
         .then(() => {
           return retry(() =>
             agentControls.getSpans().then(spans => {
+              expect(spans.length).to.equal(2);
+
               const httpEntry = verifyHttpRootEntry({
                 spans,
-                apiPath: '/sequelize-select',
+                apiPath: '/param-bindings-select',
                 pid: String(controls.getPid())
               });
 
               verifyPgExit(
                 spans,
                 httpEntry,
-                'SELECT "id", "firstName", "lastName", "createdAt", "updatedAt" FROM "User" AS "User" WHERE "User"."firstName" = \'alice123\' LIMIT 1;'
+                'SELECT "name" FROM "User" AS "User" WHERE "User"."name" = \'parapeter\' LIMIT 1;'
               );
-
-              // TODO: ?
-              // verifyExitSpan(spans, httpEntry);
             })
           );
         }));
@@ -65,25 +59,25 @@ mochaSuiteFn('frameworks/sequilize', function () {
       controls
         .sendRequest({
           method: 'GET',
-          path: '/sequelize-insert'
+          path: '/param-bindings-insert'
         })
         .then(() => {
           return retry(() =>
             agentControls.getSpans().then(spans => {
+              expect(spans.length).to.equal(2);
+
               const httpEntry = verifyHttpRootEntry({
                 spans,
-                apiPath: '/sequelize-insert',
+                apiPath: '/param-bindings-insert',
                 pid: String(controls.getPid())
               });
 
               verifyPgExit(
                 spans,
                 httpEntry,
-                'INSERT INTO "User" ("firstName","updatedAt","createdAt") VALUES ($1,$2,$3) RETURNING "id","firstName","lastName","createdAt","updatedAt";'
+                'INSERT INTO "User" ("name","updatedAt","createdAt") ' +
+                  'VALUES ($1,$2,$3) RETURNING "id","name","createdAt","updatedAt";'
               );
-
-              // TODO: ?
-              // verifyExitSpan(spans, httpEntry);
             })
           );
         }));

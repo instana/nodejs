@@ -59,9 +59,8 @@ app.get('/', (req, res) => {
   res.sendStatus(200);
 });
 
-app.get('/bookshelf-select', async (req, res) => {
-  await new BookShelfUser({ id: 1 }).fetch({ require: false });
-
+app.get('/param-bindings', async (req, res) => {
+  await new BookShelfUser({ name: 'parapeter' }).fetch({ require: false });
   res.json();
 });
 

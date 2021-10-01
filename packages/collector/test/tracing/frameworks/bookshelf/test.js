@@ -10,12 +10,7 @@ const constants = require('@instana/core').tracing.constants;
 
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('../../../../../core/test/config');
-const {
-  retry,
-  verifyHttpRootEntry,
-  expectAtLeastOneMatching,
-  verifyExitSpan
-} = require('../../../../../core/test/test_util');
+const { retry, verifyHttpRootEntry, expectAtLeastOneMatching } = require('../../../../../core/test/test_util');
 const ProcessControls = require('../../../test_util/ProcessControls');
 const globalAgent = require('../../../globalAgent');
 
@@ -33,30 +28,27 @@ mochaSuiteFn('frameworks/bookshelf', function () {
   });
   ProcessControls.setUpHooks(controls);
 
-  describe('parameterized bindings', () => {
-    it('select', () =>
-      controls
-        .sendRequest({
-          method: 'GET',
-          path: '/bookshelf-select'
-        })
-        .then(() => {
-          return retry(() =>
-            agentControls.getSpans().then(spans => {
-              const httpEntry = verifyHttpRootEntry({
-                spans,
-                apiPath: '/sequelize-select',
-                pid: String(controls.getPid())
-              });
+  it('parameterized bindings', () =>
+    controls
+      .sendRequest({
+        method: 'GET',
+        path: '/param-bindings'
+      })
+      .then(() => {
+        return retry(() =>
+          agentControls.getSpans().then(spans => {
+            expect(spans.length).to.equal(2);
 
-              verifyPgExit(spans, httpEntry, 'select "users".* from "users" where "users"."id" = $1 limit $2');
+            const httpEntry = verifyHttpRootEntry({
+              spans,
+              apiPath: '/param-bindings',
+              pid: String(controls.getPid())
+            });
 
-              // TODO: ?
-              // verifyExitSpan(spans, httpEntry);
-            })
-          );
-        }));
-  });
+            verifyPgExit(spans, httpEntry, 'select "users".* from "users" where "users"."name" = $1 limit $2');
+          })
+        );
+      }));
 
   function verifyPgExit(spans, parent, statement) {
     return expectAtLeastOneMatching(spans, span => {

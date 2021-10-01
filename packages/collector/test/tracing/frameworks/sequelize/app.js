@@ -17,22 +17,20 @@ const app = express();
 const logPrefix = `Express / Postgres App (${process.pid}):\t`;
 
 const { Sequelize, DataTypes } = require('sequelize');
-const sequelize = new Sequelize(
-  `postgres://${process.env.POSTGRES_USER}:${process.env.POSTGRES_PASSWORD}@${process.env.POSTGRES_HOST}:5432/${process.env.POSTGRES_DB}`
-);
+const sequelize = new Sequelize({
+  dialect: 'postgres',
+  host: process.env.POSTGRES_HOST,
+  username: process.env.POSTGRES_USER,
+  password: process.env.POSTGRES_PASSWORD,
+  database: process.env.POSTGRES_DB
+});
 
 (async () => {
   const User = sequelize.define(
     'User',
     {
-      // Model attributes are defined here
-      firstName: {
-        type: DataTypes.STRING,
-        allowNull: false
-      },
-      lastName: {
+      name: {
         type: DataTypes.STRING
-        // allowNull defaults to true
       }
     },
     {
@@ -44,9 +42,9 @@ const sequelize = new Sequelize(
 
   await User.create(
     {
-      firstName: 'alice123'
+      name: 'parapeter'
     },
-    { fields: ['firstName'] }
+    { fields: ['name'] }
   );
 })();
 
@@ -64,27 +62,27 @@ app.get('/', (req, res) => {
  * https://github.com/sequelize/sequelize/pull/9431
  * Sequilize does not support it yet, just for inserts and raw queries
  */
-app.get('/sequelize-select', async (req, res) => {
+app.get('/param-bindings-select', async (req, res) => {
   await sequelize.models.User.findOne({
-    // plain: true,
     where: {
-      firstName: 'alice123'
+      name: 'parapeter'
     },
+    attributes: ['name'],
     bind: {}
   });
 
-  res.json();
+  res.send();
 });
 
-app.get('/sequelize-insert', async (req, res) => {
+app.get('/param-bindings-insert', async (req, res) => {
   await sequelize.models.User.create(
     {
-      firstName: 'xxx'
+      name: 'paramo'
     },
-    { fields: ['firstName'] }
+    { fields: ['name'] }
   );
 
-  res.json();
+  res.send();
 });
 
 app.listen(process.env.APP_PORT, () => {
