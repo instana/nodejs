@@ -58,10 +58,6 @@ app.get('/', (req, res) => {
   res.sendStatus(200);
 });
 
-/**
- * https://github.com/sequelize/sequelize/pull/9431
- * Sequilize does not support it yet, just for inserts and raw queries
- */
 app.get('/find-one', async (req, res) => {
   await sequelize.models.User.findOne({
     where: {

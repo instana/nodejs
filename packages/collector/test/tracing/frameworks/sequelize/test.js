@@ -45,6 +45,11 @@ mochaSuiteFn('frameworks/sequilize', function () {
                 pid: String(controls.getPid())
               });
 
+              /**
+               * https://github.com/sequelize/sequelize/pull/9431
+               * Sequilize does not support parameterized queries yet
+               * Exceptions: inserts and raw queries
+               */
               const query = 'SELECT "name" FROM "User" AS "User" WHERE "User"."name" = \'parapeter\' LIMIT 1;';
               verifyExitSpan({
                 spanName: 'postgres',
