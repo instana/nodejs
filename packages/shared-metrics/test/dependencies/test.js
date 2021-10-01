@@ -122,6 +122,10 @@ describe('dependencies', function () {
           expect(deps['@instana/core']).to.exist;
           expect(deps['@instana/collector']).to.exist;
           expect(deps['@instana/autoprofile']).to.exist;
+
+          expectVersion(deps.fastify, '^3.20.2');
+          expectVersion(deps.express, '^4.17.1');
+          expectVersion(deps.koa, '^2.13.1');
         })
       ));
   });
