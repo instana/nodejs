@@ -6,11 +6,10 @@
 'use strict';
 
 const expect = require('chai').expect;
-const constants = require('@instana/core').tracing.constants;
 
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('../../../../../core/test/config');
-const { retry, verifyHttpRootEntry, expectAtLeastOneMatching } = require('../../../../../core/test/test_util');
+const { retry, verifyHttpRootEntry, verifyExitSpan } = require('../../../../../core/test/test_util');
 const ProcessControls = require('../../../test_util/ProcessControls');
 const globalAgent = require('../../../globalAgent');
 
@@ -46,11 +45,20 @@ mochaSuiteFn('frameworks/sequilize', function () {
                 pid: String(controls.getPid())
               });
 
-              verifyPgExit(
+              const query = 'SELECT "name" FROM "User" AS "User" WHERE "User"."name" = \'parapeter\' LIMIT 1;';
+              verifyExitSpan({
+                spanName: 'postgres',
                 spans,
-                httpEntry,
-                'SELECT "name" FROM "User" AS "User" WHERE "User"."name" = \'parapeter\' LIMIT 1;'
-              );
+                parent: httpEntry,
+                withError: false,
+                pid: String(controls.getPid()),
+                dataProperty: 'pg',
+                extraTests: [
+                  span => {
+                    expect(span.data.pg.stmt).to.equal(query);
+                  }
+                ]
+              });
             })
           );
         }));
@@ -72,30 +80,25 @@ mochaSuiteFn('frameworks/sequilize', function () {
                 pid: String(controls.getPid())
               });
 
-              verifyPgExit(
-                spans,
-                httpEntry,
+              const query =
                 'INSERT INTO "User" ("name","updatedAt","createdAt") ' +
-                  'VALUES ($1,$2,$3) RETURNING "id","name","createdAt","updatedAt";'
-              );
+                'VALUES ($1,$2,$3) RETURNING "id","name","createdAt","updatedAt";';
+
+              verifyExitSpan({
+                spanName: 'postgres',
+                spans,
+                parent: httpEntry,
+                withError: false,
+                pid: String(controls.getPid()),
+                dataProperty: 'pg',
+                extraTests: [
+                  span => {
+                    expect(span.data.pg.stmt).to.equal(query);
+                  }
+                ]
+              });
             })
           );
         }));
   });
-
-  function verifyPgExit(spans, parent, statement) {
-    return expectAtLeastOneMatching(spans, span => {
-      verifyPgExitBase(span, parent, statement);
-      expect(span.error).to.not.exist;
-      expect(span.ec).to.equal(0);
-    });
-  }
-
-  function verifyPgExitBase(span, parent, statement) {
-    expect(span.n).to.equal('postgres');
-    expect(span.k).to.equal(constants.EXIT);
-    expect(span.data).to.exist;
-    expect(span.data.pg).to.exist;
-    expect(span.data.pg.stmt).to.equal(statement);
-  }
 });

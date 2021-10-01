@@ -33,15 +33,10 @@ const bookshelf = require('bookshelf')(knex);
   const result = await bookshelf.knex.schema.hasTable('users');
 
   if (!result) {
-    bookshelf.knex.schema
-      .createTableIfNotExists('users', function (t) {
-        t.increments('id');
-        t.string('firstName');
-        t.string('lastName');
-      })
-      .then(function () {
-        console.log('Created table.');
-      });
+    bookshelf.knex.schema.createTableIfNotExists('users', function (t) {
+      t.increments('id');
+      t.string('name');
+    });
   }
 })();
 

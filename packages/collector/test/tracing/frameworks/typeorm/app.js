@@ -55,6 +55,8 @@ let typeormconnection;
     logging: false,
     entities: [UserTypeOrmEntity]
   });
+
+  await typeormconnection.synchronize();
 })();
 
 if (process.env.WITH_STDOUT) {
