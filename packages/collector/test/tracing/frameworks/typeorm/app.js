@@ -69,7 +69,7 @@ app.get('/', (req, res) => {
   res.sendStatus(200);
 });
 
-app.get('/param-bindings', async (req, res) => {
+app.get('/find-one', async (req, res) => {
   const repo = typeormconnection.getRepository(UserTypeOrm);
   await repo.findOne({ name: 'parapeter' });
 

@@ -54,7 +54,7 @@ app.get('/', (req, res) => {
   res.sendStatus(200);
 });
 
-app.get('/param-bindings', async (req, res) => {
+app.get('/find-one', async (req, res) => {
   await new BookShelfUser({ name: 'parapeter' }).fetch({ require: false });
   res.json();
 });

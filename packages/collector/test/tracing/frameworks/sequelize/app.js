@@ -62,7 +62,7 @@ app.get('/', (req, res) => {
  * https://github.com/sequelize/sequelize/pull/9431
  * Sequilize does not support it yet, just for inserts and raw queries
  */
-app.get('/param-bindings-select', async (req, res) => {
+app.get('/find-one', async (req, res) => {
   await sequelize.models.User.findOne({
     where: {
       name: 'parapeter'
@@ -71,10 +71,10 @@ app.get('/param-bindings-select', async (req, res) => {
     bind: {}
   });
 
-  res.send();
+  res.json();
 });
 
-app.get('/param-bindings-insert', async (req, res) => {
+app.get('/insert', async (req, res) => {
   await sequelize.models.User.create(
     {
       name: 'paramo'
@@ -82,7 +82,7 @@ app.get('/param-bindings-insert', async (req, res) => {
     { fields: ['name'] }
   );
 
-  res.send();
+  res.json();
 });
 
 app.listen(process.env.APP_PORT, () => {

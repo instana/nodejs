@@ -27,11 +27,11 @@ mochaSuiteFn('frameworks/typeorm', function () {
   });
   ProcessControls.setUpHooks(controls);
 
-  it('parameterized bindings', () =>
+  it('parameterized queries', () =>
     controls
       .sendRequest({
         method: 'GET',
-        path: '/param-bindings'
+        path: '/find-one'
       })
       .then(() => {
         return retry(() =>
@@ -40,7 +40,7 @@ mochaSuiteFn('frameworks/typeorm', function () {
 
             const httpEntry = verifyHttpRootEntry({
               spans,
-              apiPath: '/param-bindings',
+              apiPath: '/find-one',
               pid: String(controls.getPid())
             });
 

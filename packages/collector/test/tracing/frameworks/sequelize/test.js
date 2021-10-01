@@ -27,12 +27,12 @@ mochaSuiteFn('frameworks/sequilize', function () {
   });
   ProcessControls.setUpHooks(controls);
 
-  describe('parameterized bindings', () => {
+  describe('parameterized queries', () => {
     it('select', () =>
       controls
         .sendRequest({
           method: 'GET',
-          path: '/param-bindings-select'
+          path: '/find-one'
         })
         .then(() => {
           return retry(() =>
@@ -41,7 +41,7 @@ mochaSuiteFn('frameworks/sequilize', function () {
 
               const httpEntry = verifyHttpRootEntry({
                 spans,
-                apiPath: '/param-bindings-select',
+                apiPath: '/find-one',
                 pid: String(controls.getPid())
               });
 
@@ -67,7 +67,7 @@ mochaSuiteFn('frameworks/sequilize', function () {
       controls
         .sendRequest({
           method: 'GET',
-          path: '/param-bindings-insert'
+          path: '/insert'
         })
         .then(() => {
           return retry(() =>
@@ -76,7 +76,7 @@ mochaSuiteFn('frameworks/sequilize', function () {
 
               const httpEntry = verifyHttpRootEntry({
                 spans,
-                apiPath: '/param-bindings-insert',
+                apiPath: '/insert',
                 pid: String(controls.getPid())
               });
 

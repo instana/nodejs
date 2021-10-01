@@ -34,18 +34,18 @@ mochaSuiteFn('tracing/pg', function () {
   });
   ProcessControls.setUpHooks(controls);
 
-  it('parameterized bindings', () =>
+  it('parameterized queries', () =>
     controls
       .sendRequest({
         method: 'GET',
-        path: '/param-bindings'
+        path: '/parameterized-query'
       })
       .then(() => {
         return retry(() =>
           agentControls.getSpans().then(spans => {
             const httpEntry = verifyHttpRootEntry({
               spans,
-              apiPath: '/param-bindings',
+              apiPath: '/parameterized-query',
               pid: String(controls.getPid())
             });
 
