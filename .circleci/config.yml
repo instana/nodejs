@@ -33,60 +33,46 @@ shared: &shared
 
     - restore_cache:
         keys:
-          - v3-root-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "package-lock.json" }}
-          - v3-root-dependencies-{{ .Environment.CIRCLE_JOB }}-
+          - v{{ .Environment.CACHE_VERSION }}-root-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "package-lock.json" }}
     - restore_cache:
         keys:
-          - v3-autoprofile-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "packages/autoprofile/package-lock.json" }}
-          - v3-autoprofile-dependencies-{{ .Environment.CIRCLE_JOB }}-
+          - v{{ .Environment.CACHE_VERSION }}-autoprofile-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "packages/autoprofile/package-lock.json" }}
     - restore_cache:
         keys:
-          - v3-aws-fargate-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "packages/aws-fargate/package-lock.json" }}
-          - v3-aws-fargate-dependencies-{{ .Environment.CIRCLE_JOB }}-
+          - v{{ .Environment.CACHE_VERSION }}-aws-fargate-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "packages/aws-fargate/package-lock.json" }}
     - restore_cache:
         keys:
-          - v3-aws-lambda-auto-wrap-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "packages/aws-lambda-auto-wrap/package-lock.json" }}
-          - v3-aws-lambda-auto-wrap-dependencies-{{ .Environment.CIRCLE_JOB }}-
+          - v{{ .Environment.CACHE_VERSION }}-aws-lambda-auto-wrap-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "packages/aws-lambda-auto-wrap/package-lock.json" }}
     - restore_cache:
         keys:
-          - v3-aws-lambda-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "packages/aws-lambda/package-lock.json" }}
-          - v3-aws-lambda-dependencies-{{ .Environment.CIRCLE_JOB }}-
+          - v{{ .Environment.CACHE_VERSION }}-aws-lambda-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "packages/aws-lambda/package-lock.json" }}
     - restore_cache:
         keys:
-          - v3-collector-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "packages/collector/package-lock.json" }}
-          - v3-collector-dependencies-{{ .Environment.CIRCLE_JOB }}-
+          - v{{ .Environment.CACHE_VERSION }}-collector-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "packages/collector/package-lock.json" }}
     - restore_cache:
         keys:
-          - v3-babel-typescript-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "packages/collector/test/apps/babel-typescript/package-lock.json" }}
-          - v3-babel-typescript-dependencies-{{ .Environment.CIRCLE_JOB }}-
+          - v{{ .Environment.CACHE_VERSION }}-babel-typescript-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "packages/collector/test/apps/babel-typescript/package-lock.json" }}
     - restore_cache:
         keys:
-          - v3-core-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "packages/core/package-lock.json" }}
-          - v3-core-dependencies-{{ .Environment.CIRCLE_JOB }}-
+          - v{{ .Environment.CACHE_VERSION }}-core-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "packages/core/package-lock.json" }}
     - restore_cache:
         keys:
-          - v3-google-cloud-run-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "packages/google-cloud-run/package-lock.json" }}
-          - v3-google-cloud-run-dependencies-{{ .Environment.CIRCLE_JOB }}-
+          - v{{ .Environment.CACHE_VERSION }}-google-cloud-run-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "packages/google-cloud-run/package-lock.json" }}
     - restore_cache:
         keys:
-          - v3-legacy-sensor-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "packages/legacy-sensor/package-lock.json" }}
-          - v3-legacy-sensor-dependencies-{{ .Environment.CIRCLE_JOB }}-
+          - v{{ .Environment.CACHE_VERSION }}-legacy-sensor-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "packages/legacy-sensor/package-lock.json" }}
     - restore_cache:
         keys:
-          - v3-metrics-util-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "packages/metrics-util/package-lock.json" }}
-          - v3-metrics-util-dependencies-{{ .Environment.CIRCLE_JOB }}-
+          - v{{ .Environment.CACHE_VERSION }}-metrics-util-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "packages/metrics-util/package-lock.json" }}
     - restore_cache:
         keys:
-          - v3-serverless-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "packages/serverless/package-lock.json" }}
-          - v3-serverless-dependencies-{{ .Environment.CIRCLE_JOB }}-
+          - v{{ .Environment.CACHE_VERSION }}-serverless-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "packages/serverless/package-lock.json" }}
     - restore_cache:
         keys:
-          - v3-shared-metrics-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "packages/shared-metrics/package-lock.json" }}
-          - v3-shared-metrics-dependencies-{{ .Environment.CIRCLE_JOB }}-
+          - v{{ .Environment.CACHE_VERSION }}-shared-metrics-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "packages/shared-metrics/package-lock.json" }}
     - restore_cache:
         keys:
-          - v3-opentelemetry-exporter-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "packages/opentelemetry-exporter/package-lock.json" }}
-          - v3-opentelemetry-exporter-dependencies-{{ .Environment.CIRCLE_JOB }}-
+          - v{{ .Environment.CACHE_VERSION }}-opentelemetry-exporter-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "packages/opentelemetry-exporter/package-lock.json" }}
 
     - run: npm install
 
@@ -99,55 +85,55 @@ shared: &shared
     - save_cache:
         paths:
           - node_modules
-        key: v3-root-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "package-lock.json" }}
+        key: v{{ .Environment.CACHE_VERSION }}-root-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "package-lock.json" }}
     - save_cache:
         paths:
           - packages/autoprofile/node_modules
-        key: v3-autoprofile-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "packages/autoprofile/package-lock.json" }}
+        key: v{{ .Environment.CACHE_VERSION }}-autoprofile-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "packages/autoprofile/package-lock.json" }}
     - save_cache:
         paths:
           - packages/aws-fargate/node_modules
-        key: v3-aws-fargate-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "packages/aws-fargate/package-lock.json" }}
+        key: v{{ .Environment.CACHE_VERSION }}-aws-fargate-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "packages/aws-fargate/package-lock.json" }}
     - save_cache:
         paths:
           - packages/aws-lambda-auto-wrap/node_modules
-        key: v3-aws-lambda-auto-wrap-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "packages/aws-lambda-auto-wrap/package-lock.json" }}
+        key: v{{ .Environment.CACHE_VERSION }}-aws-lambda-auto-wrap-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "packages/aws-lambda-auto-wrap/package-lock.json" }}
     - save_cache:
         paths:
           - packages/aws-lambda/node_modules
-        key: v3-aws-lambda-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "packages/aws-lambda/package-lock.json" }}
+        key: v{{ .Environment.CACHE_VERSION }}-aws-lambda-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "packages/aws-lambda/package-lock.json" }}
     - save_cache:
         paths:
           - packages/collector/node_modules
-        key: v3-collector-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "packages/collector/package-lock.json" }}
+        key: v{{ .Environment.CACHE_VERSION }}-collector-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "packages/collector/package-lock.json" }}
     - save_cache:
         paths:
           - packages/core/node_modules
-        key: v3-core-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "packages/core/package-lock.json" }}
+        key: v{{ .Environment.CACHE_VERSION }}-core-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "packages/core/package-lock.json" }}
     - save_cache:
         paths:
           - packages/google-cloud-run/node_modules
-        key: v3-google-cloud-run-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "packages/google-cloud-run/package-lock.json" }}
+        key: v{{ .Environment.CACHE_VERSION }}-google-cloud-run-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "packages/google-cloud-run/package-lock.json" }}
     - save_cache:
         paths:
           - packages/legacy-sensor/node_modules
-        key: v3-legacy-sensor-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "packages/legacy-sensor/package-lock.json" }}
+        key: v{{ .Environment.CACHE_VERSION }}-legacy-sensor-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "packages/legacy-sensor/package-lock.json" }}
     - save_cache:
         paths:
           - packages/metrics-util/node_modules
-        key: v3-metrics-util-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "packages/metrics-util/package-lock.json" }}
+        key: v{{ .Environment.CACHE_VERSION }}-metrics-util-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "packages/metrics-util/package-lock.json" }}
     - save_cache:
         paths:
           - packages/serverless/node_modules
-        key: v3-serverless-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "packages/serverless/package-lock.json" }}
+        key: v{{ .Environment.CACHE_VERSION }}-serverless-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "packages/serverless/package-lock.json" }}
     - save_cache:
         paths:
           - packages/shared-metrics/node_modules
-        key: v3-shared-metrics-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "packages/shared-metrics/package-lock.json" }}
+        key: v{{ .Environment.CACHE_VERSION }}-shared-metrics-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "packages/shared-metrics/package-lock.json" }}
     - save_cache:
         paths:
           - packages/opentelemetry-exporter/node_modules
-        key: v3-opentelemetry-exporter-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "packages/opentelemetry-exporter/package-lock.json" }}
+        key: v{{ .Environment.CACHE_VERSION }}-opentelemetry-exporter-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "packages/opentelemetry-exporter/package-lock.json" }}
 
     # Only run audit with the most recent Node.js version - one Node version is enough.
     - run: "([[ $(node -v) =~ ^v16.*$ ]] && npm run audit) || [[ ! $(node -v) =~ ^v16.*$ ]]"
@@ -191,7 +177,7 @@ shared: &shared
     - save_cache:
         paths:
           - packages/collector/test/apps/babel-typescript/node_modules
-        key: v3-babel-typescript-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "packages/collector/test/apps/babel-typescript/package-lock.json" }}
+        key: v{{ .Environment.CACHE_VERSION }}-babel-typescript-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "packages/collector/test/apps/babel-typescript/package-lock.json" }}
 
 elasticsearch: &elasticsearch
   - image: docker.elastic.co/elasticsearch/elasticsearch:7.6.2
