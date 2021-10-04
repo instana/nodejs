@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.135.0
 
 - [Fastify] Added support for 2.x and 3.x
 
