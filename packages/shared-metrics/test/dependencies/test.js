@@ -126,16 +126,6 @@ describe('dependencies', function () {
           expectVersion(deps.fastify, '^3.20.2');
           expectVersion(deps.express, '^4.17.1');
           expectVersion(deps.koa, '^2.13.1');
-
-          expectVersion(deps.opentracing, '^0.14.5');
-          expectVersion(deps.only, '^0.0.2');
-
-          // According to how we sort and limit the collected dependencies, the break between packages that are
-          // collected and the ones that are omitted should be somewhere between negotiator should be the somewhere
-          // around the package name pinky (packages are only sorted alphabetically in this test scenario). However, to
-          // make the test a little less fragile, we allow for some leniency with regards to where exactly the break is.
-          expect(deps['queue-microtask']).to.not.exist;
-          expect(deps.qs).to.not.exist;
         })
       ));
   });

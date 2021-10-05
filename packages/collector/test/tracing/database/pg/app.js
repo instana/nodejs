@@ -95,6 +95,11 @@ app.get('/select-now-no-pool-promise', (req, res) => {
     });
 });
 
+app.get('/parameterized-query', async (req, res) => {
+  await client.query('SELECT * FROM users WHERE name = $1', ['parapeter']);
+  res.json();
+});
+
 app.get('/pool-string-insert', (req, res) => {
   const insert = 'INSERT INTO users(name, email) VALUES($1, $2) RETURNING *';
   const values = ['beaker', 'beaker@muppets.com'];

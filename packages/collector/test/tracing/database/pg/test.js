@@ -13,6 +13,8 @@ const config = require('../../../../../core/test/config');
 const {
   retry,
   getSpansByName,
+  verifyHttpRootEntry,
+  verifyExitSpan,
   expectAtLeastOneMatching,
   expectExactlyOneMatching
 } = require('../../../../../core/test/test_util');
@@ -32,6 +34,39 @@ mochaSuiteFn('tracing/pg', function () {
     useGlobalAgent: true
   });
   ProcessControls.setUpHooks(controls);
+
+  it('parameterized queries', () =>
+    controls
+      .sendRequest({
+        method: 'GET',
+        path: '/parameterized-query'
+      })
+      .then(() => {
+        return retry(() =>
+          agentControls.getSpans().then(spans => {
+            const httpEntry = verifyHttpRootEntry({
+              spans,
+              apiPath: '/parameterized-query',
+              pid: String(controls.getPid())
+            });
+
+            const query = 'SELECT * FROM users WHERE name = $1';
+            verifyExitSpan({
+              spanName: 'postgres',
+              spans,
+              parent: httpEntry,
+              withError: false,
+              pid: String(controls.getPid()),
+              dataProperty: 'pg',
+              extraTests: [
+                span => {
+                  expect(span.data.pg.stmt).to.equal(query);
+                }
+              ]
+            });
+          })
+        );
+      }));
 
   it('must trace pooled select now', () =>
     controls
