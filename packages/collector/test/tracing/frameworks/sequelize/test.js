@@ -68,6 +68,44 @@ mochaSuiteFn('frameworks/sequilize', function () {
           );
         }));
 
+    it('raw', () =>
+      controls
+        .sendRequest({
+          method: 'GET',
+          path: '/raw'
+        })
+        .then(() => {
+          return retry(() =>
+            agentControls.getSpans().then(spans => {
+              expect(spans.length).to.equal(2);
+
+              const httpEntry = verifyHttpRootEntry({
+                spans,
+                apiPath: '/raw',
+                pid: String(controls.getPid())
+              });
+
+              /**
+               * https://sequelize.org/master/manual/raw-queries.html#bind-parameter
+               */
+              const query = 'SELECT "name" FROM "User" AS "User" WHERE "User"."name" = $1 LIMIT 1;';
+              verifyExitSpan({
+                spanName: 'postgres',
+                spans,
+                parent: httpEntry,
+                withError: false,
+                pid: String(controls.getPid()),
+                dataProperty: 'pg',
+                extraTests: [
+                  span => {
+                    expect(span.data.pg.stmt).to.equal(query);
+                  }
+                ]
+              });
+            })
+          );
+        }));
+
     it('insert', () =>
       controls
         .sendRequest({

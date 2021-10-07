@@ -63,8 +63,17 @@ app.get('/find-one', async (req, res) => {
     where: {
       name: 'parapeter'
     },
-    attributes: ['name'],
-    bind: {}
+    attributes: ['name']
+  });
+
+  res.json();
+});
+
+app.get('/raw', async (req, res) => {
+  await sequelize.query('SELECT "name" FROM "User" AS "User" WHERE "User"."name" = $1 LIMIT 1;', {
+    raw: true,
+    nest: true,
+    bind: ['parapeter']
   });
 
   res.json();
