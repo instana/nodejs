@@ -59,12 +59,12 @@ class AsyncSampler {
     }
 
     function generateStackTrace(skip) {
-      var orig = Error.prepareStackTrace;
+      const orig = Error.prepareStackTrace;
       Error.prepareStackTrace = function (err, structuredStackTrace) {
         return structuredStackTrace;
       };
 
-      var stack = new Error().stack;
+      const stack = new Error().stack;
 
       Error.prepareStackTrace = orig;
 
