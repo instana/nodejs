@@ -42,12 +42,12 @@ describe('AsyncSampler', () => {
       sampler.reset();
 
       function generateStackTrace(skip) {
-        var orig = Error.prepareStackTrace;
+        const orig = Error.prepareStackTrace;
         Error.prepareStackTrace = function (error, structuredStackTrace) {
           return structuredStackTrace;
         };
 
-        var stack = new Error().stack;
+        const stack = new Error().stack;
 
         Error.prepareStackTrace = orig;
 

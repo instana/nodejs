@@ -35,7 +35,7 @@ if (fs.existsSync(addonPath)) {
   console.log('Pre-built version of AutoProfile addon is not available, falling back to node-gyp.');
 }
 
-var gyp = child_process.spawn('node-gyp', ['rebuild'], { cwd: process.cwd(), env: process.env, stdio: 'inherit' });
+const gyp = child_process.spawn('node-gyp', ['rebuild'], { cwd: process.cwd(), env: process.env, stdio: 'inherit' });
 
 gyp.on('error', err => {
   console.error('node-gyp not found.');

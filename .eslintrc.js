@@ -59,6 +59,7 @@ module.exports = {
     'no-underscore-dangle': 'off',
     'no-unused-expressions': 'off',
     'no-use-before-define': ['error', 'nofunc'],
+    'no-var': 'error',
     'object-curly-newline': 'off',
     'object-curly-spacing': 'off',
     'operator-linebreak': 'off',

@@ -42,7 +42,7 @@ function simulateCpu() {
 
 function simulateMemLeak() {
   let mem1 = [];
-  var n = 0;
+  let n = 0;
 
   // 30 min
   setInterval(() => {
@@ -69,12 +69,12 @@ function simulateMemLeak() {
 
 function simulateHttp() {
   setInterval(() => {
-    var options = {
+    const options = {
       host: '127.0.0.1',
       port: 5005
     };
 
-    var req = http.get(options, () => {});
+    const req = http.get(options, () => {});
 
     req.on('error', function (err) {
       console.log(err.message);
