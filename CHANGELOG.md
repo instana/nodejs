@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- An issue event is sent if the application uses an EOL (end of life) version of Node.js. Applicable only for non serverless environments
+
 ## 1.135.0
 
 - [Fastify] Added support for 2.x and 3.x

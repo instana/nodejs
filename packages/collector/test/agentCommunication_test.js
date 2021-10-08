@@ -7,9 +7,12 @@
 
 const expect = require('chai').expect;
 
-const config = require('../../core/test/config');
-const { retry } = require('../../core/test/test_util');
+const config = require('@instana/core/test/config');
+const { retry } = require('@instana/core/test/test_util');
 const globalAgent = require('./globalAgent');
+const { isNodeVersionEOL } = require('../src/util/eol');
+
+const isEOL = isNodeVersionEOL();
 
 describe('agentCommunication', function () {
   this.timeout(config.getTestTimeout());
@@ -55,6 +58,21 @@ describe('agentCommunication', function () {
           })
         )
       ));
+
+  it('sends a Node.js EOL alert event to the agent (when applicable)', async () => {
+    return retry(async () => {
+      const events = await agentControls.getEvents();
+
+      if (events.length === 0 && isEOL) {
+        return Promise.reject(new Error('No EOL alert event sent to the agent'));
+      } else {
+        const eolEvent = events.filter(
+          event => event.title === `Node.js version ${process.versions.node} reached its end of life`
+        );
+        expect(eolEvent).to.exist;
+      }
+    });
+  });
 });
 
 describe('announce retry', function () {

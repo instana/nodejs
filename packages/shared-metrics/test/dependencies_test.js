@@ -7,8 +7,8 @@
 
 const expect = require('chai').expect;
 
-const config = require('../../core/test/config');
-const { retry } = require('../../core/test/test_util');
+const config = require('@instana/core/test/config');
+const { retry } = require('@instana/core/test/test_util');
 const dependencies = require('../src/dependencies');
 
 /*

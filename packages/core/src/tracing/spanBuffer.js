@@ -16,13 +16,7 @@ logger = require('../logger').getLogger('tracing/spanBuffer', newLogger => {
 /** @type {Array.<string>} */
 const batchableSpanNames = [];
 
-/**
- * This module will not be typed yet: /nodejs/packages/collector/src/agentConnection.js
- * @typedef {Object} TemporaryAgentConnection
- * @property {(spans: *, cb: Function) => void} sendSpans
- */
-
-/** @type {TemporaryAgentConnection} */
+/** @type {import('..').DownstreamConnection} */
 let downstreamConnection = null;
 let isActive = false;
 /** @type {number} */
@@ -92,7 +86,7 @@ const batchingBuckets = new Map();
 
 /**
  * @param {import('../util/normalizeConfig').InstanaConfig} config
- * @param {TemporaryAgentConnection} _downstreamConnection
+ * @param {import('..').DownstreamConnection} _downstreamConnection
  */
 exports.init = function init(config, _downstreamConnection) {
   downstreamConnection = _downstreamConnection;

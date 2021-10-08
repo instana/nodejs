@@ -7,7 +7,6 @@
 
 const path = require('path');
 const fs = require('fs');
-
 const { applicationUnderMonitoring } = require('@instana/core').util;
 
 let logger = require('@instana/core').logger.getLogger('metrics');
@@ -32,6 +31,7 @@ exports.payloadPrefix = 'dependencies';
 const preliminaryPayload = {};
 
 /** @type {Object.<string, *>} */
+// @ts-ignore: Cannot redeclare exported variable 'currentPayload'
 exports.currentPayload = {};
 
 exports.MAX_ATTEMPTS = 20;
@@ -43,14 +43,14 @@ exports.activate = function activate() {
   attempts++;
 
   const started = Date.now();
-  applicationUnderMonitoring.getMainPackageJsonPathStartingAtMainModule((err, packageJsonPath) => {
+  applicationUnderMonitoring.getMainPackageJsonPathStartingAtMainModule((err, mainPackageJsonPath) => {
     if (err) {
       return logger.warn('Failed to determine main package.json. Reason: %s %s ', err.message, err.stack);
-    } else if (!packageJsonPath && attempts < exports.MAX_ATTEMPTS) {
+    } else if (!mainPackageJsonPath && attempts < exports.MAX_ATTEMPTS) {
       logger.debug('Main package.json could not be found. Will try again later.');
       setTimeout(exports.activate, DELAY).unref();
       return;
-    } else if (!packageJsonPath) {
+    } else if (!mainPackageJsonPath) {
       logger.info(
         `Main package.json could not be found after ${attempts} retries. Looking for node_modules folder now.`
       );
@@ -70,11 +70,11 @@ exports.activate = function activate() {
 
     let dependencyDir;
     if (applicationUnderMonitoring.isAppInstalledIntoNodeModules()) {
-      dependencyDir = path.join(path.dirname(packageJsonPath), '..', '..', 'node_modules');
+      dependencyDir = path.join(path.dirname(mainPackageJsonPath), '..', '..', 'node_modules');
     } else {
-      dependencyDir = path.join(path.dirname(packageJsonPath), 'node_modules');
+      dependencyDir = path.join(path.dirname(mainPackageJsonPath), 'node_modules');
     }
-    addAllDependencies(dependencyDir, started, packageJsonPath);
+    addAllDependencies(dependencyDir, started, mainPackageJsonPath);
   });
 };
 
@@ -89,6 +89,7 @@ exports.activate = function activate() {
 function addAllDependencies(dependencyDir, started, packageJsonPath) {
   addDependenciesFromDir(dependencyDir, () => {
     if (Object.keys(preliminaryPayload).length <= exports.MAX_DEPENDENCIES) {
+      // @ts-ignore: Cannot redeclare exported variable 'currentPayload'
       exports.currentPayload = preliminaryPayload;
       logger.debug(`Collection of dependencies took ${Date.now() - started} ms.`);
       return;
@@ -238,6 +239,7 @@ function limitAndSet(distances = {}) {
   for (let i = 0; i < keys.length - exports.MAX_DEPENDENCIES; i++) {
     delete preliminaryPayload[keys[i]];
   }
+  // @ts-ignore: Cannot redeclare exported variable 'currentPayload'
   exports.currentPayload = preliminaryPayload;
 }
 

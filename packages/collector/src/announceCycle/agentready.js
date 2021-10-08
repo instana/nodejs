@@ -16,6 +16,10 @@ const pidStore = require('../pidStore');
 const requestHandler = require('../agent/requestHandler');
 const transmissionCycle = require('../metrics/transmissionCycle');
 const uncaught = require('../uncaught');
+const { isNodeVersionEOL } = require('../util/eol');
+
+const ELEVEN_MINUTES = 11 * 60 * 1000;
+const TEN_MINUTES = 10 * 60 * 1000;
 
 /** @type {*} */
 let autoprofile;
@@ -86,6 +90,7 @@ function enter(_ctx) {
   tracing.activate();
   requestHandler.activate();
   scheduleTracingMetrics();
+  detectEOLNodeVersion();
 
   if (agentOpts.autoProfile && autoprofile) {
     const profiler = autoprofile.start();
@@ -141,4 +146,41 @@ function fireMonitoringEvent() {
       logger.error('Error received while trying to send Agent Monitoring Event to agent: %s', error.message);
     }
   });
+}
+
+function sendEOLEvent() {
+  agentConnection.sendEvent(
+    {
+      title: `Node.js version ${process.versions.node} reached its end of life`,
+      text:
+        'This version no longer receives updates or security fixes and might contain unfixed vulnerabilities.\n\n' +
+        'Please consider upgrading Node.js to an active version.\n\n' +
+        'For a list of active versions visit ' +
+        '[https://nodejs.org/en/about/releases/](https://nodejs.org/en/about/releases/)',
+      plugin: 'com.instana.forge.infrastructure.runtime.nodejs.NodeJsRuntimePlatform',
+      id: pidStore && typeof pidStore.getEntityId === 'function' ? pidStore.getEntityId() : undefined,
+      timestamp: Date.now(),
+      duration: ELEVEN_MINUTES,
+      severity: agentConnection.AgentEventSeverity.WARNING
+    },
+    err => {
+      if (err) {
+        logger.debug('Node.js version EOL', err);
+      }
+    }
+  );
+}
+
+/**
+ * Sends an issue event to the agent when the Node.js version has reached end of life.
+ * It will work for non serverless environments where an agent is present.
+ * Also, currently the serverless-acceptor does not have support for events.
+ */
+function detectEOLNodeVersion() {
+  if (isNodeVersionEOL()) {
+    setTimeout(() => {
+      sendEOLEvent();
+      setInterval(sendEOLEvent, TEN_MINUTES).unref();
+    }, 2000);
+  }
 }

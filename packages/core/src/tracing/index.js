@@ -128,7 +128,7 @@ exports.preInit = function preInit(preliminaryConfig) {
 
 /**
  * @param {import('../util/normalizeConfig').InstanaConfig} _config
- * @param {import('./spanBuffer').TemporaryAgentConnection} downstreamConnection
+ * @param {import('..').DownstreamConnection} downstreamConnection
  * @param {CollectorPIDStore} _processIdentityProvider
  */
 exports.init = function init(_config, downstreamConnection, _processIdentityProvider) {

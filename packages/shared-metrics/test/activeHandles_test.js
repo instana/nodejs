@@ -9,8 +9,8 @@ const expect = require('chai').expect;
 const semver = require('semver');
 const net = require('net');
 
-const config = require('../../core/test/config');
-const testUtils = require('../../core/test/test_util');
+const config = require('@instana/core/test/config');
+const testUtils = require('@instana/core/test/test_util');
 const activeHandles = require('../src/activeHandles');
 
 describe('metrics.activeHandles', function () {
