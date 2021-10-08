@@ -13,7 +13,6 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 const tar = require('tar');
-const { fork } = require('child_process');
 const detectLibc = require('detect-libc');
 
 /**
@@ -26,20 +25,9 @@ const detectLibc = require('detect-libc');
  * @property {string} [loadFrom]
  */
 
-/** @type {Array.<string>} */
-const retryMechanisms = [];
-if (
-  !process.env.INSTANA_COPY_PRECOMPILED_NATIVE_ADDONS ||
-  process.env.INSTANA_COPY_PRECOMPILED_NATIVE_ADDONS.toLowerCase() !== 'false'
-) {
-  retryMechanisms.push('copy-precompiled');
-}
-if (
-  process.env.INSTANA_REBUILD_NATIVE_ADDONS_ON_DEMAND &&
-  process.env.INSTANA_REBUILD_NATIVE_ADDONS_ON_DEMAND.toLowerCase() === 'true'
-) {
-  retryMechanisms.push('rebuild');
-}
+const copyPrecompiledDisabled =
+  process.env.INSTANA_COPY_PRECOMPILED_NATIVE_ADDONS &&
+  process.env.INSTANA_COPY_PRECOMPILED_NATIVE_ADDONS.toLowerCase() === 'false';
 
 const platform = os.platform();
 const arch = process.arch;
@@ -60,18 +48,16 @@ function loadNativeAddOn(opts) {
   // Give clients a chance to register event listeners on the emitter that we return by attempting to load the module
   // asynchronously on the next tick.
   opts.loadFrom = opts.nativeModuleName;
-  process.nextTick(loadNativeAddOnInternal.bind(null, opts, loaderEmitter, 0));
+  process.nextTick(loadNativeAddOnInternal.bind(null, opts, loaderEmitter));
   return loaderEmitter;
 }
 
 /**
  * @param {InstanaSharedMetricsOptions} opts
  * @param {EventEmitter} loaderEmitter
- * @param {number} retryIndex
- * @param {boolean} skipAttempt
- * @returns
+ * @returns {boolean}
  */
-function loadNativeAddOnInternal(opts, loaderEmitter, retryIndex, skipAttempt) {
+function loadNativeAddOnInternal(opts, loaderEmitter) {
   try {
     const { isMainThread } = require('worker_threads');
     if (!isMainThread) {
@@ -83,21 +69,32 @@ function loadNativeAddOnInternal(opts, loaderEmitter, retryIndex, skipAttempt) {
     // worker threads are not available, so we know that this is the main thread
   }
 
-  if (skipAttempt) {
-    // The logic of the previous retry mechanism figured out that it cannot complete successfully, so there is no reason
-    // to try to require the module again. Skip directly to the next retry.
-    logger.debug(`Skipping attempt ${retryIndex + 1} to load native add-on ${opts.nativeModuleName}.`);
-    prepareNextRetry(opts, loaderEmitter, retryIndex);
-  } else {
-    logger.debug(`Attempt ${retryIndex + 1} to load native add-on ${opts.nativeModuleName} from ${opts.loadFrom}.`);
-    try {
-      // Try to actually require the native add-on module.
-      const nativeModule = require(opts.loadFrom);
-      loaderEmitter.emit('loaded', nativeModule);
-      logger.debug(`Attempt ${retryIndex + 1} to load native add-on ${opts.nativeModuleName} has been successful.`);
-    } catch (e) {
-      logger.debug(`Attempt ${retryIndex + 1} to load native add-on ${opts.nativeModuleName} has failed.`, e);
-      prepareNextRetry(opts, loaderEmitter, retryIndex);
+  let nativeModuleHasBeenRequiredSuccessfully = attemptRequire(opts, loaderEmitter, 'directly');
+  if (!nativeModuleHasBeenRequiredSuccessfully) {
+    if (!copyPrecompiledDisabled) {
+      copyPrecompiled(opts, loaderEmitter, success => {
+        if (success) {
+          // The initial attempt to require the native add-on directly has failed but copying the precompiled add-on
+          // binaries has been successful. Try to require the precompiled add-on now.
+          nativeModuleHasBeenRequiredSuccessfully = attemptRequire(
+            opts,
+            loaderEmitter,
+            'after copying precompiled binaries'
+          );
+          if (!nativeModuleHasBeenRequiredSuccessfully) {
+            // Requiring the precompiled add-on has failed after successfully copying them.
+            giveUp(opts, loaderEmitter);
+          }
+        } else {
+          // The initial attempt to require the native add-on directly has failed and copying the precompiled add-on
+          // binaries has also failed.
+          giveUp(opts, loaderEmitter);
+        }
+      });
+    } else {
+      // The initial attempt to require the native add-on directly has failed and copying the precompiled add-on
+      // binaries has been explicitly disabled via INSTANA_COPY_PRECOMPILED_NATIVE_ADDONS=false.
+      giveUp(opts, loaderEmitter);
     }
   }
 }
@@ -105,49 +102,50 @@ function loadNativeAddOnInternal(opts, loaderEmitter, retryIndex, skipAttempt) {
 /**
  * @param {InstanaSharedMetricsOptions} opts
  * @param {EventEmitter} loaderEmitter
- * @param {number} retryIndex
+ * @param {string} mechanism
  */
-function prepareNextRetry(opts, loaderEmitter, retryIndex) {
-  // The first pre-condition for all retry mechanisms is that we can find the path to the native add-on that can not be
-  // required.
+function attemptRequire(opts, loaderEmitter, mechanism) {
+  try {
+    // Try to actually require the native add-on module.
+    const nativeModule = require(opts.loadFrom);
+    loaderEmitter.emit('loaded', nativeModule);
+    logger.debug(`Attempt to load native add-on ${opts.nativeModuleName} ${mechanism} has been successful.`);
+    return true;
+  } catch (e) {
+    logger.debug(`Attempt to load native add-on ${opts.nativeModuleName} ${mechanism} has failed.`, e);
+    return false;
+  }
+}
+
+/**
+ * @param {InstanaSharedMetricsOptions} opts
+ * @param {EventEmitter} loaderEmitter
+ */
+function giveUp(opts, loaderEmitter) {
+  logger.warn(opts.message);
+  loaderEmitter.emit('failed');
+}
+
+/**
+ * @param {InstanaSharedMetricsOptions} opts
+ * @param {EventEmitter} loaderEmitter
+ * @param {(success: boolean) => void} callback
+ */
+function copyPrecompiled(opts, loaderEmitter, callback) {
+  logger.debug(`Trying to copy precompiled version of ${opts.nativeModuleName} for Node.js ${process.version}.`);
+
   if (!opts.nativeModulePath || !opts.nativeModuleParentPath) {
-    findNativeModulePath(opts);
-    if (!opts.nativeModulePath || !opts.nativeModuleParentPath) {
-      logger.warn(opts.message + ' (No retry attempted.)');
-      loaderEmitter.emit('failed');
+    if (!findNativeModulePath(opts)) {
+      logger.warn(`Unable to find or construct a path for native add-on ${opts.nativeModuleName}.`);
+      process.nextTick(callback.bind(false));
       return;
     }
   }
 
-  const nextRetryMechanism = retryMechanisms[retryIndex];
-  if (!nextRetryMechanism) {
-    // We have exhausted all possible mechanisms to cope with the failure to load the native add-on.
-    logger.warn(opts.message);
-    loaderEmitter.emit('failed');
-  } else if (nextRetryMechanism === 'copy-precompiled') {
-    copyPrecompiled(opts, loaderEmitter, retryIndex);
-  } else if (nextRetryMechanism === 'rebuild') {
-    rebuildOnDemand(opts, loaderEmitter, retryIndex);
-  } else {
-    logger.error(
-      `Unknown retry mechanism for loading the native module ${opts.nativeModuleName}: ${nextRetryMechanism}.`
-    );
-    process.nextTick(loadNativeAddOnInternal.bind(null, opts, loaderEmitter, ++retryIndex, true));
-  }
-}
-
-/**
- * @param {InstanaSharedMetricsOptions} opts
- * @param {EventEmitter} loaderEmitter
- * @param {number} retryIndex
- */
-function copyPrecompiled(opts, loaderEmitter, retryIndex) {
-  logger.debug(`Trying to copy precompiled version of ${opts.nativeModuleName} for Node.js ${process.version}.`);
-
   const abi = process.versions.modules;
   if (!abi) {
     logger.warn(`Could not determine ABI version for Node.js version ${process.version}.`);
-    process.nextTick(loadNativeAddOnInternal.bind(null, opts, loaderEmitter, ++retryIndex, true));
+    process.nextTick(callback.bind(false));
     return;
   }
 
@@ -163,14 +161,11 @@ function copyPrecompiled(opts, loaderEmitter, retryIndex) {
       logger.info(
         `A precompiled version for ${opts.nativeModuleName} is not available ${label} (at ${precompiledTarGzPath}).`
       );
-      process.nextTick(loadNativeAddOnInternal.bind(null, opts, loaderEmitter, ++retryIndex, true));
+      callback(false);
       return;
-      // Note: We could combine copying and recompiling for cases where we do not have a precompiled version but
-      // node-gyp is available. That is, copy the precompiled package (from an arbitrary architecture/ABI version), then
-      // rebuild that.
     } else if (statsErr) {
       logger.warn(`Looking for a precompiled version for ${opts.nativeModuleName} ${label} failed.`, statsErr);
-      process.nextTick(loadNativeAddOnInternal.bind(null, opts, loaderEmitter, ++retryIndex, true));
+      callback(false);
       return;
     }
 
@@ -197,7 +192,7 @@ function copyPrecompiled(opts, loaderEmitter, retryIndex) {
           cpErr => {
             if (cpErr) {
               logger.warn(`Copying the precompiled build for ${opts.nativeModuleName} ${label} failed.`, cpErr);
-              process.nextTick(loadNativeAddOnInternal.bind(null, opts, loaderEmitter, ++retryIndex, true));
+              callback(false);
               return;
             }
 
@@ -205,7 +200,7 @@ function copyPrecompiled(opts, loaderEmitter, retryIndex) {
             // dependency should work.
             //
             // However, we must not use any of the paths from which Node.js has tried to load the module before (that
-            // is, node_modules/${opts.nativeModuleName}). Node.js has module loading infrastructure
+            // is, node_modules/${opts.nativeModuleName}). Node.js' module loading infrastructure
             // (lib/internal/modules/cjs/loader.js and lib/internal/modules/package_json_reader.js) have built-in
             // caching on multiple levels (for example, package.json locations and package.json contents). If Node.js
             // has tried unsuccessfully to load a module or read a package.json from a particular path, it will remember
@@ -213,75 +208,14 @@ function copyPrecompiled(opts, loaderEmitter, retryIndex) {
             // key). Instead, we force a new path, by adding precompiled to the module path and use the absolute path to
             // the module to load it.
             opts.loadFrom = targetDir;
-            process.nextTick(loadNativeAddOnInternal.bind(null, opts, loaderEmitter, ++retryIndex));
+            callback(true);
           }
         );
       })
       .catch(tarErr => {
         logger.warn(`Unpacking the precompiled build for ${opts.nativeModuleName} ${label} failed.`, tarErr);
-        process.nextTick(loadNativeAddOnInternal.bind(null, opts, loaderEmitter, ++retryIndex, true));
+        callback(false);
       });
-  });
-}
-
-/**
- * This is mainly for the scenario where @instana/collector and its dependencies has been provided by  an external
- * mechanism (like copying a bundled version contained in the Instana agent package) without running an npm install on
- * the target system. Native addons are present, but might have been build for a different operating system/Node ABI,
- * libc familiy, ...). Thus, they need to be rebuilt.
- *
- * @param {InstanaSharedMetricsOptions} opts
- * @param {EventEmitter} loaderEmitter
- * @param {number} retryIndex
- */
-function rebuildOnDemand(opts, loaderEmitter, retryIndex) {
-  /** @type {string} */
-  let nodeGypExecutable;
-  try {
-    const nodeGypPath = require.resolve('node-gyp');
-    if (!nodeGypPath) {
-      logger.warn(
-        // eslint-disable-next-line max-len
-        `Could not find node-gyp (require.resolve didn't return anything) to rebuild ${opts.nativeModuleName} on demand.`
-      );
-      process.nextTick(loadNativeAddOnInternal.bind(null, opts, loaderEmitter, ++retryIndex, true));
-      return;
-    }
-    nodeGypExecutable = path.join(nodeGypPath, '..', '..', 'bin', 'node-gyp.js');
-  } catch (e) {
-    logger.warn(`Could not load node-gyp to rebuild ${opts.nativeModuleName} on demand.`, e);
-    process.nextTick(loadNativeAddOnInternal.bind(null, opts, loaderEmitter, ++retryIndex, true));
-    return;
-  }
-
-  logger.info(`Rebuilding ${opts.nativeModulePath} via ${nodeGypExecutable}.`);
-  const nodeGyp = fork(nodeGypExecutable, ['rebuild'], {
-    cwd: opts.nativeModulePath
-  });
-  nodeGyp.on('error', err => {
-    logger.warn(
-      // eslint-disable-next-line max-len
-      `Attempt to rebuild ${opts.nativeModulePath} via ${nodeGypExecutable} has failed with an error.`,
-      err
-    );
-  });
-  nodeGyp.on('close', code => {
-    if (code === 0) {
-      logger.info(
-        // eslint-disable-next-line max-len
-        `Attempt to rebuild ${opts.nativeModulePath} via ${nodeGypExecutable} has finished, will try to load the module again.`
-      );
-      // In contrast to copyPrecompiled we do not need to force a different module path here, since in this scenario the
-      // package contents (including the package.json) was present in the node_modules folder, it was only the binary
-      // that didn't match the platform/ABI version.
-      opts.loadFrom = opts.nativeModuleName;
-      process.nextTick(loadNativeAddOnInternal.bind(null, opts, loaderEmitter, ++retryIndex));
-    } else {
-      logger.warn(
-        `Attempt to rebuild ${opts.nativeModulePath} via ${nodeGypExecutable} has failed with exit code ${code}.`
-      );
-      process.nextTick(loadNativeAddOnInternal.bind(null, opts, loaderEmitter, ++retryIndex, true));
-    }
   });
 }
 
@@ -297,24 +231,24 @@ function findNativeModulePath(opts) {
         `Could not find location for ${opts.nativeModuleName} (require.resolve didn't return anything). ` +
           'Will create a path for it.'
       );
-      createNativeModulePath(opts);
-      return;
+      return createNativeModulePath(opts);
     }
     // We found a path to the module in node_modules, that means the directory exist (and we will reuse it) but the
     // module installation is incomplete and it could not be loaded earlier (otherwise we wouldn't have gotten here).
     const idx = nativeModulePath.lastIndexOf('node_modules');
     if (idx < 0) {
       logger.warn(`Could not find node_modules substring in ${nativeModulePath}.`);
-      return;
+      return false;
     }
     opts.nativeModulePath = nativeModulePath.substring(
       0,
       idx + 'node_modules'.length + opts.nativeModuleName.length + 2
     );
     opts.nativeModuleParentPath = path.join(opts.nativeModulePath, '..');
+    return true;
   } catch (e) {
     logger.debug(`Could not find location for ${opts.nativeModuleName}. Will create a path for it.`, e);
-    createNativeModulePath(opts);
+    return createNativeModulePath(opts);
   }
 }
 
@@ -332,7 +266,7 @@ function createNativeModulePath(opts) {
       logger.warn(
         `Could not find node_modules substring in ${selfPath}. Will give up loading ${opts.nativeModuleName}.`
       );
-      return;
+      return false;
     }
 
     // cut off everything after module path
@@ -343,6 +277,7 @@ function createNativeModulePath(opts) {
   // we need to go up two directory levels.
   opts.nativeModuleParentPath = loadNativeAddOn.selfNodeModulesPath;
   opts.nativeModulePath = path.join(loadNativeAddOn.selfNodeModulesPath, opts.nativeModuleName);
+  return true;
 }
 
 loadNativeAddOn.setLogger = setLogger;

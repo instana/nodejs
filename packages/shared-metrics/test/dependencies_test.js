@@ -18,12 +18,6 @@ const dependencies = require('../src/dependencies');
 describe('metrics.dependencies', function () {
   this.timeout(config.getTestTimeout());
 
-  const originalMaxDependencies = dependencies.MAX_DEPENDENCIES;
-
-  afterEach(() => {
-    dependencies.MAX_DEPENDENCIES = originalMaxDependencies;
-  });
-
   it('should export a dependencies payload prefix', () => {
     expect(dependencies.payloadPrefix).to.equal('dependencies');
   });
@@ -36,7 +30,7 @@ describe('metrics.dependencies', function () {
       // core/src/util/applicationUnderMonitoring, dependencies would be evaluated as the content of the node_modules
       // directory relative to the main module. But with this check in place, we end up evaluating the dependencies in
       // packages/shared-metrics/node_modules.
-      expect(Object.keys(dependencies.currentPayload).length).to.be.greaterThan(300);
+      expect(Object.keys(dependencies.currentPayload).length).to.be.greaterThan(200);
       expect(dependencies.currentPayload['event-loop-lag']).to.equal('1.4.0');
       expect(dependencies.currentPayload.semver).to.equal('7.3.5');
       expect(dependencies.currentPayload.mocha).to.equal('7.2.0');

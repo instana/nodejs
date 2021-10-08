@@ -132,7 +132,8 @@ describe('dependencies', function () {
 
   describe('for an app installed into node_modules', () => {
     // This simulates a deployment where the application is brought to the production system by installing it via npm
-    // (usually a private npm registry).
+    // (usually from a private npm registry).
+    // Please see npm-installed-app/README.md for details.
     const appTgz = path.join(__dirname, 'npm-installed-app', 'npm-installed-test-app-1.0.0.tgz');
     const tmpDir = mkdtempSync(path.join(os.tmpdir(), '@instana-shared-metrics-test'));
     const repoRootDir = path.join(__dirname, '..', '..', '..', '..');
@@ -153,7 +154,8 @@ describe('dependencies', function () {
       port: 7215,
       env: {
         INSTANA_AGENT_PORT: 7211,
-        INSTANA_NODES_REPO: repoRootDir
+        INSTANA_NODES_REPO: repoRootDir,
+        MAX_DEPENDENCIES: 300
       }
     }).registerTestHooks();
 
@@ -176,18 +178,6 @@ describe('dependencies', function () {
           expectVersion(deps.fastify, '^3.20.2');
           expectVersion(deps.express, '^4.17.1');
           expectVersion(deps.koa, '^2.13.1');
-
-          // number-is-nan is one of the most distant deps (10 levels deep), but with the limit used in this test, it
-          // should be included.
-          expectVersion(deps['number-is-nan'], '^1.0.1');
-
-          // eslint is a dev dependency (see above why it is included at all), but it should also be included with the
-          // limit of 300 that we apply.
-          expectVersion(deps.eslint, '^7.30.0');
-
-          // growl is in the dependencies but it is past the point that is imposed by the limit so it should not be in
-          // the collected dependencies.
-          expect(deps.growls).to.not.exist;
         })
       ));
   });
