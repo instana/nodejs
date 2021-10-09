@@ -24,7 +24,10 @@ const ProcessControls = require('../../../collector/test/test_util/ProcessContro
 const globalAgent = require('../../../collector/test/globalAgent');
 
 describe('dependencies', function () {
-  this.timeout(Math.max(config.getTestTimeout() * 2, 20000));
+  // Some of the tests in this suite include running npm install and on CI we have observed that this can take roughly
+  // two minutes (!) when the build sometimes, so we go with a large timeout. Base timeout on CI is 30 seconds, with
+  // factor 6 thisallows for test durations up to three minutes.
+  this.timeout(config.getTestTimeout() * 6);
 
   globalAgent.setUpCleanUpHooks();
   const agentControls = globalAgent.instance;
