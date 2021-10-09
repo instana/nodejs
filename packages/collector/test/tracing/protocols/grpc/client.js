@@ -214,11 +214,15 @@ function dynamicClientSideStreaming(cancel, triggerError, cb) {
     });
   } else {
     call.write({ parameter: 'first' }, () => {
-      call.write({ parameter: 'second' }, () => {
-        call.write({ parameter: 'third' }, () => {
-          call.end();
+      // In case this test includes cancelling the stream from the client side, this timeout/delay makes sure that we
+      // actually cancel the stream _before_ all requests have gone through.
+      setTimeout(() => {
+        call.write({ parameter: 'second' }, () => {
+          call.write({ parameter: 'third' }, () => {
+            call.end();
+          });
         });
-      });
+      }, 50);
     });
   }
   if (cancel) {
@@ -243,13 +247,17 @@ function staticClientSideStreaming(cancel, triggerError, cb) {
     call.write(request, () => {
       request = new messages.TestRequest();
       request.setParameter('second');
-      call.write(request, () => {
-        request = new messages.TestRequest();
-        request.setParameter('third');
+      // In case this test includes cancelling the stream from the client side, this timeout/delay makes sure that we
+      // actually cancel the stream _before_ all requests have gone through.
+      setTimeout(() => {
         call.write(request, () => {
-          call.end();
+          request = new messages.TestRequest();
+          request.setParameter('third');
+          call.write(request, () => {
+            call.end();
+          });
         });
-      });
+      }, 50);
     });
   }
   if (cancel) {
