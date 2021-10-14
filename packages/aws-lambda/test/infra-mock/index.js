@@ -82,6 +82,10 @@ function sendPayload(callback) {
     tags: {
       much: 'wow',
       very: 'tagged'
+    },
+    env_vars: {
+      // NOTE: customer can set this env variable in each lambda. Sensor reads them
+      INSTANA_ZONE: process.env.INSTANA_ZONE
     }
   };
 
