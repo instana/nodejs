@@ -103,9 +103,9 @@ class InstanaSpan {
     /** @type {Object.<string, *>} */
     this.data = {};
 
-    // properties used within the collector that should not be transmitted to the agent/backend
-    // NOTE: If you add a new property, make sure that it is not enumerable, as it may otherwise be transmitted
-    // to the backend!
+    // Properties for the span that are only used internally but will not be transmitted to the agent/backend,
+    // therefore defined as non-enumerabled. NOTE: If you add a new property, make sure that it is also defined as
+    // non-enumerable.
     Object.defineProperty(this, 'cleanupFunctions', {
       value: [],
       writable: false,
@@ -123,6 +123,23 @@ class InstanaSpan {
     });
     Object.defineProperty(this, 'manualEndMode', {
       value: false,
+      writable: true,
+      enumerable: false
+    });
+    // Marker for higher level instrumentation (like graphql.server) to not transmit the span once they are done, but
+    // instead we wait for the protocol level instrumentation to finish (which then transmits the span).
+    Object.defineProperty(this, 'postponeTransmit', {
+      value: false,
+      configurable: true,
+      writable: true,
+      enumerable: false
+    });
+    // Additional special purpose marker that is only used to control transmission logig between the GraphQL server core
+    // instrumentation and Apollo Gateway instrumentation
+    // (see packages/core/tracing/instrumentation/protocols/graphql.js).
+    Object.defineProperty(this, 'postponeTransmitApolloGateway', {
+      value: false,
+      configurable: true,
       writable: true,
       enumerable: false
     });

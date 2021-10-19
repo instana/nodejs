@@ -5,16 +5,17 @@
 - Manual spans creation handles tags that are passed as non extensible objetcts - when `Object.freeze` or `Object.preventExtensions` is applied to the tags
 - [AWS SDKv2] Instrumentation of SNS
 - Remove dependency to node-gyp. This also removes the opt-in feature of rebuilding native add-ons via node-gyp. This capability was off by default in previous releases, it could be enabled via `INSTANA_REBUILD_NATIVE_ADDONS_ON_DEMAND=true`. This is no longer available, the environment variable will be ignored now.
+- Fix: Capture HTTP status codes for GraphQL requests over HTTP.
 
 ## 1.135.0
-- [Fastify] Added support for 2.x and 3.x
+- [Fastify] Add support for 2.x and 3.x
 
 ## 1.134.0
-- [OpenTelemetry] Added new package `@instana/opentelemetry-exporter` that offers an Instana exporter for OpenTelemetry spans
+- [OpenTelemetry] Add new package `@instana/opentelemetry-exporter` that offers an Instana exporter for OpenTelemetry spans
 
 ## 1.133.0
 - [AWS Lambda] Increase retries and timeout in Lambda extension binary.
-- Added console.warn & console.error instrumentation
+- Add console.warn & console.error instrumentation
 
 ## 1.132.2
 - Fix `path must be a string of Buffer` error in dependency distance calculator.
