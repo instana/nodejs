@@ -111,21 +111,28 @@ function traceQueryOrMutation(
     // example) (GraphQL is transport-layer agnostic).
     //
     // Possible consequences:
-    // 1) If a customer does GraphQL over any transport that we trace as an entry, we will replace this
-    // transport/protocol level entry span with a GraphQL entry. But if the customer is using a transport that we do
-    // _not_ trace, we will start a new root entry span here. We will still trace the GraphQL entry but might lose trace
-    // continuity, as X-Instana-T andX-Instana-S are not transported at the GraphQL layer but rather in the underlying
-    // transport layer (HTTP, AMQP, ...)
+    // 1) If a customer does GraphQL over any transport that we trace as an entry, we will repurpose this
+    // transport/protocol level entry span to a GraphQL entry by overwriting span.n. The attributes captured by the
+    // protocol level tracing (the initial timestamp and for example HTTP attributes like url and method) will be kept.
+    // But if the customer is using a transport that we do _not_ trace, we will start a new root entry span here. We
+    // will still trace the GraphQL entry but might lose trace continuity, as X-Instana-T andX-Instana-S are not
+    // transported at the GraphQL layer but rather in the underlying transport layer (HTTP, AMQP, ...)
     //
     // 2) If a customer does multiple things in an HTTP, AMQP, GRPc, ... call, only one of which is running a GraphQL
     // query, it is possible that they would rather see this call as the HTTP/AMQP/GRPc/... call instead of a GraphQL
     // call. But since we give GraphQL preference over protocol level entry spans, it will show up as a GraphQL call.
 
     // Replace generic node.http.server/rabbitmq/... span by a more specific graphql.server span. We change the values
-    // in the active span in-situ. This way, other exit spans that have already been created as children of the current
-    // entry span still have the the correct parent span ID.
+    // in the active span in-situ. This way, other intermediate and exit spans that have already been created as
+    // children of the current entry span still have the the correct parent span ID.
     span = activeEntrySpan;
     span.n = 'graphql.server';
+
+    // Mark this span so that the GraphQL instrumentation will not transmit it, instead we wait for the protocol level
+    // instrumentation to finish, which will then transmit it. This will ensure that we also capture attributes that are
+    // only written by the protocol level instrumentation at the end (like the HTTP status code).
+    // (This property is defined as non-enumerable in the InstanaSpan class and will not be serialized to JSON.)
+    span.postponeTransmit = true;
   }
 
   return cls.ns.runAndReturn(() => {
@@ -133,7 +140,6 @@ function traceQueryOrMutation(
       // If there hasn't been an entry span that we repurposed into a graphql.server entry span, we need to start a new
       // root entry span here.
       span = cls.startSpan('graphql.server', constants.ENTRY);
-      span.ts = Date.now();
     }
     span.stack = tracingUtil.getStackTrace(stackTraceRef);
     span.data.graphql = {
@@ -268,7 +274,7 @@ function finishSpan(span, result) {
       .filter(msg => !!msg)
       .join(', ');
   }
-  if (!span.postponeTransmit) {
+  if (!span.postponeTransmit && !span.postponeTransmitApolloGateway) {
     span.transmit();
   }
 }
@@ -277,7 +283,9 @@ function finishWithException(span, err) {
   span.ec = 1;
   span.d = Date.now() - span.ts;
   span.data.graphql.errors = err.message;
-  span.transmit();
+  if (!span.postponeTransmit) {
+    span.transmit();
+  }
 }
 
 function instrumentApolloGatewayExecuteQueryPlan(apolloGatewayExecuteQueryPlanModule) {
@@ -298,29 +306,26 @@ function shimApolloGatewayExecuteQueryPlanFunction(originalFunction) {
       // Most of the heavy lifting to trace Apollo Federation gateways (implemented by @apollo/gateway) is done by our
       // standard GraphQL tracing, because those gateway queries are all also run through normal resolvers, which we
       // instrument. There is one case that requires extra instrumentation, though. @apollo/gateway does something funky
-      // with errors that come back from individual services: At the we would normally finish and transmit the span in
-      // shimExecuteFunction/traceQueryOrMutation/runOriginalAndFinish, the errors (if any) are not part of the
-      // response. Therefore we mark the span so that transmitting it will postpone, that is, it won't happen in
-      // runOriginalAndFinish. Once the call returns from @apollo/gateway#executeQueryPlan the errors have been merged
-      // back into the response and only then will we transmit the span.
-      Object.defineProperty(activeEntrySpan, 'postponeTransmit', {
-        value: true,
-        configurable: true,
-        writable: true,
-        enumerable: false
-      });
+      // with errors that come back from individual services: We would normally finish and transmit the span in
+      // shimExecuteFunction/traceQueryOrMutation/runOriginalAndFinish, but when Apollo Gateway is involved the errors
+      // (if any) are not part of the response. Therefore we mark the span so that transmitting it will be postponed,
+      // that is, it won't happen in runOriginalAndFinish. Once the call returns from @apollo/gateway#executeQueryPlan
+      // the errors have been merged back into the response and only then will we record the errors and finally transmit
+      // the span. This is implemented via the marker property postponeTransmitApolloGateway.
+      // (This property is defined as non-enumerable in the InstanaSpan class and will not be serialized to JSON.)
+      activeEntrySpan.postponeTransmitApolloGateway = true;
     }
 
     const resultPromise = originalFunction.apply(this, arguments);
     if (resultPromise && typeof resultPromise.then === 'function') {
       return resultPromise.then(
         promiseResult => {
-          delete activeEntrySpan.postponeTransmit;
+          delete activeEntrySpan.postponeTransmitApolloGateway;
           finishSpan(activeEntrySpan, promiseResult);
           return promiseResult;
         },
         err => {
-          delete activeEntrySpan.postponeTransmit;
+          delete activeEntrySpan.postponeTransmitApolloGateway;
           finishWithException(activeEntrySpan, err);
           throw err;
         }

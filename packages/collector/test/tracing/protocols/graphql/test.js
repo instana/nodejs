@@ -546,7 +546,9 @@ function verifyGraphQLQueryEntry(
     span => expect(span.d).to.be.greaterThan(0),
     span => expect(span.stack).to.be.an('array'),
     span => expect(span.data.graphql).to.exist,
-    span => expect(span.data.graphql.operationType).to.equal('query')
+    span => expect(span.data.graphql.operationType).to.equal('query'),
+    span => expect(span.postponeTransmit).to.not.exist,
+    span => expect(span.postponeTransmitApolloGateway).to.not.exist
   ];
 
   if (queryShorthand) {
@@ -601,7 +603,8 @@ function verifyGraphQLQueryEntry(
     expectations = expectations.concat([
       span => expect(span.data.http).to.be.an('object'),
       span => expect(span.data.http.url).to.match(/\/graphql/),
-      span => expect(span.data.http.method).to.equal('POST')
+      span => expect(span.data.http.method).to.equal('POST'),
+      span => expect(span.data.http.status).to.equal(200)
     ]);
   } else if (communicationProtocol === 'amqp') {
     expectations = expectations.concat([
@@ -635,10 +638,13 @@ function verifyGraphQLMutationEntry(parentSpan, spans) {
     span => expect(span.data.graphql.args).to.exist,
     span => expect(span.data.graphql.fields.updateCharacter).to.deep.equal(['name', 'profession']),
     span => expect(span.data.graphql.args.updateCharacter).to.deep.equal(['input']),
+    span => expect(span.postponeTransmit).to.not.exist,
+    span => expect(span.postponeTransmitApolloGateway).to.not.exist,
 
     span => expect(span.data.http).to.be.an('object'),
     span => expect(span.data.http.url).to.match(/\/graphql/),
-    span => expect(span.data.http.method).to.equal('POST')
+    span => expect(span.data.http.method).to.equal('POST'),
+    span => expect(span.data.http.status).to.equal(200)
   ]);
 }
 

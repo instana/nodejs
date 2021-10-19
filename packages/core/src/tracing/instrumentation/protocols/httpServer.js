@@ -151,22 +151,24 @@ function shimEmit(realEmit) {
       });
 
       function finishSpan() {
-        // Check if a span with higher priority (like graphql.server) already finished this span, only overwrite
-        // span attributes if that is not the case.
-        if (!span.transmitted) {
-          // safe guard just in case a higher prio instrumentation (graphql etc.) has removed data.http (planning to
-          // take over the span) but did not actually transmit this span.
-          span.data.http = span.data.http || {};
-          span.data.http.status = res.statusCode;
-          span.data.http.header = httpCommon.mergeExtraHeadersFromServerResponseOrClientResponse(
-            span.data.http.header,
-            res,
-            extraHttpHeadersToCapture
-          );
+        // Always capture duration and HTTP response details, no matter if a higher level instrumentation
+        // (like graphql.server) has modified the span or not.
+        span.d = Date.now() - span.ts;
+        span.data.http = span.data.http || {};
+        span.data.http.status = res.statusCode;
+        span.data.http.header = httpCommon.mergeExtraHeadersFromServerResponseOrClientResponse(
+          span.data.http.header,
+          res,
+          extraHttpHeadersToCapture
+        );
+
+        if (!span.postponeTransmit) {
+          // Do not overwrite the error count if an instrumentation with a higher priority (like graphql.server) has
+          // already made a decision about it.
           span.ec = res.statusCode >= 500 ? 1 : 0;
-          span.d = Date.now() - span.ts;
-          span.transmit();
         }
+
+        span.transmit();
       }
 
       return realEmit.apply(originalThis, originalArgs);
