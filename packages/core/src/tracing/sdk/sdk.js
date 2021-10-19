@@ -28,17 +28,17 @@ module.exports = function (isCallbackApi) {
 
   /**
    * @param {string} name
-   * @param {string | Function} tags
-   * @param {string | Function} traceId
+   * @param {Object.<string, *> | Function} tags
+   * @param {Object.<string, *> | Function | string} traceId
    * @param {string} parentSpanId
-   * @param {Function | string} callback
+   * @param {Function | Object.<string, *>} callback
    */
   function startEntrySpan(name, tags, traceId, parentSpanId, callback) {
     if (isCallbackApi && arguments.length === 2 && typeof arguments[1] === 'function') {
       callback = tags;
       tags = traceId = parentSpanId = null;
     } else if (isCallbackApi && arguments.length === 3 && typeof arguments[2] === 'function') {
-      callback = traceId;
+      callback = /** @type {Function} */ (traceId);
       traceId = parentSpanId = null;
     }
 
@@ -62,8 +62,8 @@ module.exports = function (isCallbackApi) {
       constants.ENTRY,
       constants.SDK.ENTRY,
       startEntrySpan,
-      /** @type {string | null} */ (tags),
-      /** @type {string | null} */ (traceId),
+      /** @type {Object.<string, *> | null} */ (tags),
+      /** @type {string} */ (traceId),
       parentSpanId,
       /** @type {Function} */ (callback)
     );
@@ -71,7 +71,7 @@ module.exports = function (isCallbackApi) {
 
   /**
    * @param {Error} error
-   * @param {string} tags
+   * @param {Object.<string, *>} tags
    */
   function completeEntrySpan(error, tags) {
     if (!isActive) {
@@ -102,8 +102,8 @@ module.exports = function (isCallbackApi) {
 
   /**
    * @param {string} name
-   * @param {string} tags
-   * @param {Function | string} callback
+   * @param {Object.<string, *>} tags
+   * @param {Function | Object.<string, *>} callback
    * @returns {Function | Promise<*>}
    */
   function startIntermediateSpan(name, tags, callback) {
@@ -149,7 +149,7 @@ module.exports = function (isCallbackApi) {
 
   /**
    * @param {Error} error
-   * @param {string} tags
+   * @param {Object.<string, *>} tags
    */
   function completeIntermediateSpan(error, tags) {
     if (!isActive) {
@@ -180,8 +180,8 @@ module.exports = function (isCallbackApi) {
 
   /**
    * @param {string} name
-   * @param {string} tags
-   * @param {Function | string} callback
+   * @param {Object.<string, *>} tags
+   * @param {Function | Object.<string, *>} callback
    * @returns {Function | Promise<*>}
    */
   function startExitSpan(name, tags, callback) {
@@ -227,7 +227,7 @@ module.exports = function (isCallbackApi) {
 
   /**
    * @param {Error} error
-   * @param {string} tags
+   * @param {Object.<string, *>} tags
    */
   function completeExitSpan(error, tags) {
     if (!isActive) {
@@ -261,7 +261,7 @@ module.exports = function (isCallbackApi) {
    * @param {number} kind
    * @param {string} sdkKind
    * @param {Function} stackTraceRef
-   * @param {string} tags
+   * @param {Object.<string, *>} tags
    * @param {string} traceId
    * @param {string} parentSpanId
    * @param {Function} callback
@@ -276,7 +276,10 @@ module.exports = function (isCallbackApi) {
         type: sdkKind
       };
       if (tags) {
-        span.data.sdk.custom = { tags };
+        // We make a copy of the tags object to assure that it is extensible.
+        // As the tags object is provided by users, they could have been made not extensible with
+        // Object.freeze or Object.preventExtensions
+        span.data.sdk.custom = { tags: Object.assign({}, tags) };
       }
       return callNext(callback);
     });
@@ -285,7 +288,7 @@ module.exports = function (isCallbackApi) {
   /**
    * @param {Error} error
    * @param {import('../cls').InstanaBaseSpan} span
-   * @param {string} tags
+   * @param {Object.<string, *>} tags
    */
   function completeSpan(error, span, tags) {
     if (!span.data.sdk) {

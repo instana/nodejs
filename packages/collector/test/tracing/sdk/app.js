@@ -81,7 +81,7 @@ function createEntry(message) {
 function createEntryCallback(message) {
   instana.sdk.callback.startEntrySpan(
     'custom-entry',
-    message.withData === 'start' || message.withData === 'both' ? { start: 'whatever' } : null,
+    message.withData === 'start' || message.withData === 'both' ? Object.freeze({ start: 'whatever' }) : null,
     message.traceId,
     message.parentSpanId,
     () => {
@@ -109,7 +109,7 @@ function afterCreateEntry(instanaSdk, message) {
     const error = message.error ? new Error('Boom!') : null;
     instanaSdk.completeEntrySpan(
       error,
-      message.withData === 'end' || message.withData === 'both' ? { end: 'some value' } : null
+      message.withData === 'end' || message.withData === 'both' ? Object.freeze({ end: 'some value' }) : null
     );
     process.send(`done: ${message.command}`);
   });
@@ -134,10 +134,13 @@ app.post('/promise/create-intermediate', function createIntermediatePromise(req,
   const file = getFile(req);
   const encoding = 'UTF-8';
   instana.sdk.promise
-    .startIntermediateSpan('intermediate-file-access', {
-      path: file,
-      encoding
-    })
+    .startIntermediateSpan(
+      'intermediate-file-access',
+      Object.freeze({
+        path: file,
+        encoding
+      })
+    )
     .then(() => {
       afterCreateIntermediate(instana.sdk.promise, file, encoding, res);
     });
@@ -169,10 +172,10 @@ app.post('/callback/create-exit', function createExitCallback(req, res) {
   const encoding = 'UTF-8';
   instana.sdk.callback.startExitSpan(
     'file-access',
-    {
+    Object.freeze({
       path: file,
       encoding
-    },
+    }),
     () => {
       afterCreateExit(instana.sdk.callback, file, encoding, res);
     }
