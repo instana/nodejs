@@ -1,6 +1,6 @@
 {
   "name": "@instana/opentelemetry-exporter",
-  "version": "1.135.0",
+  "version": "1.136.0",
   "description": "OpenTelemetry Instana Exporter",
   "keywords": [
     "opentelemetry",
@@ -38,11 +38,11 @@
     "url": "https://github.com/instana/nodejs/issues"
   },
   "dependencies": {
-    "@instana/serverless": "1.135.0",
+    "@instana/serverless": "1.136.0",
     "@opentelemetry/core": "0.25.0"
   },
   "devDependencies": {
-    "@instana/core": "1.135.0",
+    "@instana/core": "1.136.0",
     "@opentelemetry/api": "1.0.3",
     "@opentelemetry/auto-instrumentations-node": "0.24.0",
     "@opentelemetry/instrumentation": "0.24.0",
