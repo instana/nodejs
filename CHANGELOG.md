@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.136.0
 - An issue event is sent if the application uses an EOL (end of life) version of Node.js. Applicable only for non serverless environments
 - Manual spans creation handles tags that are passed as non extensible objetcts - when `Object.freeze` or `Object.preventExtensions` is applied to the tags
 - [AWS SDKv2] Instrumentation of SNS
