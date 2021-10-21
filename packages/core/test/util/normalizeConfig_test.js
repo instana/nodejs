@@ -28,6 +28,8 @@ describe('util.normalizeConfig', () => {
     delete process.env.INSTANA_SPANBATCHING_ENABLED;
     delete process.env.INSTANA_DISABLE_SPANBATCHING;
     delete process.env.INSTANA_DISABLE_W3C_TRACE_CORRELATION;
+    delete process.env.INSTANA_KAFKA_TRACE_CORRELATION;
+    delete process.env.INSTANA_KAFKA_HEADER_FORMAT;
   }
 
   it('should apply all defaults', () => {
@@ -341,6 +343,69 @@ describe('util.normalizeConfig', () => {
     expect(config.tracing.disableW3cTraceCorrelation).to.be.true;
   });
 
+  it('should disable Kafka trace correlation', () => {
+    const config = normalizeConfig({ tracing: { kafka: { traceCorrelation: false } } });
+    expect(config.tracing.kafka.traceCorrelation).to.be.false;
+  });
+
+  it('should disable Kafka trace correlation via INSTANA_KAFKA_TRACE_CORRELATION', () => {
+    process.env.INSTANA_KAFKA_TRACE_CORRELATION = 'false';
+    const config = normalizeConfig();
+    expect(config.tracing.kafka.traceCorrelation).to.be.false;
+  });
+
+  it('should set Kafka header format to binary', () => {
+    const config = normalizeConfig({ tracing: { kafka: { headerFormat: 'binary' } } });
+    expect(config.tracing.kafka.headerFormat).to.equal('binary');
+  });
+
+  it('should set Kafka header format to string', () => {
+    const config = normalizeConfig({ tracing: { kafka: { headerFormat: 'string' } } });
+    expect(config.tracing.kafka.headerFormat).to.equal('string');
+  });
+
+  it('should set Kafka header format to both', () => {
+    const config = normalizeConfig({ tracing: { kafka: { headerFormat: 'both' } } });
+    expect(config.tracing.kafka.headerFormat).to.equal('both');
+  });
+
+  it('should ignore non-string Kafka header format', () => {
+    const config = normalizeConfig({ tracing: { kafka: { headerFormat: 13 } } });
+    // before we start phase 1 of the migration, 'binary' will be the default value
+    expect(config.tracing.kafka.headerFormat).to.equal('binary');
+  });
+
+  it('should ignore invalid Kafka header format', () => {
+    const config = normalizeConfig({ tracing: { kafka: { headerFormat: 'whatever' } } });
+    // before we start phase 1 of the migration, 'binary' will be the default value
+    expect(config.tracing.kafka.headerFormat).to.equal('binary');
+  });
+
+  it('should set Kafka header format to binary via INSTANA_KAFKA_HEADER_FORMAT', () => {
+    process.env.INSTANA_KAFKA_HEADER_FORMAT = 'binary';
+    const config = normalizeConfig();
+    expect(config.tracing.kafka.headerFormat).to.equal('binary');
+  });
+
+  it('should set Kafka header format to string via INSTANA_KAFKA_HEADER_FORMAT', () => {
+    process.env.INSTANA_KAFKA_HEADER_FORMAT = 'string';
+    const config = normalizeConfig();
+    expect(config.tracing.kafka.headerFormat).to.equal('string');
+  });
+
+  it('should set Kafka header format to both via INSTANA_KAFKA_HEADER_FORMAT', () => {
+    process.env.INSTANA_KAFKA_HEADER_FORMAT = 'both';
+    const config = normalizeConfig();
+    expect(config.tracing.kafka.headerFormat).to.equal('both');
+  });
+
+  it('should ignore invalid Kafka header format in INSTANA_KAFKA_HEADER_FORMAT', () => {
+    process.env.INSTANA_KAFKA_HEADER_FORMAT = 'whatever';
+    const config = normalizeConfig();
+    // before we start phase 1 of the migration, 'binary' will be the default value
+    expect(config.tracing.kafka.headerFormat).to.equal('binary');
+  });
+
   it('should accept custom secrets config', () => {
     const config = normalizeConfig({
       secrets: {
@@ -431,6 +496,8 @@ describe('util.normalizeConfig', () => {
     expect(config.tracing.stackTraceLength).to.equal(10);
     expect(config.tracing.spanBatchingEnabled).to.be.false;
     expect(config.tracing.disableW3cTraceCorrelation).to.be.false;
+    expect(config.tracing.kafka.traceCorrelation).to.be.true;
+    expect(config.tracing.kafka.headerFormat).to.equal('binary');
     expect(config.secrets).to.be.an('object');
     expect(config.secrets.matcherMode).to.equal('contains-ignore-case');
     expect(config.secrets.keywords).to.deep.equal(['key', 'pass', 'secret']);

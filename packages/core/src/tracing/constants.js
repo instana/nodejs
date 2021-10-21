@@ -17,12 +17,16 @@ exports.traceLevelHeaderNameLowerCase = exports.traceLevelHeaderName.toLowerCase
 exports.syntheticHeaderName = 'X-INSTANA-SYNTHETIC';
 exports.syntheticHeaderNameLowerCase = exports.syntheticHeaderName.toLowerCase();
 
-exports.kafkaTraceContextHeaderName = 'X_INSTANA_C';
-exports.kafkaTraceLevelHeaderName = 'X_INSTANA_L';
+// legacy kafka trace correlation (binary values)
+exports.kafkaTraceContextHeaderNameBinary = 'X_INSTANA_C';
+exports.kafkaTraceLevelHeaderNameBinary = 'X_INSTANA_L';
+exports.kafkaTraceLevelBinaryValueSuppressed = Buffer.from([0]);
+exports.kafkaTraceLevelBinaryValueInherit = Buffer.from([1]);
 
-// The JVM tracers sends and expects one single signed byte.
-exports.kafkaTraceLevelValueSuppressed = Buffer.from([0]);
-exports.kafkaTraceLevelValueInherit = Buffer.from([1]);
+// new kafka trace correlation (string values) starting approximately 2021-11
+exports.kafkaTraceIdHeaderNameString = 'X_INSTANA_T';
+exports.kafkaSpanIdHeaderNameString = 'X_INSTANA_S';
+exports.kafkaTraceLevelHeaderNameString = 'X_INSTANA_L_S';
 
 exports.w3cTraceParent = 'traceparent';
 exports.w3cTraceState = 'tracestate';

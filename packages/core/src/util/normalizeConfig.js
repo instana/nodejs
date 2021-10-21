@@ -10,11 +10,6 @@
 const supportedTracingVersion = require('../tracing/supportedVersion');
 
 /**
- * @typedef {Object} HTTPTracingOption
- * @property {Array<*>} [extraHttpHeadersToCapture]
- */
-
-/**
  * @typedef {Object} InstanaTracingOption
  * @property {boolean} [enabled]
  * @property {boolean} [automaticTracingEnabled]
@@ -23,11 +18,27 @@ const supportedTracingVersion = require('../tracing/supportedVersion');
  * @property {number} [maxBufferedSpans]
  * @property {number} [transmissionDelay]
  * @property {number} [stackTraceLength]
- * @property {HTTPTracingOption} [http]
- * @property {Array<*>} [disabledTracers]
+ * @property {HTTPTracingOptions} [http]
+ * @property {Array<string>} [disabledTracers]
  * @property {boolean} [spanBatchingEnabled]
  * @property {boolean} [disableAutomaticTracing]
  * @property {boolean} [disableW3cTraceCorrelation]
+ * @property {KafkaTracingOptions} [kafka]
+ */
+
+/**
+ * @typedef {Object} HTTPTracingOptions
+ * @property {Array<string>} [extraHttpHeadersToCapture]
+ */
+
+/**
+ * @typedef {Object} KafkaTracingOptions
+ * @property {boolean} [traceCorrelation]
+ * @property {KafkaTraceCorrelationFormat} [headerFormat]
+ */
+
+/**
+ * @typedef {'binary' | 'string' | 'both'} KafkaTraceCorrelationFormat
  */
 
 /**
@@ -78,13 +89,21 @@ const defaults = {
     stackTraceLength: 10,
     disabledTracers: [],
     spanBatchingEnabled: false,
-    disableW3cTraceCorrelation: false
+    disableW3cTraceCorrelation: false,
+    kafka: {
+      traceCorrelation: true,
+      // Before we start phase 3 of the migration, 'binary' will be the default value. With phase 1, we will move to
+      // 'both',  with phase 2 it will no longer be configurable and will always use 'string'.
+      headerFormat: 'binary'
+    }
   },
   secrets: {
     matcherMode: 'contains-ignore-case',
     keywords: ['key', 'pass', 'secret']
   }
 };
+
+const validKafkaHeaderFormats = ['binary', 'string', 'both'];
 
 const validSecretsMatcherModes = ['equals-ignore-case', 'equals', 'contains-ignore-case', 'contains', 'regex', 'none'];
 
@@ -164,6 +183,7 @@ function normalizeTracingConfig(config) {
   normalizeDisabledTracers(config);
   normalizeSpanBatchingEnabled(config);
   normalizeDisableW3cTraceCorrelation(config);
+  normalizeTracingKafka(config);
 }
 
 /**
@@ -295,9 +315,11 @@ function normalizeTracingHttp(config) {
     return;
   }
 
-  config.tracing.http.extraHttpHeadersToCapture = config.tracing.http.extraHttpHeadersToCapture.map((
-    s // Node.js HTTP API turns all incoming HTTP headers into lowercase.
-  ) => s.toLowerCase());
+  config.tracing.http.extraHttpHeadersToCapture = config.tracing.http.extraHttpHeadersToCapture.map(
+    (
+      s // Node.js HTTP API turns all incoming HTTP headers into lowercase.
+    ) => s.toLowerCase()
+  );
 }
 
 /**
@@ -403,9 +425,11 @@ function normalizeDisabledTracers(config) {
     return;
   }
 
-  config.tracing.disabledTracers = config.tracing.disabledTracers.map((
-    s // We'll check for matches in an case-insensitive fashion
-  ) => s.toLowerCase());
+  config.tracing.disabledTracers = config.tracing.disabledTracers.map(
+    (
+      s // We'll check for matches in an case-insensitive fashion
+    ) => s.toLowerCase()
+  );
 }
 
 /**
@@ -453,6 +477,52 @@ function normalizeDisableW3cTraceCorrelation(config) {
   }
 
   config.tracing.disableW3cTraceCorrelation = defaults.tracing.disableW3cTraceCorrelation;
+}
+
+/**
+ * @param {InstanaConfig} config
+ */
+function normalizeTracingKafka(config) {
+  config.tracing.kafka = config.tracing.kafka || {};
+
+  if (config.tracing.kafka.traceCorrelation === false) {
+    logger.info('Kafka trace correlation has been disabled via config.');
+  } else if (
+    process.env['INSTANA_KAFKA_TRACE_CORRELATION'] != null &&
+    process.env['INSTANA_KAFKA_TRACE_CORRELATION'].toLowerCase() === 'false'
+  ) {
+    logger.info('Kafka trace correlation has been disabled via environment variable INSTANA_KAFKA_TRACE_CORRELATION.');
+    config.tracing.kafka.traceCorrelation = false;
+  } else {
+    config.tracing.kafka.traceCorrelation = defaults.tracing.kafka.traceCorrelation;
+  }
+
+  // @ts-ignore
+  config.tracing.kafka.headerFormat =
+    config.tracing.kafka.headerFormat || process.env.INSTANA_KAFKA_HEADER_FORMAT || defaults.tracing.kafka.headerFormat;
+  if (typeof config.tracing.kafka.headerFormat !== 'string') {
+    logger.warn(
+      `The value of config.tracing.kafka.headerFormat ("${config.tracing.kafka.headerFormat}") is not a string. ` +
+        `Assuming the default value "${defaults.tracing.kafka.headerFormat}".`
+    );
+    config.tracing.kafka.headerFormat = defaults.tracing.kafka.headerFormat;
+    return;
+  }
+  // @ts-ignore
+  config.tracing.kafka.headerFormat = config.tracing.kafka.headerFormat.toLowerCase();
+  if (validKafkaHeaderFormats.indexOf(config.tracing.kafka.headerFormat) < 0) {
+    logger.warn(
+      'The value of config.tracing.kafka.headerFormat (or the value of INSTANA_KAFKA_HEADER_FORMAT) ' +
+        `("${config.tracing.kafka.headerFormat}") is not a supported header format. Assuming the default ` +
+        `value "${defaults.tracing.kafka.headerFormat}".`
+    );
+    config.tracing.kafka.headerFormat = defaults.tracing.kafka.headerFormat;
+    return;
+  }
+
+  if (config.tracing.kafka.headerFormat !== defaults.tracing.kafka.headerFormat) {
+    logger.info(`Kafka trace correlation header format has been set to "${config.tracing.kafka.headerFormat}".`);
+  }
 }
 
 /**
