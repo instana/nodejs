@@ -64,7 +64,12 @@ let receivedMessages = [];
           throw new Error('Boom!');
         }
 
-        receivedMessages.push({ topic, key: message.key.toString(), value: message.value.toString() });
+        receivedMessages.push({
+          topic,
+          key: message.key.toString(),
+          value: message.value.toString(),
+          headerNames: Object.keys(message.headers)
+        });
 
         // simulating asynchronous follow up steps
         await delay(100);
@@ -114,7 +119,12 @@ let receivedMessages = [];
             throw new Error('Boom!');
           }
 
-          receivedMessages.push({ topic: batch.topic, key: message.key.toString(), value: message.value.toString() });
+          receivedMessages.push({
+            topic: batch.topic,
+            key: message.key.toString(),
+            value: message.value.toString(),
+            headerNames: Object.keys(message.headers)
+          });
 
           resolveOffset(message.offset);
         }

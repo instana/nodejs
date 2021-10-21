@@ -15,11 +15,18 @@ logger = require('../../../logger').getLogger('tracing/kafkajs', newLogger => {
   logger = newLogger;
 });
 
+let traceCorrelationEnabled = true;
+// Before we start phase 1 of the migration, 'binary' will be the default value. With phase 1, we will move to 'both',
+// with phase 2 it will no longer be configurable and will always use 'string'.
+let headerFormat = 'binary';
+
 let isActive = false;
 
-exports.init = function init() {
+exports.init = function init(config) {
   requireHook.onFileLoad(/\/kafkajs\/src\/producer\/messageProducer\.js/, instrumentProducer);
   requireHook.onFileLoad(/\/kafkajs\/src\/consumer\/runner\.js/, instrumentConsumer);
+  traceCorrelationEnabled = config.tracing.kafka.traceCorrelation;
+  headerFormat = config.tracing.kafka.headerFormat;
 };
 
 function instrumentProducer(createProducer) {
@@ -211,17 +218,35 @@ function instrumentedEachMessage(originalEachMessage) {
 
     let traceId;
     let parentSpanId;
-    if (message && message.headers && message.headers[constants.kafkaTraceContextHeaderName]) {
-      const traceContextBuffer = message.headers[constants.kafkaTraceContextHeaderName];
-      if (Buffer.isBuffer(traceContextBuffer) && traceContextBuffer.length === 24) {
-        const traceContext = tracingUtil.readTraceContextFromBuffer(traceContextBuffer);
-        traceId = traceContext.t;
-        parentSpanId = traceContext.s;
+    let level;
+    if (message && message.headers) {
+      // Look for the the newer string header format first.
+      if (message.headers[constants.kafkaTraceIdHeaderNameString]) {
+        traceId = String(message.headers[constants.kafkaTraceIdHeaderNameString]);
+      }
+      if (message.headers[constants.kafkaSpanIdHeaderNameString]) {
+        parentSpanId = String(message.headers[constants.kafkaSpanIdHeaderNameString]);
+      }
+      if (message.headers[constants.kafkaTraceLevelHeaderNameString]) {
+        level = String(message.headers[constants.kafkaTraceLevelHeaderNameString]);
+      }
+      // Only fall back to legacy binary trace correlation headers if no new header is present.
+      if (traceId == null && parentSpanId == null && level == null) {
+        // The newer string header format has not been found, fall back to legacy binary headers.
+        if (message.headers[constants.kafkaTraceContextHeaderNameBinary]) {
+          const traceContextBuffer = message.headers[constants.kafkaTraceContextHeaderNameBinary];
+          if (Buffer.isBuffer(traceContextBuffer) && traceContextBuffer.length === 24) {
+            const traceContext = tracingUtil.readTraceContextFromBuffer(traceContextBuffer);
+            traceId = traceContext.t;
+            parentSpanId = traceContext.s;
+          }
+        }
+        level = readTraceLevelBinary(message);
       }
     }
 
     return cls.ns.runAndReturn(() => {
-      if (isSuppressed(message)) {
+      if (isSuppressed(level)) {
         cls.setTracingLevel('0');
         return originalEachMessage.apply(ctx, originalArgs);
       }
@@ -270,14 +295,44 @@ function instrumentedEachBatch(originalEachBatch) {
 
     let traceId;
     let parentSpanId;
+    let level;
     if (batch.messages) {
+      // Look for the the newer string header format first.
       for (let msgIdx = 0; msgIdx < batch.messages.length; msgIdx++) {
-        if (batch.messages[msgIdx].headers && batch.messages[msgIdx].headers[constants.kafkaTraceContextHeaderName]) {
-          const traceContextBuffer = batch.messages[msgIdx].headers[constants.kafkaTraceContextHeaderName];
-          if (Buffer.isBuffer(traceContextBuffer) && traceContextBuffer.length === 24) {
-            const traceContext = tracingUtil.readTraceContextFromBuffer(traceContextBuffer);
-            traceId = traceContext.t;
-            parentSpanId = traceContext.s;
+        if (batch.messages[msgIdx].headers && batch.messages[msgIdx].headers[constants.kafkaTraceIdHeaderNameString]) {
+          traceId = String(batch.messages[msgIdx].headers[constants.kafkaTraceIdHeaderNameString]);
+        }
+        if (batch.messages[msgIdx].headers && batch.messages[msgIdx].headers[constants.kafkaSpanIdHeaderNameString]) {
+          parentSpanId = String(batch.messages[msgIdx].headers[constants.kafkaSpanIdHeaderNameString]);
+        }
+        if (
+          batch.messages[msgIdx].headers &&
+          batch.messages[msgIdx].headers[constants.kafkaTraceLevelHeaderNameString]
+        ) {
+          level = String(batch.messages[msgIdx].headers[constants.kafkaTraceLevelHeaderNameString]);
+        }
+        if (traceId != null || parentSpanId != null || level != null) {
+          // Stop checking further batch messages once we have found a message with Instana headers.
+          break;
+        }
+      }
+
+      if (traceId == null && parentSpanId == null && level == null) {
+        // The newer string header format has not been found, fall back to legacy binary headers.
+        for (let msgIdx = 0; msgIdx < batch.messages.length; msgIdx++) {
+          if (
+            batch.messages[msgIdx].headers &&
+            batch.messages[msgIdx].headers[constants.kafkaTraceContextHeaderNameBinary]
+          ) {
+            const traceContextBuffer = batch.messages[msgIdx].headers[constants.kafkaTraceContextHeaderNameBinary];
+            if (Buffer.isBuffer(traceContextBuffer) && traceContextBuffer.length === 24) {
+              const traceContext = tracingUtil.readTraceContextFromBuffer(traceContextBuffer);
+              traceId = traceContext.t;
+              parentSpanId = traceContext.s;
+            }
+          }
+          level = readTraceLevelBinary(batch.messages[msgIdx]);
+          if (traceId != null || parentSpanId != null || level != null) {
             break;
           }
         }
@@ -285,7 +340,7 @@ function instrumentedEachBatch(originalEachBatch) {
     }
 
     return cls.ns.runAndReturn(() => {
-      if (batch.messages && isSuppressed(batch.messages[0])) {
+      if (batch.messages && isSuppressed(level)) {
         cls.setTracingLevel('0');
         return originalEachBatch.apply(ctx, originalArgs);
       }
@@ -313,44 +368,116 @@ function instrumentedEachBatch(originalEachBatch) {
   };
 }
 
-function isSuppressed(message) {
-  if (message && message.headers && message.headers[constants.kafkaTraceLevelHeaderName]) {
-    const traceLevelBuffer = message.headers[constants.kafkaTraceLevelHeaderName];
-    return Buffer.isBuffer(traceLevelBuffer) && traceLevelBuffer.length >= 1 && traceLevelBuffer.readInt8() === 0;
+function isSuppressed(level) {
+  return level === '0';
+}
+
+function readTraceLevelBinary(message) {
+  if (message.headers[constants.kafkaTraceLevelHeaderNameBinary]) {
+    const traceLevelBuffer = message.headers[constants.kafkaTraceLevelHeaderNameBinary];
+    if (Buffer.isBuffer(traceLevelBuffer) && traceLevelBuffer.length >= 1) {
+      return String(traceLevelBuffer.readInt8());
+    }
   }
-  return false;
+  return '1';
 }
 
 function addTraceContextHeaderToAllMessages(messages, span) {
+  if (!traceCorrelationEnabled) {
+    return;
+  }
+  switch (headerFormat) {
+    case 'binary':
+      addTraceContextHeaderToAllMessagesBinary(messages, span);
+      break;
+    case 'string':
+      addTraceContextHeaderToAllMessagesString(messages, span);
+      break;
+    case 'both':
+    // fall through (both is the default)
+    default:
+      addTraceContextHeaderToAllMessagesBinary(messages, span);
+      addTraceContextHeaderToAllMessagesString(messages, span);
+  }
+}
+
+function addTraceContextHeaderToAllMessagesBinary(messages, span) {
   if (Array.isArray(messages)) {
     for (let msgIdx = 0; msgIdx < messages.length; msgIdx++) {
       if (messages[msgIdx].headers == null) {
-        // messages[msgIdx].headers = {
-        //   [constants.kafkaTraceContextHeaderName]: tracingUtil.renderTraceContextToBuffer(span)
-        //   [constants.kafkaTraceLevelHeaderName]: 1
-        // };
-        messages[msgIdx].headers = {};
-        messages[msgIdx].headers[constants.kafkaTraceContextHeaderName] = tracingUtil.renderTraceContextToBuffer(span);
-        messages[msgIdx].headers[constants.kafkaTraceLevelHeaderName] = constants.kafkaTraceLevelValueInherit;
+        messages[msgIdx].headers = {
+          [constants.kafkaTraceContextHeaderNameBinary]: tracingUtil.renderTraceContextToBuffer(span),
+          [constants.kafkaTraceLevelHeaderNameBinary]: constants.kafkaTraceLevelBinaryValueInherit
+        };
       } else if (messages[msgIdx].headers && typeof messages[msgIdx].headers === 'object') {
-        messages[msgIdx].headers[constants.kafkaTraceContextHeaderName] = tracingUtil.renderTraceContextToBuffer(span);
-        messages[msgIdx].headers[constants.kafkaTraceLevelHeaderName] = constants.kafkaTraceLevelValueInherit;
+        messages[msgIdx].headers[constants.kafkaTraceContextHeaderNameBinary] =
+          tracingUtil.renderTraceContextToBuffer(span);
+        messages[msgIdx].headers[constants.kafkaTraceLevelHeaderNameBinary] =
+          constants.kafkaTraceLevelBinaryValueInherit;
+      }
+    }
+  }
+}
+
+function addTraceContextHeaderToAllMessagesString(messages, span) {
+  if (Array.isArray(messages)) {
+    for (let msgIdx = 0; msgIdx < messages.length; msgIdx++) {
+      if (messages[msgIdx].headers == null) {
+        messages[msgIdx].headers = {
+          [constants.kafkaTraceIdHeaderNameString]: span.t,
+          [constants.kafkaSpanIdHeaderNameString]: span.s
+        };
+      } else if (messages[msgIdx].headers && typeof messages[msgIdx].headers === 'object') {
+        messages[msgIdx].headers[constants.kafkaTraceIdHeaderNameString] = span.t;
+        messages[msgIdx].headers[constants.kafkaSpanIdHeaderNameString] = span.s;
       }
     }
   }
 }
 
 function addTraceLevelSuppressionToAllMessages(messages) {
+  if (!traceCorrelationEnabled) {
+    return;
+  }
+  switch (headerFormat) {
+    case 'binary':
+      addTraceLevelSuppressionToAllMessagesBinary(messages);
+      break;
+    case 'string':
+      addTraceLevelSuppressionToAllMessagesString(messages);
+      break;
+    case 'both':
+    // fall through (both is the default)
+    default:
+      addTraceLevelSuppressionToAllMessagesBinary(messages);
+      addTraceLevelSuppressionToAllMessagesString(messages);
+  }
+}
+
+function addTraceLevelSuppressionToAllMessagesBinary(messages) {
   if (Array.isArray(messages)) {
     for (let msgIdx = 0; msgIdx < messages.length; msgIdx++) {
       if (messages[msgIdx].headers == null) {
-        // messages[msgIdx].headers = {
-        //   [constants.kafkaTraceLevelHeaderName]: constants.kafkaTraceLevelValueSuppressed
-        // };
-        messages[msgIdx].headers = {};
-        messages[msgIdx].headers[constants.kafkaTraceLevelHeaderName] = constants.kafkaTraceLevelValueSuppressed;
+        messages[msgIdx].headers = {
+          [constants.kafkaTraceLevelHeaderNameBinary]: constants.kafkaTraceLevelBinaryValueSuppressed
+        };
       } else if (messages[msgIdx].headers && typeof messages[msgIdx].headers === 'object') {
-        messages[msgIdx].headers[constants.kafkaTraceLevelHeaderName] = constants.kafkaTraceLevelValueSuppressed;
+        messages[msgIdx].headers[constants.kafkaTraceLevelHeaderNameBinary] =
+          constants.kafkaTraceLevelBinaryValueSuppressed;
+      }
+    }
+  }
+}
+
+function addTraceLevelSuppressionToAllMessagesString(messages) {
+  if (Array.isArray(messages)) {
+    for (let msgIdx = 0; msgIdx < messages.length; msgIdx++) {
+      if (messages[msgIdx].headers == null) {
+        messages[msgIdx].headers = {
+          [constants.kafkaTraceLevelHeaderNameString]: '0'
+        };
+      } else if (messages[msgIdx].headers && typeof messages[msgIdx].headers === 'object') {
+        messages[msgIdx].headers[constants.kafkaTraceLevelHeaderNameString] = '0';
       }
     }
   }

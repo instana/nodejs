@@ -1,8 +1,11 @@
 # Changelog
 
+## Unreleased
+- Configurable Kafka trace correlation (enabled/disabled) and correlation header format (string, binary, both).
+
 ## 1.136.0
-- An issue event is sent if the application uses an EOL (end of life) version of Node.js. Applicable only for non serverless environments
-- Manual spans creation handles tags that are passed as non extensible objetcts - when `Object.freeze` or `Object.preventExtensions` is applied to the tags
+- An issue event is sent if the application uses an EOL (end of life) version of Node.js. Applicable only for non serverless environments.
+- Manual spans creation handles tags that are passed as non extensible objects - when `Object.freeze` or `Object.preventExtensions` is applied to the tags.
 - [AWS SDKv2] Instrumentation of SNS
 - Remove dependency to node-gyp. This also removes the opt-in feature of rebuilding native add-ons via node-gyp. This capability was off by default in previous releases, it could be enabled via `INSTANA_REBUILD_NATIVE_ADDONS_ON_DEMAND=true`. This is no longer available, the environment variable will be ignored now.
 - Fix: Capture HTTP status codes for GraphQL requests over HTTP.

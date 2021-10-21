@@ -59,6 +59,7 @@ services:
       - "zookeeper"
     environment:
       KAFKA_ADVERTISED_HOST_NAME: 127.0.0.1
+      KAFKA_ADVERTISED_PORT: 9092
       KAFKA_CREATE_TOPICS: "test:1:1,test-topic-1:1:1,test-topic-2:1:1,test-batch-topic-1:1:1,test-batch-topic-2:1:1"
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
     volumes:

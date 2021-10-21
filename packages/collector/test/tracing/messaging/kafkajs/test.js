@@ -11,9 +11,9 @@ const semver = require('semver');
 
 const constants = require('@instana/core').tracing.constants;
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
-const config = require('../../../../../core/test/config');
-const delay = require('../../../../../core/test/test_util/delay');
-const testUtils = require('../../../../../core/test/test_util');
+const config = require('@instana/core/test/config');
+const delay = require('@instana/core/test/test_util/delay');
+const { expectAtLeastOneMatching, getSpansByName, retry } = require('@instana/core/test/test_util');
 const ProcessControls = require('../../../test_util/ProcessControls');
 const globalAgent = require('../../../globalAgent');
 
@@ -34,87 +34,191 @@ mochaSuiteFn('tracing/kafkajs', function () {
   let consumerControls;
 
   describe('tracing enabled ', function () {
-    producerControls = new ProcessControls({
-      appPath: path.join(__dirname, 'producer'),
-      port: 3216,
-      useGlobalAgent: true
-    });
     consumerControls = new ProcessControls({
       appPath: path.join(__dirname, 'consumer'),
       useGlobalAgent: true
     });
-    ProcessControls.setUpHooks(producerControls, consumerControls);
+    ProcessControls.setUpHooks(consumerControls);
 
-    beforeEach(() => resetMessages(consumerControls));
-    afterEach(() => resetMessages(consumerControls));
-
-    [false, 'sender', 'receiver'].forEach(error =>
-      [false, true].forEach(useSendBatch =>
-        [false, true].forEach(useEachBatch => registerTestSuite.bind(this)(error, useSendBatch, useEachBatch))
-      )
-    );
-    // registerTestSuite.bind(this)(false, false, false);
-
-    function registerTestSuite(error, useSendBatch, useEachBatch) {
-      describe(`kafkajs (${
-        useSendBatch ? 'sendBatch' : 'sendMessage'
-      } => ${useEachBatch ? 'eachBatch' : 'eachMessage'}, error: ${error})`, () => {
-        it(`must trace sending and receiving and keep trace continuity (${
-          useSendBatch ? 'sendBatch' : 'sendMessage'
-        } => ${useEachBatch ? 'eachBatch' : 'eachMessage'}, error: ${error})`, () => {
-          const parameters = { error, useSendBatch, useEachBatch };
-          return send({
-            key: 'someKey',
-            value: 'someMessage',
-            error,
-            useSendBatch,
-            useEachBatch
-          }).then(() =>
-            testUtils.retry(() =>
-              getMessages(consumerControls)
-                .then(messages => {
-                  checkMessages(messages, parameters);
-                  return agentControls.getSpans();
-                })
-                .then(spans => {
-                  const httpEntry = verifyHttpEntry(spans);
-                  verifyKafkaExits(spans, httpEntry, parameters);
-                  verifyFollowUpHttpExit(spans, httpEntry);
-                })
-            )
-          );
+    ['binary', 'string', 'both'].forEach(headerFormat => {
+      describe(`header format: ${headerFormat}`, function () {
+        producerControls = new ProcessControls({
+          appPath: path.join(__dirname, 'producer'),
+          port: 3216,
+          useGlobalAgent: true,
+          env: {
+            INSTANA_KAFKA_HEADER_FORMAT: headerFormat
+          }
         });
+        ProcessControls.setUpHooks(producerControls);
 
-        if (error === false) {
-          // we do not need dedicated suppression tests for error conditions
-          it('must not trace when suppressed', () => {
-            const parameters = { error, useSendBatch, useEachBatch };
+        beforeEach(() => resetMessages(consumerControls));
+        afterEach(() => resetMessages(consumerControls));
 
+        [false, 'sender', 'receiver'].forEach(error =>
+          [false, true].forEach(useSendBatch =>
+            [false, true].forEach(useEachBatch =>
+              registerTestSuite.bind(this)({ headerFormat, error, useSendBatch, useEachBatch })
+            )
+          )
+        );
+      });
+    });
+
+    function registerTestSuite({ headerFormat, error, useSendBatch, useEachBatch }) {
+      describe(
+        `kafkajs (header format: ${headerFormat}, ${useSendBatch ? 'sendBatch' : 'sendMessage'} => ` +
+          `${useEachBatch ? 'eachBatch' : 'eachMessage'}, error: ${error})`,
+        () => {
+          it(`must trace sending and receiving and keep trace continuity (header format: ${headerFormat}, ${
+            useSendBatch ? 'sendBatch' : 'sendMessage'
+          } => ${useEachBatch ? 'eachBatch' : 'eachMessage'}, error: ${error})`, () => {
+            const parameters = {
+              headerFormat,
+              error,
+              useSendBatch,
+              useEachBatch,
+              suppressed: false
+            };
             return send({
               key: 'someKey',
               value: 'someMessage',
               error,
               useSendBatch,
-              useEachBatch,
-              suppressTracing: true
+              useEachBatch
             }).then(() =>
-              testUtils.retry(() =>
+              retry(() =>
                 getMessages(consumerControls)
                   .then(messages => {
                     checkMessages(messages, parameters);
-                    return delay(config.getTestTimeout() / 4);
+                    return agentControls.getSpans();
                   })
-                  .then(() => agentControls.getSpans())
-                  .then(spans => expect(spans).to.have.lengthOf(0))
+                  .then(spans => {
+                    const httpEntry = verifyHttpEntry(spans);
+                    verifyKafkaExits(spans, httpEntry, parameters);
+                    verifyFollowUpHttpExit(spans, httpEntry);
+                  })
               )
             );
           });
+
+          if (error === false) {
+            // we do not need dedicated suppression tests for error conditions
+            it(`must not trace when suppressed (header format: ${headerFormat})`, () => {
+              const parameters = { headerFormat, error, useSendBatch, useEachBatch, suppressed: true };
+              return send({
+                key: 'someKey',
+                value: 'someMessage',
+                error,
+                useSendBatch,
+                useEachBatch,
+                suppressTracing: true
+              }).then(() =>
+                retry(() =>
+                  getMessages(consumerControls)
+                    .then(messages => {
+                      checkMessages(messages, parameters);
+                      return delay(config.getTestTimeout() / 4);
+                    })
+                    .then(() => agentControls.getSpans())
+                    .then(spans => expect(spans).to.have.lengthOf(0))
+                )
+              );
+            });
+          }
         }
+      );
+    }
+  });
+
+  describe('tracing enabled, but trace correlation disabled', function () {
+    consumerControls = new ProcessControls({
+      appPath: path.join(__dirname, 'consumer'),
+      useGlobalAgent: true
+    });
+    ProcessControls.setUpHooks(consumerControls);
+
+    producerControls = new ProcessControls({
+      appPath: path.join(__dirname, 'producer'),
+      port: 3216,
+      useGlobalAgent: true,
+      env: {
+        INSTANA_KAFKA_TRACE_CORRELATION: 'false'
+      }
+    });
+    ProcessControls.setUpHooks(producerControls);
+
+    beforeEach(() => resetMessages(consumerControls));
+    afterEach(() => resetMessages(consumerControls));
+
+    [false, true].forEach(useSendBatch =>
+      [false, true].forEach(useEachBatch => registerTestSuite.bind(this)({ useSendBatch, useEachBatch }))
+    );
+
+    function registerTestSuite({ useSendBatch, useEachBatch }) {
+      it(`must trace sending and receiving but will not keep trace continuity (${
+        useSendBatch ? 'sendBatch' : 'sendMessage'
+      } => ${useEachBatch ? 'eachBatch' : 'eachMessage'})`, () => {
+        const parameters = {
+          headerFormat: 'correlation-disabled',
+          useSendBatch,
+          useEachBatch,
+          suppressed: false
+        };
+        return send({
+          key: 'someKey',
+          value: 'someMessage',
+          useSendBatch,
+          useEachBatch
+        }).then(() =>
+          retry(() =>
+            getMessages(consumerControls)
+              .then(messages => {
+                checkMessages(messages, parameters);
+                return agentControls.getSpans();
+              })
+              .then(spans => {
+                const httpEntry = verifyHttpEntry(spans);
+                verifyKafkaExits(spans, httpEntry, parameters);
+                verifyFollowUpHttpExit(spans, httpEntry);
+              })
+          )
+        );
+      });
+
+      it('must not trace Kafka exits when suppressed (but will trace Kafka entries)', () => {
+        const parameters = { headerFormat: 'correlation-disabled', useSendBatch, useEachBatch, suppressed: true };
+        return send({
+          key: 'someKey',
+          value: 'someMessage',
+          useSendBatch,
+          useEachBatch,
+          suppressTracing: true
+        }).then(() =>
+          retry(() =>
+            getMessages(consumerControls)
+              .then(messages => {
+                checkMessages(messages, parameters);
+                return agentControls.getSpans();
+              })
+              .then(() => agentControls.getSpans())
+              .then(spans => {
+                // There should be no HTTP entries and also no Kafka exits.
+                expect(getSpansByName(spans, 'node.http.server')).to.be.empty;
+                expect(getSpansByName(spans, 'kafka').filter(span => span.k === 2)).to.be.empty;
+
+                // However, since we disabled Kafka trace correlation headers, the suppression flag is not added to
+                // Kafka message, thus, each incoming Kafka message will start a new trace with a Kafka entry as its
+                // root span.
+                verifyKafkaRootEntries(spans, parameters);
+              })
+          )
+        );
       });
     }
   });
 
-  describe('kafkajs disabled', () => {
+  describe('tracing disabled', () => {
     producerControls = new ProcessControls({
       appPath: path.join(__dirname, 'producer'),
       port: 3216,
@@ -132,7 +236,12 @@ mochaSuiteFn('tracing/kafkajs', function () {
     afterEach(() => resetMessages(consumerControls));
 
     it('must not trace when disabled', () => {
-      const parameters = { error: false, useSendBatch: false, useEachBatch: false };
+      const parameters = {
+        headerFormat: 'tracing-disabled',
+        error: false,
+        useSendBatch: false,
+        useEachBatch: false
+      };
 
       return send({
         key: 'someKey',
@@ -141,7 +250,7 @@ mochaSuiteFn('tracing/kafkajs', function () {
         useSendBatch: false,
         useEachBatch: false
       }).then(() =>
-        testUtils.retry(() =>
+        retry(() =>
           getMessages(consumerControls)
             .then(messages => {
               checkMessages(messages, parameters);
@@ -187,7 +296,7 @@ mochaSuiteFn('tracing/kafkajs', function () {
     });
   }
 
-  function checkMessages(messages, { error, useSendBatch, useEachBatch }) {
+  function checkMessages(messages, { headerFormat, error, useSendBatch, useEachBatch, suppressed }) {
     expect(messages).to.be.an('array');
     if (error) {
       expect(messages).to.be.empty;
@@ -206,6 +315,7 @@ mochaSuiteFn('tracing/kafkajs', function () {
     for (let i = 0; i < numberOfMessages; i++) {
       expect(messages[i].key).to.equal('someKey');
       expect(messages[i].value).to.equal('someMessage');
+      verifyExpectedHeadersHaveBeenUsed(messages[i], { headerFormat, suppressed });
       msgsPerTopic[messages[i].topic]++;
     }
     expect(msgsPerTopic).to.deep.equal({
@@ -214,12 +324,61 @@ mochaSuiteFn('tracing/kafkajs', function () {
     });
   }
 
+  function verifyExpectedHeadersHaveBeenUsed(message, { headerFormat, suppressed }) {
+    switch (headerFormat) {
+      case 'binary':
+        if (!suppressed) {
+          expect(message.headerNames.length).to.equal(2);
+          expect(message.headerNames).to.include('X_INSTANA_C');
+          expect(message.headerNames).to.include('X_INSTANA_L');
+        } else {
+          expect(message.headerNames.length).to.equal(1);
+          expect(message.headerNames).to.include('X_INSTANA_L');
+        }
+        break;
+      case 'string':
+        if (!suppressed) {
+          expect(message.headerNames.length).to.equal(2);
+          expect(message.headerNames).to.include('X_INSTANA_T');
+          expect(message.headerNames).to.include('X_INSTANA_S');
+        } else {
+          expect(message.headerNames.length).to.equal(1);
+          expect(message.headerNames).to.include('X_INSTANA_L_S');
+        }
+        break;
+      case 'both':
+        if (!suppressed) {
+          expect(message.headerNames.length).to.equal(4);
+          expect(message.headerNames).to.include('X_INSTANA_C');
+          expect(message.headerNames).to.include('X_INSTANA_L');
+          expect(message.headerNames).to.include('X_INSTANA_T');
+          expect(message.headerNames).to.include('X_INSTANA_S');
+        } else {
+          expect(message.headerNames.length).to.equal(2);
+          expect(message.headerNames).to.include('X_INSTANA_L');
+          expect(message.headerNames).to.include('X_INSTANA_L_S');
+        }
+        break;
+      case 'tracing-disabled':
+        // Not an actual header format, just a way for the test to specify that tracing is disabled and no headers
+        // should be expected.
+        expect(message.headerNames).to.be.empty;
+        break;
+      case 'correlation-disabled':
+        // Not an actual header format, just a way for the test to specify that trace correlation headers are disabled
+        // and no headers should be expected.
+        expect(message.headerNames).to.be.empty;
+        break;
+
+      default:
+        throw new Error(`Invalid header format: ${headerFormat}`);
+    }
+  }
+
   function verifyHttpEntry(spans) {
-    return testUtils.expectAtLeastOneMatching(spans, [
+    return expectAtLeastOneMatching(spans, [
       span => expect(span.n).to.equal('node.http.server'),
       span => expect(span.f.h).to.equal('agent-stub-uuid'),
-      span => expect(span.async).to.not.exist,
-      span => expect(span.error).to.not.exist,
       span => expect(span.ec).to.equal(0)
     ]);
   }
@@ -230,35 +389,41 @@ mochaSuiteFn('tracing/kafkajs', function () {
 
     const expectedTopics = useSendBatch ? `${topicPrefix}-1,${topicPrefix}-2` : `${topicPrefix}-1`;
     const expectedBatchCount = useSendBatch ? 3 : 2;
-    const kafkaExit = testUtils.expectAtLeastOneMatching(spans, span => {
-      expect(span.t).to.equal(httpEntry.t);
-      expect(span.p).to.equal(httpEntry.s);
-      expect(span.n).to.equal('kafka');
-      expect(span.k).to.equal(constants.EXIT);
-      expect(span.f.h).to.equal('agent-stub-uuid');
-      expect(span.async).to.not.exist;
-      if (error === 'sender') {
-        expect(span.ec).to.equal(1);
-        expect(span.error).to.not.exist;
-        expect(span.data.kafka.error).to.contain('Invalid message without value for topic');
-      } else {
-        expect(span.ec).to.equal(0);
-        expect(span.error).to.not.exist;
-        expect(span.data.kafka.error).to.not.exist;
-        // We always send 2 messages for topic 1 (also via the normal send method), no matter if useSendBatch is true.
-        // With useSendBatch === true, we use a different API which allows sending messages to multiple topics
-        // at once (see below).
-      }
-      expect(span.data.kafka.access).to.equal('send');
-      expect(span.data.kafka.service).to.equal(expectedTopics);
-      expect(span.b).to.deep.equal({ s: expectedBatchCount });
-    });
+    let expectations = [
+      span => expect(span.t).to.equal(httpEntry.t),
+      span => expect(span.p).to.equal(httpEntry.s),
+      span => expect(span.n).to.equal('kafka'),
+      span => expect(span.k).to.equal(constants.EXIT),
+      span => expect(span.f.h).to.equal('agent-stub-uuid')
+    ];
+    if (error === 'sender') {
+      expectations = expectations.concat([
+        span => expect(span.ec).to.equal(1),
+        span => expect(span.data.kafka.error).to.contain('Invalid message without value for topic')
+      ]);
+    } else {
+      expectations = expectations.concat([
+        span => expect(span.ec).to.equal(0),
+        span => expect(span.data.kafka.error).to.not.exist
+      ]);
+    }
+
+    // We always send 2 messages for topic 1 (also via the normal send method), no matter if useSendBatch is true.
+    // With useSendBatch === true, we use a different API which allows sending messages to multiple topics
+    // at once (see below).
+    expectations = expectations.concat([
+      span => expect(span.data.kafka.access).to.equal('send'),
+      span => expect(span.data.kafka.service).to.equal(expectedTopics),
+      span => expect(span.b).to.deep.equal({ s: expectedBatchCount })
+    ]);
+
+    const kafkaExit = expectAtLeastOneMatching(spans, expectations);
     verifyKafkaEntries(spans, kafkaExit, parameters);
   }
 
   function verifyFollowUpHttpExit(spans, entry) {
     // verify that subsequent calls are correctly traced after creating a kafka entry/exit
-    testUtils.expectAtLeastOneMatching(spans, [
+    expectAtLeastOneMatching(spans, [
       span => expect(span.n).to.equal('node.http.client'),
       span => expect(span.t).to.equal(entry.t),
       span => expect(span.p).to.equal(entry.s)
@@ -266,90 +431,173 @@ mochaSuiteFn('tracing/kafkajs', function () {
   }
 
   function verifyKafkaEntries(spans, parentKafkaExit, parameters) {
-    const { error, useSendBatch, useEachBatch } = parameters;
+    const { headerFormat, error, useSendBatch, useEachBatch } = parameters;
     if (error === 'sender') {
       return;
     }
     const topicPrefix = getTopicPrefix(useEachBatch);
-    const firstKafkaEntry = testUtils.expectAtLeastOneMatching(spans, span => {
-      expect(span.t).to.equal(parentKafkaExit.t);
-      expect(span.p).to.equal(parentKafkaExit.s);
-      expect(span.n).to.equal('kafka');
-      expect(span.k).to.equal(constants.ENTRY);
-      expect(span.f.h).to.equal('agent-stub-uuid');
-      expect(span.async).to.not.exist;
-      expect(span.data.kafka.access).to.equal('consume');
-      expect(span.data.kafka.service).to.equal(`${topicPrefix}-1`);
-      if (error === 'receiver') {
-        expect(span.ec).to.equal(1);
-        expect(span.error).to.not.exist;
-      } else {
-        expect(span.d).to.be.greaterThan(99);
-        expect(span.ec).to.equal(0);
-        expect(span.error).to.not.exist;
-      }
-      if (useEachBatch) {
-        expect(span.b).to.deep.equal({ s: 2 });
-      } else {
-        expect(span.b).to.not.exist;
-      }
-    });
+    let expectationsFirstKafkaEntry = [
+      span => expect(span.n).to.equal('kafka'),
+      span => expect(span.k).to.equal(constants.ENTRY),
+      span => expect(span.f.h).to.equal('agent-stub-uuid'),
+      span => expect(span.data.kafka.access).to.equal('consume'),
+      span => expect(span.data.kafka.service).to.equal(`${topicPrefix}-1`)
+    ];
+    expectationsFirstKafkaEntry = addParentChildExpectation(expectationsFirstKafkaEntry, parentKafkaExit, headerFormat);
+    if (error === 'receiver') {
+      expectationsFirstKafkaEntry.push(span => expect(span.ec).to.equal(1));
+    } else {
+      expectationsFirstKafkaEntry = expectationsFirstKafkaEntry.concat([
+        span => expect(span.d).to.be.greaterThan(99),
+        span => expect(span.ec).to.equal(0)
+      ]);
+    }
+    if (useEachBatch) {
+      expectationsFirstKafkaEntry.push(span => expect(span.b).to.deep.equal({ s: 2 }));
+    } else {
+      expectationsFirstKafkaEntry.push(span => expect(span.b).to.not.exist);
+    }
+
+    const firstKafkaEntry = expectAtLeastOneMatching(spans, expectationsFirstKafkaEntry);
     if (error !== 'receiver') {
       verifyFollowUpHttpExit(spans, firstKafkaEntry);
     }
 
     if (!useEachBatch) {
-      const secondKafkaEntry = testUtils.expectAtLeastOneMatching(spans, span => {
-        expect(span.t).to.equal(parentKafkaExit.t);
-        expect(span.p).to.equal(parentKafkaExit.s);
-        expect(span.n).to.equal('kafka');
-        expect(span.s).to.not.equal(firstKafkaEntry.s); // we expect two _different_ entry spans
-        expect(span.k).to.equal(constants.ENTRY);
-
-        expect(span.f.h).to.equal('agent-stub-uuid');
-        expect(span.async).to.not.exist;
-        expect(span.data.kafka.access).to.equal('consume');
-        expect(span.data.kafka.service).to.equal(`${topicPrefix}-1`);
-        expect(span.b).to.not.exist;
-        if (error === 'receiver') {
-          expect(span.ec).to.equal(1);
-          expect(span.error).to.not.exist;
-        } else {
-          expect(span.d).to.be.greaterThan(99);
-          expect(span.ec).to.equal(0);
-          expect(span.error).to.not.exist;
-        }
-      });
+      let expectationsSecondKafkaEntry = [
+        span => expect(span.n).to.equal('kafka'),
+        span => expect(span.s).to.not.equal(firstKafkaEntry.s), // we expect two _different_ entry spans
+        span => expect(span.k).to.equal(constants.ENTRY),
+        span => expect(span.f.h).to.equal('agent-stub-uuid'),
+        span => expect(span.data.kafka.access).to.equal('consume'),
+        span => expect(span.data.kafka.service).to.equal(`${topicPrefix}-1`),
+        span => expect(span.b).to.not.exist
+      ];
+      expectationsSecondKafkaEntry = addParentChildExpectation(
+        expectationsSecondKafkaEntry,
+        parentKafkaExit,
+        headerFormat
+      );
+      if (error === 'receiver') {
+        expectationsSecondKafkaEntry.push(span => expect(span.ec).to.equal(1));
+      } else {
+        expectationsSecondKafkaEntry = expectationsSecondKafkaEntry.concat([
+          span => expect(span.d).to.be.greaterThan(99),
+          span => expect(span.ec).to.equal(0)
+        ]);
+      }
+      const secondKafkaEntry = expectAtLeastOneMatching(spans, expectationsSecondKafkaEntry);
       if (error !== 'receiver') {
         verifyFollowUpHttpExit(spans, secondKafkaEntry);
       }
     }
 
     if (useSendBatch) {
-      const thirdKafkaEntry = testUtils.expectAtLeastOneMatching(spans, span => {
-        expect(span.t).to.equal(parentKafkaExit.t);
-        expect(span.p).to.equal(parentKafkaExit.s);
-        expect(span.n).to.equal('kafka');
-        expect(span.k).to.equal(constants.ENTRY);
-        expect(span.f.h).to.equal('agent-stub-uuid');
-        expect(span.async).to.not.exist;
-        expect(span.data.kafka.access).to.equal('consume');
-        expect(span.data.kafka.service).to.equal(`${topicPrefix}-2`);
-        if (error === 'receiver') {
-          expect(span.ec).to.equal(1);
-          expect(span.error).to.not.exist;
-        } else {
-          expect(span.d).to.be.greaterThan(99);
-          expect(span.ec).to.equal(0);
-          expect(span.error).to.not.exist;
-        }
-        if (useEachBatch) {
-          expect(span.b).to.deep.equal({ s: 1 });
-        } else {
-          expect(span.b).to.not.exist;
-        }
-      });
+      let expectationsThirdKafkaEntry = [
+        span => expect(span.n).to.equal('kafka'),
+        span => expect(span.k).to.equal(constants.ENTRY),
+        span => expect(span.f.h).to.equal('agent-stub-uuid'),
+        span => expect(span.data.kafka.access).to.equal('consume'),
+        span => expect(span.data.kafka.service).to.equal(`${topicPrefix}-2`)
+      ];
+      expectationsThirdKafkaEntry = addParentChildExpectation(
+        expectationsThirdKafkaEntry,
+        parentKafkaExit,
+        headerFormat
+      );
+      if (error === 'receiver') {
+        expectationsThirdKafkaEntry.push(span => expect(span.ec).to.equal(1));
+      } else {
+        expectationsThirdKafkaEntry = expectationsThirdKafkaEntry.concat([
+          span => expect(span.d).to.be.greaterThan(99),
+          span => expect(span.ec).to.equal(0)
+        ]);
+      }
+      if (useEachBatch) {
+        expectationsThirdKafkaEntry.push(span => expect(span.b).to.deep.equal({ s: 1 }));
+      } else {
+        expectationsThirdKafkaEntry.push(span => expect(span.b).to.not.exist);
+      }
+      const thirdKafkaEntry = expectAtLeastOneMatching(spans, expectationsThirdKafkaEntry);
       if (error !== 'receiver') {
+        verifyFollowUpHttpExit(spans, thirdKafkaEntry);
+      }
+    }
+  }
+
+  function addParentChildExpectation(expectations, parentKafkaExit, headerFormat) {
+    if (headerFormat !== 'correlation-disabled') {
+      // With correlation headers enabled (default), Kafka entries will be the child span of a Kafka exit.
+      expectations = expectations.concat([
+        span => expect(span.t).to.equal(parentKafkaExit.t),
+        span => expect(span.p).to.equal(parentKafkaExit.s)
+      ]);
+    } else {
+      // With correlation headers disabled every Kafka entry will be the root span of a new trace.
+      expectations = expectations.concat([
+        span => expect(span.t).to.not.equal(parentKafkaExit.t),
+        span => expect(span.p).to.not.exist
+      ]);
+    }
+    return expectations;
+  }
+
+  function verifyKafkaRootEntries(spans, parameters) {
+    const { useSendBatch, useEachBatch } = parameters;
+    const topicPrefix = getTopicPrefix(useEachBatch);
+    const expectationsFirstKafkaEntry = [
+      span => expect(span.t).to.be.a('string'),
+      span => expect(span.p).to.not.exist,
+      span => expect(span.n).to.equal('kafka'),
+      span => expect(span.k).to.equal(constants.ENTRY),
+      span => expect(span.f.h).to.equal('agent-stub-uuid'),
+      span => expect(span.data.kafka.access).to.equal('consume'),
+      span => expect(span.data.kafka.service).to.equal(`${topicPrefix}-1`),
+      span => expect(span.d).to.be.greaterThan(99),
+      span => expect(span.ec).to.equal(0)
+    ];
+    if (useEachBatch) {
+      expectationsFirstKafkaEntry.push(span => expect(span.b).to.deep.equal({ s: 2 }));
+    } else {
+      expectationsFirstKafkaEntry.push(span => expect(span.b).to.not.exist);
+    }
+    const firstKafkaEntry = expectAtLeastOneMatching(spans, expectationsFirstKafkaEntry);
+    verifyFollowUpHttpExit(spans, firstKafkaEntry);
+
+    if (!useEachBatch) {
+      const secondKafkaEntry = expectAtLeastOneMatching(spans, [
+        span => expect(span.t).to.be.a('string'),
+        span => expect(span.p).to.not.exist,
+        span => expect(span.n).to.equal('kafka'),
+        span => expect(span.s).to.not.equal(firstKafkaEntry.s), // we expect two _different_ entry spans
+        span => expect(span.k).to.equal(constants.ENTRY),
+        span => expect(span.f.h).to.equal('agent-stub-uuid'),
+        span => expect(span.data.kafka.access).to.equal('consume'),
+        span => expect(span.data.kafka.service).to.equal(`${topicPrefix}-1`),
+        span => expect(span.b).to.not.exist,
+        span => expect(span.d).to.be.greaterThan(99),
+        span => expect(span.ec).to.equal(0)
+      ]);
+      verifyFollowUpHttpExit(spans, secondKafkaEntry);
+
+      if (useSendBatch) {
+        const expectationsThirdKafkaEntry = [
+          span => expect(span.t).to.be.a('string'),
+          span => expect(span.p).to.not.exist,
+          span => expect(span.n).to.equal('kafka'),
+          span => expect(span.k).to.equal(constants.ENTRY),
+          span => expect(span.f.h).to.equal('agent-stub-uuid'),
+          span => expect(span.data.kafka.access).to.equal('consume'),
+          span => expect(span.data.kafka.service).to.equal(`${topicPrefix}-2`),
+          span => expect(span.d).to.be.greaterThan(99),
+          span => expect(span.ec).to.equal(0)
+        ];
+        if (useEachBatch) {
+          expectationsThirdKafkaEntry.push(span => expect(span.b).to.deep.equal({ s: 1 }));
+        } else {
+          expectationsThirdKafkaEntry.push(span => expect(span.b).to.not.exist);
+        }
+        const thirdKafkaEntry = expectAtLeastOneMatching(spans, expectationsThirdKafkaEntry);
         verifyFollowUpHttpExit(spans, thirdKafkaEntry);
       }
     }
