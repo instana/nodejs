@@ -1,0 +1,16 @@
+{
+  "name": "instana-nodejs-test-durations",
+  "version": "1.0.0",
+  "description": "Processes a logfile from CircleCI and calculates how much time each test suite consumes",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node ."
+  },
+  "keywords": ["internal", "tool"],
+  "author": "Bastian Krol <bastian.krol@instana.com>",
+  "license": "MIT",
+  "dependencies": {
+    "xml2js": "^0.4.23"
+  }
+}
