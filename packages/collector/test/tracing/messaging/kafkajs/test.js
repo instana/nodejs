@@ -12,8 +12,13 @@ const semver = require('semver');
 const constants = require('@instana/core').tracing.constants;
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('@instana/core/test/config');
-const delay = require('@instana/core/test/test_util/delay');
-const { expectAtLeastOneMatching, getSpansByName, retry } = require('@instana/core/test/test_util');
+const {
+  delay,
+  expectAtLeastOneMatching,
+  getCircularList,
+  getSpansByName,
+  retry
+} = require('@instana/core/test/test_util');
 const ProcessControls = require('../../../test_util/ProcessControls');
 const globalAgent = require('../../../globalAgent');
 
@@ -40,6 +45,9 @@ mochaSuiteFn('tracing/kafkajs', function () {
     });
     ProcessControls.setUpHooks(consumerControls);
 
+    const nextUseEachBatch = getCircularList([false, true]);
+    const nextError = getCircularList([false, 'consumer']);
+
     ['binary', 'string', 'both'].forEach(headerFormat => {
       describe(`header format: ${headerFormat}`, function () {
         producerControls = new ProcessControls({
@@ -55,17 +63,15 @@ mochaSuiteFn('tracing/kafkajs', function () {
         beforeEach(() => resetMessages(consumerControls));
         afterEach(() => resetMessages(consumerControls));
 
-        [false, 'sender', 'receiver'].forEach(error =>
-          [false, true].forEach(useSendBatch =>
-            [false, true].forEach(useEachBatch =>
-              registerTestSuite.bind(this)({ headerFormat, error, useSendBatch, useEachBatch })
-            )
-          )
+        [false, true].forEach(useSendBatch =>
+          registerTracingEnabledTestSuite.bind(this)({ headerFormat, nextError, useSendBatch, nextUseEachBatch })
         );
       });
     });
 
-    function registerTestSuite({ headerFormat, error, useSendBatch, useEachBatch }) {
+    function registerTracingEnabledTestSuite({ headerFormat, useSendBatch }) {
+      const useEachBatch = nextUseEachBatch();
+      const error = nextError();
       describe(
         `kafkajs (header format: ${headerFormat}, ${useSendBatch ? 'sendBatch' : 'sendMessage'} => ` +
           `${useEachBatch ? 'eachBatch' : 'eachMessage'}, error: ${error})`,
@@ -131,6 +137,58 @@ mochaSuiteFn('tracing/kafkajs', function () {
     }
   });
 
+  describe('with error in producer ', function () {
+    const headerFormat = 'string';
+    producerControls = new ProcessControls({
+      appPath: path.join(__dirname, 'producer'),
+      port: 3216,
+      useGlobalAgent: true,
+      env: {
+        INSTANA_KAFKA_HEADER_FORMAT: headerFormat
+      }
+    });
+    ProcessControls.setUpHooks(producerControls);
+
+    [false, true].forEach(useSendBatch => registerProducerErrorTestSuite.bind(this)({ headerFormat, useSendBatch }));
+
+    function registerProducerErrorTestSuite({ useSendBatch }) {
+      const error = 'producer';
+      const useEachBatch = false;
+      describe(
+        `kafkajs (header format: ${headerFormat}, ${useSendBatch ? 'sendBatch' : 'sendMessage'} => ` +
+          `${useEachBatch ? 'eachBatch' : 'eachMessage'}, error: ${error})`,
+        () => {
+          it(`must trace attempts to send a message when an error happens in the producer (${
+            useSendBatch ? 'sendBatch' : 'sendMessage'
+          }, error: ${error})`, () => {
+            const parameters = {
+              headerFormat,
+              error,
+              useSendBatch,
+              useEachBatch,
+              suppressed: false
+            };
+            return send({
+              key: 'someKey',
+              value: 'someMessage',
+              error,
+              useSendBatch,
+              useEachBatch
+            }).then(() =>
+              retry(() =>
+                agentControls.getSpans().then(spans => {
+                  const httpEntry = verifyHttpEntry(spans);
+                  verifyKafkaExits(spans, httpEntry, parameters);
+                  verifyFollowUpHttpExit(spans, httpEntry);
+                })
+              )
+            );
+          });
+        }
+      );
+    }
+  });
+
   describe('tracing enabled, but trace correlation disabled', function () {
     consumerControls = new ProcessControls({
       appPath: path.join(__dirname, 'consumer'),
@@ -151,11 +209,14 @@ mochaSuiteFn('tracing/kafkajs', function () {
     beforeEach(() => resetMessages(consumerControls));
     afterEach(() => resetMessages(consumerControls));
 
+    const nextUseEachBatch = getCircularList([false, true]);
+
     [false, true].forEach(useSendBatch =>
-      [false, true].forEach(useEachBatch => registerTestSuite.bind(this)({ useSendBatch, useEachBatch }))
+      registerCorrelationDisabledTestSuite.bind(this)({ useSendBatch, nextUseEachBatch })
     );
 
-    function registerTestSuite({ useSendBatch, useEachBatch }) {
+    function registerCorrelationDisabledTestSuite({ useSendBatch }) {
+      const useEachBatch = nextUseEachBatch();
       it(`must trace sending and receiving but will not keep trace continuity (${
         useSendBatch ? 'sendBatch' : 'sendMessage'
       } => ${useEachBatch ? 'eachBatch' : 'eachMessage'})`, () => {
@@ -396,7 +457,7 @@ mochaSuiteFn('tracing/kafkajs', function () {
       span => expect(span.k).to.equal(constants.EXIT),
       span => expect(span.f.h).to.equal('agent-stub-uuid')
     ];
-    if (error === 'sender') {
+    if (error === 'producer') {
       expectations = expectations.concat([
         span => expect(span.ec).to.equal(1),
         span => expect(span.data.kafka.error).to.contain('Invalid message without value for topic')
@@ -432,7 +493,7 @@ mochaSuiteFn('tracing/kafkajs', function () {
 
   function verifyKafkaEntries(spans, parentKafkaExit, parameters) {
     const { headerFormat, error, useSendBatch, useEachBatch } = parameters;
-    if (error === 'sender') {
+    if (error === 'producer') {
       return;
     }
     const topicPrefix = getTopicPrefix(useEachBatch);
@@ -444,7 +505,7 @@ mochaSuiteFn('tracing/kafkajs', function () {
       span => expect(span.data.kafka.service).to.equal(`${topicPrefix}-1`)
     ];
     expectationsFirstKafkaEntry = addParentChildExpectation(expectationsFirstKafkaEntry, parentKafkaExit, headerFormat);
-    if (error === 'receiver') {
+    if (error === 'consumer') {
       expectationsFirstKafkaEntry.push(span => expect(span.ec).to.equal(1));
     } else {
       expectationsFirstKafkaEntry = expectationsFirstKafkaEntry.concat([
@@ -459,7 +520,7 @@ mochaSuiteFn('tracing/kafkajs', function () {
     }
 
     const firstKafkaEntry = expectAtLeastOneMatching(spans, expectationsFirstKafkaEntry);
-    if (error !== 'receiver') {
+    if (error !== 'consumer') {
       verifyFollowUpHttpExit(spans, firstKafkaEntry);
     }
 
@@ -478,7 +539,7 @@ mochaSuiteFn('tracing/kafkajs', function () {
         parentKafkaExit,
         headerFormat
       );
-      if (error === 'receiver') {
+      if (error === 'consumer') {
         expectationsSecondKafkaEntry.push(span => expect(span.ec).to.equal(1));
       } else {
         expectationsSecondKafkaEntry = expectationsSecondKafkaEntry.concat([
@@ -487,7 +548,7 @@ mochaSuiteFn('tracing/kafkajs', function () {
         ]);
       }
       const secondKafkaEntry = expectAtLeastOneMatching(spans, expectationsSecondKafkaEntry);
-      if (error !== 'receiver') {
+      if (error !== 'consumer') {
         verifyFollowUpHttpExit(spans, secondKafkaEntry);
       }
     }
@@ -505,7 +566,7 @@ mochaSuiteFn('tracing/kafkajs', function () {
         parentKafkaExit,
         headerFormat
       );
-      if (error === 'receiver') {
+      if (error === 'consumer') {
         expectationsThirdKafkaEntry.push(span => expect(span.ec).to.equal(1));
       } else {
         expectationsThirdKafkaEntry = expectationsThirdKafkaEntry.concat([
@@ -519,7 +580,7 @@ mochaSuiteFn('tracing/kafkajs', function () {
         expectationsThirdKafkaEntry.push(span => expect(span.b).to.not.exist);
       }
       const thirdKafkaEntry = expectAtLeastOneMatching(spans, expectationsThirdKafkaEntry);
-      if (error !== 'receiver') {
+      if (error !== 'consumer') {
         verifyFollowUpHttpExit(spans, thirdKafkaEntry);
       }
     }
