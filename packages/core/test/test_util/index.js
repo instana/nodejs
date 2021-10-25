@@ -10,6 +10,7 @@
 const commonVerifications = require('./common_verifications');
 
 module.exports = {
+  getCircularList: require('./circular_list').getCircularList,
   delay: require('./delay'),
   expectAtLeastOneMatching: require('./expectAtLeastOneMatching'),
   expectExactlyNMatching: require('./expectExactlyNMatching'),

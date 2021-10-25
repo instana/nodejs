@@ -51,7 +51,7 @@ app.listen(appPort, () => {
 
 app.post('/send-messages', (req, res) => {
   const { key = 'key', value = 'value', error, useSendBatch } = req.body;
-  if (error === 'sender') {
+  if (error === 'producer') {
     log('Triggering an error on sending.');
   } else {
     log('Sending messages with key %s and value %s using %s.', key, value, useSendBatch ? 'sendBatch' : 'sendMessage');
@@ -61,7 +61,7 @@ app.post('/send-messages', (req, res) => {
     .then(() => res.sendStatus(200))
     .then(() => console.log('Messages have been sent.')) // eslint-disable-line
     .catch(err => {
-      if (error === 'sender') {
+      if (error === 'producer') {
         log('Send error has been triggered.', err.message);
         (runAsStandAlone ? Promise.resolve() : request(`http://127.0.0.1:${agentPort}`))
           .then(() => res.sendStatus(200))
@@ -78,7 +78,7 @@ app.post('/send-messages', (req, res) => {
 
 function send({ key = 'key', value = 'value', error, useSendBatch, useEachBatch }) {
   const topicPrefix = useEachBatch ? 'test-batch-topic' : 'test-topic';
-  if (error === 'receiver') {
+  if (error === 'consumer') {
     value = 'Boom!';
   }
   if (useSendBatch) {
@@ -89,7 +89,7 @@ function send({ key = 'key', value = 'value', error, useSendBatch, useEachBatch 
 }
 
 function sendViaSend(key, value, error, topicPrefix) {
-  if (error === 'sender') {
+  if (error === 'producer') {
     return producer.send({
       topic: `${topicPrefix}-1`,
       messages: [{}, {}]
@@ -106,7 +106,7 @@ function sendViaSend(key, value, error, topicPrefix) {
 }
 
 function sendViaSendBatch(key, value, error, topicPrefix) {
-  if (error === 'sender') {
+  if (error === 'producer') {
     return producer.sendBatch({
       topicMessages: [
         {
