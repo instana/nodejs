@@ -2,3 +2,4 @@ node_modules
 npm-debug*
 packages/collector/test/bin/edgemicroResources/cli/edgemicro
 nodejs-license-report.csv
+test-duration-breakdown
