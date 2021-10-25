@@ -73,8 +73,12 @@ shared: &shared
     - restore_cache:
         keys:
           - v{{ .Environment.CACHE_VERSION }}-opentelemetry-exporter-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "packages/opentelemetry-exporter/package-lock.json" }}
+    - restore_cache:
+        keys:
+          - v{{ .Environment.CACHE_VERSION }}-misc-test-durations-{{ .Environment.CIRCLE_JOB }}-{{ checksum "misc/test-durations/package-lock.json" }}
 
     - run: npm install
+    - run: cd misc/test-durations && npm install
 
     # When running tests in Node.js 8, we pin grpc to exactly 1.10.1.
     # For more recent Node.js versions (>= 10) we use the latest 1.x as stated in package.json. We can't use grcp@1.10.1
@@ -134,6 +138,11 @@ shared: &shared
         paths:
           - packages/opentelemetry-exporter/node_modules
         key: v{{ .Environment.CACHE_VERSION }}-opentelemetry-exporter-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "packages/opentelemetry-exporter/package-lock.json" }}
+    - save_cache:
+        paths:
+          - misc/test-durations/node_modules
+        key: v{{ .Environment.CACHE_VERSION }}-misc-test-durations-{{ .Environment.CIRCLE_JOB }}-{{ checksum "misc/test-durations/package-lock.json" }}
+
 
     # Only run audit with the most recent Node.js version - one Node version is enough.
     - run: "([[ $(node -v) =~ ^v16.*$ ]] && npm run audit) || [[ ! $(node -v) =~ ^v16.*$ ]]"
@@ -150,6 +159,8 @@ shared: &shared
 
     - store_test_results:
         path: test-results
+
+    - run: node misc/test-durations/ci
 
     - run:
         # save core dumps in case there have been any
@@ -173,6 +184,8 @@ shared: &shared
         path: /tmp/core_dumps
     - store_artifacts:
         path: test-results
+    - store_artifacts:
+        path: test-duration-breakdown
 
     - save_cache:
         paths:

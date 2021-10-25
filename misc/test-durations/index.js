@@ -10,34 +10,37 @@
 
 'use strict';
 
-const { readFile } = require('fs/promises');
+const { readFile } = require('fs').promises;
 const { join } = require('path');
 const xml2js = require('xml2js');
 
-let filename = process.argv[2];
+module.exports = async function createTestSuiteDurationReport(filename, exitOnError) {
+  if (!filename) {
+    throw new Error('Missing mandatory argument: filename.');
+  }
 
-if (!filename) {
-  filename = join(__dirname, '..', '..', 'test-results', 'collector', 'results.xml');
-  console.log(`No file name provided, using default: ${filename}.`);
-}
-
-async function createTestSuiteDurationReport() {
   let content;
   try {
     content = await readFile(filename);
   } catch (e) {
     console.error(`Could not open: ${filename}.`, e.message);
     console.error(`Usage: ${process.argv[1]} [filename]`);
-    process.exit(1);
+    if (exitOnError) {
+      process.exit(1);
+    }
+    return null;
   }
 
   try {
     const parser = new xml2js.Parser();
     const parsedResults = await parser.parseStringPromise(content);
-    if (!parsedResults) {
+    if (!parsedResults || !parsedResults.testsuite || !parsedResults.testsuite.$) {
       console.error(`The file ${filename} has no content or could not be parsed.`);
       console.error(`Usage: ${process.argv[1]} [filename]`);
-      process.exit(1);
+      if (exitOnError) {
+        process.exit(1);
+      }
+      return null;
     }
     const report = {};
     report['Number of Tests'] = parseInt(parsedResults.testsuite.$.tests, 10);
@@ -73,12 +76,15 @@ async function createTestSuiteDurationReport() {
       delete suite.durationInSeconds;
     });
     report.Breakdown = sorted;
-    console.log(JSON.stringify(report, null, 2));
+    return report;
   } catch (e) {
     console.error(e);
-    process.exit(1);
+    if (exitOnError) {
+      process.exit(1);
+      return null;
+    }
   }
-}
+};
 
 function formatSecondsToMinutes(timeInSeconds) {
   const minutes = Math.floor(timeInSeconds / 60);
@@ -90,4 +96,17 @@ function formatSecondsToMinutes(timeInSeconds) {
   return `${minutes}:${secondsFormatted}:${millisFormatted}`;
 }
 
-createTestSuiteDurationReport();
+async function main() {
+  // Trigger report creation if called directly via command line.
+  let filename = process.argv[2];
+  if (!filename) {
+    filename = join(__dirname, '..', '..', 'test-results', 'collector', 'results.xml');
+    console.error(`No file name provided, using default: ${filename}.`);
+  }
+  const report = await module.exports(filename, true);
+  console.log(JSON.stringify(report, null, 2));
+}
+
+if (require.main === module) {
+  main();
+}
