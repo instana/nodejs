@@ -406,9 +406,7 @@ function postHandlerForTimeout(entrySpan, remainingMillis) {
   if (entrySpan) {
     entrySpan.ec = 1;
     entrySpan.data.lambda.msleft = remainingMillis;
-    entrySpan.data.lambda.error =
-      `The Lambda function was still running when only ${remainingMillis} ms were left, ` +
-      'it might have ended in a timeout.';
+    entrySpan.data.lambda.error = `Possible Lambda timeout with only ${remainingMillis} ms left.`;
     entrySpan.d = Date.now() - entrySpan.ts;
     entrySpan.transmit();
   }

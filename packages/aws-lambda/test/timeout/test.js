@@ -228,8 +228,7 @@ describe('timeout heuristic', () => {
         span => expect(span.data.lambda.msleft).to.be.at.most(maxRemaining),
         span => expect(span.ec).to.equal(1),
         span => {
-          const regex =
-            /The Lambda function was still running when only (\d+) ms were left, it might have ended in a timeout./;
+          const regex = /Possible Lambda timeout with only (\d+) ms left./;
 
           expect(span.data.lambda.error).to.match(regex);
           const digitsFromErrorMessage = regex.exec(span.data.lambda.error)[1];
