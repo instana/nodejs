@@ -442,6 +442,39 @@ function createEvent(error, trigger) {
         addSqsTracingHeaders(event, trigger);
         break;
 
+      case 'dynamodb':
+        event.Records = [
+          {
+            eventID: 'ba3d387f756fca2d7c215f0cad83dce3',
+            eventName: 'INSERT',
+            eventVersion: '1.1',
+            eventSource: 'aws:dynamodb',
+            awsRegion: 'us-east-2',
+            dynamodb: {
+              ApproximateCreationDateTime: 1635257251,
+              Keys: {
+                nodejs: {
+                  S: '2'
+                }
+              },
+              NewImage: {
+                name: {
+                  S: 'banana'
+                },
+                nodejs: {
+                  S: '2'
+                }
+              },
+              SequenceNumber: '19583400000000015498379115',
+              SizeBytes: 24,
+              StreamViewType: 'NEW_AND_OLD_IMAGES'
+            },
+            eventSourceARN:
+              'arn:aws:dynamodb:us-east-2:410797082306:table/TeamNodeJsTrigger/stream/2021-10-22T09:34:19.198'
+          }
+        ];
+        break;
+
       default:
         throw new Error(`Unknown trigger type: ${trigger}.`);
     }

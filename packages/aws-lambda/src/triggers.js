@@ -16,6 +16,7 @@ const maxCloudwatchEventsLength = 200;
 const maxCloudwatchLogsEvents = 3;
 const maxCloudwatchLogsEventLength = 200;
 const maxS3Records = 3;
+const maxDynamoDbRecords = 3;
 const maxS3ObjectKeyLength = 200;
 const maxSQSRecords = 3;
 
@@ -39,6 +40,10 @@ exports.enrichSpanWithTriggerData = function enrichSpanWithTriggerData(event, co
   } else if (isS3Trigger(event)) {
     span.data.lambda.trigger = 'aws:s3';
     extractEventFromS3(event, span);
+    return;
+  } else if (isDynamoDbTrigger(event)) {
+    span.data.lambda.trigger = 'aws:dynamodb';
+    extractEventFromDynamoDb(event, span);
     return;
   } else if (isSQSTrigger(event)) {
     span.data.lambda.trigger = 'aws:sqs';
@@ -196,6 +201,21 @@ function s3RecordToObject(s3Record) {
   } else {
     return undefined;
   }
+}
+
+function isDynamoDbTrigger(event) {
+  return Array.isArray(event.Records) && event.Records.length > 0 && event.Records[0].eventSource === 'aws:dynamodb';
+}
+
+function extractEventFromDynamoDb(event, span) {
+  span.data.lambda.dynamodb = {
+    events: event.Records.slice(0, maxDynamoDbRecords).map(dynamoDbRecord => ({
+      event: dynamoDbRecord.eventName,
+      eventid: dynamoDbRecord.eventID,
+      stream: dynamoDbRecord.eventSourceARN
+    }))
+  };
+  span.data.lambda.dynamodb.more = event.Records.length > maxS3Records;
 }
 
 function isSQSTrigger(event) {
