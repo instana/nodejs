@@ -108,16 +108,25 @@ async function handleLayerRequest(event, layerName) {
   if (!data.LayerVersions || !data.LayerVersions[0] || !data.LayerVersions[0].Version) {
     return respond500('Unexpected result from AWS ListLayerVersion operation.');
   }
-  const result = JSON.stringify({
+  const versionData = data.LayerVersions[0];
+  const response = {
     name: layerName,
-    version: data.LayerVersions[0].Version,
-    arn: data.LayerVersions[0].LayerVersionArn
-  });
-  versionsCache.set(cacheKey, result);
+    version: versionData.Version,
+    arn: versionData.LayerVersionArn
+  };
+
+  if (layerName === 'instana-nodejs' && typeof versionData.Description === 'string') {
+    const npmVersionMatch = versionData.Description.match(/@instana\/aws-lambda@(\d+\.\d+\.\d+)/);
+    if (npmVersionMatch && npmVersionMatch[1]) {
+      response.npmVersion = npmVersionMatch[1];
+    }
+  }
+  const responsePayload = JSON.stringify(response);
+  versionsCache.set(cacheKey, responsePayload);
   return {
     statusCode: 200,
     headers: corsAllowAll(),
-    body: result
+    body: responsePayload
   };
 }
 
