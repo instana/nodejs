@@ -471,6 +471,90 @@ function createEvent(error, trigger) {
             },
             eventSourceARN:
               'arn:aws:dynamodb:us-east-2:410797082306:table/TeamNodeJsTrigger/stream/2021-10-22T09:34:19.198'
+          },
+          {
+            eventID: 'qa3d5f7f756fca2d7c215f0cad839af4',
+            eventName: 'INSERT',
+            eventVersion: '1.1',
+            eventSource: 'aws:dynamodb',
+            awsRegion: 'us-east-2',
+            dynamodb: {
+              ApproximateCreationDateTime: 1635257251,
+              Keys: {
+                nodejs: {
+                  S: '2'
+                }
+              },
+              NewImage: {
+                name: {
+                  S: 'apple'
+                },
+                nodejs: {
+                  S: '2'
+                }
+              },
+              SequenceNumber: '19583400000000015498379115',
+              SizeBytes: 24,
+              StreamViewType: 'NEW_AND_OLD_IMAGES'
+            },
+            eventSourceARN:
+              'arn:aws:dynamodb:us-east-2:410797082306:table/TeamNodeJsTrigger/stream/2021-10-22T09:34:19.198'
+          },
+          {
+            eventID: '1234387f756fca2d7c215f0caddfabf7',
+            eventName: 'INSERT',
+            eventVersion: '1.1',
+            eventSource: 'aws:dynamodb',
+            awsRegion: 'us-east-2',
+            dynamodb: {
+              ApproximateCreationDateTime: 1635257251,
+              Keys: {
+                nodejs: {
+                  S: '2'
+                }
+              },
+              NewImage: {
+                name: {
+                  S: 'pear'
+                },
+                nodejs: {
+                  S: '2'
+                }
+              },
+              SequenceNumber: '19583400000000015498379115',
+              SizeBytes: 24,
+              StreamViewType: 'NEW_AND_OLD_IMAGES'
+            },
+            eventSourceARN:
+              'arn:aws:dynamodb:us-east-2:410797082306:table/TeamNodeJsTrigger/stream/2021-10-22T09:34:19.198'
+          },
+          {
+            eventID: '7890a87f756fca2d7c215f0cad83dce3',
+            eventName: 'INSERT',
+            eventVersion: '1.1',
+            eventSource: 'aws:dynamodb',
+            awsRegion: 'us-east-2',
+            dynamodb: {
+              ApproximateCreationDateTime: 1635257251,
+              Keys: {
+                nodejs: {
+                  S: '2'
+                }
+              },
+              NewImage: {
+                name: {
+                  S: 'lemon'
+                },
+                nodejs: {
+                  S: '2'
+                }
+              },
+              SequenceNumber: '19583400000000015498379115',
+              SizeBytes: 24,
+              StreamViewType: 'NEW_AND_OLD_IMAGES'
+            },
+            eventSourceARN:
+              'arn:aws:dynamodb:us-east-2:410797082306:table/TeamNodeJsTrigger/stream/2021-10-22T09:34:19.198'
           }
         ];
         break;

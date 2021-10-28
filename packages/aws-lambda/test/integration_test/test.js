@@ -1030,6 +1030,34 @@ function registerTests(handlerDefinitionPath) {
         ));
   });
 
+  describe('triggered by DynamoDB', function () {
+    // - same as "everything is peachy"
+    // - but triggered by AWS DynamoDB
+    const control = prelude.bind(this)({
+      handlerDefinitionPath,
+      trigger: 'dynamodb',
+      instanaEndpointUrl: backendBaseUrl,
+      instanaAgentKey
+    });
+
+    it('must recognize DynamoDB trigger', () =>
+      verify(control, { error: false, expectMetrics: true, expectSpans: true, trigger: 'aws:dynamodb' })
+        .then(() => control.getSpans())
+        .then(spans =>
+          expectExactlyOneMatching(spans, [
+            span => expect(span.n).to.equal('aws.lambda.entry'),
+            span => expect(span.k).to.equal(constants.ENTRY),
+            span => expect(span.data.lambda.dynamodb).to.be.an('object'),
+            span => expect(span.data.lambda.dynamodb.events).to.be.an('array'),
+            span => expect(span.data.lambda.dynamodb.events).to.have.length(3),
+            span => expect(span.data.lambda.dynamodb.events[0].event).to.equal('INSERT'),
+            span => expect(span.data.lambda.dynamodb.events[1].event).to.equal('INSERT'),
+            span => expect(span.data.lambda.dynamodb.events[2].event).to.equal('INSERT'),
+            span => expect(span.data.lambda.dynamodb.more).to.be.true
+          ])
+        ));
+  });
+
   describe('triggered by SQS', function () {
     // - same as "everything is peachy"
     // - but triggered by AWS SQS
