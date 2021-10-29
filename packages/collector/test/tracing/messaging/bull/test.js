@@ -24,6 +24,11 @@ const {
 const ProcessControls = require('../../../test_util/ProcessControls');
 const globalAgent = require('../../../globalAgent');
 
+/**
+ * !!! In order to test Bull, Redis must be running.
+ * Run `docker-compose up redis` from the project root
+ */
+
 let queueName = 'nodejs-team';
 
 if (process.env.BULL_QUEUE_NAME) {
@@ -35,6 +40,8 @@ let mochaSuiteFn;
 const sendingOptions = ['default', 'bulk=true', 'repeat=true'];
 // We don't need to test the callback case, as the Process case is handled as Callback already
 const receivingMethods = ['Process', 'Promise'];
+
+const withErrorCases = [false, true];
 
 const getNextSendingOption = require('@instana/core/test/test_util/circular_list').getCircularList(sendingOptions);
 const getNextReceivingMethod = require('@instana/core/test/test_util/circular_list').getCircularList(receivingMethods);
@@ -90,7 +97,7 @@ mochaSuiteFn('tracing/messaging/bull', function () {
 
         sendingOptions.forEach(sendOption => {
           const apiPath = `/send?jobName=true&${sendOption}&testId=${testId}`;
-          [false, true].forEach(withError => {
+          withErrorCases.forEach(withError => {
             const urlWithParams = withError ? apiPath + '&withError=true' : apiPath;
 
             it(`send: ${sendOption}; receive: ${receiveMethod}; error: ${!!withError}`, async () => {
@@ -127,6 +134,16 @@ mochaSuiteFn('tracing/messaging/bull', function () {
       isBulk
     }) {
       return retry(async () => {
+        /**
+         * The receiver.js test app sends errors via IPC messages to receiverControls.
+         * If we catch any, we just throw them so the test fails and we can check what is wrong.
+         */
+        const ipcErrorMessage = receiverControls.getIpcMessages().find(m => m.hasError);
+
+        if (ipcErrorMessage) {
+          throw new Error(ipcErrorMessage.error);
+        }
+
         await verifyResponseAndJobProcessing({ response, testId, isRepeatable, isBulk });
         return agentControls.getSpans().then(spans =>
           verifySpans({

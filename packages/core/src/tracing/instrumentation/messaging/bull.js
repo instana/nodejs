@@ -10,6 +10,7 @@ const cls = require('../../cls');
 const { ENTRY, EXIT, isExitSpan } = require('../../constants');
 const requireHook = require('../../../util/requireHook');
 const tracingUtil = require('../../tracingUtil');
+const { getFunctionArguments } = require('../../../util/function_arguments');
 
 let logger = require('../../../logger').getLogger('tracing/bull', newLogger => {
   logger = newLogger;
@@ -32,10 +33,7 @@ function instrumentBull(Bull) {
 function shimJobCreate(originalJobCreate) {
   return function () {
     if (isActive) {
-      const originalArgs = new Array(arguments.length);
-      for (let i = 0; i < originalArgs.length; i++) {
-        originalArgs[i] = arguments[i];
-      }
+      const originalArgs = getFunctionArguments(arguments);
 
       return instrumentedJobCreate(this, originalJobCreate, originalArgs);
     }
@@ -80,7 +78,7 @@ function instrumentedJobCreate(ctx, originalJobCreate, originalArgs) {
     // or is root if no parent present
     const span = cls.startSpan(exports.spanName, EXIT);
     span.ts = Date.now();
-    span.stack = tracingUtil.getStackTrace(instrumentedJobCreate);
+    span.stack = tracingUtil.getStackTrace(instrumentedJobCreate, 1);
     span.data.bull = {
       sort: 'exit',
       queue: queueName
@@ -105,10 +103,7 @@ function instrumentedJobCreate(ctx, originalJobCreate, originalArgs) {
 function shimJobCreateBulk(originalJobCreateBulk) {
   return function () {
     if (isActive) {
-      const originalArgs = new Array(arguments.length);
-      for (let i = 0; i < originalArgs.length; i++) {
-        originalArgs[i] = arguments[i];
-      }
+      const originalArgs = getFunctionArguments(arguments);
 
       return instrumentedJobCreateBulk(this, originalJobCreateBulk, originalArgs);
     }
@@ -143,7 +138,7 @@ function instrumentedJobCreateBulk(ctx, originalJobCreateBulk, originalArgs) {
       cls.ns.run(() => {
         const span = cls.startSpan(exports.spanName, EXIT);
         span.ts = Date.now();
-        span.stack = tracingUtil.getStackTrace(instrumentedJobCreateBulk);
+        span.stack = tracingUtil.getStackTrace(instrumentedJobCreateBulk, 2);
         span.data.bull = {
           sort: 'exit',
           queue: queueName
@@ -163,18 +158,8 @@ function instrumentedJobCreateBulk(ctx, originalJobCreateBulk, originalArgs) {
 function shimProcessJob(originalProcessJob) {
   return function () {
     if (isActive) {
-      const parentSpan = cls.getCurrentSpan();
-      if (parentSpan) {
-        logger.warn(
-          `Cannot start a Bull entry span when another span is already active: ${JSON.stringify(parentSpan)}`
-        );
-        return originalProcessJob.apply(this, arguments);
-      }
+      const originalArgs = getFunctionArguments(arguments);
 
-      const originalArgs = new Array(arguments.length);
-      for (let i = 0; i < originalArgs.length; i++) {
-        originalArgs[i] = arguments[i];
-      }
       return instrumentedProcessJob(this, originalProcessJob, originalArgs);
     }
     return originalProcessJob.apply(this, arguments);
@@ -185,13 +170,13 @@ function instrumentedProcessJob(ctx, originalProcessJob, originalArgs) {
   // originalArgs = job, notFetch = false
   /** @type {import('bull').Job} */
   const job = originalArgs[0];
-  const options = job.opts;
-  const jobId = options.jobId;
 
   if (!job) {
     return originalProcessJob.apply(ctx, originalArgs);
   }
 
+  const options = job.opts || {};
+  const jobId = options.jobId;
   const queueName = job.queue && job.queue.name;
 
   return cls.ns.runPromise(() => {
@@ -227,9 +212,21 @@ function instrumentedProcessJob(ctx, originalProcessJob, originalArgs) {
     const spanT = attributes.X_INSTANA_T;
     const spanP = attributes.X_INSTANA_S;
 
+    const parentSpan = cls.getCurrentSpan();
+
+    if ((parentSpan && parentSpan.p === spanP && parentSpan.t === spanT) || (parentSpan && parentSpan.n !== 'bull')) {
+      // We allow a new entry span even if there is already an active entry span, because repeatable and bulked jobs can
+      // run in parallel if concurrency is enabled.
+      // But here we check if the job parent span data is the same as the existent span. In this case, we don't
+      // instrument.
+      logger.warn(`Cannot start a Bull entry span when another span is already active: ${JSON.stringify(parentSpan)}`);
+
+      return originalProcessJob.apply(ctx, originalArgs);
+    }
+
     const span = cls.startSpan(exports.spanName, ENTRY, spanT, spanP);
     span.ts = Date.now();
-    span.stack = tracingUtil.getStackTrace(instrumentedProcessJob);
+    span.stack = tracingUtil.getStackTrace(instrumentedProcessJob, 1);
     span.data.bull = {
       sort: 'entry',
       queue: queueName
