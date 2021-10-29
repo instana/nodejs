@@ -61,6 +61,13 @@ function parseTraceParent(traceParentRaw, parsed) {
   // eslint-disable-next-line no-bitwise
   parsed.sampled = (flags & W3cTraceContext.SAMPLED_BITMASK) === W3cTraceContext.SAMPLED_BITMASK;
 
+  if (parsed.traceParentTraceId === '00000000000000000000000000000000') {
+    return;
+  }
+  if (parsed.traceParentParentId === '0000000000000000') {
+    return;
+  }
+
   parsed.traceParentValid = true;
 }
 

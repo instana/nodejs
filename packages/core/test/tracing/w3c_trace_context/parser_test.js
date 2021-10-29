@@ -14,8 +14,9 @@ const parse = require('../../../src/tracing/w3c_trace_context/parse');
 const version00 = '00';
 const traceParentTraceId = '0af7651916cd43dd8448eb211c80319c';
 const traceParentParentId = 'b7ad6b7169203331';
-const flags = '01';
-const validTraceParent = `${version00}-${traceParentTraceId}-${traceParentParentId}-${flags}`;
+const traceParentWithoutFlags = `${version00}-${traceParentTraceId}-${traceParentParentId}`;
+const defaultFlags = '01';
+const validTraceParent = `${traceParentWithoutFlags}-${defaultFlags}`;
 const validTraceStateWithoutInstanaArray = ['rojo=00f067aa0ba902b7', 'congo=t61rcWkgMzE'];
 const validTraceStateWithoutInstana = validTraceStateWithoutInstanaArray.join(',');
 
@@ -41,6 +42,18 @@ describe('tracing/w3c-trace-context parser', () => {
   describe('traceparent value', () => {
     it('should reject non-string traceparent', () => {
       const parsed = parse({});
+      expect(parsed.traceParentValid).to.be.false;
+      expect(parsed.traceStateValid).to.be.false;
+    });
+
+    it('should reject all zeroes trace ID', () => {
+      const parsed = parse(`01-00000000000000000000000000000000-${traceParentParentId}-${defaultFlags}`);
+      expect(parsed.traceParentValid).to.be.false;
+      expect(parsed.traceStateValid).to.be.false;
+    });
+
+    it('should reject all zeroes parent ID', () => {
+      const parsed = parse(`01-${traceParentTraceId}-0000000000000000-${defaultFlags}`);
       expect(parsed.traceParentValid).to.be.false;
       expect(parsed.traceStateValid).to.be.false;
     });
@@ -71,7 +84,7 @@ describe('tracing/w3c-trace-context parser', () => {
     });
 
     it('should ignore trailing content for spec version > 00', () => {
-      const traceparent = `01-${traceParentTraceId}-${traceParentParentId}-${flags}Gobbledygook`;
+      const traceparent = `01-${traceParentTraceId}-${traceParentParentId}-${defaultFlags}Gobbledygook`;
       const parsed = parse(traceparent);
       expect(parsed.version).to.equal('01');
       expect(parsed.traceParentTraceId).to.equal(traceParentTraceId);
@@ -88,6 +101,29 @@ describe('tracing/w3c-trace-context parser', () => {
       expect(parsed.sampled).to.be.true;
       expect(parsed.traceParentValid).to.be.true;
       expect(parsed.traceStateValid).to.be.false;
+    });
+
+    describe('traceparent flags', () => {
+      it('should parse a traceparent header with sampled = 1 when other flags are present', () => {
+        const parsed = parse(`${traceParentWithoutFlags}-ff`);
+        expect(parsed.sampled).to.be.true;
+        expect(parsed.traceParentValid).to.be.true;
+        expect(parsed.traceStateValid).to.be.false;
+      });
+
+      it('should parse a traceparent header with sampled = 0', () => {
+        const parsed = parse(`${traceParentWithoutFlags}-00`);
+        expect(parsed.sampled).to.be.false;
+        expect(parsed.traceParentValid).to.be.true;
+        expect(parsed.traceStateValid).to.be.false;
+      });
+
+      it('should parse a traceparent header with sampled = 0 when other flags are present', () => {
+        const parsed = parse(`${traceParentWithoutFlags}-fe`);
+        expect(parsed.sampled).to.be.false;
+        expect(parsed.traceParentValid).to.be.true;
+        expect(parsed.traceStateValid).to.be.false;
+      });
     });
 
     describe('render an unchanged traceparent value', () => {
