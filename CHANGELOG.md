@@ -3,6 +3,7 @@
 ## Unreleased
 - Configurable Kafka trace correlation (enabled/disabled) and correlation header format (string, binary, both).
 - [AWS Lambda] Add DynamoDB streams trigger.
+- [W3C Trace Context] Reject traceparent header when either trace ID or parent span ID are all zeroes.
 
 ## 1.136.0
 - An issue event is sent if the application uses an EOL (end of life) version of Node.js. Applicable only for non serverless environments.
