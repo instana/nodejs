@@ -24,7 +24,7 @@ function getJobData(testId, bulkIndex, withError) {
     return {
       testId,
       bulkIndex,
-      name: `I am in a bulk; ${rnd};`,
+      name: `I am in a bulk; ${bulkIndex};`,
       withError
     };
   }
@@ -37,7 +37,14 @@ function getJobData(testId, bulkIndex, withError) {
 
 const log = require('@instana/core/test/test_util/log').getLogger(logPrefix);
 
-// curl -X POST "http://127.0.0.1:3215/send?jobName=true&bulk=false&repeat=true"
+/**
+ * Example:
+ * $ curl -X POST "http://127.0.0.1:3215/send?jobName=true&bulk=false&repeat=true"
+ *
+ * Remember to start the receiver with named jobs enabled when passing jobName=true.
+ * To enable named jobs in the receiver, provide the proper environment variable:
+ * $ BULL_JOB_NAME_ENABLED=true node receiver.js
+ */
 app.post('/send', (request, response) => {
   const testId = request.query.testId || 'none';
   const repeat = request.query.repeat === 'true';
@@ -53,16 +60,19 @@ app.post('/send', (request, response) => {
 
   if (repeat && !bulk) {
     options.repeat = {
-      every: 100,
+      every: 50,
       limit: 2
     };
   }
 
   if (bulk) {
     addFunction = 'addBulk';
+    let counter = 1;
     bulkedJobs.push(
-      { name: bullJobName, data: getJobData(testId, 1, withError) },
-      { name: bullJobName, data: getJobData(testId, 2, withError) }
+      { name: bullJobName, data: getJobData(testId, counter++, withError) },
+      { name: bullJobName, data: getJobData(testId, counter++, withError) },
+      { name: bullJobName, data: getJobData(testId, counter++, withError) }
+
       // As per https://github.com/OptimalBits/bull/issues/1731, addBulk does not properly support repeatable jobs.
       // Newer versions of Bull forbid this case completely, and older versions don't handle the case properly.
       // { name: bullJobName, data: getJobData(testId, true), opts: { repeat: { every: 500, limit: 1 } } }

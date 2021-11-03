@@ -98,6 +98,7 @@ exports.processJob = processJob;
  * @param {number} processType
  * @param {(...args: *)=>{}} log
  * @param {string} jobName
+ * @param {boolean} isConcurrent
  */
 exports.buildReceiver = function (queue, processType, log, jobName, isConcurrent) {
   const processorPath = path.join(__dirname, 'child-processor.js');
@@ -130,16 +131,16 @@ exports.buildReceiver = function (queue, processType, log, jobName, isConcurrent
   }
 
   if (jobName && isConcurrent) {
-    log('named and concurrent');
+    log(`Job named ${jobName} and concurrent`);
     currentTypeArgs.unshift(jobName, NUMBER_OF_PROCESSES);
   } else if (jobName && !isConcurrent) {
-    log('named, not concurrent');
+    log(`Job named ${jobName}, not concurrent`);
     currentTypeArgs.unshift(jobName);
   } else if (!jobName && isConcurrent) {
-    log('unnamed, concurrent');
+    log('Job unnamed, concurrent');
     currentTypeArgs.unshift(NUMBER_OF_PROCESSES);
   } else {
-    log('unnamed, not concurrent');
+    log('Job unnamed, not concurrent');
   }
   queue.process.apply(queue, currentTypeArgs);
 };

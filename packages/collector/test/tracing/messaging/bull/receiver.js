@@ -7,6 +7,7 @@
 
 require('../../../../')();
 
+const { sendToParent } = require('@instana/core/test/test_util');
 const logPrefix = `Bull (${process.pid}):\t`;
 const Queue = require('bull');
 const express = require('express');
@@ -21,6 +22,29 @@ const bullJobName = process.env.BULL_JOB_NAME || 'steve';
 const jobNameEnabled = process.env.BULL_JOB_NAME_ENABLED === 'true';
 const concurrencyEnabled = process.env.BULL_CONCURRENCY_ENABLED === 'true';
 const log = require('@instana/core/test/test_util/log').getLogger(logPrefix);
+
+/**
+ * Make sure to match the sender and receiver when it comes to named jobs.
+ * For instance, if you add a named job, but the receiver is started without being expecting named jobs, there will be
+ * errors, as the receiver will not process jobs with that particular job name.
+ *
+ * eg: BULL_JOB_NAME_ENABLED=true node receiver.js
+ *
+ * By default, both sender and receiver will use the name "steve" for the named job. You can pass a new name by
+ * providing the environment variable BULL_JOB_NAME=new_job_name in both receiver.js and sender.js.
+ * If you provide the env var only in one of them, there will be an error.
+ */
+
+/**
+ * Bull appears to swallow errors, but it emits these caught errors as an 'error' event.
+ * We then capture these errors and send them to the parent process in the test and throw them
+ */
+receiver.on('error', err => {
+  sendToParent({
+    hasError: true,
+    error: err.stack || err.message || 'Unknown error'
+  });
+});
 
 if (!validCallbackTypes.includes(receiveType)) {
   log(`Callback types must be one of these: ${validCallbackTypes.join(', ')} but got ${receiveType}`);
