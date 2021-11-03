@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.137.0
 - Configurable Kafka trace correlation (enabled/disabled) and correlation header format (string, binary, both).
 - [AWS Lambda] Add DynamoDB streams trigger.
 - [W3C Trace Context] Reject traceparent header when either trace ID or parent span ID are all zeroes.
