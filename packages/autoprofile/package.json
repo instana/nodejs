@@ -2,6 +2,10 @@
   "name": "@instana/autoprofile",
   "version": "1.136.0",
   "description": "Automatic Node.js Profiler",
+  "author": {
+    "name": "Dmitri Melikyan",
+    "email": "dmitri.melikyan@instana.com"
+  },
   "homepage": "https://github.com/instana/nodejs/blob/main/packages/autoprofile/README.md",
   "keywords": [
     "production profiler",
@@ -29,6 +33,20 @@
     "verify": "npm run lint && npm test",
     "prettier": "prettier --write 'lib/**/*.js' 'test/**/*.js'"
   },
+  "contributors": [
+    {
+      "name": "Bastian Krol",
+      "email": "bastian.krol@instana.com"
+    },
+    {
+      "name": "Willian Carvalho",
+      "email": "willian.carvalho@instana.com"
+    },
+    {
+      "name": "Katharina Irrgang",
+      "email": "katharina.irrgang@instana.com"
+    }
+  ],
   "dependencies": {
     "detect-libc": "^1.0.3",
     "nan": "^2.14.2",

@@ -15,6 +15,20 @@
     "url": "https://github.com/instana/nodejs/issues"
   },
   "license": "MIT",
+  "contributors": [
+    {
+      "name": "Bastian Krol",
+      "email": "bastian.krol@instana.com"
+    },
+    {
+      "name": "Willian Carvalho",
+      "email": "willian.carvalho@instana.com"
+    },
+    {
+      "name": "Katharina Irrgang",
+      "email": "katharina.irrgang@instana.com"
+    }
+  ],
   "scripts": {
     "audit": "lerna run audit --stream && npm audit --production",
     "bootstrap": "lerna bootstrap",
