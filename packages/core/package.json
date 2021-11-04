@@ -108,6 +108,14 @@
     {
       "name": "beep-boop-beep",
       "url": "https://github.com/beep-boop-beep"
+    },
+    {
+      "name": "Willian Carvalho",
+      "email": "willian.carvalho@instana.com"
+    },
+    {
+      "name": "Katharina Irrgang",
+      "email": "katharina.irrgang@instana.com"
     }
   ],
   "license": "MIT",

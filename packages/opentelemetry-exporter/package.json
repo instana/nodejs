@@ -37,6 +37,20 @@
   "bugs": {
     "url": "https://github.com/instana/nodejs/issues"
   },
+  "contributors": [
+    {
+      "name": "Willian Carvalho",
+      "email": "willian.carvalho@instana.com"
+    },
+    {
+      "name": "Katharina Irrgang",
+      "email": "katharina.irrgang@instana.com"
+    },
+    {
+      "name": "Bastian Krol",
+      "email": "bastian.krol@instana.com"
+    }
+  ],
   "dependencies": {
     "@instana/serverless": "1.137.0",
     "@opentelemetry/core": "0.25.0"
