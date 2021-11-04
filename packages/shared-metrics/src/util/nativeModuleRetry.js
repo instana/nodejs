@@ -11,8 +11,8 @@ const EventEmitter = require('events');
 const copy = require('recursive-copy');
 const fs = require('fs');
 const os = require('os');
+const semver = require('semver');
 const path = require('path');
-const tar = require('tar');
 const detectLibc = require('detect-libc');
 
 /**
@@ -171,6 +171,20 @@ function copyPrecompiled(opts, loaderEmitter, callback) {
 
     logger.info(`Found a precompiled version for ${opts.nativeModuleName} ${label}, unpacking.`);
 
+    /**
+     * tar@6 has dropped support for Node < 10
+     * It might work to require tar@6 or to execute commands with tar@6 and Node < 10,
+     * but we don't want to risk that a customers application fails - especially if tar@6 adds
+     * breaking changes. We decided to disallow this feature.
+     */
+    if (semver.lt(process.version, '10.0.0')) {
+      logger.info(`Skipped copying precompiled version for ${opts.nativeModuleName} ${label} with Node < 10.`);
+      callback(false);
+      return;
+    }
+
+    const tar = require('tar');
+
     tar
       .x({
         cwd: os.tmpdir(),
@@ -203,10 +217,10 @@ function copyPrecompiled(opts, loaderEmitter, callback) {
             // is, node_modules/${opts.nativeModuleName}). Node.js' module loading infrastructure
             // (lib/internal/modules/cjs/loader.js and lib/internal/modules/package_json_reader.js) have built-in
             // caching on multiple levels (for example, package.json locations and package.json contents). If Node.js
-            // has tried unsuccessfully to load a module or read a package.json from a particular path, it will remember
-            // and not try to load anything from that path again (a `false` will be put into the cache for that cache
-            // key). Instead, we force a new path, by adding precompiled to the module path and use the absolute path to
-            // the module to load it.
+            // has tried unsuccessfully to load a module or read a package.json from a particular path,
+            // it will remember and not try to load anything from that path again (a `false` will be
+            // put into the cache for that cache key). Instead, we force a new path, by adding precompiled
+            // to the module path and use the absolute path to the module to load it.
             opts.loadFrom = targetDir;
             callback(true);
           }

@@ -37,7 +37,8 @@ exports.currentPayload = {
   majorGcs: 0,
   incrementalMarkings: 0,
   weakCallbackProcessing: 0,
-  gcPause: 0
+  gcPause: 0,
+  statsSupported: false
 };
 
 exports.activate = function activate() {
