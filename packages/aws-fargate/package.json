@@ -25,7 +25,7 @@
   "scripts": {
     "audit": "bin/prepare-audit.sh && npm audit --production; AUDIT_RESULT=$?; git checkout package-lock.json; exit $AUDIT_RESULT",
     "test": "echo \"$(node -v)\" | grep v6 > /dev/null || npm run test:mocha",
-    "test:mocha": "mocha --sort --reporter mocha-multi --reporter-options spec=-,xunit=../../test-results/aws-fargate/results.xml $(find test -iname '*test.js' -not -path '*node_modules*')",
+    "test:mocha": "echo \"******* Files to be tested:\n $CI_AWS_FARGATE_TEST_FILES\" && mocha --sort --reporter mocha-multi --reporter-options spec=-,xunit=../../test-results/aws-fargate/results.xml ${CI_AWS_FARGATE_TEST_FILES:=$(find test -iname '*test.js' -not -path '*node_modules*')} ",
     "test:debug": "WITH_STDOUT=true npm run test:mocha",
     "lint": "eslint src test images",
     "verify": "npm run lint && npm test",
