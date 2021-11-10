@@ -160,8 +160,11 @@ shared: &shared
 
     # Run the test suites.
     # (Use ulimit to remove the file size limit on core dump files before running tests.)
+    # The ci_glob_setup.sh script designates which files should be tested in each CircleCI process.
+    # As the reported files include the aboslute path, we want to get rid of them. We do that after the test finishes.
     - run: |
         ulimit -c unlimited
+        . ./bin/ci_glob_setup.sh
         npm test
 
     - store_test_results:
@@ -273,6 +276,7 @@ jobs:
       - <<: *nats-streaming
       - <<: *memcached
     <<: *shared
+    parallelism: 4
 
   "node-14":
     docker:
@@ -290,6 +294,7 @@ jobs:
       - <<: *nats-streaming
       - <<: *memcached
     <<: *shared
+    parallelism: 4
 
   "node-12":
     docker:
@@ -307,6 +312,7 @@ jobs:
       - <<: *nats-streaming
       - <<: *memcached
     <<: *shared
+    parallelism: 4
 
   "node-10":
     docker:
@@ -324,6 +330,7 @@ jobs:
       - <<: *nats-streaming
       - <<: *memcached
     <<: *shared
+    parallelism: 4
 
   "node-8":
     docker:
@@ -341,6 +348,7 @@ jobs:
       - <<: *nats-streaming
       - <<: *memcached
     <<: *shared
+    parallelism: 4
 
 workflows:
   version: 2

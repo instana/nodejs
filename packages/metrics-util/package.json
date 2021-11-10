@@ -25,7 +25,7 @@
   "scripts": {
     "audit": "bin/prepare-audit.sh && npm audit --production; AUDIT_RESULT=$?; git checkout package-lock.json; exit $AUDIT_RESULT",
     "test": "npm run test:mocha",
-    "test:mocha": "mocha --sort --reporter mocha-multi --reporter-options spec=-,xunit=../../test-results/metrics-util/results.xml $(find test -iname '*test.js' -not -path '*node_modules*')",
+    "test:mocha": "echo \"******* Files to be tested:\n $CI_METRICS_UTIL_TEST_FILES\" && mocha --sort --reporter mocha-multi --reporter-options spec=-,xunit=../../test-results/metrics-util/results.xml ${CI_METRICS_UTIL_TEST_FILES:=$(find test -iname '*test.js' -not -path '*node_modules*')}",
     "test:debug": "WITH_STDOUT=true npm run test:mocha",
     "lint": "eslint src test",
     "verify": "npm run lint && npm test",
