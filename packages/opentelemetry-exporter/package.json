@@ -27,7 +27,7 @@
     "start": "node test/app.js",
     "debug": "node --inspect-brk test/app.js",
     "test": "echo \"$(node -v)\" | grep v8 > /dev/null || npm run test:mocha",
-    "test:mocha": "mocha --sort --reporter mocha-multi --reporter-options spec=-,xunit=../../test-results/opentelemetry-exporter/results.xml $(find test -iname '*test.js' -not -path '*node_modules*')",
+    "test:mocha": "echo \"******* Files to be tested:\n $CI_OTEL_EXPORTER_TEST_FILES\" && mocha --sort --reporter mocha-multi --reporter-options spec=-,xunit=../../test-results/opentelemetry-exporter/results.xml ${CI_OTEL_EXPORTER_TEST_FILES:=$(find test -iname '*test.js' -not -path '*node_modules*')}",
     "test:debug": "WITH_STDOUT=true npm run test:mocha",
     "audit": "bin/prepare-audit.sh && npm audit --production; AUDIT_RESULT=$?; git checkout package-lock.json; exit $AUDIT_RESULT",
     "lint": "eslint src test",
