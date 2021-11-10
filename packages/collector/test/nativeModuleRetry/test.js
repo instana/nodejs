@@ -7,6 +7,7 @@
 
 const async = require('async');
 const { expect } = require('chai');
+const semver = require('semver');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
@@ -38,7 +39,7 @@ describe('retry loading native addons', function () {
         let foundAtLeastOneUnsupported;
         for (let i = 0; i < allMetrics.length; i++) {
           if (allMetrics[i].data.libuv) {
-            expect(allMetrics[i].data.libuv.statsSupported).to.not.exist;
+            expect(allMetrics[i].data.libuv.statsSupported).to.be.false;
             foundAtLeastOneUnsupported = true;
             break;
           }
@@ -50,11 +51,16 @@ describe('retry loading native addons', function () {
         const libuv = aggregated.libuv;
         expect(libuv).to.exist;
         expect(libuv).to.be.an('object');
-        expect(libuv.statsSupported).to.be.true;
-        expect(libuv.min).to.be.a('number');
-        expect(libuv.max).to.be.a('number');
-        expect(libuv.sum).to.be.a('number');
-        expect(libuv.lag).to.be.a('number');
+
+        if (semver.lt(process.version, '10.0.0')) {
+          expect(libuv.statsSupported).to.be.false;
+        } else {
+          expect(libuv.statsSupported).to.be.true;
+          expect(libuv.min).to.be.a('number');
+          expect(libuv.max).to.be.a('number');
+          expect(libuv.sum).to.be.a('number');
+          expect(libuv.lag).to.be.a('number');
+        }
       }
     },
     {
@@ -67,7 +73,7 @@ describe('retry loading native addons', function () {
         let foundAtLeastOneUnsupported;
         for (let i = 0; i < allMetrics.length; i++) {
           if (allMetrics[i].data.libuv) {
-            expect(allMetrics[i].data.gc.statsSupported).to.not.exist;
+            expect(allMetrics[i].data.gc.statsSupported).to.be.false;
             foundAtLeastOneUnsupported = true;
             break;
           }
@@ -79,9 +85,14 @@ describe('retry loading native addons', function () {
         const gc = aggregated.gc;
         expect(gc).to.exist;
         expect(gc).to.be.an('object');
-        expect(gc.statsSupported).to.be.true;
-        expect(gc.minorGcs).to.exist;
-        expect(gc.majorGcs).to.exist;
+
+        if (semver.lt(process.version, '10.0.0')) {
+          expect(gc.statsSupported).to.be.false;
+        } else {
+          expect(gc.statsSupported).to.be.true;
+          expect(gc.minorGcs).to.exist;
+          expect(gc.majorGcs).to.exist;
+        }
       }
     }
   ];
