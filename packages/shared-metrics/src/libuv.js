@@ -47,5 +47,7 @@ function sense() {
     stats.statsSupported = true;
     return stats;
   }
-  return {};
+  return {
+    statsSupported: false
+  };
 }
