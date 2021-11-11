@@ -99,49 +99,54 @@ async function receiveAsync() {
   try {
     const sqsPromise = sqs.receiveMessage(receiveParams).promise();
     const data = await sqsPromise;
-    instana.sdk.runInAsyncContext(sqsPromise.instanaAsyncContext, async () => {
-      if (data && data.error) {
-        log('receive message data error', data.error);
-        return;
-      } else if (!data || !data.Messages || data.Messages.length === 0) {
-        log('no messages, doing nothing');
-        return;
-      }
 
-      data.Messages.forEach(message => {
-        sendToParent(message);
+    return new Promise(resolve => {
+      instana.sdk.runInAsyncContext(sqsPromise.instanaAsyncContext, async () => {
+        if (data && data.error) {
+          log('receive message data error', data.error);
+          return resolve();
+        } else if (!data || !data.Messages || data.Messages.length === 0) {
+          log('no messages, doing nothing');
+          return resolve();
+        }
+
+        data.Messages.forEach(message => {
+          sendToParent(message);
+        });
+
+        log(
+          'got messages:',
+          data.Messages.map(m => m.MessageId)
+        );
+
+        span = instana.currentSpan();
+        span.disableAutoEnd();
+
+        const messagesForDeletion = data.Messages.map(message => {
+          return {
+            Id: message.MessageId,
+            ReceiptHandle: message.ReceiptHandle
+          };
+        });
+
+        await sqs
+          .deleteMessageBatch({
+            QueueUrl: queueURL,
+            Entries: messagesForDeletion
+          })
+          .promise();
+
+        await delay(1000);
+        await request(`http://127.0.0.1:${agentPort}`);
+        log('The follow up request after receiving a message has happened.');
+        span.end();
+        return resolve();
       });
-
-      log(
-        'got messages:',
-        data.Messages.map(m => m.MessageId)
-      );
-
-      span = instana.currentSpan();
-      span.disableAutoEnd();
-
-      const messagesForDeletion = data.Messages.map(message => {
-        return {
-          Id: message.MessageId,
-          ReceiptHandle: message.ReceiptHandle
-        };
-      });
-
-      await sqs
-        .deleteMessageBatch({
-          QueueUrl: queueURL,
-          Entries: messagesForDeletion
-        })
-        .promise();
-
-      await delay(1000);
-      await request(`http://127.0.0.1:${agentPort}`);
-      log('The follow up request after receiving a message has happened.');
-      span.end();
     });
   } catch (err) {
     span && span.end(1);
     log('ERROR receiving/deleting message', err);
+    return Promise.reject(err);
   }
 }
 

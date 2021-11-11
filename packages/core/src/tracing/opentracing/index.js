@@ -68,11 +68,11 @@ exports.getCurrentlyActiveInstanaSpanContext = function getCurrentlyActiveInstan
   }
 
   const spanContext = new opentracing.SpanContext();
-  // @ts-ignore
+  // @ts-ignore: Property 's' does not exist on type 'SpanContext'
   spanContext.s = s;
-  // @ts-ignore
+  // @ts-ignore: Property 't' does not exist on type 'SpanContext'
   spanContext.t = t;
-  // @ts-ignore
+  // @ts-ignore: Property 'samplingPriority' does not exist on type 'SpanContext'
   spanContext.samplingPriority = cls.tracingLevel() === '0' ? 0 : 1;
   // @ts-ignore
   spanContext.baggage = {};

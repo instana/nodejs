@@ -149,7 +149,7 @@ class InstanaSpan {
    * @param {Function} fn
    */
   addCleanup(fn) {
-    // @ts-ignore
+    // @ts-ignore: Property 'cleanupFunctions' does not exist on type 'InstanaSpan'
     this.cleanupFunctions.push(fn);
   }
 
@@ -180,9 +180,9 @@ class InstanaSpan {
   }
 
   cleanup() {
-    // @ts-ignore
+    // @ts-ignore: Property 'cleanupFunctions' does not exist on type 'InstanaSpan'
     this.cleanupFunctions.forEach(call);
-    // @ts-ignore
+    // @ts-ignore: Property 'cleanupFunctions' does not exist on type 'InstanaSpan'
     this.cleanupFunctions.length = 0;
   }
 

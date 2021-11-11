@@ -13,6 +13,7 @@ const { v4: uuid } = require('uuid');
 const { fail } = expect;
 const constants = require('@instana/core').tracing.constants;
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
+const { getCircularList } = require('@instana/core/test/test_util/circular_list');
 const config = require('../../../../../core/test/config');
 const {
   expectExactlyOneMatching,
@@ -43,8 +44,9 @@ const receivingMethods = ['Process', 'Promise'];
 
 const withErrorCases = [false, true];
 
-const getNextSendingOption = require('@instana/core/test/test_util/circular_list').getCircularList(sendingOptions);
-const getNextReceivingMethod = require('@instana/core/test/test_util/circular_list').getCircularList(receivingMethods);
+const getNextSendingOption = getCircularList(sendingOptions);
+const getNextReceivingMethod = getCircularList(receivingMethods);
+
 const retryTime = config.getTestTimeout() * 2;
 
 mochaSuiteFn('tracing/messaging/bull', function () {

@@ -7,7 +7,7 @@
 
 require('../../../../')();
 
-const cls = require('../../../../../core/src/tracing/cls');
+const cls = require('@instana/core/src/tracing/cls');
 
 const express = require('express');
 const morgan = require('morgan');
