@@ -33,6 +33,7 @@
     "audit": "lerna run audit --stream && npm audit --production",
     "bootstrap": "lerna bootstrap",
     "bump": "lerna publish",
+    "commit": "cz",
     "doctoc": "doctoc README.md packages/collector/README.md",
     "lint": "node misc/is_eol || (eslint .*.js *.js && npm run typecheck && lerna run lint --stream && eslint misc && eslint dockerfile-examples)",
     "postinstall": "husky install && npm run bootstrap",
@@ -87,6 +88,8 @@
     "body-parser": "^1.19.0",
     "bull": "3.22.6",
     "chai": "4.3.4",
+    "commitizen": "^4.2.4",
+    "cz-conventional-changelog": "^3.3.0",
     "dev-null": "0.1.1",
     "doctoc": "^2.0.0",
     "elasticsearch": "^16.7.2",
@@ -153,5 +156,10 @@
     "uuid": "^8.3.2",
     "winston": "^3.3.3",
     "ws": "^7.4.6"
+  },
+  "config": {
+    "commitizen": {
+      "path": "./node_modules/cz-conventional-changelog"
+    }
   }
 }

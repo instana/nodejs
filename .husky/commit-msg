@@ -1,4 +1,5 @@
 #!/bin/sh
 . "$(dirname "$0")/_/husky.sh"
 
+echo If commitlint gives you headaches, try "npm run commit".
 node_modules/.bin/commitlint --edit "$1"
