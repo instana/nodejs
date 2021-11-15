@@ -1,7 +1,14 @@
 #!/usr/bin/env node
+/*
+ * (c) Copyright IBM Corp. 2021
+ * (c) Copyright Instana Inc. and contributors 2021
+ */
 
-const { appendFile, open, readFile } = require('fs/promises');
-const { join } = require('path');
+/*  eslint-disable no-console, no-await-in-loop */
+
+'use strict';
+
+const { open, readFile } = require('fs/promises');
 
 const prefixes = [
   '@instana/autoprofile',
@@ -46,7 +53,7 @@ async function splitFile() {
     }
     const restFilename = `rest-${filename}`;
     console.error(`Creating ${restFilename}.`);
-    outputs['rest'] = await open(`${restFilename}`, 'w+');
+    outputs.rest = await open(`${restFilename}`, 'w+');
   } catch (e) {
     console.error(`Could not open ${outputFilename} for writing.`, e.message);
     process.exit(1);
@@ -66,7 +73,7 @@ async function splitFile() {
         }
       }
       if (!found) {
-        await outputs['rest'].appendFile(`${line}\n`);
+        await outputs.rest.appendFile(`${line}\n`);
       }
     });
 

@@ -3,6 +3,8 @@
  * (c) Copyright Instana Inc. and contributors 2018
  */
 
+'use strict';
+
 module.exports = {
   extends: ['airbnb/legacy', 'plugin:monorepo-cop/recommended'],
 
