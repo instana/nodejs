@@ -110,12 +110,13 @@ Later on, the original package-lock.json is restored when `git checkout package-
 
 To make a release, you first need to ensure that the released version will either be a semver minor or patch release so that automatic updates are working for our users. Following that, the process is simple:
 
-- Update `CHANGELOG.md` so that the unreleased section gets its version number. Commit and push this change.
 - Acquire an OTP token for 2fa.
 - Ensure you are logged in with npm in your shell (`npm whoami`)
-- Run either
-    - `NPM_CONFIG_OTP={your token} lerna publish --force-publish="*" patch && lerna bootstrap`, or
-    - `NPM_CONFIG_OTP={your token} lerna publish --force-publish="*" minor && lerna bootstrap`.
+- Run `NPM_CONFIG_OTP={your token} lerna publish && lerna bootstrap`.
+
+Lerna will determine if this is going to be a major, minor or patch version from the commit comments of all commits since the last release. It will also automatically update the CHANGELOG.md files in the root of the repository and also in all individual packages, based on those commits.
+
+If you want to review the changes that lerna is about to apply (for example the CHANGELOG files), you can execute `lerna version --no-git-tag-version --no-push` first.
 
 For each package release, we also publishing a new Lambda layer and a Fargate Docker image layer. This happens automatically via CI.
 
@@ -123,7 +124,8 @@ For each package release, we also publishing a new Lambda layer and a Fargate Do
 
 You might want to separate the version bumping and tagging from publishing to the npm registry. This is also possible. The separate lerna publish command (see below) is also helpful if the publish did not go through successfully.
 
-- Run `lerna version --force-publish="*" patch` or `lerna version --force-publish="*" minor`, depending on which part of the version number has to be bumped. We should never have the need to bump the major version, so do not run `lerna version major`.
+- Run `lerna version`.
+- Lerna will determine if this is going to be a major, minor or patch version from the commit comments of all commits since the last release. It will also update all relevant changelog files.
 - Lerna will push the commit and the tag created by `lerna version` to GitHub. Check that this has happened. Also check that the version numbers in package-lock.json have been updated as well.
 - Acquire an OTP token for 2fa.
 - `NPM_CONFIG_OTP={your token} lerna publish from-package && lerna bootstrap`
