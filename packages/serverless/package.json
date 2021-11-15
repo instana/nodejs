@@ -67,7 +67,7 @@
     "@instana/core": "1.137.0",
     "agent-base": "^6.0.2",
     "https-proxy-agent": "^5.0.0",
-    "semver": "^7.3.5"
+    "semver": "7.3.3"
   },
   "devDependencies": {
     "eslint": "^7.30.0",

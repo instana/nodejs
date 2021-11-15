@@ -32,7 +32,7 @@ describe('metrics.dependencies', function () {
       // packages/shared-metrics/node_modules.
       expect(Object.keys(dependencies.currentPayload).length).to.be.greaterThan(200);
       expect(dependencies.currentPayload['event-loop-lag']).to.equal('1.4.0');
-      expect(dependencies.currentPayload.semver).to.equal('7.3.5');
+      expect(dependencies.currentPayload.semver).to.equal('7.3.3');
       expect(dependencies.currentPayload.mocha).to.equal('7.2.0');
     });
   });
