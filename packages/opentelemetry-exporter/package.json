@@ -68,9 +68,6 @@
     "@opentelemetry/sdk-trace-node": "0.24.1-alpha.4",
     "@opentelemetry/semantic-conventions": "0.25.0",
     "chai-spies": "1.0.0",
-    "eslint-config-airbnb-base": "^14.2.1",
-    "eslint-plugin-import": "^2.23.4",
-    "eslint-plugin-mocha": "^9.0.0",
     "prettier": "^2.3.2"
   }
 }
