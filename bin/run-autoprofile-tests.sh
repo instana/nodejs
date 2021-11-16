@@ -7,7 +7,6 @@
 
 set -eo pipefail
 
-cd `dirname $BASH_SOURCE`/../packages/autoprofile
+lerna run test:debug --scope=@instana/autoprofile --stream
 
-npm run test:debug
 

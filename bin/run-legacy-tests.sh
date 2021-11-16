@@ -7,7 +7,4 @@
 
 set -eo pipefail
 
-cd `dirname $BASH_SOURCE`/../packages/legacy-sensor
-
-npm run test:debug
-
+lerna run test:debug --scope=@instana/legacy-sensor --stream

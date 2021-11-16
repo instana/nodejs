@@ -7,7 +7,4 @@
 
 set -eo pipefail
 
-cd `dirname $BASH_SOURCE`/../packages/shared-metrics
-
-npm run test:debug
-
+lerna run test:debug --scope=@instana/shared-metrics --stream

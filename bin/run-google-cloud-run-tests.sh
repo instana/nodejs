@@ -7,7 +7,5 @@
 
 set -eo pipefail
 
-cd `dirname $BASH_SOURCE`/../packages/google-cloud-run
-
-npm run test:debug
+lerna run test:debug --scope=@instana/google-cloud-run --stream
 
