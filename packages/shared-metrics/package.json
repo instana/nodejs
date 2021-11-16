@@ -76,7 +76,6 @@
   },
   "devDependencies": {
     "@types/tar": "^4.0.5",
-    "eslint": "^7.30.0",
     "eslint-config-airbnb-base": "^14.2.1",
     "eslint-plugin-import": "^2.23.4",
     "eslint-plugin-mocha": "^8.1.0",
