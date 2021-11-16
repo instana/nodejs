@@ -146,7 +146,6 @@
     "bookshelf": "^1.2.0",
     "knex": "^0.95.11",
     "opentracing": "^0.14.5",
-    "prettier": "^2.3.2",
     "sequelize": "6.3.4",
     "typeorm": "^0.2.37"
   }

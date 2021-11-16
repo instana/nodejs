@@ -71,8 +71,7 @@
   "devDependencies": {
     "express": "^4.17.1",
     "node-fetch": "^2.6.1",
-    "pino": "^6.11.3",
-    "prettier": "^2.3.2"
+    "pino": "^6.11.3"
   },
   "engines": {
     "node": ">=8.6.0"

@@ -133,7 +133,5 @@
     "semver": "7.3.3",
     "shimmer": "1.2.1"
   },
-  "devDependencies": {
-    "prettier": "^2.3.2"
-  }
+  "devDependencies": {}
 }

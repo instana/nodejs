@@ -67,7 +67,6 @@
     "@opentelemetry/sdk-trace-base": "0.25.0",
     "@opentelemetry/sdk-trace-node": "0.24.1-alpha.4",
     "@opentelemetry/semantic-conventions": "0.25.0",
-    "chai-spies": "1.0.0",
-    "prettier": "^2.3.2"
+    "chai-spies": "1.0.0"
   }
 }
