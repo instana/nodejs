@@ -53,7 +53,6 @@
     "node-abi": "^2.30.0"
   },
   "devDependencies": {
-    "mkdirp": "^1.0.4",
     "semver": "7.3.3"
   },
   "main": "index.js",
