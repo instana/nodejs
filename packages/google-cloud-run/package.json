@@ -69,7 +69,6 @@
     "uuid": "^8.3.2"
   },
   "devDependencies": {
-    "express": "^4.17.1",
     "node-fetch": "^2.6.1",
     "pino": "^6.11.3"
   },

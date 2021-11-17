@@ -70,7 +70,6 @@
     "semver": "7.3.3"
   },
   "devDependencies": {
-    "express": "^4.17.1",
     "pino": "^6.11.3"
   }
 }

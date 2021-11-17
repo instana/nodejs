@@ -69,7 +69,6 @@
     "@instana/serverless": "1.137.1"
   },
   "devDependencies": {
-    "express": "^4.17.1",
     "pino": "^6.11.3"
   }
 }
