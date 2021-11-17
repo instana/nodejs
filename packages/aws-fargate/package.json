@@ -69,8 +69,7 @@
     "@instana/serverless": "1.137.1"
   },
   "devDependencies": {
-    "node-fetch": "^2.6.1",
-    "pino": "^6.11.3"
+    "node-fetch": "^2.6.1"
   },
   "engines": {
     "node": ">=8.6.0"

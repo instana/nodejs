@@ -69,7 +69,5 @@
     "https-proxy-agent": "^5.0.0",
     "semver": "7.3.3"
   },
-  "devDependencies": {
-    "pino": "^6.11.3"
-  }
+  "devDependencies": {}
 }

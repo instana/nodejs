@@ -64,7 +64,5 @@
     "@instana/shared-metrics": "1.137.1",
     "node-fetch": "^2.6.1"
   },
-  "devDependencies": {
-    "pino": "^6.11.3"
-  }
+  "devDependencies": {}
 }
