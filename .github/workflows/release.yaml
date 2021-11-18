@@ -22,7 +22,7 @@ jobs:
       # - https://github.blog/changelog/2020-10-02-npm-automation-tokens/ and
       # - https://docs.npmjs.com/creating-and-viewing-access-tokens
       # TODO (later) Remove --no-git-tag-version and --no-push and use lerna publish instead of lerna version
-      - run: bin/needs-release.js || npx lerna version --no-git-tag-version --no-push --yes
+      - run: npx lerna version --no-git-tag-version --no-push --yes
 
       # TODO (later) remove this?
       - run: git status
