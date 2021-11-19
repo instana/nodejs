@@ -2,7 +2,7 @@
 
 ## Requirements
 
-We are currently using **Node.js v14** for local development.
+We are currently using **Node.js v16** for local development.
 
 `brew install jq` for OSX (for other systems please look up [here](https://stedolan.github.io/jq/)) is required to run `npm run audit` or `lerna audit run`.
 
