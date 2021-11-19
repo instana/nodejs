@@ -35,6 +35,7 @@
     "lint": "eslint src test dummy-app",
     "verify": "npm run lint && npm test",
     "agent-stub": "AGENT_PORT=3210 node test/apps/agentStub.js",
+    "genPackagelock": "npm i --package-lock-only",
     "prettier": "prettier --write 'src/**/*.js' 'test/**/*.js' 'dummy-app/**/*.js'"
   },
   "keywords": [
@@ -147,7 +148,7 @@
     "eslint": "^7.30.0",
     "eslint-config-airbnb": "^18.2.1",
     "eslint-plugin-mocha": "^9.0.0",
-    "knex": "^0.95.11",
+    "knex": "^0.21.21",
     "mocha": "^7.2.0",
     "opentracing": "^0.14.5",
     "prettier": "^2.3.2",

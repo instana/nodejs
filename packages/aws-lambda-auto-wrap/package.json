@@ -28,6 +28,7 @@
     "test:debug": "true",
     "lint": "eslint src",
     "verify": "npm run lint",
+    "genPackagelock": "npm i --package-lock-only",
     "prettier": "prettier --write 'src/**/*.js'"
   },
   "keywords": [

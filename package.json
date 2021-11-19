@@ -6,6 +6,9 @@
     "name": "Bastian Krol",
     "email": "bastian.krol@instana.com"
   },
+  "workspaces": [
+    "./packages/*"
+  ],
   "homepage": "https://github.com/instana/nodejs",
   "repository": {
     "type": "git",
@@ -30,22 +33,21 @@
     }
   ],
   "scripts": {
-    "audit": "lerna run audit --stream && npm audit --production",
-    "bootstrap": "lerna bootstrap",
-    "bump": "lerna publish",
+    "audit": "npm audit --production",
+    "bootstrap": "npm i",
     "commit": "cz",
     "doctoc": "doctoc README.md packages/collector/README.md",
-    "lint": "node misc/is_eol || (eslint .*.js *.js && npm run typecheck && lerna run lint --stream && eslint misc && eslint dockerfile-examples)",
-    "postinstall": "husky install && npm run bootstrap",
+    "postinstall": "husky install",
+    "lint": "node misc/is_eol || (eslint .*.js *.js && npm run typecheck && npm run lint --workspaces && eslint misc && eslint dockerfile-examples)",
     "precommit": "npm run doctoc",
-    "prettier": "prettier --write 'misc/**/*.js' 'dockerfile-examples/**/*.js' 'bin/**/*.js' && lerna run prettier --stream",
-    "reinstall-deps": "lerna clean -y && rm -rf node_modules && npm install && lerna bootstrap",
-    "test": "lerna run test --stream",
-    "test:debug": "lerna run test:debug --stream",
+    "prettier": "prettier --write 'misc/**/*.js' 'dockerfile-examples/**/*.js' 'bin/**/*.js' && npm run prettier --workspaces",
+    "reinstall-deps": "npm ci",
+    "test": "npm run test --workspaces",
+    "test:debug": "npm test:debug",
     "typecheck": "tsc",
-    "update-deps": "lerna exec '../../node_modules/.bin/ncu --upgrade' && lerna exec 'npm i --package-lock-only' && npm run reinstall-deps",
-    "verify": "lerna run verify --stream",
-    "version": "lerna clean --yes && lerna bootstrap --ignore-scripts -- --package-lock-only --no-audit && git add packages/*/package-lock.json"
+    "verify": "npm run verify --workspaces",
+    "bump": "lerna publish",
+    "version": "lerna version --no-git-tag-version --no-push"
   },
   "devDependencies": {
     "@apollo/federation": "^0.25.1",

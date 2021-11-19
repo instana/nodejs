@@ -18,8 +18,6 @@ const { retry } = require('../../../core/test/test_util');
 const ProcessControls = require('../test_util/ProcessControls');
 const globalAgent = require('../globalAgent');
 
-const sharedMetricsNodeModules = path.join(__dirname, '..', '..', '..', 'shared-metrics', 'node_modules');
-
 describe('retry loading native addons', function () {
   const timeout = Math.max(config.getTestTimeout(), 20000);
   this.timeout(timeout);
@@ -31,8 +29,7 @@ describe('retry loading native addons', function () {
   const metricAddonsTestConfigs = [
     {
       name: 'event-loop-stats',
-      nodeModulesPath: sharedMetricsNodeModules,
-      nativeModulePath: path.join(sharedMetricsNodeModules, 'event-loop-stats'),
+      nativeModulePath: path.dirname(require.resolve('event-loop-stats')),
       backupPath: path.join(os.tmpdir(), 'event-loop-stats-backup'),
       check: ([allMetrics, aggregated]) => {
         // check that libuv stats are initially reported as unsupported
@@ -65,8 +62,7 @@ describe('retry loading native addons', function () {
     },
     {
       name: 'gcstats.js',
-      nodeModulesPath: sharedMetricsNodeModules,
-      nativeModulePath: path.join(sharedMetricsNodeModules, 'gcstats.js'),
+      nativeModulePath: path.dirname(require.resolve('gcstats.js')),
       backupPath: path.join(os.tmpdir(), 'gcstats.js-backup'),
       check: ([allMetrics, aggregated]) => {
         // check that gc stats are initially reported as unsupported

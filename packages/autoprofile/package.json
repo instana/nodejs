@@ -31,6 +31,7 @@
     "test:mocha": "echo \"******* Files to be tested:\n $CI_AUTOPROFILE_TEST_FILES\" && mocha --sort --reporter mocha-multi --reporter-options spec=-,xunit=../../test-results/autoprofile/results.xml --recursive ${CI_AUTOPROFILE_TEST_FILES:=} test/auto_profiler.test.js",
     "lint": "eslint lib test",
     "verify": "npm run lint && npm test",
+    "genPackagelock": "npm i --package-lock-only",
     "prettier": "prettier --write 'lib/**/*.js' 'test/**/*.js'"
   },
   "contributors": [
