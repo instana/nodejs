@@ -78,10 +78,10 @@ shared: &shared
           - v{{ .Environment.CACHE_VERSION }}-misc-test-durations-{{ .Environment.CIRCLE_JOB }}-{{ checksum "package-lock.json" }}
 
     - run: |
-        if [[ $(node -v) =~ ^v10.*$ ]]; then
-          npm install -g npm@7 --prefix=$HOME/.local
-        else
+        if [[ $(node -v) =~ ^v16.*$ ]]; then
           npm install -g npm@latest --prefix=$HOME/.local
+        else
+          npm install -g npm@7.24.2 --prefix=$HOME/.local
         fi
 
     - run: npm --version
