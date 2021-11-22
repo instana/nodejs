@@ -147,12 +147,6 @@ shared: &shared
           - misc/test-durations/node_modules
         key: v{{ .Environment.CACHE_VERSION }}-misc-test-durations-{{ .Environment.CIRCLE_JOB }}-{{ checksum "misc/test-durations/package-lock.json" }}
 
-    # When running tests in Node.js 8, we pin grpc to exactly 1.10.1.
-    # For more recent Node.js versions (>= 10) we use the latest 1.x as stated in package.json. We can't use grcp@1.10.1
-    # in Node.js 10 since it fails to build under Node.js >= 10. We still want to explicitly test the combination of
-    # Node.js 8 with grpc@1.10.1 for reasons.
-    - run: "([[ $(node -v) =~ ^v8.*$ ]] && npm install grpc@1.10.1) || true"
-
     # Only run audit with the most recent Node.js version - one Node version is enough.
     - run: "([[ $(node -v) =~ ^v16.*$ ]] && npm run audit) || [[ ! $(node -v) =~ ^v16.*$ ]]"
 
@@ -365,25 +359,6 @@ jobs:
     <<: *shared
     parallelism: 16
 
-  "node-8":
-    docker:
-      - image: circleci/node:8
-      - <<: *zookeeper
-      - <<: *elasticsearch
-      - <<: *mongo
-      - <<: *redis
-      - <<: *kafka
-      - <<: *schema-registry
-      - <<: *mysql
-      - <<: *postgres
-      - <<: *mssql
-      - <<: *rabbitmq
-      - <<: *nats
-      - <<: *nats-streaming
-      - <<: *memcached
-    <<: *shared
-    parallelism: 16
-
 workflows:
   version: 2
   build:
@@ -392,4 +367,3 @@ workflows:
       - "node-14"
       - "node-12"
       - "node-10"
-      - "node-8"
