@@ -35,7 +35,7 @@ describe('dependencies', function () {
   describe('with a package.json file', () => {
     const appDir = path.join(__dirname, 'app-with-package-json');
     before(() => {
-      runCommand('npm install --no-audit', appDir);
+      runCommand('npm install --no-audit && git checkout package-lock.json', appDir);
     });
 
     const controls = new ProcessControls({
@@ -63,10 +63,7 @@ describe('dependencies', function () {
           expect(deps['mime-types']).to.exist;
           expect(deps.negotiator).to.exist;
 
-          // According to how we sort and limit the collected dependencies, negotiator should be the last package that
-          // is included while pino-std-serializers is the first that is omitted.
-
-          expect(deps['pino-std-serializers']).to.not.exist;
+          // According to how we sort and limit the collected dependencies
           expect(deps['quick-format-unescaped']).to.not.exist;
           expect(deps['raw-body']).to.not.exist;
           expect(deps['readable-stream']).to.not.exist;
@@ -90,13 +87,13 @@ describe('dependencies', function () {
     before(async () => {
       console.log(`Copying test app from ${appDir} to ${tmpDir}.`);
       await recursiveCopy(appDir, tmpDir);
+
       runCommand('npm install --no-audit', tmpDir);
-      const instanaPath = path.join(tmpDir, 'node_modules', '@instana');
-      mkdirp.sync(instanaPath);
-      const collectorPath = path.join(instanaPath, 'collector');
-      // We create a symlink to this repo for the @instana/collector package to be able to test with the current code
-      // base. A downside of this is that also the dev dependencies of @instana/collector and friends will be found.
-      symlinkSync(path.join(repoRootDir, 'packages', 'collector'), collectorPath);
+      runCommand(`npm install --prefix ${tmpDir} ${path.join(repoRootDir, 'packages', 'collector')} `);
+      runCommand(`npm install --prefix ${tmpDir} ${path.join(repoRootDir, 'packages', 'core')} `);
+      runCommand(`npm install --prefix ${tmpDir} ${path.join(repoRootDir, 'packages', 'autoprofile')} `);
+      runCommand(`npm install --prefix ${tmpDir} ${path.join(repoRootDir, 'packages', 'shared-metrics')} `);
+
       unlinkSync(path.join(tmpDir, 'package.json'));
     });
 
@@ -119,7 +116,7 @@ describe('dependencies', function () {
         agentControls.getAllMetrics(controls.getPid()).then(allMetrics => {
           const deps = findMetric(allMetrics, ['dependencies']);
           expect(deps).to.be.an('object');
-          expect(Object.keys(deps)).to.have.lengthOf(300);
+          expect(Object.keys(deps)).to.have.lengthOf(110);
 
           expect(deps['@instana/shared-metrics']).to.exist;
           expect(deps['@instana/core']).to.exist;
@@ -143,12 +140,11 @@ describe('dependencies', function () {
 
     before(async () => {
       runCommand(`npm install --no-audit ${appTgz}`, tmpDir);
-      const instanaPath = path.join(tmpDir, 'node_modules', '@instana');
-      mkdirp.sync(instanaPath);
-      const collectorPath = path.join(instanaPath, 'collector');
-      // We create a symlink to this repo for the @instana/collector package to be able to test with the current code
-      // base. A downside of this is that also the dev dependencies of @instana/collector and friends will be found.
-      symlinkSync(path.join(repoRootDir, 'packages', 'collector'), collectorPath);
+
+      runCommand(`npm install --prefix ${tmpDir} ${path.join(repoRootDir, 'packages', 'collector')} `);
+      runCommand(`npm install --prefix ${tmpDir} ${path.join(repoRootDir, 'packages', 'core')} `);
+      runCommand(`npm install --prefix ${tmpDir} ${path.join(repoRootDir, 'packages', 'autoprofile')} `);
+      runCommand(`npm install --prefix ${tmpDir} ${path.join(repoRootDir, 'packages', 'shared-metrics')} `);
     });
 
     const controls = new ProcessControls({
@@ -171,7 +167,7 @@ describe('dependencies', function () {
         agentControls.getAllMetrics(controls.getPid()).then(allMetrics => {
           const deps = findMetric(allMetrics, ['dependencies']);
           expect(deps).to.be.an('object');
-          expect(Object.keys(deps)).to.have.lengthOf(300);
+          expect(Object.keys(deps)).to.have.lengthOf(111);
 
           expect(deps['@instana/shared-metrics']).to.exist;
           expect(deps['@instana/core']).to.exist;
