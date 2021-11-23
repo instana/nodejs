@@ -30,7 +30,7 @@ exports.PORT = DEFAULT_PORT;
 const packageNames = Object.keys(agentPorts);
 for (let i = 0; i < packageNames.length; i++) {
   const packageName = packageNames[i];
-  if (process.argv[1].indexOf(packageName) >= 0) {
+  if (process.cwd().indexOf(packageName) >= 0) {
     exports.PORT = agentPorts[packageName];
     break;
   }
