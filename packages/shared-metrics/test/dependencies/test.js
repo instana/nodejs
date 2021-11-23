@@ -34,7 +34,7 @@ describe('dependencies', function () {
   describe('with a package.json file', () => {
     const appDir = path.join(__dirname, 'app-with-package-json');
     before(() => {
-      runCommand('npm install --no-audit && git checkout package-lock.json', appDir);
+      runCommand('npm install --no-audit', appDir);
     });
 
     const controls = new ProcessControls({
