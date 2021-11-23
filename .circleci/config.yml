@@ -43,15 +43,10 @@ shared: &shared
         fi
 
     - run: npm --version
+ 
+    - run: npm install
 
-    # We do not use npm ci (short for clean install) because it removes the existing node_modules folder. But we want to
-    # re-use the existing node_modules folders from CircleCI's cache. Using npm ci would defeat that purpose. For the
-    # same purpose, we reset the package lock file after running npm install. Sometimes npm install updates the lock
-    # file and that will also break caching because its checksum would then change between save_cache and restore_cache
-    # in the next CI run.    
-    - run: npm install && git checkout package-lock.json
-
-    - run: cd misc/test-durations && npm install && git checkout package-lock.json
+    - run: cd misc/test-durations && npm install
 
     # Cache the node_modules folders for the next run (before potentially installing other module versions like grpc,
     # see below).
