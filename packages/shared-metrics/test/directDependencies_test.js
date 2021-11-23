@@ -10,7 +10,7 @@ const expect = require('chai').expect;
 const testUtils = require('@instana/core/test/test_util');
 const directDependencies = require('../src/directDependencies');
 
-describe('metrics.directDependencies', () => {
+describe.skip('metrics.directDependencies', () => {
   it('should use the correct payload prefix', () => {
     expect(directDependencies.payloadPrefix).to.equal('directDependencies');
   });
