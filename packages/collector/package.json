@@ -35,7 +35,6 @@
     "lint": "eslint src test dummy-app",
     "verify": "npm run lint && npm test",
     "agent-stub": "AGENT_PORT=3210 node test/apps/agentStub.js",
-    "genPackagelock": "npm i --package-lock-only",
     "prettier": "prettier --write 'src/**/*.js' 'test/**/*.js' 'dummy-app/**/*.js'"
   },
   "keywords": [

@@ -32,7 +32,6 @@
     "audit": "bin/prepare-audit.sh && npm audit --production; AUDIT_RESULT=$?; git checkout package-lock.json; exit $AUDIT_RESULT",
     "lint": "eslint src test",
     "verify": "npm run lint && npm test",
-    "genPackagelock": "npm i --package-lock-only",
     "prettier": "prettier --write 'src/**/*.js' 'test/**/*.js'"
   },
   "bugs": {
