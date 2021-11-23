@@ -69,17 +69,7 @@
     "@instana/metrics-util": "1.137.1",
     "@instana/serverless": "1.137.1"
   },
-  "devDependencies": {
-    "eslint": "^7.30.0",
-    "eslint-config-airbnb-base": "^14.2.1",
-    "eslint-plugin-import": "^2.23.4",
-    "eslint-plugin-mocha": "^8.1.0",
-    "express": "^4.17.1",
-    "mocha": "^7.2.0",
-    "node-fetch": "^2.6.1",
-    "pino": "^6.11.3",
-    "prettier": "^2.3.2"
-  },
+  "devDependencies": {},
   "engines": {
     "node": ">=8.6.0"
   }
