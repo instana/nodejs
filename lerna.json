@@ -1,6 +1,8 @@
 {
-  "packages": ["packages/*"],
-  "version": "1.137.0",
+  "packages": [
+    "packages/*"
+  ],
+  "version": "1.137.1",
   "command": {
     "publish": {
       "exact": true,
