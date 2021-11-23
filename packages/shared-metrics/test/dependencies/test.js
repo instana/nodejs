@@ -10,8 +10,7 @@
 const _ = require('lodash');
 const { expect } = require('chai');
 const { execSync } = require('child_process');
-const { mkdtempSync, symlinkSync, unlinkSync } = require('fs');
-const mkdirp = require('mkdirp');
+const { mkdtempSync, unlinkSync } = require('fs');
 const recursiveCopy = require('recursive-copy');
 const os = require('os');
 const path = require('path');
