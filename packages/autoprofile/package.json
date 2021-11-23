@@ -26,6 +26,9 @@
   "scripts": {
     "audit": "npm audit --production",
     "install": "node node-gyp-fallback.js",
+    "pretest": "mkdir -p node_modules",
+    "pretest:mocha": "npm run pretest",
+    "pretest:debug": "npm run pretest",
     "test": "npm run test:mocha",
     "test:debug": "WITH_STDOUT=true npm run test:mocha",
     "test:mocha": "echo \"******* Files to be tested:\n $CI_AUTOPROFILE_TEST_FILES\" && mocha --sort --reporter mocha-multi --reporter-options spec=-,xunit=../../test-results/autoprofile/results.xml --recursive ${CI_AUTOPROFILE_TEST_FILES:=} test/auto_profiler.test.js",

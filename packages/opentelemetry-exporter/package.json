@@ -26,6 +26,9 @@
   "scripts": {
     "start": "node test/app.js",
     "debug": "node --inspect-brk test/app.js",
+    "pretest": "mkdir -p node_modules",
+    "pretest:mocha": "npm run pretest",
+    "pretest:debug": "npm run pretest",
     "test": "echo \"$(node -v)\" | grep v8 > /dev/null || npm run test:mocha",
     "test:mocha": "echo \"******* Files to be tested:\n $CI_OTEL_EXPORTER_TEST_FILES\" && mocha --sort --reporter mocha-multi --reporter-options spec=-,xunit=../../test-results/opentelemetry-exporter/results.xml ${CI_OTEL_EXPORTER_TEST_FILES:=$(find test -iname '*test.js' -not -path '*node_modules*')}",
     "test:debug": "WITH_STDOUT=true npm run test:mocha",

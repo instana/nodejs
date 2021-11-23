@@ -11,6 +11,9 @@
   },
   "scripts": {
     "audit": "npm audit --production",
+    "pretest": "mkdir -p node_modules",
+    "pretest:mocha": "npm run pretest",
+    "pretest:debug": "npm run pretest",
     "test": "NODE_ENV=debug USE_OPENTRACING_DEBUG_IMPL=true npm run test:mocha",
     "test:mocha": "echo \"******* Files to be tested:\n $CI_CORE_TEST_FILES\" && mocha --sort --reporter mocha-multi --reporter-options spec=-,xunit=../../test-results/core/results.xml ${CI_CORE_TEST_FILES:=$(find test -iname '*test.js' -not -path '*node_modules*')}",
     "test:debug": "WITH_STDOUT=true npm run test:mocha",

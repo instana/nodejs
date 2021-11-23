@@ -24,6 +24,9 @@
   },
   "scripts": {
     "audit": "bin/prepare-audit.sh && npm audit --production; AUDIT_RESULT=$?; git checkout package-lock.json; exit $AUDIT_RESULT",
+    "pretest": "mkdir -p node_modules",
+    "pretest:mocha": "npm run pretest",
+    "pretest:debug": "npm run pretest",
     "test": "true",
     "test:debug": "true",
     "lint": "eslint src",
