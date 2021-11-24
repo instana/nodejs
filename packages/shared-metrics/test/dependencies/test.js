@@ -94,6 +94,8 @@ describe('dependencies', function () {
       runCommand(`npm install --prefix ${tmpDir} ${path.join(repoRootDir, 'packages', 'shared-metrics')}`, tmpDir);
 
       runCommand('ls -la node_modules/@instana/shared-metrics', tmpDir);
+      runCommand('ls -la node_modules/@instana/shared-metrics/', tmpDir);
+      runCommand('ls -la node_modules/@instana/shared-metrics/', repoRootDir);
 
       unlinkSync(path.join(tmpDir, 'package.json'));
     });
