@@ -33,7 +33,7 @@ shared: &shared
 
     - restore_cache:
         keys:
-          - v{{ .Environment.CACHE_VERSION }}-collectorv2-root-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "package-lock.json" }}
+          - v{{ .Environment.CACHE_VERSION }}-collector-v2-root-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "package-lock.json" }}
 
     - run: |
         if [[ $(node -v) =~ ^v16.*$ ]]; then
@@ -53,7 +53,7 @@ shared: &shared
     - save_cache:
         paths:
           - node_modules
-        key: v{{ .Environment.CACHE_VERSION }}-collectorv2-root-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "package-lock.json" }}
+        key: v{{ .Environment.CACHE_VERSION }}-collector-v2-root-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "package-lock.json" }}
 
     # Only run audit with the most recent Node.js version - one Node version is enough.
     - run: "([[ $(node -v) =~ ^v16.*$ ]] && npm run audit) || [[ ! $(node -v) =~ ^v16.*$ ]]"
