@@ -1,0 +1,11 @@
+# Bare Node.js 16 image.
+# Native addons will work since the base image (Debian Buster) has all
+# dependencies installed out of the box.
+
+FROM node:16.13.0
+WORKDIR /usr/src/app
+COPY package*.json ./
+RUN npm install --only=production
+COPY . .
+EXPOSE 3333
+CMD [ "npm", "start" ]

@@ -1,15 +1,15 @@
 # An Alpine image with additional Alpine packages, so native addons can
 # be compiled via node-gyp.
 
-FROM node:14.9.0-alpine3.11
+FROM node:16.13.0-alpine3.14
 WORKDIR /usr/src/app
 COPY package*.json ./
 
-RUN apk add --no-cache --virtual .gyp \
+RUN apk add --no-cache --virtual .build-deps \
         build-base \
-        python \
+        python3 \
     && npm install --only=production \
-    && apk del .gyp
+    && apk del .build-deps
 
 COPY . .
 EXPOSE 3333
