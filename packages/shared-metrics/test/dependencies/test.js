@@ -93,6 +93,8 @@ describe('dependencies', function () {
       runCommand(`npm install --prefix ${tmpDir} ${path.join(repoRootDir, 'packages', 'autoprofile')}`, tmpDir);
       runCommand(`npm install --prefix ${tmpDir} ${path.join(repoRootDir, 'packages', 'shared-metrics')}`, tmpDir);
 
+      runCommand('ll packages/shared-metrics/node_modules/', tmpDir);
+
       unlinkSync(path.join(tmpDir, 'package.json'));
     });
 
