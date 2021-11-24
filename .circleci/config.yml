@@ -74,7 +74,7 @@ shared: &shared
     - run: |
         ulimit -c unlimited
         . ./bin/ci_glob_setup.sh
-        npm test
+        npm test --w packages/shared-metrics
 
     - store_test_results:
         path: test-results

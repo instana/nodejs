@@ -70,7 +70,7 @@ describe('dependencies', function () {
       ));
   });
 
-  describe.only('without a package.json file', () => {
+  describe('without a package.json file', () => {
     // This simulates a deployment where the package.json file is not included in the deployment. It is not entirely
     // trivial to create that situation. We copy the app from ./app-without-package-json to a temporary directory, then
     // run npm install there and finally delete the package.json file.
