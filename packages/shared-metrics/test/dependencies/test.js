@@ -140,10 +140,10 @@ describe('dependencies', function () {
     before(async () => {
       runCommand(`npm install --no-audit ${appTgz}`, tmpDir);
 
-      runCommand(`npm install --prefix ${tmpDir} ${path.join(repoRootDir, 'packages', 'collector')} `);
-      runCommand(`npm install --prefix ${tmpDir} ${path.join(repoRootDir, 'packages', 'core')} `);
-      runCommand(`npm install --prefix ${tmpDir} ${path.join(repoRootDir, 'packages', 'autoprofile')} `);
-      runCommand(`npm install --prefix ${tmpDir} ${path.join(repoRootDir, 'packages', 'shared-metrics')} `);
+      runCommand(`npm install --prefix ${tmpDir} ${path.join(repoRootDir, 'packages', 'collector')}`, tmpDir);
+      runCommand(`npm install --prefix ${tmpDir} ${path.join(repoRootDir, 'packages', 'core')}`, tmpDir);
+      runCommand(`npm install --prefix ${tmpDir} ${path.join(repoRootDir, 'packages', 'autoprofile')}`, tmpDir);
+      runCommand(`npm install --prefix ${tmpDir} ${path.join(repoRootDir, 'packages', 'shared-metrics')}`, tmpDir);
     });
 
     const controls = new ProcessControls({
