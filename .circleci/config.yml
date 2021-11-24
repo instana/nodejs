@@ -46,7 +46,7 @@ shared: &shared
  
     - run: npm install
 
-    - run: cd misc/test-durations && npm install
+    #- run: cd misc/test-durations && npm install
 
     # Cache the node_modules folders for the next run (before potentially installing other module versions like grpc,
     # see below).
@@ -61,7 +61,7 @@ shared: &shared
     # Check if all commits since the last release comply with the format that conventional-commit understands. This
     # makes sure that lerna version (with the "conventionalCommits" option set in lerna.json) can correctly determin the
     # next version number and generate changelogs.
-    - run: "([[ $(node -v) =~ ^v16.*$ ]] && node_modules/.bin/commitlint --from $(git describe --tags --abbrev=0)) || [[ ! $(node -v) =~ ^v16.*$ ]]"
+    #- run: "([[ $(node -v) =~ ^v16.*$ ]] && node_modules/.bin/commitlint --from $(git describe --tags --abbrev=0)) || [[ ! $(node -v) =~ ^v16.*$ ]]"
 
     # Run linting first, we don't want to wait ages for the test suite to finish only to end the CI job with a linting
     # error.
