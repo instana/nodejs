@@ -7,5 +7,5 @@ set -e
 
 
 source ./build-and-run
-buildAndRun node-12.18.3-yarn
+buildAndRun node-16.13.0-alpine-3.14-with-native
 
