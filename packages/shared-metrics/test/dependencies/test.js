@@ -115,8 +115,6 @@ describe('dependencies', function () {
         agentControls.getAllMetrics(controls.getPid()).then(allMetrics => {
           const deps = findMetric(allMetrics, ['dependencies']);
           expect(deps).to.be.an('object');
-          console.log('DEBUG');
-          console.log(deps);
           expect(Object.keys(deps)).to.have.lengthOf(110);
 
           expect(deps['@instana/shared-metrics']).to.exist;
