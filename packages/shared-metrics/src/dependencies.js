@@ -115,12 +115,18 @@ function addAllDependencies(dependencyDir, started, packageJsonPath) {
  * @param {() => void} callback
  */
 function addDependenciesFromDir(dependencyDir, callback) {
+  console.log('HELLODU0');
+  console.log(dependencyDir);
+
   fs.readdir(dependencyDir, (readDirErr, dependencies) => {
     if (readDirErr || !dependencies) {
       logger.warn('Cannot analyse dependencies due to %s', readDirErr.message);
       callback();
       return;
     }
+
+    console.log('HELLODU1');
+    console.log(dependencies.length);
 
     const filteredDependendencies = dependencies.filter(
       (
@@ -137,6 +143,9 @@ function addDependenciesFromDir(dependencyDir, callback) {
     countDownLatch.once('done', () => {
       callback();
     });
+
+    console.log('HELLODU2');
+    console.log(filteredDependendencies.length);
 
     filteredDependendencies.forEach(dependency => {
       if (dependency.indexOf('@') === 0) {
