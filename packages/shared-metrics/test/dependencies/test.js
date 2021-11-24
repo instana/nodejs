@@ -95,7 +95,9 @@ describe('dependencies', function () {
 
       runCommand('ls -la node_modules/@instana/shared-metrics', tmpDir);
       runCommand('ls -la node_modules/@instana/shared-metrics/', tmpDir);
+      runCommand('ls -la node_modules/@instana/shared-metrics/node_modules', tmpDir);
       runCommand('ls -la node_modules/@instana/shared-metrics/', repoRootDir);
+      runCommand('ls -la node_modules/@instana/shared-metrics/node_modules', repoRootDir);
 
       unlinkSync(path.join(tmpDir, 'package.json'));
     });
