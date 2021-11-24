@@ -246,6 +246,6 @@ workflows:
   build:
     jobs:
       - "node-16"
-      - "node-14"
-      - "node-12"
-      - "node-10"
+      #- "node-14"
+      #- "node-12"
+      #- "node-10"
