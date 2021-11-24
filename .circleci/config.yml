@@ -65,7 +65,7 @@ shared: &shared
 
     # Run linting first, we don't want to wait ages for the test suite to finish only to end the CI job with a linting
     # error.
-    - run: npm run lint
+    #- run: npm run lint
 
     # Run the test suites.
     # (Use ulimit to remove the file size limit on core dump files before running tests.)
