@@ -1,0 +1,16 @@
+{
+  "name": "eslint-plugin-instana",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Custom ESLint rules for Instana's Node.js packages",
+  "author": {
+    "name": "Bastian Krol",
+    "email": "bastian.krol@instana.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/instana/nodejs.git"
+  },
+  "license": "MIT",
+  "main": "index.js"
+}

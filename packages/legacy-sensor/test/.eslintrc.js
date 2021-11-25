@@ -21,6 +21,7 @@ module.exports = {
   },
 
   rules: {
+    'instana/no-unsafe-require': 'off',
     'monorepo-cop/no-relative-import-outside-package': 'off'
   }
 };
