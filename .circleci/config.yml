@@ -44,7 +44,7 @@ shared: &shared
 
     - run: npm --version
  
-    - run: npm install --legacy-peer-deps
+    - run: npm install
 
     #- run: cd misc/test-durations && npm install
 
