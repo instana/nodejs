@@ -92,7 +92,7 @@ function patchedModuleLoad(moduleName) {
       const transformerFn = applicableByModuleNameTransformers[i];
       if (typeof transformerFn === 'function') {
         try {
-          cacheEntry.moduleExports = transformerFn(cacheEntry.moduleExports) || cacheEntry.moduleExports;
+          cacheEntry.moduleExports = transformerFn(cacheEntry.moduleExports, filename) || cacheEntry.moduleExports;
         } catch (e) {
           logger.error(`Cannot instrument ${moduleName} due to an error in instrumentation: ${e}`);
           if (e.message) {
@@ -122,7 +122,7 @@ function patchedModuleLoad(moduleName) {
     for (let i = 0; i < byFileNamePatternTransformers.length; i++) {
       if (byFileNamePatternTransformers[i].pattern.test(filename)) {
         cacheEntry.moduleExports =
-          byFileNamePatternTransformers[i].fn(cacheEntry.moduleExports) || cacheEntry.moduleExports;
+          byFileNamePatternTransformers[i].fn(cacheEntry.moduleExports, filename) || cacheEntry.moduleExports;
       }
     }
     cacheEntry.byFileNamePatternTransformersApplied = true;
