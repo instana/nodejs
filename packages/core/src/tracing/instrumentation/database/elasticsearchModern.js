@@ -30,8 +30,8 @@ exports.init = function init() {
   requireHook.onModuleLoad('@elastic/elasticsearch', instrument);
 };
 
-function instrument(es) {
-  const ESAPI = require('@elastic/elasticsearch/api');
+function instrument(es, esModuleFilename) {
+  const ESAPI = tracingUtil.requireModuleFromApplicationUnderMonitoringSafely(esModuleFilename, '..', 'api');
   if (isConstructor(ESAPI)) {
     instrumentTransport(es);
   } else {
