@@ -18,7 +18,7 @@ module.exports = {
     sourceType: 'script'
   },
 
-  plugins: ['header', 'mocha', 'monorepo-cop'],
+  plugins: ['header', 'instana', 'mocha', 'monorepo-cop'],
 
   rules: {
     'block-scoped-var': 'off',
@@ -42,6 +42,7 @@ module.exports = {
     'id-length': 'off',
     'implicit-arrow-linebreak': 'off',
     indent: 'off',
+    'instana/no-unsafe-require': 'error',
     'max-classes-per-file': 'off',
     'max-len': ['error', 120, 2],
     'mocha/no-exclusive-tests': 'error',

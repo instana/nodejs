@@ -18,7 +18,7 @@ module.exports = {
     sourceType: 'script'
   },
 
-  plugins: ['mocha', 'monorepo-cop'],
+  plugins: ['instana', 'mocha', 'monorepo-cop'],
 
   rules: {
     'arrow-parens': 'off',
@@ -28,6 +28,7 @@ module.exports = {
     'function-paren-newline': 'off',
     'global-require': 'off',
     'implicit-arrow-linebreak': 'off',
+    'instana/no-unsafe-require': 'error',
     'max-len': ['error', 120, 2],
     'mocha/no-exclusive-tests': 'error',
     'no-confusing-arrow': 'off',

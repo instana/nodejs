@@ -22,6 +22,7 @@ module.exports = {
 
   rules: {
     'object-curly-newline': 'off',
+    'instana/no-unsafe-require': 'off',
     'monorepo-cop/no-relative-import-outside-package': 'off'
   }
 };
