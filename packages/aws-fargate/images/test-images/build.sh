@@ -11,7 +11,7 @@ cd `dirname $BASH_SOURCE`
 
 source utils
 
-# $1: Instana Layer Mode, aka which base image to use. One of:
+# $1: Instana Layer Mode, aka which Docker base image layer to use. One of:
 #     - released      -> public Dockerhub base image
 #     - authenticated -> containers.io base image
 #     - local         -> local Docker base image
@@ -65,7 +65,7 @@ docker rm -f $container_name || true
 echo "Removing image $image_tag"
 docker rmi -f $image_tag
 
-echo "Building $dockerfile -> $image_tag"
+echo "Building $dockerfile -> $image_tag (INSTANA_LAYER: $INSTANA_LAYER, NODEJS_VERSION: $NODEJS_VERSION)"
 docker build \
   --build-arg NODEJS_VERSION=$NODEJS_VERSION \
   --build-arg INSTANA_LAYER=$INSTANA_LAYER \

@@ -6,10 +6,12 @@
 'use strict';
 
 const crypto = require('crypto');
+const path = require('path');
 const StringDecoder = require('string_decoder').StringDecoder;
-const hexDecoder = new StringDecoder('hex');
 
 const stackTrace = require('../util/stackTrace');
+
+const hexDecoder = new StringDecoder('hex');
 
 let stackTraceLength = 10;
 
@@ -198,4 +200,34 @@ exports.readAttribCaseInsensitive = function readAttribCaseInsensitive(object, k
     }
   }
   return null;
+};
+
+/**
+ * In rare cases, we need to require a module from dependencies of the application under test, most notably specific
+ * modules from packages that we instrument. This works without issues when the application under test has installed
+ * @instana/collector and friends as a normal dependency, because then our packages are located in the same node_modules
+ * folder and our instrumentation module will have a module load path list
+ * (see https://nodejs.org/api/modules.html#modulepaths) that includes the application's node_modules folder.
+ *
+ * The situation is different when we are loaded via "--require" from a global installation -- this is the norm for
+ * @instana/aws-fargate, @instana/google-cloud-run, the Kubernetes autotrace webhook
+ * (https://www.instana.com/docs/ecosystem/kubernetes/autotrace-webhook) or when using the global installation pattern
+ * for @instana/collector that does not require modifying the source code
+ * (see * https://www.instana.com/docs/ecosystem/node-js/installation/#global-installation).
+ *
+ * In these scenarios, the module load path list does not include the application's node_module folder. Thus we need to
+ * be a bit more clever when requiring a module from the application's dependencies. We solve this by constructing the
+ * file system path of the desired module by using a known path from a module of the same package and the relative path
+ * from that module to the module we need to load. Note that instrumentations which use the requireHook module can
+ * obtain the base path via their onModuleLoad/onFileLoad callbacks.
+ *
+ * @param {string} basePath the absolute file system path of a module that is close to the one that should be loaded
+ * @param {[string]} relativePath the relative path from the basePath to the desired module
+ * @returns {*} the requested module
+ */
+exports.requireModuleFromApplicationUnderMonitoringSafely = function requireModuleFromApplicationUnderMonitoringSafely(
+  basePath,
+  ...relativePath
+) {
+  return require(path.join(basePath, ...relativePath));
 };
