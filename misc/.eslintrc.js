@@ -23,6 +23,7 @@ module.exports = {
     'function-paren-newline': 'off',
     'global-require': 'off',
     'implicit-arrow-linebreak': 'off',
+    'instana/no-unsafe-require': 'off',
     'max-len': ['error', 120, 2],
     'no-confusing-arrow': 'off',
     'no-console': 'off',
