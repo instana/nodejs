@@ -216,26 +216,20 @@ class AgentStubControls {
 
   async waitUntilAppIsCompletelyInitialized(originalPid) {
     let pid;
-    if (typeof originalPid === 'string') {
-      pid = parseInt(originalPid, 10);
-      if (isNaN(pid)) {
-        throw new Error(`PID has type string and cannot be parsed to a number: ${originalPid}`);
-      }
-    } else if (typeof originalPid === 'number') {
+    if (typeof originalPid === 'number') {
+      pid = String(originalPid);
+    } else if (typeof originalPid === 'string') {
       pid = originalPid;
     } else {
       throw new Error(`PID ${originalPid} has invalid type ${typeof originalPid}.`);
     }
 
     await retry(() =>
-      this.getReceivedData().then(data => {
-        for (let i = 0, len = data.metrics.length; i < len; i++) {
-          const d = data.metrics[i];
-          if (d.pid === pid) {
-            return true;
-          }
+      this.getDiscoveries().then(discoveries => {
+        const reportingPids = Object.keys(discoveries);
+        if (reportingPids.includes(pid)) {
+          return true;
         }
-
         throw new Error(`PID ${pid} never sent any data to the agent.`);
       })
     );
