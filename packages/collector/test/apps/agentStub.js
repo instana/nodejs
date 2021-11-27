@@ -64,7 +64,11 @@ app.put('/com.instana.plugin.nodejs.discovery', (req, res) => {
     return res.sendStatus(404);
   }
 
-  discoveries[pid] = req.body;
+  if (!discoveries[pid]) {
+    discoveries[pid] = [req.body];
+  } else {
+    discoveries[pid].push(req.body);
+  }
   logger.debug('New discovery %s with params', pid, req.body);
 
   const response = {
@@ -197,7 +201,7 @@ app.post('/com.instana.plugin.generic.agent-monitoring-event', function postMoni
 function checkExistenceOfKnownPid(fn) {
   return (req, res) => {
     const pid = req.params.pid;
-    if (!discoveries[pid]) {
+    if (!discoveries[pid] || discoveries[pid].length === 0) {
       logger.debug('Rejecting access for PID %s, not a known discovery', pid);
       return res.status(400).send(`Unknown discovery with pid: ${pid}`);
     }

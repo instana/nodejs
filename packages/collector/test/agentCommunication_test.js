@@ -5,12 +5,14 @@
 
 'use strict';
 
+const path = require('path');
 const expect = require('chai').expect;
 
 const config = require('@instana/core/test/config');
-const { retry } = require('@instana/core/test/test_util');
+const { delay, retry } = require('@instana/core/test/test_util');
 const globalAgent = require('./globalAgent');
 const { isNodeVersionEOL } = require('../src/util/eol');
+const ProcessControls = require('./test_util/ProcessControls');
 
 const isEOL = isNodeVersionEOL();
 
@@ -26,7 +28,9 @@ describe('agentCommunication', function () {
   it('must announce itself to the agent', () =>
     retry(() =>
       agentControls.getDiscoveries().then(discoveries => {
-        const discovery = discoveries[expressControls.getPid()];
+        const discoveriesForPid = discoveries[expressControls.getPid()];
+        expect(discoveriesForPid.length).to.be.at.least(1);
+        const discovery = discoveriesForPid[0];
         expect(discovery.pid).to.be.a('number');
         expect(discovery.fd).to.be.a('string');
         if (/linux/i.test(process.platform)) {
@@ -45,7 +49,10 @@ describe('agentCommunication', function () {
   it('must reannounce itself to the agent once discoveries are cleared', () =>
     retry(() =>
       agentControls.getDiscoveries().then(discoveries => {
-        expect(discoveries[expressControls.getPid()].pid).to.be.a('number');
+        const discoveriesForPid = discoveries[expressControls.getPid()];
+        expect(discoveriesForPid.length).to.be.at.least(1);
+        const discovery = discoveriesForPid[0];
+        expect(discovery.pid).to.be.a('number');
       })
     )
       .then(() => {
@@ -54,7 +61,10 @@ describe('agentCommunication', function () {
       .then(() =>
         retry(() =>
           agentControls.getDiscoveries().then(discoveries => {
-            expect(discoveries[expressControls.getPid()].pid).to.be.a('number');
+            const discoveriesForPid = discoveries[expressControls.getPid()];
+            expect(discoveriesForPid.length).to.be.at.least(1);
+            const discovery = discoveriesForPid[0];
+            expect(discovery.pid).to.be.a('number');
           })
         )
       ));
@@ -112,8 +122,9 @@ describe('announce retry', function () {
       retry(
         () =>
           agentControls.getDiscoveries().then(discoveries => {
-            const discovery = discoveries[expressControls.getPid()];
-            expect(discovery).to.exist;
+            const discoveriesForPid = discoveries[expressControls.getPid()];
+            expect(discoveriesForPid.length).to.be.at.least(1);
+            const discovery = discoveriesForPid[0];
             expect(discovery.pid).to.be.a('number');
             expect(discovery.fd).to.be.a('string');
             if (/linux/i.test(process.platform)) {
@@ -123,4 +134,34 @@ describe('announce retry', function () {
         retryTime
       ));
   }
+});
+
+describe('prevent initializing @instana/collector multiple times', function () {
+  this.timeout(config.getTestTimeout());
+
+  globalAgent.setUpCleanUpHooks();
+  const agentControls = globalAgent.instance;
+
+  const controls = new ProcessControls({
+    appPath: path.join(__dirname, 'apps', 'express'),
+    execArgv: ['--require', path.join(__dirname, '..', 'src', 'immediate')],
+    useGlobalAgent: true
+  }).registerTestHooks();
+
+  it('must only announce to agent once', async () => {
+    await delay(100); // give potential multiple announce attempts time to be triggered
+    await retry(() =>
+      agentControls.getDiscoveries().then(discoveries => {
+        const announceAttemptsForPid = discoveries[String(controls.getPid())];
+        expect(
+          announceAttemptsForPid,
+          `Expected only one announce attempt, but two have been recorded: ${JSON.stringify(
+            announceAttemptsForPid,
+            null,
+            2
+          )}`
+        ).to.have.lengthOf(1);
+      })
+    );
+  });
 });
