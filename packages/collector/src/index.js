@@ -24,6 +24,13 @@ let config;
  * @param {import('./util/normalizeConfig').CollectorConfig} [_config]
  */
 function init(_config) {
+  // @ts-ignore: Property '__INSTANA_INITIALIZED' does not exist on type global
+  if (global.__INSTANA_INITIALIZED) {
+    // Prevent initializing @instana/collector multiple times for the same process.
+    return;
+  }
+  // @ts-ignore: Property '__INSTANA_INITIALIZED' does not exist on type global
+  global.__INSTANA_INITIALIZED = true;
   config = normalizeConfig(_config);
 
   agentConnection = require('./agentConnection');

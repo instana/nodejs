@@ -76,7 +76,8 @@ class ProcessControls {
    * @property {string} [dirname]
    * @property {boolean} [dontKillInAfterHook]
    * @property {boolean} [http2]
-   * @property {Array.<*>} [args]
+   * @property {Array.<string>} [args]
+   * @property {Array.<string>} [execArgv]
    * @property {number} [minimalDelay]
    * @property {boolean} [usePreInit]
    * @property {boolean} [useGlobalAgent]
@@ -107,6 +108,8 @@ class ProcessControls {
     this.dontKillInAfterHook = opts.dontKillInAfterHook;
     // arguments for the app under test
     this.args = opts.args;
+    // command line flags for the Node.js executable
+    this.execArgv = opts.execArgv;
     // server http2
     this.http2 = opts.http2;
     // whether or not to use TLS
@@ -178,6 +181,9 @@ class ProcessControls {
     };
     if (this.cwd) {
       forkConfig.cwd = this.cwd;
+    }
+    if (this.execArgv) {
+      forkConfig.execArgv = this.execArgv;
     }
 
     this.process = this.args ? fork(this.appPath, this.args, forkConfig) : fork(this.appPath, forkConfig);
