@@ -144,3 +144,9 @@ lerna ERR! E429 Could not authenticate ${npm-user-name}: rate limited otp
 
 you simply need to wait five minutes before trying again. In case some packages have already been published and others have not, refer the advice about `lerna publish from-package` in the previous section.
 
+## Dependencies
+
+Add common dev dependencies to the root.
+Add package related dev dependencies to the package.
+
+There is a known lerna bug (https://github.com/lerna/lerna/issues/3029), which won't get fixed, because Lerna support is dead. If you run into it, try to workaround by keeping minimum a non local dependency in the package.
