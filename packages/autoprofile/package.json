@@ -52,9 +52,6 @@
     "nan": "^2.14.2",
     "node-abi": "^2.30.0"
   },
-  "devDependencies": {
-    "semver": "7.3.3"
-  },
   "main": "index.js",
   "files": [
     "src",
