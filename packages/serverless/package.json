@@ -8,9 +8,7 @@
   },
   "homepage": "https://github.com/instana/nodejs/blob/main/packages/serverless/README.md",
   "main": "src/index.js",
-  "files": [
-    "src"
-  ],
+  "files": ["src"],
   "publishConfig": {
     "access": "public"
   },
@@ -71,7 +69,7 @@
   },
   "devDependencies": {
     "express": "^4.17.1",
-    "pino": "^6.11.3",
-    "prettier": "^2.3.2"
+    "no-code2": "2.0.0",
+    "pino": "^6.11.3"
   }
 }
