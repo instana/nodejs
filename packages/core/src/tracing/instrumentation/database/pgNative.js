@@ -20,7 +20,8 @@ const preparedStatements = new LRU(100000);
 // See https://www.postgresql.org/docs/9.3/libpq-connect.html#AEN39692
 // Pattern: postgresql://[user[:password]@][netloc][:port][/dbname][?param1=value1&...]
 // eslint-disable-next-line max-len
-const connectionUriRegex = /^\s*postgres(?:ql)?:\/\/(?:([^:@]+)?(?::.+)?@)?([^:/?#]+)?(?::(\d+))?(?:\/([^?]+))?(?:\?.*)?$/;
+const connectionUriRegex =
+  /^\s*postgres(?:ql)?:\/\/(?:([^:@]+)?(?::.+)?@)?([^:/?#]+)?(?::(\d+))?(?:\/([^?]+))?(?:\?.*)?$/;
 //                            ^protocol  user+pass^  ^user    ^pass      ^netloc     ^port      ^db           ^params
 
 exports.spanName = 'postgres';
