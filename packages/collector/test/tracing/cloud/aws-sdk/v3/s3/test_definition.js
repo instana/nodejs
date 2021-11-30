@@ -20,19 +20,7 @@ const {
   verifyExitSpan
 } = require('@instana/core/test/test_util/common_verifications');
 const { promisifyNonSequentialCases } = require('../promisify_non_sequential');
-
-const bypassTest = semver.lt(process.versions.node, '10.0.0');
-
-let cleanup;
-/**
- * We need to add this verification here, or else Mocha breaks with an error about generators, used in the AWS SDK v3
- */
-if (!bypassTest) {
-  cleanup = require('./util').cleanup;
-}
-
-let mochaSuiteFn;
-
+const cleanup = require('./util').cleanup;
 const withErrorOptions = [false, true];
 
 const requestMethods = ['v3', 'v2', 'cb'];
@@ -53,7 +41,9 @@ const getNextCallMethod = require('@instana/core/test/test_util/circular_list').
 const retryTime = config.getTestTimeout() * 2;
 
 function start(version) {
-  if (!supportedVersion(process.versions.node) || bypassTest) {
+  let mochaSuiteFn;
+
+  if (!supportedVersion(process.versions.node)) {
     mochaSuiteFn = describe.skip;
   } else {
     mochaSuiteFn = describe;
