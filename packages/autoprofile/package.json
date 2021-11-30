@@ -66,9 +66,6 @@
     "node-gyp-fallback.js",
     "README.md"
   ],
-  "engines": {
-    "node": ">=6.4.0"
-  },
   "publishConfig": {
     "access": "public"
   },
