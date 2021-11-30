@@ -6,18 +6,11 @@
 'use strict';
 
 const expect = require('chai').expect;
-const semver = require('semver');
 const config = require('../../../core/test/config');
 const { retry } = require('../../../core/test/test_util');
 const globalAgent = require('../globalAgent');
 
 describe('metrics/healthchecks', function () {
-  // The npm package `admin` uses JavaScript language features which aren't available in all
-  // Node.js versions
-  if (!semver.satisfies(process.versions.node, '>=6.0.0')) {
-    return;
-  }
-
   const expressControls = require('../apps/expressControls');
 
   this.timeout(config.getTestTimeout());
