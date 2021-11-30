@@ -7,7 +7,5 @@
 
 set -eo pipefail
 
-cd `dirname $BASH_SOURCE`/../packages/serverless
-
-npm run test:debug
+lerna exec "npm run test:debug" --scope=@instana/serverless
 

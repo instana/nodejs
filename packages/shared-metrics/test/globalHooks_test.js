@@ -18,8 +18,6 @@
 
 const globalAgent = require('../../collector/test/globalAgent');
 
-globalAgent.PORT = 7211;
-
 before(globalAgent.startGlobalAgent);
 
 after(globalAgent.stopGlobalAgent);

@@ -70,7 +70,6 @@
   },
   "devDependencies": {
     "express": "^4.17.1",
-    "mocha": "^7.2.0",
     "pino": "^6.11.3",
     "prettier": "^2.3.2"
   }

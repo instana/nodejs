@@ -7,6 +7,5 @@
 
 set -eo pipefail
 
-cd `dirname $BASH_SOURCE`/..
+lerna run test:debug --stream
 
-npm run test:debug

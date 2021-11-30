@@ -7,7 +7,5 @@
 
 set -eo pipefail
 
-cd `dirname $BASH_SOURCE`/../packages/collector
-
-npm run test:debug
+lerna exec "npm run test:debug" --scope=@instana/collector
 

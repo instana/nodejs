@@ -7,7 +7,5 @@
 
 set -eo pipefail
 
-cd `dirname $BASH_SOURCE`/../packages/metrics-util
-
-npm run test:debug
+lerna exec "npm run test:debug" --scope=@instana/metrics-util
 
