@@ -7,7 +7,6 @@
 
 const path = require('path');
 const expect = require('chai').expect;
-const semver = require('semver');
 
 const constants = require('@instana/core').tracing.constants;
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
@@ -22,12 +21,7 @@ const {
 const ProcessControls = require('../../../test_util/ProcessControls');
 const globalAgent = require('../../../globalAgent');
 
-const mochaSuiteFn =
-  supportedVersion(process.versions.node) &&
-  // The latest kafkajs version requires Node.js 10.
-  semver.gte(process.versions.node, '10.0.0')
-    ? describe
-    : describe.skip;
+const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
 mochaSuiteFn('tracing/kafkajs', function () {
   this.timeout(config.getTestTimeout() * 2);
