@@ -6,7 +6,6 @@
 
 const { v4: uuid } = require('uuid');
 const semver = require('semver');
-const bypassTest = semver.lt(process.versions.node, '10.0.0');
 const path = require('path');
 const { expect } = require('chai');
 const { fail } = expect;
@@ -26,18 +25,10 @@ const { verifyHttpRootEntry, verifyHttpExit } = require('@instana/core/test/test
 const defaultPrefix = 'https://sqs.us-east-2.amazonaws.com/410797082306/';
 const queueUrlPrefix = process.env.SQS_QUEUE_URL_PREFIX || defaultPrefix;
 
-let createQueues;
-let deleteQueues;
-let sendMessageWithLegacyHeaders;
-let sendSnsNotificationToSqsQueue;
-
-// We need to add this verification as AWS SDK v3 relies on features not supported by Node version < 10
-if (!bypassTest) {
-  createQueues = require('./util').createQueues;
-  deleteQueues = require('./util').deleteQueues;
-  sendMessageWithLegacyHeaders = require('./sendNonInstrumented').sendMessageWithLegacyHeaders;
-  sendSnsNotificationToSqsQueue = require('./sendNonInstrumented').sendSnsNotificationToSqsQueue;
-}
+const createQueues = require('./util').createQueues;
+const deleteQueues = require('./util').deleteQueues;
+const sendMessageWithLegacyHeaders = require('./sendNonInstrumented').sendMessageWithLegacyHeaders;
+const sendSnsNotificationToSqsQueue = require('./sendNonInstrumented').sendSnsNotificationToSqsQueue;
 
 const sendingMethods = ['v3', 'cb', 'v2'];
 const receivingMethods = ['v3', 'cb', 'v2'];
@@ -49,7 +40,7 @@ const retryTime = config.getTestTimeout() * 2;
 function start(version) {
   let mochaSuiteFn;
 
-  if (!supportedVersion(process.versions.node) || bypassTest) {
+  if (!supportedVersion(process.versions.node)) {
     mochaSuiteFn = describe.skip;
   } else {
     mochaSuiteFn = describe;
