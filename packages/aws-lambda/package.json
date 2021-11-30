@@ -69,10 +69,6 @@
     "@instana/serverless": "1.137.2"
   },
   "devDependencies": {
-    "eslint": "^7.30.0",
-    "eslint-config-airbnb-base": "^14.2.1",
-    "eslint-plugin-import": "^2.23.4",
-    "eslint-plugin-mocha": "^8.1.0",
     "express": "^4.17.1",
     "mocha": "^7.2.0",
     "pino": "^6.11.3",

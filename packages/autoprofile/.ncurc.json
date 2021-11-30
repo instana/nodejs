@@ -1,3 +1,3 @@
 {
-  "reject": ["mocha", "eslint-plugin-mocha", "node-gyp"]
+  "reject": ["mocha"]
 }
