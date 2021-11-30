@@ -27,6 +27,9 @@
     "type": "git",
     "url": "git+https://github.com/instana/nodejs.git"
   },
+  "engines": {
+    "node": ">=10.4.0"
+  },
   "scripts": {
     "audit": "bin/prepare-audit.sh && npm audit --production; AUDIT_RESULT=$?; git checkout package-lock.json; exit $AUDIT_RESULT",
     "test": "NODE_ENV=debug USE_OPENTRACING_DEBUG_IMPL=true npm run test:mocha",
