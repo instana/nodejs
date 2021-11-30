@@ -84,16 +84,16 @@ exports.getExtraHeadersCaseInsensitive = function getExtraHeadersCaseInsensitive
   return extraHeaders;
 };
 
-// eslint-disable-next-line max-len
-exports.mergeExtraHeadersFromServerResponseOrClientResponse = function mergeExtraHeadersFromServerResponseOrClientResponse(
-  headersAlreadyCapturedIfAny,
-  serverResponse,
-  extraHttpHeadersToCapture
-) {
-  return mergeExtraHeaders(headersAlreadyCapturedIfAny, extraHttpHeadersToCapture, key =>
-    serverResponse.getHeader(key)
-  );
-};
+exports.mergeExtraHeadersFromServerResponseOrClientResponse =
+  function mergeExtraHeadersFromServerResponseOrClientResponse(
+    headersAlreadyCapturedIfAny,
+    serverResponse,
+    extraHttpHeadersToCapture
+  ) {
+    return mergeExtraHeaders(headersAlreadyCapturedIfAny, extraHttpHeadersToCapture, key =>
+      serverResponse.getHeader(key)
+    );
+  };
 
 exports.mergeExtraHeadersFromIncomingMessage = function mergeExtraHeadersFromIncomingMessage(
   headersAlreadyCapturedIfAny,

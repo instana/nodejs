@@ -30,11 +30,12 @@ exports.payloadPrefix = 'healthchecks';
 // @ts-ignore
 exports.currentPayload = {};
 
-requireHook.onModuleLoad('admin-plugin-healthcheck', function onAdminPluginHealthcheckLoaded(
-  /** @type {*} */ _adminPluginHealthcheck
-) {
-  adminPluginHealthcheck = _adminPluginHealthcheck;
-});
+requireHook.onModuleLoad(
+  'admin-plugin-healthcheck',
+  function onAdminPluginHealthcheckLoaded(/** @type {*} */ _adminPluginHealthcheck) {
+    adminPluginHealthcheck = _adminPluginHealthcheck;
+  }
+);
 
 /**
  * @param {import('@instana/core/src/util/normalizeConfig').InstanaConfig} config
