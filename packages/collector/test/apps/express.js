@@ -21,7 +21,6 @@ const instana = require('../../')({
 
 const express = require('express');
 const morgan = require('morgan');
-const semver = require('semver');
 const path = require('path');
 const fs = require('fs');
 const app = express();
@@ -36,19 +35,17 @@ if (process.env.WITH_STDOUT) {
 
 let healthcheckFunction = () => 'OK!';
 
-if (semver.satisfies(process.versions.node, '>=6.0.0')) {
-  require('admin').configure({
-    plugins: [
-      require('admin-plugin-healthcheck')({
-        checks: {
-          configurable: function () {
-            healthcheckFunction();
-          }
+require('admin').configure({
+  plugins: [
+    require('admin-plugin-healthcheck')({
+      checks: {
+        configurable: function () {
+          healthcheckFunction();
         }
-      })
-    ]
-  });
-}
+      }
+    })
+  ]
+});
 
 app.get('/return-instana-trace-id', (req, res) => {
   res.send(req.get('x-instana-t'));
