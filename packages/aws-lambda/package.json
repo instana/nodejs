@@ -47,6 +47,9 @@
     "sensor",
     "tracing"
   ],
+  "engines": {
+    "node": ">=10.4.0"
+  },
   "contributors": [
     {
       "name": "Bastian Krol",
