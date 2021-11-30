@@ -8,7 +8,6 @@
 const { inspect } = require('util');
 const { expect } = require('chai');
 const path = require('path');
-const semver = require('semver');
 const constants = require('@instana/core').tracing.constants;
 
 const Control = require('../Control');
@@ -215,14 +214,6 @@ describe('long running lambdas', () => {
    */
   function verifyNoHttpExits(spans) {
     /* eslint-disable no-console */
-    if (semver.lt(process.versions.node, '9.0.0')) {
-      // In Node.js 8.x.x, the https module uses the http module internally. This means even if we use the
-      // uninstrumented copy of the https module, we have no way of forcing it to use the uninstrumented copy of the
-      // http module internally. Since the Node.js 8 runtime for AWS Lambda has been deprecated quite a while ago, this
-      // is deemed acceptable. The only negative consequence of this shortcoming is that http requests to the Instana
-      // back end might show up in Lambda traces when the Lambda uses Node.js 8.
-      return;
-    }
     const httpExits = spans.filter(span => span.n === 'node.http.client');
     if (httpExits.length > 0) {
       console.log('Unexpected node.http.client spans:');
