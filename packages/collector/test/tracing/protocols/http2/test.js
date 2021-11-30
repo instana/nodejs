@@ -7,7 +7,6 @@
 
 const path = require('path');
 const expect = require('chai').expect;
-const semver = require('semver');
 
 const constants = require('@instana/core').tracing.constants;
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
@@ -19,15 +18,7 @@ const { AgentStubControls } = require('../../../apps/agentStubControls');
 const clientPort = 3216;
 const serverPort = 3217;
 
-const mochaSuiteFn =
-  supportedVersion(process.versions.node) &&
-  // HTTP2 support was added in Node.js 8.4.0
-  // semver.gte(process.versions.node, '8.4.0') &&
-  // The http2 module seems to trigger spurious segfaults on Node.js 8, so we skip these tests in Node.js 8.
-  // alltogether.
-  semver.gte(process.versions.node, '10.0.0')
-    ? describe
-    : describe.skip;
+const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
 mochaSuiteFn('tracing/http2', function () {
   this.timeout(config.getTestTimeout() * 2);
