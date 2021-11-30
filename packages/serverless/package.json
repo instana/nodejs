@@ -68,7 +68,6 @@
     "semver": "7.3.3"
   },
   "devDependencies": {
-    "no-code2": "2.0.0",
-    "pino": "^6.11.3"
+    "no-code2": "2.0.0"
   }
 }
