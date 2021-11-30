@@ -20,8 +20,7 @@ const globalAgent = require('../../../globalAgent');
 
 const agentControls = globalAgent.instance;
 
-const mochaSuiteFn =
-  supportedVersion(process.versions.node) && semver.gte(process.versions.node, '8.0.0') ? describe : describe.skip;
+const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
 mochaSuiteFn('tracing/too late', function () {
   this.timeout(config.getTestTimeout());
@@ -29,9 +28,9 @@ mochaSuiteFn('tracing/too late', function () {
   globalAgent.setUpCleanUpHooks();
 
   [
-    semver.gte(process.version, '10.0.0') && '@elastic/elasticsearch',
-    semver.gte(process.version, '10.0.0') && '@google-cloud/pubsub',
-    semver.gte(process.version, '10.0.0') && '@google-cloud/storage',
+    '@elastic/elasticsearch',
+    '@google-cloud/pubsub',
+    '@google-cloud/storage',
     '@hapi/call',
     'amqplib',
     'aws-sdk',
@@ -45,11 +44,11 @@ mochaSuiteFn('tracing/too late', function () {
     'grpc',
     'ioredis',
     'kafka-node',
-    semver.gte(process.version, '10.0.0') && 'kafkajs',
+    'kafkajs',
     'koa-router',
     'log4js',
     'mongodb',
-    semver.gte(process.version, '10.0.0') && 'mssql',
+    'mssql',
     'mysql',
     'mysql2',
     'mysql2',
