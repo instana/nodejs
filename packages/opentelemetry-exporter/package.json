@@ -1,6 +1,6 @@
 {
   "name": "@instana/opentelemetry-exporter",
-  "version": "1.137.1",
+  "version": "1.137.2",
   "description": "OpenTelemetry Instana Exporter",
   "keywords": [
     "opentelemetry",
@@ -55,12 +55,12 @@
     }
   ],
   "dependencies": {
-    "@instana/serverless": "1.137.1",
+    "@instana/serverless": "1.137.2",
     "@opentelemetry/api": "1.0.3",
     "@opentelemetry/core": "0.25.0"
   },
   "devDependencies": {
-    "@instana/core": "1.137.1",
+    "@instana/core": "1.137.2",
     "@opentelemetry/auto-instrumentations-node": "0.24.0",
     "@opentelemetry/instrumentation": "0.24.0",
     "@opentelemetry/instrumentation-http": "0.24.0",
