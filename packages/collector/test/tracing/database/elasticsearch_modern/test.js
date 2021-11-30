@@ -7,7 +7,6 @@
 
 const expect = require('chai').expect;
 const path = require('path');
-const semver = require('semver');
 const { exec } = require('child_process');
 
 const constants = require('@instana/core').tracing.constants;
@@ -23,9 +22,7 @@ const globalAgent = require('../../../globalAgent');
 
 const { fail } = expect;
 
-const mochaSuiteFn = semver.gte(process.versions.node, '10.0.0') ? describe : describe.skip;
-
-mochaSuiteFn('tracing/elasticsearch (modern client)', function () {
+describe('tracing/elasticsearch (modern client)', function () {
   let originalEsVersion;
 
   this.timeout(Math.max(config.getTestTimeout() * 4, 30000));
