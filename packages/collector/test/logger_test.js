@@ -7,12 +7,7 @@
 
 const expect = require('chai').expect;
 const bunyan = require('bunyan');
-const semver = require('semver');
-let pino;
-if (semver.gte(process.versions.node, '6.0.0')) {
-  // pino needs Node.js >= 6
-  pino = require('pino');
-}
+const pino = require('pino');
 
 const log = require('../src/logger');
 
