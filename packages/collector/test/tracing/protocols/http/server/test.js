@@ -42,7 +42,7 @@ mochaSuiteFn('tracing/http(s) server', function () {
     registerTests.call(this, agentControls, true, false);
   });
 
-  (semver.gte(process.versions.node, '10.0.0') ? describe : describe.skip)('http2 compat mode', function () {
+  describe('http2 compat mode', function () {
     registerTests.call(this, agentControls, true, true);
   });
 });
