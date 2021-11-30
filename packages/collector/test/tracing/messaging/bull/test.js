@@ -35,7 +35,7 @@ if (process.env.BULL_QUEUE_NAME) {
   queueName = `${process.env.BULL_QUEUE_NAME}${semver.major(process.versions.node)}`;
 }
 
-let mochaSuiteFn;
+const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
 const sendingOptions = ['default', 'bulk=true', 'repeat=true'];
 // We don't need to test the callback case, as the Process case is handled as Callback already
@@ -45,14 +45,6 @@ const withErrorCases = [false, true];
 
 const getNextSendingOption = require('@instana/core/test/test_util/circular_list').getCircularList(sendingOptions);
 const getNextReceivingMethod = require('@instana/core/test/test_util/circular_list').getCircularList(receivingMethods);
-
-// Bull relies on EventEmitter.prototype.off, which is available from Node 10 on
-if (!supportedVersion(process.versions.node) || semver.lt(process.version, '10.0.0')) {
-  mochaSuiteFn = describe.skip;
-} else {
-  mochaSuiteFn = describe;
-}
-
 const retryTime = config.getTestTimeout() * 2;
 
 mochaSuiteFn('tracing/messaging/bull', function () {
