@@ -52,6 +52,8 @@ mochaSuiteFn('tracing/graphql', function () {
     registerSubscriptionUpdatesAreTracedSuite.bind(this)(triggerUpdateVia)
   );
 
+  registerSubscriptionUpdatesCorrectParentSpanSuite('http');
+
   describe('suppressed', () => {
     const { clientControls } = createProcesses(true);
     it('should not trace when suppressed', () =>
@@ -365,6 +367,67 @@ function registerSubscriptionUpdatesAreTracedSuite(triggerUpdateVia) {
   }
 }
 
+function registerSubscriptionUpdatesCorrectParentSpanSuite(triggerUpdateVia) {
+  // This test is currently disabled because it describes a known issue. When the application under monitoring receives
+  // multiple concurrent requests with GraphQL mutations, and if there are subscribed clients, all graphql.client/ spans
+  // (which represent the subscription update calls from the GraphQL server to the subscribed clients) are
+  // attached to the first HTTP entry span, instead of the entry spans that actually triggered them.
+  describe.skip('correct parent span for subscription updates', function () {
+    const serverControls = new ProcessControls({
+      appPath: path.join(__dirname, 'apolloServer'),
+      port: 3217,
+      useGlobalAgent: true
+    });
+    const clientControls = new ProcessControls({
+      appPath: path.join(__dirname, 'client'),
+      port: 3216,
+      useGlobalAgent: true,
+      env: {
+        SERVER_PORT: serverControls.port
+      }
+    });
+
+    ProcessControls.setUpHooks(serverControls, clientControls);
+
+    it(`must not confuse parent context for parallel request (via: ${triggerUpdateVia})`, () =>
+      testParallelRequests(clientControls));
+  });
+
+  async function testParallelRequests(client) {
+    await // subscribe client
+    client.sendRequest({
+      method: 'POST',
+      path: '/subscription?id=1'
+    });
+
+    // wait a second so that subscriptions are fully established
+    await delay(1000);
+
+    const requests = [
+      {
+        method: 'POST',
+        path: '/publish-update-via-http?id=1',
+        body: { id: 1, name: 'Name 1' }
+      },
+      {
+        method: 'POST',
+        path: '/publish-update-via-http?id=2',
+        body: { id: 2, name: 'Name 2' }
+      },
+      {
+        method: 'POST',
+        path: '/publish-update-via-http?id=3',
+        body: { id: 3, name: 'Name 3' }
+      }
+    ];
+
+    // send three parallel updates
+    await Promise.all(requests.map(requestConfig => client.sendRequest(requestConfig)));
+
+    await checkSubscriptionUpdateAndSpanForParallelRequests(client);
+  }
+}
+
 function checkQueryResponse(entityNameWithAlias, withError, multipleEntities, response) {
   expect(response.data).to.exist;
   const result = response.data[entityNameWithAlias];
@@ -435,6 +498,19 @@ function checkSubscriptionUpdatesAndSpans(client1, client2, triggerUpdateVia) {
   });
 }
 
+function checkSubscriptionUpdateAndSpanForParallelRequests(client) {
+  return retry(() => {
+    const receivedUpdatesClient = client.getIpcMessages();
+    expect(receivedUpdatesClient).to.have.lengthOf(3);
+
+    receivedUpdatesClient.forEach(msg => expect(msg).to.match(/"id":"(\d)","name":"Name \d",/));
+
+    return agentControls.getSpans().then(spans => {
+      verifySpansForSubscriptionUpdateParallelRequests(spans);
+    });
+  });
+}
+
 function verifySpansForQuery(testConfig, spans) {
   const { resolverType, entityName } = testConfig;
   const httpEntryInClientApp = verifyHttpEntry(null, new RegExp(`/${resolverType}`), spans);
@@ -495,6 +571,38 @@ function verifySpansForSubscriptionUpdates(spans, triggerUpdateVia) {
   expect(graphQLSubscriptionUpdateExits).to.have.lengthOf(2);
   graphQLSubscriptionUpdateExits.forEach(exitSpan => verifyGraphQLSubscriptionUpdateExit(entryInServerApp, exitSpan));
   verifyFollowUpLogExit(entryInServerApp, 'update: 1: Updated Name Updated Profession', spans);
+}
+
+function verifySpansForSubscriptionUpdateParallelRequests(spans) {
+  const publishUpdateHttpEntryInClientApp = [];
+  for (let i = 0; i < 3; i++) {
+    publishUpdateHttpEntryInClientApp[i] = expectExactlyOneMatching(spans, [
+      span => expect(span.n).to.equal('node.http.server'),
+      span => expect(span.k).to.equal(constants.ENTRY),
+      span => expect(span.p).to.not.exist,
+      span => expect(span.data.http.method).to.equal('POST'),
+      span => expect(span.data.http.url).to.match(/\/publish-update-via-http/),
+      span => expect(span.data.http.params).to.equal(`id=${i + 1}`)
+    ]);
+  }
+
+  publishUpdateHttpEntryInClientApp.forEach(httpEntryInClientApp => {
+    const httpExitInClientApp = verifyHttpExit(httpEntryInClientApp, /\/publish-update/, spans);
+    const entryInServerApp = verifyHttpEntry(httpExitInClientApp, /\/publish-update/, spans);
+    expectExactlyOneMatching(spans, [
+      span => expect(span.n).to.equal('graphql.client'),
+      span => expect(span.k).to.equal(constants.EXIT),
+      span => expect(span.t).to.equal(entryInServerApp.t),
+      span => expect(span.p).to.equal(entryInServerApp.s),
+      span => expect(span.data.graphql.operationType).to.equal('subscription-update'),
+      span => expect(span.data.graphql.operationName).to.equal('onCharacterUpdated'),
+      span => expect(span.data.graphql.fields).to.exist,
+      span => expect(span.data.graphql.fields.characterUpdated).to.deep.equal(['id', 'name', 'profession']),
+      span => expect(span.data.graphql.args).to.exist,
+      span => expect(span.data.graphql.args.characterUpdated).to.deep.equal(['id'])
+    ]);
+    verifyFollowUpLogExit(entryInServerApp, 'update: 1: Updated Name Updated Profession', spans);
+  });
 }
 
 function verifyHttpEntry(parentSpan, urlRegex, spans) {

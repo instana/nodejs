@@ -261,6 +261,7 @@ function logAndResolve(logMsg, value) {
   pinoLogger.warn(logMsg);
   return Promise.resolve(value);
 }
+
 function logAndReject(logMsg, error) {
   pinoLogger.warn(logMsg);
   return Promise.reject(error);
