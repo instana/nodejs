@@ -5,7 +5,6 @@
 
 'use strict';
 
-const semver = require('semver');
 const { expect } = require('chai');
 const { fail } = expect;
 
