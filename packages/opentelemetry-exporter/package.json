@@ -12,6 +12,9 @@
     "test": "test"
   },
   "files": ["src"],
+  "engines": {
+    "node": ">=10.4.0"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/instana/nodejs.git"
