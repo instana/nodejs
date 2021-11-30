@@ -8,7 +8,6 @@
 'use strict';
 
 const { expect } = require('chai');
-const semver = require('semver');
 const path = require('path');
 const childProcess = require('child_process');
 const rimraf = require('rimraf');
@@ -24,8 +23,7 @@ const babelAppDir = path.join(__dirname, '../../../apps/babel-typescript');
 const babelLibDir = path.join(babelAppDir, 'lib');
 const agentControls = globalAgent.instance;
 
-const mochaSuiteFn =
-  supportedVersion(process.versions.node) && semver.gte(process.versions.node, '8.0.0') ? describe : describe.skip;
+const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
 mochaSuiteFn('tracing a babel/typescript setup', function () {
   this.timeout(Math.max(config.getTestTimeout() * 3, 20000));
