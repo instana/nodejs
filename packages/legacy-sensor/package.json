@@ -9,9 +9,7 @@
   "homepage": "https://github.com/instana/nodejs/blob/main/packages/legacy-sensor/README.md",
   "license": "MIT",
   "main": "src/index.js",
-  "files": [
-    "src"
-  ],
+  "files": ["src"],
   "directories": {
     "lib": "src",
     "test": "test"
@@ -32,13 +30,7 @@
     "verify": "npm run lint && npm test",
     "prettier": "prettier --write 'src/**/*.js' 'test/**/*.js'"
   },
-  "keywords": [
-    "instana",
-    "agent",
-    "sensor",
-    "monitoring",
-    "tracing"
-  ],
+  "keywords": ["instana", "agent", "sensor", "monitoring", "tracing"],
   "contributors": [
     {
       "name": "Bastian Krol",
@@ -61,6 +53,6 @@
   },
   "devDependencies": {
     "@instana/core": "1.137.2",
-    "prettier": "^2.3.2"
+    "no-code2": "2.0.0"
   }
 }

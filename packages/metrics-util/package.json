@@ -8,9 +8,7 @@
   },
   "homepage": "https://github.com/instana/nodejs/blob/main/packages/metrics-util/README.md",
   "main": "src/index.js",
-  "files": [
-    "src"
-  ],
+  "files": ["src"],
   "publishConfig": {
     "access": "public"
   },
@@ -31,15 +29,7 @@
     "verify": "npm run lint && npm test",
     "prettier": "prettier --write 'src/**/*.js' 'test/**/*.js'"
   },
-  "keywords": [
-    "instana",
-    "memory",
-    "metrics",
-    "monitoring",
-    "performance",
-    "sensor",
-    "tracing"
-  ],
+  "keywords": ["instana", "memory", "metrics", "monitoring", "performance", "sensor", "tracing"],
   "contributors": [
     {
       "name": "Bastian Krol",
@@ -66,7 +56,7 @@
   },
   "devDependencies": {
     "express": "^4.17.1",
-    "pino": "^6.11.3",
-    "prettier": "^2.3.2"
+    "no-code2": "2.0.0",
+    "pino": "^6.11.3"
   }
 }

@@ -9,9 +9,7 @@
   "homepage": "https://github.com/instana/nodejs/blob/main/packages/aws-lambda-auto-wrap/README.md",
   "license": "MIT",
   "main": "src/index.js",
-  "files": [
-    "src"
-  ],
+  "files": ["src"],
   "directories": {
     "lib": "src"
   },
@@ -65,6 +63,6 @@
     "@instana/aws-lambda": "1.137.2"
   },
   "devDependencies": {
-    "prettier": "^2.3.2"
+    "no-code2": "2.0.0"
   }
 }

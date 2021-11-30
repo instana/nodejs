@@ -55,6 +55,7 @@
   "devDependencies": {
     "async": "^3.2.0",
     "mkdirp": "^1.0.4",
+    "no-code2": "2.0.0",
     "semver": "7.3.3"
   },
   "main": "index.js",
