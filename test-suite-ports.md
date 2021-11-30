@@ -9,12 +9,11 @@ For this reason, we maintain an overview of the ports used by the integration te
 | -------------------- | ---------- |
 | aws-fargate          | app under test: 4215, mock back end: 9443, downstream dummy: 4567, metadata endpoint mock: 1604, proxy 4128 |
 | aws-lambda           | mock back end: 8443, mock Lambda extension: 7365, downstream dummy: 3456, proxy: 3128 |
-| collector            | apps under test: 3000, 3213-3217, 3222, 4200-4203; mock agent: 3210,3211, PostgreSQL: 5432, MongoDB: 27017, MSSQL: 1433, Elasticsearch: 9200, Redis: 6379, NATS: 4222, 4223, Kafka: 9092, RabbitMQ: 5672, GRPC:  50051 |
+| collector            | apps under test: 3000, 3213-3217, 3222, 4200-4203; individual mock agent: 3210, global mock agent: 3211, PostgreSQL: 5432, MongoDB: 27017, MSSQL: 1433, Elasticsearch: 9200, Redis: 6379, NATS: 4222, 4223, Kafka: 9092, RabbitMQ: 5672, GRPC:  50051 |
 | core                 | N.A. (no integration tests, only unit tests) |
 | google-cloud-run     | app under test: 4216, mock back end: 9444, downstream dummy: 4568, metadata endpoint mock: 1605, proxy: N.A. (no proxy tests) |
-| legacy-sensor        | apps under test: 5215, 5216; mock agent: 5210 |
+| legacy-sensor        | apps under test: 5215, 5216; individual mock agent: 5210, global mock agent: 5211 (unused) |
 | metrics-util         | N.A. (no integration tests, only unit tests) |
 | serverless           | N.A. (no integration tests, only unit tests) |
 | shared-metrics       | app under test: 7215, mock agent: 7211 |
-| collector            | app under test: 3215 |
 | opentelemetry-exporter | app under test: 6215, mock back end: 10443 |

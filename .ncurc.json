@@ -1,3 +1,3 @@
 {
-  "reject": ["eslint-plugin-mocha", "mali"]
+  "reject": ["eslint-plugin-mocha", "mali", "mocha"]
 }
