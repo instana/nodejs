@@ -7,7 +7,6 @@
 
 const path = require('path');
 const expect = require('chai').expect;
-const semver = require('semver');
 
 const constants = require('@instana/core').tracing.constants;
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
@@ -24,8 +23,7 @@ const globalAgent = require('../../../globalAgent');
 
 const agentControls = globalAgent.instance;
 
-const mochaSuiteFn =
-  !supportedVersion(process.versions.node) || semver.lt(process.versions.node, '8.5.0') ? describe.skip : describe;
+const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
 mochaSuiteFn('tracing/graphql', function () {
   this.timeout(config.getTestTimeout() * 2);
