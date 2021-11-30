@@ -55,7 +55,6 @@
     "node-fetch": "^2.6.1"
   },
   "devDependencies": {
-    "express": "^4.17.1",
     "no-code2": "2.0.0",
     "pino": "^6.11.3"
   }
