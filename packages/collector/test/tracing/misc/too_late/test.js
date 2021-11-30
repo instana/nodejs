@@ -9,7 +9,6 @@ const {
   expect,
   assert: { fail }
 } = require('chai');
-const semver = require('semver');
 
 const constants = require('@instana/core').tracing.constants;
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
@@ -20,8 +19,7 @@ const globalAgent = require('../../../globalAgent');
 
 const agentControls = globalAgent.instance;
 
-const mochaSuiteFn =
-  supportedVersion(process.versions.node) && semver.gte(process.versions.node, '8.0.0') ? describe : describe.skip;
+const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
 mochaSuiteFn('tracing/too late', function () {
   this.timeout(config.getTestTimeout());
