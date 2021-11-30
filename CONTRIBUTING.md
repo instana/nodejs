@@ -30,6 +30,30 @@ Please print, fill out, and sign the [contributor license agreement](https://git
 
 Thank you for your interest in the Instana Node.js project!
 
+## Managing Dependencies In Packages
+
+Note: Development dependencies that are shared between multiple packages can be added to the root `package.json` file to speed up `npm install`. A dependency that is only used in one package can also be added to that particular `package.json` file.
+
+Production dependencies that are required by a package always need to be added to that particular package directly. Dependencies from the root package.json are never part of the individual packages when they are uploaded to the npm registry, hence they would also not be installed for projects that depend on any `@instana` package. Thus, the root `package.json` file only has `devDependencies` and no `dependencies`.
+
+The following sections describe how to manage dependencies in practice.
+
+### Root Dependencies
+
+To add or remove dependencies to/from the *root* `package.json`, you can execute plain vanilla `npm install -D ${dependeny-name}` or `npm uninstall ${dependeny-name}` commands in the root directory of the repository.
+
+### Adding A Package Dependency
+
+Do *not* run `npm install ${dependency-name}` in the directory of a package (like, in `packages/core`). This will mess up the `package-lock.json` file in that package. (If you accidentally did this, you can do a `git checkout` of the `package.json` file of the package and then run `npm run refresh-package-lock-files` to fix the lock file and the content of `node_modules`.)
+
+The correct way of *adding* a dependency in one of the packages is to use the command `lerna add --scope=${package-name} ${dependency-name}`. For example, to add the dependency `moment` to the package `@instana/core`, you would use `lerna add --scope=@instana/core moment`. Specific versions or version ranges can be used as well: `lerna add --scope=@instana/core "moment@^2.29.1`. To add a development dependency, use `--dev`, that is, `lerna add --scope=@instana/collector --dev moment`. Refer to `lerna add --help` for more information.
+
+### Removing A Package Dependency
+
+Do *not* run `npm uninstall ${dependency-name}` in the directory of a package. This will mess up the `package-lock.json` file in that package.
+
+There is no `lerna` command to remove a dependency, that is, there is no `lerna remove --scope` counterpart for `lerna add --scope`. To remove a dependency from a package, remove the corresponding entry from the `dependencies`/`devDependencies`/... section of the package's `package.json` file and then run `npm run refresh-package-lock-files` afterwards. This will remove the package from the `node_modules` folder and also update the `package-lock.json` file correctly.
+
 ## Release Process
 
 ### When Adding A New Package
