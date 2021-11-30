@@ -18,12 +18,7 @@ require('../../')({
 const bodyParser = require('body-parser');
 const rp = require('request-promise');
 const express = require('express');
-const semver = require('semver');
 const morgan = require('morgan');
-
-// WHATWG URL class is globally availabe as of Node.js 10.0.0, needs to be required in older versions.
-const URL = semver.lt(process.versions.node, '10.0.0') ? require('url').URL : global.URL;
-
 const http = require('http');
 const baseUrl = `http://127.0.0.1:${process.env.SERVER_PORT}`;
 
