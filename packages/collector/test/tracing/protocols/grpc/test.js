@@ -18,9 +18,7 @@ const globalAgent = require('../../../globalAgent');
 
 const agentControls = globalAgent.instance;
 
-const mochaSuiteFn = semver.satisfies(process.versions.node, '>=8.2.1') ? describe : describe.skip;
-
-mochaSuiteFn('tracing/grpc', function () {
+describe('tracing/grpc', function () {
   this.timeout(config.getTestTimeout());
 
   globalAgent.setUpCleanUpHooks();
@@ -35,9 +33,7 @@ mochaSuiteFn('tracing/grpc', function () {
   });
   // registerSuite.bind(this)('dynamic', false, false);
 
-  const maliMochaSuiteFn = semver.satisfies(process.versions.node, '>=10.0.0') ? describe : describe.skip;
-
-  maliMochaSuiteFn('with mali@0.20.0', () => {
+  describe('with mali@0.20.0', () => {
     // mali@0.20.0 was the last mali version based on the grpc package, more recent versions are based on @grpc/grpc-js,
     // which is why we test 0.20.0 explicitly here.
     const { serverControls, clientControls } = createProcessesForOptions('mali', false, false);
