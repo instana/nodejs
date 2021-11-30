@@ -26,8 +26,6 @@ const bucketName = 'nodejs-tracer-test-bucket';
 
 const mochaSuiteFn =
   supportedVersion(process.versions.node) &&
-  // skip this in Node.js < 10
-  semver.gte(process.version, '10.0.0') &&
   // This suite requires GCP credentials and the app under test is not (yet) equipped to read them from an env var,
   // thus it is skipped on CI. See ../pubsub for a mechanism to load credentials from an env var.
   !process.env.CI
