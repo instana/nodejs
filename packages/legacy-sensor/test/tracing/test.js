@@ -48,11 +48,6 @@ describe('legacy sensor/tracing', function () {
   }).registerTestHooks();
 
   it('must trace request(<string>, options, cb)', () => {
-    if (semver.lt(process.versions.node, '10.9.0')) {
-      // The (url, options[, callback]) API only exists since Node 10.9.0:
-      return;
-    }
-
     return clientControls
       .sendRequest({
         method: 'GET',
@@ -196,10 +191,6 @@ describe('legacy sensor/tracing', function () {
       ));
 
   it('must trace get(<string>, options, cb)', () => {
-    if (semver.lt(process.versions.node, '10.9.0')) {
-      // The (url, options[, callback]) API only exists since Node 10.9.0.
-      return;
-    }
     return clientControls
       .sendRequest({
         method: 'GET',
