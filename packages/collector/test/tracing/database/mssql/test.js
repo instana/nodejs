@@ -5,7 +5,6 @@
 
 'use strict';
 
-const semver = require('semver');
 const errors = require('request-promise/errors');
 const expect = require('chai').expect;
 
@@ -16,12 +15,7 @@ const testUtils = require('../../../../../core/test/test_util');
 const ProcessControls = require('../../../test_util/ProcessControls');
 const globalAgent = require('../../../globalAgent');
 
-const mochaSuiteFn =
-  !supportedVersion(process.versions.node) ||
-  // The latest tedious version dropped support for Node.js 8, so we only run this test in Node.js >= 10.
-  semver.lt(process.versions.node, '10.0.0')
-    ? describe.skip
-    : describe;
+const mochaSuiteFn = !supportedVersion(process.versions.node) ? describe.skip : describe;
 
 mochaSuiteFn('tracing/mssql', function () {
   this.timeout(config.getTestTimeout());
