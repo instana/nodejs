@@ -88,8 +88,8 @@ app.post('/publish-update-via-http', (req, res) =>
     url: `${serverBaseUrl}/publish-update`,
     body: JSON.stringify({
       id: req.body.id || 1,
-      name: 'Updated Name',
-      profession: 'Updated Profession'
+      name: req.body.name || 'Updated Name',
+      profession: req.body.profession || 'Updated Profession'
     }),
     headers: {
       'Content-Type': 'application/json'
