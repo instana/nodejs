@@ -12,16 +12,8 @@
 
 const mkdirp = require('mkdirp');
 const path = require('path');
-const semver = require('semver');
 
-if (semver.gte(process.versions.node, '10.0.0')) {
-  createReport();
-} else {
-  console.error('This tool requires Node.js v10.0.0 or later.');
-  // Exiting with exit code 0 for unsupported Node.js versions instead of 1 makes it a bit easier to integrate this
-  // into CI, we can just run this tool for every version and it will result in a no-op in older Node.js versions.
-  process.exit(0);
-}
+createReport();
 
 async function createReport() {
   const repoRootPath = path.join(__dirname, '..', '..');
