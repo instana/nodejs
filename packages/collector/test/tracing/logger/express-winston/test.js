@@ -7,7 +7,6 @@
 
 const { expect, fail } = require('chai');
 
-const semver = require('semver');
 const constants = require('@instana/core').tracing.constants;
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('../../../../../core/test/config');
@@ -15,8 +14,7 @@ const testUtils = require('../../../../../core/test/test_util');
 const ProcessControls = require('../../../test_util/ProcessControls');
 const globalAgent = require('../../../globalAgent');
 
-const mochaSuiteFn =
-  supportedVersion(process.versions.node) && semver.gte(process.version, '10.12.0') ? describe : describe.skip;
+const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
 mochaSuiteFn('tracing/logger/express-winston', function () {
   this.timeout(config.getTestTimeout());
