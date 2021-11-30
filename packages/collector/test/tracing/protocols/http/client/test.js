@@ -39,7 +39,7 @@ mochaSuiteFn('tracing/http client', function () {
   registerConnectionRefusalTest.call(this, false);
   registerConnectionRefusalTest.call(this, true);
 
-  (semver.gte(process.versions.node, '8.2.1') ? describe : describe.skip)('superagent', function () {
+  describe('superagent', function () {
     registerSuperagentTest.call(this);
   });
 });
@@ -79,9 +79,7 @@ function registerTests(useHttps) {
     [false, true].forEach(withQuery => {
       const urlParam = urlObject ? 'urlObject' : 'urlString';
 
-      // The (url, options[, callback]) API only exists since Node 10.9.0:
-      const mochaFn = semver.lt(process.versions.node, '10.9.0') ? it.skip : it;
-      mochaFn(`must trace request(${urlParam}, options, cb) with query: ${withQuery}`, () =>
+      it(`must trace request(${urlParam}, options, cb) with query: ${withQuery}`, () =>
         clientControls
           .sendRequest({
             method: 'GET',
@@ -100,8 +98,7 @@ function registerTests(useHttps) {
                 })
               )
             )
-          )
-      );
+          ));
     });
   });
 
@@ -111,8 +108,7 @@ function registerTests(useHttps) {
 
       // - Can't execute this test with a self signed certificate because without an options object, there is no place
       //   where we can specify the `ca` option.
-      // - WHATWG URL objects can only be passed since 7.5.0
-      const mochaFn = useHttps || (urlObject && semver.lt(process.versions.node, '7.5.0')) ? it.skip : it;
+      const mochaFn = useHttps || urlObject ? it.skip : it;
       mochaFn(`must trace request(${urlParam}, cb) with query: ${withQuery}`, () =>
         clientControls
           .sendRequest({
@@ -223,9 +219,7 @@ function registerTests(useHttps) {
     [false, true].forEach(withQuery => {
       const urlParam = urlObject ? 'urlObject' : 'urlString';
 
-      // The (url, options[, callback]) API only exists since Node 10.9.0.
-      const mochaFn = semver.lt(process.versions.node, '10.9.0') ? it.skip : it;
-      mochaFn(`must trace get(${urlParam}, options, cb) with query: ${withQuery}`, () =>
+      it(`must trace get(${urlParam}, options, cb) with query: ${withQuery}`, () =>
         clientControls
           .sendRequest({
             method: 'GET',
@@ -244,8 +238,7 @@ function registerTests(useHttps) {
                 })
               )
             )
-          )
-      );
+          ));
     });
   });
 
@@ -255,8 +248,7 @@ function registerTests(useHttps) {
 
       // - Can't execute this test with a self signed certificate because without an options object, there is no place
       //   where we can specify the `ca` option.
-      // - WHATWG URL objects can only be passed since 7.5.0
-      const mochaFn = useHttps || (urlObject && semver.lt(process.versions.node, '7.5.0')) ? it.skip : it;
+      const mochaFn = useHttps || urlObject ? it.skip : it;
       mochaFn(`must trace get(${urlParam}, cb) with query: ${withQuery}`, () =>
         clientControls
           .sendRequest({
@@ -699,13 +691,9 @@ function verifyHttpExit({ spans, parent, url = '/', method = 'GET', status = 200
 }
 
 function serverUrl(useHttps, urlShouldContainRedactedCredentials, path_) {
-  return `http${shouldHaveProtocolHttps(useHttps) ? 's' : ''}://${
+  return `http${useHttps ? 's' : ''}://${
     urlShouldContainRedactedCredentials ? '<redacted>:<redacted>@' : ''
   }${serverHost}${path_}`;
-}
-
-function shouldHaveProtocolHttps(useHttps) {
-  return useHttps && (semver.gte(process.versions.node, '9.0.0') || semver.satisfies(process.versions.node, '8.9.0'));
 }
 
 function checkQuery(span, withQuery) {
