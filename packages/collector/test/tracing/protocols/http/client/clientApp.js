@@ -14,10 +14,6 @@ const fs = require('fs');
 const morgan = require('morgan');
 const path = require('path');
 const rp = require('request-promise');
-const semver = require('semver');
-
-// WHATWG URL class is globally availabe as of Node.js 10.0.0, needs to be required in older versions.
-const URL = semver.lt(process.versions.node, '10.0.0') ? require('url').URL : global.URL;
 
 const httpModule = process.env.USE_HTTPS === 'true' ? require('https') : require('http');
 const protocol = process.env.USE_HTTPS === 'true' ? 'https' : 'http';
