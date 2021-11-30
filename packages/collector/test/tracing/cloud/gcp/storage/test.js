@@ -7,7 +7,6 @@
 
 const { expect } = require('chai');
 
-const semver = require('semver');
 const constants = require('@instana/core').tracing.constants;
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('../../../../../../core/test/config');
