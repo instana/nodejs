@@ -7,7 +7,6 @@
 
 const path = require('path');
 const { expect } = require('chai');
-const semver = require('semver');
 
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const constants = require('@instana/core').tracing.constants;
@@ -39,10 +38,7 @@ describe('spec compliance', function () {
   globalAgent.setUpCleanUpHooks();
 
   [false, true].forEach(http2 => {
-    const mochaSuiteFn =
-      supportedVersion(process.versions.node) && (!http2 || semver.gte(process.versions.node, '10.0.0'))
-        ? describe
-        : describe.skip;
+    const mochaSuiteFn = supportedVersion(process.versions.node) && !http2 ? describe : describe.skip;
 
     mochaSuiteFn(`compliance test suite (${http2 ? 'HTTP2' : 'HTTP1'})`, () => {
       const downstreamTarget = new ProcessControls({
