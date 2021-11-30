@@ -21,11 +21,9 @@ const serverPort = 5216;
 
 let agentControls;
 
-describe('legacy sensor/tracing', function () {
-  if (!supportedVersion(process.versions.node) || (process.env.CI && semver.lt(process.versions.node, '7.0.0'))) {
-    return;
-  }
+const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
+mochaSuiteFn('legacy sensor/tracing', function () {
   agentControls = new AgentStubControls(5210);
 
   this.timeout(config.getTestTimeout() * 2);
