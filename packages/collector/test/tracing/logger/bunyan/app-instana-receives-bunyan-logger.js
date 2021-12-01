@@ -8,17 +8,17 @@
 'use strict';
 
 const agentPort = process.env.AGENT_PORT;
-
-const instana = require('../../../..');
-instana({
+const buynan = require('bunyan');
+const instana = require('../../../..')({
   agentPort,
-  logger: require('bunyan').createLogger({ name: 'app-logger' }),
   level: 'warn',
   tracing: {
     enabled: process.env.TRACING_ENABLED !== 'false',
     forceTransmissionStartingAt: 1
   }
 });
+instana.setLogger(buynan.createLogger({ name: 'app-logger' }));
+
 let instanaLogger;
 instanaLogger = require('../../../../src/logger').getLogger('test-module-name', newLogger => {
   instanaLogger = newLogger;
