@@ -7,8 +7,6 @@
 
 const coreHttpModule = require('http');
 const coreHttpsModule = require('https');
-
-const semver = require('semver');
 const URL = require('url').URL;
 
 const tracingUtil = require('../../tracingUtil');
@@ -23,20 +21,8 @@ let isActive = false;
 
 exports.init = function init(config) {
   instrument(coreHttpModule, false);
+  instrument(coreHttpsModule, true);
 
-  // Up until Node 8, the core https module uses the http module internally, so https calls are traced automatically
-  // without instrumenting https. Beginning with Node 9, the core https module started to use the internal core module
-  // _http_client directly rather than going through the http module. Therefore, beginning with Node 9, explicit
-  // instrumentation of the core https module is required. OTOH, in Node <= 8, we must _not_ instrument https, as
-  // otherwise we would run our instrumentation code twice (once for https.request and once for http.request).
-  // In case you wonder about the process.versions.node === '8.9.0' and if it shouldn't rather be something like
-  // semver.gte(process.version.node, '8.9.0') – no, it should not. Node had backported the refactoring to use
-  // _http_client directly in https (instead of going through http) from Node.js 9.0.0 to Node.js 8.9.0, only to revert
-  // that immediately in Node.js 8.9.1 a few days later. So we must only apply this for exactly 8.9.0, but for no other
-  // 8.x.x version.
-  if (semver.gte(process.versions.node, '9.0.0') || process.versions.node === '8.9.0') {
-    instrument(coreHttpsModule, true);
-  }
   extraHttpHeadersToCapture = config.tracing.http.extraHttpHeadersToCapture;
 };
 
