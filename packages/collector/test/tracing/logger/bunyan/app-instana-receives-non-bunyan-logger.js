@@ -18,16 +18,17 @@ const dummyLogger = {
   error: console.error
 };
 
-const instana = require('../../../..');
-instana({
+const instana = require('../../../..')({
   agentPort,
-  logger: dummyLogger,
   level: 'warn',
   tracing: {
     enabled: process.env.TRACING_ENABLED !== 'false',
     forceTransmissionStartingAt: 1
   }
 });
+
+instana.setLogger(dummyLogger);
+
 let instanaLogger;
 instanaLogger = require('../../../../src/logger').getLogger('test-module-name', newLogger => {
   instanaLogger = newLogger;
