@@ -12,7 +12,7 @@ if (!repoRootDir) {
 
 const instana = require('@instana/collector');
 const dependenciesModule = require(`${repoRootDir}/packages/shared-metrics/src/dependencies`);
-dependenciesModule.MAX_DEPENDENCIES = 300;
+dependenciesModule.MAX_DEPENDENCIES = 200;
 dependenciesModule.MAX_ATTEMPTS = 1;
 instana();
 

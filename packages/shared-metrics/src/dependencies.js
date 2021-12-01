@@ -239,6 +239,7 @@ function limitAndSet(distances = {}) {
   for (let i = 0; i < keys.length - exports.MAX_DEPENDENCIES; i++) {
     delete preliminaryPayload[keys[i]];
   }
+
   // @ts-ignore: Cannot redeclare exported variable 'currentPayload'
   exports.currentPayload = preliminaryPayload;
 }
