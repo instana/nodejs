@@ -5,9 +5,7 @@
 
 'use strict';
 
-const semver = require('semver');
 const expect = require('chai').expect;
-
 const controls = require('./apps/controls');
 
 /**
@@ -32,12 +30,8 @@ describe('uncaught exceptions assumptions - ', () => {
       expect(result.status).to.equal(7);
     });
 
-    // See https://github.com/nodejs/node/issues/28550 for why this test is excluded in v12.6.0 and
-    // https://github.com/nodejs/node/pull/28562/commits/36fdf1aa6c87ccfaebabb8f9c8004baab0549b0b for the fix.
-    const mochaFn =
-      semver.gte(process.version, '8.0.0') && process.version !== 'v12.6.0' ? it.bind(this) : it.skip.bind(this);
-
-    mochaFn('keeps the original stack trace', () => {
+    // NOTE: The next two tests won't work with v12.6.0 (https://github.com/nodejs/node/issues/28550)
+    it('keeps the original stack trace', () => {
       const result = controls.rethrow();
       // Actually, it will be 7, see
       // https://nodejs.org/api/process.html#process_exit_codes
@@ -50,7 +44,7 @@ describe('uncaught exceptions assumptions - ', () => {
       expect(stdErr).to.contain('test/uncaught/apps/rethrow.js');
     });
 
-    mochaFn('executes handlers registered before rethrowing handler, but not handlers registered after that', () => {
+    it('executes handlers registered before rethrowing handler, but not handlers registered after that', () => {
       const result = controls.rethrowWhenOtherHandlersArePresent();
       expect(result.status).to.not.equal(0);
       const stdOut = result.stdout.toString('utf-8');
