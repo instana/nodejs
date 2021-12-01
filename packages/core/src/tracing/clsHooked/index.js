@@ -36,10 +36,11 @@ const semver = require('semver');
  * In order to increase node version support, this loads the version of context
  * that is appropriate for the version of on nodejs that is running.
  * Node < v8 - uses AsyncWrap and async-hooks-jl
- * Node >= v12.17.0 - uses native AsyncLocalStorage
+ * Node 12.17 - 16.6 - uses native AsyncLocalStorage. See below:
+ * There is a bug introduced in Node 16.7 which breaks Async LS: https://github.com/nodejs/node/issues/40693
  * Node >= v8 - uses native async-hooks
  */
-if (process && semver.gte(process.versions.node, '12.19.0')) {
+if (process && semver.satisfies(process.versions.node, '12.17 - 16.6')) {
   // module.exports = require('./context');
   module.exports = require('./async_local_storage_context');
 } else if (process && semver.gte(process.versions.node, '8.0.0')) {
