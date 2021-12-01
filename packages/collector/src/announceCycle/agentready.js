@@ -12,7 +12,6 @@ try {
   // Worker threads are not available, so we know that this is the main thread.
 }
 
-const semver = require('semver');
 const { tracing } = require('@instana/core');
 
 const agentConnection = require('../agentConnection');
@@ -40,7 +39,7 @@ logger = require('../logger').getLogger('announceCycle/agentready', newLogger =>
   logger = newLogger;
 });
 
-if (agentOpts.autoProfile && semver.gte(process.version, '6.4.0')) {
+if (agentOpts.autoProfile) {
   try {
     // @ts-ignore - TS cannot find @instana/profile. TODO: @instana/autoprofile is not linted or typed
     autoprofile = require('@instana/autoprofile');
