@@ -59,17 +59,15 @@ describe('dependencies', function () {
           expectVersion(deps.koa, '^2.13.1');
 
           expect(deps.mime).to.exist;
-          expect(deps.negotiator).to.exist;
           expect(deps['mime-types']).to.exist;
-          expect(deps.negotiator).to.exist;
+          expect(deps.ms).to.exist;
 
-          // According to how we sort and limit the collected dependencies, negotiator should be the last package that
-          // is included while pino-std-serializers is the first that is omitted.
-
+          // According to how we sort and limit the collected dependencies, ms should be the last package that
+          // is included while negotiator is the first that is omitted.
+          expect(deps.negotiator).to.not.exist;
           expect(deps['pino-std-serializers']).to.not.exist;
           expect(deps['quick-format-unescaped']).to.not.exist;
           expect(deps['raw-body']).to.not.exist;
-          expect(deps['readable-stream']).to.not.exist;
         })
       ));
   });
@@ -119,7 +117,7 @@ describe('dependencies', function () {
         agentControls.getAllMetrics(controls.getPid()).then(allMetrics => {
           const deps = findMetric(allMetrics, ['dependencies']);
           expect(deps).to.be.an('object');
-          expect(Object.keys(deps)).to.have.lengthOf(300);
+          expect(Object.keys(deps)).to.have.lengthOf(200);
 
           expect(deps['@instana/shared-metrics']).to.exist;
           expect(deps['@instana/core']).to.exist;
@@ -158,7 +156,7 @@ describe('dependencies', function () {
       env: {
         INSTANA_AGENT_PORT: 7211,
         INSTANA_NODES_REPO: repoRootDir,
-        MAX_DEPENDENCIES: 300
+        MAX_DEPENDENCIES: 200
       }
     }).registerTestHooks();
 
@@ -171,7 +169,7 @@ describe('dependencies', function () {
         agentControls.getAllMetrics(controls.getPid()).then(allMetrics => {
           const deps = findMetric(allMetrics, ['dependencies']);
           expect(deps).to.be.an('object');
-          expect(Object.keys(deps)).to.have.lengthOf(300);
+          expect(Object.keys(deps)).to.have.lengthOf(200);
 
           expect(deps['@instana/shared-metrics']).to.exist;
           expect(deps['@instana/core']).to.exist;
