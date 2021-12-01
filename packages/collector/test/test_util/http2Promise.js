@@ -5,23 +5,13 @@
 
 'use strict';
 
-const semver = require('semver');
 const fs = require('fs');
 const path = require('path');
-
-let http2 = null;
-let HTTP2_HEADER_METHOD;
-let HTTP2_HEADER_PATH;
-let HTTP2_HEADER_STATUS;
-let NGHTTP2_CANCEL;
-
-if (semver.gte(process.version, '8.4.0')) {
-  http2 = require('http2');
-  HTTP2_HEADER_METHOD = http2.constants.HTTP2_HEADER_METHOD;
-  HTTP2_HEADER_STATUS = http2.constants.HTTP2_HEADER_STATUS;
-  HTTP2_HEADER_PATH = http2.constants.HTTP2_HEADER_PATH;
-  NGHTTP2_CANCEL = http2.constants.NGHTTP2_CANCEL;
-}
+const http2 = require('http2');
+const HTTP2_HEADER_METHOD = http2.constants.HTTP2_HEADER_METHOD;
+const HTTP2_HEADER_STATUS = http2.constants.HTTP2_HEADER_STATUS;
+const HTTP2_HEADER_PATH = http2.constants.HTTP2_HEADER_PATH;
+const NGHTTP2_CANCEL = http2.constants.NGHTTP2_CANCEL;
 
 const sslDir = path.join(__dirname, '..', 'apps', 'ssl');
 const cert = fs.readFileSync(path.join(sslDir, 'cert'));
