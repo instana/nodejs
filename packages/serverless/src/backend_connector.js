@@ -18,6 +18,7 @@ let useLambdaExtension = false;
 
 const timeoutEnvVar = 'INSTANA_TIMEOUT';
 let defaultTimeout = 500;
+const layerExtensionTimeout = 100;
 let backendTimeout = defaultTimeout;
 
 const proxyEnvVar = 'INSTANA_ENDPOINT_PROXY';
@@ -115,6 +116,10 @@ function getTransport() {
   }
 }
 
+function getBackendTimeout() {
+  return useLambdaExtension ? layerExtensionTimeout : backendTimeout;
+}
+
 function send(resourcePath, payload, finalLambdaRequest, callback) {
   if (requestHasFailed && stopSendingOnFailure) {
     logger.info(
@@ -168,6 +173,8 @@ function send(resourcePath, payload, finalLambdaRequest, callback) {
     },
     rejectUnauthorized: !disableCaCheck
   };
+
+  options.timeout = getBackendTimeout();
 
   if (proxyAgent && !useLambdaExtension) {
     options.agent = proxyAgent;
