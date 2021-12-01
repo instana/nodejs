@@ -5,13 +5,13 @@
 
 'use strict';
 
-const semver = require('semver');
+const http2 = require('http2');
+const shimmer = require('shimmer');
 
 const cls = require('../../cls');
 const constants = require('../../constants');
 const httpCommon = require('./_http');
 const readSymbolProperty = require('../../../util/readSymbolProperty');
-const shimmer = require('shimmer');
 const tracingHeaders = require('../../tracingHeaders');
 const { filterParams, sanitizeUrl } = require('../../../util/url');
 
@@ -21,20 +21,13 @@ let isActive = false;
 exports.spanName = 'node.http.server';
 
 const sentHeadersS = 'Symbol(sent-headers)';
-let HTTP2_HEADER_AUTHORITY;
-let HTTP2_HEADER_METHOD;
-let HTTP2_HEADER_PATH;
-let HTTP2_HEADER_STATUS;
+const HTTP2_HEADER_AUTHORITY = http2.constants.HTTP2_HEADER_AUTHORITY;
+const HTTP2_HEADER_METHOD = http2.constants.HTTP2_HEADER_METHOD;
+const HTTP2_HEADER_PATH = http2.constants.HTTP2_HEADER_PATH;
+const HTTP2_HEADER_STATUS = http2.constants.HTTP2_HEADER_STATUS;
 
 exports.init = function init(config) {
-  if (semver.gte(process.versions.node, '8.4.0')) {
-    const http2 = require('http2');
-    HTTP2_HEADER_AUTHORITY = http2.constants.HTTP2_HEADER_AUTHORITY;
-    HTTP2_HEADER_METHOD = http2.constants.HTTP2_HEADER_METHOD;
-    HTTP2_HEADER_PATH = http2.constants.HTTP2_HEADER_PATH;
-    HTTP2_HEADER_STATUS = http2.constants.HTTP2_HEADER_STATUS;
-    instrument(http2);
-  }
+  instrument(http2);
   extraHttpHeadersToCapture = config.tracing.http.extraHttpHeadersToCapture;
 };
 
