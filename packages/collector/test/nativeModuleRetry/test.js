@@ -7,7 +7,6 @@
 
 const async = require('async');
 const { expect } = require('chai');
-const semver = require('semver');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
