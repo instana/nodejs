@@ -6,6 +6,7 @@
 'use strict';
 
 const logger = require('./console_logger');
+
 const instanaEndpointUrlEnvVar = 'INSTANA_ENDPOINT_URL';
 const instanaAgentKeyEnvVar = 'INSTANA_AGENT_KEY';
 // The following two environment variables are deprecated and will be removed soon.
