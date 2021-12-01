@@ -5,7 +5,7 @@
 
 'use strict';
 
-const semver = require('semver');
+const http2 = require('http2');
 
 const cls = require('../../cls');
 const constants = require('../../constants');
@@ -19,18 +19,12 @@ let isActive = false;
 
 const originS = 'Symbol(origin)';
 const sentHeadersS = 'Symbol(sent-headers)';
-let HTTP2_HEADER_METHOD;
-let HTTP2_HEADER_PATH;
-let HTTP2_HEADER_STATUS;
+const HTTP2_HEADER_METHOD = http2.constants.HTTP2_HEADER_METHOD;
+const HTTP2_HEADER_PATH = http2.constants.HTTP2_HEADER_PATH;
+const HTTP2_HEADER_STATUS = http2.constants.HTTP2_HEADER_STATUS;
 
 exports.init = function init(config) {
-  if (semver.gte(process.versions.node, '8.4.0')) {
-    const http2 = require('http2');
-    HTTP2_HEADER_METHOD = http2.constants.HTTP2_HEADER_METHOD;
-    HTTP2_HEADER_PATH = http2.constants.HTTP2_HEADER_PATH;
-    HTTP2_HEADER_STATUS = http2.constants.HTTP2_HEADER_STATUS;
-    instrument(http2);
-  }
+  instrument(http2);
   extraHttpHeadersToCapture = config.tracing.http.extraHttpHeadersToCapture;
 };
 
