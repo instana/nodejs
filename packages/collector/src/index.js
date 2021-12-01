@@ -26,8 +26,6 @@ let config;
 function init(_config) {
   config = normalizeConfig(_config);
 
-  log.init(config, false);
-
   agentConnection = require('./agentConnection');
   const agentOpts = require('./agent/opts');
   const pidStore = require('./pidStore');
@@ -37,9 +35,9 @@ function init(_config) {
   logger = log.getLogger('index', newLogger => {
     logger = newLogger;
   });
-  if (!config.logger) {
-    config.logger = logger;
-  }
+
+  // NOTE: By default we set our instana internal bunyan logger
+  config.logger = logger;
 
   agentOpts.init(config);
   instanaNodeJsCore.init(config, agentConnection, pidStore);
@@ -68,6 +66,7 @@ init.isConnected = function isConnected() {
  * @param {import('@instana/core/src/logger').GenericLogger} logger
  */
 init.setLogger = function setLogger(logger) {
+  // NOTE: Override our default logger with customer's logger
   config.logger = logger;
   log.init(config, true);
 };
