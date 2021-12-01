@@ -5,19 +5,7 @@
 
 'use strict';
 
-const semver = require('semver');
-
 const logger = require('./console_logger');
-
-let Url;
-if (semver.gte(process.version, '10.0.0')) {
-  // Beginning with 10.0.0, the WHATWG URL constructor is available globally.
-  Url = URL;
-} else {
-  // In Node.js >= 6.13.0 and < 10.0.0, the WHATWG URL constructor needs to be required explicitly
-  Url = require('url').URL;
-}
-
 const instanaEndpointUrlEnvVar = 'INSTANA_ENDPOINT_URL';
 const instanaAgentKeyEnvVar = 'INSTANA_AGENT_KEY';
 // The following two environment variables are deprecated and will be removed soon.
@@ -173,7 +161,7 @@ exports.getTags = function getTags() {
 
 function parseUrl(value) {
   try {
-    return new Url(value);
+    return new URL(value);
   } catch (e) {
     logger.warn(e.message);
     return null;
