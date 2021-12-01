@@ -24,11 +24,9 @@ if (semver.satisfies(process.version, '>=12.2.0')) {
   // Use require.resolve and createRequire to get the winston dependency of express-winston (which is Winston 1.x) and
   // not the Winston version we depend on via our root package's devDependencies (which is 3.x):
   winston1x = moduleModule.createRequire(expressWinstonLocation)('winston');
-} else if (semver.satisfies(process.version, '>=10.12.0')) {
+} else {
   // Same as above, but use createRequireFromPath instead of createRequire.
   winston1x = moduleModule.createRequireFromPath(expressWinstonLocation)('winston');
-} else {
-  throw new Error('This test only supports Node.js 10.12.0 or later.');
 }
 
 const app = express();
