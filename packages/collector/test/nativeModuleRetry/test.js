@@ -52,15 +52,11 @@ describe('retry loading native addons', function () {
         expect(libuv).to.exist;
         expect(libuv).to.be.an('object');
 
-        if (semver.lt(process.version, '10.0.0')) {
-          expect(libuv.statsSupported).to.be.false;
-        } else {
-          expect(libuv.statsSupported).to.be.true;
-          expect(libuv.min).to.be.a('number');
-          expect(libuv.max).to.be.a('number');
-          expect(libuv.sum).to.be.a('number');
-          expect(libuv.lag).to.be.a('number');
-        }
+        expect(libuv.statsSupported).to.be.true;
+        expect(libuv.min).to.be.a('number');
+        expect(libuv.max).to.be.a('number');
+        expect(libuv.sum).to.be.a('number');
+        expect(libuv.lag).to.be.a('number');
       }
     },
     {
@@ -86,13 +82,9 @@ describe('retry loading native addons', function () {
         expect(gc).to.exist;
         expect(gc).to.be.an('object');
 
-        if (semver.lt(process.version, '10.0.0')) {
-          expect(gc.statsSupported).to.be.false;
-        } else {
-          expect(gc.statsSupported).to.be.true;
-          expect(gc.minorGcs).to.exist;
-          expect(gc.majorGcs).to.exist;
-        }
+        expect(gc.statsSupported).to.be.true;
+        expect(gc.minorGcs).to.exist;
+        expect(gc.majorGcs).to.exist;
       }
     }
   ];
