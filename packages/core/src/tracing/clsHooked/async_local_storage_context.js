@@ -159,15 +159,15 @@ class Namespace {
 
     // This updates the context in the promise, otherwise we return the context parent
     // TODO: revisit this: do I need this enterWith?
-    // storage.enterWith(context); THIS IS A TEST TO SEE IF WE NEED THIS OR NOT AND WHY
+    // storage.enterWith(context); // THIS IS A TEST TO SEE IF WE NEED THIS OR NOT AND WHY
     // this.enter(context);
 
-    return storage.run(context, () => {
-      const promise = fn(context);
-      if (!promise || !promise.then || !promise.catch) {
-        throw new Error('fn must return a promise.');
-      }
+    const promise = fn(context);
+    if (!promise || !promise.then || !promise.catch) {
+      throw new Error('fn must return a promise.');
+    }
 
+    return storage.run(context, () => {
       // TODO: just return promise
       return promise
         .then((/** @type {*} */ result) => {
@@ -194,7 +194,7 @@ class Namespace {
     let isPromise = false;
     let valueOrPromise;
     const context = ctx || this.createContext();
-    // storage.enterWith(context); THIS IS A TEST TO SEE IF WE NEED THIS OR NOT AND WHY
+    // storage.enterWith(context); // THIS IS A TEST TO SEE IF WE NEED THIS OR NOT AND WHY
 
     try {
       return storage.run(context, () => {
