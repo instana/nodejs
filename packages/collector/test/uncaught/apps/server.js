@@ -16,9 +16,7 @@ const config = {
     forceTransmissionStartingAt: 500
   }
 };
-if (process.env.ENABLE_REPORT_UNCAUGHT_EXCEPTION) {
-  config.reportUncaughtException = true;
-}
+
 if (process.env.ENABLE_REPORT_UNHANDLED_REJECTIONS) {
   config.reportUnhandledPromiseRejections = true;
 }
@@ -31,14 +29,6 @@ const port = process.env.APP_PORT;
 const requestHandler = (request, response) => {
   if (request.url === '/') {
     return success(response);
-  } else if (request.url === '/other') {
-    return success(response);
-  } else if (request.url === '/throw-error') {
-    return throwUncaughtError('error');
-  } else if (request.url === '/throw-string') {
-    return throwUncaughtError('string');
-  } else if (request.url === '/throw-null') {
-    return throwUncaughtError('null');
   } else if (request.url === '/reject-with-error-reason') {
     return uncaughtPromiseRejection(response, 'error');
   } else if (request.url === '/reject-with-string-reason') {
@@ -55,20 +45,6 @@ function success(response) {
   setTimeout(() => {
     response.end("Everything's peachy.");
   }, 100);
-}
-
-function throwUncaughtError(errorType) {
-  process.nextTick(() => {
-    if (errorType === 'string') {
-      // eslint-disable-next-line no-throw-literal
-      throw 'Throwing a string instead of a proper error.';
-    } else if (errorType === 'null') {
-      // eslint-disable-next-line no-throw-literal
-      throw null;
-    } else {
-      throw new Error('Boom');
-    }
-  });
 }
 
 function uncaughtPromiseRejection(response, reasonType) {
