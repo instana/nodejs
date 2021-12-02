@@ -10,7 +10,6 @@ const fs = require('fs');
 const { http } = require('@instana/core').uninstrumentedHttp;
 const pathUtil = require('path');
 const { propertySizes } = require('@instana/core').util;
-const childProcess = require('child_process');
 
 /** @typedef {import('@instana/core/src/tracing/cls').InstanaBaseSpan} InstanaBaseSpan */
 
@@ -412,76 +411,6 @@ function sendData(path, data, cb, ignore404 = false) {
 
   req.write(payload);
   req.end();
-}
-
-/**
- * Sends the given event data and trace data synchronously to the agent via HTTP. This function is synchronous, that is,
- * it blocks the event loop!
- *
- * YOU MUST NOT USE THIS FUNCTION, except for the one use case where it is actually required to block the event loop
- * (reporting an uncaught exception tot the agent in the process.on('uncaughtException') handler).
- *
- * @param {*} eventData
- * @param {Array.<InstanaBaseSpan>} spans
- */
-exports.reportUncaughtExceptionToAgentSync = function reportUncaughtExceptionToAgentSync(eventData, spans) {
-  sendRequestsSync(
-    '/com.instana.plugin.generic.event',
-    eventData,
-    `/com.instana.plugin.nodejs/traces.${pidStore.pid}`,
-    spans
-  );
-};
-
-/**
- * Sends two HTTP POST requests to the agent. This function is synchronous, that is, it blocks the event loop!
- *
- * YOU MUST NOT USE THIS FUNCTION, except for the one use case where it is actually required to block the event loop
- * (reporting an uncaught exception tot the agent in the process.on('uncaughtException') handler).
- *
- * @param {string} path1
- * @param {Object} data1
- * @param {string} path2
- * @param {Object} data2
- */
-function sendRequestsSync(path1, data1, path2, data2) {
-  let port = agentOpts.port;
-  if (typeof port !== 'number') {
-    try {
-      port = parseInt(port, 10);
-    } catch (nonNumericPortError) {
-      logger.warn('Detected non-numeric port configuration value %s, uncaught exception will not be reported.', port);
-      return;
-    }
-  }
-
-  let payload1;
-  let payload2;
-  try {
-    payload1 = JSON.stringify(data1);
-    payload2 = JSON.stringify(data2);
-  } catch (payloadSerializationError) {
-    logger.warn('Could not serialize payload, uncaught exception will not be reported.', {
-      error: payloadSerializationError
-    });
-    return;
-  }
-
-  try {
-    childProcess.execFileSync(process.execPath, [pathUtil.join(__dirname, 'uncaught', 'syncHttp.js')], {
-      env: {
-        INSTANA_AGENT_HOST: agentOpts.host,
-        INSTANA_AGENT_PORT: String(agentOpts.port),
-        PATH1: path1,
-        PAYLOAD1: payload1,
-        PATH2: path2,
-        PAYLOAD2: payload2
-      },
-      timeout: 400
-    });
-  } catch (error) {
-    logger.warn('Failed to report uncaught exception due to network error.', { error });
-  }
 }
 
 exports.isConnected = function () {
