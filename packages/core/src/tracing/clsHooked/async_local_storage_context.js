@@ -194,12 +194,12 @@ class Namespace {
    */
   runPromiseOrRunAndReturn(fn, ctx) {
     let isPromise = false;
-    /** @type {Promise<any> | any} */
-    let valueOrPromise;
+    // /** @type {Promise<any> | any} */
+    // let valueOrPromise;
     const context = ctx || this.createContext();
     this.enter(context);
     // storage.enterWith(context); // THIS IS A TEST TO SEE IF WE NEED THIS OR NOT AND WHY
-    valueOrPromise = fn(context);
+    const valueOrPromise = fn(context);
     isPromise = valueOrPromise && valueOrPromise.then && valueOrPromise.catch;
 
     try {
