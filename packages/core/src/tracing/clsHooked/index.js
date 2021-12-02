@@ -41,7 +41,6 @@ const semver = require('semver');
  * Node >= v8 - uses native async-hooks
  */
 if (process && semver.satisfies(process.versions.node, '12.17 - 16.6')) {
-  // module.exports = require('./context');
   module.exports = require('./async_local_storage_context');
 } else if (process && semver.gte(process.versions.node, '8.0.0')) {
   module.exports = require('./context');

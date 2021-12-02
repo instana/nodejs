@@ -3,10 +3,6 @@
  * (c) Copyright Instana Inc. and contributors 2021
  */
 
-// This evolved from a copy of
-// Jeff-Lewis, fix(destroy): destroy based on asyncId only (3cf7539  on Jul 25, 2017)
-// https://github.com/Jeff-Lewis/cls-hooked/blob/066c6c4027a7924b06997cc6b175b1841342abdc/context.js
-
 'use strict';
 
 const util = require('util');
