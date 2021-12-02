@@ -17,8 +17,7 @@ instana.sharedMetrics.util.nativeModuleRetry.selfNodeModulesPath = require('path
   'node_modules'
 );
 instana({
-  level: 'debug',
-  reportUncaughtException: true
+  level: 'debug'
 });
 
 const http = require('http');
