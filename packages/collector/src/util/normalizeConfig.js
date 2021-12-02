@@ -22,7 +22,6 @@ const defaults = {
  * @property {string} [agentHost]
  * @property {Object.<string, *>} [tracing]
  * @property {boolean | string} [autoProfile]
- * @property {boolean} [reportUncaughtException]
  * @property {boolean} [reportUnhandledPromiseRejections]
  * @property {import('@instana/core/src/logger').GenericLogger} [logger]
  * @property {string | number} [level]
@@ -38,26 +37,18 @@ module.exports = function normalizeConfig(config = {}) {
   config.agentPort = config.agentPort || parseToPositiveInteger(process.env.INSTANA_AGENT_PORT, defaults.agentPort);
   config.autoProfile = config.autoProfile || process.env.INSTANA_AUTO_PROFILE || defaults.autoProfile;
 
-  normalizeConfigForUncaughtExceptions(config);
-
-  return config;
-};
-
-/**
- * @param {CollectorConfig} config
- */
-function normalizeConfigForUncaughtExceptions(config) {
   config.tracing = config.tracing || {};
 
   if (config.tracing.stackTraceLength == null) {
     config.tracing.stackTraceLength = defaults.tracing.stackTraceLength;
   }
-  config.reportUncaughtException = config.reportUncaughtException === true;
-  // Make reportUncaughtException imply reportUnhandledPromiseRejections, unless explicitly disabled.
+
   if (config.reportUnhandledPromiseRejections == null) {
-    config.reportUnhandledPromiseRejections = config.reportUncaughtException;
+    config.reportUnhandledPromiseRejections = false;
   }
-}
+
+  return config;
+};
 
 /**
  * @param {string | number} value
