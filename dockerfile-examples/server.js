@@ -5,9 +5,7 @@
 
 'use strict';
 
-require('@instana/collector')({
-  reportUncaughtException: true
-});
+require('@instana/collector')();
 
 const http = require('http');
 
