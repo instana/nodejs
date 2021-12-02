@@ -18,18 +18,13 @@ logger = require('../logger').getLogger('util/uncaughtExceptionHandler', newLogg
   logger = newLogger;
 });
 
-const { tracing, util } = require('@instana/core');
-const spanBuffer = tracing.spanBuffer;
-const stackTraceUtil = util.stackTrace;
-
 /** @type {import('../agentConnection')} */
 let downstreamConnection = null;
 /** @type {import('../pidStore')} */
 let processIdentityProvider = null;
-const uncaughtExceptionEventName = 'uncaughtException';
 const unhandledRejectionEventName = 'unhandledRejection';
 let unhandledRejectionDeprecationWarningHasBeenEmitted = false;
-const stackTraceLength = 10;
+
 /** @type {import('../util/normalizeConfig').CollectorConfig} */
 let config;
 
@@ -61,122 +56,15 @@ exports.init = function (_config, _downstreamConnection, _processIdentityProvide
   config = _config;
   downstreamConnection = _downstreamConnection;
   processIdentityProvider = _processIdentityProvider;
-  if (config.reportUncaughtException) {
-    if (!processIdentityProvider) {
-      logger.warn('Reporting uncaught exceptions is enabled, but no process identity provider is available.');
-    } else if (typeof processIdentityProvider.getEntityId !== 'function') {
-      logger.warn(
-        'Reporting uncaught exceptions is enabled, but the process identity provider does not support ' +
-          'retrieving an entity ID.'
-      );
-    }
-  }
 };
 
 exports.activate = function () {
-  activateUncaughtExceptionHandling();
   activateUnhandledPromiseRejectionHandling();
 };
 
-function activateUncaughtExceptionHandling() {
-  if (config.reportUncaughtException) {
-    process.once(uncaughtExceptionEventName, onUncaughtException);
-    logger.warn(
-      'Reporting uncaught exceptions is enabled. This feature is deprecated. Please consider disabling it ' +
-        'and rely on https://www.instana.com/docs/ecosystem/os-process/#abnormal-termination instead.'
-    );
-    if (process.version === 'v12.6.0') {
-      logger.warn(
-        'You are running Node.js v12.6.0 and have enabled reporting uncaught exceptions. To enable this feature, ' +
-          '@instana/collector will register an uncaughtException handler. Due to a bug in Node.js v12.6.0, the ' +
-          'original stack trace will get lost when this process is terminated with an uncaught exception. ' +
-          'Instana recommends to use a different Node.js version (<= v12.5.0 or >= v12.6.1). See ' +
-          'https://github.com/nodejs/node/issues/28550 for details.'
-      );
-    }
-  } else {
-    logger.info('Reporting uncaught exceptions is disabled.');
-  }
-}
-
 exports.deactivate = function () {
-  process.removeListener(uncaughtExceptionEventName, onUncaughtException);
   process.removeListener(unhandledRejectionEventName, onUnhandledRejection);
 };
-
-/**
- * @param {InstanaExtendedError} uncaughtError
- */
-function onUncaughtException(uncaughtError) {
-  // because of the way Error.prepareStackTrace works and how error.stack is only created once and then cached it is
-  // important to create the JSON formatted stack trace first, before anything else accesses error.stack.
-  const jsonStackTrace =
-    uncaughtError != null ? stackTraceUtil.getStackTraceAsJson(stackTraceLength, uncaughtError) : null;
-  finishCurrentSpanAndReportEvent(uncaughtError, jsonStackTrace);
-  logAndRethrow(uncaughtError);
-}
-
-/**
- * @param {InstanaExtendedError} uncaughtError
- * @param {Array.<import('@instana/core/src/util/stackTrace').InstanaCallSite>} jsonStackTrace
- */
-function finishCurrentSpanAndReportEvent(uncaughtError, jsonStackTrace) {
-  const spans = finishCurrentSpan(jsonStackTrace);
-  const eventPayload = createEventForUncaughtException(uncaughtError);
-  downstreamConnection.reportUncaughtExceptionToAgentSync(eventPayload, spans);
-}
-
-/**
- * @param {Error} uncaughtError
- * @returns {import('../agentConnection').AgentConnectionEvent}
- */
-function createEventForUncaughtException(uncaughtError) {
-  return createEvent(uncaughtError, 'A Node.js process terminated abnormally due to an uncaught exception.', 10, false);
-}
-
-/**
- * @param {Array.<import('@instana/core/src/util/stackTrace').InstanaCallSite>} jsonStackTrace
- * @returns {Array.<import('@instana/core/src/tracing/cls').InstanaBaseSpan>}
- */
-function finishCurrentSpan(jsonStackTrace) {
-  const cls = tracing.getCls();
-  if (!cls) {
-    return [];
-  }
-  const currentSpan = cls.getCurrentSpan();
-  if (!currentSpan) {
-    return [];
-  }
-
-  currentSpan.ec = 1;
-  currentSpan.d = Date.now() - currentSpan.ts;
-  if (jsonStackTrace) {
-    currentSpan.stack = jsonStackTrace;
-  }
-  currentSpan.transmit();
-  return spanBuffer.getAndResetSpans();
-}
-
-/**
- * @param {Error} err
- */
-function logAndRethrow(err) {
-  // Remove all listeners now, so the final throw err won't trigger other registered listeners a second time.
-  const registeredListeners = process.listeners(uncaughtExceptionEventName);
-  if (registeredListeners) {
-    registeredListeners.forEach(listener => {
-      process.removeListener(uncaughtExceptionEventName, listener);
-    });
-  }
-  // prettier-ignore
-  // eslint-disable-next-line max-len
-  logger.error('The Instana Node.js collector caught an otherwise uncaught exception to generate a respective Instana event for you. Instana will now rethrow the error to terminate this process, otherwise the application would be left in an inconsistent state, see https://nodejs.org/api/process.html#process_warning_using_uncaughtexception_correctly. The next line on stderr will look as if Instana crashed your application, but actually the original error came from your application code, not from Instana. Since we rethrow the original error, you should see its stacktrace below (depening on how you operate your application and how logging is configured.)');
-
-  // Rethrow the original error (after notifying the agent) to trigger the process to finally terminate - Node won't
-  // run this handler again since it (a) has been registered with `once` and (b) we removed all handlers for
-  // uncaughtException anyway.
-  throw err;
-}
 
 function activateUnhandledPromiseRejectionHandling() {
   if (config.reportUnhandledPromiseRejections) {
