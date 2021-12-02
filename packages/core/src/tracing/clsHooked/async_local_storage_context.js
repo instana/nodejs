@@ -159,6 +159,7 @@ class Namespace {
 
     // This updates the context in the promise, otherwise we return the context parent
     // TODO: revisit this: do I need this enterWith?
+    this.enter(context);
     // storage.enterWith(context); // THIS IS A TEST TO SEE IF WE NEED THIS OR NOT AND WHY
     // this.enter(context);
 
@@ -169,15 +170,16 @@ class Namespace {
 
     return storage.run(context, () => {
       // TODO: just return promise
-      return promise
-        .then((/** @type {*} */ result) => {
-          // this.exit(context);
-          return result;
-        })
-        .catch((/** @type {*} */ err) => {
-          // this.exit(context);
-          throw err;
-        });
+      return promise;
+      // return promise
+      //   .then((/** @type {*} */ result) => {
+      //     // this.exit(context);
+      //     return result;
+      //   })
+      //   .catch((/** @type {*} */ err) => {
+      //     // this.exit(context);
+      //     throw err;
+      //   });
     });
   }
 
@@ -192,25 +194,28 @@ class Namespace {
    */
   runPromiseOrRunAndReturn(fn, ctx) {
     let isPromise = false;
+    /** @type {Promise<any> | any} */
     let valueOrPromise;
     const context = ctx || this.createContext();
+    this.enter(context);
     // storage.enterWith(context); // THIS IS A TEST TO SEE IF WE NEED THIS OR NOT AND WHY
+    valueOrPromise = fn(context);
+    isPromise = valueOrPromise && valueOrPromise.then && valueOrPromise.catch;
 
     try {
       return storage.run(context, () => {
-        valueOrPromise = fn(context);
-        isPromise = valueOrPromise && valueOrPromise.then && valueOrPromise.catch;
         if (isPromise) {
+          return valueOrPromise;
           // fn returned a promise, so we behave like this.runPromise.
-          return valueOrPromise
-            .then((/** @type {*} */ result) => {
-              // this.exit(context);
-              return result;
-            })
-            .catch((/** @type {*} */ err) => {
-              // this.exit(context);
-              throw err;
-            });
+          // return valueOrPromise
+          //   .then((/** @type {*} */ result) => {
+          //     // this.exit(context);
+          //     return result;
+          //   })
+          //   .catch((/** @type {*} */ err) => {
+          //     // this.exit(context);
+          //     throw err;
+          //   });
         }
       });
     } finally {
@@ -238,10 +243,11 @@ class Namespace {
     // }
     context = context || storage.getStore() || this.createContext();
 
-    // const self = this;
+    const self = this;
 
     return function clsBind() {
-      storage.enterWith(context);
+      // storage.enterWith(context);
+      self.enter(context);
       try {
         return fn.apply(this, arguments);
       } finally {
