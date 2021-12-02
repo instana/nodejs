@@ -28,7 +28,6 @@ mochaSuiteFn('unhandled promise rejections', function () {
     dontKillInAfterHook: false,
     agentControls,
     env: {
-      ENABLE_REPORT_UNCAUGHT_EXCEPTION: false,
       ENABLE_REPORT_UNHANDLED_REJECTIONS: true
     }
   }).registerTestHooks();
