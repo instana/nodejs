@@ -51,28 +51,17 @@ describe('util.normalizeConfig', () => {
     expect(config.tracing.stackTraceLength).to.equal(7);
   });
 
-  it('should enable reporting uncaught exceptions', () => {
+  it('should disable unhandled promises', () => {
     const config = normalizeConfig({
-      reportUncaughtException: true
-    });
-    expect(config.reportUncaughtException).to.be.true;
-    expect(config.reportUnhandledPromiseRejections).to.be.true;
-  });
-
-  it('should enable uncaught exceptions but disable unhandled promises', () => {
-    const config = normalizeConfig({
-      reportUncaughtException: true,
       reportUnhandledPromiseRejections: false
     });
-    expect(config.reportUncaughtException).to.be.true;
     expect(config.reportUnhandledPromiseRejections).to.be.false;
   });
 
-  it('should enable disable unhandled promises only', () => {
+  it('should enable unhandled promises', () => {
     const config = normalizeConfig({
       reportUnhandledPromiseRejections: true
     });
-    expect(config.reportUncaughtException).to.be.false;
     expect(config.reportUnhandledPromiseRejections).to.be.true;
   });
 
@@ -82,7 +71,6 @@ describe('util.normalizeConfig', () => {
     expect(config.agentPort).to.equal(42699);
     expect(config.tracing).to.be.an('object');
     expect(config.tracing.stackTraceLength).to.equal(10);
-    expect(config.reportUncaughtException).to.be.false;
     expect(config.reportUnhandledPromiseRejections).to.be.false;
   }
 });
