@@ -3,6 +3,13 @@
  * (c) Copyright Instana Inc. and contributors 2021
  */
 
+/**
+ * This is a reimplementation of the cls-hooked API on top of AsyncLocalStorage.
+ * This implementation is used instead of the cls-hooked based implementation in Node.js runtimes where
+ * AsyncLocalStorage is available. It exposes the same API as the previous implementation, and can be used
+ * interchangeably.
+ */
+
 'use strict';
 
 const util = require('util');
@@ -152,7 +159,7 @@ class Namespace {
 
     // This updates the context in the promise, otherwise we return the context parent
     // TODO: revisit this: do I need this enterWith?
-    storage.enterWith(context);
+    // storage.enterWith(context); THIS IS A TEST TO SEE IF WE NEED THIS OR NOT AND WHY
     // this.enter(context);
 
     return storage.run(context, () => {
@@ -187,7 +194,7 @@ class Namespace {
     let isPromise = false;
     let valueOrPromise;
     const context = ctx || this.createContext();
-    storage.enterWith(context);
+    // storage.enterWith(context); THIS IS A TEST TO SEE IF WE NEED THIS OR NOT AND WHY
 
     try {
       return storage.run(context, () => {
@@ -221,14 +228,15 @@ class Namespace {
    * @param {InstanaCLSContext} context
    */
   bind(fn, context) {
-    if (!context) {
-      const activeContext = storage.getStore();
-      if (!activeContext) {
-        context = this.createContext();
-      } else {
-        context = activeContext;
-      }
-    }
+    // if (!context) {
+    //   const activeContext = storage.getStore();
+    //   if (!activeContext) {
+    //     context = this.createContext();
+    //   } else {
+    //     context = activeContext;
+    //   }
+    // }
+    context = context || storage.getStore() || this.createContext();
 
     // const self = this;
 
