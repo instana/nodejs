@@ -83,13 +83,10 @@ class Namespace {
    * Retrieves a value by key from the current CLS context (or a parent context), assuming the key/value pair has
    * been set earlier in this context.
    * @param {string} key
+   * @param {boolean} [fallbackToSharedContext=false]
    */
-  get(key) {
-    // Maybe we should add some condition before blindly returning this.sharedContext.
-    // Right now, any last context to call enter() will be assigned as the sharedContext.
-    // It may be the case that we need only reduced spans, or at least a set of special span cases.
-    // Right now, no problems have been seen, at least on CI tests
-    const activeContext = storage.getStore() || this.sharedContext;
+  get(key, fallbackToSharedContext = false) {
+    const activeContext = storage.getStore() || (fallbackToSharedContext ? this.sharedContext : undefined);
     if (!activeContext) {
       return undefined;
     }

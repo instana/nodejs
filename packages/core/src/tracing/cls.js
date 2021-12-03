@@ -349,17 +349,19 @@ function setCurrentSpan(span) {
 
 /**
  * Get the currently active span.
+ * @param {boolean} [fallbackToSharedContext=false]
  * @returns {InstanaSpan}
  */
-function getCurrentSpan() {
-  return ns.get(currentSpanKey);
+function getCurrentSpan(fallbackToSharedContext = false) {
+  return ns.get(currentSpanKey, fallbackToSharedContext);
 }
 
-/*
+/** *
  * Get the reduced backup of the last active span in this cls context.
+ * @param {boolean} [fallbackToSharedContext=false]
  */
-function getReducedSpan() {
-  return ns.get(reducedSpanKey);
+function getReducedSpan(fallbackToSharedContext = false) {
+  return ns.get(reducedSpanKey, fallbackToSharedContext);
 }
 
 /**
