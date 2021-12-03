@@ -356,7 +356,7 @@ function getCurrentSpan(fallbackToSharedContext = false) {
   return ns.get(currentSpanKey, fallbackToSharedContext);
 }
 
-/** *
+/**
  * Get the reduced backup of the last active span in this cls context.
  * @param {boolean} [fallbackToSharedContext=false]
  */
