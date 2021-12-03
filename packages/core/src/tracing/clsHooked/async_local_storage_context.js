@@ -121,12 +121,8 @@ class Namespace {
   run(fn, ctx) {
     const context = ctx || this.createContext();
 
-    try {
-      storage.run(context, () => fn(context));
-      return context;
-    } finally {
-      this.exit(context);
-    }
+    storage.run(context, () => fn(context));
+    return context;
   }
 
   /**
@@ -159,7 +155,7 @@ class Namespace {
 
     /**
      * We need the new context to be set as the active context before the promise is called.
-     * Otherwise, the current active will cause the new span transmission to fail.
+     * Otherwise, the current active context will cause the new span transmission to fail.
      * Unlike our old code, AsyncLocalStorage.run does not update the active context, so we have to do it manually with
      * storage.enterWith. This is done by `this.enter`, which calls `enterWith`.
      * The same happens in the old code, and for the same reasons.
@@ -172,15 +168,6 @@ class Namespace {
     }
 
     return promise;
-
-    // return storage.run(context, () => {
-    //   const promise = fn(context);
-    //   if (!promise || !promise.then || !promise.catch) {
-    //     throw new Error('fn must return a promise.');
-    //   }
-
-    //   return promise;
-    // });
   }
 
   /**
@@ -202,21 +189,6 @@ class Namespace {
     if (isPromise) {
       return valueOrPromise;
     }
-
-    // try {
-    //   return storage.run(context, () => {
-    //     const valueOrPromise = fn(context);
-    //     isPromise = valueOrPromise && valueOrPromise.then && valueOrPromise.catch;
-    //     if (isPromise) {
-    //       return valueOrPromise;
-    //     }
-    //   });
-    // } finally {
-    //   if (!isPromise) {
-    //     // fn did not return a promise, so we behave like this.runAndReturn.
-    //     // this.exit(context);
-    //   }
-    // }
   }
 
   /**
@@ -232,11 +204,7 @@ class Namespace {
 
     return function clsBind() {
       self.enter(context);
-      try {
-        return fn.apply(this, arguments);
-      } finally {
-        // self.exit(context);
-      }
+      return fn.apply(this, arguments);
     };
   }
 
