@@ -157,30 +157,30 @@ class Namespace {
   runPromise(fn, ctx) {
     const context = ctx || this.createContext();
 
-    // This updates the context in the promise, otherwise we return the context parent
-    // TODO: revisit this: do I need this enterWith?
+    /**
+     * We need the new context to be set as the active context before the promise is called.
+     * Otherwise, the current active will cause the new span transmission to fail.
+     * Unlike our old code, AsyncLocalStorage.run does not update the active context, so we have to do it manually with
+     * storage.enterWith. This is done by `this.enter`, which calls `enterWith`.
+     * The same happens in the old code, and for the same reasons.
+     */
     this.enter(context);
-    // storage.enterWith(context); // THIS IS A TEST TO SEE IF WE NEED THIS OR NOT AND WHY
-    // this.enter(context);
 
     const promise = fn(context);
     if (!promise || !promise.then || !promise.catch) {
       throw new Error('fn must return a promise.');
     }
 
-    return storage.run(context, () => {
-      // TODO: just return promise
-      return promise;
-      // return promise
-      //   .then((/** @type {*} */ result) => {
-      //     // this.exit(context);
-      //     return result;
-      //   })
-      //   .catch((/** @type {*} */ err) => {
-      //     // this.exit(context);
-      //     throw err;
-      //   });
-    });
+    return promise;
+
+    // return storage.run(context, () => {
+    //   const promise = fn(context);
+    //   if (!promise || !promise.then || !promise.catch) {
+    //     throw new Error('fn must return a promise.');
+    //   }
+
+    //   return promise;
+    // });
   }
 
   /**
@@ -194,36 +194,29 @@ class Namespace {
    */
   runPromiseOrRunAndReturn(fn, ctx) {
     let isPromise = false;
-    // /** @type {Promise<any> | any} */
-    // let valueOrPromise;
     const context = ctx || this.createContext();
     this.enter(context);
-    // storage.enterWith(context); // THIS IS A TEST TO SEE IF WE NEED THIS OR NOT AND WHY
+
     const valueOrPromise = fn(context);
     isPromise = valueOrPromise && valueOrPromise.then && valueOrPromise.catch;
-
-    try {
-      return storage.run(context, () => {
-        if (isPromise) {
-          return valueOrPromise;
-          // fn returned a promise, so we behave like this.runPromise.
-          // return valueOrPromise
-          //   .then((/** @type {*} */ result) => {
-          //     // this.exit(context);
-          //     return result;
-          //   })
-          //   .catch((/** @type {*} */ err) => {
-          //     // this.exit(context);
-          //     throw err;
-          //   });
-        }
-      });
-    } finally {
-      if (!isPromise) {
-        // fn did not return a promise, so we behave like this.runAndReturn.
-        // this.exit(context);
-      }
+    if (isPromise) {
+      return valueOrPromise;
     }
+
+    // try {
+    //   return storage.run(context, () => {
+    //     const valueOrPromise = fn(context);
+    //     isPromise = valueOrPromise && valueOrPromise.then && valueOrPromise.catch;
+    //     if (isPromise) {
+    //       return valueOrPromise;
+    //     }
+    //   });
+    // } finally {
+    //   if (!isPromise) {
+    //     // fn did not return a promise, so we behave like this.runAndReturn.
+    //     // this.exit(context);
+    //   }
+    // }
   }
 
   /**
@@ -233,20 +226,11 @@ class Namespace {
    * @param {InstanaCLSContext} context
    */
   bind(fn, context) {
-    // if (!context) {
-    //   const activeContext = storage.getStore();
-    //   if (!activeContext) {
-    //     context = this.createContext();
-    //   } else {
-    //     context = activeContext;
-    //   }
-    // }
     context = context || storage.getStore() || this.createContext();
 
     const self = this;
 
     return function clsBind() {
-      // storage.enterWith(context);
       self.enter(context);
       try {
         return fn.apply(this, arguments);
