@@ -1,7 +1,7 @@
 function normalizeArgs {
   local instanaLayerMode=$1
   if [[ -z "${instanaLayerMode-}" || $instanaLayerMode = released ]]; then
-    INSTANA_LAYER=instana/google-cloud-run-nodejs:latest
+    INSTANA_LAYER=icr.io/instana/google-cloud-run-nodejs:latest
     INSTANA_LAYER_MODE=released
   elif [[ $instanaLayerMode = authenticated ]]; then
     INSTANA_LAYER=containers.instana.io/instana/release/gcp/run/nodejs:latest

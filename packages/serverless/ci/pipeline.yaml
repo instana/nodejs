@@ -38,6 +38,33 @@ resources:
       password: ((containers-instana-io-creds.password))
       tag: latest
 
+  - name: instana-google-cloud-run-npm-package
+    type: npm-resource
+    icon: cube-outline
+    source:
+      scope: instana
+      package: google-cloud-run
+      registry:
+        uri: https://registry.npmjs.org/
+
+  - name: google-cloud-run-nodejs-image-icr
+    type: registry-image
+    icon: docker
+    source:
+      repository: icr.io/instana/google-cloud-run-nodejs
+      username: ((concourse-icr-containers-public.apikey))
+      password: ((concourse-icr-containers-public.password))
+      tag: latest
+
+  - name: google-cloud-run-nodejs-image-cii
+    type: registry-image
+    icon: docker
+    source:
+      repository: containers.instana.io/instana/release/google/cloud-run/nodejs
+      username: ((containers-instana-io-creds.username))
+      password: ((containers-instana-io-creds.password))
+      tag: latest
+
   - name: slack-alert
     type: slack-notifier
     icon: slack
@@ -121,3 +148,65 @@ jobs:
         message: |
               :x: Building/pushing a new version of the container image `instana/aws-fargate-nodejs` has failed.
     on_error: *slack-notify-failure-fargate
+
+
+  - name: google-cloud-run-nodejs-container-image-layer
+    serial: true
+    plan:
+      - in_parallel:
+        - get: instana-google-cloud-run-npm-package
+          trigger: true
+          params:
+            skip_download: true
+        - get: nodejs-repository
+      - load_var: package-version
+        file: instana-google-cloud-run-npm-package/version
+        reveal: true
+
+      - task: build-and-publish-google-cloud-run-image
+        privileged: true
+        config:
+          platform: linux
+          image_resource:
+            type: registry-image
+            source:
+              repository: vito/oci-build-task
+          params:
+            CONTEXT: nodejs-repository/packages/google-cloud-run/images/instana-google-cloud-run/
+            DOCKERFILE: nodejs-repository/packages/google-cloud-run/images/instana-google-cloud-run/Dockerfile-npm
+            BUILD_ARG_package_version: ((.:package-version))
+          inputs:
+            - name: nodejs-repository
+          outputs:
+            - name: image
+          run:
+            path: build
+
+      - put: google-cloud-run-nodejs-image-icr
+        params:
+          image: image/image.tar
+          additional_tags: instana-google-cloud-run-npm-package/version
+        get_params:
+          skip_download: true
+      - put: google-cloud-run-nodejs-image-cii
+        params:
+          image: image/image.tar
+          additional_tags: instana-google-cloud-run-npm-package/version
+        get_params:
+          skip_download: true
+
+    on_success:
+      put: slack-alert
+      params:
+        channel: '#team-node'
+        alert_type: success
+        message: |
+              :white_check_mark: Version ((.:package-version)) of the container image `instana/google-cloud-run-nodejs` has been pushed to the IBM Container registry `icr.io` as well as `containers.instana.io`.
+    on_failure: &slack-notify-failure-cloud-run
+      put: slack-alert
+      params:
+        channel: '#team-node'
+        alert_type: failed
+        message: |
+              :x: Building/pushing a new version of the container image `instana/google-cloud-run-nodejs` has failed.
+    on_error: *slack-notify-failure-cloud-run
