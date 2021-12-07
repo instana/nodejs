@@ -1,4 +1,4 @@
-FROM node:12.16.3-buster AS instana-aws-fargate-build-nodejs
+FROM node:12.22.7-buster AS instana-aws-fargate-build-nodejs
 WORKDIR /instana
 COPY package.json ./
 COPY instana-*.tgz ./

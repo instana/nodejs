@@ -12,13 +12,13 @@ cd `dirname $BASH_SOURCE`
 source utils
 
 # $1: Instana Layer Mode, aka which Docker base image layer to use. One of:
-#     - released      -> public Dockerhub base image
+#     - released      -> public IBM container registry base image
 #     - authenticated -> containers.io base image
 #     - local         -> local Docker base image
 # $2: Node.js version. One of:
-#     - 12.16.3
-#     - 10.20.1
-#     - 8.6.0
+#     - 12
+#     - 10
+#     - 8
 # $3: Linux distribution. One of:
 #     - standard               -> (uses node:$version, that is, Debian)
 #     - alpine                 -> (uses node:$version-alpine, that is, Alpine, and installs build dependencies)
@@ -67,6 +67,7 @@ docker rmi -f $image_tag
 
 echo "Building $dockerfile -> $image_tag (INSTANA_LAYER: $INSTANA_LAYER, NODEJS_VERSION: $NODEJS_VERSION)"
 docker build \
+  --progress=plain \
   --build-arg NODEJS_VERSION=$NODEJS_VERSION \
   --build-arg INSTANA_LAYER=$INSTANA_LAYER \
   -f $dockerfile \
