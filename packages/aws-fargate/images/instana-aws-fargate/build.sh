@@ -32,6 +32,7 @@ if [[ -z "${build_mode-}" ]]; then
 fi
 
 dockerfile=Dockerfile-$build_mode
+build_arg=
 setImageTag $image_tag_prefix $build_mode
 
 echo "Building $image_tag from $dockerfile"
@@ -72,7 +73,7 @@ if [[ $build_mode = local ]]; then
   cp package.json.local package.json
 elif [[ $build_mode = npm ]]; then
   package_version=$(npm show @instana/aws-fargate version)
-  sed -e "s/VERSION/$package_version/g" package.json.npm > package.json
+  build_arg="--build-arg package_version=$package_version"
 else
   echo "Unknown option for build_mode: $build_mode"
   echo Aborting.
@@ -83,7 +84,7 @@ echo "Removing image $image_tag"
 docker rmi -f $image_tag
 
 echo "Building $dockerfile -> $image_tag"
-docker build -f $dockerfile -t $image_tag -t $ecr_repository/$image_tag .
+docker build $build_arg -f $dockerfile --progress=plain -t $image_tag -t $ecr_repository/$image_tag .
 echo "docker build exit status: $?"
 
 if [[ $build_mode = npm ]]; then
