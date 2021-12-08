@@ -36,13 +36,13 @@ asyncIterator.pullValue().then(event1 => {
   // Chronologically, everything inside the then-handler this happens after cls.ns.set (see below). Due to custom
   // queueing in pubsub_async_iterator, the cls context would get lost though (unless we fix it).
   log(event1);
-  valuesReadFromCls.push(cls.ns.get('key'));
+  valuesReadFromCls.push(cls.ns.get('key', true));
   asyncIterator.pullValue().then(event2 => {
     log(event2);
-    valuesReadFromCls.push(cls.ns.get('key'));
+    valuesReadFromCls.push(cls.ns.get('key', true));
     asyncIterator.pullValue().then(event3 => {
       log(event3);
-      valuesReadFromCls.push(cls.ns.get('key'));
+      valuesReadFromCls.push(cls.ns.get('key', true));
     });
   });
 });
