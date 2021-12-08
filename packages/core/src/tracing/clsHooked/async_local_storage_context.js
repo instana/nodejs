@@ -41,24 +41,23 @@ class Namespace {
    * @param {string} name
    */
   constructor(name) {
-    /**
-     * The idea behind `sharedContext` is to keep a reference of a finished context - in normal circumstances - but that
-     * we wish to use it as a parent context for the next instrumentation.
-     * For instance, we need a shared context in the GraphQL instrumentation when HTTP is used as a client entry point.
-     * In this case, the HTTP server context is properly managed by the Async Localstorage and the context is exited by
-     * it. But we need this context as the parent of the GraphQL subscription instrumentation.
+    /*
+     * The idea behind `sharedContext` is to keep a reference to an already finished context, that we might need to use
+     * as the parent context for the next instrumentation. This workaround is only used in exactly one edge case:
+     * GraphQL client spans for GraphQL subscription updates. In the instrumentation for GraphQL subscription update, we
+     * use it to find the parent entry span (usually an HTTP entry). In this case, the context for the parent entry span
+     * is properly managed by the AsyncLocalStorage and the context is exited correctly when the request is terminated.
+     * Due to some custom queuing mechanism in the graphql-subscriptions module, the subscription update happens outside
+     * of the correct context.
      *
-     * This concept is error-prone, because we hope that the remembered `sharedContext` is the correct
-     * context when the next instrumentation, which relies on it, needs it's parent context. Any other
-     * process can interupt and override the `sharedContext` by entering it's own context. Every instrumentation
-     * is using the namespace class instance as a singleton.
+     * This workaround is a best effort and can potentially lead to falling back to the wrong parent context in some
+     * cases. We work with the assumption that the stored `sharedContext` is the correct context when the next
+     * instrumentation, which relies on it, needs to find its parent context. But other requests might hav interupted
+     * and overwritten the `sharedContext` at that time.
      *
-     * This concept was already used in previous implementations. We would like to come up with a new idea for this
-     * problem.
+     * This problem already exists in a similar form in the cls-hooked based implementation in ../context.js.
      *
-     * If we are able to connect x instrumentations in a more clean way, we will also solve
-     * the concurrency problem.
-     * See https://github.com/instana/nodejs/commit/1c399d99b8909e0d4b197ab092e2af3f93776cd6
+     * See also https://github.com/instana/nodejs/commit/1c399d99b8909e0d4b197ab092e2af3f93776cd6.
      */
     this.sharedContext = null;
     this.name = name;
