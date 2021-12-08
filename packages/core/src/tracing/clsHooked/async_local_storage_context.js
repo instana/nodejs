@@ -52,7 +52,6 @@ class Namespace {
     this.name = name;
     this.active = null;
     this.id = -1;
-    this._contexts = new Map();
     this._indent = 0;
 
     Object.defineProperty(this, 'active', {
