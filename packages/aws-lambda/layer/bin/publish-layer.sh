@@ -7,7 +7,14 @@
 
 set -eo pipefail
 
-cd `dirname $BASH_SOURCE`/..
+command -v npm >/dev/null 2>&1 || {
+  cat <<EOF >&2
+Node.js (and in particular npm) needs to be installed but it isn't.
+
+Aborting.
+EOF
+  exit 1
+}
 
 command -v aws >/dev/null 2>&1 || {
   cat <<EOF >&2
@@ -17,6 +24,16 @@ Aborting.
 EOF
   exit 1
 }
+
+command -v docker >/dev/null 2>&1 || {
+  cat <<EOF >&2
+Docker needs to be installed but it isn't.
+
+Aborting.
+EOF
+  exit 1
+}
+
 command -v jq >/dev/null 2>&1 || {
   cat <<EOF >&2
 The executable jq needs to be installed but it isn't.
@@ -26,12 +43,26 @@ EOF
   exit 1
 }
 
+command -v zip >/dev/null 2>&1 || {
+  cat <<EOF >&2
+The executable zip needs to be installed but it isn't.
+
+Aborting.
+EOF
+  exit 1
+}
+
+cd `dirname $BASH_SOURCE`/..
+
 PACKAGE_NAMES="@instana/aws-lambda instana-aws-lambda-auto-wrap"
 if [[ -z $LAYER_NAME ]]; then
   LAYER_NAME=instana-nodejs
 fi
+if [[ -z $CONTAINER_REGISTRY ]]; then
+  CONTAINER_REGISTRY=icr.io
+fi
 if [[ -z $DOCKER_IMAGE_NAME ]]; then
-  DOCKER_IMAGE_NAME=instana/aws-lambda-nodejs
+  DOCKER_IMAGE_NAME=$CONTAINER_REGISTRY/instana/aws-lambda-nodejs
 fi
 
 LICENSE=MIT
@@ -45,8 +76,20 @@ REGIONS=$'ap-northeast-1\nap-northeast-2\nap-south-1\nap-southeast-1\nap-southea
 
 if [[ -z $SKIP_DOCKER_IMAGE ]]; then
   echo Will build Docker image with name \"$DOCKER_IMAGE_NAME\".
+  if [[ -z $CONTAINER_REGISTRY_USER ]]; then
+    echo Missing mandatory environment variable CONTAINER_REGISTRY_USER.
+    exit 1
+  fi
+  if [[ -z $CONTAINER_REGISTRY_PASSWORD ]]; then
+    echo Missing mandatory environment variable CONTAINER_REGISTRY_PASSWORD.
+    exit 1
+  fi
 else
   echo Building the Docker image will be skipped.
+fi
+
+if [[ -z $AWS_ACCESS_KEY_ID ]] || [[ -z $AWS_SECRET_ACCESS_KEY ]]; then
+  echo Warning: AWS_ACCESS_KEY_ID or AWS_SECRET_ACCESS_KEY are not set. This might be okay if you have set up AWS authentication via other means. If not, the AWS cli commands to publish the layer will fail.
 fi
 
 echo "step 1/8: fetching AWS regions (skipping, using fixed list of regions for now)"
@@ -190,8 +233,10 @@ if [[ -z $SKIP_DOCKER_IMAGE ]]; then
   docker build . -t "$DOCKER_IMAGE_NAME"
   docker tag $DOCKER_IMAGE_NAME:latest $DOCKER_IMAGE_NAME:$VERSION
   echo " - pushing Docker image $DOCKER_IMAGE_NAME:"
+  docker login -u="$CONTAINER_REGISTRY_USER" -p="$CONTAINER_REGISTRY_PASSWORD" $CONTAINER_REGISTRY
   docker push $DOCKER_IMAGE_NAME:latest
   docker push $DOCKER_IMAGE_NAME:$VERSION
+  docker logout $CONTAINER_REGISTRY
 else
   echo "step 7/8: building docker images (skipping)"
 fi

@@ -11,6 +11,26 @@ resources:
       username: ((instanacd-github-api-token))
       password: x-oauth-basic
 
+  - name: nodejs-repository-dind
+    type: git
+    icon: github
+    source:
+      uri: https://github.com/instana/nodejs.git
+      branch: main
+      username: ((instanacd-github-api-token))
+      password: x-oauth-basic
+      paths:
+      - packages/serverless/ci/dind-nodejs-aws-jq
+
+  - name: dind-nodejs-aws-jq-image
+    type: registry-image
+    icon: docker
+    source:
+      repository: gcr.io/k8s-brewery/instana/concourse-dind-nodejs-aws-jq
+      tag: latest
+      username: _json_key
+      password: ((team-nodejs-gcp-service-account-json))
+
   - name: instana-aws-fargate-npm-package
     type: npm-resource
     icon: cube-outline
@@ -64,6 +84,15 @@ resources:
       username: ((containers-instana-io-creds.username))
       password: ((containers-instana-io-creds.password))
       tag: latest
+
+  - name: instana-aws-lambda-npm-package
+    type: npm-resource
+    icon: cube-outline
+    source:
+      scope: instana
+      package: aws-lambda
+      registry:
+        uri: https://registry.npmjs.org/
 
   - name: slack-alert
     type: slack-notifier
@@ -210,3 +239,93 @@ jobs:
         message: |
               :x: Building/pushing a new version of the container image `instana/google-cloud-run-nodejs` has failed.
     on_error: *slack-notify-failure-cloud-run
+
+
+  # Builds the docker-in-docker image with the AWS cli and jq, which we use to assemble and publish the
+  # Instana AWS Lambda layer.
+  - name: build-and-publish-dind-nodejs-aws-jq-image
+    serial: true
+    plan:
+
+      - get: nodejs-repository-dind
+        params: { depth: 1 }
+        trigger: true
+
+      - task: build-image
+        privileged: true
+        config:
+          platform: linux
+          image_resource:
+            type: registry-image
+            source:
+              repository: vito/oci-build-task
+              tag: '0.8.0'
+          inputs:
+            - name: nodejs-repository-dind
+          params:
+            CONTEXT: nodejs-repository-dind/packages/serverless/ci/dind-nodejs-aws-jq
+          caches:
+          - path: cache
+          run:
+            path: build
+          outputs:
+            - name: image
+        output_mapping:
+          image: dind-image
+
+      - put: dind-nodejs-aws-jq-image
+        params:
+          image: dind-image/image.tar
+        get_params:
+          skip_download: true
+
+
+  - name: aws-lambda-layer-as-container-image
+    serial: true
+    plan:
+      - in_parallel:
+        - get: dind-nodejs-aws-jq-image
+        - get: instana-aws-lambda-npm-package
+          trigger: true
+          params:
+            skip_download: true
+        - get: nodejs-repository
+      - load_var: package-version
+        file: instana-aws-lambda-npm-package/version
+        reveal: true
+
+      - task: build-and-publish-aws-lambda-image
+        privileged: true
+        image: dind-nodejs-aws-jq-image
+        config:
+          platform: linux
+          inputs:
+            - name: nodejs-repository
+          run:
+            path: entrypoint.sh
+            args:
+            - bash
+            - -ceux
+            - |
+                BUILD_LAYER_WITH=npm \
+                CONTAINER_REGISTRY_USER=iamapikey \
+                CONTAINER_REGISTRY_PASSWORD=((concourse-icr-containers-public.password)) \
+                AWS_ACCESS_KEY_ID=((aws-ci-manage-lambda-layers.aws_access_key_id)) \
+                AWS_SECRET_ACCESS_KEY=((aws-ci-manage-lambda-layers.aws_secret_access_key)) \
+                nodejs-repository/packages/aws-lambda/layer/bin/publish-layer.sh
+
+    on_success:
+      put: slack-alert
+      params:
+        channel: '#team-node'
+        alert_type: success
+        message: |
+              :white_check_mark: The Instana Node.js AWS Lambda layer for package version ((.:package-version)) and the corresponding container image `icr.io/instana/aws-lambda-nodejs` have been released.
+    on_failure: &slack-notify-failure-lambda
+      put: slack-alert
+      params:
+        channel: '#team-node'
+        alert_type: failed
+        message: |
+              :x: Building/publishing a new version of the Instana Node.js AWS Lambda layer and the container image `icr.io/instana/aws-lambda-nodejs` has failed.
+    on_error: *slack-notify-failure-lambda
