@@ -42,11 +42,23 @@ class Namespace {
    */
   constructor(name) {
     /**
-     * The idea behind sharedContext is to keep a reference of a finished context - in normal circumstances - but that
+     * The idea behind `sharedContext` is to keep a reference of a finished context - in normal circumstances - but that
      * we wish to use it as a parent context for the next instrumentation.
      * For instance, we need a shared context in the GraphQL instrumentation when HTTP is used as a client entry point.
      * In this case, the HTTP server context is properly managed by the Async Localstorage and the context is exited by
-     * it. But we need this context as the parent of the GraphQL instrumentation.
+     * it. But we need this context as the parent of the GraphQL subscription instrumentation.
+     *
+     * This concept is error-prone, because we hope that the remembered `sharedContext` is the correct
+     * context when the next instrumentation, which relies on it, needs it's parent context. Any other
+     * process can interupt and override the `sharedContext` by entering it's own context. Every instrumentation
+     * is using the namespace class instance as a singleton.
+     *
+     * This concept was already used in previous implementations. We would like to come up with a new idea for this
+     * problem.
+     *
+     * If we are able to connect x instrumentations in a more clean way, we will also solve
+     * the concurrency problem.
+     * See https://github.com/instana/nodejs/commit/1c399d99b8909e0d4b197ab092e2af3f93776cd6
      */
     this.sharedContext = null;
     this.name = name;
@@ -81,6 +93,10 @@ class Namespace {
   /**
    * Retrieves a value by key from the current CLS context (or a parent context), assuming the key/value pair has
    * been set earlier in this context.
+   *
+   * When `fallbackToSharedContext` is set to true, the caller tries to access a parent context,
+   * which got remembered in a previous instrumentation.
+   *
    * @param {string} key
    * @param {boolean} [fallbackToSharedContext=false]
    */
