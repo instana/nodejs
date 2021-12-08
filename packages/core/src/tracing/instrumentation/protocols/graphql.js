@@ -165,7 +165,13 @@ function traceSubscriptionUpdate(
   if (!isActive) {
     return originalFunction.apply(originalThis, originalArgs);
   }
+
+  /**
+   * We pass `fallbackToSharedContext: true` to access the GraphQL query context,
+   * which then triggered this subscription query. We need to connect them.
+   */
   const parentSpan = cls.getCurrentSpan(true) || cls.getReducedSpan(true);
+
   if (parentSpan && !constants.isExitSpan(parentSpan) && parentSpan.t && parentSpan.s) {
     return cls.ns.runAndReturn(() => {
       const span = cls.startSpan('graphql.client', constants.EXIT, parentSpan.t, parentSpan.s);
