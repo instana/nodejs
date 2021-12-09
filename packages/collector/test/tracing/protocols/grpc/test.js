@@ -37,9 +37,10 @@ mochaSuiteFn('tracing/grpc', function () {
 
   const maliMochaSuiteFn = semver.satisfies(process.versions.node, '>=10.0.0') ? describe : describe.skip;
 
-  maliMochaSuiteFn('with mali@0.20.0', () => {
-    // mali@0.20.0 was the last mali version based on the grpc package, more recent versions are based on @grpc/grpc-js,
-    // which is why we test 0.20.0 explicitly here.
+  maliMochaSuiteFn('with mali@0.2x.0', () => {
+    // mali@0.2x.0 was the last mali version based on the grpc package, more recent versions are based on @grpc/grpc-js,
+    // which is why we test 0.2x.0 explicitly here.
+    // https://github.com/malijs/mali/blob/v0.30.0/package.json
     const { serverControls, clientControls } = createProcessesForOptions('mali', false, false);
 
     it('must trace an unary call', () => {
