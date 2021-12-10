@@ -2,7 +2,12 @@
   "name": "@instana/opentelemetry-exporter",
   "version": "1.137.2",
   "description": "OpenTelemetry Instana Exporter",
-  "keywords": ["opentelemetry", "exporter", "nodejs", "tracing"],
+  "keywords": [
+    "opentelemetry",
+    "exporter",
+    "nodejs",
+    "tracing"
+  ],
   "author": "Willian Carvalho <willian.carvalho@instana.com>",
   "homepage": "https://github.com/instana/nodejs/blob/main/packages/opentelemetry-exporter/README.md",
   "license": "MIT",
@@ -11,7 +16,9 @@
     "lib": "src",
     "test": "test"
   },
-  "files": ["src"],
+  "files": [
+    "src"
+  ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/instana/nodejs.git"
@@ -47,19 +54,19 @@
   "dependencies": {
     "@instana/serverless": "1.137.2",
     "@opentelemetry/api": "1.0.3",
-    "@opentelemetry/core": "0.25.0"
+    "@opentelemetry/core": "0.26.0"
   },
   "devDependencies": {
     "@instana/core": "1.137.2",
-    "@opentelemetry/auto-instrumentations-node": "0.24.0",
-    "@opentelemetry/instrumentation": "0.24.0",
-    "@opentelemetry/instrumentation-http": "0.24.0",
+    "@opentelemetry/auto-instrumentations-node": "0.27.0",
+    "@opentelemetry/instrumentation": "0.27.0",
+    "@opentelemetry/instrumentation-http": "0.27.0",
     "@opentelemetry/node": "0.24.0",
-    "@opentelemetry/resources": "0.25.0",
-    "@opentelemetry/sdk-node": "0.24.0",
-    "@opentelemetry/sdk-trace-base": "0.25.0",
-    "@opentelemetry/sdk-trace-node": "0.24.1-alpha.4",
-    "@opentelemetry/semantic-conventions": "0.25.0",
+    "@opentelemetry/resources": "0.26.0",
+    "@opentelemetry/sdk-node": "0.27.0",
+    "@opentelemetry/sdk-trace-base": "0.26.0",
+    "@opentelemetry/sdk-trace-node": "0.26.0",
+    "@opentelemetry/semantic-conventions": "0.26.0",
     "chai-spies": "1.0.0",
     "no-code2": "2.0.0"
   }
