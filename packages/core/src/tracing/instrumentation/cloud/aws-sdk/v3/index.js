@@ -25,8 +25,19 @@ awsProducts.forEach(awsProduct => {
 });
 
 let isActive = false;
+let onFileLoaded = false;
 
 exports.init = function init() {
+  /**
+   * @aws-sdk/smithly-client >= 3.36.0 changed how the dist structure gets delivered
+   * https://github.com/aws/aws-sdk-js-v3/blob/main/packages/smithy-client/CHANGELOG.md#3360-2021-10-08
+   * @aws-sdk/smithly-client is a subdependency of any @aws-sdk/* package
+   */
+  requireHook.onFileLoad(/@aws-sdk\/smithy-client\/dist-cjs\/client\.js/, instrumentGlobalSmithy);
+
+  /**
+   * @aws-sdk/smithly-client < 3.36.0
+   */
   requireHook.onFileLoad(/@aws-sdk\/smithy-client\/dist\/cjs\/client\.js/, instrumentGlobalSmithy);
 };
 
@@ -43,6 +54,12 @@ exports.deactivate = function deactivate() {
 };
 
 function instrumentGlobalSmithy(Smithy) {
+  // NOTE: avoid instrumenting aws-sdk v3 twice, see init
+  if (onFileLoaded) {
+    return;
+  }
+
+  onFileLoaded = true;
   shimmer.wrap(Smithy.Client.prototype, 'send', shimSmithySend);
 }
 
