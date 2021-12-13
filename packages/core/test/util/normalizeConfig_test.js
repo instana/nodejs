@@ -96,7 +96,6 @@ describe('util.normalizeConfig', () => {
     const config = normalizeConfig({ tracing: { enabled: false } });
     expect(config.tracing.enabled).to.be.false;
     expect(config.tracing.automaticTracingEnabled).to.be.false;
-    expect(config.tracing.disableAutomaticTracing).to.not.exist;
   });
 
   it('should disable tracing via INSTANA_DISABLE_TRACING', () => {
@@ -110,14 +109,6 @@ describe('util.normalizeConfig', () => {
     const config = normalizeConfig({ tracing: { automaticTracingEnabled: false } });
     expect(config.tracing.enabled).to.be.true;
     expect(config.tracing.automaticTracingEnabled).to.be.false;
-    expect(config.tracing.disableAutomaticTracing).to.not.exist;
-  });
-
-  it('should disable automatic tracing (legacy config)', () => {
-    const config = normalizeConfig({ tracing: { disableAutomaticTracing: true } });
-    expect(config.tracing.enabled).to.be.true;
-    expect(config.tracing.automaticTracingEnabled).to.be.false;
-    expect(config.tracing.disableAutomaticTracing).to.not.exist;
   });
 
   it('should disable automatic tracing via INSTANA_DISABLE_AUTO_INSTR', () => {
@@ -125,7 +116,6 @@ describe('util.normalizeConfig', () => {
     const config = normalizeConfig();
     expect(config.tracing.enabled).to.be.true;
     expect(config.tracing.automaticTracingEnabled).to.be.false;
-    expect(config.tracing.disableAutomaticTracing).to.not.exist;
   });
 
   it('should not enable automatic tracing when tracing is disabled in general', () => {
@@ -137,7 +127,6 @@ describe('util.normalizeConfig', () => {
     });
     expect(config.tracing.enabled).to.be.false;
     expect(config.tracing.automaticTracingEnabled).to.be.false;
-    expect(config.tracing.disableAutomaticTracing).to.not.exist;
   });
 
   it('should enable immediate tracing activation', () => {
@@ -482,7 +471,6 @@ describe('util.normalizeConfig', () => {
     expect(config.tracing).to.be.an('object');
     expect(config.tracing.enabled).to.be.true;
     expect(config.tracing.automaticTracingEnabled).to.be.true;
-    expect(config.tracing.disableAutomaticTracing).to.not.exist;
     expect(config.tracing.activateImmediately).to.be.false;
     expect(config.tracing.transmissionDelay).to.equal(1000);
     expect(config.tracing.forceTransmissionStartingAt).to.equal(500);
