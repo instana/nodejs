@@ -116,7 +116,7 @@ describe('tracing/opentracing/integration', function () {
   });
 
   describe('without automatic tracing', () => {
-    expressOpentracingControls.registerTestHooks({ disableAutomaticTracing: true });
+    expressOpentracingControls.registerTestHooks({ automaticTracingEnabled: false });
 
     beforeEach(() => agentControls.waitUntilAppIsCompletelyInitialized(expressOpentracingControls.getPid()));
 
