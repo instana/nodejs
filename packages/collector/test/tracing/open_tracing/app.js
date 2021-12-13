@@ -6,6 +6,7 @@
 'use strict';
 
 const instana = require('../../../');
+
 instana({
   agentPort: process.env.AGENT_PORT,
   level: 'warn',
@@ -13,7 +14,7 @@ instana({
   tracing: {
     enabled: process.env.TRACING_ENABLED !== 'false',
     forceTransmissionStartingAt: 1,
-    disableAutomaticTracing: process.env.DISABLE_AUTOMATIC_TRACING === 'true'
+    automaticTracingEnabled: process.env.DISABLE_AUTOMATIC_TRACING === 'false'
   }
 });
 
