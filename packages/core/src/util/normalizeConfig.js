@@ -21,7 +21,6 @@ const supportedTracingVersion = require('../tracing/supportedVersion');
  * @property {HTTPTracingOptions} [http]
  * @property {Array<string>} [disabledTracers]
  * @property {boolean} [spanBatchingEnabled]
- * @property {boolean} [disableAutomaticTracing]
  * @property {boolean} [disableW3cTraceCorrelation]
  * @property {KafkaTracingOptions} [kafka]
  */
@@ -201,7 +200,6 @@ function normalizeTracingEnabled(config) {
   if (process.env['INSTANA_DISABLE_TRACING'] === 'true') {
     logger.info('Not enabling tracing as it is explicitly disabled via environment variable INSTANA_DISABLE_TRACING.');
     config.tracing.enabled = false;
-    delete config.tracing.disableAutomaticTracing;
     return;
   }
 
@@ -218,10 +216,9 @@ function normalizeAutomaticTracingEnabled(config) {
     return;
   }
 
-  if (config.tracing.automaticTracingEnabled === false || config.tracing.disableAutomaticTracing) {
+  if (config.tracing.automaticTracingEnabled === false) {
     logger.info('Not enabling automatic tracing as it is explicitly disabled via config.');
     config.tracing.automaticTracingEnabled = false;
-    delete config.tracing.disableAutomaticTracing;
     return;
   }
 
@@ -230,7 +227,6 @@ function normalizeAutomaticTracingEnabled(config) {
       'Not enabling automatic tracing as it is explicitly disabled via environment variable INSTANA_DISABLE_AUTO_INSTR.'
     );
     config.tracing.automaticTracingEnabled = false;
-    delete config.tracing.disableAutomaticTracing;
     return;
   }
 
