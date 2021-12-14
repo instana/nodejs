@@ -156,6 +156,7 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v3/sqs', function () {
               return verifySingleSqsEntrySpanWithParent(traceId, spanId);
             });
 
+            // eslint-disable-next-line max-len
             it('continues trace from a SNS notification routed to an SQS queue via SNS-to-SQS subscription', async () => {
               const traceId = 'abcdef9876543210';
               const spanId = '9876543210abcdef';
@@ -258,7 +259,9 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v3/sqs', function () {
 
           /**
            * When receiving messages in batch, we can have more than one span that matches the criteria because
-           * SQS may not send all messages in one batch, thus we cannot guarantee that all messages will be in the batch.
+           * SQS may not send all messages in one batch, thus we cannot guarantee that all messages will be in
+           * the batch.
+           *
            * More info: https://docs.aws.amazon.com/AWSSimpleQueueService/latest/APIReference/API_ReceiveMessage.html
            */
           if (isBatch) {
