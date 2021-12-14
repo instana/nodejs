@@ -5,6 +5,16 @@
 
 'use strict';
 
+const mock = require('mock-require');
+
+/**
+ * NOTE:
+ * Link e.g. @aws-sdk/client-sqs2 to @aws-sdk/client-sqs
+ */
+if (process.env.AWS_SDK_CLIENT_SQS_REQUIRE !== '@aws-sdk/client-sqs') {
+  mock('@aws-sdk/client-sqs', process.env.AWS_SDK_CLIENT_SQS_REQUIRE);
+}
+
 require('../../../../../../')();
 const express = require('express');
 const delay = require('@instana/core/test/test_util/delay');
