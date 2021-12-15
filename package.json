@@ -59,7 +59,7 @@
     "@aws-sdk/client-sqs2": "npm:@aws-sdk/client-sqs@3.24.0",
     "@commitlint/cli": "^14.1.0",
     "@commitlint/config-conventional": "^14.1.0",
-    "@elastic/elasticsearch": "^7.15.0",
+    "@elastic/elasticsearch": "^7.16.0",
     "@google-cloud/pubsub": "2.12.0",
     "@google-cloud/storage": "^5.16.1",
     "@grpc/proto-loader": "0.5.6",
