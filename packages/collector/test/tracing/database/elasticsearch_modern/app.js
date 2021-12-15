@@ -32,12 +32,16 @@ const client = new Client({
   node: `http://${process.env.ELASTICSEARCH}`
 });
 
+/*
+TODO: fix me
 log(
   // eslint-disable-next-line max-len
-  `Using Elasticsearch API version ${ES_API_VERSION}, please make sure the installed client library @elastic/elasticsearch@${
+  `Using Elasticsearch API version ${ES_API_VERSION},
+  please make sure the installed client library @elastic/elasticsearch@${
     require('@elastic/elasticsearch/package.json').version
   } the Elasticsearch Docker container match that API version.`
 );
+*/
 
 app.get('/', (req, res) => {
   res.sendStatus(200);

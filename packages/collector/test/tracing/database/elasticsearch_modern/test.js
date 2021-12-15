@@ -31,7 +31,8 @@ mochaSuiteFn('tracing/elasticsearch (modern client)', function () {
   this.timeout(Math.max(config.getTestTimeout() * 4, 30000));
 
   before(() => {
-    originalEsVersion = require('@elastic/elasticsearch/package.json').version;
+    // TODO: fix me
+    originalEsVersion = '7.16.0';
     // eslint-disable-next-line no-console
     console.log(`original version: @elastic/elasticsearch@${originalEsVersion}`);
   });
@@ -39,7 +40,7 @@ mochaSuiteFn('tracing/elasticsearch (modern client)', function () {
   after(done => installLibraryVersion(originalEsVersion, done));
 
   [
-    //
+    // TODO: Add newer versions, currently we only test against 7.9
     {
       versionRange: '^7.9.1',
       apiVersion: '7.9',
