@@ -46,6 +46,7 @@ const instrumentations = [
   './instrumentation/cloud/gcp/pubsub',
   './instrumentation/cloud/gcp/storage',
   './instrumentation/control_flow/bluebird',
+  './instrumentation/control_flow/clsHooked',
   './instrumentation/control_flow/graphqlSubscriptions',
   './instrumentation/database/elasticsearchLegacy',
   './instrumentation/database/elasticsearchModern',

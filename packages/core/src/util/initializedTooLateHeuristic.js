@@ -23,6 +23,8 @@ let patterns = [
   /\/amqplib\/lib\//,
   /\/aws-sdk\/lib\/aws.js/,
   // deliberately not including bunyan because we depend on bunyan ourselves
+  /\/cls-hooked\/context.js/,
+  /\/cls-hooked\/context-legacy.js/,
   /\/elasticsearch\/src\/elasticsearch.js/,
   /\/express\/index.js/,
   /\/fastify\/lib\//,
