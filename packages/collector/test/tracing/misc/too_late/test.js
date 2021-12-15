@@ -36,6 +36,7 @@ mochaSuiteFn('tracing/too late', function () {
     'amqplib',
     'aws-sdk',
     'bluebird',
+    'cls-hooked',
     'elasticsearch',
     'express',
     'fastify',
