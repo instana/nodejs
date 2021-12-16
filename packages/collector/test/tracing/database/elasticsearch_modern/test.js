@@ -8,6 +8,7 @@
 const expect = require('chai').expect;
 const path = require('path');
 const semver = require('semver');
+const fs = require('fs');
 const { exec } = require('child_process');
 
 const constants = require('@instana/core').tracing.constants;
@@ -31,8 +32,12 @@ mochaSuiteFn('tracing/elasticsearch (modern client)', function () {
   this.timeout(Math.max(config.getTestTimeout() * 4, 30000));
 
   before(() => {
-    // TODO: fix me
-    originalEsVersion = '7.16.0';
+    // NOTE: We cannot use `require(@elastic/elasticsearch/package.json), because of
+    //       https://github.com/elastic/elasticsearch-js/blob/v7.16.0/package.json#L11
+    originalEsVersion = JSON.parse(
+      fs.readFileSync(`${path.dirname(require.resolve('@elastic/elasticsearch'))}/package.json`)
+    ).version;
+
     // eslint-disable-next-line no-console
     console.log(`original version: @elastic/elasticsearch@${originalEsVersion}`);
   });

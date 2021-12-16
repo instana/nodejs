@@ -13,6 +13,8 @@ require('../../../../')();
 
 const bodyParser = require('body-parser');
 const express = require('express');
+const path = require('path');
+const fs = require('fs');
 const morgan = require('morgan');
 const request = require('request-promise-native');
 const { Client } = require('@elastic/elasticsearch');
@@ -32,16 +34,14 @@ const client = new Client({
   node: `http://${process.env.ELASTICSEARCH}`
 });
 
-/*
-TODO: fix me
+const originalEsVersion = JSON.parse(
+  fs.readFileSync(`${path.dirname(require.resolve('@elastic/elasticsearch'))}/package.json`)
+).version;
+
 log(
-  // eslint-disable-next-line max-len
-  `Using Elasticsearch API version ${ES_API_VERSION},
-  please make sure the installed client library @elastic/elasticsearch@${
-    require('@elastic/elasticsearch/package.json').version
-  } the Elasticsearch Docker container match that API version.`
+  `Using Elasticsearch API version ${ES_API_VERSION}, please make sure the installed client library 
+  @elastic/elasticsearch@${originalEsVersion} the Elasticsearch Docker container match that API version.`
 );
-*/
 
 app.get('/', (req, res) => {
   res.sendStatus(200);
