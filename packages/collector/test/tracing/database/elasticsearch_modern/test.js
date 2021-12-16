@@ -48,34 +48,13 @@ mochaSuiteFn('tracing/elasticsearch (modern client)', function () {
     // TODO: Add newer versions, currently we only test against 7.9
     {
       versionRange: '^7.9.1',
-      apiVersion: '7.9',
       instrumentationFlavor: 'transport'
     },
     {
       versionRange: '7.9.0',
-      apiVersion: '7.9',
       instrumentationFlavor: 'api'
     }
-
-    // To test older client versions, you also need to set up a matching version of the Elasticsearch Docker container.
-    // The legacy client (package `elasticsearch`) supported using different server/API versions with the same client
-    // library, the modern client (`@elastic/elasticsearch`) does not.
-    // See docker-compose.yml for how to start older ES servers.
-    //
-    // Tests for older versions can be run manually, but are not executed on CI.
-    //
-    // {
-    //   versionRange: '^5.6.22',
-    //   apiVersion: '5.6',
-    //   instrumentationFlavor: 'api'
-    // }
-    //
-    // {
-    //   versionRange: '^6.8.8',
-    //   apiVersion: '6.8',
-    //   instrumentationFlavor: 'api'
-    // }
-  ].forEach(({ versionRange: esClientVersionRangeUnderTest, apiVersion, instrumentationFlavor }) => {
+  ].forEach(({ versionRange: esClientVersionRangeUnderTest, instrumentationFlavor }) => {
     describe(
       // eslint-disable-next-line no-useless-concat
       `@elastic/elasticsearch@${esClientVersionRangeUnderTest}/` + `instrumentation flavor: ${instrumentationFlavor}`,
@@ -88,7 +67,7 @@ mochaSuiteFn('tracing/elasticsearch (modern client)', function () {
         const controls = new ProcessControls({
           dirname: __dirname,
           useGlobalAgent: true,
-          env: { ES_API_VERSION: apiVersion }
+          env: {}
         });
         ProcessControls.setUpHooks(controls);
 
@@ -231,11 +210,7 @@ mochaSuiteFn('tracing/elasticsearch (modern client)', function () {
               expect(res.response.body).to.be.an('object');
               expect(res.response.body.timed_out).to.be.false;
               expect(res.response.body.hits).to.be.an('object');
-              if (hasTotalValue()) {
-                expect(res.response.body.hits.total.value).to.equal(1);
-              } else {
-                expect(res.response.body.hits.total).to.equal(1);
-              }
+              expect(res.response.body.hits.total.value).to.equal(1);
               expect(res.response.body.hits.hits).to.be.an('array');
               expect(res.response.body.hits.hits[0]._source.title).to.equal(titleA);
 
@@ -411,13 +386,8 @@ mochaSuiteFn('tracing/elasticsearch (modern client)', function () {
               expect(res.response.body).to.be.an('object');
               expect(res.response.body.responses).to.exist;
               expect(res.response.body.responses).to.have.lengthOf(2);
-              if (hasTotalValue()) {
-                expect(res.response.body.responses[0].hits.total.value).to.equal(1);
-                expect(res.response.body.responses[1].hits.total.value).to.equal(1);
-              } else {
-                expect(res.response.body.responses[0].hits.total).to.equal(1);
-                expect(res.response.body.responses[1].hits.total).to.equal(1);
-              }
+              expect(res.response.body.responses[0].hits.total.value).to.equal(1);
+              expect(res.response.body.responses[1].hits.total.value).to.equal(1);
               expect(res.response.body.responses[0].hits.hits[0]._source.title).to.be.oneOf([titleA, titleB]);
               expect(res.response.body.responses[1].hits.hits[0]._source.title).to.be.oneOf([titleA, titleB]);
               return retry(() =>
@@ -465,11 +435,7 @@ mochaSuiteFn('tracing/elasticsearch (modern client)', function () {
             .then(res => {
               expect(res.error).to.not.exist;
               expect(res.response).to.exist;
-              if (hasTotalValue()) {
-                expect(res.response.body.hits.total.value).to.equal(0);
-              } else {
-                expect(res.response.body.hits.total).to.equal(0);
-              }
+              expect(res.response.body.hits.total.value).to.equal(0);
               expect(res.response.body.hits.hits).to.have.lengthOf(0);
               return retry(() =>
                 agentControls.getSpans().then(spans => {
@@ -549,15 +515,7 @@ mochaSuiteFn('tracing/elasticsearch (modern client)', function () {
           });
         }
 
-        function verifyElasticsearchExit(
-          spans,
-          parent,
-          action,
-          expectedIndex,
-          expectedEndpoint,
-          traceId,
-          doNotCheckType
-        ) {
+        function verifyElasticsearchExit(spans, parent, action, expectedIndex, expectedEndpoint, traceId) {
           return expectExactlyOneMatching(spans, span => {
             if (parent) {
               expect(span.t).to.equal(parent.t);
@@ -574,9 +532,6 @@ mochaSuiteFn('tracing/elasticsearch (modern client)', function () {
             expect(span.data.elasticsearch.action).to.equal(action);
             verifyClusterOrAddressPort(span);
             verifyIndexOrEndpoint(span, expectedIndex, expectedEndpoint);
-            if (needsType(doNotCheckType) && expectedIndex !== '_all') {
-              expect(span.data.elasticsearch.type).to.equal('modern_type');
-            }
           });
         }
 
@@ -632,14 +587,6 @@ mochaSuiteFn('tracing/elasticsearch (modern client)', function () {
         }
       }
     );
-
-    function hasTotalValue() {
-      return apiVersion.indexOf('2') !== 0 && apiVersion.indexOf('5') !== 0 && apiVersion.indexOf('6') !== 0;
-    }
-
-    function needsType(doNotCheckType) {
-      return !doNotCheckType && (apiVersion.indexOf('5') === 0 || apiVersion.indexOf('6') === 0);
-    }
   });
 });
 
