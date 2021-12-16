@@ -44,10 +44,16 @@ mochaSuiteFn('tracing/elasticsearch (modern client)', function () {
 
   after(done => installLibraryVersion(originalEsVersion, done));
 
+  /**
+   * transport: instrumentation > 7.9.1
+   * api: instrumentation < 7.9.1
+   *
+   * The words "transport" and "api" try to describe the different
+   * mechanismn we use in core/src/tracing/instrumentation/database/elasticsearchModern.js
+   */
   [
-    // TODO: Add newer versions, currently we only test against 7.9
     {
-      versionRange: '^7.9.1',
+      versionRange: 'latest',
       instrumentationFlavor: 'transport'
     },
     {
@@ -59,7 +65,13 @@ mochaSuiteFn('tracing/elasticsearch (modern client)', function () {
       // eslint-disable-next-line no-useless-concat
       `@elastic/elasticsearch@${esClientVersionRangeUnderTest}/` + `instrumentation flavor: ${instrumentationFlavor}`,
       function () {
-        before(done => installLibraryVersion(esClientVersionRangeUnderTest, done));
+        before(done => {
+          if (esClientVersionRangeUnderTest === 'latest') {
+            return done();
+          }
+
+          installLibraryVersion(esClientVersionRangeUnderTest, done);
+        });
 
         globalAgent.setUpCleanUpHooks();
         const agentControls = globalAgent.instance;
@@ -89,6 +101,7 @@ mochaSuiteFn('tracing/elasticsearch (modern client)', function () {
                   expect(span.error).to.not.exist;
                   expect(span.ec).to.equal(1);
                   expect(span.data.elasticsearch.action).to.equal('get');
+
                   verifyClusterOrAddressPort(span);
                   verifyIndexOrEndpoint(
                     span,
