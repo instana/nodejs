@@ -13,8 +13,6 @@ require('../../../../')();
 
 const bodyParser = require('body-parser');
 const express = require('express');
-const path = require('path');
-const fs = require('fs');
 const morgan = require('morgan');
 const request = require('request-promise-native');
 const { Client } = require('@elastic/elasticsearch');
@@ -28,20 +26,9 @@ if (process.env.WITH_STDOUT) {
 
 app.use(bodyParser.json());
 
-const ES_API_VERSION = process.env.ES_API_VERSION || '7.9';
-
 const client = new Client({
   node: `http://${process.env.ELASTICSEARCH}`
 });
-
-const originalEsVersion = JSON.parse(
-  fs.readFileSync(`${path.dirname(require.resolve('@elastic/elasticsearch'))}/package.json`)
-).version;
-
-log(
-  `Using Elasticsearch API version ${ES_API_VERSION}, please make sure the installed client library 
-  @elastic/elasticsearch@${originalEsVersion} the Elasticsearch Docker container match that API version.`
-);
 
 app.get('/', (req, res) => {
   res.sendStatus(200);
@@ -51,7 +38,6 @@ app.get('/get', (req, res) => {
   client.get(
     {
       index: req.query.index || 'modern_index',
-      type: type(),
       id: req.query.id
     },
     {},
@@ -69,7 +55,6 @@ app.get('/search', (req, res) => {
   client
     .search({
       index: req.query.index || 'modern_index',
-      type: type(),
       q: req.query.q
     })
     .then(response => {
@@ -117,7 +102,6 @@ app.get('/mget2', (req, res) => {
   client.mget(
     {
       index: req.query.index || 'modern_index',
-      type: type(),
       body: {
         ids
       }
@@ -159,7 +143,6 @@ app.post('/index', (req, res) => {
   client
     .index({
       index: req.query.index || 'modern_index',
-      type: type(),
       body: req.body
     })
     .then(response =>
@@ -194,12 +177,4 @@ function log() {
   const args = Array.prototype.slice.call(arguments);
   args[0] = logPrefix + args[0];
   console.log.apply(console, args);
-}
-
-function type() {
-  return needsType() ? 'modern_type' : undefined;
-}
-
-function needsType() {
-  return ES_API_VERSION.indexOf('5') === 0 || ES_API_VERSION.indexOf('6') === 0;
 }
