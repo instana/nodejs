@@ -1,6 +1,6 @@
 {
   "name": "@instana/shared-metrics",
-  "version": "1.137.2",
+  "version": "1.137.3",
   "description": "Internal metrics plug-in package for Node.js monitoring with Instana",
   "author": {
     "name": "Bastian Krol",
@@ -8,7 +8,10 @@
   },
   "homepage": "https://github.com/instana/nodejs/blob/main/packages/shared-metrics/README.md",
   "main": "src/index.js",
-  "files": ["src", "addons/linux"],
+  "files": [
+    "src",
+    "addons/linux"
+  ],
   "publishConfig": {
     "access": "public"
   },
@@ -29,7 +32,14 @@
     "verify": "npm run lint && npm test",
     "prettier": "prettier --write 'src/**/*.js' 'test/**/*.js'"
   },
-  "keywords": ["instana", "memory", "metrics", "monitoring", "performance", "sensor"],
+  "keywords": [
+    "instana",
+    "memory",
+    "metrics",
+    "monitoring",
+    "performance",
+    "sensor"
+  ],
   "contributors": [
     {
       "name": "Bastian Krol",
@@ -57,7 +67,7 @@
   },
   "license": "MIT",
   "dependencies": {
-    "@instana/core": "1.137.2",
+    "@instana/core": "1.137.3",
     "detect-libc": "^1.0.3",
     "event-loop-lag": "^1.4.0",
     "recursive-copy": "^2.0.13",

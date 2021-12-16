@@ -1,6 +1,6 @@
 {
   "name": "@instana/serverless",
-  "version": "1.137.2",
+  "version": "1.137.3",
   "description": "Internal utility package for serverless Node.js tracing and monitoring with Instana",
   "author": {
     "name": "Bastian Krol",
@@ -8,7 +8,9 @@
   },
   "homepage": "https://github.com/instana/nodejs/blob/main/packages/serverless/README.md",
   "main": "src/index.js",
-  "files": ["src"],
+  "files": [
+    "src"
+  ],
   "publishConfig": {
     "access": "public"
   },
@@ -62,7 +64,7 @@
   },
   "license": "MIT",
   "dependencies": {
-    "@instana/core": "1.137.2",
+    "@instana/core": "1.137.3",
     "agent-base": "^6.0.2",
     "https-proxy-agent": "^5.0.0",
     "semver": "7.3.3"

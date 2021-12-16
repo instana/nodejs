@@ -1,6 +1,6 @@
 {
   "name": "@instana/autoprofile",
-  "version": "1.137.2",
+  "version": "1.137.3",
   "description": "Automatic Node.js Profiler",
   "author": {
     "name": "Dmitri Melikyan",

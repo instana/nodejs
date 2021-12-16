@@ -1,6 +1,6 @@
 {
   "name": "instana-nodejs-sensor",
-  "version": "1.137.2",
+  "version": "1.137.3",
   "description": "The Instana Node.js sensor (legacy adapter for previous package name)",
   "author": {
     "name": "Bastian Krol",
@@ -9,7 +9,9 @@
   "homepage": "https://github.com/instana/nodejs/blob/main/packages/legacy-sensor/README.md",
   "license": "MIT",
   "main": "src/index.js",
-  "files": ["src"],
+  "files": [
+    "src"
+  ],
   "directories": {
     "lib": "src",
     "test": "test"
@@ -30,7 +32,13 @@
     "verify": "npm run lint && npm test",
     "prettier": "prettier --write 'src/**/*.js' 'test/**/*.js'"
   },
-  "keywords": ["instana", "agent", "sensor", "monitoring", "tracing"],
+  "keywords": [
+    "instana",
+    "agent",
+    "sensor",
+    "monitoring",
+    "tracing"
+  ],
   "contributors": [
     {
       "name": "Bastian Krol",
@@ -49,10 +57,10 @@
     "url": "https://github.com/instana/nodejs/issues"
   },
   "dependencies": {
-    "@instana/collector": "1.137.2"
+    "@instana/collector": "1.137.3"
   },
   "devDependencies": {
-    "@instana/core": "1.137.2",
+    "@instana/core": "1.137.3",
     "no-code2": "2.0.0"
   }
 }

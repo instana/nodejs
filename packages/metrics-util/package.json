@@ -1,6 +1,6 @@
 {
   "name": "@instana/metrics-util",
-  "version": "1.137.2",
+  "version": "1.137.3",
   "description": "Internal utility library for Instana metric collection",
   "author": {
     "name": "Bastian Krol",
@@ -8,7 +8,9 @@
   },
   "homepage": "https://github.com/instana/nodejs/blob/main/packages/metrics-util/README.md",
   "main": "src/index.js",
-  "files": ["src"],
+  "files": [
+    "src"
+  ],
   "publishConfig": {
     "access": "public"
   },
@@ -29,7 +31,15 @@
     "verify": "npm run lint && npm test",
     "prettier": "prettier --write 'src/**/*.js' 'test/**/*.js'"
   },
-  "keywords": ["instana", "memory", "metrics", "monitoring", "performance", "sensor", "tracing"],
+  "keywords": [
+    "instana",
+    "memory",
+    "metrics",
+    "monitoring",
+    "performance",
+    "sensor",
+    "tracing"
+  ],
   "contributors": [
     {
       "name": "Bastian Krol",
@@ -49,9 +59,9 @@
   },
   "license": "MIT",
   "dependencies": {
-    "@instana/core": "1.137.2",
-    "@instana/serverless": "1.137.2",
-    "@instana/shared-metrics": "1.137.2",
+    "@instana/core": "1.137.3",
+    "@instana/serverless": "1.137.3",
+    "@instana/shared-metrics": "1.137.3",
     "node-fetch": "^2.6.1"
   },
   "devDependencies": {
