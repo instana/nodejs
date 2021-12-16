@@ -90,7 +90,7 @@
     "basic-auth-parser": "0.0.2",
     "bluebird": "^3.7.2",
     "body-parser": "^1.19.0",
-    "bull": "3.22.6",
+    "bull": "3.29.3",
     "chai": "4.3.4",
     "cls-hooked": "^4.2.2",
     "commitizen": "^4.2.4",
