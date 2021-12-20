@@ -25,6 +25,7 @@ if (!wrappedHandler) {
 }
 
 exports.handler = function instanaAutowrapHandler(event, context, callback) {
+  // NOTE: wondered why this is not protected with a try/catch, because we do not use shimmer
   return wrappedHandler(event, context, callback);
 };
 
