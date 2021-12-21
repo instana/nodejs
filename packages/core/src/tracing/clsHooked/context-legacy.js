@@ -15,7 +15,7 @@
 const util = require('util');
 const assert = require('assert');
 // @ts-ignore
-const wrapEmitter = require('emitter-listener');
+const wrapEmitter = require('./emitter-listener');
 // @ts-ignore
 const asyncHook = require('async-hook-jl');
 const unset = require('./unset');
