@@ -87,6 +87,14 @@ function instrumentedPublish(ctx, originalPublish, originalArgs, natsUrl) {
     }
 
     try {
+      // Up until 1.4.9, nats would throw the error synchronously when no callback is provided. With 1.4.12 (the next
+      // published version after 1.4.9), this will no longer happen. Instead, it will only be emitted via the nats event
+      // emitter. To capture those publisher errors, we would need to register our own event emitter. However, that is
+      // too invasive just for the sake of capturing publisher errors. Thus, for version ^1.4.12, we will not capture
+      // publisher errors in the span.
+      //
+      // See https://github.com/nats-io/nats.js/commit/9f34226823ffbd63c6f139a9d12b368a4a8adb93
+      // #diff-eb672f729dbb809e0a46163f59b4f93a76975fd0b7461640db7527ecfc346749R1687
       return originalPublish.apply(ctx, originalArgs);
     } catch (e) {
       addErrorToSpan(e, span);
