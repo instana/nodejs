@@ -6,19 +6,23 @@
 'use strict';
 
 const path = require('path');
-const expect = require('chai').expect;
+const { expect } = require('chai');
+const { fail } = expect;
+const semver = require('semver');
 
 const constants = require('@instana/core').tracing.constants;
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('../../../../../core/test/config');
 const delay = require('../../../../../core/test/test_util/delay');
-const testUtils = require('../../../../../core/test/test_util');
+const { retry, expectExactlyOneMatching, expectAtLeastOneMatching } = require('../../../../../core/test/test_util');
 const ProcessControls = require('../../../test_util/ProcessControls');
 const globalAgent = require('../../../globalAgent');
 
 const agentControls = globalAgent.instance;
 
 const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
+
+const natsVersion = require('nats/package.json').version;
 
 mochaSuiteFn('tracing/nats', function () {
   this.timeout(config.getTestTimeout() * 2);
@@ -45,11 +49,20 @@ mochaSuiteFn('tracing/nats', function () {
       });
     });
 
-    [false, true].forEach(withError => {
-      // nats.request always uses a mandatory callback and an implicit reply
-      testPublish.call(this, 'request', false, false, withError);
-      testPublish.call(this, 'requestOne', false, false, withError);
-    });
+    // nats.request always uses a mandatory callback and an implicit reply
+    testPublish.call(this, 'request', false, false, false);
+    testPublish.call(this, 'requestOne', false, false, false);
+
+    if (semver.lt(natsVersion, '1.4.12')) {
+      // Due to a change in nats@1.4.12, publisher errors are no longer captured as spans when
+      // nats.request or nats.requestOne is used (in contrast to the more usual nats.publish).
+      // See https://github.com/nats-io/nats.js/commit/9f34226823ffbd63c6f139a9d12b368a4a8adb93
+      //   #diff-eb672f729dbb809e0a46163f59b4f93a76975fd0b7461640db7527ecfc346749R1918.
+      // Fixing this would require to also instrument nats.request and nats.requestOne individually. Since 1.4.12 is the
+      // last 1.x version, this has not been implemented (and potentially never will, just for this one edge case).
+      testPublish.call(this, 'request', false, false, /* withError */ true);
+      testPublish.call(this, 'requestOne', false, false, /* withError */ true);
+    }
 
     function testPublish(publishMethod, withCallback, withReply, withError) {
       const queryParams = [
@@ -75,13 +88,20 @@ mochaSuiteFn('tracing/nats', function () {
             })
             .then(res => {
               if (withError) {
-                expect(res).to.equal('Subject must be supplied');
+                if (typeof res === 'string') {
+                  expect(res).to.equal('Subject must be supplied');
+                } else if (typeof res === 'object') {
+                  expect(res.code).to.equal('BAD_SUBJECT');
+                  expect(res.message).to.equal('Subject must be supplied');
+                } else {
+                  fail(`Unexpected response of type "${typeof res}": ${JSON.stringify(res)}`);
+                }
               } else if (publishMethod === 'request') {
                 expect(res).to.equal('sending reply');
               } else {
                 expect(res).to.equal('OK');
               }
-              return testUtils.retry(() => {
+              return retry(() => {
                 const receivedMessages = subscriberControls.getIpcMessages();
                 if (withError) {
                   expect(receivedMessages).to.have.lengthOf(0);
@@ -94,43 +114,50 @@ mochaSuiteFn('tracing/nats', function () {
                   }
                 }
                 return agentControls.getSpans().then(spans => {
-                  const entrySpan = testUtils.expectAtLeastOneMatching(spans, [
+                  const entrySpan = expectExactlyOneMatching(spans, [
                     span => expect(span.n).to.equal('node.http.server'),
                     span => expect(span.f.e).to.equal(String(publisherControls.getPid())),
                     span => expect(span.p).to.not.exist
                   ]);
-                  testUtils.expectAtLeastOneMatching(spans, span => {
-                    expect(span.t).to.equal(entrySpan.t);
-                    expect(span.p).to.equal(entrySpan.s);
-                    expect(span.k).to.equal(constants.EXIT);
-                    expect(span.n).to.equal('nats');
-                    expect(span.f.e).to.equal(String(publisherControls.getPid()));
-                    expect(span.f.h).to.equal('agent-stub-uuid');
-                    expect(span.async).to.not.exist;
-                    expect(span.ts).to.be.a('number');
-                    expect(span.d).to.be.a('number');
-                    if (withError) {
-                      expect(span.error).to.not.exist;
-                      expect(span.ec).to.equal(1);
-                    } else {
-                      expect(span.error).to.not.exist;
-                      expect(span.ec).to.equal(0);
-                    }
-                    expect(span.data.nats).to.be.an('object');
-                    expect(span.data.nats.sort).to.equal('publish');
-                    if (!withError) {
-                      // we omit the subject to trigger an error, that's why we only test it in non-error tests
-                      expect(span.data.nats.subject).to.equal('publish-test-subject');
-                    }
-                    expect(span.data.nats.address).to.equal('nats://localhost:4222');
-                    if (withError) {
-                      expect(span.data.nats.error).to.equal('Subject must be supplied');
-                    } else {
-                      expect(span.data.nats.error).to.not.exist;
-                    }
-                  });
+
+                  const expectations = [
+                    span => expect(span.t).to.equal(entrySpan.t),
+                    span => expect(span.p).to.equal(entrySpan.s),
+                    span => expect(span.k).to.equal(constants.EXIT),
+                    span => expect(span.n).to.equal('nats'),
+                    span => expect(span.f.e).to.equal(String(publisherControls.getPid())),
+                    span => expect(span.f.h).to.equal('agent-stub-uuid'),
+                    span => expect(span.async).to.not.exist,
+                    span => expect(span.ts).to.be.a('number'),
+                    span => expect(span.d).to.be.a('number'),
+
+                    span => expect(span.data.nats).to.be.an('object'),
+                    span => expect(span.data.nats.sort).to.equal('publish'),
+                    span => expect(span.data.nats.address).to.equal('nats://localhost:4222')
+                  ];
+
+                  if (withError && (semver.lt(natsVersion, '1.4.12') || withCallback)) {
+                    // Starting with nats@1.4.12, nats changed how publisher errors are treated when no callback has
+                    // been provided. Previously, they would be thrown as a synchronous error (allowing us to capture
+                    // them and annotate them on the span). Starting with 1.4.12, the are only emitted via an event
+                    // listener. By design, we deliberately do not register our own event listener on nats, so publisher
+                    // errors are not captured.
+                    expectations.push(span => expect(span.ec).to.equal(1));
+                    expectations.push(span => expect(span.data.nats.error).to.equal('Subject must be supplied'));
+                  } else {
+                    expectations.push(span => expect(span.ec).to.equal(0));
+                    expectations.push(span => expect(span.data.nats.error).to.not.exist);
+                  }
+
+                  if (!withError) {
+                    // we omit the subject to trigger an error, that's why we only test it in non-error tests
+                    expectations.push(span => expect(span.data.nats.subject).to.equal('publish-test-subject'));
+                  }
+
+                  expectExactlyOneMatching(spans, expectations);
+
                   // verify that subsequent calls are correctly traced
-                  testUtils.expectAtLeastOneMatching(spans, [
+                  expectAtLeastOneMatching(spans, [
                     span => expect(span.n).to.equal('node.http.client'),
                     span => expect(span.t).to.equal(entrySpan.t),
                     span => expect(span.p).to.equal(entrySpan.s),
@@ -166,7 +193,7 @@ mochaSuiteFn('tracing/nats', function () {
             simple: false
           })
           .then(() => {
-            return testUtils.retry(() => {
+            return retry(() => {
               const receivedMessages = subscriberControls.getIpcMessages();
               expect(receivedMessages).to.have.lengthOf(1);
               if (withError) {
@@ -176,42 +203,43 @@ mochaSuiteFn('tracing/nats', function () {
               }
 
               agentControls.getSpans().then(spans => {
-                const httpSpan = testUtils.expectAtLeastOneMatching(spans, [
+                const httpSpan = expectExactlyOneMatching(spans, [
                   span => expect(span.n).to.equal('node.http.server'),
                   span => expect(span.f.e).to.equal(String(publisherControls.getPid())),
                   span => expect(span.p).to.not.exist
                 ]);
 
                 // NATS does not support headers or metadata, so we do not have trace continuity.
-                const natsEntry = testUtils.expectAtLeastOneMatching(spans, span => {
-                  expect(span.t).to.not.equal(httpSpan.t);
-                  expect(span.p).to.not.exist;
-                  expect(span.k).to.equal(constants.ENTRY);
-                  expect(span.n).to.equal('nats');
-                  expect(span.f.e).to.equal(String(subscriberControls.getPid()));
-                  expect(span.f.h).to.equal('agent-stub-uuid');
-                  expect(span.async).to.not.exist;
-                  expect(span.ts).to.be.a('number');
-                  expect(span.d).to.be.a('number');
-                  if (withError) {
-                    expect(span.error).to.not.exist;
-                    expect(span.ec).to.equal(1);
-                  } else {
-                    expect(span.error).to.not.exist;
-                    expect(span.ec).to.equal(0);
-                  }
-                  expect(span.data.nats).to.be.an('object');
-                  expect(span.data.nats.sort).to.equal('consume');
-                  expect(span.data.nats.subject).to.equal('subscribe-test-subject');
-                  expect(span.data.nats.address).to.equal('nats://localhost:4222');
-                  if (withError) {
-                    expect(span.data.nats.error).to.equal('Boom!');
-                  } else {
-                    expect(span.data.nats.error).to.not.exist;
-                  }
-                });
+                const expectations = [
+                  span => expect(span.t).to.not.equal(httpSpan.t),
+                  span => expect(span.p).to.not.exist,
+                  span => expect(span.k).to.equal(constants.ENTRY),
+                  span => expect(span.n).to.equal('nats'),
+                  span => expect(span.f.e).to.equal(String(subscriberControls.getPid())),
+                  span => expect(span.f.h).to.equal('agent-stub-uuid'),
+                  span => expect(span.async).to.not.exist,
+                  span => expect(span.ts).to.be.a('number'),
+                  span => expect(span.d).to.be.a('number'),
+
+                  span => expect(span.data.nats).to.be.an('object'),
+                  span => expect(span.data.nats.sort).to.equal('consume'),
+                  span => expect(span.data.nats.subject).to.equal('subscribe-test-subject'),
+                  span => expect(span.data.nats.address).to.equal('nats://localhost:4222')
+                ];
+
+                if (withError) {
+                  expectations.push(span => expect(span.error).to.not.exist);
+                  expectations.push(span => expect(span.ec).to.equal(1));
+                  expectations.push(span => expect(span.data.nats.error).to.equal('Boom!'));
+                } else {
+                  expectations.push(span => expect(span.error).to.not.exist);
+                  expectations.push(span => expect(span.ec).to.equal(0));
+                  expectations.push(span => expect(span.data.nats.error).to.not.exist);
+                }
+                const natsEntry = expectExactlyOneMatching(spans, expectations);
+
                 // verify that subsequent calls are correctly traced
-                testUtils.expectAtLeastOneMatching(spans, [
+                expectExactlyOneMatching(spans, [
                   span => expect(span.n).to.equal('node.http.client'),
                   span => expect(span.t).to.equal(natsEntry.t),
                   span => expect(span.p).to.equal(natsEntry.s),
@@ -244,7 +272,7 @@ mochaSuiteFn('tracing/nats', function () {
           // (Since we cannot transmit X-INSTANA-L=0 over nats due to lack of metadata, the receive entry will be
           // there):
           expect(spans).to.have.lengthOf(1);
-          testUtils.expectAtLeastOneMatching(spans, [
+          expectExactlyOneMatching(spans, [
             span => expect(span.t).to.be.a('string'),
             span => expect(span.p).to.not.exist,
             span => expect(span.k).to.equal(constants.ENTRY),

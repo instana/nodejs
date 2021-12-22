@@ -18,10 +18,13 @@ const port = process.env.APP_PORT || 3216;
 const nats = NATS.connect();
 let connected = false;
 
+let mostRecentEmittedError = null;
+
 nats.on('connect', () => {
   connected = true;
   nats.on('error', err => {
-    log('NATS error', err);
+    mostRecentEmittedError = err;
+    log('NATS has emitted an error', err.message);
   });
 });
 
@@ -54,6 +57,7 @@ app.post('/publish', (req, res) => {
   if (withReply) {
     args.push('test-reply');
   } else if (withError) {
+    // Try to publish a message without a subject to trigger an error here in the publisher.
     args.push(null);
   }
   if (withCallback) {
@@ -73,6 +77,13 @@ app.post('/publish', (req, res) => {
 });
 
 function afterPublish(res, err, msg) {
+  if (!err && mostRecentEmittedError) {
+    // Starting with nats@1.4.12, nats no longer throws publisher errors synchronously but rather emits them as error
+    // events only. If the nats.on('error', ...) event listener received an error, we return it in the response, as it
+    // has been caused by the most recent publish.
+    err = mostRecentEmittedError;
+    mostRecentEmittedError = null;
+  }
   request(`http://127.0.0.1:${agentPort}`)
     .then(() => {
       // nats has a bug that makes the callback called twice in some situations
