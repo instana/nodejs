@@ -42,5 +42,6 @@ const semver = require('semver');
 if (process && semver.satisfies(process.versions.node, '12.17 - 16.6')) {
   module.exports = require('./async_local_storage_context');
 } else {
-  module.exports = require('./context');
+  module.exports = require('./async_local_storage_context');
+  // module.exports = require('./context');
 }
