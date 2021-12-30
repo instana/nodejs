@@ -55,14 +55,33 @@ EOF
 cd `dirname $BASH_SOURCE`/..
 
 PACKAGE_NAMES="@instana/aws-lambda instana-aws-lambda-auto-wrap"
+
+# The default layer name is instana-nodejs. If you want to push experimental changes under a different layer name, you
+# can provide the LAYER_NAME environment variable for that purpose. If you build the layer from your local source files
+# (BUILD_LAYER_WITH=local), you actually are obliged to provide a different layer name or set
+# SKIP_AWS_PUBLISH_LAYER=true to skip publishing the layer to AWS.
 if [[ -z $LAYER_NAME ]]; then
   LAYER_NAME=instana-nodejs
 fi
+
 if [[ -z $CONTAINER_REGISTRY ]]; then
   CONTAINER_REGISTRY=icr.io
 fi
+
+# The default image name is icr.io/instana/aws-lambda-nodejs. If you want to push experimental changes to a different
+# repository or even a different registry, you can provide the DOCKER_IMAGE_NAME environment variable for that purpose.
+# If you build the layer from your local source files (BUILD_LAYER_WITH=local), you actually are obliged to provide a
+# different image name or set SKIP_DOCKER_IMAGE_PUSH=true to skip pushing the image.
 if [[ -z $DOCKER_IMAGE_NAME ]]; then
-  DOCKER_IMAGE_NAME=$CONTAINER_REGISTRY/instana/aws-lambda-nodejs
+  if [[ $BUILD_LAYER_WITH == local ]]; then
+    DOCKER_IMAGE_NAME=instana-aws-lambda-nodejs-local
+  else
+    DOCKER_IMAGE_NAME=$CONTAINER_REGISTRY/instana/aws-lambda-nodejs
+  fi
+fi
+if [[ -n $SKIP_DOCKER_IMAGE ]]; then
+  # SKIP_DOCKER_IMAGE implies SKIP_DOCKER_IMAGE_PUSH
+  SKIP_DOCKER_IMAGE_PUSH=true
 fi
 
 LICENSE=MIT
@@ -76,33 +95,39 @@ REGIONS=$'ap-northeast-1\nap-northeast-2\nap-south-1\nap-southeast-1\nap-southea
 
 if [[ -z $SKIP_DOCKER_IMAGE ]]; then
   echo Will build Docker image with name \"$DOCKER_IMAGE_NAME\".
-  if [[ -z $CONTAINER_REGISTRY_USER ]]; then
-    echo Missing mandatory environment variable CONTAINER_REGISTRY_USER.
-    exit 1
-  fi
-  if [[ -z $CONTAINER_REGISTRY_PASSWORD ]]; then
-    echo Missing mandatory environment variable CONTAINER_REGISTRY_PASSWORD.
-    exit 1
+  if [[ -z $SKIP_DOCKER_IMAGE_PUSH ]]; then
+    if [[ -z $CONTAINER_REGISTRY_USER ]]; then
+      echo Missing mandatory environment variable CONTAINER_REGISTRY_USER. Provide SKIP_DOCKER_IMAGE_PUSH=true if you do not want to push the container image.
+      exit 1
+    fi
+    if [[ -z $CONTAINER_REGISTRY_PASSWORD ]]; then
+      echo Missing mandatory environment variable CONTAINER_REGISTRY_PASSWORD. Provide SKIP_DOCKER_IMAGE_PUSH=true if you do not want to push the container image.
+      exit 1
+    fi
+  else
+    echo Docker image will be built but not pushed
   fi
 else
-  echo Building the Docker image will be skipped.
+  echo Building/pushing the Docker image will be skipped.
 fi
 
 if [[ -z $AWS_ACCESS_KEY_ID ]] || [[ -z $AWS_SECRET_ACCESS_KEY ]]; then
   echo Warning: AWS_ACCESS_KEY_ID or AWS_SECRET_ACCESS_KEY are not set. This might be okay if you have set up AWS authentication via other means. If not, the AWS cli commands to publish the layer will fail.
 fi
 
-echo "step 1/8: fetching AWS regions (skipping, using fixed list of regions for now)"
+echo "step 1/9: fetching AWS regions (skipping, using fixed list of regions for now)"
 
 # Actually, this should give us the regions where the Lambda service is provided:
 # REGIONS=$(aws ssm get-parameters-by-path --path /aws/service/global-infrastructure/services/lambda/regions --output text --query "Parameters[].Value" | tr '\t' '\n')
 # But for some reason, publishing to all of these regions does not work. In particular, the
 # following regions either require special authorization/subscription status or don't support Lambdas: ap-east-1 me-south-1 ap-northeast-3
 
-echo Will publish to regions:
-echo "$REGIONS"
+if [[ -z $SKIP_AWS_PUBLISH_LAYER ]]; then
+  echo Will publish to regions:
+  echo "$REGIONS"
+fi
 
-echo "step 2/8: Prepare build enviornment"
+echo "step 2/9: Prepare build enviornment"
 
 rm -rf $ZIP_NAME
 rm -rf $TMP_ZIP_DIR
@@ -125,18 +150,16 @@ EOF
 if [[ $BUILD_LAYER_WITH == local ]]; then
   # Experimental layer build with local packages.
 
-  if [[ $LAYER_NAME == instana-nodejs ]]; then
-    echo "Error: Rejecting request to build a layer with local packages for default layer name: $LAYER_NAME. Please choose a different layer name (via the LAYER_NAME environment variable) to build experimental layer versions with local packages."
+  if [[ $LAYER_NAME == instana-nodejs ]] && [[ -z $SKIP_AWS_PUBLISH_LAYER ]]; then
+    echo "Error: Rejecting request to publish a layer with local packages for default layer name: $LAYER_NAME. Please choose a different layer name (via the LAYER_NAME environment variable) to build experimental layer versions with local packages. Alternatively, disable publishing the Lambda layer with SKIP_AWS_PUBLISH_LAYER=true."
     exit 1
   fi
-  if [[ -z $SKIP_DOCKER_IMAGE ]]; then
-    if [[ $DOCKER_IMAGE_NAME == instana/aws-lambda-nodejs ]]; then
-      echo "Error: Rejecting request to build a Docker image with local packages for default image name: $DOCKER_IMAGE_NAME. Please choose a different docker image name (via the DOCKER_IMAGE_NAME environment variable) to build experimental layer versions with local packages."
-      exit 1
-    fi
+  if [[ $DOCKER_IMAGE_NAME == icr.io/instana/aws-lambda-nodejs ]] && [[ -z $SKIP_DOCKER_IMAGE_PUSH ]]; then
+    echo "Error: Rejecting request to push a Docker image with local packages for the default image name: $DOCKER_IMAGE_NAME. Please choose a different docker image name (via the DOCKER_IMAGE_NAME environment variable) to build experimental layer container images with local packages. Alternatively, disable pushing the Docker image with SKIP_DOCKER_IMAGE_PUSH=true to only build it locally or disable building the Docker image altogether with SKIP_DOCKER_IMAGE=true."
+    exit 1
   fi
 
-  echo "step 3/8: building local(!) packages for experimental layer"
+  echo "step 3/9: building local(!) packages for experimental layer"
 
   # Move up to packages directory
   pushd ../../../.. > /dev/null
@@ -175,7 +198,7 @@ if [[ $BUILD_LAYER_WITH == local ]]; then
   rm -rf instana-core.tgz
 
 elif [[ $BUILD_LAYER_WITH == npm ]] || [[ -z $BUILD_LAYER_WITH ]]; then
-  echo "step 3/8: downloading latest packages from npm"
+  echo "step 3/9: downloading latest packages from npm"
   npm install $PACKAGE_NAMES
 else
   echo "Invalid option for BUILD_LAYER_WITH: $BUILD_LAYER_WITH, terminating."
@@ -188,59 +211,69 @@ echo "building layer with package version $VERSION"
 rm -f package.json package-lock.json
 cd ..
 
-echo "step 4/8: Add extension to layer"
+echo "step 4/9: Add extension to layer"
 mkdir -p extensions
 cp ../include/instana-lambda-extension extensions/
 
-echo "step 5/8: creating local zip file with layer contents"
+echo "step 5/9: creating local zip file with layer contents"
 zip -qr $ZIP_PREFIX .
 mv $ZIP_NAME ..
 popd > /dev/null
 
-echo "step 6/8: publishing $ZIP_NAME as AWS Lambda layer $LAYER_NAME to all regions"
-while read -r region; do
-  echo " - publishing to region $region:"
+if [[ -z $SKIP_AWS_PUBLISH_LAYER ]]; then
+  echo "step 6/9: publishing $ZIP_NAME as AWS Lambda layer $LAYER_NAME to all regions"
+  while read -r region; do
+    echo " - publishing to region $region:"
 
-  # See https://docs.aws.amazon.com/cli/latest/reference/lambda/publish-layer-version.html for documentation.
-  lambda_layer_version=$( \
-    AWS_PAGER="" aws --region $region lambda publish-layer-version \
-      --layer-name $LAYER_NAME \
-      --description "Provides Instana tracing and monitoring for AWS Lambdas (@instana/aws-lambda@$VERSION)" \
-      --license-info $LICENSE \
-      --zip-file fileb://$ZIP_NAME \
-      --output json \
-      --compatible-runtimes nodejs8.10 nodejs10.x nodejs12.x nodejs14.x \
-      | jq '.Version' \
-  )
-  echo "   + published version $lambda_layer_version to region $region"
-  if [[ $lambda_layer_version =~ ^[0-9]+$ ]]; then
-    echo "   + setting required permission on Lambda layer $LAYER_NAME / version $lambda_layer_version in region $region"
-    AWS_PAGER="" aws --region $region lambda add-layer-version-permission \
-      --layer-name $LAYER_NAME \
-      --version-number $lambda_layer_version \
-      --statement-id public-permission-all-accounts \
-      --principal \* \
-      --action lambda:GetLayerVersion \
-      --output text
-  else
-    echo "   + WARNING: Lambda layer version $lambda_layer_version does not seem to be numeric, will not set permissions in region $region"
-  fi
+    # See https://docs.aws.amazon.com/cli/latest/reference/lambda/publish-layer-version.html for documentation.
+    lambda_layer_version=$( \
+      AWS_PAGER="" aws --region $region lambda publish-layer-version \
+        --layer-name $LAYER_NAME \
+        --description "Provides Instana tracing and monitoring for AWS Lambdas (@instana/aws-lambda@$VERSION)" \
+        --license-info $LICENSE \
+        --zip-file fileb://$ZIP_NAME \
+        --output json \
+        --compatible-runtimes nodejs8.10 nodejs10.x nodejs12.x nodejs14.x \
+        | jq '.Version' \
+    )
+    echo "   + published version $lambda_layer_version to region $region"
+    if [[ $lambda_layer_version =~ ^[0-9]+$ ]]; then
+      echo "   + setting required permission on Lambda layer $LAYER_NAME / version $lambda_layer_version in region $region"
+      AWS_PAGER="" aws --region $region lambda add-layer-version-permission \
+        --layer-name $LAYER_NAME \
+        --version-number $lambda_layer_version \
+        --statement-id public-permission-all-accounts \
+        --principal \* \
+        --action lambda:GetLayerVersion \
+        --output text
+    else
+      echo "   + WARNING: Lambda layer version $lambda_layer_version does not seem to be numeric, will not set permissions in region $region"
+    fi
 
-done <<< "$REGIONS"
-
-if [[ -z $SKIP_DOCKER_IMAGE ]]; then
-  echo "step 7/8: building docker image for container image based Lambda layer"
-  docker build . -t "$DOCKER_IMAGE_NAME"
-  docker tag $DOCKER_IMAGE_NAME:latest $DOCKER_IMAGE_NAME:$VERSION
-  echo " - pushing Docker image $DOCKER_IMAGE_NAME:"
-  docker login -u="$CONTAINER_REGISTRY_USER" -p="$CONTAINER_REGISTRY_PASSWORD" $CONTAINER_REGISTRY
-  docker push $DOCKER_IMAGE_NAME:latest
-  docker push $DOCKER_IMAGE_NAME:$VERSION
-  docker logout $CONTAINER_REGISTRY
+  done <<< "$REGIONS"
 else
-  echo "step 7/8: building docker images (skipping)"
+  echo "step 6/9: publishing AWS Lambda layer (skipping)"
 fi
 
-echo "step 8/8: cleaning up"
+if [[ -z $SKIP_DOCKER_IMAGE ]]; then
+  echo "step 7/9: building docker image for container image based Lambda layer"
+  docker build . -t "$DOCKER_IMAGE_NAME"
+  if [[ -z $SKIP_DOCKER_IMAGE_PUSH ]]; then
+    echo "step 8/9: pushing docker image for container image based Lambda layer"
+    docker tag $DOCKER_IMAGE_NAME:latest $DOCKER_IMAGE_NAME:$VERSION
+    echo " - pushing Docker image $DOCKER_IMAGE_NAME:"
+    docker login -u="$CONTAINER_REGISTRY_USER" -p="$CONTAINER_REGISTRY_PASSWORD" $CONTAINER_REGISTRY
+    docker push $DOCKER_IMAGE_NAME:latest
+    docker push $DOCKER_IMAGE_NAME:$VERSION
+    docker logout $CONTAINER_REGISTRY
+  else
+    echo "step 8/9: pushing docker image (skipping)"
+  fi
+else
+  echo "step 7/9: building docker image (skipping)"
+  echo "step 8/9: pushing docker image (skipping)"
+fi
+
+echo "step 9/9: cleaning up"
 rm -rf $TMP_ZIP_DIR
 rm -rf $ZIP_NAME

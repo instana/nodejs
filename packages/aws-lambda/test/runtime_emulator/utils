@@ -1,0 +1,42 @@
+function normalizeArgs {
+  local instanaLayerMode=$1
+  if [[ -z "${instanaLayerMode-}" || $instanaLayerMode = released ]]; then
+    INSTANA_LAYER=icr.io/instana/aws-lambda-nodejs:latest
+    INSTANA_LAYER_MODE=released
+  elif [[ $instanaLayerMode = local ]]; then
+    INSTANA_LAYER=instana-aws-lambda-nodejs-local
+    INSTANA_LAYER_MODE=local
+  else
+    echo "Unknown option for Instana layer: $instanaLayerMode"
+    exit 1
+  fi
+
+  local nodeJsVersion=$2
+  if [[ -z "${nodeJsVersion-}" || $nodeJsVersion = 14 ]]; then
+    NODEJS_VERSION=14
+    LAMBDA_BASE_IMAGE=public.ecr.aws/lambda/nodejs:14
+  elif [[ $nodeJsVersion = 12 ]]; then
+    NODEJS_VERSION=12
+    LAMBDA_BASE_IMAGE=public.ecr.aws/lambda/nodejs:12
+  elif [[ $nodeJsVersion = 10 ]]; then
+    NODEJS_VERSION=10
+    LAMBDA_BASE_IMAGE=public.ecr.aws/lambda/nodejs:10
+  else
+    echo "Unknown option for Node.js version: $nodeJsVersion"
+    exit 1
+  fi
+}
+
+function setImageTag {
+  local prefix=$1
+  local nodeJsVersion=$2
+  local instanaLayerMode=$3
+  image_tag=$prefix-$nodeJsVersion-$instanaLayerMode
+}
+
+function setContainerName {
+  local prefix=$1
+  local nodeJsVersion=$2
+  local instanaLayerMode=$3
+  container_name=$prefix-$nodeJsVersion-$instanaLayerMode
+}
