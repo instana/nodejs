@@ -178,7 +178,10 @@ function shimmedHandler(originalHandler, originalThis, originalArgs, _config) {
      * We offer the customer to disable the timeout detection
      * See https://github.com/instana/nodejs/pull/443
      */
-    if (!process.env.DISABLE_LAMBDA_TIMEOUT_DETECTION || process.env.DISABLE_LAMBDA_TIMEOUT_DETECTION === 'false') {
+    if (
+      !process.env.INSTANA_DISABLE_LAMBDA_TIMEOUT_DETECTION ||
+      process.env.INSTANA_DISABLE_LAMBDA_TIMEOUT_DETECTION === 'false'
+    ) {
       registerTimeoutDetection(context, entrySpan);
     }
 

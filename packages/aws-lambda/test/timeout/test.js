@@ -173,7 +173,7 @@ describe('timeout heuristic', () => {
     };
 
     if (disableLambdaTimeoutDetection !== undefined) {
-      envs.DISABLE_LAMBDA_TIMEOUT_DETECTION = disableLambdaTimeoutDetection;
+      envs.INSTANA_DISABLE_LAMBDA_TIMEOUT_DETECTION = disableLambdaTimeoutDetection;
     }
 
     const opts = {
