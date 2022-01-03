@@ -174,7 +174,9 @@ function shimmedHandler(originalHandler, originalThis, originalArgs, _config) {
       });
     };
 
-    registerTimeoutDetection(context, entrySpan);
+    if (!process.env.DISABLE_LAMBDA_TIMEOUT_DETECTION || process.env.DISABLE_LAMBDA_TIMEOUT_DETECTION === 'false') {
+      registerTimeoutDetection(context, entrySpan);
+    }
 
     let handlerPromise;
     try {
