@@ -136,23 +136,54 @@ describe('timeout heuristic', () => {
     });
   });
 
+  describe('when the timeout detection is disabled and a timeout occurs', function () {
+    runTest.bind(this)({
+      lambdaTimeout: 3100,
+      delay: 3500,
+      expectEntrySpan: false,
+      expectTimeout: true,
+      expectResponseFromLambda: false,
+      disableLambdaTimeoutDetection: true
+    });
+  });
+
+  describe('when the timeout detection env is set but its set to false', function () {
+    runTest.bind(this)({
+      lambdaTimeout: 3100,
+      delay: 3500,
+      expectEntrySpan: true,
+      expectTimeout: true,
+      expectResponseFromLambda: false,
+      disableLambdaTimeoutDetection: false,
+      expectedMillisRemainingAtTimeout: 300
+    });
+  });
+
   function runTest({
     lambdaTimeout,
     delay,
     expectEntrySpan,
     expectTimeout,
     expectResponseFromLambda,
-    expectedMillisRemainingAtTimeout
+    expectedMillisRemainingAtTimeout,
+    disableLambdaTimeoutDetection
   }) {
+    const envs = {
+      DELAY: delay
+    };
+
+    if (disableLambdaTimeoutDetection !== undefined) {
+      envs.INSTANA_DISABLE_LAMBDA_TIMEOUT_DETECTION = disableLambdaTimeoutDetection;
+    }
+
     const opts = {
       handlerDefinitionPath,
       instanaEndpointUrl: backendBaseUrl,
       instanaAgentKey,
       lambdaTimeout,
-      env: {
-        DELAY: delay
-      }
+      env: envs
     };
+
     const control = prelude.bind(this)(opts);
 
     let label;

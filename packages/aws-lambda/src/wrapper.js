@@ -174,7 +174,16 @@ function shimmedHandler(originalHandler, originalThis, originalArgs, _config) {
       });
     };
 
-    registerTimeoutDetection(context, entrySpan);
+    /**
+     * We offer the customer to disable the timeout detection
+     * See https://github.com/instana/nodejs/pull/443
+     */
+    if (
+      !process.env.INSTANA_DISABLE_LAMBDA_TIMEOUT_DETECTION ||
+      process.env.INSTANA_DISABLE_LAMBDA_TIMEOUT_DETECTION === 'false'
+    ) {
+      registerTimeoutDetection(context, entrySpan);
+    }
 
     let handlerPromise;
     try {
@@ -401,15 +410,31 @@ function postHandler(entrySpan, error, result, callback) {
  * back end.
  */
 function postHandlerForTimeout(entrySpan, remainingMillis) {
-  logger.debug(`Heuristical timeout detection was triggered with ${remainingMillis} milliseconds left.`);
+  /**
+   * context.getRemainingTimeInMillis(context) can return negative values
+   * That just means that the lambda was already closed.
+   * `setTimeout` is not 100% reliable
+   */
+  if (remainingMillis < 200) {
+    logger.debug('Skipping heuristical timeout detection because lambda timeout exceeded already.');
+    return;
+  }
 
   if (entrySpan) {
+    // CASE: Timeout not needed, we already send the data to the backend successfully
+    if (entrySpan.transmitted) {
+      logger.debug('Skipping heuristical timeout detection because BE data was sent already.');
+      return;
+    }
+
     entrySpan.ec = 1;
     entrySpan.data.lambda.msleft = remainingMillis;
     entrySpan.data.lambda.error = `Possible Lambda timeout with only ${remainingMillis} ms left.`;
     entrySpan.d = Date.now() - entrySpan.ts;
     entrySpan.transmit();
   }
+
+  logger.debug(`Heuristical timeout detection was triggered with ${remainingMillis} milliseconds left.`);
 
   // deliberately not gathering metrics but only sending spans.
   const spans = spanBuffer.getAndResetSpans();
