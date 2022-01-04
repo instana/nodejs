@@ -5,6 +5,18 @@
 
 'use strict';
 
+const { isNodeJsTooOld, minimumNodeJsVersion } = require('@instana/core/src/util/nodeJsVersionCheck');
+
+if (isNodeJsTooOld()) {
+  // eslint-disable-next-line no-console
+  console.error(
+    `The package @instana/collector requires at least Node.js ${minimumNodeJsVersion} but this process is ` +
+      `running Node.js ${process.version}. This process will not be monitored by Instana.`
+  );
+  // @ts-ignore TS1108 (return can only be used within a function body)
+  return;
+}
+
 const { util: coreUtil } = require('@instana/core');
 const agentOpts = require('./agent/opts');
 
