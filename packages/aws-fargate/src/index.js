@@ -5,6 +5,17 @@
 
 'use strict';
 
+const { isNodeJsTooOld, minimumNodeJsVersion } = require('@instana/core/src/util/nodeJsVersionCheck');
+
+if (isNodeJsTooOld()) {
+  // eslint-disable-next-line no-console
+  console.error(
+    `The package @instana/aws-fargate requires at least Node.js ${minimumNodeJsVersion} but this process is ` +
+      `running on Node.js ${process.version}. This Fargate container will not be monitored by Instana.`
+  );
+  return;
+}
+
 const { util: coreUtil } = require('@instana/core');
 const { environment: environmentUtil } = require('@instana/serverless');
 
