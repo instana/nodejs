@@ -5,6 +5,19 @@
 
 'use strict';
 
+const { isNodeJsTooOld, minimumNodeJsVersion } = require('@instana/core/src/util/nodeJsVersionCheck');
+
+if (isNodeJsTooOld()) {
+  // eslint-disable-next-line no-console
+  console.error(
+    `The package @instana/collector requires at least Node.js ${minimumNodeJsVersion} but this process is ` +
+      `running on Node.js ${process.version}. This process will not be monitored by Instana.`
+  );
+  module.exports = function noOp() {};
+  // @ts-ignore TS1108 (return can only be used within a function body)
+  return;
+}
+
 let isMainThread = true;
 try {
   isMainThread = require('worker_threads').isMainThread;
