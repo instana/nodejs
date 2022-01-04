@@ -53,20 +53,20 @@
   ],
   "dependencies": {
     "@instana/serverless": "1.137.3",
-    "@opentelemetry/api": "1.0.3",
-    "@opentelemetry/core": "0.26.0"
+    "@opentelemetry/api": "1.0.4",
+    "@opentelemetry/core": "1.0.1"
   },
   "devDependencies": {
     "@instana/core": "1.137.3",
-    "@opentelemetry/auto-instrumentations-node": "0.27.0",
+    "@opentelemetry/auto-instrumentations-node": "0.27.1",
     "@opentelemetry/instrumentation": "0.27.0",
     "@opentelemetry/instrumentation-http": "0.27.0",
     "@opentelemetry/node": "0.24.0",
-    "@opentelemetry/resources": "0.26.0",
+    "@opentelemetry/resources": "1.0.1",
     "@opentelemetry/sdk-node": "0.27.0",
-    "@opentelemetry/sdk-trace-base": "0.26.0",
-    "@opentelemetry/sdk-trace-node": "0.26.0",
-    "@opentelemetry/semantic-conventions": "0.26.0",
+    "@opentelemetry/sdk-trace-base": "1.0.1",
+    "@opentelemetry/sdk-trace-node": "1.0.1",
+    "@opentelemetry/semantic-conventions": "1.0.1",
     "chai-spies": "1.0.0",
     "no-code2": "2.0.0"
   }
