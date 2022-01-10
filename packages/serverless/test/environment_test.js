@@ -67,6 +67,20 @@ describe('environment util', () => {
     expect(environmentUtil.isValid()).to.be.false;
   });
 
+  it('is valid if an alternative validator is passed in', () => {
+    const validateInstanaAgentKey = () => true;
+
+    validate('https://example.com:8443', null, validateInstanaAgentKey);
+    expect(environmentUtil.isValid()).to.be.true;
+  });
+
+  it('is not valid if an alternative validator is passed in which returns false', () => {
+    const validateInstanaAgentKey = () => null;
+
+    validate('https://example.com:8443', null, validateInstanaAgentKey);
+    expect(environmentUtil.isValid()).to.be.false;
+  });
+
   it('must reject non-TLS URLs', () => {
     validate('http://example.com:8443', 'dummy-key');
     expect(environmentUtil.isValid()).to.be.false;
@@ -136,13 +150,18 @@ describe('environment util', () => {
     });
   });
 
-  function validate(instanaEndpointUrl, instanaAgentKey) {
-    if (instanaEndpointUrl !== undefined) {
+  function validate(instanaEndpointUrl, instanaAgentKey, validateInstanaAgentKey) {
+    if (instanaEndpointUrl) {
       process.env.INSTANA_ENDPOINT_URL = instanaEndpointUrl;
     }
-    if (instanaAgentKey !== undefined) {
+    if (instanaAgentKey) {
       process.env.INSTANA_AGENT_KEY = instanaAgentKey;
     }
-    environmentUtil.validate();
+
+    if (validateInstanaAgentKey) {
+      environmentUtil.validate({ validateInstanaAgentKey });
+    } else {
+      environmentUtil.validate();
+    }
   }
 });

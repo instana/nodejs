@@ -1,0 +1,141 @@
+/*
+ * (c) Copyright IBM Corp. 2022
+ * (c) Copyright Instana Inc. and contributors 2022
+ */
+
+'use strict';
+
+const ENV_NAME = 'INSTANA_SSM_PARAM_NAME';
+let fetchedValue;
+let envValue;
+let errorFromAWS;
+let initTimeoutInMs = 0;
+
+module.exports.reset = () => {
+  fetchedValue = null;
+  envValue = null;
+  errorFromAWS = null;
+  initTimeoutInMs = 0;
+};
+
+module.exports.isUsed = () => !!envValue;
+
+module.exports.validate = () => {
+  // NOTE: Always reset the env value, we do not wanne cache, because it might change
+  envValue = null;
+
+  const _envValue = process.env[ENV_NAME];
+
+  if (!_envValue || !_envValue.length) {
+    return false;
+  }
+
+  envValue = _envValue;
+
+  return envValue;
+};
+
+module.exports.init = ({ logger }) => {
+  let AWS;
+
+  // CASE: Customer did not set INSTANA_SSM_PARAM_NAME, skip
+  if (!exports.isUsed()) {
+    return;
+  }
+
+  // CASE: We already fetched the SSM value, skip
+  if (fetchedValue) {
+    return;
+  }
+
+  initTimeoutInMs = Date.now();
+
+  try {
+    /**
+     * From https://docs.aws.amazon.com/lambda/latest/dg/lambda-nodejs.html:
+     *
+     * Your code runs in an environment that includes the AWS SDK for JavaScript,
+     * with credentials from an AWS Identity and Access Management (IAM) role that you manage.
+     */
+    // eslint-disable-next-line
+    AWS = require('aws-sdk');
+
+    // https://docs.aws.amazon.com/lambda/latest/dg/configuration-envvars.html
+    AWS.config.update({ region: process.env.AWS_REGION });
+
+    const ssm = new AWS.SSM();
+    const params = {
+      Name: envValue,
+      // See https://docs.aws.amazon.com/cli/latest/reference/ssm/get-parameter.html#options
+      // We always expect a string here. Never a decrypt
+      WithDecryption: false
+    };
+
+    logger.debug(`INSTANA_SSM_PARAM_NAME is ${envValue}.`);
+
+    ssm.getParameter(params, (err, data) => {
+      if (err) {
+        errorFromAWS = `Error from AWS-SDK SSM Parameter Store: ${err.message}`;
+      } else {
+        try {
+          fetchedValue = data.Parameter.Value;
+          errorFromAWS = null;
+          logger.debug(`INSTANA AGENT KEY: ${fetchedValue}`);
+        } catch (readError) {
+          errorFromAWS = `Could not read returned response from AWS-SDK SSM Parameter Store: ${readError.message}`;
+        }
+      }
+    });
+  } catch (err) {
+    logger.warn('AWS SDK not available.');
+    errorFromAWS =
+      'Could not fetch instana key from SSM parameter store using ' +
+      `"${process.env.INSTANA_SSM_PARAM_NAME}", because the AWS SDK is not available. ` +
+      `Reason: ${err.message}`;
+  }
+};
+
+exports.waitAndGetInstanaKey = callback => {
+  // CASE: We already fetched the SSM value, skip & save time
+  if (fetchedValue) {
+    return callback(null, fetchedValue);
+  }
+  // CASE: Customer has set INSTANA_SSM_PARAM_NAME, but we were not able to fetch the value from AWS
+  if (errorFromAWS) {
+    return callback(errorFromAWS);
+  }
+
+  const endInMs = Date.now();
+  // CASE: the time between ssm lib initialisation and waitAndGetInstanaKey call
+  //       (which is the end of the customers lambda handler) is already too big to wait for the AWS response
+  if (endInMs - initTimeoutInMs > (process.env.INSTANA_LAMBDA_SSM_AWS_TIMEOUT_IN_MS || 1000)) {
+    return callback('Stopped waiting for AWS SSM response.');
+  }
+
+  /**
+   * Inside AWS it mostly takes 30-50ms
+   * But I have seen numbers which were ~100-150ms too, but they do not happen often.
+   * In our tests it takes usually ~>150ms (remote call)
+   */
+  const stopIntervalAfterMs = process.env.INSTANA_LAMBDA_SSM_TIMEOUT_IN_MS || 250;
+  const start = Date.now();
+
+  const waiting = setInterval(() => {
+    const end = Date.now();
+
+    if (fetchedValue) {
+      clearInterval(waiting);
+
+      callback(null, fetchedValue);
+    } else if (end - start > stopIntervalAfterMs) {
+      clearInterval(waiting);
+
+      callback(
+        `Could not fetch instana key from SSM parameter store using "${process.env.INSTANA_SSM_PARAM_NAME}"` +
+          ', because we have not received a response from AWS.'
+      );
+    }
+  }, 25);
+
+  return waiting;
+};

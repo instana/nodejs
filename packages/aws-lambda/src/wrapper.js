@@ -6,10 +6,11 @@
 'use strict';
 
 const instanaCore = require('@instana/core');
-const { backendConnector, consoleLogger } = require('@instana/serverless');
+const { backendConnector, consoleLogger, environment } = require('@instana/serverless');
 const arnParser = require('./arn');
 const identityProvider = require('./identity_provider');
 const metrics = require('./metrics');
+const ssm = require('./ssm');
 const { enrichSpanWithTriggerData, readTraceCorrelationData } = require('./triggers');
 const processResult = require('./process_result');
 const captureHeaders = require('./capture_headers');
@@ -239,6 +240,8 @@ function init(event, arnInfo, _config) {
     logger.setLevel(process.env.INSTANA_DEBUG ? 'debug' : config.level || process.env.INSTANA_LOG_LEVEL);
   }
 
+  ssm.init({ logger });
+
   identityProvider.init(arnInfo);
   const useLambdaExtension = shouldUseLambdaExtension();
   if (useLambdaExtension) {
@@ -356,6 +359,26 @@ function postPromise(entrySpan, error, value) {
   });
 }
 
+function sendToBackend({ spans, metricsPayload, finalLambdaRequest, callback }) {
+  const runBackendConnector = () =>
+    backendConnector.sendBundle({ spans, metrics: metricsPayload }, finalLambdaRequest, callback);
+
+  // CASE: Customer uses process.env.INSTANA_AGENT_KEY
+  if (!ssm.isUsed()) {
+    return runBackendConnector();
+  }
+
+  return ssm.waitAndGetInstanaKey((err, value) => {
+    if (err) {
+      logger.debug(err);
+      return callback();
+    }
+
+    environment.setInstanaAgentKey(value);
+    return runBackendConnector();
+  });
+}
+
 /**
  * When the original handler has completed, the postHandler will finish the entry span that represents the Lambda
  * invocation and makes sure the final batch of data (including the Lambda entry span) is sent to the back end before
@@ -402,7 +425,12 @@ function postHandler(entrySpan, error, result, callback) {
     plugins: [{ name: 'com.instana.plugin.aws.lambda', entityId: identityProvider.getEntityId(), data: metricsData }]
   };
 
-  backendConnector.sendBundle({ spans, metrics: metricsPayload }, true, callback);
+  sendToBackend({
+    spans,
+    metricsPayload,
+    finalLambdaRequest: true,
+    callback
+  });
 }
 
 /**
@@ -438,7 +466,13 @@ function postHandlerForTimeout(entrySpan, remainingMillis) {
 
   // deliberately not gathering metrics but only sending spans.
   const spans = spanBuffer.getAndResetSpans();
-  backendConnector.sendBundle({ spans }, true, () => {});
+
+  sendToBackend({
+    spans,
+    metricsPayload: {},
+    finalLambdaRequest: true,
+    callback: () => {}
+  });
 }
 
 exports.currentSpan = function getHandleForCurrentSpan() {
