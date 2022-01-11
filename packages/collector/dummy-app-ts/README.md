@@ -1,31 +1,7 @@
-# Dummy App
+# Typescript Dummy App
 
-This is a trivial Node.js application suitable for quick experiments with the @instana/collector. By default, it will
-connect to a local agent on port 42699.
+This is a Node.js + Typescript merely used to test the intellisense when the Instana SDK is used.
 
-## Configuring And Starting The App
-
-The app can be started via `node .` or `npm start`.
-
-It is configured via environment variables. The default values for the environment variables are in the `.env` file.
-The defaults can be overwritten like this `AGENT_PORT=3210 node .`.
-
-## Using The Agent Stub
-
-If you want to use the agent stub instead of an actual agent, do this:
-
-```
-# start the agent stub
-cd nodejs/packages/collector
-DROP_DATA=true npm run agent-stub
-
-# start the app (in a separate terminal)
-cd nodejs/packages/collector/dummy-app
-INSTANA_AGENT_PORT=3210 node .
-```
-
-## Triggering Requests
-
-1. Make sure you have [siege](https://www.joedog.org/siege-home/) installed. On most OSes it can be installed via the package manager of your choice.
-2. Run `./trigger-requests.sh`.
-
+Because our tracer is written in Javascript with types provided in JS Doc format and declaration files generated from
+them, we want to make sure that customers using Typescript will benefit from auto completion and be able to inspect
+types from our public SDK.

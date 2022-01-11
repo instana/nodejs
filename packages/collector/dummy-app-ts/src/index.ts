@@ -12,5 +12,6 @@
 
 import instana from '../..';
 
-instana.sdk.callback.startExitSpan('lala', () => {});
+const aaa = instana.sdk.promise.startExitSpan('my-tag') as Promise<any>;
 
+instana.sdk.callback.startExitSpan('my-tag', () => {});
