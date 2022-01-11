@@ -17,7 +17,6 @@ const dynamoDbInfo = {
   api: dynamoDb,
   listFunction: 'listTables',
   listProperty: 'TableNames',
-  // criteria: 'willian-test',
   criteria: 'nodejs-table-',
   attributesFunction: 'describeTable',
   getAttributesParams(item) {
@@ -66,14 +65,24 @@ const s3Info = {
       })
       .promise();
 
-    return s3
-      .deleteObjects({
-        Bucket: itemName,
-        Delete: {
-          Objects: data.Contents.map(obj => ({ Key: obj.Key }))
-        }
-      })
-      .promise();
+    const keysToDelete = data.Contents.map(obj => ({ Key: obj.Key }));
+
+    /**
+     * If there are no objects to delete, we cannot pass an empty array in the payload, or the AWS backend will throw
+     * an error.
+     */
+    if (keysToDelete.length === 0) {
+      return Promise.resolve();
+    } else {
+      return s3
+        .deleteObjects({
+          Bucket: itemName,
+          Delete: {
+            Objects: data.Contents.map(obj => ({ Key: obj.Key }))
+          }
+        })
+        .promise();
+    }
   },
   getDeleteAttributes(itemName) {
     return {
