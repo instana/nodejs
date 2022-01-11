@@ -35,7 +35,7 @@ module.exports = {
       [
         { pattern: '' },
         { pattern: ' \\(c\\) Copyright IBM Corp. \\d{4}' },
-        { pattern: ' \\(c\\) Copyright Instana Inc. and contributors \\d{4}' },
+        { pattern: '(?: \\(c\\) Copyright Instana Inc. and contributors \\d{4})?' },
         { pattern: '' }
       ]
     ],
