@@ -347,3 +347,5 @@ process.instanaNamespaces = process.instanaNamespaces || {};
 if (asyncHook._state && !asyncHook._state.enabled) {
   asyncHook.enable();
 }
+
+exports.Namespace = Namespace;

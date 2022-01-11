@@ -12,6 +12,7 @@ const normalizeConfig = require('./util/normalizeConfig');
 const uninstrumentedHttp = require('./uninstrumentedHttp');
 const metrics = require('./metrics');
 const secrets = require('./secrets');
+/** @type {import('./tracing')} */
 const tracing = require('./tracing');
 const util = require('./util');
 
@@ -76,6 +77,7 @@ module.exports = {
   logger: log,
   metrics,
   secrets,
+  /** @type {import('./tracing')} */
   tracing,
   uninstrumentedHttp,
   util,

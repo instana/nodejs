@@ -403,3 +403,5 @@ function reset() {
 }
 // @ts-ignore
 process.instanaNamespaces = process.instanaNamespaces || {};
+
+exports.Namespace = Namespace;

@@ -1,0 +1,10 @@
+export function init(config: import('../util/normalizeConfig').InstanaConfig, _downstreamConnection: import('..').DownstreamConnection): void;
+export function activate(): void;
+export function deactivate(): void;
+export function enableSpanBatching(): void;
+export function addBatchableSpanName(spanName: string): void;
+export function addSpan(span: import('./cls').InstanaBaseSpan): void;
+export function getAndResetSpans(): import("./cls").InstanaBaseSpan[];
+export function isEmpty(): boolean;
+export type BatchingBucket = Map<number, Array<import('./cls').InstanaBaseSpan>>;
+export type BatchingBucketMap = Map<string, Map<number, import("./cls").InstanaBaseSpan[]>>;

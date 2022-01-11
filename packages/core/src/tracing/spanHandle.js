@@ -260,3 +260,6 @@ exports.getHandleForCurrentSpan = function getHandleForCurrentSpan(cls) {
     return new NoopSpanHandle();
   }
 };
+
+exports.NoopSpanHandle = NoopSpanHandle;
+exports.SpanHandle = SpanHandle;

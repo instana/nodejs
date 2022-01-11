@@ -6,7 +6,9 @@
 'use strict';
 
 const path = require('path');
+/** @type {import('../../core/src')} */
 const instanaNodeJsCore = require('@instana/core');
+/** @type {import('../../shared-metrics/src')} */
 const instanaSharedMetrics = require('@instana/shared-metrics');
 
 require('./tracing'); // load additional instrumentations

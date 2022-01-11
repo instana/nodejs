@@ -2,6 +2,8 @@
   "name": "@instana/collector",
   "version": "1.137.3",
   "description": "The Instana Node.js metrics and trace data collector",
+  "types": "types/collector/src/index.d.ts",
+  "typings": "types/collector/src/index.d.ts",
   "author": {
     "name": "Ben Ripkens",
     "email": "ben@instana.com"
