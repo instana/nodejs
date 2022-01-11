@@ -28,10 +28,10 @@ module.exports = function (isCallbackApi) {
 
   /**
    * @param {string} name
-   * @param {Object.<string, *> | Function} tags
-   * @param {Object.<string, *> | Function | string} traceId
-   * @param {string} parentSpanId
-   * @param {Function | Object.<string, *>} callback
+   * @param {Object.<string, *> | Function} [tags]
+   * @param {Object.<string, *> | Function | string} [traceId]
+   * @param {string} [parentSpanId]
+   * @param {Function | Object.<string, *>} [callback]
    */
   function startEntrySpan(name, tags, traceId, parentSpanId, callback) {
     if (isCallbackApi && arguments.length === 2 && typeof arguments[1] === 'function') {
@@ -102,8 +102,8 @@ module.exports = function (isCallbackApi) {
 
   /**
    * @param {string} name
-   * @param {Object.<string, *>} tags
-   * @param {Function | Object.<string, *>} callback
+   * @param {Object.<string, *>} [tags]
+   * @param {Function | Object.<string, *>} [callback]
    * @returns {Function | Promise<*>}
    */
   function startIntermediateSpan(name, tags, callback) {
@@ -180,8 +180,8 @@ module.exports = function (isCallbackApi) {
 
   /**
    * @param {string} name
-   * @param {Object.<string, *>} tags
-   * @param {Function | Object.<string, *>} callback
+   * @param {Object.<string, *>} [tags]
+   * @param {Function | Object.<string, *>} [callback]
    * @returns {Function | Promise<*>}
    */
   function startExitSpan(name, tags, callback) {

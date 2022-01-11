@@ -8,6 +8,8 @@
 const path = require('path');
 /** @type {import('../../core/src')} */
 const instanaNodeJsCore = require('@instana/core');
+const { tracing } = instanaNodeJsCore;
+
 /** @type {import('../../shared-metrics/src')} */
 const instanaSharedMetrics = require('@instana/shared-metrics');
 
@@ -21,6 +23,13 @@ let agentConnection;
 
 /** @type {import('./util/normalizeConfig').CollectorConfig} */
 let config;
+
+// These are types defined locally, but that require public visibility due to our public SDK
+/** @typedef {import('../../core/src/uninstrumentedHttp').UninstrumentedHTTP} UninstrumentedHTTP */
+/** @typedef {import('../../core/src/tracing').InstanaInstrumentedModule} InstanaInstrumentedModule */
+/** @typedef {import('../../core/src/tracing').TracingMetrics} TracingMetrics */
+/** @typedef {import('../../core/src/tracing/spanHandle').SpanHandle} SpanHandle */
+/** @typedef {import('../../core/src/tracing/spanHandle').NoopSpanHandle} NoopSpanHandle */
 
 /**
  * @param {import('./util/normalizeConfig').CollectorConfig} [_config]
@@ -62,11 +71,11 @@ function init(_config) {
 }
 
 init.currentSpan = function getHandleForCurrentSpan() {
-  return instanaNodeJsCore.tracing.getHandleForCurrentSpan();
+  return tracing.getHandleForCurrentSpan();
 };
 
 init.isTracing = function isTracing() {
-  return instanaNodeJsCore.tracing.getCls() ? instanaNodeJsCore.tracing.getCls().isTracing() : false;
+  return tracing.getCls() ? tracing.getCls().isTracing() : false;
 };
 
 init.isConnected = function isConnected() {
@@ -74,18 +83,23 @@ init.isConnected = function isConnected() {
 };
 
 /**
- * @param {import('@instana/core/src/logger').GenericLogger} logger
+ * @param {import('../../core/src/logger').GenericLogger} logger
  */
 init.setLogger = function setLogger(logger) {
   config.logger = logger;
   log.init(config, true);
 };
 
+const { sdk } = tracing;
+const { opentracing } = tracing;
+
 init.core = instanaNodeJsCore;
 init.sharedMetrics = instanaSharedMetrics;
 init.experimental = experimental;
-init.opentracing = instanaNodeJsCore.tracing.opentracing;
-init.sdk = instanaNodeJsCore.tracing.sdk;
+/** @type {import('../../core/src/tracing/opentracing')} */
+init.opentracing = opentracing;
+/** @type {import('../../core/src/tracing/sdk')} */
+init.sdk = sdk;
 
 if (process.env.INSTANA_IMMEDIATE_INIT != null && process.env.INSTANA_IMMEDIATE_INIT.toLowerCase() === 'true') {
   init();

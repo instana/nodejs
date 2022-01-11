@@ -1,29 +1,30 @@
 export = init;
+/** @typedef {import('../../core/src/uninstrumentedHttp').UninstrumentedHTTP} UninstrumentedHTTP */
+/** @typedef {import('../../core/src/tracing').InstanaInstrumentedModule} InstanaInstrumentedModule */
+/** @typedef {import('../../core/src/tracing').TracingMetrics} TracingMetrics */
+/** @typedef {import('../../core/src/tracing/spanHandle').SpanHandle} SpanHandle */
+/** @typedef {import('../../core/src/tracing/spanHandle').NoopSpanHandle} NoopSpanHandle */
 /**
  * @param {import('./util/normalizeConfig').CollectorConfig} [_config]
  */
-declare function init(_config?: import('./util/normalizeConfig').CollectorConfig): typeof init;
+declare function init(_config?: import('./util/normalizeConfig').CollectorConfig): typeof import(".");
 declare namespace init {
-    export function currentSpan(): import("@instana/core/src/tracing/spanHandle").SpanHandle | import("@instana/core/src/tracing/spanHandle").NoopSpanHandle;
-    export function isTracing(): boolean;
-    export function isConnected(): boolean;
-    /**
-     * @param {import('@instana/core/src/logger').GenericLogger} logger
-     */
-    export function setLogger(logger: import("@instana/core/src/logger").GenericLogger): void;
-    export { instanaNodeJsCore as core };
-    export { instanaSharedMetrics as sharedMetrics };
-    export { experimental };
-    export const opentracing: typeof import("@instana/core/src/tracing/opentracing");
-    export const sdk: typeof import("@instana/core/src/tracing/sdk");
+    export { currentSpan, isTracing, isConnected, setLogger, instanaNodeJsCore as core, instanaSharedMetrics as sharedMetrics, experimental, opentracing, sdk, UninstrumentedHTTP, InstanaInstrumentedModule, TracingMetrics, SpanHandle, NoopSpanHandle };
 }
+declare function currentSpan(): import("../../core/src/tracing/spanHandle").SpanHandle | import("../../core/src/tracing/spanHandle").NoopSpanHandle;
+declare function isTracing(): boolean;
+declare function isConnected(): boolean;
+/**
+ * @param {import('../../core/src/logger').GenericLogger} logger
+ */
+declare function setLogger(logger: import('../../core/src/logger').GenericLogger): void;
 /** @type {import('../../core/src')} */
 declare const instanaNodeJsCore: {
-    logger: typeof import("@instana/core/src/logger");
+    logger: typeof import("../../core/src/logger");
     metrics: typeof import("@instana/core/src/metrics");
     secrets: typeof import("@instana/core/src/secrets");
-    tracing: typeof import("@instana/core/src/tracing");
-    uninstrumentedHttp: import("@instana/core/src/uninstrumentedHttp").UninstrumentedHTTP;
+    tracing: typeof import("../../core/src/tracing");
+    uninstrumentedHttp: import("../../core/src/uninstrumentedHttp").UninstrumentedHTTP;
     util: {
         applicationUnderMonitoring: typeof import("@instana/core/src/util/applicationUnderMonitoring");
         atMostOnce: (name: string, cb: (...args: any) => any) => (...args: any) => any;
@@ -52,8 +53,15 @@ declare const instanaNodeJsCore: {
     };
     init: (config: import("@instana/core/src/util/normalizeConfig").InstanaConfig, downstreamConnection: import("../../core/src").DownstreamConnection, processIdentityProvider: typeof import("./pidStore")) => void;
     preInit: () => void;
-    registerAdditionalInstrumentations: (additionalInstrumentationModules: import("@instana/core/src/tracing").InstanaInstrumentedModule[]) => void;
+    registerAdditionalInstrumentations: (additionalInstrumentationModules: import("../../core/src/tracing").InstanaInstrumentedModule[]) => void;
 };
 /** @type {import('../../shared-metrics/src')} */
 declare const instanaSharedMetrics: typeof import("../../shared-metrics/src");
 import experimental = require("./experimental");
+declare const opentracing: typeof import("../../core/src/tracing/opentracing");
+declare const sdk: typeof import("../../core/src/tracing/sdk");
+type UninstrumentedHTTP = import('../../core/src/uninstrumentedHttp').UninstrumentedHTTP;
+type InstanaInstrumentedModule = import('../../core/src/tracing').InstanaInstrumentedModule;
+type TracingMetrics = import('../../core/src/tracing').TracingMetrics;
+type SpanHandle = import('../../core/src/tracing/spanHandle').SpanHandle;
+type NoopSpanHandle = import('../../core/src/tracing/spanHandle').NoopSpanHandle;

@@ -12,25 +12,8 @@ const normalizeConfig = require('./util/normalizeConfig');
 const uninstrumentedHttp = require('./uninstrumentedHttp');
 const metrics = require('./metrics');
 const secrets = require('./secrets');
-/** @type {import('./tracing')} */
 const tracing = require('./tracing');
 const util = require('./util');
-
-/**
- * @typedef {{
-    h?: string,
-    e?: string,
-    hl?: boolean,
-    cp?: string,
-   }} PIDData
- */
-
-/**
- * @typedef {Object} InstanaCore
- * @property {import('./metrics/index')} metrics
- * @property {import('./secrets')} secrets
- * @property {import('./tracing/index')} tracing
- */
 
 /** @typedef {import('../../collector/src/agentConnection').AgentConnectionEvent} AgentConnectionEvent */
 
@@ -77,7 +60,6 @@ module.exports = {
   logger: log,
   metrics,
   secrets,
-  /** @type {import('./tracing')} */
   tracing,
   uninstrumentedHttp,
   util,

@@ -1,14 +1,3 @@
-export type PIDData = {
-    h?: string;
-    e?: string;
-    hl?: boolean;
-    cp?: string;
-};
-export type InstanaCore = {
-    metrics: typeof metrics;
-    secrets: typeof secrets;
-    tracing: typeof import("./tracing");
-};
 export type AgentConnectionEvent = import('../../collector/src/agentConnection').AgentConnectionEvent;
 /**
  * This type is based on /nodejs/packages/collector/src/agentConnection.js
@@ -20,8 +9,7 @@ export type DownstreamConnection = {
 import log = require("./logger");
 import metrics = require("./metrics");
 import secrets = require("./secrets");
-/** @type {import('./tracing')} */
-export const tracing: typeof import("./tracing");
+import tracing = require("./tracing");
 import uninstrumentedHttp = require("./uninstrumentedHttp");
 import util = require("./util");
 /**
@@ -32,20 +20,6 @@ import util = require("./util");
  */
 export function init(config: import('./util/normalizeConfig').InstanaConfig, downstreamConnection: DownstreamConnection, processIdentityProvider: typeof import("../../collector/src/pidStore")): void;
 export function preInit(): void;
-/**
- * @typedef {{
-    h?: string,
-    e?: string,
-    hl?: boolean,
-    cp?: string,
-   }} PIDData
- */
-/**
- * @typedef {Object} InstanaCore
- * @property {import('./metrics/index')} metrics
- * @property {import('./secrets')} secrets
- * @property {import('./tracing/index')} tracing
- */
 /** @typedef {import('../../collector/src/agentConnection').AgentConnectionEvent} AgentConnectionEvent */
 /**
  * This type is based on /nodejs/packages/collector/src/agentConnection.js
@@ -57,4 +31,4 @@ export function preInit(): void;
  * @param {Array.<import('./tracing/index').InstanaInstrumentedModule>} additionalInstrumentationModules
  */
 export function registerAdditionalInstrumentations(additionalInstrumentationModules: Array<import('./tracing/index').InstanaInstrumentedModule>): void;
-export { log as logger, metrics, secrets, uninstrumentedHttp, util };
+export { log as logger, metrics, secrets, tracing, uninstrumentedHttp, util };
