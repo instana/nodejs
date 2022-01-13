@@ -9,7 +9,8 @@
   "homepage": "https://github.com/instana/nodejs/blob/main/packages/aws-lambda/README.md",
   "main": "src/index.js",
   "files": [
-    "src"
+    "src",
+    "CHANGELOG.md"
   ],
   "publishConfig": {
     "access": "public"
