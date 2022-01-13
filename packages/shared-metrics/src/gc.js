@@ -55,7 +55,7 @@ const nativeModuleLoader = require('./util/nativeModuleRetry')({
     'Could not load gcstats.js. You will not be able to see GC information in Instana for this application. This ' +
     'typically occurs when native addons could not be installed during module installation (npm install). See the ' +
     'instructions to learn more about the requirements of the collector: ' +
-    'https://www.instana.com/docs/ecosystem/node-js/installation/#native-addons'
+    'https://www.ibm.com/docs/de/obi/current?topic=nodejs-collector-installation#native-addons'
 });
 
 /** @type {NodeJS.Timeout} */

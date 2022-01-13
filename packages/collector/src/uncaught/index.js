@@ -83,7 +83,9 @@ function activateUncaughtExceptionHandling() {
     process.once(uncaughtExceptionEventName, onUncaughtException);
     logger.warn(
       'Reporting uncaught exceptions is enabled. This feature is deprecated. Please consider disabling it ' +
-        'and rely on https://www.instana.com/docs/ecosystem/os-process/#abnormal-termination instead.'
+        // eslint-disable-next-line max-len
+        'and rely on https://www.ibm.com/docs/de/obi/current?topic=technologies-monitoring-os-process#process-abnormal-termination ' +
+        'instead.'
     );
     if (process.version === 'v12.6.0') {
       logger.warn(
