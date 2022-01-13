@@ -62,9 +62,8 @@
     "lib",
     "addons/linux",
     "binding.gyp",
-    "index.js",
     "node-gyp-fallback.js",
-    "README.md"
+    "CHANGELOG.md"
   ],
   "engines": {
     "node": ">=6.4.0"
