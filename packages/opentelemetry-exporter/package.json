@@ -17,7 +17,8 @@
     "test": "test"
   },
   "files": [
-    "src"
+    "src",
+    "CHANGELOG.md"
   ],
   "repository": {
     "type": "git",
