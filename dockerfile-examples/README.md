@@ -1,7 +1,7 @@
 Examples Dockerfile
 ===================
 
-Dockerizing your Node.js application is a thing. Since the Instana Node.js collector uses some native addons (see [readme](https://www.instana.com/docs/ecosystem/node-js/installation/#native-addons)), it might be required to add additional operating system packages to your Docker image. This directory contains a few example Dockerfiles to test Docker builds with various base images and configurations.
+Dockerizing your Node.js application is a thing. Since the Instana Node.js collector uses some native addons (see [readme](https://www.ibm.com/docs/de/obi/current?topic=nodejs-collector-installation#native-addons)), it might be required to add additional operating system packages to your Docker image. This directory contains a few example Dockerfiles to test Docker builds with various base images and configurations.
 
 This is probably relevant for you
 - dockerize your Node.js application

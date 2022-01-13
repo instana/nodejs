@@ -133,7 +133,7 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 - Instrumentation of AWS Lambda invoke function
 
 ## 1.121.0
-- [AWS Lambda] Include Instana's [AWS Lambda extension](https://docs.aws.amazon.com/lambda/latest/dg/using-extensions.html) in the [Instana Node.js Lambda layer](https://www.instana.com/docs/ecosystem/aws-lambda/nodejs#instana-autotrace-setup). Monitoring data and traces are offloaded locally to Instana's Lambda extension, which will then forward it to the Instana back end. This feature is currently limited to Lambda functions configured with 256 MB of memory or more. Using the Instana Lambda extension can be disabled by setting the environment variable `INSTANA_DISABLE_LAMBDA_EXTENSION` to a non-empty string for a Lambda function.
+- [AWS Lambda] Include Instana's [AWS Lambda extension](https://docs.aws.amazon.com/lambda/latest/dg/using-extensions.html) in the [Instana Node.js Lambda layer](https://www.ibm.com/docs/de/obi/current?topic=kinesis-aws-lambda-native-tracing-nodejs#instana-autotrace-setup). Monitoring data and traces are offloaded locally to Instana's Lambda extension, which will then forward it to the Instana back end. This feature is currently limited to Lambda functions configured with 256 MB of memory or more. Using the Instana Lambda extension can be disabled by setting the environment variable `INSTANA_DISABLE_LAMBDA_EXTENSION` to a non-empty string for a Lambda function.
 
 ## 1.120.0
 - Add instrumentation for AWS Kinesis
@@ -332,7 +332,7 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 - Fix PID used in profiling payload when running in a container.
 
 ## 1.98.0
-- Add `@instana/autoprofile` to support [Instana AutoProfile™](https://www.instana.com/docs/profiling/) (automated and continuous production profiler). Instana AutoProfile is currently opt-in and can be enabled with the config option `autoProfile: true` or via the environment variable `INSTANA_AUTO_PROFILE=true`.
+- Add `@instana/autoprofile` to support [Instana AutoProfile™](https://www.ibm.com/docs/de/obi/current?topic=instana-profile-processes) (automated and continuous production profiler). Instana AutoProfile is currently opt-in and can be enabled with the config option `autoProfile: true` or via the environment variable `INSTANA_AUTO_PROFILE=true`.
 
 ## 1.97.1
 - Update to `netlinkwrapper@1.2.0`.
@@ -406,7 +406,7 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 
 ## 1.89.0
 - Instrument [Apigee Microgateway/edgemicro's](https://www.npmjs.com/package/edgemicro) worker processes automatically when they are spawned.
-- Provide an executable for static instrumentation of a globally installed [edgemicro](https://www.npmjs.com/package/edgemicro) CLI (see [our docs](https://www.instana.com/docs/ecosystem/node-js/edgemicro) for details).
+- Provide an executable for static instrumentation of a globally installed [edgemicro](https://www.npmjs.com/package/edgemicro) CLI (see [our docs](https://www.ibm.com/docs/de/obi/current?topic=technologies-monitoring-apigee-microgateway) for details).
 - Keep asynchronous context across [memored](https://www.npmjs.com/package/memored) IPC communication gaps.
 
 ## 1.88.1
@@ -566,19 +566,19 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 - Add support for Node.js 12 (except for two optional features that rely on native addons which are not yet available for Node.js 12, CPU profiling and reporting uncaught exceptions).
 
 ## 1.66.0
-- Report unhandled promise rejections as issues (disabled by default, see [configuration guide](https://www.instana.com/docs/ecosystem/node-js/configuration/#reporting-unhandled-promise-rejections)).
+- Report unhandled promise rejections as issues (disabled by default, see [configuration guide](https://www.ibm.com/docs/de/obi/current?topic=nodejs-collector-configuration#reporting-unhandled-promise-rejections)).
 
 ## 1.65.1
 - Fix: Init metrics correctly when no config is passed ([#138](https://github.com/instana/nodejs/issues/138)).
 - Add data.rpc.host and data.rpc.port to GRPC exits to improve service discovery.
 
 ## 1.65.0
-- Rename the npm package from instana-nodejs-sensor to @instana/collector. See [migration guide](https://www.instana.com/docs/ecosystem/node-js/installation/#change-of-package-name) for details.
+- Rename the npm package from instana-nodejs-sensor to @instana/collector. See [migration guide](https://www.ibm.com/docs/de/obi/current?topic=nodejs-collector-installation#change-of-package-name) for details.
 - Split into @instana/core and @instana/collector.
 - Fix trace context continuity when multiple instances of `bluebird` are present.
 
 ## 1.64.0
-- Add tracing SDK to create spans manually, integrating seamlessly with automatic tracing - see [SDK API documentation](https://www.instana.com/docs/ecosystem/node-js/api#creating-spans-manually-with-the-sdk) for details.
+- Add tracing SDK to create spans manually, integrating seamlessly with automatic tracing - see [SDK API documentation](https://www.ibm.com/docs/de/obi/current?topic=nodejs-instana-api#creating-spans-manually-with-the-sdk) for details.
 - Additional validation for entry spans (that no other span is already in progress).
 
 ## 1.63.2

@@ -40,7 +40,7 @@ if (agentOpts.autoProfile && semver.gte(process.version, '6.4.0')) {
         'although autoprofiling has been enabled. This typically occurs when native addons could not be installed ' +
         'during module installation (npm install/yarn). See the instructions to learn more about the requirements of ' +
         'the collector: ' +
-        'https://www.instana.com/docs/ecosystem/node-js/installation/#native-addons'
+        'https://www.ibm.com/docs/de/obi/current?topic=nodejs-collector-installation#native-addons'
     );
     fireMonitoringEvent();
     setInterval(fireMonitoringEvent, 600000).unref();

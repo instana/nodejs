@@ -1,3 +1,3 @@
 # API
 
-This document has moved [here](https://www.instana.com/docs/ecosystem/node-js/api/).
+This document has moved [here](https://www.ibm.com/docs/de/obi/current?topic=nodejs-instana-api).
