@@ -30,7 +30,7 @@ mochaSuiteFn('tracing/too late', function () {
 
   [
     semver.gte(process.version, '10.0.0') && '@elastic/elasticsearch',
-    '@google-cloud/pubsub',
+    semver.gte(process.version, '10.0.0') && '@google-cloud/pubsub',
     semver.gte(process.version, '10.0.0') && '@google-cloud/storage',
     '@hapi/call',
     'amqplib',
