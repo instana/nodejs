@@ -4,7 +4,8 @@
   "description": "Core library for Instana's Node.js packages",
   "main": "src/index.js",
   "files": [
-    "src"
+    "src",
+    "CHANGELOG.md"
   ],
   "publishConfig": {
     "access": "public"
