@@ -10,6 +10,8 @@ shared: &shared
     - MONGODB=127.0.0.1:27017
     - ZOOKEEPER=127.0.0.1:2181
     - KAFKA=127.0.0.1:9092
+    - KAFKA2=127.0.0.1:29092
+    - SCHEMA_REGISTRY=127.0.0.1:8081
     - REDIS=127.0.0.1:6379
     - MYSQL_HOST=127.0.0.1
     - MYSQL_PORT=3306
@@ -227,9 +229,20 @@ elasticsearch: &elasticsearch
 kafka: &kafka
   - image: wurstmeister/kafka:2.12-2.2.1
     environment:
-      KAFKA_ADVERTISED_HOST_NAME: 127.0.0.1
-      KAFKA_CREATE_TOPICS: "test:1:1,test-topic-1:1:1,test-topic-2:1:1,test-batch-topic-1:1:1,test-batch-topic-2:1:1"
+      KAFKA_LISTENERS: EXTERNAL://:9092,PLAINTEXT://:29092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://127.0.0.1:29092,EXTERNAL://localhost:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,EXTERNAL:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_CREATE_TOPICS: "test:1:1,test-topic-1:1:1,test-topic-2:1:1,test-batch-topic-1:1:1,test-batch-topic-2:1:1,rdkafka-topic:1:1,kafka-avro-topic:1:1"
       KAFKA_ZOOKEEPER_CONNECT: 127.0.0.1:2181
+
+schema-registry: &schema-registry
+  - image: confluentinc/cp-schema-registry:4.1.0
+    environment:
+      SCHEMA_REGISTRY_KAFKASTORE_CONNECTION_URL: "127.0.0.1:2181"
+      SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: "PLAINTEXT://127.0.0.1:29092"
+      SCHEMA_REGISTRY_HOST_NAME: schema-registry
 
 mongo: &mongo
   - image: circleci/mongo:4.1.13
@@ -284,6 +297,7 @@ jobs:
       - <<: *mongo
       - <<: *redis
       - <<: *kafka
+      - <<: *schema-registry
       - <<: *mysql
       - <<: *postgres
       - <<: *mssql
@@ -302,6 +316,7 @@ jobs:
       - <<: *mongo
       - <<: *redis
       - <<: *kafka
+      - <<: *schema-registry
       - <<: *mysql
       - <<: *postgres
       - <<: *mssql
@@ -320,6 +335,7 @@ jobs:
       - <<: *mongo
       - <<: *redis
       - <<: *kafka
+      - <<: *schema-registry
       - <<: *mysql
       - <<: *postgres
       - <<: *mssql
@@ -338,6 +354,7 @@ jobs:
       - <<: *mongo
       - <<: *redis
       - <<: *kafka
+      - <<: *schema-registry
       - <<: *mysql
       - <<: *postgres
       - <<: *mssql
@@ -356,6 +373,7 @@ jobs:
       - <<: *mongo
       - <<: *redis
       - <<: *kafka
+      - <<: *schema-registry
       - <<: *mysql
       - <<: *postgres
       - <<: *mssql
