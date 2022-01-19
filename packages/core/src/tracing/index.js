@@ -71,6 +71,7 @@ const instrumentations = [
   './instrumentation/messaging/amqp',
   './instrumentation/messaging/kafkaJs',
   './instrumentation/messaging/kafkaNode',
+  './instrumentation/messaging/rdkafka',
   './instrumentation/messaging/nats',
   './instrumentation/messaging/natsStreaming',
   './instrumentation/messaging/bull',
