@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.137.5](https://github.com/instana/nodejs/compare/v1.137.4...v1.137.5) (2022-01-25)
+
+
+### Bug Fixes
+
+* **deps:** bumped node-fetch to ^2.6.7 (security patch) ([#465](https://github.com/instana/nodejs/issues/465)) ([e8c622b](https://github.com/instana/nodejs/commit/e8c622bd976f9b552572cfed927cb11876315979))
+
+
+
+
+
 ## [1.137.4](https://github.com/instana/nodejs/compare/v1.137.3...v1.137.4) (2022-01-11)
 
 **Note:** Version bump only for package @instana/metrics-util

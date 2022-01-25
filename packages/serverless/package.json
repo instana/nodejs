@@ -1,6 +1,6 @@
 {
   "name": "@instana/serverless",
-  "version": "1.137.4",
+  "version": "1.137.5",
   "description": "Internal utility package for serverless Node.js tracing and monitoring with Instana",
   "author": {
     "name": "Bastian Krol",
@@ -65,7 +65,7 @@
   },
   "license": "MIT",
   "dependencies": {
-    "@instana/core": "1.137.4",
+    "@instana/core": "1.137.5",
     "agent-base": "^6.0.2",
     "https-proxy-agent": "^5.0.0",
     "semver": "7.3.3"
