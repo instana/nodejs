@@ -63,7 +63,7 @@
     "@instana/core": "1.137.4",
     "@instana/serverless": "1.137.4",
     "@instana/shared-metrics": "1.137.4",
-    "node-fetch": "^2.6.1"
+    "node-fetch": "^2.6.7"
   },
   "devDependencies": {
     "no-code2": "2.0.0"
