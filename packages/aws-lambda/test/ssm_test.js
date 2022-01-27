@@ -113,7 +113,6 @@ describe('Unit: ssm library', () => {
       const interval = ssm.waitAndGetInstanaKey((err, value) => {
         expect(err).to.be.null;
         expect(value).to.equal('instana-value');
-        expect(interval._destroyed).to.be.true;
         callback();
       });
 
@@ -148,7 +147,6 @@ describe('Unit: ssm library', () => {
             '"hello instana agent key", because we have not received a response from AWS.'
         );
         expect(value).to.be.undefined;
-        expect(interval._destroyed).to.be.true;
         callback();
       });
 
