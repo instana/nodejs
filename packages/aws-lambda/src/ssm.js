@@ -113,11 +113,13 @@ exports.waitAndGetInstanaKey = callback => {
   }
 
   /**
-   * Inside AWS it mostly takes 30-50ms
-   * But I have seen numbers which were ~100-150ms too, but they do not happen often.
+   * Inside AWS the call to `getParameter` mostly takes 30-50ms
+   * Because we initialise the fetch already before the customer's handler is called,
+   * the chance is very high that the interval is not even used.
+   *
    * In our tests it takes usually ~>150ms (remote call)
    */
-  const stopIntervalAfterMs = process.env.INSTANA_LAMBDA_SSM_TIMEOUT_IN_MS || 250;
+  const stopIntervalAfterMs = process.env.INSTANA_LAMBDA_SSM_TIMEOUT_IN_MS || 150;
   const start = Date.now();
 
   const waiting = setInterval(() => {
