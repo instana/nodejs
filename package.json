@@ -82,9 +82,8 @@
     "admin": "^1.4.1",
     "admin-plugin-healthcheck": "^1.1.0",
     "amqplib": "^0.8.0",
-    "apollo-link": "^1.2.14",
-    "apollo-link-ws": "^1.0.20",
     "apollo-server-express": "^2.24.1",
+    "apollo-server-express-v3": "npm:apollo-server-express@3.6.2",
     "async": "^3.2.2",
     "aws-sdk": "2.1046.0",
     "basic-auth-parser": "0.0.2",
@@ -113,9 +112,12 @@
     "fastify2": "npm:fastify@2.15.3",
     "fastify3": "npm:fastify@3.21.5",
     "google-protobuf": "^3.19.1",
-    "graphql": "^14.7.0",
+    "graphql": "^15.8.0",
     "graphql-subscriptions": "^1.2.1",
     "graphql-tools": "^7.0.5",
+    "graphql-ws": "^5.5.5",
+    "graphql-v14": "npm:graphql@14.7.0",
+    "graphql-v16": "npm:graphql@16.3.0",
     "grpc": "^1.24.2",
     "husky": "^7.0.4",
     "ioredis": "^4.28.2",
@@ -166,7 +168,7 @@
     "underscore": "^1.13.1",
     "uuid": "^8.3.2",
     "winston": "^3.3.3",
-    "ws": "^7.4.6"
+    "ws": "^7.5.6"
   },
   "config": {
     "commitizen": {
