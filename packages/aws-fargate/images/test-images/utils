@@ -20,7 +20,7 @@ function normalizeArgs {
   elif [[ $nodeJsVersion = 10 ]]; then
     NODEJS_VERSION=10.20.1
   elif [[ $nodeJsVersion = 8 ]]; then
-    NODEJS_VERSION=8.6.0
+    NODEJS_VERSION=8.17.0
   else
     NODEJS_VERSION=$nodeJsVersion
   fi
