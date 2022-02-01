@@ -11,12 +11,8 @@
 
 - [Instana npm Packages](#instana-npm-packages)
 - [Filing Issues](#filing-issues)
-- [Direct Links to the @instana/collector Documentation](#direct-links-to-the-instanacollector-documentation)
-  - [Installation and Usage](#installation-and-usage)
-  - [CPU Profiling, Garbage Collection and Event Loop Information](#cpu-profiling-garbage-collection-and-event-loop-information)
-  - [API](#api)
-  - [OpenTracing](#opentracing)
-- [Change of Package Name](#change-of-package-name)
+- [Documentation](#documentation)
+- [Legacy Package Name `instana-nodejs-sensor`](#legacy-package-name-instana-nodejs-sensor)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -34,27 +30,17 @@ The following packages are meant for direct consumption by Instana users, all  o
 
 If something is not working as expected or you have a question, instead of opening an issue in this repository, please open a ticket at <https://support.instana.com/hc/requests/new> instead. Please refrain from filing issues or tickets if your audit tool (npm audit, Snyk, etc.) reported a CVE for a dependency or a transitive dependency of `@instana/collector` -- we run these audits with every build and take appropriate action automatically.
 
-## Direct Links to the @instana/collector Documentation
+## Documentation
 
-The documentation available in the README.md file for the package formerly known as `instana-nodejs-sensor` that was located in the root folder of this repository up until release 1.64.0 has been migrated to the [Node.js page](https://www.ibm.com/docs/de/obi/current?topic=technologies-monitoring-nodejs) of the [Instana documentation portal](https://www.ibm.com/docs/de/obi/current). The following sections mostly serve as redirects for people having arrived here following outdated links.
+The documentation for Instana's Node.js support is available on [Node.js page](https://www.ibm.com/docs/de/obi/current?topic=technologies-monitoring-nodejs) of the [Instana documentation portal](https://www.ibm.com/docs/de/obi/current).
 
-### Installation and Usage
+Here are a few more quick links:
 
-See [installation page](https://www.ibm.com/docs/de/obi/current?topic=nodejs-collector-installation).
+* [Installation](https://www.ibm.com/docs/de/obi/current?topic=nodejs-collector-installation)
+* [Native Addons: Profiling, Garbage Collection and Event Loop Information](https://www.ibm.com/docs/de/obi/current?topic=nodejs-collector-installation#native-addons)
+* [API](https://www.ibm.com/docs/de/obi/current?topic=nodejs-instana-api).
 
-### CPU Profiling, Garbage Collection and Event Loop Information
+## Legacy Package Name `instana-nodejs-sensor`
 
-See [native addons section](https://www.ibm.com/docs/de/obi/current?topic=nodejs-collector-installation#native-addons).
-
-### API
-
-See [API page](https://www.ibm.com/docs/de/obi/current?topic=nodejs-instana-api).
-
-### OpenTracing
-
-See [OpenTracing section](https://www.ibm.com/docs/de/obi/current?topic=nodejs-instana-api#opentracing-integration).
-
-## Change of Package Name
-
-Up to release `1.64.0` (April 2019), the package `@instana/collector` was called `instana-nodejs-sensor`. Beginning with version `1.65.0`, the name has changed to `@instana/collector`.lease refer to our [migration guide](https://www.ibm.com/docs/de/obi/current?topic=nodejs-collector-installation#change-of-package-name) for details.
+Up to release `1.64.0` (April 2019), the package `@instana/collector` was called `instana-nodejs-sensor`. Beginning with version `1.65.0`, the name had changed to `@instana/collector`. We continued to publish the package under the deprecated alias `instana-nodejs-sensor` for backwards compatibilty for all `1.x.y` versions, for a grace period of over 2.5 years. Starting with version `2.0.0`, the package `instana-nodejs-sensor` will no longer be updated. Please refer to our [migration guide](https://www.ibm.com/docs/de/obi/current?topic=nodejs-collector-installation#change-of-package-name) for details.
 

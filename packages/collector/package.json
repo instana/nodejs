@@ -45,7 +45,6 @@
     "instana",
     "agent",
     "collector",
-    "sensor",
     "monitoring",
     "tracing"
   ],
