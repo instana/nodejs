@@ -24,7 +24,7 @@ let HTTP2_HEADER_PATH;
 let HTTP2_HEADER_STATUS;
 
 exports.init = function init(config) {
-  if (semver.gte(process.versions.node, '8.4.0')) {
+  if (semver.gte(process.versions.node, '8.8.0')) {
     const http2 = require('http2');
     HTTP2_HEADER_METHOD = http2.constants.HTTP2_HEADER_METHOD;
     HTTP2_HEADER_PATH = http2.constants.HTTP2_HEADER_PATH;
