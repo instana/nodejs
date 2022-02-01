@@ -42,7 +42,6 @@
     "monitoring",
     "opentracing",
     "performance",
-    "sensor",
     "tracing"
   ],
   "contributors": [
