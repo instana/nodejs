@@ -5,18 +5,34 @@
 
 'use strict';
 
+require('./mockVersion');
 require('../../../../')();
 
-const SubscriptionClient = require('subscriptions-transport-ws').SubscriptionClient;
-const WebSocketLink = require('apollo-link-ws').WebSocketLink;
 const amqp = require('amqplib');
 const bodyParser = require('body-parser');
-const execute = require('apollo-link').execute;
 const express = require('express');
 const morgan = require('morgan');
 const rp = require('request-promise');
 const { v4: uuid } = require('uuid');
 const ws = require('ws');
+
+/**
+ * See
+ *
+ * https://github.com/apollographql/apollo-server/issues/6058
+ * https://www.apollographql.com/docs/apollo-server/data/subscriptions/#the-graphql-ws-transport-library
+ * https://github.com/apollographql/apollo-server/
+ *    blob/apollo-server-express%402.24.1/packages/apollo-server-core/src/ApolloServer.ts#L39
+ *    blob/apollo-server-express%402.24.1/packages/apollo-server-core/src/ApolloServer.ts#L898
+ *
+ * Subscriptions no longer working from GraphQL v15 using subscriptions-transport-ws
+ * Furtermore subscriptions-transport-ws is no longer maintained
+ *
+ * We no longer test against Node 8, because graphql-ws has no support for it
+ * But if you want to test something on GraphQL v14 + Node 8, you can use:
+ * https://github.com/instana/nodejs/tree/v1.137.5/packages/collector/test/tracing/protocols/graphql
+ */
+const { createClient } = require('graphql-ws');
 
 const serverPort = process.env.SERVER_PORT || 3217;
 const serverBaseUrl = `http://127.0.0.1:${serverPort}`;
@@ -206,6 +222,7 @@ function runMutation(req, res, input) {
       }
     }
   `;
+
   return rp({
     method: 'POST',
     url: serverGraphQLEndpoint,
@@ -227,46 +244,35 @@ function runMutation(req, res, input) {
 }
 
 function establishSubscription(req, res) {
-  const subscribeQuery = `
-    subscription onCharacterUpdated($id: ID!) {
-      characterUpdated(id: $id) {
-        id
-        name
-        profession
-      }
-    }
-  `;
-
-  const subscriptionClient = createSubscriptionObservable(serverWsGraphQLUrl, subscribeQuery, {
-    id: req.query.id || 1
+  const client = createClient({
+    url: serverWsGraphQLUrl,
+    webSocketImpl: ws
   });
-  subscriptionClient.subscribe(
-    eventData => {
-      if (process.send) {
-        process.send(`character updated: ${JSON.stringify(eventData)}`);
-      }
+
+  client.subscribe(
+    {
+      query: 'subscription onCharacterUpdated { characterUpdated (id: "1") { id name profession } }'
     },
-    err => {
-      if (process.send) {
-        process.send(`character updated error: ${JSON.stringify(err)}`);
+    {
+      next: data => {
+        if (process.send) {
+          process.send(`character updated: ${JSON.stringify(data)}`);
+        }
+      },
+      error: err => {
+        if (process.send) {
+          process.send(`character updated error: ${err.message}`);
+        }
       }
     }
   );
+
   res.sendStatus(204);
 }
 
 app.listen(port, () => {
   log(`Listening on port ${port} (downstream server port: ${serverPort}).`);
 });
-
-function createSubscriptionObservable(webSocketUrl, query, variables) {
-  const webSocketClient = new SubscriptionClient(webSocketUrl, { reconnect: true }, ws);
-  const webSocketLink = new WebSocketLink(webSocketClient);
-  return execute(webSocketLink, {
-    query,
-    variables
-  });
-}
 
 function log() {
   const args = Array.prototype.slice.call(arguments);

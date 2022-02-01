@@ -24,135 +24,155 @@ const globalAgent = require('../../../globalAgent');
 
 const agentControls = globalAgent.instance;
 
-const mochaSuiteFn =
-  !supportedVersion(process.versions.node) || semver.lt(process.versions.node, '8.5.0') ? describe.skip : describe;
+const skipNodeVersion = {
+  // graphql-ws is not compatible with Node 8
+  14: semver.lt(process.versions.node, '10.0.0'),
+  15: semver.lt(process.versions.node, '10.0.0'),
+  16: semver.lt(process.versions.node, '12.0.0')
+};
 
-mochaSuiteFn('tracing/graphql', function () {
+describe('tracing/graphql', function () {
   this.timeout(config.getTestTimeout() * 2);
 
-  globalAgent.setUpCleanUpHooks();
+  [14, 15, 16].forEach(graphqlVersion => {
+    if (!supportedVersion(process.versions.node) || skipNodeVersion[graphqlVersion]) {
+      return;
+    }
 
-  describe('raw GraphQL', () => {
-    const { serverControls, clientControls } = createProcesses(false);
+    describe(`${graphqlVersion}`, () => {
+      globalAgent.setUpCleanUpHooks();
 
-    registerAllQuerySuiteVariations(serverControls, clientControls, false, 'http');
-    registerAllQuerySuiteVariations(serverControls, clientControls, false, 'amqp');
-    registerMutationSuite(serverControls, clientControls, false);
-    registerSubscriptionOperationNotTracedSuite(serverControls, clientControls, false);
-  });
+      describe('raw GraphQL', () => {
+        const { serverControls, clientControls } = createProcesses(false, graphqlVersion);
 
-  describe('Apollo', () => {
-    const { serverControls, clientControls } = createProcesses(true);
-    registerAllQuerySuiteVariations(serverControls, clientControls, true, 'http');
-    registerMutationSuite(serverControls, clientControls, true);
-    registerSubscriptionOperationNotTracedSuite(serverControls, clientControls, true);
-  });
+        registerAllQuerySuiteVariations(serverControls, clientControls, false, 'http');
+        registerAllQuerySuiteVariations(serverControls, clientControls, false, 'amqp');
+        registerMutationSuite(serverControls, clientControls, false);
+        registerSubscriptionOperationNotTracedSuite(serverControls, clientControls, false);
+      });
 
-  ['http', 'graphql'].forEach(triggerUpdateVia =>
-    registerSubscriptionUpdatesAreTracedSuite.bind(this)(triggerUpdateVia)
-  );
+      describe('Apollo', () => {
+        const { serverControls, clientControls } = createProcesses(true, graphqlVersion);
+        registerAllQuerySuiteVariations(serverControls, clientControls, true, 'http');
+        registerMutationSuite(serverControls, clientControls, true);
+        registerSubscriptionOperationNotTracedSuite(serverControls, clientControls, true);
+      });
 
-  registerSubscriptionUpdatesCorrectParentSpanSuite('http');
+      ['http', 'graphql'].forEach(triggerUpdateVia =>
+        registerSubscriptionUpdatesAreTracedSuite.bind(this)(triggerUpdateVia, graphqlVersion)
+      );
 
-  describe('suppressed', () => {
-    const { clientControls } = createProcesses(true);
-    it('should not trace when suppressed', () =>
-      clientControls
-        .sendRequest({
-          method: 'POST',
-          path: '/value',
-          headers: {
-            'X-INSTANA-L': '0'
-          }
-        })
-        .then(response => {
-          checkQueryResponse('value', false, false, response);
-          return delay(config.getTestTimeout() / 4);
-        })
-        .then(() =>
-          agentControls.getSpans().then(spans => {
-            expect(spans).to.have.lengthOf(0);
-          })
-        ));
-  });
+      registerSubscriptionUpdatesCorrectParentSpanSuite('http', graphqlVersion);
 
-  describe('disabled', () => {
-    const serverControls = new ProcessControls({
-      appPath: path.join(__dirname, 'rawGraphQLServer'),
-      port: 3217,
-      useGlobalAgent: true,
-      tracingEnabled: false
-    });
-    const clientControls = new ProcessControls({
-      appPath: path.join(__dirname, 'client'),
-      port: 3216,
-      useGlobalAgent: true,
-      tracingEnabled: false,
-      env: {
-        SERVER_PORT: serverControls.port
-      }
-    });
+      describe('suppressed', () => {
+        const { clientControls } = createProcesses(true, graphqlVersion);
 
-    ProcessControls.setUpHooks(serverControls, clientControls);
-
-    it('should not trace when disabled', () =>
-      clientControls
-        .sendRequest({
-          method: 'POST',
-          path: '/value'
-        })
-        .then(response => {
-          checkQueryResponse('value', false, false, response);
-          return delay(config.getTestTimeout() / 4);
-        })
-        .then(() =>
-          agentControls.getSpans().then(spans => {
-            expect(spans).to.have.lengthOf(0);
-          })
-        ));
-  });
-
-  describe('individually disabled', () => {
-    const serverControls = new ProcessControls({
-      appPath: path.join(__dirname, 'rawGraphQLServer'),
-      port: 3217,
-      useGlobalAgent: true,
-      env: {
-        INSTANA_DISABLED_TRACERS: 'graphQL'
-      }
-    });
-    const clientControls = new ProcessControls({
-      appPath: path.join(__dirname, 'client'),
-      port: 3216,
-      useGlobalAgent: true,
-      env: {
-        SERVER_PORT: serverControls.port
-      }
-    });
-
-    ProcessControls.setUpHooks(serverControls, clientControls);
-
-    it('should not trace graphql when that tracer is disabled individually but still trace all other calls', () =>
-      clientControls
-        .sendRequest({
-          method: 'POST',
-          path: '/value'
-        })
-        .then(response => {
-          checkQueryResponse('value', false, false, response);
-          return retry(() =>
-            agentControls.getSpans().then(spans => {
-              const httpEntryInClientApp = verifyHttpEntry(null, /\/value/, spans);
-              const httpExitInClientApp = verifyHttpExit(httpEntryInClientApp, /\/graphql/, spans);
-              const httpEntryInServerApp = verifyHttpEntry(httpExitInClientApp, /\/graphql/, spans);
-              verifyFollowUpLogExit(httpEntryInServerApp, 'value', spans);
-              // No graphql span has been recorded but graphql since we have explicitly disabled graphql tracing, but
-              // processing has worked (as we have verified via checkQueryResponse).
-              expect(getSpansByName(spans, 'graphql.server')).to.be.empty;
-              expect(getSpansByName(spans, 'graphql.client')).to.be.empty;
+        it('should not trace when suppressed', () =>
+          clientControls
+            .sendRequest({
+              method: 'POST',
+              path: '/value',
+              headers: {
+                'X-INSTANA-L': '0'
+              }
             })
-          );
-        }));
+            .then(response => {
+              checkQueryResponse('value', false, false, response);
+              return delay(config.getTestTimeout() / 4);
+            })
+            .then(() =>
+              agentControls.getSpans().then(spans => {
+                expect(spans).to.have.lengthOf(0);
+              })
+            ));
+      });
+
+      describe('disabled', () => {
+        const serverControls = new ProcessControls({
+          appPath: path.join(__dirname, 'rawGraphQLServer'),
+          port: 3217,
+          useGlobalAgent: true,
+          tracingEnabled: false,
+          env: {
+            GRAPHQL_VERSION: graphqlVersion
+          }
+        });
+        const clientControls = new ProcessControls({
+          appPath: path.join(__dirname, 'client'),
+          port: 3216,
+          useGlobalAgent: true,
+          tracingEnabled: false,
+          env: {
+            SERVER_PORT: serverControls.port,
+            GRAPHQL_VERSION: graphqlVersion
+          }
+        });
+
+        ProcessControls.setUpHooks(serverControls, clientControls);
+
+        it('should not trace when disabled', () =>
+          clientControls
+            .sendRequest({
+              method: 'POST',
+              path: '/value'
+            })
+            .then(response => {
+              checkQueryResponse('value', false, false, response);
+              return delay(config.getTestTimeout() / 4);
+            })
+            .then(() =>
+              agentControls.getSpans().then(spans => {
+                expect(spans).to.have.lengthOf(0);
+              })
+            ));
+      });
+
+      describe('individually disabled', () => {
+        const serverControls = new ProcessControls({
+          appPath: path.join(__dirname, 'rawGraphQLServer'),
+          port: 3217,
+          useGlobalAgent: true,
+          env: {
+            INSTANA_DISABLED_TRACERS: 'graphQL',
+            GRAPHQL_VERSION: graphqlVersion
+          }
+        });
+        const clientControls = new ProcessControls({
+          appPath: path.join(__dirname, 'client'),
+          port: 3216,
+          useGlobalAgent: true,
+          env: {
+            SERVER_PORT: serverControls.port,
+            GRAPHQL_VERSION: graphqlVersion
+          }
+        });
+
+        ProcessControls.setUpHooks(serverControls, clientControls);
+
+        it('should not trace graphql when that tracer is disabled individually but still trace all other calls', () =>
+          clientControls
+            .sendRequest({
+              method: 'POST',
+              path: '/value'
+            })
+            .then(response => {
+              checkQueryResponse('value', false, false, response);
+              return retry(() =>
+                agentControls.getSpans().then(spans => {
+                  const httpEntryInClientApp = verifyHttpEntry(null, /\/value/, spans);
+                  const httpExitInClientApp = verifyHttpExit(httpEntryInClientApp, /\/graphql/, spans);
+                  const httpEntryInServerApp = verifyHttpEntry(httpExitInClientApp, /\/graphql/, spans);
+                  verifyFollowUpLogExit(httpEntryInServerApp, 'value', spans);
+                  // No graphql span has been recorded but graphql since we have explicitly
+                  // disabled graphql tracing, but
+                  // processing has worked (as we have verified via checkQueryResponse).
+                  expect(getSpansByName(spans, 'graphql.server')).to.be.empty;
+                  expect(getSpansByName(spans, 'graphql.client')).to.be.empty;
+                })
+              );
+            }));
+      });
+    });
   });
 });
 
@@ -182,6 +202,7 @@ function registerQuerySuite(
     `${queryShorthand ? 'query shorthand' : 'no query shorthand'}, ` +
     `${useAlias ? 'alias' : 'no alias'}, ` +
     `over ${communicationProtocol})`;
+
   describe(`queries ${titleSuffix}`, function () {
     it(`must trace a query with a value resolver ${titleSuffix}`, () => testQuery('value'));
 
@@ -210,6 +231,7 @@ function registerQuerySuite(
       .join('&');
 
     const url = queryParams ? `/${resolverType}?${queryParams}` : `/${resolverType}`;
+
     return clientControls
       .sendRequest({
         method: 'POST',
@@ -277,18 +299,23 @@ function registerSubscriptionOperationNotTracedSuite(serverControls, clientContr
   }
 }
 
-function createProcesses(apollo) {
+function createProcesses(apollo, version) {
   const serverControls = new ProcessControls({
     appPath: path.join(__dirname, apollo ? 'apolloServer' : 'rawGraphQLServer'),
     port: 3217,
-    useGlobalAgent: true
+    useGlobalAgent: true,
+    env: {
+      GRAPHQL_VERSION: version
+    }
   });
+
   const clientControls = new ProcessControls({
     appPath: path.join(__dirname, 'client'),
     port: 3216,
     useGlobalAgent: true,
     env: {
-      SERVER_PORT: serverControls.port
+      SERVER_PORT: serverControls.port,
+      GRAPHQL_VERSION: version
     }
   });
 
@@ -297,12 +324,15 @@ function createProcesses(apollo) {
   return { serverControls, clientControls };
 }
 
-function registerSubscriptionUpdatesAreTracedSuite(triggerUpdateVia) {
+function registerSubscriptionUpdatesAreTracedSuite(triggerUpdateVia, version) {
   describe(`subscriptions (via: ${triggerUpdateVia})`, function () {
     const serverControls = new ProcessControls({
       appPath: path.join(__dirname, 'apolloServer'),
       port: 3217,
-      useGlobalAgent: true
+      useGlobalAgent: true,
+      env: {
+        GRAPHQL_VERSION: version
+      }
     });
     // client 1
     const clientControls1 = new ProcessControls({
@@ -310,7 +340,8 @@ function registerSubscriptionUpdatesAreTracedSuite(triggerUpdateVia) {
       port: 3216,
       useGlobalAgent: true,
       env: {
-        SERVER_PORT: serverControls.port
+        SERVER_PORT: serverControls.port,
+        GRAPHQL_VERSION: version
       }
     });
     // client 2
@@ -319,7 +350,8 @@ function registerSubscriptionUpdatesAreTracedSuite(triggerUpdateVia) {
       useGlobalAgent: true,
       port: 3226,
       env: {
-        SERVER_PORT: serverControls.port
+        SERVER_PORT: serverControls.port,
+        GRAPHQL_VERSION: version
       }
     });
 
@@ -367,7 +399,7 @@ function registerSubscriptionUpdatesAreTracedSuite(triggerUpdateVia) {
   }
 }
 
-function registerSubscriptionUpdatesCorrectParentSpanSuite(triggerUpdateVia) {
+function registerSubscriptionUpdatesCorrectParentSpanSuite(triggerUpdateVia, version) {
   // This test is currently disabled because it describes a known issue. When the application under monitoring receives
   // multiple concurrent requests with GraphQL mutations, and if there are subscribed clients, all graphql.client/ spans
   // (which represent the subscription update calls from the GraphQL server to the subscribed clients) are
@@ -376,14 +408,18 @@ function registerSubscriptionUpdatesCorrectParentSpanSuite(triggerUpdateVia) {
     const serverControls = new ProcessControls({
       appPath: path.join(__dirname, 'apolloServer'),
       port: 3217,
-      useGlobalAgent: true
+      useGlobalAgent: true,
+      env: {
+        GRAPHQL_VERSION: version
+      }
     });
     const clientControls = new ProcessControls({
       appPath: path.join(__dirname, 'client'),
       port: 3216,
       useGlobalAgent: true,
       env: {
-        SERVER_PORT: serverControls.port
+        SERVER_PORT: serverControls.port,
+        GRAPHQL_VERSION: version
       }
     });
 
