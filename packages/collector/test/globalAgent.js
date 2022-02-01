@@ -21,7 +21,6 @@ const { AgentStubControls } = require('./apps/agentStubControls');
 // test-suite-ports.md. All packages that want to use the global agent need to declare the port they use here.
 const agentPorts = {
   '@instana/collector': 3211,
-  'instana-nodejs-sensor': 5211,
   '@instana/shared-metrics': 7211
 };
 
