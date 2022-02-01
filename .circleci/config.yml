@@ -60,9 +60,6 @@ shared: &shared
           - v{{ .Environment.CACHE_VERSION }}-google-cloud-run-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "packages/google-cloud-run/package-lock.json" }}
     - restore_cache:
         keys:
-          - v{{ .Environment.CACHE_VERSION }}-legacy-sensor-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "packages/legacy-sensor/package-lock.json" }}
-    - restore_cache:
-        keys:
           - v{{ .Environment.CACHE_VERSION }}-metrics-util-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "packages/metrics-util/package-lock.json" }}
     - restore_cache:
         keys:
@@ -120,10 +117,6 @@ shared: &shared
         paths:
           - packages/google-cloud-run/node_modules
         key: v{{ .Environment.CACHE_VERSION }}-google-cloud-run-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "packages/google-cloud-run/package-lock.json" }}
-    - save_cache:
-        paths:
-          - packages/legacy-sensor/node_modules
-        key: v{{ .Environment.CACHE_VERSION }}-legacy-sensor-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "packages/legacy-sensor/package-lock.json" }}
     - save_cache:
         paths:
           - packages/metrics-util/node_modules
@@ -195,7 +188,6 @@ shared: &shared
           cp packages/collector/core.* /tmp/core_dumps || :
           cp packages/core/core.* /tmp/core_dumps || :
           cp packages/google-cloud-run/core.* /tmp/core_dumps || :
-          cp packages/legacy-sensor/core.* /tmp/core_dumps || :
           cp packages/metrics-util/core.* /tmp/core_dumps || :
           cp packages/serverless/core.* /tmp/core_dumps || :
           cp packages/shared-metrics/core.* /tmp/core_dumps || :
