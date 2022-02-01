@@ -21,8 +21,8 @@ const serverPort = 3217;
 
 const mochaSuiteFn =
   supportedVersion(process.versions.node) &&
-  // HTTP2 support was added in Node.js 8.4.0
-  // semver.gte(process.versions.node, '8.4.0') &&
+  // HTTP2 support was added in Node.js 8.4.0 behind the flag --expose-http2 and exposed in 8.8.0 without a flag.
+  // semver.gte(process.versions.node, '8.8.0') &&
   // The http2 module seems to trigger spurious segfaults on Node.js 8, so we skip these tests in Node.js 8.
   // alltogether.
   semver.gte(process.versions.node, '10.0.0')
