@@ -1,6 +1,6 @@
 {
   "name": "instana-google-cloud-run-docker-image",
-  "version": "VERSION",
+  "version": "SELF_VERSION",
   "description": "Provides @instana/google-cloud-run as an image for multi stage Dockerfiles",
   "repository": {
     "type": "git",
@@ -9,6 +9,6 @@
   "author": "Bastian Krol <bastian.krol@instana.com>",
   "license": "ISC",
   "dependencies": {
-    "@instana/google-cloud-run": "VERSION"
+    "@instana/google-cloud-run": "INSTANA_GOOGLE_CLOUD_RUN_VERSION"
   }
 }
