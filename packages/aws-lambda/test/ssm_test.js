@@ -96,12 +96,50 @@ describe('Unit: ssm library', () => {
               Value: 'instana-value'
             }
           });
-        }, 200);
+        }, 100);
       });
 
       expect(ssm.init({ logger: { debug: sinon.stub() } })).to.be.undefined;
 
       expect(getParameterMock.callCount).to.equal(1);
+      expect(getParameterMock.getCall(0).args[0]).to.eql({
+        Name: 'hello instana agent key',
+        WithDecryption: false
+      });
+
+      const interval = ssm.waitAndGetInstanaKey((err, value) => {
+        expect(err).to.be.null;
+        expect(value).to.equal('instana-value');
+        callback();
+      });
+
+      expect(interval).to.exist;
+    });
+
+    it('[with decryption] should fetch aws ssm value if ssm env is set', callback => {
+      process.env.INSTANA_SSM_PARAM_NAME = 'hello instana agent key';
+      process.env.INSTANA_SSM_DECRYPTION = 'true';
+
+      ssm.validate();
+      expect(ssm.isUsed()).to.be.true;
+
+      getParameterMock.callsFake((params, cb) => {
+        setTimeout(() => {
+          cb(null, {
+            Parameter: {
+              Value: 'instana-value'
+            }
+          });
+        }, 50);
+      });
+
+      expect(ssm.init({ logger: { debug: sinon.stub() } })).to.be.undefined;
+
+      expect(getParameterMock.callCount).to.equal(1);
+      expect(getParameterMock.getCall(0).args[0]).to.eql({
+        Name: 'hello instana agent key',
+        WithDecryption: true
+      });
 
       const interval = ssm.waitAndGetInstanaKey((err, value) => {
         expect(err).to.be.null;

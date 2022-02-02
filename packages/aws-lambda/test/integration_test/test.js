@@ -75,6 +75,9 @@ function prelude(opts) {
   if (opts.instanaAgentKeyViaSSM) {
     env.INSTANA_SSM_PARAM_NAME = opts.instanaAgentKeyViaSSM;
   }
+  if (opts.instanaSSMDecryption) {
+    env.INSTANA_SSM_DECRYPTION = opts.instanaSSMDecryption;
+  }
   // INSTANA_KEY/instanaKey is deprecated and will be removed before GA - use INSTANA_AGENT_KEY/instanaAgentKey
   if (opts.instanaKey) {
     env.INSTANA_KEY = opts.instanaKey;
@@ -250,6 +253,135 @@ function registerTests(handlerDefinitionPath) {
           }
 
           callback();
+        });
+      });
+
+      it('must capture metrics and spans', () =>
+        verify(control, { error: false, expectMetrics: true, expectSpans: true }));
+    });
+
+    describe('[with decryption] error', () => {
+      const AWS = require('aws-sdk');
+      let kmsKeyId;
+
+      // - INSTANA_ENDPOINT_URL is configured
+      // - INSTANA_AGENT_KEY is configured via SSM
+      // - back end is reachable
+      // - lambda function ends with success
+      const control = prelude.bind(this)({
+        handlerDefinitionPath,
+        instanaEndpointUrl: backendBaseUrl,
+        instanaAgentKeyViaSSM: '/Nodejstest/MyAgentKeyEncrypted'
+      });
+
+      after(callback => {
+        const kms = new AWS.KMS({ region: awsRegion });
+        kms.scheduleKeyDeletion(
+          {
+            KeyId: kmsKeyId,
+            PendingWindowInDays: 7
+          },
+          kmsErr => {
+            if (kmsErr) {
+              throw new Error(`Cannot remove KMS key: ${kmsErr.message}`);
+            }
+
+            callback();
+          }
+        );
+      });
+
+      before(callback => {
+        const ssm = new AWS.SSM({ region: awsRegion });
+        const kms = new AWS.KMS({ region: awsRegion });
+
+        kms.createKey({}, (kmsErr, data) => {
+          if (kmsErr) {
+            throw new Error(`Cannot set KMS key: ${kmsErr.message}`);
+          }
+
+          kmsKeyId = data.KeyMetadata.KeyId;
+
+          const params = {
+            Name: '/Nodejstest/MyAgentKeyEncrypted',
+            Value: instanaAgentKey,
+            Type: 'SecureString',
+            KeyId: kmsKeyId,
+            Overwrite: true
+          };
+
+          ssm.putParameter(params, ssmErr => {
+            if (ssmErr) {
+              throw new Error(`Cannot set SSM parameter store value: ${ssmErr.message}`);
+            }
+
+            callback();
+          });
+        });
+      });
+
+      it('must not capture metrics and spans', () =>
+        verify(control, { error: false, expectMetrics: false, expectSpans: false }));
+    });
+
+    describe('[with decryption] succeeds', () => {
+      const AWS = require('aws-sdk');
+      let kmsKeyId;
+
+      // - INSTANA_ENDPOINT_URL is configured
+      // - INSTANA_AGENT_KEY is configured via SSM
+      // - back end is reachable
+      // - lambda function ends with success
+      const control = prelude.bind(this)({
+        handlerDefinitionPath,
+        instanaEndpointUrl: backendBaseUrl,
+        instanaAgentKeyViaSSM: '/Nodejstest/MyAgentKeyEncrypted',
+        instanaSSMDecryption: true
+      });
+
+      after(callback => {
+        const kms = new AWS.KMS({ region: awsRegion });
+        kms.scheduleKeyDeletion(
+          {
+            KeyId: kmsKeyId,
+            PendingWindowInDays: 7
+          },
+          kmsErr => {
+            if (kmsErr) {
+              throw new Error(`Cannot remove KMS key: ${kmsErr.message}`);
+            }
+
+            callback();
+          }
+        );
+      });
+
+      before(callback => {
+        const ssm = new AWS.SSM({ region: awsRegion });
+        const kms = new AWS.KMS({ region: awsRegion });
+
+        kms.createKey({}, (kmsErr, data) => {
+          if (kmsErr) {
+            throw new Error(`Cannot set KMS key: ${kmsErr.message}`);
+          }
+
+          kmsKeyId = data.KeyMetadata.KeyId;
+
+          const params = {
+            Name: '/Nodejstest/MyAgentKeyEncrypted',
+            Value: instanaAgentKey,
+            Type: 'SecureString',
+            KeyId: kmsKeyId,
+            Overwrite: true
+          };
+
+          ssm.putParameter(params, ssmErr => {
+            if (ssmErr) {
+              throw new Error(`Cannot set SSM parameter store value: ${ssmErr.message}`);
+            }
+
+            callback();
+          });
         });
       });
 

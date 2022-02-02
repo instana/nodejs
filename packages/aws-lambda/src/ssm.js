@@ -5,6 +5,7 @@
 'use strict';
 
 const ENV_NAME = 'INSTANA_SSM_PARAM_NAME';
+const ENV_DECRYPTION = 'INSTANA_SSM_DECRYPTION';
 let fetchedValue = null;
 let envValue = null;
 let errorFromAWS = null;
@@ -60,9 +61,12 @@ module.exports.init = ({ logger }) => {
     const ssm = new AWS.SSM({ region: process.env.AWS_REGION });
     const params = {
       Name: envValue,
-      // See https://docs.aws.amazon.com/cli/latest/reference/ssm/get-parameter.html#options
-      // We always expect a string here. Never a decrypt
-      WithDecryption: false
+      /**
+       * See https://docs.aws.amazon.com/cli/latest/reference/ssm/get-parameter.html#options
+       * The value in the parameter store was either created with type "string" or "safestring"
+       * A "safestring" uses a KMS key to encrypt/decrypt the value in the store.
+       */
+      WithDecryption: process.env[ENV_DECRYPTION] === 'true'
     };
 
     logger.debug(`INSTANA_SSM_PARAM_NAME is ${envValue}.`);
@@ -72,9 +76,14 @@ module.exports.init = ({ logger }) => {
         errorFromAWS = `Error from AWS-SDK SSM Parameter Store: ${err.message}`;
       } else {
         try {
-          fetchedValue = data.Parameter.Value;
-          errorFromAWS = null;
-          logger.debug(`INSTANA AGENT KEY: ${fetchedValue}`);
+          // CASE: Customer created key with decryption KMS key, but does not tell us
+          if (data.Parameter.Type === 'SecureString' && process.env[ENV_DECRYPTION] !== 'true') {
+            errorFromAWS = 'SSM Key is a SecureString. Please pass INSTANA_SSM_DECRYPTION=true';
+          } else {
+            fetchedValue = data.Parameter.Value;
+            errorFromAWS = null;
+            logger.debug(`INSTANA AGENT KEY: ${fetchedValue}`);
+          }
         } catch (readError) {
           errorFromAWS = `Could not read returned response from AWS-SDK SSM Parameter Store: ${readError.message}`;
         }
