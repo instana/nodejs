@@ -1,6 +1,5 @@
 /*
- * (c) Copyright IBM Corp. 2021
- * (c) Copyright Instana Inc. and contributors 2019
+ * (c) Copyright IBM Corp. 2022
  */
 
 'use strict';
@@ -11,15 +10,14 @@ const expect = require('chai').expect;
 const ssm = require('../src/ssm');
 
 let getParameterMock;
-let awsUpdateConfigMock;
 
 describe('Unit: ssm library', () => {
   before(() => {
-    process.env.INSTANA_LAMBDA_SSM_TIMEOUT_IN_MS = 500;
+    process.env.AWS_REGION = 'a-region';
   });
   after(() => {
+    delete process.env.AWS_REGION;
     delete process.env.INSTANA_LAMBDA_SSM_TIMEOUT_IN_MS;
-    delete process.env.INSTANA_LAMBDA_SSM_AWS_TIMEOUT_IN_MS;
   });
   afterEach(() => {
     delete process.env.INSTANA_SSM_PARAM_NAME;
@@ -28,23 +26,23 @@ describe('Unit: ssm library', () => {
 
   it('should return false if ssm env is not set', () => {
     expect(ssm.validate()).to.be.false;
+    expect(ssm.isUsed()).to.be.false;
   });
   it('should env value if ssm env is set', () => {
     process.env.INSTANA_SSM_PARAM_NAME = 'hello instana agent key';
-    expect(ssm.validate()).to.equal('hello instana agent key');
+    expect(ssm.validate()).to.be.true;
+    expect(ssm.getValue()).to.equal('hello instana agent key');
+    expect(ssm.isUsed()).to.be.true;
   });
 
   describe('init & waitAndGetInstanaKey', () => {
     beforeEach(() => {
       getParameterMock = sinon.stub();
-      awsUpdateConfigMock = sinon.stub();
 
       mock('aws-sdk', {
-        config: {
-          update: awsUpdateConfigMock
-        },
         // eslint-disable-next-line object-shorthand
-        SSM: function () {
+        SSM: function (opts) {
+          expect(opts).to.eql({ region: 'a-region' });
           return { getParameter: getParameterMock };
         }
       });
@@ -58,39 +56,35 @@ describe('Unit: ssm library', () => {
       ssm.validate();
       expect(ssm.init({ logger: sinon.stub() })).to.be.undefined;
       expect(ssm.isUsed()).to.be.false;
-
-      const AWS = require('aws-sdk');
-      expect(AWS.config.update.callCount).to.equal(0);
-      expect(new AWS.SSM().getParameter.callCount).to.equal(0);
+      expect(getParameterMock.callCount).to.equal(0);
     });
 
     it('validate & init timeout difference is too high', callback => {
-      const AWS = require('aws-sdk');
-
       process.env.INSTANA_SSM_PARAM_NAME = 'hello instana agent key';
-      process.env.INSTANA_LAMBDA_SSM_AWS_TIMEOUT_IN_MS = 500;
 
       ssm.validate();
 
-      expect(ssm.init({ logger: { debug: sinon.stub() } })).to.be.undefined;
+      expect(ssm.init({ logger: { debug: sinon.stub(), warn: sinon.stub() } })).to.be.undefined;
 
-      expect(new AWS.SSM().getParameter.callCount).to.equal(1);
-      expect(AWS.config.update.callCount).to.equal(1);
+      expect(getParameterMock.callCount).to.equal(1);
+
+      expect(getParameterMock.getCall(0).args[0]).to.eql({
+        Name: 'hello instana agent key',
+        WithDecryption: false
+      });
 
       setTimeout(() => {
         const interval = ssm.waitAndGetInstanaKey((err, value) => {
-          expect(err).to.equal('Stopped waiting for AWS SSM response.');
+          expect(err).to.equal('Stopped waiting for AWS SSM response after 1000ms.');
           expect(value).to.be.undefined;
           callback();
         });
 
         expect(interval).to.be.undefined;
-      }, 800);
+      }, 1200);
     });
 
     it('should fetch aws ssm value if ssm env is set', callback => {
-      const AWS = require('aws-sdk');
-
       process.env.INSTANA_SSM_PARAM_NAME = 'hello instana agent key';
       ssm.validate();
       expect(ssm.isUsed()).to.be.true;
@@ -107,8 +101,7 @@ describe('Unit: ssm library', () => {
 
       expect(ssm.init({ logger: { debug: sinon.stub() } })).to.be.undefined;
 
-      expect(new AWS.SSM().getParameter.callCount).to.equal(1);
-      expect(AWS.config.update.callCount).to.equal(1);
+      expect(getParameterMock.callCount).to.equal(1);
 
       const interval = ssm.waitAndGetInstanaKey((err, value) => {
         expect(err).to.be.null;
@@ -120,9 +113,9 @@ describe('Unit: ssm library', () => {
     });
 
     it('should fetch aws ssm value if ssm env is set, but timeout kicks in', callback => {
-      const AWS = require('aws-sdk');
-
       process.env.INSTANA_SSM_PARAM_NAME = 'hello instana agent key';
+      process.env.INSTANA_LAMBDA_SSM_TIMEOUT_IN_MS = '500';
+
       ssm.validate();
       expect(ssm.isUsed()).to.be.true;
 
@@ -138,8 +131,7 @@ describe('Unit: ssm library', () => {
 
       expect(ssm.init({ logger: { debug: sinon.stub() } })).to.be.undefined;
 
-      expect(new AWS.SSM().getParameter.callCount).to.equal(1);
-      expect(AWS.config.update.callCount).to.equal(1);
+      expect(getParameterMock.callCount).to.equal(1);
 
       const interval = ssm.waitAndGetInstanaKey((err, value) => {
         expect(err).to.equal(

@@ -105,7 +105,7 @@ function _validate(instanaEndpointUrl, _instanaAgentKey, validateInstanaAgentKey
   instanaAgentKey = _instanaAgentKey;
 
   /**
-   * process.env.INSTANA_AGENT_KEY is stronger than any fallback strategy
+   * process.env.INSTANA_AGENT_KEY has priority over any fallback strategy
    * That means for the whole system: if there is no process.env.INSTANA_AGENT_KEY
    * and the fallback strategy won't work either, we skip sending data to the BE.
    */

@@ -53,7 +53,7 @@ function prelude(opts) {
     INSTANA_EXTRA_HTTP_HEADERS:
       'x-request-header-1; X-REQUEST-HEADER-2 ; x-response-header-1;X-RESPONSE-HEADER-2 , x-downstream-header  ',
     AWS_REGION: awsRegion,
-    INSTANA_LAMBDA_SSM_TIMEOUT_IN_MS: 500,
+    INSTANA_LAMBDA_SSM_TIMEOUT_IN_MS: '500',
     ...opts.env
   };
   if (opts.error) {
@@ -236,9 +236,7 @@ function registerTests(handlerDefinitionPath) {
 
       before(callback => {
         const AWS = require('aws-sdk');
-        AWS.config.update({ region: awsRegion });
-
-        const ssm = new AWS.SSM();
+        const ssm = new AWS.SSM({ region: awsRegion });
         const params = {
           Name: '/Nodejstest/MyAgentKey',
           Value: instanaAgentKey,

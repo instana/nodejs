@@ -1,14 +1,13 @@
 /*
  * (c) Copyright IBM Corp. 2022
- * (c) Copyright Instana Inc. and contributors 2022
  */
 
 'use strict';
 
 const ENV_NAME = 'INSTANA_SSM_PARAM_NAME';
-let fetchedValue;
-let envValue;
-let errorFromAWS;
+let fetchedValue = null;
+let envValue = null;
+let errorFromAWS = null;
 let initTimeoutInMs = 0;
 
 module.exports.reset = () => {
@@ -19,11 +18,9 @@ module.exports.reset = () => {
 };
 
 module.exports.isUsed = () => !!envValue;
+module.exports.getValue = () => envValue;
 
 module.exports.validate = () => {
-  // NOTE: Always reset the env value, we do not wanne cache, because it might change
-  envValue = null;
-
   const _envValue = process.env[ENV_NAME];
 
   if (!_envValue || !_envValue.length) {
@@ -31,8 +28,7 @@ module.exports.validate = () => {
   }
 
   envValue = _envValue;
-
-  return envValue;
+  return true;
 };
 
 module.exports.init = ({ logger }) => {
@@ -57,13 +53,11 @@ module.exports.init = ({ logger }) => {
      * Your code runs in an environment that includes the AWS SDK for JavaScript,
      * with credentials from an AWS Identity and Access Management (IAM) role that you manage.
      */
-    // eslint-disable-next-line
+    // eslint-disable-next-line instana/no-unsafe-require, import/no-extraneous-dependencies
     AWS = require('aws-sdk');
 
     // https://docs.aws.amazon.com/lambda/latest/dg/configuration-envvars.html
-    AWS.config.update({ region: process.env.AWS_REGION });
-
-    const ssm = new AWS.SSM();
+    const ssm = new AWS.SSM({ region: process.env.AWS_REGION });
     const params = {
       Name: envValue,
       // See https://docs.aws.amazon.com/cli/latest/reference/ssm/get-parameter.html#options
@@ -95,7 +89,7 @@ module.exports.init = ({ logger }) => {
   }
 };
 
-exports.waitAndGetInstanaKey = callback => {
+module.exports.waitAndGetInstanaKey = callback => {
   // CASE: We already fetched the SSM value, skip & save time
   if (fetchedValue) {
     return callback(null, fetchedValue);
@@ -106,10 +100,12 @@ exports.waitAndGetInstanaKey = callback => {
   }
 
   const endInMs = Date.now();
+  const awsTimeoutInMs = 1000;
+
   // CASE: the time between ssm lib initialisation and waitAndGetInstanaKey call
   //       (which is the end of the customers lambda handler) is already too big to wait for the AWS response
-  if (endInMs - initTimeoutInMs > (process.env.INSTANA_LAMBDA_SSM_AWS_TIMEOUT_IN_MS || 1000)) {
-    return callback('Stopped waiting for AWS SSM response.');
+  if (endInMs - initTimeoutInMs > awsTimeoutInMs) {
+    return callback(`Stopped waiting for AWS SSM response after ${awsTimeoutInMs}ms.`);
   }
 
   /**
@@ -119,7 +115,18 @@ exports.waitAndGetInstanaKey = callback => {
    *
    * In our tests it takes usually ~>150ms (remote call)
    */
-  const stopIntervalAfterMs = process.env.INSTANA_LAMBDA_SSM_TIMEOUT_IN_MS || 150;
+  let stopIntervalAfterMs = 250;
+  let ssmTimeOutEnv = process.env.INSTANA_LAMBDA_SSM_TIMEOUT_IN_MS;
+
+  if (ssmTimeOutEnv && ssmTimeOutEnv.length > 0) {
+    ssmTimeOutEnv = Number(ssmTimeOutEnv);
+
+    // NOTE: Customer could set the timeout higher than the lambda timeout, but that is up to him
+    if (!isNaN(ssmTimeOutEnv)) {
+      stopIntervalAfterMs = ssmTimeOutEnv;
+    }
+  }
+
   const start = Date.now();
 
   const waiting = setInterval(() => {
