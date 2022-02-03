@@ -6,8 +6,11 @@
 'use strict';
 
 const { environment: environmentUtil } = require('@instana/serverless');
+const ssm = require('./ssm');
 
-environmentUtil.validate();
+environmentUtil.validate({
+  validateInstanaAgentKey: ssm.validate
+});
 
 if (environmentUtil.isValid()) {
   module.exports = exports = require('./wrapper');

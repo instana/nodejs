@@ -6,7 +6,6 @@
 'use strict';
 
 const semver = require('semver');
-
 const logger = require('./console_logger');
 
 let Url;
@@ -39,10 +38,11 @@ exports.sendUnencrypted = process.env[exports.sendUnencryptedEnvVar] === 'true';
 
 const customZone = process.env[instanaZoneEnvVar] ? process.env[instanaZoneEnvVar] : undefined;
 
-exports.validate = function validate() {
+exports.validate = function validate({ validateInstanaAgentKey } = {}) {
   _validate(
     process.env[instanaEndpointUrlEnvVar] || process.env[deprecatedInstanaUrlEnvVar],
-    process.env[instanaAgentKeyEnvVar] || process.env[deprecatedInstanaKeyEnvVar]
+    process.env[instanaAgentKeyEnvVar] || process.env[deprecatedInstanaKeyEnvVar],
+    validateInstanaAgentKey
   );
 };
 
@@ -53,7 +53,7 @@ exports._reset = function _reset() {
   backendPort = null;
 };
 
-function _validate(instanaEndpointUrl, _instanaAgentKey) {
+function _validate(instanaEndpointUrl, _instanaAgentKey, validateInstanaAgentKey) {
   logger.debug(`${instanaEndpointUrlEnvVar}: ${instanaEndpointUrl}`);
 
   if (!instanaEndpointUrl) {
@@ -104,15 +104,26 @@ function _validate(instanaEndpointUrl, _instanaAgentKey) {
 
   instanaAgentKey = _instanaAgentKey;
 
+  /**
+   * process.env.INSTANA_AGENT_KEY has priority over any fallback strategy
+   * That means for the whole system: if there is no process.env.INSTANA_AGENT_KEY
+   * and the fallback strategy won't work either, we skip sending data to the BE.
+   */
   if (!instanaAgentKey || instanaAgentKey.length === 0) {
-    logger.warn(`The environment variable ${instanaAgentKeyEnvVar} is not set. No data will be reported to Instana.`);
-    return;
+    const result = validateInstanaAgentKey ? validateInstanaAgentKey() : null;
+
+    if (!result) {
+      logger.warn(`The environment variable ${instanaAgentKeyEnvVar} is not set. No data will be reported to Instana.`);
+      return;
+    }
+  } else {
+    logger.debug(`INSTANA AGENT KEY: ${instanaAgentKey}`);
   }
 
   logger.debug(`INSTANA ENDPOINT HOST: ${backendHost}`);
   logger.debug(`INSTANA ENDPOINT PORT: ${backendPort}`);
   logger.debug(`INSTANA ENDPOINT PATH: ${backendPath}`);
-  logger.debug(`INSTANA AGENT KEY: ${instanaAgentKey}`);
+
   valid = true;
 }
 
@@ -134,6 +145,10 @@ exports.getBackendPath = function getBackendPath() {
 
 exports.getInstanaAgentKey = function getInstanaAgentKey() {
   return instanaAgentKey;
+};
+
+exports.setInstanaAgentKey = function setInstanaAgentKey(key) {
+  instanaAgentKey = key;
 };
 
 exports.getCustomZone = function getCustomZone() {

@@ -17,8 +17,9 @@ const retry = require('../../../serverless/test/util/retry');
 
 const { fail } = expect;
 
+const awsRegion = 'us-east-2';
 const functionName = 'functionName';
-const unqualifiedArn = `arn:aws:lambda:us-east-2:410797082306:function:${functionName}`;
+const unqualifiedArn = `arn:aws:lambda:${awsRegion}:410797082306:function:${functionName}`;
 const version = '$LATEST';
 const qualifiedArn = `${unqualifiedArn}:${version}`;
 
@@ -35,14 +36,15 @@ const instanaAgentKey = 'aws-lambda-dummy-key';
   'legacy_api',
   'promise'
 ].forEach(lambdaType => {
-  describe(`aws/lambda/${lambdaType}`, () =>
-    registerTests.bind(this)(path.join(__dirname, '..', 'lambdas', lambdaType)));
+  describe(`aws/lambda/${lambdaType}`, function () {
+    this.timeout(config.getTestTimeout());
+    this.slow(config.getTestTimeout() / 4);
+
+    return registerTests.bind(this)(path.join(__dirname, '..', 'lambdas', lambdaType));
+  });
 });
 
 function prelude(opts) {
-  this.timeout(config.getTestTimeout());
-  this.slow(config.getTestTimeout() / 4);
-
   if (opts.startBackend == null) {
     opts.startBackend = true;
   }
@@ -50,6 +52,8 @@ function prelude(opts) {
   const env = {
     INSTANA_EXTRA_HTTP_HEADERS:
       'x-request-header-1; X-REQUEST-HEADER-2 ; x-response-header-1;X-RESPONSE-HEADER-2 , x-downstream-header  ',
+    AWS_REGION: awsRegion,
+    INSTANA_LAMBDA_SSM_TIMEOUT_IN_MS: '500',
     ...opts.env
   };
   if (opts.error) {
@@ -67,6 +71,12 @@ function prelude(opts) {
   }
   if (opts.instanaAgentKey) {
     env.INSTANA_AGENT_KEY = opts.instanaAgentKey;
+  }
+  if (opts.instanaAgentKeyViaSSM) {
+    env.INSTANA_SSM_PARAM_NAME = opts.instanaAgentKeyViaSSM;
+  }
+  if (opts.instanaSSMDecryption) {
+    env.INSTANA_SSM_DECRYPTION = opts.instanaSSMDecryption;
   }
   // INSTANA_KEY/instanaKey is deprecated and will be removed before GA - use INSTANA_AGENT_KEY/instanaAgentKey
   if (opts.instanaKey) {
@@ -198,6 +208,186 @@ function registerTests(handlerDefinitionPath) {
 
     it('must capture metrics and spans', () =>
       verify(control, { error: false, expectMetrics: true, expectSpans: true, alias: 'anAlias' }));
+  });
+
+  describe('when INSTANA_SSM_PARAM_NAME is used', function () {
+    describe('but we cannot fetch the key from AWS', () => {
+      // - INSTANA_ENDPOINT_URL is configured
+      // - INSTANA_AGENT_KEY is configured via SSM
+      // - back end is reachable
+      // - lambda function ends with success
+      const control = prelude.bind(this)({
+        handlerDefinitionPath,
+        instanaEndpointUrl: backendBaseUrl,
+        instanaAgentKeyViaSSM: '/Nodejstest/MyAgentKeyMissing'
+      });
+
+      it('must not capture metrics and spans', () =>
+        verify(control, { error: false, expectMetrics: false, expectSpans: false }));
+    });
+
+    describe('and it succeeds', () => {
+      // - INSTANA_ENDPOINT_URL is configured
+      // - INSTANA_AGENT_KEY is configured via SSM
+      // - back end is reachable
+      // - lambda function ends with success
+      const control = prelude.bind(this)({
+        handlerDefinitionPath,
+        instanaEndpointUrl: backendBaseUrl,
+        instanaAgentKeyViaSSM: '/Nodejstest/MyAgentKey'
+      });
+
+      before(callback => {
+        const AWS = require('aws-sdk');
+        const ssm = new AWS.SSM({ region: awsRegion });
+        const params = {
+          Name: '/Nodejstest/MyAgentKey',
+          Value: instanaAgentKey,
+          Type: 'String',
+          Overwrite: true
+        };
+
+        ssm.putParameter(params, err => {
+          if (err) {
+            throw new Error(`Cannot set SSM parameter store value: ${err.message}`);
+          }
+
+          callback();
+        });
+      });
+
+      it('must capture metrics and spans', () =>
+        verify(control, { error: false, expectMetrics: true, expectSpans: true }));
+    });
+
+    describe('[with decryption] error', () => {
+      const AWS = require('aws-sdk');
+      let kmsKeyId;
+
+      // - INSTANA_ENDPOINT_URL is configured
+      // - INSTANA_AGENT_KEY is configured via SSM
+      // - back end is reachable
+      // - lambda function ends with success
+      const control = prelude.bind(this)({
+        handlerDefinitionPath,
+        instanaEndpointUrl: backendBaseUrl,
+        instanaAgentKeyViaSSM: '/Nodejstest/MyAgentKeyEncrypted'
+      });
+
+      after(callback => {
+        const kms = new AWS.KMS({ region: awsRegion });
+        kms.scheduleKeyDeletion(
+          {
+            KeyId: kmsKeyId,
+            PendingWindowInDays: 7
+          },
+          kmsErr => {
+            if (kmsErr) {
+              throw new Error(`Cannot remove KMS key: ${kmsErr.message}`);
+            }
+
+            callback();
+          }
+        );
+      });
+
+      before(callback => {
+        const ssm = new AWS.SSM({ region: awsRegion });
+        const kms = new AWS.KMS({ region: awsRegion });
+
+        kms.createKey({}, (kmsErr, data) => {
+          if (kmsErr) {
+            throw new Error(`Cannot set KMS key: ${kmsErr.message}`);
+          }
+
+          kmsKeyId = data.KeyMetadata.KeyId;
+
+          const params = {
+            Name: '/Nodejstest/MyAgentKeyEncrypted',
+            Value: instanaAgentKey,
+            Type: 'SecureString',
+            KeyId: kmsKeyId,
+            Overwrite: true
+          };
+
+          ssm.putParameter(params, ssmErr => {
+            if (ssmErr) {
+              throw new Error(`Cannot set SSM parameter store value: ${ssmErr.message}`);
+            }
+
+            callback();
+          });
+        });
+      });
+
+      it('must not capture metrics and spans', () =>
+        verify(control, { error: false, expectMetrics: false, expectSpans: false }));
+    });
+
+    describe('[with decryption] succeeds', () => {
+      const AWS = require('aws-sdk');
+      let kmsKeyId;
+
+      // - INSTANA_ENDPOINT_URL is configured
+      // - INSTANA_AGENT_KEY is configured via SSM
+      // - back end is reachable
+      // - lambda function ends with success
+      const control = prelude.bind(this)({
+        handlerDefinitionPath,
+        instanaEndpointUrl: backendBaseUrl,
+        instanaAgentKeyViaSSM: '/Nodejstest/MyAgentKeyEncrypted',
+        instanaSSMDecryption: true
+      });
+
+      after(callback => {
+        const kms = new AWS.KMS({ region: awsRegion });
+        kms.scheduleKeyDeletion(
+          {
+            KeyId: kmsKeyId,
+            PendingWindowInDays: 7
+          },
+          kmsErr => {
+            if (kmsErr) {
+              throw new Error(`Cannot remove KMS key: ${kmsErr.message}`);
+            }
+
+            callback();
+          }
+        );
+      });
+
+      before(callback => {
+        const ssm = new AWS.SSM({ region: awsRegion });
+        const kms = new AWS.KMS({ region: awsRegion });
+
+        kms.createKey({}, (kmsErr, data) => {
+          if (kmsErr) {
+            throw new Error(`Cannot set KMS key: ${kmsErr.message}`);
+          }
+
+          kmsKeyId = data.KeyMetadata.KeyId;
+
+          const params = {
+            Name: '/Nodejstest/MyAgentKeyEncrypted',
+            Value: instanaAgentKey,
+            Type: 'SecureString',
+            KeyId: kmsKeyId,
+            Overwrite: true
+          };
+
+          ssm.putParameter(params, ssmErr => {
+            if (ssmErr) {
+              throw new Error(`Cannot set SSM parameter store value: ${ssmErr.message}`);
+            }
+
+            callback();
+          });
+        });
+      });
+
+      it('must capture metrics and spans', () =>
+        verify(control, { error: false, expectMetrics: true, expectSpans: true }));
+    });
   });
 
   describe('when deprecated env var keys are used', function () {
