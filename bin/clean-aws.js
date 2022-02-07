@@ -18,6 +18,7 @@ const dynamoDbInfo = {
   listFunction: 'listTables',
   listProperty: 'TableNames',
   criteria: 'nodejs-table-',
+  limit: 50,
   attributesFunction: 'describeTable',
   getAttributesParams(item) {
     return { TableName: item };
@@ -187,6 +188,14 @@ function cleanupOldItems(apiInfo, applyChanges = false) {
     .then(items => {
       if (items.length > 0) {
         if (applyChanges) {
+          if (apiInfo.limit && items.length > apiInfo.limit) {
+            console.log(
+              `There are ${items.length} items eligible for deletion but the AWS service in question is limited to delete ${apiInfo.limit} at once. I am going to delete ${apiInfo.limit} right now. Run the script again to delete more.`
+            );
+            // arbitrarily delete all item after position apiInfo.limit
+            items.splice(apiInfo.limit);
+          }
+
           const promises = items.map(itemName => {
             return apiInfo.preConditionPromise(itemName).then(() => {
               return apiInfo.api[apiInfo.deleteFunction](apiInfo.getDeleteAttributes(itemName)).promise();
@@ -194,13 +203,14 @@ function cleanupOldItems(apiInfo, applyChanges = false) {
           });
           Promise.all(promises)
             .then(data => {
-              console.log('All items cleaned', data);
+              console.log(`${items.length} items have been deleted:`, items);
             })
             .catch(err => {
-              console.log('Error deleting items', err);
+              console.log(`Found ${items.length} items to delete:`, items);
+              console.log(`Error deleting ${items.length} items:`, err);
             });
         } else {
-          console.log('[DRY RUN] Would have deleted', items.length, items);
+          console.log(`[DRY RUN] Would have deleted ${items.length} items:`, items);
         }
       } else {
         console.log('No items to delete');
@@ -221,12 +231,13 @@ const argsOptions = {
 const optionsArray = Object.keys(argsOptions);
 const args = process.argv.slice(2).map(arg => arg.toLocaleLowerCase());
 
-if (!optionsArray.includes(args[0]) || args.length === 0) {
+const awsService = args[0]?.toLowerCase();
+if (!optionsArray.includes(awsService) || args.length === 0) {
   console.log('****************************************************************************');
   console.log(`Valid commands are clean-aws.js [${optionsArray.join(' | ')}] [dry=false]`);
   console.log('eg: ./bin/clean-aws.js s3');
   console.log('Nothing will be deleted until you provide the `dry=false` option');
   console.log('****************************************************************************');
 } else {
-  cleanupOldItems(argsOptions[args[0]], args[1] === 'dry=false');
+  cleanupOldItems(argsOptions[awsService], args[1] === 'dry=false');
 }
