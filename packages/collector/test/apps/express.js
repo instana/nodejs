@@ -12,7 +12,9 @@
 const instana = require('../../')({
   agentPort: process.env.AGENT_PORT,
   tracing: {
-    timeBetweenHealthcheckCalls: 1000,
+    metrics: {
+      timeBetweenHealthcheckCalls: 1000
+    },
     enabled: process.env.TRACING_ENABLED !== 'false',
     forceTransmissionStartingAt: 1,
     stackTraceLength: process.env.STACK_TRACE_LENGTH != null ? parseInt(process.env.STACK_TRACE_LENGTH, 10) : 10
