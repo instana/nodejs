@@ -163,6 +163,17 @@ shared: &shared
     # error.
     - run: npm run lint
 
+      # Clean up old left over AWS resources from earlier test runs (created more more than 24 hours ago):
+    - run: |
+        ([[ ! $(node -v) =~ ^v16.*$ ]] || \
+          ( \
+            bin/clean-aws.js s3 dry=false && \
+             bin/clean-aws.js dynamodb dry=false && \
+             bin/clean-aws.js sqs dry=false && \
+             bin/clean-aws.js kinesis dry=false \
+          ) \
+        )
+
     # Run the test suites.
     # (Use ulimit to remove the file size limit on core dump files before running tests.)
     # The ci_glob_setup.sh script designates which files should be tested in each CircleCI process.
