@@ -83,13 +83,6 @@ describe('util.normalizeConfig', () => {
       }
     });
     expect(config.metrics.timeBetweenHealthcheckCalls).to.equal(9876);
-    expect(config.timeBetweenHealthcheckCalls).to.not.exist;
-  });
-
-  it('should use legacy config.timeBetweenHealthcheckCalls', () => {
-    const config = normalizeConfig({ timeBetweenHealthcheckCalls: 1234 });
-    expect(config.metrics.timeBetweenHealthcheckCalls).to.equal(1234);
-    expect(config.timeBetweenHealthcheckCalls).to.not.exist;
   });
 
   it('should disable tracing', () => {
