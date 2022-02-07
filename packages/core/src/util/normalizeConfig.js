@@ -156,13 +156,8 @@ function normalizeMetricsConfig(config) {
     'INSTANA_METRICS_TRANSMISSION_DELAY'
   );
 
-  // The correct location for this is config.metrics.timeBetweenHealthcheckCalls but previous versions accepted
-  // config.timeBetweenHealthcheckCalls. We still accept that to not break applications relying on that.
   config.metrics.timeBetweenHealthcheckCalls =
-    config.metrics.timeBetweenHealthcheckCalls ||
-    config.timeBetweenHealthcheckCalls ||
-    defaults.metrics.timeBetweenHealthcheckCalls;
-  delete config.timeBetweenHealthcheckCalls;
+    config.metrics.timeBetweenHealthcheckCalls || defaults.metrics.timeBetweenHealthcheckCalls;
 }
 
 /**
