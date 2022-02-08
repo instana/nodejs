@@ -29,5 +29,11 @@ module.exports = function retry(fn, time, until) {
 
   return delay(time / 20)
     .then(fn)
-    .catch(() => retry(fn, time, until));
+    .catch(err => {
+      if (err.name === 'AssertionError') {
+        throw err;
+      }
+
+      retry(fn, time, until);
+    });
 };
