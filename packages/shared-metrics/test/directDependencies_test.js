@@ -9,8 +9,11 @@ const expect = require('chai').expect;
 
 const testUtils = require('@instana/core/test/test_util');
 const directDependencies = require('../src/directDependencies');
+const config = require('../../serverless/test/config');
 
-describe('metrics.directDependencies', () => {
+describe('metrics.directDependencies', function () {
+  this.timeout(config.getTestTimeout());
+
   it('should use the correct payload prefix', () => {
     expect(directDependencies.payloadPrefix).to.equal('directDependencies');
   });
