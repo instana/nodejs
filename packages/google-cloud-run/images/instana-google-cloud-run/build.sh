@@ -5,6 +5,9 @@
 # (c) Copyright Instana Inc. and contributors 2020
 #######################################
 
+# This is a local script for testing the images.
+# We use serverless/ci/pipeline.yml to publish the images. 
+
 set -eo pipefail
 
 cd `dirname $BASH_SOURCE`
