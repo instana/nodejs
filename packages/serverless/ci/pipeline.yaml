@@ -47,7 +47,8 @@ resources:
       repository: icr.io/instana/aws-fargate-nodejs
       username: ((concourse-icr-containers-public.apikey))
       password: ((concourse-icr-containers-public.password))
-      tag: latest
+      # NOTE: Deliberately omitting `tag: latest` here on the branch for 1.x so
+      # we do not accidentally tag 1.x image versions with `latest`.
 
   - name: aws-fargate-nodejs-image-cii
     type: registry-image
@@ -56,7 +57,8 @@ resources:
       repository: containers.instana.io/instana/release/aws/fargate/nodejs
       username: ((containers-instana-io-creds.username))
       password: ((containers-instana-io-creds.password))
-      tag: latest
+      # NOTE: Deliberately omitting `tag: latest` here on the branch for 1.x so
+      # we do not accidentally tag 1.x image versions with `latest`.
 
   - name: instana-google-cloud-run-npm-package
     type: npm-resource
@@ -74,7 +76,8 @@ resources:
       repository: icr.io/instana/google-cloud-run-nodejs
       username: ((concourse-icr-containers-public.apikey))
       password: ((concourse-icr-containers-public.password))
-      tag: latest
+      # NOTE: Deliberately omitting `tag: latest` here on the branch for 1.x so
+      # we do not accidentally tag 1.x image versions with `latest`.
 
   - name: google-cloud-run-nodejs-image-cii
     type: registry-image
@@ -83,7 +86,8 @@ resources:
       repository: containers.instana.io/instana/release/google/cloud-run/nodejs
       username: ((containers-instana-io-creds.username))
       password: ((containers-instana-io-creds.password))
-      tag: latest
+      # NOTE: Deliberately omitting `tag: latest` here on the branch for 1.x so
+      # we do not accidentally tag 1.x image versions with `latest`.
 
   - name: instana-aws-lambda-npm-package
     type: npm-resource
@@ -151,6 +155,7 @@ jobs:
       - put: aws-fargate-nodejs-image-icr
         params:
           image: image/image.tar
+          # In fact, on the branch for 1.x, this will be the only tag, not an _additional_ tag.
           additional_tags: instana-aws-fargate-npm-package/version
         get_params:
           skip_download: true
@@ -158,6 +163,7 @@ jobs:
       - put: aws-fargate-nodejs-image-cii
         params:
           image: image/image.tar
+          # In fact, on the branch for 1.x, this will be the only tag, not an _additional_ tag.
           additional_tags: instana-aws-fargate-npm-package/version
         get_params:
           skip_download: true
@@ -214,12 +220,14 @@ jobs:
       - put: google-cloud-run-nodejs-image-icr
         params:
           image: image/image.tar
+          # In fact, on the branch for 1.x, this will be the only tag, not an _additional_ tag.
           additional_tags: instana-google-cloud-run-npm-package/version
         get_params:
           skip_download: true
       - put: google-cloud-run-nodejs-image-cii
         params:
           image: image/image.tar
+          # In fact, on the branch for 1.x, this will be the only tag, not an _additional_ tag.
           additional_tags: instana-google-cloud-run-npm-package/version
         get_params:
           skip_download: true
