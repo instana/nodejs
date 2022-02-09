@@ -315,6 +315,9 @@ jobs:
             - bash
             - -ceux
             - |
+                # Passing in PACKAGE_VERSION=1 will use the latest 1.x package and also avoid tagging the resulting
+                # container image as latest.
+                PACKAGE_VERSION=1 \
                 BUILD_LAYER_WITH=npm \
                 CONTAINER_REGISTRY_USER=iamapikey \
                 CONTAINER_REGISTRY_PASSWORD=((concourse-icr-containers-public.password)) \
