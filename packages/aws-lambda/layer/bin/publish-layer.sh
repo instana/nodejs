@@ -54,7 +54,11 @@ EOF
 
 cd `dirname $BASH_SOURCE`/..
 
-PACKAGE_NAMES="@instana/aws-lambda instana-aws-lambda-auto-wrap"
+if [[ -z $PACKAGE_VERSION ]]; then
+  PACKAGE_VERSION=latest
+fi
+
+PACKAGE_NAMES="@instana/aws-lambda@$PACKAGE_VERSION instana-aws-lambda-auto-wrap@$PACKAGE_VERSION"
 
 # The default layer name is instana-nodejs. If you want to push experimental changes under a different layer name, you
 # can provide the LAYER_NAME environment variable for that purpose. If you build the layer from your local source files
@@ -198,7 +202,7 @@ if [[ $BUILD_LAYER_WITH == local ]]; then
   rm -rf instana-core.tgz
 
 elif [[ $BUILD_LAYER_WITH == npm ]] || [[ -z $BUILD_LAYER_WITH ]]; then
-  echo "step 3/9: downloading latest packages from npm"
+  echo "step 3/9: downloading packages from npm (version $PACKAGE_VERSION)"
   npm install $PACKAGE_NAMES
 else
   echo "Invalid option for BUILD_LAYER_WITH: $BUILD_LAYER_WITH, terminating."
@@ -257,14 +261,22 @@ fi
 
 if [[ -z $SKIP_DOCKER_IMAGE ]]; then
   echo "step 7/9: building docker image for container image based Lambda layer"
-  docker build . -t "$DOCKER_IMAGE_NAME"
+  docker build . -t "$DOCKER_IMAGE_NAME:$VERSION"
+  if [[ $PACKAGE_VERSION == latest ]]; then
+    docker tag $DOCKER_IMAGE_NAME:$VERSION $DOCKER_IMAGE_NAME:latest
+  fi
+
   if [[ -z $SKIP_DOCKER_IMAGE_PUSH ]]; then
     echo "step 8/9: pushing docker image for container image based Lambda layer"
-    docker tag $DOCKER_IMAGE_NAME:latest $DOCKER_IMAGE_NAME:$VERSION
-    echo " - pushing Docker image $DOCKER_IMAGE_NAME:"
+    echo " - executing docker login:"
     docker login -u="$CONTAINER_REGISTRY_USER" -p="$CONTAINER_REGISTRY_PASSWORD" $CONTAINER_REGISTRY
-    docker push $DOCKER_IMAGE_NAME:latest
+    echo " - pushing Docker image $DOCKER_IMAGE_NAME:$VERSION now:"
     docker push $DOCKER_IMAGE_NAME:$VERSION
+    if [[ $PACKAGE_VERSION == latest ]]; then
+      echo " - pushing Docker image $DOCKER_IMAGE_NAME:latest now:"
+      docker push $DOCKER_IMAGE_NAME:latest
+    fi
+    echo " - executing docker logout:"
     docker logout $CONTAINER_REGISTRY
   else
     echo "step 8/9: pushing docker image (skipping)"
