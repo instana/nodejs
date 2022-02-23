@@ -53,7 +53,7 @@ const retryTime = config.getTestTimeout() * 2;
 
 const topic = 'rdkafka-topic';
 
-mochaSuiteFn('tracing/messaging/node-rdkafka', function () {
+mochaSuiteFn.only('tracing/messaging/node-rdkafka', function () {
   this.timeout(config.getTestTimeout() * 4);
 
   globalAgent.setUpCleanUpHooks();

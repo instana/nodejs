@@ -49,7 +49,7 @@ if (!supportedVersion(process.versions.node) || !kafkaAvroAllowedVersions) {
 const retryTime = config.getTestTimeout() * 2;
 const topic = 'kafka-avro-topic';
 
-mochaSuiteFn('tracing/messaging/kafka-avro', function () {
+mochaSuiteFn.only('tracing/messaging/kafka-avro', function () {
   this.timeout(config.getTestTimeout() * 4);
 
   globalAgent.setUpCleanUpHooks();

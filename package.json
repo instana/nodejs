@@ -49,6 +49,7 @@
     "version": "lerna clean --yes && lerna bootstrap --ignore-scripts -- --package-lock-only --no-audit && git add packages/*/package-lock.json"
   },
   "devDependencies": {
+    "kafka-avro": "^3.1.1",
     "@apollo/federation": "0.25.1",
     "@apollo/gateway": "0.46.0",
     "@aws-sdk/client-dynamodb": "3.44.0",
@@ -172,7 +173,7 @@
     "ws": "^7.5.6"
   },
   "optionalDependencies": {
-    "kafka-avro": "^3.1.1"
+
   },
   "config": {
     "commitizen": {

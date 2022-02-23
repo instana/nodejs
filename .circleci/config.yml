@@ -388,8 +388,8 @@ workflows:
   version: 2
   build:
     jobs:
-      - "node-16"
-      - "node-14"
-      - "node-12"
-      - "node-10"
+      # - "node-16"
+      # - "node-14"
+      # - "node-12"
+      # - "node-10"
       - "node-8"
