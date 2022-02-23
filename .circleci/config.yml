@@ -35,7 +35,7 @@ shared: &shared
 
     - restore_cache:
         keys:
-          - v{{ .Environment.CACHE_VERSION }}-root-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "package-lock.json" }}
+          - v{{ .Environment.CACHE_VERSION }}-root-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "package-lock.json" }}-nocache1
     - restore_cache:
         keys:
           - v{{ .Environment.CACHE_VERSION }}-autoprofile-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "packages/autoprofile/package-lock.json" }}
