@@ -37,9 +37,11 @@ const semver = require('semver');
  * that is appropriate for the version of on nodejs that is running.
  * Node 12.17 - 16.6 - uses native AsyncLocalStorage. See below:
  * There is a bug introduced in Node 16.7 which breaks Async LS: https://github.com/nodejs/node/issues/40693
+ * Async LS fix introduced in v17.2: https://github.com/nodejs/node/blob/master/doc/changelogs/CHANGELOG_V17.md#commits-5
+ * Async LS fix introduced in v16.14: https://github.com/nodejs/node/blob/master/doc/changelogs/CHANGELOG_V16.md#commits
  * Node >= v8 - uses native async-hooks
  */
-if (process && semver.satisfies(process.versions.node, '12.17 - 16.6')) {
+if (process && semver.satisfies(process.versions.node, '12.17 - 16.6 || ^16.14 || >=17.2')) {
   module.exports = require('./async_local_storage_context');
 } else {
   module.exports = require('./context');
