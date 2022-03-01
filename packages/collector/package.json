@@ -148,7 +148,6 @@
     "knex": "^0.95.11",
     "no-code2": "2.0.0",
     "opentracing": "^0.14.5",
-    "sequelize": "6.17.0",
     "typeorm": "^0.2.41"
   }
 }
