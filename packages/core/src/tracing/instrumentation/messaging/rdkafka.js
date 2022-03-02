@@ -39,7 +39,7 @@ function instrumentConsumer(module) {
   const className = 'KafkaConsumer';
   const originalKafkaConsumer = module[className];
 
-  module[className] = function () {
+  module[className] = function InstrumentedKafkaConsumer() {
     const that = new originalKafkaConsumer(...arguments);
     shimmer.wrap(that, 'emit', shimConsumerStreamEmit);
     return that;
@@ -216,6 +216,7 @@ function instrumentedEmit(ctx, originalEmit, originalArgs) {
         if (cls.tracingSuppressed()) {
           const headers = addTraceLevelSuppression(messageData.headers);
           messageData.headers = headers;
+          return originalEmit.apply(ctx, originalArgs);
         } else {
           let traceId;
           let parentSpanId;
@@ -292,8 +293,12 @@ function instrumentedEmit(ctx, originalEmit, originalArgs) {
             return originalEmit.apply(ctx, originalArgs);
           }
         }
+      } else {
+        return originalEmit.apply(ctx, originalArgs);
       }
     });
+  } else {
+    return originalEmit.apply(ctx, originalArgs);
   }
 }
 

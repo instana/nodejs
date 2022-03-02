@@ -60,43 +60,47 @@ mochaSuiteFn('tracing/messaging/node-rdkafka', function () {
   const agentControls = globalAgent.instance;
 
   describe('tracing enabled, no suppression', function () {
-    const producerControls = new ProcessControls({
-      appPath: path.join(__dirname, 'producer'),
-      port: 3216,
-      useGlobalAgent: true,
-      env: {
-        RDKAFKA_PRODUCER_DELIVERY_CB: getNextDeliveryCb()
-      }
-    });
-
-    ProcessControls.setUpHooksWithRetryTime(retryTime, producerControls);
-
-    consumerApiMethods.forEach(consumerMethod => {
-      describe(`consuming via ${consumerMethod} API`, () => {
-        const consumerControls = new ProcessControls({
-          appPath: path.join(__dirname, 'consumer'),
-          port: 3215,
+    producerEnableDeliveryCbOptions.forEach(deliveryCbEnabled => {
+      describe(`Producer ${deliveryCbEnabled === 'true' ? 'with' : 'without'} delivery callback enabled`, () => {
+        const producerControls = new ProcessControls({
+          appPath: path.join(__dirname, 'producer'),
+          port: 3216,
           useGlobalAgent: true,
           env: {
-            RDKAFKA_CONSUMER_AS_STREAM: consumerMethod === 'stream' ? 'true' : 'false'
+            RDKAFKA_PRODUCER_DELIVERY_CB: deliveryCbEnabled === 'true'
           }
         });
 
-        ProcessControls.setUpHooksWithRetryTime(retryTime, consumerControls);
+        ProcessControls.setUpHooksWithRetryTime(retryTime, producerControls);
 
-        producerApiMethods.forEach(producerMethod => {
-          [false, 'sender'].forEach(withError => {
-            const apiPath = `/produce/${producerMethod}`;
-            const urlWithParams = withError ? apiPath + '?withError=true' : apiPath;
+        consumerApiMethods.forEach(consumerMethod => {
+          describe(`consuming via ${consumerMethod} API`, () => {
+            const consumerControls = new ProcessControls({
+              appPath: path.join(__dirname, 'consumer'),
+              port: 3215,
+              useGlobalAgent: true,
+              env: {
+                RDKAFKA_CONSUMER_AS_STREAM: consumerMethod === 'stream' ? 'true' : 'false'
+              }
+            });
 
-            it(`produces as ${producerMethod}; consumes as ${consumerMethod}; error: ${!!withError}`, async () => {
-              const response = await producerControls.sendRequest({
-                method: 'GET',
-                path: urlWithParams,
-                simple: withError !== 'sender'
+            ProcessControls.setUpHooksWithRetryTime(retryTime, consumerControls);
+
+            producerApiMethods.forEach(producerMethod => {
+              [false, 'sender'].forEach(withError => {
+                const apiPath = `/produce/${producerMethod}`;
+                const urlWithParams = withError ? apiPath + '?withError=true' : apiPath;
+
+                it(`produces(${producerMethod}); consumes(${consumerMethod}); error: ${!!withError}`, async () => {
+                  const response = await producerControls.sendRequest({
+                    method: 'GET',
+                    path: urlWithParams,
+                    simple: withError !== 'sender'
+                  });
+
+                  return verify(consumerControls, producerControls, response, apiPath, withError);
+                });
               });
-
-              return verify(consumerControls, producerControls, response, apiPath, withError);
             });
           });
         });
