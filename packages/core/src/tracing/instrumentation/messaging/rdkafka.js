@@ -96,7 +96,7 @@ function shimConsumerStreamEmit(originalEmit) {
       return originalEmit.apply(this, originalArgs);
     }
 
-    return instrumentedEmit(this, originalEmit, originalArgs);
+    return instrumentedConsumerEmit(this, originalEmit, originalArgs);
   };
 }
 
@@ -200,7 +200,7 @@ function removeInstanaHeadersFromMessage(messageData) {
   }
 }
 
-function instrumentedEmit(ctx, originalEmit, originalArgs) {
+function instrumentedConsumerEmit(ctx, originalEmit, originalArgs) {
   let [event, eventData] = originalArgs;
 
   /**
@@ -279,7 +279,7 @@ function instrumentedEmit(ctx, originalEmit, originalArgs) {
             return originalEmit.apply(ctx, originalArgs);
           }
           const span = cls.startSpan('kafka', constants.ENTRY, traceId, parentSpanId);
-          span.stack = tracingUtil.getStackTrace(instrumentedEmit, 1);
+          span.stack = tracingUtil.getStackTrace(instrumentedConsumerEmit, 1);
           span.data.kafka = {
             access: 'consume',
             service: messageData.topic
