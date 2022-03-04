@@ -4,6 +4,12 @@ import { UsersService, UserCreationParams } from './userService';
 
 @Route('api/users')
 export class UsersController extends Controller {
+  @SuccessResponse('200', 'Created') // Custom success response
+  @Get('/auth-error')
+  @Security('yyy')
+  public async authError(): Promise<void> {
+    return;
+  }
   @Get('{userId}')
   @Security('xxx')
   public async getUser(@Path() userId: number, @Query() name?: string): Promise<User> {

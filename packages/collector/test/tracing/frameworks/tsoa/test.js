@@ -14,7 +14,7 @@ const testUtils = require('../../../../../core/test/test_util');
 const ProcessControls = require('../../../test_util/ProcessControls');
 const globalAgent = require('../../../globalAgent');
 
-const mochaSuiteFn = supportedVersion(process.versions.node) ? describe.only : describe.skip;
+const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
 mochaSuiteFn('tracing/tsoa', function () {
   this.timeout(config.getTestTimeout());
@@ -94,6 +94,29 @@ mochaSuiteFn('tracing/tsoa', function () {
                 span => expect(span.k).to.equal(constants.ENTRY),
                 span => expect(span.data.http.status).to.equal(400),
                 span => expect(span.data.http.path_tpl).to.equal('/api/users')
+              ]);
+            })
+          )
+        );
+    });
+
+    it('exists although there was an auth error', () => {
+      const requestOptions = {
+        method: 'GET',
+        path: '/api/users/auth-error'
+      };
+
+      return controls
+        .sendRequest(requestOptions)
+        .catch(() => Promise.resolve())
+        .then(() =>
+          testUtils.retry(() =>
+            agentControls.getSpans().then(spans => {
+              testUtils.expectAtLeastOneMatching(spans, [
+                span => expect(span.n).to.equal('node.http.server'),
+                span => expect(span.k).to.equal(constants.ENTRY),
+                span => expect(span.data.http.status).to.equal(401),
+                span => expect(span.data.http.path_tpl).to.equal('/api/users/auth-error')
               ]);
             })
           )

@@ -22,6 +22,11 @@ exports.UsersController = void 0;
 const tsoa_1 = require("tsoa");
 const userService_1 = require("./userService");
 let UsersController = class UsersController extends tsoa_1.Controller {
+    authError() {
+        return __awaiter(this, void 0, void 0, function* () {
+            return;
+        });
+    }
     getUser(userId, name) {
         return __awaiter(this, void 0, void 0, function* () {
             return new userService_1.UsersService().get(userId, name);
@@ -42,6 +47,12 @@ let UsersController = class UsersController extends tsoa_1.Controller {
         });
     }
 };
+__decorate([
+    (0, tsoa_1.SuccessResponse)('200', 'Created') // Custom success response
+    ,
+    (0, tsoa_1.Get)('/auth-error'),
+    (0, tsoa_1.Security)('yyy')
+], UsersController.prototype, "authError", null);
 __decorate([
     (0, tsoa_1.Get)('{userId}'),
     (0, tsoa_1.Security)('xxx'),

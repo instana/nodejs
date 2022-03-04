@@ -76,6 +76,22 @@
 	},
 	"openapi": "3.0.0",
 	"paths": {
+		"/api/users/auth-error": {
+			"get": {
+				"operationId": "AuthError",
+				"responses": {
+					"200": {
+						"description": "Created"
+					}
+				},
+				"security": [
+					{
+						"yyy": []
+					}
+				],
+				"parameters": []
+			}
+		},
 		"/api/users/{userId}": {
 			"get": {
 				"operationId": "GetUser",

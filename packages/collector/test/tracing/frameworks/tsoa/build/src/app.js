@@ -14,14 +14,6 @@ exports.app.use(body_parser_1.default.urlencoded({
     extended: true
 }));
 exports.app.use(body_parser_1.default.json());
-exports.app.use(function errorHandler(err, req, res, next) {
-    if (err instanceof Error) {
-        return res.status(200).json({
-            message: 'error damn'
-        });
-    }
-    next();
-});
 exports.app.use(function anyMiddleware(req, res, next) {
     // NOTE: early exit in a middleware
     if (req.path === '/api/users/error/22') {
@@ -30,7 +22,16 @@ exports.app.use(function anyMiddleware(req, res, next) {
     }
     next();
 });
-(0, routes_1.RegisterRoutes)(exports.app);
 exports.app.get('/', (req, res) => {
     res.sendStatus(200);
+});
+(0, routes_1.RegisterRoutes)(exports.app);
+exports.app.use(function errorHandler(err, req, res, next) {
+    if (err instanceof Error) {
+        // @ts-expect-error
+        return res.status(err.status || 200).json({
+            message: 'error damn'
+        });
+    }
+    next();
 });
