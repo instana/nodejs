@@ -120,7 +120,7 @@ mochaSuiteFn('tracing/tsoa', function () {
               testUtils.expectAtLeastOneMatching(spans, [
                 span => expect(span.n).to.equal('node.http.server'),
                 span => expect(span.k).to.equal(constants.ENTRY),
-                span => expect(span.data.http.path_tpl).to.equal('/api/users/error/22'),
+                span => expect(span.data.http.path_tpl).to.not.exist,
                 span => expect(span.data.http.status).to.equal(200)
               ]);
             })
