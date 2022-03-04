@@ -208,98 +208,98 @@ function instrumentedEmit(ctx, originalEmit, originalArgs) {
     eventData = [eventData];
   }
 
-  if (isActive) {
-    eventData.forEach(messageData => {
-      const parentSpan = cls.getCurrentSpan();
+  if (!isActive) {
+    return originalEmit.apply(ctx, originalArgs);
+  }
 
-      if (!parentSpan) {
-        if (cls.tracingSuppressed()) {
-          const headers = addTraceLevelSuppression(messageData.headers);
-          messageData.headers = headers;
-          return originalEmit.apply(ctx, originalArgs);
-        } else {
-          let traceId;
-          let parentSpanId;
-          let level;
+  const parentSpan = cls.getCurrentSpan();
 
-          const instanaHeaders = (messageData.headers || []).filter(headerObject => {
-            const headerKey = Object.keys(headerObject)[0].toLowerCase();
-            return headerKey.indexOf('x_instana') > -1;
-          });
+  if (parentSpan) {
+    return originalEmit.apply(ctx, originalArgs);
+  }
 
-          // flatten array to object
-          const instanaHeadersAsObject = {};
+  eventData.forEach(messageData => {
+    if (cls.tracingSuppressed()) {
+      const headers = addTraceLevelSuppression(messageData.headers);
+      messageData.headers = headers;
+      return originalEmit.apply(ctx, originalArgs);
+    } else {
+      let traceId;
+      let parentSpanId;
+      let level;
 
-          instanaHeaders.forEach(instanaHeader => {
-            const key = Object.keys(instanaHeader)[0];
-            instanaHeadersAsObject[key] = instanaHeader[key];
-          });
+      const instanaHeaders = (messageData.headers || []).filter(headerObject => {
+        const headerKey = Object.keys(headerObject)[0].toLowerCase();
+        return headerKey.indexOf('x_instana') > -1;
+      });
 
-          if (instanaHeaders.length) {
-            // Look for the the newer string header format first.
-            if (instanaHeadersAsObject[constants.kafkaTraceIdHeaderNameString]) {
-              traceId = String(instanaHeadersAsObject[constants.kafkaTraceIdHeaderNameString]);
+      // flatten array to object
+      const instanaHeadersAsObject = {};
+
+      instanaHeaders.forEach(instanaHeader => {
+        const key = Object.keys(instanaHeader)[0];
+        instanaHeadersAsObject[key] = instanaHeader[key];
+      });
+
+      if (instanaHeaders.length) {
+        // Look for the the newer string header format first.
+        if (instanaHeadersAsObject[constants.kafkaTraceIdHeaderNameString]) {
+          traceId = String(instanaHeadersAsObject[constants.kafkaTraceIdHeaderNameString]);
+        }
+        if (instanaHeadersAsObject[constants.kafkaSpanIdHeaderNameString]) {
+          parentSpanId = String(instanaHeadersAsObject[constants.kafkaSpanIdHeaderNameString]);
+        }
+        if (instanaHeadersAsObject[constants.kafkaTraceLevelHeaderNameString]) {
+          level = String(instanaHeadersAsObject[constants.kafkaTraceLevelHeaderNameString]);
+        }
+
+        // Only fall back to legacy binary trace correlation headers if no new header is present.
+        if (traceId == null && parentSpanId == null && level == null) {
+          // The newer string header format has not been found, fall back to legacy binary headers.
+          if (instanaHeadersAsObject[constants.kafkaTraceContextHeaderNameBinary]) {
+            const traceContextBuffer = instanaHeadersAsObject[constants.kafkaTraceContextHeaderNameBinary];
+            if (Buffer.isBuffer(traceContextBuffer) && traceContextBuffer.length === 24) {
+              const traceContext = tracingUtil.readTraceContextFromBuffer(traceContextBuffer);
+              traceId = traceContext.t;
+              parentSpanId = traceContext.s;
             }
-            if (instanaHeadersAsObject[constants.kafkaSpanIdHeaderNameString]) {
-              parentSpanId = String(instanaHeadersAsObject[constants.kafkaSpanIdHeaderNameString]);
-            }
-            if (instanaHeadersAsObject[constants.kafkaTraceLevelHeaderNameString]) {
-              level = String(instanaHeadersAsObject[constants.kafkaTraceLevelHeaderNameString]);
-            }
-
-            // Only fall back to legacy binary trace correlation headers if no new header is present.
-            if (traceId == null && parentSpanId == null && level == null) {
-              // The newer string header format has not been found, fall back to legacy binary headers.
-              if (instanaHeadersAsObject[constants.kafkaTraceContextHeaderNameBinary]) {
-                const traceContextBuffer = instanaHeadersAsObject[constants.kafkaTraceContextHeaderNameBinary];
-                if (Buffer.isBuffer(traceContextBuffer) && traceContextBuffer.length === 24) {
-                  const traceContext = tracingUtil.readTraceContextFromBuffer(traceContextBuffer);
-                  traceId = traceContext.t;
-                  parentSpanId = traceContext.s;
-                }
-              }
-              level = readTraceLevelBinary(instanaHeadersAsObject);
-            }
-            removeInstanaHeadersFromMessage(messageData);
           }
+          level = readTraceLevelBinary(instanaHeadersAsObject);
+        }
+        removeInstanaHeadersFromMessage(messageData);
+      }
 
-          if (event === 'data' || event === 'error') {
-            cls.ns.runAndReturn(function () {
-              if (level !== '1') {
-                cls.setTracingLevel(level || '0');
-                return originalEmit.apply(ctx, originalArgs);
-              }
-              const span = cls.startSpan('kafka', constants.ENTRY, traceId, parentSpanId);
-              span.stack = tracingUtil.getStackTrace(instrumentedEmit, 1);
-              span.data.kafka = {
-                access: 'consume',
-                service: messageData.topic
-              };
-
-              if (event === 'error') {
-                delete messageData.headers;
-                span.ec = 1;
-                span.data.kafka.error = messageData.message;
-              }
-
-              setImmediate(() => {
-                span.d = Date.now() - span.ts;
-                span.transmit();
-              });
-
-              return originalEmit.apply(ctx, originalArgs);
-            });
-          } else {
+      if (event === 'data' || event === 'error') {
+        cls.ns.runAndReturn(function () {
+          if (level !== '1') {
+            cls.setTracingLevel(level || '0');
             return originalEmit.apply(ctx, originalArgs);
           }
-        }
+          const span = cls.startSpan('kafka', constants.ENTRY, traceId, parentSpanId);
+          span.stack = tracingUtil.getStackTrace(instrumentedEmit, 1);
+          span.data.kafka = {
+            access: 'consume',
+            service: messageData.topic
+          };
+
+          if (event === 'error') {
+            delete messageData.headers;
+            span.ec = 1;
+            span.data.kafka.error = messageData.message;
+          }
+
+          setImmediate(() => {
+            span.d = Date.now() - span.ts;
+            span.transmit();
+          });
+
+          return originalEmit.apply(ctx, originalArgs);
+        });
       } else {
         return originalEmit.apply(ctx, originalArgs);
       }
-    });
-  } else {
-    return originalEmit.apply(ctx, originalArgs);
-  }
+    }
+  });
 }
 
 function readTraceLevelBinary(instanaHeadersAsObject) {
