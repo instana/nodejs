@@ -38,6 +38,7 @@ let mochaSuiteFn;
 const producerEnableDeliveryCbOptions = ['true', 'false'];
 const producerApiMethods = ['standard', 'stream'];
 const consumerApiMethods = ['standard', 'stream'];
+const withErrorMethods = [false, 'bufferErrorSender', 'deliveryErrorSender'];
 
 const { getCircularList } = require('@instana/core/test/test_util/circular_list');
 const getNextProducerMethod = getCircularList(producerApiMethods);
@@ -83,19 +84,50 @@ mochaSuiteFn('tracing/messaging/node-rdkafka', function () {
                 RDKAFKA_CONSUMER_AS_STREAM: consumerMethod === 'stream' ? 'true' : 'false'
               }
             });
-
             ProcessControls.setUpHooksWithRetryTime(retryTime, consumerControls);
 
-            producerApiMethods.forEach(producerMethod => {
-              [false, 'sender'].forEach(withError => {
-                const apiPath = `/produce/${producerMethod}`;
-                const urlWithParams = withError ? apiPath + '?withError=true' : apiPath;
+            beforeEach(async () => {
+              if (consumerControls.getPid()) {
+                return;
+              }
 
-                it(`produces(${producerMethod}); consumes(${consumerMethod}); error: ${!!withError}`, async () => {
+              await consumerControls.startAndWaitForAgentConnection();
+            });
+
+            afterEach(async () => {
+              await consumerControls.kill();
+              consumerControls.clearIpcMessages();
+            });
+
+            producerApiMethods.forEach(producerMethod => {
+              withErrorMethods.forEach(withError => {
+                const apiPath = `/produce/${producerMethod}`;
+
+                // CASE: skip these combination because they do not work
+                if (
+                  (withError === 'deliveryErrorSender' && deliveryCbEnabled === 'false') ||
+                  (withError === 'deliveryErrorSender' && consumerMethod === 'stream') ||
+                  (withError === 'deliveryErrorSender' && producerMethod === 'stream')
+                ) {
+                  return;
+                }
+
+                it(`produces(${producerMethod}); consumes(${consumerMethod}); error: ${withError}`, async () => {
+                  let urlWithParams;
+
+                  if (withError === 'deliveryErrorSender') {
+                    urlWithParams = apiPath + '?throwDeliveryErr=true';
+
+                    await consumerControls.kill();
+                  } else if (withError === 'bufferErrorSender') {
+                    urlWithParams = apiPath + '?withError=true';
+                  } else {
+                    urlWithParams = apiPath;
+                  }
+
                   const response = await producerControls.sendRequest({
                     method: 'GET',
-                    path: urlWithParams,
-                    simple: withError !== 'sender'
+                    path: urlWithParams
                   });
 
                   return verify(consumerControls, producerControls, response, apiPath, withError);
@@ -109,25 +141,27 @@ mochaSuiteFn('tracing/messaging/node-rdkafka', function () {
   });
 
   function verify(_producerControls, _consumerControls, response, apiPath, withError) {
-    if (withError === 'sender') {
-      expect(response.error).to.equal('Message must be a buffer or null');
-    } else {
-      return retry(() => {
-        verifyResponseAndMessage(response, _producerControls);
+    return retry(() => {
+      verifyResponseAndMessage(response, _producerControls, withError);
 
-        return agentControls
-          .getSpans()
-          .then(spans => verifySpans(_producerControls, _consumerControls, spans, apiPath, null, withError));
-      }, retryTime);
-    }
+      return agentControls
+        .getSpans()
+        .then(spans => verifySpans(_producerControls, _consumerControls, spans, apiPath, null, withError));
+    }, retryTime);
   }
 
   function verifySpans(receiverControls, _senderControls, spans, apiPath, messageId, withError) {
     const httpEntry = verifyHttpRootEntry({ spans, apiPath, pid: String(_senderControls.getPid()) });
-    const kafkaExit = verifyRdKafkaExit(_senderControls, spans, httpEntry, messageId, withError);
-    verifyHttpExit({ spans, parent: httpEntry, pid: String(_senderControls.getPid()) });
+    let kafkaExit;
 
-    if (withError !== 'publisher') {
+    // CASE: buffer error means -> we not even produce a kafka msg
+    if (withError !== 'bufferErrorSender') {
+      kafkaExit = verifyRdKafkaExit(_senderControls, spans, httpEntry, messageId, withError);
+      verifyHttpExit({ spans, parent: httpEntry, pid: String(_senderControls.getPid()) });
+    }
+
+    // CASE: we do not expect a kafka entry span (consumer message)
+    if (!withError) {
       const kafkaEntry = verifyRdKafkaEntry(receiverControls, spans, kafkaExit, messageId, withError);
       verifyHttpExit({ spans, parent: kafkaEntry, pid: String(receiverControls.getPid()) });
     }
@@ -167,13 +201,20 @@ mochaSuiteFn('tracing/messaging/node-rdkafka', function () {
       span => expect(span.p).to.equal(parent.s),
       span => expect(span.f.e).to.equal(String(_senderControls.getPid())),
       span => expect(span.f.h).to.equal('agent-stub-uuid'),
-      span => expect(span.error).to.not.exist,
-      span => expect(span.ec).to.equal(withError === 'sender' ? 1 : 0),
       span => expect(span.async).to.not.exist,
       span => expect(span.data).to.exist,
       span => expect(span.data.kafka).to.be.an('object'),
       span => expect(span.data.kafka.service).to.equal(topic),
-      span => expect(span.data.kafka.access).to.equal('send')
+      span => expect(span.data.kafka.access).to.equal('send'),
+
+      span => expect(span.ec).to.equal(!withError ? 0 : 1),
+      span => (!withError ? expect(span.data.kafka.error).to.not.exist : ''),
+      span =>
+        withError === 'deliveryErrorSender' ? expect(span.data.kafka.error).to.equal('delivery fake error') : '',
+      span =>
+        withError === 'bufferErrorSender'
+          ? expect(span.data.kafka.error).to.equal('Message must be a buffer or null')
+          : ''
     ]);
   }
 
@@ -273,10 +314,17 @@ mochaSuiteFn('tracing/messaging/node-rdkafka', function () {
   });
 });
 
-function verifyResponseAndMessage(response, consumerControls) {
+function verifyResponseAndMessage(response, consumerControls, withError) {
   expect(response).to.be.an('object');
   const receivedMessages = consumerControls.getIpcMessages();
   expect(receivedMessages).to.be.an('array');
+
+  // CASE: we do not expect consumer messages if error on sender side
+  if (withError) {
+    expect(receivedMessages.length).to.equal(0);
+    return;
+  }
+
   expect(receivedMessages).to.have.lengthOf.at.least(1);
   const message = receivedMessages.filter(({ headers }) => {
     const header = headers.filter(_header => {

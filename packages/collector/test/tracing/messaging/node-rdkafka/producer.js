@@ -24,6 +24,8 @@ const app = express();
 
 const topic = 'rdkafka-topic';
 
+let throwDeliveryErr = false;
+
 function getProducer(isStream = false) {
   /** @type {Kafka.Producer | Kafka.ProducerStream} */
   let _producer;
@@ -62,9 +64,20 @@ function getProducer(isStream = false) {
     // This requires dr_cb option in order to work. When enabled, it gives us a confirmation that the message was
     // delivered successfully or not. This is handled by the instrumentation, if it's enabled.
     // Be aware that this only works for standard API - not for stream cases.
-    // _producer.on('delivery-report', (err, data) => {
-    // log('Delivery report:', err, data);
-    // });
+    _producer.on('delivery-report', () => {
+      log('Delivery report');
+
+      if (throwDeliveryErr) {
+        const listenersArr = _producer.listeners('delivery-report');
+        listenersArr.forEach(listener => {
+          if (listener.name === 'instanaDeliveryReportListener') {
+            _producer.removeListener('delivery-report', listener);
+
+            listener(new Error('delivery fake error'));
+          }
+        });
+      }
+    });
 
     // We must either call .poll() manually after sending messages or set the producer to poll on an interval.
     // Without this, we do not get delivery events and the queue will eventually fill up.
@@ -153,6 +166,7 @@ let streamProducer = getProducer(true);
 app.get('/produce/:method', async (req, res) => {
   const method = req.params.method || 'standard';
   const withError = req.query.withError === 'true';
+  throwDeliveryErr = req.query.throwDeliveryErr === 'true';
 
   try {
     const response = await doProduce(
@@ -179,7 +193,10 @@ app.get('/produce/:method', async (req, res) => {
     if (method === 'stream') {
       streamProducer = getProducer(true);
     }
-    res.status(500).send({
+
+    // NOTE: better not return 500 otherwise the test suite does not continue with checking expects
+    //       const resp = await sendRequest -> expects success
+    res.status(200).send({
       error: err.message
     });
   }

@@ -45,6 +45,8 @@ function getConsumer() {
     });
 
     _consumer.on('data', async data => {
+      log('Got stream message');
+
       const span = instana.currentSpan();
       span.disableAutoEnd();
       // "headers" may or may not be present in data.
@@ -57,8 +59,6 @@ function getConsumer() {
       } else {
         sendToParent(data);
       }
-
-      log('Got message');
 
       await delay(200);
       await fetch(`http://127.0.0.1:${agentPort}`);
@@ -87,6 +87,8 @@ function getConsumer() {
         // }, 100);
       })
       .on('data', async data => {
+        log('Got standard message');
+
         const span = instana.currentSpan();
         span.disableAutoEnd();
         // "headers" may or may not be present in data.
@@ -94,7 +96,6 @@ function getConsumer() {
         // the producer can set a value either as string or Buffer, but the response received by the consumer is always
         // a Uint8Array
         sendToParent(data);
-        log('Got message');
         await delay(200);
         await fetch(`http://127.0.0.1:${agentPort}`);
         span.end();

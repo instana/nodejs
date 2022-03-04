@@ -139,12 +139,14 @@ function instrumentedProduce(ctx, originalProduce, originalArgs) {
     originalArgs[6] = headers;
 
     if (deliveryCb) {
-      ctx.once('delivery-report', err => {
+      ctx.once('delivery-report', function instanaDeliveryReportListener(err) {
         span.d = Date.now() - span.ts;
+
         if (err) {
           span.ec = 1;
           span.data.kafka.error = err.message;
         }
+
         span.transmit();
       });
     }
@@ -159,7 +161,8 @@ function instrumentedProduce(ctx, originalProduce, originalArgs) {
 
       return result;
     } catch (error) {
-      // This error is properly captured for both Stream and standard API
+      // e.g. cannot send message because format is byte
+      //      "Message must be a buffer or null"
       span.ec = 1;
       span.data.kafka.error = error.message;
 

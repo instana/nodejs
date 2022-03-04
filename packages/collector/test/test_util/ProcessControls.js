@@ -225,7 +225,7 @@ class ProcessControls {
 
   getPid() {
     if (!this.process) {
-      return 'no process, no PID';
+      return false;
     }
     return this.process.pid;
   }
@@ -286,6 +286,11 @@ class ProcessControls {
     }
     return new Promise(resolve => {
       this.process.once('exit', resolve);
+      this.process.once('exit', () => {
+        this.process.pid = null;
+        resolve();
+      });
+
       this.process.kill();
     });
   }
