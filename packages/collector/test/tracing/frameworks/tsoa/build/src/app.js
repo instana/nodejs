@@ -23,6 +23,7 @@ exports.app.use(function errorHandler(err, req, res, next) {
     next();
 });
 exports.app.use(function anyMiddleware(req, res, next) {
+    // NOTE: early exit in a middleware
     if (req.path === '/api/users/error/22') {
         res.sendStatus(200);
         return;

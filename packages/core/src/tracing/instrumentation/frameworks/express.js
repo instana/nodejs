@@ -71,8 +71,8 @@ function wrapExpress4HandleFn(fn) {
 
 function shimExpress4Use(originalUse) {
   return function shimmedUsed(path, fn) {
-    // CASE 1: error middleware with 4 parameters
-    // CASE 2: any other middlware with 3 parameters and maybe early exit of incoming request
+    // middleware attached to application.
+    // An error handling middleware is defined as a middleware which accepts four parameters
     if (typeof path === 'string' && typeof fn === 'function' && fn.length === 4) {
       const args = [];
       for (let i = 0; i < arguments.length; i++) {
@@ -84,20 +84,8 @@ function shimExpress4Use(originalUse) {
         }
       }
       return originalUse.apply(this, args);
-    } else if (typeof path === 'string' && typeof fn === 'function' && fn.length === 3) {
-      const args = [];
-      for (let i = 0; i < arguments.length; i++) {
-        const arg = arguments[i];
-        if (typeof arg === 'function') {
-          args.push(wrapHandler(arg));
-        } else {
-          args.push(arg);
-        }
-      }
-      return originalUse.apply(this, args);
-    } else {
-      return originalUse.apply(this, arguments);
     }
+    return originalUse.apply(this, arguments);
   };
 }
 
@@ -146,7 +134,7 @@ function wrapHandler(fn) {
     // express.js checks parameter count to decide what kind of handler function
     // it should invoke.
     // eslint-disable-next-line no-unused-vars
-    return function wrappedInstanaMiddlewareHandlingFn(req, res, next) {
+    return function (req, res, next) {
       annotateHttpEntrySpanWithPathTemplate(req);
       return fn.apply(this, arguments);
     };
@@ -156,39 +144,21 @@ function wrapHandler(fn) {
   // express.js checks parameter count to decide what kind of handler function
   // it should invoke.
   // eslint-disable-next-line no-unused-vars
-  return function wrappedInstanaErrorHandlingFn(err, req, res, next) {
+  return function (err, req, res, next) {
     annotateHttpEntrySpanWithPathTemplate(req);
     return fn.apply(this, arguments);
   };
 }
 
 function annotateHttpEntrySpanWithPathTemplate(req) {
-  const span = cls.getCurrentEntrySpan();
+  if (!req.route) {
+    return;
+  }
 
+  const span = cls.getCurrentEntrySpan();
   if (!span || span.n !== httpServer.spanName || span.pathTplFrozen) {
     return;
   }
 
-  let pathTpl;
-
-  // CASE: Express attaches `req.route` when the target route get's dispatched
-  //       `req.route` is not available when request is exited too early in a middleware
-  if (!req.route) {
-    pathTpl = req.originalUrl;
-  } else {
-    pathTpl = (req.baseUrl || '') + req.route.path;
-  }
-
-  /**
-   * path_tpl = original url structure (parameterized such as /api/user/:id)
-   *
-   * If the registered path is not parameterized, we still send the `path_tpl`.
-   * That means we provide the attribute for every request except for the following cases:
-   *    - request is exited too early in a middleware
-   *
-   * And if we don't send path_tpl, backend will autogroup requests
-   *
-   *    e.g. /api/something/else -> /api
-   */
-  span.data.http.path_tpl = pathTpl;
+  span.data.http.path_tpl = (req.baseUrl || '') + req.route.path;
 }
