@@ -181,6 +181,16 @@ That last command (`lerna publish from-package`) can also be run if the previous
 
 Be aware that if `lerna version` or `lerna publish` abort with an error in the middle of doing things, you might end up with local changes in the `package.json` files. Lerna adds some metadata there just before trying to publish. These changes can simply be discarded with `git checkout packages` before trying to publish again.
 
+#### Publishing a pre-release
+
+To publish a pre-release for the next major version, execute:
+
+```
+lerna publish --conventional-prerelease --dist-tag next --preid rc
+```
+
+This assumes that you are on a branch where the versions in all package.json files have already been bumped to `x.0.0` with `x` being the next major version.
+
 #### Rate Limited OTP
 
 If publishing the packages fails with an error like this:
