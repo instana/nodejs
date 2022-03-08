@@ -7,7 +7,7 @@ See `serverless/ci/pipeline.yml`. The images are published on `icr.io` (IBM Cont
 
 https://ci.instana.io/teams/nodejs/pipelines/serverless-in-process-collectors:main/resources/instana-aws-fargate-npm-package
 
-***NOTE: Releases do not use these folders (instana-aws-fargate, test-images)!
+**NOTE: Releases do not use these folders (instana-aws-fargate, test-images)!
       These are only useful to simulate builds.** 
 
 ## Setup
