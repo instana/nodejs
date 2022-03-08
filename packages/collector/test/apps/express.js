@@ -83,6 +83,14 @@ app.post('/set-logger', (req, res) => {
   res.send('OK');
 });
 
+app.get('/trace-id-and-span-id', (req, res) => {
+  const span = instana.currentSpan();
+  res.json({
+    t: span.getTraceId(),
+    s: span.getSpanId()
+  });
+});
+
 function appendToDummyLogFile(level, logFilePath) {
   return message => {
     const content = typeof messsage === 'string' ? message : JSON.stringify(message);

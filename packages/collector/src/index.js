@@ -26,8 +26,23 @@ let config;
 function init(_config) {
   // @ts-ignore: Property '__INSTANA_INITIALIZED' does not exist on type global
   if (global.__INSTANA_INITIALIZED) {
-    // Prevent initializing @instana/collector multiple times for the same process.
-    return;
+    // Prevent initializing @instana/collector multiple times for the same process: @instana/collector has already been
+    // initialized, potentially from a different installation of @instana/collector somewhere else in the file system.
+    // Find that module in the require cache and return its exports (this is necessary to make sure calls to our API
+    // work as expected).
+    const collectorIndexCacheKey = Object.keys(require.cache).find(
+      cacheKey => cacheKey.indexOf('/@instana/collector/src/index.js') >= 0
+    );
+    if (collectorIndexCacheKey) {
+      return require.cache[collectorIndexCacheKey].exports;
+    } else {
+      // eslint-disable-next-line no-console
+      console.error(
+        "Warning: Instana has already been initialized but the module @instana/collector is not present in Node.js' " +
+          'module cache. The Instana API will not be available.'
+      );
+      return init;
+    }
   }
   // @ts-ignore: Property '__INSTANA_INITIALIZED' does not exist on type global
   global.__INSTANA_INITIALIZED = true;
@@ -56,6 +71,7 @@ function init(_config) {
 
   logger.info('@instana/collector module version:', require(path.join(__dirname, '..', 'package.json')).version);
   require('./announceCycle').start();
+
   return init;
 }
 

@@ -3,13 +3,10 @@
  * (c) Copyright Instana Inc. and contributors 2021
  */
 
-/* eslint-disable no-console */
-
 'use strict';
 
 const _ = require('lodash');
 const { expect } = require('chai');
-const { execSync } = require('child_process');
 const { mkdtempSync, symlinkSync, unlinkSync } = require('fs');
 const mkdirp = require('mkdirp');
 const recursiveCopy = require('recursive-copy');
@@ -19,14 +16,14 @@ const rimraf = require('rimraf');
 const { satisfies } = require('semver');
 
 const config = require('@instana/core/test/config');
-const { retry } = require('@instana/core/test/test_util');
+const { retry, runCommandSync } = require('@instana/core/test/test_util');
 const ProcessControls = require('../../../collector/test/test_util/ProcessControls');
 const globalAgent = require('../../../collector/test/globalAgent');
 
 describe('dependencies', function () {
   // Some of the tests in this suite include running npm install and on CI we have observed that this can take roughly
-  // two minutes (!) when the build sometimes, so we go with a large timeout. Base timeout on CI is 30 seconds, with
-  // factor 6 thisallows for test durations up to three minutes.
+  // two minutes (!) sometimes, so we go with a large timeout. Base timeout on CI is 30 seconds, with
+  // factor 6 this allows for test durations up to three minutes.
   this.timeout(config.getTestTimeout() * 6);
 
   globalAgent.setUpCleanUpHooks();
@@ -35,7 +32,7 @@ describe('dependencies', function () {
   describe('with a package.json file', () => {
     const appDir = path.join(__dirname, 'app-with-package-json');
     before(() => {
-      runCommand('npm install --no-audit', appDir);
+      runCommandSync('npm install --production --no-optional --no-audit', appDir);
     });
 
     const controls = new ProcessControls({
@@ -43,7 +40,8 @@ describe('dependencies', function () {
       useGlobalAgent: true,
       port: 7215,
       env: {
-        INSTANA_AGENT_PORT: 7211
+        INSTANA_AGENT_PORT: 7211,
+        INSTANA_COPY_PRECOMPILED_NATIVE_ADDONS: 'false'
       }
     }).registerTestHooks();
 
@@ -86,9 +84,10 @@ describe('dependencies', function () {
     const repoRootDir = path.join(__dirname, '..', '..', '..', '..');
 
     before(async () => {
+      // eslint-disable-next-line no-console
       console.log(`Copying test app from ${appDir} to ${tmpDir}.`);
       await recursiveCopy(appDir, tmpDir);
-      runCommand('npm install --no-audit', tmpDir);
+      runCommandSync('npm install --production --no-optional --no-audit', tmpDir);
       const instanaPath = path.join(tmpDir, 'node_modules', '@instana');
       mkdirp.sync(instanaPath);
       const collectorPath = path.join(instanaPath, 'collector');
@@ -104,6 +103,7 @@ describe('dependencies', function () {
       port: 7215,
       env: {
         INSTANA_AGENT_PORT: 7211,
+        INSTANA_COPY_PRECOMPILED_NATIVE_ADDONS: 'false',
         INSTANA_NODES_REPO: repoRootDir
       }
     }).registerTestHooks();
@@ -140,7 +140,7 @@ describe('dependencies', function () {
     const repoRootDir = path.join(__dirname, '..', '..', '..', '..');
 
     before(async () => {
-      runCommand(`npm install --no-audit ${appTgz}`, tmpDir);
+      runCommandSync(`npm install --production --no-optional --no-audit ${appTgz}`, tmpDir);
       const instanaPath = path.join(tmpDir, 'node_modules', '@instana');
       mkdirp.sync(instanaPath);
       const collectorPath = path.join(instanaPath, 'collector');
@@ -155,6 +155,7 @@ describe('dependencies', function () {
       port: 7215,
       env: {
         INSTANA_AGENT_PORT: 7211,
+        INSTANA_COPY_PRECOMPILED_NATIVE_ADDONS: 'false',
         INSTANA_NODES_REPO: repoRootDir,
         MAX_DEPENDENCIES: 200
       }
@@ -205,16 +206,4 @@ function expectVersion(actualVersion, expectedRange) {
     satisfies(actualVersion, expectedRange),
     `${actualVersion} does not satisfy the expected range ${expectedRange}.`
   ).to.be.true;
-}
-
-/**
- * Run a shell command synchronously in a given directory.
- *
- * @param {string} cmd The command to run
- * @param {string} cwd The working directory for running the program
- */
-function runCommand(cmd, cwd) {
-  console.log(`Running ${cmd} in ${cwd}.`);
-  const cmdOutput = execSync(cmd, { cwd });
-  console.log(`Done with running ${cmd} in ${cwd}:\n${cmdOutput}`);
 }
