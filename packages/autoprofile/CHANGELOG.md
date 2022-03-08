@@ -3,6 +3,22 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.0.0-rc.0](https://github.com/instana/nodejs/compare/v1.138.0...v2.0.0-rc.0) (2022-03-08)
+
+
+### chore
+
+* dropped Node 6/8 ([5b902d1](https://github.com/instana/nodejs/commit/5b902d1a848a601f67e569a7adcb10794754eb69))
+
+
+### BREAKING CHANGES
+
+* v2 has dropped support for Node 6/8.
+
+
+
+
+
 ## [1.137.5](https://github.com/instana/nodejs/compare/v1.137.4...v1.137.5) (2022-01-25)
 
 **Note:** Version bump only for package @instana/autoprofile
