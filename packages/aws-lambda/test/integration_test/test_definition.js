@@ -1666,13 +1666,13 @@ function registerTests(handlerDefinitionPath) {
     expect(pluginData.name).to.equal('com.instana.plugin.aws.lambda');
     expect(pluginData.entityId).to.equal(qualifiedArn);
     const metrics = pluginData.data;
-    expect(metrics.sensorVersion).to.match(/1\.\d\d+\.\d+/);
+    expect(metrics.sensorVersion).to.match(/^\d+\.\d+.\d+(?:-rc\.\d+)?$/);
     expect(metrics.startTime).to.be.at.most(Date.now());
     expect(metrics.versions).to.be.an('object');
-    expect(metrics.versions.node).to.match(/\d+\.\d+\.\d+/);
-    expect(metrics.versions.v8).to.match(/\d+\.\d+\.\d+/);
-    expect(metrics.versions.uv).to.match(/\d+\.\d+\.\d+/);
-    expect(metrics.versions.zlib).to.match(/\d+\.\d+\.\d+/);
+    expect(metrics.versions.node).to.match(/^\d+\.\d+\.\d+$/);
+    expect(metrics.versions.v8).to.match(/^\d+\.\d+\.\d+/);
+    expect(metrics.versions.uv).to.match(/^\d+\.\d+\.\d+/);
+    expect(metrics.versions.zlib).to.match(/^\d+\.\d+\.\d+/);
     verifyHeaders(allPlugins);
     if (expectations.error !== 'lambda-synchronous') {
       // A synchronous error terminates the Lambda really fast, so there might not have been enough time to collect
