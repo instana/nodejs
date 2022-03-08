@@ -300,16 +300,13 @@ describe('Using the API', () => {
     expect(pluginData.name).to.equal('com.instana.plugin.aws.lambda');
     expect(pluginData.entityId).to.equal(qualifiedArn);
     const metrics = pluginData.data;
-    expect(metrics.sensorVersion).to.match(/1\.\d\d+\.\d+/);
+    expect(metrics.sensorVersion).to.match(/^\d+\.\d+.\d+(?:-rc\.\d+)?$/);
     expect(metrics.startTime).to.be.at.most(Date.now());
     expect(metrics.versions).to.be.an('object');
-    expect(metrics.versions.node).to.match(/\d+\.\d+\.\d+/);
-    expect(metrics.versions.v8).to.match(/\d+\.\d+\.\d+/);
-    expect(metrics.versions.uv).to.match(/\d+\.\d+\.\d+/);
-    expect(metrics.versions.zlib).to.match(/\d+\.\d+\.\d+/);
-    expect(metrics.npmPackageDescription).to.equal('Instana tracing and monitoring for Node.js based AWS Lambdas');
-    expect(metrics.npmPackageName).to.equal('@instana/aws-lambda');
-    expect(metrics.npmPackageVersion).to.match(/\d+\.\d+\.\d+/);
+    expect(metrics.versions.node).to.be.a('string');
+    expect(metrics.versions.v8).to.be.a('string');
+    expect(metrics.versions.uv).to.be.a('string');
+    expect(metrics.versions.zlib).to.be.a('string');
     verifyHeaders(allPlugins);
   }
 
