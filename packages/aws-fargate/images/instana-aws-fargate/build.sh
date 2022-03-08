@@ -8,6 +8,7 @@
 # This is a local script for testing the images.
 # We use serverless/ci/pipeline.yml to publish the images. 
 
+# use -eox to see better output
 set -eo pipefail
 
 cd `dirname $BASH_SOURCE`
@@ -33,6 +34,11 @@ build_mode=$1
 if [[ -z "${build_mode-}" ]]; then
   build_mode=local
 fi
+
+npm_tag=$2
+
+echo BUILD MODE ${build_mode}
+echo NPM TAG ${npm_tag}
 
 dockerfile=Dockerfile-$build_mode
 build_arg=
@@ -75,7 +81,14 @@ if [[ $build_mode = local ]]; then
 
   cp package.json.local package.json
 elif [[ $build_mode = npm ]]; then
-  package_version=$(npm show @instana/aws-fargate version)
+  if [[ -n $npm_tag ]]; then
+    package_version=$(npm show @instana/aws-fargate@$npm_tag version)
+  else
+    package_version=$(npm show @instana/aws-fargate version)
+  fi
+
+  echo NPM Package Version $package_version
+
   build_arg="--build-arg package_version=$package_version"
 else
   echo "Unknown option for build_mode: $build_mode"
@@ -87,12 +100,23 @@ echo "Removing image $image_tag"
 docker rmi -f $image_tag
 
 echo "Building $dockerfile -> $image_tag"
-docker build $build_arg -f $dockerfile --progress=plain -t $image_tag -t $ecr_repository/$image_tag .
+
+if [[ -n $npm_tag ]]; then
+  docker build --progress=plain $build_arg -f $dockerfile -t $image_tag:$npm_tag -t $ecr_repository/$image_tag:$npm_tag .
+else
+  docker build --progress=plain $build_arg -f $dockerfile -t $image_tag -t $ecr_repository/$image_tag .
+fi
+
 echo "docker build exit status: $?"
 
 if [[ $build_mode = npm ]]; then
-  docker tag $image_tag:latest $image_tag:$package_version
-  docker tag $ecr_repository/$image_tag:latest $ecr_repository/$image_tag:$package_version
+  if [[ -n $npm_tag ]]; then
+    docker tag $image_tag:$npm_tag $image_tag:$package_version
+    docker tag $ecr_repository/$image_tag:$npm_tag $ecr_repository/$image_tag:$package_version
+  else
+    docker tag $image_tag:latest $image_tag:$package_version
+    docker tag $ecr_repository/$image_tag:latest $ecr_repository/$image_tag:$package_version
+  fi  
 fi
 
 rm -f package.json

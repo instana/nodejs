@@ -5,6 +5,7 @@
 # (c) Copyright Instana Inc. and contributors 2020
 #######################################
 
+# use -eox to see better output
 set -eo pipefail
 
 cd `dirname $BASH_SOURCE`
@@ -15,6 +16,7 @@ source utils
 #     - released      -> public IBM container registry base image
 #     - authenticated -> containers.io base image
 #     - local         -> local Docker base image
+#     - aws           -> download aws container image registry
 # $2: Node.js version. One of:
 #     - 12
 #     - 10
@@ -23,7 +25,10 @@ source utils
 #     - standard               -> (uses node:$version, that is, Debian)
 #     - alpine                 -> (uses node:$version-alpine, that is, Alpine, and installs build dependencies)
 #     - alpine-no-build-deps   -> (uses node:$version-alpine, that is, Alpine, and does not install build dependencies)
-normalizeArgs $1 $2 $3
+# $4  Docker Tag
+#     - latest (default)
+#     - any other npm tag you have published e.g. next, beta etc.
+normalizeArgs $1 $2 $3 $4
 
 if [[ ! -f .env ]]; then
   echo .env file is missing
@@ -56,7 +61,7 @@ else
   echo Not building local Instana layer.
 fi
 
-setImageTag $image_tag_prefix $NODEJS_VERSION $LINUX_DISTRIBUTION $INSTANA_LAYER_MODE
+setImageTag $image_tag_prefix $NODEJS_VERSION $LINUX_DISTRIBUTION $INSTANA_LAYER_MODE $DOCKER_TAG
 setContainerName $container_name_prefix $NODEJS_VERSION $LINUX_DISTRIBUTION $INSTANA_LAYER_MODE
 
 echo "Stopping and removing container $container_name"
@@ -65,11 +70,12 @@ docker rm -f $container_name || true
 echo "Removing image $image_tag"
 docker rmi -f $image_tag
 
-echo "Building $dockerfile -> $image_tag (INSTANA_LAYER: $INSTANA_LAYER, NODEJS_VERSION: $NODEJS_VERSION)"
+echo "Building $dockerfile -> $image_tag (INSTANA_LAYER: $INSTANA_LAYER, NODEJS_VERSION: $NODEJS_VERSION, DOCKER_TAG: $DOCKER_TAG)"
 docker build \
   --progress=plain \
   --build-arg NODEJS_VERSION=$NODEJS_VERSION \
   --build-arg INSTANA_LAYER=$INSTANA_LAYER \
+  --build-arg DOCKER_TAG=$DOCKER_TAG \
   -f $dockerfile \
   -t $image_tag \
   -t $ecr_repository/$image_tag \
