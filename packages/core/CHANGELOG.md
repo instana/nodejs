@@ -3,6 +3,47 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.0.0-rc.0](https://github.com/instana/nodejs/compare/v1.138.0...v2.0.0-rc.0) (2022-03-08)
+
+
+### chore
+
+* removed disableAutomaticTracing legacy config ([#432](https://github.com/instana/nodejs/issues/432)) ([c8f6cef](https://github.com/instana/nodejs/commit/c8f6cef241c8b9f1b06ff6fe6de70386d6086e6f))
+* removed legacy support for config.timeBetweenHealthcheckCalls ([#476](https://github.com/instana/nodejs/issues/476)) ([4c4f894](https://github.com/instana/nodejs/commit/4c4f894f9308da8fe3503585a7feac8a108a75af))
+
+
+### Code Refactoring
+
+* remove npm package instana-nodejs-sensor ([bebfc2d](https://github.com/instana/nodejs/commit/bebfc2da9989ade98034e5a1ae87e0a0bd43a5d8))
+
+
+### Features
+
+* added asynclocalstorage implementation ([#430](https://github.com/instana/nodejs/issues/430)) ([fe86e3a](https://github.com/instana/nodejs/commit/fe86e3a32592a98de9cb869916435e45db07a1ea))
+* self-disable if detected Node.js runtime version is too old ([d934d37](https://github.com/instana/nodejs/commit/d934d37e1f56ea5b877f39e699054c1e4b675dd1))
+
+
+### BREAKING CHANGES
+
+* Removed support for legacy config `instana({ timeBetweenHealthcheckCalls: ... })`.
+                 Use `instana({ metrics: { timeBetweenHealthcheckCalls: ...}})`.
+
+Co-authored-by: kirrg001 <katharina.irrgang@gmail.com>
+* Starting with version 2.0.0, consumers of the package who
+still use the deprecated package name instana-nodejs-sensor will need to follow
+https://www.ibm.com/docs/en/obi/current?topic=nodejs-collector-installation#change-of-package-name
+to receive updates in the future.
+
+refs 80206
+* Removed "disableAutomaticTracing" config option.
+                 Use `instana({ automaticTracingEnabled: Boolean })`.
+
+Co-authored-by: kirrg001 <katharina.irrgang@gmail.com>
+
+
+
+
+
 # [1.138.0](https://github.com/instana/nodejs/compare/v1.137.5...v1.138.0) (2022-02-08)
 
 
