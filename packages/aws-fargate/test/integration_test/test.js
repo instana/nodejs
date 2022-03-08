@@ -510,14 +510,14 @@ describe('AWS fargate integration test', function () {
     expect(Object.keys(nodeJsPayload)).to.have.lengthOf(3);
     const nodeJsData = nodeJsPayload.data;
     expect(nodeJsData.pid).to.equal(processData.pid);
-    expect(nodeJsData.sensorVersion).to.match(/1\.\d\d+\.\d+/);
+    expect(nodeJsData.sensorVersion).to.match(/^\d+\.\d+.\d+(?:-rc\.\d+)?$/);
     expect(nodeJsData.startTime).to.be.at.most(Date.now());
     expect(nodeJsData.versions).to.be.an('object');
-    expect(nodeJsData.versions.node).to.match(/\d+\.\d+\.\d+/);
+    expect(nodeJsData.versions.node).to.match(/^\d+\.\d+\.\d+$/);
     expect(`v${nodeJsData.versions.node}`).to.equal(process.version);
-    expect(nodeJsData.versions.v8).to.match(/\d+\.\d+\.\d+/);
-    expect(nodeJsData.versions.uv).to.match(/\d+\.\d+\.\d+/);
-    expect(nodeJsData.versions.zlib).to.match(/\d+\.\d+\.\d+/);
+    expect(nodeJsData.versions.v8).to.match(/^\d+\.\d+\.\d+/);
+    expect(nodeJsData.versions.uv).to.match(/^\d+\.\d+\.\d+/);
+    expect(nodeJsData.versions.zlib).to.match(/^\d+\.\d+\.\d+/);
 
     expect(nodeJsData.name).to.equal('@instana/aws-fargate');
     expect(nodeJsData.description).to.equal('Instana tracing and monitoring for Node.js based AWS Fargate tasks');
