@@ -186,7 +186,7 @@ Be aware that if `lerna version` or `lerna publish` abort with an error in the m
 To publish a pre-release for the next major version, execute:
 
 ```
-lerna publish --conventional-prerelease --dist-tag next --preid rc
+NPM_CONFIG_OTP={your token} lerna publish --conventional-prerelease --dist-tag next --preid rc
 ```
 
 This assumes that you are on a branch where the versions in all package.json files have already been bumped to `x.0.0` with `x` being the next major version.
