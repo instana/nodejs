@@ -18,6 +18,7 @@ module.exports = {
   getSpansByName: require('./getSpansByName'),
   retry: require('./retry'),
   retryUntilSpansMatch: require('./retryUntilSpansMatch'),
+  runCommandSync: require('./runCommand').runCommandSync,
   sendToParent: require('./sendToParent'),
   stringifyItems: require('./stringifyItems'),
   ...commonVerifications
