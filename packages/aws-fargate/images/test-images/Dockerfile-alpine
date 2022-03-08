@@ -1,7 +1,8 @@
-ARG INSTANA_LAYER=icr.io/instana/aws-fargate-nodejs:latest
+ARG DOCKER_TAG=latest
+ARG INSTANA_LAYER=icr.io/instana/aws-fargate-nodejs
 ARG NODEJS_VERSION=12.16.3
 
-FROM ${INSTANA_LAYER} as instanaLayer
+FROM ${INSTANA_LAYER}:${DOCKER_TAG} as instanaLayer
 
 FROM node:${NODEJS_VERSION}-alpine
 WORKDIR /usr/src/app
