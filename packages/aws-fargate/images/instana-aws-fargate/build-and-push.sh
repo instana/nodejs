@@ -8,6 +8,7 @@
 # This is a local script for testing the images.
 # We use serverless/ci/pipeline.yml to publish the images. 
 
+# use -eox to see better output
 set -eo pipefail
 
 cd `dirname $BASH_SOURCE`
@@ -34,14 +35,28 @@ if [[ -z "${build_mode-}" ]]; then
   build_mode=local
 fi
 
-./build.sh $build_mode
+npm_tag=$2
+
+./build.sh $build_mode $npm_tag
 
 setImageTag $image_tag_prefix $build_mode
 
-echo "Pushing image $image_tag to $ecr_repository"
-docker push $ecr_repository/$image_tag
+if [[ -n $npm_tag ]]; then
+  docker push $ecr_repository/$image_tag:$npm_tag
+  echo "Pushing image $image_tag:$npm_tag to $ecr_repository"
+else
+  docker push $ecr_repository/$image_tag
+  echo "Pushing image $image_tag to $ecr_repository"
+fi
 
 if [[ $build_mode = npm ]]; then
-  package_version=$(npm show @instana/aws-fargate version)
+  if [[ -n $npm_tag ]]; then
+    package_version=$(npm show @instana/aws-fargate@$npm_tag version)
+  else
+    package_version=$(npm show @instana/aws-fargate version)
+  fi
+
+  echo NPM Package Version $package_version
+
   docker push $ecr_repository/$image_tag:$package_version
 fi

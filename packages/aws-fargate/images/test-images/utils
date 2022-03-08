@@ -1,5 +1,6 @@
 function normalizeArgs {
   local instanaLayerMode=$1
+
   if [[ -z "${instanaLayerMode-}" || $instanaLayerMode = released ]]; then
     INSTANA_LAYER=icr.io/instana/aws-fargate-nodejs:latest
     INSTANA_LAYER_MODE=released
@@ -9,6 +10,9 @@ function normalizeArgs {
   elif [[ $instanaLayerMode = local ]]; then
     INSTANA_LAYER=instana-aws-fargate-nodejs-local
     INSTANA_LAYER_MODE=local
+  elif [[ $instanaLayerMode = aws ]]; then
+    INSTANA_LAYER=410797082306.dkr.ecr.us-east-2.amazonaws.com/instana-aws-fargate-nodejs
+    INSTANA_LAYER_MODE=aws
   else
     echo "Unknown option for Instana layer: $instanaLayerMode"
     exit 1
@@ -36,12 +40,20 @@ function normalizeArgs {
     echo "Unknown option for Linux distribution: $distribution"
     exit 1
   fi
+
+  local docker_tag=$4
+  if [[ -n "${docker_tag-}" ]]; then
+    DOCKER_TAG=$docker_tag
+  else
+    DOCKER_TAG=latest
+  fi
 }
 
 function setImageTag {
   local prefix=$1
   local nodeJsVersion=$2
   local distribution=$3
+
   if [[ $distribution = standard ]]; then
     distribution=""
   elif [[ $distribution = alpine ]]; then
@@ -52,9 +64,11 @@ function setImageTag {
     echo "Unknown option for Linux distribution: $distribution"
     exit 1
   fi
-  local instanaLayerMode=$4
 
-  image_tag=$prefix-$nodeJsVersion$distribution-$instanaLayerMode
+  local instanaLayerMode=$4
+  local docker_tag=$5
+
+  image_tag=$prefix-$nodeJsVersion$distribution-$instanaLayerMode:$docker_tag
 }
 
 function setContainerName {
