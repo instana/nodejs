@@ -11,7 +11,7 @@ cd `dirname $BASH_SOURCE`
 
 source utils
 
-normalizeArgs $1 $2 $3
+normalizeArgs $1 $2 $3 $4
 
 if [[ ! -f .env ]]; then
   echo .env file is missing
@@ -28,9 +28,9 @@ if [[ -z "${container_name_prefix-}" ]]; then
   exit 1
 fi
 
-./build.sh $INSTANA_LAYER_MODE $NODEJS_VERSION $LINUX_DISTRIBUTION
+./build.sh $INSTANA_LAYER_MODE $NODEJS_VERSION $LINUX_DISTRIBUTION $DOCKER_TAG
 
-setImageTag $image_tag_prefix $NODEJS_VERSION $LINUX_DISTRIBUTION $INSTANA_LAYER_MODE
+setImageTag $image_tag_prefix $NODEJS_VERSION $LINUX_DISTRIBUTION $INSTANA_LAYER_MODE $DOCKER_TAG
 
 echo "Pushing image $image_tag to $ecr_repository"
 docker push $ecr_repository/$image_tag
