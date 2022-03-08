@@ -79,7 +79,11 @@ Then:
 Go to Pink
 https://test-instana.pink.instana.rocks/#/physical?q=entity.type%3Afargate%20&snapshotId=dYPnS5dp3Pinv_4Rxsrzl3CvnN8
 
-Send some requests to...
+You can find the public ip here:
+https://us-east-2.console.aws.amazon.com/ecs/home?region=us-east-2#/clusters/bastian-krol-test/tasks/7c75d3e7628743ba864a5d6d2ab6770e/details
+
+The port is in the server.js file.
+
 
 
 ## Test local package
