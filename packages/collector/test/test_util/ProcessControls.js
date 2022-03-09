@@ -285,7 +285,6 @@ class ProcessControls {
       return Promise.resolve();
     }
     return new Promise(resolve => {
-      this.process.once('exit', resolve);
       this.process.once('exit', () => {
         this.process.pid = null;
         resolve();
