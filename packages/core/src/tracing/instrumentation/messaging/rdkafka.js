@@ -221,16 +221,16 @@ function instrumentedConsumerEmit(ctx, originalEmit, originalArgs) {
     return originalEmit.apply(ctx, originalArgs);
   }
 
+  if (event !== 'data' && event !== 'error') {
+    return originalEmit.apply(ctx, originalArgs);
+  }
+
   eventData.forEach(messageData => {
     if (cls.tracingSuppressed()) {
       const headers = addTraceLevelSuppression(messageData.headers);
       messageData.headers = headers;
       return originalEmit.apply(ctx, originalArgs);
     } else {
-      let traceId;
-      let parentSpanId;
-      let level;
-
       const instanaHeaders = (messageData.headers || []).filter(headerObject => {
         const headerKey = Object.keys(headerObject)[0].toLowerCase();
         return headerKey.indexOf('x_instana') > -1;
@@ -244,63 +244,53 @@ function instrumentedConsumerEmit(ctx, originalEmit, originalArgs) {
         instanaHeadersAsObject[key] = instanaHeader[key];
       });
 
-      if (instanaHeaders.length) {
-        // Look for the the newer string header format first.
-        if (instanaHeadersAsObject[constants.kafkaTraceIdHeaderNameString]) {
-          traceId = String(instanaHeadersAsObject[constants.kafkaTraceIdHeaderNameString]);
-        }
-        if (instanaHeadersAsObject[constants.kafkaSpanIdHeaderNameString]) {
-          parentSpanId = String(instanaHeadersAsObject[constants.kafkaSpanIdHeaderNameString]);
-        }
-        if (instanaHeadersAsObject[constants.kafkaTraceLevelHeaderNameString]) {
-          level = String(instanaHeadersAsObject[constants.kafkaTraceLevelHeaderNameString]);
-        }
+      let traceId;
+      let parentSpanId;
+      let level;
 
-        // Only fall back to legacy binary trace correlation headers if no new header is present.
-        if (traceId == null && parentSpanId == null && level == null) {
-          // The newer string header format has not been found, fall back to legacy binary headers.
-          if (instanaHeadersAsObject[constants.kafkaTraceContextHeaderNameBinary]) {
-            const traceContextBuffer = instanaHeadersAsObject[constants.kafkaTraceContextHeaderNameBinary];
-            if (Buffer.isBuffer(traceContextBuffer) && traceContextBuffer.length === 24) {
-              const traceContext = tracingUtil.readTraceContextFromBuffer(traceContextBuffer);
-              traceId = traceContext.t;
-              parentSpanId = traceContext.s;
-            }
-          }
-          level = readTraceLevelBinary(instanaHeadersAsObject);
-        }
+      if (instanaHeaders.length) {
+        const {
+          level: _level,
+          traceId: _traceId,
+          parentSpanId: _parentSpanId
+        } = findInstanaHeaderValues(instanaHeadersAsObject);
+
+        traceId = _traceId;
+        parentSpanId = _parentSpanId;
+        level = _level;
+
         removeInstanaHeadersFromMessage(messageData);
       }
 
-      if (event === 'data' || event === 'error') {
-        cls.ns.runAndReturn(function () {
-          if (level !== '1') {
-            cls.setTracingLevel(level || '0');
-            return originalEmit.apply(ctx, originalArgs);
-          }
-          const span = cls.startSpan('kafka', constants.ENTRY, traceId, parentSpanId);
-          span.stack = tracingUtil.getStackTrace(instrumentedConsumerEmit, 1);
-          span.data.kafka = {
-            access: 'consume',
-            service: messageData.topic
-          };
-
-          if (event === 'error') {
-            delete messageData.headers;
-            span.ec = 1;
-            span.data.kafka.error = messageData.message;
-          }
-
-          setImmediate(() => {
-            span.d = Date.now() - span.ts;
-            span.transmit();
-          });
-
+      cls.ns.runAndReturn(function () {
+        if (level !== '1') {
+          cls.setTracingLevel(level || '0');
           return originalEmit.apply(ctx, originalArgs);
+        }
+
+        const span = cls.startSpan('kafka', constants.ENTRY, traceId, parentSpanId);
+        span.stack = tracingUtil.getStackTrace(instrumentedConsumerEmit, 1);
+
+        span.data.kafka = {
+          access: 'consume',
+          service: messageData.topic || 'empty'
+        };
+
+        // CASE: stream consumer receives error e.g. cannot connect to kafka
+        if (event === 'error') {
+          delete messageData.headers;
+
+          span.ec = 1;
+          span.data.kafka.error = messageData.message;
+        }
+
+        setImmediate(() => {
+          span.d = Date.now() - span.ts;
+          span.transmit();
         });
-      } else {
+
         return originalEmit.apply(ctx, originalArgs);
-      }
+      });
     }
   });
 }
@@ -409,6 +399,41 @@ function addTraceLevelSuppressionString(headers) {
     headers.push({ [constants.kafkaTraceLevelHeaderNameString]: '0' });
   }
   return headers;
+}
+
+function findInstanaHeaderValues(instanaHeadersAsObject) {
+  let traceId;
+  let parentSpanId;
+  let level;
+
+  // CASE: Look for the the newer string header format first.
+  if (instanaHeadersAsObject[constants.kafkaTraceIdHeaderNameString]) {
+    traceId = String(instanaHeadersAsObject[constants.kafkaTraceIdHeaderNameString]);
+  }
+  if (instanaHeadersAsObject[constants.kafkaSpanIdHeaderNameString]) {
+    parentSpanId = String(instanaHeadersAsObject[constants.kafkaSpanIdHeaderNameString]);
+  }
+  if (instanaHeadersAsObject[constants.kafkaTraceLevelHeaderNameString]) {
+    level = String(instanaHeadersAsObject[constants.kafkaTraceLevelHeaderNameString]);
+  }
+
+  // CASE: Only fall back to legacy binary trace correlation headers if no new header is present.
+  if (traceId == null && parentSpanId == null && level == null) {
+    // The newer string header format has not been found, fall back to legacy binary headers.
+    if (instanaHeadersAsObject[constants.kafkaTraceContextHeaderNameBinary]) {
+      const traceContextBuffer = instanaHeadersAsObject[constants.kafkaTraceContextHeaderNameBinary];
+
+      if (Buffer.isBuffer(traceContextBuffer) && traceContextBuffer.length === 24) {
+        const traceContext = tracingUtil.readTraceContextFromBuffer(traceContextBuffer);
+        traceId = traceContext.t;
+        parentSpanId = traceContext.s;
+      }
+    }
+
+    level = readTraceLevelBinary(instanaHeadersAsObject);
+  }
+
+  return { level, traceId, parentSpanId };
 }
 
 exports.activate = function activate() {
