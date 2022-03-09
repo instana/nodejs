@@ -10,6 +10,7 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 
 - [Instana npm Packages](#instana-npm-packages)
+- [Breaking Changes](#breaking-changes)
 - [Filing Issues](#filing-issues)
 - [Documentation](#documentation)
 
@@ -24,6 +25,12 @@ The following packages are meant for direct consumption by Instana users, all  o
 * `@instana/aws-lambda`: See <https://www.ibm.com/docs/de/obi/current?topic=kinesis-aws-lambda-native-tracing-nodejs#supported-runtimes>.
 * `@instana/collector`: See <https://www.ibm.com/docs/de/obi/current?topic=technologies-monitoring-nodejs>.
 * `@instana/google-cloud-run`: See <https://www.ibm.com/docs/de/obi/current?topic=agents-monitoring-google-cloud-run#instana-cloud-native-buildpack-for-google-cloud-run> or <https://www.ibm.com/docs/de/obi/current?topic=agents-monitoring-google-cloud-run#nodejs>.
+
+## Breaking Changes
+
+The current major release is `2.x.y`.
+
+Checkout our [breaking changes documentation](https://www.ibm.com/docs/de/obi/current?topic=technologies-monitoring-nodejs#supported-nodejs-versions#breaking-changes) to upgrade from v1 to v2.
 
 ## Filing Issues
 
