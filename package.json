@@ -171,9 +171,6 @@
     "winston": "^3.3.3",
     "ws": "^7.5.6"
   },
-  "optionalDependencies": {
-    "kafka-avro": "^3.1.1"
-  },
   "config": {
     "commitizen": {
       "path": "./node_modules/cz-conventional-changelog"
