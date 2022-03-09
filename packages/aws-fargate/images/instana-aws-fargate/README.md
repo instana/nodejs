@@ -32,7 +32,7 @@ We have to login at container registry in AWS, because otherwise we cannot push 
 
 ```
 cd ..
-./ecr-login.sh
+./aws-ecr-login.sh
 ```
 
 You can now publish the image:
@@ -61,6 +61,7 @@ cp .env.template .env
 https://us-east-2.console.aws.amazon.com/ecr/repositories?region=us-east-2
 
 If you cannot push the image to AWS, you need to first create the repository!
+    e.g. fargate-nodejs-test-8.17.0-aws
 
 If the image pops up:
 https://us-east-2.console.aws.amazon.com/ecs/home?region=us-east-2#/taskDefinitions
@@ -95,3 +96,7 @@ The port is in the server.js file.
 (local = build mode)
 
 
+## Node Version Switch
+
+./build-and-push.sh aws 12 standard next
+./build-and-push.sh aws 8 standard next
