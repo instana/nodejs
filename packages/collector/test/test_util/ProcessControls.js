@@ -246,6 +246,7 @@ class ProcessControls {
     const requestOptions = Object.assign({}, opts);
     const baseUrl = this.getBaseUrl(opts);
     requestOptions.baseUrl = baseUrl;
+
     if (this.http2) {
       return http2Promise.request(requestOptions);
     } else {

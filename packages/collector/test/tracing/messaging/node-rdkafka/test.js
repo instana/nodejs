@@ -34,7 +34,6 @@ const globalAgent = require('../../../globalAgent');
 const { verifyHttpRootEntry, verifyHttpExit } = require('@instana/core/test/test_util/common_verifications');
 
 let mochaSuiteFn;
-const RUN_SINGLE_TEST = false;
 
 const producerEnableDeliveryCbOptions = ['true', 'false'];
 const producerApiMethods = ['standard', 'stream'];
@@ -48,6 +47,7 @@ if (!supportedVersion(process.versions.node)) {
   mochaSuiteFn = describe;
 }
 
+const RUN_SINGLE_TEST = false;
 const retryTime = config.getTestTimeout() * 2;
 const topic = 'rdkafka-topic';
 
@@ -115,59 +115,57 @@ mochaSuiteFn('tracing/messaging/node-rdkafka', function () {
                     producerControls = null;
                   });
 
-                  // NOTE: this condition helps to test a single use case locally
                   if (
-                    RUN_SINGLE_TEST &&
-                    producerMethod !== 'standard' &&
-                    consumerMethod !== 'standard' &&
-                    deliveryCbEnabled !== 'true' &&
-                    objectMode !== 'true' &&
-                    withError
+                    !RUN_SINGLE_TEST ||
+                    (RUN_SINGLE_TEST &&
+                      producerMethod === 'stream' &&
+                      consumerMethod === 'stream' &&
+                      objectMode === 'true' &&
+                      deliveryCbEnabled === 'true' &&
+                      !withError)
                   ) {
-                    return;
+                    it(`produces(${producerMethod}); consumes(${consumerMethod}); error: ${withError}`, async () => {
+                      const apiPath = `/produce/${producerMethod}`;
+
+                      let urlWithParams;
+
+                      if (withError === 'deliveryErrorSender') {
+                        urlWithParams = apiPath + '?throwDeliveryErr=true';
+                        await consumerControls.kill();
+                      } else if (withError === 'bufferErrorSender') {
+                        urlWithParams = apiPath + '?bufferErrorSender=true';
+                      } else {
+                        urlWithParams = apiPath;
+                      }
+
+                      let response;
+
+                      if (withError !== 'streamErrorReceiver') {
+                        response = await producerControls.sendRequest({
+                          method: 'GET',
+                          path: urlWithParams
+                        });
+                      } else {
+                        response = {
+                          timestamp: Date.now(),
+                          wasSent: false,
+                          topic,
+                          msg: null,
+                          messageCounter: 0
+                        };
+                      }
+
+                      return verify(
+                        consumerControls,
+                        producerControls,
+                        response,
+                        apiPath,
+                        withError,
+                        objectMode,
+                        producerMethod
+                      );
+                    });
                   }
-
-                  it(`produces(${producerMethod}); consumes(${consumerMethod}); error: ${withError}`, async () => {
-                    const apiPath = `/produce/${producerMethod}`;
-
-                    let urlWithParams;
-
-                    if (withError === 'deliveryErrorSender') {
-                      urlWithParams = apiPath + '?throwDeliveryErr=true';
-                      await consumerControls.kill();
-                    } else if (withError === 'bufferErrorSender') {
-                      urlWithParams = apiPath + '?bufferErrorSender=true';
-                    } else {
-                      urlWithParams = apiPath;
-                    }
-
-                    let response;
-
-                    if (withError !== 'streamErrorReceiver') {
-                      response = await producerControls.sendRequest({
-                        method: 'GET',
-                        path: urlWithParams
-                      });
-                    } else {
-                      response = {
-                        timestamp: Date.now(),
-                        wasSent: false,
-                        topic,
-                        msg: null,
-                        messageCounter: 0
-                      };
-                    }
-
-                    return verify(
-                      consumerControls,
-                      producerControls,
-                      response,
-                      apiPath,
-                      withError,
-                      objectMode,
-                      producerMethod
-                    );
-                  });
                 });
               });
             });
@@ -283,7 +281,7 @@ mochaSuiteFn('tracing/messaging/node-rdkafka', function () {
     ]);
   }
 
-  describe('tracing disabled', () => {
+  describe.skip('tracing disabled', () => {
     this.timeout(config.getTestTimeout() * 2);
 
     const producerControls = new ProcessControls({
@@ -329,7 +327,7 @@ mochaSuiteFn('tracing/messaging/node-rdkafka', function () {
     });
   });
 
-  describe('tracing enabled but suppressed', () => {
+  describe.skip('tracing enabled but suppressed', () => {
     const producerControls = new ProcessControls({
       appPath: path.join(__dirname, 'producer'),
       port: 3216,
