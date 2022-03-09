@@ -44,10 +44,18 @@ const withErrorMethods = [false, 'bufferErrorSender', 'deliveryErrorSender', 'st
 if (!supportedVersion(process.versions.node)) {
   mochaSuiteFn = describe.skip;
 } else {
-  mochaSuiteFn = describe.only;
+  mochaSuiteFn = describe;
 }
 
 const RUN_SINGLE_TEST = false;
+const SINGLE_TEST_PROPS = {
+  producerMethod: 'stream',
+  consumerMethod: 'stream',
+  objectMode: 'false',
+  deliveryCbEnabled: 'true',
+  withError: false
+};
+
 const retryTime = config.getTestTimeout() * 2;
 const topic = 'rdkafka-topic';
 
@@ -118,11 +126,11 @@ mochaSuiteFn('tracing/messaging/node-rdkafka', function () {
                   if (
                     !RUN_SINGLE_TEST ||
                     (RUN_SINGLE_TEST &&
-                      producerMethod === 'stream' &&
-                      consumerMethod === 'stream' &&
-                      objectMode === 'true' &&
-                      deliveryCbEnabled === 'true' &&
-                      !withError)
+                      producerMethod === SINGLE_TEST_PROPS.producerMethod &&
+                      consumerMethod === SINGLE_TEST_PROPS.consumerMethod &&
+                      objectMode === SINGLE_TEST_PROPS.objectMode &&
+                      deliveryCbEnabled === SINGLE_TEST_PROPS.deliveryCbEnabled &&
+                      withError === SINGLE_TEST_PROPS.withError)
                   ) {
                     it(`produces(${producerMethod}); consumes(${consumerMethod}); error: ${withError}`, async () => {
                       const apiPath = `/produce/${producerMethod}`;
@@ -209,11 +217,9 @@ mochaSuiteFn('tracing/messaging/node-rdkafka', function () {
     //       no producer exit span because we use headers and objectMode false does not support it
     if (objectMode === 'false' && producerMethod === 'stream' && !withError) {
       verifyHttpRootEntry({ spans, apiPath, pid: String(_senderControls.getPid()) });
-      // eslint-disable-next-line no-console
-      console.log('!DEBUG!');
-      // eslint-disable-next-line no-console
-      console.log(spans);
-      expect(spans.length).to.equal(1);
+      verifyHttpExit({ spans, parent: null, pid: String(_senderControls.getPid()) });
+
+      expect(spans.length).to.equal(2);
       return;
     }
 
@@ -285,7 +291,7 @@ mochaSuiteFn('tracing/messaging/node-rdkafka', function () {
     ]);
   }
 
-  describe.skip('tracing disabled', () => {
+  describe('tracing disabled', () => {
     this.timeout(config.getTestTimeout() * 2);
 
     const producerControls = new ProcessControls({
@@ -331,7 +337,7 @@ mochaSuiteFn('tracing/messaging/node-rdkafka', function () {
     });
   });
 
-  describe.skip('tracing enabled but suppressed', () => {
+  describe('tracing enabled but suppressed', () => {
     const producerControls = new ProcessControls({
       appPath: path.join(__dirname, 'producer'),
       port: 3216,

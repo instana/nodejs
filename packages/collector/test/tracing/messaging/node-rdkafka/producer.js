@@ -111,15 +111,22 @@ function doProduce(_producer, isStream, bufferErrorSender = false, msg = 'Node r
 
       log('Sending message as stream');
 
+      let wasSent = false;
       /**
        * Producer as stream can only send an object (which we need in order to set the header) if the option objectMode
        * is provided: https://github.com/Blizzard/node-rdkafka/blob/master/lib/producer-stream.js#L59
        */
-      const wasSent = _producer.write({
-        topic: topic,
-        headers: [{ message_counter: ++messageCounter }],
-        value: theMessage
-      });
+      try {
+        wasSent = _producer.write({
+          topic: topic,
+          headers: [{ message_counter: ++messageCounter }],
+          value: theMessage
+        });
+      } catch (e) {
+        // [ERR_INVALID_ARG_TYPE]: The "chunk" argument must be of type string or an instance of Buffer or
+        // Uint8Array. Received an instance of Object
+        // NOTE: Somehow this error is not thrown for Node < 14
+      }
 
       setTimeout(async () => {
         await fetch(`http://127.0.0.1:${agentPort}`);
