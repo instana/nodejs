@@ -226,72 +226,66 @@ function instrumentedConsumerEmit(ctx, originalEmit, originalArgs) {
   }
 
   eventData.forEach(messageData => {
-    if (cls.tracingSuppressed()) {
-      const headers = addTraceLevelSuppression(messageData.headers);
-      messageData.headers = headers;
-      return originalEmit.apply(ctx, originalArgs);
-    } else {
-      const instanaHeaders = (messageData.headers || []).filter(headerObject => {
-        const headerKey = Object.keys(headerObject)[0].toLowerCase();
-        return headerKey.indexOf('x_instana') > -1;
-      });
+    const instanaHeaders = (messageData.headers || []).filter(headerObject => {
+      const headerKey = Object.keys(headerObject)[0].toLowerCase();
+      return headerKey.indexOf('x_instana') > -1;
+    });
 
-      // flatten array to object
-      const instanaHeadersAsObject = {};
+    // flatten array to object
+    const instanaHeadersAsObject = {};
 
-      instanaHeaders.forEach(instanaHeader => {
-        const key = Object.keys(instanaHeader)[0];
-        instanaHeadersAsObject[key] = instanaHeader[key];
-      });
+    instanaHeaders.forEach(instanaHeader => {
+      const key = Object.keys(instanaHeader)[0];
+      instanaHeadersAsObject[key] = instanaHeader[key];
+    });
 
-      let traceId;
-      let parentSpanId;
-      let level;
+    let traceId;
+    let parentSpanId;
+    let level;
 
-      if (instanaHeaders.length) {
-        const {
-          level: _level,
-          traceId: _traceId,
-          parentSpanId: _parentSpanId
-        } = findInstanaHeaderValues(instanaHeadersAsObject);
+    if (instanaHeaders.length) {
+      const {
+        level: _level,
+        traceId: _traceId,
+        parentSpanId: _parentSpanId
+      } = findInstanaHeaderValues(instanaHeadersAsObject);
 
-        traceId = _traceId;
-        parentSpanId = _parentSpanId;
-        level = _level;
+      traceId = _traceId;
+      parentSpanId = _parentSpanId;
+      level = _level;
 
-        removeInstanaHeadersFromMessage(messageData);
+      removeInstanaHeadersFromMessage(messageData);
+    }
+
+    cls.ns.runAndReturn(function () {
+      if (level && level === '0') {
+        cls.setTracingLevel('0');
+        return originalEmit.apply(ctx, originalArgs);
       }
 
-      cls.ns.runAndReturn(function () {
-        if (level && level === '0') {
-          cls.setTracingLevel('0');
-          return originalEmit.apply(ctx, originalArgs);
-        }
+      const span = cls.startSpan('kafka', constants.ENTRY, traceId, parentSpanId);
+      span.stack = tracingUtil.getStackTrace(instrumentedConsumerEmit, 1);
 
-        const span = cls.startSpan('kafka', constants.ENTRY, traceId, parentSpanId);
-        span.stack = tracingUtil.getStackTrace(instrumentedConsumerEmit, 1);
+      span.data.kafka = {
+        access: 'consume',
+        service: messageData.topic || 'empty'
+      };
 
-        span.data.kafka = {
-          access: 'consume',
-          service: messageData.topic || 'empty'
-        };
+      // CASE: stream consumer receives error e.g. cannot connect to kafka
+      if (event === 'error') {
+        delete messageData.headers;
 
-        // CASE: stream consumer receives error e.g. cannot connect to kafka
-        if (event === 'error') {
-          delete messageData.headers;
+        span.ec = 1;
+        span.data.kafka.error = messageData.message;
+      }
 
-          span.ec = 1;
-          span.data.kafka.error = messageData.message;
-        }
-
-        setImmediate(() => {
-          span.d = Date.now() - span.ts;
-          span.transmit();
-        });
-
-        return originalEmit.apply(ctx, originalArgs);
+      setImmediate(() => {
+        span.d = Date.now() - span.ts;
+        span.transmit();
       });
-    }
+
+      return originalEmit.apply(ctx, originalArgs);
+    });
   });
 }
 
