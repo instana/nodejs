@@ -12,7 +12,6 @@
 - [Instana npm Packages](#instana-npm-packages)
 - [Filing Issues](#filing-issues)
 - [Documentation](#documentation)
-- [Legacy Package Name `instana-nodejs-sensor`](#legacy-package-name-instana-nodejs-sensor)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -39,8 +38,3 @@ Here are a few more quick links:
 * [Installation](https://www.ibm.com/docs/de/obi/current?topic=nodejs-collector-installation)
 * [Native Addons: Profiling, Garbage Collection and Event Loop Information](https://www.ibm.com/docs/de/obi/current?topic=nodejs-collector-installation#native-addons)
 * [API](https://www.ibm.com/docs/de/obi/current?topic=nodejs-instana-api).
-
-## Legacy Package Name `instana-nodejs-sensor`
-
-Up to release `1.64.0` (April 2019), the package `@instana/collector` was called `instana-nodejs-sensor`. Beginning with version `1.65.0`, the name had changed to `@instana/collector`. We continued to publish the package under the deprecated alias `instana-nodejs-sensor` for backwards compatibilty for all `1.x.y` versions, for a grace period of over 2.5 years. Starting with version `2.0.0`, the package `instana-nodejs-sensor` will no longer be updated. Please refer to our [migration guide](https://www.ibm.com/docs/de/obi/current?topic=nodejs-collector-installation#change-of-package-name) for details.
-
