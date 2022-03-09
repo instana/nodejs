@@ -4,13 +4,8 @@
 
 'use strict';
 
-require('../../../../')({
-  tracing: {
-    kafka: {
-      headerFormat: 'string'
-    }
-  }
-});
+require('../../../../')({});
+
 const Kafka = require('node-rdkafka');
 const fetch = require('node-fetch');
 const agentPort = process.env.INSTANA_AGENT_PORT || 42699;

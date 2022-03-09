@@ -17,9 +17,19 @@ logger = require('../../../logger').getLogger('tracing/rdkafka', newLogger => {
 });
 
 let traceCorrelationEnabled = true;
-// Before we start phase 1 of the migration, 'binary' will be the default value. With phase 1, we will move to 'both',
-// with phase 2 it will no longer be configurable and will always use 'string'.
-let headerFormat = 'binary';
+
+/**
+ * Kafka migration has not officially started yet
+ * The option `headerFormat` is not officially documented yet.
+ *
+ * To ensure customers can use rdkafka instrumentation we set the
+ * default to "both" here. That means we send both header formats
+ * by default.
+ *
+ * Node.js Sender -> Node.js Receiver works
+ * Node.js Sender -> Java Receiver does not works
+ */
+let headerFormat = 'both';
 
 let isActive = false;
 
@@ -28,7 +38,12 @@ exports.init = function init(config) {
   requireHook.onFileLoad(/\/node-rdkafka\/lib\/kafka-consumer-stream\.js/, instrumentConsumerAsStream);
   requireHook.onModuleLoad('node-rdkafka', instrumentConsumer);
   traceCorrelationEnabled = config.tracing.kafka.traceCorrelation;
-  headerFormat = config.tracing.kafka.headerFormat;
+
+  // NOTE: normalizeConfig sends "binary" by default
+  //       we don't want to use binary in rdkafka at all, see comment above
+  if (headerFormat === 'string') {
+    headerFormat = config.tracing.kafka.headerFormat;
+  }
 };
 
 function instrumentProducer(ProducerClass) {

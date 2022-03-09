@@ -4,13 +4,7 @@
 
 'use strict';
 
-require('../../../../')({
-  tracing: {
-    kafka: {
-      headerFormat: 'string'
-    }
-  }
-});
+require('../../../../')({});
 
 const KafkaAvro = require('kafka-avro');
 
