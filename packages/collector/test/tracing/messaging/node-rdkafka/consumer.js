@@ -36,19 +36,31 @@ function getConsumer() {
       {},
       {
         topics: [topic],
-        streamAsBatch: true
+        // NOTE: Receive either a single message or an array of messages
+        streamAsBatch: false
       }
     );
 
     _consumer.on('error', err => {
-      log('Consumer as stream reader error:', err);
+      log('Consumer stream error:', err);
     });
+
+    if (process.env.RDKAFKA_CONSUMER_ERROR && process.env.RDKAFKA_CONSUMER_ERROR === 'streamErrorReceiver') {
+      _consumer.consumer.consume(1, err => {
+        if (err.message === 'KafkaConsumer is not connected') {
+          setTimeout(() => {
+            _consumer.emit('error', err);
+          }, 500);
+        }
+      });
+    }
 
     _consumer.on('data', async data => {
       log('Got stream message');
 
       const span = instana.currentSpan();
       span.disableAutoEnd();
+
       // "headers" may or may not be present in data.
       // It is an array of objects {key: value}.
       // The producer can set a value either as string or Buffer, but the response received by the consumer is always
@@ -71,7 +83,8 @@ function getConsumer() {
 
     _consumer
       .on('ready', () => {
-        log('Ready.');
+        log('Standard Ready.');
+
         _consumer.subscribe([topic]);
 
         // Consume from the rdkafka-topic. This is what determines
@@ -91,18 +104,20 @@ function getConsumer() {
 
         const span = instana.currentSpan();
         span.disableAutoEnd();
+
         // "headers" may or may not be present in data.
         // it is an array of objects {key: value}.
         // the producer can set a value either as string or Buffer, but the response received by the consumer is always
         // a Uint8Array
         sendToParent(data);
+
         await delay(200);
         await fetch(`http://127.0.0.1:${agentPort}`);
         span.end();
       });
 
-    _consumer.on('event.error', err => {
-      log('Consumer as standard api error:', err);
+    _consumer.on('error', err => {
+      log('Consumer Standard error:', err);
     });
   }
 

@@ -48,7 +48,7 @@ function getProducer(isStream = false) {
         // In the instrumentation we can check Buffer.isBuffer, like it's done here:
         // https://github.com/Blizzard/node-rdkafka/blob/master/lib/producer-stream.js#L232
         // Without this option, the stream expects only the message as a Buffer.
-        objectMode: true
+        objectMode: process.env.RDKAFKA_OBJECT_MODE === 'true'
       }
     );
   } else {
@@ -94,12 +94,11 @@ let messageCounter = 0;
  * @param {string} msg
  * @returns {{ wasSent: boolean, topic: string, msg: string, timestamp: number }}
  */
-function doProduce(_producer, isStream, withError = false, msg = 'Node rdkafka is great!') {
+function doProduce(_producer, isStream, bufferErrorSender = false, msg = 'Node rdkafka is great!') {
   let theMessage = Buffer.from(msg);
 
-  log(`Sending message as ${isStream ? 'stream' : 'standard API'}`);
   if (isStream) {
-    if (withError) {
+    if (bufferErrorSender) {
       // Message must be a buffer or null, so a number causes an error
       theMessage = 123;
     }
@@ -109,6 +108,8 @@ function doProduce(_producer, isStream, withError = false, msg = 'Node rdkafka i
         _producer.close();
         reject(err);
       });
+
+      log('Sending message as stream');
 
       /**
        * Producer as stream can only send an object (which we need in order to set the header) if the option objectMode
@@ -133,12 +134,14 @@ function doProduce(_producer, isStream, withError = false, msg = 'Node rdkafka i
       }, 100);
     });
   } else {
-    if (withError) {
+    if (bufferErrorSender) {
       theMessage = 'invalid message as string';
     }
 
     return new Promise((resolve, reject) => {
       _producer.on('error', reject);
+
+      log('Sending message as standard');
 
       const wasSent = _producer.produce(topic, null, theMessage, null, null, null, [
         { message_counter: ++messageCounter }
@@ -165,14 +168,15 @@ let streamProducer = getProducer(true);
 // method is either standard or stream
 app.get('/produce/:method', async (req, res) => {
   const method = req.params.method || 'standard';
-  const withError = req.query.withError === 'true';
+  const bufferErrorSender = req.query.bufferErrorSender === 'true';
+
   throwDeliveryErr = req.query.throwDeliveryErr === 'true';
 
   try {
     const response = await doProduce(
       method === 'stream' ? streamProducer : standardProducer,
       method === 'stream',
-      withError
+      bufferErrorSender
     );
     res.status(200).send(response);
   } catch (err) {

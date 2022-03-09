@@ -34,24 +34,21 @@ const globalAgent = require('../../../globalAgent');
 const { verifyHttpRootEntry, verifyHttpExit } = require('@instana/core/test/test_util/common_verifications');
 
 let mochaSuiteFn;
+const RUN_SINGLE_TEST = false;
 
 const producerEnableDeliveryCbOptions = ['true', 'false'];
 const producerApiMethods = ['standard', 'stream'];
 const consumerApiMethods = ['standard', 'stream'];
-const withErrorMethods = [false, 'bufferErrorSender', 'deliveryErrorSender'];
-
-const { getCircularList } = require('@instana/core/test/test_util/circular_list');
-const getNextProducerMethod = getCircularList(producerApiMethods);
-const getNextConsumerMethod = getCircularList(consumerApiMethods);
-const getNextDeliveryCb = getCircularList(producerEnableDeliveryCbOptions);
+const objectModeMethods = ['true', 'false'];
+const withErrorMethods = [false, 'bufferErrorSender', 'deliveryErrorSender', 'streamErrorReceiver'];
 
 if (!supportedVersion(process.versions.node)) {
   mochaSuiteFn = describe.skip;
 } else {
   mochaSuiteFn = describe;
 }
-const retryTime = config.getTestTimeout() * 2;
 
+const retryTime = config.getTestTimeout() * 2;
 const topic = 'rdkafka-topic';
 
 mochaSuiteFn('tracing/messaging/node-rdkafka', function () {
@@ -60,77 +57,117 @@ mochaSuiteFn('tracing/messaging/node-rdkafka', function () {
   globalAgent.setUpCleanUpHooks();
   const agentControls = globalAgent.instance;
 
-  describe('tracing enabled, no suppression', function () {
-    producerEnableDeliveryCbOptions.forEach(deliveryCbEnabled => {
-      describe(`Producer ${deliveryCbEnabled === 'true' ? 'with' : 'without'} delivery callback enabled`, () => {
-        const producerControls = new ProcessControls({
-          appPath: path.join(__dirname, 'producer'),
-          port: 3216,
-          useGlobalAgent: true,
-          env: {
-            RDKAFKA_PRODUCER_DELIVERY_CB: deliveryCbEnabled === 'true'
-          }
-        });
+  producerEnableDeliveryCbOptions.forEach(deliveryCbEnabled => {
+    objectModeMethods.forEach(objectMode => {
+      consumerApiMethods.forEach(consumerMethod => {
+        producerApiMethods.forEach(producerMethod => {
+          withErrorMethods.forEach(withError => {
+            let consumerControls;
+            let producerControls;
 
-        ProcessControls.setUpHooksWithRetryTime(retryTime, producerControls);
+            // CASE: skip these combination because they do not work or don't make sense
+            if (
+              (withError === 'deliveryErrorSender' && deliveryCbEnabled === 'false') ||
+              (withError === 'deliveryErrorSender' && consumerMethod === 'stream') ||
+              (withError === 'deliveryErrorSender' && producerMethod === 'stream') ||
+              (withError === 'streamErrorReceiver' && producerMethod === 'standard') ||
+              (withError === 'streamErrorReceiver' && consumerMethod === 'standard')
+            ) {
+              return;
+            }
 
-        consumerApiMethods.forEach(consumerMethod => {
-          describe(`consuming via ${consumerMethod} API`, () => {
-            const consumerControls = new ProcessControls({
-              appPath: path.join(__dirname, 'consumer'),
-              port: 3215,
-              useGlobalAgent: true,
-              env: {
-                RDKAFKA_CONSUMER_AS_STREAM: consumerMethod === 'stream' ? 'true' : 'false'
-              }
-            });
-            ProcessControls.setUpHooksWithRetryTime(retryTime, consumerControls);
+            describe('tracing enabled, no suppression', function () {
+              describe(`delivery report: ${deliveryCbEnabled}`, function () {
+                describe(`object mode: ${objectMode}`, function () {
+                  beforeEach(async () => {
+                    consumerControls = new ProcessControls({
+                      appPath: path.join(__dirname, 'consumer'),
+                      port: 3215,
+                      useGlobalAgent: true,
+                      env: {
+                        RDKAFKA_CONSUMER_AS_STREAM: consumerMethod === 'stream' ? 'true' : 'false',
+                        RDKAFKA_CONSUMER_ERROR: withError
+                      }
+                    });
 
-            beforeEach(async () => {
-              if (consumerControls.getPid()) {
-                return;
-              }
+                    producerControls = new ProcessControls({
+                      appPath: path.join(__dirname, 'producer'),
+                      port: 3216,
+                      useGlobalAgent: true,
+                      env: {
+                        RDKAFKA_OBJECT_MODE: objectMode,
+                        RDKAFKA_PRODUCER_DELIVERY_CB: deliveryCbEnabled === 'true'
+                      }
+                    });
 
-              await consumerControls.startAndWaitForAgentConnection();
-            });
-
-            afterEach(async () => {
-              await consumerControls.kill();
-              consumerControls.clearIpcMessages();
-            });
-
-            producerApiMethods.forEach(producerMethod => {
-              withErrorMethods.forEach(withError => {
-                const apiPath = `/produce/${producerMethod}`;
-
-                // CASE: skip these combination because they do not work
-                if (
-                  (withError === 'deliveryErrorSender' && deliveryCbEnabled === 'false') ||
-                  (withError === 'deliveryErrorSender' && consumerMethod === 'stream') ||
-                  (withError === 'deliveryErrorSender' && producerMethod === 'stream')
-                ) {
-                  return;
-                }
-
-                it(`produces(${producerMethod}); consumes(${consumerMethod}); error: ${withError}`, async () => {
-                  let urlWithParams;
-
-                  if (withError === 'deliveryErrorSender') {
-                    urlWithParams = apiPath + '?throwDeliveryErr=true';
-
-                    await consumerControls.kill();
-                  } else if (withError === 'bufferErrorSender') {
-                    urlWithParams = apiPath + '?withError=true';
-                  } else {
-                    urlWithParams = apiPath;
-                  }
-
-                  const response = await producerControls.sendRequest({
-                    method: 'GET',
-                    path: urlWithParams
+                    await consumerControls.startAndWaitForAgentConnection();
+                    await producerControls.startAndWaitForAgentConnection();
                   });
 
-                  return verify(consumerControls, producerControls, response, apiPath, withError);
+                  afterEach(async () => {
+                    await consumerControls.stop();
+                    await producerControls.stop();
+
+                    consumerControls.clearIpcMessages();
+                    producerControls.clearIpcMessages();
+
+                    consumerControls = null;
+                    producerControls = null;
+                  });
+
+                  // NOTE: this condition helps to test a single use case locally
+                  if (
+                    RUN_SINGLE_TEST &&
+                    producerMethod !== 'standard' &&
+                    consumerMethod !== 'standard' &&
+                    deliveryCbEnabled !== 'true' &&
+                    objectMode !== 'true' &&
+                    withError
+                  ) {
+                    return;
+                  }
+
+                  it(`produces(${producerMethod}); consumes(${consumerMethod}); error: ${withError}`, async () => {
+                    const apiPath = `/produce/${producerMethod}`;
+
+                    let urlWithParams;
+
+                    if (withError === 'deliveryErrorSender') {
+                      urlWithParams = apiPath + '?throwDeliveryErr=true';
+                      await consumerControls.kill();
+                    } else if (withError === 'bufferErrorSender') {
+                      urlWithParams = apiPath + '?bufferErrorSender=true';
+                    } else {
+                      urlWithParams = apiPath;
+                    }
+
+                    let response;
+
+                    if (withError !== 'streamErrorReceiver') {
+                      response = await producerControls.sendRequest({
+                        method: 'GET',
+                        path: urlWithParams
+                      });
+                    } else {
+                      response = {
+                        timestamp: Date.now(),
+                        wasSent: false,
+                        topic,
+                        msg: null,
+                        messageCounter: 0
+                      };
+                    }
+
+                    return verify(
+                      consumerControls,
+                      producerControls,
+                      response,
+                      apiPath,
+                      withError,
+                      objectMode,
+                      producerMethod
+                    );
+                  });
                 });
               });
             });
@@ -140,17 +177,44 @@ mochaSuiteFn('tracing/messaging/node-rdkafka', function () {
     });
   });
 
-  function verify(_producerControls, _consumerControls, response, apiPath, withError) {
+  function verify(_producerControls, _consumerControls, response, apiPath, withError, objectMode, producerMethod) {
     return retry(() => {
-      verifyResponseAndMessage(response, _producerControls, withError);
+      verifyResponseAndMessage(response, _producerControls, withError, objectMode, producerMethod);
 
       return agentControls
         .getSpans()
-        .then(spans => verifySpans(_producerControls, _consumerControls, spans, apiPath, null, withError));
+        .then(spans =>
+          verifySpans(_producerControls, _consumerControls, spans, apiPath, null, withError, objectMode, producerMethod)
+        );
     }, retryTime);
   }
 
-  function verifySpans(receiverControls, _senderControls, spans, apiPath, messageId, withError) {
+  function verifySpans(
+    receiverControls,
+    _senderControls,
+    spans,
+    apiPath,
+    messageId,
+    withError,
+    objectMode,
+    producerMethod
+  ) {
+    // CASE: Consumer error entry span has no parent
+    // CASE: consumer error means -> we not even produce a kafka msg
+    if (withError === 'streamErrorReceiver') {
+      verifyRdKafkaEntry(receiverControls, spans, null, messageId, withError);
+      expect(spans.length).to.equal(1);
+      return;
+    }
+
+    // CASE: producer stream only works with objectMode true
+    //       no producer exit span because we use headers and objectMode false does not support it
+    if (objectMode === 'false' && producerMethod === 'stream' && !withError) {
+      verifyHttpRootEntry({ spans, apiPath, pid: String(_senderControls.getPid()) });
+      expect(spans.length).to.equal(1);
+      return;
+    }
+
     const httpEntry = verifyHttpRootEntry({ spans, apiPath, pid: String(_senderControls.getPid()) });
     let kafkaExit;
 
@@ -160,7 +224,7 @@ mochaSuiteFn('tracing/messaging/node-rdkafka', function () {
       verifyHttpExit({ spans, parent: httpEntry, pid: String(_senderControls.getPid()) });
     }
 
-    // CASE: we do not expect a kafka entry span (consumer message)
+    // CASE: we do not expect a kafka entry span for errors
     if (!withError) {
       const kafkaEntry = verifyRdKafkaEntry(receiverControls, spans, kafkaExit, messageId, withError);
       verifyHttpExit({ spans, parent: kafkaEntry, pid: String(receiverControls.getPid()) });
@@ -173,22 +237,23 @@ mochaSuiteFn('tracing/messaging/node-rdkafka', function () {
     return operation(spans, [
       span => expect(span.n).to.equal('kafka'),
       span => expect(span.k).to.equal(constants.ENTRY),
-      span => expect(span.t).to.equal(parent.t),
-      span => expect(span.p).to.equal(parent.s),
+      span => (parent ? expect(span.t).to.equal(parent.t) : ''),
+      span => (parent ? expect(span.p).to.equal(parent.s) : ''),
       span => expect(span.f.e).to.equal(String(receiverControls.getPid())),
       span => expect(span.f.h).to.equal('agent-stub-uuid'),
       span => {
-        if (withError === 'receiver') {
-          expect(span.data.kafka.error).to.match(/Forced error/);
+        if (withError === 'streamErrorReceiver') {
+          expect(span.data.kafka.error).to.equal('KafkaConsumer is not connected');
         } else {
           expect(span.data.kafka.error).to.not.exist;
         }
       },
-      span => expect(span.ec).to.equal(withError === 'receiver' ? 1 : 0),
+      span => expect(span.ec).to.equal(withError ? 1 : 0),
       span => expect(span.async).to.not.exist,
       span => expect(span.data).to.exist,
       span => expect(span.data.kafka).to.be.an('object'),
-      span => expect(span.data.kafka.service).to.equal(topic),
+      span =>
+        parent ? expect(span.data.kafka.service).to.equal(topic) : expect(span.data.kafka.service).to.equal('empty'),
       span => expect(span.data.kafka.access).to.equal('consume')
     ]);
   }
@@ -227,13 +292,12 @@ mochaSuiteFn('tracing/messaging/node-rdkafka', function () {
       useGlobalAgent: true,
       tracingEnabled: false,
       env: {
-        RDKAFKA_PRODUCER_DELIVERY_CB: getNextDeliveryCb()
+        RDKAFKA_PRODUCER_DELIVERY_CB: 'false'
       }
     });
 
     ProcessControls.setUpHooksWithRetryTime(retryTime, producerControls);
 
-    const receivingMethod = getNextConsumerMethod();
     describe('producing and consuming', () => {
       const consumerControls = new ProcessControls({
         appPath: path.join(__dirname, 'consumer'),
@@ -247,11 +311,10 @@ mochaSuiteFn('tracing/messaging/node-rdkafka', function () {
 
       ProcessControls.setUpHooksWithRetryTime(retryTime, consumerControls);
 
-      const producerMethod = getNextProducerMethod();
-      it(`should not trace for producing as ${producerMethod} / consuming as ${receivingMethod}`, async () => {
+      it('should not trace for producing as standard / consuming as standard', async () => {
         const response = await producerControls.sendRequest({
           method: 'GET',
-          path: `/produce/${producerMethod}`
+          path: '/produce/standard'
         });
 
         return retry(() => verifyResponseAndMessage(response, consumerControls), retryTime)
@@ -272,13 +335,12 @@ mochaSuiteFn('tracing/messaging/node-rdkafka', function () {
       port: 3216,
       useGlobalAgent: true,
       env: {
-        RDKAFKA_PRODUCER_DELIVERY_CB: getNextDeliveryCb()
+        RDKAFKA_PRODUCER_DELIVERY_CB: 'false'
       }
     });
 
     ProcessControls.setUpHooksWithRetryTime(retryTime, producerControls);
 
-    const consumerMethod = getNextConsumerMethod();
     describe('tracing suppressed', () => {
       const receiverControls = new ProcessControls({
         appPath: path.join(__dirname, 'consumer'),
@@ -291,11 +353,10 @@ mochaSuiteFn('tracing/messaging/node-rdkafka', function () {
 
       ProcessControls.setUpHooksWithRetryTime(retryTime, receiverControls);
 
-      const producerMethod = getNextProducerMethod();
-      it(`doesn't trace when producing as ${producerMethod} / consuming as ${consumerMethod}`, async () => {
+      it("doesn't trace when producing as standard / consuming as standard", async () => {
         const response = await producerControls.sendRequest({
           method: 'GET',
-          path: `/produce/${producerMethod}`,
+          path: '/produce/standard',
           suppressTracing: true
         });
 
@@ -314,13 +375,14 @@ mochaSuiteFn('tracing/messaging/node-rdkafka', function () {
   });
 });
 
-function verifyResponseAndMessage(response, consumerControls, withError) {
+function verifyResponseAndMessage(response, consumerControls, withError, objectMode, producerMethod) {
   expect(response).to.be.an('object');
   const receivedMessages = consumerControls.getIpcMessages();
   expect(receivedMessages).to.be.an('array');
 
   // CASE: we do not expect consumer messages if error on sender side
-  if (withError) {
+  // CASE: producer stream does not work with objectMode false
+  if (withError || (objectMode === 'false' && producerMethod === 'stream')) {
     expect(receivedMessages.length).to.equal(0);
     return;
   }
