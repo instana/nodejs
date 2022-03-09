@@ -28,8 +28,6 @@ const topicName = 'kafka-avro-topic';
 (async () => {
   await kafkaAvro.init();
 
-  isReady = true;
-
   const consumer = await kafkaAvro.getConsumer({
     // Keep this value low (default is 5000ms) to be sure that messages won't survive between tests.
     'auto.commit.interval.ms': 500,
@@ -40,6 +38,7 @@ const topicName = 'kafka-avro-topic';
 
   await new Promise((resolve, reject) => {
     consumer.on('ready', () => {
+      isReady = true;
       resolve(consumer);
     });
 
