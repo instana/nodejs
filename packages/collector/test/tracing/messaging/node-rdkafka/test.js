@@ -44,7 +44,7 @@ const withErrorMethods = [false, 'bufferErrorSender', 'deliveryErrorSender', 'st
 if (!supportedVersion(process.versions.node)) {
   mochaSuiteFn = describe.skip;
 } else {
-  mochaSuiteFn = describe;
+  mochaSuiteFn = describe.only;
 }
 
 const RUN_SINGLE_TEST = false;
@@ -209,6 +209,8 @@ mochaSuiteFn('tracing/messaging/node-rdkafka', function () {
     //       no producer exit span because we use headers and objectMode false does not support it
     if (objectMode === 'false' && producerMethod === 'stream' && !withError) {
       verifyHttpRootEntry({ spans, apiPath, pid: String(_senderControls.getPid()) });
+      console.log('!DEBUG!');
+      console.log(spans);
       expect(spans.length).to.equal(1);
       return;
     }
