@@ -263,8 +263,8 @@ function instrumentedConsumerEmit(ctx, originalEmit, originalArgs) {
       }
 
       cls.ns.runAndReturn(function () {
-        if (level !== '1') {
-          cls.setTracingLevel(level || '0');
+        if (level && level === '0') {
+          cls.setTracingLevel('0');
           return originalEmit.apply(ctx, originalArgs);
         }
 
