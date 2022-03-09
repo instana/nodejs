@@ -23,6 +23,14 @@ try {
     module.exports = exports = require('./preactivate.js');
     return;
   } else if (majorVersion >= 6 && majorVersion < 10) {
+    // eslint-disable-next-line no-console
+    console.log(
+      `@instana/aws-fargate has detected an outdated Node.js runtime version (${nodeJsVersion}), falling back to` +
+        ' package version 1.x. We strongly recommend to pin the major version of the base image ' +
+        'icr.io/instana/aws-fargate-nodejs. See ' +
+        'https://www.ibm.com/docs/en/obi/current?topic=agents-monitoring-aws-fargate#versioning.'
+    );
+
     // Maintenance note: As long as we do not backport the changes to index.js and the additional preactivate.js file to
     // the 1.x branch, this needs to point to:
     //   /instana/legacy-1x/node_modules/@instana/aws-fargate/src/index
