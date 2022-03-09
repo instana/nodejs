@@ -209,7 +209,9 @@ mochaSuiteFn('tracing/messaging/node-rdkafka', function () {
     //       no producer exit span because we use headers and objectMode false does not support it
     if (objectMode === 'false' && producerMethod === 'stream' && !withError) {
       verifyHttpRootEntry({ spans, apiPath, pid: String(_senderControls.getPid()) });
+      // eslint-disable-next-line no-console
       console.log('!DEBUG!');
+      // eslint-disable-next-line no-console
       console.log(spans);
       expect(spans.length).to.equal(1);
       return;
