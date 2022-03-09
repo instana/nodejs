@@ -225,7 +225,7 @@ class ProcessControls {
 
   getPid() {
     if (!this.process) {
-      return 'no process, no PID';
+      return false;
     }
     return this.process.pid;
   }
@@ -246,6 +246,7 @@ class ProcessControls {
     const requestOptions = Object.assign({}, opts);
     const baseUrl = this.getBaseUrl(opts);
     requestOptions.baseUrl = baseUrl;
+
     if (this.http2) {
       return http2Promise.request(requestOptions);
     } else {
@@ -285,7 +286,11 @@ class ProcessControls {
       return Promise.resolve();
     }
     return new Promise(resolve => {
-      this.process.once('exit', resolve);
+      this.process.once('exit', () => {
+        this.process.pid = null;
+        resolve();
+      });
+
       this.process.kill();
     });
   }

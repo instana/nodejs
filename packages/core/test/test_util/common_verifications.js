@@ -143,10 +143,10 @@ exports.verifyHttpExit = function verifyHttpExit({
 }) {
   const tests = [
     (/** @type {InstanaBaseSpan} */ span) => {
-      expect(span.t).to.equal(parent.t);
+      parent ? expect(span.t).to.equal(parent.t) : '';
     },
     (/** @type {InstanaBaseSpan} */ span) => {
-      expect(span.p).to.equal(parent.s);
+      parent ? expect(span.p).to.equal(parent.s) : '';
     },
     (/** @type {InstanaBaseSpan} */ span) => {
       expect(span.k).to.equal(constants.EXIT);
