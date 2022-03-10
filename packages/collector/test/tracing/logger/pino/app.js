@@ -7,22 +7,49 @@
 
 'use strict';
 
-const agentPort = process.env.INSTANA_AGENT_PORT;
-
+require('./mockVersion');
 require('../../../..')();
 
 const request = require('request-promise');
 const bodyParser = require('body-parser');
 const express = require('express');
 const morgan = require('morgan');
-
-const pinoOptions = {
-  customLevels: {
-    customInfo: 31,
-    customError: 51
-  }
-};
 const pino = require('pino');
+
+const agentPort = process.env.INSTANA_AGENT_PORT;
+let pinoOptions;
+
+if (process.env.PINO_VERSION === '6') {
+  pinoOptions = {
+    customLevels: {
+      customInfo: 31,
+      customError: 51
+    }
+  };
+} else {
+  pinoOptions = {
+    customLevels: {
+      customInfo: 31,
+      customError: 51
+    },
+    transport: {
+      pipeline: [
+        {
+          target: 'pino-pretty'
+        }
+      ]
+    }
+  };
+
+  /*
+  NOTE: This syntax does the same than the syntax above
+        Except: customLevels cannot be set
+  pinoOptions = pino.transport({
+    target: 'pino-pretty'
+  });
+  */
+}
+
 const plainVanillaPino = pino(pinoOptions);
 const expressPino = require('express-pino-logger')(pinoOptions);
 
