@@ -50,22 +50,12 @@ describe('dependencies', function () {
         agentControls.getAllMetrics(controls.getPid()).then(allMetrics => {
           const deps = findMetric(allMetrics, ['dependencies']);
           expect(deps).to.be.an('object');
+
           expect(Object.keys(deps)).to.have.lengthOf(75);
 
+          // Ensure some main example dependencies exist in the metrics
           expectVersion(deps.fastify, '^3.20.2');
           expectVersion(deps.express, '^4.17.1');
-          expectVersion(deps.koa, '^2.13.1');
-
-          expect(deps.mime).to.exist;
-          expect(deps['mime-types']).to.exist;
-          expect(deps.ms).to.exist;
-
-          // According to how we sort and limit the collected dependencies, ms should be the last package that
-          // is included while negotiator is the first that is omitted.
-          expect(deps.negotiator).to.not.exist;
-          expect(deps['pino-std-serializers']).to.not.exist;
-          expect(deps['quick-format-unescaped']).to.not.exist;
-          expect(deps['raw-body']).to.not.exist;
         })
       ));
   });
