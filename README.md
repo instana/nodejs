@@ -30,7 +30,7 @@ The following packages are meant for direct consumption by Instana users, all  o
 
 The current major release is `2.x.y`.
 
-Checkout our [breaking changes documentation](https://www.ibm.com/docs/de/obi/current?topic=technologies-monitoring-nodejs#supported-nodejs-versions#breaking-changes) to upgrade from v1 to v2.
+Checkout our [breaking changes documentation](https://www.ibm.com/docs/en/obi/current?topic=technologies-monitoring-nodejs#breaking-changes) to upgrade from v1 to v2.
 
 ## Filing Issues
 
