@@ -33,18 +33,23 @@ function shimGenLog(originalGenLog) {
       return originalGenLog.apply(this, arguments);
     } else {
       const originalLoggingFunction = originalGenLog.apply(this, arguments);
+
       return function log(mergingObject, message) {
         if (isActive && cls.isTracing()) {
           const parentSpan = cls.getCurrentSpan();
+
           if (parentSpan && !constants.isExitSpan(parentSpan)) {
             const originalArgs = new Array(arguments.length);
+
             for (let i = 0; i < arguments.length; i++) {
               originalArgs[i] = arguments[i];
             }
+
             const ctx = this;
             return cls.ns.runAndReturn(() => {
               const span = cls.startSpan('log.pino', constants.EXIT);
               span.stack = tracingUtil.getStackTrace(log);
+
               if (typeof mergingObject === 'string') {
                 // calls like logger.error('only a message')
                 message = mergingObject;
@@ -71,12 +76,15 @@ function shimGenLog(originalGenLog) {
                 // If it is neither of those call patterns, we give up and do not capture a message.
                 message = 'Pino log call without message and mergingObject.';
               }
+
               span.data.log = {
                 message
               };
+
               if (level >= 50) {
                 span.ec = 1;
               }
+
               try {
                 return originalLoggingFunction.apply(ctx, originalArgs);
               } finally {
