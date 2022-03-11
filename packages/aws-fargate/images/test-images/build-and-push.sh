@@ -5,6 +5,18 @@
 # (c) Copyright Instana Inc. and contributors 2020
 #######################################
 
+# This script builds and pushes a test image that can be used as a Fargate task. You can either the Instanan Node.js
+# Fargate base image from one of various sources (published production image, image from your local Docker registry,
+# image from an AWS ECR registry with pre-release images).
+
+# ##############
+# # Parameters #
+# ##############
+#
+# ./build-and-push.sh <instana-layer-mode> <node-js-version> <linux-distribution> <docker-tag>
+#
+# See ./build.sh for a more details description of the parameters that this script accepts.
+
 set -eo pipefail
 
 cd `dirname $BASH_SOURCE`
