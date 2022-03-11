@@ -5,8 +5,31 @@
 # (c) Copyright Instana Inc. and contributors 2020
 #######################################
 
-# This is a local script for testing the images.
-# We use serverless/ci/pipeline.yml to publish the images. 
+# This script is only used locally to build test versions of the container image. The production image on icr.io
+# is built and published via Concourse, see serverless/ci/pipeline.yml. However, note that the files Dockerfile-npm and
+# package.json.npm in this directory are used for the production image.
+#
+# The use cases for this script are:
+# * Built a Fargate base container image from your local sources (including all local modifications), and
+# * Building a base container image from an npm image that does not have the dist tag "latest", for example a
+#   release candidate npm package tagged with "next".
+# * Testing changes in the Dockerfile or package.json used for building the base container image.
+#
+# The images built by this script can either be used locally or pushed to a Docker registry, see ./build-and-push.sh for
+# a script that includes uploading the image to a remote Docker registry.
+
+# ##############
+# # Parameters #
+# ##############
+#
+# $1: Build mode:
+#     - local: Builds the container image from your local machine, including all local modifications.
+#     - npm: Downloads @instana/aws-fargate from the npm registry and puts that into the image. Local modifications or
+#       commits not included in the release are ignored.
+# $2: npm dist tag:
+#     - latest (this is the default)
+#     - any other dist tag that is available in the npm registry for @instana/aws-fargate.
+#       The most common use case would be to build a base image from a pre-release npm dist tag like "next" for testing.
 
 # use -eox to see better output
 set -eo pipefail
@@ -35,14 +58,18 @@ if [[ -z "${build_mode-}" ]]; then
   build_mode=local
 fi
 
+# Use a dist-tag like "next" as the second parameter to build an image from a pre-release candidate.
 npm_tag=$2
+if [[ -z "${npm_tag-}" ]]; then
+  npm_tag=latest
+fi
 
-echo BUILD MODE ${build_mode}
-echo NPM TAG ${npm_tag}
+echo Build Mode: ${build_mode}
+echo npm Tag: ${npm_tag}
 
 dockerfile=Dockerfile-$build_mode
 build_arg=
-setImageTag $image_tag_prefix $build_mode
+setImageTag $image_tag_prefix $build_mode $npm_tag
 
 echo "Building $image_tag from $dockerfile"
 
@@ -86,8 +113,7 @@ elif [[ $build_mode = npm ]]; then
   else
     package_version=$(npm show @instana/aws-fargate version)
   fi
-
-  echo NPM Package Version $package_version
+  echo npm package version $package_version
 
   build_arg="--build-arg package_version=$package_version"
 else
@@ -96,27 +122,18 @@ else
   exit 1
 fi
 
-echo "Removing image $image_tag"
+echo "Removing images $image_tag_without_version and $image_tag"
+docker rmi -f $image_tag_without_version
 docker rmi -f $image_tag
 
 echo "Building $dockerfile -> $image_tag"
-
-if [[ -n $npm_tag ]]; then
-  docker build --progress=plain $build_arg -f $dockerfile -t $image_tag:$npm_tag -t $ecr_repository/$image_tag:$npm_tag .
-else
-  docker build --progress=plain $build_arg -f $dockerfile -t $image_tag -t $ecr_repository/$image_tag .
-fi
-
+docker build --progress=plain $build_arg -f $dockerfile -t $image_tag -t $ecr_repository/$image_tag .
 echo "docker build exit status: $?"
 
 if [[ $build_mode = npm ]]; then
-  if [[ -n $npm_tag ]]; then
-    docker tag $image_tag:$npm_tag $image_tag:$package_version
-    docker tag $ecr_repository/$image_tag:$npm_tag $ecr_repository/$image_tag:$package_version
-  else
-    docker tag $image_tag:latest $image_tag:$package_version
-    docker tag $ecr_repository/$image_tag:latest $ecr_repository/$image_tag:$package_version
-  fi  
+  # Add additional tags with the exact npm package version.
+  docker tag $image_tag $image_tag_without_version:$package_version
+  docker tag $ecr_repository/$image_tag $ecr_repository/$image_tag_without_version:$package_version
 fi
 
 rm -f package.json
