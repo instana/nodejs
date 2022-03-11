@@ -5,8 +5,24 @@
 # (c) Copyright Instana Inc. and contributors 2020
 #######################################
 
-# This is a local script for testing the images.
-# We use serverless/ci/pipeline.yml to publish the images. 
+# This script is only used locally to build and push test versions of the container image. The production image on
+# icr.io is built and published via Concourse, see serverless/ci/pipeline.yml. However, note that the files
+# Dockerfile-npm, package.json.npm and setup.sh in this directory _are_ actually used for the production image.
+#
+# The use cases for this script are:
+# * Built a Fargate base container image from your local sources (including all local modifications), and
+# * Building a base container image from an npm image that does not have the dist tag "latest", for example a
+#   release candidate npm package tagged with "next".
+# * Testing changes in the Dockerfile or package.json used for building the base container image.
+#
+# This script will upload the image directly to a remote Docker registry after building it. By default, we use an
+# AWS ECR registry (this can be configured via .env).
+
+# ##############
+# # Parameters #
+# ##############
+#
+# See ./build.sh for a detailed description of the parameters that this script accepts.
 
 # use -eox to see better output
 set -eo pipefail
@@ -39,15 +55,10 @@ npm_tag=$2
 
 ./build.sh $build_mode $npm_tag
 
-setImageTag $image_tag_prefix $build_mode
+setImageTag $image_tag_prefix $build_mode $npm_tag
 
-if [[ -n $npm_tag ]]; then
-  docker push $ecr_repository/$image_tag:$npm_tag
-  echo "Pushing image $image_tag:$npm_tag to $ecr_repository"
-else
-  docker push $ecr_repository/$image_tag
-  echo "Pushing image $image_tag to $ecr_repository"
-fi
+echo "Pushing image $image_tag to $ecr_repository"
+docker push $ecr_repository/$image_tag
 
 if [[ $build_mode = npm ]]; then
   if [[ -n $npm_tag ]]; then
@@ -55,8 +66,6 @@ if [[ $build_mode = npm ]]; then
   else
     package_version=$(npm show @instana/aws-fargate version)
   fi
-
-  echo NPM Package Version $package_version
-
-  docker push $ecr_repository/$image_tag:$package_version
+  echo npm package version: $package_version
+  docker push $ecr_repository/$image_tag_without_version:$package_version
 fi

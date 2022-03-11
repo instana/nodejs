@@ -2,16 +2,16 @@ function normalizeArgs {
   local instanaLayerMode=$1
 
   if [[ -z "${instanaLayerMode-}" || $instanaLayerMode = released ]]; then
-    INSTANA_LAYER=icr.io/instana/aws-fargate-nodejs:latest
+    instana_layer_without_tag=icr.io/instana/aws-fargate-nodejs
     INSTANA_LAYER_MODE=released
   elif [[ $instanaLayerMode = authenticated ]]; then
-    INSTANA_LAYER=containers.instana.io/instana/release/aws/fargate/nodejs:latest
+    instana_layer_without_tag=containers.instana.io/instana/release/aws/fargate/nodejs
     INSTANA_LAYER_MODE=authenticated
   elif [[ $instanaLayerMode = local ]]; then
-    INSTANA_LAYER=instana-aws-fargate-nodejs-local
+    instana_layer_without_tag=instana-aws-fargate-nodejs-local
     INSTANA_LAYER_MODE=local
   elif [[ $instanaLayerMode = aws ]]; then
-    INSTANA_LAYER=410797082306.dkr.ecr.us-east-2.amazonaws.com/instana-aws-fargate-nodejs
+    instana_layer_without_tag=410797082306.dkr.ecr.us-east-2.amazonaws.com/instana-aws-fargate-nodejs
     INSTANA_LAYER_MODE=aws
   else
     echo "Unknown option for Instana layer: $instanaLayerMode"
@@ -47,13 +47,15 @@ function normalizeArgs {
   else
     DOCKER_TAG=latest
   fi
+  INSTANA_LAYER=$instana_layer_without_tag:$DOCKER_TAG
 }
 
 function setImageTag {
   local prefix=$1
-  local nodeJsVersion=$2
-  local distribution=$3
 
+  local nodeJsVersion=$2
+
+  local distribution=$3
   if [[ $distribution = standard ]]; then
     distribution=""
   elif [[ $distribution = alpine ]]; then
@@ -66,6 +68,7 @@ function setImageTag {
   fi
 
   local instanaLayerMode=$4
+
   local docker_tag=$5
 
   image_tag=$prefix-$nodeJsVersion$distribution-$instanaLayerMode:$docker_tag
@@ -73,7 +76,9 @@ function setImageTag {
 
 function setContainerName {
   local prefix=$1
+
   local nodeJsVersion=$2
+
   local distribution=$3
   if [[ $distribution = standard ]]; then
     distribution=""
@@ -85,7 +90,10 @@ function setContainerName {
     echo "Unknown option for Linux distribution: $distribution"
     exit 1
   fi
+
   local instanaLayerMode=$4
 
-  container_name=$prefix-$nodeJsVersion$distribution-$instanaLayerMode
+  local docker_tag=$5
+
+  container_name=$prefix-$nodeJsVersion$distribution-$instanaLayerMode-$docker_tag
 }
