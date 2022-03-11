@@ -5,13 +5,30 @@
 # (c) Copyright Instana Inc. and contributors 2020
 #######################################
 
+# This script builds and runs a test image locally. You can either the Instanan Node.js Google Cloud Run
+# base image from one of various sources (published production image, image from your local Docker registry,
+# image from an GCR registry with pre-release images). To run test images locally, you will also want to start the
+# metadata server emulation via
+#
+#   node packages/google-cloud-run/test/metadata_mock
+#
+# in a separate shell.
+
+# ##############
+# # Parameters #
+# ##############
+#
+# ./build-and-run.sh <instana-layer-mode> <node-js-version> <linux-distribution> <docker-tag>
+#
+# See ./build.sh for a more details description of the parameters that this script accepts.
+
 set -eo pipefail
 
 cd `dirname $BASH_SOURCE`
 
 source utils
 
-normalizeArgs $1 $2 $3
+normalizeArgs $1 $2 $3 $4
 
 if [[ ! -f .env ]]; then
   echo .env file is missing
@@ -40,10 +57,10 @@ if [[ -z "${metadata_v1-}" ]]; then
   exit 1
 fi
 
-./build.sh $INSTANA_LAYER_MODE $NODEJS_VERSION $LINUX_DISTRIBUTION
+./build.sh $INSTANA_LAYER_MODE $NODEJS_VERSION $LINUX_DISTRIBUTION $DOCKER_TAG
 
-setImageTag $image_tag_prefix $NODEJS_VERSION $LINUX_DISTRIBUTION $INSTANA_LAYER_MODE
-setContainerName $container_name_prefix $NODEJS_VERSION $LINUX_DISTRIBUTION $INSTANA_LAYER_MODE
+setImageTag $image_tag_prefix $NODEJS_VERSION $LINUX_DISTRIBUTION $INSTANA_LAYER_MODE $DOCKER_TAG
+setContainerName $container_name_prefix $NODEJS_VERSION $LINUX_DISTRIBUTION $INSTANA_LAYER_MODE $DOCKER_TAG
 
 echo "Running container $container_name from image $image_tag (reporting to $instana_endpoint_url/$instana_agent_key)"
 docker \
