@@ -20,6 +20,7 @@ const cls = require('../../cls');
 
 let Metadata;
 let isActive = false;
+const addressRegex = /^(.*):(\d+)$/;
 
 const TYPES = {
   UNARY: 'unary',
@@ -28,29 +29,14 @@ const TYPES = {
   BIDI: 'bidi'
 };
 
-const ALL_TYPES = [TYPES.UNARY, TYPES.SERVER_STREAM, TYPES.CLIENT_STREAM, TYPES.BIDI];
-const TYPES_WITH_CALLBACK = [TYPES.UNARY, TYPES.CLIENT_STREAM];
-const TYPES_WITH_CALL_END = [TYPES.SERVER_STREAM, TYPES.BIDI];
-
-const addressRegex = /^(.*):(\d+)$/;
-
-const deprecated = {};
-
-deprecated.TYPES = {};
-deprecated.TYPES.UNARY = 'unary';
-deprecated.TYPES.SERVER_STREAM = 'server_stream';
-deprecated.TYPES.CLIENT_STREAM = 'client_stream';
-deprecated.TYPES.BIDI = 'bidi';
-
-deprecated.ALL_TYPES = [
-  deprecated.TYPES.UNARY,
-  deprecated.TYPES.CLIENT_STREAM,
-  deprecated.TYPES.SERVER_STREAM,
-  deprecated.TYPES.BIDI
-];
-
-deprecated.TYPES_WITH_CALLBACK = [deprecated.TYPES.UNARY, deprecated.TYPES.CLIENT_STREAM];
-deprecated.TYPES_WITH_CALL_END = [deprecated.TYPES.BIDI, deprecated.TYPES.SERVER_STREAM];
+const deprecated = {
+  TYPES: {
+    UNARY: 'unary',
+    SERVER_STREAM: 'server_stream',
+    CLIENT_STREAM: 'client_stream',
+    BIDI: 'bidi'
+  }
+};
 
 // TODO: Check if we need more tests
 // TODO: never instrument both at the same time
@@ -85,9 +71,14 @@ deprecated.instrumentServer = serverModule => {
     shimServerRegister({
       name: 'GRPC',
       isDeprecated: true,
-      allTypes: deprecated.ALL_TYPES,
-      typesWithCallback: deprecated.TYPES_WITH_CALLBACK,
-      typesWithCallEnd: deprecated.TYPES_WITH_CALL_END
+      allTypes: [
+        deprecated.TYPES.UNARY,
+        deprecated.TYPES.CLIENT_STREAM,
+        deprecated.TYPES.SERVER_STREAM,
+        deprecated.TYPES.BIDI
+      ],
+      typesWithCallback: [deprecated.TYPES.UNARY, deprecated.TYPES.CLIENT_STREAM],
+      typesWithCallEnd: [deprecated.TYPES.BIDI, deprecated.TYPES.SERVER_STREAM]
     })
   );
 };
@@ -284,9 +275,9 @@ function instrumentServer(serverModule) {
     shimServerRegister({
       name: 'GRPC-JS',
       isDeprecated: false,
-      allTypes: ALL_TYPES,
-      typesWithCallback: TYPES_WITH_CALLBACK,
-      typesWithCallEnd: TYPES_WITH_CALL_END
+      allTypes: [TYPES.UNARY, TYPES.SERVER_STREAM, TYPES.CLIENT_STREAM, TYPES.BIDI],
+      typesWithCallback: [TYPES.UNARY, TYPES.CLIENT_STREAM],
+      typesWithCallEnd: [TYPES.SERVER_STREAM, TYPES.BIDI]
     })
   );
 }
