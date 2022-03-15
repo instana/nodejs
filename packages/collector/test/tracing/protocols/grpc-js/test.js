@@ -158,8 +158,6 @@ function waitForTrace(serverControls, clientControls, url, cancel, erroneous) {
 }
 
 function checkTrace(serverControls, clientControls, spans, url, cancel, erroneous) {
-  //  console.log(spans);
-
   const httpEntry = expectExactlyOneMatching(spans, checkHttpEntry(url));
   const grpcEntry = expectExactlyOneMatching(
     spans,
