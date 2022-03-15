@@ -15,7 +15,7 @@ const pinoLogger = require('pino')();
 const app = express();
 
 const PROTO_PATH = path.join(__dirname, 'protos/test.proto');
-const logPrefix = `GRPC Server (${process.pid}):\t`;
+const logPrefix = `GRPC-JS Server (${process.pid}):\t`;
 let server;
 
 const runServer = async () => {
