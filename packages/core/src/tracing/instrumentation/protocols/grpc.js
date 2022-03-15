@@ -324,10 +324,7 @@ function instrumentClient(clientModule) {
           return origFn.apply(this, arguments);
         }
 
-        const originalArgs = new Array(arguments.length);
-        for (let i = 0; i < arguments.length; i++) {
-          originalArgs[i] = arguments[i];
-        }
+        const originalArgs = copyArgs(arguments);
 
         if (isSuppressed) {
           modifyArgs(originalArgs, null, requestStream, responseStream);
@@ -363,7 +360,6 @@ function instrumentClient(clientModule) {
 // makeServerStreamRequest: (method, serialize, deserialize, argument)
 // makeBidiStreamRequest:   (method, serialize, deserialize, metadata, options)
 // makeBidiStreamRequest:   (method, serialize, deserialize, options)
-// TODO: unit test!
 function modifyArgs(originalArgs, span, requestStream, responseStream) {
   let metadata;
   let callback;
