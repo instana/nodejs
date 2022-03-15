@@ -640,6 +640,7 @@ function readMetadata(metadata, key) {
   return null;
 }
 
+// From https://github.com/grpc/grpc-node/blob/master/packages/grpc-js/src/uri-parser.ts
 const NUMBER_REGEX = /^\d+$/;
 function splitHostPort(path) {
   if (path.startsWith('[')) {
