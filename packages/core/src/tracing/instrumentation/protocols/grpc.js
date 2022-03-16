@@ -188,7 +188,7 @@ deprecated.shimClientMethod = (address, rpcPath, requestStream, responseStream, 
  * If responseStream is true, there is no response callback, we listen for the 'end' event instead (only relevant if
  * we are tracing, that is, span != null).
  */
-deprecated.modifyArgs = (originalArgs, span, requestStream, responseStream) => {
+deprecated.modifyArgs = (originalArgs, span, responseStream) => {
   // Find callback, metadata and options in original arguments, the parameters can be:
   // (message, metadata, options, callback) but all of them except the message can be optional.
   // All of
@@ -318,7 +318,7 @@ function instrumentClient(clientModule) {
         const originalArgs = copyArgs(arguments);
 
         if (isSuppressed) {
-          modifyArgs(originalArgs, null, requestStream, responseStream);
+          modifyArgs(name, originalArgs, null);
           return origFn.apply(this, originalArgs);
         }
 
@@ -334,7 +334,9 @@ function instrumentClient(clientModule) {
           requestStream,
           responseStream,
           {
-            modifyArgs
+            modifyArgs: function (args, s) {
+              modifyArgs(name, args, s);
+            }
           }
         );
       };
@@ -342,26 +344,14 @@ function instrumentClient(clientModule) {
   });
 }
 
-// grpc-js client uses function overload
-// makeUnaryRequest:        (method, serialize, deserialize, argument, metadata, options, callback)
-// makeUnaryRequest:        (method, serialize, deserialize, argument, callback)
-// makeUnaryRequest:        (method, serialize, deserialize, argument, metadata, callback)
-// makeServerStreamRequest: (method, serialize, deserialize, argument, metadata, options)
-// makeServerStreamRequest: (method, serialize, deserialize, argument, options)
-// makeServerStreamRequest: (method, serialize, deserialize, argument)
-// makeBidiStreamRequest:   (method, serialize, deserialize, metadata, options)
-// makeBidiStreamRequest:   (method, serialize, deserialize, options)
-function modifyArgs(originalArgs, span, requestStream, responseStream) {
-  let metadata;
-  let callback;
-  let options;
-
-  const arg1 = originalArgs[originalArgs.length - 3];
-  const arg2 = originalArgs[originalArgs.length - 2];
-  const arg3 = originalArgs[originalArgs.length - 1];
-
-  const mockCallback = (i, originalCb) => {
-    originalArgs[i] = cls.ns.bind(function (err) {
+// See https://github.com/grpc/grpc-node/blob/master/packages/grpc-js/src/client.ts
+// makeUnaryRequest(method, serialize, deserialize, argument, metadata, options, callback)
+// makeClientStreamRequest(method, serialize, deserialize, metadata, options, callback)
+// makeBidiStreamRequest(method, serialize, deserialize, metadata, options)
+// makeServerStreamRequest(method, serialize, deserialize, argument, metadata, options)
+function modifyArgs(name, originalArgs, span) {
+  const mockCallback = (newArgs, originalCb) => {
+    newArgs[newArgs.length - 1] = cls.ns.bind(function (err) {
       span.d = Date.now() - span.ts;
 
       if (err) {
@@ -380,80 +370,105 @@ function modifyArgs(originalArgs, span, requestStream, responseStream) {
     });
   };
 
-  if (typeof arg1 === 'function' && !responseStream) {
-    metadata = new Metadata();
-    options = {};
-    callback = arg3;
+  const setInstanaHeaders = metadata => {
+    if (metadata && metadata.set) {
+      metadata.set(constants.spanIdHeaderName, span.s);
+      metadata.set(constants.traceIdHeaderName, span.t);
+      metadata.set(constants.traceLevelHeaderName, '1');
+    }
+  };
 
-    originalArgs[originalArgs.length - 1] = metadata;
-    originalArgs.push(options);
-    originalArgs.push(arg3);
+  const checkMetadataOptionsAndCallback = (method, serialize, deserialize, argument, metadata, options, callback) => {
+    const arg1 = metadata;
+    const arg2 = options;
+    const arg3 = callback;
 
-    mockCallback(originalArgs.length - 1, callback);
-  } else if (typeof arg2 === 'function' && !responseStream) {
+    let newMetadata;
+    let newOptions;
+    let newCallback;
+
+    if (typeof arg1 === 'function') {
+      newMetadata = new Metadata();
+      newOptions = {};
+      newCallback = arg1;
+
+      originalArgs[originalArgs.length - 1] = newMetadata;
+      originalArgs.push(newOptions);
+      originalArgs.push(newCallback);
+    } else if (typeof arg2 === 'function') {
+      if (arg1 instanceof Metadata) {
+        newMetadata = arg1;
+        newOptions = {};
+        newCallback = arg2;
+
+        originalArgs[originalArgs.length - 2] = newMetadata;
+        originalArgs[originalArgs.length - 1] = newOptions;
+        originalArgs.push(newCallback);
+      } else {
+        newMetadata = new Metadata();
+        newOptions = arg1;
+        newCallback = arg2;
+
+        originalArgs[originalArgs.length - 2] = newMetadata;
+        originalArgs[originalArgs.length - 1] = newOptions;
+        originalArgs.push(newCallback);
+      }
+    } else {
+      if (!(arg1 instanceof Metadata && arg2 instanceof Object && typeof arg3 === 'function')) {
+        throw new Error('Incorrect arguments passed');
+      }
+
+      newMetadata = arg1;
+      newOptions = arg2;
+      newCallback = arg3;
+    }
+
+    mockCallback(originalArgs, newCallback);
+    setInstanaHeaders(newMetadata, span);
+  };
+
+  const checkMetadataAndOptions = (method, serialize, deserialize, argument, metadata, options) => {
+    const arg1 = metadata;
+    const arg2 = options;
+    let newMetadata;
+    let newOptions;
+
     if (arg1 instanceof Metadata) {
-      metadata = arg1;
-      options = {};
-      callback = arg2;
+      newMetadata = arg1;
+    } else if (!arg1 && !arg2) {
+      newOptions = {};
+      newMetadata = new Metadata();
 
-      originalArgs[originalArgs.length - 2] = options;
-      originalArgs.push(callback);
-
-      mockCallback(originalArgs.length - 1, callback);
+      originalArgs.push(newMetadata);
+      originalArgs.push(newOptions);
     } else {
-      metadata = new Metadata();
-      options = arg1;
-      callback = arg2;
+      newOptions = arg1;
+      newMetadata = new Metadata();
 
-      originalArgs[originalArgs.length - 3] = metadata;
-      originalArgs[originalArgs.length - 2] = options;
-      originalArgs[originalArgs.length - 1] = callback;
-
-      mockCallback(originalArgs.length - 1, callback);
+      originalArgs[originalArgs.length - 1] = newMetadata;
+      originalArgs.push(newOptions);
     }
-  } else if (responseStream && !requestStream) {
-    if (arg2 instanceof Metadata) {
-      metadata = arg2;
-      options = arg3;
-    } else if (originalArgs.length === 4) {
-      metadata = new Metadata();
-      options = {};
 
-      originalArgs.push(metadata);
-      originalArgs.push(options);
-    } else {
-      metadata = new Metadata();
-      options = arg3;
+    setInstanaHeaders(newMetadata, span);
+  };
 
-      originalArgs[originalArgs.length - 2] = metadata;
-      originalArgs[originalArgs.length - 1] = options;
-    }
-  } else if (responseStream && requestStream) {
-    if (arg2 instanceof Metadata) {
-      metadata = arg2;
-      options = arg3;
-    } else if (originalArgs.length === 3) {
-      metadata = new Metadata();
-      options = {};
-
-      originalArgs.push(metadata);
-      originalArgs.push(options);
-    } else {
-      metadata = new Metadata();
-      options = arg3;
-
-      originalArgs[originalArgs.length - 1] = metadata;
-      originalArgs.push(options);
-    }
-  } else {
-    metadata = arg1;
-    options = arg2;
-    callback = arg3;
+  if (name === 'makeClientStreamRequest') {
+    return checkMetadataOptionsAndCallback(
+      originalArgs[0],
+      originalArgs[1],
+      originalArgs[2],
+      null,
+      originalArgs[3],
+      originalArgs[4],
+      originalArgs[5]
+    );
   }
 
-  metadata.set(constants.spanIdHeaderName, span.s);
-  metadata.set(constants.traceIdHeaderName, span.t);
-  metadata.set(constants.traceLevelHeaderName, '1');
+  if (name === 'makeUnaryRequest') {
+    return checkMetadataOptionsAndCallback(...originalArgs);
+  }
+
+  return checkMetadataAndOptions(...originalArgs);
 }
 
 /**
@@ -598,7 +613,7 @@ function instrumentedClientMethod(
       flavor: 'grpc'
     };
 
-    config.modifyArgs(originalArgs, span, requestStream, responseStream);
+    config.modifyArgs(originalArgs, span, responseStream);
 
     const call = originalFunction.apply(ctx, originalArgs);
 
@@ -711,6 +726,9 @@ function copyAttributes(from, to) {
   });
   return to;
 }
+
+exports.modifyArgs = modifyArgs;
+exports.instrumentModule = instrumentModule;
 
 exports.activate = function () {
   isActive = true;
