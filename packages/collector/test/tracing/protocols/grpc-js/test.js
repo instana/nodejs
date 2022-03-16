@@ -60,6 +60,17 @@ mochaSuiteFn('tracing/grpc-js', function () {
       runTest('/bidi-stream', serverControls, clientControls, null, false, true));
   });
 
+  const maliMochaSuiteFn = semver.satisfies(process.versions.node, '>=14.0.0') ? describe : describe.skip;
+
+  maliMochaSuiteFn('with mali server', () => {
+    const { serverControls, clientControls } = createProcesses({}, { isMali: true });
+
+    it('must trace an unary call', () => {
+      const expectedReply = 'received: request';
+      return runTest('/unary-call', serverControls, clientControls, expectedReply);
+    });
+  });
+
   describe('suppressed', () => {
     const { clientControls } = createProcesses();
 
@@ -107,12 +118,22 @@ mochaSuiteFn('tracing/grpc-js', function () {
   });
 });
 
-function createProcesses(env = {}) {
-  const serverControls = new ProcessControls({
-    appPath: path.join(__dirname, 'server'),
-    useGlobalAgent: true,
-    env
-  });
+function createProcesses(env = {}, opts = { isMali: false }) {
+  let serverControls;
+
+  if (!opts.isMali) {
+    serverControls = new ProcessControls({
+      appPath: path.join(__dirname, 'server'),
+      useGlobalAgent: true,
+      env
+    });
+  } else {
+    serverControls = new ProcessControls({
+      appPath: path.join(__dirname, 'maliServer'),
+      useGlobalAgent: true,
+      env
+    });
+  }
 
   const clientControls = new ProcessControls({
     appPath: path.join(__dirname, 'client'),

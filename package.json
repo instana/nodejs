@@ -132,6 +132,7 @@
     "lodash": "^4.17.21",
     "log4js": "^6.3.0",
     "mali": "0.23.0",
+    "mali-latest": "npm:mali@^0.46.1",
     "memcached": "2.2.2",
     "mkdirp": "^1.0.4",
     "mocha": "^7.2.0",
