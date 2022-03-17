@@ -253,14 +253,39 @@ function shimServerRegister(originalFunction) {
   };
 }
 
-// NOTE: rpc server for grpc-js is http 2.0 and is auto instrumented by us
-// TODO: Why?
 function createInstrumentedServerHandler(name, type, originalHandler) {
   return function (call) {
     const originalThis = this;
     const originalArgs = arguments;
 
-    // TODO: Check ParentSpan?
+    const parentSpan = cls.getCurrentSpan();
+
+    /**
+     * The deprecated grpc module has used the server implementation in c++.
+     * That's why we have not auto instrumented the incoming http 2 server call.
+     * The `parentSpan` was always empty.
+     *
+     * But for grpc-js we autoinstrument the incoming http2 call.
+     * The `parentSpan` for grpc-js is always the parent http2 server entry span.
+     * We want to use the concept of priorisation and cancel the parent span.
+     *
+     * Any other parentspan which is not node.http.server should result in an error,
+     * because it signalises that something wrong happend. Usually this case
+     * should not happen.
+     */
+    if (parentSpan) {
+      if (parentSpan.n !== 'node.http.server') {
+        logger.warn(
+          'Cannot start a GRPC-JS entry span when another span is already active. Currently, the following span is ' +
+            'active: ' +
+            JSON.stringify(parentSpan)
+        );
+        return originalHandler.apply(originalThis, originalArgs);
+      }
+
+      parentSpan.cancel();
+    }
+
     return cls.ns.runAndReturn(() => {
       const metadata = call.metadata;
       const level = readMetadata(metadata, constants.traceLevelHeaderName);

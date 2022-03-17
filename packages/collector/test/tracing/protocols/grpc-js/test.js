@@ -173,6 +173,7 @@ function createQueryParams(cancel, erroneous) {
 function waitForTrace(serverControls, clientControls, url, cancel, erroneous) {
   return retry(() =>
     agentControls.getSpans().then(spans => {
+      expect(spans.length).to.eql(5);
       checkTrace(serverControls, clientControls, spans, url, cancel, erroneous);
     })
   );
