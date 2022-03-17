@@ -13,7 +13,7 @@ const kafkaJs = require('../../src/tracing/instrumentation/messaging/kafkaJs');
 const grpc = require('../../src/tracing/instrumentation/protocols/grpc');
 const grpcJs = require('../../src/tracing/instrumentation/protocols/grpcJs');
 
-const mochaSuiteFn = semver.satisfies(process.versions.node, '>=8.13.0') ? describe.only : describe.skip;
+const mochaSuiteFn = semver.satisfies(process.versions.node, '>=8.13.0') ? describe : describe.skip;
 
 mochaSuiteFn('[UNIT] tracing/index', function () {
   let activateStubGrpc;
