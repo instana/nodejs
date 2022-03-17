@@ -95,9 +95,8 @@ mochaSuiteFn('tracing/grpc-js', function () {
   });
 
   describe('individually disabled', () => {
-    // TODO: "grpc" not working!
     const { clientControls } = createProcesses({
-      INSTANA_DISABLED_TRACERS: 'GRPCJS'
+      INSTANA_DISABLED_TRACERS: 'grpcjs'
     });
 
     it('should not trace when GRPC tracing is individually disabled', () =>
