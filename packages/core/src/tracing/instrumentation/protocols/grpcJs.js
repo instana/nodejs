@@ -245,10 +245,16 @@ function shimServerRegister(originalFunction) {
 
     const originalArgs = copyArgs(arguments);
 
-    // NOTE: wrap handler for service method that is being registered
-    // TODO: why?
+    /**
+     * Override the original handler e.g. `function unaryCall` (see server.js)
+     * to instrument the incoming server call for the target type.
+     *
+     * name e.g. /instana.node.grpc.test.TestService/MakeUnaryCal
+     * type e.g. unary
+     */
     const originalHandler = originalArgs[1];
     originalArgs[1] = createInstrumentedServerHandler(name, type, originalHandler);
+
     return originalFunction.apply(this, originalArgs);
   };
 }
