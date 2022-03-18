@@ -5,11 +5,11 @@
 'use strict';
 
 const expect = require('chai').expect;
-const semver = require('semver');
+const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const grpc = require('../../../../../core/src/tracing/instrumentation/protocols/grpcJs');
 const { Metadata } = require('@grpc/grpc-js');
 
-const mochaSuiteFn = semver.satisfies(process.versions.node, '>=8.13.0') ? describe : describe.skip;
+const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
 mochaSuiteFn('[UNIT] tracing/grpc-js', function () {
   describe('modifyArgs', () => {
