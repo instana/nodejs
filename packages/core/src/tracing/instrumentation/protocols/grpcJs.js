@@ -275,7 +275,7 @@ function createInstrumentedServerHandler(name, type, originalHandler) {
      * The `parentSpan` for grpc-js is always the parent http2 server entry span.
      * We want to use the concept of priorisation and cancel the parent span.
      *
-     * Any other parentspan which is not node.http.server should result in an error,
+     * Any other parent span which is not node.http.server should result in an error,
      * because it signalises that something wrong happend. Usually this case
      * should not happen.
      */
