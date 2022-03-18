@@ -33,6 +33,7 @@ let patterns = [
   /\/graphql\/execution\//,
   /\/grpc\/index.js/,
   /\/grpc\/src\//,
+  /\/@grpc\/grpc-js\/build\/src\//,
   /\/ioredis\/built\//,
   /\/node-rdkafka\/lib\//,
   /\/kafka-node\/lib\//,
