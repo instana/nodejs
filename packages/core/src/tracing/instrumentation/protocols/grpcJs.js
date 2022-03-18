@@ -68,7 +68,12 @@ function instrumentClient(clientModule) {
 
     shimmer.wrap(clientModule.Client.prototype, name, function (origFn) {
       return function (method) {
-        const { host, port } = splitHostPort(address);
+        const hostAndPort = splitHostPort(address);
+
+        if (hostAndPort.port && typeof hostAndPort.port === 'number') {
+          hostAndPort.port = hostAndPort.port.toString();
+        }
+
         const parentSpan = cls.getCurrentSpan();
         const isTracing = isActive && cls.isTracing() && parentSpan && !constants.isExitSpan(parentSpan);
         const isSuppressed = cls.tracingLevel() === '0';
@@ -91,7 +96,7 @@ function instrumentClient(clientModule) {
           this,
           origFn,
           originalArgs,
-          { host, port: port.toString() },
+          hostAndPort,
           method,
           requestStream,
           responseStream,
@@ -431,15 +436,19 @@ const NUMBER_REGEX = /^\d+$/;
 function splitHostPort(path) {
   if (path.startsWith('[')) {
     const hostEnd = path.indexOf(']');
+
     if (hostEnd === -1) {
-      return null;
+      return { host: null, port: null };
     }
+
     const host = path.substring(1, hostEnd);
+
     /* Only an IPv6 address should be in bracketed notation, and an IPv6
      * address should have at least one colon */
     if (host.indexOf(':') === -1) {
-      return null;
+      return { host: null, port: null };
     }
+
     if (path.length > hostEnd + 1) {
       if (path[hostEnd + 1] === ':') {
         const portString = path.substring(hostEnd + 2);
@@ -449,14 +458,15 @@ function splitHostPort(path) {
             port: +portString
           };
         } else {
-          return null;
+          return { host: null, port: null };
         }
       } else {
-        return null;
+        return { host: null, port: null };
       }
     } else {
       return {
-        host
+        host,
+        port: null
       };
     }
   } else {
@@ -471,11 +481,12 @@ function splitHostPort(path) {
           port: +splitPath[1]
         };
       } else {
-        return null;
+        return { host: null, port: null };
       }
     } else {
       return {
-        host: path
+        host: path,
+        port: null
       };
     }
   }
