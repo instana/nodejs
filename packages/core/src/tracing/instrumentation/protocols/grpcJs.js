@@ -266,7 +266,7 @@ function createInstrumentedServerHandler(name, type, originalHandler) {
 
     const parentSpan = cls.getCurrentSpan();
 
-    /**
+    /*
      * The deprecated grpc module has used the server implementation in c++.
      * That's why we have not auto instrumented the incoming http 2 server call.
      * The `parentSpan` was always empty.
