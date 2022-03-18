@@ -78,12 +78,13 @@ function instrumentClient(clientModule) {
         const isTracing = isActive && cls.isTracing() && parentSpan && !constants.isExitSpan(parentSpan);
         const isSuppressed = cls.tracingLevel() === '0';
 
-        if (!isTracing) {
+        if (!isTracing && !isSuppressed) {
           return origFn.apply(this, arguments);
         }
 
         const originalArgs = copyArgs(arguments);
 
+        // NOTE: isTracing is false when the span should be suppressed
         if (isSuppressed) {
           modifyArgs(name, originalArgs, null);
           return origFn.apply(this, originalArgs);
@@ -133,9 +134,14 @@ function modifyArgs(name, originalArgs, span) {
 
   const setInstanaHeaders = metadata => {
     if (metadata && metadata.set) {
-      metadata.set(constants.spanIdHeaderName, span.s);
-      metadata.set(constants.traceIdHeaderName, span.t);
-      metadata.set(constants.traceLevelHeaderName, '1');
+      // NOTE: if the span is null, the tracing is suppressed
+      if (span) {
+        metadata.set(constants.spanIdHeaderName, span.s);
+        metadata.set(constants.traceIdHeaderName, span.t);
+        metadata.set(constants.traceLevelHeaderName, '1');
+      } else {
+        metadata.set(constants.traceLevelHeaderName, '0');
+      }
     }
   };
 
@@ -185,7 +191,10 @@ function modifyArgs(name, originalArgs, span) {
       newCallback = arg3;
     }
 
-    wrapCallback(originalArgs, newCallback);
+    if (span) {
+      wrapCallback(originalArgs, newCallback);
+    }
+
     setInstanaHeaders(newMetadata, span);
   };
 
