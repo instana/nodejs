@@ -181,7 +181,7 @@ function waitForTrace(serverControls, clientControls, url, cancel, erroneous) {
 
 function checkTrace(serverControls, clientControls, spans, url, cancel, erroneous) {
   const httpEntry = expectExactlyOneMatching(spans, checkHttpEntry(url));
-  const grpcEntry = expectExactlyOneMatching(
+  const grpcExit = expectExactlyOneMatching(
     spans,
     checkGrpcClientSpan(httpEntry, clientControls, url, cancel, erroneous)
   );
@@ -192,12 +192,12 @@ function checkTrace(serverControls, clientControls, spans, url, cancel, erroneou
   // server can signal to the client when to cancel the call after it has already reached the server, such a channel
   // does not exist for unary call and client side streaming.
   if (!cancel || url === '/server-stream' || url === '/bidi-stream') {
-    const grpcExit = expectExactlyOneMatching(
+    const grpcEntry = expectExactlyOneMatching(
       spans,
-      checkGrpcServerSpan(grpcEntry, serverControls, url, cancel, erroneous)
+      checkGrpcServerSpan(grpcExit, serverControls, url, cancel, erroneous)
     );
 
-    expectExactlyOneMatching(spans, checkLogSpanDuringGrpcEntry(grpcExit, url, erroneous));
+    expectExactlyOneMatching(spans, checkLogSpanDuringGrpcEntry(grpcEntry, url, erroneous));
   } else {
     // Would be nice to also check for the log span from the interceptor but will actually never be created because at
     // that time, the parent span is an exit span (the GRPC exit). If only log spans were intermediate spans :-)
@@ -244,12 +244,12 @@ function checkGrpcClientSpan(httpEntry, clientControls, url, cancel, erroneous) 
   return expectations;
 }
 
-function checkGrpcServerSpan(grpcEntry, serverControls, url, cancel, erroneous) {
+function checkGrpcServerSpan(grpcExit, serverControls, url, cancel, erroneous) {
   let expectations = [
     span => expect(span.n).to.equal('rpc-server'),
     span => expect(span.k).to.equal(constants.ENTRY),
-    span => expect(span.t).to.equal(grpcEntry.t),
-    span => expect(span.p).to.equal(grpcEntry.s),
+    span => expect(span.t).to.equal(grpcExit.t),
+    span => expect(span.p).to.equal(grpcExit.s),
     span => expect(span.s).to.be.not.empty,
     span => expect(span.f.e).to.equal(String(serverControls.getPid())),
     span => expect(span.data.rpc).to.exist,
