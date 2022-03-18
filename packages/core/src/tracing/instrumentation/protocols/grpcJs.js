@@ -111,7 +111,7 @@ function instrumentClient(clientModule) {
 
 // See https://github.com/grpc/grpc-node/blob/master/packages/grpc-js/src/client.ts
 function modifyArgs(name, originalArgs, span) {
-  const mockCallback = (newArgs, originalCb) => {
+  const wrapCallback = (newArgs, originalCb) => {
     newArgs[newArgs.length - 1] = cls.ns.bind(function (err) {
       span.d = Date.now() - span.ts;
 
@@ -184,7 +184,7 @@ function modifyArgs(name, originalArgs, span) {
       newCallback = arg3;
     }
 
-    mockCallback(originalArgs, newCallback);
+    wrapCallback(originalArgs, newCallback);
     setInstanaHeaders(newMetadata, span);
   };
 
