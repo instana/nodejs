@@ -34,6 +34,7 @@ let patterns = [
   /\/ioredis\/built\//,
   /\/kafka-node\/lib\//,
   /\/kafkajs\/index.js/,
+  /\/node-rdkafka\/lib\//,
   /\/koa-router\/lib\//,
   /\/log4js\/lib\/log4js.js/,
   /\/memored\/index.js/,
@@ -94,4 +95,9 @@ module.exports = function hasThePackageBeenInitializedTooLate() {
   }
   firstCall = false;
   return hasBeenInitializedTooLate;
+};
+
+module.exports.reset = () => {
+  hasBeenInitializedTooLate = false;
+  firstCall = true;
 };
