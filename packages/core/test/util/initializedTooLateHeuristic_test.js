@@ -50,6 +50,7 @@ describe('[UNIT] util.initializedTooLateHeurstic', () => {
     const originalRequireCache = require.cache;
 
     instrumentedModules.forEach(moduleName => {
+      // eslint-disable-next-line no-console
       console.log(`for module ${moduleName}`);
 
       // RESET CACHE & module
