@@ -91,6 +91,17 @@ mochaSuiteFn('[UNIT] tracing/grpc-js', function () {
       expect(originalArgs[4].get('x-instana-l')).to.eql(['1']);
       expect(originalArgs[5]).to.eql({});
       expect(originalArgs[6].name).to.eql('clsBind');
+
+      originalArgs = [method, serialize, deserialize, argument];
+
+      grpc.instrumentModule({ Metadata });
+      grpc.modifyArgs(name, originalArgs, span);
+
+      expect(originalArgs.length).to.eql(4);
+      expect(originalArgs[0]).to.eql('method');
+      expect(originalArgs[1].name).to.eql('serialize');
+      expect(originalArgs[2].name).to.eql('deserialize');
+      expect(originalArgs[3]).to.eql({ arg: 1 });
     });
 
     it('makeClientStreamRequest', () => {

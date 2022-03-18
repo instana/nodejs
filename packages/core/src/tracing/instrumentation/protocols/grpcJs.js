@@ -175,8 +175,9 @@ function modifyArgs(name, originalArgs, span) {
         originalArgs.push(newCallback);
       }
     } else {
+      // NOTE: Do nothing, because the format we expect is different
       if (!(arg1 instanceof Metadata && arg2 instanceof Object && typeof arg3 === 'function')) {
-        throw new Error('Incorrect arguments passed');
+        return;
       }
 
       newMetadata = arg1;
