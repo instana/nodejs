@@ -16,8 +16,10 @@ const grpc = require('@grpc/grpc-js');
 const path = require('path');
 const app = express();
 
-const PROTO_PATH = path.join(__dirname, 'protos/test.proto');
 const logPrefix = `GRPC-JS Client (${process.pid}):\t`;
+const log = require('@instana/core/test/test_util/log').getLogger(logPrefix);
+
+const PROTO_PATH = path.join(__dirname, 'protos/test.proto');
 
 let client;
 let makeUnaryCall;
@@ -228,10 +230,3 @@ app.post('/shutdown', (req, res) => {
 app.listen(port, () => {
   log(`Listening on port: ${port}`);
 });
-
-function log() {
-  const args = Array.prototype.slice.call(arguments);
-  args[0] = logPrefix + args[0];
-  // eslint-disable-next-line no-console
-  console.log.apply(console, args);
-}

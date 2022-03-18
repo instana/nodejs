@@ -17,6 +17,7 @@ const path = require('path');
 const expressApp = express();
 
 const logPrefix = `GRPC-JS Mali Server (${process.pid}):\t`;
+const log = require('@instana/core/test/test_util/log').getLogger(logPrefix);
 
 async function MakeUnaryCall(ctx) {
   pinoLogger.warn('/unary-call');
@@ -57,10 +58,3 @@ expressApp.get('/', (req, res) => {
 expressApp.listen(port, () => {
   log(`Listening on port: ${port}`);
 });
-
-function log() {
-  const args = Array.prototype.slice.call(arguments);
-  args[0] = `GRPC-JS Mali Server (${process.pid}):\t${args[0]}`;
-  // eslint-disable-next-line no-console
-  console.log.apply(console, args);
-}
