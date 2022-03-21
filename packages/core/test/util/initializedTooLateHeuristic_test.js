@@ -28,6 +28,7 @@ describe('[UNIT] util.initializedTooLateHeurstic', () => {
   });
 
   after(() => {
+    sinon.restore();
     delete require.cache['/@contrast/agent/'];
   });
 
@@ -47,14 +48,10 @@ describe('[UNIT] util.initializedTooLateHeurstic', () => {
   });
 
   it('hasBeenInitializedTooLate is true', () => {
-    const originalRequireCache = require.cache;
-
     instrumentedModules.forEach(moduleName => {
       // eslint-disable-next-line no-console
       console.log(`for module ${moduleName}`);
 
-      // RESET CACHE & module
-      require.cache = originalRequireCache;
       initializedTooLateHeurstic.reset();
 
       let p = moduleName;
