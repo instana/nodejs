@@ -10,7 +10,7 @@ const path = require('path');
 const requireHook = require('../../src/util/requireHook');
 const initializedTooLateHeurstic = require('../../src/util/initializedTooLateHeuristic');
 
-describe.only('[UNIT] util.initializedTooLateHeurstic', () => {
+describe('[UNIT] util.initializedTooLateHeurstic', () => {
   const instrumentedModules = [];
 
   before(() => {
