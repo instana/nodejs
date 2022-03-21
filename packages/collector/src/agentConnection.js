@@ -158,7 +158,17 @@ exports.announceNodeCollector = function announceNodeCollector(cb) {
       payload.fd = String(socket._handle.fd);
 
       try {
-        payload.inode = fs.readlinkSync(pathUtil.join('/proc', String(process.pid), 'fd', payload.fd));
+        const linkPathPrefix = `${pathUtil.join('/proc', String(process.pid), 'fd')}/`;
+        const linkPath = pathUtil.join(linkPathPrefix, payload.fd);
+        payload.inode = fs.readlinkSync(linkPath);
+        if (typeof payload.inode === 'string' && payload.inode.indexOf(linkPathPrefix) === 0) {
+          // Node.js apps built with Bazel need special handling here, since Bazel's node-patches turn the result of
+          // readlinkSync into an absolute path. See
+          // https://github.com/bazelbuild/rules_nodejs/blob/5.3.0/packages/node-patches/src/fs.ts#L226
+          // We work around that by removing those bogus leading path segments. The Instana agent will try to match on
+          // the inode value without any path prefix, so sending a fully qualified path would break the announcement.
+          payload.inode = payload.inode.substring(linkPathPrefix.length);
+        }
       } catch (e) {
         logger.debug('Failed to retrieve inode for file descriptor %s: %s', payload.fd, e.message);
       }
