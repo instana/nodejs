@@ -79,6 +79,7 @@ const instrumentations = [
   './instrumentation/process/process',
   './instrumentation/protocols/graphql',
   './instrumentation/protocols/grpc',
+  './instrumentation/protocols/grpcJs',
   './instrumentation/protocols/httpClient',
   './instrumentation/protocols/httpServer',
   './instrumentation/protocols/http2Client',
@@ -195,9 +196,11 @@ exports.activate = function activate() {
     if (automaticTracingEnabled) {
       instrumentations.forEach(instrumentationKey => {
         const instrumentationName = /.\/instrumentation\/[^/]*\/(.*)/.exec(instrumentationKey)[1];
+
         const isDisabled =
           config.tracing.disabledTracers.findIndex(disabledKey => instrumentationName.toLowerCase() === disabledKey) !==
           -1;
+
         if (!isDisabled) {
           instrumentationModules[instrumentationKey].activate();
         }
