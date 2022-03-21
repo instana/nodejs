@@ -10,7 +10,7 @@ const path = require('path');
 const requireHook = require('../../src/util/requireHook');
 const initializedTooLateHeurstic = require('../../src/util/initializedTooLateHeuristic');
 
-describe('[UNIT] util.initializedTooLateHeurstic', () => {
+describe.only('[UNIT] util.initializedTooLateHeurstic', () => {
   const instrumentedModules = [];
 
   before(() => {
@@ -54,22 +54,25 @@ describe('[UNIT] util.initializedTooLateHeurstic', () => {
 
       initializedTooLateHeurstic.reset();
 
-      let p = moduleName;
+      let resolvedPath = moduleName;
+
       try {
-        p = require.resolve(moduleName);
+        resolvedPath = require.resolve(moduleName);
       } catch (err) {
-        p = path.resolve(p.toString().replace(/\\\/?/g, '/'));
+        resolvedPath = path.resolve(resolvedPath.toString().replace(/\\\/?/g, '/'));
       }
 
-      require.cache[p] = {};
+      require.cache[resolvedPath] = {};
+      const exclude = ['bluebird', 'bunyan', 'winston'];
+      const excluded = exclude.filter(n => resolvedPath.indexOf(n) !== -1);
 
-      if (p.indexOf('bluebird') !== -1 || p.indexOf('bunyan') !== -1 || p.indexOf('winston') !== -1) {
+      if (excluded.length) {
         expect(initializedTooLateHeurstic()).to.be.false;
-        delete require.cache[p];
       } else {
         expect(initializedTooLateHeurstic()).to.be.true;
-        delete require.cache[p];
       }
+
+      delete require.cache[resolvedPath];
     });
   });
 });
