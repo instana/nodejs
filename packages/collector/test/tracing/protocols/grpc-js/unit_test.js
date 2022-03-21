@@ -25,7 +25,7 @@ mochaSuiteFn('[UNIT] tracing/grpc-js', function () {
       const serialize = function serialize() {};
       const deserialize = function deserialize() {};
       const argument = { arg: 1 };
-      const metadata = new Metadata();
+      let metadata = new Metadata();
       metadata.set('remember', 'me');
       const options = { opt: 1 };
       const callback = function cb() {};
@@ -61,6 +61,20 @@ mochaSuiteFn('[UNIT] tracing/grpc-js', function () {
       expect(originalArgs[5]).to.eql({ opt: 1 });
       expect(originalArgs[6].name).to.eql('clsBind');
 
+      originalArgs = [method, serialize, deserialize, argument, options];
+
+      grpc.instrumentModule({ Metadata });
+      grpc.modifyArgs(name, originalArgs, span);
+
+      expect(originalArgs[0]).to.eql('method');
+      expect(originalArgs[1].name).to.eql('serialize');
+      expect(originalArgs[2].name).to.eql('deserialize');
+      expect(originalArgs[3]).to.eql({ arg: 1 });
+      expect(originalArgs[4]).to.eql({ opt: 1 });
+
+      metadata = new Metadata();
+      metadata.set('remember', 'me');
+
       originalArgs = [method, serialize, deserialize, argument, metadata, callback];
 
       grpc.instrumentModule({ Metadata });
@@ -74,8 +88,26 @@ mochaSuiteFn('[UNIT] tracing/grpc-js', function () {
       expect(originalArgs[4].get('x-instana-t')).to.eql(['t']);
       expect(originalArgs[4].get('x-instana-l')).to.eql(['1']);
       expect(originalArgs[4].get('remember')).to.eql(['me']);
-      expect(originalArgs[5]).to.eql({});
-      expect(originalArgs[6].name).to.eql('clsBind');
+      expect(originalArgs[5].name).to.eql('clsBind');
+
+      metadata = new Metadata();
+      metadata.set('remember', 'me');
+
+      originalArgs = [method, serialize, deserialize, argument, metadata];
+
+      grpc.instrumentModule({ Metadata });
+      grpc.modifyArgs(name, originalArgs, span);
+
+      expect(originalArgs.length).to.eql(5);
+
+      expect(originalArgs[0]).to.eql('method');
+      expect(originalArgs[1].name).to.eql('serialize');
+      expect(originalArgs[2].name).to.eql('deserialize');
+      expect(originalArgs[3]).to.eql({ arg: 1 });
+      expect(originalArgs[4].get('x-instana-s')).to.eql(['s']);
+      expect(originalArgs[4].get('x-instana-t')).to.eql(['t']);
+      expect(originalArgs[4].get('x-instana-l')).to.eql(['1']);
+      expect(originalArgs[4].get('remember')).to.eql(['me']);
 
       originalArgs = [method, serialize, deserialize, argument, callback];
 
@@ -89,8 +121,7 @@ mochaSuiteFn('[UNIT] tracing/grpc-js', function () {
       expect(originalArgs[4].get('x-instana-s')).to.eql(['s']);
       expect(originalArgs[4].get('x-instana-t')).to.eql(['t']);
       expect(originalArgs[4].get('x-instana-l')).to.eql(['1']);
-      expect(originalArgs[5]).to.eql({});
-      expect(originalArgs[6].name).to.eql('clsBind');
+      expect(originalArgs[5].name).to.eql('clsBind');
 
       originalArgs = [method, serialize, deserialize, argument];
 
@@ -115,7 +146,7 @@ mochaSuiteFn('[UNIT] tracing/grpc-js', function () {
       const method = 'method';
       const serialize = function serialize() {};
       const deserialize = function deserialize() {};
-      const metadata = new Metadata();
+      let metadata = new Metadata();
       metadata.set('remember', 'me');
       const options = { opt: 1 };
       const callback = function cb() {};
@@ -150,6 +181,9 @@ mochaSuiteFn('[UNIT] tracing/grpc-js', function () {
       expect(originalArgs[4]).to.eql({ opt: 1 });
       expect(originalArgs[5].name).to.eql('clsBind');
 
+      metadata = new Metadata();
+      metadata.set('remember', 'me');
+
       originalArgs = [method, serialize, deserialize, metadata, callback];
 
       grpc.instrumentModule({ Metadata });
@@ -162,8 +196,7 @@ mochaSuiteFn('[UNIT] tracing/grpc-js', function () {
       expect(originalArgs[3].get('x-instana-t')).to.eql(['t']);
       expect(originalArgs[3].get('x-instana-l')).to.eql(['1']);
       expect(originalArgs[3].get('remember')).to.eql(['me']);
-      expect(originalArgs[4]).to.eql({});
-      expect(originalArgs[5].name).to.eql('clsBind');
+      expect(originalArgs[4].name).to.eql('clsBind');
 
       originalArgs = [method, serialize, deserialize, callback];
 
@@ -177,8 +210,7 @@ mochaSuiteFn('[UNIT] tracing/grpc-js', function () {
       expect(originalArgs[3].get('x-instana-t')).to.eql(['t']);
       expect(originalArgs[3].get('x-instana-l')).to.eql(['1']);
       expect(originalArgs[3].get('remember')).to.eql([]);
-      expect(originalArgs[4]).to.eql({});
-      expect(originalArgs[5].name).to.eql('clsBind');
+      expect(originalArgs[4].name).to.eql('clsBind');
     });
 
     it('makeServerStreamRequest', () => {
@@ -193,7 +225,7 @@ mochaSuiteFn('[UNIT] tracing/grpc-js', function () {
       const serialize = function serialize() {};
       const deserialize = function deserialize() {};
       const argument = { arg: 1 };
-      const metadata = new Metadata();
+      let metadata = new Metadata();
       metadata.set('remember', 'me');
       const options = { opt: 1 };
 
@@ -211,6 +243,23 @@ mochaSuiteFn('[UNIT] tracing/grpc-js', function () {
       expect(originalArgs[4].get('x-instana-l')).to.eql(['1']);
       expect(originalArgs[4].get('remember')).to.eql(['me']);
       expect(originalArgs[5]).to.eql({ opt: 1 });
+
+      metadata = new Metadata();
+      metadata.set('remember', 'me');
+
+      originalArgs = [method, serialize, deserialize, argument, metadata];
+
+      grpc.instrumentModule({ Metadata });
+      grpc.modifyArgs(name, originalArgs, span);
+
+      expect(originalArgs[0]).to.eql('method');
+      expect(originalArgs[1].name).to.eql('serialize');
+      expect(originalArgs[2].name).to.eql('deserialize');
+      expect(originalArgs[3]).to.eql({ arg: 1 });
+      expect(originalArgs[4].get('x-instana-s')).to.eql(['s']);
+      expect(originalArgs[4].get('x-instana-t')).to.eql(['t']);
+      expect(originalArgs[4].get('x-instana-l')).to.eql(['1']);
+      expect(originalArgs[4].get('remember')).to.eql(['me']);
 
       originalArgs = [method, serialize, deserialize, argument, options];
 

@@ -156,21 +156,17 @@ function modifyArgs(name, originalArgs, span) {
 
     if (typeof arg1 === 'function') {
       newMetadata = new Metadata();
-      newOptions = {};
       newCallback = arg1;
 
       originalArgs[originalArgs.length - 1] = newMetadata;
-      originalArgs.push(newOptions);
       originalArgs.push(newCallback);
     } else if (typeof arg2 === 'function') {
       if (arg1 instanceof Metadata) {
         newMetadata = arg1;
-        newOptions = {};
         newCallback = arg2;
 
         originalArgs[originalArgs.length - 2] = newMetadata;
-        originalArgs[originalArgs.length - 1] = newOptions;
-        originalArgs.push(newCallback);
+        originalArgs[originalArgs.length - 1] = newCallback;
       } else {
         newMetadata = new Metadata();
         newOptions = arg1;
@@ -181,6 +177,12 @@ function modifyArgs(name, originalArgs, span) {
         originalArgs.push(newCallback);
       }
     } else {
+      // CASE: makeUnaryCall(...., metadata) -> no callback
+      if (arg1 instanceof Metadata && !arg2 && !arg3) {
+        setInstanaHeaders(arg1, span);
+        return;
+      }
+
       // NOTE: Do nothing, because the format we expect is different
       if (!(arg1 instanceof Metadata && arg2 instanceof Object && typeof arg3 === 'function')) {
         return;
