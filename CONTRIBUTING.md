@@ -54,6 +54,29 @@ Do *not* run `npm uninstall ${dependency-name}` in the directory of a package. T
 
 There is no `lerna` command to remove a dependency, that is, there is no `lerna remove --scope` counterpart for `lerna add --scope`. To remove a dependency from a package, remove the corresponding entry from the `dependencies`/`devDependencies`/... section of the package's `package.json` file and then run `npm run refresh-package-lock-files` afterwards. This will remove the package from the `node_modules` folder and also update the `package-lock.json` file correctly.
 
+### Updating Dependencies
+
+#### Updating All Dependencies At Once
+
+You can run `npm run update-deps` to update all dependencies in all packages via [`npm-check-updates`](https://www.npmjs.com/package/npm-check-updates) in one batch.
+
+#### Updating A Single Version In A Lockfile
+
+You can also force an update of a specfic transitive dependency that is present in a package's `package-lock.json` file as follows. This is particularly useful to adress security vulnerabilities reported against transitive dependencies. For example, to update the transitive `minimist` dependency in `@instana/shared-metrics` to version `1.2.6`, do the following:
+
+```
+# Add the transitive dependency in the desired version temporarily as a direct dependency:
+lerna add --scope=@instana/shared-metrics minimist@1.2.6
+
+# This adds minimist as a direct dependency to shared-metric's package.json file, which is an undesired side-effect for
+# our use case. To fix that, _remove_ minimist from packages/shared-metrics/package.json#dependencies again, then run:
+npm run refresh-package-lock-files
+
+# Finally, check that the dependency in question has been updated in `packages/shared-metrics/package-lock.json` to the desired version.
+```
+
+Note: The intent of the procedure above is satisfy security scanners (`npm audit`, Dependabot etc.). `package-lock.json` files are never included when publishing to the npm registry. Thy are only relevant when you execute an `npm install` in _this repository_. Users of `@instana` npm packages will have their own `package-lock.json` or `yarn.lock` file for their application, those are completely independent from the `package-lock.json` files in this repository. Thus, they need to take care of updating their transitive dependencies themselves. We only can make sure that the version ranges we use for our direct dependencies allow to install a dependency tree that has no known vulnerabilities.
+
 ## Release Process
 
 ### When Adding A New Package
