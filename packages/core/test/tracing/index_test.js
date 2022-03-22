@@ -12,10 +12,13 @@ const normalizeConfig = require('../../src/util/normalizeConfig');
 const kafkaJs = require('../../src/tracing/instrumentation/messaging/kafkaJs');
 const grpc = require('../../src/tracing/instrumentation/protocols/grpc');
 const grpcJs = require('../../src/tracing/instrumentation/protocols/grpcJs');
+const testConfig = require('../config');
 
 const mochaSuiteFn = semver.satisfies(process.versions.node, '>=8.13.0') ? describe : describe.skip;
 
 mochaSuiteFn('[UNIT] tracing/index', function () {
+  this.timeout(testConfig.getTestTimeout());
+
   let activateStubGrpc;
   let activateStubGrpcJs;
   let activateStubKafkaJs;

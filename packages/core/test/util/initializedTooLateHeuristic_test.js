@@ -9,8 +9,11 @@ const sinon = require('sinon');
 const path = require('path');
 const requireHook = require('../../src/util/requireHook');
 const initializedTooLateHeurstic = require('../../src/util/initializedTooLateHeuristic');
+const config = require('../config');
 
-describe('[UNIT] util.initializedTooLateHeurstic', () => {
+describe('[UNIT] util.initializedTooLateHeurstic', function () {
+  this.timeout(config.getTestTimeout());
+
   const instrumentedModules = [];
 
   before(() => {
