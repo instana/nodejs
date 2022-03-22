@@ -8,6 +8,7 @@
 const { expect } = require('chai');
 const path = require('path');
 const Control = require('../Control');
+const config = require('../../../serverless/test/config');
 
 const backendPort = 8443;
 const backendBaseUrl = `https://localhost:${backendPort}/serverless`;
@@ -62,7 +63,7 @@ function prelude(opts) {
 // NOTE: This test will fail if you initialise core before serverless.
 //       e.g. aws-lambda/src/index -> require core and call init
 describe('Logging', function () {
-  this.timeout(5000);
+  this.timeout(config.getTestTimeout());
 
   const handlerDefinitionPath = path.join(__dirname, './lambda');
 

@@ -10,8 +10,8 @@ const path = require('path');
 const constants = require('@instana/core').tracing.constants;
 
 const Control = require('../Control');
-const expectExactlyOneMatching = require('../../../core/test/test_util/expectExactlyOneMatching');
 const config = require('../../../serverless/test/config');
+const expectExactlyOneMatching = require('../../../core/test/test_util/expectExactlyOneMatching');
 const retry = require('../../../serverless/test/util/retry');
 
 const { fail } = expect;
@@ -29,7 +29,6 @@ const instanaAgentKey = 'aws-lambda-dummy-key';
 
 function prelude(opts) {
   const timeout = opts.lambdaTimeout * 2;
-
   this.timeout(process.env.CI ? config.getTestTimeout() : timeout);
   this.slow(timeout);
 
@@ -190,6 +189,7 @@ describe('timeout heuristic', () => {
     const control = prelude.bind(this)(opts);
 
     let label;
+
     if (expectTimeout && !expectResponseFromLambda) {
       label = 'must detect the timeout';
     } else if (expectTimeout) {
