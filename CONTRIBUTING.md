@@ -20,6 +20,19 @@ Some of the tests require infrastructure components (databases etc.) to run loca
 
 If you want to see the Node.js collector's debug output while running the tests, make sure the environment variable `WITH_STDOUT` is set to a non-empty string. You can also use `npm run test:debug` instead of `npm test` to achieve this.
 
+## Executing code coverage tool
+
+If you are actively developing a feature and you would like to know which lines and files you have alreasy covered in your tests, it's recommended to use `.only` for the target test file and then run:
+
+```
+npm run coverage --scope @instana/collector
+```
+
+At the end of the execution it will open the coverage report in the browser and you can navigate through
+the result.
+
+If you want to run the full coverage report, you can run `npm run coverage-all`.
+
 ## How to Contribute
 
 This is an open source project, and we appreciate your help!
