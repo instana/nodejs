@@ -7,6 +7,7 @@
 
 'use strict';
 
+require('./mockVersion');
 const agentPort = process.env.INSTANA_AGENT_PORT;
 
 require('../../../../')();
@@ -16,9 +17,8 @@ const express = require('express');
 const morgan = require('morgan');
 const request = require('request-promise-native');
 const { Client } = require('@elastic/elasticsearch');
-
 const app = express();
-const logPrefix = `Elasticsearch (Modern Client) (${process.pid}):\t`;
+const logPrefix = `Elasticsearch ${process.env.ELASTIC_VERSION} (Modern Client) (${process.pid}):\t`;
 
 if (process.env.WITH_STDOUT) {
   app.use(morgan(`${logPrefix}:method :url :status`));
