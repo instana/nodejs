@@ -18,6 +18,28 @@
 
 const { startGlobalAgent, stopGlobalAgent } = require('./globalAgent');
 
+const { execSync } = require('child_process');
+const path = require('path');
+
 before(startGlobalAgent);
 
 after(stopGlobalAgent);
+
+beforeEach(checkPino);
+afterEach(checkPino);
+
+function checkPino() {
+  const cwd = path.join(__dirname, '..', '..', '..', 'node_modules');
+  const cmd = 'ls -la pino-v7';
+
+  // eslint-disable-next-line no-console
+  console.log(`Running ${cmd} in ${cwd}.`);
+  try {
+    const cmdOutput = execSync(cmd, { cwd });
+    // eslint-disable-next-line no-console
+    console.log(`Ran ${cmd} in ${cwd}:\n${cmdOutput}`);
+  } catch (e) {
+    // eslint-disable-next-line no-console
+    console.error(e.code, e.message);
+  }
+}
