@@ -176,6 +176,9 @@ shared: &shared
           ) \
         )
 
+    - run: ls -la node_modules
+    - run: cat node_modules/pino-v7/package.json
+
     # Run the test suites.
     # (Use ulimit to remove the file size limit on core dump files before running tests.)
     # The ci_glob_setup.sh script designates which files should be tested in each CircleCI process.
@@ -388,8 +391,8 @@ workflows:
   version: 2
   build:
     jobs:
-      - "node-16"
+      # - "node-16"
       - "node-14"
-      - "node-12"
-      - "node-10"
-      - "node-8"
+      # - "node-12"
+      # - "node-10"
+      # - "node-8"
