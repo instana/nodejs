@@ -6,10 +6,7 @@
 'use strict';
 
 const expect = require('chai').expect;
-const path = require('path');
 const semver = require('semver');
-const fs = require('fs');
-const { exec } = require('child_process');
 
 const constants = require('@instana/core').tracing.constants;
 const config = require('../../../../../core/test/config');
@@ -27,22 +24,7 @@ const { fail } = expect;
 const mochaSuiteFn = semver.gte(process.versions.node, '10.0.0') ? describe : describe.skip;
 
 mochaSuiteFn('tracing/elasticsearch (modern client)', function () {
-  let originalEsVersion;
-
   this.timeout(Math.max(config.getTestTimeout() * 4, 30000));
-
-  before(() => {
-    // NOTE: We cannot use `require(@elastic/elasticsearch/package.json), because of
-    //       https://github.com/elastic/elasticsearch-js/blob/v7.16.0/package.json#L11
-    originalEsVersion = JSON.parse(
-      fs.readFileSync(`${path.dirname(require.resolve('@elastic/elasticsearch'))}/package.json`)
-    ).version;
-
-    // eslint-disable-next-line no-console
-    console.log(`original version: @elastic/elasticsearch@${originalEsVersion}`);
-  });
-
-  after(done => installLibraryVersion(originalEsVersion, done));
 
   /**
    * transport: instrumentation > 7.9.1
@@ -53,40 +35,36 @@ mochaSuiteFn('tracing/elasticsearch (modern client)', function () {
    */
   [
     {
-      versionRange: 'latest',
+      version: 'latest',
       instrumentationFlavor: 'transport'
     },
     {
-      versionRange: '7.9.0',
+      version: '7.9.0',
       instrumentationFlavor: 'api'
     }
-  ].forEach(({ versionRange: esClientVersionRangeUnderTest, instrumentationFlavor }) => {
+  ].forEach(({ version, instrumentationFlavor }) => {
     describe(
       // eslint-disable-next-line no-useless-concat
-      `@elastic/elasticsearch@${esClientVersionRangeUnderTest}/` + `instrumentation flavor: ${instrumentationFlavor}`,
+      `@elastic/elasticsearch@${version}/` + `instrumentation flavor: ${instrumentationFlavor}`,
       function () {
-        before(done => {
-          if (esClientVersionRangeUnderTest === 'latest') {
-            return done();
-          }
-
-          installLibraryVersion(esClientVersionRangeUnderTest, done);
-        });
-
         globalAgent.setUpCleanUpHooks();
         const agentControls = globalAgent.instance;
 
         const controls = new ProcessControls({
           dirname: __dirname,
           useGlobalAgent: true,
-          env: {}
+          env: {
+            ELASTIC_VERSION: version
+          }
         });
+
         ProcessControls.setUpHooks(controls);
 
         it('must report errors caused by missing indices', () =>
           get({ id: 'thisDocumentWillNotExist', index: 'thisIndexDoesNotExist' }).then(res => {
             expect(res.error).to.exist;
             expect(res.error.meta.body.error.root_cause[0].type).to.equal('index_not_found_exception');
+
             return retry(() =>
               agentControls.getSpans().then(spans => {
                 const entrySpan = verifyHttpEntry(spans, '/get');
@@ -101,7 +79,6 @@ mochaSuiteFn('tracing/elasticsearch (modern client)', function () {
                   expect(span.error).to.not.exist;
                   expect(span.ec).to.equal(1);
                   expect(span.data.elasticsearch.action).to.equal('get');
-
                   verifyClusterOrAddressPort(span);
                   verifyIndexOrEndpoint(
                     span,
@@ -602,24 +579,3 @@ mochaSuiteFn('tracing/elasticsearch (modern client)', function () {
     );
   });
 });
-
-function installLibraryVersion(version, done) {
-  const installCommand = `npm install --no-save --silent @elastic/elasticsearch@${version}`;
-  const cwd = path.join(__dirname, '..', '..', '..', '..', '..', '..');
-
-  // eslint-disable-next-line no-console
-  console.log(`Executing: ${installCommand}`);
-  exec(installCommand, { cwd, windowsHide: true }, (error, stdout, stderr) => {
-    if (error) {
-      done(error);
-      return;
-    }
-    // eslint-disable-next-line no-console
-    console.log(`stdout from ${installCommand}: ${stdout}`);
-    if (stderr) {
-      // eslint-disable-next-line no-console
-      console.log(`stderr from ${installCommand}: ${stderr}`);
-    }
-    done();
-  });
-}
