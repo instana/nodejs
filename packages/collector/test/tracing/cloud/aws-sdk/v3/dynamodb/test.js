@@ -48,8 +48,6 @@ const operationsInfo = {
   updateItem: 'update'
 };
 
-const withErrorOptions = [false, true];
-
 const requestMethods = ['v3', 'v2', 'cb'];
 const availableOperations = [
   'createTable',
@@ -72,28 +70,73 @@ if (!supportedVersion(process.versions.node) || bypassTest) {
 
 const retryTime = config.getTestTimeout() * 2;
 
+const createTableName = () => {
+  let tableName = 'nodejs-team';
+
+  if (process.env.AWS_DYNAMODB_TABLE_NAME) {
+    tableName = `${process.env.AWS_DYNAMODB_TABLE_NAME}v3-${semver.major(process.versions.node)}-${uuid()}`;
+  }
+
+  const randomNumber = Math.floor(Math.random() * 10000);
+  tableName = `${tableName}-${randomNumber}`;
+  return tableName;
+};
+
 mochaSuiteFn('tracing/cloud/aws-sdk/v3/dynamodb', function () {
   ['@aws-sdk/client-dynamodb', '@aws-sdk/client-dynamodb2'].forEach(version => {
     describe(`version: ${version}`, function () {
-      this.timeout(config.getTestTimeout() * 3);
+      this.timeout(config.getTestTimeout() * 5);
 
       globalAgent.setUpCleanUpHooks();
       const agentControls = globalAgent.instance;
 
-      let tableName = 'nodejs-team';
+      describe('tracing enabled, no suppression', function () {
+        requestMethods.forEach(requestMethod => {
+          describe(`request method: ${requestMethod}`, function () {
+            const tableName = createTableName();
 
-      if (process.env.AWS_DYNAMODB_TABLE_NAME) {
-        tableName = `${process.env.AWS_DYNAMODB_TABLE_NAME}v3-${semver.major(process.versions.node)}-${uuid()}`;
-      }
+            const appControls = new ProcessControls({
+              appPath: path.join(__dirname, 'app'),
+              port: 3215,
+              useGlobalAgent: true,
+              env: {
+                AWS_DYNAMODB_TABLE_NAME: tableName,
+                AWS_SDK_CLIENT_DYNAMODB_REQUIRE: version
+              }
+            });
 
-      const randomNumber = Math.floor(Math.random() * 1000);
-      tableName = `${tableName}-${randomNumber}`;
+            ProcessControls.setUpHooksWithRetryTime(retryTime, appControls);
 
-      after(() => {
-        return cleanup(tableName);
+            after(() => {
+              return cleanup(tableName);
+            });
+
+            availableOperations.forEach(operation => {
+              it(`operation: ${operation}/${requestMethod}`, async () => {
+                const apiPath = `/${operation}/${requestMethod}`;
+
+                const response = await appControls.sendRequest({
+                  method: 'GET',
+                  path: `${apiPath}`
+                });
+
+                /**
+                 * Table takes some time to be available, even though the callback gives a success message
+                 */
+                if (operation === 'createTable') {
+                  await checkTableExistence(tableName, true);
+                }
+
+                return verify(appControls, response, apiPath, operation, false, tableName);
+              });
+            });
+          });
+        });
       });
 
-      describe('tracing enabled, no suppression', function () {
+      describe('should handle errors', function () {
+        const tableName = createTableName();
+
         const appControls = new ProcessControls({
           appPath: path.join(__dirname, 'app'),
           port: 3215,
@@ -105,89 +148,28 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v3/dynamodb', function () {
         });
 
         ProcessControls.setUpHooksWithRetryTime(retryTime, appControls);
-        withErrorOptions.forEach(withError => {
-          if (withError) {
-            describe(`getting result with error: ${withError ? 'yes' : 'no'}`, () => {
-              it(`should instrument ${availableOperations.join(', ')} with error`, () => {
-                return promisifyNonSequentialCases(
-                  verify,
-                  availableOperations,
-                  appControls,
-                  withError,
-                  getNextCallMethod
-                );
-              });
-            });
-          } else {
-            describe(`getting result with error: ${withError ? 'yes' : 'no'}`, () => {
-              availableOperations.forEach(operation => {
-                const requestMethod = getNextCallMethod();
-                it(`operation: ${operation}/${requestMethod}`, async () => {
-                  const withErrorOption = withError ? '?withError=1' : '';
-                  const apiPath = `/${operation}/${requestMethod}`;
 
-                  const response = await appControls.sendRequest({
-                    method: 'GET',
-                    path: `${apiPath}${withErrorOption}`,
-                    simple: withError === false
-                  });
-
-                  /**
-                   * Table takes some time to be available, even though the callback gives a success message
-                   */
-                  if (operation === 'createTable') {
-                    await checkTableExistence(tableName, true);
-                  }
-                  return verify(appControls, response, apiPath, operation, withError);
-                });
-              });
-            });
-          }
+        after(() => {
+          return cleanup(tableName);
         });
 
-        function verify(controls, response, apiPath, operation, withError) {
-          return retry(() => {
-            return agentControls
-              .getSpans()
-              .then(spans => verifySpans(controls, response, spans, apiPath, operation, withError));
-          }, retryTime);
-        }
-
-        function verifySpans(controls, response, spans, apiPath, operation, withError) {
-          const httpEntry = verifyHttpRootEntry({ spans, apiPath, pid: String(controls.getPid()) });
-          verifyExitSpan({
-            spanName: 'dynamodb',
-            spans,
-            parent: httpEntry,
-            withError,
-            pid: String(controls.getPid()),
-            extraTests: [
-              span => expect(span.data.dynamodb.op).to.equal(operationsInfo[operation]),
-              span => {
-                let expected;
-
-                if (operation !== 'listTables') {
-                  if (operation !== 'createTable' || !withError) {
-                    expected = tableName;
-                  }
-                }
-
-                expect(span.data.dynamodb.table).to.equal(expected);
-              },
-              () => {
-                verifyResponse(response, operation, withError);
-              }
-            ]
-          });
-
-          if (!withError) {
-            verifyHttpExit({ spans, parent: httpEntry, pid: String(controls.getPid()) });
-          }
-        }
+        it(`should instrument ${availableOperations.join(', ')} with error`, () => {
+          return promisifyNonSequentialCases(
+            (controls, response, apiPath, operation, withError) => {
+              return verify(controls, response, apiPath, operation, withError, tableName);
+            },
+            availableOperations,
+            appControls,
+            true,
+            getNextCallMethod
+          );
+        });
       });
 
       describe('tracing disabled', () => {
         this.timeout(config.getTestTimeout() * 2);
+
+        const tableName = createTableName();
 
         const appControls = new ProcessControls({
           appPath: path.join(__dirname, 'app'),
@@ -202,15 +184,32 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v3/dynamodb', function () {
 
         ProcessControls.setUpHooksWithRetryTime(retryTime, appControls);
 
+        after(() => {
+          return cleanup(tableName);
+        });
+
+        before(async () => {
+          // Create table first via v3 style!
+          const response = await appControls.sendRequest({
+            method: 'GET',
+            path: `/${availableOperations[0]}/${requestMethods[0]}`
+          });
+
+          verifyResponse(response, availableOperations[0], false, tableName);
+        });
+
         describe('attempt to get result', () => {
           availableOperations.slice(1).forEach(operation => {
             const requestMethod = getNextCallMethod();
+
             it(`should not trace (${operation}/${requestMethod})`, async () => {
               const response = await appControls.sendRequest({
                 method: 'GET',
                 path: `/${operation}/${requestMethod}`
               });
-              verifyResponse(response, operation, false);
+
+              verifyResponse(response, operation, false, tableName);
+
               return retry(() => delay(config.getTestTimeout() / 4))
                 .then(() => agentControls.getSpans())
                 .then(spans => {
@@ -224,6 +223,8 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v3/dynamodb', function () {
       });
 
       describe('tracing enabled but suppressed', () => {
+        const tableName = createTableName();
+
         const appControls = new ProcessControls({
           appPath: path.join(__dirname, 'app'),
           port: 3215,
@@ -236,9 +237,24 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v3/dynamodb', function () {
 
         ProcessControls.setUpHooksWithRetryTime(retryTime, appControls);
 
+        after(() => {
+          return cleanup(tableName);
+        });
+
+        before(async () => {
+          // Create table first!
+          const response = await appControls.sendRequest({
+            method: 'GET',
+            path: `/${availableOperations[0]}/${requestMethods[0]}`
+          });
+
+          verifyResponse(response, availableOperations[0], false, tableName);
+        });
+
         describe('attempt to get result', () => {
           availableOperations.slice(1).forEach(operation => {
             const requestMethod = getNextCallMethod();
+
             it(`should not trace (${operation}/${requestMethod})`, async () => {
               const response = await appControls.sendRequest({
                 suppressTracing: true,
@@ -260,31 +276,72 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v3/dynamodb', function () {
         });
       });
 
-      function verifyResponse(response, operation, withError) {
-        if (!withError) {
-          expect(response.result).to.exist;
+      function verify(controls, response, apiPath, operation, withError, tableName) {
+        return retry(() => {
+          return agentControls
+            .getSpans()
+            .then(spans => verifySpans(controls, response, spans, apiPath, operation, withError, tableName));
+        }, retryTime);
+      }
 
-          switch (operation) {
-            case 'createTable':
-              expect(response.result.TableDescription).to.exist;
-              expect(response.result.TableDescription.TableName).to.equal(tableName);
-              expect(response.result.TableDescription.TableStatus).to.equal('CREATING');
-              break;
-            case 'listTables':
-              expect(response.result.TableNames.length).to.gte(1);
-              break;
-            case 'getItem':
-              expect(response.result.Item).to.exist;
-              break;
-            case 'scan':
-            case 'query':
-              expect(response.result.Count).to.gte(1);
-              expect(response.result.Items.length).to.gte(1);
-              break;
-            default:
-          }
+      function verifySpans(controls, response, spans, apiPath, operation, withError, tableName) {
+        const httpEntry = verifyHttpRootEntry({ spans, apiPath, pid: String(controls.getPid()) });
+
+        verifyExitSpan({
+          spanName: 'dynamodb',
+          spans,
+          parent: httpEntry,
+          withError,
+          pid: String(controls.getPid()),
+          extraTests: [
+            span => expect(span.data.dynamodb.op).to.equal(operationsInfo[operation]),
+            span => {
+              let expected;
+
+              if (operation !== 'listTables') {
+                if (operation !== 'createTable' || !withError) {
+                  expected = tableName;
+                }
+              }
+
+              expect(span.data.dynamodb.table).to.equal(expected);
+            },
+            () => {
+              verifyResponse(response, operation, withError, tableName);
+            }
+          ]
+        });
+
+        if (!withError) {
+          verifyHttpExit({ spans, parent: httpEntry, pid: String(controls.getPid()) });
         }
       }
     });
+
+    function verifyResponse(response, operation, withError, tableName) {
+      if (!withError) {
+        expect(response.result).to.exist;
+
+        switch (operation) {
+          case 'createTable':
+            expect(response.result.TableDescription).to.exist;
+            expect(response.result.TableDescription.TableName).to.equal(tableName);
+            expect(response.result.TableDescription.TableStatus).to.equal('CREATING');
+            break;
+          case 'listTables':
+            expect(response.result.TableNames.length).to.gte(1);
+            break;
+          case 'getItem':
+            expect(response.result.Item).to.exist;
+            break;
+          case 'scan':
+          case 'query':
+            expect(response.result.Count).to.gte(1);
+            expect(response.result.Items.length).to.gte(1);
+            break;
+          default:
+        }
+      }
+    }
   });
 });
