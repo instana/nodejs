@@ -12,9 +12,9 @@
   },
   "scripts": {
     "audit": "npm audit --production",
-    "test": "NODE_ENV=debug USE_OPENTRACING_DEBUG_IMPL=true npm run test:mocha",
-    "test:mocha": "echo \"******* Files to be tested:\n $CI_CORE_TEST_FILES\" && mocha --sort --reporter mocha-multi --reporter-options spec=-,xunit=../../test-results/core/results.xml ${CI_CORE_TEST_FILES:=$(find test -iname '*test.js' -not -path '*node_modules*')}",
-    "test:debug": "WITH_STDOUT=true npm run test:mocha",
+    "test": "NODE_ENV=debug USE_OPENTRACING_DEBUG_IMPL=true mocha --sort $(find test -iname '*test.js' -not -path '*node_modules*')",
+    "test:debug": "WITH_STDOUT=true npm run test",
+    "test:ci": "echo \"******* Files to be tested:\n $CI_CORE_TEST_FILES\" && if [ -z \"${CI_CORE_TEST_FILES}\" ]; then echo \"No Files to test in this node\"; else mocha --reporter mocha-multi-reporters --reporter-options configFile=reporter-config.json --sort ${CI_CORE_TEST_FILES}; fi",
     "lint": "eslint src test",
     "verify": "npm run lint && npm test",
     "prettier": "prettier --write 'src/**/*.js' 'test/**/*.js'"

@@ -23,11 +23,14 @@ const {
 } = require('@instana/core/test/test_util/common_verifications');
 const { promisifyNonSequentialCases } = require('../promisify_non_sequential');
 
-let bucketName = 'nodejs-team';
+let bucketName = 'nodejs-bucket';
 
 if (process.env.AWS_S3_BUCKET_NAME) {
   bucketName = `${process.env.AWS_S3_BUCKET_NAME}${semver.major(process.versions.node)}-${uuid()}`;
 }
+
+const randomNumber = Math.floor(Math.random() * 1000);
+bucketName = `${bucketName}-${randomNumber}`;
 
 let mochaSuiteFn;
 

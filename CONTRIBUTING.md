@@ -99,13 +99,13 @@ These scripts can be used by lerna, specially during CI builds:
 
 ```javascript
 "scripts": {
-  "test": "echo \"$(node -v)\" | grep v8 > /dev/null || npm run test:mocha",
-  "test:mocha": "mocha --sort --reporter mocha-multi --reporter-options spec=-,xunit=../../test-results/opentelemetry-exporter/results.xml $(find test -iname '*test.js' -not -path '*node_modules*')",
-  "test:debug": "WITH_STDOUT=true npm run test:mocha",
-  "audit": "npm run audit --production",
-  "lint": "eslint src test",
-  "verify": "npm run lint && npm test",
-  "prettier": "prettier --write 'src/**/*.js' 'test/**/*.js'"
+    "audit": "npm audit --production",
+    "test": "NODE_ENV=debug mocha --sort $(find test -iname '*test.js' -not -path '*node_modules*')",
+    "test:debug": "WITH_STDOUT=true npm run test",
+    "test:ci": "echo \"******* Files to be tested:\n $CI_CORE_TEST_FILES\" && if [ -z \"${CI_CORE_TEST_FILES}\" ]; then echo \"No Files to test in this node\"; else mocha --reporter mocha-multi-reporters --reporter-options configFile=reporter-config.json --sort ${CI_CORE_TEST_FILES}; fi",
+    "lint": "eslint src test",
+    "verify": "npm run lint && npm test",
+    "prettier": "prettier --write 'src/**/*.js' 'test/**/*.js'"
 }
 ```
 

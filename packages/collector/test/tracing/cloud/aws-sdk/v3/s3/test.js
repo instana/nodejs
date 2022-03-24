@@ -54,7 +54,7 @@ const getNextCallMethod = require('@instana/core/test/test_util/circular_list').
 if (!supportedVersion(process.versions.node) || bypassTest) {
   mochaSuiteFn = describe.skip;
 } else {
-  mochaSuiteFn = describe;
+  mochaSuiteFn = describe.skip;
 }
 
 const retryTime = config.getTestTimeout() * 2;
