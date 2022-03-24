@@ -247,13 +247,35 @@ function registerTests(handlerDefinitionPath) {
           Overwrite: true
         };
 
-        ssm.putParameter(params, err => {
-          if (err) {
-            throw new Error(`Cannot set SSM parameter store value: ${err.message}`);
-          }
+        const createSSMKey = cb => {
+          ssm.putParameter(params, err => {
+            if (err) {
+              // eslint-disable-next-line no-console
+              console.log('DEBUG', err);
+              return cb(new Error(`Cannot set SSM parameter store value: ${err.name} ${err.message}`));
+            }
 
-          callback();
-        });
+            return cb();
+          });
+        };
+
+        let retries = 0;
+        const run = () => {
+          createSSMKey(err => {
+            if (err) {
+              if (retries > 2) {
+                return callback(new Error('Could not create SSM key.'));
+              }
+
+              retries += 1;
+              return run();
+            }
+
+            return callback();
+          });
+        };
+
+        return run();
       });
 
       it('must capture metrics and spans', () =>
@@ -310,13 +332,35 @@ function registerTests(handlerDefinitionPath) {
             Overwrite: true
           };
 
-          ssm.putParameter(params, ssmErr => {
-            if (ssmErr) {
-              throw new Error(`Cannot set SSM parameter store value: ${ssmErr.message}`);
-            }
+          const createSSMKey = cb => {
+            ssm.putParameter(params, err => {
+              if (err) {
+                // eslint-disable-next-line no-console
+                console.log('DEBUG', err);
+                return cb(new Error(`Cannot set SSM parameter store value: ${err.name} ${err.message}`));
+              }
 
-            callback();
-          });
+              return cb();
+            });
+          };
+
+          let retries = 0;
+          const run = () => {
+            createSSMKey(err => {
+              if (err) {
+                if (retries > 2) {
+                  return callback(new Error('Could not create SSM key.'));
+                }
+
+                retries += 1;
+                return run();
+              }
+
+              return callback();
+            });
+          };
+
+          return run();
         });
       });
 
@@ -375,13 +419,35 @@ function registerTests(handlerDefinitionPath) {
             Overwrite: true
           };
 
-          ssm.putParameter(params, ssmErr => {
-            if (ssmErr) {
-              throw new Error(`Cannot set SSM parameter store value: ${ssmErr.message}`);
-            }
+          const createSSMKey = cb => {
+            ssm.putParameter(params, err => {
+              if (err) {
+                // eslint-disable-next-line no-console
+                console.log('DEBUG', err);
+                return cb(new Error(`Cannot set SSM parameter store value: ${err.name} ${err.message}`));
+              }
 
-            callback();
-          });
+              return cb();
+            });
+          };
+
+          let retries = 0;
+          const run = () => {
+            createSSMKey(err => {
+              if (err) {
+                if (retries > 2) {
+                  return callback(new Error('Could not create SSM key.'));
+                }
+
+                retries += 1;
+                return run();
+              }
+
+              return callback();
+            });
+          };
+
+          return run();
         });
       });
 
