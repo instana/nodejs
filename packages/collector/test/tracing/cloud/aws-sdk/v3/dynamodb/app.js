@@ -16,9 +16,12 @@ if (process.env.AWS_SDK_CLIENT_DYNAMODB_REQUIRE !== '@aws-sdk/client-dynamodb') 
 }
 
 require('../../../../../../')();
+
 const express = require('express');
 const fetch = require('node-fetch');
 const awsSdk3 = require('@aws-sdk/client-dynamodb');
+const cls = require('../../../../../../../core/src/tracing/cls');
+
 const logPrefix = `AWS SDK v3 DynamoDB (${process.pid}):\t`;
 const log = require('@instana/core/test/test_util/log').getLogger(logPrefix);
 const port = process.env.APP_PORT || 3215;
@@ -134,6 +137,27 @@ function enforceErrors(options, operation) {
   }
 }
 
+const checkTableStatus = async (operation, res) => {
+  if (operation === 'createTable') {
+    if (
+      (res && res.TableDescription && res.TableDescription.TableStatus === 'CREATING') ||
+      (res && res.Table && res.Table.TableStatus === 'CREATING')
+    ) {
+      const op = cap('DescribeTableCommand');
+
+      // NOTE: disale http tracing, otherwise we get a lot of http spans because of retries
+      cls.isTracing() && cls.setTracingLevel('0');
+      const command = new awsSdk3[op]({
+        TableName: tableName
+      });
+
+      const newRes = await dynamoDB.send(command);
+      cls.isTracing() && cls.setTracingLevel('1');
+      await checkTableStatus(operation, newRes);
+    }
+  }
+};
+
 async function runV3AsPromise(withError, operation) {
   const options = operationParams[operation] || {};
   if (withError) {
@@ -143,6 +167,10 @@ async function runV3AsPromise(withError, operation) {
   const op = cap(`${operation}Command`);
   const command = new awsSdk3[op](options);
   const results = await dynamoDB.send(command);
+
+  if (!withError) {
+    await checkTableStatus(operation, results);
+  }
   return results;
 }
 
@@ -154,7 +182,12 @@ function runV3AsCallback(withError, operation, cb) {
 
   const op = cap(`${operation}Command`);
   const command = new awsSdk3[op](options);
-  dynamoDB.send(command, cb);
+  dynamoDB.send(command, async (err, results) => {
+    if (!withError) {
+      await checkTableStatus(operation, results);
+    }
+    cb(err, results);
+  });
 }
 
 async function runV3AsV2Style(withError, operation) {
@@ -164,6 +197,9 @@ async function runV3AsV2Style(withError, operation) {
   }
 
   const results = await dynamoDBv2[operation](options);
+  if (!withError) {
+    await checkTableStatus(operation, results);
+  }
   return results;
 }
 
