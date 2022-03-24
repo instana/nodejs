@@ -15,6 +15,8 @@ const bodyParser = require('body-parser');
 
 const app = express();
 const logPrefix = `Bookshelf App (${process.pid}):\t`;
+let isReady = false;
+let BookShelfUser;
 
 const knex = require('knex')({
   client: 'pg',
@@ -33,16 +35,17 @@ const bookshelf = require('bookshelf')(knex);
   const result = await bookshelf.knex.schema.hasTable('users');
 
   if (!result) {
-    bookshelf.knex.schema.createTableIfNotExists('users', function (t) {
+    await bookshelf.knex.schema.createTable('users', function (t) {
       t.increments('id');
       t.string('name');
     });
   }
-})();
 
-const BookShelfUser = bookshelf.model('User', {
-  tableName: 'users'
-});
+  BookShelfUser = bookshelf.model('User', {
+    tableName: 'users'
+  });
+  isReady = true;
+})();
 
 if (process.env.WITH_STDOUT) {
   app.use(morgan(`${logPrefix}:method :url :status`));
@@ -51,6 +54,10 @@ if (process.env.WITH_STDOUT) {
 app.use(bodyParser.json());
 
 app.get('/', (req, res) => {
+  if (!isReady) {
+    return res.sendStatus(500);
+  }
+
   res.sendStatus(200);
 });
 
