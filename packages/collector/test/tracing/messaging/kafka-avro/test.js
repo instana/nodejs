@@ -253,9 +253,14 @@ function verifyResponseAndMessage(response, consumerControls) {
   return message;
 }
 
+/**
+ * We manually install kafka-avro because this dependency
+ * fails to install on most node versions.
+ * See PR description: https://github.com/instana/nodejs/pull/486
+ */
 function installLibraryVersion(done) {
   const version = '^3.1.1';
-  const command = `npm install --silent --no-save kafka-avro@${version}`;
+  const command = `npm install --silent kafka-avro@${version}`;
 
   return execCommand(command, done);
 }
