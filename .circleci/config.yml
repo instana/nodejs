@@ -183,7 +183,7 @@ shared: &shared
     - run: |
         ulimit -c unlimited
         . ./bin/ci_glob_setup.sh
-        npm test
+        npm run test:ci
 
     - store_test_results:
         path: test-results
@@ -306,7 +306,7 @@ jobs:
       - <<: *nats-streaming
       - <<: *memcached
     <<: *shared
-    parallelism: 4
+    parallelism: 16
 
   "node-14":
     docker:
@@ -325,7 +325,7 @@ jobs:
       - <<: *nats-streaming
       - <<: *memcached
     <<: *shared
-    parallelism: 4
+    parallelism: 16
 
   "node-12":
     docker:
@@ -344,7 +344,7 @@ jobs:
       - <<: *nats-streaming
       - <<: *memcached
     <<: *shared
-    parallelism: 4
+    parallelism: 16
 
   "node-10":
     docker:
@@ -363,7 +363,7 @@ jobs:
       - <<: *nats-streaming
       - <<: *memcached
     <<: *shared
-    parallelism: 4
+    parallelism: 16
 
   "node-8":
     docker:
@@ -382,7 +382,7 @@ jobs:
       - <<: *nats-streaming
       - <<: *memcached
     <<: *shared
-    parallelism: 4
+    parallelism: 16
 
 workflows:
   version: 2

@@ -26,6 +26,7 @@
   "scripts": {
     "audit": "bin/prepare-audit.sh && npm audit --production; AUDIT_RESULT=$?; git checkout package-lock.json; exit $AUDIT_RESULT",
     "test": "true",
+    "test:ci": "true",
     "test:debug": "true",
     "lint": "eslint src",
     "verify": "npm run lint",

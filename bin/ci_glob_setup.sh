@@ -1,33 +1,30 @@
-#!/usr/bin/env bash
-
 #######################################
-# (c) Copyright IBM Corp. 2021
-# (c) Copyright Instana Inc. and contributors 2021
+# (c) Copyright IBM Corp. 2022
 #######################################
 
-
-# Each of these environment variables will hold a list of files per CircleCI process to be tested.
-# They will be used later by each package where the `test:mocha` script is present
-# The `circleci tests glob` command list the files based on the provided glob. A similar result can be achieved without
-# their tool, but CircleCI recommends its usage.
-# The `circleci tests split` command will split files among the number of designated processes.
-# The `--split-by=timings` option looks at the previous build and downloads all result*.xml files. Then, it attempts to
-# split files among the process in a way that they finish more or less at the same time.
-
-set -xeo pipefail
-
-cd `dirname $BASH_SOURCE`/..
+shopt -s globstar
+files=$(circleci tests glob /home/circleci/repo/packages/**/test/**/*test.js | sed "/node_modules/d" | circleci tests split --split-by=timings --timings-type=filename)
+#files="packages/core/test/util/compression_test.js packages/collector/test/actions/source_test.js packages/core/test/util/slidingWindow_test.js packages/shared-metrics/test/util/DependencyDistanceCalculator_te$
 
 for package in packages/*/ ; do
-  # remove leading "packages/"
+  for i in $(echo $files | tr " " "\n")
+  do
+    if [[ "$i" == *"$package"* ]]; then
+        y+=" ${i}"
+    fi
+  done
+
+  echo $package
+  echo "Files matched: $y"
+
   package_name=${package#packages/}
-  # remove trailing "/"
   package_name=${package_name%/}
-  # replace all "-" by "_"
   package_name=${package_name//-/_}
-  # convert lower case to upper case
   package_name="${package_name^^}"
 
-  declare CI_${package_name}_TEST_FILES="$(circleci tests glob "${package}test/**/*test.js" | circleci tests split | sed "s|${package}||g")"
-  export CI_${package_name}_TEST_FILES
+  echo CI_${package_name}_TEST_FILES
+  declare CI_${package_name}_TEST_FILES="$(echo ${y})"
+  export CI_${package_name}_TEST_FILES="$(echo ${y})"
+
+  unset y
 done
