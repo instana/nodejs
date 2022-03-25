@@ -15,8 +15,8 @@ const bypassTest = semver.lt(process.versions.node, '10.0.0');
  * We need to add this verification here, or else Mocha breaks with an error about generators, used in the AWS SDK v3
  */
 if (!bypassTest) {
-  checkTableExistence = require('./util').checkTableExistence;
-  cleanup = require('./util').cleanup;
+  checkTableExistence = require('../util').checkTableExistence;
+  cleanup = require('../util').cleanup;
 }
 
 const { v4: uuid } = require('uuid');
@@ -24,16 +24,16 @@ const path = require('path');
 const { expect } = require('chai');
 const { fail } = expect;
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
-const config = require('../../../../../../../core/test/config');
-const { retry, stringifyItems, delay } = require('../../../../../../../core/test/test_util');
-const ProcessControls = require('../../../../../test_util/ProcessControls');
-const globalAgent = require('../../../../../globalAgent');
+const config = require('@instana/core/test/config');
+const { retry, stringifyItems, delay } = require('@instana/core/test/test_util');
+const ProcessControls = require('../../../../../../test_util/ProcessControls');
+const globalAgent = require('../../../../../../globalAgent');
 const {
   verifyHttpRootEntry,
   verifyExitSpan,
   verifyHttpExit
 } = require('@instana/core/test/test_util/common_verifications');
-const { promisifyNonSequentialCases } = require('../promisify_non_sequential');
+const { promisifyNonSequentialCases } = require('../../promisify_non_sequential');
 
 let mochaSuiteFn;
 
@@ -48,7 +48,6 @@ const operationsInfo = {
   updateItem: 'update'
 };
 
-const requestMethods = ['v3', 'v2', 'cb'];
 const availableOperations = [
   'createTable',
   'putItem',
@@ -59,8 +58,6 @@ const availableOperations = [
   'query',
   'deleteItem'
 ];
-
-const getNextCallMethod = require('@instana/core/test/test_util/circular_list').getCircularList(requestMethods);
 
 if (!supportedVersion(process.versions.node) || bypassTest) {
   mochaSuiteFn = describe.skip;
@@ -82,55 +79,52 @@ const createTableName = () => {
   return tableName;
 };
 
-const version = '@aws-sdk/client-dynamodb2';
+const requestMethod = 'v2';
+const version = '@aws-sdk/client-dynamodb';
 
 mochaSuiteFn('tracing/cloud/aws-sdk/v3/dynamodb', function () {
-  describe(`version: ${version}`, function () {
+  describe(`version: ${version}, ${requestMethod}`, function () {
     this.timeout(config.getTestTimeout() * 5);
 
     globalAgent.setUpCleanUpHooks();
     const agentControls = globalAgent.instance;
 
     describe('tracing enabled, no suppression', function () {
-      requestMethods.forEach(requestMethod => {
-        describe(`request method: ${requestMethod}`, function () {
-          const tableName = createTableName();
+      const tableName = createTableName();
 
-          const appControls = new ProcessControls({
-            appPath: path.join(__dirname, 'app'),
-            port: 3215,
-            useGlobalAgent: true,
-            env: {
-              AWS_DYNAMODB_TABLE_NAME: tableName,
-              AWS_SDK_CLIENT_DYNAMODB_REQUIRE: version
-            }
+      const appControls = new ProcessControls({
+        appPath: path.join(__dirname, '../app'),
+        port: 3215,
+        useGlobalAgent: true,
+        env: {
+          AWS_DYNAMODB_TABLE_NAME: tableName,
+          AWS_SDK_CLIENT_DYNAMODB_REQUIRE: version
+        }
+      });
+
+      ProcessControls.setUpHooksWithRetryTime(retryTime, appControls);
+
+      after(() => {
+        return cleanup(tableName);
+      });
+
+      availableOperations.forEach(operation => {
+        it(`operation: ${operation}/${requestMethod}`, async () => {
+          const apiPath = `/${operation}/${requestMethod}`;
+
+          const response = await appControls.sendRequest({
+            method: 'GET',
+            path: `${apiPath}`
           });
 
-          ProcessControls.setUpHooksWithRetryTime(retryTime, appControls);
+          /**
+           * Table takes some time to be available, even though the callback gives a success message
+           */
+          if (operation === 'createTable') {
+            await checkTableExistence(tableName, true);
+          }
 
-          after(() => {
-            return cleanup(tableName);
-          });
-
-          availableOperations.forEach(operation => {
-            it(`operation: ${operation}/${requestMethod}`, async () => {
-              const apiPath = `/${operation}/${requestMethod}`;
-
-              const response = await appControls.sendRequest({
-                method: 'GET',
-                path: `${apiPath}`
-              });
-
-              /**
-               * Table takes some time to be available, even though the callback gives a success message
-               */
-              if (operation === 'createTable') {
-                await checkTableExistence(tableName, true);
-              }
-
-              return verify(appControls, response, apiPath, operation, false, tableName);
-            });
-          });
+          return verify(appControls, response, apiPath, operation, false, tableName);
         });
       });
     });
@@ -139,7 +133,7 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v3/dynamodb', function () {
       const tableName = createTableName();
 
       const appControls = new ProcessControls({
-        appPath: path.join(__dirname, 'app'),
+        appPath: path.join(__dirname, '../app'),
         port: 3215,
         useGlobalAgent: true,
         env: {
@@ -162,7 +156,7 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v3/dynamodb', function () {
           availableOperations,
           appControls,
           true,
-          getNextCallMethod
+          () => requestMethod
         );
       });
     });
@@ -173,7 +167,7 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v3/dynamodb', function () {
       const tableName = createTableName();
 
       const appControls = new ProcessControls({
-        appPath: path.join(__dirname, 'app'),
+        appPath: path.join(__dirname, '../app'),
         port: 3215,
         useGlobalAgent: true,
         tracingEnabled: false,
@@ -190,10 +184,10 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v3/dynamodb', function () {
       });
 
       before(async () => {
-        // Create table first via v3 style!
+        // Create table first!
         const response = await appControls.sendRequest({
           method: 'GET',
-          path: `/${availableOperations[0]}/${requestMethods[0]}`
+          path: `/${availableOperations[0]}/${requestMethod}`
         });
 
         verifyResponse(response, availableOperations[0], false, tableName);
@@ -202,8 +196,6 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v3/dynamodb', function () {
 
       describe('attempt to get result', () => {
         availableOperations.slice(1).forEach(operation => {
-          const requestMethod = getNextCallMethod();
-
           it(`should not trace (${operation}/${requestMethod})`, async () => {
             const response = await appControls.sendRequest({
               method: 'GET',
@@ -228,7 +220,7 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v3/dynamodb', function () {
       const tableName = createTableName();
 
       const appControls = new ProcessControls({
-        appPath: path.join(__dirname, 'app'),
+        appPath: path.join(__dirname, '../app'),
         port: 3215,
         useGlobalAgent: true,
         env: {
@@ -247,7 +239,7 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v3/dynamodb', function () {
         // Create table first!
         const response = await appControls.sendRequest({
           method: 'GET',
-          path: `/${availableOperations[0]}/${requestMethods[0]}`
+          path: `/${availableOperations[0]}/${requestMethod}`
         });
 
         verifyResponse(response, availableOperations[0], false, tableName);
@@ -256,8 +248,6 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v3/dynamodb', function () {
 
       describe('attempt to get result', () => {
         availableOperations.slice(1).forEach(operation => {
-          const requestMethod = getNextCallMethod();
-
           it(`should not trace (${operation}/${requestMethod})`, async () => {
             const response = await appControls.sendRequest({
               suppressTracing: true,
