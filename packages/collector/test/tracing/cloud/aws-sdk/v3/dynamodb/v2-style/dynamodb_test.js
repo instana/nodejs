@@ -191,7 +191,7 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v3/dynamodb', function () {
         });
 
         verifyResponse(response, availableOperations[0], false, tableName);
-        agentControls.clearReceivedData();
+        await agentControls.clearReceivedData();
       });
 
       describe('attempt to get result', () => {
@@ -243,7 +243,7 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v3/dynamodb', function () {
         });
 
         verifyResponse(response, availableOperations[0], false, tableName);
-        agentControls.clearReceivedData();
+        await agentControls.clearReceivedData();
       });
 
       describe('attempt to get result', () => {
