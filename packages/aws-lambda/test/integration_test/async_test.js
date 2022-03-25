@@ -28,20 +28,13 @@ const backendBaseUrl = `https://localhost:${backendPort}/serverless`;
 const downstreamDummyPort = 3456;
 const downstreamDummyUrl = `http://localhost:${downstreamDummyPort}/`;
 const instanaAgentKey = 'aws-lambda-dummy-key';
+const lambdaType = 'async';
 
-[
-  //
-  'async',
-  'callback',
-  'legacy_api',
-  'promise'
-].forEach(lambdaType => {
-  describe(`aws/lambda/${lambdaType}`, function () {
-    this.timeout(config.getTestTimeout());
-    this.slow(config.getTestTimeout() / 4);
+describe(`aws/lambda/${lambdaType}`, function () {
+  this.timeout(config.getTestTimeout());
+  this.slow(config.getTestTimeout() / 4);
 
-    return registerTests.bind(this)(path.join(__dirname, '..', 'lambdas', lambdaType));
-  });
+  return registerTests.bind(this)(path.join(__dirname, '..', 'lambdas', lambdaType));
 });
 
 function prelude(opts) {
