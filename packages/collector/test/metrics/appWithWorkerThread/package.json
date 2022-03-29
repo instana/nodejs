@@ -1,0 +1,16 @@
+{
+  "name": "worker-thread-test-app",
+  "private": true,
+  "version": "1.0.0",
+  "description": "This is a test application to test snapshot and metrics data.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/instana/nodejs.git"
+  },
+  "main": "app.js",
+  "author": {
+    "name": "Bastian Krol",
+    "email": "bastian.krol@ibm.com"
+  },
+  "license": "MIT"
+}

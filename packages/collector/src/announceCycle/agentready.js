@@ -5,6 +5,13 @@
 
 'use strict';
 
+let isMainThread = true;
+try {
+  isMainThread = require('worker_threads').isMainThread;
+} catch (err) {
+  // Worker threads are not available, so we know that this is the main thread.
+}
+
 const semver = require('semver');
 const { tracing } = require('@instana/core');
 
@@ -23,6 +30,9 @@ const TEN_MINUTES = 10 * 60 * 1000;
 
 /** @type {*} */
 let autoprofile;
+
+/** @type {*} */
+let profiler;
 
 /** @type {import('@instana/core/src/logger').GenericLogger} */
 let logger;
@@ -71,29 +81,34 @@ module.exports = exports = {
  */
 function enter(_ctx) {
   ctx = _ctx;
-  uncaught.activate();
-  metrics.activate();
+
   initializedTooLate.check();
-  transmissionCycle.activate(
-    metrics,
-    agentConnection,
-    /**
-     * @param {Array.<import('../agent/requestHandler').AnnounceRequest>} requests
-     */
-    function onSuccess(requests) {
-      requestHandler.handleRequests(requests);
-    },
-    function onError() {
-      ctx.transitionTo('unannounced');
-    }
-  );
+
+  if (isMainThread) {
+    uncaught.activate();
+    metrics.activate();
+    requestHandler.activate();
+    transmissionCycle.activate(
+      metrics,
+      agentConnection,
+      /**
+       * @param {Array.<import('../agent/requestHandler').AnnounceRequest>} requests
+       */
+      function onSuccess(requests) {
+        requestHandler.handleRequests(requests);
+      },
+      function onError() {
+        ctx.transitionTo('unannounced');
+      }
+    );
+    scheduleTracingMetrics();
+    detectEOLNodeVersion();
+  }
+
   tracing.activate();
-  requestHandler.activate();
-  scheduleTracingMetrics();
-  detectEOLNodeVersion();
 
   if (agentOpts.autoProfile && autoprofile) {
-    const profiler = autoprofile.start();
+    profiler = autoprofile.start();
     /**
      * @param {*} profiles
      * @param {(...args: *) => *} callback
@@ -110,14 +125,19 @@ function enter(_ctx) {
 }
 
 function leave() {
-  uncaught.deactivate();
-  metrics.deactivate();
-  transmissionCycle.deactivate();
+  if (isMainThread) {
+    uncaught.deactivate();
+    metrics.deactivate();
+    requestHandler.deactivate();
+    transmissionCycle.deactivate();
+    deScheduleTracingMetrics();
+  }
+
   tracing.deactivate();
-  requestHandler.deactivate();
-  if (tracingMetricsTimeout) {
-    clearTimeout(tracingMetricsTimeout);
-    tracingMetricsTimeout = null;
+
+  if (profiler) {
+    profiler.destroy();
+    profiler = null;
   }
 }
 
@@ -138,6 +158,13 @@ function sendTracingMetrics() {
 function scheduleTracingMetrics() {
   tracingMetricsTimeout = setTimeout(sendTracingMetrics, tracingMetricsDelay);
   tracingMetricsTimeout.unref();
+}
+
+function deScheduleTracingMetrics() {
+  if (tracingMetricsTimeout) {
+    clearTimeout(tracingMetricsTimeout);
+    tracingMetricsTimeout = null;
+  }
 }
 
 function fireMonitoringEvent() {
