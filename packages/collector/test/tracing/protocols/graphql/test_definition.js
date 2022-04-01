@@ -1,6 +1,5 @@
 /*
- * (c) Copyright IBM Corp. 2021
- * (c) Copyright Instana Inc. and contributors 2019
+ * (c) Copyright IBM Corp. 2022
  */
 
 'use strict';
@@ -23,12 +22,15 @@ const ProcessControls = require('../../../test_util/ProcessControls');
 const globalAgent = require('../../../globalAgent');
 
 const agentControls = globalAgent.instance;
-const graphqlVersion = 15;
+
 const skipNodeVersion = {
-  15: semver.lt(process.versions.node, '10.0.0')
+  // graphql-ws is not compatible with Node 8
+  14: semver.lt(process.versions.node, '10.0.0'),
+  15: semver.lt(process.versions.node, '10.0.0'),
+  16: semver.lt(process.versions.node, '12.0.0')
 };
 
-describe('tracing/graphql', function () {
+function start(graphqlVersion) {
   this.timeout(config.getTestTimeout() * 2);
 
   if (!supportedVersion(process.versions.node) || skipNodeVersion[graphqlVersion]) {
@@ -169,7 +171,7 @@ describe('tracing/graphql', function () {
           }));
     });
   });
-});
+}
 
 function registerAllQuerySuiteVariations(serverControls, clientControls, apollo, communicationProtocol) {
   const useAlias = Math.random >= 0.5;
@@ -816,3 +818,7 @@ function verifyFollowUpLogExit(parentSpan, expectedMessage, spans) {
     span => expect(span.data.log.message).to.equal(expectedMessage)
   ]);
 }
+
+module.exports = function (graphqlVersion) {
+  return start.bind(this)(graphqlVersion);
+};
