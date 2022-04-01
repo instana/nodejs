@@ -61,7 +61,8 @@ function loadNativeAddOnInternal(opts, loaderEmitter) {
   try {
     const { isMainThread } = require('worker_threads');
     if (!isMainThread) {
-      logger.warn(opts.message + ' (Native addons are currently not loaded in worker threads)');
+      // Fail silently, we currently do not want to send any metrics from a worker thread.
+      // (But see https://instana.kanbanize.com/ctrl_board/56/cards/48699/details/)
       loaderEmitter.emit('failed');
       return;
     }

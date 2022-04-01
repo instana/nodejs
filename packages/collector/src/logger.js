@@ -7,6 +7,15 @@
 
 'use strict';
 
+/** @type number */
+let threadId = 0;
+try {
+  threadId = require('worker_threads').threadId;
+} catch (ignored) {
+  // We are apparently running in a Node.js version that does not have worker threads yet, thus we are on the main
+  // thread (0).
+}
+
 const bunyan = require('bunyan');
 const { logger } = require('@instana/core');
 
@@ -37,6 +46,7 @@ exports.init = function init(config, isReInit) {
     // we create later on.
     parentLogger = bunyan.createLogger({
       name: '@instana/collector',
+      thread: threadId,
       __in: 1
     });
   }

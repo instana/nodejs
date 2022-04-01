@@ -5,6 +5,13 @@
 
 'use strict';
 
+let isMainThread = true;
+try {
+  isMainThread = require('worker_threads').isMainThread;
+} catch (err) {
+  // Worker threads are not available, so we know that this is the main thread.
+}
+
 const path = require('path');
 const instanaNodeJsCore = require('@instana/core');
 const instanaSharedMetrics = require('@instana/shared-metrics');
@@ -66,8 +73,11 @@ function init(_config) {
   agentOpts.init(config);
   instanaNodeJsCore.init(config, agentConnection, pidStore);
   instanaSharedMetrics.setLogger(logger);
-  uncaught.init(config, agentConnection, pidStore);
-  require('./metrics').init(config);
+
+  if (isMainThread) {
+    uncaught.init(config, agentConnection, pidStore);
+    require('./metrics').init(config);
+  }
 
   logger.info('@instana/collector module version:', require(path.join(__dirname, '..', 'package.json')).version);
   require('./announceCycle').start();
