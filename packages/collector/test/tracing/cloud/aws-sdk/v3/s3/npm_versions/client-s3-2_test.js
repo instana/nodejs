@@ -7,5 +7,5 @@
 const npmVersion = '@aws-sdk/client-s3-2';
 
 describe('tracing/cloud/aws-sdk/v3/s3', function () {
-  require('./test_definition').bind(this)(npmVersion);
+  require('../test_definition').bind(this)(npmVersion);
 });
