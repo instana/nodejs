@@ -308,6 +308,7 @@ jobs:
             - -ceux
             - |
                 BUILD_LAYER_WITH=npm \
+                NO_PROMPT=true \
                 CONTAINER_REGISTRY_USER=iamapikey \
                 CONTAINER_REGISTRY_PASSWORD=((concourse-icr-containers-public.password)) \
                 AWS_ACCESS_KEY_ID=((aws-ci-manage-lambda-layers.aws_access_key_id)) \
