@@ -93,9 +93,32 @@ ZIP_PREFIX=instana-nodejs-layer
 ZIP_NAME=$ZIP_PREFIX.zip
 TMP_ZIP_DIR=tmp
 
-echo Will build Lambda layer with name \"$LAYER_NAME\".
+if [[ -z $REGIONS ]]; then
+  REGIONS=$'ap-northeast-1\nap-northeast-2\nap-south-1\nap-southeast-1\nap-southeast-2\nca-central-1\neu-central-1\neu-north-1\neu-west-1\neu-west-2\neu-west-3\nsa-east-1\nus-east-1\nus-east-2\nus-west-1\nus-west-2'
+fi
 
-REGIONS=$'ap-northeast-1\nap-northeast-2\nap-south-1\nap-southeast-1\nap-southeast-2\nca-central-1\neu-central-1\neu-north-1\neu-west-1\neu-west-2\neu-west-3\nsa-east-1\nus-east-1\nus-east-2\nus-west-1\nus-west-2'
+if [[ -z $NO_PROMPT ]]; then
+  while true; do
+      echo "####"
+      echo "LAYER_NAME: $LAYER_NAME"
+      echo "SKIP_DOCKER_IMAGE: $SKIP_DOCKER_IMAGE"
+      echo "DOCKER_IMAGE_NAME: $DOCKER_IMAGE_NAME"
+      echo "REGIONS: $REGIONS"
+      echo "PACKAGE_VERSION: $PACKAGE_VERSION"
+      echo "BUILD_LAYER_WITH: $BUILD_LAYER_WITH"
+      echo "SKIP_AWS_PUBLISH_LAYER: $SKIP_AWS_PUBLISH_LAYER"
+      echo "####"
+
+      read -p "Do you wish to continue (yes or no)? " yn
+      case $yn in
+          [Yy]* ) echo "Let's go!"; break;;
+          [Nn]* ) exit 1;;
+          * ) echo "Please answer yes or no.";;
+      esac
+  done
+fi
+
+echo Will build Lambda layer with name \"$LAYER_NAME\".
 
 if [[ -z $SKIP_DOCKER_IMAGE ]]; then
   echo Will build Docker image with name \"$DOCKER_IMAGE_NAME\".
@@ -181,7 +204,7 @@ if [[ $BUILD_LAYER_WITH == local ]]; then
   echo "Building local tar.gz for @instana/aws-lambda."
   cd ../aws-lambda
   npm --loglevel=warn pack
-  mv instana-aws-lambda-1*.tgz $LAYER_WORKDIR/instana-aws-lambda.tgz
+  mv instana-aws-lambda-*.tgz $LAYER_WORKDIR/instana-aws-lambda.tgz
 
   echo "Building local tar.gz for instana-aws-lambda-auto-wrap."
   cd ../aws-lambda-auto-wrap
@@ -226,6 +249,7 @@ popd > /dev/null
 
 if [[ -z $SKIP_AWS_PUBLISH_LAYER ]]; then
   echo "step 6/9: publishing $ZIP_NAME as AWS Lambda layer $LAYER_NAME to all regions"
+
   while read -r region; do
     echo " - publishing to region $region:"
 
@@ -256,12 +280,14 @@ if [[ -z $SKIP_AWS_PUBLISH_LAYER ]]; then
 
   done <<< "$REGIONS"
 else
-  echo "step 6/9: publishing AWS Lambda layer (skipping)"
+  echo "step 6/9: publishing AWS Lambda layer $LAYER_NAME (skipping)"
 fi
 
 if [[ -z $SKIP_DOCKER_IMAGE ]]; then
   echo "step 7/9: building docker image for container image based Lambda layer"
   docker build . -t "$DOCKER_IMAGE_NAME:$VERSION"
+
+  # NOTE: serverless/ci/pipeline.yaml passes PACKAGE_VERSION=1 for 1.x branch
   if [[ $PACKAGE_VERSION == latest ]]; then
     docker tag $DOCKER_IMAGE_NAME:$VERSION $DOCKER_IMAGE_NAME:latest
   fi
@@ -272,10 +298,12 @@ if [[ -z $SKIP_DOCKER_IMAGE ]]; then
     docker login -u="$CONTAINER_REGISTRY_USER" -p="$CONTAINER_REGISTRY_PASSWORD" $CONTAINER_REGISTRY
     echo " - pushing Docker image $DOCKER_IMAGE_NAME:$VERSION now:"
     docker push $DOCKER_IMAGE_NAME:$VERSION
+
     if [[ $PACKAGE_VERSION == latest ]]; then
       echo " - pushing Docker image $DOCKER_IMAGE_NAME:latest now:"
       docker push $DOCKER_IMAGE_NAME:latest
     fi
+
     echo " - executing docker logout:"
     docker logout $CONTAINER_REGISTRY
   else
