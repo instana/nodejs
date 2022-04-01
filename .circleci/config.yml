@@ -292,7 +292,7 @@ jobs:
       - <<: *nats-streaming
       - <<: *memcached
     <<: *shared
-    parallelism: 16
+    parallelism: 20
 
   "node-14":
     docker:
@@ -311,7 +311,7 @@ jobs:
       - <<: *nats-streaming
       - <<: *memcached
     <<: *shared
-    parallelism: 16
+    parallelism: 20
 
   "node-12":
     docker:
@@ -330,7 +330,7 @@ jobs:
       - <<: *nats-streaming
       - <<: *memcached
     <<: *shared
-    parallelism: 16
+    parallelism: 20
 
   "node-10":
     docker:
@@ -349,7 +349,7 @@ jobs:
       - <<: *nats-streaming
       - <<: *memcached
     <<: *shared
-    parallelism: 16
+    parallelism: 20
 
 workflows:
   version: 2
