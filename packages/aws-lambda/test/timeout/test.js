@@ -11,6 +11,8 @@ const constants = require('@instana/core').tracing.constants;
 
 const Control = require('../Control');
 const expectExactlyOneMatching = require('../../../core/test/test_util/expectExactlyOneMatching');
+const config = require('../../../serverless/test/config');
+const retry = require('../../../serverless/test/util/retry');
 
 const { fail } = expect;
 
@@ -27,7 +29,8 @@ const instanaAgentKey = 'aws-lambda-dummy-key';
 
 function prelude(opts) {
   const timeout = opts.lambdaTimeout * 2;
-  this.timeout(timeout);
+
+  this.timeout(process.env.CI ? config.getTestTimeout() : timeout);
   this.slow(timeout);
 
   if (opts.startBackend == null) {
@@ -223,8 +226,10 @@ describe('timeout heuristic', () => {
 
           expect(e.message).to.include('but it ran only 0 time(s).');
         })
-        .finally(() =>
-          control.getSpans().then(spans => {
+        .finally(async () => {
+          await retry(async () => {
+            const spans = await control.getSpans();
+
             if (expectEntrySpan) {
               verifyLambdaEntry(
                 spans,
@@ -233,8 +238,8 @@ describe('timeout heuristic', () => {
                 expectedMillisRemainingAtTimeout + 100
               );
             }
-          })
-        );
+          });
+        });
     });
   }
 
