@@ -213,7 +213,7 @@ availableOperations.forEach(op => {
     const method = req.params.method;
 
     switch (method) {
-      case 'v3':
+      case 'default-style':
         runV3AsPromise(withError, op)
           .then(data => {
             return fetch(`http://127.0.0.1:${agentPort}`).then(() => data);
@@ -228,7 +228,7 @@ availableOperations.forEach(op => {
             res.status(500).send({ error: String(err) });
           });
         break;
-      case 'v2':
+      case 'v2-style':
         runV3AsV2Style(withError, op)
           .then(data => {
             return fetch(`http://127.0.0.1:${agentPort}`).then(() => data);
@@ -243,7 +243,7 @@ availableOperations.forEach(op => {
             res.status(500).send({ error: String(err) });
           });
         break;
-      case 'cb':
+      case 'cb-style':
         runV3AsCallback(withError, op, (err, data) => {
           if (err) {
             res.status(500).send({ error: String(err) });
