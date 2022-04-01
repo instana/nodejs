@@ -228,4 +228,6 @@ availableOperations.forEach(op => {
   });
 });
 
-app.listen(port, () => log(`AWS SDK v3 S3 app, listening to port ${port}`));
+app.listen(port, () =>
+  log(`AWS SDK v3 S3 app with npm version "${process.env.AWS_SDK_CLIENT_S3_REQUIRE}", listening to port ${port}`)
+);
