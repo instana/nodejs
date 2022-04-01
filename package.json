@@ -93,7 +93,7 @@
     "bluebird": "^3.7.2",
     "body-parser": "^1.19.0",
     "bull": "3.29.3",
-    "chai": "4.3.4",
+    "chai": "4.3.6",
     "cls-hooked": "^4.2.2",
     "commitizen": "^4.2.4",
     "cz-conventional-changelog": "^3.3.0",
