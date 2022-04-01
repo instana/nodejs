@@ -187,7 +187,8 @@ function start(version, requestMethod) {
         });
 
         verifyResponse(response, availableOperations[0], false, tableName);
-        await agentControls.clearReceivedData();
+
+        // No need to clear or wait for spans, we do not trace!
       });
 
       describe('attempt to get result', () => {
@@ -239,6 +240,12 @@ function start(version, requestMethod) {
         });
 
         verifyResponse(response, availableOperations[0], false, tableName);
+
+        await retry(async () => {
+          const spans = await agentControls.getSpans();
+          expect(spans.length).to.eql(3);
+        });
+
         await agentControls.clearReceivedData();
       });
 
