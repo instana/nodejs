@@ -1,6 +1,5 @@
 /*
- * (c) Copyright IBM Corp. 2021
- * (c) Copyright Instana Inc. and contributors 2021
+ * (c) Copyright IBM Corp. 2022
  */
 
 'use strict';
@@ -13,14 +12,14 @@ const { expect } = require('chai');
 const { fail } = expect;
 const constants = require('@instana/core').tracing.constants;
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
-const config = require('@instana/core/test/config');
+const config = require('../../../../../../../core/test/config');
 const {
   expectExactlyOneMatching,
   expectAtLeastOneMatching,
   retry,
   delay,
   stringifyItems
-} = require('@instana/core/test/test_util');
+} = require('../../../../../../../core/test/test_util');
 const ProcessControls = require('../../../../../test_util/ProcessControls');
 const globalAgent = require('../../../../../globalAgent');
 const { verifyHttpRootEntry, verifyHttpExit } = require('@instana/core/test/test_util/common_verifications');
@@ -40,23 +39,23 @@ if (!bypassTest) {
   sendSnsNotificationToSqsQueue = require('./sendNonInstrumented').sendSnsNotificationToSqsQueue;
 }
 
-let mochaSuiteFn;
-
 const sendingMethods = ['v3', 'cb', 'v2'];
 const receivingMethods = ['v3', 'cb', 'v2'];
 const getNextSendMethod = require('@instana/core/test/test_util/circular_list').getCircularList(sendingMethods);
 const getNextReceiveMethod = require('@instana/core/test/test_util/circular_list').getCircularList(receivingMethods);
 
-if (!supportedVersion(process.versions.node) || bypassTest) {
-  mochaSuiteFn = describe.skip;
-} else {
-  mochaSuiteFn = describe;
-}
 const retryTime = config.getTestTimeout() * 2;
-const version = '@aws-sdk/client-sqs2';
 
-mochaSuiteFn('tracing/cloud/aws-sdk/v3/sqs', function () {
-  describe(`version: ${version}`, function () {
+function start(version) {
+  let mochaSuiteFn;
+
+  if (!supportedVersion(process.versions.node) || bypassTest) {
+    mochaSuiteFn = describe.skip;
+  } else {
+    mochaSuiteFn = describe;
+  }
+
+  mochaSuiteFn(`npm: ${version}`, function () {
     this.timeout(config.getTestTimeout() * 4);
 
     let queueName = 'team_nodejs';
@@ -443,7 +442,7 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v3/sqs', function () {
       });
     });
   });
-});
+}
 
 function verifyResponseAndMessage(response, receiverControls) {
   expect(response).to.be.an('object');
@@ -471,3 +470,7 @@ function verifyResponseAndBatchMessage(response, receiverControls) {
   expect(message.Body).to.equal('Hello from Node tracer');
   return messageId;
 }
+
+module.exports = function (version) {
+  return start.bind(this)(version);
+};
