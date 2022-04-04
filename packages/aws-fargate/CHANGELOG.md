@@ -3,6 +3,29 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.0.0](https://github.com/instana/nodejs/compare/v1.140.1...v2.0.0) (2022-04-04)
+
+
+### Bug Fixes
+
+* **fargate:** detect Node.js version, use matching @instana/aws-fargate version ([0d1f955](https://github.com/instana/nodejs/commit/0d1f9557d650aad45673c2caaa22b8906b9b29d3))
+* dropped Node 6/8 ([0e6fd0e](https://github.com/instana/nodejs/commit/0e6fd0ef8f836ef6f2d95f3ddda2a641d92d0f86))
+* remove npm package instana-nodejs-sensor ([5fb9f18](https://github.com/instana/nodejs/commit/5fb9f1807998fb3335652d135eb167dc13f9221d))
+* self-disable if detected Node.js runtime version is too old ([cfe4248](https://github.com/instana/nodejs/commit/cfe4248a9a107165f8e96dbcb1948b399527d244))
+
+
+### BREAKING CHANGES
+
+* Starting with version 2.0.0, consumers of the package who
+still use the deprecated package name instana-nodejs-sensor will need to follow
+https://www.ibm.com/docs/en/obi/current?topic=nodejs-collector-installation#change-of-package-name
+to receive updates in the future.
+* v2 has dropped support for Node 6/8.
+
+
+
+
+
 ## [1.140.1](https://github.com/instana/nodejs/compare/v1.140.0...v1.140.1) (2022-04-04)
 
 **Note:** Version bump only for package @instana/aws-fargate
