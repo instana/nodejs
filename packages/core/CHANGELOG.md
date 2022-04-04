@@ -3,6 +3,32 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.0.0-rc.1](https://github.com/instana/nodejs/compare/v1.140.1...v2.0.0-rc.1) (2022-04-04)
+
+
+### Bug Fixes
+
+* remove npm package instana-nodejs-sensor ([3bbf9cd](https://github.com/instana/nodejs/commit/3bbf9cdb6b1238e314f590601360460fd8101e55))
+* removed disableAutomaticTracing legacy config ([#432](https://github.com/instana/nodejs/issues/432)) ([f8f6da4](https://github.com/instana/nodejs/commit/f8f6da4e90f94bbb6081a79ef95b45817ac51267))
+* removed legacy support for config.timeBetweenHealthcheckCalls ([#476](https://github.com/instana/nodejs/issues/476)) ([2b70a11](https://github.com/instana/nodejs/commit/2b70a1192c243f16a1682b5e7162a44d8a9ca08b))
+* self-disable if detected Node.js runtime version is too old ([fb61677](https://github.com/instana/nodejs/commit/fb6167797cb059fc7f14f69e4cbf2a9d1b709ce9))
+
+
+### BREAKING CHANGES
+
+* Removed support for legacy config `instana({ timeBetweenHealthcheckCalls: ... })`.
+                 Use `instana({ metrics: { timeBetweenHealthcheckCalls: ...}})`.
+* Starting with version 2.0.0, consumers of the package who
+still use the deprecated package name instana-nodejs-sensor will need to follow
+https://www.ibm.com/docs/en/obi/current?topic=nodejs-collector-installation#change-of-package-name
+to receive updates in the future.
+* Removed "disableAutomaticTracing" config option.
+                 Use `instana({ automaticTracingEnabled: Boolean })`.
+
+
+
+
+
 ## [1.140.1](https://github.com/instana/nodejs/compare/v1.140.0...v1.140.1) (2022-04-04)
 
 

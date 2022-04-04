@@ -3,6 +3,47 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.0.0-rc.1](https://github.com/instana/nodejs/compare/v1.140.1...v2.0.0-rc.1) (2022-04-04)
+
+
+### Bug Fixes
+
+* **fargate:** detect Node.js version, use matching @instana/aws-fargate version ([e96a87e](https://github.com/instana/nodejs/commit/e96a87ed5c510a05d0ecbd6343e8acbaa8a52053))
+* **google-cloud-run:** detect Node.js version, use matching @instana/google-cloud-run version ([eafbb9a](https://github.com/instana/nodejs/commit/eafbb9ae7dbbfd80b6dde5ade902307d4c40e6bc))
+* **lambda:** remove nodejs8.10 from compatible runtimes ([4754932](https://github.com/instana/nodejs/commit/475493294b0be59c820b1ace88ac4213c4f34ac5))
+* dropped Node 6/8 ([63c9f97](https://github.com/instana/nodejs/commit/63c9f97871621400a9042dc6fcf31da48b6ea67e))
+* remove npm package instana-nodejs-sensor ([3bbf9cd](https://github.com/instana/nodejs/commit/3bbf9cdb6b1238e314f590601360460fd8101e55))
+* removed disableAutomaticTracing legacy config ([#432](https://github.com/instana/nodejs/issues/432)) ([f8f6da4](https://github.com/instana/nodejs/commit/f8f6da4e90f94bbb6081a79ef95b45817ac51267))
+* removed legacy support for config.timeBetweenHealthcheckCalls ([#476](https://github.com/instana/nodejs/issues/476)) ([2b70a11](https://github.com/instana/nodejs/commit/2b70a1192c243f16a1682b5e7162a44d8a9ca08b))
+* removed support for passing parent logger during initialisation ([6db15c4](https://github.com/instana/nodejs/commit/6db15c486ae72c95e45053af5a5e926faffd2aa9))
+* removed uncaught exception config ([4fcda83](https://github.com/instana/nodejs/commit/4fcda834547d999f52d454b627eb56198be31cb6))
+* self-disable if detected Node.js runtime version is too old ([fb61677](https://github.com/instana/nodejs/commit/fb6167797cb059fc7f14f69e4cbf2a9d1b709ce9))
+
+
+### BREAKING CHANGES
+
+* **lambda:** The Instana Node.js Lambda layer is no longer compatible with
+Node.js 8. For Lambda functions still running on Node.js 8, please use the
+latest layer version that has been published for Node.js 8, see
+https://www.ibm.com/docs/en/obi/current?topic=kinesis-aws-lambda-native-tracing-nodejs
+* Removed support for legacy config `instana({ timeBetweenHealthcheckCalls: ... })`.
+                 Use `instana({ metrics: { timeBetweenHealthcheckCalls: ...}})`.
+* Starting with version 2.0.0, consumers of the package who
+still use the deprecated package name instana-nodejs-sensor will need to follow
+https://www.ibm.com/docs/en/obi/current?topic=nodejs-collector-installation#change-of-package-name
+to receive updates in the future.
+* Removed "disableAutomaticTracing" config option.
+                 Use `instana({ automaticTracingEnabled: Boolean })`.
+* Removed "reportUncaughtException" config option.
+	 	 The feature was completely removed.
+* Removed support for passing logger to instana initialisation.
+	 	 Use `instana.setLogger(logger)`".
+* v2 has dropped support for Node 6/8.
+
+
+
+
+
 ## [1.140.1](https://github.com/instana/nodejs/compare/v1.140.0...v1.140.1) (2022-04-04)
 
 

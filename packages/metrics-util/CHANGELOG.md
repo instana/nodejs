@@ -3,6 +3,25 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.0.0-rc.1](https://github.com/instana/nodejs/compare/v1.140.1...v2.0.0-rc.1) (2022-04-04)
+
+
+### Bug Fixes
+
+* remove npm package instana-nodejs-sensor ([3bbf9cd](https://github.com/instana/nodejs/commit/3bbf9cdb6b1238e314f590601360460fd8101e55))
+
+
+### BREAKING CHANGES
+
+* Starting with version 2.0.0, consumers of the package who
+still use the deprecated package name instana-nodejs-sensor will need to follow
+https://www.ibm.com/docs/en/obi/current?topic=nodejs-collector-installation#change-of-package-name
+to receive updates in the future.
+
+
+
+
+
 ## [1.140.1](https://github.com/instana/nodejs/compare/v1.140.0...v1.140.1) (2022-04-04)
 
 **Note:** Version bump only for package @instana/metrics-util
