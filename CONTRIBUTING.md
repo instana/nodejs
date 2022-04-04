@@ -191,6 +191,12 @@ NPM_CONFIG_OTP={your token} lerna publish --conventional-prerelease --dist-tag n
 
 This assumes that you are on a branch where the versions in all package.json files have already been bumped to `x.0.0` with `x` being the next major version.
 
+Doing a stable release after a prerelease requires you to use:
+
+```
+NPM_CONFIG_OTP={TOKEN} lerna publish --force-publish --conventional-graduate && lerna bootstrap
+```
+
 NOTE: With each prerelease the changelogs are getting updated. It might be wishful to delete the changelog before doing a final major release.
 
 #### Rate Limited OTP
