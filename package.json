@@ -38,7 +38,7 @@
     "lint": "node misc/is_eol || (eslint .*.js *.js && npm run typecheck && lerna run lint --stream && eslint misc && eslint dockerfile-examples)",
     "postinstall": "husky install && npm run bootstrap",
     "precommit": "npm run doctoc",
-    "coverage-all": "nyc --reporter=lcov lerna run test --stream && npm run open-coverage",
+    "coverage-all": "nyc --reporter=lcov lerna run test --stream",
     "coverage": "nyc --reporter=lcov lerna run test --scope=${npm_config_scope} && npm run open-coverage",
     "open-coverage": "open coverage/lcov-report/index.html",
     "prettier": "prettier --write 'misc/**/*.js' 'dockerfile-examples/**/*.js' 'bin/**/*.js' && lerna run prettier --stream",
