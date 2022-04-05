@@ -31,7 +31,8 @@ npm run coverage --scope @instana/collector
 At the end of the execution it will open the coverage report in the browser and you can navigate through
 the result.
 
-If you want to run the full coverage report, you can run `npm run coverage-all`.
+Circle CI executes `npm run coverage-all` once per week to generate a full coverage report.
+It's not recommended to run `coverage-all` locally, because it can take up to 1 1/2h.
 
 ## How to Contribute
 

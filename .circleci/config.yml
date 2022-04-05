@@ -173,7 +173,7 @@ shared: &shared
         if [[ -z "$NODE_COVERAGE" ]]; then
           npm run test:ci
         else
-          npm run coverage-all || true
+          npm run coverage-all
         fi
 
     - store_test_results:
@@ -387,5 +387,12 @@ workflows:
       - "node-12"
       - "node-10"
   coverage:
+    triggers:
+      - schedule:
+          cron: "0 0 * * 0"
+          filters:
+            branches:
+              only:
+                - main
     jobs:
       - "node-coverage"
