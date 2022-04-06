@@ -20,7 +20,15 @@ const asyncRoute = require('../../../../test_util/asyncExpressRoute');
 
 const logPrefix = `Google Cloud Storage Client (${process.pid}):\t`;
 
-const storage = new Storage();
+const options = { projectId: process.env.GCP_PROJECT };
+
+if (process.env.CI && process.env.GOOGLE_APPLICATION_CREDENTIALS_CONTENT) {
+  options.credentials = JSON.parse(process.env.GOOGLE_APPLICATION_CREDENTIALS_CONTENT);
+} else if (!process.env.CI) {
+  options.keyFilename = process.env.GOOGLE_APPLICATION_CREDENTIALS;
+}
+
+const storage = new Storage(options);
 
 const port = process.env.APP_PORT || 3215;
 const bucketName = 'nodejs-tracer-test-bucket';
@@ -50,7 +58,7 @@ app.post(
       res.sendStatus(200);
     } catch (e) {
       log(e);
-      res.sendStatus(500);
+      res.sendStatus(e.code || 500);
     }
   })
 );
@@ -60,12 +68,12 @@ app.post('/storage-createBucket-bucket-delete-callback', (req, res) => {
   storage.createBucket(randomBucketName, (errCreate, bucket) => {
     if (errCreate) {
       log(errCreate);
-      return res.sendStatus(500);
+      return res.sendStatus(errCreate.code || 500);
     }
     bucket.delete(errDelete => {
       if (errDelete) {
         log(errDelete);
-        return res.sendStatus(500);
+        return res.sendStatus(errDelete.code || 500);
       }
       res.sendStatus(200);
     });
@@ -83,7 +91,7 @@ app.post(
       res.sendStatus(200);
     } catch (e) {
       log(e);
-      res.sendStatus(500);
+      res.sendStatus(e.code || 500);
     }
   })
 );
@@ -93,12 +101,12 @@ app.post('/bucket-create-bucket-delete-callback', (req, res) => {
   storage.createBucket(randomBucketName, (errCreate, bucket) => {
     if (errCreate) {
       log(errCreate);
-      return res.sendStatus(500);
+      return res.sendStatus(errCreate.code || 500);
     }
     bucket.delete(errDelete => {
       if (errDelete) {
         log(errDelete);
-        return res.sendStatus(500);
+        return res.sendStatus(errDelete.code || 500);
       }
       res.sendStatus(200);
     });
@@ -113,7 +121,7 @@ app.post(
       res.sendStatus(200);
     } catch (e) {
       log(e);
-      res.sendStatus(500);
+      res.sendStatus(e.code || 500);
     }
   })
 );
@@ -122,7 +130,7 @@ app.post('/storage-get-buckets-callback', (req, res) => {
   storage.getBuckets(err => {
     if (err) {
       log(err);
-      return res.sendStatus(500);
+      return res.sendStatus(err.code || 500);
     }
     res.sendStatus(200);
   });
@@ -136,7 +144,7 @@ app.post(
       res.sendStatus(200);
     } catch (e) {
       log(e);
-      res.sendStatus(500);
+      res.sendStatus(e.code || 500);
     }
   })
 );
@@ -145,7 +153,7 @@ app.post('/storage-get-service-account-callback', (req, res) => {
   storage.getServiceAccount(err => {
     if (err) {
       log(err);
-      return res.sendStatus(500);
+      return res.sendStatus(err.code || 500);
     }
     res.sendStatus(200);
   });
@@ -328,7 +336,7 @@ bucketRoutes.forEach(({ pathPrefix, actions }) => {
         res.sendStatus(200);
       } catch (e) {
         log(e);
-        res.sendStatus(500);
+        res.sendStatus(e.code || 500);
       }
     })
   );
@@ -343,7 +351,7 @@ bucketRoutes.forEach(({ pathPrefix, actions }) => {
       err => {
         if (err) {
           log(err);
-          return res.sendStatus(500);
+          return res.sendStatus(err.code || 500);
         }
         return res.sendStatus(200);
       }
@@ -498,7 +506,7 @@ fileRoutes.forEach(({ pathPrefix, uploadName, actions }) => {
         res.sendStatus(200);
       } catch (e) {
         log(e);
-        res.sendStatus(500);
+        res.sendStatus(e.code || 500);
       }
     })
   );
@@ -508,8 +516,9 @@ fileRoutes.forEach(({ pathPrefix, uploadName, actions }) => {
     bucket.upload(localFileName, { destination: uploadName, gzip: true }, (errUpload, file) => {
       if (errUpload) {
         log(errUpload);
-        return res.sendStatus(500);
+        return res.sendStatus(errUpload.code || 500);
       }
+
       async_.series(
         actions.map(action => {
           const { method, args = [] } = action;
@@ -518,7 +527,7 @@ fileRoutes.forEach(({ pathPrefix, uploadName, actions }) => {
         err => {
           if (err) {
             log(err);
-            return res.sendStatus(500);
+            return res.sendStatus(err.code || 500);
           }
           return res.sendStatus(200);
         }
@@ -530,17 +539,23 @@ fileRoutes.forEach(({ pathPrefix, uploadName, actions }) => {
 app.post(
   '/file-read-stream',
   asyncRoute(async (req, res) => {
-    const bucket = storage.bucket(bucketName);
-    const [remoteSource] = await bucket.upload(localFileName, { destination: 'file.txt', gzip: true });
-    const localTarget = path.join(__dirname, 'read-stream-target.txt');
-    remoteSource
-      .createReadStream()
-      .on('error', err => {
-        log(err);
-        res.sendStatus(500);
-      })
-      .on('end', () => res.sendStatus(200))
-      .pipe(fs.createWriteStream(localTarget));
+    try {
+      const bucket = storage.bucket(bucketName);
+      const [remoteSource] = await bucket.upload(localFileName, { destination: 'file.txt', gzip: true });
+      const localTarget = path.join(__dirname, 'read-stream-target.txt');
+
+      remoteSource
+        .createReadStream()
+        .on('error', err => {
+          log(err);
+          res.sendStatus(err.code || 500);
+        })
+        .on('end', () => res.sendStatus(200))
+        .pipe(fs.createWriteStream(localTarget));
+    } catch (err) {
+      log(err);
+      res.sendStatus(err.code || 500);
+    }
   })
 );
 
@@ -551,7 +566,7 @@ app.post('/file-write-stream', async (req, res) => {
     .pipe(file.createWriteStream({ resumable: false }))
     .on('error', err => {
       log(err);
-      res.sendStatus(500);
+      res.sendStatus(err.code || 500);
     })
     .on('finish', () => {
       res.sendStatus(200);
@@ -572,7 +587,7 @@ app.post(
       res.sendStatus(200);
     } catch (e) {
       log(e);
-      res.sendStatus(500);
+      res.sendStatus(e.code || 500);
     }
   })
 );
@@ -581,7 +596,7 @@ app.post('/hmac-keys-callback', (req, res) => {
   storage.createHmacKey(serviceAccountEmail, (errCreate, hmacKey) => {
     if (errCreate) {
       log(errCreate);
-      return res.sendStatus(500);
+      return res.sendStatus(errCreate.code || 500);
     }
     hmacKey.setMetadata(
       {
@@ -590,22 +605,22 @@ app.post('/hmac-keys-callback', (req, res) => {
       errSetMd => {
         if (errSetMd) {
           log(errSetMd);
-          return res.sendStatus(500);
+          return res.sendStatus(errSetMd.code || 500);
         }
         hmacKey.getMetadata(errGetMd => {
           if (errGetMd) {
             log(errGetMd);
-            return res.sendStatus(500);
+            return res.sendStatus(errGetMd.code || 500);
           }
           hmacKey.get('ACCESS_KEY', errGet => {
             if (errGet) {
               log(errGet);
-              return res.sendStatus(500);
+              return res.sendStatus(errGet.code || 500);
             }
             hmacKey.delete(errDelete => {
               if (errDelete) {
                 log(errDelete);
-                return res.sendStatus(500);
+                return res.sendStatus(errDelete.code || 500);
               }
               res.sendStatus(200);
             });
