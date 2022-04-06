@@ -220,7 +220,7 @@ exports.init = function init(config) {
 
 /**
  * @param {MatchingOptions} matcherId
- * @param {Array.<*>} secretsList
+ * @param {Array.<string>} secretsList
  */
 exports.setMatcher = function setMatcher(matcherId, secretsList) {
   if (!(typeof matcherId === 'string')) {
