@@ -15,10 +15,8 @@ logger = require('../../../logger').getLogger('tracing/kafkajs', newLogger => {
   logger = newLogger;
 });
 
-let traceCorrelationEnabled = true;
-// Before we start phase 1 of the migration, 'binary' will be the default value. With phase 1, we will move to 'both',
-// with phase 2 it will no longer be configurable and will always use 'string'.
-let headerFormat = 'binary';
+let traceCorrelationEnabled = constants.kafkaTraceCorrelationDefault;
+let headerFormat = constants.kafkaHeaderFormatDefault;
 
 let isActive = false;
 
@@ -27,6 +25,11 @@ exports.init = function init(config) {
   requireHook.onFileLoad(/\/kafkajs\/src\/consumer\/runner\.js/, instrumentConsumer);
   traceCorrelationEnabled = config.tracing.kafka.traceCorrelation;
   headerFormat = config.tracing.kafka.headerFormat;
+};
+
+exports.setKafkaTracingConfig = function setKafkaTracingConfig(kafkaTracingConfig) {
+  traceCorrelationEnabled = kafkaTracingConfig.traceCorrelation;
+  headerFormat = kafkaTracingConfig.headerFormat;
 };
 
 function instrumentProducer(createProducer) {

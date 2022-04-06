@@ -23,8 +23,6 @@ let automaticTracingEnabled = false;
 let cls = null;
 /** @type {import('../util/normalizeConfig').InstanaConfig} */
 let config = null;
-/** @type {Array.<string>} */
-let extraHeaders = [];
 
 /** @typedef {import('../../../collector/src/pidStore')} CollectorPIDStore */
 
@@ -95,9 +93,16 @@ const instrumentations = [
  * @property {Function} activate
  * @property {Function} deactivate
  * @property {Function} [updateConfig]
- * @property {(extraHeaders: Array.<*>) => {}} [setExtraHttpHeadersToCapture]
+ * @property {(extraHeaders: Array.<string>) => {}} [setExtraHttpHeadersToCapture]
+ * @property {(kafkaTracingConfig: KafkaTracingConfig) => {}} [setKafkaTracingConfig]
  * @property {boolean} [batchable]
  * @property {string} [spanName]
+ */
+
+/**
+ * @typedef {Object} KafkaTracingConfig
+ * @property {boolean} [traceCorrelation]
+ * @property {string} [headerFormat]
  */
 
 /** @type {Array.<InstanaInstrumentedModule>} */
@@ -235,16 +240,29 @@ exports.getCls = function getCls() {
 };
 
 /**
- * @param {Array.<string>} _extraHeaders
+ * @param {Array.<string>} extraHeaders
  */
-exports.setExtraHttpHeadersToCapture = function setExtraHttpHeadersToCapture(_extraHeaders) {
-  extraHeaders = _extraHeaders;
+exports.setExtraHttpHeadersToCapture = function setExtraHttpHeadersToCapture(extraHeaders) {
   instrumentations.forEach(instrumentationKey => {
     if (
       instrumentationModules[instrumentationKey] &&
       typeof instrumentationModules[instrumentationKey].setExtraHttpHeadersToCapture === 'function'
     ) {
       instrumentationModules[instrumentationKey].setExtraHttpHeadersToCapture(extraHeaders);
+    }
+  });
+};
+
+/**
+ * @param {KafkaTracingConfig} kafkaTracingConfig
+ */
+exports.setKafkaTracingConfig = function setKafkaTracingConfig(kafkaTracingConfig) {
+  instrumentations.forEach(instrumentationKey => {
+    if (
+      instrumentationModules[instrumentationKey] &&
+      typeof instrumentationModules[instrumentationKey].setKafkaTracingConfig === 'function'
+    ) {
+      instrumentationModules[instrumentationKey].setKafkaTracingConfig(kafkaTracingConfig);
     }
   });
 };

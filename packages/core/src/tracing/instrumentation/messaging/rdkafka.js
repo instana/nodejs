@@ -16,20 +16,9 @@ logger = require('../../../logger').getLogger('tracing/rdkafka', newLogger => {
   logger = newLogger;
 });
 
-let traceCorrelationEnabled = true;
-
-/**
- * Kafka migration has not officially started yet
- * The option `headerFormat` is not officially documented yet.
- *
- * To ensure customers can use rdkafka instrumentation we set the
- * default to "both" here. That means we send both header formats
- * by default.
- *
- * Node.js Sender -> Node.js Receiver works
- * Node.js Sender -> Java Receiver does not works
- */
-let headerFormat = 'both';
+let traceCorrelationEnabled = constants.kafkaTraceCorrelationDefault;
+let headerFormat = constants.kafkaHeaderFormatDefault;
+overrideKafkaHeaderFormat();
 
 let isActive = false;
 
@@ -37,14 +26,39 @@ exports.init = function init(config) {
   requireHook.onFileLoad(/\/node-rdkafka\/lib\/producer\.js/, instrumentProducer);
   requireHook.onFileLoad(/\/node-rdkafka\/lib\/kafka-consumer-stream\.js/, instrumentConsumerAsStream);
   requireHook.onModuleLoad('node-rdkafka', instrumentConsumer);
-  traceCorrelationEnabled = config.tracing.kafka.traceCorrelation;
 
-  // NOTE: normalizeConfig sends "binary" by default
-  //       we don't want to use binary in rdkafka at all, see comment above
-  if (headerFormat === 'string') {
-    headerFormat = config.tracing.kafka.headerFormat;
-  }
+  traceCorrelationEnabled = config.tracing.kafka.traceCorrelation;
+  headerFormat = config.tracing.kafka.headerFormat;
+  overrideKafkaHeaderFormat();
 };
+
+exports.setKafkaTracingConfig = function setKafkaTracingConfig(kafkaTracingConfig) {
+  traceCorrelationEnabled = kafkaTracingConfig.traceCorrelation;
+  headerFormat = kafkaTracingConfig.headerFormat;
+  overrideKafkaHeaderFormat();
+};
+
+// Note: This function can be removed as soon as we switch to 'both' as the default header format.
+function overrideKafkaHeaderFormat() {
+  // node-rdkafka's handling of non-string header values is broken, see
+  // https://github.com/Blizzard/node-rdkafka/pull/933 and https://github.com/Blizzard/node-rdkafka/pull/935.
+  //
+  // Thus, our current binary header format for Instana Kafka trace correlation headers (X_INSTANA_C) will not work with
+  // node-kafka. Fortunately, we are already planning to migrate away from that header format to a string based header
+  // format. That customer facing phase of that migration has not started yet, thus the the option `headerFormat` has
+  // not yet been documented publicly.
+  //
+  // To ensure customers can use rdkafka instrumentation with trace correlation, we set the default value for
+  // headerFormat to "both" here, instead of "binary". That means we send both header formats by default.
+  //
+  // - Node.js rdkafka producer -> any Node.js/Java/.Net receiver: trace correlation works as expected, since consumers
+  //   will look for both string and binary headers.
+  // - Node.js rdkafka producer -> Go consumer does not work yet, until the Go tracer implements phase 0 of the
+  //   Kafka header migration.
+  if (headerFormat === 'binary') {
+    headerFormat = 'both';
+  }
+}
 
 function instrumentProducer(ProducerClass) {
   shimmer.wrap(ProducerClass.prototype, 'produce', shimProduce);
