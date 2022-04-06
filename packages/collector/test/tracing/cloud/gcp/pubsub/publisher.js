@@ -80,12 +80,15 @@ app.post('/publish-callback', (req, res) => {
 
 function createMessageData(req) {
   const withError = req.query.withError;
+
   let subject;
   if (!withError) {
     subject = 'test message';
   } else if (withError === 'publisher') {
-    // try to send null to provoke a publisher error
-    return null;
+    // See change https://github.com/googleapis/nodejs-pubsub/commit/97fd4f041c195e0388b0613b2cf9710b89ab4e15
+    // We no longer can send "null"
+    // Goal: pubsub module raises error because of wrong input
+    return 'this is not a buffer';
   } else {
     throw new Error(`Unknown value for withError: ${withError}.`);
   }
