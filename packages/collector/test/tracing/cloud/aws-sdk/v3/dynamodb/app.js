@@ -151,7 +151,16 @@ const checkTableStatus = async (operation, res) => {
         TableName: tableName
       });
 
-      const newRes = await dynamoDB.send(command);
+      let newRes;
+
+      try {
+        newRes = await dynamoDB.send(command);
+      } catch (err) {
+        // CASE: aws returns 404, but should not return 404
+        // ignore
+        newRes = res;
+      }
+
       cls.isTracing() && cls.setTracingLevel('1');
       await checkTableStatus(operation, newRes);
     }
