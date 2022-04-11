@@ -121,6 +121,8 @@ mochaSuiteFn('tracing/common', function () {
   });
 
   describe('service name', function () {
+    this.timeout(config.getTestTimeout());
+
     describe('with env var', function () {
       const controls = new ProcessControls({
         useGlobalAgent: true,
