@@ -27,6 +27,11 @@ exports.init = function init(config) {
   headerFormat = config.tracing.kafka.headerFormat;
 };
 
+exports.updateConfig = function updateConfig(config) {
+  traceCorrelationEnabled = config.tracing.kafka.traceCorrelation;
+  headerFormat = config.tracing.kafka.headerFormat;
+};
+
 exports.activate = function activate(extraConfig) {
   if (extraConfig && extraConfig.tracing && extraConfig.tracing.kafka) {
     if (extraConfig.tracing.kafka.traceCorrelation != null) {
