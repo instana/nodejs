@@ -5,7 +5,11 @@
 
 'use strict';
 
-const { secrets, tracing } = require('@instana/core');
+const {
+  secrets,
+  tracing,
+  util: { ensureNestedObjectExists }
+} = require('@instana/core');
 const { constants: tracingConstants } = tracing;
 
 /** @type {import('@instana/core/src/logger').GenericLogger} */
@@ -156,9 +160,10 @@ function applyExtraHttpHeaderConfiguration(agentResponse) {
  */
 function actuallyApplyExtraHttpHeaderConfiguration(extraHeaders) {
   if (Array.isArray(extraHeaders)) {
-    tracing.setExtraHttpHeadersToCapture(
-      // The Node.js HTTP API converts all incoming HTTP headers into lowercase.
-      extraHeaders.map((/** @type {string} */ s) => s.toLowerCase())
+    ensureNestedObjectExists(agentOpts.config, ['tracing', 'http']);
+    // The Node.js HTTP API converts all incoming HTTP headers into lowercase.
+    agentOpts.config.tracing.http.extraHttpHeadersToCapture = extraHeaders.map((/** @type {string} */ s) =>
+      s.toLowerCase()
     );
   }
 }
@@ -179,7 +184,8 @@ function applyKafkaTracingConfiguration(agentResponse) {
           ? kafkaTracingConfigFromAgent['header-format']
           : tracingConstants.kafkaHeaderFormatDefault
     };
-    tracing.setKafkaTracingConfig(kafkaTracingConfig);
+    ensureNestedObjectExists(agentOpts.config, ['tracing', 'kafka']);
+    agentOpts.config.tracing.kafka = kafkaTracingConfig;
   }
   // There is no fallback because there is are no legacy agent response attributes for the Kafka tracing config, those
   // were only introduced with the Node.js discovery version 1.2.18.
@@ -191,6 +197,7 @@ function applyKafkaTracingConfiguration(agentResponse) {
 function applySpanBatchingConfiguration(agentResponse) {
   if (agentResponse.spanBatchingEnabled === true || agentResponse.spanBatchingEnabled === 'true') {
     logger.info('Enabling span batching via agent configuration.');
-    tracing.enableSpanBatching();
+    ensureNestedObjectExists(agentOpts.config, ['tracing']);
+    agentOpts.config.tracing.spanBatchingEnabled = true;
   }
 }

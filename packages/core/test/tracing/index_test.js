@@ -4,10 +4,11 @@
 
 'use strict';
 
-const expect = require('chai').expect;
-const sinon = require('sinon');
-const semver = require('semver');
+const chai = require('chai');
 const proxyquire = require('proxyquire');
+const semver = require('semver');
+const sinon = require('sinon');
+const sinonChai = require('sinon-chai');
 
 const normalizeConfig = require('../../src/util/normalizeConfig');
 const kafkaJs = require('../../src/tracing/instrumentation/messaging/kafkaJs');
@@ -15,6 +16,9 @@ const rdKafka = require('../../src/tracing/instrumentation/messaging/rdkafka');
 const grpc = require('../../src/tracing/instrumentation/protocols/grpc');
 const grpcJs = require('../../src/tracing/instrumentation/protocols/grpcJs');
 const testConfig = require('../config');
+
+const expect = chai.expect;
+chai.use(sinonChai);
 
 const mochaSuiteFn = semver.satisfies(process.versions.node, '>=8.13.0') ? describe : describe.skip;
 
@@ -26,15 +30,13 @@ mochaSuiteFn('[UNIT] tracing/index', function () {
   let activateStubGrpc;
   let activateStubGrpcJs;
   let activateStubKafkaJs;
-  let setKafkaTracingConfigStubKafkaJs;
-  let setKafkaTracingConfigStubRdKafka;
+  let activateStubRdKafka;
 
   before(() => {
     activateStubGrpc = sinon.stub(grpc, 'activate');
     activateStubGrpcJs = sinon.stub(grpcJs, 'activate');
     activateStubKafkaJs = sinon.stub(kafkaJs, 'activate');
-    setKafkaTracingConfigStubKafkaJs = sinon.stub(kafkaJs, 'setKafkaTracingConfig');
-    setKafkaTracingConfigStubRdKafka = sinon.stub(rdKafka, 'setKafkaTracingConfig');
+    activateStubRdKafka = sinon.stub(rdKafka, 'activate');
   });
 
   beforeEach(() => {
@@ -47,40 +49,48 @@ mochaSuiteFn('[UNIT] tracing/index', function () {
     activateStubGrpc.reset();
     activateStubGrpcJs.reset();
     activateStubKafkaJs.reset();
-    setKafkaTracingConfigStubKafkaJs.reset();
-    setKafkaTracingConfigStubRdKafka.reset();
+    activateStubRdKafka.reset();
     delete process.env.INSTANA_DISABLED_TRACERS;
   });
 
+  after(() => {
+    sinon.restore();
+  });
+
   it('deactivate instrumentation via config', () => {
-    initAndActivate({ tracing: { disabledTracers: ['grpc', 'kafka'] } });
-    expect(activateStubGrpc.called).to.be.false;
-    expect(activateStubGrpcJs.called).to.be.true;
-    expect(activateStubKafkaJs.called).to.be.true;
+    initAndActivate({ tracing: { disabledTracers: ['grpc', 'kafkajs'] } });
+    expect(activateStubGrpc).to.not.have.been.called;
+    expect(activateStubGrpcJs).to.have.been.called;
+    expect(activateStubKafkaJs).to.not.have.been.called;
+    expect(activateStubRdKafka).to.have.been.called;
   });
 
   it('deactivate instrumentation via env', () => {
     process.env.INSTANA_DISABLED_TRACERS = 'grpc';
     initAndActivate({});
-    expect(activateStubGrpc.called).to.be.false;
-    expect(activateStubGrpcJs.called).to.be.true;
-    expect(activateStubKafkaJs.called).to.be.true;
+    expect(activateStubGrpc).to.not.have.been.called;
+    expect(activateStubGrpcJs).to.have.been.called;
+    expect(activateStubKafkaJs).to.have.been.called;
+    expect(activateStubRdKafka).to.have.been.called;
   });
 
   it('update Kafka tracing config', () => {
-    initAndActivate({});
-    const kafkaTracingConfig = {
-      traceCorrelation: false,
-      headerFormat: 'string'
+    const extraConfigFromAgent = {
+      tracing: {
+        kafka: {
+          traceCorrelation: false,
+          headerFormat: 'string'
+        }
+      }
     };
-    tracing.setKafkaTracingConfig(kafkaTracingConfig);
-    expect(setKafkaTracingConfigStubKafkaJs.calledWith(kafkaTracingConfig)).to.be.true;
-    expect(setKafkaTracingConfigStubRdKafka.calledWith(kafkaTracingConfig)).to.be.true;
+    initAndActivate({}, extraConfigFromAgent);
+    expect(activateStubKafkaJs).to.have.been.calledWith(extraConfigFromAgent);
+    expect(activateStubRdKafka).to.have.been.calledWith(extraConfigFromAgent);
   });
 
-  function initAndActivate(config) {
-    normalizeConfig(config);
-    tracing.init(config);
-    tracing.activate();
+  function initAndActivate(initConfig, extraConfigForActivate) {
+    normalizeConfig(initConfig);
+    tracing.init(initConfig);
+    tracing.activate(extraConfigForActivate);
   }
 });

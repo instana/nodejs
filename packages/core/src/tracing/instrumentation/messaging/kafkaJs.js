@@ -27,9 +27,20 @@ exports.init = function init(config) {
   headerFormat = config.tracing.kafka.headerFormat;
 };
 
-exports.setKafkaTracingConfig = function setKafkaTracingConfig(kafkaTracingConfig) {
-  traceCorrelationEnabled = kafkaTracingConfig.traceCorrelation;
-  headerFormat = kafkaTracingConfig.headerFormat;
+exports.activate = function activate(extraConfig) {
+  if (extraConfig && extraConfig.tracing && extraConfig.tracing.kafka) {
+    if (extraConfig.tracing.kafka.traceCorrelation != null) {
+      traceCorrelationEnabled = extraConfig.tracing.kafka.traceCorrelation;
+    }
+    if (typeof extraConfig.tracing.kafka.headerFormat === 'string') {
+      headerFormat = extraConfig.tracing.kafka.headerFormat;
+    }
+  }
+  isActive = true;
+};
+
+exports.deactivate = function deactivate() {
+  isActive = false;
 };
 
 function instrumentProducer(createProducer) {
@@ -485,11 +496,3 @@ function addTraceLevelSuppressionToAllMessagesString(messages) {
     }
   }
 }
-
-exports.activate = function activate() {
-  isActive = true;
-};
-
-exports.deactivate = function deactivate() {
-  isActive = false;
-};
