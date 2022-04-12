@@ -31,6 +31,10 @@ exports.init = function init(config) {
   extraHttpHeadersToCapture = config.tracing.http.extraHttpHeadersToCapture;
 };
 
+exports.updateConfig = function updateConfig(config) {
+  extraHttpHeadersToCapture = config.tracing.http.extraHttpHeadersToCapture;
+};
+
 exports.activate = function activate(extraConfig) {
   if (
     extraConfig &&
@@ -45,10 +49,6 @@ exports.activate = function activate(extraConfig) {
 
 exports.deactivate = function deactivate() {
   isActive = false;
-};
-
-exports.updateConfig = function updateConfig(config) {
-  extraHttpHeadersToCapture = config.tracing.http.extraHttpHeadersToCapture;
 };
 
 function instrument(coreModule) {
