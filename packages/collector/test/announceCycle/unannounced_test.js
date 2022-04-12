@@ -14,23 +14,22 @@ chai.use(sinonChai);
 
 const { secrets, tracing } = require('@instana/core');
 const { constants } = tracing;
+const agentConnection = require('../../src/agentConnection');
 
-describe('agent ready state', () => {
+describe('unannounced state', () => {
   let unannouncedState;
-  let agentResponse;
 
   let pidStoreStub;
   let agentOptsStub;
+  let agentConnectionStub;
   let tracingStub;
   let secretsStub;
 
   describe('enter', () => {
     before(() => {
-      // This value will be modified by individual tests before it is handed over to the unnanounced module.
-      agentResponse = {};
-
       pidStoreStub = {};
       agentOptsStub = {};
+      agentConnectionStub = sinon.stub(agentConnection);
       tracingStub = sinon.stub(tracing);
       secretsStub = sinon.stub(secrets);
 
@@ -41,23 +40,17 @@ describe('agent ready state', () => {
         },
         '../pidStore': pidStoreStub,
         '../agent/opts': agentOptsStub,
-        '../agentConnection': {
-          announceNodeCollector: cb => {
-            setImmediate(() => {
-              cb(null, JSON.stringify(agentResponse));
-            });
-          }
-        }
+        '../agentConnection': agentConnectionStub
       });
     });
 
     afterEach(() => {
-      tracingStub.setKafkaTracingConfig.reset();
-      tracingStub.enableSpanBatching.reset();
-      tracingStub.setExtraHttpHeadersToCapture.reset();
+      agentConnectionStub.announceNodeCollector.reset();
+      tracingStub.activate.reset();
       secretsStub.setMatcher.reset();
       pidStoreStub.pid = undefined;
       agentOptsStub.agentUuid = undefined;
+      agentOptsStub.config = {};
     });
 
     after(() => {
@@ -65,6 +58,7 @@ describe('agent ready state', () => {
     });
 
     it('should transition to announced', done => {
+      prepareAnnounceResponse({});
       unannouncedState.enter({
         transitionTo: nextState => {
           expect(nextState).to.equal('announced');
@@ -74,7 +68,7 @@ describe('agent ready state', () => {
     });
 
     it('should use pid from response', done => {
-      agentResponse = { pid: 42 };
+      prepareAnnounceResponse({ pid: 42 });
       unannouncedState.enter({
         transitionTo: () => {
           expect(pidStoreStub.pid).to.equal(42);
@@ -84,7 +78,9 @@ describe('agent ready state', () => {
     });
 
     it('should use agent UUID from response', done => {
-      agentResponse = { agentUuid: 'some agent uuid' };
+      prepareAnnounceResponse({
+        agentUuid: 'some agent uuid'
+      });
       unannouncedState.enter({
         transitionTo: () => {
           expect(agentOptsStub.agentUuid).to.equal('some agent uuid');
@@ -94,12 +90,12 @@ describe('agent ready state', () => {
     });
 
     it('should use secrets config response', done => {
-      agentResponse = {
+      prepareAnnounceResponse({
         secrets: {
           matcher: 'equals',
           list: ['hidden', 'opaque']
         }
-      };
+      });
       unannouncedState.enter({
         transitionTo: () => {
           expect(secretsStub.setMatcher).to.have.been.calledWith('equals', ['hidden', 'opaque']);
@@ -109,48 +105,58 @@ describe('agent ready state', () => {
     });
 
     it('should apply extra http header configuration from tracing attribute', done => {
-      agentResponse = {
+      prepareAnnounceResponse({
         tracing: {
           'extra-http-headers': ['x-extra-header-1', 'X-Extra-Header-2']
         }
-      };
+      });
       unannouncedState.enter({
         transitionTo: () => {
-          expect(tracingStub.setExtraHttpHeadersToCapture).to.have.been.calledWith([
-            'x-extra-header-1',
-            'x-extra-header-2'
-          ]);
+          expect(agentOptsStub.config).to.deep.equal({
+            tracing: {
+              http: {
+                extraHttpHeadersToCapture: ['x-extra-header-1', 'x-extra-header-2']
+              }
+            }
+          });
           done();
         }
       });
     });
 
     it('should apply extra http header configuration from legacy agent response', done => {
-      agentResponse = {
+      prepareAnnounceResponse({
         extraHeaders: ['x-extra-header-3', 'X-Extra-Header-4']
-      };
+      });
       unannouncedState.enter({
         transitionTo: () => {
-          expect(tracingStub.setExtraHttpHeadersToCapture).to.have.been.calledWith([
-            'x-extra-header-3',
-            'x-extra-header-4'
-          ]);
+          expect(agentOptsStub.config).to.deep.equal({
+            tracing: {
+              http: {
+                extraHttpHeadersToCapture: ['x-extra-header-3', 'x-extra-header-4']
+              }
+            }
+          });
           done();
         }
       });
     });
 
     it('should use default values for kafka tracing configuration', done => {
-      agentResponse = {
+      prepareAnnounceResponse({
         tracing: {
           kafka: {}
         }
-      };
+      });
       unannouncedState.enter({
         transitionTo: () => {
-          expect(tracingStub.setKafkaTracingConfig).to.have.been.calledWith({
-            traceCorrelation: constants.kafkaTraceCorrelationDefault,
-            headerFormat: constants.kafkaHeaderFormatDefault
+          expect(agentOptsStub.config).to.deep.equal({
+            tracing: {
+              kafka: {
+                traceCorrelation: constants.kafkaTraceCorrelationDefault,
+                headerFormat: constants.kafkaHeaderFormatDefault
+              }
+            }
           });
           done();
         }
@@ -158,19 +164,23 @@ describe('agent ready state', () => {
     });
 
     it('should apply the kafka tracing configuration', done => {
-      agentResponse = {
+      prepareAnnounceResponse({
         tracing: {
           kafka: {
             'trace-correlation': false,
             'header-format': 'string'
           }
         }
-      };
+      });
       unannouncedState.enter({
         transitionTo: () => {
-          expect(tracingStub.setKafkaTracingConfig).to.have.been.calledWith({
-            traceCorrelation: false,
-            headerFormat: 'string'
+          expect(agentOptsStub.config).to.deep.equal({
+            tracing: {
+              kafka: {
+                traceCorrelation: false,
+                headerFormat: 'string'
+              }
+            }
           });
           done();
         }
@@ -178,15 +188,21 @@ describe('agent ready state', () => {
     });
 
     it('should apply span batching configuratino', done => {
-      agentResponse = {
-        spanBatchingEnabled: true
-      };
+      prepareAnnounceResponse({ spanBatchingEnabled: true });
       unannouncedState.enter({
         transitionTo: () => {
-          expect(tracingStub.enableSpanBatching).to.have.been.called;
+          expect(agentOptsStub.config).to.deep.equal({
+            tracing: {
+              spanBatchingEnabled: true
+            }
+          });
           done();
         }
       });
     });
+
+    function prepareAnnounceResponse(announceResponse) {
+      agentConnectionStub.announceNodeCollector.callsArgWithAsync(0, null, JSON.stringify(announceResponse));
+    }
   });
 });

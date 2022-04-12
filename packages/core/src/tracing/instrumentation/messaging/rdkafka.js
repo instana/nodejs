@@ -32,10 +32,21 @@ exports.init = function init(config) {
   overrideKafkaHeaderFormat();
 };
 
-exports.setKafkaTracingConfig = function setKafkaTracingConfig(kafkaTracingConfig) {
-  traceCorrelationEnabled = kafkaTracingConfig.traceCorrelation;
-  headerFormat = kafkaTracingConfig.headerFormat;
-  overrideKafkaHeaderFormat();
+exports.activate = function activate(extraConfig) {
+  if (extraConfig && extraConfig.tracing && extraConfig.tracing.kafka) {
+    if (extraConfig.tracing.kafka.traceCorrelation != null) {
+      traceCorrelationEnabled = extraConfig.tracing.kafka.traceCorrelation;
+    }
+    if (typeof extraConfig.tracing.kafka.headerFormat === 'string') {
+      headerFormat = extraConfig.tracing.kafka.headerFormat;
+      overrideKafkaHeaderFormat();
+    }
+  }
+  isActive = true;
+};
+
+exports.deactivate = function deactivate() {
+  isActive = false;
 };
 
 // Note: This function can be removed as soon as we switch to 'both' as the default header format.
@@ -458,11 +469,3 @@ function findInstanaHeaderValues(instanaHeadersAsObject) {
 
   return { level, traceId, parentSpanId };
 }
-
-exports.activate = function activate() {
-  isActive = true;
-};
-
-exports.deactivate = function deactivate() {
-  isActive = false;
-};
