@@ -143,3 +143,15 @@ services:
     ports:
       - 11211:11211
 
+  # https://hub.docker.com/r/ibmcom/db2
+  db2:
+    image: ibmcom/db2
+    privileged: true
+    ports:
+      - 58885:50000
+    environment:
+      - LICENSE=accept
+      - DBNAME=nodedb
+      - DB2INSTANCE=node
+      - DB2INST1_PASSWORD=nodepw
+      - STARTUP_MODE=restoreIfNotExists

@@ -59,7 +59,8 @@ let patterns = [
   /\/bull\/index.js/,
   /\/redis\/index.js/,
   /\/superagent\/lib\/node\/index.js/,
-  /\/memcached\/index.js/
+  /\/memcached\/index.js/,
+  /\/ibm_db\/lib/
 ];
 
 const extraPatterns = [
