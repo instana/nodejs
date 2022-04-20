@@ -281,6 +281,25 @@ memcached: &memcached
   - image: memcached:1.6.9
 
 jobs:
+  "node-18":
+    docker:
+      - image: circleci/node:18
+      - <<: *zookeeper
+      - <<: *elasticsearch
+      - <<: *mongo
+      - <<: *redis
+      - <<: *kafka
+      - <<: *schema-registry
+      - <<: *mysql
+      - <<: *postgres
+      - <<: *mssql
+      - <<: *rabbitmq
+      - <<: *nats
+      - <<: *nats-streaming
+      - <<: *memcached
+    <<: *shared
+    parallelism: 16
+
   "node-16":
     docker:
       - image: circleci/node:16
@@ -298,7 +317,7 @@ jobs:
       - <<: *nats-streaming
       - <<: *memcached
     <<: *shared
-    parallelism: 20
+    parallelism: 16
 
   "node-14":
     docker:
@@ -317,7 +336,7 @@ jobs:
       - <<: *nats-streaming
       - <<: *memcached
     <<: *shared
-    parallelism: 20
+    parallelism: 16
 
   "node-12":
     docker:
@@ -336,7 +355,7 @@ jobs:
       - <<: *nats-streaming
       - <<: *memcached
     <<: *shared
-    parallelism: 20
+    parallelism: 16
 
   "node-10":
     docker:
@@ -355,7 +374,7 @@ jobs:
       - <<: *nats-streaming
       - <<: *memcached
     <<: *shared
-    parallelism: 20
+    parallelism: 16
 
   "node-coverage":
     environment:
@@ -382,6 +401,7 @@ workflows:
   version: 2
   build:
     jobs:
+      - "node-18"
       - "node-16"
       - "node-14"
       - "node-12"
