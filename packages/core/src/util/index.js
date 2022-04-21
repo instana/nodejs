@@ -11,6 +11,7 @@ module.exports = {
   buffer: require('./buffer'),
   clone: require('./clone'),
   compression: require('./compression'),
+  ensureNestedObjectExists: require('./ensureNestedObjectExists'),
   excludedFromInstrumentation: require('./excludedFromInstrumentation'),
   hasThePackageBeenInitializedTooLate: require('./initializedTooLateHeuristic'),
   normalizeConfig: require('./normalizeConfig'),

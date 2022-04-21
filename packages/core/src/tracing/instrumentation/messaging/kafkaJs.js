@@ -15,10 +15,8 @@ logger = require('../../../logger').getLogger('tracing/kafkajs', newLogger => {
   logger = newLogger;
 });
 
-let traceCorrelationEnabled = true;
-// Before we start phase 1 of the migration, 'binary' will be the default value. With phase 1, we will move to 'both',
-// with phase 2 it will no longer be configurable and will always use 'string'.
-let headerFormat = 'binary';
+let traceCorrelationEnabled = constants.kafkaTraceCorrelationDefault;
+let headerFormat = constants.kafkaHeaderFormatDefault;
 
 let isActive = false;
 
@@ -27,6 +25,27 @@ exports.init = function init(config) {
   requireHook.onFileLoad(/\/kafkajs\/src\/consumer\/runner\.js/, instrumentConsumer);
   traceCorrelationEnabled = config.tracing.kafka.traceCorrelation;
   headerFormat = config.tracing.kafka.headerFormat;
+};
+
+exports.updateConfig = function updateConfig(config) {
+  traceCorrelationEnabled = config.tracing.kafka.traceCorrelation;
+  headerFormat = config.tracing.kafka.headerFormat;
+};
+
+exports.activate = function activate(extraConfig) {
+  if (extraConfig && extraConfig.tracing && extraConfig.tracing.kafka) {
+    if (extraConfig.tracing.kafka.traceCorrelation != null) {
+      traceCorrelationEnabled = extraConfig.tracing.kafka.traceCorrelation;
+    }
+    if (typeof extraConfig.tracing.kafka.headerFormat === 'string') {
+      headerFormat = extraConfig.tracing.kafka.headerFormat;
+    }
+  }
+  isActive = true;
+};
+
+exports.deactivate = function deactivate() {
+  isActive = false;
 };
 
 function instrumentProducer(createProducer) {
@@ -482,11 +501,3 @@ function addTraceLevelSuppressionToAllMessagesString(messages) {
     }
   }
 }
-
-exports.activate = function activate() {
-  isActive = true;
-};
-
-exports.deactivate = function deactivate() {
-  isActive = false;
-};

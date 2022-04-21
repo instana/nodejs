@@ -61,6 +61,29 @@ const supportedTracingVersion = require('../tracing/supportedVersion');
  * @property {number} [timeBetweenHealthcheckCalls]
  */
 
+/**
+ * @typedef {Object} AgentConfig
+ * @property {AgentTracingConfig} [tracing]
+ */
+
+/**
+ * @typedef {Object} AgentTracingConfig
+ * @property {AgentTracingHttpConfig} [http]
+ * @property {AgentTracingKafkaConfig} [kafka]
+ * @property {boolean|string} [spanBatchingEnabled]
+ */
+
+/**
+ * @typedef {Object} AgentTracingHttpConfig
+ * @property {Array.<string>} [extraHttpHeadersToCapture]
+ */
+
+/**
+ * @typedef {Object} AgentTracingKafkaConfig
+ * @property {boolean} [traceCorrelation]
+ * @property {string} [headerFormat]
+ */
+
 /** @type {import('../logger').GenericLogger} */
 let logger;
 logger = require('../logger').getLogger('configuration', newLogger => {

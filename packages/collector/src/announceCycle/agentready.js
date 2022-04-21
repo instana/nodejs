@@ -104,7 +104,7 @@ function enter(_ctx) {
     detectEOLNodeVersion();
   }
 
-  tracing.activate();
+  tracing.activate(agentOpts.config);
 
   if (agentOpts.autoProfile && autoprofile) {
     profiler = autoprofile.start();

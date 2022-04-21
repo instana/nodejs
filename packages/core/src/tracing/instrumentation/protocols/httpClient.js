@@ -30,6 +30,22 @@ exports.updateConfig = function updateConfig(config) {
   extraHttpHeadersToCapture = config.tracing.http.extraHttpHeadersToCapture;
 };
 
+exports.activate = function activate(extraConfig) {
+  if (
+    extraConfig &&
+    extraConfig.tracing &&
+    extraConfig.tracing.http &&
+    Array.isArray(extraConfig.tracing.http.extraHttpHeadersToCapture)
+  ) {
+    extraHttpHeadersToCapture = extraConfig.tracing.http.extraHttpHeadersToCapture;
+  }
+  isActive = true;
+};
+
+exports.deactivate = function deactivate() {
+  isActive = false;
+};
+
 /**
  * @param {string | number | Array.<string>} headerValue
  * @param {(headerValue: string) => boolean} validator
@@ -267,18 +283,6 @@ function instrument(coreModule, forceHttps) {
     return req;
   };
 }
-
-exports.activate = function activate() {
-  isActive = true;
-};
-
-exports.deactivate = function deactivate() {
-  isActive = false;
-};
-
-exports.setExtraHttpHeadersToCapture = function setExtraHttpHeadersToCapture(_extraHeaders) {
-  extraHttpHeadersToCapture = _extraHeaders;
-};
 
 function constructFromUrlOpts(options, self, forceHttps) {
   if (options.href) {
