@@ -18,6 +18,7 @@
 
 const path = require('path');
 const { expect } = require('chai');
+const semver = require('semver');
 const { fail } = expect;
 const {
   tracing: { constants }
@@ -39,7 +40,6 @@ const producerApiMethods = ['standard', 'stream'];
 const consumerApiMethods = ['standard', 'stream'];
 const objectModeMethods = ['true', 'false'];
 const withErrorMethods = [false, 'bufferErrorSender', 'deliveryErrorSender', 'streamErrorReceiver'];
-
 const RUN_SINGLE_TEST = false;
 const SINGLE_TEST_PROPS = {
   producerMethod: 'stream',
@@ -53,7 +53,7 @@ const retryTime = config.getTestTimeout() * 2;
 const topic = 'rdkafka-topic';
 
 let mochaSuiteFn;
-if (!supportedVersion(process.versions.node)) {
+if (!supportedVersion(process.versions.node) || semver.gte(process.versions.node, '18.0.0')) {
   mochaSuiteFn = describe.skip;
 } else {
   mochaSuiteFn = describe;
