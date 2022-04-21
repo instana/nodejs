@@ -32,6 +32,22 @@ exports.updateConfig = config => {
   extraHttpHeadersToCapture = config.tracing.http.extraHttpHeadersToCapture;
 };
 
+exports.activate = function activate(extraConfig) {
+  if (
+    extraConfig &&
+    extraConfig.tracing &&
+    extraConfig.tracing.http &&
+    Array.isArray(extraConfig.tracing.http.extraHttpHeadersToCapture)
+  ) {
+    extraHttpHeadersToCapture = extraConfig.tracing.http.extraHttpHeadersToCapture;
+  }
+  isActive = true;
+};
+
+exports.deactivate = function deactivate() {
+  isActive = false;
+};
+
 function instrument(coreModule) {
   const originalConnect = coreModule.connect;
   coreModule.connect = function connect() {
@@ -146,18 +162,6 @@ function addW3cHeaders(headers, w3cTraceContext) {
     }
   }
 }
-
-exports.activate = function activate() {
-  isActive = true;
-};
-
-exports.deactivate = function deactivate() {
-  isActive = false;
-};
-
-exports.setExtraHttpHeadersToCapture = function setExtraHttpHeadersToCapture(_extraHeaders) {
-  extraHttpHeadersToCapture = _extraHeaders;
-};
 
 function splitAndFilter(path) {
   const parts = path.split('?');

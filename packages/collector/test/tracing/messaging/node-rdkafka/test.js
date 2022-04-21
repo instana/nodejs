@@ -31,6 +31,7 @@ const config = require('../../../../../core/test/config');
 const { expectExactlyOneMatching, retry, delay, stringifyItems } = require('../../../../../core/test/test_util');
 const ProcessControls = require('../../../test_util/ProcessControls');
 const globalAgent = require('../../../globalAgent');
+const { AgentStubControls } = require('../../../apps/agentStubControls');
 const { verifyHttpRootEntry, verifyHttpExit } = require('@instana/core/test/test_util/common_verifications');
 
 let mochaSuiteFn;
@@ -208,7 +209,7 @@ mochaSuiteFn('tracing/messaging/node-rdkafka', function () {
     // CASE: Consumer error entry span has no parent
     // CASE: consumer error means -> we not even produce a kafka msg
     if (withError === 'streamErrorReceiver') {
-      verifyRdKafkaEntry(receiverControls, spans, null, messageId, withError);
+      verifyRdKafkaEntry(receiverControls, spans, null, messageId, withError, 'empty');
       expect(spans.length).to.equal(1);
       return;
     }
@@ -239,14 +240,24 @@ mochaSuiteFn('tracing/messaging/node-rdkafka', function () {
     }
   }
 
-  function verifyRdKafkaEntry(receiverControls, spans, parent, messageId, withError) {
-    const operation = expectExactlyOneMatching;
-
-    return operation(spans, [
+  function verifyRdKafkaEntry(receiverControls, spans, parent, messageId, withError, expectedService = topic) {
+    return expectExactlyOneMatching(spans, [
       span => expect(span.n).to.equal('kafka'),
       span => expect(span.k).to.equal(constants.ENTRY),
-      span => (parent ? expect(span.t).to.equal(parent.t) : ''),
-      span => (parent ? expect(span.p).to.equal(parent.s) : ''),
+      span => {
+        if (parent) {
+          expect(span.t).to.equal(parent.t);
+        } else {
+          expect(span.t).to.be.a('string');
+        }
+      },
+      span => {
+        if (parent) {
+          expect(span.p).to.equal(parent.s);
+        } else {
+          expect(span.p).to.not.exist;
+        }
+      },
       span => expect(span.f.e).to.equal(String(receiverControls.getPid())),
       span => expect(span.f.h).to.equal('agent-stub-uuid'),
       span => {
@@ -260,8 +271,7 @@ mochaSuiteFn('tracing/messaging/node-rdkafka', function () {
       span => expect(span.async).to.not.exist,
       span => expect(span.data).to.exist,
       span => expect(span.data.kafka).to.be.an('object'),
-      span =>
-        parent ? expect(span.data.kafka.service).to.equal(topic) : expect(span.data.kafka.service).to.equal('empty'),
+      span => expect(span.data.kafka.service).to.equal(expectedService),
       span => expect(span.data.kafka.access).to.equal('consume')
     ]);
   }
@@ -290,6 +300,154 @@ mochaSuiteFn('tracing/messaging/node-rdkafka', function () {
           : ''
     ]);
   }
+
+  describe('tracing enabled, header format string', function () {
+    this.timeout(config.getTestTimeout() * 2);
+
+    const producerControls = new ProcessControls({
+      appPath: path.join(__dirname, 'producer'),
+      port: 3216,
+      useGlobalAgent: true,
+      env: {
+        INSTANA_KAFKA_HEADER_FORMAT: 'string'
+      }
+    });
+    ProcessControls.setUpHooks(producerControls);
+
+    const consumerControls = new ProcessControls({
+      appPath: path.join(__dirname, 'consumer'),
+      useGlobalAgent: true
+    });
+    ProcessControls.setUpHooks(consumerControls);
+
+    it('must trace sending and receiving and keep trace continuity', async () => {
+      const apiPath = '/produce/standard';
+      const response = await producerControls.sendRequest({
+        method: 'GET',
+        path: apiPath
+      });
+
+      await retry(async () => {
+        await verifyResponseAndMessage(response, consumerControls);
+        const spans = await agentControls.getSpans();
+        const httpEntry = verifyHttpRootEntry({ spans, apiPath, pid: String(producerControls.getPid()) });
+        const kafkaExit = verifyRdKafkaExit(producerControls, spans, httpEntry, null, false);
+        verifyHttpExit({ spans, parent: httpEntry, pid: String(producerControls.getPid()) });
+        const kafkaEntry = verifyRdKafkaEntry(consumerControls, spans, kafkaExit, null, false);
+        verifyHttpExit({ spans, parent: kafkaEntry, pid: String(consumerControls.getPid()) });
+      });
+    });
+  });
+
+  describe('tracing enabled, header format string via agent config', function () {
+    this.timeout(config.getTestTimeout() * 2);
+
+    const customAgentControls = new AgentStubControls();
+    customAgentControls.registerTestHooks({
+      kafkaConfig: { headerFormat: 'string' }
+    });
+    const producerControls = new ProcessControls({
+      appPath: path.join(__dirname, 'producer'),
+      port: 3216,
+      agentControls: customAgentControls
+    }).registerTestHooks();
+    const consumerControls = new ProcessControls({
+      appPath: path.join(__dirname, 'consumer'),
+      agentControls: customAgentControls
+    }).registerTestHooks();
+
+    it('must trace sending and receiving but will not keep trace continuity', async () => {
+      const apiPath = '/produce/standard';
+      const response = await producerControls.sendRequest({
+        method: 'GET',
+        path: apiPath
+      });
+
+      await retry(async () => {
+        await verifyResponseAndMessage(response, consumerControls);
+        const spans = await customAgentControls.getSpans();
+        const httpEntry = verifyHttpRootEntry({ spans, apiPath, pid: String(producerControls.getPid()) });
+        const kafkaExit = verifyRdKafkaExit(producerControls, spans, httpEntry, null, false);
+        verifyHttpExit({ spans, parent: httpEntry, pid: String(producerControls.getPid()) });
+        const kafkaEntry = verifyRdKafkaEntry(consumerControls, spans, kafkaExit, null, false);
+        verifyHttpExit({ spans, parent: kafkaEntry, pid: String(consumerControls.getPid()) });
+      });
+    });
+  });
+
+  describe('tracing enabled, but trace correlation disabled', function () {
+    this.timeout(config.getTestTimeout() * 2);
+
+    const producerControls = new ProcessControls({
+      appPath: path.join(__dirname, 'producer'),
+      port: 3216,
+      useGlobalAgent: true,
+      env: {
+        INSTANA_KAFKA_TRACE_CORRELATION: 'false'
+      }
+    });
+    ProcessControls.setUpHooks(producerControls);
+
+    const consumerControls = new ProcessControls({
+      appPath: path.join(__dirname, 'consumer'),
+      useGlobalAgent: true
+    });
+    ProcessControls.setUpHooks(consumerControls);
+
+    it('must trace sending and receiving but will not keep trace continuity', async () => {
+      const apiPath = '/produce/standard';
+      const response = await producerControls.sendRequest({
+        method: 'GET',
+        path: apiPath
+      });
+
+      await retry(async () => {
+        await verifyResponseAndMessage(response, consumerControls);
+        const spans = await agentControls.getSpans();
+        const httpEntry = verifyHttpRootEntry({ spans, apiPath, pid: String(producerControls.getPid()) });
+        verifyRdKafkaExit(producerControls, spans, httpEntry, null, false);
+        verifyHttpExit({ spans, parent: httpEntry, pid: String(producerControls.getPid()) });
+        const kafkaEntry = verifyRdKafkaEntry(consumerControls, spans, null, null, false);
+        verifyHttpExit({ spans, parent: kafkaEntry, pid: String(consumerControls.getPid()) });
+      });
+    });
+  });
+
+  describe('tracing enabled, trace correlation disabled via agent config', function () {
+    this.timeout(config.getTestTimeout() * 2);
+
+    const customAgentControls = new AgentStubControls();
+    customAgentControls.registerTestHooks({
+      kafkaConfig: { traceCorrelation: false }
+    });
+    const producerControls = new ProcessControls({
+      appPath: path.join(__dirname, 'producer'),
+      port: 3216,
+      agentControls: customAgentControls
+    }).registerTestHooks();
+    const consumerControls = new ProcessControls({
+      appPath: path.join(__dirname, 'consumer'),
+      agentControls: customAgentControls
+    }).registerTestHooks();
+
+    it('must trace sending and receiving but will not keep trace continuity', async () => {
+      const apiPath = '/produce/standard';
+      const response = await producerControls.sendRequest({
+        method: 'GET',
+        path: apiPath
+      });
+
+      await retry(async () => {
+        await verifyResponseAndMessage(response, consumerControls);
+        const spans = await customAgentControls.getSpans();
+        const httpEntry = verifyHttpRootEntry({ spans, apiPath, pid: String(producerControls.getPid()) });
+        verifyRdKafkaExit(producerControls, spans, httpEntry, null, false);
+        verifyHttpExit({ spans, parent: httpEntry, pid: String(producerControls.getPid()) });
+        const kafkaEntry = verifyRdKafkaEntry(consumerControls, spans, null, null, false);
+        verifyHttpExit({ spans, parent: kafkaEntry, pid: String(consumerControls.getPid()) });
+      });
+    });
+  });
 
   describe('tracing disabled', () => {
     this.timeout(config.getTestTimeout() * 2);

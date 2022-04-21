@@ -23,8 +23,6 @@ let automaticTracingEnabled = false;
 let cls = null;
 /** @type {import('../util/normalizeConfig').InstanaConfig} */
 let config = null;
-/** @type {Array.<string>} */
-let extraHeaders = [];
 
 /** @typedef {import('../../../collector/src/pidStore')} CollectorPIDStore */
 
@@ -95,9 +93,14 @@ const instrumentations = [
  * @property {Function} activate
  * @property {Function} deactivate
  * @property {Function} [updateConfig]
- * @property {(extraHeaders: Array.<*>) => {}} [setExtraHttpHeadersToCapture]
  * @property {boolean} [batchable]
  * @property {string} [spanName]
+ */
+
+/**
+ * @typedef {Object} KafkaTracingConfig
+ * @property {boolean} [traceCorrelation]
+ * @property {string} [headerFormat]
  */
 
 /** @type {Array.<InstanaInstrumentedModule>} */
@@ -186,10 +189,10 @@ function initInstrumenations(_config) {
   }
 }
 
-exports.activate = function activate() {
+exports.activate = function activate(extraConfig = {}) {
   if (tracingEnabled && !tracingActivated) {
     tracingActivated = true;
-    spanBuffer.activate();
+    spanBuffer.activate(extraConfig);
     opentracing.activate();
     sdk.activate();
 
@@ -202,7 +205,7 @@ exports.activate = function activate() {
           -1;
 
         if (!isDisabled) {
-          instrumentationModules[instrumentationKey].activate();
+          instrumentationModules[instrumentationKey].activate(extraConfig);
         }
       });
     }
@@ -232,26 +235,6 @@ exports.getHandleForCurrentSpan = function getHandleForCurrentSpan() {
 exports.getCls = function getCls() {
   // This only provides a value if tracing is enabled, otherwise cls will not be required and is null.
   return cls;
-};
-
-/**
- * @param {Array.<string>} _extraHeaders
- */
-exports.setExtraHttpHeadersToCapture = function setExtraHttpHeadersToCapture(_extraHeaders) {
-  extraHeaders = _extraHeaders;
-  instrumentations.forEach(instrumentationKey => {
-    if (
-      instrumentationModules[instrumentationKey] &&
-      typeof instrumentationModules[instrumentationKey].setExtraHttpHeadersToCapture === 'function'
-    ) {
-      instrumentationModules[instrumentationKey].setExtraHttpHeadersToCapture(extraHeaders);
-    }
-  });
-};
-
-// This will be removed again after the opt-in transition phase.
-exports.enableSpanBatching = function enableSpanBatching() {
-  spanBuffer.enableSpanBatching();
 };
 
 /**

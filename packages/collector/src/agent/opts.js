@@ -16,6 +16,9 @@ exports.agentUuid = undefined;
 // @ts-ignore - Cannot redeclare exported variable
 exports.autoProfile = false;
 
+/** @type {import('@instana/core/src/util/normalizeConfig').AgentConfig} config */
+exports.config = {};
+
 /**
  * @param {import('../util/normalizeConfig').CollectorConfig} config
  */

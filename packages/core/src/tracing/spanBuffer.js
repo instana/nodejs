@@ -104,7 +104,10 @@ exports.init = function init(config, _downstreamConnection) {
   }
 };
 
-exports.activate = function activate() {
+/**
+ * @param {import('../util/normalizeConfig').AgentConfig} extraConfig
+ */
+exports.activate = function activate(extraConfig) {
   if (!downstreamConnection) {
     logger.error('No downstreamConnection has been set.');
     return;
@@ -116,6 +119,9 @@ exports.activate = function activate() {
   if (typeof downstreamConnection.sendSpans !== 'function') {
     logger.error('downstreamConnection.sendSpans is not a function.');
     return;
+  }
+  if (extraConfig && extraConfig.tracing && extraConfig.tracing.spanBatchingEnabled) {
+    batchingEnabled = true;
   }
   isActive = true;
   if (activatedAt == null) {
@@ -137,10 +143,6 @@ exports.deactivate = function deactivate() {
   spans = [];
   batchingBuckets.clear();
   clearTimeout(transmissionTimeoutHandle);
-};
-
-exports.enableSpanBatching = function enableSpanBatching() {
-  batchingEnabled = true;
 };
 
 /**

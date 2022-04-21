@@ -20,6 +20,7 @@ const {
 } = require('@instana/core/test/test_util');
 const ProcessControls = require('../../../test_util/ProcessControls');
 const globalAgent = require('../../../globalAgent');
+const { AgentStubControls } = require('../../../apps/agentStubControls');
 
 const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
@@ -271,6 +272,88 @@ mochaSuiteFn('tracing/kafkajs', function () {
         );
       });
     }
+  });
+
+  describe('header format from agent config', function () {
+    const headerFormat = 'string';
+    const customAgentControls = new AgentStubControls();
+    customAgentControls.registerTestHooks({
+      kafkaConfig: { headerFormat }
+    });
+    producerControls = new ProcessControls({
+      appPath: path.join(__dirname, 'producer'),
+      port: 3216,
+      agentControls: customAgentControls
+    }).registerTestHooks();
+    consumerControls = new ProcessControls({
+      appPath: path.join(__dirname, 'consumer'),
+      agentControls: customAgentControls
+    }).registerTestHooks();
+
+    it(
+      `must trace sending and receiving and keep trace continuity (header format ${headerFormat} ` +
+        'from agent config)',
+      () => {
+        return send({
+          key: 'someKey',
+          value: 'someMessage'
+        }).then(() =>
+          retry(() =>
+            getMessages(consumerControls)
+              .then(messages => {
+                checkMessages(messages, { headerFormat });
+                return customAgentControls.getSpans();
+              })
+              .then(spans => {
+                const httpEntry = verifyHttpEntry(spans);
+                verifyKafkaExits(spans, httpEntry, { headerFormat });
+                verifyFollowUpHttpExit(spans, httpEntry);
+              })
+          )
+        );
+      }
+    );
+  });
+
+  describe('disable trace correlation from agent config', function () {
+    const customAgentControls = new AgentStubControls();
+    customAgentControls.registerTestHooks({
+      kafkaConfig: { traceCorrelation: false }
+    });
+    producerControls = new ProcessControls({
+      appPath: path.join(__dirname, 'producer'),
+      port: 3216,
+      agentControls: customAgentControls
+    }).registerTestHooks();
+    consumerControls = new ProcessControls({
+      appPath: path.join(__dirname, 'consumer'),
+      agentControls: customAgentControls
+    }).registerTestHooks();
+
+    const headerFormat = 'correlation-disabled';
+    it(
+      'must trace sending and receiving but will not keep trace continuity ' +
+        '(trace correlation disabled from agent config)',
+      () => {
+        return send({
+          key: 'someKey',
+          value: 'someMessage'
+        }).then(() =>
+          retry(() =>
+            getMessages(consumerControls)
+              .then(messages => {
+                checkMessages(messages, { headerFormat });
+                return customAgentControls.getSpans();
+              })
+              .then(spans => {
+                const httpEntry = verifyHttpEntry(spans);
+                verifyKafkaExits(spans, httpEntry, { headerFormat });
+                verifyFollowUpHttpExit(spans, httpEntry);
+              })
+          )
+        );
+      }
+    );
   });
 
   describe('tracing disabled', () => {

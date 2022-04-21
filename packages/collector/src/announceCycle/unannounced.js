@@ -5,7 +5,12 @@
 
 'use strict';
 
-const { secrets, tracing } = require('@instana/core');
+const {
+  secrets,
+  tracing,
+  util: { ensureNestedObjectExists }
+} = require('@instana/core');
+const { constants: tracingConstants } = tracing;
 
 /** @type {import('@instana/core/src/logger').GenericLogger} */
 let logger;
@@ -19,6 +24,32 @@ const pidStore = require('../pidStore');
 const initialRetryDelay = 10 * 1000; // 10 seconds
 const backoffFactor = 1.5;
 const maxRetryDelay = 60 * 1000; // one minute
+
+/**
+ * @typedef {Object} AgentAnnounceResponse
+ * @property {SecretsConfig} [secrets]
+ * @property {TracingConfig} [tracing]
+ * @property {Array.<string>} [extraHeaders]
+ * @property {boolean|string} [spanBatchingEnabled]
+ */
+
+/**
+ * @typedef {Object} SecretsConfig
+ * @property {Array.<string>} list
+ * @property {import('@instana/core/src/secrets').MatchingOptions} matcher
+ */
+
+/**
+ * @typedef {Object} TracingConfig
+ * @property {Array.<string>} [extra-http-headers]
+ * @property {KafkaTracingConfig} [kafka]
+ */
+
+/**
+ * @typedef {Object} KafkaTracingConfig
+ * @property {boolean} [trace-correlation]
+ * @property {string} [header-format]
+ */
 
 module.exports = {
   /**
@@ -50,9 +81,9 @@ function tryToAnnounce(ctx, retryDelay = initialRetryDelay) {
       return;
     }
 
-    let response;
+    let agentResponse;
     try {
-      response = JSON.parse(rawResponse);
+      agentResponse = JSON.parse(rawResponse);
     } catch (e) {
       logger.warn(
         'Failed to JSON.parse agent response. Response was %s. Will retry in %s ms',
@@ -64,43 +95,109 @@ function tryToAnnounce(ctx, retryDelay = initialRetryDelay) {
       return;
     }
 
-    const pid = response.pid;
+    const pid = agentResponse.pid;
     logger.info('Overwriting pid for reporting purposes to: %s', pid);
     pidStore.pid = pid;
 
-    agentOpts.agentUuid = response.agentUuid;
-    if (Array.isArray(response.extraHeaders)) {
-      tracing.setExtraHttpHeadersToCapture(
-        // Node.js HTTP API turns all incoming HTTP headers into lowercase.
-        response.extraHeaders.map((/** @type {string} */ s) => s.toLowerCase())
-      );
-    }
-    if (response.spanBatchingEnabled === true || response.spanBatchingEnabled === 'true') {
-      logger.info('Enabling span batching via agent configuration.');
-      tracing.enableSpanBatching();
-    }
-
-    if (response.secrets) {
-      if (!(typeof response.secrets.matcher === 'string')) {
-        logger.warn(
-          'Received invalid secrets configuration from agent, attribute matcher is not a string: $s',
-          response.secrets.matcher
-        );
-      } else if (Object.keys(secrets.matchers).indexOf(response.secrets.matcher) < 0) {
-        logger.warn(
-          'Received invalid secrets configuration from agent, matcher is not supported: $s',
-          response.secrets.matcher
-        );
-      } else if (!Array.isArray(response.secrets.list)) {
-        logger.warn(
-          'Received invalid secrets configuration from agent, attribute list is not an array: $s',
-          response.secrets.list
-        );
-      } else {
-        secrets.setMatcher(response.secrets.matcher, response.secrets.list);
-      }
-    }
-
+    agentOpts.agentUuid = agentResponse.agentUuid;
+    applyAgentConfiguration(agentResponse);
     ctx.transitionTo('announced');
   });
+}
+
+/**
+ * @param {AgentAnnounceResponse} agentResponse
+ */
+function applyAgentConfiguration(agentResponse) {
+  applySecretsConfiguration(agentResponse);
+  applyExtraHttpHeaderConfiguration(agentResponse);
+  applyKafkaTracingConfiguration(agentResponse);
+  applySpanBatchingConfiguration(agentResponse);
+}
+
+/**
+ * @param {AgentAnnounceResponse} agentResponse
+ */
+function applySecretsConfiguration(agentResponse) {
+  if (agentResponse.secrets) {
+    if (!(typeof agentResponse.secrets.matcher === 'string')) {
+      logger.warn(
+        'Received invalid secrets configuration from agent, attribute matcher is not a string: $s',
+        agentResponse.secrets.matcher
+      );
+    } else if (Object.keys(secrets.matchers).indexOf(agentResponse.secrets.matcher) < 0) {
+      logger.warn(
+        'Received invalid secrets configuration from agent, matcher is not supported: $s',
+        agentResponse.secrets.matcher
+      );
+    } else if (!Array.isArray(agentResponse.secrets.list)) {
+      logger.warn(
+        'Received invalid secrets configuration from agent, attribute list is not an array: $s',
+        agentResponse.secrets.list
+      );
+    } else {
+      secrets.setMatcher(agentResponse.secrets.matcher, agentResponse.secrets.list);
+    }
+  }
+}
+
+/**
+ * @param {AgentAnnounceResponse} agentResponse
+ */
+function applyExtraHttpHeaderConfiguration(agentResponse) {
+  if (agentResponse.tracing) {
+    actuallyApplyExtraHttpHeaderConfiguration(agentResponse.tracing['extra-http-headers']);
+    return;
+  }
+
+  // Fallback for Node.js discovery prior to version 1.2.18, which did not support providing the complete
+  // com.instana.tracing section in the agent response. We can remove this fallback approximately in May 2023.
+  actuallyApplyExtraHttpHeaderConfiguration(agentResponse.extraHeaders);
+}
+
+/**
+ * @param {Array.<string>} extraHeaders
+ */
+function actuallyApplyExtraHttpHeaderConfiguration(extraHeaders) {
+  if (Array.isArray(extraHeaders)) {
+    ensureNestedObjectExists(agentOpts.config, ['tracing', 'http']);
+    // The Node.js HTTP API converts all incoming HTTP headers into lowercase.
+    agentOpts.config.tracing.http.extraHttpHeadersToCapture = extraHeaders.map((/** @type {string} */ s) =>
+      s.toLowerCase()
+    );
+  }
+}
+
+/**
+ * @param {AgentAnnounceResponse} agentResponse
+ */
+function applyKafkaTracingConfiguration(agentResponse) {
+  if (agentResponse.tracing && agentResponse.tracing.kafka) {
+    const kafkaTracingConfigFromAgent = agentResponse.tracing.kafka;
+    const kafkaTracingConfig = {
+      traceCorrelation:
+        kafkaTracingConfigFromAgent['trace-correlation'] != null
+          ? kafkaTracingConfigFromAgent['trace-correlation']
+          : tracingConstants.kafkaTraceCorrelationDefault,
+      headerFormat:
+        kafkaTracingConfigFromAgent['header-format'] != null
+          ? kafkaTracingConfigFromAgent['header-format']
+          : tracingConstants.kafkaHeaderFormatDefault
+    };
+    ensureNestedObjectExists(agentOpts.config, ['tracing', 'kafka']);
+    agentOpts.config.tracing.kafka = kafkaTracingConfig;
+  }
+  // There is no fallback because there is are no legacy agent response attributes for the Kafka tracing config, those
+  // were only introduced with the Node.js discovery version 1.2.18.
+}
+
+/**
+ * @param {AgentAnnounceResponse} agentResponse
+ */
+function applySpanBatchingConfiguration(agentResponse) {
+  if (agentResponse.spanBatchingEnabled === true || agentResponse.spanBatchingEnabled === 'true') {
+    logger.info('Enabling span batching via agent configuration.');
+    ensureNestedObjectExists(agentOpts.config, ['tracing']);
+    agentOpts.config.tracing.spanBatchingEnabled = true;
+  }
 }

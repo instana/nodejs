@@ -28,6 +28,11 @@ exports.kafkaTraceIdHeaderNameString = 'X_INSTANA_T';
 exports.kafkaSpanIdHeaderNameString = 'X_INSTANA_S';
 exports.kafkaTraceLevelHeaderNameString = 'X_INSTANA_L_S';
 
+exports.kafkaTraceCorrelationDefault = true;
+// Before we start phase 1 of the migration, 'binary' will be the default value. With phase 1, we will move to 'both',
+// with phase 2 it will no longer be configurable and will always use 'string'.
+exports.kafkaHeaderFormatDefault = 'binary';
+
 exports.w3cTraceParent = 'traceparent';
 exports.w3cTraceState = 'tracestate';
 exports.w3cInstana = 'in';
