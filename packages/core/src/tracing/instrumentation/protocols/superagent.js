@@ -9,7 +9,7 @@ const shimmer = require('shimmer');
 
 /** @type {import('../../../logger').GenericLogger} */
 let logger;
-logger = require('../../../logger').getLogger('tracing/grpc', newLogger => {
+logger = require('../../../logger').getLogger('tracing/superagent', newLogger => {
   logger = newLogger;
 });
 

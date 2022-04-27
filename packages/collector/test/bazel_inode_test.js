@@ -34,7 +34,10 @@ describe('agent connection/bazel', function () {
         fs: mockFs(`/proc/${process.pid}/fd/socket:[12345]`),
 
         // stub out the http communication part of the announce request
-        '@instana/core': mockInstanaCoreHttp()
+        '@instana/core': mockInstanaCoreHttp(),
+
+        // We need to proxyquire logger, too, to work around the duplicate module logger name check.
+        './logger': proxyquire('../src/logger', {})
       });
     });
 
@@ -57,7 +60,10 @@ describe('agent connection/bazel', function () {
         fs: mockFs('socket:[12345]'),
 
         // stub out the http communication part of the announce request
-        '@instana/core': mockInstanaCoreHttp()
+        '@instana/core': mockInstanaCoreHttp(),
+
+        // We need to proxyquire logger, too, to work around the duplicate module logger name check.
+        './logger': proxyquire('../src/logger', {})
       });
     });
 

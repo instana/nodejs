@@ -15,7 +15,10 @@ describe('tracing/cls', () => {
 
   beforeEach(() => {
     // reload to clear vars
-    cls = proxyquire('../../src/tracing/cls', {});
+    cls = proxyquire('../../src/tracing/cls', {
+      // We need to proxyquire logger, too, to work around the duplicate module logger name check.
+      '../logger': proxyquire('../../src/logger', {})
+    });
     cls.init({});
   });
 

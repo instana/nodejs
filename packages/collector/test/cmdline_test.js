@@ -57,7 +57,10 @@ describe('cmdline', () => {
 
   function req() {
     result = proxyquire('../src/cmdline', {
-      fs
+      fs,
+
+      // We need to proxyquire logger, too, to work around the duplicate module logger name check.
+      './logger': proxyquire('../src/logger', {})
     }).getCmdline();
   }
 });

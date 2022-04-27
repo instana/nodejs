@@ -14,7 +14,10 @@ describe('util/requireHook', () => {
   let hook;
 
   beforeEach(() => {
-    requireHook = proxyquire('../../../src/util/requireHook', {});
+    requireHook = proxyquire('../../../src/util/requireHook', {
+      // We need to proxyquire logger, too, to work around the duplicate module logger name check.
+      '../logger': proxyquire('../../../src/logger', {})
+    });
     hook = sinon.stub();
   });
 

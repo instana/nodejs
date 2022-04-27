@@ -15,7 +15,7 @@ const {
 const { ENTRY, EXIT, isExitSpan, sqsAttributeNames } = require('../../../../constants');
 const tracingUtil = require('../../../../tracingUtil');
 const { InstanaAWSProduct } = require('./instana_aws_product');
-let logger = require('../../../../../logger').getLogger('tracing/sqs', newLogger => {
+let logger = require('../../../../../logger').getLogger('tracing/sqs/v3', newLogger => {
   logger = newLogger;
 });
 
