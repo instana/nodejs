@@ -135,7 +135,8 @@ function start(version) {
                 simple: withError !== 'sender'
               });
 
-              return verify(receiverControls, senderControls, response, apiPath, withError);
+              await verify(receiverControls, senderControls, response, apiPath, withError);
+              await verifyNoUnclosedSpansHaveBeenDetected(receiverControls);
             });
           });
 
@@ -143,7 +144,8 @@ function start(version) {
             const traceId = '1234';
             const spanId = '5678';
             await sendMessageWithLegacyHeaders(queueURL, traceId, spanId);
-            return verifySingleSqsEntrySpanWithParent(traceId, spanId);
+            await verifySingleSqsEntrySpanWithParent(traceId, spanId);
+            await verifyNoUnclosedSpansHaveBeenDetected(receiverControls);
           });
 
           // eslint-disable-next-line max-len
@@ -151,7 +153,8 @@ function start(version) {
             const traceId = 'abcdef9876543210';
             const spanId = '9876543210abcdef';
             await sendSnsNotificationToSqsQueue(queueURL, traceId, spanId);
-            return verifySingleSqsEntrySpanWithParent(traceId, spanId);
+            await verifySingleSqsEntrySpanWithParent(traceId, spanId);
+            await verifyNoUnclosedSpansHaveBeenDetected(receiverControls);
           });
 
           it(
@@ -161,7 +164,46 @@ function start(version) {
               const traceId = 'abcdef9876543210';
               const spanId = '9876543210abcdef';
               await sendSnsNotificationToSqsQueue(queueURL, traceId, spanId, true);
-              return verifySingleSqsEntrySpanWithParent(traceId, spanId);
+              await verifySingleSqsEntrySpanWithParent(traceId, spanId);
+              await verifyNoUnclosedSpansHaveBeenDetected(receiverControls);
+            }
+          );
+        });
+
+        describe(`polling via ${sqsReceiveMethod} when no messages are available`, () => {
+          const receiverControls = new ProcessControls({
+            appPath: path.join(__dirname, 'receiver'),
+            port: 3216,
+            useGlobalAgent: true,
+            env: {
+              SQSV3_RECEIVE_METHOD: sqsReceiveMethod,
+              SQS_POLL_DELAY: 1,
+              AWS_SQS_QUEUE_URL: `${queueUrlPrefix}${queueName}`,
+              AWS_SDK_CLIENT_SQS_REQUIRE: version
+            }
+          });
+
+          ProcessControls.setUpHooksWithRetryTime(retryTime, receiverControls);
+
+          it(
+            `consecutive receiveMessage calls via ${sqsReceiveMethod} in the same event loop tick should not ` +
+              'trigger a warning',
+            async () => {
+              await retry(async () => {
+                const numberOfMessagePolls = await receiverControls.sendRequest({
+                  path: '/number-of-receive-message-attempts',
+                  suppressTracing: true
+                });
+                // Make sure the receiver has started to poll for messages at least twice.
+                expect(numberOfMessagePolls).to.be.at.least(2);
+              }, retryTime);
+
+              // There should be no spans since we do not send any SQS messages in this test and we also do not send
+              // HTTP requests to the sender.
+              const spans = await agentControls.getSpans();
+              expect(spans).to.be.empty;
+
+              await verifyNoUnclosedSpansHaveBeenDetected(receiverControls);
             }
           );
         });
@@ -197,31 +239,31 @@ function start(version) {
                 path: `${apiPath}?isBatch=true`
               });
 
-              return verify(receiverControls, senderControlsBatch, response, apiPath, false, true);
+              await verify(receiverControls, senderControlsBatch, response, apiPath, false, true);
+              await verifyNoUnclosedSpansHaveBeenDetected(receiverControls);
             });
           });
         });
       });
 
-      function verify(receiverControls, _senderControls, response, apiPath, withError, isBatch) {
+      async function verify(receiverControls, _senderControls, response, apiPath, withError, isBatch) {
         if (withError === 'sender') {
           expect(response.error).to.equal('MissingParameter: The request must contain the parameter MessageBody.');
         } else {
-          return retry(() => {
+          await retry(async () => {
             if (isBatch) {
               verifyResponseAndBatchMessage(response, receiverControls);
             } else {
               verifyResponseAndMessage(response, receiverControls);
             }
-            return agentControls
-              .getSpans()
-              .then(spans => verifySpans(receiverControls, _senderControls, spans, apiPath, null, withError, isBatch));
+            const spans = await agentControls.getSpans();
+            verifySpans(receiverControls, _senderControls, spans, apiPath, null, withError, isBatch);
           }, retryTime);
         }
       }
 
-      function verifySingleSqsEntrySpanWithParent(traceId, spanId) {
-        return retry(async () => {
+      async function verifySingleSqsEntrySpanWithParent(traceId, spanId) {
+        await retry(async () => {
           const spans = await agentControls.getSpans();
           return expectExactlyOneMatching(spans, [
             span => expect(span.t).to.equal(traceId),
@@ -344,14 +386,14 @@ function start(version) {
             path: `/send-message/${sendingMethod}`
           });
 
-          return retry(() => verifyResponseAndMessage(response, receiverControls), retryTime)
-            .then(() => delay(config.getTestTimeout() / 4))
-            .then(() => agentControls.getSpans())
-            .then(spans => {
-              if (spans.length > 0) {
-                fail(`Unexpected spans (AWS SQS v3 suppressed: ${stringifyItems(spans)}`);
-              }
-            });
+          await retry(async () => {
+            await verifyResponseAndMessage(response, receiverControls);
+          }, retryTime);
+          await delay(config.getTestTimeout() / 4);
+          const spans = await agentControls.getSpans();
+          if (spans.length > 0) {
+            fail(`Unexpected spans (AWS SQS v3 suppressed: ${stringifyItems(spans)}`);
+          }
         });
       });
     });
@@ -394,16 +436,16 @@ function start(version) {
             }
           });
 
-          return retry(() => {
+          await retry(() => {
             verifyResponseAndMessage(response, receiverControls);
-          }, retryTime)
-            .then(() => delay(config.getTestTimeout() / 4))
-            .then(() => agentControls.getSpans())
-            .then(spans => {
-              if (spans.length > 0) {
-                fail(`Unexpected spans (AWS SQS v3 suppressed: ${stringifyItems(spans)}`);
-              }
-            });
+          }, retryTime);
+          await delay(config.getTestTimeout() / 4);
+          const spans = await agentControls.getSpans();
+          if (spans.length > 0) {
+            fail(`Unexpected spans (AWS SQS v3 suppressed: ${stringifyItems(spans)}`);
+          }
+
+          await verifyNoUnclosedSpansHaveBeenDetected(receiverControls);
         });
       });
     });
@@ -426,10 +468,12 @@ function start(version) {
         await retry(() => delay(config.getTestTimeout() / 4), retryTime);
         const spans = await agentControls.getSpans();
 
-        return expectAtLeastOneMatching(spans, [
+        expectAtLeastOneMatching(spans, [
           span => expect(span.ec).equal(1),
           span => expect(span.data.sqs.error).to.equal('The specified queue does not exist for this wsdl version.')
         ]);
+
+        await verifyNoUnclosedSpansHaveBeenDetected(receiverControls);
       });
     });
   });
@@ -460,6 +504,22 @@ function verifyResponseAndBatchMessage(response, receiverControls) {
   expect(message, 'received message matches with sent message').to.exist;
   expect(message.Body).to.equal('Hello from Node tracer');
   return messageId;
+}
+
+/**
+ * Verify that the warning "Cannot start an AWS SQS entry span when another span is already active."
+ * has not been logged. That log message would indicate that we did not correctly cancel the SQS entry span that had
+ * been started for the previous sqs.receiveMessage/sqs.sendCommand invocation.
+ */
+async function verifyNoUnclosedSpansHaveBeenDetected(receiverControls) {
+  let warnLogs = await receiverControls.sendRequest({
+    path: '/warn-logs',
+    suppressTracing: true
+  });
+  warnLogs = warnLogs.filter(msg => msg.includes('Cannot start'));
+  if (warnLogs.length > 0) {
+    fail(`Unexpected warnings have been logged: ${JSON.stringify(warnLogs)}`);
+  }
 }
 
 module.exports = function (version) {

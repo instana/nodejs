@@ -6,20 +6,35 @@
 'use strict';
 
 const instana = require('../../../../../../')();
+
 const express = require('express');
-const port = process.env.APP_PORT || 3216;
-const agentPort = process.env.INSTANA_AGENT_PORT || 42699;
 const request = require('request-promise');
 const { sendToParent } = require('../../../../../../../core/test/test_util');
-
-const app = express();
-
 const delay = require('../../../../../../../core/test/test_util/delay');
+const CollectingLogger = require('../../../../../test_util/CollectingLogger');
+const TeeLogger = require('../../../../../test_util/TeeLogger');
 const { sqs } = require('./sqsUtil');
+
+const instanaLogger = require('../../../../../../src/logger').getLogger('SQS receiver');
+instanaLogger.level('warn');
+const collectingLogger = new CollectingLogger();
+const teeLogger = new TeeLogger(instanaLogger, collectingLogger);
+instana.setLogger(teeLogger);
+
+const port = process.env.APP_PORT || 3216;
+const agentPort = process.env.INSTANA_AGENT_PORT || 42699;
 const queueURL = process.env.AWS_SQS_QUEUE_URL;
+
+// Keep the default value above 5, as tests can fail if not all messages are fetched.
+let sqsPollDelay = 7;
+if (process.env.SQS_POLL_DELAY) {
+  sqsPollDelay = parseInt(process.env.SQS_POLL_DELAY, 10);
+}
+
 const logPrefix = `AWS SDK v2 SQS Message Receiver (${process.pid}):\t`;
 
 let hasStartedPolling = false;
+let numberOfReceiveMessageAttempts = 0;
 
 const receiveParams = {
   AttributeNames: ['SentTimestamp'],
@@ -27,13 +42,14 @@ const receiveParams = {
   MessageAttributeNames: ['All'],
   QueueUrl: queueURL,
   VisibilityTimeout: 5,
-  // Please keep this value above 5, as tests can fail if not all messages are received
-  WaitTimeSeconds: 7
+  WaitTimeSeconds: sqsPollDelay
 };
 
 const log = require('@instana/core/test/test_util/log').getLogger(logPrefix);
 
-app.get('/', (_req, res) => {
+const app = express();
+
+app.get('/', (req, res) => {
   if (hasStartedPolling) {
     res.send('OK');
   } else {
@@ -41,8 +57,23 @@ app.get('/', (_req, res) => {
   }
 });
 
+/**
+ * Responds with the number of times this receiver has _started_ to poll new messages via sqs.receiveMessage.
+ */
+app.get('/number-of-receive-message-attempts', (req, res) => {
+  res.status(200).send(String(numberOfReceiveMessageAttempts));
+});
+
+/**
+ * Responds with the number of times this receiver has _started_ to poll new messages via sqs.receiveMessage.
+ */
+app.get('/warn-logs', (req, res) => {
+  res.status(200).send(collectingLogger.getWarnLogs());
+});
+
 function receivePromise() {
   let span;
+  numberOfReceiveMessageAttempts++;
   return sqs
     .receiveMessage(receiveParams)
     .promise()
@@ -97,6 +128,7 @@ function receivePromise() {
 async function receiveAsync() {
   let span;
   try {
+    numberOfReceiveMessageAttempts++;
     const sqsPromise = sqs.receiveMessage(receiveParams).promise();
     const data = await sqsPromise;
 
@@ -151,14 +183,15 @@ async function receiveAsync() {
 }
 
 function receiveCallback(cb) {
+  numberOfReceiveMessageAttempts++;
   sqs.receiveMessage(receiveParams, (err, messagesData) => {
     const span = instana.currentSpan();
     span.disableAutoEnd();
 
     if (err) {
       log(err);
-      cb();
       span.end(1);
+      cb();
     } else if (messagesData.error) {
       log('receive message data error', messagesData.error);
     } else if (messagesData.Messages) {
@@ -224,10 +257,10 @@ async function pollForMessages() {
       console.error(e);
       process.exit(1);
     }
-    setImmediate(pollForMessages);
+    pollForMessages();
   } else if (receivedType === 'callback') {
     receiveCallback(() => {
-      setImmediate(pollForMessages);
+      pollForMessages();
     });
   } else if (receivedType === 'async') {
     try {
@@ -237,7 +270,7 @@ async function pollForMessages() {
       console.error(e);
       process.exit(1);
     }
-    setImmediate(pollForMessages);
+    pollForMessages();
   } else {
     log(`End with command ${receivedType}`);
   }
