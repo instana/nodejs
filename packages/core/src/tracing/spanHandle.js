@@ -165,7 +165,7 @@ SpanHandle.prototype.disableAutoEnd = function disableAutoEnd() {
 };
 
 /**
- * Finishes as span that has been switched to manual-end-mode before.
+ * Finishes a span that has been switched to manual-end-mode before.
  * @param {boolean | number} errorCount
  */
 SpanHandle.prototype.end = function end(errorCount) {
@@ -179,6 +179,13 @@ SpanHandle.prototype.end = function end(errorCount) {
     this.span.ec = errorCount;
   }
   this.span.transmitManual();
+};
+
+/**
+ * Cancels as span that has been switched to manual-end-mode before.
+ */
+SpanHandle.prototype.cancel = function cancel() {
+  this.span.cancel();
 };
 
 /**
@@ -246,6 +253,10 @@ NoopSpanHandle.prototype.disableAutoEnd = function disableAutoEnd() {
 };
 
 NoopSpanHandle.prototype.end = function end() {
+  // provide dummy operation when automatic tracing is not enabled
+};
+
+NoopSpanHandle.prototype.cancel = function cancel() {
   // provide dummy operation when automatic tracing is not enabled
 };
 
