@@ -293,7 +293,10 @@ function instrumentedReceiveMessage(ctx, originalReceiveMessage, originalArgs) {
           setImmediate(() => finishSpan(null, data, span));
           return originalCallback.apply(this, arguments);
         } else {
-          setImmediate(() => span.cancel());
+          // No messages have been received. The assumption is that no follow-up activities will occur, but polling for
+          // messages might be triggered again in the same event loop tick. Thus we also need to cancel the span
+          // _synchronously_ in the same event loop tick. See commit message for details.
+          span.cancel();
           return originalCallback.apply(this, arguments);
         }
       });
@@ -328,7 +331,10 @@ function instrumentedReceiveMessage(ctx, originalReceiveMessage, originalArgs) {
               configureEntrySpan(span, data, tracingAttributes);
               setImmediate(() => finishSpan(null, data, span));
             } else {
-              setImmediate(() => span.cancel());
+              // No messages have been received. The assumption is that no follow-up activities will occur, but polling
+              // for messages might be triggered again in the same event loop tick. Thus we also need to cancel the span
+              // _synchronously_ in the same event loop tick. See commit message for details.
+              span.cancel();
             }
             return data;
           },

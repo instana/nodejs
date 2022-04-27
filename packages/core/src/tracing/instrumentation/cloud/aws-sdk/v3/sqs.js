@@ -214,7 +214,10 @@ class InstanaAWSSQS extends InstanaAWSProduct {
                 self.finishSpan(null, span);
               });
             } else {
-              setImmediate(() => span.cancel());
+              // No messages have been received. The assumption is that no follow-up activities will occur, but polling
+              // for messages might be triggered again in the same event loop tick. Thus we also need to cancel the span
+              // _synchronously_ in the same event loop tick. See commit message for details.
+              span.cancel();
             }
 
             _callback.apply(self, arguments);
@@ -245,7 +248,10 @@ class InstanaAWSSQS extends InstanaAWSProduct {
                 this.finishSpan(null, span);
               });
             } else {
-              setImmediate(() => span.cancel());
+              // No messages have been received. The assumption is that no follow-up activities will occur, but polling
+              // for messages might be triggered again in the same event loop tick. Thus we also need to cancel the span
+              // _synchronously_ in the same event loop tick. See commit message for details.
+              span.cancel();
             }
             return data;
           })
