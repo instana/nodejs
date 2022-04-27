@@ -35,7 +35,10 @@ describe('pidStore', () => {
       },
       './internalPidStore': {
         pid: process.pid
-      }
+      },
+
+      // We need to proxyquire logger, too, to work around the duplicate module logger name check.
+      '../logger': proxyquire('../../src/logger', {})
     });
   }
 

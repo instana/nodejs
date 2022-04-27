@@ -102,6 +102,9 @@ exports.getLogger = function getLogger(loggerName, reInitFn) {
   }
 
   if (reInitFn) {
+    if (registry[loggerName]) {
+      throw new Error(`Duplicate logger name: ${loggerName}.`);
+    }
     registry[loggerName] = reInitFn;
   }
   return _logger;

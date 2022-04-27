@@ -32,7 +32,7 @@ const sortTypes = {
   EXIT: 'exit'
 };
 
-let logger = require('../../../../../logger').getLogger('tracing/sqs', newLogger => {
+let logger = require('../../../../../logger').getLogger('tracing/sqs/v2', newLogger => {
   logger = newLogger;
 });
 

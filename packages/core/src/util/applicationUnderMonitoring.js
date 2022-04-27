@@ -10,7 +10,7 @@ const path = require('path');
 
 /** @type {import('../logger').GenericLogger} */
 let logger;
-logger = require('../logger').getLogger('util/atMostOnce', newLogger => {
+logger = require('../logger').getLogger('util/applicationUnderMonitoring', newLogger => {
   logger = newLogger;
 });
 
