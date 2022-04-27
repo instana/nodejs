@@ -79,6 +79,7 @@ function init(config, _processIdentityProvider) {
  * @property {Function} [freezePathTemplate]
  * @property {Function} [disableAutoEnd]
  * @property {Function} [transmitManual]
+ * @property {Function} [cancel]
  */
 
 class InstanaSpan {
