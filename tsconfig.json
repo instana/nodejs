@@ -21,6 +21,6 @@
   "exclude": [
     "node_modules",
     "packages/shared-metrics/test/dependencies",
-    "packages/shared-metrics/test/globalHooks_test.js"
+    "packages/shared-metrics/test/hooks.js"
   ]
 }
