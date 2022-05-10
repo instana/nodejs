@@ -85,15 +85,13 @@ app.put('/com.instana.plugin.nodejs.discovery', (req, res) => {
     }
   };
 
-  if (enableSpanBatching) {
-    response.spanBatchingEnabled = true;
-  }
-
-  if (kafkaTraceCorrelation != null || kafkaHeaderFormat || extraHeaders.length > 0) {
+  if (kafkaTraceCorrelation != null || kafkaHeaderFormat || extraHeaders.length > 0 || enableSpanBatching) {
     response.tracing = {};
+
     if (extraHeaders.length > 0) {
       response.tracing['extra-http-headers'] = extraHeaders;
     }
+
     if (kafkaTraceCorrelation != null || kafkaHeaderFormat) {
       response.tracing.kafka = {};
       if (kafkaTraceCorrelation != null) {
@@ -102,6 +100,10 @@ app.put('/com.instana.plugin.nodejs.discovery', (req, res) => {
       if (kafkaHeaderFormat) {
         response.tracing.kafka['header-format'] = kafkaHeaderFormat;
       }
+    }
+
+    if (enableSpanBatching) {
+      response.tracing['span-batching-enabled'] = true;
     }
   }
 

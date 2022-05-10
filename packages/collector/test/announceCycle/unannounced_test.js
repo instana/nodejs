@@ -187,7 +187,23 @@ describe('unannounced state', () => {
       });
     });
 
-    it('should apply span batching configuratino', done => {
+    it('should apply span batching configuration', done => {
+      prepareAnnounceResponse({
+        tracing: { 'span-batching-enabled': true }
+      });
+      unannouncedState.enter({
+        transitionTo: () => {
+          expect(agentOptsStub.config).to.deep.equal({
+            tracing: {
+              spanBatchingEnabled: true
+            }
+          });
+          done();
+        }
+      });
+    });
+
+    it('should apply legacy span batching configuration', done => {
       prepareAnnounceResponse({ spanBatchingEnabled: true });
       unannouncedState.enter({
         transitionTo: () => {
