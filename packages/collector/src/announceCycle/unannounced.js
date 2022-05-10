@@ -43,6 +43,7 @@ const maxRetryDelay = 60 * 1000; // one minute
  * @typedef {Object} TracingConfig
  * @property {Array.<string>} [extra-http-headers]
  * @property {KafkaTracingConfig} [kafka]
+ * @property {boolean} [span-batching-enabled]
  */
 
 /**
@@ -151,7 +152,7 @@ function applyExtraHttpHeaderConfiguration(agentResponse) {
   }
 
   // Fallback for Node.js discovery prior to version 1.2.18, which did not support providing the complete
-  // com.instana.tracing section in the agent response. We can remove this fallback approximately in May 2023.
+  // com.instana.tracing section in the agent response. We can remove this legacy fallback approximately in May 2023.
   actuallyApplyExtraHttpHeaderConfiguration(agentResponse.extraHeaders);
 }
 
@@ -195,6 +196,16 @@ function applyKafkaTracingConfiguration(agentResponse) {
  * @param {AgentAnnounceResponse} agentResponse
  */
 function applySpanBatchingConfiguration(agentResponse) {
+  if (agentResponse.tracing) {
+    if (agentResponse.tracing['span-batching-enabled'] === true) {
+      ensureNestedObjectExists(agentOpts.config, ['tracing']);
+      agentOpts.config.tracing.spanBatchingEnabled = true;
+    }
+    return;
+  }
+
+  // Fallback for Node.js discovery prior to version 1.2.18, which did not sent the span-batching-enabled config in the
+  // common tracing options section. We can remove this legacy fallback approximately in May 2023.
   if (agentResponse.spanBatchingEnabled === true || agentResponse.spanBatchingEnabled === 'true') {
     logger.info('Enabling span batching via agent configuration.');
     ensureNestedObjectExists(agentOpts.config, ['tracing']);
