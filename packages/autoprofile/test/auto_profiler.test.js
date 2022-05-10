@@ -6,30 +6,6 @@
 'use strict';
 
 const assert = require('assert');
-const AutoProfiler = require('../lib/auto_profiler').AutoProfiler;
-
-beforeEach(() => {
-  global.profiler = new AutoProfiler();
-
-  global.profiler.sendProfiles = function (profiles, callback) {
-    // eslint-disable-next-line no-console
-    callback();
-  };
-
-  global.profiler.getExternalPid = function () {
-    return '123';
-  };
-
-  global.profiler.start({
-    debug: true,
-    disableTimers: true
-  });
-});
-
-afterEach(() => {
-  global.profiler.destroy();
-  global.profiler = undefined;
-});
 
 describe('AutoProfiler', () => {
   let profiler;
