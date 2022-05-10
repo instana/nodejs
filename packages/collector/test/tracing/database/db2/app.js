@@ -43,7 +43,8 @@ if (process.env.CI) {
 let connection;
 
 /**
- * The docker compose db2 image took a long time to allow connections.
+ * The docker compose db2 image takes a long time to
+ * allow connections initially.
  */
 let tries = 0;
 const MAX_TRIES = 30;
@@ -355,6 +356,7 @@ app.get('/prepare-execute-fetch-async', (req, res) => {
         result.fetchAll(...args);
       } catch (fetchAllErr) {
         // TODO: there is a bug in c++ lib
+        // https://github.com/ibmdb/node-ibm_db/issues/846
         result.closeSync();
         res.status(error ? 200 : 500).send({ data: {} });
       }
@@ -425,9 +427,7 @@ app.get('/prepare-execute-mixed-1', (req, res) => {
           const args = [];
 
           if (error && error === 'fetch') {
-            // TODO: I have no further ideas how to produce an error in the callback
             // This will raise an error, not a cb error
-            // TODO: OVERRIDE ARFUMENTS CALLBACK?
             args.push(null);
             args.push(null);
           }

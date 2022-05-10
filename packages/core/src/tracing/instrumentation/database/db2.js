@@ -24,20 +24,9 @@ exports.init = function init() {
  * https://github.com/ibmdb/node-ibm_db/blob/master/APIDocumentation.md
  *
  * DB2 is a C++ implementation with a JS interface.
- *
  * https://github.com/ibmdb/node-ibm_db/blob/master/src/odbc_connection.cpp
- * The C++ implementation odbc_connection offers the following fn's, which are interesting for us:
- *  createStatement, createStatementSync, query, querySync
- *
  * https://github.com/ibmdb/node-ibm_db/blob/master/src/odbc_statement.cpp
- * The C++ implementation odbc_statemente offers the following fn's, which are interesting for us:
- *  execute, executeSync, executeDirect, executeDirectSync, executeNonQuery,
- *  prepare, prepareSync
- *
  * https://github.com/ibmdb/node-ibm_db/blob/master/lib/odbc.js
- * JS interface offers the following fn's, which are interesting for us:
- * query, querySync
- * prepare, execute, fetch, fetchAll (+ sync variants)
  *
  * queryStream works out of the box, because they use `queryResult` internally
  * https://github.com/ibmdb/node-ibm_db/blob/master/lib/odbc.js#L1068
@@ -56,6 +45,12 @@ function instrument(db2) {
 
   shimmer.wrap(db2.Database.prototype, 'prepare', instrumentPrepare);
   shimmer.wrap(db2.Database.prototype, 'prepareSync', instrumentPrepareSync);
+}
+
+function skipInstrumentation() {
+  // CASE: instrumentation is disabled
+  // CASE: db call is disabled via suppress header
+  return !isActive || cls.tracingSuppressed() || !cls.isTracing();
 }
 
 function instrumentOpen(originalFunction) {
@@ -77,10 +72,8 @@ function instrumentQueryResultSync(originalFunction) {
   };
 }
 
-function instrumentQueryResultHelper(ctx, originalArgs, originalFunction, stmt, isAsync = false) {
-  // CASE: instrumentation is disabled
-  // CASE: db call is disabled via suppress header
-  if (!isActive || cls.tracingSuppressed() || !cls.isTracing()) {
+function instrumentQueryResultHelper(ctx, originalArgs, originalFunction, stmt, isAsync) {
+  if (skipInstrumentation()) {
     return originalFunction.apply(ctx, originalArgs);
   }
 
@@ -173,14 +166,12 @@ function instrumentQuery(originalFunction) {
 
 function instrumentQuerySync(originalFunction) {
   return function (stmt) {
-    return instrumentQueryHelper(this, arguments, originalFunction, stmt);
+    return instrumentQueryHelper(this, arguments, originalFunction, stmt, false);
   };
 }
 
-function instrumentQueryHelper(ctx, originalArgs, originalFunction, stmt, isAsync = false) {
-  // CASE: instrumentation is disabled
-  // CASE: db call is disabled via suppress header
-  if (!isActive || cls.tracingSuppressed() || !cls.isTracing()) {
+function instrumentQueryHelper(ctx, originalArgs, originalFunction, stmt, isAsync) {
+  if (skipInstrumentation()) {
     return originalFunction.apply(ctx, originalArgs);
   }
 
@@ -404,9 +395,7 @@ function instrumentPrepare(originalFunction) {
     const ctx = this;
     const originalArgs = arguments;
 
-    // CASE: instrumentation is disabled
-    // CASE: db call is disabled via suppress header
-    if (!isActive || cls.tracingSuppressed() || !cls.isTracing()) {
+    if (skipInstrumentation()) {
       return originalFunction.apply(ctx, originalArgs);
     }
 
@@ -434,9 +423,7 @@ function instrumentPrepareSync(originalFunction) {
     const ctx = this;
     const originalArgs = arguments;
 
-    // CASE: instrumentation is disabled
-    // CASE: db call is disabled via suppress header
-    if (!isActive || cls.tracingSuppressed() || !cls.isTracing()) {
+    if (skipInstrumentation()) {
       return originalFunction.apply(ctx, originalArgs);
     }
 
@@ -532,7 +519,8 @@ function captureFetchError(result, span) {
   if (result.fetchSync) {
     const originalFetchSync = result.fetchSync;
 
-    // TODO: discuss if okay
+    // TODO: discuss if okay, background: it is really hard to test the error cases
+    //       we attach the original libary fn to override it in our app.js
     if (process.env.INSTANA_ATTACH_FETCH_SYNC) {
       result.originalFetchSync = originalFetchSync;
     }

@@ -11,7 +11,8 @@ const testUtils = require('../../../../../core/test/test_util');
 const ProcessControls = require('../../../test_util/ProcessControls');
 const globalAgent = require('../../../globalAgent');
 
-const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
+const mochaSuiteFn = supportedVersion(process.versions.node) ? describe.only : describe.skip;
+const DB_LOCAL_CONN_STR = 'DATABASE=nodedb;HOSTNAME=localhost;UID=node;PWD=nodepw;PORT=58885;PROTOCOL=TCPIP';
 
 const verifySpans = (agentControls, controls, options = {}) => {
   return agentControls.getSpans().then(spans => {
@@ -43,11 +44,7 @@ const verifySpans = (agentControls, controls, options = {}) => {
       span => expect(span.f.e).to.equal(String(controls.getPid())),
       span => expect(span.f.h).to.equal('agent-stub-uuid'),
       span => expect(span.data.db2.stmt).to.equal(options.stmt || 'select 1 from sysibm.sysdummy1'),
-      span =>
-        expect(span.data.db2.dsn).to.equal(
-          process.env.DB2_CONNECTION_STR ||
-            'DATABASE=nodedb;HOSTNAME=localhost;UID=node;PWD=nodepw;PORT=58885;PROTOCOL=TCPIP'
-        ),
+      span => expect(span.data.db2.dsn).to.equal(process.env.DB2_CONNECTION_STR || DB_LOCAL_CONN_STR),
       span => expect(span.async).to.not.exist,
       span =>
         options.error
@@ -380,11 +377,7 @@ mochaSuiteFn('tracing/db2', function () {
                       expect(span.data.db2.stmt).to.equal(
                         'insert into shoes (COLINT, COLDATETIME, COLTEXT) VALUES (?, ?, ?)'
                       ),
-                    span =>
-                      expect(span.data.db2.dsn).to.equal(
-                        process.env.DB2_CONNECTION_STR ||
-                          'DATABASE=nodedb;HOSTNAME=localhost;UID=node;PWD=nodepw;PORT=58885;PROTOCOL=TCPIP'
-                      ),
+                    span => expect(span.data.db2.dsn).to.equal(process.env.DB2_CONNECTION_STR || DB_LOCAL_CONN_STR),
                     span => expect(span.async).to.not.exist,
                     span => expect(span.data.db2.error).to.not.exist,
                     span => expect(span.ec).to.equal(0)
@@ -417,11 +410,7 @@ mochaSuiteFn('tracing/db2', function () {
                   span => expect(span.f.e).to.equal(String(controls.getPid())),
                   span => expect(span.f.h).to.equal('agent-stub-uuid'),
                   span => expect(span.data.db2.stmt).to.equal("insert into shoes values (3, null, 'something')"),
-                  span =>
-                    expect(span.data.db2.dsn).to.equal(
-                      process.env.DB2_CONNECTION_STR ||
-                        'DATABASE=nodedb;HOSTNAME=localhost;UID=node;PWD=nodepw;PORT=58885;PROTOCOL=TCPIP'
-                    ),
+                  span => expect(span.data.db2.dsn).to.equal(process.env.DB2_CONNECTION_STR || DB_LOCAL_CONN_STR),
                   span => expect(span.async).to.not.exist,
                   span => expect(span.data.db2.error).to.not.exist,
                   span => expect(span.ec).to.equal(0)
