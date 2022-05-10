@@ -26,9 +26,9 @@
   "scripts": {
     "audit": "npm audit --production",
     "install": "node node-gyp-fallback.js",
-    "test": "mocha --sort test/auto_profiler.test.js $(find test -iname '*test.js' -not -path '*node_modules*')",
+    "test": "mocha --config=test/.mocharc.js --sort test/auto_profiler.test.js $(find test -iname '*test.js' -not -path '*node_modules*')",
     "test:debug": "WITH_STDOUT=true npm run test",
-    "test:ci": "echo \"******* Files to be tested:\n $CI_AUTOPROFILE_TEST_FILES\" && if [ -z \"${CI_AUTOPROFILE_TEST_FILES}\" ]; then echo \"No Files to test in this node\"; else mocha --reporter mocha-multi-reporters --reporter-options configFile=reporter-config.json --sort test/auto_profiler.test.js ${CI_AUTOPROFILE_TEST_FILES}; fi",
+    "test:ci": "echo \"******* Files to be tested:\n $CI_AUTOPROFILE_TEST_FILES\" && if [ -z \"${CI_AUTOPROFILE_TEST_FILES}\" ]; then echo \"No Files to test in this node\"; else mocha --config=test/.mocharc.js --reporter mocha-multi-reporters --reporter-options configFile=reporter-config.json --sort test/auto_profiler.test.js ${CI_AUTOPROFILE_TEST_FILES}; fi",
     "lint": "eslint lib test",
     "verify": "npm run lint && npm test",
     "prettier": "prettier --write 'lib/**/*.js' 'test/**/*.js'"
