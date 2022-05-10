@@ -47,7 +47,7 @@ function instrument(db2) {
   shimmer.wrap(db2.Database.prototype, 'prepareSync', instrumentPrepareSync);
 }
 
-function skipInstrumentation() {
+function skipTracing() {
   // CASE: instrumentation is disabled
   // CASE: db call is disabled via suppress header
   return !isActive || cls.tracingSuppressed() || !cls.isTracing();
@@ -55,6 +55,8 @@ function skipInstrumentation() {
 
 function instrumentOpen(originalFunction) {
   return function instanaInstrumentationOpen() {
+    // NOTE: connection.open(fn) will throw an error in the library
+    //       we can rely on arguments[0] being the connection string
     connectionStr = arguments[0];
     return originalFunction.apply(this, arguments);
   };
@@ -73,7 +75,7 @@ function instrumentQueryResultSync(originalFunction) {
 }
 
 function instrumentQueryResultHelper(ctx, originalArgs, originalFunction, stmt, isAsync) {
-  if (skipInstrumentation()) {
+  if (skipTracing()) {
     return originalFunction.apply(ctx, originalArgs);
   }
 
@@ -85,15 +87,7 @@ function instrumentQueryResultHelper(ctx, originalArgs, originalFunction, stmt, 
   }
 
   return cls.ns.runAndReturn(() => {
-    // eslint-disable-next-line max-len
-    // https://github.ibm.com/instana/backend/blob/develop/forge/src/main/java/com/instana/forge/connection/database/ibmdb2/IbmDb2Span.java
-    const span = cls.startSpan(exports.spanName, constants.EXIT);
-    span.stack = tracingUtil.getStackTrace(instrumentQuery);
-    span.d = Date.now() - span.ts;
-    span.data.db2 = {
-      stmt: tracingUtil.shortenDatabaseStatement(stmt),
-      dsn: connectionStr
-    };
+    const span = createSpan(stmt, instrumentQueryResultHelper);
 
     if (!isAsync) {
       try {
@@ -171,7 +165,7 @@ function instrumentQuerySync(originalFunction) {
 }
 
 function instrumentQueryHelper(ctx, originalArgs, originalFunction, stmt, isAsync) {
-  if (skipInstrumentation()) {
+  if (skipTracing()) {
     return originalFunction.apply(ctx, originalArgs);
   }
 
@@ -183,15 +177,7 @@ function instrumentQueryHelper(ctx, originalArgs, originalFunction, stmt, isAsyn
   }
 
   return cls.ns.runAndReturn(() => {
-    // eslint-disable-next-line max-len
-    // https://github.ibm.com/instana/backend/blob/develop/forge/src/main/java/com/instana/forge/connection/database/ibmdb2/IbmDb2Span.java
-    const span = cls.startSpan(exports.spanName, constants.EXIT);
-    span.d = Date.now() - span.ts;
-    span.stack = tracingUtil.getStackTrace(instrumentQuery);
-    span.data.db2 = {
-      stmt: tracingUtil.shortenDatabaseStatement(stmt),
-      dsn: connectionStr
-    };
+    const span = createSpan(stmt, instrumentQueryHelper);
 
     // CASE: e.g. querySync
     if (!isAsync) {
@@ -299,13 +285,7 @@ function instrumentExecuteHelper(ctx, originalArgs, stmtObject, parentSpan) {
     return cls.ns.runAndReturn(() => {
       cls.setCurrentSpan(parentSpan);
 
-      const span = cls.startSpan(exports.spanName, constants.EXIT);
-      span.d = Date.now() - span.ts;
-      span.stack = tracingUtil.getStackTrace(instrumentExecuteHelper);
-      span.data.db2 = {
-        stmt: tracingUtil.shortenDatabaseStatement(originalArgs[0]),
-        dsn: connectionStr
-      };
+      const span = createSpan(originalArgs[0], instrumentExecuteHelper);
 
       // NOTE: returns row count
       try {
@@ -327,13 +307,7 @@ function instrumentExecuteHelper(ctx, originalArgs, stmtObject, parentSpan) {
       cls.setCurrentSpan(parentSpan);
 
       // NOTE: start one span per execute!
-      const span = cls.startSpan(exports.spanName, constants.EXIT);
-      span.d = Date.now() - span.ts;
-      span.stack = tracingUtil.getStackTrace(instrumentExecuteHelper);
-      span.data.db2 = {
-        stmt: tracingUtil.shortenDatabaseStatement(originalArgs[0]),
-        dsn: connectionStr
-      };
+      const span = createSpan(originalArgs[0], instrumentExecuteHelper);
 
       const result = originalExecuteSync.apply(this, arguments);
       finishSpan(ctx, result, span);
@@ -351,13 +325,7 @@ function instrumentExecuteHelper(ctx, originalArgs, stmtObject, parentSpan) {
       cls.setCurrentSpan(parentSpan);
 
       // NOTE: start one span per execute!
-      const span = cls.startSpan(exports.spanName, constants.EXIT);
-      span.d = Date.now() - span.ts;
-      span.stack = tracingUtil.getStackTrace(instrumentExecuteHelper);
-      span.data.db2 = {
-        stmt: tracingUtil.shortenDatabaseStatement(originalArgs[0]),
-        dsn: connectionStr
-      };
+      const span = createSpan(originalArgs[0], instrumentExecuteHelper);
 
       const args = arguments;
       const origCallbackIndex =
@@ -395,7 +363,7 @@ function instrumentPrepare(originalFunction) {
     const ctx = this;
     const originalArgs = arguments;
 
-    if (skipInstrumentation()) {
+    if (skipTracing()) {
       return originalFunction.apply(ctx, originalArgs);
     }
 
@@ -423,7 +391,7 @@ function instrumentPrepareSync(originalFunction) {
     const ctx = this;
     const originalArgs = arguments;
 
-    if (skipInstrumentation()) {
+    if (skipTracing()) {
       return originalFunction.apply(ctx, originalArgs);
     }
 
@@ -568,6 +536,20 @@ function captureFetchError(result, span) {
       }
     };
   }
+}
+
+function createSpan(stmt, fn) {
+  // eslint-disable-next-line max-len
+  // https://github.ibm.com/instana/backend/blob/develop/forge/src/main/java/com/instana/forge/connection/database/ibmdb2/IbmDb2Span.java
+  const span = cls.startSpan(exports.spanName, constants.EXIT);
+  span.stack = tracingUtil.getStackTrace(fn);
+  span.d = Date.now() - span.ts;
+  span.data.db2 = {
+    stmt: tracingUtil.shortenDatabaseStatement(stmt),
+    dsn: tracingUtil.sanitizeConnectionStr(connectionStr)
+  };
+
+  return span;
 }
 
 function finishSpan(ctx, result, span) {

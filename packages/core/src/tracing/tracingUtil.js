@@ -177,6 +177,19 @@ exports.shortenDatabaseStatement = function shortenDatabaseStatement(stmt) {
 };
 
 /**
+ * @param {string} connectionStr
+ * @returns {string}
+ */
+exports.sanitizeConnectionStr = function sanitizeConnectionStr(connectionStr) {
+  if (connectionStr == null || typeof connectionStr !== 'string') {
+    return undefined;
+  }
+
+  const replaced = connectionStr.replace(/PWD=.*?(?=;)/, 'PWD=REPLACED');
+  return replaced;
+};
+
+/**
  * Iterates over all attributes of the given object and returns the first attribute for which the name matches the given
  * name in a case insensitive fashion, or null if no such attribute exists.
  *
