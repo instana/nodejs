@@ -21,6 +21,20 @@ let connStr = 'DATABASE=nodedb;HOSTNAME=localhost;UID=node;PWD=nodepw;PORT=58885
  * Extractor type "machine" does not work, because we already using "docker" type, see
  * https://circleci.com/docs/2.0/executor-types/.
  * We've decided to use the IBM DB2 cloud service.
+ *
+ * Example connection string for circleci ENV:
+ * DATABASE=bludb;HOSTNAME=*.databases.appdomain.cloud;UID=msv01866;PWD=xxx;PORT=31198;PROTOCOL=TCPIP;SECURITY=SSL
+ *
+ * database, hostname and port:
+ *   - Go to https://cloud.ibm.com/resources. Click on your instance.
+ *   - Click "Go to UI"
+ *   - Click on the right panel on "administration".
+ *
+ * username and password:
+ *   - Go to https://cloud.ibm.com/resources. Click on your instance.
+ *   - Click on service credential
+ *   - Create service credential
+ *   - Copy User & Pws from the JSON
  */
 if (process.env.CI) {
   connStr = process.env.DB2_CONNECTION_STR;
