@@ -14,7 +14,8 @@ const ibmdb = require('ibm_db');
 const app = express();
 const port = process.env.APP_PORT || 3322;
 const logPrefix = `DB2 App (${process.pid}):\t`;
-let connStr = 'DATABASE=nodedb;HOSTNAME=localhost;UID=node;PWD=nodepw;PORT=58885;PROTOCOL=TCPIP';
+const DB2_NAME = process.env.DB2_NAME;
+let connStr = 'HOSTNAME=localhost;UID=node;PWD=nodepw;PORT=58885;PROTOCOL=TCPIP';
 
 /**
  * We are unable to start a DB2 container on circleci, because db2 needs privileged permissions.
@@ -48,10 +49,32 @@ let connection;
  */
 let tries = 0;
 const MAX_TRIES = 30;
+
 const connect = () => {
+  // NOTE: I cannot create a database with docker ATM
+  // See https://github.com/ibmdb/node-ibm_db/issues/848
+  if (process.env.CI) {
+    console.log(`creating database: ${DB2_NAME} ${connStr}`);
+
+    try {
+      ibmdb.createDbSync(DB2_NAME, connStr);
+      console.log(`created database: ${DB2_NAME}`);
+    } catch (createDbErr) {
+      if (tries > MAX_TRIES) {
+        throw createDbErr;
+      }
+
+      tries += 1;
+      return setTimeout(() => {
+        console.log('Trying again...');
+        connect();
+      }, 1000);
+    }
+  }
+
   console.log(`trying to connect: ${tries}`);
 
-  ibmdb.open(connStr, function (err, conn) {
+  ibmdb.open(`${connStr};DATABASE=${DB2_NAME}`, function (err, conn) {
     if (err) {
       console.log(err);
 
@@ -89,6 +112,14 @@ app.get('/', (req, res) => {
   } else {
     res.sendStatus(200);
   }
+});
+
+app.delete('/db', (req, res) => {
+  console.log(`deleting database ${DB2_NAME}`);
+  ibmdb.dropDbSync(DB2_NAME, connStr);
+  console.log(`deleted database ${DB2_NAME}`);
+
+  res.sendStatus(200);
 });
 
 app.get('/query-promise', (req, res) => {

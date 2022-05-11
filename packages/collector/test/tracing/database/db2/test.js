@@ -10,11 +10,27 @@ const testUtils = require('../../../../../core/test/test_util');
 const ProcessControls = require('../../../test_util/ProcessControls');
 const globalAgent = require('../../../globalAgent');
 
-const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
-const DB_LOCAL_CONN_STR = 'DATABASE=nodedb;HOSTNAME=localhost;UID=node;PWD=REPLACED;PORT=58885;PROTOCOL=TCPIP';
+const mochaSuiteFn = supportedVersion(process.versions.node) ? describe.only : describe.skip;
+const DB_LOCAL_CONN_STR = 'HOSTNAME=localhost;UID=node;PWD=REPLACED;PORT=58885;PROTOCOL=TCPIP';
 const DB_REMOTE_CONN_STR = process.env.CI
   ? process.env.DB2_CONNECTION_STR.replace(/PWD=.*?(?=;)/, 'PWD=REPLACED')
   : null;
+
+const CONN_STR = DB_REMOTE_CONN_STR || DB_LOCAL_CONN_STR;
+let DB2_NAME;
+
+// NOTE: DB2 has a limitation of 8 chars
+const createDatabaseName = () => {
+  const randomStr = Array(8)
+    .fill('abcdefghijklmnopqrstuvwxyz')
+    .map(function (x) {
+      return x[Math.floor(Math.random() * x.length)];
+    })
+    .join('');
+
+  if (process.env.CI) return randomStr;
+  return 'nodedb';
+};
 
 const verifySpans = (agentControls, controls, options = {}) => {
   return agentControls.getSpans().then(spans => {
@@ -46,7 +62,7 @@ const verifySpans = (agentControls, controls, options = {}) => {
       span => expect(span.f.e).to.equal(String(controls.getPid())),
       span => expect(span.f.h).to.equal('agent-stub-uuid'),
       span => expect(span.data.db2.stmt).to.equal(options.stmt || 'select 1 from sysibm.sysdummy1'),
-      span => expect(span.data.db2.dsn).to.equal(DB_REMOTE_CONN_STR || DB_LOCAL_CONN_STR),
+      span => expect(span.data.db2.dsn).to.equal(`${CONN_STR};DATABASE=${DB2_NAME}`),
       span => expect(span.async).to.not.exist,
       span =>
         options.error
@@ -63,13 +79,15 @@ mochaSuiteFn('tracing/db2', function () {
 
   globalAgent.setUpCleanUpHooks();
   const agentControls = globalAgent.instance;
+  DB2_NAME = createDatabaseName();
 
   let controls = new ProcessControls({
     dirname: __dirname,
     port: 3322,
     useGlobalAgent: true,
     env: {
-      INSTANA_ATTACH_FETCH_SYNC: true
+      INSTANA_ATTACH_FETCH_SYNC: true,
+      DB2_NAME
     }
   });
 
@@ -78,7 +96,15 @@ mochaSuiteFn('tracing/db2', function () {
   before(async () => {
     await controls.startAndWaitForAgentConnection(timeout);
   });
+
   after(async () => {
+    if (process.env.CI) {
+      await controls.sendRequest({
+        method: 'DELETE',
+        path: '/db'
+      });
+    }
+
     await controls.stop();
   });
 
@@ -379,7 +405,7 @@ mochaSuiteFn('tracing/db2', function () {
                       expect(span.data.db2.stmt).to.equal(
                         'insert into shoes (COLINT, COLDATETIME, COLTEXT) VALUES (?, ?, ?)'
                       ),
-                    span => expect(span.data.db2.dsn).to.equal(DB_REMOTE_CONN_STR || DB_LOCAL_CONN_STR),
+                    span => expect(span.data.db2.dsn).to.equal(`${CONN_STR};DATABASE=${DB2_NAME}`),
                     span => expect(span.async).to.not.exist,
                     span => expect(span.data.db2.error).to.not.exist,
                     span => expect(span.ec).to.equal(0)
@@ -412,7 +438,7 @@ mochaSuiteFn('tracing/db2', function () {
                   span => expect(span.f.e).to.equal(String(controls.getPid())),
                   span => expect(span.f.h).to.equal('agent-stub-uuid'),
                   span => expect(span.data.db2.stmt).to.equal("insert into shoes values (3, null, 'something')"),
-                  span => expect(span.data.db2.dsn).to.equal(DB_REMOTE_CONN_STR || DB_LOCAL_CONN_STR),
+                  span => expect(span.data.db2.dsn).to.equal(`${CONN_STR};DATABASE=${DB2_NAME}`),
                   span => expect(span.async).to.not.exist,
                   span => expect(span.data.db2.error).to.not.exist,
                   span => expect(span.ec).to.equal(0)
@@ -1002,13 +1028,16 @@ mochaSuiteFn('tracing/db2', function () {
     before(async () => {
       await controls.stop();
 
+      DB2_NAME = createDatabaseName();
+
       controls = new ProcessControls({
         dirname: __dirname,
         port: 3322,
         useGlobalAgent: true,
         tracingEnabled: false,
         env: {
-          INSTANA_ATTACH_FETCH_SYNC: true
+          INSTANA_ATTACH_FETCH_SYNC: true,
+          DB2_NAME
         }
       });
 
@@ -1016,6 +1045,13 @@ mochaSuiteFn('tracing/db2', function () {
     });
 
     after(async () => {
+      if (process.env.CI) {
+        await controls.sendRequest({
+          method: 'DELETE',
+          path: '/db'
+        });
+      }
+
       await controls.stop();
     });
 

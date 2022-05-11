@@ -150,8 +150,20 @@ services:
     ports:
       - 58885:50000
     environment:
-      - LICENSE=accept
+      - PERSISTENT_HOME=true
       - DBNAME=nodedb
+      - BLU=false
+      - HADR_ENABLED=false
+      - ENABLE_ORACLE_COMPATIBILITY=false
+      - UPDATEAVAIL=NO
+      - SAMPLEDB=false
+      - REPODB=false
+      - IS_OSXFS=false
+      - LICENSE=accept
       - DB2INSTANCE=node
       - DB2INST1_PASSWORD=nodepw
+      - DB2_CREATE_DB_ON_PATH=true
       - STARTUP_MODE=restoreIfNotExists
+    volumes: 
+       - ./db2/database:/database
+       - ./db2/db2_data:/db2_data

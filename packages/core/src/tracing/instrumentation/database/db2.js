@@ -74,60 +74,6 @@ function instrumentQueryResultSync(originalFunction) {
   };
 }
 
-function instrumentQueryResultHelper(ctx, originalArgs, originalFunction, stmt, isAsync) {
-  if (skipTracing()) {
-    return originalFunction.apply(ctx, originalArgs);
-  }
-
-  const parentSpan = cls.getCurrentSpan();
-
-  // CASE: There can be only one exit span, skip
-  if (constants.isExitSpan(parentSpan)) {
-    return originalFunction.apply(ctx, originalArgs);
-  }
-
-  return cls.ns.runAndReturn(() => {
-    const span = createSpan(stmt, instrumentQueryResultHelper);
-
-    if (!isAsync) {
-      try {
-        const result = originalFunction.apply(ctx, originalArgs);
-        finishSpan(ctx, result, span);
-        return result;
-      } catch (err) {
-        span.ec = 1;
-        span.data.db2.error = tracingUtil.getErrorDetails(err);
-        finishSpan(ctx, null, span);
-        return err;
-      }
-    }
-
-    const customerCallbackIndex =
-      // eslint-disable-next-line no-nested-ternary
-      originalArgs.length === 2 && typeof originalArgs[1] === 'function'
-        ? 1
-        : originalArgs.length === 3 && typeof originalArgs[2] === 'function'
-        ? 2
-        : null;
-    const customerCallback = originalArgs[customerCallbackIndex];
-
-    if (customerCallback) {
-      originalArgs[customerCallbackIndex] = function instanaCallback(err) {
-        if (err) {
-          span.ec = 1;
-          span.data.db2.error = tracingUtil.getErrorDetails(err);
-        }
-
-        const result = customerCallback.apply(this, arguments);
-        finishSpan(ctx, result, span);
-        return result;
-      };
-
-      return originalFunction.apply(ctx, originalArgs);
-    }
-  });
-}
-
 /**
  * We are losing the parentSpan because of the C++ implementation of `beginTransaction`.
  * We were unable to figure out why the context get's lost.
@@ -161,196 +107,6 @@ function instrumentQuery(originalFunction) {
 function instrumentQuerySync(originalFunction) {
   return function (stmt) {
     return instrumentQueryHelper(this, arguments, originalFunction, stmt, false);
-  };
-}
-
-function instrumentQueryHelper(ctx, originalArgs, originalFunction, stmt, isAsync) {
-  if (skipTracing()) {
-    return originalFunction.apply(ctx, originalArgs);
-  }
-
-  const parentSpan = cls.getCurrentSpan();
-
-  // CASE: There can be only one exit span, skip
-  if (constants.isExitSpan(parentSpan)) {
-    return originalFunction.apply(ctx, originalArgs);
-  }
-
-  return cls.ns.runAndReturn(() => {
-    const span = createSpan(stmt, instrumentQueryHelper);
-
-    // CASE: e.g. querySync
-    if (!isAsync) {
-      let result;
-      let err;
-
-      try {
-        result = originalFunction.apply(ctx, originalArgs);
-
-        if (result instanceof Error) {
-          err = result;
-        }
-      } catch (e) {
-        err = e;
-      }
-
-      if (err) {
-        span.ec = 1;
-        span.data.db2.error = tracingUtil.getErrorDetails(err);
-      }
-
-      finishSpan(ctx, result, span);
-
-      if (err) {
-        throw err;
-      }
-
-      return result;
-    }
-
-    const customerCallbackIndex =
-      // eslint-disable-next-line no-nested-ternary
-      originalArgs.length === 2 && typeof originalArgs[1] === 'function'
-        ? 1
-        : originalArgs.length === 3 && typeof originalArgs[2] === 'function'
-        ? 2
-        : null;
-    const customerCallback = originalArgs[customerCallbackIndex];
-
-    if (customerCallback) {
-      originalArgs[customerCallbackIndex] = function instanaCallback(err) {
-        if (err) {
-          span.ec = 1;
-          span.data.db2.error = tracingUtil.getErrorDetails(err);
-        }
-
-        finishSpan(ctx, null, span);
-
-        if (customerCallback) {
-          return customerCallback.apply(this, arguments);
-        }
-      };
-
-      return originalFunction.apply(ctx, originalArgs);
-    }
-
-    const resultPromise = originalFunction.apply(ctx, originalArgs);
-
-    resultPromise
-      .then(result => {
-        finishSpan(ctx, result, span);
-        return result;
-      })
-      .catch(err => {
-        span.ec = 1;
-        span.data.db2.error = tracingUtil.getErrorDetails(err);
-        finishSpan(ctx, null, span);
-        return err;
-      });
-
-    return resultPromise;
-  });
-}
-
-function handleTransaction(ctx, span) {
-  const originalEndTransaction = ctx.conn.endTransaction;
-  const originalEndTransactionSync = ctx.conn.endTransactionSync;
-
-  // NOTE: This is an internal fn to avoid instrumenting commit, rollback separately
-  ctx.conn.endTransaction = function instanaEndTransaction(rollback) {
-    if (rollback) {
-      span.cancel();
-    } else {
-      span.transmit();
-    }
-
-    return originalEndTransaction.apply(this, arguments);
-  };
-
-  ctx.conn.endTransactionSync = function instanaEndTransactionSync(rollback) {
-    if (rollback) {
-      span.cancel();
-    } else {
-      span.transmit();
-    }
-
-    return originalEndTransactionSync.apply(this, arguments);
-  };
-}
-
-function instrumentExecuteHelper(ctx, originalArgs, stmtObject, parentSpan) {
-  const originalExecuteNonQuerySync = stmtObject.executeNonQuerySync;
-
-  stmtObject.executeNonQuerySync = function instanaExecuteNonQuerySync() {
-    return cls.ns.runAndReturn(() => {
-      cls.setCurrentSpan(parentSpan);
-
-      const span = createSpan(originalArgs[0], instrumentExecuteHelper);
-
-      // NOTE: returns row count
-      try {
-        const result = originalExecuteNonQuerySync.apply(this, arguments);
-        finishSpan(ctx, result, span);
-        return result;
-      } catch (err) {
-        span.ec = 1;
-        span.data.db2.error = tracingUtil.getErrorDetails(err);
-        finishSpan(ctx, null, span);
-        return err;
-      }
-    });
-  };
-
-  const originalExecuteSync = stmtObject.executeSync;
-  stmtObject.executeSync = function instanaExecuteSync() {
-    return cls.ns.runAndReturn(() => {
-      cls.setCurrentSpan(parentSpan);
-
-      // NOTE: start one span per execute!
-      const span = createSpan(originalArgs[0], instrumentExecuteHelper);
-
-      const result = originalExecuteSync.apply(this, arguments);
-      finishSpan(ctx, result, span);
-      return result;
-    });
-  };
-
-  const originalExecute = stmtObject.execute;
-
-  stmtObject.execute = function instanaExecute() {
-    return cls.ns.runAndReturn(() => {
-      // NOTE: We have to set the initial http parent span here
-      //       because we start the context (runAndReturn) in execute and not in prepare.
-      //       If the customer calls execute twice, we'd loose parent span otherwise.
-      cls.setCurrentSpan(parentSpan);
-
-      // NOTE: start one span per execute!
-      const span = createSpan(originalArgs[0], instrumentExecuteHelper);
-
-      const args = arguments;
-      const origCallbackIndex =
-        // eslint-disable-next-line no-nested-ternary
-        args.length === 1 && typeof args[0] === 'function'
-          ? 0
-          : args.length === 2 && typeof args[1] === 'function'
-          ? 1
-          : null;
-      const origCallback = args[origCallbackIndex];
-
-      args[origCallbackIndex] = function instanaExecuteCallback(executeErr, result) {
-        if (executeErr) {
-          span.ec = 1;
-          span.data.db2.error = tracingUtil.getErrorDetails(executeErr);
-          finishSpan(ctx, null, span);
-          return origCallback.apply(this, arguments);
-        }
-
-        finishSpan(ctx, result, span);
-        return origCallback.apply(this, arguments);
-      };
-
-      return originalExecute.apply(this, arguments);
-    });
   };
 }
 
@@ -412,6 +168,12 @@ function instrumentPrepareSync(originalFunction) {
     return stmtObject;
   };
 }
+
+/**
+ * ##############################
+ * ##### HELPERS
+ * ##############################
+ */
 
 function captureFetchError(result, span) {
   if (!result) return;
@@ -538,6 +300,212 @@ function captureFetchError(result, span) {
   }
 }
 
+function instrumentQueryHelper(ctx, originalArgs, originalFunction, stmt, isAsync) {
+  if (skipTracing()) {
+    return originalFunction.apply(ctx, originalArgs);
+  }
+
+  const parentSpan = cls.getCurrentSpan();
+
+  // CASE: There can be only one exit span, skip
+  if (constants.isExitSpan(parentSpan)) {
+    return originalFunction.apply(ctx, originalArgs);
+  }
+
+  return cls.ns.runAndReturn(() => {
+    const span = createSpan(stmt, instrumentQueryHelper);
+
+    // CASE: querySync
+    if (!isAsync) {
+      try {
+        const result = originalFunction.apply(ctx, originalArgs);
+
+        if (result instanceof Error) {
+          span.ec = 1;
+          span.data.db2.error = tracingUtil.getErrorDetails(result);
+        }
+
+        finishSpan(ctx, result, span);
+        return result;
+      } catch (e) {
+        span.ec = 1;
+        span.data.db2.error = tracingUtil.getErrorDetails(e);
+        finishSpan(ctx, null, span);
+        throw e;
+      }
+    }
+
+    const customerCallbackIndex =
+      // eslint-disable-next-line no-nested-ternary
+      originalArgs.length === 2 && typeof originalArgs[1] === 'function'
+        ? 1
+        : originalArgs.length === 3 && typeof originalArgs[2] === 'function'
+        ? 2
+        : null;
+    const customerCallback = originalArgs[customerCallbackIndex];
+
+    if (customerCallback) {
+      originalArgs[customerCallbackIndex] = function instanaCallback(err) {
+        if (err) {
+          span.ec = 1;
+          span.data.db2.error = tracingUtil.getErrorDetails(err);
+        }
+
+        finishSpan(ctx, null, span);
+        return customerCallback.apply(this, arguments);
+      };
+
+      return originalFunction.apply(ctx, originalArgs);
+    }
+
+    const resultPromise = originalFunction.apply(ctx, originalArgs);
+
+    resultPromise
+      .then(result => {
+        finishSpan(ctx, result, span);
+        return result;
+      })
+      .catch(err => {
+        span.ec = 1;
+        span.data.db2.error = tracingUtil.getErrorDetails(err);
+        finishSpan(ctx, null, span);
+        return err;
+      });
+
+    return resultPromise;
+  });
+}
+
+function instrumentExecuteHelper(ctx, originalArgs, stmtObject, parentSpan) {
+  const originalExecuteNonQuerySync = stmtObject.executeNonQuerySync;
+
+  stmtObject.executeNonQuerySync = function instanaExecuteNonQuerySync() {
+    return cls.ns.runAndReturn(() => {
+      cls.setCurrentSpan(parentSpan);
+
+      const span = createSpan(originalArgs[0], instrumentExecuteHelper);
+
+      // NOTE: returns row count
+      try {
+        const result = originalExecuteNonQuerySync.apply(this, arguments);
+        finishSpan(ctx, result, span);
+        return result;
+      } catch (err) {
+        span.ec = 1;
+        span.data.db2.error = tracingUtil.getErrorDetails(err);
+        finishSpan(ctx, null, span);
+        return err;
+      }
+    });
+  };
+
+  const originalExecuteSync = stmtObject.executeSync;
+  stmtObject.executeSync = function instanaExecuteSync() {
+    return cls.ns.runAndReturn(() => {
+      cls.setCurrentSpan(parentSpan);
+
+      // NOTE: start one span per execute!
+      const span = createSpan(originalArgs[0], instrumentExecuteHelper);
+
+      const result = originalExecuteSync.apply(this, arguments);
+      finishSpan(ctx, result, span);
+      return result;
+    });
+  };
+
+  const originalExecute = stmtObject.execute;
+
+  stmtObject.execute = function instanaExecute() {
+    return cls.ns.runAndReturn(() => {
+      // NOTE: We have to set the initial http parent span here
+      //       because we start the context (runAndReturn) in execute and not in prepare.
+      //       If the customer calls execute twice, we'd loose parent span otherwise.
+      cls.setCurrentSpan(parentSpan);
+
+      // NOTE: start one span per execute!
+      const span = createSpan(originalArgs[0], instrumentExecuteHelper);
+
+      const args = arguments;
+      const origCallbackIndex =
+        // eslint-disable-next-line no-nested-ternary
+        args.length === 1 && typeof args[0] === 'function'
+          ? 0
+          : args.length === 2 && typeof args[1] === 'function'
+          ? 1
+          : null;
+      const origCallback = args[origCallbackIndex];
+
+      args[origCallbackIndex] = function instanaExecuteCallback(executeErr, result) {
+        if (executeErr) {
+          span.ec = 1;
+          span.data.db2.error = tracingUtil.getErrorDetails(executeErr);
+          finishSpan(ctx, null, span);
+          return origCallback.apply(this, arguments);
+        }
+
+        finishSpan(ctx, result, span);
+        return origCallback.apply(this, arguments);
+      };
+
+      return originalExecute.apply(this, arguments);
+    });
+  };
+}
+
+function instrumentQueryResultHelper(ctx, originalArgs, originalFunction, stmt, isAsync) {
+  if (skipTracing()) {
+    return originalFunction.apply(ctx, originalArgs);
+  }
+
+  const parentSpan = cls.getCurrentSpan();
+
+  // CASE: There can be only one exit span, skip
+  if (constants.isExitSpan(parentSpan)) {
+    return originalFunction.apply(ctx, originalArgs);
+  }
+
+  return cls.ns.runAndReturn(() => {
+    const span = createSpan(stmt, instrumentQueryResultHelper);
+
+    if (!isAsync) {
+      try {
+        const result = originalFunction.apply(ctx, originalArgs);
+        finishSpan(ctx, result, span);
+        return result;
+      } catch (err) {
+        span.ec = 1;
+        span.data.db2.error = tracingUtil.getErrorDetails(err);
+        finishSpan(ctx, null, span);
+        return err;
+      }
+    }
+
+    const customerCallbackIndex =
+      // eslint-disable-next-line no-nested-ternary
+      originalArgs.length === 2 && typeof originalArgs[1] === 'function'
+        ? 1
+        : originalArgs.length === 3 && typeof originalArgs[2] === 'function'
+        ? 2
+        : null;
+    const customerCallback = originalArgs[customerCallbackIndex];
+
+    if (customerCallback) {
+      originalArgs[customerCallbackIndex] = function instanaCallback(err) {
+        if (err) {
+          span.ec = 1;
+          span.data.db2.error = tracingUtil.getErrorDetails(err);
+        }
+
+        const result = customerCallback.apply(this, arguments);
+        finishSpan(ctx, result, span);
+        return result;
+      };
+
+      return originalFunction.apply(ctx, originalArgs);
+    }
+  });
+}
+
 function createSpan(stmt, fn) {
   // eslint-disable-next-line max-len
   // https://github.ibm.com/instana/backend/blob/develop/forge/src/main/java/com/instana/forge/connection/database/ibmdb2/IbmDb2Span.java
@@ -582,6 +550,32 @@ function finishSpan(ctx, result, span) {
   } else {
     internalFinishSpan();
   }
+}
+
+function handleTransaction(ctx, span) {
+  const originalEndTransaction = ctx.conn.endTransaction;
+  const originalEndTransactionSync = ctx.conn.endTransactionSync;
+
+  // NOTE: This is an internal fn to avoid instrumenting commit, rollback separately
+  ctx.conn.endTransaction = function instanaEndTransaction(rollback) {
+    if (rollback) {
+      span.cancel();
+    } else {
+      span.transmit();
+    }
+
+    return originalEndTransaction.apply(this, arguments);
+  };
+
+  ctx.conn.endTransactionSync = function instanaEndTransactionSync(rollback) {
+    if (rollback) {
+      span.cancel();
+    } else {
+      span.transmit();
+    }
+
+    return originalEndTransactionSync.apply(this, arguments);
+  };
 }
 
 exports.activate = function activate() {

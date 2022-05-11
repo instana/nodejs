@@ -5,3 +5,4 @@ nodejs-license-report.csv
 test-duration-breakdown
 .nyc_output
 coverage
+db2
