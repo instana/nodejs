@@ -12,6 +12,7 @@ const registry = {};
 
 /**
  * @typedef {Object} GenericLogger
+ * @property {(...args: *) => void} [trace]
  * @property {(...args: *) => void} debug
  * @property {(...args: *) => void} info
  * @property {(...args: *) => void} warn
