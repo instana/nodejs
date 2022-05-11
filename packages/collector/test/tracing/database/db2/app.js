@@ -60,6 +60,7 @@ const connect = () => {
       ibmdb.createDbSync(DB2_NAME, connStr);
       console.log(`created database: ${DB2_NAME}`);
     } catch (createDbErr) {
+      console.log(createDbErr);
       if (tries > MAX_TRIES) {
         throw createDbErr;
       }
