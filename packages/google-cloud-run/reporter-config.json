@@ -1,5 +1,5 @@
 {
-  "reporterEnabled": "spec, mocha-junit-reporter",
+  "reporterEnabled": "spec, mocha-junit-reporter, ../core/test/test_util/retryReporter.js",
   "mochaJunitReporterReporterOptions": {
     "mochaFile": "../../test-results/google-cloud-run/results.xml"
   }
