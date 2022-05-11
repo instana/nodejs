@@ -9,7 +9,6 @@ require('../../../../')();
 /* eslint-disable no-console */
 const bodyParser = require('body-parser');
 const express = require('express');
-const os = require('os');
 const fs = require('fs');
 const morgan = require('morgan');
 const ibmdb = require('ibm_db');
@@ -543,11 +542,12 @@ app.get('/execute-file-sync', (req, res) => {
   let content = fs.readFileSync(`${__dirname}/resources/${filename}`, 'utf8');
   content = content.replace(/{TABLE_NAME}/g, DB2_TABLE_NAME_3);
 
-  const tmpdir = os.tmpdir();
-  fs.writeFileSync(`${tmpdir}_${filename}`, content);
+  const newFilePath = `${__dirname}/resources/${filename}_r`;
+  fs.writeFileSync(newFilePath, content);
 
   try {
-    const rows = connection.executeFileSync(`${tmpdir}_${filename}`, delimiter);
+    const rows = connection.executeFileSync(newFilePath, delimiter);
+    fs.unlinkSync(newFilePath);
 
     if (rows instanceof Error) {
       return res.status(500).send({ err: rows.message });
@@ -555,6 +555,8 @@ app.get('/execute-file-sync', (req, res) => {
 
     res.status(200).send({ data: rows });
   } catch (err) {
+    fs.unlinkSync(newFilePath);
+
     res.status(500).send({ err: err.message });
   }
 });
@@ -567,10 +569,12 @@ app.get('/execute-file-async', (req, res) => {
   let content = fs.readFileSync(`${__dirname}/resources/${filename}`, 'utf8');
   content = content.replace(/{TABLE_NAME}/g, DB2_TABLE_NAME_3);
 
-  const tmpdir = os.tmpdir();
-  fs.writeFileSync(`${tmpdir}_${filename}`, content);
+  const newFilePath = `${__dirname}/resources/${filename}_r`;
+  fs.writeFileSync(newFilePath, content);
 
-  connection.executeFile(`${tmpdir}_${filename}`, delimiter, function (err, data) {
+  connection.executeFile(newFilePath, delimiter, function (err, data) {
+    fs.unlinkSync(newFilePath);
+
     if (err) {
       return res.status(500).send({ err: err.message });
     }
