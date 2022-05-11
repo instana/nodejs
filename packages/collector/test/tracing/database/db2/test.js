@@ -18,9 +18,16 @@ const DB_REMOTE_CONN_STR = process.env.CI
 
 const CONN_STR = DB_REMOTE_CONN_STR || DB_LOCAL_CONN_STR;
 let DB2_NAME;
+let TABLE_NAME_1;
+let TABLE_NAME_2;
+let TABLE_NAME_3;
 
 // NOTE: DB2 has a limitation of 8 chars
-const createDatabaseName = () => {
+const getDatabaseName = () => {
+  return 'nodedb';
+};
+
+const generateTableName = () => {
   const randomStr = Array(8)
     .fill('abcdefghijklmnopqrstuvwxyz')
     .map(function (x) {
@@ -28,8 +35,7 @@ const createDatabaseName = () => {
     })
     .join('');
 
-  if (process.env.CI) return randomStr;
-  return 'nodedb';
+  return randomStr;
 };
 
 const verifySpans = (agentControls, controls, options = {}) => {
@@ -79,36 +85,32 @@ mochaSuiteFn('tracing/db2', function () {
 
   globalAgent.setUpCleanUpHooks();
   const agentControls = globalAgent.instance;
-  DB2_NAME = createDatabaseName();
-
-  let controls = new ProcessControls({
-    dirname: __dirname,
-    port: 3322,
-    useGlobalAgent: true,
-    env: {
-      INSTANA_ATTACH_FETCH_SYNC: true,
-      DB2_NAME
-    }
-  });
-
-  ProcessControls.setUpTestCaseCleanUpHooks(controls);
-
-  before(async () => {
-    await controls.startAndWaitForAgentConnection(timeout);
-  });
-
-  after(async () => {
-    if (process.env.CI) {
-      await controls.sendRequest({
-        method: 'DELETE',
-        path: '/db'
-      });
-    }
-
-    await controls.stop();
-  });
+  let controls;
 
   describe('tracing is active', function () {
+    before(async () => {
+      DB2_NAME = getDatabaseName();
+      TABLE_NAME_1 = generateTableName();
+      TABLE_NAME_2 = generateTableName();
+      TABLE_NAME_3 = generateTableName();
+
+      controls = new ProcessControls({
+        dirname: __dirname,
+        port: 3322,
+        useGlobalAgent: true,
+        env: {
+          INSTANA_ATTACH_FETCH_SYNC: true,
+          DB2_NAME,
+          DB2_TABLE_NAME_1: TABLE_NAME_1,
+          DB2_TABLE_NAME_2: TABLE_NAME_2,
+          DB2_TABLE_NAME_3: TABLE_NAME_3
+        }
+      });
+
+      ProcessControls.setUpTestCaseCleanUpHooks(controls);
+      await controls.startAndWaitForAgentConnection();
+    });
+
     it('must trace query promise', function () {
       return controls
         .sendRequest({
@@ -236,7 +238,7 @@ mochaSuiteFn('tracing/db2', function () {
         .then(() => {
           return testUtils.retry(() => {
             return verifySpans(agentControls, controls, {
-              stmt: 'insert into shoes(COLINT, COLDATETIME, COLTEXT) VALUES (42, null, null)'
+              stmt: `insert into ${TABLE_NAME_1}(COLINT, COLDATETIME, COLTEXT) VALUES (42, null, null)`
             });
           });
         });
@@ -251,7 +253,7 @@ mochaSuiteFn('tracing/db2', function () {
         .then(() => {
           return testUtils.retry(() => {
             return verifySpans(agentControls, controls, {
-              stmt: 'insert into shoes(COLINT, COLDATETIME, COLTEXT) VALUES (42, null, null)',
+              stmt: `insert into ${TABLE_NAME_1}(COLINT, COLDATETIME, COLTEXT) VALUES (42, null, null)`,
               expectNoDb2Span: true
             });
           });
@@ -267,7 +269,7 @@ mochaSuiteFn('tracing/db2', function () {
         .then(() => {
           return testUtils.retry(() => {
             return verifySpans(agentControls, controls, {
-              stmt: 'insert into shoes(COLINT, COLDATETIME, COLTEXT) VALUES (42, null, null)'
+              stmt: `insert into ${TABLE_NAME_1}(COLINT, COLDATETIME, COLTEXT) VALUES (42, null, null)`
             });
           });
         });
@@ -282,7 +284,7 @@ mochaSuiteFn('tracing/db2', function () {
         .then(() => {
           return testUtils.retry(() => {
             return verifySpans(agentControls, controls, {
-              stmt: 'insert into shoes(COLINT, COLDATETIME, COLTEXT) VALUES (42, null, null)',
+              stmt: `insert into ${TABLE_NAME_1}(COLINT, COLDATETIME, COLTEXT) VALUES (42, null, null)`,
               expectNoDb2Span: true
             });
           });
@@ -298,7 +300,7 @@ mochaSuiteFn('tracing/db2', function () {
         .then(() => {
           return testUtils.retry(() => {
             return verifySpans(agentControls, controls, {
-              stmt: 'insert into shoes(COLINT, COLDATETIME, COLTEXT) VALUES (42, null, null)'
+              stmt: `insert into ${TABLE_NAME_1}(COLINT, COLDATETIME, COLTEXT) VALUES (42, null, null)`
             });
           });
         });
@@ -313,7 +315,7 @@ mochaSuiteFn('tracing/db2', function () {
         .then(() => {
           return testUtils.retry(() => {
             return verifySpans(agentControls, controls, {
-              stmt: 'insert into shoes(COLINT, COLDATETIME, COLTEXT) VALUES (42, null, null)',
+              stmt: `insert into ${TABLE_NAME_1}(COLINT, COLDATETIME, COLTEXT) VALUES (42, null, null)`,
               expectNoDb2Span: true
             });
           });
@@ -329,7 +331,7 @@ mochaSuiteFn('tracing/db2', function () {
         .then(() => {
           return testUtils.retry(() => {
             return verifySpans(agentControls, controls, {
-              stmt: 'insert into shoes(COLINT, COLDATETIME, COLTEXT) VALUES (42, null, null)'
+              stmt: `insert into ${TABLE_NAME_1}(COLINT, COLDATETIME, COLTEXT) VALUES (42, null, null)`
             });
           });
         });
@@ -344,7 +346,7 @@ mochaSuiteFn('tracing/db2', function () {
         .then(() => {
           return testUtils.retry(() => {
             return verifySpans(agentControls, controls, {
-              stmt: 'insert into shoes(COLINT, COLDATETIME, COLTEXT) VALUES (42, null, null)',
+              stmt: `insert into ${TABLE_NAME_1}(COLINT, COLDATETIME, COLTEXT) VALUES (42, null, null)`,
               expectNoDb2Span: true
             });
           });
@@ -360,7 +362,7 @@ mochaSuiteFn('tracing/db2', function () {
         .then(() => {
           return testUtils.retry(() => {
             return verifySpans(agentControls, controls, {
-              stmt: 'insert into shoes (COLINT, COLDATETIME, COLTEXT) VALUES (?, ?, ?)'
+              stmt: `insert into ${TABLE_NAME_1} (COLINT, COLDATETIME, COLTEXT) VALUES (?, ?, ?)`
             });
           });
         });
@@ -375,7 +377,7 @@ mochaSuiteFn('tracing/db2', function () {
         .then(() => {
           return testUtils.retry(() => {
             return verifySpans(agentControls, controls, {
-              stmt: 'insert into shoes (COLINT, COLDATETIME, COLTEXT) VALUES (?, ?, ?)'
+              stmt: `insert into ${TABLE_NAME_1} (COLINT, COLDATETIME, COLTEXT) VALUES (?, ?, ?)`
             });
           });
         });
@@ -403,7 +405,7 @@ mochaSuiteFn('tracing/db2', function () {
                     span => expect(span.f.h).to.equal('agent-stub-uuid'),
                     span =>
                       expect(span.data.db2.stmt).to.equal(
-                        'insert into shoes (COLINT, COLDATETIME, COLTEXT) VALUES (?, ?, ?)'
+                        `insert into ${TABLE_NAME_1} (COLINT, COLDATETIME, COLTEXT) VALUES (?, ?, ?)`
                       ),
                     span => expect(span.data.db2.dsn).to.equal(`${CONN_STR};DATABASE=${DB2_NAME}`),
                     span => expect(span.async).to.not.exist,
@@ -427,7 +429,7 @@ mochaSuiteFn('tracing/db2', function () {
         .then(() => {
           return testUtils.retry(() => {
             return verifySpans(agentControls, controls, {
-              stmt: 'insert into shoes (COLINT, COLDATETIME, COLTEXT) VALUES (?, ?, ?)',
+              stmt: `insert into ${TABLE_NAME_1} (COLINT, COLDATETIME, COLTEXT) VALUES (?, ?, ?)`,
               spanLength: 3,
               verifyCustom: (entrySpan, spans) => {
                 testUtils.expectAtLeastOneMatching(spans, [
@@ -437,7 +439,8 @@ mochaSuiteFn('tracing/db2', function () {
                   span => expect(span.k).to.equal(constants.EXIT),
                   span => expect(span.f.e).to.equal(String(controls.getPid())),
                   span => expect(span.f.h).to.equal('agent-stub-uuid'),
-                  span => expect(span.data.db2.stmt).to.equal("insert into shoes values (3, null, 'something')"),
+                  span =>
+                    expect(span.data.db2.stmt).to.equal(`insert into ${TABLE_NAME_1} values (3, null, 'something')`),
                   span => expect(span.data.db2.dsn).to.equal(`${CONN_STR};DATABASE=${DB2_NAME}`),
                   span => expect(span.async).to.not.exist,
                   span => expect(span.data.db2.error).to.not.exist,
@@ -458,7 +461,7 @@ mochaSuiteFn('tracing/db2', function () {
         .then(() => {
           return testUtils.retry(() => {
             return verifySpans(agentControls, controls, {
-              stmt: 'insert into shoes (COLINT, COLDATETIME, COLTEXT) VALUES (?, ?, ?)',
+              stmt: `insert into ${TABLE_NAME_1} (COLINT, COLDATETIME, COLTEXT) VALUES (?, ?, ?)`,
               error: 'Error: [IBM][CLI Driver][DB2/LINUXX8664] SQL0181N  The string representatio'
             });
           });
@@ -474,7 +477,7 @@ mochaSuiteFn('tracing/db2', function () {
         .then(() => {
           return testUtils.retry(() => {
             return verifySpans(agentControls, controls, {
-              stmt: 'insert into shoes (COLINT, COLDATETIME, COLTEXT) VALUES (?, ?, ?)',
+              stmt: `insert into ${TABLE_NAME_1} (COLINT, COLDATETIME, COLTEXT) VALUES (?, ?, ?)`,
               expectNoDb2Span: true
             });
           });
@@ -490,7 +493,7 @@ mochaSuiteFn('tracing/db2', function () {
         .then(() => {
           return testUtils.retry(() => {
             return verifySpans(agentControls, controls, {
-              stmt: 'SELECT * FROM shoes'
+              stmt: `SELECT * FROM ${TABLE_NAME_1}`
             });
           });
         });
@@ -524,12 +527,12 @@ mochaSuiteFn('tracing/db2', function () {
               spanLength: 7,
               verifyCustom: (entrySpan, spans) => {
                 const stmtsToExpect = [
-                  'drop table hits if exists',
-                  'create table hits (col1 varchar(40), col2 int)',
-                  'drop table hits',
-                  "insert into hits values ('something', 42)",
-                  "insert into hits values ('für', 43)",
-                  'select * from hits'
+                  `drop table ${TABLE_NAME_2} if exists`,
+                  `create table ${TABLE_NAME_2} (col1 varchar(40), col2 int)`,
+                  `drop table ${TABLE_NAME_2}`,
+                  `insert into ${TABLE_NAME_2} values ('something', 42)`,
+                  `insert into ${TABLE_NAME_2} values ('für', 43)`,
+                  `select * from ${TABLE_NAME_2}`
                 ];
 
                 stmtsToExpect.forEach(stmt => {
@@ -563,7 +566,7 @@ mochaSuiteFn('tracing/db2', function () {
         .then(() => {
           return testUtils.retry(() => {
             return verifySpans(agentControls, controls, {
-              stmt: 'insert into shoes(COLINT, COLDATETIME, COLTEXT) VALUES (?, ?, ?)'
+              stmt: `insert into ${TABLE_NAME_1}(COLINT, COLDATETIME, COLTEXT) VALUES (?, ?, ?)`
             });
           });
         });
@@ -578,7 +581,7 @@ mochaSuiteFn('tracing/db2', function () {
         .then(() => {
           return testUtils.retry(() => {
             return verifySpans(agentControls, controls, {
-              stmt: 'insert into shoes(COLINT, COLDATETIME, COLTEXT) VALUES (?, ?, ?)',
+              stmt: `insert into ${TABLE_NAME_1}(COLINT, COLDATETIME, COLTEXT) VALUES (?, ?, ?)`,
               error: 'Error: [IBM][CLI Driver] CLI0100E  Wrong number of parameters. SQLSTATE=07001'
             });
           });
@@ -594,7 +597,7 @@ mochaSuiteFn('tracing/db2', function () {
         .then(() => {
           return testUtils.retry(() => {
             return verifySpans(agentControls, controls, {
-              stmt: 'SELECT * FROM shoes'
+              stmt: `SELECT * FROM ${TABLE_NAME_1}`
             });
           });
         });
@@ -625,7 +628,7 @@ mochaSuiteFn('tracing/db2', function () {
         .then(() => {
           return testUtils.retry(() => {
             return verifySpans(agentControls, controls, {
-              stmt: 'SELECT * FROM shoes'
+              stmt: `SELECT * FROM ${TABLE_NAME_1}`
             });
           });
         });
@@ -640,7 +643,7 @@ mochaSuiteFn('tracing/db2', function () {
         .then(() => {
           return testUtils.retry(() => {
             return verifySpans(agentControls, controls, {
-              stmt: 'SELECT * FROM shoes'
+              stmt: `SELECT * FROM ${TABLE_NAME_1}`
             });
           });
         });
@@ -671,7 +674,7 @@ mochaSuiteFn('tracing/db2', function () {
         .then(() => {
           return testUtils.retry(() => {
             return verifySpans(agentControls, controls, {
-              stmt: 'SELECT * FROM shoes'
+              stmt: `SELECT * FROM ${TABLE_NAME_1}`
             });
           });
         });
@@ -687,7 +690,7 @@ mochaSuiteFn('tracing/db2', function () {
           return testUtils.retry(() => {
             return verifySpans(agentControls, controls, {
               spanLength: 2,
-              stmt: 'insert into shoes(COLINT, COLDATETIME, COLTEXT) VALUES (88, null, null)',
+              stmt: `insert into ${TABLE_NAME_1}(COLINT, COLDATETIME, COLTEXT) VALUES (88, null, null)`,
               error: 'Error: simulated error\n    at ODBCResult.result.originalFetchSync'
             });
           });
@@ -703,7 +706,7 @@ mochaSuiteFn('tracing/db2', function () {
         .then(() => {
           return testUtils.retry(() => {
             return verifySpans(agentControls, controls, {
-              stmt: 'SELECT * FROM shoes'
+              stmt: `SELECT * FROM ${TABLE_NAME_1}`
             });
           });
         });
@@ -718,7 +721,7 @@ mochaSuiteFn('tracing/db2', function () {
         .then(() => {
           return testUtils.retry(() => {
             return verifySpans(agentControls, controls, {
-              stmt: 'SELECT * FROM shoes'
+              stmt: `SELECT * FROM ${TABLE_NAME_1}`
             });
           });
         });
@@ -733,7 +736,7 @@ mochaSuiteFn('tracing/db2', function () {
         .then(() => {
           return testUtils.retry(() => {
             return verifySpans(agentControls, controls, {
-              stmt: 'insert into shoes (COLINT, COLDATETIME, COLTEXT) VALUES (?, ?, ?)'
+              stmt: `insert into ${TABLE_NAME_1} (COLINT, COLDATETIME, COLTEXT) VALUES (?, ?, ?)`
             });
           });
         });
@@ -751,16 +754,16 @@ mochaSuiteFn('tracing/db2', function () {
               spanLength: 11,
               verifyCustom: (entrySpan, spans) => {
                 const stmtsToExpect = [
-                  'create table sample(no integer,name varchar(10))',
-                  "insert into sample values(1,'pri')",
-                  "insert into sample values(2,'anbu')",
-                  'select * from sample',
-                  'drop table sample',
-                  'create table sample1(no integer)',
-                  'insert into sample1 values(1)',
-                  'insert into sample1 values(2)',
-                  'select * from sample1',
-                  'drop table sample1'
+                  `create table ${TABLE_NAME_3}(no integer,name varchar(10))`,
+                  `insert into ${TABLE_NAME_3} values(1,'pri')`,
+                  `insert into ${TABLE_NAME_3} values(2,'anbu')`,
+                  `select * from ${TABLE_NAME_3}`,
+                  `drop table ${TABLE_NAME_3}`,
+                  `create table ${TABLE_NAME_3}(no integer)`,
+                  `insert into ${TABLE_NAME_3} values(1)`,
+                  `insert into ${TABLE_NAME_3} values(2)`,
+                  `select * from ${TABLE_NAME_3}`,
+                  `drop table ${TABLE_NAME_3}`
                 ];
 
                 stmtsToExpect.forEach(stmt => {
@@ -797,16 +800,16 @@ mochaSuiteFn('tracing/db2', function () {
               spanLength: 11,
               verifyCustom: (entrySpan, spans) => {
                 const stmtsToExpect = [
-                  'create table sample(no integer,name varchar(10))',
-                  "\ninsert into sample values(1,'pri')",
-                  "\ninsert into sample values(2,'anbu')",
-                  '\nselect * from sample',
-                  '\ndrop table sample',
-                  '\ncreate table sample1(no integer)',
-                  '\ninsert into sample1 values(1)',
-                  '\ninsert into sample1 values(2)',
-                  '\nselect * from sample1',
-                  '\ndrop table sample1'
+                  `create table ${TABLE_NAME_3}(no integer,name varchar(10))`,
+                  `\ninsert into ${TABLE_NAME_3} values(1,'pri')`,
+                  `\ninsert into ${TABLE_NAME_3} values(2,'anbu')`,
+                  `\nselect * from ${TABLE_NAME_3}`,
+                  `\ndrop table ${TABLE_NAME_3}`,
+                  `\ncreate table ${TABLE_NAME_3}(no integer)`,
+                  `\ninsert into ${TABLE_NAME_3} values(1)`,
+                  `\ninsert into ${TABLE_NAME_3} values(2)`,
+                  `\nselect * from ${TABLE_NAME_3}`,
+                  `\ndrop table ${TABLE_NAME_3}`
                 ];
 
                 stmtsToExpect.forEach(stmt => {
@@ -843,16 +846,16 @@ mochaSuiteFn('tracing/db2', function () {
               spanLength: 11,
               verifyCustom: (entrySpan, spans) => {
                 const stmtsToExpect = [
-                  'create table sample(no integer,name varchar(10))',
-                  "insert into sample values(1,'pri')",
-                  "insert into sample values(2,'anbu')",
-                  'select * from sample',
-                  'drop table sample',
-                  'create table sample1(no integer)',
-                  'insert into sample1 values(1)',
-                  'insert into sample1 values(2)',
-                  'select * from sample1',
-                  'drop table sample1'
+                  `create table ${TABLE_NAME_3}(no integer,name varchar(10))`,
+                  `insert into ${TABLE_NAME_3} values(1,'pri')`,
+                  `insert into ${TABLE_NAME_3} values(2,'anbu')`,
+                  `select * from ${TABLE_NAME_3}`,
+                  `drop table ${TABLE_NAME_3}`,
+                  `create table ${TABLE_NAME_3}(no integer)`,
+                  `insert into ${TABLE_NAME_3} values(1)`,
+                  `insert into ${TABLE_NAME_3} values(2)`,
+                  `select * from ${TABLE_NAME_3}`,
+                  `drop table ${TABLE_NAME_3}`
                 ];
 
                 stmtsToExpect.forEach(stmt => {
@@ -901,7 +904,7 @@ mochaSuiteFn('tracing/db2', function () {
         .then(() => {
           return testUtils.retry(() => {
             return verifySpans(agentControls, controls, {
-              stmt: 'SELECT * FROM shoes'
+              stmt: `SELECT * FROM ${TABLE_NAME_1}`
             });
           });
         });
@@ -916,7 +919,7 @@ mochaSuiteFn('tracing/db2', function () {
         .then(() => {
           return testUtils.retry(() => {
             return verifySpans(agentControls, controls, {
-              stmt: 'SELECT * FROM shoes'
+              stmt: `SELECT * FROM ${TABLE_NAME_1}`
             });
           });
         });
@@ -931,7 +934,7 @@ mochaSuiteFn('tracing/db2', function () {
         .then(() => {
           return testUtils.retry(() => {
             return verifySpans(agentControls, controls, {
-              stmt: 'SELECT * FROM shoes'
+              stmt: `SELECT * FROM ${TABLE_NAME_1}`
             });
           });
         });
@@ -946,7 +949,7 @@ mochaSuiteFn('tracing/db2', function () {
         .then(() => {
           return testUtils.retry(() => {
             return verifySpans(agentControls, controls, {
-              stmt: 'SELECT * FROM shoes'
+              stmt: `SELECT * FROM ${TABLE_NAME_1}`
             });
           });
         });
@@ -1026,9 +1029,17 @@ mochaSuiteFn('tracing/db2', function () {
 
   describe('tracing disabled', function () {
     before(async () => {
+      await controls.sendRequest({
+        method: 'DELETE',
+        path: '/conn'
+      });
+
       await controls.stop();
 
-      DB2_NAME = createDatabaseName();
+      DB2_NAME = getDatabaseName();
+      TABLE_NAME_1 = generateTableName();
+      TABLE_NAME_2 = generateTableName();
+      TABLE_NAME_3 = generateTableName();
 
       controls = new ProcessControls({
         dirname: __dirname,
@@ -1037,20 +1048,27 @@ mochaSuiteFn('tracing/db2', function () {
         tracingEnabled: false,
         env: {
           INSTANA_ATTACH_FETCH_SYNC: true,
-          DB2_NAME
+          DB2_NAME,
+          DB2_TABLE_NAME_1: TABLE_NAME_1,
+          DB2_TABLE_NAME_2: TABLE_NAME_2,
+          DB2_TABLE_NAME_3: TABLE_NAME_3
         }
       });
 
+      ProcessControls.setUpTestCaseCleanUpHooks(controls);
       await controls.startAndWaitForAgentConnection();
     });
 
     after(async () => {
-      if (process.env.CI) {
-        await controls.sendRequest({
-          method: 'DELETE',
-          path: '/db'
-        });
-      }
+      await controls.sendRequest({
+        method: 'DELETE',
+        path: '/tables'
+      });
+
+      await controls.sendRequest({
+        method: 'DELETE',
+        path: '/conn'
+      });
 
       await controls.stop();
     });

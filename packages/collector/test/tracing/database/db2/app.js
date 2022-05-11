@@ -9,6 +9,8 @@ require('../../../../')();
 /* eslint-disable no-console */
 const bodyParser = require('body-parser');
 const express = require('express');
+const os = require('os');
+const fs = require('fs');
 const morgan = require('morgan');
 const ibmdb = require('ibm_db');
 const app = express();
@@ -36,7 +38,17 @@ let connStr = 'HOSTNAME=localhost;UID=node;PWD=nodepw;PORT=58885;PROTOCOL=TCPIP'
  *   - Click on service credential
  *   - Create service credential
  *   - Copy User & Pws from the JSON
+ *
+ *
+ * We are unable to create databases.
+ * 1. locally with docker: https://github.com/ibmdb/node-ibm_db/issues/848
+ * 2. remote on circleci: SQL1092N  The requested command or operation failed
+ *                        because the user ID does not have the authority to perform
+ *                        the requested command or operation.  User ID: "MSV01866".
+ *
+ * That's why we use random names for tables.
  */
+
 if (process.env.CI) {
   connStr = process.env.DB2_CONNECTION_STR;
 }
@@ -47,32 +59,14 @@ let connection;
  * The docker compose db2 image takes a long time to
  * allow connections initially.
  */
+const DB2_TABLE_NAME_1 = process.env.DB2_TABLE_NAME_1;
+const DB2_TABLE_NAME_2 = process.env.DB2_TABLE_NAME_2;
+const DB2_TABLE_NAME_3 = process.env.DB2_TABLE_NAME_3;
+
 let tries = 0;
 const MAX_TRIES = 30;
 
 const connect = () => {
-  // NOTE: I cannot create a database with docker ATM
-  // See https://github.com/ibmdb/node-ibm_db/issues/848
-  if (process.env.CI) {
-    console.log(`creating database: ${DB2_NAME} ${connStr}`);
-
-    try {
-      ibmdb.createDbSync(DB2_NAME, connStr);
-      console.log(`created database: ${DB2_NAME}`);
-    } catch (createDbErr) {
-      console.log(createDbErr);
-      if (tries > MAX_TRIES) {
-        throw createDbErr;
-      }
-
-      tries += 1;
-      return setTimeout(() => {
-        console.log('Trying again...');
-        connect();
-      }, 1000);
-    }
-  }
-
   console.log(`trying to connect: ${tries}`);
 
   ibmdb.open(`${connStr};DATABASE=${DB2_NAME}`, function (err, conn) {
@@ -92,8 +86,8 @@ const connect = () => {
 
     console.log('Successfully connected.');
 
-    conn.querySync('drop table shoes');
-    conn.querySync('create table shoes(COLINT INTEGER, COLDATETIME TIMESTAMP, COLTEXT VARCHAR(255))');
+    conn.querySync(`drop table ${DB2_TABLE_NAME_1}`);
+    conn.querySync(`create table ${DB2_TABLE_NAME_1} (COLINT INTEGER, COLDATETIME TIMESTAMP, COLTEXT VARCHAR(255))`);
 
     connection = conn;
   });
@@ -115,10 +109,30 @@ app.get('/', (req, res) => {
   }
 });
 
+app.delete('/conn', (req, res) => {
+  console.log('deleting conn');
+  connection.closeSync();
+  console.log('deleted conn');
+
+  res.sendStatus(200);
+});
+
 app.delete('/db', (req, res) => {
   console.log(`deleting database ${DB2_NAME}`);
   ibmdb.dropDbSync(DB2_NAME, connStr);
   console.log(`deleted database ${DB2_NAME}`);
+
+  res.sendStatus(200);
+});
+
+app.delete('/tables', (req, res) => {
+  console.log('deleting tables...');
+
+  connection.querySync(`drop table ${DB2_TABLE_NAME_1}`);
+  connection.querySync(`drop table ${DB2_TABLE_NAME_2}`);
+  connection.querySync(`drop table ${DB2_TABLE_NAME_3}`);
+
+  console.log('deleted tables');
 
   res.sendStatus(200);
 });
@@ -229,7 +243,7 @@ app.get('/query-sync', (req, res) => {
 app.get('/transaction-sync', (req, res) => {
   const commit = req.query.commit || false;
   const type = req.query.type || 'async';
-  const stmt = 'insert into shoes(COLINT, COLDATETIME, COLTEXT) VALUES (42, null, null)';
+  const stmt = `insert into ${DB2_TABLE_NAME_1}(COLINT, COLDATETIME, COLTEXT) VALUES (42, null, null)`;
 
   if (type === 'sync') {
     connection.beginTransactionSync();
@@ -259,7 +273,7 @@ app.get('/transaction-sync', (req, res) => {
 app.get('/transaction-async', (req, res) => {
   const commit = req.query.commit || false;
   const type = req.query.type || 'async';
-  const stmt = 'insert into shoes(COLINT, COLDATETIME, COLTEXT) VALUES (42, null, null)';
+  const stmt = `insert into ${DB2_TABLE_NAME_1}(COLINT, COLDATETIME, COLTEXT) VALUES (42, null, null)`;
 
   if (type === 'sync') {
     connection.beginTransactionSync();
@@ -294,7 +308,7 @@ app.get('/prepare-execute-async', (req, res) => {
   const reuse = req.query.reuse;
   const error = req.query.error;
   const extraQuery = req.query.extraQuery;
-  let stmt = 'insert into shoes (COLINT, COLDATETIME, COLTEXT) VALUES (?, ?, ?)';
+  let stmt = `insert into ${DB2_TABLE_NAME_1} (COLINT, COLDATETIME, COLTEXT) VALUES (?, ?, ?)`;
   const params = [2, null, 'Adidas'];
 
   if (error === 'execute') {
@@ -306,7 +320,7 @@ app.get('/prepare-execute-async', (req, res) => {
   }
 
   if (extraQuery) {
-    connection.querySync("insert into shoes values (3, null, 'something')");
+    connection.querySync(`insert into ${DB2_TABLE_NAME_1} values (3, null, 'something')`);
   }
 
   connection.prepare(stmt, (err, stmtObject) => {
@@ -334,7 +348,7 @@ app.get('/prepare-execute-async', (req, res) => {
 });
 
 app.get('/prepare-execute-transaction', (req, res) => {
-  const stmt = 'insert into shoes (COLINT, COLDATETIME, COLTEXT) VALUES (?, ?, ?)';
+  const stmt = `insert into ${DB2_TABLE_NAME_1} (COLINT, COLDATETIME, COLTEXT) VALUES (?, ?, ?)`;
   const params = [2, null, 'Adidas'];
 
   connection.beginTransaction(errTxn => {
@@ -357,7 +371,7 @@ app.get('/prepare-execute-transaction', (req, res) => {
 });
 
 app.get('/prepare-execute-fetch-async', (req, res) => {
-  const stmt = 'SELECT * FROM shoes';
+  const stmt = `SELECT * FROM ${DB2_TABLE_NAME_1}`;
   const error = req.query.error;
 
   connection.prepare(stmt, (err, stmtObject) => {
@@ -398,12 +412,12 @@ app.get('/prepare-execute-fetch-async', (req, res) => {
 
 app.get('/prepare-execute-fetch-sync', (req, res) => {
   try {
-    connection.querySync('drop table hits if exists');
-    connection.querySync('create table hits (col1 varchar(40), col2 int)');
-    connection.querySync("insert into hits values ('something', 42)");
-    connection.querySync("insert into hits values ('für', 43)");
+    connection.querySync(`drop table ${DB2_TABLE_NAME_2} if exists`);
+    connection.querySync(`create table ${DB2_TABLE_NAME_2} (col1 varchar(40), col2 int)`);
+    connection.querySync(`insert into ${DB2_TABLE_NAME_2} values ('something', 42)`);
+    connection.querySync(`insert into ${DB2_TABLE_NAME_2} values ('für', 43)`);
 
-    const stmt = connection.prepareSync('select * from hits');
+    const stmt = connection.prepareSync(`select * from ${DB2_TABLE_NAME_2}`);
     const result = stmt.executeSync();
 
     // NOTE: fetch row by row
@@ -415,7 +429,7 @@ app.get('/prepare-execute-fetch-sync', (req, res) => {
 
     result.closeSync();
 
-    connection.querySync('drop table hits');
+    connection.querySync(`drop table ${DB2_TABLE_NAME_2}`);
     res.status(200).send({ data });
   } catch (err) {
     res.status(500).send({ err: err.message });
@@ -426,10 +440,10 @@ app.get('/prepare-execute-mixed-1', (req, res) => {
   const error = req.query.error || false;
   const skipClose = req.query.skipClose;
   const fetchType = req.query.fetchType;
-  let stmt = 'SELECT * FROM shoes';
+  let stmt = `SELECT * FROM ${DB2_TABLE_NAME_1}`;
 
   if (error && error === 'fetchSync') {
-    stmt = 'insert into shoes(COLINT, COLDATETIME, COLTEXT) VALUES (88, null, null)';
+    stmt = `insert into ${DB2_TABLE_NAME_1}(COLINT, COLDATETIME, COLTEXT) VALUES (88, null, null)`;
   }
   let params = [];
 
@@ -507,7 +521,7 @@ app.get('/prepare-execute-mixed-2', (req, res) => {
   const skipClose = req.query.skipClose;
 
   try {
-    stmtObject = connection.prepareSync('SELECT * FROM shoes');
+    stmtObject = connection.prepareSync(`SELECT * FROM ${DB2_TABLE_NAME_1}`);
   } catch (err) {
     return res.status(500).send({ err: err.message });
   }
@@ -526,8 +540,14 @@ app.get('/execute-file-sync', (req, res) => {
   const filename = req.query.file || 'sample1.txt';
   const delimiter = req.query.file ? '%' : ';';
 
+  let content = fs.readFileSync(`${__dirname}/resources/${filename}`, 'utf8');
+  content = content.replace(/{TABLE_NAME}/g, DB2_TABLE_NAME_3);
+
+  const tmpdir = os.tmpdir();
+  fs.writeFileSync(`${tmpdir}_${filename}`, content);
+
   try {
-    const rows = connection.executeFileSync(`${__dirname}/resources/${filename}`, delimiter);
+    const rows = connection.executeFileSync(`${tmpdir}_${filename}`, delimiter);
 
     if (rows instanceof Error) {
       return res.status(500).send({ err: rows.message });
@@ -544,7 +564,13 @@ app.get('/execute-file-async', (req, res) => {
   const filename = req.query.file || 'sample1.txt';
   const delimiter = req.query.file ? '%' : ';';
 
-  connection.executeFile(`${__dirname}/resources/${filename}`, delimiter, function (err, data) {
+  let content = fs.readFileSync(`${__dirname}/resources/${filename}`, 'utf8');
+  content = content.replace(/{TABLE_NAME}/g, DB2_TABLE_NAME_3);
+
+  const tmpdir = os.tmpdir();
+  fs.writeFileSync(`${tmpdir}_${filename}`, content);
+
+  connection.executeFile(`${tmpdir}_${filename}`, delimiter, function (err, data) {
     if (err) {
       return res.status(500).send({ err: err.message });
     }
@@ -556,7 +582,9 @@ app.get('/execute-file-async', (req, res) => {
 app.get('/prepare-execute-non-query-sync', (req, res) => {
   const error = req.query.error;
 
-  const stmtObject = connection.prepareSync('insert into shoes(COLINT, COLDATETIME, COLTEXT) VALUES (?, ?, ?)');
+  const stmtObject = connection.prepareSync(
+    `insert into ${DB2_TABLE_NAME_1}(COLINT, COLDATETIME, COLTEXT) VALUES (?, ?, ?)`
+  );
   let params = [22, null, null];
 
   if (error) {
@@ -573,7 +601,7 @@ app.get('/prepare-execute-non-query-sync', (req, res) => {
 
 app.get('/query-result-async', (req, res) => {
   const txn = req.query.transaction;
-  const stmt = 'SELECT * FROM shoes';
+  const stmt = `SELECT * FROM ${DB2_TABLE_NAME_1}`;
 
   if (txn) {
     connection.beginTransactionSync();
@@ -601,7 +629,7 @@ app.get('/query-result-sync', (req, res) => {
   }
 
   try {
-    const stmt = 'SELECT * FROM shoes';
+    const stmt = `SELECT * FROM ${DB2_TABLE_NAME_1}`;
     const result = connection.queryResultSync(stmt);
 
     if (txn) {
