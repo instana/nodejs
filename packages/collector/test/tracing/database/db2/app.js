@@ -117,6 +117,7 @@ app.get('/', (req, res) => {
 app.delete('/conn', (req, res) => {
   console.log('deleting conn');
   connection.closeSync();
+  connection = null;
   console.log('deleted conn');
 
   res.sendStatus(200);
