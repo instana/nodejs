@@ -21,6 +21,7 @@ let DB2_NAME;
 let TABLE_NAME_1;
 let TABLE_NAME_2;
 let TABLE_NAME_3;
+const DELAY_TIMEOUT_IN_MS = 500;
 
 // NOTE: DB2 has a limitation of 8 chars
 const getDatabaseName = () => {
@@ -79,7 +80,7 @@ const verifySpans = (agentControls, controls, options = {}) => {
   });
 };
 
-mochaSuiteFn('tracing/db2', function () {
+mochaSuiteFn.only('tracing/db2', function () {
   const timeout = 30 * 1000;
   this.timeout(timeout);
 
@@ -1000,6 +1001,7 @@ mochaSuiteFn('tracing/db2', function () {
             'X-INSTANA-L': '0'
           }
         })
+        .then(() => testUtils.delay(DELAY_TIMEOUT_IN_MS))
         .then(() => {
           return testUtils.retry(() => {
             return verifySpans(agentControls, controls, {
@@ -1008,6 +1010,7 @@ mochaSuiteFn('tracing/db2', function () {
           });
         });
     });
+
     it('must not trace for prepareSync', function () {
       return controls
         .sendRequest({
@@ -1017,6 +1020,7 @@ mochaSuiteFn('tracing/db2', function () {
             'X-INSTANA-L': '0'
           }
         })
+        .then(() => testUtils.delay(DELAY_TIMEOUT_IN_MS))
         .then(() => {
           return testUtils.retry(() => {
             return verifySpans(agentControls, controls, {
@@ -1034,6 +1038,7 @@ mochaSuiteFn('tracing/db2', function () {
             'X-INSTANA-L': '0'
           }
         })
+        .then(() => testUtils.delay(DELAY_TIMEOUT_IN_MS))
         .then(() => {
           return testUtils.retry(() => {
             return verifySpans(agentControls, controls, {
@@ -1051,6 +1056,7 @@ mochaSuiteFn('tracing/db2', function () {
             'X-INSTANA-L': '0'
           }
         })
+        .then(() => testUtils.delay(DELAY_TIMEOUT_IN_MS))
         .then(() => {
           return testUtils.retry(() => {
             return verifySpans(agentControls, controls, {
@@ -1105,6 +1111,7 @@ mochaSuiteFn('tracing/db2', function () {
           method: 'GET',
           path: '/transaction-async'
         })
+        .then(() => testUtils.delay(DELAY_TIMEOUT_IN_MS))
         .then(() => {
           return testUtils.retry(() => {
             return verifySpans(agentControls, controls, {
