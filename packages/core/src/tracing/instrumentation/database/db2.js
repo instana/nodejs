@@ -476,8 +476,8 @@ function finishSpan(ctx, result, span) {
   }
 
   // NOTE: This signalises us the end of the trace
-  //       Because we want to capture errors in transaction or fetch calls
-  //       we want to wait for this call.
+  //       Because we want to capture errors till the customer finished the operation.
+  //       That's why we want to wait for this call. The ibm docs say, it's required to call it!
   if (result && result.closeSync) {
     const originalCloseSync = result.closeSync;
     let closeSyncCalled = false;
