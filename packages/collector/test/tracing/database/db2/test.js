@@ -10,7 +10,7 @@ const testUtils = require('../../../../../core/test/test_util');
 const ProcessControls = require('../../../test_util/ProcessControls');
 const globalAgent = require('../../../globalAgent');
 
-const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
+const mochaSuiteFn = supportedVersion(process.versions.node) ? describe.only : describe.skip;
 const DB_LOCAL_CONN_STR = 'HOSTNAME=localhost;UID=node;PWD=REPLACED;PORT=58885;PROTOCOL=TCPIP';
 const DB_REMOTE_CONN_STR = process.env.CI
   ? process.env.DB2_CONNECTION_STR.replace(/PWD=.*?(?=;)/, 'PWD=REPLACED')
@@ -99,7 +99,6 @@ mochaSuiteFn('tracing/db2', function () {
         port: 3322,
         useGlobalAgent: true,
         env: {
-          INSTANA_ATTACH_FETCH_SYNC: true,
           DB2_NAME,
           DB2_TABLE_NAME_1: TABLE_NAME_1,
           DB2_TABLE_NAME_2: TABLE_NAME_2,
@@ -109,6 +108,20 @@ mochaSuiteFn('tracing/db2', function () {
 
       ProcessControls.setUpTestCaseCleanUpHooks(controls);
       await controls.startAndWaitForAgentConnection();
+    });
+
+    after(async () => {
+      await controls.sendRequest({
+        method: 'DELETE',
+        path: '/tables'
+      });
+
+      await controls.sendRequest({
+        method: 'DELETE',
+        path: '/conn'
+      });
+
+      await controls.stop();
     });
 
     it('must trace query promise', function () {
@@ -500,6 +513,7 @@ mochaSuiteFn('tracing/db2', function () {
     });
 
     // TODO: wait for ibm resp
+    //       https://github.com/ibmdb/node-ibm_db/issues/846
     it.skip('[withError] prepare, execute, fetchAll', function () {
       return controls
         .sendRequest({
@@ -658,8 +672,8 @@ mochaSuiteFn('tracing/db2', function () {
         .then(() => {
           return testUtils.retry(() => {
             return verifySpans(agentControls, controls, {
-              expectNoDb2Span: true,
-              spanLength: 1
+              stmt: `SELECT * FROM ${TABLE_NAME_1}`,
+              spanLength: 2
             });
           });
         });
@@ -675,23 +689,6 @@ mochaSuiteFn('tracing/db2', function () {
           return testUtils.retry(() => {
             return verifySpans(agentControls, controls, {
               stmt: `SELECT * FROM ${TABLE_NAME_1}`
-            });
-          });
-        });
-    });
-
-    it('[with fetchSync and error] must trace prepare execute mixed 1', function () {
-      return controls
-        .sendRequest({
-          method: 'GET',
-          path: '/prepare-execute-mixed-1?fetchType=fetchSync&error=fetchSync'
-        })
-        .then(() => {
-          return testUtils.retry(() => {
-            return verifySpans(agentControls, controls, {
-              spanLength: 2,
-              stmt: `insert into ${TABLE_NAME_1}(COLINT, COLDATETIME, COLTEXT) VALUES (88, null, null)`,
-              error: 'Error: simulated error\n    at ODBCResult.result.originalFetchSync'
             });
           });
         });
@@ -957,6 +954,43 @@ mochaSuiteFn('tracing/db2', function () {
   });
 
   describe('tracing is active, but suppressed', function () {
+    before(async () => {
+      DB2_NAME = getDatabaseName();
+      TABLE_NAME_1 = generateTableName();
+      TABLE_NAME_2 = generateTableName();
+      TABLE_NAME_3 = generateTableName();
+
+      controls = new ProcessControls({
+        dirname: __dirname,
+        port: 3322,
+        useGlobalAgent: true,
+        tracingEnabled: false,
+        env: {
+          DB2_NAME,
+          DB2_TABLE_NAME_1: TABLE_NAME_1,
+          DB2_TABLE_NAME_2: TABLE_NAME_2,
+          DB2_TABLE_NAME_3: TABLE_NAME_3
+        }
+      });
+
+      ProcessControls.setUpTestCaseCleanUpHooks(controls);
+      await controls.startAndWaitForAgentConnection();
+    });
+
+    after(async () => {
+      await controls.sendRequest({
+        method: 'DELETE',
+        path: '/tables'
+      });
+
+      await controls.sendRequest({
+        method: 'DELETE',
+        path: '/conn'
+      });
+
+      await controls.stop();
+    });
+
     it('must not trace for query', function () {
       return controls
         .sendRequest({
@@ -1027,15 +1061,8 @@ mochaSuiteFn('tracing/db2', function () {
     });
   });
 
-  describe('tracing disabled', function () {
+  describe('tracing is disabled', function () {
     before(async () => {
-      await controls.sendRequest({
-        method: 'DELETE',
-        path: '/conn'
-      });
-
-      await controls.stop();
-
       DB2_NAME = getDatabaseName();
       TABLE_NAME_1 = generateTableName();
       TABLE_NAME_2 = generateTableName();
@@ -1047,7 +1074,6 @@ mochaSuiteFn('tracing/db2', function () {
         useGlobalAgent: true,
         tracingEnabled: false,
         env: {
-          INSTANA_ATTACH_FETCH_SYNC: true,
           DB2_NAME,
           DB2_TABLE_NAME_1: TABLE_NAME_1,
           DB2_TABLE_NAME_2: TABLE_NAME_2,
@@ -1055,22 +1081,22 @@ mochaSuiteFn('tracing/db2', function () {
         }
       });
 
+      after(async () => {
+        await controls.sendRequest({
+          method: 'DELETE',
+          path: '/tables'
+        });
+
+        await controls.sendRequest({
+          method: 'DELETE',
+          path: '/conn'
+        });
+
+        await controls.stop();
+      });
+
       ProcessControls.setUpTestCaseCleanUpHooks(controls);
       await controls.startAndWaitForAgentConnection();
-    });
-
-    after(async () => {
-      await controls.sendRequest({
-        method: 'DELETE',
-        path: '/tables'
-      });
-
-      await controls.sendRequest({
-        method: 'DELETE',
-        path: '/conn'
-      });
-
-      await controls.stop();
     });
 
     it('must not trace', function () {

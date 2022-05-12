@@ -56,7 +56,8 @@ function skipTracing() {
 function instrumentOpen(originalFunction) {
   return function instanaInstrumentationOpen() {
     // NOTE: connection.open(fn) will throw an error in the library
-    //       we can rely on arguments[0] being the connection string
+    //       we can rely on arguments[0] being the connection string.
+    //       There is no other format to pass in the connection.
     connectionStr = arguments[0];
     return originalFunction.apply(this, arguments);
   };
@@ -83,15 +84,18 @@ function instrumentQueryResultSync(originalFunction) {
  *
  * That's why we have to instrument `beginTransaction` and reactivate
  * the span.
+ *
+ * We do not loose the parentSpan if the customer uses "beginTransactionSync".
  */
 function instrumentBeginTransaction(originalFunction) {
-  return function instanaInstrumentationBeginTransaction(cb) {
+  return function instanaInstrumentBeginTransaction() {
     const parentSpan = cls.getCurrentSpan();
+    const originalCallback = arguments[0];
 
-    arguments[0] = cls.ns.bind(function instanaInstrumentationBeginTransactionCallback() {
+    arguments[0] = cls.ns.bind(function instanaInstrumentBeginTransactionCallback() {
       // NOTE: See function description
       cls.setCurrentSpan(parentSpan);
-      return cb.apply(this, arguments);
+      return originalCallback.apply(this, arguments);
     });
 
     return originalFunction.apply(this, arguments);
@@ -111,11 +115,11 @@ function instrumentQuerySync(originalFunction) {
 }
 
 /**
- * Main difference prepare and query:
+ * Main difference of prepare and a normal query call:
  * - you can call prepare once an re-use the statement (higher performance)
  */
 function instrumentPrepare(originalFunction) {
-  return function instanaPrepare() {
+  return function instanaInstrumentPrepare() {
     const ctx = this;
     const originalArgs = arguments;
 
@@ -130,20 +134,23 @@ function instrumentPrepare(originalFunction) {
       return originalFunction.apply(ctx, originalArgs);
     }
 
+    // NOTE: prepare(stmt, cb) is the only possible usage
+    // TODO: I have not used cls.ns.bind here, because we remember the parentSpan
+    //       anyway and runAndReturn is executed per "execute" call, which creates a new context.
     const originalCallback = originalArgs[1];
-    originalArgs[1] = cls.ns.bind(function instanaCallback(err, stmtObject) {
+    originalArgs[1] = function instanaPrepareCallback(err, stmtObject) {
       if (err) return originalCallback.apply(this, arguments);
 
       instrumentExecuteHelper(ctx, originalArgs, stmtObject, parentSpan);
       return originalCallback.apply(this, arguments);
-    });
+    };
 
     return originalFunction.apply(this, originalArgs);
   };
 }
 
 function instrumentPrepareSync(originalFunction) {
-  return function instanaPrepareSync() {
+  return function instanaInstrumentPrepareSync() {
     const ctx = this;
     const originalArgs = arguments;
 
@@ -175,129 +182,70 @@ function instrumentPrepareSync(originalFunction) {
  * ##############################
  */
 
+/**
+ * Goal of this function is to capture errors
+ * happing when the result is fetched from the database.
+ */
 function captureFetchError(result, span) {
   if (!result) return;
 
-  if (result.fetch) {
-    // NOTE: Goal is to recognise when an error occurs on fetch!
-    // NOTE: Customer does not have to call fetch!
-    const originalFetch = result.fetch;
-    result.fetch = function instanaFetch() {
-      const argsFetch = arguments;
-      const fetchIndex =
-        // eslint-disable-next-line no-nested-ternary
-        argsFetch.length === 1 && typeof argsFetch[0] === 'function'
-          ? 0
-          : argsFetch.length === 2 && typeof argsFetch[1] === 'function'
-          ? 1
-          : null;
-      const fetchCb = argsFetch[fetchIndex];
+  const asyncFns = ['fetch', 'fetchAll'];
+  const syncFns = ['fetchSync', 'fetchAllSync'];
 
-      argsFetch[fetchIndex] = function instanaFetchCb(fetchCbErr) {
-        if (fetchCbErr) {
-          span.ec = 1;
-          span.data.db2.error = tracingUtil.getErrorDetails(fetchCbErr);
-        }
+  asyncFns.forEach(fnName => {
+    if (result[fnName]) {
+      const originalFn = result[fnName];
 
-        return fetchCb.apply(this, arguments);
+      result[fnName] = function instanaFetchOverride() {
+        const argsFetch = arguments;
+        const fetchIndex =
+          // eslint-disable-next-line no-nested-ternary
+          argsFetch.length === 1 && typeof argsFetch[0] === 'function'
+            ? 0
+            : argsFetch.length === 2 && typeof argsFetch[1] === 'function'
+            ? 1
+            : null;
+        const fetchCb = argsFetch[fetchIndex];
+
+        argsFetch[fetchIndex] = function instanaFetchCb(fetchCbErr) {
+          if (fetchCbErr) {
+            span.ec = 1;
+            span.data.db2.error = tracingUtil.getErrorDetails(fetchCbErr);
+          }
+
+          return fetchCb.apply(this, arguments);
+        };
+
+        // NOTE: if the customer passes wrong arguments to the fetch fn
+        //       an error is thrown. We still want to keep the span
+        // TODO: Discuss if we want to cancel this span?
+        return originalFn.apply(this, arguments);
       };
-
-      try {
-        return originalFetch.apply(this, arguments);
-      } catch (e) {
-        // CASE: wrong arguments etc.
-        // TODO: Discuss if we want to trace this call or not.
-        // -> prepare success, execute success, fetch error because of wrong usage
-        span.cancel();
-        throw e;
-      }
-    };
-  }
-
-  if (result.fetchAll) {
-    const originalFetchAll = result.fetchAll;
-    result.fetchAll = function instanaFetchAll() {
-      const argsFetchAll = arguments;
-      const fetchAllIndex =
-        // eslint-disable-next-line no-nested-ternary
-        argsFetchAll.length === 1 && typeof argsFetchAll[0] === 'function'
-          ? 0
-          : argsFetchAll.length === 2 && typeof argsFetchAll[1] === 'function'
-          ? 1
-          : null;
-      const fetchAllCb = argsFetchAll[fetchAllIndex];
-
-      argsFetchAll[fetchAllIndex] = function instanaFetchCb(fetchAllCbErr) {
-        if (fetchAllCbErr) {
-          span.ec = 1;
-          span.data.db2.error = tracingUtil.getErrorDetails(fetchAllCbErr);
-        }
-
-        return fetchAllCb.apply(this, arguments);
-      };
-
-      try {
-        return originalFetchAll.apply(this, arguments);
-      } catch (e) {
-        // CASE: wrong arguments etc.
-        span.cancel();
-        throw e;
-      }
-    };
-  }
-
-  if (result.fetchSync) {
-    const originalFetchSync = result.fetchSync;
-
-    // TODO: discuss if okay, background: it is really hard to test the error cases
-    //       we attach the original libary fn to override it in our app.js
-    if (process.env.INSTANA_ATTACH_FETCH_SYNC) {
-      result.originalFetchSync = originalFetchSync;
     }
+  });
 
-    result.fetchSync = function instanaFetchSync() {
-      try {
-        let fn = originalFetchSync;
-        if (process.env.INSTANA_ATTACH_FETCH_SYNC) {
-          fn = result.originalFetchSync;
-        }
+  syncFns.forEach(fnName => {
+    if (result[fnName]) {
+      const originalFn = result[fnName];
 
-        const res = fn.apply(this, arguments);
+      result[fnName] = function instanaSyncOverride() {
+        try {
+          const res = originalFn.apply(this, arguments);
 
-        if (res instanceof Error) {
+          if (res instanceof Error) {
+            span.ec = 1;
+            span.data.db2.error = tracingUtil.getErrorDetails(res);
+          }
+          return res;
+        } catch (err) {
           span.ec = 1;
-          span.data.db2.error = tracingUtil.getErrorDetails(res);
+          span.data.db2.error = tracingUtil.getErrorDetails(err);
+
+          return err;
         }
-        return res;
-      } catch (err) {
-        span.ec = 1;
-        span.data.db2.error = tracingUtil.getErrorDetails(err);
-
-        return err;
-      }
-    };
-  }
-
-  if (result.fetchAllSync) {
-    const originalFetchAllSync = result.fetchAllSync;
-    result.fetchAllSync = function instanaFetchAllSync() {
-      try {
-        const res = originalFetchAllSync.apply(this, arguments);
-
-        if (res instanceof Error) {
-          span.ec = 1;
-          span.data.db2.error = tracingUtil.getErrorDetails(res);
-        }
-
-        return res;
-      } catch (err) {
-        span.ec = 1;
-        span.data.db2.error = tracingUtil.getErrorDetails(err);
-
-        return err;
-      }
-    };
-  }
+      };
+    }
+  });
 }
 
 function instrumentQueryHelper(ctx, originalArgs, originalFunction, stmt, isAsync) {
@@ -376,12 +324,12 @@ function instrumentQueryHelper(ctx, originalArgs, originalFunction, stmt, isAsyn
   });
 }
 
-function instrumentExecuteHelper(ctx, originalArgs, stmtObject, parentSpan) {
+function instrumentExecuteHelper(ctx, originalArgs, stmtObject, httpParentSpan) {
   const originalExecuteNonQuerySync = stmtObject.executeNonQuerySync;
 
   stmtObject.executeNonQuerySync = function instanaExecuteNonQuerySync() {
     return cls.ns.runAndReturn(() => {
-      cls.setCurrentSpan(parentSpan);
+      cls.setCurrentSpan(httpParentSpan);
 
       const span = createSpan(originalArgs[0], instrumentExecuteHelper);
 
@@ -402,7 +350,7 @@ function instrumentExecuteHelper(ctx, originalArgs, stmtObject, parentSpan) {
   const originalExecuteSync = stmtObject.executeSync;
   stmtObject.executeSync = function instanaExecuteSync() {
     return cls.ns.runAndReturn(() => {
-      cls.setCurrentSpan(parentSpan);
+      cls.setCurrentSpan(httpParentSpan);
 
       // NOTE: start one span per execute!
       const span = createSpan(originalArgs[0], instrumentExecuteHelper);
@@ -420,7 +368,7 @@ function instrumentExecuteHelper(ctx, originalArgs, stmtObject, parentSpan) {
       // NOTE: We have to set the initial http parent span here
       //       because we start the context (runAndReturn) in execute and not in prepare.
       //       If the customer calls execute twice, we'd loose parent span otherwise.
-      cls.setCurrentSpan(parentSpan);
+      cls.setCurrentSpan(httpParentSpan);
 
       // NOTE: start one span per execute!
       const span = createSpan(originalArgs[0], instrumentExecuteHelper);
@@ -524,31 +472,35 @@ function finishSpan(ctx, result, span) {
   captureFetchError(result, span);
 
   if (ctx.conn.inTransaction) {
-    handleTransaction(ctx, span);
+    return handleTransaction(ctx, span);
   }
 
-  const internalFinishSpan = () => {
-    if (!ctx.conn.inTransaction) span.transmit();
-  };
-
+  // NOTE: This signalises us the end of the trace
+  //       Because we want to capture errors in transaction or fetch calls
+  //       we want to wait for this call.
   if (result && result.closeSync) {
     const originalCloseSync = result.closeSync;
     let closeSyncCalled = false;
     result.closeSync = function instanaCloseSync() {
+      if (closeSyncCalled) return originalCloseSync.apply(this, arguments);
+
       closeSyncCalled = true;
-      internalFinishSpan();
+      span.transmit();
       return originalCloseSync.apply(this, arguments);
     };
 
-    // CASE: customer forgets to call `closeSync`
-    // TODO: discuss timeout length and in general
+    // CASE: customer forgets to call `result.closeSync`
+    //       search for result.closeSync() in:
+    //       https://github.com/ibmdb/node-ibm_db/blob/master/APIDocumentation.md
+    // TODO: discuss timeout length and the approach in general
     setTimeout(() => {
       if (!closeSyncCalled) {
-        internalFinishSpan();
+        closeSyncCalled = true;
+        span.transmit();
       }
     }, 500);
   } else {
-    internalFinishSpan();
+    span.transmit();
   }
 }
 

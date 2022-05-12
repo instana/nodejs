@@ -473,6 +473,7 @@ app.get('/prepare-execute-mixed-1', (req, res) => {
 
           if (error && error === 'fetch') {
             // This will raise an error, not a cb error
+            // NOTE: this case will not call "closeSync", which triggers the timeout in the db2 instrumentation
             args.push(null);
             args.push(null);
           }
@@ -486,24 +487,15 @@ app.get('/prepare-execute-mixed-1', (req, res) => {
           }
         });
       } else if (fetchType === 'fetchSync') {
-        if (error && error === 'fetchSync') {
-          result.originalFetchSync = function () {
-            return new Error('simulated error');
-          };
+        let data = 0;
 
-          result.fetchSync();
-          res.status(200).send({ data: {} });
-        } else {
-          let data = 0;
-
-          // eslint-disable-next-line no-cond-assign
-          while ((data = result.fetchSync({ fetchMode: 3 }))) {
-            // ignore
-          }
-
-          if (!skipClose) result.closeSync();
-          res.status(200).send({ data });
+        // eslint-disable-next-line no-cond-assign
+        while ((data = result.fetchSync({ fetchMode: 3 }))) {
+          // ignore
         }
+
+        if (!skipClose) result.closeSync();
+        res.status(200).send({ data });
       } else {
         if (!skipClose) result.closeSync();
 
