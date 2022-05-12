@@ -50,6 +50,9 @@ let connStr = 'HOSTNAME=localhost;UID=node;PWD=nodepw;PORT=58885;PROTOCOL=TCPIP'
 
 if (process.env.CI) {
   connStr = process.env.DB2_CONNECTION_STR;
+  if (!connStr) {
+    throw new Error('No connection string for IBM DB2, please make sure the environment variable DB2_CONNECTION_STR is set.');
+  }
 }
 
 let connection;
