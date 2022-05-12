@@ -51,7 +51,9 @@ let connStr = 'HOSTNAME=localhost;UID=node;PWD=nodepw;PORT=58885;PROTOCOL=TCPIP'
 if (process.env.CI) {
   connStr = process.env.DB2_CONNECTION_STR;
   if (!connStr) {
-    throw new Error('No connection string for IBM DB2, please make sure the environment variable DB2_CONNECTION_STR is set.');
+    throw new Error(
+      'No connection string for IBM DB2, please make sure the environment variable DB2_CONNECTION_STR is set.'
+    );
   }
 }
 
@@ -119,14 +121,6 @@ app.delete('/conn', (req, res) => {
   connection.closeSync();
   connection = null;
   console.log('deleted conn');
-
-  res.sendStatus(200);
-});
-
-app.delete('/db', (req, res) => {
-  console.log(`deleting database ${DB2_NAME}`);
-  ibmdb.dropDbSync(DB2_NAME, connStr);
-  console.log(`deleted database ${DB2_NAME}`);
 
   res.sendStatus(200);
 });
