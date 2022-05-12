@@ -54,16 +54,19 @@ if (process.env.CI) {
 
 let connection;
 
-/**
- * The docker compose db2 image takes a long time to
- * allow connections initially.
- */
 const DB2_TABLE_NAME_1 = process.env.DB2_TABLE_NAME_1;
 const DB2_TABLE_NAME_2 = process.env.DB2_TABLE_NAME_2;
 const DB2_TABLE_NAME_3 = process.env.DB2_TABLE_NAME_3;
 
+/**
+ * The docker compose db2 image takes a long time to
+ * allow connections initially.
+ *
+ * Furthermore the connection creation is sometimes slow too.
+ */
 let tries = 0;
-const MAX_TRIES = 30;
+const MAX_TRIES = 10;
+const CONNECT_TIMEOUT_IN_MS = 500;
 
 const connect = () => {
   console.log(`trying to connect: ${tries}`);
@@ -80,7 +83,7 @@ const connect = () => {
       return setTimeout(() => {
         console.log('Trying again...');
         connect();
-      }, 1000);
+      }, CONNECT_TIMEOUT_IN_MS);
     }
 
     console.log('Successfully connected.');

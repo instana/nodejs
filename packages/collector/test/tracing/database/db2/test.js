@@ -7,6 +7,7 @@
 const expect = require('chai').expect;
 const { supportedVersion, constants } = require('@instana/core').tracing;
 const testUtils = require('../../../../../core/test/test_util');
+const config = require('../../../../../core/test/config');
 const ProcessControls = require('../../../test_util/ProcessControls');
 const globalAgent = require('../../../globalAgent');
 
@@ -80,9 +81,10 @@ const verifySpans = (agentControls, controls, options = {}) => {
   });
 };
 
+// The db2 docke rcontainer needs a longer time to bootstrap. Please check the docker logs if
+// the container is already up.
 mochaSuiteFn('tracing/db2', function () {
-  const timeout = 30 * 1000;
-  this.timeout(timeout);
+  this.timeout(config.getTestTimeout());
 
   globalAgent.setUpCleanUpHooks();
   const agentControls = globalAgent.instance;
