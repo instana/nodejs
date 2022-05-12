@@ -208,7 +208,8 @@ app.get('/query-sync', (req, res) => {
     /**
      * There are two types of errors
      *
-     * 1. Not connected to the database, see https://github.com/ibmdb/node-ibm_db/blob/27bf53607793782e67acbb17b80434caf98a16d7/lib/odbc.js#L811-L814
+     * 1. Not connected to the database,
+     *    see https://github.com/ibmdb/node-ibm_db/blob/27bf53607793782e67acbb17b80434caf98a16d7/lib/odbc.js#L811-L814
      * 2. Invalid query
      */
     if (simulateErr === 'conn') {
