@@ -91,7 +91,7 @@ const connect = () => {
 
     console.log('Successfully connected.');
 
-    conn.querySync(`drop table ${DB2_TABLE_NAME_1}`);
+    conn.querySync(`drop table ${DB2_TABLE_NAME_1} if exists`);
     conn.querySync(`create table ${DB2_TABLE_NAME_1} (COLINT INTEGER, COLDATETIME TIMESTAMP, COLTEXT VARCHAR(255))`);
 
     connection = conn;
