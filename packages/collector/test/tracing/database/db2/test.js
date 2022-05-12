@@ -80,7 +80,7 @@ const verifySpans = (agentControls, controls, options = {}) => {
   });
 };
 
-mochaSuiteFn.only('tracing/db2', function () {
+mochaSuiteFn('tracing/db2', function () {
   const timeout = 30 * 1000;
   this.timeout(timeout);
 
