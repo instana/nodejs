@@ -312,11 +312,28 @@ app.get('/transaction-async', (req, res) => {
 });
 
 app.get('/prepare-on-start', function (req, res) {
-  stmtObjectFromStart.execute(function (err, result) {
-    if (err) return res.status(500).send({ err: err.message });
+  const skipClose = req.query.skipClose || false;
+  const sync = req.query.sync || false;
 
-    result.closeSync();
-    res.status(200).send({ data: result });
+  if (sync) {
+    const result3 = stmtObjectFromStart.executeSync();
+    result3.closeSync();
+    const result4 = stmtObjectFromStart.executeSync();
+    result4.closeSync();
+    res.status(200).send({ data: result4 });
+    return;
+  }
+
+  stmtObjectFromStart.execute(function (err1, result1) {
+    if (err1) return res.status(500).send({ err: err1.message });
+    if (!skipClose) result1.closeSync();
+
+    stmtObjectFromStart.execute(function (err2, result2) {
+      if (err2) return res.status(skipClose ? 200 : 500).send({ err: err2.message });
+
+      result2.closeSync();
+      res.status(200).send({ data: result2 });
+    });
   });
 });
 

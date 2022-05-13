@@ -332,17 +332,29 @@ function instrumentQueryHelper(ctx, originalArgs, originalFunction, stmt, isAsyn
 }
 
 function instrumentExecuteHelper(ctx, originalArgs, stmtObject, prepareCallParentSpan) {
-  const canPrepareTracing = () => {
-    // CASE: if prepareCallParentSpan is true, we skip checking `cls.isTracing`
-    //       because then the `execute` call has no context
-    if (skipTracing(!!prepareCallParentSpan)) {
-      return false;
-    }
+  let httpSpan;
 
+  const canPrepareTracing = () => {
+    // prepareCallParentSpan:
+    //   prepare call happens in http context, we need to remember it
+    //   cls.getCurrentSpan() is undefined in this case
     const parentSpan = cls.getCurrentSpan() || prepareCallParentSpan;
 
     // CASE: There can be only one exit span, skip
     if (constants.isExitSpan(parentSpan)) {
+      return false;
+    }
+
+    // NOTE: remember the http parent of the first execute call,
+    //       otherwise the next execute call looses the parent
+    if (!prepareCallParentSpan && parentSpan) {
+      httpSpan = parentSpan;
+    }
+
+    // console.log(skipTracing(!!prepareCallParentSpan));
+    // CASE: if prepareCallParentSpan is true, we skip checking `cls.isTracing`
+    //       because then the `execute` call has no context
+    if (skipTracing(!!prepareCallParentSpan || !parentSpan)) {
       return false;
     }
 
@@ -351,7 +363,7 @@ function instrumentExecuteHelper(ctx, originalArgs, stmtObject, prepareCallParen
      *        - execute is called twice, we'd loose the parent span
      *        - prepare call happens in http context, we need to remember it
      */
-    cls.setCurrentSpan(parentSpan);
+    cls.setCurrentSpan(httpSpan || parentSpan);
     return true;
   };
 

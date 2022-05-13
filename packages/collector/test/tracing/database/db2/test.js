@@ -378,7 +378,58 @@ mochaSuiteFn('tracing/db2', function () {
         .then(() => {
           return testUtils.retry(() => {
             return verifySpans(agentControls, controls, {
-              stmt: `SELECT * FROM ${TABLE_NAME_1}`
+              stmt: `SELECT * FROM ${TABLE_NAME_1}`,
+              spanLength: 3
+            });
+          });
+        });
+    });
+
+    it('[executeSync] must trace prepare on start', function () {
+      return controls
+        .sendRequest({
+          method: 'GET',
+          path: '/prepare-on-start?sync=true'
+        })
+        .then(() => {
+          return testUtils.retry(() => {
+            return verifySpans(agentControls, controls, {
+              stmt: `SELECT * FROM ${TABLE_NAME_1}`,
+              spanLength: 3
+            });
+          });
+        });
+    });
+
+    it('[skip close] must trace prepare on start', function () {
+      return controls
+        .sendRequest({
+          method: 'GET',
+          path: '/prepare-on-start?skipClose=true'
+        })
+        .then(() => {
+          return testUtils.retry(() => {
+            return verifySpans(agentControls, controls, {
+              stmt: `SELECT * FROM ${TABLE_NAME_1}`,
+              spanLength: 3,
+              verifyCustom: (entrySpan, spans) => {
+                testUtils.expectAtLeastOneMatching(spans, [
+                  span => expect(span.t).to.equal(entrySpan.t),
+                  span => expect(span.p).to.equal(entrySpan.s),
+                  span => expect(span.n).to.equal('db2'),
+                  span => expect(span.k).to.equal(constants.EXIT),
+                  span => expect(span.f.e).to.equal(String(controls.getPid())),
+                  span => expect(span.f.h).to.equal('agent-stub-uuid'),
+                  span => expect(span.data.db2.stmt).to.equal(`SELECT * FROM ${TABLE_NAME_1}`),
+                  span => expect(span.data.db2.dsn).to.equal(`${CONN_STR};DATABASE=${DB2_NAME}`),
+                  span => expect(span.async).to.not.exist,
+                  span =>
+                    expect(span.data.db2.error).to.eql(
+                      'Error: [IBM][CLI Driver] CLI0115E  Invalid cursor state. SQLSTATE=24000'
+                    ),
+                  span => expect(span.ec).to.equal(1)
+                ]);
+              }
             });
           });
         });
