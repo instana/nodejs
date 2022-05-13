@@ -116,7 +116,7 @@ function instrumentQuerySync(originalFunction) {
 
 /**
  * Main difference of prepare and a normal query call:
- * - you can call prepare once an re-use the statement (higher performance)
+ * - you can call prepare once and re-use the statement (higher performance)
  */
 function instrumentPrepare(originalFunction) {
   return function instanaInstrumentPrepare() {
