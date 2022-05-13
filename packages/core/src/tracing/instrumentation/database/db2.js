@@ -47,10 +47,10 @@ function instrument(db2) {
   shimmer.wrap(db2.Database.prototype, 'prepareSync', instrumentPrepareSync);
 }
 
-function skipTracing() {
+function skipTracing(ignoreClsTracing = false) {
   // CASE: instrumentation is disabled
   // CASE: db call is disabled via suppress header
-  return !isActive || cls.tracingSuppressed() || !cls.isTracing();
+  return !isActive || cls.tracingSuppressed() || (ignoreClsTracing ? false : !cls.isTracing());
 }
 
 function instrumentOpen(originalFunction) {
@@ -92,6 +92,10 @@ function instrumentBeginTransaction(originalFunction) {
     const parentSpan = cls.getCurrentSpan();
     const originalCallback = arguments[0];
 
+    if (typeof originalCallback !== 'function') {
+      return originalCallback.apply(this, arguments);
+    }
+
     arguments[0] = cls.ns.bind(function instanaInstrumentBeginTransactionCallback() {
       // NOTE: See function description
       cls.setCurrentSpan(parentSpan);
@@ -123,25 +127,26 @@ function instrumentPrepare(originalFunction) {
     const ctx = this;
     const originalArgs = arguments;
 
-    if (skipTracing()) {
+    // CASE: we pass "true" to skip `cls.isTracing` because the prepare call can happen on process start
+    if (skipTracing(true)) {
       return originalFunction.apply(ctx, originalArgs);
     }
 
-    const parentSpan = cls.getCurrentSpan();
-
-    // CASE: There can be only one exit span, skip
-    if (constants.isExitSpan(parentSpan)) {
-      return originalFunction.apply(ctx, originalArgs);
-    }
+    const possibleHttpParentSpan = cls.getCurrentSpan();
 
     // NOTE: prepare(stmt, cb) is the only possible usage
     // TODO: I have not used cls.ns.bind here, because we remember the parentSpan
     //       anyway and runAndReturn is executed per "execute" call, which creates a new context.
     const originalCallback = originalArgs[1];
+
+    if (typeof originalCallback !== 'function') {
+      return originalFunction.apply(this, originalArgs);
+    }
+
     originalArgs[1] = function instanaPrepareCallback(err, stmtObject) {
       if (err) return originalCallback.apply(this, arguments);
 
-      instrumentExecuteHelper(ctx, originalArgs, stmtObject, parentSpan);
+      instrumentExecuteHelper(ctx, originalArgs, stmtObject, possibleHttpParentSpan);
       return originalCallback.apply(this, arguments);
     };
 
@@ -308,28 +313,55 @@ function instrumentQueryHelper(ctx, originalArgs, originalFunction, stmt, isAsyn
 
     const resultPromise = originalFunction.apply(ctx, originalArgs);
 
-    resultPromise
-      .then(result => {
-        finishSpan(ctx, result, span);
-        return result;
-      })
-      .catch(err => {
-        span.ec = 1;
-        span.data.db2.error = tracingUtil.getErrorDetails(err);
-        finishSpan(ctx, null, span);
-        return err;
-      });
+    if (resultPromise && typeof resultPromise.then === 'function' && typeof resultPromise.catch === 'function') {
+      resultPromise
+        .then(result => {
+          finishSpan(ctx, result, span);
+          return result;
+        })
+        .catch(err => {
+          span.ec = 1;
+          span.data.db2.error = tracingUtil.getErrorDetails(err);
+          finishSpan(ctx, null, span);
+          return err;
+        });
 
-    return resultPromise;
+      return resultPromise;
+    }
   });
 }
 
-function instrumentExecuteHelper(ctx, originalArgs, stmtObject, httpParentSpan) {
+function instrumentExecuteHelper(ctx, originalArgs, stmtObject, prepareCallParentSpan) {
+  const canPrepareTracing = () => {
+    // CASE: if prepareCallParentSpan is true, we skip checking `cls.isTracing`
+    //       because then the `execute` call has no context
+    if (skipTracing(!!prepareCallParentSpan)) {
+      return false;
+    }
+
+    const parentSpan = cls.getCurrentSpan() || prepareCallParentSpan;
+
+    // CASE: There can be only one exit span, skip
+    if (constants.isExitSpan(parentSpan)) {
+      return false;
+    }
+
+    /**
+     * NOTE: We have to set the parent span here, reasons:
+     *        - execute is called twice, we'd loose the parent span
+     *        - prepare call happens in http context, we need to remember it
+     */
+    cls.setCurrentSpan(parentSpan);
+    return true;
+  };
+
   const originalExecuteNonQuerySync = stmtObject.executeNonQuerySync;
 
   stmtObject.executeNonQuerySync = function instanaExecuteNonQuerySync() {
     return cls.ns.runAndReturn(() => {
-      cls.setCurrentSpan(httpParentSpan);
+      if (!canPrepareTracing()) {
+        return originalExecuteNonQuerySync.apply(this, arguments);
+      }
 
       const span = createSpan(originalArgs[0], instrumentExecuteHelper);
 
@@ -350,7 +382,9 @@ function instrumentExecuteHelper(ctx, originalArgs, stmtObject, httpParentSpan) 
   const originalExecuteSync = stmtObject.executeSync;
   stmtObject.executeSync = function instanaExecuteSync() {
     return cls.ns.runAndReturn(() => {
-      cls.setCurrentSpan(httpParentSpan);
+      if (!canPrepareTracing()) {
+        return originalExecuteSync.apply(this, arguments);
+      }
 
       // NOTE: start one span per execute!
       const span = createSpan(originalArgs[0], instrumentExecuteHelper);
@@ -365,10 +399,9 @@ function instrumentExecuteHelper(ctx, originalArgs, stmtObject, httpParentSpan) 
 
   stmtObject.execute = function instanaExecute() {
     return cls.ns.runAndReturn(() => {
-      // NOTE: We have to set the initial http parent span here
-      //       because we start the context (runAndReturn) in execute and not in prepare.
-      //       If the customer calls execute twice, we'd loose parent span otherwise.
-      cls.setCurrentSpan(httpParentSpan);
+      if (!canPrepareTracing()) {
+        return originalExecute.apply(this, arguments);
+      }
 
       // NOTE: start one span per execute!
       const span = createSpan(originalArgs[0], instrumentExecuteHelper);
@@ -505,29 +538,57 @@ function finishSpan(ctx, result, span) {
 }
 
 function handleTransaction(ctx, span) {
-  const originalEndTransaction = ctx.conn.endTransaction;
-  const originalEndTransactionSync = ctx.conn.endTransactionSync;
-
   // NOTE: This is an internal fn to avoid instrumenting commit, rollback separately
-  ctx.conn.endTransaction = function instanaEndTransaction(rollback) {
-    if (rollback) {
-      span.cancel();
-    } else {
-      span.transmit();
+  const fns = ['endTransaction', 'endTransactionSync'];
+
+  fns.forEach(fn => {
+    const originalFn = ctx.conn[fn];
+
+    // CASE: does fn exist on the lib?
+    if (typeof originalFn === 'function') {
+      ctx.conn[fn] = function instanaEndTransactionOverride(forceRollback) {
+        const originalOnEndCallback = arguments[1];
+
+        // CASE: async
+        if (typeof originalOnEndCallback === 'function') {
+          arguments[1] = function instanaOnEndOverride(onEndErr) {
+            if (onEndErr) {
+              span.ec = 1;
+              span.data.db2.error = tracingUtil.getErrorDetails(onEndErr) || 'Error not available.';
+            }
+
+            if (forceRollback && !onEndErr) {
+              span.ec = 1;
+              span.data.db2.error = 'Transaction was rolled back without error.';
+            }
+
+            span.transmit();
+            return originalOnEndCallback.apply(this, arguments);
+          };
+
+          return originalFn.apply(this, arguments);
+        }
+
+        // CASE: sync
+        try {
+          const result = originalFn.apply(this, arguments);
+
+          if (forceRollback) {
+            span.ec = 1;
+            span.data.db2.error = 'Transaction was rolled back without error.';
+          }
+
+          span.transmit();
+          return result;
+        } catch (err) {
+          span.ec = 1;
+          span.data.db2.error = tracingUtil.getErrorDetails(err) || 'Error not available.';
+          span.transmit();
+          throw err;
+        }
+      };
     }
-
-    return originalEndTransaction.apply(this, arguments);
-  };
-
-  ctx.conn.endTransactionSync = function instanaEndTransactionSync(rollback) {
-    if (rollback) {
-      span.cancel();
-    } else {
-      span.transmit();
-    }
-
-    return originalEndTransactionSync.apply(this, arguments);
-  };
+  });
 }
 
 exports.activate = function activate() {

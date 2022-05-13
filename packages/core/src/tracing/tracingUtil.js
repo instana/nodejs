@@ -185,7 +185,7 @@ exports.sanitizeConnectionStr = function sanitizeConnectionStr(connectionStr) {
     return undefined;
   }
 
-  const replaced = connectionStr.replace(/PWD=.*?(?=;)/, 'PWD=REPLACED');
+  const replaced = connectionStr.replace(/PWD=.*?(?=;)/, 'PWD=<redacted>');
   return replaced;
 };
 

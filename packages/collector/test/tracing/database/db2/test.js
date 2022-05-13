@@ -12,9 +12,9 @@ const ProcessControls = require('../../../test_util/ProcessControls');
 const globalAgent = require('../../../globalAgent');
 
 const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
-const DB_LOCAL_CONN_STR = 'HOSTNAME=localhost;UID=node;PWD=REPLACED;PORT=58885;PROTOCOL=TCPIP';
+const DB_LOCAL_CONN_STR = 'HOSTNAME=localhost;UID=node;PWD=<redacted>;PORT=58885;PROTOCOL=TCPIP';
 const DB_REMOTE_CONN_STR = process.env.CI
-  ? process.env.DB2_CONNECTION_STR.replace(/PWD=.*?(?=;)/, 'PWD=REPLACED')
+  ? process.env.DB2_CONNECTION_STR.replace(/PWD=.*?(?=;)/, 'PWD=<redacted>')
   : null;
 
 const CONN_STR = DB_REMOTE_CONN_STR || DB_LOCAL_CONN_STR;
@@ -81,8 +81,8 @@ const verifySpans = (agentControls, controls, options = {}) => {
   });
 };
 
-// The db2 docke rcontainer needs a longer time to bootstrap. Please check the docker logs if
-// the container is already up.
+// The db2 docker container needs a longer time to bootstrap. Please check the docker logs if
+// the container is up.
 mochaSuiteFn('tracing/db2', function () {
   this.timeout(config.getTestTimeout());
 
@@ -270,7 +270,7 @@ mochaSuiteFn('tracing/db2', function () {
           return testUtils.retry(() => {
             return verifySpans(agentControls, controls, {
               stmt: `insert into ${TABLE_NAME_1}(COLINT, COLDATETIME, COLTEXT) VALUES (42, null, null)`,
-              expectNoDb2Span: true
+              error: 'Transaction was rolled back without error.'
             });
           });
         });
@@ -301,7 +301,7 @@ mochaSuiteFn('tracing/db2', function () {
           return testUtils.retry(() => {
             return verifySpans(agentControls, controls, {
               stmt: `insert into ${TABLE_NAME_1}(COLINT, COLDATETIME, COLTEXT) VALUES (42, null, null)`,
-              expectNoDb2Span: true
+              error: 'Transaction was rolled back without error.'
             });
           });
         });
@@ -332,7 +332,7 @@ mochaSuiteFn('tracing/db2', function () {
           return testUtils.retry(() => {
             return verifySpans(agentControls, controls, {
               stmt: `insert into ${TABLE_NAME_1}(COLINT, COLDATETIME, COLTEXT) VALUES (42, null, null)`,
-              expectNoDb2Span: true
+              error: 'Transaction was rolled back without error.'
             });
           });
         });
@@ -363,7 +363,22 @@ mochaSuiteFn('tracing/db2', function () {
           return testUtils.retry(() => {
             return verifySpans(agentControls, controls, {
               stmt: `insert into ${TABLE_NAME_1}(COLINT, COLDATETIME, COLTEXT) VALUES (42, null, null)`,
-              expectNoDb2Span: true
+              error: 'Transaction was rolled back without error.'
+            });
+          });
+        });
+    });
+
+    it('must trace prepare on start', function () {
+      return controls
+        .sendRequest({
+          method: 'GET',
+          path: '/prepare-on-start'
+        })
+        .then(() => {
+          return testUtils.retry(() => {
+            return verifySpans(agentControls, controls, {
+              stmt: `SELECT * FROM ${TABLE_NAME_1}`
             });
           });
         });
@@ -490,11 +505,12 @@ mochaSuiteFn('tracing/db2', function () {
           method: 'GET',
           path: '/prepare-execute-async?error=prepare'
         })
+        .then(() => testUtils.delay(DELAY_TIMEOUT_IN_MS))
         .then(() => {
           return testUtils.retry(() => {
             return verifySpans(agentControls, controls, {
-              stmt: `insert into ${TABLE_NAME_1} (COLINT, COLDATETIME, COLTEXT) VALUES (?, ?, ?)`,
-              expectNoDb2Span: true
+              expectNoDb2Span: true,
+              spanLength: 1
             });
           });
         });
@@ -523,6 +539,7 @@ mochaSuiteFn('tracing/db2', function () {
           method: 'GET',
           path: '/prepare-execute-fetch-async?error=true'
         })
+        .then(() => testUtils.delay(DELAY_TIMEOUT_IN_MS))
         .then(() => {
           return testUtils.retry(() => {
             return verifySpans(agentControls, controls, {
@@ -626,6 +643,7 @@ mochaSuiteFn('tracing/db2', function () {
           method: 'GET',
           path: '/prepare-execute-mixed-1?error=executeRaise'
         })
+        .then(() => testUtils.delay(DELAY_TIMEOUT_IN_MS))
         .then(() => {
           return testUtils.retry(() => {
             return verifySpans(agentControls, controls, {

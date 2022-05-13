@@ -72,6 +72,7 @@ const DB2_TABLE_NAME_3 = process.env.DB2_TABLE_NAME_3;
 let tries = 0;
 const MAX_TRIES = 10;
 const CONNECT_TIMEOUT_IN_MS = 500;
+let stmtObjectFromStart;
 
 const connect = () => {
   console.log(`trying to connect: ${tries}`);
@@ -96,7 +97,12 @@ const connect = () => {
     conn.querySync(`drop table ${DB2_TABLE_NAME_1} if exists`);
     conn.querySync(`create table ${DB2_TABLE_NAME_1} (COLINT INTEGER, COLDATETIME TIMESTAMP, COLTEXT VARCHAR(255))`);
 
-    connection = conn;
+    conn.prepare(`SELECT * FROM ${DB2_TABLE_NAME_1}`, (prepareErr, stmtObject) => {
+      if (prepareErr) throw prepareErr;
+
+      stmtObjectFromStart = stmtObject;
+      connection = conn;
+    });
   });
 };
 
@@ -302,6 +308,15 @@ app.get('/transaction-async', (req, res) => {
         res.status(200).send({ data });
       });
     });
+  });
+});
+
+app.get('/prepare-on-start', function (req, res) {
+  stmtObjectFromStart.execute(function (err, result) {
+    if (err) return res.status(500).send({ err: err.message });
+
+    result.closeSync();
+    res.status(200).send({ data: result });
   });
 });
 
