@@ -476,26 +476,22 @@ mochaSuiteFn('tracing/db2', function () {
             return verifySpans(agentControls, controls, {
               spanLength: 3,
               verifyCustom: (entrySpan, spans) => {
-                testUtils.expectAtLeastOneMatching(
-                  spans,
-                  [
-                    span => expect(span.t).to.equal(entrySpan.t),
-                    span => expect(span.p).to.equal(entrySpan.s),
-                    span => expect(span.n).to.equal('db2'),
-                    span => expect(span.k).to.equal(constants.EXIT),
-                    span => expect(span.f.e).to.equal(String(controls.getPid())),
-                    span => expect(span.f.h).to.equal('agent-stub-uuid'),
-                    span =>
-                      expect(span.data.db2.stmt).to.equal(
-                        `insert into ${TABLE_NAME_1} (COLINT, COLDATETIME, COLTEXT) VALUES (?, ?, ?)`
-                      ),
-                    span => expect(span.data.db2.dsn).to.equal(`${CONN_STR};DATABASE=${DB2_NAME}`),
-                    span => expect(span.async).to.not.exist,
-                    span => expect(span.data.db2.error).to.not.exist,
-                    span => expect(span.ec).to.equal(0)
-                  ],
-                  { numberOfMatches: 2 }
-                );
+                testUtils.expectExactlyNMatching(spans, 2, [
+                  span => expect(span.t).to.equal(entrySpan.t),
+                  span => expect(span.p).to.equal(entrySpan.s),
+                  span => expect(span.n).to.equal('db2'),
+                  span => expect(span.k).to.equal(constants.EXIT),
+                  span => expect(span.f.e).to.equal(String(controls.getPid())),
+                  span => expect(span.f.h).to.equal('agent-stub-uuid'),
+                  span =>
+                    expect(span.data.db2.stmt).to.equal(
+                      `insert into ${TABLE_NAME_1} (COLINT, COLDATETIME, COLTEXT) VALUES (?, ?, ?)`
+                    ),
+                  span => expect(span.data.db2.dsn).to.equal(`${CONN_STR};DATABASE=${DB2_NAME}`),
+                  span => expect(span.async).to.not.exist,
+                  span => expect(span.data.db2.error).to.not.exist,
+                  span => expect(span.ec).to.equal(0)
+                ]);
               }
             });
           });

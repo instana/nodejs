@@ -15,16 +15,13 @@ const { findAllMatchingItems, reportFailure } = require('./matchingItems');
  * @type {Function}
  * @param {Array.<InstanaBaseSpan>} items
  * @param {(span: InstanaBaseSpan) => void} expectations
- * @param {*} options
- * @returns {*}
+ * @returns {InstanaBaseSpan}
  */
-module.exports = exports = function expectAtLeastOneMatching(items, expectations, options = { numberOfMatches: null }) {
+module.exports = exports = function expectAtLeastOneMatching(items, expectations) {
   const matchResult = findAllMatchingItems(items, expectations);
   const matches = matchResult.getMatches();
 
-  if (options.numberOfMatches && options.numberOfMatches === matches.length) {
-    return matches;
-  } else if (options.numberOfMatches === null && matches.length >= 1) {
+  if (matches.length >= 1) {
     return matches[0];
   } else if (matchResult.getError()) {
     reportFailure(matchResult, 'at least one matching item');
