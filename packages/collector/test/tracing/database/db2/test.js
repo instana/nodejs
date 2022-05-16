@@ -24,6 +24,8 @@ let TABLE_NAME_2;
 let TABLE_NAME_3;
 const DELAY_TIMEOUT_IN_MS = 500;
 
+const DB2_CLOSE_TIMEOUT_IN_MS = 1000;
+
 // NOTE: DB2 has a limitation of 8 chars
 const getDatabaseName = () => {
   return 'nodedb';
@@ -105,7 +107,8 @@ mochaSuiteFn('tracing/db2', function () {
           DB2_NAME,
           DB2_TABLE_NAME_1: TABLE_NAME_1,
           DB2_TABLE_NAME_2: TABLE_NAME_2,
-          DB2_TABLE_NAME_3: TABLE_NAME_3
+          DB2_TABLE_NAME_3: TABLE_NAME_3,
+          DB2_CLOSE_TIMEOUT_IN_MS
         }
       });
 
@@ -269,8 +272,7 @@ mochaSuiteFn('tracing/db2', function () {
         .then(() => {
           return testUtils.retry(() => {
             return verifySpans(agentControls, controls, {
-              stmt: `insert into ${TABLE_NAME_1}(COLINT, COLDATETIME, COLTEXT) VALUES (42, null, null)`,
-              error: 'Transaction was rolled back without error.'
+              stmt: `insert into ${TABLE_NAME_1}(COLINT, COLDATETIME, COLTEXT) VALUES (42, null, null)`
             });
           });
         });
@@ -300,8 +302,7 @@ mochaSuiteFn('tracing/db2', function () {
         .then(() => {
           return testUtils.retry(() => {
             return verifySpans(agentControls, controls, {
-              stmt: `insert into ${TABLE_NAME_1}(COLINT, COLDATETIME, COLTEXT) VALUES (42, null, null)`,
-              error: 'Transaction was rolled back without error.'
+              stmt: `insert into ${TABLE_NAME_1}(COLINT, COLDATETIME, COLTEXT) VALUES (42, null, null)`
             });
           });
         });
@@ -331,8 +332,7 @@ mochaSuiteFn('tracing/db2', function () {
         .then(() => {
           return testUtils.retry(() => {
             return verifySpans(agentControls, controls, {
-              stmt: `insert into ${TABLE_NAME_1}(COLINT, COLDATETIME, COLTEXT) VALUES (42, null, null)`,
-              error: 'Transaction was rolled back without error.'
+              stmt: `insert into ${TABLE_NAME_1}(COLINT, COLDATETIME, COLTEXT) VALUES (42, null, null)`
             });
           });
         });
@@ -362,8 +362,7 @@ mochaSuiteFn('tracing/db2', function () {
         .then(() => {
           return testUtils.retry(() => {
             return verifySpans(agentControls, controls, {
-              stmt: `insert into ${TABLE_NAME_1}(COLINT, COLDATETIME, COLTEXT) VALUES (42, null, null)`,
-              error: 'Transaction was rolled back without error.'
+              stmt: `insert into ${TABLE_NAME_1}(COLINT, COLDATETIME, COLTEXT) VALUES (42, null, null)`
             });
           });
         });
@@ -407,10 +406,12 @@ mochaSuiteFn('tracing/db2', function () {
           method: 'GET',
           path: '/prepare-on-start?skipClose=true'
         })
+        .then(() => testUtils.delay(DB2_CLOSE_TIMEOUT_IN_MS))
         .then(() => {
           return testUtils.retry(() => {
             return verifySpans(agentControls, controls, {
               stmt: `SELECT * FROM ${TABLE_NAME_1}`,
+              error: 'Error: [IBM][CLI Driver] CLI0115E  Invalid cursor state. SQLSTATE=24000',
               spanLength: 3,
               verifyCustom: (entrySpan, spans) => {
                 testUtils.expectAtLeastOneMatching(spans, [
@@ -425,10 +426,48 @@ mochaSuiteFn('tracing/db2', function () {
                   span => expect(span.async).to.not.exist,
                   span =>
                     expect(span.data.db2.error).to.eql(
-                      'Error: [IBM][CLI Driver] CLI0115E  Invalid cursor state. SQLSTATE=24000'
+                      `'result.closeSync' was not called within ${DB2_CLOSE_TIMEOUT_IN_MS}ms.`
                     ),
                   span => expect(span.ec).to.equal(1)
                 ]);
+              }
+            });
+          });
+        });
+    });
+
+    it('must trace prepare/execute with two different http endpoints', function () {
+      return controls
+        .sendRequest({
+          method: 'GET',
+          path: '/prepare-in-http'
+        })
+        .then(() => {
+          return controls.sendRequest({
+            method: 'GET',
+            path: '/execute-in-http'
+          });
+        })
+        .then(() => {
+          return testUtils.retry(() => {
+            return verifySpans(agentControls, controls, {
+              stmt: `SELECT * FROM ${TABLE_NAME_1}`,
+              spanLength: 3,
+              verifyCustom: (entrySpan, spans) => {
+                const realParent = testUtils.expectAtLeastOneMatching(spans, [
+                  span => expect(span.n).to.equal('node.http.server'),
+                  span => expect(span.f.e).to.equal(String(controls.getPid())),
+                  span => expect(span.f.h).to.equal('agent-stub-uuid'),
+                  span => expect(span.data.http.path_tpl).to.equal('/execute-in-http')
+                ]);
+                testUtils.expectAtLeastOneMatching(spans, [
+                  span => expect(span.n).to.equal('node.http.server'),
+                  span => expect(span.f.e).to.equal(String(controls.getPid())),
+                  span => expect(span.f.h).to.equal('agent-stub-uuid'),
+                  span => expect(span.data.http.path_tpl).to.equal('/prepare-in-http')
+                ]);
+
+                testUtils.expectAtLeastOneMatching(spans, [span => expect(span.p).to.equal(realParent.s)]);
               }
             });
           });
@@ -707,10 +746,13 @@ mochaSuiteFn('tracing/db2', function () {
           method: 'GET',
           path: '/prepare-execute-mixed-1?skipClose=true'
         })
+        .then(() => testUtils.delay(DB2_CLOSE_TIMEOUT_IN_MS))
         .then(() => {
           return testUtils.retry(() => {
             return verifySpans(agentControls, controls, {
-              stmt: `SELECT * FROM ${TABLE_NAME_1}`
+              stmt: `SELECT * FROM ${TABLE_NAME_1}`,
+              error: `'result.closeSync' was not called within ${DB2_CLOSE_TIMEOUT_IN_MS}ms.`,
+              spanLength: 2
             });
           });
         });
@@ -741,7 +783,7 @@ mochaSuiteFn('tracing/db2', function () {
           return testUtils.retry(() => {
             return verifySpans(agentControls, controls, {
               stmt: `SELECT * FROM ${TABLE_NAME_1}`,
-              spanLength: 2
+              error: 'TypeError: ODBCResult::Fetch(): 1 or 2 arguments are required'
             });
           });
         });
@@ -783,10 +825,13 @@ mochaSuiteFn('tracing/db2', function () {
           method: 'GET',
           path: '/prepare-execute-mixed-2?skipClose=true'
         })
+        .then(() => testUtils.delay(DB2_CLOSE_TIMEOUT_IN_MS))
         .then(() => {
           return testUtils.retry(() => {
             return verifySpans(agentControls, controls, {
-              stmt: `SELECT * FROM ${TABLE_NAME_1}`
+              stmt: `SELECT * FROM ${TABLE_NAME_1}`,
+              error: `'result.closeSync' was not called within ${DB2_CLOSE_TIMEOUT_IN_MS}ms.`,
+              spanLength: 2
             });
           });
         });

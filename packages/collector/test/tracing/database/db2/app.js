@@ -337,6 +337,25 @@ app.get('/prepare-on-start', function (req, res) {
   });
 });
 
+let prepareToRem;
+app.get('/prepare-in-http', function (req, res) {
+  const stmt = `SELECT * FROM ${DB2_TABLE_NAME_1}`;
+
+  connection.prepare(stmt, (err, stmtObject) => {
+    if (err) return res.status(500).send({ err: err.message });
+    prepareToRem = stmtObject;
+    res.status(200).send({ data: stmtObject });
+  });
+});
+app.get('/execute-in-http', function (req, res) {
+  prepareToRem.execute(function (subErr, result) {
+    if (subErr) return res.status(500).send({ err: subErr.message });
+
+    result.closeSync();
+    res.status(200).send({ data: result });
+  });
+});
+
 app.get('/prepare-execute-async', (req, res) => {
   const reuse = req.query.reuse;
   const error = req.query.error;
@@ -517,6 +536,7 @@ app.get('/prepare-execute-mixed-1', (req, res) => {
           try {
             result.fetch(...args);
           } catch (fetchErr3) {
+            result.closeSync();
             res.status(error ? 200 : 500).send({ data: fetchErr3.message });
           }
         });

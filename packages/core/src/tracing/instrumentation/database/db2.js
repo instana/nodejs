@@ -14,6 +14,8 @@ const cls = require('../../cls');
 let isActive = false;
 let connectionStr;
 
+const CLOSE_TIMEOUT_IN_MS = process.env.DB2_CLOSE_TIMEOUT_IN_MS || 1000 * 30;
+
 exports.spanName = 'db2';
 
 exports.init = function init() {
@@ -121,22 +123,14 @@ function instrumentQuerySync(originalFunction) {
 /**
  * Main difference of prepare and a normal query call:
  * - you can call prepare once and re-use the statement (higher performance)
+ *
+ * prepare(stmt, cb) is the only possible usage
  */
 function instrumentPrepare(originalFunction) {
   return function instanaInstrumentPrepare() {
     const ctx = this;
     const originalArgs = arguments;
-
-    // CASE: we pass "true" to skip `cls.isTracing` because the prepare call can happen on process start
-    if (skipTracing(true)) {
-      return originalFunction.apply(ctx, originalArgs);
-    }
-
-    const possibleHttpParentSpan = cls.getCurrentSpan();
-
-    // NOTE: prepare(stmt, cb) is the only possible usage
-    // TODO: I have not used cls.ns.bind here, because we remember the parentSpan
-    //       anyway and runAndReturn is executed per "execute" call, which creates a new context.
+    const possibleParentSpan = cls.getCurrentEntrySpan();
     const originalCallback = originalArgs[1];
 
     if (typeof originalCallback !== 'function') {
@@ -146,7 +140,7 @@ function instrumentPrepare(originalFunction) {
     originalArgs[1] = function instanaPrepareCallback(err, stmtObject) {
       if (err) return originalCallback.apply(this, arguments);
 
-      instrumentExecuteHelper(ctx, originalArgs, stmtObject, possibleHttpParentSpan);
+      instrumentExecuteHelper(ctx, originalArgs, stmtObject, possibleParentSpan);
       return originalCallback.apply(this, arguments);
     };
 
@@ -158,15 +152,10 @@ function instrumentPrepareSync(originalFunction) {
   return function instanaInstrumentPrepareSync() {
     const ctx = this;
     const originalArgs = arguments;
-
-    if (skipTracing()) {
-      return originalFunction.apply(ctx, originalArgs);
-    }
-
-    const parentSpan = cls.getCurrentSpan();
+    const possibleParentSpan = cls.getCurrentEntrySpan();
 
     // CASE: There can be only one exit span, skip
-    if (constants.isExitSpan(parentSpan)) {
+    if (constants.isExitSpan(possibleParentSpan)) {
       return originalFunction.apply(ctx, originalArgs);
     }
 
@@ -176,7 +165,7 @@ function instrumentPrepareSync(originalFunction) {
       return stmtObject;
     }
 
-    instrumentExecuteHelper(ctx, originalArgs, stmtObject, parentSpan);
+    instrumentExecuteHelper(ctx, originalArgs, stmtObject, possibleParentSpan);
     return stmtObject;
   };
 }
@@ -221,10 +210,13 @@ function captureFetchError(result, span) {
           return fetchCb.apply(this, arguments);
         };
 
-        // NOTE: if the customer passes wrong arguments to the fetch fn
-        //       an error is thrown. We still want to keep the span
-        // TODO: Discuss if we want to cancel this span?
-        return originalFn.apply(this, arguments);
+        try {
+          return originalFn.apply(this, arguments);
+        } catch (catchedErr) {
+          span.ec = 1;
+          span.data.db2.error = tracingUtil.getErrorDetails(catchedErr);
+          throw catchedErr;
+        }
       };
     }
   });
@@ -295,7 +287,7 @@ function instrumentQueryHelper(ctx, originalArgs, originalFunction, stmt, isAsyn
         : originalArgs.length === 3 && typeof originalArgs[2] === 'function'
         ? 2
         : null;
-    const customerCallback = originalArgs[customerCallbackIndex];
+    const customerCallback = customerCallbackIndex != null ? originalArgs[customerCallbackIndex] : null;
 
     if (customerCallback) {
       originalArgs[customerCallbackIndex] = function instanaCallback(err) {
@@ -332,12 +324,11 @@ function instrumentQueryHelper(ctx, originalArgs, originalFunction, stmt, isAsyn
 }
 
 function instrumentExecuteHelper(ctx, originalArgs, stmtObject, prepareCallParentSpan) {
-  let httpSpan;
+  let rememberedParentSpan;
 
   const canPrepareTracing = () => {
-    // prepareCallParentSpan:
-    //   prepare call happens in http context, we need to remember it
-    //   cls.getCurrentSpan() is undefined in this case
+    // cls.getCurrentSpan()  : exists if prepare is called outside of the http context
+    // prepareCallParentSpan : exists if prepare call is called inside of the http context
     const parentSpan = cls.getCurrentSpan() || prepareCallParentSpan;
 
     // CASE: There can be only one exit span, skip
@@ -345,25 +336,26 @@ function instrumentExecuteHelper(ctx, originalArgs, stmtObject, prepareCallParen
       return false;
     }
 
-    // NOTE: remember the http parent of the first execute call,
-    //       otherwise the next execute call looses the parent
-    if (!prepareCallParentSpan && parentSpan) {
-      httpSpan = parentSpan;
+    // CASE: we need to remember the original parent span for further `execute` calls
+    //       ensure we set the remembered span once in the first call by checking rememberedParentSpan
+    if (!parentSpan && !rememberedParentSpan) {
+      rememberedParentSpan = parentSpan;
     }
 
-    // console.log(skipTracing(!!prepareCallParentSpan));
-    // CASE: if prepareCallParentSpan is true, we skip checking `cls.isTracing`
-    //       because then the `execute` call has no context
-    if (skipTracing(!!prepareCallParentSpan || !parentSpan)) {
+    // cls.isTracing is false when `execute` is minimum called twice
+    // then parentSpan is undefined, because there is no current span and no remembered span yet
+    if (skipTracing(!parentSpan || !!prepareCallParentSpan)) {
       return false;
     }
 
     /**
-     * NOTE: We have to set the parent span here, reasons:
-     *        - execute is called twice, we'd loose the parent span
-     *        - prepare call happens in http context, we need to remember it
+     * If we do not set the parent, the span will have no parent!
+     *
+     * We have to set the parent span here, reasons:
+     *   - execute is called twice
+     *   - prepare call happens in http context, we need to remember it
      */
-    cls.setCurrentSpan(httpSpan || parentSpan);
+    cls.setCurrentSpan(rememberedParentSpan || parentSpan);
     return true;
   };
 
@@ -480,7 +472,7 @@ function instrumentQueryResultHelper(ctx, originalArgs, originalFunction, stmt, 
         : originalArgs.length === 3 && typeof originalArgs[2] === 'function'
         ? 2
         : null;
-    const customerCallback = originalArgs[customerCallbackIndex];
+    const customerCallback = customerCallbackIndex != null ? originalArgs[customerCallbackIndex] : null;
 
     if (customerCallback) {
       originalArgs[customerCallbackIndex] = function instanaCallback(err) {
@@ -504,7 +496,7 @@ function createSpan(stmt, fn) {
   // https://github.ibm.com/instana/backend/blob/develop/forge/src/main/java/com/instana/forge/connection/database/ibmdb2/IbmDb2Span.java
   const span = cls.startSpan(exports.spanName, constants.EXIT);
   span.stack = tracingUtil.getStackTrace(fn);
-  span.d = Date.now() - span.ts;
+  span.ts = Date.now();
   span.data.db2 = {
     stmt: tracingUtil.shortenDatabaseStatement(stmt),
     dsn: tracingUtil.sanitizeConnectionStr(connectionStr)
@@ -530,21 +522,27 @@ function finishSpan(ctx, result, span) {
       if (closeSyncCalled) return originalCloseSync.apply(this, arguments);
 
       closeSyncCalled = true;
+      span.d = Date.now() - span.ts;
       span.transmit();
+
       return originalCloseSync.apply(this, arguments);
     };
 
     // CASE: customer forgets to call `result.closeSync`
     //       search for result.closeSync() in:
     //       https://github.com/ibmdb/node-ibm_db/blob/master/APIDocumentation.md
-    // TODO: discuss timeout length and the approach in general
+    //       We need to wait for a long time because any sql query can take long
     setTimeout(() => {
       if (!closeSyncCalled) {
         closeSyncCalled = true;
+        span.ec = 1;
+        span.data.db2.error = `'result.closeSync' was not called within ${CLOSE_TIMEOUT_IN_MS}ms.`;
+        span.d = Date.now() - span.ts;
         span.transmit();
       }
-    }, 500);
+    }, CLOSE_TIMEOUT_IN_MS).unref();
   } else {
+    span.d = Date.now() - span.ts;
     span.transmit();
   }
 }
@@ -558,7 +556,7 @@ function handleTransaction(ctx, span) {
 
     // CASE: does fn exist on the lib?
     if (typeof originalFn === 'function') {
-      ctx.conn[fn] = function instanaEndTransactionOverride(forceRollback) {
+      ctx.conn[fn] = function instanaEndTransactionOverride() {
         const originalOnEndCallback = arguments[1];
 
         // CASE: async
@@ -569,11 +567,7 @@ function handleTransaction(ctx, span) {
               span.data.db2.error = tracingUtil.getErrorDetails(onEndErr) || 'Error not available.';
             }
 
-            if (forceRollback && !onEndErr) {
-              span.ec = 1;
-              span.data.db2.error = 'Transaction was rolled back without error.';
-            }
-
+            span.d = Date.now() - span.ts;
             span.transmit();
             return originalOnEndCallback.apply(this, arguments);
           };
@@ -584,12 +578,7 @@ function handleTransaction(ctx, span) {
         // CASE: sync
         try {
           const result = originalFn.apply(this, arguments);
-
-          if (forceRollback) {
-            span.ec = 1;
-            span.data.db2.error = 'Transaction was rolled back without error.';
-          }
-
+          span.d = Date.now() - span.ts;
           span.transmit();
           return result;
         } catch (err) {
