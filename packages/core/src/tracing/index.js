@@ -57,6 +57,7 @@ const instrumentations = [
   './instrumentation/database/pg',
   './instrumentation/database/pgNative',
   './instrumentation/database/redis',
+  './instrumentation/database/db2',
   './instrumentation/frameworks/express',
   './instrumentation/frameworks/fastify',
   './instrumentation/frameworks/hapi',

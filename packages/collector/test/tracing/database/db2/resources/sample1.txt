@@ -1,0 +1,10 @@
+create table {TABLE_NAME}(no integer,name varchar(10));
+insert into {TABLE_NAME} values(1,'pri');
+insert into {TABLE_NAME} values(2,'anbu');
+select * from {TABLE_NAME};
+drop table {TABLE_NAME};
+create table {TABLE_NAME}(no integer);
+insert into {TABLE_NAME} values(1);
+insert into {TABLE_NAME} values(2);
+select * from {TABLE_NAME};
+drop table {TABLE_NAME}
