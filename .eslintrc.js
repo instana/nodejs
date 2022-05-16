@@ -51,6 +51,7 @@ module.exports = {
     'no-console': 'error',
     'no-const-assign': 'error',
     'no-continue': 'off',
+    'no-dupe-class-members': 'error',
     'no-else-return': 'off',
     'no-labels': 'off',
     'no-mixed-operators': 'off',
