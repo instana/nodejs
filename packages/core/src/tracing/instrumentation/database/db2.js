@@ -153,12 +153,6 @@ function instrumentPrepareSync(originalFunction) {
     const ctx = this;
     const originalArgs = arguments;
     const possibleParentSpan = cls.getCurrentEntrySpan();
-
-    // CASE: There can be only one exit span, skip
-    if (constants.isExitSpan(possibleParentSpan)) {
-      return originalFunction.apply(ctx, originalArgs);
-    }
-
     const stmtObject = originalFunction.apply(ctx, originalArgs);
 
     if (stmtObject instanceof Error) {
