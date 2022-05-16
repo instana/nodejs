@@ -1082,7 +1082,8 @@ mochaSuiteFn('tracing/db2', function () {
           DB2_NAME,
           DB2_TABLE_NAME_1: TABLE_NAME_1,
           DB2_TABLE_NAME_2: TABLE_NAME_2,
-          DB2_TABLE_NAME_3: TABLE_NAME_3
+          DB2_TABLE_NAME_3: TABLE_NAME_3,
+          DB2_CLOSE_TIMEOUT_IN_MS
         }
       });
 
@@ -1195,26 +1196,27 @@ mochaSuiteFn('tracing/db2', function () {
           DB2_NAME,
           DB2_TABLE_NAME_1: TABLE_NAME_1,
           DB2_TABLE_NAME_2: TABLE_NAME_2,
-          DB2_TABLE_NAME_3: TABLE_NAME_3
+          DB2_TABLE_NAME_3: TABLE_NAME_3,
+          DB2_CLOSE_TIMEOUT_IN_MS
         }
-      });
-
-      after(async () => {
-        await controls.sendRequest({
-          method: 'DELETE',
-          path: '/tables'
-        });
-
-        await controls.sendRequest({
-          method: 'DELETE',
-          path: '/conn'
-        });
-
-        await controls.stop();
       });
 
       ProcessControls.setUpTestCaseCleanUpHooks(controls);
       await controls.startAndWaitForAgentConnection();
+    });
+
+    after(async () => {
+      await controls.sendRequest({
+        method: 'DELETE',
+        path: '/tables'
+      });
+
+      await controls.sendRequest({
+        method: 'DELETE',
+        path: '/conn'
+      });
+
+      await controls.stop();
     });
 
     it('must not trace', function () {
