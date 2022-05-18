@@ -19,7 +19,6 @@
  * sent message will be created.
  */
 
-const { exec } = require('child_process');
 const path = require('path');
 const { expect } = require('chai');
 const { fail } = expect;
@@ -31,7 +30,7 @@ const {
   tracing: { supportedVersion }
 } = require('@instana/core');
 
-const { satisfies } = require('semver');
+const semver = require('semver');
 const config = require('../../../../../core/test/config');
 const { expectExactlyOneMatching, retry, delay, stringifyItems } = require('../../../../../core/test/test_util');
 const ProcessControls = require('../../../test_util/ProcessControls');
@@ -46,7 +45,7 @@ let mochaSuiteFn;
  * Installing kafka-avro via optionalDependencies throws an error,
  * see https://github.com/instana/nodejs/pull/486#discussion_r818509109
  */
-const kafkaAvroAllowedVersions = satisfies(process.versions.node, '14');
+const kafkaAvroAllowedVersions = semver.lt(process.versions.node, '16.0.0');
 
 if (!supportedVersion(process.versions.node) || !kafkaAvroAllowedVersions) {
   mochaSuiteFn = describe.skip;
@@ -62,13 +61,6 @@ mochaSuiteFn('tracing/messaging/kafka-avro', function () {
 
   globalAgent.setUpCleanUpHooks();
   const agentControls = globalAgent.instance;
-
-  before(done => {
-    installLibraryVersion(done);
-  });
-  after(done => {
-    uninstallLibraryVersion(done);
-  });
 
   describe('tracing enabled, no suppression', function () {
     const producerControls = new ProcessControls({
@@ -251,43 +243,4 @@ function verifyResponseAndMessage(response, consumerControls) {
   expect(message).to.exist;
   expect(message.name).to.equal('John');
   return message;
-}
-
-/**
- * We manually install kafka-avro because this dependency
- * fails to install on most node versions.
- * See PR description: https://github.com/instana/nodejs/pull/486
- */
-function installLibraryVersion(done) {
-  const version = '^3.1.1';
-  const command = `npm install --silent kafka-avro@${version}`;
-
-  return execCommand(command, done);
-}
-
-function uninstallLibraryVersion(done) {
-  const command = 'npm uninstall kafka-avro';
-
-  return execCommand(command, done);
-}
-
-function execCommand(cmd, done) {
-  const cwd = path.join(__dirname, '..', '..', '..', '..', '..', '..');
-
-  // eslint-disable-next-line no-console
-  console.log(`Executing: ${cmd}`);
-
-  exec(cmd, { cwd, windowsHide: true }, (error, stdout, stderr) => {
-    if (error) {
-      done(error);
-      return;
-    }
-    // eslint-disable-next-line no-console
-    console.log(`stdout from ${cmd}: ${stdout}`);
-    if (stderr) {
-      // eslint-disable-next-line no-console
-      console.log(`stderr from ${cmd}: ${stderr}`);
-    }
-    done();
-  });
 }

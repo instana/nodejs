@@ -183,6 +183,10 @@
     "ws": "^7.5.6"
   },
   "optionalDevDependencies": {
+    "kafka-avro": {
+      "engine": "< 16",
+      "version": "^3.1.1"
+    },
     "pg-native": {
       "engine": "< 18",
       "version": "^3.0.0"
