@@ -17,8 +17,8 @@ cd `dirname $BASH_SOURCE`/..
 commands=$(jq -r '.optionalDevDependencies | to_entries[] | "npm install --save-dev \(.key)@\(.value.version)#\(.value.engine),"' ./package.json)
 IFS=$',';
 
+# We need to reset the json file because otherwise NPM will add the dependencies.
 cp package.json package.json.tmp
-cp package-lock.json package-lock.json.tmp
 
 for cmd in $commands; do
     engine=$(echo "$cmd" | grep -Eo "#(.*)"| cut -d# -f2)
@@ -34,4 +34,3 @@ for cmd in $commands; do
 done
 
 mv package.json.tmp package.json
-mv package-lock.json.tmp package-lock.json
