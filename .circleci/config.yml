@@ -31,7 +31,12 @@ shared: &shared
   steps:
     - checkout
     - run: node --version
-    - run: sudo npm install npm@8.6.0 -g
+    - run: |
+        if [[ -z "$NEW_IMAGE" ]]; then
+          npm install npm@8.6.0 -g
+        else
+          sudo npm install npm@8.6.0 -g
+        fi
     - run: npm --version
 
     - restore_cache:
@@ -283,6 +288,8 @@ memcached: &memcached
 
 jobs:
   "node-18":
+    environment:
+        NEW_IMAGE: true
     docker:
       - image: cimg/node:18.0
       - <<: *zookeeper
@@ -380,6 +387,7 @@ jobs:
   "node-coverage":
     environment:
         NODE_COVERAGE: true
+        NEW_IMAGE: true
     docker:
       - image: cimg/node:16.15
       - <<: *zookeeper
