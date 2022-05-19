@@ -31,6 +31,7 @@ shared: &shared
   steps:
     - checkout
     - run: node --version
+    - run: npm install npm@8.6.0 -g
     - run: npm --version
 
     - restore_cache:
@@ -302,7 +303,7 @@ jobs:
 
   "node-16":
     docker:
-      - image: cimg/node:16.15
+      - image: circleci/node:16
       - <<: *zookeeper
       - <<: *elasticsearch
       - <<: *mongo
