@@ -33,9 +33,9 @@ shared: &shared
     - run: node --version
     - run: |
         if [[ -z "$NEW_IMAGE" ]]; then
-          sudo npm install npm@8.6.0 -g          
+          sudo npm install npm@latest -g          
         else
-          npm install npm@8.6.0 -g
+          npm install npm@latest -g
         fi
     - run: npm --version
 
