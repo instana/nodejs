@@ -31,12 +31,6 @@ shared: &shared
   steps:
     - checkout
     - run: node --version
-    - run: |
-        if [[ -z "$NEW_IMAGE" ]]; then
-          sudo npm install npm@latest -g || true    
-        else
-          npm install npm@latest -g || true
-        fi
     - run: npm --version
 
     - restore_cache:
