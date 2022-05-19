@@ -33,7 +33,7 @@ shared: &shared
     - run: node --version
     - run: |
         if [ -n "$NPM_VERSION" ]; then
-          npm install npm@$NPM_VERSION -g
+          sudo npm install npm@$NPM_VERSION -g
         fi
     - run: npm --version
 
