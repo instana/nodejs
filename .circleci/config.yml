@@ -299,7 +299,7 @@ jobs:
       - <<: *nats-streaming
       - <<: *memcached
     <<: *shared
-    parallelism: 16
+    parallelism: 24
 
   "node-16":
     docker:
@@ -318,7 +318,7 @@ jobs:
       - <<: *nats-streaming
       - <<: *memcached
     <<: *shared
-    parallelism: 16
+    parallelism: 24
 
   "node-14":
     docker:
@@ -337,7 +337,7 @@ jobs:
       - <<: *nats-streaming
       - <<: *memcached
     <<: *shared
-    parallelism: 16
+    parallelism: 24
 
   "node-12":
     docker:
@@ -405,8 +405,6 @@ workflows:
       - "node-18"
       - "node-16"
       - "node-14"
-      - "node-12"
-      - "node-10"
   coverage:
     triggers:
       - schedule:
@@ -417,3 +415,14 @@ workflows:
                 - main
     jobs:
       - "node-coverage"
+  oldernodejsversions:
+    triggers:
+      - schedule:
+          cron: "0 0 * * 1-5"
+          filters:
+            branches:
+              only:
+                - main
+    jobs:
+      - "node-10"
+      - "node-12"
