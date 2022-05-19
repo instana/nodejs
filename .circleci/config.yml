@@ -31,7 +31,7 @@ shared: &shared
   steps:
     - checkout
     - run: node --version
-    - run: npm install npm@8.6.0 -g
+    - run: sudo npm install npm@8.6.0 -g
     - run: npm --version
 
     - restore_cache:
