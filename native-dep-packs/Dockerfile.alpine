@@ -2,17 +2,6 @@ ARG BASE_IMAGE
 FROM ${BASE_IMAGE}
 WORKDIR /instana
 
-# Beginning with the Node.js 16 Alpine Docker image (based on Alpine 3.13), we need to install the package python3
-# instead of python.
-RUN \
-  if grep "3.13" /etc/os-release; then \
-    apk add --no-cache --virtual .gyp \
-            build-base \
-            python3 ; \
-  else \
-    apk add --no-cache --virtual .gyp \
-            build-base \
-            python ; \
-  fi
+RUN apk add --no-cache --virtual .gyp build-base python3
 
 RUN npm install @instana/collector@latest

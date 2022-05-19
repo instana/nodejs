@@ -35,8 +35,14 @@ module.exports = exports = function buildSingleAddOn(abi, version) {
     darwinNodeJs10Fix = '--build_v8_with_gn=false';
   }
 
-  const command = `node node_modules/node-gyp/bin/node-gyp.js rebuild --target=${version} ${darwinNodeJs10Fix} --arch=x64`;
+  let command = `node node_modules/node-gyp/bin/node-gyp.js rebuild --target=${version} ${darwinNodeJs10Fix} --arch=x64`;
   const cwd = path.join(__dirname, '..');
+
+  // NOTE: the comment is not only executed on the container, also on your mac if you run `build-all-addons`
+  if (cwd !== '/opt/autoprofile') {
+    const rootGyp = path.join(__dirname, '..', '..', '..', 'node_modules');
+    command = `node ${rootGyp}/node-gyp/bin/node-gyp.js rebuild --target=${version} ${darwinNodeJs10Fix} --arch=x64`;
+  }
 
   console.log(`Running "${command}" in directory "${cwd}".`);
   execSync(command, {
