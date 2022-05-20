@@ -18,14 +18,6 @@ logger = require('../../../logger').getLogger('tracing/rdkafka', newLogger => {
   logger = newLogger;
 });
 
-const allInstanaHeaders = [
-  constants.kafkaTraceIdHeaderName,
-  constants.kafkaSpanIdHeaderName,
-  constants.kafkaTraceLevelHeaderName,
-  constants.kafkaLegacyTraceContextHeaderName,
-  constants.kafkaLegacyTraceLevelHeaderName
-].map(header => header.toLowerCase());
-
 let traceCorrelationEnabled = constants.kafkaTraceCorrelationDefault;
 let headerFormat = constants.kafkaHeaderFormatDefault;
 overrideKafkaHeaderFormat();
@@ -239,9 +231,9 @@ function removeInstanaHeadersFromMessage(messageData) {
       // There should be only one. That's how the API works. This can be tested, for instance, by sending a message
       // via kafkajs to be recieved by rdkafka consumer. Each header will be a single object as an item in the
       // messageData.headers array
-      const headerKey = Object.keys(headerObject)[0];
+      const headerKey = Object.keys(headerObject)[0].toUpperCase();
 
-      if (allInstanaHeaders.indexOf(headerKey.toLowerCase()) > -1) {
+      if (constants.allInstanaKafkaHeaders.includes(headerKey)) {
         messageData.headers.splice(i, 1);
       }
     }
@@ -275,15 +267,14 @@ function instrumentedConsumerEmit(ctx, originalEmit, originalArgs) {
 
   eventData.forEach(messageData => {
     const instanaHeaders = (messageData.headers || []).filter(headerObject => {
-      const headerKey = Object.keys(headerObject)[0].toLowerCase();
-      return headerKey.indexOf('x_instana') > -1;
+      const headerKey = Object.keys(headerObject)[0].toUpperCase();
+      return constants.allInstanaKafkaHeaders.includes(headerKey);
     });
 
     // flatten array to object
     const instanaHeadersAsObject = {};
-
     instanaHeaders.forEach(instanaHeader => {
-      const key = Object.keys(instanaHeader)[0];
+      const key = Object.keys(instanaHeader)[0].toUpperCase();
       instanaHeadersAsObject[key] = instanaHeader[key];
     });
 

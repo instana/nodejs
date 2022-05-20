@@ -33,6 +33,14 @@ exports.kafkaTraceCorrelationDefault = true;
 // with phase 2 it will no longer be configurable and will always use 'string'.
 exports.kafkaHeaderFormatDefault = 'binary';
 
+exports.allInstanaKafkaHeaders = [
+  exports.kafkaTraceIdHeaderName,
+  exports.kafkaSpanIdHeaderName,
+  exports.kafkaTraceLevelHeaderName,
+  exports.kafkaLegacyTraceContextHeaderName,
+  exports.kafkaLegacyTraceLevelHeaderName
+];
+
 exports.w3cTraceParent = 'traceparent';
 exports.w3cTraceState = 'tracestate';
 exports.w3cInstana = 'in';
