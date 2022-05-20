@@ -22,6 +22,14 @@ let headerFormat = constants.kafkaHeaderFormatDefault;
 
 let isActive = false;
 
+const allInstanaHeaders = [
+  constants.kafkaTraceLevelHeaderName,
+  constants.kafkaLegacyTraceLevelHeaderName,
+  constants.kafkaTraceIdHeaderName,
+  constants.kafkaSpanIdHeaderName,
+  constants.kafkaLegacyTraceContextHeaderName
+];
+
 exports.init = function init(config) {
   requireHook.onFileLoad(/\/kafkajs\/src\/producer\/messageProducer\.js/, instrumentProducer);
   requireHook.onFileLoad(/\/kafkajs\/src\/consumer\/runner\.js/, instrumentConsumer);
@@ -272,6 +280,8 @@ function instrumentedEachMessage(originalEachMessage) {
       }
     }
 
+    removeInstanaHeadersFromMessage(message);
+
     return cls.ns.runAndReturn(() => {
       if (isSuppressed(level)) {
         cls.setTracingLevel('0');
@@ -369,6 +379,10 @@ function instrumentedEachBatch(originalEachBatch) {
             break;
           }
         }
+      }
+
+      for (let msgIdx = 0; msgIdx < batch.messages.length; msgIdx++) {
+        removeInstanaHeadersFromMessage(batch.messages[msgIdx]);
       }
     }
 
@@ -516,5 +530,16 @@ function addTraceLevelSuppressionToAllMessagesString(messages) {
         messages[msgIdx].headers[constants.kafkaTraceLevelHeaderName] = '0';
       }
     }
+  }
+}
+
+function removeInstanaHeadersFromMessage(message) {
+  const headerNames = message.headers && Object.keys(message.headers);
+  if (headerNames && headerNames.length > 0) {
+    headerNames.forEach(name => {
+      if (allInstanaHeaders.includes(name)) {
+        delete message.headers[name];
+      }
+    });
   }
 }
