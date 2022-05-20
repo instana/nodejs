@@ -19,11 +19,11 @@ logger = require('../../../logger').getLogger('tracing/rdkafka', newLogger => {
 });
 
 const allInstanaHeaders = [
-  constants.kafkaTraceIdHeaderNameString,
-  constants.kafkaSpanIdHeaderNameString,
-  constants.kafkaTraceLevelHeaderNameString,
-  constants.kafkaTraceContextHeaderNameBinary,
-  constants.kafkaTraceLevelHeaderNameBinary
+  constants.kafkaTraceIdHeaderName,
+  constants.kafkaSpanIdHeaderName,
+  constants.kafkaTraceLevelHeaderName,
+  constants.kafkaLegacyTraceContextHeaderName,
+  constants.kafkaLegacyTraceLevelHeaderName
 ].map(header => header.toLowerCase());
 
 let traceCorrelationEnabled = constants.kafkaTraceCorrelationDefault;
@@ -344,8 +344,8 @@ function instrumentedConsumerEmit(ctx, originalEmit, originalArgs) {
 }
 
 function readTraceLevelBinary(instanaHeadersAsObject) {
-  if (instanaHeadersAsObject[constants.kafkaTraceLevelHeaderNameBinary]) {
-    const traceLevelBuffer = instanaHeadersAsObject[constants.kafkaTraceLevelHeaderNameBinary];
+  if (instanaHeadersAsObject[constants.kafkaLegacyTraceLevelHeaderName]) {
+    const traceLevelBuffer = instanaHeadersAsObject[constants.kafkaLegacyTraceLevelHeaderName];
     if (Buffer.isBuffer(traceLevelBuffer) && traceLevelBuffer.length >= 1) {
       return String(traceLevelBuffer.readInt8());
     }
@@ -382,12 +382,12 @@ function addTraceContextHeader(headers, span) {
 function addTraceContextHeaderBinary(headers, span) {
   if (headers == null) {
     headers = [
-      { [constants.kafkaTraceContextHeaderNameBinary]: tracingUtil.renderTraceContextToBuffer(span) },
-      { [constants.kafkaTraceLevelHeaderNameBinary]: constants.kafkaTraceLevelBinaryValueInherit }
+      { [constants.kafkaLegacyTraceContextHeaderName]: tracingUtil.renderTraceContextToBuffer(span) },
+      { [constants.kafkaLegacyTraceLevelHeaderName]: constants.kafkaLegacyTraceLevelValueInherit }
     ];
   } else if (headers && Array.isArray(headers)) {
-    headers.push({ [constants.kafkaTraceContextHeaderNameBinary]: tracingUtil.renderTraceContextToBuffer(span) });
-    headers.push({ [constants.kafkaTraceLevelHeaderNameBinary]: constants.kafkaTraceLevelBinaryValueInherit });
+    headers.push({ [constants.kafkaLegacyTraceContextHeaderName]: tracingUtil.renderTraceContextToBuffer(span) });
+    headers.push({ [constants.kafkaLegacyTraceLevelHeaderName]: constants.kafkaLegacyTraceLevelValueInherit });
   }
   return headers;
 }
@@ -395,14 +395,14 @@ function addTraceContextHeaderBinary(headers, span) {
 function addTraceContextHeaderString(headers, span) {
   if (headers == null) {
     headers = [
-      { [constants.kafkaTraceIdHeaderNameString]: leftPad(span.t, 32) },
-      { [constants.kafkaSpanIdHeaderNameString]: span.s },
-      { [constants.kafkaTraceLevelHeaderNameString]: '1' }
+      { [constants.kafkaTraceIdHeaderName]: leftPad(span.t, 32) },
+      { [constants.kafkaSpanIdHeaderName]: span.s },
+      { [constants.kafkaTraceLevelHeaderName]: '1' }
     ];
   } else if (headers && Array.isArray(headers)) {
-    headers.push({ [constants.kafkaTraceIdHeaderNameString]: leftPad(span.t, 32) });
-    headers.push({ [constants.kafkaSpanIdHeaderNameString]: span.s });
-    headers.push({ [constants.kafkaTraceLevelHeaderNameString]: '1' });
+    headers.push({ [constants.kafkaTraceIdHeaderName]: leftPad(span.t, 32) });
+    headers.push({ [constants.kafkaSpanIdHeaderName]: span.s });
+    headers.push({ [constants.kafkaTraceLevelHeaderName]: '1' });
   }
   return headers;
 }
@@ -427,11 +427,11 @@ function addTraceLevelSuppressionBinary(headers) {
   if (headers == null) {
     headers = [
       {
-        [constants.kafkaTraceLevelHeaderNameBinary]: constants.kafkaTraceLevelBinaryValueSuppressed
+        [constants.kafkaLegacyTraceLevelHeaderName]: constants.kafkaLegacyTraceLevelValueSuppressed
       }
     ];
   } else if (headers && typeof Array.isArray(headers)) {
-    headers.push({ [constants.kafkaTraceLevelHeaderNameBinary]: constants.kafkaTraceLevelBinaryValueSuppressed });
+    headers.push({ [constants.kafkaLegacyTraceLevelHeaderName]: constants.kafkaLegacyTraceLevelValueSuppressed });
   }
   return headers;
 }
@@ -440,11 +440,11 @@ function addTraceLevelSuppressionString(headers) {
   if (headers == null) {
     headers = [
       {
-        [constants.kafkaTraceLevelHeaderNameString]: '0'
+        [constants.kafkaTraceLevelHeaderName]: '0'
       }
     ];
   } else if (headers && Array.isArray(headers)) {
-    headers.push({ [constants.kafkaTraceLevelHeaderNameString]: '0' });
+    headers.push({ [constants.kafkaTraceLevelHeaderName]: '0' });
   }
   return headers;
 }
@@ -456,26 +456,26 @@ function findInstanaHeaderValues(instanaHeadersAsObject) {
   let level;
 
   // CASE: Look for the the newer string header format first.
-  if (instanaHeadersAsObject[constants.kafkaTraceIdHeaderNameString]) {
-    traceId = String(instanaHeadersAsObject[constants.kafkaTraceIdHeaderNameString]);
+  if (instanaHeadersAsObject[constants.kafkaTraceIdHeaderName]) {
+    traceId = String(instanaHeadersAsObject[constants.kafkaTraceIdHeaderName]);
     if (traceId) {
       const limited = limitTraceId({ traceId });
       traceId = limited.traceId;
       longTraceId = limited.longTraceId;
     }
   }
-  if (instanaHeadersAsObject[constants.kafkaSpanIdHeaderNameString]) {
-    parentSpanId = String(instanaHeadersAsObject[constants.kafkaSpanIdHeaderNameString]);
+  if (instanaHeadersAsObject[constants.kafkaSpanIdHeaderName]) {
+    parentSpanId = String(instanaHeadersAsObject[constants.kafkaSpanIdHeaderName]);
   }
-  if (instanaHeadersAsObject[constants.kafkaTraceLevelHeaderNameString]) {
-    level = String(instanaHeadersAsObject[constants.kafkaTraceLevelHeaderNameString]);
+  if (instanaHeadersAsObject[constants.kafkaTraceLevelHeaderName]) {
+    level = String(instanaHeadersAsObject[constants.kafkaTraceLevelHeaderName]);
   }
 
   // CASE: Only fall back to legacy binary trace correlation headers if no new header is present.
   if (traceId == null && parentSpanId == null && level == null) {
     // The newer string header format has not been found, fall back to legacy binary headers.
-    if (instanaHeadersAsObject[constants.kafkaTraceContextHeaderNameBinary]) {
-      const traceContextBuffer = instanaHeadersAsObject[constants.kafkaTraceContextHeaderNameBinary];
+    if (instanaHeadersAsObject[constants.kafkaLegacyTraceContextHeaderName]) {
+      const traceContextBuffer = instanaHeadersAsObject[constants.kafkaLegacyTraceContextHeaderName];
 
       if (Buffer.isBuffer(traceContextBuffer) && traceContextBuffer.length === 24) {
         const traceContext = tracingUtil.readTraceContextFromBuffer(traceContextBuffer);

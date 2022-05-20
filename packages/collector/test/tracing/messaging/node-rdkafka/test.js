@@ -53,11 +53,11 @@ const retryTime = config.getTestTimeout() * 2;
 const topic = 'rdkafka-topic';
 
 const allInstanaHeaders = [
-  constants.kafkaTraceIdHeaderNameString,
-  constants.kafkaSpanIdHeaderNameString,
-  constants.kafkaTraceLevelHeaderNameString,
-  constants.kafkaTraceContextHeaderNameBinary,
-  constants.kafkaTraceLevelHeaderNameBinary
+  constants.kafkaTraceIdHeaderName,
+  constants.kafkaSpanIdHeaderName,
+  constants.kafkaTraceLevelHeaderName,
+  constants.kafkaLegacyTraceContextHeaderName,
+  constants.kafkaLegacyTraceLevelHeaderName
 ];
 
 let mochaSuiteFn;
