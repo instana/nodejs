@@ -52,14 +52,6 @@ const SINGLE_TEST_PROPS = {
 const retryTime = config.getTestTimeout() * 2;
 const topic = 'rdkafka-topic';
 
-const allInstanaHeaders = [
-  constants.kafkaTraceIdHeaderName,
-  constants.kafkaSpanIdHeaderName,
-  constants.kafkaTraceLevelHeaderName,
-  constants.kafkaLegacyTraceContextHeaderName,
-  constants.kafkaLegacyTraceLevelHeaderName
-];
-
 let mochaSuiteFn;
 if (!supportedVersion(process.versions.node)) {
   mochaSuiteFn = describe.skip;
@@ -579,7 +571,7 @@ function verifyResponseAndMessage(response, consumerControls, withError, objectM
     const key = Object.keys(keyValuePair)[0];
     headerNames.push(key);
   });
-  allInstanaHeaders.forEach(headerName => expect(headerNames).to.not.contain(headerName));
+  constants.allInstanaKafkaHeaders.forEach(headerName => expect(headerNames).to.not.contain(headerName));
 
   expect(message.topic).to.equal(topic);
   return message;

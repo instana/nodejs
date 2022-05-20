@@ -22,14 +22,6 @@ const ProcessControls = require('../../../test_util/ProcessControls');
 const globalAgent = require('../../../globalAgent');
 const { AgentStubControls } = require('../../../apps/agentStubControls');
 
-const allInstanaHeaders = [
-  constants.kafkaTraceIdHeaderName,
-  constants.kafkaSpanIdHeaderName,
-  constants.kafkaTraceLevelHeaderName,
-  constants.kafkaLegacyTraceContextHeaderName,
-  constants.kafkaLegacyTraceLevelHeaderName
-];
-
 const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
 mochaSuiteFn('tracing/kafkajs', function () {
@@ -461,7 +453,7 @@ mochaSuiteFn('tracing/kafkajs', function () {
       expect(message.key).to.equal('someKey');
       expect(message.value).to.equal('someMessage');
       const headerNames = message.headers ? Object.keys(message.headers) : [];
-      allInstanaHeaders.forEach(headerName => expect(headerNames).to.not.contain(headerName));
+      constants.allInstanaKafkaHeaders.forEach(headerName => expect(headerNames).to.not.contain(headerName));
     }
 
     expect(msgsPerTopic).to.deep.equal({

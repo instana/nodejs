@@ -22,14 +22,6 @@ let headerFormat = constants.kafkaHeaderFormatDefault;
 
 let isActive = false;
 
-const allInstanaHeaders = [
-  constants.kafkaTraceLevelHeaderName,
-  constants.kafkaLegacyTraceLevelHeaderName,
-  constants.kafkaTraceIdHeaderName,
-  constants.kafkaSpanIdHeaderName,
-  constants.kafkaLegacyTraceContextHeaderName
-];
-
 exports.init = function init(config) {
   requireHook.onFileLoad(/\/kafkajs\/src\/producer\/messageProducer\.js/, instrumentProducer);
   requireHook.onFileLoad(/\/kafkajs\/src\/consumer\/runner\.js/, instrumentConsumer);
@@ -534,12 +526,10 @@ function addTraceLevelSuppressionToAllMessagesString(messages) {
 }
 
 function removeInstanaHeadersFromMessage(message) {
-  const headerNames = message.headers && Object.keys(message.headers);
-  if (headerNames && headerNames.length > 0) {
-    headerNames.forEach(name => {
-      if (allInstanaHeaders.includes(name)) {
-        delete message.headers[name];
-      }
+  if (message.headers && typeof message.headers === 'object') {
+    constants.allInstanaKafkaHeaders.forEach(name => {
+      // If the header is not present, deleting it is a no-op.
+      delete message.headers[name];
     });
   }
 }
