@@ -6,6 +6,8 @@
 
 const requireHook = require('../../../util/requireHook');
 const tracingUtil = require('../../tracingUtil');
+const { limitTraceId } = require('../../tracingHeaders');
+const leftPad = require('../../leftPad');
 const constants = require('../../constants');
 const cls = require('../../cls');
 const shimmer = require('shimmer');
@@ -15,6 +17,14 @@ let logger;
 logger = require('../../../logger').getLogger('tracing/rdkafka', newLogger => {
   logger = newLogger;
 });
+
+const allInstanaHeaders = [
+  constants.kafkaTraceIdHeaderNameString,
+  constants.kafkaSpanIdHeaderNameString,
+  constants.kafkaTraceLevelHeaderNameString,
+  constants.kafkaTraceContextHeaderNameBinary,
+  constants.kafkaTraceLevelHeaderNameBinary
+].map(header => header.toLowerCase());
 
 let traceCorrelationEnabled = constants.kafkaTraceCorrelationDefault;
 let headerFormat = constants.kafkaHeaderFormatDefault;
@@ -224,14 +234,6 @@ function instrumentedProduce(ctx, originalProduce, originalArgs) {
 
 function removeInstanaHeadersFromMessage(messageData) {
   if (messageData.headers && messageData.headers.length) {
-    const instanaHeaders = [
-      constants.kafkaTraceLevelHeaderNameString,
-      constants.kafkaTraceLevelHeaderNameBinary,
-      constants.kafkaTraceIdHeaderNameString,
-      constants.kafkaSpanIdHeaderNameString,
-      constants.kafkaTraceContextHeaderNameBinary
-    ].map(header => header.toLowerCase());
-
     for (let i = messageData.headers.length - 1; i >= 0; i--) {
       const headerObject = messageData.headers[i];
       // There should be only one. That's how the API works. This can be tested, for instance, by sending a message
@@ -239,7 +241,7 @@ function removeInstanaHeadersFromMessage(messageData) {
       // messageData.headers array
       const headerKey = Object.keys(headerObject)[0];
 
-      if (instanaHeaders.indexOf(headerKey.toLocaleLowerCase()) > -1) {
+      if (allInstanaHeaders.indexOf(headerKey.toLowerCase()) > -1) {
         messageData.headers.splice(i, 1);
       }
     }
@@ -286,6 +288,7 @@ function instrumentedConsumerEmit(ctx, originalEmit, originalArgs) {
     });
 
     let traceId;
+    let longTraceId;
     let parentSpanId;
     let level;
 
@@ -293,10 +296,12 @@ function instrumentedConsumerEmit(ctx, originalEmit, originalArgs) {
       const {
         level: _level,
         traceId: _traceId,
+        longTraceId: _longTraceId,
         parentSpanId: _parentSpanId
       } = findInstanaHeaderValues(instanaHeadersAsObject);
 
       traceId = _traceId;
+      longTraceId = _longTraceId;
       parentSpanId = _parentSpanId;
       level = _level;
 
@@ -310,6 +315,9 @@ function instrumentedConsumerEmit(ctx, originalEmit, originalArgs) {
       }
 
       const span = cls.startSpan('kafka', constants.ENTRY, traceId, parentSpanId);
+      if (longTraceId) {
+        span.lt = longTraceId;
+      }
       span.stack = tracingUtil.getStackTrace(instrumentedConsumerEmit, 1);
 
       span.data.kafka = {
@@ -387,12 +395,12 @@ function addTraceContextHeaderBinary(headers, span) {
 function addTraceContextHeaderString(headers, span) {
   if (headers == null) {
     headers = [
-      { [constants.kafkaTraceIdHeaderNameString]: span.t },
+      { [constants.kafkaTraceIdHeaderNameString]: leftPad(span.t, 32) },
       { [constants.kafkaSpanIdHeaderNameString]: span.s },
       { [constants.kafkaTraceLevelHeaderNameString]: '1' }
     ];
   } else if (headers && Array.isArray(headers)) {
-    headers.push({ [constants.kafkaTraceIdHeaderNameString]: span.t });
+    headers.push({ [constants.kafkaTraceIdHeaderNameString]: leftPad(span.t, 32) });
     headers.push({ [constants.kafkaSpanIdHeaderNameString]: span.s });
     headers.push({ [constants.kafkaTraceLevelHeaderNameString]: '1' });
   }
@@ -443,12 +451,18 @@ function addTraceLevelSuppressionString(headers) {
 
 function findInstanaHeaderValues(instanaHeadersAsObject) {
   let traceId;
+  let longTraceId;
   let parentSpanId;
   let level;
 
   // CASE: Look for the the newer string header format first.
   if (instanaHeadersAsObject[constants.kafkaTraceIdHeaderNameString]) {
     traceId = String(instanaHeadersAsObject[constants.kafkaTraceIdHeaderNameString]);
+    if (traceId) {
+      const limited = limitTraceId({ traceId });
+      traceId = limited.traceId;
+      longTraceId = limited.longTraceId;
+    }
   }
   if (instanaHeadersAsObject[constants.kafkaSpanIdHeaderNameString]) {
     parentSpanId = String(instanaHeadersAsObject[constants.kafkaSpanIdHeaderNameString]);
@@ -473,5 +487,5 @@ function findInstanaHeaderValues(instanaHeadersAsObject) {
     level = readTraceLevelBinary(instanaHeadersAsObject);
   }
 
-  return { level, traceId, parentSpanId };
+  return { level, traceId, longTraceId, parentSpanId };
 }
