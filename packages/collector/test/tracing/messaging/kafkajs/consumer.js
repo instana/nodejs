@@ -64,11 +64,16 @@ let receivedMessages = [];
           throw new Error('Boom!');
         }
 
+        const headers = {};
+        Object.keys(message.headers).forEach(headerName => {
+          headers[headerName] = String(message.headers[headerName]);
+        });
+
         receivedMessages.push({
           topic,
           key: message.key.toString(),
           value: message.value.toString(),
-          headerNames: Object.keys(message.headers)
+          headers
         });
 
         // simulating asynchronous follow up steps

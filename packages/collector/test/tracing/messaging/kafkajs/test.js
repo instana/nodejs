@@ -463,49 +463,60 @@ mochaSuiteFn('tracing/kafkajs', function () {
   }
 
   function verifyExpectedHeadersHaveBeenUsed(message, { headerFormat, suppressed }) {
+    const headerNames = message.headers ? Object.keys(message.headers) : [];
+
     switch (headerFormat) {
       case 'binary':
         if (!suppressed) {
-          expect(message.headerNames.length).to.equal(2);
-          expect(message.headerNames).to.include('X_INSTANA_C');
-          expect(message.headerNames).to.include('X_INSTANA_L');
+          expect(headerNames.length).to.equal(2);
+          expect(headerNames).to.include('X_INSTANA_C');
+          expect(headerNames).to.include('X_INSTANA_L');
+          expect(message.headers['X_INSTANA_L']).to.have.length(1);
         } else {
-          expect(message.headerNames.length).to.equal(1);
-          expect(message.headerNames).to.include('X_INSTANA_L');
+          expect(headerNames.length).to.equal(1);
+          expect(headerNames).to.include('X_INSTANA_L');
+          expect(message.headers['X_INSTANA_L']).to.have.length(1);
         }
         break;
       case 'string':
         if (!suppressed) {
-          expect(message.headerNames.length).to.equal(2);
-          expect(message.headerNames).to.include('X_INSTANA_T');
-          expect(message.headerNames).to.include('X_INSTANA_S');
+          expect(headerNames.length).to.equal(2);
+          expect(headerNames).to.include('X_INSTANA_T');
+          expect(message.headers['X_INSTANA_T']).to.have.length(32);
+          expect(headerNames).to.include('X_INSTANA_S');
+          expect(message.headers['X_INSTANA_S']).to.have.length(16);
         } else {
-          expect(message.headerNames.length).to.equal(1);
-          expect(message.headerNames).to.include('X_INSTANA_L_S');
+          expect(headerNames.length).to.equal(1);
+          expect(headerNames).to.include('X_INSTANA_L_S');
         }
         break;
       case 'both':
         if (!suppressed) {
-          expect(message.headerNames.length).to.equal(4);
-          expect(message.headerNames).to.include('X_INSTANA_C');
-          expect(message.headerNames).to.include('X_INSTANA_L');
-          expect(message.headerNames).to.include('X_INSTANA_T');
-          expect(message.headerNames).to.include('X_INSTANA_S');
+          expect(headerNames.length).to.equal(4);
+          expect(headerNames).to.include('X_INSTANA_C');
+          expect(headerNames).to.include('X_INSTANA_L');
+          expect(message.headers['X_INSTANA_L']).to.have.length(1);
+          expect(headerNames).to.include('X_INSTANA_T');
+          expect(message.headers['X_INSTANA_T']).to.have.length(32);
+          expect(headerNames).to.include('X_INSTANA_S');
+          expect(message.headers['X_INSTANA_S']).to.have.length(16);
         } else {
-          expect(message.headerNames.length).to.equal(2);
-          expect(message.headerNames).to.include('X_INSTANA_L');
-          expect(message.headerNames).to.include('X_INSTANA_L_S');
+          expect(headerNames.length).to.equal(2);
+          expect(headerNames).to.include('X_INSTANA_L');
+          expect(message.headers['X_INSTANA_L']).to.have.length(1);
+          expect(headerNames).to.include('X_INSTANA_L_S');
+          expect(message.headers['X_INSTANA_L_S']).to.have.length(1);
         }
         break;
       case 'tracing-disabled':
         // Not an actual header format, just a way for the test to specify that tracing is disabled and no headers
         // should be expected.
-        expect(message.headerNames).to.be.empty;
+        expect(headerNames).to.be.empty;
         break;
       case 'correlation-disabled':
         // Not an actual header format, just a way for the test to specify that trace correlation headers are disabled
         // and no headers should be expected.
-        expect(message.headerNames).to.be.empty;
+        expect(headerNames).to.be.empty;
         break;
 
       default:
