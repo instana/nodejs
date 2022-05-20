@@ -64,8 +64,7 @@ function instrumentProducer(createProducer) {
 }
 
 function shimmedSend(originalSend) {
-  // After dropping Node 4 support, we should make this an async function, since the original is also an async function.
-  return /* async */ function (config /* { topic, messages } */) {
+  return async function (config /* { topic, messages } */) {
     const topic = config.topic;
     const messages = config.messages;
 
@@ -119,8 +118,7 @@ function instrumentedSend(ctx, originalSend, originalArgs, topic, messages) {
 }
 
 function shimmedSendBatch(originalSendBatch) {
-  // After dropping Node 4 support, we should make this an async function, since the original is also an async function.
-  return /* async */ function (config /* { topicMessages } */) {
+  return async function (config /* { topicMessages } */) {
     const topicMessages = config.topicMessages;
 
     if (cls.tracingSuppressed()) {
