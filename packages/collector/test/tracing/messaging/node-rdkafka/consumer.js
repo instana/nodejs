@@ -46,11 +46,18 @@ function getConsumer() {
     });
 
     if (process.env.RDKAFKA_CONSUMER_ERROR && process.env.RDKAFKA_CONSUMER_ERROR === 'streamErrorReceiver') {
-      _consumer.consumer.consume(1, err => {
-        if (err.message === 'KafkaConsumer is not connected') {
+      _consumer.consumer.consume(1, (err, msg) => {
+        if (err && err.message === 'KafkaConsumer is not connected') {
           setTimeout(() => {
             _consumer.emit('error', err);
           }, 500);
+        } else {
+          const unexpected = `Unexpected consume result, expected an error. Received message: ${JSON.stringify(
+            msg
+          )}, error: ${err}.`;
+          // eslint-disable-next-line no-console
+          console.log(unexpected);
+          _consumer.emit('error', new Error(unexpected));
         }
       });
     }
