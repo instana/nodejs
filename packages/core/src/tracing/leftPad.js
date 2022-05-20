@@ -55,14 +55,15 @@ const cache = [
  * @returns {string}
  */
 function leftPad(str, len) {
-  // use '0' as the padding char, always
-  let ch = '0';
   // `len` is the `pad`'s length now
   len -= str.length;
   // doesn't need to pad
   if (len <= 0) return str;
   // use cached/precreated padding strings for common use cases (up to length 32)
   if (len < 33) return cache[len] + str;
+
+  // use '0' as the padding char, always
+  let ch = '0';
   // `pad` starts with an empty string
   let pad = '';
   // eslint-disable-next-line no-constant-condition

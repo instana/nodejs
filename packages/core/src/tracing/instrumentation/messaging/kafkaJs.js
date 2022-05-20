@@ -7,6 +7,8 @@
 
 const requireHook = require('../../../util/requireHook');
 const tracingUtil = require('../../tracingUtil');
+const { limitTraceId } = require('../../tracingHeaders');
+const leftPad = require('../../leftPad');
 const constants = require('../../constants');
 const cls = require('../../cls');
 
@@ -236,12 +238,18 @@ function instrumentedEachMessage(originalEachMessage) {
     }
 
     let traceId;
+    let longTraceId;
     let parentSpanId;
     let level;
     if (message && message.headers) {
       // Look for the the newer string header format first.
       if (message.headers[constants.kafkaTraceIdHeaderNameString]) {
         traceId = String(message.headers[constants.kafkaTraceIdHeaderNameString]);
+        if (traceId) {
+          const limited = limitTraceId({ traceId });
+          traceId = limited.traceId;
+          longTraceId = limited.longTraceId;
+        }
       }
       if (message.headers[constants.kafkaSpanIdHeaderNameString]) {
         parentSpanId = String(message.headers[constants.kafkaSpanIdHeaderNameString]);
@@ -271,6 +279,9 @@ function instrumentedEachMessage(originalEachMessage) {
       }
 
       const span = cls.startSpan('kafka', constants.ENTRY, traceId, parentSpanId);
+      if (longTraceId) {
+        span.lt = longTraceId;
+      }
       span.stack = [];
       span.data.kafka = {
         access: 'consume',
@@ -313,6 +324,7 @@ function instrumentedEachBatch(originalEachBatch) {
     }
 
     let traceId;
+    let longTraceId;
     let parentSpanId;
     let level;
     if (batch.messages) {
@@ -320,6 +332,11 @@ function instrumentedEachBatch(originalEachBatch) {
       for (let msgIdx = 0; msgIdx < batch.messages.length; msgIdx++) {
         if (batch.messages[msgIdx].headers && batch.messages[msgIdx].headers[constants.kafkaTraceIdHeaderNameString]) {
           traceId = String(batch.messages[msgIdx].headers[constants.kafkaTraceIdHeaderNameString]);
+          if (traceId) {
+            const limited = limitTraceId({ traceId });
+            traceId = limited.traceId;
+            longTraceId = limited.longTraceId;
+          }
         }
         if (batch.messages[msgIdx].headers && batch.messages[msgIdx].headers[constants.kafkaSpanIdHeaderNameString]) {
           parentSpanId = String(batch.messages[msgIdx].headers[constants.kafkaSpanIdHeaderNameString]);
@@ -365,6 +382,9 @@ function instrumentedEachBatch(originalEachBatch) {
       }
 
       const span = cls.startSpan('kafka', constants.ENTRY, traceId, parentSpanId);
+      if (longTraceId) {
+        span.lt = longTraceId;
+      }
       span.stack = [];
       span.data.kafka = {
         access: 'consume',
@@ -407,20 +427,20 @@ function addTraceContextHeaderToAllMessages(messages, span) {
   }
   switch (headerFormat) {
     case 'binary':
-      addTraceContextHeaderToAllMessagesBinary(messages, span);
+      addLegacyTraceContextHeaderToAllMessages(messages, span);
       break;
     case 'string':
-      addTraceContextHeaderToAllMessagesString(messages, span);
+      addTraceIdSpanIdToAllMessages(messages, span);
       break;
     case 'both':
     // fall through (both is the default)
     default:
-      addTraceContextHeaderToAllMessagesBinary(messages, span);
-      addTraceContextHeaderToAllMessagesString(messages, span);
+      addLegacyTraceContextHeaderToAllMessages(messages, span);
+      addTraceIdSpanIdToAllMessages(messages, span);
   }
 }
 
-function addTraceContextHeaderToAllMessagesBinary(messages, span) {
+function addLegacyTraceContextHeaderToAllMessages(messages, span) {
   if (Array.isArray(messages)) {
     for (let msgIdx = 0; msgIdx < messages.length; msgIdx++) {
       if (messages[msgIdx].headers == null) {
@@ -438,16 +458,16 @@ function addTraceContextHeaderToAllMessagesBinary(messages, span) {
   }
 }
 
-function addTraceContextHeaderToAllMessagesString(messages, span) {
+function addTraceIdSpanIdToAllMessages(messages, span) {
   if (Array.isArray(messages)) {
     for (let msgIdx = 0; msgIdx < messages.length; msgIdx++) {
       if (messages[msgIdx].headers == null) {
         messages[msgIdx].headers = {
-          [constants.kafkaTraceIdHeaderNameString]: span.t,
+          [constants.kafkaTraceIdHeaderNameString]: leftPad(span.t, 32),
           [constants.kafkaSpanIdHeaderNameString]: span.s
         };
       } else if (messages[msgIdx].headers && typeof messages[msgIdx].headers === 'object') {
-        messages[msgIdx].headers[constants.kafkaTraceIdHeaderNameString] = span.t;
+        messages[msgIdx].headers[constants.kafkaTraceIdHeaderNameString] = leftPad(span.t, 32);
         messages[msgIdx].headers[constants.kafkaSpanIdHeaderNameString] = span.s;
       }
     }

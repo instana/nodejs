@@ -132,11 +132,11 @@ exports.fromHeaders = function fromHeaders(headers) {
       synthetic,
       w3cTraceContext
     };
-    return limitTraceId(result);
+    return exports.limitTraceId(result);
   } else if (xInstanaT && xInstanaS) {
     // X-INSTANA- headers are present but W3C trace context headers are not. Use the received IDs and also create a W3C
     // trace context based on those IDs.
-    return limitTraceId({
+    return exports.limitTraceId({
       traceId: /** @type {string} */ (xInstanaT),
       parentId: /** @type {string} */ (xInstanaS),
       usedTraceParent: false,
@@ -164,7 +164,7 @@ exports.fromHeaders = function fromHeaders(headers) {
         p: w3cTraceContext.instanaParentId
       };
     }
-    return limitTraceId({
+    return exports.limitTraceId({
       traceId: !isSuppressed(level) ? w3cTraceContext.traceParentTraceId : null,
       parentId: !isSuppressed(level) ? w3cTraceContext.traceParentParentId : null,
       usedTraceParent: !isSuppressed(level),
@@ -192,7 +192,7 @@ exports.fromHeaders = function fromHeaders(headers) {
       traceId = generateRandomTraceId();
       parentId = null;
     }
-    return limitTraceId({
+    return exports.limitTraceId({
       traceId,
       parentId,
       usedTraceParent: false,
@@ -210,7 +210,7 @@ exports.fromHeaders = function fromHeaders(headers) {
       // pass them down in the traceparent header); this trace and parent IDs ares not actually associated with any
       // existing span (Instana or foreign). This can't be helped, the spec mandates to always set the traceparent
       // header on outgoing requests, even if we didn't sample and it has to have a parent ID field.
-      return limitTraceId({
+      return exports.limitTraceId({
         usedTraceParent: false,
         level,
         synthetic,
@@ -225,7 +225,7 @@ exports.fromHeaders = function fromHeaders(headers) {
       // cls.startSpan, we will update it so it gets the parent ID of the entry span we create there. The bogus
       // parent ID "000..." will never be transmitted to any other service.
       w3cTraceContext = w3c.create(xInstanaT, '0000000000000000', true);
-      return limitTraceId({
+      return exports.limitTraceId({
         traceId: xInstanaT,
         parentId: null,
         usedTraceParent: false,
@@ -361,13 +361,13 @@ function readW3cTraceContext(headers) {
  * @param {TracingHeaders} result
  * @returns {TracingHeaders}
  */
-function limitTraceId(result) {
+exports.limitTraceId = function limitTraceId(result) {
   if (result.traceId && result.traceId.length >= 32) {
     result.longTraceId = result.traceId;
     result.traceId = result.traceId.substring(16, 32);
   }
   return result;
-}
+};
 
 /**
  * Takes the result of fromHttpReques/fromHeaders and sets the required attributes on the span.
