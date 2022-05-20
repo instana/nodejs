@@ -18,15 +18,15 @@ exports.syntheticHeaderName = 'X-INSTANA-SYNTHETIC';
 exports.syntheticHeaderNameLowerCase = exports.syntheticHeaderName.toLowerCase();
 
 // legacy kafka trace correlation (binary values)
-exports.kafkaTraceContextHeaderNameBinary = 'X_INSTANA_C';
-exports.kafkaTraceLevelHeaderNameBinary = 'X_INSTANA_L';
-exports.kafkaTraceLevelBinaryValueSuppressed = Buffer.from([0]);
-exports.kafkaTraceLevelBinaryValueInherit = Buffer.from([1]);
+exports.kafkaLegacyTraceContextHeaderName = 'X_INSTANA_C';
+exports.kafkaLegacyTraceLevelHeaderName = 'X_INSTANA_L';
+exports.kafkaLegacyTraceLevelValueSuppressed = Buffer.from([0]);
+exports.kafkaLegacyTraceLevelValueInherit = Buffer.from([1]);
 
 // new kafka trace correlation (string values) starting approximately 2021-11
-exports.kafkaTraceIdHeaderNameString = 'X_INSTANA_T';
-exports.kafkaSpanIdHeaderNameString = 'X_INSTANA_S';
-exports.kafkaTraceLevelHeaderNameString = 'X_INSTANA_L_S';
+exports.kafkaTraceIdHeaderName = 'X_INSTANA_T';
+exports.kafkaSpanIdHeaderName = 'X_INSTANA_S';
+exports.kafkaTraceLevelHeaderName = 'X_INSTANA_L_S';
 
 exports.kafkaTraceCorrelationDefault = true;
 // Before we start phase 1 of the migration, 'binary' will be the default value. With phase 1, we will move to 'both',
