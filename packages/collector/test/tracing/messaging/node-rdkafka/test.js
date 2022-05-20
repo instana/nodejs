@@ -34,19 +34,11 @@ const globalAgent = require('../../../globalAgent');
 const { AgentStubControls } = require('../../../apps/agentStubControls');
 const { verifyHttpRootEntry, verifyHttpExit } = require('@instana/core/test/test_util/common_verifications');
 
-let mochaSuiteFn;
-
 const producerEnableDeliveryCbOptions = ['true', 'false'];
 const producerApiMethods = ['standard', 'stream'];
 const consumerApiMethods = ['standard', 'stream'];
 const objectModeMethods = ['true', 'false'];
 const withErrorMethods = [false, 'bufferErrorSender', 'deliveryErrorSender', 'streamErrorReceiver'];
-
-if (!supportedVersion(process.versions.node)) {
-  mochaSuiteFn = describe.skip;
-} else {
-  mochaSuiteFn = describe;
-}
 
 const RUN_SINGLE_TEST = false;
 const SINGLE_TEST_PROPS = {
@@ -59,6 +51,21 @@ const SINGLE_TEST_PROPS = {
 
 const retryTime = config.getTestTimeout() * 2;
 const topic = 'rdkafka-topic';
+
+const allInstanaHeaders = [
+  constants.kafkaTraceIdHeaderNameString,
+  constants.kafkaSpanIdHeaderNameString,
+  constants.kafkaTraceLevelHeaderNameString,
+  constants.kafkaTraceContextHeaderNameBinary,
+  constants.kafkaTraceLevelHeaderNameBinary
+];
+
+let mochaSuiteFn;
+if (!supportedVersion(process.versions.node)) {
+  mochaSuiteFn = describe.skip;
+} else {
+  mochaSuiteFn = describe;
+}
 
 mochaSuiteFn('tracing/messaging/node-rdkafka', function () {
   this.timeout(config.getTestTimeout() * 4);
@@ -564,7 +571,16 @@ function verifyResponseAndMessage(response, consumerControls, withError, objectM
   })[0];
 
   expect(message).to.exist;
-  expect(Buffer.from(message.value.data, 'utf8').toString()).to.equal('Node rdkafka is great!');
+  const messagePayload = Buffer.from(message.value.data, 'utf8').toString();
+  expect(messagePayload).to.equal('Node rdkafka is great!');
+
+  const headerNames = [];
+  message.headers.forEach(keyValuePair => {
+    const key = Object.keys(keyValuePair)[0];
+    headerNames.push(key);
+  });
+  allInstanaHeaders.forEach(headerName => expect(headerNames).to.not.contain(headerName));
+
   expect(message.topic).to.equal(topic);
   return message;
 }
