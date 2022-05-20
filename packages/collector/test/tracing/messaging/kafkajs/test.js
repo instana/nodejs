@@ -22,6 +22,14 @@ const ProcessControls = require('../../../test_util/ProcessControls');
 const globalAgent = require('../../../globalAgent');
 const { AgentStubControls } = require('../../../apps/agentStubControls');
 
+const allInstanaHeaders = [
+  constants.kafkaTraceIdHeaderName,
+  constants.kafkaSpanIdHeaderName,
+  constants.kafkaTraceLevelHeaderName,
+  constants.kafkaLegacyTraceContextHeaderName,
+  constants.kafkaLegacyTraceLevelHeaderName
+];
+
 const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
 mochaSuiteFn('tracing/kafkajs', function () {
@@ -78,8 +86,7 @@ mochaSuiteFn('tracing/kafkajs', function () {
               headerFormat,
               error,
               useSendBatch,
-              useEachBatch,
-              suppressed: false
+              useEachBatch
             };
             return send({
               key: 'someKey',
@@ -106,7 +113,7 @@ mochaSuiteFn('tracing/kafkajs', function () {
           if (error === false) {
             // we do not need dedicated suppression tests for error conditions
             it(`must not trace when suppressed (header format: ${headerFormat})`, () => {
-              const parameters = { headerFormat, error, useSendBatch, useEachBatch, suppressed: true };
+              const parameters = { headerFormat, error, useSendBatch, useEachBatch };
               return send({
                 key: 'someKey',
                 value: 'someMessage',
@@ -160,8 +167,7 @@ mochaSuiteFn('tracing/kafkajs', function () {
               headerFormat,
               error,
               useSendBatch,
-              useEachBatch,
-              suppressed: false
+              useEachBatch
             };
             return send({
               key: 'someKey',
@@ -218,8 +224,7 @@ mochaSuiteFn('tracing/kafkajs', function () {
         const parameters = {
           headerFormat: 'correlation-disabled',
           useSendBatch,
-          useEachBatch,
-          suppressed: false
+          useEachBatch
         };
         return send({
           key: 'someKey',
@@ -243,7 +248,7 @@ mochaSuiteFn('tracing/kafkajs', function () {
       });
 
       it('must not trace Kafka exits when suppressed (but will trace Kafka entries)', () => {
-        const parameters = { headerFormat: 'correlation-disabled', useSendBatch, useEachBatch, suppressed: true };
+        const parameters = { headerFormat: 'correlation-disabled', useSendBatch, useEachBatch };
         return send({
           key: 'someKey',
           value: 'someMessage',
@@ -434,7 +439,7 @@ mochaSuiteFn('tracing/kafkajs', function () {
     });
   }
 
-  function checkMessages(messages, { headerFormat, error, useSendBatch, useEachBatch, suppressed }) {
+  function checkMessages(messages, { error, useSendBatch, useEachBatch }) {
     expect(messages).to.be.an('array');
     if (error) {
       expect(messages).to.be.empty;
@@ -451,77 +456,18 @@ mochaSuiteFn('tracing/kafkajs', function () {
       [`${topicPrefix}-2`]: 0
     };
     for (let i = 0; i < numberOfMessages; i++) {
-      expect(messages[i].key).to.equal('someKey');
-      expect(messages[i].value).to.equal('someMessage');
-      verifyExpectedHeadersHaveBeenUsed(messages[i], { headerFormat, suppressed });
-      msgsPerTopic[messages[i].topic]++;
+      const message = messages[i];
+      msgsPerTopic[message.topic]++;
+      expect(message.key).to.equal('someKey');
+      expect(message.value).to.equal('someMessage');
+      const headerNames = message.headers ? Object.keys(message.headers) : [];
+      allInstanaHeaders.forEach(headerName => expect(headerNames).to.not.contain(headerName));
     }
+
     expect(msgsPerTopic).to.deep.equal({
       [`${topicPrefix}-1`]: 2,
       [`${topicPrefix}-2`]: useSendBatch ? 1 : 0
     });
-  }
-
-  function verifyExpectedHeadersHaveBeenUsed(message, { headerFormat, suppressed }) {
-    const headerNames = message.headers ? Object.keys(message.headers) : [];
-
-    switch (headerFormat) {
-      case 'binary':
-        if (!suppressed) {
-          expect(headerNames.length).to.equal(2);
-          expect(headerNames).to.include('X_INSTANA_C');
-          expect(headerNames).to.include('X_INSTANA_L');
-          expect(message.headers['X_INSTANA_L']).to.have.length(1);
-        } else {
-          expect(headerNames.length).to.equal(1);
-          expect(headerNames).to.include('X_INSTANA_L');
-          expect(message.headers['X_INSTANA_L']).to.have.length(1);
-        }
-        break;
-      case 'string':
-        if (!suppressed) {
-          expect(headerNames.length).to.equal(2);
-          expect(headerNames).to.include('X_INSTANA_T');
-          expect(message.headers['X_INSTANA_T']).to.have.length(32);
-          expect(headerNames).to.include('X_INSTANA_S');
-          expect(message.headers['X_INSTANA_S']).to.have.length(16);
-        } else {
-          expect(headerNames.length).to.equal(1);
-          expect(headerNames).to.include('X_INSTANA_L_S');
-        }
-        break;
-      case 'both':
-        if (!suppressed) {
-          expect(headerNames.length).to.equal(4);
-          expect(headerNames).to.include('X_INSTANA_C');
-          expect(headerNames).to.include('X_INSTANA_L');
-          expect(message.headers['X_INSTANA_L']).to.have.length(1);
-          expect(headerNames).to.include('X_INSTANA_T');
-          expect(message.headers['X_INSTANA_T']).to.have.length(32);
-          expect(headerNames).to.include('X_INSTANA_S');
-          expect(message.headers['X_INSTANA_S']).to.have.length(16);
-        } else {
-          expect(headerNames.length).to.equal(2);
-          expect(headerNames).to.include('X_INSTANA_L');
-          expect(message.headers['X_INSTANA_L']).to.have.length(1);
-          expect(headerNames).to.include('X_INSTANA_L_S');
-          expect(message.headers['X_INSTANA_L_S']).to.have.length(1);
-        }
-        break;
-      case 'tracing-disabled':
-        // Not an actual header format, just a way for the test to specify that tracing is disabled and no headers
-        // should be expected.
-        expect(headerNames).to.be.empty;
-        break;
-      case 'correlation-disabled':
-        // Not an actual header format, just a way for the test to specify that trace correlation headers are disabled
-        // and no headers should be expected.
-        expect(headerNames).to.be.empty;
-        break;
-
-      default:
-        throw new Error(`Invalid header format: ${headerFormat}`);
-    }
   }
 
   function verifyHttpEntry(spans) {
