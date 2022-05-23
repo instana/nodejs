@@ -38,7 +38,7 @@ module.exports = exports = function buildSingleAddOn(abi, version) {
   let command = `node node_modules/node-gyp/bin/node-gyp.js rebuild --target=${version} ${darwinNodeJs10Fix} --arch=x64`;
   const cwd = path.join(__dirname, '..');
 
-  // NOTE: the comment is not only executed on the container, also on your mac if you run `build-all-addons`
+  // NOTE: the command is not only executed on the container, also on your local developer machine if you run `build-all-addons`
   if (cwd !== '/opt/autoprofile') {
     const rootGyp = path.join(__dirname, '..', '..', '..', 'node_modules');
     command = `node ${rootGyp}/node-gyp/bin/node-gyp.js rebuild --target=${version} ${darwinNodeJs10Fix} --arch=x64`;
