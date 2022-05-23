@@ -6,7 +6,7 @@
 
 const port = process.env.APP_PORT || 3216;
 
-require('../../../../')();
+require('../../../..')();
 
 const bodyParser = require('body-parser');
 const pinoLogger = require('pino')();

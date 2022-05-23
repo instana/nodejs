@@ -15,7 +15,7 @@ if (process.env.AWS_SDK_CLIENT_S3_REQUIRE !== '@aws-sdk/client-s3') {
   mock('@aws-sdk/client-s3', process.env.AWS_SDK_CLIENT_S3_REQUIRE);
 }
 
-require('../../../../../../')();
+require('../../../../../..')();
 const express = require('express');
 const fetch = require('node-fetch');
 const awsSdk3 = require('@aws-sdk/client-s3');

@@ -21,7 +21,7 @@ if (FASTIFY_REQUIRE !== 'fastify') {
   mock('fastify', FASTIFY_REQUIRE);
 }
 
-require('../../../../')();
+require('../../../..')();
 const fastify = require('fastify');
 
 // NOTE: beforeHandler got deprecated in v2 and removed in v3

@@ -7,7 +7,7 @@
 
 const agentPort = process.env.INSTANA_AGENT_PORT;
 
-require('../../../../')({
+require('../../../..')({
   level: 'warn',
   tracing: {
     enabled: process.env.TRACING_ENABLED !== 'false',

@@ -9,7 +9,7 @@
 
 const agentPort = process.env.INSTANA_AGENT_PORT;
 
-const instana = require('../../../../')();
+const instana = require('../../../..')();
 
 const accessFunction = process.env.USE_EXECUTE ? 'execute' : 'query';
 const driverModeEnvVar = process.env.DRIVER_MODE;

@@ -27,7 +27,7 @@ describe('[UNIT] util.initializedTooLateHeurstic', function () {
 
     require.cache['/@contrast/agent/'] = {};
 
-    const tracing = require('../../src/');
+    const tracing = require('../../src');
     tracing.init();
   });
 

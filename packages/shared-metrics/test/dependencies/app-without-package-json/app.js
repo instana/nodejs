@@ -10,6 +10,7 @@ if (!repoRootDir) {
   throw new Error('Mandatory environment variable INSTANA_NODES_REPO is not set.');
 }
 
+// eslint-disable-next-line import/no-unresolved
 const instana = require('@instana/collector');
 const dependenciesModule = require(`${repoRootDir}/packages/shared-metrics/src/dependencies`);
 dependenciesModule.MAX_DEPENDENCIES = 200;

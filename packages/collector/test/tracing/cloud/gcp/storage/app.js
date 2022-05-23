@@ -5,7 +5,7 @@
 
 'use strict';
 
-require('../../../../../')();
+require('../../../../..')();
 
 const async_ = require('async');
 const bodyParser = require('body-parser');

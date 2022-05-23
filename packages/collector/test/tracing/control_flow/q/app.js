@@ -5,7 +5,7 @@
 
 'use strict';
 
-const instana = require('../../../../')();
+const instana = require('../../../..')();
 
 const fs = require('fs');
 const path = require('path');

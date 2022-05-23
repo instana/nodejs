@@ -5,7 +5,7 @@
 
 'use strict';
 
-require('../../../../../../')();
+require('../../../../../..')();
 const agentPort = process.env.INSTANA_AGENT_PORT || 42699;
 const request = require('request-promise');
 const delay = require('../../../../../../../core/test/test_util/delay');

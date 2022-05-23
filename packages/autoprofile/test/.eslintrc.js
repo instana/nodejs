@@ -6,19 +6,7 @@
 'use strict';
 
 module.exports = {
-  extends: '../../../.eslintrc.js',
-
-  env: {
-    es6: true,
-    mocha: true
-  },
-
-  parserOptions: {
-    ecmaVersion: 2018
-  },
-
-  rules: {
-    'instana/no-unsafe-require': 'off',
-    'monorepo-cop/no-relative-import-outside-package': 'off'
-  }
+  extends: '../../../.eslintrc.tests.js',
+  // see https://github.com/eslint/eslint/issues/13385#issuecomment-641252879
+  root: true
 };

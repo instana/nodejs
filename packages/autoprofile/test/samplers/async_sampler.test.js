@@ -5,12 +5,12 @@
 
 'use strict';
 
-const AsyncSampler = require('../../lib/samplers/async_sampler').AsyncSampler;
-
 const { Writable } = require('stream');
 const assert = require('assert');
 const http = require('http');
 const fs = require('fs');
+
+const AsyncSampler = require('../../lib/samplers/async_sampler').AsyncSampler;
 
 class DevNull extends Writable {
   constructor(opts) {

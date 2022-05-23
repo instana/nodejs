@@ -33,7 +33,7 @@ if (process.env.SCREW_AROUND_WITH_UP_ARRAY_FIND) {
   });
 }
 
-require('../../../')(config);
+require('../../..')(config);
 
 const http = require('http');
 const pino = require('pino')();

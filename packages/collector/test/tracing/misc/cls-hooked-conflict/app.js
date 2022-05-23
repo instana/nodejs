@@ -5,7 +5,7 @@
 
 'use strict';
 
-const instana = require('../../../../')();
+const instana = require('../../../..')();
 const clsHooked = require('cls-hooked');
 
 const express = require('express');

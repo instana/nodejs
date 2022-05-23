@@ -5,7 +5,7 @@
 
 'use strict';
 
-const instana = require('../../../');
+const instana = require('../../..');
 
 instana({
   agentPort: process.env.AGENT_PORT,

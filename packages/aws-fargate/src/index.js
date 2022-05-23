@@ -20,7 +20,7 @@ try {
     return;
   }
   if (majorVersion >= 10) {
-    module.exports = exports = require('./preactivate.js');
+    module.exports = exports = require('./preactivate');
     return;
   } else if (majorVersion >= 6 && majorVersion < 10) {
     // eslint-disable-next-line no-console
@@ -40,7 +40,7 @@ try {
     //   /instana/legacy-1x/node_modules/@instana/aws-fargate/src/preactivate
     // Otherwise we would get into an endless require loop.
     //
-    // eslint-disable-next-line instana/no-unsafe-require
+    // eslint-disable-next-line
     module.exports = exports = require('/instana/legacy-1x/node_modules/@instana/aws-fargate/src/index');
     return;
   }

@@ -5,9 +5,10 @@
 
 'use strict';
 
-const CpuSampler = require('../../lib/samplers/cpu_sampler').CpuSampler;
 const assert = require('assert');
 const async = require('async');
+
+const CpuSampler = require('../../lib/samplers/cpu_sampler').CpuSampler;
 
 describe('CpuSampler', () => {
   let profiler;

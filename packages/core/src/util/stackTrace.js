@@ -61,6 +61,7 @@ exports.getStackTraceAsJson = function getStackTraceAsJson(length, error) {
   Error.stackTraceLimit = length;
   Error.prepareStackTrace = attachJsonStackTrace;
   // access error.stack to trigger attachJsonStackTrace to be called
+  // eslint-disable-next-line no-unused-expressions
   error.stack;
   Error.stackTraceLimit = originalLimit;
   Error.prepareStackTrace = originalPrepareStackTrace;

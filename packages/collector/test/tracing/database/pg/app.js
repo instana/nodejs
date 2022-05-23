@@ -9,7 +9,7 @@
 
 const agentPort = process.env.INSTANA_AGENT_PORT;
 
-require('../../../../')();
+require('../../../..')();
 
 const _pg = require('pg');
 const Pool = _pg.Pool;

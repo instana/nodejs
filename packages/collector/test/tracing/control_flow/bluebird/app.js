@@ -8,7 +8,7 @@
 
 'use strict';
 
-const instana = require('../../../../')();
+const instana = require('../../../..')();
 
 const request = require('request-promise');
 const bodyParser = require('body-parser');

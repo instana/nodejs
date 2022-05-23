@@ -15,10 +15,10 @@ if (process.env.REQUIRE_BEFORE_COLLECTOR) {
   http = require('http');
   httpGet = http.get;
   require(process.env.REQUIRE_BEFORE_COLLECTOR);
-  require('../../../../')();
+  require('../../../..')();
 } else {
   // Initializing @instana/collector properly, before other require statements.
-  require('../../../../')();
+  require('../../../..')();
   http = require('http');
   httpGet = http.get;
 }

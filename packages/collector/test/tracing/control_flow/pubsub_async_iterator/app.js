@@ -5,7 +5,7 @@
 
 'use strict';
 
-require('../../../../')();
+require('../../../..')();
 
 const cls = require('../../../../../core/src/tracing/cls');
 

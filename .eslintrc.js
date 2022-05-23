@@ -5,8 +5,12 @@
 
 'use strict';
 
+/**
+ * The basic eslint configuration for production code. Eslint configs in the individual packages * implicitly inherit
+ * from this configuration.
+ */
 module.exports = {
-  extends: ['airbnb/legacy', 'plugin:monorepo-cop/recommended'],
+  extends: ['airbnb-base', 'plugin:monorepo-cop/recommended'],
 
   env: {
     es6: true,
@@ -14,16 +18,18 @@ module.exports = {
   },
 
   parserOptions: {
-    ecmaVersion: 2016,
+    // With Node.js 10 as the minimum required Node.js version, ES 2018 is appropriate, see  https://node.green/#ES2018.
+    ecmaVersion: 2018,
     sourceType: 'script'
   },
 
   plugins: ['header', 'instana', 'mocha', 'monorepo-cop'],
 
   rules: {
-    'block-scoped-var': 'off',
+    'arrow-parens': 'off',
+    'arrow-body-style': 'off',
+    'comma-dangle': ['error', 'never'],
     'class-methods-use-this': 'off',
-    'comma-dangle': 'off',
     'consistent-return': 'off',
     eqeqeq: ['error', 'allow-null'],
     'func-names': 'off',
@@ -39,49 +45,47 @@ module.exports = {
         { pattern: '' }
       ]
     ],
-    'id-length': 'off',
     'implicit-arrow-linebreak': 'off',
+    'import/newline-after-import': 'off',
+    'import/no-dynamic-require': 'off',
+    'import/order': 'off',
     indent: 'off',
     'instana/no-unsafe-require': 'error',
     'max-classes-per-file': 'off',
     'max-len': ['error', 120, 2],
     'mocha/no-exclusive-tests': 'error',
     'new-cap': 'off',
-    'newline-per-chained-call': 'off',
+    'no-confusing-arrow': 'off',
     'no-console': 'error',
     'no-const-assign': 'error',
     'no-continue': 'off',
     'no-dupe-class-members': 'error',
     'no-else-return': 'off',
     'no-labels': 'off',
-    'no-mixed-operators': 'off',
     'no-multi-assign': 'off',
-    'no-multiple-empty-lines': 'off',
     'no-param-reassign': 'off',
     'no-plusplus': 'off',
     'no-restricted-globals': 'off',
     'no-underscore-dangle': 'off',
-    'no-unused-expressions': 'off',
     'no-use-before-define': ['error', 'nofunc'],
     'no-var': 'error',
     'object-curly-newline': 'off',
-    'object-curly-spacing': 'off',
+    'object-shorthand': 'off',
     'operator-linebreak': 'off',
+    'prefer-arrow-callback': 'off',
     'prefer-const': [
       'error',
       {
         destructuring: 'all'
       }
     ],
-    'prefer-arrow-callback': 'off',
-    'space-before-function-paren': 'off',
+    'prefer-destructuring': 'off',
+    'prefer-object-spread': 'off',
+    'prefer-rest-params': 'off',
+    'prefer-spread': 'off',
+    'prefer-template': 'off',
     strict: ['error', 'global'],
-    'vars-on-top': 'off',
     'wrap-iife': 'off',
     yoda: 'off'
-  },
-
-  globals: {
-    Promise: true
   }
 };

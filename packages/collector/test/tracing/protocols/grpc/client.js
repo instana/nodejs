@@ -7,7 +7,7 @@
 
 const port = process.env.APP_PORT || 3216;
 
-require('../../../../')();
+require('../../../..')();
 
 const bodyParser = require('body-parser');
 // pino log spans are used to verify that follow up calls are traced correctly after a GRPC exit

@@ -5,7 +5,7 @@
 
 'use strict';
 
-require('../../../../../../')();
+require('../../../../../..')();
 
 const { ApolloServer, gql } = require('apollo-server-express');
 const { buildFederatedSchema } = require('@apollo/federation');

@@ -7,7 +7,7 @@
 
 'use strict';
 
-const instana = require('../../../')();
+const instana = require('../../..')();
 
 const express = require('express');
 const morgan = require('morgan');

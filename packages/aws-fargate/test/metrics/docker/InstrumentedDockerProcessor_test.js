@@ -57,23 +57,21 @@ describe('Docker processor', function () {
     dataProcessor.resetSources();
   });
 
-  after(() => {
-    return new Promise(resolve => {
-      if (metadataMock) {
-        metadataMock.once('exit', () => {
+  after(
+    () =>
+      new Promise(resolve => {
+        if (metadataMock) {
+          metadataMock.once('exit', () => resolve());
+          metadataMock.kill();
+        } else {
           resolve();
-        });
-        metadataMock.kill();
-      } else {
-        resolve();
-      }
-    });
-  });
+        }
+      })
+  );
 
-  it('should not get ready if no successful fetch has happened', () => {
+  it('should not get ready if no successful fetch has happened', () =>
     // deliberately not activating the source
-    return delay(50).then(() => expect(dataProcessor.isReady()).to.be.false);
-  });
+    delay(50).then(() => expect(dataProcessor.isReady()).to.be.false));
 
   it('should get ready if a successful fetch has happened', () => {
     dataProcessor.activate();

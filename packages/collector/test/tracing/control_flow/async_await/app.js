@@ -8,7 +8,7 @@
 const rp = require('request-promise');
 const request = require('request');
 
-require('../../../../')({
+require('../../../..')({
   agentPort: process.env.AGENT_PORT,
   level: 'warn',
   tracing: {

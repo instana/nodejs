@@ -13,7 +13,7 @@
 /*
  * Note: The rule import/no-unresolved is not enough for every case in this project because it will be satisfied if the
  * required module can be found somewhere, for example in the node_modules of the root package, or as a dev dependency.
- * For our production code, that does not offer enough protection. Instead the required module needs to bein the
+ * For our production code, that does not offer enough protection. Instead the required module needs to be in the
  * production dependencies of that particular package.
  */
 

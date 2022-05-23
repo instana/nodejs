@@ -7,6 +7,7 @@
 
 module.exports = {
   rules: {
-    'no-console': 'off'
+    // npm install might not have been run in this directory
+    'import/no-unresolved': 'off'
   }
 };

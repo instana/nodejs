@@ -9,7 +9,7 @@
 
 const agentPort = process.env.AGENT_PORT;
 
-const instana = require('../../../../')({
+const instana = require('../../../..')({
   agentPort,
   level: 'warn',
   tracing: {

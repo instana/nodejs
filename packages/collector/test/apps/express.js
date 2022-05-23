@@ -9,7 +9,7 @@
 // latency and response codes. This can be used a baselines for many tests, e.g.
 // to test distributed tracing.
 
-const instana = require('../../')({
+const instana = require('../..')({
   agentPort: process.env.AGENT_PORT,
   tracing: {
     metrics: {

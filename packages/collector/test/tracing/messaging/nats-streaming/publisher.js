@@ -7,7 +7,7 @@
 
 const agentPort = process.env.INSTANA_AGENT_PORT;
 
-require('../../../../')();
+require('../../../..')();
 
 const request = require('request-promise');
 const express = require('express');

@@ -10,7 +10,7 @@
 const appPort = process.env.APP_PORT || 3215;
 const agentPort = process.env.INSTANA_AGENT_PORT;
 
-const instana = require('../../../../')();
+const instana = require('../../../..')();
 
 const express = require('express');
 const kafka = require('kafka-node');

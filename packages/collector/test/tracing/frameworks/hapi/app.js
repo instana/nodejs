@@ -5,7 +5,7 @@
 
 'use strict';
 
-require('../../../../')();
+require('../../../..')();
 
 const LEGACY_HAPI = process.env.LEGACY_HAPI === 'true';
 const Hapi = require(LEGACY_HAPI ? 'hapi' : '@hapi/hapi');
