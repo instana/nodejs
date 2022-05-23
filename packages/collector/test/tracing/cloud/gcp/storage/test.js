@@ -611,11 +611,9 @@ if (
         mochaFn(`must trace google cloud storage ${pathPrefix} (${apiVariant} API)`, async () => {
           const requestPath = `/${pathPrefix}-${apiVariant}`;
 
-          return run(requestPath).then(() => {
-            return retry(() =>
-              agentControls.getSpans().then(spans => verifySpans(spans, requestPath, expectedGcsSpans))
-            );
-          });
+          return run(requestPath).then(() =>
+            retry(() => agentControls.getSpans().then(spans => verifySpans(spans, requestPath, expectedGcsSpans)))
+          );
         });
       });
 
@@ -626,17 +624,17 @@ if (
       it(`HMAC key operations (${apiVariant} API)`, () => {
         const requestPath = `/hmac-keys-${apiVariant}`;
 
-        return run(requestPath).then(() => {
-          return retry(() => agentControls.getSpans().then(spans => verifySpansHmacKeys(spans, requestPath)));
-        });
+        return run(requestPath).then(() =>
+          retry(() => agentControls.getSpans().then(spans => verifySpansHmacKeys(spans, requestPath)))
+        );
       });
     });
 
     it('file read stream', () => {
       const requestPath = '/file-read-stream';
 
-      return run(requestPath).then(() => {
-        return retry(() =>
+      return run(requestPath).then(() =>
+        retry(() =>
           agentControls.getSpans().then(spans =>
             verifySpans(spans, requestPath, [
               {
@@ -655,15 +653,15 @@ if (
               }
             ])
           )
-        );
-      });
+        )
+      );
     });
 
     it('file write stream', () => {
       const requestPath = '/file-write-stream';
 
-      return run(requestPath).then(() => {
-        return retry(() =>
+      return run(requestPath).then(() =>
+        retry(() =>
           agentControls.getSpans().then(spans =>
             verifySpans(spans, requestPath, [
               {
@@ -675,8 +673,8 @@ if (
               }
             ])
           )
-        );
-      });
+        )
+      );
     });
 
     function verifySpans(spans, requestPath, expectedGcsSpans) {

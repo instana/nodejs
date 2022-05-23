@@ -192,8 +192,8 @@ mochaSuiteFn('tracing/nats', function () {
             path: url,
             simple: false
           })
-          .then(() => {
-            return retry(() => {
+          .then(() =>
+            retry(() => {
               const receivedMessages = subscriberControls.getIpcMessages();
               expect(receivedMessages).to.have.lengthOf(1);
               if (withError) {
@@ -246,8 +246,8 @@ mochaSuiteFn('tracing/nats', function () {
                   span => expect(span.k).to.equal(constants.EXIT)
                 ]);
               });
-            });
-          });
+            })
+          );
       });
     }
   });

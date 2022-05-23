@@ -87,9 +87,7 @@ const AWSAPI = {
             } else {
               setTimeout(() => {
                 request(`http://127.0.0.1:${agentPort}`)
-                  .then(() => {
-                    return resolve(data);
-                  })
+                  .then(() => resolve(data))
                   .catch(err2 => {
                     log(
                       `${

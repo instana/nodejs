@@ -290,8 +290,8 @@ mochaSuiteFn('tracing/kafkajs', function () {
     it(
       `must trace sending and receiving and keep trace continuity (header format ${headerFormat} ` +
         'from agent config)',
-      () => {
-        return send({
+      () =>
+        send({
           key: 'someKey',
           value: 'someMessage'
         }).then(() =>
@@ -307,8 +307,7 @@ mochaSuiteFn('tracing/kafkajs', function () {
                 verifyFollowUpHttpExit(spans, httpEntry);
               })
           )
-        );
-      }
+        )
     );
   });
 
@@ -331,8 +330,8 @@ mochaSuiteFn('tracing/kafkajs', function () {
     it(
       'must trace sending and receiving but will not keep trace continuity ' +
         '(trace correlation disabled from agent config)',
-      () => {
-        return send({
+      () =>
+        send({
           key: 'someKey',
           value: 'someMessage'
         }).then(() =>
@@ -348,8 +347,7 @@ mochaSuiteFn('tracing/kafkajs', function () {
                 verifyFollowUpHttpExit(spans, httpEntry);
               })
           )
-        );
-      }
+        )
     );
   });
 

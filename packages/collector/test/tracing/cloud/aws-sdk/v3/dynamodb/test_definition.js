@@ -89,9 +89,7 @@ function start(version, requestMethod) {
 
       ProcessControls.setUpHooksWithRetryTime(retryTime, appControls);
 
-      after(() => {
-        return cleanup(tableName);
-      });
+      after(() => cleanup(tableName));
 
       availableOperations.forEach(operation => {
         it(`operation: ${operation}/${requestMethod}`, async () => {
@@ -129,21 +127,17 @@ function start(version, requestMethod) {
 
       ProcessControls.setUpHooksWithRetryTime(retryTime, appControls);
 
-      after(() => {
-        return cleanup(tableName);
-      });
+      after(() => cleanup(tableName));
 
-      it(`should instrument ${availableOperations.join(', ')} with error`, () => {
-        return promisifyNonSequentialCases(
-          (controls, response, apiPath, operation, withError) => {
-            return verify(controls, response, apiPath, operation, withError, tableName);
-          },
+      it(`should instrument ${availableOperations.join(', ')} with error`, () =>
+        promisifyNonSequentialCases(
+          (controls, response, apiPath, operation, withError) =>
+            verify(controls, response, apiPath, operation, withError, tableName),
           availableOperations,
           appControls,
           true,
           () => requestMethod
-        );
-      });
+        ));
     });
 
     describe('tracing disabled', () => {
@@ -164,9 +158,7 @@ function start(version, requestMethod) {
 
       ProcessControls.setUpHooksWithRetryTime(retryTime, appControls);
 
-      after(() => {
-        return cleanup(tableName);
-      });
+      after(() => cleanup(tableName));
 
       before(async () => {
         // Create table first!
@@ -217,9 +209,7 @@ function start(version, requestMethod) {
 
       ProcessControls.setUpHooksWithRetryTime(retryTime, appControls);
 
-      after(() => {
-        return cleanup(tableName);
-      });
+      after(() => cleanup(tableName));
 
       before(async () => {
         // Create table first!
@@ -262,11 +252,13 @@ function start(version, requestMethod) {
     });
 
     function verify(controls, response, apiPath, operation, withError, tableName) {
-      return retry(() => {
-        return agentControls
-          .getSpans()
-          .then(spans => verifySpans(controls, response, spans, apiPath, operation, withError, tableName));
-      }, retryTime);
+      return retry(
+        () =>
+          agentControls
+            .getSpans()
+            .then(spans => verifySpans(controls, response, spans, apiPath, operation, withError, tableName)),
+        retryTime
+      );
     }
 
     function verifySpans(controls, response, spans, apiPath, operation, withError, tableName) {

@@ -84,8 +84,8 @@ mochaSuiteFn('tracing/mongoose', function () {
       );
   });
 
-  it('must trace aggregate calls', () => {
-    return controls
+  it('must trace aggregate calls', () =>
+    controls
       .sendRequest({
         method: 'POST',
         path: '/aggregate'
@@ -107,8 +107,7 @@ mochaSuiteFn('tracing/mongoose', function () {
             expect(mongoExit.data.mongo.json).to.contain('"$project"');
           })
         );
-      });
-  });
+      }));
 
   function expectEntry(spans, url) {
     return expectExactlyOneMatching(spans, [

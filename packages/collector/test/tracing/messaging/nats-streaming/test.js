@@ -146,8 +146,8 @@ mochaSuiteFn('tracing/nats-streaming', function () {
             path: url,
             simple: false
           })
-          .then(() => {
-            return retry(() => {
+          .then(() =>
+            retry(() => {
               const receivedMessages = subscriberControls.getIpcMessages();
               if (!withError) {
                 expect(receivedMessages).to.have.lengthOf.at.least(1);
@@ -199,8 +199,8 @@ mochaSuiteFn('tracing/nats-streaming', function () {
                   span => expect(span.f.h).to.equal('agent-stub-uuid')
                 ]);
               });
-            });
-          });
+            })
+          );
       });
     }
   });

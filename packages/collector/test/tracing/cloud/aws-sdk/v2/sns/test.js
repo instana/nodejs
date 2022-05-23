@@ -82,15 +82,8 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/sns', function () {
     withErrorOptions.forEach(withError => {
       if (withError) {
         describe(`getting result with error: ${withError ? 'yes' : 'no'}`, () => {
-          it(`should instrument ${availableOperations.join(', ')} with error`, () => {
-            return promisifyNonSequentialCases(
-              verify,
-              availableOperations,
-              senderControls,
-              withError,
-              getNextCallMethod
-            );
-          });
+          it(`should instrument ${availableOperations.join(', ')} with error`, () =>
+            promisifyNonSequentialCases(verify, availableOperations, senderControls, withError, getNextCallMethod));
         });
       } else {
         describe(`getting result with error: ${withError ? 'yes' : 'no'}`, () => {

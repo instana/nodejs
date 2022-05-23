@@ -72,9 +72,7 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/dynamodb', function () {
   globalAgent.setUpCleanUpHooks();
   const agentControls = globalAgent.instance;
 
-  after(() => {
-    return cleanup(tableName);
-  });
+  after(() => cleanup(tableName));
 
   describe('tracing enabled, no suppression', function () {
     const appControls = new ProcessControls({
@@ -90,9 +88,8 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/dynamodb', function () {
     withErrorOptions.forEach(withError => {
       if (withError) {
         describe(`getting result with error: ${withError ? 'yes' : 'no'}`, () => {
-          it(`should instrument ${availableOperations.join(', ')} with error`, () => {
-            return promisifyNonSequentialCases(verify, availableOperations, appControls, withError, getNextCallMethod);
-          });
+          it(`should instrument ${availableOperations.join(', ')} with error`, () =>
+            promisifyNonSequentialCases(verify, availableOperations, appControls, withError, getNextCallMethod));
         });
       } else {
         describe(`getting result with error: ${withError ? 'yes' : 'no'}`, () => {
@@ -122,9 +119,10 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/dynamodb', function () {
     });
 
     function verify(controls, response, apiPath, operation, withError) {
-      return retry(() => {
-        return agentControls.getSpans().then(spans => verifySpans(controls, spans, apiPath, operation, withError));
-      }, retryTime);
+      return retry(
+        () => agentControls.getSpans().then(spans => verifySpans(controls, spans, apiPath, operation, withError)),
+        retryTime
+      );
     }
 
     function verifySpans(controls, spans, apiPath, operation, withError) {

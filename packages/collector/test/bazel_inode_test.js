@@ -79,9 +79,7 @@ describe('agent connection/bazel', function () {
 
   function mockFs(readlinkSyncResult) {
     return {
-      readlinkSync: () => {
-        return readlinkSyncResult;
-      }
+      readlinkSync: () => readlinkSyncResult
     };
   }
 

@@ -91,8 +91,8 @@ mochaSuiteFn('tracing/cache/memcached', function () {
         });
 
         describe('instrumenting non sequential operations with success', () => {
-          it(`should instrument ${parallelOps.join(', ')}`, () => {
-            return Promise.all(
+          it(`should instrument ${parallelOps.join(', ')}`, () =>
+            Promise.all(
               parallelOps.map(op => {
                 const apiPath = `/${op}`;
 
@@ -102,18 +102,15 @@ mochaSuiteFn('tracing/cache/memcached', function () {
                     path: `${apiPath}`,
                     simple: withError === false
                   })
-                  .then(response => {
-                    return verify(appControls, response, apiPath, withError, op);
-                  })
+                  .then(response => verify(appControls, response, apiPath, withError, op))
                   .catch(Promise.reject);
               })
-            );
-          });
+            ));
         });
       } else {
         describe('instrumenting with API error', () => {
-          it(`should test ${availableOperations.join(', ')}`, () => {
-            return Promise.all(
+          it(`should test ${availableOperations.join(', ')}`, () =>
+            Promise.all(
               availableOperations.map(op => {
                 const apiPath = `/${op}`;
                 return appControls
@@ -122,21 +119,19 @@ mochaSuiteFn('tracing/cache/memcached', function () {
                     path: `${apiPath}?withError=true`,
                     simple: withError === false
                   })
-                  .then(response => {
-                    return verify(appControls, response, apiPath, withError, op);
-                  })
+                  .then(response => verify(appControls, response, apiPath, withError, op))
                   .catch(Promise.reject);
               })
-            );
-          });
+            ));
         });
       }
     });
 
     function verify(controls, response, apiPath, withError, operation) {
-      return retry(() => {
-        return agentControls.getSpans().then(spans => verifySpans(controls, spans, apiPath, withError, operation));
-      }, retryTime);
+      return retry(
+        () => agentControls.getSpans().then(spans => verifySpans(controls, spans, apiPath, withError, operation)),
+        retryTime
+      );
     }
 
     function verifySpans(controls, spans, apiPath, withError, operation) {
@@ -206,10 +201,10 @@ mochaSuiteFn('tracing/cache/memcached', function () {
     });
 
     describe('non sequential operations that are not instrumented', () => {
-      it(`does not instrument ${parallelOps.join(', ')}`, () => {
-        return Promise.all(
-          parallelOps.map(op => {
-            return appControls
+      it(`does not instrument ${parallelOps.join(', ')}`, () =>
+        Promise.all(
+          parallelOps.map(op =>
+            appControls
               .sendRequest({
                 method: 'GET',
                 path: `/${op}`
@@ -224,10 +219,9 @@ mochaSuiteFn('tracing/cache/memcached', function () {
                   return Promise.resolve();
                 }
               })
-              .catch(Promise.reject);
-          })
-        );
-      });
+              .catch(Promise.reject)
+          )
+        ));
     });
   });
 
@@ -262,10 +256,10 @@ mochaSuiteFn('tracing/cache/memcached', function () {
     });
 
     describe('non sequential operations are not traced', () => {
-      it(`should not trace (${parallelOps.join(', ')})`, () => {
-        return Promise.all(
-          parallelOps.map(op => {
-            return appControls
+      it(`should not trace (${parallelOps.join(', ')})`, () =>
+        Promise.all(
+          parallelOps.map(op =>
+            appControls
               .sendRequest({
                 suppressTracing: true,
                 method: 'GET',
@@ -281,10 +275,9 @@ mochaSuiteFn('tracing/cache/memcached', function () {
                   return Promise.resolve();
                 }
               })
-              .catch(Promise.reject);
-          })
-        );
-      });
+              .catch(Promise.reject)
+          )
+        ));
     });
   });
 });

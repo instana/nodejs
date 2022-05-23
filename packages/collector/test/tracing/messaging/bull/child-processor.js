@@ -17,6 +17,4 @@ function log() {
   /* eslint-enable no-console */
 }
 
-module.exports = (job, done) => {
-  return processJob(job, done, log, 'separate process');
-};
+module.exports = (job, done) => processJob(job, done, log, 'separate process');

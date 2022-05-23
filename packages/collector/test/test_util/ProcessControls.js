@@ -48,24 +48,16 @@ class ProcessControls {
    * suite has finished. Ensures that app and agent is booted before the test can start.
    */
   static setUpSuiteHooksWithRetryTime(retryTime, ...allControls) {
-    before(() => {
-      return Promise.all(allControls.map(control => control.startAndWaitForAgentConnection(retryTime)));
-    });
-    after(() => {
-      return Promise.all(allControls.map(control => control.stop()));
-    });
+    before(() => Promise.all(allControls.map(control => control.startAndWaitForAgentConnection(retryTime))));
+    after(() => Promise.all(allControls.map(control => control.stop())));
   }
 
   /**
    * Cleans up per test-case data (IPC messages received from the child process) before and after each test case.
    */
   static setUpTestCaseCleanUpHooks(...allControls) {
-    beforeEach(() => {
-      return Promise.all(allControls.map(control => control.clearIpcMessages()));
-    });
-    afterEach(() => {
-      return Promise.all(allControls.map(control => control.clearIpcMessages()));
-    });
+    beforeEach(() => Promise.all(allControls.map(control => control.clearIpcMessages())));
+    afterEach(() => Promise.all(allControls.map(control => control.clearIpcMessages())));
   }
 
   /**

@@ -130,12 +130,8 @@ const DynamoDBApi = {
             } else {
               setTimeout(() => {
                 request(`http://127.0.0.1:${agentPort}`)
-                  .then(() => {
-                    return resolve(data);
-                  })
-                  .catch(err2 => {
-                    return reject(err2);
-                  });
+                  .then(() => resolve(data))
+                  .catch(err2 => reject(err2));
               });
             }
           });

@@ -64,15 +64,15 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/combined-products', function () {
     ProcessControls.setUpHooksWithRetryTime(retryTime, appControls);
     withErrorOptions.forEach(withError => {
       describe(`getting result with error: ${withError ? 'yes' : 'no'}`, () => {
-        it(`should instrument ${availableOperations.join(', ')} ${withError ? 'with' : 'without'} errors`, () => {
-          return promisifyNonSequentialCases(verify, availableOperations, appControls, withError, getNextCallMethod);
-        });
+        it(`should instrument ${availableOperations.join(', ')} ${withError ? 'with' : 'without'} errors`, () =>
+          promisifyNonSequentialCases(verify, availableOperations, appControls, withError, getNextCallMethod));
       });
     });
     function verify(controls, response, apiPath, operation, withError) {
-      return retry(() => {
-        return agentControls.getSpans().then(spans => verifySpans(controls, spans, apiPath, operation, withError));
-      }, retryTime);
+      return retry(
+        () => agentControls.getSpans().then(spans => verifySpans(controls, spans, apiPath, operation, withError)),
+        retryTime
+      );
     }
     function verifySpans(controls, spans, apiPath, operation, withError) {
       const httpEntry = verifyHttpRootEntry({ spans, apiPath, pid: String(controls.getPid()) });
@@ -115,23 +115,21 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/combined-products', function () {
     });
     ProcessControls.setUpHooksWithRetryTime(retryTime, appControls);
     describe('attempt to get result', () => {
-      it(`should not trace ${availableOperations.join(', ')}`, () => {
-        return promisifyNonSequentialCases(
-          () => {
-            return retry(() => delay(config.getTestTimeout() / 4))
+      it(`should not trace ${availableOperations.join(', ')}`, () =>
+        promisifyNonSequentialCases(
+          () =>
+            retry(() => delay(config.getTestTimeout() / 4))
               .then(() => agentControls.getSpans())
               .then(spans => {
                 if (spans.length > 0) {
                   fail(`Unexpected spans suppressed: ${stringifyItems(spans)}`);
                 }
-              });
-          },
+              }),
           availableOperations,
           appControls,
           false,
           getNextCallMethod
-        );
-      });
+        ));
     });
   });
 
@@ -146,24 +144,22 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/combined-products', function () {
     });
     ProcessControls.setUpHooksWithRetryTime(retryTime, appControls);
     describe('attempt to get result', () => {
-      it(`should not trace ${availableOperations.join(', ')}`, () => {
-        return promisifyNonSequentialCases(
-          () => {
-            return retry(() => delay(config.getTestTimeout() / 4), retryTime)
+      it(`should not trace ${availableOperations.join(', ')}`, () =>
+        promisifyNonSequentialCases(
+          () =>
+            retry(() => delay(config.getTestTimeout() / 4), retryTime)
               .then(() => agentControls.getSpans())
               .then(spans => {
                 if (spans.length > 0) {
                   fail(`Unexpected spans suppressed: ${stringifyItems(spans)}`);
                 }
-              });
-          },
+              }),
           availableOperations,
           appControls,
           false,
           getNextCallMethod,
           { suppressTracing: true }
-        );
-      });
+        ));
     });
   });
 });

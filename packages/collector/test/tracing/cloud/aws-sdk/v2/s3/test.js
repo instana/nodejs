@@ -62,9 +62,7 @@ const retryTime = config.getTestTimeout() * 2;
 mochaSuiteFn('tracing/cloud/aws-sdk/v2/s3', function () {
   this.timeout(config.getTestTimeout() * 3);
 
-  after(() => {
-    return cleanup(bucketName);
-  });
+  after(() => cleanup(bucketName));
 
   globalAgent.setUpCleanUpHooks();
   const agentControls = globalAgent.instance;
@@ -84,9 +82,8 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/s3', function () {
     withErrorOptions.forEach(withError => {
       if (withError) {
         describe(`getting result with error: ${withError ? 'yes' : 'no'}`, () => {
-          it(`should instrument ${availableOperations.join(', ')} with error`, () => {
-            return promisifyNonSequentialCases(verify, availableOperations, appControls, withError, getNextCallMethod);
-          });
+          it(`should instrument ${availableOperations.join(', ')} with error`, () =>
+            promisifyNonSequentialCases(verify, availableOperations, appControls, withError, getNextCallMethod));
         });
       } else {
         describe(`getting result with error: ${withError ? 'yes' : 'no'}`, () => {
@@ -111,9 +108,10 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/s3', function () {
     });
 
     function verify(controls, response, apiPath, withError) {
-      return retry(() => {
-        return agentControls.getSpans().then(spans => verifySpans(controls, spans, apiPath, withError));
-      }, retryTime);
+      return retry(
+        () => agentControls.getSpans().then(spans => verifySpans(controls, spans, apiPath, withError)),
+        retryTime
+      );
     }
 
     function verifySpans(controls, spans, apiPath, withError) {

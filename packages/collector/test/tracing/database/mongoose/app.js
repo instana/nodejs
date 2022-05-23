@@ -113,8 +113,8 @@ app.post('/aggregate', (req, res) => {
       age: 89
     })
   ])
-    .then(() => {
-      return Person.aggregate([
+    .then(() =>
+      Person.aggregate([
         {
           $match: { status: status1 }
         },
@@ -132,8 +132,8 @@ app.post('/aggregate', (req, res) => {
             totalAge: true
           }
         }
-      ]);
-    })
+      ])
+    )
     .then(r => {
       res.json(r);
     })

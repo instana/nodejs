@@ -103,13 +103,9 @@ exports.processJob = processJob;
 exports.buildReceiver = function (queue, processType, log, jobName, isConcurrent) {
   const processorPath = path.join(__dirname, 'child-processor.js');
 
-  const callbackCb = (job, done) => {
-    return processJob(job, done, log, 'callback');
-  };
+  const callbackCb = (job, done) => processJob(job, done, log, 'callback');
 
-  const promiseCb = job => {
-    return processJob(job, undefined, log, 'promise');
-  };
+  const promiseCb = job => processJob(job, undefined, log, 'promise');
 
   const callbackArgs = [callbackCb];
   const promiseArgs = [promiseCb];

@@ -9,18 +9,18 @@ const AWS = require('@aws-sdk/client-sqs');
 const sqs = new AWS.SQS({ region: 'us-east-2' });
 
 exports.createQueues = function (queueNames) {
-  const promises = queueNames.map(name => {
-    return sqs.createQueue({
+  const promises = queueNames.map(name =>
+    sqs.createQueue({
       QueueName: name
-    });
-  });
+    })
+  );
 
   return Promise.all(promises);
 };
 
 exports.deleteQueues = function (urls) {
-  const promises = urls.map(url => {
-    return sqs
+  const promises = urls.map(url =>
+    sqs
       .deleteQueue({
         QueueUrl: url
       })
@@ -29,8 +29,8 @@ exports.deleteQueues = function (urls) {
           return Promise.resolve();
         }
         return Promise.reject(err);
-      });
-  });
+      })
+  );
 
   return Promise.all(promises);
 };

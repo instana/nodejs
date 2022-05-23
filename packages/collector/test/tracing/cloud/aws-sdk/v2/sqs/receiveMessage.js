@@ -98,12 +98,10 @@ function receivePromise() {
       span = instana.currentSpan();
       span.disableAutoEnd();
 
-      const messagesForDeletion = data.Messages.map(message => {
-        return {
-          Id: message.MessageId,
-          ReceiptHandle: message.ReceiptHandle
-        };
-      });
+      const messagesForDeletion = data.Messages.map(message => ({
+        Id: message.MessageId,
+        ReceiptHandle: message.ReceiptHandle
+      }));
 
       return sqs
         .deleteMessageBatch({
@@ -154,12 +152,10 @@ async function receiveAsync() {
         span = instana.currentSpan();
         span.disableAutoEnd();
 
-        const messagesForDeletion = data.Messages.map(message => {
-          return {
-            Id: message.MessageId,
-            ReceiptHandle: message.ReceiptHandle
-          };
-        });
+        const messagesForDeletion = data.Messages.map(message => ({
+          Id: message.MessageId,
+          ReceiptHandle: message.ReceiptHandle
+        }));
 
         await sqs
           .deleteMessageBatch({
@@ -204,12 +200,10 @@ function receiveCallback(cb) {
         messagesData.Messages.map(m => m.MessageId)
       );
 
-      const messagesForDeletion = messagesData.Messages.map(message => {
-        return {
-          Id: message.MessageId,
-          ReceiptHandle: message.ReceiptHandle
-        };
-      });
+      const messagesForDeletion = messagesData.Messages.map(message => ({
+        Id: message.MessageId,
+        ReceiptHandle: message.ReceiptHandle
+      }));
 
       sqs.deleteMessageBatch(
         {
