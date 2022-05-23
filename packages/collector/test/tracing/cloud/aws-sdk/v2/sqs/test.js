@@ -117,7 +117,7 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/sqs', function () {
         [false, 'sender'].forEach(withError => {
           const sqsSendMethod = getNextSendMethod();
           const apiPath = `/send-${sqsSendMethod}`;
-          const urlWithParams = withError ? apiPath + '?withError=true' : apiPath;
+          const urlWithParams = withError ? `${apiPath}?withError=true` : apiPath;
 
           it(`send(${sqsSendMethod}); receive(${sqsReceiveMethod}); error: ${!!withError}`, async () => {
             const response = await senderControls.sendRequest({
@@ -479,7 +479,7 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/sqs', function () {
       useGlobalAgent: true,
       env: {
         SQS_RECEIVE_METHOD: 'callback',
-        AWS_SQS_QUEUE_URL: queueURL + '-non-existent'
+        AWS_SQS_QUEUE_URL: `${queueURL}-non-existent`
       }
     });
 

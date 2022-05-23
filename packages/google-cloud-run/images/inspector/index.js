@@ -185,7 +185,7 @@ app.on('request', async (req, res) => {
   } catch (e) {
     console.error(e);
     res.statusCode = 500;
-    res.end('Inspection failed: ' + (e.stack || e.message || e));
+    res.end(`Inspection failed: ${e.stack || e.message || e}`);
   }
 });
 

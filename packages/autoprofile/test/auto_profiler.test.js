@@ -36,7 +36,7 @@ describe('AutoProfiler', () => {
       // do some work
       for (let i = 0; i < 60 * 10000; i++) {
         /* eslint-disable no-unused-vars */
-        let text = 'text' + i;
+        let text = `text${i}`;
         text += 'text2';
       }
 

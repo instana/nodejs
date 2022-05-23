@@ -138,10 +138,10 @@ mochaSuiteFn('tracing/messaging/node-rdkafka', function () {
                       let urlWithParams;
 
                       if (withError === 'deliveryErrorSender') {
-                        urlWithParams = apiPath + '?throwDeliveryErr=true';
+                        urlWithParams = `${apiPath}?throwDeliveryErr=true`;
                         await consumerControls.kill();
                       } else if (withError === 'bufferErrorSender') {
-                        urlWithParams = apiPath + '?bufferErrorSender=true';
+                        urlWithParams = `${apiPath}?bufferErrorSender=true`;
                       } else {
                         urlWithParams = apiPath;
                       }

@@ -25,7 +25,7 @@ app.get('/otel-test', (_req, res) => {
   delay(500)
     .then(() => request('https://www.instana.com'))
     .then(text => {
-      res.send({ ok: true, data: text.substr(0, 10) + '...' });
+      res.send({ ok: true, data: `${text.substr(0, 10)}...` });
     })
     .catch(err => {
       res.status(500).send({ error: err });
@@ -36,7 +36,7 @@ app.post('/otel-post', (_req, res) => {
   delay(500)
     .then(() => request('https://www.instana.com'))
     .then(text => {
-      res.send({ ok: true, data: text.substr(0, 10) + '...' });
+      res.send({ ok: true, data: `${text.substr(0, 10)}...` });
     })
     .catch(err => {
       res.status(500).send({ error: err });

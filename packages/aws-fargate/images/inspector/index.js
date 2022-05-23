@@ -126,7 +126,7 @@ app.on('request', async (req, res) => {
     res.end(result.join('\n'));
   } catch (e) {
     res.statusCode = 500;
-    res.end('Inspection failed.');
+    res.end(`Inspection failed: ${e.stack || e.message || e}`);
   }
 });
 

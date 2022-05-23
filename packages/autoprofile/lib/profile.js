@@ -40,7 +40,7 @@ class CallSite {
   }
 
   createKey(methodName, fileName, fileLine) {
-    return methodName + ' (' + fileName + ':' + fileLine + ')';
+    return `${methodName} (${fileName}:${fileLine})`;
   }
 
   findChild(methodName, fileName, fileLine) {
@@ -105,7 +105,7 @@ class CallSite {
 class Profile {
   constructor(profiler, category, type, unit, roots, duration, timespan) {
     this.profiler = profiler;
-    this.processId = '' + process.pid;
+    this.processId = `${process.pid}`;
     this.id = profiler.utils.generateUuid();
     this.runtime = Profile.c.RUNTIME_NODEJS;
     this.category = category;

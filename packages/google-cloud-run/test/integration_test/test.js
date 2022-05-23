@@ -270,6 +270,7 @@ describe('Google Cloud Run integration test', function () {
     const expectedNumberOfPlugins = 3;
     if (allEntities.length < expectedNumberOfPlugins) {
       fail(
+        // eslint-disable-next-line prefer-template
         'Error: Received less entities than expected: ' +
           `Wanted: ${expectedNumberOfPlugins}, got: ${allEntities.length}. ` +
           'Here are the entities that have been received: ' +
