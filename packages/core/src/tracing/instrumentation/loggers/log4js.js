@@ -66,10 +66,8 @@ function instrumentedLog(ctx, originalArgs, originalLog, markAsError) {
       message = originalArgs[1];
     } else {
       // The original log4js log method takes (level, ...data) as arguments and creates the actually logged message via
-      // util.format(...data). The following is equivalent, but Node.js 4 compliant (spread syntax is available
-      // beginning with Node.js 5).
-      const messageArgs = originalArgs.slice(1);
-      message = util.format.apply(util, messageArgs);
+      // util.format(...data).
+      message = util.format.apply(...originalArgs.slice(1));
     }
 
     const span = cls.startSpan('log.log4js', constants.EXIT);
