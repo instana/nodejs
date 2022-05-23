@@ -23,9 +23,7 @@ const app = express();
 
 app.get('/otel-test', (_req, res) => {
   delay(500)
-    .then(() => {
-      return request('https://www.instana.com');
-    })
+    .then(() => request('https://www.instana.com'))
     .then(text => {
       res.send({ ok: true, data: text.substr(0, 10) + '...' });
     })
@@ -36,9 +34,7 @@ app.get('/otel-test', (_req, res) => {
 
 app.post('/otel-post', (_req, res) => {
   delay(500)
-    .then(() => {
-      return request('https://www.instana.com');
-    })
+    .then(() => request('https://www.instana.com'))
     .then(text => {
       res.send({ ok: true, data: text.substr(0, 10) + '...' });
     })

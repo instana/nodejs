@@ -4,7 +4,7 @@
 
 'use strict';
 
-require('../../../../')();
+require('../../../..')();
 
 /* eslint-disable no-console */
 const bodyParser = require('body-parser');

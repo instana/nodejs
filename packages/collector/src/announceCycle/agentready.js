@@ -42,6 +42,7 @@ logger = require('../logger').getLogger('announceCycle/agentready', newLogger =>
 if (agentOpts.autoProfile) {
   try {
     // @ts-ignore - TS cannot find @instana/profile. TODO: @instana/autoprofile is not linted or typed
+    // eslint-disable-next-line import/no-extraneous-dependencies
     autoprofile = require('@instana/autoprofile');
   } catch (e) {
     logger.info(

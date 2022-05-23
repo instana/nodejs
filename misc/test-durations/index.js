@@ -52,7 +52,7 @@ module.exports = async function createTestSuiteDurationReport(filename, exitOnEr
         accumulatedReport[suiteName] = {
           suite: suiteName,
           durationInSeconds: 0,
-          ['number of tests']: 0
+          'number of tests': 0
           // tests: []
         };
       }

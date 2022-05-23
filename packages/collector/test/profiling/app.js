@@ -5,7 +5,7 @@
 
 'use strict';
 
-require('../../')();
+require('../..')();
 
 const logPrefix = `HTTP: Server (${process.pid}):\t`;
 

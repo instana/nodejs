@@ -6,7 +6,7 @@
 
 const port = process.env.APP_PORT || 3217;
 
-require('../../../../')();
+require('../../../..')();
 
 const express = require('express');
 const morgan = require('morgan');

@@ -9,7 +9,7 @@
 
 const agentPort = process.env.INSTANA_AGENT_PORT;
 
-const instana = require('../../../')();
+const instana = require('../../..')();
 
 const fs = require('fs');
 const bodyParser = require('body-parser');
@@ -404,16 +404,16 @@ function nestIntermediatesPromise(message) {
 }
 
 function synchronousOperations() {
-  const result = instana.sdk.callback.startEntrySpan('synchronous-entry', () => {
-    return instana.sdk.callback.startIntermediateSpan('synchronous-intermediate', () => {
-      return instana.sdk.callback.startExitSpan('synchronous-exit', () => {
+  const result = instana.sdk.callback.startEntrySpan('synchronous-entry', () =>
+    instana.sdk.callback.startIntermediateSpan('synchronous-intermediate', () =>
+      instana.sdk.callback.startExitSpan('synchronous-exit', () => {
         instana.sdk.callback.completeExitSpan();
         instana.sdk.callback.completeIntermediateSpan();
         instana.sdk.callback.completeEntrySpan();
         return '4711';
-      });
-    });
-  });
+      })
+    )
+  );
   process.send(`done: ${result}`);
 }
 

@@ -4,7 +4,9 @@
 
 'use strict';
 
-const instana = require('../../../../')();
+const instana = require('../../../..')();
+
+// eslint-disable-next-line import/no-extraneous-dependencies, import/no-unresolved
 const KafkaAvro = require('kafka-avro');
 
 const fetch = require('node-fetch');

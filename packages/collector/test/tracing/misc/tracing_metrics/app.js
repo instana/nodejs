@@ -5,7 +5,7 @@
 
 'use strict';
 
-const instana = require('../../../../')({
+const instana = require('../../../..')({
   tracing: {
     forceTransmissionStartingAt: process.env.FORCE_TRANSMISSION_STARTING_AT
       ? parseInt(process.env.FORCE_TRANSMISSION_STARTING_AT, 10)

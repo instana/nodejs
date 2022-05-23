@@ -5,7 +5,7 @@
 
 'use strict';
 
-const instana = require('../../../../')();
+const instana = require('../../../..')();
 
 const bodyParser = require('body-parser');
 const express = require('express');

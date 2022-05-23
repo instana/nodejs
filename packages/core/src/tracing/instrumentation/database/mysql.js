@@ -30,7 +30,9 @@ function instrumentMysql(mysql) {
 
 function instrumentMysql2(mysql) {
   instrumentConnection(mysql.Connection.prototype, true);
-  mysql.Pool && instrumentPool(mysql.Pool.prototype);
+  if (mysql.Pool) {
+    instrumentPool(mysql.Pool.prototype);
+  }
 }
 
 function instrumentMysql2WithPromises(mysql) {

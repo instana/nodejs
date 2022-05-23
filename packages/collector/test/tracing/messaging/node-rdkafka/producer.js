@@ -4,7 +4,7 @@
 
 'use strict';
 
-require('../../../../')({});
+require('../../../..')({});
 
 const Kafka = require('node-rdkafka');
 const fetch = require('node-fetch');

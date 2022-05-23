@@ -5,7 +5,7 @@
 
 'use strict';
 
-require('../../../../')();
+require('../../../..')();
 const logPrefix = `Bull (${process.pid}):\t`;
 const Queue = require('bull');
 const redisServer = process.env.REDIS_SERVER || 'redis://127.0.0.1:6379';

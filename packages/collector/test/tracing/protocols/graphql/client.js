@@ -6,7 +6,7 @@
 'use strict';
 
 require('./mockVersion');
-require('../../../../')();
+require('../../../..')();
 
 const amqp = require('amqplib');
 const bodyParser = require('body-parser');

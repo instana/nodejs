@@ -5,7 +5,7 @@
 
 'use strict';
 
-require('../../../../')();
+require('../../../..')();
 
 const request = require('request-promise');
 const bodyParser = require('body-parser');

@@ -5,7 +5,7 @@
 
 'use strict';
 
-require('../../../../')();
+require('../../../..')();
 
 const fs = require('fs');
 const http2 = require('http2');

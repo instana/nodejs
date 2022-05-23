@@ -101,9 +101,7 @@ function instrumentClient(clientModule) {
           method,
           requestStream,
           responseStream,
-          (args, span) => {
-            return modifyArgs(name, args, span);
-          }
+          (args, span) => modifyArgs(name, args, span)
         );
       };
     });

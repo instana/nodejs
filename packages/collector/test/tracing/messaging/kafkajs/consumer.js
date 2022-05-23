@@ -5,7 +5,7 @@
 
 'use strict';
 
-const instana = require('../../../../')();
+const instana = require('../../../..')();
 
 const express = require('express');
 const { Kafka } = require('kafkajs');

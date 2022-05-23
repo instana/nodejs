@@ -7,7 +7,7 @@
 
 const useHttp2 = process.env.USE_HTTP2 ? process.env.USE_HTTP2 === 'true' : false;
 
-require('../../../../')();
+require('../../../..')();
 
 const fs = require('fs');
 const path = require('path');

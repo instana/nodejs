@@ -7,7 +7,7 @@
 
 const port = process.env.APP_PORT || 3217;
 
-require('../../../../')();
+require('../../../..')();
 
 const Mali = require('mali');
 const pinoLogger = require('pino')();

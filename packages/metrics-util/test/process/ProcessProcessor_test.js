@@ -26,10 +26,9 @@ describe('Process processor', function () {
     dataProcessor.resetSources();
   });
 
-  it("should not get ready if core metrics haven't been activated", () => {
+  it("should not get ready if core metrics haven't been activated", () =>
     // deliberately not activating the source
-    return delay(50).then(() => expect(dataProcessor.isReady()).to.be.false);
-  });
+    delay(50).then(() => expect(dataProcessor.isReady()).to.be.false));
 
   it('should get ready if core metrics have been activated', () => {
     dataProcessor.activate();

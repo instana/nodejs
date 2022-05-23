@@ -5,7 +5,7 @@
 
 'use strict';
 
-require('../../../../')();
+require('../../../..')();
 
 const { ApolloServer } = require('apollo-server-express');
 const { ApolloGateway } = require('@apollo/gateway');

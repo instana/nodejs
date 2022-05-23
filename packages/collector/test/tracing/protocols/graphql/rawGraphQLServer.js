@@ -6,7 +6,7 @@
 'use strict';
 
 require('./mockVersion');
-require('../../../../')();
+require('../../../..')();
 
 const bodyParser = require('body-parser');
 const express = require('express');

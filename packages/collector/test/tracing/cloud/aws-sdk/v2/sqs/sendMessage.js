@@ -5,7 +5,7 @@
 
 'use strict';
 
-require('../../../../../../')();
+require('../../../../../..')();
 
 const bodyParser = require('body-parser');
 const express = require('express');

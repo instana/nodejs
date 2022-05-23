@@ -7,7 +7,7 @@
 
 const agentPort = process.env.INSTANA_AGENT_PORT;
 
-require('../../../../')();
+require('../../../..')();
 
 const Client = require('pg-native');
 const express = require('express');

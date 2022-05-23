@@ -8,7 +8,7 @@
 // Deliberately requiring superagent before instana to test experimental on-demand instrumentation for it.
 const superagent = require('superagent');
 
-const instana = require('../../../../../')();
+const instana = require('../../../../..')();
 
 const bodyParser = require('body-parser');
 const express = require('express');

@@ -9,7 +9,7 @@
 
 const agentPort = process.env.AGENT_PORT;
 
-require('../../../../')({
+require('../../../..')({
   agentPort,
   level: 'warn',
   tracing: {

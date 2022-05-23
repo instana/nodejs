@@ -7,7 +7,7 @@
 
 const expect = require('chai').expect;
 
-const supportedTracingVersion = require('../../src/tracing/supportedVersion.js');
+const supportedTracingVersion = require('../../src/tracing/supportedVersion');
 
 describe('supported versions for Node.js auto tracing', () => {
   it('must support various Node.js versions', () => {

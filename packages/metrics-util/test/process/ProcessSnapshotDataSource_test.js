@@ -25,10 +25,9 @@ describe('process snapshot data source', function () {
     dataSource.reset();
   });
 
-  it('should know that no refresh has happened yet', () => {
+  it('should know that no refresh has happened yet', () =>
     // deliberately not activating the source
-    return delay(50).then(() => expect(dataSource.hasRefreshedAtLeastOnce()).to.be.false);
-  });
+    delay(50).then(() => expect(dataSource.hasRefreshedAtLeastOnce()).to.be.false));
 
   it('should know that at least one refresh has happened already', () => {
     dataSource.activate();

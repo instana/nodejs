@@ -32,7 +32,7 @@ if (vendor === 'instana') {
 
 let cls;
 if (isInstana()) {
-  require('../../../../')();
+  require('../../../..')();
   cls = require('../../../../../core/src/tracing/cls');
 }
 

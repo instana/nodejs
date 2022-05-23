@@ -5,9 +5,9 @@
 
 'use strict';
 
-const AllocationSampler = require('../../lib/samplers/allocation_sampler').AllocationSampler;
 const assert = require('assert');
 const async = require('async');
+const AllocationSampler = require('../../lib/samplers/allocation_sampler').AllocationSampler;
 
 describe('AllocationSampler', () => {
   let profiler;

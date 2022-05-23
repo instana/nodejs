@@ -5,7 +5,7 @@
 
 'use strict';
 
-require('../../../../')();
+require('../../../..')();
 
 const { sendToParent } = require('@instana/core/test/test_util');
 const logPrefix = `Bull (${process.pid}):\t`;
