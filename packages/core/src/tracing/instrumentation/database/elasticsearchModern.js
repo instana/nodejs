@@ -51,16 +51,7 @@ function instrumentApiLayer(es, ESAPI) {
   });
 
   es.Client = function InstrumentedClient() {
-    // We are patching a native ES6 constructor, the following approach works without relying on ES6 language features.
-    //
-    // Once we drop support for Node.js 4, this could be simply:
-    // return new OriginalClient(...arguments);
-    // See https://stackoverflow.com/a/33195176/2565264 and
-    // https://node.green/#ES2015-syntax-spread-syntax-for-iterable-objects.
-    const client = new (Function.prototype.bind.apply(
-      OriginalClient,
-      [null].concat(Array.prototype.slice.call(arguments))
-    ))();
+    const client = new OriginalClient(...arguments);
 
     const clusterInfo = {};
     gatherClusterInfo(client, clusterInfo);
