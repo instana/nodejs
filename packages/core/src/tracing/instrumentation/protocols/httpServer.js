@@ -171,12 +171,14 @@ function shimEmit(realEmit) {
         // (like graphql.server) has modified the span or not.
         span.d = Date.now() - span.ts;
         span.data.http = span.data.http || {};
-        span.data.http.status = res.statusCode;
-        span.data.http.header = httpCommon.mergeExtraHeadersFromServerResponseOrClientResponse(
-          span.data.http.header,
-          res,
-          extraHttpHeadersToCapture
-        );
+        if (res.headersSent) {
+          span.data.http.status = res.statusCode;
+          span.data.http.header = httpCommon.mergeExtraHeadersFromServerResponseOrClientResponse(
+            span.data.http.header,
+            res,
+            extraHttpHeadersToCapture
+          );
+        }
 
         if (!span.postponeTransmit) {
           // Do not overwrite the error count if an instrumentation with a higher priority (like graphql.server) has

@@ -325,11 +325,18 @@ function registerTests(useHttps) {
       .then(() =>
         retry(() =>
           globalAgent.instance.getSpans().then(spans => {
-            expectExactlyOneMatching(spans, [
+            const exitInClient = expectExactlyOneMatching(spans, [
               span => expect(span.n).to.equal('node.http.client'),
               span => expect(span.k).to.equal(constants.EXIT),
               span => expect(span.ec).to.equal(1),
               span => expect(span.data.http.error).to.match(/aborted/)
+            ]);
+            expectExactlyOneMatching(spans, [
+              span => expect(span.t).to.equal(exitInClient.t),
+              span => expect(span.p).to.equal(exitInClient.s),
+              span => expect(span.n).to.equal('node.http.server'),
+              span => expect(span.k).to.equal(constants.ENTRY),
+              span => expect(span.data.http.status).to.not.exist
             ]);
           })
         )
