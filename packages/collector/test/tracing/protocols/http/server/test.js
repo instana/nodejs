@@ -463,7 +463,7 @@ function registerTests(agentControls, useHttps, useHttp2CompatApi) {
               // situation is different because we inspect a response header of the stream (HTTP2_HEADER_STATUS), which
               // does not exist until a response is actually sent. Thus, for HTTP 2, span.data.http.status will be
               // undefined.
-              verifyThereIsExactlyOneHttpEntry(spans, '/dont-respond', 'GET', useHttp2CompatApi ? undefined : 200);
+              verifyThereIsExactlyOneHttpEntry(spans, '/dont-respond', 'GET', undefined);
             })
           );
         } else {
@@ -493,7 +493,7 @@ function registerTests(agentControls, useHttps, useHttp2CompatApi) {
               // timeout). For HTTP 2, the situation is different because we inspect a response header of the stream
               // (HTTP2_HEADER_STATUS), which does not exist until a response is actually sent. Thus, for HTTP 2,
               // span.data.http.status will be undefined.
-              verifyThereIsExactlyOneHttpEntry(spans, '/destroy-socket', 'GET', useHttp2CompatApi ? undefined : 200);
+              verifyThereIsExactlyOneHttpEntry(spans, '/destroy-socket', 'GET', undefined);
             })
           );
         } else {
