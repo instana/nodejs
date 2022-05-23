@@ -34,8 +34,8 @@ mochaSuiteFn('frameworks/sequilize', function () {
           method: 'GET',
           path: '/find-one'
         })
-        .then(() => {
-          return retry(() =>
+        .then(() =>
+          retry(() =>
             agentControls.getSpans().then(spans => {
               expect(spans.length).to.equal(2);
 
@@ -65,8 +65,8 @@ mochaSuiteFn('frameworks/sequilize', function () {
                 ]
               });
             })
-          );
-        }));
+          )
+        ));
 
     it('raw', () =>
       controls
@@ -74,8 +74,8 @@ mochaSuiteFn('frameworks/sequilize', function () {
           method: 'GET',
           path: '/raw'
         })
-        .then(() => {
-          return retry(() =>
+        .then(() =>
+          retry(() =>
             agentControls.getSpans().then(spans => {
               expect(spans.length).to.equal(2);
 
@@ -103,8 +103,8 @@ mochaSuiteFn('frameworks/sequilize', function () {
                 ]
               });
             })
-          );
-        }));
+          )
+        ));
 
     it('insert', () =>
       controls
@@ -112,8 +112,8 @@ mochaSuiteFn('frameworks/sequilize', function () {
           method: 'GET',
           path: '/insert'
         })
-        .then(() => {
-          return retry(() =>
+        .then(() =>
+          retry(() =>
             agentControls.getSpans().then(spans => {
               expect(spans.length).to.equal(2);
 
@@ -141,7 +141,7 @@ mochaSuiteFn('frameworks/sequilize', function () {
                 ]
               });
             })
-          );
-        }));
+          )
+        ));
   });
 });

@@ -224,9 +224,7 @@ availableOperations.forEach(op => {
     switch (method) {
       case 'default-style':
         runV3AsPromise(withError, op)
-          .then(data => {
-            return fetch(`http://127.0.0.1:${agentPort}`).then(() => data);
-          })
+          .then(data => fetch(`http://127.0.0.1:${agentPort}`).then(() => data))
           .then(data => {
             res.send({
               status: 'ok',
@@ -239,9 +237,7 @@ availableOperations.forEach(op => {
         break;
       case 'v2-style':
         runV3AsV2Style(withError, op)
-          .then(data => {
-            return fetch(`http://127.0.0.1:${agentPort}`).then(() => data);
-          })
+          .then(data => fetch(`http://127.0.0.1:${agentPort}`).then(() => data))
           .then(data => {
             res.send({
               status: 'ok',

@@ -65,11 +65,11 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/lambda', function () {
       });
     });
     function verify(controls, response, apiPath, operation, withError) {
-      return retry(() => {
-        return agentControls
-          .getSpans()
-          .then(spans => verifySpans(controls, response, spans, apiPath, operation, withError));
-      }, retryTime);
+      return retry(
+        () =>
+          agentControls.getSpans().then(spans => verifySpans(controls, response, spans, apiPath, operation, withError)),
+        retryTime
+      );
     }
     function verifySpans(controls, response, spans, apiPath, operation, withError) {
       const httpEntry = verifyHttpRootEntry({ spans, apiPath, pid: String(controls.getPid()) });

@@ -113,12 +113,10 @@ async function runAsPromise(isV2Style = false) {
         data.Messages.map(m => m.MessageId)
       );
 
-      const messagesForDeletion = data.Messages.map(message => {
-        return {
-          Id: message.MessageId,
-          ReceiptHandle: message.ReceiptHandle
-        };
-      });
+      const messagesForDeletion = data.Messages.map(message => ({
+        Id: message.MessageId,
+        ReceiptHandle: message.ReceiptHandle
+      }));
 
       const deletionCommand = new awsSdk3.DeleteMessageBatchCommand({
         QueueUrl: queueURL,
@@ -177,12 +175,10 @@ async function runV3AsCallback(cb) {
       data.Messages.map(m => m.MessageId)
     );
 
-    const messagesForDeletion = data.Messages.map(message => {
-      return {
-        Id: message.MessageId,
-        ReceiptHandle: message.ReceiptHandle
-      };
-    });
+    const messagesForDeletion = data.Messages.map(message => ({
+      Id: message.MessageId,
+      ReceiptHandle: message.ReceiptHandle
+    }));
 
     const deletionCommand = new awsSdk3.DeleteMessageBatchCommand({
       QueueUrl: queueURL,

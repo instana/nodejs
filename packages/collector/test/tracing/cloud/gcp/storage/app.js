@@ -46,9 +46,7 @@ if (process.env.WITH_STDOUT) {
 
 app.use(bodyParser.json());
 
-app.get('/', (req, res) => {
-  return res.sendStatus(200);
-});
+app.get('/', (req, res) => res.sendStatus(200));
 
 app.post('/storage-createBucket-bucket-delete-promise', async (req, res) => {
   try {

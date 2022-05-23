@@ -27,9 +27,7 @@ const DELAY_TIMEOUT_IN_MS = 500;
 const DB2_CLOSE_TIMEOUT_IN_MS = 1000;
 
 // NOTE: DB2 has a limitation of 8 chars
-const getDatabaseName = () => {
-  return 'nodedb';
-};
+const getDatabaseName = () => 'nodedb';
 
 const generateTableName = () => {
   const randomStr = Array(8)
@@ -42,8 +40,8 @@ const generateTableName = () => {
   return randomStr;
 };
 
-const verifySpans = (agentControls, controls, options = {}) => {
-  return agentControls.getSpans().then(spans => {
+const verifySpans = (agentControls, controls, options = {}) =>
+  agentControls.getSpans().then(spans => {
     if (options.expectSpans === false) {
       expect(spans).to.be.empty;
       return;
@@ -81,7 +79,6 @@ const verifySpans = (agentControls, controls, options = {}) => {
       span => (options.error ? expect(span.ec).to.equal(1) : expect(span.ec).to.equal(0))
     ]);
   });
-};
 
 // The db2 docker container needs a longer time to bootstrap. Please check the docker logs if
 // the container is up.
@@ -136,11 +133,7 @@ mochaSuiteFn('tracing/db2', function () {
           method: 'GET',
           path: '/query-promise'
         })
-        .then(() => {
-          return testUtils.retry(() => {
-            return verifySpans(agentControls, controls);
-          });
-        });
+        .then(() => testUtils.retry(() => verifySpans(agentControls, controls)));
     });
 
     it('[with error] must trace query promise', function () {
@@ -149,14 +142,14 @@ mochaSuiteFn('tracing/db2', function () {
           method: 'GET',
           path: '/query-promise?err=true'
         })
-        .then(() => {
-          return testUtils.retry(() => {
-            return verifySpans(agentControls, controls, {
+        .then(() =>
+          testUtils.retry(() =>
+            verifySpans(agentControls, controls, {
               stmt: 'select invalid query',
               error: '[IBM][CLI Driver][DB2/LINUXX8664] SQL0104N  An unexpected token'
-            });
-          });
-        });
+            })
+          )
+        );
     });
 
     it('must trace query cb (2 args)', function () {
@@ -165,11 +158,7 @@ mochaSuiteFn('tracing/db2', function () {
           method: 'GET',
           path: '/query-cb'
         })
-        .then(() => {
-          return testUtils.retry(() => {
-            return verifySpans(agentControls, controls);
-          });
-        });
+        .then(() => testUtils.retry(() => verifySpans(agentControls, controls)));
     });
 
     it('must trace query cb (3 args)', function () {
@@ -178,13 +167,13 @@ mochaSuiteFn('tracing/db2', function () {
           method: 'GET',
           path: '/query-cb?args=3'
         })
-        .then(() => {
-          return testUtils.retry(() => {
-            return verifySpans(agentControls, controls, {
+        .then(() =>
+          testUtils.retry(() =>
+            verifySpans(agentControls, controls, {
               stmt: 'select creator, name from sysibm.systables where 1 = ?'
-            });
-          });
-        });
+            })
+          )
+        );
     });
 
     it('[with error] must trace query cb', function () {
@@ -193,14 +182,14 @@ mochaSuiteFn('tracing/db2', function () {
           method: 'GET',
           path: '/query-cb?err=true'
         })
-        .then(() => {
-          return testUtils.retry(() => {
-            return verifySpans(agentControls, controls, {
+        .then(() =>
+          testUtils.retry(() =>
+            verifySpans(agentControls, controls, {
               stmt: 'select invalid query',
               error: '[IBM][CLI Driver][DB2/LINUXX8664] SQL0104N  An unexpected token'
-            });
-          });
-        });
+            })
+          )
+        );
     });
 
     it('must trace query sync', function () {
@@ -209,11 +198,7 @@ mochaSuiteFn('tracing/db2', function () {
           method: 'GET',
           path: '/query-sync'
         })
-        .then(() => {
-          return testUtils.retry(() => {
-            return verifySpans(agentControls, controls);
-          });
-        });
+        .then(() => testUtils.retry(() => verifySpans(agentControls, controls)));
     });
 
     it('[with connection err] must trace query sync', function () {
@@ -222,14 +207,14 @@ mochaSuiteFn('tracing/db2', function () {
           method: 'GET',
           path: '/query-sync?err=conn'
         })
-        .then(() => {
-          return testUtils.retry(() => {
-            return verifySpans(agentControls, controls, {
+        .then(() =>
+          testUtils.retry(() =>
+            verifySpans(agentControls, controls, {
               stmt: 'select invalid query',
               error: 'Connection not open.'
-            });
-          });
-        });
+            })
+          )
+        );
     });
 
     it('[with query err] must trace query sync', function () {
@@ -238,14 +223,14 @@ mochaSuiteFn('tracing/db2', function () {
           method: 'GET',
           path: '/query-sync?err=query'
         })
-        .then(() => {
-          return testUtils.retry(() => {
-            return verifySpans(agentControls, controls, {
+        .then(() =>
+          testUtils.retry(() =>
+            verifySpans(agentControls, controls, {
               stmt: 'select invalid query',
               error: 'Error: [IBM][CLI Driver][DB2/LINUXX8664] SQL0104N  An unexpected token'
-            });
-          });
-        });
+            })
+          )
+        );
     });
 
     it('must trace async transaction with sync query', function () {
@@ -254,13 +239,13 @@ mochaSuiteFn('tracing/db2', function () {
           method: 'GET',
           path: '/transaction-sync'
         })
-        .then(() => {
-          return testUtils.retry(() => {
-            return verifySpans(agentControls, controls, {
+        .then(() =>
+          testUtils.retry(() =>
+            verifySpans(agentControls, controls, {
               stmt: `insert into ${TABLE_NAME_1}(COLINT, COLDATETIME, COLTEXT) VALUES (42, null, null)`
-            });
-          });
-        });
+            })
+          )
+        );
     });
 
     it('must not trace async transaction with sync query because of rollback', function () {
@@ -269,13 +254,13 @@ mochaSuiteFn('tracing/db2', function () {
           method: 'GET',
           path: '/transaction-sync?commit=false'
         })
-        .then(() => {
-          return testUtils.retry(() => {
-            return verifySpans(agentControls, controls, {
+        .then(() =>
+          testUtils.retry(() =>
+            verifySpans(agentControls, controls, {
               stmt: `insert into ${TABLE_NAME_1}(COLINT, COLDATETIME, COLTEXT) VALUES (42, null, null)`
-            });
-          });
-        });
+            })
+          )
+        );
     });
 
     it('must trace sync transaction with sync query', function () {
@@ -284,13 +269,13 @@ mochaSuiteFn('tracing/db2', function () {
           method: 'GET',
           path: '/transaction-sync?type=sync'
         })
-        .then(() => {
-          return testUtils.retry(() => {
-            return verifySpans(agentControls, controls, {
+        .then(() =>
+          testUtils.retry(() =>
+            verifySpans(agentControls, controls, {
               stmt: `insert into ${TABLE_NAME_1}(COLINT, COLDATETIME, COLTEXT) VALUES (42, null, null)`
-            });
-          });
-        });
+            })
+          )
+        );
     });
 
     it('must not trace sync transaction with sync query because of rollback', function () {
@@ -299,13 +284,13 @@ mochaSuiteFn('tracing/db2', function () {
           method: 'GET',
           path: '/transaction-sync?type=sync&commit=false'
         })
-        .then(() => {
-          return testUtils.retry(() => {
-            return verifySpans(agentControls, controls, {
+        .then(() =>
+          testUtils.retry(() =>
+            verifySpans(agentControls, controls, {
               stmt: `insert into ${TABLE_NAME_1}(COLINT, COLDATETIME, COLTEXT) VALUES (42, null, null)`
-            });
-          });
-        });
+            })
+          )
+        );
     });
 
     it('must trace async transaction with async query', function () {
@@ -314,13 +299,13 @@ mochaSuiteFn('tracing/db2', function () {
           method: 'GET',
           path: '/transaction-async'
         })
-        .then(() => {
-          return testUtils.retry(() => {
-            return verifySpans(agentControls, controls, {
+        .then(() =>
+          testUtils.retry(() =>
+            verifySpans(agentControls, controls, {
               stmt: `insert into ${TABLE_NAME_1}(COLINT, COLDATETIME, COLTEXT) VALUES (42, null, null)`
-            });
-          });
-        });
+            })
+          )
+        );
     });
 
     it('must not trace async transaction with async query because of rollback', function () {
@@ -329,13 +314,13 @@ mochaSuiteFn('tracing/db2', function () {
           method: 'GET',
           path: '/transaction-async?commit=false'
         })
-        .then(() => {
-          return testUtils.retry(() => {
-            return verifySpans(agentControls, controls, {
+        .then(() =>
+          testUtils.retry(() =>
+            verifySpans(agentControls, controls, {
               stmt: `insert into ${TABLE_NAME_1}(COLINT, COLDATETIME, COLTEXT) VALUES (42, null, null)`
-            });
-          });
-        });
+            })
+          )
+        );
     });
 
     it('must trace sync transaction with async query', function () {
@@ -344,13 +329,13 @@ mochaSuiteFn('tracing/db2', function () {
           method: 'GET',
           path: '/transaction-async?type=sync'
         })
-        .then(() => {
-          return testUtils.retry(() => {
-            return verifySpans(agentControls, controls, {
+        .then(() =>
+          testUtils.retry(() =>
+            verifySpans(agentControls, controls, {
               stmt: `insert into ${TABLE_NAME_1}(COLINT, COLDATETIME, COLTEXT) VALUES (42, null, null)`
-            });
-          });
-        });
+            })
+          )
+        );
     });
 
     it('must not trace sync transaction with async query because of rollback', function () {
@@ -359,13 +344,13 @@ mochaSuiteFn('tracing/db2', function () {
           method: 'GET',
           path: '/transaction-async?type=sync&commit=false'
         })
-        .then(() => {
-          return testUtils.retry(() => {
-            return verifySpans(agentControls, controls, {
+        .then(() =>
+          testUtils.retry(() =>
+            verifySpans(agentControls, controls, {
               stmt: `insert into ${TABLE_NAME_1}(COLINT, COLDATETIME, COLTEXT) VALUES (42, null, null)`
-            });
-          });
-        });
+            })
+          )
+        );
     });
 
     it('must trace prepare on start', function () {
@@ -374,14 +359,14 @@ mochaSuiteFn('tracing/db2', function () {
           method: 'GET',
           path: '/prepare-on-start'
         })
-        .then(() => {
-          return testUtils.retry(() => {
-            return verifySpans(agentControls, controls, {
+        .then(() =>
+          testUtils.retry(() =>
+            verifySpans(agentControls, controls, {
               stmt: `SELECT * FROM ${TABLE_NAME_1}`,
               spanLength: 3
-            });
-          });
-        });
+            })
+          )
+        );
     });
 
     it('[executeSync] must trace prepare on start', function () {
@@ -390,14 +375,14 @@ mochaSuiteFn('tracing/db2', function () {
           method: 'GET',
           path: '/prepare-on-start?sync=true'
         })
-        .then(() => {
-          return testUtils.retry(() => {
-            return verifySpans(agentControls, controls, {
+        .then(() =>
+          testUtils.retry(() =>
+            verifySpans(agentControls, controls, {
               stmt: `SELECT * FROM ${TABLE_NAME_1}`,
               spanLength: 3
-            });
-          });
-        });
+            })
+          )
+        );
     });
 
     it('[skip close] must trace prepare on start', function () {
@@ -407,9 +392,9 @@ mochaSuiteFn('tracing/db2', function () {
           path: '/prepare-on-start?skipClose=true'
         })
         .then(() => testUtils.delay(DB2_CLOSE_TIMEOUT_IN_MS))
-        .then(() => {
-          return testUtils.retry(() => {
-            return verifySpans(agentControls, controls, {
+        .then(() =>
+          testUtils.retry(() =>
+            verifySpans(agentControls, controls, {
               stmt: `SELECT * FROM ${TABLE_NAME_1}`,
               error: 'Error: [IBM][CLI Driver] CLI0115E  Invalid cursor state. SQLSTATE=24000',
               spanLength: 3,
@@ -431,9 +416,9 @@ mochaSuiteFn('tracing/db2', function () {
                   span => expect(span.ec).to.equal(1)
                 ]);
               }
-            });
-          });
-        });
+            })
+          )
+        );
     });
 
     it('must trace prepare/execute with two different http endpoints', function () {
@@ -442,15 +427,15 @@ mochaSuiteFn('tracing/db2', function () {
           method: 'GET',
           path: '/prepare-in-http'
         })
-        .then(() => {
-          return controls.sendRequest({
+        .then(() =>
+          controls.sendRequest({
             method: 'GET',
             path: '/execute-in-http'
-          });
-        })
-        .then(() => {
-          return testUtils.retry(() => {
-            return verifySpans(agentControls, controls, {
+          })
+        )
+        .then(() =>
+          testUtils.retry(() =>
+            verifySpans(agentControls, controls, {
               stmt: `SELECT * FROM ${TABLE_NAME_1}`,
               spanLength: 3,
               verifyCustom: (entrySpan, spans) => {
@@ -469,9 +454,9 @@ mochaSuiteFn('tracing/db2', function () {
 
                 testUtils.expectAtLeastOneMatching(spans, [span => expect(span.p).to.equal(realParent.s)]);
               }
-            });
-          });
-        });
+            })
+          )
+        );
     });
 
     it('must trace prepare execute async', function () {
@@ -480,13 +465,13 @@ mochaSuiteFn('tracing/db2', function () {
           method: 'GET',
           path: '/prepare-execute-async'
         })
-        .then(() => {
-          return testUtils.retry(() => {
-            return verifySpans(agentControls, controls, {
+        .then(() =>
+          testUtils.retry(() =>
+            verifySpans(agentControls, controls, {
               stmt: `insert into ${TABLE_NAME_1} (COLINT, COLDATETIME, COLTEXT) VALUES (?, ?, ?)`
-            });
-          });
-        });
+            })
+          )
+        );
     });
 
     it('must trace prepare execute async', function () {
@@ -495,13 +480,13 @@ mochaSuiteFn('tracing/db2', function () {
           method: 'GET',
           path: '/prepare-execute-async'
         })
-        .then(() => {
-          return testUtils.retry(() => {
-            return verifySpans(agentControls, controls, {
+        .then(() =>
+          testUtils.retry(() =>
+            verifySpans(agentControls, controls, {
               stmt: `insert into ${TABLE_NAME_1} (COLINT, COLDATETIME, COLTEXT) VALUES (?, ?, ?)`
-            });
-          });
-        });
+            })
+          )
+        );
     });
 
     it('must trace prepare execute async with reusage', function () {
@@ -510,9 +495,9 @@ mochaSuiteFn('tracing/db2', function () {
           method: 'GET',
           path: '/prepare-execute-async?reuse=true'
         })
-        .then(() => {
-          return testUtils.retry(() => {
-            return verifySpans(agentControls, controls, {
+        .then(() =>
+          testUtils.retry(() =>
+            verifySpans(agentControls, controls, {
               spanLength: 3,
               verifyCustom: (entrySpan, spans) => {
                 testUtils.expectExactlyNMatching(spans, 2, [
@@ -532,9 +517,9 @@ mochaSuiteFn('tracing/db2', function () {
                   span => expect(span.ec).to.equal(0)
                 ]);
               }
-            });
-          });
-        });
+            })
+          )
+        );
     });
 
     it('must trace prepare execute async with extra query', function () {
@@ -543,9 +528,9 @@ mochaSuiteFn('tracing/db2', function () {
           method: 'GET',
           path: '/prepare-execute-async?extraQuery=true'
         })
-        .then(() => {
-          return testUtils.retry(() => {
-            return verifySpans(agentControls, controls, {
+        .then(() =>
+          testUtils.retry(() =>
+            verifySpans(agentControls, controls, {
               stmt: `insert into ${TABLE_NAME_1} (COLINT, COLDATETIME, COLTEXT) VALUES (?, ?, ?)`,
               spanLength: 3,
               verifyCustom: (entrySpan, spans) => {
@@ -564,9 +549,9 @@ mochaSuiteFn('tracing/db2', function () {
                   span => expect(span.ec).to.equal(0)
                 ]);
               }
-            });
-          });
-        });
+            })
+          )
+        );
     });
 
     it('[with execute error] must trace prepare execute async', function () {
@@ -575,14 +560,14 @@ mochaSuiteFn('tracing/db2', function () {
           method: 'GET',
           path: '/prepare-execute-async?error=execute'
         })
-        .then(() => {
-          return testUtils.retry(() => {
-            return verifySpans(agentControls, controls, {
+        .then(() =>
+          testUtils.retry(() =>
+            verifySpans(agentControls, controls, {
               stmt: `insert into ${TABLE_NAME_1} (COLINT, COLDATETIME, COLTEXT) VALUES (?, ?, ?)`,
               error: 'Error: [IBM][CLI Driver][DB2/LINUXX8664] SQL0181N  The string representatio'
-            });
-          });
-        });
+            })
+          )
+        );
     });
 
     it('[with prepare error] must trace prepare execute async', function () {
@@ -592,14 +577,14 @@ mochaSuiteFn('tracing/db2', function () {
           path: '/prepare-execute-async?error=prepare'
         })
         .then(() => testUtils.delay(DELAY_TIMEOUT_IN_MS))
-        .then(() => {
-          return testUtils.retry(() => {
-            return verifySpans(agentControls, controls, {
+        .then(() =>
+          testUtils.retry(() =>
+            verifySpans(agentControls, controls, {
               expectNoDb2Span: true,
               spanLength: 1
-            });
-          });
-        });
+            })
+          )
+        );
     });
 
     it('must trace prepare execute fetchAll async', function () {
@@ -608,13 +593,13 @@ mochaSuiteFn('tracing/db2', function () {
           method: 'GET',
           path: '/prepare-execute-fetch-async'
         })
-        .then(() => {
-          return testUtils.retry(() => {
-            return verifySpans(agentControls, controls, {
+        .then(() =>
+          testUtils.retry(() =>
+            verifySpans(agentControls, controls, {
               stmt: `SELECT * FROM ${TABLE_NAME_1}`
-            });
-          });
-        });
+            })
+          )
+        );
     });
 
     // TODO: wait for ibm resp
@@ -626,13 +611,13 @@ mochaSuiteFn('tracing/db2', function () {
           path: '/prepare-execute-fetch-async?error=true'
         })
         .then(() => testUtils.delay(DELAY_TIMEOUT_IN_MS))
-        .then(() => {
-          return testUtils.retry(() => {
-            return verifySpans(agentControls, controls, {
+        .then(() =>
+          testUtils.retry(() =>
+            verifySpans(agentControls, controls, {
               expectNoDb2Span: true
-            });
-          });
-        });
+            })
+          )
+        );
     });
 
     it('must trace prepare execute fetch sync', function () {
@@ -641,9 +626,9 @@ mochaSuiteFn('tracing/db2', function () {
           method: 'GET',
           path: '/prepare-execute-fetch-sync'
         })
-        .then(() => {
-          return testUtils.retry(() => {
-            return verifySpans(agentControls, controls, {
+        .then(() =>
+          testUtils.retry(() =>
+            verifySpans(agentControls, controls, {
               spanLength: 7,
               verifyCustom: (entrySpan, spans) => {
                 const stmtsToExpect = [
@@ -672,9 +657,9 @@ mochaSuiteFn('tracing/db2', function () {
                   ).to.not.be.undefined;
                 });
               }
-            });
-          });
-        });
+            })
+          )
+        );
     });
 
     it('prepare, executeNonQuerySync', function () {
@@ -683,13 +668,13 @@ mochaSuiteFn('tracing/db2', function () {
           method: 'GET',
           path: '/prepare-execute-non-query-sync'
         })
-        .then(() => {
-          return testUtils.retry(() => {
-            return verifySpans(agentControls, controls, {
+        .then(() =>
+          testUtils.retry(() =>
+            verifySpans(agentControls, controls, {
               stmt: `insert into ${TABLE_NAME_1}(COLINT, COLDATETIME, COLTEXT) VALUES (?, ?, ?)`
-            });
-          });
-        });
+            })
+          )
+        );
     });
 
     it('[with error] prepare, executeNonQuerySync', function () {
@@ -698,14 +683,14 @@ mochaSuiteFn('tracing/db2', function () {
           method: 'GET',
           path: '/prepare-execute-non-query-sync?error=true'
         })
-        .then(() => {
-          return testUtils.retry(() => {
-            return verifySpans(agentControls, controls, {
+        .then(() =>
+          testUtils.retry(() =>
+            verifySpans(agentControls, controls, {
               stmt: `insert into ${TABLE_NAME_1}(COLINT, COLDATETIME, COLTEXT) VALUES (?, ?, ?)`,
               error: 'Error: [IBM][CLI Driver] CLI0100E  Wrong number of parameters. SQLSTATE=07001'
-            });
-          });
-        });
+            })
+          )
+        );
     });
 
     it('must trace prepare execute mixed 1', function () {
@@ -714,13 +699,13 @@ mochaSuiteFn('tracing/db2', function () {
           method: 'GET',
           path: '/prepare-execute-mixed-1'
         })
-        .then(() => {
-          return testUtils.retry(() => {
-            return verifySpans(agentControls, controls, {
+        .then(() =>
+          testUtils.retry(() =>
+            verifySpans(agentControls, controls, {
               stmt: `SELECT * FROM ${TABLE_NAME_1}`
-            });
-          });
-        });
+            })
+          )
+        );
     });
 
     it('[with error raise] must trace prepare execute mixed 1', function () {
@@ -730,14 +715,14 @@ mochaSuiteFn('tracing/db2', function () {
           path: '/prepare-execute-mixed-1?error=executeRaise'
         })
         .then(() => testUtils.delay(DELAY_TIMEOUT_IN_MS))
-        .then(() => {
-          return testUtils.retry(() => {
-            return verifySpans(agentControls, controls, {
+        .then(() =>
+          testUtils.retry(() =>
+            verifySpans(agentControls, controls, {
               expectNoDb2Span: true,
               spanLength: 1
-            });
-          });
-        });
+            })
+          )
+        );
     });
 
     it('[with skipClose] must trace prepare execute mixed 1', function () {
@@ -747,15 +732,15 @@ mochaSuiteFn('tracing/db2', function () {
           path: '/prepare-execute-mixed-1?skipClose=true'
         })
         .then(() => testUtils.delay(DB2_CLOSE_TIMEOUT_IN_MS))
-        .then(() => {
-          return testUtils.retry(() => {
-            return verifySpans(agentControls, controls, {
+        .then(() =>
+          testUtils.retry(() =>
+            verifySpans(agentControls, controls, {
               stmt: `SELECT * FROM ${TABLE_NAME_1}`,
               error: `'result.closeSync' was not called within ${DB2_CLOSE_TIMEOUT_IN_MS}ms.`,
               spanLength: 2
-            });
-          });
-        });
+            })
+          )
+        );
     });
 
     it('[with fetch] must trace prepare execute mixed 1', function () {
@@ -764,13 +749,13 @@ mochaSuiteFn('tracing/db2', function () {
           method: 'GET',
           path: '/prepare-execute-mixed-1?fetchType=fetch'
         })
-        .then(() => {
-          return testUtils.retry(() => {
-            return verifySpans(agentControls, controls, {
+        .then(() =>
+          testUtils.retry(() =>
+            verifySpans(agentControls, controls, {
               stmt: `SELECT * FROM ${TABLE_NAME_1}`
-            });
-          });
-        });
+            })
+          )
+        );
     });
 
     it('[with fetch and error] must trace prepare execute mixed 1', function () {
@@ -779,14 +764,14 @@ mochaSuiteFn('tracing/db2', function () {
           method: 'GET',
           path: '/prepare-execute-mixed-1?fetchType=fetch&error=fetch'
         })
-        .then(() => {
-          return testUtils.retry(() => {
-            return verifySpans(agentControls, controls, {
+        .then(() =>
+          testUtils.retry(() =>
+            verifySpans(agentControls, controls, {
               stmt: `SELECT * FROM ${TABLE_NAME_1}`,
               error: 'TypeError: ODBCResult::Fetch(): 1 or 2 arguments are required'
-            });
-          });
-        });
+            })
+          )
+        );
     });
 
     it('[with fetchSync] must trace prepare execute mixed 1', function () {
@@ -795,13 +780,13 @@ mochaSuiteFn('tracing/db2', function () {
           method: 'GET',
           path: '/prepare-execute-mixed-1?fetchType=fetchSync'
         })
-        .then(() => {
-          return testUtils.retry(() => {
-            return verifySpans(agentControls, controls, {
+        .then(() =>
+          testUtils.retry(() =>
+            verifySpans(agentControls, controls, {
               stmt: `SELECT * FROM ${TABLE_NAME_1}`
-            });
-          });
-        });
+            })
+          )
+        );
     });
 
     it('must trace prepare execute mixed 2', function () {
@@ -810,13 +795,13 @@ mochaSuiteFn('tracing/db2', function () {
           method: 'GET',
           path: '/prepare-execute-mixed-2'
         })
-        .then(() => {
-          return testUtils.retry(() => {
-            return verifySpans(agentControls, controls, {
+        .then(() =>
+          testUtils.retry(() =>
+            verifySpans(agentControls, controls, {
               stmt: `SELECT * FROM ${TABLE_NAME_1}`
-            });
-          });
-        });
+            })
+          )
+        );
     });
 
     it('[with skipClose] must trace prepare execute mixed 2', function () {
@@ -826,15 +811,15 @@ mochaSuiteFn('tracing/db2', function () {
           path: '/prepare-execute-mixed-2?skipClose=true'
         })
         .then(() => testUtils.delay(DB2_CLOSE_TIMEOUT_IN_MS))
-        .then(() => {
-          return testUtils.retry(() => {
-            return verifySpans(agentControls, controls, {
+        .then(() =>
+          testUtils.retry(() =>
+            verifySpans(agentControls, controls, {
               stmt: `SELECT * FROM ${TABLE_NAME_1}`,
               error: `'result.closeSync' was not called within ${DB2_CLOSE_TIMEOUT_IN_MS}ms.`,
               spanLength: 2
-            });
-          });
-        });
+            })
+          )
+        );
     });
 
     it('prepare + execute in transaction', function () {
@@ -843,13 +828,13 @@ mochaSuiteFn('tracing/db2', function () {
           method: 'GET',
           path: '/prepare-execute-transaction'
         })
-        .then(() => {
-          return testUtils.retry(() => {
-            return verifySpans(agentControls, controls, {
+        .then(() =>
+          testUtils.retry(() =>
+            verifySpans(agentControls, controls, {
               stmt: `insert into ${TABLE_NAME_1} (COLINT, COLDATETIME, COLTEXT) VALUES (?, ?, ?)`
-            });
-          });
-        });
+            })
+          )
+        );
     });
 
     it('executeFile', function () {
@@ -858,9 +843,9 @@ mochaSuiteFn('tracing/db2', function () {
           method: 'GET',
           path: '/execute-file-async'
         })
-        .then(() => {
-          return testUtils.retry(() => {
-            return verifySpans(agentControls, controls, {
+        .then(() =>
+          testUtils.retry(() =>
+            verifySpans(agentControls, controls, {
               spanLength: 11,
               verifyCustom: (entrySpan, spans) => {
                 const stmtsToExpect = [
@@ -893,9 +878,9 @@ mochaSuiteFn('tracing/db2', function () {
                   ).to.not.be.undefined;
                 });
               }
-            });
-          });
-        });
+            })
+          )
+        );
     });
 
     it('executeFileSync sample1.txt', function () {
@@ -904,9 +889,9 @@ mochaSuiteFn('tracing/db2', function () {
           method: 'GET',
           path: '/execute-file-sync'
         })
-        .then(() => {
-          return testUtils.retry(() => {
-            return verifySpans(agentControls, controls, {
+        .then(() =>
+          testUtils.retry(() =>
+            verifySpans(agentControls, controls, {
               spanLength: 11,
               verifyCustom: (entrySpan, spans) => {
                 const stmtsToExpect = [
@@ -939,9 +924,9 @@ mochaSuiteFn('tracing/db2', function () {
                   ).to.not.be.undefined;
                 });
               }
-            });
-          });
-        });
+            })
+          )
+        );
     });
 
     it('executeFileSync sample2.txt', function () {
@@ -950,9 +935,9 @@ mochaSuiteFn('tracing/db2', function () {
           method: 'GET',
           path: '/execute-file-sync?file=sample2.txt'
         })
-        .then(() => {
-          return testUtils.retry(() => {
-            return verifySpans(agentControls, controls, {
+        .then(() =>
+          testUtils.retry(() =>
+            verifySpans(agentControls, controls, {
               spanLength: 11,
               verifyCustom: (entrySpan, spans) => {
                 const stmtsToExpect = [
@@ -985,9 +970,9 @@ mochaSuiteFn('tracing/db2', function () {
                   ).to.not.be.undefined;
                 });
               }
-            });
-          });
-        });
+            })
+          )
+        );
     });
 
     it('queryStream', function () {
@@ -996,13 +981,13 @@ mochaSuiteFn('tracing/db2', function () {
           method: 'GET',
           path: '/query-stream'
         })
-        .then(() => {
-          return testUtils.retry(() => {
-            return verifySpans(agentControls, controls, {
+        .then(() =>
+          testUtils.retry(() =>
+            verifySpans(agentControls, controls, {
               stmt: 'select 1 from sysibm.sysdummy1'
-            });
-          });
-        });
+            })
+          )
+        );
     });
 
     it('queryResult', function () {
@@ -1011,13 +996,13 @@ mochaSuiteFn('tracing/db2', function () {
           method: 'GET',
           path: '/query-result-async'
         })
-        .then(() => {
-          return testUtils.retry(() => {
-            return verifySpans(agentControls, controls, {
+        .then(() =>
+          testUtils.retry(() =>
+            verifySpans(agentControls, controls, {
               stmt: `SELECT * FROM ${TABLE_NAME_1}`
-            });
-          });
-        });
+            })
+          )
+        );
     });
 
     it('queryResult in transaction', function () {
@@ -1026,13 +1011,13 @@ mochaSuiteFn('tracing/db2', function () {
           method: 'GET',
           path: '/query-result-async?transaction=true'
         })
-        .then(() => {
-          return testUtils.retry(() => {
-            return verifySpans(agentControls, controls, {
+        .then(() =>
+          testUtils.retry(() =>
+            verifySpans(agentControls, controls, {
               stmt: `SELECT * FROM ${TABLE_NAME_1}`
-            });
-          });
-        });
+            })
+          )
+        );
     });
 
     it('queryResultSync', function () {
@@ -1041,13 +1026,13 @@ mochaSuiteFn('tracing/db2', function () {
           method: 'GET',
           path: '/query-result-sync'
         })
-        .then(() => {
-          return testUtils.retry(() => {
-            return verifySpans(agentControls, controls, {
+        .then(() =>
+          testUtils.retry(() =>
+            verifySpans(agentControls, controls, {
               stmt: `SELECT * FROM ${TABLE_NAME_1}`
-            });
-          });
-        });
+            })
+          )
+        );
     });
 
     it('queryResultSync in transaction', function () {
@@ -1056,13 +1041,13 @@ mochaSuiteFn('tracing/db2', function () {
           method: 'GET',
           path: '/query-result-sync?transaction=true'
         })
-        .then(() => {
-          return testUtils.retry(() => {
-            return verifySpans(agentControls, controls, {
+        .then(() =>
+          testUtils.retry(() =>
+            verifySpans(agentControls, controls, {
               stmt: `SELECT * FROM ${TABLE_NAME_1}`
-            });
-          });
-        });
+            })
+          )
+        );
     });
   });
 
@@ -1115,13 +1100,13 @@ mochaSuiteFn('tracing/db2', function () {
           }
         })
         .then(() => testUtils.delay(DELAY_TIMEOUT_IN_MS))
-        .then(() => {
-          return testUtils.retry(() => {
-            return verifySpans(agentControls, controls, {
+        .then(() =>
+          testUtils.retry(() =>
+            verifySpans(agentControls, controls, {
               expectSpans: false
-            });
-          });
-        });
+            })
+          )
+        );
     });
 
     it('must not trace for prepareSync', function () {
@@ -1134,13 +1119,13 @@ mochaSuiteFn('tracing/db2', function () {
           }
         })
         .then(() => testUtils.delay(DELAY_TIMEOUT_IN_MS))
-        .then(() => {
-          return testUtils.retry(() => {
-            return verifySpans(agentControls, controls, {
+        .then(() =>
+          testUtils.retry(() =>
+            verifySpans(agentControls, controls, {
               expectSpans: false
-            });
-          });
-        });
+            })
+          )
+        );
     });
     it('must not trace for prepare', function () {
       return controls
@@ -1152,13 +1137,13 @@ mochaSuiteFn('tracing/db2', function () {
           }
         })
         .then(() => testUtils.delay(DELAY_TIMEOUT_IN_MS))
-        .then(() => {
-          return testUtils.retry(() => {
-            return verifySpans(agentControls, controls, {
+        .then(() =>
+          testUtils.retry(() =>
+            verifySpans(agentControls, controls, {
               expectSpans: false
-            });
-          });
-        });
+            })
+          )
+        );
     });
     it('must not trace for transaction', function () {
       return controls
@@ -1170,13 +1155,13 @@ mochaSuiteFn('tracing/db2', function () {
           }
         })
         .then(() => testUtils.delay(DELAY_TIMEOUT_IN_MS))
-        .then(() => {
-          return testUtils.retry(() => {
-            return verifySpans(agentControls, controls, {
+        .then(() =>
+          testUtils.retry(() =>
+            verifySpans(agentControls, controls, {
               expectSpans: false
-            });
-          });
-        });
+            })
+          )
+        );
     });
   });
 
@@ -1226,13 +1211,13 @@ mochaSuiteFn('tracing/db2', function () {
           path: '/transaction-async'
         })
         .then(() => testUtils.delay(DELAY_TIMEOUT_IN_MS))
-        .then(() => {
-          return testUtils.retry(() => {
-            return verifySpans(agentControls, controls, {
+        .then(() =>
+          testUtils.retry(() =>
+            verifySpans(agentControls, controls, {
               expectSpans: false
-            });
-          });
-        });
+            })
+          )
+        );
     });
   });
 });

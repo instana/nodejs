@@ -41,8 +41,8 @@ mochaSuiteFn('tracing/pg', function () {
         method: 'GET',
         path: '/parameterized-query'
       })
-      .then(() => {
-        return retry(() =>
+      .then(() =>
+        retry(() =>
           agentControls.getSpans().then(spans => {
             const httpEntry = verifyHttpRootEntry({
               spans,
@@ -65,8 +65,8 @@ mochaSuiteFn('tracing/pg', function () {
               ]
             });
           })
-        );
-      }));
+        )
+      ));
 
   it('must trace pooled select now', () =>
     controls

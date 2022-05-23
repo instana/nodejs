@@ -60,9 +60,7 @@ function start(version) {
       bucketName = `${bucketName}-${uuid()}`;
     }
 
-    after(() => {
-      return cleanup(bucketName);
-    });
+    after(() => cleanup(bucketName));
 
     globalAgent.setUpCleanUpHooks();
     const agentControls = globalAgent.instance;
@@ -84,15 +82,14 @@ function start(version) {
         if (withError) {
           const operationsWithoutListBuckets = availableOperations.filter(op => op !== 'listBuckets');
           describe(`getting result with error: ${withError ? 'yes' : 'no'}`, () => {
-            it(`should instrument ${operationsWithoutListBuckets.join(', ')} with error`, () => {
-              return promisifyNonSequentialCases(
+            it(`should instrument ${operationsWithoutListBuckets.join(', ')} with error`, () =>
+              promisifyNonSequentialCases(
                 verify,
                 operationsWithoutListBuckets,
                 appControls,
                 withError,
                 getNextCallMethod
-              );
-            });
+              ));
           });
         } else {
           describe(`getting result with error: ${withError ? 'yes' : 'no'}`, () => {
@@ -118,9 +115,10 @@ function start(version) {
 
       function verify(controls, response, apiPath, withError, operation) {
         verifyResponse(response, operation, withError);
-        return retry(() => {
-          return agentControls.getSpans().then(spans => verifySpans(controls, spans, apiPath, withError));
-        }, retryTime);
+        return retry(
+          () => agentControls.getSpans().then(spans => verifySpans(controls, spans, apiPath, withError)),
+          retryTime
+        );
       }
 
       function verifySpans(controls, spans, apiPath, withError) {

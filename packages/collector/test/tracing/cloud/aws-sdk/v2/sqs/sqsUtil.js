@@ -25,46 +25,47 @@ const sqs = new AWS.SQS();
 exports.sqs = sqs;
 
 exports.purgeQueues = function (urls) {
-  const promises = urls.map(url => {
-    return new Promise((resolve, reject) => {
-      sqs
-        .purgeQueue({
-          QueueUrl: url
-        })
-        .promise()
-        .then(data => {
-          setTimeout(() => {
-            resolve(data);
-          }, 3000);
-        })
-        .catch(err => {
-          if (err.code === 'AWS.SimpleQueueService.PurgeQueueInProgress') {
-            resolve('Previous purge still running');
-          } else {
-            reject(err);
-          }
-        });
-    });
-  });
+  const promises = urls.map(
+    url =>
+      new Promise((resolve, reject) => {
+        sqs
+          .purgeQueue({
+            QueueUrl: url
+          })
+          .promise()
+          .then(data => {
+            setTimeout(() => {
+              resolve(data);
+            }, 3000);
+          })
+          .catch(err => {
+            if (err.code === 'AWS.SimpleQueueService.PurgeQueueInProgress') {
+              resolve('Previous purge still running');
+            } else {
+              reject(err);
+            }
+          });
+      })
+  );
 
   return Promise.all(promises);
 };
 
 exports.createQueues = function (queueNames) {
-  const promises = queueNames.map(name => {
-    return sqs
+  const promises = queueNames.map(name =>
+    sqs
       .createQueue({
         QueueName: name
       })
-      .promise();
-  });
+      .promise()
+  );
 
   return Promise.all(promises);
 };
 
 exports.deleteQueues = function (urls) {
-  const promises = urls.map(url => {
-    return sqs
+  const promises = urls.map(url =>
+    sqs
       .deleteQueue({
         QueueUrl: url
       })
@@ -74,8 +75,8 @@ exports.deleteQueues = function (urls) {
           return Promise.resolve();
         }
         return Promise.reject(err);
-      });
-  });
+      })
+  );
 
   return Promise.all(promises);
 };

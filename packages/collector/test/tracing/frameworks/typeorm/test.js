@@ -33,8 +33,8 @@ mochaSuiteFn('frameworks/typeorm', function () {
         method: 'GET',
         path: '/find-one'
       })
-      .then(() => {
-        return retry(() =>
+      .then(() =>
+        retry(() =>
           agentControls.getSpans().then(spans => {
             expect(spans.length).to.equal(2);
 
@@ -63,6 +63,6 @@ mochaSuiteFn('frameworks/typeorm', function () {
               ]
             });
           })
-        );
-      }));
+        )
+      ));
 });

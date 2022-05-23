@@ -111,9 +111,10 @@ if (
       function verify(response, apiPath, withError) {
         if (withError === 'publisher') {
           expect(response).to.equal('Data must be in the form of a Buffer.');
-          return retry(() => {
-            return agentControls.getSpans().then(spans => verifySpans(spans, apiPath, null, withError));
-          }, retryTime);
+          return retry(
+            () => agentControls.getSpans().then(spans => verifySpans(spans, apiPath, null, withError)),
+            retryTime
+          );
         } else {
           return retry(() => {
             const messageId = verifyResponseAndMessage(response, subscriberControls);
@@ -229,16 +230,16 @@ if (
               'X-INSTANA-L': '0'
             }
           })
-          .then(response => {
-            return retry(() => verifyResponseAndMessage(response, subscriberControls), retryTime)
+          .then(response =>
+            retry(() => verifyResponseAndMessage(response, subscriberControls), retryTime)
               .then(() => delay(config.getTestTimeout() / 4))
               .then(() => agentControls.getSpans())
               .then(spans => {
                 if (spans.length > 0) {
                   fail(`Unexpected spans (Google Cloud Run/suppressed: ${stringifyItems(spans)}`);
                 }
-              });
-          }));
+              })
+          ));
     });
 
     describe('tracing disabled', function () {
@@ -276,16 +277,16 @@ if (
             method: 'POST',
             path: '/publish-promise'
           })
-          .then(response => {
-            return retry(() => verifyResponseAndMessage(response, subscriberControls), retryTime)
+          .then(response =>
+            retry(() => verifyResponseAndMessage(response, subscriberControls), retryTime)
               .then(() => delay(config.getTestTimeout() / 4))
               .then(() => agentControls.getSpans())
               .then(spans => {
                 if (spans.length > 0) {
                   fail(`Unexpected spans (Google Cloud PubSub/suppressed: ${stringifyItems(spans)}`);
                 }
-              });
-          }));
+              })
+          ));
     });
   });
 }

@@ -66,17 +66,14 @@ describe('tracing/logger/pino', function () {
         )
       ));
 
-    it(`must trace warn${suffix}`, () => {
-      return runTest('warn', useExpressPino, false, 'Warn message - should be traced.', controls);
-    });
+    it(`must trace warn${suffix}`, () =>
+      runTest('warn', useExpressPino, false, 'Warn message - should be traced.', controls));
 
-    it(`must trace error${suffix}`, () => {
-      return runTest('error', useExpressPino, true, 'Error message - should be traced.', controls);
-    });
+    it(`must trace error${suffix}`, () =>
+      runTest('error', useExpressPino, true, 'Error message - should be traced.', controls));
 
-    it(`must trace fatal${suffix}`, () => {
-      return runTest('fatal', useExpressPino, true, 'Fatal message - should be traced.', controls);
-    });
+    it(`must trace fatal${suffix}`, () =>
+      runTest('fatal', useExpressPino, true, 'Fatal message - should be traced.', controls));
 
     // prettier-ignore
     it(`must trace error object without message${suffix}`, () =>
@@ -122,10 +119,8 @@ describe('tracing/logger/pino', function () {
         )
       ));
 
-    // prettier-ignore
-    it(`must trace custom error${suffix}`, () => {
-      return runTest('custom-error', useExpressPino, true, 'Custom error level message - should be traced.', controls);
-    });
+    it(`must trace custom error${suffix}`, () =>
+      runTest('custom-error', useExpressPino, true, 'Custom error level message - should be traced.', controls));
 
     it(`must trace child logger error${suffix}`, () => {
       if (useExpressPino) {

@@ -67,8 +67,8 @@ describe('agentCommunication', function () {
         )
       ));
 
-  it('sends a Node.js EOL alert event to the agent (when applicable)', async () => {
-    return retry(async () => {
+  it('sends a Node.js EOL alert event to the agent (when applicable)', async () =>
+    retry(async () => {
       const events = await agentControls.getEvents();
 
       if (events.length === 0 && isEOL) {
@@ -79,8 +79,7 @@ describe('agentCommunication', function () {
         );
         expect(eolEvent).to.exist;
       }
-    });
-  });
+    }));
 });
 
 describe('announce retry', function () {

@@ -554,9 +554,7 @@ function verifyResponseAndMessage(response, consumerControls, withError, objectM
 
   expect(receivedMessages).to.have.lengthOf.at.least(1);
   const message = receivedMessages.filter(({ headers }) => {
-    const header = headers.filter(_header => {
-      return _header.message_counter != null;
-    })[0];
+    const header = headers.filter(_header => _header.message_counter != null)[0];
 
     const messageCounter = Buffer.from(header.message_counter.data).toString();
     return parseInt(messageCounter, 10) === response.messageCounter;
