@@ -8,7 +8,7 @@
 # When using optional dependencies, they are counted as "prod" dependency.
 # We run really quickly into audit errors for older packages.
 # This is our own implementation of having "optionalDevDependencies".
-# Requirement: grep@3
+# Requirement: cut, grep@3, jq, node, npm
 
 set -eo pipefail
 
