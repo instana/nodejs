@@ -24,7 +24,6 @@ const globalAgent = require('../../../globalAgent');
 const agentControls = globalAgent.instance;
 
 const skipNodeVersion = {
-  // graphql-ws is not compatible with Node 8
   14: semver.lt(process.versions.node, '10.0.0'),
   15: semver.lt(process.versions.node, '10.0.0'),
   16: semver.lt(process.versions.node, '12.0.0')

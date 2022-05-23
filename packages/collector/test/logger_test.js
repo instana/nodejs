@@ -81,10 +81,6 @@ describe('logger', () => {
   });
 
   it('should not detect pino as bunyan', () => {
-    if (!pino) {
-      // This test is skipped in Node.js 4 since pino only supports Node.js >= 6.
-      return;
-    }
     const pinoLogger = pino();
     log.init({ logger: pinoLogger });
     const logger = log.getLogger('myLogger');
@@ -93,10 +89,6 @@ describe('logger', () => {
   });
 
   it('should create a child logger for pino', () => {
-    if (!pino) {
-      // This test is skipped in Node.js 4 since pino only supports Node.js >= 6.
-      return;
-    }
     const pinoLogger = pino();
     log.init({ logger: pinoLogger });
     const logger = log.getLogger('myLogger');

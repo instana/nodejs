@@ -27,10 +27,6 @@ const ws = require('ws');
  *
  * Subscriptions no longer working from GraphQL v15 using subscriptions-transport-ws
  * Furtermore subscriptions-transport-ws is no longer maintained
- *
- * We no longer test against Node 8, because graphql-ws has no support for it
- * But if you want to test something on GraphQL v14 + Node 8, you can use:
- * https://github.com/instana/nodejs/tree/v1.137.5/packages/collector/test/tracing/protocols/graphql
  */
 const { createClient } = require('graphql-ws');
 
