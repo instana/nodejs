@@ -85,7 +85,7 @@ exports.createTopic = async function createTopic(topicAndQueueName) {
     .subscribe({
       TopicArn: topicData.TopicArn,
       Protocol: 'sqs',
-      Endpoint: 'arn:aws:sqs:us-east-2:410797082306:' + topicAndQueueName,
+      Endpoint: `arn:aws:sqs:us-east-2:410797082306:${topicAndQueueName}`,
       Attributes: {
         RawMessageDelivery: 'true'
       }

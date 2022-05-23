@@ -39,7 +39,7 @@ app.get('/produce', async (req, res) => {
   const producer = await kafkaAvro.getProducer({});
 
   producer.on('disconnected', arg => {
-    log('producer disconnected. ' + JSON.stringify(arg));
+    log(`producer disconnected. ${JSON.stringify(arg)}`);
   });
 
   const value = { name: 'John', messageCounter };

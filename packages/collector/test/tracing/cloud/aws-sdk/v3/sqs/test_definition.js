@@ -126,7 +126,7 @@ function start(version) {
           [false, 'sender'].forEach(withError => {
             const sqsSendMethod = getNextSendMethod();
             const apiPath = `/send-message/${sqsSendMethod}`;
-            const urlWithParams = withError ? apiPath + '?withError=true' : apiPath;
+            const urlWithParams = withError ? `${apiPath}?withError=true` : apiPath;
 
             it(`send(${sqsSendMethod}); receive(${sqsReceiveMethod}); error: ${!!withError}`, async () => {
               const response = await senderControls.sendRequest({
@@ -457,7 +457,7 @@ function start(version) {
         useGlobalAgent: true,
         env: {
           SQSV3_RECEIVE_METHOD: 'v3',
-          AWS_SQS_QUEUE_URL: queueURL + '-non-existent',
+          AWS_SQS_QUEUE_URL: `${queueURL}-non-existent`,
           AWS_SDK_CLIENT_SQS_REQUIRE: version
         }
       });

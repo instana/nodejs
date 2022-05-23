@@ -90,7 +90,7 @@ mochaSuiteFn('tracing/messaging/bull', function () {
         sendingOptions.forEach(sendOption => {
           const apiPath = `/send?jobName=true&${sendOption}&testId=${testId}`;
           withErrorCases.forEach(withError => {
-            const urlWithParams = withError ? apiPath + '&withError=true' : apiPath;
+            const urlWithParams = withError ? `${apiPath}&withError=true` : apiPath;
 
             it(`send: ${sendOption}; receive: ${receiveMethod}; error: ${!!withError}`, async () => {
               const response = await senderControls.sendRequest({
@@ -176,7 +176,7 @@ mochaSuiteFn('tracing/messaging/bull', function () {
         span => expect(span.f.h).to.equal('agent-stub-uuid'),
         span => expect(span.n).to.equal('node.http.server'),
         span =>
-          expect(span.data.http.url + '?' + span.data.http.params).to.equal(
+          expect(`${span.data.http.url}?${span.data.http.params}`).to.equal(
             apiPath + (withError ? '&withError=true' : '')
           )
       ]);

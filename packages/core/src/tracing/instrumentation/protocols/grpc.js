@@ -70,6 +70,7 @@ function createInstrumentedServerHandler(name, type, originalHandler) {
     const parentSpan = cls.getCurrentSpan();
     if (parentSpan) {
       logger.warn(
+        // eslint-disable-next-line prefer-template
         'Cannot start a GRPC entry span when another span is already active. Currently, the following span is ' +
           'active: ' +
           JSON.stringify(parentSpan)

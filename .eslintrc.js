@@ -82,7 +82,6 @@ module.exports = {
     'prefer-object-spread': 'off',
     'prefer-rest-params': 'off',
     'prefer-spread': 'off',
-    'prefer-template': 'off',
     strict: ['error', 'global'],
     'wrap-iife': 'off',
     yoda: 'off'

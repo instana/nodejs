@@ -26,7 +26,7 @@ const { promisifyNonSequentialCases } = require('../promisify_non_sequential');
 
 const topicAndQueueName = `team-nodejs-${semver.major(process.versions.node)}-${uuid()}`;
 const topicArn = `arn:aws:sns:us-east-2:410797082306:${topicAndQueueName}`;
-const sqsQueueUrl = 'https://sqs.us-east-2.amazonaws.com/410797082306/' + topicAndQueueName;
+const sqsQueueUrl = `https://sqs.us-east-2.amazonaws.com/410797082306/${topicAndQueueName}`;
 
 let mochaSuiteFn;
 

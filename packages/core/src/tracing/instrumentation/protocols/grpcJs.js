@@ -297,6 +297,7 @@ function createInstrumentedServerHandler(name, type, originalHandler) {
     if (parentSpan) {
       if (parentSpan.n !== 'node.http.server') {
         logger.warn(
+          // eslint-disable-next-line prefer-template
           'Cannot start a GRPC-JS entry span when another span is already active. Currently, the following span is ' +
             'active: ' +
             JSON.stringify(parentSpan)

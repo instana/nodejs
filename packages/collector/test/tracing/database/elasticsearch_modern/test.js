@@ -104,7 +104,7 @@ describe('tracing/elasticsearch (modern client)', function () {
             }
           }).then(res => {
             if (res.error) {
-              fail('Unexpected errors:' + JSON.stringify(res.error, null, 2));
+              fail(`Unexpected errors:${JSON.stringify(res.error, null, 2)}`);
             }
             expect(res.error).to.not.exist;
             expect(res.response).to.exist;

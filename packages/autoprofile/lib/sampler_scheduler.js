@@ -77,16 +77,16 @@ class SamplerScheduler {
     }
 
     if (this.profileDuration > this.config.maxProfileDuration) {
-      this.profiler.debug(this.config.logPrefix + ': max profiling duration reached.');
+      this.profiler.debug(`${this.config.logPrefix}: max profiling duration reached.`);
       return null;
     }
 
     if (this.profiler.samplerActive) {
-      this.profiler.debug(this.config.logPrefix + ': sampler lock exists.');
+      this.profiler.debug(`${this.config.logPrefix}: sampler lock exists.`);
       return null;
     }
     this.profiler.samplerActive = true;
-    this.profiler.debug(this.config.logPrefix + ': started.');
+    this.profiler.debug(`${this.config.logPrefix}: started.`);
 
     try {
       this.sampler.startSampler();
@@ -110,7 +110,7 @@ class SamplerScheduler {
         self.profileDuration += Date.now() - spanStart;
         self.sampler.stopSampler();
         self.profiler.samplerActive = false;
-        self.profiler.debug(self.config.logPrefix + ': stopped.');
+        self.profiler.debug(`${self.config.logPrefix}: stopped.`);
       } catch (err) {
         self.profiler.samplerActive = false;
         self.profiler.exception(err);
@@ -145,13 +145,13 @@ class SamplerScheduler {
       this.reset();
       return;
     }
-    this.profiler.debug(this.config.logPrefix + ': reporting profile.');
+    this.profiler.debug(`${this.config.logPrefix}: reporting profile.`);
 
     const profile = this.sampler.buildProfile(this.profileDuration, Date.now() - this.profileStartTs);
 
     const externalPid = this.profiler.getExternalPid();
     if (externalPid) {
-      profile.processId = '' + externalPid;
+      profile.processId = `${externalPid}`;
     }
 
     this.profiler.profileRecorder.record(profile.toJson());
