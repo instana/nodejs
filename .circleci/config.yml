@@ -387,7 +387,6 @@ jobs:
   "node-coverage":
     environment:
         NODE_COVERAGE: true
-        NEW_IMAGE: true
     docker:
       - image: cimg/node:16.15
       - <<: *zookeeper
