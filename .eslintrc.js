@@ -48,6 +48,7 @@ module.exports = {
     'implicit-arrow-linebreak': 'off',
     'import/newline-after-import': 'off',
     'import/no-dynamic-require': 'off',
+    'import/no-unresolved': 'off',
     'import/order': 'off',
     indent: 'off',
     'instana/no-unsafe-require': 'error',
