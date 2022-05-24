@@ -147,7 +147,7 @@
   "devDependencies": {
     "@types/bunyan": "^1.8.8",
     "bookshelf": "^1.2.0",
-    "knex": "^0.95.11",
+    "knex": "^0.21.17",
     "no-code2": "2.0.0",
     "opentracing": "^0.14.5",
     "typeorm": "^0.2.41"

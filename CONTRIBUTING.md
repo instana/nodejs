@@ -223,3 +223,33 @@ lerna ERR! E429 Could not authenticate ${npm-user-name}: rate limited otp
 
 you simply need to wait five minutes before trying again. In case some packages have already been published and others have not, refer the advice about `lerna publish from-package` in the previous section.
 
+## Adding support for a new Node.js version
+
+Example PR Node v18
+https://github.com/instana/nodejs/pull/529
+
+### Native dependencies (prebuilds)
+
+We deliver prebuilds of native dependencies for every supported Node version in our releases.
+
+You can find the ABI (NODE_MODULE_VERSION) [here](https://nodejs.org/en/download/releases/).
+
+#### shared-metrics package
+
+Please run these commands to generate the prebuilds for event-loop-stats and gcstats:
+
+```sh
+cd native-dep-packs
+./rebuild-precompiled-addons.sh
+```
+
+#### autoprofile package
+
+Please run these commands to generate the prebuilds for our own autoprofiler:
+
+```sh
+cd packages/autoprofile
+precompile/build-all-addons.js
+```
+
+NOTE: It is recommended to comment out the ABI versions you don't want to generate/regenerate in the `build-all-addons` script. Alternatively, if you want to regenerate all builds that's fine too, but it takes longer. 

@@ -7,6 +7,7 @@
 const expect = require('chai').expect;
 const sinon = require('sinon');
 const path = require('path');
+const fs = require('fs');
 const requireHook = require('../../src/util/requireHook');
 const initializedTooLateHeurstic = require('../../src/util/initializedTooLateHeuristic');
 const config = require('../config');
@@ -63,6 +64,12 @@ describe('[UNIT] util.initializedTooLateHeurstic', function () {
         resolvedPath = require.resolve(moduleName);
       } catch (err) {
         resolvedPath = path.resolve(resolvedPath.toString().replace(/\\\/?/g, '/'));
+      }
+
+      if (!fs.existsSync(resolvedPath)) {
+        // eslint-disable-next-line no-console
+        console.log(`Do not expect anything if the module ${resolvedPath}is not installed.`);
+        return;
       }
 
       require.cache[resolvedPath] = {};
