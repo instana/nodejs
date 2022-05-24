@@ -33,12 +33,12 @@ const LIBC_FAMILIES = [GLIBC, MUSL];
 // Maintenance Note:
 // This should be kept in sync with native-dep-packs/rebuild-precompiled-addons.sh -> ABI_VERSIONS.
 const ABI_VERSIONS = {
-  57: '8.17.0',
   64: '10.24.1',
   72: '12.22.1',
   83: '14.17.0',
   88: '15.14.0',
-  93: '16.3.0'
+  93: '16.3.0',
+  108: '18.0.0'
 };
 
 function buildForPlatform(platform) {

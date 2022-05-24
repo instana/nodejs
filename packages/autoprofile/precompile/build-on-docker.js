@@ -6,7 +6,7 @@
 'use strict';
 
 const { GLIBC, MUSL } = require('detect-libc');
-
+const path = require('path');
 const execute = require('./execute-sync');
 const getDockerOpts = require('./docker-opts');
 
@@ -27,8 +27,12 @@ module.exports = exports = function buildOnDocker(platform, family, abi, version
   console.log(
     `Running node-gyp for ${platform}/${family}/ABI ${abi} (target=${version}) on Docker container ${dockerTag} now:`
   );
+
+  // NOTE: we need to bind the root dependencies, because mkdirp & node-gyp is not installed in autoprofile package
+  const rootModules = path.join(__dirname, '..', '..', '..', 'node_modules');
   execute(`docker run \
            --mount type=bind,source="$(pwd)",target=/opt/autoprofile \
+           --mount type=bind,source="${rootModules}",target=/opt/autoprofile/node_modules \
            --name ${dockerTag} ${dockerTag} \
            ${abi} \
            ${version}

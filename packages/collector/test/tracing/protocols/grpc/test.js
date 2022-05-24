@@ -6,9 +6,10 @@
 'use strict';
 
 const path = require('path');
+const semver = require('semver');
 const expect = require('chai').expect;
 
-const constants = require('@instana/core').tracing.constants;
+const { constants, supportedVersion } = require('@instana/core').tracing;
 const config = require('../../../../../core/test/config');
 const delay = require('../../../../../core/test/test_util/delay');
 const { expectExactlyOneMatching, getSpansByName, retry } = require('../../../../../core/test/test_util');
@@ -17,7 +18,10 @@ const globalAgent = require('../../../globalAgent');
 
 const agentControls = globalAgent.instance;
 
-describe('tracing/grpc', function () {
+const mochaSuiteFn =
+  supportedVersion(process.versions.node) && semver.lt(process.versions.node, '18.0.0') ? describe : describe.skip;
+
+mochaSuiteFn('tracing/grpc', function () {
   this.timeout(config.getTestTimeout());
 
   globalAgent.setUpCleanUpHooks();
