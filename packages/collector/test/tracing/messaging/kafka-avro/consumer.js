@@ -6,7 +6,7 @@
 
 const instana = require('../../../..')();
 
-// eslint-disable-next-line import/no-extraneous-dependencies, import/no-unresolved
+// eslint-disable-next-line import/no-extraneous-dependencies
 const KafkaAvro = require('kafka-avro');
 
 const fetch = require('node-fetch');
