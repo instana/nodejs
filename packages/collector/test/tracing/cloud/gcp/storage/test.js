@@ -24,6 +24,7 @@ const delay = require('../../../../../../core/test/test_util/delay');
 const globalAgent = require('../../../../globalAgent');
 
 const bucketName = 'nodejs-tracer-test-bucket';
+const bucketPrefixRegex = new RegExp(`^${bucketName}-.*$`);
 
 /**
  * This suite is skipped if no GCP project ID has been provided via GPC_PROJECT. It also requires to either have GCP
@@ -109,13 +110,13 @@ if (
             {
               operation: 'buckets.insert',
               attributes: {
-                bucket: /^nodejs-tracer-test-bucket-.*$/
+                bucket: bucketPrefixRegex
               }
             },
             {
               operation: 'buckets.delete',
               attributes: {
-                bucket: /^nodejs-tracer-test-bucket-.*$/
+                bucket: bucketPrefixRegex
               }
             }
           ]
@@ -126,13 +127,13 @@ if (
             {
               operation: 'buckets.insert',
               attributes: {
-                bucket: /^nodejs-tracer-test-bucket-.*$/
+                bucket: bucketPrefixRegex
               }
             },
             {
               operation: 'buckets.delete',
               attributes: {
-                bucket: /^nodejs-tracer-test-bucket-.*$/
+                bucket: bucketPrefixRegex
               }
             }
           ]
@@ -171,21 +172,21 @@ if (
               operation: 'objects.insert',
               attributes: {
                 bucket: bucketName,
-                object: 'combine-source-1.txt'
+                object: /^combine-source-1-.*$/
               }
             },
             {
               operation: 'objects.insert',
               attributes: {
                 bucket: bucketName,
-                object: 'combine-source-2.txt'
+                object: /^combine-source-2-.*$/
               }
             },
             {
               operation: 'objects.compose',
               attributes: {
                 destinationBucket: bucketName,
-                destinationObject: 'combine-destination.gz'
+                destinationObject: /^combine-destination-.*$/
               }
             }
           ]
@@ -211,7 +212,7 @@ if (
               operation: 'objects.insert',
               attributes: {
                 bucket: bucketName,
-                object: 'delete-me'
+                object: /^delete-me-.*/
               }
             },
             {
@@ -303,17 +304,29 @@ if (
           pathPrefix: 'bucket-set-and-remove-retention-period',
           expectedGcsSpans: [
             {
-              operation: 'buckets.patch',
-              unique: false,
+              operation: 'buckets.insert',
               attributes: {
-                bucket: bucketName
+                bucket: bucketPrefixRegex
               }
             },
             {
               operation: 'buckets.patch',
               unique: false,
               attributes: {
-                bucket: bucketName
+                bucket: bucketPrefixRegex
+              }
+            },
+            {
+              operation: 'buckets.patch',
+              unique: false,
+              attributes: {
+                bucket: bucketPrefixRegex
+              }
+            },
+            {
+              operation: 'buckets.delete',
+              attributes: {
+                bucket: bucketPrefixRegex
               }
             }
           ]
@@ -381,16 +394,16 @@ if (
               operation: 'objects.insert',
               attributes: {
                 bucket: bucketName,
-                object: 'file.txt'
+                object: /^source-.*$/
               }
             },
             {
               operation: 'objects.rewrite',
               attributes: {
                 sourceBucket: bucketName,
-                sourceObject: 'file.txt',
+                sourceObject: /^source-.*$/,
                 destinationBucket: bucketName,
-                destinationObject: 'destination.txt'
+                destinationObject: /^destination-.*$/
               }
             }
           ]
@@ -402,14 +415,14 @@ if (
               operation: 'objects.insert',
               attributes: {
                 bucket: bucketName,
-                object: 'file.txt'
+                object: /^file-.*$/
               }
             },
             {
               operation: 'objects.delete',
               attributes: {
                 bucket: bucketName,
-                object: 'file.txt'
+                object: /^file-.*$/
               }
             }
           ]
@@ -421,14 +434,14 @@ if (
               operation: 'objects.insert',
               attributes: {
                 bucket: bucketName,
-                object: 'file.txt'
+                object: /^file-.*$/
               }
             },
             {
               operation: 'objects.get',
               attributes: {
                 bucket: bucketName,
-                object: 'file.txt'
+                object: /^file-.*$/
               }
             }
           ]
@@ -440,14 +453,14 @@ if (
               operation: 'objects.insert',
               attributes: {
                 bucket: bucketName,
-                object: 'file.txt'
+                object: /^file-.*$/
               }
             },
             {
               operation: 'objects.get',
               attributes: {
                 bucket: bucketName,
-                object: 'file.txt'
+                object: /^file-.*$/
               }
             }
           ]
@@ -459,14 +472,14 @@ if (
               operation: 'objects.insert',
               attributes: {
                 bucket: bucketName,
-                object: 'file.txt'
+                object: /^file-.*$/
               }
             },
             {
               operation: 'objects.get',
               attributes: {
                 bucket: bucketName,
-                object: 'file.txt'
+                object: /^file-.*$/
               }
             }
           ]
@@ -478,14 +491,14 @@ if (
               operation: 'objects.insert',
               attributes: {
                 bucket: bucketName,
-                object: 'file.txt'
+                object: /^file-.*$/
               }
             },
             {
               operation: 'objects.get',
               attributes: {
                 bucket: bucketName,
-                object: 'file.txt'
+                object: /^file-.*$/
               }
             }
           ]
@@ -497,14 +510,14 @@ if (
               operation: 'objects.insert',
               attributes: {
                 bucket: bucketName,
-                object: 'file.txt'
+                object: /^file-.*$/
               }
             },
             {
               operation: 'objects.get',
               attributes: {
                 bucket: bucketName,
-                object: 'file.txt'
+                object: /^file-.*$/
               }
             }
           ]
@@ -516,16 +529,16 @@ if (
               operation: 'objects.insert',
               attributes: {
                 bucket: bucketName,
-                object: 'file.txt'
+                object: /^file-.*$/
               }
             },
             {
               operation: 'objects.rewrite',
               attributes: {
                 sourceBucket: bucketName,
-                sourceObject: 'file.txt',
+                sourceObject: /^file-.*$/,
                 destinationBucket: bucketName,
-                destinationObject: 'destination.txt'
+                destinationObject: /^destination-.*$/
               }
             }
           ]
@@ -538,7 +551,7 @@ if (
               unique: false,
               attributes: {
                 bucket: bucketName,
-                object: 'file.txt'
+                object: /^file-.*$/
               }
             },
             {
@@ -546,7 +559,7 @@ if (
               unique: false,
               attributes: {
                 bucket: bucketName,
-                object: 'file.txt'
+                object: /^file-.*$/
               }
             }
           ]
@@ -558,14 +571,14 @@ if (
               operation: 'objects.insert',
               attributes: {
                 bucket: bucketName,
-                object: 'file.txt'
+                object: /^file-.*$/
               }
             },
             {
               operation: 'objects.patch',
               attributes: {
                 bucket: bucketName,
-                object: 'file.txt'
+                object: /^file-.*$/
               }
             }
           ]
@@ -577,16 +590,16 @@ if (
               operation: 'objects.insert',
               attributes: {
                 bucket: bucketName,
-                object: 'file.txt'
+                object: /^file-.*$/
               }
             },
             {
               operation: 'objects.rewrite',
               attributes: {
                 sourceBucket: bucketName,
-                sourceObject: 'file.txt',
+                sourceObject: /^file-.*$/,
                 destinationBucket: bucketName,
-                destinationObject: 'file.txt'
+                destinationObject: /^file-.*$/
               }
             }
           ]
@@ -630,14 +643,14 @@ if (
                 operation: 'objects.insert',
                 attributes: {
                   bucket: bucketName,
-                  object: 'file.txt'
+                  object: /^file-.*$/
                 }
               },
               {
                 operation: 'objects.get',
                 attributes: {
                   bucket: bucketName,
-                  object: 'file.txt'
+                  object: /^file-.*$/
                 }
               }
             ])
@@ -657,7 +670,7 @@ if (
                 operation: 'objects.insert',
                 attributes: {
                   bucket: bucketName,
-                  object: 'target.txt'
+                  object: /^target-.*$/
                 }
               }
             ])
@@ -675,7 +688,7 @@ if (
           httpEntry,
           operation,
           error,
-          verifyGcsAttributes.bind(null, attributes),
+          verifyGcsAttributes(attributes),
           unique,
           gcsExits
         );
@@ -705,22 +718,26 @@ if (
       expect(getSpansByName(spans, 'node.http.client')).to.be.empty;
     }
 
-    function verifyGcsAttributes(attributes, gcsExit) {
+    function verifyGcsAttributes(attributes) {
+      const expectations = [];
       if (attributes) {
         Object.keys(attributes).forEach(key => {
           if (attributes[key] instanceof RegExp) {
-            expect(gcsExit.data.gcs[key]).to.match(attributes[key]);
+            expectations.push(span => expect(span.data.gcs[key]).to.match(attributes[key]));
           } else {
-            expect(gcsExit.data.gcs[key]).to.equal(attributes[key]);
+            expectations.push(span => expect(span.data.gcs[key]).to.equal(attributes[key]));
           }
         });
-        expect(Object.keys(gcsExit.data.gcs)).to.have.lengthOf(
-          // + 1 because span.data.gcs.op is always present
-          Object.keys(attributes).length + 1
+        expectations.push(span =>
+          expect(Object.keys(span.data.gcs)).to.have.lengthOf(
+            // + 1 because span.data.gcs.op is always present
+            Object.keys(attributes).length + 1
+          )
         );
       } else {
-        expect(Object.keys(gcsExit.data.gcs)).to.have.lengthOf(1);
+        expectations.push(span => expect(Object.keys(span.data.gcs)).to.have.lengthOf(1));
       }
+      return expectations;
     }
 
     function verifyHttpEntry(spans, url) {
@@ -743,30 +760,32 @@ if (
       unique = true,
       otherSpans
     ) {
-      return (unique === false ? expectAtLeastOneMatching : expectExactlyOneMatching)(spans, span => {
-        expect(span.n).to.equal('gcs');
-        expect(span.k).to.equal(constants.EXIT);
-        expect(span.t).to.equal(parent.t);
-        expect(span.p).to.equal(parent.s);
-        if (otherSpans) {
-          otherSpans.forEach(other => expect(span.s).to.not.equal(other.s));
-        }
-        expect(span.f.e).to.equal(String(controls.getPid()));
-        expect(span.f.h).to.equal('agent-stub-uuid');
-        expect(span.error).to.not.exist;
-        if (error) {
-          expect(span.ec).to.equal(1);
-        } else {
-          expect(span.ec).to.equal(0);
-        }
-        expect(span.async).to.not.exist;
-        expect(span.data).to.exist;
-        expect(span.data.gcs).to.be.an('object');
-        expect(span.data.gcs.op).to.equal(operation);
-        if (additionalExpectations) {
-          additionalExpectations(span);
-        }
-      });
+      let expectations = [
+        span => expect(span.n).to.equal('gcs'),
+        span => expect(span.k).to.equal(constants.EXIT),
+        span => expect(span.t).to.equal(parent.t),
+        span => expect(span.p).to.equal(parent.s),
+        span => expect(span.f.e).to.equal(String(controls.getPid())),
+        span => expect(span.f.h).to.equal('agent-stub-uuid'),
+        span => expect(span.error).to.not.exist,
+        span => expect(span.async).to.not.exist,
+        span => expect(span.data).to.exist,
+        span => expect(span.data.gcs).to.be.an('object'),
+        span => expect(span.data.gcs.op).to.equal(operation),
+        span => (error ? expect(span.ec).to.equal(1) : expect(span.ec).to.equal(0))
+      ];
+      if (otherSpans) {
+        otherSpans.forEach(other => {
+          expectations.push(span => {
+            expect(span.s).to.not.equal(other.s);
+          });
+        });
+      }
+      if (additionalExpectations) {
+        expectations = expectations.concat(additionalExpectations);
+      }
+      const matchingFunction = unique === false ? expectAtLeastOneMatching : expectExactlyOneMatching;
+      return matchingFunction(spans, expectations);
     }
   });
 }
