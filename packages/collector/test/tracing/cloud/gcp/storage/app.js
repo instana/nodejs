@@ -36,6 +36,10 @@ const fileName = 'test-file.txt';
 const localFileName = path.join(__dirname, fileName);
 const serviceAccountEmail = 'team-nodejs@k8s-brewery.iam.gserviceaccount.com';
 
+const combineSource1 = randomObjectName('combine-source-1');
+const combineSource2 = randomObjectName('combine-source-2');
+const combineDestination = randomObjectName('combine-destination');
+
 const app = express();
 
 if (process.env.WITH_STDOUT) {
@@ -52,8 +56,7 @@ app.post(
   '/storage-createBucket-bucket-delete-promise',
   asyncRoute(async (req, res) => {
     try {
-      const randomBucketName = `${bucketName}-${uuid()}`;
-      const [bucket] = await storage.createBucket(randomBucketName);
+      const [bucket] = await storage.createBucket(randomBucketName());
       await bucket.delete();
       res.sendStatus(200);
     } catch (e) {
@@ -64,8 +67,7 @@ app.post(
 );
 
 app.post('/storage-createBucket-bucket-delete-callback', (req, res) => {
-  const randomBucketName = `${bucketName}-${uuid()}`;
-  storage.createBucket(randomBucketName, (errCreate, bucket) => {
+  storage.createBucket(randomBucketName(), (errCreate, bucket) => {
     if (errCreate) {
       log(errCreate);
       return res.sendStatus(errCreate.code || 500);
@@ -84,8 +86,7 @@ app.post(
   '/bucket-create-bucket-delete-promise',
   asyncRoute(async (req, res) => {
     try {
-      const randomBucketName = `${bucketName}-${uuid()}`;
-      const bucket = storage.bucket(randomBucketName);
+      const bucket = storage.bucket(randomBucketName());
       await bucket.create();
       await bucket.delete();
       res.sendStatus(200);
@@ -97,8 +98,7 @@ app.post(
 );
 
 app.post('/bucket-create-bucket-delete-callback', (req, res) => {
-  const randomBucketName = `${bucketName}-${uuid()}`;
-  storage.createBucket(randomBucketName, (errCreate, bucket) => {
+  storage.createBucket(randomBucketName(), (errCreate, bucket) => {
     if (errCreate) {
       log(errCreate);
       return res.sendStatus(errCreate.code || 500);
@@ -159,6 +159,55 @@ app.post('/storage-get-service-account-callback', (req, res) => {
   });
 });
 
+// This could simply be an entry in the bucketRoutes array, but the retention period can cause conflicts with
+// concurrently running tests that try to delete an object from the bucket so we make sure this route creates its own
+// unique bucket beforehand.
+app.post('/bucket-set-and-remove-retention-period-promise', async (req, res) => {
+  try {
+    const bn = randomBucketName();
+    const bucket = storage.bucket(bn);
+    await bucket.create();
+    await bucket.setRetentionPeriod([1]);
+    await bucket.removeRetentionPeriod();
+    await bucket.delete();
+    res.sendStatus(200);
+  } catch (e) {
+    log(e);
+    res.sendStatus(e.code || 500);
+  }
+});
+
+// This could simply be an entry in the bucketRoutes array, but the retention period can cause conflicts with
+// concurrently running tests that try to delete an object from the bucket so we make sure this route creates its own
+// unique bucket beforehand.
+app.post('/bucket-set-and-remove-retention-period-callback', (req, res) => {
+  storage.createBucket(randomBucketName(), (errCreate, bucket) => {
+    if (errCreate) {
+      log(errCreate);
+      return res.sendStatus(errCreate.code || 500);
+    }
+    bucket.setRetentionPeriod([1], errSet => {
+      if (errSet) {
+        log(errSet);
+        return res.sendStatus(errSet.code || 500);
+      }
+      bucket.removeRetentionPeriod(errRemove => {
+        if (errRemove) {
+          log(errRemove);
+          return res.sendStatus(errRemove.code || 500);
+        }
+        bucket.delete(errDelete => {
+          if (errDelete) {
+            log(errDelete);
+            return res.sendStatus(errDelete.code || 500);
+          }
+          res.sendStatus(200);
+        });
+      });
+    });
+  });
+});
+
 const bucketRoutes = [
   {
     pathPrefix: 'add-lifecycle-rule',
@@ -181,15 +230,15 @@ const bucketRoutes = [
     actions: [
       {
         method: 'upload',
-        args: [localFileName, { destination: 'combine-source-1.txt', gzip: true }]
+        args: [localFileName, { destination: combineSource1, gzip: true }]
       },
       {
         method: 'upload',
-        args: [localFileName, { destination: 'combine-source-2.txt', gzip: true }]
+        args: [localFileName, { destination: combineSource2, gzip: true }]
       },
       {
         method: 'combine',
-        args: [['combine-source-1.txt', 'combine-source-2.txt'], 'combine-destination.gz']
+        args: [[combineSource1, combineSource2], combineDestination]
       }
     ]
   },
@@ -198,7 +247,7 @@ const bucketRoutes = [
     actions: [
       {
         method: 'upload',
-        args: [localFileName, { destination: 'delete-me', gzip: true }]
+        args: [localFileName, { destination: randomObjectName('delete-me'), gzip: true }]
       },
       {
         method: 'deleteFiles',
@@ -260,18 +309,6 @@ const bucketRoutes = [
     actions: [
       {
         method: 'getNotifications'
-      }
-    ]
-  },
-  {
-    pathPrefix: 'set-and-remove-retention-period',
-    actions: [
-      {
-        method: 'setRetentionPeriod',
-        args: [1]
-      },
-      {
-        method: 'removeRetentionPeriod'
       }
     ]
   },
@@ -387,17 +424,17 @@ app.post('/bucket-combine-error-callback', (req, res) => {
 const fileRoutes = [
   {
     pathPrefix: 'copy',
-    uploadName: 'file.txt',
+    uploadName: randomObjectName('source'),
     actions: [
       {
         method: 'copy',
-        args: ['destination.txt']
+        args: [randomObjectName('destination')]
       }
     ]
   },
   {
     pathPrefix: 'delete',
-    uploadName: 'file.txt',
+    uploadName: randomObjectName('file'),
     actions: [
       {
         method: 'delete'
@@ -406,7 +443,7 @@ const fileRoutes = [
   },
   {
     pathPrefix: 'download',
-    uploadName: 'file.txt',
+    uploadName: randomObjectName('file'),
     actions: [
       {
         method: 'download'
@@ -415,7 +452,7 @@ const fileRoutes = [
   },
   {
     pathPrefix: 'exists',
-    uploadName: 'file.txt',
+    uploadName: randomObjectName('file'),
     actions: [
       {
         method: 'exists'
@@ -424,7 +461,7 @@ const fileRoutes = [
   },
   {
     pathPrefix: 'get',
-    uploadName: 'file.txt',
+    uploadName: randomObjectName('file'),
     actions: [
       {
         method: 'get'
@@ -433,7 +470,7 @@ const fileRoutes = [
   },
   {
     pathPrefix: 'get-metadata',
-    uploadName: 'file.txt',
+    uploadName: randomObjectName('file'),
     actions: [
       {
         method: 'getMetadata'
@@ -442,7 +479,7 @@ const fileRoutes = [
   },
   {
     pathPrefix: 'is-public',
-    uploadName: 'file.txt',
+    uploadName: randomObjectName('file'),
     actions: [
       {
         method: 'isPublic'
@@ -451,17 +488,17 @@ const fileRoutes = [
   },
   {
     pathPrefix: 'move',
-    uploadName: 'file.txt',
+    uploadName: randomObjectName('file'),
     actions: [
       {
         method: 'move',
-        args: ['destination.txt']
+        args: [randomObjectName('destination')]
       }
     ]
   },
   {
     pathPrefix: 'save',
-    uploadName: 'file.txt',
+    uploadName: randomObjectName('file'),
     actions: [
       {
         method: 'save',
@@ -471,7 +508,7 @@ const fileRoutes = [
   },
   {
     pathPrefix: 'set-metadata',
-    uploadName: 'file.txt',
+    uploadName: randomObjectName('file'),
     actions: [
       {
         method: 'setMetadata',
@@ -481,7 +518,7 @@ const fileRoutes = [
   },
   {
     pathPrefix: 'set-storage-class',
-    uploadName: 'file.txt',
+    uploadName: randomObjectName('file'),
     actions: [
       {
         method: 'setStorageClass',
@@ -541,7 +578,7 @@ app.post(
   asyncRoute(async (req, res) => {
     try {
       const bucket = storage.bucket(bucketName);
-      const [remoteSource] = await bucket.upload(localFileName, { destination: 'file.txt', gzip: true });
+      const [remoteSource] = await bucket.upload(localFileName, { destination: randomObjectName('file'), gzip: true });
       const localTarget = path.join(__dirname, 'read-stream-target.txt');
 
       remoteSource
@@ -561,7 +598,7 @@ app.post(
 
 app.post('/file-write-stream', async (req, res) => {
   const bucket = storage.bucket(bucketName);
-  const file = bucket.file('target.txt');
+  const file = bucket.file(randomObjectName('target'));
   fs.createReadStream(localFileName)
     .pipe(file.createWriteStream({ resumable: false }))
     .on('error', err => {
@@ -634,6 +671,14 @@ app.post('/hmac-keys-callback', (req, res) => {
 app.listen(port, () => {
   log(`Listening on port: ${port}`);
 });
+
+function randomBucketName() {
+  return `${bucketName}-${uuid()}`;
+}
+
+function randomObjectName(prefix) {
+  return `${prefix}-${uuid()}`;
+}
 
 function log() {
   /* eslint-disable no-console */
