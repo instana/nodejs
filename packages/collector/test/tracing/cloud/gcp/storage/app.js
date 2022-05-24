@@ -16,8 +16,6 @@ const path = require('path');
 const { Storage } = require('@google-cloud/storage');
 const { v4: uuid } = require('uuid');
 
-const asyncRoute = require('../../../../test_util/asyncExpressRoute');
-
 const logPrefix = `Google Cloud Storage Client (${process.pid}):\t`;
 
 const options = { projectId: process.env.GCP_PROJECT };
@@ -52,19 +50,16 @@ app.get('/', (req, res) => {
   return res.sendStatus(200);
 });
 
-app.post(
-  '/storage-createBucket-bucket-delete-promise',
-  asyncRoute(async (req, res) => {
-    try {
-      const [bucket] = await storage.createBucket(randomBucketName());
-      await bucket.delete();
-      res.sendStatus(200);
-    } catch (e) {
-      log(e);
-      res.sendStatus(e.code || 500);
-    }
-  })
-);
+app.post('/storage-createBucket-bucket-delete-promise', async (req, res) => {
+  try {
+    const [bucket] = await storage.createBucket(randomBucketName());
+    await bucket.delete();
+    res.sendStatus(200);
+  } catch (e) {
+    log(e);
+    res.sendStatus(e.code || 500);
+  }
+});
 
 app.post('/storage-createBucket-bucket-delete-callback', (req, res) => {
   storage.createBucket(randomBucketName(), (errCreate, bucket) => {
@@ -82,20 +77,17 @@ app.post('/storage-createBucket-bucket-delete-callback', (req, res) => {
   });
 });
 
-app.post(
-  '/bucket-create-bucket-delete-promise',
-  asyncRoute(async (req, res) => {
-    try {
-      const bucket = storage.bucket(randomBucketName());
-      await bucket.create();
-      await bucket.delete();
-      res.sendStatus(200);
-    } catch (e) {
-      log(e);
-      res.sendStatus(e.code || 500);
-    }
-  })
-);
+app.post('/bucket-create-bucket-delete-promise', async (req, res) => {
+  try {
+    const bucket = storage.bucket(randomBucketName());
+    await bucket.create();
+    await bucket.delete();
+    res.sendStatus(200);
+  } catch (e) {
+    log(e);
+    res.sendStatus(e.code || 500);
+  }
+});
 
 app.post('/bucket-create-bucket-delete-callback', (req, res) => {
   storage.createBucket(randomBucketName(), (errCreate, bucket) => {
@@ -113,18 +105,15 @@ app.post('/bucket-create-bucket-delete-callback', (req, res) => {
   });
 });
 
-app.post(
-  '/storage-get-buckets-promise',
-  asyncRoute(async (req, res) => {
-    try {
-      await storage.getBuckets();
-      res.sendStatus(200);
-    } catch (e) {
-      log(e);
-      res.sendStatus(e.code || 500);
-    }
-  })
-);
+app.post('/storage-get-buckets-promise', async (req, res) => {
+  try {
+    await storage.getBuckets();
+    res.sendStatus(200);
+  } catch (e) {
+    log(e);
+    res.sendStatus(e.code || 500);
+  }
+});
 
 app.post('/storage-get-buckets-callback', (req, res) => {
   storage.getBuckets(err => {
@@ -136,18 +125,15 @@ app.post('/storage-get-buckets-callback', (req, res) => {
   });
 });
 
-app.post(
-  '/storage-get-service-account-promise',
-  asyncRoute(async (req, res) => {
-    try {
-      await storage.getServiceAccount();
-      res.sendStatus(200);
-    } catch (e) {
-      log(e);
-      res.sendStatus(e.code || 500);
-    }
-  })
-);
+app.post('/storage-get-service-account-promise', async (req, res) => {
+  try {
+    await storage.getServiceAccount();
+    res.sendStatus(200);
+  } catch (e) {
+    log(e);
+    res.sendStatus(e.code || 500);
+  }
+});
 
 app.post('/storage-get-service-account-callback', (req, res) => {
   storage.getServiceAccount(err => {
@@ -360,23 +346,20 @@ const bucketRoutes = [
 ];
 
 bucketRoutes.forEach(({ pathPrefix, actions }) => {
-  app.post(
-    `/bucket-${pathPrefix}-promise`,
-    asyncRoute(async (req, res) => {
-      try {
-        const bucket = storage.bucket(bucketName);
-        for (let i = 0; i < actions.length; i++) {
-          const { method, args } = actions[i];
-          // eslint-disable-next-line no-await-in-loop
-          await bucket[method].apply(bucket, args);
-        }
-        res.sendStatus(200);
-      } catch (e) {
-        log(e);
-        res.sendStatus(e.code || 500);
+  app.post(`/bucket-${pathPrefix}-promise`, async (req, res) => {
+    try {
+      const bucket = storage.bucket(bucketName);
+      for (let i = 0; i < actions.length; i++) {
+        const { method, args } = actions[i];
+        // eslint-disable-next-line no-await-in-loop
+        await bucket[method].apply(bucket, args);
       }
-    })
-  );
+      res.sendStatus(200);
+    } catch (e) {
+      log(e);
+      res.sendStatus(e.code || 500);
+    }
+  });
 
   app.post(`/bucket-${pathPrefix}-callback`, (req, res) => {
     const bucket = storage.bucket(bucketName);
@@ -396,19 +379,16 @@ bucketRoutes.forEach(({ pathPrefix, actions }) => {
   });
 });
 
-app.post(
-  '/bucket-combine-error-promise',
-  asyncRoute(async (req, res) => {
-    try {
-      const bucket = storage.bucket(bucketName);
-      await bucket.combine(['does-not-exist-1.txt', 'does-not-exist-2.txt'], 'combine-error.gz');
-      log('Operation bucket.combine succeeded although it should not have succeeded.');
-      res.sendStatus(500);
-    } catch (e) {
-      res.sendStatus(200);
-    }
-  })
-);
+app.post('/bucket-combine-error-promise', async (req, res) => {
+  try {
+    const bucket = storage.bucket(bucketName);
+    await bucket.combine(['does-not-exist-1.txt', 'does-not-exist-2.txt'], 'combine-error.gz');
+    log('Operation bucket.combine succeeded although it should not have succeeded.');
+    res.sendStatus(500);
+  } catch (e) {
+    res.sendStatus(200);
+  }
+});
 
 app.post('/bucket-combine-error-callback', (req, res) => {
   const bucket = storage.bucket(bucketName);
@@ -529,24 +509,21 @@ const fileRoutes = [
 ];
 
 fileRoutes.forEach(({ pathPrefix, uploadName, actions }) => {
-  app.post(
-    `/file-${pathPrefix}-promise`,
-    asyncRoute(async (req, res) => {
-      try {
-        const bucket = storage.bucket(bucketName);
-        const [file] = await bucket.upload(localFileName, { destination: uploadName, gzip: true });
-        for (let i = 0; i < actions.length; i++) {
-          const { method, args } = actions[i];
-          // eslint-disable-next-line no-await-in-loop
-          await file[method].apply(file, args);
-        }
-        res.sendStatus(200);
-      } catch (e) {
-        log(e);
-        res.sendStatus(e.code || 500);
+  app.post(`/file-${pathPrefix}-promise`, async (req, res) => {
+    try {
+      const bucket = storage.bucket(bucketName);
+      const [file] = await bucket.upload(localFileName, { destination: uploadName, gzip: true });
+      for (let i = 0; i < actions.length; i++) {
+        const { method, args } = actions[i];
+        // eslint-disable-next-line no-await-in-loop
+        await file[method].apply(file, args);
       }
-    })
-  );
+      res.sendStatus(200);
+    } catch (e) {
+      log(e);
+      res.sendStatus(e.code || 500);
+    }
+  });
 
   app.post(`/file-${pathPrefix}-callback`, (req, res) => {
     const bucket = storage.bucket(bucketName);
@@ -573,28 +550,25 @@ fileRoutes.forEach(({ pathPrefix, uploadName, actions }) => {
   });
 });
 
-app.post(
-  '/file-read-stream',
-  asyncRoute(async (req, res) => {
-    try {
-      const bucket = storage.bucket(bucketName);
-      const [remoteSource] = await bucket.upload(localFileName, { destination: randomObjectName('file'), gzip: true });
-      const localTarget = path.join(__dirname, 'read-stream-target.txt');
+app.post('/file-read-stream', async (req, res) => {
+  try {
+    const bucket = storage.bucket(bucketName);
+    const [remoteSource] = await bucket.upload(localFileName, { destination: randomObjectName('file'), gzip: true });
+    const localTarget = path.join(__dirname, 'read-stream-target.txt');
 
-      remoteSource
-        .createReadStream()
-        .on('error', err => {
-          log(err);
-          res.sendStatus(err.code || 500);
-        })
-        .on('end', () => res.sendStatus(200))
-        .pipe(fs.createWriteStream(localTarget));
-    } catch (err) {
-      log(err);
-      res.sendStatus(err.code || 500);
-    }
-  })
-);
+    remoteSource
+      .createReadStream()
+      .on('error', err => {
+        log(err);
+        res.sendStatus(err.code || 500);
+      })
+      .on('end', () => res.sendStatus(200))
+      .pipe(fs.createWriteStream(localTarget));
+  } catch (err) {
+    log(err);
+    res.sendStatus(err.code || 500);
+  }
+});
 
 app.post('/file-write-stream', async (req, res) => {
   const bucket = storage.bucket(bucketName);
@@ -610,24 +584,21 @@ app.post('/file-write-stream', async (req, res) => {
     });
 });
 
-app.post(
-  '/hmac-keys-promise',
-  asyncRoute(async (req, res) => {
-    try {
-      const [hmacKey] = await storage.createHmacKey(serviceAccountEmail);
-      await hmacKey.setMetadata({
-        state: 'INACTIVE'
-      });
-      await hmacKey.getMetadata();
-      await hmacKey.get('ACCESS_KEY');
-      await hmacKey.delete();
-      res.sendStatus(200);
-    } catch (e) {
-      log(e);
-      res.sendStatus(e.code || 500);
-    }
-  })
-);
+app.post('/hmac-keys-promise', async (req, res) => {
+  try {
+    const [hmacKey] = await storage.createHmacKey(serviceAccountEmail);
+    await hmacKey.setMetadata({
+      state: 'INACTIVE'
+    });
+    await hmacKey.getMetadata();
+    await hmacKey.get('ACCESS_KEY');
+    await hmacKey.delete();
+    res.sendStatus(200);
+  } catch (e) {
+    log(e);
+    res.sendStatus(e.code || 500);
+  }
+});
 
 app.post('/hmac-keys-callback', (req, res) => {
   storage.createHmacKey(serviceAccountEmail, (errCreate, hmacKey) => {
