@@ -45,9 +45,8 @@ mochaSuiteFn('frameworks/typeorm', function () {
             });
 
             const query =
-              'SELECT "UserTypeOrm"."id" AS "UserTypeOrm_id", "UserTypeOrm"."name" ' +
-              'AS "UserTypeOrm_name" FROM "user_type_orm" "UserTypeOrm" WHERE ' +
-              '"UserTypeOrm"."name" = $1 LIMIT 1';
+              'SELECT "UserTypeOrm"."id" AS "UserTypeOrm_id", "UserTypeOrm"."name" AS "UserTypeOrm_name" ' +
+              'FROM "user_type_orm" "UserTypeOrm" WHERE ("UserTypeOrm"."name" = $1) LIMIT 1';
 
             verifyExitSpan({
               spanName: 'postgres',

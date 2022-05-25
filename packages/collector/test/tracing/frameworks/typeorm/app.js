@@ -42,12 +42,14 @@ const UserTypeOrmEntity = new EntitySchema({
   }
 });
 
-let typeormconnection;
+let AppDataSource;
+let ready = false;
 
-(async () => {
-  typeormconnection = await typeorm.createConnection({
+function connect() {
+  AppDataSource = new typeorm.DataSource({
     type: 'postgres',
     host: process.env.POSTGRES_HOST,
+    port: process.env.POSTGRES_PORT,
     username: process.env.POSTGRES_USER,
     password: process.env.POSTGRES_PASSWORD,
     database: process.env.POSTGRES_DB,
@@ -56,8 +58,16 @@ let typeormconnection;
     entities: [UserTypeOrmEntity]
   });
 
-  await typeormconnection.synchronize();
-})();
+  AppDataSource.initialize()
+    .then(() => {
+      ready = true;
+    })
+    .catch(err => {
+      console.log(`Error occured while connecting ${err.message}`);
+    });
+}
+
+connect();
 
 if (process.env.WITH_STDOUT) {
   app.use(morgan(`${logPrefix}:method :url :status`));
@@ -66,12 +76,13 @@ if (process.env.WITH_STDOUT) {
 app.use(bodyParser.json());
 
 app.get('/', (req, res) => {
+  if (!ready) return res.sendStatus(500);
   res.sendStatus(200);
 });
 
 app.get('/find-one', async (req, res) => {
-  const repo = typeormconnection.getRepository(UserTypeOrm);
-  await repo.findOne({ name: 'parapeter' });
+  const repo = AppDataSource.getRepository(UserTypeOrm);
+  await repo.findOne({ where: { name: 'parapeter' } });
 
   res.json();
 });
