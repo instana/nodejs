@@ -7,16 +7,6 @@
 
 const { findAllMatchingItems, reportFailure } = require('./matchingItems');
 
-/**
- * @typedef {import('../../src/tracing/cls').InstanaBaseSpan} InstanaBaseSpan
- */
-
-/**
- * @type {Function}
- * @param {Array.<InstanaBaseSpan>} items
- * @param {(span: InstanaBaseSpan) => void} expectations
- * @returns {InstanaBaseSpan}
- */
 module.exports = exports = function expectAtLeastOneMatching(items, expectations) {
   const matchResult = findAllMatchingItems(items, expectations);
   const matches = matchResult.getMatches();

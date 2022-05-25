@@ -5,11 +5,6 @@
 
 'use strict';
 
-/**
- * @template T
- * @param {Array.<T>} arr
- * @returns {() => T}
- */
 exports.getCircularList = function getCircularList(arr) {
   let currentIndex = 0;
   return function getNextItemFromList() {

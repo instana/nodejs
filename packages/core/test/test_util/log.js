@@ -5,11 +5,6 @@
 
 'use strict';
 
-/**
- * Returns a log function
- * @param {string} logPrefix
- * @returns {(...args: *) => void}
- */
 exports.getLogger = function (logPrefix) {
   return function log() {
     /* eslint-disable no-console */

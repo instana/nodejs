@@ -5,15 +5,6 @@
 
 'use strict';
 
-/**
- * @typedef {import('../../src/tracing/cls').InstanaBaseSpan} InstanaBaseSpan
- */
-
-/**
- * @param {Array.<InstanaBaseSpan>} arr
- * @param {string} name
- * @returns {Array.<InstanaBaseSpan>}
- */
 module.exports = function getSpansByName(arr, name) {
   if (!Array.isArray(arr)) {
     throw new Error(`Need an array of spans, but got ${arr}`);
