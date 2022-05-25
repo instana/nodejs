@@ -302,7 +302,7 @@ jobs:
       - <<: *nats-streaming
       - <<: *memcached
     <<: *shared
-    parallelism: 16
+    parallelism: 20
 
   "node-16":
     docker:
@@ -321,7 +321,7 @@ jobs:
       - <<: *nats-streaming
       - <<: *memcached
     <<: *shared
-    parallelism: 16
+    parallelism: 20
 
   "node-14":
     environment:
@@ -342,7 +342,7 @@ jobs:
       - <<: *nats-streaming
       - <<: *memcached
     <<: *shared
-    parallelism: 16
+    parallelism: 20
 
   "node-12":
     environment:
@@ -363,7 +363,7 @@ jobs:
       - <<: *nats-streaming
       - <<: *memcached
     <<: *shared
-    parallelism: 16
+    parallelism: 20
 
   "node-10":
     docker:
@@ -382,7 +382,7 @@ jobs:
       - <<: *nats-streaming
       - <<: *memcached
     <<: *shared
-    parallelism: 16
+    parallelism: 20
 
   "node-coverage":
     environment:
@@ -411,6 +411,15 @@ workflows:
     jobs:
       - "node-18"
       - "node-16"
+  sidejobs:
+    triggers:
+      - schedule:
+          cron: "0 2 * * *"
+          filters:
+            branches:
+              only:
+                - main
+    jobs:
       - "node-14"
       - "node-12"
       - "node-10"
