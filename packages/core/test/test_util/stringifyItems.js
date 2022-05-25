@@ -7,12 +7,6 @@
 
 const MAX_SPANS_IN_ERROR = 30;
 
-/** @typedef {import('../../src/tracing/cls').InstanaBaseSpan} InstanaBaseSpan */
-
-/**
- * @type {Function}
- * @param {null | undefined | Array.<InstanaBaseSpan>} items
- */
 module.exports = exports = function stringifyItems(items) {
   if (items === null) {
     return 'null';
@@ -35,10 +29,6 @@ module.exports = exports = function stringifyItems(items) {
   }
 };
 
-/**
- * @param {InstanaBaseSpan} item
- * @returns {InstanaBaseSpan}
- */
 function shortenStackTrace(item) {
   if (!item.stack) {
     return item;

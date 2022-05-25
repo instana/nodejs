@@ -5,9 +5,6 @@
 
 'use strict';
 
-/**
- * @param {*} message
- */
 module.exports = function sendToParent(message) {
   if (process.send) {
     process.send(message);
