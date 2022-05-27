@@ -167,6 +167,10 @@ addToPackageLock package-lock.json @instana/serverless false
 
 Later on, the original package-lock.json is restored when `git checkout package-lock.json;` is run from the `audit` npm script that you added before (see the package.json section above)
 
+#### IMPORTANT: Set Publishing Access For The New Package
+
+Visit https://www.npmjs.com/package/@instana/${package-name}/access and set publishing access to "Require two-factor authentication or automation tokens".
+
 ### Making A New Release
 
 To make a release, you first need to ensure that the released version will either be a semver minor or patch release so that automatic updates are working for our users. Following that, the process is simple:
@@ -252,4 +256,4 @@ cd packages/autoprofile
 precompile/build-all-addons.js
 ```
 
-NOTE: It is recommended to comment out the ABI versions you don't want to generate/regenerate in the `build-all-addons` script. Alternatively, if you want to regenerate all builds that's fine too, but it takes longer. 
+NOTE: It is recommended to comment out the ABI versions you don't want to generate/regenerate in the `build-all-addons` script. Alternatively, if you want to regenerate all builds that's fine too, but it takes longer.
