@@ -8,6 +8,8 @@
 const expect = require('chai').expect;
 const fail = require('chai').assert.fail;
 
+const { v4: uuid } = require('uuid');
+
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const constants = require('@instana/core').tracing.constants;
 const config = require('../../../../core/test/config');
@@ -26,6 +28,14 @@ mochaSuiteFn('tracing/sdk', function () {
   globalAgent.setUpCleanUpHooks();
   const agentControls = globalAgent.instance;
 
+  let correlationId;
+  let correlationType;
+
+  beforeEach(() => {
+    correlationId = uuid();
+    correlationType = Math.random() > 0.5 ? 'mobile' : 'web';
+  });
+
   describe('when tracing is enabled', () => {
     const controls = new ProcessControls({
       dirname: __dirname,
@@ -41,79 +51,120 @@ mochaSuiteFn('tracing/sdk', function () {
     function registerSuite(apiType) {
       describe(`${apiType} API`, () => {
         it('must create an entry span without custom tags', () => {
-          controls.sendViaIpc({ command: 'start-entry', type: apiType });
+          controls.sendViaIpc({ command: 'start-entry', type: apiType, correlationId, correlationType });
           return retry(() => {
             const ipcMessages = controls.getIpcMessages();
             checkForErrors(ipcMessages);
             expect(ipcMessages.length).to.equal(1);
             expect(ipcMessages[0]).to.equal('done: start-entry');
             return agentControls.getSpans().then(spans => {
-              const customEntry = expectCustomEntry(spans, controls.getPid(), 'none');
-              expectHttpExit(spans, customEntry, controls.getPid());
+              const customEntry = expectCustomEntry({
+                spans,
+                pid: controls.getPid(),
+                tagsAt: 'none',
+                expectedCrid: correlationId,
+                expectedCrtp: correlationType
+              });
+              expectHttpExit({ spans, parentEntry: customEntry, pid: controls.getPid() });
             });
           });
         });
 
         it('must create an entry span with tags provided at start', () => {
-          controls.sendViaIpc({ command: 'start-entry', type: apiType, withData: 'start' });
+          controls.sendViaIpc({
+            command: 'start-entry',
+            type: apiType,
+            withData: 'start',
+            correlationId,
+            correlationType
+          });
           return retry(() => {
             const ipcMessages = controls.getIpcMessages();
             checkForErrors(ipcMessages);
             expect(ipcMessages.length).to.equal(1);
             expect(ipcMessages[0]).to.equal('done: start-entry');
             return agentControls.getSpans().then(spans => {
-              const customEntry = expectCustomEntry(spans, controls.getPid(), 'start');
-              expectHttpExit(spans, customEntry, controls.getPid());
+              const customEntry = expectCustomEntry({
+                spans,
+                pid: controls.getPid(),
+                tagsAt: 'start',
+                expectedCrid: correlationId,
+                expectedCrtp: correlationType
+              });
+              expectHttpExit({ spans, parentEntry: customEntry, pid: controls.getPid() });
             });
           });
         });
 
         it('must create an entry span with tags provided at completion', () => {
-          controls.sendViaIpc({ command: 'start-entry', type: apiType, withData: 'end' });
+          controls.sendViaIpc({
+            command: 'start-entry',
+            type: apiType,
+            withData: 'end',
+            correlationId,
+            correlationType
+          });
           return retry(() => {
             const ipcMessages = controls.getIpcMessages();
             checkForErrors(ipcMessages);
             expect(ipcMessages.length).to.equal(1);
             expect(ipcMessages[0]).to.equal('done: start-entry');
             return agentControls.getSpans().then(spans => {
-              const customEntry = expectCustomEntry(spans, controls.getPid(), 'end');
-              expectHttpExit(spans, customEntry, controls.getPid());
+              const customEntry = expectCustomEntry({
+                spans,
+                pid: controls.getPid(),
+                tagsAt: 'end',
+                expectedCrid: correlationId,
+                expectedCrtp: correlationType
+              });
+              expectHttpExit({ spans, parentEntry: customEntry, pid: controls.getPid() });
             });
           });
         });
 
         it('must create an entry span with tags provided at start and completion', () => {
-          controls.sendViaIpc({ command: 'start-entry', type: apiType, withData: 'both' });
+          controls.sendViaIpc({
+            command: 'start-entry',
+            type: apiType,
+            withData: 'both',
+            correlationId,
+            correlationType
+          });
           return retry(() => {
             const ipcMessages = controls.getIpcMessages();
             checkForErrors(ipcMessages);
             expect(ipcMessages.length).to.equal(1);
             expect(ipcMessages[0]).to.equal('done: start-entry');
             return agentControls.getSpans().then(spans => {
-              const customEntry = expectCustomEntry(spans, controls.getPid(), 'both');
-              expectHttpExit(spans, customEntry, controls.getPid());
+              const customEntry = expectCustomEntry({
+                spans,
+                pid: controls.getPid(),
+                tagsAt: 'both',
+                expectedCrid: correlationId,
+                expectedCrtp: correlationType
+              });
+              expectHttpExit({ spans, parentEntry: customEntry, pid: controls.getPid() });
             });
           });
         });
 
         it('must create an entry span with an error', () => {
-          controls.sendViaIpc({ command: 'start-entry', type: apiType, error: true });
+          controls.sendViaIpc({ command: 'start-entry', type: apiType, error: true, correlationId, correlationType });
           return retry(() => {
             const ipcMessages = controls.getIpcMessages();
             checkForErrors(ipcMessages);
             expect(ipcMessages.length).to.equal(1);
             expect(ipcMessages[0]).to.equal('done: start-entry');
             return agentControls.getSpans().then(spans => {
-              const customEntry = expectCustomEntry(
+              const customEntry = expectCustomEntry({
                 spans,
-                controls.getPid(),
-                'none',
-                undefined,
-                undefined,
-                undefined,
-                true
-              );
-              expectHttpExit(spans, customEntry, controls.getPid());
+                pid: controls.getPid(),
+                tagsAt: 'none',
+                error: true,
+                expectedCrid: correlationId,
+                expectedCrtp: correlationType
+              });
+              expectHttpExit({ spans, parentEntry: customEntry, pid: controls.getPid() });
             });
           });
         });
@@ -125,7 +176,9 @@ mochaSuiteFn('tracing/sdk', function () {
             command: 'start-entry',
             type: apiType,
             traceId,
-            parentSpanId
+            parentSpanId,
+            correlationId,
+            correlationType
           });
           return retry(() => {
             const ipcMessages = controls.getIpcMessages();
@@ -133,8 +186,18 @@ mochaSuiteFn('tracing/sdk', function () {
             expect(ipcMessages.length).to.equal(1);
             expect(ipcMessages[0]).to.equal('done: start-entry');
             return agentControls.getSpans().then(spans => {
-              const customEntry = expectCustomEntry(spans, controls.getPid(), 'none', traceId, parentSpanId);
-              expectHttpExit(spans, customEntry, controls.getPid());
+              const customEntry = expectCustomEntry({
+                spans,
+                pid: controls.getPid(),
+                tagsAt: 'none',
+                traceId,
+                parentSpanId,
+                // The SDK will silently discard EUM correlation data for all spans except root entry spans, so we
+                // expect crid and crtp to be not set
+                expectedCrid: null,
+                expectedCrtp: null
+              });
+              expectHttpExit({ spans, parentEntry: customEntry, pid: controls.getPid() });
             });
           });
         });
@@ -143,21 +206,27 @@ mochaSuiteFn('tracing/sdk', function () {
           controls
             .sendRequest({
               method: 'POST',
-              path: `/${apiType}/create-intermediate`
+              path: `/${apiType}/create-intermediate`,
+              qs: { correlationId, correlationType }
             })
             .then(response => {
               expect(response).does.exist;
               expect(response.indexOf('The MIT License')).to.equal(0);
               return retry(() =>
                 agentControls.getSpans().then(spans => {
-                  const httpEntry = expectHttpEntry(spans, `/${apiType}/create-intermediate`);
-                  const intermediateSpan = expectCustomFsIntermediate(
+                  const httpEntry = expectHttpEntry({
                     spans,
-                    httpEntry,
-                    controls.getPid(),
-                    /\/LICENSE$/
-                  );
-                  expectHttpExit(spans, intermediateSpan, controls.getPid());
+                    path: `/${apiType}/create-intermediate`,
+                    expectedCrid: correlationId,
+                    expectedCrtp: correlationType
+                  });
+                  const intermediateSpan = expectCustomFsIntermediate({
+                    spans,
+                    parentEntry: httpEntry,
+                    pid: controls.getPid(),
+                    path: /\/LICENSE$/
+                  });
+                  expectHttpExit({ spans, parentEntry: intermediateSpan, pid: controls.getPid() });
                 })
               );
             }));
@@ -166,16 +235,22 @@ mochaSuiteFn('tracing/sdk', function () {
           controls
             .sendRequest({
               method: 'POST',
-              path: `/${apiType}/create-exit`
+              path: `/${apiType}/create-exit`,
+              qs: { correlationId, correlationType }
             })
             .then(response => {
               expect(response).does.exist;
               expect(response.indexOf('The MIT License')).to.equal(0);
               return retry(() =>
                 agentControls.getSpans().then(spans => {
-                  const httpEntry = expectHttpEntry(spans, `/${apiType}/create-exit`);
-                  expectCustomFsExit(spans, httpEntry, controls.getPid(), /\/LICENSE$/);
-                  expectHttpExit(spans, httpEntry, controls.getPid());
+                  const httpEntry = expectHttpEntry({
+                    spans,
+                    path: `/${apiType}/create-exit`,
+                    expectedCrid: correlationId,
+                    expectedCrtp: correlationType
+                  });
+                  expectCustomFsExit({ spans, parentEntry: httpEntry, pid: controls.getPid(), path: /\/LICENSE$/ });
+                  expectHttpExit({ spans, parentEntry: httpEntry, pid: controls.getPid() });
                 })
               );
             }));
@@ -185,67 +260,99 @@ mochaSuiteFn('tracing/sdk', function () {
             .sendRequest({
               method: 'POST',
               path: `/${apiType}/create-exit?error=true`,
-              simple: false
+              simple: false,
+              qs: { correlationId, correlationType }
             })
             .then(response => {
               expect(response).does.exist;
               expect(response).to.equal('Not Found');
               return retry(() =>
                 agentControls.getSpans().then(spans => {
-                  const httpEntry = expectHttpEntry(spans, `/${apiType}/create-exit`);
-                  expectCustomFsExit(spans, httpEntry, controls.getPid(), /\/does-not-exist$/, true);
-                  expectHttpExit(spans, httpEntry, controls.getPid());
+                  const httpEntry = expectHttpEntry({
+                    spans,
+                    path: `/${apiType}/create-exit`,
+                    expectedCrid: correlationId,
+                    expectedCrtp: correlationType
+                  });
+                  expectCustomFsExit({
+                    spans,
+                    parentEntry: httpEntry,
+                    pid: controls.getPid(),
+                    path: /\/does-not-exist$/,
+                    error: true
+                  });
+                  expectHttpExit({ spans, parentEntry: httpEntry, pid: controls.getPid() });
                 })
               );
             }));
 
         it('must keep the trace context when binding an event emitter', () => {
-          controls.sendViaIpc({ command: 'event-emitter', type: apiType });
+          controls.sendViaIpc({ command: 'event-emitter', type: apiType, correlationId, correlationType });
           return retry(() => {
             const ipcMessages = controls.getIpcMessages();
             checkForErrors(ipcMessages);
             expect(ipcMessages.length).to.equal(1);
             expect(ipcMessages[0]).to.equal('done: event-emitter');
             return agentControls.getSpans().then(spans => {
-              const customEntry = expectCustomEntry(spans, controls.getPid());
-              expectHttpExit(spans, customEntry, controls.getPid());
+              const customEntry = expectCustomEntry({
+                spans,
+                pid: controls.getPid(),
+                expectedCrid: correlationId,
+                expectedCrtp: correlationType
+              });
+              expectHttpExit({ spans, parentEntry: customEntry, pid: controls.getPid() });
             });
           });
         });
 
         it('must nest entries and exits correctly', () => {
-          controls.sendViaIpc({ command: 'nest-entry-exit', type: apiType });
+          controls.sendViaIpc({ command: 'nest-entry-exit', type: apiType, correlationId, correlationType });
           return retry(() => {
             const ipcMessages = controls.getIpcMessages();
             checkForErrors(ipcMessages);
             expect(ipcMessages.length).to.equal(1);
             expect(ipcMessages[0]).to.equal('done: nest-entry-exit');
             return agentControls.getSpans().then(spans => {
-              const customEntry = expectCustomEntry(
+              const customEntry = expectCustomEntry({
                 spans,
-                controls.getPid(),
-                undefined,
-                undefined,
-                undefined,
-                /^nestEntryExit/
-              );
-              expectCustomExit(spans, customEntry, controls.getPid());
+                pid: controls.getPid(),
+                functionName: /^nestEntryExit/,
+                expectedCrid: correlationId,
+                expectedCrtp: correlationType
+              });
+              expectCustomExit({ spans, parentEntry: customEntry, pid: controls.getPid() });
             });
           });
         });
 
         it('must nest intermediates correctly', () => {
-          controls.sendViaIpc({ command: 'nest-intermediates', type: apiType });
+          controls.sendViaIpc({ command: 'nest-intermediates', type: apiType, correlationId, correlationType });
           return retry(() => {
             const ipcMessages = controls.getIpcMessages();
             checkForErrors(ipcMessages);
             expect(ipcMessages.length).to.equal(1);
             expect(ipcMessages[0]).to.equal('done: nest-intermediates');
             return agentControls.getSpans().then(spans => {
-              const customEntry = expectCustomEntry(spans, controls.getPid(), null, null, null, /^nestIntermediates/);
-              const intermediate1 = expectIntermediate(spans, customEntry, 'intermediate-1', controls.getPid());
-              const intermediate2 = expectIntermediate(spans, intermediate1, 'intermediate-2', controls.getPid());
-              expectCustomExit(spans, intermediate2, controls.getPid());
+              const customEntry = expectCustomEntry({
+                spans,
+                pid: controls.getPid(),
+                functionName: /^nestIntermediates/,
+                expectedCrid: correlationId,
+                expectedCrtp: correlationType
+              });
+              const intermediate1 = expectIntermediate({
+                spans,
+                parentEntry: customEntry,
+                name: 'intermediate-1',
+                pid: controls.getPid()
+              });
+              const intermediate2 = expectIntermediate({
+                spans,
+                parentEntry: intermediate1,
+                name: 'intermediate-2',
+                pid: controls.getPid()
+              });
+              expectCustomExit({ spans, parentEntry: intermediate2, pid: controls.getPid() });
             });
           });
         });
@@ -256,14 +363,20 @@ mochaSuiteFn('tracing/sdk', function () {
       controls
         .sendRequest({
           method: 'POST',
-          path: '/callback/create-exit-synchronous-result'
+          path: '/callback/create-exit-synchronous-result',
+          qs: { correlationId, correlationType }
         })
         .then(response => {
           expect(response).does.exist;
           expect(response.result).to.equal(42);
           return retry(() =>
             agentControls.getSpans().then(spans => {
-              const httpEntry = expectHttpEntry(spans, '/callback/create-exit-synchronous-result');
+              const httpEntry = expectHttpEntry({
+                spans,
+                path: '/callback/create-exit-synchronous-result',
+                expectedCrid: correlationId,
+                expectedCrtp: correlationType
+              });
               expectExactlyOneMatching(spans, [
                 span => expect(span.t).to.equal(httpEntry.t),
                 span => expect(span.p).to.equal(httpEntry.s),
@@ -273,13 +386,13 @@ mochaSuiteFn('tracing/sdk', function () {
                 span => expect(span.data.sdk.name).to.equal('synchronous-exit'),
                 span => expect(span.data.sdk.type).to.equal(constants.SDK.EXIT)
               ]);
-              expectHttpExit(spans, httpEntry, controls.getPid());
+              expectHttpExit({ spans, parentEntry: httpEntry, pid: controls.getPid() });
             })
           );
         }));
 
     it('must return results from all startXxxSpan methods', () => {
-      controls.sendViaIpc({ command: 'synchronous-operations' });
+      controls.sendViaIpc({ command: 'synchronous-operations', correlationId, correlationType });
       return retry(() => {
         const ipcMessages = controls.getIpcMessages();
         checkForErrors(ipcMessages);
@@ -333,7 +446,7 @@ mochaSuiteFn('tracing/sdk', function () {
     function registerSuite(apiType) {
       describe(`${apiType} API`, () => {
         it('must not create entry spans', () => {
-          controls.sendViaIpc({ command: 'start-entry', type: apiType });
+          controls.sendViaIpc({ command: 'start-entry', type: apiType, correlationId, correlationType });
           return retry(() => {
             const ipcMessages = controls.getIpcMessages();
             checkForErrors(ipcMessages);
@@ -358,7 +471,8 @@ mochaSuiteFn('tracing/sdk', function () {
         controls
           .sendRequest({
             method: 'POST',
-            path: `/${apiType}/create-intermediate`
+            path: `/${apiType}/create-intermediate`,
+            qs: { correlationId, correlationType }
           })
           .then(response => {
             expect(response).does.exist;
@@ -374,7 +488,8 @@ mochaSuiteFn('tracing/sdk', function () {
         controls
           .sendRequest({
             method: 'POST',
-            path: `/${apiType}/create-exit`
+            path: `/${apiType}/create-exit`,
+            qs: { correlationId, correlationType }
           })
           .then(response => {
             expect(response).does.exist;
@@ -388,7 +503,17 @@ mochaSuiteFn('tracing/sdk', function () {
     }
   });
 
-  function expectCustomEntry(spans, pid, tagsAt, traceId, parentSpanId, functionName = /^createEntry/, error) {
+  function expectCustomEntry({
+    spans,
+    pid,
+    tagsAt,
+    traceId,
+    parentSpanId,
+    error,
+    functionName = /^createEntry/,
+    expectedCrid,
+    expectedCrtp
+  }) {
     let expectations = [
       span => (traceId ? expect(span.t).to.equal(traceId) : expect(span.t).to.exist),
       span => (parentSpanId ? expect(span.p).to.equal(parentSpanId) : expect(span.p).to.not.exist),
@@ -397,15 +522,16 @@ mochaSuiteFn('tracing/sdk', function () {
       span => expect(span.f.e).to.equal(String(pid)),
       span => expect(span.f.h).to.equal('agent-stub-uuid'),
       span => expect(span.async).to.not.exist,
-      span => expect(span.error).to.not.exist
+      span => expect(span.error).to.not.exist,
+      span => (expectedCrid ? expect(span.crid).to.equal(expectedCrid) : expect(span.crid).to.not.exist),
+      span => (expectedCrtp ? expect(span.crtp).to.equal(expectedCrtp) : expect(span.crtp).to.not.exist)
     ];
 
     if (error) {
       expectations = expectations.concat([
         span => expect(span.ec).to.equal(1),
         span => expect(span.data.sdk.custom.tags.message).to.contain('Error: Boom!\n'),
-        span =>
-          expect(span.data.sdk.custom.tags.message).to.contain('packages/collector/test/tracing/sdk/app.js:109:35')
+        span => expect(span.data.sdk.custom.tags.message).to.contain('packages/collector/test/tracing/sdk/app.js')
       ]);
     } else {
       expectations.push(span => expect(span.ec).to.equal(0));
@@ -461,15 +587,17 @@ mochaSuiteFn('tracing/sdk', function () {
     return expectExactlyOneMatching(spans, expectations);
   }
 
-  function expectHttpEntry(spans, path) {
+  function expectHttpEntry({ spans, path, expectedCrid, expectedCrtp }) {
     return expectExactlyOneMatching(spans, [
       span => expect(span.n).to.equal('node.http.server'),
       span => expect(span.data.http.method).to.equal('POST'),
-      span => expect(span.data.http.url).to.equal(path)
+      span => expect(span.data.http.url).to.equal(path),
+      span => (expectedCrid ? expect(span.crid).to.equal(expectedCrid) : expect(span.crid).to.not.exist),
+      span => (expectedCrtp ? expect(span.crtp).to.equal(expectedCrtp) : expect(span.crtp).to.not.exist)
     ]);
   }
 
-  function expectHttpExit(spans, parentEntry, pid) {
+  function expectHttpExit({ spans, parentEntry, pid }) {
     expectExactlyOneMatching(spans, [
       span => expect(span.t).to.equal(parentEntry.t),
       span => expect(span.p).to.equal(parentEntry.s),
@@ -482,19 +610,29 @@ mochaSuiteFn('tracing/sdk', function () {
       span => expect(span.ec).to.equal(0),
       span => expect(span.data.http.method).to.equal('GET'),
       span => expect(span.data.http.url).to.match(/http:\/\/127\.0\.0\.1:/),
-      span => expect(span.data.http.status).to.equal(200)
+      span => expect(span.data.http.status).to.equal(200),
+      span => expect(span.crid).to.not.exist,
+      span => expect(span.crtp).to.not.exist
     ]);
   }
 
-  function expectCustomFsIntermediate(spans, parentEntry, pid, path, error) {
-    return expectCustomFsSpan(spans, 'INTERMEDIATE', /^createIntermediate/, parentEntry, pid, path, error);
+  function expectCustomFsIntermediate({ spans, parentEntry, pid, path, error }) {
+    return expectCustomFsSpan({
+      spans,
+      kind: 'INTERMEDIATE',
+      functionName: /^createIntermediate/,
+      parentEntry,
+      pid,
+      path,
+      error
+    });
   }
 
-  function expectCustomFsExit(spans, parentEntry, pid, path, error) {
-    return expectCustomFsSpan(spans, 'EXIT', /^createExit/, parentEntry, pid, path, error);
+  function expectCustomFsExit({ spans, parentEntry, pid, path, error }) {
+    return expectCustomFsSpan({ spans, kind: 'EXIT', functionName: /^createExit/, parentEntry, pid, path, error });
   }
 
-  function expectCustomFsSpan(spans, kind, functionName, parentEntry, pid, path, error) {
+  function expectCustomFsSpan({ spans, kind, functionName, parentEntry, pid, path, error }) {
     return expectExactlyOneMatching(spans, span => {
       expect(span.t).to.equal(parentEntry.t);
       expect(span.p).to.equal(parentEntry.s);
@@ -515,6 +653,8 @@ mochaSuiteFn('tracing/sdk', function () {
       expect(span.data.sdk.custom.tags).to.exist;
       expect(span.data.sdk.custom.tags.path).to.match(path);
       expect(span.data.sdk.custom.tags.encoding).to.equal('UTF-8');
+      expect(span.crid).to.not.exist;
+      expect(span.crtp).to.not.exist;
       if (error) {
         expect(span.data.sdk.custom.tags.error.indexOf('ENOENT: no such file or directory')).to.equal(0);
       } else {
@@ -523,7 +663,7 @@ mochaSuiteFn('tracing/sdk', function () {
     });
   }
 
-  function expectIntermediate(spans, parentEntry, name, pid) {
+  function expectIntermediate({ spans, parentEntry, name, pid }) {
     return expectExactlyOneMatching(spans, [
       span => expect(span.t).to.equal(parentEntry.t),
       span => expect(span.p).to.equal(parentEntry.s),
@@ -539,11 +679,13 @@ mochaSuiteFn('tracing/sdk', function () {
       span => expect(span.data.sdk).to.exist,
       span => expect(span.data.sdk.name).to.equal(name),
       span => expect(span.data.sdk.type).to.equal(constants.SDK.INTERMEDIATE),
-      span => expect(span.data.sdk.custom).to.not.exist
+      span => expect(span.data.sdk.custom).to.not.exist,
+      span => expect(span.crid).to.not.exist,
+      span => expect(span.crtp).to.not.exist
     ]);
   }
 
-  function expectCustomExit(spans, parentEntry, pid) {
+  function expectCustomExit({ spans, parentEntry, pid }) {
     return expectExactlyOneMatching(spans, [
       span => expect(span.t).to.equal(parentEntry.t),
       span => expect(span.p).to.equal(parentEntry.s),
@@ -559,7 +701,9 @@ mochaSuiteFn('tracing/sdk', function () {
       span => expect(span.data.sdk).to.exist,
       span => expect(span.data.sdk.name).to.equal('custom-exit'),
       span => expect(span.data.sdk.type).to.equal(constants.SDK.EXIT),
-      span => expect(span.data.sdk.custom).to.not.exist
+      span => expect(span.data.sdk.custom).to.not.exist,
+      span => expect(span.crid).to.not.exist,
+      span => expect(span.crtp).to.not.exist
     ]);
   }
 

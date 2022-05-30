@@ -30,6 +30,16 @@ if (process.env.WITH_STDOUT) {
 
 app.use(bodyParser.json());
 
+app.use((req, res, next) => {
+  if (req.query.correlationId) {
+    instana.currentSpan().setCorrelationId(req.query.correlationId);
+  }
+  if (req.query.correlationType) {
+    instana.currentSpan().setCorrelationType(req.query.correlationType);
+  }
+  next();
+});
+
 app.get('/', (req, res) => {
   res.sendStatus(200);
 });
@@ -55,7 +65,7 @@ process.on('message', message => {
       nestIntermediates(message);
       break;
     case 'synchronous-operations':
-      synchronousOperations();
+      synchronousOperations(message);
       break;
     default:
       process.send(`error: unknown command: ${message.command}`);
@@ -104,6 +114,7 @@ function createEntryPromise(message) {
 }
 
 function afterCreateEntry(instanaSdk, message) {
+  setCorrelationAttributesForIpcMessage(message);
   // follow-up with an IO action that is auto-traced to validate tracing context integrity
   request(`http://127.0.0.1:${agentPort}`).then(() => {
     const error = message.error ? new Error('Boom!') : null;
@@ -113,6 +124,15 @@ function afterCreateEntry(instanaSdk, message) {
     );
     process.send(`done: ${message.command}`);
   });
+}
+
+function setCorrelationAttributesForIpcMessage(message) {
+  if (message.correlationId) {
+    instana.currentSpan().setCorrelationId(message.correlationId);
+  }
+  if (message.correlationType) {
+    instana.currentSpan().setCorrelationType(message.correlationType);
+  }
 }
 
 app.post('/callback/create-intermediate', function createIntermediateCallback(req, res) {
@@ -249,6 +269,7 @@ function createEntryWithEventEmitterCallback(message) {
   const emitter = new DummyEmitter();
   emitter.start();
   instana.sdk.callback.startEntrySpan('custom-entry', () => {
+    setCorrelationAttributesForIpcMessage(message);
     onEmittedEvent(instana.sdk.callback, emitter, message);
   });
 }
@@ -257,6 +278,7 @@ function createEntryWithEventEmitterPromise(message) {
   const emitter = new DummyEmitter();
   emitter.start();
   instana.sdk.promise.startEntrySpan('custom-entry').then(() => {
+    setCorrelationAttributesForIpcMessage(message);
     onEmittedEvent(instana.sdk.promise, emitter, message);
   });
 }
@@ -293,6 +315,7 @@ function nestEntryExit(message) {
 
 function nestEntryExitCallback(message) {
   instana.sdk.callback.startEntrySpan('custom-entry', () => {
+    setCorrelationAttributesForIpcMessage(message);
     setTimeout(function createExit() {
       instana.sdk.callback.startExitSpan('custom-exit', () => {
         setTimeout(() => {
@@ -320,6 +343,7 @@ function nestEntryExitCallback(message) {
 function nestEntryExitPromise(message) {
   instana.sdk.promise
     .startEntrySpan('custom-entry')
+    .then(() => setCorrelationAttributesForIpcMessage(message))
     .then(() => delay(50))
     .then(function createExit() {
       return instana.sdk.promise
@@ -353,6 +377,7 @@ function nestIntermediates(message) {
 
 function nestIntermediatesCallback(message) {
   instana.sdk.callback.startEntrySpan('custom-entry', () => {
+    setCorrelationAttributesForIpcMessage(message);
     setTimeout(function createIntermediate1() {
       instana.sdk.callback.startIntermediateSpan('intermediate-1', () => {
         setTimeout(function createIntermediate2() {
@@ -378,6 +403,7 @@ function nestIntermediatesCallback(message) {
 function nestIntermediatesPromise(message) {
   instana.sdk.promise
     .startEntrySpan('custom-entry')
+    .then(() => setCorrelationAttributesForIpcMessage(message))
     .then(() => delay(50))
     .then(function createIntermediate1() {
       instana.sdk.promise
@@ -403,17 +429,18 @@ function nestIntermediatesPromise(message) {
     });
 }
 
-function synchronousOperations() {
-  const result = instana.sdk.callback.startEntrySpan('synchronous-entry', () =>
-    instana.sdk.callback.startIntermediateSpan('synchronous-intermediate', () =>
+function synchronousOperations(message) {
+  const result = instana.sdk.callback.startEntrySpan('synchronous-entry', () => {
+    setCorrelationAttributesForIpcMessage(message);
+    return instana.sdk.callback.startIntermediateSpan('synchronous-intermediate', () =>
       instana.sdk.callback.startExitSpan('synchronous-exit', () => {
         instana.sdk.callback.completeExitSpan();
         instana.sdk.callback.completeIntermediateSpan();
         instana.sdk.callback.completeEntrySpan();
         return '4711';
       })
-    )
-  );
+    );
+  });
   process.send(`done: ${result}`);
 }
 
