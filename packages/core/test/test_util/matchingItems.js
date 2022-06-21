@@ -9,15 +9,7 @@ const fail = require('chai').assert.fail;
 
 const stringifyItems = require('./stringifyItems');
 
-/**
- * @typedef {import('../../src/tracing/cls').InstanaBaseSpan} InstanaBaseSpan
- */
-
 class MatchResult {
-  /**
-   * @param {Array.<InstanaBaseSpan>} items
-   * @param {Array.<(span: InstanaBaseSpan) => void> | ((span: InstanaBaseSpan) => void)} expectations
-   */
   constructor(items, expectations) {
     if (!Array.isArray(items)) {
       throw new Error(`items needs to be an array: ${items}`);
@@ -93,9 +85,6 @@ class MatchResult {
     return this.failedExpectation;
   }
 
-  /**
-   * @param {(span: InstanaBaseSpan) => void} failedExpectation
-   */
   setFailedExpectation(failedExpectation) {
     this.failedExpectation = failedExpectation;
   }
@@ -103,12 +92,6 @@ class MatchResult {
 
 exports.MatchResult = MatchResult;
 
-/**
- *
- * @param {Array.<import('../../src/tracing/cls').InstanaBaseSpan>} items
- * @param {Array.<(span: InstanaBaseSpan) => void> | ((span: InstanaBaseSpan) => void)} expectations
- * @returns {MatchResult}
- */
 exports.findAllMatchingItems = function findAllMatchingItems(items, expectations) {
   if (!items || items.length === 0) {
     fail('Could not find any matching items which match all the criteria. In fact, there were zero items.');
@@ -151,10 +134,6 @@ exports.findAllMatchingItems = function findAllMatchingItems(items, expectations
   return result;
 };
 
-/**
- * @param {MatchResult} result
- * @param {*} lookingFor
- */
 exports.reportFailure = function reportFailure(result, lookingFor) {
   // Clone the stack before creating a new error object, otherwise the stack of the new error object (including the
   // stringified spans) will be added again, basically duplicating the list of spans we add to the error message.

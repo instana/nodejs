@@ -86,6 +86,44 @@ SpanHandle.prototype.getErrorCount = function getErrorCount() {
 };
 
 /**
+ * Returns the correlation ID for end user monitoring.
+ */
+SpanHandle.prototype.getCorrelationId = function getCorrelationId() {
+  return this.span.crid;
+};
+
+/**
+ * Sets the correlation ID for end user monitoring. This method call is only effective for root entry spans, it will be
+ * silently ignored otherwise.
+ *
+ * @param {string} correlationId the correlation ID
+ */
+SpanHandle.prototype.setCorrelationId = function setCorrelationId(correlationId) {
+  if (this.isEntrySpan() && !this.getParentSpanId()) {
+    this.span.crid = correlationId;
+  }
+};
+
+/**
+ * Returns the correlation type for end user monitoring.
+ */
+SpanHandle.prototype.getCorrelationType = function getCorrelationType() {
+  return this.span.crtp;
+};
+
+/**
+ * Sets the correlation type for end user monitoring. This method call is only effective for root entry spans, it will
+ * be silently ignored otherwise.
+ *
+ * @param {string} correlationType the correlation type, either 'web' or 'mobile'
+ */
+SpanHandle.prototype.setCorrelationType = function setCorrelationType(correlationType) {
+  if (this.isEntrySpan() && !this.getParentSpanId()) {
+    this.span.crtp = correlationType;
+  }
+};
+
+/**
  * @param {string} path
  * @param {*} value
  */
@@ -245,6 +283,24 @@ NoopSpanHandle.prototype.getDuration = function getDuration() {
 NoopSpanHandle.prototype.getErrorCount = function getErrorCount() {
   return 0;
 };
+
+/**
+ * @returns {null}
+ */
+NoopSpanHandle.prototype.getCorrelationId = function getCorrelationId() {
+  return null;
+};
+
+NoopSpanHandle.prototype.setCorrelationId = function setCorrelationId() {};
+
+/**
+ * @returns {null}
+ */
+NoopSpanHandle.prototype.getCorrelationType = function getCorrelationType() {
+  return null;
+};
+
+NoopSpanHandle.prototype.setCorrelationType = function setCorrelationType() {};
 
 NoopSpanHandle.prototype.annotate = function annotate() {};
 
