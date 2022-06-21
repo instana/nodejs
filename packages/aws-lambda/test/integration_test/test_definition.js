@@ -138,9 +138,7 @@ function prelude(opts) {
     faasRuntimePath: path.join(__dirname, '../runtime_mock'),
     handlerDefinitionPath: opts.handlerDefinitionPath,
     startBackend: opts.startBackend,
-    // The option useExtensionPort determines whether the backend stub is started on the port where the Lambda extension
-    // would  usually listen (acting as a mock extension instead of a mock back end in that case).
-    useExtensionPort: opts.useExtensionPort,
+    startExtension: opts.startExtension,
     downstreamDummyUrl,
     proxy: opts.proxy,
     startProxy: opts.startProxy,
@@ -667,8 +665,9 @@ function registerTests(handlerDefinitionPath) {
     // directly to the back end.
     const control = prelude.bind(this)({
       handlerDefinitionPath,
+      startBackend: true,
       useExtension: true,
-      useExtensionPort: false,
+      startExtension: false,
       instanaEndpointUrl: backendBaseUrl,
       instanaAgentKey
     });
@@ -683,13 +682,42 @@ function registerTests(handlerDefinitionPath) {
     const control = prelude.bind(this)({
       handlerDefinitionPath,
       useExtension: true,
-      useExtensionPort: true,
+      startExtension: true,
+      startBackend: true,
       instanaEndpointUrl: backendBaseUrl,
       instanaAgentKey
     });
 
     it('must deliver metrics and spans to the extension', () =>
       verify(control, { error: false, expectMetrics: true, expectSpans: true }));
+  });
+
+  describe('when the extension is used and available, but is unresponsive', function () {
+    const control = prelude.bind(this)({
+      handlerDefinitionPath,
+      startExtension: 'unresponsive',
+      startBackend: true,
+      useExtension: true,
+      instanaEndpointUrl: backendBaseUrl,
+      instanaAgentKey
+    });
+
+    it('must deliver metrics and spans to the extension', () =>
+      verify(control, { error: false, expectMetrics: true, expectSpans: true }));
+  });
+
+  describe('when the extension is used, but is unresponsive and BE throws ECONNREFUSED', function () {
+    const control = prelude.bind(this)({
+      handlerDefinitionPath,
+      startExtension: 'unresponsive',
+      startBackend: false,
+      useExtension: true,
+      instanaEndpointUrl: backendBaseUrl,
+      instanaAgentKey
+    });
+
+    it('must deliver metrics and spans to the extension', () =>
+      verify(control, { error: 'connect ECONNREFUSED', expectMetrics: false, expectSpans: false }));
   });
 
   describe('when using a proxy without authentication', function () {

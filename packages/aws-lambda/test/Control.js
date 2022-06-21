@@ -16,14 +16,17 @@ const AbstractServerlessControl = require('../../serverless/test/util/AbstractSe
 
 function Control(opts) {
   AbstractServerlessControl.call(this, opts);
-  // The option useExtensionPort determines whether the backend stub is started on the port where the Lambda extension
-  // would  usually listen (acting as a mock extension instead of a mock back end in that case).
-  if (this.opts.useExtensionPort) {
-    this.backendPort = 7365;
-  } else {
+  // With `startExtension` you can start the extension on a different port
+  // parallel to the backend stub.
+  if (this.opts.startExtension) {
+    this.extensionPort = 7365;
+  }
+
+  if (this.opts.startBackend) {
     this.backendPort = this.opts.backendPort || 8443;
   }
-  this.useHttps = !this.opts.useExtensionPort;
+
+  this.useHttps = !this.opts.startExtension;
   const protocol = this.useHttps ? 'https' : 'http';
   this.backendBaseUrl = this.opts.backendBaseUrl || `${protocol}://localhost:${this.backendPort}/serverless`;
   this.downstreamDummyPort = this.opts.downstreamDummyPort || 3456;

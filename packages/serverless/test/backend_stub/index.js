@@ -22,7 +22,6 @@ const deepMerge = require('../../../core/src/util/deepMerge');
 const logPrefix = 'backend-stub';
 const logger = pino.child({ name: logPrefix, pid: process.pid });
 logger.level = 'info';
-
 const useHttps = process.env.USE_HTTPS !== 'false';
 
 const options = {
@@ -51,10 +50,6 @@ app.use(
 // This endpoint will be called when the Lambda integration test simulates talking directly to serverless-acceptor
 // instead of the Lambda extenstion (default case).
 app.post('/serverless/bundle', acceptBundle);
-
-// This endpoint will be called when the Lambda integration test simulates talking to the Lambda extension instead of
-// serverless-acceptor.
-app.post('/bundle', acceptBundle);
 
 function acceptBundle(req, res) {
   logger.debug('incoming bundle', req.body);
