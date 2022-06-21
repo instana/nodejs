@@ -64,7 +64,7 @@ function instrumentApi(client, actionPath, clusterInfo) {
     return;
   }
   parent[actionPath[actionPath.length - 1]] = function instrumentedAction(params, cb) {
-    if (!isActive || !cls.isTracing()) {
+    if (cls.skipExitTracing({ isActive })) {
       return originalFunction.apply(this, arguments);
     }
 

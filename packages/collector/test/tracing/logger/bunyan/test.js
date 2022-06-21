@@ -76,6 +76,19 @@ mochaSuiteFn('tracing/logger/bunyan', function () {
 
     it('must trace child logger error', () =>
       runTest('child-error', true, 'Child logger error message - should be traced.'));
+
+    it('[suppression] should not trace', async function () {
+      await appControls.trigger('warn', { 'X-INSTANA-L': '0' });
+
+      return testUtils
+        .retry(() => testUtils.delay(config.getTestTimeout() / 4))
+        .then(() => agentControls.getSpans())
+        .then(spans => {
+          if (spans.length > 0) {
+            expect.fail(`Unexpected spans ${testUtils.stringifyItems(spans)}.`);
+          }
+        });
+    });
   });
 
   // verify that Instana's own Bunyan logging does not get traced

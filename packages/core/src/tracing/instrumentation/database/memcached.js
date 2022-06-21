@@ -6,7 +6,7 @@
 'use strict';
 
 const cls = require('../../cls');
-const { EXIT, isExitSpan } = require('../../constants');
+const { EXIT } = require('../../constants');
 const tracingUtil = require('../../tracingUtil');
 
 const shimmer = require('shimmer');
@@ -56,22 +56,16 @@ function instrumentMemcached(Memcached) {
 
 function shimCommand(originalCommand) {
   return function () {
-    if (isActive) {
-      const originalArgs = getFunctionArguments(arguments);
-      return instrumentedCommand(this, originalCommand, originalArgs);
+    if (cls.skipExitTracing({ isActive })) {
+      return originalCommand.apply(this, arguments);
     }
 
-    return originalCommand.apply(this, arguments);
+    const originalArgs = getFunctionArguments(arguments);
+    return instrumentedCommand(this, originalCommand, originalArgs);
   };
 }
 
 function instrumentedCommand(ctx, originalCommand, originaCommandArgs) {
-  const parentSpan = cls.getCurrentSpan();
-
-  if (!parentSpan || isExitSpan(parentSpan)) {
-    return originalCommand.apply(ctx, originaCommandArgs);
-  }
-
   return cls.ns.runAndReturn(() => {
     const originalQuery = originaCommandArgs[0];
 

@@ -6,7 +6,7 @@
 'use strict';
 
 const cls = require('../../../../cls');
-const { EXIT, isExitSpan } = require('../../../../constants');
+const { EXIT } = require('../../../../constants');
 const tracingUtil = require('../../../../tracingUtil');
 const { InstanaAWSProduct } = require('./instana_aws_product');
 
@@ -16,11 +16,64 @@ const SPAN_NAME = 'aws.lambda.invoke';
 const operations = ['invoke', 'invokeAsync'];
 
 class InstanaAWSLambda extends InstanaAWSProduct {
-  instrumentedMakeRequest(ctx, originalMakeRequest, originalArgs) {
-    const parentSpan = cls.getCurrentSpan();
-    const self = this;
+  propagateInstanaHeaders(originalArgs, span, suppressed = false) {
+    /** @type {import('aws-sdk').Lambda.Types.InvocationRequest | import('aws-sdk').Lambda.Types.InvokeAsyncRequest} */
+    const params = originalArgs[1];
+    let clientContextContentBase64;
+    let clientContextContentJSON;
+    let isJSON = true;
 
-    if (!parentSpan || isExitSpan(parentSpan)) {
+    const instanaHeaders = {
+      'x-instana-l': suppressed ? '0' : '1'
+    };
+
+    if (span) {
+      instanaHeaders['x-instana-s'] = span.s;
+      instanaHeaders['x-instana-t'] = span.t;
+    }
+
+    // invokeAsync doesn't have the option ClientContext
+    if (originalArgs[0] === 'invoke') {
+      if (params.ClientContext != null) {
+        clientContextContentBase64 = Buffer.from(params.ClientContext, 'base64').toString();
+
+        try {
+          clientContextContentJSON = JSON.parse(clientContextContentBase64);
+          if (typeof clientContextContentJSON.Custom === 'object') {
+            Object.assign(clientContextContentJSON.Custom, instanaHeaders);
+          } else {
+            clientContextContentJSON.Custom = instanaHeaders;
+          }
+        } catch (err) {
+          // ClientContext has a value that is not JSON, then we cannot add Instana headers
+          isJSON = false;
+        }
+      } else {
+        clientContextContentJSON = {
+          Custom: instanaHeaders
+        };
+      }
+
+      if (isJSON) {
+        clientContextContentBase64 = Buffer.from(JSON.stringify(clientContextContentJSON), 'utf8').toString('base64');
+
+        if (clientContextContentBase64.length <= MAX_CONTEXT_SIZE) {
+          params.ClientContext = clientContextContentBase64;
+        }
+      }
+    }
+  }
+
+  instrumentedMakeRequest(ctx, originalMakeRequest, originalArgs) {
+    const self = this;
+    const skipTracingResult = cls.skipExitTracing({ extendedResponse: true });
+
+    // NOTE: `shimMakeRequest`  in index.js is already checking the result of `isActive`
+    if (skipTracingResult.skip) {
+      if (skipTracingResult.suppressed) {
+        this.propagateInstanaHeaders(originalArgs, null, skipTracingResult.suppressed);
+      }
+
       return originalMakeRequest.apply(ctx, originalArgs);
     }
 
@@ -30,56 +83,7 @@ class InstanaAWSLambda extends InstanaAWSProduct {
       span.stack = tracingUtil.getStackTrace(this.instrumentedMakeRequest, 1);
       span.data[this.spanName] = this.buildSpanData(originalArgs[0], originalArgs[1]);
 
-      // eslint-disable-next-line
-      /** @type {import('aws-sdk').Lambda.Types.InvocationRequest | import('aws-sdk').Lambda.Types.InvokeAsyncRequest} */
-      const params = originalArgs[1];
-      let clientContextContentBase64;
-      let clientContextContentJSON;
-      let isJSON = true;
-
-      const instanaCustomHeaders = {
-        Custom: {
-          'x-instana-l': cls.tracingSuppressed() ? '0' : '1',
-          'x-instana-s': span.s,
-          'x-instana-t': span.t
-        }
-      };
-
-      // invokeAsync doesn't have the option ClientContext
-      if (originalArgs[0] === 'invoke') {
-        if (params.ClientContext != null) {
-          clientContextContentBase64 = Buffer.from(params.ClientContext, 'base64').toString();
-
-          try {
-            clientContextContentJSON = JSON.parse(clientContextContentBase64);
-
-            if (typeof clientContextContentJSON.Custom === 'object') {
-              clientContextContentJSON.Custom['x-instana-l'] = cls.tracingSuppressed() ? '0' : '1';
-              clientContextContentJSON.Custom['x-instana-s'] = span.s;
-              clientContextContentJSON.Custom['x-instana-t'] = span.t;
-            } else {
-              clientContextContentJSON.Custom = instanaCustomHeaders.Custom;
-            }
-          } catch (err) {
-            // ClientContext has a value that is not JSON, then we cannot add Instana headers
-            isJSON = false;
-          }
-        } else {
-          clientContextContentJSON = instanaCustomHeaders;
-        }
-
-        if (isJSON) {
-          clientContextContentBase64 = Buffer.from(JSON.stringify(clientContextContentJSON), 'utf8').toString('base64');
-
-          if (clientContextContentBase64.length <= MAX_CONTEXT_SIZE) {
-            params.ClientContext = clientContextContentBase64;
-          }
-        }
-      }
-
-      if (cls.tracingSuppressed()) {
-        return originalMakeRequest.apply(ctx, originalArgs);
-      }
+      this.propagateInstanaHeaders(originalArgs, span);
 
       if (typeof originalArgs[2] === 'function') {
         // callback case

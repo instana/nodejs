@@ -68,38 +68,33 @@ function shimLevelMethod(derivedLogger, key, markAsError) {
 
 function instrumentedLevelMethod(originalMethod, markAsError) {
   return function (message) {
-    if (isActive && cls.isTracing()) {
-      const parentSpan = cls.getCurrentSpan();
-      if (parentSpan && !constants.isExitSpan(parentSpan)) {
-        const originalArgs = new Array(arguments.length);
-        for (let i = 0; i < arguments.length; i++) {
-          originalArgs[i] = arguments[i];
-        }
-
-        if (
-          arguments.length === 1 &&
-          !!arguments[0] &&
-          typeof arguments[0] === 'object' &&
-          typeof arguments[0].message === 'string'
-        ) {
-          // this is the case logger.$level({ message: '...'})
-          message = arguments[0].message;
-        } else if (arguments.length >= 1) {
-          for (let j = arguments.length - 1; j >= 1; j--) {
-            if (!!arguments[j] && typeof arguments[j] === 'object' && typeof arguments[j].message === 'string') {
-              message += arguments[j].message;
-            }
-          }
-        }
-
-        const ctx = this;
-        return createSpan(ctx, originalMethod, originalArgs, message, markAsError);
-      } else {
-        return originalMethod.apply(this, arguments);
-      }
-    } else {
+    if (cls.skipExitTracing({ isActive, log: false })) {
       return originalMethod.apply(this, arguments);
     }
+
+    const originalArgs = new Array(arguments.length);
+    for (let i = 0; i < arguments.length; i++) {
+      originalArgs[i] = arguments[i];
+    }
+
+    if (
+      arguments.length === 1 &&
+      !!arguments[0] &&
+      typeof arguments[0] === 'object' &&
+      typeof arguments[0].message === 'string'
+    ) {
+      // this is the case logger.$level({ message: '...'})
+      message = arguments[0].message;
+    } else if (arguments.length >= 1) {
+      for (let j = arguments.length - 1; j >= 1; j--) {
+        if (!!arguments[j] && typeof arguments[j] === 'object' && typeof arguments[j].message === 'string') {
+          message += arguments[j].message;
+        }
+      }
+    }
+
+    const ctx = this;
+    return createSpan(ctx, originalMethod, originalArgs, message, markAsError);
   };
 }
 
@@ -139,21 +134,16 @@ function instrumentedLog(originalMethod) {
       }
     }
 
-    if (levelIsTraced(level) && isActive && cls.isTracing()) {
-      const parentSpan = cls.getCurrentSpan();
-      if (parentSpan && !constants.isExitSpan(parentSpan)) {
-        const originalArgs = new Array(arguments.length);
-        for (let j = 0; j < arguments.length; j++) {
-          originalArgs[j] = arguments[j];
-        }
-        const ctx = this;
-        return createSpan(ctx, originalMethod, originalArgs, message, levelIsError(level));
-      } else {
-        return originalMethod.apply(this, arguments);
-      }
-    } else {
+    if (cls.skipExitTracing({ isActive, log: false }) || !levelIsTraced(level)) {
       return originalMethod.apply(this, arguments);
     }
+
+    const originalArgs = new Array(arguments.length);
+    for (let j = 0; j < arguments.length; j++) {
+      originalArgs[j] = arguments[j];
+    }
+    const ctx = this;
+    return createSpan(ctx, originalMethod, originalArgs, message, levelIsError(level));
   };
 }
 

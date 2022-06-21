@@ -55,14 +55,16 @@ function shimConnect(original) {
 
 function shimAwaitResult(original) {
   return function () {
-    if (!isActive || !cls.isTracing() || typeof arguments[0] !== 'function') {
+    if (cls.skipExitTracing({ isActive }) || typeof arguments[0] !== 'function') {
       return original.apply(this, arguments);
     }
+
     const originalArgs = new Array(arguments.length);
     originalArgs[0] = cls.ns.bind(arguments[0]);
     for (let i = 1; i < arguments.length; i++) {
       originalArgs[i] = arguments[i];
     }
+
     return original.apply(this, originalArgs);
   };
 }
@@ -76,32 +78,26 @@ function shimPrepare(original) {
 
 function shimQueryOrExecute(instrumented, original) {
   return function () {
-    if (!isActive || !cls.isTracing()) {
+    if (cls.skipExitTracing({ isActive })) {
       return original.apply(this, arguments);
     }
+
     const originalArgs = new Array(arguments.length);
     for (let i = 0; i < arguments.length; i++) {
       originalArgs[i] = arguments[i];
     }
+
     return instrumented(this, original, originalArgs);
   };
 }
 
 function instrumentedQuery(ctx, originalQuery, originalArgs) {
-  const parentSpan = cls.getCurrentSpan();
-  if (constants.isExitSpan(parentSpan)) {
-    return originalQuery.apply(ctx, originalArgs);
-  }
   const statement = originalArgs[0];
   const stackTraceRef = instrumentedQuery;
   return startSpan(ctx, originalQuery, originalArgs, statement, stackTraceRef);
 }
 
 function instrumentedExecute(ctx, originalExecute, originalArgs) {
-  const parentSpan = cls.getCurrentSpan();
-  if (constants.isExitSpan(parentSpan)) {
-    return originalExecute.apply(ctx, originalArgs);
-  }
   const statement = preparedStatements.get(originalArgs[0]);
   const stackTraceRef = instrumentedExecute;
   return startSpan(ctx, originalExecute, originalArgs, statement, stackTraceRef);
@@ -109,7 +105,7 @@ function instrumentedExecute(ctx, originalExecute, originalArgs) {
 
 function shimQueryOrExecuteSync(isExecute, original) {
   return function () {
-    if (!isActive || !cls.isTracing()) {
+    if (cls.skipExitTracing({ isActive })) {
       return original.apply(this, arguments);
     }
 
@@ -120,7 +116,9 @@ function shimQueryOrExecuteSync(isExecute, original) {
 
     const statement = isExecute ? preparedStatements.get(originalArgs[0]) : originalArgs[0];
     const resultAndSpan = startSpanBeforeSync(this, original, originalArgs, statement, shimQueryOrExecuteSync);
+
     finishSpan(resultAndSpan.error, resultAndSpan.span);
+
     if (resultAndSpan.error) {
       throw resultAndSpan.error;
     }

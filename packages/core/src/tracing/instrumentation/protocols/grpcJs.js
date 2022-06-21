@@ -74,20 +74,16 @@ function instrumentClient(clientModule) {
           hostAndPort.port = hostAndPort.port.toString();
         }
 
-        const parentSpan = cls.getCurrentSpan();
-        const isTracing = isActive && cls.isTracing() && parentSpan && !constants.isExitSpan(parentSpan);
-        const isSuppressed = cls.tracingLevel() === '0';
-
-        if (!isTracing && !isSuppressed) {
-          return origFn.apply(this, arguments);
-        }
-
         const originalArgs = copyArgs(arguments);
 
-        // NOTE: isTracing is false when the span should be suppressed
-        if (isSuppressed) {
-          modifyArgs(name, originalArgs, null);
-          return origFn.apply(this, originalArgs);
+        const skipTracingResult = cls.skipExitTracing({ isActive, extendedResponse: true });
+        if (skipTracingResult.skip) {
+          if (skipTracingResult.suppressed) {
+            modifyArgs(name, originalArgs, null);
+            return origFn.apply(this, originalArgs);
+          }
+
+          return origFn.apply(this, arguments);
         }
 
         /**

@@ -140,26 +140,35 @@ function instrument(coreModule, forceHttps) {
     }
 
     let w3cTraceContext = cls.getW3cTraceContext();
+    const skipTracingResult = cls.skipExitTracing({
+      isActive,
+      extendedResponse: true,
+      skipParentSpanCheck: true,
+      skipIsTracing: true
+    });
+
     const parentSpan = cls.getCurrentSpan() || cls.getReducedSpan();
 
     if (
-      !isActive ||
+      skipTracingResult.skip ||
       !parentSpan ||
       constants.isExitSpan(parentSpan) ||
-      shouldBeBypassed(parentSpan, options) ||
-      cls.tracingSuppressed()
+      shouldBeBypassed(parentSpan, options)
     ) {
       let traceLevelHeaderHasBeenAdded = false;
-      if (cls.tracingSuppressed()) {
+      if (skipTracingResult.suppressed) {
         traceLevelHeaderHasBeenAdded = tryToAddTraceLevelAddHeaderToOpts(options, '0', w3cTraceContext);
       }
+
       clientRequest = originalRequest.apply(coreModule, arguments);
-      if (cls.tracingSuppressed() && !traceLevelHeaderHasBeenAdded) {
+      if (skipTracingResult.suppressed && !traceLevelHeaderHasBeenAdded) {
         clientRequest.setHeader(constants.traceLevelHeaderName, '0');
         setW3cHeadersOnRequest(clientRequest, w3cTraceContext);
       }
+
       return clientRequest;
     }
+
     cls.ns.run(() => {
       const span = cls.startSpan('node.http.client', constants.EXIT);
 

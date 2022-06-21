@@ -38,13 +38,16 @@ function instrument(ioredis) {
 function instrumentSendCommand(original) {
   return function wrappedInternalSendCommand(command) {
     const client = this;
+    const parentSpan = cls.getCurrentSpan();
+    let callback;
 
-    if (command.promise == null || typeof command.name !== 'string' || !isActive || !cls.isTracing()) {
+    if (
+      command.promise == null ||
+      typeof command.name !== 'string' ||
+      cls.skipExitTracing({ isActive, skipParentSpanCheck: true })
+    ) {
       return original.apply(this, arguments);
     }
-
-    let callback;
-    const parentSpan = cls.getCurrentSpan();
 
     if (
       parentSpan.n === exports.spanName &&
@@ -111,13 +114,10 @@ function instrumentPipelineCommand(original) {
 function instrumentMultiOrPipelineCommand(commandName, original) {
   return function wrappedInternalMultiOrPipelineCommand() {
     const client = this;
-
-    if (!isActive || !cls.isTracing()) {
-      return original.apply(this, arguments);
-    }
-
     const parentSpan = cls.getCurrentSpan();
-    if (constants.isExitSpan(parentSpan)) {
+
+    // NOTE: multiple redis transaction can have a parent ioredis call
+    if (cls.skipExitTracing({ isActive, skipParentSpanCheck: true }) || constants.isExitSpan(parentSpan)) {
       return original.apply(this, arguments);
     }
 

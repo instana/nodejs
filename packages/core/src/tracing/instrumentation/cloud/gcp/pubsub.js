@@ -13,8 +13,7 @@ const {
   spanIdHeaderNameLowerCase,
   traceLevelHeaderNameLowerCase,
   ENTRY,
-  EXIT,
-  isExitSpan
+  EXIT
 } = require('../../../constants');
 const requireHook = require('../../../../util/requireHook');
 const tracingUtil = require('../../../tracingUtil');
@@ -64,14 +63,26 @@ function instrumentConstructor(module, constructorAttribute, methodAttribue, shi
 
 function shimPublishMessage(originalFunction) {
   return function () {
-    if (isActive) {
-      const originalArgs = new Array(arguments.length);
-      for (let i = 0; i < arguments.length; i++) {
-        originalArgs[i] = arguments[i];
-      }
-      return instrumentedPublishMessage(this, originalFunction, originalArgs);
+    const originalArgs = new Array(arguments.length);
+    for (let i = 0; i < arguments.length; i++) {
+      originalArgs[i] = arguments[i];
     }
-    return originalFunction.apply(this, arguments);
+    const message = originalArgs[0];
+    let attributes = message.attributes;
+    if (!attributes) {
+      attributes = message.attributes = {};
+    }
+
+    const skipTracingResult = cls.skipExitTracing({ isActive, extendedResponse: true });
+    if (skipTracingResult.skip) {
+      if (skipTracingResult.suppressed) {
+        propagateSuppression(attributes);
+      }
+
+      return originalFunction.apply(this, arguments);
+    }
+
+    return instrumentedPublishMessage(this, originalFunction, originalArgs);
   };
 }
 
@@ -80,16 +91,6 @@ function instrumentedPublishMessage(ctx, originalPublishMessage, originalArgs) {
   let attributes = message.attributes;
   if (!attributes) {
     attributes = message.attributes = {};
-  }
-
-  if (cls.tracingSuppressed()) {
-    propagateSuppression(attributes);
-  }
-
-  const parentSpan = cls.getCurrentSpan();
-
-  if (!parentSpan || isExitSpan(parentSpan)) {
-    return originalPublishMessage.apply(ctx, originalArgs);
   }
 
   return cls.ns.runAndReturn(() => {

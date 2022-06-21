@@ -42,8 +42,8 @@ function execOperation(op, cb, withError = false, ctx = false) {
     options.InvalidParameter = 1;
   }
 
-  if (ctx && op === 'invoke') {
-    const base64Value = Buffer.from('{"Custom": {"awesome_company": "Instana"}}').toString('base64');
+  if (ctx && ctx !== 'null' && op === 'invoke') {
+    const base64Value = Buffer.from(ctx).toString('base64');
     options.ClientContext = base64Value;
   }
 
@@ -90,7 +90,7 @@ app.get('/', (_req, res) => {
 availableOperations.forEach(operation => {
   app.get(`/${operation}/:method`, async (req, res) => {
     const withError = typeof req.query.withError === 'string' && req.query.withError !== '';
-    const ctx = typeof req.query.ctx === 'string' && req.query.ctx !== '';
+    const ctx = req.query.ctx;
     const method = req.params.method;
 
     if (method === 'Callback') {

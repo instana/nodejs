@@ -15,7 +15,7 @@ const testUtils = require('../../../../../core/test/test_util');
 const ProcessControls = require('../../../test_util/ProcessControls');
 const globalAgent = require('../../../globalAgent');
 
-const mochaSuiteFn = !supportedVersion(process.versions.node) ? describe.skip : describe;
+const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
 mochaSuiteFn('tracing/mssql', function () {
   this.timeout(config.getTestTimeout());

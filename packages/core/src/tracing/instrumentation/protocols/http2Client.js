@@ -61,12 +61,14 @@ function instrumentClientHttp2Session(clientHttp2Session) {
   const originalRequest = clientHttp2Session.request;
   clientHttp2Session.request = function request(headers) {
     let w3cTraceContext = cls.getW3cTraceContext();
+    const skipTracingResult = cls.skipExitTracing({ isActive, extendedResponse: true, skipParentSpanCheck: true });
     const parentSpan = cls.getCurrentSpan() || cls.getReducedSpan();
 
-    if (!isActive || !parentSpan || constants.isExitSpan(parentSpan)) {
-      if (cls.tracingSuppressed()) {
+    if (skipTracingResult.skip || !parentSpan || constants.isExitSpan(parentSpan)) {
+      if (skipTracingResult.suppressed) {
         addTraceLevelHeader(headers, '0', w3cTraceContext);
       }
+
       return originalRequest.apply(this, arguments);
     }
 

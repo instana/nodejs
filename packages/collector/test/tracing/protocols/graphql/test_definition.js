@@ -64,14 +64,12 @@ function start(graphqlVersion) {
     describe('suppressed', () => {
       const { clientControls } = createProcesses(true, graphqlVersion);
 
-      it('should not trace when suppressed', () =>
+      it('should not trace', () =>
         clientControls
           .sendRequest({
             method: 'POST',
             path: '/value',
-            headers: {
-              'X-INSTANA-L': '0'
-            }
+            suppressTracing: true
           })
           .then(response => {
             checkQueryResponse('value', false, false, response);

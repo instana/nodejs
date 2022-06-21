@@ -29,23 +29,17 @@ function shimLog(options) {
         return originalLog.apply(this, arguments);
       }
 
-      if (isActive && cls.isTracing()) {
-        const parentSpan = cls.getCurrentSpan();
-
-        if (parentSpan && !constants.isExitSpan(parentSpan)) {
-          const originalArgs = new Array(arguments.length);
-
-          for (let i = 0; i < arguments.length; i++) {
-            originalArgs[i] = arguments[i];
-          }
-
-          instrumentedLog(this, originalLog, originalArgs, options);
-        } else {
-          return originalLog.apply(this, arguments);
-        }
-      } else {
+      if (cls.skipExitTracing({ isActive, log: false })) {
         return originalLog.apply(this, arguments);
       }
+
+      const originalArgs = new Array(arguments.length);
+
+      for (let i = 0; i < arguments.length; i++) {
+        originalArgs[i] = arguments[i];
+      }
+
+      instrumentedLog(this, originalLog, originalArgs, options);
     };
 }
 

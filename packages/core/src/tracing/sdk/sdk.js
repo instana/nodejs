@@ -127,6 +127,7 @@ module.exports = function (isCallbackApi) {
       );
       return callNext(/** @type {Function} */ (callback));
     }
+
     if (constants.isExitSpan(parentSpan)) {
       logger.warn(
         // eslint-disable-next-line max-len
@@ -193,26 +194,11 @@ module.exports = function (isCallbackApi) {
       tags = null;
     }
 
-    if (!isActive) {
+    if (cls === null) {
       return callNext(/** @type {Function} */ (callback));
     }
 
-    const parentSpan = cls.getCurrentSpan();
-
-    if (!parentSpan) {
-      logger.warn(
-        // eslint-disable-next-line max-len
-        `Cannot start an exit span (${name}) as this requires an active entry (or intermediate) span as parent. Currently there is no span active at all.`
-      );
-      return callNext(/** @type {Function} */ (callback));
-    }
-    if (constants.isExitSpan(parentSpan)) {
-      logger.warn(
-        // eslint-disable-next-line max-len
-        `Cannot start an exit span (${name}) as this requires an active entry (or intermediate) span as parent. But the currently active span is itself an exit span: ${JSON.stringify(
-          parentSpan
-        )}`
-      );
+    if (cls.skipExitTracing({ isActive })) {
       return callNext(/** @type {Function} */ (callback));
     }
 

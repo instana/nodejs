@@ -7,7 +7,7 @@
 
 const shimmer = require('shimmer');
 const cls = require('../../cls');
-const { ENTRY, EXIT, isExitSpan } = require('../../constants');
+const { ENTRY, EXIT } = require('../../constants');
 const requireHook = require('../../../util/requireHook');
 const tracingUtil = require('../../tracingUtil');
 const { getFunctionArguments } = require('../../../util/function_arguments');
@@ -32,46 +32,53 @@ function instrumentBull(Bull) {
 
 function shimJobCreate(originalJobCreate) {
   return function () {
-    if (isActive) {
-      const originalArgs = getFunctionArguments(arguments);
+    const originalArgs = getFunctionArguments(arguments);
+    const options = originalArgs[3];
+    const repeatableJob = options && typeof options.jobId === 'string' && options.jobId.indexOf('repeat') === 0;
+    const repeatableJobIsSuppressed = repeatableJob && options.X_INSTANA_L === '0';
+    const skipIsTracing = !!repeatableJob;
+    const parentSpan = cls.getCurrentSpan();
+    const skipTracingResult = cls.skipExitTracing({
+      isActive,
+      extendedResponse: true,
+      skipParentSpanCheck: true,
+      skipIsTracing
+    });
 
-      return instrumentedJobCreate(this, originalJobCreate, originalArgs);
+    /**
+     * Repeatable jobs cannot be persisted to a parent span, since we don't know for how long they will run.
+     * The backend won't hold a reference to the parent entry span for too long, which will then make this span orphan.
+     * So we send repeatable jobs as root span.
+     */
+    if (
+      skipTracingResult.skip ||
+      skipTracingResult.isExitSpan ||
+      (!parentSpan && !repeatableJob) ||
+      repeatableJobIsSuppressed
+    ) {
+      /**
+       * Repeatable jobs work in a different way than regular ones.
+       * One single job is created with the repeat options, but the upcoming repetitions will lose the supression,
+       * making cls.tracingSuppressed() to return false.
+       * But repeated jobs have the instana header X_INSTANA_L properly set, which is why we include this check here.
+       */
+      if (skipTracingResult.suppressed || repeatableJobIsSuppressed) {
+        propagateSuppression(options);
+      }
+
+      return originalJobCreate.apply(this, arguments);
     }
 
-    return originalJobCreate.apply(this, arguments);
+    return instrumentedJobCreate(this, originalJobCreate, originalArgs, options);
   };
 }
 
 // Immediate jobs and repeatable jobs are caught here, bulked or not
-function instrumentedJobCreate(ctx, originalJobCreate, originalArgs) {
+function instrumentedJobCreate(ctx, originalJobCreate, originalArgs, options) {
   // Job.create args: Queue data, job name or ctx.DEFAULT_JOB_NAME, job data, options
 
   // queue name should always be found, as it's required in order to start the whole process
   const queueName = (originalArgs[0] && originalArgs[0].name) || 'name not found';
-  const options = originalArgs[3];
-  const repeatableJob = options && typeof options.jobId === 'string' && options.jobId.indexOf('repeat') === 0;
-
-  /**
-   * Repeatable jobs work in a different way than regular ones.
-   * One single job is created with the repeat options, but the upcoming repetitions will lose the supression,
-   * making cls.tracingSuppressed() to return false.
-   * But repeated jobs have the instana header X_INSTANA_L properly set, which is why we include this check here.
-   */
-  if (cls.tracingSuppressed() || (repeatableJob && options.X_INSTANA_L === '0')) {
-    propagateSuppression(options);
-    return originalJobCreate.apply(ctx, originalArgs);
-  }
-
-  const parentSpan = cls.getCurrentSpan();
-
-  /**
-   * Repeatable jobs cannot be persisted to a parent span, since we don't know for how long they will run.
-   * The backend won't hold a reference to the parent entry span for too long, which will then make this span orphan.
-   * So we send repeatable jobs as root span.
-   */
-  if ((!parentSpan && !repeatableJob) || isExitSpan(parentSpan)) {
-    return originalJobCreate.apply(ctx, originalArgs);
-  }
 
   return cls.ns.runAndReturn(() => {
     // inherit parent if exists. eg: ENTRY http server
@@ -102,13 +109,24 @@ function instrumentedJobCreate(ctx, originalJobCreate, originalArgs) {
 
 function shimJobCreateBulk(originalJobCreateBulk) {
   return function () {
-    if (isActive) {
-      const originalArgs = getFunctionArguments(arguments);
+    const originalArgs = getFunctionArguments(arguments);
+    const skipTracingResult = cls.skipExitTracing({ isActive, extendedResponse: true });
 
-      return instrumentedJobCreateBulk(this, originalJobCreateBulk, originalArgs);
+    if (skipTracingResult.skip) {
+      if (skipTracingResult.suppressed) {
+        const immediateJobs = originalArgs[1] || [];
+
+        immediateJobs.forEach(job => {
+          propagateSuppression(job.opts);
+        });
+
+        return originalJobCreateBulk.apply(this, originalArgs);
+      }
+
+      return originalJobCreateBulk.apply(this, originalArgs);
     }
 
-    return originalJobCreateBulk.apply(this, arguments);
+    return instrumentedJobCreateBulk(this, originalJobCreateBulk, originalArgs);
   };
 }
 
@@ -123,33 +141,21 @@ function instrumentedJobCreateBulk(ctx, originalJobCreateBulk, originalArgs) {
   /** @type {Array<import('bull').Job>} */
   const immediateJobs = originalArgs[1] || [];
 
-  if (cls.tracingSuppressed()) {
-    immediateJobs.forEach(job => {
-      propagateSuppression(job.opts);
-    });
-
-    return originalJobCreateBulk.apply(ctx, originalArgs);
-  }
-
-  const parentSpan = cls.getCurrentSpan();
-
   immediateJobs.forEach(job => {
-    if (parentSpan && !isExitSpan(parentSpan)) {
-      cls.ns.run(() => {
-        const span = cls.startSpan(exports.spanName, EXIT);
-        span.ts = Date.now();
-        span.stack = tracingUtil.getStackTrace(instrumentedJobCreateBulk, 2);
-        span.data.bull = {
-          sort: 'exit',
-          queue: queueName
-        };
-        const options = job.opts;
+    cls.ns.run(() => {
+      const span = cls.startSpan(exports.spanName, EXIT);
+      span.ts = Date.now();
+      span.stack = tracingUtil.getStackTrace(instrumentedJobCreateBulk, 2);
+      span.data.bull = {
+        sort: 'exit',
+        queue: queueName
+      };
+      const options = job.opts;
 
-        propagateTraceContext(options, span);
+      propagateTraceContext(options, span);
 
-        finishSpan(null, job.data, span);
-      });
-    }
+      finishSpan(null, job.data, span);
+    });
   });
 
   return originalJobCreateBulk.apply(ctx, originalArgs);

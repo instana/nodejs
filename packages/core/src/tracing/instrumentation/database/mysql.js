@@ -73,37 +73,41 @@ function instrumentPoolWithPromises(mysql) {
 
 function shimQuery(original) {
   return function () {
-    if (isActive && cls.isTracing()) {
-      return instrumentedAccessFunction(this, original, arguments[0], arguments[1], arguments[2]);
+    if (cls.skipExitTracing({ isActive })) {
+      return original.apply(this, arguments);
     }
-    return original.apply(this, arguments);
+
+    return instrumentedAccessFunction(this, original, arguments[0], arguments[1], arguments[2]);
   };
 }
 
 function shimExecute(original) {
   return function () {
-    if (isActive && cls.isTracing()) {
-      return instrumentedAccessFunction(this, original, arguments[0], arguments[1], arguments[2]);
+    if (cls.skipExitTracing({ isActive })) {
+      return original.apply(this, arguments);
     }
-    return original.apply(this, arguments);
+
+    return instrumentedAccessFunction(this, original, arguments[0], arguments[1], arguments[2]);
   };
 }
 
 function shimPromiseQuery(originalQuery) {
   return function () {
-    if (isActive && cls.isTracing()) {
-      return instrumentedAccessFunction(this, originalQuery, arguments[0], arguments[1], null, true);
+    if (cls.skipExitTracing({ isActive })) {
+      return originalQuery.apply(this, arguments);
     }
-    return originalQuery.apply(this, arguments);
+
+    return instrumentedAccessFunction(this, originalQuery, arguments[0], arguments[1], null, true);
   };
 }
 
 function shimPromiseExecute(originalExecute) {
   return function () {
-    if (isActive && cls.isTracing()) {
-      return instrumentedAccessFunction(this, originalExecute, arguments[0], arguments[1], null, true);
+    if (cls.skipExitTracing({ isActive })) {
+      return originalExecute.apply(this, arguments);
     }
-    return originalExecute.apply(this, arguments);
+
+    return instrumentedAccessFunction(this, originalExecute, arguments[0], arguments[1], null, true);
   };
 }
 
@@ -118,11 +122,6 @@ function instrumentedAccessFunction(
   const originalArgs = [statementOrOpts, valuesOrCallback];
   if (typeof optCallback !== 'undefined') {
     originalArgs.push(optCallback);
-  }
-
-  const parentSpan = cls.getCurrentSpan();
-  if (constants.isExitSpan(parentSpan)) {
-    return originalFunction.apply(ctx, originalArgs);
   }
 
   let host;

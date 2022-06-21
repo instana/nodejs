@@ -119,13 +119,6 @@ function shimProduce(originalProduce) {
      * - headers?: Kafka.MessageHeader[]
      */
     const originalArgs = getFunctionArguments(arguments);
-    const message = originalArgs[2];
-
-    if (!isActive || !message) {
-      logger.debug('Will not instrument');
-      return originalProduce.apply(this, originalArgs);
-    }
-
     return instrumentedProduce(this, originalProduce, originalArgs);
   };
 }
@@ -149,14 +142,21 @@ function shimConsumerStreamEmit(originalEmit) {
 }
 
 function instrumentedProduce(ctx, originalProduce, originalArgs) {
-  if (cls.tracingSuppressed()) {
-    const headers = addTraceLevelSuppression(originalArgs[6]);
-    originalArgs[6] = headers;
-    return originalProduce.apply(ctx, originalArgs);
+  const message = originalArgs[2];
+
+  if (!message) {
+    logger.debug('Will not instrument');
+    return originalProduce.apply(this, originalArgs);
   }
 
-  const parentSpan = cls.getCurrentSpan();
-  if (!parentSpan || constants.isExitSpan(parentSpan)) {
+  const skipTracingResult = cls.skipExitTracing({ isActive, extendedResponse: true });
+
+  if (skipTracingResult.skip) {
+    if (skipTracingResult.suppressed) {
+      const headers = addTraceLevelSuppression(originalArgs[6]);
+      originalArgs[6] = headers;
+    }
+
     return originalProduce.apply(ctx, originalArgs);
   }
 
