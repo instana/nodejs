@@ -74,7 +74,7 @@ mochaSuiteFn('tracing/grpc-js', function () {
   describe('suppressed', () => {
     const { clientControls } = createProcesses();
 
-    it('should not trace when suppressed', () =>
+    it('[suppressed] should not trace', () =>
       clientControls
         .sendRequest({
           method: 'POST',

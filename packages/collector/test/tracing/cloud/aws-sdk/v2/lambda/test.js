@@ -20,6 +20,7 @@ const functionName = 'wrapped-async';
 let mochaSuiteFn;
 
 const withErrorOptions = [false, true];
+const availableCtx = [null, '{"Custom": {"awesome_company": "Instana"}}', '{"Custom": "Something"}'];
 const requestMethods = ['Callback', 'Promise'];
 const availableOperations = ['invoke', 'invokeAsync'];
 
@@ -37,6 +38,7 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/lambda', function () {
   this.timeout(config.getTestTimeout() * 3);
   globalAgent.setUpCleanUpHooks();
   const agentControls = globalAgent.instance;
+
   describe('tracing enabled, no suppression', function () {
     const appControls = new ProcessControls({
       appPath: path.join(__dirname, 'app'),
@@ -46,33 +48,42 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/lambda', function () {
         AWS_LAMBDA_FUNCTION_NAME: functionName
       }
     });
+
     ProcessControls.setUpHooksWithRetryTime(retryTime, appControls);
+
     withErrorOptions.forEach(withError => {
       describe(`getting result with error: ${withError ? 'yes' : 'no'}`, () => {
         availableOperations.forEach(operation => {
-          const requestMethod = getNextCallMethod();
-          it(`operation: ${operation}/${requestMethod}`, async () => {
-            const withErrorOption = withError ? '&withError=1' : '';
-            const apiPath = `/${operation}/${requestMethod}`;
-            const response = await appControls.sendRequest({
-              method: 'GET',
-              path: `${apiPath}?ctx=1${withErrorOption}`,
-              simple: withError === false
+          availableCtx.forEach(ctx => {
+            const requestMethod = getNextCallMethod();
+
+            it(`operation: ${operation}/${requestMethod} (ctx: ${ctx})`, async () => {
+              const withErrorOption = withError ? '&withError=1' : '';
+              const apiPath = `/${operation}/${requestMethod}`;
+              const response = await appControls.sendRequest({
+                method: 'GET',
+                path: `${apiPath}?ctx=${ctx}${withErrorOption}`,
+                simple: withError === false
+              });
+
+              return verify(appControls, response, apiPath, operation, withError, ctx);
             });
-            return verify(appControls, response, apiPath, operation, withError);
           });
         });
       });
     });
-    function verify(controls, response, apiPath, operation, withError) {
+    function verify(controls, response, apiPath, operation, withError, ctx) {
       return retry(
         () =>
-          agentControls.getSpans().then(spans => verifySpans(controls, response, spans, apiPath, operation, withError)),
+          agentControls
+            .getSpans()
+            .then(spans => verifySpans(controls, response, spans, apiPath, operation, withError, ctx)),
         retryTime
       );
     }
-    function verifySpans(controls, response, spans, apiPath, operation, withError) {
+    function verifySpans(controls, response, spans, apiPath, operation, withError, ctx) {
       const httpEntry = verifyHttpRootEntry({ spans, apiPath, pid: String(controls.getPid()) });
+
       verifyExitSpan({
         spanName: SPAN_NAME,
         spans,
@@ -89,9 +100,16 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/lambda', function () {
               const clientContext = JSON.parse(clientContextString);
               expect(clientContext.Custom['x-instana-s']).to.equal(span.s);
               expect(clientContext.Custom['x-instana-t']).to.equal(span.t);
-              expect(clientContext.Custom.awesome_company, 'The original Custom values must be untouched').to.equal(
-                'Instana'
-              );
+              expect(clientContext.Custom['x-instana-l']).to.equal('1');
+
+              if (ctx) {
+                const ctxJSON = JSON.parse(ctx);
+
+                if (ctxJSON.Custom.awesome_company) {
+                  expect(clientContext.Custom.awesome_company).to.exist;
+                  expect(ctxJSON.Custom.awesome_company).to.equal(clientContext.Custom.awesome_company);
+                }
+              }
             }
           }
         ]
@@ -101,6 +119,7 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/lambda', function () {
 
   describe('tracing disabled', () => {
     this.timeout(config.getTestTimeout() * 2);
+
     const appControls = new ProcessControls({
       appPath: path.join(__dirname, 'app'),
       port: 3215,
@@ -140,16 +159,29 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/lambda', function () {
         AWS_LAMBDA_FUNCTION_NAME: functionName
       }
     });
+
     ProcessControls.setUpHooksWithRetryTime(retryTime, appControls);
+
     describe('attempt to get result', () => {
       availableOperations.forEach(operation => {
         const requestMethod = getNextCallMethod();
+
         it(`should not trace (${operation}/${requestMethod})`, async () => {
-          await appControls.sendRequest({
+          const resp = await appControls.sendRequest({
             suppressTracing: true,
             method: 'GET',
             path: `/${operation}/${requestMethod}`
           });
+
+          // NOTE: we do not propagate headers for `invokeAsync`
+          if (requestMethod === 'invoke') {
+            const clientContextString = Buffer.from(resp.data.clientContext || '', 'base64').toString();
+            const clientContext = JSON.parse(clientContextString);
+            expect(clientContext.Custom['x-instana-s']).to.not.exist;
+            expect(clientContext.Custom['x-instana-t']).to.not.exist;
+            expect(clientContext.Custom['x-instana-l']).to.equal('0');
+          }
+
           return retry(() => delay(config.getTestTimeout() / 4), retryTime)
             .then(() => agentControls.getSpans())
             .then(spans => {

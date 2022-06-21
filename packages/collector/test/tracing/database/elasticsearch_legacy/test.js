@@ -14,7 +14,8 @@ const {
   stringifyItems,
   expectExactlyOneMatching,
   getSpansByName,
-  retry
+  retry,
+  delay
 } = require('../../../../../core/test/test_util');
 const ProcessControls = require('../../../test_util/ProcessControls');
 const globalAgent = require('../../../globalAgent');
@@ -445,6 +446,22 @@ mochaSuiteFn('tracing/elasticsearch (legacy client)', function () {
         })
       );
     }));
+
+  it('[suppressed] should not trace', async function () {
+    await controls.sendRequest({
+      method: 'GET',
+      path: '/search?q=nope',
+      suppressTracing: true
+    });
+
+    return retry(() => delay(config.getTestTimeout() / 4))
+      .then(() => agentControls.getSpans())
+      .then(spans => {
+        if (spans.length > 0) {
+          expect.fail(`Unexpected spans ${stringifyItems(spans)}.`);
+        }
+      });
+  });
 
   function get(opts) {
     return sendRequest('GET', '/get', opts);

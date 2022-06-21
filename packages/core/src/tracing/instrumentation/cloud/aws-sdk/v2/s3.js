@@ -6,7 +6,7 @@
 'use strict';
 
 const cls = require('../../../../cls');
-const { EXIT, isExitSpan } = require('../../../../constants');
+const { EXIT } = require('../../../../constants');
 const tracingUtil = require('../../../../tracingUtil');
 const { InstanaAWSProduct } = require('./instana_aws_product');
 
@@ -53,19 +53,14 @@ const operations = Object.keys(s3MethodsInfo);
 const SPAN_NAME = 's3';
 
 class InstanaAWSS3 extends InstanaAWSProduct {
+  /**
+   * Original args for ALL AWS SDK Requets: [method, params, callback]
+   */
   instrumentedMakeRequest(ctx, originalMakeRequest, originalArgs) {
     const self = this;
-    /**
-     * Original args for ALL AWS SDK Requets: [method, params, callback]
-     */
 
-    if (cls.tracingSuppressed()) {
-      return originalMakeRequest.apply(ctx, originalArgs);
-    }
-
-    const parentSpan = cls.getCurrentSpan();
-
-    if (!parentSpan || isExitSpan(parentSpan)) {
+    // NOTE: `shimMakeRequest`  in index.js is already checking the result of `isActive`
+    if (cls.skipExitTracing()) {
       return originalMakeRequest.apply(ctx, originalArgs);
     }
 

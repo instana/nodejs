@@ -10,7 +10,13 @@ const expect = require('chai').expect;
 const constants = require('@instana/core').tracing.constants;
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('../../../../../core/test/config');
-const { retry, expectAtLeastOneMatching, expectExactlyOneMatching } = require('../../../../../core/test/test_util');
+const {
+  retry,
+  delay,
+  expectAtLeastOneMatching,
+  expectExactlyOneMatching,
+  stringifyItems
+} = require('../../../../../core/test/test_util');
 
 const ProcessControls = require('../../../test_util/ProcessControls');
 const globalAgent = require('../../../globalAgent');
@@ -160,6 +166,7 @@ mochaSuiteFn('tracing/redis', function () {
               span => expect(span.async).to.not.exist,
               span => expect(span.error).to.not.exist,
               span => expect(span.ec).to.equal(0),
+              // contains two batched span
               span => expect(span.b).to.be.an('object'),
               span => expect(span.b.s).to.equal(2),
               span => expect(span.b.u).to.not.exist,
@@ -290,6 +297,26 @@ mochaSuiteFn('tracing/redis', function () {
           })
         )
       ));
+
+  it('[suppressed] should not trace', async function () {
+    await controls.sendRequest({
+      method: 'POST',
+      path: '/values',
+      qs: {
+        key: 'price',
+        value: 42
+      },
+      suppressTracing: true
+    });
+
+    return retry(() => delay(config.getTestTimeout() / 4))
+      .then(() => agentControls.getSpans())
+      .then(spans => {
+        if (spans.length > 0) {
+          expect.fail(`Unexpected spans ${stringifyItems(spans)}.`);
+        }
+      });
+  });
 
   function verifyHttpExit(spans, parent) {
     expectExactlyOneMatching(spans, [

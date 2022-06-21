@@ -66,6 +66,23 @@ describe('tracing/logger/pino', function () {
         )
       ));
 
+    it('[suppressed] should not trace', async function () {
+      await controls.sendRequest({
+        method: 'GET',
+        path: '/warn',
+        suppressTracing: true
+      });
+
+      return testUtils
+        .retry(() => testUtils.delay(config.getTestTimeout() / 4))
+        .then(() => agentControls.getSpans())
+        .then(spans => {
+          if (spans.length > 0) {
+            expect.fail(`Unexpected spans ${testUtils.stringifyItems(spans)}.`);
+          }
+        });
+    });
+
     it(`must trace warn${suffix}`, () =>
       runTest('warn', useExpressPino, false, 'Warn message - should be traced.', controls));
 

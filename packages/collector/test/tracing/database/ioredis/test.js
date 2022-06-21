@@ -526,4 +526,38 @@ mochaSuiteFn('tracing/ioredis', function () {
           })
         )
       ));
+
+  it('[suppressed] should not trace pipeline', async function () {
+    await controls.sendRequest({
+      method: 'GET',
+      path: '/pipeline',
+      suppressTracing: true
+    });
+
+    return testUtils
+      .retry(() => testUtils.delay(config.getTestTimeout() / 4))
+      .then(() => agentControls.getSpans())
+      .then(spans => {
+        if (spans.length > 0) {
+          expect.fail(`Unexpected spans ${testUtils.stringifyItems(spans)}.`);
+        }
+      });
+  });
+
+  it('[suppressed] should not trace multi', async function () {
+    await controls.sendRequest({
+      method: 'GET',
+      path: '/multi',
+      suppressTracing: true
+    });
+
+    return testUtils
+      .retry(() => testUtils.delay(config.getTestTimeout() / 4))
+      .then(() => agentControls.getSpans())
+      .then(spans => {
+        if (spans.length > 0) {
+          expect.fail(`Unexpected spans ${testUtils.stringifyItems(spans)}.`);
+        }
+      });
+  });
 });

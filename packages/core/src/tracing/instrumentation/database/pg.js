@@ -31,25 +31,20 @@ function instrumentClient(Client) {
 
 function shimQuery(original) {
   return function () {
-    if (isActive && cls.isTracing()) {
-      // slightly more performant version of the usual Array.prototype.slice trick.
-      const argsForOriginalQuery = new Array(arguments.length);
-      for (let i = 0; i < arguments.length; i++) {
-        argsForOriginalQuery[i] = arguments[i];
-      }
-      return instrumentedQuery(this, original, argsForOriginalQuery);
+    if (cls.skipExitTracing({ isActive })) {
+      return original.apply(this, arguments);
     }
-    return original.apply(this, arguments);
+
+    // slightly more performant version of the usual Array.prototype.slice trick.
+    const argsForOriginalQuery = new Array(arguments.length);
+    for (let i = 0; i < arguments.length; i++) {
+      argsForOriginalQuery[i] = arguments[i];
+    }
+    return instrumentedQuery(this, original, argsForOriginalQuery);
   };
 }
 
 function instrumentedQuery(ctx, originalQuery, argsForOriginalQuery) {
-  const parentSpan = cls.getCurrentSpan();
-
-  if (constants.isExitSpan(parentSpan)) {
-    return originalQuery.apply(ctx, argsForOriginalQuery);
-  }
-
   const host = ctx.connectionParameters.host;
   const port = ctx.connectionParameters.port;
   const user = ctx.connectionParameters.user;

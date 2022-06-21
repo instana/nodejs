@@ -60,6 +60,23 @@ mochaSuiteFn('tracing/logger/console', function () {
     it('must not trace debug', () => runAndDoNotTrace('debug'));
     it('must not trace 3rd party logger', () => runAndDoNotTrace('3rd-party-logger'));
 
+    it('[suppression] must not trace', async () => {
+      await controls.sendRequest({
+        method: 'GET',
+        path: '/warn',
+        suppressTracing: true
+      });
+
+      return testUtils
+        .retry(() => testUtils.delay(config.getTestTimeout() / 4))
+        .then(() => agentControls.getSpans())
+        .then(spans => {
+          if (spans.length > 0) {
+            expect.fail(`Unexpected spans ${testUtils.stringifyItems(spans)}.`);
+          }
+        });
+    });
+
     it('must trace warn', () => runAndTrace('warn', false, 'console.warn - should be traced', 'warn'));
     it('must trace error', () => runAndTrace('error', true, 'console.error - should be traced'));
     it('must trace timeout', () => runAndTrace('timeout', true, 'console.error - should be traced'));

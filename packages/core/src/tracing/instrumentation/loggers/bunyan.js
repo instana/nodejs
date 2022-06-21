@@ -35,20 +35,16 @@ function shimLog(markAsError) {
         // * this.fields.__in -> This is one of Instana's own loggers, we never want to trace those log calls.
         return originalLog.apply(this, arguments);
       }
-      if (isActive && cls.isTracing()) {
-        const parentSpan = cls.getCurrentSpan();
-        if (parentSpan && !constants.isExitSpan(parentSpan)) {
-          const originalArgs = new Array(arguments.length);
-          for (let i = 0; i < arguments.length; i++) {
-            originalArgs[i] = arguments[i];
-          }
-          instrumentedLog(this, originalLog, originalArgs, markAsError);
-        } else {
-          return originalLog.apply(this, arguments);
-        }
-      } else {
+
+      if (cls.skipExitTracing({ isActive, log: false })) {
         return originalLog.apply(this, arguments);
       }
+
+      const originalArgs = new Array(arguments.length);
+      for (let i = 0; i < arguments.length; i++) {
+        originalArgs[i] = arguments[i];
+      }
+      instrumentedLog(this, originalLog, originalArgs, markAsError);
     };
 }
 

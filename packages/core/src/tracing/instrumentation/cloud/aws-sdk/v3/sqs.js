@@ -12,7 +12,7 @@ const {
   readTracingAttributesFromSns,
   readTracingAttributes
 } = require('../aws_utils');
-const { ENTRY, EXIT, isExitSpan, sqsAttributeNames } = require('../../../../constants');
+const { ENTRY, EXIT, sqsAttributeNames } = require('../../../../constants');
 const tracingUtil = require('../../../../tracingUtil');
 const { InstanaAWSProduct } = require('./instana_aws_product');
 let logger = require('../../../../../logger').getLogger('tracing/sqs/v3', newLogger => {
@@ -83,20 +83,20 @@ class InstanaAWSSQS extends InstanaAWSProduct {
       attributes = sendMessageInput.MessageAttributes = {};
     }
 
-    if (cls.tracingSuppressed()) {
-      if (isBatch) {
-        sendMessageInput.Entries.forEach(entry => {
-          this.propagateSuppression(entry.MessageAttributes);
-        });
-      } else {
-        this.propagateSuppression(attributes);
+    // NOTE: `shimSmithySend`  in index.js is already checking the result of `isActive`
+    const skipTracingResult = cls.skipExitTracing({ extendedResponse: true });
+
+    if (skipTracingResult.skip) {
+      if (skipTracingResult.suppressed) {
+        if (isBatch) {
+          sendMessageInput.Entries.forEach(entry => {
+            this.propagateSuppression(entry.MessageAttributes);
+          });
+        } else {
+          this.propagateSuppression(attributes);
+        }
       }
-      return originalSend.apply(ctx, smithySendArgs);
-    }
 
-    const parentSpan = cls.getCurrentSpan();
-
-    if (!parentSpan || isExitSpan(parentSpan)) {
       return originalSend.apply(ctx, smithySendArgs);
     }
 

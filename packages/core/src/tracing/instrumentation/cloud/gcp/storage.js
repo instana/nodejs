@@ -379,9 +379,10 @@ function instrument(storage) {
 
 function shim(instrumented, original) {
   return function () {
-    if (!isActive || !cls.isTracing()) {
+    if (cls.skipExitTracing({ isActive })) {
       return original.apply(this, arguments);
     }
+
     const originalArgs = new Array(arguments.length);
     for (let i = 0; i < arguments.length; i++) {
       originalArgs[i] = arguments[i];
@@ -391,11 +392,6 @@ function shim(instrumented, original) {
 }
 
 function instrumentedOperation(operation, extractorPre, extractorPost, ctx, original, originalArgs) {
-  const parentSpan = cls.getCurrentSpan();
-  if (constants.isExitSpan(parentSpan)) {
-    return original.apply(ctx, originalArgs);
-  }
-
   return cls.ns.runAndReturn(() => {
     const span = cls.startSpan('gcs', constants.EXIT);
     span.stack = tracingUtil.getStackTrace(instrumentedOperation, 1);
@@ -428,11 +424,6 @@ function instrumentedOperation(operation, extractorPre, extractorPost, ctx, orig
 }
 
 function instrumentedCreateStream(operation, bindEvent, finalEvent, ctx, original, originalArgs) {
-  const parentSpan = cls.getCurrentSpan();
-  if (constants.isExitSpan(parentSpan)) {
-    return original.apply(ctx, originalArgs);
-  }
-
   return cls.ns.runAndReturn(() => {
     const span = cls.startSpan('gcs', constants.EXIT);
     span.stack = tracingUtil.getStackTrace(instrumentedCreateStream, 1);

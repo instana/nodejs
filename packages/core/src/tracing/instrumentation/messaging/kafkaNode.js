@@ -38,23 +38,20 @@ function instrument(kafka) {
 
 function shimSend(original) {
   return function () {
-    if (isActive) {
-      return instrumentedSend(this, original, arguments[0], arguments[1]);
-    }
-    return original.apply(this, arguments);
+    return instrumentedSend(this, original, arguments[0], arguments[1]);
   };
 }
 
 function instrumentedSend(ctx, originalSend, produceRequests, cb) {
-  const parentSpan = cls.getCurrentSpan();
   const args = [produceRequests];
 
   // Possibly bail early
-  if (!cls.isTracing() || constants.isExitSpan(parentSpan) || !produceRequests || produceRequests.length === 0) {
+  if (cls.skipExitTracing({ isActive }) || !produceRequests || produceRequests.length === 0) {
     // restore original send args
     if (cb) {
       args.push(cb);
     }
+
     return originalSend.apply(ctx, args);
   }
 

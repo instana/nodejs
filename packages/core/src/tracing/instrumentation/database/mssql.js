@@ -36,14 +36,15 @@ function instrumentRequest(Request) {
 
 function shimMethod(instrumentedFunction, originalFunction) {
   return function () {
-    if (isActive && cls.isTracing()) {
-      const originalArgs = new Array(arguments.length);
-      for (let i = 0; i < arguments.length; i++) {
-        originalArgs[i] = arguments[i];
-      }
-      return instrumentedFunction(this, originalFunction, originalArgs);
+    if (cls.skipExitTracing({ isActive })) {
+      return originalFunction.apply(this, arguments);
     }
-    return originalFunction.apply(this, arguments);
+
+    const originalArgs = new Array(arguments.length);
+    for (let i = 0; i < arguments.length; i++) {
+      originalArgs[i] = arguments[i];
+    }
+    return instrumentedFunction(this, originalFunction, originalArgs);
   };
 }
 
@@ -56,14 +57,9 @@ function instrumentedBulk(ctx, originalFunction, originalArgs) {
 }
 
 function instrumentedMethod(ctx, originalFunction, originalArgs, stackTraceRef, commandProvider) {
-  const parentSpan = cls.getCurrentSpan();
-
-  if (constants.isExitSpan(parentSpan)) {
-    return originalFunction.apply(ctx, originalArgs);
-  }
-
   const connectionParameters = findConnectionParameters(ctx);
   const command = commandProvider(originalArgs);
+
   return cls.ns.runAndReturn(() => {
     const span = cls.startSpan(exports.spanName, constants.EXIT);
     span.stack = tracingUtil.getStackTrace(stackTraceRef);
@@ -114,19 +110,22 @@ function shimPrepare(originalFunction) {
   return function () {
     // Statements can be prepared globally at application startup, there is not necessarily any HTTP request active, so
     // we explicitly do not check for cls.isTracing() here.
-    if (isActive) {
-      const originalArgs = new Array(arguments.length);
-      for (let i = 0; i < arguments.length; i++) {
-        originalArgs[i] = arguments[i];
-      }
-      if (originalArgs.length >= 2 && typeof originalArgs[1] === 'function') {
-        originalArgs[1] = cls.ns.bind(originalArgs[1]);
-      }
-      // Attach the statement to the PreparedStatement object so that we can add it to the span when execute is called.
-      this.__instanaStatement = originalArgs[0];
-      return originalFunction.apply(this, originalArgs);
+    // We do not want to use `cls.skipExitTracing` here because this is a db prepare call.
+    // We do not want to check anything other than if the instrumentation is active.
+    if (!isActive) {
+      return originalFunction.apply(this, arguments);
     }
-    return originalFunction.apply(this, arguments);
+
+    const originalArgs = new Array(arguments.length);
+    for (let i = 0; i < arguments.length; i++) {
+      originalArgs[i] = arguments[i];
+    }
+    if (originalArgs.length >= 2 && typeof originalArgs[1] === 'function') {
+      originalArgs[1] = cls.ns.bind(originalArgs[1]);
+    }
+    // Attach the statement to the PreparedStatement object so that we can add it to the span when execute is called.
+    this.__instanaStatement = originalArgs[0];
+    return originalFunction.apply(this, originalArgs);
   };
 }
 
@@ -140,19 +139,20 @@ function instrumentTransaction(Transaction) {
 
 function shimBeginTransaction(originalFunction) {
   return function () {
-    if (isActive && cls.isTracing()) {
-      const originalArgs = new Array(arguments.length);
-      for (let i = 0; i < arguments.length; i++) {
-        originalArgs[i] = arguments[i];
-      }
-      if (typeof originalArgs[1] === 'function') {
-        originalArgs[1] = cls.ns.bind(originalArgs[1]);
-      } else if (typeof originalArgs[0] === 'function') {
-        originalArgs[0] = cls.ns.bind(originalArgs[0]);
-      }
-      return originalFunction.apply(this, originalArgs);
+    if (cls.skipExitTracing({ isActive })) {
+      return originalFunction.apply(this, arguments);
     }
-    return originalFunction.apply(this, arguments);
+
+    const originalArgs = new Array(arguments.length);
+    for (let i = 0; i < arguments.length; i++) {
+      originalArgs[i] = arguments[i];
+    }
+    if (typeof originalArgs[1] === 'function') {
+      originalArgs[1] = cls.ns.bind(originalArgs[1]);
+    } else if (typeof originalArgs[0] === 'function') {
+      originalArgs[0] = cls.ns.bind(originalArgs[0]);
+    }
+    return originalFunction.apply(this, originalArgs);
   };
 }
 

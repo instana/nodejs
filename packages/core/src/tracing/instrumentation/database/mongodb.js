@@ -64,7 +64,7 @@ function instrumentCmapConnection(connection) {
 
 function shimCmapQuery(original) {
   return function tmp() {
-    if (!isActive || !cls.isTracing()) {
+    if (cls.skipExitTracing({ isActive })) {
       return original.apply(this, arguments);
     }
 
@@ -79,7 +79,7 @@ function shimCmapQuery(original) {
 
 function shimCmapCommand(original) {
   return function () {
-    if (!isActive || !cls.isTracing()) {
+    if (cls.skipExitTracing({ isActive })) {
       return original.apply(this, arguments);
     }
 
@@ -100,7 +100,7 @@ function shimCmapCommand(original) {
 
 function shimCmapMethod(original) {
   return function () {
-    if (!isActive || !cls.isTracing()) {
+    if (cls.skipExitTracing({ isActive })) {
       return original.apply(this, arguments);
     }
 
@@ -115,7 +115,7 @@ function shimCmapMethod(original) {
 
 function shimCmapGetMore(original) {
   return function () {
-    if (!isActive || !cls.isTracing()) {
+    if (cls.skipExitTracing({ isActive })) {
       return original.apply(this, arguments);
     }
 
@@ -129,11 +129,6 @@ function shimCmapGetMore(original) {
 }
 
 function instrumentedCmapQuery(ctx, originalQuery, originalArgs) {
-  const parentSpan = cls.getCurrentSpan();
-  if (constants.isExitSpan(parentSpan)) {
-    return originalQuery.apply(ctx, originalArgs);
-  }
-
   const { originalCallback, callbackIndex } = findCallback(originalArgs);
   if (callbackIndex < 0) {
     return originalQuery.apply(ctx, originalArgs);
@@ -171,11 +166,6 @@ function instrumentedCmapQuery(ctx, originalQuery, originalArgs) {
 }
 
 function instrumentedCmapMethod(ctx, originalMethod, originalArgs, command) {
-  const parentSpan = cls.getCurrentSpan();
-  if (constants.isExitSpan(parentSpan)) {
-    return originalMethod.apply(ctx, originalArgs);
-  }
-
   const { originalCallback, callbackIndex } = findCallback(originalArgs);
   if (callbackIndex < 0) {
     return originalMethod.apply(ctx, originalArgs);
@@ -211,11 +201,6 @@ function instrumentedCmapMethod(ctx, originalMethod, originalArgs, command) {
 }
 
 function instrumentedCmapGetMore(ctx, originalMethod, originalArgs) {
-  const parentSpan = cls.getCurrentSpan();
-  if (constants.isExitSpan(parentSpan)) {
-    return originalMethod.apply(ctx, originalArgs);
-  }
-
   const { originalCallback, callbackIndex } = findCallback(originalArgs);
   if (callbackIndex < 0) {
     return originalMethod.apply(ctx, originalArgs);
@@ -251,23 +236,20 @@ function instrumentLegacyTopologyPool(Pool) {
 
 function shimLegacyWrite(original) {
   return function () {
-    if (!isActive || !cls.isTracing()) {
+    if (cls.skipExitTracing({ isActive })) {
       return original.apply(this, arguments);
     }
+
     const originalArgs = new Array(arguments.length);
     for (let i = 0; i < arguments.length; i++) {
       originalArgs[i] = arguments[i];
     }
+
     return instrumentedLegacyWrite(this, original, originalArgs);
   };
 }
 
 function instrumentedLegacyWrite(ctx, originalWrite, originalArgs) {
-  const parentSpan = cls.getCurrentSpan();
-  if (constants.isExitSpan(parentSpan)) {
-    return originalWrite.apply(ctx, originalArgs);
-  }
-
   // pool.js#write throws a sync error if there is no callback, so we can safely assume there is one. If there was no
   // callback, we wouldn't be able to finish the span, so we won't start one.
   const { originalCallback, callbackIndex } = findCallback(originalArgs);

@@ -50,9 +50,11 @@ function instrument(db2) {
 }
 
 function skipTracing(ignoreClsTracing = false) {
-  // CASE: instrumentation is disabled
-  // CASE: db call is disabled via suppress header
-  return !isActive || cls.tracingSuppressed() || (ignoreClsTracing ? false : !cls.isTracing());
+  // CASES: instrumentation is disabled, db call is disabled via suppress header
+  return (
+    cls.skipExitTracing({ isActive, skipIsTracing: true, skipParentSpanCheck: true }) ||
+    (ignoreClsTracing ? false : !cls.isTracing())
+  );
 }
 
 function instrumentOpen(originalFunction) {
@@ -244,13 +246,6 @@ function instrumentQueryHelper(ctx, originalArgs, originalFunction, stmt, isAsyn
     return originalFunction.apply(ctx, originalArgs);
   }
 
-  const parentSpan = cls.getCurrentSpan();
-
-  // CASE: There can be only one exit span, skip
-  if (constants.isExitSpan(parentSpan)) {
-    return originalFunction.apply(ctx, originalArgs);
-  }
-
   return cls.ns.runAndReturn(() => {
     const span = createSpan(stmt, instrumentQueryHelper);
 
@@ -320,7 +315,7 @@ function instrumentQueryHelper(ctx, originalArgs, originalFunction, stmt, isAsyn
 function instrumentExecuteHelper(ctx, originalArgs, stmtObject, prepareCallParentSpan) {
   let rememberedParentSpan;
 
-  const canPrepareTracing = () => {
+  const canTrace = () => {
     // cls.getCurrentSpan()  : exists if prepare is called outside of the http context
     // prepareCallParentSpan : exists if prepare call is called inside of the http context
     const parentSpan = cls.getCurrentSpan() || prepareCallParentSpan;
@@ -357,7 +352,7 @@ function instrumentExecuteHelper(ctx, originalArgs, stmtObject, prepareCallParen
 
   stmtObject.executeNonQuerySync = function instanaExecuteNonQuerySync() {
     return cls.ns.runAndReturn(() => {
-      if (!canPrepareTracing()) {
+      if (!canTrace()) {
         return originalExecuteNonQuerySync.apply(this, arguments);
       }
 
@@ -380,7 +375,7 @@ function instrumentExecuteHelper(ctx, originalArgs, stmtObject, prepareCallParen
   const originalExecuteSync = stmtObject.executeSync;
   stmtObject.executeSync = function instanaExecuteSync() {
     return cls.ns.runAndReturn(() => {
-      if (!canPrepareTracing()) {
+      if (!canTrace()) {
         return originalExecuteSync.apply(this, arguments);
       }
 
@@ -397,7 +392,7 @@ function instrumentExecuteHelper(ctx, originalArgs, stmtObject, prepareCallParen
 
   stmtObject.execute = function instanaExecute() {
     return cls.ns.runAndReturn(() => {
-      if (!canPrepareTracing()) {
+      if (!canTrace()) {
         return originalExecute.apply(this, arguments);
       }
 
@@ -433,13 +428,6 @@ function instrumentExecuteHelper(ctx, originalArgs, stmtObject, prepareCallParen
 
 function instrumentQueryResultHelper(ctx, originalArgs, originalFunction, stmt, isAsync) {
   if (skipTracing()) {
-    return originalFunction.apply(ctx, originalArgs);
-  }
-
-  const parentSpan = cls.getCurrentSpan();
-
-  // CASE: There can be only one exit span, skip
-  if (constants.isExitSpan(parentSpan)) {
     return originalFunction.apply(ctx, originalArgs);
   }
 

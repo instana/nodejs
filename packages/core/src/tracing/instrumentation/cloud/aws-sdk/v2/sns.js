@@ -6,7 +6,7 @@
 'use strict';
 
 const cls = require('../../../../cls');
-const { EXIT, isExitSpan, sqsAttributeNames } = require('../../../../constants');
+const { EXIT, sqsAttributeNames } = require('../../../../constants');
 const tracingUtil = require('../../../../tracingUtil');
 const { InstanaAWSProduct } = require('./instana_aws_product');
 
@@ -24,19 +24,18 @@ const SPAN_NAME = 'sns';
 
 class InstanaAWSSNS extends InstanaAWSProduct {
   instrumentedMakeRequest(ctx, originalMakeRequest, originalArgs) {
-    const parentSpan = cls.getCurrentSpan();
     const messageBody = originalArgs[1];
 
     if (!messageBody.MessageAttributes) {
       messageBody.MessageAttributes = {};
     }
 
-    if (!parentSpan || isExitSpan(parentSpan)) {
-      return originalMakeRequest.apply(ctx, originalArgs);
-    }
+    const skipTracingResult = cls.skipExitTracing({ isActive: true, extendedResponse: true });
+    if (skipTracingResult.skip) {
+      if (skipTracingResult.suppressed) {
+        this.propagateSuppression(messageBody.MessageAttributes);
+      }
 
-    if (cls.tracingSuppressed()) {
-      this.propagateSuppression(messageBody.MessageAttributes);
       return originalMakeRequest.apply(ctx, originalArgs);
     }
 

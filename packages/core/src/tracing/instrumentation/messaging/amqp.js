@@ -42,33 +42,36 @@ function instrumentCallbackModel(callbackModelModule) {
 
 function shimSendMessage(originalFunction) {
   return function () {
-    if (isActive) {
-      const originalArgs = new Array(arguments.length);
-      for (let i = 0; i < arguments.length; i++) {
-        originalArgs[i] = arguments[i];
-      }
-      return instrumentedSendMessage(this, originalFunction, originalArgs);
+    const originalArgs = new Array(arguments.length);
+    for (let i = 0; i < arguments.length; i++) {
+      originalArgs[i] = arguments[i];
     }
-    return originalFunction.apply(this, arguments);
+
+    return instrumentedSendMessage(this, originalFunction, originalArgs);
   };
 }
 
 function instrumentedSendMessage(ctx, originalSendMessage, originalArgs) {
-  if (cls.tracingSuppressed()) {
-    propagateSuppression(originalArgs[0]);
-    propagateSuppression(originalArgs[1]);
-  }
-
+  // We need to skip parentSpan condition because the parentSpan check is too specific in this fn
+  const skipTracingResult = cls.skipExitTracing({ isActive, extendedResponse: true, skipParentSpanCheck: true });
   const parentSpan = cls.getCurrentSpan();
-  if (
-    !parentSpan || //
-    // allow rabbitmq parent exit spans, this is actually the span started in instrumentedChannelModelPublish
-    (constants.isExitSpan(parentSpan) && parentSpan.n !== 'rabbitmq')
-  ) {
+  const isExitSpan = skipTracingResult.isExitSpan;
+
+  if (skipTracingResult.skip) {
+    if (skipTracingResult.suppressed) {
+      propagateSuppression(originalArgs[0]);
+      propagateSuppression(originalArgs[1]);
+    }
+
     return originalSendMessage.apply(ctx, originalArgs);
   }
 
-  if (constants.isExitSpan(parentSpan) && parentSpan.n === 'rabbitmq') {
+  // allow rabbitmq parent exit spans, this is actually the span started in instrumentedChannelModelPublish
+  if (!parentSpan || (isExitSpan && parentSpan.n !== 'rabbitmq')) {
+    return originalSendMessage.apply(ctx, originalArgs);
+  }
+
+  if (isExitSpan && parentSpan.n === 'rabbitmq') {
     // if ConfirmChannel#publish/sendToQueue has been invoked, we have already created a new cls context in
     // instrumentedChannelModelPublish and must not do so again here.
     processExitSpan(ctx, parentSpan, originalArgs);
@@ -381,23 +384,19 @@ function instrumentedCallbackModelGet(ctx, originalGet, originalArgs) {
 
 function shimChannelModelPublish(originalFunction) {
   return function () {
-    if (isActive) {
-      const originalArgs = new Array(arguments.length);
-      for (let i = 0; i < arguments.length; i++) {
-        originalArgs[i] = arguments[i];
-      }
-      return instrumentedChannelModelPublish(this, originalFunction, originalArgs);
+    const originalArgs = new Array(arguments.length);
+    for (let i = 0; i < arguments.length; i++) {
+      originalArgs[i] = arguments[i];
     }
-    return originalFunction.apply(this, arguments);
+
+    return instrumentedChannelModelPublish(this, originalFunction, originalArgs);
   };
 }
 
+// The main work is actually done in instrumentedSendMessage which will be called by ConfirmChannel.publish
+// internally. We only instrument ConfirmChannel.publish to hook into the callback.
 function instrumentedChannelModelPublish(ctx, originalFunction, originalArgs) {
-  // The main work is actually done in instrumentedSendMessage which will be called by ConfirmChannel.publish
-  // internally. We only instrument ConfirmChannel.publish to hook into the callback.
-  const parentSpan = cls.getCurrentSpan();
-
-  if (!parentSpan || constants.isExitSpan(parentSpan)) {
+  if (cls.skipExitTracing({ isActive })) {
     return originalFunction.apply(ctx, originalArgs);
   }
 
@@ -418,23 +417,19 @@ function instrumentedChannelModelPublish(ctx, originalFunction, originalArgs) {
 
 function shimCallbackModelPublish(originalFunction) {
   return function () {
-    if (isActive) {
-      const originalArgs = new Array(arguments.length);
-      for (let i = 0; i < arguments.length; i++) {
-        originalArgs[i] = arguments[i];
-      }
-      return instrumentedCallbackModelPublish(this, originalFunction, originalArgs);
+    const originalArgs = new Array(arguments.length);
+    for (let i = 0; i < arguments.length; i++) {
+      originalArgs[i] = arguments[i];
     }
-    return originalFunction.apply(this, arguments);
+
+    return instrumentedCallbackModelPublish(this, originalFunction, originalArgs);
   };
 }
 
+// The main work is actually done in instrumentedSendMessage which will be called by ConfirmChannel.publish
+// internally. We only instrument ConfirmChannel.publish to hook into the callback.
 function instrumentedCallbackModelPublish(ctx, originalFunction, originalArgs) {
-  // The main work is actually done in instrumentedSendMessage which will be called by ConfirmChannel.publish
-  // internally. We only instrument ConfirmChannel.publish to hook into the callback.
-  const parentSpan = cls.getCurrentSpan();
-
-  if (!cls.isTracing() || constants.isExitSpan(parentSpan)) {
+  if (cls.skipExitTracing({ isActive })) {
     return originalFunction.apply(ctx, originalArgs);
   }
 

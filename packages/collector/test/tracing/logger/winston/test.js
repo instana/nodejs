@@ -41,6 +41,23 @@ mochaSuiteFn('tracing/logger/winston', function () {
         .forEach(variant =>
           ['info', 'warn', 'error'].forEach(level => {
             runTests(useGlobalLogger, useLevelMethod, variant, level);
+
+            it(`[suppressed] should not trace: ${level}`, async function () {
+              await controls.sendRequest({
+                method: 'GET',
+                path: `/log?level=${level}&variant=string-only`,
+                suppressTracing: true
+              });
+
+              return testUtils
+                .retry(() => testUtils.delay(config.getTestTimeout() / 4))
+                .then(() => agentControls.getSpans())
+                .then(spans => {
+                  if (spans.length > 0) {
+                    expect.fail(`Unexpected spans ${testUtils.stringifyItems(spans)}.`);
+                  }
+                });
+            });
           })
         )
     )

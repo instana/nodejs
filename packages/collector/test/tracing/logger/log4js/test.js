@@ -56,6 +56,23 @@ mochaSuiteFn('tracing/logger/log4js', function () {
         )
       ));
 
+    it('[suppressed] should not trace', async function () {
+      await controls.sendRequest({
+        method: 'POST',
+        path: '/log?level=error',
+        suppressTracing: true
+      });
+
+      return testUtils
+        .retry(() => testUtils.delay(config.getTestTimeout() / 4))
+        .then(() => agentControls.getSpans())
+        .then(spans => {
+          if (spans.length > 0) {
+            expect.fail(`Unexpected spans ${testUtils.stringifyItems(spans)}.`);
+          }
+        });
+    });
+
     it(`must trace warn ${suffix}`, () => runTest('warn', 'Warn message - should be traced.', useLogMethod, false));
 
     it(`must trace error ${suffix}`, () => runTest('error', 'Error message - should be traced.', useLogMethod, true));

@@ -196,33 +196,32 @@ function instrumentedMakeClientConstructor(clientModule, originalFunction) {
 
 function shimClientMethod(address, rpcPath, requestStream, responseStream, originalFunction) {
   function shimmedFunction() {
-    const parentSpan = cls.getCurrentSpan();
-    const isTracing = isActive && cls.isTracing() && parentSpan && !constants.isExitSpan(parentSpan);
-    const isSuppressed = cls.tracingLevel() === '0';
-    if (isTracing || isSuppressed) {
-      const originalArgs = new Array(arguments.length);
-      for (let i = 0; i < arguments.length; i++) {
-        originalArgs[i] = arguments[i];
-      }
+    const originalArgs = new Array(arguments.length);
+    for (let i = 0; i < arguments.length; i++) {
+      originalArgs[i] = arguments[i];
+    }
 
-      if (isTracing) {
-        return instrumentedClientMethod(
-          this,
-          originalFunction,
-          originalArgs,
-          address,
-          rpcPath,
-          requestStream,
-          responseStream
-        );
-      } else {
+    const skipTracingResponse = cls.skipExitTracing({ isActive, extendedResponse: true });
+    if (skipTracingResponse.skip) {
+      if (skipTracingResponse.suppressed) {
         // Suppressed: We don't want to trace this call but we need to propagate the x-instana-l=0 header.
         modifyArgs(originalArgs); // add x-instana-l: 0 to metadata
-        return originalFunction.apply(this, originalArgs);
       }
+
+      return originalFunction.apply(this, originalArgs);
     }
-    return originalFunction.apply(this, arguments);
+
+    return instrumentedClientMethod(
+      this,
+      originalFunction,
+      originalArgs,
+      address,
+      rpcPath,
+      requestStream,
+      responseStream
+    );
   }
+
   return copyAttributes(originalFunction, shimmedFunction);
 }
 

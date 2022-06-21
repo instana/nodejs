@@ -7,7 +7,7 @@
 
 const spanBuffer = require('./spanBuffer');
 const tracingUtil = require('./tracingUtil');
-const { ENTRY, EXIT, INTERMEDIATE } = require('./constants');
+const { ENTRY, EXIT, INTERMEDIATE, isExitSpan } = require('./constants');
 const hooked = require('./clsHooked');
 const tracingMetrics = require('./metrics');
 /** @type {import('../logger').GenericLogger} */
@@ -493,8 +493,63 @@ function runPromiseInAsyncContext(context, fn) {
 function call(fn) {
   fn();
 }
+/**
+ * This method should be used in all exit instrumentations.
+ * It checks whether the tracing shoud be skipped or not.
+ *
+ * | options             | description
+ * --------------------------------------------------------------------------------------------
+ * | isActive            | Whether the instrumentation is active or not.
+ * | extendedResponse    | By default the method returns a boolean. Sometimes it's helpful to
+ * |                     | get the full response when you would like to determine why it was skipped.
+ * |                     | For example because of suppression.
+ * | skipParentSpanCheck | Some instrumentations have a very specific handling for checking the parent span.
+ * |                     | With this flag you can skip the default parent span check.
+ * | log                 | Logger instrumentations might not want to log because they run into recursive
+ * |                     | problem raising `RangeError: Maximum call stack size exceeded`.
+ * | skipIsTracing       | Instrumentation wants to handle `cls.isTracing` on it's own (e.g db2)
+ *
+ * @param {Object.<string, *>} options
+ */
+function skipExitTracing(
+  options = {
+    isActive: true,
+    extendedResponse: false,
+    skipParentSpanCheck: false,
+    log: true,
+    skipIsTracing: false
+  }
+) {
+  const parentSpan = getCurrentSpan();
+  const suppressed = tracingSuppressed();
+  const isExitSpanResult = isExitSpan(parentSpan);
+
+  if (!options.skipParentSpanCheck && (!parentSpan || isExitSpanResult)) {
+    if (options.log) {
+      logger.warn(
+        // eslint-disable-next-line max-len
+        `Cannot start an exit span as this requires an active entry (or intermediate) span as parent. ${
+          parentSpan
+            ? `But the currently active span is itself an exit span: ${JSON.stringify(parentSpan)}`
+            : 'Currently there is no span active at all'
+        }`
+      );
+    }
+
+    if (options.extendedResponse) return { skip: true, suppressed, isExitSpan: isExitSpanResult };
+    else return true;
+  }
+
+  const skipIsActive = options.isActive === false;
+  const skipIsTracing = !options.skipIsTracing ? !isTracing() : false;
+  const skip = skipIsActive || skipIsTracing || suppressed;
+
+  if (options.extendedResponse) return { skip, suppressed, isExitSpan: isExitSpanResult };
+  else return skip;
+}
 
 module.exports = {
+  skipExitTracing,
   currentEntrySpanKey,
   currentSpanKey,
   reducedSpanKey,

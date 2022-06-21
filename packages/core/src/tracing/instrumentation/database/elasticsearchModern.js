@@ -87,7 +87,7 @@ function instrumentApi(client, actionPath, clusterInfo) {
   }
 
   parent[actionPath[actionPath.length - 1]] = function instrumentedAction(params, options, originalCallback) {
-    if (!isActive || !cls.isTracing()) {
+    if (cls.skipExitTracing({ isActive })) {
       return originalFunction.apply(this, arguments);
     }
 
@@ -299,23 +299,20 @@ function instrumentTransport(es) {
 
 function shimRequest(esReq) {
   return function () {
-    if (!isActive || !cls.isTracing()) {
+    if (cls.skipExitTracing({ isActive })) {
       return esReq.apply(this, arguments);
     }
+
     const originalArgs = new Array(arguments.length);
     for (let i = 0; i < arguments.length; i++) {
       originalArgs[i] = arguments[i];
     }
+
     return instrumentedRequest(this, esReq, originalArgs);
   };
 }
 
 function instrumentedRequest(ctx, origEsReq, originalArgs) {
-  const parentSpan = cls.getCurrentSpan();
-  if (constants.isExitSpan(parentSpan)) {
-    return origEsReq.apply(ctx, originalArgs);
-  }
-
   // normalize arguments
   let params = originalArgs[0] || {};
   const options = originalArgs[1];

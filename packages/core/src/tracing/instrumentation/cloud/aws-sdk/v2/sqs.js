@@ -13,7 +13,7 @@ const {
   readTracingAttributesFromSns,
   readTracingAttributes
 } = require('../aws_utils');
-const { ENTRY, EXIT, isExitSpan, sqsAttributeNames } = require('../../../../constants');
+const { ENTRY, EXIT, sqsAttributeNames } = require('../../../../constants');
 const requireHook = require('../../../../../util/requireHook');
 const tracingUtil = require('../../../../tracingUtil');
 
@@ -67,16 +67,12 @@ function instrumentSQS(AWS) {
 
 function shimSendMessage(originalSendMessage) {
   return function () {
-    if (isActive) {
-      const originalArgs = new Array(arguments.length);
-      for (let i = 0; i < originalArgs.length; i++) {
-        originalArgs[i] = arguments[i];
-      }
-
-      return instrumentedSendMessage(this, originalSendMessage, originalArgs);
+    const originalArgs = new Array(arguments.length);
+    for (let i = 0; i < originalArgs.length; i++) {
+      originalArgs[i] = arguments[i];
     }
 
-    return originalSendMessage.apply(this, arguments);
+    return instrumentedSendMessage(this, originalSendMessage, originalArgs);
   };
 }
 
@@ -116,20 +112,18 @@ function instrumentedSendMessage(ctx, originalSendMessage, originalArgs) {
     attributes = messageData.MessageAttributes = {};
   }
 
-  if (cls.tracingSuppressed()) {
-    if (isBatch) {
-      messageData.Entries.forEach(entry => {
-        propagateSuppression(entry.MessageAttributes);
-      });
-    } else {
-      propagateSuppression(attributes);
+  const skipTracingResult = cls.skipExitTracing({ isActive, extendedResponse: true });
+  if (skipTracingResult.skip) {
+    if (skipTracingResult.suppressed) {
+      if (isBatch) {
+        messageData.Entries.forEach(entry => {
+          propagateSuppression(entry.MessageAttributes);
+        });
+      } else {
+        propagateSuppression(attributes);
+      }
     }
-    return originalSendMessage.apply(ctx, originalArgs);
-  }
 
-  const parentSpan = cls.getCurrentSpan();
-
-  if (!parentSpan || isExitSpan(parentSpan)) {
     return originalSendMessage.apply(ctx, originalArgs);
   }
 

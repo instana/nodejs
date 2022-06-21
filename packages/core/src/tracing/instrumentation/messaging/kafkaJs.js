@@ -68,17 +68,16 @@ function shimmedSend(originalSend) {
     const topic = config.topic;
     const messages = config.messages;
 
-    if (cls.tracingSuppressed()) {
-      addTraceLevelSuppressionToAllMessages(messages);
+    const skipTracingResult = cls.skipExitTracing({ isActive, extendedResponse: true });
+
+    if (skipTracingResult.skip || !messages || messages.length === 0) {
+      if (skipTracingResult.suppressed) {
+        addTraceLevelSuppressionToAllMessages(messages);
+      }
+
       return originalSend.apply(this, arguments);
     }
-    if (!isActive || !cls.isTracing() || !messages || messages.length === 0) {
-      return originalSend.apply(this, arguments);
-    }
-    const parentSpan = cls.getCurrentSpan();
-    if (!parentSpan || constants.isExitSpan(parentSpan)) {
-      return originalSend.apply(this, arguments);
-    }
+
     const originalArgs = new Array(arguments.length);
     for (let argsIdx = 0; argsIdx < arguments.length; argsIdx++) {
       originalArgs[argsIdx] = arguments[argsIdx];
@@ -121,19 +120,18 @@ function shimmedSendBatch(originalSendBatch) {
   return async function (config /* { topicMessages } */) {
     const topicMessages = config.topicMessages;
 
-    if (cls.tracingSuppressed()) {
-      topicMessages.forEach(topicMessage => {
-        addTraceLevelSuppressionToAllMessages(topicMessage.messages);
-      });
+    const skipTracingResult = cls.skipExitTracing({ isActive, extendedResponse: true });
+
+    if (skipTracingResult.skip || !topicMessages || topicMessages.length === 0) {
+      if (skipTracingResult.suppressed) {
+        topicMessages.forEach(topicMessage => {
+          addTraceLevelSuppressionToAllMessages(topicMessage.messages);
+        });
+      }
+
       return originalSendBatch.apply(this, arguments);
     }
-    if (!isActive || !cls.isTracing() || !topicMessages || topicMessages.length === 0) {
-      return originalSendBatch.apply(this, arguments);
-    }
-    const parentSpan = cls.getCurrentSpan();
-    if (!parentSpan || constants.isExitSpan(parentSpan)) {
-      return originalSendBatch.apply(this, arguments);
-    }
+
     const originalArgs = new Array(arguments.length);
     for (let i = 0; i < arguments.length; i++) {
       originalArgs[i] = arguments[i];

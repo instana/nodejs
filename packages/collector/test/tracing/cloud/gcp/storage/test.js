@@ -20,7 +20,7 @@ const {
 } = require('../../../../../../core/test/test_util');
 
 const ProcessControls = require('../../../../test_util/ProcessControls');
-const delay = require('../../../../../../core/test/test_util/delay');
+const testUtils = require('../../../../../../core/test/test_util');
 const globalAgent = require('../../../../globalAgent');
 
 const bucketName = 'nodejs-tracer-test-bucket';
@@ -93,7 +93,7 @@ if (
           // 404 - ApiError: No such object: nodejs-tracer-test-bucket/file.txt (happens if you upload and get too fast)
           // 403 - is subject to bucket's retention policy and cannot be deleted, overwritten or archived until...
           if (err.statusCode === 429 || err.statusCode === 409 || err.statusCode === 404 || err.statusCode === 403) {
-            await delay(1 * 5000);
+            await testUtils.delay(1 * 5000);
             await agentControls.clearReceivedData();
             return run(requestPath, tries);
           }
@@ -675,6 +675,23 @@ if (
           )
         )
       );
+    });
+
+    it('[suppressed] should not trace', async function () {
+      await controls.sendRequest({
+        method: 'POST',
+        path: '/bucket-create-bucket-delete-callback',
+        suppressTracing: true
+      });
+
+      return testUtils
+        .retry(() => testUtils.delay(config.getTestTimeout() / 4))
+        .then(() => agentControls.getSpans())
+        .then(spans => {
+          if (spans.length > 0) {
+            fail(`Unexpected spans ${testUtils.stringifyItems(spans)}.`);
+          }
+        });
     });
 
     function verifySpans(spans, requestPath, expectedGcsSpans) {

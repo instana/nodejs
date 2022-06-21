@@ -41,21 +41,17 @@ function shimConnect(originalFunction) {
 
 function shimPublish(natsUrl, originalFunction) {
   return function () {
-    if (isActive && cls.isTracing()) {
-      const originalArgs = new Array(arguments.length);
-      for (let i = 0; i < arguments.length; i++) {
-        originalArgs[i] = arguments[i];
-      }
-      return instrumentedPublish(this, originalFunction, originalArgs, natsUrl);
+    const originalArgs = new Array(arguments.length);
+    for (let i = 0; i < arguments.length; i++) {
+      originalArgs[i] = arguments[i];
     }
-    return originalFunction.apply(this, arguments);
+
+    return instrumentedPublish(this, originalFunction, originalArgs, natsUrl);
   };
 }
 
 function instrumentedPublish(ctx, originalPublish, originalArgs, natsUrl) {
-  const parentSpan = cls.getCurrentSpan();
-
-  if (!cls.isTracing() || !parentSpan || constants.isExitSpan(parentSpan)) {
+  if (cls.skipExitTracing({ isActive })) {
     return originalPublish.apply(ctx, originalArgs);
   }
 

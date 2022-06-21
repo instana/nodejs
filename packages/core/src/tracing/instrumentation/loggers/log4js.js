@@ -34,12 +34,7 @@ function instrumentLog4jsLogger(loggerModule) {
 
 function shimLog(originalLog) {
   return function (level) {
-    if (!isActive || !cls.isTracing()) {
-      return originalLog.apply(this, arguments);
-    }
-
-    const parentSpan = cls.getCurrentSpan();
-    if (!parentSpan || constants.isExitSpan(parentSpan)) {
+    if (cls.skipExitTracing({ isActive, log: false })) {
       return originalLog.apply(this, arguments);
     }
 

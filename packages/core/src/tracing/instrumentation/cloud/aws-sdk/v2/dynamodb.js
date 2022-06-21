@@ -6,7 +6,7 @@
 'use strict';
 
 const cls = require('../../../../cls');
-const { EXIT, isExitSpan } = require('../../../../constants');
+const { EXIT } = require('../../../../constants');
 const tracingUtil = require('../../../../tracingUtil');
 const { InstanaAWSProduct } = require('./instana_aws_product');
 
@@ -28,9 +28,8 @@ const SPAN_NAME = 'dynamodb';
 
 class InstanaAWSDynamoDB extends InstanaAWSProduct {
   instrumentedMakeRequest(ctx, originalMakeRequest, originalArgs) {
-    const parentSpan = cls.getCurrentSpan();
-
-    if (!parentSpan || isExitSpan(parentSpan)) {
+    // NOTE: `shimMakeRequest`  in index.js is already checking the result of `isActive`
+    if (cls.skipExitTracing()) {
       return originalMakeRequest.apply(ctx, originalArgs);
     }
 

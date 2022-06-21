@@ -6,7 +6,7 @@
 'use strict';
 
 const expect = require('chai').expect;
-
+const { fail } = expect;
 const constants = require('@instana/core').tracing.constants;
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('../../../../../core/test/config');
@@ -52,6 +52,43 @@ function registerSuite(agentControls, driverMode, useExecute) {
     ProcessControls.setUpHooks(controls);
 
     test(controls, agentControls);
+  });
+
+  describe('suppressed', function () {
+    const env = {
+      DRIVER_MODE: driverMode
+    };
+    if (useExecute) {
+      env.USE_EXECUTE = 'true';
+    }
+
+    const controls = new ProcessControls({
+      dirname: __dirname,
+      useGlobalAgent: true,
+      env
+    });
+
+    ProcessControls.setUpHooks(controls);
+
+    it('should not trace', async function () {
+      await controls.sendRequest({
+        method: 'POST',
+        path: '/values',
+        qs: {
+          value: 42
+        },
+        suppressTracing: true
+      });
+
+      return testUtils
+        .retry(() => testUtils.delay(config.getTestTimeout() / 4))
+        .then(() => agentControls.getSpans())
+        .then(spans => {
+          if (spans.length > 0) {
+            fail(`Unexpected spans ${testUtils.stringifyItems(spans)}.`);
+          }
+        });
+    });
   });
 }
 

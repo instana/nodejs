@@ -69,4 +69,4 @@ function waitUntilServerIsUp() {
 
 exports.getPid = () => appProcess.pid;
 
-exports.trigger = level => request(`http://127.0.0.1:${appPort}/${level}`);
+exports.trigger = (level, headers = {}) => request(`http://127.0.0.1:${appPort}/${level}`, { headers });
