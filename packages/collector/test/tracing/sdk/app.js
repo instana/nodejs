@@ -184,7 +184,7 @@ app.post('/callback/create-intermediates', async function createIntermediatesCal
   res.status(200).send();
 });
 
-app.post('/promise/create-intermediates', async function createIntermediatesCallback(req, res) {
+app.post('/promise/create-intermediates', async function createIntermediatesPromise(req, res) {
   (async () => {
     const span1 = await instana.sdk.async.startIntermediateSpan('intermediate1');
     await delay(200);
