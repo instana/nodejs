@@ -152,18 +152,14 @@ module.exports = function (isCallbackApi) {
   /**
    * @param {Error} error
    * @param {Object.<string, *>} tags
-   * @param {InstanaBaseSpan} currentSpan
+   * @param {InstanaBaseSpan} spanToBeCompleted
    */
-  function completeIntermediateSpan(error, tags, currentSpan) {
+  function completeIntermediateSpan(error, tags, spanToBeCompleted) {
     if (!isActive) {
       return;
     }
 
-    let span = cls.getCurrentSpan();
-
-    if (currentSpan) {
-      span = currentSpan;
-    }
+    const span = spanToBeCompleted || cls.getCurrentSpan();
 
     if (!span) {
       logger.warn(

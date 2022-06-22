@@ -166,7 +166,7 @@ app.post('/promise/create-intermediate', function createIntermediatePromise(req,
     });
 });
 
-app.post('/callback/create-intermediates', async function createIntermediatesCallback(req, res) {
+app.post('/callback/create-overlapping-intermediates', async function createOverlappingIntermediatesCallback(req, res) {
   instana.sdk.callback.startIntermediateSpan('intermediate1', async span1 => {
     await delay(200);
 
@@ -184,7 +184,7 @@ app.post('/callback/create-intermediates', async function createIntermediatesCal
   res.status(200).send();
 });
 
-app.post('/promise/create-intermediates', async function createIntermediatesPromise(req, res) {
+app.post('/promise/create-overlapping-intermediates', async function createOverlappingIntermediatesPromise(req, res) {
   (async () => {
     const span1 = await instana.sdk.async.startIntermediateSpan('intermediate1');
     await delay(200);

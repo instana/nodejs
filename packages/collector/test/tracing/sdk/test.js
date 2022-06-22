@@ -231,11 +231,11 @@ mochaSuiteFn('tracing/sdk', function () {
               );
             }));
 
-        it('must create parallel intermediate spans', () =>
+        it('must create overlapping parent and child spans', () =>
           controls
             .sendRequest({
               method: 'POST',
-              path: `/${apiType}/create-intermediates`
+              path: `/${apiType}/create-overlapping-intermediates`
             })
             .then(response => {
               expect(response).does.not.exist;
@@ -244,7 +244,7 @@ mochaSuiteFn('tracing/sdk', function () {
                 agentControls.getSpans().then(spans => {
                   const httpEntry = expectHttpEntry({
                     spans,
-                    path: `/${apiType}/create-intermediates`
+                    path: `/${apiType}/create-overlapping-intermediates`
                   });
 
                   const intermediateSpan1 = expectCustomFsIntermediate({
@@ -715,8 +715,7 @@ mochaSuiteFn('tracing/sdk', function () {
       }
 
       if (duration) {
-        expect(span.d).to.be.greaterThan(duration - 5);
-        expect(span.d).to.be.lessThan(duration + 20);
+        expect(span.d).to.be.closeTo(duration, 20);
       }
     });
   }
