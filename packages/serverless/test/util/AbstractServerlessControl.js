@@ -23,6 +23,7 @@ function AbstractServerlessControl(opts = {}) {
 
 AbstractServerlessControl.prototype.reset = function reset() {
   this.messagesFromBackend = [];
+  this.messagesFromExtension = [];
   this.messagesFromDownstreamDummy = [];
   this.messagesFromProxy = [];
 };
@@ -52,6 +53,12 @@ AbstractServerlessControl.prototype.registerTestHooks = function registerTestHoo
       backendPromise = this.startBackendAndWaitForIt();
     } else {
       backendPromise = Promise.resolve();
+    }
+    let extensionPromise;
+    if (this.opts.startExtension) {
+      extensionPromise = this.startExtensionAndWaitForIt();
+    } else {
+      extensionPromise = Promise.resolve();
     }
 
     let downstreamDummyPromise;
@@ -94,7 +101,7 @@ AbstractServerlessControl.prototype.registerTestHooks = function registerTestHoo
       proxyPromise = Promise.resolve();
     }
 
-    const allAuxiliaryProcesses = [backendPromise, downstreamDummyPromise, proxyPromise].concat(
+    const allAuxiliaryProcesses = [extensionPromise, backendPromise, downstreamDummyPromise, proxyPromise].concat(
       this.startAdditionalAuxiliaryProcesses()
     );
     return Promise.all(allAuxiliaryProcesses)
@@ -135,9 +142,33 @@ AbstractServerlessControl.prototype.startBackendAndWaitForIt = function startBac
   });
   return this.waitUntilBackendIsUp();
 };
+AbstractServerlessControl.prototype.startExtensionAndWaitForIt = function startExtensionAndWaitForIt() {
+  this.extensionHasBeenStarted = true;
+  this.extension = fork(path.join(__dirname, '../extension_stub'), {
+    stdio: config.getAppStdio(),
+    env: Object.assign(
+      {
+        BACKEND_HTTPS: this.useHttps == null || this.useHttps,
+        BACKEND_PORT: this.backendPort,
+        EXTENSION_PORT: this.extensionPort,
+        EXTENSION_UNRESPONSIVE: this.opts.startExtension === 'unresponsive'
+      },
+      process.env,
+      this.opts.env
+    )
+  });
+  this.extension.on('message', message => {
+    this.messagesFromExtension.push(message);
+  });
+  return this.waitUntilExtensionIsUp();
+};
 
 AbstractServerlessControl.prototype.waitUntilBackendIsUp = function waitUntilBackendIsUp() {
   return this.waitUntilProcessIsUp('backend mock', this.messagesFromBackend, 'backend: started');
+};
+
+AbstractServerlessControl.prototype.waitUntilExtensionIsUp = function waitUntilBackendIsUp() {
+  return this.waitUntilProcessIsUp('extension mock', this.messagesFromExtension, 'extension: started');
 };
 
 AbstractServerlessControl.prototype.waitUntilDownstreamDummyIsUp = function waitUntilDownstreamDummyIsUp() {
@@ -210,6 +241,7 @@ AbstractServerlessControl.prototype.kill = function kill() {
     [
       //
       this.killBackend(),
+      this.killExtension(),
       this.killDownstreamDummy(),
       this.killMonitoredProcess(),
       this.killProxy()
@@ -219,6 +251,9 @@ AbstractServerlessControl.prototype.kill = function kill() {
 
 AbstractServerlessControl.prototype.killBackend = function killBackend() {
   return this.killChildProcess(this.backend);
+};
+AbstractServerlessControl.prototype.killExtension = function killExtension() {
+  return this.killChildProcess(this.extension);
 };
 
 AbstractServerlessControl.prototype.killDownstreamDummy = function killDownstreamDummy() {

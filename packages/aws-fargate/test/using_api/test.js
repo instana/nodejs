@@ -64,7 +64,7 @@ describe('Using the API', function () {
     expect(response).to.be.an('object');
     expect(response.message).to.equal('Hello Fargate!');
     expect(response.logs).to.deep.equal({
-      debug: ['Sending data to Instana (/metrics).'],
+      debug: ['Sending data to Instana (/metrics).', 'Sent data to Instana (/metrics).'],
       info: [],
       warn: [
         'INSTANA_DISABLE_CA_CHECK is set, which means that the server certificate will not be verified against the ' +

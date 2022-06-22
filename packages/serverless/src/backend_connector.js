@@ -183,6 +183,7 @@ function send(resourcePath, payload, finalLambdaRequest, callback) {
   let req;
   const skipWaitingForHttpResponse = !proxyAgent && !useLambdaExtension;
   const transport = getTransport();
+
   if (skipWaitingForHttpResponse) {
     // If the Lambda extension is not available to act as a proxy between the Lambda and serverless-acceptor (and
     // additionally, if no user-configured proxy is in place), we change the HTTP handling a bit to reduce the time
@@ -223,6 +224,14 @@ function send(resourcePath, payload, finalLambdaRequest, callback) {
   req.on('timeout', () => onTimeout(req, resourcePath, payload, finalLambdaRequest, callback));
 
   req.on('error', e => {
+    // CASE: we manually destroy streams, skip these errors
+    // Otherwise we will produce `Error: socket hang up` errors in the logs
+    // We already print the warning that a timeout happened
+    // https://nodejs.org/api/http.html#requestdestroyed
+    if (req.destroyed) {
+      return;
+    }
+
     if (useLambdaExtension) {
       // This is a failure from talking to the Lambda extension on localhost. Most probably it is simply not available
       // because @instana/aws-lambda has been installed as a normal npm dependency instead of using Instana's
@@ -257,6 +266,10 @@ function send(resourcePath, payload, finalLambdaRequest, callback) {
       }
       callback(propagateErrorsUpstream ? e : undefined);
     }
+  });
+
+  req.on('finish', () => {
+    logger.debug(`Sent data to Instana (${resourcePath}).`);
   });
 
   if (skipWaitingForHttpResponse) {
