@@ -71,6 +71,9 @@ function init(config, _processIdentityProvider) {
  * @property {string} [crtp] correlation type
  * @property {string} [crid] correlation ID
  * @property {boolean} [sy] synthetic marker
+ * @property {boolean} [pathTplFrozen] pathTplFrozen
+ * @property {boolean} [transmitted] transmitted
+ * @property {boolean} [manualEndMode] manualEndMode
  * @property {*} [stack] stack trace
  * @property {Object.<string, *>} [data]
  * @property {{s?: number, d?: number}} [b] batching information
@@ -80,6 +83,8 @@ function init(config, _processIdentityProvider) {
  * @property {Function} [disableAutoEnd]
  * @property {Function} [transmitManual]
  * @property {Function} [cancel]
+ * @property {Function} [addCleanup]
+ * @property {Function} [cleanup]
  */
 
 class InstanaSpan {
@@ -351,7 +356,7 @@ function setCurrentSpan(span) {
 /**
  * Get the currently active span.
  * @param {boolean} [fallbackToSharedContext=false]
- * @returns {InstanaSpan}
+ * @returns {InstanaBaseSpan}
  */
 function getCurrentSpan(fallbackToSharedContext = false) {
   return ns.get(currentSpanKey, fallbackToSharedContext);

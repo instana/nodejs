@@ -166,6 +166,43 @@ app.post('/promise/create-intermediate', function createIntermediatePromise(req,
     });
 });
 
+app.post('/callback/create-intermediates', async function createIntermediatesCallback(req, res) {
+  instana.sdk.callback.startIntermediateSpan('intermediate1', async span1 => {
+    await delay(200);
+
+    instana.sdk.callback.startIntermediateSpan('intermediate2', async span2 => {
+      await delay(400);
+
+      instana.sdk.callback.completeIntermediateSpan(null, { success: true }, span2);
+    });
+
+    await delay(200);
+    instana.sdk.callback.completeIntermediateSpan(null, { success: true }, span1);
+  });
+
+  await delay(200);
+  res.status(200).send();
+});
+
+app.post('/promise/create-intermediates', async function createIntermediatesCallback(req, res) {
+  (async () => {
+    const span1 = await instana.sdk.async.startIntermediateSpan('intermediate1');
+    await delay(200);
+
+    (async () => {
+      const span2 = await instana.sdk.async.startIntermediateSpan('intermediate2');
+      await delay(400);
+      instana.sdk.async.completeIntermediateSpan(null, { success: true }, span2);
+    })();
+
+    await delay(200);
+    instana.sdk.async.completeIntermediateSpan(null, { success: true }, span1);
+  })();
+
+  await delay(200);
+  res.status(200).send();
+});
+
 function afterCreateIntermediate(instanaSdk, file, encoding, res) {
   fs.readFile(file, encoding, (err, content) => {
     if (err) {
