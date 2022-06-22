@@ -231,6 +231,41 @@ mochaSuiteFn('tracing/sdk', function () {
               );
             }));
 
+        it('must create overlapping parent and child spans', () =>
+          controls
+            .sendRequest({
+              method: 'POST',
+              path: `/${apiType}/create-overlapping-intermediates`
+            })
+            .then(response => {
+              expect(response).does.not.exist;
+
+              return retry(() =>
+                agentControls.getSpans().then(spans => {
+                  const httpEntry = expectHttpEntry({
+                    spans,
+                    path: `/${apiType}/create-overlapping-intermediates`
+                  });
+
+                  const intermediateSpan1 = expectCustomFsIntermediate({
+                    spans,
+                    parentEntry: httpEntry,
+                    pid: controls.getPid(),
+                    sdkName: 'intermediate1',
+                    duration: 400
+                  });
+
+                  expectCustomFsIntermediate({
+                    spans,
+                    parentEntry: intermediateSpan1,
+                    pid: controls.getPid(),
+                    sdkName: 'intermediate2',
+                    duration: 400
+                  });
+                })
+              );
+            }));
+
         it('must create an exit span', () =>
           controls
             .sendRequest({
@@ -616,15 +651,17 @@ mochaSuiteFn('tracing/sdk', function () {
     ]);
   }
 
-  function expectCustomFsIntermediate({ spans, parentEntry, pid, path, error }) {
+  function expectCustomFsIntermediate({ spans, parentEntry, pid, path, error, sdkName, functionName, duration }) {
     return expectCustomFsSpan({
       spans,
       kind: 'INTERMEDIATE',
-      functionName: /^createIntermediate/,
+      functionName,
       parentEntry,
       pid,
       path,
-      error
+      error,
+      sdkName,
+      duration
     });
   }
 
@@ -632,7 +669,7 @@ mochaSuiteFn('tracing/sdk', function () {
     return expectCustomFsSpan({ spans, kind: 'EXIT', functionName: /^createExit/, parentEntry, pid, path, error });
   }
 
-  function expectCustomFsSpan({ spans, kind, functionName, parentEntry, pid, path, error }) {
+  function expectCustomFsSpan({ spans, kind, functionName, parentEntry, pid, path, error, sdkName, duration }) {
     return expectExactlyOneMatching(spans, span => {
       expect(span.t).to.equal(parentEntry.t);
       expect(span.p).to.equal(parentEntry.s);
@@ -640,25 +677,45 @@ mochaSuiteFn('tracing/sdk', function () {
       expect(span.k).to.equal(constants[kind]);
       expect(span.f.e).to.equal(String(pid));
       expect(span.f.h).to.equal('agent-stub-uuid');
+
       expect(span.async).to.not.exist;
       // eslint-disable-next-line no-unneeded-ternary
       expect(span.error).to.not.exist;
       expect(span.ec).to.equal(error ? 1 : 0);
       expect(span.data.sdk).to.exist;
-      expect(span.data.sdk.name).to.equal(kind === 'INTERMEDIATE' ? 'intermediate-file-access' : 'file-access');
+
+      if (sdkName) {
+        expect(span.data.sdk.name).to.equal(sdkName);
+      } else {
+        expect(span.data.sdk.name).to.equal(kind === 'INTERMEDIATE' ? 'intermediate-file-access' : 'file-access');
+      }
+
       expect(span.data.sdk.type).to.equal(constants.SDK[kind]);
-      expect(span.stack[0].c).to.match(/test\/tracing\/sdk\/app.js$/);
-      expect(span.stack[0].m).to.match(functionName);
+
+      if (functionName) {
+        expect(span.stack[0].c).to.match(/test\/tracing\/sdk\/app.js$/);
+        expect(span.stack[0].m).to.match(functionName);
+      }
+
       expect(span.data.sdk.custom).to.exist;
       expect(span.data.sdk.custom.tags).to.exist;
-      expect(span.data.sdk.custom.tags.path).to.match(path);
-      expect(span.data.sdk.custom.tags.encoding).to.equal('UTF-8');
+
+      if (path) {
+        expect(span.data.sdk.custom.tags.path).to.match(path);
+        expect(span.data.sdk.custom.tags.encoding).to.equal('UTF-8');
+      }
+
       expect(span.crid).to.not.exist;
       expect(span.crtp).to.not.exist;
+
       if (error) {
         expect(span.data.sdk.custom.tags.error.indexOf('ENOENT: no such file or directory')).to.equal(0);
       } else {
         expect(span.data.sdk.custom.tags.success).to.be.true;
+      }
+
+      if (duration) {
+        expect(span.d).to.be.closeTo(duration, 20);
       }
     });
   }
