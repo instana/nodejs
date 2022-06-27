@@ -15,7 +15,22 @@ const RUNTIME_PATH = '/var/runtime';
 const SPLIT_AT_DOT_REGEX = /^([^.]*)\.(.*)$/;
 const TWO_DOTS = '..';
 
-const lambdaRuntimeErrors = require(`${RUNTIME_PATH}/Errors.js`);
+class HandlerNotFound extends Error {}
+class MalformedHandlerName extends Error {}
+class UserCodeSyntaxError extends Error {}
+class ImportModuleError extends Error {}
+
+let lambdaRuntimeErrors = {
+  HandlerNotFound,
+  MalformedHandlerName,
+  UserCodeSyntaxError,
+  ImportModuleError
+};
+
+// NOTE: Lambda v16 removed the ability to require `Error.js`
+if (Number(process.versions.node.split('.')[0]) < 16) {
+  lambdaRuntimeErrors = require(`${RUNTIME_PATH}/Errors.js`);
+}
 
 let wrappedHandler;
 
