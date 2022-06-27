@@ -27,7 +27,7 @@ let lambdaRuntimeErrors = {
   ImportModuleError
 };
 
-// NOTE: Lambda v16 removed the ability to required `Error.js`
+// NOTE: Lambda v16 removed the ability to require `Error.js`
 if (Number(process.versions.node.split('.')[0]) < 16) {
   lambdaRuntimeErrors = require(`${RUNTIME_PATH}/Errors.js`);
 }
