@@ -261,7 +261,7 @@ if [[ -z $SKIP_AWS_PUBLISH_LAYER ]]; then
         --license-info $LICENSE \
         --zip-file fileb://$ZIP_NAME \
         --output json \
-        --compatible-runtimes nodejs10.x nodejs12.x nodejs14.x \
+        --compatible-runtimes nodejs10.x nodejs12.x nodejs14.x nodejs16.x \
         | jq '.Version' \
     )
     echo "   + published version $lambda_layer_version to region $region"
