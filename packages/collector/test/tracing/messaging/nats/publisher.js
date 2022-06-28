@@ -7,6 +7,7 @@
 
 const agentPort = process.env.INSTANA_AGENT_PORT;
 
+require('./mockVersion');
 require('../../../..')();
 
 const request = require('request-promise');
@@ -15,51 +16,115 @@ const NATS = require('nats');
 
 const app = express();
 const port = require('../../../test_util/app-port')();
-const nats = NATS.connect();
+const connectionError = process.env.CONNECT_ERROR === 'true';
+const IS_LATEST = process.env.NATS_VERSION === 'latest';
+
+let sc;
+let nats;
+
 let connected = false;
-
+let connectionErrorMsg;
 let mostRecentEmittedError = null;
+let headers;
 
-nats.on('connect', () => {
-  connected = true;
+if (IS_LATEST) {
+  sc = NATS.StringCodec();
+  headers = NATS.headers;
+
+  (async function () {
+    if (connectionError) {
+      try {
+        await NATS.connect({ servers: 'deno.nats.io:4323' });
+      } catch (connErr) {
+        log('Could not connect to nats server.', connErr);
+        connectionErrorMsg = connErr.message;
+      }
+    } else {
+      nats = await NATS.connect();
+      connected = true;
+    }
+  })();
+} else {
+  if (connectionError) {
+    nats = NATS.connect({ servers: ['deno.nats.io:4323'] });
+  } else {
+    nats = NATS.connect();
+  }
+
+  nats.on('connect', () => {
+    connected = true;
+  });
+
   nats.on('error', err => {
     mostRecentEmittedError = err;
+    connectionErrorMsg = err.message;
     log('NATS has emitted an error', err.message);
   });
+}
+
+// We already catch the error for await NATS.connect({ servers: 'deno.nats.io:4323' });
+// but the application still shuts down, which we do not want.
+process.on('uncaughtException', e => {
+  log('Catched uncaught', e);
 });
 
 app.get('/', (req, res) => {
   if (connected) {
     res.send('OK');
   } else {
-    res.status(500).send('Not ready yet.');
+    res.status(500).send(connectionErrorMsg || 'Not ready yet.');
   }
 });
 
-app.post('/publish', (req, res) => {
+app.post('/publish', async (req, res) => {
   const withCallback = req.query.withCallback;
   const withReply = req.query.withReply;
   const withError = req.query.withError;
   const isSubscribeTest = req.query.subscribeTest;
+  const noHeaders = req.query.noHeaders === 'true';
+  const subscribeSubject = req.query.subscribeSubject;
   let subject;
-  if (isSubscribeTest) {
+
+  if (isSubscribeTest && !subscribeSubject) {
     subject = 'subscribe-test-subject';
   } else if (withError) {
     // try to publish without a subject to cause an error
     subject = null;
-  } else {
+  } else if (!subscribeSubject) {
     subject = 'publish-test-subject';
+  } else {
+    subject = subscribeSubject;
   }
-  const message = withError && isSubscribeTest ? 'trigger an error' : "It's nuts, ain't it?!";
+
+  let message = withError && isSubscribeTest ? 'trigger an error' : "It's nuts, ain't it?!";
+
+  if (IS_LATEST) {
+    message = sc.encode(message);
+  }
 
   const args = [subject, message];
 
   if (withReply) {
-    args.push('test-reply');
+    if (IS_LATEST) {
+      args.push({
+        reply: 'test-reply'
+      });
+    } else {
+      args.push('test-reply');
+    }
   } else if (withError) {
     // Try to publish a message without a subject to trigger an error here in the publisher.
     args.push(null);
   }
+
+  if (IS_LATEST && !noHeaders) {
+    const h = headers();
+    h.append('id', '123456');
+    h.append('unix_time', Date.now().toString());
+
+    args.push({ headers: h });
+  }
+
   if (withCallback) {
     args.push(err => {
       afterPublish(res, err);
@@ -84,6 +149,7 @@ function afterPublish(res, err, msg) {
     err = mostRecentEmittedError;
     mostRecentEmittedError = null;
   }
+
   request(`http://127.0.0.1:${agentPort}`)
     .then(() => {
       // nats has a bug that makes the callback called twice in some situations
@@ -103,21 +169,46 @@ function afterPublish(res, err, msg) {
     });
 }
 
-app.post('/request', (req, res) => {
+app.post('/request', async (req, res) => {
   const withError = req.query.withError;
   const requestOne = req.query.requestOne;
+
   const requestCallback = reply => {
     afterPublish(res, null, reply);
   };
 
-  const natsPublishMethod = requestOne ? nats.request.bind(nats) : nats.requestOne.bind(nats);
+  const natsPublishMethod =
+    requestOne && process.env.NATS_VERSION === 'v1' ? nats.requestOne.bind(nats) : nats.request.bind(nats);
 
   if (withError) {
     try {
       // try to publish without a subject to cause an error
-      natsPublishMethod(null, 'awaiting reply', requestCallback);
+      if (IS_LATEST) {
+        await nats.request(null, sc.encode('awaiting reply nats2'));
+        afterPublish(res, null);
+      } else {
+        natsPublishMethod(null, 'awaiting reply', requestCallback);
+      }
     } catch (e) {
       afterPublish(res, e);
+    }
+
+    return;
+  }
+
+  if (IS_LATEST) {
+    if (!requestOne) {
+      // the client will create a normal subscription for receiving the response to
+      // a generated inbox subject before the request is published
+      await nats
+        .request('publish-test-subject', sc.encode('awaiting reply'), { reply: 'test', noMux: true })
+        .then(m => {
+          afterPublish(res, null, sc.decode(m.data), true);
+        });
+    } else {
+      await nats.request('publish-test-subject', sc.encode('awaiting reply'), { noMux: false }).then(m => {
+        afterPublish(res, null, sc.decode(m.data), true);
+      });
     }
   } else {
     natsPublishMethod('publish-test-subject', 'awaiting reply', requestCallback);

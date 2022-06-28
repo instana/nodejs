@@ -326,10 +326,10 @@ zookeeper: &zookeeper
   - image: wurstmeister/zookeeper:latest
 
 nats: &nats
-  - image: nats:2.0.2-linux
+  - image: nats:2.9.14-linux
 
 nats-streaming: &nats-streaming
-  - image: nats-streaming:0.15.1-linux
+  - image: nats-streaming:0.25.3-linux
     command: -p 4223 -m 8223
 
 memcached: &memcached

@@ -523,7 +523,6 @@ function skipExitTracing(
   const parentSpan = getCurrentSpan();
   const suppressed = tracingSuppressed();
   const isExitSpanResult = isExitSpan(parentSpan);
-
   if (!options.skipParentSpanCheck && (!parentSpan || isExitSpanResult)) {
     if (options.log) {
       logger.warn(
@@ -543,7 +542,6 @@ function skipExitTracing(
   const skipIsActive = options.isActive === false;
   const skipIsTracing = !options.skipIsTracing ? !isTracing() : false;
   const skip = skipIsActive || skipIsTracing || suppressed;
-
   if (options.extendedResponse) return { skip, suppressed, isExitSpan: isExitSpanResult };
   else return skip;
 }
