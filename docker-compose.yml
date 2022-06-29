@@ -6,7 +6,7 @@ services:
       - 6379:6379
 
   mongo:
-    image: mongo
+    image: mongo:4.1.13
     ports:
       - 27017:27017
 
