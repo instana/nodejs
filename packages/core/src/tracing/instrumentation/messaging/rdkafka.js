@@ -12,12 +12,6 @@ const constants = require('../../constants');
 const cls = require('../../cls');
 const shimmer = require('shimmer');
 const { getFunctionArguments } = require('../../../util/function_arguments');
-
-let logger;
-logger = require('../../../logger').getLogger('tracing/rdkafka', newLogger => {
-  logger = newLogger;
-});
-
 let traceCorrelationEnabled = constants.kafkaTraceCorrelationDefault;
 let headerFormat = constants.kafkaHeaderFormatDefault;
 overrideKafkaHeaderFormat();
@@ -133,7 +127,6 @@ function shimConsumerStreamEmit(originalEmit) {
     const originalArgs = getFunctionArguments(arguments);
 
     if (!isActive) {
-      logger.debug('Will not instrument');
       return originalEmit.apply(this, originalArgs);
     }
 
@@ -145,7 +138,6 @@ function instrumentedProduce(ctx, originalProduce, originalArgs) {
   const message = originalArgs[2];
 
   if (!message) {
-    logger.debug('Will not instrument');
     return originalProduce.apply(this, originalArgs);
   }
 
