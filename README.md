@@ -43,5 +43,5 @@ The documentation for Instana's Node.js support is available on [Node.js page](h
 Here are a few more quick links:
 
 * [Installation](https://www.ibm.com/docs/de/obi/current?topic=nodejs-collector-installation)
-* [Native Addons: Profiling, Garbage Collection and Event Loop Information](https://www.ibm.com/docs/de/obi/current?topic=nodejs-collector-installation#native-addons)
+* [Native Addons: Profiling, Garbage Collection and Event Loop Information](https://www.ibm.com/docs/de/obi/current?topic=nodejs-collector-installation#native-add-ons)
 * [API](https://www.ibm.com/docs/de/obi/current?topic=nodejs-instana-api).
