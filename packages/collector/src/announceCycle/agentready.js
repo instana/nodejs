@@ -47,9 +47,10 @@ if (agentOpts.autoProfile) {
   } catch (e) {
     logger.info(
       'Could not load @instana/autoprofile. You will not get profiling information for this Node.js app in Instana, ' +
-        'although autoprofiling has been enabled. This typically occurs when native addons could not be installed ' +
-        'during module installation (npm install/yarn). See the instructions to learn more about the requirements of ' +
-        'the collector: ' +
+        'although autoprofiling has been enabled. This typically occurs when native addons could not be built ' +
+        'during module installation (npm install/yarn) or when npm install --no-optional or yarn --ignore-optional ' +
+        'have been used to install dependencies. See the instructions to learn more about the requirements of the ' +
+        'collector: ' +
         'https://www.ibm.com/docs/de/obi/current?topic=nodejs-collector-installation#native-addons'
     );
     fireMonitoringEvent();

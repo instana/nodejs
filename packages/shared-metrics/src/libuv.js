@@ -18,10 +18,10 @@ const nativeModuleLoader = require('./util/nativeModuleRetry')({
   nativeModuleName: 'event-loop-stats',
   moduleRoot: path.join(__dirname, '..'),
   message:
-    'Could not load event-loop-stats. You will only see limited event loop information in ' +
-    'Instana for this application. This typically occurs when native addons could not be ' +
-    'installed during module installation (npm install). See the instructions to learn more ' +
-    'about the requirements of the collector: ' +
+    'Could not load event-loop-stats. You will only see limited event loop information in Instana for this ' +
+    'application. This typically occurs when native addons could not be built during module installation ' +
+    '(npm install/yarn) or when npm install --no-optional or yarn --ignore-optional have been used to install ' +
+    'dependencies. See the instructions to learn more about the requirements of the collector: ' +
     'https://www.ibm.com/docs/de/obi/current?topic=nodejs-collector-installation#native-addons'
 });
 
