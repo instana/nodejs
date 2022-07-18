@@ -453,8 +453,6 @@ app.get('/prepare-execute-fetch-async', (req, res) => {
       try {
         result.fetchAll(...args);
       } catch (fetchAllErr) {
-        // TODO: there is a bug in c++ lib
-        // https://github.com/ibmdb/node-ibm_db/issues/846
         result.closeSync();
         res.status(error ? 200 : 500).send({ data: {} });
       }
