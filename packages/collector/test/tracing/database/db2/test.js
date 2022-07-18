@@ -602,9 +602,7 @@ mochaSuiteFn('tracing/db2', function () {
         );
     });
 
-    // TODO: wait for ibm resp
-    //       https://github.com/ibmdb/node-ibm_db/issues/846
-    it.skip('[withError] prepare, execute, fetchAll', function () {
+    it('[withError] prepare, execute, fetchAll', function () {
       return controls
         .sendRequest({
           method: 'GET',
@@ -614,7 +612,8 @@ mochaSuiteFn('tracing/db2', function () {
         .then(() =>
           testUtils.retry(() =>
             verifySpans(agentControls, controls, {
-              expectNoDb2Span: true
+              stmt: `SELECT * FROM ${TABLE_NAME_1}`,
+              error: 'TypeError: ODBCResult::FetchAll(): 1 or 2 arguments are required'
             })
           )
         );
@@ -768,7 +767,7 @@ mochaSuiteFn('tracing/db2', function () {
           testUtils.retry(() =>
             verifySpans(agentControls, controls, {
               stmt: `SELECT * FROM ${TABLE_NAME_1}`,
-              error: 'TypeError: ODBCResult::Fetch(): 1 or 2 arguments are required'
+              error: 'TypeError: Cannot read properties of null (reading'
             })
           )
         );
