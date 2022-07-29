@@ -5,6 +5,8 @@
 'use strict';
 
 const expect = require('chai').expect;
+const semver = require('semver');
+
 const { supportedVersion, constants } = require('@instana/core').tracing;
 const testUtils = require('../../../../../core/test/test_util');
 const config = require('../../../../../core/test/config');
@@ -758,6 +760,12 @@ mochaSuiteFn('tracing/db2', function () {
     });
 
     it('[with fetch and error] must trace prepare execute mixed 1', function () {
+      let expectedError = 'TypeError: Cannot read properties of null (reading';
+      if (semver.lt(process.versions.node, '16.0.0')) {
+        // For Node.js 14 and earlier, the error message is slightly different.
+        expectedError = "TypeError: Cannot read property 'fetchMode' of null";
+      }
+
       return controls
         .sendRequest({
           method: 'GET',
@@ -767,7 +775,7 @@ mochaSuiteFn('tracing/db2', function () {
           testUtils.retry(() =>
             verifySpans(agentControls, controls, {
               stmt: `SELECT * FROM ${TABLE_NAME_1}`,
-              error: 'TypeError: Cannot read properties of null (reading'
+              error: expectedError
             })
           )
         );

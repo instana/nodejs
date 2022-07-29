@@ -208,10 +208,10 @@ function captureFetchError(result, span) {
 
         try {
           return originalFn.apply(this, arguments);
-        } catch (catchedErr) {
+        } catch (caughtErr) {
           span.ec = 1;
-          span.data.db2.error = tracingUtil.getErrorDetails(catchedErr);
-          throw catchedErr;
+          span.data.db2.error = tracingUtil.getErrorDetails(caughtErr);
+          throw caughtErr;
         }
       };
     }
