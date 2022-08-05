@@ -16,7 +16,7 @@ const AbstractServerlessControl = require('../../serverless/test/util/AbstractSe
 
 function Control(opts) {
   AbstractServerlessControl.call(this, opts);
-  // With `startExtension` you can start the extension on a different port
+  // With `startExtension` you can start the extension stub on a different port.
   // parallel to the backend stub.
   if (this.opts.startExtension) {
     this.extensionPort = 7365;
@@ -29,6 +29,7 @@ function Control(opts) {
   this.useHttps = !this.opts.startExtension;
   const protocol = this.useHttps ? 'https' : 'http';
   this.backendBaseUrl = this.opts.backendBaseUrl || `${protocol}://localhost:${this.backendPort}/serverless`;
+  this.extensionBaseUrl = `http://localhost:${this.extensionPort}`;
   this.downstreamDummyPort = this.opts.downstreamDummyPort || 3456;
   this.downstreamDummyUrl = this.opts.downstreamDummyUrl || `http://localhost:${this.downstreamDummyPort}`;
   this.proxyPort = this.opts.proxyPort || 3128;

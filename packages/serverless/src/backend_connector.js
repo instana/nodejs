@@ -89,6 +89,10 @@ exports.init = function init(
   }
 
   requestHasFailed = false;
+
+  if (useLambdaExtension) {
+    executeLambdaExtensionPreflightRequest();
+  }
 };
 
 exports.setLogger = function setLogger(_logger) {
@@ -106,6 +110,65 @@ exports.sendMetrics = function sendMetrics(metrics, callback) {
 exports.sendSpans = function sendSpans(spans, callback) {
   send('/traces', spans, false, callback);
 };
+
+function executeLambdaExtensionPreflightRequest() {
+  logger.debug('Executing preflight request to Lambda extension.');
+  const req = uninstrumented.http.request(
+    {
+      hostname: layerExtensionHostname,
+      port: layerExtensionPort,
+      path: '/preflight',
+      method: 'POST',
+      // This sets a timeout for establishing the socket connection, see setTimeout below for a timeout for an
+      // idle connection after the socket has been opened.
+      timeout: layerExtensionTimeout
+    },
+    res => {
+      if (res.statusCode === 200) {
+        logger.debug('The Instana Lambda extension preflight request has succeeded.');
+      } else {
+        handlePreflightError(
+          new Error(
+            `The Instana Lambda extension preflight request has returned an unexpected status code: ${res.statusCode}`
+          )
+        );
+      }
+    }
+  );
+
+  function handlePreflightError(e) {
+    // Make sure we do not try to talk to the Lambda extension again.
+    useLambdaExtension = false;
+    logger.debug(
+      'The Instana Lambda extension preflight request did not succeed. Falling back to talking to the Instana back ' +
+        'end directly.',
+      e
+    );
+  }
+
+  req.on('error', e => {
+    // req.destroyed indicates that we have run into a timeout and have already handled the timeout error.
+    if (req.destroyed) {
+      return;
+    }
+    handlePreflightError(e);
+  });
+
+  // Handle timeouts that occur after connecting to the socket (no response from the extension).
+  req.setTimeout(layerExtensionTimeout, () => {
+    handlePreflightError(new Error('The Lambda extension preflight request timed out.'));
+    // Destroy timed out request manually as mandated in https://nodejs.org/api/http.html#event-timeout.
+    if (req && !req.destroyed) {
+      try {
+        req.destroy();
+      } catch (e) {
+        // ignore
+      }
+    }
+  });
+
+  req.end();
+}
 
 function getTransport() {
   if (useLambdaExtension) {

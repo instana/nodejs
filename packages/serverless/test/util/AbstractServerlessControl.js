@@ -142,6 +142,7 @@ AbstractServerlessControl.prototype.startBackendAndWaitForIt = function startBac
   });
   return this.waitUntilBackendIsUp();
 };
+
 AbstractServerlessControl.prototype.startExtensionAndWaitForIt = function startExtensionAndWaitForIt() {
   this.extensionHasBeenStarted = true;
   this.extension = fork(path.join(__dirname, '../extension_stub'), {
@@ -151,7 +152,10 @@ AbstractServerlessControl.prototype.startExtensionAndWaitForIt = function startE
         BACKEND_HTTPS: this.useHttps == null || this.useHttps,
         BACKEND_PORT: this.backendPort,
         EXTENSION_PORT: this.extensionPort,
-        EXTENSION_UNRESPONSIVE: this.opts.startExtension === 'unresponsive'
+        EXTENSION_UNRESPONSIVE: this.opts.startExtension === 'unresponsive',
+        EXTENSION_PREFFLIGHT_RESPONSIVE_BUT_UNRESPONSIVE_LATER: this.opts.startExtension === 'unresponsive-later',
+        PREFLIGHT_REQUEST_RESPONDS_WITH_UNEXPECTED_STATUS_CODE:
+          this.opts.startExtension === 'unexpected-preflight-response'
       },
       process.env,
       this.opts.env
@@ -291,6 +295,10 @@ AbstractServerlessControl.prototype.getSpans = function getSpans() {
   return this._getFromBackend('/received/spans');
 };
 
+AbstractServerlessControl.prototype.getSpansFromExtension = function getSpansFromExtension() {
+  return this._getFromExtension('/received/spans');
+};
+
 AbstractServerlessControl.prototype.getMetrics = function getMetrics() {
   return this._getFromBackend('/received/metrics');
 };
@@ -349,6 +357,29 @@ AbstractServerlessControl.prototype.setResponsive = function setResponsive(respo
       method: 'POST',
       url: `${this.backendBaseUrl}/responsive?responsive=${responsive}`,
       strictSSL: false
+    });
+  } else {
+    return Promise.resolve([]);
+  }
+};
+
+AbstractServerlessControl.prototype._getFromExtension = function _getFromExtension(url) {
+  if (this.extensionHasBeenStarted) {
+    return request({
+      method: 'GET',
+      url: `${this.extensionBaseUrl}${url}`,
+      json: true
+    });
+  } else {
+    return Promise.resolve([]);
+  }
+};
+
+AbstractServerlessControl.prototype.resetExtension = function resetExtension() {
+  if (this.extensionHasBeenStarted) {
+    return request({
+      method: 'DELETE',
+      url: `${this.extensionBaseUrl}/received`
     });
   } else {
     return Promise.resolve([]);
