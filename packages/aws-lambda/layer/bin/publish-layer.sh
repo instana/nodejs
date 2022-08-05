@@ -203,6 +203,13 @@ if [[ $BUILD_LAYER_WITH == local ]]; then
 
   echo "Building local tar.gz for @instana/aws-lambda."
   cd ../aws-lambda
+  if [[ -n $REBUILD_LAMBDA_EXTENSION ]]; then
+    echo "Rebuilding Lambda extension from local sources for @instana/aws-lambda."
+    pushd ../../../lambda-extension > /dev/null
+    make build
+    popd > /dev/null
+    cp ../../../lambda-extension/_build/extensions/instana-lambda-extension layer/include/instana-lambda-extension
+  fi
   npm --loglevel=warn pack
   mv instana-aws-lambda-*.tgz $LAYER_WORKDIR/instana-aws-lambda.tgz
 

@@ -660,22 +660,6 @@ function registerTests(handlerDefinitionPath) {
         .then(() => verifyAfterRunningHandler(control, { error: false, expectMetrics: true, expectSpans: true })));
   });
 
-  describe('when the extension is used but not available', function () {
-    // In this test, backend_connector will try to use the Lambda extension first and then fall back to sending data
-    // directly to the back end.
-    const control = prelude.bind(this)({
-      handlerDefinitionPath,
-      startBackend: true,
-      useExtension: true,
-      startExtension: false,
-      instanaEndpointUrl: backendBaseUrl,
-      instanaAgentKey
-    });
-
-    it('must deliver metrics and spans to the extension', () =>
-      verify(control, { error: false, expectMetrics: true, expectSpans: true }));
-  });
-
   describe('when the extension is used and available', function () {
     // This starts the backend stub on the extension port, simulating that the Lambda extension is available. The case
     // that the Lambda extension is _not_ available is tested in "when the extension is used but not available"
@@ -688,7 +672,30 @@ function registerTests(handlerDefinitionPath) {
       instanaAgentKey
     });
 
-    it('must deliver metrics and spans to the extension', () =>
+    it('must deliver metrics and spans to the extension', async () => {
+      await verify(control, { error: false, expectMetrics: true, expectSpans: true });
+
+      // With an working and responsive Lambda extension, we expect
+      // * the preflight request succeed, and the
+      // * data being sent via the extension (instead of being sent to the back end directly).
+      const spansFromExtension = await control.getSpansFromExtension();
+      expect(spansFromExtension).to.have.length(2);
+    });
+  });
+
+  describe('when the extension is used but not available', function () {
+    // In this test, backend_connector will make the preflight request to the Lambda extension, which will be
+    // unsuccessful, then it will fall back to sending data directly to the back end.
+    const control = prelude.bind(this)({
+      handlerDefinitionPath,
+      startBackend: true,
+      useExtension: true,
+      startExtension: false,
+      instanaEndpointUrl: backendBaseUrl,
+      instanaAgentKey
+    });
+
+    it('must deliver metrics and spans directly to the back end', () =>
       verify(control, { error: false, expectMetrics: true, expectSpans: true }));
   });
 
@@ -702,8 +709,58 @@ function registerTests(handlerDefinitionPath) {
       instanaAgentKey
     });
 
-    it('must deliver metrics and spans to the extension', () =>
-      verify(control, { error: false, expectMetrics: true, expectSpans: true }));
+    it('must deliver metrics and spans directly to the back end', async () => {
+      await verify(control, { error: false, expectMetrics: true, expectSpans: true });
+
+      // With an unresponsive Lambda extension, we expect
+      // * the preflight request to the extension to time out, and the
+      // * data being sent directly to the back end.
+      const spansFromExtension = await control.getSpansFromExtension();
+      expect(spansFromExtension).to.have.length(0);
+    });
+  });
+
+  describe('when the extension is used and the preflight request responds with an unexpected status code', function () {
+    const control = prelude.bind(this)({
+      handlerDefinitionPath,
+      startExtension: 'unexpected-preflight-response',
+      startBackend: true,
+      useExtension: true,
+      instanaEndpointUrl: backendBaseUrl,
+      instanaAgentKey
+    });
+
+    it('must deliver metrics and spans directly to the back end', async () => {
+      await verify(control, { error: false, expectMetrics: true, expectSpans: true });
+
+      // With Lambda extension preflight request failing, we expect
+      // * the preflight request to the extension to time out, and the
+      // * data being sent directly to the back end.
+      const spansFromExtension = await control.getSpansFromExtension();
+      expect(spansFromExtension).to.have.length(0);
+    });
+  });
+
+  // eslint-disable-next-line max-len
+  describe('when the extension is used, the preflight request succeeds, but the extension becomes unresponsive later', function () {
+    const control = prelude.bind(this)({
+      handlerDefinitionPath,
+      startExtension: 'unresponsive-later',
+      startBackend: true,
+      useExtension: true,
+      instanaEndpointUrl: backendBaseUrl,
+      instanaAgentKey
+    });
+
+    it('must deliver metrics and spans directly to the back end', async () => {
+      await verify(control, { error: false, expectMetrics: true, expectSpans: true });
+
+      // With the preflight request succeeding but the extension becoming unresponsive later, the outcome basically
+      // depends on whether we store the spans in the extenion stub when it is simulating unresponsiveness or not.
+      // Currently we do that, so we expect 2 spans.
+      const spansFromExtension = await control.getSpansFromExtension();
+      expect(spansFromExtension).to.have.length(2);
+    });
   });
 
   describe('when the extension is used, but is unresponsive and BE throws ECONNREFUSED', function () {
