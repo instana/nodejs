@@ -202,8 +202,11 @@ const bucketRoutes = [
           {
             action: 'delete',
             condition: {
-              age: 365
+              age: 1
             }
+          },
+          {
+            append: false
           }
         ]
       }
