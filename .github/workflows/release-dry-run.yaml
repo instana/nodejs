@@ -1,0 +1,25 @@
+# This github action automatically executes a dry run of publishing a release when we merge to the main branch.
+name: auto-release-dry-run
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  publish-release:
+    runs-on: ubuntu-latest
+    name: Execute a dry-run of publishing a new release to the npm registry.
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+           node-version: '18'
+
+      - run: npm install
+
+      - run: npx lerna version --no-git-tag-version --no-push --yes
+
+      - run: git status
+      - run: git --no-pager diff --cached
+      - run: git --no-pager diff
+

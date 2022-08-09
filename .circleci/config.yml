@@ -411,7 +411,7 @@ workflows:
     jobs:
       - "node-18"
       - "node-16"
-  sidejobs:
+  legacy-nodejs-versions:
     triggers:
       - schedule:
           cron: "0 2 * * *"

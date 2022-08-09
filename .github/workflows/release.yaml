@@ -1,31 +1,61 @@
-# This github action automatically publishes a release when we merge to the main branch.
-# THIS IS CURRENTLY A POC. It does not yet actually publish a release, but merely performs a dry run.
-name: auto-release
+# This github action publishes a release on-demand. It can be triggered manually. Before actually publishing a release,
+# it will check whether there are successful CircleCI builds for the commit that is to be released.
+name: release-on-demand
+
+# Use https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#onworkflow_dispatchinputs
+# to allow an override for the CircleCI check?
+
 on:
-  push:
-    branches:
-      - main
+  workflow_dispatch:
+    inputs:
+      dryRun:
+        description: 'Dry Run'
+        required: false
+        default: false
+        type: choice
+        options:
+        - false
+        - true
+      skipCiStatusCheck:
+        description: 'Skip CI status check'
+        required: false
+        default: false
+        type: choice
+        options:
+        - false
+        - true
 
 jobs:
   publish-release:
+    name: Release the main branch as a new version to the npm registry.
     runs-on: ubuntu-latest
-    name: Publish a new release to the npm registry.
+    env:
+      CIRCLE_TOKEN: ${{ secrets.CIRCLE_TOKEN }}
+      NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+      DRY_RUN: ${{ inputs.dryRun }}
+      SKIP_CI_STATUS_CHECK: ${{ inputs.skipCiStatusCheck }}
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v2
         with:
-           node-version: '16'
+           node-version: '18'
+
+      - run: |
+          if [[ $SKIP_CI_STATUS_CHECK != true ]]; then
+            .github/workflows/check-circle-ci-status.js
+          fi
 
       - run: npm install
 
-      # TODO (later) Once we actually want to publish we also need to provide an automation token, see
-      # - https://github.blog/changelog/2020-10-02-npm-automation-tokens/ and
-      # - https://docs.npmjs.com/creating-and-viewing-access-tokens
-      # TODO (later) Remove --no-git-tag-version and --no-push and use lerna publish instead of lerna version
-      - run: npx lerna version --no-git-tag-version --no-push --yes
-
-      # TODO (later) remove this?
-      - run: git status
-      - run: git --no-pager diff --cached
-      - run: git --no-pager diff
+      - run: |
+          set -x
+          if [[ $DRY_RUN = true ]]; then
+            npx lerna version --no-git-tag-version --no-push --yes
+            git status
+            git --no-pager diff --cached
+            git --no-pager diff
+          else
+            npx lerna publish --yes
+            git log -p -n1
+          fi
 
