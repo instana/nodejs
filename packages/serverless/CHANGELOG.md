@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [2.6.1](https://github.com/instana/nodejs/compare/v2.6.0...v2.6.1) (2022-08-09)
+
+
+### Bug Fixes
+
+* **lambda:** increase socket and HTTP timeout for Lambda extension ([7a07a8b](https://github.com/instana/nodejs/commit/7a07a8b1f596cf611bb8a144316b1432a688e1eb))
+
+
+
+
+
 # [2.6.0](https://github.com/instana/nodejs/compare/v2.5.0...v2.6.0) (2022-06-28)
 
 **Note:** Version bump only for package @instana/serverless
