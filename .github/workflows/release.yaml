@@ -9,7 +9,7 @@ on:
   workflow_dispatch:
     inputs:
       dryRun:
-        description: 'Dry Run'
+        description: "Dry Run"
         required: false
         default: false
         type: choice
@@ -17,7 +17,7 @@ on:
         - false
         - true
       skipCiStatusCheck:
-        description: 'Skip CI status check'
+        description: "Skip CI status check"
         required: false
         default: false
         type: choice
@@ -38,16 +38,18 @@ jobs:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v2
         with:
-           node-version: '18'
+           node-version: "18"
 
-      - run: |
+      - name: Check CircleCI status
+        run: |
           if [[ $SKIP_CI_STATUS_CHECK != true ]]; then
             .github/workflows/check-circle-ci-status.js
           fi
 
       - run: npm install
 
-      - run: |
+      - name: Execute lerna
+        run: |
           set -x
           if [[ $DRY_RUN = true ]]; then
             npx lerna version --no-git-tag-version --no-push --yes
@@ -58,4 +60,74 @@ jobs:
             npx lerna publish --yes
             git log -p -n1
           fi
+
+      - name: Send success message
+        if: "${{ success() }}"
+        uses: slackapi/slack-github-action@v1.21.0
+        with:
+          channel-id: ${{ secrets.SLACK_CHANNEL_ID }}
+          payload: |
+            {
+              "text": ":mega: :package: New package versions have been released successfully! :star-struck: :tada:",
+              "attachments": [{
+                "color": "good",
+                "fields": [
+                  {
+                    "title": "Commit URL",
+                    "value": "<${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }}>"
+                  },
+                  {
+                    "title": "Action URL",
+                    "value": "<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}>"
+                  },
+                  {
+                    "title": "Dry Run?",
+                    "value": "${{ env.DRY_RUN }}",
+                    "short": true
+                  },
+                  {
+                    "title": "Skip CircleCI check?",
+                    "value": "${{ env.SKIP_CI_STATUS_CHECK }}",
+                    "short": true
+                  }
+                ]
+              }]
+            }
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+
+      - name: Send failure message
+        if: "${{ failure() }}"
+        uses: slackapi/slack-github-action@v1.21.0
+        with:
+          channel-id: ${{ secrets.SLACK_CHANNEL_ID }}
+          payload: |
+            {
+              "text": ":boom: :scream: Releasing new package versions has failed! :scream_cat: :sob:",
+              "attachments": [{
+                "color": "danger",
+                "fields": [
+                  {
+                    "title": "Commit URL",
+                    "value": "<${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }}>"
+                  },
+                  {
+                    "title": "Action URL",
+                    "value": "<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}>"
+                  },
+                  {
+                    "title": "Dry Run?",
+                    "value": "${{ env.DRY_RUN }}",
+                    "short": true
+                  },
+                  {
+                    "title": "Skip CircleCI check?",
+                    "value": "${{ env.SKIP_CI_STATUS_CHECK }}",
+                    "short": true
+                  }
+                ]
+              }]
+            }
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
 
