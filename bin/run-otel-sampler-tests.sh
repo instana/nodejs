@@ -7,4 +7,3 @@
 set -eo pipefail
 
 lerna exec "npm run test:debug" --scope=@instana/opentelemetry-sampler
-

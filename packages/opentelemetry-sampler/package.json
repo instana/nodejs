@@ -55,7 +55,7 @@
     "@opentelemetry/api": "1.1.0"
   },
   "devDependencies": {
-    "@instana/core": "2.6.0",
+    "@instana/core": "2.6.1",
     "@opentelemetry/auto-instrumentations-node": "0.31.0",
     "@opentelemetry/exporter-trace-otlp-http": "^0.30.0",
     "@opentelemetry/instrumentation": "0.30.0",
