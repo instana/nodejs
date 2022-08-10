@@ -91,9 +91,7 @@ npm run refresh-package-lock-files
 
 Note: The intent of the procedure above is satisfy security scanners (`npm audit`, Dependabot etc.). `package-lock.json` files are never included when publishing to the npm registry. Thy are only relevant when you execute an `npm install` in _this repository_. Users of `@instana` npm packages will have their own `package-lock.json` or `yarn.lock` file for their application, those are completely independent from the `package-lock.json` files in this repository. Thus, they need to take care of updating their transitive dependencies themselves. We only can make sure that the version ranges we use for our direct dependencies allow to install a dependency tree that has no known vulnerabilities.
 
-## Release Process
-
-### When Adding A New Package
+## Adding A New Package
 
 Reminder for all new packages: Check if `.circleci/config.yml` has `save_cache`/`restore_cache` entries for the new package.
 
@@ -169,7 +167,10 @@ Later on, the original package-lock.json is restored when `git checkout package-
 
 #### IMPORTANT: Set Publishing Access For The New Package
 
-Visit https://www.npmjs.com/package/@instana/${package-name}/access and set publishing access to "Require two-factor authentication or automation tokens".
+Visit https://www.npmjs.com/package/@instana/${package-name}/access and set publishing ac
+cess to "Require two-factor authentication or automation tokens".
+
+## Release Process
 
 ### Publishing A New Release
 
@@ -185,7 +186,8 @@ The process to publish a new minor or patch release (that is, new versions of al
 The Github action will try to publish new versions for all packages from the most recent commit of the `main` branch. It will check if there is at least one successful CircleCI build for that commit hash for the main `build` workflow as well as for the `legacy-nodejs-versions` workflow. If that check fails, the Github action will abort. Otherwise it will go on to publish new releases to npm accordingly.
 
 Parameters for the release Github action:
-* "Dry Run": With this option set to true, the Github action will not actually create a release but only apply all changes (package.json and package-lock.json files, CHANGELOG files). The action log will show the resulting diff at the end. The changes will not be committed. This can be used to preview the changes the release action would apply.
+* "Use lerna publish from-package": Instead of executing `lerna publish`, the action will execute `lerna publish from-package`. See [below](#separate-lerna-version-and-lerna-publish) for the use case for this parameter. If in doubt, leave it unchanged (that is, `false`).
+* "Dry Run": With this option set to true, the Github action will not actually create a release but only apply all changes (package.json and package-lock.json files, CHANGELOG files). The action log will show the resulting diff at the end. The changes will not be committed. This can be used to preview the changes the release action would apply. If this option is `true`, the option "Use lerna publish from-package" has no effect.
 * "Skip CI status check": With this option set to true, the Github action will skip the preliminary check for successful CircleCI builds. This option should only be used for test purposes together with "Dry Run", or if actual lives depend on us publishing a release _right now_, without waiting for CircleCI.
 
 Lerna will determine if this is going to be a minor or patch version from the commit comments of all commits since the last release. It will also automatically update the CHANGELOG.md files in the root of the repository and also in all individual packages, based on those commits.
@@ -198,16 +200,13 @@ For each release, we also publishing a new Lambda layer, a Fargate Docker image 
 
 It is possible to execute the git parts of a release (version bump and tagging) and the npm part (publishing to the npm registry) separately. This can be used to rectify a situation when the `lerna publish` step the [Github release action](#publishing-a-new-release) did not go through successfully and has only completed the git actions but not the npm publish.
 
-- Optionally, run `lerna version` to bump all versions and create a git tag. You can skip this step if it has already happened for the release you want to publish.
+- Run `lerna version` to bump all versions and create a git tag.
+    - You can skip this step if it has already happened for the release you want to publish. If not, the step is mandatory.
     - Lerna will determine if this is going to be a major, minor or patch version from the commit comments of all commits since the last release. It will also update all relevant changelog files.
     - Lerna will push the commit and the tag created by `lerna version` to GitHub. Check that this has happened. Also check that the version numbers in package-lock.json have been updated as well.
-- Ensure you are logged in with npm in your shell (`npm whoami`)
-- Acquire an OTP token for 2fa.
-- Run `NPM_CONFIG_OTP={your token} lerna publish from-package && lerna bootstrap`
+- Run the Github action `release-on-demand` with the parameter `Use lerna publish from-package` set to `true`.
 
-That last command (`lerna publish from-package`) can also be run if the previous publish command went through for a subset of packages but not for others. Lerna will automatically figure out for which packages the latest version is not present in the registry and only publish those.
-
-Be aware that if `lerna version` or `lerna publish` abort with an error in the middle of doing things, you might end up with local changes in the `package.json` files. Lerna adds some metadata there just before trying to publish. These changes can simply be discarded with `git checkout packages` before trying to publish again.
+This will execute `lerna publish from-package`. This can also be used if the previous execution of the release Github action went through for a subset of packages but not for others. Lerna will automatically figure out for which packages the latest version is not present in the registry and only publish those.
 
 #### Rate Limited OTP
 
@@ -217,7 +216,7 @@ If publishing the packages fails with an error like this:
 lerna ERR! E429 Could not authenticate ${npm-user-name}: rate limited otp
 ```
 
-you will need to wait five minutes before trying again. In case some packages have already been published and others have not, refer the advice about `lerna publish from-package` in the previous section.
+you will need to wait five minutes before trying again. In case some packages have already been published and others have not, use the option "Use lerna publish from-package" as explained in the [previous section](#separate-lerna-version-and-lerna-publish).
 
 #### Publishing A Pre-Release
 

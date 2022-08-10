@@ -2,12 +2,17 @@
 # it will check whether there are successful CircleCI builds for the commit that is to be released.
 name: release-on-demand
 
-# Use https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#onworkflow_dispatchinputs
-# to allow an override for the CircleCI check?
-
 on:
   workflow_dispatch:
     inputs:
+      fromPackage:
+        description: "Use \"lerna publish from-package\""
+        required: false
+        default: false
+        type: choice
+        options:
+        - false
+        - true
       dryRun:
         description: "Dry Run"
         required: false
@@ -32,6 +37,7 @@ jobs:
     env:
       CIRCLE_TOKEN: ${{ secrets.CIRCLE_TOKEN }}
       NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+      FROM_PACKAGE: ${{ inputs.fromPackage }}
       DRY_RUN: ${{ inputs.dryRun }}
       SKIP_CI_STATUS_CHECK: ${{ inputs.skipCiStatusCheck }}
     steps:
@@ -56,6 +62,8 @@ jobs:
             git status
             git --no-pager diff --cached
             git --no-pager diff
+          elif [[ $FROM_PACKAGE = true ]]; then
+            npx lerna publish --yes from-package
           else
             npx lerna publish --yes
             git log -p -n1
