@@ -54,6 +54,11 @@ jobs:
 
       - run: npm install
 
+      # This is required to make sure that new packages (@instana packages that we publish for the first time) can be
+      # published to the npm registry. The default visibility for scoped packages is private, but our npm account
+      # (free plan) does not allow private packages (and we actually want those packages to be public).
+      - run: npm config set access public
+
       - name: Execute lerna
         run: |
           set -x
