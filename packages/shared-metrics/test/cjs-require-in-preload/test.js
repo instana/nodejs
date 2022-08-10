@@ -28,11 +28,6 @@ describe('cjs require collector in preload phase', function () {
   ProcessControls.setUpHooks(controls);
 
   it('should be able to find package.json', async () => {
-    await controls.sendRequest({
-      method: 'GET',
-      path: '/metrics'
-    });
-
     await testUtils.retry(() =>
       controls.agentControls.getAllMetrics(controls.getPid()).then(metrics => {
         const name = findMetric(metrics, ['name']);
