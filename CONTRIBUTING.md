@@ -191,9 +191,11 @@ If you want to locally review the changes that lerna is about to apply (for exam
 
 For each release, we also publishing a new Lambda layer, a Fargate Docker image layer and a Google Cloud Run image layer. This happens automatically via [CI](https://ci.instana.io/teams/nodejs/pipelines/serverless-in-process-collectors:main).
 
+The Github action will send a Slack notification to the channel of team Node.js. Additionally, you can enable notifications for actions for your account at <https://github.com/settings/notifications> (in the section titled "Actions"). But enabling that might also get you notifications for other repositories you contribute to.
+
 #### Separate lerna version And lerna publish
 
-It is possible to execute the git parts of a release (version bump and tagging) and the npm part (publishing to the npm registry) separately. This can be used to rectify a situation when the `lerna publish` step the [Github release action](#publishing-a-new-release) did not go through successfully and has only completed the git actions but not the npm publish.
+It is possible to execute the git parts of a release (version bump and tagging) and the npm part (publishing to the npm registry) separately. This can be used to rectify a situation when the `lerna publish` step of the [Github release action](#publishing-a-new-release) did not go through successfully and has only completed the git actions but not the npm publish, or only published a subset of the packages successfully.
 
 - Run `lerna version` to bump all versions and create a git tag.
     - You can skip this step if it has already happened for the release you want to publish. If not, the step is mandatory.
