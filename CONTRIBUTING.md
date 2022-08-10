@@ -93,18 +93,13 @@ Note: The intent of the procedure above is satisfy security scanners (`npm audit
 
 ## Adding A New Package
 
+When adding a new package to this monorepo, there are a few things to consider.
+
+### CircleCI Caching
+
 Reminder for all new packages: Check if `.circleci/config.yml` has `save_cache`/`restore_cache` entries for the new package.
 
-When adding a new _scoped_ package (that is, `@instana/something` in contrast to `instana-something`), it needs to be configured to have public access, because scoped packages are private by default. Thus the publish would fail with something like `npm ERR! You must sign up for private packages: @instana/something`. To prevent this, you can configure the access level beforehand globablly:
-
-* Run `npm config list` and check if the global section (e.g. `/Users/$yourname/.npmrc`) contains `access = "public"`.
-* If not, run `npm config set access public` and check again.
-* Following that, all packages can be published as usual (see below).
-* See also: https://github.com/lerna/lerna/issues/1821.
-* Many roads lead to rome, you can also set the access level on a package level instead of globally. Or you can issue `lerna version` separately and then publish only the new package directly via `npm` from within its directory with `NPM_CONFIG_OTP={your token} npm publish --access public` before publishing all the remaining package from the root directory with `NPM_CONFIG_OTP={your token} lerna publish from-package && lerna bootstrap`. This is also the way to remedy a situation where some of the packages have been published and some have not been published because you forgot to take care of the new package beforehand and the aforementioned error stopped the `lerna publish` in the middle. See [here](#separate-lerna-version-and-lerna-publish).
-* Add the relevant npm scripts to the `package.json` (see details below).
-
-#### Package.json
+### Package.json
 
 For all new packages, make sure that a handful of npm scripts are part of package.json.
 These scripts can be used by lerna, specially during CI builds:
@@ -133,7 +128,11 @@ This also means, of course, that you will need to add the corresponding librarie
 >
 > Additionally, the corresponding `bin/prepare-audit.sh` (see more info below) must be created in the root of the new package, and the sibling packages must be marked to be
 
-#### Lerna and `npm audit`
+### Set Publishing Access For The New Package
+
+After the package has been published to the npm registry for the first time, visit https://www.npmjs.com/package/@instana/${package-name}/access and set publishing access to "Require two-factor authentication or automation tokens".
+
+### Lerna and `npm audit`
 
 The Node.js tracer is structured in a monorepo.
 That's how we manage to publish multiple packages in the `@instana/package` fashion, and for that we use [lerna](https://www.npmjs.com/package/lerna).
@@ -165,10 +164,6 @@ addToPackageLock package-lock.json @instana/serverless false
 
 Later on, the original package-lock.json is restored when `git checkout package-lock.json;` is run from the `audit` npm script that you added before (see the package.json section above)
 
-#### IMPORTANT: Set Publishing Access For The New Package
-
-Visit https://www.npmjs.com/package/@instana/${package-name}/access and set publishing ac
-cess to "Require two-factor authentication or automation tokens".
 
 ## Release Process
 
