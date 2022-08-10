@@ -61,7 +61,7 @@
     "@opentelemetry/instrumentation": "0.30.0",
     "@opentelemetry/instrumentation-http": "0.30.0",
     "@opentelemetry/node": "0.24.0",
-    "@opentelemetry/propagator-instana": "file:../../../opentelemetry-js-contrib/propagators/opentelemetry-propagator-instana/opentelemetry-propagator-instana-1.0.0.tgz",
+    "@opentelemetry/propagator-instana": "0.2.0",
     "@opentelemetry/resources": "1.4.0",
     "@opentelemetry/sdk-node": "0.30.0",
     "@opentelemetry/sdk-trace-base": "1.4.0",
