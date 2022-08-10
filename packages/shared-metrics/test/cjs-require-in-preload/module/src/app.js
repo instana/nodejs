@@ -7,7 +7,7 @@
 const express = require('express');
 const port = process.env.APP_PORT || 44004;
 const app = express();
-const logPrefix = `CJS Preload: (${process.pid}):\t`;
+const logPrefix = `CJS preload collector: (${process.pid}):\t`;
 
 app.get('/', (req, res) => {
   res.send('OK');
