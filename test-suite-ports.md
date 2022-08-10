@@ -14,5 +14,6 @@ For this reason, we maintain an overview of the ports used by the integration te
 | google-cloud-run     | app under test: 4216, mock back end: 9444, downstream dummy: 4568, metadata endpoint mock: 1605, proxy: N.A. (no proxy tests) |
 | metrics-util         | N.A. (no integration tests, only unit tests) |
 | serverless           | N.A. (no integration tests, only unit tests) |
-| shared-metrics       | app under test: 7215, mock agent: 7211 |
+| shared-metrics         | app under test: 7215, mock agent: 7211 |
 | opentelemetry-exporter | app under test: 6215, mock back end: 10443 |
+| opentelemetry-sampler  | app under test: 8215, mock back end: 10455 |

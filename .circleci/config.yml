@@ -78,6 +78,9 @@ shared: &shared
           - v{{ .Environment.CACHE_VERSION }}-opentelemetry-exporter-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "packages/opentelemetry-exporter/package-lock.json" }}
     - restore_cache:
         keys:
+          - v{{ .Environment.CACHE_VERSION }}-opentelemetry-sampler-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "packages/opentelemetry-sampler/package-lock.json" }}
+    - restore_cache:
+        keys:
           - v{{ .Environment.CACHE_VERSION }}-misc-test-durations-{{ .Environment.CIRCLE_JOB }}-{{ checksum "misc/test-durations/package-lock.json" }}
 
     # We do not use npm ci (short for clean install) because it removes the existing node_modules folder. But we want to
@@ -139,6 +142,10 @@ shared: &shared
         paths:
           - packages/opentelemetry-exporter/node_modules
         key: v{{ .Environment.CACHE_VERSION }}-opentelemetry-exporter-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "packages/opentelemetry-exporter/package-lock.json" }}
+    - save_cache:
+        paths:
+          - packages/opentelemetry-sampler/node_modules
+        key: v{{ .Environment.CACHE_VERSION }}-opentelemetry-sampler-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "packages/opentelemetry-sampler/package-lock.json" }}
     - save_cache:
         paths:
           - misc/test-durations/node_modules
