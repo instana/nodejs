@@ -20,7 +20,7 @@ exports.payloadPrefix = 'name';
 // @ts-ignore
 exports.currentPayload = undefined;
 
-exports.MAX_ATTEMPTS = 10;
+exports.MAX_ATTEMPTS = 60;
 exports.DELAY = 1000;
 let attempts = 0;
 
