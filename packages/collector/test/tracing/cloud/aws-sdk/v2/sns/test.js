@@ -24,7 +24,7 @@ const {
 } = require('@instana/core/test/test_util/common_verifications');
 const { promisifyNonSequentialCases } = require('../promisify_non_sequential');
 
-const topicAndQueueName = `team-nodejs-${semver.major(process.versions.node)}-${uuid()}`;
+const topicAndQueueName = `nodejs-team-${semver.major(process.versions.node)}-${uuid()}`;
 const topicArn = `arn:aws:sns:us-east-2:410797082306:${topicAndQueueName}`;
 const sqsQueueUrl = `https://sqs.us-east-2.amazonaws.com/410797082306/${topicAndQueueName}`;
 
