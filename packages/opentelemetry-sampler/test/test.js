@@ -34,7 +34,7 @@ mochaSuiteFn('Instana OpenTelemetry Sampler', function () {
       otelAppPath: './test/app',
       env: {
         INSTANA_DISABLE_CA_CHECK: 'true',
-        PORT: 6215,
+        PORT: 8215,
         INSTANA_ENDPOINT_URL: `https://localhost:${backendPort}/`,
         INSTANA_AGENT_KEY: 'some key'
       }
@@ -68,7 +68,7 @@ mochaSuiteFn('Instana OpenTelemetry Sampler', function () {
       otelAppPath: './test/app',
       env: {
         INSTANA_DISABLE_CA_CHECK: 'true',
-        PORT: 6215,
+        PORT: 8215,
         INSTANA_ENDPOINT_URL: `https://localhost:${backendPort}/`,
         INSTANA_AGENT_KEY: 'some key',
         OTEL_EXPORTER_OTLP_ENDPOINT: exporterEndpoint,
@@ -106,7 +106,7 @@ mochaSuiteFn('Instana OpenTelemetry Sampler', function () {
       otelAppPath: './test/app',
       env: {
         INSTANA_DISABLE_CA_CHECK: 'true',
-        PORT: 6215,
+        PORT: 8215,
         INSTANA_ENDPOINT_URL: `https://localhost:${backendPort}/`,
         INSTANA_AGENT_KEY: 'some key',
         OTEL_EXPORTER_OTLP_ENDPOINT: exporterEndpoint,
@@ -139,7 +139,7 @@ mochaSuiteFn('Instana OpenTelemetry Sampler', function () {
       otelAppPath: './test/app',
       env: {
         INSTANA_DISABLE_CA_CHECK: 'true',
-        PORT: 6215,
+        PORT: 8215,
         INSTANA_ENDPOINT_URL: `https://localhost:${backendPort}/`,
         INSTANA_AGENT_KEY: 'some key'
       }
