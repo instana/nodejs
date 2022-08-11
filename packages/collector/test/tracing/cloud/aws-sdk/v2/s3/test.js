@@ -23,7 +23,7 @@ const {
 } = require('@instana/core/test/test_util/common_verifications');
 const { promisifyNonSequentialCases } = require('../promisify_non_sequential');
 
-let bucketName = 'nodejs-bucket';
+let bucketName = 'nodejs-team';
 
 if (process.env.AWS_S3_BUCKET_NAME) {
   bucketName = `${process.env.AWS_S3_BUCKET_NAME}${semver.major(process.versions.node)}-${uuid()}`;

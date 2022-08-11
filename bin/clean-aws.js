@@ -6,18 +6,21 @@
 
 'use strict';
 
+const yargs = require('yargs/yargs');
+const { hideBin } = require('yargs/helpers');
 const aws = require('aws-sdk');
 const region = { region: 'us-east-2' };
 const sqs = new aws.SQS(region);
 const dynamoDb = new aws.DynamoDB(region);
 const s3 = new aws.S3(region);
+const sns = new aws.SNS(region);
 const kinesis = new aws.Kinesis(region);
 
 const dynamoDbInfo = {
   api: dynamoDb,
   listFunction: 'listTables',
   listProperty: 'TableNames',
-  criteria: 'nodejs-table-',
+  criteria: 'nodejs-team-',
   limit: 50,
   attributesFunction: 'describeTable',
   getAttributesParams(item) {
@@ -45,7 +48,7 @@ const s3Info = {
   listProperty: 'Buckets',
   itemAttribute: 'Name', // if item is not a string but an object, we can do item[itemAttribute]
   itemDateAttribute: 'CreationDate', // if the item object already has a date value, so we use this instead
-  criteria: 'nodejs-bucket-',
+  criteria: 'nodejs-team-',
   attributesFunction: 'describeTable',
   getAttributesParams(item) {
     return { TableName: item };
@@ -123,8 +126,7 @@ const sqsInfo = {
   api: sqs,
   listFunction: 'listQueues',
   listProperty: 'QueueUrls',
-  criteria: 'https://sqs.us-east-2.amazonaws.com/410797082306/team-node',
-  // criteria: 'https://sqs.us-east-2.amazonaws.com/410797082306/team-node-ci-test-queue',
+  criteria: 'https://sqs.us-east-2.amazonaws.com/410797082306/nodejs-team-',
   attributesFunction: 'getQueueAttributes',
   getAttributesParams(item) {
     return { QueueUrl: item, AttributeNames: ['LastModifiedTimestamp'] };
@@ -147,22 +149,60 @@ const sqsInfo = {
   }
 };
 
-async function getTeamNodeAWSItems(apiInfo) {
+const snsInfo = {
+  api: sns,
+  listFunction: 'listTopics',
+  listProperty: 'Topics',
+  itemAttribute: 'TopicArn',
+  criteria: 'arn:aws:sns:us-east-2:410797082306:nodejs-team-',
+  attributesFunction: 'getTopicAttributes',
+  getAttributesParams(item) {
+    return item;
+  },
+  itemName: 'TopicArn',
+  getReturnedAttributes(item) {
+    // SNS topics do not have a creation date or launch date
+    return {
+      TopicArn: item.TopicArn,
+      ts: Date.now()
+    };
+  },
+  deleteFunction: 'deleteTopic',
+  preConditionPromise: () => Promise.resolve(),
+  getDeleteAttributes(itemName) {
+    return {
+      TopicArn: itemName
+    };
+  }
+};
+
+async function getTeamNodeAWSItems(apiInfo, skipDateCheck, criteria) {
   // eg: s3.listBuckets()
   const rawItems = await apiInfo.api[apiInfo.listFunction]().promise();
 
   const filteredItems = rawItems[apiInfo.listProperty].filter(item => {
     const _item = item[apiInfo.itemAttribute] || item;
-    return _item.indexOf(apiInfo.criteria) === 0;
+    return _item.indexOf(criteria || apiInfo.criteria) === 0;
   });
+
+  const date = new Date();
+  date.setHours(date.getHours() - 3);
 
   if (apiInfo.itemDateAttribute) {
     const _items = filteredItems.map(item => {
       return apiInfo.getReturnedAttributes(item);
     });
 
-    const yesterday = Date.now() - 24 * 3600 * 1000;
-    const itemsToDelete = _items.filter(item => item.ts < yesterday).map(item => item[apiInfo.itemName]);
+    let itemsToDelete = _items;
+    // only remove items which are older than 3h
+    if (!skipDateCheck) {
+      itemsToDelete = _items.filter(item => item.ts < date.getTime());
+    }
+
+    itemsToDelete = itemsToDelete.map(item => {
+      return { name: item[apiInfo.itemName], ts: new Date(item.ts) };
+    });
+
     return Promise.resolve(itemsToDelete);
   } else {
     // no creation date, so we search each filtered item to get the creation date
@@ -175,34 +215,46 @@ async function getTeamNodeAWSItems(apiInfo) {
         });
     });
 
-    // filter results which creation date is older than today
+    // filter results which creation date is older than 3h
     return Promise.all(promises).then(items2 => {
-      const yesterday = Date.now() - 24 * 3600 * 1000;
-      return items2.filter(item => item.ts < yesterday).map(item => item[apiInfo.itemName]);
+      if (!skipDateCheck) {
+        items2 = items2.filter(item => item.ts < date.getTime());
+      }
+
+      return items2.map(item => {
+        return {
+          name: item[apiInfo.itemName],
+          ts: new Date(item.ts)
+        };
+      });
     });
   }
 }
 
-function cleanupOldItems(apiInfo, applyChanges = false) {
-  return getTeamNodeAWSItems(apiInfo)
+function cleanupOldItems(apiInfo, dryRun, skipDateCheck, criteria) {
+  return getTeamNodeAWSItems(apiInfo, skipDateCheck, criteria)
     .then(items => {
       if (items.length > 0) {
-        if (applyChanges) {
+        if (!dryRun) {
           if (apiInfo.limit && items.length > apiInfo.limit) {
             console.log(
-              `There are ${items.length} items eligible for deletion but the AWS service in question is limited to delete ${apiInfo.limit} at once. I am going to delete ${apiInfo.limit} right now. Run the script again to delete more.`
+              `There are ${items.length} items eligible for deletion but the AWS` +
+                `service in question is limited to delete ${apiInfo.limit} at once.` +
+                `I am going to delete ${apiInfo.limit} right now. Run the script again to delete more.`
             );
+
             // arbitrarily delete all item after position apiInfo.limit
             items.splice(apiInfo.limit);
           }
 
-          const promises = items.map(itemName => {
-            return apiInfo.preConditionPromise(itemName).then(() => {
-              return apiInfo.api[apiInfo.deleteFunction](apiInfo.getDeleteAttributes(itemName)).promise();
+          const promises = items.map(item => {
+            return apiInfo.preConditionPromise(item.name).then(() => {
+              return apiInfo.api[apiInfo.deleteFunction](apiInfo.getDeleteAttributes(item.name)).promise();
             });
           });
+
           Promise.all(promises)
-            .then(data => {
+            .then(() => {
               console.log(`${items.length} items have been deleted:`, items);
             })
             .catch(err => {
@@ -213,7 +265,7 @@ function cleanupOldItems(apiInfo, applyChanges = false) {
           console.log(`[DRY RUN] Would have deleted ${items.length} items:`, items);
         }
       } else {
-        console.log('No items to delete');
+        console.log(`${dryRun ? '[DRY RUN]' : ''} No items to delete`);
       }
     })
     .catch(err => {
@@ -225,19 +277,40 @@ const argsOptions = {
   s3: s3Info,
   dynamodb: dynamoDbInfo,
   sqs: sqsInfo,
-  kinesis: kinesisInfo
+  kinesis: kinesisInfo,
+  sns: snsInfo
 };
 
-const optionsArray = Object.keys(argsOptions);
-const args = process.argv.slice(2).map(arg => arg.toLocaleLowerCase());
+/**
+ * Usage
+ *
+ * bin/clean-aws.js --help
+ * bin/clean-aws.js --dry=true
+ */
+const argv = yargs(hideBin(process.argv))
+  .option('service', {
+    alias: 's',
+    type: 'string',
+    default: 's3',
+    description: 's3, sqs, dynamodb, kinesis, sns'
+  })
+  .option('dry', {
+    alias: 'd',
+    default: false,
+    type: 'boolean',
+    description: 'Dry run is on by default.'
+  })
+  .option('skipDateCheck', {
+    alias: 'sd',
+    default: false,
+    type: 'boolean',
+    description: 'The script will only delete data older than 1 day. You can skip this condition.'
+  })
+  .option('criteria', {
+    alias: 'c',
+    type: 'string',
+    description: 'Matching string for the item name.'
+  })
+  .parse();
 
-const awsService = args[0]?.toLowerCase();
-if (!optionsArray.includes(awsService) || args.length === 0) {
-  console.log('****************************************************************************');
-  console.log(`Valid commands are clean-aws.js [${optionsArray.join(' | ')}] [dry=false]`);
-  console.log('eg: ./bin/clean-aws.js s3');
-  console.log('Nothing will be deleted until you provide the `dry=false` option');
-  console.log('****************************************************************************');
-} else {
-  cleanupOldItems(argsOptions[awsService], args[1] === 'dry=false');
-}
+cleanupOldItems(argsOptions[argv.service], argv.dry, argv.skipDateCheck, argv.criteria);

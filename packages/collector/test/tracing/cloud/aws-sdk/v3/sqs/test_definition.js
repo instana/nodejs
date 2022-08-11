@@ -49,7 +49,7 @@ function start(version) {
   mochaSuiteFn(`npm: ${version}`, function () {
     this.timeout(config.getTestTimeout() * 4);
 
-    let queueName = 'team_nodejs';
+    let queueName = 'nodejs-team';
 
     if (process.env.SQS_QUEUE_NAME) {
       queueName = `${process.env.SQS_QUEUE_NAME}-v3-${semver.major(process.versions.node)}-${uuid()}`;

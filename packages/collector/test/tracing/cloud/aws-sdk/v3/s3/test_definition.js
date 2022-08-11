@@ -52,7 +52,7 @@ function start(version) {
   mochaSuiteFn(`npm: ${version}`, function () {
     this.timeout(config.getTestTimeout() * 3);
 
-    let bucketName = 'nodejs-bucket';
+    let bucketName = 'nodejs-team';
 
     if (process.env.AWS_S3_BUCKET_NAME) {
       bucketName = `${process.env.AWS_S3_BUCKET_NAME}v3-${semver.major(process.versions.node)}-${uuid()}`;

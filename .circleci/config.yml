@@ -163,16 +163,15 @@ shared: &shared
     # error.
     - run: npm run lint
 
-      # Clean up old left over AWS resources from earlier test runs (created more more than 24 hours ago):
+    # Clean up old left over AWS resources from earlier test runs (created more more than 3 hours ago):
+    # Do not execute the script on every parallel build
     - run: |
-        ([[ ! $(node -v) =~ ^v16.*$ ]] || \
-          ( \
-            bin/clean-aws.js s3 dry=false && \
-             bin/clean-aws.js dynamodb dry=false && \
-             bin/clean-aws.js sqs dry=false && \
-             bin/clean-aws.js kinesis dry=false \
-          ) \
-        )
+        if [[ $(node -v) =~ ^v16.*$ && $CIRCLE_NODE_INDEX == "0" ]]; then
+          bin/clean-aws.js --service=s3
+          bin/clean-aws.js --service=dynamodb
+          bin/clean-aws.js --service=sqs
+          bin/clean-aws.js --service=kinesis
+        fi
 
     # Run the test suites.
     # (Use ulimit to remove the file size limit on core dump files before running tests.)
