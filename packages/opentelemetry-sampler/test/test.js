@@ -20,7 +20,7 @@ let mochaSuiteFn;
 if (!supportedVersion(process.versions.node)) {
   mochaSuiteFn = describe.skip;
 } else {
-  mochaSuiteFn = describe.only;
+  mochaSuiteFn = describe;
 }
 
 mochaSuiteFn('Instana OpenTelemetry Sampler', function () {
