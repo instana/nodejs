@@ -27,7 +27,7 @@ mochaSuiteFn('Instana OpenTelemetry Sampler', function () {
   this.timeout(getTestTimeout() * 3);
 
   describe('should trace & export into Instana format', function () {
-    const backendPort = 10434;
+    const backendPort = 10455;
     const appControls = new Control({
       backendPort,
       startBackend: true,
@@ -61,7 +61,7 @@ mochaSuiteFn('Instana OpenTelemetry Sampler', function () {
 
   describe('should trace with Otel format', function () {
     const exporterEndpoint = 'http://example.com';
-    const backendPort = 10434;
+    const backendPort = 10455;
     const appControls = new Control({
       backendPort,
       startBackend: true,
@@ -99,7 +99,7 @@ mochaSuiteFn('Instana OpenTelemetry Sampler', function () {
 
   describe('should not trace with Otel format', function () {
     const exporterEndpoint = 'http://example.com';
-    const backendPort = 10434;
+    const backendPort = 10455;
     const appControls = new Control({
       backendPort,
       startBackend: true,
@@ -132,7 +132,7 @@ mochaSuiteFn('Instana OpenTelemetry Sampler', function () {
   });
 
   describe('should not trace', function () {
-    const backendPort = 10434;
+    const backendPort = 10455;
     const appControls = new Control({
       backendPort,
       startBackend: true,
