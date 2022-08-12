@@ -2,7 +2,7 @@
 
 ## Requirements
 
-You should use the Node.js version defined in [.nvmrc](../.nvmrc) (and the `npm` version that comes with that Node.js version) for local development. You might want to install [nvm](https://github.com/nvm-sh/nvm) to manage multiple Node.js versions, but this is optional.
+You should use the Node.js version defined in [.nvmrc](https://github.com/instana/nodejs/blob/main/.nvmrc) (and the `npm` version that comes with that Node.js version) for local development. You might want to install [nvm](https://github.com/nvm-sh/nvm) to manage multiple Node.js versions, but this is optional.
 
 `brew install jq` for OSX (for other systems please look up [here](https://stedolan.github.io/jq/)) is required to run `npm run audit` or `lerna audit run`.
 
