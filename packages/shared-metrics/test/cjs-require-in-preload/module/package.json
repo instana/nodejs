@@ -1,0 +1,7 @@
+{
+  "name": "cjs-example",
+  "version": "1.0.0",
+  "description": "",
+  "main": "src/app.js",
+  "dependencies": {}
+}

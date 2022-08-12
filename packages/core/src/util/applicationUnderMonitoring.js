@@ -30,7 +30,7 @@ function isAppInstalledIntoNodeModules() {
 
 /**
  * Looks for the app's main package.json file, parses it and returns the parsed content. The search is started at
- * path.dirname(process.mainModule.filename).
+ * path.dirname(require.main.filename).
  *
  * In case the search is successful, the result will be cached for consecutive invocations.
  *
@@ -43,7 +43,7 @@ function getMainPackageJsonStartingAtMainModule(cb) {
 
 /**
  * Looks for the app's main package.json file, parses it and returns the parsed content. If the given directory is null
- * or undefined, the search will start at path.dirname(process.mainModule.filename).
+ * or undefined, the search will start at path.dirname(require.main.filename).
  *
  * In case the search is successful, the result will be cached for consecutive invocations.
  *
@@ -83,7 +83,7 @@ function getMainPackageJsonStartingAtDirectory(startDirectory, cb) {
 }
 
 /**
- * Looks for path of the app's main package.json file, starting the search at path.dirname(process.mainModule.filename).
+ * Looks for path of the app's main package.json file, starting the search at path.dirname(require.main.filename).
  *
  * In case the search is successful, the result will be cached for consecutive invocations.
  *
@@ -96,7 +96,7 @@ function getMainPackageJsonPathStartingAtMainModule(cb) {
 
 /**
  * Looks for path of the app's main package.json file, starting the search at the given directory. If the given
- * directory is null or undefined, the search will start at path.dirname(process.mainModule.filename).
+ * directory is null or undefined, the search will start at path.dirname(require.main.filename).
  *
  * In case the search is successful, the result will be cached for consecutive invocations.
  *
@@ -113,18 +113,44 @@ function getMainPackageJsonPathStartingAtDirectory(startDirectory, cb) {
 
   if (!startDirectory) {
     // No explicit starting directory for searching for the main package.json has been provided, use the Node.js
-    // process' main module as the starting point.
-    const mainModule = process.mainModule;
+    // "require.main" module as the starting point.
+
+    // NOTE: "require.main" is undefined when the Instana collector is required inside a
+    // preloaded module using "--require". "process.mainModule" is not, but it is deprecated and should
+    // no longer been used.
+    let mainModule = require.main;
 
     if (!mainModule) {
       // This happens
       // a) when the Node CLI is evaluating an expression, or
-      // b) when the REPL is used, or
-      // c) when we have been pre-required with the --require/-r command line flag
-      // In particular for case (c) we want to try again later. This is handled in the individual metrics that rely on
-      // evaluating the package.json file.
-      return process.nextTick(cb);
+      // b) when the REPL is used
+      // c) when we have been pre-required with the --require/-r command line flag.
+      //
+      // In particular for case (c) we can try again later and wait for the main module to be loaded.
+      // But usually that is not necessary because the initialisation of the collector takes longer than
+      // Node.js having not loaded the main module. Still, it is "ok" to keep the retry mechanismn inside
+      // the individual metrics (e.g. name.js) just for safety.
+      //
+      // But when the application is using ES modules and they require the Instana collector
+      // with "--require file.cjs", neither `require.main` nor the deprecated `process.mainModule`
+      // will have a value, because ES modules use `import.meta` and soon `import.main`.
+      // See https://github.com/nodejs/modules/issues/274
+
+      // eslint-disable-next-line max-len
+      // See https://github.com/nodejs/node/blob/472edc775d683aed2d9ed39ca7cf381f3e7e3ce2/lib/internal/modules/run_main.js#L79
+      // Node.js is using `process.argv[1]` internally as main file path.
+      // Check whether a module was preloaded and use process.argv[1] as filename.
+      // @ts-ignore
+      if (process._preload_modules && process._preload_modules.length > 0) {
+        // @ts-ignore
+        mainModule = {
+          filename: process.argv[1]
+        };
+      } else {
+        return process.nextTick(cb);
+      }
     }
+
     startDirectory = path.dirname(mainModule.filename);
   }
 
@@ -229,7 +255,7 @@ function findNodeModulesFolder(cb) {
     return process.nextTick(cb, null, nodeModulesPath);
   }
 
-  const mainModule = process.mainModule;
+  const mainModule = require.main;
   if (!mainModule) {
     return process.nextTick(cb);
   }
