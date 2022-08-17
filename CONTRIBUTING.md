@@ -95,11 +95,9 @@ Note: The intent of the procedure above is satisfy security scanners (`npm audit
 
 When adding a new package to this monorepo, there are a few things to consider.
 
-### CI Caching
+### CircleCI Caching
 
-Reminder for all new packages:
-* Check if `.circleci/config.yml` has `save_cache`/`restore_cache` entries for the new package.
-* Check if `.github/workflows/release.yaml` has a `cache-dependency-path` entry for the new package.
+Reminder for all new packages: Check if `.circleci/config.yml` has `save_cache`/`restore_cache` entries for the new package.
 
 ### Package.json
 

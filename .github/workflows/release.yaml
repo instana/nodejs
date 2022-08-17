@@ -48,19 +48,7 @@ jobs:
         with:
           node-version: "16"
           cache: 'npm'
-          cache-dependency-path: |
-            package-lock.json
-            packages/autoprofile/package-lock.json
-            packages/aws-fargate/package-lock.json
-            packages/aws-lambda-auto-wrap/package-lock.json
-            packages/aws-lambda/package-lock.json
-            packages/collector/package-lock.json
-            packages/core/package-lock.json
-            packages/google-cloud-run/package-lock.json
-            packages/metrics-util/package-lock.json
-            packages/opentelemetry-exporter/package-lock.json
-            packages/serverless/package-lock.json
-            packages/shared-metrics/package-lock.json
+          cache-dependency-path: '**/package-lock.json'
 
       - name: Check CircleCI status
         run: |
@@ -68,7 +56,7 @@ jobs:
             .github/workflows/check-circle-ci-status.js
           fi
 
-      - run: npm install
+      - run: npm ci
 
       - name: Disallow major releases
         run: .github/workflows/disallow-major-release.sh
@@ -95,9 +83,9 @@ jobs:
             git --no-pager diff --cached
             git --no-pager diff
           elif [[ $FROM_PACKAGE = true ]]; then
-            npx lerna publish --yes from-package
+            npx lerna publish --yes --no-verify-access from-package
           else
-            npx lerna publish --yes
+            npx lerna publish --yes --no-verify-access
             git log -p -n1
           fi
 
