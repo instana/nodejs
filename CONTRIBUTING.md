@@ -130,7 +130,7 @@ This also means, of course, that you will need to add the corresponding librarie
 
 ### Set Publishing Access For The New Package
 
-After the package has been published to the npm registry for the first time, visit https://www.npmjs.com/package/@instana/${package-name}/access and set publishing access to "Require two-factor authentication or automation tokens".
+After the package has been published to the npm registry for the first time, visit https://www.npmjs.com/package/@instana/${package-name}/access and set publishing access to "Require two-factor authentication or automation tokens". (The default setting is "Two-factor authentication is not required".)
 
 ### Lerna and `npm audit`
 
