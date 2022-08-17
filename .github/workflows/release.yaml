@@ -41,10 +41,26 @@ jobs:
       DRY_RUN: ${{ inputs.dryRun }}
       SKIP_CI_STATUS_CHECK: ${{ inputs.skipCiStatusCheck }}
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-node@v2
+      - uses: actions/checkout@v3
         with:
-           node-version: "16"
+          token: ${{ secrets.GH_PAT }}
+      - uses: actions/setup-node@v3
+        with:
+          node-version: "16"
+          cache: 'npm'
+          cache-dependency-path: |
+            package-lock.json
+            packages/autoprofile/package-lock.json
+            packages/aws-fargate/package-lock.json
+            packages/aws-lambda-auto-wrap/package-lock.json
+            packages/aws-lambda/package-lock.json
+            packages/collector/package-lock.json
+            packages/core/package-lock.json
+            packages/google-cloud-run/package-lock.json
+            packages/metrics-util/package-lock.json
+            packages/opentelemetry-exporter/package-lock.json
+            packages/serverless/package-lock.json
+            packages/shared-metrics/package-lock.json
 
       - name: Check CircleCI status
         run: |
@@ -57,10 +73,18 @@ jobs:
       - name: Disallow major releases
         run: .github/workflows/disallow-major-release.sh
 
+      - name: Add token to .npmrc
+        run: echo '//registry.npmjs.org/:_authToken=${NPM_TOKEN}' >> .npmrc
+
       # This is required to make sure that new packages (@instana packages that we publish for the first time) can be
       # published to the npm registry. The default visibility for scoped packages is private, but our npm account
       # (free plan) does not allow private packages (and we actually want those packages to be public).
       - run: npm config set access public
+
+      - name: Configure git name/email
+        run: |
+          git config user.name "IBM/Instana/Team Node.js"
+          git config user.email github-actions@github.com
 
       - name: Execute lerna
         run: |
