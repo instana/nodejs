@@ -1,0 +1,4 @@
+!test/util/dependencies_test_dir_02/node_modules
+!test/util/dependencies_test_dir_02/node_modules/**
+!test/util/dependencies_test_dir_03/node_modules
+!test/util/dependencies_test_dir_03/node_modules/**
