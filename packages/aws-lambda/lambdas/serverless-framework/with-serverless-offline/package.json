@@ -1,0 +1,26 @@
+{
+  "name": "nodejs-team-serverless-with-serverless-offline",
+  "description": "A lambda function built with serverless & serverless offline",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/instana/nodejs.git"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "serverless package",
+    "deploy": "serverless offline",
+    "deploy:nobuild": "serverless offline --package ./.serverless",
+    "invoke": "aws lambda invoke /dev/null --region us-east-2 --endpoint-url http://localhost:3002   --function-name nodejs-team-serverless-2-dev-with-serverless-offline"
+  },
+  "author": "Bastian Krol <bastian.krol@instana.com>",
+  "license": "MIT",
+  "dependencies": {
+    "lodash": "^4.17.15"
+  },
+  "devDependencies": {
+    "serverless": "3.21.0",
+    "serverless-offline": "^9.2.0"
+  }
+}

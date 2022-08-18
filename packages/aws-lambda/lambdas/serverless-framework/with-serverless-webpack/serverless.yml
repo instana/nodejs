@@ -1,0 +1,29 @@
+service: nodejs-team-serverless-3
+
+provider:
+  name: aws
+  runtime: nodejs16.x
+  stage: dev
+  region: us-east-2
+
+plugins:
+  - serverless-webpack
+
+custom:
+  webpack:
+    webpackConfig: ./webpack.config.js
+    includeModules: true    
+
+package:
+  individually: true
+
+functions:
+  with-serverless-webpack:
+    environment:
+      LAMBDA_HANDLER: index.handler
+      INSTANA_ENDPOINT_URL: ${env:INSTANA_ENDPOINT_URL}
+      INSTANA_AGENT_KEY: ${env:INSTANA_AGENT_KEY}
+    layers:
+      - arn:aws:lambda:us-east-2:410797082306:layer:instana-nodejs:110
+    handler: instana-aws-lambda-auto-wrap.handler
+    entrypoint: index.handler
