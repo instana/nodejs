@@ -1,0 +1,6 @@
+!test/metrics/appWithWorkerThread/node_modules
+!test/metrics/appWithWorkerThread/node_modules/**
+!test/metrics/npmInstalledApp/node_modules
+!test/metrics/npmInstalledApp/node_modules/**
+
+test/bin/edgemicroResources/cli/edgemicro
