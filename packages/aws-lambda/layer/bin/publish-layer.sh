@@ -58,6 +58,10 @@ if [[ -z $PACKAGE_VERSION ]]; then
   PACKAGE_VERSION=latest
 fi
 
+if [[ -z $LAMBDA_ARCHITECTURE ]]; then
+  LAMBDA_ARCHITECTURE='x86_64'
+fi
+
 PACKAGE_NAMES="@instana/aws-lambda@$PACKAGE_VERSION instana-aws-lambda-auto-wrap@$PACKAGE_VERSION"
 
 # The default layer name is instana-nodejs. If you want to push experimental changes under a different layer name, you
@@ -79,10 +83,13 @@ fi
 if [[ -z $DOCKER_IMAGE_NAME ]]; then
   if [[ $BUILD_LAYER_WITH == local ]]; then
     DOCKER_IMAGE_NAME=instana-aws-lambda-nodejs-local
+  elif [[ $BUILD_LAYER_WITH == npm ]] && [[ $LAYER_NAME == instana-nodejs ]]; then
+      DOCKER_IMAGE_NAME=$CONTAINER_REGISTRY/instana/aws-lambda-nodejs
   else
-    DOCKER_IMAGE_NAME=$CONTAINER_REGISTRY/instana/aws-lambda-nodejs
+    DOCKER_IMAGE_NAME=$CONTAINER_REGISTRY/instana/aws-lambda-nodejs-experimental
   fi
 fi
+
 if [[ -n $SKIP_DOCKER_IMAGE ]]; then
   # SKIP_DOCKER_IMAGE implies SKIP_DOCKER_IMAGE_PUSH
   SKIP_DOCKER_IMAGE_PUSH=true
@@ -90,6 +97,14 @@ fi
 
 LICENSE=MIT
 ZIP_PREFIX=instana-nodejs-layer
+
+
+if [[ $LAMBDA_ARCHITECTURE == arm64 ]]; then
+  LAYER_NAME=$LAYER_NAME-$LAMBDA_ARCHITECTURE
+  ZIP_PREFIX=$ZIP_PREFIX-$LAMBDA_ARCHITECTURE
+  DOCKER_IMAGE_NAME=$DOCKER_IMAGE_NAME-$LAMBDA_ARCHITECTURE  
+fi
+
 ZIP_NAME=$ZIP_PREFIX.zip
 TMP_ZIP_DIR=tmp
 
@@ -97,18 +112,21 @@ if [[ -z $REGIONS ]]; then
   REGIONS=$'ap-northeast-1\nap-northeast-2\nap-south-1\nap-southeast-1\nap-southeast-2\nca-central-1\neu-central-1\neu-north-1\neu-west-1\neu-west-2\neu-west-3\nsa-east-1\nus-east-1\nus-east-2\nus-west-1\nus-west-2'
 fi
 
-if [[ -z $NO_PROMPT ]]; then
-  while true; do
-      echo "####"
-      echo "LAYER_NAME: $LAYER_NAME"
-      echo "SKIP_DOCKER_IMAGE: $SKIP_DOCKER_IMAGE"
-      echo "DOCKER_IMAGE_NAME: $DOCKER_IMAGE_NAME"
-      echo "REGIONS: $REGIONS"
-      echo "PACKAGE_VERSION: $PACKAGE_VERSION"
-      echo "BUILD_LAYER_WITH: $BUILD_LAYER_WITH"
-      echo "SKIP_AWS_PUBLISH_LAYER: $SKIP_AWS_PUBLISH_LAYER"
-      echo "####"
+echo "####"
+echo "LAYER_NAME: $LAYER_NAME"
+echo "ZIP_NAME: $ZIP_NAME"
+echo "LAMBDA_ARCHITECTURE: $LAMBDA_ARCHITECTURE"
+echo "SKIP_DOCKER_IMAGE: $SKIP_DOCKER_IMAGE"
+echo "SKIP_DOCKER_IMAGE_PUSH: $SKIP_DOCKER_IMAGE_PUSH"
+echo "DOCKER_IMAGE_NAME: $DOCKER_IMAGE_NAME"
+echo "REGIONS: $REGIONS"
+echo "PACKAGE_VERSION: $PACKAGE_VERSION"
+echo "BUILD_LAYER_WITH: $BUILD_LAYER_WITH"
+echo "SKIP_AWS_PUBLISH_LAYER: $SKIP_AWS_PUBLISH_LAYER"
+echo "####"
 
+if [[ -z $NO_PROMPT ]]; then
+  while true; do      
       read -p "Do you wish to continue (yes or no)? " yn
       case $yn in
           [Yy]* ) echo "Let's go!"; break;;
@@ -193,30 +211,36 @@ if [[ $BUILD_LAYER_WITH == local ]]; then
 
   echo "Building local tar.gz for @instana/core."
   cd core
+  rm -rf instana-core-*.tgz
   npm --loglevel=warn pack
   mv instana-core-*.tgz $LAYER_WORKDIR/instana-core.tgz
 
   echo "Building local tar.gz for @instana/serverless."
   cd ../serverless
+  rm -rf instana-serverless-*.tgz
   npm --loglevel=warn pack
   mv instana-serverless-*.tgz $LAYER_WORKDIR/instana-serverless.tgz
 
   echo "Building local tar.gz for @instana/aws-lambda."
   cd ../aws-lambda
+
   if [[ -n $REBUILD_LAMBDA_EXTENSION ]]; then
     echo "Rebuilding Lambda extension from local sources for @instana/aws-lambda."
     pushd ../../../lambda-extension > /dev/null
     make build
     popd > /dev/null
-    cp ../../../lambda-extension/_build/extensions/instana-lambda-extension layer/include/instana-lambda-extension
+    cp ../../../lambda-extension/_build/extensions/$LAMBDA_ARCHITECTURE/instana-lambda-extension layer/include/$LAMBDA_ARCHITECTURE/instana-lambda-extension
   fi
+
+  rm -rf instana-aws-lambda-*.tgz
   npm --loglevel=warn pack
   mv instana-aws-lambda-*.tgz $LAYER_WORKDIR/instana-aws-lambda.tgz
 
   echo "Building local tar.gz for instana-aws-lambda-auto-wrap."
   cd ../aws-lambda-auto-wrap
+  rm -rf instana-aws-lambda-auto-wrap-*.tgz
   npm --loglevel=warn pack
-  mv instana-aws-lambda-auto-wrap*.tgz $LAYER_WORKDIR/instana-aws-lambda-auto-wrap.tgz
+  mv instana-aws-lambda-auto-wrap-*.tgz $LAYER_WORKDIR/instana-aws-lambda-auto-wrap.tgz
 
   popd > /dev/null
 
@@ -247,7 +271,8 @@ cd ..
 
 echo "step 4/9: Add extension to layer"
 mkdir -p extensions
-cp ../include/instana-lambda-extension extensions/
+
+cp ../include/$LAMBDA_ARCHITECTURE/instana-lambda-extension extensions/instana-lambda-extension
 
 echo "step 5/9: creating local zip file with layer contents"
 zip -qr $ZIP_PREFIX .
@@ -268,6 +293,7 @@ if [[ -z $SKIP_AWS_PUBLISH_LAYER ]]; then
         --license-info $LICENSE \
         --zip-file fileb://$ZIP_NAME \
         --output json \
+        --compatible-architectures $LAMBDA_ARCHITECTURE \
         --compatible-runtimes nodejs10.x nodejs12.x nodejs14.x nodejs16.x \
         | jq '.Version' \
     )
