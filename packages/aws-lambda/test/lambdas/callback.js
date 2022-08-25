@@ -62,14 +62,24 @@ const handler = function handler(event, context, callback) {
     res => {
       res.resume();
       res.on('end', () => {
-        if (event.error === 'asynchronous') {
-          callback(new Error('Boom!'));
+        let delayCallback;
+        if (process.env.HANDLER_DELAY) {
+          console.log(`Introducing an artificial delay in the handler of ${process.env.HANDLER_DELAY} ms.`);
+          delayCallback = cb => setTimeout(cb, parseInt(process.env.HANDLER_DELAY, 10));
         } else {
-          if (event.requestedStatusCode) {
-            response.statusCode = parseInt(event.requestedStatusCode, 10);
-          }
-          callback(null, response);
+          delayCallback = cb => setImmediate(cb);
         }
+
+        delayCallback(() => {
+          if (event.error === 'asynchronous') {
+            callback(new Error('Boom!'));
+          } else {
+            if (event.requestedStatusCode) {
+              response.statusCode = parseInt(event.requestedStatusCode, 10);
+            }
+            callback(null, response);
+          }
+        });
       });
     }
   );

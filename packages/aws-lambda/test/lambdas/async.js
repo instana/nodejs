@@ -9,6 +9,8 @@
 
 const instana = require('../..');
 
+const delay = require('../../../core/test/test_util/delay');
+
 // In production, the package @instana/aws-lambda is located in
 // /var/task/node_modules/@instana/aws-lambda/src/metrics while the main package.json of the Lambda is in
 // /var/task/package.json. The assumption about the relative location does not hold in the tests, so we need to fix the
@@ -49,6 +51,11 @@ const handler = async event => {
     throw new Error('Boom!');
   }
   await fetch(downstreamDummyUrl, { headers: { 'X-Downstream-Header': 'yes' } });
+  if (process.env.HANDLER_DELAY) {
+    console.log(`Introducing an artificial delay in the handler of ${process.env.HANDLER_DELAY} ms.`);
+    await delay(parseInt(process.env.HANDLER_DELAY, 10));
+  }
+
   if (event.error === 'asynchronous') {
     const error = new Error('Boom!');
     // deliberately setting error.message to a non-string value to test this case

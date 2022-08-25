@@ -133,6 +133,9 @@ function prelude(opts) {
   } else {
     env.INSTANA_DISABLE_LAMBDA_EXTENSION = 'true';
   }
+  if (opts.handlerDelay) {
+    env.HANDLER_DELAY = opts.handlerDelay;
+  }
 
   const control = new Control({
     faasRuntimePath: path.join(__dirname, '../runtime_mock'),
@@ -712,17 +715,58 @@ function registerTests(handlerDefinitionPath) {
     it('must deliver metrics and spans directly to the back end', async () => {
       await verify(control, { error: false, expectMetrics: true, expectSpans: true });
 
-      // With an unresponsive Lambda extension, we expect
+      // With the Lambda extension being unresponsive when the preflight request is made, we expect
       // * the preflight request to the extension to time out, and the
       // * data being sent directly to the back end.
-      const spansFromExtension = await control.getSpansFromExtension();
-      expect(spansFromExtension).to.have.length(0);
+
+      // With an unresponsive Lambda extension, we expect the spans to be send to the back end directly. But the devil
+      // is in the details: Whether the in-process collector attempts to send data to the extension first depends on the
+      // timing.
+      // * When the Lamba handler finishes very fast, the in-process collector will try to send data to the
+      // extension _before_ the preflight request has returned or timed out.
+      // * When the Lambda handler takes longer than the preflight request, the in-process collector will not even try
+      //   to use the extenion but send to the back end directly.
+      //
+      // This is why we do not check control.getSpansFromExtension() here.
+      //
+      // See also the next test:
+      //   "when the extension is used and available, but is unresponsive, and the handler finishes _after_
+      //   the preflight request"
     });
   });
+
+  describe(
+    'when the extension is used and available, but is unresponsive, and the handler finishes _after_ the ' +
+      'preflight request',
+    function () {
+      const control = prelude.bind(this)({
+        handlerDefinitionPath,
+        handlerDelay: 500,
+        startExtension: 'unresponsive',
+        startBackend: true,
+        useExtension: true,
+        instanaEndpointUrl: backendBaseUrl,
+        instanaAgentKey
+      });
+
+      it('must deliver metrics and spans directly to the back end', async () => {
+        await verify(control, { error: false, expectMetrics: true, expectSpans: true });
+
+        // This is an extension to the previous test ("must deliver metrics and spans directly to the back end"). See
+        // there for an explanation. In this test, we introduce an artifical delay into the Lambda handler to make sure
+        // it finishes _after_ the preflight request. This way we can verify that the in-process collector will not
+        // attempt to send data to the back end.
+
+        const spansFromExtension = await control.getSpansFromExtension();
+        expect(spansFromExtension).to.have.length(0);
+      });
+    }
+  );
 
   describe('when the extension is used and the preflight request responds with an unexpected status code', function () {
     const control = prelude.bind(this)({
       handlerDefinitionPath,
+      handlerDelay: 100,
       startExtension: 'unexpected-preflight-response',
       startBackend: true,
       useExtension: true,
@@ -733,7 +777,7 @@ function registerTests(handlerDefinitionPath) {
     it('must deliver metrics and spans directly to the back end', async () => {
       await verify(control, { error: false, expectMetrics: true, expectSpans: true });
 
-      // With Lambda extension preflight request failing, we expect
+      // With the Lambda extension preflight request failing, we expect
       // * the preflight request to the extension to time out, and the
       // * data being sent directly to the back end.
       const spansFromExtension = await control.getSpansFromExtension();

@@ -9,6 +9,8 @@
 
 const instana = require('../..');
 
+const delay = require('../../../core/test/test_util/delay');
+
 // In production, the package @instana/aws-lambda is located in
 // /var/task/node_modules/@instana/aws-lambda/src/metrics while the main package.json of the Lambda is in
 // /var/task/package.json. The assumption about the relative location does not hold in the tests, so we need to fix the
@@ -50,16 +52,26 @@ const handler = event => {
     throw new Error('Boom!');
   }
   return fetch(downstreamDummyUrl, { headers: { 'X-Downstream-Header': 'yes' } }).then(() => {
-    if (event.error === 'asynchronous') {
-      throw new Error('Boom!');
+    let delayPromise;
+    if (process.env.HANDLER_DELAY) {
+      console.log(`Introducing an artificial delay in the handler of ${process.env.HANDLER_DELAY} ms.`);
+      delayPromise = delay(parseInt(process.env.HANDLER_DELAY, 10));
+    } else {
+      delayPromise = Promise.resolve();
     }
 
-    if (event.requestedStatusCode) {
-      // In contrast to both other lambdas we pass back the HTTP status code as a string here, just so this case is also
-      // tested.
-      response.statusCode = event.requestedStatusCode;
-    }
-    return response;
+    return delayPromise.then(() => {
+      if (event.error === 'asynchronous') {
+        throw new Error('Boom!');
+      }
+
+      if (event.requestedStatusCode) {
+        // In contrast to both other lambdas we pass back the HTTP status code as a string here, just so this case is
+        // also tested.
+        response.statusCode = event.requestedStatusCode;
+      }
+      return response;
+    });
   });
 };
 
