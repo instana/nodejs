@@ -65,23 +65,33 @@ const handler = function handler(event, context) {
     res => {
       res.resume();
       res.on('end', () => {
-        if (event.error === 'asynchronous') {
-          const error = new Error('Boom!');
-          if (Math.random() > 0.5) {
-            context.fail(error);
-          } else {
-            context.done(error);
-          }
+        let delayCallback;
+        if (process.env.HANDLER_DELAY) {
+          console.log(`Introducing an artificial delay in the handler of ${process.env.HANDLER_DELAY} ms.`);
+          delayCallback = cb => setTimeout(cb, parseInt(process.env.HANDLER_DELAY, 10));
         } else {
-          if (event.requestedStatusCode) {
-            response.statusCode = parseInt(event.requestedStatusCode, 10);
-          }
-          if (Math.random() > 0.5) {
-            context.succeed(response);
-          } else {
-            context.done(null, response);
-          }
+          delayCallback = cb => setImmediate(cb);
         }
+
+        delayCallback(() => {
+          if (event.error === 'asynchronous') {
+            const error = new Error('Boom!');
+            if (Math.random() > 0.5) {
+              context.fail(error);
+            } else {
+              context.done(error);
+            }
+          } else {
+            if (event.requestedStatusCode) {
+              response.statusCode = parseInt(event.requestedStatusCode, 10);
+            }
+            if (Math.random() > 0.5) {
+              context.succeed(response);
+            } else {
+              context.done(null, response);
+            }
+          }
+        });
       });
     }
   );
