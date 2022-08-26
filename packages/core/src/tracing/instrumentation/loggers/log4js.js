@@ -62,7 +62,7 @@ function instrumentedLog(ctx, originalArgs, originalLog, markAsError) {
     } else {
       // The original log4js log method takes (level, ...data) as arguments and creates the actually logged message via
       // util.format(...data).
-      message = util.format.apply(...originalArgs.slice(1));
+      message = util.format(...originalArgs.slice(1));
     }
 
     const span = cls.startSpan('log.log4js', constants.EXIT);
