@@ -46,6 +46,7 @@ app.post('/log', (req, res) => {
   const level = query.level;
   const message = query.message;
   const useLogMethod = query.useLogMethod === 'true';
+  const multipleArguments = query.multipleArguments === 'true';
 
   let method = null;
   const args = [];
@@ -57,7 +58,11 @@ app.post('/log', (req, res) => {
     method = logger[level];
   }
 
-  args.push(message);
+  if (multipleArguments) {
+    args.push(message, 'more', 'arguments');
+  } else {
+    args.push(message);
+  }
 
   method.apply(logger, args);
   finish(res);

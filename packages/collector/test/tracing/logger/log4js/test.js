@@ -10,7 +10,13 @@ const { expect } = require('chai');
 const constants = require('@instana/core').tracing.constants;
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('../../../../../core/test/config');
-const testUtils = require('../../../../../core/test/test_util');
+const {
+  delay,
+  expectAtLeastOneMatching,
+  getSpansByName,
+  retry,
+  stringifyItems
+} = require('../../../../../core/test/test_util');
 const ProcessControls = require('../../../test_util/ProcessControls');
 const globalAgent = require('../../../globalAgent');
 
@@ -38,23 +44,22 @@ mochaSuiteFn('tracing/logger/log4js', function () {
       suffix = '(using level method)';
     }
 
-    it(`must not trace info ${suffix}`, () =>
-      trigger('info', 'Info message - must not be traced.', useLogMethod).then(() =>
-        testUtils.retry(() =>
-          agentControls.getSpans().then(spans => {
-            const entrySpan = testUtils.expectAtLeastOneMatching(spans, [
-              span => expect(span.n).to.equal('node.http.server'),
-              span => expect(span.f.e).to.equal(String(controls.getPid())),
-              span => expect(span.f.h).to.equal('agent-stub-uuid')
-            ]);
-            testUtils.expectAtLeastOneMatching(spans, span => {
-              checkNextExitSpan(span, entrySpan);
-            });
-            const log4jsSpans = testUtils.getSpansByName(spans, 'log.log4js');
-            expect(log4jsSpans).to.be.empty;
-          })
-        )
-      ));
+    it(`must not trace info ${suffix}`, async () => {
+      await trigger({ level: 'info', message: 'Info message - must not be traced.', useLogMethod });
+      return retry(async () => {
+        const spans = await agentControls.getSpans();
+        const entrySpan = expectAtLeastOneMatching(spans, [
+          span => expect(span.n).to.equal('node.http.server'),
+          span => expect(span.f.e).to.equal(String(controls.getPid())),
+          span => expect(span.f.h).to.equal('agent-stub-uuid')
+        ]);
+        expectAtLeastOneMatching(spans, span => {
+          checkNextExitSpan(span, entrySpan);
+        });
+        const log4jsSpans = getSpansByName(spans, 'log.log4js');
+        expect(log4jsSpans).to.be.empty;
+      });
+    });
 
     it('[suppressed] should not trace', async function () {
       await controls.sendRequest({
@@ -63,44 +68,65 @@ mochaSuiteFn('tracing/logger/log4js', function () {
         suppressTracing: true
       });
 
-      return testUtils
-        .retry(() => testUtils.delay(config.getTestTimeout() / 4))
-        .then(() => agentControls.getSpans())
-        .then(spans => {
-          if (spans.length > 0) {
-            expect.fail(`Unexpected spans ${testUtils.stringifyItems(spans)}.`);
-          }
-        });
+      await delay(config.getTestTimeout() / 4);
+      const spans = await agentControls.getSpans();
+      if (spans.length > 0) {
+        expect.fail(`Unexpected spans ${stringifyItems(spans)}.`);
+      }
     });
 
-    it(`must trace warn ${suffix}`, () => runTest('warn', 'Warn message - should be traced.', useLogMethod, false));
+    it(`must trace warn ${suffix}`, () =>
+      runTest({
+        level: 'warn',
+        message: 'Warn message - should be traced.',
+        useLogMethod
+      }));
 
-    it(`must trace error ${suffix}`, () => runTest('error', 'Error message - should be traced.', useLogMethod, true));
+    it(`must trace error ${suffix}`, () =>
+      runTest({
+        level: 'error',
+        message: 'Error message - should be traced.',
+        useLogMethod,
+        expectErroneous: true
+      }));
 
-    it(`must trace fatal ${suffix}`, () => runTest('fatal', 'Fatal message - should be traced.', useLogMethod, true));
+    it(`must trace fatal ${suffix}`, () =>
+      runTest({
+        level: 'fatal',
+        message: 'Fatal message - should be traced.',
+        useLogMethod,
+        expectErroneous: true
+      }));
+
+    it(`must trace error ${suffix} with multiple log arguments`, () =>
+      runTest({
+        level: 'error',
+        message: 'Error message - should be traced.',
+        useLogMethod,
+        expectErroneous: true,
+        multipleArguments: true
+      }));
   }
 
-  function runTest(level, message, useLogMethod, expectErroneous) {
-    return trigger(level, message, useLogMethod).then(() =>
-      testUtils.retry(() =>
-        agentControls.getSpans().then(spans => {
-          const entrySpan = testUtils.expectAtLeastOneMatching(spans, [
-            span => expect(span.n).to.equal('node.http.server'),
-            span => expect(span.f.e).to.equal(String(controls.getPid())),
-            span => expect(span.f.h).to.equal('agent-stub-uuid')
-          ]);
-          testUtils.expectAtLeastOneMatching(spans, span => {
-            checkLog4jsSpan(span, entrySpan, expectErroneous, message);
-          });
-          testUtils.expectAtLeastOneMatching(spans, span => {
-            checkNextExitSpan(span, entrySpan);
-          });
-        })
-      )
-    );
+  async function runTest({ level, message, useLogMethod, expectErroneous = false, multipleArguments = false }) {
+    await trigger({ level, message, useLogMethod, multipleArguments });
+    await retry(async () => {
+      const spans = await agentControls.getSpans();
+      const entrySpan = expectAtLeastOneMatching(spans, [
+        span => expect(span.n).to.equal('node.http.server'),
+        span => expect(span.f.e).to.equal(String(controls.getPid())),
+        span => expect(span.f.h).to.equal('agent-stub-uuid')
+      ]);
+      expectAtLeastOneMatching(spans, span => {
+        checkLog4jsSpan(span, entrySpan, expectErroneous, message, multipleArguments);
+      });
+      expectAtLeastOneMatching(spans, span => {
+        checkNextExitSpan(span, entrySpan);
+      });
+    });
   }
 
-  function checkLog4jsSpan(span, parent, expectErroneous, message) {
+  function checkLog4jsSpan(span, parent, expectErroneous, message, multipleArguments) {
     expect(span.t).to.equal(parent.t);
     expect(span.p).to.equal(parent.s);
     expect(span.k).to.equal(constants.EXIT);
@@ -112,7 +138,11 @@ mochaSuiteFn('tracing/logger/log4js', function () {
     expect(span.ec).to.equal(expectErroneous ? 1 : 0);
     expect(span.data).to.exist;
     expect(span.data.log).to.exist;
-    expect(span.data.log.message).to.equal(message);
+    if (multipleArguments) {
+      expect(span.data.log.message).to.equal(`${message} more arguments`);
+    } else {
+      expect(span.data.log.message).to.equal(message);
+    }
   }
 
   function checkNextExitSpan(span, parent) {
@@ -124,11 +154,12 @@ mochaSuiteFn('tracing/logger/log4js', function () {
     expect(span.n).to.equal('node.http.client');
   }
 
-  function trigger(level, message, useLogMethod) {
+  function trigger({ level, message, useLogMethod, multipleArguments = false }) {
     const query = {
       level,
       message,
-      useLogMethod
+      useLogMethod,
+      multipleArguments
     };
     const queryString = Object.keys(query)
       .map(key => `${key}=${query[key]}`)
