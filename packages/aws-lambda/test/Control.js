@@ -68,7 +68,6 @@ Control.prototype.startMonitoredProcess = function startMonitoredProcess() {
       {
         HANDLER_DEFINITION_PATH: this.opts.handlerDefinitionPath,
         DOWNSTREAM_DUMMY_URL: this.downstreamDummyUrl,
-        INSTANA_LOG_LEVEL: 'debug',
         INSTANA_DISABLE_CA_CHECK: this.useHttps,
         INSTANA_DEV_SEND_UNENCRYPTED: !this.useHttps,
         WAIT_FOR_MESSAGE: true
