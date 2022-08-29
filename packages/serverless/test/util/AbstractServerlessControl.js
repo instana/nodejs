@@ -131,6 +131,7 @@ AbstractServerlessControl.prototype.startBackendAndWaitForIt = function startBac
       {
         USE_HTTPS: this.useHttps == null || this.useHttps,
         BACKEND_PORT: this.backendPort,
+        INSTANA_LOG_LEVEL: 'debug',
         BACKEND_UNRESPONSIVE: this.opts.startBackend === 'unresponsive'
       },
       process.env,
@@ -151,6 +152,7 @@ AbstractServerlessControl.prototype.startExtensionAndWaitForIt = function startE
       {
         BACKEND_HTTPS: this.useHttps == null || this.useHttps,
         BACKEND_PORT: this.backendPort,
+        INSTANA_LOG_LEVEL: 'debug',
         EXTENSION_PORT: this.extensionPort,
         EXTENSION_UNRESPONSIVE: this.opts.startExtension === 'unresponsive',
         EXTENSION_PREFFLIGHT_RESPONSIVE_BUT_UNRESPONSIVE_LATER: this.opts.startExtension === 'unresponsive-later',
