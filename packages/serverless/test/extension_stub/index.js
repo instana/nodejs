@@ -75,20 +75,13 @@ app.all('*', (req, res) => {
   // Store spans so we can later verify that the spans were actually sent to the extension instead of having been
   // sent directly to the back end.
   if (req.url === '/bundle' && req.body.spans) {
-    logger.debug({ msg: 'Storing spans from /bundle in extension', spans: req.body.spans });
     storeSpans(req.body.spans);
   } else if (req.url === '/traces' && Array.isArray(req.body)) {
-    logger.debug({ msg: 'Storing spans from /traces in extension', spans: req.body });
     storeSpans(req.body);
   }
 
   if (unresponsive || preflightResponsiveButUnresponsiveLater) {
     // intentionally not responding for tests that verify proper timeout handling
-    logger.debug({
-      msg: 'Lambda extension mock will not respond.',
-      unresponsive,
-      preflightResponsiveButUnresponsiveLater
-    });
     return;
   }
 
@@ -103,9 +96,7 @@ app.all('*', (req, res) => {
       ...req.headers
     }
   };
-  logger.debug({ msg: 'Forwarding data to the back end.', data: stringifiedBody });
   const beReq = transport.request(options, backEndResponse => {
-    logger.debug({ msg: `Forwarded data to the back end, status ${backEndResponse.status}`, data: stringifiedBody });
     res.sendStatus(backEndResponse.statusCode);
   });
   beReq.end(stringifiedBody);
