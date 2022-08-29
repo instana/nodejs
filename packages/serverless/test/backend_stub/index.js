@@ -21,7 +21,7 @@ const deepMerge = require('../../../core/src/util/deepMerge');
 
 const logPrefix = 'backend-stub';
 const logger = pino.child({ name: logPrefix, pid: process.pid });
-logger.level = 'info';
+logger.level = process.env.INSTANA_DEBUG ? 'debug' : process.env.INSTANA_LOG_LEVEL || 'info';
 const useHttps = process.env.USE_HTTPS !== 'false';
 
 const options = {
@@ -52,7 +52,7 @@ app.use(
 app.post('/serverless/bundle', acceptBundle);
 
 function acceptBundle(req, res) {
-  logger.debug('incoming bundle', req.body);
+  logger.debug({ msg: 'incoming bundle', body: req.body });
   receivedData.rawBundles.push(req.body);
   if (unresponsive) {
     // intentionally not responding for tests that verify proper timeout handling
@@ -88,7 +88,7 @@ app.post('/serverless/metrics', acceptMetrics);
 app.post('/metrics', acceptMetrics);
 
 function acceptMetrics(req, res) {
-  logger.debug('incoming metrics', req.body);
+  logger.debug({ msg: 'incoming metrics', body: req.body });
   receivedData.rawMetrics.push(req.body);
   if (unresponsive) {
     // intentionally not responding for tests that verify proper timeout handling
@@ -116,7 +116,7 @@ app.post('/serverless/traces', acceptTraces);
 app.post('/traces', acceptTraces);
 
 function acceptTraces(req, res) {
-  logger.debug('incoming spans', req.body);
+  logger.debug({ msg: 'incoming spans', body: req.body });
   receivedData.rawSpanArrays.push(req.body);
   if (unresponsive) {
     // intentionally not responding for tests that verify proper timeout handling
