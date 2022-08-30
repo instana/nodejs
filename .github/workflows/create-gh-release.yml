@@ -1,10 +1,12 @@
-name: GH Release Creation 
+name: create-gh-release
 
 permissions:
   contents: write
 
 on:
   push:
+    branches:
+      - main
     tags:
       - "v*.*.*"
 
