@@ -6,8 +6,13 @@ permissions:
 on:
   push:
     tags:
-      - v[0-9]+.*
-
+      - v[0-9]+.*      
+  workflow_dispatch:
+    inputs:
+      GITHUB_REF:
+        description: "refs/tags/v2.6.2"
+        required: true
+        type: environment
 jobs:
   create-release:
     runs-on: ubuntu-latest
