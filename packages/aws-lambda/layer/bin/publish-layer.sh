@@ -286,6 +286,7 @@ if [[ -z $SKIP_AWS_PUBLISH_LAYER ]]; then
     echo " - publishing to region $region:"
 
     # See https://docs.aws.amazon.com/cli/latest/reference/lambda/publish-layer-version.html for documentation.
+    # NOTE: --compatible-architectures $LAMBDA_ARCHITECTURE is not working in all regions.
     lambda_layer_version=$( \
       AWS_PAGER="" aws --region $region lambda publish-layer-version \
         --layer-name $LAYER_NAME \
@@ -293,7 +294,6 @@ if [[ -z $SKIP_AWS_PUBLISH_LAYER ]]; then
         --license-info $LICENSE \
         --zip-file fileb://$ZIP_NAME \
         --output json \
-        --compatible-architectures $LAMBDA_ARCHITECTURE \
         --compatible-runtimes nodejs10.x nodejs12.x nodejs14.x nodejs16.x \
         | jq '.Version' \
     )
