@@ -21,6 +21,5 @@ jobs:
       - uses: taiki-e/create-gh-release-action@v1
         with:
           changelog: CHANGELOG.md
-          draft: true
         env:
           GITHUB_TOKEN: ${{ secrets.GH_PAT }}
