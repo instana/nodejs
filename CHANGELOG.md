@@ -9,7 +9,16 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 ### Features
 
 * **aws-lambda:** added support for arm64 architecture ([#605](https://github.com/instana/nodejs/issues/605)) ([03dd47a](https://github.com/instana/nodejs/commit/03dd47a76d894310ce93063f4e26fd1e667be655)), closes [#596](https://github.com/instana/nodejs/issues/596)
+* **aws-lambda:** send preflight request to the AWS Lambda extension 
 
+
+
+### Bug Fixes
+
+
+* **lambda:** work around req.destroyed not being set in Node.js <= 12 
+* **lambda:** fix concurrency bug in preflight request handling 
+* **tracing:** fix log4js message format call 
 
 
 
