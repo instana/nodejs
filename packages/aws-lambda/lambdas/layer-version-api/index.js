@@ -42,18 +42,22 @@ exports.handler = async event => {
     return { statusCode: 400, headers: corsAllowAll() };
   }
 
+  const lookup = {
+    '/nodejs': '/instana-nodejs',
+    '/java': '/instana-java',
+    '/python': '/instana-python'
+  };
+
   if (event.httpMethod === 'OPTIONS') {
     return { statusCode: 204, headers: corsAllowAll() };
   } else if (event.path === '/') {
     return handleRootRequest(event);
-  } else if (event.path === '/java' || event.path === '/instana-java') {
-    return handleLayerRequest(event, 'instana-java');
-  } else if (event.path === '/nodejs' || event.path === '/instana-nodejs') {
-    return handleLayerRequest(event, 'instana-nodejs');
-  } else if (event.path === '/python' || event.path === '/instana-python') {
-    return handleLayerRequest(event, 'instana-python');
+  } else {
+    const layerName = lookup[event.path] || event.path;
+
+    // default case: we forward the requested layer name to the sdk
+    return handleLayerRequest(event, layerName.replace(/\//g, ''));
   }
-  return { statusCode: 404, headers: corsAllowAll() };
 };
 
 function handleRootRequest(event) {
@@ -67,6 +71,7 @@ function handleRootRequest(event) {
     body: JSON.stringify({
       'instana-java': `${baseUrl}/instana-java`,
       'instana-nodejs': `${baseUrl}/instana-nodejs`,
+      'instana-nodejs-arm64': `${baseUrl}/instana-nodejs-arm64`,
       'instana-python': `${baseUrl}/instana-python`
     })
   };
@@ -115,7 +120,7 @@ async function handleLayerRequest(event, layerName) {
     arn: versionData.LayerVersionArn
   };
 
-  if (layerName === 'instana-nodejs' && typeof versionData.Description === 'string') {
+  if (layerName.includes('instana-nodejs') && typeof versionData.Description === 'string') {
     const npmVersionMatch = versionData.Description.match(/@instana\/aws-lambda@(\d+\.\d+\.\d+)/);
     if (npmVersionMatch && npmVersionMatch[1]) {
       response.npmVersion = npmVersionMatch[1];
