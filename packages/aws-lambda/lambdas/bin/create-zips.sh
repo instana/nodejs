@@ -50,7 +50,7 @@ mv instana-core-*.tgz ../aws-lambda/instana-core.tgz
 echo "Building local tar.gz for @instana/aws-lambda."
 cd ../aws-lambda
 npm --loglevel=warn pack
-mv instana-aws-lambda-1*.tgz instana-aws-lambda.tgz
+mv instana-aws-lambda-*.tgz instana-aws-lambda.tgz
 
 echo "Building local tar.gz for instana-aws-lambda-auto-wrap."
 cd ../aws-lambda-auto-wrap
