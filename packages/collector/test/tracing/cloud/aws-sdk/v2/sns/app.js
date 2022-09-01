@@ -37,11 +37,21 @@ const methods = {
 const availableMethods = Object.values(methods);
 
 const SNSApi = {
-  runOperation(operation, method, withError) {
+  runOperation(operation, method, withError, addHeaders) {
     const originalOptions = operationParams[operation];
     let options;
     if (originalOptions) {
       options = Object.assign({}, originalOptions);
+    }
+
+    if (addHeaders) {
+      options.MessageAttributes = {};
+      for (let i = 0; i < addHeaders; i++) {
+        options.MessageAttributes[`dummy-attribute-${i}`] = {
+          DataType: 'String',
+          StringValue: `dummy value ${i}`
+        };
+      }
     }
 
     if (withError) {
@@ -127,6 +137,7 @@ app.get('/', (_req, res) => {
 availableOperations.forEach(operation => {
   app.get(`/${operation}/:method`, async (req, res) => {
     const withError = typeof req.query.withError === 'string' && req.query.withError !== '';
+    const addHeaders = req.query.addHeaders ? parseInt(req.query.addHeaders, 10) : 0;
     const method = req.params.method;
 
     if (!availableMethods.includes(method)) {
@@ -135,7 +146,7 @@ availableOperations.forEach(operation => {
       });
     } else {
       try {
-        const data = await SNSApi.runOperation(operation, method, withError);
+        const data = await SNSApi.runOperation(operation, method, withError, addHeaders);
         res.send(data);
       } catch (err) {
         res.send({

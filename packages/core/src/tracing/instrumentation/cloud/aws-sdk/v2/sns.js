@@ -9,6 +9,11 @@ const cls = require('../../../../cls');
 const { EXIT, sqsAttributeNames } = require('../../../../constants');
 const tracingUtil = require('../../../../tracingUtil');
 const { InstanaAWSProduct } = require('./instana_aws_product');
+const { logTooManyAttributesWarningOnce } = require('../aws_utils');
+
+let logger = require('../../../../../logger').getLogger('tracing/sns/v2', newLogger => {
+  logger = newLogger;
+});
 
 /**
  * We only instrument publish() for now.
@@ -103,6 +108,12 @@ class InstanaAWSSNS extends InstanaAWSProduct {
       return;
     }
 
+    // SQS has a limit of 10 message attributes, we need to add two attributes.
+    if (Object.keys(attributes).length >= 9) {
+      logTooManyAttributesWarningOnce(logger, attributes, 2);
+      return;
+    }
+
     attributes[sqsAttributeNames.TRACE_ID] = {
       DataType: 'String',
       StringValue: span.t
@@ -112,15 +123,16 @@ class InstanaAWSSNS extends InstanaAWSProduct {
       DataType: 'String',
       StringValue: span.s
     };
-
-    attributes[sqsAttributeNames.LEVEL] = {
-      DataType: 'String',
-      StringValue: '1'
-    };
   }
 
   propagateSuppression(attributes) {
     if (!attributes || typeof attributes !== 'object') {
+      return;
+    }
+
+    // SQS has a limit of 10 message attributes, we would need to add one attribute.
+    if (Object.keys(attributes).length >= 10) {
+      logTooManyAttributesWarningOnce(logger, attributes, 1);
       return;
     }
 
