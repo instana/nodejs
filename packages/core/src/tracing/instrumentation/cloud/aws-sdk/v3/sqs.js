@@ -9,6 +9,7 @@ const cls = require('../../../../cls');
 const {
   configureEntrySpan,
   hasTracingAttributes,
+  logTooManyAttributesWarningOnce,
   readTracingAttributesFromSns,
   readTracingAttributes
 } = require('../aws_utils');
@@ -289,6 +290,12 @@ class InstanaAWSSQS extends InstanaAWSProduct {
       return;
     }
 
+    // SQS has a limit of 10 message attributes, we would need to add one attribute.
+    if (Object.keys(attributes).length >= 10) {
+      logTooManyAttributesWarningOnce(logger, attributes, 1);
+      return;
+    }
+
     attributes[sqsAttributeNames.LEVEL] = {
       DataType: 'String',
       StringValue: '0'
@@ -300,6 +307,12 @@ class InstanaAWSSQS extends InstanaAWSProduct {
       return;
     }
 
+    // SQS has a limit of 10 message attributes, we need to add two attributes.
+    if (Object.keys(attributes).length >= 9) {
+      logTooManyAttributesWarningOnce(logger, attributes, 2);
+      return;
+    }
+
     attributes[sqsAttributeNames.TRACE_ID] = {
       DataType: 'String',
       StringValue: span.t
@@ -308,11 +321,6 @@ class InstanaAWSSQS extends InstanaAWSProduct {
     attributes[sqsAttributeNames.SPAN_ID] = {
       DataType: 'String',
       StringValue: span.s
-    };
-
-    attributes[sqsAttributeNames.LEVEL] = {
-      DataType: 'String',
-      StringValue: '1'
     };
   }
 }

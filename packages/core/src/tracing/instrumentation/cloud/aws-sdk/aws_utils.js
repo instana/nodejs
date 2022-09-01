@@ -8,6 +8,8 @@
 const { snsSqsInstanaHeaderPrefixRegex, sqsAttributeNames } = require('../../../constants');
 const tracingUtil = require('../../../tracingUtil');
 
+let tooManyAttributesWarningHasBeenLogged = false;
+
 /**
  * Reads all trace context relevant message attributes from an incoming message and provides them in a normalized format
  * for later processing.
@@ -108,9 +110,27 @@ function configureEntrySpan(span, data, tracingAttributes) {
   }
 }
 
+function logTooManyAttributesWarningOnce(logger, attributes, requiredNumberOfAttributes) {
+  if (tooManyAttributesWarningHasBeenLogged) {
+    return;
+  }
+  tooManyAttributesWarningHasBeenLogged = true;
+  const existingAttributes = Object.keys(attributes);
+  logger.warn(
+    'Could not add trace correlation message attributes to an outgoing SQS or SNS message. Wanted to add ' +
+      `${requiredNumberOfAttributes} attribute(s), but the messsage already has ${existingAttributes.length} ` +
+      `attributes: ${existingAttributes.join(
+        ', '
+      )}. AWS imposes a limit of 10 message attributes. Trace correlation will be impacted -- the SQS receiver ` +
+      'will start a new trace that is not connected to the trace for sending the message. This log message will ' +
+      'only be logged once.'
+  );
+}
+
 module.exports = {
   configureEntrySpan,
   hasTracingAttributes,
   readTracingAttributesFromSns,
-  readTracingAttributes
+  readTracingAttributes,
+  logTooManyAttributesWarningOnce
 };

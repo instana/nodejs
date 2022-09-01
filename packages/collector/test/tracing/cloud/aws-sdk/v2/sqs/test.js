@@ -28,12 +28,8 @@ const { verifyHttpRootEntry, verifyHttpExit } = require('@instana/core/test/test
 const defaultPrefix = 'https://sqs.us-east-2.amazonaws.com/410797082306/';
 const queueUrlPrefix = process.env.SQS_QUEUE_URL_PREFIX || defaultPrefix;
 
-let queueName = 'nodejs-team';
-
-if (process.env.SQS_QUEUE_NAME) {
-  queueName = `${process.env.SQS_QUEUE_NAME}${semver.major(process.versions.node)}-${uuid()}`;
-}
-
+const queueNamePrefix = process.env.SQS_QUEUE_NAME || 'nodejs-team';
+const queueName = `${queueNamePrefix}${semver.major(process.versions.node)}-${uuid()}`;
 const queueURL = `${queueUrlPrefix}${queueName}`;
 
 let mochaSuiteFn;
@@ -198,6 +194,43 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/sqs', function () {
       });
     });
 
+    describe('message header limits', function () {
+      const receiverControls = new ProcessControls({
+        appPath: path.join(__dirname, 'receiveMessage'),
+        port: 3216,
+        useGlobalAgent: true,
+        env: {
+          SQS_RECEIVE_METHOD: 'async',
+          AWS_SQS_QUEUE_URL: `${queueUrlPrefix}${queueName}`
+        }
+      });
+
+      ProcessControls.setUpHooksWithRetryTime(retryTime, receiverControls);
+
+      const apiPath = '/send-callback';
+
+      it('creates spans but does not add correlation headers ', async () => {
+        const response = await senderControls.sendRequest({
+          method: 'POST',
+          path: `${apiPath}?addHeaders=9`
+        });
+
+        await retry(async () => {
+          verifyResponseAndMessage(response, receiverControls);
+          const spans = await agentControls.getSpans();
+
+          const httpEntry = verifyHttpRootEntry({ spans, apiPath, pid: String(senderControls.getPid()) });
+          verifySQSExit(senderControls, spans, httpEntry);
+
+          // The SQS entry will be the root of a new trace because we were not able to add tracing headers.
+          const sqsEntry = verifySQSEntry(receiverControls, spans, null);
+          verifyHttpExit({ spans, parent: sqsEntry, pid: String(receiverControls.getPid()) });
+        }, retryTime);
+
+        await verifyNoUnclosedSpansHaveBeenDetected(receiverControls);
+      });
+    });
+
     describe('sqs-consumer API', () => {
       describe('message processed with success', () => {
         const sqsConsumerControls = new ProcessControls({
@@ -331,8 +364,8 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/sqs', function () {
       return operation(spans, [
         span => expect(span.n).to.equal('sqs'),
         span => expect(span.k).to.equal(constants.ENTRY),
-        span => expect(span.t).to.equal(parent.t),
-        span => expect(span.p).to.equal(parent.s),
+        span => (parent ? expect(span.t).to.equal(parent.t) : expect(span.t).to.be.a('string')),
+        span => (parent ? expect(span.p).to.equal(parent.s) : expect(span.p).to.not.exist),
         span => expect(span.f.e).to.equal(String(receiverControls.getPid())),
         span => expect(span.f.h).to.equal('agent-stub-uuid'),
         span => {

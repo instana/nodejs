@@ -40,7 +40,7 @@ const operationParams = {
 
 const availableMethods = ['v3', 'v2', 'cb'];
 
-function configureOptions(withError, isBatch) {
+function configureOptions(withError, isBatch, addHeaders) {
   const options = Object.assign({}, operationParams);
   if (!withError && !isBatch) {
     options.MessageBody = 'Hello from Node tracer';
@@ -64,26 +64,36 @@ function configureOptions(withError, isBatch) {
       }
     ];
   } // else, it's the withError case, which will happen, because MessageBody was not set
+
+  if (addHeaders) {
+    options.MessageAttributes = {};
+    for (let i = 0; i < addHeaders; i++) {
+      options.MessageAttributes[`dummy-attribute-${i}`] = {
+        DataType: 'String',
+        StringValue: `dummy value ${i}`
+      };
+    }
+  }
   return options;
 }
 
-async function runV3AsPromise(withError, isBatch = false) {
-  const options = configureOptions(withError, isBatch);
+async function runV3AsPromise(withError, isBatch = false, addHeaders = 0) {
+  const options = configureOptions(withError, isBatch, addHeaders);
   const sendCommand = isBatch ? 'SendMessageBatchCommand' : 'SendMessageCommand';
   const command = new awsSdk3[sendCommand](options);
   const results = await sqs.send(command);
   return results;
 }
 
-function runV3AsCallback(withError, isBatch, cb) {
-  const options = configureOptions(withError, isBatch);
+function runV3AsCallback(withError, isBatch, addHeaders = 0, cb) {
+  const options = configureOptions(withError, isBatch, addHeaders);
   const sendCommand = isBatch ? 'SendMessageBatchCommand' : 'SendMessageCommand';
   const command = new awsSdk3[sendCommand](options);
   sqs.send(command, cb);
 }
 
-async function runV3AsV2Style(withError, isBatch = false) {
-  const options = configureOptions(withError, isBatch);
+async function runV3AsV2Style(withError, isBatch = false, addHeaders = 0) {
+  const options = configureOptions(withError, isBatch, addHeaders);
   const sendCommand = isBatch ? 'sendMessageBatch' : 'sendMessage';
   const results = await sqsv2[sendCommand](options);
   return results;
@@ -93,10 +103,11 @@ app.get('/send-message/:method', (req, res) => {
   const withError = req.query.withError === 'true';
   const method = req.params.method;
   const isBatch = req.query.isBatch === 'true';
+  const addHeaders = req.query.addHeaders ? parseInt(req.query.addHeaders, 10) : 0;
 
   switch (method) {
     case 'v3':
-      runV3AsPromise(withError, isBatch)
+      runV3AsPromise(withError, isBatch, addHeaders)
         .then(async data => {
           await delay(200);
           return data;
@@ -113,7 +124,7 @@ app.get('/send-message/:method', (req, res) => {
         });
       break;
     case 'v2':
-      runV3AsV2Style(withError, isBatch)
+      runV3AsV2Style(withError, isBatch, addHeaders)
         .then(async data => {
           await delay(200);
           return data;
@@ -130,7 +141,7 @@ app.get('/send-message/:method', (req, res) => {
         });
       break;
     case 'cb':
-      runV3AsCallback(withError, isBatch, (err, data) => {
+      runV3AsCallback(withError, isBatch, addHeaders, (err, data) => {
         if (err) {
           res.status(500).send({ error: String(err) });
         } else {

@@ -135,7 +135,7 @@ function start(version) {
                 simple: withError !== 'sender'
               });
 
-              await verify(receiverControls, senderControls, response, apiPath, withError);
+              await verify({ receiverControls, senderControls, response, apiPath, withError });
               await verifyNoUnclosedSpansHaveBeenDetected(receiverControls);
             });
           });
@@ -239,112 +239,19 @@ function start(version) {
                 path: `${apiPath}?isBatch=true`
               });
 
-              await verify(receiverControls, senderControlsBatch, response, apiPath, false, true);
+              await verify({
+                receiverControls,
+                senderControls: senderControlsBatch,
+                response,
+                apiPath,
+                withError: false,
+                isBatch: true
+              });
               await verifyNoUnclosedSpansHaveBeenDetected(receiverControls);
             });
           });
         });
       });
-
-      async function verify(receiverControls, _senderControls, response, apiPath, withError, isBatch) {
-        if (withError === 'sender') {
-          expect(response.error).to.equal('MissingParameter: The request must contain the parameter MessageBody.');
-        } else {
-          await retry(async () => {
-            if (isBatch) {
-              verifyResponseAndBatchMessage(response, receiverControls);
-            } else {
-              verifyResponseAndMessage(response, receiverControls);
-            }
-            const spans = await agentControls.getSpans();
-            verifySpans(receiverControls, _senderControls, spans, apiPath, null, withError, isBatch);
-          }, retryTime);
-        }
-      }
-
-      async function verifySingleSqsEntrySpanWithParent(traceId, spanId) {
-        await retry(async () => {
-          const spans = await agentControls.getSpans();
-          return expectExactlyOneMatching(spans, [
-            span => expect(span.t).to.equal(traceId),
-            span => expect(span.p).to.equal(spanId),
-            span => expect(span.k).to.equal(constants.ENTRY)
-          ]);
-        }, retryTime);
-      }
-
-      function verifySpans(receiverControls, _senderControls, spans, apiPath, messageId, withError, isBatch) {
-        const httpEntry = verifyHttpRootEntry({ spans, apiPath, pid: String(_senderControls.getPid()) });
-        const sqsExit = verifySQSExit(_senderControls, spans, httpEntry, messageId, withError);
-        verifyHttpExit({ spans, parent: httpEntry, pid: String(_senderControls.getPid()) });
-
-        if (withError !== 'publisher') {
-          const sqsEntry = verifySQSEntry(receiverControls, spans, sqsExit, messageId, withError, isBatch);
-          verifyHttpExit({ spans, parent: sqsEntry, pid: String(receiverControls.getPid()) });
-        }
-      }
-
-      function verifySQSEntry(receiverControls, spans, parent, messageId, withError, isBatch) {
-        let operation = expectExactlyOneMatching;
-
-        /**
-         * When receiving messages in batch, we can have more than one span that matches the criteria because
-         * SQS may not send all messages in one batch, thus we cannot guarantee that all messages will be in
-         * the batch.
-         *
-         * More info: https://docs.aws.amazon.com/AWSSimpleQueueService/latest/APIReference/API_ReceiveMessage.html
-         */
-        if (isBatch) {
-          operation = expectAtLeastOneMatching;
-        }
-
-        return operation(spans, [
-          span => expect(span.n).to.equal('sqs'),
-          span => expect(span.k).to.equal(constants.ENTRY),
-          span => expect(span.t).to.equal(parent.t),
-          span => expect(span.p).to.equal(parent.s),
-          span => expect(span.f.e).to.equal(String(receiverControls.getPid())),
-          span => expect(span.f.h).to.equal('agent-stub-uuid'),
-          span => {
-            if (withError === 'receiver') {
-              expect(span.data.sqs.error).to.match(/Forced error/);
-            } else {
-              expect(span.data.sqs.error).to.not.exist;
-            }
-          },
-          span => expect(span.ec).to.equal(withError === 'receiver' ? 1 : 0),
-          span => expect(span.async).to.not.exist,
-          span => expect(span.data).to.exist,
-          span => expect(span.data.sqs).to.be.an('object'),
-          span => expect(span.data.sqs.sort).to.equal('entry'),
-          span => expect(span.data.sqs.queue).to.match(new RegExp(`^${queueUrlPrefix}${queueName}`)),
-          span => expect(span.data.sqs.size).to.be.an('number'),
-          span => {
-            if (!isBatch) {
-              // This makes sure that the span end time is logged properly
-              expect(span.d).to.greaterThan(1000);
-            }
-          }
-        ]);
-      }
-
-      function verifySQSExit(_senderControls, spans, parent, messageId, withError) {
-        return expectExactlyOneMatching(spans, [
-          span => expect(span.n).to.equal('sqs'),
-          span => expect(span.k).to.equal(constants.EXIT),
-          span => expect(span.t).to.equal(parent.t),
-          span => expect(span.p).to.equal(parent.s),
-          span => expect(span.f.e).to.equal(String(_senderControls.getPid())),
-          span => expect(span.f.h).to.equal('agent-stub-uuid'),
-          span => expect(span.error).to.not.exist,
-          span => expect(span.ec).to.equal(withError === 'sender' ? 1 : 0),
-          span => expect(span.async).to.not.exist,
-          span => expect(span.data).to.exist,
-          span => expect(span.data.sqs).to.be.an('object'),
-          span => expect(span.data.sqs.sort).to.equal('exit'),
-          span => expect(span.data.sqs.queue).to.match(new RegExp(`^${queueUrlPrefix}${queueName}`))
-        ]);
-      }
     });
 
     describe('tracing disabled', () => {
@@ -476,50 +383,198 @@ function start(version) {
         await verifyNoUnclosedSpansHaveBeenDetected(receiverControls);
       });
     });
+
+    describe('message header limits', function () {
+      const senderControls = new ProcessControls({
+        appPath: path.join(__dirname, 'sender'),
+        port: 3215,
+        useGlobalAgent: true,
+        env: {
+          AWS_SQS_QUEUE_URL: `${queueUrlPrefix}${queueName}`,
+          AWS_SDK_CLIENT_SQS_REQUIRE: version
+        }
+      });
+
+      const receiverControls = new ProcessControls({
+        appPath: path.join(__dirname, 'receiver'),
+        port: 3216,
+        useGlobalAgent: true,
+        env: {
+          AWS_SQS_QUEUE_URL: `${queueUrlPrefix}${queueName}`,
+          AWS_SDK_CLIENT_SQS_REQUIRE: version
+        }
+      });
+
+      ProcessControls.setUpHooksWithRetryTime(retryTime, senderControls);
+      ProcessControls.setUpHooksWithRetryTime(retryTime, receiverControls);
+
+      const sendingMethod = getNextSendMethod();
+      const apiPath = `/send-message/${sendingMethod}`;
+
+      it('creates spans but does not add correlation headers', async () => {
+        const response = await senderControls.sendRequest({
+          method: 'GET',
+          path: `${apiPath}?addHeaders=9`
+        });
+
+        await retry(async () => {
+          verifyResponseAndMessage(response, receiverControls);
+          const spans = await agentControls.getSpans();
+
+          const httpEntry = verifyHttpRootEntry({ spans, apiPath, pid: String(senderControls.getPid()) });
+          verifySQSExit({ senderControls, spans, parent: httpEntry });
+          verifyHttpExit({ spans, parent: httpEntry, pid: String(senderControls.getPid()) });
+
+          // The SQS entry will be the root of a new trace because we were not able to add tracing headers.
+          const sqsEntry = verifySQSEntry({ receiverControls, spans, parent: null });
+          verifyHttpExit({ spans, parent: sqsEntry, pid: String(receiverControls.getPid()) });
+        }, retryTime);
+
+        await verifyNoUnclosedSpansHaveBeenDetected(receiverControls);
+      });
+    });
+
+    async function verify({ receiverControls, senderControls, response, apiPath, withError, isBatch }) {
+      if (withError === 'sender') {
+        expect(response.error).to.equal('MissingParameter: The request must contain the parameter MessageBody.');
+      } else {
+        await retry(async () => {
+          if (isBatch) {
+            verifyResponseAndBatchMessage(response, receiverControls);
+          } else {
+            verifyResponseAndMessage(response, receiverControls);
+          }
+          const spans = await agentControls.getSpans();
+          verifySpans({ receiverControls, senderControls, spans, apiPath, withError, isBatch });
+        }, retryTime);
+      }
+    }
+
+    function verifyResponseAndMessage(response, receiverControls) {
+      expect(response).to.be.an('object');
+      const messageId = response.result.MessageId;
+      expect(messageId).to.be.a('string');
+      const receivedMessages = receiverControls.getIpcMessages();
+      expect(receivedMessages).to.be.an('array');
+      expect(receivedMessages).to.have.lengthOf.at.least(1);
+      const message = receivedMessages.filter(({ MessageId }) => MessageId === messageId)[0];
+      expect(message).to.exist;
+      expect(message.Body).to.equal('Hello from Node tracer');
+    }
+
+    function verifyResponseAndBatchMessage(response, receiverControls) {
+      expect(response.result).to.be.an('object');
+      expect(response.result.Successful.length, 'at least one message in the batch').to.at.least(1);
+      const messageId = response.result.Successful.slice(-1)[0].MessageId;
+      expect(messageId, 'message id of last successful sent message').to.be.a('string');
+      const receivedMessages = receiverControls.getIpcMessages();
+      expect(receivedMessages, 'IPC messages must be an array').to.be.an('array');
+      expect(receivedMessages, 'IPC messages has at least one item').to.have.lengthOf.at.least(1);
+      const message = receivedMessages.filter(({ MessageId }) => MessageId === messageId)[0];
+      expect(message, 'received message matches with sent message').to.exist;
+      expect(message.Body).to.equal('Hello from Node tracer');
+    }
+
+    async function verifySingleSqsEntrySpanWithParent(traceId, spanId) {
+      await retry(async () => {
+        const spans = await agentControls.getSpans();
+        return expectExactlyOneMatching(spans, [
+          span => expect(span.t).to.equal(traceId),
+          span => expect(span.p).to.equal(spanId),
+          span => expect(span.k).to.equal(constants.ENTRY)
+        ]);
+      }, retryTime);
+    }
+
+    function verifySpans({ receiverControls, senderControls, spans, apiPath, withError, isBatch }) {
+      const httpEntry = verifyHttpRootEntry({ spans, apiPath, pid: String(senderControls.getPid()) });
+      const sqsExit = verifySQSExit({ senderControls, spans, parent: httpEntry, withError });
+      verifyHttpExit({ spans, parent: httpEntry, pid: String(senderControls.getPid()) });
+
+      if (withError !== 'publisher') {
+        const sqsEntry = verifySQSEntry({ receiverControls, spans, parent: sqsExit, withError, isBatch });
+        verifyHttpExit({ spans, parent: sqsEntry, pid: String(receiverControls.getPid()) });
+      }
+    }
+
+    function verifySQSEntry({ receiverControls, spans, parent, withError, isBatch }) {
+      let operation = expectExactlyOneMatching;
+
+      /**
+       * When receiving messages in batch, we can have more than one span that matches the criteria because
+       * SQS may not send all messages in one batch, thus we cannot guarantee that all messages will be in
+       * the batch.
+       *
+       * More info: https://docs.aws.amazon.com/AWSSimpleQueueService/latest/APIReference/API_ReceiveMessage.html
+       */
+      if (isBatch) {
+        operation = expectAtLeastOneMatching;
+      }
+
+      return operation(spans, [
+        span => expect(span.n).to.equal('sqs'),
+        span => expect(span.k).to.equal(constants.ENTRY),
+        span => (parent ? expect(span.t).to.equal(parent.t) : expect(span.t).to.be.a('string')),
+        span => (parent ? expect(span.p).to.equal(parent.s) : expect(span.p).to.not.exist),
+        span => expect(span.f.e).to.equal(String(receiverControls.getPid())),
+        span => expect(span.f.h).to.equal('agent-stub-uuid'),
+        span => {
+          if (withError === 'receiver') {
+            expect(span.data.sqs.error).to.match(/Forced error/);
+          } else {
+            expect(span.data.sqs.error).to.not.exist;
+          }
+        },
+        span => expect(span.ec).to.equal(withError === 'receiver' ? 1 : 0),
+        span => expect(span.async).to.not.exist,
+        span => expect(span.data).to.exist,
+        span => expect(span.data.sqs).to.be.an('object'),
+        span => expect(span.data.sqs.sort).to.equal('entry'),
+        span => expect(span.data.sqs.queue).to.match(new RegExp(`^${queueUrlPrefix}${queueName}`)),
+        span => expect(span.data.sqs.size).to.be.an('number'),
+        span => {
+          if (!isBatch) {
+            // This makes sure that the span end time is logged properly
+            expect(span.d).to.greaterThan(1000);
+          }
+        }
+      ]);
+    }
+
+    function verifySQSExit({ senderControls, spans, parent, withError }) {
+      return expectExactlyOneMatching(spans, [
+        span => expect(span.n).to.equal('sqs'),
+        span => expect(span.k).to.equal(constants.EXIT),
+        span => expect(span.t).to.equal(parent.t),
+        span => expect(span.p).to.equal(parent.s),
+        span => expect(span.f.e).to.equal(String(senderControls.getPid())),
+        span => expect(span.f.h).to.equal('agent-stub-uuid'),
+        span => expect(span.error).to.not.exist,
+        span => expect(span.ec).to.equal(withError === 'sender' ? 1 : 0),
+        span => expect(span.async).to.not.exist,
+        span => expect(span.data).to.exist,
+        span => expect(span.data.sqs).to.be.an('object'),
+        span => expect(span.data.sqs.sort).to.equal('exit'),
+        span => expect(span.data.sqs.queue).to.match(new RegExp(`^${queueUrlPrefix}${queueName}`))
+      ]);
+    }
+
+    /**
+     * Verify that the warning "Cannot start an AWS SQS entry span when another span is already active."
+     * has not been logged. That log message would indicate that we did not correctly cancel the SQS entry span that had
+     * been started for the previous sqs.receiveMessage/sqs.sendCommand invocation.
+     */
+    async function verifyNoUnclosedSpansHaveBeenDetected(receiverControls) {
+      let warnLogs = await receiverControls.sendRequest({
+        path: '/warn-logs',
+        suppressTracing: true
+      });
+      warnLogs = warnLogs.filter(msg => msg.includes('Cannot start'));
+      if (warnLogs.length > 0) {
+        fail(`Unexpected warnings have been logged: ${JSON.stringify(warnLogs)}`);
+      }
+    }
   });
-}
-
-function verifyResponseAndMessage(response, receiverControls) {
-  expect(response).to.be.an('object');
-  const messageId = response.result.MessageId;
-  expect(messageId).to.be.a('string');
-  const receivedMessages = receiverControls.getIpcMessages();
-  expect(receivedMessages).to.be.an('array');
-  expect(receivedMessages).to.have.lengthOf.at.least(1);
-  const message = receivedMessages.filter(({ MessageId }) => MessageId === messageId)[0];
-  expect(message).to.exist;
-  expect(message.Body).to.equal('Hello from Node tracer');
-  return messageId;
-}
-
-function verifyResponseAndBatchMessage(response, receiverControls) {
-  expect(response.result).to.be.an('object');
-  expect(response.result.Successful.length, 'at least one message in the batch').to.at.least(1);
-  const messageId = response.result.Successful.slice(-1)[0].MessageId;
-  expect(messageId, 'message id of last successful sent message').to.be.a('string');
-  const receivedMessages = receiverControls.getIpcMessages();
-  expect(receivedMessages, 'IPC messages must be an array').to.be.an('array');
-  expect(receivedMessages, 'IPC messages has at least one item').to.have.lengthOf.at.least(1);
-  const message = receivedMessages.filter(({ MessageId }) => MessageId === messageId)[0];
-  expect(message, 'received message matches with sent message').to.exist;
-  expect(message.Body).to.equal('Hello from Node tracer');
-  return messageId;
-}
-
-/**
- * Verify that the warning "Cannot start an AWS SQS entry span when another span is already active."
- * has not been logged. That log message would indicate that we did not correctly cancel the SQS entry span that had
- * been started for the previous sqs.receiveMessage/sqs.sendCommand invocation.
- */
-async function verifyNoUnclosedSpansHaveBeenDetected(receiverControls) {
-  let warnLogs = await receiverControls.sendRequest({
-    path: '/warn-logs',
-    suppressTracing: true
-  });
-  warnLogs = warnLogs.filter(msg => msg.includes('Cannot start'));
-  if (warnLogs.length > 0) {
-    fail(`Unexpected warnings have been logged: ${JSON.stringify(warnLogs)}`);
-  }
 }
 
 module.exports = function (version) {

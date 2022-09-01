@@ -23,7 +23,7 @@ app.get('/', (_req, res) => {
   res.send('Ok');
 });
 
-function buildMessageParams(withError, isBatch) {
+function buildMessageParams(withError, isBatch, addHeaders) {
   const sendParams = {
     QueueUrl: queueURL
   };
@@ -51,13 +51,24 @@ function buildMessageParams(withError, isBatch) {
     ];
   }
 
+  if (addHeaders) {
+    sendParams.MessageAttributes = {};
+    for (let i = 0; i < addHeaders; i++) {
+      sendParams.MessageAttributes[`dummy-attribute-${i}`] = {
+        DataType: 'String',
+        StringValue: `dummy value ${i}`
+      };
+    }
+  }
+
   return sendParams;
 }
 
 app.post('/send-callback', (req, res) => {
   const withError = req.query.withError !== undefined;
   const isBatch = req.query.isBatch !== undefined;
-  const sendParams = buildMessageParams(withError, isBatch);
+  const addHeaders = req.query.addHeaders ? parseInt(req.query.addHeaders, 10) : 0;
+  const sendParams = buildMessageParams(withError, isBatch, addHeaders);
 
   const method = isBatch ? 'sendMessageBatch' : 'sendMessage';
 
@@ -81,7 +92,8 @@ app.post('/send-callback', (req, res) => {
 app.post('/send-promise', async (req, res) => {
   const withError = req.query.withError !== undefined;
   const isBatch = req.query.isBatch !== undefined;
-  const sendParams = buildMessageParams(withError, isBatch);
+  const addHeaders = req.query.addHeaders ? parseInt(req.query.addHeaders, 10) : 0;
+  const sendParams = buildMessageParams(withError, isBatch, addHeaders);
   const method = isBatch ? 'sendMessageBatch' : 'sendMessage';
 
   try {

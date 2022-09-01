@@ -81,12 +81,12 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/sns', function () {
 
     withErrorOptions.forEach(withError => {
       if (withError) {
-        describe(`getting result with error: ${withError ? 'yes' : 'no'}`, () => {
+        describe('getting result with error', () => {
           it(`should instrument ${availableOperations.join(', ')} with error`, () =>
             promisifyNonSequentialCases(verify, availableOperations, senderControls, withError, getNextCallMethod));
         });
       } else {
-        describe(`getting result with error: ${withError ? 'yes' : 'no'}`, () => {
+        describe('getting result without error', () => {
           availableOperations.forEach(operation => {
             const requestMethod = getNextCallMethod();
             it(`operation: ${operation}/${requestMethod}`, async () => {
@@ -104,19 +104,44 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/sns', function () {
       }
     });
 
-    function verify(_senderControls, response, apiPath, operation, withError, _receiverControls) {
-      return retry(async () => {
-        const spans = await agentControls.getSpans();
-        const sqsEntrySpan = spans.filter(span => span.n === 'sqs' && span.k === constants.ENTRY);
+    describe('message header limits', () => {
+      it('creates spans but does not add correlation headers ', async () => {
+        const operation = 'publish';
+        const apiPath = `/${operation}/Async`;
+        await senderControls.sendRequest({
+          method: 'GET',
+          path: `${apiPath}?addHeaders=9`
+        });
+        await retry(async () => {
+          const spans = await agentControls.getSpans();
+          const httpEntry = verifyHttpRootEntry({ spans, apiPath, pid: String(senderControls.getPid()) });
+          verifyExitSpan({
+            spanName: 'sns',
+            spans,
+            parent: httpEntry,
+            withError: false,
+            pid: String(senderControls.getPid()),
+            extraTests: [span => expect(span.data.sns.topic).to.equal(topicArn)]
+          });
+
+          verifyHttpExit({ spans, parent: httpEntry, pid: String(senderControls.getPid()) });
+          verifySQSEntrySpan(spans, String(receiverControls.getPid()), null);
+        });
+      });
+    });
+
+    async function verify(_senderControls, response, apiPath, operation, withError, _receiverControls) {
+      const spans = await retry(async () => {
+        const _spans = await agentControls.getSpans();
+        const sqsEntrySpan = _spans.filter(span => span.n === 'sqs' && span.k === constants.ENTRY);
 
         if (withError || (sqsEntrySpan.length > 0 && !withError)) {
-          return spans;
+          return _spans;
         } else {
-          return Promise.reject();
+          throw new Error(`Expected an SQS entry span but did not receive one. All spans: ${stringifyItems(_spans)}`);
         }
-      }, retryTime).then(spans =>
-        verifySpans(_senderControls, spans, apiPath, operation, withError, _receiverControls)
-      );
+      }, retryTime);
+      verifySpans(_senderControls, spans, apiPath, operation, withError, _receiverControls);
     }
 
     function verifySpans(_senderControls, spans, apiPath, operation, withError, _receiverControls) {
@@ -141,8 +166,8 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/sns', function () {
         span => expect(span.n).to.be.eq('sqs'),
         span => expect(span.k).to.be.eq(constants.ENTRY),
         span => expect(span.f.e).to.be.eq(receiverPid),
-        span => expect(span.t).to.be.eq(parent.t),
-        span => expect(span.p).to.be.eq(parent.s),
+        span => (parent ? expect(span.t).to.be.eq(parent.t) : expect(span.t).to.be.a('string')),
+        span => (parent ? expect(span.p).to.be.eq(parent.s) : expect(span.p).to.not.exist),
         span => expect(span.data.sqs.queue).to.be.eq(sqsQueueUrl)
       ]);
     }
