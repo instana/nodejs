@@ -14,7 +14,7 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 
 
 
-## 2.7.0 (2022-08-31)
+# [2.7.0](https://github.com/instana/nodejs/compare/v2.6.2...v2.7.0) (2022-08-31)
 
 
 ### Features
@@ -34,7 +34,7 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 
 
 
-## 2.6.2 (2022-08-17)
+## [2.6.2](https://github.com/instana/nodejs/compare/v2.6.1...v2.6.2) (2022-08-17)
 
 **Note:** Version bump only for package @instana/root
 
