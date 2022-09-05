@@ -7,15 +7,70 @@ on:
   push:
     tags:
       - v[0-9]+.*
+  workflow_dispatch:
+    inputs:
+      tag_ref:
+        description: "refs/tags/v2.6.2"
+        required: true
+        type: string
 
 jobs:
   create-release:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: taiki-e/create-gh-release-action@v1
+        with:
+          # With fetch-depth 0 the checkout action will also fetch all tags and branches. We need the tags for
+          # ./disallow-major-release.sh to work.
+          fetch-depth: 0
+          token: ${{ secrets.GH_PAT }}
+      - name: Set GITHUB_REF from input
+        if: "${{ inputs.tag_ref != '' }}"
+        run: |
+          echo "GITHUB_REF=${{ inputs.tag_ref }}" >> $GITHUB_ENV
+      - name: Set GITHUB_REF from original
+        if: "${{ inputs.tag_ref == '' }}"
+        run: |
+          echo "GITHUB_REF=$GITHUB_REF" >> $GITHUB_ENV
+      - uses: kirrg001/create-gh-release-action@main
         with:
           changelog: CHANGELOG.md
           draft: true
+          githubref: ${{ env.GITHUB_REF }}
         env:
           GITHUB_TOKEN: ${{ secrets.GH_PAT }}
+      - name: Send success message
+        if: "${{ success() }}"
+        uses: slackapi/slack-github-action@v1.21.0
+        with:
+          channel-id: ${{ secrets.SLACK_CHANNEL_ID }}
+          payload: |
+            {
+              "text": "Github Release has been created successfully! :tada:",
+              "attachments": [{
+                "color": "good",
+                "fields": [
+                  {
+                    "title": "Releases URL",
+                    "value": "<${{ github.server_url }}/${{ github.repository }}/releases>"
+                  }
+                ]
+              }]
+            }
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+
+      - name: Send failure message
+        if: "${{ failure() }}"
+        uses: slackapi/slack-github-action@v1.21.0
+        with:
+          channel-id: ${{ secrets.SLACK_CHANNEL_ID }}
+          payload: |
+            {
+              "text": ":boom: :scream: Github Release has failed! :scream_cat: :sob:",
+              "attachments": [{
+                "color": "danger"
+              }]
+            }
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
