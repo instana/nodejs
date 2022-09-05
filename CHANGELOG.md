@@ -14,7 +14,7 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 
 
 
-# 2.7.0 (2022-08-31)
+## 2.7.0 (2022-08-31)
 
 
 ### Features
