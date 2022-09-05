@@ -2,7 +2,16 @@
 # (c) Copyright IBM Corp. 2022
 #######################################
 
-set -eo pipefail
+set -xeo pipefail
+
+LAST_TAG=$(node_modules/.bin/git-semver-tags | head -n1)
+echo "Last tag: $LAST_TAG"
+
+echo "Commits since last tag:"
+node_modules/.bin/git-raw-commits --from "$LAST_TAG" --format '%B%n-hash-%n%H'
+
+# We do not actually need to figure out the last tag or the raw commits on our own, conventional-recommended-bump takes
+# care of that. The previous output statements are purely for information, in case the check goes wrong.
 
 RELEASE_TYPE=$(node_modules/.bin/conventional-recommended-bump --preset conventionalcommits)
 
