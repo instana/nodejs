@@ -43,8 +43,9 @@ jobs:
     steps:
       - uses: actions/checkout@v3
         with:
-          # 0 = all, default is 1
-          fetch-depth: 1337
+          # With fetch-depth 0 the checkout action will also fetch all tags and branches. We need the tags for
+          # ./disallow-major-release.sh to work.
+          fetch-depth: 0
           token: ${{ secrets.GH_PAT }}
       - uses: actions/setup-node@v3
         with:
