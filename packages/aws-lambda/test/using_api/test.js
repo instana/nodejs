@@ -201,7 +201,7 @@ describe('Using the API', () => {
         expect(body.logs.info).to.be.empty;
         expect(body.logs.warn).to.deep.equal([
           'INSTANA_DISABLE_CA_CHECK is set, which means that the server certificate will not be verified against the ' +
-            'list of known CAs. This makes your lambda vulnerable to MITM attacks when connecting to Instana. ' +
+            'list of known CAs. This makes your service vulnerable to MITM attacks when connecting to Instana. ' +
             'This setting should never be used in production, unless you use our on-premises product and are unable ' +
             'to operate the Instana back end with a certificate with a known root CA.'
         ]);
