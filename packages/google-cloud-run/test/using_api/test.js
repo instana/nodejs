@@ -64,17 +64,20 @@ describe('Using the API', function () {
   function verify(control, response) {
     expect(response).to.be.an('object');
     expect(response.message).to.equal('Hello Cloud Run!');
-    expect(response.logs).to.deep.equal({
-      debug: ['Sending data to Instana (/metrics).', 'Sent data to Instana (/metrics).'],
-      info: [],
-      warn: [
-        'INSTANA_DISABLE_CA_CHECK is set, which means that the server certificate will not be verified against the ' +
-          'list of known CAs. This makes your lambda vulnerable to MITM attacks when connecting to Instana. This ' +
-          'setting should never be used in production, unless you use our on-premises product and are unable to ' +
-          'operate the Instana back end with a certificate with a known root CA.'
-      ],
-      error: []
-    });
+
+    // During phase 1 of the Kafka header migration (October 2022 - October 2023) there will be a debug log about
+    // ignoring the option 'both' for rdkafka. We do not care about that log message in this test.
+    const debug = response.logs.debug.filter(msg => !msg.includes('Ignoring configuration or default value'));
+    expect(debug).to.deep.equal(['Sending data to Instana (/metrics).', 'Sent data to Instana (/metrics).']);
+    expect(response.logs.info).to.be.empty;
+    expect(response.logs.warn).to.deep.equal([
+      'INSTANA_DISABLE_CA_CHECK is set, which means that the server certificate will not be verified against the ' +
+        'list of known CAs. This makes your service vulnerable to MITM attacks when connecting to Instana. This ' +
+        'setting should never be used in production, unless you use our on-premises product and are unable to ' +
+        'operate the Instana back end with a certificate with a known root CA.'
+    ]);
+    expect(response.logs.error).to.be.empty;
+
     expect(response.currentSpan.span.n).to.equal('node.http.server');
     expect(response.currentSpan.span.f.hl).to.be.true;
     expect(response.currentSpan.span.f.e).to.equal(instanceId);

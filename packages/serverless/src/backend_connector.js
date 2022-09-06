@@ -231,7 +231,7 @@ function send(resourcePath, payload, finalLambdaRequest, callback) {
     if (disableCaCheck) {
       logger.warn(
         `${disableCaCheckEnvVar} is set, which means that the server certificate will not be verified against ` +
-          'the list of known CAs. This makes your lambda vulnerable to MITM attacks when connecting to Instana. ' +
+          'the list of known CAs. This makes your service vulnerable to MITM attacks when connecting to Instana. ' +
           'This setting should never be used in production, unless you use our on-premises product and are unable to ' +
           'operate the Instana back end with a certificate with a known root CA.'
       );
