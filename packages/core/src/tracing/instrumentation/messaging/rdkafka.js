@@ -13,8 +13,11 @@ const cls = require('../../cls');
 const shimmer = require('shimmer');
 const { getFunctionArguments } = require('../../../util/function_arguments');
 let traceCorrelationEnabled = constants.kafkaTraceCorrelationDefault;
-let headerFormat = constants.kafkaHeaderFormatDefault;
-overrideKafkaHeaderFormat();
+
+let logger;
+logger = require('../../../logger').getLogger('tracing/rdkafka', newLogger => {
+  logger = newLogger;
+});
 
 let isActive = false;
 
@@ -24,14 +27,12 @@ exports.init = function init(config) {
   requireHook.onModuleLoad('node-rdkafka', instrumentConsumer);
 
   traceCorrelationEnabled = config.tracing.kafka.traceCorrelation;
-  headerFormat = config.tracing.kafka.headerFormat;
-  overrideKafkaHeaderFormat();
+  logWarningForKafkaHeaderFormat(config.tracing.kafka.headerFormat);
 };
 
 exports.updateConfig = function updateConfig(config) {
   traceCorrelationEnabled = config.tracing.kafka.traceCorrelation;
-  headerFormat = config.tracing.kafka.headerFormat;
-  overrideKafkaHeaderFormat();
+  logWarningForKafkaHeaderFormat(config.tracing.kafka.headerFormat);
 };
 
 exports.activate = function activate(extraConfig) {
@@ -39,10 +40,7 @@ exports.activate = function activate(extraConfig) {
     if (extraConfig.tracing.kafka.traceCorrelation != null) {
       traceCorrelationEnabled = extraConfig.tracing.kafka.traceCorrelation;
     }
-    if (typeof extraConfig.tracing.kafka.headerFormat === 'string') {
-      headerFormat = extraConfig.tracing.kafka.headerFormat;
-      overrideKafkaHeaderFormat();
-    }
+    logWarningForKafkaHeaderFormat(extraConfig.tracing.kafka.headerFormat);
   }
   isActive = true;
 };
@@ -51,25 +49,36 @@ exports.deactivate = function deactivate() {
   isActive = false;
 };
 
-// Note: This function can be removed as soon as we switch to 'both' as the default header format.
-function overrideKafkaHeaderFormat() {
+// Note: This function can be removed as soon as we finish the Kafka header migration and remove the ability to
+// configure the header format (at that point, we will only be using string headers).
+function logWarningForKafkaHeaderFormat(headerFormat) {
   // node-rdkafka's handling of non-string header values is broken, see
-  // https://github.com/Blizzard/node-rdkafka/pull/933 and https://github.com/Blizzard/node-rdkafka/pull/935.
+  // https://github.com/Blizzard/node-rdkafka/pull/968.
   //
-  // Thus, our current binary header format for Instana Kafka trace correlation headers (X_INSTANA_C) will not work with
-  // node-kafka. Fortunately, we are already planning to migrate away from that header format to a string based header
-  // format. That customer facing phase of that migration has not started yet, thus the the option `headerFormat` has
-  // not yet been documented publicly.
+  // For this reason, the legacy binary header format for Instana Kafka trace correlation headers (X_INSTANA_C) will not
+  // work with node-rdkafka. Fortunately, we are already in the process of migrating away from that binary header format
+  // to a header format that is purely based on string values.
   //
-  // To ensure customers can use rdkafka instrumentation with trace correlation, we set the default value for
-  // headerFormat to "both" here, instead of "binary". That means we send both header formats by default.
-  //
-  // - Node.js rdkafka producer -> any Node.js/Java/.Net receiver: trace correlation works as expected, since consumers
-  //   will look for both string and binary headers.
-  // - Node.js rdkafka producer -> Go consumer does not work yet, until the Go tracer implements phase 0 of the
-  //   Kafka header migration.
+  // Trace correlation would be broken for rdkafka senders with the header format 'binary'. If that format has been
+  // configured explicitly, we log a warning and ignore the config value. The rdkafka instrumentation alwas acts as if
+  // format 'string' had been configured.
   if (headerFormat === 'binary') {
-    headerFormat = 'both';
+    logger.warn(
+      "Ignoring configuration value 'binary' for Kafka header format in node-rdkafka instrumentation, using header " +
+        "format 'string' instead. Binary headers do not work with node-rdkafka, see " +
+        'https://github.com/Blizzard/node-rdkafka/pull/968.'
+    );
+  } else if (headerFormat === 'both') {
+    // The option format 'both' which is available for other tracers/instrumentations (sending both binary and string
+    // headers also does not make sense for node-rdkafka headers, because sending binary headers along with string
+    // headers will not have any benefit. Theoretically, we would also want to warn if 'both' has been configured
+    // explicitly. But both is also the current default value and we cannot differentiate between an explicit
+    // configuration and the default value here, so we do not log a warning for 'both', just a debug message.
+    logger.debug(
+      "Ignoring configuration or default value 'both' for Kafka header format in node-rdkafka instrumentation, using " +
+        "header format 'string' instead. Binary headers do not work with node-rdkafka, see " +
+        'https://github.com/Blizzard/node-rdkafka/pull/968.'
+    );
   }
 }
 
@@ -340,42 +349,7 @@ function addTraceContextHeader(headers, span) {
   if (!traceCorrelationEnabled) {
     return headers;
   }
-  switch (headerFormat) {
-    case 'binary':
-      return addTraceContextHeaderBinary(headers, span);
-    case 'string':
-      return addTraceContextHeaderString(headers, span);
-    case 'both':
-    // fall through (both is the default)
-    default:
-      return addTraceContextHeaderBinary(addTraceContextHeaderString(headers, span), span);
-  }
-}
 
-/**
- * At the time of this instrumentation, the node-rdkafka had an issue with handling binary content, where any zeros
- * found in the beginning of the data are trimmed out, and any number higher than 127 is replaced by "unknown".
- * More details in the PR that fixes the issue: https://github.com/Blizzard/node-rdkafka/pull/935.
- *
- * This means that customers using node-rdkafka or any libs that depend on it will not have proper span correlation
- * when headers are sent as binary. The exit and entry spans will still be created though.
- * It's important to know that customers using node-rdkafka only as consumers, where the producer was another runtime
- * instrumented by Instana, the correlation should work as intended. The problem lies only in the node-rdkafka producer.
- */
-function addTraceContextHeaderBinary(headers, span) {
-  if (headers == null) {
-    headers = [
-      { [constants.kafkaLegacyTraceContextHeaderName]: tracingUtil.renderTraceContextToBuffer(span) },
-      { [constants.kafkaLegacyTraceLevelHeaderName]: constants.kafkaLegacyTraceLevelValueInherit }
-    ];
-  } else if (headers && Array.isArray(headers)) {
-    headers.push({ [constants.kafkaLegacyTraceContextHeaderName]: tracingUtil.renderTraceContextToBuffer(span) });
-    headers.push({ [constants.kafkaLegacyTraceLevelHeaderName]: constants.kafkaLegacyTraceLevelValueInherit });
-  }
-  return headers;
-}
-
-function addTraceContextHeaderString(headers, span) {
   if (headers == null) {
     headers = [
       { [constants.kafkaTraceIdHeaderName]: leftPad(span.t, 32) },
@@ -394,32 +368,7 @@ function addTraceLevelSuppression(headers) {
   if (!traceCorrelationEnabled) {
     return headers;
   }
-  switch (headerFormat) {
-    case 'binary':
-      return addTraceLevelSuppressionBinary(headers);
-    case 'string':
-      return addTraceLevelSuppressionString(headers);
-    case 'both':
-    // fall through (both is the default)
-    default:
-      return addTraceLevelSuppressionString(addTraceLevelSuppressionBinary(headers));
-  }
-}
 
-function addTraceLevelSuppressionBinary(headers) {
-  if (headers == null) {
-    headers = [
-      {
-        [constants.kafkaLegacyTraceLevelHeaderName]: constants.kafkaLegacyTraceLevelValueSuppressed
-      }
-    ];
-  } else if (headers && typeof Array.isArray(headers)) {
-    headers.push({ [constants.kafkaLegacyTraceLevelHeaderName]: constants.kafkaLegacyTraceLevelValueSuppressed });
-  }
-  return headers;
-}
-
-function addTraceLevelSuppressionString(headers) {
   if (headers == null) {
     headers = [
       {

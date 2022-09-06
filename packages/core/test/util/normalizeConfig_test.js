@@ -353,14 +353,16 @@ describe('util.normalizeConfig', () => {
 
   it('should ignore non-string Kafka header format', () => {
     const config = normalizeConfig({ tracing: { kafka: { headerFormat: 13 } } });
-    // before we start phase 1 of the migration, 'binary' will be the default value
-    expect(config.tracing.kafka.headerFormat).to.equal('binary');
+    // During phase 1 of the migration, 'both' will be the default value. In phase 2, the ability to configure the
+    // format will be removed and we will only use the 'string' format.
+    expect(config.tracing.kafka.headerFormat).to.equal('both');
   });
 
   it('should ignore invalid Kafka header format', () => {
     const config = normalizeConfig({ tracing: { kafka: { headerFormat: 'whatever' } } });
-    // before we start phase 1 of the migration, 'binary' will be the default value
-    expect(config.tracing.kafka.headerFormat).to.equal('binary');
+    // During phase 1 of the migration, 'both' will be the default value. In phase 2, the ability to configure the
+    // format will be removed and we will only use the 'string' format.
+    expect(config.tracing.kafka.headerFormat).to.equal('both');
   });
 
   it('should set Kafka header format to binary via INSTANA_KAFKA_HEADER_FORMAT', () => {
@@ -384,8 +386,9 @@ describe('util.normalizeConfig', () => {
   it('should ignore invalid Kafka header format in INSTANA_KAFKA_HEADER_FORMAT', () => {
     process.env.INSTANA_KAFKA_HEADER_FORMAT = 'whatever';
     const config = normalizeConfig();
-    // before we start phase 1 of the migration, 'binary' will be the default value
-    expect(config.tracing.kafka.headerFormat).to.equal('binary');
+    // During phase 1 of the migration, 'both' will be the default value. In phase 2, the ability to configure the
+    // format will be removed and we will only use the 'string' format.
+    expect(config.tracing.kafka.headerFormat).to.equal('both');
   });
 
   it('should accept custom secrets config', () => {
@@ -478,7 +481,7 @@ describe('util.normalizeConfig', () => {
     expect(config.tracing.spanBatchingEnabled).to.be.false;
     expect(config.tracing.disableW3cTraceCorrelation).to.be.false;
     expect(config.tracing.kafka.traceCorrelation).to.be.true;
-    expect(config.tracing.kafka.headerFormat).to.equal('binary');
+    expect(config.tracing.kafka.headerFormat).to.equal('both');
     expect(config.secrets).to.be.an('object');
     expect(config.secrets.matcherMode).to.equal('contains-ignore-case');
     expect(config.secrets.keywords).to.deep.equal(['key', 'pass', 'secret']);
