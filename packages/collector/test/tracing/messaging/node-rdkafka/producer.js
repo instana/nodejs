@@ -183,7 +183,7 @@ app.get('/produce/:method', async (req, res) => {
     res.status(200).send(response);
   } catch (err) {
     /**
-     * According to the Node.js spec, if a writtable stream receives the 'error' event, the only valid event by then is
+     * According to the Node.js spec, if a writable stream receives the 'error' event, the only valid event by then is
      * 'close'. So we create a new stream after an error occurs.
      *
      * From the Node.js docs (https://nodejs.org/dist/latest-v16.x/docs/api/stream.html#event-error):

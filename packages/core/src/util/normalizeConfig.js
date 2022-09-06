@@ -9,6 +9,8 @@
 
 const supportedTracingVersion = require('../tracing/supportedVersion');
 
+const constants = require('../tracing/constants');
+
 /**
  * @typedef {Object} InstanaTracingOption
  * @property {boolean} [enabled]
@@ -33,11 +35,7 @@ const supportedTracingVersion = require('../tracing/supportedVersion');
 /**
  * @typedef {Object} KafkaTracingOptions
  * @property {boolean} [traceCorrelation]
- * @property {KafkaTraceCorrelationFormat} [headerFormat]
- */
-
-/**
- * @typedef {'binary' | 'string' | 'both'} KafkaTraceCorrelationFormat
+ * @property {import('../tracing/constants').KafkaTraceCorrelationFormat} [headerFormat]
  */
 
 /**
@@ -114,9 +112,7 @@ const defaults = {
     disableW3cTraceCorrelation: false,
     kafka: {
       traceCorrelation: true,
-      // Before we start phase 3 of the migration, 'binary' will be the default value. With phase 1, we will move to
-      // 'both',  with phase 2 it will no longer be configurable and will always use 'string'.
-      headerFormat: 'binary'
+      headerFormat: constants.kafkaHeaderFormatDefault
     }
   },
   secrets: {

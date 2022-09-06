@@ -23,15 +23,22 @@ exports.kafkaLegacyTraceLevelHeaderName = 'X_INSTANA_L';
 exports.kafkaLegacyTraceLevelValueSuppressed = Buffer.from([0]);
 exports.kafkaLegacyTraceLevelValueInherit = Buffer.from([1]);
 
-// new kafka trace correlation (string values) starting approximately 2021-11
+// New kafka trace correlation (string values). Available as opt-in since 2021-10, and send out together with the legacy
+// binary headers by default starting in 2022-10. We will switch over to these headers completely (omitting the legacy
+// headers approximately in 2023-10.
 exports.kafkaTraceIdHeaderName = 'X_INSTANA_T';
 exports.kafkaSpanIdHeaderName = 'X_INSTANA_S';
 exports.kafkaTraceLevelHeaderName = 'X_INSTANA_L_S';
 
+/**
+ * @typedef {'binary' | 'string' | 'both'} KafkaTraceCorrelationFormat
+ */
+
+// With the current phase 1 of the Kafka header format migration, 'both', is the default.
+// With phase 2 (starting approximately October 2023) it will no longer be configurable and will always use 'string'.
+/** @type {KafkaTraceCorrelationFormat} */
+exports.kafkaHeaderFormatDefault = 'both';
 exports.kafkaTraceCorrelationDefault = true;
-// Before we start phase 1 of the migration, 'binary' will be the default value. With phase 1, we will move to 'both',
-// with phase 2 it will no longer be configurable and will always use 'string'.
-exports.kafkaHeaderFormatDefault = 'binary';
 
 exports.allInstanaKafkaHeaders = [
   exports.kafkaTraceIdHeaderName,

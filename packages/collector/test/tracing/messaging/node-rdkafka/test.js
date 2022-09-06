@@ -8,12 +8,12 @@
  * Important notes
  * ---------------
  *
- * * The Producer as a stream can only have span correlation if the Writtable option objectMode is set to true.
- * Otherwise, there is no way to append the Instana headers to it.
- * * The Producer, as stream or standard API cannot propagate span correlation when headerFormat is set to 'binary'.
- * More info here: https://github.com/Blizzard/node-rdkafka/pull/935.
- * * If the option dr_cb is not set to true, we cannot guarantee that a message was sent, but a span with a successful
- * sent message will be created.
+ * - The Producer as a stream can only have span correlation if the objectMode option is set to true on the
+ *   writable stream. Otherwise, there is no way to append the Instana headers to it.
+ * - The Producer, as stream or standard API cannot propagate trace correlation headers in format 'binary' and will
+ *   always use 'string'. More info here: https://github.com/Blizzard/node-rdkafka/pull/968.
+ * - If the option dr_cb is not set to true, we cannot guarantee that a message was sent, but a span with a successful
+ *   sent message will be created.
  */
 
 const path = require('path');
