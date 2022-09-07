@@ -32,7 +32,7 @@ jobs:
         if: "${{ inputs.tag_ref == '' }}"
         run: |
           echo "GITHUB_REF=$GITHUB_REF" >> $GITHUB_ENV
-      - uses: kirrg001/create-gh-release-action@main
+      - uses: instana/create-gh-release-action@v1
         with:
           changelog: CHANGELOG.md
           draft: true
