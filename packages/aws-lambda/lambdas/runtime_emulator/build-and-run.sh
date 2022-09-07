@@ -32,10 +32,12 @@ if [[ $INSTANA_LAYER_MODE = local ]]; then
   echo Building local Instana Lambda layer as a container image first.
   pushd ../../layer > /dev/null
   BUILD_LAYER_WITH=local \
-    DOCKER_IMAGE_NAME=instana-aws-lambda-nodejs-local \
-    SKIP_AWS_PUBLISH_LAYER=true \
-    SKIP_DOCKER_IMAGE_PUSH=true \
-    bin/publish-layer.sh
+  LAYER_NAME=instana-nodejs-$INSTANA_LAYER_MODE \
+  REGIONS=us-east-2 \
+  DOCKER_IMAGE_NAME=instana-aws-lambda-nodejs-local \
+  SKIP_AWS_PUBLISH_LAYER=true \
+  SKIP_DOCKER_IMAGE_PUSH=true \
+  bin/publish-layer.sh
   popd > /dev/null
 else
   echo Not building the local Instana Lambda layer.

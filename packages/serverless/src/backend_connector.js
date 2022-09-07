@@ -62,8 +62,8 @@ exports.init = function init(
   propagateErrorsUpstream = _propagateErrorsUpstream == null ? false : _propagateErrorsUpstream;
   defaultTimeout = _defaultTimeout == null ? defaultTimeout : _defaultTimeout;
   useLambdaExtension = _useLambdaExtension;
-
   backendTimeout = defaultTimeout;
+
   if (process.env[timeoutEnvVar]) {
     backendTimeout = parseInt(process.env[timeoutEnvVar], 10);
     if (isNaN(backendTimeout) || backendTimeout < 0) {
@@ -90,8 +90,12 @@ exports.init = function init(
 
   requestHasFailed = false;
 
+  // Heartbeat is only for the AWS Lambda extension
+  // IMPORTANT: the @instana/aws-lambda package will not
+  //            send data once. It can happen all the time till the Lambda handler dies!
+  //            SpanBuffer sends data asap and when the handler is finished the rest is sent.
   if (useLambdaExtension) {
-    executeLambdaExtensionPreflightRequest();
+    executeLambdaExtensionHeartbeatRequest();
   }
 };
 
@@ -111,63 +115,78 @@ exports.sendSpans = function sendSpans(spans, callback) {
   send('/traces', spans, false, callback);
 };
 
-function executeLambdaExtensionPreflightRequest() {
-  logger.debug('Executing preflight request to Lambda extension.');
-  const req = uninstrumented.http.request(
-    {
-      hostname: layerExtensionHostname,
-      port: layerExtensionPort,
-      path: '/preflight',
-      method: 'POST',
-      // This sets a timeout for establishing the socket connection, see setTimeout below for a timeout for an
-      // idle connection after the socket has been opened.
-      timeout: layerExtensionTimeout
-    },
-    res => {
-      if (res.statusCode === 200) {
-        logger.debug('The Instana Lambda extension preflight request has succeeded.');
-      } else {
-        handlePreflightError(
-          new Error(
-            `The Instana Lambda extension preflight request has returned an unexpected status code: ${res.statusCode}`
-          )
-        );
-      }
-    }
-  );
+let heartbeatInterval;
+function executeLambdaExtensionHeartbeatRequest() {
+  const executeHeartbeat = () => {
+    logger.debug('Executing Heartbeat request to Lambda extension.');
 
-  function handlePreflightError(e) {
-    // Make sure we do not try to talk to the Lambda extension again.
-    useLambdaExtension = false;
-    logger.debug(
-      'The Instana Lambda extension preflight request did not succeed. Falling back to talking to the Instana back ' +
-        'end directly.',
-      e
+    const req = uninstrumented.http.request(
+      {
+        hostname: layerExtensionHostname,
+        port: layerExtensionPort,
+        path: '/heartbeat',
+        method: 'POST',
+        // This sets a timeout for establishing the socket connection, see setTimeout below for a timeout for an
+        // idle connection after the socket has been opened.
+        timeout: layerExtensionTimeout
+      },
+      res => {
+        if (res.statusCode === 200) {
+          logger.debug('The Instana Lambda extension Heartbeat request has succeeded.');
+        } else {
+          handleHeartbeatError(
+            new Error(
+              `The Instana Lambda extension Heartbeat request has returned an unexpected status code: ${res.statusCode}`
+            )
+          );
+        }
+      }
     );
-  }
 
-  req.on('error', e => {
-    // req.destroyed indicates that we have run into a timeout and have already handled the timeout error.
-    if (req.destroyed) {
-      return;
+    function handleHeartbeatError(e) {
+      // Make sure we do not try to talk to the Lambda extension again.
+      useLambdaExtension = false;
+      clearInterval(heartbeatInterval);
+
+      logger.debug(
+        'The Instana Lambda extension Heartbeat request did not succeed. Falling back to talking to the Instana back ' +
+          'end directly.',
+        e
+      );
     }
-    handlePreflightError(e);
-  });
 
-  // Handle timeouts that occur after connecting to the socket (no response from the extension).
-  req.setTimeout(layerExtensionTimeout, () => {
-    handlePreflightError(new Error('The Lambda extension preflight request timed out.'));
-    // Destroy timed out request manually as mandated in https://nodejs.org/api/http.html#event-timeout.
-    if (req && !req.destroyed) {
-      try {
-        destroyRequest(req);
-      } catch (e) {
-        // ignore
+    req.on('error', e => {
+      // req.destroyed indicates that we have run into a timeout and have already handled the timeout error.
+      if (req.destroyed) {
+        return;
       }
-    }
-  });
 
-  req.end();
+      handleHeartbeatError(e);
+    });
+
+    // Handle timeouts that occur after connecting to the socket (no response from the extension).
+    req.setTimeout(layerExtensionTimeout, () => {
+      handleHeartbeatError(new Error('The Lambda extension Heartbeat request timed out.'));
+
+      // Destroy timed out request manually as mandated in https://nodejs.org/api/http.html#event-timeout.
+      if (req && !req.destroyed) {
+        try {
+          destroyRequest(req);
+        } catch (e) {
+          // ignore
+        }
+      }
+    });
+
+    req.end();
+  };
+
+  // call immediately
+  executeHeartbeat();
+
+  // NOTE: it is fine to use interval, because the req timeout is 300ms and the interval is 500
+  heartbeatInterval = setInterval(executeHeartbeat, 500);
+  heartbeatInterval.unref();
 }
 
 function getTransport(localUseLambdaExtension) {
@@ -185,7 +204,7 @@ function getBackendTimeout(localUseLambdaExtension) {
 
 function send(resourcePath, payload, finalLambdaRequest, callback) {
   // We need a local copy of the global useLambdaExtension variable, otherwise it might be changed concurrently by
-  // executeLambdaExtensionPreflightRequest. But we need to remember the value at the time we _started_ the request to
+  // executeLambdaExtensionHeartbeatRequest. But we need to remember the value at the time we _started_ the request to
   // decide whether to fall back to sending to the back end directly or give up sending data completely.
   let localUseLambdaExtension = useLambdaExtension;
 
@@ -193,6 +212,7 @@ function send(resourcePath, payload, finalLambdaRequest, callback) {
     logger.info(
       `Not attempting to send data to ${resourcePath} as a previous request has already timed out or failed.`
     );
+
     callback();
     return;
   } else {
@@ -313,6 +333,7 @@ function send(resourcePath, payload, finalLambdaRequest, callback) {
 
       // Make sure we do not try to talk to the Lambda extension again.
       useLambdaExtension = localUseLambdaExtension = false;
+      clearInterval(heartbeatInterval);
 
       // Retry the request immediately, this time sending it to serverless-acceptor directly.
       send(resourcePath, payload, finalLambdaRequest, callback);
@@ -321,6 +342,7 @@ function send(resourcePath, payload, finalLambdaRequest, callback) {
       // extension has already failed. Thus, this is a failure from talking directly to serverless-acceptor
       // (or a user-provided proxy).
       requestHasFailed = true;
+
       if (!propagateErrorsUpstream) {
         if (proxyAgent) {
           logger.warn(
@@ -332,12 +354,17 @@ function send(resourcePath, payload, finalLambdaRequest, callback) {
           logger.warn('Could not send traces and metrics to Instana. The Instana back end seems to be unavailable.', e);
         }
       }
+
       callback(propagateErrorsUpstream ? e : undefined);
     }
   });
 
   req.on('finish', () => {
     logger.debug(`Sent data to Instana (${resourcePath}).`);
+
+    if (useLambdaExtension && finalLambdaRequest) {
+      clearInterval(heartbeatInterval);
+    }
   });
 
   if (skipWaitingForHttpResponse) {
@@ -387,6 +414,7 @@ function onTimeout(localUseLambdaExtension, req, resourcePath, payload, finalLam
 
     // Make sure we do not try to talk to the Lambda extension again.
     useLambdaExtension = localUseLambdaExtension = false;
+    clearInterval(heartbeatInterval);
 
     if (req && !req.destroyed) {
       try {

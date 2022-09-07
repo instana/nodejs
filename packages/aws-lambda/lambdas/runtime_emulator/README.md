@@ -1,11 +1,25 @@
 # AWS Lambda Runtime Emulator
 
+## Prerequisite
+
+Copy `.env.template` to `.env`.
+
+Set at least these env variables:
+
+```
+image_tag_prefix=
+container_name_prefix=
+instana_endpoint_url=
+instana_agent_key=
+```
+
 ## Test an image with RIE included in the image
 
 https://github.com/aws/aws-lambda-runtime-interface-emulator#test-an-image-with-rie-included-in-the-image
 
-* rebuild & run: `./build-and-run.sh`
-* trigger function invocation: `./trigger.sh`
+* Build & run using local layer: `./build-and-run.sh local`
+* Build & run using released layer:  `./build-and-run.sh`
+* Trigger function invocation: `./trigger.sh`
 
 ## Test an image without adding RIE to the image
 
