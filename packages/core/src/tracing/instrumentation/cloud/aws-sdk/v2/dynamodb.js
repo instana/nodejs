@@ -39,7 +39,7 @@ class InstanaAWSDynamoDB extends InstanaAWSProduct {
       span.ts = Date.now();
       span.stack = tracingUtil.getStackTrace(this.instrumentedMakeRequest, 1);
       // Data attribs: op and table
-      span.data[this.spanName] = this.buildSpanData(originalArgs[0], originalArgs[1]);
+      span.data[this.spanName] = this.buildSpanData(ctx, originalArgs[0], originalArgs[1]);
 
       if (typeof originalArgs[2] === 'function') {
         // callback case
@@ -98,10 +98,11 @@ class InstanaAWSDynamoDB extends InstanaAWSProduct {
     });
   }
 
-  buildSpanData(operation, params) {
+  buildSpanData(ctx, operation, params) {
     const operationInfo = operationsInfo[operation];
     const spanData = {
-      op: operationInfo.op
+      op: operationInfo.op,
+      region: ctx.config.region
     };
 
     if (params && params.TableName) {

@@ -272,6 +272,7 @@ function start(version, requestMethod) {
         pid: String(controls.getPid()),
         extraTests: [
           span => expect(span.data.dynamodb.op).to.equal(operationsInfo[operation]),
+          span => expect(span.data.dynamodb.region).to.equal('us-east-2'),
           span => {
             let expected;
 
