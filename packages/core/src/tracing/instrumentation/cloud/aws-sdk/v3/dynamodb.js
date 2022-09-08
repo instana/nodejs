@@ -41,6 +41,7 @@ class InstanaAWSDynamoDB extends InstanaAWSProduct {
       span.ts = Date.now();
       span.stack = tracingUtil.getStackTrace(this.instrumentedSmithySend, 1);
       span.data[this.spanName] = this.buildSpanData(command.constructor.name, command.input);
+      this.captureRegion(ctx, span);
 
       if (typeof smithySendArgs[1] === 'function') {
         const _callback = smithySendArgs[1];
@@ -83,6 +84,23 @@ class InstanaAWSDynamoDB extends InstanaAWSProduct {
     }
 
     return spanData;
+  }
+
+  captureRegion(ctx, span) {
+    // Unfortunately the region seems to be available only via an async API. The promise should usually resolve long
+    // before the actual DynamoDB call finishes and we close the span.
+    if (typeof ctx.config.region === 'function') {
+      const regionPromise = ctx.config.region();
+      if (typeof regionPromise.then === 'function') {
+        regionPromise
+          .then(region => {
+            span.data[this.spanName].region = region;
+          })
+          .catch(() => {
+            /* silently ignore failed attempts to get the region */
+          });
+      }
+    }
   }
 }
 

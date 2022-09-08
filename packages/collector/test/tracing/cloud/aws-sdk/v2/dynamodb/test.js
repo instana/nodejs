@@ -135,7 +135,8 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/dynamodb', function () {
         pid: String(controls.getPid()),
         extraTests: [
           span => expect(span.data.dynamodb.op).to.equal(operationsInfo[operation]),
-          span => expect(span.data.dynamodb.table).to.equal(operation !== 'listTables' ? tableName : undefined)
+          span => expect(span.data.dynamodb.table).to.equal(operation !== 'listTables' ? tableName : undefined),
+          span => expect(span.data.dynamodb.region).to.equal('us-east-2')
         ]
       });
 
