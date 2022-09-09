@@ -32,13 +32,12 @@ jobs:
         if: "${{ inputs.tag_ref == '' }}"
         run: |
           echo "GITHUB_REF=$GITHUB_REF" >> $GITHUB_ENV
-      - uses: instana/create-gh-release-action@v1
+      - uses: taiki-e/create-gh-release-action@v1
         with:
           changelog: CHANGELOG.md
           draft: true
-          githubref: ${{ env.GITHUB_REF }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GH_PAT }}
+          ref: ${{ env.GITHUB_REF }}
+          token: ${{ secrets.GH_PAT }}
       - name: Send success message
         if: "${{ success() }}"
         uses: slackapi/slack-github-action@v1.21.0
