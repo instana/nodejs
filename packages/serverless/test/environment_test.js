@@ -118,6 +118,14 @@ describe('environment util', () => {
     expect(environmentUtil.getBackendPath()).to.equal('/serverless');
   });
 
+  it('must sanitize url', () => {
+    validate('https://example.com:8443 ', 'dummy-key');
+    expect(environmentUtil.isValid()).to.be.true;
+    expect(environmentUtil.getBackendHost()).to.equal('example.com');
+    expect(environmentUtil.getBackendPort()).to.equal('8443');
+    expect(environmentUtil.getBackendPath()).to.equal('/');
+  });
+
   it('getCustomZone() must respond with undefined when INSTANA_ZONE is not set', () => {
     expect(environmentUtil.getCustomZone()).to.be.undefined;
   });
