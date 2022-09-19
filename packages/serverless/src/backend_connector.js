@@ -256,8 +256,7 @@ function send(resourcePath, payload, finalLambdaRequest, callback) {
       'Content-Type': 'application/json',
       'Content-Length': Buffer.byteLength(serializedPayload),
       [constants.xInstanaHost]: hostHeader,
-      [constants.xInstanaKey]: environmentUtil.getInstanaAgentKey(),
-      [constants.xInstanaTime]: Date.now()
+      [constants.xInstanaKey]: environmentUtil.getInstanaAgentKey()
     },
     rejectUnauthorized: !disableCaCheck
   };
