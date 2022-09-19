@@ -418,7 +418,7 @@ describe('Google Cloud Run integration test', function () {
     expect(headers).to.exist;
     expect(headers['x-instana-host']).to.equal(host);
     expect(headers['x-instana-key']).to.equal(instanaAgentKey);
-    expect(headers['x-instana-time']).to.be.a('string');
+    expect(headers['x-instana-time']).to.not.exist;
   }
 
   function verifyNoSpansAndMetrics(control) {

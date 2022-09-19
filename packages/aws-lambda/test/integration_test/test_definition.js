@@ -1817,7 +1817,7 @@ function registerTests(handlerDefinitionPath) {
     expect(headers).to.exist;
     expect(headers['x-instana-host']).to.equal(qualifiedArn);
     expect(headers['x-instana-key']).to.equal(instanaAgentKey);
-    expect(headers['x-instana-time']).to.be.a('string');
+    expect(headers['x-instana-time']).to.not.exist;
   }
 
   function getHeaderCaseInsensitive(headers, header) {

@@ -113,8 +113,7 @@ function sendPayload(callback) {
       'Content-Type': 'application/json',
       'Content-Length': Buffer.byteLength(payload),
       [constants.xInstanaHost]: 'some-random-host-that-runs-the-aws-agent',
-      [constants.xInstanaKey]: instanaKey,
-      [constants.xInstanaTime]: Date.now()
+      [constants.xInstanaKey]: instanaKey
     },
     rejectUnauthorized: !disableCaCheck
   };
