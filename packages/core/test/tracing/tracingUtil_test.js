@@ -19,6 +19,7 @@ const {
   generateRandomTraceId,
   getErrorDetails,
   readTraceContextFromBuffer,
+  sanitizeConnectionStr,
   unsignedHexStringToBuffer,
   unsignedHexStringsToBuffer
 } = require('../../src/tracing/tracingUtil');
@@ -366,6 +367,40 @@ describe('tracing/tracingUtil', () => {
 
     it('must use the whole provided error when all else fails', () => {
       expect(getErrorDetails('Whhoooopppppss')).to.match(/Whhoooopppppss/);
+    });
+  });
+
+  describe('sanitizeConnectionStr', () => {
+    it('should redact password at the start of the connection string', () => {
+      expect(
+        sanitizeConnectionStr(
+          'PWD=123456;DATABASE=MY_DATABASE;HOSTNAME=localhost;PORT=50000;PROTOCOL=TCPIP;UID=my_user'
+        )
+      ).to.equal('PWD=<redacted>;DATABASE=MY_DATABASE;HOSTNAME=localhost;PORT=50000;PROTOCOL=TCPIP;UID=my_user');
+    });
+
+    it('should redact password in the middle of the connection string', () => {
+      expect(
+        sanitizeConnectionStr(
+          'DATABASE=MY_DATABASE;HOSTNAME=localhost;PORT=50000;PWD=123456;PROTOCOL=TCPIP;UID=my_user'
+        )
+      ).to.equal('DATABASE=MY_DATABASE;HOSTNAME=localhost;PORT=50000;PWD=<redacted>;PROTOCOL=TCPIP;UID=my_user');
+    });
+
+    it('should redact password with whitespaces', () => {
+      expect(
+        sanitizeConnectionStr(
+          'DATABASE=MY_DATABASE;HOSTNAME=localhost;PORT=50000; \t PWD \n =  \r123456 ;PROTOCOL=TCPIP;UID=my_user'
+        )
+      ).to.equal('DATABASE=MY_DATABASE;HOSTNAME=localhost;PORT=50000; \t PWD=<redacted>;PROTOCOL=TCPIP;UID=my_user');
+    });
+
+    it('should redact password at the end of the connection string', () => {
+      expect(
+        sanitizeConnectionStr(
+          'DATABASE=MY_DATABASE;HOSTNAME=localhost;PORT=50000;PROTOCOL=TCPIP;UID=my_user;PWD=123456'
+        )
+      ).to.equal('DATABASE=MY_DATABASE;HOSTNAME=localhost;PORT=50000;PROTOCOL=TCPIP;UID=my_user;PWD=<redacted>');
     });
   });
 });
