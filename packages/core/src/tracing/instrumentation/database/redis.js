@@ -40,13 +40,16 @@ function instrument(redis) {
     logger.debug('Aborting the attempt to instrument redis, this seems to be an unsupported version of redis.');
     return;
   }
+
   const redisClientProto = redis.RedisClient.prototype;
   commands.list.forEach(name => {
-    // Some commands are not added or are renamed. Ignore them.
+    // NOTE: Some commands are not added or are renamed. Ignore them.
+    //       Do not use & connector, because if the fn multi is defined,
+    ///      we still don't want to handle it here. Needs to be a OR condition
     if (
-      !redisClientProto[name] &&
+      !redisClientProto[name] ||
       // Multi commands are handled differently.
-      name !== 'multi'
+      name === 'multi'
     ) {
       return;
     }
@@ -56,25 +59,36 @@ function instrument(redis) {
     shimmer.wrap(redisClientProto, name.toUpperCase(), boundInstrumentCommand);
   });
 
+  // Batch === Individual commands fail and the whole batch executation will NOT fail
+  // Multi === Individual commands fail and the whole multi executation will fail
+  // Different version of redis (in particular ancient ones like 0.10.x) have rather different APIs for the multi
+  // operations. Shimming them conditionally is not really necessary (shimmer checks for itself) but supresses a log
+  // statement from shimmer.
+  // 0.x => multi (https://github.com/redis/node-redis/blob/v0.12.1/index.js#L1105) exec
+  // 0.x => no batch
+  // 3.x => multi(https://github.com/redis/node-redis/blob/v3.1.2/lib/individualCommands.js#L24) exec = exec_transaction
+  // 3.x => batch(https://github.com/redis/node-redis/blob/v3.1.2/lib/individualCommands.js#L31) exec = exec_batch
   if (redis.Multi) {
-    // Different version of redis (in particular ancient ones like 0.10.x) have rather different APIs for the multi
-    // operations. Shimming them conditionally is not really necessary (shimmer checks for itself) but supresses a log
-    // statement from shimmer.
+    const instrumentedAsMulti = instrumentMultiExec.bind(null, true);
+    const instrumentedAsBatch = instrumentMultiExec.bind(null, false);
 
     if (typeof redis.Multi.prototype.exec_transaction === 'function') {
-      shimmer.wrap(redis.Multi.prototype, 'exec_transaction', instrumentMultiExec.bind(null, true));
+      shimmer.wrap(redis.Multi.prototype, 'exec_transaction', instrumentedAsMulti);
     }
-
-    const instrumentedBatch = instrumentMultiExec.bind(null, false);
     if (typeof redis.Multi.prototype.exec_batch === 'function') {
-      // Old versions of redis also do not have exec_batch. See above (exec_transaction).
-      shimmer.wrap(redis.Multi.prototype, 'exec_batch', instrumentedBatch);
+      shimmer.wrap(redis.Multi.prototype, 'exec_batch', instrumentedAsBatch);
     }
     if (typeof redis.Multi.prototype.EXEC === 'function') {
-      shimmer.wrap(redis.Multi.prototype, 'EXEC', instrumentedBatch);
+      shimmer.wrap(redis.Multi.prototype, 'EXEC', instrumentedAsBatch);
     }
+
+    // 0.x multi and 3.x batch use `exec` but we need to differeniate if batch or multi
     if (typeof redis.Multi.prototype.exec === 'function') {
-      shimmer.wrap(redis.Multi.prototype, 'exec', instrumentedBatch);
+      if (typeof redis.Multi.prototype.exec_transaction !== 'function') {
+        shimmer.wrap(redis.Multi.prototype, 'exec', instrumentedAsMulti);
+      } else {
+        shimmer.wrap(redis.Multi.prototype, 'exec', instrumentedAsBatch);
+      }
     }
   }
 }
@@ -95,12 +109,16 @@ function instrumentCommand(command, original) {
         command
       };
 
-      const callback = cls.ns.bind(onResult);
       const args = [];
       for (let i = 0; i < arguments.length; i++) {
         args[i] = arguments[i];
       }
 
+      // CASE: no callback provided
+      //       e.g. client.set('key', 'value') is valid without callback
+      //       e.g. client.get('key') is valid without callback
+      // NOTE: multi & batch is not handled via instrumentCommand
+      const callback = cls.ns.bind(onResult);
       let userProvidedCallback = args[args.length - 1];
       if (typeof userProvidedCallback !== 'function') {
         userProvidedCallback = null;
@@ -137,23 +155,14 @@ function instrumentMultiExec(isAtomic, original) {
       return original.apply(this, arguments);
     }
 
-    // CASE: multi = multiple executions
-    //       These executations are combined in one batch (see test).
-    //       And all of them need to same parent.
-    //       This parent has to be the incoming http server span.
-    //       If parentSpan.n is "redis", we need to use the original entry span instead. (http server)
-    //       because `cls.getCurrentSpan()` is the previous redis execution of the multi executions.
-    let parentSpan = cls.getCurrentSpan();
-    if (parentSpan.n === 'redis') {
-      parentSpan = cls.getCurrentEntrySpan();
-    }
+    const parentSpan = cls.getCurrentSpan();
 
     return cls.ns.runAndReturn(() => {
       const span = cls.startSpan(exports.spanName, constants.EXIT, parentSpan.t, parentSpan.s);
-
       span.stack = tracingUtil.getStackTrace(instrumentedMultiExec);
       span.data.redis = {
         connection: multi._client != null ? multi._client.address : undefined,
+        // pipeline = batch
         command: isAtomic ? 'multi' : 'pipeline'
       };
 
@@ -174,13 +183,19 @@ function instrumentMultiExec(isAtomic, original) {
       const subCommands = (span.data.redis.subCommands = []);
       const len = multi.queue != null ? multi.queue.length : 0;
       let legacyMultiMarkerHasBeenSeen = false;
+
       for (let i = 0; i < len; i++) {
         let subCommand;
         if (typeof multi.queue.get === 'function') {
           subCommand = multi.queue.get(i);
           subCommands[i] = subCommand.command;
-          subCommand.callback = buildSubCommandCallback(span, subCommand.callback);
+
+          // CASE: a batch can succeed although an individual command failed
+          if (!isAtomic) {
+            subCommand.callback = buildSubCommandCallback(span, subCommand.callback);
+          }
         } else {
+          // NOTE: Remove in 3.x
           // Branch for ancient versions of redis (like 0.12.1):
           subCommand = multi.queue[i];
           if (!Array.isArray(subCommand) || subCommand.length === 0) {
@@ -194,6 +209,7 @@ function instrumentMultiExec(isAtomic, original) {
           subCommands[idx] = subCommand[0];
         }
       }
+
       // must not send batch size 0
       if (subCommands.length > 0) {
         span.b = {
@@ -204,11 +220,24 @@ function instrumentMultiExec(isAtomic, original) {
 
       return original.apply(this, args);
 
-      function onResult(error) {
+      function onResult(err) {
         span.d = Date.now() - span.ts;
 
-        if (error && isAtomic) {
-          span.ec = span.data.redis.subCommands.length;
+        if (err && isAtomic) {
+          span.ec = 1;
+
+          if (err.message) {
+            span.data.redis.error = err.message;
+          } else if (err instanceof Array && err.length) {
+            span.data.redis.error = err[0].message;
+          } else {
+            span.data.redis.error = 'Unknown error';
+          }
+
+          // NOTE: sub errors are not supported in 0.12
+          if (err.errors && err.errors.length) {
+            span.data.redis.error = err.errors.map(subErr => subErr.message).join('\n');
+          }
         }
 
         span.transmit();
@@ -221,6 +250,9 @@ function instrumentMultiExec(isAtomic, original) {
   };
 }
 
+// NOTE: We only need this function to capture errors in a batch command
+// 3.x offers the ability to read the errors as sub errors (sub error = sub command)
+// and 0.x has no batch functionality
 function buildSubCommandCallback(span, userProvidedCallback) {
   return function subCommandCallback(err) {
     if (err) {
