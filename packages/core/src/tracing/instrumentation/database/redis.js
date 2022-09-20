@@ -13,6 +13,11 @@ const tracingUtil = require('../../tracingUtil');
 const constants = require('../../constants');
 const cls = require('../../cls');
 
+let logger;
+logger = require('../../../logger').getLogger('tracing/redis', newLogger => {
+  logger = newLogger;
+});
+
 let isActive = false;
 
 exports.spanName = 'redis';
@@ -31,6 +36,10 @@ exports.init = function init() {
 };
 
 function instrument(redis) {
+  if (!redis.RedisClient) {
+    logger.debug('Aborting the attempt to instrument redis, this seems to be an unsupported version of redis.');
+    return;
+  }
   const redisClientProto = redis.RedisClient.prototype;
   commands.list.forEach(name => {
     // Some commands are not added or are renamed. Ignore them.
