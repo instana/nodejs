@@ -2,6 +2,19 @@
 
 version: 2.1
 
+parameters:
+  run_workflow_build:
+    default: true
+    type: boolean
+
+  run_workflow_legacy:
+    default: true
+    type: boolean
+
+  run_workflow_coverage:
+    default: true
+    type: boolean
+
 shared: &shared
   working_directory: ~/repo
 
@@ -413,11 +426,15 @@ jobs:
 
 workflows:
   version: 2
+
   build:
+    when: << pipeline.parameters.run_workflow_build >>
     jobs:
       - "node-18"
       - "node-16"
+
   legacy-nodejs-versions:
+    when: << pipeline.parameters.run_workflow_legacy >>
     triggers:
       - schedule:
           cron: "0 2 * * *"
@@ -425,11 +442,14 @@ workflows:
             branches:
               only:
                 - main
+                - trigger-workflows-on-demand
     jobs:
       - "node-14"
       - "node-12"
       - "node-10"
+
   coverage:
+    when: << pipeline.parameters.run_workflow_coverage >>
     triggers:
       - schedule:
           cron: "0 0 * * 0"
@@ -437,5 +457,6 @@ workflows:
             branches:
               only:
                 - main
+                - trigger-workflows-on-demand
     jobs:
       - "node-coverage"
