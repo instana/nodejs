@@ -8,12 +8,7 @@ const expect = require('chai').expect;
 const sinon = require('sinon');
 const backendConnector = require('../src/backend_connector');
 const uninstrumentedHttp = require('../src/uninstrumentedHttp');
-
-const sleep = async ts => {
-  return new Promise(resolve => {
-    setTimeout(resolve, ts);
-  });
-};
+const delay = require('../../core/test/test_util/delay');
 
 const sendBundle = async () => {
   return new Promise(resolve => {
@@ -58,7 +53,7 @@ describe('[UNIT] backend connector', () => {
       backendConnector.init();
 
       expect(uninstrumentedHttp.http.request.called).to.be.false;
-      await sleep(750);
+      await delay(750);
       expect(uninstrumentedHttp.http.request.called).to.be.false;
       expect(global.setInterval.called).to.be.false;
       expect(global.clearInterval.called).to.be.false;
@@ -87,7 +82,7 @@ describe('[UNIT] backend connector', () => {
       expect(uninstrumentedHttp.http.request.callCount).to.eql(1);
 
       const prom = sendBundle();
-      await sleep(200);
+      await delay(200);
 
       const onTimeout = onStub.getCalls().find(call => call.firstArg === 'timeout').callback;
       const onEnd = uninstrumentedHttp.http.request.getCalls().find(call => call.firstArg.path === '/bundle').callback;
@@ -108,7 +103,7 @@ describe('[UNIT] backend connector', () => {
       expect(uninstrumentedHttp.http.request.callCount).to.eql(1);
 
       const prom = sendBundle();
-      await sleep(200);
+      await delay(200);
 
       const onError = onStub.getCalls().find(call => call.firstArg === 'error').callback;
       const onEnd = uninstrumentedHttp.http.request.getCalls().find(call => call.firstArg.path === '/bundle').callback;
@@ -126,7 +121,7 @@ describe('[UNIT] backend connector', () => {
       expect(uninstrumentedHttp.http.request.called).to.be.true;
       expect(uninstrumentedHttp.http.request.callCount).to.eql(1);
 
-      await sleep(550);
+      await delay(550);
 
       expect(uninstrumentedHttp.http.request.called).to.be.true;
       expect(uninstrumentedHttp.http.request.callCount).to.eql(2);
@@ -135,7 +130,7 @@ describe('[UNIT] backend connector', () => {
       expect(global.setInterval.calledOnce).to.be.true;
 
       const prom = sendBundle();
-      await sleep(200);
+      await delay(200);
 
       const onFinish = onStub.getCalls().find(call => call.firstArg === 'finish').callback;
       const onEnd = uninstrumentedHttp.http.request.getCalls().find(call => call.firstArg.path === '/bundle').callback;
@@ -151,7 +146,7 @@ describe('[UNIT] backend connector', () => {
       // finalLambdaRequest == true, we expect the heartbeat to finish
       expect(global.clearInterval.called).to.be.true;
 
-      await sleep(1000);
+      await delay(1000);
 
       // 1 bundle req, 2 heartbeats
       expect(uninstrumentedHttp.http.request.callCount).to.eql(3);
@@ -163,7 +158,7 @@ describe('[UNIT] backend connector', () => {
       expect(uninstrumentedHttp.http.request.called).to.be.true;
       expect(uninstrumentedHttp.http.request.callCount).to.eql(1);
 
-      await sleep(550);
+      await delay(550);
 
       expect(uninstrumentedHttp.http.request.called).to.be.true;
       expect(uninstrumentedHttp.http.request.callCount).to.eql(2);
@@ -172,7 +167,7 @@ describe('[UNIT] backend connector', () => {
       expect(global.setInterval.calledOnce).to.be.true;
 
       let prom = sendSpans();
-      await sleep(200);
+      await delay(200);
 
       let onFinish = onStub.getCalls().find(call => call.firstArg === 'finish').callback;
       let onEnd = uninstrumentedHttp.http.request.getCalls().find(call => call.firstArg.path === '/traces').callback;
@@ -187,7 +182,7 @@ describe('[UNIT] backend connector', () => {
       // finalLambdaRequest == false, we expect the heartbeat to NOT finish
       expect(global.clearInterval.called).to.be.false;
 
-      await sleep(800);
+      await delay(800);
 
       // more heartbeats
       expect(uninstrumentedHttp.http.request.callCount).to.eql(5);
@@ -196,7 +191,7 @@ describe('[UNIT] backend connector', () => {
       uninstrumentedHttp.http.request.resetHistory();
 
       prom = sendBundle();
-      await sleep(200);
+      await delay(200);
 
       onFinish = onStub.getCalls().find(call => call.firstArg === 'finish').callback;
       onEnd = uninstrumentedHttp.http.request.getCalls().find(call => call.firstArg.path === '/bundle').callback;
@@ -211,7 +206,7 @@ describe('[UNIT] backend connector', () => {
       // finalLambdaRequest is now true, we expect the heartbeat to finish
       expect(global.clearInterval.called).to.be.true;
 
-      await sleep(1000);
+      await delay(1000);
 
       expect(uninstrumentedHttp.http.request.callCount).to.eql(2);
     });
