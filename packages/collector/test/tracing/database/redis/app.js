@@ -7,6 +7,7 @@
 
 'use strict';
 
+require('./mockVersion');
 require('../../../..')();
 
 const bodyParser = require('body-parser');
@@ -21,7 +22,13 @@ let connectedToRedis = false;
 
 const agentPort = process.env.INSTANA_AGENT_PORT;
 
-const client = redis.createClient(`//${process.env.REDIS}`);
+let client;
+if (process.env.REDIS_VERSION === 'latest') {
+  client = redis.createClient(`//${process.env.REDIS}`);
+} else {
+  const portAndHost = process.env.REDIS.split(':');
+  client = redis.createClient(portAndHost[1], portAndHost[0]);
+}
 
 client.on('ready', () => {
   connectedToRedis = true;
@@ -53,6 +60,26 @@ app.post('/values', (req, res) => {
         res.sendStatus(200);
       });
     }
+  });
+});
+
+// https://github.com/redis/node-redis/blob/v3.1.2/test/commands/get.spec.js#L75
+app.get('/get-without-cb', (req, res) => {
+  const key = req.query.key;
+  client.get(key);
+  request(`http://127.0.0.1:${agentPort}`).then(() => {
+    res.sendStatus(200);
+  });
+});
+
+app.get('/set-without-cb', (req, res) => {
+  const key = req.query.key;
+  const value = req.query.value;
+
+  client.set(key, value);
+
+  request(`http://127.0.0.1:${agentPort}`).then(() => {
+    res.sendStatus(200);
   });
 });
 
@@ -100,6 +127,34 @@ app.get('/multi', (req, res) => {
     });
 });
 
+app.get('/multi-sub-cb', (req, res) => {
+  client
+    .multi()
+    .hset('someCollection', 'key', 'value')
+    .hget('someCollection', 'key', 'too', 'many', function () {
+      // ignore
+    })
+    .exec(err => {
+      if (err) {
+        log('Multi failed', err);
+
+        request(`http://127.0.0.1:${agentPort}`).then(() => {
+          res.sendStatus(200);
+        });
+      } else {
+        res.sendStatus(500);
+      }
+    });
+});
+
+app.get('/multiNoExecCb', (req, res) => {
+  client.multi().hset('someCollection', 'key', 'value').hget('someCollection', 'key').exec();
+
+  request(`http://127.0.0.1:${agentPort}`).then(() => {
+    res.sendStatus(200);
+  });
+});
+
 app.get('/multiFailure', (req, res) => {
   // simulating wrong get usage
   client
@@ -110,14 +165,15 @@ app.get('/multiFailure', (req, res) => {
       if (err) {
         log('Multi failed', err);
         request(`http://127.0.0.1:${agentPort}`).then(() => {
-          res.sendStatus(500);
+          res.sendStatus(200);
         });
       } else {
-        res.sendStatus(200);
+        res.sendStatus(500);
       }
     });
 });
 
+// Difference to multi: a batch can succeed when a single operation fails
 app.get('/batchFailure', (req, res) => {
   // simulating wrong get usage
   client
@@ -126,7 +182,7 @@ app.get('/batchFailure', (req, res) => {
     .hget('someCollection', 'key', 'too', 'many', 'args')
     .exec(err => {
       if (err) {
-        log('batch failed', err);
+        log('batch should not fail', err);
         res.sendStatus(500);
       } else {
         request(`http://127.0.0.1:${agentPort}`).then(() => {

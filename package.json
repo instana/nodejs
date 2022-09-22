@@ -166,6 +166,7 @@
     "q": "1.5.1",
     "read-pkg-up": "^7.0.1",
     "redis": "^3.1.2",
+    "redis-v0": "npm:redis@^0.12.1",
     "request": "^2.88.0",
     "request-promise": "^4.2.2",
     "request-promise-native": "^1.0.5",
