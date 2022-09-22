@@ -95,7 +95,7 @@ exports.init = function init(
   //            send data once. It can happen all the time till the Lambda handler dies!
   //            SpanBuffer sends data asap and when the handler is finished the rest is sent.
   if (useLambdaExtension) {
-    executeLambdaExtensionHeartbeatRequest();
+    scheduleLambdaExtensionHeartbeatRequest();
   }
 };
 
@@ -116,7 +116,7 @@ exports.sendSpans = function sendSpans(spans, callback) {
 };
 
 let heartbeatInterval;
-function executeLambdaExtensionHeartbeatRequest() {
+function scheduleLambdaExtensionHeartbeatRequest() {
   const executeHeartbeat = () => {
     logger.debug('Executing Heartbeat request to Lambda extension.');
 
@@ -204,7 +204,7 @@ function getBackendTimeout(localUseLambdaExtension) {
 
 function send(resourcePath, payload, finalLambdaRequest, callback) {
   // We need a local copy of the global useLambdaExtension variable, otherwise it might be changed concurrently by
-  // executeLambdaExtensionHeartbeatRequest. But we need to remember the value at the time we _started_ the request to
+  // scheduleLambdaExtensionHeartbeatRequest. But we need to remember the value at the time we _started_ the request to
   // decide whether to fall back to sending to the back end directly or give up sending data completely.
   let localUseLambdaExtension = useLambdaExtension;
 
