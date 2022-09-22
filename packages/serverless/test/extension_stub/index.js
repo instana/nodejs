@@ -20,10 +20,10 @@ logger.level = process.env.INSTANA_DEBUG ? 'debug' : process.env.INSTANA_LOG_LEV
 const port = process.env.EXTENSION_PORT;
 
 const unresponsive = process.env.EXTENSION_UNRESPONSIVE === 'true';
-const preflightResponsiveButUnresponsiveLater =
+const heartbeatResponsiveButUnresponsiveLater =
   process.env.EXTENSION_PREFFLIGHT_RESPONSIVE_BUT_UNRESPONSIVE_LATER === 'true';
-const preflightRespondsWithUnexpectedStatusCode =
-  process.env.PREFLIGHT_REQUEST_RESPONDS_WITH_UNEXPECTED_STATUS_CODE === 'true';
+const heartbeatRespondsWithUnexpectedStatusCode =
+  process.env.HEARTBEAT_REQUEST_RESPONDS_WITH_UNEXPECTED_STATUS_CODE === 'true';
 
 let receivedData = resetReceivedData();
 
@@ -39,13 +39,13 @@ app.use(
   })
 );
 
-app.all('/preflight', (req, res) => {
+app.all('/heartbeat', (req, res) => {
   if (unresponsive) {
     // intentionally not responding for tests that verify proper timeout handling
     return;
   }
 
-  if (preflightRespondsWithUnexpectedStatusCode) {
+  if (heartbeatRespondsWithUnexpectedStatusCode) {
     return res.sendStatus(500);
   }
 
@@ -66,7 +66,7 @@ app.delete('/received/spans', (req, res) => {
   return res.sendStatus('204');
 });
 
-// With the exception of /preflight, the Lambda extension would forward all requests to the
+// With the exception of /heartbeat, the Lambda extension would forward all requests to the
 // back end (serverless-acceptor). This handler mimicks that behavior.
 app.all('*', (req, res) => {
   const stringifiedBody = JSON.stringify(req.body);
@@ -80,7 +80,7 @@ app.all('*', (req, res) => {
     storeSpans(req.body);
   }
 
-  if (unresponsive || preflightResponsiveButUnresponsiveLater) {
+  if (unresponsive || heartbeatResponsiveButUnresponsiveLater) {
     // intentionally not responding for tests that verify proper timeout handling
     return;
   }

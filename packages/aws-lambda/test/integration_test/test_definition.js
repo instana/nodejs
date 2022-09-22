@@ -679,7 +679,7 @@ function registerTests(handlerDefinitionPath) {
       await verify(control, { error: false, expectMetrics: true, expectSpans: true });
 
       // With an working and responsive Lambda extension, we expect
-      // * the preflight request succeed, and the
+      // * the heartbeat request succeed, and the
       // * data being sent via the extension (instead of being sent to the back end directly).
       const spansFromExtension = await control.getSpansFromExtension();
       expect(spansFromExtension).to.have.length(2);
@@ -687,7 +687,7 @@ function registerTests(handlerDefinitionPath) {
   });
 
   describe('when the extension is used but not available', function () {
-    // In this test, backend_connector will make the preflight request to the Lambda extension, which will be
+    // In this test, backend_connector will make the heartbeat request to the Lambda extension, which will be
     // unsuccessful, then it will fall back to sending data directly to the back end.
     const control = prelude.bind(this)({
       handlerDefinitionPath,
@@ -715,29 +715,29 @@ function registerTests(handlerDefinitionPath) {
     it('must deliver metrics and spans directly to the back end', async () => {
       await verify(control, { error: false, expectMetrics: true, expectSpans: true });
 
-      // With the Lambda extension being unresponsive when the preflight request is made, we expect
-      // * the preflight request to the extension to time out, and the
+      // With the Lambda extension being unresponsive when the heartbeat request is made, we expect
+      // * the heartbeat request to the extension to time out, and the
       // * data being sent directly to the back end.
 
       // With an unresponsive Lambda extension, we expect the spans to be send to the back end directly. But the devil
       // is in the details: Whether the in-process collector attempts to send data to the extension first depends on the
       // timing.
       // * When the Lamba handler finishes very fast, the in-process collector will try to send data to the
-      // extension _before_ the preflight request has returned or timed out.
-      // * When the Lambda handler takes longer than the preflight request, the in-process collector will not even try
+      // extension _before_ the heartbeat request has returned or timed out.
+      // * When the Lambda handler takes longer than the heartbeat request, the in-process collector will not even try
       //   to use the extenion but send to the back end directly.
       //
       // This is why we do not check control.getSpansFromExtension() here.
       //
       // See also the next test:
       //   "when the extension is used and available, but is unresponsive, and the handler finishes _after_
-      //   the preflight request"
+      //   the heartbeat request"
     });
   });
 
   describe(
     'when the extension is used and available, but is unresponsive, and the handler finishes _after_ the ' +
-      'preflight request',
+      'heartbeat request',
     function () {
       const control = prelude.bind(this)({
         handlerDefinitionPath,
@@ -754,7 +754,7 @@ function registerTests(handlerDefinitionPath) {
 
         // This is an extension to the previous test ("must deliver metrics and spans directly to the back end"). See
         // there for an explanation. In this test, we introduce an artifical delay into the Lambda handler to make sure
-        // it finishes _after_ the preflight request. This way we can verify that the in-process collector will not
+        // it finishes _after_ the heartbeat request. This way we can verify that the in-process collector will not
         // attempt to send data to the back end.
 
         const spansFromExtension = await control.getSpansFromExtension();
@@ -763,11 +763,11 @@ function registerTests(handlerDefinitionPath) {
     }
   );
 
-  describe('when the extension is used and the preflight request responds with an unexpected status code', function () {
+  describe('when the extension is used and the heartbeat request responds with an unexpected status code', function () {
     const control = prelude.bind(this)({
       handlerDefinitionPath,
       handlerDelay: 100,
-      startExtension: 'unexpected-preflight-response',
+      startExtension: 'unexpected-heartbeat-response',
       startBackend: true,
       useExtension: true,
       instanaEndpointUrl: backendBaseUrl,
@@ -777,8 +777,8 @@ function registerTests(handlerDefinitionPath) {
     it('must deliver metrics and spans directly to the back end', async () => {
       await verify(control, { error: false, expectMetrics: true, expectSpans: true });
 
-      // With the Lambda extension preflight request failing, we expect
-      // * the preflight request to the extension to time out, and the
+      // With the Lambda extension heartbeat request failing, we expect
+      // * the heartbeat request to the extension to time out, and the
       // * data being sent directly to the back end.
       const spansFromExtension = await control.getSpansFromExtension();
       expect(spansFromExtension).to.have.length(0);
@@ -786,7 +786,7 @@ function registerTests(handlerDefinitionPath) {
   });
 
   // eslint-disable-next-line max-len
-  describe('when the extension is used, the preflight request succeeds, but the extension becomes unresponsive later', function () {
+  describe('when the extension is used, the heartbeat request succeeds, but the extension becomes unresponsive later', function () {
     const control = prelude.bind(this)({
       handlerDefinitionPath,
       startExtension: 'unresponsive-later',
@@ -799,7 +799,7 @@ function registerTests(handlerDefinitionPath) {
     it('must deliver metrics and spans directly to the back end', async () => {
       await verify(control, { error: false, expectMetrics: true, expectSpans: true });
 
-      // With the preflight request succeeding but the extension becoming unresponsive later, the outcome basically
+      // With the heartbeat request succeeding but the extension becoming unresponsive later, the outcome basically
       // depends on whether we store the spans in the extenion stub when it is simulating unresponsiveness or not.
       // Currently we do that, so we expect 2 spans.
       const spansFromExtension = await control.getSpansFromExtension();

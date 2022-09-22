@@ -154,8 +154,8 @@ AbstractServerlessControl.prototype.startExtensionAndWaitForIt = function startE
         EXTENSION_PORT: this.extensionPort,
         EXTENSION_UNRESPONSIVE: this.opts.startExtension === 'unresponsive',
         EXTENSION_PREFFLIGHT_RESPONSIVE_BUT_UNRESPONSIVE_LATER: this.opts.startExtension === 'unresponsive-later',
-        PREFLIGHT_REQUEST_RESPONDS_WITH_UNEXPECTED_STATUS_CODE:
-          this.opts.startExtension === 'unexpected-preflight-response'
+        HEARTBEAT_REQUEST_RESPONDS_WITH_UNEXPECTED_STATUS_CODE:
+          this.opts.startExtension === 'unexpected-heartbeat-response'
       },
       process.env,
       this.opts.env
