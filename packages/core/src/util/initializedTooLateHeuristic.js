@@ -58,6 +58,8 @@ let patterns = [
   /\/pino\/lib\//,
   /\/bull\/index.js/,
   /\/redis\/index.js/,
+  /\/redis\/dist\/index.js/,
+  /\/@redis\/client\/dist\/lib\/cluster\/commands.js/,
   /\/superagent\/lib\/node\/index.js/,
   /\/memcached\/index.js/,
   /\/ibm_db\/lib/

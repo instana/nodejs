@@ -68,7 +68,7 @@ describe('[UNIT] util.initializedTooLateHeurstic', function () {
 
       if (!fs.existsSync(resolvedPath)) {
         // eslint-disable-next-line no-console
-        console.log(`Do not expect anything if the module ${resolvedPath}is not installed.`);
+        console.log(`Do not expect anything if the module ${resolvedPath} is not installed.`);
         return;
       }
 
