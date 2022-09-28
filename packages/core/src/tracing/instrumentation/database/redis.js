@@ -61,7 +61,7 @@ function instrument(redis) {
               const selfMadeQueue = [];
 
               const wrapExecAsPipeline = execAsPipelineOrig => {
-                return function instrumented() {
+                return function instrumentedExecAsPipelineInstana() {
                   return instrumentMultiExec(false, addressUrl, false, execAsPipelineOrig)(selfMadeQueue, this);
                 };
               };
@@ -73,7 +73,7 @@ function instrument(redis) {
               };
 
               const wrapAddCommand = addCommandOrig => {
-                return function instrumented() {
+                return function instrumentedAddCommandInstana() {
                   selfMadeQueue.push(arguments[0]);
                   return addCommandOrig.apply(this, arguments);
                 };
