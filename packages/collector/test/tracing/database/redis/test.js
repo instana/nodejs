@@ -34,10 +34,8 @@ describe('tracing/redis', function () {
       const controls = new ProcessControls({
         dirname: __dirname,
         useGlobalAgent: true,
-        port: 3322,
         env: {
-          REDIS_VERSION: redisVersion,
-          APP_PORT: 3322
+          REDIS_VERSION: redisVersion
         }
       });
       ProcessControls.setUpHooks(controls);
