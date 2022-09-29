@@ -40,6 +40,13 @@ describe('tracing/redis', function () {
       });
       ProcessControls.setUpHooks(controls);
 
+      before(async () => {
+        await controls.sendRequest({
+          method: 'POST',
+          path: '/clearkeys'
+        });
+      });
+
       it('must trace set/get calls', () =>
         controls
           .sendRequest({
@@ -164,108 +171,6 @@ describe('tracing/redis', function () {
               })
             );
           }));
-
-      if (redisVersion === 'latest') {
-        it('must trace hvals', () =>
-          controls
-            .sendRequest({
-              method: 'GET',
-              path: '/hvals'
-            })
-            .then(() =>
-              retry(() =>
-                agentControls.getSpans().then(spans => {
-                  const entrySpan = expectAtLeastOneMatching(spans, [
-                    span => expect(span.n).to.equal('node.http.server'),
-                    span => expect(span.data.http.method).to.equal('GET')
-                  ]);
-
-                  expectAtLeastOneMatching(spans, [
-                    span => expect(span.t).to.equal(entrySpan.t),
-                    span => expect(span.p).to.equal(entrySpan.s),
-                    span => expect(span.n).to.equal('redis'),
-                    span => expect(span.k).to.equal(constants.EXIT),
-                    span => expect(span.f.e).to.equal(String(controls.getPid())),
-                    span => expect(span.f.h).to.equal('agent-stub-uuid'),
-                    span => expect(span.async).to.not.exist,
-                    span => expect(span.error).to.not.exist,
-                    span => expect(span.ec).to.equal(0),
-                    span => expect(span.data.redis.connection).to.contain(process.env.REDIS),
-                    span => expect(span.data.redis.command).to.equal('hVals')
-                  ]);
-
-                  verifyHttpExit(spans, entrySpan);
-                })
-              )
-            ));
-
-        it('must trace scan iterator usage', () =>
-          controls
-            .sendRequest({
-              method: 'GET',
-              path: '/scan-iterator'
-            })
-            .then(() =>
-              retry(() =>
-                agentControls.getSpans().then(spans => {
-                  const entrySpan = expectAtLeastOneMatching(spans, [
-                    span => expect(span.n).to.equal('node.http.server'),
-                    span => expect(span.data.http.method).to.equal('GET')
-                  ]);
-
-                  expectExactlyNMatching(spans, 4, [
-                    span => expect(span.t).to.equal(entrySpan.t),
-                    span => expect(span.p).to.equal(entrySpan.s),
-                    span => expect(span.n).to.equal('redis'),
-                    span => expect(span.k).to.equal(constants.EXIT),
-                    span => expect(span.f.e).to.equal(String(controls.getPid())),
-                    span => expect(span.f.h).to.equal('agent-stub-uuid'),
-                    span => expect(span.async).to.not.exist,
-                    span => expect(span.error).to.not.exist,
-                    span => expect(span.ec).to.equal(0),
-                    span => expect(span.data.redis.connection).to.contain(process.env.REDIS),
-                    span => expect(span.data.redis.command).to.equal('get')
-                  ]);
-
-                  verifyHttpExit(spans, entrySpan);
-                })
-              )
-            ));
-
-        // See https://redis.js.org/#node-redis-usage-basic-example blocking commands
-        it('blocking', () =>
-          controls
-            .sendRequest({
-              method: 'GET',
-              path: '/blocking'
-            })
-            .then(() =>
-              retry(() =>
-                agentControls.getSpans().then(spans => {
-                  const entrySpan = expectAtLeastOneMatching(spans, [
-                    span => expect(span.n).to.equal('node.http.server'),
-                    span => expect(span.data.http.method).to.equal('GET')
-                  ]);
-
-                  expectAtLeastOneMatching(spans, [
-                    span => expect(span.t).to.equal(entrySpan.t),
-                    span => expect(span.p).to.equal(entrySpan.s),
-                    span => expect(span.n).to.equal('redis'),
-                    span => expect(span.k).to.equal(constants.EXIT),
-                    span => expect(span.f.e).to.equal(String(controls.getPid())),
-                    span => expect(span.f.h).to.equal('agent-stub-uuid'),
-                    span => expect(span.async).to.not.exist,
-                    span => expect(span.error).to.not.exist,
-                    span => expect(span.ec).to.equal(0),
-                    span => expect(span.data.redis.connection).to.contain(process.env.REDIS),
-                    span => expect(span.data.redis.command).to.equal('blPop')
-                  ]);
-
-                  verifyHttpExit(spans, entrySpan);
-                })
-              )
-            ));
-      }
 
       it('must not trace get without waiting', () =>
         controls
@@ -661,6 +566,108 @@ describe('tracing/redis', function () {
               })
             )
           ));
+
+      if (redisVersion === 'latest') {
+        it('must trace hvals', () =>
+          controls
+            .sendRequest({
+              method: 'GET',
+              path: '/hvals'
+            })
+            .then(() =>
+              retry(() =>
+                agentControls.getSpans().then(spans => {
+                  const entrySpan = expectAtLeastOneMatching(spans, [
+                    span => expect(span.n).to.equal('node.http.server'),
+                    span => expect(span.data.http.method).to.equal('GET')
+                  ]);
+
+                  expectAtLeastOneMatching(spans, [
+                    span => expect(span.t).to.equal(entrySpan.t),
+                    span => expect(span.p).to.equal(entrySpan.s),
+                    span => expect(span.n).to.equal('redis'),
+                    span => expect(span.k).to.equal(constants.EXIT),
+                    span => expect(span.f.e).to.equal(String(controls.getPid())),
+                    span => expect(span.f.h).to.equal('agent-stub-uuid'),
+                    span => expect(span.async).to.not.exist,
+                    span => expect(span.error).to.not.exist,
+                    span => expect(span.ec).to.equal(0),
+                    span => expect(span.data.redis.connection).to.contain(process.env.REDIS),
+                    span => expect(span.data.redis.command).to.equal('hVals')
+                  ]);
+
+                  verifyHttpExit(spans, entrySpan);
+                })
+              )
+            ));
+
+        it('must trace scan iterator usage', () =>
+          controls
+            .sendRequest({
+              method: 'GET',
+              path: '/scan-iterator'
+            })
+            .then(() =>
+              retry(() =>
+                agentControls.getSpans().then(spans => {
+                  const entrySpan = expectAtLeastOneMatching(spans, [
+                    span => expect(span.n).to.equal('node.http.server'),
+                    span => expect(span.data.http.method).to.equal('GET')
+                  ]);
+
+                  expectExactlyNMatching(spans, 4, [
+                    span => expect(span.t).to.equal(entrySpan.t),
+                    span => expect(span.p).to.equal(entrySpan.s),
+                    span => expect(span.n).to.equal('redis'),
+                    span => expect(span.k).to.equal(constants.EXIT),
+                    span => expect(span.f.e).to.equal(String(controls.getPid())),
+                    span => expect(span.f.h).to.equal('agent-stub-uuid'),
+                    span => expect(span.async).to.not.exist,
+                    span => expect(span.error).to.not.exist,
+                    span => expect(span.ec).to.equal(0),
+                    span => expect(span.data.redis.connection).to.contain(process.env.REDIS),
+                    span => expect(span.data.redis.command).to.equal('get')
+                  ]);
+
+                  verifyHttpExit(spans, entrySpan);
+                })
+              )
+            ));
+
+        // See https://redis.js.org/#node-redis-usage-basic-example blocking commands
+        it('blocking', () =>
+          controls
+            .sendRequest({
+              method: 'GET',
+              path: '/blocking'
+            })
+            .then(() =>
+              retry(() =>
+                agentControls.getSpans().then(spans => {
+                  const entrySpan = expectAtLeastOneMatching(spans, [
+                    span => expect(span.n).to.equal('node.http.server'),
+                    span => expect(span.data.http.method).to.equal('GET')
+                  ]);
+
+                  expectAtLeastOneMatching(spans, [
+                    span => expect(span.t).to.equal(entrySpan.t),
+                    span => expect(span.p).to.equal(entrySpan.s),
+                    span => expect(span.n).to.equal('redis'),
+                    span => expect(span.k).to.equal(constants.EXIT),
+                    span => expect(span.f.e).to.equal(String(controls.getPid())),
+                    span => expect(span.f.h).to.equal('agent-stub-uuid'),
+                    span => expect(span.async).to.not.exist,
+                    span => expect(span.error).to.not.exist,
+                    span => expect(span.ec).to.equal(0),
+                    span => expect(span.data.redis.connection).to.contain(process.env.REDIS),
+                    span => expect(span.data.redis.command).to.equal('blPop')
+                  ]);
+
+                  verifyHttpExit(spans, entrySpan);
+                })
+              )
+            ));
+      }
 
       it('[suppressed] should not trace', async function () {
         await controls.sendRequest({

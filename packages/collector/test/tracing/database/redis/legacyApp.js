@@ -15,6 +15,7 @@ const morgan = require('morgan');
 const redis = require('redis');
 const request = require('request-promise-native');
 
+const cls = require('../../../../../core/src/tracing/cls');
 const app = express();
 const logPrefix = `Redis Legacy App (${process.pid}):\t`;
 let connectedToRedis = false;
@@ -46,6 +47,16 @@ app.get('/', (req, res) => {
   } else {
     res.sendStatus(200);
   }
+});
+
+app.post('/clearkeys', (req, res) => {
+  cls.isTracing() && cls.setTracingLevel('0');
+
+  client.flushall(err => {
+    cls.isTracing() && cls.setTracingLevel('1');
+    if (err) return res.sendStatus(500);
+    res.sendStatus(200);
+  });
 });
 
 app.post('/values', (req, res) => {

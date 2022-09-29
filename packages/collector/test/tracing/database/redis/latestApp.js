@@ -13,6 +13,7 @@ const morgan = require('morgan');
 const redis = require('redis');
 const request = require('request-promise-native');
 
+const cls = require('../../../../../core/src/tracing/cls');
 const app = express();
 const logPrefix = `Redis Latest App (${process.pid}):\t`;
 let connectedToRedis = false;
@@ -41,6 +42,14 @@ app.get('/', (req, res) => {
   }
 });
 
+app.post('/clearkeys', async (req, res) => {
+  cls.isTracing() && cls.setTracingLevel('0');
+  await client.flushAll();
+
+  cls.isTracing() && cls.setTracingLevel('1');
+  res.sendStatus(200);
+});
+
 app.post('/values', async (req, res) => {
   const key = req.query.key;
   const value = req.query.value;
@@ -55,6 +64,21 @@ app.post('/values', async (req, res) => {
   await request(`http://127.0.0.1:${agentPort}`);
   log('Sent agent request successfully.');
   res.sendStatus(200);
+});
+
+app.get('/values', async (req, res) => {
+  const key = req.query.key;
+
+  try {
+    const redisRes = await client.get(key);
+    log('Got redis key successfully.');
+    await request(`http://127.0.0.1:${agentPort}`);
+    log('Sent agent request successfully.');
+    res.send(redisRes);
+  } catch (err) {
+    log('Get with key %s failed', key, err);
+    res.sendStatus(500);
+  }
 });
 
 app.get('/hvals', async (req, res) => {
@@ -122,21 +146,6 @@ app.get('/set-without-waiting', (req, res) => {
   request(`http://127.0.0.1:${agentPort}`).then(() => {
     res.sendStatus(200);
   });
-});
-
-app.get('/values', async (req, res) => {
-  const key = req.query.key;
-
-  try {
-    const redisRes = await client.get(key);
-    log('Got redis key successfully.');
-    await request(`http://127.0.0.1:${agentPort}`);
-    log('Sent agent request successfully.');
-    res.send(redisRes);
-  } catch (err) {
-    log('Get with key %s failed', key, err);
-    res.sendStatus(500);
-  }
 });
 
 app.get('/failure', async (req, res) => {
