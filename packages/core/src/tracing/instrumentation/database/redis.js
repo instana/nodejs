@@ -43,9 +43,9 @@ function instrument(redis) {
   // NOTE: v4 no longer exposes the RedisClient. We need to wait till `createClient` get's called
   //       to get the instance of the redis client
   if (!redis.RedisClient) {
-    const createdClientWrap = originalFunction => {
+    const createdClientWrap = originalCreatedClientFn => {
       return function instrumentedCreateClientInstana(address) {
-        const redisClient = originalFunction.apply(this, arguments);
+        const redisClient = originalCreatedClientFn.apply(this, arguments);
         let addressUrl;
 
         if (address && address.url) {
@@ -55,27 +55,37 @@ function instrument(redis) {
         shimAllCommands(redisClient, addressUrl, false);
 
         if (redisClient.multi) {
-          const wrapMulti = orig => {
+          const wrapMulti = originalMultiFn => {
             return function instrumentedMultiInstana() {
-              const result = orig.apply(this, arguments);
+              const result = originalMultiFn.apply(this, arguments);
               const selfMadeQueue = [];
 
-              const wrapExecAsPipeline = execAsPipelineOrig => {
+              // batch
+              const wrapExecAsPipeline = execAsPipelineOriginalFn => {
                 return function instrumentedExecAsPipelineInstana() {
-                  return instrumentMultiExec(false, addressUrl, false, execAsPipelineOrig)(selfMadeQueue, this);
+                  return instrumentMultiExec(
+                    this,
+                    arguments,
+                    execAsPipelineOriginalFn,
+                    addressUrl,
+                    false,
+                    false,
+                    selfMadeQueue
+                  );
                 };
               };
 
-              const wrapExec = execOrig => {
-                return async function instrumentedExecInstana() {
-                  return instrumentMultiExec(true, addressUrl, false, execOrig)(selfMadeQueue, this);
+              // multi
+              const wrapExec = execOriginalFn => {
+                return function instrumentedExecAsPipelineInstana() {
+                  return instrumentMultiExec(this, arguments, execOriginalFn, addressUrl, true, false, selfMadeQueue);
                 };
               };
 
-              const wrapAddCommand = addCommandOrig => {
+              const wrapAddCommand = addCommandOriginalFn => {
                 return function instrumentedAddCommandInstana() {
                   selfMadeQueue.push(arguments[0]);
-                  return addCommandOrig.apply(this, arguments);
+                  return addCommandOriginalFn.apply(this, arguments);
                 };
               };
 
@@ -85,7 +95,7 @@ function instrument(redis) {
               shimmer.wrap(result, 'addCommand', wrapAddCommand);
               shimmer.wrap(result, 'exec', wrapExec);
 
-              // `execAsPipeline` can be used to trigger batches in v4
+              // `execAsPipeline` can be used to trigger batches in 4.x
               shimmer.wrap(result, 'execAsPipeline', wrapExecAsPipeline);
 
               return result;
@@ -116,25 +126,33 @@ function instrument(redis) {
     // 3.x => multi(https://github.com/redis/node-redis/blob/v3.1.2/lib/individualCommands.js#L24) exec = exec_transaction
     // 3.x => batch(https://github.com/redis/node-redis/blob/v3.1.2/lib/individualCommands.js#L31) exec = exec_batch
     if (redis.Multi) {
-      const instrumentedAsMulti = instrumentMultiExec.bind(null, true, null, true);
-      const instrumentedAsBatch = instrumentMultiExec.bind(null, false, null, true);
+      const wrapExec = isAtomic => {
+        return function wrapExecInstana(originalFn) {
+          return function instrumentedExecInstana() {
+            const addressUrl = this._client ? this._client.address : null;
+            return instrumentMultiExec(this, arguments, originalFn, addressUrl, isAtomic, true, this.queue);
+          };
+        };
+      };
 
       if (typeof redis.Multi.prototype.exec_transaction === 'function') {
-        shimmer.wrap(redis.Multi.prototype, 'exec_transaction', instrumentedAsMulti);
+        shimmer.wrap(redis.Multi.prototype, 'exec_transaction', wrapExec(true));
       }
+
       if (typeof redis.Multi.prototype.exec_batch === 'function') {
-        shimmer.wrap(redis.Multi.prototype, 'exec_batch', instrumentedAsBatch);
+        shimmer.wrap(redis.Multi.prototype, 'exec_batch', wrapExec(false));
       }
+
       if (typeof redis.Multi.prototype.EXEC === 'function') {
-        shimmer.wrap(redis.Multi.prototype, 'EXEC', instrumentedAsBatch);
+        shimmer.wrap(redis.Multi.prototype, 'EXEC', wrapExec(false));
       }
 
       // 0.x multi and 3.x batch use `exec` but we need to differeniate if batch or multi
       if (typeof redis.Multi.prototype.exec === 'function') {
         if (typeof redis.Multi.prototype.exec_transaction !== 'function') {
-          shimmer.wrap(redis.Multi.prototype, 'exec', instrumentedAsMulti);
+          shimmer.wrap(redis.Multi.prototype, 'exec', wrapExec(true));
         } else {
-          shimmer.wrap(redis.Multi.prototype, 'exec', instrumentedAsBatch);
+          shimmer.wrap(redis.Multi.prototype, 'exec', wrapExec(false));
         }
       }
     }
@@ -146,6 +164,12 @@ function shimAllCommands(redisClass, addressUrl, cbStyle) {
   if (redisCommandList.length) {
     list = redisCommandList;
   }
+
+  const wrapCommand = commandName => {
+    return function wrapCommandInstana(original) {
+      return instrumentCommand(original, commandName, addressUrl, cbStyle);
+    };
+  };
 
   list.forEach(name => {
     // NOTE: Some commands are not added or are renamed. Ignore them.
@@ -159,56 +183,56 @@ function shimAllCommands(redisClass, addressUrl, cbStyle) {
       return;
     }
 
-    const boundInstrumentCommand = instrumentCommand.bind(null, name, addressUrl, cbStyle);
-    shimmer.wrap(redisClass, name, boundInstrumentCommand);
+    shimmer.wrap(redisClass, name, wrapCommand(name));
 
     const upperCaseFnName = name.toUpperCase();
-    if (redisClass[upperCaseFnName]) shimmer.wrap(redisClass, upperCaseFnName, boundInstrumentCommand);
+    if (redisClass[upperCaseFnName]) shimmer.wrap(redisClass, upperCaseFnName, wrapCommand(name));
   });
 }
 
-function instrumentCommand(command, address, cbStyle, original) {
-  return function wrappedCommand() {
-    const client = this;
+function instrumentCommand(original, command, address, cbStyle) {
+  return function instrumentedCommandInstana() {
+    const origCtx = this;
+    const origArgs = arguments;
 
     if (cls.skipExitTracing({ isActive })) {
-      return original.apply(this, arguments);
+      return original.apply(origCtx, origArgs);
     }
 
     return cls.ns.runAndReturn(() => {
       const span = cls.startSpan(exports.spanName, constants.EXIT);
-      span.stack = tracingUtil.getStackTrace(wrappedCommand);
+      span.stack = tracingUtil.getStackTrace(instrumentCommand);
 
       span.data.redis = {
-        connection: address || client.address,
+        connection: address || origCtx.address,
         command
       };
-
-      const args = [];
-      for (let i = 0; i < arguments.length; i++) {
-        args[i] = arguments[i];
-      }
 
       let userProvidedCallback;
 
       if (cbStyle) {
+        const modifiedArgs = [];
+        for (let i = 0; i < origArgs.length; i++) {
+          modifiedArgs[i] = origArgs[i];
+        }
+
         // CASE: no callback provided
         //       e.g. client.set('key', 'value') is valid without callback
         //       e.g. client.get('key') is valid without callback
         // NOTE: multi & batch is not handled via instrumentCommand
         const callback = cls.ns.bind(onResult);
-        userProvidedCallback = args[args.length - 1];
+        userProvidedCallback = modifiedArgs[modifiedArgs.length - 1];
 
         if (typeof userProvidedCallback !== 'function') {
           userProvidedCallback = null;
-          args.push(callback);
-          return original.apply(this, args);
+          modifiedArgs.push(callback);
+          return original.apply(origCtx, modifiedArgs);
         } else {
-          args[args.length - 1] = callback;
-          return original.apply(this, args);
+          modifiedArgs[modifiedArgs.length - 1] = callback;
+          return original.apply(origCtx, modifiedArgs);
         }
       } else {
-        const promise = original.apply(this, args);
+        const promise = original.apply(origCtx, origArgs);
         if (typeof promise.then === 'function') {
           promise
             .then(value => {
@@ -241,155 +265,135 @@ function instrumentCommand(command, address, cbStyle, original) {
   };
 }
 
-function instrumentMultiExec(isAtomic, address, cbStyle, original) {
-  return function instrumentedMultiExec(selfMadeQueue, ctx) {
-    const multi = this;
+function instrumentMultiExec(origCtx, origArgs, original, address, isAtomic, cbStyle, queue) {
+  if (cls.skipExitTracing({ isActive })) {
+    return original.apply(origCtx, origArgs);
+  }
 
-    if (cls.skipExitTracing({ isActive })) {
-      return original.apply(ctx || this, arguments);
+  const parentSpan = cls.getCurrentSpan();
+
+  return cls.ns.runAndReturn(() => {
+    const span = cls.startSpan(exports.spanName, constants.EXIT, parentSpan.t, parentSpan.s);
+    span.stack = tracingUtil.getStackTrace(instrumentMultiExec);
+    span.data.redis = {
+      connection: address,
+      // pipeline = batch
+      command: isAtomic ? 'multi' : 'pipeline'
+    };
+
+    const subCommands = (span.data.redis.subCommands = []);
+    let legacyMultiMarkerHasBeenSeen = false;
+    const len = queue.length;
+
+    for (let i = 0; i < len; i++) {
+      let subCommand;
+      if (typeof queue.get === 'function') {
+        subCommand = queue.get(i);
+        subCommands[i] = subCommand.command;
+
+        // CASE: a batch can succeed although an individual command failed
+        if (!isAtomic) {
+          subCommand.callback = buildSubCommandCallback(span, subCommand.callback);
+        }
+      } else {
+        // NOTE: Remove in 3.x
+        // Branch for ancient versions of redis (like 0.12.1):
+        subCommand = queue[i];
+        if (!Array.isArray(subCommand) || subCommand.length === 0) {
+          continue;
+        }
+        if (subCommand[0] === 'MULTI') {
+          legacyMultiMarkerHasBeenSeen = true;
+          continue;
+        }
+        const idx = legacyMultiMarkerHasBeenSeen && i >= 1 ? i - 1 : i;
+        subCommands[idx] = subCommand[0];
+      }
     }
 
-    const parentSpan = cls.getCurrentSpan();
-
-    return cls.ns.runAndReturn(() => {
-      let connection;
-      if (multi && multi._client) {
-        connection = multi._client.address;
-      } else {
-        connection = address;
-      }
-
-      const span = cls.startSpan(exports.spanName, constants.EXIT, parentSpan.t, parentSpan.s);
-      span.stack = tracingUtil.getStackTrace(instrumentedMultiExec);
-      span.data.redis = {
-        connection,
-        // pipeline = batch
-        command: isAtomic ? 'multi' : 'pipeline'
+    // must not send batch size 0
+    if (subCommands.length > 0) {
+      span.b = {
+        s: subCommands.length
       };
+    }
+    span.ec = 0;
 
-      let queue;
-      const subCommands = (span.data.redis.subCommands = []);
-      let legacyMultiMarkerHasBeenSeen = false;
+    const modifiedArgs = [];
+    for (let i = 0; i < origArgs.length; i++) {
+      modifiedArgs[i] = origArgs[i];
+    }
 
-      if (multi && multi.queue) {
-        queue = multi.queue;
-      } else if (selfMadeQueue) {
-        queue = selfMadeQueue;
+    let userProvidedCallback;
+
+    if (cbStyle) {
+      const callback = cls.ns.bind(onResult);
+
+      userProvidedCallback = modifiedArgs[modifiedArgs.length - 1];
+      if (typeof userProvidedCallback !== 'function') {
+        userProvidedCallback = null;
+        modifiedArgs.push(callback);
       } else {
-        queue = [];
+        modifiedArgs[modifiedArgs.length - 1] = callback;
       }
 
-      const len = queue.length;
+      return original.apply(origCtx, modifiedArgs);
+    } else {
+      try {
+        const promise = original.apply(origCtx, modifiedArgs);
 
-      for (let i = 0; i < len; i++) {
-        let subCommand;
-        if (typeof queue.get === 'function') {
-          subCommand = multi.queue.get(i);
-          subCommands[i] = subCommand.command;
-
-          // CASE: a batch can succeed although an individual command failed
-          if (!isAtomic) {
-            subCommand.callback = buildSubCommandCallback(span, subCommand.callback);
-          }
-        } else {
-          // NOTE: Remove in 3.x
-          // Branch for ancient versions of redis (like 0.12.1):
-          subCommand = queue[i];
-          if (!Array.isArray(subCommand) || subCommand.length === 0) {
-            continue;
-          }
-          if (subCommand[0] === 'MULTI') {
-            legacyMultiMarkerHasBeenSeen = true;
-            continue;
-          }
-          const idx = legacyMultiMarkerHasBeenSeen && i >= 1 ? i - 1 : i;
-          subCommands[idx] = subCommand[0];
-        }
-      }
-
-      // must not send batch size 0
-      if (subCommands.length > 0) {
-        span.b = {
-          s: subCommands.length
-        };
-      }
-      span.ec = 0;
-
-      const args = [];
-      for (let i = 0; i < arguments.length; i++) {
-        args[i] = arguments[i];
-      }
-
-      let userProvidedCallback;
-
-      if (cbStyle) {
-        const callback = cls.ns.bind(onResult);
-
-        userProvidedCallback = args[args.length - 1];
-        if (typeof userProvidedCallback !== 'function') {
-          userProvidedCallback = null;
-          args.push(callback);
-        } else {
-          args[args.length - 1] = callback;
+        if (typeof promise.then === 'function') {
+          promise
+            .then(value => {
+              onResult();
+              return value;
+            })
+            .catch(error => {
+              onResult(error);
+              return error;
+            });
         }
 
-        return original.apply(this, args);
-      } else {
-        try {
-          const promise = original.apply(ctx, args);
-          if (typeof promise.then === 'function') {
-            promise
-              .then(value => {
-                onResult();
-                return value;
-              })
-              .catch(error => {
-                onResult(error);
-                return error;
-              });
-          }
-
-          return promise;
-        } catch (execSycnErr) {
-          onResult(execSycnErr);
-          throw execSycnErr;
-        }
+        return promise;
+      } catch (execSycnErr) {
+        onResult(execSycnErr);
+        throw execSycnErr;
       }
+    }
 
-      function onResult(err) {
-        span.d = Date.now() - span.ts;
+    function onResult(err) {
+      span.d = Date.now() - span.ts;
 
-        if (err && isAtomic) {
-          span.ec = 1;
+      if (err && isAtomic) {
+        span.ec = 1;
 
-          if (err.message) {
-            span.data.redis.error = err.message;
-          } else if (err instanceof Array && err.length) {
-            span.data.redis.error = err[0].message;
-          } else {
-            span.data.redis.error = 'Unknown error';
-          }
-
-          // NOTE: sub errors are only supported in 3.x
-          if (err.errors && err.errors.length) {
-            span.data.redis.error = err.errors.map(subErr => subErr.message).join('\n');
-          }
-        }
-
-        // v4 batch has no feature to pass callbacks to sub commands
-        if (err && !span.data.redis.error) {
-          span.ec = 1;
+        if (err.message) {
           span.data.redis.error = err.message;
+        } else if (err instanceof Array && err.length) {
+          span.data.redis.error = err[0].message;
+        } else {
+          span.data.redis.error = 'Unknown error';
         }
 
-        span.transmit();
-
-        if (typeof userProvidedCallback === 'function') {
-          return userProvidedCallback.apply(this, arguments);
+        // NOTE: sub errors are only supported in 3.x
+        if (err.errors && err.errors.length) {
+          span.data.redis.error = err.errors.map(subErr => subErr.message).join('\n');
         }
       }
-    });
-  };
+
+      // 4.x batch has no feature to pass callbacks to sub commands
+      if (err && !span.data.redis.error) {
+        span.ec = 1;
+        span.data.redis.error = err.message;
+      }
+
+      span.transmit();
+
+      if (typeof userProvidedCallback === 'function') {
+        return userProvidedCallback.apply(this, arguments);
+      }
+    }
+  });
 }
 
 // NOTE: We only need this function to capture errors in a batch command

@@ -29,7 +29,7 @@ mochaSuiteFn('tracing/spanbatching with redis', function () {
       dirname: __dirname,
       useGlobalAgent: true,
       env: {
-        REDIS_VERSION: 3,
+        REDIS_VERSION: 'v3',
         INSTANA_FORCE_TRANSMISSION_STARTING_AT: 500,
         INSTANA_DEV_BATCH_THRESHOLD: 250, // make sure redis calls are batched even when stuff is slow
         INSTANA_SPANBATCHING_ENABLED: 'true' // TODO remove this when switching to opt-in
@@ -46,7 +46,7 @@ mochaSuiteFn('tracing/spanbatching with redis', function () {
       dirname: __dirname,
       agentControls: customAgentControls,
       env: {
-        REDIS_VERSION: 3,
+        REDIS_VERSION: 'v3',
         INSTANA_FORCE_TRANSMISSION_STARTING_AT: 500,
         INSTANA_DEV_BATCH_THRESHOLD: 250 // make sure redis calls are batched even when stuff is slow
       }
@@ -61,7 +61,7 @@ mochaSuiteFn('tracing/spanbatching with redis', function () {
       dirname: __dirname,
       useGlobalAgent: true,
       env: {
-        REDIS_VERSION: 3,
+        REDIS_VERSION: 'v3',
         INSTANA_FORCE_TRANSMISSION_STARTING_AT: 500,
         INSTANA_DEV_BATCH_THRESHOLD: 250 // make sure redis calls are batched even when stuff is slow
       }

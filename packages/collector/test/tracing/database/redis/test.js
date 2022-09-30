@@ -22,7 +22,7 @@ const ProcessControls = require('../../../test_util/ProcessControls');
 const globalAgent = require('../../../globalAgent');
 
 describe('tracing/redis', function () {
-  ['latest', 3, 0].forEach(redisVersion => {
+  ['latest', 'v3', 'v0'].forEach(redisVersion => {
     const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
     mochaSuiteFn(`redis@${redisVersion}`, function () {
@@ -340,7 +340,7 @@ describe('tracing/redis', function () {
                     span => expect(span.b.u).to.not.exist,
                     span => expect(span.data.redis.connection).to.contain(process.env.REDIS),
                     span =>
-                      redisVersion === 3
+                      redisVersion === 'v3'
                         ? expect(span.data.redis.error).to.contain("ERR wrong number of arguments for 'hget' command")
                         : expect(span.data.redis.error).to.contain(
                             'EXECABORT Transaction discarded because of previous errors.'
