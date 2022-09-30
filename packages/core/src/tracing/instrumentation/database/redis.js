@@ -44,12 +44,23 @@ function instrument(redis) {
   //       to get the instance of the redis client
   if (!redis.RedisClient) {
     const createdClientWrap = originalCreatedClientFn => {
-      return function instrumentedCreateClientInstana(address) {
+      return function instrumentedCreateClientInstana(createClientOpts) {
         const redisClient = originalCreatedClientFn.apply(this, arguments);
         let addressUrl;
 
-        if (address && address.url) {
-          addressUrl = address.url;
+        // https://github.com/redis/node-redis/blob/master/docs/client-configuration.md
+        if (createClientOpts) {
+          if (createClientOpts.url) {
+            addressUrl = createClientOpts.url;
+          } else if (createClientOpts.socket) {
+            if (createClientOpts.socket.host) {
+              addressUrl = `${createClientOpts.socket.host}:${createClientOpts.socket.port}`;
+            } else if (createClientOpts.socket.path) {
+              addressUrl = createClientOpts.socket.path;
+            }
+          } else if (createClientOpts.host) {
+            addressUrl = createClientOpts.host;
+          }
         }
 
         shimAllCommands(redisClient, addressUrl, false);
