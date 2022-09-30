@@ -287,6 +287,8 @@ function instrumentMultiExec(origCtx, origArgs, original, address, isAtomic, cbS
 
     for (let i = 0; i < len; i++) {
       let subCommand;
+
+      // v3
       if (typeof queue.get === 'function') {
         subCommand = queue.get(i);
         subCommands[i] = subCommand.command;
@@ -296,8 +298,7 @@ function instrumentMultiExec(origCtx, origArgs, original, address, isAtomic, cbS
           subCommand.callback = buildSubCommandCallback(span, subCommand.callback);
         }
       } else {
-        // NOTE: Remove in 3.x
-        // Branch for ancient versions of redis (like 0.12.1):
+        // v0, v4
         subCommand = queue[i];
         if (!Array.isArray(subCommand) || subCommand.length === 0) {
           continue;
@@ -364,7 +365,8 @@ function instrumentMultiExec(origCtx, origArgs, original, address, isAtomic, cbS
     function onResult(err) {
       span.d = Date.now() - span.ts;
 
-      if (err && isAtomic) {
+      // NOTE: if customer is using batching, there won't be an error object
+      if (err) {
         span.ec = 1;
 
         if (err.message) {
@@ -375,16 +377,10 @@ function instrumentMultiExec(origCtx, origArgs, original, address, isAtomic, cbS
           span.data.redis.error = 'Unknown error';
         }
 
-        // NOTE: sub errors are only supported in 3.x
+        // v3 = provides sub errors
         if (err.errors && err.errors.length) {
           span.data.redis.error = err.errors.map(subErr => subErr.message).join('\n');
         }
-      }
-
-      // 4.x batch has no feature to pass callbacks to sub commands
-      if (err && !span.data.redis.error) {
-        span.ec = 1;
-        span.data.redis.error = err.message;
       }
 
       span.transmit();
@@ -397,8 +393,7 @@ function instrumentMultiExec(origCtx, origArgs, original, address, isAtomic, cbS
 }
 
 // NOTE: We only need this function to capture errors in a batch command
-// 3.x offers the ability to read the errors as sub errors (sub error = sub command)
-// and 0.x has no batch functionality
+//       The fn is only used for v3 redis client
 function buildSubCommandCallback(span, userProvidedCallback) {
   return function subCommandCallback(err) {
     if (err) {

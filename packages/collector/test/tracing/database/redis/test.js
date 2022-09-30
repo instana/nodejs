@@ -443,7 +443,7 @@ describe('tracing/redis', function () {
 
       // v0 has no batch feature at all
       // v4 has removed client.batch, but they batch internally (https://github.com/redis/node-redis/issues/1796)
-      if (redisVersion === 3 || redisVersion === 'latest') {
+      if (redisVersion === 'v3' || redisVersion === 'latest') {
         it('must trace batch calls', () =>
           controls
             .sendRequest({
@@ -487,7 +487,7 @@ describe('tracing/redis', function () {
 
       // v0 has no batch feature at all
       // v4 has removed client.batch, but they batch internally (https://github.com/redis/node-redis/issues/1796)
-      if (redisVersion === 3 || redisVersion === 'latest') {
+      if (redisVersion === 'v3' || redisVersion === 'latest') {
         it('must trace failed batch calls', () =>
           controls
             .sendRequest({
