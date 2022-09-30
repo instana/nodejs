@@ -23,7 +23,7 @@ let connectedToRedis = false;
 const agentPort = process.env.INSTANA_AGENT_PORT;
 
 let client;
-if (process.env.REDIS_VERSION === 3) {
+if (process.env.REDIS_VERSION === 'v3') {
   client = redis.createClient(`//${process.env.REDIS}`);
 } else {
   // v0
