@@ -1,7 +1,7 @@
 version: '2'
 services:
   redis:
-    image: redis:4.0.6
+    image: redis:5.0.14
     ports:
       - 6379:6379
 

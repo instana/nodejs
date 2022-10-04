@@ -9,23 +9,16 @@ const { expect } = require('chai');
 
 const constants = require('@instana/core').tracing.constants;
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
-const config = require('../../../../../core/test/config');
-const {
-  getSpansByName,
-  expectExactlyOneMatching,
-  retry,
-  stringifyItems
-} = require('../../../../../core/test/test_util');
+const config = require('@instana/core/test/config');
+const { getSpansByName, expectExactlyOneMatching, retry, stringifyItems } = require('@instana/core/test/test_util');
 
 const ProcessControls = require('../../../test_util/ProcessControls');
 const { AgentStubControls } = require('../../../apps/agentStubControls');
 const globalAgent = require('../../../globalAgent');
-
 const { fail } = expect;
-
 const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
-mochaSuiteFn('tracing/batching', function () {
+mochaSuiteFn('tracing/spanbatching with redis', function () {
   this.timeout(config.getTestTimeout());
 
   globalAgent.setUpCleanUpHooks();
@@ -36,6 +29,7 @@ mochaSuiteFn('tracing/batching', function () {
       dirname: __dirname,
       useGlobalAgent: true,
       env: {
+        REDIS_VERSION: 'v3',
         INSTANA_FORCE_TRANSMISSION_STARTING_AT: 500,
         INSTANA_DEV_BATCH_THRESHOLD: 250, // make sure redis calls are batched even when stuff is slow
         INSTANA_SPANBATCHING_ENABLED: 'true' // TODO remove this when switching to opt-in
@@ -52,6 +46,7 @@ mochaSuiteFn('tracing/batching', function () {
       dirname: __dirname,
       agentControls: customAgentControls,
       env: {
+        REDIS_VERSION: 'v3',
         INSTANA_FORCE_TRANSMISSION_STARTING_AT: 500,
         INSTANA_DEV_BATCH_THRESHOLD: 250 // make sure redis calls are batched even when stuff is slow
       }
@@ -66,6 +61,7 @@ mochaSuiteFn('tracing/batching', function () {
       dirname: __dirname,
       useGlobalAgent: true,
       env: {
+        REDIS_VERSION: 'v3',
         INSTANA_FORCE_TRANSMISSION_STARTING_AT: 500,
         INSTANA_DEV_BATCH_THRESHOLD: 250 // make sure redis calls are batched even when stuff is slow
       }

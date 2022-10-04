@@ -7,6 +7,7 @@
 
 'use strict';
 
+require('./mockVersion');
 require('../../../..')();
 
 const bodyParser = require('body-parser');
@@ -18,9 +19,7 @@ const request = require('request-promise-native');
 const app = express();
 const logPrefix = `Redis Batching App (${process.pid}):\t`;
 let connectedToRedis = false;
-
 const agentPort = process.env.INSTANA_AGENT_PORT;
-
 const client = redis.createClient(`//${process.env.REDIS}`);
 
 client.on('ready', () => {
