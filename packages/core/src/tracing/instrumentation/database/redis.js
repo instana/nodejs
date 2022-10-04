@@ -5,7 +5,6 @@
 
 'use strict';
 
-const commands = require('redis-commands');
 const shimmer = require('shimmer');
 
 const requireHook = require('../../../util/requireHook');
@@ -43,7 +42,7 @@ function instrument(redis) {
   // NOTE: v4 no longer exposes the RedisClient. We need to wait till `createClient` get's called
   //       to get the instance of the redis client
   if (!redis.RedisClient) {
-    const createdClientWrap = originalCreatedClientFn => {
+    const createClientWrap = originalCreatedClientFn => {
       return function instrumentedCreateClientInstana(createClientOpts) {
         const redisClient = originalCreatedClientFn.apply(this, arguments);
         let addressUrl;
@@ -61,9 +60,12 @@ function instrument(redis) {
           } else if (createClientOpts.host) {
             addressUrl = createClientOpts.host;
           }
+        } else {
+          // default fallback, see https://github.com/redis/node-redis#basic-example
+          addressUrl = 'localhost:6379';
         }
 
-        shimAllCommands(redisClient, addressUrl, false);
+        shimAllCommands(redisClient, addressUrl, false, redisCommandList);
 
         if (redisClient.multi) {
           const wrapMulti = originalMultiFn => {
@@ -120,7 +122,7 @@ function instrument(redis) {
       };
     };
 
-    shimmer.wrap(redis, 'createClient', createdClientWrap);
+    shimmer.wrap(redis, 'createClient', createClientWrap);
   } else {
     const redisClientProto = redis.RedisClient.prototype;
 
@@ -170,10 +172,13 @@ function instrument(redis) {
   }
 }
 
-function shimAllCommands(redisClass, addressUrl, cbStyle) {
-  let list = commands.list;
-  if (redisCommandList.length) {
-    list = redisCommandList;
+function shimAllCommands(redisClass, addressUrl, cbStyle, redisCommands) {
+  let list = redisCommands;
+
+  if (!list || !list.length) {
+    // v0, v3 legacy
+    // from https://github.com/NodeRedis/redis-commands/blob/master/commands.json
+    list = require('./redis-commands.json');
   }
 
   const wrapCommand = commandName => {

@@ -6,6 +6,7 @@
 'use strict';
 
 const expect = require('chai').expect;
+const semver = require('semver');
 const constants = require('@instana/core').tracing.constants;
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('../../../../../core/test/config');
@@ -23,7 +24,14 @@ const globalAgent = require('../../../globalAgent');
 
 describe('tracing/redis', function () {
   ['latest', 'v3', 'v0'].forEach(redisVersion => {
-    const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
+    let mochaSuiteFn;
+
+    // v4 dropped support for < 12
+    if (redisVersion === 'latest') {
+      mochaSuiteFn = semver.gte(process.versions.node, '12.0.0') ? describe : describe.skip;
+    } else {
+      mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
+    }
 
     mochaSuiteFn(`redis@${redisVersion}`, function () {
       this.timeout(config.getTestTimeout());
