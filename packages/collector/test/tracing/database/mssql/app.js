@@ -7,6 +7,7 @@
 
 'use strict';
 
+require('./mockVersion');
 require('../../../..')();
 
 const bodyParser = require('body-parser');
@@ -443,7 +444,6 @@ app.get('/pipe', (req, res) => {
     console.log('PIPE ERR', err);
   });
   stream.on('finish', () => {
-    console.log('PIPE FINISH');
     res.end();
   });
 });
