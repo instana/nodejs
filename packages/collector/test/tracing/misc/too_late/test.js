@@ -25,7 +25,7 @@ mochaSuiteFn('tracing/too late', function () {
   this.timeout(config.getTestTimeout());
   globalAgent.setUpCleanUpHooks();
 
-  const EXAMPLE_MODULE = 'redis';
+  const EXAMPLE_MODULE = 'mysql';
 
   describe(`@instana/collector is initialized too late (choosing ${EXAMPLE_MODULE} as an example)`, function () {
     const controls = new ProcessControls({

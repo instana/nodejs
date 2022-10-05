@@ -26,9 +26,10 @@ describe('tracing/redis', function () {
   ['latest', 'v3', 'v0'].forEach(redisVersion => {
     let mochaSuiteFn;
 
-    // v4 dropped support for < 12
+    // v4 dropped support for < 12, but they introduced another drop of Node v12 in a feature release
+    // See https://github.com/redis/node-redis/issues/2283
     if (redisVersion === 'latest') {
-      mochaSuiteFn = semver.gte(process.versions.node, '12.0.0') ? describe : describe.skip;
+      mochaSuiteFn = semver.gte(process.versions.node, '14.0.0') ? describe : describe.skip;
     } else {
       mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
     }
