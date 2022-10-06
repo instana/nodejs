@@ -3,6 +3,23 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.10.0](https://github.com/instana/nodejs/compare/v2.9.0...v2.10.0) (2022-10-06)
+
+
+### Features
+
+* **collector:** added support for redis v4 ([#627](https://github.com/instana/nodejs/issues/627)) ([ad00255](https://github.com/instana/nodejs/commit/ad00255c73bc7ec080a1a91172a8878febe274b2))
+* **kafka:** use kafka header format 'both' by default ([b2585cf](https://github.com/instana/nodejs/commit/b2585cf7e4c6f31b38d486505699309cb9d759d6))
+
+
+### Reverts
+
+* Revert "build(deps-dev): bump mssql from 7.3.1 to 9.0.1" (#632) ([309e17b](https://github.com/instana/nodejs/commit/309e17b390a4a32f8f1eb80102a1babae881ec50)), closes [#632](https://github.com/instana/nodejs/issues/632)
+
+
+
+
+
 # [2.9.0](https://github.com/instana/nodejs/compare/v2.8.1...v2.9.0) (2022-09-26)
 
 
