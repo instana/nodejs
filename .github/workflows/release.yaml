@@ -53,6 +53,11 @@ jobs:
           cache: 'npm'
           cache-dependency-path: '**/package-lock.json'
 
+      - name: echo versions
+        run: |
+          node --version
+          npm --version
+
       - name: Check CircleCI status
         run: |
           if [[ $SKIP_CI_STATUS_CHECK != true ]]; then
