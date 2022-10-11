@@ -92,13 +92,14 @@ jobs:
             git --no-pager diff
           elif [[ $FROM_PACKAGE = true ]]; then
             npx lerna publish --yes --no-verify-access from-package
+            git log -p -n1
           else
             npx lerna publish --yes --no-verify-access
             git log -p -n1
           fi
 
       - name: Send success message
-        if: "${{ success() }}"
+        if: "${{ success() && env.DRY_RUN != 'true' }}"
         uses: slackapi/slack-github-action@v1.21.0
         with:
           channel-id: ${{ secrets.SLACK_CHANNEL_ID }}
@@ -138,7 +139,7 @@ jobs:
           SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
 
       - name: Send failure message
-        if: "${{ failure() }}"
+        if: "${{ failure() && env.DRY_RUN != 'true' }}"
         uses: slackapi/slack-github-action@v1.21.0
         with:
           channel-id: ${{ secrets.SLACK_CHANNEL_ID }}
