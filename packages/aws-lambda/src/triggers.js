@@ -337,29 +337,14 @@ function readTraceCorrelationFromSqs(event) {
 
 function readTraceCorrelationFromSqsAttributes(attributes) {
   const traceCorrelationData = {};
-  traceCorrelationData.traceId = readSqsMessageAttributeWithFallback(
-    attributes,
-    tracingConstants.sqsAttributeNames.TRACE_ID,
-    tracingConstants.sqsAttributeNames.LEGACY_TRACE_ID
-  );
-  traceCorrelationData.parentId = readSqsMessageAttributeWithFallback(
-    attributes,
-    tracingConstants.sqsAttributeNames.SPAN_ID,
-    tracingConstants.sqsAttributeNames.LEGACY_SPAN_ID
-  );
-  traceCorrelationData.level = readSqsMessageAttributeWithFallback(
-    attributes,
-    tracingConstants.sqsAttributeNames.LEVEL,
-    tracingConstants.sqsAttributeNames.LEGACY_LEVEL
-  );
+  traceCorrelationData.traceId = readSqsMessageAttribute(attributes, tracingConstants.sqsAttributeNames.TRACE_ID);
+  traceCorrelationData.parentId = readSqsMessageAttribute(attributes, tracingConstants.sqsAttributeNames.SPAN_ID);
+  traceCorrelationData.level = readSqsMessageAttribute(attributes, tracingConstants.sqsAttributeNames.LEVEL);
   return traceCorrelationData;
 }
 
-function readSqsMessageAttributeWithFallback(messageAttributes, key, keyFallback) {
-  return (
-    readSqsStringMessageAttribute(messageAttributes, key) ||
-    readSqsStringMessageAttribute(messageAttributes, keyFallback)
-  );
+function readSqsMessageAttribute(messageAttributes, key) {
+  return readSqsStringMessageAttribute(messageAttributes, key);
 }
 
 function readSqsStringMessageAttribute(messageAttributes, key) {

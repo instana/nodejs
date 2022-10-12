@@ -68,11 +68,8 @@ exports.SDK = {
 
 exports.sqsAttributeNames = {
   TRACE_ID: 'X_INSTANA_T',
-  LEGACY_TRACE_ID: 'X_INSTANA_ST',
   SPAN_ID: 'X_INSTANA_S',
-  LEGACY_SPAN_ID: 'X_INSTANA_SS',
-  LEVEL: 'X_INSTANA_L',
-  LEGACY_LEVEL: 'X_INSTANA_SL'
+  LEVEL: 'X_INSTANA_L'
 };
 
 exports.snsSqsInstanaHeaderPrefixRegex = /"X_INSTANA_/i;
