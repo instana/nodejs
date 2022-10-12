@@ -27,7 +27,6 @@ const queueUrlPrefix = process.env.SQS_QUEUE_URL_PREFIX || defaultPrefix;
 
 const createQueues = require('./util').createQueues;
 const deleteQueues = require('./util').deleteQueues;
-const sendMessageWithLegacyHeaders = require('./sendNonInstrumented').sendMessageWithLegacyHeaders;
 const sendSnsNotificationToSqsQueue = require('./sendNonInstrumented').sendSnsNotificationToSqsQueue;
 
 const sendingMethods = ['v3', 'cb', 'v2'];
@@ -140,14 +139,6 @@ function start(version) {
             });
           });
 
-          it('falls back to legacy "S" headers if needed. eg: X_INSTANA_ST instead of X_INSTANA_T', async () => {
-            const traceId = '1234';
-            const spanId = '5678';
-            await sendMessageWithLegacyHeaders(queueURL, traceId, spanId);
-            await verifySingleSqsEntrySpanWithParent(traceId, spanId);
-            await verifyNoUnclosedSpansHaveBeenDetected(receiverControls);
-          });
-
           // eslint-disable-next-line max-len
           it('continues trace from a SNS notification routed to an SQS queue via SNS-to-SQS subscription', async () => {
             const traceId = 'abcdef9876543210';
@@ -156,18 +147,6 @@ function start(version) {
             await verifySingleSqsEntrySpanWithParent(traceId, spanId);
             await verifyNoUnclosedSpansHaveBeenDetected(receiverControls);
           });
-
-          it(
-            'continues trace from a SNS notification routed to an SQS queue via SNS-to-SQS subscription ' +
-              '(legacy headers)',
-            async () => {
-              const traceId = 'abcdef9876543210';
-              const spanId = '9876543210abcdef';
-              await sendSnsNotificationToSqsQueue(queueURL, traceId, spanId, true);
-              await verifySingleSqsEntrySpanWithParent(traceId, spanId);
-              await verifyNoUnclosedSpansHaveBeenDetected(receiverControls);
-            }
-          );
         });
 
         describe(`polling via ${sqsReceiveMethod} when no messages are available`, () => {

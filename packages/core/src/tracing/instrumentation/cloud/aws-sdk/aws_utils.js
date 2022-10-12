@@ -20,21 +20,9 @@ function readTracingAttributes(sqsAttributes) {
     return tracingAttributes;
   }
 
-  tracingAttributes.traceId = readMessageAttributeWithFallback(
-    sqsAttributes,
-    sqsAttributeNames.TRACE_ID,
-    sqsAttributeNames.LEGACY_TRACE_ID
-  );
-  tracingAttributes.parentId = readMessageAttributeWithFallback(
-    sqsAttributes,
-    sqsAttributeNames.SPAN_ID,
-    sqsAttributeNames.LEGACY_SPAN_ID
-  );
-  tracingAttributes.level = readMessageAttributeWithFallback(
-    sqsAttributes,
-    sqsAttributeNames.LEVEL,
-    sqsAttributeNames.LEGACY_LEVEL
-  );
+  tracingAttributes.traceId = readMessageAttribute(sqsAttributes, sqsAttributeNames.TRACE_ID);
+  tracingAttributes.parentId = readMessageAttribute(sqsAttributes, sqsAttributeNames.SPAN_ID);
+  tracingAttributes.level = readMessageAttribute(sqsAttributes, sqsAttributeNames.LEVEL);
 
   return tracingAttributes;
 }
@@ -52,21 +40,9 @@ function readTracingAttributesFromSns(messageBody) {
     try {
       const parsedBody = JSON.parse(messageBody);
       if (parsedBody && parsedBody.MessageAttributes) {
-        tracingAttributes.traceId = readMessageAttributeWithFallback(
-          parsedBody.MessageAttributes,
-          sqsAttributeNames.TRACE_ID,
-          sqsAttributeNames.LEGACY_TRACE_ID
-        );
-        tracingAttributes.parentId = readMessageAttributeWithFallback(
-          parsedBody.MessageAttributes,
-          sqsAttributeNames.SPAN_ID,
-          sqsAttributeNames.LEGACY_SPAN_ID
-        );
-        tracingAttributes.level = readMessageAttributeWithFallback(
-          parsedBody.MessageAttributes,
-          sqsAttributeNames.LEVEL,
-          sqsAttributeNames.LEGACY_LEVEL
-        );
+        tracingAttributes.traceId = readMessageAttribute(parsedBody.MessageAttributes, sqsAttributeNames.TRACE_ID);
+        tracingAttributes.parentId = readMessageAttribute(parsedBody.MessageAttributes, sqsAttributeNames.SPAN_ID);
+        tracingAttributes.level = readMessageAttribute(parsedBody.MessageAttributes, sqsAttributeNames.LEVEL);
       }
     } catch (e) {
       // The attempt to parse the message body as JSON failed, so this is not an SQS message resulting from an SNS
@@ -77,9 +53,8 @@ function readTracingAttributesFromSns(messageBody) {
   return tracingAttributes;
 }
 
-function readMessageAttributeWithFallback(attributes, key1, key2) {
-  const attribute =
-    tracingUtil.readAttribCaseInsensitive(attributes, key1) || tracingUtil.readAttribCaseInsensitive(attributes, key2);
+function readMessageAttribute(attributes, key) {
+  const attribute = tracingUtil.readAttribCaseInsensitive(attributes, key);
   if (attribute) {
     // attribute.stringValue is used by SQS message attributes, attribute.Value is used by SNS-to-SQS.
     return attribute.StringValue || attribute.Value;

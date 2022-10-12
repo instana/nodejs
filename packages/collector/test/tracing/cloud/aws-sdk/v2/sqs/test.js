@@ -23,7 +23,7 @@ const {
 } = require('../../../../../../../core/test/test_util');
 const ProcessControls = require('../../../../../test_util/ProcessControls');
 const globalAgent = require('../../../../../globalAgent');
-const { sendMessageWithLegacyHeaders, sendSnsNotificationToSqsQueue } = require('./sendNonInstrumented');
+const { sendSnsNotificationToSqsQueue } = require('./sendNonInstrumented');
 const { verifyHttpRootEntry, verifyHttpExit } = require('@instana/core/test/test_util/common_verifications');
 const defaultPrefix = 'https://sqs.us-east-2.amazonaws.com/410797082306/';
 const queueUrlPrefix = process.env.SQS_QUEUE_URL_PREFIX || defaultPrefix;
@@ -127,14 +127,6 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/sqs', function () {
           });
         });
 
-        it('falls back to legacy "S" headers if needed. eg: X_INSTANA_ST instead of X_INSTANA_T', async () => {
-          const traceId = '1234';
-          const spanId = '5678';
-          await sendMessageWithLegacyHeaders(queueURL, traceId, spanId);
-          await verifySingleSqsEntrySpanWithParent(traceId, spanId);
-          await verifyNoUnclosedSpansHaveBeenDetected(receiverControls);
-        });
-
         it('continues trace from a SNS notification routed to an SQS queue via SNS-to-SQS subscription', async () => {
           const traceId = 'abcdef9876543210';
           const spanId = '9876543210abcdef';
@@ -142,18 +134,6 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/sqs', function () {
           await verifySingleSqsEntrySpanWithParent(traceId, spanId);
           await verifyNoUnclosedSpansHaveBeenDetected(receiverControls);
         });
-
-        it(
-          'continues trace from a SNS notification routed to an SQS queue via SNS-to-SQS subscription ' +
-            '(legacy headers)',
-          async () => {
-            const traceId = 'abcdef9876543210';
-            const spanId = '9876543210abcdef';
-            await sendSnsNotificationToSqsQueue(queueURL, traceId, spanId, true);
-            await verifySingleSqsEntrySpanWithParent(traceId, spanId);
-            await verifyNoUnclosedSpansHaveBeenDetected(receiverControls);
-          }
-        );
       });
 
       describe(`polling via ${sqsReceiveMethod} when no messages are available`, () => {

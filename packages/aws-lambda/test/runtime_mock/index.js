@@ -611,15 +611,6 @@ function addSqsTracingHeaders(event, trigger) {
     if (process.env.INSTANA_HEADER_L) {
       addSqsMessageAttribute(event, 'x_InStaNa_l', 'INSTANA_HEADER_L');
     }
-    if (process.env.INSTANA_SQS_LEGACY_HEADER_T) {
-      addSqsMessageAttribute(event, 'x_InStaNa_st', 'INSTANA_SQS_LEGACY_HEADER_T');
-    }
-    if (process.env.INSTANA_SQS_LEGACY_HEADER_S) {
-      addSqsMessageAttribute(event, 'x_InStaNa_sS', 'INSTANA_SQS_LEGACY_HEADER_S');
-    }
-    if (process.env.INSTANA_SQS_LEGACY_HEADER_L) {
-      addSqsMessageAttribute(event, 'x_InStaNa_Sl', 'INSTANA_SQS_LEGACY_HEADER_L');
-    }
   } else if (trigger === 'sns-to-sqs') {
     event.Records[0].body = JSON.stringify({
       Type: 'Notification',
@@ -637,15 +628,6 @@ function addSqsTracingHeaders(event, trigger) {
     }
     if (process.env.INSTANA_HEADER_L) {
       addSnsPropertyToSqsMessageBody(event, 'x_InStaNa_l', 'INSTANA_HEADER_L');
-    }
-    if (process.env.INSTANA_SQS_LEGACY_HEADER_T) {
-      addSnsPropertyToSqsMessageBody(event, 'x_InStaNa_st', 'INSTANA_SQS_LEGACY_HEADER_T');
-    }
-    if (process.env.INSTANA_SQS_LEGACY_HEADER_S) {
-      addSnsPropertyToSqsMessageBody(event, 'x_InStaNa_sS', 'INSTANA_SQS_LEGACY_HEADER_S');
-    }
-    if (process.env.INSTANA_SQS_LEGACY_HEADER_L) {
-      addSnsPropertyToSqsMessageBody(event, 'x_InStaNa_Sl', 'INSTANA_SQS_LEGACY_HEADER_L');
     }
   } else {
     throw new Error(`Unknown trigger type: ${trigger}.`);
