@@ -298,7 +298,8 @@ const argv = yargs(hideBin(process.argv))
     alias: 'd',
     default: false,
     type: 'boolean',
-    description: 'Dry run is on by default.'
+    description:
+      'Use --dry=true to only print the items that would be deleted instead of actually deleting them, off by default.'
   })
   .option('skipDateCheck', {
     alias: 'sd',
