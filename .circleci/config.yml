@@ -60,6 +60,9 @@ shared: &shared
           - v{{ .Environment.CACHE_VERSION }}-babel-typescript-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "packages/collector/test/apps/babel-typescript/package-lock.json" }}
     - restore_cache:
         keys:
+          - v{{ .Environment.CACHE_VERSION }}-prisma-app-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "packages/collector/test/tracing/database/prisma/package-lock.json" }}
+    - restore_cache:
+        keys:
           - v{{ .Environment.CACHE_VERSION }}-core-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "packages/core/package-lock.json" }}
     - restore_cache:
         keys:
@@ -221,6 +224,10 @@ shared: &shared
         paths:
           - packages/collector/test/apps/babel-typescript/node_modules
         key: v{{ .Environment.CACHE_VERSION }}-babel-typescript-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "packages/collector/test/apps/babel-typescript/package-lock.json" }}
+    - save_cache:
+        paths:
+          - packages/collector/test/tracing/database/prisma/node_modules
+        key: v{{ .Environment.CACHE_VERSION }}-prisma-app-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "packages/collector/test/tracing/database/prisma/package-lock.json" }}
 
 elasticsearch: &elasticsearch
   - image: docker.elastic.co/elasticsearch/elasticsearch:7.6.2

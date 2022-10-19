@@ -3,13 +3,10 @@
  * (c) Copyright Instana Inc. and contributors 2019
  */
 
-/* eslint-disable no-console */
-
 'use strict';
 
 const { expect } = require('chai');
 const path = require('path');
-const childProcess = require('child_process');
 const rimraf = require('rimraf');
 
 const constants = require('@instana/core').tracing.constants;
@@ -18,6 +15,7 @@ const config = require('../../../../../core/test/config');
 const testUtils = require('../../../../../core/test/test_util');
 const ProcessControls = require('../../../test_util/ProcessControls');
 const globalAgent = require('../../../globalAgent');
+const { executeCallback } = require('../../../test_util/executeCommand');
 
 const babelAppDir = path.join(__dirname, '../../../apps/babel-typescript');
 const babelLibDir = path.join(babelAppDir, 'lib');
@@ -35,18 +33,9 @@ mochaSuiteFn('tracing a babel/typescript setup', function () {
       if (err) {
         return done(err);
       }
-      const originalWorkingDir = process.cwd();
-      const command = 'npm install && npm run build';
-      process.chdir(babelAppDir);
-      console.log(`About to run "${command}" in ${process.cwd()} now, this might take a while.`);
       // If this fails with "Error: Cannot find module './testUtils'" there might be left over node_modules installed by
       // a different Node.js version. rm -rf packages/collector/test/apps/babel-typescript/node_modules and run again.
-      childProcess.exec(command, (error, stdout, stderr) => {
-        console.log(`STDOUT of ${command}: ${stdout}`);
-        console.error(`STDERR of ${command}: ${stderr}`);
-        process.chdir(originalWorkingDir);
-        done(error);
-      });
+      executeCallback('npm install && npm run build', babelAppDir, done);
     });
   });
 
