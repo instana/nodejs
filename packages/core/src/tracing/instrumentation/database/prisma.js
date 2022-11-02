@@ -18,6 +18,8 @@ const cls = require('../../cls');
 
 let isActive = false;
 
+const providerAndDataSourceUriMap = new WeakMap();
+
 exports.init = function init() {
   requireHook.onModuleLoad('@prisma/client', instrumentPrismaClient);
 };
@@ -49,17 +51,22 @@ function instrumentClientConstructor(prismaClientModule) {
                 return;
               }
 
-              // We attach the provider and destination URL to the Prisma client instance. That way, when multiple
-              // Prisma client's are used, we do not confuse providers/database URLs
-              this.__inProvider = activeDatasource.activeProvider;
+              // We store the provider and destination URL for the Prisma client instance. That way, when multiple
+              // Prisma client's are used, we do not confuse providers/database URLs.
               const dataSourceUrlObject = activeDatasource.url;
               if (dataSourceUrlObject && dataSourceUrlObject.value) {
-                this.in_DataSourceUrl = redactPassword(activeDatasource.activeProvider, dataSourceUrlObject.value);
+                providerAndDataSourceUriMap.set(this._engine, {
+                  provider: activeDatasource.activeProvider,
+                  dataSourceUrl: redactPassword(activeDatasource.activeProvider, dataSourceUrlObject.value)
+                });
               } else if (dataSourceUrlObject && dataSourceUrlObject.fromEnvVar) {
-                this.in_DataSourceUrl = redactPassword(
-                  activeDatasource.activeProvider,
-                  process.env[dataSourceUrlObject.fromEnvVar]
-                );
+                providerAndDataSourceUriMap.set(this._engine, {
+                  provider: activeDatasource.activeProvider,
+                  dataSourceUrl: redactPassword(
+                    activeDatasource.activeProvider,
+                    process.env[dataSourceUrlObject.fromEnvVar]
+                  )
+                });
               }
             });
           } else {
@@ -113,11 +120,13 @@ function instrumentedRequest(ctx, originalRequest, argsForOriginalRequest) {
     const span = cls.startSpan('prisma', EXIT);
     span.stack = getStackTrace(instrumentedRequest, 1);
     const params = argsForOriginalRequest[0] || {};
+
+    const providerAndDataSourceUri = ctx._engine ? providerAndDataSourceUriMap.get(ctx._engine) || {} : {};
     span.data.prisma = {
       model: params.model,
       action: params.action,
-      provider: ctx.__inProvider,
-      url: ctx.in_DataSourceUrl
+      provider: providerAndDataSourceUri.provider,
+      url: providerAndDataSourceUri.dataSourceUrl
     };
     const requestPromise = originalRequest.apply(ctx, argsForOriginalRequest);
     if (!requestPromise && typeof requestPromise.then !== 'function') {

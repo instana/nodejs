@@ -25,7 +25,7 @@ const migrationsTargetDir = path.join(appDir, 'prisma', 'migrations');
 
 const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
-mochaSuiteFn.only('tracing/prisma', function () {
+mochaSuiteFn('tracing/prisma', function () {
   this.timeout(Math.max(config.getTestTimeout() * 3, 20000));
 
   before(async () => {
@@ -34,7 +34,7 @@ mochaSuiteFn.only('tracing/prisma', function () {
     // the npm scripts defined in the local package.json file) for each provider -- see the `before` hook for each
     // provider below. Prisma is somewhat finicky with paths and makes specific assumptions: Basically it expects
     // `prisma/schema.prisma` to exist in the project's root directory and the `prisma` and `@prisma/client` modules to
-    // be installed into node_modules relative to that file. This is why we do not // install `@prisma/client` in our
+    // be installed into node_modules relative to that file. This is why we do not install `@prisma/client` in our
     // root dependencies, as we do for other modules under test.
     // See also: https://www.prisma.io/docs/reference/api-reference/command-reference#generate
     await executeAsync('npm install', appDir);
