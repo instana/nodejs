@@ -25,7 +25,7 @@ const migrationsTargetDir = path.join(appDir, 'prisma', 'migrations');
 
 const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
-mochaSuiteFn('tracing/prisma', function () {
+mochaSuiteFn.only('tracing/prisma', function () {
   this.timeout(Math.max(config.getTestTimeout() * 3, 20000));
 
   // We need to run npm install for the prisma application (which has its own package.json file) because prisma
@@ -36,8 +36,8 @@ mochaSuiteFn('tracing/prisma', function () {
 
   providers.forEach(provider => {
     describe(`with provider ${provider}`, () => {
-      if (provider === 'postgresql' && !process.env.POSTGRES_URL) {
-        throw new Error('POSTGRES_URL is not set.');
+      if (provider === 'postgresql' && !process.env.PRISMA_POSTGRES_URL) {
+        throw new Error('PRISMA_POSTGRES_URL is not set.');
       }
 
       // Set up Prisma stuff for the provider we want to test with (either sqlite or postgresql).
@@ -181,7 +181,7 @@ mochaSuiteFn('tracing/prisma', function () {
         expectedUrl = 'file:./dev.db';
         break;
       case 'postgresql':
-        expectedUrl = process.env.POSTGRES_URL.replace('nodepw', '_redacted_');
+        expectedUrl = process.env.PRISMA_POSTGRES_URL.replace('nodepw', '_redacted_');
         break;
       default:
         throw new Error(`Unknown provider: ${expectedUrl}`);
