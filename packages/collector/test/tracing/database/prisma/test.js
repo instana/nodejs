@@ -28,9 +28,15 @@ const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : descri
 mochaSuiteFn.only('tracing/prisma', function () {
   this.timeout(Math.max(config.getTestTimeout() * 3, 20000));
 
-  // We need to run npm install for the prisma application (which has its own package.json file) because prisma
-  // downloads a native database driver binary the current platform (Darwin, Linux, ...) as an npm postinstall hook.
   before(async () => {
+    // We need to run npm install for the prisma application and install @prisma/client locally, because we need the
+    // prisma client tooling to be installed locally. We need to run `prisma generate` and `prisma migrate deploy` (via
+    // the npm scripts defined in the local package.json file) for each provider -- see the `before` hook for each
+    // provider below. Prisma is somewhat finicky with paths and makes specific assumptions: Basically it expects
+    // `prisma/schema.prisma` to exist in the project's root directory and the `prisma` and `@prisma/client` modules to
+    // be installed into node_modules relative to that file. This is why we do not // install `@prisma/client` in our
+    // root dependencies, as we do for other modules under test.
+    // See also: https://www.prisma.io/docs/reference/api-reference/command-reference#generate
     await executeAsync('npm install', appDir);
   });
 
@@ -51,7 +57,11 @@ mochaSuiteFn.only('tracing/prisma', function () {
         await rimraf(migrationsTargetDir);
         await recursiveCopy(migrationsSourceDir, migrationsTargetDir);
 
+        // Run the prisma client tooling to generate the database client access code.
+        // See https://www.prisma.io/docs/reference/api-reference/command-reference#generate
         await executeAsync('npm run generate', appDir);
+
+        // Run database migrations to create the table.
         await executeAsync('npm run migrate', appDir);
       });
 
