@@ -73,6 +73,8 @@ docker run \
   --env INSTANA_TIMEOUT=$instana_timeout \
   --env INSTANA_ENDPOINT_URL=$instana_endpoint_url \
   --env INSTANA_AGENT_KEY=$instana_agent_key \
+  # Use the line below if you want to test ES modules. Also checkout the Dockerfile
+  #--env LAMBDA_HANDLER='esm/app.handler' \
   --env LAMBDA_HANDLER=app.handler \
   -p 9000:8080 \
   --name $container_name \

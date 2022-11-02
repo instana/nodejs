@@ -1,0 +1,6 @@
+{
+  "reporterEnabled": "spec, mocha-junit-reporter, ../core/test/test_util/retryReporter.js",
+  "mochaJunitReporterReporterOptions": {
+    "mochaFile": "../../test-results/aws-lambda-auto-wrap/results.xml"
+  }
+}

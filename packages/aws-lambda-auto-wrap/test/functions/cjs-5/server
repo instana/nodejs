@@ -1,0 +1,9 @@
+/*
+ * (c) Copyright IBM Corp. 2022
+ */
+
+'use strict';
+
+exports.candle = async () => {
+  return 200;
+};

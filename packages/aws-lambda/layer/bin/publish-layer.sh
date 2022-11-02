@@ -274,6 +274,12 @@ mkdir -p extensions
 
 cp ../include/$LAMBDA_ARCHITECTURE/instana-lambda-extension extensions/instana-lambda-extension
 
+# ES module support for AWS Lambda
+# We copy the files manually, because we do not have to publish them to NPM
+mkdir nodejs/node_modules/instana-aws-lambda-auto-wrap-esm
+cp ../../../aws-lambda-auto-wrap/esm/index.js nodejs/node_modules/instana-aws-lambda-auto-wrap-esm
+cp ../../../aws-lambda-auto-wrap/src/utils.js nodejs/node_modules/instana-aws-lambda-auto-wrap-esm
+
 echo "step 5/9: creating local zip file with layer contents"
 zip -qr $ZIP_PREFIX .
 mv $ZIP_NAME ..
