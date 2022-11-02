@@ -162,6 +162,8 @@ function redactPassword(provider, url) {
     const parsedUrl = new URL(url);
 
     if (parsedUrl != null) {
+      // We usually use <redacted> but the password is part of an URI and "<"/">" are invalid characters in URIs. We
+      // might parse the URL later when processing the span in the back end and for that we need a valid URI.
       parsedUrl.password = '_redacted_';
     }
     return parsedUrl.toString();
