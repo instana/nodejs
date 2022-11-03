@@ -26,7 +26,7 @@ module.exports = function (isCallbackApi) {
   /** @type {import('../cls')} */
   let cls = null;
   /** @type {Function} */
-  let wrapper = null;
+  let runInContext = null;
 
   /**
    * @param {string} name
@@ -63,6 +63,7 @@ module.exports = function (isCallbackApi) {
       name,
       constants.ENTRY,
       constants.SDK.ENTRY,
+      true,
       startEntrySpan,
       /** @type {Object.<string, *> | null} */ (tags),
       /** @type {string} */ (traceId),
@@ -142,6 +143,7 @@ module.exports = function (isCallbackApi) {
       name,
       constants.INTERMEDIATE,
       constants.SDK.INTERMEDIATE,
+      false,
       startIntermediateSpan,
       tags,
       null,
@@ -206,6 +208,7 @@ module.exports = function (isCallbackApi) {
       name,
       constants.EXIT,
       constants.SDK.EXIT,
+      false,
       startExitSpan,
       tags,
       null,
@@ -249,6 +252,7 @@ module.exports = function (isCallbackApi) {
    * @param {string} name
    * @param {number} kind
    * @param {string} sdkKind
+   * @param {boolean} forceRootContext
    * @param {Function} stackTraceRef
    * @param {Object.<string, *>} tags
    * @param {string} traceId
@@ -256,8 +260,19 @@ module.exports = function (isCallbackApi) {
    * @param {Function} callback
    * @returns {Function | Promise<*>}
    */
-  function startSdkSpan(name, kind, sdkKind, stackTraceRef, tags, traceId, parentSpanId, callback) {
-    return wrapper(() => {
+  function startSdkSpan(name, kind, sdkKind, forceRootContext, stackTraceRef, tags, traceId, parentSpanId, callback) {
+    const context = forceRootContext
+      ? // SDK entry spans: Force ALS/CLS to use a new, separate root context. There is nothing we ever want to fetch
+        // from a parent/ancestor context for SDK entry spans. This avoids a memory leak when client code is calling
+        // sdk.startEntrySpan recursively in the same context over and over again, which creates an evergrowing chain
+        // of contexts, linked by prototypical inheritance.
+        cls.ns.createRootContext()
+      : // Let ALS/CLS create a new child context of the currently active context. This is the correct behavior for
+        // intermediate and exit spans. We need them to happen in a child/descendant context of the currently active
+        // entry span.
+        null;
+
+    return runInContext(() => {
       const span = cls.startSpan('sdk', kind, traceId, parentSpanId);
       span.stack = tracingUtil.getStackTrace(stackTraceRef);
       span.data.sdk = {
@@ -271,7 +286,11 @@ module.exports = function (isCallbackApi) {
         span.data.sdk.custom = { tags: Object.assign({}, tags) };
       }
       return callNext(callback);
-    });
+
+      // The additional argument `context` for runInContext (cls.ns.runAndReturn or cls.ns.runPromise, depending on the
+      // API type) allows us to force a specific context to be used by those functions. We use a new root context for
+      // SDK entry spans and null otherwise (intermediate spans, exit spans).
+    }, context);
   }
 
   /**
@@ -338,7 +357,7 @@ module.exports = function (isCallbackApi) {
    */
   function init(_cls) {
     cls = _cls;
-    wrapper = isCallbackApi ? cls.ns.runAndReturn.bind(cls.ns) : cls.ns.runPromise.bind(cls.ns);
+    runInContext = isCallbackApi ? cls.ns.runAndReturn.bind(cls.ns) : cls.ns.runPromise.bind(cls.ns);
   }
 
   function activate() {
