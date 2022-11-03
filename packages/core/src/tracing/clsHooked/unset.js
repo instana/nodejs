@@ -39,7 +39,6 @@ function storeReducedSpan(context, key, span) {
   // processed. By keeping the reduced span around, we can still provide trace continuity. The reduced span will
   // automatically be removed when its async context is finally destroyed.
   if (key === currentSpanKey && span != null) {
-    const gqd = span.gqd;
     context[reducedSpanKey] = {
       n: span.n,
       t: span.t,
@@ -49,6 +48,7 @@ function storeReducedSpan(context, key, span) {
     };
 
     // Also keep captured GraphQL destination (host & port) for subscription updates, if present.
+    const gqd = span.gqd;
     if (gqd) {
       context[reducedSpanKey].gqd = gqd;
     }

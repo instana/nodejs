@@ -84,11 +84,22 @@ Namespace.prototype.get = function get(key) {
 };
 
 /**
- * Creates a new CLS context in this namespace.
+ * Creates a new CLS context in this namespace as a child of the currently active context (or as a root context if no
+ * context is currently active).
  */
 Namespace.prototype.createContext = function createContext() {
   // Prototype inherit existing context if created a new child context within existing context.
   let context = Object.create(this.active ? this.active : Object.prototype);
+  context._ns_name = this.name;
+  context.id = currentUid;
+  return context;
+};
+
+/**
+ * Creates a new root CLS context in this namespace, independent of the currently active context.
+ */
+Namespace.prototype.createRootContext = function createRootContext() {
+  let context = Object.create(Object.prototype);
   context._ns_name = this.name;
   context.id = currentUid;
   return context;

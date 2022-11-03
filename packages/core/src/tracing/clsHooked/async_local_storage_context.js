@@ -111,13 +111,27 @@ class Namespace {
   }
 
   /**
-   * Creates a new CLS context in this namespace.
+   * Creates a new CLS context in this namespace as a child of the currently active context (or as a root context if no
+   * context is currently active).
    * @returns {InstanaCLSContext}
    */
   createContext() {
     const activeContext = storage.getStore();
     // Prototype inherit existing context if created a new child context within existing context.
     const context = Object.create(activeContext || Object.prototype);
+    context._ns_name = this.name;
+    context.id = executionAsyncId();
+    return context;
+  }
+
+  /**
+   * Creates a new root CLS context in this namespace, independent of the currently active context.
+   *
+   * @returns {InstanaCLSContext}
+   */
+  createRootContext() {
+    // Prototype inherit existing context if created a new child context within existing context.
+    const context = Object.create(Object.prototype);
     context._ns_name = this.name;
     context.id = executionAsyncId();
     return context;
