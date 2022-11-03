@@ -31,7 +31,7 @@ module.exports = function unset(context, key, value) {
 function storeReducedSpan(context, key, span) {
   // Keep only a reduced record for spans after transmission. This serves two purposes:
   // 1) If there is an async leak in the Node.js runtime, that is, missing destroy calls for async_hook resources for
-  // which an init call has been received, the memory used by clsHooked will grow, because context objects will be  kept
+  // which an init call has been received, the memory used by clsHooked will grow, because context objects will be kept
   // around forever. By keeping the reduced span we can at least see (in a heap dump) for which type of spans the
   // destroy call is missing, aiding in troubleshooting the Node.js runtime bug.
   // 2) In some special cases, async continuity can break due to userland queueing. One example are GraphQL subscription
@@ -47,6 +47,7 @@ function storeReducedSpan(context, key, span) {
       p: span.p,
       k: span.k
     };
+
     // Also keep captured GraphQL destination (host & port) for subscription updates, if present.
     if (gqd) {
       context[reducedSpanKey].gqd = gqd;
