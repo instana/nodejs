@@ -9,6 +9,7 @@ const fs = require('fs').promises;
 const path = require('path');
 const recursiveCopy = require('recursive-copy');
 const rimraf = require('util').promisify(require('rimraf'));
+const semver = require('semver');
 
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('../../../../../core/test/config');
@@ -23,7 +24,8 @@ const appDir = __dirname;
 const schemaTargetFile = path.join(appDir, 'prisma', 'schema.prisma');
 const migrationsTargetDir = path.join(appDir, 'prisma', 'migrations');
 
-const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
+const mochaSuiteFn =
+  supportedVersion(process.versions.node) && semver.gte(process.versions.node, '14.17.0') ? describe : describe.skip;
 
 mochaSuiteFn('tracing/prisma', function () {
   this.timeout(Math.max(config.getTestTimeout() * 3, 20000));
