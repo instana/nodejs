@@ -20,8 +20,6 @@ const unset = require('./unset');
 
 const CONTEXTS_SYMBOL = 'instanaClsHooked@contexts';
 
-const DEBUG_CLS = !!process.env.DEBUG_CLS;
-
 const storage = new AsyncLocalStorage();
 
 module.exports = {
@@ -130,7 +128,6 @@ class Namespace {
    * @returns {InstanaCLSContext}
    */
   createRootContext() {
-    // Prototype inherit existing context if created a new child context within existing context.
     const context = Object.create(Object.prototype);
     context._ns_name = this.name;
     context.id = executionAsyncId();
@@ -147,7 +144,6 @@ class Namespace {
    */
   run(fn, ctx) {
     const context = ctx || this.createContext();
-    debug('ALS run enter', context.id, 'active:', this.active ? this.active.id : 'ROOT');
 
     storage.run(context, () => fn(context));
     return context;
@@ -180,7 +176,6 @@ class Namespace {
    */
   runPromise(fn, ctx) {
     const context = ctx || this.createContext();
-    debug('ALS runPromise enter', context.id, 'active:', this.active ? this.active.id : 'ROOT');
 
     /**
      * We need the new context to be set as the active context before the promise is called.
@@ -354,12 +349,3 @@ function reset() {
 
 // @ts-ignore: Property 'instanaNamespaces' does not exist on type 'Process'
 process.instanaNamespaces = process.instanaNamespaces || {};
-
-// @ts-ignore
-function debug(...args) {
-  if (DEBUG_CLS) {
-    // fs.writeSync(1, `${util.format(...args)}\n`);
-    // @ts-ignore
-    process._rawDebug(`${util.format(...args)}`);
-  }
-}
