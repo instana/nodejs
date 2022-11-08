@@ -10,6 +10,11 @@
 // Jeff-Lewis, fix(destroy): destroy based on asyncId only (3cf7539  on Jul 25, 2017)
 // https://github.com/Jeff-Lewis/cls-hooked/blob/066c6c4027a7924b06997cc6b175b1841342abdc/context.js
 
+// Changes:
+// - rename the symbols to avoid name clashes
+// - have Namespace.prototype.set return a function which can be used to unset the value from the context
+//   on which it was originally set.
+
 'use strict';
 
 const util = require('util');
