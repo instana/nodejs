@@ -26,8 +26,6 @@ const unset = require('./unset');
 
 const CONTEXTS_SYMBOL = 'instanaClsHooked@contexts';
 
-const DEBUG_CLS = !!process.env.DEBUG_CLS;
-
 let currentUid = -1;
 
 module.exports = {
@@ -120,8 +118,6 @@ Namespace.prototype.createRootContext = function createRootContext() {
  */
 Namespace.prototype.run = function run(fn, ctx) {
   let context = ctx || this.createContext();
-  debug('CLS-HOOKED run enter', context.id, 'active:', this.active ? this.active.id : 'ROOT');
-
   this.enter(context);
 
   try {
@@ -159,7 +155,6 @@ Namespace.prototype.runAndReturn = function runAndReturn(fn, ctx) {
  */
 Namespace.prototype.runPromise = function runPromise(fn, ctx) {
   let context = ctx || this.createContext();
-  debug('CLS-HOOKED runPromise enter', context.id, 'active:', this.active ? this.active.id : 'ROOT');
   this.enter(context);
 
   let promise = fn(context);
@@ -424,12 +419,3 @@ function reset() {
 }
 // @ts-ignore
 process.instanaNamespaces = process.instanaNamespaces || {};
-
-// @ts-ignore
-function debug(...args) {
-  if (DEBUG_CLS) {
-    // fs.writeSync(1, `${util.format(...args)}\n`);
-    // @ts-ignore
-    process._rawDebug(`${util.format(...args)}`);
-  }
-}
