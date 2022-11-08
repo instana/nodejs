@@ -44,7 +44,7 @@ mochaSuiteFn('tracing/sdk', function () {
 
     ProcessControls.setUpHooks(controls);
 
-    ['callback', 'promise'].forEach(function (apiType) {
+    ['callback', 'promise', 'async'].forEach(function (apiType) {
       registerSuite.bind(this)(apiType);
     });
 
@@ -355,7 +355,12 @@ mochaSuiteFn('tracing/sdk', function () {
                 expectedCrid: correlationId,
                 expectedCrtp: correlationType
               });
-              expectCustomExit({ spans, parentEntry: customEntry, pid: controls.getPid() });
+              expectCustomExit({
+                spans,
+                parentEntry: customEntry,
+                pid: controls.getPid(),
+                apiType
+              });
             });
           });
         });
@@ -379,15 +384,22 @@ mochaSuiteFn('tracing/sdk', function () {
                 spans,
                 parentEntry: customEntry,
                 name: 'intermediate-1',
-                pid: controls.getPid()
+                pid: controls.getPid(),
+                apiType
               });
               const intermediate2 = expectIntermediate({
                 spans,
                 parentEntry: intermediate1,
                 name: 'intermediate-2',
-                pid: controls.getPid()
+                pid: controls.getPid(),
+                apiType
               });
-              expectCustomExit({ spans, parentEntry: intermediate2, pid: controls.getPid() });
+              expectCustomExit({
+                spans,
+                parentEntry: intermediate2,
+                pid: controls.getPid(),
+                apiType
+              });
             });
           });
         });
@@ -474,7 +486,7 @@ mochaSuiteFn('tracing/sdk', function () {
 
     ProcessControls.setUpHooks(controls);
 
-    ['callback', 'promise'].forEach(function (apiType) {
+    ['callback', 'promise', 'async'].forEach(function (apiType) {
       registerSuite.bind(this)(apiType);
     });
 
@@ -556,8 +568,6 @@ mochaSuiteFn('tracing/sdk', function () {
       span => expect(span.k).to.equal(constants.ENTRY),
       span => expect(span.f.e).to.equal(String(pid)),
       span => expect(span.f.h).to.equal('agent-stub-uuid'),
-      span => expect(span.async).to.not.exist,
-      span => expect(span.error).to.not.exist,
       span => (expectedCrid ? expect(span.crid).to.equal(expectedCrid) : expect(span.crid).to.not.exist),
       span => (expectedCrtp ? expect(span.crtp).to.equal(expectedCrtp) : expect(span.crtp).to.not.exist)
     ];
@@ -640,8 +650,6 @@ mochaSuiteFn('tracing/sdk', function () {
       span => expect(span.k).to.equal(constants.EXIT),
       span => expect(span.f.e).to.equal(String(pid)),
       span => expect(span.f.h).to.equal('agent-stub-uuid'),
-      span => expect(span.async).to.not.exist,
-      span => expect(span.error).to.not.exist,
       span => expect(span.ec).to.equal(0),
       span => expect(span.data.http.method).to.equal('GET'),
       span => expect(span.data.http.url).to.match(/http:\/\/127\.0\.0\.1:/),
@@ -670,57 +678,41 @@ mochaSuiteFn('tracing/sdk', function () {
   }
 
   function expectCustomFsSpan({ spans, kind, functionName, parentEntry, pid, path, error, sdkName, duration }) {
-    return expectExactlyOneMatching(spans, span => {
-      expect(span.t).to.equal(parentEntry.t);
-      expect(span.p).to.equal(parentEntry.s);
-      expect(span.n).to.equal('sdk');
-      expect(span.k).to.equal(constants[kind]);
-      expect(span.f.e).to.equal(String(pid));
-      expect(span.f.h).to.equal('agent-stub-uuid');
-
-      expect(span.async).to.not.exist;
-      // eslint-disable-next-line no-unneeded-ternary
-      expect(span.error).to.not.exist;
-      expect(span.ec).to.equal(error ? 1 : 0);
-      expect(span.data.sdk).to.exist;
-
-      if (sdkName) {
-        expect(span.data.sdk.name).to.equal(sdkName);
-      } else {
-        expect(span.data.sdk.name).to.equal(kind === 'INTERMEDIATE' ? 'intermediate-file-access' : 'file-access');
-      }
-
-      expect(span.data.sdk.type).to.equal(constants.SDK[kind]);
-
-      if (functionName) {
-        expect(span.stack[0].c).to.match(/test\/tracing\/sdk\/app.js$/);
-        expect(span.stack[0].m).to.match(functionName);
-      }
-
-      expect(span.data.sdk.custom).to.exist;
-      expect(span.data.sdk.custom.tags).to.exist;
-
-      if (path) {
-        expect(span.data.sdk.custom.tags.path).to.match(path);
-        expect(span.data.sdk.custom.tags.encoding).to.equal('UTF-8');
-      }
-
-      expect(span.crid).to.not.exist;
-      expect(span.crtp).to.not.exist;
-
-      if (error) {
-        expect(span.data.sdk.custom.tags.error.indexOf('ENOENT: no such file or directory')).to.equal(0);
-      } else {
-        expect(span.data.sdk.custom.tags.success).to.be.true;
-      }
-
-      if (duration) {
-        expect(span.d).to.be.closeTo(duration, 20);
-      }
-    });
+    return expectExactlyOneMatching(spans, [
+      span => expect(span.t).to.equal(parentEntry.t),
+      span => expect(span.p).to.equal(parentEntry.s),
+      span => expect(span.n).to.equal('sdk'),
+      span => expect(span.k).to.equal(constants[kind]),
+      span => expect(span.f.e).to.equal(String(pid)),
+      span => expect(span.f.h).to.equal('agent-stub-uuid'),
+      span => expect(span.ec).to.equal(error ? 1 : 0),
+      span => expect(span.data.sdk).to.be.an('object'),
+      span =>
+        sdkName
+          ? expect(span.data.sdk.name).to.equal(sdkName)
+          : expect(span.data.sdk.name).to.equal(kind === 'INTERMEDIATE' ? 'intermediate-file-access' : 'file-access'),
+      span => expect(span.data.sdk.type).to.equal(constants.SDK[kind]),
+      span => {
+        if (functionName) {
+          expect(span.stack[0].c).to.match(/test\/tracing\/sdk\/app.js$/);
+          expect(span.stack[0].m).to.match(functionName);
+        }
+      },
+      span => expect(span.data.sdk.custom).to.be.an('object'),
+      span => expect(span.data.sdk.custom.tags).to.be.an('object'),
+      span =>
+        path &&
+        expect(span.data.sdk.custom.tags.path).to.match(path) &&
+        expect(span.data.sdk.custom.tags.encoding).to.equal('UTF-8'),
+      span =>
+        error
+          ? expect(span.data.sdk.custom.tags.error.indexOf('ENOENT: no such file or directory')).to.equal(0)
+          : expect(span.data.sdk.custom.tags.success).to.be.true,
+      span => duration && expect(span.d).to.be.closeTo(duration, 20)
+    ]);
   }
 
-  function expectIntermediate({ spans, parentEntry, name, pid }) {
+  function expectIntermediate({ spans, parentEntry, name, pid, apiType }) {
     return expectExactlyOneMatching(spans, [
       span => expect(span.t).to.equal(parentEntry.t),
       span => expect(span.p).to.equal(parentEntry.s),
@@ -728,11 +720,9 @@ mochaSuiteFn('tracing/sdk', function () {
       span => expect(span.k).to.equal(constants.INTERMEDIATE),
       span => expect(span.f.e).to.equal(String(pid)),
       span => expect(span.f.h).to.equal('agent-stub-uuid'),
-      span => expect(span.async).to.not.exist,
-      span => expect(span.error).to.not.exist,
       span => expect(span.ec).to.equal(0),
       span => expect(span.stack[0].c).to.match(/test\/tracing\/sdk\/app.js$/),
-      span => expect(span.stack[0].m).to.match(/createIntermediate/),
+      span => expect(span.stack[0].m).to.match(apiType === 'async' ? /^nestIntermediatesAsync$/ : /createIntermediate/),
       span => expect(span.data.sdk).to.exist,
       span => expect(span.data.sdk.name).to.equal(name),
       span => expect(span.data.sdk.type).to.equal(constants.SDK.INTERMEDIATE),
@@ -742,7 +732,7 @@ mochaSuiteFn('tracing/sdk', function () {
     ]);
   }
 
-  function expectCustomExit({ spans, parentEntry, pid }) {
+  function expectCustomExit({ spans, parentEntry, pid, apiType }) {
     return expectExactlyOneMatching(spans, [
       span => expect(span.t).to.equal(parentEntry.t),
       span => expect(span.p).to.equal(parentEntry.s),
@@ -750,11 +740,9 @@ mochaSuiteFn('tracing/sdk', function () {
       span => expect(span.k).to.equal(constants.EXIT),
       span => expect(span.f.e).to.equal(String(pid)),
       span => expect(span.f.h).to.equal('agent-stub-uuid'),
-      span => expect(span.async).to.not.exist,
-      span => expect(span.error).to.not.exist,
       span => expect(span.ec).to.equal(0),
       span => expect(span.stack[0].c).to.match(/test\/tracing\/sdk\/app.js$/),
-      span => expect(span.stack[0].m).to.match(/createExit/),
+      span => expect(span.stack[0].m).to.match(apiType === 'async' ? /^nest.*Async$/ : /createExit/),
       span => expect(span.data.sdk).to.exist,
       span => expect(span.data.sdk.name).to.equal('custom-exit'),
       span => expect(span.data.sdk.type).to.equal(constants.SDK.EXIT),
