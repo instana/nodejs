@@ -16,6 +16,8 @@ const morgan = require('morgan');
 const sql = require('mssql');
 const devNull = require('dev-null');
 
+const { delay } = require('@instana/core/test/test_util');
+
 let pool;
 const app = express();
 const logPrefix = `Express / MSSQL App (${process.pid}):\t`;
@@ -47,43 +49,64 @@ connectConfig.database = dbName;
 let preparedStatementGlobal = new sql.PreparedStatement();
 let ready = false;
 
-sql
-  .connect(initConnectConfig)
-  .then(() =>
-    new sql.Request().query(`IF EXISTS (SELECT * FROM sys.databases WHERE name = N'${dbName}') DROP DATABASE ${dbName}`)
-  )
-  .then(() => new sql.Request().query(`CREATE DATABASE ${dbName}`))
-  .then(() => sql.close())
-  .then(() => sql.connect(connectConfig))
-  .then(_pool => {
-    pool = _pool;
-    return new sql.Request().query(
-      'CREATE TABLE UserTable (id INT IDENTITY(1,1), name VARCHAR(40) NOT NULL, email VARCHAR(40) NOT NULL)'
-    );
-  })
-  .then(() =>
-    new sql.Request().batch(
-      'CREATE PROCEDURE testProcedure' +
-        '    @username nvarchar(40)' +
-        'AS' +
-        '    SET NOCOUNT ON;' +
-        '    SELECT name, email' +
-        '    FROM UserTable' +
-        '    WHERE name = @username;'
-    )
-  )
-  .then(() => {
-    preparedStatementGlobal = new sql.PreparedStatement();
-    preparedStatementGlobal.input('username', sql.NVarChar(40));
-    preparedStatementGlobal.input('email', sql.NVarChar(40));
-    return preparedStatementGlobal.prepare('INSERT INTO UserTable (name, email) VALUES (@username, @email)');
-  })
-  .then(() => {
-    ready = true;
-  })
-  .catch(initErr => {
-    log('Failed to create database or table or failed to connect.', initErr);
-  });
+async function connect() {
+  await sql.connect(initConnectConfig);
+  await new sql.Request().query(
+    `IF EXISTS (SELECT * FROM sys.databases WHERE name = N'${dbName}') DROP DATABASE ${dbName}`
+  );
+  await new sql.Request().query(`CREATE DATABASE ${dbName}`);
+  await sql.close();
+
+  pool = await sql.connect(connectConfig);
+  await new sql.Request().query(
+    'CREATE TABLE UserTable (id INT IDENTITY(1,1), name VARCHAR(40) NOT NULL, email VARCHAR(40) NOT NULL)'
+  );
+  await new sql.Request().batch(
+    'CREATE PROCEDURE testProcedure' +
+      '    @username nvarchar(40)' +
+      'AS' +
+      '    SET NOCOUNT ON;' +
+      '    SELECT name, email' +
+      '    FROM UserTable' +
+      '    WHERE name = @username;'
+  );
+  preparedStatementGlobal = new sql.PreparedStatement();
+  preparedStatementGlobal.input('username', sql.NVarChar(40));
+  preparedStatementGlobal.input('email', sql.NVarChar(40));
+  await preparedStatementGlobal.prepare('INSERT INTO UserTable (name, email) VALUES (@username, @email)');
+  ready = true;
+}
+
+async function connectWithRetry() {
+  if (process.env.CI) {
+    const maxRetries = 3;
+    let retries = 1;
+    for (; retries <= maxRetries; retries++) {
+      try {
+        // eslint-disable-next-line no-await-in-loop
+        await connect();
+        break;
+      } catch (err) {
+        if (retries >= maxRetries) {
+          log(`Failed to create database or table or failed to connect after ${retries} retries.`, err);
+          throw err;
+        } else {
+          log(`Failed to create database or table or failed to connect in retry ${retries}, will retry in a bit.`, err);
+          // eslint-disable-next-line no-await-in-loop
+          await delay(8000);
+        }
+      }
+    }
+  } else {
+    try {
+      await connect();
+    } catch (err) {
+      log('Failed to create database or table or failed to connect.', err);
+    }
+  }
+}
+
+connectWithRetry();
 
 if (process.env.WITH_STDOUT) {
   app.use(morgan(`${logPrefix}:method :url :status`));
