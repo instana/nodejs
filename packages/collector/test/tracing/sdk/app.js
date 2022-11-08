@@ -18,11 +18,12 @@ const morgan = require('morgan');
 const path = require('path');
 const request = require('request-promise');
 
-const delay = require('../../../../core/test/test_util/delay');
+const { delay, getLogger } = require('../../../../core/test/test_util');
 const DummyEmitter = require('./dummyEmitter');
 
 const app = express();
 const logPrefix = `SDK: Server (${process.pid}):\t`;
+const log = getLogger(logPrefix);
 
 if (process.env.WITH_STDOUT) {
   app.use(morgan(`${logPrefix}:method :url :status`));
@@ -83,6 +84,9 @@ function createEntry(message) {
     case 'promise':
       createEntryPromise(message);
       break;
+    case 'async':
+      createEntryAsync(message);
+      break;
     default:
       process.send(`error: unknown command type: ${message.type}`);
   }
@@ -111,6 +115,16 @@ function createEntryPromise(message) {
     .then(() => {
       afterCreateEntry(instana.sdk.promise, message);
     });
+}
+
+async function createEntryAsync(message) {
+  await instana.sdk.async.startEntrySpan(
+    'custom-entry',
+    message.withData === 'start' || message.withData === 'both' ? { start: 'whatever' } : null,
+    message.traceId,
+    message.parentSpanId
+  );
+  afterCreateEntry(instana.sdk.async, message);
 }
 
 function afterCreateEntry(instanaSdk, message) {
@@ -166,41 +180,17 @@ app.post('/promise/create-intermediate', function createIntermediatePromise(req,
     });
 });
 
-app.post('/callback/create-overlapping-intermediates', async function createOverlappingIntermediatesCallback(req, res) {
-  instana.sdk.callback.startIntermediateSpan('intermediate1', async span1 => {
-    await delay(200);
-
-    instana.sdk.callback.startIntermediateSpan('intermediate2', async span2 => {
-      await delay(400);
-
-      instana.sdk.callback.completeIntermediateSpan(null, { success: true }, span2);
-    });
-
-    await delay(200);
-    instana.sdk.callback.completeIntermediateSpan(null, { success: true }, span1);
-  });
-
-  await delay(200);
-  res.status(200).send();
-});
-
-app.post('/promise/create-overlapping-intermediates', async function createOverlappingIntermediatesPromise(req, res) {
-  (async () => {
-    const span1 = await instana.sdk.async.startIntermediateSpan('intermediate1');
-    await delay(200);
-
-    (async () => {
-      const span2 = await instana.sdk.async.startIntermediateSpan('intermediate2');
-      await delay(400);
-      instana.sdk.async.completeIntermediateSpan(null, { success: true }, span2);
-    })();
-
-    await delay(200);
-    instana.sdk.async.completeIntermediateSpan(null, { success: true }, span1);
-  })();
-
-  await delay(200);
-  res.status(200).send();
+app.post('/async/create-intermediate', async function createIntermediateAsync(req, res) {
+  const file = getFile(req);
+  const encoding = 'UTF-8';
+  await instana.sdk.async.startIntermediateSpan(
+    'intermediate-file-access',
+    Object.freeze({
+      path: file,
+      encoding
+    })
+  );
+  afterCreateIntermediate(instana.sdk.async, file, encoding, res);
 });
 
 function afterCreateIntermediate(instanaSdk, file, encoding, res) {
@@ -224,6 +214,87 @@ function afterCreateIntermediate(instanaSdk, file, encoding, res) {
   });
 }
 
+app.post('/callback/create-overlapping-intermediates', async function createOverlappingIntermediatesCallback(req, res) {
+  // Start span 1 first.
+  instana.sdk.callback.startIntermediateSpan('intermediate1', async span1 => {
+    await delay(200);
+
+    // Now start a second span (which is a child of the first).
+    instana.sdk.callback.startIntermediateSpan('intermediate2', async () => {
+      await delay(200);
+
+      // Complete the first span while the second span is still ongoing, and while we are in the/ context of the second
+      // span. To achieve this, the completeIntermediateSpan call receives an additional argument, which denotes the
+      // span we want to complete.
+      instana.sdk.callback.completeIntermediateSpan(null, { success: true }, span1);
+
+      await delay(200);
+
+      // We do not need to provide the extra span argument here because we are in the context of the second span, which
+      // we want to complete now.
+      instana.sdk.callback.completeIntermediateSpan(null, { success: true });
+    });
+  });
+
+  await delay(600);
+  res.status(200).send();
+});
+
+app.post('/promise/create-overlapping-intermediates', function createOverlappingIntermediatesPromise(req, res) {
+  let span1;
+  let span2;
+
+  // Start span 1 first.
+  instana.sdk.promise
+    .startIntermediateSpan('intermediate1')
+    .then(s => {
+      span1 = s;
+    })
+    .then(() => delay(200))
+
+    // Now start a second span (which is a child of the first).
+    .then(() => instana.sdk.promise.startIntermediateSpan('intermediate2'))
+    .then(s => {
+      span2 = s;
+    })
+    .then(() => delay(200))
+
+    // Complete the first span while the second span is still ongoing, and while we are in the context of the second
+    // span. To achieve this, the completeIntermediateSpan call receives an additional argument, which denotes the span
+    // we want to complete.
+    .then(() => instana.sdk.promise.completeIntermediateSpan(null, { success: true }, span1))
+    .then(() => delay(200))
+
+    // Now complete the second span.
+    .then(() => instana.sdk.promise.completeIntermediateSpan(null, { success: true }, span2))
+
+    .then(() => {
+      res.status(200).send();
+    });
+});
+
+app.post('/async/create-overlapping-intermediates', async function createOverlappingIntermediatesPromise(req, res) {
+  // Start span 1 first.
+  const span1 = await instana.sdk.async.startIntermediateSpan('intermediate1');
+  await delay(200);
+
+  // Now start a second span (which is a child of the first).
+  await instana.sdk.async.startIntermediateSpan('intermediate2');
+  await delay(200);
+
+  // Complete the first span while the second span is still ongoing, and while we are in the context of the second span.
+  // To achieve this, the completeIntermediateSpan call receives an additional argument, which denotes the span we want
+  // to complete.
+  instana.sdk.async.completeIntermediateSpan(null, { success: true }, span1);
+  await delay(200);
+
+  // We do not need to provide the extra span argument here because the second span (which we want to complete now) is
+  // the active span in this context..
+  instana.sdk.async.completeIntermediateSpan(null, { success: true });
+
+  res.status(200).send();
+});
+
 app.post('/callback/create-exit', function createExitCallback(req, res) {
   const file = getFile(req);
   const encoding = 'UTF-8';
@@ -239,17 +310,6 @@ app.post('/callback/create-exit', function createExitCallback(req, res) {
   );
 });
 
-app.post('/callback/create-exit-synchronous-result', function createExitCallback(req, res) {
-  const result = instana.sdk.callback.startExitSpan('synchronous-exit', () => {
-    instana.sdk.callback.completeExitSpan(null, { success: true });
-    return 42;
-  });
-  // follow-up with an IO action that is auto-traced to validate tracing context integrity
-  request(`http://127.0.0.1:${agentPort}`).then(() => {
-    res.send({ result });
-  });
-});
-
 app.post('/promise/create-exit', function createExitPromise(req, res) {
   const file = getFile(req);
   const encoding = 'UTF-8';
@@ -263,11 +323,15 @@ app.post('/promise/create-exit', function createExitPromise(req, res) {
     });
 });
 
-function getFile(req) {
-  return req.query.error
-    ? path.resolve(__dirname, '../../../does-not-exist')
-    : path.resolve(__dirname, '../../../LICENSE');
-}
+app.post('/async/create-exit', async function createExitAsync(req, res) {
+  const file = getFile(req);
+  const encoding = 'UTF-8';
+  await instana.sdk.async.startExitSpan('file-access', {
+    path: file,
+    encoding
+  });
+  afterCreateExit(instana.sdk.async, file, encoding, res);
+});
 
 function afterCreateExit(instanaSdk, file, encoding, res) {
   fs.readFile(file, encoding, (err, content) => {
@@ -286,6 +350,23 @@ function afterCreateExit(instanaSdk, file, encoding, res) {
   });
 }
 
+app.post('/callback/create-exit-synchronous-result', function createExitCallback(req, res) {
+  const result = instana.sdk.callback.startExitSpan('synchronous-exit', () => {
+    instana.sdk.callback.completeExitSpan(null, { success: true });
+    return 42;
+  });
+  // follow-up with an IO action that is auto-traced to validate tracing context integrity
+  request(`http://127.0.0.1:${agentPort}`).then(() => {
+    res.send({ result });
+  });
+});
+
+function getFile(req) {
+  return req.query.error
+    ? path.resolve(__dirname, '../../../does-not-exist')
+    : path.resolve(__dirname, '../../../LICENSE');
+}
+
 function createSpansWithEventEmitter(message) {
   if (!message.type) {
     return process.send(`error: command event-emitter needs a type attribute: ${JSON.stringify(message)}`);
@@ -296,6 +377,9 @@ function createSpansWithEventEmitter(message) {
       break;
     case 'promise':
       createEntryWithEventEmitterPromise(message);
+      break;
+    case 'async':
+      createEntryWithEventEmitterAsync(message);
       break;
     default:
       process.send(`error: unknown command type: ${message.type}`);
@@ -318,6 +402,14 @@ function createEntryWithEventEmitterPromise(message) {
     setCorrelationAttributesForIpcMessage(message);
     onEmittedEvent(instana.sdk.promise, emitter, message);
   });
+}
+
+async function createEntryWithEventEmitterAsync(message) {
+  const emitter = new DummyEmitter();
+  emitter.start();
+  await instana.sdk.async.startEntrySpan('custom-entry');
+  setCorrelationAttributesForIpcMessage(message);
+  onEmittedEvent(instana.sdk.async, emitter, message);
 }
 
 function onEmittedEvent(instanaSdk, emitter, message) {
@@ -344,6 +436,9 @@ function nestEntryExit(message) {
       break;
     case 'promise':
       nestEntryExitPromise(message);
+      break;
+    case 'async':
+      nestEntryExitAsync(message);
       break;
     default:
       process.send(`error: unknown command type: ${message.type}`);
@@ -396,6 +491,17 @@ function nestEntryExitPromise(message) {
     });
 }
 
+async function nestEntryExitAsync(message) {
+  await instana.sdk.async.startEntrySpan('custom-entry');
+  setCorrelationAttributesForIpcMessage(message);
+  await delay(50);
+  await instana.sdk.async.startExitSpan('custom-exit');
+  await delay(50);
+  instana.sdk.async.completeExitSpan();
+  await instana.sdk.async.completeEntrySpan();
+  process.send(`done: ${message.command}`);
+}
+
 function nestIntermediates(message) {
   if (!message.type) {
     return process.send(`error: command nest-intermediates needs a type attribute: ${JSON.stringify(message)}`);
@@ -406,6 +512,9 @@ function nestIntermediates(message) {
       break;
     case 'promise':
       nestIntermediatesPromise(message);
+      break;
+    case 'async':
+      nestIntermediatesAsync(message);
       break;
     default:
       process.send(`error: unknown command type: ${message.type}`);
@@ -466,6 +575,23 @@ function nestIntermediatesPromise(message) {
     });
 }
 
+async function nestIntermediatesAsync(message) {
+  await instana.sdk.async.startEntrySpan('custom-entry');
+  setCorrelationAttributesForIpcMessage(message);
+  await delay(50);
+  await instana.sdk.async.startIntermediateSpan('intermediate-1');
+  await delay(50);
+  await instana.sdk.async.startIntermediateSpan('intermediate-2');
+  await delay(50);
+  instana.sdk.async.startExitSpan('custom-exit');
+  await delay(50);
+  instana.sdk.async.completeExitSpan();
+  instana.sdk.async.completeIntermediateSpan();
+  instana.sdk.async.completeIntermediateSpan();
+  instana.sdk.async.completeEntrySpan();
+  process.send(`done: ${message.command}`);
+}
+
 function synchronousOperations(message) {
   const result = instana.sdk.callback.startEntrySpan('synchronous-entry', () => {
     setCorrelationAttributesForIpcMessage(message);
@@ -484,9 +610,3 @@ function synchronousOperations(message) {
 app.listen(process.env.APP_PORT, () => {
   log(`Listening on port: ${process.env.APP_PORT}`);
 });
-
-function log() {
-  const args = Array.prototype.slice.call(arguments);
-  args[0] = logPrefix + args[0];
-  console.log.apply(console, args);
-}
