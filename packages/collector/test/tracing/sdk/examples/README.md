@@ -39,11 +39,11 @@ DELAY=1000 node packages/collector/test/tracing/sdk/examples/async_recursive.js
 
 # Force @instana/collector to use the legacy cls-hooked library instead of AsyncLocalStorage.
 INSTANA_FORCE_LEGACY_CLS=true node packages/collector/test/tracing/sdk/examples/async_recursive.js
-
-# Print additional debug output
-DEBUG_CLS=true node packages/collector/test/tracing/sdk/examples/async_recursive.js
 ```
 
 ### Creating a Heapdump
 
-All examples load the `heapdump` module. Execute `kill -USR2 $pid` to create a heapdump while the process is running. Heapdumps can be inspected via Chrome/Chromium for example (DevTools -> tab memory -> Load).
+* Run `npm i -g heapdump && npm link heapdump`.
+* Uncomment the line `// const heapdump = require('heapdump');` in the example app you want to run.
+* Start the app and check its pid.
+* Execute `kill -USR2 $pid` to create a heapdump while the process is running. Heapdumps can be inspected via Chrome/Chromium for example (DevTools -> tab memory -> Load).

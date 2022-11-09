@@ -10,7 +10,7 @@ const instana = require('../../../..')({
 });
 
 // eslint-disable-next-line no-unused-vars
-const heapdump = require('heapdump');
+// const heapdump = require('heapdump');
 const { delayBetweenCalls, simulateWorkCallback } = require('./util');
 
 function createSdkSpan(cb) {
