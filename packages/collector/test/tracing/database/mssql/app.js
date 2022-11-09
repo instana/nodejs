@@ -16,7 +16,7 @@ const morgan = require('morgan');
 const sql = require('mssql');
 const devNull = require('dev-null');
 
-const { delay } = require('@instana/core/test/test_util');
+const { delay, isCI } = require('@instana/core/test/test_util');
 
 let pool;
 const app = express();
@@ -78,7 +78,7 @@ async function connect() {
 }
 
 async function connectWithRetry() {
-  if (process.env.CI) {
+  if (isCI()) {
     const maxRetries = 3;
     let retries = 1;
     for (; retries <= maxRetries; retries++) {

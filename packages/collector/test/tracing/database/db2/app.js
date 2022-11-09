@@ -12,6 +12,8 @@ const express = require('express');
 const fs = require('fs');
 const morgan = require('morgan');
 const ibmdb = require('ibm_db');
+const { isCI } = require('@instana/core/test/test_util');
+
 const app = express();
 const port = process.env.APP_PORT || 3322;
 const logPrefix = `DB2 App (${process.pid}):\t`;
@@ -48,7 +50,7 @@ let connStr = 'HOSTNAME=localhost;UID=node;PWD=nodepw;PORT=58885;PROTOCOL=TCPIP'
  * That's why we use random names for tables.
  */
 
-if (process.env.CI) {
+if (isCI()) {
   connStr = process.env.DB2_CONNECTION_STR;
   if (!connStr) {
     throw new Error(

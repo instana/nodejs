@@ -11,7 +11,7 @@ const constants = require('@instana/core').tracing.constants;
 
 const Control = require('../Control');
 const config = require('../../../serverless/test/config');
-const expectExactlyOneMatching = require('../../../core/test/test_util/expectExactlyOneMatching');
+const { expectExactlyOneMatching, isCI } = require('../../../core/test/test_util');
 const retry = require('../../../serverless/test/util/retry');
 
 const { fail } = expect;
@@ -29,7 +29,7 @@ const instanaAgentKey = 'aws-lambda-dummy-key';
 
 function prelude(opts) {
   const timeout = opts.lambdaTimeout * 2;
-  this.timeout(process.env.CI ? config.getTestTimeout() : timeout);
+  this.timeout(isCI() ? config.getTestTimeout() : timeout);
   this.slow(timeout);
 
   if (opts.startBackend == null) {

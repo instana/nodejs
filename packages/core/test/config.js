@@ -5,15 +5,17 @@
 
 'use strict';
 
+const isCI = require('./test_util/is_ci');
+
 exports.getAppStdio = () => {
-  if (process.env.WITH_STDOUT || process.env.CI) {
+  if (process.env.WITH_STDOUT || isCI()) {
     return [process.stdin, process.stdout, process.stderr, 'ipc'];
   }
   return [process.stdin, 'ignore', process.stderr, 'ipc'];
 };
 
 exports.getTestTimeout = () => {
-  if (process.env.CI) {
+  if (isCI()) {
     return 30000;
   }
   return 5000;
