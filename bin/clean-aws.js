@@ -4,6 +4,8 @@
  * (c) Copyright Instana Inc. and contributors 2020
  */
 
+/*  eslint-disable import/no-extraneous-dependencies, instana/no-unsafe-require */
+
 'use strict';
 
 const yargs = require('yargs/yargs');

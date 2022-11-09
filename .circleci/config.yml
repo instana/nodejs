@@ -30,11 +30,42 @@ shared: &shared
 
   steps:
     - checkout
+
+    # The main intent for skipping the build is the legacy-nodejs-versions workflow which is built daily. If no new
+    # commits have been merged to main, we do not need to built the same commit over and over again.
+    #
+    # Theoretically we could also save the build on the main branch directly after merging a PR - since we always
+    # require a branch that has been rebased on main, and require a successful build before merging, we always have
+    # built the same commit on the PR branch already before merging, and then we build the commit again on main after
+    # merging to main. But there is a little kink here: When merging the PR on Github via the UI, the commit on main
+    # will have a different hash than the commit on the branch, even if the branch was up to date and a fast-forward
+    # merge would have been possible.
+    #
+    # See https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/incorporating-changes-from-a-pull-request/about-pull-request-merges#rebase-and-merge-your-commits:
+    # > [...] In that way, the rebase and merge behavior resembles a fast-forward merge by maintaining a linear project
+    # > history. However, rebasing achieves this by re-writing the commit history on the base branch with new commits.
+    #
+    # Of course you could always do an actual git merge --ff-only on the main branch locally and push that to main to
+    # avoid that, if you really wanted to.
+    - run:
+        name: Skip Build If This Commit Has Already Been Built
+        command: |
+          if [[ $FORCE_REBUILT != true ]]; then
+            if bin/check-circle-ci-status.js check-for-successful-build-on-any-branch; then
+              echo "Commit has been built already, skipping remaining build steps."
+              circleci step halt
+            fi
+          fi
+
     - run: node --version
-    - run: |
-        if [ -n "$NPM_VERSION" ]; then
-          sudo npm install npm@$NPM_VERSION -g
-        fi
+
+    - run:
+        name: Optionally Install A Specific npm Version
+        command: |
+          if [ -n "$NPM_VERSION" ]; then
+            sudo npm install npm@$NPM_VERSION -g
+          fi
+
     - run: npm --version
 
     - restore_cache:
