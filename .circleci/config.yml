@@ -91,9 +91,19 @@ shared: &shared
     # same purpose, we reset the package lock file after running npm install. Sometimes npm install updates the lock
     # file and that will also break caching because its checksum would then change between save_cache and restore_cache
     # in the next CI run.
-    - run: npm install && git checkout package-lock.json
+    - run:
+        name: npm install
+        command: |
+          date
+          npm install
+          git checkout package-lock.json
 
-    - run: cd misc/test-durations && npm install && git checkout package-lock.json
+    - run:
+        name: install dependencies of test-durations script
+        command: |
+          cd misc/test-durations
+          npm install
+          git checkout package-lock.json
 
     # Cache the node_modules folders for the next run (before potentially installing other module versions like grpc,
     # see below).
@@ -155,64 +165,56 @@ shared: &shared
         key: v{{ .Environment.CACHE_VERSION }}-misc-test-durations-{{ .Environment.CIRCLE_JOB }}-{{ checksum "misc/test-durations/package-lock.json" }}
 
     # Only run audit with the most recent Node.js version - one Node version is enough.
-    - run: "([[ $(node -v) =~ ^v16.*$ ]] && npm run audit) || [[ ! $(node -v) =~ ^v16.*$ ]]"
+    - run:
+        name: Execute npm audit
+        command: "([[ $(node -v) =~ ^v16.*$ ]] && npm run audit) || [[ ! $(node -v) =~ ^v16.*$ ]]"
 
     # Check if all commits since the last release comply with the format that conventional-commit understands. This
     # makes sure that lerna version (with the "conventionalCommits" option set in lerna.json) can correctly determin the
     # next version number and generate changelogs.
-    - run: "([[ $(node -v) =~ ^v16.*$ ]] && node_modules/.bin/commitlint --from $(git describe --tags --abbrev=0)) || [[ ! $(node -v) =~ ^v16.*$ ]]"
+    - run:
+        name: Execute commitlint
+        command: "([[ $(node -v) =~ ^v16.*$ ]] && node_modules/.bin/commitlint --from $(git describe --tags --abbrev=0)) || [[ ! $(node -v) =~ ^v16.*$ ]]"
 
     # Run linting first, we don't want to wait ages for the test suite to finish only to end the CI job with a linting
     # error.
-    - run: npm run lint
+    - run:
+        name: Lint Source Code
+        command: npm run lint
 
     # Clean up old left over AWS resources from earlier test runs (created more more than 3 hours ago):
     # Do not execute the script on every parallel build
-    - run: |
-        if [[ $(node -v) =~ ^v16.*$ && $CIRCLE_NODE_INDEX == "0" ]]; then
-          bin/clean-aws.js --service=s3
-          bin/clean-aws.js --service=dynamodb
-          bin/clean-aws.js --service=sqs
-          bin/clean-aws.js --service=kinesis
-        fi
+    - run:
+        name: Clean Up AWS Resources
+        command: |
+          if [[ $(node -v) =~ ^v16.*$ && $CIRCLE_NODE_INDEX == "0" ]]; then
+            bin/clean-aws.js --service=s3
+            bin/clean-aws.js --service=dynamodb
+            bin/clean-aws.js --service=sqs
+            bin/clean-aws.js --service=kinesis
+          fi
 
     # Run the test suites.
-    # (Use ulimit to remove the file size limit on core dump files before running tests.)
     # The ci_glob_setup.sh script designates which files should be tested in each CircleCI process.
     # As the reported files include the aboslute path, we want to get rid of them. We do that after the test finishes.
-    - run: |
-        ulimit -c unlimited
-        . ./bin/ci_glob_setup.sh
-        if [[ -z "$NODE_COVERAGE" ]]; then
-          npm run test:ci
-        else
-          npm run coverage-all
-        fi
+    - run:
+        name: Run Tests
+        command: |
+          . ./bin/ci_glob_setup.sh
+          date
+          if [[ -z "$NODE_COVERAGE" ]]; then
+            npm run test:ci
+          else
+            npm run coverage-all
+          fi
 
     - store_test_results:
         path: test-results
 
-    - run: node misc/test-durations/ci
-
     - run:
-        # save core dumps in case there have been any
-        command: |
-          mkdir -p /tmp/core_dumps
-          cp core.* /tmp/core_dumps || :
-          cp packages/shared-metrics/core.* /tmp/core_dumps || :
-          cp packages/autoprofile/core.* /tmp/core_dumps || :
-          cp packages/aws-fargate/core.* /tmp/core_dumps || :
-          cp packages/aws-lambda-auto-wrap/core.* /tmp/core_dumps || :
-          cp packages/aws-lambda/core.* /tmp/core_dumps || :
-          cp packages/collector/core.* /tmp/core_dumps || :
-          cp packages/core/core.* /tmp/core_dumps || :
-          cp packages/google-cloud-run/core.* /tmp/core_dumps || :
-          cp packages/metrics-util/core.* /tmp/core_dumps || :
-          cp packages/serverless/core.* /tmp/core_dumps || :
-          cp packages/shared-metrics/core.* /tmp/core_dumps || :
-        when: on_fail
-    - store_artifacts:
-        path: /tmp/core_dumps
+        name: Analyze Test Durations
+        command: node misc/test-durations/ci
+
     - store_artifacts:
         path: coverage
     - store_artifacts:
