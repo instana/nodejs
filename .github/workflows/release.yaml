@@ -61,7 +61,7 @@ jobs:
       - name: Check CircleCI status
         run: |
           if [[ $SKIP_CI_STATUS_CHECK != true ]]; then
-            .github/workflows/check-circle-ci-status.js
+            bin/check-circle-ci-status.js
           fi
 
       - run: npm ci
