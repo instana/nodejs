@@ -6,3 +6,11 @@ updates:
     schedule:
       interval: weekly
     open-pull-requests-limit: 4
+    # At times we might have 4 dependabot PRs open. Automatically rebasing
+    # (which is the default) will trigger 4 CircleCI builds whenever we merge
+    # something to main. This burns CircleCI credits pretty fast with little
+    # benefit. Also, running multiple builds (for 4 branches) in parallel seems
+    # make the CircleCI builds less stable. For these two reasons we disable
+    # the automatic rebase. Instead, rebase manually when you want to merge
+    # a dependabot PR.
+    rebase-strategy: "disabled"
