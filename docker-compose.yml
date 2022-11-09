@@ -111,7 +111,7 @@ services:
       POSTGRES_DB: nodedb
 
   mssql:
-    image: mcr.microsoft.com/mssql/server:2019-CU11-ubuntu-20.04
+    image: mcr.microsoft.com/mssql/server:2022-RC1-ubuntu-20.04
     ports:
       - 1433:1433
     environment:
@@ -164,6 +164,6 @@ services:
       - DB2INST1_PASSWORD=nodepw
       - DB2_CREATE_DB_ON_PATH=true
       - STARTUP_MODE=restoreIfNotExists
-    volumes: 
+    volumes:
        - ./db2/database:/database
        - ./db2/db2_data:/db2_data
