@@ -11,7 +11,7 @@ const semver = require('semver');
 const constants = require('@instana/core').tracing.constants;
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('../../../../../core/test/config');
-const testUtils = require('../../../../../core/test/test_util');
+const { expectAtLeastOneMatching, isCI, retry } = require('../../../../../core/test/test_util');
 const ProcessControls = require('../../../test_util/ProcessControls');
 const globalAgent = require('../../../globalAgent');
 
@@ -27,7 +27,7 @@ describe('tracing/mssql', function () {
     }
 
     mochaSuiteFn(`mssql@${mssqlVersion}`, function () {
-      this.timeout(config.getTestTimeout());
+      this.timeout(isCI() ? 70000 : config.getTestTimeout());
 
       globalAgent.setUpCleanUpHooks();
       const agentControls = globalAgent.instance;
@@ -49,15 +49,15 @@ describe('tracing/mssql', function () {
             path: '/pipe'
           })
           .then(() =>
-            testUtils.retry(() =>
+            retry(() =>
               agentControls.getSpans().then(spans => {
-                const httpEntrySpan = testUtils.expectAtLeastOneMatching(spans, [
+                const httpEntrySpan = expectAtLeastOneMatching(spans, [
                   span => expect(span.n).to.equal('node.http.server'),
                   span => expect(span.data.http.method).to.equal('GET'),
                   span => expect(span.data.http.url).to.equal('/pipe')
                 ]);
 
-                testUtils.expectAtLeastOneMatching(spans, span => {
+                expectAtLeastOneMatching(spans, span => {
                   checkMssqlSpan(span, httpEntrySpan);
                   expect(span.data.mssql.stmt).to.equal('SELECT name, email FROM UserTable');
                 });
@@ -74,15 +74,15 @@ describe('tracing/mssql', function () {
           .then(response => {
             expect(response.length).to.equal(1);
 
-            return testUtils.retry(() =>
+            return retry(() =>
               agentControls.getSpans().then(spans => {
-                const httpEntrySpan = testUtils.expectAtLeastOneMatching(spans, [
+                const httpEntrySpan = expectAtLeastOneMatching(spans, [
                   span => expect(span.n).to.equal('node.http.server'),
                   span => expect(span.data.http.method).to.equal('GET'),
                   span => expect(span.data.http.url).to.equal('/select-getdate')
                 ]);
 
-                testUtils.expectAtLeastOneMatching(spans, span => {
+                expectAtLeastOneMatching(spans, span => {
                   checkMssqlSpan(span, httpEntrySpan);
                   expect(span.data.mssql.stmt).to.equal('SELECT GETDATE()');
                 });
@@ -99,15 +99,15 @@ describe('tracing/mssql', function () {
           .then(response => {
             expect(response.length).to.equal(1);
 
-            return testUtils.retry(() =>
+            return retry(() =>
               agentControls.getSpans().then(spans => {
-                const httpEntrySpan = testUtils.expectAtLeastOneMatching(spans, [
+                const httpEntrySpan = expectAtLeastOneMatching(spans, [
                   span => expect(span.n).to.equal('node.http.server'),
                   span => expect(span.data.http.method).to.equal('GET'),
                   span => expect(span.data.http.url).to.equal('/select-static')
                 ]);
 
-                testUtils.expectAtLeastOneMatching(spans, span => {
+                expectAtLeastOneMatching(spans, span => {
                   checkMssqlSpan(span, httpEntrySpan);
                   expect(span.data.mssql.stmt).to.equal('SELECT GETDATE()');
                 });
@@ -125,15 +125,15 @@ describe('tracing/mssql', function () {
           .then(response => {
             expect(response.statusCode).to.equal(500);
 
-            return testUtils.retry(() =>
+            return retry(() =>
               agentControls.getSpans().then(spans => {
-                const httpEntrySpan = testUtils.expectAtLeastOneMatching(spans, [
+                const httpEntrySpan = expectAtLeastOneMatching(spans, [
                   span => expect(span.n).to.equal('node.http.server'),
                   span => expect(span.data.http.method).to.equal('GET'),
                   span => expect(span.data.http.url).to.equal('/error-callback')
                 ]);
 
-                testUtils.expectAtLeastOneMatching(spans, span => {
+                expectAtLeastOneMatching(spans, span => {
                   checkMssqlErrorSpan(span, httpEntrySpan, "Invalid object name 'non_existing_table'");
                   expect(span.data.mssql.stmt).to.equal('SELECT name, email FROM non_existing_table');
                 });
@@ -150,15 +150,15 @@ describe('tracing/mssql', function () {
           .then(response => {
             expect(response.length).to.equal(1);
 
-            return testUtils.retry(() =>
+            return retry(() =>
               agentControls.getSpans().then(spans => {
-                const httpEntrySpan = testUtils.expectAtLeastOneMatching(spans, [
+                const httpEntrySpan = expectAtLeastOneMatching(spans, [
                   span => expect(span.n).to.equal('node.http.server'),
                   span => expect(span.data.http.method).to.equal('GET'),
                   span => expect(span.data.http.url).to.equal('/select-promise')
                 ]);
 
-                testUtils.expectAtLeastOneMatching(spans, span => {
+                expectAtLeastOneMatching(spans, span => {
                   checkMssqlSpan(span, httpEntrySpan);
                   expect(span.data.mssql.stmt).to.equal('SELECT GETDATE()');
                 });
@@ -176,15 +176,15 @@ describe('tracing/mssql', function () {
           .then(response => {
             expect(response.statusCode).to.equal(500);
 
-            return testUtils.retry(() =>
+            return retry(() =>
               agentControls.getSpans().then(spans => {
-                const httpEntrySpan = testUtils.expectAtLeastOneMatching(spans, [
+                const httpEntrySpan = expectAtLeastOneMatching(spans, [
                   span => expect(span.n).to.equal('node.http.server'),
                   span => expect(span.data.http.method).to.equal('GET'),
                   span => expect(span.data.http.url).to.equal('/error-promise')
                 ]);
 
-                testUtils.expectAtLeastOneMatching(spans, span => {
+                expectAtLeastOneMatching(spans, span => {
                   checkMssqlErrorSpan(span, httpEntrySpan, "Invalid object name 'non_existing_table'");
                   expect(span.data.mssql.stmt).to.equal('SELECT name, email FROM non_existing_table');
                 });
@@ -201,15 +201,15 @@ describe('tracing/mssql', function () {
           .then(response => {
             expect(response.length).to.equal(1);
 
-            return testUtils.retry(() =>
+            return retry(() =>
               agentControls.getSpans().then(spans => {
-                const httpEntrySpan = testUtils.expectAtLeastOneMatching(spans, [
+                const httpEntrySpan = expectAtLeastOneMatching(spans, [
                   span => expect(span.n).to.equal('node.http.server'),
                   span => expect(span.data.http.method).to.equal('GET'),
                   span => expect(span.data.http.url).to.equal('/select-standard-pool')
                 ]);
 
-                testUtils.expectAtLeastOneMatching(spans, span => {
+                expectAtLeastOneMatching(spans, span => {
                   checkMssqlSpan(span, httpEntrySpan);
                   expect(span.data.mssql.stmt).to.equal('SELECT 1 AS NUMBER');
                 });
@@ -226,15 +226,15 @@ describe('tracing/mssql', function () {
           .then(response => {
             expect(response.length).to.equal(1);
 
-            return testUtils.retry(() =>
+            return retry(() =>
               agentControls.getSpans().then(spans => {
-                const httpEntrySpan = testUtils.expectAtLeastOneMatching(spans, [
+                const httpEntrySpan = expectAtLeastOneMatching(spans, [
                   span => expect(span.n).to.equal('node.http.server'),
                   span => expect(span.data.http.method).to.equal('GET'),
                   span => expect(span.data.http.url).to.equal('/select-custom-pool')
                 ]);
 
-                testUtils.expectAtLeastOneMatching(spans, span => {
+                expectAtLeastOneMatching(spans, span => {
                   checkMssqlSpan(span, httpEntrySpan);
                   expect(span.data.mssql.stmt).to.equal('SELECT 1 AS NUMBER');
                 });
@@ -266,37 +266,37 @@ describe('tracing/mssql', function () {
             expect(response[0].email).to.equal('gaius@julius.com');
             expect(response[1].name).to.equal('augustus');
             expect(response[1].email).to.equal('augustus@julius.com');
-            return testUtils.retry(() =>
+            return retry(() =>
               agentControls.getSpans().then(spans => {
-                const firstWriteEntry = testUtils.expectAtLeastOneMatching(spans, [
+                const firstWriteEntry = expectAtLeastOneMatching(spans, [
                   span => expect(span.n).to.equal('node.http.server'),
                   span => expect(span.data.http.method).to.equal('POST'),
                   span => expect(span.data.http.url).to.equal('/insert')
                 ]);
-                const secondWriteEntry = testUtils.expectAtLeastOneMatching(spans, [
+                const secondWriteEntry = expectAtLeastOneMatching(spans, [
                   span => expect(span.n).to.equal('node.http.server'),
                   span => expect(span.data.http.method).to.equal('POST'),
                   span => expect(span.data.http.url).to.equal('/insert-params')
                 ]);
-                const readEntry = testUtils.expectAtLeastOneMatching(spans, [
+                const readEntry = expectAtLeastOneMatching(spans, [
                   span => expect(span.n).to.equal('node.http.server'),
                   span => expect(span.data.http.method).to.equal('GET'),
                   span => expect(span.data.http.url).to.equal('/select')
                 ]);
 
-                testUtils.expectAtLeastOneMatching(spans, span => {
+                expectAtLeastOneMatching(spans, span => {
                   checkMssqlSpan(span, firstWriteEntry);
                   expect(span.data.mssql.stmt).to.equal(
                     "INSERT INTO UserTable (name, email) VALUES (N'gaius', N'gaius@julius.com')"
                   );
                 });
-                testUtils.expectAtLeastOneMatching(spans, span => {
+                expectAtLeastOneMatching(spans, span => {
                   checkMssqlSpan(span, secondWriteEntry);
                   expect(span.data.mssql.stmt).to.equal(
                     'INSERT INTO UserTable (name, email) VALUES (@username, @email)'
                   );
                 });
-                testUtils.expectAtLeastOneMatching(spans, span => {
+                expectAtLeastOneMatching(spans, span => {
                   checkMssqlSpan(span, readEntry);
                   expect(span.data.mssql.stmt).to.equal('SELECT name, email FROM UserTable');
                 });
@@ -318,26 +318,26 @@ describe('tracing/mssql', function () {
           )
           .then(response => {
             expect(response).to.equal('tiberius@claudius.com');
-            return testUtils.retry(() =>
+            return retry(() =>
               agentControls.getSpans().then(spans => {
-                const writeEntry = testUtils.expectAtLeastOneMatching(spans, [
+                const writeEntry = expectAtLeastOneMatching(spans, [
                   span => expect(span.n).to.equal('node.http.server'),
                   span => expect(span.data.http.method).to.equal('POST'),
                   span => expect(span.data.http.url).to.equal('/insert-prepared-callback')
                 ]);
-                const readEntry = testUtils.expectAtLeastOneMatching(spans, [
+                const readEntry = expectAtLeastOneMatching(spans, [
                   span => expect(span.n).to.equal('node.http.server'),
                   span => expect(span.data.http.method).to.equal('GET'),
                   span => expect(span.data.http.url).to.equal('/select-by-name/tiberius')
                 ]);
 
-                testUtils.expectAtLeastOneMatching(spans, span => {
+                expectAtLeastOneMatching(spans, span => {
                   checkMssqlSpan(span, writeEntry);
                   expect(span.data.mssql.stmt).to.equal(
                     'INSERT INTO UserTable (name, email) VALUES (@username, @email)'
                   );
                 });
-                testUtils.expectAtLeastOneMatching(spans, span => {
+                expectAtLeastOneMatching(spans, span => {
                   checkMssqlSpan(span, readEntry);
                   expect(span.data.mssql.stmt).to.equal('SELECT name, email FROM UserTable WHERE name=@username');
                 });
@@ -359,26 +359,26 @@ describe('tracing/mssql', function () {
           )
           .then(response => {
             expect(response).to.equal('caligula@julioclaudian.com');
-            return testUtils.retry(() =>
+            return retry(() =>
               agentControls.getSpans().then(spans => {
-                const writeEntry = testUtils.expectAtLeastOneMatching(spans, [
+                const writeEntry = expectAtLeastOneMatching(spans, [
                   span => expect(span.n).to.equal('node.http.server'),
                   span => expect(span.data.http.method).to.equal('POST'),
                   span => expect(span.data.http.url).to.equal('/insert-prepared-promise')
                 ]);
-                const readEntry = testUtils.expectAtLeastOneMatching(spans, [
+                const readEntry = expectAtLeastOneMatching(spans, [
                   span => expect(span.n).to.equal('node.http.server'),
                   span => expect(span.data.http.method).to.equal('GET'),
                   span => expect(span.data.http.url).to.equal('/select-by-name/caligula')
                 ]);
 
-                testUtils.expectAtLeastOneMatching(spans, span => {
+                expectAtLeastOneMatching(spans, span => {
                   checkMssqlSpan(span, writeEntry);
                   expect(span.data.mssql.stmt).to.equal(
                     'INSERT INTO UserTable (name, email) VALUES (@username, @email)'
                   );
                 });
-                testUtils.expectAtLeastOneMatching(spans, span => {
+                expectAtLeastOneMatching(spans, span => {
                   checkMssqlSpan(span, readEntry);
                   expect(span.data.mssql.stmt).to.equal('SELECT name, email FROM UserTable WHERE name=@username');
                 });
@@ -395,14 +395,14 @@ describe('tracing/mssql', function () {
           .catch(errors.StatusCodeError, reason => reason)
           .then(response => {
             expect(response.statusCode).to.equal(500);
-            return testUtils.retry(() =>
+            return retry(() =>
               agentControls.getSpans().then(spans => {
-                const writeEntry = testUtils.expectAtLeastOneMatching(spans, [
+                const writeEntry = expectAtLeastOneMatching(spans, [
                   span => expect(span.n).to.equal('node.http.server'),
                   span => expect(span.data.http.method).to.equal('POST'),
                   span => expect(span.data.http.url).to.equal('/insert-prepared-error-callback')
                 ]);
-                testUtils.expectAtLeastOneMatching(spans, span => {
+                expectAtLeastOneMatching(spans, span => {
                   checkMssqlErrorSpan(
                     span,
                     writeEntry,
@@ -426,14 +426,14 @@ describe('tracing/mssql', function () {
           .catch(errors.StatusCodeError, reason => reason)
           .then(response => {
             expect(response.statusCode).to.equal(500);
-            return testUtils.retry(() =>
+            return retry(() =>
               agentControls.getSpans().then(spans => {
-                const writeEntry = testUtils.expectAtLeastOneMatching(spans, [
+                const writeEntry = expectAtLeastOneMatching(spans, [
                   span => expect(span.n).to.equal('node.http.server'),
                   span => expect(span.data.http.method).to.equal('POST'),
                   span => expect(span.data.http.url).to.equal('/insert-prepared-error-promise')
                 ]);
-                testUtils.expectAtLeastOneMatching(spans, span => {
+                expectAtLeastOneMatching(spans, span => {
                   checkMssqlErrorSpan(
                     span,
                     writeEntry,
@@ -456,20 +456,20 @@ describe('tracing/mssql', function () {
           })
           .then(response => {
             expect(response).to.equal('vespasian@flavius.com');
-            return testUtils.retry(() =>
+            return retry(() =>
               agentControls.getSpans().then(spans => {
-                const httpEntry = testUtils.expectAtLeastOneMatching(spans, [
+                const httpEntry = expectAtLeastOneMatching(spans, [
                   span => expect(span.n).to.equal('node.http.server'),
                   span => expect(span.data.http.method).to.equal('POST'),
                   span => expect(span.data.http.url).to.equal('/transaction-callback')
                 ]);
-                testUtils.expectAtLeastOneMatching(spans, span => {
+                expectAtLeastOneMatching(spans, span => {
                   checkMssqlSpan(span, httpEntry);
                   expect(span.data.mssql.stmt).to.equal(
                     'INSERT INTO UserTable (name, email) VALUES (@username, @email)'
                   );
                 });
-                testUtils.expectAtLeastOneMatching(spans, span => {
+                expectAtLeastOneMatching(spans, span => {
                   checkMssqlSpan(span, httpEntry);
                   expect(span.data.mssql.stmt).to.equal("SELECT name, email FROM UserTable WHERE name=N'vespasian'");
                 });
@@ -485,20 +485,20 @@ describe('tracing/mssql', function () {
           })
           .then(response => {
             expect(response).to.equal('titus@flavius.com');
-            return testUtils.retry(() =>
+            return retry(() =>
               agentControls.getSpans().then(spans => {
-                const httpEntry = testUtils.expectAtLeastOneMatching(spans, [
+                const httpEntry = expectAtLeastOneMatching(spans, [
                   span => expect(span.n).to.equal('node.http.server'),
                   span => expect(span.data.http.method).to.equal('POST'),
                   span => expect(span.data.http.url).to.equal('/transaction-promise')
                 ]);
-                testUtils.expectAtLeastOneMatching(spans, span => {
+                expectAtLeastOneMatching(spans, span => {
                   checkMssqlSpan(span, httpEntry);
                   expect(span.data.mssql.stmt).to.equal(
                     'INSERT INTO UserTable (name, email) VALUES (@username, @email)'
                   );
                 });
-                testUtils.expectAtLeastOneMatching(spans, span => {
+                expectAtLeastOneMatching(spans, span => {
                   checkMssqlSpan(span, httpEntry);
                   expect(span.data.mssql.stmt).to.equal("SELECT name, email FROM UserTable WHERE name=N'titus'");
                 });
@@ -515,15 +515,15 @@ describe('tracing/mssql', function () {
           .then(response => {
             expect(response.recordset).to.exist;
 
-            return testUtils.retry(() =>
+            return retry(() =>
               agentControls.getSpans().then(spans => {
-                const httpEntrySpan = testUtils.expectAtLeastOneMatching(spans, [
+                const httpEntrySpan = expectAtLeastOneMatching(spans, [
                   span => expect(span.n).to.equal('node.http.server'),
                   span => expect(span.data.http.method).to.equal('GET'),
                   span => expect(span.data.http.url).to.equal('/stored-procedure-callback')
                 ]);
 
-                testUtils.expectAtLeastOneMatching(spans, span => {
+                expectAtLeastOneMatching(spans, span => {
                   checkMssqlSpan(span, httpEntrySpan);
                   expect(span.data.mssql.stmt).to.equal('testProcedure');
                 });
@@ -541,15 +541,15 @@ describe('tracing/mssql', function () {
             expect(response.rows).to.exist;
             expect(response.errors.length).to.equal(0);
 
-            return testUtils.retry(() =>
+            return retry(() =>
               agentControls.getSpans().then(spans => {
-                const httpEntrySpan = testUtils.expectAtLeastOneMatching(spans, [
+                const httpEntrySpan = expectAtLeastOneMatching(spans, [
                   span => expect(span.n).to.equal('node.http.server'),
                   span => expect(span.data.http.method).to.equal('GET'),
                   span => expect(span.data.http.url).to.equal('/streaming')
                 ]);
 
-                testUtils.expectAtLeastOneMatching(spans, span => {
+                expectAtLeastOneMatching(spans, span => {
                   checkMssqlSpan(span, httpEntrySpan);
                   expect(span.data.mssql.stmt).to.equal('SELECT name, email FROM UserTable');
                 });
@@ -566,15 +566,15 @@ describe('tracing/mssql', function () {
           .then(response => {
             expect(response.length).to.equal(1);
 
-            return testUtils.retry(() =>
+            return retry(() =>
               agentControls.getSpans().then(spans => {
-                const httpEntrySpan = testUtils.expectAtLeastOneMatching(spans, [
+                const httpEntrySpan = expectAtLeastOneMatching(spans, [
                   span => expect(span.n).to.equal('node.http.server'),
                   span => expect(span.data.http.method).to.equal('GET'),
                   span => expect(span.data.http.url).to.equal('/batch-callback')
                 ]);
 
-                testUtils.expectAtLeastOneMatching(spans, span => {
+                expectAtLeastOneMatching(spans, span => {
                   checkMssqlSpan(span, httpEntrySpan);
                   expect(span.data.mssql.stmt).to.equal('SELECT GETDATE()');
                 });
@@ -591,15 +591,15 @@ describe('tracing/mssql', function () {
           .then(response => {
             expect(response.length).to.equal(1);
 
-            return testUtils.retry(() =>
+            return retry(() =>
               agentControls.getSpans().then(spans => {
-                const httpEntrySpan = testUtils.expectAtLeastOneMatching(spans, [
+                const httpEntrySpan = expectAtLeastOneMatching(spans, [
                   span => expect(span.n).to.equal('node.http.server'),
                   span => expect(span.data.http.method).to.equal('GET'),
                   span => expect(span.data.http.url).to.equal('/batch-promise')
                 ]);
 
-                testUtils.expectAtLeastOneMatching(spans, span => {
+                expectAtLeastOneMatching(spans, span => {
                   checkMssqlSpan(span, httpEntrySpan);
                   expect(span.data.mssql.stmt).to.equal('SELECT GETDATE()');
                 });
@@ -616,15 +616,15 @@ describe('tracing/mssql', function () {
           .then(response => {
             expect(response.rowsAffected).to.equal(3);
 
-            return testUtils.retry(() =>
+            return retry(() =>
               agentControls.getSpans().then(spans => {
-                const httpEntrySpan = testUtils.expectAtLeastOneMatching(spans, [
+                const httpEntrySpan = expectAtLeastOneMatching(spans, [
                   span => expect(span.n).to.equal('node.http.server'),
                   span => expect(span.data.http.method).to.equal('GET'),
                   span => expect(span.data.http.url).to.equal('/bulk')
                 ]);
 
-                testUtils.expectAtLeastOneMatching(spans, span => {
+                expectAtLeastOneMatching(spans, span => {
                   checkMssqlSpan(span, httpEntrySpan);
                   expect(span.data.mssql.stmt).to.equal('MSSQL bulk operation');
                 });
@@ -642,15 +642,15 @@ describe('tracing/mssql', function () {
             expect(response.name).to.equal('RequestError');
             expect(response.code).to.equal('ECANCEL');
 
-            return testUtils.retry(() =>
+            return retry(() =>
               agentControls.getSpans().then(spans => {
-                const httpEntrySpan = testUtils.expectAtLeastOneMatching(spans, [
+                const httpEntrySpan = expectAtLeastOneMatching(spans, [
                   span => expect(span.n).to.equal('node.http.server'),
                   span => expect(span.data.http.method).to.equal('GET'),
                   span => expect(span.data.http.url).to.equal('/cancel')
                 ]);
 
-                testUtils.expectAtLeastOneMatching(spans, span => {
+                expectAtLeastOneMatching(spans, span => {
                   checkMssqlErrorSpan(span, httpEntrySpan, 'Canceled.');
                   expect(span.data.mssql.stmt).to.equal("WAITFOR DELAY '00:00:05'; SELECT 1 as NUMBER");
                 });
