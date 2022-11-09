@@ -13,12 +13,12 @@ const { v4: uuid } = require('uuid');
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const constants = require('@instana/core').tracing.constants;
 const config = require('../../../../core/test/config');
-const { expectExactlyOneMatching, retry } = require('../../../../core/test/test_util');
+const { expectExactlyOneMatching, isCI, retry } = require('../../../../core/test/test_util');
 const delay = require('../../../../core/test/test_util/delay');
 const ProcessControls = require('../../test_util/ProcessControls');
 const globalAgent = require('../../globalAgent');
 
-const waitForSpans = process.env.CI ? 1000 : 200;
+const waitForSpans = isCI() ? 1000 : 200;
 
 const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 

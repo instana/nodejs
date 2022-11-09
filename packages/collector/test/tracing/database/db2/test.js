@@ -15,7 +15,7 @@ const globalAgent = require('../../../globalAgent');
 
 const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 const DB_LOCAL_CONN_STR = 'HOSTNAME=localhost;UID=node;PWD=<redacted>;PORT=58885;PROTOCOL=TCPIP';
-const DB_REMOTE_CONN_STR = process.env.CI
+const DB_REMOTE_CONN_STR = testUtils.isCI()
   ? process.env.DB2_CONNECTION_STR.replace(/PWD=.*?(?=;)/, 'PWD=<redacted>')
   : null;
 

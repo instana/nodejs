@@ -17,6 +17,7 @@ module.exports = {
   expectExactlyOneMatching: require('./expectExactlyOneMatching'),
   getSpansByName: require('./getSpansByName'),
   getLogger: require('./log').getLogger,
+  isCI: require('./is_ci'),
   retry: require('./retry'),
   retryUntilSpansMatch: require('./retryUntilSpansMatch'),
   runCommandSync: require('./runCommand').runCommandSync,

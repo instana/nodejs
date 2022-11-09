@@ -12,6 +12,7 @@ const fail = require('assert').fail;
 const util = require('util');
 
 const config = require('../config');
+const { isCI } = require('../test_util');
 
 const {
   generateRandomId,
@@ -73,7 +74,7 @@ describe('tracing/tracingUtil', () => {
 
     // generate one million IDs each (64 bit/16 chars, 128 bit/32 chars)
     const iterations = 1000000;
-    const maxAcceptableDuration = process.env.CI ? 50000 : 10000;
+    const maxAcceptableDuration = isCI() ? 50000 : 10000;
 
     microBenchmark(16);
     microBenchmark(32);
