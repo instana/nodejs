@@ -48,7 +48,7 @@ const s3Info = {
   listProperty: 'Buckets',
   itemAttribute: 'Name', // if item is not a string but an object, we can do item[itemAttribute]
   itemDateAttribute: 'CreationDate', // if the item object already has a date value, so we use this instead
-  criteria: 'nodejs-team-',
+  criteria: 'nodejs-team',
   attributesFunction: 'describeTable',
   getAttributesParams(item) {
     return { TableName: item };

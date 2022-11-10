@@ -26,7 +26,7 @@ const { promisifyNonSequentialCases } = require('../promisify_non_sequential');
 let bucketName = 'nodejs-team';
 
 if (process.env.AWS_S3_BUCKET_NAME) {
-  bucketName = `${process.env.AWS_S3_BUCKET_NAME}${semver.major(process.versions.node)}-${uuid()}`;
+  bucketName = `${process.env.AWS_S3_BUCKET_NAME}-v2-${semver.major(process.versions.node)}-${uuid()}`;
 }
 
 const randomNumber = Math.floor(Math.random() * 1000);

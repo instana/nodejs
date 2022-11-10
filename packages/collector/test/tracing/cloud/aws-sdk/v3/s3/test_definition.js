@@ -55,7 +55,7 @@ function start(version) {
     let bucketName = 'nodejs-team';
 
     if (process.env.AWS_S3_BUCKET_NAME) {
-      bucketName = `${process.env.AWS_S3_BUCKET_NAME}v3-${semver.major(process.versions.node)}-${uuid()}`;
+      bucketName = `${process.env.AWS_S3_BUCKET_NAME}-v3-${semver.major(process.versions.node)}-${uuid()}`;
     } else {
       bucketName = `${bucketName}-${uuid()}`;
     }
