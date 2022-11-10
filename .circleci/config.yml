@@ -263,6 +263,7 @@ mssql: &mssql
     environment:
       ACCEPT_EULA: Y
       SA_PASSWORD: stanCanHazMsSQL1
+      MSSQL_PID: Express
 
 mysql: &mysql
   - image: circleci/mysql:8.0.1

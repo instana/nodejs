@@ -117,6 +117,7 @@ services:
     environment:
       ACCEPT_EULA: Y
       SA_PASSWORD: stanCanHazMsSQL1
+      MSSQL_PID: Express
 
   rabbitmq:
     image: rabbitmq:3.7.8-alpine
