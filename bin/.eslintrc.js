@@ -7,6 +7,7 @@
 
 module.exports = {
   rules: {
-    'no-console': 'off'
+    'no-console': 'off',
+    'instana/no-unsafe-require': 'off'
   }
 };
