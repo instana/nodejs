@@ -68,15 +68,6 @@ mochaSuiteFn('tracing/prisma', function () {
       });
 
       after(async () => {
-        // eslint-disable-next-line no-use-before-define
-        if (controls) {
-          // eslint-disable-next-line no-use-before-define
-          await controls.sendRequest({
-            method: 'POST',
-            path: '/disconnect'
-          });
-        }
-
         await fs.rm(schemaTargetFile, { force: true });
         await rimraf(migrationsTargetDir);
       });

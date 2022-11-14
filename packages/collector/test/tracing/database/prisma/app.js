@@ -98,12 +98,6 @@ app.post('/update', async (req, res) => {
   }
 });
 
-app.post('/disconnect', async (req, res) => {
-  await prisma.$disconnect();
-  ready = false;
-  res.sendStatus(204);
-});
-
 app.listen(process.env.APP_PORT, () => {
   log(`Listening on port: ${process.env.APP_PORT}`);
 });
