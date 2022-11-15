@@ -1,2 +1,3 @@
 **/node_modules/*
 lambdas/serverless-framework/with-serverless-webpack/*
+lambdas/runtime_emulator/esm/*
