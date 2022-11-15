@@ -3,3 +3,6 @@ contact_links:
   - name: Instana Support Portal
     url: https://support.instana.com
     about: Please ask usage questions there.
+  - name: Feature Requests
+    url: https://automation-management.ideas.ibm.com/?project=INSTANA
+    about: Please file feature requests there (or search for existing requests and vote for them). Do not use Github issues for feature requests.
