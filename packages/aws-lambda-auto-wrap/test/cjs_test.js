@@ -159,7 +159,10 @@ describe('cjs wrapper', function () {
       if (semver.lt(process.versions.node, '12.0.0')) {
         expect(e.message).to.eql('SyntaxError: Unexpected identifier');
       } else {
-        expect(e.message).to.eql('SyntaxError: Cannot use import statement outside a module');
+        expect(e.message).to.eql(
+          'Your Lambda function is using an ES module. ' +
+            "Please use the 'instana-aws-lambda-auto-wrap-esm.handler' as runtime handler."
+        );
       }
     }
 

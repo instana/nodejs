@@ -43,7 +43,10 @@ function requireTargetHandlerModule(lambdaTaskRoot, targetHandlerModuleFolder, t
   } catch (e) {
     if ('MODULE_NOT_FOUND' === e.code) {
       throw new localUtils.errors.lambda.ImportModuleError(e);
-    } else if ('ERR_REQUIRE_ESM' === e.code) {
+    } else if (
+      'ERR_REQUIRE_ESM' === e.code ||
+      e.message.indexOf('Cannot use import statement outside a module') !== -1
+    ) {
       throw new localUtils.errors.lambda.ImportModuleError(
         'Your Lambda function is using an ES module. ' +
           "Please use the 'instana-aws-lambda-auto-wrap-esm.handler' as runtime handler."
