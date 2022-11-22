@@ -107,11 +107,13 @@ resource_types:
     type: registry-image
     source:
       repository: timotto/concourse-npm-resource
+      tag: latest
 
   - name: slack-notifier
     type: registry-image
     source:
       repository: mockersf/concourse-slack-notifier
+      tag: latest
 
 
 jobs:
@@ -137,6 +139,7 @@ jobs:
             type: registry-image
             source:
               repository: vito/oci-build-task
+              tag: latest
           params:
             CONTEXT: nodejs-repository/packages/aws-fargate/images/instana-aws-fargate/
             DOCKERFILE: nodejs-repository/packages/aws-fargate/images/instana-aws-fargate/Dockerfile-npm
@@ -200,6 +203,7 @@ jobs:
             type: registry-image
             source:
               repository: vito/oci-build-task
+              tag: latest
           params:
             CONTEXT: nodejs-repository/packages/google-cloud-run/images/instana-google-cloud-run/
             DOCKERFILE: nodejs-repository/packages/google-cloud-run/images/instana-google-cloud-run/Dockerfile-npm
