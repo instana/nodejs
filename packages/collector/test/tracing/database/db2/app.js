@@ -97,7 +97,14 @@ const connect = () => {
     console.log('Successfully connected.');
 
     conn.querySync(`drop table ${DB2_TABLE_NAME_1} if exists`);
-    conn.querySync(`create table ${DB2_TABLE_NAME_1} (COLINT INTEGER, COLDATETIME TIMESTAMP, COLTEXT VARCHAR(255))`);
+
+    const result = conn.querySync(
+      `create table ${DB2_TABLE_NAME_1} (COLINT INTEGER, COLDATETIME TIMESTAMP, COLTEXT VARCHAR(255))`
+    );
+
+    if (!(result instanceof Array)) {
+      throw new Error(result);
+    }
 
     conn.prepare(`SELECT * FROM ${DB2_TABLE_NAME_1}`, (prepareErr, stmtObject) => {
       if (prepareErr) throw prepareErr;
@@ -305,7 +312,7 @@ app.get('/transaction-async', (req, res) => {
 
       // false === commit, true === rollback
       connection.endTransaction(Boolean(commit), function (subSubErr) {
-        if (subErr) return res.status(500).send({ err: subSubErr.message });
+        if (subSubErr) return res.status(500).send({ err: subSubErr.message });
 
         res.status(200).send({ data });
       });
