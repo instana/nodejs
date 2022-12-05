@@ -57,12 +57,15 @@ mochaSuiteFn('tracing/logger/bunyan', function () {
     it("must capture a nested error object's message", () =>
       runTest('nested-error-object-only', true, 'This is a nested error.'));
 
-    it('must not serialize random object', () =>
+    it('must serialize random object', () => runTest('error-random-object-only', true, '{"foo":"[Object]"}'));
+
+    it('must serialize large object', () =>
       runTest(
-        'error-random-object-only',
+        'error-large-object-only',
         true,
-        'Log call without message. ' +
-          'The Bunyan "fields" argument will not be serialized by Instana for performance reasons.'
+        // eslint-disable-next-line max-len
+        '{"_id":"638dea148cff492d47e792ea","index":0,"guid":"01b61bfa-fe4c-4d75-9224-389c4c04de10","isActive":false,"balance":"$1,919.18","picture":"http://placehold.it/32x32","age":37,"eyeColor":"blue","name":"Manning Brady","gender":"male","company":"ZYTRAC","email":"manningbrady@zytrac.com","phone":"+1 (957) 538-2183","address":"146 Bushwick Court, Gilgo, New York, 2992","about":"Ullamco cillum reprehenderit eu proident veniam laboris tempor voluptate. Officia deserunt velit incididunt consequat la...',
+        500
       ));
 
     it("must capture an error object's message and an additional string", () =>
@@ -72,7 +75,7 @@ mochaSuiteFn('tracing/logger/bunyan', function () {
       runTest('nested-error-object-and-string', true, 'This is a nested error. -- Error message - should be traced.'));
 
     it('must trace random object and string', () =>
-      runTest('error-random-object-and-string', true, 'Error message - should be traced.'));
+      runTest('error-random-object-and-string', true, '{"foo":"[Object]"} - Error message - should be traced.'));
 
     it('must trace child logger error', () =>
       runTest('child-error', true, 'Child logger error message - should be traced.'));
@@ -124,7 +127,7 @@ mochaSuiteFn('tracing/logger/bunyan', function () {
     });
   });
 
-  function runTest(url, expectErroneous, message) {
+  function runTest(url, expectErroneous, message, lengthOfMessage) {
     return appControls.trigger(url).then(() =>
       testUtils.retry(() =>
         agentControls.getSpans().then(spans => {
@@ -134,7 +137,7 @@ mochaSuiteFn('tracing/logger/bunyan', function () {
             span => expect(span.f.h).to.equal('agent-stub-uuid')
           ]);
           testUtils.expectAtLeastOneMatching(spans, span => {
-            checkBunyanSpan(span, entrySpan, expectErroneous, message);
+            checkBunyanSpan(span, entrySpan, expectErroneous, message, lengthOfMessage);
           });
           testUtils.expectAtLeastOneMatching(spans, span => {
             checkNextExitSpan(span, entrySpan);
@@ -153,7 +156,7 @@ mochaSuiteFn('tracing/logger/bunyan', function () {
     );
   }
 
-  function checkBunyanSpan(span, parent, erroneous, message) {
+  function checkBunyanSpan(span, parent, erroneous, message, lengthOfMessage) {
     expect(span.t).to.equal(parent.t);
     expect(span.p).to.equal(parent.s);
     expect(span.k).to.equal(constants.EXIT);
@@ -166,6 +169,10 @@ mochaSuiteFn('tracing/logger/bunyan', function () {
     expect(span.data).to.exist;
     expect(span.data.log).to.exist;
     expect(span.data.log.message).to.equal(message);
+
+    if (lengthOfMessage) {
+      expect(span.data.log.message.length).to.equal(lengthOfMessage);
+    }
   }
 
   function checkNextExitSpan(span, parent) {

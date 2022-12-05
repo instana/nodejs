@@ -23,7 +23,9 @@ const request = require('request-promise');
 const bodyParser = require('body-parser');
 const express = require('express');
 const morgan = require('morgan');
+const fs = require('fs');
 
+const path = require('path');
 const bunyan = require('bunyan');
 const logger = bunyan.createLogger({ name: 'test-logger' });
 
@@ -72,6 +74,11 @@ app.get('/nested-error-object-only', (req, res) => {
 
 app.get('/error-random-object-only', (req, res) => {
   logger.error({ foo: { bar: 'baz' } });
+  finish(res);
+});
+
+app.get('/error-large-object-only', (req, res) => {
+  logger.error(JSON.parse(fs.readFileSync(path.join(__dirname, 'assets', 'large_obj.json'), 'utf8')));
   finish(res);
 });
 
