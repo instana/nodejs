@@ -40,6 +40,10 @@ function instrument(es) {
 
     return client;
   };
+
+  Object.keys(OriginalClient).forEach(key => {
+    es.Client[key] = OriginalClient[key];
+  });
 }
 
 function gatherClusterInfo(client, clusterInfo) {
