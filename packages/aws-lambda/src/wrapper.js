@@ -247,6 +247,7 @@ function init(event, arnInfo, _config) {
   // instanaCore.init also normalizes the config as a side effect
   instanaCore.init(config, backendConnector, identityProvider);
 
+  spanBuffer.setIsFaaS(true);
   captureHeaders.init(config);
   metrics.init(config);
   metrics.activate();
@@ -363,6 +364,14 @@ function postHandler(entrySpan, error, result, callback) {
   }
 
   const spans = spanBuffer.getAndResetSpans();
+
+  // We want that all upcoming spans are send immediately to the BE.
+  // Span collection happens all the time and they are buffered via spanBuffer.
+  // The spanBuffer will only send out the spans early if the payload becomes too big.
+  // When the Lambda handler finishes we trigger `sendBundle`.
+  // If there is any span collected afterwards (async operations), we send them out
+  // directly and that's why we set `setTransmitImmediate` to true.
+  spanBuffer.setTransmitImmediate(true);
 
   const metricsData = metrics.gatherData();
 
