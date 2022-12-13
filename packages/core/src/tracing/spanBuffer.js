@@ -42,6 +42,10 @@ let forceTransmissionStartingAt;
 let transmissionTimeoutHandle;
 /** @type {NodeJS.Timeout} */
 let preActivationCleanupIntervalHandle;
+/** @type {boolean} */
+let isFaaS;
+/** @type {boolean} */
+let transmitImmediate;
 
 /** @type {Array.<import('./cls').InstanaBaseSpan>} */
 let spans = [];
@@ -95,6 +99,8 @@ exports.init = function init(config, _downstreamConnection) {
   transmissionDelay = config.tracing.transmissionDelay;
   batchingEnabled = config.tracing.spanBatchingEnabled;
   initialDelayBeforeSendingSpans = Math.max(transmissionDelay, minDelayBeforeSendingSpans);
+  isFaaS = false;
+  transmitImmediate = false;
 
   if (config.tracing.activateImmediately) {
     preActivationCleanupIntervalHandle = setInterval(() => {
@@ -120,19 +126,30 @@ exports.activate = function activate(extraConfig) {
     logger.error('downstreamConnection.sendSpans is not a function.');
     return;
   }
+
   if (extraConfig && extraConfig.tracing && extraConfig.tracing.spanBatchingEnabled) {
     batchingEnabled = true;
   }
+
   isActive = true;
   if (activatedAt == null) {
     // record the time stamp of the first activation to enforce one second delay between sending snapshot data and
     // sending spans for the first time.
     activatedAt = Date.now();
   }
+
   spans = [];
   batchingBuckets.clear();
-  transmissionTimeoutHandle = setTimeout(transmitSpans, initialDelayBeforeSendingSpans);
-  transmissionTimeoutHandle.unref();
+
+  // NOTE: We do not want to use `setTimeout` in AWS Lambda, because
+  //       the AWS runtime might execute the handler in a different lambda execution.
+  //       On AWS Lambda we wait till the handler finishes and then transmit all collected spans via
+  //       `sendBundle`. Any detected span will be sent directly to the BE.
+  if (!isFaaS) {
+    transmissionTimeoutHandle = setTimeout(transmitSpans, initialDelayBeforeSendingSpans);
+    transmissionTimeoutHandle.unref();
+  }
+
   if (preActivationCleanupIntervalHandle) {
     clearInterval(preActivationCleanupIntervalHandle);
   }
@@ -167,6 +184,13 @@ exports.addSpan = function (span) {
     return;
   }
 
+  // CASE: if we no longer want to buffer spans after we have already send the bundle
+  if (transmitImmediate) {
+    spans.push(span);
+    transmitSpans();
+    return;
+  }
+
   const spanIsBatchable = batchingEnabled && isBatchable(span);
 
   if (!spanIsBatchable || !addToBatch(span)) {
@@ -177,6 +201,7 @@ exports.addSpan = function (span) {
       addToBucket(span);
     }
 
+    // NOTE: we send out spans directly if the number of spans reaches > 500 [default] and if the min delay is reached.
     if (spans.length >= forceTransmissionStartingAt && Date.now() - minDelayBeforeSendingSpans > activatedAt) {
       transmitSpans();
     }
@@ -395,14 +420,18 @@ function transmitSpans() {
   clearTimeout(transmissionTimeoutHandle);
 
   if (spans.length === 0) {
-    transmissionTimeoutHandle = setTimeout(transmitSpans, transmissionDelay);
-    transmissionTimeoutHandle.unref();
+    if (!isFaaS) {
+      transmissionTimeoutHandle = setTimeout(transmitSpans, transmissionDelay);
+      transmissionTimeoutHandle.unref();
+    }
+
     return;
   }
 
   const spansToSend = spans;
   spans = [];
   batchingBuckets.clear();
+
   // We restore the content of the spans array if sending them downstream was not successful. We do not restore
   // batchingBuckets, though. This is deliberate. In the worst case, we might miss some batching opportunities, but
   // since sending spans downstream will take a few milliseconds, even that will be rare (and it is acceptable).
@@ -414,8 +443,10 @@ function transmitSpans() {
       removeSpansIfNecessary();
     }
 
-    transmissionTimeoutHandle = setTimeout(transmitSpans, transmissionDelay);
-    transmissionTimeoutHandle.unref();
+    if (!isFaaS) {
+      transmissionTimeoutHandle = setTimeout(transmitSpans, transmissionDelay);
+      transmissionTimeoutHandle.unref();
+    }
   });
 }
 
@@ -432,6 +463,14 @@ exports.getAndResetSpans = function getAndResetSpans() {
 
 exports.isEmpty = function isEmpty() {
   return spans.length === 0;
+};
+
+exports.setTransmitImmediate = function setTransmitImmediate(/** @type {Boolean} */ val) {
+  transmitImmediate = val;
+};
+
+exports.setIsFaaS = function setIsFaaS(/** @type {Boolean} */ val) {
+  isFaaS = val;
 };
 
 function removeSpansIfNecessary() {
