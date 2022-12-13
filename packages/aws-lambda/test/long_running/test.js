@@ -144,6 +144,7 @@ describe('long running lambdas', () => {
         const duration = Date.now() - control.startedAt;
         verifyResponse(control);
         expect(duration).to.be.at.most(opts.expectedLambdaRuntime);
+
         return Promise.all([
           //
           control.getSpans(),
@@ -154,15 +155,9 @@ describe('long running lambdas', () => {
         ]).then(([spans, metrics, rawBundles, rawSpanArrays, rawMetrics]) => {
           expect(spans).to.have.lengthOf(0);
           expect(metrics).to.have.lengthOf(0);
-
-          // The first POST /spans fails...
-          expect(rawSpanArrays).to.have.lengthOf(1);
-          // ...and we expect @instana/aws-lambda to stop sending spans after that. In particular, we expect the
-          // POST /bundle at the end to not happen.
-          expect(rawBundles).to.have.lengthOf(0);
-
-          // @instana/aws-lambda never sends metrics while running, it only reports them at the end together with the
-          // bundle.
+          expect(rawSpanArrays).to.have.lengthOf(0);
+          expect(rawBundles).to.have.lengthOf(1);
+          expect(rawBundles[0].spans).to.have.lengthOf(31);
           expect(rawMetrics).to.have.lengthOf(0);
         });
       }));
