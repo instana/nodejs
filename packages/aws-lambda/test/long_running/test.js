@@ -95,14 +95,14 @@ describe('long running lambdas', () => {
         ]).then(([spans, metrics, rawBundles, rawSpanArrays]) => {
           verifySpans(spans, opts);
           verifyMetrics(metrics);
-          // The lambda runs 13 seconds and creates a span every second. We also send spans to serverless acceptor
-          // every second + the final bundle. Thus, we should see around 11-12 intermittent POST requests to /traces and
-          // one to /bundle.
+
+          // The lambda runs x seconds and creates a span every second.
+          // We send all these spans in the the final bundle.
           expect(rawSpanArrays).to.be.an('array');
-          expect(rawSpanArrays).to.have.lengthOf.at.least(10);
-          expect(rawSpanArrays).to.have.lengthOf.at.most(13);
+          expect(rawSpanArrays).to.have.lengthOf(0);
           expect(rawBundles).to.be.an('array');
           expect(rawBundles).to.have.lengthOf(1);
+          expect(rawBundles[0].spans).to.have.lengthOf(14);
         });
       }));
   });

@@ -374,7 +374,6 @@ function postHandler(entrySpan, error, result, callback) {
   spanBuffer.setTransmitImmediate(true);
 
   const metricsData = metrics.gatherData();
-
   const metricsPayload = {
     plugins: [{ name: 'com.instana.plugin.aws.lambda', entityId: identityProvider.getEntityId(), data: metricsData }]
   };
