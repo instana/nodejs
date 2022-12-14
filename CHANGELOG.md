@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [2.13.2](https://github.com/instana/nodejs/compare/v2.13.1...v2.13.2) (2022-12-14)
+
+
+### Bug Fixes
+
+* **aws-fargate:** cannot read property 'cpu' of undefined ([#671](https://github.com/instana/nodejs/issues/671)) ([bea107c](https://github.com/instana/nodejs/commit/bea107c84191111302dc91e164a7b68d29731d07))
+* **aws-lambda:** reduced deadlocks and long running lambda executions ([#666](https://github.com/instana/nodejs/issues/666)) ([6800be0](https://github.com/instana/nodejs/commit/6800be01d32989723799894dd75a834f2c6c3f30))
+
+
+
+
+
 ## [2.13.1](https://github.com/instana/nodejs/compare/v2.13.0...v2.13.1) (2022-12-12)
 
 
