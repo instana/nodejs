@@ -38,8 +38,8 @@ class EcsTaskProcessor extends DataProcessor {
       desiredStatus: metadata.DesiredStatus,
       knownStatus: metadata.KnownStatus,
       limits: {
-        cpu: metadata.Limits.CPU,
-        memory: metadata.Limits.Memory
+        cpu: metadata.Limits ? metadata.Limits.CPU : undefined,
+        memory: metadata.Limits ? metadata.Limits.Memory : undefined
       },
       pullStartedAt: metadata.PullStartedAt,
       pullStoppedAt: metadata.PullStoppedAt,
