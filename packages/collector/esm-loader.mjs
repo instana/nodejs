@@ -1,0 +1,25 @@
+/*
+ * (c) Copyright IBM Corp. 2022
+ */
+
+'use strict';
+
+/**
+ * We currently only instrument CJS modules. As soon as we want
+ * to instrument ES modules (such as `got` v12), the requireHook will
+ * no longer work. Therefor we would need to wrap the target ES module
+ * with our instrumentations using the resolve & load hook.
+ */
+
+import instana from './src/index.js';
+instana();
+
+/*
+export async function resolve(specifier, context, nextResolve) {
+  return nextResolve(specifier, context, nextResolve);
+}
+
+export async function load(url, context, nextLoad) {
+  return nextLoad(url, context, nextLoad);
+}
+*/
