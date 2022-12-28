@@ -458,6 +458,10 @@ workflows:
     jobs:
       - "node-18"
       - "node-16"
+  esm:
+    jobs:
+      - "node-18"
+      - "node-16"
   legacy-nodejs-versions:
     triggers:
       - schedule:
