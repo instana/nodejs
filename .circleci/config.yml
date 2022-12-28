@@ -458,12 +458,6 @@ workflows:
     jobs:
       - "node-18"
       - "node-16"
-  build-esm:
-    environment:
-      RUN_ESM: true
-    jobs:
-      - "node-18"
-      - "node-16"
   legacy-nodejs-versions:
     triggers:
       - schedule:
