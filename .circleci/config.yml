@@ -370,6 +370,48 @@ jobs:
     <<: *shared
     parallelism: 20
 
+  "node-18-esm":
+    environment:
+      RUN_ESM: true  
+    docker:
+      - image: cimg/node:18.0
+      - <<: *zookeeper
+      - <<: *elasticsearch
+      - <<: *mongo
+      - <<: *redis
+      - <<: *kafka
+      - <<: *schema-registry
+      - <<: *mysql
+      - <<: *postgres
+      - <<: *mssql
+      - <<: *rabbitmq
+      - <<: *nats
+      - <<: *nats-streaming
+      - <<: *memcached
+    <<: *shared
+    parallelism: 20
+
+  "node-16-esm":
+    environment:
+      RUN_ESM: true
+    docker:
+      - image: circleci/node:16
+      - <<: *zookeeper
+      - <<: *elasticsearch
+      - <<: *mongo
+      - <<: *redis
+      - <<: *kafka
+      - <<: *schema-registry
+      - <<: *mysql
+      - <<: *postgres
+      - <<: *mssql
+      - <<: *rabbitmq
+      - <<: *nats
+      - <<: *nats-streaming
+      - <<: *memcached
+    <<: *shared
+    parallelism: 20
+
   "node-14":
     environment:
       NPM_VERSION: 8.6.0
@@ -459,11 +501,9 @@ workflows:
       - "node-18"
       - "node-16"
   esm:
-    environment:
-      - RUN_ESM=true
     jobs:
-      - "node-18"
-      - "node-16"
+      - "node-18-esm"
+      - "node-16-esm"
   legacy-nodejs-versions:
     triggers:
       - schedule:
