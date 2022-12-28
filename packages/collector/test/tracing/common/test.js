@@ -186,7 +186,6 @@ mochaSuiteFn.only('tracing/common', function () {
           expect(spans.length).to.equal(1);
           const span = spans[0];
           expect(span.n).to.equal('node.http.server');
-          console.log(span);
           if (expectServiceNameOnSpan == null) {
             throw new Error('Please explicitly pass true or false for expectServiceNameOnSpan');
           } else if (expectServiceNameOnSpan) {
