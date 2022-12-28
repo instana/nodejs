@@ -19,7 +19,7 @@ const extendedTimeout = Math.max(config.getTestTimeout(), 10000);
 
 const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
-mochaSuiteFn('tracing/common', function () {
+mochaSuiteFn.only('tracing/common', function () {
   globalAgent.setUpCleanUpHooks();
 
   describe('delay', function () {
@@ -186,6 +186,7 @@ mochaSuiteFn('tracing/common', function () {
           expect(spans.length).to.equal(1);
           const span = spans[0];
           expect(span.n).to.equal('node.http.server');
+          console.log(span);
           if (expectServiceNameOnSpan == null) {
             throw new Error('Please explicitly pass true or false for expectServiceNameOnSpan');
           } else if (expectServiceNameOnSpan) {

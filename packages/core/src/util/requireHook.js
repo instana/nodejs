@@ -61,12 +61,12 @@ function patchedModuleLoad(moduleName) {
   //       with our instrumentation
   if (path.isAbsolute(moduleName) && moduleName.indexOf('.js') !== -1) {
     try {
-      // node_modules/mysql/lib/index.js
-      module = moduleName.match(/node_modules\/(.*?(?=\/))/)[1];
+      // node_modules/@elastic/elasicsearch/index.js
+      module = moduleName.match(/node_modules\/(@.*?(?=\/)\/.*?(?=\/))/)[1];
     } catch (err1) {
       try {
-        // node_modules/@elastic/elasicsearch/index.js
-        module = moduleName.match(/node_modules\/(@.*?(?=\/)\/.*?(?=\/))/)[1];
+        // node_modules/mysql/lib/index.js
+        module = moduleName.match(/node_modules\/(.*?(?=\/))/)[1];
       } catch (err2) {
         module = moduleName;
       }

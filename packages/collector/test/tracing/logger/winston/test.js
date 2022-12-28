@@ -162,7 +162,7 @@ mochaSuiteFn('tracing/logger/winston', function () {
     expect(span.stack).to.not.be.empty;
     let found = false;
     span.stack.forEach(callSite => {
-      found = found || callSite.c.indexOf('winston/app.js') >= 0;
+      found = found || callSite.c.indexOf('winston/app.') >= 0;
     });
     if (!found) {
       fail(`Did not find the expected call site winston/app.js in ${JSON.stringify(span.stack, null, 2)}`);
