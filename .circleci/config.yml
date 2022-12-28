@@ -459,6 +459,8 @@ workflows:
       - "node-18"
       - "node-16"
   esm:
+    environment:
+      RUN_ESM: "true"
     jobs:
       - "node-18"
       - "node-16"
