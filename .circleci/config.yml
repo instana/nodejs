@@ -503,7 +503,7 @@ workflows:
   esm-build:
     triggers:
       - schedule:
-          cron: "0 4 * * *"
+          cron: "7 4 * * *"
           filters:
             branches:
               only:
