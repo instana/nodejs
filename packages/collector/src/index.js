@@ -50,9 +50,17 @@ function init(_config) {
     // initialized, potentially from a different installation of @instana/collector somewhere else in the file system.
     // Find that module in the require cache and return its exports (this is necessary to make sure calls to our API
     // work as expected).
-    const collectorIndexCacheKey = Object.keys(require.cache).find(
+    let collectorIndexCacheKey = Object.keys(require.cache).find(
       cacheKey => cacheKey.indexOf('/@instana/collector/src/index.js') >= 0
     );
+
+    // Requiring the collector package twice in the test package using a relative path such as `../../..`
+    if (process.env.NODE_ENV === 'test') {
+      collectorIndexCacheKey = Object.keys(require.cache).find(
+        cacheKey => cacheKey.indexOf('collector/src/index.js') >= 0
+      );
+    }
+
     if (collectorIndexCacheKey) {
       return require.cache[collectorIndexCacheKey].exports;
     } else {

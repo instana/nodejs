@@ -6,7 +6,6 @@
 
 const mock = require('mock-require');
 const requireHook = require('../../../../../core/src/util/requireHook');
-
 const ELASTIC_VERSION = process.env.ELASTIC_VERSION;
 const ELASTIC_REQUIRE =
   process.env.ELASTIC_VERSION === 'latest' ? '@elastic/elasticsearch' : `@elastic/elasticsearch-v${ELASTIC_VERSION}`;

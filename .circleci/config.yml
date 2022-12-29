@@ -234,7 +234,11 @@ shared: &shared
           . ./bin/ci_glob_setup.sh
           date
           if [[ -z "$NODE_COVERAGE" ]]; then
-            npm run test:ci
+            if [[ -z "$COLLECTOR_ONLY" ]]; then
+              npm run test:ci
+            else
+              npm run test:ci:collector
+            fi
           else
             npm run coverage-all
           fi
@@ -370,6 +374,50 @@ jobs:
     <<: *shared
     parallelism: 20
 
+  "node-18-esm":
+    environment:
+      RUN_ESM: true
+      COLLECTOR_ONLY: true      
+    docker:
+      - image: cimg/node:18.0
+      - <<: *zookeeper
+      - <<: *elasticsearch
+      - <<: *mongo
+      - <<: *redis
+      - <<: *kafka
+      - <<: *schema-registry
+      - <<: *mysql
+      - <<: *postgres
+      - <<: *mssql
+      - <<: *rabbitmq
+      - <<: *nats
+      - <<: *nats-streaming
+      - <<: *memcached
+    <<: *shared
+    parallelism: 20
+
+  "node-16-esm":
+    environment:
+      RUN_ESM: true
+      COLLECTOR_ONLY: true
+    docker:
+      - image: circleci/node:16
+      - <<: *zookeeper
+      - <<: *elasticsearch
+      - <<: *mongo
+      - <<: *redis
+      - <<: *kafka
+      - <<: *schema-registry
+      - <<: *mysql
+      - <<: *postgres
+      - <<: *mssql
+      - <<: *rabbitmq
+      - <<: *nats
+      - <<: *nats-streaming
+      - <<: *memcached
+    <<: *shared
+    parallelism: 20
+
   "node-14":
     environment:
       NPM_VERSION: 8.6.0
@@ -458,6 +506,17 @@ workflows:
     jobs:
       - "node-18"
       - "node-16"
+  esm-build:
+    triggers:
+      - schedule:
+          cron: "7 4 * * *"
+          filters:
+            branches:
+              only:
+                - main  
+    jobs:
+      - "node-18-esm"
+      - "node-16-esm"
   legacy-nodejs-versions:
     triggers:
       - schedule:

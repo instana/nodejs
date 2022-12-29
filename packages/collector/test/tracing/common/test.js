@@ -19,7 +19,7 @@ const extendedTimeout = Math.max(config.getTestTimeout(), 10000);
 
 const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
-mochaSuiteFn('tracing/common', function () {
+mochaSuiteFn.only('tracing/common', function () {
   globalAgent.setUpCleanUpHooks();
 
   describe('delay', function () {

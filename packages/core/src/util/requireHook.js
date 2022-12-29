@@ -54,6 +54,25 @@ exports.init = function (config) {
  * @param {string} moduleName
  */
 function patchedModuleLoad(moduleName) {
+  // CASE: when using ESM, the Node runtime passes a full path to Module._load
+  //       we try to grab the module name to being able to patch the target module
+  //       with our instrumentation
+  if (path.isAbsolute(moduleName)) {
+    // e.g. path is node_modules/@elastic/elasicsearch/index.js
+    let match = moduleName.match(/node_modules\/(@.*?(?=\/)\/.*?(?=\/))/);
+
+    if (match && match.length > 1) {
+      moduleName = match[1];
+    } else {
+      // e.g. path is node_modules/mysql/lib/index.js
+      match = moduleName.match(/node_modules\/(.*?(?=\/))/);
+
+      if (match && match.length > 1) {
+        moduleName = match[1];
+      }
+    }
+  }
+
   // First attempt to always get the module via the original implementation
   // as this action may fail. The original function populates the module cache.
   const moduleExports = origLoad.apply(Module, arguments);

@@ -89,7 +89,24 @@ class ProcessControls {
       throw new Error('Invalid config, appPath and dirname are mutually exclusive.');
     }
     if (!opts.appPath && opts.dirname) {
-      opts.appPath = path.join(opts.dirname, 'app');
+      opts.appPath = path.join(opts.dirname, 'app.js');
+    }
+
+    if (process.env.RUN_ESM && !opts.execArgv) {
+      if (opts.dirname) {
+        try {
+          const files = fs.readdirSync(opts.dirname);
+          const esmApp = files.find(f => f.indexOf('.mjs') !== -1);
+
+          if (esmApp) {
+            opts.execArgv = [`--experimental-loader=${path.join(__dirname, '..', '..', 'esm-loader.mjs')}`];
+            opts.appPath = path.join(opts.dirname, 'app.mjs');
+          }
+        } catch (err) {
+          // eslint-disable-next-line no-console
+          console.log('Unable to load the target app.mjs', err);
+        }
+      }
     }
 
     // absolute path to .js file that should be executed

@@ -4,15 +4,18 @@
 
 'use strict';
 
-require('../../../..')();
-
 /* eslint-disable no-console */
-const bodyParser = require('body-parser');
-const express = require('express');
-const fs = require('fs');
-const morgan = require('morgan');
-const ibmdb = require('ibm_db');
-const { isCI } = require('@instana/core/test/test_util');
+import bodyParser from 'body-parser';
+import express from 'express';
+import fs from 'fs';
+import morgan from 'morgan';
+import ibmdb from 'ibm_db';
+import testUtil from '@instana/core/test/test_util/index.js';
+import { dirname } from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 const app = express();
 const port = process.env.APP_PORT || 3322;
@@ -50,7 +53,7 @@ let connStr = 'HOSTNAME=localhost;UID=node;PWD=nodepw;PORT=58885;PROTOCOL=TCPIP'
  * That's why we use random names for tables.
  */
 
-if (isCI()) {
+if (testUtil.isCI()) {
   connStr = process.env.DB2_CONNECTION_STR;
   if (!connStr) {
     throw new Error(

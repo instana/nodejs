@@ -12,8 +12,8 @@
 // The globalAgent module manages an agent stub instance that can be used globally for all tests.
 
 const { startGlobalAgent, stopGlobalAgent } = require('./globalAgent');
-
 const isCI = require('@instana/core/test/test_util/is_ci');
+const fs = require('fs');
 
 exports.mochaHooks = {
   async beforeAll() {
@@ -23,6 +23,18 @@ exports.mochaHooks = {
   },
 
   beforeEach() {
+    const testFile = this.currentTest.file;
+
+    if (process.env.RUN_ESM) {
+      const files = fs.readdirSync(testFile.split('/').slice(0, -1).join('/'));
+      const esmApp = files.find(f => f.indexOf('.mjs') !== -1);
+
+      if (!esmApp) {
+        this.skip();
+        return;
+      }
+    }
+
     if (isCI()) {
       // Troubleshooting issues on CI often involves timing-based questions like:
       // * Why was this test application not able to connect to the database container? Did the DB container take too
