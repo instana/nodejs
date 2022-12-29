@@ -12,6 +12,9 @@
  *
  * Usage:
  * node --experimental-loader=@instana/collector/esm-loader.mjs server.js
+ *
+ * NOTE: When using ESM the customer can only configure the collector with
+ *       ENV variables.
  */
 
 import instana from './src/index.js';
