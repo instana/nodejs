@@ -58,15 +58,17 @@ function patchedModuleLoad(moduleName) {
   //       we try to grab the module name to being able to patch the target module
   //       with our instrumentation
   if (path.isAbsolute(moduleName)) {
-    try {
-      // node_modules/@elastic/elasicsearch/index.js
-      moduleName = moduleName.match(/node_modules\/(@.*?(?=\/)\/.*?(?=\/))/)[1];
-    } catch (err1) {
-      try {
-        // node_modules/mysql/lib/index.js
-        moduleName = moduleName.match(/node_modules\/(.*?(?=\/))/)[1];
-      } catch (err2) {
-        // ignore
+    // e.g. path is node_modules/@elastic/elasicsearch/index.js
+    let match = moduleName.match(/node_modules\/(@.*?(?=\/)\/.*?(?=\/))/);
+
+    if (match && match.length > 1) {
+      moduleName = match[1];
+    } else {
+      // e.g. path is node_modules/mysql/lib/index.js
+      match = moduleName.match(/node_modules\/(.*?(?=\/))/);
+
+      if (match && match.length > 1) {
+        moduleName = match[1];
       }
     }
   }
