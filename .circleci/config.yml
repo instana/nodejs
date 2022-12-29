@@ -500,7 +500,14 @@ workflows:
     jobs:
       - "node-18"
       - "node-16"
-  esm:
+  esm-build:
+    triggers:
+      - schedule:
+          cron: "0 4 * * *"
+          filters:
+            branches:
+              only:
+                - main  
     jobs:
       - "node-18-esm"
       - "node-16-esm"
