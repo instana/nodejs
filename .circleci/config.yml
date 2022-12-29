@@ -235,7 +235,7 @@ shared: &shared
           date
           if [[ -z "$NODE_COVERAGE" ]]; then
             npm run test:ci
-          elsif [[ -z "$COLLECTOR_ONLY" ]]; then
+          elif [[ -z "$COLLECTOR_ONLY" ]]; then
             npm run test:ci:collector
           fi
 
