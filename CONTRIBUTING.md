@@ -20,6 +20,15 @@ Some of the tests require infrastructure components (databases etc.) to run loca
 
 If you want to see the Node.js collector's debug output while running the tests, make sure the environment variable `WITH_STDOUT` is set to a non-empty string. You can also use `npm run test:debug` instead of `npm test` to achieve this.
 
+## Adding Tests
+
+### ES6
+
+We have added a CI build to test our instrumentations against ES module apps.
+See https://github.com/instana/nodejs/pull/672
+
+Not all of the current test apps have a `app.mjs`, because the effort is high. If you are adding a new test, it is wishful to also generate a `app.mjs`. You can use the npm module [cjs-to-es6](https://www.npmjs.com/package/cjs-to-es6) to generate the `app.mjs` from the `app.js`. Setting `RUN_ESM=true` locally will run use the ESM app instead of the CJS app.
+
 ## Executing code coverage tool
 
 If you are actively developing a feature and you would like to know which lines and files you have alreasy covered in your tests, it's recommended to use `.only` for the target test file and then run:
