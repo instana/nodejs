@@ -234,9 +234,13 @@ shared: &shared
           . ./bin/ci_glob_setup.sh
           date
           if [[ -z "$NODE_COVERAGE" ]]; then
-            npm run test:ci
-          elif [[ -z "$COLLECTOR_ONLY" ]]; then
-            npm run test:ci:collector
+            if [[ -z "$COLLECTOR_ONLY" ]]; then
+              npm run test:ci
+            else
+              npm run test:ci:collector
+            fi
+          else
+            npm run coverage-all
           fi
 
     - store_test_results:
