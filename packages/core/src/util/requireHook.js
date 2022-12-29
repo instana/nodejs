@@ -54,21 +54,19 @@ exports.init = function (config) {
  * @param {string} moduleName
  */
 function patchedModuleLoad(moduleName) {
-  let module = moduleName;
-
   // CASE: when using ESM, the Node runtime passes a full path to Module._load
   //       we try to grab the module name to being able to patch the target module
   //       with our instrumentation
-  if (path.isAbsolute(moduleName) && moduleName.indexOf('.js') !== -1) {
+  if (path.isAbsolute(moduleName)) {
     try {
       // node_modules/@elastic/elasicsearch/index.js
-      module = moduleName.match(/node_modules\/(@.*?(?=\/)\/.*?(?=\/))/)[1];
+      moduleName = moduleName.match(/node_modules\/(@.*?(?=\/)\/.*?(?=\/))/)[1];
     } catch (err1) {
       try {
         // node_modules/mysql/lib/index.js
-        module = moduleName.match(/node_modules\/(.*?(?=\/))/)[1];
+        moduleName = moduleName.match(/node_modules\/(.*?(?=\/))/)[1];
       } catch (err2) {
-        module = moduleName;
+        // ignore
       }
     }
   }
@@ -105,15 +103,15 @@ function patchedModuleLoad(moduleName) {
     return moduleExports;
   }
 
-  const applicableByModuleNameTransformers = byModuleNameTransformers[module];
-  if (applicableByModuleNameTransformers && cacheEntry.appliedByModuleNameTransformers.indexOf(module) === -1) {
+  const applicableByModuleNameTransformers = byModuleNameTransformers[moduleName];
+  if (applicableByModuleNameTransformers && cacheEntry.appliedByModuleNameTransformers.indexOf(moduleName) === -1) {
     for (let i = 0; i < applicableByModuleNameTransformers.length; i++) {
       const transformerFn = applicableByModuleNameTransformers[i];
       if (typeof transformerFn === 'function') {
         try {
           cacheEntry.moduleExports = transformerFn(cacheEntry.moduleExports, filename) || cacheEntry.moduleExports;
         } catch (e) {
-          logger.error(`Cannot instrument ${module} due to an error in instrumentation: ${e}`);
+          logger.error(`Cannot instrument ${moduleName} due to an error in instrumentation: ${e}`);
           if (e.message) {
             logger.error(e.message);
           }
@@ -127,14 +125,14 @@ function patchedModuleLoad(moduleName) {
             'but of type "%s" (details: %s). The most likely cause is that something has messed with Node.js\' ' +
             'module cache. This can result in limited tracing and health check functionality (for example, missing ' +
             'calls in Instana).',
-          module,
+          moduleName,
           i,
           typeof transformerFn,
           transformerFn == null ? 'null/undefined' : transformerFn
         );
       }
     }
-    cacheEntry.appliedByModuleNameTransformers.push(module);
+    cacheEntry.appliedByModuleNameTransformers.push(moduleName);
   }
 
   if (!cacheEntry.byFileNamePatternTransformersApplied) {

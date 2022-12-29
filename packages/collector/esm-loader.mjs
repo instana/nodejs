@@ -9,6 +9,9 @@
  * to instrument ES modules (such as `got` v12), the requireHook will
  * no longer work. Therefor we would need to wrap the target ES module
  * with our instrumentations using the resolve & load hook.
+ *
+ * Usage:
+ * node --experimental-loader=@instana/collector/esm-loader.mjs server.js
  */
 
 import instana from './src/index.js';
