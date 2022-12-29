@@ -235,8 +235,8 @@ shared: &shared
           date
           if [[ -z "$NODE_COVERAGE" ]]; then
             npm run test:ci
-          else
-            npm run coverage-all
+          elsif [[ -z "$COLLECTOR_ONLY" ]]; then
+            npm run test:ci:collector
           fi
 
     - store_test_results:
@@ -372,7 +372,8 @@ jobs:
 
   "node-18-esm":
     environment:
-      RUN_ESM: true  
+      RUN_ESM: true
+      COLLECTOR_ONLY: true      
     docker:
       - image: cimg/node:18.0
       - <<: *zookeeper
@@ -394,6 +395,7 @@ jobs:
   "node-16-esm":
     environment:
       RUN_ESM: true
+      COLLECTOR_ONLY: true
     docker:
       - image: circleci/node:16
       - <<: *zookeeper
@@ -501,13 +503,13 @@ workflows:
       - "node-18"
       - "node-16"
   esm-build:
-    triggers:
-      - schedule:
-          cron: "7 4 * * *"
-          filters:
-            branches:
-              only:
-                - main  
+    #triggers:
+    #  - schedule:
+    #      cron: "7 4 * * *"
+    #      filters:
+    #        branches:
+    #          only:
+    #            - main  
     jobs:
       - "node-18-esm"
       - "node-16-esm"
