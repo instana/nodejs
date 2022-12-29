@@ -507,13 +507,13 @@ workflows:
       - "node-18"
       - "node-16"
   esm-build:
-    #triggers:
-    #  - schedule:
-    #      cron: "7 4 * * *"
-    #      filters:
-    #        branches:
-    #          only:
-    #            - main  
+    triggers:
+      - schedule:
+          cron: "7 4 * * *"
+          filters:
+            branches:
+              only:
+                - main  
     jobs:
       - "node-18-esm"
       - "node-16-esm"
