@@ -13,10 +13,12 @@ import moduleModule from 'module';
 import morgan from 'morgan';
 import semver from 'semver';
 import expressWinston from 'express-winston';
+import { createRequire } from 'module';
 
+const require = createRequire(import.meta.url);
+const expressWinstonLocation = require.resolve('express-winston');
 let winston1x;
 
-const expressWinstonLocation = require.resolve('express-winston');
 if (semver.satisfies(process.version, '>=12.2.0')) {
   // Use require.resolve and createRequire to get the winston dependency of express-winston (which is Winston 1.x) and
   // not the Winston version we depend on via our root package's devDependencies (which is 3.x):
