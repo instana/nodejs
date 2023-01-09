@@ -141,8 +141,8 @@ function getMainPackageJsonPathStartingAtDirectory(startDirectory, cb) {
       // See https://github.com/nodejs/node/blob/472edc775d683aed2d9ed39ca7cf381f3e7e3ce2/lib/internal/modules/run_main.js#L79
       // Node.js is using `process.argv[1]` internally as main file path.
       // Check whether a module was preloaded and use process.argv[1] as filename.
-      // @ts-ignore
       if (
+        // @ts-ignore
         (process._preload_modules && process._preload_modules.length > 0) ||
         (process.execArgv &&
           process.execArgv.length > 0 &&
