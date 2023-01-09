@@ -1,5 +1,5 @@
 {
-  "name": "cjs-example",
+  "name": "esm-app",
   "version": "1.0.0",
   "description": "",
   "main": "src/app.js",
