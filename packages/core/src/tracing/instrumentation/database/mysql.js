@@ -8,7 +8,7 @@
 const shimmer = require('shimmer');
 
 let logger;
-logger = require('../../../logger').getLogger('tracing/mongoose', newLogger => {
+logger = require('../../../logger').getLogger('tracing/mysql', newLogger => {
   logger = newLogger;
 });
 
