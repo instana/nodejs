@@ -1,5 +1,5 @@
 {
-  "name": "esm-example",
+  "name": "esm-require-in-preload",
   "version": "1.0.0",
   "description": "",
   "main": "src/app.js",
