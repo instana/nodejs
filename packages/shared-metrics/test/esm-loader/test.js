@@ -17,7 +17,7 @@ const ProcessControls = require('../../../collector/test/test_util/ProcessContro
 // NOTE: Node 10 needs to use .mjs file ending & --experimental-modules flag
 const mochaSuiteFn = semver.gte(process.versions.node, '12.0.0') ? describe : describe.skip;
 
-mochaSuiteFn.only('ESM loader', function () {
+mochaSuiteFn('ESM loader', function () {
   this.timeout(config.getTestTimeout());
 
   const controls = new ProcessControls({
