@@ -58,6 +58,7 @@ function patchedModuleLoad(moduleName) {
   //       we try to grab the module name to being able to patch the target module
   //       with our instrumentation
   if (path.isAbsolute(moduleName)) {
+    logger.debug('Path is absolute.', moduleName);
     // EDGE CASE for ESM: mysql2/promise.js
     if (moduleName.indexOf('node_modules/mysql2/promise.js') !== -1) {
       moduleName = 'mysql2/promise';
@@ -76,6 +77,7 @@ function patchedModuleLoad(moduleName) {
         }
       }
     }
+    logger.debug('Path was transformed.', moduleName);
   }
 
   // First attempt to always get the module via the original implementation
