@@ -47,7 +47,7 @@ exports.activate = function activate() {
     if (err) {
       return logger.warn('Failed to determine main package.json. Reason: %s %s ', err.message, err.stack);
     } else if (!mainPackageJsonPath && attempts < exports.MAX_ATTEMPTS) {
-      logger.debug('Main package.json could not be found. Will try again later.');
+      logger.debug(`Main package.json could not be found at ${mainPackageJsonPath}. Will try again later.`);
       setTimeout(exports.activate, DELAY).unref();
       return;
     } else if (!mainPackageJsonPath) {

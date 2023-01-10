@@ -125,6 +125,7 @@ function getMainPackageJsonPathStartingAtDirectory(startDirectory, cb) {
       // a) when the Node CLI is evaluating an expression, or
       // b) when the REPL is used
       // c) when we have been pre-required with the --require/-r command line flag.
+      // d) when --experimental-loader is used for ESM apps.
       //
       // In particular for case (c) we can try again later and wait for the main module to be loaded.
       // But usually that is not necessary because the initialisation of the collector takes longer than
@@ -140,8 +141,14 @@ function getMainPackageJsonPathStartingAtDirectory(startDirectory, cb) {
       // See https://github.com/nodejs/node/blob/472edc775d683aed2d9ed39ca7cf381f3e7e3ce2/lib/internal/modules/run_main.js#L79
       // Node.js is using `process.argv[1]` internally as main file path.
       // Check whether a module was preloaded and use process.argv[1] as filename.
-      // @ts-ignore
-      if (process._preload_modules && process._preload_modules.length > 0) {
+      if (
+        // @ts-ignore
+        (process._preload_modules && process._preload_modules.length > 0) ||
+        (process.execArgv &&
+          process.execArgv.length > 0 &&
+          process.execArgv[0].indexOf('--experimental-loader') !== -1 &&
+          process.execArgv[0].indexOf('esm-loader.mjs') !== -1)
+      ) {
         // @ts-ignore
         mainModule = {
           filename: process.argv[1]

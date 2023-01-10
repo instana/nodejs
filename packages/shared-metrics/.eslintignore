@@ -1,1 +1,2 @@
-test/ejs-require-in-preload
+test/esm-require-in-preload
+test/esm-loader
