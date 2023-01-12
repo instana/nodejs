@@ -7,11 +7,6 @@
 
 const shimmer = require('shimmer');
 
-let logger;
-logger = require('../../../logger').getLogger('tracing/mysql', newLogger => {
-  logger = newLogger;
-});
-
 const requireHook = require('../../../util/requireHook');
 const tracingUtil = require('../../tracingUtil');
 const constants = require('../../constants');
@@ -29,13 +24,11 @@ exports.init = function init() {
 };
 
 function instrumentMysql(mysql) {
-  logger.debug('instrumentMysql');
   instrumentConnection(Object.getPrototypeOf(mysql.createConnection({})), false);
   instrumentPool(Object.getPrototypeOf(mysql.createPool({})));
 }
 
 function instrumentMysql2(mysql) {
-  logger.debug('instrumentMysql2');
   instrumentConnection(mysql.Connection.prototype, true);
   if (mysql.Pool) {
     instrumentPool(mysql.Pool.prototype);
@@ -43,7 +36,6 @@ function instrumentMysql2(mysql) {
 }
 
 function instrumentMysql2WithPromises(mysql) {
-  logger.debug('instrumentMysql2WithPromises');
   // Currently only pooled connections will be instrumented.
   instrumentPoolWithPromises(mysql);
 }
@@ -81,7 +73,6 @@ function instrumentPoolWithPromises(mysql) {
 
 function shimQuery(original) {
   return function () {
-    logger.debug('shimQuery');
     if (cls.skipExitTracing({ isActive })) {
       return original.apply(this, arguments);
     }
@@ -92,7 +83,6 @@ function shimQuery(original) {
 
 function shimExecute(original) {
   return function () {
-    logger.debug('shimExecute');
     if (cls.skipExitTracing({ isActive })) {
       return original.apply(this, arguments);
     }
@@ -103,7 +93,6 @@ function shimExecute(original) {
 
 function shimPromiseQuery(originalQuery) {
   return function () {
-    logger.debug('shimPromiseQuery');
     if (cls.skipExitTracing({ isActive })) {
       return originalQuery.apply(this, arguments);
     }
