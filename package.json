@@ -159,7 +159,7 @@
     "npm-check-updates": "^16.3.18",
     "nyc": "^15.1.0",
     "pg": "^8.7.1",
-    "pino": "^6.13.3",
+    "pino": "^8.8.0",
     "pino-pretty": "^7.5.3",
     "pino-v7": "npm:pino@^7.8.1",
     "pkg-up": "^3.1.0",
