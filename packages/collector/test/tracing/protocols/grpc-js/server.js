@@ -11,7 +11,7 @@ require('../../../..')();
 const express = require('express');
 const morgan = require('morgan');
 const path = require('path');
-const pinoLogger = require('pino')();
+const pinoLogger = require('pino-v6')();
 const app = express();
 
 const logPrefix = `GRPC-JS Server (${process.pid}):\t`;

@@ -10,7 +10,7 @@ const instana = require('../../../..')();
 const bodyParser = require('body-parser');
 const express = require('express');
 const morgan = require('morgan');
-const pino = require('pino')();
+const pino = require('pino-v6')();
 
 const app = express();
 const logPrefix = `Restore Context (${process.pid}):\t`;

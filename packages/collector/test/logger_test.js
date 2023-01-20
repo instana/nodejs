@@ -7,7 +7,7 @@
 
 const expect = require('chai').expect;
 const bunyan = require('bunyan');
-const pino = require('pino');
+const pino = require('pino-v6');
 
 const log = require('../src/logger');
 

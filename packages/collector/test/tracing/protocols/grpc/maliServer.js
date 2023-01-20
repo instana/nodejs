@@ -10,7 +10,7 @@ const port = process.env.APP_PORT || 3217;
 require('../../../..')();
 
 const Mali = require('mali');
-const pinoLogger = require('pino')();
+const pinoLogger = require('pino-v6')();
 const express = require('express');
 const morgan = require('morgan');
 const path = require('path');

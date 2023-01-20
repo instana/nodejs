@@ -11,7 +11,7 @@
 const bodyParser = require('body-parser');
 const express = require('express');
 const morgan = require('morgan');
-const pino = require('pino')();
+const pino = require('pino-v6')();
 
 const { sendToParent } = require('../../../core/test/test_util');
 

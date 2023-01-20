@@ -14,7 +14,7 @@ const http = require('http');
 const https = require('https');
 const morgan = require('morgan');
 const path = require('path');
-const pino = require('pino')();
+const pino = require('pino-v6')();
 
 const { sendToParent } = require('../../../core/test/test_util');
 const deepMerge = require('../../../core/src/util/deepMerge');

@@ -15,7 +15,7 @@ const logPrefix = `PreInit (${process.env.INSTANA_EARLY_INSTRUMENTATION === 'tru
 const http = require('http');
 
 // Deliberately requiring pino _before_ calling @instana/collector#init.
-const pino = require('pino')();
+const pino = require('pino-v6')();
 
 const port = process.env.APP_PORT || 3000;
 const app = new http.Server();
