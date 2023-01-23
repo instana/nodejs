@@ -80,10 +80,11 @@ const instrumentations = [
   './instrumentation/protocols/graphql',
   './instrumentation/protocols/grpc',
   './instrumentation/protocols/grpcJs',
-  './instrumentation/protocols/httpClient',
-  './instrumentation/protocols/httpServer',
   './instrumentation/protocols/http2Client',
   './instrumentation/protocols/http2Server',
+  './instrumentation/protocols/httpClient',
+  './instrumentation/protocols/httpServer',
+  './instrumentation/protocols/nativeFetch',
   './instrumentation/protocols/superagent'
 ];
 

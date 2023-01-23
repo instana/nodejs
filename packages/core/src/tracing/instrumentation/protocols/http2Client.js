@@ -12,7 +12,7 @@ const constants = require('../../constants');
 const httpCommon = require('./_http');
 const readSymbolProperty = require('../../../util/readSymbolProperty');
 const tracingUtil = require('../../tracingUtil');
-const { filterParams, sanitizeUrl } = require('../../../util/url');
+const { sanitizeUrl, splitAndFilter } = require('../../../util/url');
 
 let extraHttpHeadersToCapture;
 let isActive = false;
@@ -62,6 +62,9 @@ function instrumentClientHttp2Session(clientHttp2Session) {
   clientHttp2Session.request = function request(headers) {
     let w3cTraceContext = cls.getW3cTraceContext();
     const skipTracingResult = cls.skipExitTracing({ isActive, extendedResponse: true, skipParentSpanCheck: true });
+
+    // If there is no active entry span, we fall back to the reduced span of the most recent entry span. See comment in
+    // packages/core/src/tracing/clsHooked/unset.js#storeReducedSpan.
     const parentSpan = cls.getCurrentSpan() || cls.getReducedSpan();
 
     if (skipTracingResult.skip || !parentSpan || constants.isExitSpan(parentSpan)) {
@@ -116,7 +119,7 @@ function instrumentClientHttp2Session(clientHttp2Session) {
 
       stream.on('response', resHeaders => {
         status = resHeaders[HTTP2_HEADER_STATUS];
-        capturedHeaders = httpCommon.mergeExtraHeadersFromHeaders(
+        capturedHeaders = httpCommon.mergeExtraHeadersFromNormalizedObjectLiteral(
           capturedHeaders,
           resHeaders,
           extraHttpHeadersToCapture
@@ -163,12 +166,4 @@ function addW3cHeaders(headers, w3cTraceContext) {
       headers[constants.w3cTraceState] = w3cTraceContext.renderTraceState();
     }
   }
-}
-
-function splitAndFilter(path) {
-  const parts = path.split('?');
-  if (parts.length >= 2) {
-    return filterParams(parts[1]);
-  }
-  return null;
 }

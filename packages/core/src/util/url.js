@@ -75,3 +75,30 @@ exports.filterParams = function filterParams(queryString) {
     })
     .join('&');
 };
+
+/**
+ * Splits the given string (a URL) at the first occurence of the question mark character, then treats the second half as
+ * a query string, applies secrets redaction to it and returns that query string with secrets redacted.
+ *
+ * @param {string} fullUrl the URL from the query string is to be extracted
+ */
+exports.splitAndFilter = function splitAndFilter(fullUrl) {
+  const parts = fullUrl.split('?');
+  if (parts.length >= 2) {
+    return exports.filterParams(parts[1]);
+  }
+  return null;
+};
+
+/**
+ * Returns a new string which is the input with the first character removed if and only if that character is a question
+ * mark, otherwise this function returns the input unchanged.
+ *
+ * @param {string} queryString the string from which the first character will be conditionally be removed
+ */
+exports.dropLeadingQuestionMark = function dropLeadingQuestionMark(queryString) {
+  if (queryString && queryString.charAt(0) === '?') {
+    return queryString.substring(1);
+  }
+  return queryString;
+};

@@ -29,15 +29,33 @@ module.exports = function unset(context, key, value) {
  * @param {import('../cls').InstanaBaseSpan} span
  */
 function storeReducedSpan(context, key, span) {
-  // Keep only a reduced record for spans after transmission. This serves two purposes:
-  // 1) If there is an async leak in the Node.js runtime, that is, missing destroy calls for async_hook resources for
+  // We keep a reduced record of spans after having sent them to the agent. This serves two purposes:
+  //
+  // 1) In some special cases, async continuity can break due to userland queueing or deferred exits.
+  //
+  // One example are GraphQL subscription updates. The processing of the HTTP entry that triggered the subscription
+  // update has already finished by the time the subscription update is processed.
+  //
+  // Another example are deferred exit calls. For example, when processing an incoming HTTP request, the application
+  // under monitoring could send a response back to the client early and trigger additional outgoing calls in an
+  // asynchronous post-processing step (after sending back the response). Without keeping a reduced span, we would miss
+  // these deferred exits - the exit instrumentation would see that there is no active entry span and would not record
+  // the call as an exit span at all. To support deferred exit calls, instrumentations can fall back to the reduced span
+  // if there is no active entry span. At the moment, only HTTP client instrumentations (httpClient, http2Client and
+  // nativeFetch) and GraphQL subscription updates do this. We could potentially extend this to _all_ exit
+  // instrumentations.
+  //
+  // In summary: By keeping the reduced span around, we can still provide trace continuity in these edge cases.
+  //
+  // Note: The reduced span will automatically be removed when its async context is finally destroyed. This is important
+  // for two reasons, (a) keeping the reduced span does not create a memory leak and (b) we do not accidentally capture
+  // exit spans under completely unrelated entry spans.
+  //
+  // 2) If there is an async leak in the Node.js runtime, that is, missing destroy calls for async_hook resources for
   // which an init call has been received, the memory used by clsHooked will grow, because context objects will be kept
   // around forever. By keeping the reduced span we can at least see (in a heap dump) for which type of spans the
   // destroy call is missing, aiding in troubleshooting the Node.js runtime bug.
-  // 2) In some special cases, async continuity can break due to userland queueing. One example are GraphQL subscription
-  // updates. The processing of the triggering HTTP entry has already finished by the time the subscription update is
-  // processed. By keeping the reduced span around, we can still provide trace continuity. The reduced span will
-  // automatically be removed when its async context is finally destroyed.
+
   if (key === currentSpanKey && span != null) {
     context[reducedSpanKey] = {
       n: span.n,

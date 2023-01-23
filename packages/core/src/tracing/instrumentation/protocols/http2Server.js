@@ -125,7 +125,7 @@ function shimEmit(realEmit) {
         url: sanitizeUrl(pathParts.shift()),
         params: pathParts.length > 0 ? pathParts.join('?') : undefined,
         host: authority,
-        header: httpCommon.getExtraHeadersFromHeaders(headers, extraHttpHeadersToCapture)
+        header: httpCommon.getExtraHeadersFromNormalizedObjectLiteral(headers, extraHttpHeadersToCapture)
       };
 
       const incomingServiceName =

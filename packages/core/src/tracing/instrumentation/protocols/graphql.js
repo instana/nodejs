@@ -166,10 +166,10 @@ function traceSubscriptionUpdate(
     return originalFunction.apply(originalThis, originalArgs);
   }
 
-  /**
-   * We pass `fallbackToSharedContext: true` to access the GraphQL query context,
-   * which then triggered this subscription query. We need to connect them.
-   */
+  // We pass `fallbackToSharedContext: true` to getCurrentSpan to access the GraphQL query context, which then
+  // triggered this subscription query. We need to connect them.
+  // Additionally, if there is no active entry span, we fall back to the reduced span of the most recent entry span. See
+  // comment in packages/core/src/tracing/clsHooked/unset.js#storeReducedSpan.
   const parentSpan = cls.getCurrentSpan(true) || cls.getReducedSpan(true);
 
   if (parentSpan && !constants.isExitSpan(parentSpan) && parentSpan.t && parentSpan.s) {

@@ -10,7 +10,7 @@ const coreHttpsModule = require('https');
 const URL = require('url').URL;
 
 const tracingUtil = require('../../tracingUtil');
-const { filterParams, sanitizeUrl } = require('../../../util/url');
+const { dropLeadingQuestionMark, filterParams, sanitizeUrl, splitAndFilter } = require('../../../util/url');
 const httpCommon = require('./_http');
 const constants = require('../../constants');
 const cls = require('../../cls');
@@ -147,6 +147,8 @@ function instrument(coreModule, forceHttps) {
       skipIsTracing: true
     });
 
+    // If there is no active entry span, we fall back to the reduced span of the most recent entry span. See comment in
+    // packages/core/src/tracing/clsHooked/unset.js#storeReducedSpan.
     const parentSpan = cls.getCurrentSpan() || cls.getReducedSpan();
 
     if (
@@ -200,11 +202,12 @@ function instrument(coreModule, forceHttps) {
           status: res.statusCode,
           params
         };
-        const headers = captureRequestHeaders(options, clientRequest, res);
 
+        const headers = captureRequestHeaders(options, clientRequest, res);
         if (headers) {
           span.data.http.header = headers;
         }
+
         span.d = Date.now() - span.ts;
         span.ec = res.statusCode >= 500 ? 1 : 0;
         span.transmit();
@@ -430,21 +433,6 @@ function isItSafeToModifiyHeadersForRequest(clientRequest) {
   const authHeader = clientRequest.getHeader('Authorization');
   // see comment in isItSafeToModifiyHeadersInOptions
   return !authHeader || authHeader.indexOf('AWS') !== 0;
-}
-
-function splitAndFilter(fullUrl) {
-  const parts = fullUrl.split('?');
-  if (parts.length >= 2) {
-    return filterParams(parts[1]);
-  }
-  return null;
-}
-
-function dropLeadingQuestionMark(params) {
-  if (params && params.charAt(0) === '?') {
-    return params.substring(1);
-  }
-  return params;
 }
 
 function captureRequestHeaders(options, clientRequest, response) {

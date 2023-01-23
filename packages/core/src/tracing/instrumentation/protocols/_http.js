@@ -10,7 +10,7 @@
  * expensive than getExtraHeadersCaseInsensitive/getExtraHeadersFromOptions.
  */
 exports.getExtraHeadersFromMessage = function getExtraHeadersFromMessage(message, extraHttpHeadersToCapture) {
-  return exports.getExtraHeadersFromHeaders(message.headers, extraHttpHeadersToCapture);
+  return exports.getExtraHeadersFromNormalizedObjectLiteral(message.headers, extraHttpHeadersToCapture);
 };
 
 /*
@@ -18,7 +18,10 @@ exports.getExtraHeadersFromMessage = function getExtraHeadersFromMessage(message
  * cased in the data we receive. This method is less expensive than
  * getExtraHeadersCaseInsensitive/getExtraHeadersFromOptions.
  */
-exports.getExtraHeadersFromHeaders = function getExtraHeadersFromHeaders(headers, extraHttpHeadersToCapture) {
+exports.getExtraHeadersFromNormalizedObjectLiteral = function getExtraHeadersFromNormalizedObjectLiteral(
+  headers,
+  extraHttpHeadersToCapture
+) {
   if (!extraHttpHeadersToCapture || extraHttpHeadersToCapture.length === 0) {
     return undefined;
   }
@@ -32,6 +35,32 @@ exports.getExtraHeadersFromHeaders = function getExtraHeadersFromHeaders(headers
       // If the client has set the same header multiple times, Node.js has already normalized
       // this to "value 1, value 2, ..."
       extraHeaders[key] = value;
+      extraHeadersFound = true;
+    }
+  }
+  if (!extraHeadersFound) {
+    return undefined;
+  }
+  return extraHeaders;
+};
+
+/*
+ * Used in native fetch instrumentation; the headers are already normalized to a
+ * Headers object (https://developer.mozilla.org/en-US/docs/Web/API/Headers) and the header names are normalized
+ * to lower case.
+ */
+exports.getExtraHeadersFromFetchHeaders = function getExtraHeadersFromFetchHeaders(headers, extraHttpHeadersToCapture) {
+  if (!extraHttpHeadersToCapture || extraHttpHeadersToCapture.length === 0) {
+    return undefined;
+  }
+  let extraHeadersFound = false;
+  const extraHeaders = {};
+  for (let i = 0; i < extraHttpHeadersToCapture.length; i++) {
+    const key = extraHttpHeadersToCapture[i];
+    if (headers.has(key)) {
+      // If the client has set the same header multiple times, Node.js has already normalized
+      // this to "value 1, value 2, ..."
+      extraHeaders[key] = headers.get(key);
       extraHeadersFound = true;
     }
   }
@@ -100,14 +129,14 @@ exports.mergeExtraHeadersFromIncomingMessage = function mergeExtraHeadersFromInc
   incomingMessage,
   extraHttpHeadersToCapture
 ) {
-  return exports.mergeExtraHeadersFromHeaders(
+  return exports.mergeExtraHeadersFromNormalizedObjectLiteral(
     headersAlreadyCapturedIfAny,
     incomingMessage.headers,
     extraHttpHeadersToCapture
   );
 };
 
-exports.mergeExtraHeadersFromHeaders = function mergeExtraHeadersFromHeaders(
+exports.mergeExtraHeadersFromNormalizedObjectLiteral = function mergeExtraHeadersFromNormalizedObjectLiteral(
   headersAlreadyCapturedIfAny,
   headers,
   extraHttpHeadersToCapture
@@ -116,6 +145,20 @@ exports.mergeExtraHeadersFromHeaders = function mergeExtraHeadersFromHeaders(
     return headersAlreadyCapturedIfAny;
   }
   return mergeExtraHeaders(headersAlreadyCapturedIfAny, extraHttpHeadersToCapture, key => headers[key]);
+};
+
+exports.mergeExtraHeadersFromFetchHeaders = function mergeExtraHeadersFromFetchHeaders(
+  headersAlreadyCapturedIfAny,
+  headers,
+  extraHttpHeadersToCapture
+) {
+  if (!extraHttpHeadersToCapture || extraHttpHeadersToCapture.length === 0 || !headers) {
+    return headersAlreadyCapturedIfAny;
+  }
+
+  return mergeExtraHeaders(headersAlreadyCapturedIfAny, extraHttpHeadersToCapture, keyToCapture =>
+    headers.get(keyToCapture)
+  );
 };
 
 exports.mergeExtraHeadersCaseInsensitive = function mergeExtraHeadersCaseInsensitive(

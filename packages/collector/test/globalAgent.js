@@ -55,6 +55,8 @@ exports.startGlobalAgent = function start() {
       'X-My-Exit-Options-Request-Multi-Header',
       'X-My-Exit-Set-On-Request-Header',
       'X-My-Exit-Set-On-Request-Multi-Header',
+      'X-My-Exit-Request-Object-Request-Header',
+      'X-My-Exit-Request-Object-Request-Multi-Header',
       'X-My-Exit-Response-Header'
     ]
   });
