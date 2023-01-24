@@ -7,7 +7,7 @@
 const mock = require('mock-require');
 const requireHook = require('../../../../../core/src/util/requireHook');
 const PINO_VERSION = process.env.PINO_VERSION;
-const PINO_REQUIRE = PINO_VERSION === 'latest' ? 'pino' : `pino-v${PINO_VERSION}`;
+const PINO_REQUIRE = `pino-v${PINO_VERSION}`;
 
 if (PINO_REQUIRE !== 'pino') {
   mock('pino', PINO_REQUIRE);

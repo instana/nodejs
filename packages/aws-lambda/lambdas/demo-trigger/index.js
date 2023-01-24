@@ -6,7 +6,7 @@
 'use strict';
 
 const async_ = require('async');
-const pino = require('pino-v6');
+const pino = require('pino');
 const request = require('request-promise');
 // eslint-disable-next-line import/no-extraneous-dependencies
 const s3 = new (require('aws-sdk').S3)(); // this is provided by AWS, so it is not listed in package.json

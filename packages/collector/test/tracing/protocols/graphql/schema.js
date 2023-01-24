@@ -8,7 +8,7 @@ const graphQL = require('graphql');
 const graphqlSubscriptions = require('graphql-subscriptions');
 const data = require('./data');
 // Pino log spans are used to verify that follow up calls are traced correctly in a GraphQL entry.
-const pinoLogger = require('pino-v6')();
+const pinoLogger = require('pino')();
 
 module.exports = function exportSchema() {
   const pubsub = new graphqlSubscriptions.PubSub();

@@ -20,7 +20,7 @@ describe('tracing/logger/pino', function () {
   globalAgent.setUpCleanUpHooks();
   const agentControls = globalAgent.instance;
 
-  ['latest', '7'].forEach(pinoVersion => {
+  ['8', '7'].forEach(pinoVersion => {
     // NOTE: v7 dropped Node 10 support
     const mochaSuiteFn = semver.gte(process.versions.node, '12.0.0') ? describe : describe.skip;
 

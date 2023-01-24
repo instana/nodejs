@@ -36,7 +36,7 @@ if (process.env.SCREW_AROUND_WITH_UP_ARRAY_FIND) {
 require('../../..')(config);
 
 const http = require('http');
-const pino = require('pino-v6')();
+const pino = require('pino')();
 const port = process.env.APP_PORT || 3000;
 const app = new http.Server();
 

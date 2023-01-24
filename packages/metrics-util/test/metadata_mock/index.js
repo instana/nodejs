@@ -10,7 +10,7 @@
 const bodyParser = require('body-parser');
 const express = require('express');
 const morgan = require('morgan');
-const pino = require('pino-v6')();
+const pino = require('pino')();
 
 const { sendToParent } = require('../../../core/test/test_util');
 

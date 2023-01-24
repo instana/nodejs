@@ -11,7 +11,7 @@ require('../../../..')();
 
 const bodyParser = require('body-parser');
 // pino log spans are used to verify that follow up calls are traced correctly after a GRPC exit
-const pinoLogger = require('pino-v6')();
+const pinoLogger = require('pino')();
 const express = require('express');
 const morgan = require('morgan');
 const grpc = require('grpc');
