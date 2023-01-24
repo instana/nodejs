@@ -38,7 +38,7 @@ describe('spec compliance', function () {
   globalAgent.setUpCleanUpHooks();
 
   [false, true].forEach(http2 => {
-    const mochaSuiteFn = supportedVersion(process.versions.node) && !http2 ? describe : describe.skip;
+    const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
     mochaSuiteFn(`compliance test suite (${http2 ? 'HTTP2' : 'HTTP1'})`, () => {
       const downstreamTarget = new ProcessControls({
