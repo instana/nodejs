@@ -54,15 +54,41 @@ describe('spec compliance', function () {
       after(() => downstreamTarget.stop());
 
       [false, true].forEach(w3cTraceCorrelationDisabled => {
-        registerSuite(downstreamTarget, http2, w3cTraceCorrelationDisabled);
+        registerSuite({ downstreamTarget, http2, w3cTraceCorrelationDisabled });
       });
     });
   });
 
-  function registerSuite(downstreamTarget, http2, w3cTraceCorrelationDisabled) {
-    describe(`compliance test suite (${http2 ? 'HTTP2' : 'HTTP1'})`, () => {
+  let mochaSuiteFnNativeFetch;
+  if (!supportedVersion(process.versions.node)) {
+    mochaSuiteFnNativeFetch = describe.skip;
+  } else if (!global.fetch) {
+    mochaSuiteFnNativeFetch = describe.skip;
+  } else {
+    mochaSuiteFnNativeFetch = describe;
+  }
+
+  mochaSuiteFnNativeFetch('compliance test suite (HTTP -> Native Fetch)', () => {
+    const downstreamTarget = new ProcessControls({
+      appPath: path.join(__dirname, 'downstreamTarget'),
+      port: downstreamPort,
+      useGlobalAgent: true
+    });
+    before(() => downstreamTarget.start());
+    after(() => downstreamTarget.stop());
+
+    [false, true].forEach(w3cTraceCorrelationDisabled => {
+      registerSuite({ nativeFetch: true, w3cTraceCorrelationDisabled });
+    });
+  });
+
+  function registerSuite({ http2, nativeFetch, w3cTraceCorrelationDisabled }) {
+    describe(`compliance test suite (${http2 ? 'HTTP2' : 'HTTP1'}, W3C trace correlation ${
+      w3cTraceCorrelationDisabled ? 'disabled' : 'enabled'
+    })`, () => {
       const env = {
         USE_HTTP2: http2,
+        USE_NATIVE_FETCH: nativeFetch,
         DOWNSTREAM_PORT: downstreamPort
       };
 

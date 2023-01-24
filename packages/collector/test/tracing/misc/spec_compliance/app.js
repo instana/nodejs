@@ -3,9 +3,12 @@
  * (c) Copyright Instana Inc. and contributors 2020
  */
 
+/* global fetch */
+
 'use strict';
 
 const useHttp2 = process.env.USE_HTTP2 ? process.env.USE_HTTP2 === 'true' : false;
+const useNativeFetch = process.env.USE_NATIVE_FETCH ? process.env.USE_NATIVE_FETCH === 'true' : false;
 
 require('../../../..')();
 
@@ -79,27 +82,51 @@ async function handleRequest(incomingHeaders, method, url, resOrStream) {
     if (method !== 'GET') {
       return endWithStatus(method, url, resOrStream, 405);
     }
-    const requestOptions = {
-      method,
-      qs: query
-    };
-    if (useHttp2) {
-      requestOptions.baseUrl = `https://localhost:${downstreamPort}`;
-      requestOptions.path = '/downstream';
-    } else {
-      requestOptions.uri = `http://localhost:${downstreamPort}/downstream`;
-    }
 
-    const requestPromise = useHttp2 ? http2Promise.request(requestOptions) : rp(requestOptions);
-    try {
-      const downstreamResponse = await requestPromise;
-      return endWithPayload(method, url, resOrStream, downstreamResponse);
-    } catch (e) {
-      return endWithError(method, url, resOrStream, e);
+    if (useNativeFetch) {
+      return executeDownstreamRequestViaNativeFetch(method, url, query, resOrStream);
+    } else {
+      return executeDownstreamRequestViaCoreHttp(method, url, query, resOrStream);
     }
   }
 
   return endWithStatus(method, url, resOrStream, 404);
+}
+
+async function executeDownstreamRequestViaCoreHttp(method, url, query, resOrStream) {
+  const requestOptions = {
+    method,
+    qs: query
+  };
+  if (useHttp2) {
+    requestOptions.baseUrl = `https://localhost:${downstreamPort}`;
+    requestOptions.path = '/downstream';
+  } else {
+    requestOptions.uri = `http://localhost:${downstreamPort}/downstream`;
+  }
+
+  const requestPromise = useHttp2 ? http2Promise.request(requestOptions) : rp(requestOptions);
+  try {
+    const downstreamResponse = await requestPromise;
+    return endWithPayload(method, url, resOrStream, downstreamResponse);
+  } catch (e) {
+    return endWithError(method, url, resOrStream, e);
+  }
+}
+
+async function executeDownstreamRequestViaNativeFetch(method, url, query, resOrStream) {
+  try {
+    let fullUrl = `http://localhost:${downstreamPort}/downstream`;
+    if (Object.keys(query).length > 0) {
+      const urlSearchParams = new URLSearchParams(query);
+      fullUrl = `${fullUrl}?${urlSearchParams}`;
+    }
+    const downstreamResponse = await fetch(fullUrl, { method });
+    const downstreamResponsePayload = await downstreamResponse.json();
+    return endWithPayload(method, url, resOrStream, downstreamResponsePayload);
+  } catch (e) {
+    return endWithError(method, url, resOrStream, e);
+  }
 }
 
 function endWithPayload(method, url, resOrStream, payload) {
