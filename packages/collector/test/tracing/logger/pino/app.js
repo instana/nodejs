@@ -19,7 +19,7 @@ const pino = require('pino');
 const agentPort = process.env.INSTANA_AGENT_PORT;
 let pinoOptions;
 
-if (process.env.PINO_VERSION === 'latest') {
+if (process.env.PINO_VERSION === '8') {
   pinoOptions = {
     customLevels: {
       customInfo: 31,
