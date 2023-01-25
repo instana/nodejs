@@ -338,7 +338,7 @@ memcached: &memcached
 jobs:
   "node-18":
     docker:
-      - image: cimg/node:18.0
+      - image: cimg/node:18.13
       - <<: *zookeeper
       - <<: *elasticsearch
       - <<: *mongo
@@ -377,7 +377,7 @@ jobs:
   "node-18-esm":
     environment:
       RUN_ESM: true
-      COLLECTOR_ONLY: true      
+      COLLECTOR_ONLY: true
     docker:
       - image: cimg/node:18.0
       - <<: *zookeeper
@@ -513,7 +513,7 @@ workflows:
           filters:
             branches:
               only:
-                - main  
+                - main
     jobs:
       - "node-18-esm"
       - "node-16-esm"
