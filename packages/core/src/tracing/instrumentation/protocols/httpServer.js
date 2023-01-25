@@ -173,7 +173,7 @@ function shimEmit(realEmit) {
         span.data.http = span.data.http || {};
         if (res.headersSent) {
           span.data.http.status = res.statusCode;
-          span.data.http.header = httpCommon.mergeExtraHeadersFromServerResponseOrClientResponse(
+          span.data.http.header = httpCommon.mergeExtraHeadersFromServerResponseOrClientRequest(
             span.data.http.header,
             res,
             extraHttpHeadersToCapture

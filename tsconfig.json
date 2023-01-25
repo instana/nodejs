@@ -14,6 +14,7 @@
   "include": [
     "packages/core/src/util",
     "packages/core/src/tracing/*.js",
+    "packages/core/src/tracing/instrumentation/protocols/_http.js",
     "packages/shared-metrics",
     "packages/collector/src"
   ],

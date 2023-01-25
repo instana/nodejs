@@ -437,7 +437,7 @@ function isItSafeToModifiyHeadersForRequest(clientRequest) {
 
 function captureRequestHeaders(options, clientRequest, response) {
   let headers = httpCommon.getExtraHeadersFromOptions(options, extraHttpHeadersToCapture);
-  headers = httpCommon.mergeExtraHeadersFromServerResponseOrClientResponse(
+  headers = httpCommon.mergeExtraHeadersFromServerResponseOrClientRequest(
     headers,
     clientRequest,
     extraHttpHeadersToCapture
