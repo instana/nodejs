@@ -229,7 +229,7 @@ class InstanaAWSSQS extends InstanaAWSProduct {
       } else {
         const request = originalSend.apply(ctx, smithySendArgs);
 
-        // NOTE: This is promise chain for the "send" method only!
+        // NOTE: This is promise chain for the "send" method from @awsk-sdk/smithy-client, not from sqs-consumer!
         request
           .then(data => {
             if (data && data.error) {
