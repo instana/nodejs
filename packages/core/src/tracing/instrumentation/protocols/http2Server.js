@@ -10,7 +10,10 @@ const shimmer = require('shimmer');
 
 const cls = require('../../cls');
 const constants = require('../../constants');
-const httpCommon = require('./_http');
+const {
+  getExtraHeadersFromNormalizedObjectLiteral,
+  mergeExtraHeadersCaseInsensitive
+} = require('./captureHttpHeadersUtil');
 const readSymbolProperty = require('../../../util/readSymbolProperty');
 const tracingHeaders = require('../../tracingHeaders');
 const { filterParams, sanitizeUrl } = require('../../../util/url');
@@ -125,7 +128,7 @@ function shimEmit(realEmit) {
         url: sanitizeUrl(pathParts.shift()),
         params: pathParts.length > 0 ? pathParts.join('?') : undefined,
         host: authority,
-        header: httpCommon.getExtraHeadersFromNormalizedObjectLiteral(headers, extraHttpHeadersToCapture)
+        header: getExtraHeadersFromNormalizedObjectLiteral(headers, extraHttpHeadersToCapture)
       };
 
       const incomingServiceName =
@@ -175,7 +178,7 @@ function shimEmit(realEmit) {
           // take over the span) but did not actually transmit this span.
           span.data.http = span.data.http || {};
           span.data.http.status = status;
-          span.data.http.header = httpCommon.mergeExtraHeadersCaseInsensitive(
+          span.data.http.header = mergeExtraHeadersCaseInsensitive(
             span.data.http.header,
             resHeaders,
             extraHttpHeadersToCapture

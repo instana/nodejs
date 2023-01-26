@@ -6,7 +6,11 @@
 
 const cls = require('../../cls');
 const constants = require('../../constants');
-const httpCommon = require('./_http');
+const {
+  getExtraHeadersFromFetchHeaders,
+  getExtraHeadersCaseInsensitive,
+  mergeExtraHeadersFromFetchHeaders
+} = require('./captureHttpHeadersUtil');
 const tracingUtil = require('../../tracingUtil');
 const { sanitizeUrl, splitAndFilter } = require('../../../util/url');
 
@@ -96,7 +100,7 @@ function instrument() {
           // The first argument is an instance of Request, see https://developer.mozilla.org/en-US/docs/Web/API/Request.
           rawUrl = resource.url;
           method = resource.method;
-          capturedHeaders = httpCommon.getExtraHeadersFromFetchHeaders(resource.headers, extraHttpHeadersToCapture);
+          capturedHeaders = getExtraHeadersFromFetchHeaders(resource.headers, extraHttpHeadersToCapture);
         } else if (typeof resource.toString === 'function') {
           // This also handles the case when the resource is a URL object, as well as any object that has a custom
           // stringifier.
@@ -119,9 +123,9 @@ function instrument() {
           // the behavior of fetch(), if there are headers in both the Request object and the options object, only the
           // headers from the options object are applied.
           if (isFetchApiHeaders(options.headers)) {
-            capturedHeaders = httpCommon.getExtraHeadersFromFetchHeaders(options.headers, extraHttpHeadersToCapture);
+            capturedHeaders = getExtraHeadersFromFetchHeaders(options.headers, extraHttpHeadersToCapture);
           } else {
-            capturedHeaders = httpCommon.getExtraHeadersCaseInsensitive(options.headers, extraHttpHeadersToCapture);
+            capturedHeaders = getExtraHeadersCaseInsensitive(options.headers, extraHttpHeadersToCapture);
           }
         }
       }
@@ -141,7 +145,7 @@ function instrument() {
         .then(response => {
           span.data.http.status = response.status;
           span.ec = response.status >= 500 ? 1 : 0;
-          capturedHeaders = httpCommon.mergeExtraHeadersFromFetchHeaders(
+          capturedHeaders = mergeExtraHeadersFromFetchHeaders(
             capturedHeaders,
             response.headers,
             extraHttpHeadersToCapture

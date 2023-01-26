@@ -9,7 +9,10 @@ const http2 = require('http2');
 
 const cls = require('../../cls');
 const constants = require('../../constants');
-const httpCommon = require('./_http');
+const {
+  getExtraHeadersCaseInsensitive,
+  mergeExtraHeadersFromNormalizedObjectLiteral
+} = require('./captureHttpHeadersUtil');
 const readSymbolProperty = require('../../../util/readSymbolProperty');
 const tracingUtil = require('../../tracingUtil');
 const { sanitizeUrl, splitAndFilter } = require('../../../util/url');
@@ -94,7 +97,7 @@ function instrumentClientHttp2Session(clientHttp2Session) {
 
       const origin = readSymbolProperty(stream, originS);
       const reqHeaders = readSymbolProperty(stream, sentHeadersS);
-      let capturedHeaders = httpCommon.getExtraHeadersCaseInsensitive(reqHeaders, extraHttpHeadersToCapture);
+      let capturedHeaders = getExtraHeadersCaseInsensitive(reqHeaders, extraHttpHeadersToCapture);
 
       let method;
       let path;
@@ -119,7 +122,7 @@ function instrumentClientHttp2Session(clientHttp2Session) {
 
       stream.on('response', resHeaders => {
         status = resHeaders[HTTP2_HEADER_STATUS];
-        capturedHeaders = httpCommon.mergeExtraHeadersFromNormalizedObjectLiteral(
+        capturedHeaders = mergeExtraHeadersFromNormalizedObjectLiteral(
           capturedHeaders,
           resHeaders,
           extraHttpHeadersToCapture

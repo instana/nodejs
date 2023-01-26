@@ -11,7 +11,11 @@ const URL = require('url').URL;
 
 const tracingUtil = require('../../tracingUtil');
 const { dropLeadingQuestionMark, filterParams, sanitizeUrl, splitAndFilter } = require('../../../util/url');
-const httpCommon = require('./_http');
+const {
+  getExtraHeadersFromOptions,
+  mergeExtraHeadersFromIncomingMessage,
+  mergeExtraHeadersFromServerResponseOrClientRequest
+} = require('./captureHttpHeadersUtil');
 const constants = require('../../constants');
 const cls = require('../../cls');
 const url = require('url');
@@ -436,12 +440,8 @@ function isItSafeToModifiyHeadersForRequest(clientRequest) {
 }
 
 function captureRequestHeaders(options, clientRequest, response) {
-  let headers = httpCommon.getExtraHeadersFromOptions(options, extraHttpHeadersToCapture);
-  headers = httpCommon.mergeExtraHeadersFromServerResponseOrClientRequest(
-    headers,
-    clientRequest,
-    extraHttpHeadersToCapture
-  );
-  headers = httpCommon.mergeExtraHeadersFromIncomingMessage(headers, response, extraHttpHeadersToCapture);
+  let headers = getExtraHeadersFromOptions(options, extraHttpHeadersToCapture);
+  headers = mergeExtraHeadersFromServerResponseOrClientRequest(headers, clientRequest, extraHttpHeadersToCapture);
+  headers = mergeExtraHeadersFromIncomingMessage(headers, response, extraHttpHeadersToCapture);
   return headers;
 }

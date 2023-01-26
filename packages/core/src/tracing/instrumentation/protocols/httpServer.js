@@ -11,7 +11,10 @@ const coreHttpModule = require('http');
 const constants = require('../../constants');
 const tracingHeaders = require('../../tracingHeaders');
 const { filterParams, sanitizeUrl } = require('../../../util/url');
-const httpCommon = require('./_http');
+const {
+  getExtraHeadersFromMessage,
+  mergeExtraHeadersFromServerResponseOrClientRequest
+} = require('./captureHttpHeadersUtil');
 const shimmer = require('shimmer');
 const cls = require('../../cls');
 
@@ -100,7 +103,7 @@ function shimEmit(realEmit) {
         url: sanitizeUrl(urlParts.shift()),
         params: urlParts.length > 0 ? urlParts.join('?') : undefined,
         host: req.headers.host,
-        header: httpCommon.getExtraHeadersFromMessage(req, extraHttpHeadersToCapture)
+        header: getExtraHeadersFromMessage(req, extraHttpHeadersToCapture)
       };
 
       const incomingServiceName =
@@ -173,7 +176,7 @@ function shimEmit(realEmit) {
         span.data.http = span.data.http || {};
         if (res.headersSent) {
           span.data.http.status = res.statusCode;
-          span.data.http.header = httpCommon.mergeExtraHeadersFromServerResponseOrClientRequest(
+          span.data.http.header = mergeExtraHeadersFromServerResponseOrClientRequest(
             span.data.http.header,
             res,
             extraHttpHeadersToCapture
