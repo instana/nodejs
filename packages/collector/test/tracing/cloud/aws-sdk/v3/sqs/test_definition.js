@@ -190,7 +190,7 @@ function start(version) {
 
       // See https://github.com/bbc/sqs-consumer/issues/356
       if (version !== '@aws-sdk/client-sqs' && semver.gte(process.versions.node, '14.0.0')) {
-        describe.only('sqs-consumer API', () => {
+        describe('sqs-consumer API', () => {
           describe('message processed with success', () => {
             const sqsConsumerControls = new ProcessControls({
               appPath: path.join(__dirname, 'sqs-consumer'),
