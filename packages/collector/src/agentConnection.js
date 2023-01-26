@@ -263,9 +263,6 @@ exports.sendMetrics = function sendMetrics(data, cb) {
  * @param {(...args: *) => *} cb
  */
 exports.sendSpans = function sendSpans(spans, cb) {
-  spans.forEach(sp => {
-    // console.log(sp);
-  });
   const callback = atMostOnce('callback for sendSpans', err => {
     if (err && !maxContentErrorHasBeenLogged && err instanceof PayloadTooLargeError) {
       logLargeSpans(spans);
