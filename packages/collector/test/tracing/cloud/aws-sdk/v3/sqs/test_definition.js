@@ -188,10 +188,72 @@ function start(version) {
         });
       });
 
-      /**
-       * At the moment, SQS-Consumer does not support AWS SDK v3, although a PR exists in their repository:
-       * https://github.com/bbc/sqs-consumer/pull/252
-       */
+      if (semver.gte(process.versions.node, '14.0.0')) {
+        describe('sqs-consumer API', () => {
+          describe('message processed with success', () => {
+            const sqsConsumerControls = new ProcessControls({
+              appPath: path.join(__dirname, 'sqs-consumer'),
+              port: 3216,
+              useGlobalAgent: true,
+              env: {
+                AWS_SQS_QUEUE_URL: `${queueUrlPrefix}${queueName}-consumer`
+              }
+            });
+
+            ProcessControls.setUpHooksWithRetryTime(retryTime, sqsConsumerControls);
+
+            const apiPath = '/send-message/v3';
+
+            it('receives message', async () => {
+              const response = await senderControlsSQSConsumer.sendRequest({
+                method: 'GET',
+                path: apiPath
+              });
+
+              await verify({
+                receiverControls: sqsConsumerControls,
+                senderControls: senderControlsSQSConsumer,
+                response,
+                apiPath,
+                withError: false,
+                isBatch: false
+              });
+            });
+          });
+
+          describe('message not processed with success', () => {
+            const sqsConsumerControls = new ProcessControls({
+              appPath: path.join(__dirname, 'sqs-consumer'),
+              port: 3216,
+              useGlobalAgent: true,
+              env: {
+                AWS_SQS_QUEUE_URL: `${queueUrlPrefix}${queueName}-consumer`,
+                AWS_SQS_RECEIVER_ERROR: 'true'
+              }
+            });
+
+            ProcessControls.setUpHooksWithRetryTime(retryTime, sqsConsumerControls);
+
+            const apiPath = '/send-message/v3';
+
+            it('fails to receive a message', async () => {
+              const response = await senderControlsSQSConsumer.sendRequest({
+                method: 'GET',
+                path: apiPath
+              });
+
+              await verify({
+                receiverControls: sqsConsumerControls,
+                senderControls: senderControlsSQSConsumer,
+                response,
+                apiPath,
+                withError: 'receiver',
+                isBatch: false
+              });
+            });
+          });
+        });
+      }
 
       describe('messages sent in batch', () => {
         receivingMethods.forEach(sqsReceiveMethod => {

@@ -39,14 +39,14 @@ const operations = Object.keys(operationsInfo);
 const SPAN_NAME = 'sqs';
 
 class InstanaAWSSQS extends InstanaAWSProduct {
-  instrumentedSmithySend(ctx, originalSend, smithySendArgs) {
+  instrumentedSmithySend(ctx, originalSend, smithySendArgs, SQSConsumer) {
     const commandName = smithySendArgs[0].constructor.name;
     const operation = operationsInfo[commandName];
 
     if (operation && operation.sort === 'exit') {
-      return this.instrumentExit(ctx, originalSend, smithySendArgs, operation);
+      return this.instrumentExit(ctx, originalSend, smithySendArgs, operation, SQSConsumer);
     } else if (operation && operation.sort === 'entry') {
-      return this.instrumentEntry(ctx, originalSend, smithySendArgs, operation);
+      return this.instrumentEntry(ctx, originalSend, smithySendArgs, operation, SQSConsumer);
     }
 
     return originalSend.apply(ctx, smithySendArgs);
@@ -151,7 +151,7 @@ class InstanaAWSSQS extends InstanaAWSProduct {
     });
   }
 
-  instrumentEntry(ctx, originalSend, smithySendArgs, operation) {
+  instrumentEntry(ctx, originalSend, smithySendArgs, operation, SQSConsumer) {
     const parentSpan = cls.getCurrentSpan();
     if (parentSpan) {
       logger.warn(
@@ -190,7 +190,6 @@ class InstanaAWSSQS extends InstanaAWSProduct {
 
       if (typeof smithySendArgs[1] === 'function') {
         const _callback = smithySendArgs[1];
-
         smithySendArgs[1] = cls.ns.bind(function (err, data) {
           if (err) {
             _callback.apply(this, arguments);
@@ -211,6 +210,7 @@ class InstanaAWSSQS extends InstanaAWSProduct {
                 setImmediate(() => span.cancel());
               }
               configureEntrySpan(span, data, tracingAttributes);
+
               setImmediate(() => {
                 self.finishSpan(null, span);
               });
@@ -229,6 +229,7 @@ class InstanaAWSSQS extends InstanaAWSProduct {
       } else {
         const request = originalSend.apply(ctx, smithySendArgs);
 
+        // NOTE: This is promise chain for the "send" method only!
         request
           .then(data => {
             if (data && data.error) {
@@ -244,7 +245,9 @@ class InstanaAWSSQS extends InstanaAWSProduct {
                 cls.setTracingLevel('0');
                 setImmediate(() => span.cancel());
               }
+
               configureEntrySpan(span, data, tracingAttributes);
+
               setImmediate(() => {
                 this.finishSpan(null, span);
               });
@@ -254,6 +257,13 @@ class InstanaAWSSQS extends InstanaAWSProduct {
               // _synchronously_ in the same event loop tick. See commit message for details.
               span.cancel();
             }
+
+            // NOTE: attach the async context to continue with it if sqs-consumer is used, see index.js
+            //       sqs-consumer messages are dependend on the customer's `handleMessage` function
+            data.Messages.forEach(message => {
+              message.instanaAsyncContext = cls.getAsyncContext();
+            });
+
             return data;
           })
           .catch(err => {
