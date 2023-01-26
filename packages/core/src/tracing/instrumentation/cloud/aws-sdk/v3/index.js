@@ -55,12 +55,9 @@ exports.deactivate = function deactivate() {
   isActive = false;
 };
 
-let SQSConsumer;
-function instrumentSQSConsumer(_SQSConsumer) {
-  SQSConsumer = _SQSConsumer;
-
+function instrumentSQSConsumer(SQSConsumer) {
   shimmer.wrap(SQSConsumer.Consumer.prototype, 'executeHandler', function (orig) {
-    return function executeHandler() {
+    return function instanaExecuteHandler() {
       const message = arguments[0];
 
       if (message.instanaAsyncContext) {
@@ -112,7 +109,7 @@ function shimSmithySend(originalSend) {
       const awsProduct = operationMap[command.constructor.name];
 
       if (awsProduct) {
-        return awsProduct.instrumentedSmithySend(self, originalSend, smithySendArgs, SQSConsumer);
+        return awsProduct.instrumentedSmithySend(self, originalSend, smithySendArgs);
       }
 
       return originalSend.apply(self, smithySendArgs);

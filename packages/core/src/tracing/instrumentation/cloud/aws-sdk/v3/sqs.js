@@ -39,14 +39,14 @@ const operations = Object.keys(operationsInfo);
 const SPAN_NAME = 'sqs';
 
 class InstanaAWSSQS extends InstanaAWSProduct {
-  instrumentedSmithySend(ctx, originalSend, smithySendArgs, SQSConsumer) {
+  instrumentedSmithySend(ctx, originalSend, smithySendArgs) {
     const commandName = smithySendArgs[0].constructor.name;
     const operation = operationsInfo[commandName];
 
     if (operation && operation.sort === 'exit') {
-      return this.instrumentExit(ctx, originalSend, smithySendArgs, operation, SQSConsumer);
+      return this.instrumentExit(ctx, originalSend, smithySendArgs, operation);
     } else if (operation && operation.sort === 'entry') {
-      return this.instrumentEntry(ctx, originalSend, smithySendArgs, operation, SQSConsumer);
+      return this.instrumentEntry(ctx, originalSend, smithySendArgs, operation);
     }
 
     return originalSend.apply(ctx, smithySendArgs);
