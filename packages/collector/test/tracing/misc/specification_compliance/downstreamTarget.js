@@ -72,9 +72,11 @@ function endWithPayload(method, url, resOrStream, payload) {
   }
   if (useHttp2) {
     resOrStream.respond({
-      [HTTP2_HEADER_STATUS]: 200
+      [HTTP2_HEADER_STATUS]: 200,
+      'X-Response-Header-Downstream-To-App': 'Value 3'
     });
   } else {
+    resOrStream.setHeader('X-Response-Header-Downstream-To-App', 'Value 3');
     resOrStream.statusCode = 200;
   }
   resOrStream.end(payload);

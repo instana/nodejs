@@ -57,7 +57,13 @@ exports.startGlobalAgent = function start() {
       'X-My-Exit-Set-On-Request-Multi-Header',
       'X-My-Exit-Request-Object-Request-Header',
       'X-My-Exit-Request-Object-Request-Multi-Header',
-      'X-My-Exit-Response-Header'
+      'X-My-Exit-Response-Header',
+
+      // For packages/collector/test/tracing/misc/specification_compliance/
+      'X-Request-Header-Test-To-App',
+      'X-Response-Header-App-To-Test',
+      'X-Request-Header-App-To-Downstream',
+      'X-Response-Header-Downstream-To-App'
     ]
   });
 };

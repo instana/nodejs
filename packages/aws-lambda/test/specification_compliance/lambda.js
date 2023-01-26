@@ -19,11 +19,24 @@ const fetch = require('node-fetch');
 
 const downstreamDummyUrl = process.env.DOWNSTREAM_DUMMY_URL;
 
-exports.handler = instana.wrap(async () => {
-  const downstreamResponse = await fetch(downstreamDummyUrl);
+exports.handler = instana.wrap(async event => {
+  let downstreamUrl = downstreamDummyUrl;
+  if (event.queryStringParameters) {
+    downstreamUrl = `${downstreamUrl}?${Object.keys(event.queryStringParameters)
+      .map(key => `${key}=${event.queryStringParameters[key]}`)
+      .join('&')}`;
+  }
+  const downstreamResponse = await fetch(downstreamUrl, {
+    headers: {
+      'X-Request-Header-App-To-Downstream': 'Value 2'
+    }
+  });
   const downstreamResponseBody = await downstreamResponse.json();
   return {
     statusCode: 200,
-    body: downstreamResponseBody
+    body: downstreamResponseBody,
+    headers: {
+      'X-Response-Header-App-To-Test': 'Value 4'
+    }
   };
 });

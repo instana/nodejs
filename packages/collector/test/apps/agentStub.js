@@ -20,7 +20,7 @@ const logger = bunyan.createLogger({ name: 'agent-stub', pid: process.pid });
 const port = process.env.AGENT_PORT || 42699;
 const extraHeaders = process.env.EXTRA_HEADERS ? process.env.EXTRA_HEADERS.split(',') : [];
 const secretsMatcher = process.env.SECRETS_MATCHER ? process.env.SECRETS_MATCHER : 'contains-ignore-case';
-const secretsList = process.env.SECRETS_LIST ? process.env.SECRETS_LIST.split(',') : ['key', 'pass', 'secret'];
+const secretsList = process.env.SECRETS_LIST ? process.env.SECRETS_LIST.split(',') : ['pass', 'secret', 'token'];
 const dropAllData = process.env.DROP_DATA === 'true';
 const logTraces = process.env.LOG_TRACES === 'true';
 const logProfiles = process.env.LOG_PROFILES === 'true';

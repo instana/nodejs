@@ -34,6 +34,11 @@ app.get('/', (req, res) => {
   for (let i = 0; i < rawHeaders.length; i += 2) {
     headersToEcho[rawHeaders[i]] = rawHeaders[i + 1];
   }
+
+  // This header is used for the AWS Lambda version of the spec compliance test
+  // (packages/aws-lambda/test/specification_compliance).
+  res.setHeader('X-Response-Header-Downstream-To-App', 'Value 3');
+
   delay(200).then(() => {
     res.json(headersToEcho);
   });

@@ -96,7 +96,10 @@ async function handleRequest(incomingHeaders, method, url, resOrStream) {
 async function executeDownstreamRequestViaCoreHttp(method, url, query, resOrStream) {
   const requestOptions = {
     method,
-    qs: query
+    qs: query,
+    headers: {
+      'X-Request-Header-App-To-Downstream': 'Value 2'
+    }
   };
   if (useHttp2) {
     requestOptions.baseUrl = `https://localhost:${downstreamPort}`;
@@ -121,7 +124,12 @@ async function executeDownstreamRequestViaNativeFetch(method, url, query, resOrS
       const urlSearchParams = new URLSearchParams(query);
       fullUrl = `${fullUrl}?${urlSearchParams}`;
     }
-    const downstreamResponse = await fetch(fullUrl, { method });
+    const downstreamResponse = await fetch(fullUrl, {
+      method,
+      headers: {
+        'X-Request-Header-App-To-Downstream': 'Value 2'
+      }
+    });
     const downstreamResponsePayload = await downstreamResponse.json();
     return endWithPayload(method, url, resOrStream, downstreamResponsePayload);
   } catch (e) {
@@ -138,10 +146,12 @@ function endWithPayload(method, url, resOrStream, payload) {
   }
   if (useHttp2) {
     resOrStream.respond({
-      [HTTP2_HEADER_STATUS]: 200
+      [HTTP2_HEADER_STATUS]: 200,
+      'X-Response-Header-App-To-Test': 'Value 4'
     });
   } else {
     resOrStream.statusCode = 200;
+    resOrStream.setHeader('X-Response-Header-App-To-Test', 'Value 4');
   }
   resOrStream.end(payload);
 }

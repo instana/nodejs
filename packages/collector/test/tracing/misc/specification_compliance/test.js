@@ -7,6 +7,7 @@
 
 const path = require('path');
 const { expect } = require('chai');
+const querystring = require('querystring');
 
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const constants = require('@instana/core').tracing.constants;
@@ -110,12 +111,10 @@ describe('spec compliance', function () {
       ProcessControls.setUpHooks(app);
 
       testCases.forEach(testDefinition => {
-        const label =
-          `${testDefinition.index}: ${testDefinition['Scenario/incoming headers']} -> ` +
-          `${testDefinition['What to do?']}`;
+        const label = `${testDefinition.index}: ${testDefinition.Scenario} -> ${testDefinition['What to do?']}`;
         it(label, async () => {
           const valuesForPlaceholders = {};
-          const headers = {};
+          let headers = {};
           [
             'X-INSTANA-T in',
             'X-INSTANA-S in',
@@ -136,10 +135,18 @@ describe('spec compliance', function () {
             }
           });
 
+          headers = { ...headers, ...parseHeaderList(testDefinition['request headers in']) };
+
           const suppressed = testDefinition['X-INSTANA-L in'] === '0';
 
+          const basePath = '/start';
+          const query = testDefinition['query in'];
+          let fullPath = basePath;
+          if (query) {
+            fullPath = `${basePath}?${query}`;
+          }
           const request = {
-            path: '/start',
+            path: fullPath,
             headers,
             resolveWithFullResponse: true
           };
@@ -269,9 +276,8 @@ function verifyHttpEntry(testDefinition, valuesForPlaceholders, spans, url) {
     const spanAttribute = definitionAttribute.substring(definitionAttribute.indexOf('.') + 1);
     addExpectation(expectations, testDefinition, valuesForPlaceholders, definitionAttribute, spanAttribute);
   });
-
-  // span.fp is no longer supported
-  expectations.push(span => expect(span.fp).to.not.exist);
+  verifyQueryParams({ expectations, kind: 'entry', testDefinition });
+  verifyCapturedHeaders({ expectations, kind: 'entry', testDefinition });
 
   return expectExactlyOneMatching(spans, expectations);
 }
@@ -285,8 +291,7 @@ function verifyHttpExit(testDefinition, valuesForPlaceholders, spans, url) {
     span => expect(span.s).to.be.a('string'),
     span => expect(span.data.http.method).to.equal('GET'),
     span => expect(span.data.http.url).to.match(url),
-    span => expect(span.data.http.status).to.equal(200),
-    span => expect(span.fp).to.not.exist
+    span => expect(span.data.http.status).to.equal(200)
   ];
   [
     'exitSpan.t',
@@ -302,8 +307,87 @@ function verifyHttpExit(testDefinition, valuesForPlaceholders, spans, url) {
     const spanAttribute = definitionAttribute.substring(definitionAttribute.indexOf('.') + 1);
     addExpectation(expectations, testDefinition, definitionAttribute, spanAttribute);
   });
+  verifyQueryParams({ expectations, kind: 'exit', testDefinition });
+  verifyCapturedHeaders({ expectations, kind: 'exit', testDefinition });
 
   return expectExactlyOneMatching(spans, expectations);
+}
+
+function verifyQueryParams({ expectations, kind, testDefinition }) {
+  const expectedQueryParams = testDefinition[`${kind}Span.params`];
+  expectations.push(span => {
+    if (expectedQueryParams) {
+      // Make sure the secrets are not contained in the captured query params.
+      expect(span.data.http.params).to.not.match(/myP4sswd/i);
+      expect(span.data.http.params).to.not.match(/secret-value/i);
+      expect(span.data.http.params).to.not.match(/token_value/i);
+
+      const expectedParams = querystring.parse(expectedQueryParams);
+      const parsedActualParams = querystring.parse(span.data.http.params);
+
+      Object.keys(expectedParams).forEach(key => {
+        expect(parsedActualParams[key]).to.equal(
+          expectedParams[key],
+          `value for captured query parameter "${key}" in span attribute span.data.http.params on ${kind} span did ` +
+            `not match, full actual annotation value: ${
+              span.data.http.params
+            }, expected at least the following parameters: ${JSON.stringify(expectedParams)}`
+        );
+      });
+    }
+  });
+}
+
+function verifyCapturedHeaders({ expectations, kind, testDefinition }) {
+  const expectedHeaders = testDefinition[`${kind}Span.headers`];
+  if (expectedHeaders) {
+    const expectedCapturedHeaders = parseHeaderList(expectedHeaders);
+
+    expectations.push(span => {
+      const actualCapturedHeaders = span.data.http.header;
+      expect(
+        actualCapturedHeaders,
+        `Expected captured headers "${expectedHeaders}" to be present on the ${kind} span in span.data.http.header, ` +
+          'but the span had no headers at all'
+      ).to.be.an('object');
+
+      Object.keys(expectedCapturedHeaders).forEach(nameExpected => {
+        let found = false;
+        Object.keys(actualCapturedHeaders).forEach(nameActual => {
+          if (nameExpected.toLowerCase() === nameActual.toLowerCase()) {
+            found = true;
+            expect(actualCapturedHeaders[nameActual]).to.equal(
+              expectedCapturedHeaders[nameExpected],
+              `value for captured header "${nameExpected}" in annotation span.data.http.header on ${kind} span did ` +
+                `not match, full actual annotation value: ${JSON.stringify(
+                  actualCapturedHeaders
+                )}, expected at least the following headers: ${JSON.stringify(expectedCapturedHeaders)}`
+            );
+          }
+        });
+        expect(
+          found,
+          `captured header "${nameExpected}" not found in annotation span.data.http.header on ${kind} span, full ` +
+            `actual annotation value: ${JSON.stringify(
+              actualCapturedHeaders
+            )}, expected at least the following headers: ${JSON.stringify(expectedCapturedHeaders)}`
+        ).to.be.true;
+      });
+    });
+  }
+}
+
+function parseHeaderList(commaSeparatedString) {
+  if (commaSeparatedString == null) {
+    return {};
+  }
+  const headers = {};
+  const keyValuePairs = commaSeparatedString.split(',');
+  keyValuePairs.forEach(pair => {
+    const [name, value] = pair.split(':');
+    headers[name.trim()] = value.trim();
+  });
+  return headers;
 }
 
 function addExpectation(expectations, testDefinition, valuesForPlaceholders, definitionAttribute, spanAttribute) {
