@@ -188,7 +188,8 @@ function start(version) {
         });
       });
 
-      if (semver.gte(process.versions.node, '14.0.0')) {
+      // See https://github.com/bbc/sqs-consumer/issues/356
+      if (version !== '@aws-sdk/client-sqs' && semver.gte(process.versions.node, '14.0.0')) {
         describe('sqs-consumer API', () => {
           describe('message processed with success', () => {
             const sqsConsumerControls = new ProcessControls({
@@ -196,7 +197,8 @@ function start(version) {
               port: 3216,
               useGlobalAgent: true,
               env: {
-                AWS_SQS_QUEUE_URL: `${queueUrlPrefix}${queueName}-consumer`
+                AWS_SQS_QUEUE_URL: `${queueUrlPrefix}${queueName}-consumer`,
+                AWS_SDK_CLIENT_SQS_REQUIRE: version
               }
             });
 
@@ -228,6 +230,7 @@ function start(version) {
               useGlobalAgent: true,
               env: {
                 AWS_SQS_QUEUE_URL: `${queueUrlPrefix}${queueName}-consumer`,
+                AWS_SDK_CLIENT_SQS_REQUIRE: version,
                 AWS_SQS_RECEIVER_ERROR: 'true'
               }
             });

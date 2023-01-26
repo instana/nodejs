@@ -10,7 +10,10 @@ const mock = require('mock-require');
  * The newest version of @aws-sdk/client-sqs is somehow not working
  * with sqs-consumer package.
  */
-mock('@aws-sdk/client-sqs', '@aws-sdk/client-sqs2');
+if (process.env.AWS_SDK_CLIENT_SQS_REQUIRE !== '@aws-sdk/client-sqs') {
+  mock('@aws-sdk/client-sqs', process.env.AWS_SDK_CLIENT_SQS_REQUIRE);
+}
+
 mock('sqs-consumer', 'sqs-consumer-v6');
 
 const instana = require('../../../../../../src')();
