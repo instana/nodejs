@@ -60,7 +60,7 @@ function instrumentSQSConsumer(SQSConsumer) {
     return function instanaExecuteHandler() {
       const message = arguments[0];
 
-      if (message.instanaAsyncContext) {
+      if (message && message.instanaAsyncContext) {
         return cls.runInAsyncContext(message.instanaAsyncContext, () => {
           const span = cls.getCurrentSpan();
           span.disableAutoEnd();
