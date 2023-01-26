@@ -151,7 +151,7 @@ class InstanaAWSSQS extends InstanaAWSProduct {
     });
   }
 
-  instrumentEntry(ctx, originalSend, smithySendArgs, operation, SQSConsumer) {
+  instrumentEntry(ctx, originalSend, smithySendArgs, operation) {
     const parentSpan = cls.getCurrentSpan();
     if (parentSpan) {
       logger.warn(
