@@ -6,7 +6,6 @@
 'use strict';
 
 const shimmer = require('shimmer');
-const cls = require('../../../../cls');
 const requireHook = require('../../../../../util/requireHook');
 const { getFunctionArguments } = require('../../../../../util/function_arguments');
 
@@ -17,6 +16,8 @@ const awsProducts = [
   require('./s3'),
   require('./sqs')
 ];
+
+const sqsConsumer = require('./sqs-consumer');
 
 /** @type {Object.<string, import('./instana_aws_product').InstanaAWSProduct} */
 const operationMap = {};
@@ -29,7 +30,8 @@ let isActive = false;
 let onFileLoaded = false;
 
 exports.init = function init() {
-  requireHook.onModuleLoad('sqs-consumer', instrumentSQSConsumer);
+  sqsConsumer.init();
+
   /**
    * @aws-sdk/smithly-client >= 3.36.0 changed how the dist structure gets delivered
    * https://github.com/aws/aws-sdk-js-v3/blob/main/packages/smithy-client/CHANGELOG.md#3360-2021-10-08
@@ -54,40 +56,6 @@ exports.activate = function activate() {
 exports.deactivate = function deactivate() {
   isActive = false;
 };
-
-function instrumentSQSConsumer(SQSConsumer) {
-  shimmer.wrap(SQSConsumer.Consumer.prototype, 'executeHandler', function (orig) {
-    return function instanaExecuteHandler() {
-      const message = arguments[0];
-
-      if (message && message.instanaAsyncContext) {
-        return cls.runInAsyncContext(message.instanaAsyncContext, () => {
-          const span = cls.getCurrentSpan();
-          span.disableAutoEnd();
-
-          delete arguments[0].instanaAsyncContext;
-          const res = orig.apply(this, arguments);
-
-          res
-            .then(() => {
-              span.d = Date.now() - span.ts;
-              span.transmitManual();
-            })
-            .catch(err => {
-              span.ec = 1;
-              span.data.sqs.error = err.message || err.code || JSON.stringify(err);
-              span.d = Date.now() - span.ts;
-              span.transmitManual();
-            });
-
-          return res;
-        });
-      }
-
-      return orig.apply(this, arguments);
-    };
-  });
-}
 
 function instrumentGlobalSmithy(Smithy) {
   // NOTE: avoid instrumenting aws-sdk v3 twice, see init
