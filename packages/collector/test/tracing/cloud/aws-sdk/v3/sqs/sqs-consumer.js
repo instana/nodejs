@@ -78,7 +78,7 @@ const consumerApp = Consumer.create(
     {
       // MaxNumberOfMessages
       batchSize: 10,
-      waitTimeSeconds: 2,
+      // waitTimeSeconds: 2,
       // We sometimes receives Messages: undefined, which made the tests flaky
       // https://github.com/aws/aws-sdk-js-v3/issues/1394
       visibilityTimeout: 1,
