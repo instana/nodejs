@@ -21,8 +21,6 @@ function instrument(SQSConsumer) {
         return cls.runInAsyncContext(message.instanaAsyncContext, () => {
           const span = cls.getCurrentSpan();
           span.disableAutoEnd();
-
-          delete arguments[0].instanaAsyncContext;
           const res = orig.apply(this, arguments);
 
           res
