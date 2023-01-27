@@ -258,12 +258,11 @@ class InstanaAWSSQS extends InstanaAWSProduct {
               span.cancel();
             }
 
-            // NOTE: attach the async context to continue with it if sqs-consumer is used, see index.js
-            //       sqs-consumer messages are dependend on the customer's `handleMessage` function
+            // NOTE: attach the async context to the last message to be able to
+            //       finish the span with the correct end time and error in the sqs-consuemr `handleMessage` function.
+            // 1x ReceiveMessageCommand with multiple messages (batchSize>1) == 1 sqs entry with size 4
             if (data && data.Messages && data.Messages) {
-              data.Messages.forEach(message => {
-                message.instanaAsyncContext = cls.getAsyncContext();
-              });
+              data.Messages[data.Messages.length - 1].instanaAsyncContext = cls.getAsyncContext();
             }
 
             return data;

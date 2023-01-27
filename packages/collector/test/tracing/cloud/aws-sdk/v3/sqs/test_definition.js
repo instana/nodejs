@@ -17,7 +17,8 @@ const {
   expectAtLeastOneMatching,
   retry,
   delay,
-  stringifyItems
+  stringifyItems,
+  expectExactlyNMatching
 } = require('../../../../../../../core/test/test_util');
 const ProcessControls = require('../../../../../test_util/ProcessControls');
 const globalAgent = require('../../../../../globalAgent');
@@ -191,7 +192,7 @@ function start(version) {
       // See https://github.com/bbc/sqs-consumer/issues/356
       if (version !== '@aws-sdk/client-sqs' && semver.gte(process.versions.node, '14.0.0')) {
         describe('sqs-consumer API', () => {
-          describe('message processed with success', () => {
+          describe('[handleMessage] message processed with success', () => {
             const sqsConsumerControls = new ProcessControls({
               appPath: path.join(__dirname, 'sqs-consumer'),
               port: 3216,
@@ -219,6 +220,71 @@ function start(version) {
                 apiPath,
                 withError: false,
                 isBatch: false
+              });
+            });
+
+            it('receives messages', async () => {
+              const response = await senderControlsSQSConsumer.sendRequest({
+                method: 'GET',
+                path: `${apiPath}?isBatch=true`
+              });
+
+              await verify({
+                receiverControls: sqsConsumerControls,
+                senderControls: senderControlsSQSConsumer,
+                response,
+                apiPath,
+                withError: false,
+                isBatch: true
+              });
+            });
+          });
+
+          describe('[handleMessageBatch] message processed with success', () => {
+            const sqsConsumerControls = new ProcessControls({
+              appPath: path.join(__dirname, 'sqs-consumer'),
+              port: 3216,
+              useGlobalAgent: true,
+              env: {
+                AWS_SQS_QUEUE_URL: `${queueUrlPrefix}${queueName}-consumer`,
+                AWS_SDK_CLIENT_SQS_REQUIRE: version,
+                HANDLE_MESSAGE_BATCH: true
+              }
+            });
+
+            ProcessControls.setUpHooksWithRetryTime(retryTime, sqsConsumerControls);
+
+            const apiPath = '/send-message/v3';
+
+            it('receives message', async () => {
+              const response = await senderControlsSQSConsumer.sendRequest({
+                method: 'GET',
+                path: apiPath
+              });
+              await verify({
+                receiverControls: sqsConsumerControls,
+                senderControls: senderControlsSQSConsumer,
+                response,
+                apiPath,
+                withError: false,
+                isBatch: false
+              });
+            });
+
+            it('receives messages', async () => {
+              const response = await senderControlsSQSConsumer.sendRequest({
+                method: 'GET',
+                path: `${apiPath}?isBatch=true`
+              });
+
+              await verify({
+                receiverControls: sqsConsumerControls,
+                senderControls: senderControlsSQSConsumer,
+                response,
+                apiPath,
+                withError: false,
+                isBatch: true,
+                isSQSConsumer: true
               });
             });
           });
@@ -478,18 +544,18 @@ function start(version) {
       });
     });
 
-    async function verify({ receiverControls, senderControls, response, apiPath, withError, isBatch }) {
+    async function verify({ receiverControls, senderControls, response, apiPath, withError, isBatch, isSQSConsumer }) {
       if (withError === 'sender') {
         expect(response.error).to.equal('MissingParameter: The request must contain the parameter MessageBody.');
       } else {
         await retry(async () => {
           if (isBatch) {
-            verifyResponseAndBatchMessage(response, receiverControls);
+            verifyResponseAndBatchMessage(response, receiverControls, isSQSConsumer);
           } else {
             verifyResponseAndMessage(response, receiverControls);
           }
           const spans = await agentControls.getSpans();
-          verifySpans({ receiverControls, senderControls, spans, apiPath, withError, isBatch });
+          verifySpans({ receiverControls, senderControls, spans, apiPath, withError, isBatch, isSQSConsumer });
         }, retryTime);
       }
     }
@@ -530,14 +596,30 @@ function start(version) {
       }, retryTime);
     }
 
-    function verifySpans({ receiverControls, senderControls, spans, apiPath, withError, isBatch }) {
+    function verifySpans({ receiverControls, senderControls, spans, apiPath, withError, isBatch, isSQSConsumer }) {
       const httpEntry = verifyHttpRootEntry({ spans, apiPath, pid: String(senderControls.getPid()) });
       const sqsExit = verifySQSExit({ senderControls, spans, parent: httpEntry, withError });
       verifyHttpExit({ spans, parent: httpEntry, pid: String(senderControls.getPid()) });
 
       if (withError !== 'publisher') {
         const sqsEntry = verifySQSEntry({ receiverControls, spans, parent: sqsExit, withError, isBatch });
-        verifyHttpExit({ spans, parent: sqsEntry, pid: String(receiverControls.getPid()) });
+
+        if (isSQSConsumer) {
+          verifyHttpExit({
+            spans,
+            parent: sqsEntry,
+            pid: String(receiverControls.getPid()),
+            testMethod: (exitSpans, tests) => {
+              return expectExactlyNMatching(exitSpans, 4, tests);
+            }
+          });
+        } else {
+          verifyHttpExit({
+            spans,
+            parent: sqsEntry,
+            pid: String(receiverControls.getPid())
+          });
+        }
       }
     }
 
