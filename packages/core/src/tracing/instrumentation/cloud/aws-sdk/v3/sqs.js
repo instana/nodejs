@@ -260,9 +260,11 @@ class InstanaAWSSQS extends InstanaAWSProduct {
 
             // NOTE: attach the async context to continue with it if sqs-consumer is used, see index.js
             //       sqs-consumer messages are dependend on the customer's `handleMessage` function
-            data.Messages.forEach(message => {
-              message.instanaAsyncContext = cls.getAsyncContext();
-            });
+            if (data && data.Messages && data.Messages) {
+              data.Messages.forEach(message => {
+                message.instanaAsyncContext = cls.getAsyncContext();
+              });
+            }
 
             return data;
           })
