@@ -190,7 +190,6 @@ class InstanaAWSSQS extends InstanaAWSProduct {
 
       if (typeof smithySendArgs[1] === 'function') {
         const _callback = smithySendArgs[1];
-
         smithySendArgs[1] = cls.ns.bind(function (err, data) {
           if (err) {
             _callback.apply(this, arguments);
@@ -211,6 +210,7 @@ class InstanaAWSSQS extends InstanaAWSProduct {
                 setImmediate(() => span.cancel());
               }
               configureEntrySpan(span, data, tracingAttributes);
+
               setImmediate(() => {
                 self.finishSpan(null, span);
               });
@@ -229,6 +229,7 @@ class InstanaAWSSQS extends InstanaAWSProduct {
       } else {
         const request = originalSend.apply(ctx, smithySendArgs);
 
+        // NOTE: This is promise chain for the "send" method from @awsk-sdk/smithy-client, not from sqs-consumer!
         request
           .then(data => {
             if (data && data.error) {
@@ -244,7 +245,9 @@ class InstanaAWSSQS extends InstanaAWSProduct {
                 cls.setTracingLevel('0');
                 setImmediate(() => span.cancel());
               }
+
               configureEntrySpan(span, data, tracingAttributes);
+
               setImmediate(() => {
                 this.finishSpan(null, span);
               });
@@ -254,6 +257,14 @@ class InstanaAWSSQS extends InstanaAWSProduct {
               // _synchronously_ in the same event loop tick. See commit message for details.
               span.cancel();
             }
+
+            // NOTE: attach the async context to the last message to be able to
+            //       finish the span with the correct end time and error in the sqs-consuemr `handleMessage` function.
+            // 1x ReceiveMessageCommand with multiple messages (batchSize>1) == 1 sqs entry with size 4
+            if (data && data.Messages && data.Messages) {
+              data.Messages[data.Messages.length - 1].instanaAsyncContext = cls.getAsyncContext();
+            }
+
             return data;
           })
           .catch(err => {

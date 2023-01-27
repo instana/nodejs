@@ -17,6 +17,8 @@ const awsProducts = [
   require('./sqs')
 ];
 
+const sqsConsumer = require('./sqs-consumer');
+
 /** @type {Object.<string, import('./instana_aws_product').InstanaAWSProduct} */
 const operationMap = {};
 
@@ -28,6 +30,8 @@ let isActive = false;
 let onFileLoaded = false;
 
 exports.init = function init() {
+  sqsConsumer.init();
+
   /**
    * @aws-sdk/smithly-client >= 3.36.0 changed how the dist structure gets delivered
    * https://github.com/aws/aws-sdk-js-v3/blob/main/packages/smithy-client/CHANGELOG.md#3360-2021-10-08
