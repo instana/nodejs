@@ -21,8 +21,15 @@ describe('tracing/logger/pino', function () {
   const agentControls = globalAgent.instance;
 
   ['8', '7'].forEach(pinoVersion => {
+    let mochaSuiteFn;
+
     // NOTE: v7 dropped Node 10 support
-    const mochaSuiteFn = semver.gte(process.versions.node, '12.0.0') ? describe : describe.skip;
+    // NOTE: v8 dropped Node 12 support
+    if (pinoVersion === '8') {
+      mochaSuiteFn = semver.gte(process.versions.node, '14.0.0') ? describe : describe.skip;
+    } else {
+      mochaSuiteFn = semver.gte(process.versions.node, '12.0.0') ? describe : describe.skip;
+    }
 
     mochaSuiteFn(`pino@${pinoVersion}`, function () {
       const controls = new ProcessControls({
