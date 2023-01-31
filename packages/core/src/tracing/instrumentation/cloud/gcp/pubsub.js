@@ -45,11 +45,13 @@ function instrumentPublisher(publisher) {
 }
 
 function instrumentSubscriber(subscriber) {
-  if (!subscriber || !subscriber.Subscriber) {
-    return;
-  }
+  process.nextTick(() => {
+    if (!subscriber || !subscriber.Subscriber) {
+      return;
+    }
 
-  instrumentConstructor(subscriber, 'Subscriber', 'emit', shimSubscriberEmit);
+    instrumentConstructor(subscriber, 'Subscriber', 'emit', shimSubscriberEmit);
+  });
 }
 
 function instrumentConstructor(module, constructorAttribute, methodAttribue, shimmedMethod) {
