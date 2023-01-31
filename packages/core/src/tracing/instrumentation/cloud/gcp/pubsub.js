@@ -45,6 +45,10 @@ function instrumentPublisher(publisher) {
 }
 
 function instrumentSubscriber(subscriber) {
+  // NOTE: using nextTicket works for both 2.x and 3.x
+  // 3.x: subscriber.js loads message-queues
+  //      message-queues.js loads subscriber
+  //      circular dependency
   process.nextTick(() => {
     if (!subscriber || !subscriber.Subscriber) {
       return;
