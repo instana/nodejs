@@ -57,7 +57,8 @@ function patchedModuleLoad(moduleName) {
   // CASE: when using ESM, the Node runtime passes a full path to Module._load
   //       we try to grab the module name to being able to patch the target module
   //       with our instrumentation
-  if (path.isAbsolute(moduleName)) {
+  // CASE: we ignore all file endings, which we are not interested in. Any module can load any file.
+  if (path.isAbsolute(moduleName) && ['.node', '.json', '.ts'].indexOf(path.extname(moduleName)) === -1) {
     // EDGE CASE for ESM: mysql2/promise.js
     if (moduleName.indexOf('node_modules/mysql2/promise.js') !== -1) {
       moduleName = 'mysql2/promise';
