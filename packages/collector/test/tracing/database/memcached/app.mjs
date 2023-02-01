@@ -11,9 +11,12 @@ import getAppPort from '../../../test_util/app-port.js';
 const port = getAppPort();
 const agentPort = process.env.INSTANA_AGENT_PORT || 42699;
 import fetch from 'node-fetch';
-const logPrefix = `Memcached (${process.pid}):\t`;
-const log = require('@instana/core/test/test_util/log').getLogger(logPrefix);
+import logger from '@instana/core/test/test_util/log.js';
 import Memcached from 'memcached';
+
+const logPrefix = `Memcached (${process.pid}):\t`;
+const log = logger.getLogger(logPrefix);
+
 const memcached = new Memcached(process.env.MEMCACHED || 'localhost:11211');
 
 /**

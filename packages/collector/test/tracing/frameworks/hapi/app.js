@@ -7,9 +7,7 @@
 
 require('../../../..')();
 
-const LEGACY_HAPI = process.env.LEGACY_HAPI === 'true';
-const Hapi = require(LEGACY_HAPI ? 'hapi' : '@hapi/hapi');
-
+const Hapi = require('@hapi/hapi');
 const logPrefix = `Hapi Server: (${process.pid}):\t`;
 const port = require('../../../test_util/app-port')();
 
