@@ -49,7 +49,7 @@ const init = async () => {
 
   await server.start();
   log(`Listening on port ${port} (${server.info.uri}).`);
-  log(LEGACY_HAPI ? 'Using legacy (pre 18.x) hapi module.' : 'Using modern (>= 18.x) hapi module.');
+  log('Using modern (>= 18.x) hapi module.');
 };
 
 process.on('unhandledRejection', err => {
