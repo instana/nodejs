@@ -7,7 +7,7 @@
 
 'use strict';
 
-const appPort = process.env.APP_PORT || 3215;
+const appPort = process.env.APP_PORT;
 const agentPort = process.env.INSTANA_AGENT_PORT;
 
 const instana = require('../../../..')();

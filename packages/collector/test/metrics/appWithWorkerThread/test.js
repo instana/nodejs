@@ -67,7 +67,6 @@ mochaSuiteFn('worker threads', function () {
   });
 
   function createProcess(env = {}) {
-    env.WORKER_THREAD_APP_PORT = 3216;
     return new ProcessControls({
       appPath: path.join(__dirname, 'app'),
       cwd: __dirname,

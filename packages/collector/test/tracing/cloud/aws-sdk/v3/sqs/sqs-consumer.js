@@ -21,7 +21,7 @@ const { sendToParent } = require('../../../../../../../core/test/test_util');
 const delay = require('../../../../../../../core/test/test_util/delay');
 
 const awsRegion = 'us-east-2';
-const port = process.env.APP_PORT || 3216;
+const port = process.env.APP_PORT;
 const agentPort = process.env.INSTANA_AGENT_PORT || 42699;
 const withError = process.env.AWS_SQS_RECEIVER_ERROR === 'true';
 const handleMessageBatch = process.env.HANDLE_MESSAGE_BATCH === 'true';

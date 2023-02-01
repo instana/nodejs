@@ -8,11 +8,11 @@
 const spawn = require('child_process').spawn;
 const request = require('request-promise');
 const path = require('path');
+const portfinder = require('../../../test_util/portfinder');
 
 const testUtils = require('../../../../../core/test/test_util');
 const config = require('../../../../../core/test/config');
 const agentPort = require('../../../apps/agentStubControls').agentPort;
-const appPort = (exports.appPort = 3217);
 
 let expressApp;
 
@@ -22,7 +22,7 @@ exports.registerTestHooks = opts => {
 
     const env = Object.create(process.env);
     env.AGENT_PORT = agentPort;
-    env.APP_PORT = appPort;
+    env.APP_PORT = exports.appPort = portfinder();
     env.UPSTREAM_PORT = opts.upstreamPort;
     env.USE_REQUEST_PROMISE = String(opts.useRequestPromise);
 
@@ -43,7 +43,7 @@ function waitUntilServerIsUp() {
   return testUtils.retry(() =>
     request({
       method: 'GET',
-      url: `http://127.0.0.1:${appPort}`,
+      url: `http://127.0.0.1:${exports.appPort}`,
       headers: {
         'X-INSTANA-L': '0'
       }
@@ -56,6 +56,6 @@ exports.getPid = () => expressApp.pid;
 exports.sendRequest = () =>
   request({
     method: 'GET',
-    url: `http://127.0.0.1:${appPort}/getSomething`,
+    url: `http://127.0.0.1:${exports.appPort}/getSomething`,
     resolveWithFullResponse: true
   });

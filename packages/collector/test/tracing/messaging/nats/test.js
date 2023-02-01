@@ -30,7 +30,6 @@ mochaSuiteFn('tracing/nats', function () {
   globalAgent.setUpCleanUpHooks();
 
   const publisherControls = new ProcessControls({
-    port: 3216,
     appPath: path.join(__dirname, 'publisher'),
     useGlobalAgent: true
   });
@@ -298,7 +297,6 @@ describe('tracing/nats disabled', function () {
   this.timeout(config.getTestTimeout() * 2);
   const publisherControls = new ProcessControls({
     appPath: path.join(__dirname, 'publisher'),
-    port: 3216,
     useGlobalAgent: true,
     tracingEnabled: false
   });

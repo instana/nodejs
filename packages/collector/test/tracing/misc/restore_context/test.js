@@ -26,8 +26,7 @@ mochaSuiteFn('tracing/restore context', function () {
   describe('tracing enabled', () => {
     const controls = new ProcessControls({
       dirname: __dirname,
-      useGlobalAgent: true,
-      port: 3222
+      useGlobalAgent: true
     });
     ProcessControls.setUpHooks(controls);
     registerAllTests(controls, true);
@@ -37,8 +36,7 @@ mochaSuiteFn('tracing/restore context', function () {
     const controls = new ProcessControls({
       dirname: __dirname,
       useGlobalAgent: true,
-      tracingEnabled: false,
-      port: 3222
+      tracingEnabled: false
     });
     ProcessControls.setUpHooks(controls);
     registerAllTests(controls, false);

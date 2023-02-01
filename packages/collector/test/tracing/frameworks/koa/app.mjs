@@ -9,7 +9,7 @@ import Koa from 'koa';
 import Router from 'koa-router';
 import bodyParser from 'koa-bodyparser';
 import morgan from 'koa-morgan';
-const port = process.env.APP_PORT || 3216;
+const port = process.env.APP_PORT;
 const logPrefix = `Koa Server: (${process.pid}):\t`;
 
 const app = new Koa();

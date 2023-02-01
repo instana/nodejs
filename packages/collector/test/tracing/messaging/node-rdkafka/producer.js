@@ -12,7 +12,7 @@ const agentPort = process.env.INSTANA_AGENT_PORT || 42699;
 const logPrefix = `rdkafka Producer (${process.pid}):\t`;
 const log = require('@instana/core/test/test_util/log').getLogger(logPrefix);
 const express = require('express');
-const port = process.env.APP_PORT || 3216;
+const port = process.env.APP_PORT;
 const enableDeliveryCb = process.env.RDKAFKA_PRODUCER_DELIVERY_CB === 'true';
 
 const app = express();

@@ -14,11 +14,6 @@ const { delay, expectExactlyOneMatching, retry } = require('../../../../../../co
 const ProcessControls = require('../../../../test_util/ProcessControls');
 const globalAgent = require('../../../../globalAgent');
 
-const clientPort = 3216;
-const clientHost = `localhost:${clientPort}`;
-const serverPort = 3217;
-const serverHost = `localhost:${serverPort}`;
-
 let mochaSuiteFn;
 if (!supportedVersion(process.versions.node)) {
   mochaSuiteFn = describe.skip;
@@ -35,13 +30,11 @@ mochaSuiteFn('tracing/native fetch', function () {
 
   const serverControls = new ProcessControls({
     appPath: path.join(__dirname, 'serverApp'),
-    port: serverPort,
     useGlobalAgent: true
   });
 
   const clientControls = new ProcessControls({
     appPath: path.join(__dirname, 'clientApp'),
-    port: clientPort,
     useGlobalAgent: true
   });
 
@@ -507,7 +500,9 @@ function verifySpans({
   expectedHeadersOnExitSpan = null,
   withClientError = null,
   withServerError = false,
-  withTimeout = false
+  withTimeout = false,
+  serverControls,
+  clientControls
 }) {
   let expectedRootHttpEntryStatusCode = 200;
   if (withClientError || withTimeout) {
@@ -517,13 +512,13 @@ function verifySpans({
   }
   const entryInClient = verifyRootHttpEntry({
     spans,
-    host: clientHost,
+    host: `localhost:${clientControls.getPort()}`,
     url: clientEndpoint,
     status: expectedRootHttpEntryStatusCode,
     withError: withClientError || withServerError || withTimeout
   });
 
-  let expectedUrlInHttpExit = serverUrl(serverEndpoint);
+  let expectedUrlInHttpExit = serverUrl(serverEndpoint, serverControls);
   if (withClientError === 'unreachable') {
     expectedUrlInHttpExit = 'http://localhost:1023/unreachable';
   } else if (withClientError === 'malformed-url') {
@@ -550,7 +545,7 @@ function verifySpans({
     const entryInServer = verifyHttpEntry({
       spans,
       parent: exitInClient,
-      host: serverHost,
+      host: `localhost:${serverControls.getPort()}`,
       url: serverEndpoint,
       status: withServerError ? 500 : 200,
       method,
@@ -646,8 +641,8 @@ function verifyHttpExit({
   return expectExactlyOneMatching(spans, expectations);
 }
 
-function serverUrl(path_) {
-  return `http://${serverHost}${path_}`;
+function serverUrl(path_, serverControls) {
+  return `http://localhost${serverControls.getPort()}${path_}`;
 }
 
 function checkQuery({ span, withQuery, doNotCheckQuery }) {

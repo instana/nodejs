@@ -10,12 +10,11 @@ const fs = require('fs');
 const path = require('path');
 const request = require('request-promise');
 const spawn = require('child_process').spawn;
-
+const portfinder = require('../test_util/portfinder');
 const testUtils = require('../../../core/test/test_util');
 const config = require('../../../core/test/config');
 const legacyAgentPort = require('./agentStubControls').agentPort;
 const globalAgentPort = require('../globalAgent').PORT;
-const appPort = (exports.appPort = 3213);
 
 const sslDir = path.join(__dirname, 'ssl');
 const cert = fs.readFileSync(path.join(sslDir, 'cert'));
@@ -30,7 +29,7 @@ exports.registerTestHooks = opts => {
 exports.start = function start(opts = {}, retryTime) {
   const env = Object.create(process.env);
   env.AGENT_PORT = opts.useGlobalAgent ? globalAgentPort : legacyAgentPort;
-  env.APP_PORT = appPort;
+  env.APP_PORT = exports.appPort = portfinder();
   env.TRACING_ENABLED = opts.enableTracing !== false;
   env.STACK_TRACE_LENGTH = opts.stackTraceLength || 0;
   env.USE_HTTPS = opts.useHttps === true;
@@ -124,5 +123,5 @@ exports.setLogger = (useHttps, logFilePath) =>
   });
 
 function getBaseUrl(useHttps) {
-  return `http${useHttps ? 's' : ''}://localhost:${appPort}`;
+  return `http${useHttps ? 's' : ''}://localhost:${exports.appPort}`;
 }

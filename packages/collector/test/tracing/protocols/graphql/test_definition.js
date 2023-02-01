@@ -85,7 +85,6 @@ function start(graphqlVersion) {
     describe('disabled', () => {
       const serverControls = new ProcessControls({
         appPath: path.join(__dirname, 'rawGraphQLServer'),
-        port: 3217,
         useGlobalAgent: true,
         tracingEnabled: false,
         env: {
@@ -94,11 +93,10 @@ function start(graphqlVersion) {
       });
       const clientControls = new ProcessControls({
         appPath: path.join(__dirname, 'client'),
-        port: 3216,
         useGlobalAgent: true,
         tracingEnabled: false,
         env: {
-          SERVER_PORT: serverControls.port,
+          SERVER_PORT: serverControls.getPort(),
           GRAPHQL_VERSION: graphqlVersion
         }
       });
@@ -125,7 +123,6 @@ function start(graphqlVersion) {
     describe('individually disabled', () => {
       const serverControls = new ProcessControls({
         appPath: path.join(__dirname, 'rawGraphQLServer'),
-        port: 3217,
         useGlobalAgent: true,
         env: {
           INSTANA_DISABLED_TRACERS: 'graphQL',
@@ -134,10 +131,9 @@ function start(graphqlVersion) {
       });
       const clientControls = new ProcessControls({
         appPath: path.join(__dirname, 'client'),
-        port: 3216,
         useGlobalAgent: true,
         env: {
-          SERVER_PORT: serverControls.port,
+          SERVER_PORT: serverControls.getPort(),
           GRAPHQL_VERSION: graphqlVersion
         }
       });
@@ -296,7 +292,6 @@ function registerSubscriptionOperationNotTracedSuite(serverControls, clientContr
 function createProcesses(apollo, version) {
   const serverControls = new ProcessControls({
     appPath: path.join(__dirname, apollo ? 'apolloServer' : 'rawGraphQLServer'),
-    port: 3217,
     useGlobalAgent: true,
     env: {
       GRAPHQL_VERSION: version
@@ -305,10 +300,9 @@ function createProcesses(apollo, version) {
 
   const clientControls = new ProcessControls({
     appPath: path.join(__dirname, 'client'),
-    port: 3216,
     useGlobalAgent: true,
     env: {
-      SERVER_PORT: serverControls.port,
+      SERVER_PORT: serverControls.getPort(),
       GRAPHQL_VERSION: version
     }
   });
@@ -322,7 +316,6 @@ function registerSubscriptionUpdatesAreTracedSuite(triggerUpdateVia, version) {
   describe(`subscriptions (via: ${triggerUpdateVia})`, function () {
     const serverControls = new ProcessControls({
       appPath: path.join(__dirname, 'apolloServer'),
-      port: 3217,
       useGlobalAgent: true,
       env: {
         GRAPHQL_VERSION: version
@@ -331,10 +324,9 @@ function registerSubscriptionUpdatesAreTracedSuite(triggerUpdateVia, version) {
     // client 1
     const clientControls1 = new ProcessControls({
       appPath: path.join(__dirname, 'client'),
-      port: 3216,
       useGlobalAgent: true,
       env: {
-        SERVER_PORT: serverControls.port,
+        SERVER_PORT: serverControls.getPort(),
         GRAPHQL_VERSION: version
       }
     });
@@ -342,9 +334,8 @@ function registerSubscriptionUpdatesAreTracedSuite(triggerUpdateVia, version) {
     const clientControls2 = new ProcessControls({
       appPath: path.join(__dirname, 'client'),
       useGlobalAgent: true,
-      port: 3226,
       env: {
-        SERVER_PORT: serverControls.port,
+        SERVER_PORT: serverControls.getPort(),
         GRAPHQL_VERSION: version
       }
     });
@@ -401,7 +392,6 @@ function registerSubscriptionUpdatesCorrectParentSpanSuite(triggerUpdateVia, ver
   describe.skip('correct parent span for subscription updates', function () {
     const serverControls = new ProcessControls({
       appPath: path.join(__dirname, 'apolloServer'),
-      port: 3217,
       useGlobalAgent: true,
       env: {
         GRAPHQL_VERSION: version
@@ -409,10 +399,9 @@ function registerSubscriptionUpdatesCorrectParentSpanSuite(triggerUpdateVia, ver
     });
     const clientControls = new ProcessControls({
       appPath: path.join(__dirname, 'client'),
-      port: 3216,
       useGlobalAgent: true,
       env: {
-        SERVER_PORT: serverControls.port,
+        SERVER_PORT: serverControls.getPort(),
         GRAPHQL_VERSION: version
       }
     });

@@ -70,7 +70,6 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/s3', function () {
   describe('tracing enabled, no suppression', function () {
     const appControls = new ProcessControls({
       appPath: path.join(__dirname, 'app'),
-      port: 3215,
       useGlobalAgent: true,
       env: {
         AWS_S3_BUCKET_NAME: bucketName
@@ -136,7 +135,6 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/s3', function () {
 
     const appControls = new ProcessControls({
       appPath: path.join(__dirname, 'app'),
-      port: 3215,
       useGlobalAgent: true,
       tracingEnabled: false,
       env: {
@@ -170,7 +168,6 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/s3', function () {
   describe('tracing enabled but suppressed', () => {
     const appControls = new ProcessControls({
       appPath: path.join(__dirname, 'app'),
-      port: 3215,
       useGlobalAgent: true,
       env: {
         AWS_S3_BUCKET_NAME: bucketName

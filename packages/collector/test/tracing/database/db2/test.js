@@ -100,7 +100,6 @@ mochaSuiteFn('tracing/db2', function () {
 
       controls = new ProcessControls({
         dirname: __dirname,
-        port: 3322,
         useGlobalAgent: true,
         env: {
           DB2_NAME,
@@ -1067,7 +1066,6 @@ mochaSuiteFn('tracing/db2', function () {
 
       controls = new ProcessControls({
         dirname: __dirname,
-        port: 3322,
         useGlobalAgent: true,
         tracingEnabled: false,
         env: {
@@ -1181,7 +1179,6 @@ mochaSuiteFn('tracing/db2', function () {
 
       controls = new ProcessControls({
         dirname: __dirname,
-        port: 3322,
         useGlobalAgent: true,
         tracingEnabled: false,
         env: {

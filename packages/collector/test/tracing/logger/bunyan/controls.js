@@ -8,12 +8,12 @@
 const spawn = require('child_process').spawn;
 const request = require('request-promise');
 const path = require('path');
+const portfinder = require('../../../test_util/portfinder');
 
 const testUtils = require('../../../../../core/test/test_util');
 const config = require('../../../../../core/test/config');
 const agentPort = require('../../../globalAgent').PORT;
 const upstreamPort = require('../../../apps/expressControls').appPort;
-const appPort = (exports.appPort = 3215);
 
 let appProcess;
 
@@ -37,7 +37,7 @@ exports.registerTestHooks = (opts = {}) => {
   beforeEach(() => {
     const env = Object.create(process.env);
     env.AGENT_PORT = agentPort;
-    env.APP_PORT = appPort;
+    env.APP_PORT = exports.appPort = portfinder();
     env.UPSTREAM_PORT = upstreamPort;
     env.STACK_TRACE_LENGTH = opts.stackTraceLength || 0;
     env.TRACING_ENABLED = opts.enableTracing !== false;
@@ -59,7 +59,7 @@ function waitUntilServerIsUp() {
   return testUtils.retry(() =>
     request({
       method: 'GET',
-      url: `http://127.0.0.1:${appPort}`,
+      url: `http://127.0.0.1:${exports.appPort}`,
       headers: {
         'X-INSTANA-L': '0'
       }
@@ -69,4 +69,4 @@ function waitUntilServerIsUp() {
 
 exports.getPid = () => appProcess.pid;
 
-exports.trigger = (level, headers = {}) => request(`http://127.0.0.1:${appPort}/${level}`, { headers });
+exports.trigger = (level, headers = {}) => request(`http://127.0.0.1:${exports.appPort}/${level}`, { headers });

@@ -36,7 +36,7 @@ const serverGraphQLEndpoint = `${serverBaseUrl}/graphql`;
 const serverWsGraphQLUrl = `ws://127.0.0.1:${serverPort}/graphql`;
 
 const app = express();
-const port = process.env.APP_PORT || 3216;
+const port = process.env.APP_PORT;
 const logPrefix = `GraphQL Client (${process.pid}):\t`;
 
 let channel;

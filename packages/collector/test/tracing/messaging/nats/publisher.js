@@ -14,7 +14,7 @@ const express = require('express');
 const NATS = require('nats');
 
 const app = express();
-const port = process.env.APP_PORT || 3216;
+const port = process.env.APP_PORT;
 const nats = NATS.connect();
 let connected = false;
 

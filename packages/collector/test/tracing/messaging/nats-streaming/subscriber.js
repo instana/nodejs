@@ -14,7 +14,7 @@ const request = require('request-promise');
 const natsStreaming = require('node-nats-streaming');
 
 const app = express();
-const port = process.env.APP_PORT || 3215;
+const port = process.env.APP_PORT;
 const client = natsStreaming.connect('test-cluster', 'test-client-subscriber', {
   url: 'nats://localhost:4223'
 });

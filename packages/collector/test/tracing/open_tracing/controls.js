@@ -8,11 +8,10 @@
 const spawn = require('child_process').spawn;
 const request = require('request-promise');
 const path = require('path');
-
+const portfinder = require('../../test_util/portfinder');
 const testUtils = require('../../../../core/test/test_util');
 const config = require('../../../../core/test/config');
 const agentPort = require('../../globalAgent').PORT;
-const appPort = (exports.appPort = 3215);
 
 let expressOpentracingApp;
 
@@ -22,7 +21,7 @@ exports.registerTestHooks = opts => {
 
     const env = Object.create(process.env);
     env.AGENT_PORT = agentPort;
-    env.APP_PORT = appPort;
+    env.APP_PORT = exports.appPort = portfinder();
     env.TRACING_ENABLED = opts.enableTracing !== false;
     env.DISABLE_AUTOMATIC_TRACING = opts.automaticTracingEnabled === false;
 
@@ -43,7 +42,7 @@ function waitUntilServerIsUp() {
   return testUtils.retry(() =>
     request({
       method: 'GET',
-      url: `http://127.0.0.1:${appPort}`,
+      url: `http://127.0.0.1:${exports.appPort}`,
       headers: {
         'X-INSTANA-L': '0'
       }
@@ -56,5 +55,5 @@ exports.getPid = () => expressOpentracingApp.pid;
 exports.sendRequest = opts =>
   request({
     method: opts.method,
-    url: `http://127.0.0.1:${appPort}${opts.path}`
+    url: `http://127.0.0.1:${exports.appPort}${opts.path}`
   });

@@ -64,7 +64,7 @@ function execOperation(op, cb, withError = false, ctx = false) {
 const availableOperations = Object.keys(operations);
 
 const app = express();
-const port = process.env.APP_PORT || 3215;
+const port = process.env.APP_PORT;
 
 function httpError(res, err) {
   res.status(500).send({

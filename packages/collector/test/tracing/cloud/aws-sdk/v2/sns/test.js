@@ -60,7 +60,6 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/sns', function () {
   describe('tracing enabled, no suppression', function () {
     const senderControls = new ProcessControls({
       appPath: path.join(__dirname, 'app'),
-      port: 3215,
       useGlobalAgent: true,
       env: {
         AWS_SNS_TOPIC_ARN: topicArn
@@ -69,7 +68,6 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/sns', function () {
 
     const receiverControls = new ProcessControls({
       appPath: path.join(__dirname, '../sqs/receiveMessage'),
-      port: 3216,
       useGlobalAgent: true,
       env: {
         SQS_RECEIVE_METHOD: 'callback',
@@ -178,7 +176,6 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/sns', function () {
 
     const appControls = new ProcessControls({
       appPath: path.join(__dirname, 'app'),
-      port: 3215,
       useGlobalAgent: true,
       tracingEnabled: false,
       env: {
@@ -211,7 +208,6 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/sns', function () {
   describe('tracing enabled but suppressed', () => {
     const appControls = new ProcessControls({
       appPath: path.join(__dirname, 'app'),
-      port: 3215,
       useGlobalAgent: true,
       env: {
         AWS_SNS_TOPIC_ARN: topicArn

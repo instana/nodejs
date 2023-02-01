@@ -65,7 +65,6 @@ mochaSuiteFn('tracing/messaging/kafka-avro', function () {
   describe('tracing enabled, no suppression', function () {
     const producerControls = new ProcessControls({
       appPath: path.join(__dirname, 'producer'),
-      port: 3216,
       useGlobalAgent: true
     });
 
@@ -74,7 +73,6 @@ mochaSuiteFn('tracing/messaging/kafka-avro', function () {
     describe('consuming message', () => {
       const consumerControls = new ProcessControls({
         appPath: path.join(__dirname, 'consumer'),
-        port: 3215,
         useGlobalAgent: true
       });
 
@@ -152,7 +150,6 @@ mochaSuiteFn('tracing/messaging/kafka-avro', function () {
 
     const producerControls = new ProcessControls({
       appPath: path.join(__dirname, 'producer'),
-      port: 3216,
       useGlobalAgent: true,
       tracingEnabled: false
     });
@@ -162,7 +159,6 @@ mochaSuiteFn('tracing/messaging/kafka-avro', function () {
     describe('producing and consuming', () => {
       const consumerControls = new ProcessControls({
         appPath: path.join(__dirname, 'consumer'),
-        port: 3215,
         useGlobalAgent: true,
         tracingEnabled: false
       });
@@ -190,7 +186,6 @@ mochaSuiteFn('tracing/messaging/kafka-avro', function () {
   describe('tracing enabled but suppressed', () => {
     const producerControls = new ProcessControls({
       appPath: path.join(__dirname, 'producer'),
-      port: 3216,
       useGlobalAgent: true
     });
 
@@ -199,7 +194,6 @@ mochaSuiteFn('tracing/messaging/kafka-avro', function () {
     describe('tracing suppressed', () => {
       const receiverControls = new ProcessControls({
         appPath: path.join(__dirname, 'consumer'),
-        port: 3215,
         useGlobalAgent: true
       });
 

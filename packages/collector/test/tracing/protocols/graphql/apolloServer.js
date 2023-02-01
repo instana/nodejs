@@ -17,7 +17,7 @@ const morgan = require('morgan');
 const { schema, pubsub, pinoLogger } = require('./schema')();
 const data = require('./data');
 
-const port = process.env.APP_PORT || 3217;
+const port = process.env.APP_PORT;
 const app = express();
 
 const logPrefix = `GraphQL/Apollo Server (${process.pid}):\t`;

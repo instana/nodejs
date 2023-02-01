@@ -47,7 +47,6 @@ mochaSuiteFn('tracing/kafkajs', function () {
       describe(`header format: ${headerFormat}`, function () {
         producerControls = new ProcessControls({
           appPath: path.join(__dirname, 'producer'),
-          port: 3216,
           useGlobalAgent: true,
           env: {
             INSTANA_KAFKA_HEADER_FORMAT: headerFormat
@@ -135,7 +134,6 @@ mochaSuiteFn('tracing/kafkajs', function () {
     const headerFormat = 'string';
     producerControls = new ProcessControls({
       appPath: path.join(__dirname, 'producer'),
-      port: 3216,
       useGlobalAgent: true,
       env: {
         INSTANA_KAFKA_HEADER_FORMAT: headerFormat
@@ -191,7 +189,6 @@ mochaSuiteFn('tracing/kafkajs', function () {
 
     producerControls = new ProcessControls({
       appPath: path.join(__dirname, 'producer'),
-      port: 3216,
       useGlobalAgent: true,
       env: {
         INSTANA_KAFKA_TRACE_CORRELATION: 'false'
@@ -279,7 +276,6 @@ mochaSuiteFn('tracing/kafkajs', function () {
     });
     producerControls = new ProcessControls({
       appPath: path.join(__dirname, 'producer'),
-      port: 3216,
       agentControls: customAgentControls
     }).registerTestHooks();
     consumerControls = new ProcessControls({
@@ -318,7 +314,6 @@ mochaSuiteFn('tracing/kafkajs', function () {
     });
     producerControls = new ProcessControls({
       appPath: path.join(__dirname, 'producer'),
-      port: 3216,
       agentControls: customAgentControls
     }).registerTestHooks();
     consumerControls = new ProcessControls({
@@ -354,7 +349,6 @@ mochaSuiteFn('tracing/kafkajs', function () {
   describe('tracing disabled', () => {
     producerControls = new ProcessControls({
       appPath: path.join(__dirname, 'producer'),
-      port: 3216,
       useGlobalAgent: true,
       tracingEnabled: false
     });

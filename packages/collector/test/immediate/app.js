@@ -13,7 +13,7 @@ const morgan = require('morgan');
 
 const app = express();
 
-const port = process.env.APP_PORT || 3215;
+const port = process.env.APP_PORT;
 
 const logPrefix = `Auto Attach (${process.pid}):\t`;
 

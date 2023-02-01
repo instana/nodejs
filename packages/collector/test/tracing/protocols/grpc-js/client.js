@@ -4,7 +4,7 @@
 
 'use strict';
 
-const port = process.env.APP_PORT || 3216;
+const port = process.env.APP_PORT;
 
 require('../../../..')();
 

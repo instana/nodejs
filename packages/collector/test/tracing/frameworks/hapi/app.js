@@ -11,7 +11,7 @@ const LEGACY_HAPI = process.env.LEGACY_HAPI === 'true';
 const Hapi = require(LEGACY_HAPI ? 'hapi' : '@hapi/hapi');
 
 const logPrefix = `Hapi Server: (${process.pid}):\t`;
-const port = process.env.APP_PORT || 3216;
+const port = process.env.APP_PORT;
 
 const init = async () => {
   const server = Hapi.server({

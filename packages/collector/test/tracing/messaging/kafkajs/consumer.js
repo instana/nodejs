@@ -14,7 +14,7 @@ const { v4: uuid } = require('uuid');
 
 const delay = require('../../../../../core/test/test_util/delay');
 
-const appPort = process.env.APP_PORT || 3215;
+const appPort = process.env.APP_PORT;
 const agentPort = process.env.INSTANA_AGENT_PORT || 42699;
 const runAsStandAlone = !!process.env.RUN_AS_STAND_ALONE;
 

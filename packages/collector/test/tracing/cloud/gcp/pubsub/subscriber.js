@@ -17,7 +17,7 @@ const request = require('request-promise');
 const { sendToParent } = require('../../../../../../core/test/test_util');
 const { createTopicAndSubscription } = require('./pubsubUtil');
 
-const port = process.env.APP_PORT || 3215;
+const port = process.env.APP_PORT;
 const logPrefix = `Google Cloud Pub/Sub Subscriber (${process.pid}):\t`;
 
 let connected = false;

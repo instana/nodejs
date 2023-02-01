@@ -18,7 +18,7 @@ const { schema } = require('./schema')();
 
 const graphql = graphQL.graphql;
 
-const port = process.env.APP_PORT || 3217;
+const port = process.env.APP_PORT;
 const app = express();
 
 const logPrefix = `GraphQL (raw) Server (${process.pid}):\t`;

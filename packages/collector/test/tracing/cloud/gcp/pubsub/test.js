@@ -65,7 +65,6 @@ if (
 
       const publisherControls = new ProcessControls({
         appPath: path.join(__dirname, 'publisher'),
-        port: 3216,
         useGlobalAgent: true,
         env: {
           GCP_PROJECT: projectId,
@@ -201,7 +200,6 @@ if (
 
       const publisherControls = new ProcessControls({
         appPath: path.join(__dirname, 'publisher'),
-        port: 3216,
         useGlobalAgent: true,
         env: {
           GCP_PROJECT: projectId,
@@ -250,7 +248,6 @@ if (
 
       const publisherControls = new ProcessControls({
         appPath: path.join(__dirname, 'publisher'),
-        port: 3216,
         useGlobalAgent: true,
         tracingEnabled: false,
         env: {

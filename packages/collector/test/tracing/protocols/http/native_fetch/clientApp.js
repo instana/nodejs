@@ -15,7 +15,7 @@ const morgan = require('morgan');
 const app = express();
 const port = process.env.APP_PORT || 3000;
 
-const serverPort = process.env.SERVER_PORT || 3217;
+const serverPort = process.env.SERVER_PORT;
 
 // Note: In the client test app for the Node.js http core module, we use
 // const baseUrl = `http://user:password@localhost:${serverPort}`;
