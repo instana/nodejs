@@ -7,7 +7,8 @@
 
 import express from 'express';
 const app = express();
-const port = process.env.APP_PORT;
+import getAppPort from '../../../test_util/app-port';
+const port = getAppPort();
 const agentPort = process.env.INSTANA_AGENT_PORT || 42699;
 import fetch from 'node-fetch';
 const logPrefix = `Memcached (${process.pid}):\t`;

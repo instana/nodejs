@@ -11,7 +11,7 @@ const Koa = require('koa');
 const Router = require('koa-router');
 const bodyParser = require('koa-bodyparser');
 const morgan = require('koa-morgan');
-const port = process.env.APP_PORT;
+const port = require('../../../test_util/app-port')();
 const logPrefix = `Koa Server: (${process.pid}):\t`;
 
 const app = new Koa();

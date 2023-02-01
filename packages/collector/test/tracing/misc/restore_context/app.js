@@ -14,7 +14,7 @@ const pino = require('pino')();
 
 const app = express();
 const logPrefix = `Restore Context (${process.pid}):\t`;
-const port = process.env.APP_PORT;
+const port = require('../../../test_util/app-port')();
 
 const customCallbackQueue = [];
 const customPromiseQueue = [];

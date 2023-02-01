@@ -20,7 +20,7 @@ import readSymbolProperty from '../../../../../../core/src/util/readSymbolProper
 const streamSymbol = 'Symbol(stream)';
 
 const logPrefix = `HTTP: Server (${process.pid}):\t`;
-const port = process.env.APP_PORT;
+const port = require('../test_util/app-port')();
 
 if (process.env.USE_HTTP2 === 'true' && process.env.USE_HTTPS === 'false') {
   throw new Error('Using the HTTP2 compat API without HTTPS is not supported by this test app.');

@@ -8,6 +8,9 @@
 const agentPort = process.env.INSTANA_AGENT_PORT || 42699;
 import request from 'request-promise';
 import delay from '../../../../../../../core/test/test_util/delay';
+import getAppPort from '../../../../../test_util/app-port';
+const port = getAppPort();
+
 import AWS from 'aws-sdk';
 import express from 'express';
 const logPrefix = `AWS SDK v2 DynamoDB (${process.pid}):\t`;
@@ -177,7 +180,6 @@ const DynamoDBApi = {
 };
 
 const app = express();
-const port = process.env.APP_PORT;
 
 app.get('/', (_req, res) => {
   res.send('Ok');

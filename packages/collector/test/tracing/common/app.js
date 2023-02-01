@@ -37,7 +37,7 @@ require('../../..')(config);
 
 const http = require('http');
 const pino = require('pino')();
-const port = process.env.APP_PORT;
+const port = require('../../test_util/app-port')();
 const app = new http.Server();
 
 app.on('request', (req, res) => {

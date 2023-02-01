@@ -30,7 +30,7 @@ if (isCI() && process.env.GOOGLE_APPLICATION_CREDENTIALS_CONTENT) {
 
 const storage = new Storage(options);
 
-const port = process.env.APP_PORT;
+const port = require('../../../../test_util/app-port')();
 const bucketName = 'nodejs-tracer-test-bucket';
 const fileName = 'test-file.txt';
 const localFileName = path.join(__dirname, fileName);

@@ -17,7 +17,7 @@ const router = require('../../../test_util/simpleHttp2Router');
 const { HTTP2_HEADER_STATUS } = http2.constants;
 
 const logPrefix = `HTTP2: Client (${process.pid}):\t`;
-const port = process.env.APP_PORT;
+const port = require('../../../test_util/app-port')();
 const downstreamPort = process.env.SERVER_PORT;
 const sslDir = path.join(__dirname, '..', '..', '..', 'apps', 'ssl');
 

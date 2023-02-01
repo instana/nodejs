@@ -23,7 +23,7 @@ if (process.env.REQUIRE_BEFORE_COLLECTOR) {
   httpGet = http.get;
 }
 
-const port = process.env.APP_PORT;
+const port = require('../../../test_util/app-port')();
 const app = new http.Server();
 
 const logPrefix = `Partially Uninstrumented (${process.pid}):\t`;

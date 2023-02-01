@@ -15,7 +15,8 @@ AWS.config.update({ region: 'us-east-2' });
 const s3 = new AWS.S3();
 
 const app = express();
-const port = process.env.APP_PORT;
+import getAppPort from '../../../../../test_util/app-port';
+const port = getAppPort();
 
 import log from '@instana/core/test/test_util/log.js';
 const logger = log.getLogger(logPrefix);

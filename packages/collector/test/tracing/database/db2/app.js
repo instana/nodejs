@@ -15,7 +15,7 @@ const ibmdb = require('ibm_db');
 const { isCI } = require('@instana/core/test/test_util');
 
 const app = express();
-const port = process.env.APP_PORT;
+const port = require('../../../test_util/app-port')();
 const logPrefix = `DB2 App (${process.pid}):\t`;
 const DB2_NAME = process.env.DB2_NAME;
 let connStr = 'HOSTNAME=localhost;UID=node;PWD=nodepw;PORT=58885;PROTOCOL=TCPIP';

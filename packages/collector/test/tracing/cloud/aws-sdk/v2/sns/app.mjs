@@ -10,6 +10,8 @@ import fetch from 'node-fetch';
 import delay from '@instana/core/test/test_util/delay';
 import AWS from 'aws-sdk';
 import express from 'express';
+import getAppPort from '../../../../../test_util/app-port';
+const port = getAppPort();
 const logPrefix = `AWS SDK v2 SNS (${process.pid}):\t`;
 AWS.config.update({ region: 'us-east-2' });
 const sns = new AWS.SNS();
@@ -125,7 +127,6 @@ const SNSApi = {
 };
 
 const app = express();
-const port = process.env.APP_PORT;
 
 app.get('/', (_req, res) => {
   res.send('Ok');

@@ -17,7 +17,7 @@ const serverBaseUrl = `http://127.0.0.1:${serverPort}`;
 const serverGraphQLEndpoint = `${serverBaseUrl}/graphql`;
 
 const app = express();
-const port = process.env.APP_PORT;
+const port = require('../../../test_util/app-port')();
 const logPrefix = `Apollo Federation Client (${process.pid}):\t`;
 
 if (process.env.WITH_STDOUT) {

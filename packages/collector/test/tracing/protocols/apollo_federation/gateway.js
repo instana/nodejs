@@ -19,7 +19,7 @@ const inventoryPort = process.env.SERVICE_PORT_INVENTORY;
 const productsPort = process.env.SERVICE_PORT_PRODUCTS;
 const reviewsPort = process.env.SERVICE_PORT_REVIEWS;
 
-const port = process.env.APP_PORT;
+const port = require('../../../test_util/app-port')();
 const app = express();
 
 const logPrefix = `Apollo Federation Gateway (${process.pid}):\t`;

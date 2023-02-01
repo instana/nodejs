@@ -12,7 +12,7 @@ const path = require('path');
 
 const { HTTP2_HEADER_METHOD, HTTP2_HEADER_PATH, HTTP2_HEADER_STATUS } = require('http2').constants;
 
-const port = process.env.APP_PORT;
+const port = require('../../../test_util/app-port')();
 
 const logPrefix = `Spec Compliance Test Downstream Target (${useHttp2 ? 'HTTP2' : 'HTTP1'}) (${process.pid}):\t`;
 

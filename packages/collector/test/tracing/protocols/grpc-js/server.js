@@ -4,7 +4,7 @@
 
 'use strict';
 
-const port = process.env.APP_PORT;
+const port = require('../../../test_util/app-port')();
 
 require('../../../..')();
 
