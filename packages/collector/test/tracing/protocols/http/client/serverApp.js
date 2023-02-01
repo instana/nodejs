@@ -14,7 +14,7 @@ const express = require('express');
 const fs = require('fs');
 const morgan = require('morgan');
 const path = require('path');
-
+const port = require('../../../../test_util/app-port')();
 const protocol = process.env.USE_HTTPS === 'true' ? 'https' : 'http';
 const logPrefix = `Express/${protocol} Server (${process.pid}):\t`;
 
@@ -71,11 +71,11 @@ if (process.env.USE_HTTPS === 'true') {
       },
       app
     )
-    .listen(process.env.APP_PORT, () => {
+    .listen(port, () => {
       log(`Listening on port ${process.env.APP_PORT} (TLS: true).`);
     });
 } else {
-  app.listen(process.env.APP_PORT, () => {
+  app.listen(port, () => {
     log(`Listening on port ${process.env.APP_PORT} (TLS: false).`);
   });
 }

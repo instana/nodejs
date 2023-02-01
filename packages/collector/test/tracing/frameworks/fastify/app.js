@@ -23,6 +23,7 @@ if (FASTIFY_REQUIRE !== 'fastify') {
 
 require('../../../..')();
 const fastify = require('fastify');
+const port = require('../../../test_util/app-port')();
 
 // NOTE: beforeHandler got deprecated in v2 and removed in v3
 //       see https://github.com/fastify/fastify/pull/1750
@@ -131,7 +132,7 @@ app.register(subRouter, { prefix: '/sub' });
 
 const start = async () => {
   try {
-    await app.listen(process.env.APP_PORT);
+    await app.listen(port);
     log(`listening on ${app.server.address().port} with Fastify version ${FASTIFY_VERSION}`);
   } catch (err) {
     log('startup failure', err);

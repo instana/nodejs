@@ -12,6 +12,7 @@ const instana = require('../../..')();
 const express = require('express');
 const morgan = require('morgan');
 const bodyParser = require('body-parser');
+const port = require('../../test_util/app-port')();
 
 const app = express();
 const logPrefix = `API: Server (${process.pid}):\t`;
@@ -63,8 +64,8 @@ app.get('/span/manuallyended', (req, res) => {
   }, 50);
 });
 
-app.listen(process.env.APP_PORT, () => {
-  log(`Listening on port: ${process.env.APP_PORT}`);
+app.listen(port, () => {
+  log(`Listening on port: ${port}`);
 });
 
 function serialize(span) {

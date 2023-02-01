@@ -30,6 +30,7 @@ let confirmChannel;
 const request = require('request-promise');
 const bodyParser = require('body-parser');
 const express = require('express');
+const port = require('../../../test_util/app-port')();
 const app = express();
 
 // promise based amqp publisher
@@ -138,8 +139,8 @@ app.post('/send-to-confirm-queue', (req, res) => {
   });
 });
 
-app.listen(process.env.APP_PORT, () => {
-  log(`Listening on port: ${process.env.APP_PORT}`);
+app.listen(port, () => {
+  log(`Listening on port: ${port}`);
 });
 
 function log() {

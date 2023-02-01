@@ -59,7 +59,7 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/sns', function () {
 
   describe('tracing enabled, no suppression', function () {
     const senderControls = new ProcessControls({
-      appPath: path.join(__dirname, 'app'),
+      dirname: __dirname,
       useGlobalAgent: true,
       env: {
         AWS_SNS_TOPIC_ARN: topicArn

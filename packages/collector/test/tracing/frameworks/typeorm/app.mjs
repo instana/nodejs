@@ -10,6 +10,8 @@
 import express from 'express';
 import morgan from 'morgan';
 import bodyParser from 'body-parser';
+import getAppPort from '../../../test_util/app-port.js';
+const port = getAppPort();
 
 const app = express();
 const logPrefix = `Typeorm App (${process.pid}):\t`;
@@ -85,8 +87,8 @@ app.get('/find-one', async (req, res) => {
   res.json();
 });
 
-app.listen(process.env.APP_PORT, () => {
-  log(`Listening on port: ${process.env.APP_PORT}`);
+app.listen(port, () => {
+  log(`Listening on port: ${port}`);
 });
 
 function log() {

@@ -36,6 +36,7 @@ const request = require('request-promise');
 const bodyParser = require('body-parser');
 const express = require('express');
 const morgan = require('morgan');
+const port = require('../../../test_util/app-port')();
 
 const app = express();
 const logPrefix = `Express / MySQL App (${process.pid}):\t`;
@@ -154,7 +155,7 @@ app.post('/valuesAndCall', (req, res) => {
   }
 });
 
-app.listen(process.env.APP_PORT, () => {
+app.listen(port, () => {
   log(
     `Listening on port: ${process.env.APP_PORT} (driver: ${driver}, access: ${accessFunction}, cluster: ${useCluster})`
   );

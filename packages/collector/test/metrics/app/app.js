@@ -12,6 +12,7 @@ const morgan = require('morgan');
 
 const app = express();
 const logPrefix = `Metrics App (${process.pid}):\t`;
+const port = require('../../test_util/app-port')();
 
 if (process.env.WITH_STDOUT) {
   app.use(morgan(`${logPrefix}:method :url :status`));
@@ -19,8 +20,8 @@ if (process.env.WITH_STDOUT) {
 
 app.get('/', (req, res) => res.sendStatus(200));
 
-app.listen(process.env.APP_PORT, () => {
-  log(`Listening on port: ${process.env.APP_PORT}`);
+app.listen(port, () => {
+  log(`Listening on port: ${port}`);
 });
 
 function log() {

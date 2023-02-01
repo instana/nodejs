@@ -11,8 +11,9 @@ const cls = require('../../../../../core/src/tracing/cls');
 
 const express = require('express');
 const morgan = require('morgan');
-
 const graphqlSubscriptions = require('graphql-subscriptions');
+const port = require('../../../test_util/app-port')();
+
 const pubsub = new graphqlSubscriptions.PubSub();
 const eventName = 'event-name';
 const asyncIterator = pubsub.asyncIterator(eventName);
@@ -60,8 +61,8 @@ app.get('/pull-before-push', (req, res) => {
   }, 200);
 });
 
-app.listen(process.env.APP_PORT, () => {
-  log(`Listening on port: ${process.env.APP_PORT}`);
+app.listen(port, () => {
+  log(`Listening on port: ${port}`);
 });
 
 function log() {

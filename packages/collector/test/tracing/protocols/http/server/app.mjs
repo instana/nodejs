@@ -15,12 +15,13 @@ import https from 'https';
 import http2 from 'http2';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
+import getAppPort from '../../../../test_util/app-port.js';
+const port = getAppPort();
 import readSymbolProperty from '../../../../../../core/src/util/readSymbolProperty.js';
 
 const streamSymbol = 'Symbol(stream)';
 
 const logPrefix = `HTTP: Server (${process.pid}):\t`;
-const port = require('../test_util/app-port')();
 
 if (process.env.USE_HTTP2 === 'true' && process.env.USE_HTTPS === 'false') {
   throw new Error('Using the HTTP2 compat API without HTTPS is not supported by this test app.');

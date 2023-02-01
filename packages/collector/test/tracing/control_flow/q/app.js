@@ -15,8 +15,8 @@ const bodyParser = require('body-parser');
 const EventEmitter = require('events');
 const express = require('express');
 const morgan = require('morgan');
-
 const Q = require('q');
+const port = require('../../../test_util/app-port')();
 
 const agentPort = process.env.INSTANA_AGENT_PORT;
 const app = express();
@@ -208,8 +208,8 @@ function sendResponse(res, err) {
   res.json(responsePayload);
 }
 
-app.listen(process.env.APP_PORT, () => {
-  log(`Listening on port: ${process.env.APP_PORT}`);
+app.listen(port, () => {
+  log(`Listening on port: ${port}`);
 });
 
 function doSomethingAsync() {

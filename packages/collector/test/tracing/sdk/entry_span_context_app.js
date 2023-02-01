@@ -10,7 +10,7 @@ const instana = require('../../..')();
 const express = require('express');
 const morgan = require('morgan');
 const { delay, getLogger } = require('@instana/core/test/test_util');
-
+const port = require('../../test_util/app-port')();
 const app = express();
 const logPrefix = `SDK entry span context (${process.pid}):\t`;
 const log = getLogger(logPrefix);
@@ -240,6 +240,6 @@ function annotateWithParentContext() {
   instana.currentSpan().annotate(parentContextAnnotation, prototypeOfActiveContext);
 }
 
-app.listen(process.env.APP_PORT, () => {
-  log(`Listening on port: ${process.env.APP_PORT}`);
+app.listen(port, () => {
+  log(`Listening on port: ${port}`);
 });

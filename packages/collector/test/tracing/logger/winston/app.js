@@ -14,9 +14,8 @@ const bodyParser = require('body-parser');
 const express = require('express');
 const morgan = require('morgan');
 const semver = require('semver');
-
 const winston = require('winston');
-
+const port = require('../../../test_util/app-port')();
 const agentPort = process.env.INSTANA_AGENT_PORT;
 
 let logger;
@@ -119,8 +118,8 @@ function finish(res) {
   });
 }
 
-app.listen(process.env.APP_PORT, () => {
-  log(`Listening on port: ${process.env.APP_PORT}`);
+app.listen(port, () => {
+  log(`Listening on port: ${port}`);
 });
 
 function log() {

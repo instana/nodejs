@@ -7,13 +7,13 @@
 
 import hapi from 'hapi';
 import hapiNew from '@hapi/hapi';
+import getAppPort from '../../../test_util/app-port.js';
+const port = getAppPort();
 
 const LEGACY_HAPI = process.env.LEGACY_HAPI === 'true';
 const Hapi = LEGACY_HAPI ? hapi : hapyNew;
 
 const logPrefix = `Hapi Server: (${process.pid}):\t`;
-import getAppPort from '../../../test_util/app-port';
-const port = getAppPort();
 
 const init = async () => {
   const server = Hapi.server({

@@ -10,6 +10,9 @@
 import instanaFactory from '../../../src/index.js';
 const instana = instanaFactory();
 
+import getAppPort from '../../test_util/app-port.js';
+const port = getAppPort();
+
 import express from 'express';
 import morgan from 'morgan';
 import bodyParser from 'body-parser';
@@ -64,8 +67,8 @@ app.get('/span/manuallyended', (req, res) => {
   }, 50);
 });
 
-app.listen(process.env.APP_PORT, () => {
-  log(`Listening on port: ${process.env.APP_PORT}`);
+app.listen(port, () => {
+  log(`Listening on port: ${port}`);
 });
 
 function serialize(span) {

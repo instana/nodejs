@@ -90,8 +90,8 @@ function sendActiveTraceContext(res) {
   res.json(instana.opentracing.getCurrentlyActiveInstanaSpanContext());
 }
 
-app.listen(process.env.APP_PORT, () => {
-  log(`Listening on port: ${process.env.APP_PORT}`);
+app.listen(port, () => {
+  log(`Listening on port: ${port}`);
 });
 
 function log() {

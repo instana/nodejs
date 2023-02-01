@@ -17,6 +17,8 @@ const express = require('express');
 const morgan = require('morgan');
 const request = require('request-promise-native');
 const { Client } = require('@elastic/elasticsearch');
+const port = require('../../../test_util/app-port')();
+
 const app = express();
 const logPrefix = `Elasticsearch ${process.env.ELASTIC_VERSION} (Modern Client) (${process.pid}):\t`;
 
@@ -169,8 +171,8 @@ app.post('/index', (req, res) => {
     );
 });
 
-app.listen(process.env.APP_PORT, () => {
-  log(`Listening on port: ${process.env.APP_PORT}`);
+app.listen(port, () => {
+  log(`Listening on port: ${port}`);
 });
 
 function log() {

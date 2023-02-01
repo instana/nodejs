@@ -13,6 +13,8 @@ const instana = instanaFactory();
 import bodyParser from 'body-parser';
 import express from 'express';
 import morgan from 'morgan';
+import getAppPort from '../../../test_util/app-port.js';
+const port = getAppPort();
 
 const app = express();
 const logPrefix = `Express HTTP: Server (${process.pid}):\t`;
@@ -72,8 +74,8 @@ function authenticationMiddleware() {
   };
 }
 
-app.listen(process.env.APP_PORT, () => {
-  log(`Listening on port: ${process.env.APP_PORT}`);
+app.listen(port, () => {
+  log(`Listening on port: ${port}`);
 });
 
 function log() {

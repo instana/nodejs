@@ -12,6 +12,7 @@ const bodyParser = require('body-parser');
 const EventEmitter = require('events');
 const express = require('express');
 const morgan = require('morgan');
+const port = require('../../../test_util/app-port')();
 
 const app = express();
 const logPrefix = `Express app with native promises (${process.pid}):\t`;
@@ -86,8 +87,8 @@ function sendActiveTraceContext(res) {
   res.json(instana.opentracing.getCurrentlyActiveInstanaSpanContext());
 }
 
-app.listen(process.env.APP_PORT, () => {
-  log(`Listening on port: ${process.env.APP_PORT}`);
+app.listen(port, () => {
+  log(`Listening on port: ${port}`);
 });
 
 function delay(ms) {

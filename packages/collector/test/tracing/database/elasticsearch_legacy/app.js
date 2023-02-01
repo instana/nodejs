@@ -16,6 +16,7 @@ const express = require('express');
 const morgan = require('morgan');
 const request = require('request-promise-native');
 const elasticsearch = require('elasticsearch');
+const port = require('../../../test_util/app-port')();
 
 const app = express();
 const logPrefix = `Elasticsearch (Legacy Client) (${process.pid}):\t`;
@@ -194,8 +195,8 @@ app.get('/searchAndGet', (req, res) => {
     });
 });
 
-app.listen(process.env.APP_PORT, () => {
-  log(`Listening on port: ${process.env.APP_PORT}`);
+app.listen(port, () => {
+  log(`Listening on port: ${port}`);
 });
 
 function log() {

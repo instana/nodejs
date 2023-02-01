@@ -230,8 +230,8 @@ app.post('/pipelineKeepTracing', (req, res) => {
     });
 });
 
-app.listen(process.env.APP_PORT, () => {
-  log(`Listening on port: ${process.env.APP_PORT}`);
+app.listen(port, () => {
+  log(`Listening on port: ${port}`);
 });
 
 function log() {

@@ -15,6 +15,7 @@ const express = require('express');
 const morgan = require('morgan');
 const sql = require('mssql');
 const devNull = require('dev-null');
+const port = require('../../../test_util/app-port')();
 
 const { delay, isCI } = require('@instana/core/test/test_util');
 
@@ -526,8 +527,8 @@ app.get('/cancel', (req, res) => {
   request.cancel();
 });
 
-app.listen(process.env.APP_PORT, () => {
-  log(`Listening on port: ${process.env.APP_PORT}`);
+app.listen(port, () => {
+  log(`Listening on port: ${port}`);
 });
 
 function log() {

@@ -7,7 +7,7 @@
 
 import express from 'express';
 const app = express();
-import getAppPort from '../../../test_util/app-port';
+import getAppPort from '../../../test_util/app-port.js';
 const port = getAppPort();
 const agentPort = process.env.INSTANA_AGENT_PORT || 42699;
 import fetch from 'node-fetch';

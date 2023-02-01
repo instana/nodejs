@@ -13,12 +13,12 @@ import ibmdb from 'ibm_db';
 import testUtil from '@instana/core/test/test_util/index.js';
 import { dirname } from 'path';
 import { fileURLToPath } from 'url';
+import getAppPort from '../../../test_util/app-port.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 const app = express();
-import getAppPort from '../../../test_util/app-port';
 const port = getAppPort();
 const logPrefix = `DB2 App (${process.pid}):\t`;
 const DB2_NAME = process.env.DB2_NAME;

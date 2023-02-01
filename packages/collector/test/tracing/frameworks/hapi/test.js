@@ -26,7 +26,7 @@ mochaSuiteFn('tracing/hapi', function () {
   globalAgent.setUpCleanUpHooks();
 
   const controls = new ProcessControls({
-    appPath: path.join(__dirname, 'app'),
+    dirname: __dirname,
     useGlobalAgent: true
   });
   ProcessControls.setUpHooks(controls);

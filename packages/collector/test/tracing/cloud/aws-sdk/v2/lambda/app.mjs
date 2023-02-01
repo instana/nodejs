@@ -11,7 +11,7 @@ const logPrefix = `AWS SDK v2 Lambda (${process.pid}):\t`;
 AWS.config.update({ region: 'us-east-2' });
 const lambda = new AWS.Lambda();
 const functionName = process.env.AWS_LAMBDA_FUNCTION_NAME || 'wrapped-async';
-import getAppPort from '../../../../../test_util/app-port';
+import getAppPort from '../../../../../test_util/app-port.js';
 const port = getAppPort();
 
 import log from '@instana/core/test/test_util/log.js';

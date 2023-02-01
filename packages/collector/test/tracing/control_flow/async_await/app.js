@@ -17,6 +17,7 @@ require('../../../..')({
 });
 
 const express = require('express');
+const port = require('../../../test_util/app-port')();
 
 const asyncRoute = require('../../../test_util/asyncExpressRoute');
 
@@ -83,8 +84,8 @@ async function sendRequest(requestOptions) {
   return response;
 }
 
-app.listen(process.env.APP_PORT, () => {
-  log(`Listening on port: ${process.env.APP_PORT}`);
+app.listen(port, () => {
+  log(`Listening on port: ${port}`);
 });
 
 function log() {
