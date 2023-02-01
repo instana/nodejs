@@ -35,7 +35,10 @@ mochaSuiteFn('tracing/native fetch', function () {
 
   const clientControls = new ProcessControls({
     appPath: path.join(__dirname, 'clientApp'),
-    useGlobalAgent: true
+    useGlobalAgent: true,
+    env: {
+      SERVER_PORT: serverControls.port
+    }
   });
 
   ProcessControls.setUpHooks(serverControls, clientControls);
@@ -93,7 +96,9 @@ mochaSuiteFn('tracing/native fetch', function () {
               const spans = await globalAgent.instance.getSpans();
               verifySpans({
                 spans,
-                method
+                method,
+                serverControls,
+                clientControls
               });
             });
           });
@@ -119,7 +124,9 @@ mochaSuiteFn('tracing/native fetch', function () {
             const spans = await globalAgent.instance.getSpans();
             verifySpans({
               spans,
-              withQuery: true
+              withQuery: true,
+              serverControls,
+              clientControls
             });
           });
         });
@@ -147,7 +154,9 @@ mochaSuiteFn('tracing/native fetch', function () {
           verifySpans({
             spans,
             method: 'PATCH',
-            withQuery: false
+            withQuery: false,
+            serverControls,
+            clientControls
           });
         });
       }
@@ -178,7 +187,9 @@ mochaSuiteFn('tracing/native fetch', function () {
             'x-my-exit-request-object-request-multi-header':
               'x-my-exit-request-object-request-multi-header-value-1,' +
               'x-my-exit-request-object-request-multi-header-value-2'
-          }
+          },
+          serverControls,
+          clientControls
         });
       });
     });
@@ -207,7 +218,9 @@ mochaSuiteFn('tracing/native fetch', function () {
             'x-my-exit-request-object-request-multi-header':
               'x-my-exit-request-object-request-multi-header-value-1, ' +
               'x-my-exit-request-object-request-multi-header-value-2'
-          }
+          },
+          serverControls,
+          clientControls
         });
       });
     });
@@ -235,7 +248,9 @@ mochaSuiteFn('tracing/native fetch', function () {
             'x-my-exit-options-request-header': 'x-my-exit-options-request-header-value',
             'x-my-exit-options-request-multi-header':
               'x-my-exit-options-request-multi-header-value-1, x-my-exit-options-request-multi-header-value-2'
-          }
+          },
+          serverControls,
+          clientControls
         });
       });
     });
@@ -263,7 +278,9 @@ mochaSuiteFn('tracing/native fetch', function () {
             'x-my-exit-options-request-header': 'x-my-exit-options-request-header-value',
             'x-my-exit-options-request-multi-header':
               'x-my-exit-options-request-multi-header-value-1,x-my-exit-options-request-multi-header-value-2'
-          }
+          },
+          serverControls,
+          clientControls
         });
       });
     });
@@ -283,7 +300,9 @@ mochaSuiteFn('tracing/native fetch', function () {
           spans,
           expectedHeadersOnExitSpan: {
             'x-my-exit-response-header': 'x-my-exit-response-header-value'
-          }
+          },
+          serverControls,
+          clientControls
         });
       });
     });
@@ -313,7 +332,9 @@ mochaSuiteFn('tracing/native fetch', function () {
               'x-my-exit-request-object-request-multi-header-value-1,' +
               'x-my-exit-request-object-request-multi-header-value-2',
             'x-my-exit-response-header': 'x-my-exit-response-header-value'
-          }
+          },
+          serverControls,
+          clientControls
         });
       });
     });
@@ -345,7 +366,9 @@ mochaSuiteFn('tracing/native fetch', function () {
               'x-my-exit-options-request-header': 'x-my-exit-options-request-header-value',
               'x-my-exit-options-request-multi-header':
                 'x-my-exit-options-request-multi-header-value-1, x-my-exit-options-request-multi-header-value-2'
-            }
+            },
+            serverControls,
+            clientControls
           });
         });
       }
@@ -362,11 +385,14 @@ mochaSuiteFn('tracing/native fetch', function () {
         }),
         simple: false
       });
+
       await retry(async () => {
         const spans = await globalAgent.instance.getSpans();
         verifySpans({
           spans,
-          withClientError: 'unreachable'
+          withClientError: 'unreachable',
+          serverControls,
+          clientControls
         });
       });
     });
@@ -384,7 +410,9 @@ mochaSuiteFn('tracing/native fetch', function () {
         const spans = await globalAgent.instance.getSpans();
         verifySpans({
           spans,
-          withClientError: 'malformed-url'
+          withClientError: 'malformed-url',
+          serverControls,
+          clientControls
         });
       });
     });
@@ -403,7 +431,9 @@ mochaSuiteFn('tracing/native fetch', function () {
         const spans = await globalAgent.instance.getSpans();
         verifySpans({
           spans,
-          withServerError: true
+          withServerError: true,
+          serverControls,
+          clientControls
         });
       });
     });
@@ -422,7 +452,9 @@ mochaSuiteFn('tracing/native fetch', function () {
         const spans = await globalAgent.instance.getSpans();
         verifySpans({
           spans,
-          withTimeout: true
+          withTimeout: true,
+          serverControls,
+          clientControls
         });
       });
     });
@@ -522,7 +554,7 @@ function verifySpans({
   if (withClientError === 'unreachable') {
     expectedUrlInHttpExit = 'http://localhost:1023/unreachable';
   } else if (withClientError === 'malformed-url') {
-    expectedUrlInHttpExit = 'http://127.0.0.1:3217malformed-url';
+    expectedUrlInHttpExit = `http://127.0.0.1:${serverControls.port}malformed-url`;
   }
   const exitInClient = verifyHttpExit({
     spans,
@@ -532,7 +564,8 @@ function verifySpans({
     method,
     withClientError,
     withServerError,
-    withTimeout
+    withTimeout,
+    serverControls
   });
   checkQuery({
     span: exitInClient,
@@ -607,7 +640,8 @@ function verifyHttpExit({
   status = 200,
   withClientError,
   withServerError,
-  withTimeout
+  withTimeout,
+  serverControls
 }) {
   const expectations = [
     span => expect(span.n).to.equal('node.http.client'),
@@ -625,7 +659,7 @@ function verifyHttpExit({
     if (withClientError === 'unreachable') {
       expectedClientError = 'fetch failed';
     } else if (withClientError === 'malformed-url') {
-      expectedClientError = 'Failed to parse URL from http:127.0.0.1:3217malformed-url';
+      expectedClientError = `Failed to parse URL from http:127.0.0.1:${serverControls.port}malformed-url`;
     }
     expectations.push(span => expect(span.data.http.status).to.not.exist);
     expectations.push(span => expect(span.data.http.error).to.equal(expectedClientError));
@@ -642,7 +676,7 @@ function verifyHttpExit({
 }
 
 function serverUrl(path_, serverControls) {
-  return `http://localhost${serverControls.getPort()}${path_}`;
+  return `http://localhost:${serverControls.getPort()}${path_}`;
 }
 
 function checkQuery({ span, withQuery, doNotCheckQuery }) {

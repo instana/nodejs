@@ -105,7 +105,7 @@ function createResourceArgument(req, urlPath) {
       if (req.query.withClientError === 'unreachable') {
         return 'http://localhost:1023/unreachable';
       } else if (req.query.withClientError === 'malformed-url') {
-        return 'http:127.0.0.1:3217malformed-url';
+        return `http:127.0.0.1:${serverPort}malformed-url`;
       }
       return `${baseUrl}${pathWithQuery}`;
 
