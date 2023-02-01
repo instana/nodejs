@@ -337,8 +337,6 @@ memcached: &memcached
 
 jobs:
   "node-18":
-    environment:
-      RUN_ESM: true
     docker:
       - image: cimg/node:18.13
       - <<: *zookeeper
@@ -358,8 +356,6 @@ jobs:
     parallelism: 20
 
   "node-16":
-    environment:
-      RUN_ESM: true
     docker:
       - image: circleci/node:16
       - <<: *zookeeper
