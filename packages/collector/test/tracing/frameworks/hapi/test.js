@@ -5,7 +5,6 @@
 
 'use strict';
 
-const path = require('path');
 const semver = require('semver');
 const expect = require('chai').expect;
 

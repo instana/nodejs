@@ -5,7 +5,6 @@
 
 'use strict';
 
-const path = require('path');
 const { expect } = require('chai');
 const { fail } = expect;
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
