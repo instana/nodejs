@@ -15,6 +15,7 @@ const config = require('../../../../../core/test/config');
 const agentPort = require('../../../apps/agentStubControls').agentPort;
 
 let expressApp;
+const appPort = (exports.appPort = portfinder());
 
 exports.registerTestHooks = opts => {
   beforeEach(() => {
@@ -22,7 +23,7 @@ exports.registerTestHooks = opts => {
 
     const env = Object.create(process.env);
     env.AGENT_PORT = agentPort;
-    env.APP_PORT = exports.appPort = portfinder();
+    env.APP_PORT = appPort;
     env.UPSTREAM_PORT = opts.upstreamPort;
     env.USE_REQUEST_PROMISE = String(opts.useRequestPromise);
 
@@ -43,7 +44,7 @@ function waitUntilServerIsUp() {
   return testUtils.retry(() =>
     request({
       method: 'GET',
-      url: `http://127.0.0.1:${exports.appPort}`,
+      url: `http://127.0.0.1:${appPort}`,
       headers: {
         'X-INSTANA-L': '0'
       }
@@ -56,6 +57,6 @@ exports.getPid = () => expressApp.pid;
 exports.sendRequest = () =>
   request({
     method: 'GET',
-    url: `http://127.0.0.1:${exports.appPort}/getSomething`,
+    url: `http://127.0.0.1:${appPort}/getSomething`,
     resolveWithFullResponse: true
   });

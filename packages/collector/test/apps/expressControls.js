@@ -20,6 +20,7 @@ const sslDir = path.join(__dirname, 'ssl');
 const cert = fs.readFileSync(path.join(sslDir, 'cert'));
 
 let expressApp;
+const appPort = (exports.appPort = portfinder());
 
 exports.registerTestHooks = opts => {
   beforeEach(() => exports.start(opts));
@@ -29,7 +30,7 @@ exports.registerTestHooks = opts => {
 exports.start = function start(opts = {}, retryTime) {
   const env = Object.create(process.env);
   env.AGENT_PORT = opts.useGlobalAgent ? globalAgentPort : legacyAgentPort;
-  env.APP_PORT = exports.appPort = portfinder();
+  env.APP_PORT = appPort;
   env.TRACING_ENABLED = opts.enableTracing !== false;
   env.STACK_TRACE_LENGTH = opts.stackTraceLength || 0;
   env.USE_HTTPS = opts.useHttps === true;
@@ -123,5 +124,5 @@ exports.setLogger = (useHttps, logFilePath) =>
   });
 
 function getBaseUrl(useHttps) {
-  return `http${useHttps ? 's' : ''}://localhost:${exports.appPort}`;
+  return `http${useHttps ? 's' : ''}://localhost:${appPort}`;
 }

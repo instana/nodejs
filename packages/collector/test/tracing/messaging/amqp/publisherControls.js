@@ -15,6 +15,7 @@ const config = require('../../../../../core/test/config');
 const agentPort = require('../../../globalAgent').PORT;
 
 let app;
+const appPort = (exports.appPort = portfinder());
 
 exports.registerTestHooks = opts => {
   beforeEach(() => {
@@ -22,7 +23,7 @@ exports.registerTestHooks = opts => {
 
     const env = Object.create(process.env);
     env.AGENT_PORT = agentPort;
-    env.APP_PORT = exports.appPort = portfinder();
+    env.APP_PORT = appPort;
     env.TRACING_ENABLED = opts.enableTracing !== false;
 
     app = spawn('node', [path.join(__dirname, `publisher${opts.apiType}.js`)], {
@@ -42,7 +43,7 @@ function waitUntilServerIsUp() {
   return testUtils.retry(() =>
     request({
       method: 'GET',
-      url: `http://127.0.0.1:${exports.appPort}`,
+      url: `http://127.0.0.1:${appPort}`,
       headers: {
         'X-INSTANA-L': '0'
       }
@@ -55,7 +56,7 @@ exports.getPid = () => app.pid;
 exports.sendToQueue = (message, headers) =>
   request({
     method: 'POST',
-    url: `http://127.0.0.1:${exports.appPort}/send-to-queue`,
+    url: `http://127.0.0.1:${appPort}/send-to-queue`,
     json: true,
     simple: true,
     headers,
@@ -67,7 +68,7 @@ exports.sendToQueue = (message, headers) =>
 exports.publish = (message, headers) =>
   request({
     method: 'POST',
-    url: `http://127.0.0.1:${exports.appPort}/publish`,
+    url: `http://127.0.0.1:${appPort}/publish`,
     json: true,
     simple: true,
     headers,
@@ -79,7 +80,7 @@ exports.publish = (message, headers) =>
 exports.sendToGetQueue = (message, headers) =>
   request({
     method: 'POST',
-    url: `http://127.0.0.1:${exports.appPort}/send-to-get-queue`,
+    url: `http://127.0.0.1:${appPort}/send-to-get-queue`,
     json: true,
     simple: true,
     headers,
@@ -91,7 +92,7 @@ exports.sendToGetQueue = (message, headers) =>
 exports.sendToConfirmQueue = (message, headers) =>
   request({
     method: 'POST',
-    url: `http://127.0.0.1:${exports.appPort}/send-to-confirm-queue`,
+    url: `http://127.0.0.1:${appPort}/send-to-confirm-queue`,
     json: true,
     simple: true,
     headers,

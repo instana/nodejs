@@ -16,6 +16,7 @@ const agentPort = require('../../../globalAgent').PORT;
 const upstreamPort = require('../../../apps/expressControls').appPort;
 
 let appProcess;
+const appPort = (exports.appPort = portfinder());
 
 exports.registerTestHooks = (opts = {}) => {
   let appName = 'app.js';
@@ -37,7 +38,7 @@ exports.registerTestHooks = (opts = {}) => {
   beforeEach(() => {
     const env = Object.create(process.env);
     env.AGENT_PORT = agentPort;
-    env.APP_PORT = exports.appPort = portfinder();
+    env.APP_PORT = appPort;
     env.UPSTREAM_PORT = upstreamPort;
     env.STACK_TRACE_LENGTH = opts.stackTraceLength || 0;
     env.TRACING_ENABLED = opts.enableTracing !== false;
@@ -59,7 +60,7 @@ function waitUntilServerIsUp() {
   return testUtils.retry(() =>
     request({
       method: 'GET',
-      url: `http://127.0.0.1:${exports.appPort}`,
+      url: `http://127.0.0.1:${appPort}`,
       headers: {
         'X-INSTANA-L': '0'
       }
@@ -69,4 +70,4 @@ function waitUntilServerIsUp() {
 
 exports.getPid = () => appProcess.pid;
 
-exports.trigger = (level, headers = {}) => request(`http://127.0.0.1:${exports.appPort}/${level}`, { headers });
+exports.trigger = (level, headers = {}) => request(`http://127.0.0.1:${appPort}/${level}`, { headers });

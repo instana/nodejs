@@ -14,6 +14,7 @@ const config = require('../../../../core/test/config');
 const agentPort = require('../../globalAgent').PORT;
 
 let expressOpentracingApp;
+const appPort = (exports.appPort = portfinder());
 
 exports.registerTestHooks = opts => {
   beforeEach(() => {
@@ -21,7 +22,7 @@ exports.registerTestHooks = opts => {
 
     const env = Object.create(process.env);
     env.AGENT_PORT = agentPort;
-    env.APP_PORT = exports.appPort = portfinder();
+    env.APP_PORT = appPort;
     env.TRACING_ENABLED = opts.enableTracing !== false;
     env.DISABLE_AUTOMATIC_TRACING = opts.automaticTracingEnabled === false;
 
@@ -42,7 +43,7 @@ function waitUntilServerIsUp() {
   return testUtils.retry(() =>
     request({
       method: 'GET',
-      url: `http://127.0.0.1:${exports.appPort}`,
+      url: `http://127.0.0.1:${appPort}`,
       headers: {
         'X-INSTANA-L': '0'
       }
@@ -55,5 +56,5 @@ exports.getPid = () => expressOpentracingApp.pid;
 exports.sendRequest = opts =>
   request({
     method: opts.method,
-    url: `http://127.0.0.1:${exports.appPort}${opts.path}`
+    url: `http://127.0.0.1:${appPort}${opts.path}`
   });
