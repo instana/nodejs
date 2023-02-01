@@ -30,11 +30,8 @@ mochaSuiteFn('tracing/kafkajs', function () {
   globalAgent.setUpCleanUpHooks();
   const agentControls = globalAgent.instance;
 
-  let producerControls;
-  let consumerControls;
-
   describe('tracing enabled ', function () {
-    consumerControls = new ProcessControls({
+    const consumerControls = new ProcessControls({
       appPath: path.join(__dirname, 'consumer'),
       useGlobalAgent: true
     });
@@ -45,7 +42,7 @@ mochaSuiteFn('tracing/kafkajs', function () {
 
     ['binary', 'string', 'both'].forEach(headerFormat => {
       describe(`header format: ${headerFormat}`, function () {
-        producerControls = new ProcessControls({
+        const producerControls = new ProcessControls({
           appPath: path.join(__dirname, 'producer'),
           useGlobalAgent: true,
           env: {
@@ -58,14 +55,21 @@ mochaSuiteFn('tracing/kafkajs', function () {
         afterEach(() => resetMessages(consumerControls));
 
         [false, true].forEach(useSendBatch =>
-          registerTracingEnabledTestSuite.bind(this)({ headerFormat, nextError, useSendBatch, nextUseEachBatch })
+          registerTracingEnabledTestSuite.bind(this)({
+            headerFormat,
+            nextError,
+            useSendBatch,
+            nextUseEachBatch,
+            producerControls
+          })
         );
       });
     });
 
-    function registerTracingEnabledTestSuite({ headerFormat, useSendBatch }) {
+    function registerTracingEnabledTestSuite({ headerFormat, useSendBatch, producerControls }) {
       const useEachBatch = nextUseEachBatch();
       const error = nextError();
+
       describe(
         `kafkajs (header format: ${headerFormat}, ${useSendBatch ? 'sendBatch' : 'sendMessage'} => ` +
           `${useEachBatch ? 'eachBatch' : 'eachMessage'}, error: ${error})`,
@@ -84,7 +88,8 @@ mochaSuiteFn('tracing/kafkajs', function () {
               value: 'someMessage',
               error,
               useSendBatch,
-              useEachBatch
+              useEachBatch,
+              producerControls
             }).then(() =>
               retry(() =>
                 getMessages(consumerControls)
@@ -111,7 +116,8 @@ mochaSuiteFn('tracing/kafkajs', function () {
                 error,
                 useSendBatch,
                 useEachBatch,
-                suppressTracing: true
+                suppressTracing: true,
+                producerControls
               }).then(() =>
                 retry(() =>
                   getMessages(consumerControls)
@@ -132,7 +138,7 @@ mochaSuiteFn('tracing/kafkajs', function () {
 
   describe('with error in producer ', function () {
     const headerFormat = 'string';
-    producerControls = new ProcessControls({
+    const producerControls = new ProcessControls({
       appPath: path.join(__dirname, 'producer'),
       useGlobalAgent: true,
       env: {
@@ -164,7 +170,8 @@ mochaSuiteFn('tracing/kafkajs', function () {
               value: 'someMessage',
               error,
               useSendBatch,
-              useEachBatch
+              useEachBatch,
+              producerControls
             }).then(() =>
               retry(() =>
                 agentControls.getSpans().then(spans => {
@@ -181,13 +188,13 @@ mochaSuiteFn('tracing/kafkajs', function () {
   });
 
   describe('tracing enabled, but trace correlation disabled', function () {
-    consumerControls = new ProcessControls({
+    const consumerControls = new ProcessControls({
       appPath: path.join(__dirname, 'consumer'),
       useGlobalAgent: true
     });
     ProcessControls.setUpHooks(consumerControls);
 
-    producerControls = new ProcessControls({
+    const producerControls = new ProcessControls({
       appPath: path.join(__dirname, 'producer'),
       useGlobalAgent: true,
       env: {
@@ -219,7 +226,8 @@ mochaSuiteFn('tracing/kafkajs', function () {
           key: 'someKey',
           value: 'someMessage',
           useSendBatch,
-          useEachBatch
+          useEachBatch,
+          producerControls
         }).then(() =>
           retry(() =>
             getMessages(consumerControls)
@@ -243,6 +251,7 @@ mochaSuiteFn('tracing/kafkajs', function () {
           value: 'someMessage',
           useSendBatch,
           useEachBatch,
+          producerControls,
           suppressTracing: true
         }).then(() =>
           retry(() =>
@@ -274,11 +283,11 @@ mochaSuiteFn('tracing/kafkajs', function () {
     customAgentControls.registerTestHooks({
       kafkaConfig: { headerFormat }
     });
-    producerControls = new ProcessControls({
+    const producerControls = new ProcessControls({
       appPath: path.join(__dirname, 'producer'),
       agentControls: customAgentControls
     }).registerTestHooks();
-    consumerControls = new ProcessControls({
+    const consumerControls = new ProcessControls({
       appPath: path.join(__dirname, 'consumer'),
       agentControls: customAgentControls
     }).registerTestHooks();
@@ -289,7 +298,8 @@ mochaSuiteFn('tracing/kafkajs', function () {
       () =>
         send({
           key: 'someKey',
-          value: 'someMessage'
+          value: 'someMessage',
+          producerControls
         }).then(() =>
           retry(() =>
             getMessages(consumerControls)
@@ -312,11 +322,13 @@ mochaSuiteFn('tracing/kafkajs', function () {
     customAgentControls.registerTestHooks({
       kafkaConfig: { traceCorrelation: false }
     });
-    producerControls = new ProcessControls({
+
+    const producerControls = new ProcessControls({
       appPath: path.join(__dirname, 'producer'),
       agentControls: customAgentControls
     }).registerTestHooks();
-    consumerControls = new ProcessControls({
+
+    const consumerControls = new ProcessControls({
       appPath: path.join(__dirname, 'consumer'),
       agentControls: customAgentControls
     }).registerTestHooks();
@@ -328,7 +340,8 @@ mochaSuiteFn('tracing/kafkajs', function () {
       () =>
         send({
           key: 'someKey',
-          value: 'someMessage'
+          value: 'someMessage',
+          producerControls
         }).then(() =>
           retry(() =>
             getMessages(consumerControls)
@@ -347,12 +360,12 @@ mochaSuiteFn('tracing/kafkajs', function () {
   });
 
   describe('tracing disabled', () => {
-    producerControls = new ProcessControls({
+    const producerControls = new ProcessControls({
       appPath: path.join(__dirname, 'producer'),
       useGlobalAgent: true,
       tracingEnabled: false
     });
-    consumerControls = new ProcessControls({
+    const consumerControls = new ProcessControls({
       appPath: path.join(__dirname, 'consumer'),
       useGlobalAgent: true,
       tracingEnabled: false
@@ -375,7 +388,8 @@ mochaSuiteFn('tracing/kafkajs', function () {
         value: 'someMessage',
         error: false,
         useSendBatch: false,
-        useEachBatch: false
+        useEachBatch: false,
+        producerControls
       }).then(() =>
         retry(() =>
           getMessages(consumerControls)
@@ -391,7 +405,7 @@ mochaSuiteFn('tracing/kafkajs', function () {
   });
 
   // eslint-disable-next-line object-curly-newline
-  function send({ key, value, error, useSendBatch, useEachBatch, suppressTracing }) {
+  function send({ key, value, error, useSendBatch, useEachBatch, suppressTracing, producerControls }) {
     const req = {
       method: 'POST',
       path: '/send-messages',

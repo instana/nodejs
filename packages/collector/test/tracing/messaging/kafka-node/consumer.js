@@ -7,7 +7,7 @@
 
 'use strict';
 
-const appPort = process.env.APP_PORT;
+const port = require('../../../test_util/app-port')();
 const agentPort = process.env.INSTANA_AGENT_PORT;
 
 const instana = require('../../../..')();
@@ -133,8 +133,8 @@ app.get('/errors', (req, res) => {
   res.send(receivedErrors);
 });
 
-app.listen(appPort, () => {
-  log(`Listening on port: ${appPort}`);
+app.listen(port, () => {
+  log(`Listening on port: ${port}`);
 });
 
 function log() {

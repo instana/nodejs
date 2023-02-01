@@ -30,11 +30,8 @@ allTestCases.forEach(testDefinition => {
   }
 });
 
-let app;
-
 describe('spec compliance', function () {
   this.timeout(config.getTestTimeout());
-
   globalAgent.setUpCleanUpHooks();
 
   [false, true].forEach(http2 => {
@@ -98,12 +95,13 @@ describe('spec compliance', function () {
         testCases = testCasesWithW3cTraceCorrelation;
       }
 
-      app = new ProcessControls({
+      const app = new ProcessControls({
         dirname: __dirname,
         useGlobalAgent: true,
         http2,
         env
       });
+
       ProcessControls.setUpHooks(app);
 
       testCases.forEach(testDefinition => {
@@ -179,12 +177,12 @@ describe('spec compliance', function () {
             expect(spans).to.have.lengthOf(0);
           } else {
             await retryUntilSpansMatch(agentControls, spans => {
-              verifyHttpEntry(testDefinition, valuesForPlaceholders, spans, '/start');
+              verifyHttpEntry(testDefinition, valuesForPlaceholders, spans, '/start', app);
               verifyHttpExit(
                 testDefinition,
                 valuesForPlaceholders,
                 spans,
-                /^http(?:s)?:\/\/localhost:PORT\/downstream$/.toString().replace('PORT', app.port)
+                `localhost:${downstreamTarget.port}/downstream`
               );
             });
           }
@@ -245,7 +243,7 @@ function parseForPlaceholders(valuesForPlaceholders, template, value) {
   // }
 }
 
-function verifyHttpEntry(testDefinition, valuesForPlaceholders, spans, url) {
+function verifyHttpEntry(testDefinition, valuesForPlaceholders, spans, url, app) {
   const expectations = [
     span => expect(span.n).to.equal('node.http.server'),
     span => expect(span.k).to.equal(constants.ENTRY),
@@ -286,7 +284,7 @@ function verifyHttpExit(testDefinition, valuesForPlaceholders, spans, url) {
     span => expect(span.t).to.be.a('string'),
     span => expect(span.s).to.be.a('string'),
     span => expect(span.data.http.method).to.equal('GET'),
-    span => expect(span.data.http.url).to.match(url),
+    span => expect(span.data.http.url).to.contain(url),
     span => expect(span.data.http.status).to.equal(200)
   ];
   [

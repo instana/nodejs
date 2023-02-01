@@ -16,7 +16,7 @@ const EventEmitter = require('events');
 const Promise = require('bluebird');
 const express = require('express');
 const morgan = require('morgan');
-
+const port = require('../../../test_util/app-port')();
 const app = express();
 const logPrefix = `Express / bluebird App (${process.pid}):\t`;
 

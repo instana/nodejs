@@ -64,7 +64,10 @@ import morgan from 'morgan';
 // Instana's Node.js API (https://www.ibm.com/docs/de/obi/current?topic=nodejs-instana-api):
 // @ts-ignore
 import instana from '@instana/collector';
+
+// @ts-ignore
 import getAppPort from '../../../test_util/app-port.js';
+
 const app = express();
 const port = getAppPort();
 

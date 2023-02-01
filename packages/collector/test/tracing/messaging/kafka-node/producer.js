@@ -15,6 +15,7 @@ const request = require('request-promise');
 const bodyParser = require('body-parser');
 const express = require('express');
 const kafka = require('kafka-node');
+const port = require('../../../test_util/app-port')();
 const app = express();
 
 let client;
