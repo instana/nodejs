@@ -8,6 +8,7 @@
 const path = require('path');
 const { expect } = require('chai');
 
+const portfinder = require('../../../test_util/portfinder');
 const constants = require('@instana/core').tracing.constants;
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('../../../../../core/test/config');
@@ -17,8 +18,7 @@ const ProcessControls = require('../../../test_util/ProcessControls');
 const globalAgent = require('../../../globalAgent');
 
 const agentControls = globalAgent.instance;
-
-const otherVendorAppPort = 4201;
+const otherVendorAppPort = portfinder();
 
 const foreignTraceIdLeftHalf = 'f0e1567890123456';
 const foreignTraceIdRightHalf = '78901234567bcdea';
@@ -50,7 +50,7 @@ mochaSuiteFn('tracing/W3C Trace Context', function () {
           startRequest({ app: instanaAppControls, depth: 1 }).then(response => {
             const { traceparent, tracestate } = getSpecHeadersFromFinalHttpRequest(response);
             return retryUntilSpansMatch(agentControls, spans => {
-              const instanaHttpEntryRoot = verifyHttpRootEntry({ spans, url: '/start' });
+              const instanaHttpEntryRoot = verifyHttpRootEntry({ spans, url: '/start', instanaAppControls });
               const instanaHttpExit = verifyHttpExit(spans, instanaHttpEntryRoot, '/end');
 
               const instanaTraceId = instanaHttpEntryRoot.t;
@@ -122,7 +122,7 @@ mochaSuiteFn('tracing/W3C Trace Context', function () {
           startRequest({ app: instanaAppControls, depth: 1, withSpecHeaders: 'invalid-traceparent' }).then(response => {
             const { traceparent, tracestate } = getSpecHeadersFromFinalHttpRequest(response);
             return retryUntilSpansMatch(agentControls, spans => {
-              const instanaHttpEntryRoot = verifyHttpRootEntry({ spans, url: '/start' });
+              const instanaHttpEntryRoot = verifyHttpRootEntry({ spans, url: '/start', instanaAppControls });
               const instanaHttpExit = verifyHttpExit(spans, instanaHttpEntryRoot, '/end');
 
               const instanaTraceId = instanaHttpEntryRoot.t;
@@ -414,7 +414,7 @@ mochaSuiteFn('tracing/W3C Trace Context', function () {
           startRequest({ app: instanaAppControls, depth: 2 }).then(response => {
             const { traceparent, tracestate } = getSpecHeadersFromFinalHttpRequest(response);
             return retryUntilSpansMatch(agentControls, spans => {
-              const instanaHttpEntryRoot = verifyHttpRootEntry({ spans, url: '/start' });
+              const instanaHttpEntryRoot = verifyHttpRootEntry({ spans, url: '/start', instanaAppControls });
               const instanaHttpExit = verifyHttpExit(spans, instanaHttpEntryRoot, '/continue');
 
               const instanaTraceId = instanaHttpEntryRoot.t;
@@ -452,7 +452,7 @@ mochaSuiteFn('tracing/W3C Trace Context', function () {
           startRequest({ app: instanaAppControls, depth: 2, otherMode: 'forward' }).then(response => {
             const { traceparent, tracestate } = getSpecHeadersFromFinalHttpRequest(response);
             return retryUntilSpansMatch(agentControls, spans => {
-              const instanaHttpEntryRoot = verifyHttpRootEntry({ spans, url: '/start' });
+              const instanaHttpEntryRoot = verifyHttpRootEntry({ spans, url: '/start', instanaAppControls });
               const instanaHttpExit = verifyHttpExit(spans, instanaHttpEntryRoot, '/continue');
 
               const instanaTraceId = instanaHttpEntryRoot.t;
@@ -494,7 +494,7 @@ mochaSuiteFn('tracing/W3C Trace Context', function () {
             const { traceIdFromTraceParent, parentIdFromTraceParent } = extractIdsFromTraceParent(traceparent);
 
             return retryUntilSpansMatch(agentControls, spans => {
-              const instanaHttpEntryRoot = verifyHttpRootEntry({ spans, url: '/start' });
+              const instanaHttpEntryRoot = verifyHttpRootEntry({ spans, url: '/start', instanaAppControls });
               const instanaHttpExit = verifyHttpExit(spans, instanaHttpEntryRoot, '/continue');
 
               const instanaTraceId = instanaHttpEntryRoot.t;
@@ -547,7 +547,7 @@ mochaSuiteFn('tracing/W3C Trace Context', function () {
             const { traceIdFromTraceParent, parentIdFromTraceParent } = extractIdsFromTraceParent(traceparent);
 
             return retryUntilSpansMatch(agentControls, spans => {
-              const instanaHttpEntryRoot = verifyHttpRootEntry({ spans, url: '/start' });
+              const instanaHttpEntryRoot = verifyHttpRootEntry({ spans, url: '/start', instanaAppControls });
               verifyHttpExit(spans, instanaHttpEntryRoot, '/continue');
 
               const instanaTraceId = instanaHttpEntryRoot.t;
@@ -592,7 +592,7 @@ mochaSuiteFn('tracing/W3C Trace Context', function () {
             expect(response.w3cTraceContext.receivedHeaders).to.deep.equal({});
 
             return retryUntilSpansMatch(agentControls, spans => {
-              const instanaHttpEntryRoot = verifyHttpRootEntry({ spans, url: '/start' });
+              const instanaHttpEntryRoot = verifyHttpRootEntry({ spans, url: '/start', instanaAppControls });
               verifyHttpExit(spans, instanaHttpEntryRoot, '/continue');
 
               const instanaTraceId = instanaHttpEntryRoot.t;
@@ -608,7 +608,7 @@ mochaSuiteFn('tracing/W3C Trace Context', function () {
 
               // Find the span for last HTTP entry in to the Instana-instrumented process.
               // In this case, the terminal HTTP entry span is not part of the same trace.
-              const terminalHttpEntry = verifyHttpRootEntry({ spans, url: '/end' });
+              const terminalHttpEntry = verifyHttpRootEntry({ spans, url: '/end', instanaAppControls });
 
               expect(instanaTraceIdInActiveTraceContext).to.not.equal(instanaTraceId);
               // The span ID we put into the in key-value pair in the active trace context must equal the span ID on the

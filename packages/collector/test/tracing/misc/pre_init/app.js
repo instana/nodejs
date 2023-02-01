@@ -17,7 +17,7 @@ const http = require('http');
 // Deliberately requiring pino _before_ calling @instana/collector#init.
 const pino = require('pino')();
 
-const port = process.env.APP_PORT || 3000;
+const port = process.env.APP_PORT;
 const app = new http.Server();
 
 // Only calling @instana/collector#init now, after require statements (and in particular, _after_ requiring pino).

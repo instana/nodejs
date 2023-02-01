@@ -9,7 +9,7 @@ require('../..')();
 
 const logPrefix = `HTTP: Server (${process.pid}):\t`;
 
-const port = process.env.APP_PORT || 3000;
+const port = process.env.APP_PORT;
 
 const server = require('http')
   .createServer()

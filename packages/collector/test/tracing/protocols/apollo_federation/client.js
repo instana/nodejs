@@ -12,7 +12,7 @@ const express = require('express');
 const morgan = require('morgan');
 const rp = require('request-promise');
 
-const serverPort = process.env.SERVER_PORT || 3217;
+const serverPort = process.env.SERVER_PORT;
 const serverBaseUrl = `http://127.0.0.1:${serverPort}`;
 const serverGraphQLEndpoint = `${serverBaseUrl}/graphql`;
 

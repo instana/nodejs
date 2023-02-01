@@ -30,7 +30,7 @@ const ws = require('ws');
  */
 const { createClient } = require('graphql-ws');
 
-const serverPort = process.env.SERVER_PORT || 3217;
+const serverPort = process.env.SERVER_PORT;
 const serverBaseUrl = `http://127.0.0.1:${serverPort}`;
 const serverGraphQLEndpoint = `${serverBaseUrl}/graphql`;
 const serverWsGraphQLUrl = `ws://127.0.0.1:${serverPort}/graphql`;
