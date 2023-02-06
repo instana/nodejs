@@ -14,6 +14,8 @@ const instana = instanaFactory();
 import mysql from 'mysql';
 import mysql2 from 'mysql2';
 import mysql2promise from 'mysql2/promise';
+import getAppPort from '../../../test_util/app-port.js';
+const port = getAppPort();
 
 const accessFunction = process.env.USE_EXECUTE ? 'execute' : 'query';
 const driverModeEnvVar = process.env.DRIVER_MODE;
@@ -162,10 +164,8 @@ app.post('/valuesAndCall', (req, res) => {
   }
 });
 
-app.listen(process.env.APP_PORT, () => {
-  log(
-    `Listening on port: ${process.env.APP_PORT} (driver: ${driver}, access: ${accessFunction}, cluster: ${useCluster})`
-  );
+app.listen(port, () => {
+  log(`Listening on port: ${port} (driver: ${driver}, access: ${accessFunction}, cluster: ${useCluster})`);
 });
 
 function fetchValues(req, res) {

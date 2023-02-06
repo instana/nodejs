@@ -47,7 +47,7 @@ const { HTTP2_HEADER_METHOD, HTTP2_HEADER_PATH, HTTP2_HEADER_STATUS } = require(
 
 const tracingUtil = require('../../../../../core/src/tracing/tracingUtil');
 
-const port = process.env.APP_PORT;
+const port = require('../../../test_util/app-port')();
 const downstreamPort = process.env.DOWNSTREAM_PORT;
 
 const otherVendorTraceStateKey = 'other';

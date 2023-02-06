@@ -11,7 +11,7 @@ const Queue = require('bull');
 const redisServer = process.env.REDIS_SERVER || 'redis://127.0.0.1:6379';
 const queueName = process.env.BULL_QUEUE_NAME || 'nodejs-team';
 const express = require('express');
-const port = process.env.APP_PORT || 3215;
+const port = require('../../../test_util/app-port')();
 const bullJobName = process.env.BULL_JOB_NAME || 'steve';
 
 const app = express();

@@ -12,6 +12,7 @@ require('../../../..')();
 const bodyParser = require('body-parser');
 const express = require('express');
 const morgan = require('morgan');
+const port = require('../../../test_util/app-port')();
 
 const app = express();
 const logPrefix = `Express uncaughtErrors App (${process.pid}):\t`;
@@ -41,8 +42,8 @@ app.get('/defaultErrorHandler', (req, res) => {
   throw new Error('To be caught by default error handler');
 });
 
-app.listen(process.env.APP_PORT, () => {
-  log(`Listening on port: ${process.env.APP_PORT}`);
+app.listen(port, () => {
+  log(`Listening on port: ${port}`);
 });
 
 function log() {

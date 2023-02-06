@@ -9,7 +9,7 @@ require('../../../..')();
 
 const express = require('express');
 const app = express();
-const port = process.env.APP_PORT || 3215;
+const port = require('../../../test_util/app-port')();
 const agentPort = process.env.INSTANA_AGENT_PORT || 42699;
 const fetch = require('node-fetch');
 const logPrefix = `Memcached (${process.pid}):\t`;

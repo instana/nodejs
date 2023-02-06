@@ -68,7 +68,6 @@ function start(version) {
     describe('tracing enabled, no suppression', function () {
       const appControls = new ProcessControls({
         appPath: path.join(__dirname, 'app'),
-        port: 3215,
         useGlobalAgent: true,
         env: {
           AWS_S3_BUCKET_NAME: bucketName,
@@ -181,7 +180,6 @@ function start(version) {
 
       const appControls = new ProcessControls({
         appPath: path.join(__dirname, 'app'),
-        port: 3215,
         useGlobalAgent: true,
         tracingEnabled: false,
         env: {
@@ -216,7 +214,6 @@ function start(version) {
     describe('tracing enabled but suppressed', () => {
       const appControls = new ProcessControls({
         appPath: path.join(__dirname, 'app'),
-        port: 3215,
         useGlobalAgent: true,
         env: {
           AWS_S3_BUCKET_NAME: bucketName,

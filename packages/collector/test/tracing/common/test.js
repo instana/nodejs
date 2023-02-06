@@ -51,11 +51,13 @@ mochaSuiteFn('tracing/common', function () {
             path: '/'
           })
           .then(
-            withMinimalDelay ? () => verifyMinimalDelay(agentControls) : () => verifyNoMinimalDelay(agentControls)
+            withMinimalDelay
+              ? () => verifyMinimalDelay(agentControls, controls)
+              : () => verifyNoMinimalDelay(agentControls, controls)
           ));
     }
 
-    function verifyMinimalDelay(agentControls) {
+    function verifyMinimalDelay(agentControls, controls) {
       return (
         delay(3000)
           .then(() => agentControls.getSpans())
@@ -85,7 +87,7 @@ mochaSuiteFn('tracing/common', function () {
                   expect(span.data.http.method).to.equal('GET');
                   expect(span.data.http.url).to.equal('/');
                   expect(span.data.http.status).to.equal(200);
-                  expect(span.data.http.host).to.equal('localhost:3215');
+                  expect(span.data.http.host).to.equal(`localhost:${controls.getPort()}`);
                 }),
               Math.max(extendedTimeout / 2, 10000)
             )
@@ -93,7 +95,7 @@ mochaSuiteFn('tracing/common', function () {
       );
     }
 
-    function verifyNoMinimalDelay(agentControls) {
+    function verifyNoMinimalDelay(agentControls, controls) {
       return retry(() =>
         agentControls.getSpans().then(spans => {
           if (spans.length !== 1) {
@@ -114,7 +116,7 @@ mochaSuiteFn('tracing/common', function () {
           expect(span.data.http.method).to.equal('GET');
           expect(span.data.http.url).to.equal('/');
           expect(span.data.http.status).to.equal(200);
-          expect(span.data.http.host).to.equal('localhost:3215');
+          expect(span.data.http.host).to.equal(`localhost:${controls.getPort()}`);
         })
       );
     }

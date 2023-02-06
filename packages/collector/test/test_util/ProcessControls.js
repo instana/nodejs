@@ -15,7 +15,7 @@ const config = require('../../../core/test/config');
 const http2Promise = require('./http2Promise');
 const testUtils = require('../../../core/test/test_util');
 const globalAgent = require('../globalAgent');
-
+const portFinder = require('./portfinder');
 const sslDir = path.join(__dirname, '..', 'apps', 'ssl');
 const cert = fs.readFileSync(path.join(sslDir, 'cert'));
 
@@ -123,8 +123,10 @@ class ProcessControls {
     this.http2 = opts.http2;
     // whether or not to use TLS
     this.useHttps = opts.env && !!opts.env.USE_HTTPS;
+
     // http/https/http2 port
-    this.port = opts.port || process.env.APP_PORT || 3215;
+    this.port = opts.port || process.env.APP_PORT || portFinder();
+
     this.tracingEnabled = opts.tracingEnabled !== false;
     this.usePreInit = opts.usePreInit === true;
 
@@ -180,6 +182,10 @@ class ProcessControls {
     return this;
   }
 
+  getPort() {
+    return this.port;
+  }
+
   async start(retryTime) {
     const that = this;
     this.receivedIpcMessages = [];
@@ -188,6 +194,7 @@ class ProcessControls {
       stdio: config.getAppStdio(),
       env: this.env
     };
+
     if (this.cwd) {
       forkConfig.cwd = this.cwd;
     }

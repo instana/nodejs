@@ -5,9 +5,7 @@
 
 'use strict';
 
-const path = require('path');
 const expect = require('chai').expect;
-
 const constants = require('@instana/core').tracing.constants;
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const tracingUtil = require('../../../../../core/src/tracing/tracingUtil');
@@ -25,7 +23,7 @@ mochaSuiteFn('tracing/express with uncaught errors', function () {
   globalAgent.setUpCleanUpHooks();
 
   const controls = new ProcessControls({
-    appPath: path.join(__dirname, 'app'),
+    dirname: __dirname,
     useGlobalAgent: true
   });
   ProcessControls.setUpHooks(controls);

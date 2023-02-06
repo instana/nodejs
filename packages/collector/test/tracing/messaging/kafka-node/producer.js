@@ -15,6 +15,7 @@ const request = require('request-promise');
 const bodyParser = require('body-parser');
 const express = require('express');
 const kafka = require('kafka-node');
+const port = require('../../../test_util/app-port')();
 const app = express();
 
 let client;
@@ -55,8 +56,8 @@ app.get('/', (req, res) => {
   res.send('OK');
 });
 
-app.listen(process.env.APP_PORT, () => {
-  log(`Listening on port: ${process.env.APP_PORT}`);
+app.listen(port, () => {
+  log(`Listening on port: ${port}`);
 });
 
 app.post('/send-message', (req, res) => {

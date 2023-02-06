@@ -10,6 +10,8 @@
 import bodyParser from 'body-parser';
 import express from 'express';
 import morgan from 'morgan';
+import getAppPort from '../../../test_util/app-port.js';
+const port = getAppPort();
 
 const app = express();
 const logPrefix = `Express uncaughtErrors App (${process.pid}):\t`;
@@ -39,8 +41,8 @@ app.get('/defaultErrorHandler', (req, res) => {
   throw new Error('To be caught by default error handler');
 });
 
-app.listen(process.env.APP_PORT, () => {
-  log(`Listening on port: ${process.env.APP_PORT}`);
+app.listen(port, () => {
+  log(`Listening on port: ${port}`);
 });
 
 function log() {

@@ -27,7 +27,6 @@ mochaSuiteFn('tracing/nats-streaming', function () {
 
     const publisherControls = new ProcessControls({
       appPath: path.join(__dirname, 'publisher'),
-      port: 3216,
       useGlobalAgent: true
     });
 
@@ -233,7 +232,6 @@ mochaSuiteFn('tracing/nats-streaming', function () {
 
     const publisherControls = new ProcessControls({
       appPath: path.join(__dirname, 'publisher'),
-      port: 3216,
       useGlobalAgent: true,
       tracingEnabled: false
     });

@@ -17,6 +17,8 @@ import express from 'express';
 import morgan from 'morgan';
 import assert from 'assert';
 import request from 'request-promise';
+import getAppPort from '../../../test_util/app-port.js';
+const port = getAppPort();
 
 const app = express();
 let db;
@@ -243,8 +245,8 @@ app.get('/findall', (req, res) => {
     });
 });
 
-app.listen(process.env.APP_PORT, () => {
-  log(`Listening on port: ${process.env.APP_PORT}`);
+app.listen(port, () => {
+  log(`Listening on port: ${port}`);
 });
 
 function log() {

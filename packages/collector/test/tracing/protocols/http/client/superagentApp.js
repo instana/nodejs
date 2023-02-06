@@ -13,7 +13,7 @@ const instana = require('../../../../..')();
 const bodyParser = require('body-parser');
 const express = require('express');
 const morgan = require('morgan');
-
+const port = require('../../../../test_util/app-port')();
 const asyncRoute = require('../../../../test_util/asyncExpressRoute');
 
 const agentPort = process.env.INSTANA_AGENT_PORT;
@@ -93,12 +93,12 @@ app.get(
   })
 );
 
-app.listen(process.env.APP_PORT, () => {
+app.listen(port, () => {
   // Instrumenting superagent late on demand. That we do it in app.listen is quite arbitrary but since this happens
   // aynchronously after bootstrapping the app, it emulates a common real world usage.
   instana.experimental.instrument('superagent', superagent);
 
-  log(`Listening on port: ${process.env.APP_PORT}`);
+  log(`Listening on port: ${port}`);
 });
 
 function createUrl(urlPath) {

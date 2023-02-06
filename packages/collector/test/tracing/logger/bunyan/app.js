@@ -24,7 +24,7 @@ const bodyParser = require('body-parser');
 const express = require('express');
 const morgan = require('morgan');
 const fs = require('fs');
-
+const port = require('../../../test_util/app-port')();
 const path = require('path');
 const bunyan = require('bunyan');
 const logger = bunyan.createLogger({ name: 'test-logger' });
@@ -109,8 +109,8 @@ function finish(res) {
   });
 }
 
-app.listen(process.env.APP_PORT, () => {
-  log(`Listening on port: ${process.env.APP_PORT}`);
+app.listen(port, () => {
+  log(`Listening on port: ${port}`);
 });
 
 function log() {

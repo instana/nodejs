@@ -11,7 +11,7 @@ const bodyParser = require('body-parser');
 const express = require('express');
 const { sqs } = require('./sqsUtil');
 const queueURL = process.env.AWS_SQS_QUEUE_URL;
-const port = process.env.APP_PORT || 3215;
+const port = require('../../../../../test_util/app-port')();
 const logPrefix = `AWS SDK v2 SQS Message Sender (${process.pid}):\t`;
 const log = require('@instana/core/test/test_util/log').getLogger(logPrefix);
 

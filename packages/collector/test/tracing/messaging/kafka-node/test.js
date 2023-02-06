@@ -31,7 +31,6 @@ mochaSuiteFn('tracing/kafka-node', function () {
     describe(`producing via: ${producerType}`, function () {
       const producerControls = new ProcessControls({
         appPath: path.join(__dirname, 'producer'),
-        port: 3216,
         useGlobalAgent: true,
         env: {
           PRODUCER_TYPE: producerType
@@ -105,7 +104,6 @@ mochaSuiteFn('tracing/kafka-node', function () {
     describe(`consuming via: ${consumerType}`, () => {
       const producerControls = new ProcessControls({
         appPath: path.join(__dirname, 'producer'),
-        port: 3216,
         useGlobalAgent: true,
         env: {
           PRODUCER_TYPE: 'plain'

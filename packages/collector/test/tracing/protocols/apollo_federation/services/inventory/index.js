@@ -14,7 +14,7 @@ const express = require('express');
 const http = require('http');
 const morgan = require('morgan');
 
-const port = process.env.APP_PORT || 4201;
+const port = require('../../../../../test_util/app-port')();
 const app = express();
 const logPrefix = `Inventory Service (${process.pid}):\t`;
 

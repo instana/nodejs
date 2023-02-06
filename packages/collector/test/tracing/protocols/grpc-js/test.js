@@ -137,7 +137,6 @@ function createProcesses(env = {}, opts = { isMali: false }) {
 
   const clientControls = new ProcessControls({
     appPath: path.join(__dirname, 'client'),
-    port: 3216,
     useGlobalAgent: true,
     env
   });

@@ -14,7 +14,7 @@ const agentPort = process.env.INSTANA_AGENT_PORT || 42699;
 const logPrefix = `Kafka Avro Producer (${process.pid}):\t`;
 const log = require('@instana/core/test/test_util/log').getLogger(logPrefix);
 const express = require('express');
-const port = process.env.APP_PORT || 3216;
+const port = require('../../../test_util/app-port')();
 
 const app = express();
 

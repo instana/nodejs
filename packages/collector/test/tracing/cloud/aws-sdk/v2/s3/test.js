@@ -7,7 +7,6 @@
 
 const { v4: uuid } = require('uuid');
 const semver = require('semver');
-const path = require('path');
 const { expect } = require('chai');
 const { cleanup } = require('./util');
 const { fail } = expect;
@@ -69,8 +68,7 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/s3', function () {
 
   describe('tracing enabled, no suppression', function () {
     const appControls = new ProcessControls({
-      appPath: path.join(__dirname, 'app'),
-      port: 3215,
+      dirname: __dirname,
       useGlobalAgent: true,
       env: {
         AWS_S3_BUCKET_NAME: bucketName
@@ -135,8 +133,7 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/s3', function () {
     this.timeout(config.getTestTimeout() * 2);
 
     const appControls = new ProcessControls({
-      appPath: path.join(__dirname, 'app'),
-      port: 3215,
+      dirname: __dirname,
       useGlobalAgent: true,
       tracingEnabled: false,
       env: {
@@ -169,8 +166,7 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/s3', function () {
 
   describe('tracing enabled but suppressed', () => {
     const appControls = new ProcessControls({
-      appPath: path.join(__dirname, 'app'),
-      port: 3215,
+      dirname: __dirname,
       useGlobalAgent: true,
       env: {
         AWS_S3_BUCKET_NAME: bucketName

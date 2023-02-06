@@ -13,6 +13,7 @@ const Sequelize = require('sequelize');
 const express = require('express');
 const morgan = require('morgan');
 const bodyParser = require('body-parser');
+const port = require('../../../test_util/app-port')();
 
 const sequelize = new Sequelize(process.env.POSTGRES_DB, process.env.POSTGRES_USER, process.env.POSTGRES_PASSWORD, {
   host: process.env.POSTGRES_HOST,
@@ -131,8 +132,8 @@ process.on('message', message => {
   }
 });
 
-app.listen(process.env.APP_PORT, () => {
-  log(`Listening on port: ${process.env.APP_PORT}`);
+app.listen(port, () => {
+  log(`Listening on port: ${port}`);
 });
 
 function log() {

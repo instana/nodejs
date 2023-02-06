@@ -7,11 +7,9 @@
 
 require('../../../..')();
 
-const LEGACY_HAPI = process.env.LEGACY_HAPI === 'true';
-const Hapi = require(LEGACY_HAPI ? 'hapi' : '@hapi/hapi');
-
+const Hapi = require('@hapi/hapi');
 const logPrefix = `Hapi Server: (${process.pid}):\t`;
-const port = process.env.APP_PORT || 3216;
+const port = require('../../../test_util/app-port')();
 
 const init = async () => {
   const server = Hapi.server({
@@ -51,7 +49,7 @@ const init = async () => {
 
   await server.start();
   log(`Listening on port ${port} (${server.info.uri}).`);
-  log(LEGACY_HAPI ? 'Using legacy (pre 18.x) hapi module.' : 'Using modern (>= 18.x) hapi module.');
+  log('Using modern (>= 18.x) hapi module.');
 };
 
 process.on('unhandledRejection', err => {

@@ -12,6 +12,8 @@ import bodyParser from 'body-parser';
 import express from 'express';
 import morgan from 'morgan';
 import log4js from 'log4js';
+import getAppPort from '../../../test_util/app-port.js';
+const port = getAppPort();
 
 const agentPort = process.env.INSTANA_AGENT_PORT;
 
@@ -72,8 +74,8 @@ function finish(res) {
   });
 }
 
-app.listen(process.env.APP_PORT, () => {
-  log(`Listening on port: ${process.env.APP_PORT}`);
+app.listen(port, () => {
+  log(`Listening on port: ${port}`);
 });
 
 function log() {

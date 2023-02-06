@@ -8,6 +8,8 @@ import { PrismaClient } from '@prisma/client';
 import express from 'express';
 import morgan from 'morgan';
 import bodyParser from 'body-parser';
+import getAppPort from '../../../test_util/app-port.js';
+const port = getAppPort();
 
 const app = express();
 const logPrefix = `Prisma App (${process.pid}):\t`;
@@ -97,6 +99,6 @@ app.post('/update', async (req, res) => {
   }
 });
 
-app.listen(process.env.APP_PORT, () => {
-  logger(`Listening on port: ${process.env.APP_PORT}`);
+app.listen(port, () => {
+  logger(`Listening on port: ${port}`);
 });

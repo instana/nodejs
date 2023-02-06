@@ -10,17 +10,17 @@ const fs = require('fs');
 const path = require('path');
 const request = require('request-promise');
 const spawn = require('child_process').spawn;
-
+const portfinder = require('../test_util/portfinder');
 const testUtils = require('../../../core/test/test_util');
 const config = require('../../../core/test/config');
 const legacyAgentPort = require('./agentStubControls').agentPort;
 const globalAgentPort = require('../globalAgent').PORT;
-const appPort = (exports.appPort = 3213);
 
 const sslDir = path.join(__dirname, 'ssl');
 const cert = fs.readFileSync(path.join(sslDir, 'cert'));
 
 let expressApp;
+const appPort = (exports.appPort = portfinder());
 
 exports.registerTestHooks = opts => {
   beforeEach(() => exports.start(opts));

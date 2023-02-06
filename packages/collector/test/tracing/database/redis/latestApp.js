@@ -12,6 +12,7 @@ const express = require('express');
 const morgan = require('morgan');
 const redis = require('redis');
 const request = require('request-promise-native');
+const port = require('../../../test_util/app-port')();
 
 const cls = require('../../../../../core/src/tracing/cls');
 const app = express();
@@ -225,8 +226,8 @@ app.get('/callSequence', async (req, res) => {
   }
 });
 
-app.listen(process.env.APP_PORT, () => {
-  log(`Listening on port: ${process.env.APP_PORT}`);
+app.listen(port, () => {
+  log(`Listening on port: ${port}`);
 });
 
 function log() {

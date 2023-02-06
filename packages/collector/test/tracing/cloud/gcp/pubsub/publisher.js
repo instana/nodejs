@@ -17,7 +17,7 @@ const request = require('request-promise');
 const asyncRoute = require('../../../../test_util/asyncExpressRoute');
 const { createTopic } = require('./pubsubUtil');
 
-const port = process.env.APP_PORT || 3216;
+const port = require('../../../../test_util/app-port')();
 const logPrefix = `Google Cloud Pub/Sub Publisher (${process.pid}):\t`;
 
 let topic;

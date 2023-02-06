@@ -65,7 +65,11 @@ import morgan from 'morgan';
 // @ts-ignore
 import instana from '@instana/collector';
 
+// @ts-ignore
+import getAppPort from '../../../test_util/app-port.js';
+
 const app = express();
+const port = getAppPort();
 
 const logPrefix = `Express App (${process.pid}):\t`;
 
@@ -77,6 +81,6 @@ app.get('/', (req, res) => {
   res.send('OK');
 });
 
-app.listen(process.env.APP_PORT, () => {
-  console.log(`Listening on port: ${process.env.APP_PORT}`);
+app.listen(port, () => {
+  console.log(`Listening on port: ${port}`);
 });

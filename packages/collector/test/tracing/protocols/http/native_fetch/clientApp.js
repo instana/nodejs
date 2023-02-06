@@ -13,9 +13,9 @@ const express = require('express');
 const morgan = require('morgan');
 
 const app = express();
-const port = process.env.APP_PORT || 3000;
+const port = require('../../../../test_util/app-port')();
 
-const serverPort = process.env.SERVER_PORT || 3217;
+const serverPort = process.env.SERVER_PORT;
 
 // Note: In the client test app for the Node.js http core module, we use
 // const baseUrl = `http://user:password@localhost:${serverPort}`;
@@ -105,7 +105,7 @@ function createResourceArgument(req, urlPath) {
       if (req.query.withClientError === 'unreachable') {
         return 'http://localhost:1023/unreachable';
       } else if (req.query.withClientError === 'malformed-url') {
-        return 'http:127.0.0.1:3217malformed-url';
+        return `http:127.0.0.1:${serverPort}malformed-url`;
       }
       return `${baseUrl}${pathWithQuery}`;
 

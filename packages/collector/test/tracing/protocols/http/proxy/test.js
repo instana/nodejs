@@ -69,7 +69,10 @@ mochaSuiteFn('http with proxy', function () {
                 span => expect(span.error).to.not.exist,
                 span => expect(span.ec).to.equal(0),
                 span => expect(span.data.http.method).to.equal('POST'),
-                span => expect(span.data.http.url).to.equal('http://localhost:3213/proxy-call/checkout'),
+                span =>
+                  expect(span.data.http.url).to.equal(
+                    `http://localhost:${expressControls.appPort}/proxy-call/checkout`
+                  ),
                 span => expect(span.data.http.status).to.equal(201)
               ]);
 
@@ -130,7 +133,10 @@ mochaSuiteFn('http with proxy', function () {
                 span => expect(span.error).to.not.exist,
                 span => expect(span.ec).to.equal(0),
                 span => expect(span.data.http.method).to.equal('POST'),
-                span => expect(span.data.http.url).to.equal('http://localhost:3213/proxy-call/checkout'),
+                span =>
+                  expect(span.data.http.url).to.equal(
+                    `http://localhost:${expressControls.appPort}/proxy-call/checkout`
+                  ),
                 span => expect(span.data.http.status).to.equal(200)
               ]);
 
@@ -262,7 +268,10 @@ mochaSuiteFn('http with proxy', function () {
               span => expect(span.error).to.not.exist,
               span => expect(span.ec).to.equal(0),
               span => expect(span.data.http.method).to.equal('POST'),
-              span => expect(span.data.http.url).to.equal(`http://localhost:3213/proxy-call/call-${call}`),
+              span =>
+                expect(span.data.http.url).to.equal(
+                  `http://localhost:${expressControls.appPort}/proxy-call/call-${call}`
+                ),
               span => expect(span.data.http.status).to.equal((call % 20) + 200)
             ]);
 

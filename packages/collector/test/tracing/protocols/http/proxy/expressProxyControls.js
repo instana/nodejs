@@ -10,12 +10,13 @@ const path = require('path');
 const request = require('request-promise');
 const spawn = require('child_process').spawn;
 
+const portfinder = require('../../../../test_util/portfinder');
 const testUtils = require('../../../../../../core/test/test_util');
 const config = require('../../../../../../core/test/config');
 const legacyAgentPort = require('../../../../apps/agentStubControls').agentPort;
 const globalAgentPort = require('../../../../globalAgent').PORT;
 const upstreamPort = require('../../../../apps/expressControls').appPort;
-const appPort = (exports.appPort = 3214);
+const appPort = (exports.appPort = portfinder());
 
 let expressProxyApp;
 

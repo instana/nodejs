@@ -16,6 +16,8 @@ import express from 'express';
 import morgan from 'morgan';
 import request from 'request-promise-native';
 import bodyParser from 'body-parser';
+import getAppPort from '../../../test_util/app-port.js';
+const port = getAppPort();
 
 const app = express();
 const logPrefix = `Express / Postgres App (${process.pid}):\t`;
@@ -249,8 +251,8 @@ app.get('/quick-query', (req, res) => {
     });
 });
 
-app.listen(process.env.APP_PORT, () => {
-  log(`Listening on port: ${process.env.APP_PORT}`);
+app.listen(port, () => {
+  log(`Listening on port: ${port}`);
 });
 
 function log() {

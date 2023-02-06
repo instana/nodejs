@@ -16,11 +16,6 @@ const { expectExactlyOneMatching, retry } = require('../../../../../../core/test
 const ProcessControls = require('../../../../test_util/ProcessControls');
 const globalAgent = require('../../../../globalAgent');
 
-const clientPort = 3216;
-const clientHost = `localhost:${clientPort}`;
-const serverPort = 3217;
-const serverHost = `localhost:${serverPort}`;
-
 const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
 mochaSuiteFn('tracing/http client', function () {
@@ -47,7 +42,6 @@ mochaSuiteFn('tracing/http client', function () {
 function registerTests(useHttps) {
   const serverControls = new ProcessControls({
     appPath: path.join(__dirname, 'serverApp'),
-    port: serverPort,
     useGlobalAgent: true,
     env: {
       USE_HTTPS: useHttps
@@ -56,10 +50,9 @@ function registerTests(useHttps) {
 
   const clientControls = new ProcessControls({
     appPath: path.join(__dirname, 'clientApp'),
-    port: clientPort,
     useGlobalAgent: true,
     env: {
-      SERVER_PORT: serverControls.port,
+      SERVER_PORT: serverControls.getPort(),
       USE_HTTPS: useHttps
     }
   });
@@ -93,6 +86,8 @@ function registerTests(useHttps) {
                   useHttps,
                   clientEndpoint: '/request-url-and-options',
                   serverEndpoint: '/request-url-opts',
+                  serverControls,
+                  clientControls,
                   withQuery,
                   urlShouldContainRedactedCredentials: true
                 })
@@ -123,6 +118,8 @@ function registerTests(useHttps) {
                   useHttps,
                   clientEndpoint: '/request-url-only',
                   serverEndpoint: '/request-only-url',
+                  serverControls,
+                  clientControls,
                   withQuery,
                   urlShouldContainRedactedCredentials: true
                 })
@@ -148,6 +145,8 @@ function registerTests(useHttps) {
                 useHttps,
                 clientEndpoint: '/request-options-only',
                 serverEndpoint: '/request-only-opts',
+                serverControls,
+                clientControls,
                 withQuery
               })
             )
@@ -164,7 +163,11 @@ function registerTests(useHttps) {
       .then(() =>
         retry(() =>
           globalAgent.instance.getSpans().then(spans => {
-            const entrySpan = verifyRootHttpEntry({ spans, host: clientHost, url: '/request-malformed-url' });
+            const entrySpan = verifyRootHttpEntry({
+              spans,
+              host: `localhost:${clientControls.getPort()}`,
+              url: '/request-malformed-url'
+            });
             expectExactlyOneMatching(spans, [
               span => expect(span.n).to.equal('node.http.client'),
               span => expect(span.k).to.equal(constants.EXIT),
@@ -208,6 +211,8 @@ function registerTests(useHttps) {
                 useHttps,
                 clientEndpoint: '/request-options-only-null-headers',
                 serverEndpoint: '/request-only-opts',
+                serverControls,
+                clientControls,
                 withQuery
               })
             )
@@ -233,6 +238,8 @@ function registerTests(useHttps) {
                   useHttps,
                   clientEndpoint: '/get-url-and-options',
                   serverEndpoint: '/get-url-opts',
+                  serverControls,
+                  clientControls,
                   withQuery,
                   urlShouldContainRedactedCredentials: true
                 })
@@ -263,6 +270,8 @@ function registerTests(useHttps) {
                   useHttps,
                   clientEndpoint: '/get-url-only',
                   serverEndpoint: '/get-only-url',
+                  serverControls,
+                  clientControls,
                   withQuery,
                   urlShouldContainRedactedCredentials: true
                 })
@@ -288,6 +297,8 @@ function registerTests(useHttps) {
                 useHttps,
                 clientEndpoint: '/get-options-only',
                 serverEndpoint: '/get-only-opts',
+                serverControls,
+                clientControls,
                 withQuery
               })
             )
@@ -476,7 +487,6 @@ function registerConnectionRefusalTest(useHttps) {
   describe('connection refusal', function () {
     const serverControls = new ProcessControls({
       appPath: path.join(__dirname, 'serverApp'),
-      port: serverPort,
       useGlobalAgent: true,
       env: {
         USE_HTTPS: useHttps
@@ -485,10 +495,9 @@ function registerConnectionRefusalTest(useHttps) {
 
     const clientControls = new ProcessControls({
       appPath: path.join(__dirname, 'clientApp'),
-      port: clientPort,
       useGlobalAgent: true,
       env: {
-        SERVER_PORT: serverControls.port,
+        SERVER_PORT: serverControls.getPort(),
         USE_HTTPS: useHttps
       }
     });
@@ -523,16 +532,14 @@ function registerConnectionRefusalTest(useHttps) {
 function registerSuperagentTest() {
   const serverControls = new ProcessControls({
     appPath: path.join(__dirname, 'serverApp'),
-    port: serverPort,
     useGlobalAgent: true
   });
 
   const clientControls = new ProcessControls({
     appPath: path.join(__dirname, 'superagentApp'),
-    port: clientPort,
     useGlobalAgent: true,
     env: {
-      SERVER_PORT: serverControls.port
+      SERVER_PORT: serverControls.getPort()
     }
   });
 
@@ -546,7 +553,11 @@ function registerSuperagentTest() {
       })
       .then(() =>
         retry(() =>
-          globalAgent.instance.getSpans().then(spans => verifySuperagentSpans(spans, '/callback', '/request-url-opts'))
+          globalAgent.instance
+            .getSpans()
+            .then(spans =>
+              verifySuperagentSpans(spans, '/callback', '/request-url-opts', clientControls, serverControls)
+            )
         )
       ));
 
@@ -558,7 +569,9 @@ function registerSuperagentTest() {
       })
       .then(() =>
         retry(() =>
-          globalAgent.instance.getSpans().then(spans => verifySuperagentSpans(spans, '/then', '/request-url-opts'))
+          globalAgent.instance
+            .getSpans()
+            .then(spans => verifySuperagentSpans(spans, '/then', '/request-url-opts', clientControls, serverControls))
         )
       ));
 
@@ -570,7 +583,9 @@ function registerSuperagentTest() {
       })
       .then(() =>
         retry(() =>
-          globalAgent.instance.getSpans().then(spans => verifySuperagentSpans(spans, '/catch', '/does-not-exist'))
+          globalAgent.instance
+            .getSpans()
+            .then(spans => verifySuperagentSpans(spans, '/catch', '/does-not-exist', clientControls, serverControls))
         )
       ));
 
@@ -582,7 +597,9 @@ function registerSuperagentTest() {
       })
       .then(() =>
         retry(() =>
-          globalAgent.instance.getSpans().then(spans => verifySuperagentSpans(spans, '/await', '/request-url-opts'))
+          globalAgent.instance
+            .getSpans()
+            .then(spans => verifySuperagentSpans(spans, '/await', '/request-url-opts', clientControls, serverControls))
         )
       ));
 
@@ -594,7 +611,11 @@ function registerSuperagentTest() {
       })
       .then(() =>
         retry(() =>
-          globalAgent.instance.getSpans().then(spans => verifySuperagentSpans(spans, '/await-fail', '/does-not-exist'))
+          globalAgent.instance
+            .getSpans()
+            .then(spans =>
+              verifySuperagentSpans(spans, '/await-fail', '/does-not-exist', clientControls, serverControls)
+            )
         )
       ));
 }
@@ -616,27 +637,42 @@ function verifySpans({
   useHttps,
   clientEndpoint,
   serverEndpoint,
+  clientControls,
+  serverControls,
   withQuery,
   urlShouldContainRedactedCredentials
 }) {
-  const entryInClient = verifyRootHttpEntry({ spans, host: clientHost, url: clientEndpoint });
+  const entryInClient = verifyRootHttpEntry({
+    spans,
+    host: `localhost:${clientControls.getPort()}`,
+    url: clientEndpoint
+  });
   const exitInClient = verifyHttpExit({
     spans,
     parent: entryInClient,
-    url: serverUrl(useHttps, urlShouldContainRedactedCredentials, serverEndpoint)
+    url: serverUrl(useHttps, urlShouldContainRedactedCredentials, serverEndpoint, serverControls)
   });
   checkQuery(exitInClient, withQuery);
-  const entryInServer = verifyHttpEntry({ spans, parent: exitInClient, host: serverHost, url: serverEndpoint });
+  const entryInServer = verifyHttpEntry({
+    spans,
+    parent: exitInClient,
+    host: `localhost:${serverControls.getPort()}`,
+    url: serverEndpoint
+  });
   checkQuery(entryInServer, withQuery);
   expect(spans).to.have.lengthOf(3);
 }
 
-function verifySuperagentSpans(spans, clientEndpoint, serverEndpoint) {
-  const entryInClient = verifyRootHttpEntry({ spans, host: clientHost, url: clientEndpoint });
+function verifySuperagentSpans(spans, clientEndpoint, serverEndpoint, clientControls, serverControls) {
+  const entryInClient = verifyRootHttpEntry({
+    spans,
+    host: `localhost:${clientControls.getPort()}`,
+    url: clientEndpoint
+  });
   const firstExitInClient = verifyHttpExit({
     spans,
     parent: entryInClient,
-    url: serverUrl(false, false, serverEndpoint),
+    url: serverUrl(false, false, serverEndpoint, serverControls),
     method: 'GET',
     status: serverEndpoint === '/does-not-exist' ? 404 : 200
   });
@@ -644,7 +680,7 @@ function verifySuperagentSpans(spans, clientEndpoint, serverEndpoint) {
   verifyHttpEntry({
     spans,
     parent: firstExitInClient,
-    host: serverHost,
+    host: `localhost:${serverControls.getPort()}`,
     url: serverEndpoint,
     method: 'GET',
     status: serverEndpoint === '/does-not-exist' ? 404 : 200
@@ -697,10 +733,10 @@ function verifyHttpExit({ spans, parent, url = '/', method = 'GET', status = 200
   ]);
 }
 
-function serverUrl(useHttps, urlShouldContainRedactedCredentials, path_) {
+function serverUrl(useHttps, urlShouldContainRedactedCredentials, path_, serverControls) {
   return `http${useHttps ? 's' : ''}://${
     urlShouldContainRedactedCredentials ? '<redacted>:<redacted>@' : ''
-  }${serverHost}${path_}`;
+  }${`localhost:${serverControls.getPort()}`}${path_}`;
 }
 
 function checkQuery(span, withQuery) {

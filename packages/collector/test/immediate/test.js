@@ -8,6 +8,7 @@
 const { expect } = require('chai');
 const { spawn } = require('child_process');
 const _ = require('lodash');
+const portfinder = require('../test_util/portfinder');
 const request = require('request-promise');
 
 const config = require('../../../core/test/config');
@@ -16,6 +17,7 @@ const ProcessControls = require('../test_util/ProcessControls');
 const globalAgent = require('../globalAgent');
 
 const agentControls = globalAgent.instance;
+let controls;
 
 describe('collector/src/immediate', function () {
   globalAgent.setUpCleanUpHooks();
@@ -23,7 +25,7 @@ describe('collector/src/immediate', function () {
   this.timeout(config.getTestTimeout());
 
   describe('an application instrumented via NODE_OPTIONS', () => {
-    const controls = new ProcessControls({
+    controls = new ProcessControls({
       useGlobalAgent: true,
       dirname: __dirname,
       cwd: __dirname,
@@ -54,10 +56,12 @@ describe('collector/src/immediate', function () {
     });
 
     it('should ignore npm but instrument the actual application', async () => {
+      const appPort = portfinder();
       const env = _.assign({}, process.env, {
         NODE_OPTIONS: '--require ../../src/immediate',
         INSTANA_AGENT_PORT: agentControls.agentPort,
-        INSTANA_LOG_LEVEL: 'info'
+        INSTANA_LOG_LEVEL: 'info',
+        APP_PORT: appPort
       });
 
       // Start a Node.js application via npm start, this will start two Node.js processes: npm and the actual
@@ -72,7 +76,7 @@ describe('collector/src/immediate', function () {
       // Wait until the application under test is up.
       appUnderTestPid = await retry(() =>
         request({
-          url: 'http://localhost:3215/pid',
+          url: `http://localhost:${appPort}/pid`,
           method: 'GET',
           headers: {
             'X-INSTANA-L': '0'

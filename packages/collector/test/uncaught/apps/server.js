@@ -24,7 +24,7 @@ if (process.env.ENABLE_REPORT_UNHANDLED_REJECTIONS) {
 instana(config);
 
 const http = require('http');
-const port = process.env.APP_PORT;
+const port = require('../../test_util/app-port')();
 
 const requestHandler = (request, response) => {
   if (request.url === '/') {

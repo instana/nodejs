@@ -8,7 +8,6 @@
 const { v4: uuid } = require('uuid');
 const { checkTableExistence, cleanup } = require('./util');
 const semver = require('semver');
-const path = require('path');
 const { expect } = require('chai');
 const { fail } = expect;
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
@@ -76,8 +75,7 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/dynamodb', function () {
 
   describe('tracing enabled, no suppression', function () {
     const appControls = new ProcessControls({
-      appPath: path.join(__dirname, 'app'),
-      port: 3215,
+      dirname: __dirname,
       useGlobalAgent: true,
       env: {
         AWS_DYNAMODB_TABLE_NAME: tableName
@@ -150,8 +148,7 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/dynamodb', function () {
     this.timeout(config.getTestTimeout() * 2);
 
     const appControls = new ProcessControls({
-      appPath: path.join(__dirname, 'app'),
-      port: 3215,
+      dirname: __dirname,
       useGlobalAgent: true,
       tracingEnabled: false,
       env: {
@@ -183,8 +180,7 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/dynamodb', function () {
 
   describe('tracing enabled but suppressed', () => {
     const appControls = new ProcessControls({
-      appPath: path.join(__dirname, 'app'),
-      port: 3215,
+      dirname: __dirname,
       useGlobalAgent: true,
       env: {
         AWS_DYNAMODB_TABLE_NAME: tableName

@@ -30,12 +30,8 @@ allTestCases.forEach(testDefinition => {
   }
 });
 
-const appPort = 3215;
-const downstreamPort = 3216;
-
 describe('spec compliance', function () {
   this.timeout(config.getTestTimeout());
-
   globalAgent.setUpCleanUpHooks();
 
   [false, true].forEach(http2 => {
@@ -44,7 +40,6 @@ describe('spec compliance', function () {
     mochaSuiteFn(`compliance test suite (${http2 ? 'HTTP2' : 'HTTP1'})`, () => {
       const downstreamTarget = new ProcessControls({
         appPath: path.join(__dirname, 'downstreamTarget'),
-        port: downstreamPort,
         useGlobalAgent: true,
         http2,
         env: {
@@ -72,25 +67,24 @@ describe('spec compliance', function () {
   mochaSuiteFnNativeFetch('compliance test suite (HTTP -> Native Fetch)', () => {
     const downstreamTarget = new ProcessControls({
       appPath: path.join(__dirname, 'downstreamTarget'),
-      port: downstreamPort,
       useGlobalAgent: true
     });
     before(() => downstreamTarget.start());
     after(() => downstreamTarget.stop());
 
     [false, true].forEach(w3cTraceCorrelationDisabled => {
-      registerSuite({ nativeFetch: true, w3cTraceCorrelationDisabled });
+      registerSuite({ nativeFetch: true, w3cTraceCorrelationDisabled, downstreamTarget });
     });
   });
 
-  function registerSuite({ http2, nativeFetch, w3cTraceCorrelationDisabled }) {
+  function registerSuite({ http2, nativeFetch, w3cTraceCorrelationDisabled, downstreamTarget }) {
     describe(`compliance test suite (${http2 ? 'HTTP2' : 'HTTP1'}, W3C trace correlation ${
       w3cTraceCorrelationDisabled ? 'disabled' : 'enabled'
     })`, () => {
       const env = {
         USE_HTTP2: http2,
         USE_NATIVE_FETCH: nativeFetch,
-        DOWNSTREAM_PORT: downstreamPort
+        DOWNSTREAM_PORT: downstreamTarget.port
       };
 
       let testCases;
@@ -103,11 +97,11 @@ describe('spec compliance', function () {
 
       const app = new ProcessControls({
         dirname: __dirname,
-        port: appPort,
         useGlobalAgent: true,
         http2,
         env
       });
+
       ProcessControls.setUpHooks(app);
 
       testCases.forEach(testDefinition => {
@@ -183,12 +177,12 @@ describe('spec compliance', function () {
             expect(spans).to.have.lengthOf(0);
           } else {
             await retryUntilSpansMatch(agentControls, spans => {
-              verifyHttpEntry(testDefinition, valuesForPlaceholders, spans, '/start');
+              verifyHttpEntry(testDefinition, valuesForPlaceholders, spans, '/start', app);
               verifyHttpExit(
                 testDefinition,
                 valuesForPlaceholders,
                 spans,
-                /^http(?:s)?:\/\/localhost:3216\/downstream$/
+                `localhost:${downstreamTarget.port}/downstream`
               );
             });
           }
@@ -249,7 +243,7 @@ function parseForPlaceholders(valuesForPlaceholders, template, value) {
   // }
 }
 
-function verifyHttpEntry(testDefinition, valuesForPlaceholders, spans, url) {
+function verifyHttpEntry(testDefinition, valuesForPlaceholders, spans, url, app) {
   const expectations = [
     span => expect(span.n).to.equal('node.http.server'),
     span => expect(span.k).to.equal(constants.ENTRY),
@@ -258,7 +252,7 @@ function verifyHttpEntry(testDefinition, valuesForPlaceholders, spans, url) {
     span => expect(span.s).to.be.a('string'),
     span => expect(span.data.http.method).to.equal('GET'),
     span => expect(span.data.http.url).to.equal(url),
-    span => expect(span.data.http.host).to.equal(`localhost:${appPort}`),
+    span => expect(span.data.http.host).to.equal(`localhost:${app.port}`),
     span => expect(span.data.http.status).to.equal(200)
   ];
 
@@ -290,7 +284,7 @@ function verifyHttpExit(testDefinition, valuesForPlaceholders, spans, url) {
     span => expect(span.t).to.be.a('string'),
     span => expect(span.s).to.be.a('string'),
     span => expect(span.data.http.method).to.equal('GET'),
-    span => expect(span.data.http.url).to.match(url),
+    span => expect(span.data.http.url).to.contain(url),
     span => expect(span.data.http.status).to.equal(200)
   ];
   [

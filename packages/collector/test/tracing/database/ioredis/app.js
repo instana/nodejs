@@ -16,7 +16,7 @@ const express = require('express');
 const morgan = require('morgan');
 const redis = require('ioredis');
 const request = require('request-promise');
-
+const port = require('../../../test_util/app-port')();
 const app = express();
 const logPrefix = `Express / Redis App (${process.pid}):\t`;
 let connectedToRedis = true;
@@ -230,8 +230,8 @@ app.post('/pipelineKeepTracing', (req, res) => {
     });
 });
 
-app.listen(process.env.APP_PORT, () => {
-  log(`Listening on port: ${process.env.APP_PORT}`);
+app.listen(port, () => {
+  log(`Listening on port: ${port}`);
 });
 
 function log() {

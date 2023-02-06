@@ -8,14 +8,15 @@
 const spawn = require('child_process').spawn;
 const request = require('request-promise');
 const path = require('path');
+const portfinder = require('../../../test_util/portfinder');
 
 const testUtils = require('../../../../../core/test/test_util');
 const config = require('../../../../../core/test/config');
 const agentPort = require('../../../globalAgent').PORT;
 const upstreamPort = require('../../../apps/expressControls').appPort;
-const appPort = (exports.appPort = 3215);
 
 let appProcess;
+const appPort = (exports.appPort = portfinder());
 
 exports.registerTestHooks = (opts = {}) => {
   let appName = 'app.js';

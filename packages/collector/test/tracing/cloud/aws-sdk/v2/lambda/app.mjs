@@ -11,6 +11,8 @@ const logPrefix = `AWS SDK v2 Lambda (${process.pid}):\t`;
 AWS.config.update({ region: 'us-east-2' });
 const lambda = new AWS.Lambda();
 const functionName = process.env.AWS_LAMBDA_FUNCTION_NAME || 'wrapped-async';
+import getAppPort from '../../../../../test_util/app-port.js';
+const port = getAppPort();
 
 import log from '@instana/core/test/test_util/log.js';
 const logger = log.getLogger(logPrefix);
@@ -64,7 +66,6 @@ function execOperation(op, cb, withError = false, ctx = false) {
 const availableOperations = Object.keys(operations);
 
 const app = express();
-const port = process.env.APP_PORT || 3215;
 
 function httpError(res, err) {
   res.status(500).send({

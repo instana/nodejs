@@ -7,14 +7,19 @@
 
 const agentPort = process.env.INSTANA_AGENT_PORT || 42699;
 import request from 'request-promise';
-import delay from '../../../../../../../core/test/test_util/delay';
+import delay from '../../../../../../../core/test/test_util/delay.js';
+import getAppPort from '../../../../../test_util/app-port.js';
+import logger from '@instana/core/test/test_util/log.js';
+
+const port = getAppPort();
+
 import AWS from 'aws-sdk';
 import express from 'express';
 const logPrefix = `AWS SDK v2 DynamoDB (${process.pid}):\t`;
 AWS.config.update({ region: 'us-east-2' });
 const dynamoDB = new AWS.DynamoDB();
 const tableName = process.env.AWS_DYNAMODB_TABLE_NAME || 'nodejs-team';
-const log = require('@instana/core/test/test_util/log').getLogger(logPrefix);
+const log = logger.getLogger(logPrefix);
 
 const tableCreationParams = {
   TableName: tableName,
@@ -177,7 +182,6 @@ const DynamoDBApi = {
 };
 
 const app = express();
-const port = process.env.APP_PORT || 3215;
 
 app.get('/', (_req, res) => {
   res.send('Ok');

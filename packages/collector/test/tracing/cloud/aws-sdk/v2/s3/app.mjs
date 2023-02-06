@@ -7,15 +7,17 @@
 
 const agentPort = process.env.INSTANA_AGENT_PORT || 42699;
 import request from 'request-promise';
-import delay from '../../../../../../../core/test/test_util/delay';
+import delay from '../../../../../../../core/test/test_util/delay.js';
 import AWS from 'aws-sdk';
 import express from 'express';
+
 const logPrefix = `AWS SDK v2 S3 (${process.pid}):\t`;
 AWS.config.update({ region: 'us-east-2' });
 const s3 = new AWS.S3();
 
 const app = express();
-const port = process.env.APP_PORT || 3215;
+import getAppPort from '../../../../../test_util/app-port.js';
+const port = getAppPort();
 
 import log from '@instana/core/test/test_util/log.js';
 const logger = log.getLogger(logPrefix);

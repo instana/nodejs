@@ -22,6 +22,7 @@ require('../../../../..')({
 const express = require('express');
 const request = require('request');
 const fetch = require('node-fetch');
+const port = require('../../../../test_util/app-port')();
 const app = express();
 
 app.get('/', (req, res) => {
@@ -74,7 +75,7 @@ app.use((req, res) => {
   }, delay * 0.25);
 });
 
-app.listen(process.env.APP_PORT, () => {
+app.listen(port, () => {
   log(`Listening on port: ${process.env.APP_PORT}, proxying to ${process.env.UPSTREAM_PORT}.`);
 });
 

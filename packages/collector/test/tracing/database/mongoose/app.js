@@ -12,6 +12,7 @@ const mongoose = require('mongoose');
 const express = require('express');
 const morgan = require('morgan');
 const { v4: uuid } = require('uuid');
+const port = require('../../../test_util/app-port')();
 
 const app = express();
 const logPrefix = `Express / Mongoose App (${process.pid}):\t`;
@@ -143,8 +144,8 @@ app.post('/aggregate', (req, res) => {
     });
 });
 
-app.listen(process.env.APP_PORT, () => {
-  log(`Listening on port: ${process.env.APP_PORT}`);
+app.listen(port, () => {
+  log(`Listening on port: ${port}`);
 });
 
 function log() {

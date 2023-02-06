@@ -14,6 +14,9 @@ import bodyParser from 'body-parser';
 import express from 'express';
 import morgan from 'morgan';
 import bunyan from 'bunyan';
+import getAppPort from '../../../test_util/app-port.js';
+const port = getAppPort();
+
 const bunyanLogger = bunyan.createLogger({ name: 'test-logger-console' });
 
 const app = express();
@@ -109,6 +112,6 @@ function finish(res) {
   });
 }
 
-app.listen(process.env.APP_PORT, () => {
-  console.log(`Listening on port: ${process.env.APP_PORT}`);
+app.listen(port, () => {
+  console.log(`Listening on port: ${port}`);
 });

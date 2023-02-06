@@ -59,43 +59,37 @@ function testQuery(allControls, testConfig) {
 function startAllProcesses() {
   const accountServiceControls = new ProcessControls({
     appPath: path.join(__dirname, 'services', 'accounts'),
-    port: 4200,
     useGlobalAgent: true
   });
   const inventoryServiceControls = new ProcessControls({
     appPath: path.join(__dirname, 'services', 'inventory'),
-    port: 4201,
     useGlobalAgent: true
   });
   const productsServiceControls = new ProcessControls({
     appPath: path.join(__dirname, 'services', 'products'),
-    port: 4202,
     useGlobalAgent: true
   });
   const reviewsServiceControls = new ProcessControls({
     appPath: path.join(__dirname, 'services', 'reviews'),
-    port: 4203,
     useGlobalAgent: true
   });
 
   const gatewayControls = new ProcessControls({
     appPath: path.join(__dirname, 'gateway'),
-    port: 3217,
     useGlobalAgent: true,
     env: {
-      SERVICE_PORT_ACCOUNTS: accountServiceControls.port,
-      SERVICE_PORT_INVENTORY: inventoryServiceControls.port,
-      SERVICE_PORT_PRODUCTS: productsServiceControls.port,
-      SERVICE_PORT_REVIEWS: reviewsServiceControls.port
+      SERVICE_PORT_ACCOUNTS: accountServiceControls.getPort(),
+      SERVICE_PORT_INVENTORY: inventoryServiceControls.getPort(),
+      SERVICE_PORT_PRODUCTS: productsServiceControls.getPort(),
+      SERVICE_PORT_REVIEWS: reviewsServiceControls.getPort()
     }
   });
 
   const clientControls = new ProcessControls({
     appPath: path.join(__dirname, 'client'),
-    port: 3216,
     useGlobalAgent: true,
     env: {
-      SERVER_PORT: gatewayControls.port
+      SERVER_PORT: gatewayControls.getPort()
     }
   });
 
@@ -164,7 +158,7 @@ function verifySpansForQuery(allControls, testConfig, spans) {
   const { gatewayControls, clientControls } = allControls;
   const { withError } = testConfig;
   const httpEntryInClientApp = verifyHttpEntry(clientControls, spans);
-  const httpExitFromClientApp = verifyHttpExit(httpEntryInClientApp, clientControls, 3217, spans);
+  const httpExitFromClientApp = verifyHttpExit(httpEntryInClientApp, clientControls, gatewayControls.getPort(), spans);
 
   const graphQLQueryEntryInGateway = verifyGraphQLGatewayEntry(
     httpExitFromClientApp,
@@ -176,20 +170,40 @@ function verifySpansForQuery(allControls, testConfig, spans) {
   );
   // The gateway sends a GraphQL request to each service, thus there There are four HTTP exits from the gateway and four
   // corresponding GraphQL entries - one for each service involved.
-  const httpExitFromGatewayToAccounts = verifyHttpExit(graphQLQueryEntryInGateway, gatewayControls, 4200, spans);
+  const httpExitFromGatewayToAccounts = verifyHttpExit(
+    graphQLQueryEntryInGateway,
+    gatewayControls,
+    allControls.accountServiceControls.getPort(),
+    spans
+  );
   verifyGraphQLAccountEntry(httpExitFromGatewayToAccounts, allControls, testConfig, spans);
 
   // In the error test we throw an error in the accounts service. The gateway then aborts processing this GraphQL
   // query and never talks to the other services. Thus, the remaining GraphQL communication only happens in the
   // non-error test case.
   if (!withError) {
-    const httpExitFromGatewayToInventory = verifyHttpExit(graphQLQueryEntryInGateway, gatewayControls, 4201, spans);
+    const httpExitFromGatewayToInventory = verifyHttpExit(
+      graphQLQueryEntryInGateway,
+      gatewayControls,
+      allControls.inventoryServiceControls.getPort(),
+      spans
+    );
     verifyGraphQLInventoryEntry(httpExitFromGatewayToInventory, allControls, testConfig, spans);
 
-    const httpExitFromGatewayToProducts = verifyHttpExit(graphQLQueryEntryInGateway, gatewayControls, 4202, spans);
+    const httpExitFromGatewayToProducts = verifyHttpExit(
+      graphQLQueryEntryInGateway,
+      gatewayControls,
+      allControls.productsServiceControls.getPort(),
+      spans
+    );
     verifyGraphQLProductsEntry(httpExitFromGatewayToProducts, allControls, testConfig, spans);
 
-    const httpExitFromGatewayToReviews = verifyHttpExit(graphQLQueryEntryInGateway, gatewayControls, 4203, spans);
+    const httpExitFromGatewayToReviews = verifyHttpExit(
+      graphQLQueryEntryInGateway,
+      gatewayControls,
+      allControls.reviewsServiceControls.getPort(),
+      spans
+    );
     verifyGraphQLReviewsEntry(httpExitFromGatewayToReviews, allControls, testConfig, spans);
   }
 

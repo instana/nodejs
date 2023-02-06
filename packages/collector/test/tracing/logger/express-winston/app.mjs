@@ -14,6 +14,8 @@ import morgan from 'morgan';
 import semver from 'semver';
 import expressWinston from 'express-winston';
 import { createRequire } from 'module';
+import getAppPort from '../../../test_util/app-port.js';
+const port = getAppPort();
 
 const require = createRequire(import.meta.url);
 const expressWinstonLocation = require.resolve('express-winston');
@@ -60,8 +62,8 @@ app.get('/500', (req, res) => {
   res.sendStatus(500);
 });
 
-app.listen(process.env.APP_PORT, () => {
-  log(`Listening on port: ${process.env.APP_PORT}`);
+app.listen(port, () => {
+  log(`Listening on port: ${port}`);
 });
 
 function log() {

@@ -17,7 +17,7 @@ const express = require('express');
 const morgan = require('morgan');
 const path = require('path');
 const request = require('request-promise');
-
+const port = require('../../test_util/app-port')();
 const { delay, getLogger } = require('../../../../core/test/test_util');
 const DummyEmitter = require('./dummyEmitter');
 
@@ -607,6 +607,6 @@ function synchronousOperations(message) {
   process.send(`done: ${result}`);
 }
 
-app.listen(process.env.APP_PORT, () => {
-  log(`Listening on port: ${process.env.APP_PORT}`);
+app.listen(port, () => {
+  log(`Listening on port: ${port}`);
 });

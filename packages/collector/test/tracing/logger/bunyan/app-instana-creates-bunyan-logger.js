@@ -26,7 +26,7 @@ instanaLogger = require('../../../../src/logger').getLogger('test-module-name', 
 const bodyParser = require('body-parser');
 const express = require('express');
 const morgan = require('morgan');
-
+const port = require('../../../test_util/app-port')();
 const app = express();
 const logPrefix = `Bunyan App [Instana creates Bunyan logger] (${process.pid}):\t`;
 
@@ -45,8 +45,8 @@ app.get('/trigger', (req, res) => {
   res.sendStatus(200);
 });
 
-app.listen(process.env.APP_PORT, () => {
-  log(`Listening on port: ${process.env.APP_PORT}`);
+app.listen(port, () => {
+  log(`Listening on port: ${port}`);
 });
 
 function log() {

@@ -14,7 +14,7 @@ const fs = require('fs');
 const morgan = require('morgan');
 const path = require('path');
 const rp = require('request-promise');
-
+const port = require('../../../../test_util/app-port')();
 const httpModule = process.env.USE_HTTPS === 'true' ? require('https') : require('http');
 const protocol = process.env.USE_HTTPS === 'true' ? 'https' : 'http';
 const baseUrl = `${protocol}://user:password@localhost:${process.env.SERVER_PORT}`;
@@ -243,12 +243,12 @@ app.put('/expect-continue', (req, res) => {
 if (process.env.USE_HTTPS === 'true') {
   require('https')
     .createServer({ key, cert }, app)
-    .listen(process.env.APP_PORT, () => {
-      log(`Listening (HTTPS!) on port: ${process.env.APP_PORT}`);
+    .listen(port, () => {
+      log(`Listening (HTTPS!) on port: ${port}`);
     });
 } else {
-  app.listen(process.env.APP_PORT, () => {
-    log(`Listening on port: ${process.env.APP_PORT}`);
+  app.listen(port, () => {
+    log(`Listening on port: ${port}`);
   });
 }
 

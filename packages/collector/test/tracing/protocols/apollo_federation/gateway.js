@@ -14,12 +14,12 @@ const express = require('express');
 const http = require('http');
 const morgan = require('morgan');
 
-const accountsPort = process.env.SERVICE_PORT_ACCOUNTS || 4200;
-const inventoryPort = process.env.SERVICE_PORT_INVENTORY || 4201;
-const productsPort = process.env.SERVICE_PORT_PRODUCTS || 4202;
-const reviewsPort = process.env.SERVICE_PORT_REVIEWS || 4203;
+const accountsPort = process.env.SERVICE_PORT_ACCOUNTS;
+const inventoryPort = process.env.SERVICE_PORT_INVENTORY;
+const productsPort = process.env.SERVICE_PORT_PRODUCTS;
+const reviewsPort = process.env.SERVICE_PORT_REVIEWS;
 
-const port = process.env.APP_PORT || 3217;
+const port = require('../../../test_util/app-port')();
 const app = express();
 
 const logPrefix = `Apollo Federation Gateway (${process.pid}):\t`;

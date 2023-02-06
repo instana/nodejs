@@ -11,6 +11,8 @@ import Sequelize from 'sequelize';
 import express from 'express';
 import morgan from 'morgan';
 import bodyParser from 'body-parser';
+import getAppPort from '../../../test_util/app-port.js';
+const port = getAppPort();
 
 const sequelize = new Sequelize(process.env.POSTGRES_DB, process.env.POSTGRES_USER, process.env.POSTGRES_PASSWORD, {
   host: process.env.POSTGRES_HOST,
@@ -129,8 +131,8 @@ process.on('message', message => {
   }
 });
 
-app.listen(process.env.APP_PORT, () => {
-  log(`Listening on port: ${process.env.APP_PORT}`);
+app.listen(port, () => {
+  log(`Listening on port: ${port}`);
 });
 
 function log() {

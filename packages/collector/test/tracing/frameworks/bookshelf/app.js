@@ -12,6 +12,7 @@ require('../../../..')();
 const express = require('express');
 const morgan = require('morgan');
 const bodyParser = require('body-parser');
+const port = require('../../../test_util/app-port')();
 
 const app = express();
 const logPrefix = `Bookshelf App (${process.pid}):\t`;
@@ -66,8 +67,8 @@ app.get('/find-one', async (req, res) => {
   res.json();
 });
 
-app.listen(process.env.APP_PORT, () => {
-  log(`Listening on port: ${process.env.APP_PORT}`);
+app.listen(port, () => {
+  log(`Listening on port: ${port}`);
 });
 
 function log() {

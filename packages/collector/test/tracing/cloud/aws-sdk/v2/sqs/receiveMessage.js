@@ -21,7 +21,7 @@ const collectingLogger = new CollectingLogger();
 const teeLogger = new TeeLogger(instanaLogger, collectingLogger);
 instana.setLogger(teeLogger);
 
-const port = process.env.APP_PORT || 3216;
+const port = require('../../../../../test_util/app-port')();
 const agentPort = process.env.INSTANA_AGENT_PORT || 42699;
 const queueURL = process.env.AWS_SQS_QUEUE_URL;
 

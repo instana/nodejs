@@ -55,7 +55,6 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/combined-products', function () {
   describe('tracing enabled, no suppression', function () {
     const appControls = new ProcessControls({
       appPath: path.join(__dirname, 'combined_products'),
-      port: 3215,
       useGlobalAgent: true,
       env: {
         AWS_LAMBDA_FUNCTION_NAME: functionName
@@ -106,7 +105,6 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/combined-products', function () {
     this.timeout(config.getTestTimeout() * 2);
     const appControls = new ProcessControls({
       appPath: path.join(__dirname, 'combined_products'),
-      port: 3215,
       useGlobalAgent: true,
       tracingEnabled: false,
       env: {
@@ -136,7 +134,6 @@ mochaSuiteFn('tracing/cloud/aws-sdk/v2/combined-products', function () {
   describe('tracing enabled but suppressed', () => {
     const appControls = new ProcessControls({
       appPath: path.join(__dirname, 'combined_products'),
-      port: 3215,
       useGlobalAgent: true,
       env: {
         AWS_LAMBDA_FUNCTION_NAME: functionName

@@ -14,8 +14,11 @@ import express from 'express';
 import morgan from 'morgan';
 import redis from 'ioredis';
 import request from 'request-promise';
+import getAppPort from '../../../test_util/app-port.js';
 
 const app = express();
+const port = getAppPort();
+
 const logPrefix = `Express / Redis App (${process.pid}):\t`;
 let connectedToRedis = true;
 
@@ -228,8 +231,8 @@ app.post('/pipelineKeepTracing', (req, res) => {
     });
 });
 
-app.listen(process.env.APP_PORT, () => {
-  log(`Listening on port: ${process.env.APP_PORT}`);
+app.listen(port, () => {
+  log(`Listening on port: ${port}`);
 });
 
 function log() {

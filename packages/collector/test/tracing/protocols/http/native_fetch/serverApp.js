@@ -15,7 +15,7 @@ const logPrefix = `Native Fetch Server (${process.pid}):\t`;
 const log = require('@instana/core/test/test_util/log').getLogger(logPrefix);
 
 const app = express();
-const port = process.env.APP_PORT || 3000;
+const port = require('../../../../test_util/app-port')();
 
 if (process.env.WITH_STDOUT) {
   app.use(morgan(`${logPrefix}:method :url :status`));

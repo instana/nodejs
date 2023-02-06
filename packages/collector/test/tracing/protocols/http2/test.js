@@ -15,9 +15,6 @@ const { delay, expectExactlyOneMatching, retry } = require('../../../../../core/
 const ProcessControls = require('../../../test_util/ProcessControls');
 const { AgentStubControls } = require('../../../apps/agentStubControls');
 
-const clientPort = 3216;
-const serverPort = 3217;
-
 const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
 mochaSuiteFn('tracing/http2', function () {
@@ -36,17 +33,16 @@ mochaSuiteFn('tracing/http2', function () {
   const serverControls = new ProcessControls({
     appPath: path.join(__dirname, 'server'),
     http2: true,
-    port: serverPort,
     agentControls
   });
 
   const clientControls = new ProcessControls({
     appPath: path.join(__dirname, 'client'),
     http2: true,
-    port: clientPort,
     agentControls,
+    forcePortSearching: true,
     env: {
-      SERVER_PORT: serverControls.port
+      SERVER_PORT: serverControls.getPort()
     }
   });
 
@@ -66,7 +62,11 @@ mochaSuiteFn('tracing/http2', function () {
           const responsePayload = JSON.parse(res.body);
           expect(responsePayload.message).to.equal('Ohai HTTP2!');
 
-          return retry(() => agentControls.getSpans().then(spans => verifySpans(spans, 'GET', false, withQuery)));
+          return retry(() =>
+            agentControls
+              .getSpans()
+              .then(spans => verifySpans(spans, 'GET', false, withQuery, serverControls, clientControls))
+          );
         }));
   });
 
@@ -84,7 +84,11 @@ mochaSuiteFn('tracing/http2', function () {
           const responsePayload = JSON.parse(res.body);
           expect(responsePayload.message).to.equal('Ohai HTTP2!');
 
-          return retry(() => agentControls.getSpans().then(spans => verifySpans(spans, method, false)));
+          return retry(() =>
+            agentControls
+              .getSpans()
+              .then(spans => verifySpans(spans, method, false, false, serverControls, clientControls))
+          );
         }));
   });
 
@@ -101,7 +105,9 @@ mochaSuiteFn('tracing/http2', function () {
         const responsePayload = JSON.parse(res.body);
         expect(responsePayload.message).to.equal('Oops!');
 
-        return retry(() => agentControls.getSpans().then(spans => verifySpans(spans, 'GET', true)));
+        return retry(() =>
+          agentControls.getSpans().then(spans => verifySpans(spans, 'GET', true, false, serverControls, clientControls))
+        );
       }));
 
   it('must suppress', () =>
@@ -150,7 +156,7 @@ mochaSuiteFn('tracing/http2', function () {
       .then(() =>
         retry(() =>
           agentControls.getSpans().then(spans => {
-            const entryInClient = verifyRootHttpEntry(spans, `localhost:${serverPort}`, '/request');
+            const entryInClient = verifyRootHttpEntry(spans, `localhost:${serverControls.getPort()}`, '/request');
             expect(entryInClient.t).to.be.a('string');
             expect(entryInClient.t).to.have.lengthOf(16);
             expect(entryInClient.t).to.not.equal('84e588b697868fee');
@@ -173,7 +179,7 @@ mochaSuiteFn('tracing/http2', function () {
       .then(() =>
         retry(() =>
           agentControls.getSpans().then(spans => {
-            verifyRootHttpEntry(spans, `localhost:${serverPort}`, '/request', 'GET', 200, false, true);
+            verifyRootHttpEntry(spans, `localhost:${serverControls.getPort()}`, '/request', 'GET', 200, false, true);
           })
         )
       ));
@@ -190,7 +196,7 @@ mochaSuiteFn('tracing/http2', function () {
       .then(() =>
         retry(() =>
           agentControls.getSpans().then(spans => {
-            const entry = verifyRootHttpEntry(spans, `localhost:${serverPort}`, '/request');
+            const entry = verifyRootHttpEntry(spans, `localhost:${serverControls.getPort()}`, '/request');
             expect(entry.data.service).to.equal('Custom Service');
           })
         )
@@ -288,7 +294,7 @@ mochaSuiteFn('tracing/http2', function () {
         const traceId = /^Instana Trace ID: ([a-f0-9]{16})$/.exec(response.body)[1];
         return retry(() =>
           agentControls.getSpans().then(spans => {
-            const span = verifyRootHttpEntry(spans, `localhost:${serverPort}`, '/inject-trace-id');
+            const span = verifyRootHttpEntry(spans, `localhost:${serverControls.getPort()}`, '/inject-trace-id');
             expect(span.t).to.equal(traceId);
           })
         );
@@ -303,10 +309,10 @@ function constructPath(basePath, withQuery) {
   }
 }
 
-function verifySpans(spans, method, erroneous, withQuery) {
+function verifySpans(spans, method, erroneous, withQuery, serverControls, clientControls) {
   const entryInClient = verifyRootHttpEntry(
     spans,
-    `localhost:${clientPort}`,
+    `localhost:${clientControls.getPort()}`,
     '/trigger-downstream',
     method,
     erroneous ? 500 : 200,
@@ -315,7 +321,7 @@ function verifySpans(spans, method, erroneous, withQuery) {
   const exitInClient = verifyHttpExit(
     spans,
     entryInClient,
-    `https://localhost:${serverPort}/request`,
+    `https://localhost:${serverControls.getPort()}/request`,
     method,
     true, // expectHeaders
     erroneous ? 500 : 200,
@@ -325,7 +331,7 @@ function verifySpans(spans, method, erroneous, withQuery) {
   const entryInServer = verifyHttpEntry(
     spans,
     exitInClient,
-    `localhost:${serverPort}`,
+    `localhost:${serverControls.getPort()}`,
     '/request',
     method,
     true, // expectHeaders

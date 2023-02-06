@@ -63,8 +63,7 @@ mochaSuiteFn('tracing/cache/memcached', function () {
 
   describe('tracing enabled, no suppression', function () {
     const appControls = new ProcessControls({
-      appPath: path.join(__dirname, 'app'),
-      port: 3215,
+      dirname: __dirname,
       useGlobalAgent: true,
       env: {}
     });
@@ -174,7 +173,6 @@ mochaSuiteFn('tracing/cache/memcached', function () {
 
     const appControls = new ProcessControls({
       appPath: path.join(__dirname, 'app'),
-      port: 3215,
       useGlobalAgent: true,
       tracingEnabled: false,
       env: {}
@@ -228,7 +226,6 @@ mochaSuiteFn('tracing/cache/memcached', function () {
   describe('tracing enabled but suppressed', () => {
     const appControls = new ProcessControls({
       appPath: path.join(__dirname, 'app'),
-      port: 3215,
       useGlobalAgent: true,
       env: {}
     });

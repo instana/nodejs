@@ -5,7 +5,6 @@
 
 'use strict';
 
-const path = require('path');
 const semver = require('semver');
 const expect = require('chai').expect;
 
@@ -26,7 +25,7 @@ mochaSuiteFn('tracing/hapi', function () {
   globalAgent.setUpCleanUpHooks();
 
   const controls = new ProcessControls({
-    appPath: path.join(__dirname, 'app'),
+    dirname: __dirname,
     useGlobalAgent: true
   });
   ProcessControls.setUpHooks(controls);

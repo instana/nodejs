@@ -79,7 +79,6 @@ function start(version, requestMethod) {
 
       const appControls = new ProcessControls({
         appPath: path.join(__dirname, './app'),
-        port: 3215,
         useGlobalAgent: true,
         env: {
           AWS_DYNAMODB_TABLE_NAME: tableName,
@@ -117,7 +116,6 @@ function start(version, requestMethod) {
 
       const appControls = new ProcessControls({
         appPath: path.join(__dirname, './app'),
-        port: 3215,
         useGlobalAgent: true,
         env: {
           AWS_DYNAMODB_TABLE_NAME: tableName,
@@ -147,7 +145,6 @@ function start(version, requestMethod) {
 
       const appControls = new ProcessControls({
         appPath: path.join(__dirname, './app'),
-        port: 3215,
         useGlobalAgent: true,
         tracingEnabled: false,
         env: {
@@ -199,7 +196,6 @@ function start(version, requestMethod) {
 
       const appControls = new ProcessControls({
         appPath: path.join(__dirname, './app'),
-        port: 3215,
         useGlobalAgent: true,
         env: {
           AWS_DYNAMODB_TABLE_NAME: tableName,

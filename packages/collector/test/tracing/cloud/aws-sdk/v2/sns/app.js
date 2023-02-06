@@ -125,7 +125,7 @@ const SNSApi = {
 };
 
 const app = express();
-const port = process.env.APP_PORT || 3215;
+const port = require('../../../../../test_util/app-port')();
 
 app.get('/', (_req, res) => {
   res.send('Ok');

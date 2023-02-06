@@ -21,8 +21,8 @@ const http2Promise = require('../../../test_util/http2Promise');
 
 const { HTTP2_HEADER_METHOD, HTTP2_HEADER_PATH, HTTP2_HEADER_STATUS } = require('http2').constants;
 
-const port = process.env.APP_PORT || 3215;
-const downstreamPort = process.env.DOWNSTREAM_PORT || 3216;
+const port = require('../../../test_util/app-port')();
+const downstreamPort = process.env.DOWNSTREAM_PORT;
 
 const logPrefix = `Spec Compliance Test App (${useHttp2 ? 'HTTP2' : 'HTTP1'}) (${process.pid}):\t`;
 
