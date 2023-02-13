@@ -68,8 +68,13 @@ mochaSuiteFn('tracing/prisma', function () {
       });
 
       after(async () => {
-        await fs.rm(schemaTargetFile, { force: true });
-        await rimraf(migrationsTargetDir);
+        try {
+          await fs.rm(schemaTargetFile, { force: true });
+          await rimraf(migrationsTargetDir);
+        } catch (err) {
+          // eslint-disable-next-line no-console
+          console.log('Prisma after hook error', err);
+        }
       });
 
       globalAgent.setUpCleanUpHooks();
