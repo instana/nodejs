@@ -28,7 +28,6 @@ function shimConnect(originalFunction) {
     const client = originalFunction.apply(this, arguments);
     if (!clientHasBeenInstrumented) {
       shimmer.wrap(client.constructor.prototype, 'publish', shimPublish.bind(null, client.options.url));
-
       shimmer.wrap(client.constructor.prototype, 'subscribe', shimSubscribe.bind(null, client.options.url));
       clientHasBeenInstrumented = true;
     }
