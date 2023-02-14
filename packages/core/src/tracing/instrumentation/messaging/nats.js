@@ -127,8 +127,12 @@ function addTraceCorrelationHeaders(args, isLatest, span) {
 }
 
 function instrumentedPublish(ctx, originalPublish, originalArgs, natsUrl, isLatest) {
-  if (cls.skipExitTracing({ isActive })) {
-    addSuppressionHeaders(originalArgs, isLatest);
+  const skipTracingResult = cls.skipExitTracing({ isActive: true, extendedResponse: true });
+  if (skipTracingResult.skip) {
+    if (skipTracingResult.suppressed) {
+      addSuppressionHeaders(originalArgs, isLatest);
+    }
+
     return originalPublish.apply(ctx, originalArgs);
   }
 
