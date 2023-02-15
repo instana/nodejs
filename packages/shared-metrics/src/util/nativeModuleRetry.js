@@ -5,11 +5,11 @@
 
 'use strict';
 
-let logger = require('@instana/core').logger.getLogger('shared-metrics/native-module-retry');
+const { logger: Logger, uninstrumentedFs: fs } = require('@instana/core');
+let logger = Logger.getLogger('shared-metrics/native-module-retry');
 
 const EventEmitter = require('events');
 const copy = require('recursive-copy');
-const fs = require('fs');
 const os = require('os');
 const tar = require('tar');
 const path = require('path');

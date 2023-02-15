@@ -5,7 +5,12 @@
 
 'use strict';
 
-const instana = require('../../../../../..')();
+const instana = require('../../../../../..')({
+  tracing: {
+    // aws sdk produces some fs calls to read the config from disk on instantiation which we ignore.
+    useOpentelemetry: false
+  }
+});
 
 const express = require('express');
 const request = require('request-promise');

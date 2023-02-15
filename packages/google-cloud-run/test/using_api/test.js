@@ -10,9 +10,8 @@ const path = require('path');
 const constants = require('@instana/core').tracing.constants;
 
 const Control = require('../Control');
-const { delay, expectExactlyOneMatching } = require('../../../core/test/test_util');
+const { delay, expectExactlyOneMatching, retry } = require('../../../core/test/test_util');
 const config = require('../../../serverless/test/config');
-const retry = require('../../../serverless/test/util/retry');
 
 const instanceId =
   // eslint-disable-next-line max-len

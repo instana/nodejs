@@ -14,6 +14,7 @@ const constants = require('../tracing/constants');
 /**
  * @typedef {Object} InstanaTracingOption
  * @property {boolean} [enabled]
+ * @property {boolean} [useOpentelemetry]
  * @property {boolean} [automaticTracingEnabled]
  * @property {boolean} [activateImmediately]
  * @property {number} [forceTransmissionStartingAt]
@@ -98,6 +99,7 @@ const defaults = {
   },
   tracing: {
     enabled: true,
+    useOpentelemetry: true,
     automaticTracingEnabled: true,
     activateImmediately: false,
     forceTransmissionStartingAt: 500,
@@ -188,6 +190,7 @@ function normalizeTracingConfig(config) {
     config.tracing = {};
   }
   normalizeTracingEnabled(config);
+  normalizeUseOpentelemetry(config);
   normalizeAutomaticTracingEnabled(config);
   normalizeActivateImmediately(config);
   normalizeTracingTransmission(config);
@@ -218,6 +221,25 @@ function normalizeTracingEnabled(config) {
   }
 
   config.tracing.enabled = defaults.tracing.enabled;
+}
+
+/**
+ *
+ * @param {InstanaConfig} config
+ */
+function normalizeUseOpentelemetry(config) {
+  if (config.tracing.useOpentelemetry === false) {
+    return;
+  }
+  if (config.tracing.useOpentelemetry === true) {
+    return;
+  }
+  if (process.env['INSTANA_DISABLE_USE_OPENTELEMETRY'] === 'true') {
+    config.tracing.useOpentelemetry = false;
+    return;
+  }
+
+  config.tracing.useOpentelemetry = defaults.tracing.useOpentelemetry;
 }
 
 /**

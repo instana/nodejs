@@ -14,6 +14,7 @@ const tracingHeaders = require('./tracingHeaders');
 const tracingUtil = require('./tracingUtil');
 const spanBuffer = require('./spanBuffer');
 const supportedVersion = require('./supportedVersion');
+const { otelInstrumentations } = require('./opentelemetry-instrumentations');
 
 let tracingEnabled = false;
 let tracingActivated = false;
@@ -159,6 +160,10 @@ exports.init = function init(_config, downstreamConnection, _processIdentityProv
 
     if (automaticTracingEnabled) {
       initInstrumenations(config);
+
+      if (_config.tracing.useOpentelemetry) {
+        otelInstrumentations.init(config, cls);
+      }
     }
   }
 
@@ -176,13 +181,16 @@ function initInstrumenations(_config) {
     instrumentations.forEach(instrumentationKey => {
       instrumentationModules[instrumentationKey] = require(instrumentationKey);
       instrumentationModules[instrumentationKey].init(_config);
+
       if (instrumentationModules[instrumentationKey].batchable && instrumentationModules[instrumentationKey].spanName) {
         spanBuffer.addBatchableSpanName(instrumentationModules[instrumentationKey].spanName);
       }
     });
+
     additionalInstrumentationModules.forEach(instrumentationModule => {
       instrumentationModule.init(_config);
     });
+
     instrumenationsInitialized = true;
   } else {
     instrumentations.forEach(instrumentationKey => {

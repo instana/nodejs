@@ -7,7 +7,7 @@
 
 'use strict';
 
-const fs = require('fs');
+const { uninstrumentedFs: fs } = require('@instana/core');
 const util = require('util');
 const CallSite = require('../profile').CallSite;
 const Profile = require('../profile').Profile;

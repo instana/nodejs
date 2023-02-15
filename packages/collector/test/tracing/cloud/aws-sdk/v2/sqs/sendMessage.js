@@ -5,7 +5,12 @@
 
 'use strict';
 
-require('../../../../../..')();
+require('../../../../../..')({
+  tracing: {
+    // aws sdk produces some fs calls to read the config from disk on instantiation which we ignore.
+    useOpentelemetry: false
+  }
+});
 
 const bodyParser = require('body-parser');
 const express = require('express');

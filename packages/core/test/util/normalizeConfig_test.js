@@ -377,6 +377,32 @@ describe('util.normalizeConfig', () => {
     expect(config.tracing.kafka.headerFormat).to.equal('string');
   });
 
+  it('should disable opentelemetry if config is set', () => {
+    const config = normalizeConfig({
+      tracing: { useOpentelemetry: false }
+    });
+    expect(config.tracing.useOpentelemetry).to.equal(false);
+  });
+
+  it('should enable opentelemetry if config is set', () => {
+    const config = normalizeConfig({
+      tracing: { useOpentelemetry: true }
+    });
+    expect(config.tracing.useOpentelemetry).to.equal(true);
+  });
+
+  it('should disable opentelemetry if INSTANA_DISABLE_USE_OPENTELEMETRY is set', () => {
+    process.env.INSTANA_DISABLE_USE_OPENTELEMETRY = 'true';
+    const config = normalizeConfig();
+    expect(config.tracing.useOpentelemetry).to.equal(false);
+  });
+
+  it('should enable opentelemetry if INSTANA_DISABLE_USE_OPENTELEMETRY is set', () => {
+    process.env.INSTANA_DISABLE_USE_OPENTELEMETRY = 'false';
+    const config = normalizeConfig();
+    expect(config.tracing.useOpentelemetry).to.equal(true);
+  });
+
   it('should set Kafka header format to both via INSTANA_KAFKA_HEADER_FORMAT', () => {
     process.env.INSTANA_KAFKA_HEADER_FORMAT = 'both';
     const config = normalizeConfig();
@@ -460,10 +486,13 @@ describe('util.normalizeConfig', () => {
 
   function checkDefaults(config) {
     expect(config).to.be.an('object');
+
     expect(config.serviceName).to.not.exist;
+
     expect(config.metrics).to.be.an('object');
     expect(config.metrics.transmissionDelay).to.equal(1000);
     expect(config.metrics.timeBetweenHealthcheckCalls).to.equal(3000);
+
     expect(config.tracing).to.be.an('object');
     expect(config.tracing.enabled).to.be.true;
     expect(config.tracing.automaticTracingEnabled).to.be.true;
@@ -482,6 +511,8 @@ describe('util.normalizeConfig', () => {
     expect(config.tracing.disableW3cTraceCorrelation).to.be.false;
     expect(config.tracing.kafka.traceCorrelation).to.be.true;
     expect(config.tracing.kafka.headerFormat).to.equal('both');
+    expect(config.tracing.useOpentelemetry).to.equal(true);
+
     expect(config.secrets).to.be.an('object');
     expect(config.secrets.matcherMode).to.equal('contains-ignore-case');
     expect(config.secrets.keywords).to.deep.equal(['key', 'pass', 'secret']);

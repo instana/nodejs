@@ -5,7 +5,7 @@
 
 'use strict';
 
-const fs = require('fs');
+const fs = require('../uninstrumentedFs');
 const path = require('path');
 
 /** @typedef {import('../util/normalizeConfig').InstanaConfig} InstanaConfig */

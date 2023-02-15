@@ -6,8 +6,7 @@
 'use strict';
 
 const path = require('path');
-const fs = require('fs');
-const { applicationUnderMonitoring } = require('@instana/core').util;
+const { util, uninstrumentedFs: fs } = require('@instana/core');
 
 let logger = require('@instana/core').logger.getLogger('metrics');
 
@@ -43,7 +42,7 @@ exports.activate = function activate() {
   attempts++;
 
   const started = Date.now();
-  applicationUnderMonitoring.getMainPackageJsonPathStartingAtMainModule((err, mainPackageJsonPath) => {
+  util.applicationUnderMonitoring.getMainPackageJsonPathStartingAtMainModule((err, mainPackageJsonPath) => {
     if (err) {
       return logger.warn('Failed to determine main package.json. Reason: %s %s ', err.message, err.stack);
     } else if (!mainPackageJsonPath && attempts < exports.MAX_ATTEMPTS) {
@@ -54,7 +53,7 @@ exports.activate = function activate() {
       logger.info(
         `Main package.json could not be found after ${attempts} retries. Looking for node_modules folder now.`
       );
-      applicationUnderMonitoring.findNodeModulesFolder((errNodeModules, nodeModulesFolder) => {
+      util.applicationUnderMonitoring.findNodeModulesFolder((errNodeModules, nodeModulesFolder) => {
         if (errNodeModules) {
           return logger.warn('Failed to determine node_modules folder. Reason: %s %s ', err.message, err.stack);
         } else if (!nodeModulesFolder) {
@@ -69,7 +68,7 @@ exports.activate = function activate() {
     }
 
     let dependencyDir;
-    if (applicationUnderMonitoring.isAppInstalledIntoNodeModules()) {
+    if (util.applicationUnderMonitoring.isAppInstalledIntoNodeModules()) {
       dependencyDir = path.join(path.dirname(mainPackageJsonPath), '..', '..', 'node_modules');
     } else {
       dependencyDir = path.join(path.dirname(mainPackageJsonPath), 'node_modules');

@@ -5,9 +5,7 @@
 
 'use strict';
 
-const fs = require('fs');
-
-const { applicationUnderMonitoring } = require('@instana/core').util;
+const { util, uninstrumentedFs: fs } = require('@instana/core');
 
 let logger = require('@instana/core').logger.getLogger('metrics');
 
@@ -33,7 +31,7 @@ let attempts = 0;
 
 exports.activate = function activate() {
   attempts++;
-  applicationUnderMonitoring.getMainPackageJsonPathStartingAtMainModule((err, packageJsonPath) => {
+  util.applicationUnderMonitoring.getMainPackageJsonPathStartingAtMainModule((err, packageJsonPath) => {
     if (err) {
       return logger.info(
         'Failed to determine main package.json for analysis of direct dependencies. Reason: %s %s ',

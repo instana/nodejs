@@ -5,8 +5,9 @@
 
 'use strict';
 
-const fs = require('fs');
+const { uninstrumentedFs: fs } = require('@instana/core');
 const path = require('path');
+
 const SPLIT_AT_DOT_REGEX = /^([^.]*)\.(.*)$/;
 const TWO_DOTS = '..';
 const DEFAULT_HANDLER = 'index.handler';

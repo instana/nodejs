@@ -5,7 +5,7 @@
 
 'use strict';
 
-const fs = require('fs');
+const { uninstrumentedFs: fs } = require('@instana/core');
 const path = require('path');
 
 /** @type {import('@instana/core/src/logger').GenericLogger} */

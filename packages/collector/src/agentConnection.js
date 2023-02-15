@@ -5,11 +5,10 @@
 
 'use strict';
 
-const { atMostOnce } = require('@instana/core').util;
-const fs = require('fs');
-const { http } = require('@instana/core').uninstrumentedHttp;
+const { util, uninstrumentedHttp, uninstrumentedFs: fs } = require('@instana/core');
+const http = uninstrumentedHttp.http;
+
 const pathUtil = require('path');
-const { propertySizes } = require('@instana/core').util;
 
 /** @typedef {import('@instana/core/src/tracing/cls').InstanaBaseSpan} InstanaBaseSpan */
 
@@ -79,7 +78,7 @@ exports.AgentEventSeverity = {
  * @param {(err: Error, rawResponse?: string) => void} cb
  */
 exports.announceNodeCollector = function announceNodeCollector(cb) {
-  cb = atMostOnce('callback for announceNodeCollector', cb);
+  cb = util.atMostOnce('callback for announceNodeCollector', cb);
 
   /** @type {AgentConnectionPayload} */
   const payload = {
@@ -202,7 +201,7 @@ exports.checkWhetherAgentIsReadyToAcceptData = function checkWhetherAgentIsReady
  * @param {(...args: *) => *} cb
  */
 function checkWhetherResponseForPathIsOkay(path, cb) {
-  cb = atMostOnce('callback for checkWhetherResponseForPathIsOkay', cb);
+  cb = util.atMostOnce('callback for checkWhetherResponseForPathIsOkay', cb);
 
   const req = http.request(
     {
@@ -238,7 +237,7 @@ function checkWhetherResponseForPathIsOkay(path, cb) {
  * @param {(...args: *) => *} cb
  */
 exports.sendMetrics = function sendMetrics(data, cb) {
-  cb = atMostOnce('callback for sendMetrics', cb);
+  cb = util.atMostOnce('callback for sendMetrics', cb);
 
   sendData(`/com.instana.plugin.nodejs.${pidStore.pid}`, data, (err, body) => {
     if (err) {
@@ -264,7 +263,7 @@ exports.sendMetrics = function sendMetrics(data, cb) {
  * @param {(...args: *) => *} cb
  */
 exports.sendSpans = function sendSpans(spans, cb) {
-  const callback = atMostOnce('callback for sendSpans', err => {
+  const callback = util.atMostOnce('callback for sendSpans', err => {
     if (err && !maxContentErrorHasBeenLogged && err instanceof PayloadTooLargeError) {
       logLargeSpans(spans);
     }
@@ -279,7 +278,7 @@ exports.sendSpans = function sendSpans(spans, cb) {
  * @param {(...args: *) => *} cb
  */
 exports.sendProfiles = function sendProfiles(profiles, cb) {
-  const callback = atMostOnce('callback for sendProfiles', err => {
+  const callback = util.atMostOnce('callback for sendProfiles', err => {
     if (err && err instanceof PayloadTooLargeError) {
       logger.warn('Profiles are too too large to be sent.');
     } else if (err && err.statusCode === 404) {
@@ -299,7 +298,7 @@ exports.sendProfiles = function sendProfiles(profiles, cb) {
  * @param {(...args: *) => *} cb
  */
 exports.sendEvent = function sendEvent(eventData, cb) {
-  const callback = atMostOnce('callback for sendEvent', (err, responseBody) => {
+  const callback = util.atMostOnce('callback for sendEvent', (err, responseBody) => {
     cb(err, responseBody);
   });
 
@@ -321,7 +320,7 @@ exports.sendAgentMonitoringEvent = function sendAgentMonitoringEvent(code, categ
     category
   };
 
-  const callback = atMostOnce('callback for sendAgentMonitoringEvent', (err, responseBody) => {
+  const callback = util.atMostOnce('callback for sendAgentMonitoringEvent', (err, responseBody) => {
     cb(err, responseBody);
   });
 
@@ -334,7 +333,7 @@ exports.sendAgentMonitoringEvent = function sendAgentMonitoringEvent(code, categ
  * @param {(...args: *) => *} cb
  */
 exports.sendAgentResponseToAgent = function sendAgentResponseToAgent(messageId, response, cb) {
-  cb = atMostOnce('callback for sendAgentResponseToAgent', cb);
+  cb = util.atMostOnce('callback for sendAgentResponseToAgent', cb);
 
   sendData(
     `/com.instana.plugin.nodejs/response.${pidStore.pid}?messageId=${encodeURIComponent(messageId)}`,
@@ -348,7 +347,7 @@ exports.sendAgentResponseToAgent = function sendAgentResponseToAgent(messageId, 
  * @param {(...args: *) => *} cb
  */
 exports.sendTracingMetricsToAgent = function sendTracingMetricsToAgent(tracingMetrics, cb) {
-  const callback = atMostOnce('callback for sendTracingMetricsToAgent', err => {
+  const callback = util.atMostOnce('callback for sendTracingMetricsToAgent', err => {
     cb(err);
   });
 
@@ -363,7 +362,7 @@ exports.sendTracingMetricsToAgent = function sendTracingMetricsToAgent(tracingMe
  * @returns
  */
 function sendData(path, data, cb, ignore404 = false) {
-  cb = atMostOnce(`callback for sendData: ${path}`, cb);
+  cb = util.atMostOnce(`callback for sendData: ${path}`, cb);
 
   const payloadAsString = JSON.stringify(data, circularReferenceRemover());
   if (typeof logger.trace === 'function') {
@@ -474,7 +473,8 @@ function logLargeSpans(spans) {
     .slice(0, 4)
     .map(
       s =>
-        `span name: ${s.span.n}, largest attribute: ${propertySizes(s.span)
+        `span name: ${s.span.n}, largest attribute: ${util
+          .propertySizes(s.span)
           .sort((p1, p2) => p2.length - p1.length)
           .slice(0, 1)
           .map(p => `${p.property} (${p.length} bytes)`)}`

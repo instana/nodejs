@@ -48,28 +48,28 @@ mochaSuiteFn('tracing/q', function () {
   runTest('/delay2');
   runTest('/timeout', verifySingleEntryWithError);
   runTest('/nodeify');
-  runTest('/make-node-resolver');
+  runTest('/make-node-resolver', verifySingleEntry, { spanLength: 2 }); // calls fs.readFile
   runTest('/with-event-emitter');
   runTest('/entry-exit', verifyEntryAndExit);
 
-  function runTest(path, verification = verifySingleEntry) {
+  function runTest(path, verification = verifySingleEntry, opts = { spanLength: 1 }) {
     it(`must trace: ${path}`, () =>
       controls
         .sendRequest({
           method: 'GET',
           path
         })
-        .then(response => verification(response, path)));
+        .then(response => verification(response, path, opts)));
   }
 
-  function verifySingleEntry(response, path) {
+  function verifySingleEntry(response, path, opts) {
     expect(response.span).to.be.an('object');
     expect(response.error).to.not.exist;
     return testUtils.retry(() =>
       agentControls.getSpans().then(spans => {
         const entrySpan = verifyRootEntrySpan(spans, path);
         expect(response.span.t).to.equal(entrySpan.t);
-        expect(spans).to.have.lengthOf(1);
+        expect(spans).to.have.lengthOf(opts.spanLength);
       })
     );
   }

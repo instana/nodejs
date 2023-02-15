@@ -29,10 +29,6 @@ describe('agent connection/bazel', function () {
   describe("Bazel's node-patches are present", () => {
     before(() => {
       agentConnection = proxyquire('../src/agentConnection', {
-        // Stub out the fs part part of the fd/inode lookup (the readlinkSync call), and act as if node-patches from
-        // Bazel were active, that is, return an absolute path from readlinkSync.
-        fs: mockFs(`/proc/${process.pid}/fd/socket:[12345]`),
-
         // stub out the http communication part of the announce request
         '@instana/core': mockInstanaCoreHttp(),
 
@@ -111,7 +107,10 @@ describe('agent connection/bazel', function () {
             return req;
           }
         }
-      }
+      },
+      // Stub out the fs part part of the fd/inode lookup (the readlinkSync call), and act as if node-patches from
+      // Bazel were active, that is, return an absolute path from readlinkSync.
+      uninstrumentedFs: mockFs(`/proc/${process.pid}/fd/socket:[12345]`)
     };
   }
 });

@@ -6,7 +6,7 @@
 'use strict';
 
 const expect = require('chai').expect;
-const fs = require('fs');
+const { uninstrumentedFs: fs } = require('@instana/core');
 
 const activeRequests = require('../src/activeRequests');
 
