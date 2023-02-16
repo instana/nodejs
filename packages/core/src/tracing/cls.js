@@ -249,7 +249,7 @@ function startSpan(spanName, kind, traceId, parentSpanId, w3cTraceContext) {
   const parentSpan = getCurrentSpan();
   const parentW3cTraceContext = getW3cTraceContext();
 
-  if (serviceName != null && !parentSpan) {
+  if (serviceName != null) {
     span.data.service = serviceName;
   }
 

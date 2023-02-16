@@ -11,7 +11,7 @@ const constants = require('@instana/core').tracing.constants;
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('../../../../core/test/config');
 const delay = require('../../../../core/test/test_util/delay');
-const { retry, stringifyItems } = require('../../../../core/test/test_util');
+const { getSpansByName, retry, stringifyItems } = require('../../../../core/test/test_util');
 const ProcessControls = require('../../test_util/ProcessControls');
 const globalAgent = require('../../globalAgent');
 
@@ -134,7 +134,10 @@ mochaSuiteFn('tracing/common', function () {
         }
       });
       ProcessControls.setUpHooks(controls);
-      registerServiceNameTest.call(this, globalAgent.instance, controls, 'env var', true);
+      registerServiceNameTest.call(this, globalAgent.instance, controls, {
+        configMethod: 'env var',
+        expectServiceNameOnSpans: 'on-all-spans'
+      });
     });
 
     describe('with config', function () {
@@ -147,7 +150,10 @@ mochaSuiteFn('tracing/common', function () {
         }
       });
       ProcessControls.setUpHooks(controls);
-      registerServiceNameTest.call(this, globalAgent.instance, controls, 'config object', true);
+      registerServiceNameTest.call(this, globalAgent.instance, controls, {
+        configMethod: 'config object',
+        expectServiceNameOnSpans: 'on-all-spans'
+      });
     });
 
     describe('with header when agent is configured to capture the header', function () {
@@ -156,7 +162,10 @@ mochaSuiteFn('tracing/common', function () {
         agentControls,
         dirname: __dirname
       }).registerTestHooks();
-      registerServiceNameTest.call(this, agentControls, controls, 'X-Instana-Service header', true);
+      registerServiceNameTest.call(this, agentControls, controls, {
+        configMethod: 'X-Instana-Service header',
+        expectServiceNameOnSpans: 'on-entry-span'
+      });
     });
 
     describe('with header when agent is _not_ configured to capture the header', function () {
@@ -165,38 +174,64 @@ mochaSuiteFn('tracing/common', function () {
         agentControls,
         dirname: __dirname
       }).registerTestHooks();
-      registerServiceNameTest.call(this, agentControls, controls, 'X-Instana-Service header', false);
+      registerServiceNameTest.call(this, agentControls, controls, {
+        configMethod: 'X-Instana-Service header',
+        expectServiceNameOnSpans: 'no'
+      });
     });
 
-    function registerServiceNameTest(agentControls, controls, configMethod, expectServiceNameOnSpan) {
-      it(`must${expectServiceNameOnSpan ? ' ' : ' _not_ '}respect service name configured via: ${configMethod}`, () => {
+    function registerServiceNameTest(agentControls, controls, { configMethod, expectServiceNameOnSpans }) {
+      if (expectServiceNameOnSpans == null || typeof expectServiceNameOnSpans !== 'string') {
+        throw new Error('Please explicitly pass a string value for expectServiceNameOnSpans.');
+      }
+
+      it(`must${
+        expectServiceNameOnSpans === 'no' ? ' _not_ ' : ' '
+      }respect service name configured via: ${configMethod}`, () => {
         const req = {
-          path: '/'
+          path: '/with-intermediate-and-exit-spans'
         };
         if (configMethod === 'X-Instana-Service header') {
           req.headers = {
             'x-InsTana-sErvice': 'much-custom-very-wow service'
           };
         }
-        return controls.sendRequest(req).then(() => verifyServiceName(agentControls, expectServiceNameOnSpan));
+        return controls.sendRequest(req).then(() => verifyServiceName(agentControls, expectServiceNameOnSpans));
       });
     }
 
-    function verifyServiceName(agentControls, expectServiceNameOnSpan) {
-      return retry(() =>
-        agentControls.getSpans().then(spans => {
-          expect(spans.length).to.equal(1);
-          const span = spans[0];
-          expect(span.n).to.equal('node.http.server');
-          if (expectServiceNameOnSpan == null) {
-            throw new Error('Please explicitly pass true or false for expectServiceNameOnSpan');
-          } else if (expectServiceNameOnSpan) {
-            expect(span.data.service).to.equal('much-custom-very-wow service');
+    async function verifyServiceName(agentControls, expectServiceNameOnSpans) {
+      const spans = await retry(async () => {
+        const _spans = await agentControls.getSpans();
+        expect(_spans.length).to.equal(3);
+        return _spans;
+      });
+
+      const [entrySpan] = getSpansByName(spans, 'node.http.server');
+
+      if (expectServiceNameOnSpans === 'on-all-spans') {
+        spans.forEach(span => {
+          expect(span.data.service, `Missing span.data.service annotation on span ${span.n}`).to.equal(
+            'much-custom-very-wow service'
+          );
+        });
+      } else if (expectServiceNameOnSpans === 'on-entry-span') {
+        spans.forEach(span => {
+          if (span === entrySpan) {
+            expect(span.data.service, `Missing span.data.service annotation on span ${span.n}`).to.equal(
+              'much-custom-very-wow service'
+            );
           } else {
-            expect(span.data.service).to.not.exist;
+            expect(span.data.service, `Unexpected span.data.service annotation on span ${span.n}`).to.not.exist;
           }
-        })
-      );
+        });
+      } else if (expectServiceNameOnSpans === 'no') {
+        spans.forEach(span => {
+          expect(span.data.service, `Unexpected span.data.service annotation on span ${span.n}`).to.not.exist;
+        });
+      } else {
+        throw new Error(`Unknown value for parameter expectServiceNameOnSpans: ${expectServiceNameOnSpans}`);
+      }
     }
   });
 
