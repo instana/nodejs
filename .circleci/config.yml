@@ -338,7 +338,7 @@ memcached: &memcached
 jobs:
   "node-18":
     docker:
-      - image: cimg/node:18.13
+      - image: cimg/node:18.14
       - <<: *zookeeper
       - <<: *elasticsearch
       - <<: *mongo
@@ -379,7 +379,7 @@ jobs:
       RUN_ESM: true
       COLLECTOR_ONLY: true
     docker:
-      - image: cimg/node:18.0
+      - image: cimg/node:18.14
       - <<: *zookeeper
       - <<: *elasticsearch
       - <<: *mongo
