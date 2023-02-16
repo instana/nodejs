@@ -33,7 +33,7 @@ if (process.env.SCREW_AROUND_WITH_UP_ARRAY_FIND) {
   });
 }
 
-require('../../..')(config);
+const instana = require('../../..')(config);
 
 const http = require('http');
 const pino = require('pino')();
@@ -46,6 +46,11 @@ app.on('request', (req, res) => {
   }
   if (req.url.indexOf('with-log') >= 0) {
     pino.error('This error message should be traced, unless the pino instrumentation is disabled.');
+  } else if (req.url.indexOf('with-intermediate-and-exit-spans') >= 0) {
+    instana.sdk.callback.startIntermediateSpan('dummy-sdk-span', () => {
+      pino.warn('create an exit span');
+      instana.sdk.callback.completeIntermediateSpan();
+    });
   }
   res.end();
 });
