@@ -502,40 +502,47 @@ jobs:
 
 workflows:
   version: 2
+
   build:
+    when:
+      # This makes sure none of our triggers (https://app.circleci.com/settings/project/github/instana/nodejs/triggers)
+      # kicks off the main build workflow jobs. (These jobs are triggered by webhook, that is, by pushing commits to
+      # Github branches for which a PR has been opened.)
+      not:
+        equal: [ scheduled_pipeline, << pipeline.trigger_source >> ]
     jobs:
       - "node-18"
       - "node-16"
-  esm-build:
-    triggers:
-      - schedule:
-          cron: "7 4 * * *"
-          filters:
-            branches:
-              only:
-                - main
-    jobs:
-      - "node-18-esm"
-      - "node-16-esm"
+
   legacy-nodejs-versions:
-    triggers:
-      - schedule:
-          cron: "0 2 * * *"
-          filters:
-            branches:
-              only:
-                - main
+    when:
+      or:
+        # See https://app.circleci.com/settings/project/github/instana/nodejs/triggers.
+        - equal: [ nightly-build-2-am, << pipeline.schedule.name >> ]
+        # This allows us to kick off this workflow on demand via the API.
+        - equal: [ api, << pipeline.trigger_source >> ]
     jobs:
       - "node-14"
       - "node-12"
       - "node-10"
+
+  esm-build:
+    when:
+      or:
+        # See https://app.circleci.com/settings/project/github/instana/nodejs/triggers.
+        - equal: [ nightly-build-4-am, << pipeline.schedule.name >> ]
+        # This allows us to kick off this workflow on demand via the API.
+        - equal: [ api, << pipeline.trigger_source >> ]
+    jobs:
+      - "node-18-esm"
+      - "node-16-esm"
+
   coverage:
-    triggers:
-      - schedule:
-          cron: "0 0 * * 0"
-          filters:
-            branches:
-              only:
-                - main
+    when:
+      or:
+        # See https://app.circleci.com/settings/project/github/instana/nodejs/triggers.
+        - equal: [ weekly-build-sunday-0-am, << pipeline.schedule.name >> ]
+        # This allows us to kick off this workflow on demand via the API.
+        - equal: [ api, << pipeline.trigger_source >> ]
     jobs:
       - "node-coverage"
