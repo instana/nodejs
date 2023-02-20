@@ -71,7 +71,7 @@
     "@grpc/grpc-js": "^1.5.7",
     "@grpc/proto-loader": "^0.5.6",
     "@grpc/proto-loader-latest": "npm:@grpc/proto-loader@^0.6.9",
-    "@hapi/hapi": "^20.2.1",
+    "@hapi/hapi": "^21.3.0",
     "@types/bull": "^4.10.0",
     "@types/chai": "^4.3.0",
     "@types/detect-libc": "^1.0.0",
