@@ -7,6 +7,7 @@
 
 const expect = require('chai').expect;
 const { fail } = expect;
+const semver = require('semver');
 const constants = require('@instana/core').tracing.constants;
 const config = require('../../../../../core/test/config');
 const {
@@ -16,10 +17,12 @@ const {
   retry,
   delay
 } = require('../../../../../core/test/test_util');
+const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const ProcessControls = require('../../../test_util/ProcessControls');
 const globalAgent = require('../../../globalAgent');
+const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
-describe('tracing/elasticsearch (modern client)', function () {
+mochaSuiteFn('tracing/elasticsearch (modern client)', function () {
   this.timeout(Math.max(config.getTestTimeout() * 4, 30000));
 
   /**
@@ -35,14 +38,24 @@ describe('tracing/elasticsearch (modern client)', function () {
       instrumentationFlavor: 'transport'
     },
     {
+      version: '7.17.0',
+      instrumentationFlavor: 'transport'
+    },
+    {
       version: '7.9.0',
       instrumentationFlavor: 'api'
     }
   ].forEach(({ version, instrumentationFlavor }) => {
-    describe(
+    const versionDescribe =
+      // eslint-disable-next-line no-nested-ternary
+      version === 'latest' ? (semver.gte(process.versions.node, '14.0.0') ? describe : describe.skip) : describe;
+
+    versionDescribe(
       // eslint-disable-next-line no-useless-concat
       `@elastic/elasticsearch@${version}/` + `instrumentation flavor: ${instrumentationFlavor}`,
       function () {
+        const indiceKey = version === 'latest' ? 'Indices.refresh' : 'indices.refresh';
+
         globalAgent.setUpCleanUpHooks();
         const agentControls = globalAgent.instance;
 
@@ -110,11 +123,12 @@ describe('tracing/elasticsearch (modern client)', function () {
             expect(res.response).to.exist;
             expect(res.response.body._index).to.equal('modern_index');
             expect(res.response.body._shards.successful).to.equal(1);
+
             return retry(() =>
               agentControls.getSpans().then(spans => {
                 const entrySpan = verifyHttpEntry(spans, '/index');
                 verifyElasticsearchExit(spans, entrySpan, 'index');
-                verifyElasticsearchExit(spans, entrySpan, 'indices.refresh', '_all', '/_all/_refresh');
+                verifyElasticsearchExit(spans, entrySpan, indiceKey, '_all', '/_all/_refresh');
                 verifyNoHttpExitsToElasticsearch(spans);
               })
             );
@@ -122,6 +136,7 @@ describe('tracing/elasticsearch (modern client)', function () {
 
         it('must write to ES and retrieve the same document, tracing everything', () => {
           const titleA = `a${Date.now()}`;
+
           return index({
             body: {
               title: titleA
@@ -130,9 +145,16 @@ describe('tracing/elasticsearch (modern client)', function () {
             .then(res1 => {
               expect(res1.error).to.not.exist;
               expect(res1.response).to.exist;
-              expect(res1.response.statusCode).to.equal(201);
+
+              if (version === 'latest') {
+                expect(res1.response.body.result).to.equal('created');
+              } else {
+                expect(res1.response.statusCode).to.equal(201);
+              }
+
               expect(res1.response.body._index).to.equal('modern_index');
               expect(res1.response.body._shards.successful).to.equal(1);
+
               return retry(() =>
                 get({
                   id: res1.response.body._id
@@ -149,7 +171,7 @@ describe('tracing/elasticsearch (modern client)', function () {
                 agentControls.getSpans().then(spans => {
                   const indexEntrySpan = verifyHttpEntry(spans, '/index');
                   verifyElasticsearchExit(spans, indexEntrySpan, 'index');
-                  verifyElasticsearchExit(spans, indexEntrySpan, 'indices.refresh', '_all', '/_all/_refresh');
+                  verifyElasticsearchExit(spans, indexEntrySpan, indiceKey, '_all', '/_all/_refresh');
 
                   const getEntrySpan = verifyHttpEntry(spans, '/get');
                   const getExitSpan = verifyElasticsearchExit(spans, getEntrySpan, 'get');
@@ -193,6 +215,7 @@ describe('tracing/elasticsearch (modern client)', function () {
             .then(res => {
               expect(res.error).to.not.exist;
               expect(res.response).to.exist;
+
               expect(res.response.body).to.be.an('object');
               expect(res.response.body.timed_out).to.be.false;
               expect(res.response.body.hits).to.be.an('object');
@@ -203,11 +226,14 @@ describe('tracing/elasticsearch (modern client)', function () {
               return retry(() =>
                 agentControls.getSpans().then(spans => {
                   const index1Entry = verifyHttpEntry(spans, '/index', '42');
+
                   verifyElasticsearchExit(spans, index1Entry, 'index');
-                  verifyElasticsearchExit(spans, index1Entry, 'indices.refresh', '_all', '/_all/_refresh');
+                  verifyElasticsearchExit(spans, index1Entry, indiceKey, '_all', '/_all/_refresh');
+
                   const index2Entry = verifyHttpEntry(spans, '/index', '43');
+
                   verifyElasticsearchExit(spans, index2Entry, 'index');
-                  verifyElasticsearchExit(spans, index2Entry, 'indices.refresh', '_all', '/_all/_refresh');
+                  verifyElasticsearchExit(spans, index2Entry, indiceKey, '_all', '/_all/_refresh');
 
                   const searchEntrySpan = verifyHttpEntry(spans, '/search');
                   const searchExitSpan = verifyElasticsearchExit(
@@ -250,6 +276,7 @@ describe('tracing/elasticsearch (modern client)', function () {
               expect(res.error).to.not.exist;
               expect(res.response).to.exist;
               idA = res.response.body._id;
+
               return index({
                 body: {
                   title: titleB
@@ -262,6 +289,7 @@ describe('tracing/elasticsearch (modern client)', function () {
               expect(res.error).to.not.exist;
               expect(res.response).to.exist;
               idB = res.response.body._id;
+
               return index({
                 body: {
                   title: titleC
@@ -274,6 +302,7 @@ describe('tracing/elasticsearch (modern client)', function () {
               expect(res.error).to.not.exist;
               expect(res.response).to.exist;
               idC = res.response.body._id;
+
               return retry(() =>
                 mget1({
                   id: [idA, idB]
@@ -284,6 +313,7 @@ describe('tracing/elasticsearch (modern client)', function () {
               expect(res.error).to.not.exist;
               expect(res.response).to.exist;
               response1 = res.response.body;
+
               return retry(() =>
                 mget2({
                   id: [idB, idC]
@@ -294,18 +324,22 @@ describe('tracing/elasticsearch (modern client)', function () {
               expect(res.error).to.not.exist;
               expect(res.response).to.exist;
               response2 = res.response.body;
+
               expect(response1.docs[0]._source.title).to.deep.equal(titleA);
               expect(response1.docs[1]._source.title).to.deep.equal(titleB);
               expect(response2.docs[0]._source.title).to.deep.equal(titleB);
               expect(response2.docs[1]._source.title).to.deep.equal(titleC);
+
               return retry(() =>
                 agentControls.getSpans().then(spans => {
                   verifyElasticsearchExit(spans, null, 'index', undefined, undefined, '42');
-                  verifyElasticsearchExit(spans, null, 'indices.refresh', '_all', '/_all/_refresh', '42');
+                  verifyElasticsearchExit(spans, null, indiceKey, '_all', '/_all/_refresh', '42');
+
                   verifyElasticsearchExit(spans, null, 'index', undefined, undefined, '43');
-                  verifyElasticsearchExit(spans, null, 'indices.refresh', '_all', '/_all/_refresh', '43');
+                  verifyElasticsearchExit(spans, null, indiceKey, '_all', '/_all/_refresh', '43');
+
                   verifyElasticsearchExit(spans, null, 'index', undefined, undefined, '44');
-                  verifyElasticsearchExit(spans, null, 'indices.refresh', '_all', '/_all/_refresh', '44');
+                  verifyElasticsearchExit(spans, null, indiceKey, '_all', '/_all/_refresh', '44');
 
                   const mget1HttpEntry = verifyHttpEntry(spans, '/mget1');
                   const mget1Exit = verifyElasticsearchExit(
@@ -379,11 +413,11 @@ describe('tracing/elasticsearch (modern client)', function () {
               return retry(() =>
                 agentControls.getSpans().then(spans => {
                   verifyElasticsearchExit(spans, null, 'index', undefined, undefined, '42');
-                  verifyElasticsearchExit(spans, null, 'indices.refresh', '_all', '/_all/_refresh', '42');
+                  verifyElasticsearchExit(spans, null, indiceKey, '_all', '/_all/_refresh', '42');
                   verifyElasticsearchExit(spans, null, 'index', undefined, undefined, '43');
-                  verifyElasticsearchExit(spans, null, 'indices.refresh', '_all', '/_all/_refresh', '43');
+                  verifyElasticsearchExit(spans, null, indiceKey, '_all', '/_all/_refresh', '43');
                   verifyElasticsearchExit(spans, null, 'index', undefined, undefined, '44');
-                  verifyElasticsearchExit(spans, null, 'indices.refresh', '_all', '/_all/_refresh', '44');
+                  verifyElasticsearchExit(spans, null, indiceKey, '_all', '/_all/_refresh', '44');
 
                   const msearchEntrySpan = verifyHttpEntry(spans, '/msearch');
                   const msearchExitSpan = verifyElasticsearchExit(
@@ -427,7 +461,7 @@ describe('tracing/elasticsearch (modern client)', function () {
                 agentControls.getSpans().then(spans => {
                   const entrySpan = verifyHttpEntry(spans, '/index');
                   verifyElasticsearchExit(spans, entrySpan, 'index');
-                  verifyElasticsearchExit(spans, entrySpan, 'indices.refresh', '_all', '/_all/_refresh');
+                  verifyElasticsearchExit(spans, entrySpan, indiceKey, '_all', '/_all/_refresh');
 
                   const searchExit = verifyElasticsearchExit(spans, null, 'search', undefined, '/modern_index/_search');
                   expect(searchExit.data.elasticsearch.hits).to.equal(0);

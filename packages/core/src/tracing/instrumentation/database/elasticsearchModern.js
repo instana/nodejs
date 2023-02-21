@@ -30,12 +30,31 @@ exports.init = function init() {
   requireHook.onModuleLoad('@elastic/elasticsearch', instrument);
 };
 
+let connectionString;
+
 function instrument(es, esModuleFilename) {
-  const ESAPI = tracingUtil.requireModuleFromApplicationUnderMonitoringSafely(esModuleFilename, '..', 'api');
-  if (isConstructor(ESAPI)) {
+  // v8
+  if (es.SniffingTransport) {
+    const OriginalClient = es.Client;
+    es.Client = function InstanaClient() {
+      const client = new OriginalClient(...arguments);
+
+      if (client.connectionPool && client.connectionPool.connections && client.connectionPool.connections.length > 0) {
+        connectionString = client.connectionPool.connections[0].url;
+      }
+
+      return client;
+    };
+
     instrumentTransport(es);
   } else {
-    instrumentApiLayer(es, ESAPI);
+    const ESAPI = tracingUtil.requireModuleFromApplicationUnderMonitoringSafely(esModuleFilename, '..', 'api');
+
+    if (isConstructor(ESAPI)) {
+      instrumentTransport(es);
+    } else {
+      instrumentApiLayer(es, ESAPI);
+    }
   }
 }
 
@@ -148,24 +167,24 @@ function instrumentApi(client, actionPath, clusterInfo) {
 }
 
 function onSuccess(span, result) {
-  if (result.body) {
-    const body = result.body;
-    if (body.hits != null && body.hits.total != null) {
-      if (typeof body.hits.total === 'number') {
-        span.data.elasticsearch.hits = body.hits.total;
-      } else if (typeof body.hits.total.value === 'number') {
-        span.data.elasticsearch.hits = body.hits.total.value;
-      }
-    } else if (body.responses != null && Array.isArray(body.responses)) {
-      span.data.elasticsearch.hits = body.responses.reduce((hits, res) => {
-        if (res.hits && typeof res.hits.total === 'number') {
-          return hits + res.hits.total;
-        } else if (res.hits && res.hits.total && typeof res.hits.total.value === 'number') {
-          return hits + res.hits.total.value;
-        }
-        return hits;
-      }, 0);
+  const hits = (result.body && result.body.hits) || result.hits;
+  const responses = (result.body && result.body.responses) || result.responses;
+
+  if (hits != null && hits.total != null) {
+    if (typeof hits.total === 'number') {
+      span.data.elasticsearch.hits = hits.total;
+    } else if (typeof hits.total.value === 'number') {
+      span.data.elasticsearch.hits = hits.total.value;
     }
+  } else if (responses != null && Array.isArray(responses)) {
+    span.data.elasticsearch.hits = responses.reduce((h, res) => {
+      if (res.hits && typeof res.hits.total === 'number') {
+        return h + res.hits.total;
+      } else if (res.hits && res.hits.total && typeof res.hits.total.value === 'number') {
+        return h + res.hits.total.value;
+      }
+      return h;
+    }, 0);
   }
 
   parseConnectionFromResult(span, result);
@@ -187,6 +206,7 @@ function onError(span, error) {
 }
 
 function parseConnectionFromResult(span, result) {
+  // NOTE: Does not work for v8
   // Result can also be a part of the error object, both have the meta.connection attribute.
   // For the error object it is in error.meta.meta.connection (see onError).
   if (!span.data.elasticsearch.cluster && !span.data.elasticsearch.address && result.meta && result.meta.connection) {
@@ -195,12 +215,17 @@ function parseConnectionFromResult(span, result) {
       span.data.elasticsearch.address = connectionUrl.hostname;
       span.data.elasticsearch.port = connectionUrl.port;
     }
+  } else if (connectionString) {
+    const parsedConnectionUrl = new URL(connectionString);
+    span.data.elasticsearch.address = parsedConnectionUrl.hostname;
+    span.data.elasticsearch.port = parsedConnectionUrl.port;
   }
 }
 
 function processParams(span, params) {
   const action = span.data.elasticsearch.action;
   const body = (params && params.body) || (params && params.bulkBody);
+
   if (action === 'mget' && body && body.docs && Array.isArray(body.docs)) {
     getSpanDataFromMget1(span, body.docs);
   } else if (action === 'mget' && body && body.ids && Array.isArray(body.ids)) {
@@ -211,6 +236,7 @@ function processParams(span, params) {
     span.data.elasticsearch.index = toStringEsMultiParameter(params.index);
     span.data.elasticsearch.type = toStringEsMultiParameter(params.type);
     span.data.elasticsearch.id = params.id;
+
     if (action && action.indexOf('search') === 0) {
       span.data.elasticsearch.query = tracingUtil.shortenDatabaseStatement(JSON.stringify(params));
     }
@@ -287,7 +313,6 @@ function instrumentTransport(es) {
   // https://github.com/elastic/elasticsearch-js/pull/1314 for details. Also, starting with that version, some API
   // methods are added via Object.defineProperties with the default settings and only a getter, making it impossible
   // to override/wrap them. For those versions we fall back to instrumenting the transport layer instead of the API.
-
   if (es.Transport && es.Transport.prototype) {
     shimmer.wrap(es.Transport.prototype, 'request', shimRequest);
   } else {
@@ -318,6 +343,7 @@ function instrumentedRequest(ctx, origEsReq, originalArgs) {
   const options = originalArgs[1];
   let callbackIndex = 2;
   let originalCallback = originalArgs[callbackIndex];
+
   if (typeof originalCallback !== 'function') {
     if (typeof options === 'function') {
       callbackIndex = 1;
@@ -331,7 +357,6 @@ function instrumentedRequest(ctx, origEsReq, originalArgs) {
       originalCallback = null;
     }
   }
-
   const httpPath = params.path;
 
   return cls.ns.runAndReturn(() => {
@@ -340,6 +365,7 @@ function instrumentedRequest(ctx, origEsReq, originalArgs) {
     span.data.elasticsearch = {
       endpoint: httpPath
     };
+
     findActionInStack(span);
     processParams(span, params);
     parseIdFromPath(span, httpPath);
@@ -382,8 +408,7 @@ function findActionInStack(span) {
   if (!span.stack) {
     return;
   }
-
-  const esApiFrames = span.stack.filter(frame => frame.c && frame.c.includes('@elastic/elasticsearch/api'));
+  const esApiFrames = span.stack.filter(frame => frame.c && frame.c.includes('/api'));
   if (esApiFrames.length === 0) {
     return;
   }

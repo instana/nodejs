@@ -272,10 +272,11 @@ shared: &shared
         key: v{{ .Environment.CACHE_VERSION }}-prisma-app-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "packages/collector/test/tracing/database/prisma/package-lock.json" }}
 
 elasticsearch: &elasticsearch
-  - image: docker.elastic.co/elasticsearch/elasticsearch:7.6.2
+  - image: docker.elastic.co/elasticsearch/elasticsearch:8.6.1
     environment:
       - discovery.type=single-node
       - "ES_JAVA_OPTS=-Xms500m -Xmx500m"
+      - xpack.security.enabled=false
 
 kafka: &kafka
   - image: wurstmeister/kafka:2.12-2.2.1
