@@ -35,20 +35,21 @@ mochaSuiteFn('tracing/elasticsearch (modern client)', function () {
   [
     {
       version: 'latest',
-      instrumentationFlavor: 'transport'
+      instrumentationFlavor: 'transport',
+      engine: '14.0.0'
     },
     {
       version: '7.17.0',
-      instrumentationFlavor: 'transport'
+      instrumentationFlavor: 'transport',
+      engine: '12.0.0'
     },
     {
       version: '7.9.0',
-      instrumentationFlavor: 'api'
+      instrumentationFlavor: 'api',
+      engine: '8.0.0'
     }
-  ].forEach(({ version, instrumentationFlavor }) => {
-    const versionDescribe =
-      // eslint-disable-next-line no-nested-ternary
-      version === 'latest' ? (semver.gte(process.versions.node, '14.0.0') ? describe : describe.skip) : describe;
+  ].forEach(({ version, instrumentationFlavor, engine }) => {
+    const versionDescribe = semver.gte(process.versions.node, engine) ? describe : describe.skip;
 
     versionDescribe(
       // eslint-disable-next-line no-useless-concat
