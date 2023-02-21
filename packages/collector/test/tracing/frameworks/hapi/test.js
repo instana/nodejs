@@ -15,8 +15,8 @@ const ProcessControls = require('../../../test_util/ProcessControls');
 const globalAgent = require('../../../globalAgent');
 
 const mochaSuiteFn =
-  // Hapi 20 requires Node.js 12.
-  semver.gte(process.versions.node, '12.0.0') ? describe : describe.skip;
+  // Hapi 21 requires Node.js 14.
+  semver.gte(process.versions.node, '14.0.0') ? describe : describe.skip;
 
 mochaSuiteFn('tracing/hapi', function () {
   this.timeout(config.getTestTimeout());
