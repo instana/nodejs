@@ -49,7 +49,11 @@ class ProcessControls {
    */
   static setUpSuiteHooksWithRetryTime(retryTime, ...allControls) {
     before(() => Promise.all(allControls.map(control => control.startAndWaitForAgentConnection(retryTime))));
-    after(() => Promise.all(allControls.map(control => control.stop())));
+    after(() => {
+      // eslint-disable-next-line no-console
+      console.log('[ProcessControls] (static) - after hook');
+      return Promise.all(allControls.map(control => control.stop()));
+    });
   }
 
   /**
@@ -212,7 +216,11 @@ class ProcessControls {
   }
 
   async stop() {
+    // eslint-disable-next-line no-console
+    console.log(`[ProcessControls] ${this} - ProcessControl#stop`);
     await this.kill();
+    // eslint-disable-next-line no-console
+    console.log(`[ProcessControls] ${this} - ProcessControl#stop done`);
   }
 
   async waitUntilServerIsUp(retryTime) {
@@ -295,20 +303,37 @@ class ProcessControls {
   }
 
   kill() {
+    // eslint-disable-next-line no-console
+    console.log(`[ProcessControls] ${this} - ProcessControl#kill`);
     if (!this.process) {
+      // eslint-disable-next-line no-console
+      console.log(`[ProcessControls] ${this} - no process to kill, done.`);
       return Promise.resolve();
     }
     if (this.process.killed || this.dontKillInAfterHook) {
+      // eslint-disable-next-line no-console
+      console.log(
+        // eslint-disable-next-line max-len
+        `[ProcessControls] ${this} - process has already been killed (${this.process.killed}) or is not meant to be killed in after hook (${this.dontKillInAfterHook}), done.`
+      );
       return Promise.resolve();
     }
     return new Promise(resolve => {
       this.process.once('exit', () => {
+        // eslint-disable-next-line no-console
+        console.log(`[ProcessControls] ${this} - process exit event has been triggered, done.`);
         this.process.pid = null;
         resolve();
       });
 
+      // eslint-disable-next-line no-console
+      console.log(`[ProcessControls] ${this} - calling process.kill() now.`);
       this.process.kill();
     });
+  }
+
+  toString() {
+    return `${this.process ? this.process.pid : '-'} (${this.appPath})`;
   }
 }
 
