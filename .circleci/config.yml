@@ -2,6 +2,11 @@
 
 version: 2.1
 
+parameters:
+  workflow:
+    type: string
+    default: build
+
 shared: &shared
   working_directory: ~/repo
 
@@ -504,12 +509,20 @@ workflows:
   version: 2
 
   build:
+
     when:
-      # This makes sure none of our triggers (https://app.circleci.com/settings/project/github/instana/nodejs/triggers)
-      # kicks off the main build workflow jobs. (These jobs are triggered by webhook, that is, by pushing commits to
-      # Github branches for which a PR has been opened.)
-      not:
-        equal: [ scheduled_pipeline, << pipeline.trigger_source >> ]
+      and:
+
+        # This makes sure the "Trigger Pipeline" button when started with a specific workflow parameter value
+        # (say, "coverage) does not also start the "build" workflow.
+        - equal: [ build, << pipeline.parameters.workflow >> ]
+
+        # This makes sure that none of our triggers
+        # (https://app.circleci.com/settings/project/github/instana/nodejs/triggers)
+        # kicks off the main build workflow jobs. (This workflow is triggered by the source "webhook", that is, by
+        # pushing commits to Github branches for which a PR has been opened.)
+        - not:
+          equal: [ scheduled_pipeline, << pipeline.trigger_source >> ]
     jobs:
       - "node-18"
       - "node-16"
@@ -519,8 +532,9 @@ workflows:
       or:
         # See https://app.circleci.com/settings/project/github/instana/nodejs/triggers.
         - equal: [ nightly-build-2-am, << pipeline.schedule.name >> ]
-        # This allows us to kick off this workflow on demand via the API.
-        - equal: [ api, << pipeline.trigger_source >> ]
+        # This allows us to kick off this workflow on demand via the CircleCI UI with the "Trigger Pipeline" button,
+        # by providing the parameter "workflow: legacy-nodejs-versions"
+        - equal: [ legacy-nodejs-versions, << pipeline.parameters.workflow >> ]
     jobs:
       - "node-14"
       - "node-12"
@@ -531,8 +545,9 @@ workflows:
       or:
         # See https://app.circleci.com/settings/project/github/instana/nodejs/triggers.
         - equal: [ nightly-build-4-am, << pipeline.schedule.name >> ]
-        # This allows us to kick off this workflow on demand via the API.
-        - equal: [ api, << pipeline.trigger_source >> ]
+        # This allows us to kick off this workflow on demand via the CircleCI UI with the "Trigger Pipeline" button,
+        # by providing the parameter "workflow: esm-build"
+        - equal: [ esm-build, << pipeline.parameters.workflow >> ]
     jobs:
       - "node-18-esm"
       - "node-16-esm"
@@ -542,7 +557,8 @@ workflows:
       or:
         # See https://app.circleci.com/settings/project/github/instana/nodejs/triggers.
         - equal: [ weekly-build-sunday-0-am, << pipeline.schedule.name >> ]
-        # This allows us to kick off this workflow on demand via the API.
-        - equal: [ api, << pipeline.trigger_source >> ]
+        # This allows us to kick off this workflow on demand via the CircleCI UI with the "Trigger Pipeline" button,
+        # by providing the parameter "workflow: coverage"
+        - equal: [ coverage, << pipeline.parameters.workflow >> ]
     jobs:
       - "node-coverage"
