@@ -102,7 +102,3 @@ app.post('/update', async (req, res) => {
 app.listen(port, () => {
   log(`Listening on port: ${port}`);
 });
-
-process.on('uncaughtException', err => {
-  log('Prisma uncaught exception', err);
-});
