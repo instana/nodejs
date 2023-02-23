@@ -39,7 +39,7 @@ mochaSuiteFn('tracing/prisma', function () {
     // be installed into node_modules relative to that file. This is why we do not install `@prisma/client` in our
     // root dependencies, as we do for other modules under test.
     // See also: https://www.prisma.io/docs/reference/api-reference/command-reference#generate
-    await executeAsync('npm install', appDir);
+    await executeAsync('npm install --no-audit', appDir);
   });
 
   providers.forEach(provider => {
