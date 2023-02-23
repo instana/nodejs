@@ -68,23 +68,8 @@ mochaSuiteFn('tracing/prisma', function () {
       });
 
       after(async () => {
-        try {
-          // eslint-disable-next-line no-console
-          console.log(
-            `[Prisma test after hook (${provider})] deleting Prisma schema target file ${schemaTargetFile} now.`
-          );
-          await fs.rm(schemaTargetFile, { force: true });
-          // eslint-disable-next-line no-console
-          console.log(
-            `[Prisma test after hook (${provider})] Deleting migrations target directory ${migrationsTargetDir} now.`
-          );
-          await rimraf(migrationsTargetDir);
-          // eslint-disable-next-line no-console
-          console.log(`[Prisma test after hook (${provider})] Done.`);
-        } catch (err) {
-          // eslint-disable-next-line no-console
-          console.log('Prisma after hook error', err);
-        }
+        await fs.rm(schemaTargetFile, { force: true });
+        await rimraf(migrationsTargetDir);
       });
 
       globalAgent.setUpCleanUpHooks();
