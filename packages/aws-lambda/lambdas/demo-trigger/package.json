@@ -13,9 +13,7 @@
   "author": "Bastian Krol <bastian.krol@instana.com>",
   "license": "MIT",
   "dependencies": {
-    "@instana/aws-lambda": "file:../../instana-aws-lambda.tgz",
     "async": "^3.1.0",
-    "instana-aws-lambda-auto-wrap": "file:../../instana-aws-lambda-auto-wrap.tgz",
     "pino": "^5.14.0",
     "request": "^2.88.0",
     "request-promise": "^4.2.4",
