@@ -30,7 +30,7 @@ exports.init = function init() {
   requireHook.onModuleLoad('@elastic/elasticsearch', instrument);
 };
 
-let connectionString;
+let parsedConnectionUrl;
 
 function instrument(es, esModuleFilename) {
   // v8
@@ -40,7 +40,12 @@ function instrument(es, esModuleFilename) {
       const client = new OriginalClient(...arguments);
 
       if (client.connectionPool && client.connectionPool.connections && client.connectionPool.connections.length > 0) {
-        connectionString = client.connectionPool.connections[0].url;
+        const connectionString = client.connectionPool.connections[0].url;
+        try {
+          parsedConnectionUrl = new URL(connectionString);
+        } catch (parseErrr) {
+          /* ignore */
+        }
       }
 
       return client;
@@ -215,8 +220,7 @@ function parseConnectionFromResult(span, result) {
       span.data.elasticsearch.address = connectionUrl.hostname;
       span.data.elasticsearch.port = connectionUrl.port;
     }
-  } else if (connectionString) {
-    const parsedConnectionUrl = new URL(connectionString);
+  } else if (parsedConnectionUrl) {
     span.data.elasticsearch.address = parsedConnectionUrl.hostname;
     span.data.elasticsearch.port = parsedConnectionUrl.port;
   }
