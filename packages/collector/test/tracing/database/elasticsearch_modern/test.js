@@ -55,7 +55,7 @@ mochaSuiteFn('tracing/elasticsearch (modern client)', function () {
       // eslint-disable-next-line no-useless-concat
       `@elastic/elasticsearch@${version}/` + `instrumentation flavor: ${instrumentationFlavor}`,
       function () {
-        const indiceKey = version === 'latest' ? 'Indices.refresh' : 'indices.refresh';
+        const indicesKey = version === 'latest' ? 'Indices.refresh' : 'indices.refresh';
 
         globalAgent.setUpCleanUpHooks();
         const agentControls = globalAgent.instance;
@@ -129,7 +129,7 @@ mochaSuiteFn('tracing/elasticsearch (modern client)', function () {
               agentControls.getSpans().then(spans => {
                 const entrySpan = verifyHttpEntry(spans, '/index');
                 verifyElasticsearchExit(spans, entrySpan, 'index');
-                verifyElasticsearchExit(spans, entrySpan, indiceKey, '_all', '/_all/_refresh');
+                verifyElasticsearchExit(spans, entrySpan, indicesKey, '_all', '/_all/_refresh');
                 verifyNoHttpExitsToElasticsearch(spans);
               })
             );
@@ -172,7 +172,7 @@ mochaSuiteFn('tracing/elasticsearch (modern client)', function () {
                 agentControls.getSpans().then(spans => {
                   const indexEntrySpan = verifyHttpEntry(spans, '/index');
                   verifyElasticsearchExit(spans, indexEntrySpan, 'index');
-                  verifyElasticsearchExit(spans, indexEntrySpan, indiceKey, '_all', '/_all/_refresh');
+                  verifyElasticsearchExit(spans, indexEntrySpan, indicesKey, '_all', '/_all/_refresh');
 
                   const getEntrySpan = verifyHttpEntry(spans, '/get');
                   const getExitSpan = verifyElasticsearchExit(spans, getEntrySpan, 'get');
@@ -229,12 +229,12 @@ mochaSuiteFn('tracing/elasticsearch (modern client)', function () {
                   const index1Entry = verifyHttpEntry(spans, '/index', '42');
 
                   verifyElasticsearchExit(spans, index1Entry, 'index');
-                  verifyElasticsearchExit(spans, index1Entry, indiceKey, '_all', '/_all/_refresh');
+                  verifyElasticsearchExit(spans, index1Entry, indicesKey, '_all', '/_all/_refresh');
 
                   const index2Entry = verifyHttpEntry(spans, '/index', '43');
 
                   verifyElasticsearchExit(spans, index2Entry, 'index');
-                  verifyElasticsearchExit(spans, index2Entry, indiceKey, '_all', '/_all/_refresh');
+                  verifyElasticsearchExit(spans, index2Entry, indicesKey, '_all', '/_all/_refresh');
 
                   const searchEntrySpan = verifyHttpEntry(spans, '/search');
                   const searchExitSpan = verifyElasticsearchExit(
@@ -334,13 +334,13 @@ mochaSuiteFn('tracing/elasticsearch (modern client)', function () {
               return retry(() =>
                 agentControls.getSpans().then(spans => {
                   verifyElasticsearchExit(spans, null, 'index', undefined, undefined, '42');
-                  verifyElasticsearchExit(spans, null, indiceKey, '_all', '/_all/_refresh', '42');
+                  verifyElasticsearchExit(spans, null, indicesKey, '_all', '/_all/_refresh', '42');
 
                   verifyElasticsearchExit(spans, null, 'index', undefined, undefined, '43');
-                  verifyElasticsearchExit(spans, null, indiceKey, '_all', '/_all/_refresh', '43');
+                  verifyElasticsearchExit(spans, null, indicesKey, '_all', '/_all/_refresh', '43');
 
                   verifyElasticsearchExit(spans, null, 'index', undefined, undefined, '44');
-                  verifyElasticsearchExit(spans, null, indiceKey, '_all', '/_all/_refresh', '44');
+                  verifyElasticsearchExit(spans, null, indicesKey, '_all', '/_all/_refresh', '44');
 
                   const mget1HttpEntry = verifyHttpEntry(spans, '/mget1');
                   const mget1Exit = verifyElasticsearchExit(
@@ -414,11 +414,11 @@ mochaSuiteFn('tracing/elasticsearch (modern client)', function () {
               return retry(() =>
                 agentControls.getSpans().then(spans => {
                   verifyElasticsearchExit(spans, null, 'index', undefined, undefined, '42');
-                  verifyElasticsearchExit(spans, null, indiceKey, '_all', '/_all/_refresh', '42');
+                  verifyElasticsearchExit(spans, null, indicesKey, '_all', '/_all/_refresh', '42');
                   verifyElasticsearchExit(spans, null, 'index', undefined, undefined, '43');
-                  verifyElasticsearchExit(spans, null, indiceKey, '_all', '/_all/_refresh', '43');
+                  verifyElasticsearchExit(spans, null, indicesKey, '_all', '/_all/_refresh', '43');
                   verifyElasticsearchExit(spans, null, 'index', undefined, undefined, '44');
-                  verifyElasticsearchExit(spans, null, indiceKey, '_all', '/_all/_refresh', '44');
+                  verifyElasticsearchExit(spans, null, indicesKey, '_all', '/_all/_refresh', '44');
 
                   const msearchEntrySpan = verifyHttpEntry(spans, '/msearch');
                   const msearchExitSpan = verifyElasticsearchExit(
@@ -462,7 +462,7 @@ mochaSuiteFn('tracing/elasticsearch (modern client)', function () {
                 agentControls.getSpans().then(spans => {
                   const entrySpan = verifyHttpEntry(spans, '/index');
                   verifyElasticsearchExit(spans, entrySpan, 'index');
-                  verifyElasticsearchExit(spans, entrySpan, indiceKey, '_all', '/_all/_refresh');
+                  verifyElasticsearchExit(spans, entrySpan, indicesKey, '_all', '/_all/_refresh');
 
                   const searchExit = verifyElasticsearchExit(spans, null, 'search', undefined, '/modern_index/_search');
                   expect(searchExit.data.elasticsearch.hits).to.equal(0);
