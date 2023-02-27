@@ -131,7 +131,7 @@ shared: &shared
         name: npm install
         command: |
           date
-          npm install
+          node --max-old-space-size=2048 $(which npm) install
           git checkout package-lock.json
 
     - run:
