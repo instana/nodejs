@@ -131,7 +131,7 @@ shared: &shared
         name: npm install
         command: |
           date
-          node --max-old-space-size=2048 $(which npm) install
+          npm install
           git checkout package-lock.json
 
     - run:
@@ -484,6 +484,7 @@ jobs:
       - <<: *memcached
     <<: *shared
     parallelism: 20
+    resource_class: large
 
   "node-coverage":
     environment:
