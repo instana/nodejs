@@ -50,6 +50,7 @@
     "test:debug": "lerna run test:debug --stream",
     "typecheck": "tsc",
     "update-deps": "lerna exec '../../node_modules/.bin/ncu --upgrade' && lerna exec 'npm i --package-lock-only' && npm run reinstall-deps",
+    "verify": "lerna run verify --stream",
     "version": "lerna clean --yes && lerna bootstrap --no-ci --ignore-scripts -- --package-lock-only --no-audit && git add packages/*/package-lock.json"
   },
   "devDependencies": {
