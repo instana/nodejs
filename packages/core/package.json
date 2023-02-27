@@ -126,7 +126,7 @@
   "dependencies": {
     "async-hook-jl": "^1.7.6",
     "cls-bluebird": "^2.1.0",
-    "lru-cache": "6.0.0",
+    "lru-cache": "7.17.0",
     "methods": "^1.1.2",
     "opentracing": "^0.14.5",
     "redis-commands": "^1.7.0",
