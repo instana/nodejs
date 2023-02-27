@@ -465,6 +465,7 @@ jobs:
       - <<: *memcached
     <<: *shared
     parallelism: 20
+    resource_class: large
 
   "node-10":
     docker:
