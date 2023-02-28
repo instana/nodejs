@@ -44,8 +44,15 @@ function instrumentReloadCluster(reloadClusterModule) {
     // Deliberately not using the isActive pattern here because the edgemicro workers are started immediately by the
     // edgemicro CLI, before the connection to the Instana agent is established (and thus isActive becoming true).
     const clusterManager = reloadClusterModule.apply(this, arguments);
+
+    // See https://github.com/DefinitelyTyped/DefinitelyTyped/discussions/59229
+    // https://github.com/DefinitelyTyped/DefinitelyTyped/blob/master/types/node/cluster.d.ts
+    // @ts-expect-error :-/
     cluster.settings.execArgv = cluster.settings.execArgv || [];
+
+    // @ts-expect-error :-/
     for (let i = 0; i < cluster.settings.execArgv.length; i++) {
+      // @ts-expect-error :-/
       if (cluster.settings.execArgv[i].indexOf('--require') >= 0) {
         return clusterManager;
       }
@@ -55,8 +62,13 @@ function instrumentReloadCluster(reloadClusterModule) {
       // eslint-disable-next-line max-len
       `Detected a call to 'edgemicro/cli/lib/reload-cluster', instrumenting edgemicro workers by adding --require ${selfPath.immediate} to cluster.settings.execArgv.`
     );
+
+    // @ts-expect-error :-/
     cluster.settings.execArgv.push('--require');
+
+    // @ts-expect-error :-/
     cluster.settings.execArgv.push(selfPath.immediate);
+
     return clusterManager;
   };
 }
