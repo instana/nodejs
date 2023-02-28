@@ -360,6 +360,7 @@ jobs:
       - <<: *memcached
     <<: *shared
     parallelism: 20
+    resource_class: large
 
   "node-16":
     docker:
@@ -379,6 +380,7 @@ jobs:
       - <<: *memcached
     <<: *shared
     parallelism: 20
+    resource_class: large
 
   "node-18-esm":
     environment:
@@ -401,6 +403,7 @@ jobs:
       - <<: *memcached
     <<: *shared
     parallelism: 20
+    resource_class: large
 
   "node-16-esm":
     environment:
@@ -423,6 +426,7 @@ jobs:
       - <<: *memcached
     <<: *shared
     parallelism: 20
+    resource_class: large
 
   "node-14":
     environment:
@@ -444,6 +448,7 @@ jobs:
       - <<: *memcached
     <<: *shared
     parallelism: 20
+    resource_class: large
 
   "node-12":
     environment:
@@ -507,6 +512,7 @@ jobs:
       - <<: *memcached
     <<: *shared
     parallelism: 1
+    resource_class: large
 
 workflows:
   version: 2
