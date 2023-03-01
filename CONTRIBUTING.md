@@ -273,6 +273,7 @@ Please run these commands to generate the prebuilds for event-loop-stats and gcs
 ```sh
 cd native-dep-packs
 ./rebuild-precompiled-addons.sh
+BUILD_FOR_MACOS=true ./rebuild-precompiled-addons.sh
 ```
 
 #### autoprofile package
