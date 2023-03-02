@@ -109,12 +109,36 @@ mochaSuiteFn('tracing/grpc-js', function () {
           expect(response.reply).to.equal('received: request');
           return retry(() =>
             agentControls.getSpans().then(spans => {
-              expectExactlyOneMatching(spans, checkHttpEntry('/unary-call'));
+              expectExactlyOneMatching(spans, checkHttpEntry({ url: '/unary-call' }));
               expect(getSpansByName(spans, 'rpc-client')).to.be.empty;
               expect(getSpansByName(spans, 'rpc-server')).to.be.empty;
             })
           );
         }));
+  });
+
+  describe('multiple hosts', () => {
+    const { clientControls } = createProcesses();
+
+    it('call two different hosts', async () => {
+      const url = '/two-different-hosts';
+      const response = await clientControls.sendRequest({
+        method: 'POST',
+        path: url
+      });
+
+      expect(response.reply1).to.equal('received: request');
+      expect(response.reply2).to.equal('received: request');
+
+      let spans;
+      await retry(async () => {
+        spans = await agentControls.getSpans();
+        expect(spans.length).to.eql(7);
+      });
+      const httpEntry = expectExactlyOneMatching(spans, checkHttpEntry({ url }));
+      expectExactlyOneMatching(spans, checkGrpcClientSpan({ httpEntry, clientControls, url, host: 'localhost' }));
+      expectExactlyOneMatching(spans, checkGrpcClientSpan({ httpEntry, clientControls, url, host: '127.0.0.1' }));
+    });
   });
 });
 
@@ -169,20 +193,19 @@ function createQueryParams(cancel, erroneous) {
   }
 }
 
-function waitForTrace(serverControls, clientControls, url, cancel, erroneous) {
-  return retry(() =>
-    agentControls.getSpans().then(spans => {
-      expect(spans.length).to.eql(5);
-      checkTrace(serverControls, clientControls, spans, url, cancel, erroneous);
-    })
-  );
+async function waitForTrace(serverControls, clientControls, url, cancel, erroneous) {
+  return retry(async () => {
+    const spans = await agentControls.getSpans();
+    expect(spans.length).to.eql(5);
+    checkTrace(serverControls, clientControls, spans, url, cancel, erroneous);
+  });
 }
 
 function checkTrace(serverControls, clientControls, spans, url, cancel, erroneous) {
-  const httpEntry = expectExactlyOneMatching(spans, checkHttpEntry(url));
+  const httpEntry = expectExactlyOneMatching(spans, checkHttpEntry({ url }));
   const grpcExit = expectExactlyOneMatching(
     spans,
-    checkGrpcClientSpan(httpEntry, clientControls, url, cancel, erroneous)
+    checkGrpcClientSpan({ httpEntry, clientControls, url, cancel, erroneous })
   );
 
   // Except for server-streaming and bidi-streaming, we cancel the call immediately on the client, so it usually never
@@ -193,19 +216,19 @@ function checkTrace(serverControls, clientControls, spans, url, cancel, erroneou
   if (!cancel || url === '/server-stream' || url === '/bidi-stream') {
     const grpcEntry = expectExactlyOneMatching(
       spans,
-      checkGrpcServerSpan(grpcExit, serverControls, url, cancel, erroneous)
+      checkGrpcServerSpan({ grpcExit, serverControls, url, cancel, erroneous })
     );
 
-    expectExactlyOneMatching(spans, checkLogSpanDuringGrpcEntry(grpcEntry, url, erroneous));
+    expectExactlyOneMatching(spans, checkLogSpanDuringGrpcEntry({ grpcEntry, url, erroneous }));
   } else {
     // Would be nice to also check for the log span from the interceptor but will actually never be created because at
     // that time, the parent span is an exit span (the GRPC exit). If only log spans were intermediate spans :-)
     // expectExactlyOneMatching(spans, checkLogSpanFromClientInterceptor.bind(null, httpEntry));
-    expectExactlyOneMatching(spans, checkLogSpanAfterGrpcExit(httpEntry, url, cancel, erroneous));
+    expectExactlyOneMatching(spans, checkLogSpanAfterGrpcExit({ httpEntry, url, cancel, erroneous }));
   }
 }
 
-function checkHttpEntry(url) {
+function checkHttpEntry({ url }) {
   return [
     span => expect(span.n).to.equal('node.http.server'),
     span => expect(span.k).to.equal(constants.ENTRY),
@@ -213,7 +236,14 @@ function checkHttpEntry(url) {
   ];
 }
 
-function checkGrpcClientSpan(httpEntry, clientControls, url, cancel, erroneous) {
+function checkGrpcClientSpan({
+  httpEntry,
+  clientControls,
+  url,
+  cancel = false,
+  erroneous = false,
+  host = 'localhost'
+}) {
   let expectations = [
     span => expect(span.n).to.equal('rpc-client'),
     span => expect(span.k).to.equal(constants.EXIT),
@@ -224,7 +254,7 @@ function checkGrpcClientSpan(httpEntry, clientControls, url, cancel, erroneous) 
     span => expect(span.data.rpc).to.exist,
     span => expect(span.data.rpc.flavor).to.equal('grpc'),
     span => expect(span.data.rpc.call).to.equal(rpcCallNameForUrl(url)),
-    span => expect(span.data.rpc.host).to.equal('localhost'),
+    span => expect(span.data.rpc.host).to.equal(host),
     span => expect(span.data.rpc.port).to.equal('50051')
   ];
   if (erroneous) {
@@ -243,7 +273,7 @@ function checkGrpcClientSpan(httpEntry, clientControls, url, cancel, erroneous) 
   return expectations;
 }
 
-function checkGrpcServerSpan(grpcExit, serverControls, url, cancel, erroneous) {
+function checkGrpcServerSpan({ grpcExit, serverControls, url, cancel, erroneous }) {
   let expectations = [
     span => expect(span.n).to.equal('rpc-server'),
     span => expect(span.k).to.equal(constants.ENTRY),
@@ -271,7 +301,7 @@ function checkGrpcServerSpan(grpcExit, serverControls, url, cancel, erroneous) {
   return expectations;
 }
 
-function checkLogSpanAfterGrpcExit(httpEntry, url, cancel, erroneous) {
+function checkLogSpanAfterGrpcExit({ httpEntry, url, cancel, erroneous }) {
   const expectations = [
     span => expect(span.n).to.equal('log.pino'),
     span => expect(span.k).to.equal(constants.EXIT),
@@ -288,7 +318,7 @@ function checkLogSpanAfterGrpcExit(httpEntry, url, cancel, erroneous) {
   return expectations;
 }
 
-function checkLogSpanDuringGrpcEntry(grpcEntry, url, erroneous) {
+function checkLogSpanDuringGrpcEntry({ grpcEntry, url, erroneous }) {
   const expectations = [
     span => expect(span.n).to.equal('log.pino'),
     span => expect(span.k).to.equal(constants.EXIT),
@@ -306,6 +336,8 @@ function checkLogSpanDuringGrpcEntry(grpcEntry, url, erroneous) {
 function rpcCallNameForUrl(url) {
   switch (url) {
     case '/unary-call':
+    // fall through
+    case '/two-different-hosts':
       return 'instana.node.grpc.test.TestService/MakeUnaryCall';
     case '/server-stream':
       return 'instana.node.grpc.test.TestService/StartServerSideStreaming';

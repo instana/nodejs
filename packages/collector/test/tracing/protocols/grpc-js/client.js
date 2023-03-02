@@ -22,6 +22,7 @@ const log = require('@instana/core/test/test_util/log').getLogger(logPrefix);
 const PROTO_PATH = path.join(__dirname, 'protos/test.proto');
 
 let client;
+let anotherClient;
 let makeUnaryCall;
 let startServerSideStreaming;
 let startClientSideStreaming;
@@ -41,6 +42,7 @@ function runClient() {
 
   const testProto = grpc.loadPackageDefinition(packageDefinition).instana.node.grpc.test;
   client = new testProto.TestService('localhost:50051', grpc.credentials.createInsecure());
+  anotherClient = new testProto.TestService('127.0.0.1:50051', grpc.credentials.createInsecure());
 
   makeUnaryCall = unaryCall;
   startServerSideStreaming = serverSideStreaming;
@@ -50,9 +52,9 @@ function runClient() {
 
 runClient();
 
-function unaryCall(cancel, triggerError, cb) {
+function unaryCall({ cancel, triggerError, grpcJsClient = client }, cb) {
   const parameter = triggerError ? 'error' : 'request';
-  const call = client.makeUnaryCall({ parameter }, cb);
+  const call = grpcJsClient.makeUnaryCall({ parameter }, cb);
 
   if (cancel) {
     setTimeout(() => {
@@ -61,7 +63,7 @@ function unaryCall(cancel, triggerError, cb) {
   }
 }
 
-function serverSideStreaming(cancel, triggerError, cb) {
+function serverSideStreaming({ cancel, triggerError }, cb) {
   const replies = [];
   const call = client.startServerSideStreaming({
     parameter: paramFor(cancel, triggerError)
@@ -91,7 +93,7 @@ function serverSideStreaming(cancel, triggerError, cb) {
   });
 }
 
-function clientSideStreaming(cancel, triggerError, cb) {
+function clientSideStreaming({ cancel, triggerError }, cb) {
   const call = client.startClientSideStreaming(cb);
 
   if (triggerError) {
@@ -118,7 +120,7 @@ function clientSideStreaming(cancel, triggerError, cb) {
   }
 }
 
-function bidiStreaming(cancel, triggerError, cb) {
+function bidiStreaming({ cancel, triggerError }, cb) {
   const replies = [];
   const call = client.startBidiStreaming();
   let cbCalled = false;
@@ -176,7 +178,7 @@ app.get('/', (req, res) => {
 });
 
 app.post('/unary-call', (req, res) => {
-  makeUnaryCall(req.query.cancel, req.query.error, (err, reply) => {
+  makeUnaryCall(optionsFromRequest(req), (err, reply) => {
     if (err) {
       pinoLogger.error(err);
       return res.send(err);
@@ -188,7 +190,7 @@ app.post('/unary-call', (req, res) => {
 });
 
 app.post('/server-stream', (req, res) => {
-  startServerSideStreaming(req.query.cancel, req.query.error, (err, replyMessages) => {
+  startServerSideStreaming(optionsFromRequest(req), (err, replyMessages) => {
     if (err) {
       pinoLogger.error(err);
       return res.send(err);
@@ -200,7 +202,7 @@ app.post('/server-stream', (req, res) => {
 });
 
 app.post('/client-stream', (req, res) => {
-  startClientSideStreaming(req.query.cancel, req.query.error, (err, reply) => {
+  startClientSideStreaming(optionsFromRequest(req), (err, reply) => {
     if (err) {
       pinoLogger.error(err);
       return res.send(err);
@@ -212,13 +214,30 @@ app.post('/client-stream', (req, res) => {
 });
 
 app.post('/bidi-stream', (req, res) => {
-  startBidiStreaming(req.query.cancel, req.query.error, (err, replyMessages) => {
+  startBidiStreaming(optionsFromRequest(req), (err, replyMessages) => {
     if (err) {
       pinoLogger.error(err);
       return res.send(err);
     }
     pinoLogger.warn('/bidi-stream');
     return res.send({ reply: replyMessages });
+  });
+});
+
+function optionsFromRequest(req) {
+  return { cancel: req.query.cancel, triggerError: req.query.error };
+}
+
+app.post('/two-different-hosts', (req, res) => {
+  makeUnaryCall({ grpcJsClient: client }, (err1, reply1) => {
+    const message1 = typeof reply1.getMessage === 'function' ? reply1.getMessage() : reply1.message;
+    makeUnaryCall({ grpcJsClient: anotherClient }, (err2, reply2) => {
+      const message2 = typeof reply2.getMessage === 'function' ? reply2.getMessage() : reply2.message;
+      return res.send({
+        reply1: message1,
+        reply2: message2
+      });
+    });
   });
 });
 

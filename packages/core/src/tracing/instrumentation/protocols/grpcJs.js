@@ -45,16 +45,24 @@ function instrumentServer(serverModule) {
 }
 
 function instrumentClient(clientModule) {
-  let address;
-
-  class ClientMock extends clientModule.Client {
-    constructor(_address) {
-      address = _address;
+  class InstanaWrapper extends clientModule.Client {
+    constructor(address) {
       super(...arguments);
+
+      try {
+        const hostAndPort = splitHostPort(address);
+        if (hostAndPort.port && typeof hostAndPort.port === 'number') {
+          hostAndPort.port = hostAndPort.port.toString();
+        }
+        this._hostAndPort = hostAndPort;
+      } catch (e) {
+        this._hostAndPort = {};
+        logger.warn(`Failed to parse GRPC-JS destination addresss: ${address}`);
+      }
     }
   }
 
-  clientModule.Client = ClientMock;
+  clientModule.Client = InstanaWrapper;
 
   const fnArr = [
     { name: 'makeUnaryRequest', responseStream: false, requestStream: false },
@@ -68,12 +76,6 @@ function instrumentClient(clientModule) {
 
     shimmer.wrap(clientModule.Client.prototype, name, function (origFn) {
       return function (method) {
-        const hostAndPort = splitHostPort(address);
-
-        if (hostAndPort.port && typeof hostAndPort.port === 'number') {
-          hostAndPort.port = hostAndPort.port.toString();
-        }
-
         const originalArgs = copyArgs(arguments);
 
         const skipTracingResult = cls.skipExitTracing({ isActive, extendedResponse: true });
@@ -93,7 +95,7 @@ function instrumentClient(clientModule) {
           this,
           origFn,
           originalArgs,
-          hostAndPort,
+          this._hostAndPort,
           method,
           requestStream,
           responseStream,
@@ -378,7 +380,7 @@ function instrumentedClientMethod(
   ctx,
   originalFunction,
   originalArgs,
-  address,
+  hostAndPort,
   rpcPath,
   requestStream,
   responseStream,
@@ -390,8 +392,8 @@ function instrumentedClientMethod(
     span.stack = tracingUtil.getStackTrace(instrumentedClientMethod);
 
     span.data.rpc = {
-      host: address.host,
-      port: address.port,
+      host: hostAndPort.host,
+      port: hostAndPort.port,
       call: dropLeadingSlash(rpcPath),
       flavor: 'grpc'
     };
@@ -441,6 +443,10 @@ function readMetadata(metadata, key) {
 // Copied from https://github.com/grpc/grpc-node/blob/master/packages/grpc-js/src/uri-parser.ts
 const NUMBER_REGEX = /^\d+$/;
 function splitHostPort(path) {
+  if (typeof path !== 'string') {
+    return { host: null, port: null };
+  }
+
   if (path.startsWith('[')) {
     const hostEnd = path.indexOf(']');
 
