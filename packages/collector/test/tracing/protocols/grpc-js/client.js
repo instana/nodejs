@@ -120,7 +120,7 @@ function clientSideStreaming({ cancel, triggerError }, cb) {
   }
 }
 
-function bidiStreaming({ cancel, triggerError }, cb) {
+function bidiStreaming({ triggerError }, cb) {
   const replies = [];
   const call = client.startBidiStreaming();
   let cbCalled = false;

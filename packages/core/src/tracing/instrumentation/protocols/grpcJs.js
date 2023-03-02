@@ -114,8 +114,9 @@ function modifyArgs(name, originalArgs, span) {
 
       if (err) {
         const errorMessage = err.details || err.message;
-
-        if (errorMessage !== 'Cancelled') {
+        if (typeof errorMessage === 'string' && errorMessage.toLowerCase().includes('cancelled')) {
+          // No-op, we do not want to mark cancelled calls as erroneous.
+        } else {
           span.ec = 1;
           if (errorMessage) {
             span.data.rpc.error = errorMessage;
@@ -291,6 +292,12 @@ function createInstrumentedServerHandler(name, type, originalHandler) {
      * Any other parent span which is not node.http.server should result in an error,
      * because it signalises that something wrong happend. Usually this case
      * should not happen.
+     *
+     * Note that cancelling the incoming HTTP entry span does not reliably work when
+     * the grpc-js call is cancelled quickly on the client side because the grpc-js server
+     * instrumentation might never be triggered. In that case we end up with an HTTP
+     * entry span from the connection attempt made by the grpc-js client before the call
+     * is cancelled.
      */
     if (parentSpan) {
       if (parentSpan.n !== 'node.http.server') {
@@ -415,13 +422,14 @@ function instrumentedClientMethod(
       call.on('error', err => {
         span.d = Date.now() - span.ts;
         const errorMessage = err.details || err.message;
-        if (errorMessage !== 'Cancelled') {
+        if (typeof errorMessage === 'string' && errorMessage.toLowerCase().includes('cancelled')) {
+          // No-op, we do not want to mark cancelled calls as erroneous.
+        } else {
           span.ec = 1;
           if (errorMessage) {
             span.data.rpc.error = errorMessage;
           }
         }
-
         span.transmit();
       });
     }

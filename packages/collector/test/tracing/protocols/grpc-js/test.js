@@ -35,6 +35,8 @@ mochaSuiteFn('tracing/grpc-js', function () {
     it('must mark unary call as erroneous', () =>
       runTest('/unary-call', serverControls, clientControls, null, false, true));
 
+    it('must cancel an unary call', () => runTest('/unary-call', serverControls, clientControls, null, true, false));
+
     it('must trace server-side streaming', () => {
       const expectedReply = ['received: request', 'streaming', 'more', 'data'];
       return runTest('/server-stream', serverControls, clientControls, expectedReply);
@@ -42,6 +44,9 @@ mochaSuiteFn('tracing/grpc-js', function () {
 
     it('must mark server-side streaming as erroneous', () =>
       runTest('/server-stream', serverControls, clientControls, null, false, true));
+
+    it('must cancel server-side streaming', () =>
+      runTest('/server-stream', serverControls, clientControls, null, true, false));
 
     it('must trace client-side streaming', () => {
       const expectedReply = 'first; second; third';
@@ -51,6 +56,9 @@ mochaSuiteFn('tracing/grpc-js', function () {
     it('must mark client-side streaming as erroneous', () =>
       runTest('/client-stream', serverControls, clientControls, null, false, true));
 
+    it('must cancel client-side streaming', () =>
+      runTest('/client-stream', serverControls, clientControls, null, true, false));
+
     it('must trace bidi streaming', () => {
       const expectedReply = ['received: first', 'received: second', 'received: third', 'STOP'];
       return runTest('/bidi-stream', serverControls, clientControls, expectedReply);
@@ -58,6 +66,8 @@ mochaSuiteFn('tracing/grpc-js', function () {
 
     it('must mark bidi streaming as erroneous', () =>
       runTest('/bidi-stream', serverControls, clientControls, null, false, true));
+
+    it('must cancel bidi streaming', () => runTest('/bidi-stream', serverControls, clientControls, null, true, false));
   });
 
   const maliMochaSuiteFn = semver.satisfies(process.versions.node, '>=14.0.0') ? describe : describe.skip;
@@ -193,30 +203,46 @@ function createQueryParams(cancel, erroneous) {
   }
 }
 
-async function waitForTrace(serverControls, clientControls, url, cancel, erroneous) {
+function waitForTrace(serverControls, clientControls, url, cancel, erroneous) {
   return retry(async () => {
     const spans = await agentControls.getSpans();
-    expect(spans.length).to.eql(5);
+
+    // For an unary call and client side streaming, we cancel the call immediately on the client, so it usually never
+    // reaches the server (depends on the timing), thus we expect less spans to be produced. For server side streaming
+    // and bidi streaming we have a communcation channel from the server to the client so that the server can signal to
+    // the client when to cancel the call after it has already reached the server, thus we expect more
+    // spans (exactly 5). Such a channel does not exist for unary call and client side streaming. This is also checked
+    // in more detail in checkTrace.
+    if (cancel && (url === '/unary-call' || url === '/client-stream')) {
+      // Cancelling the incoming HTTP2 entry span does not reliably work when the GRPC call is cancelled quickly on the
+      // client side, because the grpc-js server instrumentation might never be triggered. In that case we end up with
+      // an HTTP entry span from the connection attempt made by the grpc-js client before the call has been cancelled.
+      // That is why we sometimes get 4 instead of 3 spans. In other cases, the call gets processed on the server side
+      // before it is cancelled, in that case we get an rpc-server and an additional log.pino span from processing the
+      // call on the server side (which amounts to 5 spans then).
+      expect(spans).to.have.lengthOf.at.least(3);
+      expect(spans).to.have.lengthOf.at.most(5);
+    } else {
+      expect(spans).to.have.lengthOf(5);
+    }
+
     checkTrace(serverControls, clientControls, spans, url, cancel, erroneous);
   });
 }
 
 function checkTrace(serverControls, clientControls, spans, url, cancel, erroneous) {
   const httpEntry = expectExactlyOneMatching(spans, checkHttpEntry({ url }));
-  const grpcExit = expectExactlyOneMatching(
-    spans,
-    checkGrpcClientSpan({ httpEntry, clientControls, url, cancel, erroneous })
-  );
+  const grpcExit = expectExactlyOneMatching(spans, checkGrpcClientSpan({ httpEntry, clientControls, url, erroneous }));
 
-  // Except for server-streaming and bidi-streaming, we cancel the call immediately on the client, so it usually never
+  // For an unary call and client side streaming, we cancel the call immediately on the client, so it usually never
   // reaches the server (depends on the timing). Therefore we also do not expect any GRPC server spans to exist. For
-  // server-streaming and bidi-streaming we have a communcation channel from the server to the client so that the
+  // server side streaming and bidi streaming we have a communcation channel from the server to the client so that the
   // server can signal to the client when to cancel the call after it has already reached the server, such a channel
   // does not exist for unary call and client side streaming.
   if (!cancel || url === '/server-stream' || url === '/bidi-stream') {
     const grpcEntry = expectExactlyOneMatching(
       spans,
-      checkGrpcServerSpan({ grpcExit, serverControls, url, cancel, erroneous })
+      checkGrpcServerSpan({ grpcExit, serverControls, url, erroneous })
     );
 
     expectExactlyOneMatching(spans, checkLogSpanDuringGrpcEntry({ grpcEntry, url, erroneous }));
@@ -236,14 +262,7 @@ function checkHttpEntry({ url }) {
   ];
 }
 
-function checkGrpcClientSpan({
-  httpEntry,
-  clientControls,
-  url,
-  cancel = false,
-  erroneous = false,
-  host = 'localhost'
-}) {
+function checkGrpcClientSpan({ httpEntry, clientControls, url, erroneous = false, host = 'localhost' }) {
   let expectations = [
     span => expect(span.n).to.equal('rpc-client'),
     span => expect(span.k).to.equal(constants.EXIT),
@@ -273,7 +292,7 @@ function checkGrpcClientSpan({
   return expectations;
 }
 
-function checkGrpcServerSpan({ grpcExit, serverControls, url, cancel, erroneous }) {
+function checkGrpcServerSpan({ grpcExit, serverControls, url, erroneous }) {
   let expectations = [
     span => expect(span.n).to.equal('rpc-server'),
     span => expect(span.k).to.equal(constants.ENTRY),
