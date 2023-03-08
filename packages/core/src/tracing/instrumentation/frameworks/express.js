@@ -5,7 +5,7 @@
 
 'use strict';
 
-const shimmer = require('shimmer');
+const shimmer = require('../../shimmer');
 const methods = require('methods');
 
 const requireHook = require('../../../util/requireHook');

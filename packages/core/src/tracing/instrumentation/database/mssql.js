@@ -5,12 +5,12 @@
 
 'use strict';
 
-const shimmer = require('shimmer');
-
 const requireHook = require('../../../util/requireHook');
 const tracingUtil = require('../../tracingUtil');
 const constants = require('../../constants');
 const cls = require('../../cls');
+const shimmer = require('../../shimmer');
+// const shimmer = require('../../shimmer');
 
 let isActive = false;
 
@@ -22,6 +22,11 @@ exports.init = function init() {
 };
 
 function instrumentMssql(mssql) {
+  /*
+  mssql.Request.prototype.query = function fakeQuery() {
+    throw new Error('SHIT FROM QUERY');
+  };
+  */
   instrumentRequest(mssql.Request);
   instrumentPreparedStatement(mssql.PreparedStatement);
   instrumentTransaction(mssql.Transaction);
@@ -64,7 +69,7 @@ function instrumentedMethod(ctx, originalFunction, originalArgs, stackTraceRef, 
     const span = cls.startSpan(exports.spanName, constants.EXIT);
     span.stack = tracingUtil.getStackTrace(stackTraceRef);
     span.data.mssql = {
-      stmt: tracingUtil.shortenDatabaseStatement(command),
+      stmt: tracingUtil.shorteDatabaseStatement(command),
       host: connectionParameters.host,
       port: connectionParameters.port,
       user: connectionParameters.user,

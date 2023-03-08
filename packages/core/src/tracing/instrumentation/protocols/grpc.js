@@ -6,7 +6,7 @@
 'use strict';
 
 const util = require('util');
-const shimmer = require('shimmer');
+const shimmer = require('../../shimmer');
 
 let logger;
 logger = require('../../../logger').getLogger('tracing/grpc', newLogger => {

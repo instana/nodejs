@@ -8,7 +8,7 @@
 const process = require('process');
 
 const { ENTRY } = require('../../constants');
-const shimmer = require('shimmer');
+const shimmer = require('../../shimmer');
 const cls = require('../../cls');
 const spanBuffer = require('../../spanBuffer');
 

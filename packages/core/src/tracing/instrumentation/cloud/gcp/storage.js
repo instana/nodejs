@@ -6,7 +6,7 @@
 'use strict';
 
 const path = require('path');
-const shimmer = require('shimmer');
+const shimmer = require('../../../shimmer');
 
 const cls = require('../../../cls');
 const constants = require('../../../constants');

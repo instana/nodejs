@@ -10,7 +10,7 @@ const { limitTraceId } = require('../../tracingHeaders');
 const leftPad = require('../../leftPad');
 const constants = require('../../constants');
 const cls = require('../../cls');
-const shimmer = require('shimmer');
+const shimmer = require('../../shimmer');
 const { getFunctionArguments } = require('../../../util/function_arguments');
 let traceCorrelationEnabled = constants.kafkaTraceCorrelationDefault;
 

@@ -8,7 +8,7 @@
 // about the conflict between nyc and Prisma. The workaround might lead to killing the Prisma app under test
 // via SIGKILL, which will deprive Istanbul of the opportunity to report test coverage for Prisma correctly.
 
-const shimmer = require('shimmer');
+const shimmer = require('../../shimmer');
 
 let logger;
 logger = require('../../../logger').getLogger('tracing/prisma', newLogger => {

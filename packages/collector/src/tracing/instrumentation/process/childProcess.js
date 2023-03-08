@@ -8,9 +8,10 @@
 
 const processIdentityProvider = require('../../../pidStore');
 
-const getCls = require('@instana/core').tracing.getCls;
 const coreChildProcess = require('child_process');
-const shimmer = require('shimmer');
+const { tracing } = require('@instana/core');
+const shimmer = tracing.shimmer;
+const getCls = tracing.getCls;
 
 const selfPath = require('./selfPath');
 

@@ -5,7 +5,7 @@
 
 'use strict';
 
-const shimmer = require('shimmer');
+const shimmer = require('../../shimmer');
 
 let logger;
 logger = require('../../../logger').getLogger('tracing/graphql', newLogger => {

@@ -7,7 +7,7 @@
 
 'use strict';
 
-const shimmer = require('shimmer');
+const shimmer = require('../../shimmer');
 const tracingUtil = require('../../tracingUtil');
 const constants = require('../../constants');
 const cls = require('../../cls');
