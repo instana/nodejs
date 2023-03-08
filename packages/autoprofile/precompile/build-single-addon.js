@@ -7,9 +7,11 @@
 
 const { execSync } = require('child_process');
 const { copyFileSync, existsSync } = require('fs');
+// eslint-disable-next-line import/no-extraneous-dependencies
 const { sync: mkdirpSync } = require('mkdirp');
 const path = require('path');
 const os = require('os');
+// eslint-disable-next-line import/no-extraneous-dependencies
 const semver = require('semver');
 
 module.exports = exports = function buildSingleAddOn(abi, version) {
@@ -21,7 +23,7 @@ module.exports = exports = function buildSingleAddOn(abi, version) {
     family = require('detect-libc').family;
   }
 
-  const addonDir = path.join(__dirname, '..', 'addons', platform, arch, family ? family : '', abi);
+  const addonDir = path.join(__dirname, '..', 'addons', platform, arch, family || '', abi);
   const addonPath = path.join(addonDir, 'autoprofile.node');
   const label = `${platform}/${arch}/${family ? `${family}/` : ''}${abi} (target=${version})`;
 

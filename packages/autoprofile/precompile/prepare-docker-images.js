@@ -5,8 +5,6 @@
 
 'use strict';
 
-const { GLIBC, MUSL } = require('detect-libc');
-
 const execute = require('./execute-sync');
 const getDockerOpts = require('./docker-opts');
 
@@ -17,7 +15,6 @@ module.exports = exports = function prepareDockerImages(libcFamilies) {
     const {
       //
       baseImage,
-      distro,
       dockerFile,
       dockerTag
     } = getDockerOpts(family);

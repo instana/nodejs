@@ -8,7 +8,6 @@
 
 const os = require('os');
 const path = require('path');
-const { copyFileSync, existsSync, mkdirSync } = require('fs');
 const { GLIBC, MUSL } = require('detect-libc');
 
 const buildSingleAddOn = require('./build-single-addon');
@@ -64,7 +63,7 @@ function buildOnHostOrDocker(platform, family, abi, version) {
   } else if (platform === 'linux') {
     buildOnDocker(platform, family, abi, version);
   } else {
-    console.error(`Platform not supported: ${platorm}`);
+    console.error(`Platform not supported: ${platform}`);
     process.exit(1);
   }
 }

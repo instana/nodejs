@@ -5,18 +5,12 @@
 
 'use strict';
 
-const { GLIBC, MUSL } = require('detect-libc');
 const path = require('path');
 const execute = require('./execute-sync');
 const getDockerOpts = require('./docker-opts');
 
 module.exports = exports = function buildOnDocker(platform, family, abi, version) {
-  const {
-    //
-    baseImage,
-    distro,
-    dockerTag
-  } = getDockerOpts(family);
+  const { dockerTag } = getDockerOpts(family);
 
   console.log(`Stopping and removing ${dockerTag}.`);
   execute(`docker stop ${dockerTag} > /dev/null || true`);
