@@ -54,7 +54,7 @@ function instrumentCmapConnection(connection) {
       'remove' // collection.delete et al.
     ].forEach(fnName => {
       if (connection.Connection.prototype[fnName]) {
-        shimmer.wrap(connection.Connection.prototype, fnName, shimCmapMethod);
+        shimmer.wrap(connection.Connection.prototype, fnName, shimCmapMethod.bind(null, fnName));
       }
     });
 
@@ -98,7 +98,7 @@ function shimCmapCommand(original) {
   };
 }
 
-function shimCmapMethod(original) {
+function shimCmapMethod(fnName, original) {
   return function () {
     if (cls.skipExitTracing({ isActive })) {
       return original.apply(this, arguments);
@@ -109,7 +109,7 @@ function shimCmapMethod(original) {
       originalArgs[i] = arguments[i];
     }
 
-    return instrumentedCmapMethod(this, original, originalArgs, original.name);
+    return instrumentedCmapMethod(this, original, originalArgs, fnName);
   };
 }
 

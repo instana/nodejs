@@ -69,7 +69,7 @@ function instrumentedMethod(ctx, originalFunction, originalArgs, stackTraceRef, 
     const span = cls.startSpan(exports.spanName, constants.EXIT);
     span.stack = tracingUtil.getStackTrace(stackTraceRef);
     span.data.mssql = {
-      stmt: tracingUtil.shorteDatabaseStatement(command),
+      stmt: tracingUtil.shortenDatabaseStatement(command),
       host: connectionParameters.host,
       port: connectionParameters.port,
       user: connectionParameters.user,

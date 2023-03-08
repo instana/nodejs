@@ -40,6 +40,12 @@ exports.wrap = (origObject, origMethod, instrumentationWrapperMethod) => {
           throw err;
         }
 
+        // CASE: some libs throw an error like throw ({ message: 'this is a msg' }) which does not create a proper stack
+        //       e.g. db2
+        if (!err.stack) {
+          throw err;
+        }
+
         if (originalCalled) return;
         originalCalled = true;
 
