@@ -21,7 +21,7 @@ module.exports.init = cls => {
     const parentSpan = cls.getCurrentSpan();
 
     // CASE: we only want to trace fs calls on entry spans
-    if (!parentSpan || constants.isExitSpan()) {
+    if (!parentSpan || constants.isExitSpan(parentSpan)) {
       return orig.apply(this, arguments);
     }
 
