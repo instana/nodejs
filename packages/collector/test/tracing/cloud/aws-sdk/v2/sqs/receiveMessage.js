@@ -5,7 +5,17 @@
 
 'use strict';
 
-const instana = require('../../../../../..')();
+const instana = require('../../../../../..')({
+  tracing: {
+    // We need to disable Otel here because on CI the AWS sdk loads the config file more often than locally
+    // and creates more spans than locally.
+    // Background: if you receive a message, aws verifies if you have a cached config file.
+    //             AWS tries to load the file from disk ~/.aws/config and caches it.
+    //             But if the file does not exist, it tries to load it again and again.
+    // https://github.com/aws/aws-sdk-js/blob/5bfd7c11067e1d52391deb06d165551218f7f19e/lib/shared-ini/ini-loader.js#L67
+    useOpentelemtry: false
+  }
+});
 
 const express = require('express');
 const request = require('request-promise');
@@ -183,6 +193,9 @@ async function receiveAsync() {
 function receiveCallback(cb) {
   numberOfReceiveMessageAttempts++;
   sqs.receiveMessage(receiveParams, (err, messagesData) => {
+    // eslint-disable-next-line no-console
+    console.log('sqs.receiveMessage', new Error().stack);
+
     const span = instana.currentSpan();
     span.disableAutoEnd();
 
