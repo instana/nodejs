@@ -4,8 +4,7 @@
 
 'use strict';
 
-const checkTableExistence = require('./util').checkTableExistence;
-const cleanup = require('./util').cleanup;
+const { checkTableExistence, cleanup, minimumNodeJsVersion } = require('./util');
 const semver = require('semver');
 const { v4: uuid } = require('uuid');
 const path = require('path');
@@ -62,7 +61,7 @@ const createTableName = () => {
 };
 
 function start(version, requestMethod) {
-  if (!supportedVersion(process.versions.node)) {
+  if (!supportedVersion(process.versions.node) || semver.lt(process.versions.node, minimumNodeJsVersion)) {
     mochaSuiteFn = describe.skip;
   } else {
     mochaSuiteFn = describe;
