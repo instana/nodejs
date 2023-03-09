@@ -5,12 +5,7 @@
 
 'use strict';
 
-const instana = require('../../../../../../src')({
-  tracing: {
-    // aws sdk produces some fs calls to read the config from disk on instantiation which we ignore.
-    useOpentelemetry: false
-  }
-});
+const instana = require('../../../../../../src')();
 const express = require('express');
 const AWS = require('aws-sdk');
 const { Consumer } = require('sqs-consumer');

@@ -15,12 +15,7 @@ if (process.env.AWS_SDK_CLIENT_DYNAMODB_REQUIRE !== '@aws-sdk/client-dynamodb') 
   mock('@aws-sdk/client-dynamodb', process.env.AWS_SDK_CLIENT_DYNAMODB_REQUIRE);
 }
 
-require('../../../../../..')({
-  tracing: {
-    // aws sdk produces some fs calls to read the config from disk on instantiation which we ignore.
-    useOpentelemetry: false
-  }
-});
+require('../../../../../..')();
 
 const express = require('express');
 const fetch = require('node-fetch');
