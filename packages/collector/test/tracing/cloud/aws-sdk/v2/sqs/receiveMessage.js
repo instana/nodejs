@@ -13,7 +13,7 @@ const instana = require('../../../../../..')({
     //             AWS tries to load the file from disk ~/.aws/config and caches it.
     //             But if the file does not exist, it tries to load it again and again.
     // https://github.com/aws/aws-sdk-js/blob/5bfd7c11067e1d52391deb06d165551218f7f19e/lib/shared-ini/ini-loader.js#L67
-    useOpentelemtry: false
+    useOpentelemetry: false
   }
 });
 
