@@ -193,9 +193,6 @@ async function receiveAsync() {
 function receiveCallback(cb) {
   numberOfReceiveMessageAttempts++;
   sqs.receiveMessage(receiveParams, (err, messagesData) => {
-    // eslint-disable-next-line no-console
-    console.log('sqs.receiveMessage', new Error().stack);
-
     const span = instana.currentSpan();
     span.disableAutoEnd();
 

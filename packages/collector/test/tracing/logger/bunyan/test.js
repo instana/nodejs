@@ -128,7 +128,7 @@ mochaSuiteFn('tracing/logger/bunyan', function () {
     });
   });
 
-  function runTest(url, expectErroneous, message, lengthOfMessage, spanLength) {
+  function runTest(url, expectErroneous, message, lengthOfMessage, numberOfSpans) {
     return appControls.trigger(url).then(() =>
       testUtils.retry(() =>
         agentControls.getSpans().then(spans => {
@@ -151,7 +151,7 @@ mochaSuiteFn('tracing/logger/bunyan', function () {
           // entry + exit + bunyan log (+ fs call)
           // NOTE: Bunyan uses process.stdout directly
           //       Length of 3 just ensures that our console.* instrumentation isn't counted when customer uses Bunyan
-          expect(spans.length).to.eql(spanLength || 3);
+          expect(spans.length).to.eql(numberOfSpans || 3);
         })
       )
     );
