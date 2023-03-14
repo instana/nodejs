@@ -5,6 +5,7 @@
 
 'use strict';
 
+const semver = require('semver');
 const { AsyncHooksContextManager } = require('@opentelemetry/context-async-hooks');
 const api = require('@opentelemetry/api');
 const { BasicTracerProvider } = require('@opentelemetry/sdk-trace-base');
@@ -19,6 +20,12 @@ const instrumentations = {
 //       logger.debug -> creates fs call -> calls transformToInstanaSpan -> calls logger.debug
 //       use uninstrumented logger, but useless for production
 module.exports.init = (_config, cls) => {
+  // CASE: otel offically does not support Node < 14
+  // https://github.com/open-telemetry/opentelemetry-js/tree/main#supported-runtimes
+  if (semver.lt(process.versions.node, '14.0.0')) {
+    return;
+  }
+
   Object.keys(instrumentations).forEach(k => {
     const value = instrumentations[k];
     const instrumentation = require(`./${value.name}`);
