@@ -102,7 +102,7 @@ ZIP_PREFIX=instana-nodejs-layer
 if [[ $LAMBDA_ARCHITECTURE == arm64 ]]; then
   LAYER_NAME=$LAYER_NAME-$LAMBDA_ARCHITECTURE
   ZIP_PREFIX=$ZIP_PREFIX-$LAMBDA_ARCHITECTURE
-  DOCKER_IMAGE_NAME=$DOCKER_IMAGE_NAME-$LAMBDA_ARCHITECTURE  
+  DOCKER_IMAGE_NAME=$DOCKER_IMAGE_NAME-$LAMBDA_ARCHITECTURE
 fi
 
 ZIP_NAME=$ZIP_PREFIX.zip
@@ -126,7 +126,7 @@ echo "SKIP_AWS_PUBLISH_LAYER: $SKIP_AWS_PUBLISH_LAYER"
 echo "####"
 
 if [[ -z $NO_PROMPT ]]; then
-  while true; do      
+  while true; do
       read -p "Do you wish to continue (yes or no)? " yn
       case $yn in
           [Yy]* ) echo "Let's go!"; break;;
@@ -300,7 +300,7 @@ if [[ -z $SKIP_AWS_PUBLISH_LAYER ]]; then
         --license-info $LICENSE \
         --zip-file fileb://$ZIP_NAME \
         --output json \
-        --compatible-runtimes nodejs10.x nodejs12.x nodejs14.x nodejs16.x \
+        --compatible-runtimes nodejs10.x nodejs12.x nodejs14.x nodejs16.x nodejs18.x \
         | jq '.Version' \
     )
     echo "   + published version $lambda_layer_version to region $region"
