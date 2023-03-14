@@ -515,12 +515,21 @@ fileRoutes.forEach(({ pathPrefix, uploadName, actions }) => {
   app.post(`/file-${pathPrefix}-promise`, async (req, res) => {
     try {
       const bucket = storage.bucket(bucketName);
-      const [file] = await bucket.upload(localFileName, { destination: uploadName, gzip: true });
+      const [file] = await bucket.upload(localFileName, { destination: uploadName, gzip: true, resumable: false });
+
       for (let i = 0; i < actions.length; i++) {
         const { method, args } = actions[i];
-        // eslint-disable-next-line no-await-in-loop
-        await file[method].apply(file, args);
+
+        if (method === 'save') {
+          // data must be a string or buffer
+          // eslint-disable-next-line no-await-in-loop
+          await file[method](args[0], { resumable: false });
+        } else {
+          // eslint-disable-next-line no-await-in-loop
+          await file[method].apply(file, args);
+        }
       }
+
       res.sendStatus(200);
     } catch (e) {
       log(e);
@@ -530,7 +539,8 @@ fileRoutes.forEach(({ pathPrefix, uploadName, actions }) => {
 
   app.post(`/file-${pathPrefix}-callback`, (req, res) => {
     const bucket = storage.bucket(bucketName);
-    bucket.upload(localFileName, { destination: uploadName, gzip: true }, (errUpload, file) => {
+
+    bucket.upload(localFileName, { destination: uploadName, gzip: true, resumable: false }, (errUpload, file) => {
       if (errUpload) {
         log(errUpload);
         return res.sendStatus(errUpload.code || 500);
@@ -539,7 +549,12 @@ fileRoutes.forEach(({ pathPrefix, uploadName, actions }) => {
       async_.series(
         actions.map(action => {
           const { method, args = [] } = action;
-          return file[method].bind(file, ...args);
+
+          if (method === 'save') {
+            return file[method].bind(file, args[0], { resumable: false });
+          } else {
+            return file[method].bind(file, ...args);
+          }
         }),
         err => {
           if (err) {
@@ -577,7 +592,7 @@ app.post('/file-write-stream', async (req, res) => {
   const bucket = storage.bucket(bucketName);
   const file = bucket.file(randomObjectName('target'));
   fs.createReadStream(localFileName)
-    .pipe(file.createWriteStream({ resumable: false }))
+    .pipe(file.createWriteStream())
     .on('error', err => {
       log(err);
       res.sendStatus(err.code || 500);
