@@ -6,6 +6,7 @@
 'use strict';
 
 const { expect } = require('chai');
+const semver = require('semver');
 const { fail } = expect;
 
 const constants = require('@instana/core').tracing.constants;
@@ -34,6 +35,8 @@ const bucketPrefixRegex = new RegExp(`^${bucketName}-.*$`);
  * https://console.cloud.google.com/home/dashboard?project=k8s-brewery&pli=1
  *
  * You can find the credentials in 1pwd.
+ *
+ * @google-cloud/storage@6 dropped support for Node v10.
  */
 if (
   !process.env.GCP_PROJECT ||
@@ -50,7 +53,11 @@ if (
 } else {
   let mochaSuiteFn;
 
-  if (!supportedVersion(process.versions.node) || !process.env.GCP_PROJECT) {
+  if (
+    !supportedVersion(process.versions.node) ||
+    !process.env.GCP_PROJECT ||
+    semver.lte(process.versions.node, '12.0.0')
+  ) {
     mochaSuiteFn = describe.skip;
   } else {
     mochaSuiteFn = describe;
