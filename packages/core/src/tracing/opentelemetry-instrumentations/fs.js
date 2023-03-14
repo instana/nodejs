@@ -37,9 +37,6 @@ module.exports.init = cls => {
       // because this can create a lot of require calls e.g. fs-extra creates > 500 calls
       // NOTE: createHook is called **after** requireParentSpan
       if (opts.args && opts.args[0] && opts.args[0].indexOf('/node_modules') !== -1) return false;
-
-      // eslint-disable-next-line no-console
-      console.log('createhook', operation, opts, new Error().stack);
       return true;
     }
   });
