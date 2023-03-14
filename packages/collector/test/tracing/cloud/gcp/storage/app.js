@@ -592,7 +592,7 @@ app.post('/file-write-stream', async (req, res) => {
   const bucket = storage.bucket(bucketName);
   const file = bucket.file(randomObjectName('target'));
   fs.createReadStream(localFileName)
-    .pipe(file.createWriteStream())
+    .pipe(file.createWriteStream({ resumable: false }))
     .on('error', err => {
       log(err);
       res.sendStatus(err.code || 500);
