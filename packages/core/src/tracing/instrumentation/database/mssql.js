@@ -22,11 +22,6 @@ exports.init = function init() {
 };
 
 function instrumentMssql(mssql) {
-  /*
-  mssql.Request.prototype.query = function fakeQuery() {
-    throw new Error('SHIT FROM QUERY');
-  };
-  */
   instrumentRequest(mssql.Request);
   instrumentPreparedStatement(mssql.PreparedStatement);
   instrumentTransaction(mssql.Transaction);
