@@ -515,9 +515,8 @@ fileRoutes.forEach(({ pathPrefix, uploadName, actions }) => {
   app.post(`/file-${pathPrefix}-promise`, async (req, res) => {
     try {
       const bucket = storage.bucket(bucketName);
-      // NOTE: when passing resumable: false, you need to pass the option to file.save too.
-      //       resumable strategy [default] = uses google auth lib request
-      //       simple strategy = uses teeny request, which we do not trace
+      // NOTE: when passing `resumable: false`, you need to pass the option to `file.save` too.
+      //       there is currently no test for `resumeable: false`
       const [file] = await bucket.upload(localFileName, { destination: uploadName, gzip: true });
 
       for (let i = 0; i < actions.length; i++) {
