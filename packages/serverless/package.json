@@ -66,8 +66,7 @@
   "dependencies": {
     "@instana/core": "2.18.1",
     "agent-base": "^6.0.2",
-    "https-proxy-agent": "^5.0.0",
-    "semver": "7.3.3"
+    "https-proxy-agent": "^5.0.0"
   },
   "devDependencies": {
     "no-code2": "2.0.0"
