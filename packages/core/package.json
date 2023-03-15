@@ -124,7 +124,6 @@
   },
   "homepage": "https://github.com/instana/nodejs/blob/main/packages/core/README.md",
   "dependencies": {
-    "async-hook-jl": "^1.7.6",
     "cls-bluebird": "^2.1.0",
     "lru-cache": "6.0.0",
     "methods": "^1.1.2",
