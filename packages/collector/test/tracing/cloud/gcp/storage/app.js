@@ -515,19 +515,16 @@ fileRoutes.forEach(({ pathPrefix, uploadName, actions }) => {
   app.post(`/file-${pathPrefix}-promise`, async (req, res) => {
     try {
       const bucket = storage.bucket(bucketName);
-      const [file] = await bucket.upload(localFileName, { destination: uploadName, gzip: true, resumable: false });
+      // NOTE: when passing resumable: false, you need to pass the option to file.save too.
+      //       resumable strategy [default] = uses google auth lib request
+      //       simple strategy = uses teeny request, which we do not trace
+      const [file] = await bucket.upload(localFileName, { destination: uploadName, gzip: true });
 
       for (let i = 0; i < actions.length; i++) {
         const { method, args } = actions[i];
 
-        if (method === 'save') {
-          // data must be a string or buffer
-          // eslint-disable-next-line no-await-in-loop
-          await file[method](args[0], { resumable: false });
-        } else {
-          // eslint-disable-next-line no-await-in-loop
-          await file[method].apply(file, args);
-        }
+        // eslint-disable-next-line no-await-in-loop
+        await file[method].apply(file, args);
       }
 
       res.sendStatus(200);
@@ -540,7 +537,7 @@ fileRoutes.forEach(({ pathPrefix, uploadName, actions }) => {
   app.post(`/file-${pathPrefix}-callback`, (req, res) => {
     const bucket = storage.bucket(bucketName);
 
-    bucket.upload(localFileName, { destination: uploadName, gzip: true, resumable: false }, (errUpload, file) => {
+    bucket.upload(localFileName, { destination: uploadName, gzip: true }, (errUpload, file) => {
       if (errUpload) {
         log(errUpload);
         return res.sendStatus(errUpload.code || 500);
@@ -549,12 +546,7 @@ fileRoutes.forEach(({ pathPrefix, uploadName, actions }) => {
       async_.series(
         actions.map(action => {
           const { method, args = [] } = action;
-
-          if (method === 'save') {
-            return file[method].bind(file, args[0], { resumable: false });
-          } else {
-            return file[method].bind(file, ...args);
-          }
+          return file[method].bind(file, ...args);
         }),
         err => {
           if (err) {
