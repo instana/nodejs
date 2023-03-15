@@ -65,8 +65,7 @@
   "dependencies": {
     "@instana/core": "2.18.1",
     "@instana/metrics-util": "2.18.1",
-    "@instana/serverless": "2.18.1",
-    "uuid": "^8.3.2"
+    "@instana/serverless": "2.18.1"
   },
   "devDependencies": {
     "no-code2": "2.0.0"
