@@ -116,7 +116,7 @@ function shouldBeBypassed(parentSpan, options) {
     header => header.toLowerCase().indexOf('google-api-nodejs-client') > -1
   );
 
-  const hostMatchesGPC = options && options.host && options.host.indexOf('googleapis') !== -1;
+  const hostMatchesGPC = options && options.host && options.host === 'storage.googleapis.com';
   if (isGCPNodeJSHeader && hostMatchesGPC) return true;
 
   return false;
