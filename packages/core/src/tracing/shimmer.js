@@ -14,7 +14,7 @@ logger = require('../logger').getLogger('tracing/shimmer', newLogger => {
 exports.unwrap = shimmer.unwrap;
 
 /**
- * This wrapper pretends that the application of the customer dies.
+ * This wrapper prevents that the application of the customer dies.
  *
  * We won't catch errors which happened e.g. when the result of the original fn comes back.
  * This is fine, because we want to primarly catch errors which happened before the library call.
