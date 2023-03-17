@@ -54,6 +54,7 @@ let patterns = [
   /\/mysql2\/index.js/,
   /\/mysql2\/promise.js/,
   /\/mysql\/index.js/,
+  /\/couchbase\/dist/,
   /\/nats\/index.js/,
   /\/node-nats-streaming\/index.js/,
   /\/node-rdkafka\/lib\//,

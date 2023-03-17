@@ -305,6 +305,21 @@ kafka: &kafka
       KAFKA_CREATE_TOPICS: "test:1:1,test-topic-1:1:1,test-topic-2:1:1,test-batch-topic-1:1:1,test-batch-topic-2:1:1,rdkafka-topic:1:1,kafka-avro-topic:1:1"
       KAFKA_ZOOKEEPER_CONNECT: 127.0.0.1:2181
 
+couchbase-server: &couchbase-server
+  - image: kirrg/couchbase-server
+    environment:
+      - CLUSTER_NAME=couchbase-demo
+      - COUCHBASE_ADMINISTRATOR_USERNAME=node
+      - COUCHBASE_ADMINISTRATOR_PASSWORD=nodepwd
+      - COUCHBASE_BUCKET=projects
+      - COUCHBASE_BUCKET_2=companies
+      - COUCHBASE_BUCKET_RAMSIZE=512
+      - COUCHBASE_BUCKET_RAMSIZE_2=512
+      - COUCHBASE_RAM_SIZE=2048
+      - COUCHBASE_INDEX_RAM_SIZE=512
+    entrypoint: [""]
+    command: sh -c "/opt/couchbase/init/init-cbserver.sh"      
+
 schema-registry: &schema-registry
   - image: confluentinc/cp-schema-registry:4.1.0
     environment:
@@ -374,6 +389,7 @@ jobs:
       - <<: *nats
       - <<: *nats-streaming
       - <<: *memcached
+      - <<: *couchbase-server
     <<: *shared
     parallelism: 20
     resource_class: large
@@ -394,6 +410,7 @@ jobs:
       - <<: *nats
       - <<: *nats-streaming
       - <<: *memcached
+      - <<: *couchbase-server
     <<: *shared
     parallelism: 20
     resource_class: large
@@ -417,6 +434,7 @@ jobs:
       - <<: *nats
       - <<: *nats-streaming
       - <<: *memcached
+      - <<: *couchbase-server
     <<: *shared
     parallelism: 20
     resource_class: large
@@ -439,6 +457,7 @@ jobs:
       - <<: *nats
       - <<: *nats-streaming
       - <<: *memcached
+      - <<: *couchbase-server
     <<: *shared
     parallelism: 20
     resource_class: large
@@ -461,6 +480,7 @@ jobs:
       - <<: *nats
       - <<: *nats-streaming
       - <<: *memcached
+      - <<: *couchbase-server
     <<: *shared
     parallelism: 20
     resource_class: large
@@ -481,6 +501,7 @@ jobs:
       - <<: *nats
       - <<: *nats-streaming
       - <<: *memcached
+      - <<: *couchbase-server
     <<: *shared
     parallelism: 20
     resource_class: large
@@ -503,6 +524,7 @@ jobs:
       - <<: *nats
       - <<: *nats-streaming
       - <<: *memcached
+      - <<: *couchbase-server
     <<: *shared
     parallelism: 1
     resource_class: large

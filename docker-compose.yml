@@ -1,4 +1,3 @@
-version: '2'
 services:
   redis:
     image: redis:5.0.14
@@ -9,6 +8,29 @@ services:
     image: mongo:4.1.13
     ports:
       - 27017:27017
+
+  couchbase-server:
+    image: kirrg/couchbase-server:latest
+    ports:
+     - 8091-8096:8091-8096
+     - 11210:11210
+    environment:
+      - CLUSTER_NAME=couchbase-demo
+      - COUCHBASE_ADMINISTRATOR_USERNAME=node
+      - COUCHBASE_ADMINISTRATOR_PASSWORD=nodepwd
+      - COUCHBASE_BUCKET=projects
+      - COUCHBASE_BUCKET_2=companies
+      - COUCHBASE_BUCKET_RAMSIZE=512
+      - COUCHBASE_BUCKET_RAMSIZE_2=512
+      - COUCHBASE_RAM_SIZE=2048
+      - COUCHBASE_INDEX_RAM_SIZE=512
+    hostname: couchbase-server
+    container_name: couchbase-server
+    working_dir: /opt/couchbase
+    stdin_open: true
+    tty: true
+    entrypoint: [""]
+    command: sh -c "/opt/couchbase/init/init-cbserver.sh"
 
   # # Elasticsearch 2.3
   # elasticsearch:
