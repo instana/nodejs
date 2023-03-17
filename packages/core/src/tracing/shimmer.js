@@ -17,7 +17,7 @@ exports.unwrap = shimmer.unwrap;
  * This wrapper pretends that the application of the customer dies.
  *
  * We won't catch errors which happened e.g. when the result of the original fn comes back.
- * This is fine, because we want to primarly catch sync solution.
+ * This is fine, because we want to primarly catch errors which happened before the library call.
  */
 exports.wrap = (origObject, origMethod, instrumentationWrapperMethod) => {
   shimmer.wrap(origObject, origMethod, function shimmerWrapper(originalFunction) {
@@ -46,10 +46,10 @@ exports.wrap = (origObject, origMethod, instrumentationWrapperMethod) => {
           throw err;
         }
 
+        logger.warn(`An internal error happend in the Instana Node.js collector. Please contact support. ${err.stack}`);
+
         if (originalCalled) return;
         originalCalled = true;
-
-        logger.warn(`Catched error from instrumentation: ${err.message}, ${err.stack}`);
 
         // CASE: we pretend that there was no error in our instrumentation, we only log a warning and
         //       ensure tht the customer's application does not die.
