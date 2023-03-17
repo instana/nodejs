@@ -79,6 +79,15 @@ function evaluateHeaderValue(headerValue, validator) {
  * for which a higher level instrumentation exists, for example, HTTP requests made by AWS SQS that represent the queue
  * polling when we already created an SQS entry span for it.
  *
+ * When using GCP storage library, the default way to upload a file is the resumable strategy.
+ * This strategy uses google-auth-library -> gaxios -> http/https node core libs, which create http exit spans.
+ * We want to suppress these spans because they have no further benefit for the customers.
+ * Important: the http request happens after the gcp span async context. Therefor the parentSpan
+ * is the http server entry.
+ *
+ * https://github.com/googleapis/nodejs-storage/blob/v6.9.4/src/resumable-upload.ts#L912
+ * https://github.com/googleapis/gaxios/blob/v5.1.0/src/gaxios.ts
+ *
  * @param {InstanaSpan} parentSpan The currently active parent span
  * @param {Object} options The standard lib request options:
  * https://nodejs.org/dist/latest-v14.x/docs/api/http.html#http_http_request_options_callback
@@ -101,6 +110,15 @@ function shouldBeBypassed(parentSpan, options) {
   if (parentSpan && parentSpan.n === 'sqs' && isAWSNodeJSHeader && hostMatchesSQS) {
     return true;
   }
+
+  const isGCPNodeJSHeader = evaluateHeaderValue(
+    userAgent,
+    header => header.toLowerCase().indexOf('google-api-nodejs-client') > -1
+  );
+
+  const hostMatchesGPC = options && options.host && options.host === 'storage.googleapis.com';
+  if (isGCPNodeJSHeader && hostMatchesGPC) return true;
+
   return false;
 }
 

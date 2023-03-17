@@ -515,12 +515,17 @@ fileRoutes.forEach(({ pathPrefix, uploadName, actions }) => {
   app.post(`/file-${pathPrefix}-promise`, async (req, res) => {
     try {
       const bucket = storage.bucket(bucketName);
+      // NOTE: when passing `resumable: false`, you need to pass the option to `file.save` too.
+      //       there is currently no test for `resumeable: false`
       const [file] = await bucket.upload(localFileName, { destination: uploadName, gzip: true });
+
       for (let i = 0; i < actions.length; i++) {
         const { method, args } = actions[i];
+
         // eslint-disable-next-line no-await-in-loop
         await file[method].apply(file, args);
       }
+
       res.sendStatus(200);
     } catch (e) {
       log(e);
@@ -530,6 +535,7 @@ fileRoutes.forEach(({ pathPrefix, uploadName, actions }) => {
 
   app.post(`/file-${pathPrefix}-callback`, (req, res) => {
     const bucket = storage.bucket(bucketName);
+
     bucket.upload(localFileName, { destination: uploadName, gzip: true }, (errUpload, file) => {
       if (errUpload) {
         log(errUpload);
