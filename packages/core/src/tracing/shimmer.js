@@ -21,8 +21,8 @@ exports.unwrap = shimmer.unwrap;
  * This is fine, because we want to primarly catch errors which happened before the library call.
  */
 exports.wrap = (origObject, origMethod, instrumentationWrapperMethod) => {
-  shimmer.wrap(origObject, origMethod, function shimmerWrapper(originalFunction) {
-    return function () {
+  shimmer.wrap(origObject, origMethod, function instanaShimmerWrap(originalFunction) {
+    return function instanaShimmerWrapInner() {
       let originalCalled = false;
       const originalThis = this;
       const originalArgs = arguments;
