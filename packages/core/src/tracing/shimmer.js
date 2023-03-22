@@ -14,8 +14,9 @@ logger = require('../logger').getLogger('tracing/shimmer', newLogger => {
 exports.unwrap = shimmer.unwrap;
 
 /**
- * This wrapper around the shimmer library prevents that the application of the customer terminates when one of our instrumentations throws an error _in the instrumencation code_.
- * Errors that are produced by the application or the instrumented library are re-thrown (we do not want to change the behavior of the application under monitoring).
+ * This wrapper around the shimmer library prevents that the application of the customer terminates when one of our
+ * instrumentations throws an error _in the instrumencation code_. Errors that are produced by the application or the
+ * instrumented library are re-thrown (we do not want to change the behavior of the application under monitoring).
  *
  * We won't catch errors which happened e.g. when the result of the original fn comes back.
  * This is fine, because we want to primarly catch errors which happened before the library call.
