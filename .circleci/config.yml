@@ -232,7 +232,7 @@ shared: &shared
         #   https://github.com/instana/nodejs/commit/84b597773f94b4a6b18356652396c92cc16ea4c3
         # - @types/*: These packages are installed to provide additional types that tsc uses, but we never explicitly
         #   require those packages, thus they get flagged as false positives by depcheck.
-        command: "([[ $(node -v) =~ ^v18.*$ ]] && node_modules/.bin/lerna exec '../../node_modules/.bin/depcheck --skip-missing --ignores nan,no-code2,agent-base,@types/*') || [[ ! $(node -v) =~ ^v18.*$ ]]"
+        command: "([[ $(node -v) =~ ^v18.*$ ]] && npm run depcheck) || [[ ! $(node -v) =~ ^v18.*$ ]]"
 
     # Clean up old left over AWS resources from earlier test runs (created more more than 3 hours ago):
     # Do not execute the script on every parallel build

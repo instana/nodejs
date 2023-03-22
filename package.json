@@ -51,6 +51,7 @@
     "typecheck": "tsc",
     "update-deps": "lerna exec '../../node_modules/.bin/ncu --upgrade' && lerna exec 'npm i --package-lock-only' && npm run reinstall-deps",
     "verify": "lerna run verify --stream",
+    "depcheck": "lerna exec 'npx depcheck --skip-missing --ignores nan,no-code2,agent-base,@types/*' --stream",
     "version": "lerna clean --yes && lerna bootstrap --no-ci --ignore-scripts -- --package-lock-only --no-audit && git add packages/*/package-lock.json"
   },
   "devDependencies": {
