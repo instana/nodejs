@@ -275,3 +275,5 @@ exports._debugCurrentSpanName = function _debugCurrentSpanName() {
   }
   return `current: ${s.n}`;
 };
+
+exports.shimmer = require('./shimmer');

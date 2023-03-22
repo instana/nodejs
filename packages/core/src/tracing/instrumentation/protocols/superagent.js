@@ -5,7 +5,7 @@
 
 'use strict';
 
-const shimmer = require('shimmer');
+const shimmer = require('../../shimmer');
 
 /** @type {import('../../../logger').GenericLogger} */
 let logger;

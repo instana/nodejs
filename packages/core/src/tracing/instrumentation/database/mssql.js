@@ -5,12 +5,11 @@
 
 'use strict';
 
-const shimmer = require('shimmer');
-
 const requireHook = require('../../../util/requireHook');
 const tracingUtil = require('../../tracingUtil');
 const constants = require('../../constants');
 const cls = require('../../cls');
+const shimmer = require('../../shimmer');
 
 let isActive = false;
 

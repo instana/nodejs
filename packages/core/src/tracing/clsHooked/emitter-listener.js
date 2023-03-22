@@ -25,7 +25,7 @@
 
 'use strict';
 
-const shimmer = require('shimmer');
+const shimmer = require('../shimmer');
 const wrap = shimmer.wrap;
 const unwrap = shimmer.unwrap;
 

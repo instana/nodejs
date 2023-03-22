@@ -4,7 +4,7 @@
 
 'use strict';
 
-const shimmer = require('shimmer');
+const shimmer = require('../../shimmer');
 
 let logger;
 logger = require('../../../logger').getLogger('tracing/grpcjs', newLogger => {

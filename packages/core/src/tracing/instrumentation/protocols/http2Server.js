@@ -6,7 +6,7 @@
 'use strict';
 
 const http2 = require('http2');
-const shimmer = require('shimmer');
+const shimmer = require('../../shimmer');
 
 const cls = require('../../cls');
 const constants = require('../../constants');

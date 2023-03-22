@@ -15,7 +15,7 @@ const {
   getExtraHeadersFromMessage,
   mergeExtraHeadersFromServerResponseOrClientRequest
 } = require('./captureHttpHeadersUtil');
-const shimmer = require('shimmer');
+const shimmer = require('../../shimmer');
 const cls = require('../../cls');
 
 let extraHttpHeadersToCapture;
