@@ -20,6 +20,24 @@ exports.unwrap = shimmer.unwrap;
  *
  * We won't catch errors which happened e.g. when the result of the original fn comes back.
  * This is fine, because we want to primarly catch errors which happened before the library call.
+ *
+ * ----------------------------------------------------------------
+ *
+ * Assuming the following flow for an uninstrumented application:
+ *
+ * application code -> original library function
+ *
+ * After applying instrumentation with the help of this wrapper, the flow will looks like this:
+ *
+ * application code -> (anonymous function in line 24 which we might want to give a name, see below) ->
+ * instrumentationWrapperMethod (e.g. shimQuery from our mysql instrumentation) ->
+ * instanaOriginalFunctionWrapper -> original library function.
+ *
+ * This serves two purposes:
+ * 1. We can insert one central try-catch into the flow that is applied for all our instrumentations.
+ * 2. The additional named function instanaOriginalFunctionWrapper enables us to inspect the stack trace of errors
+ *    that are thrown and thus determine whether they have been thrown in our instrumentation code or in the
+ *    instrumented library.
  */
 exports.wrap = (origObject, origMethod, instrumentationWrapperMethod) => {
   shimmer.wrap(origObject, origMethod, function instanaShimmerWrap(originalFunction) {
