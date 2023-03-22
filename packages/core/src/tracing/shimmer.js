@@ -29,6 +29,7 @@ exports.wrap = (origObject, origMethod, instrumentationWrapperMethod) => {
       const originalArgs = arguments;
 
       function instanaOriginalFunctionWrapper() {
+        // NOTE: we keep this check for super safety. we are not aware of a use case atm.
         if (originalCalled) return;
         originalCalled = true;
         return originalFunction.apply(this, arguments);
