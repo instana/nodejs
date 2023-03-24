@@ -35,7 +35,7 @@ const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : descri
 
     ['Promises', 'Callbacks'].forEach(apiType => {
       describe(apiType, function () {
-        registerTests.call(this, apiType, version);
+        registerTests.call(this, apiType);
       });
     });
   });
