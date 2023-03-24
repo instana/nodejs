@@ -49,16 +49,21 @@ function enter(ctx) {
       return;
     }
 
-    logger.debug('%s:%s is not running the agent. Trying default gateway...', agentHost, agentOpts.port, {
-      error: localhostCheckErr
-    });
+    logger.debug(
+      'No Instana host agent is running on %s:%s. Trying the default gateway next.',
+      agentHost,
+      agentOpts.port,
+      {
+        error: localhostCheckErr
+      }
+    );
 
     getDefaultGateway(function onGetDefaultGateway(getDefaultGatewayErr, defaultGateway) {
       if (getDefaultGatewayErr) {
-        logger.debug('Error while trying to determine default gateway.', { error: getDefaultGatewayErr });
+        logger.debug('Error while trying to determine the default gateway.', { error: getDefaultGatewayErr });
         logger.warn(
-          'Agent cannot be contacted via %s:%s and default gateway cannot be determined. ' +
-            'Scheduling reattempt of agent host lookup in %s millis.',
+          'The Instana host agent cannot be contacted via %s:%s and the default gateway cannot be determined. ' +
+            'Scheduling another attempt to establish a connection to the Instana host agent in %s ms.',
           agentHost,
           agentOpts.port,
           retryTimeoutMillis
@@ -75,12 +80,12 @@ function enter(ctx) {
           return;
         }
 
-        logger.debug('Failed to contact agent via default gateway %s', defaultGateway, {
+        logger.debug('Failed to reach the Instana host agent via the default gateway %s', defaultGateway, {
           error: defaultGatewayCheckErr
         });
         logger.warn(
-          'Agent cannot be contacted via %s:%s nor via default gateway %s:%s. ' +
-            'Scheduling reattempt of agent host lookup in %s millis.',
+          'The Instana host agent can neither be reached via %s:%s nor via the default gateway %s:%s. ' +
+            'Scheduling another attempt to establish a connection to the Instana host agent in %s ms.',
           agentHost,
           agentOpts.port,
           defaultGateway,
@@ -157,6 +162,6 @@ function checkHost(host, cb) {
  * @param {string} host
  */
 function setAgentHost(host) {
-  logger.info('Attempting agent communication via %s:%s', host, agentOpts.port);
+  logger.info('Trying to reach the Instana host agent on %s:%s', host, agentOpts.port);
   agentOpts.host = host;
 }

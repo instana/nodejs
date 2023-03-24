@@ -77,7 +77,13 @@ function tryToAnnounce(ctx, retryDelay = initialRetryDelay) {
   }
   agentConnection.announceNodeCollector((err, rawResponse) => {
     if (err) {
-      logger.debug('Announce attempt failed: %s. Will retry in %s ms', err.message, retryDelay);
+      logger.info(
+        'Establishing the connection to the Instana host agent has failed: %s. This usually means that the Instana ' +
+          'host agent is not yet ready to accept connections. This is not an error. Establishing the connection will ' +
+          'be retried in %s ms.',
+        err.message,
+        retryDelay
+      );
       setTimeout(tryToAnnounce, retryDelay, ctx, nextRetryDelay).unref();
       return;
     }
@@ -86,19 +92,26 @@ function tryToAnnounce(ctx, retryDelay = initialRetryDelay) {
     try {
       agentResponse = JSON.parse(rawResponse);
     } catch (e) {
-      logger.warn(
-        'Failed to JSON.parse agent response. Response was %s. Will retry in %s ms',
-        rawResponse,
+      logger.error(
+        "Failed to parse the JSON payload from the Instana host agent's response. Establishing the " +
+          'connection to the Instana host agent will be retried in %s ms. The response payload was %s.',
         retryDelay,
+        rawResponse,
         e
       );
       setTimeout(tryToAnnounce, retryDelay, ctx, nextRetryDelay).unref();
       return;
     }
 
-    const pid = agentResponse.pid;
-    logger.info('Overwriting pid for reporting purposes to: %s', pid);
-    pidStore.pid = pid;
+    if (pidStore.pid !== agentResponse.pid) {
+      logger.info(
+        'Reporting data to the Instana host agent with the PID from the root namespace (%s) instead of the ' +
+          'in-container PID (%s).',
+        agentResponse.pid,
+        pidStore.pid
+      );
+      pidStore.pid = agentResponse.pid;
+    }
 
     agentOpts.agentUuid = agentResponse.agentUuid;
     applyAgentConfiguration(agentResponse);
@@ -123,17 +136,17 @@ function applySecretsConfiguration(agentResponse) {
   if (agentResponse.secrets) {
     if (!(typeof agentResponse.secrets.matcher === 'string')) {
       logger.warn(
-        'Received invalid secrets configuration from agent, attribute matcher is not a string: $s',
+        'Received an invalid secrets configuration from the Instana host agent, attribute matcher is not a string: $s',
         agentResponse.secrets.matcher
       );
     } else if (Object.keys(secrets.matchers).indexOf(agentResponse.secrets.matcher) < 0) {
       logger.warn(
-        'Received invalid secrets configuration from agent, matcher is not supported: $s',
+        'Received an invalid secrets configuration from the Intana agent, matcher is not supported: $s',
         agentResponse.secrets.matcher
       );
     } else if (!Array.isArray(agentResponse.secrets.list)) {
       logger.warn(
-        'Received invalid secrets configuration from agent, attribute list is not an array: $s',
+        'Received an invalid secrets configuration from the Instana host agent, attribute list is not an array: $s',
         agentResponse.secrets.list
       );
     } else {
@@ -207,7 +220,7 @@ function applySpanBatchingConfiguration(agentResponse) {
   // Fallback for Node.js discovery prior to version 1.2.18, which did not sent the span-batching-enabled config in the
   // common tracing options section. We can remove this legacy fallback approximately in May 2023.
   if (agentResponse.spanBatchingEnabled === true || agentResponse.spanBatchingEnabled === 'true') {
-    logger.info('Enabling span batching via agent configuration.');
+    logger.info('Enabling span batching via Instana host agent configuration.');
     ensureNestedObjectExists(agentOpts.config, ['tracing']);
     agentOpts.config.tracing.spanBatchingEnabled = true;
   }

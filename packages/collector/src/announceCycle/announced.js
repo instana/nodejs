@@ -33,11 +33,12 @@ module.exports = {
 function checkWhetherAgentIsReadyToAccept(totalNumberOfAttempts, ctx) {
   agentConnection.checkWhetherAgentIsReadyToAcceptData(ready => {
     if (ready) {
-      logger.info('Agent is ready to accept.');
+      logger.info('The Instana host agent is ready to accept data.');
       ctx.transitionTo('agentready');
     } else if (totalNumberOfAttempts > MAX_RETRIES) {
       logger.warn(
-        'Agent is not ready to accept data after %s attempts. Restarting announce cycle.',
+        'The Instana host agent is not yet ready to accept data after %s attempts. Restarting the cycle to establish ' +
+          'a connection.',
         totalNumberOfAttempts
       );
       ctx.transitionTo('unannounced');
