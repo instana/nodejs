@@ -77,7 +77,7 @@ function tryToAnnounce(ctx, retryDelay = initialRetryDelay) {
   }
   agentConnection.announceNodeCollector((err, rawResponse) => {
     if (err) {
-      logger.info('Announce attempt failed: %s. Will retry in %s ms', err.message, retryDelay);
+      logger.debug('Announce attempt failed: %s. Will retry in %s ms', err.message, retryDelay);
       setTimeout(tryToAnnounce, retryDelay, ctx, nextRetryDelay).unref();
       return;
     }
