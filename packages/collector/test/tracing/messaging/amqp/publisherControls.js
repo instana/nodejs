@@ -25,6 +25,7 @@ exports.registerTestHooks = opts => {
     env.AGENT_PORT = agentPort;
     env.APP_PORT = appPort;
     env.TRACING_ENABLED = opts.enableTracing !== false;
+    env.AMQPLIB_VERSION = opts.version;
 
     app = spawn('node', [path.join(__dirname, `publisher${opts.apiType}.js`)], {
       stdio: config.getAppStdio(),

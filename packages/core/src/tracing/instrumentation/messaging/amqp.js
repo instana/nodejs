@@ -151,7 +151,16 @@ function shimDispatchMessage(originalFunction) {
 function instrumentedDispatchMessage(ctx, originalDispatchMessage, originalArgs) {
   const fields = originalArgs[0] || {};
   const consumerTag = fields.consumerTag;
-  const consumer = ctx.consumers[consumerTag];
+  let consumer;
+
+  // 0.10.x
+  // https://github.com/amqp-node/amqplib/commit/d483493e6825ed7d770e68f4cec60979d0feeae7
+  if (ctx.consumers.get && typeof ctx.consumers.get === 'function') {
+    consumer = ctx.consumers.get(consumerTag);
+  } else {
+    consumer = ctx.consumers[consumerTag];
+  }
+
   if (!consumer) {
     // amqplib will throw an error for this call because it can't be routed, so we don't create a span for it.
     return originalDispatchMessage.apply(ctx, originalArgs);
@@ -236,6 +245,7 @@ function instrumentedChannelModelGet(ctx, originalGet, originalArgs) {
   // we simply cancel the span instead of transmitting it.
   return cls.ns.runPromise(() => {
     const span = cls.startSpan('rabbitmq', constants.ENTRY);
+
     return originalGet.apply(ctx, originalArgs).then(result => {
       if (!result) {
         // get did not fetch a new message from RabbitMQ (because the queue has no messages), no need to create a span.
