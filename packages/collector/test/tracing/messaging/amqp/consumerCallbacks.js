@@ -200,7 +200,7 @@ function consumerConfirm(conn) {
   }
 }
 
-amqp.connect('amqp://localhost', (err, conn) => {
+amqp.connect('amqp://127.0.0.1', (err, conn) => {
   if (err != null) {
     return bail(err);
   }

@@ -191,7 +191,7 @@ app.listen(port, () => {
   log(`Listening on port: ${port}`);
 });
 
-amqp.connect('amqp://localhost', (err, conn) => {
+amqp.connect('amqp://127.0.0.1', (err, conn) => {
   if (err) {
     return bail(err);
   }
