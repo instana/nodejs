@@ -35,7 +35,10 @@ mochaSuiteFn('tracing a babel/typescript setup', function () {
       }
       // If this fails with "Error: Cannot find module './testUtils'" there might be left over node_modules installed by
       // a different Node.js version. rm -rf packages/collector/test/apps/babel-typescript/node_modules and run again.
-      executeCallback('npm install && npm run build', babelAppDir, done);
+
+      // We use --no-optional to make npm install a bit faster. Compiling native add-ons (gcstats.js and friends)
+      // might take longer than the the timeout on CI, and they are not relevant for this test suite.
+      executeCallback('npm install --no-optional && npm run build', babelAppDir, done);
     });
   });
 
@@ -47,7 +50,10 @@ mochaSuiteFn('tracing a babel/typescript setup', function () {
 
   const controls = new ProcessControls({
     appPath: path.join(__dirname, '../../../apps/babel-typescript'),
-    useGlobalAgent: true
+    useGlobalAgent: true,
+    env: {
+      INSTANA_COPY_PRECOMPILED_NATIVE_ADDONS: false
+    }
   });
   ProcessControls.setUpHooks(controls);
 
