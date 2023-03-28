@@ -120,6 +120,24 @@ app.post('/send-to-get-queue', (req, res) => {
     });
 });
 
+app.post('/publish-to-confirm-channel-without-callback', (req, res) => {
+  // @golevelup/nestjs-rabbitmq 3.3.0 did not pass the confirm callback
+  // eslint-disable-next-line max-len
+  // https://github.com/golevelup/nestjs/blob/%40golevelup/nestjs-rabbitmq%403.3.0/packages/rabbitmq/src/amqp/connection.ts#L541
+  // https://github.com/jwalton/node-amqp-connection-manager/blob/v4.1.11/src/ChannelWrapper.ts#L13
+  // https://github.com/amqp-node/amqplib/blob/v0.10.3/lib/channel_model.js#L265
+  confirmChannel.publish(exchange, '', Buffer.from(req.body.message));
+
+  request(`http://127.0.0.1:${agentPort}`)
+    .then(() => {
+      res.status(201).send('OK');
+    })
+    .catch(err2 => {
+      log(err2);
+      res.sendStatus(500);
+    });
+});
+
 app.post('/send-to-confirm-queue', (req, res) => {
   // Even with a ConfirmChannel and even in the promise API case, sendToQueue/publish do not return a promise, but only
   // accept a callback, see
