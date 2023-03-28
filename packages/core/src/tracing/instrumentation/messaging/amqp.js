@@ -459,7 +459,12 @@ function instrumentedCallbackModelPublish(ctx, originalFunction, originalArgs) {
         span.transmit();
         originalCb.apply(this, arguments);
       });
+    } else {
+      // CASE: confirm callback missing. amqplib does not throw any error, just transmit the span
+      span.d = Date.now() - span.ts;
+      span.transmit();
     }
+
     return originalFunction.apply(ctx, originalArgs);
   });
 }
