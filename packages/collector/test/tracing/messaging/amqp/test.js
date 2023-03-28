@@ -125,6 +125,22 @@ const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : descri
         )
       ));
 
+    if (apiType === 'Promises') {
+      it('must record an exit span for ConfirmChannel#publish without confirm callback', () =>
+        publisherControls.publishToConfirmChannelWithoutCallback('Ohai!').then(() =>
+          retry(() =>
+            agentControls.getSpans().then(spans => {
+              const httpEntry = verifyHttpEntry(spans);
+              const rabbitMqExit = verifyRabbitMqExit(spans, httpEntry);
+              expect(rabbitMqExit.data.rabbitmq.exchange).to.eql('instana-test-exchange-comfirm');
+              expect(rabbitMqExit.data.rabbitmq.key).to.not.exist;
+              verifyHttpExit(spans, httpEntry);
+            })
+          )
+        ));
+    }
+
+    // `sendToQueue` calls .publish internally
     it('must record an exit span for ConfirmChannel#sendToQueue', () =>
       publisherControls.sendToConfirmQueue('Ohai!').then(() =>
         retry(() =>

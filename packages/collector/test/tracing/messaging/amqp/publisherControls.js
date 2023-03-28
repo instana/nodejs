@@ -90,6 +90,18 @@ exports.sendToGetQueue = (message, headers) =>
     }
   });
 
+exports.publishToConfirmChannelWithoutCallback = (message, headers) =>
+  request({
+    method: 'POST',
+    url: `http://127.0.0.1:${appPort}/publish-to-confirm-channel-without-callback`,
+    json: true,
+    simple: true,
+    headers,
+    body: {
+      message
+    }
+  });
+
 exports.sendToConfirmQueue = (message, headers) =>
   request({
     method: 'POST',

@@ -62,7 +62,6 @@ function instrumentedSendMessage(ctx, originalSendMessage, originalArgs) {
       propagateSuppression(originalArgs[0]);
       propagateSuppression(originalArgs[1]);
     }
-
     return originalSendMessage.apply(ctx, originalArgs);
   }
 
@@ -71,6 +70,7 @@ function instrumentedSendMessage(ctx, originalSendMessage, originalArgs) {
     return originalSendMessage.apply(ctx, originalArgs);
   }
 
+  // instrumentedChannelModelPublish starts the span without data. The fn is responsible to transmit the span.
   if (isExitSpan && parentSpan.n === 'rabbitmq') {
     // if ConfirmChannel#publish/sendToQueue has been invoked, we have already created a new cls context in
     // instrumentedChannelModelPublish and must not do so again here.
@@ -412,6 +412,7 @@ function instrumentedChannelModelPublish(ctx, originalFunction, originalArgs) {
 
   return cls.ns.runAndReturn(() => {
     const span = cls.startSpan('rabbitmq', constants.EXIT);
+
     // everything else is handled in instrumentedSendMessage/processExitSpan
     if (originalArgs.length >= 5 && typeof originalArgs[4] === 'function') {
       const originalCb = originalArgs[4];
@@ -420,7 +421,12 @@ function instrumentedChannelModelPublish(ctx, originalFunction, originalArgs) {
         span.transmit();
         originalCb.apply(this, arguments);
       });
+    } else {
+      // CASE: confirm callback missing. amqplib does not throw any error, just transmit the span
+      span.d = Date.now() - span.ts;
+      span.transmit();
     }
+
     return originalFunction.apply(ctx, originalArgs);
   });
 }
