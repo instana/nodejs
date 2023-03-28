@@ -131,7 +131,7 @@ const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : descri
           agentControls.getSpans().then(spans => {
             const httpEntry = verifyHttpEntry(spans);
             const rabbitMqExit = verifyRabbitMqExit(spans, httpEntry);
-            expect(rabbitMqExit.data.rabbitmq.exchange).to.eql('instana-test-exchange-comfirm');
+            expect(rabbitMqExit.data.rabbitmq.exchange).to.eql(exchange);
             expect(rabbitMqExit.data.rabbitmq.key).to.not.exist;
             verifyHttpExit(spans, httpEntry);
           })

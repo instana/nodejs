@@ -23,7 +23,6 @@ const amqp = require('amqplib/callback_api');
 const a = require('async');
 const bail = require('./amqpUtil').bail;
 const exchange = require('./amqpUtil').exchange;
-const exchangeConfirm = require('./amqpUtil').exchangeConfirm;
 const queueName = require('./amqpUtil').queueName;
 const queueNameGet = require('./amqpUtil').queueNameGet;
 const queueNameConfirm = require('./amqpUtil').queueNameConfirm;
@@ -177,7 +176,7 @@ app.post('/publish-to-confirm-channel-without-callback', (req, res) => {
   // https://github.com/golevelup/nestjs/blob/%40golevelup/nestjs-rabbitmq%403.3.0/packages/rabbitmq/src/amqp/connection.ts#L541
   // https://github.com/jwalton/node-amqp-connection-manager/blob/v4.1.11/src/ChannelWrapper.ts#L13
   // https://github.com/amqp-node/amqplib/blob/v0.10.3/lib/channel_model.js#L265
-  confirmChannel.publish(exchangeConfirm, '', Buffer.from(req.body.message));
+  confirmChannel.publish(exchange, '', Buffer.from(req.body.message));
 
   request(`http://127.0.0.1:${agentPort}`)
     .then(() => {

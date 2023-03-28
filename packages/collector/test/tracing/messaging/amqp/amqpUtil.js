@@ -8,7 +8,6 @@
 'use strict';
 
 exports.exchange = 'instana-test-exchange';
-exports.exchangeConfirm = 'instana-test-exchange-comfirm';
 exports.queueName = 'instana-test-queue';
 exports.queueNameGet = 'instana-test-queue-get';
 exports.queueNameConfirm = 'instana-test-queue-confirm';
