@@ -108,7 +108,7 @@
     "dev-null": "0.1.1",
     "doctoc": "^2.1.0",
     "elasticsearch": "^16.7.2",
-    "eslint": "^7.32.0",
+    "eslint": "^8.37.0",
     "eslint-config-airbnb": "^18.2.1",
     "eslint-config-airbnb-base": "^14.2.1",
     "eslint-plugin-header": "^3.1.1",
