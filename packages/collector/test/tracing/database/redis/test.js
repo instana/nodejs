@@ -23,6 +23,10 @@ const ProcessControls = require('../../../test_util/ProcessControls');
 const globalAgent = require('../../../globalAgent');
 
 describe('tracing/redis', function () {
+  this.timeout(config.getTestTimeout());
+
+  const agentControls = globalAgent.instance;
+
   ['latest', 'v3', 'v0'].forEach(redisVersion => {
     let mochaSuiteFn;
 
@@ -35,10 +39,7 @@ describe('tracing/redis', function () {
     }
 
     mochaSuiteFn(`redis@${redisVersion}`, function () {
-      this.timeout(config.getTestTimeout());
-
       globalAgent.setUpCleanUpHooks();
-      const agentControls = globalAgent.instance;
 
       const controls = new ProcessControls({
         dirname: __dirname,
@@ -712,6 +713,43 @@ describe('tracing/redis', function () {
               expect.fail(`Unexpected spans ${stringifyItems(spans)}.`);
             }
           });
+      });
+
+      it('call two different hosts', async () => {
+        const response = await controls.sendRequest({
+          method: 'POST',
+          path: '/two-different-target-hosts',
+          qs: {
+            key: 'key',
+            value1: 'value1',
+            value2: 'value2'
+          }
+        });
+
+        expect(response.response1).to.equal('OK');
+        expect(response.response2).to.equal('OK');
+
+        await retry(async () => {
+          const spans = await agentControls.getSpans();
+          const entrySpan = expectAtLeastOneMatching(spans, [
+            span => expect(span.n).to.equal('node.http.server'),
+            span => expect(span.data.http.method).to.equal('POST')
+          ]);
+          expectExactlyOneMatching(spans, [
+            span => expect(span.t).to.equal(entrySpan.t),
+            span => expect(span.p).to.equal(entrySpan.s),
+            span => expect(span.n).to.equal('redis'),
+            span => expect(span.data.redis.command).to.equal('set'),
+            span => expect(span.data.redis.connection).to.contain('127.0.0.1')
+          ]);
+          expectExactlyOneMatching(spans, [
+            span => expect(span.t).to.equal(entrySpan.t),
+            span => expect(span.p).to.equal(entrySpan.s),
+            span => expect(span.n).to.equal('redis'),
+            span => expect(span.data.redis.command).to.equal('set'),
+            span => expect(span.data.redis.connection).to.contain('localhost')
+          ]);
+        });
       });
 
       function verifyHttpExit(spans, parent) {

@@ -21,12 +21,17 @@ let connectedToRedis = false;
 const agentPort = process.env.INSTANA_AGENT_PORT;
 
 const client = redis.createClient({ url: `redis://${process.env.REDIS}` });
-client.on('error', err => log('Redis Client Error', err));
+const client2 = redis.createClient({ url: `redis://${process.env.REDIS_ALTERNATIVE}` });
+
+[client, client2].forEach(c => {
+  c.on('error', err => log('Redis Client Error', err));
+});
 
 (async () => {
   await client.connect();
+  await client2.connect();
   connectedToRedis = true;
-  log('Connected to redis client.', process.env.REDIS_VERSION);
+  log(`Connected to redis client (version: ${process.env.REDIS_VERSION}).`);
 })();
 
 if (process.env.WITH_STDOUT) {
@@ -222,6 +227,18 @@ app.get('/callSequence', async (req, res) => {
     res.send(result);
   } catch (err) {
     log('Set/Get with key %s, value %s failed', key, value, err);
+    res.sendStatus(500);
+  }
+});
+
+app.post('/two-different-target-hosts', async (req, res) => {
+  try {
+    const response = {};
+    response.response1 = await client.set(req.query.key, req.query.value1);
+    response.response2 = await client2.set(req.query.key, req.query.value2);
+    res.json(response);
+  } catch (e) {
+    log('Redis set operation failed.', e);
     res.sendStatus(500);
   }
 });

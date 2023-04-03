@@ -7,5 +7,8 @@
 require('./mockVersion');
 const redisLatest = process.env.REDIS_VERSION === 'latest';
 
-if (redisLatest) require('./latestApp');
-else require('./legacyApp');
+if (redisLatest) {
+  require('./latestApp');
+} else {
+  require('./legacyApp');
+}

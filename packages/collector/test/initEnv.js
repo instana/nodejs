@@ -14,6 +14,7 @@ const DEFAULT_ENV_VALUES = {
   ZOOKEEPER: '127.0.0.1:2181',
   KAFKA: '127.0.0.1:9092',
   REDIS: '127.0.0.1:6379',
+  REDIS_ALTERNATIVE: 'localhost:6379',
   COUCHBASE: 'couchbase://127.0.0.1',
   COUCHBASE_2: 'couchbase://localhost',
   MYSQL_HOST: '127.0.0.1',

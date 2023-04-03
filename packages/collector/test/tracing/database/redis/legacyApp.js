@@ -24,16 +24,31 @@ let connectedToRedis = false;
 const agentPort = process.env.INSTANA_AGENT_PORT;
 
 let client;
+let client2;
 if (process.env.REDIS_VERSION === 'v3') {
   client = redis.createClient(`//${process.env.REDIS}`);
+  client2 = redis.createClient(`//${process.env.REDIS_ALTERNATIVE}`);
 } else {
   // v0
   const portAndHost = process.env.REDIS.split(':');
   client = redis.createClient(portAndHost[1], portAndHost[0]);
+  const portAndHost2 = process.env.REDIS_ALTERNATIVE.split(':');
+  client2 = redis.createClient(portAndHost2[1], portAndHost2[0]);
 }
 
+let clientReady = false;
+let client2Ready = false;
 client.on('ready', () => {
-  connectedToRedis = true;
+  clientReady = true;
+  if (client2Ready) {
+    connectedToRedis = true;
+  }
+});
+client2.on('ready', () => {
+  client2Ready = true;
+  if (clientReady) {
+    connectedToRedis = true;
+  }
 });
 
 if (process.env.WITH_STDOUT) {
@@ -261,6 +276,25 @@ app.get('/callSequence', (req, res) => {
       request(`http://127.0.0.1:${agentPort}`).then(() => {
         res.send(result);
       });
+    });
+  });
+});
+
+app.post('/two-different-target-hosts', (req, res) => {
+  const response = {};
+  client.set(req.query.key, req.query.value1, (err, result) => {
+    if (err) {
+      log('Redis set operation failed.', err);
+      return res.sendStatus(500);
+    }
+    response.response1 = result;
+    client2.set(req.query.key, req.query.value2, (err2, result2) => {
+      if (err2) {
+        log('Redis set operation failed.', err2);
+        return res.sendStatus(500);
+      }
+      response.response2 = result2;
+      res.json(response);
     });
   });
 });
