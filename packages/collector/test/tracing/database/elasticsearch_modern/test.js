@@ -26,7 +26,7 @@ mochaSuiteFn('tracing/elasticsearch (modern client)', function () {
   this.timeout(Math.max(config.getTestTimeout() * 4, 30000));
 
   /**
-   * transport: instrumentation > 7.9.1
+   * transport: instrumentation >= 7.9.1
    * api: instrumentation < 7.9.1
    *
    * The words "transport" and "api" try to describe the different
@@ -486,6 +486,54 @@ mochaSuiteFn('tracing/elasticsearch (modern client)', function () {
                 expect.fail(`Unexpected spans ${stringifyItems(spans)}.`);
               }
             });
+        });
+
+        it('call two different hosts', async function () {
+          if (instrumentationFlavor === 'api') {
+            // We only capture the destination host when instrumenting the transport layer on newer client versions.
+            this.skip();
+          }
+          const response = await controls.sendRequest({
+            method: 'POST',
+            path: '/two-different-target-hosts',
+            qs: {
+              key: 'key',
+              value1: 'value1',
+              value2: 'value2'
+            }
+          });
+
+          if (version === 'latest') {
+            expect(response.response1).to.equal('created');
+            expect(response.response2).to.equal('created');
+          } else {
+            expect(response.response1).to.equal(201);
+            expect(response.response2).to.equal(201);
+          }
+
+          await retry(async () => {
+            const spans = await agentControls.getSpans();
+            const entrySpan = expectExactlyOneMatching(spans, [
+              span => expect(span.n).to.equal('node.http.server'),
+              span => expect(span.data.http.method).to.equal('POST')
+            ]);
+            expectExactlyOneMatching(spans, [
+              span => expect(span.t).to.equal(entrySpan.t),
+              span => expect(span.p).to.equal(entrySpan.s),
+              span => expect(span.n).to.equal('elasticsearch'),
+              span => expect(span.data.elasticsearch.action).to.equal('index'),
+              span => expect(span.data.elasticsearch.address).to.equal('127.0.0.1'),
+              span => expect(span.data.elasticsearch.port).to.equal('9200')
+            ]);
+            expectExactlyOneMatching(spans, [
+              span => expect(span.t).to.equal(entrySpan.t),
+              span => expect(span.p).to.equal(entrySpan.s),
+              span => expect(span.n).to.equal('elasticsearch'),
+              span => expect(span.data.elasticsearch.action).to.equal('index'),
+              span => expect(span.data.elasticsearch.address).to.equal('localhost'),
+              span => expect(span.data.elasticsearch.port).to.equal('9200')
+            ]);
+          });
         });
 
         function get(opts) {

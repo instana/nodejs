@@ -30,7 +30,7 @@ exports.init = function init() {
   requireHook.onModuleLoad('@elastic/elasticsearch', instrument);
 };
 
-let parsedConnectionUrl;
+const connectionUrlCache = {};
 
 function instrument(es, esModuleFilename) {
   // v8
@@ -41,11 +41,9 @@ function instrument(es, esModuleFilename) {
 
       if (client.connectionPool && client.connectionPool.connections && client.connectionPool.connections.length > 0) {
         const connectionString = client.connectionPool.connections[0].url;
-        try {
-          parsedConnectionUrl = new URL(connectionString);
-        } catch (parseErrr) {
-          /* ignore */
-        }
+        // We will almost certainly need the host and port from the connection URL later in shimGetConnection when
+        // capturing an actual request. We can as well parse it now and put it in the cache.
+        parseAndCacheConnectionUrl(connectionString);
       }
 
       return client;
@@ -192,8 +190,9 @@ function onSuccess(span, result) {
     }, 0);
   }
 
-  parseConnectionFromResult(span, result);
+  getConnectionDetailsFromResultMeta(span, result);
   span.d = Date.now() - span.ts;
+
   span.transmit();
   return result;
 }
@@ -205,13 +204,46 @@ function onError(span, error) {
     span.data.elasticsearch.error = tracingUtil.getErrorDetails(error);
   }
   if (error.meta && error.meta.meta) {
-    parseConnectionFromResult(span, error.meta);
+    getConnectionDetailsFromResultMeta(span, error.meta);
   }
   span.transmit();
 }
 
-function parseConnectionFromResult(span, result) {
-  // NOTE: Does not work for v8
+function parseAndCacheConnectionUrl(connectionUrl) {
+  if (connectionUrl && connectionUrl instanceof url.URL) {
+    // The connection URL is already in the form of a URL object. No need to parse it.
+    return connectionUrl;
+  } else if (typeof connectionUrl === 'string') {
+    // The connection URL is only available as a string. We need to parse it to extract the host and the port.
+
+    // Deliberately checking for undefined, since we store a failure to parse an URL as null.
+    if (connectionUrlCache[connectionUrl] !== undefined) {
+      return connectionUrlCache[connectionUrl];
+    }
+    try {
+      const parsedConnectionUrl = new URL(connectionUrl);
+      // We do not want to spend the CPU cycles to parse the URL for each ES request. When we have parsed a given URL
+      // once, we cache the resulting result and never parse that particular URL again.
+      connectionUrlCache[connectionUrl] = parsedConnectionUrl;
+      return parsedConnectionUrl;
+    } catch (e) {
+      // We also cache the fact that we failed to parse a given URL, otherwise we would try to parse it again on every
+      // request.
+      connectionUrlCache[connectionUrl] = null;
+      return null;
+    }
+  }
+}
+
+function getConnectionDetailsFromResultMeta(span, result) {
+  if (span.data.elasticsearch.address) {
+    // We have already annotated the connection details, probably via shimGetConnection, no need to deal with connection
+    // details again for this span.
+    return;
+  }
+
+  // NOTE: This does not work for version 8.
+
   // Result can also be a part of the error object, both have the meta.connection attribute.
   // For the error object it is in error.meta.meta.connection (see onError).
   if (!span.data.elasticsearch.cluster && !span.data.elasticsearch.address && result.meta && result.meta.connection) {
@@ -220,9 +252,6 @@ function parseConnectionFromResult(span, result) {
       span.data.elasticsearch.address = connectionUrl.hostname;
       span.data.elasticsearch.port = connectionUrl.port;
     }
-  } else if (parsedConnectionUrl) {
-    span.data.elasticsearch.address = parsedConnectionUrl.hostname;
-    span.data.elasticsearch.port = parsedConnectionUrl.port;
   }
 }
 
@@ -319,11 +348,32 @@ function instrumentTransport(es) {
   // to override/wrap them. For those versions we fall back to instrumenting the transport layer instead of the API.
   if (es.Transport && es.Transport.prototype) {
     shimmer.wrap(es.Transport.prototype, 'request', shimRequest);
+    shimmer.wrap(es.Transport.prototype, 'getConnection', shimGetConnection);
   } else {
     logger.error(
       'Cannot instrument @elastic/elasticsearch. Either es.Transport or es.Transport.prototype does not exist.'
     );
   }
+}
+
+// Transport#request calls Transport#getConnection internally to determine which connection to use. That is,
+// Transport#getConnection is called while the Elasticsearch exit span is active, and we can use it to capture the
+// connection details.
+function shimGetConnection(originalGetConnection) {
+  return function () {
+    const connectionInfo = originalGetConnection.apply(this, arguments);
+    if (connectionInfo && connectionInfo.url) {
+      const span = cls.getCurrentSpan();
+      if (span && span.n === 'elasticsearch') {
+        const parsedConnectionUrl = parseAndCacheConnectionUrl(connectionInfo.url);
+        if (parsedConnectionUrl) {
+          span.data.elasticsearch.address = parsedConnectionUrl.hostname;
+          span.data.elasticsearch.port = parsedConnectionUrl.port;
+        }
+      }
+    }
+    return connectionInfo;
+  };
 }
 
 function shimRequest(esReq) {

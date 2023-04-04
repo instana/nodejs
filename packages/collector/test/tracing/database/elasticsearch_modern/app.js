@@ -32,6 +32,9 @@ app.use(bodyParser.json());
 const client = new Client({
   node: `http://${process.env.ELASTICSEARCH}`
 });
+const client2 = new Client({
+  node: `http://${process.env.ELASTICSEARCH_ALTERNATIVE}`
+});
 
 // v7 & v8 have a different return value
 const commonReturnValue = response => {
@@ -238,6 +241,26 @@ app.post('/index', (req, res) => {
         res.json({ error });
       }
     );
+});
+
+app.post('/two-different-target-hosts', async (req, res) => {
+  try {
+    const response = {};
+    const esResponse1 = await client.index({
+      index: req.query.index || 'modern_index',
+      body: req.body
+    });
+    response.response1 = esResponse1.result || esResponse1.statusCode;
+    const esResponse2 = await client2.index({
+      index: req.query.index || 'modern_index',
+      body: req.body
+    });
+    response.response2 = esResponse2.result || esResponse2.statusCode;
+    res.json(response);
+  } catch (e) {
+    log('Elasticsearch index operation failed.', e);
+    return res.sendStatus(500);
+  }
 });
 
 app.listen(port, () => {

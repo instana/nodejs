@@ -11,6 +11,7 @@ const semver = require('semver');
 const DEFAULT_ENV_VALUES = {
   MONGODB: '127.0.0.1:27017',
   ELASTICSEARCH: '127.0.0.1:9200',
+  ELASTICSEARCH_ALTERNATIVE: 'localhost:9200',
   ZOOKEEPER: '127.0.0.1:2181',
   KAFKA: '127.0.0.1:9092',
   REDIS: '127.0.0.1:6379',
