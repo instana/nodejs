@@ -22,9 +22,21 @@ const logPrefix = `Express / Redis App (${process.pid}):\t`;
 let connectedToRedis = true;
 
 const client = new Redis(`//${process.env.REDIS}`);
+const client2 = new Redis(`//${process.env.REDIS_ALTERNATIVE}`);
 
+let clientReady = false;
+let client2Ready = false;
 client.on('ready', () => {
-  connectedToRedis = true;
+  clientReady = true;
+  if (client2Ready) {
+    connectedToRedis = true;
+  }
+});
+client2.on('ready', () => {
+  client2Ready = true;
+  if (clientReady) {
+    connectedToRedis = true;
+  }
 });
 
 if (process.env.WITH_STDOUT) {
@@ -228,6 +240,25 @@ app.post('/pipelineKeepTracing', (req, res) => {
       log('Unexpected error', err);
       res.sendStatus(500);
     });
+});
+
+app.post('/two-different-target-hosts', (req, res) => {
+  const response = {};
+  client.set(req.query.key, req.query.value1, (err, result) => {
+    if (err) {
+      log('Redis set operation failed.', err);
+      return res.sendStatus(500);
+    }
+    response.response1 = result;
+    client2.set(req.query.key, req.query.value2, (err2, result2) => {
+      if (err2) {
+        log('Redis set operation failed.', err2);
+        return res.sendStatus(500);
+      }
+      response.response2 = result2;
+      res.json(response);
+    });
+  });
 });
 
 app.listen(port, () => {

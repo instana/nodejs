@@ -11,7 +11,13 @@ const semver = require('semver');
 const constants = require('@instana/core').tracing.constants;
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('../../../../../core/test/config');
-const testUtils = require('../../../../../core/test/test_util');
+const {
+  delay,
+  expectExactlyOneMatching,
+  expectAtLeastOneMatching,
+  retry,
+  stringifyItems
+} = require('../../../../../core/test/test_util');
 const ProcessControls = require('../../../test_util/ProcessControls');
 const globalAgent = require('../../../globalAgent');
 
@@ -52,14 +58,14 @@ mochaSuiteFn('tracing/ioredis', function () {
       .then(response => {
         expect(String(response)).to.equal('42');
 
-        return testUtils.retry(() =>
+        return retry(() =>
           agentControls.getSpans().then(spans => {
-            const writeEntrySpan = testUtils.expectAtLeastOneMatching(spans, [
+            const writeEntrySpan = expectAtLeastOneMatching(spans, [
               span => expect(span.n).to.equal('node.http.server'),
               span => expect(span.data.http.method).to.equal('POST')
             ]);
 
-            testUtils.expectAtLeastOneMatching(spans, [
+            expectAtLeastOneMatching(spans, [
               span => expect(span.t).to.equal(writeEntrySpan.t),
               span => expect(span.p).to.equal(writeEntrySpan.s),
               span => expect(span.n).to.equal('redis'),
@@ -73,12 +79,12 @@ mochaSuiteFn('tracing/ioredis', function () {
               span => expect(span.data.redis.command).to.equal('set')
             ]);
 
-            const readEntrySpan = testUtils.expectAtLeastOneMatching(spans, [
+            const readEntrySpan = expectAtLeastOneMatching(spans, [
               span => expect(span.n).to.equal('node.http.server'),
               span => expect(span.data.http.method).to.equal('GET')
             ]);
 
-            testUtils.expectAtLeastOneMatching(spans, [
+            expectAtLeastOneMatching(spans, [
               span => expect(span.t).to.equal(readEntrySpan.t),
               span => expect(span.p).to.equal(readEntrySpan.s),
               span => expect(span.n).to.equal('redis'),
@@ -117,14 +123,14 @@ mochaSuiteFn('tracing/ioredis', function () {
       .then(response => {
         expect(String(response)).to.equal('OK;13');
 
-        return testUtils.retry(() =>
+        return retry(() =>
           agentControls.getSpans().then(spans => {
-            const writeEntrySpan = testUtils.expectAtLeastOneMatching(spans, [
+            const writeEntrySpan = expectAtLeastOneMatching(spans, [
               span => expect(span.n).to.equal('node.http.server'),
               span => expect(span.data.http.method).to.equal('POST')
             ]);
 
-            testUtils.expectAtLeastOneMatching(spans, [
+            expectAtLeastOneMatching(spans, [
               span => expect(span.t).to.equal(writeEntrySpan.t),
               span => expect(span.p).to.equal(writeEntrySpan.s),
               span => expect(span.n).to.equal('redis'),
@@ -138,12 +144,12 @@ mochaSuiteFn('tracing/ioredis', function () {
               span => expect(span.data.redis.command).to.equal('set')
             ]);
 
-            const readEntrySpan = testUtils.expectAtLeastOneMatching(spans, [
+            const readEntrySpan = expectAtLeastOneMatching(spans, [
               span => expect(span.n).to.equal('node.http.server'),
               span => expect(span.data.http.method).to.equal('GET')
             ]);
 
-            testUtils.expectAtLeastOneMatching(spans, [
+            expectAtLeastOneMatching(spans, [
               span => expect(span.t).to.equal(readEntrySpan.t),
               span => expect(span.p).to.equal(readEntrySpan.s),
               span => expect(span.n).to.equal('redis'),
@@ -157,7 +163,7 @@ mochaSuiteFn('tracing/ioredis', function () {
               span => expect(span.data.redis.command).to.equal('get')
             ]);
 
-            testUtils.expectAtLeastOneMatching(spans, [
+            expectAtLeastOneMatching(spans, [
               span => expect(span.t).to.equal(readEntrySpan.t),
               span => expect(span.p).to.equal(readEntrySpan.s),
               span => expect(span.n).to.equal('node.http.client'),
@@ -197,14 +203,14 @@ mochaSuiteFn('tracing/ioredis', function () {
       .then(response => {
         expect(String(response)).to.equal('OK;13');
 
-        return testUtils.retry(() =>
+        return retry(() =>
           agentControls.getSpans().then(spans => {
-            const writeEntrySpan = testUtils.expectAtLeastOneMatching(spans, [
+            const writeEntrySpan = expectAtLeastOneMatching(spans, [
               span => expect(span.n).to.equal('node.http.server'),
               span => expect(span.data.http.method).to.equal('POST')
             ]);
 
-            testUtils.expectAtLeastOneMatching(spans, [
+            expectAtLeastOneMatching(spans, [
               span => expect(span.t).to.equal(writeEntrySpan.t),
               span => expect(span.p).to.equal(writeEntrySpan.s),
               span => expect(span.n).to.equal('redis'),
@@ -218,12 +224,12 @@ mochaSuiteFn('tracing/ioredis', function () {
               span => expect(span.data.redis.command).to.equal('set')
             ]);
 
-            const readEntrySpan = testUtils.expectAtLeastOneMatching(spans, [
+            const readEntrySpan = expectAtLeastOneMatching(spans, [
               span => expect(span.n).to.equal('node.http.server'),
               span => expect(span.data.http.method).to.equal('GET')
             ]);
 
-            testUtils.expectAtLeastOneMatching(spans, [
+            expectAtLeastOneMatching(spans, [
               span => expect(span.t).to.equal(readEntrySpan.t),
               span => expect(span.p).to.equal(readEntrySpan.s),
               span => expect(span.n).to.equal('redis'),
@@ -237,7 +243,7 @@ mochaSuiteFn('tracing/ioredis', function () {
               span => expect(span.data.redis.command).to.equal('get')
             ]);
 
-            testUtils.expectAtLeastOneMatching(spans, [
+            expectAtLeastOneMatching(spans, [
               span => expect(span.t).to.equal(readEntrySpan.t),
               span => expect(span.p).to.equal(readEntrySpan.s),
               span => expect(span.n).to.equal('node.http.client'),
@@ -265,14 +271,14 @@ mochaSuiteFn('tracing/ioredis', function () {
         // ignore errors
       })
       .then(() =>
-        testUtils.retry(() =>
+        retry(() =>
           agentControls.getSpans().then(spans => {
-            const writeEntrySpan = testUtils.expectAtLeastOneMatching(spans, [
+            const writeEntrySpan = expectAtLeastOneMatching(spans, [
               span => expect(span.n).to.equal('node.http.server'),
               span => expect(span.data.http.method).to.equal('GET')
             ]);
 
-            testUtils.expectAtLeastOneMatching(spans, [
+            expectAtLeastOneMatching(spans, [
               span => expect(span.t).to.equal(writeEntrySpan.t),
               span => expect(span.p).to.equal(writeEntrySpan.s),
               span => expect(span.n).to.equal('redis'),
@@ -297,14 +303,14 @@ mochaSuiteFn('tracing/ioredis', function () {
         path: '/multi'
       })
       .then(() =>
-        testUtils.retry(() =>
+        retry(() =>
           agentControls.getSpans().then(spans => {
-            const writeEntrySpan = testUtils.expectAtLeastOneMatching(spans, [
+            const writeEntrySpan = expectAtLeastOneMatching(spans, [
               span => expect(span.n).to.equal('node.http.server'),
               span => expect(span.data.http.method).to.equal('GET')
             ]);
 
-            testUtils.expectAtLeastOneMatching(spans, [
+            expectAtLeastOneMatching(spans, [
               span => expect(span.t).to.equal(writeEntrySpan.t),
               span => expect(span.p).to.equal(writeEntrySpan.s),
               span => expect(span.n).to.equal('redis'),
@@ -334,14 +340,14 @@ mochaSuiteFn('tracing/ioredis', function () {
         // ignore errors
       })
       .then(() =>
-        testUtils.retry(() =>
+        retry(() =>
           agentControls.getSpans().then(spans => {
-            const writeEntrySpan = testUtils.expectAtLeastOneMatching(spans, [
+            const writeEntrySpan = expectAtLeastOneMatching(spans, [
               span => expect(span.n).to.equal('node.http.server'),
               span => expect(span.data.http.method).to.equal('GET')
             ]);
 
-            testUtils.expectAtLeastOneMatching(spans, [
+            expectAtLeastOneMatching(spans, [
               span => expect(span.t).to.equal(writeEntrySpan.t),
               span => expect(span.p).to.equal(writeEntrySpan.s),
               span => expect(span.n).to.equal('redis'),
@@ -369,14 +375,14 @@ mochaSuiteFn('tracing/ioredis', function () {
         path: '/multiKeepTracing'
       })
       .then(() =>
-        testUtils.retry(() =>
+        retry(() =>
           agentControls.getSpans().then(spans => {
-            const entrySpan = testUtils.expectAtLeastOneMatching(spans, [
+            const entrySpan = expectAtLeastOneMatching(spans, [
               span => expect(span.n).to.equal('node.http.server'),
               span => expect(span.data.http.method).to.equal('POST')
             ]);
 
-            testUtils.expectAtLeastOneMatching(spans, [
+            expectAtLeastOneMatching(spans, [
               span => expect(span.t).to.equal(entrySpan.t),
               span => expect(span.p).to.equal(entrySpan.s),
               span => expect(span.n).to.equal('redis'),
@@ -393,7 +399,7 @@ mochaSuiteFn('tracing/ioredis', function () {
               span => expect(span.data.redis.subCommands).to.deep.equal(['hset', 'hget'])
             ]);
 
-            testUtils.expectAtLeastOneMatching(spans, [
+            expectAtLeastOneMatching(spans, [
               span => expect(span.t).to.equal(entrySpan.t),
               span => expect(span.p).to.equal(entrySpan.s),
               span => expect(span.n).to.equal('node.http.client'),
@@ -418,14 +424,14 @@ mochaSuiteFn('tracing/ioredis', function () {
         path: '/pipeline'
       })
       .then(() =>
-        testUtils.retry(() =>
+        retry(() =>
           agentControls.getSpans().then(spans => {
-            const writeEntrySpan = testUtils.expectAtLeastOneMatching(spans, [
+            const writeEntrySpan = expectAtLeastOneMatching(spans, [
               span => expect(span.n).to.equal('node.http.server'),
               span => expect(span.data.http.method).to.equal('GET')
             ]);
 
-            testUtils.expectAtLeastOneMatching(spans, [
+            expectAtLeastOneMatching(spans, [
               span => expect(span.t).to.equal(writeEntrySpan.t),
               span => expect(span.p).to.equal(writeEntrySpan.s),
               span => expect(span.n).to.equal('redis'),
@@ -452,14 +458,14 @@ mochaSuiteFn('tracing/ioredis', function () {
         path: '/pipelineFailure'
       })
       .then(() =>
-        testUtils.retry(() =>
+        retry(() =>
           agentControls.getSpans().then(spans => {
-            const writeEntrySpan = testUtils.expectAtLeastOneMatching(spans, [
+            const writeEntrySpan = expectAtLeastOneMatching(spans, [
               span => expect(span.n).to.equal('node.http.server'),
               span => expect(span.data.http.method).to.equal('GET')
             ]);
 
-            testUtils.expectAtLeastOneMatching(spans, [
+            expectAtLeastOneMatching(spans, [
               span => expect(span.t).to.equal(writeEntrySpan.t),
               span => expect(span.p).to.equal(writeEntrySpan.s),
               span => expect(span.n).to.equal('redis'),
@@ -487,14 +493,14 @@ mochaSuiteFn('tracing/ioredis', function () {
         path: '/pipelineKeepTracing'
       })
       .then(() =>
-        testUtils.retry(() =>
+        retry(() =>
           agentControls.getSpans().then(spans => {
-            const entrySpan = testUtils.expectAtLeastOneMatching(spans, [
+            const entrySpan = expectAtLeastOneMatching(spans, [
               span => expect(span.n).to.equal('node.http.server'),
               span => expect(span.data.http.method).to.equal('POST')
             ]);
 
-            testUtils.expectAtLeastOneMatching(spans, [
+            expectAtLeastOneMatching(spans, [
               span => expect(span.t).to.equal(entrySpan.t),
               span => expect(span.p).to.equal(entrySpan.s),
               span => expect(span.n).to.equal('redis'),
@@ -511,7 +517,7 @@ mochaSuiteFn('tracing/ioredis', function () {
               span => expect(span.data.redis.subCommands).to.deep.equal(['hset', 'hget'])
             ]);
 
-            testUtils.expectAtLeastOneMatching(spans, [
+            expectAtLeastOneMatching(spans, [
               span => expect(span.t).to.equal(entrySpan.t),
               span => expect(span.p).to.equal(entrySpan.s),
               span => expect(span.n).to.equal('node.http.client'),
@@ -536,12 +542,11 @@ mochaSuiteFn('tracing/ioredis', function () {
       suppressTracing: true
     });
 
-    return testUtils
-      .retry(() => testUtils.delay(config.getTestTimeout() / 4))
+    return retry(() => delay(config.getTestTimeout() / 4))
       .then(() => agentControls.getSpans())
       .then(spans => {
         if (spans.length > 0) {
-          expect.fail(`Unexpected spans ${testUtils.stringifyItems(spans)}.`);
+          expect.fail(`Unexpected spans ${stringifyItems(spans)}.`);
         }
       });
   });
@@ -553,13 +558,49 @@ mochaSuiteFn('tracing/ioredis', function () {
       suppressTracing: true
     });
 
-    return testUtils
-      .retry(() => testUtils.delay(config.getTestTimeout() / 4))
+    return retry(() => delay(config.getTestTimeout() / 4))
       .then(() => agentControls.getSpans())
       .then(spans => {
         if (spans.length > 0) {
-          expect.fail(`Unexpected spans ${testUtils.stringifyItems(spans)}.`);
+          expect.fail(`Unexpected spans ${stringifyItems(spans)}.`);
         }
       });
+  });
+
+  it('call two different hosts', async () => {
+    const response = await controls.sendRequest({
+      method: 'POST',
+      path: '/two-different-target-hosts',
+      qs: {
+        key: 'key',
+        value1: 'value1',
+        value2: 'value2'
+      }
+    });
+
+    expect(response.response1).to.equal('OK');
+    expect(response.response2).to.equal('OK');
+
+    await retry(async () => {
+      const spans = await agentControls.getSpans();
+      const entrySpan = expectAtLeastOneMatching(spans, [
+        span => expect(span.n).to.equal('node.http.server'),
+        span => expect(span.data.http.method).to.equal('POST')
+      ]);
+      expectExactlyOneMatching(spans, [
+        span => expect(span.t).to.equal(entrySpan.t),
+        span => expect(span.p).to.equal(entrySpan.s),
+        span => expect(span.n).to.equal('redis'),
+        span => expect(span.data.redis.command).to.equal('set'),
+        span => expect(span.data.redis.connection).to.contain('127.0.0.1')
+      ]);
+      expectExactlyOneMatching(spans, [
+        span => expect(span.t).to.equal(entrySpan.t),
+        span => expect(span.p).to.equal(entrySpan.s),
+        span => expect(span.n).to.equal('redis'),
+        span => expect(span.data.redis.command).to.equal('set'),
+        span => expect(span.data.redis.connection).to.contain('localhost')
+      ]);
+    });
   });
 });
