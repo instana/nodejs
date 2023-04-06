@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [2.20.2](https://github.com/instana/nodejs/compare/v2.20.1...v2.20.2) (2023-04-06)
+
+
+### Bug Fixes
+
+* **shared-metrics:** fixed package.json not being found when app is ESM ([#749](https://github.com/instana/nodejs/issues/749)) ([c15569c](https://github.com/instana/nodejs/commit/c15569c6a866bd109d69f7cf748767b55eb82397))
+
+
+
+
+
 ## [2.20.1](https://github.com/instana/nodejs/compare/v2.20.0...v2.20.1) (2023-03-30)
 
 
