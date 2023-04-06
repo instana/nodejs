@@ -146,8 +146,10 @@ function getMainPackageJsonPathStartingAtDirectory(startDirectory, cb) {
         (process._preload_modules && process._preload_modules.length > 0) ||
         (process.execArgv &&
           process.execArgv.length > 0 &&
-          process.execArgv[0].indexOf('--experimental-loader') !== -1 &&
-          process.execArgv[0].indexOf('esm-loader.mjs') !== -1)
+          ((process.execArgv[0].indexOf('--experimental-loader') !== -1 &&
+            process.execArgv[0].indexOf('esm-loader.mjs')) !== -1 ||
+            (process.execArgv[0].indexOf('--experimental-loader') !== -1 &&
+              process.execArgv[1].indexOf('esm-loader.mjs') !== -1)))
       ) {
         // @ts-ignore
         mainModule = {
