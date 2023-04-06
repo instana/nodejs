@@ -2,3 +2,6 @@
 !test/util/dependencies_test_dir_02/node_modules/**
 !test/util/dependencies_test_dir_03/node_modules
 !test/util/dependencies_test_dir_03/node_modules/**
+!test/esm-loader/module/node_modules
+!test/esm-loader/module-2/node_modules
+!test/esm-loader/module-3/node_modules
