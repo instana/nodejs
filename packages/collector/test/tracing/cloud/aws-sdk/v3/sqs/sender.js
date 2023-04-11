@@ -85,7 +85,7 @@ async function runV3AsPromise(withError, isBatch = false, addHeaders = 0) {
   return results;
 }
 
-function runV3AsCallback(withError, isBatch, addHeaders = 0, cb) {
+function runV3AsCallback(withError, isBatch, addHeaders, cb) {
   const options = configureOptions(withError, isBatch, addHeaders);
   const sendCommand = isBatch ? 'SendMessageBatchCommand' : 'SendMessageCommand';
   const command = new awsSdk3[sendCommand](options);

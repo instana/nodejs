@@ -3,8 +3,6 @@
  * (c) Copyright Instana Inc. and contributors 2020
  */
 
-/* global fetch */
-
 'use strict';
 
 const useHttp2 = process.env.USE_HTTP2 ? process.env.USE_HTTP2 === 'true' : false;

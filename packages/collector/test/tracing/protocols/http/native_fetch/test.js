@@ -510,7 +510,7 @@ function constructPath({
   return `${basePath}?${queryString}`;
 }
 
-function verifyResponse(response, expectedMethod = 'GET', expectedHeaders) {
+function verifyResponse(response, expectedMethod = 'GET', expectedHeaders = null) {
   expect(response.method).to.equal(expectedMethod);
   expect(response.headers).to.be.an('object');
   if (expectedHeaders) {
