@@ -6,6 +6,7 @@
 'use strict';
 
 const path = require('path');
+const semver = require('semver');
 const expect = require('chai').expect;
 
 const constants = require('@instana/core').tracing.constants;
@@ -22,7 +23,8 @@ const ProcessControls = require('../../../test_util/ProcessControls');
 const globalAgent = require('../../../globalAgent');
 const { AgentStubControls } = require('../../../apps/agentStubControls');
 
-const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
+const mochaSuiteFn =
+  supportedVersion(process.versions.node) && semver.gte(process.versions.node, '14.0.0') ? describe : describe.skip;
 
 mochaSuiteFn('tracing/kafkajs', function () {
   this.timeout(config.getTestTimeout() * 2);
