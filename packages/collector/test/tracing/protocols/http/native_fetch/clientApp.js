@@ -2,8 +2,6 @@
  * (c) Copyright IBM Corp. 2023
  */
 
-/* global AbortSignal, fetch, Headers, Request */
-
 'use strict';
 
 require('../../../../..')();

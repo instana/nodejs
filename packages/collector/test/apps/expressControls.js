@@ -27,7 +27,7 @@ exports.registerTestHooks = opts => {
   afterEach(() => exports.stop());
 };
 
-exports.start = function start(opts = {}, retryTime) {
+exports.start = function start(opts = {}, retryTime = null) {
   const env = Object.create(process.env);
   env.AGENT_PORT = opts.useGlobalAgent ? globalAgentPort : legacyAgentPort;
   env.APP_PORT = appPort;

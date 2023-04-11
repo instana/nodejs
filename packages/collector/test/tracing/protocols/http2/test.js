@@ -342,7 +342,7 @@ function verifySpans(spans, method, erroneous, withQuery, serverControls, client
   expect(spans).to.have.lengthOf(3);
 }
 
-function verifyRootHttpEntry(spans, host, url, method = 'GET', status = 200, erroneous, synthetic) {
+function verifyRootHttpEntry(spans, host, url, method = 'GET', status = 200, erroneous = false, synthetic = false) {
   return verifyHttpEntry(spans, null, host, url, method, false, status, erroneous, synthetic);
 }
 
@@ -352,7 +352,7 @@ function verifyHttpEntry(
   host,
   url,
   method = 'GET',
-  expectHeaders,
+  expectHeaders = true,
   status = 200,
   erroneous = false,
   synthetic = false

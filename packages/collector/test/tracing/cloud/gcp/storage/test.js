@@ -780,7 +780,7 @@ if (
       error,
       additionalExpectations,
       unique = true,
-      otherSpans
+      otherSpans = null
     ) {
       let expectations = [
         span => expect(span.n).to.equal('gcs'),
