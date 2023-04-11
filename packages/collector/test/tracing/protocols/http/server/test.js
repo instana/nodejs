@@ -609,30 +609,14 @@ function registerTests(agentControls, useHttps, useHttp2CompatApi) {
       }));
 }
 
-function verifyThereIsExactlyOneHttpEntry(
-  spans,
-  controls,
-  url = '/',
-  method = 'GET',
-  status = 200,
-  erroneous = false,
-  synthetic = false
-) {
+function verifyThereIsExactlyOneHttpEntry(spans, controls, url, method, status, erroneous, synthetic) {
   expect(spans.length).to.equal(1);
   const span = spans[0];
-  verifyHttpEntry(span, controls, url, method, status, erroneous, synthetic);
+  verifyHttpEntry(span, controls, status, url, method, erroneous, synthetic);
   return span;
 }
 
-function verifyHttpEntry(
-  span,
-  controls,
-  url = '/',
-  method = 'GET',
-  status = 200,
-  erroneous = false,
-  synthetic = false
-) {
+function verifyHttpEntry(span, controls, status, url = '/', method = 'GET', erroneous = false, synthetic = false) {
   expect(span.n).to.equal('node.http.server');
   expect(span.k).to.equal(constants.ENTRY);
   expect(span.async).to.not.exist;
