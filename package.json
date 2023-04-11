@@ -133,7 +133,7 @@
     "ibm_db": "^2.8.2",
     "ioredis": "^4.28.2",
     "kafka-node": "^5.0.0",
-    "kafkajs": "^1.15.0",
+    "kafkajs": "^2.2.4",
     "koa": "^2.13.4",
     "koa-bodyparser": "^4.3.0",
     "koa-morgan": "^1.0.1",
