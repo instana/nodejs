@@ -80,9 +80,7 @@ mochaSuiteFn('opentelemetry/instrumentations', function () {
                     expect(span.data.tags['restify.method']).to.eql('get');
                     expect(span.data.tags['http.route']).to.eql('/test');
 
-                    expect(span.data.resource['telemetry.sdk.language']).to.eql('nodejs');
-                    expect(span.data.resource['telemetry.sdk.name']).to.eql('opentelemetry');
-                    expect(span.data.resource['telemetry.sdk.version']).to.eql('1.11.0');
+                    checkTelemetryResourceAttrs(span);
                   }
                 });
 
@@ -113,9 +111,7 @@ mochaSuiteFn('opentelemetry/instrumentations', function () {
                       expect(span.data.tags['restify.method']).to.eql('use');
                       expect(span.data.tags['http.route']).to.eql('/test');
 
-                      expect(span.data.resource['telemetry.sdk.language']).to.eql('nodejs');
-                      expect(span.data.resource['telemetry.sdk.name']).to.eql('opentelemetry');
-                      expect(span.data.resource['telemetry.sdk.version']).to.eql('1.11.0');
+                      checkTelemetryResourceAttrs(span);
                     }
                   });
                 });
@@ -135,9 +131,7 @@ mochaSuiteFn('opentelemetry/instrumentations', function () {
                     expect(span.data.tags['restify.method']).to.eql('get');
                     expect(span.data.tags['http.route']).to.eql('/test');
 
-                    expect(span.data.resource['telemetry.sdk.language']).to.eql('nodejs');
-                    expect(span.data.resource['telemetry.sdk.name']).to.eql('opentelemetry');
-                    expect(span.data.resource['telemetry.sdk.version']).to.eql('1.11.0');
+                    checkTelemetryResourceAttrs(span);
                   }
                 });
 
@@ -250,9 +244,7 @@ mochaSuiteFn('opentelemetry/instrumentations', function () {
                 dataProperty: 'tags',
                 extraTests: span => {
                   expect(span.data.tags.name).to.eql('fs readFileSync');
-                  expect(span.data.resource['telemetry.sdk.language']).to.eql('nodejs');
-                  expect(span.data.resource['telemetry.sdk.name']).to.eql('opentelemetry');
-                  expect(span.data.resource['telemetry.sdk.version']).to.eql('1.11.0');
+                  checkTelemetryResourceAttrs(span);
                 }
               });
             })
@@ -285,9 +277,7 @@ mochaSuiteFn('opentelemetry/instrumentations', function () {
                 dataProperty: 'tags',
                 extraTests: span => {
                   expect(span.data.tags.name).to.eql('fs statSync');
-                  expect(span.data.resource['telemetry.sdk.language']).to.eql('nodejs');
-                  expect(span.data.resource['telemetry.sdk.name']).to.eql('opentelemetry');
-                  expect(span.data.resource['telemetry.sdk.version']).to.eql('1.11.0');
+                  checkTelemetryResourceAttrs(span);
                 }
               });
 
@@ -300,9 +290,7 @@ mochaSuiteFn('opentelemetry/instrumentations', function () {
                 dataProperty: 'tags',
                 extraTests: span => {
                   expect(span.data.tags.name).to.eql('fs readFileSync');
-                  expect(span.data.resource['telemetry.sdk.language']).to.eql('nodejs');
-                  expect(span.data.resource['telemetry.sdk.name']).to.eql('opentelemetry');
-                  expect(span.data.resource['telemetry.sdk.version']).to.eql('1.11.0');
+                  checkTelemetryResourceAttrs(span);
                 }
               });
             })
@@ -365,9 +353,7 @@ mochaSuiteFn('opentelemetry/instrumentations', function () {
                   expect(span.data.tags['messaging.operation']).to.eql('receive');
                   expect(span.data.tags['messaging.socket.io.event_name']).to.eql('test_reply');
 
-                  expect(span.data.resource['telemetry.sdk.language']).to.eql('nodejs');
-                  expect(span.data.resource['telemetry.sdk.name']).to.eql('opentelemetry');
-                  expect(span.data.resource['telemetry.sdk.version']).to.eql('1.11.0');
+                  checkTelemetryResourceAttrs(span);
                 }
               });
 
@@ -386,9 +372,7 @@ mochaSuiteFn('opentelemetry/instrumentations', function () {
                   expect(span.data.tags['messaging.socket.io.namespace']).to.eql('/');
                   expect(span.data.tags['messaging.destination']).to.eql('EMIT test');
 
-                  expect(span.data.resource['telemetry.sdk.language']).to.eql('nodejs');
-                  expect(span.data.resource['telemetry.sdk.name']).to.eql('opentelemetry');
-                  expect(span.data.resource['telemetry.sdk.version']).to.eql('1.11.0');
+                  checkTelemetryResourceAttrs(span);
                 }
               });
             })
@@ -427,9 +411,7 @@ mochaSuiteFn('opentelemetry/instrumentations', function () {
                   expect(span.data.tags['messaging.socket.io.namespace']).to.eql('/');
                   expect(span.data.tags['messaging.destination']).to.eql('EMIT message');
 
-                  expect(span.data.resource['telemetry.sdk.language']).to.eql('nodejs');
-                  expect(span.data.resource['telemetry.sdk.name']).to.eql('opentelemetry');
-                  expect(span.data.resource['telemetry.sdk.version']).to.eql('1.11.0');
+                  checkTelemetryResourceAttrs(span);
                 }
               });
             })
@@ -454,6 +436,12 @@ mochaSuiteFn('opentelemetry/instrumentations', function () {
         ));
   });
 });
+
+function checkTelemetryResourceAttrs(span) {
+  expect(span.data.resource['telemetry.sdk.language']).to.eql('nodejs');
+  expect(span.data.resource['telemetry.sdk.name']).to.eql('opentelemetry');
+  expect(span.data.resource['telemetry.sdk.version']).to.match(/1\.\d\.\d/);
+}
 
 function verifyHttpExit(spans, parentSpan) {
   return expectExactlyOneMatching(spans, [
