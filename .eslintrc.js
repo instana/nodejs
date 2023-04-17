@@ -28,7 +28,7 @@ module.exports = {
   rules: {
     'arrow-parens': 'off',
     'no-promise-executor-return': 'off',
-    'default-param-last': 'warn',
+    'default-param-last': 'off',
     'arrow-body-style': 'off',
     'comma-dangle': ['error', 'never'],
     'class-methods-use-this': 'off',
