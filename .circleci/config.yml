@@ -393,6 +393,7 @@ jobs:
       - <<: *nats-streaming
       - <<: *memcached
       - <<: *couchbase
+      - <<: *couchbase-setup
     <<: *shared
     parallelism: 20
     resource_class: large
@@ -414,6 +415,7 @@ jobs:
       - <<: *nats-streaming
       - <<: *memcached
       - <<: *couchbase
+      - <<: *couchbase-setup
     <<: *shared
     parallelism: 20
     resource_class: large
@@ -438,6 +440,7 @@ jobs:
       - <<: *nats-streaming
       - <<: *memcached
       - <<: *couchbase
+      - <<: *couchbase-setup
     <<: *shared
     parallelism: 20
     resource_class: large
@@ -461,6 +464,7 @@ jobs:
       - <<: *nats-streaming
       - <<: *memcached
       - <<: *couchbase
+      - <<: *couchbase-setup
     <<: *shared
     parallelism: 20
     resource_class: large
@@ -484,6 +488,7 @@ jobs:
       - <<: *nats-streaming
       - <<: *memcached
       - <<: *couchbase
+      - <<: *couchbase-setup
     <<: *shared
     parallelism: 20
     resource_class: large
@@ -505,6 +510,7 @@ jobs:
       - <<: *nats-streaming
       - <<: *memcached
       - <<: *couchbase
+      - <<: *couchbase-setup
     <<: *shared
     parallelism: 20
     resource_class: large
@@ -528,6 +534,7 @@ jobs:
       - <<: *nats-streaming
       - <<: *memcached
       - <<: *couchbase
+      - <<: *couchbase-setup
     <<: *shared
     parallelism: 1
     resource_class: large
