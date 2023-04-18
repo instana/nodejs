@@ -322,7 +322,8 @@ couchbase-setup: &couchbase-setup
         curl -v http://couchbase:8091/settings/web -d port=8091 -d username=node -d password=nodepwd && \
         curl -i -u node:nodepwd -X POST http://couchbase:8091/settings/indexes -d 'storageMode=memory_optimized' && \
         curl -v -u node:nodepwd -X POST http://couchbase:8091/pools/default/buckets -d name=projects -d bucketType=couchbase -d ramQuota=128 -d flushEnabled=1 && \
-        curl -v -u node:nodepwd -X POST http://couchbase:8091/pools/default/buckets -d name=companies -d bucketType=ephemeral -d ramQuota=128 -d flushEnabled=1      
+        curl -v -u node:nodepwd -X POST http://couchbase:8091/pools/default/buckets -d name=companies -d bucketType=ephemeral -d ramQuota=128 -d flushEnabled=1
+        tail -f /dev/null
 
 schema-registry: &schema-registry
   - image: confluentinc/cp-schema-registry:4.1.0
