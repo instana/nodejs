@@ -126,7 +126,7 @@ const connect = async () => {
       const data = await dnsPromises.lookup('couchbase', { family: 4 });
       log(data);
     } catch (e1) {
-      console.log('lookup', e1);
+      log('lookup', e1);
     }
 
     connStr1 = 'couchbase://couchbase';
