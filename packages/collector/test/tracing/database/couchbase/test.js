@@ -20,6 +20,24 @@ const ProcessControls = require('../../../test_util/ProcessControls');
 const globalAgent = require('../../../globalAgent');
 const DELAY_TIMEOUT_IN_MS = 500;
 
+const verifyCouchbaseSpan = (controls, entrySpan, options = { hostname: 'localhost' }) => [
+  span => expect(span.t).to.equal(entrySpan.t),
+  span => expect(span.p).to.equal(entrySpan.s),
+  span => expect(span.n).to.equal('couchbase'),
+  span => expect(span.k).to.equal(constants.EXIT),
+  span => (options.error ? expect(span.ec).to.equal(1) : expect(span.ec).to.equal(0)),
+  span => expect(span.f.e).to.equal(String(controls.getPid())),
+  span => expect(span.f.h).to.equal('agent-stub-uuid'),
+  // span => expect(span.data.couchbase.hostname).to.equal(`couchbase://${options.hostname}`),
+  span => expect(span.data.couchbase.bucket).to.equal('bucket' in options ? options.bucket : 'projects'),
+  span => expect(span.data.couchbase.type).to.equal('type' in options ? options.type : 'membase'),
+  span => expect(span.data.couchbase.sql).to.equal(options.sql || 'GET'),
+  span =>
+    options.error
+      ? expect(span.data.couchbase.error).to.equal(options.error)
+      : expect(span.data.couchbase.error).to.not.exist
+];
+
 const verifySpans = (agentControls, controls, options = {}) =>
   agentControls.getSpans().then(spans => {
     if (options.expectSpans === false) {
@@ -38,23 +56,7 @@ const verifySpans = (agentControls, controls, options = {}) =>
     if (options.verifyCustom) return options.verifyCustom(entrySpan, spans);
     if (options.spanLength === 1) return;
 
-    expectExactlyOneMatching(spans, [
-      span => expect(span.t).to.equal(entrySpan.t),
-      span => expect(span.p).to.equal(entrySpan.s),
-      span => expect(span.n).to.equal('couchbase'),
-      span => expect(span.k).to.equal(constants.EXIT),
-      span => (options.error ? expect(span.ec).to.equal(1) : expect(span.ec).to.equal(0)),
-      span => expect(span.f.e).to.equal(String(controls.getPid())),
-      span => expect(span.f.h).to.equal('agent-stub-uuid'),
-      // span => expect(span.data.couchbase.hostname).to.equal('couchbase://127.0.0.1'),
-      span => expect(span.data.couchbase.bucket).to.equal('bucket' in options ? options.bucket : 'projects'),
-      span => expect(span.data.couchbase.type).to.equal('type' in options ? options.type : 'membase'),
-      span => expect(span.data.couchbase.sql).to.equal(options.sql),
-      span =>
-        options.error
-          ? expect(span.data.couchbase.error).to.equal(options.error)
-          : expect(span.data.couchbase.error).to.not.exist
-    ]);
+    expectExactlyOneMatching(spans, verifyCouchbaseSpan(controls, entrySpan, options));
   });
 
 const mochaSuiteFn =
@@ -100,19 +102,7 @@ mochaSuiteFn('tracing/couchbase', function () {
               verifySpans(agentControls, controls, {
                 spanLength: 3,
                 verifyCustom: (entrySpan, spans) => {
-                  expectExactlyOneMatching(spans, [
-                    span => expect(span.t).to.equal(entrySpan.t),
-                    span => expect(span.p).to.equal(entrySpan.s),
-                    span => expect(span.n).to.equal('couchbase'),
-                    span => expect(span.k).to.equal(constants.EXIT),
-                    span => expect(span.ec).to.equal(0),
-                    span => expect(span.f.e).to.equal(String(controls.getPid())),
-                    span => expect(span.f.h).to.equal('agent-stub-uuid'),
-                    // span => expect(span.data.couchbase.hostname).to.equal('couchbase://127.0.0.1'),
-                    span => expect(span.data.couchbase.bucket).to.equal('projects'),
-                    span => expect(span.data.couchbase.type).to.equal('membase'),
-                    span => expect(span.data.couchbase.sql).to.equal('GET')
-                  ]);
+                  expectExactlyOneMatching(spans, verifyCouchbaseSpan(controls, entrySpan));
 
                   expectExactlyOneMatching(spans, [
                     span => expect(span.t).to.equal(entrySpan.t),
@@ -146,32 +136,12 @@ mochaSuiteFn('tracing/couchbase', function () {
               verifySpans(agentControls, controls, {
                 spanLength: 3,
                 verifyCustom: (entrySpan, spans) => {
-                  expectExactlyOneMatching(spans, [
-                    span => expect(span.t).to.equal(entrySpan.t),
-                    span => expect(span.p).to.equal(entrySpan.s),
-                    span => expect(span.n).to.equal('couchbase'),
-                    span => expect(span.k).to.equal(constants.EXIT),
-                    span => expect(span.ec).to.equal(0),
-                    span => expect(span.f.e).to.equal(String(controls.getPid())),
-                    span => expect(span.f.h).to.equal('agent-stub-uuid'),
-                    // span => expect(span.data.couchbase.hostname).to.equal('couchbase://127.0.0.1'),
-                    span => expect(span.data.couchbase.bucket).to.equal('projects'),
-                    span => expect(span.data.couchbase.type).to.equal('membase'),
-                    span => expect(span.data.couchbase.sql).to.equal('GET')
-                  ]);
-                  expectExactlyOneMatching(spans, [
-                    span => expect(span.t).to.equal(entrySpan.t),
-                    span => expect(span.p).to.equal(entrySpan.s),
-                    span => expect(span.n).to.equal('couchbase'),
-                    span => expect(span.k).to.equal(constants.EXIT),
-                    span => expect(span.ec).to.equal(0),
-                    span => expect(span.f.e).to.equal(String(controls.getPid())),
-                    span => expect(span.f.h).to.equal('agent-stub-uuid'),
-                    // span => expect(span.data.couchbase.hostname).to.equal('couchbase://127.0.0.1'),
-                    span => expect(span.data.couchbase.bucket).to.equal('companies'),
-                    span => expect(span.data.couchbase.type).to.equal('ephemeral'),
-                    span => expect(span.data.couchbase.sql).to.equal('INSERT')
-                  ]);
+                  expectExactlyOneMatching(spans, verifyCouchbaseSpan(controls, entrySpan));
+
+                  expectExactlyOneMatching(
+                    spans,
+                    verifyCouchbaseSpan(controls, entrySpan, { bucket: 'companies', type: 'ephemeral', sql: 'INSERT' })
+                  );
                 }
               })
             );
@@ -200,30 +170,12 @@ mochaSuiteFn('tracing/couchbase', function () {
               verifySpans(agentControls, controls, {
                 spanLength: 3,
                 verifyCustom: (entrySpan, spans) => {
-                  expectExactlyOneMatching(spans, [
-                    span => expect(span.t).to.equal(entrySpan.t),
-                    span => expect(span.p).to.equal(entrySpan.s),
-                    span => expect(span.n).to.equal('couchbase'),
-                    span => expect(span.k).to.equal(constants.EXIT),
-                    span => expect(span.f.e).to.equal(String(controls.getPid())),
-                    span => expect(span.f.h).to.equal('agent-stub-uuid'),
-                    // span => expect(span.data.couchbase.hostname).to.equal('couchbase://127.0.0.1'),
-                    span => expect(span.data.couchbase.bucket).to.equal('projects'),
-                    span => expect(span.data.couchbase.type).to.equal('membase'),
-                    span => expect(span.data.couchbase.sql).to.equal('REPLACE')
-                  ]);
-                  expectExactlyOneMatching(spans, [
-                    span => expect(span.t).to.equal(entrySpan.t),
-                    span => expect(span.p).to.equal(entrySpan.s),
-                    span => expect(span.n).to.equal('couchbase'),
-                    span => expect(span.k).to.equal(constants.EXIT),
-                    span => expect(span.f.e).to.equal(String(controls.getPid())),
-                    span => expect(span.f.h).to.equal('agent-stub-uuid'),
-                    //    span => expect(span.data.couchbase.hostname).to.equal('couchbase://127.0.0.1'),
-                    span => expect(span.data.couchbase.bucket).to.equal('projects'),
-                    span => expect(span.data.couchbase.type).to.equal('membase'),
-                    span => expect(span.data.couchbase.sql).to.equal('GET')
-                  ]);
+                  expectExactlyOneMatching(
+                    spans,
+                    verifyCouchbaseSpan(controls, entrySpan, { bucket: 'projects', type: 'membase', sql: 'REPLACE' })
+                  );
+
+                  expectExactlyOneMatching(spans, verifyCouchbaseSpan(controls, entrySpan));
                 }
               })
             );
@@ -307,54 +259,38 @@ mochaSuiteFn('tracing/couchbase', function () {
               verifySpans(agentControls, controls, {
                 spanLength: 5,
                 verifyCustom: (entrySpan, spans) => {
-                  expectExactlyOneMatching(spans, [
-                    span => expect(span.t).to.equal(entrySpan.t),
-                    span => expect(span.p).to.equal(entrySpan.s),
-                    span => expect(span.n).to.equal('couchbase'),
-                    span => expect(span.k).to.equal(constants.EXIT),
-                    span => expect(span.f.e).to.equal(String(controls.getPid())),
-                    span => expect(span.f.h).to.equal('agent-stub-uuid'),
-                    //  span => expect(span.data.couchbase.hostname).to.equal('couchbase://127.0.0.1'),
-                    span => expect(span.data.couchbase.bucket).to.equal('projects'),
-                    span => expect(span.data.couchbase.type).to.equal('membase'),
-                    span => expect(span.data.couchbase.sql).to.equal('UPSERTINDEX')
-                  ]);
-                  expectExactlyOneMatching(spans, [
-                    span => expect(span.t).to.equal(entrySpan.t),
-                    span => expect(span.p).to.equal(entrySpan.s),
-                    span => expect(span.n).to.equal('couchbase'),
-                    span => expect(span.k).to.equal(constants.EXIT),
-                    span => expect(span.f.e).to.equal(String(controls.getPid())),
-                    span => expect(span.f.h).to.equal('agent-stub-uuid'),
-                    //  span => expect(span.data.couchbase.hostname).to.equal('couchbase://127.0.0.1'),
-                    span => expect(span.data.couchbase.bucket).to.equal('projects'),
-                    span => expect(span.data.couchbase.type).to.equal('membase'),
-                    span => expect(span.data.couchbase.sql).to.equal('GETINDEX')
-                  ]);
-                  expectExactlyOneMatching(spans, [
-                    span => expect(span.t).to.equal(entrySpan.t),
-                    span => expect(span.p).to.equal(entrySpan.s),
-                    span => expect(span.n).to.equal('couchbase'),
-                    span => expect(span.k).to.equal(constants.EXIT),
-                    span => expect(span.f.e).to.equal(String(controls.getPid())),
-                    span => expect(span.f.h).to.equal('agent-stub-uuid'),
-                    //  span => expect(span.data.couchbase.hostname).to.equal('couchbase://127.0.0.1'),
-                    span => expect(span.data.couchbase.bucket).to.equal('projects'),
-                    span => expect(span.data.couchbase.type).to.equal('membase'),
-                    span => expect(span.data.couchbase.sql).to.equal('GETALLINDEXES')
-                  ]);
-                  expectExactlyOneMatching(spans, [
-                    span => expect(span.t).to.equal(entrySpan.t),
-                    span => expect(span.p).to.equal(entrySpan.s),
-                    span => expect(span.n).to.equal('couchbase'),
-                    span => expect(span.k).to.equal(constants.EXIT),
-                    span => expect(span.f.e).to.equal(String(controls.getPid())),
-                    span => expect(span.f.h).to.equal('agent-stub-uuid'),
-                    //   span => expect(span.data.couchbase.hostname).to.equal('couchbase://127.0.0.1'),
-                    span => expect(span.data.couchbase.bucket).to.equal(''),
-                    span => expect(span.data.couchbase.type).to.equal(''),
-                    span => expect(span.data.couchbase.sql).to.equal('DROPINDEX')
-                  ]);
+                  expectExactlyOneMatching(
+                    spans,
+                    verifyCouchbaseSpan(controls, entrySpan, {
+                      bucket: 'projects',
+                      type: 'membase',
+                      sql: 'UPSERTINDEX'
+                    })
+                  );
+                  expectExactlyOneMatching(
+                    spans,
+                    verifyCouchbaseSpan(controls, entrySpan, {
+                      bucket: 'projects',
+                      type: 'membase',
+                      sql: 'GETINDEX'
+                    })
+                  );
+                  expectExactlyOneMatching(
+                    spans,
+                    verifyCouchbaseSpan(controls, entrySpan, {
+                      bucket: 'projects',
+                      type: 'membase',
+                      sql: 'GETALLINDEXES'
+                    })
+                  );
+                  expectExactlyOneMatching(
+                    spans,
+                    verifyCouchbaseSpan(controls, entrySpan, {
+                      bucket: '',
+                      type: '',
+                      sql: 'DROPINDEX'
+                    })
+                  );
                 }
               })
             );
@@ -372,30 +308,23 @@ mochaSuiteFn('tracing/couchbase', function () {
               verifySpans(agentControls, controls, {
                 spanLength: 9,
                 verifyCustom: (entrySpan, spans) => {
-                  expectExactlyOneMatching(spans, [
-                    span => expect(span.t).to.equal(entrySpan.t),
-                    span => expect(span.p).to.equal(entrySpan.s),
-                    span => expect(span.n).to.equal('couchbase'),
-                    span => expect(span.k).to.equal(constants.EXIT),
-                    span => expect(span.f.e).to.equal(String(controls.getPid())),
-                    span => expect(span.f.h).to.equal('agent-stub-uuid'),
-                    //     span => expect(span.data.couchbase.hostname).to.equal('couchbase://127.0.0.1'),
-                    span => expect(span.data.couchbase.bucket).to.equal('projects'),
-                    span => expect(span.data.couchbase.type).to.equal('membase'),
-                    span => expect(span.data.couchbase.sql).to.equal('ANALYTICSQUERY')
-                  ]);
-                  expectExactlyNMatching(spans, 7, [
-                    span => expect(span.t).to.equal(entrySpan.t),
-                    span => expect(span.p).to.equal(entrySpan.s),
-                    span => expect(span.n).to.equal('couchbase'),
-                    span => expect(span.k).to.equal(constants.EXIT),
-                    span => expect(span.f.e).to.equal(String(controls.getPid())),
-                    span => expect(span.f.h).to.equal('agent-stub-uuid'),
-                    //                  span => expect(span.data.couchbase.hostname).to.equal('couchbase://127.0.0.1'),
-                    span => expect(span.data.couchbase.bucket).to.equal(''),
-                    span => expect(span.data.couchbase.type).to.equal(''),
-                    span => expect(span.data.couchbase.sql).to.equal('ANALYTICSQUERY')
-                  ]);
+                  expectExactlyOneMatching(
+                    spans,
+                    verifyCouchbaseSpan(controls, entrySpan, {
+                      bucket: 'projects',
+                      type: 'membase',
+                      sql: 'ANALYTICSQUERY'
+                    })
+                  );
+                  expectExactlyNMatching(
+                    spans,
+                    7,
+                    verifyCouchbaseSpan(controls, entrySpan, {
+                      bucket: '',
+                      type: '',
+                      sql: 'ANALYTICSQUERY'
+                    })
+                  );
                 }
               })
             );
@@ -413,18 +342,14 @@ mochaSuiteFn('tracing/couchbase', function () {
               verifySpans(agentControls, controls, {
                 spanLength: 4,
                 verifyCustom: (entrySpan, spans) => {
-                  expectExactlyOneMatching(spans, [
-                    span => expect(span.t).to.equal(entrySpan.t),
-                    span => expect(span.p).to.equal(entrySpan.s),
-                    span => expect(span.n).to.equal('couchbase'),
-                    span => expect(span.k).to.equal(constants.EXIT),
-                    span => expect(span.f.e).to.equal(String(controls.getPid())),
-                    span => expect(span.f.h).to.equal('agent-stub-uuid'),
-                    //      span => expect(span.data.couchbase.hostname).to.equal('couchbase://127.0.0.1'),
-                    span => expect(span.data.couchbase.bucket).to.equal(''),
-                    span => expect(span.data.couchbase.type).to.equal(''),
-                    span => expect(span.data.couchbase.sql).to.equal('SEARCHQUERY')
-                  ]);
+                  expectExactlyOneMatching(
+                    spans,
+                    verifyCouchbaseSpan(controls, entrySpan, {
+                      bucket: '',
+                      type: '',
+                      sql: 'SEARCHQUERY'
+                    })
+                  );
                 }
               })
             );
@@ -445,54 +370,33 @@ mochaSuiteFn('tracing/couchbase', function () {
                 verifySpans(agentControls, controls, {
                   spanLength: 5,
                   verifyCustom: (entrySpan, spans) => {
-                    expectExactlyOneMatching(spans, [
-                      span => expect(span.t).to.equal(entrySpan.t),
-                      span => expect(span.p).to.equal(entrySpan.s),
-                      span => expect(span.n).to.equal('couchbase'),
-                      span => expect(span.k).to.equal(constants.EXIT),
-                      span => expect(span.f.e).to.equal(String(controls.getPid())),
-                      // span => expect(span.f.h).to.equal('agent-stub-uuid'),
-                      span => expect(span.data.couchbase.hostname).to.equal('couchbase://127.0.0.1'),
-                      span => expect(span.data.couchbase.bucket).to.equal('projects'),
-                      span => expect(span.data.couchbase.type).to.equal('membase'),
-                      span => expect(span.data.couchbase.sql).to.equal('GET')
-                    ]);
-                    expectExactlyOneMatching(spans, [
-                      span => expect(span.t).to.equal(entrySpan.t),
-                      span => expect(span.p).to.equal(entrySpan.s),
-                      span => expect(span.n).to.equal('couchbase'),
-                      span => expect(span.k).to.equal(constants.EXIT),
-                      span => expect(span.f.e).to.equal(String(controls.getPid())),
-                      span => expect(span.f.h).to.equal('agent-stub-uuid'),
-                      // span => expect(span.data.couchbase.hostname).to.equal('couchbase://127.0.0.1'),
-                      span => expect(span.data.couchbase.bucket).to.equal('projects'),
-                      span => expect(span.data.couchbase.type).to.equal('membase'),
-                      span => expect(span.data.couchbase.sql).to.equal('INSERT')
-                    ]);
-                    expectExactlyOneMatching(spans, [
-                      span => expect(span.t).to.equal(entrySpan.t),
-                      span => expect(span.p).to.equal(entrySpan.s),
-                      span => expect(span.n).to.equal('couchbase'),
-                      span => expect(span.k).to.equal(constants.EXIT),
-                      span => expect(span.f.e).to.equal(String(controls.getPid())),
-                      span => expect(span.f.h).to.equal('agent-stub-uuid'),
-                      // span => expect(span.data.couchbase.hostname).to.equal('couchbase://127.0.0.1'),
-                      span => expect(span.data.couchbase.bucket).to.equal('projects'),
-                      span => expect(span.data.couchbase.type).to.equal('membase'),
-                      span => expect(span.data.couchbase.sql).to.equal('REMOVE')
-                    ]);
-                    expectExactlyOneMatching(spans, [
-                      span => expect(span.t).to.equal(entrySpan.t),
-                      span => expect(span.p).to.equal(entrySpan.s),
-                      span => expect(span.n).to.equal('couchbase'),
-                      span => expect(span.k).to.equal(constants.EXIT),
-                      span => expect(span.f.e).to.equal(String(controls.getPid())),
-                      span => expect(span.f.h).to.equal('agent-stub-uuid'),
-                      // span => expect(span.data.couchbase.hostname).to.equal('couchbase://127.0.0.1'),
-                      span => expect(span.data.couchbase.bucket).to.equal(''),
-                      span => expect(span.data.couchbase.type).to.equal(''),
-                      span => expect(span.data.couchbase.sql).to.equal('COMMIT')
-                    ]);
+                    expectExactlyOneMatching(
+                      spans,
+                      verifyCouchbaseSpan(controls, entrySpan, {
+                        sql: 'GET'
+                      })
+                    );
+                    expectExactlyOneMatching(
+                      spans,
+                      verifyCouchbaseSpan(controls, entrySpan, {
+                        sql: 'INSERT'
+                      })
+                    );
+                    expectExactlyOneMatching(
+                      spans,
+                      verifyCouchbaseSpan(controls, entrySpan, {
+                        sql: 'REMOVE'
+                      })
+                    );
+
+                    expectExactlyOneMatching(
+                      spans,
+                      verifyCouchbaseSpan(controls, entrySpan, {
+                        bucket: '',
+                        type: '',
+                        sql: 'COMMIT'
+                      })
+                    );
                   }
                 })
               );
@@ -511,42 +415,26 @@ mochaSuiteFn('tracing/couchbase', function () {
                 verifySpans(agentControls, controls, {
                   spanLength: 4,
                   verifyCustom: (entrySpan, spans) => {
-                    expectExactlyOneMatching(spans, [
-                      span => expect(span.t).to.equal(entrySpan.t),
-                      span => expect(span.p).to.equal(entrySpan.s),
-                      span => expect(span.n).to.equal('couchbase'),
-                      span => expect(span.k).to.equal(constants.EXIT),
-                      span => expect(span.f.e).to.equal(String(controls.getPid())),
-                      span => expect(span.f.h).to.equal('agent-stub-uuid'),
-                      // span => expect(span.data.couchbase.hostname).to.equal('couchbase://127.0.0.1'),
-                      span => expect(span.data.couchbase.bucket).to.equal('projects'),
-                      span => expect(span.data.couchbase.type).to.equal('membase'),
-                      span => expect(span.data.couchbase.sql).to.equal('GET')
-                    ]);
-                    expectExactlyOneMatching(spans, [
-                      span => expect(span.t).to.equal(entrySpan.t),
-                      span => expect(span.p).to.equal(entrySpan.s),
-                      span => expect(span.n).to.equal('couchbase'),
-                      span => expect(span.k).to.equal(constants.EXIT),
-                      span => expect(span.f.e).to.equal(String(controls.getPid())),
-                      span => expect(span.f.h).to.equal('agent-stub-uuid'),
-                      // span => expect(span.data.couchbase.hostname).to.equal('couchbase://127.0.0.1'),
-                      span => expect(span.data.couchbase.bucket).to.equal('projects'),
-                      span => expect(span.data.couchbase.type).to.equal('membase'),
-                      span => expect(span.data.couchbase.sql).to.equal('INSERT')
-                    ]);
-                    expectExactlyOneMatching(spans, [
-                      span => expect(span.t).to.equal(entrySpan.t),
-                      span => expect(span.p).to.equal(entrySpan.s),
-                      span => expect(span.n).to.equal('couchbase'),
-                      span => expect(span.k).to.equal(constants.EXIT),
-                      span => expect(span.f.e).to.equal(String(controls.getPid())),
-                      span => expect(span.f.h).to.equal('agent-stub-uuid'),
-                      // span => expect(span.data.couchbase.hostname).to.equal('couchbase://127.0.0.1'),
-                      span => expect(span.data.couchbase.bucket).to.equal(''),
-                      span => expect(span.data.couchbase.type).to.equal(''),
-                      span => expect(span.data.couchbase.sql).to.equal('ROLLBACK')
-                    ]);
+                    expectExactlyOneMatching(
+                      spans,
+                      verifyCouchbaseSpan(controls, entrySpan, {
+                        sql: 'GET'
+                      })
+                    );
+                    expectExactlyOneMatching(
+                      spans,
+                      verifyCouchbaseSpan(controls, entrySpan, {
+                        sql: 'INSERT'
+                      })
+                    );
+                    expectExactlyOneMatching(
+                      spans,
+                      verifyCouchbaseSpan(controls, entrySpan, {
+                        bucket: '',
+                        type: '',
+                        sql: 'ROLLBACK'
+                      })
+                    );
                   }
                 })
               );
@@ -566,78 +454,53 @@ mochaSuiteFn('tracing/couchbase', function () {
               verifySpans(agentControls, controls, {
                 spanLength: 8,
                 verifyCustom: (entrySpan, spans) => {
-                  expectExactlyOneMatching(spans, [
-                    span => expect(span.t).to.equal(entrySpan.t),
-                    span => expect(span.p).to.equal(entrySpan.s),
-                    span => expect(span.n).to.equal('couchbase'),
-                    span => expect(span.k).to.equal(constants.EXIT),
-                    span => expect(span.f.e).to.equal(String(controls.getPid())),
-                    span => expect(span.f.h).to.equal('agent-stub-uuid'),
-                    // span => expect(span.data.couchbase.hostname).to.equal('couchbase://127.0.0.1'),
-                    span => expect(span.data.couchbase.bucket).to.equal('projects'),
-                    span => expect(span.data.couchbase.type).to.equal('membase'),
-                    span => expect(span.data.couchbase.sql).to.equal('CREATEINDEX')
-                  ]);
-                  expectExactlyOneMatching(spans, [
-                    span => expect(span.t).to.equal(entrySpan.t),
-                    span => expect(span.p).to.equal(entrySpan.s),
-                    span => expect(span.n).to.equal('couchbase'),
-                    span => expect(span.k).to.equal(constants.EXIT),
-                    span => expect(span.f.e).to.equal(String(controls.getPid())),
-                    span => expect(span.f.h).to.equal('agent-stub-uuid'),
-                    // span => expect(span.data.couchbase.hostname).to.equal('couchbase://127.0.0.1'),
-                    span => expect(span.data.couchbase.bucket).to.equal('companies'),
-                    span => expect(span.data.couchbase.type).to.equal('ephemeral'),
-                    span => expect(span.data.couchbase.sql).to.equal('CREATEINDEX')
-                  ]);
-                  expectExactlyNMatching(spans, 2, [
-                    span => expect(span.t).to.equal(entrySpan.t),
-                    span => expect(span.p).to.equal(entrySpan.s),
-                    span => expect(span.n).to.equal('couchbase'),
-                    span => expect(span.k).to.equal(constants.EXIT),
-                    span => expect(span.f.e).to.equal(String(controls.getPid())),
-                    span => expect(span.f.h).to.equal('agent-stub-uuid'),
-                    // span => expect(span.data.couchbase.hostname).to.equal('couchbase://127.0.0.1'),
-                    span => expect(span.data.couchbase.bucket).to.equal(''),
-                    span => expect(span.data.couchbase.type).to.equal(''),
-                    span => expect(span.data.couchbase.sql).to.equal('QUERY')
-                  ]);
-                  expectExactlyOneMatching(spans, [
-                    span => expect(span.t).to.equal(entrySpan.t),
-                    span => expect(span.p).to.equal(entrySpan.s),
-                    span => expect(span.n).to.equal('couchbase'),
-                    span => expect(span.k).to.equal(constants.EXIT),
-                    span => expect(span.f.e).to.equal(String(controls.getPid())),
-                    span => expect(span.f.h).to.equal('agent-stub-uuid'),
-                    // span => expect(span.data.couchbase.hostname).to.equal('couchbase://127.0.0.1'),
-                    span => expect(span.data.couchbase.bucket).to.equal('projects'),
-                    span => expect(span.data.couchbase.type).to.equal('membase'),
-                    span => expect(span.data.couchbase.sql).to.equal('DROPINDEX')
-                  ]);
-                  expectExactlyOneMatching(spans, [
-                    span => expect(span.t).to.equal(entrySpan.t),
-                    span => expect(span.p).to.equal(entrySpan.s),
-                    span => expect(span.n).to.equal('couchbase'),
-                    span => expect(span.k).to.equal(constants.EXIT),
-                    span => expect(span.f.e).to.equal(String(controls.getPid())),
-                    span => expect(span.f.h).to.equal('agent-stub-uuid'),
-                    // span => expect(span.data.couchbase.hostname).to.equal('couchbase://127.0.0.1'),
-                    span => expect(span.data.couchbase.bucket).to.equal('companies'),
-                    span => expect(span.data.couchbase.type).to.equal('ephemeral'),
-                    span => expect(span.data.couchbase.sql).to.equal('DROPINDEX')
-                  ]);
-                  expectExactlyOneMatching(spans, [
-                    span => expect(span.t).to.equal(entrySpan.t),
-                    span => expect(span.p).to.equal(entrySpan.s),
-                    span => expect(span.n).to.equal('couchbase'),
-                    span => expect(span.k).to.equal(constants.EXIT),
-                    span => expect(span.f.e).to.equal(String(controls.getPid())),
-                    span => expect(span.f.h).to.equal('agent-stub-uuid'),
-                    // span => expect(span.data.couchbase.hostname).to.equal('couchbase://127.0.0.1'),
-                    span => expect(span.data.couchbase.bucket).to.equal('companies'),
-                    span => expect(span.data.couchbase.type).to.equal('ephemeral'),
-                    span => expect(span.data.couchbase.sql).to.equal('GETALLINDEXES')
-                  ]);
+                  expectExactlyOneMatching(
+                    spans,
+                    verifyCouchbaseSpan(controls, entrySpan, {
+                      sql: 'CREATEINDEX'
+                    })
+                  );
+                  expectExactlyOneMatching(
+                    spans,
+                    verifyCouchbaseSpan(controls, entrySpan, {
+                      bucket: 'companies',
+                      type: 'ephemeral',
+                      sql: 'CREATEINDEX'
+                    })
+                  );
+
+                  expectExactlyNMatching(
+                    spans,
+                    2,
+                    verifyCouchbaseSpan(controls, entrySpan, {
+                      bucket: '',
+                      type: '',
+                      sql: 'QUERY'
+                    })
+                  );
+
+                  expectExactlyOneMatching(
+                    spans,
+                    verifyCouchbaseSpan(controls, entrySpan, {
+                      sql: 'DROPINDEX'
+                    })
+                  );
+                  expectExactlyOneMatching(
+                    spans,
+                    verifyCouchbaseSpan(controls, entrySpan, {
+                      bucket: 'companies',
+                      type: 'ephemeral',
+                      sql: 'DROPINDEX'
+                    })
+                  );
+                  expectExactlyOneMatching(
+                    spans,
+                    verifyCouchbaseSpan(controls, entrySpan, {
+                      bucket: 'companies',
+                      type: 'ephemeral',
+                      sql: 'GETALLINDEXES'
+                    })
+                  );
                 }
               })
             );
@@ -657,30 +520,23 @@ mochaSuiteFn('tracing/couchbase', function () {
                 verifySpans(agentControls, controls, {
                   spanLength: 5,
                   verifyCustom: (entrySpan, spans) => {
-                    expectExactlyOneMatching(spans, [
-                      span => expect(span.t).to.equal(entrySpan.t),
-                      span => expect(span.p).to.equal(entrySpan.s),
-                      span => expect(span.n).to.equal('couchbase'),
-                      span => expect(span.k).to.equal(constants.EXIT),
-                      span => expect(span.f.e).to.equal(String(controls.getPid())),
-                      span => expect(span.f.h).to.equal('agent-stub-uuid'),
-                      // span => expect(span.data.couchbase.hostname).to.equal('couchbase://localhost'),
-                      span => expect(span.data.couchbase.bucket).to.equal(''),
-                      span => expect(span.data.couchbase.type).to.equal(''),
-                      span => expect(span.data.couchbase.sql).to.equal('QUERY')
-                    ]);
-                    expectExactlyOneMatching(spans, [
-                      span => expect(span.t).to.equal(entrySpan.t),
-                      span => expect(span.p).to.equal(entrySpan.s),
-                      span => expect(span.n).to.equal('couchbase'),
-                      span => expect(span.k).to.equal(constants.EXIT),
-                      span => expect(span.f.e).to.equal(String(controls.getPid())),
-                      span => expect(span.f.h).to.equal('agent-stub-uuid'),
-                      // span => expect(span.data.couchbase.hostname).to.equal('couchbase://127.0.0.1'),
-                      span => expect(span.data.couchbase.bucket).to.equal(''),
-                      span => expect(span.data.couchbase.type).to.equal(''),
-                      span => expect(span.data.couchbase.sql).to.equal('QUERY')
-                    ]);
+                    expectExactlyOneMatching(
+                      spans,
+                      verifyCouchbaseSpan(controls, entrySpan, {
+                        bucket: '',
+                        type: '',
+                        sql: 'QUERY'
+                      })
+                    );
+                    expectExactlyOneMatching(
+                      spans,
+                      verifyCouchbaseSpan(controls, entrySpan, {
+                        bucket: '',
+                        hostname: '127.0.0.1',
+                        type: '',
+                        sql: 'QUERY'
+                      })
+                    );
                   }
                 })
               );
@@ -701,44 +557,27 @@ mochaSuiteFn('tracing/couchbase', function () {
                 verifySpans(agentControls, controls, {
                   spanLength: 9,
                   verifyCustom: (entrySpan, spans) => {
-                    expectExactlyNMatching(spans, 3, [
-                      span => expect(span.t).to.equal(entrySpan.t),
-                      span => expect(span.p).to.equal(entrySpan.s),
-                      span => expect(span.n).to.equal('couchbase'),
-                      span => expect(span.k).to.equal(constants.EXIT),
-                      span => expect(span.f.e).to.equal(String(controls.getPid())),
-                      span => expect(span.f.h).to.equal('agent-stub-uuid'),
-                      // span => expect(span.data.couchbase.hostname).to.equal('couchbase://127.0.0.1'),
-                      span => expect(span.data.couchbase.bucket).to.equal('projects'),
-                      span => expect(span.data.couchbase.type).to.equal('membase'),
-                      span => expect(span.data.couchbase.sql).to.equal('MUTATEIN')
-                    ]);
-
-                    expectExactlyNMatching(spans, 2, [
-                      span => expect(span.t).to.equal(entrySpan.t),
-                      span => expect(span.p).to.equal(entrySpan.s),
-                      span => expect(span.n).to.equal('couchbase'),
-                      span => expect(span.k).to.equal(constants.EXIT),
-                      span => expect(span.f.e).to.equal(String(controls.getPid())),
-                      span => expect(span.f.h).to.equal('agent-stub-uuid'),
-                      // span => expect(span.data.couchbase.hostname).to.equal('couchbase://127.0.0.1'),
-                      span => expect(span.data.couchbase.bucket).to.equal('projects'),
-                      span => expect(span.data.couchbase.type).to.equal('membase'),
-                      span => expect(span.data.couchbase.sql).to.equal('LOOKUPIN')
-                    ]);
-
-                    expectExactlyNMatching(spans, 3, [
-                      span => expect(span.t).to.equal(entrySpan.t),
-                      span => expect(span.p).to.equal(entrySpan.s),
-                      span => expect(span.n).to.equal('couchbase'),
-                      span => expect(span.k).to.equal(constants.EXIT),
-                      span => expect(span.f.e).to.equal(String(controls.getPid())),
-                      span => expect(span.f.h).to.equal('agent-stub-uuid'),
-                      // span => expect(span.data.couchbase.hostname).to.equal('couchbase://127.0.0.1'),
-                      span => expect(span.data.couchbase.bucket).to.equal('projects'),
-                      span => expect(span.data.couchbase.type).to.equal('membase'),
-                      span => expect(span.data.couchbase.sql).to.equal('GET')
-                    ]);
+                    expectExactlyNMatching(
+                      spans,
+                      3,
+                      verifyCouchbaseSpan(controls, entrySpan, {
+                        sql: 'MUTATEIN'
+                      })
+                    );
+                    expectExactlyNMatching(
+                      spans,
+                      2,
+                      verifyCouchbaseSpan(controls, entrySpan, {
+                        sql: 'LOOKUPIN'
+                      })
+                    );
+                    expectExactlyNMatching(
+                      spans,
+                      3,
+                      verifyCouchbaseSpan(controls, entrySpan, {
+                        sql: 'GET'
+                      })
+                    );
                   }
                 })
               );
@@ -757,44 +596,27 @@ mochaSuiteFn('tracing/couchbase', function () {
                 verifySpans(agentControls, controls, {
                   spanLength: 9,
                   verifyCustom: (entrySpan, spans) => {
-                    expectExactlyNMatching(spans, 3, [
-                      span => expect(span.t).to.equal(entrySpan.t),
-                      span => expect(span.p).to.equal(entrySpan.s),
-                      span => expect(span.n).to.equal('couchbase'),
-                      span => expect(span.k).to.equal(constants.EXIT),
-                      span => expect(span.f.e).to.equal(String(controls.getPid())),
-                      span => expect(span.f.h).to.equal('agent-stub-uuid'),
-                      // span => expect(span.data.couchbase.hostname).to.equal('couchbase://127.0.0.1'),
-                      span => expect(span.data.couchbase.bucket).to.equal('projects'),
-                      span => expect(span.data.couchbase.type).to.equal('membase'),
-                      span => expect(span.data.couchbase.sql).to.equal('MUTATEIN')
-                    ]);
-
-                    expectExactlyNMatching(spans, 3, [
-                      span => expect(span.t).to.equal(entrySpan.t),
-                      span => expect(span.p).to.equal(entrySpan.s),
-                      span => expect(span.n).to.equal('couchbase'),
-                      span => expect(span.k).to.equal(constants.EXIT),
-                      span => expect(span.f.e).to.equal(String(controls.getPid())),
-                      span => expect(span.f.h).to.equal('agent-stub-uuid'),
-                      // span => expect(span.data.couchbase.hostname).to.equal('couchbase://127.0.0.1'),
-                      span => expect(span.data.couchbase.bucket).to.equal('projects'),
-                      span => expect(span.data.couchbase.type).to.equal('membase'),
-                      span => expect(span.data.couchbase.sql).to.equal('LOOKUPIN')
-                    ]);
-
-                    expectExactlyNMatching(spans, 2, [
-                      span => expect(span.t).to.equal(entrySpan.t),
-                      span => expect(span.p).to.equal(entrySpan.s),
-                      span => expect(span.n).to.equal('couchbase'),
-                      span => expect(span.k).to.equal(constants.EXIT),
-                      span => expect(span.f.e).to.equal(String(controls.getPid())),
-                      span => expect(span.f.h).to.equal('agent-stub-uuid'),
-                      // span => expect(span.data.couchbase.hostname).to.equal('couchbase://127.0.0.1'),
-                      span => expect(span.data.couchbase.bucket).to.equal('projects'),
-                      span => expect(span.data.couchbase.type).to.equal('membase'),
-                      span => expect(span.data.couchbase.sql).to.equal('GET')
-                    ]);
+                    expectExactlyNMatching(
+                      spans,
+                      3,
+                      verifyCouchbaseSpan(controls, entrySpan, {
+                        sql: 'MUTATEIN'
+                      })
+                    );
+                    expectExactlyNMatching(
+                      spans,
+                      3,
+                      verifyCouchbaseSpan(controls, entrySpan, {
+                        sql: 'LOOKUPIN'
+                      })
+                    );
+                    expectExactlyNMatching(
+                      spans,
+                      2,
+                      verifyCouchbaseSpan(controls, entrySpan, {
+                        sql: 'GET'
+                      })
+                    );
                   }
                 })
               );
