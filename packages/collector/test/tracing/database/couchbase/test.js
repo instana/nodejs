@@ -60,7 +60,8 @@ const verifySpans = (agentControls, controls, options = {}) =>
 const mochaSuiteFn =
   supportedVersion(process.versions.node) && semver.gte(process.versions.node, '12.0.0') ? describe : describe.skip;
 
-mochaSuiteFn('tracing/couchbase', function () {
+// NOTE: it takes 1-2 minutes till the couchbase server can be reached via docker
+mochaSuiteFn.only('tracing/couchbase', function () {
   // The couchbase server is so unrelaible. Absolutely random behaviour for everything.
   this.timeout(config.getTestTimeout() * 4);
 

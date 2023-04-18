@@ -24,11 +24,11 @@ services:
       - COUCHBASE_BUCKET_RAMSIZE_2=512
       - COUCHBASE_RAM_SIZE=2048
       - COUCHBASE_INDEX_RAM_SIZE=512
-    hostname: couchbase-server
-    container_name: couchbase-server
-    working_dir: /opt/couchbase
-    stdin_open: true
-    tty: true
+    # hostname: couchbase-server
+    # container_name: couchbase-server
+    # working_dir: /opt/couchbase
+    # stdin_open: true
+    # tty: true
     entrypoint: [""]
     command: sh -c "/opt/couchbase/init/init-cbserver.sh"
 
