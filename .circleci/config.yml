@@ -303,22 +303,28 @@ kafka: &kafka
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,EXTERNAL:PLAINTEXT
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
       KAFKA_CREATE_TOPICS: "test:1:1,test-topic-1:1:1,test-topic-2:1:1,test-batch-topic-1:1:1,test-batch-topic-2:1:1,rdkafka-topic:1:1,kafka-avro-topic:1:1"
-      KAFKA_ZOOKEEPER_CONNECT: 127.0.0.1:2181
+      KAFKA_ZOOKEEPER_CONNECT: 127.0.0.1:2181   
 
-couchbase-server: &couchbase-server
-  - image: kirrg/couchbase-server
-    environment:
-      - CLUSTER_NAME=couchbase-demo
-      - COUCHBASE_ADMINISTRATOR_USERNAME=node
-      - COUCHBASE_ADMINISTRATOR_PASSWORD=nodepwd
-      - COUCHBASE_BUCKET=projects
-      - COUCHBASE_BUCKET_2=companies
-      - COUCHBASE_BUCKET_RAMSIZE=512
-      - COUCHBASE_BUCKET_RAMSIZE_2=512
-      - COUCHBASE_RAM_SIZE=2048
-      - COUCHBASE_INDEX_RAM_SIZE=512
-    entrypoint: [""]
-    command: sh -c "/opt/couchbase/init/init-cbserver.sh"      
+couchbase: &couchbase
+  - image: couchbase/server:latest
+    name: couchbase
+    ports:
+      - '8091-8096:8091-8096'
+      - '11210:11210'
+
+couchbase-setup:
+  image: amd64/centos:7
+  entrypoint:
+    - "bash"
+    - "-ecx"
+    - |
+        sleep 30 && \
+        curl -v -X POST http://couchbase:8091/pools/default -d memoryQuota=512 -d indexMemoryQuota=512 && \
+        curl -v http://couchbase:8091/node/controller/setupServices -d services=kv%2Ceventing%2Cindex%2Cn1ql%2Ccbas%2Cfts && \
+        curl -v http://couchbase:8091/settings/web -d port=8091 -d username=node -d password=nodepwd && \
+        curl -i -u node:nodepwd -X POST http://couchbase:8091/settings/indexes -d 'storageMode=memory_optimized' && \
+        curl -v -u node:nodepwd -X POST http://couchbase:8091/pools/default/buckets -d name=projects -d bucketType=couchbase -d ramQuota=128 -d flushEnabled=1 && \
+        curl -v -u node:nodepwd -X POST http://couchbase:8091/pools/default/buckets -d name=companies -d bucketType=ephemeral -d ramQuota=128 -d flushEnabled=1      
 
 schema-registry: &schema-registry
   - image: confluentinc/cp-schema-registry:4.1.0
@@ -389,7 +395,7 @@ jobs:
       - <<: *nats
       - <<: *nats-streaming
       - <<: *memcached
-      - <<: *couchbase-server
+      - <<: *couchbase
     <<: *shared
     parallelism: 20
     resource_class: large
@@ -410,7 +416,7 @@ jobs:
       - <<: *nats
       - <<: *nats-streaming
       - <<: *memcached
-      - <<: *couchbase-server
+      - <<: *couchbase
     <<: *shared
     parallelism: 20
     resource_class: large
@@ -434,7 +440,7 @@ jobs:
       - <<: *nats
       - <<: *nats-streaming
       - <<: *memcached
-      - <<: *couchbase-server
+      - <<: *couchbase
     <<: *shared
     parallelism: 20
     resource_class: large
@@ -457,7 +463,7 @@ jobs:
       - <<: *nats
       - <<: *nats-streaming
       - <<: *memcached
-      - <<: *couchbase-server
+      - <<: *couchbase
     <<: *shared
     parallelism: 20
     resource_class: large
@@ -480,7 +486,7 @@ jobs:
       - <<: *nats
       - <<: *nats-streaming
       - <<: *memcached
-      - <<: *couchbase-server
+      - <<: *couchbase
     <<: *shared
     parallelism: 20
     resource_class: large
@@ -501,7 +507,7 @@ jobs:
       - <<: *nats
       - <<: *nats-streaming
       - <<: *memcached
-      - <<: *couchbase-server
+      - <<: *couchbase
     <<: *shared
     parallelism: 20
     resource_class: large
@@ -524,7 +530,7 @@ jobs:
       - <<: *nats
       - <<: *nats-streaming
       - <<: *memcached
-      - <<: *couchbase-server
+      - <<: *couchbase
     <<: *shared
     parallelism: 1
     resource_class: large
