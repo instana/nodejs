@@ -39,6 +39,7 @@ const indeParams = {
 // NOTE: we sometimes receive "failed to create index" 400 status code. No idea why.
 // Restart & clean docker. Usually it works afterwards.
 const upsertIndex = async (idxName, cb) => {
+  const delayInMs = 500;
   const opts = {
     name: idxName,
     sourceName: bucket1.name,
@@ -50,20 +51,20 @@ const upsertIndex = async (idxName, cb) => {
   if (cb) {
     return cluster.searchIndexes().upsertIndex(opts, async err => {
       if (err) {
-        await delay(500);
+        await delay(delayInMs);
         return upsertIndex(idxName, cb);
       }
 
-      await delay(1000);
+      await delay(delayInMs);
       return cb();
     });
   }
 
   try {
     await cluster.searchIndexes().upsertIndex(opts);
-    await delay(1000);
+    await delay(delayInMs);
   } catch (err) {
-    await delay(500);
+    await delay(delayInMs);
     return upsertIndex(idxName);
   }
 };
@@ -124,6 +125,8 @@ couchbase.connect(
   async (err, _cluster) => {
     if (err) throw err;
 
+    log('Connected to couchbase. Bootstrapping...');
+
     cluster = _cluster;
     bucketMng = cluster.buckets();
 
@@ -131,19 +134,22 @@ couchbase.connect(
     await bucketMng.flushBucket('projects');
     await bucketMng.flushBucket('companies');
 
+    // cluster.bucket calls `conn.openBucket`
     bucket1 = cluster.bucket('projects');
+    bucket2 = cluster.bucket('companies');
+
     collection1 = bucket1.defaultCollection();
 
     // NOTE: Customer can create a custom scope and a custom collection
     //       I have manually tested this and it works as well
     //       _default is automatically created when creating a bucket.
-    // cluster.bucket calls `conn.openBucket`
-    bucket2 = cluster.bucket('companies');
     scope2 = bucket2.scope('_default');
     collection2 = scope2.collection('_default');
 
     await bootstrapCluster();
     connected = true;
+
+    log('Bootstrapping done.');
   }
 );
 

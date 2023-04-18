@@ -306,7 +306,7 @@ kafka: &kafka
       KAFKA_ZOOKEEPER_CONNECT: 127.0.0.1:2181   
 
 couchbase: &couchbase
-  - image: couchbase/server:latest
+  - image: couchbase/server:7.1.4
     name: couchbase
 
 couchbase-setup:
