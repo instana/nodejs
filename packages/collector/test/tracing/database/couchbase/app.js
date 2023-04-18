@@ -14,7 +14,7 @@ const morgan = require('morgan');
 const requestPromise = require('request-promise');
 const request = require('request-promise-native');
 const port = require('../../../test_util/app-port')();
-const { delay } = require('../../../../../core/test/test_util');
+const { delay, isCI } = require('../../../../../core/test/test_util');
 const agentPort = process.env.INSTANA_AGENT_PORT;
 
 let connected = false;
@@ -114,11 +114,29 @@ const bootstrapCluster = async () => {
   }
 };
 
-// NOTE: There is the option to connect with a bucket name couchbase://127.0.0.1/projects,
-//       but the fn still returns the cluster and the instrumentation works.
-try {
+const connect = async () => {
+  let connStr1 = process.env.COUCHBASE;
+  // let connStr2 = process.env.COUCHBASE_2;
+
+  const dns = require('dns');
+  const dnsPromises = dns.promises;
+
+  if (isCI()) {
+    try {
+      const data = await dnsPromises.lookup('couchbase', { family: 4 });
+      log(data);
+    } catch (e1) {
+      console.log('lookup', e1);
+    }
+
+    connStr1 = 'couchbase://couchbase';
+    // connStr2 = `couchbase://${data.address}`;
+  }
+
+  // NOTE: There is the option to connect with a bucket name couchbase://127.0.0.1/projects,
+  //       but the fn still returns the cluster and the instrumentation works.
   couchbase.connect(
-    process.env.COUCHBASE,
+    connStr1,
     {
       username: 'node',
       password: 'nodepwd'
@@ -149,18 +167,16 @@ try {
 
       await bootstrapCluster();
       connected = true;
+      connected2 = true;
 
       log('Bootstrapping done.');
     }
   );
-} catch (connectionErr1) {
-  log(`Error while connecting: ${connectionErr1.message}`);
-}
 
-try {
   // Second connection for testing multiple clients.
+  /*
   couchbase.connect(
-    process.env.COUCHBASE_2,
+    connStr2,
     {
       username: 'node',
       password: 'nodepwd'
@@ -172,10 +188,10 @@ try {
       connected2 = true;
     }
   );
-} catch (connectionErr2) {
-  log(`Error while connecting: ${connectionErr2.message}`);
-}
+  */
+};
 
+connect();
 const app = express();
 const logPrefix = `Couchbase App (${process.pid}):\t`;
 

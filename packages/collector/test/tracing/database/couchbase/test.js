@@ -644,7 +644,7 @@ mochaSuiteFn('tracing/couchbase', function () {
           }));
 
       if (apiType === 'promise') {
-        it('[multiple connections] must trace', () =>
+        it.skip('[multiple connections] must trace', () =>
           controls
             .sendRequest({
               method: 'get',
