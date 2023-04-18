@@ -357,6 +357,7 @@ function instrumentConnect(originalConnect) {
 function findCallback(originalArgs) {
   let originalCallback;
   let callbackIndex = -1;
+
   for (let i = 0; i < originalArgs.length; i++) {
     if (typeof originalArgs[i] === 'function') {
       originalCallback = originalArgs[i];
@@ -364,6 +365,7 @@ function findCallback(originalArgs) {
       break;
     }
   }
+
   return {
     originalCallback,
     callbackIndex
@@ -417,7 +419,7 @@ function instrumentOperation({ connectionStr, bucketName, getBucketType, sqlType
 
         return prom;
       } else {
-        originalArgs[callbackIndex] = cls.ns.bind(function (err, result) {
+        originalArgs[callbackIndex] = cls.ns.bind(function instanaCallback(err, result) {
           if (err) {
             span.ec = 1;
             span.data.couchbase.error = tracingUtil.getErrorDetails(err);
