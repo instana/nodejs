@@ -31,17 +31,15 @@ exports.init = function init() {
   // https://github.com/couchbase/couchnode/blob/e855b094cd1b0140ffefc40f32a828b9134d181c/lib/searchindexmanager.ts#L243
   // We could instrument some traffic via the HttpExecutor library, but then we would not capture the connected host.
   // requireHook.onFileLoad(/couchbase\/dist\/httpexecutor/, instrumentHttpRequest);
+  //
+  // function instrumentHttpRequest(lib) {
+  //   shimmer.wrap(lib.HttpExecutor.prototype, 'request', function (orig) {
+  //     return function instanaRequest() {
+  //       return orig.apply(this, arguments);
+  //     };
+  //   });
+  // }
 };
-
-/*
-function instrumentHttpRequest(lib) {
-  shimmer.wrap(lib.HttpExecutor.prototype, 'request', function (orig) {
-    return function instanaRequest() {
-      return orig.apply(this, arguments);
-    };
-  });
-}
-*/
 
 // CRUD operations:
 // https://github.com/couchbase/couchnode/blob/e855b094cd1b0140ffefc40f32a828b9134d181c/src/connection_autogen.cpp#L210
@@ -85,16 +83,16 @@ function instrumentConnect(originalConnect) {
 function instrumentCluster(cluster, connectionStr) {
   if (!cluster) return;
 
-  // #### QUERY QUERY
+  // #### SEARCH QUERY
   shimmer.wrap(cluster, 'searchQuery', instrumentOperation.bind(null, { connectionStr, sqlType: 'SEARCHQUERY' }));
 
-  // #### COLLECTION OPERATIONS (collection.insert)
+  // #### CRUD
   instrumentCollection(cluster, connectionStr);
 
-  // #### SEARCH SERVICE (.searchIndexes().)
+  // #### FTS SERVICE (.searchIndexes().)
   instrumentSearchIndexes(cluster, connectionStr);
 
-  // #### QUERY INDEXES SERVICE (.queryIndexes().)
+  // #### N1QL SERVICE (.queryIndexes().)
   instrumentQueryIndexes(cluster, connectionStr);
 
   // #### TRANSACTIONS

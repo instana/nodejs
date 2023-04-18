@@ -115,7 +115,7 @@ const bootstrapCluster = async () => {
 };
 
 // NOTE: There is the option to connect with a bucket name couchbase://127.0.0.1/projects,
-//       but the fn still returns the cluster and the instrumentation works.
+//       but the fn still returns the cluster and the instrumentation works. Manually tested.
 couchbase.connect(
   process.env.COUCHBASE_CONN_STR_1,
   {

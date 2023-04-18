@@ -68,7 +68,6 @@ const mochaSuiteFn =
 
 // NOTE: it takes 1-2 minutes till the couchbase server can be reached via docker
 mochaSuiteFn('tracing/couchbase', function () {
-  // The couchbase server is so unrelaible. Absolutely random behaviour for everything.
   this.timeout(config.getTestTimeout() * 4);
 
   globalAgent.setUpCleanUpHooks();
@@ -102,7 +101,7 @@ mochaSuiteFn('tracing/couchbase', function () {
 
     ProcessControls.setUpTestCaseCleanUpHooks(controls);
 
-    // The operations for the cluster creation and cleanup can take a while.
+    // The operations for bootstrapping & cleanup can take a while.
     await controls.startAndWaitForAgentConnection(1000, Date.now() + 30 * 1000);
   });
 
