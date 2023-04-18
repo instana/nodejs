@@ -249,7 +249,7 @@ mochaSuiteFn('tracing/db2', function () {
         );
     });
 
-    it('must not trace async transaction with sync query because of rollback', function () {
+    it('must trace async transaction with sync query because of rollback', function () {
       return controls
         .sendRequest({
           method: 'GET',
@@ -279,7 +279,7 @@ mochaSuiteFn('tracing/db2', function () {
         );
     });
 
-    it('must not trace sync transaction with sync query because of rollback', function () {
+    it('must trace sync transaction with sync query because of rollback', function () {
       return controls
         .sendRequest({
           method: 'GET',
@@ -309,7 +309,7 @@ mochaSuiteFn('tracing/db2', function () {
         );
     });
 
-    it('must not trace async transaction with async query because of rollback', function () {
+    it('must trace async transaction with async query because of rollback', function () {
       return controls
         .sendRequest({
           method: 'GET',
@@ -339,7 +339,7 @@ mochaSuiteFn('tracing/db2', function () {
         );
     });
 
-    it('must not trace sync transaction with async query because of rollback', function () {
+    it('must trace sync transaction with async query because of rollback', function () {
       return controls
         .sendRequest({
           method: 'GET',
