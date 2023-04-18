@@ -311,6 +311,7 @@ couchbase: &couchbase
 
 couchbase-setup: &couchbase-setup
   image: amd64/centos:7
+  name: couchbase-setup
   entrypoint:
     - "bash"
     - "-ecx"
