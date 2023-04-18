@@ -11,6 +11,7 @@ const constants = require('@instana/core').tracing.constants;
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('../../../../../core/test/config');
 const {
+  isCI,
   retry,
   delay,
   expectExactlyOneMatching,
@@ -18,9 +19,12 @@ const {
 } = require('../../../../../core/test/test_util');
 const ProcessControls = require('../../../test_util/ProcessControls');
 const globalAgent = require('../../../globalAgent');
-const DELAY_TIMEOUT_IN_MS = 500;
 
-const verifyCouchbaseSpan = (controls, entrySpan, options = { hostname: 'localhost' }) => [
+const DELAY_TIMEOUT_IN_MS = 500;
+let connStr1 = process.env.COUCHBASE;
+let connStr2 = process.env.COUCHBASE_2;
+
+const verifyCouchbaseSpan = (controls, entrySpan, options = {}) => [
   span => expect(span.t).to.equal(entrySpan.t),
   span => expect(span.p).to.equal(entrySpan.s),
   span => expect(span.n).to.equal('couchbase'),
@@ -28,7 +32,7 @@ const verifyCouchbaseSpan = (controls, entrySpan, options = { hostname: 'localho
   span => (options.error ? expect(span.ec).to.equal(1) : expect(span.ec).to.equal(0)),
   span => expect(span.f.e).to.equal(String(controls.getPid())),
   span => expect(span.f.h).to.equal('agent-stub-uuid'),
-  // span => expect(span.data.couchbase.hostname).to.equal(`couchbase://${options.hostname}`),
+  span => expect(span.data.couchbase.hostname).to.equal('hostname' in options ? options.hostname : connStr1),
   span => expect(span.data.couchbase.bucket).to.equal('bucket' in options ? options.bucket : 'projects'),
   span => expect(span.data.couchbase.type).to.equal('type' in options ? options.type : 'membase'),
   span => expect(span.data.couchbase.sql).to.equal(options.sql || 'GET'),
@@ -73,9 +77,27 @@ mochaSuiteFn('tracing/couchbase', function () {
   let controls;
 
   before(async () => {
+    // NOTE: The CircleCI container is called "couchbase". It's hostname is therefor "couchbase", not "localhost".
+    //       The "couchbase-setup" container is able to initialize the cluster etc. via the domain name "couchbase".
+    const dns = require('dns');
+    const dnsPromises = dns.promises;
+
+    if (isCI()) {
+      const data = await dnsPromises.lookup('couchbase', { family: 4 });
+      if (data && data.address) {
+        connStr2 = `couchbase://${data.address}`;
+      }
+
+      connStr1 = 'couchbase://couchbase';
+    }
+
     controls = new ProcessControls({
       dirname: __dirname,
-      useGlobalAgent: true
+      useGlobalAgent: true,
+      env: {
+        COUCHBASE_CONN_STR_1: connStr1,
+        COUCHBASE_CONN_STR_2: connStr2
+      }
     });
 
     ProcessControls.setUpTestCaseCleanUpHooks(controls);
@@ -115,7 +137,7 @@ mochaSuiteFn('tracing/couchbase', function () {
                     span => expect(span.error).to.not.exist,
                     span => expect(span.ec).to.equal(0),
                     span => expect(span.data.http.method).to.equal('GET'),
-                    // span => expect(span.data.http.url).to.match(/http:\/\/127\.0\.0\.1:/),
+                    span => expect(span.data.http.url).to.contain('/'),
                     span => expect(span.data.http.status).to.equal(200)
                   ]);
                 }
@@ -532,7 +554,7 @@ mochaSuiteFn('tracing/couchbase', function () {
                       spans,
                       verifyCouchbaseSpan(controls, entrySpan, {
                         bucket: '',
-                        hostname: '127.0.0.1',
+                        hostname: connStr2,
                         type: '',
                         sql: 'QUERY'
                       })

@@ -14,7 +14,7 @@ const morgan = require('morgan');
 const requestPromise = require('request-promise');
 const request = require('request-promise-native');
 const port = require('../../../test_util/app-port')();
-const { delay, isCI } = require('../../../../../core/test/test_util');
+const { delay } = require('../../../../../core/test/test_util');
 const agentPort = process.env.INSTANA_AGENT_PORT;
 
 let connected = false;
@@ -114,86 +114,61 @@ const bootstrapCluster = async () => {
   }
 };
 
-const connect = async () => {
-  let connStr1 = process.env.COUCHBASE;
-  // let connStr2 = process.env.COUCHBASE_2;
+// NOTE: There is the option to connect with a bucket name couchbase://127.0.0.1/projects,
+//       but the fn still returns the cluster and the instrumentation works.
+couchbase.connect(
+  process.env.COUCHBASE_CONN_STR_1,
+  {
+    username: 'node',
+    password: 'nodepwd'
+  },
+  async (err, _cluster) => {
+    if (err) throw err;
 
-  const dns = require('dns');
-  const dnsPromises = dns.promises;
+    log('Connected to couchbase. Bootstrapping...');
 
-  if (isCI()) {
-    try {
-      const data = await dnsPromises.lookup('couchbase', { family: 4 });
-      if (data && data.address) {
-        log(data.address);
-      }
-    } catch (e1) {
-      log('lookup', e1);
-    }
+    cluster = _cluster;
+    bucketMng = cluster.buckets();
 
-    connStr1 = 'couchbase://couchbase';
-    // connStr2 = `couchbase://${data.address}`;
+    // clear all data
+    await bucketMng.flushBucket('projects');
+    await bucketMng.flushBucket('companies');
+
+    // cluster.bucket calls `conn.openBucket`
+    bucket1 = cluster.bucket('projects');
+    bucket2 = cluster.bucket('companies');
+
+    collection1 = bucket1.defaultCollection();
+
+    // NOTE: Customer can create a custom scope and a custom collection
+    //       I have manually tested this and it works as well
+    //       _default is automatically created when creating a bucket.
+    scope2 = bucket2.scope('_default');
+    collection2 = scope2.collection('_default');
+
+    await bootstrapCluster();
+    connected = true;
+    connected2 = true;
+
+    log('Bootstrapping done.');
   }
+);
 
-  // NOTE: There is the option to connect with a bucket name couchbase://127.0.0.1/projects,
-  //       but the fn still returns the cluster and the instrumentation works.
-  couchbase.connect(
-    connStr1,
-    {
-      username: 'node',
-      password: 'nodepwd'
-    },
-    async (err, _cluster) => {
-      if (err) throw err;
+// Second connection for testing multiple clients.
+couchbase.connect(
+  process.env.COUCHBASE_CONN_STR_2,
+  {
+    username: 'node',
+    password: 'nodepwd'
+  },
+  async (err, _cluster) => {
+    if (err) throw err;
 
-      log('Connected to couchbase. Bootstrapping...');
+    cluster2 = _cluster;
+    connected2 = true;
+  }
+);
 
-      cluster = _cluster;
-      bucketMng = cluster.buckets();
-
-      // clear all data
-      await bucketMng.flushBucket('projects');
-      await bucketMng.flushBucket('companies');
-
-      // cluster.bucket calls `conn.openBucket`
-      bucket1 = cluster.bucket('projects');
-      bucket2 = cluster.bucket('companies');
-
-      collection1 = bucket1.defaultCollection();
-
-      // NOTE: Customer can create a custom scope and a custom collection
-      //       I have manually tested this and it works as well
-      //       _default is automatically created when creating a bucket.
-      scope2 = bucket2.scope('_default');
-      collection2 = scope2.collection('_default');
-
-      await bootstrapCluster();
-      connected = true;
-      connected2 = true;
-
-      log('Bootstrapping done.');
-    }
-  );
-
-  // Second connection for testing multiple clients.
-  /*
-  couchbase.connect(
-    connStr2,
-    {
-      username: 'node',
-      password: 'nodepwd'
-    },
-    async (err, _cluster) => {
-      if (err) throw err;
-
-      cluster2 = _cluster;
-      connected2 = true;
-    }
-  );
-  */
-};
-
-connect();
 const app = express();
 const logPrefix = `Couchbase App (${process.pid}):\t`;
 
