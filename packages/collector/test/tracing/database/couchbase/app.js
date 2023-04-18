@@ -116,57 +116,65 @@ const bootstrapCluster = async () => {
 
 // NOTE: There is the option to connect with a bucket name couchbase://127.0.0.1/projects,
 //       but the fn still returns the cluster and the instrumentation works.
-couchbase.connect(
-  process.env.COUCHBASE,
-  {
-    username: 'node',
-    password: 'nodepwd'
-  },
-  async (err, _cluster) => {
-    if (err) throw err;
+try {
+  couchbase.connect(
+    process.env.COUCHBASE,
+    {
+      username: 'node',
+      password: 'nodepwd'
+    },
+    async (err, _cluster) => {
+      if (err) throw err;
 
-    log('Connected to couchbase. Bootstrapping...');
+      log('Connected to couchbase. Bootstrapping...');
 
-    cluster = _cluster;
-    bucketMng = cluster.buckets();
+      cluster = _cluster;
+      bucketMng = cluster.buckets();
 
-    // clear all data
-    await bucketMng.flushBucket('projects');
-    await bucketMng.flushBucket('companies');
+      // clear all data
+      await bucketMng.flushBucket('projects');
+      await bucketMng.flushBucket('companies');
 
-    // cluster.bucket calls `conn.openBucket`
-    bucket1 = cluster.bucket('projects');
-    bucket2 = cluster.bucket('companies');
+      // cluster.bucket calls `conn.openBucket`
+      bucket1 = cluster.bucket('projects');
+      bucket2 = cluster.bucket('companies');
 
-    collection1 = bucket1.defaultCollection();
+      collection1 = bucket1.defaultCollection();
 
-    // NOTE: Customer can create a custom scope and a custom collection
-    //       I have manually tested this and it works as well
-    //       _default is automatically created when creating a bucket.
-    scope2 = bucket2.scope('_default');
-    collection2 = scope2.collection('_default');
+      // NOTE: Customer can create a custom scope and a custom collection
+      //       I have manually tested this and it works as well
+      //       _default is automatically created when creating a bucket.
+      scope2 = bucket2.scope('_default');
+      collection2 = scope2.collection('_default');
 
-    await bootstrapCluster();
-    connected = true;
+      await bootstrapCluster();
+      connected = true;
 
-    log('Bootstrapping done.');
-  }
-);
+      log('Bootstrapping done.');
+    }
+  );
+} catch (connectionErr1) {
+  log(`Error while connecting: ${connectionErr1.message}`);
+}
 
-// Second connection for testing multiple clients.
-couchbase.connect(
-  process.env.COUCHBASE_2,
-  {
-    username: 'node',
-    password: 'nodepwd'
-  },
-  async (err, _cluster) => {
-    if (err) throw err;
+try {
+  // Second connection for testing multiple clients.
+  couchbase.connect(
+    process.env.COUCHBASE_2,
+    {
+      username: 'node',
+      password: 'nodepwd'
+    },
+    async (err, _cluster) => {
+      if (err) throw err;
 
-    cluster2 = _cluster;
-    connected2 = true;
-  }
-);
+      cluster2 = _cluster;
+      connected2 = true;
+    }
+  );
+} catch (connectionErr2) {
+  log(`Error while connecting: ${connectionErr2.message}`);
+}
 
 const app = express();
 const logPrefix = `Couchbase App (${process.pid}):\t`;
