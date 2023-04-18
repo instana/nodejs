@@ -124,7 +124,9 @@ const connect = async () => {
   if (isCI()) {
     try {
       const data = await dnsPromises.lookup('couchbase', { family: 4 });
-      log(data);
+      if (data && data.address) {
+        log(data.address);
+      }
     } catch (e1) {
       log('lookup', e1);
     }
