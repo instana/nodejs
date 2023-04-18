@@ -308,9 +308,6 @@ kafka: &kafka
 couchbase: &couchbase
   - image: couchbase/server:latest
     name: couchbase
-    ports:
-      - '8091-8096:8091-8096'
-      - '11210:11210'
 
 couchbase-setup:
   image: amd64/centos:7
