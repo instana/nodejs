@@ -13,7 +13,8 @@ const constants = require('../../constants');
 const cls = require('../../cls');
 
 let isActive = false;
-let clientHasBeenInstrumented = false;
+let clientHasBeenInstrumentedV1 = false;
+let clientHasBeenInstrumentedV2 = false;
 
 exports.init = function init() {
   requireHook.onModuleLoad('nats', instrumentNats);
@@ -30,35 +31,52 @@ function instrumentNats(_natsModule) {
 function shimConnect(originalFunction) {
   return function () {
     const client = originalFunction.apply(this, arguments);
-    if (!clientHasBeenInstrumented) {
-      const isPromise = client && client.then && client.catch;
+    const isPromise = client && client.then && client.catch;
 
+    if (isPromise) {
       // Nats 2.x
-      // https://github.com/nats-io/nats.deno
-      if (isPromise) {
-        client.then(nc => {
-          connectionObject = nc;
+      client.then(nc => {
+        connectionObject = nc;
 
-          let natsUrl = 'nats://';
-          if (nc.protocol && nc.protocol.server && nc.protocol.server.listen) {
-            natsUrl = `nats://${nc.protocol.server.listen}`;
-          }
+        let natsUrl = 'nats://';
+        if (nc.protocol && nc.protocol.server && nc.protocol.server.listen) {
+          natsUrl = `nats://${nc.protocol.server.listen}`;
+        }
 
-          shimmer.wrap(nc.constructor.prototype, 'publish', shimPublish.bind(null, natsUrl, true));
-          shimmer.wrap(nc.constructor.prototype, 'request', shimRequest.bind(null, natsUrl));
-          shimmer.wrap(nc.constructor.prototype, 'subscribe', shimSubscribe.bind(null, natsUrl, true));
+        nc._natsUrl = natsUrl;
 
-          clientHasBeenInstrumented = true;
-          return nc;
-        });
+        if (!clientHasBeenInstrumentedV2) {
+          shimmer.wrap(nc.constructor.prototype, 'publish', shimPublish.bind(null, true));
+          shimmer.wrap(nc.constructor.prototype, 'request', shimRequest.bind(null));
+          shimmer.wrap(nc.constructor.prototype, 'subscribe', shimSubscribe.bind(null, true));
+          clientHasBeenInstrumentedV2 = true;
+        }
+
+        return nc;
+      });
+    } else {
+      // Nats 1.x
+      if (client.options.url) {
+        // Passing in options.url is one way to specify a server,
+        // see https://github.com/nats-io/nats.js/tree/v1.4.12#basic-authentication
+        client._natsUrl = client.options.url;
+      } else if (Array.isArray(client.options.servers)) {
+        // Providing a servers array is another way to specify the NATS server(s),
+        // see https://github.com/nats-io/nats.js/tree/v1.4.12#clustered-usage
+        client._natsUrl = client.options.servers[0];
       } else {
-        shimmer.wrap(client.constructor.prototype, 'publish', shimPublish.bind(null, client.options.url, false));
+        // default value if client is created without arguments
+        client._natsUrl = 'nats://localhost:4222';
+      }
+
+      if (!clientHasBeenInstrumentedV1) {
+        shimmer.wrap(client.constructor.prototype, 'publish', shimPublish.bind(null, false));
 
         // nats.requestOne uses nats.request internally, so there is no need to instrument requestOne separately
-        shimmer.wrap(client.constructor.prototype, 'request', shimRequest.bind(null, client.options.url));
+        shimmer.wrap(client.constructor.prototype, 'request', shimRequest.bind(null));
 
-        shimmer.wrap(client.constructor.prototype, 'subscribe', shimSubscribe.bind(null, client.options.url, true));
-        clientHasBeenInstrumented = true;
+        shimmer.wrap(client.constructor.prototype, 'subscribe', shimSubscribe.bind(null, true));
+        clientHasBeenInstrumentedV1 = true;
       }
     }
 
@@ -66,14 +84,14 @@ function shimConnect(originalFunction) {
   };
 }
 
-function shimPublish(natsUrl, isLatest, originalFunction) {
+function shimPublish(isLatest, originalFunction) {
   return function () {
     const originalArgs = new Array(arguments.length);
     for (let i = 0; i < arguments.length; i++) {
       originalArgs[i] = arguments[i];
     }
 
-    return instrumentedPublish(this, originalFunction, originalArgs, natsUrl, isLatest);
+    return instrumentedPublish(this, originalFunction, originalArgs, isLatest);
   };
 }
 
@@ -126,7 +144,7 @@ function addTraceCorrelationHeaders(args, isLatest, span) {
   }
 }
 
-function instrumentedPublish(ctx, originalPublish, originalArgs, natsUrl, isLatest) {
+function instrumentedPublish(ctx, originalPublish, originalArgs, isLatest) {
   const skipTracingResult = cls.skipExitTracing({ isActive: true, extendedResponse: true });
   if (skipTracingResult.skip) {
     if (skipTracingResult.suppressed) {
@@ -152,7 +170,7 @@ function instrumentedPublish(ctx, originalPublish, originalArgs, natsUrl, isLate
     span.stack = tracingUtil.getStackTrace(instrumentedPublish);
     span.data.nats = {
       sort: 'publish',
-      address: natsUrl,
+      address: ctx._natsUrl,
       subject
     };
 
@@ -198,7 +216,7 @@ function instrumentedPublish(ctx, originalPublish, originalArgs, natsUrl, isLate
   });
 }
 
-function shimRequest(natsUrl, originalFunction) {
+function shimRequest(originalFunction) {
   // nats 1.x:
   // nats.request uses nats.publish internally, we only need to cls-bind the callback here (it is not passed down to
   // nats.publish because it only fires after the reply has been received, not after the initial messages has been
@@ -214,7 +232,7 @@ function shimRequest(natsUrl, originalFunction) {
           return originalFunction.apply(this, arguments);
         }
 
-        return instrumentedPublish(this, originalFunction, arguments, natsUrl);
+        return instrumentedPublish(this, originalFunction, arguments);
       } else {
         for (let i = 3; i >= 0; i--) {
           if (typeof arguments[i] === 'function') {
@@ -231,17 +249,17 @@ function shimRequest(natsUrl, originalFunction) {
   };
 }
 
-function shimSubscribe(natsUrl, isLatest, originalFunction) {
+function shimSubscribe(isLatest, originalFunction) {
   return function () {
     const originalSubscribeArgs = new Array(arguments.length);
     for (let i = 0; i < arguments.length; i++) {
       originalSubscribeArgs[i] = arguments[i];
     }
-    return instrumentedSubscribe(this, originalFunction, originalSubscribeArgs, natsUrl, isLatest);
+    return instrumentedSubscribe(this, originalFunction, originalSubscribeArgs, isLatest);
   };
 }
 
-function instrumentedSubscribe(ctx, originalSubscribe, originalSubscribeArgs, natsUrl, isLatest) {
+function instrumentedSubscribe(ctx, originalSubscribe, originalSubscribeArgs, isLatest) {
   const subject = originalSubscribeArgs[0];
   let callbackIndex = -1;
   let isCallbackAttr = false;
@@ -265,11 +283,14 @@ function instrumentedSubscribe(ctx, originalSubscribe, originalSubscribeArgs, na
     if (isCallbackAttr) {
       originalCallback = originalSubscribeArgs[callbackIndex].callback;
       originalSubscribeArgs[callbackIndex].callback = function (err, msg) {
-        return instrumentedSubscribeCallback(natsUrl, subject, originalCallback, null, isLatest).bind(this)(err, msg);
+        return instrumentedSubscribeCallback(ctx._natsUrl, subject, originalCallback, null, isLatest).bind(this)(
+          err,
+          msg
+        );
       };
     } else {
       originalCallback = originalSubscribeArgs[callbackIndex];
-      originalSubscribeArgs[callbackIndex] = instrumentedSubscribeCallback(natsUrl, subject, originalCallback);
+      originalSubscribeArgs[callbackIndex] = instrumentedSubscribeCallback(ctx._natsUrl, subject, originalCallback);
     }
 
     return originalSubscribe.apply(ctx, originalSubscribeArgs);
@@ -284,7 +305,7 @@ function instrumentedSubscribe(ctx, originalSubscribe, originalSubscribeArgs, na
         // eslint-disable-next-line no-restricted-syntax
         for await (const msg of sub) {
           await new Promise(resolve => {
-            instrumentedSubscribeCallback(natsUrl, subject, resolve, currentCtx, isLatest)(null, msg);
+            instrumentedSubscribeCallback(ctx._natsUrl, subject, resolve, currentCtx, isLatest)(null, msg);
           });
 
           yield msg;

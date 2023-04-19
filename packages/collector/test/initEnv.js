@@ -23,6 +23,8 @@ const DEFAULT_ENV_VALUES = {
   MYSQL_USER: 'node',
   MYSQL_PW: 'nodepw',
   MYSQL_DB: 'nodedb',
+  NATS: 'nats://127.0.0.1:4222',
+  NATS_ALTERNATIVE: 'nats://localhost:4222',
   POSTGRES_USER: 'node',
   POSTGRES_PASSWORD: 'nodepw',
   POSTGRES_DB: 'nodedb',

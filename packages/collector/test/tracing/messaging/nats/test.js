@@ -72,6 +72,36 @@ mochaSuiteFn('tracing/nats', function () {
             testPublish.call(this, 'requestOne', false, false, /* withError */ true);
           }
 
+          it('call two different hosts', async function () {
+            await publisherControls.sendRequest({
+              method: 'POST',
+              path: '/two-different-target-hosts'
+            });
+
+            await retry(async () => {
+              const spans = await agentControls.getSpans();
+              const entrySpan = expectExactlyOneMatching(spans, [
+                span => expect(span.n).to.equal('node.http.server'),
+                span => expect(span.data.http.method).to.equal('POST')
+              ]);
+
+              expectExactlyOneMatching(spans, [
+                span => expect(span.t).to.equal(entrySpan.t),
+                span => expect(span.p).to.equal(entrySpan.s),
+                span => expect(span.n).to.equal('nats'),
+                span => expect(span.data.nats.sort).to.equal('publish'),
+                span => expect(span.data.nats.address).to.equal('nats://127.0.0.1:4222')
+              ]);
+              expectExactlyOneMatching(spans, [
+                span => expect(span.t).to.equal(entrySpan.t),
+                span => expect(span.p).to.equal(entrySpan.s),
+                span => expect(span.n).to.equal('nats'),
+                span => expect(span.data.nats.sort).to.equal('publish'),
+                span => expect(span.data.nats.address).to.equal('nats://localhost:4222')
+              ]);
+            });
+          });
+
           function testPublish(publishMethod, withCallback, withReply, withError) {
             const queryParams = [
               withCallback ? 'withCallback=yes' : null,
@@ -145,10 +175,7 @@ mochaSuiteFn('tracing/nats', function () {
 
                           span => expect(span.data.nats).to.be.an('object'),
                           span => expect(span.data.nats.sort).to.equal('publish'),
-                          span =>
-                            version === 'v1'
-                              ? expect(span.data.nats.address).to.equal('nats://localhost:4222')
-                              : expect(span.data.nats.address).to.equal('nats://127.0.0.1:4222')
+                          span => expect(span.data.nats.address).to.equal('nats://127.0.0.1:4222')
                         ];
 
                         if (withError && (version === 'latest' || withCallback)) {
@@ -306,10 +333,7 @@ mochaSuiteFn('tracing/nats', function () {
                         span => expect(span.data.nats).to.be.an('object'),
                         span => expect(span.data.nats.sort).to.equal('consume'),
                         span => expect(span.data.nats.subject).to.equal('subscribe-test-subject'),
-                        span =>
-                          version === 'v1'
-                            ? expect(span.data.nats.address).to.equal('nats://localhost:4222')
-                            : expect(span.data.nats.address).to.equal('nats://127.0.0.1:4222')
+                        span => expect(span.data.nats.address).to.equal('nats://127.0.0.1:4222')
                       ];
 
                       if (withError) {
@@ -380,10 +404,7 @@ mochaSuiteFn('tracing/nats', function () {
                     span => expect(span.data.nats).to.be.an('object'),
                     span => expect(span.data.nats.sort).to.equal('consume'),
                     span => expect(span.data.nats.subject).to.equal('publish-test-subject'),
-                    span =>
-                      version === 'v1'
-                        ? expect(span.data.nats.address).to.equal('nats://localhost:4222')
-                        : expect(span.data.nats.address).to.equal('nats://127.0.0.1:4222'),
+                    span => expect(span.data.nats.address).to.equal('nats://127.0.0.1:4222'),
                     span => expect(span.data.nats.error).to.not.exist
                   ]);
                 }

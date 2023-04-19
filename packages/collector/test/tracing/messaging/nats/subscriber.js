@@ -14,6 +14,8 @@ const express = require('express');
 const request = require('request-promise');
 const NATS = require('nats');
 
+const log = require('@instana/core/test/test_util/log').getLogger('NATS Subscriber');
+
 const app = express();
 const port = require('../../../test_util/app-port')();
 let connected = false;
@@ -24,7 +26,7 @@ if (process.env.NATS_VERSION === 'latest') {
   sc = NATS.StringCodec();
 
   (async function () {
-    nats = await NATS.connect();
+    nats = await NATS.connect({ servers: process.env.NATS });
     connected = true;
 
     const sub = nats.subscribe('publish-test-subject');
@@ -115,7 +117,7 @@ if (process.env.NATS_VERSION === 'latest') {
     });
   })();
 } else {
-  nats = NATS.connect();
+  nats = NATS.connect({ servers: [process.env.NATS] });
   nats.on('connect', () => {
     connected = true;
 
@@ -174,10 +176,3 @@ app.get('/', (req, res) => {
 app.listen(port, () => {
   log(`Listening on port: ${port}`);
 });
-
-function log() {
-  /* eslint-disable no-console */
-  const args = Array.prototype.slice.call(arguments);
-  args[0] = `NATS Subscriber (${process.pid}):\t${args[0]}`;
-  console.log.apply(console, args);
-}

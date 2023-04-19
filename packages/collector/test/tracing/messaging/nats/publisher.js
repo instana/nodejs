@@ -14,13 +14,16 @@ const request = require('request-promise');
 const express = require('express');
 const NATS = require('nats');
 
+const log = require('@instana/core/test/test_util/log').getLogger('NATS Publisher');
+
 const app = express();
 const port = require('../../../test_util/app-port')();
 const connectionError = process.env.CONNECT_ERROR === 'true';
 const IS_LATEST = process.env.NATS_VERSION === 'latest';
 
 let sc;
-let nats;
+let natsClient;
+let natsClient2;
 
 let connected = false;
 let connectionErrorMsg;
@@ -40,25 +43,44 @@ if (IS_LATEST) {
         connectionErrorMsg = connErr.message;
       }
     } else {
-      nats = await NATS.connect();
+      natsClient = await NATS.connect({ servers: process.env.NATS });
+      natsClient2 = await NATS.connect({ servers: process.env.NATS_ALTERNATIVE });
       connected = true;
     }
   })();
 } else {
   if (connectionError) {
-    nats = NATS.connect({ servers: ['deno.nats.io:4323'] });
+    natsClient = NATS.connect({ servers: ['deno.nats.io:4323'] });
   } else {
-    nats = NATS.connect();
+    natsClient = NATS.connect({ servers: [process.env.NATS] });
   }
+  natsClient2 = NATS.connect({ servers: [process.env.NATS_ALTERNATIVE] });
 
-  nats.on('connect', () => {
-    connected = true;
+  let client1Connected = false;
+  let client2Connected = false;
+
+  natsClient.on('connect', () => {
+    client1Connected = true;
+    if (client2Connected) {
+      connected = true;
+    }
+  });
+  natsClient2.on('connect', () => {
+    client2Connected = true;
+    if (client1Connected) {
+      connected = true;
+    }
   });
 
-  nats.on('error', err => {
+  natsClient.on('error', err => {
     mostRecentEmittedError = err;
     connectionErrorMsg = err.message;
     log('NATS has emitted an error', err.message);
+  });
+  natsClient2.on('error', err => {
+    mostRecentEmittedError = err;
+    connectionErrorMsg = err.message;
+    log('NATS (client 2) has emitted an error', err.message);
   });
 }
 
@@ -132,7 +154,7 @@ app.post('/publish', async (req, res) => {
   }
 
   try {
-    nats.publish.apply(nats, args);
+    natsClient.publish.apply(natsClient, args);
     if (!withCallback) {
       return afterPublish(res);
     }
@@ -178,13 +200,15 @@ app.post('/request', async (req, res) => {
   };
 
   const natsPublishMethod =
-    requestOne && process.env.NATS_VERSION === 'v1' ? nats.requestOne.bind(nats) : nats.request.bind(nats);
+    requestOne && process.env.NATS_VERSION === 'v1'
+      ? natsClient.requestOne.bind(natsClient)
+      : natsClient.request.bind(natsClient);
 
   if (withError) {
     try {
       // try to publish without a subject to cause an error
       if (IS_LATEST) {
-        await nats.request(null, sc.encode('awaiting reply nats2'));
+        await natsClient.request(null, sc.encode('awaiting reply nats2'));
         afterPublish(res, null);
       } else {
         natsPublishMethod(null, 'awaiting reply', requestCallback);
@@ -200,13 +224,13 @@ app.post('/request', async (req, res) => {
     if (!requestOne) {
       // the client will create a normal subscription for receiving the response to
       // a generated inbox subject before the request is published
-      await nats
+      await natsClient
         .request('publish-test-subject', sc.encode('awaiting reply'), { reply: 'test', noMux: true })
         .then(m => {
           afterPublish(res, null, sc.decode(m.data), true);
         });
     } else {
-      await nats.request('publish-test-subject', sc.encode('awaiting reply'), { noMux: false }).then(m => {
+      await natsClient.request('publish-test-subject', sc.encode('awaiting reply'), { noMux: false }).then(m => {
         afterPublish(res, null, sc.decode(m.data), true);
       });
     }
@@ -215,13 +239,24 @@ app.post('/request', async (req, res) => {
   }
 });
 
+app.post('/two-different-target-hosts', async (req, res) => {
+  const subject = 'publish-test-subject';
+  let message1 = 'message for client 1';
+  let message2 = 'message for client 2';
+
+  if (IS_LATEST) {
+    message1 = sc.encode(message1);
+    message2 = sc.encode(message2);
+  }
+  try {
+    natsClient.publish(subject, message1);
+    natsClient2.publish(subject, message2);
+    return res.sendStatus(200);
+  } catch (e) {
+    return res.sendStatus(500);
+  }
+});
+
 app.listen(port, () => {
   log(`Listening on port: ${port}`);
 });
-
-function log() {
-  /* eslint-disable no-console */
-  const args = Array.prototype.slice.call(arguments);
-  args[0] = `NATS Publisher (${process.pid}):\t${args[0]}`;
-  console.log.apply(console, args);
-}
