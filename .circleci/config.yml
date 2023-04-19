@@ -421,29 +421,6 @@ jobs:
     parallelism: 20
     resource_class: large
 
-  "node-16-esm":
-    environment:
-      RUN_ESM: true
-      COLLECTOR_ONLY: true
-    docker:
-      - image: circleci/node:16
-      - <<: *zookeeper
-      - <<: *elasticsearch
-      - <<: *mongo
-      - <<: *redis
-      - <<: *kafka
-      - <<: *schema-registry
-      - <<: *mysql
-      - <<: *postgres
-      - <<: *mssql
-      - <<: *rabbitmq
-      - <<: *nats
-      - <<: *nats-streaming
-      - <<: *memcached
-    <<: *shared
-    parallelism: 20
-    resource_class: large
-
   "node-14":
     environment:
       NPM_VERSION: 8.6.0
@@ -550,7 +527,6 @@ workflows:
           equal: [ scheduled_pipeline, << pipeline.trigger_source >> ]
     jobs:
       - "node-18"
-      - "node-16"
 
   legacy-nodejs-versions:
     when:
@@ -561,6 +537,7 @@ workflows:
         # by providing the parameter "workflow: legacy-nodejs-versions"
         - equal: [ legacy-nodejs-versions, << pipeline.parameters.workflow >> ]
     jobs:
+      - "node-16"
       - "node-14"
       - "node-12"
       - "node-10"
@@ -575,7 +552,6 @@ workflows:
         - equal: [ esm-build, << pipeline.parameters.workflow >> ]
     jobs:
       - "node-18-esm"
-      - "node-16-esm"
 
   coverage:
     when:
