@@ -9,7 +9,7 @@
  *
  * It can be run in two modes, for two different use cases.
  * 1) Inside a Github action, to determine whether the current commit has a green CircleCI pipeline for both the
- *   normal build and the legacy-nodejs-versions build. This is the default mode when running the script without
+ *   normal build and the other-nodejs-versions build. This is the default mode when running the script without
  *   parameters or with the command check-for-release.
  *
  * 2) Inside CircleCI itself, to determine whether the currently running pipeline has already been built successfully
@@ -24,7 +24,7 @@ const https = require('https');
 const path = require('path');
 
 const mainWorkflowLabel = 'build';
-const legacyWorkflowLabel = 'legacy-nodejs-versions';
+const legacyWorkflowLabel = 'other-nodejs-versions';
 
 function readBasicEnvironmentVariables() {
   const options = {};
@@ -61,7 +61,7 @@ function readGithubActionEnvironmentVariablesForReleaseCheck() {
 
 /**
  * This method checks if green builds exist:
- * - for _both_ workflows,* "build" and "legacy-nodejs-versions",
+ * - for _both_ workflows,* "build" and "other-nodejs-versions",
  * - for the given commit,
  * - on the _main_ branch.
  *
@@ -305,7 +305,7 @@ async function main() {
   switch (command) {
     case 'check-for-release':
       // Checks if green builds exist:
-      // - for _both_ workflows, "build" and "legacy-nodejs-versions",
+      // - for _both_ workflows, "build" and "other-nodejs-versions",
       // - for the commit we are currently on,
       // - on the _main_ branch.
       return checkIfTheCurrentCommitCanBeReleased();

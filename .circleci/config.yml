@@ -36,7 +36,7 @@ shared: &shared
   steps:
     - checkout
 
-    # The main intent for skipping the build is the legacy-nodejs-versions workflow which is built daily. If no new
+    # The main intent for skipping the build is the other-nodejs-versions workflow which is built daily. If no new
     # commits have been merged to main, we do not need to built the same commit over and over again.
     #
     # Theoretically we could also save the build on the main branch directly after merging a PR - since we always
@@ -528,14 +528,14 @@ workflows:
     jobs:
       - "node-18"
 
-  legacy-nodejs-versions:
+  other-nodejs-versions:
     when:
       or:
         # See https://app.circleci.com/settings/project/github/instana/nodejs/triggers.
         - equal: [ nightly-build-2-am, << pipeline.schedule.name >> ]
         # This allows us to kick off this workflow on demand via the CircleCI UI with the "Trigger Pipeline" button,
-        # by providing the parameter "workflow: legacy-nodejs-versions"
-        - equal: [ legacy-nodejs-versions, << pipeline.parameters.workflow >> ]
+        # by providing the parameter "workflow: other-nodejs-versions"
+        - equal: [ other-nodejs-versions, << pipeline.parameters.workflow >> ]
     jobs:
       - "node-16"
       - "node-14"
