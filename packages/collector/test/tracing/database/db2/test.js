@@ -84,7 +84,7 @@ const verifySpans = (agentControls, controls, options = {}) =>
 
 // The db2 docker container needs a longer time to bootstrap. Please check the docker logs if
 // the container is up.
-mochaSuiteFn('tracing/db2', function () {
+mochaSuiteFn.only('tracing/db2', function () {
   this.timeout(config.getTestTimeout());
 
   globalAgent.setUpCleanUpHooks();
