@@ -76,7 +76,7 @@ mochaSuiteFn('tracing/couchbase', function () {
   let controls;
 
   before(async () => {
-    // NOTE: The CircleCI container is called "couchbase". It's hostname is therefor "couchbase", not "localhost".
+    // NOTE: The CircleCI container is called "couchbase". It's hostname is therefore "couchbase", not "localhost".
     //       The "couchbase-setup" container is able to initialize the cluster etc. via the domain name "couchbase".
     const dns = require('dns');
     const dnsPromises = dns.promises;
