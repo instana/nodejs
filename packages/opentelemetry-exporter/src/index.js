@@ -73,8 +73,8 @@ class InstanaExporter {
 
     // https://github.com/open-telemetry/opentelemetry-js/pull/3627
     // NOTE: We are not using the Instana logger. We are using Otel API diag component.
-    if (process.env.INSTANA_DEBUG) {
-      process.env.OTEL_LOG_LEVEL = 'debug';
+    if (process.env.INSTANA_DEBUG || process.env.INSTANA_LOG_LEVEL) {
+      process.env.OTEL_LOG_LEVEL = process.env.INSTANA_DEBUG ? 'debug' : process.env.INSTANA_LOG_LEVEL;
     }
 
     // If endpoint URL and agent key are not provided, we don't set them in an attempt to use env vars, if they were set
