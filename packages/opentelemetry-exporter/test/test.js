@@ -178,7 +178,7 @@ mochaSuiteFn('Instana OpenTelemetry Exporter', function () {
 });
 
 function verifySpans(spans, appControls) {
-  expectExactlyNMatching(spans, 5, [
+  expectExactlyNMatching(spans, 7, [
     span => expect(span.ec).to.eq(0),
     span => expect(span.f.e).to.eq(appControls.getTestAppPid()),
     span => expect(span.n).to.eq('otel'),
