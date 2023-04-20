@@ -33,8 +33,16 @@ const verifyCouchbaseSpan = (controls, entrySpan, options = {}) => [
   span => expect(span.f.e).to.equal(String(controls.getPid())),
   span => expect(span.f.h).to.equal('agent-stub-uuid'),
   span => expect(span.data.couchbase.hostname).to.equal('hostname' in options ? options.hostname : connStr1),
-  span => expect(span.data.couchbase.bucket).to.equal('bucket' in options ? options.bucket : 'projects'),
-  span => expect(span.data.couchbase.type).to.equal('type' in options ? options.type : 'membase'),
+  span =>
+    expect(span.data.couchbase.bucket).to.equal(
+      // eslint-disable-next-line no-nested-ternary
+      'bucket' in options ? (options.bucket === '' ? undefined : options.bucket) : 'projects'
+    ),
+  span =>
+    expect(span.data.couchbase.type).to.equal(
+      // eslint-disable-next-line no-nested-ternary
+      'type' in options ? (options.type === '' ? undefined : options.type) : 'membase'
+    ),
   span => expect(span.data.couchbase.sql).to.equal(options.sql || 'GET'),
   span =>
     options.error
@@ -67,7 +75,7 @@ const mochaSuiteFn =
   supportedVersion(process.versions.node) && semver.gte(process.versions.node, '12.0.0') ? describe : describe.skip;
 
 // NOTE: it takes 1-2 minutes till the couchbase server can be reached via docker
-mochaSuiteFn.only('tracing/couchbase', function () {
+mochaSuiteFn('tracing/couchbase', function () {
   this.timeout(config.getTestTimeout() * 4);
 
   globalAgent.setUpCleanUpHooks();

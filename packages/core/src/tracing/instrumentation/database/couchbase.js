@@ -29,7 +29,9 @@ exports.init = function init() {
   // The couchbase client talks to some Couchbase services via http directly from the JS implementation.
   // e.g. search service
   // https://github.com/couchbase/couchnode/blob/e855b094cd1b0140ffefc40f32a828b9134d181c/lib/searchindexmanager.ts#L243
-  // We could instrument some traffic via the HttpExecutor library, but then we would not capture the connected host, because the underlying connection is handled in native C++ code.
+  // We could instrument some traffic via the HttpExecutor library, but then we would not capture the connected host,
+  // because the underlying connection is handled in native C++ code.
+  //
   // requireHook.onFileLoad(/couchbase\/dist\/httpexecutor/, instrumentHttpRequest);
   //
   // function instrumentHttpRequest(lib) {
@@ -110,7 +112,7 @@ function instrumentCluster(cluster, connectionStr) {
       resultHandler: (span, result) => {
         if (result && result.rows && result.rows.length > 0 && result.rows[0].BucketName) {
           span.data.couchbase.bucket = result.rows[0].BucketName;
-          span.data.couchbase.type = bucketLookup[span.data.couchbase.bucket] || '';
+          span.data.couchbase.type = bucketLookup[span.data.couchbase.bucket];
         }
       }
     })
@@ -202,11 +204,11 @@ function instrumentSearchIndexes(cluster, connectionStr) {
                 if (result && result.sourceName) {
                   // CASE: getindex
                   span.data.couchbase.bucket = result.sourceName;
-                  span.data.couchbase.type = bucketLookup[span.data.couchbase.bucket] || '';
+                  span.data.couchbase.type = bucketLookup[span.data.couchbase.bucket];
                 } else if (result && Array.isArray(result) && result.length > 0) {
                   // CASE: getAllIndexes
                   span.data.couchbase.bucket = result[0].sourceName;
-                  span.data.couchbase.type = bucketLookup[span.data.couchbase.bucket] || '';
+                  span.data.couchbase.type = bucketLookup[span.data.couchbase.bucket];
                 }
               }
             },
@@ -310,8 +312,6 @@ function instrumentTransactions(cluster, connectionStr) {
                   span.ts = Date.now();
                   span.data.couchbase = {
                     hostname: connectionStr,
-                    bucket: '',
-                    type: '',
                     sql: obj[0].sql
                   };
 
@@ -364,8 +364,8 @@ function instrumentOperation({ connectionStr, bucketName, getBucketTypeFn, sqlTy
       span.ts = Date.now();
       span.data.couchbase = {
         hostname: connectionStr,
-        bucket: bucketName || '',
-        type: bucketType || '',
+        bucket: bucketName,
+        type: bucketType,
         sql: sqlType
       };
 
@@ -457,7 +457,10 @@ function findCallback(originalArgs) {
   let originalCallback;
   let callbackIndex = -1;
 
-  for (let i = 0; i < originalArgs.length; i++) {
+  // If there is any function that takes two or more functions as an argument,
+  // the convention would be to pass in the callback as the last argument, thus searching
+  // from the end backwards might be marginally safer.
+  for (let i = originalArgs.length - 1; i >= 0; i--) {
     if (typeof originalArgs[i] === 'function') {
       originalCallback = originalArgs[i];
       callbackIndex = i;
