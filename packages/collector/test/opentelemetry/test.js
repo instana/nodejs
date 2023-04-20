@@ -11,7 +11,7 @@ const express = require('express');
 
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('../../../core/test/config');
-const { retry } = require('../../../core/test/test_util');
+const { retry, delay } = require('../../../core/test/test_util');
 const ProcessControls = require('../test_util/ProcessControls');
 const portfinder = require('../test_util/portfinder');
 const globalAgent = require('../globalAgent');
@@ -20,6 +20,10 @@ const globalAgent = require('../globalAgent');
 const mochaSuiteFn =
   supportedVersion(process.versions.node) && semver.gte(process.versions.node, '18.0.0') ? describe : describe.skip;
 
+// NOTE: Using @instana/collector and the OpenTelemetry SDK in the same process is not supported.
+//       Thus, this test does not verify desirable behavior but simply checks what exactly happens when
+//       this unsupported setup is used. Both variants (require Instana first/OTel second and vice versa)
+//       fail, though they fail in different ways.
 mochaSuiteFn('Opentelemetry usage', function () {
   this.timeout(config.getTestTimeout());
   const randomPort = portfinder();
@@ -66,6 +70,7 @@ mochaSuiteFn('Opentelemetry usage', function () {
           method: 'GET',
           path: '/trace'
         })
+        .then(() => delay(500))
         .then(() =>
           retry(() =>
             agentControls.getSpans().then(spans => {
