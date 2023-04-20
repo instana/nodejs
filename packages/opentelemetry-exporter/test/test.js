@@ -178,6 +178,10 @@ mochaSuiteFn('Instana OpenTelemetry Exporter', function () {
 });
 
 function verifySpans(spans, appControls) {
+  // ENTRY /otel-test
+  // EXIT www.instana.com
+  // 2 x express middleware, 1 x request handler
+  // 1 x tlc connect, 1 x tls connect
   expectExactlyNMatching(spans, 7, [
     span => expect(span.ec).to.eq(0),
     span => expect(span.f.e).to.eq(appControls.getTestAppPid()),
