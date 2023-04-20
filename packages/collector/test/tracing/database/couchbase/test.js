@@ -67,7 +67,7 @@ const mochaSuiteFn =
   supportedVersion(process.versions.node) && semver.gte(process.versions.node, '12.0.0') ? describe : describe.skip;
 
 // NOTE: it takes 1-2 minutes till the couchbase server can be reached via docker
-mochaSuiteFn('tracing/couchbase', function () {
+mochaSuiteFn.only('tracing/couchbase', function () {
   this.timeout(config.getTestTimeout() * 4);
 
   globalAgent.setUpCleanUpHooks();

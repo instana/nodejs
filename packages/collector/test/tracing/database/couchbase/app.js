@@ -38,6 +38,7 @@ const indeParams = {
 
 // NOTE: we sometimes receive "failed to create index" 400 status code. No idea why.
 // Restart & clean docker. Usually it works afterwards.
+// We need all of the delays used below to avoid `index_not_ready`.
 const upsertIndex = async (idxName, cb) => {
   const delayInMs = 500;
   const opts = {
