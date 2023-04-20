@@ -70,6 +70,13 @@ class InstanaExporter {
    */
   constructor({ agentKey, endpointUrl } = {}) {
     this._isShutdown = true;
+
+    // https://github.com/open-telemetry/opentelemetry-js/pull/3627
+    // NOTE: We are not using the Instana logger. We are using Otel API diag component.
+    if (process.env.INSTANA_DEBUG) {
+      process.env.OTEL_LOG_LEVEL = 'debug';
+    }
+
     // If endpoint URL and agent key are not provided, we don't set them in an attempt to use env vars, if they were set
     if (endpointUrl) {
       process.env[instanaEndpointUrlEnvVar] = endpointUrl;
@@ -91,6 +98,8 @@ class InstanaExporter {
    * @param {(result: import('@opentelemetry/core').ExportResult) => void} resultCallback
    */
   export(spans, resultCallback) {
+    diag.debug(`Instana: received ${spans.length} spans from Opentelemetry.`);
+
     if (this._isShutdown) {
       setImmediate(() => {
         resultCallback({
@@ -102,7 +111,6 @@ class InstanaExporter {
     }
 
     const instanaSpans = spans.map(this._transform.bind(this));
-
     this._sendSpans(instanaSpans, resultCallback);
   }
 
