@@ -659,7 +659,8 @@ mochaSuiteFn('tracing/couchbase', function () {
             path: `/remove-${apiType}?error=true`
           })
           .then(resp => {
-            expect(resp.success).to.eql(true);
+            expect(resp.errMsg).to.eql(apiType === 'promise' ? 'invalid argument' : 'document not found');
+
             return retry(() =>
               verifySpans(agentControls, controls, {
                 sql: 'REMOVE',

@@ -321,7 +321,7 @@ app.post('/remove-promise', async (req, res) => {
       await collection1.remove();
       res.status(500);
     } catch (removeErr) {
-      res.json({ success: true });
+      res.json({ errMsg: removeErr.message });
     }
   } else {
     await collection1.remove('remove-key-1');
@@ -333,7 +333,7 @@ app.post('/remove-callback', (req, res) => {
 
   if (err) {
     collection1.remove('doesnotexist', err1 => {
-      if (err1) return res.json({ success: true });
+      if (err1) return res.json({ errMsg: err1.message });
       res.status(500).send({ err: err1.message });
     });
   } else {
