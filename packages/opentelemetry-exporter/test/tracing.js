@@ -29,7 +29,11 @@ const spanProcessor = new BatchSpanProcessor(traceExporter, {
   scheduledDelayMillis: 100
 });
 
-const nodeAutoInstrumentations = getNodeAutoInstrumentations();
+const nodeAutoInstrumentations = getNodeAutoInstrumentations({
+  '@opentelemetry/instrumentation-fs': {
+    enabled: false
+  }
+});
 
 const sdk = new opentelemetry.NodeSDK({
   resource: new Resource({

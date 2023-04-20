@@ -12,14 +12,20 @@ const opentelemetry = require('@opentelemetry/sdk-node');
 const { getNodeAutoInstrumentations } = require('@opentelemetry/auto-instrumentations-node');
 const { SemanticResourceAttributes } = require('@opentelemetry/semantic-conventions');
 const { Resource } = require('@opentelemetry/resources');
-const { InstanaAlwaysOnSampler } = require('../src');
-const nodeAutoInstrumentations = getNodeAutoInstrumentations();
 const { InstanaExporter } = require('../../opentelemetry-exporter/src/index');
 const { OTLPTraceExporter } = require('@opentelemetry/exporter-trace-otlp-http');
 const { BatchSpanProcessor } = require('@opentelemetry/tracing');
 const { InstanaPropagator } = require('@opentelemetry/propagator-instana');
+const { InstanaAlwaysOnSampler } = require('../src');
+
 const pinkAgentKey = '';
 const pinkEndpointUrl = '';
+
+const nodeAutoInstrumentations = getNodeAutoInstrumentations({
+  '@opentelemetry/instrumentation-fs': {
+    enabled: false
+  }
+});
 
 api.propagation.setGlobalPropagator(new InstanaPropagator());
 
