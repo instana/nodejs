@@ -29,7 +29,7 @@ exports.init = function init() {
   // The couchbase client talks to some Couchbase services via http directly from the JS implementation.
   // e.g. search service
   // https://github.com/couchbase/couchnode/blob/e855b094cd1b0140ffefc40f32a828b9134d181c/lib/searchindexmanager.ts#L243
-  // We could instrument some traffic via the HttpExecutor library, but then we would not capture the connected host.
+  // We could instrument some traffic via the HttpExecutor library, but then we would not capture the connected host, because the underlying connection is handled in native C++ code.
   // requireHook.onFileLoad(/couchbase\/dist\/httpexecutor/, instrumentHttpRequest);
   //
   // function instrumentHttpRequest(lib) {
