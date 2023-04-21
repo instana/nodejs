@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.21.0](https://github.com/instana/nodejs/compare/v2.20.2...v2.21.0) (2023-04-21)
+
+
+### Features
+
+* **opentelemetry-exporter:** added support for INSTANA_DEBUG env variable ([#759](https://github.com/instana/nodejs/issues/759)) ([4e922c2](https://github.com/instana/nodejs/commit/4e922c2c39fddb4b605375c9fac71bd3ae497341))
+
+
+
+
+
 ## [2.20.2](https://github.com/instana/nodejs/compare/v2.20.1...v2.20.2) (2023-04-06)
 
 **Note:** Version bump only for package @instana/opentelemetry-exporter
