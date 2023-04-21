@@ -14,14 +14,29 @@ const express = require('express');
 const natsStreaming = require('node-nats-streaming');
 
 const app = express();
-const client = natsStreaming.connect('test-cluster', 'test-client-publisher', {
+const client = natsStreaming.connect('test-cluster', 'test-client-publisher-1', {
   url: 'nats://localhost:4223'
 });
+const client2 = natsStreaming.connect('test-cluster', 'test-client-publisher-2', {
+  url: 'nats://127.0.0.1:4223'
+});
 const port = require('../../../test_util/app-port')();
+
 let connected = false;
+let client1Connected = false;
+let client2Connected = false;
 
 client.on('connect', () => {
-  connected = true;
+  client1Connected = true;
+  if (client2Connected) {
+    connected = true;
+  }
+});
+client2.on('connect', () => {
+  client2Connected = true;
+  if (client1Connected) {
+    connected = true;
+  }
 });
 
 client.on('close', () => {
@@ -75,6 +90,26 @@ function afterPublish(res, err) {
       res.sendStatus(500);
     });
 }
+
+app.post('/two-different-target-hosts', async (req, res) => {
+  const message1 = 'message for client 1';
+  const message2 = 'message for client 2';
+  const subject = 'publish-test-subject';
+
+  client.publish(subject, message1, err1 => {
+    if (err1) {
+      return res.status(500).send(err1.message ? err1.message : err1);
+    } else {
+      client2.publish(subject, message2, err2 => {
+        if (err2) {
+          return res.status(500).send(err2.message ? err2.message : err2);
+        } else {
+          return res.status(200).send('OK');
+        }
+      });
+    }
+  });
+});
 
 app.listen(port, () => {
   log(`Listening on port: ${port}`);

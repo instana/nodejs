@@ -3,6 +3,9 @@
  * (c) Copyright Instana Inc. and contributors 2019
  */
 
+// Note: nats-streaming is in the process of being deprecated.
+// https://docs.nats.io/legacy/stan#warning-deprecation-notice
+
 'use strict';
 
 const shimmer = require('../../shimmer');
@@ -26,27 +29,28 @@ function instrumentNatsStreaming(natsStreamingModule) {
 function shimConnect(originalFunction) {
   return function () {
     const client = originalFunction.apply(this, arguments);
+    client._natsUrl = client.options.url;
     if (!clientHasBeenInstrumented) {
-      shimmer.wrap(client.constructor.prototype, 'publish', shimPublish.bind(null, client.options.url));
-      shimmer.wrap(client.constructor.prototype, 'subscribe', shimSubscribe.bind(null, client.options.url));
+      shimmer.wrap(client.constructor.prototype, 'publish', shimPublish);
+      shimmer.wrap(client.constructor.prototype, 'subscribe', shimSubscribe);
       clientHasBeenInstrumented = true;
     }
     return client;
   };
 }
 
-function shimPublish(natsUrl, originalFunction) {
+function shimPublish(originalFunction) {
   return function () {
     const originalArgs = new Array(arguments.length);
     for (let i = 0; i < arguments.length; i++) {
       originalArgs[i] = arguments[i];
     }
 
-    return instrumentedPublish(this, originalFunction, originalArgs, natsUrl);
+    return instrumentedPublish(this, originalFunction, originalArgs);
   };
 }
 
-function instrumentedPublish(ctx, originalPublish, originalArgs, natsUrl) {
+function instrumentedPublish(ctx, originalPublish, originalArgs) {
   if (cls.skipExitTracing({ isActive })) {
     return originalPublish.apply(ctx, originalArgs);
   }
@@ -60,7 +64,7 @@ function instrumentedPublish(ctx, originalPublish, originalArgs, natsUrl) {
     span.stack = tracingUtil.getStackTrace(instrumentedPublish);
     span.data.nats = {
       sort: 'publish',
-      address: natsUrl,
+      address: ctx._natsUrl,
       subject
     };
 
@@ -85,47 +89,49 @@ function instrumentedPublish(ctx, originalPublish, originalArgs, natsUrl) {
   });
 }
 
-function shimSubscribe(natsUrl, originalFunction) {
+function shimSubscribe(originalFunction) {
   return function () {
     const subscription = originalFunction.apply(this, arguments);
     if (subscription) {
-      shimmer.wrap(subscription, 'emit', shimSubscriptionEmit.bind(null, natsUrl, arguments[0]));
+      shimmer.wrap(subscription, 'emit', shimSubscriptionEmit.bind(null, arguments[0]));
     }
     return subscription;
   };
 }
 
-function shimSubscriptionEmit(natsUrl, subject, originalFunction) {
+function shimSubscriptionEmit(subject, originalFunction) {
   return function (type) {
     if (isActive && (type === 'message' || type === 'error')) {
       const originalArgs = new Array(arguments.length);
       for (let i = 0; i < arguments.length; i++) {
         originalArgs[i] = arguments[i];
       }
-      return instrumentedEmit(this, originalFunction, originalArgs, natsUrl, subject);
+      return instrumentedEmit(this, originalFunction, originalArgs, subject);
     }
     return originalFunction.apply(this, arguments);
   };
 }
 
-function instrumentedEmit(ctx, originalEmit, originalArgs, natsUrl, subject) {
+function instrumentedEmit(ctx, originalEmit, originalArgs, subject) {
   if (originalArgs[0] === 'message') {
-    return captureMessageSpan(ctx, originalEmit, originalArgs, natsUrl, subject);
+    return captureMessageSpan(ctx, originalEmit, originalArgs, subject);
   } else if (originalArgs[0] === 'error') {
     return captureErrorInCurrentSpan(ctx, originalEmit, originalArgs);
   }
 }
 
-function captureMessageSpan(ctx, originalEmit, originalArgs, natsUrl, subject) {
+function captureMessageSpan(ctx, originalEmit, originalArgs, subject) {
   let span;
   const activeSpan = cls.getCurrentSpan();
 
+  let natsUrl;
   if (activeSpan && activeSpan.n === 'nats' && constants.isEntrySpan(activeSpan)) {
     // Expected case: The raw nats instrumentation kicks in earlier than the nats-streaming instrumentation, so we
     // have already started a raw nats entry span before realizing that it is in fact a nats.streaming entry. We
     // replace this raw nats span with the higher level nats.streaming span.
     span = activeSpan;
     span.n = 'nats.streaming';
+    natsUrl = span.data.nats.address;
   } else if (activeSpan) {
     // Unexpected: There is already an active span, but it is not a raw nats entry span. Abort tracing this
     // nats.streaming entry.

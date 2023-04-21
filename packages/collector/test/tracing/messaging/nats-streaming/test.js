@@ -12,12 +12,21 @@ const { v4: uuid } = require('uuid');
 const constants = require('@instana/core').tracing.constants;
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('../../../../../core/test/config');
-const { delay, stringifyItems, expectAtLeastOneMatching, retry } = require('../../../../../core/test/test_util');
+const {
+  delay,
+  stringifyItems,
+  expectExactlyOneMatching,
+  expectAtLeastOneMatching,
+  retry
+} = require('../../../../../core/test/test_util');
 const ProcessControls = require('../../../test_util/ProcessControls');
 const globalAgent = require('../../../globalAgent');
 
 const agentControls = globalAgent.instance;
 const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
+
+// Note: nats-streaming is in the process of being deprecated.
+// https://docs.nats.io/legacy/stan#warning-deprecation-notice
 
 mochaSuiteFn('tracing/nats-streaming', function () {
   describe('tracing is enabled', function () {
@@ -120,6 +129,40 @@ mochaSuiteFn('tracing/nats-streaming', function () {
             });
         });
       }
+
+      it('call two different hosts', async function () {
+        const res = await publisherControls.sendRequest({
+          method: 'POST',
+          path: '/two-different-target-hosts'
+        });
+
+        expect(res).to.equal('OK');
+
+        await retry(async () => {
+          const spans = await agentControls.getSpans();
+          const entrySpan = expectExactlyOneMatching(spans, [
+            span => expect(span.n).to.equal('node.http.server'),
+            span => expect(span.data.http.method).to.equal('POST')
+          ]);
+
+          expectExactlyOneMatching(spans, [
+            span => expect(span.t).to.equal(entrySpan.t),
+            span => expect(span.p).to.equal(entrySpan.s),
+            span => expect(span.k).to.equal(constants.EXIT),
+            span => expect(span.n).to.equal('nats.streaming'),
+            span => expect(span.data.nats.sort).to.equal('publish'),
+            span => expect(span.data.nats.address).to.equal('nats://127.0.0.1:4223')
+          ]);
+          expectExactlyOneMatching(spans, [
+            span => expect(span.t).to.equal(entrySpan.t),
+            span => expect(span.p).to.equal(entrySpan.s),
+            span => expect(span.k).to.equal(constants.EXIT),
+            span => expect(span.n).to.equal('nats.streaming'),
+            span => expect(span.data.nats.sort).to.equal('publish'),
+            span => expect(span.data.nats.address).to.equal('nats://localhost:4223')
+          ]);
+        });
+      });
     });
 
     describe('subscribe', function () {
@@ -204,8 +247,9 @@ mochaSuiteFn('tracing/nats-streaming', function () {
       }
     });
 
-    // TODO: This case currently does not work, because we cannot forward suppression headers in nats
-    //       instrumentation. Updating nats to 2.0 would solve this. There is a ticket in the backlog.
+    // This case currently does not work, because we cannot forward suppression headers in nats v1 instrumentation.
+    // Updating nats to 2.0 would solve this. But we will not invest into nats-streaming instrumentation anymore, since
+    // nats-streaming is being deprecated.
     describe.skip('suppressed', function () {
       this.timeout(config.getTestTimeout() * 2);
 
