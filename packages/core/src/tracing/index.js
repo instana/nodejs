@@ -59,6 +59,7 @@ const instrumentations = [
   './instrumentation/database/prisma',
   './instrumentation/database/redis',
   './instrumentation/database/db2',
+  './instrumentation/database/couchbase',
   './instrumentation/frameworks/express',
   './instrumentation/frameworks/fastify',
   './instrumentation/frameworks/hapi',

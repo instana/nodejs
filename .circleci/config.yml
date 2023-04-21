@@ -303,7 +303,27 @@ kafka: &kafka
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,EXTERNAL:PLAINTEXT
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
       KAFKA_CREATE_TOPICS: "test:1:1,test-topic-1:1:1,test-topic-2:1:1,test-batch-topic-1:1:1,test-batch-topic-2:1:1,rdkafka-topic:1:1,kafka-avro-topic:1:1"
-      KAFKA_ZOOKEEPER_CONNECT: 127.0.0.1:2181
+      KAFKA_ZOOKEEPER_CONNECT: 127.0.0.1:2181   
+
+couchbase: &couchbase
+  - image: couchbase/server:7.1.4
+    name: couchbase
+
+couchbase-setup: &couchbase-setup
+  image: amd64/centos:7
+  name: couchbase-setup
+  entrypoint:
+    - "bash"
+    - "-ecx"
+    - |
+        sleep 30 && \
+        curl -v -X POST http://couchbase:8091/pools/default -d memoryQuota=512 -d indexMemoryQuota=512 && \
+        curl -v http://couchbase:8091/node/controller/setupServices -d services=kv%2Ceventing%2Cindex%2Cn1ql%2Ccbas%2Cfts && \
+        curl -v http://couchbase:8091/settings/web -d port=8091 -d username=node -d password=nodepwd && \
+        curl -i -u node:nodepwd -X POST http://couchbase:8091/settings/indexes -d 'storageMode=memory_optimized' && \
+        curl -v -u node:nodepwd -X POST http://couchbase:8091/pools/default/buckets -d name=projects -d bucketType=couchbase -d ramQuota=128 -d flushEnabled=1 && \
+        curl -v -u node:nodepwd -X POST http://couchbase:8091/pools/default/buckets -d name=companies -d bucketType=ephemeral -d ramQuota=128 -d flushEnabled=1
+        tail -f /dev/null
 
 schema-registry: &schema-registry
   - image: confluentinc/cp-schema-registry:4.1.0
@@ -374,6 +394,8 @@ jobs:
       - <<: *nats
       - <<: *nats-streaming
       - <<: *memcached
+      - <<: *couchbase
+      - <<: *couchbase-setup
     <<: *shared
     parallelism: 20
     resource_class: large
@@ -394,6 +416,8 @@ jobs:
       - <<: *nats
       - <<: *nats-streaming
       - <<: *memcached
+      - <<: *couchbase
+      - <<: *couchbase-setup
     <<: *shared
     parallelism: 20
     resource_class: large
@@ -417,6 +441,8 @@ jobs:
       - <<: *nats
       - <<: *nats-streaming
       - <<: *memcached
+      - <<: *couchbase
+      - <<: *couchbase-setup
     <<: *shared
     parallelism: 20
     resource_class: large
@@ -439,6 +465,8 @@ jobs:
       - <<: *nats
       - <<: *nats-streaming
       - <<: *memcached
+      - <<: *couchbase
+      - <<: *couchbase-setup
     <<: *shared
     parallelism: 20
     resource_class: large
@@ -461,6 +489,8 @@ jobs:
       - <<: *nats
       - <<: *nats-streaming
       - <<: *memcached
+      - <<: *couchbase
+      - <<: *couchbase-setup
     <<: *shared
     parallelism: 20
     resource_class: large
@@ -481,6 +511,8 @@ jobs:
       - <<: *nats
       - <<: *nats-streaming
       - <<: *memcached
+      - <<: *couchbase
+      - <<: *couchbase-setup
     <<: *shared
     parallelism: 20
     resource_class: large
@@ -503,6 +535,8 @@ jobs:
       - <<: *nats
       - <<: *nats-streaming
       - <<: *memcached
+      - <<: *couchbase
+      - <<: *couchbase-setup
     <<: *shared
     parallelism: 1
     resource_class: large

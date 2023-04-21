@@ -190,7 +190,7 @@ class ProcessControls {
     return this.port;
   }
 
-  async start(retryTime) {
+  async start(retryTime, until) {
     const that = this;
     this.receivedIpcMessages = [];
 
@@ -212,26 +212,27 @@ class ProcessControls {
       that.receivedIpcMessages.push(message);
     });
 
-    await this.waitUntilServerIsUp(retryTime);
+    await this.waitUntilServerIsUp(retryTime, until);
   }
 
   async stop() {
     await this.kill();
   }
 
-  async waitUntilServerIsUp(retryTime) {
+  async waitUntilServerIsUp(retryTime, until) {
     await testUtils.retry(
       () =>
         this.sendRequest({
           method: 'GET',
           suppressTracing: true
         }),
-      retryTime
+      retryTime,
+      until
     );
   }
 
-  async startAndWaitForAgentConnection(retryTime) {
-    await this.start(retryTime);
+  async startAndWaitForAgentConnection(retryTime, until) {
+    await this.start(retryTime, until);
     await this.agentControls.waitUntilAppIsCompletelyInitialized(this.getPid());
   }
 
