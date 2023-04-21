@@ -54,6 +54,16 @@ mochaSuiteFn('Instana OpenTelemetry Sampler', function () {
 
       await retry(async () => {
         const spans = await appControls.getSpans();
+        const spanNames = [
+          'middleware - query',
+          'middleware - expressInit',
+          'request handler - /otel-test',
+          'tcp.connect',
+          'tls.connect',
+          'HTTPS GET',
+          'GET /otel-test'
+        ];
+        expect(spanNames).to.eql(spans.map(s => s.data.operation));
         expect(spans.length).to.eql(7);
       }, 500);
     });
@@ -92,8 +102,17 @@ mochaSuiteFn('Instana OpenTelemetry Sampler', function () {
         path: '/get-otel-spans',
         suppressTracing: true
       });
-
-      expect(resp.spans.length).to.eql(7);
+      const spanNames = [
+        'middleware - query',
+        'middleware - expressInit',
+        'request handler - /otel-test',
+        'tcp.connect',
+        'tls.connect',
+        'HTTPS GET',
+        'GET /otel-test'
+      ];
+      expect(spanNames).to.eql(resp.spans.map(s => s.name));
+      expect(resp.spans.length).to.be.gte(7);
     });
   });
 
