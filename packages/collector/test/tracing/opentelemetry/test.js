@@ -440,7 +440,7 @@ mochaSuiteFn('opentelemetry/instrumentations', function () {
 function checkTelemetryResourceAttrs(span) {
   expect(span.data.resource['telemetry.sdk.language']).to.eql('nodejs');
   expect(span.data.resource['telemetry.sdk.name']).to.eql('opentelemetry');
-  expect(span.data.resource['telemetry.sdk.version']).to.match(/1\.\d\.\d/);
+  expect(span.data.resource['telemetry.sdk.version']).to.match(/1\.\d+\.\d/);
 }
 
 function verifyHttpExit(spans, parentSpan) {
