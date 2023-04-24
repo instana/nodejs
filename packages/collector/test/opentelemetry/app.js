@@ -38,11 +38,19 @@ const initOtel = () => {
 };
 
 if (process.env.INSTANA_LOAD_FIRST === 'true') {
-  require('../../src')();
+  require('../../src')({
+    tracing: {
+      useOpentelemetry: false
+    }
+  });
   initOtel();
 } else {
   initOtel();
-  require('../../src')();
+  require('../../src')({
+    tracing: {
+      useOpentelemetry: false
+    }
+  });
 }
 
 require('mysql');
