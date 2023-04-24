@@ -205,7 +205,7 @@
     "grpc": "1.24.11",
     "kafka-avro": "3.1.1",
     "mali": "0.23.0",
-    "node-rdkafka": "2.13.0",
+    "node-rdkafka": "2.15.0",
     "pg-native": "3.0.1"
   },
   "config": {
