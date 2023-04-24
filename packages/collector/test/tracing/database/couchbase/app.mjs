@@ -18,6 +18,7 @@ const port = portFactory();
 const uuid = { v1 };
 const agentPort = process.env.INSTANA_AGENT_PORT;
 const delay = testUtil.delay;
+
 let connected = false;
 let connected2 = false;
 let cluster;
@@ -39,6 +40,7 @@ const indeParams = {
 
 // NOTE: we sometimes receive "failed to create index" 400 status code. No idea why.
 // Restart & clean docker. Usually it works afterwards.
+// We need all of the delays used below to avoid `index_not_ready`.
 const upsertIndex = async (idxName, cb) => {
   const delayInMs = 500;
   const opts = {
@@ -321,7 +323,7 @@ app.post('/remove-promise', async (req, res) => {
       await collection1.remove();
       res.status(500);
     } catch (removeErr) {
-      res.json({ success: true });
+      res.json({ errMsg: removeErr.message });
     }
   } else {
     await collection1.remove('remove-key-1');
@@ -333,7 +335,7 @@ app.post('/remove-callback', (req, res) => {
 
   if (err) {
     collection1.remove('doesnotexist', err1 => {
-      if (err1) return res.json({ success: true });
+      if (err1) return res.json({ errMsg: err1.message });
       res.status(500).send({ err: err1.message });
     });
   } else {
