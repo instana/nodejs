@@ -161,7 +161,7 @@
     "mssql": "^9.0.1",
     "mssql-v8": "npm:mssql@^8.1.4",
     "mysql": "^2.18.1",
-    "mysql2": "^2.3.3",
+    "mysql2": "^3.2.3",
     "nats": "^2.11.0",
     "nats-v1": "npm:nats@^1.4.12",
     "node-fetch": "^2.6.1",
