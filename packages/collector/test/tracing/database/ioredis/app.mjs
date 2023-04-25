@@ -12,17 +12,15 @@ const agentPort = process.env.INSTANA_AGENT_PORT;
 import bodyParser from 'body-parser';
 import express from 'express';
 import morgan from 'morgan';
-import redis from 'ioredis';
+import Redis from 'ioredis';
 import request from 'request-promise';
-import getAppPort from '../../../test_util/app-port.js';
-
+import portFactory from '../../../test_util/app-port.js';
+const port = portFactory();
 const app = express();
-const port = getAppPort();
-
 const logPrefix = `Express / Redis App (${process.pid}):\t`;
 let connectedToRedis = true;
 
-const client = redis.createClient(`//${process.env.REDIS}`);
+const client = new Redis(`//${process.env.REDIS}`);
 
 client.on('ready', () => {
   connectedToRedis = true;
