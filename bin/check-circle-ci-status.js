@@ -275,6 +275,7 @@ function executeHttpRequest(requestPath, circleToken) {
       },
       res => {
         if (res.statusCode < 200 || res.statusCode > 299) {
+          res.on('data', chunk => console.log(`CircleCI response body: ${chunk}`));
           return reject(new Error(`Unexpected status code ${res.statusCode} for request to ${requestPath}.`));
         }
 
