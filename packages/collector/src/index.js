@@ -60,7 +60,6 @@ function init(_config) {
         cacheKey => cacheKey.indexOf('collector/src/index.js') >= 0
       );
     }
-
     if (collectorIndexCacheKey) {
       return require.cache[collectorIndexCacheKey].exports;
     } else {

@@ -1,0 +1,6 @@
+{
+  "name": "esm_multiple_installations",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "app.mjs"
+}
