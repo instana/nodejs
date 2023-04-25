@@ -22,7 +22,7 @@ const globalAgent = require('../../../globalAgent');
 
 const DELAY_TIMEOUT_IN_MS = 500;
 let connStr1 = process.env.COUCHBASE;
-let connStr2 = process.env.COUCHBASE_2;
+let connStr2 = process.env.COUCHBASE_ALTERNATIVE;
 
 const verifyCouchbaseSpan = (controls, entrySpan, options = {}) => [
   span => expect(span.t).to.equal(entrySpan.t),
