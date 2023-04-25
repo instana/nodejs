@@ -7,6 +7,8 @@
 
 const expect = require('chai').expect;
 const { fail } = expect;
+const semver = require('semver');
+
 const constants = require('@instana/core').tracing.constants;
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('../../../../../core/test/config');
@@ -36,7 +38,13 @@ function registerSuite(agentControls, driverMode, useExecute) {
     return;
   }
 
-  describe(`driver mode: ${driverMode}, access function: ${useExecute ? 'execute' : 'query'}`, () => {
+  let mochaSuiteFnForDriverMode = describe;
+  if (driverMode.includes('mysql2') && semver.lt(process.versions.node, '14.0.0')) {
+    // mysql2 does no longer support Node.js < 14, see https://github.com/sidorares/node-mysql2/issues/1965
+    mochaSuiteFnForDriverMode = describe.skip;
+  }
+
+  mochaSuiteFnForDriverMode(`driver mode: ${driverMode}, access function: ${useExecute ? 'execute' : 'query'}`, () => {
     const env = {
       DRIVER_MODE: driverMode
     };
@@ -54,7 +62,7 @@ function registerSuite(agentControls, driverMode, useExecute) {
     test(controls, agentControls);
   });
 
-  describe('suppressed', function () {
+  mochaSuiteFnForDriverMode('suppressed', function () {
     const env = {
       DRIVER_MODE: driverMode
     };
