@@ -53,7 +53,7 @@ const retryTime = config.getTestTimeout() * 2;
 const topic = 'rdkafka-topic';
 
 let mochaSuiteFn;
-if (!supportedVersion(process.versions.node) || semver.gte(process.versions.node, '18.0.0')) {
+if (!supportedVersion(process.versions.node) || semver.lte(process.versions.node, '14.0.0')) {
   mochaSuiteFn = describe.skip;
 } else {
   mochaSuiteFn = describe;
