@@ -6,7 +6,7 @@
 
 // NOTE: Works because this is already the same collector instance. Node.js will automatically
 //       return the cached instance.
-// const instana = require(process.env.INSTANA_COLLECTOR_PATH);
+// import instana from process.env.INSTANA_COLLECTOR_PATH;
 
 // NOTE: This works, because we call the init fn of the collector again and
 //       the cached exports from the first initialization (see load-instana.js) is returned.
@@ -17,7 +17,7 @@ const initializedInstana = instana();
 
 // NOTE: Does not work, because this is a new instance in the require cache and this code
 //       was never initialized.
-// const instana = require('../../../../../src');
+// import instana from '../../../../../../src/index.js';
 
 import express from 'express';
 import delay from '@instana/core/test/test_util/delay.js';
