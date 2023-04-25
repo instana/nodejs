@@ -50,23 +50,20 @@ function enter(ctx) {
     }
 
     logger.debug(
-      'No Instana host agent is running on %s:%s. Trying the default gateway next.',
-      agentHost,
-      agentOpts.port,
-      {
-        error: localhostCheckErr
-      }
+      `No Instana host agent is running on ${agentHost}:${agentOpts.port}: ${localhostCheckErr}. Trying the default ` +
+        'gateway next.'
     );
 
     getDefaultGateway(function onGetDefaultGateway(getDefaultGatewayErr, defaultGateway) {
       if (getDefaultGatewayErr) {
-        logger.debug('Error while trying to determine the default gateway.', { error: getDefaultGatewayErr });
         logger.warn(
-          'The Instana host agent cannot be contacted via %s:%s and the default gateway cannot be determined. ' +
-            'Scheduling another attempt to establish a connection to the Instana host agent in %s ms.',
-          agentHost,
-          agentOpts.port,
-          retryTimeoutMillis
+          `The Instana host agent cannot be reached via ${agentHost}:${agentOpts.port} and the default gateway ` +
+            `cannot be determined. Details: Error for the connection attempt: ${safelyExtractErrorMessage(
+              localhostCheckErr
+            )}; error for determining the gateway: ${safelyExtractErrorMessage(
+              getDefaultGatewayErr
+            )}. The Instana host agent might not be ready yet, scheduling another attempt to establish a connection ` +
+            `in ${retryTimeoutMillis} ms.`
         );
         const defaultGatewayRetryTimeout = setTimeout(enter, retryTimeoutMillis, ctx);
         defaultGatewayRetryTimeout.unref();
@@ -80,17 +77,13 @@ function enter(ctx) {
           return;
         }
 
-        logger.debug('Failed to reach the Instana host agent via the default gateway %s', defaultGateway, {
-          error: defaultGatewayCheckErr
-        });
         logger.warn(
-          'The Instana host agent can neither be reached via %s:%s nor via the default gateway %s:%s. ' +
-            'Scheduling another attempt to establish a connection to the Instana host agent in %s ms.',
-          agentHost,
-          agentOpts.port,
-          defaultGateway,
-          agentOpts.port,
-          retryTimeoutMillis
+          `The Instana host agent can neither be reached via ${agentHost}:${agentOpts.port} nor via the default ` +
+            `gateway ${defaultGateway}:${agentOpts.port}. Details: Error for the first attempt: ` +
+            `${safelyExtractErrorMessage(localhostCheckErr)}; error for the second attempt: ${safelyExtractErrorMessage(
+              defaultGatewayCheckErr
+            )}. The Instana host agent might not be ready yet, scheduling another attempt to establish a connection ` +
+            `in ${retryTimeoutMillis} ms.`
         );
         const checkHostRetryTimeout = setTimeout(enter, retryTimeoutMillis, ctx);
         checkHostRetryTimeout.unref();
@@ -135,7 +128,9 @@ function checkHost(host, cb) {
         } else {
           cb(
             new Error(
-              `Host ${host}:${agentOpts.port} did not respond with expected agent header. Got: ${res.headers.server}`
+              `The attempt to connect to the Instana host agent on ${host}:${agentOpts.port} has failed, the ` +
+                `response did not contain the expected "Server" header. Expected ${EXPECTED_SERVER_HEADER}, ` +
+                `but received: ${res.headers.server}`
             )
           );
         }
@@ -143,19 +138,42 @@ function checkHost(host, cb) {
       }
     );
   } catch (e) {
-    cb(new Error(`Host lookup failed due to: ${e.message}`));
+    cb(
+      new Error(
+        `The attempt to connect to the Instana host agent on ${host}:${agentOpts.port} has failed with the following ` +
+          `error: ${e.message}`
+      )
+    );
     return;
   }
 
   req.setTimeout(5000, function onTimeout() {
-    cb(new Error('Host check timed out'));
+    cb(new Error(`The attempt to connect to the Instana host agent on ${host}:${agentOpts.port} has timed out.`));
   });
 
   req.on('error', err => {
-    cb(new Error(`Host check failed: ${err.message}`));
+    cb(
+      new Error(
+        `The attempt to connect to the Instana host agent on ${host}:${agentOpts.port} has failed with the following ` +
+          `error: ${err.message}`
+      )
+    );
   });
 
   req.end();
+}
+
+/**
+ * @param {Error} error
+ */
+function safelyExtractErrorMessage(error) {
+  if (error == null) {
+    return null;
+  }
+  if (error.message) {
+    return error.message;
+  }
+  return error;
 }
 
 /**
