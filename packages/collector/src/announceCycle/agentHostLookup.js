@@ -11,8 +11,6 @@ const { http } = require('@instana/core').uninstrumentedHttp;
 
 const agentOpts = require('../agent/opts');
 
-const EXPECTED_SERVER_HEADER = 'Instana Agent';
-
 /** @type {import('@instana/core/src/logger').GenericLogger} */
 let logger;
 logger = require('../logger').getLogger('announceCycle/agentHostLookup', newLogger => {
@@ -29,6 +27,8 @@ logger = require('../logger').getLogger('announceCycle/agentHostLookup', newLogg
 // The host differs, when the collector is running inside a Docker container and the
 // agent is running on the host.
 
+const expectedServerHeader = 'Instana Agent';
+const requestTimeout = 5000;
 const retryTimeoutMillis = 60 * 1000;
 
 module.exports = {
@@ -120,16 +120,18 @@ function checkHost(host, cb) {
         port: agentOpts.port,
         path: '/',
         agent: http.agent,
-        method: 'GET'
+        method: 'GET',
+        // timeout for establishing a connection
+        timeout: requestTimeout
       },
       res => {
-        if (res.headers.server === EXPECTED_SERVER_HEADER) {
+        if (res.headers.server === expectedServerHeader) {
           cb(null);
         } else {
           cb(
             new Error(
               `The attempt to connect to the Instana host agent on ${host}:${agentOpts.port} has failed, the ` +
-                `response did not contain the expected "Server" header. Expected ${EXPECTED_SERVER_HEADER}, ` +
+                `response did not contain the expected "Server" header. Expected ${expectedServerHeader}, ` +
                 `but received: ${res.headers.server}`
             )
           );
@@ -147,9 +149,12 @@ function checkHost(host, cb) {
     return;
   }
 
-  req.setTimeout(5000, function onTimeout() {
-    cb(new Error(`The attempt to connect to the Instana host agent on ${host}:${agentOpts.port} has timed out.`));
+  req.on('timeout', function onTimeout() {
+    cb(new Error(`The attempt to connect to the Instana host agent on ${host}:${agentOpts.port} has timed out`));
   });
+
+  // additional idle timeout (that is, not getting a response after establishing a connection)
+  req.setTimeout(requestTimeout);
 
   req.on('error', err => {
     cb(
