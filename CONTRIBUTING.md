@@ -4,6 +4,8 @@
 
 You should use the Node.js version defined in [.nvmrc](https://github.com/instana/nodejs/blob/main/.nvmrc) (and the `npm` version that comes with that Node.js version) for local development. You might want to install [nvm](https://github.com/nvm-sh/nvm) to manage multiple Node.js versions, but this is optional.
 
+Python3 (< 3.11) is required, otherwise the db2 package won't build, see https://github.com/nodejs/node-gyp/issues/2219.
+
 `brew install jq` for OSX (for other systems please look up [here](https://stedolan.github.io/jq/)) is required to run `npm run audit` or `lerna audit run`.
 
 Note: You might need to install `libpq-dev`/`postgresql-devel` or a similar package before running `npm install` because `pg-native` depends on it. (`@instana/collector` and friends do not depend on `pg-native` but our test suite depends on it.)
