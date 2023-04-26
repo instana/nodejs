@@ -4,6 +4,7 @@
 
 'use strict';
 
+const dns = require('dns').promises;
 const expect = require('chai').expect;
 const semver = require('semver');
 
@@ -14,13 +15,22 @@ const ProcessControls = require('../../../test_util/ProcessControls');
 const globalAgent = require('../../../globalAgent');
 
 const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
-const DB_LOCAL_CONN_STR = 'HOSTNAME=localhost;UID=node;PWD=<redacted>;PORT=58885;PROTOCOL=TCPIP';
-const DB_REMOTE_CONN_STR = testUtils.isCI()
-  ? process.env.DB2_CONNECTION_STR.replace(/PWD=.*?(?=;)/, 'PWD=<redacted>')
-  : null;
 
-const CONN_STR = DB_REMOTE_CONN_STR || DB_LOCAL_CONN_STR;
-let DB2_NAME;
+if (testUtils.isCI() && !process.env.DB2_CONNECTION_STR) {
+  throw new Error(
+    'No connection string for IBM DB2, please make sure the environment variable DB2_CONNECTION_STR is set.'
+  );
+}
+
+const DB2_CONN_STR =
+  process.env.DB2_CONNECTION_STR || 'HOSTNAME=localhost;UID=node;PWD=nodepw;PORT=58885;PROTOCOL=TCPIP';
+let DB2_CONN_STR_ALTERNATIVE;
+let EXPECTED_DB2_CONN_STR;
+let EXPECTED_DB2_CONN_STR_ALTERNATIVE;
+const DB2_HOSTNAME = /HOSTNAME=([^;]+)/.exec(DB2_CONN_STR)[1];
+
+// NOTE: DB2 has a limitation of 8 chars
+const DB2_DATABASE_NAME = 'nodedb';
 let TABLE_NAME_1;
 let TABLE_NAME_2;
 let TABLE_NAME_3;
@@ -28,8 +38,8 @@ const DELAY_TIMEOUT_IN_MS = 500;
 
 const DB2_CLOSE_TIMEOUT_IN_MS = 1000;
 
-// NOTE: DB2 has a limitation of 8 chars
-const getDatabaseName = () => 'nodedb';
+const testTimeout = Math.max(20000, config.getTestTimeout());
+const retryTime = testTimeout / 2;
 
 const generateTableName = () => {
   const randomStr = Array(8)
@@ -72,7 +82,7 @@ const verifySpans = (agentControls, controls, options = {}) =>
       span => expect(span.f.e).to.equal(String(controls.getPid())),
       span => expect(span.f.h).to.equal('agent-stub-uuid'),
       span => expect(span.data.db2.stmt).to.equal(options.stmt || 'select 1 from sysibm.sysdummy1'),
-      span => expect(span.data.db2.dsn).to.equal(`${CONN_STR};DATABASE=${DB2_NAME}`),
+      span => expect(span.data.db2.dsn).to.equal(`${EXPECTED_DB2_CONN_STR};DATABASE=${DB2_DATABASE_NAME}`),
       span => expect(span.async).to.not.exist,
       span =>
         options.error
@@ -85,7 +95,22 @@ const verifySpans = (agentControls, controls, options = {}) =>
 // The db2 docker container needs a longer time to bootstrap. Please check the docker logs if
 // the container is up.
 mochaSuiteFn('tracing/db2', function () {
-  this.timeout(config.getTestTimeout());
+  this.timeout(testTimeout);
+
+  before(async () => {
+    // We need a second connection string pointing to the same DB2 instance, for the test "call two different hosts". We
+    // produce one by resolving the host name in the original connection string to an IP.
+    const dnsLookupResult = await dns.lookup(DB2_HOSTNAME, { family: 4 });
+    if (dnsLookupResult && dnsLookupResult.address) {
+      DB2_CONN_STR_ALTERNATIVE = DB2_CONN_STR.replace(DB2_HOSTNAME, dnsLookupResult.address);
+    } else {
+      DB2_CONN_STR_ALTERNATIVE = DB2_CONN_STR.replace('localhost', dnsLookupResult.address);
+    }
+
+    // The EXPECTED_... variables are what the tracer will capture (with the password redacted).
+    EXPECTED_DB2_CONN_STR = DB2_CONN_STR.replace(/PWD=.*?(?=;)/, 'PWD=<redacted>');
+    EXPECTED_DB2_CONN_STR_ALTERNATIVE = DB2_CONN_STR_ALTERNATIVE.replace(/PWD=.*?(?=;)/, 'PWD=<redacted>');
+  });
 
   globalAgent.setUpCleanUpHooks();
   const agentControls = globalAgent.instance;
@@ -93,7 +118,6 @@ mochaSuiteFn('tracing/db2', function () {
 
   describe('tracing is active', function () {
     before(async () => {
-      DB2_NAME = getDatabaseName();
       TABLE_NAME_1 = generateTableName();
       TABLE_NAME_2 = generateTableName();
       TABLE_NAME_3 = generateTableName();
@@ -102,7 +126,9 @@ mochaSuiteFn('tracing/db2', function () {
         dirname: __dirname,
         useGlobalAgent: true,
         env: {
-          DB2_NAME,
+          DB2_CONN_STR,
+          DB2_CONN_STR_ALTERNATIVE,
+          DB2_DATABASE_NAME,
           DB2_TABLE_NAME_1: TABLE_NAME_1,
           DB2_TABLE_NAME_2: TABLE_NAME_2,
           DB2_TABLE_NAME_3: TABLE_NAME_3,
@@ -111,7 +137,7 @@ mochaSuiteFn('tracing/db2', function () {
       });
 
       ProcessControls.setUpTestCaseCleanUpHooks(controls);
-      await controls.startAndWaitForAgentConnection();
+      await controls.startAndWaitForAgentConnection(retryTime);
     });
 
     after(async () => {
@@ -408,7 +434,7 @@ mochaSuiteFn('tracing/db2', function () {
                   span => expect(span.f.e).to.equal(String(controls.getPid())),
                   span => expect(span.f.h).to.equal('agent-stub-uuid'),
                   span => expect(span.data.db2.stmt).to.equal(`SELECT * FROM ${TABLE_NAME_1}`),
-                  span => expect(span.data.db2.dsn).to.equal(`${CONN_STR};DATABASE=${DB2_NAME}`),
+                  span => expect(span.data.db2.dsn).to.equal(`${EXPECTED_DB2_CONN_STR};DATABASE=${DB2_DATABASE_NAME}`),
                   span => expect(span.async).to.not.exist,
                   span =>
                     expect(span.data.db2.error).to.eql(
@@ -512,7 +538,7 @@ mochaSuiteFn('tracing/db2', function () {
                     expect(span.data.db2.stmt).to.equal(
                       `insert into ${TABLE_NAME_1} (COLINT, COLDATETIME, COLTEXT) VALUES (?, ?, ?)`
                     ),
-                  span => expect(span.data.db2.dsn).to.equal(`${CONN_STR};DATABASE=${DB2_NAME}`),
+                  span => expect(span.data.db2.dsn).to.equal(`${EXPECTED_DB2_CONN_STR};DATABASE=${DB2_DATABASE_NAME}`),
                   span => expect(span.async).to.not.exist,
                   span => expect(span.data.db2.error).to.not.exist,
                   span => expect(span.ec).to.equal(0)
@@ -544,7 +570,7 @@ mochaSuiteFn('tracing/db2', function () {
                   span => expect(span.f.h).to.equal('agent-stub-uuid'),
                   span =>
                     expect(span.data.db2.stmt).to.equal(`insert into ${TABLE_NAME_1} values (3, null, 'something')`),
-                  span => expect(span.data.db2.dsn).to.equal(`${CONN_STR};DATABASE=${DB2_NAME}`),
+                  span => expect(span.data.db2.dsn).to.equal(`${EXPECTED_DB2_CONN_STR};DATABASE=${DB2_DATABASE_NAME}`),
                   span => expect(span.async).to.not.exist,
                   span => expect(span.data.db2.error).to.not.exist,
                   span => expect(span.ec).to.equal(0)
@@ -1055,11 +1081,41 @@ mochaSuiteFn('tracing/db2', function () {
           )
         );
     });
+
+    it('call two different hosts', async () => {
+      const response = await controls.sendRequest({
+        method: 'GET',
+        path: '/two-different-target-hosts'
+      });
+
+      expect(response.data1).to.deep.equal([{ 1: 1 }]);
+      expect(response.data2).to.deep.equal([{ 1: 'a' }]);
+      await testUtils.retry(async () => {
+        const spans = await agentControls.getSpans();
+        const entrySpan = testUtils.expectAtLeastOneMatching(spans, [
+          span => expect(span.n).to.equal('node.http.server'),
+          span => expect(span.data.http.method).to.equal('GET')
+        ]);
+        testUtils.expectExactlyOneMatching(spans, [
+          span => expect(span.t).to.equal(entrySpan.t),
+          span => expect(span.p).to.equal(entrySpan.s),
+          span => expect(span.n).to.equal('db2'),
+          span => expect(span.data.db2.stmt).to.equal('select 1 from sysibm.sysdummy1'),
+          span => expect(span.data.db2.dsn).to.contain(EXPECTED_DB2_CONN_STR)
+        ]);
+        testUtils.expectExactlyOneMatching(spans, [
+          span => expect(span.t).to.equal(entrySpan.t),
+          span => expect(span.p).to.equal(entrySpan.s),
+          span => expect(span.n).to.equal('db2'),
+          span => expect(span.data.db2.stmt).to.equal("select 'a' from sysibm.sysdummy1"),
+          span => expect(span.data.db2.dsn).to.contain(EXPECTED_DB2_CONN_STR_ALTERNATIVE)
+        ]);
+      });
+    });
   });
 
   describe('tracing is active, but suppressed', function () {
     before(async () => {
-      DB2_NAME = getDatabaseName();
       TABLE_NAME_1 = generateTableName();
       TABLE_NAME_2 = generateTableName();
       TABLE_NAME_3 = generateTableName();
@@ -1069,7 +1125,9 @@ mochaSuiteFn('tracing/db2', function () {
         useGlobalAgent: true,
         tracingEnabled: false,
         env: {
-          DB2_NAME,
+          DB2_CONN_STR,
+          DB2_CONN_STR_ALTERNATIVE,
+          DB2_DATABASE_NAME,
           DB2_TABLE_NAME_1: TABLE_NAME_1,
           DB2_TABLE_NAME_2: TABLE_NAME_2,
           DB2_TABLE_NAME_3: TABLE_NAME_3,
@@ -1078,7 +1136,7 @@ mochaSuiteFn('tracing/db2', function () {
       });
 
       ProcessControls.setUpTestCaseCleanUpHooks(controls);
-      await controls.startAndWaitForAgentConnection();
+      await controls.startAndWaitForAgentConnection(retryTime);
     });
 
     after(async () => {
@@ -1172,7 +1230,6 @@ mochaSuiteFn('tracing/db2', function () {
 
   describe('tracing is disabled', function () {
     before(async () => {
-      DB2_NAME = getDatabaseName();
       TABLE_NAME_1 = generateTableName();
       TABLE_NAME_2 = generateTableName();
       TABLE_NAME_3 = generateTableName();
@@ -1182,7 +1239,9 @@ mochaSuiteFn('tracing/db2', function () {
         useGlobalAgent: true,
         tracingEnabled: false,
         env: {
-          DB2_NAME,
+          DB2_CONN_STR,
+          DB2_CONN_STR_ALTERNATIVE,
+          DB2_DATABASE_NAME,
           DB2_TABLE_NAME_1: TABLE_NAME_1,
           DB2_TABLE_NAME_2: TABLE_NAME_2,
           DB2_TABLE_NAME_3: TABLE_NAME_3,
@@ -1191,7 +1250,7 @@ mochaSuiteFn('tracing/db2', function () {
       });
 
       ProcessControls.setUpTestCaseCleanUpHooks(controls);
-      await controls.startAndWaitForAgentConnection();
+      await controls.startAndWaitForAgentConnection(retryTime);
     });
 
     after(async () => {

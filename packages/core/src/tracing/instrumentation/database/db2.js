@@ -12,7 +12,6 @@ const constants = require('../../constants');
 const cls = require('../../cls');
 
 let isActive = false;
-let connectionStr;
 
 const CLOSE_TIMEOUT_IN_MS = process.env.DB2_CLOSE_TIMEOUT_IN_MS || 1000 * 30;
 
@@ -62,7 +61,7 @@ function instrumentOpen(originalFunction) {
     // NOTE: connection.open(fn) will throw an error in the library
     //       we can rely on arguments[0] being the connection string.
     //       There is no other format to pass in the connection.
-    connectionStr = arguments[0];
+    this._instanaConnectionString = arguments[0];
     return originalFunction.apply(this, arguments);
   };
 }
@@ -247,7 +246,7 @@ function instrumentQueryHelper(ctx, originalArgs, originalFunction, stmt, isAsyn
   }
 
   return cls.ns.runAndReturn(() => {
-    const span = createSpan(stmt, instrumentQueryHelper);
+    const span = createSpan(stmt, instrumentQueryHelper, ctx._instanaConnectionString);
 
     // CASE: querySync
     if (!isAsync) {
@@ -356,7 +355,7 @@ function instrumentExecuteHelper(ctx, originalArgs, stmtObject, prepareCallParen
         return originalExecuteNonQuerySync.apply(this, arguments);
       }
 
-      const span = createSpan(originalArgs[0], instrumentExecuteHelper);
+      const span = createSpan(originalArgs[0], instrumentExecuteHelper, ctx._instanaConnectionString);
 
       // NOTE: returns row count
       try {
@@ -380,7 +379,7 @@ function instrumentExecuteHelper(ctx, originalArgs, stmtObject, prepareCallParen
       }
 
       // NOTE: start one span per execute!
-      const span = createSpan(originalArgs[0], instrumentExecuteHelper);
+      const span = createSpan(originalArgs[0], instrumentExecuteHelper, ctx._instanaConnectionString);
 
       const result = originalExecuteSync.apply(this, arguments);
       finishSpan(ctx, result, span);
@@ -397,7 +396,7 @@ function instrumentExecuteHelper(ctx, originalArgs, stmtObject, prepareCallParen
       }
 
       // NOTE: start one span per execute!
-      const span = createSpan(originalArgs[0], instrumentExecuteHelper);
+      const span = createSpan(originalArgs[0], instrumentExecuteHelper, ctx._instanaConnectionString);
 
       const args = arguments;
       const origCallbackIndex =
@@ -432,7 +431,7 @@ function instrumentQueryResultHelper(ctx, originalArgs, originalFunction, stmt, 
   }
 
   return cls.ns.runAndReturn(() => {
-    const span = createSpan(stmt, instrumentQueryResultHelper);
+    const span = createSpan(stmt, instrumentQueryResultHelper, ctx._instanaConnectionString);
 
     if (!isAsync) {
       try {
@@ -473,7 +472,7 @@ function instrumentQueryResultHelper(ctx, originalArgs, originalFunction, stmt, 
   });
 }
 
-function createSpan(stmt, fn) {
+function createSpan(stmt, fn, connectionStr) {
   // eslint-disable-next-line max-len
   // https://github.ibm.com/instana/backend/blob/develop/forge/src/main/java/com/instana/forge/connection/database/ibmdb2/IbmDb2Span.java
   const span = cls.startSpan(exports.spanName, constants.EXIT);

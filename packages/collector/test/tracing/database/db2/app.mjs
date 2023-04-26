@@ -2,9 +2,11 @@
  * (c) Copyright IBM Corp. 2022
  */
 
+/* eslint-disable no-console */
+
 'use strict';
 
-/* eslint-disable no-console */
+import { promisify } from 'util';
 import bodyParser from 'body-parser';
 import express from 'express';
 import fs from 'fs';
@@ -21,8 +23,12 @@ const __dirname = dirname(__filename);
 const app = express();
 const port = getAppPort();
 const logPrefix = `DB2 App (${process.pid}):\t`;
-const DB2_NAME = process.env.DB2_NAME;
-let connStr = 'HOSTNAME=localhost;UID=node;PWD=nodepw;PORT=58885;PROTOCOL=TCPIP';
+const delay = testUtil.delay;
+
+const DB2_DATABASE_NAME = process.env.DB2_DATABASE_NAME;
+const connStr1 = process.env.DB2_CONN_STR || 'HOSTNAME=localhost;UID=node;PWD=nodepw;PORT=58885;PROTOCOL=TCPIP';
+const connStr2 =
+  process.env.DB2_CONN_STR_ALTERNATIVE || 'HOSTNAME=127.0.0.1;UID=node;PWD=nodepw;PORT=58885;PROTOCOL=TCPIP';
 
 /**
  * We are unable to start a DB2 container on circleci, because db2 needs privileged permissions.
@@ -54,16 +60,8 @@ let connStr = 'HOSTNAME=localhost;UID=node;PWD=nodepw;PORT=58885;PROTOCOL=TCPIP'
  * That's why we use random names for tables.
  */
 
-if (testUtil.isCI()) {
-  connStr = process.env.DB2_CONNECTION_STR;
-  if (!connStr) {
-    throw new Error(
-      'No connection string for IBM DB2, please make sure the environment variable DB2_CONNECTION_STR is set.'
-    );
-  }
-}
-
 let connection;
+let connection2;
 
 const DB2_TABLE_NAME_1 = process.env.DB2_TABLE_NAME_1;
 const DB2_TABLE_NAME_2 = process.env.DB2_TABLE_NAME_2;
@@ -80,46 +78,45 @@ const MAX_TRIES = 10;
 const CONNECT_TIMEOUT_IN_MS = 500;
 let stmtObjectFromStart;
 
-const connect = () => {
-  console.log(`trying to connect: ${tries}`);
+const db2OpenPromisified = promisify(ibmdb.open);
 
-  ibmdb.open(`${connStr};DATABASE=${DB2_NAME}`, function (err, conn) {
-    if (err) {
-      console.log(err);
+async function connect(connectionStr) {
+  console.log(`Trying to connect to DB2, attempt ${tries} of ${MAX_TRIES}`);
 
-      if (tries > MAX_TRIES) {
-        throw err;
-      }
-
-      tries += 1;
-      return setTimeout(() => {
-        console.log('Trying again...');
-        connect();
-      }, CONNECT_TIMEOUT_IN_MS);
+  let conn;
+  try {
+    conn = await db2OpenPromisified(connectionStr);
+  } catch (err) {
+    console.log(err);
+    if (tries > MAX_TRIES) {
+      throw err;
     }
 
-    console.log('Successfully connected.');
+    tries += 1;
+    console.log(`Trying to connect to DB2 again in ${CONNECT_TIMEOUT_IN_MS} milliseconds.`);
+    await delay(CONNECT_TIMEOUT_IN_MS);
+    return connect(connectionStr);
+  }
+  console.log('A client has successfully connected.');
+  return conn;
+}
 
-    conn.querySync(`drop table ${DB2_TABLE_NAME_1} if exists`);
+(async function openConnections() {
+  connection = await connect(`${connStr1};DATABASE=${DB2_DATABASE_NAME}`);
 
-    const result = conn.querySync(
-      `create table ${DB2_TABLE_NAME_1} (COLINT INTEGER, COLDATETIME TIMESTAMP, COLTEXT VARCHAR(255))`
-    );
+  connection.querySync(`drop table ${DB2_TABLE_NAME_1} if exists`);
+  const result = connection.querySync(
+    `create table ${DB2_TABLE_NAME_1} (COLINT INTEGER, COLDATETIME TIMESTAMP, COLTEXT VARCHAR(255))`
+  );
+  if (!(result instanceof Array)) {
+    throw new Error(result);
+  }
+  stmtObjectFromStart = connection.prepareSync(`SELECT * FROM ${DB2_TABLE_NAME_1}`);
 
-    if (!(result instanceof Array)) {
-      throw new Error(result);
-    }
+  connection2 = await connect(`${connStr2};DATABASE=${DB2_DATABASE_NAME}`);
 
-    conn.prepare(`SELECT * FROM ${DB2_TABLE_NAME_1}`, (prepareErr, stmtObject) => {
-      if (prepareErr) throw prepareErr;
-
-      stmtObjectFromStart = stmtObject;
-      connection = conn;
-    });
-  });
-};
-
-connect();
+  console.log('Both clients have successfully connected.');
+})();
 
 if (process.env.WITH_STDOUT) {
   app.use(morgan(`${logPrefix}:method :url :status`));
@@ -128,7 +125,7 @@ if (process.env.WITH_STDOUT) {
 app.use(bodyParser.json());
 
 app.get('/', (req, res) => {
-  if (!connection) {
+  if (!connection || !connection2) {
     res.sendStatus(500);
   } else {
     res.sendStatus(200);
@@ -138,13 +135,17 @@ app.get('/', (req, res) => {
 app.delete('/conn', (req, res) => {
   console.log('deleting conn');
 
-  if (!connection) {
-    return res.sendStatus(200);
+  if (connection) {
+    connection.closeSync();
+    connection = null;
+    console.log('connection 1 has been closed');
   }
 
-  connection.closeSync();
-  connection = null;
-  console.log('deleted conn');
+  if (connection2) {
+    connection2.closeSync();
+    connection2 = null;
+    console.log('connection 2 has been closed');
+  }
 
   res.sendStatus(200);
 });
@@ -736,6 +737,34 @@ app.get('/query-stream', (req, res) => {
     .once('error', function (err) {
       return res.status(error ? 200 : 500).send({ err: err.message });
     });
+});
+
+app.get('/two-different-target-hosts', async (req, res) => {
+  if (!connection) {
+    log('Client 1 is not connected.');
+    return res.sendStatus(500);
+  }
+  if (!connection2) {
+    log('Client 2 is not connected.');
+    return res.sendStatus(500);
+  }
+
+  const response = {};
+  try {
+    response.data1 = await connection.query('select 1 from sysibm.sysdummy1');
+    console.log('data1', response.data1);
+  } catch (e) {
+    log('The first DB2 query failed.', e);
+    return res.sendStatus(500);
+  }
+  try {
+    response.data2 = await connection2.query("select 'a' from sysibm.sysdummy1");
+    console.log('data2', response.data2);
+  } catch (e) {
+    log('The second DB2 query failed.', e);
+    return res.sendStatus(500);
+  }
+  res.json(response);
 });
 
 app.listen(port, () => {
