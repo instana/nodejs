@@ -49,11 +49,12 @@ exports.AgentEventSeverity = {
  * */
 
 /**
- * @typedef {Object} AgentConnectionEvent
+ * @typedef {Object} Event
  * @property {string} [title]
  * @property {string} [text]
  * @property {string} [plugin]
  * @property {number} [pid]
+ * @property {string} [path]
  * @property {number} [id]
  * @property {string} [code]
  * @property {string} [category]
@@ -294,7 +295,7 @@ exports.sendProfiles = function sendProfiles(profiles, cb) {
 };
 
 /**
- * @param {AgentConnectionEvent} eventData
+ * @param {Event} eventData
  * @param {(...args: *) => *} cb
  */
 exports.sendEvent = function sendEvent(eventData, cb) {
@@ -311,7 +312,7 @@ exports.sendEvent = function sendEvent(eventData, cb) {
  * @param {(...args: *) => *} cb
  */
 exports.sendAgentMonitoringEvent = function sendAgentMonitoringEvent(code, category, cb) {
-  /** @type {AgentConnectionEvent} */
+  /** @type {Event} */
   const event = {
     plugin: 'com.instana.forge.infrastructure.runtime.nodejs.NodeJsRuntimePlatform',
     pid: pidStore.pid,
