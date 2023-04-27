@@ -26,8 +26,12 @@ const logPrefix = `CJS SDK multiple installations: (${process.pid}):\t`;
 async function createSDKSpans() {
   // NOTE: We need the delay here to ensure that the collector is fully initialized.
   //       Otherwise we will get NoopSpanHandle instances because tracing is not ready yet.
+  //       For customers the delay can be tiny (~500ms), but for the test we need to choose a bigger
+  //       delay, because we need to ensure that the test has already started and won't call
+  //       beforeEach(() => this.clearReceivedData());
   // TODO: ticket #125682
   await testUtils.delay(500);
+  await testUtils.delay(2000);
 
   await instana.sdk.async.startEntrySpan('entryspan');
   // console.log(initializedInstana.currentSpan());
