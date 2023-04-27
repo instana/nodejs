@@ -24,8 +24,9 @@ const transmissionCycle = require('../metrics/transmissionCycle');
 const uncaught = require('../uncaught');
 const { isNodeVersionEOL } = require('../util/eol');
 
-const ELEVEN_MINUTES = 11 * 60 * 1000;
-const TEN_MINUTES = 10 * 60 * 1000;
+const ONE_MINUTE = 60 * 1000;
+const EOL_EVENT_REFRESH_INTERVAL = 6 * 60 * ONE_MINUTE; // 6 hours
+const EOL_EVENT_DURATION = 6 * 60 * ONE_MINUTE + ONE_MINUTE; // 6 hours + 1 minute
 
 /** @type {*} */
 let autoprofile;
@@ -186,6 +187,7 @@ function fireMonitoringEvent() {
 }
 
 function sendEOLEvent() {
+  const pid = pidStore.getEntityId();
   agentConnection.sendEvent(
     {
       title: `Node.js version ${process.versions.node} reached its end of life`,
@@ -195,10 +197,11 @@ function sendEOLEvent() {
         'For a list of active versions visit ' +
         '[https://nodejs.org/en/about/releases/](https://nodejs.org/en/about/releases/)',
       plugin: 'com.instana.forge.infrastructure.runtime.nodejs.NodeJsRuntimePlatform',
-      id: pidStore && typeof pidStore.getEntityId === 'function' ? pidStore.getEntityId() : undefined,
+      id: pid,
       timestamp: Date.now(),
-      duration: ELEVEN_MINUTES,
-      severity: agentConnection.AgentEventSeverity.WARNING
+      duration: EOL_EVENT_DURATION,
+      severity: agentConnection.AgentEventSeverity.WARNING,
+      path: `${agentOpts.agentUuid}/${pid}/nodejs-eol`
     },
     err => {
       if (err) {
@@ -210,14 +213,15 @@ function sendEOLEvent() {
 
 /**
  * Sends an issue event to the agent when the Node.js version has reached end of life.
- * It will work for non serverless environments where an agent is present.
- * Also, currently the serverless-acceptor does not have support for events.
+ * It will work for non-serverless environments where an agent is present.
+ * (At the time of writing, the backend service that our serverless in-process collectors send data to does not have
+ * support for events.)
  */
 function detectEOLNodeVersion() {
   if (isNodeVersionEOL()) {
     setTimeout(() => {
       sendEOLEvent();
-      setInterval(sendEOLEvent, TEN_MINUTES).unref();
+      setInterval(sendEOLEvent, EOL_EVENT_REFRESH_INTERVAL).unref();
     }, 2000);
   }
 }

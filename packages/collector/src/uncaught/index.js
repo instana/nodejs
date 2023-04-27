@@ -116,7 +116,7 @@ function onUnhandledRejection(reason) {
 
 /**
  * @param {Error} reason
- * @returns {import('../agentConnection').AgentConnectionEvent}
+ * @returns {import('../agentConnection').Event}
  */
 function createEventForUnhandledRejection(reason) {
   return createEvent(reason, 'An unhandled promise rejection occured in a Node.js process.', 5, true);
@@ -127,7 +127,7 @@ function createEventForUnhandledRejection(reason) {
  * @param {string} title
  * @param {import('../agentConnection').ProblemSeverity} severity
  * @param {boolean} isPromiseRejection
- * @returns {import('../agentConnection').AgentConnectionEvent}
+ * @returns {import('../agentConnection').Event}
  */
 function createEvent(error, title, severity, isPromiseRejection) {
   /** @type {string} */

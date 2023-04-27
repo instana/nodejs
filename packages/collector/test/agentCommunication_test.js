@@ -8,11 +8,9 @@
 const expect = require('chai').expect;
 
 const config = require('@instana/core/test/config');
-const { retry } = require('@instana/core/test/test_util');
+const { delay, retry } = require('@instana/core/test/test_util');
 const globalAgent = require('./globalAgent');
 const { isNodeVersionEOL } = require('../src/util/eol');
-
-const isEOL = isNodeVersionEOL();
 
 describe('agentCommunication', function () {
   this.timeout(config.getTestTimeout());
@@ -67,19 +65,33 @@ describe('agentCommunication', function () {
         )
       ));
 
-  it('sends a Node.js EOL alert event to the agent (when applicable)', async () =>
-    retry(async () => {
-      const events = await agentControls.getEvents();
-
-      if (events.length === 0 && isEOL) {
-        return Promise.reject(new Error('No EOL alert event sent to the agent'));
-      } else {
-        const eolEvent = events.filter(
+  it('sends a Node.js EOL alert event to the agent (when applicable)', async () => {
+    if (isNodeVersionEOL()) {
+      await retry(async () => {
+        const allEvents = await agentControls.getEvents();
+        const eolEvents = allEvents.filter(
           event => event.title === `Node.js version ${process.versions.node} reached its end of life`
         );
-        expect(eolEvent).to.exist;
-      }
-    }));
+        expect(eolEvents).to.have.length(1, 'No EOL events have been sent to the agent');
+        const eolEvent = eolEvents[0];
+        expect(eolEvent.title).to.match(/Node.js version .* reached its end of life/);
+        expect(eolEvent.title).to.contain(process.versions.node);
+        expect(eolEvent.text).to.contain('This version no longer');
+        expect(eolEvent.plugin).to.equal('com.instana.forge.infrastructure.runtime.nodejs.NodeJsRuntimePlatform');
+        expect(eolEvent.id).to.equal(expressControls.getPid());
+        expect(eolEvent.path).to.equal(`agent-stub-uuid/${expressControls.getPid()}/nodejs-eol`);
+        expect(eolEvent.severity).to.equal(5);
+        expect(eolEvent.duration).to.equal(21660000);
+      });
+    } else {
+      await delay(2000);
+      const allEvents = await agentControls.getEvents();
+      const eolEvents = allEvents.filter(
+        event => event.title === `Node.js version ${process.versions.node} reached its end of life`
+      );
+      expect(eolEvents, `Received one or more unexpected EOL events: ${JSON.stringify(eolEvents)}`).to.be.empty;
+    }
+  });
 });
 
 describe('announce retry', function () {

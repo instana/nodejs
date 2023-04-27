@@ -31,13 +31,13 @@ const util = require('./util');
  * @property {import('./tracing/index')} tracing
  */
 
-/** @typedef {import('../../collector/src/agentConnection').AgentConnectionEvent} AgentConnectionEvent */
+/** @typedef {import('../../collector/src/agentConnection').Event} Event */
 
 /**
  * This type is based on /nodejs/packages/collector/src/agentConnection.js
  * @typedef {Object} DownstreamConnection
  * @property {(spans: *, cb: Function) => void} sendSpans
- * @property {(eventData: AgentConnectionEvent, cb: (...args: *) => *) => void} sendEvent
+ * @property {(eventData: Event, cb: (...args: *) => *) => void} sendEvent
  */
 
 /**
