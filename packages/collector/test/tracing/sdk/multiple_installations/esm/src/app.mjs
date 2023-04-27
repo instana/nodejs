@@ -30,7 +30,7 @@ async function createSDKSpans() {
   // NOTE: We need the delay here to ensure that the collector is fully initialized.
   //       Otherwise we will get NoopSpanHandle instances because tracing is not ready yet.
   // TODO: ticket #125682
-  await delay(500);
+  await delay(2000);
 
   await initializedInstana.sdk.async.startEntrySpan('entryspan');
   // console.log(initializedInstana.currentSpan());
