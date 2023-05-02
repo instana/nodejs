@@ -383,7 +383,7 @@ memcached: &memcached
 jobs:
   "node-18":
     docker:
-      - image: cimg/node:18.14
+      - image: cimg/node:18.16
       - <<: *zookeeper
       - <<: *elasticsearch
       - <<: *mongo
@@ -423,14 +423,13 @@ jobs:
       - <<: *couchbase-setup
     <<: *shared
     parallelism: << pipeline.parameters.executors >>
-    resource_class: large
 
   "node-18-esm":
     environment:
       RUN_ESM: true
       COLLECTOR_ONLY: true
     docker:
-      - image: cimg/node:18.14
+      - image: cimg/node:18.16
       - <<: *zookeeper
       - <<: *elasticsearch
       - <<: *mongo
@@ -518,13 +517,12 @@ jobs:
       - <<: *couchbase-setup
     <<: *shared
     parallelism: << pipeline.parameters.executors >>
-    resource_class: large
 
   "node-coverage":
     environment:
         NODE_COVERAGE: true
     docker:
-      - image: cimg/node:18.14
+      - image: cimg/node:18.16
       - <<: *zookeeper
       - <<: *elasticsearch
       - <<: *mongo
