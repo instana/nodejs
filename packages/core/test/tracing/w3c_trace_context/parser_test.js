@@ -104,25 +104,65 @@ describe('tracing/w3c-trace-context parser', () => {
     });
 
     describe('traceparent flags', () => {
-      it('should parse a traceparent header with sampled = 1 when other flags are present', () => {
-        const parsed = parse(`${traceParentWithoutFlags}-ff`);
+      it('should parse the sampled flag', () => {
+        const parsed = parse(`${traceParentWithoutFlags}-01`);
         expect(parsed.sampled).to.be.true;
         expect(parsed.traceParentValid).to.be.true;
-        expect(parsed.traceStateValid).to.be.false;
+        expect(parsed.renderFlags()).to.equal('01');
       });
 
-      it('should parse a traceparent header with sampled = 0', () => {
-        const parsed = parse(`${traceParentWithoutFlags}-00`);
-        expect(parsed.sampled).to.be.false;
+      it('should parse the random trace ID flag', () => {
+        const parsed = parse(`${traceParentWithoutFlags}-02`);
+        expect(parsed.randomTraceId).to.be.true;
+        expect(parsed.traceParentValid).to.be.true;
+        expect(parsed.renderFlags()).to.equal('02');
+      });
+
+      it('should parse the sampled flag and the random trace ID flag', () => {
+        const parsed = parse(`${traceParentWithoutFlags}-03`);
+        expect(parsed.sampled).to.be.true;
+        expect(parsed.randomTraceId).to.be.true;
+        expect(parsed.traceParentValid).to.be.true;
+        expect(parsed.renderFlags()).to.equal('03');
+      });
+
+      it('should parse a traceparent header when unknown flags are present', () => {
+        // all possible flags are set
+        const parsed = parse(`${traceParentWithoutFlags}-ff`);
+        expect(parsed.sampled).to.be.true;
+        expect(parsed.randomTraceId).to.be.true;
         expect(parsed.traceParentValid).to.be.true;
         expect(parsed.traceStateValid).to.be.false;
+        expect(parsed.renderFlags()).to.equal('03');
       });
 
-      it('should parse a traceparent header with sampled = 0 when other flags are present', () => {
+      it('should parse a traceparent header with sampled = 0 when unknown flags are present', () => {
+        // every flag is set except for sampled
         const parsed = parse(`${traceParentWithoutFlags}-fe`);
         expect(parsed.sampled).to.be.false;
+        expect(parsed.randomTraceId).to.be.true;
         expect(parsed.traceParentValid).to.be.true;
         expect(parsed.traceStateValid).to.be.false;
+        expect(parsed.renderFlags()).to.equal('02');
+      });
+
+      it('should parse a traceparent header with random trace ID = 0 when unknown flags are present', () => {
+        // every flag is set except for randomg trace ID
+        const parsed = parse(`${traceParentWithoutFlags}-fd`);
+        expect(parsed.sampled).to.be.true;
+        expect(parsed.randomTraceId).to.be.false;
+        expect(parsed.traceParentValid).to.be.true;
+        expect(parsed.traceStateValid).to.be.false;
+        expect(parsed.renderFlags()).to.equal('01');
+      });
+
+      it('should parse a traceparent header when no flags are set', () => {
+        const parsed = parse(`${traceParentWithoutFlags}-00`);
+        expect(parsed.sampled).to.be.false;
+        expect(parsed.randomTraceId).to.be.false;
+        expect(parsed.traceParentValid).to.be.true;
+        expect(parsed.traceStateValid).to.be.false;
+        expect(parsed.renderFlags()).to.equal('00');
       });
     });
 

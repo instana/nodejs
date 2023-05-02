@@ -23,7 +23,7 @@ describe('tracing/w3c-trace-context create', () => {
     const instanaTraceId = longTraceId ? traceId32Char : traceid16Char;
     const expectedTraceId = longTraceId ? traceId32Char : `0000000000000000${traceid16Char}`;
     const expectedSampled = sampled !== false;
-    const expectedFlags = sampled !== false ? '01' : '00';
+    const expectedFlags = sampled !== false ? '03' : '02';
 
     const testTitleSuffix = `(${idLengthTitle(longTraceId)}, sampled: ${sampled})`;
 
@@ -35,6 +35,7 @@ describe('tracing/w3c-trace-context create', () => {
       expect(traceContext.traceParentTraceId).to.equal(expectedTraceId);
       expect(traceContext.traceParentParentId).to.equal(parentId);
       expect(traceContext.sampled).to.equal(expectedSampled);
+      expect(traceContext.randomTraceId).to.be.true;
       expect(traceContext.renderTraceParent()).to.equal(`${version00}-${expectedTraceId}-${parentId}-${expectedFlags}`);
 
       expect(traceContext.traceStateValid).to.be.true;
@@ -65,7 +66,8 @@ describe('tracing/w3c-trace-context create', () => {
       expect(traceContext.traceParentTraceId).to.equal(expectedTraceId);
       expect(traceContext.traceParentParentId).to.equal(parentId);
       expect(traceContext.sampled).to.be.false;
-      expect(traceContext.renderTraceParent()).to.equal(`${version00}-${expectedTraceId}-${parentId}-00`);
+      expect(traceContext.randomTraceId).to.be.true;
+      expect(traceContext.renderTraceParent()).to.equal(`${version00}-${expectedTraceId}-${parentId}-02`);
 
       expect(traceContext.traceStateValid).to.be.true;
       expect(traceContext.traceStateHead).to.not.exist;

@@ -11,7 +11,7 @@
     "X-INSTANA-T out": "$new_64_bit_trace_id",
     "X-INSTANA-S out": "$new_span_id_2",
     "X-INSTANA-L out": "1",
-    "traceparent out": "00-0000000000000000$new_64_bit_trace_id-$new_span_id_2-01",
+    "traceparent out": "00-0000000000000000$new_64_bit_trace_id-$new_span_id_2-03",
     "tracestate out": "in=$new_64_bit_trace_id;$new_span_id_2",
     "index": 1
   },
@@ -30,7 +30,7 @@
     "X-INSTANA-T out": "fa2375d711a4ca0f",
     "X-INSTANA-S out": "$new_span_id_2",
     "X-INSTANA-L out": "1",
-    "traceparent out": "00-0000000000000000fa2375d711a4ca0f-$new_span_id_2-01",
+    "traceparent out": "00-0000000000000000fa2375d711a4ca0f-$new_span_id_2-03",
     "tracestate out": "in=fa2375d711a4ca0f;$new_span_id_2",
     "index": 2
   },
@@ -50,7 +50,7 @@
     "X-INSTANA-T out": "3483a5fe1cd42e30",
     "X-INSTANA-S out": "$new_span_id_2",
     "X-INSTANA-L out": "1",
-    "traceparent out": "00-0373e5f7aca1cdef3483a5fe1cd42e30-$new_span_id_2-01",
+    "traceparent out": "00-0373e5f7aca1cdef3483a5fe1cd42e30-$new_span_id_2-03",
     "tracestate out": "in=3483a5fe1cd42e30;$new_span_id_2",
     "index": 3
   },
@@ -234,7 +234,7 @@
     "What to do?": "Don’t create spans, send X-INSTANA-L=0 and spec headers downstream with sampled=0",
     "X-INSTANA-L in": "0",
     "X-INSTANA-L out": "0",
-    "traceparent out": "00-0000000000000000$new_64_bit_trace_id-$new_span_id-00",
+    "traceparent out": "00-0000000000000000$new_64_bit_trace_id-$new_span_id-02",
     "index": 12
   },
   {
@@ -244,7 +244,7 @@
     "X-INSTANA-S in": "37cb2d6e9b1c078a",
     "X-INSTANA-L in": "0",
     "X-INSTANA-L out": "0",
-    "traceparent out": "00-0000000000000000$new_64_bit_trace_id-$new_span_id-00",
+    "traceparent out": "00-0000000000000000$new_64_bit_trace_id-$new_span_id-02",
     "index": 13
   },
   {
@@ -285,7 +285,7 @@
     "X-INSTANA-T out": "fa2375d711a4ca0f",
     "X-INSTANA-S out": "$new_span_id_2",
     "X-INSTANA-L out": "1",
-    "traceparent out": "00-0000000000000000fa2375d711a4ca0f-$new_span_id_2-01",
+    "traceparent out": "00-0000000000000000fa2375d711a4ca0f-$new_span_id_2-03",
     "tracestate out": "in=fa2375d711a4ca0f;$new_span_id_2",
     "index": 16
   },
@@ -306,7 +306,7 @@
     "X-INSTANA-T out": "$new_64_bit_trace_id",
     "X-INSTANA-S out": "$new_span_id_2",
     "X-INSTANA-L out": "1",
-    "traceparent out": "00-0000000000000000$new_64_bit_trace_id-$new_span_id_2-01",
+    "traceparent out": "00-0000000000000000$new_64_bit_trace_id-$new_span_id_2-03",
     "tracestate out": "in=$new_64_bit_trace_id;$new_span_id_2",
     "index": 17
   },
@@ -323,7 +323,7 @@
     "X-INSTANA-T out": "$new_64_bit_trace_id",
     "X-INSTANA-S out": "$new_span_id_2",
     "X-INSTANA-L out": "1",
-    "traceparent out": "00-0000000000000000$new_64_bit_trace_id-$new_span_id_2-01",
+    "traceparent out": "00-0000000000000000$new_64_bit_trace_id-$new_span_id_2-03",
     "tracestate out": "in=$new_64_bit_trace_id;$new_span_id_2",
     "index": 18
   },
@@ -343,7 +343,7 @@
     "X-INSTANA-T out": "fa2375d711a4ca0f",
     "X-INSTANA-S out": "$new_span_id_2",
     "X-INSTANA-L out": "1",
-    "traceparent out": "00-0000000000000000fa2375d711a4ca0f-$new_span_id_2-01",
+    "traceparent out": "00-0000000000000000fa2375d711a4ca0f-$new_span_id_2-03",
     "tracestate out": "in=fa2375d711a4ca0f;$new_span_id_2",
     "index": 19
   },
@@ -364,7 +364,7 @@
     "X-INSTANA-T out": "3483a5fe1cd42e30",
     "X-INSTANA-S out": "$new_span_id_2",
     "X-INSTANA-L out": "1",
-    "traceparent out": "00-0373e5f7aca1cdef3483a5fe1cd42e30-$new_span_id_2-01",
+    "traceparent out": "00-0373e5f7aca1cdef3483a5fe1cd42e30-$new_span_id_2-03",
     "tracestate out": "in=3483a5fe1cd42e30;$new_span_id_2",
     "index": 20
   },
@@ -519,7 +519,7 @@
     "INSTANA_DISABLE_W3C_TRACE_CORRELATION": "yes_please",
     "X-INSTANA-L in": "0",
     "X-INSTANA-L out": "0",
-    "traceparent out": "00-0000000000000000$new_64_bit_trace_id-$new_span_id-00",
+    "traceparent out": "00-0000000000000000$new_64_bit_trace_id-$new_span_id-02",
     "index": 28
   },
   {
@@ -530,7 +530,7 @@
     "X-INSTANA-S in": "37cb2d6e9b1c078a",
     "X-INSTANA-L in": "0",
     "X-INSTANA-L out": "0",
-    "traceparent out": "00-0000000000000000$new_64_bit_trace_id-$new_span_id-00",
+    "traceparent out": "00-0000000000000000$new_64_bit_trace_id-$new_span_id-02",
     "index": 29
   },
   {
@@ -568,7 +568,7 @@
     "X-INSTANA-T out": "$new_64_bit_trace_id",
     "X-INSTANA-S out": "$new_span_id_2",
     "X-INSTANA-L out": "1",
-    "traceparent out": "00-0000000000000000$new_64_bit_trace_id-$new_span_id_2-01",
+    "traceparent out": "00-0000000000000000$new_64_bit_trace_id-$new_span_id_2-03",
     "tracestate out": "in=$new_64_bit_trace_id;$new_span_id_2",
     "index": 32
   },
@@ -585,7 +585,7 @@
     "X-INSTANA-T out": "$new_64_bit_trace_id",
     "X-INSTANA-S out": "$new_span_id_2",
     "X-INSTANA-L out": "1",
-    "traceparent out": "00-0000000000000000$new_64_bit_trace_id-$new_span_id_2-01",
+    "traceparent out": "00-0000000000000000$new_64_bit_trace_id-$new_span_id_2-03",
     "tracestate out": "in=$new_64_bit_trace_id;$new_span_id_2",
     "index": 33
   },
@@ -649,7 +649,7 @@
     "X-INSTANA-T out": "$new_64_bit_trace_id",
     "X-INSTANA-S out": "$new_span_id_2",
     "X-INSTANA-L out": "1",
-    "traceparent out": "00-0000000000000000$new_64_bit_trace_id-$new_span_id_2-01",
+    "traceparent out": "00-0000000000000000$new_64_bit_trace_id-$new_span_id_2-03",
     "tracestate out": "in=$new_64_bit_trace_id;$new_span_id_2",
     "index": 36
   },
@@ -670,7 +670,7 @@
     "X-INSTANA-T out": "fa2375d711a4ca0f",
     "X-INSTANA-S out": "$new_span_id_2",
     "X-INSTANA-L out": "1",
-    "traceparent out": "00-0000000000000000fa2375d711a4ca0f-$new_span_id_2-01",
+    "traceparent out": "00-0000000000000000fa2375d711a4ca0f-$new_span_id_2-03",
     "tracestate out": "in=fa2375d711a4ca0f;$new_span_id_2",
     "index": 37
   },
@@ -690,7 +690,7 @@
     "X-INSTANA-T out": "fa2375d711a4ca0f",
     "X-INSTANA-S out": "$new_span_id_2",
     "X-INSTANA-L out": "1",
-    "traceparent out": "00-0000000000000000fa2375d711a4ca0f-$new_span_id_2-01",
+    "traceparent out": "00-0000000000000000fa2375d711a4ca0f-$new_span_id_2-03",
     "tracestate out": "in=fa2375d711a4ca0f;$new_span_id_2",
     "index": 38
   },
@@ -710,7 +710,7 @@
     "X-INSTANA-T out": "fa2375d711a4ca0f",
     "X-INSTANA-S out": "$new_span_id_2",
     "X-INSTANA-L out": "1",
-    "traceparent out": "00-0000000000000000fa2375d711a4ca0f-$new_span_id_2-01",
+    "traceparent out": "00-0000000000000000fa2375d711a4ca0f-$new_span_id_2-03",
     "tracestate out": "in=fa2375d711a4ca0f;$new_span_id_2",
     "index": 39
   },
@@ -730,8 +730,48 @@
     "X-INSTANA-T out": "fa2375d711a4ca0f",
     "X-INSTANA-S out": "$new_span_id_2",
     "X-INSTANA-L out": "1",
-    "traceparent out": "00-0000000000000000fa2375d711a4ca0f-$new_span_id_2-01",
+    "traceparent out": "00-0000000000000000fa2375d711a4ca0f-$new_span_id_2-03",
     "tracestate out": "in=fa2375d711a4ca0f;$new_span_id_2",
     "index": 40
+  },
+  {
+    "Scenario": "INSTANA_SERVICE_NAME support / entry span",
+    "What to do?": "add span.data.service on entry span",
+    "X-INSTANA-T in": "fa2375d711a4ca0f",
+    "X-INSTANA-S in": "37cb2d6e9b1c078a",
+    "Server-Timing": "intid;desc=fa2375d711a4ca0f",
+    "entrySpan.t": "fa2375d711a4ca0f",
+    "entrySpan.p": "37cb2d6e9b1c078a",
+    "entrySpan.s": "$new_span_id_1",
+    "entrySpan.data.service": "Tracer Test Suite Service",
+    "exitSpan.t": "fa2375d711a4ca0f",
+    "exitSpan.p": "$new_span_id_1",
+    "exitSpan.s": "$new_span_id_2",
+    "X-INSTANA-T out": "fa2375d711a4ca0f",
+    "X-INSTANA-S out": "$new_span_id_2",
+    "X-INSTANA-L out": "1",
+    "traceparent out": "00-0000000000000000fa2375d711a4ca0f-$new_span_id_2-03",
+    "tracestate out": "in=fa2375d711a4ca0f;$new_span_id_2",
+    "index": 41
+  },
+  {
+    "Scenario": "INSTANA_SERVICE_NAME support / exit span",
+    "What to do?": "add span.data.service on exit span",
+    "X-INSTANA-T in": "fa2375d711a4ca0f",
+    "X-INSTANA-S in": "37cb2d6e9b1c078a",
+    "Server-Timing": "intid;desc=fa2375d711a4ca0f",
+    "entrySpan.t": "fa2375d711a4ca0f",
+    "entrySpan.p": "37cb2d6e9b1c078a",
+    "entrySpan.s": "$new_span_id_1",
+    "exitSpan.t": "fa2375d711a4ca0f",
+    "exitSpan.p": "$new_span_id_1",
+    "exitSpan.s": "$new_span_id_2",
+    "exitSpan.data.service": "Tracer Test Suite Service",
+    "X-INSTANA-T out": "fa2375d711a4ca0f",
+    "X-INSTANA-S out": "$new_span_id_2",
+    "X-INSTANA-L out": "1",
+    "traceparent out": "00-0000000000000000fa2375d711a4ca0f-$new_span_id_2-03",
+    "tracestate out": "in=fa2375d711a4ca0f;$new_span_id_2",
+    "index": 42
   }
 ]

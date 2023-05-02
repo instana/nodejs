@@ -56,7 +56,7 @@ mochaSuiteFn('tracing/W3C Trace Context', function () {
               const instanaTraceId = instanaHttpEntryRoot.t;
               const instanaExitSpanId = instanaHttpExit.s;
 
-              expect(traceparent).to.match(new RegExp(`00-${LEFT_PAD_16}${instanaTraceId}-${instanaExitSpanId}-01`));
+              expect(traceparent).to.match(new RegExp(`00-${LEFT_PAD_16}${instanaTraceId}-${instanaExitSpanId}-03`));
               expect(tracestate).to.match(new RegExp(`in=${instanaTraceId};${instanaExitSpanId}`));
             });
           }));
@@ -65,11 +65,89 @@ mochaSuiteFn('tracing/W3C Trace Context', function () {
         // Instana tracer to respect the incoming IDs, but limit the trace ID to 64 bit for backwards compatibility with
         // older Instana tracers. We also expect the Instana tracer to continue the W3C trace. Finally, we expect the
         // correct spec headers to be passed downstream by the Instana service.
-        it('Instana continues a spec trace and passes the correct spec headers downstream', () =>
-          startRequest({ app: instanaAppControls, depth: 1, withSpecHeaders: 'valid' }).then(response => {
+        // Furthermore, the random trace ID flag should be set since it was set in the incoming header.
+        it(
+          'Instana continues a spec trace and passes the correct spec headers downstream ' +
+            '(upstream sets the random trace ID flag)',
+          () =>
+            startRequest({
+              app: instanaAppControls,
+              depth: 1,
+              withSpecHeaders: 'valid-sampled-with-random-trace-id'
+            }).then(response => {
+              const { traceparent, tracestate } = getSpecHeadersFromFinalHttpRequest(response);
+              return retryUntilSpansMatch(agentControls, spans => {
+                const instanaHttpEntry = verifyHttpEntry({
+                  spans,
+                  instanaAppControls,
+                  parentSpan: {
+                    t: foreignTraceIdRightHalf,
+                    s: foreignParentId
+                  },
+                  url: '/start',
+                  usedTraceParent: true,
+                  longTraceId: foreignTraceId
+                });
+                const instanaHttpExit = verifyHttpExit(spans, instanaHttpEntry, '/end');
+
+                const instanaExitSpanId = instanaHttpExit.s;
+                expect(traceparent).to.match(new RegExp(`00-${foreignTraceId}-${instanaExitSpanId}-03`));
+                expect(tracestate).to.match(new RegExp(`in=${foreignTraceIdRightHalf};${instanaExitSpanId}`));
+              });
+            })
+        );
+
+        // First request to Instana already has spec headers, simulating a (spec) trace in progress. We expect the
+        // Instana tracer to respect the incoming IDs, but limit the trace ID to 64 bit for backwards compatibility with
+        // older Instana tracers. We also expect the Instana tracer to continue the W3C trace. Finally, we expect the
+        // correct spec headers to be passed downstream by the Instana service.
+        // Furthermore, the random trace ID flag should be unset since it was unset in the incoming header.
+        it(
+          'Instana continues a spec trace and passes the correct spec headers downstream ' +
+            '(upstream does _not_ set the random trace ID flag)',
+          () =>
+            startRequest({
+              app: instanaAppControls,
+              depth: 1,
+              withSpecHeaders: 'valid-sampled-no-random-trace-id'
+            }).then(response => {
+              const { traceparent, tracestate } = getSpecHeadersFromFinalHttpRequest(response);
+              return retryUntilSpansMatch(agentControls, spans => {
+                const instanaHttpEntry = verifyHttpEntry({
+                  spans,
+                  instanaAppControls,
+                  parentSpan: {
+                    t: foreignTraceIdRightHalf,
+                    s: foreignParentId
+                  },
+                  url: '/start',
+                  usedTraceParent: true,
+                  longTraceId: foreignTraceId
+                });
+                const instanaHttpExit = verifyHttpExit(spans, instanaHttpEntry, '/end');
+
+                const instanaExitSpanId = instanaHttpExit.s;
+                expect(traceparent).to.match(new RegExp(`00-${foreignTraceId}-${instanaExitSpanId}-01`));
+                expect(tracestate).to.match(new RegExp(`in=${foreignTraceIdRightHalf};${instanaExitSpanId}`));
+              });
+            })
+        );
+
+        // First request to Instana already has spec headers with sampled=0, simulating a (spec) trace in progress where
+        // the most recent upstream service did not record tracing data. We still expect Instana to continue the W3C
+        // trace with the W3C trace ID from traceparent (the parent element has not been recorded, but other ancestor
+        // elements might have been recorded). We also expect the correct spec headers to be passed downstream by the
+        // Instana service. In particular, it should keep the same trace ID it received when passing down spec headers.
+        // Furthermore, the random trace ID flag should be set since it was set in the incoming header.
+        it('Instana continues a spec trace with sampled=0 (upstream sets the random trace ID flag)', () =>
+          startRequest({
+            app: instanaAppControls,
+            depth: 1,
+            withSpecHeaders: 'valid-not-sampled-with-random-trace-id'
+          }).then(response => {
             const { traceparent, tracestate } = getSpecHeadersFromFinalHttpRequest(response);
             return retryUntilSpansMatch(agentControls, spans => {
-              const instanaHttpEntry = verifyHttpEntry({
+              const instanaHttpEntryRoot = verifyHttpEntry({
                 spans,
                 instanaAppControls,
                 parentSpan: {
@@ -80,21 +158,26 @@ mochaSuiteFn('tracing/W3C Trace Context', function () {
                 usedTraceParent: true,
                 longTraceId: foreignTraceId
               });
-              const instanaHttpExit = verifyHttpExit(spans, instanaHttpEntry, '/end');
+              const instanaHttpExit = verifyHttpExit(spans, instanaHttpEntryRoot, '/end');
 
               const instanaExitSpanId = instanaHttpExit.s;
-              expect(traceparent).to.match(new RegExp(`00-${foreignTraceId}-${instanaExitSpanId}-01`));
+              expect(traceparent).to.match(new RegExp(`00-${foreignTraceId}-${instanaExitSpanId}-03`));
               expect(tracestate).to.match(new RegExp(`in=${foreignTraceIdRightHalf};${instanaExitSpanId}`));
             });
           }));
 
         // First request to Instana already has spec headers with sampled=0, simulating a (spec) trace in progress where
-        // the most recent upstream service did not record tracing data. We still expect Instana to continue the W3C
+        // the most recent upstream service did not record tracing data.  We still expect Instana to continue the W3C
         // trace with the W3C trace ID from traceparent (the parent element has not been recorded, but other ancestor
         // elements might have been recorded). We also expect the correct spec headers to be passed downstream by the
         // Instana service. In particular, it should keep the same trace ID it received when passing down spec headers.
-        it('Instana continues a spec trace with sampled=0', () =>
-          startRequest({ app: instanaAppControls, depth: 1, withSpecHeaders: 'not-sampled' }).then(response => {
+        // Furthermore, the random trace ID flag should be unset since it was unset in the incoming header.
+        it('Instana continues a spec trace with sampled=0 (upstream does not set the random trace ID flag)', () =>
+          startRequest({
+            app: instanaAppControls,
+            depth: 1,
+            withSpecHeaders: 'valid-not-sampled-no-random-trace-id'
+          }).then(response => {
             const { traceparent, tracestate } = getSpecHeadersFromFinalHttpRequest(response);
             return retryUntilSpansMatch(agentControls, spans => {
               const instanaHttpEntryRoot = verifyHttpEntry({
@@ -127,7 +210,7 @@ mochaSuiteFn('tracing/W3C Trace Context', function () {
 
               const instanaTraceId = instanaHttpEntryRoot.t;
               const instanaExitSpanId = instanaHttpExit.s;
-              expect(traceparent).to.match(new RegExp(`00-${LEFT_PAD_16}${instanaTraceId}-${instanaExitSpanId}-01`));
+              expect(traceparent).to.match(new RegExp(`00-${LEFT_PAD_16}${instanaTraceId}-${instanaExitSpanId}-03`));
               expect(tracestate).to.match(new RegExp(`in=${instanaTraceId};${instanaExitSpanId}`));
             });
           }));
@@ -154,7 +237,7 @@ mochaSuiteFn('tracing/W3C Trace Context', function () {
               const instanaHttpExit = verifyHttpExit(spans, instanaHttpEntry, '/end');
 
               const instanaExitSpanId = instanaHttpExit.s;
-              expect(traceparent).to.match(new RegExp(`00-${foreignTraceId}-${instanaExitSpanId}-01`));
+              expect(traceparent).to.match(new RegExp(`00-${foreignTraceId}-${instanaExitSpanId}-03`));
               expect(tracestate).to.match(
                 new RegExp(`in=${foreignTraceIdRightHalf};${instanaExitSpanId},thing=foo,bar=baz`)
               );
@@ -203,7 +286,7 @@ mochaSuiteFn('tracing/W3C Trace Context', function () {
               expect(traceparent).to.exist;
               expect(response.w3cTraceContext.receivedHeaders.tracestate).to.not.exist;
               // sampled=0 is passed down
-              expect(traceparent).to.match(new RegExp(`00-${LEFT_PAD_16}[0-9a-f]{16}-[0-9a-f]{16}-00`));
+              expect(traceparent).to.match(new RegExp(`00-${LEFT_PAD_16}[0-9a-f]{16}-[0-9a-f]{16}-02`));
             })
             // give spans a chance to come in
             .then(() => delay(500))
@@ -235,7 +318,7 @@ mochaSuiteFn('tracing/W3C Trace Context', function () {
 
                   const instanaExitSpanId = instanaHttpExit.s;
                   expect(traceparent).to.match(
-                    new RegExp(`00-${LEFT_PAD_16}${upstreamInstanaTraceId}-${instanaExitSpanId}-01`)
+                    new RegExp(`00-${LEFT_PAD_16}${upstreamInstanaTraceId}-${instanaExitSpanId}-03`)
                   );
                   expect(tracestate).to.match(new RegExp(`in=${upstreamInstanaTraceId};${instanaExitSpanId}`));
                 });
@@ -246,7 +329,7 @@ mochaSuiteFn('tracing/W3C Trace Context', function () {
             startRequest({
               app: instanaAppControls,
               depth: 1,
-              withSpecHeaders: 'valid',
+              withSpecHeaders: 'valid-sampled-with-random-trace-id',
               withInstanaHeaders: 'trace-in-progress'
             }).then(response => {
               const { traceparent, tracestate } = getSpecHeadersFromFinalHttpRequest(response);
@@ -265,7 +348,7 @@ mochaSuiteFn('tracing/W3C Trace Context', function () {
                 const instanaHttpExit = verifyHttpExit(spans, instanaHttpEntry, '/end');
 
                 const instanaExitSpanId = instanaHttpExit.s;
-                expect(traceparent).to.match(new RegExp(`00-${foreignTraceId}-${instanaExitSpanId}-01`));
+                expect(traceparent).to.match(new RegExp(`00-${foreignTraceId}-${instanaExitSpanId}-03`));
                 expect(tracestate).to.match(new RegExp(`in=${upstreamInstanaTraceId};${instanaExitSpanId}`));
               });
             }));
@@ -274,7 +357,7 @@ mochaSuiteFn('tracing/W3C Trace Context', function () {
             startRequest({
               app: instanaAppControls,
               depth: 1,
-              withSpecHeaders: 'not-sampled',
+              withSpecHeaders: 'valid-not-sampled-no-random-trace-id',
               withInstanaHeaders: 'trace-in-progress'
             }).then(response => {
               const { traceparent, tracestate } = getSpecHeadersFromFinalHttpRequest(response);
@@ -308,7 +391,7 @@ mochaSuiteFn('tracing/W3C Trace Context', function () {
             startRequest({
               app: instanaAppControls,
               depth: 1,
-              withSpecHeaders: 'not-sampled',
+              withSpecHeaders: 'valid-not-sampled-no-random-trace-id',
               withInstanaHeaders: 'suppress'
             })
               .then(response => {
@@ -340,7 +423,7 @@ mochaSuiteFn('tracing/W3C Trace Context', function () {
             startRequest({
               app: instanaAppControls,
               depth: 1,
-              withSpecHeaders: 'valid',
+              withSpecHeaders: 'valid-sampled-no-random-trace-id',
               withInstanaHeaders: 'suppress'
             })
               .then(response => {
@@ -385,7 +468,7 @@ mochaSuiteFn('tracing/W3C Trace Context', function () {
                   expect(response.w3cTraceContext.receivedHeaders).to.be.an('object');
                   const traceparent = response.w3cTraceContext.receivedHeaders.traceparent;
                   const tracestate = response.w3cTraceContext.receivedHeaders.tracestate;
-                  const traceParentMatch = new RegExp(`00-${LEFT_PAD_16}([0-9a-f]{16})-([0-9a-f]{16})-00`).exec(
+                  const traceParentMatch = new RegExp(`00-${LEFT_PAD_16}([0-9a-f]{16})-([0-9a-f]{16})-02`).exec(
                     traceparent
                   );
                   expect(traceParentMatch).to.exist;
@@ -457,7 +540,7 @@ mochaSuiteFn('tracing/W3C Trace Context', function () {
 
               const instanaTraceId = instanaHttpEntryRoot.t;
               const instanaExitSpanId = instanaHttpExit.s;
-              expect(traceparent).to.match(new RegExp(`00-${LEFT_PAD_16}${instanaTraceId}-${instanaExitSpanId}-01`));
+              expect(traceparent).to.match(new RegExp(`00-${LEFT_PAD_16}${instanaTraceId}-${instanaExitSpanId}-03`));
               expect(tracestate).to.match(new RegExp(`in=${instanaTraceId};${instanaExitSpanId}`));
               // The trace ID from the traceparent header should match then Instana trace ID (modulo left padding).
               const { traceIdFromTraceParent, parentIdFromTraceParent } = extractIdsFromTraceParent(traceparent);
@@ -715,19 +798,29 @@ function startRequest({ app, depth = 2, withSpecHeaders = null, otherMode = 'par
   const request = {
     path: `/start?depth=${depth}&otherMode=${otherMode}`
   };
-  if (withSpecHeaders === 'valid') {
+  if (withSpecHeaders === 'valid-sampled-with-random-trace-id') {
+    request.headers = {
+      traceparent: `00-${foreignTraceId}-${foreignParentId}-03`,
+      tracestate: 'thing=foo,bar=baz'
+    };
+  } else if (withSpecHeaders === 'valid-sampled-no-random-trace-id') {
     request.headers = {
       traceparent: `00-${foreignTraceId}-${foreignParentId}-01`,
       tracestate: 'thing=foo,bar=baz'
     };
-  } else if (withSpecHeaders === 'not-sampled') {
+  } else if (withSpecHeaders === 'valid-not-sampled-with-random-trace-id') {
+    request.headers = {
+      traceparent: `00-${foreignTraceId}-${foreignParentId}-02`,
+      tracestate: 'thing=foo,bar=baz'
+    };
+  } else if (withSpecHeaders === 'valid-not-sampled-no-random-trace-id') {
     request.headers = {
       traceparent: `00-${foreignTraceId}-${foreignParentId}-00`,
       tracestate: 'thing=foo,bar=baz'
     };
   } else if (withSpecHeaders === 'too-new-traceparent') {
     request.headers = {
-      traceparent: `01-${foreignTraceId}-${foreignParentId}-01-wait-there-is-more`,
+      traceparent: `01-${foreignTraceId}-${foreignParentId}-03-wait-there-is-more`,
       tracestate: 'thing=foo,bar=baz'
     };
   } else if (withSpecHeaders === 'invalid-traceparent') {
@@ -814,7 +907,7 @@ function verifyTraceContextAgainstTerminalSpan({
 }
 
 function extractIdsFromTraceParent(traceparent) {
-  const traceParentMatch = /^00-([0-9a-f]{32})-([0-9a-f]{16})-01$/.exec(traceparent);
+  const traceParentMatch = /^00-([0-9a-f]{32})-([0-9a-f]{16})-[0-9a-f]{2}$/.exec(traceparent);
   const traceIdFromTraceParent = traceParentMatch[1];
   const parentIdFromTraceParent = traceParentMatch[2];
   return { traceIdFromTraceParent, parentIdFromTraceParent };

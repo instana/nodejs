@@ -57,9 +57,12 @@ function parseTraceParent(traceParentRaw, parsed) {
   }
   parsed.traceParentTraceId = match[1];
   parsed.traceParentParentId = match[2];
+
   const flags = parseInt(match[3], 16);
   // eslint-disable-next-line no-bitwise
   parsed.sampled = (flags & W3cTraceContext.SAMPLED_BITMASK) === W3cTraceContext.SAMPLED_BITMASK;
+  // eslint-disable-next-line no-bitwise
+  parsed.randomTraceId = (flags & W3cTraceContext.RANDOM_TRACE_ID_BITMASK) === W3cTraceContext.RANDOM_TRACE_ID_BITMASK;
 
   if (parsed.traceParentTraceId === '00000000000000000000000000000000') {
     return;

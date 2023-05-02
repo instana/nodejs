@@ -6,11 +6,15 @@
 'use strict';
 
 const constants = require('../constants');
+const leftPad = require('../leftPad');
 const tracingUtil = require('../tracingUtil');
 
 const VERSION00 = '00';
 const LEFT_PAD_16 = '0000000000000000';
-const SAMPLED_BITMASK = 0x00000001;
+
+// See https://www.w3.org/TR/trace-context-2/#trace-flags for details on the bitmasks.
+const SAMPLED_BITMASK = 0b1;
+const RANDOM_TRACE_ID_BITMASK = 0b10;
 
 function W3cTraceContext() {
   // whether the traceparent header is valid
@@ -23,6 +27,8 @@ function W3cTraceContext() {
   this.traceParentParentId = undefined;
   // the sampled flag from the traceparent header
   this.sampled = undefined;
+  // the random trace ID flag from the traceparent header
+  this.randomTraceId = undefined;
 
   // whether the tracestate header is valid
   this.traceStateValid = false;
@@ -51,6 +57,8 @@ W3cTraceContext.fromInstanaIds = function fromInstanaIds(instanaTraceId, instana
   traceContext.traceParentTraceId = paddedTraceId;
   traceContext.traceParentParentId = instanaParentId;
   traceContext.sampled = sampled;
+  // Instana tracers always generate trace IDs randomly, so we can confidently set this flag.
+  traceContext.randomTraceId = true;
 
   traceContext.traceStateValid = true;
   traceContext.instanaTraceId = instanaTraceId;
@@ -72,6 +80,8 @@ W3cTraceContext.createEmptyUnsampled = function createEmptyUnsampled(traceId, pa
   traceContext.traceParentTraceId = paddedTraceId;
   traceContext.traceParentParentId = parentId;
   traceContext.sampled = false;
+  // We always generate a new trace IDs randomly for this case, so we can confidently set this flag.
+  traceContext.randomTraceId = true;
   traceContext.traceStateValid = true;
   return traceContext;
 };
@@ -88,10 +98,19 @@ W3cTraceContext.prototype.renderTraceParent = function renderTraceParent() {
 };
 
 /**
- * @returns {'01' | '00'}
+ * @returns {string}
  */
 W3cTraceContext.prototype.renderFlags = function renderFlags() {
-  return this.sampled ? '01' : '00';
+  let flagsInt = 0;
+  if (this.sampled) {
+    // eslint-disable-next-line no-bitwise
+    flagsInt |= SAMPLED_BITMASK;
+  }
+  if (this.randomTraceId) {
+    // eslint-disable-next-line no-bitwise
+    flagsInt |= RANDOM_TRACE_ID_BITMASK;
+  }
+  return leftPad(flagsInt.toString(16), 2);
 };
 
 /**
@@ -206,5 +225,6 @@ W3cTraceContext.prototype.getMostRecentForeignTraceStateMember = function getMos
 
 W3cTraceContext.VERSION00 = VERSION00;
 W3cTraceContext.SAMPLED_BITMASK = SAMPLED_BITMASK;
+W3cTraceContext.RANDOM_TRACE_ID_BITMASK = RANDOM_TRACE_ID_BITMASK;
 
 module.exports = W3cTraceContext;
