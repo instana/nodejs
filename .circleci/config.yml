@@ -401,7 +401,7 @@ jobs:
       - <<: *couchbase-setup
     <<: *shared
     parallelism: 15
-    resource_class: large
+    resource_class: medium+
 
   "node-16":
     docker:
@@ -423,6 +423,7 @@ jobs:
       - <<: *couchbase-setup
     <<: *shared
     parallelism: << pipeline.parameters.executors >>
+    resource_class: medium+
 
   "node-18-esm":
     environment:
@@ -447,7 +448,7 @@ jobs:
       - <<: *couchbase-setup
     <<: *shared
     parallelism: << pipeline.parameters.executors >>
-    resource_class: large
+    resource_class: medium+
 
   "node-14":
     environment:
@@ -471,7 +472,7 @@ jobs:
       - <<: *couchbase-setup
     <<: *shared
     parallelism: << pipeline.parameters.executors >>
-    resource_class: large
+    resource_class: medium+
 
   "node-12":
     environment:
@@ -495,7 +496,7 @@ jobs:
       - <<: *couchbase-setup
     <<: *shared
     parallelism: << pipeline.parameters.executors >>
-    resource_class: large
+    resource_class: medium+
 
   "node-10":
     docker:
@@ -517,6 +518,7 @@ jobs:
       - <<: *couchbase-setup
     <<: *shared
     parallelism: << pipeline.parameters.executors >>
+    resource_class: medium+
 
   "node-coverage":
     environment:
