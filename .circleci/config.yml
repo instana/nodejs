@@ -405,7 +405,7 @@ jobs:
 
   "node-16":
     docker:
-      - image: circleci/node:16
+      - image: cimg/node:16.20
       - <<: *zookeeper
       - <<: *elasticsearch
       - <<: *mongo
@@ -453,7 +453,7 @@ jobs:
     environment:
       NPM_VERSION: 8.6.0
     docker:
-      - image: circleci/node:14
+      - image: cimg/node:14.21
       - <<: *zookeeper
       - <<: *elasticsearch
       - <<: *mongo
