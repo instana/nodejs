@@ -198,7 +198,7 @@
     "sqs-consumer-v6": "npm:sqs-consumer@^6.2.0",
     "superagent": "^6.1.0",
     "tsoa": "^3.14.1",
-    "typescript": "^4.5.2",
+    "typescript": "^5.0.4",
     "underscore": "^1.13.1",
     "uuid": "^8.3.2",
     "winston": "^3.3.3",
