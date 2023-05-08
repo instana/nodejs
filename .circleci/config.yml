@@ -250,12 +250,11 @@ shared: &shared
           fi
 
     # Run the test suites.
-    # The ci_glob_setup.sh script designates which files should be tested in each CircleCI process.
-    # As the reported files include the aboslute path, we want to get rid of them. We do that after the test finishes.
+    # The ci_glob_setup.sh script determines which tests will be run on each CircleCI executor.
     - run:
         name: Run Tests
         command: |
-          . ./bin/ci_glob_setup.sh
+          source bin/ci_glob_setup.sh
           date
           if [[ -z "$NODE_COVERAGE" ]]; then
             if [[ -z "$COLLECTOR_ONLY" ]]; then

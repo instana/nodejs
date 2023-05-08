@@ -26,7 +26,7 @@
   "scripts": {
     "audit": "bin/prepare-audit.sh && npm audit --production; AUDIT_RESULT=$?; git checkout package-lock.json; exit $AUDIT_RESULT",
     "test": "mocha --sort $(find test -iname '*test.js' -not -path '*node_modules*')",
-    "test:ci": "echo \"******* Files to be tested:\n $CI_SERVERLESS_TEST_FILES\" &&  if [ -z \"${CI_SERVERLESS_TEST_FILES}\" ]; then echo \"No Files to test in this node\"; else mocha --reporter mocha-multi-reporters --reporter-options configFile=reporter-config.json --sort ${CI_SERVERLESS_TEST_FILES}; fi",
+    "test:ci": "echo \"******* Files to be tested:\n $CI_SERVERLESS_TEST_FILES\" &&  if [ -z \"${CI_SERVERLESS_TEST_FILES}\" ]; then echo \"No test files have been assigned to this CircleCI executor.\"; else mocha --reporter mocha-multi-reporters --reporter-options configFile=reporter-config.json --sort ${CI_SERVERLESS_TEST_FILES}; fi",
     "test:debug": "WITH_STDOUT=true npm run test",
     "lint": "eslint src test",
     "verify": "npm run lint && npm test",
