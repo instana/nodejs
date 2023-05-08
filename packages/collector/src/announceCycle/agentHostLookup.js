@@ -27,7 +27,6 @@ logger = require('../logger').getLogger('announceCycle/agentHostLookup', newLogg
 // The host differs, when the collector is running inside a Docker container and the
 // agent is running on the host.
 
-const expectedServerHeader = 'Instana Agent';
 const requestTimeout = 5000;
 const retryTimeoutMillis = 60 * 1000;
 
@@ -125,14 +124,13 @@ function checkHost(host, cb) {
         timeout: requestTimeout
       },
       res => {
-        if (res.headers.server === expectedServerHeader) {
+        if (res.statusCode >= 200 && res.statusCode < 300) {
           cb(null);
         } else {
           cb(
             new Error(
-              `The attempt to connect to the Instana host agent on ${host}:${agentOpts.port} has failed, the ` +
-                `response did not contain the expected "Server" header. Expected ${expectedServerHeader}, ` +
-                `but received: ${res.headers.server}`
+              `The attempt to connect to the Instana host agent on ${host}:${agentOpts.port} has failed with an ` +
+                `unexpected status code. Expected HTTP 200 but received: ${res.statusCode}`
             )
           );
         }
