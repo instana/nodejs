@@ -5,6 +5,9 @@
 
 'use strict';
 
+require('./mockVersion');
+const isLatest = process.env.MONGOOSE_VERSION === 'latest';
+
 require('../../../..')();
 
 const bodyParser = require('body-parser');
@@ -44,13 +47,25 @@ mongoose.model(
 );
 const Person = mongoose.model('Person');
 
-mongoose.connect(connectString, err => {
-  if (err) {
-    log('Failed to connect to Mongodb', err);
-    process.exit(1);
-  }
-  connectedToMongo = true;
-});
+if (isLatest) {
+  (async () => {
+    try {
+      await mongoose.connect(connectString);
+      connectedToMongo = true;
+    } catch (err) {
+      log('Failed to connect to Mongodb', err);
+      process.exit(1);
+    }
+  })();
+} else {
+  mongoose.connect(connectString, err => {
+    if (err) {
+      log('Failed to connect to Mongodb', err);
+      process.exit(1);
+    }
+    connectedToMongo = true;
+  });
+}
 
 if (process.env.WITH_STDOUT) {
   app.use(morgan(`${logPrefix}:method :url :status`));
@@ -92,6 +107,7 @@ app.post('/find', (req, res) => {
 app.post('/aggregate', (req, res) => {
   const status1 = uuid();
   const status2 = uuid();
+
   Promise.all([
     Person.create({
       name: uuid(),

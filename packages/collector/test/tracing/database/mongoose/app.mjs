@@ -5,6 +5,8 @@
 
 'use strict';
 
+const isLatest = process.env.MONGOOSE_VERSION === 'latest';
+
 import bodyParser from 'body-parser';
 import mongoose from 'mongoose';
 import express from 'express';
@@ -43,13 +45,25 @@ mongoose.model(
 );
 const Person = mongoose.model('Person');
 
-mongoose.connect(connectString, err => {
-  if (err) {
-    log('Failed to connect to Mongodb', err);
-    process.exit(1);
-  }
-  connectedToMongo = true;
-});
+if (isLatest) {
+  (async () => {
+    try {
+      await mongoose.connect(connectString);
+      connectedToMongo = true;
+    } catch (err) {
+      log('Failed to connect to Mongodb', err);
+      process.exit(1);
+    }
+  })();
+} else {
+  mongoose.connect(connectString, err => {
+    if (err) {
+      log('Failed to connect to Mongodb', err);
+      process.exit(1);
+    }
+    connectedToMongo = true;
+  });
+}
 
 if (process.env.WITH_STDOUT) {
   app.use(morgan(`${logPrefix}:method :url :status`));

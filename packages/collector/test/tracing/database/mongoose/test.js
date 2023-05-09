@@ -7,6 +7,7 @@
 
 const expect = require('chai').expect;
 const { v4: uuid } = require('uuid');
+const semver = require('semver');
 
 const constants = require('@instana/core').tracing.constants;
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
@@ -17,99 +18,118 @@ const globalAgent = require('../../../globalAgent');
 
 const USE_ATLAS = process.env.USE_ATLAS === 'true';
 
-const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
+// v5 uses mongodb v3
+// v6 uses mongodb v4
+// latest (v7) uses mongodb v5
 
-mochaSuiteFn('tracing/mongoose', function () {
-  const timeout = USE_ATLAS ? config.getTestTimeout() * 2 : config.getTestTimeout();
-  this.timeout(timeout);
+['latest', 'v6', 'v5'].forEach(version => {
+  let mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
-  globalAgent.setUpCleanUpHooks();
-  const agentControls = globalAgent.instance;
+  if (version === 'latest') {
+    mochaSuiteFn = semver.lt(process.versions.node, '14.0.0') ? describe.skip : mochaSuiteFn;
+  } else if (version === 'v6') {
+    mochaSuiteFn = semver.lt(process.versions.node, '12.0.0') ? describe.skip : mochaSuiteFn;
+  }
 
-  const controls = new ProcessControls({
-    dirname: __dirname,
-    useGlobalAgent: true
-  });
-  ProcessControls.setUpHooks(controls);
+  // NOTE: require-mock is not working with esm apps. There is also no need to run the ESM APP for all versions.
+  if (process.env.RUN_ESM && version !== 'latest') return;
 
-  it('must trace create calls', () =>
-    controls
-      .sendRequest({
-        method: 'POST',
-        path: '/insert',
-        body: {
-          name: 'Some Body',
-          age: 999
-        }
-      })
-      .then(() =>
-        retry(() =>
-          agentControls.getSpans().then(spans => {
-            const entrySpan = expectEntry(spans, '/insert');
-            expectMongoExit(spans, entrySpan, 'insert');
-          })
-        )
-      ));
+  mochaSuiteFn(`tracing/mongoose@${version}`, function () {
+    const timeout = USE_ATLAS ? config.getTestTimeout() * 2 : config.getTestTimeout();
+    this.timeout(timeout);
 
-  it('must trace findOne calls', () => {
-    const randomName = uuid();
-    return controls
-      .sendRequest({
-        method: 'POST',
-        path: '/insert',
-        body: {
-          name: randomName,
-          age: 42
-        }
-      })
-      .then(() =>
-        controls.sendRequest({
+    globalAgent.setUpCleanUpHooks();
+    const agentControls = globalAgent.instance;
+
+    const controls = new ProcessControls({
+      dirname: __dirname,
+      useGlobalAgent: true,
+      env: {
+        MONGOOSE_VERSION: version
+      }
+    });
+
+    ProcessControls.setUpHooks(controls);
+
+    it('must trace create calls', () =>
+      controls
+        .sendRequest({
           method: 'POST',
-          path: '/find',
+          path: '/insert',
+          body: {
+            name: 'Some Body',
+            age: 999
+          }
+        })
+        .then(() =>
+          retry(() =>
+            agentControls.getSpans().then(spans => {
+              const entrySpan = expectEntry(controls, spans, '/insert');
+              expectMongoExit(controls, spans, entrySpan, 'insert');
+            })
+          )
+        ));
+
+    it('must trace findOne calls', () => {
+      const randomName = uuid();
+      return controls
+        .sendRequest({
+          method: 'POST',
+          path: '/insert',
           body: {
             name: randomName,
             age: 42
           }
         })
-      )
-      .then(() =>
-        retry(() =>
-          agentControls.getSpans().then(spans => {
-            const entrySpan = expectEntry(spans, '/find');
-            const mongoExit = expectMongoExit(spans, entrySpan, 'find');
-            expect(mongoExit.data.mongo.filter).to.contain('"age":42');
-            expect(mongoExit.data.mongo.filter).to.contain(`"name":"${randomName}"`);
+        .then(() =>
+          controls.sendRequest({
+            method: 'POST',
+            path: '/find',
+            body: {
+              name: randomName,
+              age: 42
+            }
           })
         )
-      );
+        .then(() =>
+          retry(() =>
+            agentControls.getSpans().then(spans => {
+              const entrySpan = expectEntry(controls, spans, '/find');
+              const mongoExit = expectMongoExit(controls, spans, entrySpan, 'find');
+              expect(mongoExit.data.mongo.filter).to.contain('"age":42');
+              expect(mongoExit.data.mongo.filter).to.contain(`"name":"${randomName}"`);
+            })
+          )
+        );
+    });
+
+    it('must trace aggregate calls', () =>
+      controls
+        .sendRequest({
+          method: 'POST',
+          path: '/aggregate'
+        })
+        .then(res => {
+          expect(res).to.be.an('array');
+          const group1 = res.find(o => o._id === 33);
+          const group2 = res.find(o => o._id === 77);
+          expect(group1.totalCount).to.equal(2);
+          expect(group1.totalAge).to.equal(66);
+          expect(group2.totalCount).to.equal(1);
+          expect(group2.totalAge).to.equal(77);
+          return retry(() =>
+            agentControls.getSpans().then(spans => {
+              const entrySpan = expectEntry(controls, spans, '/aggregate');
+              const mongoExit = expectMongoExit(controls, spans, entrySpan, 'aggregate');
+              expect(mongoExit.data.mongo.json).to.contain('"$match"');
+              expect(mongoExit.data.mongo.json).to.contain('"$group"');
+              expect(mongoExit.data.mongo.json).to.contain('"$project"');
+            })
+          );
+        }));
   });
 
-  it('must trace aggregate calls', () =>
-    controls
-      .sendRequest({
-        method: 'POST',
-        path: '/aggregate'
-      })
-      .then(res => {
-        expect(res).to.be.an('array');
-        const group1 = res.find(o => o._id === 33);
-        const group2 = res.find(o => o._id === 77);
-        expect(group1.totalCount).to.equal(2);
-        expect(group1.totalAge).to.equal(66);
-        expect(group2.totalCount).to.equal(1);
-        expect(group2.totalAge).to.equal(77);
-        return retry(() =>
-          agentControls.getSpans().then(spans => {
-            const entrySpan = expectEntry(spans, '/aggregate');
-            const mongoExit = expectMongoExit(spans, entrySpan, 'aggregate');
-            expect(mongoExit.data.mongo.json).to.contain('"$match"');
-            expect(mongoExit.data.mongo.json).to.contain('"$group"');
-            expect(mongoExit.data.mongo.json).to.contain('"$project"');
-          })
-        );
-      }));
-
-  function expectEntry(spans, url) {
+  function expectEntry(controls, spans, url) {
     return expectExactlyOneMatching(spans, [
       span => expect(span.n).to.equal('node.http.server'),
       span => expect(span.data.http.url).to.equal(url),
@@ -121,7 +141,7 @@ mochaSuiteFn('tracing/mongoose', function () {
     ]);
   }
 
-  function expectMongoExit(spans, parent, command) {
+  function expectMongoExit(controls, spans, parent, command) {
     return expectExactlyOneMatching(spans, span => {
       expect(span.t).to.equal(parent.t);
       expect(span.p).to.equal(parent.s);

@@ -34,31 +34,36 @@ exports.batchable = true;
 
 exports.init = function init() {
   // unified topology layer
-  requireHook.onFileLoad(/\/mongodb\/lib\/cmap\/connection.js/, instrumentCmapConnection);
+  requireHook.onFileLoad(/\/mongodb\/lib\/cmap\/connection\.js/, instrumentCmapConnection);
   // mongodb >= 3.3.x, legacy topology layer
-  requireHook.onFileLoad(/\/mongodb\/lib\/core\/connection\/pool.js/, instrumentLegacyTopologyPool);
+  requireHook.onFileLoad(/\/mongodb\/lib\/core\/connection\/pool\.js/, instrumentLegacyTopologyPool);
   // mongodb < 3.3.x, legacy topology layer
-  requireHook.onFileLoad(/\/mongodb-core\/lib\/connection\/pool.js/, instrumentLegacyTopologyPool);
+  requireHook.onFileLoad(/\/mongodb-core\/lib\/connection\/pool\.js/, instrumentLegacyTopologyPool);
 };
 
 function instrumentCmapConnection(connection) {
   if (connection.Connection && connection.Connection.prototype) {
-    // collection.findOne, collection.find et al.
-    shimmer.wrap(connection.Connection.prototype, 'query', shimCmapQuery);
-    // collection.count et al.
-    shimmer.wrap(connection.Connection.prototype, 'command', shimCmapCommand);
+    // v4, v5
+    if (!connection.Connection.prototype.query) {
+      shimmer.wrap(connection.Connection.prototype, 'command', shimCmapCommand);
+    } else {
+      // collection.findOne, collection.find et al.
+      shimmer.wrap(connection.Connection.prototype, 'query', shimCmapQuery);
+      // collection.count et al.
+      shimmer.wrap(connection.Connection.prototype, 'command', shimCmapCommand);
 
-    [
-      'insert', // collection.insertOne et al.
-      'update', // collection.replaceOne et al.
-      'remove' // collection.delete et al.
-    ].forEach(fnName => {
-      if (connection.Connection.prototype[fnName]) {
-        shimmer.wrap(connection.Connection.prototype, fnName, shimCmapMethod.bind(null, fnName));
-      }
-    });
+      [
+        'insert', // collection.insertOne et al.
+        'update', // collection.replaceOne et al.
+        'remove' // collection.delete et al.
+      ].forEach(fnName => {
+        if (connection.Connection.prototype[fnName]) {
+          shimmer.wrap(connection.Connection.prototype, fnName, shimCmapMethod.bind(null, fnName));
+        }
+      });
 
-    shimmer.wrap(connection.Connection.prototype, 'getMore', shimCmapGetMore);
+      shimmer.wrap(connection.Connection.prototype, 'getMore', shimCmapGetMore);
+    }
   }
 }
 
@@ -170,12 +175,23 @@ function instrumentedCmapMethod(ctx, originalMethod, originalArgs, command) {
   if (callbackIndex < 0) {
     return originalMethod.apply(ctx, originalArgs);
   }
-
   return cls.ns.runAndReturn(() => {
     const span = cls.startSpan(exports.spanName, constants.EXIT);
     span.stack = tracingUtil.getStackTrace(instrumentedCmapQuery, 1);
 
-    const namespace = originalArgs[0];
+    let namespace = originalArgs[0];
+
+    if (typeof namespace === 'object') {
+      // NOTE: Sometimes the collection name is "$cmd"
+      if (namespace.collection !== '$cmd') {
+        namespace = `${namespace.db}.${namespace.collection}`;
+      } else if (originalArgs[1] && typeof originalArgs[1] === 'object') {
+        const collName = originalArgs[1][command];
+        namespace = `${namespace.db}.${collName}`;
+      } else {
+        namespace = namespace.db;
+      }
+    }
 
     let service;
     if (ctx.address) {

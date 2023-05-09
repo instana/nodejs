@@ -5,6 +5,9 @@
 
 'use strict';
 
+require('./mockVersion');
+const isLatest = process.env.MONGODB_VERSION === 'latest';
+
 const agentPort = process.env.INSTANA_AGENT_PORT;
 
 require('../../../..')({
@@ -65,8 +68,17 @@ if (process.env.USE_LEGACY_3_X_CONNECTION_MECHANISM) {
     collection = db.collection('mydocs');
     log('Connected to MongoDB');
   });
+} else if (isLatest) {
+  (async () => {
+    const client = new MongoClient(connectString);
+    await client.connect();
+    db = client.db('myproject');
+    collection = db.collection('mydocs');
+
+    log('Connected to MongoDB');
+  })();
 } else {
-  // mongodb versions >= 3.x, newer "unified" topology
+  // mongodb versions >= 3.x, newer "unified" topology, < 5
   MongoClient.connect(connectString, { useUnifiedTopology: true }, (err, client) => {
     assert.equal(null, err);
     db = client.db();
@@ -82,7 +94,13 @@ app.get('/', (req, res) => {
   }
 });
 
-app.post('/count', (req, res) => {
+app.post('/count', async (req, res) => {
+  if (isLatest) {
+    const mongoResponse = await collection.count(req.body);
+    res.json(mongoResponse);
+    return;
+  }
+
   collection.count(req.body, (err, mongoResponse) => {
     if (err) {
       log('Failed to count', err);
@@ -224,11 +242,30 @@ app.post('/long-find', (req, res) => {
     });
 });
 
-app.get('/findall', (req, res) => {
+app.get('/findall', async (req, res) => {
   const filter = {};
+
+  if (isLatest) {
+    const findOpts = {};
+    findOpts.batchSize = 2;
+    findOpts.limit = 10;
+
+    // NOTE: filter by property "unique"
+    if (req.query && req.query.unique) {
+      filter.unique = req.query.unique;
+    }
+
+    const resp = await collection.find(filter, findOpts).toArray();
+    await request(`http://127.0.0.1:${agentPort}`);
+    res.json(resp);
+    return;
+  }
+
+  // NOTE: filter by property "unique"
   if (req.query && req.query.unique) {
     filter.unique = req.query.unique;
   }
+
   collection
     .find(filter)
     .batchSize(2)

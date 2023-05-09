@@ -37,11 +37,13 @@ exports.instrument = function instrument(Mongoose) {
   const originalAggregate = Mongoose.Model.aggregate;
 
   // Instrument Mongoose.Model#aggregate to attach the async context.
-  Mongoose.Model.aggregate = function aggregate() {
+  Mongoose.Model.aggregate = function instanaAggregate() {
     const aggr = originalAggregate.apply(this, arguments);
+
     if (!aggr) {
       return aggr;
     }
+
     if (typeof aggr.then === 'function' && typeof aggr.catch === 'function') {
       aggr.__inctx = cls.getAsyncContext();
       shimmer.wrap(aggr, 'then', instrumentThenOrCatch);
