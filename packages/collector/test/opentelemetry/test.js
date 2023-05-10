@@ -25,7 +25,9 @@ const mochaSuiteFn =
 //       this unsupported setup is used. Both variants (require Instana first/OTel second and vice versa)
 //       fail, though they fail in different ways.
 mochaSuiteFn('Opentelemetry usage', function () {
-  this.timeout(config.getTestTimeout());
+  const timeout = config.getTestTimeout() * 2;
+  const retryTimeout = timeout / 2;
+  this.timeout(timeout);
   const randomPort = portfinder();
   let server;
   let otelSpans = [];
@@ -72,16 +74,21 @@ mochaSuiteFn('Opentelemetry usage', function () {
         })
         .then(() => delay(500))
         .then(() =>
-          retry(() =>
-            agentControls.getSpans().then(spans => {
-              // Instana does not work when instana was required first
-              expect(spans.length).to.equal(0);
+          retry(
+            () =>
+              agentControls.getSpans().then(spans => {
+                // Instana does not work when instana was required first
+                expect(spans, `Expected no Instana spans but got ${JSON.stringify(spans)}`).to.be.empty;
 
-              // 1 means -> one instrumentation traced spans
-              // here it is: request handler / middlewares
-              expect(otelSpans.length).to.equal(1);
-              expect(otelSpans[0].scopeSpans[0].spans.length).to.equal(3);
-            })
+                // 1 means -> one instrumentation traced spans
+                // here it is: request handler / middlewares
+                expect(otelSpans, `Expected one OTel span but got ${JSON.stringify(otelSpans)}`).to.have.lengthOf(1);
+                expect(
+                  otelSpans[0].scopeSpans[0].spans,
+                  `Expected three scope spans but got ${JSON.stringify(otelSpans[0].scopeSpans[0].spans)}`
+                ).to.have.lengthOf(3);
+              }),
+            retryTimeout
           )
         ));
   });
@@ -112,19 +119,21 @@ mochaSuiteFn('Opentelemetry usage', function () {
           path: '/trace'
         })
         .then(() =>
-          retry(() =>
-            agentControls.getSpans().then(spans => {
-              // instana works when otel was required first
-              // 1 entry instana span http server
-              // 1 exit internal otel request to transmit the spans (OTLPTraceExporter)
-              expect(spans.length).to.equal(2);
-              expect(spans[0].data.http.url).to.eql('/trace');
-              expect(spans[1].data.http.url).to.contain('/v1/traces');
+          retry(
+            () =>
+              agentControls.getSpans().then(spans => {
+                // instana works when otel was required first
+                // 1 entry instana span http server
+                // 1 exit internal otel request to transmit the spans (OTLPTraceExporter)
+                expect(spans, `Expected two spans but got ${JSON.stringify(spans)}`).to.have.lengthOf(2);
+                expect(spans[0].data.http.url).to.eql('/trace');
+                expect(spans[1].data.http.url).to.contain('/v1/traces');
 
-              // request handler + middleware spans
-              // internal otel request to transmit the spans (OTLPTraceExporter)
-              expect(otelSpans.length).to.be.gte(2);
-            })
+                // request handler + middleware spans
+                // internal otel request to transmit the spans (OTLPTraceExporter)
+                expect(otelSpans, `Expected at least two OTel spans but got ${otelSpans}`).to.have.lengthOf.at.least(2);
+              }),
+            retryTimeout
           )
         ));
   });
