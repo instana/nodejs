@@ -254,6 +254,7 @@ shared: &shared
     # As the reported files include the aboslute path, we want to get rid of them. We do that after the test finishes.
     - run:
         name: Run Tests
+        no_output_timeout: 60m
         command: |
           . ./bin/ci_glob_setup.sh
           date
@@ -448,7 +449,7 @@ jobs:
       - <<: *couchbase-setup
     <<: *shared
     parallelism: << pipeline.parameters.executors >>
-    resource_class: large
+    resource_class: medium+
 
   "node-14":
     environment:
