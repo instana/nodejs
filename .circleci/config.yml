@@ -448,7 +448,7 @@ jobs:
       - <<: *couchbase-setup
     <<: *shared
     parallelism: << pipeline.parameters.executors >>
-    resource_class: medium+
+    resource_class: large
 
   "node-14":
     environment:
