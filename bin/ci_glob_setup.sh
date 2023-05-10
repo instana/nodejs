@@ -4,7 +4,7 @@
 
 shopt -s globstar
 files=$(circleci tests glob /home/circleci/repo/packages/**/test/**/*test.js | sed "/node_modules/d" | circleci tests split --split-by=timings --timings-type=filename)
-#files="packages/core/test/util/compression_test.js packages/collector/test/actions/source_test.js packages/core/test/util/slidingWindow_test.js packages/shared-metrics/test/util/DependencyDistanceCalculator_te$
+#files=$(find ~+/packages/**/test -type f -name '*test.js' | sed "/node_modules/d")
 
 for package in packages/*/ ; do
   for i in $(echo $files | tr " " "\n")
@@ -21,6 +21,7 @@ for package in packages/*/ ; do
   package_name=${package_name%/}
   package_name=${package_name//-/_}
   package_name="${package_name^^}"
+
 
   echo CI_${package_name}_TEST_FILES
   declare CI_${package_name}_TEST_FILES="$(echo ${y})"
