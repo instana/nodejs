@@ -7,3 +7,4 @@ test-duration-breakdown
 coverage
 /db2
 instana-*.tgz
+.vscode

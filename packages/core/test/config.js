@@ -18,5 +18,9 @@ exports.getTestTimeout = () => {
   if (isCI()) {
     return 30000;
   }
+  // NOTE: Otherwise mocha will interrupt the debugging session quickly.
+  if (process.env.VSCODE_DEBUG === 'true') {
+    return 30000;
+  }
   return 5000;
 };

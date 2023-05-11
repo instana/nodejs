@@ -131,6 +131,8 @@ async function receiveAsync() {
     const data = await sqsPromise;
 
     return new Promise(resolve => {
+      // TODO: This could be simplified by wrapping the SQS.prototype.receiveMessage method.
+      //       See v3/sqs.js
       instana.sdk.runInAsyncContext(sqsPromise.instanaAsyncContext, async () => {
         if (data && data.error) {
           log('receive message data error', data.error);

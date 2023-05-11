@@ -32,6 +32,9 @@ let onFileLoaded = false;
 exports.init = function init() {
   sqsConsumer.init();
 
+  // NOTE: each aws product can have it's own init fn to wrap or unwrap specific functions
+  awsProducts.forEach(awsProduct => awsProduct.init && awsProduct.init(requireHook, shimmer));
+
   /**
    * @aws-sdk/smithly-client >= 3.36.0 changed how the dist structure gets delivered
    * https://github.com/aws/aws-sdk-js-v3/blob/main/packages/smithy-client/CHANGELOG.md#3360-2021-10-08

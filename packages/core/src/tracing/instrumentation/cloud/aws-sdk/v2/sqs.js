@@ -309,6 +309,7 @@ function instrumentedReceiveMessage(ctx, originalReceiveMessage, originalArgs) {
     // promise use case
     if (typeof awsRequest.promise === 'function' && typeof originalCallback !== 'function') {
       const originalPromiseFn = awsRequest.promise;
+
       awsRequest.promise = cls.ns.bind(function () {
         const promise = originalPromiseFn.apply(awsRequest, arguments);
 

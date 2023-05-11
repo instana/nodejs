@@ -32,6 +32,7 @@ const sendSnsNotificationToSqsQueue = require('./sendNonInstrumented').sendSnsNo
 
 const sendingMethods = ['v3', 'cb', 'v2'];
 const receivingMethods = ['v3', 'cb', 'v2'];
+
 const getNextSendMethod = require('@instana/core/test/test_util/circular_list').getCircularList(sendingMethods);
 const getNextReceiveMethod = require('@instana/core/test/test_util/circular_list').getCircularList(receivingMethods);
 

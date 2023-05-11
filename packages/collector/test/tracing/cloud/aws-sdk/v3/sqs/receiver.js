@@ -87,6 +87,7 @@ app.get('/warn-logs', (req, res) => {
 async function runAsPromise(isV2Style = false) {
   const command = new awsSdk3.ReceiveMessageCommand(receiveParams);
   numberOfReceiveMessageAttempts++;
+
   const promise = isV2Style ? sqsv2.receiveMessage(receiveParams) : sqs.send(command);
   let span;
 

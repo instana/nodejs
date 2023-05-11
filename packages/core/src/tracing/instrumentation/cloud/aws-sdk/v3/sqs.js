@@ -39,6 +39,31 @@ const operations = Object.keys(operationsInfo);
 const SPAN_NAME = 'sqs';
 
 class InstanaAWSSQS extends InstanaAWSProduct {
+  init(requireHook, shimmer) {
+    requireHook.onFileLoad(/@aws-sdk\/client-sqs\/dist-cjs\/SQS\.js/, function (module) {
+      shimmer.wrap(module.SQS.prototype, 'receiveMessage', function (originalReceiveMsgFn) {
+        return function instanaReceiveMessage() {
+          return cls.ns.runAndReturn(() => {
+            const ctx = cls.getAsyncContext();
+            this._instanaCtx = ctx;
+            const promise = originalReceiveMsgFn.apply(this, arguments);
+
+            promise.then = cls.ns.bind(promise.then);
+
+            if (promise.catch) {
+              promise.catch = cls.ns.bind(promise.catch);
+            }
+            if (promise.finally) {
+              promise.finally = cls.ns.bind(promise.finally);
+            }
+
+            return promise;
+          });
+        };
+      });
+    });
+  }
+
   instrumentedSmithySend(ctx, originalSend, smithySendArgs) {
     const commandName = smithySendArgs[0].constructor.name;
     const operation = operationsInfo[commandName];
@@ -166,6 +191,8 @@ class InstanaAWSSQS extends InstanaAWSProduct {
     const command = smithySendArgs[0];
     const sendMessageInput = command.input;
 
+    // Note: we pass in ctx._instanaCtx as the second parameter to runAndReturn which will run the function in the
+    // context belonging to this SQS promise.
     return cls.ns.runAndReturn(() => {
       const self = this;
       const span = cls.startSpan(SPAN_NAME, ENTRY);
@@ -237,6 +264,7 @@ class InstanaAWSSQS extends InstanaAWSProduct {
               setImmediate(() => this.finishSpan(null, span));
             } else if (data && data.Messages && data.Messages.length > 0) {
               const messages = data.Messages;
+
               let tracingAttributes = readTracingAttributes(messages[0].MessageAttributes);
               if (!hasTracingAttributes(tracingAttributes)) {
                 tracingAttributes = readTracingAttributesFromSns(messages[0].Body);
@@ -283,7 +311,7 @@ class InstanaAWSSQS extends InstanaAWSProduct {
 
         return request;
       }
-    });
+    }, ctx._instanaCtx);
   }
 
   buildSpanData(operation, sendMessageInput) {
