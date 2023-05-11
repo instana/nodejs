@@ -31,19 +31,21 @@ function main() {
     terminate(true);
     return;
   }
+
   definitionPath = path.resolve(definitionRelativePath);
   // eslint-disable-next-line import/no-dynamic-require
   lambdaDefinition = require(definitionPath);
   validateDefinition(lambdaDefinition);
+
   if (process.env.WAIT_FOR_MESSAGE !== 'true') {
     // Run handler immediately if started runtime mock has been started directly via CLI.
     runHandler(lambdaDefinition.handler, process.env.LAMDBA_ERROR);
   } else {
     // Wait for an explicit command to start the handler when used in the context of automated tests.
     process.on('message', message => {
-      const { cmd, context, event } = message;
+      const { cmd, context, event, eventOpts } = message;
       if (cmd === 'run-handler') {
-        runHandler(lambdaDefinition.handler, process.env.LAMDBA_ERROR, { context, event });
+        runHandler(lambdaDefinition.handler, process.env.LAMDBA_ERROR, { context, event, eventOpts });
       }
     });
     sendToParent('runtime: started');
@@ -77,9 +79,10 @@ function validateDefinition() {
 /**
  * Runs the given lambda handler.
  */
-function runHandler(handler, error, { context, event } = {}) {
+function runHandler(handler, error, { context, event, eventOpts } = {}) {
   const trigger = process.env.LAMBDA_TRIGGER;
-  event = event || createEvent(error, trigger);
+  event = event || createEvent(error, trigger, eventOpts);
+
   registerErrorHandling();
   log(`Running ${definitionPath}.`);
 
@@ -223,7 +226,7 @@ function createContext(callback) {
   return context;
 }
 
-function createEvent(error, trigger) {
+function createEvent(error, trigger, eventOpts = { payloadFormatVersion: '1.0' }) {
   /* eslint-disable default-case */
   const event = {};
 
@@ -243,31 +246,59 @@ function createEvent(error, trigger) {
         break;
 
       case 'api-gateway-proxy':
-        event.resource = '/path/to/{param1}/{param2}';
-        event.path = '/path/to/path-xxx/path-yyy';
-        event.httpMethod = 'POST';
-        event.headers = {
-          'X-Request-Header-1': 'A Header Value',
-          'X-Request-Header-3': 'not configured to capture this'
-        };
-        event.multiValueHeaders = {
-          'X-Request-Header-2': ['Multi Value', 'Header Value'],
-          'X-Request-Header-4': ['not', 'configured', 'to', 'be', 'captured']
-        };
-        event.queryStringParameters = {
-          param1: 'another-param-value',
-          param2: 'param-value'
-        };
-        event.multiValueQueryStringParameters = {
-          param1: ['param-value', 'another-param-value'],
-          param2: ['param-value']
-        };
-        event.pathParameters = {
-          param1: 'path-xxx',
-          param2: 'path-yyy'
-        };
-        event.body = '{\n    "test": "with body"\n}';
-        addHttpTracingHeaders(event);
+        if (eventOpts.payloadFormatVersion === '1.0') {
+          event.version = '1.0';
+          event.resource = '/path/to/{param1}/{param2}';
+          event.path = '/path/to/path-xxx/path-yyy';
+          event.httpMethod = 'POST';
+          event.headers = {
+            'X-Request-Header-1': 'A Header Value',
+            'X-Request-Header-3': 'not configured to capture this'
+          };
+          event.multiValueHeaders = {
+            'X-Request-Header-2': ['Multi Value', 'Header Value'],
+            'X-Request-Header-4': ['not', 'configured', 'to', 'be', 'captured']
+          };
+          event.queryStringParameters = {
+            param1: 'another-param-value',
+            param2: 'param-value'
+          };
+          event.multiValueQueryStringParameters = {
+            param1: ['param-value', 'another-param-value'],
+            param2: ['param-value']
+          };
+          event.pathParameters = {
+            param1: 'path-xxx',
+            param2: 'path-yyy'
+          };
+          event.body = '{\n    "test": "with body"\n}';
+          addHttpTracingHeaders(event);
+        } else {
+          event.version = '2.0';
+          event.rawQueryString = 'parameter1=value1&parameter1=value2&parameter2=value';
+          event.rawPath = '/path/to/{param1}/{param2}';
+          event.requestContext = {
+            http: {
+              method: 'POST',
+              path: '/path/to/path-xxx/path-yyy'
+            }
+          };
+          event.headers = {
+            'X-Request-Header-1': 'A Header Value 1, A Header Value 2',
+            'X-Request-Header-2': 'a header value single',
+            'X-Request-Header-3': 'not configured to capture this'
+          };
+          event.queryStringParameters = {
+            parameter1: 'value1,value2',
+            parameter2: 'value'
+          };
+          event.pathParameters = {
+            param1: 'path-xxx',
+            param2: 'path-yyy'
+          };
+          event.body = '{\n    "test": "with body"\n}';
+          addHttpTracingHeaders(event);
+        }
         break;
 
       case 'application-load-balancer':

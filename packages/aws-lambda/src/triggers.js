@@ -62,24 +62,50 @@ exports.enrichSpanWithTriggerData = function enrichSpanWithTriggerData(event, co
 };
 
 function isApiGatewayProxyTrigger(event) {
-  // Note: An application load balancer event also has event.path and event.httpMethod but it does not have
+  // NOTE: An application load balancer event also has event.path and event.httpMethod but it does not have
   // event.resource.
-  return event.resource != null && event.path != null && event.httpMethod != null;
+  return (
+    (event.resource != null && event.path != null && event.httpMethod != null) ||
+    (event.rawPath && event.version === '2.0')
+  );
+}
+
+function getHttpData(event) {
+  if (event.version === '2.0') {
+    const requestCtx = event.requestContext || {};
+    const requestCtxHttp = requestCtx.http || {};
+
+    return {
+      method: requestCtxHttp.method,
+      url: requestCtxHttp.path,
+      path_tpl: event.rawPath,
+      params: readHttpQueryParams(event),
+      // TODO: if the customer defines which headers to capture, we extract it from the payload
+      header: captureHeaders(event)
+    };
+  }
+
+  return {
+    method: event.httpMethod,
+    url: event.path,
+    path_tpl: event.resource,
+    params: readHttpQueryParams(event),
+    // TODO: if the customer defines which headers to capture, we extract it from the payload
+    header: captureHeaders(event)
+  };
 }
 
 function extractHttpFromApiGatewwayProxyEvent(event, span) {
   // Remark: We never extract host headers for Lambda entries even if we could sometimes, because they are of no
   // interest.
-  span.data.http = {
-    method: event.httpMethod,
-    url: event.path,
-    path_tpl: event.resource,
-    params: readHttpQueryParams(event),
-    header: captureHeaders(event)
-  };
+  span.data.http = getHttpData(event);
 }
 
 function readHttpQueryParams(event) {
+  if (event.version === '2.0') {
+    return event.rawQueryString;
+  }
+
   if (event.multiValueQueryStringParameters) {
     return Object.keys(event.multiValueQueryStringParameters)
       .map(key =>

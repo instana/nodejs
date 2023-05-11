@@ -889,7 +889,7 @@ function registerTests(handlerDefinitionPath) {
       instanaAgentKey
     });
 
-    it('must recognize API gateway trigger (with proxy)', () =>
+    it('[payloadFormatVersion 1.0] must recognize API gateway trigger (with proxy)', () =>
       verify(control, { error: false, expectMetrics: true, expectSpans: true, trigger: 'aws:api.gateway' })
         .then(() => control.getSpans())
         .then(spans =>
@@ -910,6 +910,34 @@ function registerTests(handlerDefinitionPath) {
                 'x-request-header-2': 'Multi Value,Header Value',
                 'x-response-header-1': 'response header value 1',
                 'x-response-header-2': 'response,header,value 2'
+              }),
+            span => expect(span.data.http.host).to.not.exist,
+            span => expect(span.data.http.status).to.equal(200)
+          ])
+        ));
+
+    it('[payloadFormatVersion 2.0] must recognize API gateway trigger (with proxy)', () =>
+      verify(
+        control,
+        { error: false, expectMetrics: true, expectSpans: true, trigger: 'aws:api.gateway' },
+        { payloadFormatVersion: '2.0' }
+      )
+        .then(() => control.getSpans())
+        .then(spans =>
+          expectExactlyOneMatching(spans, [
+            span => expect(span.n).to.equal('aws.lambda.entry'),
+            span => expect(span.k).to.equal(constants.ENTRY),
+            span => expect(span.data.http).to.be.an('object'),
+            span => expect(span.data.http.method).to.equal('POST'),
+            span => expect(span.data.http.url).to.equal('/path/to/path-xxx/path-yyy'),
+            span => expect(span.data.http.path_tpl).to.equal('/path/to/{param1}/{param2}'),
+            span => expect(span.data.http.params).to.equal('parameter1=value1&parameter1=value2&parameter2=value'),
+            span =>
+              expect(span.data.http.header).to.deep.equal({
+                'x-request-header-1': 'A Header Value 1, A Header Value 2',
+                'x-request-header-2': 'a header value single',
+                'x-response-header-1': 'response header value 1, response header value 2',
+                'x-response-header-2': 'response header value 2'
               }),
             span => expect(span.data.http.host).to.not.exist,
             span => expect(span.data.http.status).to.equal(200)
@@ -1535,11 +1563,13 @@ function registerTests(handlerDefinitionPath) {
         ));
   });
 
-  function verify(control, expectations) {
-    return control.runHandler().then(() => verifyAfterRunningHandler(control, expectations));
+  function verify(control, expectations, eventOpts) {
+    return control
+      .runHandler({ eventOpts })
+      .then(() => verifyAfterRunningHandler(control, expectations, eventOpts && eventOpts.payloadFormatVersion));
   }
 
-  function verifyAfterRunningHandler(control, expectations) {
+  function verifyAfterRunningHandler(control, expectations, payloadFormatVersion) {
     const { error, expectMetrics, expectSpans } = expectations;
     /* eslint-disable no-console */
     if (error && error.startsWith('lambda')) {
@@ -1560,16 +1590,29 @@ function registerTests(handlerDefinitionPath) {
         console.log('Unexpected Errors:');
         console.log(JSON.stringify(control.getLambdaErrors()));
       }
+
       expect(control.getLambdaErrors()).to.be.empty;
       expect(control.getLambdaResults().length).to.equal(1);
+
       const result = control.getLambdaResults()[0];
       expect(result).to.exist;
       expect(result.headers).to.be.an('object');
-      expect(result.headers['X-Response-Header-1']).to.equal('response header value 1');
-      expect(result.headers['X-Response-Header-3']).to.equal('response header value 3');
-      expect(result.multiValueHeaders).to.be.an('object');
-      expect(result.multiValueHeaders['X-Response-Header-2']).to.deep.equal(['response', 'header', 'value 2']);
-      expect(result.multiValueHeaders['X-Response-Header-4']).to.deep.equal(['response', 'header', 'value 4']);
+
+      if (payloadFormatVersion === '2.0') {
+        expect(result.multiValueHeaders).to.not.exist;
+
+        expect(result.headers['X-Response-Header-1']).to.equal('response header value 1, response header value 2');
+        expect(result.headers['X-Response-Header-2']).to.equal('response header value 2');
+        expect(result.headers['X-Response-Header-3']).to.equal('should not capture');
+      } else {
+        expect(result.headers['X-Response-Header-1']).to.equal('response header value 1');
+        expect(result.headers['X-Response-Header-3']).to.equal('response header value 3');
+
+        expect(result.multiValueHeaders).to.be.an('object');
+        expect(result.multiValueHeaders['X-Response-Header-2']).to.deep.equal(['response', 'header', 'value 2']);
+        expect(result.multiValueHeaders['X-Response-Header-4']).to.deep.equal(['response', 'header', 'value 4']);
+      }
+
       expect(result.body).to.deep.equal({ message: 'Stan says hi!' });
     }
 

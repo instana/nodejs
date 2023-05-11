@@ -21,19 +21,7 @@ const fetch = require('node-fetch');
 
 const downstreamDummyUrl = process.env.DOWNSTREAM_DUMMY_URL;
 
-const response = {
-  headers: {
-    'X-Response-Header-1': 'response header value 1',
-    'X-Response-Header-3': 'response header value 3'
-  },
-  multiValueHeaders: {
-    'X-Response-Header-2': ['response', 'header', 'value 2'],
-    'X-Response-Header-4': ['response', 'header', 'value 4']
-  },
-  body: {
-    message: 'Stan says hi!'
-  }
-};
+const response = {};
 
 if (process.env.SERVER_TIMING_HEADER) {
   if (process.env.SERVER_TIMING_HEADER === 'string') {
@@ -47,6 +35,28 @@ if (process.env.SERVER_TIMING_HEADER) {
 
 const handler = event => {
   console.log('in actual handler');
+
+  if (event.version === '1.0') {
+    response.headers = {
+      'X-Response-Header-1': 'response header value 1',
+      'X-Response-Header-3': 'response header value 3'
+    };
+
+    response.multiValueHeaders = {
+      'X-Response-Header-2': ['response', 'header', 'value 2'],
+      'X-Response-Header-4': ['response', 'header', 'value 4']
+    };
+  } else {
+    response.headers = {
+      'X-Response-Header-1': 'response header value 1, response header value 2',
+      'X-Response-Header-2': 'response header value 2',
+      'X-Response-Header-3': 'should not capture'
+    };
+  }
+
+  response.body = {
+    message: 'Stan says hi!'
+  };
 
   if (event.error === 'synchronous') {
     throw new Error('Boom!');
