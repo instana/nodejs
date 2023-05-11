@@ -228,7 +228,7 @@ function createContext(callback) {
 
 function createEvent(error, trigger, eventOpts = { payloadFormatVersion: '1.0' }) {
   /* eslint-disable default-case */
-  const event = {};
+  const event = { version: '1.0' };
 
   if (error != null) {
     event.error = error;
