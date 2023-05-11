@@ -64,7 +64,6 @@ function shimmedHandler(originalHandler, originalThis, originalArgs, _config) {
   const event = originalArgs[0];
   const context = originalArgs[1];
   const lambdaCallback = originalArgs[2];
-  console.log('shimmedHandler');
   const arnInfo = arnParser(context);
   init(event, arnInfo, _config);
 
