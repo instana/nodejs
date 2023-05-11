@@ -16,7 +16,7 @@ exports.setLogger = function setLogger(_logger) {
 };
 
 exports.payloadPrefix = 'keywords';
-/** @type {Array.<*>} */
+/** @type {Array.<string>} */
 // @ts-ignore
 exports.currentPayload = [];
 

@@ -21,9 +21,15 @@ exports.init = _config => {
 };
 
 /**
+ * Depending on what kind of data the metric or snapshot attributes represents, a number of different payloads are
+ * valid. Ultimately, it depends on what the backend understands.
+ * @typedef {string|Object.<string, any>|Array.<string>} SnapshotOrMetricsPayload
+ */
+
+/**
  * @typedef {Object} InstanaMetricsModule
  * @property {string} payloadPrefix
- * @property {string} [currentPayload]
+ * @property {SnapshotOrMetricsPayload} currentPayload
  * @property {(config?: InstanaConfig) => void} [activate]
  * @property {() => void} [deactivate]
  * @property {(logger: import('../logger').GenericLogger) => void} [setLogger]
@@ -75,10 +81,10 @@ exports.deactivate = () => {
 };
 
 /**
- * @returns {Object.<string, string>}
+ * @returns {Object.<string, SnapshotOrMetricsPayload>}
  */
 exports.gatherData = function gatherData() {
-  /** @type {Object.<string, string>} */
+  /** @type {Object.<string, SnapshotOrMetricsPayload>} */
   const payload = {};
 
   metricsModules.forEach(metricsModule => {

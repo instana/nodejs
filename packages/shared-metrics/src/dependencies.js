@@ -27,10 +27,10 @@ exports.MAX_DEPENDENCIES = 750;
 /** @type {string} */
 exports.payloadPrefix = 'dependencies';
 
-/** @type {Object.<string, *>} */
+/** @type {Object.<string, string>} */
 const preliminaryPayload = {};
 
-/** @type {Object.<string, *>} */
+/** @type {Object.<string, string>} */
 // @ts-ignore: Cannot redeclare exported variable 'currentPayload'
 exports.currentPayload = {};
 
