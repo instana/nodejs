@@ -102,7 +102,10 @@ function extractHttpFromApiGatewwayProxyEvent(event, span) {
 
 function readHttpQueryParams(event) {
   if (event.version === '2.0') {
-    return event.rawQueryString;
+    // NOTE: we do not want to create the "params" property when rawQueryString is empty
+    //       AWS always forwards an empty string.
+    if (event.rawQueryString) return event.rawQueryString;
+    return null;
   }
 
   if (event.multiValueQueryStringParameters) {
