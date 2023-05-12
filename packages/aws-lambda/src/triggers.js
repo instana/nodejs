@@ -105,7 +105,7 @@ function readHttpQueryParams(event) {
     // NOTE: we do not want to create the "params" property when rawQueryString is empty
     //       AWS always forwards an empty string.
     if (event.rawQueryString) return event.rawQueryString;
-    return null;
+    return undefined;
   }
 
   if (event.multiValueQueryStringParameters) {
