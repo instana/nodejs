@@ -75,33 +75,29 @@ function isApiGatewayProxyTrigger(event) {
   );
 }
 
-function getHttpData(event) {
+// Remark: We never extract host headers for Lambda entries even if we could sometimes, because they are of no
+// interest.
+function extractHttpFromApiGatewwayProxyEvent(event, span) {
   if (event.version === '2.0') {
     const requestCtx = event.requestContext || {};
     const requestCtxHttp = requestCtx.http || {};
 
-    return {
+    span.data.http = {
       method: requestCtxHttp.method,
       url: requestCtxHttp.path,
       path_tpl: event.rawPath,
       params: readHttpQueryParams(event),
       header: captureHeaders(event)
     };
+  } else {
+    span.data.http = {
+      method: event.httpMethod,
+      url: event.path,
+      path_tpl: event.resource,
+      params: readHttpQueryParams(event),
+      header: captureHeaders(event)
+    };
   }
-
-  return {
-    method: event.httpMethod,
-    url: event.path,
-    path_tpl: event.resource,
-    params: readHttpQueryParams(event),
-    header: captureHeaders(event)
-  };
-}
-
-function extractHttpFromApiGatewwayProxyEvent(event, span) {
-  // Remark: We never extract host headers for Lambda entries even if we could sometimes, because they are of no
-  // interest.
-  span.data.http = getHttpData(event);
 }
 
 function readHttpQueryParams(event) {
