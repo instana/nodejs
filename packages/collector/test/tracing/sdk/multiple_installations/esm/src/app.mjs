@@ -6,7 +6,8 @@
 
 // NOTE: Works because this is already the same collector instance. Node.js will automatically
 //       return the cached instance.
-// import instana from process.env.INSTANA_COLLECTOR_PATH;
+// const instana = await import(process.env.INSTANA_COLLECTOR_PATH);
+// const initializedInstana = instana.default;
 
 // NOTE: This works, because we call the init fn of the collector again and
 //       the cached exports from the first initialization (see load-instana.js) is returned.
