@@ -64,6 +64,7 @@ function shimmedHandler(originalHandler, originalThis, originalArgs, _config) {
   const event = originalArgs[0];
   const context = originalArgs[1];
   const lambdaCallback = originalArgs[2];
+
   const arnInfo = arnParser(context);
   init(event, arnInfo, _config);
 
@@ -106,7 +107,6 @@ function shimmedHandler(originalHandler, originalThis, originalArgs, _config) {
         );
       tracingHeaders.setSpanAttributes(entrySpan, traceCorrelationData);
       const { arn, alias } = arnInfo;
-
       entrySpan.data.lambda = {
         arn,
         alias,
@@ -115,12 +115,10 @@ function shimmedHandler(originalHandler, originalThis, originalArgs, _config) {
         functionVersion: context.functionVersion,
         reqId: context.awsRequestId
       };
-
       if (coldStart) {
         entrySpan.data.lambda.coldStart = true;
         coldStart = false;
       }
-
       enrichSpanWithTriggerData(event, context, entrySpan);
     }
 

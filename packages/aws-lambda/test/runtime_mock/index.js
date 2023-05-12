@@ -228,7 +228,7 @@ function createContext(callback) {
 
 function createEvent(error, trigger, eventOpts = { payloadFormatVersion: '1.0' }) {
   /* eslint-disable default-case */
-  const event = { version: '1.0' };
+  const event = { version: eventOpts.payloadFormatVersion };
 
   if (error != null) {
     event.error = error;
@@ -246,8 +246,7 @@ function createEvent(error, trigger, eventOpts = { payloadFormatVersion: '1.0' }
         break;
 
       case 'api-gateway-proxy':
-        if (eventOpts.payloadFormatVersion === '1.0') {
-          event.version = '1.0';
+        if (event.version === '1.0') {
           event.resource = '/path/to/{param1}/{param2}';
           event.path = '/path/to/path-xxx/path-yyy';
           event.httpMethod = 'POST';
@@ -274,7 +273,6 @@ function createEvent(error, trigger, eventOpts = { payloadFormatVersion: '1.0' }
           event.body = '{\n    "test": "with body"\n}';
           addHttpTracingHeaders(event);
         } else {
-          event.version = '2.0';
           event.rawQueryString = 'parameter1=value1&parameter1=value2&parameter2=value';
           event.rawPath = '/path/to/{param1}/{param2}';
           event.requestContext = {

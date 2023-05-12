@@ -80,7 +80,6 @@ function getHttpData(event) {
       url: requestCtxHttp.path,
       path_tpl: event.rawPath,
       params: readHttpQueryParams(event),
-      // TODO: if the customer defines which headers to capture, we extract it from the payload
       header: captureHeaders(event)
     };
   }
@@ -90,7 +89,6 @@ function getHttpData(event) {
     url: event.path,
     path_tpl: event.resource,
     params: readHttpQueryParams(event),
-    // TODO: if the customer defines which headers to capture, we extract it from the payload
     header: captureHeaders(event)
   };
 }
