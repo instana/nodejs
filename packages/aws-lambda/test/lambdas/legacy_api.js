@@ -19,18 +19,7 @@ require('../../src/metrics/rootDir').root = require('path').resolve(__dirname, '
 const http = require('http');
 
 const downstreamDummyUrl = process.env.DOWNSTREAM_DUMMY_URL;
-
 const response = {};
-
-if (process.env.SERVER_TIMING_HEADER) {
-  if (process.env.SERVER_TIMING_HEADER === 'string') {
-    response.headers['sErveR-tIming'] = 'cache;desc="Cache Read";dur=23.2';
-  } else if (process.env.SERVER_TIMING_HEADER === 'array') {
-    response.multiValueHeaders['ServEr-TiminG'] = ['cache;desc="Cache Read";dur=23.2', 'cpu;dur=2.4'];
-  } else {
-    throw new Error(`Unknown SERVER_TIMING_HEADER value: ${process.env.SERVER_TIMING_HEADER}.`);
-  }
-}
 
 // This Lambda uses a deprecated Lambda API from 2016 that still exists (and, unfortunately, is used by some customers)
 // but isn't even documented anymore. See
@@ -57,6 +46,10 @@ const handler = function handler(event, context) {
     };
   }
 
+  if (process.env.SERVER_TIMING_HEADER) {
+    response.headers['sErveR-tIming'] = 'cache;desc="Cache Read";dur=23.2';
+  }
+
   response.body = {
     message: 'Stan says hi!'
   };
@@ -64,6 +57,7 @@ const handler = function handler(event, context) {
   if (event.error === 'synchronous') {
     throw new Error('Boom!');
   }
+
   const downstream = url.parse(downstreamDummyUrl);
   const req = http.request(
     {

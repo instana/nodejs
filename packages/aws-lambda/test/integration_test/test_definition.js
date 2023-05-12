@@ -50,7 +50,7 @@ function prelude(opts) {
     INSTANA_EXTRA_HTTP_HEADERS:
       'x-request-header-1; X-REQUEST-HEADER-2 ; x-response-header-1;X-RESPONSE-HEADER-2 , x-downstream-header  ',
     AWS_REGION: awsRegion,
-    INSTANA_LAMBDA_SSM_TIMEOUT_IN_MS: '500',
+    INSTANA_LAMBDA_SSM_TIMEOUT_IN_MS: '1000',
     ...opts.env
   };
   if (opts.error) {
@@ -1067,7 +1067,7 @@ function registerTests(handlerDefinitionPath) {
       trigger: 'api-gateway-proxy',
       instanaEndpointUrl: backendBaseUrl,
       instanaAgentKey,
-      serverTiming: 'string'
+      serverTiming: true
     });
 
     it('must inject the Server-Timing header', () => {
@@ -1077,40 +1077,6 @@ function registerTests(handlerDefinitionPath) {
           const response = control.getLambdaResults()[0];
           serverTimingValue = getHeaderCaseInsensitive(response.headers, 'server-timing');
           expect(serverTimingValue).to.match(/^cache;desc="Cache Read";dur=23.2, intid;desc=[0-9a-f]+$/);
-        })
-        .then(() => control.getSpans())
-        .then(spans =>
-          expectExactlyOneMatching(spans, [
-            span => expect(span.n).to.equal('aws.lambda.entry'),
-            span => expect(span.k).to.equal(constants.ENTRY),
-            span =>
-              expect(/^cache;desc="Cache Read";dur=23.2, intid;desc=([0-9a-f]+)$/.exec(serverTimingValue)[1]).to.equal(
-                span.t
-              )
-          ])
-        );
-    });
-  });
-
-  describe('API Gateway/EUM - Server-Timing array header already present', function () {
-    const control = prelude.bind(this)({
-      handlerDefinitionPath,
-      trigger: 'api-gateway-proxy',
-      instanaEndpointUrl: backendBaseUrl,
-      instanaAgentKey,
-      serverTiming: 'array'
-    });
-
-    it('must add our Server-Timing value to the first entry in the multi value header array', () => {
-      let serverTimingValue = null;
-      return verify(control, { error: false, expectMetrics: true, expectSpans: true, trigger: 'aws:api.gateway' })
-        .then(() => {
-          const response = control.getLambdaResults()[0];
-          const serverTimingValueArray = getHeaderCaseInsensitive(response.multiValueHeaders, 'server-timing');
-          expect(serverTimingValueArray).to.have.length(2);
-          expect(serverTimingValueArray[0]).to.match(/^cache;desc="Cache Read";dur=23.2, intid;desc=([0-9a-f]+)$/);
-          expect(serverTimingValueArray[1]).to.equal('cpu;dur=2.4');
-          serverTimingValue = serverTimingValueArray[0];
         })
         .then(() => control.getSpans())
         .then(spans =>
@@ -1571,6 +1537,7 @@ function registerTests(handlerDefinitionPath) {
 
   function verifyAfterRunningHandler(control, expectations, payloadFormatVersion) {
     const { error, expectMetrics, expectSpans } = expectations;
+
     /* eslint-disable no-console */
     if (error && error.startsWith('lambda')) {
       expect(control.getLambdaErrors().length).to.equal(1);

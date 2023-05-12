@@ -19,18 +19,7 @@ require('../../src/metrics/rootDir').root = require('path').resolve(__dirname, '
 const http = require('http');
 
 const downstreamDummyUrl = process.env.DOWNSTREAM_DUMMY_URL;
-
 const response = {};
-
-if (process.env.SERVER_TIMING_HEADER) {
-  if (process.env.SERVER_TIMING_HEADER === 'string') {
-    response.headers['sErveR-tIming'] = 'cache;desc="Cache Read";dur=23.2';
-  } else if (process.env.SERVER_TIMING_HEADER === 'array') {
-    response.multiValueHeaders['ServEr-TiminG'] = ['cache;desc="Cache Read";dur=23.2', 'cpu;dur=2.4'];
-  } else {
-    throw new Error(`Unknown SERVER_TIMING_HEADER value: ${process.env.SERVER_TIMING_HEADER}.`);
-  }
-}
 
 const handler = function handler(event, context, callback) {
   console.log('in actual handler');
@@ -51,6 +40,10 @@ const handler = function handler(event, context, callback) {
       'X-Response-Header-2': 'response header value 2',
       'X-Response-Header-3': 'should not capture'
     };
+  }
+
+  if (process.env.SERVER_TIMING_HEADER) {
+    response.headers['sErveR-tIming'] = 'cache;desc="Cache Read";dur=23.2';
   }
 
   response.body = {
