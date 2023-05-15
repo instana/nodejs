@@ -21,13 +21,15 @@ const mochaSuiteFn =
   supportedVersion(process.versions.node) && semver.gte(process.versions.node, '18.0.0') ? describe : describe.skip;
 
 mochaSuiteFn('[ESM] tracing/sdk/multiple_installations', function () {
-  this.timeout(config.getTestTimeout());
+  this.timeout(Math.max(config.getTestTimeout() * 3, 30000));
 
   const tmpDirPath = path.join(os.tmpdir(), '@instana-collector-test-prevent-multiple-installations');
   const tmpDir = mkdtempSync(tmpDirPath);
-
   const pathToSeparateInstanaCollector = path.join(tmpDir, 'node_modules', '@instana', 'collector', 'src', 'index.js');
-  testUtils.runCommandSync('npm install --production --no-optional --no-audit @instana/collector', tmpDir);
+
+  before(() => {
+    testUtils.runCommandSync('npm install --production --no-optional --no-audit @instana/collector', tmpDir);
+  });
 
   after(done => {
     rimraf(tmpDir, done);
