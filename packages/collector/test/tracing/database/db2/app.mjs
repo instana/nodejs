@@ -2,8 +2,6 @@
  * (c) Copyright IBM Corp. 2022
  */
 
-/* eslint-disable no-console */
-
 'use strict';
 
 import { promisify } from 'util';
@@ -25,7 +23,7 @@ const port = getAppPort();
 const logPrefix = `DB2 App (${process.pid}):\t`;
 const delay = testUtil.delay;
 
-const DB2_DATABASE_NAME = process.env.DB2_DATABASE_NAME;
+const DB2_DATABASE_NAME = process.env.DB2_DATABASE_NAME || 'nodedb';
 const connStr1 = process.env.DB2_CONN_STR || 'HOSTNAME=localhost;UID=node;PWD=nodepw;PORT=58885;PROTOCOL=TCPIP';
 const connStr2 =
   process.env.DB2_CONN_STR_ALTERNATIVE || 'HOSTNAME=127.0.0.1;UID=node;PWD=nodepw;PORT=58885;PROTOCOL=TCPIP';
@@ -63,9 +61,9 @@ const connStr2 =
 let connection;
 let connection2;
 
-const DB2_TABLE_NAME_1 = process.env.DB2_TABLE_NAME_1;
-const DB2_TABLE_NAME_2 = process.env.DB2_TABLE_NAME_2;
-const DB2_TABLE_NAME_3 = process.env.DB2_TABLE_NAME_3;
+const DB2_TABLE_NAME_1 = process.env.DB2_TABLE_NAME_1 || 'table1';
+const DB2_TABLE_NAME_2 = process.env.DB2_TABLE_NAME_2 || 'table2';
+const DB2_TABLE_NAME_3 = process.env.DB2_TABLE_NAME_3 || 'table3';
 
 /**
  * The docker compose db2 image takes a long time to
@@ -81,6 +79,7 @@ let stmtObjectFromStart;
 const db2OpenPromisified = promisify(ibmdb.open);
 
 async function connect(connectionStr) {
+  /* eslint-disable no-console */
   console.log(`Trying to connect to DB2, attempt ${tries} of ${MAX_TRIES}`);
 
   let conn;
@@ -99,9 +98,11 @@ async function connect(connectionStr) {
   }
   console.log('A client has successfully connected.');
   return conn;
+  /* eslint-enable no-console */
 }
 
 (async function openConnections() {
+  /* eslint-disable no-console */
   connection = await connect(`${connStr1};DATABASE=${DB2_DATABASE_NAME}`);
 
   connection.querySync(`drop table ${DB2_TABLE_NAME_1} if exists`);
@@ -116,6 +117,7 @@ async function connect(connectionStr) {
   connection2 = await connect(`${connStr2};DATABASE=${DB2_DATABASE_NAME}`);
 
   console.log('Both clients have successfully connected.');
+  /* eslint-enable no-console */
 })();
 
 if (process.env.WITH_STDOUT) {
@@ -133,6 +135,7 @@ app.get('/', (req, res) => {
 });
 
 app.delete('/conn', (req, res) => {
+  /* eslint-disable no-console */
   console.log('deleting conn');
 
   if (connection) {
@@ -148,9 +151,11 @@ app.delete('/conn', (req, res) => {
   }
 
   res.sendStatus(200);
+  /* eslint-enable no-console */
 });
 
 app.delete('/tables', (req, res) => {
+  /* eslint-disable no-console */
   console.log('deleting tables...');
 
   if (!connection) {
@@ -164,6 +169,7 @@ app.delete('/tables', (req, res) => {
   console.log('deleted tables');
 
   res.sendStatus(200);
+  /* eslint-enable no-console */
 });
 
 app.get('/query-promise', (req, res) => {
@@ -752,14 +758,12 @@ app.get('/two-different-target-hosts', async (req, res) => {
   const response = {};
   try {
     response.data1 = await connection.query('select 1 from sysibm.sysdummy1');
-    console.log('data1', response.data1);
   } catch (e) {
     log('The first DB2 query failed.', e);
     return res.sendStatus(500);
   }
   try {
     response.data2 = await connection2.query("select 'a' from sysibm.sysdummy1");
-    console.log('data2', response.data2);
   } catch (e) {
     log('The second DB2 query failed.', e);
     return res.sendStatus(500);
