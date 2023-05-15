@@ -15,7 +15,7 @@ let isActive = false;
 
 const CLOSE_TIMEOUT_IN_MS = process.env.DB2_CLOSE_TIMEOUT_IN_MS || 1000 * 30;
 
-exports.spanName = 'db2';
+exports.spanName = 'ibmdb2';
 
 exports.init = function init() {
   requireHook.onModuleLoad('ibm_db', instrument);

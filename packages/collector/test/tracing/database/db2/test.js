@@ -77,7 +77,7 @@ const verifySpans = (agentControls, controls, options = {}) =>
     testUtils.expectAtLeastOneMatching(spans, [
       span => expect(span.t).to.equal(entrySpan.t),
       span => expect(span.p).to.equal(entrySpan.s),
-      span => expect(span.n).to.equal('db2'),
+      span => expect(span.n).to.equal('ibmdb2'),
       span => expect(span.k).to.equal(constants.EXIT),
       span => expect(span.f.e).to.equal(String(controls.getPid())),
       span => expect(span.f.h).to.equal('agent-stub-uuid'),
@@ -429,7 +429,7 @@ mochaSuiteFn('tracing/db2', function () {
                 testUtils.expectAtLeastOneMatching(spans, [
                   span => expect(span.t).to.equal(entrySpan.t),
                   span => expect(span.p).to.equal(entrySpan.s),
-                  span => expect(span.n).to.equal('db2'),
+                  span => expect(span.n).to.equal('ibmdb2'),
                   span => expect(span.k).to.equal(constants.EXIT),
                   span => expect(span.f.e).to.equal(String(controls.getPid())),
                   span => expect(span.f.h).to.equal('agent-stub-uuid'),
@@ -530,7 +530,7 @@ mochaSuiteFn('tracing/db2', function () {
                 testUtils.expectExactlyNMatching(spans, 2, [
                   span => expect(span.t).to.equal(entrySpan.t),
                   span => expect(span.p).to.equal(entrySpan.s),
-                  span => expect(span.n).to.equal('db2'),
+                  span => expect(span.n).to.equal('ibmdb2'),
                   span => expect(span.k).to.equal(constants.EXIT),
                   span => expect(span.f.e).to.equal(String(controls.getPid())),
                   span => expect(span.f.h).to.equal('agent-stub-uuid'),
@@ -564,7 +564,7 @@ mochaSuiteFn('tracing/db2', function () {
                 testUtils.expectAtLeastOneMatching(spans, [
                   span => expect(span.t).to.equal(entrySpan.t),
                   span => expect(span.p).to.equal(entrySpan.s),
-                  span => expect(span.n).to.equal('db2'),
+                  span => expect(span.n).to.equal('ibmdb2'),
                   span => expect(span.k).to.equal(constants.EXIT),
                   span => expect(span.f.e).to.equal(String(controls.getPid())),
                   span => expect(span.f.h).to.equal('agent-stub-uuid'),
@@ -1099,14 +1099,14 @@ mochaSuiteFn('tracing/db2', function () {
         testUtils.expectExactlyOneMatching(spans, [
           span => expect(span.t).to.equal(entrySpan.t),
           span => expect(span.p).to.equal(entrySpan.s),
-          span => expect(span.n).to.equal('db2'),
+          span => expect(span.n).to.equal('ibmdb2'),
           span => expect(span.data.db2.stmt).to.equal('select 1 from sysibm.sysdummy1'),
           span => expect(span.data.db2.dsn).to.contain(EXPECTED_DB2_CONN_STR)
         ]);
         testUtils.expectExactlyOneMatching(spans, [
           span => expect(span.t).to.equal(entrySpan.t),
           span => expect(span.p).to.equal(entrySpan.s),
-          span => expect(span.n).to.equal('db2'),
+          span => expect(span.n).to.equal('ibmdb2'),
           span => expect(span.data.db2.stmt).to.equal("select 'a' from sysibm.sysdummy1"),
           span => expect(span.data.db2.dsn).to.contain(EXPECTED_DB2_CONN_STR_ALTERNATIVE)
         ]);

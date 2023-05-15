@@ -18,7 +18,7 @@ const app = express();
 const port = require('../../../test_util/app-port')();
 const logPrefix = `DB2 App (${process.pid}):\t`;
 
-const DB2_DATABASE_NAME = process.env.DB2_DATABASE_NAME;
+const DB2_DATABASE_NAME = process.env.DB2_DATABASE_NAME || 'nodedb';
 const connStr1 = process.env.DB2_CONN_STR || 'HOSTNAME=localhost;UID=node;PWD=nodepw;PORT=58885;PROTOCOL=TCPIP';
 const connStr2 =
   process.env.DB2_CONN_STR_ALTERNATIVE || 'HOSTNAME=127.0.0.1;UID=node;PWD=nodepw;PORT=58885;PROTOCOL=TCPIP';
@@ -56,9 +56,9 @@ const connStr2 =
 let connection;
 let connection2;
 
-const DB2_TABLE_NAME_1 = process.env.DB2_TABLE_NAME_1;
-const DB2_TABLE_NAME_2 = process.env.DB2_TABLE_NAME_2;
-const DB2_TABLE_NAME_3 = process.env.DB2_TABLE_NAME_3;
+const DB2_TABLE_NAME_1 = process.env.DB2_TABLE_NAME_1 || 'table1';
+const DB2_TABLE_NAME_2 = process.env.DB2_TABLE_NAME_2 || 'table2';
+const DB2_TABLE_NAME_3 = process.env.DB2_TABLE_NAME_3 || 'table3';
 
 /**
  * The docker compose db2 image takes a long time to
