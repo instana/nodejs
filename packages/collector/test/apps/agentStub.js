@@ -50,11 +50,6 @@ app.use(
   })
 );
 
-app.use((req, res, next) => {
-  res.set('server', 'Instana Agent');
-  next();
-});
-
 app.get('/', (req, res) => {
   res.send('OK');
 });
