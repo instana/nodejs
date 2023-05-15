@@ -26,9 +26,7 @@ const { verifyHttpRootEntry, verifyHttpExit } = require('@instana/core/test/test
 const defaultPrefix = 'https://sqs.us-east-2.amazonaws.com/410797082306/';
 const queueUrlPrefix = process.env.SQS_QUEUE_URL_PREFIX || defaultPrefix;
 
-const createQueues = require('./util').createQueues;
-const deleteQueues = require('./util').deleteQueues;
-const sendSnsNotificationToSqsQueue = require('./sendNonInstrumented').sendSnsNotificationToSqsQueue;
+const { createQueues, deleteQueues, minimumNodeJsVersion, sendSnsNotificationToSqsQueue } = require('./util');
 
 const sendingMethods = ['v3', 'cb', 'v2'];
 const receivingMethods = ['v3', 'cb', 'v2'];
@@ -41,7 +39,7 @@ const retryTime = config.getTestTimeout() * 2;
 function start(version) {
   let mochaSuiteFn;
 
-  if (!supportedVersion(process.versions.node)) {
+  if (!supportedVersion(process.versions.node) || semver.lt(process.versions.node, minimumNodeJsVersion)) {
     mochaSuiteFn = describe.skip;
   } else {
     mochaSuiteFn = describe;
