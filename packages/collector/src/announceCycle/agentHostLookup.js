@@ -5,11 +5,13 @@
 
 'use strict';
 
+const { callbackify } = require('util');
 const { atMostOnce } = require('@instana/core').util;
-const { exec } = require('child_process');
 const { http } = require('@instana/core').uninstrumentedHttp;
 
 const agentOpts = require('../agent/opts');
+const defaultGatewayParser = require('./defaultGatewayParser');
+const readDefaultGateway = callbackify(defaultGatewayParser.parseProcSelfNetRouteFile);
 
 /** @type {import('@instana/core/src/logger').GenericLogger} */
 let logger;
@@ -53,7 +55,7 @@ function enter(ctx) {
         'gateway next.'
     );
 
-    getDefaultGateway(function onGetDefaultGateway(getDefaultGatewayErr, defaultGateway) {
+    readDefaultGateway(function onReadDefaultGateway(getDefaultGatewayErr, defaultGateway) {
       if (getDefaultGatewayErr) {
         logger.warn(
           `The Instana host agent cannot be reached via ${agentHost}:${agentOpts.port} and the default gateway ` +
@@ -88,19 +90,6 @@ function enter(ctx) {
         checkHostRetryTimeout.unref();
       });
     });
-  });
-}
-
-/**
- * @param {(err: Error, data?: string) => void} cb
- */
-function getDefaultGateway(cb) {
-  exec("/sbin/ip route | awk '/default/ { print $3 }'", (error, stdout, stderr) => {
-    if (error !== null || stderr.length > 0) {
-      cb(new Error(`Failed to retrieve default gateway: ${stderr}`));
-    } else {
-      cb(null, stdout.trim());
-    }
   });
 }
 
