@@ -19,15 +19,24 @@ logger = require('../logger').getLogger('announceCycle/agentHostLookup', newLogg
   logger = newLogger;
 });
 
-// Depending on the environment in which the agent and node collector are running,
-// the agent may be available under different hosts. For instance,
-// when the agent and collector are running on the same host outside any container,
-// the host will probably be 127.0.0.1.
-//
-// A custom host can be set via agent options
-//
-// The host differs, when the collector is running inside a Docker container and the
-// agent is running on the host.
+/* eslint-disable max-len */
+/*
+ * Tries to find a listening Instana host agent. The agent should usually be running on the same physical host, but
+ * may be reachable via various different IPs, depending on the environment, that is, whether the Node.js process is
+ * running directly on the physical host, in a container, or in a pod via container orchestration.
+ *
+ * Steps:
+ * 1. Check either the configured IP and port (e.g. INSTANA_AGENT_HOST:INSTANA_AGENT_PORT) or the default
+ *    (127.0.0.1:42699), or a combination of configured IP & default port or vice versa. (In Kubernetes/OpenShift, we
+ *    assume that INSTANA_AGENT_HOST is set via a fieldRef to status.hostIP, see
+ *    https://www.ibm.com/docs/en/instana-observability/current?topic=agents-installing-host-agent-kubernetes#configure-network-access-for-monitored-applications)
+ * 2. If nothing is listening on the IP/port determined in step (1.), we try to determine the default gateway IP and try
+ *    to connect to that IP (still with the configured port or default port if nothing is configured). This is aimed
+ *    at Node.js processes running in a container but without container orchestration like K8s.
+ * 3. If (2.) also fails (either because we cannot determine a default gateway IP or because nothing is listening
+ *    there), we schedule a retry, starting at (1.) again.
+ */
+/* eslint-enable max-len */
 
 const requestTimeout = 5000;
 const retryTimeoutMillis = 60 * 1000;
@@ -66,8 +75,8 @@ function enter(ctx) {
             )}. The Instana host agent might not be ready yet, scheduling another attempt to establish a connection ` +
             `in ${retryTimeoutMillis} ms.`
         );
-        const defaultGatewayRetryTimeout = setTimeout(enter, retryTimeoutMillis, ctx);
-        defaultGatewayRetryTimeout.unref();
+
+        setTimeout(enter, retryTimeoutMillis, ctx).unref();
         return;
       }
 
@@ -86,8 +95,7 @@ function enter(ctx) {
             )}. The Instana host agent might not be ready yet, scheduling another attempt to establish a connection ` +
             `in ${retryTimeoutMillis} ms.`
         );
-        const checkHostRetryTimeout = setTimeout(enter, retryTimeoutMillis, ctx);
-        checkHostRetryTimeout.unref();
+        setTimeout(enter, retryTimeoutMillis, ctx).unref();
       });
     });
   });
@@ -172,6 +180,6 @@ function safelyExtractErrorMessage(error) {
  * @param {string} host
  */
 function setAgentHost(host) {
-  logger.info('Trying to reach the Instana host agent on %s:%s', host, agentOpts.port);
+  logger.info('Found an agent on %s:%s, proceeding to announce request.', host, agentOpts.port);
   agentOpts.host = host;
 }
