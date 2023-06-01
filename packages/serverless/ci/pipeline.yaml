@@ -95,7 +95,7 @@ resources:
         uri: https://registry.npmjs.org/
 
   - name: slack-alert
-    type: slack-notifier
+    type: slack-notification
     icon: slack
     source:
       url: ((tracer-community-slack-hook))
@@ -109,10 +109,10 @@ resource_types:
       repository: timotto/concourse-npm-resource
       tag: latest
 
-  - name: slack-notifier
+  - name: slack-notification
     type: registry-image
     source:
-      repository: mockersf/concourse-slack-notifier
+      repository: cfcommunity/slack-notification-resource
       tag: latest
 
 
@@ -168,17 +168,39 @@ jobs:
     on_success:
       put: slack-alert
       params:
-        channel: '#team-node'
-        alert_type: success
-        message: |
+        channel: '#team-node #tracer-releases'
+        icon_emoji: ':white_check_mark:'
+        text: |
               :white_check_mark: Version ((.:package-version)) of the container image `instana/aws-fargate-nodejs` has been pushed to the IBM Container registry `icr.io` as well as `containers.instana.io`.
+        attachments: &slack-alert-attachements-success
+          - color: '#00ff00'
+            fields:
+              - title: 'Job'
+                value: $BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME
+                short: true
+              - title: 'Build'
+                value: $BUILD_NAME
+                short: true
+            footer: $ATC_EXTERNAL_URL/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME
+            footer_icon: https://ci.concourse-ci.org/public/images/favicon-succeeded.png
     on_failure: &slack-notify-failure-fargate
       put: slack-alert
       params:
         channel: '#team-node'
-        alert_type: failed
-        message: |
+        icon_emoji: ':check-failed:'
+        text: |
               :x: Building/pushing a new version of the container image `instana/aws-fargate-nodejs` has failed.
+        attachments: &slack-alert-attachements-failure
+          - color: '#ff0000'
+            fields:
+              - title: 'Job'
+                value: $BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_AME
+                short: true
+              - title: 'Build'
+                value: $BUILD_NAME
+                short: true
+            footer: $ATC_EXTERNAL_URL/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME
+            footer_icon: https://ci.concourse-ci.org/public/images/favicon-failed.png
     on_error: *slack-notify-failure-fargate
 
 
@@ -231,17 +253,19 @@ jobs:
     on_success:
       put: slack-alert
       params:
-        channel: '#team-node'
-        alert_type: success
-        message: |
+        channel: '#team-node #tracer-releases'
+        icon_emoji: ':white_check_mark:'
+        text: |
               :white_check_mark: Version ((.:package-version)) of the container image `instana/google-cloud-run-nodejs` has been pushed to the IBM Container registry `icr.io` as well as `containers.instana.io`.
+        attachments: *slack-alert-attachements-success
     on_failure: &slack-notify-failure-cloud-run
       put: slack-alert
       params:
         channel: '#team-node'
-        alert_type: failed
-        message: |
+        icon_emoji: ':check-failed:'
+        text: |
               :x: Building/pushing a new version of the container image `instana/google-cloud-run-nodejs` has failed.
+        attachments: *slack-alert-attachements-failure
     on_error: *slack-notify-failure-cloud-run
 
 
@@ -344,15 +368,17 @@ jobs:
     on_success:
       put: slack-alert
       params:
-        channel: '#team-node'
-        alert_type: success
-        message: |
+        channel: '#team-node #tracer-releases'
+        icon_emoji: ':white_check_mark:'
+        text: |
               :white_check_mark: The Instana Node.js AWS Lambda layer for package version ((.:package-version)) and the corresponding container image `icr.io/instana/aws-lambda-nodejs` have been released.
+        attachments: *slack-alert-attachements-success
     on_failure: &slack-notify-failure-lambda
       put: slack-alert
       params:
         channel: '#team-node'
-        alert_type: failed
-        message: |
+        icon_emoji: ':check-failed:'
+        text: |
               :x: Building/publishing a new version of the Instana Node.js AWS Lambda layer and the container image `icr.io/instana/aws-lambda-nodejs` has failed.
+        attachments: *slack-alert-attachements-failure
     on_error: *slack-notify-failure-lambda
