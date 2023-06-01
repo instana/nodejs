@@ -98,17 +98,21 @@ jobs:
             git log -p -n1
           fi
 
-      - name: Send success message
+      - name: Send success message to team channel
         if: "${{ success() && env.DRY_RUN != 'true' }}"
         uses: slackapi/slack-github-action@v1.21.0
         with:
-          channel-id: ${{ secrets.SLACK_CHANNEL_ID }}
+          channel-id: ${{ secrets.SLACK_CHANNEL_ID_TEAM }}
           payload: |
             {
               "text": ":mega: :package: New package versions have been released successfully! :star-struck: :tada:",
               "attachments": [{
                 "color": "good",
                 "fields": [
+                  {
+                    "title": "Changelog",
+                    "value": "<${{ github.server_url }}/${{ github.repository }}/blob/main/CHANGELOG.md>"
+                  },
                   {
                     "title": "Commit URL",
                     "value": "<${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }}>"
@@ -138,11 +142,32 @@ jobs:
         env:
           SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
 
+      - name: Send success message to release channel
+        if: "${{ success() && env.DRY_RUN != 'true' }}"
+        uses: slackapi/slack-github-action@v1.21.0
+        with:
+          channel-id: ${{ secrets.SLACK_CHANNEL_ID_RELEASES }}
+          payload: |
+            {
+              "text": ":mega: :package: A new version of the Node.js tracer (npm package @instana/collector and friends) has been released! :star-struck: :tada:",
+              "attachments": [{
+                "color": "good",
+                "fields": [
+                  {
+                    "title": "Changelog",
+                    "value": "<${{ github.server_url }}/${{ github.repository }}/blob/main/CHANGELOG.md>"
+                  }
+                ]
+              }]
+            }
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+
       - name: Send failure message
         if: "${{ failure() && env.DRY_RUN != 'true' }}"
         uses: slackapi/slack-github-action@v1.21.0
         with:
-          channel-id: ${{ secrets.SLACK_CHANNEL_ID }}
+          channel-id: ${{ secrets.SLACK_CHANNEL_ID_TEAM }}
           payload: |
             {
               "text": ":boom: :scream: Releasing new package versions has failed! :scream_cat: :sob:",

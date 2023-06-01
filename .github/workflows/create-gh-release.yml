@@ -42,10 +42,10 @@ jobs:
         if: "${{ success() }}"
         uses: slackapi/slack-github-action@v1.21.0
         with:
-          channel-id: ${{ secrets.SLACK_CHANNEL_ID }}
+          channel-id: ${{ secrets.SLACK_CHANNEL_ID_TEAM }}
           payload: |
             {
-              "text": "Github Release has been created successfully! :tada:",
+              "text": "Github release has been created successfully! :tada:",
               "attachments": [{
                 "color": "good",
                 "fields": [
@@ -63,7 +63,7 @@ jobs:
         if: "${{ failure() }}"
         uses: slackapi/slack-github-action@v1.21.0
         with:
-          channel-id: ${{ secrets.SLACK_CHANNEL_ID }}
+          channel-id: ${{ secrets.SLACK_CHANNEL_ID_TEAM }}
           payload: |
             {
               "text": ":boom: :scream: Github Release has failed! :scream_cat: :sob:",
