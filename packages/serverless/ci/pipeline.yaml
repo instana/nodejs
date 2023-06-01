@@ -7,7 +7,7 @@ resources:
     icon: github
     source:
       uri: https://github.com/instana/nodejs.git
-      branch: main
+      branch: ((branch))
       username: ((instanacd-github-api-token))
       password: x-oauth-basic
 
@@ -16,7 +16,7 @@ resources:
     icon: github
     source:
       uri: https://github.com/instana/nodejs.git
-      branch: main
+      branch: ((branch))
       username: ((instanacd-github-api-token))
       password: x-oauth-basic
       paths:
@@ -118,6 +118,16 @@ resource_types:
 
 jobs:
 
+  - name: self-update
+    max_in_flight: 1
+    plan:
+      - get: nodejs-repository
+        trigger: true
+      - set_pipeline: self
+        file: nodejs-repository/packages/serverless/ci/pipeline.yaml
+        vars:
+          branch: ((branch))
+
   - name: aws-fargate-nodejs-container-image-layer
     serial: true
     plan:
@@ -127,6 +137,8 @@ jobs:
           params:
             skip_download: true
         - get: nodejs-repository
+          passed:
+          - self-update
       - load_var: package-version
         file: instana-aws-fargate-npm-package/version
         reveal: true
@@ -213,6 +225,8 @@ jobs:
           params:
             skip_download: true
         - get: nodejs-repository
+          passed:
+          - self-update
       - load_var: package-version
         file: instana-google-cloud-run-npm-package/version
         reveal: true
@@ -318,6 +332,8 @@ jobs:
           params:
             skip_download: true
         - get: nodejs-repository
+          passed:
+          - self-update
       - load_var: package-version
         file: instana-aws-lambda-npm-package/version
         reveal: true
