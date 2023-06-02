@@ -122,8 +122,11 @@ function checkHost(host, cb) {
       },
       res => {
         if (res.statusCode >= 200 && res.statusCode < 300) {
-          cb(null);
+          handleResponse(host, res, cb);
         } else {
+          // We are not interested in the body of a non-2xx HTTP response, but since we have added a response handler,
+          // we must consume the response body, see https://nodejs.org/api/http.html#class-httpclientrequest.
+          res.resume();
           cb(
             new Error(
               `The attempt to connect to the Instana host agent on ${host}:${agentOpts.port} has failed with an ` +
@@ -131,7 +134,6 @@ function checkHost(host, cb) {
             )
           );
         }
-        res.resume();
       }
     );
   } catch (e) {
@@ -161,6 +163,53 @@ function checkHost(host, cb) {
   });
 
   req.end();
+}
+
+/**
+ * Checks the response payload to determine whether we have actually connected to an Instana host agent.
+ *
+ * @param {string} host the target IP (will only be used for logging in this method)
+ * @param {import('http').IncomingMessage} res the HTTP response
+ * @param {(...args: *) => *} cb
+ */
+function handleResponse(host, res, cb) {
+  /* eslint-disable max-len */
+  // We inspect the payload, checking whether it is JSON and has the "version" property, to verify that we have
+  // actually connected to an Instana host agent. See
+  // https://github.ibm.com/instana/technical-documentation/blob/master/tracing/specification/README.md#phase-1--host-lookup
+  /* eslint-enable max-len */
+
+  res.setEncoding('utf8');
+  let responsePayload = '';
+  res.on('data', chunk => {
+    responsePayload += chunk;
+  });
+  res.on('end', () => {
+    let responseJson;
+    try {
+      responseJson = JSON.parse(responsePayload);
+    } catch (e) {
+      cb(
+        new Error(
+          `The attempt to connect to the Instana host agent on ${host}:${agentOpts.port} has failed, the response ` +
+            `cannot be parsed as JSON. The party listening on ${host}:${agentOpts.port} does not seem to be an ` +
+            `Instana host agent. Full response: ${responsePayload}`
+        )
+      );
+      return;
+    }
+    if (responseJson.version !== undefined) {
+      cb(null);
+    } else {
+      cb(
+        new Error(
+          `The attempt to connect to the Instana host agent on ${host}:${agentOpts.port} has failed, the response did` +
+            ` not have a "version" property. The party listening on ${host}:${agentOpts.port} does not seem to be an ` +
+            `Instana host agent. Full response: ${responsePayload}`
+        )
+      );
+    }
+  });
 }
 
 /**

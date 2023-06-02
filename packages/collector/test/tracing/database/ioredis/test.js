@@ -121,7 +121,7 @@ mochaSuiteFn('tracing/ioredis', function () {
         })
       )
       .then(response => {
-        expect(String(response)).to.equal('OK;13');
+        expect(String(response)).to.equal('13');
 
         return retry(() =>
           agentControls.getSpans().then(spans => {
@@ -201,7 +201,7 @@ mochaSuiteFn('tracing/ioredis', function () {
         })
       )
       .then(response => {
-        expect(String(response)).to.equal('OK;13');
+        expect(String(response)).to.equal('13');
 
         return retry(() =>
           agentControls.getSpans().then(spans => {

@@ -51,7 +51,7 @@ app.use(
 );
 
 app.get('/', (req, res) => {
-  res.send('OK');
+  res.json({ version: '1.1.999' });
 });
 
 app.put('/com.instana.plugin.nodejs.discovery', (req, res) => {

@@ -33,9 +33,21 @@ describe('agent host lookup state', () => {
   const hostAndPort = { host, port };
   const defaultGatewayIpPort = { host: defaultGatewayIp, port };
 
+  const responseOk = (req, cb) => {
+    const res = new FakeResponse(200, { version: '1.2.3' });
+    cb(res);
+    res.emitPayload();
+  };
+
+  const responseNotAnAgent = (req, cb) => {
+    const res = new FakeResponse(200, { message: 'this is not an Instana host agent' });
+    cb(res);
+    res.emitPayload();
+  };
+
   const configuredHostLookupOk = new FakeRequestHandler({
     when: hostAndPort,
-    then: (req, cb) => cb(new FakeResponse(200))
+    then: responseOk
   });
 
   const configuredHostLookupConnectionRefused = new FakeRequestHandler({
@@ -44,9 +56,15 @@ describe('agent host lookup state', () => {
     onlyOnce: true
   });
 
+  const configuredHostLookupNotAnAgent = new FakeRequestHandler({
+    when: hostAndPort,
+    then: responseNotAnAgent,
+    onlyOnce: true
+  });
+
   const defaultGatewayLookupOk = new FakeRequestHandler({
     when: defaultGatewayIpPort,
-    then: (req, cb) => cb(new FakeResponse(200))
+    then: responseOk
   });
 
   const defaultGatewayLookupConnectionRefused = new FakeRequestHandler({
@@ -135,6 +153,38 @@ describe('agent host lookup state', () => {
     it('should find the agent at the default gateway IP', done => {
       transitionTo.callsFake(newState => {
         expect(configuredHostLookupConnectionRefused.hasBeenCalled()).to.be.true;
+        expect(parseProcSelfNetRouteFileStub).to.have.been.called;
+        expect(defaultGatewayLookupOk.hasBeenCalled()).to.be.true;
+        expect(newState).to.equal('unannounced');
+        done();
+      });
+
+      agentHostLookupState.enter(ctxStub);
+    });
+  });
+
+  describe('via default gateway IP when something else listens on 127.0.0.1:42699', () => {
+    before(() => {
+      agentOptsMock.host = hostAndPort.host;
+      agentOptsMock.port = hostAndPort.port;
+      parseProcSelfNetRouteFileStub.callsFake(async () => defaultGatewayIp);
+      requestStub.callsFake((opt, cb) => {
+        fakeRequest = new FakeRequest(
+          [
+            //
+            configuredHostLookupNotAnAgent,
+            defaultGatewayLookupOk
+          ],
+          opt,
+          cb
+        );
+        return fakeRequest;
+      });
+    });
+
+    it('should not connect to 127.0.0.1:42699 but find the agent at the default gateway IP', done => {
+      transitionTo.callsFake(newState => {
+        expect(configuredHostLookupNotAnAgent.hasBeenCalled()).to.be.true;
         expect(parseProcSelfNetRouteFileStub).to.have.been.called;
         expect(defaultGatewayLookupOk.hasBeenCalled()).to.be.true;
         expect(newState).to.equal('unannounced');
