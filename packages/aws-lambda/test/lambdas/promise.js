@@ -20,33 +20,44 @@ require('../../src/metrics/rootDir').root = require('path').resolve(__dirname, '
 const fetch = require('node-fetch');
 
 const downstreamDummyUrl = process.env.DOWNSTREAM_DUMMY_URL;
-
-const response = {
-  headers: {
-    'X-Response-Header-1': 'response header value 1',
-    'X-Response-Header-3': 'response header value 3'
-  },
-  multiValueHeaders: {
-    'X-Response-Header-2': ['response', 'header', 'value 2'],
-    'X-Response-Header-4': ['response', 'header', 'value 4']
-  },
-  body: {
-    message: 'Stan says hi!'
-  }
-};
-
-if (process.env.SERVER_TIMING_HEADER) {
-  if (process.env.SERVER_TIMING_HEADER === 'string') {
-    response.headers['sErveR-tIming'] = 'cache;desc="Cache Read";dur=23.2';
-  } else if (process.env.SERVER_TIMING_HEADER === 'array') {
-    response.multiValueHeaders['ServEr-TiminG'] = ['cache;desc="Cache Read";dur=23.2', 'cpu;dur=2.4'];
-  } else {
-    throw new Error(`Unknown SERVER_TIMING_HEADER value: ${process.env.SERVER_TIMING_HEADER}.`);
-  }
-}
+const response = {};
 
 const handler = event => {
   console.log('in actual handler');
+
+  if (event.version === '1.0') {
+    response.headers = {
+      'X-Response-Header-1': 'response header value 1',
+      'X-Response-Header-3': 'response header value 3'
+    };
+
+    response.multiValueHeaders = {
+      'X-Response-Header-2': ['response', 'header', 'value 2'],
+      'X-Response-Header-4': ['response', 'header', 'value 4']
+    };
+  } else {
+    response.headers = {
+      'X-Response-Header-1': 'response header value 1, response header value 2',
+      'X-Response-Header-2': 'response header value 2',
+      'X-Response-Header-3': 'should not capture'
+    };
+  }
+
+  if (process.env.SERVER_TIMING_HEADER) {
+    if (process.env.SERVER_TIMING_HEADER === 'array') {
+      if (event.version === '1.0') {
+        response.multiValueHeaders['ServEr-TiminG'] = ['cache;desc="Cache Read";dur=23.2', 'cpu;dur=2.4'];
+      } else {
+        response.headers['ServEr-TiminG'] = 'cache;desc="Cache Read";dur=23.2,cpu;dur=2.4';
+      }
+    } else {
+      response.headers['sErveR-tIming'] = 'cache;desc="Cache Read";dur=23.2';
+    }
+  }
+
+  response.body = {
+    message: 'Stan says hi!'
+  };
 
   if (event.error === 'synchronous') {
     throw new Error('Boom!');

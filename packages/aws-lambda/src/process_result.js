@@ -92,16 +92,20 @@ function injectIntoSingleValueHeaders(result, entrySpan) {
 function injectIntoHeaders(result, entrySpan) {
   // result has only multi value headers or both, single and multi
 
-  const existingHeaderMulti = headersUtil.readHeaderKeyValuePairCaseInsensitive(
+  const existingServerTimingMultiValueHeader = headersUtil.readHeaderKeyValuePairCaseInsensitive(
     result.multiValueHeaders,
     serverTimingHeader
   );
-  const existingHeaderSingle = headersUtil.readHeaderKeyValuePairCaseInsensitive(result.headers, serverTimingHeader);
+  const existingServerTimingHeader = headersUtil.readHeaderKeyValuePairCaseInsensitive(
+    result.headers,
+    serverTimingHeader
+  );
 
-  if (existingHeaderMulti != null) {
+  // PayloadFormatVersion 1.0
+  if (existingServerTimingMultiValueHeader != null) {
     // Server-Timing header exists in multi value headers, add it there, no matter if there is also one in single
     // value headers or not.
-    const { key: originalServerTimingKey, value: originalServerTimingValue } = existingHeaderMulti;
+    const { key: originalServerTimingKey, value: originalServerTimingValue } = existingServerTimingMultiValueHeader;
     if (Array.isArray(originalServerTimingValue) && originalServerTimingValue.length === 0) {
       result.multiValueHeaders[originalServerTimingKey].push(createServerTimingValue(entrySpan));
     } else if (Array.isArray(originalServerTimingValue) && originalServerTimingValue.length > 0) {
@@ -115,9 +119,12 @@ function injectIntoHeaders(result, entrySpan) {
         entrySpan
       );
     }
-  } else if (existingHeaderSingle != null && typeof existingHeaderSingle.value === 'string') {
-    // concat to existing single value header
-    result.headers[existingHeaderSingle.key] = addToStringOrReplaceInString(existingHeaderSingle.value, entrySpan);
+  } else if (existingServerTimingHeader != null && typeof existingServerTimingHeader.value === 'string') {
+    // NOTE: Can be either single header string or multiple header string (Payloadversion 2.0)
+    result.headers[existingServerTimingHeader.key] = addToStringOrReplaceInString(
+      existingServerTimingHeader.value,
+      entrySpan
+    );
   } else {
     // There is no Server-Timing header neither in the single value headers nor in multi value headers, we
     // arbitrarily add it as a multi value header.

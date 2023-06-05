@@ -58,28 +58,56 @@ exports.enrichSpanWithTriggerData = function enrichSpanWithTriggerData(event, co
   // as-is as the event. If there is no HTTP body, an empty object is passed. There is no way of differentiating such an
   // invocation reliably by inspecting the event object. Thus, we assume all invocations that we cannot identify as
   // something else are in fact API gateway calls without the lambda proxy setting.
+  // Furthermore, if the customer has setup a mapping template to define which data should be forwarded to the lambda
+  // handler, there is also no way to detect the event object.
   span.data.lambda.trigger = 'aws:api.gateway.noproxy';
 };
 
 function isApiGatewayProxyTrigger(event) {
-  // Note: An application load balancer event also has event.path and event.httpMethod but it does not have
+  // NOTE: An application load balancer event also has event.path and event.httpMethod but it does not have
   // event.resource.
-  return event.resource != null && event.path != null && event.httpMethod != null;
+  // NOTE: Gateway Rest API with lambda proxy -> always format 1.0
+  // NOTE: Gateway HTTP API with lambda proxy -> default is 2.0, but can be configured on creation
+  // NOTE: Gateway REST/HTTP API without lambda proxy -> format cannot be interpreted
+  return (
+    (event.resource != null && event.path != null && event.httpMethod != null) ||
+    (event.rawPath && event.version === '2.0')
+  );
 }
 
+// Remark: We never extract host headers for Lambda entries even if we could sometimes, because they are of no
+// interest.
 function extractHttpFromApiGatewwayProxyEvent(event, span) {
-  // Remark: We never extract host headers for Lambda entries even if we could sometimes, because they are of no
-  // interest.
-  span.data.http = {
-    method: event.httpMethod,
-    url: event.path,
-    path_tpl: event.resource,
-    params: readHttpQueryParams(event),
-    header: captureHeaders(event)
-  };
+  if (event.version === '2.0') {
+    const requestCtx = event.requestContext || {};
+    const requestCtxHttp = requestCtx.http || {};
+
+    span.data.http = {
+      method: requestCtxHttp.method,
+      url: requestCtxHttp.path,
+      path_tpl: event.rawPath,
+      params: readHttpQueryParams(event),
+      header: captureHeaders(event)
+    };
+  } else {
+    span.data.http = {
+      method: event.httpMethod,
+      url: event.path,
+      path_tpl: event.resource,
+      params: readHttpQueryParams(event),
+      header: captureHeaders(event)
+    };
+  }
 }
 
 function readHttpQueryParams(event) {
+  if (event.version === '2.0') {
+    // NOTE: we do not want to create the "params" property when rawQueryString is empty
+    //       AWS always forwards an empty string.
+    if (event.rawQueryString) return event.rawQueryString;
+    return undefined;
+  }
+
   if (event.multiValueQueryStringParameters) {
     return Object.keys(event.multiValueQueryStringParameters)
       .map(key =>
