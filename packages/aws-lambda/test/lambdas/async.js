@@ -44,7 +44,15 @@ const handler = async event => {
   }
 
   if (process.env.SERVER_TIMING_HEADER) {
-    response.headers['sErveR-tIming'] = 'cache;desc="Cache Read";dur=23.2';
+    if (process.env.SERVER_TIMING_HEADER === 'array') {
+      if (event.version === '1.0') {
+        response.multiValueHeaders['ServEr-TiminG'] = ['cache;desc="Cache Read";dur=23.2', 'cpu;dur=2.4'];
+      } else {
+        response.headers['ServEr-TiminG'] = 'cache;desc="Cache Read";dur=23.2,cpu;dur=2.4';
+      }
+    } else {
+      response.headers['sErveR-tIming'] = 'cache;desc="Cache Read";dur=23.2';
+    }
   }
 
   response.body = {

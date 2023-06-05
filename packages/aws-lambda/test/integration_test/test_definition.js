@@ -878,71 +878,73 @@ function registerTests(handlerDefinitionPath) {
       verify(control, { error: false, expectMetrics: false, expectSpans: false }));
   });
 
-  describe('triggered by API Gateway (Lambda Proxy)', function () {
-    // - same as "everything is peachy"
-    // - but triggered by AWS API Gateway (with Lambda Proxy)
-    const control = prelude.bind(this)({
-      handlerDefinitionPath,
-      trigger: 'api-gateway-proxy',
-      statusCode: 200,
-      instanaEndpointUrl: backendBaseUrl,
-      instanaAgentKey
+  describe('everything is peachy - triggered by API Gateway (Lambda Proxy)', function () {
+    ['1.0', '2.0'].forEach(payloadFormatVersion => {
+      describe(`PayloadFormatVersion ${payloadFormatVersion}`, function () {
+        // - same as "everything is peachy"
+        // - but triggered by AWS API Gateway (with Lambda Proxy)
+        const control = prelude.bind(this)({
+          handlerDefinitionPath,
+          trigger: 'api-gateway-proxy',
+          statusCode: 200,
+          instanaEndpointUrl: backendBaseUrl,
+          instanaAgentKey
+        });
+
+        it('must recognize API gateway trigger (with proxy)', () =>
+          verify(
+            control,
+            { error: false, expectMetrics: true, expectSpans: true, trigger: 'aws:api.gateway' },
+            { payloadFormatVersion }
+          )
+            .then(() => control.getSpans())
+            .then(spans => {
+              if (payloadFormatVersion === '1.0') {
+                expectExactlyOneMatching(spans, [
+                  span => expect(span.n).to.equal('aws.lambda.entry'),
+                  span => expect(span.k).to.equal(constants.ENTRY),
+                  span => expect(span.data.http).to.be.an('object'),
+                  span => expect(span.data.http.method).to.equal('POST'),
+                  span => expect(span.data.http.url).to.equal('/path/to/path-xxx/path-yyy'),
+                  span => expect(span.data.http.path_tpl).to.equal('/path/to/{param1}/{param2}'),
+                  span =>
+                    expect(span.data.http.params).to.equal(
+                      'param1=param-value&param1=another-param-value&param2=param-value'
+                    ),
+                  span =>
+                    expect(span.data.http.header).to.deep.equal({
+                      'x-request-header-1': 'A Header Value',
+                      'x-request-header-2': 'Multi Value,Header Value',
+                      'x-response-header-1': 'response header value 1',
+                      'x-response-header-2': 'response,header,value 2'
+                    }),
+                  span => expect(span.data.http.host).to.not.exist,
+                  span => expect(span.data.http.status).to.equal(200)
+                ]);
+              } else {
+                expectExactlyOneMatching(spans, [
+                  span => expect(span.n).to.equal('aws.lambda.entry'),
+                  span => expect(span.k).to.equal(constants.ENTRY),
+                  span => expect(span.data.http).to.be.an('object'),
+                  span => expect(span.data.http.method).to.equal('POST'),
+                  span => expect(span.data.http.url).to.equal('/path/to/path-xxx/path-yyy'),
+                  span => expect(span.data.http.path_tpl).to.equal('/path/to/{param1}/{param2}'),
+                  span =>
+                    expect(span.data.http.params).to.equal('parameter1=value1&parameter1=value2&parameter2=value'),
+                  span =>
+                    expect(span.data.http.header).to.deep.equal({
+                      'x-request-header-1': 'A Header Value 1, A Header Value 2',
+                      'x-request-header-2': 'a header value single',
+                      'x-response-header-1': 'response header value 1, response header value 2',
+                      'x-response-header-2': 'response header value 2'
+                    }),
+                  span => expect(span.data.http.host).to.not.exist,
+                  span => expect(span.data.http.status).to.equal(200)
+                ]);
+              }
+            }));
+      });
     });
-
-    it('[payloadFormatVersion 1.0] must recognize API gateway trigger (with proxy)', () =>
-      verify(control, { error: false, expectMetrics: true, expectSpans: true, trigger: 'aws:api.gateway' })
-        .then(() => control.getSpans())
-        .then(spans =>
-          expectExactlyOneMatching(spans, [
-            span => expect(span.n).to.equal('aws.lambda.entry'),
-            span => expect(span.k).to.equal(constants.ENTRY),
-            span => expect(span.data.http).to.be.an('object'),
-            span => expect(span.data.http.method).to.equal('POST'),
-            span => expect(span.data.http.url).to.equal('/path/to/path-xxx/path-yyy'),
-            span => expect(span.data.http.path_tpl).to.equal('/path/to/{param1}/{param2}'),
-            span =>
-              expect(span.data.http.params).to.equal(
-                'param1=param-value&param1=another-param-value&param2=param-value'
-              ),
-            span =>
-              expect(span.data.http.header).to.deep.equal({
-                'x-request-header-1': 'A Header Value',
-                'x-request-header-2': 'Multi Value,Header Value',
-                'x-response-header-1': 'response header value 1',
-                'x-response-header-2': 'response,header,value 2'
-              }),
-            span => expect(span.data.http.host).to.not.exist,
-            span => expect(span.data.http.status).to.equal(200)
-          ])
-        ));
-
-    it('[payloadFormatVersion 2.0] must recognize API gateway trigger (with proxy)', () =>
-      verify(
-        control,
-        { error: false, expectMetrics: true, expectSpans: true, trigger: 'aws:api.gateway' },
-        { payloadFormatVersion: '2.0' }
-      )
-        .then(() => control.getSpans())
-        .then(spans =>
-          expectExactlyOneMatching(spans, [
-            span => expect(span.n).to.equal('aws.lambda.entry'),
-            span => expect(span.k).to.equal(constants.ENTRY),
-            span => expect(span.data.http).to.be.an('object'),
-            span => expect(span.data.http.method).to.equal('POST'),
-            span => expect(span.data.http.url).to.equal('/path/to/path-xxx/path-yyy'),
-            span => expect(span.data.http.path_tpl).to.equal('/path/to/{param1}/{param2}'),
-            span => expect(span.data.http.params).to.equal('parameter1=value1&parameter1=value2&parameter2=value'),
-            span =>
-              expect(span.data.http.header).to.deep.equal({
-                'x-request-header-1': 'A Header Value 1, A Header Value 2',
-                'x-request-header-2': 'a header value single',
-                'x-response-header-1': 'response header value 1, response header value 2',
-                'x-response-header-2': 'response header value 2'
-              }),
-            span => expect(span.data.http.host).to.not.exist,
-            span => expect(span.data.http.status).to.equal(200)
-          ])
-        ));
   });
 
   describe('triggered by API Gateway (Lambda Proxy) with parent span', function () {
@@ -1004,7 +1006,7 @@ function registerTests(handlerDefinitionPath) {
       verify(control, { error: false, expectMetrics: true, expectSpans: false }));
   });
 
-  describe('HTTP errors', function () {
+  describe('triggered by API Gateway (Lambda Proxy) - HTTP errors', function () {
     const control = prelude.bind(this)({
       handlerDefinitionPath,
       trigger: 'api-gateway-proxy',
@@ -1034,61 +1036,126 @@ function registerTests(handlerDefinitionPath) {
         ));
   });
 
-  describe('API Gateway/EUM - no Server-Timing header of its own', function () {
-    const control = prelude.bind(this)({
-      handlerDefinitionPath,
-      trigger: 'api-gateway-proxy',
-      instanaEndpointUrl: backendBaseUrl,
-      instanaAgentKey
-    });
+  describe('API Gateway/EUM Server-Timing header', function () {
+    ['1.0', '2.0'].forEach(payloadFormatVersion => {
+      describe(`No header present (PayloadFormat: ${payloadFormatVersion})`, function () {
+        const control = prelude.bind(this)({
+          handlerDefinitionPath,
+          trigger: 'api-gateway-proxy',
+          instanaEndpointUrl: backendBaseUrl,
+          instanaAgentKey
+        });
 
-    it('must inject the Server-Timing header', () => {
-      let serverTimingValue = null;
-      return verify(control, { error: false, expectMetrics: true, expectSpans: true, trigger: 'aws:api.gateway' })
-        .then(() => {
-          const response = control.getLambdaResults()[0];
-          serverTimingValue = getHeaderCaseInsensitive(response.multiValueHeaders, 'server-timing');
-          expect(serverTimingValue).to.match(/^intid;desc=[0-9a-f]+$/);
-        })
-        .then(() => control.getSpans())
-        .then(spans =>
-          expectExactlyOneMatching(spans, [
-            span => expect(span.n).to.equal('aws.lambda.entry'),
-            span => expect(span.k).to.equal(constants.ENTRY),
-            span => expect(/^intid;desc=([0-9a-f]+)$/.exec(serverTimingValue)[1]).to.equal(span.t)
-          ])
-        );
-    });
-  });
+        it('must inject the Server-Timing header', () => {
+          let serverTimingValue = null;
 
-  describe('API Gateway/EUM - Server-Timing string header already present', function () {
-    const control = prelude.bind(this)({
-      handlerDefinitionPath,
-      trigger: 'api-gateway-proxy',
-      instanaEndpointUrl: backendBaseUrl,
-      instanaAgentKey,
-      serverTiming: true
-    });
+          return verify(
+            control,
+            { error: false, expectMetrics: true, expectSpans: true, trigger: 'aws:api.gateway' },
+            { payloadFormatVersion }
+          )
+            .then(() => {
+              const response = control.getLambdaResults()[0];
 
-    it('must inject the Server-Timing header', () => {
-      let serverTimingValue = null;
-      return verify(control, { error: false, expectMetrics: true, expectSpans: true, trigger: 'aws:api.gateway' })
-        .then(() => {
-          const response = control.getLambdaResults()[0];
-          serverTimingValue = getHeaderCaseInsensitive(response.headers, 'server-timing');
-          expect(serverTimingValue).to.match(/^cache;desc="Cache Read";dur=23.2, intid;desc=[0-9a-f]+$/);
-        })
-        .then(() => control.getSpans())
-        .then(spans =>
-          expectExactlyOneMatching(spans, [
-            span => expect(span.n).to.equal('aws.lambda.entry'),
-            span => expect(span.k).to.equal(constants.ENTRY),
-            span =>
-              expect(/^cache;desc="Cache Read";dur=23.2, intid;desc=([0-9a-f]+)$/.exec(serverTimingValue)[1]).to.equal(
-                span.t
-              )
-          ])
-        );
+              if (payloadFormatVersion === '1.0') {
+                serverTimingValue = getHeaderCaseInsensitive(response.multiValueHeaders, 'server-timing');
+              } else {
+                serverTimingValue = getHeaderCaseInsensitive(response.headers, 'server-timing');
+              }
+
+              expect(serverTimingValue).to.match(/^intid;desc=[0-9a-f]+$/);
+            })
+            .then(() => control.getSpans())
+            .then(spans =>
+              expectExactlyOneMatching(spans, [
+                span => expect(span.n).to.equal('aws.lambda.entry'),
+                span => expect(span.k).to.equal(constants.ENTRY),
+                span => expect(/^intid;desc=([0-9a-f]+)$/.exec(serverTimingValue)[1]).to.equal(span.t)
+              ])
+            );
+        });
+      });
+
+      describe('String header already present', function () {
+        const control = prelude.bind(this)({
+          handlerDefinitionPath,
+          trigger: 'api-gateway-proxy',
+          instanaEndpointUrl: backendBaseUrl,
+          instanaAgentKey,
+          serverTiming: 'string'
+        });
+
+        it('must inject the Server-Timing header', () => {
+          let serverTimingValue = null;
+          return verify(
+            control,
+            { error: false, expectMetrics: true, expectSpans: true, trigger: 'aws:api.gateway' },
+            { payloadFormatVersion }
+          )
+            .then(() => {
+              const response = control.getLambdaResults()[0];
+              serverTimingValue = getHeaderCaseInsensitive(response.headers, 'server-timing');
+              expect(serverTimingValue).to.match(/^cache;desc="Cache Read";dur=23.2, intid;desc=[0-9a-f]+$/);
+            })
+            .then(() => control.getSpans())
+            .then(spans =>
+              expectExactlyOneMatching(spans, [
+                span => expect(span.n).to.equal('aws.lambda.entry'),
+                span => expect(span.k).to.equal(constants.ENTRY),
+                span =>
+                  expect(
+                    /^cache;desc="Cache Read";dur=23.2, intid;desc=([0-9a-f]+)$/.exec(serverTimingValue)[1]
+                  ).to.equal(span.t)
+              ])
+            );
+        });
+      });
+
+      describe(`Array header already present (PayloadFormat: ${payloadFormatVersion})`, function () {
+        const control = prelude.bind(this)({
+          handlerDefinitionPath,
+          trigger: 'api-gateway-proxy',
+          instanaEndpointUrl: backendBaseUrl,
+          instanaAgentKey,
+          serverTiming: 'array'
+        });
+
+        it('must add our Server-Timing value to the first entry in the multi value header array', () => {
+          let serverTimingValue = null;
+
+          return verify(
+            control,
+            { error: false, expectMetrics: true, expectSpans: true, trigger: 'aws:api.gateway' },
+            { payloadFormatVersion }
+          )
+            .then(() => {
+              const response = control.getLambdaResults()[0];
+
+              if (payloadFormatVersion === '1.0') {
+                const serverTimingValueArray = getHeaderCaseInsensitive(response.multiValueHeaders, 'server-timing');
+                expect(serverTimingValueArray).to.have.length(2);
+                expect(serverTimingValueArray[0]).to.match(
+                  /^cache;desc="Cache Read";dur=23.2, intid;desc=([0-9a-f]+)$/
+                );
+                expect(serverTimingValueArray[1]).to.equal('cpu;dur=2.4');
+                serverTimingValue = serverTimingValueArray[0];
+              } else {
+                const headerVal = getHeaderCaseInsensitive(response.headers, 'server-timing');
+                expect(headerVal).to.match(/^cache;desc="Cache Read";dur=23.2,cpu;dur=2.4, intid;desc=([0-9a-f]+)/);
+                serverTimingValue = headerVal;
+              }
+            })
+            .then(() => control.getSpans())
+            .then(spans =>
+              expectExactlyOneMatching(spans, [
+                span => expect(span.n).to.equal('aws.lambda.entry'),
+                span => expect(span.k).to.equal(constants.ENTRY),
+                // initd;desc=entrySpan.t
+                span => expect(serverTimingValue).to.contain(span.t)
+              ])
+            );
+        });
+      });
     });
   });
 
@@ -1747,6 +1814,7 @@ function registerTests(handlerDefinitionPath) {
   function getHeaderCaseInsensitive(headers, header) {
     let key = null;
     let value = null;
+
     Object.keys(headers).forEach(h => {
       if (header.toLowerCase() === h.toLowerCase()) {
         if (key != null) {
