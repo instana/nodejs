@@ -34,24 +34,24 @@ module.exports.init = (_config, cls) => {
   });
 
   const transformToInstanaSpan = otelSpan => {
-    const tracingSuppressed = cls.tracingSuppressed();
-    if (tracingSuppressed) {
-      return;
-    }
-
     const targetInstrumentionName = otelSpan.instrumentationLibrary.name;
     let kind = constants.EXIT;
 
     if (instrumentations[targetInstrumentionName] && instrumentations[targetInstrumentionName].module) {
-      const m = instrumentations[targetInstrumentionName].module;
+      const targetInstrumentationModule = instrumentations[targetInstrumentionName].module;
 
-      if (m.getKind) {
-        kind = m.getKind(otelSpan);
+      if (targetInstrumentationModule.getKind) {
+        kind = targetInstrumentationModule.getKind(otelSpan);
       }
 
-      if (m.transform) {
-        otelSpan = m.transform(otelSpan);
+      if (targetInstrumentationModule.transform) {
+        otelSpan = targetInstrumentationModule.transform(otelSpan);
       }
+    }
+
+    // NOTE: checks wether tracing is suppressed and if a parent entry span exists.
+    if (cls.skipExitTracing()) {
+      return;
     }
 
     try {
