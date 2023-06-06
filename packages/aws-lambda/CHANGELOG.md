@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.23.0](https://github.com/instana/nodejs/compare/v2.22.1...v2.23.0) (2023-06-06)
+
+
+### Features
+
+* **aws-lambda:** added support for payload version format 2.0 ([#786](https://github.com/instana/nodejs/issues/786)) ([06c9780](https://github.com/instana/nodejs/commit/06c9780346620cb28a1d6d7225ad092039374333)), closes [#34347](https://github.com/instana/nodejs/issues/34347)
+
+
+
+
+
 ## [2.22.1](https://github.com/instana/nodejs/compare/v2.22.0...v2.22.1) (2023-05-15)
 
 **Note:** Version bump only for package @instana/aws-lambda
