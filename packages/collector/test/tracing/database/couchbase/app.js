@@ -4,12 +4,7 @@
 
 'use strict';
 
-require('../../../..')({
-  tracing: {
-    // TODO: https://github.com/elastic/require-in-the-middle/issues/61
-    useOpentelemetry: false
-  }
-});
+require('../../../..')();
 
 const couchbase = require('couchbase');
 const bodyParser = require('body-parser');
