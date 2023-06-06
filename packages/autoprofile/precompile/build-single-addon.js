@@ -8,7 +8,7 @@
 const { execSync } = require('child_process');
 const { copyFileSync, existsSync } = require('fs');
 // eslint-disable-next-line import/no-extraneous-dependencies
-const { sync: mkdirpSync } = require('mkdirp');
+const { mkdirp } = require('mkdirp');
 const path = require('path');
 const os = require('os');
 // eslint-disable-next-line import/no-extraneous-dependencies
@@ -29,7 +29,7 @@ module.exports = exports = function buildSingleAddOn(abi, version) {
 
   console.log(`Building native addon for ${label} (${addonPath}).`);
   if (!existsSync(addonDir)) {
-    mkdirpSync(addonDir);
+    mkdirp.sync(addonDir);
   }
 
   let darwinNodeJs10Fix = '';
