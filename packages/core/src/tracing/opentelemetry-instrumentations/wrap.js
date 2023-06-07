@@ -53,7 +53,11 @@ module.exports.init = (_config, cls) => {
       }
     }
 
-    if ((kind === constants.EXIT && cls.skipExitTracing()) || (kind === constants.ENTRY && cls.tracingSuppressed())) {
+    if (cls.tracingSuppressed()) {
+      return;
+    }
+
+    if (kind === constants.EXIT && cls.skipExitTracing()) {
       return;
     }
 
