@@ -88,8 +88,8 @@ app.get('/keepTracing', (req, res) => {
       // Execute another traced call to verify that we keep the tracing context.
       return request(`http://127.0.0.1:${agentPort}`);
     })
-    .then(httpRes => {
-      res.send(`${httpRes};${redisResponse}`);
+    .then(() => {
+      res.send(redisResponse);
     })
     .catch(err => {
       log('Unexpected error for key %s', key, err);
@@ -115,7 +115,7 @@ app.get('/keepTracingCallback', (req, res) => {
           log('HTTP call failed', httpErr);
           return reject(httpErr);
         }
-        return resolve(`${httpRes.body};${redisRes}`);
+        return resolve(redisRes);
       });
     });
   })
