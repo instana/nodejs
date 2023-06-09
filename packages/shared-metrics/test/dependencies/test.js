@@ -8,7 +8,7 @@
 const _ = require('lodash');
 const { expect } = require('chai');
 const { mkdtempSync, symlinkSync, unlinkSync } = require('fs');
-const { mkdirp } = require('mkdirp');
+const mkdirp = require('mkdirp');
 const recursiveCopy = require('recursive-copy');
 const os = require('os');
 const path = require('path');
