@@ -22,7 +22,6 @@ describe('agent host lookup state', () => {
   const port = 12345;
 
   let fakeRequest;
-  let sinonFakeTimers;
 
   const agentOptsMock = {
     '@noCallThru': true,
@@ -73,22 +72,28 @@ describe('agent host lookup state', () => {
     onlyOnce: true
   });
 
-  const requestStub = sinon.stub();
-  const httpStub = {
-    request: requestStub,
-    '@noCallThru': true
-  };
-
-  const parseProcSelfNetRouteFileStub = sinon.stub();
-  const defaultGatewayParserMock = {
-    '@noCallThru': true,
-    parseProcSelfNetRouteFile: parseProcSelfNetRouteFileStub
-  };
-
-  const transitionTo = sinon.stub();
-  const ctxStub = { transitionTo };
+  let requestStub;
+  let httpStub;
+  let parseProcSelfNetRouteFileStub;
+  let defaultGatewayParserMock;
+  let transitionTo;
+  let ctxStub;
 
   before(() => {
+    // set up stubs for HTTP communication and file system access (for reading from /proc/self/net/route).
+
+    requestStub = sinon.stub();
+    httpStub = {
+      request: requestStub,
+      '@noCallThru': true
+    };
+
+    parseProcSelfNetRouteFileStub = sinon.stub();
+    defaultGatewayParserMock = {
+      '@noCallThru': true,
+      parseProcSelfNetRouteFile: parseProcSelfNetRouteFileStub
+    };
+
     agentHostLookupState = proxyquire('../../src/announceCycle/agentHostLookup', {
       '../agent/opts': agentOptsMock,
       '@instana/core': {
@@ -99,14 +104,15 @@ describe('agent host lookup state', () => {
 
       './defaultGatewayParser': defaultGatewayParserMock
     });
+
+    transitionTo = sinon.stub();
+    ctxStub = { transitionTo };
   });
 
   afterEach(() => {
+    // reset stubs after each test
     sinon.restore();
     fakeRequest.reset();
-    if (sinonFakeTimers) {
-      sinonFakeTimers.restore();
-    }
   });
 
   describe('via configured IP/configured port', () => {
@@ -196,6 +202,8 @@ describe('agent host lookup state', () => {
   });
 
   describe('retry when default gateway IP cannot be determined', () => {
+    let sinonFakeTimers;
+
     before(() => {
       agentOptsMock.host = hostAndPort.host;
       agentOptsMock.port = hostAndPort.port;
@@ -206,8 +214,14 @@ describe('agent host lookup state', () => {
         fakeRequest = new FakeRequest([configuredHostLookupConnectionRefused, configuredHostLookupOk], opt, cb);
         return fakeRequest;
       });
+    });
 
+    beforeEach(() => {
       sinonFakeTimers = sinon.useFakeTimers();
+    });
+
+    afterEach(() => {
+      sinonFakeTimers.restore();
     });
 
     it('should retry the configured host', async () =>
@@ -230,6 +244,8 @@ describe('agent host lookup state', () => {
   });
 
   describe('retry when default gateway IP can be determined', () => {
+    let sinonFakeTimers;
+
     const configuredHostLookupConnectionRefusedSecondAttempt = configuredHostLookupConnectionRefused.clone();
     before(() => {
       agentOptsMock.host = hostAndPort.host;
@@ -249,8 +265,14 @@ describe('agent host lookup state', () => {
         );
         return fakeRequest;
       });
+    });
 
+    beforeEach(() => {
       sinonFakeTimers = sinon.useFakeTimers();
+    });
+
+    afterEach(() => {
+      sinonFakeTimers.restore();
     });
 
     it('should retry the configured host', async () =>
