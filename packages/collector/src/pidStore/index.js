@@ -5,9 +5,9 @@
 
 'use strict';
 
-const fs = require('fs');
 const EventEmitter = require('events').EventEmitter;
 
+const { uninstrumentedFs: fs } = require('@instana/core');
 const internalPidStore = require('./internalPidStore');
 const agentOpts = require('../agent/opts');
 

@@ -15,7 +15,6 @@
 const http = require('http');
 
 const { delay, sendToParent } = require('../../../core/test/test_util');
-
 const instana = require('../..');
 
 const port = process.env.PORT || 4216;
@@ -55,8 +54,10 @@ app.on('request', (req, res) => {
 
   // use Instana SDK to create spans manually
   instana.sdk.callback.startExitSpan('custom-span', () => {
-    delay(10).then(() => {
-      instana.sdk.promise.completeExitSpan();
+    // add an additional delay to wait that the span was sent to the BE
+    instana.sdk.promise.completeExitSpan();
+
+    delay(100).then(() => {
       res.end(
         JSON.stringify({
           message: 'Hello Cloud Run!',

@@ -5,7 +5,7 @@
 
 'use strict';
 
-const fs = require('fs');
+const fs = require('../uninstrumentedFs');
 const path = require('path');
 
 /** @type {import('../logger').GenericLogger} */

@@ -6,12 +6,12 @@
 'use strict';
 
 const assert = require('assert');
-const fs = require('fs');
+const { logger: Logger, uninstrumentedFs: fs } = require('@instana/core');
 const path = require('path');
 
 const CountDownLatch = require('./CountDownLatch');
 
-let logger = require('@instana/core').logger.getLogger('metrics');
+let logger = Logger.getLogger('metrics');
 
 /**
  * @param {import('@instana/core/src/logger').GenericLogger} _logger

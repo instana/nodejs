@@ -30,8 +30,8 @@ describe('pidStore', () => {
 
   function doRequire() {
     pidStore = proxyquire('../../src/pidStore', {
-      fs: {
-        readFileSync
+      '@instana/core': {
+        uninstrumentedFs: { readFileSync }
       },
       './internalPidStore': {
         pid: process.pid

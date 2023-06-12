@@ -63,7 +63,8 @@
     "url": "https://github.com/instana/nodejs/issues"
   },
   "dependencies": {
-    "@instana/aws-lambda": "2.23.0"
+    "@instana/aws-lambda": "2.23.0",
+    "@instana/core": "2.23.0"
   },
   "devDependencies": {
     "no-code2": "2.0.0"

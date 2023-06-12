@@ -70,7 +70,7 @@ const verifySpans = (agentControls, controls, options = {}) =>
       return;
     }
 
-    expect(spans.length).to.equal(options.spanLength || 2);
+    expect(spans.length).to.equal(options.numberOfSpans || 2);
 
     if (options.verifyCustom) return options.verifyCustom(entrySpan, spans);
 
@@ -390,7 +390,7 @@ mochaSuiteFn('tracing/db2', function () {
           testUtils.retry(() =>
             verifySpans(agentControls, controls, {
               stmt: `SELECT * FROM ${TABLE_NAME_1}`,
-              spanLength: 3
+              numberOfSpans: 3
             })
           )
         );
@@ -406,7 +406,7 @@ mochaSuiteFn('tracing/db2', function () {
           testUtils.retry(() =>
             verifySpans(agentControls, controls, {
               stmt: `SELECT * FROM ${TABLE_NAME_1}`,
-              spanLength: 3
+              numberOfSpans: 3
             })
           )
         );
@@ -424,7 +424,7 @@ mochaSuiteFn('tracing/db2', function () {
             verifySpans(agentControls, controls, {
               stmt: `SELECT * FROM ${TABLE_NAME_1}`,
               error: 'Error: [IBM][CLI Driver] CLI0115E  Invalid cursor state. SQLSTATE=24000',
-              spanLength: 3,
+              numberOfSpans: 3,
               verifyCustom: (entrySpan, spans) => {
                 testUtils.expectAtLeastOneMatching(spans, [
                   span => expect(span.t).to.equal(entrySpan.t),
@@ -464,7 +464,7 @@ mochaSuiteFn('tracing/db2', function () {
           testUtils.retry(() =>
             verifySpans(agentControls, controls, {
               stmt: `SELECT * FROM ${TABLE_NAME_1}`,
-              spanLength: 3,
+              numberOfSpans: 3,
               verifyCustom: (entrySpan, spans) => {
                 const realParent = testUtils.expectAtLeastOneMatching(spans, [
                   span => expect(span.n).to.equal('node.http.server'),
@@ -525,7 +525,7 @@ mochaSuiteFn('tracing/db2', function () {
         .then(() =>
           testUtils.retry(() =>
             verifySpans(agentControls, controls, {
-              spanLength: 3,
+              numberOfSpans: 3,
               verifyCustom: (entrySpan, spans) => {
                 testUtils.expectExactlyNMatching(spans, 2, [
                   span => expect(span.t).to.equal(entrySpan.t),
@@ -559,7 +559,7 @@ mochaSuiteFn('tracing/db2', function () {
           testUtils.retry(() =>
             verifySpans(agentControls, controls, {
               stmt: `insert into ${TABLE_NAME_1} (COLINT, COLDATETIME, COLTEXT) VALUES (?, ?, ?)`,
-              spanLength: 3,
+              numberOfSpans: 3,
               verifyCustom: (entrySpan, spans) => {
                 testUtils.expectAtLeastOneMatching(spans, [
                   span => expect(span.t).to.equal(entrySpan.t),
@@ -608,7 +608,7 @@ mochaSuiteFn('tracing/db2', function () {
           testUtils.retry(() =>
             verifySpans(agentControls, controls, {
               expectNoDb2Span: true,
-              spanLength: 1
+              numberOfSpans: 1
             })
           )
         );
@@ -655,7 +655,7 @@ mochaSuiteFn('tracing/db2', function () {
         .then(() =>
           testUtils.retry(() =>
             verifySpans(agentControls, controls, {
-              spanLength: 7,
+              numberOfSpans: 7,
               verifyCustom: (entrySpan, spans) => {
                 const stmtsToExpect = [
                   `drop table ${TABLE_NAME_2} if exists`,
@@ -745,7 +745,7 @@ mochaSuiteFn('tracing/db2', function () {
           testUtils.retry(() =>
             verifySpans(agentControls, controls, {
               expectNoDb2Span: true,
-              spanLength: 1
+              numberOfSpans: 1
             })
           )
         );
@@ -763,7 +763,7 @@ mochaSuiteFn('tracing/db2', function () {
             verifySpans(agentControls, controls, {
               stmt: `SELECT * FROM ${TABLE_NAME_1}`,
               error: `'result.closeSync' was not called within ${DB2_CLOSE_TIMEOUT_IN_MS}ms.`,
-              spanLength: 2
+              numberOfSpans: 2
             })
           )
         );
@@ -848,7 +848,7 @@ mochaSuiteFn('tracing/db2', function () {
             verifySpans(agentControls, controls, {
               stmt: `SELECT * FROM ${TABLE_NAME_1}`,
               error: `'result.closeSync' was not called within ${DB2_CLOSE_TIMEOUT_IN_MS}ms.`,
-              spanLength: 2
+              numberOfSpans: 2
             })
           )
         );
@@ -878,7 +878,10 @@ mochaSuiteFn('tracing/db2', function () {
         .then(() =>
           testUtils.retry(() =>
             verifySpans(agentControls, controls, {
-              spanLength: 11,
+              // 11 queries splitted from the file
+              // 5 fs operations on top (ours + from db2 internally fs-extra)
+              // https://github.com/ibmdb/node-ibm_db/blob/fb25937524d74d25917e9aa67fb4737971317986/lib/odbc.js#L916
+              numberOfSpans: 15,
               verifyCustom: (entrySpan, spans) => {
                 const stmtsToExpect = [
                   `create table ${TABLE_NAME_3}(no integer,name varchar(10))`,
@@ -924,7 +927,8 @@ mochaSuiteFn('tracing/db2', function () {
         .then(() =>
           testUtils.retry(() =>
             verifySpans(agentControls, controls, {
-              spanLength: 11,
+              // 11 queries + fs calls
+              numberOfSpans: 16,
               verifyCustom: (entrySpan, spans) => {
                 const stmtsToExpect = [
                   `create table ${TABLE_NAME_3}(no integer,name varchar(10))`,
@@ -970,7 +974,8 @@ mochaSuiteFn('tracing/db2', function () {
         .then(() =>
           testUtils.retry(() =>
             verifySpans(agentControls, controls, {
-              spanLength: 11,
+              // 11 queries + fs calls
+              numberOfSpans: 16,
               verifyCustom: (entrySpan, spans) => {
                 const stmtsToExpect = [
                   `create table ${TABLE_NAME_3}(no integer,name varchar(10))`,

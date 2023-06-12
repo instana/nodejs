@@ -19,7 +19,6 @@ AWS.HttpRequest.prototype.appendToUserAgent = function () {
 };
 
 AWS.config.update({ region: 'us-east-2' });
-
 const sqs = new AWS.SQS();
 
 exports.sqs = sqs;

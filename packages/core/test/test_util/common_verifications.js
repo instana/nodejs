@@ -6,6 +6,7 @@
 'use strict';
 
 const expectExactlyOneMatching = require('./expectExactlyOneMatching');
+const expectExactlyNMatching = require('./expectExactlyNMatching');
 const constants = require('../../src/index').tracing.constants;
 const { expect } = require('chai');
 
@@ -50,11 +51,13 @@ exports.verifyExitSpan = function verifyExitSpan({
   pid,
   extraTests,
   testMethod = expectExactlyOneMatching,
+  kind = constants.EXIT,
+  n,
   dataProperty
 }) {
   const tests = [
     span => {
-      expect(span.k).to.equal(constants.EXIT);
+      expect(span.k).to.equal(kind);
     },
     span => {
       expect(span.n).to.equal(spanName);
@@ -82,6 +85,72 @@ exports.verifyExitSpan = function verifyExitSpan({
     }
   ].concat(extraTests || []);
 
+  if (testMethod === expectExactlyNMatching) return testMethod(spans, n, tests);
+  return testMethod(spans, tests);
+};
+
+// eslint-disable-next-line
+exports.verifyIntermediateSpan = function verifyIntermediateSpan({
+  spanName,
+  spans,
+  parent,
+  withError,
+  pid,
+  extraTests,
+  testMethod = expectExactlyOneMatching,
+  n,
+  dataProperty
+}) {
+  return exports.verifyExitSpan({
+    spanName,
+    spans,
+    parent,
+    withError,
+    pid,
+    extraTests,
+    testMethod,
+    n,
+    kind: constants.INTERMEDIATE,
+    dataProperty
+  });
+};
+
+// eslint-disable-next-line
+exports.verifyEntrySpan = function verifyEntrySpan({
+  spanName,
+  spans,
+  withError,
+  pid,
+  extraTests,
+  testMethod = expectExactlyOneMatching,
+  n,
+  dataProperty
+}) {
+  const tests = [
+    span => {
+      expect(span.k).to.equal(constants.ENTRY);
+    },
+    span => {
+      expect(span.n).to.equal(spanName);
+    },
+    span => {
+      expect(span.f.e).to.equal(pid);
+    },
+    span => {
+      expect(span.f.h).to.equal('agent-stub-uuid');
+    },
+    span => {
+      expect(span.ec).to.equal(withError ? 1 : 0);
+    },
+    span => {
+      expect(span.data).to.exist;
+    },
+    span => {
+      expect(span.data[dataProperty || spanName]).to.be.an('object');
+    }
+  ].concat(extraTests || []);
+
+  if (testMethod === expectExactlyNMatching) return testMethod(spans, n, tests);
   return testMethod(spans, tests);
 };
 

@@ -10,6 +10,8 @@ const normalizeConfig = require('./util/normalizeConfig');
 
 // Require this first to ensure that we have non-instrumented http available.
 const uninstrumentedHttp = require('./uninstrumentedHttp');
+const uninstrumentedFs = require('./uninstrumentedFs');
+
 const metrics = require('./metrics');
 const secrets = require('./secrets');
 const tracing = require('./tracing');
@@ -78,6 +80,7 @@ module.exports = {
   secrets,
   tracing,
   uninstrumentedHttp,
+  uninstrumentedFs,
   util,
   init,
   preInit,

@@ -84,7 +84,7 @@ describe('tracing/opentracing/integration', function () {
         expressOpentracingControls.sendRequest({ path: '/withOpentracingConnectedToInstanaTrace' }).then(() =>
           testUtils.retry(() =>
             agentControls.getSpans().then(spans => {
-              expect(spans).to.have.lengthOf(2);
+              expect(spans).to.have.lengthOf(3);
 
               const httpSpan = testUtils.expectAtLeastOneMatching(spans, [
                 span => expect(span.n).to.equal('node.http.server'),
@@ -103,6 +103,19 @@ describe('tracing/opentracing/integration', function () {
                 span => expect(span.f.h).to.equal('agent-stub-uuid'),
                 span => expect(span.data.service).to.equal('theFancyServiceYouWouldntBelieveActuallyExists'),
                 span => expect(span.data.sdk.name).to.equal('service')
+              ]);
+
+              // opentracing lazy loads cls.js
+              // realpathSync /Users/kirrg001/dev/instana/nodejs/packages/core/src/tracing/cls.js
+              testUtils.expectAtLeastOneMatching(spans, [
+                span => expect(span.t).to.equal(httpSpan.t),
+                span => expect(span.p).to.equal(httpSpan.s),
+                span => expect(span.s).to.be.a('string'),
+                span => expect(span.s).not.to.equal(span.t),
+                span => expect(span.s).not.to.equal(span.p),
+                span => expect(span.n).to.equal('otel'),
+                span => expect(span.f.e).to.equal(String(expressOpentracingControls.getPid())),
+                span => expect(span.f.h).to.equal('agent-stub-uuid')
               ]);
             })
           )
