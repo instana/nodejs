@@ -10,9 +10,11 @@ const expect = require('chai').expect;
 const constants = require('@instana/core').tracing.constants;
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('../../../../../core/test/config');
-const testUtils = require('../../../../../core/test/test_util');
+const { expectExactlyOneMatching, retry, stringifyItems } = require('../../../../../core/test/test_util');
 const ProcessControls = require('../../../test_util/ProcessControls');
 const globalAgent = require('../../../globalAgent');
+
+const oTelIntegrationIsEnabled = require('../../../test_util/isOTelIntegrationEnabled');
 
 const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
@@ -48,7 +50,10 @@ mochaSuiteFn('tracing/q', function () {
   runTest('/delay2');
   runTest('/timeout', verifySingleEntryWithError);
   runTest('/nodeify');
-  runTest('/make-node-resolver', verifySingleEntry, { spanLength: 2 }); // calls fs.readFile
+  runTest('/make-node-resolver', verifySingleEntry, {
+    // calls fs.readFile, which creates a second span if the OTel integration with its fs plug-in is enabled
+    spanLength: oTelIntegrationIsEnabled ? 2 : 1
+  });
   runTest('/with-event-emitter');
   runTest('/entry-exit', verifyEntryAndExit);
 
@@ -65,11 +70,11 @@ mochaSuiteFn('tracing/q', function () {
   function verifySingleEntry(response, path, opts) {
     expect(response.span).to.be.an('object');
     expect(response.error).to.not.exist;
-    return testUtils.retry(() =>
+    return retry(() =>
       agentControls.getSpans().then(spans => {
         const entrySpan = verifyRootEntrySpan(spans, path);
         expect(response.span.t).to.equal(entrySpan.t);
-        expect(spans).to.have.lengthOf(opts.spanLength);
+        expect(spans, stringifyItems(spans)).to.have.lengthOf(opts.spanLength);
       })
     );
   }
@@ -77,17 +82,17 @@ mochaSuiteFn('tracing/q', function () {
   function verifySingleEntryWithError(response, path) {
     expect(response.span).to.be.an('object');
     expect(response.error).to.equal('Boom!');
-    return testUtils.retry(() =>
+    return retry(() =>
       agentControls.getSpans().then(spans => {
         const entrySpan = verifyRootEntrySpan(spans, path);
         expect(response.span.t).to.equal(entrySpan.t);
-        expect(spans).to.have.lengthOf(1);
+        expect(spans, stringifyItems(spans)).to.have.lengthOf(1);
       })
     );
   }
 
   function verifyEntryAndExit(response, path) {
-    return testUtils.retry(() =>
+    return retry(() =>
       agentControls.getSpans().then(spans => {
         expect(response.span).to.be.an('object');
         expect(response.error).to.not.exist;
@@ -99,7 +104,7 @@ mochaSuiteFn('tracing/q', function () {
   }
 
   function verifyRootEntrySpan(spans, path) {
-    return testUtils.expectAtLeastOneMatching(spans, [
+    return expectExactlyOneMatching(spans, [
       span => expect(span.p).to.equal(undefined),
       span => expect(span.n).to.equal('node.http.server'),
       span => expect(span.k).to.equal(constants.ENTRY),
@@ -108,7 +113,7 @@ mochaSuiteFn('tracing/q', function () {
   }
 
   function verifyExitSpan(spans, parentSpan) {
-    return testUtils.expectAtLeastOneMatching(spans, [
+    return expectExactlyOneMatching(spans, [
       span => expect(span.t).to.equal(parentSpan.t),
       span => expect(span.p).to.equal(parentSpan.s),
       span => expect(span.n).to.equal('node.http.client'),

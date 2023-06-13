@@ -12,6 +12,8 @@ const config = require('../../../../core/test/config');
 const testUtils = require('../../../../core/test/test_util');
 const globalAgent = require('../../globalAgent');
 
+const oTelIntegrationIsEnabled = require('../../test_util/isOTelIntegrationEnabled');
+
 describe('tracing/opentracing/integration', function () {
   this.timeout(config.getTestTimeout());
 
@@ -84,7 +86,7 @@ describe('tracing/opentracing/integration', function () {
         expressOpentracingControls.sendRequest({ path: '/withOpentracingConnectedToInstanaTrace' }).then(() =>
           testUtils.retry(() =>
             agentControls.getSpans().then(spans => {
-              expect(spans).to.have.lengthOf(3);
+              expect(spans).to.have.lengthOf(oTelIntegrationIsEnabled ? 3 : 2);
 
               const httpSpan = testUtils.expectAtLeastOneMatching(spans, [
                 span => expect(span.n).to.equal('node.http.server'),
@@ -105,18 +107,20 @@ describe('tracing/opentracing/integration', function () {
                 span => expect(span.data.sdk.name).to.equal('service')
               ]);
 
-              // opentracing lazy loads cls.js
-              // realpathSync /Users/kirrg001/dev/instana/nodejs/packages/core/src/tracing/cls.js
-              testUtils.expectAtLeastOneMatching(spans, [
-                span => expect(span.t).to.equal(httpSpan.t),
-                span => expect(span.p).to.equal(httpSpan.s),
-                span => expect(span.s).to.be.a('string'),
-                span => expect(span.s).not.to.equal(span.t),
-                span => expect(span.s).not.to.equal(span.p),
-                span => expect(span.n).to.equal('otel'),
-                span => expect(span.f.e).to.equal(String(expressOpentracingControls.getPid())),
-                span => expect(span.f.h).to.equal('agent-stub-uuid')
-              ]);
+              if (oTelIntegrationIsEnabled) {
+                // OpenTracing lazy loads cls.js, which creates a span via the OTel fs plug-in.
+                // realpathSync /path/to/repo/nodejs/packages/core/src/tracing/cls.js
+                testUtils.expectAtLeastOneMatching(spans, [
+                  span => expect(span.t).to.equal(httpSpan.t),
+                  span => expect(span.p).to.equal(httpSpan.s),
+                  span => expect(span.s).to.be.a('string'),
+                  span => expect(span.s).not.to.equal(span.t),
+                  span => expect(span.s).not.to.equal(span.p),
+                  span => expect(span.n).to.equal('otel'),
+                  span => expect(span.f.e).to.equal(String(expressOpentracingControls.getPid())),
+                  span => expect(span.f.h).to.equal('agent-stub-uuid')
+                ]);
+              }
             })
           )
         ));

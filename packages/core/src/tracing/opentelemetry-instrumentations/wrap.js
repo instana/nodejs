@@ -16,13 +16,15 @@ const instrumentations = {
   '@opentelemetry/instrumentation-socket.io': { name: 'socket.io' }
 };
 
+module.exports.minimumNodeJsVersion = '14.0.0';
+
 // NOTE: using a logger might create a recursive execution
 //       logger.debug -> creates fs call -> calls transformToInstanaSpan -> calls logger.debug
 //       use uninstrumented logger, but useless for production
 module.exports.init = (_config, cls) => {
   // CASE: otel offically does not support Node < 14
   // https://github.com/open-telemetry/opentelemetry-js/tree/main#supported-runtimes
-  if (semver.lt(process.versions.node, '14.0.0')) {
+  if (semver.lt(process.versions.node, module.exports.minimumNodeJsVersion)) {
     return;
   }
 

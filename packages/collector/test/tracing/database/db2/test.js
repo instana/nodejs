@@ -14,6 +14,8 @@ const config = require('../../../../../core/test/config');
 const ProcessControls = require('../../../test_util/ProcessControls');
 const globalAgent = require('../../../globalAgent');
 
+const oTelIntegrationIsEnabled = require('../../../test_util/isOTelIntegrationEnabled');
+
 const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
 if (testUtils.isCI() && !process.env.DB2_CONNECTION_STR) {
@@ -879,9 +881,9 @@ mochaSuiteFn('tracing/db2', function () {
           testUtils.retry(() =>
             verifySpans(agentControls, controls, {
               // 11 queries splitted from the file
-              // 5 fs operations on top (ours + from db2 internally fs-extra)
+              // 4 fs operations on top (ours + from db2 internally fs-extra)
               // https://github.com/ibmdb/node-ibm_db/blob/fb25937524d74d25917e9aa67fb4737971317986/lib/odbc.js#L916
-              numberOfSpans: 15,
+              numberOfSpans: oTelIntegrationIsEnabled ? 15 : 11,
               verifyCustom: (entrySpan, spans) => {
                 const stmtsToExpect = [
                   `create table ${TABLE_NAME_3}(no integer,name varchar(10))`,
@@ -928,7 +930,7 @@ mochaSuiteFn('tracing/db2', function () {
           testUtils.retry(() =>
             verifySpans(agentControls, controls, {
               // 11 queries + fs calls
-              numberOfSpans: 16,
+              numberOfSpans: oTelIntegrationIsEnabled ? 16 : 11,
               verifyCustom: (entrySpan, spans) => {
                 const stmtsToExpect = [
                   `create table ${TABLE_NAME_3}(no integer,name varchar(10))`,
@@ -975,7 +977,7 @@ mochaSuiteFn('tracing/db2', function () {
           testUtils.retry(() =>
             verifySpans(agentControls, controls, {
               // 11 queries + fs calls
-              numberOfSpans: 16,
+              numberOfSpans: oTelIntegrationIsEnabled ? 16 : 11,
               verifyCustom: (entrySpan, spans) => {
                 const stmtsToExpect = [
                   `create table ${TABLE_NAME_3}(no integer,name varchar(10))`,
