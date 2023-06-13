@@ -3,6 +3,22 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.24.0](https://github.com/instana/nodejs/compare/v2.23.0...v2.24.0) (2023-06-13)
+
+
+### Bug Fixes
+
+* **announce:** verify connection to Instana host agent via payload check ([ae1b41c](https://github.com/instana/nodejs/commit/ae1b41c93392f8ad3a15ef3f809d2f5cfbfddbc8))
+
+
+### Features
+
+* **collector:** added node:fs, restify and socket.io support (OpenTelemetry integration) ([#715](https://github.com/instana/nodejs/issues/715)) ([60f3bb9](https://github.com/instana/nodejs/commit/60f3bb960f909e0640b372de97c8f6d7c1654038)), closes [#109122](https://github.com/instana/nodejs/issues/109122)
+
+
+
+
+
 # [2.23.0](https://github.com/instana/nodejs/compare/v2.22.1...v2.23.0) (2023-06-06)
 
 **Note:** Version bump only for package @instana/collector
