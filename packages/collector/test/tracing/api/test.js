@@ -30,7 +30,6 @@ mochaSuiteFn('tracing/api', function () {
       const now = Date.now();
       return controls
         .sendRequest({
-          method: 'GET',
           path: '/span/active'
         })
         .then(response => {
@@ -55,7 +54,6 @@ mochaSuiteFn('tracing/api', function () {
     it('must annotate a nested value (path given as flat string)', () =>
       controls
         .sendRequest({
-          method: 'GET',
           path: '/span/annotate-path-flat-string'
         })
         .then(response => {
@@ -74,7 +72,6 @@ mochaSuiteFn('tracing/api', function () {
     it('must annotate a nested value (path given as array)', () =>
       controls
         .sendRequest({
-          method: 'GET',
           path: '/span/annotate-path-array'
         })
         .then(response => {
@@ -89,11 +86,53 @@ mochaSuiteFn('tracing/api', function () {
           expect(span.handleConstructorName).to.equal('SpanHandle');
         }));
 
+    it('must mark the current span as erroneous', () =>
+      controls
+        .sendRequest({
+          path: '/span/mark-as-erroneous'
+        })
+        .then(response => {
+          const span = response.span;
+          expect(span).to.exist;
+          expect(span.name).to.equal('node.http.server');
+          expect(span.errorCount).to.equal(1);
+          expect(span.data.http.error).to.equal(
+            'This call has been marked as erroneous via the Instana Node.js SDK, no error message has been supplied.'
+          );
+        }));
+
+    it('must mark the current span as erroneous with a custom error message', () =>
+      controls
+        .sendRequest({
+          path: '/span/mark-as-erroneous-custom-message'
+        })
+        .then(response => {
+          const span = response.span;
+          expect(span).to.exist;
+          expect(span.name).to.equal('node.http.server');
+          expect(span.errorCount).to.equal(1);
+          expect(span.data.http.error).to.not.exist;
+          expect(span.data.custom.path.error).to.equal('custom error message');
+        }));
+
+    it('must mark the current span as non-erroneous', () =>
+      controls
+        .sendRequest({
+          path: '/span/mark-as-non-erroneous'
+        })
+        .then(response => {
+          const span = response.span;
+          expect(span).to.exist;
+          expect(span.name).to.equal('node.http.server');
+          expect(span.errorCount).to.equal(0);
+          expect(span.name).to.equal('node.http.server');
+          expect(span.data.http.error).to.not.exist;
+        }));
+
     it('must manually end the currently active span', () => {
       const now = Date.now();
       return controls
         .sendRequest({
-          method: 'GET',
           path: '/span/manuallyended'
         })
         .then(response => {
@@ -126,7 +165,6 @@ mochaSuiteFn('tracing/api', function () {
     it('must provide a noop span handle', () =>
       controls
         .sendRequest({
-          method: 'GET',
           path: '/span/active'
         })
         .then(response => {
@@ -148,7 +186,6 @@ mochaSuiteFn('tracing/api', function () {
     it('must do nothing when trying to manually end the currently active span', () =>
       controls
         .sendRequest({
-          method: 'GET',
           path: '/span/manuallyended'
         })
         .then(response => {
@@ -170,7 +207,6 @@ mochaSuiteFn('tracing/api', function () {
     it('must do nothing when trying to annotate', () =>
       controls
         .sendRequest({
-          method: 'GET',
           path: '/span/annotate-path-flat-string'
         })
         .then(response => {

@@ -7,6 +7,12 @@
 
 const constants = require('./constants');
 
+/** @type {import('../logger').GenericLogger} */
+let logger;
+logger = require('../logger').getLogger('tracing/spanHandle', newLogger => {
+  logger = newLogger;
+});
+
 /**
  * Provides very limited access from client code to the current active span.
  * @param {import('./cls').InstanaBaseSpan} _span
@@ -124,8 +130,17 @@ SpanHandle.prototype.setCorrelationType = function setCorrelationType(correlatio
 };
 
 /**
- * @param {string} path
- * @param {*} value
+ * Adds an annotation (also known as a tag or custom tag) to the span. The path can be provided as a dot-separated
+ * string or as an array of strings. That is, the following two calls are equivalent:
+ * - span.annotate('sdk.custom.tags.myTag', 'My Value'), and
+ * - span.annotate(['sdk', 'custom', 'tags', 'myTag'], 'My Value').
+ *
+ * Note that custom tags should always be prefixed by sdk.custom.tags. You can also use this method to override standard
+ * tags, like the HTTP path template (example: span.annotate('http.path_tpl', '/user/{id}/details')), but it is not
+ * recommended, unless there are very good reasons to interfere with Instana's auto tracing.
+ *
+ * @param {string|Array.<string>} path the path of the annotation in the span object
+ * @param {*} value the value for the annotation
  */
 SpanHandle.prototype.annotate = function annotate(path, value) {
   if (path == null) {
@@ -174,7 +189,7 @@ function _annotateWithString(target, path, value) {
 
 /**
  * @param {Object.<string, *>} target
- * @param {string} path
+ * @param {Array.<string>} path
  * @param {*} value
  */
 function _annotateWithArray(target, path, value) {
@@ -191,6 +206,104 @@ function _annotateWithArray(target, path, value) {
       target[head] = nestedTarget = {};
     }
     _annotateWithArray(nestedTarget, tail, value);
+  }
+}
+
+/**
+ * Marks the span as an error (that is, it sets the error count for the span to 1). You can optionally provide an error
+ * message. If no message is provided, a default error message will be set.
+ *
+ * @param {string?} errorMessage the error message to add as an annotation
+ * @param {string|Array.<string>} errorMessagePath the annotation path where the error message will be written to;
+ *   there is usually no need to provide this argument as this will be handled automatically
+ */
+SpanHandle.prototype.markAsErroneous = function markAsErroneous(
+  errorMessage = 'This call has been marked as erroneous via the Instana Node.js SDK, no error message has been ' +
+    'supplied.',
+  errorMessagePath
+) {
+  this.span.ec = 1;
+  this._annotateErrorMessage(errorMessage, errorMessagePath);
+};
+
+/**
+ * Marks the span as being not an error (that is, it sets the error count for the span to 0). This is useful if the span
+ * has been marked erroneous previously (either by autotracing or via span.markAsErroneous) and that earlier decision
+ * needs to be reverted.
+ * @param {string|Array.<string>} errorMessagePath the annotation path where the error message has been written to
+ *   earlier; there is usually no need to provide this argument as this will be handled automatically
+ */
+SpanHandle.prototype.markAsNonErroneous = function markAsNonErroneous(errorMessagePath) {
+  this.span.ec = 0;
+  // reset the error message as well
+  this._annotateErrorMessage(undefined, errorMessagePath);
+};
+
+/**
+ * @param {string?} errorMessage
+ * @param {string|Array.<string>} errorMessagePath
+ */
+SpanHandle.prototype._annotateErrorMessage = function _annotateErrorMessage(errorMessage, errorMessagePath) {
+  if (errorMessagePath) {
+    this.annotate(errorMessagePath, errorMessage);
+  } else {
+    findAndAnnotateErrorMessage(this.span, errorMessage);
+  }
+};
+
+/**
+ * @param {import('./cls').InstanaBaseSpan} span
+ * @param {string|Array.<string>} message
+ */
+function findAndAnnotateErrorMessage(span, message) {
+  const data = span.data;
+  if (!data) {
+    logger.warn(
+      'The error message annotation cannot be set in span.markAsErroneous/span.markAsNonErroneous, since the ' +
+        `${span.n} span has no data object.`
+    );
+    return;
+  }
+
+  let potentialSpanTypeSpecificDataKeys = Object.keys(data).filter(
+    key =>
+      // Some db instrumentations add a span.data.peer object in addition to their main section.
+      key !== 'peer' &&
+      // We are only interested in actual object properties, not string properties like span.data.service etc.
+      data[key] != null &&
+      typeof data[key] === 'object' &&
+      !Array.isArray(data[key])
+  );
+
+  if (potentialSpanTypeSpecificDataKeys.length === 0) {
+    logger.warn(
+      'The error message annotation cannot be set in span.markAsErroneous/span.markAsNonErroneous, since the ' +
+        `data object of the ${span.n} span has no keys. Please provide the path to the error message annotation ` +
+        'explicitly.'
+    );
+    return;
+  }
+  if (potentialSpanTypeSpecificDataKeys.length > 1 && potentialSpanTypeSpecificDataKeys.includes('sdk')) {
+    // Example: span.data.(http|rpc|mysql|whatever) _and_ span.data.sdk.custom.tags can legitimately exist on the same
+    // span when custom annotations have been added to an autotrace span.
+    // In that case, we want to add the error message to the autotrace span data.
+    potentialSpanTypeSpecificDataKeys = potentialSpanTypeSpecificDataKeys.filter(key => key !== 'sdk');
+  }
+  if (potentialSpanTypeSpecificDataKeys.length > 1) {
+    logger.warn(
+      'The error message annotation cannot be set in span.markAsErroneous/span.markAsNonErroneous, since the ' +
+        `data object of the ${span.n} span has more than one key: ${potentialSpanTypeSpecificDataKeys.join(
+          ', '
+        )}. Please provide the path to the error message annotation explicitly.`
+    );
+    return;
+  }
+
+  const spanTypeSpecificData = data[potentialSpanTypeSpecificDataKeys[0]];
+  if (message != null) {
+    spanTypeSpecificData.error = message;
+  } else {
+    delete spanTypeSpecificData.error;
   }
 }
 
@@ -304,6 +417,10 @@ NoopSpanHandle.prototype.setCorrelationType = function setCorrelationType() {};
 
 NoopSpanHandle.prototype.annotate = function annotate() {};
 
+NoopSpanHandle.prototype.markAsErroneous = function markAsErroneous() {};
+
+NoopSpanHandle.prototype.markAsNonErroneous = function markAsNonErroneous() {};
+
 NoopSpanHandle.prototype.disableAutoEnd = function disableAutoEnd() {
   // provide dummy operation when automatic tracing is not enabled
 };
@@ -327,3 +444,9 @@ exports.getHandleForCurrentSpan = function getHandleForCurrentSpan(cls) {
     return new NoopSpanHandle();
   }
 };
+
+// Only exported for testing purposese.
+exports._SpanHandle = SpanHandle;
+
+// Only exported for testing purposese.
+exports._NoopSpanHandle = NoopSpanHandle;

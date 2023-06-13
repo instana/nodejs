@@ -53,6 +53,31 @@ app.get('/span/annotate-path-array', (req, res) => {
   });
 });
 
+app.get('/span/mark-as-erroneous', (req, res) => {
+  const span = instana.currentSpan();
+  span.markAsErroneous();
+  res.json({
+    span: serialize(span)
+  });
+});
+
+app.get('/span/mark-as-erroneous-custom-message', (req, res) => {
+  const span = instana.currentSpan();
+  span.markAsErroneous('custom error message', 'custom.path.error');
+  res.json({
+    span: serialize(span)
+  });
+});
+
+app.get('/span/mark-as-non-erroneous', (req, res) => {
+  const span = instana.currentSpan();
+  span.markAsErroneous();
+  span.markAsNonErroneous();
+  res.json({
+    span: serialize(span)
+  });
+});
+
 app.get('/span/manuallyended', (req, res) => {
   const span = instana.currentSpan();
   span.disableAutoEnd();
