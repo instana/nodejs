@@ -8,7 +8,7 @@
 const path = require('path');
 const { GLIBC, MUSL } = require('detect-libc');
 
-const nodeJsVersion = '14.15.1';
+const nodeJsVersion = '18.16.0';
 
 module.exports = exports = function getDockerOpts(family) {
   let baseImage;
