@@ -170,6 +170,7 @@
     "nats": "^2.11.0",
     "nats-v1": "npm:nats@^1.4.12",
     "node-fetch": "^2.6.1",
+    "node-gyp": "^8.4.1",
     "node-nats-streaming": "^0.3.2",
     "npm-check-updates": "^16.3.18",
     "nyc": "^15.1.0",
