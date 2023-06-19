@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [2.25.1](https://github.com/instana/nodejs/compare/v2.25.0...v2.25.1) (2023-06-19)
+
+
+### Bug Fixes
+
+* **lambda:** avoid freezing outgoing requests ([#806](https://github.com/instana/nodejs/issues/806)) ([0e32399](https://github.com/instana/nodejs/commit/0e3239987dbc487050e8ff28168ad570af4e08a0))
+
+
+
+
+
 # [2.25.0](https://github.com/instana/nodejs/compare/v2.24.0...v2.25.0) (2023-06-16)
 
 
