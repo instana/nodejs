@@ -98,6 +98,10 @@ jobs:
             git log -p -n1
           fi
 
+      - id: read_version_number
+        name: Read the new version number from package.json
+        run: echo "version=$(jq .version packages/core/package.json)" >> $GITHUB_OUTPUT
+
       - name: Send success message to team channel
         if: "${{ success() && env.DRY_RUN != 'true' }}"
         uses: slackapi/slack-github-action@v1.21.0
@@ -105,7 +109,7 @@ jobs:
           channel-id: ${{ secrets.SLACK_CHANNEL_ID_TEAM }}
           payload: |
             {
-              "text": ":mega: :package: New package versions have been released successfully! :star-struck: :tada:",
+              "text": ":mega: :package: Version ${{ steps.read_version_number.outputs.version }} has been released successfully! :star-struck: :tada:",
               "attachments": [{
                 "color": "good",
                 "fields": [
@@ -149,7 +153,7 @@ jobs:
           channel-id: ${{ secrets.SLACK_CHANNEL_ID_RELEASES }}
           payload: |
             {
-              "text": ":mega: :package: A new version of the Node.js tracer (npm package @instana/collector and friends) has been released! :star-struck: :tada:",
+              "text": ":mega: :package: Version ${{ steps.read_version_number.outputs.version }} of the Node.js tracer (npm package @instana/collector and friends) has been released! :star-struck: :tada:",
               "attachments": [{
                 "color": "good",
                 "fields": [
