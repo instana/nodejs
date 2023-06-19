@@ -180,7 +180,7 @@ jobs:
     on_success:
       put: slack-alert
       params:
-        channel: '#team-node #tracer-releases'
+        channel: '#team-node'
         icon_emoji: ':white_check_mark:'
         text: |
               :white_check_mark: Version ((.:package-version)) of the container image `instana/aws-fargate-nodejs` has been pushed to the IBM Container registry `icr.io` as well as `containers.instana.io`.
@@ -267,7 +267,7 @@ jobs:
     on_success:
       put: slack-alert
       params:
-        channel: '#team-node #tracer-releases'
+        channel: '#team-node'
         icon_emoji: ':white_check_mark:'
         text: |
               :white_check_mark: Version ((.:package-version)) of the container image `instana/google-cloud-run-nodejs` has been pushed to the IBM Container registry `icr.io` as well as `containers.instana.io`.
@@ -384,7 +384,7 @@ jobs:
     on_success:
       put: slack-alert
       params:
-        channel: '#team-node #tracer-releases'
+        channel: '#team-node'
         icon_emoji: ':white_check_mark:'
         text: |
               :white_check_mark: The Instana Node.js AWS Lambda layer for package version ((.:package-version)) and the corresponding container image `icr.io/instana/aws-lambda-nodejs` have been released.
