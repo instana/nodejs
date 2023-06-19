@@ -22,4 +22,3 @@ var TraceFlags;
   /** Bit to represent whether trace is sampled in trace flags. */
   TraceFlags[(TraceFlags['SAMPLED'] = 1)] = 'SAMPLED';
 })((TraceFlags = exports.TraceFlags || (exports.TraceFlags = {})));
-//# sourceMappingURL=trace_flags.js.map

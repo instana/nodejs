@@ -23,4 +23,3 @@ exports.INVALID_SPAN_CONTEXT = {
   spanId: exports.INVALID_SPANID,
   traceFlags: trace_flags_1.TraceFlags.NONE
 };
-//# sourceMappingURL=invalid-span-constants.js.map
