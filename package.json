@@ -220,5 +220,10 @@
     "commitizen": {
       "path": "./node_modules/cz-conventional-changelog"
     }
+  },
+  "nyc": {
+    "exclude": [
+      "packages/core/src/tracing/opentelemetry-instrumentations/files"
+    ]
   }
 }
