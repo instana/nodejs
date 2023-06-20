@@ -222,7 +222,11 @@ SpanHandle.prototype.markAsErroneous = function markAsErroneous(
     'supplied.',
   errorMessagePath
 ) {
-  this.span.ec = 1;
+  // We deliberately write directly to the protected property span._ec instead of span.ec here to circumvent the write
+  // protection established by ecHasBeenSetManually. A direct manual write via the SDK always has priority over anything
+  // else that has potentially written before (even other earlier markAsErroneous/markAsNonErroneous calls).
+  this.span._ec = 1;
+  this.span.ecHasBeenSetManually = true;
   this._annotateErrorMessage(errorMessage, errorMessagePath);
 };
 
@@ -234,7 +238,12 @@ SpanHandle.prototype.markAsErroneous = function markAsErroneous(
  *   earlier; there is usually no need to provide this argument as this will be handled automatically
  */
 SpanHandle.prototype.markAsNonErroneous = function markAsNonErroneous(errorMessagePath) {
-  this.span.ec = 0;
+  // We deliberately write directly to the protected property span._ec instead of span.ec here to circumvent the write
+  // protection established by ecHasBeenSetManually. A direct manual write via the SDK always has priority over anything
+  // else that has potentially written before (even other earlier markAsErroneous/markAsNonErroneous calls).
+  this.span._ec = 0;
+  this.span.ecHasBeenSetManually = true;
+
   // reset the error message as well
   this._annotateErrorMessage(undefined, errorMessagePath);
 };

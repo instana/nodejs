@@ -144,7 +144,12 @@ describe('tracing/spanHandle', () => {
     let spanHandle;
 
     beforeEach(() => {
-      span = { data: {} };
+      span = {
+        data: {},
+        get ec() {
+          return this._ec;
+        }
+      };
       spanHandle = new SpanHandle(span);
     });
 
@@ -185,7 +190,13 @@ describe('tracing/spanHandle', () => {
     let spanHandle;
 
     beforeEach(() => {
-      span = { ec: 42, data: {} };
+      span = {
+        _ec: 42,
+        get ec() {
+          return this._ec;
+        },
+        data: {}
+      };
       spanHandle = new SpanHandle(span);
     });
 

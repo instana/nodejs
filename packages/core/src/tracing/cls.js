@@ -62,6 +62,8 @@ function init(config, _processIdentityProvider) {
  * @property {string} [n] type/name
  * @property {number} [k] kind
  * @property {number} [ec] error count
+ * @property {number} [_ec] internal property for error count
+ * @property {boolean} [ecHasBeenSetManually] whether the error count has been set manually via the SDK
  * @property {number} [ts] timestamp
  * @property {number} [d] duration
  * @property {{e?: string, h?: string, hl?: boolean, cp?: string}} [f] from section
@@ -101,7 +103,32 @@ class InstanaSpan {
     if (processIdentityProvider && typeof processIdentityProvider.getFrom === 'function') {
       this.f = processIdentityProvider.getFrom();
     }
-    this.ec = 0;
+
+    // The property span.ec is defined with a getter/setter instead of being a plain property. We need to be able to
+    // prohibit overwriting span.ec from auto-tracing instrumentations after it has been set manually via the
+    // SDK (spanHandle.markAsErroneous).
+    Object.defineProperty(this, '_ec', {
+      value: 0,
+      writable: true,
+      enumerable: false
+    });
+    Object.defineProperty(this, 'ec', {
+      get() {
+        return this._ec;
+      },
+      set(value) {
+        if (!this.ecHasBeenSetManually) {
+          this._ec = value;
+        }
+      },
+      enumerable: true
+    });
+    Object.defineProperty(this, 'ecHasBeenSetManually', {
+      value: false,
+      writable: true,
+      enumerable: false
+    });
+
     this.ts = Date.now();
     this.d = 0;
     /** @type {Array.<*>} */
