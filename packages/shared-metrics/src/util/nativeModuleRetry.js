@@ -59,7 +59,20 @@ function loadNativeAddOn(opts) {
  */
 function loadNativeAddOnInternal(opts, loaderEmitter) {
   try {
-    const { isMainThread } = require('worker_threads');
+    let isMainThread = true;
+    isMainThread = require('worker_threads').isMainThread;
+
+    if (
+      process.execArgv &&
+      process.execArgv.length > 0 &&
+      ((process.execArgv[0].indexOf('--experimental-loader') !== -1 &&
+        process.execArgv[0].indexOf('esm-loader.mjs')) !== -1 ||
+        (process.execArgv[0].indexOf('--experimental-loader') !== -1 &&
+          process.execArgv[1].indexOf('esm-loader.mjs') !== -1))
+    ) {
+      if (!isMainThread) isMainThread = true;
+    }
+
     if (!isMainThread) {
       // Fail silently, we currently do not want to send any metrics from a worker thread.
       // (But see https://instana.kanbanize.com/ctrl_board/56/cards/48699/details/)
