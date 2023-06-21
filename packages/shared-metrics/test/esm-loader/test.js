@@ -15,9 +15,11 @@ const config = require('@instana/core/test/config');
 const ProcessControls = require('../../../collector/test/test_util/ProcessControls');
 
 // NOTE: Node 10 needs to use .mjs file ending & --experimental-modules flag
-const mochaSuiteFn = semver.gte(process.versions.node, '12.0.0') ? describe : describe.skip;
+// NOTE: ESM loader & Node v20 do not work together. https://github.com/nodejs/help/issues/4190
+const mochaSuiteFn =
+  semver.gte(process.versions.node, '12.0.0') && semver.lt(process.version.node, '20.0.0') ? describe : describe.skip;
 
-mochaSuiteFn.only('ESM loader', function () {
+mochaSuiteFn('ESM loader', function () {
   describe('case 1', function () {
     this.timeout(config.getTestTimeout());
 
