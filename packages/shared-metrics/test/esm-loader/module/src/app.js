@@ -3,7 +3,7 @@
  */
 
 'use strict';
-console.log('app.js called');
+
 import express from 'express';
 
 const port = process.env.APP_PORT || 44004;

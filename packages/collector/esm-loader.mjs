@@ -16,29 +16,16 @@
  * NOTE: When using ESM the customer can only configure the collector with
  *       ENV variables.
  */
+
 import instana from './src/index.js';
-let appSpecifier;
+instana();
 
-console.log('bootstrap');
+/*
 export async function resolve(specifier, context, nextResolve) {
-  console.log(specifier, context);
-  // first resolve is the app file
-  // file:///Users/kirrg001/dev/instana/nodejs/packages/shared-metrics/test/esm-loader/module/src/app.js
-  if (!appSpecifier) {
-    appSpecifier = specifier;
-    process.argv[1] = appSpecifier.replace('file://', '');
-    instana();
-  }
-
   return nextResolve(specifier, context, nextResolve);
 }
 
-/*
 export async function load(url, context, nextLoad) {
   return nextLoad(url, context, nextLoad);
 }
 */
-
-export function globalPreload(context) {
-  console.log('globalPreload', context);
-}

@@ -25,17 +25,6 @@ try {
   // Worker threads are not available, so we know that this is the main thread.
 }
 
-if (
-  process.execArgv &&
-  process.execArgv.length > 0 &&
-  ((process.execArgv[0].indexOf('--experimental-loader') !== -1 && process.execArgv[0].indexOf('esm-loader.mjs')) !==
-    -1 ||
-    (process.execArgv[0].indexOf('--experimental-loader') !== -1 &&
-      process.execArgv[1].indexOf('esm-loader.mjs') !== -1))
-) {
-  if (!isMainThread) isMainThread = true;
-}
-
 const path = require('path');
 const instanaNodeJsCore = require('@instana/core');
 const instanaSharedMetrics = require('@instana/shared-metrics');

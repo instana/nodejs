@@ -12,7 +12,6 @@ let logger = require('@instana/core').logger.getLogger('metrics');
 
 const CountDownLatch = require('./util/CountDownLatch');
 const { DependencyDistanceCalculator, MAX_DEPTH } = require('./util/DependencyDistanceCalculator');
-const { getMainPackageJson } = require('@instana/core/src/util/applicationUnderMonitoring');
 
 /**
  * @param {import('@instana/core/src/logger').GenericLogger} _logger
