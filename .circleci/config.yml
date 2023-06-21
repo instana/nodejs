@@ -471,6 +471,31 @@ jobs:
     parallelism: << pipeline.parameters.executors >>
     resource_class: medium+
 
+  "node-20-esm":
+    environment:
+      RUN_ESM: true
+      COLLECTOR_ONLY: true
+    docker:
+      - image: cimg/node:20.3
+      - <<: *zookeeper
+      - <<: *elasticsearch
+      - <<: *mongo
+      - <<: *redis
+      - <<: *kafka
+      - <<: *schema-registry
+      - <<: *mysql
+      - <<: *postgres
+      - <<: *mssql
+      - <<: *rabbitmq
+      - <<: *nats
+      - <<: *nats-streaming
+      - <<: *memcached
+      - <<: *couchbase
+      - <<: *couchbase-setup
+    <<: *shared
+    parallelism: << pipeline.parameters.executors >>
+    resource_class: medium+
+
   "node-14":
     environment:
       NPM_VERSION: 8.6.0
@@ -611,6 +636,7 @@ workflows:
         - equal: [ esm-build, << pipeline.parameters.workflow >> ]
     jobs:
       - "node-18-esm"
+      - "node-20-esm"
 
   coverage:
     when:
