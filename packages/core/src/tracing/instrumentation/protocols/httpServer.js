@@ -170,6 +170,13 @@ function shimEmit(realEmit) {
       });
 
       function finishSpan() {
+        if (span.transmitted) {
+          // We listen to multiple events like aborted, finish and close. In some scenarios, finishSpan will be called
+          // multiple times. However, if the span has already been transmitted to the agent, we do not need to do
+          // anything here, it has been taken care of by an earlier invocation of finishSpan.
+          return;
+        }
+
         // Always capture duration and HTTP response details, no matter if a higher level instrumentation
         // (like graphql.server) has modified the span or not.
         span.d = Date.now() - span.ts;
