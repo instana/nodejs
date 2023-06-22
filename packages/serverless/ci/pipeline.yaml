@@ -49,7 +49,7 @@ resources:
       password: ((concourse-icr-containers-public.password))
       tag: latest
 
-  - name: aws-fargate-nodejs-image-containters-instana-io
+  - name: aws-fargate-nodejs-image-containers-instana-io
     type: registry-image
     icon: docker
     source:
@@ -61,6 +61,7 @@ resources:
       repository: delivery.instana.io/rel-docker-agent-local/agent/aws/fargate/nodejs
       username: ((delivery-instana-io-release-project-artifact-read-writer-creds.username))
       password: ((delivery-instana-io-release-project-artifact-read-writer-creds.password))
+      tag: latest
 
   - name: instana-google-cloud-run-npm-package
     type: npm-resource
@@ -179,7 +180,7 @@ jobs:
         get_params:
           skip_download: true
 
-      - put: aws-fargate-nodejs-image-containters-instana-io
+      - put: aws-fargate-nodejs-image-containers-instana-io
         params:
           image: image/image.tar
           additional_tags: instana-aws-fargate-npm-package/version
