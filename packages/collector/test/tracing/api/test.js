@@ -106,7 +106,7 @@ mochaSuiteFn('tracing/api', function () {
           span => expect(span.n).to.equal('node.http.server'),
           span => expect(span.ec).to.equal(1),
           span => expect(span.data.http.error).to.not.exist,
-          span => expect(span.data.custom.path.error).to.equal('custom error message')
+          span => expect(span.data.sdk.custom.tags.error).to.equal('custom error message')
         ]);
       });
     });
