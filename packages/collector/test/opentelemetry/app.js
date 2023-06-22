@@ -58,7 +58,6 @@ require('mysql2');
 require('ioredis');
 require('mongoose');
 require('pg');
-require('grpc');
 require('fs');
 require('amqplib');
 require('fastify');
