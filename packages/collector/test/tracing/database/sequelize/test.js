@@ -6,6 +6,7 @@
 'use strict';
 
 const { expect } = require('chai');
+const semver = require('semver');
 const { fail } = require('chai').assert;
 
 const constants = require('@instana/core').tracing.constants;
@@ -17,7 +18,9 @@ const globalAgent = require('../../../globalAgent');
 
 const agentControls = globalAgent.instance;
 
-const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
+// See https://github.com/sequelize/sequelize/releases/tag/v7.0.0-alpha.27
+const mochaSuiteFn =
+  supportedVersion(process.versions.node) && semver.lt(process.versions.node, '20.0.0') ? describe : describe.skip;
 
 mochaSuiteFn('tracing/sequelize', function () {
   this.timeout(config.getTestTimeout());
