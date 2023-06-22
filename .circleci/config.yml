@@ -610,7 +610,7 @@ workflows:
           equal: [ scheduled_pipeline, << pipeline.trigger_source >> ]
     jobs:
       - "node-20"
-      - "node-18"
+      #- "node-18"
 
   other-nodejs-versions:
     when:
@@ -635,7 +635,7 @@ workflows:
         # by providing the parameter "workflow: esm-build"
         - equal: [ esm-build, << pipeline.parameters.workflow >> ]
     jobs:
-      - "node-18-esm"
+      #- "node-18-esm"
       - "node-20-esm"
 
   coverage:
