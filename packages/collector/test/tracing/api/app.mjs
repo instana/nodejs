@@ -66,7 +66,7 @@ app.get('/span/mark-as-erroneous', (req, res) => {
 
 app.get('/span/mark-as-erroneous-custom-message', (req, res) => {
   const span = instana.currentSpan();
-  span.markAsErroneous('custom error message', 'custom.path.error');
+  span.markAsErroneous('custom error message', 'sdk.custom.tags.error');
   res.json({
     span: serialize(span)
   });
