@@ -100,7 +100,9 @@ jobs:
 
       - id: read_version_number
         name: Read the new version number from package.json
-        run: echo "version=$(jq .version packages/core/package.json)" >> $GITHUB_OUTPUT
+        # --raw-output removes the quotes around the version number from the jq output.
+        # The quotes would break the JSON payload for the Slack success message.
+        run: echo "version=$(jq --raw-output .version packages/core/package.json)" >> $GITHUB_OUTPUT
 
       - name: Send success message to team channel
         if: "${{ success() && env.DRY_RUN != 'true' }}"
