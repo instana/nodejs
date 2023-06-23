@@ -71,6 +71,8 @@ The following sections describe how to manage dependencies in practice.
 
 ### package-lock.json
 
+Note: The `package-lock.json` files are only relevant when you execute an `npm install` in _this repository_. Users of `@instana` npm packages will have their own `package-lock.json` or `yarn.lock` file for their application, those are completely independent from the `package-lock.json` files in this repository. Thus, they need to take care of updating their transitive dependencies themselves. We only can make sure that the version ranges we use for our direct dependencies (in our `package.json` files) allow to install a dependency tree that has no known vulnerabilities.
+
 #### lockfileVersion
 
 We currently use lockfileVersion 2. LockfileVersion 3 is no longer compatible with Node v10.
@@ -90,17 +92,19 @@ Do *not* run `npm install ${dependency-name}` in the directory of a package (lik
 
 The correct way of *adding* a dependency in one of the packages is to use the command `lerna add --scope=${package-name} ${dependency-name}`. For example, to add the dependency `moment` to the package `@instana/core`, you would use `lerna add --scope=@instana/core moment`. Specific versions or version ranges can be used as well: `lerna add --scope=@instana/core "moment@^2.29.1`. To add a development dependency, use `--dev`, that is, `lerna add --scope=@instana/collector --dev moment`. Refer to `lerna add --help` for more information.
 
-### Removing A Package Dependency
-
-Do *not* run `npm uninstall ${dependency-name}` in the directory of a package. This will mess up the `package-lock.json` file in that package.
-
-There is no `lerna` command to remove a dependency, that is, there is no `lerna remove --scope` counterpart for `lerna add --scope`. To remove a dependency from a package, remove the corresponding entry from the `dependencies`/`devDependencies`/... section of the package's `package.json` file and then run `npm run refresh-package-lock-files` afterwards. This will remove the package from the `node_modules` folder and also update the `package-lock.json` file correctly.
-
 ### Updating Dependencies
 
 #### Updating All Dependencies At Once
 
 You can run `npm run update-deps` to update all dependencies in all packages via [`npm-check-updates`](https://www.npmjs.com/package/npm-check-updates) in one batch.
+
+#### Updating A Single Version In A `package.json` File
+
+Run `lerna add --scope=@instana/$package $dependencyName@$version && npm run refresh-package-lock-files`. For example, when you want to update the `semver` dependency in `@instana/core` to version 7.5.3, run `lerna add --scope=@instana/core semver@7.5.3 && npm run refresh-package-lock-files`.
+
+You can manage dev dependencies in the same way, that is `lerna add --dev --scope=@instana/autoprofile semver@7.5.3 && npm run refresh-package-lock-files`.
+
+Do *not* run `npm install ${dependency-name}` in the directory of a package (like, in `packages/core`) to update a dependency. This will mess up the `package-lock.json` file in that package. (If you accidentally did this, you can do a `git checkout` of the `package.json` file of the package and then run `npm run refresh-package-lock-files` to fix the lock file and the content of `node_modules`.)
 
 #### Updating A Single Version In A Lockfile
 
@@ -117,7 +121,31 @@ npm run refresh-package-lock-files
 # Finally, check that the dependency in question has been updated in `packages/shared-metrics/package-lock.json` to the desired version.
 ```
 
-Note: The intent of the procedure above is satisfy security scanners (`npm audit`, Dependabot etc.). `package-lock.json` files are never included when publishing to the npm registry. Thy are only relevant when you execute an `npm install` in _this repository_. Users of `@instana` npm packages will have their own `package-lock.json` or `yarn.lock` file for their application, those are completely independent from the `package-lock.json` files in this repository. Thus, they need to take care of updating their transitive dependencies themselves. We only can make sure that the version ranges we use for our direct dependencies allow to install a dependency tree that has no known vulnerabilities.
+Note: The intent of the procedure above is satisfy security scanners (`npm audit`, Dependabot etc.) we run ourselves. The `package-lock.json` files are never included when publishing to the npm registry, see section <#package-lock.json>.
+
+### Removing A Package Dependency
+
+Do *not* run `npm uninstall ${dependency-name}` in the directory of a package. This will mess up the `package-lock.json` file in that package.
+
+There is no `lerna` command to remove a dependency, that is, there is no `lerna remove --scope` counterpart for `lerna add --scope`. To remove a dependency from a package, remove the corresponding entry from the `dependencies`/`devDependencies`/... section of the package's `package.json` file and then run `npm run refresh-package-lock-files` afterwards. This will remove the package from the `node_modules` folder and also update the `package-lock.json` file correctly.
+
+#### Version Ranges vs. Pinning a Specific Version
+
+When adding new production dependencies, there is always the choice to either:
+* add the dependency with a version _range_, e.g. list it as `"package-name": "~x.y.z"` or `"package-name": "^x.y.z"` in the `package.json` file, or
+* _pin_ an exact version, that is, add it as `"package-name": "x.y.z"` to `package.json`.
+
+Since we maintain packages that are used as _libraries_ by others (in contrast to maintaining an _application_ that we run ourselves), we should usually allow a version range of type `^` for all dependencies, unless there are very specific reasons not to. A `^` version range of `^1.2.3` matches all versions of `>= 1.2.3` and `< 2.0.0`, that is, it allows newer patch and minor versions, but no newer major version. This allows users of `@instana/collector` and other `@instana/...` packages  to update any transitive dependency these packages have on their own, without depending on IBM to release a new version of these packages. This is particularly relevant when transitive dependencies get flagged by vulnerability scanners. Nevertheless, we also always update depdencies when they get flagged by `npm audit` in a timely manner.
+
+Possible reasons to pin an exact version of a dependency:
+* We are using internals of the library (monkey-patching functions, depending on internal APIs etc.)
+* The library had a history of introducing breaking changes in a semver-minor or semver-patch update. That is, we don't trust the maintainers to handle semver correctly.
+
+These rules apply first and foremost to production dependencies (that is, `dependencies` and `optionalDependencies`, not as strictly for `devDependencies`). Still, for `devDependencies`, we usually should use `^` version ranges as well.
+
+A note on `package-lock.json` files: Packages published on the npm registry never contain `package-lock.json` files. So the versions pinned in our `package-lock.json` files are only relevant to determine the package versions that get installed when running `npm install` inside this repository (locally or on CI), they do not affect users installing `@instana` packages as a dependency.
+
+
 
 ## Adding A New Package
 
