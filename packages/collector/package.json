@@ -138,7 +138,7 @@
     "@instana/core": "2.25.2",
     "@instana/shared-metrics": "2.25.2",
     "bunyan": "^1.8.15",
-    "semver": "7.3.3",
+    "semver": "7.5.3",
     "serialize-error": "^3.0.0"
   },
   "optionalDependencies": {
