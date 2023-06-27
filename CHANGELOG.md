@@ -5,7 +5,10 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 
 ## [2.25.3](https://github.com/instana/nodejs/compare/v2.25.2...v2.25.3) (2023-06-27)
 
-**Note:** Version bump only for package @instana/root
+
+### Dependencies
+
+* **deps:** bump semver from 7.3.3 to 7.5.3 ([f6d2a0b](https://github.com/instana/nodejs/commit/f6d2a0bda2d02c5c6baf31a8695e3b0c545be3b6))
 
 
 
