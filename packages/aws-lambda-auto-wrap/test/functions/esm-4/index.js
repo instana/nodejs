@@ -7,7 +7,7 @@ import https from 'https';
 export const candle = async (event, context) => {
   const promise = new Promise(function (resolve, reject) {
     https
-      .get('https://www.instana.com', res => {
+      .get('https://www.example.com', res => {
         resolve(res.statusCode);
       })
       .on('error', e => {
