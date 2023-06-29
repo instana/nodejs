@@ -26,6 +26,8 @@ const port = require('../../../test_util/app-port')();
 const app = express();
 const logPrefix = `Got App (${process.pid}):\t`;
 
+const agentPort = process.env.INSTANA_AGENT_PORT;
+
 if (process.env.WITH_STDOUT) {
   app.use(morgan(`${logPrefix}:method :url :status`));
 }
@@ -37,7 +39,7 @@ app.get('/', async (req, res) => {
 });
 
 app.get('/request', async (req, res) => {
-  await got.get('https://www.instana.com');
+  await got.get(`http://127.0.0.1:${agentPort}`);
 
   res.json();
 });

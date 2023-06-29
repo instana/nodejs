@@ -53,7 +53,7 @@ mochaSuiteFn('tracing/got', function () {
               extraTests: [
                 span => {
                   expect(span.data.http.method).to.equal('GET');
-                  expect(span.data.http.url).to.equal('https://www.instana.com/');
+                  expect(span.data.http.url).to.equal(`http://127.0.0.1:${agentControls.agentPort}/`);
                   expect(span.data.http.status).to.equal(200);
                 }
               ]
