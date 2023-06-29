@@ -38,7 +38,7 @@ const app = express();
 
 app.get('/otel-test', (_req, res) => {
   delay(500)
-    .then(() => request('https://www.instana.com'))
+    .then(() => request('https://www.example.com'))
     .then(() => {
       res.status(200).json({ success: true });
     })
@@ -68,7 +68,7 @@ app.get('/get-otel-spans', (_req, res) => {
 
 app.post('/otel-post', (_req, res) => {
   delay(500)
-    .then(() => request('https://www.instana.com'))
+    .then(() => request('https://www.example.com'))
     .then(() => {
       res.status(200).json({ success: true });
     })
