@@ -11,7 +11,7 @@ const express = require('express');
 
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('../../../core/test/config');
-const { retry, delay } = require('../../../core/test/test_util');
+const { retry, delay, isCI } = require('../../../core/test/test_util');
 const ProcessControls = require('../test_util/ProcessControls');
 const portfinder = require('../test_util/portfinder');
 const globalAgent = require('../globalAgent');
@@ -94,7 +94,13 @@ mochaSuiteFn('Opentelemetry usage', function () {
         ));
   });
 
-  describe('otel first', function () {
+  // This test is flaky on CI. It basically serves to demonstrate that with this unsupported setup (combining OTel and
+  // Instana, initializing OTel first), we might receive duplicated spans, one from OTel, one from Instana. However,
+  // sometimes the OTel span is missing. That might be due to a timing issue. Anyways, since this test mostly exist to
+  // document an unsupported setup, we skip it on CI.
+  const mochaSuiteFnOTelFirst = isCI ? describe.skip : describe;
+
+  mochaSuiteFnOTelFirst('otel first', function () {
     globalAgent.setUpCleanUpHooks();
     const agentControls = globalAgent.instance;
 
