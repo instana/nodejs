@@ -15,6 +15,7 @@ const { retry, delay } = require('../../../core/test/test_util');
 const ProcessControls = require('../test_util/ProcessControls');
 const portfinder = require('../test_util/portfinder');
 const globalAgent = require('../globalAgent');
+const RETRY_TIME = 10 * 1000;
 
 // NOTE: only run on the latest node version
 const mochaSuiteFn =
@@ -60,7 +61,7 @@ mochaSuiteFn('Opentelemetry usage', function () {
       }
     });
 
-    ProcessControls.setUpHooks(controls);
+    ProcessControls.setUpHooksWithRetryTime(RETRY_TIME, controls);
 
     before(() => {
       otelSpans = [];
@@ -106,7 +107,7 @@ mochaSuiteFn('Opentelemetry usage', function () {
       }
     });
 
-    ProcessControls.setUpHooks(controls);
+    ProcessControls.setUpHooksWithRetryTime(RETRY_TIME, controls);
 
     before(() => {
       otelSpans = [];

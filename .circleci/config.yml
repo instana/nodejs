@@ -74,6 +74,13 @@ shared: &shared
             sudo npm install npm@$NPM_VERSION -g
           fi
 
+    - run:
+        name: Optionally Install A Specific node-gyp Version
+        command: |
+          if [ -n "$NODE_GYP_VERSION" ]; then
+            npm install node-gyp@$NODE_GYP_VERSION
+          fi
+
     - run: npm --version
 
     - restore_cache:
@@ -380,6 +387,30 @@ memcached: &memcached
   - image: memcached:1.6.9
 
 jobs:
+  "node-20":
+    environment:
+      NODE_GYP_VERSION: 8.4.1
+    docker:
+      - image: cimg/node:20.3
+      - <<: *zookeeper
+      - <<: *elasticsearch
+      - <<: *mongo
+      - <<: *redis
+      - <<: *kafka
+      - <<: *schema-registry
+      - <<: *mysql
+      - <<: *postgres
+      - <<: *mssql
+      - <<: *rabbitmq
+      - <<: *nats
+      - <<: *nats-streaming
+      - <<: *memcached
+      - <<: *couchbase
+      - <<: *couchbase-setup
+    <<: *shared
+    parallelism: 15
+    resource_class: medium+
+
   "node-18":
     docker:
       - image: cimg/node:18.16
@@ -562,6 +593,7 @@ workflows:
         - not:
           equal: [ scheduled_pipeline, << pipeline.trigger_source >> ]
     jobs:
+      - "node-20"
       - "node-18"
 
   other-nodejs-versions:

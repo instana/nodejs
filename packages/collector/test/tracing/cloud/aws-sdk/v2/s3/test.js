@@ -56,10 +56,10 @@ if (!supportedVersion(process.versions.node)) {
   mochaSuiteFn = describe;
 }
 
-const retryTime = config.getTestTimeout() * 2;
+const retryTime = config.getTestTimeout() * 5;
 
 mochaSuiteFn('tracing/cloud/aws-sdk/v2/s3', function () {
-  this.timeout(config.getTestTimeout() * 3);
+  this.timeout(config.getTestTimeout() * 10);
 
   after(() => cleanup(bucketName));
 
