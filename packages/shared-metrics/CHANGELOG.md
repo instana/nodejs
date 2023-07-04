@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.26.0](https://github.com/instana/nodejs/compare/v2.25.3...v2.26.0) (2023-07-04)
+
+
+### Features
+
+* added support for Node v20 (ESM not working yet) ([#805](https://github.com/instana/nodejs/issues/805)) ([830259f](https://github.com/instana/nodejs/commit/830259f1267e0e2f77208f607fdb15a8d520953e))
+
+
+
+
+
 ## [2.25.3](https://github.com/instana/nodejs/compare/v2.25.2...v2.25.3) (2023-06-27)
 
 **Note:** Version bump only for package @instana/shared-metrics

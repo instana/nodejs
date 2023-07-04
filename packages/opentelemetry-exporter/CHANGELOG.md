@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.26.0](https://github.com/instana/nodejs/compare/v2.25.3...v2.26.0) (2023-07-04)
+
+**Note:** Version bump only for package @instana/opentelemetry-exporter
+
+
+
+
+
 ## [2.25.3](https://github.com/instana/nodejs/compare/v2.25.2...v2.25.3) (2023-06-27)
 
 **Note:** Version bump only for package @instana/opentelemetry-exporter
