@@ -85,6 +85,30 @@ mochaSuiteFn('ESM loader', function () {
       );
     });
   });
+
+  describe('case 4 (NODE_OPTIONS)', function () {
+    this.timeout(config.getTestTimeout());
+
+    const controls = new ProcessControls({
+      env: {
+        NODE_OPTIONS: '--experimental-loader=../../../../collector/esm-loader.mjs'
+      },
+      useGlobalAgent: true,
+      cwd: path.join(__dirname, 'module'),
+      appPath: path.join(__dirname, 'module-3', 'node_modules', 'my-app', 'server.mjs')
+    });
+
+    ProcessControls.setUpHooks(controls);
+
+    it('should be able to find package.json', async () => {
+      await testUtils.retry(() =>
+        controls.agentControls.getAllMetrics(controls.getPid()).then(metrics => {
+          const name = findMetric(metrics, ['name']);
+          expect(name).to.equal('my-app');
+        })
+      );
+    });
+  });
 });
 
 /**
