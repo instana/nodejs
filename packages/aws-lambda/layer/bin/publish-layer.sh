@@ -108,8 +108,15 @@ fi
 ZIP_NAME=$ZIP_PREFIX.zip
 TMP_ZIP_DIR=tmp
 
+# Actually, this should give us the regions where the Lambda service is provided:
+# REGIONS=$(aws ssm get-parameters-by-path --path /aws/service/global-infrastructure/services/lambda/regions --output text --query "Parameters[].Value" | tr '\t' '\n')
+# But for some reason, publishing to all of these regions does not work. In particular, the
+# following regions either require special authorization/subscription status or don't support Lambdas: ap-east-1 me-south-1 ap-northeast-3
+
 if [[ -z $REGIONS ]]; then
-  REGIONS=$'ap-northeast-1\nap-northeast-2\nap-south-1\nap-southeast-1\nap-southeast-2\nca-central-1\neu-central-1\neu-north-1\neu-west-1\neu-west-2\neu-west-3\nsa-east-1\nus-east-1\nus-east-2\nus-west-1\nus-west-2'
+  #REGIONS=$(aws ssm get-parameters-by-path --path /aws/service/global-infrastructure/services/ssm/regions --query 'Parameters[].Value')
+  REGIONS=$(aws ssm get-parameters-by-path --path /aws/service/global-infrastructure/services/lambda/regions --output text --query "Parameters[].Value" | tr '\t' '\n' | sort)
+  # REGIONS=$'ap-northeast-1\nap-northeast-2\nap-south-1\nap-southeast-1\nap-southeast-2\nca-central-1\neu-central-1\neu-north-1\neu-west-1\neu-west-2\neu-west-3\nsa-east-1\nus-east-1\nus-east-2\nus-west-1\nus-west-2'
 fi
 
 echo "####"
@@ -160,16 +167,13 @@ if [[ -z $AWS_ACCESS_KEY_ID ]] || [[ -z $AWS_SECRET_ACCESS_KEY ]]; then
   echo Warning: AWS_ACCESS_KEY_ID or AWS_SECRET_ACCESS_KEY are not set. This might be okay if you have set up AWS authentication via other means. If not, the AWS cli commands to publish the layer will fail.
 fi
 
-echo "step 1/9: fetching AWS regions (skipping, using fixed list of regions for now)"
-
-# Actually, this should give us the regions where the Lambda service is provided:
-# REGIONS=$(aws ssm get-parameters-by-path --path /aws/service/global-infrastructure/services/lambda/regions --output text --query "Parameters[].Value" | tr '\t' '\n')
-# But for some reason, publishing to all of these regions does not work. In particular, the
-# following regions either require special authorization/subscription status or don't support Lambdas: ap-east-1 me-south-1 ap-northeast-3
+echo "step 1/9: AWS regions"
 
 if [[ -z $SKIP_AWS_PUBLISH_LAYER ]]; then
   echo Will publish to regions:
   echo "$REGIONS"
+else
+  echo Publishing to AWS will be skipped.
 fi
 
 echo "step 2/9: Prepare build enviornment"
