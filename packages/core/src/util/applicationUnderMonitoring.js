@@ -144,6 +144,7 @@ function getMainPackageJsonPathStartingAtDirectory(startDirectory, cb) {
       if (
         // @ts-ignore
         (process._preload_modules && process._preload_modules.length > 0) ||
+        (process.env.NODE_OPTIONS && process.env.NODE_OPTIONS.indexOf('--experimental-loader') !== -1) ||
         (process.execArgv &&
           process.execArgv.length > 0 &&
           ((process.execArgv[0].indexOf('--experimental-loader') !== -1 &&
