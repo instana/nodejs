@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [2.26.1](https://github.com/instana/nodejs/compare/v2.26.0...v2.26.1) (2023-07-10)
+
+
+### Bug Fixes
+
+* **shared-metrics:** esm app package.json not being found when node_options is set ([#817](https://github.com/instana/nodejs/issues/817)) ([dc8f7af](https://github.com/instana/nodejs/commit/dc8f7af9b8f61bb97768eb18e36bff3fb80b6ccc))
+
+
+
+
+
 # [2.26.0](https://github.com/instana/nodejs/compare/v2.25.3...v2.26.0) (2023-07-04)
 
 
