@@ -39,7 +39,7 @@ Setting `RUN_ESM=true` locally will run use the ESM app instead of the CJS app w
 
 ## Executing code coverage tool
 
-If you are actively developing a feature and you would like to know which lines and files you have alreasy covered in your tests, it's recommended to use `.only` for the target test file and then run:
+If you are actively developing a feature and you would like to know which lines and files you have already covered in your tests, it's recommended to use `.only` for the target test file and then run:
 
 ```
 npm run coverage --scope @instana/collector
