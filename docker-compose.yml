@@ -127,8 +127,8 @@ services:
       SCHEMA_REGISTRY_HOST_NAME: schema-registry
 
   mysql:
-    image: mysql:8.0.23
-    platform: linux/x86_64
+    image: mysql:8.0.1
+    platform: linux/amd64
     ports:
       - 3306:3306
     environment:
