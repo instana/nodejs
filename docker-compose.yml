@@ -19,6 +19,7 @@ services:
 
   couchbase-setup:
     image: amd64/centos:7
+    platform: linux/amd64
     depends_on:
       - couchbase
     restart: "no"
@@ -82,11 +83,13 @@ services:
   # -> https://issues.apache.org/jira/browse/ZOOKEEPER-1936
   zookeeper:
     image: wurstmeister/zookeeper
+    platform: linux/amd64
     ports:
       - 2181:2181
 
   kafka:
     image: wurstmeister/kafka:2.12-2.2.1
+    platform: linux/amd64
     ports:
       - 9092:9092
       - 29092:29092
@@ -112,6 +115,7 @@ services:
 
   schema-registry:
     image: confluentinc/cp-schema-registry:4.1.0
+    platform: linux/amd64
     hostname: schema-registry
     depends_on:
       - "kafka"
@@ -124,6 +128,7 @@ services:
 
   mysql:
     image: mysql:8.0.1
+    platform: linux/amd64
     ports:
       - 3306:3306
     environment:
@@ -146,6 +151,7 @@ services:
 
   mssql:
     image: mcr.microsoft.com/mssql/server:2022-RC1-ubuntu-20.04
+    platform: linux/amd64
     ports:
       - 1433:1433
     environment:
@@ -181,6 +187,7 @@ services:
   # https://hub.docker.com/r/ibmcom/db2
   db2:
     image: ibmcom/db2
+    platform: linux/amd64
     privileged: true
     ports:
       - 58885:50000
