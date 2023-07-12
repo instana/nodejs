@@ -10,7 +10,7 @@ Python3 (< 3.11) is required, otherwise the db2 package won't build, see https:/
 
 Note: You might need to install `libpq-dev`/`postgresql-devel` or a similar package before running `npm install` because `pg-native` depends on it. (`@instana/collector` and friends do not depend on `pg-native` but our test suite depends on it.)
 
-After cloning the repository, run `npm install` in the root of the repository. This will install `lerna` as a local dependency and also bootstrap all packages (by running `npm install` in the individual packages, `packages/core`, `packages/collector`, ...). It can be convenient to have `lerna` installed globally to be able to run lerna commands directly from the command line, but it is not strictly necessary.
+After cloning the repository, run `npm install` in the root of the repository. This will install `lerna` as a local dependency and also bootstrap all packages (by running `npm install` in the individual packages, `packages/core`, `packages/collector`, ...). It is necessary to install `lerna` globally in order to perform lerna commands straight from the command line `npm install -g lerna`.
 
 Make sure that your IDE is parsing .prettierrc. Otherwise, install the necessary plugins to make it so.
 
