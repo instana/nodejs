@@ -31,12 +31,18 @@ mochaSuiteFn('[UNIT] tracing/index', function () {
   let activateStubGrpcJs;
   let activateStubKafkaJs;
   let activateStubRdKafka;
+  let initStubGrpc;
+  let initStubGrpcJs;
+  let initStubKafkaJs;
 
   before(() => {
     activateStubGrpc = sinon.stub(grpc, 'activate');
     activateStubGrpcJs = sinon.stub(grpcJs, 'activate');
     activateStubKafkaJs = sinon.stub(kafkaJs, 'activate');
     activateStubRdKafka = sinon.stub(rdKafka, 'activate');
+    initStubGrpc = sinon.stub(grpc, 'init');
+    initStubGrpcJs = sinon.stub(grpcJs, 'init');
+    initStubKafkaJs = sinon.stub(kafkaJs, 'init');
   });
 
   beforeEach(() => {
@@ -50,6 +56,9 @@ mochaSuiteFn('[UNIT] tracing/index', function () {
     activateStubGrpcJs.reset();
     activateStubKafkaJs.reset();
     activateStubRdKafka.reset();
+    initStubGrpc.reset();
+    initStubGrpcJs.reset();
+    initStubKafkaJs.reset();
     delete process.env.INSTANA_DISABLED_TRACERS;
   });
 
@@ -63,6 +72,7 @@ mochaSuiteFn('[UNIT] tracing/index', function () {
     expect(activateStubGrpcJs).to.have.been.called;
     expect(activateStubKafkaJs).to.not.have.been.called;
     expect(activateStubRdKafka).to.have.been.called;
+    expect(initStubGrpc).not.to.have.been.called;
   });
 
   it('deactivate instrumentation via env', () => {
@@ -72,6 +82,7 @@ mochaSuiteFn('[UNIT] tracing/index', function () {
     expect(activateStubGrpcJs).to.have.been.called;
     expect(activateStubKafkaJs).to.have.been.called;
     expect(activateStubRdKafka).to.have.been.called;
+    expect(initStubGrpc).not.to.have.been.called;
   });
 
   it('update Kafka tracing config', () => {
@@ -86,6 +97,13 @@ mochaSuiteFn('[UNIT] tracing/index', function () {
     initAndActivate({}, extraConfigFromAgent);
     expect(activateStubKafkaJs).to.have.been.calledWith(extraConfigFromAgent);
     expect(activateStubRdKafka).to.have.been.calledWith(extraConfigFromAgent);
+  });
+
+  it('skip init step when instrumentation disabled', () => {
+    initAndActivate({ tracing: { disabledTracers: ['grpcjs', 'kafkajs'] } });
+    expect(initStubKafkaJs).not.to.have.been.called;
+    expect(initStubGrpcJs).not.to.have.been.called;
+    expect(initStubGrpc).to.have.been.called;
   });
 
   function initAndActivate(initConfig, extraConfigForActivate) {

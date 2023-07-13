@@ -180,7 +180,11 @@ function initInstrumenations(_config) {
   if (!instrumenationsInitialized) {
     instrumentations.forEach(instrumentationKey => {
       instrumentationModules[instrumentationKey] = require(instrumentationKey);
-      instrumentationModules[instrumentationKey].init(_config);
+      const instrumentationName = instrumentationKey.match(/.\/instrumentation\/[^/]*\/(.*)/)[1];
+      const isInstrumentationDisabled = _config.tracing.disabledTracers.includes(instrumentationName.toLowerCase());
+      if (!isInstrumentationDisabled) {
+        instrumentationModules[instrumentationKey].init(_config);
+      }
 
       if (instrumentationModules[instrumentationKey].batchable && instrumentationModules[instrumentationKey].spanName) {
         spanBuffer.addBatchableSpanName(instrumentationModules[instrumentationKey].spanName);
