@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [2.26.2](https://github.com/instana/nodejs/compare/v2.26.1...v2.26.2) (2023-07-17)
+
+
+### Bug Fixes
+
+* skip init step when disabling individual instrumentations ([#824](https://github.com/instana/nodejs/issues/824)) ([8f8f661](https://github.com/instana/nodejs/commit/8f8f661c8dd416e94ce5e35f7b0eda81f0445c25))
+
+
+
+
+
 ## [2.26.1](https://github.com/instana/nodejs/compare/v2.26.0...v2.26.1) (2023-07-10)
 
 
