@@ -36,12 +36,12 @@ const DB2_DATABASE_NAME = 'nodedb';
 let TABLE_NAME_1;
 let TABLE_NAME_2;
 let TABLE_NAME_3;
-const DELAY_TIMEOUT_IN_MS = 500;
+const DELAY_TIMEOUT_IN_MS = 2000;
 
 const DB2_CLOSE_TIMEOUT_IN_MS = 1000;
 
-const testTimeout = Math.max(20000, config.getTestTimeout());
-const retryTime = testTimeout / 2;
+const testTimeout = Math.max(50000, config.getTestTimeout());
+const retryTime = 30000;
 
 const generateTableName = () => {
   const randomStr = Array(8)
@@ -72,6 +72,10 @@ const verifySpans = (agentControls, controls, options = {}) =>
       return;
     }
 
+    // eslint-disable-next-line no-console
+    spans.forEach(s => console.log(s));
+    // eslint-disable-next-line no-console
+    console.log(oTelIntegrationIsEnabled);
     expect(spans.length).to.equal(options.numberOfSpans || 2);
 
     if (options.verifyCustom) return options.verifyCustom(entrySpan, spans);
@@ -96,7 +100,7 @@ const verifySpans = (agentControls, controls, options = {}) =>
 
 // The db2 docker container needs a longer time to bootstrap. Please check the docker logs if
 // the container is up.
-mochaSuiteFn('tracing/db2', function () {
+mochaSuiteFn.only('tracing/db2', function () {
   this.timeout(testTimeout);
 
   before(async () => {

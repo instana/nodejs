@@ -68,7 +68,7 @@ const DB2_TABLE_NAME_3 = process.env.DB2_TABLE_NAME_3 || 'table3';
  */
 let tries = 0;
 const MAX_TRIES = 10;
-const CONNECT_TIMEOUT_IN_MS = 500;
+const CONNECT_TIMEOUT_IN_MS = 2000;
 let stmtObjectFromStart;
 
 const db2OpenPromisified = promisify(ibmdb.open);

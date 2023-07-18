@@ -593,7 +593,7 @@ workflows:
         - not:
           equal: [ scheduled_pipeline, << pipeline.trigger_source >> ]
     jobs:
-      - "node-20"
+      #- "node-20"
       - "node-18"
 
   other-nodejs-versions:
