@@ -875,6 +875,7 @@ mochaSuiteFn.only('tracing/db2', function () {
         );
     });
 
+    // eslint-disable-next-line mocha/no-exclusive-tests
     it.only('executeFile', function () {
       return controls
         .sendRequest({
