@@ -640,11 +640,7 @@ app.get('/execute-file-async', (req, res) => {
   const newFilePath = `${__dirname}/resources/${filename}_r`;
   fs.writeFileSync(newFilePath, content);
 
-  // eslint-disable-next-line no-console
-  console.log('executeFile');
   connection.executeFile(newFilePath, delimiter, function (err, data) {
-    // eslint-disable-next-line no-console
-    console.log(err);
     fs.unlinkSync(newFilePath);
 
     if (err) {
