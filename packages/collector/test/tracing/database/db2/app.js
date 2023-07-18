@@ -4,6 +4,15 @@
 
 'use strict';
 
+// ibm_db uses fs-extra
+// fs-extra uses graceful-fs
+// nyc is graceful-fs
+// graceful-fs loaded too early and does not get instrumented
+// TODO: is there a better solution?
+Object.keys(require.cache).forEach(key => {
+  if (key.indexOf('fs') !== -1) delete require.cache[key];
+});
+
 require('../../../..')();
 
 const { promisify } = require('util');
