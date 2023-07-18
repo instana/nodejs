@@ -40,7 +40,6 @@ module.exports.init = (_config, cls) => {
       return;
     }
 
-    console.log(otelSpan);
     const targetInstrumentionName = otelSpan.instrumentationLibrary.name;
     let kind = constants.EXIT;
 

@@ -20,7 +20,8 @@ module.exports.init = cls => {
   api.trace.getSpan = function instanaGetSpan() {
     const parentSpan = cls.getCurrentSpan();
 
-    console.log('PARENT SOAN', parentSpan);
+    // eslint-disable-next-line no-console
+    console.log('PARENT SPAN', parentSpan);
     // CASE: we only want to trace fs calls on entry spans
     if (!parentSpan || constants.isExitSpan(parentSpan)) {
       return orig.apply(this, arguments);
