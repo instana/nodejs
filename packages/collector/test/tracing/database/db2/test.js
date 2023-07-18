@@ -73,7 +73,7 @@ const verifySpans = (agentControls, controls, options = {}) =>
     }
 
     // eslint-disable-next-line no-console
-    spans.forEach(s => console.log(s));
+    spans.forEach(s => console.log(s.data));
     // eslint-disable-next-line no-console
     console.log(oTelIntegrationIsEnabled);
     expect(spans.length).to.equal(options.numberOfSpans || 2);
@@ -875,7 +875,7 @@ mochaSuiteFn.only('tracing/db2', function () {
         );
     });
 
-    it('executeFile', function () {
+    it.only('executeFile', function () {
       return controls
         .sendRequest({
           method: 'GET',
