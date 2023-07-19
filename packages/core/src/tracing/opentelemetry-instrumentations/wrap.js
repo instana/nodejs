@@ -59,7 +59,7 @@ module.exports.init = (_config, cls) => {
       return;
     }
 
-    if (kind === constants.EXIT && cls.skipExitTracing()) {
+    if (kind === constants.EXIT && cls.skipExitTracing({ log: false })) {
       return;
     }
 
