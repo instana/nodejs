@@ -1595,6 +1595,38 @@ function registerTests(handlerDefinitionPath) {
           ])
         ));
   });
+  describe('triggered by AWS lambda function url', function () {
+    const control = prelude.bind(this)({
+      handlerDefinitionPath,
+      trigger: 'function-url',
+      instanaEndpointUrl: backendBaseUrl,
+      instanaAgentKey
+    });
+    it('must recognize the function URL trigger', () =>
+      verify(
+        control,
+        {
+          error: false,
+          expectMetrics: true,
+          expectSpans: true,
+          trigger: 'aws:lambda.function.url'
+        },
+        {
+          payloadFormatVersion: '2.0'
+        }
+      )
+        .then(() => control.getSpans())
+        .then(spans =>
+          expectExactlyOneMatching(
+            spans,
+            span => expect(span.n).to.equal('aws.lambda.entry'),
+            span => expect(span.k).to.equal(constants.ENTRY),
+            span => expect(span.data.http.method).to.equal('GET'),
+            span => expect(span.data.http.path).to.equal('/path/to'),
+            span => expect(span.data.http).to.be.an('object')
+          )
+        ));
+  });
 
   function verify(control, expectations, eventOpts) {
     return control

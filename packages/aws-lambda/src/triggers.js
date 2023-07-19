@@ -19,6 +19,7 @@ const maxS3Records = 3;
 const maxDynamoDbRecords = 3;
 const maxS3ObjectKeyLength = 200;
 const maxSQSRecords = 3;
+const awsLambdaFunctionUrlHostRegex = /^.*\.lambda-url\..*\.on\.aws$/i;
 
 exports.enrichSpanWithTriggerData = function enrichSpanWithTriggerData(event, context, span) {
   if (isApiGatewayProxyTrigger(event)) {
@@ -52,6 +53,10 @@ exports.enrichSpanWithTriggerData = function enrichSpanWithTriggerData(event, co
   } else if (isInvokeFunction(context)) {
     span.data.lambda.trigger = 'aws:lambda.invoke';
     return;
+  } else if (isFunctionURLTrigger(event)) {
+    span.data.lambda.trigger = 'aws:lambda.function.url';
+    extractFunctionUrlEvent(event, span);
+    return;
   }
 
   // When an API Gateway is used without the "Use Lambda Proxy" setting, the body from the HTTP request is forwarded
@@ -69,9 +74,25 @@ function isApiGatewayProxyTrigger(event) {
   // NOTE: Gateway Rest API with lambda proxy -> always format 1.0
   // NOTE: Gateway HTTP API with lambda proxy -> default is 2.0, but can be configured on creation
   // NOTE: Gateway REST/HTTP API without lambda proxy -> format cannot be interpreted
+  // NOTE: Function URL also support version 2 and contains rawPath, Gateway HTTP API does not follow the format
+  // https://<url-id>.lambda-url.<region>.on.aws
   return (
     (event.resource != null && event.path != null && event.httpMethod != null) ||
-    (event.rawPath && event.version === '2.0')
+    (event.rawPath &&
+      event.version === '2.0' &&
+      !(event.requestContext.domainName && awsLambdaFunctionUrlHostRegex.test(event.requestContext.domainName)))
+  );
+}
+
+function isFunctionURLTrigger(event) {
+  // NOTE: Function URL -> Lambda sets routeKey to $default as a placeholder.
+  // NOTE: Function URL -> Currently support version 2.0.
+  // NOTE: Function URL -> Domain name follows the format https://<url-id>.lambda-url.<region>.on.aws
+  return (
+    event.routeKey === '$default' &&
+    event.version === '2.0' &&
+    event.requestContext.domainName &&
+    awsLambdaFunctionUrlHostRegex.test(event.requestContext.domainName)
   );
 }
 
@@ -386,4 +407,16 @@ function readSqsStringMessageAttribute(messageAttributes, key) {
 
 function hasFoundTraceCorrelationData(traceCorrelationData) {
   return traceCorrelationData.traceId || traceCorrelationData.parentId || traceCorrelationData.level;
+}
+
+function extractFunctionUrlEvent(event, span) {
+  const requestCtx = event.requestContext || {};
+  const requestCtxHttp = requestCtx.http || {};
+
+  span.data.http = {
+    method: requestCtxHttp.method,
+    url: requestCtxHttp.path,
+    params: readHttpQueryParams(event),
+    header: captureHeaders(event)
+  };
 }
