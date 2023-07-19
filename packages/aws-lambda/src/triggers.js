@@ -52,6 +52,10 @@ exports.enrichSpanWithTriggerData = function enrichSpanWithTriggerData(event, co
   } else if (isInvokeFunction(context)) {
     span.data.lambda.trigger = 'aws:lambda.invoke';
     return;
+  } else if (isFunctionURLTrigger(context)) {
+    span.data.lambda.trigger = 'aws:lambda.functionurl';
+    extractFunctionUrlEvent(event, span);
+    return;
   }
 
   // When an API Gateway is used without the "Use Lambda Proxy" setting, the body from the HTTP request is forwarded
@@ -69,9 +73,22 @@ function isApiGatewayProxyTrigger(event) {
   // NOTE: Gateway Rest API with lambda proxy -> always format 1.0
   // NOTE: Gateway HTTP API with lambda proxy -> default is 2.0, but can be configured on creation
   // NOTE: Gateway REST/HTTP API without lambda proxy -> format cannot be interpreted
+  // NOTE: Function URL also support version 2 and contains rawPath, Gateway HTTP API does not follow the format
+  // https://<url-id>.lambda-url.<region>.on.aws
   return (
     (event.resource != null && event.path != null && event.httpMethod != null) ||
-    (event.rawPath && event.version === '2.0')
+    (event.rawPath && event.version === '2.0' &&
+      !(event.requestContext.domainName && event.requestContext.domainName.includes('lambda-url')))
+  );
+}
+
+function isFunctionURLTrigger(event) {
+  // NOTE: Function URL -> Lambda sets routeKey to $default as a placeholder.
+  // NOTE: Function URL -> Currently support version 2.0.
+  // NOTE: Function URL -> Domain name follows the format https://<url-id>.lambda-url.<region>.on.aws
+  return (
+    event.routeKey === '$default' && event.version === '2.0' &&
+    (event.requestContext.domainName && event.requestContext.domainName.includes('lambda-url'))
   );
 }
 
@@ -386,4 +403,17 @@ function readSqsStringMessageAttribute(messageAttributes, key) {
 
 function hasFoundTraceCorrelationData(traceCorrelationData) {
   return traceCorrelationData.traceId || traceCorrelationData.parentId || traceCorrelationData.level;
+}
+
+function extractFunctionUrlEvent(event, span) {
+  const requestCtx = event.requestContext || {};
+  const requestCtxHttp = requestCtx.http || {};
+
+  span.data.http = {
+    method: requestCtxHttp.method,
+    url: requestCtxHttp.path,
+    path_tpl: event.rawPath,
+    params: readHttpQueryParams(event),
+    header: captureHeaders(event)
+  };
 }

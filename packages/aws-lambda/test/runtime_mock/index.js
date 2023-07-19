@@ -279,7 +279,8 @@ function createEvent(error, trigger, eventOpts = { payloadFormatVersion: '1.0' }
             http: {
               method: 'POST',
               path: '/path/to/path-xxx/path-yyy'
-            }
+            },
+            domainName: 'xxxxxx.execute-api.region.amazonaws.com'
           };
           event.headers = {
             'X-Request-Header-1': 'A Header Value 1, A Header Value 2',
@@ -586,6 +587,30 @@ function createEvent(error, trigger, eventOpts = { payloadFormatVersion: '1.0' }
               'arn:aws:dynamodb:us-east-2:410797082306:table/TeamNodeJsTrigger/stream/2021-10-22T09:34:19.198'
           }
         ];
+        break;
+
+      case 'function-url':
+        event.version = '2.0';
+        event.rawQueryString = '';
+        event.rawPath = '/path/to';
+        event.routeKey = '$default';
+        event.requestContext = {
+          http: {
+            method: 'GET',
+            path: '/path/to'
+          },
+          domainName: 'xxxxxx.lambda-url.region.on.aws'
+        };
+        event.headers = {
+          'X-Request-Header-1': 'A Header Value 1, A Header Value 2',
+          'X-Request-Header-2': 'a header value single',
+          'X-Request-Header-3': 'not configured to capture this'
+        };
+        event.queryStringParameters = {
+          parameter1: 'value1,value2',
+          parameter2: 'value'
+        };
+        addHttpTracingHeaders(event);
         break;
 
       default:
