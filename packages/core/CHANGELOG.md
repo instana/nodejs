@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [2.26.3](https://github.com/instana/nodejs/compare/v2.26.2...v2.26.3) (2023-07-20)
+
+
+### Bug Fixes
+
+* **collector:** reduce warnings when exit span cannot be started ([#827](https://github.com/instana/nodejs/issues/827)) ([d0d82cf](https://github.com/instana/nodejs/commit/d0d82cfa4562129cf1de32afef853764e9f7d1a5))
+
+
+
+
+
 ## [2.26.2](https://github.com/instana/nodejs/compare/v2.26.1...v2.26.2) (2023-07-17)
 
 
