@@ -19,6 +19,7 @@ const maxS3Records = 3;
 const maxDynamoDbRecords = 3;
 const maxS3ObjectKeyLength = 200;
 const maxSQSRecords = 3;
+const awsLambdaFunctionUrlHostRegex = /^.*\.lambda-url\..*\.on\.aws$/i;
 
 exports.enrichSpanWithTriggerData = function enrichSpanWithTriggerData(event, context, span) {
   if (isApiGatewayProxyTrigger(event)) {
@@ -52,7 +53,7 @@ exports.enrichSpanWithTriggerData = function enrichSpanWithTriggerData(event, co
   } else if (isInvokeFunction(context)) {
     span.data.lambda.trigger = 'aws:lambda.invoke';
     return;
-  } else if (isFunctionURLTrigger(context)) {
+  } else if (isFunctionURLTrigger(event)) {
     span.data.lambda.trigger = 'aws:lambda.functionurl';
     extractFunctionUrlEvent(event, span);
     return;
@@ -77,8 +78,9 @@ function isApiGatewayProxyTrigger(event) {
   // https://<url-id>.lambda-url.<region>.on.aws
   return (
     (event.resource != null && event.path != null && event.httpMethod != null) ||
-    (event.rawPath && event.version === '2.0' &&
-      !(event.requestContext.domainName && event.requestContext.domainName.includes('lambda-url')))
+    (event.rawPath &&
+      event.version === '2.0' &&
+      !(event.requestContext.domainName && awsLambdaFunctionUrlHostRegex.test(event.requestContext.domainName)))
   );
 }
 
@@ -87,8 +89,10 @@ function isFunctionURLTrigger(event) {
   // NOTE: Function URL -> Currently support version 2.0.
   // NOTE: Function URL -> Domain name follows the format https://<url-id>.lambda-url.<region>.on.aws
   return (
-    event.routeKey === '$default' && event.version === '2.0' &&
-    (event.requestContext.domainName && event.requestContext.domainName.includes('lambda-url'))
+    event.routeKey === '$default' &&
+    event.version === '2.0' &&
+    event.requestContext.domainName &&
+    awsLambdaFunctionUrlHostRegex.test(event.requestContext.domainName)
   );
 }
 
@@ -412,7 +416,6 @@ function extractFunctionUrlEvent(event, span) {
   span.data.http = {
     method: requestCtxHttp.method,
     url: requestCtxHttp.path,
-    path_tpl: event.rawPath,
     params: readHttpQueryParams(event),
     header: captureHeaders(event)
   };
