@@ -54,7 +54,7 @@ exports.enrichSpanWithTriggerData = function enrichSpanWithTriggerData(event, co
     span.data.lambda.trigger = 'aws:lambda.invoke';
     return;
   } else if (isFunctionURLTrigger(event)) {
-    span.data.lambda.trigger = 'aws:lambda.functionurl';
+    span.data.lambda.trigger = 'aws:lambda.function.url';
     extractFunctionUrlEvent(event, span);
     return;
   }
