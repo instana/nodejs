@@ -50,4 +50,33 @@ describe('util/stackTrace', () => {
     expect(stack[1].m).to.equal('c');
     expect(stack).to.have.lengthOf(2);
   });
+
+  it('must not capture stack type string', () => {
+    let stack;
+
+    (function a() {
+      const stackTraceTarget = { stack: 'this is not an array' };
+      const orig = Error.captureStackTrace;
+      Error.captureStackTrace = target => {
+        Object.assign(target, stackTraceTarget);
+      };
+
+      stack = stackTrace.captureStackTrace(2, a);
+      Error.captureStackTrace = orig;
+    })();
+
+    expect(stack.length).to.equal(0);
+  });
+
+  it('must capture stack length < drop', () => {
+    const stackTraceTarget = { stack: new Array(5) };
+    const orig = Error.captureStackTrace;
+    Error.captureStackTrace = target => {
+      Object.assign(target, stackTraceTarget);
+    };
+
+    const stack = stackTrace.captureStackTrace(2, this, 10);
+    Error.captureStackTrace = orig;
+    expect(stack.length).to.equal(5);
+  });
 });
