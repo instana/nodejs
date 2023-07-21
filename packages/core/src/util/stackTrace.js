@@ -37,11 +37,17 @@ exports.captureStackTrace = function captureStackTrace(length, referenceFunction
     // drawback is that it might show too much, but that's better than not having any stack trace at all.
     Error.captureStackTrace(stackTraceTarget);
   }
-  const stack = stackTraceTarget.stack;
+
+  let stack = stackTraceTarget.stack;
+
+  if (!Array.isArray(stack)) {
+    stack = [];
+  }
+
   Error.stackTraceLimit = originalLimit;
   Error.prepareStackTrace = originalPrepareStackTrace;
 
-  if (drop > 0) {
+  if (drop > 0 && stack.length >= drop) {
     stack.splice(0, drop);
   }
   return stack;
