@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.27.0](https://github.com/instana/nodejs/compare/v2.26.3...v2.27.0) (2023-07-24)
+
+
+### Bug Fixes
+
+* stack.slice not a function ([#828](https://github.com/instana/nodejs/issues/828)) ([827a722](https://github.com/instana/nodejs/commit/827a722939785ca70791e5c36de8a88a8c48423a))
+
+
+
+
+
 ## [2.26.3](https://github.com/instana/nodejs/compare/v2.26.2...v2.26.3) (2023-07-20)
 
 

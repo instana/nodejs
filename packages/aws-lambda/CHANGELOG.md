@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.27.0](https://github.com/instana/nodejs/compare/v2.26.3...v2.27.0) (2023-07-24)
+
+
+### Features
+
+* **aws-lambda:** added function url support ([6f9fdb2](https://github.com/instana/nodejs/commit/6f9fdb20640d986c7af58a6a6d77f385336a8cb2))
+
+
+
+
+
 ## [2.26.3](https://github.com/instana/nodejs/compare/v2.26.2...v2.26.3) (2023-07-20)
 
 **Note:** Version bump only for package @instana/aws-lambda
