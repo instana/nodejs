@@ -16,6 +16,8 @@ Make sure that your IDE is parsing .prettierrc. Otherwise, install the necessary
 
 Troubleshooting `pg_config: command not found`: The tests in this package depend on (among others) `pg-native` and that in turn depends on the native add-on `libpq`. That add-on might try to call `pg_config` during `npm install`. If `npm install` terminates with `pg_config: command not found`, install the PostgreSQL package for your system (e.g. `brew install postgresql` or similar). If you do not want to run any tests, you can also omit this step and install dependencies with `npm install --production` instead.
 
+Install the [`aws-cli`](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html) to publish AWS layers from local.
+
 ## Executing Tests Locally
 
 Some of the tests require infrastructure components (databases etc.) to run locally. The easiest way to run all required components locally is to use Docker and on top of this [Docker Compose](https://docs.docker.com/compose/). Start the script `bin/start-test-containers.sh` to set up all the necessary infrastructure. Once this is up, leave it running and, in second shell, start `bin/run-tests.sh`. This will set the necessary environment variables and kick off the tests.
@@ -322,3 +324,26 @@ precompile/build-all-addons.js
 ```
 
 NOTE: It is recommended to comment out the ABI versions you don't want to generate/regenerate in the `build-all-addons` script. Alternatively, if you want to regenerate all builds that's fine too, but it takes longer.
+
+## Support for Cloud Services
+
+### Publishing local layer to AWS
+
+To publish local layer to AWS with the AWS CLI, the CLI needs to have access to the IAM credentials.
+
+Steps to follow
+
+- Create an IAM user if you don't already have one with the required rights.
+- Create `credentials` file on the following folder location, `~/.aws`
+- Add below informations to the newly created `credentials` file. The access key and secret key can be obtained from the IAM user account.
+```javascript
+[default]
+aws_access_key_id = <add your access key>
+aws_secret_access_key = <add your secret key>
+```
+More information can be found [here](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html).
+- Run these commands to publish local layer to AWS:
+```sh
+cd packages/aws-lambda/layer/bin/
+REGIONS=<region> SKIP_DOCKER_IMAGE=true BUILD_LAYER_WITH=local LAYER_NAME=experimental-instana-nodejs-with-extension ./publish-layer.sh
+```
