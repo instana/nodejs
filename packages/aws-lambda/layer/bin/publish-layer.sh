@@ -108,15 +108,12 @@ fi
 ZIP_NAME=$ZIP_PREFIX.zip
 TMP_ZIP_DIR=tmp
 
-# Actually, this should give us the regions where the Lambda service is provided:
-# REGIONS=$(aws ssm get-parameters-by-path --path /aws/service/global-infrastructure/services/lambda/regions --output text --query "Parameters[].Value" | tr '\t' '\n')
-# But for some reason, publishing to all of these regions does not work. In particular, the
-# following regions either require special authorization/subscription status or don't support Lambdas: ap-east-1 me-south-1 ap-northeast-3
+# us-gov-* only available to US government agencies, U.S. government etc.
+# cn-* (china regions) completely disconnected from normal AWS account. 
+SKIPPED_REGIONS=$'cn-north-1\ncn-northwest-1\nus-gov-east-1\nus-gov-west-1'
 
 if [[ -z $REGIONS ]]; then
-  #REGIONS=$(aws ssm get-parameters-by-path --path /aws/service/global-infrastructure/services/ssm/regions --query 'Parameters[].Value')
   REGIONS=$(aws ssm get-parameters-by-path --path /aws/service/global-infrastructure/services/lambda/regions --output text --query "Parameters[].Value" | tr '\t' '\n' | sort)
-  # REGIONS=$'ap-northeast-1\nap-northeast-2\nap-south-1\nap-southeast-1\nap-southeast-2\nca-central-1\neu-central-1\neu-north-1\neu-west-1\neu-west-2\neu-west-3\nsa-east-1\nus-east-1\nus-east-2\nus-west-1\nus-west-2'
 fi
 
 echo "####"
@@ -127,6 +124,7 @@ echo "SKIP_DOCKER_IMAGE: $SKIP_DOCKER_IMAGE"
 echo "SKIP_DOCKER_IMAGE_PUSH: $SKIP_DOCKER_IMAGE_PUSH"
 echo "DOCKER_IMAGE_NAME: $DOCKER_IMAGE_NAME"
 echo "REGIONS: $REGIONS"
+echo "SKIPPED REGIONS: $SKIPPED_REGIONS"
 echo "PACKAGE_VERSION: $PACKAGE_VERSION"
 echo "BUILD_LAYER_WITH: $BUILD_LAYER_WITH"
 echo "SKIP_AWS_PUBLISH_LAYER: $SKIP_AWS_PUBLISH_LAYER"
@@ -293,34 +291,47 @@ if [[ -z $SKIP_AWS_PUBLISH_LAYER ]]; then
   echo "step 6/9: publishing $ZIP_NAME as AWS Lambda layer $LAYER_NAME to all regions"
 
   while read -r region; do
-    echo " - publishing to region $region:"
+    skip=0
 
-    # See https://docs.aws.amazon.com/cli/latest/reference/lambda/publish-layer-version.html for documentation.
-    # NOTE: --compatible-architectures $LAMBDA_ARCHITECTURE is not working in all regions.
-    lambda_layer_version=$( \
-      AWS_PAGER="" aws --region $region lambda publish-layer-version \
-        --layer-name $LAYER_NAME \
-        --description "Provides Instana tracing and monitoring for AWS Lambdas (@instana/aws-lambda@$VERSION)" \
-        --license-info $LICENSE \
-        --zip-file fileb://$ZIP_NAME \
-        --output json \
-        --compatible-runtimes nodejs10.x nodejs12.x nodejs14.x nodejs16.x nodejs18.x \
-        | jq '.Version' \
-    )
-    echo "   + published version $lambda_layer_version to region $region"
-    if [[ $lambda_layer_version =~ ^[0-9]+$ ]]; then
-      echo "   + setting required permission on Lambda layer $LAYER_NAME / version $lambda_layer_version in region $region"
-      AWS_PAGER="" aws --region $region lambda add-layer-version-permission \
-        --layer-name $LAYER_NAME \
-        --version-number $lambda_layer_version \
-        --statement-id public-permission-all-accounts \
-        --principal \* \
-        --action lambda:GetLayerVersion \
-        --output text
+    while read -r skip; do
+      if [[ "$region" == "$skip" ]]; then
+        skip=1
+        break
+      fi
+    done <<< "$SKIPPED_REGIONS"
+
+    if [[ $skip -eq 1 ]]; then
+      echo " - skipping region: $region"      
     else
-      echo "   + WARNING: Lambda layer version $lambda_layer_version does not seem to be numeric, will not set permissions in region $region"
-    fi
+      echo " - publishing to region $region:"
+          
+      # See https://docs.aws.amazon.com/cli/latest/reference/lambda/publish-layer-version.html for documentation.
+      # NOTE: --compatible-architectures $LAMBDA_ARCHITECTURE is not working in all regions.
+      lambda_layer_version=$( \
+        AWS_PAGER="" aws --region $region lambda publish-layer-version \
+          --layer-name $LAYER_NAME \
+          --description "Provides Instana tracing and monitoring for AWS Lambdas (@instana/aws-lambda@$VERSION)" \
+          --license-info $LICENSE \
+          --zip-file fileb://$ZIP_NAME \
+          --output json \
+          --compatible-runtimes nodejs10.x nodejs12.x nodejs14.x nodejs16.x nodejs18.x \
+          | jq '.Version' \
+      )
 
+      echo "   + published version $lambda_layer_version to region $region"
+      if [[ $lambda_layer_version =~ ^[0-9]+$ ]]; then
+        echo "   + setting required permission on Lambda layer $LAYER_NAME / version $lambda_layer_version in region $region"
+        AWS_PAGER="" aws --region $region lambda add-layer-version-permission \
+          --layer-name $LAYER_NAME \
+          --version-number $lambda_layer_version \
+          --statement-id public-permission-all-accounts \
+          --principal \* \
+          --action lambda:GetLayerVersion \
+          --output text
+      else
+        echo "   + WARNING: Lambda layer version $lambda_layer_version does not seem to be numeric, will not set permissions in region $region"
+      fi
+    fi
   done <<< "$REGIONS"
 else
   echo "step 6/9: publishing AWS Lambda layer $LAYER_NAME (skipping)"
