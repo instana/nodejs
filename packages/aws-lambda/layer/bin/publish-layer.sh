@@ -174,7 +174,7 @@ else
   echo Publishing to AWS will be skipped.
 fi
 
-echo "step 2/9: Prepare build enviornment"
+echo "step 2/9: Prepare build environment"
 
 rm -rf $ZIP_NAME
 rm -rf $TMP_ZIP_DIR
