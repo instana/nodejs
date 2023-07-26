@@ -30,18 +30,34 @@ if [[ -z $LAYER_NAME ]]; then
   LAYER_NAME=instana-nodejs
 fi
 
-REGIONS=$'ap-northeast-1\nap-northeast-2\nap-south-1\nap-southeast-1\nap-southeast-2\nca-central-1\neu-central-1\neu-north-1\neu-west-1\neu-west-2\neu-west-3\nsa-east-1\nus-east-1\nus-east-2\nus-west-1\nus-west-2'
+REGIONS=$(aws ssm get-parameters-by-path --path /aws/service/global-infrastructure/services/lambda/regions --output text --query "Parameters[].Value" | tr '\t' '\n' | sort)
+
+# us-gov-* only available to US government agencies, U.S. government etc.
+# cn-* (china regions) completely disconnected from normal AWS account. 
+SKIPPED_REGIONS=$'cn-north-1\ncn-northwest-1\nus-gov-east-1\nus-gov-west-1'
 
 while read -r region; do
-  lambda_layer_version=$( \
-    AWS_PAGER="" aws --region $region \
-      lambda list-layer-versions \
-      --layer-name $LAYER_NAME \
-      --output json \
-      | jq '.LayerVersions[0].Version' \
-  )
+  skip=0
 
-  echo $region: $lambda_layer_version
+  while read -r skip; do
+    if [[ "$region" == "$skip" ]]; then
+      skip=1
+      break
+    fi
+  done <<< "$SKIPPED_REGIONS"
 
+  if [[ $skip -eq 1 ]]; then
+    echo "$region: skipped"
+  else
+    lambda_layer_version=$( \
+      AWS_PAGER="" aws --region $region \
+        lambda list-layer-versions \
+        --layer-name $LAYER_NAME \
+        --output json \
+        | jq '.LayerVersions[0].Version' \
+    )
+
+    echo $region: $lambda_layer_version
+  fi
 done <<< "$REGIONS"
 
