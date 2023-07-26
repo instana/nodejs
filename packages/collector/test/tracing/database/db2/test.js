@@ -13,9 +13,6 @@ const testUtils = require('../../../../../core/test/test_util');
 const config = require('../../../../../core/test/config');
 const ProcessControls = require('../../../test_util/ProcessControls');
 const globalAgent = require('../../../globalAgent');
-
-const oTelIntegrationIsEnabled = require('../../../test_util/isOTelIntegrationEnabled');
-
 const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
 if (testUtils.isCI() && !process.env.DB2_CONNECTION_STR) {
@@ -54,6 +51,15 @@ const generateTableName = () => {
   return randomStr;
 };
 
+/**
+ * NOTE: When using `nyc` (our coverage tool) the number of spans are different,
+ *       because `nyc` is using `node-preload`, which adds certain npm packages to the require cache.
+ *       And if the require cache is containing libraries, which we instrument, we loose spans.
+ *       DB2 is using fs-extra, which uses graceful-fs. `nyc` is using `graceful-fs` too.
+ *       That's why we are loosing fs spans.
+ *       We have removed the assertions for checking the exact number of spans for now.
+ *       See https://github.com/instana/nodejs/pull/825#discussion_r1268002295
+ */
 const verifySpans = (agentControls, controls, options = {}) =>
   agentControls.getSpans().then(spans => {
     if (options.expectSpans === false) {
@@ -71,12 +77,6 @@ const verifySpans = (agentControls, controls, options = {}) =>
       expect(spans.length).to.equal(1);
       return;
     }
-
-    // eslint-disable-next-line no-console
-    spans.forEach(s => console.log(s.data));
-    // eslint-disable-next-line no-console
-    console.log(oTelIntegrationIsEnabled);
-    expect(spans.length).to.equal(options.numberOfSpans || 2);
 
     if (options.verifyCustom) return options.verifyCustom(entrySpan, spans);
 
@@ -100,7 +100,7 @@ const verifySpans = (agentControls, controls, options = {}) =>
 
 // The db2 docker container needs a longer time to bootstrap. Please check the docker logs if
 // the container is up.
-mochaSuiteFn.only('tracing/db2', function () {
+mochaSuiteFn('tracing/db2', function () {
   this.timeout(testTimeout);
 
   before(async () => {
@@ -395,8 +395,7 @@ mochaSuiteFn.only('tracing/db2', function () {
         .then(() =>
           testUtils.retry(() =>
             verifySpans(agentControls, controls, {
-              stmt: `SELECT * FROM ${TABLE_NAME_1}`,
-              numberOfSpans: 3
+              stmt: `SELECT * FROM ${TABLE_NAME_1}`
             })
           )
         );
@@ -411,8 +410,7 @@ mochaSuiteFn.only('tracing/db2', function () {
         .then(() =>
           testUtils.retry(() =>
             verifySpans(agentControls, controls, {
-              stmt: `SELECT * FROM ${TABLE_NAME_1}`,
-              numberOfSpans: 3
+              stmt: `SELECT * FROM ${TABLE_NAME_1}`
             })
           )
         );
@@ -430,7 +428,6 @@ mochaSuiteFn.only('tracing/db2', function () {
             verifySpans(agentControls, controls, {
               stmt: `SELECT * FROM ${TABLE_NAME_1}`,
               error: 'Error: [IBM][CLI Driver] CLI0115E  Invalid cursor state. SQLSTATE=24000',
-              numberOfSpans: 3,
               verifyCustom: (entrySpan, spans) => {
                 testUtils.expectAtLeastOneMatching(spans, [
                   span => expect(span.t).to.equal(entrySpan.t),
@@ -470,7 +467,6 @@ mochaSuiteFn.only('tracing/db2', function () {
           testUtils.retry(() =>
             verifySpans(agentControls, controls, {
               stmt: `SELECT * FROM ${TABLE_NAME_1}`,
-              numberOfSpans: 3,
               verifyCustom: (entrySpan, spans) => {
                 const realParent = testUtils.expectAtLeastOneMatching(spans, [
                   span => expect(span.n).to.equal('node.http.server'),
@@ -531,7 +527,6 @@ mochaSuiteFn.only('tracing/db2', function () {
         .then(() =>
           testUtils.retry(() =>
             verifySpans(agentControls, controls, {
-              numberOfSpans: 3,
               verifyCustom: (entrySpan, spans) => {
                 testUtils.expectExactlyNMatching(spans, 2, [
                   span => expect(span.t).to.equal(entrySpan.t),
@@ -565,7 +560,6 @@ mochaSuiteFn.only('tracing/db2', function () {
           testUtils.retry(() =>
             verifySpans(agentControls, controls, {
               stmt: `insert into ${TABLE_NAME_1} (COLINT, COLDATETIME, COLTEXT) VALUES (?, ?, ?)`,
-              numberOfSpans: 3,
               verifyCustom: (entrySpan, spans) => {
                 testUtils.expectAtLeastOneMatching(spans, [
                   span => expect(span.t).to.equal(entrySpan.t),
@@ -613,8 +607,7 @@ mochaSuiteFn.only('tracing/db2', function () {
         .then(() =>
           testUtils.retry(() =>
             verifySpans(agentControls, controls, {
-              expectNoDb2Span: true,
-              numberOfSpans: 1
+              expectNoDb2Span: true
             })
           )
         );
@@ -661,7 +654,6 @@ mochaSuiteFn.only('tracing/db2', function () {
         .then(() =>
           testUtils.retry(() =>
             verifySpans(agentControls, controls, {
-              numberOfSpans: 7,
               verifyCustom: (entrySpan, spans) => {
                 const stmtsToExpect = [
                   `drop table ${TABLE_NAME_2} if exists`,
@@ -750,8 +742,7 @@ mochaSuiteFn.only('tracing/db2', function () {
         .then(() =>
           testUtils.retry(() =>
             verifySpans(agentControls, controls, {
-              expectNoDb2Span: true,
-              numberOfSpans: 1
+              expectNoDb2Span: true
             })
           )
         );
@@ -768,8 +759,7 @@ mochaSuiteFn.only('tracing/db2', function () {
           testUtils.retry(() =>
             verifySpans(agentControls, controls, {
               stmt: `SELECT * FROM ${TABLE_NAME_1}`,
-              error: `'result.closeSync' was not called within ${DB2_CLOSE_TIMEOUT_IN_MS}ms.`,
-              numberOfSpans: 2
+              error: `'result.closeSync' was not called within ${DB2_CLOSE_TIMEOUT_IN_MS}ms.`
             })
           )
         );
@@ -853,8 +843,7 @@ mochaSuiteFn.only('tracing/db2', function () {
           testUtils.retry(() =>
             verifySpans(agentControls, controls, {
               stmt: `SELECT * FROM ${TABLE_NAME_1}`,
-              error: `'result.closeSync' was not called within ${DB2_CLOSE_TIMEOUT_IN_MS}ms.`,
-              numberOfSpans: 2
+              error: `'result.closeSync' was not called within ${DB2_CLOSE_TIMEOUT_IN_MS}ms.`
             })
           )
         );
@@ -876,7 +865,7 @@ mochaSuiteFn.only('tracing/db2', function () {
     });
 
     // eslint-disable-next-line mocha/no-exclusive-tests
-    it.only('executeFile', function () {
+    it('executeFile', function () {
       return controls
         .sendRequest({
           method: 'GET',
@@ -885,10 +874,11 @@ mochaSuiteFn.only('tracing/db2', function () {
         .then(() =>
           testUtils.retry(() =>
             verifySpans(agentControls, controls, {
+              // Spans:
               // 11 queries splitted from the file
               // 4 fs operations on top (ours + from db2 internally fs-extra)
               // https://github.com/ibmdb/node-ibm_db/blob/fb25937524d74d25917e9aa67fb4737971317986/lib/odbc.js#L916
-              numberOfSpans: oTelIntegrationIsEnabled ? 15 : 11,
+              // If the Otel integration is disabled, we expect 11 spans.
               verifyCustom: (entrySpan, spans) => {
                 const stmtsToExpect = [
                   `create table ${TABLE_NAME_3}(no integer,name varchar(10))`,
@@ -934,8 +924,7 @@ mochaSuiteFn.only('tracing/db2', function () {
         .then(() =>
           testUtils.retry(() =>
             verifySpans(agentControls, controls, {
-              // 11 queries + fs calls
-              numberOfSpans: oTelIntegrationIsEnabled ? 16 : 11,
+              // 11 Instana spans + 5 Otel Spans
               verifyCustom: (entrySpan, spans) => {
                 const stmtsToExpect = [
                   `create table ${TABLE_NAME_3}(no integer,name varchar(10))`,
@@ -981,8 +970,7 @@ mochaSuiteFn.only('tracing/db2', function () {
         .then(() =>
           testUtils.retry(() =>
             verifySpans(agentControls, controls, {
-              // 11 queries + fs calls
-              numberOfSpans: oTelIntegrationIsEnabled ? 16 : 11,
+              // 11 Instana spans + 5 Otel fs spans
               verifyCustom: (entrySpan, spans) => {
                 const stmtsToExpect = [
                   `create table ${TABLE_NAME_3}(no integer,name varchar(10))`,

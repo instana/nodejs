@@ -40,8 +40,6 @@ module.exports.init = (_config, cls) => {
       return;
     }
 
-    // eslint-disable-next-line no-console
-    console.log('otelSpan', otelSpan);
     const targetInstrumentionName = otelSpan.instrumentationLibrary.name;
     let kind = constants.EXIT;
 
