@@ -571,7 +571,7 @@ jobs:
       - <<: *couchbase
       - <<: *couchbase-setup
     <<: *shared
-    parallelism: 15
+    parallelism: 1
     resource_class: large
 
 workflows:

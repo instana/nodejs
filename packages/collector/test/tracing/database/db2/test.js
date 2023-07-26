@@ -864,7 +864,6 @@ mochaSuiteFn('tracing/db2', function () {
         );
     });
 
-    // eslint-disable-next-line mocha/no-exclusive-tests
     it('executeFile', function () {
       return controls
         .sendRequest({
