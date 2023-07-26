@@ -108,6 +108,8 @@ fi
 ZIP_NAME=$ZIP_PREFIX.zip
 TMP_ZIP_DIR=tmp
 
+echo "step 1/9: Fetching AWS regions"
+
 # us-gov-* only available to US government agencies, U.S. government etc.
 # cn-* (china regions) completely disconnected from normal AWS account. 
 SKIPPED_REGIONS=$'cn-north-1\ncn-northwest-1\nus-gov-east-1\nus-gov-west-1'
@@ -163,15 +165,6 @@ fi
 
 if [[ -z $AWS_ACCESS_KEY_ID ]] || [[ -z $AWS_SECRET_ACCESS_KEY ]]; then
   echo Warning: AWS_ACCESS_KEY_ID or AWS_SECRET_ACCESS_KEY are not set. This might be okay if you have set up AWS authentication via other means. If not, the AWS cli commands to publish the layer will fail.
-fi
-
-echo "step 1/9: AWS regions"
-
-if [[ -z $SKIP_AWS_PUBLISH_LAYER ]]; then
-  echo Will publish to regions:
-  echo "$REGIONS"
-else
-  echo Publishing to AWS will be skipped.
 fi
 
 echo "step 2/9: Prepare build environment"
