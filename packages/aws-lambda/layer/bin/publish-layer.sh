@@ -108,7 +108,13 @@ fi
 ZIP_NAME=$ZIP_PREFIX.zip
 TMP_ZIP_DIR=tmp
 
-echo "step 1/9: Fetching AWS regions"
+if [[ -z $AWS_ACCESS_KEY_ID ]] || [[ -z $AWS_SECRET_ACCESS_KEY ]]; then
+  printf "Warning: Environment variables AWS_ACCESS_KEY_ID or AWS_SECRET_ACCESS_KEY are not set.\n"
+  printf "This might be okay if you have set up AWS authentication via other means.\n"
+  printf "If not, the AWS cli commands will fail.\n"
+fi
+
+printf "\nstep 1/9: Fetching AWS regions\n"
 
 # us-gov-* only available to US government agencies, U.S. government etc.
 # cn-* (china regions) completely disconnected from normal AWS account. 
@@ -118,7 +124,7 @@ if [[ -z $REGIONS ]]; then
   REGIONS=$(aws ssm get-parameters-by-path --path /aws/service/global-infrastructure/services/lambda/regions --output text --query "Parameters[].Value" | tr '\t' '\n' | sort)
 fi
 
-echo "####"
+printf "\n#### Summary ####\n\n"
 echo "LAYER_NAME: $LAYER_NAME"
 echo "ZIP_NAME: $ZIP_NAME"
 echo "LAMBDA_ARCHITECTURE: $LAMBDA_ARCHITECTURE"
@@ -130,7 +136,7 @@ echo "SKIPPED REGIONS: $SKIPPED_REGIONS"
 echo "PACKAGE_VERSION: $PACKAGE_VERSION"
 echo "BUILD_LAYER_WITH: $BUILD_LAYER_WITH"
 echo "SKIP_AWS_PUBLISH_LAYER: $SKIP_AWS_PUBLISH_LAYER"
-echo "####"
+printf "####\n\n"
 
 if [[ -z $NO_PROMPT ]]; then
   while true; do
@@ -161,10 +167,6 @@ if [[ -z $SKIP_DOCKER_IMAGE ]]; then
   fi
 else
   echo Building/pushing the Docker image will be skipped.
-fi
-
-if [[ -z $AWS_ACCESS_KEY_ID ]] || [[ -z $AWS_SECRET_ACCESS_KEY ]]; then
-  echo Warning: AWS_ACCESS_KEY_ID or AWS_SECRET_ACCESS_KEY are not set. This might be okay if you have set up AWS authentication via other means. If not, the AWS cli commands to publish the layer will fail.
 fi
 
 echo "step 2/9: Prepare build environment"
