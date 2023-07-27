@@ -38,7 +38,8 @@ exports.getStackTrace = function getStackTrace(referenceFunction, drop) {
 };
 
 exports.generateRandomTraceId = function generateRandomTraceId() {
-  // Note: As soon as all Instana tracers support 128 bit trace IDs we can generate a string of length 32 here.
+  // Maintenance note (128-bit-trace-ids): As soon as all Instana tracers support 128 bit trace IDs we can generate a
+  // string of length 32 here.
   return exports.generateRandomId(16);
 };
 

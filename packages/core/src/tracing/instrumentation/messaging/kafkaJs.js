@@ -462,6 +462,9 @@ function addTraceIdSpanIdToAllMessages(messages, span) {
     for (let msgIdx = 0; msgIdx < messages.length; msgIdx++) {
       if (messages[msgIdx].headers == null) {
         messages[msgIdx].headers = {
+          // Maintenance note (128-bit-trace-ids): We can remove the left-pad call here once we have switched to 128 bit
+          // trace IDs. We already left-pad to the trace ID length (currently 16) in cls.js, when continuing the trace
+          // from an upstream tracer.
           [constants.kafkaTraceIdHeaderName]: leftPad(span.t, 32),
           [constants.kafkaSpanIdHeaderName]: span.s
         };

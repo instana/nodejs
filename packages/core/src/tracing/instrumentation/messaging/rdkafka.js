@@ -352,11 +352,16 @@ function addTraceContextHeader(headers, span) {
 
   if (headers == null) {
     headers = [
+      // Maintenance note (128-bit-trace-ids): We can remove the left-pad call here once we have switched to 128 bit
+      // trace IDs. We already left-pad to the trace ID length (currently 16) in cls.js, when continuing the trace from
+      // an upstream tracer.
       { [constants.kafkaTraceIdHeaderName]: leftPad(span.t, 32) },
       { [constants.kafkaSpanIdHeaderName]: span.s },
       { [constants.kafkaTraceLevelHeaderName]: '1' }
     ];
   } else if (headers && Array.isArray(headers)) {
+    // Maintenance note (128-bit-trace-ids): We can remove the left-pad call here once we have switched to 128 bit trace
+    // IDs, see above.
     headers.push({ [constants.kafkaTraceIdHeaderName]: leftPad(span.t, 32) });
     headers.push({ [constants.kafkaSpanIdHeaderName]: span.s });
     headers.push({ [constants.kafkaTraceLevelHeaderName]: '1' });

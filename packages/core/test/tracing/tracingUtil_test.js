@@ -29,11 +29,14 @@ describe('tracing/tracingUtil', () => {
   describe('generate random IDs', function () {
     this.timeout(config.getTestTimeout() * 10);
 
+    // Maintenance note (128-bit-trace-ids): The following line checks that 64 bit (16 char) IDs are generated okay. We
+    // need to replace the third parameter with 32 once we switch to 128 bit trace IDs.
     testRandomIds('trace', generateRandomTraceId, 16);
+
     testRandomIds('span', generateRandomSpanId, 16);
 
-    // The following line checks that 128 bit (32 char)  IDs are generated okay, although we do not yet need
-    // 128 bit IDs (yet). It can be removed once trace IDs are upped to 128 bit.
+    // Maintenance note (128-bit-trace-ids): The following line checks that 128 bit (32 char) IDs are generated okay,
+    // although we do not yet need 128 bit IDs (yet). It can be removed once trace IDs are switched to 128 bit length.
     testRandomIds('128 bit', generateRandomId.bind(null, 32), 32);
 
     const validIdRegex = /^[a-f0-9]+$/;

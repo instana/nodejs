@@ -46,6 +46,7 @@ describe('tracing/headers', () => {
     expect(context.parentId).to.equal(instanaSpanId);
   });
 
+  // Maintenance note (128-bit-trace-ids): This test becomes obsolete when we switch to 128 bit trace IDs.
   it('should read 128 bit X-INSTANA-T and limit it to 64 bit', () => {
     const context = tracingHeaders.fromHttpRequest({
       headers: {

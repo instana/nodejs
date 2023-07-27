@@ -12,8 +12,8 @@
 
 module.exports = leftPad;
 
-// Even with 128 bit trace IDs we will only ever want to pad to max 32 characters, so keep a cache of the padding
-// strings for padding lengths 0 to 32.
+// We will only ever want to pad to at most 32 characters, so we keep a cache of the padding strings for padding lengths
+// 0 to 32.
 const cache = [
   '',
   '0',
@@ -49,6 +49,7 @@ const cache = [
   '0000000000000000000000000000000',
   '00000000000000000000000000000000'
 ];
+
 /**
  * @param {string} str
  * @param {number} len

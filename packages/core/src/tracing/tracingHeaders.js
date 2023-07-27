@@ -362,6 +362,7 @@ function readW3cTraceContext(headers) {
  * @returns {TracingHeaders}
  */
 exports.limitTraceId = function limitTraceId(result) {
+  // Maintenance note (128-bit-trace-ids): This function can be removed when we switch to 128 bit trace IDs.
   if (result.traceId && result.traceId.length >= 32) {
     result.longTraceId = result.traceId;
     result.traceId = result.traceId.substring(16, 32);
