@@ -11,6 +11,12 @@ const StringDecoder = require('string_decoder').StringDecoder;
 
 const stackTrace = require('../util/stackTrace');
 
+/** @type {import('../logger').GenericLogger} */
+let logger;
+logger = require('../logger').getLogger('tracing/tracingUtil', newLogger => {
+  logger = newLogger;
+});
+
 const hexDecoder = new StringDecoder('hex');
 
 let stackTraceLength = 10;
@@ -58,16 +64,18 @@ exports.generateRandomId = function (length) {
 /**
  * @param {Buffer} buffer
  * @returns {{
- *  t: string,
- *  s: string
+ *  t?: string,
+ *  s?: string
  * }}
  */
 exports.readTraceContextFromBuffer = function readTraceContextFromBuffer(buffer) {
   if (!Buffer.isBuffer(buffer)) {
-    throw new Error(`Not a buffer: ${buffer}`);
+    logger.error(`Not a buffer: ${buffer}`);
+    return {};
   }
   if (buffer.length !== 24) {
-    throw new Error(`Only buffers of length 24 are supported: ${buffer}`);
+    logger.error(`Only buffers of length 24 are supported: ${buffer}`);
+    return {};
   }
   // Check if the first 8 bytes are all zeroes:
   // (Beginning with Node.js 12, this check could be simply `buffer.readBigInt64BE(0) !== 0n) {`.)
@@ -108,7 +116,8 @@ exports.unsignedHexStringToBuffer = function unsignedHexStringToBuffer(hexString
   } else if (hexString.length === 32) {
     buffer = buffer || Buffer.alloc(16);
   } else {
-    throw new Error(`Only supported hex string lengths are 16 and 32, got: ${hexString}`);
+    logger.error(`Only hex strings of lengths 16 or 32 can be converted, received: ${hexString}`);
+    return buffer;
   }
   writeHexToBuffer(hexString, buffer, offset);
   return buffer;

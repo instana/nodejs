@@ -14,6 +14,7 @@ const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('@instana/core/test/config');
 const {
   delay,
+  expectExactlyOneMatching,
   expectAtLeastOneMatching,
   getCircularList,
   getSpansByName,
@@ -406,6 +407,56 @@ mochaSuiteFn('tracing/kafkajs', function () {
     });
   });
 
+  describe('must cope with non-standard length trace and span IDs', () => {
+    // regression test for https://github.com/instana/nodejs/issues/833
+
+    const consumerControls = new ProcessControls({
+      appPath: path.join(__dirname, 'consumer'),
+      useGlobalAgent: true
+    });
+
+    const producerControls = new ProcessControls({
+      appPath: path.join(__dirname, 'producer'),
+      useGlobalAgent: true,
+      env: {
+        INSTANA_KAFKA_HEADER_FORMAT: 'both'
+      }
+    });
+
+    ProcessControls.setUpHooks(consumerControls, producerControls);
+
+    beforeEach(() => resetMessages(consumerControls));
+    afterEach(() => resetMessages(consumerControls));
+
+    it('must pad short incoming trace and span IDs', async () => {
+      await producerControls.sendRequest({
+        method: 'POST',
+        path: '/send-messages',
+        simple: true,
+        body: {
+          key: 'someKey',
+          value: 'someMessage'
+        },
+        headers: {
+          'X-INSTANA-T': '1234',
+          'X-INSTANA-S': '5678'
+        }
+      });
+
+      await retry(async () => {
+        const messages = await getMessages(consumerControls);
+        checkMessages(messages);
+        const spans = await agentControls.getSpans();
+        const httpEntry = verifyHttpEntry(spans, {
+          traceId: '0000000000001234',
+          parentSpanId: '0000000000005678'
+        });
+        verifyKafkaExits(spans, httpEntry);
+        verifyFollowUpHttpExit(spans, httpEntry);
+      });
+    });
+  });
+
   // eslint-disable-next-line object-curly-newline
   function send({ key, value, error, useSendBatch, useEachBatch, suppressTracing, producerControls }) {
     const req = {
@@ -439,7 +490,7 @@ mochaSuiteFn('tracing/kafkajs', function () {
     });
   }
 
-  function checkMessages(messages, { error, useSendBatch, useEachBatch }) {
+  function checkMessages(messages, { error, useSendBatch, useEachBatch } = {}) {
     expect(messages).to.be.an('array');
     if (error) {
       expect(messages).to.be.empty;
@@ -470,15 +521,22 @@ mochaSuiteFn('tracing/kafkajs', function () {
     });
   }
 
-  function verifyHttpEntry(spans) {
-    return expectAtLeastOneMatching(spans, [
+  function verifyHttpEntry(spans, { traceId, parentSpanId } = {}) {
+    const expectations = [
       span => expect(span.n).to.equal('node.http.server'),
       span => expect(span.f.h).to.equal('agent-stub-uuid'),
       span => expect(span.ec).to.equal(0)
-    ]);
+    ];
+    if (traceId) {
+      expectations.push(span => expect(span.t).to.equal(traceId));
+    }
+    if (parentSpanId) {
+      expectations.push(span => expect(span.p).to.equal(parentSpanId));
+    }
+    return expectExactlyOneMatching(spans, expectations);
   }
 
-  function verifyKafkaExits(spans, httpEntry, parameters) {
+  function verifyKafkaExits(spans, httpEntry, parameters = {}) {
     const { error, useSendBatch, useEachBatch } = parameters;
     const topicPrefix = getTopicPrefix(useEachBatch);
 
@@ -512,13 +570,13 @@ mochaSuiteFn('tracing/kafkajs', function () {
       span => expect(span.b).to.deep.equal({ s: expectedBatchCount })
     ]);
 
-    const kafkaExit = expectAtLeastOneMatching(spans, expectations);
+    const kafkaExit = expectExactlyOneMatching(spans, expectations);
     verifyKafkaEntries(spans, kafkaExit, parameters);
   }
 
   function verifyFollowUpHttpExit(spans, entry) {
     // verify that subsequent calls are correctly traced after creating a kafka entry/exit
-    expectAtLeastOneMatching(spans, [
+    expectExactlyOneMatching(spans, [
       span => expect(span.n).to.equal('node.http.client'),
       span => expect(span.t).to.equal(entry.t),
       span => expect(span.p).to.equal(entry.s)
@@ -581,7 +639,7 @@ mochaSuiteFn('tracing/kafkajs', function () {
           span => expect(span.ec).to.equal(0)
         ]);
       }
-      const secondKafkaEntry = expectAtLeastOneMatching(spans, expectationsSecondKafkaEntry);
+      const secondKafkaEntry = expectExactlyOneMatching(spans, expectationsSecondKafkaEntry);
       if (error !== 'consumer') {
         verifyFollowUpHttpExit(spans, secondKafkaEntry);
       }
@@ -613,7 +671,7 @@ mochaSuiteFn('tracing/kafkajs', function () {
       } else {
         expectationsThirdKafkaEntry.push(span => expect(span.b).to.not.exist);
       }
-      const thirdKafkaEntry = expectAtLeastOneMatching(spans, expectationsThirdKafkaEntry);
+      const thirdKafkaEntry = expectExactlyOneMatching(spans, expectationsThirdKafkaEntry);
       if (error !== 'consumer') {
         verifyFollowUpHttpExit(spans, thirdKafkaEntry);
       }
@@ -660,7 +718,7 @@ mochaSuiteFn('tracing/kafkajs', function () {
     verifyFollowUpHttpExit(spans, firstKafkaEntry);
 
     if (!useEachBatch) {
-      const secondKafkaEntry = expectAtLeastOneMatching(spans, [
+      const secondKafkaEntry = expectExactlyOneMatching(spans, [
         span => expect(span.t).to.be.a('string'),
         span => expect(span.p).to.not.exist,
         span => expect(span.n).to.equal('kafka'),
@@ -692,7 +750,7 @@ mochaSuiteFn('tracing/kafkajs', function () {
         } else {
           expectationsThirdKafkaEntry.push(span => expect(span.b).to.not.exist);
         }
-        const thirdKafkaEntry = expectAtLeastOneMatching(spans, expectationsThirdKafkaEntry);
+        const thirdKafkaEntry = expectExactlyOneMatching(spans, expectationsThirdKafkaEntry);
         verifyFollowUpHttpExit(spans, thirdKafkaEntry);
       }
     }

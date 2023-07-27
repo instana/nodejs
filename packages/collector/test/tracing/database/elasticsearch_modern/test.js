@@ -194,16 +194,16 @@ mochaSuiteFn('tracing/elasticsearch (modern client)', function () {
             body: {
               title: titleA
             },
-            parentSpanId: '42',
-            traceId: '42'
+            parentSpanId: '0000000000000042',
+            traceId: '0000000000000042'
           })
             .then(() =>
               index({
                 body: {
                   title: titleB
                 },
-                parentSpanId: '43',
-                traceId: '43'
+                parentSpanId: '0000000000000043',
+                traceId: '0000000000000043'
               })
             )
             .then(() =>
@@ -226,12 +226,12 @@ mochaSuiteFn('tracing/elasticsearch (modern client)', function () {
 
               return retry(() =>
                 agentControls.getSpans().then(spans => {
-                  const index1Entry = verifyHttpEntry(spans, '/index', '42');
+                  const index1Entry = verifyHttpEntry(spans, '/index', '0000000000000042');
 
                   verifyElasticsearchExit(spans, index1Entry, 'index');
                   verifyElasticsearchExit(spans, index1Entry, indicesKey, '_all', '/_all/_refresh');
 
-                  const index2Entry = verifyHttpEntry(spans, '/index', '43');
+                  const index2Entry = verifyHttpEntry(spans, '/index', '0000000000000043');
 
                   verifyElasticsearchExit(spans, index2Entry, 'index');
                   verifyElasticsearchExit(spans, index2Entry, indicesKey, '_all', '/_all/_refresh');
@@ -270,8 +270,8 @@ mochaSuiteFn('tracing/elasticsearch (modern client)', function () {
             body: {
               title: titleA
             },
-            parentSpanId: '42',
-            traceId: '42'
+            parentSpanId: '0000000000000042',
+            traceId: '0000000000000042'
           })
             .then(res => {
               expect(res.error).to.not.exist;
@@ -282,8 +282,8 @@ mochaSuiteFn('tracing/elasticsearch (modern client)', function () {
                 body: {
                   title: titleB
                 },
-                parentSpanId: '43',
-                traceId: '43'
+                parentSpanId: '0000000000000043',
+                traceId: '0000000000000043'
               });
             })
             .then(res => {
@@ -295,8 +295,8 @@ mochaSuiteFn('tracing/elasticsearch (modern client)', function () {
                 body: {
                   title: titleC
                 },
-                parentSpanId: '44',
-                traceId: '44'
+                parentSpanId: '0000000000000044',
+                traceId: '0000000000000044'
               });
             })
             .then(res => {
@@ -333,14 +333,14 @@ mochaSuiteFn('tracing/elasticsearch (modern client)', function () {
 
               return retry(() =>
                 agentControls.getSpans().then(spans => {
-                  verifyElasticsearchExit(spans, null, 'index', undefined, undefined, '42');
-                  verifyElasticsearchExit(spans, null, indicesKey, '_all', '/_all/_refresh', '42');
+                  verifyElasticsearchExit(spans, null, 'index', undefined, undefined, '0000000000000042');
+                  verifyElasticsearchExit(spans, null, indicesKey, '_all', '/_all/_refresh', '0000000000000042');
 
-                  verifyElasticsearchExit(spans, null, 'index', undefined, undefined, '43');
-                  verifyElasticsearchExit(spans, null, indicesKey, '_all', '/_all/_refresh', '43');
+                  verifyElasticsearchExit(spans, null, 'index', undefined, undefined, '0000000000000043');
+                  verifyElasticsearchExit(spans, null, indicesKey, '_all', '/_all/_refresh', '0000000000000043');
 
-                  verifyElasticsearchExit(spans, null, 'index', undefined, undefined, '44');
-                  verifyElasticsearchExit(spans, null, indicesKey, '_all', '/_all/_refresh', '44');
+                  verifyElasticsearchExit(spans, null, 'index', undefined, undefined, '0000000000000044');
+                  verifyElasticsearchExit(spans, null, indicesKey, '_all', '/_all/_refresh', '0000000000000044');
 
                   const mget1HttpEntry = verifyHttpEntry(spans, '/mget1');
                   const mget1Exit = verifyElasticsearchExit(
@@ -373,16 +373,16 @@ mochaSuiteFn('tracing/elasticsearch (modern client)', function () {
             body: {
               title: titleA
             },
-            parentSpanId: '42',
-            traceId: '42'
+            parentSpanId: '0000000000000042',
+            traceId: '0000000000000042'
           })
             .then(() =>
               index({
                 body: {
                   title: titleB
                 },
-                parentSpanId: '43',
-                traceId: '43'
+                parentSpanId: '0000000000000043',
+                traceId: '0000000000000043'
               })
             )
             .then(() =>
@@ -390,8 +390,8 @@ mochaSuiteFn('tracing/elasticsearch (modern client)', function () {
                 body: {
                   title: titleC
                 },
-                parentSpanId: '44',
-                traceId: '44'
+                parentSpanId: '0000000000000044',
+                traceId: '0000000000000044'
               })
             )
             .then(() =>
@@ -413,12 +413,12 @@ mochaSuiteFn('tracing/elasticsearch (modern client)', function () {
               expect(res.response.body.responses[1].hits.hits[0]._source.title).to.be.oneOf([titleA, titleB]);
               return retry(() =>
                 agentControls.getSpans().then(spans => {
-                  verifyElasticsearchExit(spans, null, 'index', undefined, undefined, '42');
-                  verifyElasticsearchExit(spans, null, indicesKey, '_all', '/_all/_refresh', '42');
-                  verifyElasticsearchExit(spans, null, 'index', undefined, undefined, '43');
-                  verifyElasticsearchExit(spans, null, indicesKey, '_all', '/_all/_refresh', '43');
-                  verifyElasticsearchExit(spans, null, 'index', undefined, undefined, '44');
-                  verifyElasticsearchExit(spans, null, indicesKey, '_all', '/_all/_refresh', '44');
+                  verifyElasticsearchExit(spans, null, 'index', undefined, undefined, '0000000000000042');
+                  verifyElasticsearchExit(spans, null, indicesKey, '_all', '/_all/_refresh', '0000000000000042');
+                  verifyElasticsearchExit(spans, null, 'index', undefined, undefined, '0000000000000043');
+                  verifyElasticsearchExit(spans, null, indicesKey, '_all', '/_all/_refresh', '0000000000000043');
+                  verifyElasticsearchExit(spans, null, 'index', undefined, undefined, '0000000000000044');
+                  verifyElasticsearchExit(spans, null, indicesKey, '_all', '/_all/_refresh', '0000000000000044');
 
                   const msearchEntrySpan = verifyHttpEntry(spans, '/msearch');
                   const msearchExitSpan = verifyElasticsearchExit(

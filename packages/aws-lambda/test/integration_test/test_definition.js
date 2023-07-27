@@ -957,8 +957,8 @@ function registerTests(handlerDefinitionPath) {
       instanaEndpointUrl: backendBaseUrl,
       instanaAgentKey,
       statusCode: 201,
-      traceId: 'test-trace-id',
-      spanId: 'test-span-id'
+      traceId: '1234567890abcdef',
+      spanId: 'fedcba9876543210'
     });
 
     it('must recognize API gateway trigger (with proxy) with parent span', () =>
@@ -968,8 +968,8 @@ function registerTests(handlerDefinitionPath) {
         expectSpans: true,
         trigger: 'aws:api.gateway',
         parent: {
-          t: 'test-trace-id',
-          s: 'test-span-id'
+          t: '1234567890abcdef',
+          s: 'fedcba9876543210'
         }
       })
         .then(() => control.getSpans())
@@ -1252,8 +1252,8 @@ function registerTests(handlerDefinitionPath) {
       trigger: 'application-load-balancer',
       instanaEndpointUrl: backendBaseUrl,
       instanaAgentKey,
-      traceId: 'test-trace-id',
-      spanId: 'test-span-id'
+      traceId: '1234567890abcdef',
+      spanId: 'fedcba9876543210'
     });
 
     it('must recognize the application load balancer trigger and parent span', () =>
@@ -1263,8 +1263,8 @@ function registerTests(handlerDefinitionPath) {
         expectSpans: true,
         trigger: 'aws:application.load.balancer',
         parent: {
-          t: 'test-trace-id',
-          s: 'test-span-id'
+          t: '1234567890abcdef',
+          s: 'fedcba9876543210'
         }
       })
         .then(() => control.getSpans())
@@ -1288,8 +1288,8 @@ function registerTests(handlerDefinitionPath) {
       trigger: 'invoke-function',
       instanaEndpointUrl: backendBaseUrl,
       instanaAgentKey,
-      traceIdContext: 'test-trace-id',
-      spanIdContext: 'test-span-id',
+      traceIdContext: '1234567890abcdef',
+      spanIdContext: 'fedcba9876543210',
       traceLevelContext: '1'
     });
 
@@ -1300,8 +1300,8 @@ function registerTests(handlerDefinitionPath) {
         expectSpans: true,
         trigger: 'aws:lambda.invoke',
         parent: {
-          t: 'test-trace-id',
-          s: 'test-span-id'
+          t: '1234567890abcdef',
+          s: 'fedcba9876543210'
         }
       })
         .then(() => control.getSpans())
@@ -1320,8 +1320,8 @@ function registerTests(handlerDefinitionPath) {
       trigger: 'invoke-function',
       instanaEndpointUrl: backendBaseUrl,
       instanaAgentKey,
-      traceIdContext: 'test-trace-id',
-      spanIdContext: 'test-span-id',
+      traceIdContext: '1234567890abcdef',
+      spanIdContext: 'fedcba9876543210',
       traceLevelContext: '1',
       fillContext: true
     });
@@ -1333,8 +1333,8 @@ function registerTests(handlerDefinitionPath) {
         expectSpans: true,
         trigger: 'aws:lambda.invoke',
         parent: {
-          t: 'test-trace-id',
-          s: 'test-span-id'
+          t: '1234567890abcdef',
+          s: 'fedcba9876543210'
         }
       })
         .then(() => {
@@ -1358,8 +1358,8 @@ function registerTests(handlerDefinitionPath) {
       trigger: 'invoke-function',
       instanaEndpointUrl: backendBaseUrl,
       instanaAgentKey,
-      traceIdContext: 'test-trace-id',
-      spanIdContext: 'test-span-id',
+      traceIdContext: '1234567890abcdef',
+      spanIdContext: 'fedcba9876543210',
       traceLevelContext: '0'
     });
 
@@ -1526,8 +1526,8 @@ function registerTests(handlerDefinitionPath) {
       trigger: 'sqs',
       instanaEndpointUrl: backendBaseUrl,
       instanaAgentKey,
-      traceId: 'test-trace-id',
-      spanId: 'test-span-id'
+      traceId: '1234567890abcdef',
+      spanId: 'fedcba9876543210'
     });
 
     it('must continue trace from SQS message', () =>
@@ -1537,8 +1537,8 @@ function registerTests(handlerDefinitionPath) {
         expectSpans: true,
         trigger: 'aws:sqs',
         parent: {
-          t: 'test-trace-id',
-          s: 'test-span-id'
+          t: '1234567890abcdef',
+          s: 'fedcba9876543210'
         }
       })
         .then(() => control.getSpans())
@@ -1564,8 +1564,8 @@ function registerTests(handlerDefinitionPath) {
       trigger: 'sns-to-sqs',
       instanaEndpointUrl: backendBaseUrl,
       instanaAgentKey,
-      traceId: 'test-trace-id',
-      spanId: 'test-span-id'
+      traceId: '1234567890abcdef',
+      spanId: 'fedcba9876543210'
     });
 
     it('must continue trace from SQS message created from an SNS notification', () =>
@@ -1575,8 +1575,8 @@ function registerTests(handlerDefinitionPath) {
         expectSpans: true,
         trigger: 'aws:sqs',
         parent: {
-          t: 'test-trace-id',
-          s: 'test-span-id'
+          t: '1234567890abcdef',
+          s: 'fedcba9876543210'
         }
       })
         .then(() => control.getSpans())

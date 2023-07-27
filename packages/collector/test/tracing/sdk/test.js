@@ -170,8 +170,8 @@ mochaSuiteFn('tracing/sdk', function () {
         });
 
         it('must create an entry span with trace ID and parent span ID', () => {
-          const traceId = 'trace-id';
-          const parentSpanId = 'parent-span-id';
+          const traceId = '1234567890abcdef';
+          const parentSpanId = 'fedcba9876543210';
           controls.sendViaIpc({
             command: 'start-entry',
             type: apiType,

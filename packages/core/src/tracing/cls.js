@@ -5,6 +5,7 @@
 
 'use strict';
 
+const leftPad = require('./leftPad');
 const spanBuffer = require('./spanBuffer');
 const tracingUtil = require('./tracingUtil');
 const { ENTRY, EXIT, INTERMEDIATE, isExitSpan } = require('./constants');
@@ -282,9 +283,15 @@ function startSpan(spanName, kind, traceId, parentSpanId, w3cTraceContext) {
 
   // If the client code has specified a trace ID/parent ID, use the provided IDs.
   if (traceId) {
-    span.t = traceId;
+    // The incoming trace ID/span ID from an upstream tracer could be shorter than the standard length. Some of our code
+    // (in particular, the binary Kafka trace correlation header X_INSTANA_C) assumes the standard length. We normalize
+    // both IDs here by left-padding with 0 characters.
+
+    // Maintenance note (128-bit-trace-ids): When we switch to 128 bit trace IDs, we need to left-pad the trace ID to 32
+    // characters instead of 16.
+    span.t = leftPad(traceId, 16);
     if (parentSpanId) {
-      span.p = parentSpanId;
+      span.p = leftPad(parentSpanId, 16);
     }
   } else if (parentSpan) {
     // Otherwise, use the currently active span (if any) as parent.
