@@ -13,20 +13,31 @@ const awsLambdaClientForRegion = {};
 const VALID_REGIONS = [
   'ap-northeast-1',
   'ap-northeast-2',
+  'ap-northeast-3',
   'ap-south-1',
+  'ap-south-2',
+  'ap-east-1',
   'ap-southeast-1',
   'ap-southeast-2',
+  'ap-southeast-3',
+  'ap-southeast-4',
   'ca-central-1',
   'eu-central-1',
+  'eu-central-2',
   'eu-north-1',
+  'eu-south-1',
+  'eu-south-2',
   'eu-west-1',
   'eu-west-2',
   'eu-west-3',
-  'sa-east-1',
   'us-east-1',
   'us-east-2',
   'us-west-1',
-  'us-west-2'
+  'us-west-2',
+  'af-south-1',
+  'me-central-1',
+  'me-south-1',
+  'sa-east-1'
 ];
 
 // Note: We do not use lru-cache for the lru feature but for how it handles max-age: "Items are not pro-actively pruned
@@ -110,8 +121,13 @@ async function handleLayerRequest(event, layerName) {
   if (!data) {
     return respond500('No result from AWS ListLayerVersion operation.');
   }
+
   if (!data.LayerVersions || !data.LayerVersions[0] || !data.LayerVersions[0].Version) {
-    return respond500('Unexpected result from AWS ListLayerVersion operation.');
+    if (Array.isArray(data.LayerVersions) && data.LayerVersions.length === 0) {
+      return respond500('No layer version found.');
+    } else {
+      return respond500('Unexpected result from AWS ListLayerVersion operation.');
+    }
   }
   const versionData = data.LayerVersions[0];
   const response = {
