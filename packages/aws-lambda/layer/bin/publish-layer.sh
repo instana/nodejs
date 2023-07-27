@@ -62,6 +62,10 @@ if [[ -z $LAMBDA_ARCHITECTURE ]]; then
   LAMBDA_ARCHITECTURE='x86_64'
 fi
 
+if [[ -z $AWS_DEFAULT_REGION ]]; then
+  AWS_DEFAULT_REGION='us-east-1'
+fi
+
 PACKAGE_NAMES="@instana/aws-lambda@$PACKAGE_VERSION instana-aws-lambda-auto-wrap@$PACKAGE_VERSION"
 
 # The default layer name is instana-nodejs. If you want to push experimental changes under a different layer name, you
