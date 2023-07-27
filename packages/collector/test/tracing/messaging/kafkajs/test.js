@@ -79,41 +79,37 @@ mochaSuiteFn('tracing/kafkajs', function () {
         () => {
           it(`must trace sending and receiving and keep trace continuity (header format: ${headerFormat}, ${
             useSendBatch ? 'sendBatch' : 'sendMessage'
-          } => ${useEachBatch ? 'eachBatch' : 'eachMessage'}, error: ${error})`, () => {
+          } => ${useEachBatch ? 'eachBatch' : 'eachMessage'}, error: ${error})`, async () => {
             const parameters = {
               headerFormat,
               error,
               useSendBatch,
               useEachBatch
             };
-            return send({
+            await send({
               key: 'someKey',
               value: 'someMessage',
               error,
               useSendBatch,
               useEachBatch,
               producerControls
-            }).then(() =>
-              retry(() =>
-                getMessages(consumerControls)
-                  .then(messages => {
-                    checkMessages(messages, parameters);
-                    return agentControls.getSpans();
-                  })
-                  .then(spans => {
-                    const httpEntry = verifyHttpEntry(spans);
-                    verifyKafkaExits(spans, httpEntry, parameters);
-                    verifyFollowUpHttpExit(spans, httpEntry);
-                  })
-              )
-            );
+            });
+
+            await retry(async () => {
+              const messages = await getMessages(consumerControls);
+              checkMessages(messages, parameters);
+              const spans = await agentControls.getSpans();
+              const httpEntry = verifyHttpEntry(spans);
+              verifyKafkaExits(spans, httpEntry, parameters);
+              verifyFollowUpHttpExit(spans, httpEntry);
+            });
           });
 
           if (error === false) {
             // we do not need dedicated suppression tests for error conditions
-            it(`must not trace when suppressed (header format: ${headerFormat})`, () => {
+            it(`must not trace when suppressed (header format: ${headerFormat})`, async () => {
               const parameters = { headerFormat, error, useSendBatch, useEachBatch };
-              return send({
+              await send({
                 key: 'someKey',
                 value: 'someMessage',
                 error,
@@ -121,17 +117,14 @@ mochaSuiteFn('tracing/kafkajs', function () {
                 useEachBatch,
                 suppressTracing: true,
                 producerControls
-              }).then(() =>
-                retry(() =>
-                  getMessages(consumerControls)
-                    .then(messages => {
-                      checkMessages(messages, parameters);
-                      return delay(config.getTestTimeout() / 4);
-                    })
-                    .then(() => agentControls.getSpans())
-                    .then(spans => expect(spans).to.have.lengthOf(0))
-                )
-              );
+              });
+              await retry(async () => {
+                const messages = await getMessages(consumerControls);
+                checkMessages(messages, parameters);
+                await delay(config.getTestTimeout() / 4);
+                const spans = await agentControls.getSpans();
+                expect(spans).to.have.lengthOf(0);
+              });
             });
           }
         }
@@ -161,29 +154,27 @@ mochaSuiteFn('tracing/kafkajs', function () {
         () => {
           it(`must trace attempts to send a message when an error happens in the producer (${
             useSendBatch ? 'sendBatch' : 'sendMessage'
-          }, error: ${error})`, () => {
+          }, error: ${error})`, async () => {
             const parameters = {
               headerFormat,
               error,
               useSendBatch,
               useEachBatch
             };
-            return send({
+            await send({
               key: 'someKey',
               value: 'someMessage',
               error,
               useSendBatch,
               useEachBatch,
               producerControls
-            }).then(() =>
-              retry(() =>
-                agentControls.getSpans().then(spans => {
-                  const httpEntry = verifyHttpEntry(spans);
-                  verifyKafkaExits(spans, httpEntry, parameters);
-                  verifyFollowUpHttpExit(spans, httpEntry);
-                })
-              )
-            );
+            });
+            await retry(async () => {
+              const spans = await agentControls.getSpans();
+              const httpEntry = verifyHttpEntry(spans);
+              verifyKafkaExits(spans, httpEntry, parameters);
+              verifyFollowUpHttpExit(spans, httpEntry);
+            });
           });
         }
       );
@@ -219,63 +210,51 @@ mochaSuiteFn('tracing/kafkajs', function () {
       const useEachBatch = nextUseEachBatch();
       it(`must trace sending and receiving but will not keep trace continuity (${
         useSendBatch ? 'sendBatch' : 'sendMessage'
-      } => ${useEachBatch ? 'eachBatch' : 'eachMessage'})`, () => {
+      } => ${useEachBatch ? 'eachBatch' : 'eachMessage'})`, async () => {
         const parameters = {
           headerFormat: 'correlation-disabled',
           useSendBatch,
           useEachBatch
         };
-        return send({
+        await send({
           key: 'someKey',
           value: 'someMessage',
           useSendBatch,
           useEachBatch,
           producerControls
-        }).then(() =>
-          retry(() =>
-            getMessages(consumerControls)
-              .then(messages => {
-                checkMessages(messages, parameters);
-                return agentControls.getSpans();
-              })
-              .then(spans => {
-                const httpEntry = verifyHttpEntry(spans);
-                verifyKafkaExits(spans, httpEntry, parameters);
-                verifyFollowUpHttpExit(spans, httpEntry);
-              })
-          )
-        );
+        });
+        await retry(async () => {
+          const messages = await getMessages(consumerControls);
+          checkMessages(messages, parameters);
+          const spans = await agentControls.getSpans();
+          const httpEntry = verifyHttpEntry(spans);
+          verifyKafkaExits(spans, httpEntry, parameters);
+          verifyFollowUpHttpExit(spans, httpEntry);
+        });
       });
 
-      it('must not trace Kafka exits when suppressed (but will trace Kafka entries)', () => {
+      it('must not trace Kafka exits when suppressed (but will trace Kafka entries)', async () => {
         const parameters = { headerFormat: 'correlation-disabled', useSendBatch, useEachBatch };
-        return send({
+        await send({
           key: 'someKey',
           value: 'someMessage',
           useSendBatch,
           useEachBatch,
           producerControls,
           suppressTracing: true
-        }).then(() =>
-          retry(() =>
-            getMessages(consumerControls)
-              .then(messages => {
-                checkMessages(messages, parameters);
-                return agentControls.getSpans();
-              })
-              .then(() => agentControls.getSpans())
-              .then(spans => {
-                // There should be no HTTP entries and also no Kafka exits.
-                expect(getSpansByName(spans, 'node.http.server')).to.be.empty;
-                expect(getSpansByName(spans, 'kafka').filter(span => span.k === 2)).to.be.empty;
-
-                // However, since we disabled Kafka trace correlation headers, the suppression flag is not added to
-                // Kafka message, thus, each incoming Kafka message will start a new trace with a Kafka entry as its
-                // root span.
-                verifyKafkaRootEntries(spans, parameters);
-              })
-          )
-        );
+        });
+        await retry(async () => {
+          const messages = await getMessages(consumerControls);
+          checkMessages(messages, parameters);
+          const spans = await agentControls.getSpans();
+          // There should be no HTTP entries and also no Kafka exits.
+          expect(getSpansByName(spans, 'node.http.server')).to.be.empty;
+          expect(getSpansByName(spans, 'kafka').filter(span => span.k === 2)).to.be.empty;
+          // However, since we disabled Kafka trace correlation headers, the suppression flag is not added to
+          // Kafka message, thus, each incoming Kafka message will start a new trace with a Kafka entry as its
+          // root span.
+          verifyKafkaRootEntries(spans, parameters);
+        });
       });
     }
   });
@@ -298,25 +277,21 @@ mochaSuiteFn('tracing/kafkajs', function () {
     it(
       `must trace sending and receiving and keep trace continuity (header format ${headerFormat} ` +
         'from agent config)',
-      () =>
-        send({
+      async () => {
+        await send({
           key: 'someKey',
           value: 'someMessage',
           producerControls
-        }).then(() =>
-          retry(() =>
-            getMessages(consumerControls)
-              .then(messages => {
-                checkMessages(messages, { headerFormat });
-                return customAgentControls.getSpans();
-              })
-              .then(spans => {
-                const httpEntry = verifyHttpEntry(spans);
-                verifyKafkaExits(spans, httpEntry, { headerFormat });
-                verifyFollowUpHttpExit(spans, httpEntry);
-              })
-          )
-        )
+        });
+        await retry(async () => {
+          const messages = await getMessages(consumerControls);
+          checkMessages(messages, { headerFormat });
+          const spans = await customAgentControls.getSpans();
+          const httpEntry = verifyHttpEntry(spans);
+          verifyKafkaExits(spans, httpEntry, { headerFormat });
+          verifyFollowUpHttpExit(spans, httpEntry);
+        });
+      }
     );
   });
 
@@ -340,25 +315,21 @@ mochaSuiteFn('tracing/kafkajs', function () {
     it(
       'must trace sending and receiving but will not keep trace continuity ' +
         '(trace correlation disabled from agent config)',
-      () =>
-        send({
+      async () => {
+        await send({
           key: 'someKey',
           value: 'someMessage',
           producerControls
-        }).then(() =>
-          retry(() =>
-            getMessages(consumerControls)
-              .then(messages => {
-                checkMessages(messages, { headerFormat });
-                return customAgentControls.getSpans();
-              })
-              .then(spans => {
-                const httpEntry = verifyHttpEntry(spans);
-                verifyKafkaExits(spans, httpEntry, { headerFormat });
-                verifyFollowUpHttpExit(spans, httpEntry);
-              })
-          )
-        )
+        });
+        await retry(async () => {
+          const messages = await getMessages(consumerControls);
+          checkMessages(messages, { headerFormat });
+          const spans = await customAgentControls.getSpans();
+          const httpEntry = verifyHttpEntry(spans);
+          verifyKafkaExits(spans, httpEntry, { headerFormat });
+          verifyFollowUpHttpExit(spans, httpEntry);
+        });
+      }
     );
   });
 
@@ -378,7 +349,7 @@ mochaSuiteFn('tracing/kafkajs', function () {
     beforeEach(() => resetMessages(consumerControls));
     afterEach(() => resetMessages(consumerControls));
 
-    it('must not trace when disabled', () => {
+    it('must not trace when disabled', async () => {
       const parameters = {
         headerFormat: 'tracing-disabled',
         error: false,
@@ -386,24 +357,21 @@ mochaSuiteFn('tracing/kafkajs', function () {
         useEachBatch: false
       };
 
-      return send({
+      await send({
         key: 'someKey',
         value: 'someMessage',
         error: false,
         useSendBatch: false,
         useEachBatch: false,
         producerControls
-      }).then(() =>
-        retry(() =>
-          getMessages(consumerControls)
-            .then(messages => {
-              checkMessages(messages, parameters);
-              return delay(config.getTestTimeout() / 4);
-            })
-            .then(() => agentControls.getSpans())
-            .then(spans => expect(spans).to.have.lengthOf(0))
-        )
-      );
+      });
+      await retry(async () => {
+        const messages = await getMessages(consumerControls);
+        checkMessages(messages, parameters);
+        await delay(config.getTestTimeout() / 4);
+        const spans = await agentControls.getSpans();
+        expect(spans).to.have.lengthOf(0);
+      });
     });
   });
 
