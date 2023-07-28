@@ -46,6 +46,10 @@ exports.init = function init() {
    * @aws-sdk/smithly-client < 3.36.0
    */
   requireHook.onFileLoad(/@aws-sdk\/smithy-client\/dist\/cjs\/client\.js/, instrumentGlobalSmithy);
+   /**
+   * @aws-sdk/smithly-client > 3.36.0
+   */
+   requireHook.onModuleLoad('@smithy/smithy-client', instrumentGlobalSmithy);
 };
 
 exports.isActive = function () {
