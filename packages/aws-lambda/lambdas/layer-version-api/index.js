@@ -9,36 +9,7 @@
 const AWS = require('aws-sdk');
 
 const awsLambdaClientForRegion = {};
-
-const VALID_REGIONS = [
-  'ap-northeast-1',
-  'ap-northeast-2',
-  'ap-northeast-3',
-  'ap-south-1',
-  'ap-south-2',
-  'ap-east-1',
-  'ap-southeast-1',
-  'ap-southeast-2',
-  'ap-southeast-3',
-  'ap-southeast-4',
-  'ca-central-1',
-  'eu-central-1',
-  'eu-central-2',
-  'eu-north-1',
-  'eu-south-1',
-  'eu-south-2',
-  'eu-west-1',
-  'eu-west-2',
-  'eu-west-3',
-  'us-east-1',
-  'us-east-2',
-  'us-west-1',
-  'us-west-2',
-  'af-south-1',
-  'me-central-1',
-  'me-south-1',
-  'sa-east-1'
-];
+let regions = [];
 
 // Note: We do not use lru-cache for the lru feature but for how it handles max-age: "Items are not pro-actively pruned
 // out as they age, but if you try to get an item that is too old, it'll drop it and return undefined instead of giving
@@ -65,6 +36,9 @@ exports.handler = async event => {
     return handleRootRequest(event);
   } else {
     const layerName = lookup[event.path] || event.path;
+
+    // once load the regions and cache them
+    await getAWSRegions();
 
     // default case: we forward the requested layer name to the sdk
     return handleLayerRequest(event, layerName.replace(/\//g, ''));
@@ -95,7 +69,7 @@ async function handleLayerRequest(event, layerName) {
 
   let region = event.queryStringParameters ? event.queryStringParameters.region : null;
   region = region || 'us-east-2';
-  if (!VALID_REGIONS.includes(region)) {
+  if (!regions.includes(region)) {
     return {
       statusCode: 404,
       body: JSON.stringify({ message: `Unknown region: ${region}` }),
@@ -118,6 +92,7 @@ async function handleLayerRequest(event, layerName) {
 
   console.log(`No cached result for ${cacheKey}.`);
   const data = await listLayerVersions(region, layerName);
+
   if (!data) {
     return respond500('No result from AWS ListLayerVersion operation.');
   }
@@ -157,6 +132,15 @@ function respond500(message) {
     headers: corsAllowAll(),
     body: JSON.stringify({ message })
   };
+}
+
+async function getAWSRegions() {
+  if (regions.length > 0) return;
+
+  const ec2 = new AWS.EC2({ region: 'us-west-1' });
+  const data = await ec2.describeRegions().promise();
+  const regionNames = data.Regions.map(r => r.RegionName);
+  regions = regionNames;
 }
 
 async function listLayerVersions(region, layerName) {
