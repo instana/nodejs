@@ -3,6 +3,22 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.29.0](https://github.com/instana/nodejs/compare/v2.28.0...v2.29.0) (2023-07-31)
+
+
+### Bug Fixes
+
+* **tracing:** normalize incoming trace/span IDs from upstream tracers ([01e26d1](https://github.com/instana/nodejs/commit/01e26d110eb26b9143f33126f68e5594b00b32ea)), closes [#833](https://github.com/instana/nodejs/issues/833)
+
+
+### Features
+
+* added support for the latest  aws sdk v3 changes ([#837](https://github.com/instana/nodejs/issues/837)) ([3936a9d](https://github.com/instana/nodejs/commit/3936a9da70752102e90cf3721e63bd83dce92151))
+
+
+
+
+
 # [2.28.0](https://github.com/instana/nodejs/compare/v2.27.0...v2.28.0) (2023-07-27)
 
 
