@@ -52,7 +52,7 @@ const availableOperations = [
 const getNextCallMethod = require('@instana/core/test/test_util/circular_list').getCircularList(requestMethods);
 function start(version) {
   let mochaSuiteFn;
-  if (!supportedVersion(process.versions.node)) {
+  if (!supportedVersion(process.versions.node) || semver.lt(process.versions.node, '14.0.0')) {
     mochaSuiteFn = describe.skip;
   } else {
     mochaSuiteFn = describe;
