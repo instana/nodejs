@@ -39,7 +39,7 @@ const operationsInfo = {
   putRecords: 'putRecords'
 };
 
-const requestMethods = ['async-style', 'promise-style', 'cb-style', 'cb-v2-style', 'promise-v2-style'];
+const requestMethods = ['async', 'promise', 'cb', 'async-v2', 'promise-v2', 'cb-v2'];
 const availableOperations = [
   'createStream',
   'putRecords',
@@ -97,9 +97,6 @@ function start(version) {
                   path: `${apiPath}${withErrorOption}`,
                   simple: withError === false
                 });
-                /**
-                 * The stream takes some time to be available, even though the callback gives a success message
-                 */
                 if (operation === 'createStream') {
                   await checkStreamExistence(streamName, true);
                 }
@@ -125,8 +122,6 @@ function start(version) {
           withError,
           pid: String(controls.getPid()),
           extraTests: [
-            // When we force an error into getRecords or getShardIterator, the error will occur in listShards
-            // before even reaching getRecords
             span =>
               expect(span.data.kinesis.op).to.equal(
                 withError && operationsInfo[operation].match(/^getRecords$|^shardIterator$/)
@@ -167,9 +162,7 @@ function start(version) {
       });
 
       ProcessControls.setUpHooksWithRetryTime(retryTime, appControls);
-
       describe('attempt to get result', () => {
-        // we don't create the stream, as it was created previously
         availableOperations.slice(1).forEach(operation => {
           const requestMethod = getNextCallMethod();
           it(`should not trace (${operation}/${requestMethod})`, async () => {
@@ -209,7 +202,6 @@ function start(version) {
       });
 
       ProcessControls.setUpHooksWithRetryTime(retryTime, appControls);
-
       describe('attempt to get result', () => {
         // we don't create the stream, as it was created previously
         availableOperations.slice(1).forEach(operation => {

@@ -11,7 +11,6 @@ const app = express();
 const agentPort = process.env.INSTANA_AGENT_PORT || 42699;
 const port = require('../../../../../test_util/app-port')();
 const streamName = process.env.AWS_KINESIS_STREAM_NAME || 'nodejs-team';
-
 const {
   KinesisClient,
   Kinesis,
@@ -70,184 +69,62 @@ const availableOperations = {
   }
 };
 const operationNames = Object.keys(availableOperations);
-
-async function executeAsync(operation, withError) {
+const commandMapping = {
+  createStream: CreateStreamCommand,
+  putRecord: PutRecordCommand,
+  putRecords: PutRecordsCommand,
+  getRecords: GetRecordsCommand,
+  getShardIterator: GetShardIteratorCommand,
+  listStreams: ListStreamsCommand,
+  listShards: ListShardsCommand
+};
+function enforceErrors(options) {
+  // this will enforce error for all commands except liststreams
+  options.ShardCount = 0;
+}
+async function executeOperation(operation, withError, method) {
   const operationOptions = availableOperations[operation];
   const mergedOptions = { ...operationOptions };
 
   if (withError) {
     enforceErrors(mergedOptions);
   }
-
+  const command = commandMapping[operation];
   switch (operation) {
     case 'getRecords': {
-      const data = await executeAsync('getShardIterator', withError);
+      const data = await executeOperation('getShardIterator', withError, method);
       mergedOptions.ShardIterator = data.ShardIterator;
-      return kinesis.send(new GetRecordsCommand(mergedOptions));
+      return kinesisSend(new command(mergedOptions), method);
     }
-
     case 'getShardIterator': {
-      const shards = await executeAsync('listShards', withError);
+      const shards = await executeOperation('listShards', withError, method);
       const { ShardId, SequenceNumberRange } = shards.Shards[0];
       const StartingSequenceNumber = SequenceNumberRange.StartingSequenceNumber;
       mergedOptions.ShardId = ShardId;
       mergedOptions.StartingSequenceNumber = StartingSequenceNumber;
-      return kinesis.send(new GetShardIteratorCommand(mergedOptions));
+      return kinesisSend(new command(mergedOptions), method);
     }
-
-    case 'createStream':
-      return kinesis.send(new CreateStreamCommand(mergedOptions));
-
-    case 'putRecords':
-      return kinesis.send(new PutRecordsCommand(mergedOptions));
-
-    case 'putRecord':
-      return kinesis.send(new PutRecordCommand(mergedOptions));
-
-    case 'listStreams':
-      return kinesis.send(new ListStreamsCommand(mergedOptions));
-
-    case 'listShards':
-      return kinesis.send(new ListShardsCommand(mergedOptions));
-
     default:
-      // Use kinesis.send() for all other operations
-      if (kinesis[operation]) {
-        return kinesis.send(new kinesis[operation](mergedOptions));
-      } else {
-        //  throw new Error(`Operation "${operation}" not supported.`);
-      }
+      return kinesisSend(new command(mergedOptions), method);
   }
 }
+async function kinesisSendWithPromise(command) {
+  return kinesis.send(command).then(result => {
+    return result;
+  });
+}
 
-async function executePromise(operation, withError) {
-  const operationOptions = availableOperations[operation];
-  const mergedOptions = { ...operationOptions };
-
-  if (withError) {
-    enforceErrors(mergedOptions);
-  }
-  async function kinesisSend(command) {
-    try {
-      return await kinesis.send(command);
-    } catch (error) {
-      // throw new Error(`Error executing "${command.constructor.name}": ${error.message}`);
+function kinesisSendWithCB(command, cb) {
+  kinesis.send(command, (error, result) => {
+    if (error) {
+      cb(new Error(`Error executing "${command.constructor.name}": ${error.message}`));
+    } else {
+      cb(null, result);
     }
-  }
-
-  switch (operation) {
-    case 'getRecords':
-      return executePromise('getShardIterator', withError)
-        .then(async data => {
-          mergedOptions.ShardIterator = data.ShardIterator;
-          return kinesis.send(new GetRecordsCommand(mergedOptions));
-        });
-
-    case 'getShardIterator':
-      return executePromise('listShards', withError)
-        .then(shards => {
-          const { ShardId, SequenceNumberRange } = shards.Shards[0];
-          const StartingSequenceNumber = SequenceNumberRange.StartingSequenceNumber;
-          mergedOptions.ShardId = ShardId;
-          mergedOptions.StartingSequenceNumber = StartingSequenceNumber;
-          return kinesis.send(new GetShardIteratorCommand(mergedOptions));
-        });
-
-    case 'createStream':
-      return kinesisSend(new CreateStreamCommand(mergedOptions));
-
-    case 'putRecords':
-      return kinesisSend(new PutRecordsCommand(mergedOptions));
-
-    case 'putRecord':
-      return kinesisSend(new PutRecordCommand(mergedOptions));
-
-    case 'listStreams':
-      return kinesisSend(new ListStreamsCommand(mergedOptions));
-
-    case 'listShards':
-      return kinesisSend(new ListShardsCommand(mergedOptions));
-
-    default:
-      // Use kinesis.send() for all other operations
-      if (kinesis[operation]) {
-        return kinesisSend(new kinesis[operation](mergedOptions));
-      } else {
-        // throw new Error(`Operation "${operation}" not supported.`);
-      }
-  }
+  });
 }
-async function executeCallback(operation, withError, callback) {
-  const operationOptions = availableOperations[operation];
-  const mergedOptions = { ...operationOptions };
 
-  if (withError) {
-    enforceErrors(mergedOptions);
-  }
-
-  const kinesisSendWithCallback = (command, cb) => {
-    kinesis.send(command, (error, result) => {
-      if (error) {
-        cb(new Error(`Error executing "${command.constructor.name}": ${error.message}`));
-      } else {
-        cb(null, result);
-      }
-    });
-  };
-
-  switch (operation) {
-    case 'getRecords':
-      return executeCallback('getShardIterator', withError, (err, data) => {
-        if (err) {
-          callback(err);
-        } else {
-          mergedOptions.ShardIterator = data.ShardIterator;
-          kinesisSendWithCallback(new GetRecordsCommand(mergedOptions), callback);
-        }
-      });
-
-    case 'getShardIterator':
-      return executeCallback('listShards', withError, (err, shards) => {
-        if (err) {
-          callback(err);
-        } else {
-          const { ShardId, SequenceNumberRange } = shards.Shards[0];
-          const StartingSequenceNumber = SequenceNumberRange.StartingSequenceNumber;
-          mergedOptions.ShardId = ShardId;
-          mergedOptions.StartingSequenceNumber = StartingSequenceNumber;
-          kinesisSendWithCallback(new GetShardIteratorCommand(mergedOptions), callback);
-        }
-      });
-
-    case 'createStream':
-      kinesisSendWithCallback(new CreateStreamCommand(mergedOptions), callback);
-      break;
-
-    case 'putRecords':
-      kinesisSendWithCallback(new PutRecordsCommand(mergedOptions), callback);
-      break;
-
-    case 'putRecord':
-      kinesisSendWithCallback(new PutRecordCommand(mergedOptions), callback);
-      break;
-
-    case 'listStreams':
-      return kinesisSendWithCallback(new ListStreamsCommand(mergedOptions), callback);
-
-    case 'listShards':
-      return kinesisSendWithCallback(new ListShardsCommand(mergedOptions), callback);
-
-    default:
-      // Use kinesis.send() for all other operations
-      if (kinesis[operation]) {
-        return kinesisSendWithCallback(new kinesis[operation](mergedOptions), callback);
-      } else {
-        callback(new Error(`Operation "${operation}" not supported.`));
-      }
-  }
-}
-// AWS SDK v2 style for executing the Kinesis operations
-function kinesisSendV2(command) {
+function kinesisV2SendWithPromise(command) {
   return new Promise((resolve, reject) => {
     kinesisV2.send(command, (error, result) => {
       if (error) {
@@ -259,8 +136,7 @@ function kinesisSendV2(command) {
   });
 }
 
-// AWS SDK v2 style for executing the Kinesis operations with a callback
-function kinesisSendV2Callback(command, callback) {
+function kinesisSendV2WithCB(command, callback) {
   kinesisV2.send(command, (error, result) => {
     if (error) {
       callback(new Error(`Error executing "${command.constructor.name}": ${error.message}`));
@@ -269,119 +145,38 @@ function kinesisSendV2Callback(command, callback) {
     }
   });
 }
-function executeCallbackV2(operation, withError, callback) {
-  const operationOptions = availableOperations[operation];
-  const mergedOptions = { ...operationOptions };
-
-  if (withError) {
-    enforceErrors(mergedOptions);
-  }
-
-  switch (operation) {
-    case 'getRecords':
-      executeCallbackV2('getShardIterator', withError, (err, data) => {
-        if (err) {
-          callback(err);
-        } else {
-          mergedOptions.ShardIterator = data.ShardIterator;
-          kinesisSendV2Callback(new GetRecordsCommand(mergedOptions), callback);
-        }
-      });
-      break;
-
-    case 'getShardIterator':
-      executeCallbackV2('listShards', withError, (err, shards) => {
-        if (err) {
-          callback(err);
-        } else {
-          const { ShardId, SequenceNumberRange } = shards.Shards[0];
-          const StartingSequenceNumber = SequenceNumberRange.StartingSequenceNumber;
-          mergedOptions.ShardId = ShardId;
-          mergedOptions.StartingSequenceNumber = StartingSequenceNumber;
-          kinesisSendV2Callback(new GetShardIteratorCommand(mergedOptions), callback);
-        }
-      });
-      break;
-
-    case 'createStream':
-      kinesisSendV2Callback(new CreateStreamCommand(mergedOptions), callback);
-      break;
-
-    case 'putRecords':
-      kinesisSendV2Callback(new PutRecordsCommand(mergedOptions), callback);
-      break;
-
-    case 'putRecord':
-      kinesisSendV2Callback(new PutRecordCommand(mergedOptions), callback);
-      break;
-
-    case 'listStreams':
-      kinesisSendV2Callback(new ListStreamsCommand(mergedOptions), callback);
-      break;
-
-    case 'listShards':
-      kinesisSendV2Callback(new ListShardsCommand(mergedOptions), callback);
-      break;
-
-    default:
-      // Use kinesis.send() for all other operations
-      if (kinesisV2[operation]) {
-        kinesisSendV2Callback(new kinesisV2[operation](mergedOptions), callback);
-      } else {
-        callback(new Error(`Operation "${operation}" not supported.`));
-      }
-  }
-}
-
-async function executePromiseV2(operation, withError) {
-  const operationOptions = availableOperations[operation];
-  const mergedOptions = { ...operationOptions };
-
-  if (withError) {
-    enforceErrors(mergedOptions, operation);
-  }
-
-  switch (operation) {
-    case 'getRecords':
-      return executePromiseV2('getShardIterator', withError)
-        .then(async data => {
-          mergedOptions.ShardIterator = data.ShardIterator;
-          return kinesisSendV2(new GetRecordsCommand(mergedOptions));
-        })
-        .catch(error => {
-          throw new Error(`Error executing "getRecords": ${error.message}`);
+async function kinesisSend(command, method) {
+  switch (method) {
+    case 'async':
+      return kinesis.send(command);
+    case 'promise':
+      return kinesisSendWithPromise(command);
+    case 'cb':
+      return new Promise((resolve, reject) => {
+        kinesisSendWithCB(command, (err, result) => {
+          if (err) {
+            reject(err);
+          } else {
+            resolve(result);
+          }
         });
-
-    case 'getShardIterator':
-      return executePromiseV2('listShards', withError)
-        .then(shards => {
-          const { ShardId, SequenceNumberRange } = shards.Shards[0];
-          const StartingSequenceNumber = SequenceNumberRange.StartingSequenceNumber;
-          mergedOptions.ShardId = ShardId;
-          mergedOptions.StartingSequenceNumber = StartingSequenceNumber;
-          return kinesisSendV2(new GetShardIteratorCommand(mergedOptions));
-        })
-        .catch(error => {
-          throw new Error(`Error executing "getShardIterator": ${error.message}`);
+      });
+    case 'async-v2':
+      return kinesisV2.send(command);
+    case 'promise-v2':
+      return kinesisV2SendWithPromise(command);
+    case 'cb-v2':
+      return new Promise((resolve, reject) => {
+        kinesisSendV2WithCB(command, (err, result) => {
+          if (err) {
+            reject(err);
+          } else {
+            resolve(result);
+          }
         });
-
-    case 'createStream':
-      return kinesisSendV2(new CreateStreamCommand(mergedOptions));
-
-    case 'putRecords':
-      return kinesisSendV2(new PutRecordsCommand(mergedOptions));
-
-    case 'putRecord':
-      return kinesisSendV2(new PutRecordCommand(mergedOptions));
-
-    case 'listStreams':
-      return kinesisSendV2(new ListStreamsCommand(mergedOptions));
-
-    case 'listShards':
-      return kinesisSendV2(new ListShardsCommand(mergedOptions));
-
+      });
     default:
-      throw new Error(`Operation "${operation}" not supported.`);
+      return null;
   }
 }
 
@@ -398,87 +193,14 @@ function httpSuccess(res, data) {
     data: data
   });
 }
-function enforceErrors(options) {
-  // this will enforce error for all commands except liststreams
-  options.ShardCount = 0;
-}
 operationNames.forEach(operation => {
   app.get(`/${operation}/:method`, async (req, res) => {
     const withError = typeof req.query.withError === 'string' && req.query.withError !== '';
     const method = req.params.method;
-    let data;
-
     try {
-      switch (method) {
-        case 'async-style':
-          data = await executeAsync(operation, withError);
-          request(`http://127.0.0.1:${agentPort}`)
-            .then(() => {
-              httpSuccess(res, data);
-            })
-            .catch(err2 => {
-              httpError(res, err2);
-            });
-          break;
-
-        case 'promise-style':
-          executePromise(operation, withError);
-          request(`http://127.0.0.1:${agentPort}`)
-            .then(() => {
-              httpSuccess(res, data);
-            })
-            .catch(err2 => {
-              httpError(res, err2);
-            });
-          break;
-
-        case 'cb-style':
-          executeCallback(operation, withError, (err, result) => {
-            if (err) {
-              httpError(res, err);
-            } else {
-              request(`http://127.0.0.1:${agentPort}`)
-                .then(() => {
-                  httpSuccess(res, result);
-                })
-                .catch(err2 => {
-                  httpError(res, err2);
-                });
-            }
-          });
-          break;
-
-        case 'promise-v2-style':
-          data = await executePromiseV2(operation, withError);
-          request(`http://127.0.0.1:${agentPort}`)
-            .then(() => {
-              httpSuccess(res, data);
-            })
-            .catch(err2 => {
-              httpError(res, err2);
-            });
-          break;
-
-        case 'cb-v2-style':
-          executeCallbackV2(operation, withError, (err, result) => {
-            if (err) {
-              httpError(res, err);
-            } else {
-              request(`http://127.0.0.1:${agentPort}`)
-                .then(() => {
-                  httpSuccess(res, result);
-                })
-                .catch(err2 => {
-                  httpError(res, err2);
-                });
-            }
-          });
-          break;
-
-        default:
-          res.status(500).send({ error: `URL must match one of the methods: ${operationNames.join(', ')}` });
-          return;
-      }
+      const data = await executeOperation(operation, withError, method);
+      await request(`http://127.0.0.1:${agentPort}`);
+      httpSuccess(res, data);
     } catch (err) {
       httpError(res, err);
     }
