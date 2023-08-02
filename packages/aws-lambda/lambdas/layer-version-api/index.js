@@ -140,7 +140,6 @@ async function getAWSRegions() {
   const ec2 = new AWS.EC2({ region: 'us-west-1' });
   const data = await ec2.describeRegions().promise();
   regions = data.Regions.map(r => r.RegionName);
-  regions = regionNames;
 }
 
 async function listLayerVersions(region, layerName) {
