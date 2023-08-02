@@ -94,14 +94,14 @@ async function handleLayerRequest(event, layerName) {
   const data = await listLayerVersions(region, layerName);
 
   if (!data) {
-    return respond500('No result from AWS ListLayerVersion operation.');
+    return respond('No result from AWS ListLayerVersion operation.', 500);
   }
 
   if (!data.LayerVersions || !data.LayerVersions[0] || !data.LayerVersions[0].Version) {
     if (Array.isArray(data.LayerVersions) && data.LayerVersions.length === 0) {
-      return respond500('No layer version found.');
+      return respond('No layer version found.');
     } else {
-      return respond500('Unexpected result from AWS ListLayerVersion operation.');
+      return respond('Unexpected result from AWS ListLayerVersion operation.', 500);
     }
   }
   const versionData = data.LayerVersions[0];
@@ -126,9 +126,9 @@ async function handleLayerRequest(event, layerName) {
   };
 }
 
-function respond500(message) {
+function respond(message, statusCode) {
   return {
-    statusCode: 500,
+    statusCode: statusCode || 404,
     headers: corsAllowAll(),
     body: JSON.stringify({ message })
   };
