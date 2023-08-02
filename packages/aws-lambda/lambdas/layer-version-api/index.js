@@ -9,25 +9,7 @@
 const AWS = require('aws-sdk');
 
 const awsLambdaClientForRegion = {};
-
-const VALID_REGIONS = [
-  'ap-northeast-1',
-  'ap-northeast-2',
-  'ap-south-1',
-  'ap-southeast-1',
-  'ap-southeast-2',
-  'ca-central-1',
-  'eu-central-1',
-  'eu-north-1',
-  'eu-west-1',
-  'eu-west-2',
-  'eu-west-3',
-  'sa-east-1',
-  'us-east-1',
-  'us-east-2',
-  'us-west-1',
-  'us-west-2'
-];
+let regions = [];
 
 // Note: We do not use lru-cache for the lru feature but for how it handles max-age: "Items are not pro-actively pruned
 // out as they age, but if you try to get an item that is too old, it'll drop it and return undefined instead of giving
@@ -54,6 +36,9 @@ exports.handler = async event => {
     return handleRootRequest(event);
   } else {
     const layerName = lookup[event.path] || event.path;
+
+    // once load the regions and cache them
+    await getAWSRegions();
 
     // default case: we forward the requested layer name to the sdk
     return handleLayerRequest(event, layerName.replace(/\//g, ''));
@@ -84,7 +69,7 @@ async function handleLayerRequest(event, layerName) {
 
   let region = event.queryStringParameters ? event.queryStringParameters.region : null;
   region = region || 'us-east-2';
-  if (!VALID_REGIONS.includes(region)) {
+  if (!regions.includes(region)) {
     return {
       statusCode: 404,
       body: JSON.stringify({ message: `Unknown region: ${region}` }),
@@ -107,11 +92,17 @@ async function handleLayerRequest(event, layerName) {
 
   console.log(`No cached result for ${cacheKey}.`);
   const data = await listLayerVersions(region, layerName);
+
   if (!data) {
-    return respond500('No result from AWS ListLayerVersion operation.');
+    return respond('No result from AWS ListLayerVersion operation.', 500);
   }
+
   if (!data.LayerVersions || !data.LayerVersions[0] || !data.LayerVersions[0].Version) {
-    return respond500('Unexpected result from AWS ListLayerVersion operation.');
+    if (Array.isArray(data.LayerVersions) && data.LayerVersions.length === 0) {
+      return respond('No layer version found.');
+    } else {
+      return respond('Unexpected result from AWS ListLayerVersion operation.', 500);
+    }
   }
   const versionData = data.LayerVersions[0];
   const response = {
@@ -135,12 +126,20 @@ async function handleLayerRequest(event, layerName) {
   };
 }
 
-function respond500(message) {
+function respond(message, statusCode) {
   return {
-    statusCode: 500,
+    statusCode: statusCode || 404,
     headers: corsAllowAll(),
     body: JSON.stringify({ message })
   };
+}
+
+async function getAWSRegions() {
+  if (regions.length > 0) return;
+
+  const ec2 = new AWS.EC2({ region: 'us-west-1' });
+  const data = await ec2.describeRegions().promise();
+  regions = data.Regions.map(r => r.RegionName);
 }
 
 async function listLayerVersions(region, layerName) {
