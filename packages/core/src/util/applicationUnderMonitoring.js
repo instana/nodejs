@@ -88,7 +88,7 @@ function readFile(packageJsonPath, cb) {
     try {
       parsedMainPackageJson = JSON.parse(contents);
     } catch (e) {
-      logger.warn('Main package.json file %s cannot be parsed: %s', packageJsonPath, e);
+      logger.warn('Package.json file %s cannot be parsed: %s', packageJsonPath, e);
       return cb(e, null);
     }
     return cb(null, parsedMainPackageJson);
