@@ -34,10 +34,14 @@ function isAppInstalledIntoNodeModules() {
  *
  * In case the search is successful, the result will be cached for consecutive invocations.
  *
+ * @param {import('./normalizeConfig').InstanaConfig} config
  * @param {(err: Error, parsedMainPackageJson: Object.<string, *>) => void } cb - the callback will be called with an
  * error or the parsed package.json file as a JS object.
  */
-function getMainPackageJsonStartingAtMainModule(cb) {
+function getMainPackageJsonStartingAtMainModule(config, cb) {
+  if (config && config.packageJsonPath) {
+    return readFile(config.packageJsonPath, cb);
+  }
   return getMainPackageJsonStartingAtDirectory(null, cb);
 }
 
@@ -66,19 +70,28 @@ function getMainPackageJsonStartingAtDirectory(startDirectory, cb) {
       return process.nextTick(cb);
     }
 
-    fs.readFile(packageJsonPath, { encoding: 'utf8' }, (readFileErr, contents) => {
-      if (readFileErr) {
-        return cb(readFileErr, null);
-      }
+    readFile(packageJsonPath, cb);
+  });
+}
 
-      try {
-        parsedMainPackageJson = JSON.parse(contents);
-      } catch (e) {
-        logger.warn('Main package.json file %s cannot be parsed: %s', packageJsonPath, e);
-        return cb(e, null);
-      }
-      return cb(null, parsedMainPackageJson);
-    });
+/**
+ *
+ * @param {string} packageJsonPath
+ * @param {function} cb
+ */
+function readFile(packageJsonPath, cb) {
+  fs.readFile(packageJsonPath, { encoding: 'utf8' }, (readFileErr, contents) => {
+    if (readFileErr) {
+      return cb(readFileErr, null);
+    }
+
+    try {
+      parsedMainPackageJson = JSON.parse(contents);
+    } catch (e) {
+      logger.warn('Main package.json file %s cannot be parsed: %s', packageJsonPath, e);
+      return cb(e, null);
+    }
+    return cb(null, parsedMainPackageJson);
   });
 }
 
@@ -179,7 +192,7 @@ function getMainPackageJsonPathStartingAtDirectory(startDirectory, cb) {
 // @ts-ignore
 function getMainPackageJson(startDirectory, cb) {
   if (typeof startDirectory === 'function') {
-    return getMainPackageJsonStartingAtMainModule(startDirectory);
+    return getMainPackageJsonStartingAtMainModule({}, startDirectory);
   } else {
     return getMainPackageJsonStartingAtDirectory(startDirectory, cb);
   }

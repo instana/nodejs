@@ -7,6 +7,7 @@
 
 const expect = require('chai').expect;
 const sinon = require('sinon');
+const path = require('path');
 const testUtils = require('../../core/test/test_util');
 const name = require('../src/name');
 const { applicationUnderMonitoring } = require('@instana/core').util;
@@ -34,7 +35,7 @@ describe('metrics.name', () => {
 
   describe('when the package.json cannot be found', function () {
     before(() => {
-      sinon.stub(applicationUnderMonitoring, 'getMainPackageJsonStartingAtMainModule').callsFake(cb => {
+      sinon.stub(applicationUnderMonitoring, 'getMainPackageJsonStartingAtMainModule').callsFake((config, cb) => {
         cb(null, null);
       });
     });
@@ -50,6 +51,41 @@ describe('metrics.name', () => {
 
       return testUtils.retry(() => {
         expect(name.currentPayload).to.contain('node_modules/mocha/bin/mocha');
+      });
+    });
+  });
+
+  describe('when packageJsonPath is provided', function () {
+    it('[absolute] it should use the provided package json', async () => {
+      name.MAX_ATTEMPTS = 5;
+      name.DELAY = 50;
+      name.activate({ packageJsonPath: path.join(__dirname, './cjs-require-in-preload/module/package.json') });
+
+      return testUtils.retry(() => {
+        expect(name.currentPayload).to.contain('cjs-example');
+      });
+    });
+
+    it('[relative] it should use the provided package json', async () => {
+      name.MAX_ATTEMPTS = 5;
+      name.DELAY = 50;
+
+      // NOTE: relative to process.cwd()
+      name.activate({ packageJsonPath: 'test/cjs-require-in-preload/module/package.json' });
+
+      return testUtils.retry(() => {
+        expect(name.currentPayload).to.contain('cjs-example');
+      });
+    });
+
+    it('it should not use the provided package json', async () => {
+      name.MAX_ATTEMPTS = 5;
+      name.DELAY = 50;
+
+      name.activate({ packageJsonPath: null });
+
+      return testUtils.retry(() => {
+        expect(name.currentPayload).to.contain('cjs-example');
       });
     });
   });
