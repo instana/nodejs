@@ -546,13 +546,16 @@ function call(fn) {
  * @param {Object.<string, *>} options
  */
 function skipExitTracing(options) {
-  const opts = Object.assign({}, options, {
-    isActive: true,
-    extendedResponse: false,
-    skipParentSpanCheck: false,
-    log: true,
-    skipIsTracing: false
-  });
+  const opts = Object.assign(
+    {
+      isActive: true,
+      extendedResponse: false,
+      skipParentSpanCheck: false,
+      log: true,
+      skipIsTracing: false
+    },
+    options
+  );
 
   const parentSpan = getCurrentSpan();
   const suppressed = tracingSuppressed();
