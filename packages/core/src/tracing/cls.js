@@ -545,20 +545,31 @@ function call(fn) {
  *
  * @param {Object.<string, *>} options
  */
-function skipExitTracing(
-  options = {
-    isActive: true,
-    extendedResponse: false,
-    skipParentSpanCheck: false,
-    log: true,
-    skipIsTracing: false
-  }
-) {
+function skipExitTracing(options) {
+  const opts = Object.assign(
+    {
+      isActive: true,
+      extendedResponse: false,
+      skipParentSpanCheck: false,
+      log: true,
+      skipIsTracing: false
+    },
+    options
+  );
+
   const parentSpan = getCurrentSpan();
   const suppressed = tracingSuppressed();
   const isExitSpanResult = isExitSpan(parentSpan);
-  if (!options.skipParentSpanCheck && (!parentSpan || isExitSpanResult)) {
-    if (options.log) {
+
+  // CASE: first ask for suppressed, because if we skip the entry span, we won't have a parentSpan
+  //       on the exit span, which would create noisy log messages.
+  if (suppressed) {
+    if (opts.extendedResponse) return { skip: true, suppressed, isExitSpan: isExitSpanResult };
+    return true;
+  }
+
+  if (!opts.skipParentSpanCheck && (!parentSpan || isExitSpanResult)) {
+    if (opts.log) {
       logger.warn(
         // eslint-disable-next-line max-len
         `Cannot start an exit span as this requires an active entry (or intermediate) span as parent. ${
@@ -569,14 +580,14 @@ function skipExitTracing(
       );
     }
 
-    if (options.extendedResponse) return { skip: true, suppressed, isExitSpan: isExitSpanResult };
+    if (opts.extendedResponse) return { skip: true, suppressed, isExitSpan: isExitSpanResult };
     else return true;
   }
 
-  const skipIsActive = options.isActive === false;
-  const skipIsTracing = !options.skipIsTracing ? !isTracing() : false;
-  const skip = skipIsActive || skipIsTracing || suppressed;
-  if (options.extendedResponse) return { skip, suppressed, isExitSpan: isExitSpanResult };
+  const skipIsActive = opts.isActive === false;
+  const skipIsTracing = !opts.skipIsTracing ? !isTracing() : false;
+  const skip = skipIsActive || skipIsTracing;
+  if (opts.extendedResponse) return { skip, suppressed, isExitSpan: isExitSpanResult };
   else return skip;
 }
 
