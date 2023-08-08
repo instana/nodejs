@@ -187,28 +187,6 @@ function getMainPackageJsonPathStartingAtDirectory(startDirectory, cb) {
   });
 }
 
-// Backward compat fix for @instana/collector@<1.99.0 plus latest @instana/core, see
-// packages/collector/test/backward_compat/test.js for more details.
-// @ts-ignore
-function getMainPackageJson(startDirectory, cb) {
-  if (typeof startDirectory === 'function') {
-    return getMainPackageJsonStartingAtMainModule({}, startDirectory);
-  } else {
-    return getMainPackageJsonStartingAtDirectory(startDirectory, cb);
-  }
-}
-
-// Backward compat fix for @instana/collector@<1.99.0 plus latest @instana/core, see
-// packages/collector/test/backward_compat/test.js for more details.
-// @ts-ignore
-function getMainPackageJsonPath(startDirectory, cb) {
-  if (typeof startDirectory === 'function') {
-    return getMainPackageJsonPathStartingAtMainModule(startDirectory);
-  } else {
-    return getMainPackageJsonPathStartingAtDirectory(startDirectory, cb);
-  }
-}
-
 /**
  * @param {string} dir
  * @param {(err: Error, main: *) => void} cb
@@ -344,8 +322,5 @@ module.exports = {
   getMainPackageJsonStartingAtDirectory,
   getMainPackageJsonPathStartingAtMainModule,
   getMainPackageJsonPathStartingAtDirectory,
-  findNodeModulesFolder,
-
-  getMainPackageJson,
-  getMainPackageJsonPath
+  findNodeModulesFolder
 };
