@@ -177,6 +177,8 @@ function normalizePackageJsonPath(config) {
     logger.warn(
       `Invalid configuration: config.packageJsonPath is not a string, the value will be ignored: ${config.packageJsonPath}`
     );
+
+    config.packageJsonPath = null;
   }
 }
 

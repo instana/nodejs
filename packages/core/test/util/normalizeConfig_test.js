@@ -9,7 +9,7 @@ const expect = require('chai').expect;
 
 const normalizeConfig = require('../../src/util/normalizeConfig');
 
-describe('util.normalizeConfig', () => {
+describe.only('util.normalizeConfig', () => {
   beforeEach(resetEnv);
   afterEach(resetEnv);
 
@@ -488,6 +488,11 @@ describe('util.normalizeConfig', () => {
   it('should accept packageJsonPath', () => {
     const config = normalizeConfig({ packageJsonPath: './something' });
     expect(config.packageJsonPath).to.equal('./something');
+  });
+
+  it('should not accept packageJsonPath', () => {
+    const config = normalizeConfig({ packageJsonPath: 1234 });
+    expect(config.packageJsonPath).to.not.exist;
   });
 
   it('should accept INSTANA_PACKAGE_JSON_PATH', () => {
