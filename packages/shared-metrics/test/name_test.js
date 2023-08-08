@@ -15,6 +15,7 @@ const { applicationUnderMonitoring } = require('@instana/core').util;
 describe('metrics.name', () => {
   afterEach(() => {
     name.reset();
+    applicationUnderMonitoring.reset();
   });
 
   it('should export a name payload prefix', () => {
@@ -59,10 +60,10 @@ describe('metrics.name', () => {
     it('[absolute] it should use the provided package json', async () => {
       name.MAX_ATTEMPTS = 5;
       name.DELAY = 50;
-      name.activate({ packageJsonPath: path.join(__dirname, './cjs-require-in-preload/module/package.json') });
+      name.activate({ packageJsonPath: path.join(__dirname, './esm-require-in-preload/module/package.json') });
 
       return testUtils.retry(() => {
-        expect(name.currentPayload).to.contain('cjs-example');
+        expect(name.currentPayload).to.contain('esm-require-in-preload');
       });
     });
 
@@ -71,10 +72,10 @@ describe('metrics.name', () => {
       name.DELAY = 50;
 
       // NOTE: relative to process.cwd()
-      name.activate({ packageJsonPath: 'test/cjs-require-in-preload/module/package.json' });
+      name.activate({ packageJsonPath: 'test/esm-require-in-preload/module/package.json' });
 
       return testUtils.retry(() => {
-        expect(name.currentPayload).to.contain('cjs-example');
+        expect(name.currentPayload).to.contain('esm-require-in-preload');
       });
     });
 
@@ -85,7 +86,7 @@ describe('metrics.name', () => {
       name.activate({ packageJsonPath: null });
 
       return testUtils.retry(() => {
-        expect(name.currentPayload).to.contain('cjs-example');
+        expect(name.currentPayload).to.contain('mocha');
       });
     });
   });

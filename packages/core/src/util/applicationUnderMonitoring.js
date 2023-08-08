@@ -42,6 +42,7 @@ function getMainPackageJsonStartingAtMainModule(config, cb) {
   if (config && config.packageJsonPath) {
     return readFile(config.packageJsonPath, cb);
   }
+
   return getMainPackageJsonStartingAtDirectory(null, cb);
 }
 
@@ -316,11 +317,17 @@ function searchInParentDir(dir, onParentDir, cb) {
   return onParentDir(parentDir, cb);
 }
 
+const reset = () => {
+  parsedMainPackageJson = undefined;
+  mainPackageJsonPath = undefined;
+};
+
 module.exports = {
   isAppInstalledIntoNodeModules,
   getMainPackageJsonStartingAtMainModule,
   getMainPackageJsonStartingAtDirectory,
   getMainPackageJsonPathStartingAtMainModule,
   getMainPackageJsonPathStartingAtDirectory,
-  findNodeModulesFolder
+  findNodeModulesFolder,
+  reset
 };
