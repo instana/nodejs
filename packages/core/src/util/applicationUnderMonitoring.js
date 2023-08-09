@@ -39,6 +39,12 @@ function isAppInstalledIntoNodeModules() {
  * error or the parsed package.json file as a JS object.
  */
 function getMainPackageJsonStartingAtMainModule(config, cb) {
+  // NOTE: we already cached the package.json
+  if (parsedMainPackageJson !== undefined) {
+    return cb(null, parsedMainPackageJson);
+  }
+
+  // CASE: customer provided custom package.json path, let's try loading it
   if (config && config.packageJsonPath) {
     return readFile(config.packageJsonPath, cb);
   }
@@ -57,8 +63,10 @@ function getMainPackageJsonStartingAtMainModule(config, cb) {
  * error or the parsed package.json file as a JS object.
  */
 function getMainPackageJsonStartingAtDirectory(startDirectory, cb) {
+  // NOTE: we already cached the package.json. We need the caching here too, because
+  //       e.g. `npmPackageVersion` uses this function directly. It's duplicated code, but its acceptable.
   if (parsedMainPackageJson !== undefined) {
-    return process.nextTick(cb, null, parsedMainPackageJson);
+    return cb(null, parsedMainPackageJson);
   }
 
   getMainPackageJsonPathStartingAtDirectory(startDirectory, (err, packageJsonPath) => {
