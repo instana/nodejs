@@ -24,15 +24,22 @@ exports.MAX_ATTEMPTS = 60;
 exports.DELAY = 1000;
 let attempts = 0;
 
-exports.activate = function activate() {
+/**
+ * @param {import('@instana/core/src/util/normalizeConfig').InstanaConfig} config
+ */
+exports.activate = function activate(config) {
   attempts++;
 
-  applicationUnderMonitoring.getMainPackageJsonStartingAtMainModule((err, packageJson) => {
+  applicationUnderMonitoring.getMainPackageJsonStartingAtMainModule(config, (err, packageJson) => {
     if (err) {
       return logger.warn('Failed to determine main package json. Reason: ', err.message, err.stack);
     } else if (!packageJson && attempts < exports.MAX_ATTEMPTS) {
       logger.debug('Main package.json could not be found. Will try again later.');
-      setTimeout(exports.activate, exports.DELAY).unref();
+
+      setTimeout(() => {
+        exports.activate(config);
+      }, exports.DELAY).unref();
+
       return;
     } else if (!packageJson) {
       if (require.main) {

@@ -30,6 +30,7 @@ describe('util.normalizeConfig', () => {
     delete process.env.INSTANA_DISABLE_W3C_TRACE_CORRELATION;
     delete process.env.INSTANA_KAFKA_TRACE_CORRELATION;
     delete process.env.INSTANA_KAFKA_HEADER_FORMAT;
+    delete process.env.INSTANA_PACKAGE_JSON_PATH;
   }
 
   it('should apply all defaults', () => {
@@ -484,10 +485,27 @@ describe('util.normalizeConfig', () => {
     expect(config.secrets.keywords).to.deep.equal(['nope', 'never']);
   });
 
+  it('should accept packageJsonPath', () => {
+    const config = normalizeConfig({ packageJsonPath: './something' });
+    expect(config.packageJsonPath).to.equal('./something');
+  });
+
+  it('should not accept packageJsonPath', () => {
+    const config = normalizeConfig({ packageJsonPath: 1234 });
+    expect(config.packageJsonPath).to.not.exist;
+  });
+
+  it('should accept INSTANA_PACKAGE_JSON_PATH', () => {
+    process.env.INSTANA_PACKAGE_JSON_PATH = '/my/path';
+    const config = normalizeConfig({});
+    expect(config.packageJsonPath).to.equal('/my/path');
+  });
+
   function checkDefaults(config) {
     expect(config).to.be.an('object');
 
     expect(config.serviceName).to.not.exist;
+    expect(config.packageJsonPath).to.not.exist;
 
     expect(config.metrics).to.be.an('object');
     expect(config.metrics.transmissionDelay).to.equal(1000);

@@ -34,10 +34,21 @@ function isAppInstalledIntoNodeModules() {
  *
  * In case the search is successful, the result will be cached for consecutive invocations.
  *
+ * @param {import('./normalizeConfig').InstanaConfig} config
  * @param {(err: Error, parsedMainPackageJson: Object.<string, *>) => void } cb - the callback will be called with an
  * error or the parsed package.json file as a JS object.
  */
-function getMainPackageJsonStartingAtMainModule(cb) {
+function getMainPackageJsonStartingAtMainModule(config, cb) {
+  // NOTE: we already cached the package.json
+  if (parsedMainPackageJson !== undefined) {
+    return cb(null, parsedMainPackageJson);
+  }
+
+  // CASE: customer provided custom package.json path, let's try loading it
+  if (config && config.packageJsonPath) {
+    return readFile(config.packageJsonPath, cb);
+  }
+
   return getMainPackageJsonStartingAtDirectory(null, cb);
 }
 
@@ -52,8 +63,10 @@ function getMainPackageJsonStartingAtMainModule(cb) {
  * error or the parsed package.json file as a JS object.
  */
 function getMainPackageJsonStartingAtDirectory(startDirectory, cb) {
+  // NOTE: we already cached the package.json. We need the caching here too, because
+  //       e.g. `npmPackageVersion` uses this function directly. It's duplicated code, but its acceptable.
   if (parsedMainPackageJson !== undefined) {
-    return process.nextTick(cb, null, parsedMainPackageJson);
+    return cb(null, parsedMainPackageJson);
   }
 
   getMainPackageJsonPathStartingAtDirectory(startDirectory, (err, packageJsonPath) => {
@@ -66,19 +79,28 @@ function getMainPackageJsonStartingAtDirectory(startDirectory, cb) {
       return process.nextTick(cb);
     }
 
-    fs.readFile(packageJsonPath, { encoding: 'utf8' }, (readFileErr, contents) => {
-      if (readFileErr) {
-        return cb(readFileErr, null);
-      }
+    readFile(packageJsonPath, cb);
+  });
+}
 
-      try {
-        parsedMainPackageJson = JSON.parse(contents);
-      } catch (e) {
-        logger.warn('Main package.json file %s cannot be parsed: %s', packageJsonPath, e);
-        return cb(e, null);
-      }
-      return cb(null, parsedMainPackageJson);
-    });
+/**
+ *
+ * @param {string} packageJsonPath
+ * @param {function} cb
+ */
+function readFile(packageJsonPath, cb) {
+  fs.readFile(packageJsonPath, { encoding: 'utf8' }, (readFileErr, contents) => {
+    if (readFileErr) {
+      return cb(readFileErr, null);
+    }
+
+    try {
+      parsedMainPackageJson = JSON.parse(contents);
+    } catch (e) {
+      logger.warn('Package.json file %s cannot be parsed: %s', packageJsonPath, e);
+      return cb(e, null);
+    }
+    return cb(null, parsedMainPackageJson);
   });
 }
 
@@ -172,28 +194,6 @@ function getMainPackageJsonPathStartingAtDirectory(startDirectory, cb) {
     mainPackageJsonPath = main;
     return cb(null, mainPackageJsonPath);
   });
-}
-
-// Backward compat fix for @instana/collector@<1.99.0 plus latest @instana/core, see
-// packages/collector/test/backward_compat/test.js for more details.
-// @ts-ignore
-function getMainPackageJson(startDirectory, cb) {
-  if (typeof startDirectory === 'function') {
-    return getMainPackageJsonStartingAtMainModule(startDirectory);
-  } else {
-    return getMainPackageJsonStartingAtDirectory(startDirectory, cb);
-  }
-}
-
-// Backward compat fix for @instana/collector@<1.99.0 plus latest @instana/core, see
-// packages/collector/test/backward_compat/test.js for more details.
-// @ts-ignore
-function getMainPackageJsonPath(startDirectory, cb) {
-  if (typeof startDirectory === 'function') {
-    return getMainPackageJsonPathStartingAtMainModule(startDirectory);
-  } else {
-    return getMainPackageJsonPathStartingAtDirectory(startDirectory, cb);
-  }
 }
 
 /**
@@ -325,6 +325,11 @@ function searchInParentDir(dir, onParentDir, cb) {
   return onParentDir(parentDir, cb);
 }
 
+const reset = () => {
+  parsedMainPackageJson = undefined;
+  mainPackageJsonPath = undefined;
+};
+
 module.exports = {
   isAppInstalledIntoNodeModules,
   getMainPackageJsonStartingAtMainModule,
@@ -332,7 +337,5 @@ module.exports = {
   getMainPackageJsonPathStartingAtMainModule,
   getMainPackageJsonPathStartingAtDirectory,
   findNodeModulesFolder,
-
-  getMainPackageJson,
-  getMainPackageJsonPath
+  reset
 };

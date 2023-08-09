@@ -54,6 +54,7 @@ const constants = require('../tracing/constants');
 /**
  * @typedef {Object} InstanaConfig
  * @property {string} [serviceName]
+ * @property {string} [packageJsonPath]
  * @property {InstanaMetricsOption} [metrics]
  * @property {InstanaTracingOption} [tracing]
  * @property {InstanaSecretsOption} [secrets]
@@ -92,11 +93,13 @@ logger = require('../logger').getLogger('configuration', newLogger => {
 /** @type {InstanaConfig} */
 const defaults = {
   serviceName: null,
+  packageJsonPath: null,
 
   metrics: {
     transmissionDelay: 1000,
     timeBetweenHealthcheckCalls: 3000
   },
+
   tracing: {
     enabled: true,
     useOpentelemetry: true,
@@ -141,6 +144,7 @@ module.exports = function normalizeConfig(config) {
   }
 
   normalizeServiceName(config);
+  normalizePackageJsonPath(config);
   normalizeMetricsConfig(config);
   normalizeTracingConfig(config);
   normalizeSecrets(config);
@@ -159,6 +163,22 @@ function normalizeServiceName(config) {
       `Invalid configuration: config.serviceName is not a string, the value will be ignored: ${config.serviceName}`
     );
     config.serviceName = defaults.serviceName;
+  }
+}
+
+/**
+ * @param {InstanaConfig} config
+ */
+function normalizePackageJsonPath(config) {
+  if (config.packageJsonPath == null && process.env['INSTANA_PACKAGE_JSON_PATH']) {
+    config.packageJsonPath = process.env['INSTANA_PACKAGE_JSON_PATH'];
+  }
+  if (config.packageJsonPath != null && typeof config.packageJsonPath !== 'string') {
+    logger.warn(
+      `Invalid configuration: config.packageJsonPath is not a string, the value will be ignored: ${config.packageJsonPath}`
+    );
+
+    config.packageJsonPath = null;
   }
 }
 
