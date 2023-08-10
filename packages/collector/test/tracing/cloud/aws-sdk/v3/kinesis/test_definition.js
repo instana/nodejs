@@ -33,7 +33,7 @@ const operationsInfo = {
   deleteStream: 'deleteStream',
   createStream: 'createStream',
   getRecords: 'getRecords',
-  getShardIterator: 'shardIterator',
+  getShardIterator: 'getShardIterator',
   listStreams: 'listStreams',
   putRecord: 'putRecord',
   putRecords: 'putRecords'
@@ -73,8 +73,7 @@ function start(version) {
         appPath: path.join(__dirname, 'app'),
         useGlobalAgent: true,
         env: {
-          AWS_KINESIS_STREAM_NAME: streamName,
-          AWS_SDK_CLIENT_REQUIRE: version
+          AWS_KINESIS_STREAM_NAME: streamName
         }
       });
       ProcessControls.setUpHooksWithRetryTime(retryTime, appControls);
@@ -124,7 +123,7 @@ function start(version) {
           extraTests: [
             span =>
               expect(span.data.kinesis.op).to.equal(
-                withError && operationsInfo[operation].match(/^getRecords$|^shardIterator$/)
+                withError && operationsInfo[operation].match(/^getRecords$|^getShardIterator$/)
                   ? 'listShards'
                   : operationsInfo[operation]
               ),
@@ -133,7 +132,7 @@ function start(version) {
                 !span.data.kinesis.op.match(/^getRecords$|^listStreams$/) ? streamName : undefined
               ),
             span => {
-              if (span.data.kinesis.op === 'shardIterator') {
+              if (span.data.kinesis.op === 'getShardIterator') {
                 expect(span.data.kinesis.shard).to.equal('shardId-000000000000');
                 expect(span.data.kinesis.shardType).to.equal('AT_SEQUENCE_NUMBER');
                 expect(span.data.kinesis.startSequenceNumber).to.exist;
@@ -156,8 +155,7 @@ function start(version) {
         useGlobalAgent: true,
         tracingEnabled: false,
         env: {
-          AWS_KINESIS_STREAM_NAME: streamName,
-          AWS_SDK_CLIENT_REQUIRE: version
+          AWS_KINESIS_STREAM_NAME: streamName
         }
       });
 
@@ -196,8 +194,7 @@ function start(version) {
         appPath: path.join(__dirname, 'app'),
         useGlobalAgent: true,
         env: {
-          AWS_KINESIS_STREAM_NAME: streamName,
-          AWS_SDK_CLIENT_REQUIRE: version
+          AWS_KINESIS_STREAM_NAME: streamName
         }
       });
 

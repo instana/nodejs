@@ -47,10 +47,10 @@ exports.init = function init() {
    * @aws-sdk/smithly-client < 3.36.0
    */
   requireHook.onFileLoad(/@aws-sdk\/smithy-client\/dist\/cjs\/client\.js/, instrumentGlobalSmithy);
-   /**
+  /**
    * @aws-sdk/smithly-client > 3.36.0
    */
-   requireHook.onModuleLoad('@smithy/smithy-client', instrumentGlobalSmithy);
+  requireHook.onModuleLoad('@smithy/smithy-client', instrumentGlobalSmithy);
 };
 
 exports.isActive = function () {
@@ -82,14 +82,23 @@ function shimSmithySend(originalSend) {
     const command = smithySendArgs[0];
 
     if (isActive) {
-      const awsProduct = operationMap[command.constructor.name];
+      const serviceId = self.config && self.config.serviceId;
+      const awsProduct = serviceId && awsProducts.find(aws => aws.spanName === serviceId.toLowerCase());
 
-      if (awsProduct) {
+      if (awsProduct && awsProduct.supportsOperation(command.constructor.name)) {
         return awsProduct.instrumentedSmithySend(self, originalSend, smithySendArgs);
+      } else {
+        // This code will be removed when we release support for version 3x.
+        // We are keeping it here for now to avoid any unknown problems.
+        handleLegacy(originalSend, smithySendArgs);
       }
-
-      return originalSend.apply(self, smithySendArgs);
     }
     return originalSend.apply(self, smithySendArgs);
   };
+}
+function handleLegacy(originalSend, smithySendArgs) {
+  const awsProduct = operationMap[smithySendArgs[0].constructor.name];
+  if (awsProduct) {
+    return awsProduct.instrumentedSmithySend(this, originalSend, smithySendArgs);
+  }
 }

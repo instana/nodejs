@@ -6,43 +6,13 @@
 
 const cls = require('../../../../cls');
 const { EXIT } = require('../../../../constants');
-const { getStackTrace } = require('../../../../tracingUtil');
+const tracingUtil = require('../../../../tracingUtil');
 const { InstanaAWSProduct } = require('./instana_aws_product');
 
 const SPAN_NAME = 'kinesis';
 
-const operationsInfo = {
-  CreateStreamCommand: {
-    op: 'createStream'
-  },
-  DeleteStreamCommand: {
-    op: 'deleteStream'
-  },
-  GetRecordsCommand: {
-    op: 'getRecords'
-  },
-  GetShardIteratorCommand: {
-    op: 'shardIterator'
-  },
-  ListStreamsCommand: {
-    op: 'listStreams'
-  },
-  PutRecordCommand: {
-    op: 'putRecord'
-  },
-  PutRecordsCommand: {
-    op: 'putRecords'
-  },
-  ListShardsCommand: {
-    op: 'listShards'
-  }
-};
-
-const operations = Object.keys(operationsInfo);
-
 class InstanaAWSKinesis extends InstanaAWSProduct {
   instrumentedSmithySend(ctx, originalSend, smithySendArgs) {
-    // NOTE: `shimSmithySend`  in index.js is already checking the result of `isActive`
     if (cls.skipExitTracing()) {
       return originalSend.apply(ctx, smithySendArgs);
     }
@@ -52,27 +22,23 @@ class InstanaAWSKinesis extends InstanaAWSProduct {
       const self = this;
       const span = cls.startSpan(this.spanName, EXIT);
       span.ts = Date.now();
-      span.stack = getStackTrace(this.instrumentedSend, 1);
-      span.data[this.spanName] = this.buildSpanData(command.constructor.name, command.input);
-      this.captureRegion(ctx, span);
-
-      if (typeof smithySendArgs[1] === 'function') {
-        const _callback = smithySendArgs[1];
-
-        smithySendArgs[1] = cls.ns.bind(function (err) {
+      span.stack = tracingUtil.getStackTrace(this.instrumentedSmithySend, 1);
+      const operation = this.convertOperationName(command.constructor.name);
+      span.data[this.spanName] = this.buildSpanData(operation, smithySendArgs[0].input);
+      const callback = typeof smithySendArgs[1] === 'function' ? smithySendArgs[1] : smithySendArgs[2];
+      if (callback) {
+        const callbackIndex = callback === smithySendArgs[1] ? 1 : 2;
+        smithySendArgs[callbackIndex] = cls.ns.bind(function (err) {
           if (err) {
-            _callback.apply(this, arguments);
             self.finishSpan(err, span);
           } else {
-            _callback.apply(this, arguments);
             self.finishSpan(null, span);
           }
+          callback.apply(this, arguments);
         });
-
         return originalSend.apply(ctx, smithySendArgs);
       } else {
         const request = originalSend.apply(ctx, smithySendArgs);
-
         request
           .then(() => {
             this.finishSpan(null, span);
@@ -87,12 +53,11 @@ class InstanaAWSKinesis extends InstanaAWSProduct {
   }
 
   buildSpanData(operation, params) {
-    const operationInfo = operationsInfo[operation];
+    const spanData = { op: operation };
     if (!params) {
-      return { op: operationInfo.op };
+      return spanData;
     }
 
-    const spanData = { op: operationInfo.op };
     if (params.StreamName) {
       spanData.stream = params.StreamName;
     }
@@ -112,16 +77,10 @@ class InstanaAWSKinesis extends InstanaAWSProduct {
     return spanData;
   }
 
-  async captureRegion(ctx, span) {
-    if (typeof ctx.config.region === 'function') {
-      try {
-        const region = await ctx.config.region();
-        span.data[this.spanName].region = region;
-      } catch (error) {
-        /* Silently ignore failed attempts to get the region */
-      }
-    }
+  convertOperationName(operation) {
+    const convertedOperation = operation.replace(/Command$/, '');
+    return convertedOperation.charAt(0).toLowerCase() + convertedOperation.slice(1);
   }
 }
 
-module.exports = new InstanaAWSKinesis(SPAN_NAME, operations);
+module.exports = new InstanaAWSKinesis(SPAN_NAME);

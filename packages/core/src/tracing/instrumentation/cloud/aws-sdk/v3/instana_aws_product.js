@@ -12,7 +12,7 @@ class InstanaAWSProduct {
    */
   constructor(spanName, operations) {
     this.spanName = spanName;
-    this.operations = operations;
+    this.operations = operations || [];
   }
 
   instrumentedSmithySend(/** ctx, originalSend, smithySendArgs */) {
@@ -24,11 +24,9 @@ class InstanaAWSProduct {
    */
   getOperations() {
     const operationMap = {};
-
     this.operations.forEach(op => {
       operationMap[op] = this;
     });
-
     return operationMap;
   }
 
@@ -53,6 +51,11 @@ class InstanaAWSProduct {
         spanData.error = err.message || err.code || JSON.stringify(err);
       }
     }
+  }
+
+  supportsOperation(operation) {
+    if (!this.operations || !this.operations.length) return true;
+    return this.operations.includes(operation);
   }
 }
 
