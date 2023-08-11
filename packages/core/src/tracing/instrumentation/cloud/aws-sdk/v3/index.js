@@ -88,8 +88,12 @@ function shimSmithySend(originalSend) {
       if (awsProduct && awsProduct.supportsOperation(command.constructor.name)) {
         return awsProduct.instrumentedSmithySend(self, originalSend, smithySendArgs);
       } else {
-        // This code will be removed in version 3.x release.
-        // We are keeping it here for now to avoid any unknown problems.
+        // This code can be removed once all AWS SDK v3 instrumentations have been refactored to use the new approach
+        // introduced in https://github.com/instana/nodejs/pull/838 for kinesis. That is: Do not use an explicit
+        // operationsInfo/operationsMap map that restricts the traced operations to a subset of possible operations, but
+        // instead allow _all_ operations to be traced, using the operation name from `command.constructor.name` for
+        // span.data.$spanName.op. We plan to finish this refactoring before or with the next major release (3.x) of the
+        // @instana packages.
         awsProduct = operationMap[smithySendArgs[0].constructor.name];
         if (awsProduct) {
           return awsProduct.instrumentedSmithySend(this, originalSend, smithySendArgs);
