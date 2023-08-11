@@ -83,22 +83,21 @@ function shimSmithySend(originalSend) {
 
     if (isActive) {
       const serviceId = self.config && self.config.serviceId;
-      const awsProduct = serviceId && awsProducts.find(aws => aws.spanName === serviceId.toLowerCase());
+      let awsProduct = serviceId && awsProducts.find(aws => aws.spanName === serviceId.toLowerCase());
 
       if (awsProduct && awsProduct.supportsOperation(command.constructor.name)) {
         return awsProduct.instrumentedSmithySend(self, originalSend, smithySendArgs);
       } else {
-        // This code will be removed when we release support for version 3x.
+        // This code will be removed in version 3.x release.
         // We are keeping it here for now to avoid any unknown problems.
-        handleLegacy(originalSend, smithySendArgs);
+        awsProduct = operationMap[smithySendArgs[0].constructor.name];
+        if (awsProduct) {
+          return awsProduct.instrumentedSmithySend(this, originalSend, smithySendArgs);
+        }
+
+        return originalSend.apply(this, smithySendArgs);
       }
     }
     return originalSend.apply(self, smithySendArgs);
   };
-}
-function handleLegacy(originalSend, smithySendArgs) {
-  const awsProduct = operationMap[smithySendArgs[0].constructor.name];
-  if (awsProduct) {
-    return awsProduct.instrumentedSmithySend(this, originalSend, smithySendArgs);
-  }
 }
