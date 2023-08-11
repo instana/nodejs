@@ -14,7 +14,8 @@ const awsProducts = [
   //
   require('./dynamodb'),
   require('./s3'),
-  require('./sqs')
+  require('./sqs'),
+  require('./kinesis')
 ];
 
 const sqsConsumer = require('./sqs-consumer');
@@ -46,10 +47,10 @@ exports.init = function init() {
    * @aws-sdk/smithly-client < 3.36.0
    */
   requireHook.onFileLoad(/@aws-sdk\/smithy-client\/dist\/cjs\/client\.js/, instrumentGlobalSmithy);
-   /**
+  /**
    * @aws-sdk/smithly-client > 3.36.0
    */
-   requireHook.onModuleLoad('@smithy/smithy-client', instrumentGlobalSmithy);
+  requireHook.onModuleLoad('@smithy/smithy-client', instrumentGlobalSmithy);
 };
 
 exports.isActive = function () {
@@ -81,13 +82,25 @@ function shimSmithySend(originalSend) {
     const command = smithySendArgs[0];
 
     if (isActive) {
-      const awsProduct = operationMap[command.constructor.name];
+      const serviceId = self.config && self.config.serviceId;
+      let awsProduct = serviceId && awsProducts.find(aws => aws.spanName === serviceId.toLowerCase());
 
-      if (awsProduct) {
+      if (awsProduct && awsProduct.supportsOperation(command.constructor.name)) {
         return awsProduct.instrumentedSmithySend(self, originalSend, smithySendArgs);
-      }
+      } else {
+        // This code can be removed once all AWS SDK v3 instrumentations have been refactored to use the new approach
+        // introduced in https://github.com/instana/nodejs/pull/838 for kinesis. That is: Do not use an explicit
+        // operationsInfo/operationsMap map that restricts the traced operations to a subset of possible operations, but
+        // instead allow _all_ operations to be traced, using the operation name from `command.constructor.name` for
+        // span.data.$spanName.op. We plan to finish this refactoring before or with the next major release (3.x) of the
+        // @instana packages.
+        awsProduct = operationMap[smithySendArgs[0].constructor.name];
+        if (awsProduct) {
+          return awsProduct.instrumentedSmithySend(this, originalSend, smithySendArgs);
+        }
 
-      return originalSend.apply(self, smithySendArgs);
+        return originalSend.apply(this, smithySendArgs);
+      }
     }
     return originalSend.apply(self, smithySendArgs);
   };
