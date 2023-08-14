@@ -5,9 +5,7 @@
 'use strict';
 
 const { v4: uuid } = require('uuid');
-const { cleanup } = require('./util');
 const semver = require('semver');
-const { checkStreamExistence } = require('./util');
 const { expect } = require('chai');
 const path = require('path');
 const { fail } = expect;
@@ -54,10 +52,13 @@ function start(version) {
   let mochaSuiteFn;
   if (!supportedVersion(process.versions.node) || semver.lt(process.versions.node, '14.0.0')) {
     mochaSuiteFn = describe.skip;
+    return;
   } else {
     mochaSuiteFn = describe;
   }
 
+  const { cleanup } = require('./util');
+  const { checkStreamExistence } = require('./util');
   const retryTime = config.getTestTimeout() * 5;
 
   mochaSuiteFn(`npm: ${version}`, function () {
