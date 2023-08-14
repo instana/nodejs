@@ -5,7 +5,6 @@
 'use strict';
 
 const { KinesisClient, DescribeStreamCommand, DeleteStreamCommand } = require('@aws-sdk/client-kinesis');
-
 const kinesis = new KinesisClient({ region: 'us-east-2' });
 const interval = 1000;
 const MAX_WAIT_TIME = 10000;
