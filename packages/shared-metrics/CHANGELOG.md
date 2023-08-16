@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.30.0](https://github.com/instana/nodejs/compare/v2.29.0...v2.30.0) (2023-08-16)
+
+
+### Features
+
+* added ability to provide a custom package json path ([#839](https://github.com/instana/nodejs/issues/839)) ([f37d898](https://github.com/instana/nodejs/commit/f37d898bcfc5d053b70251854b40b76e396a22b8))
+
+
+
+
+
 # [2.29.0](https://github.com/instana/nodejs/compare/v2.28.0...v2.29.0) (2023-07-31)
 
 **Note:** Version bump only for package @instana/shared-metrics
