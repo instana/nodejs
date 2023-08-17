@@ -11,7 +11,7 @@ const mock = require('mock-require');
  * NOTE:
  * Link e.g. @aws-sdk/client-sqs2 to @aws-sdk/client-sqs
  */
-if (process.env.AWS_SDK_CLIENT_SQS_REQUIRE !== '@aws-sdk/client-sqs') {
+if (process.env.AWS_SDK_CLIENT_SQS_REQUIRE && process.env.AWS_SDK_CLIENT_SQS_REQUIRE !== '@aws-sdk/client-sqs') {
   mock('@aws-sdk/client-sqs', process.env.AWS_SDK_CLIENT_SQS_REQUIRE);
 }
 
@@ -38,10 +38,16 @@ const agentPort = process.env.INSTANA_AGENT_PORT || 42699;
 const sqsV3ReceiveMethod = process.env.SQSV3_RECEIVE_METHOD || 'v3';
 const queueURL = process.env.AWS_SQS_QUEUE_URL;
 const awsRegion = 'us-east-2';
+let sqs;
+let sqsv2;
 
-const sqs = new awsSdk3.SQSClient({ region: awsRegion });
-const sqsv2 = new awsSdk3.SQS({ region: awsRegion });
-
+if (process.env.AWS_ENDPOINT) {
+  sqs = new awsSdk3.SQSClient({ region: awsRegion, endpoint: process.env.AWS_ENDPOINT });
+  sqsv2 = new awsSdk3.SQS({ region: awsRegion, endpoint: process.env.AWS_ENDPOINT });
+} else {
+  sqs = new awsSdk3.SQSClient({ region: awsRegion });
+  sqsv2 = new awsSdk3.SQS({ region: awsRegion });
+}
 // Keep the default value above 5, as tests can fail if not all messages are fetched.
 let sqsPollDelay = 7;
 if (process.env.SQS_POLL_DELAY) {
@@ -254,4 +260,4 @@ async function startPollingWhenReady() {
 
 startPollingWhenReady();
 
-app.listen(port, () => log(`AWS SDK v3 SQS receiver, listening to port ${port}`));
+app.listen(port, () => log(`AWS SDK v3 SQS receiver, listening to port ${port} with ${queueURL}`));
