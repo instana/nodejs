@@ -322,6 +322,26 @@ mochaSuiteFn('tracing/pg', function () {
         );
       }));
 
+  it('trace all asynchronous queries', () =>
+    controls
+      .sendRequest({
+        method: 'GET',
+        path: '/asynchronous-query'
+      })
+      .then(response => {
+        expect(response).to.exist;
+
+        return retry(() =>
+          agentControls.getSpans().then(spans => {
+            expect(getSpansByName(spans, 'postgres')).to.have.lengthOf(3);
+            const httpEntry = verifyHttpEntry(spans, '/asynchronous-query');
+            verifyPgExit(spans, httpEntry, 'SELECT NOW()');
+            verifyPgExit(spans, httpEntry, 'INSERT INTO users(name, email) VALUES($1, $2) RETURNING *');
+            verifyPgExit(spans, httpEntry, 'SELECT NOW() FROM pg_sleep(2)');
+            verifyHttpExit(spans, httpEntry);
+          })
+        );
+      }));
   function verifySimpleSelectResponse(response) {
     expect(response).to.exist;
     expect(response.command).to.equal('SELECT');
