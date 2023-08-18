@@ -7,7 +7,6 @@
 const expect = require('chai').expect;
 const fs = require('fs').promises;
 const path = require('path');
-const recursiveCopy = require('recursive-copy');
 const rimraf = require('util').promisify(require('rimraf'));
 const semver = require('semver');
 
@@ -53,11 +52,15 @@ mochaSuiteFn('tracing/prisma', function () {
         const schemaSourceFile = path.join(appDir, 'prisma', `schema.prisma.${provider}`);
 
         await fs.rm(schemaTargetFile, { force: true });
-        await fs.copyFile(schemaSourceFile, schemaTargetFile);
+        await fs.cp(schemaSourceFile, schemaTargetFile);
 
         const migrationsSourceDir = path.join(appDir, 'prisma', `migrations-${provider}`);
         await rimraf(migrationsTargetDir);
-        await recursiveCopy(migrationsSourceDir, migrationsTargetDir);
+        await fs.cp(migrationsSourceDir, migrationsTargetDir, {
+          recursive: true,
+          force: true,
+          preserveTimestamps: true
+        });
 
         // Run the prisma client tooling to generate the database client access code.
         // See https://www.prisma.io/docs/reference/api-reference/command-reference#generate

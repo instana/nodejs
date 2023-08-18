@@ -8,8 +8,8 @@
 const _ = require('lodash');
 const { expect } = require('chai');
 const { mkdtempSync, symlinkSync, unlinkSync } = require('fs');
+const { cp } = require('fs/promises');
 const { mkdirp } = require('mkdirp');
-const recursiveCopy = require('recursive-copy');
 const os = require('os');
 const path = require('path');
 const rimraf = require('rimraf');
@@ -76,7 +76,11 @@ describe('dependencies', function () {
     before(async () => {
       // eslint-disable-next-line no-console
       console.log(`Copying test app from ${appDir} to ${tmpDir}.`);
-      await recursiveCopy(appDir, tmpDir);
+      await cp(appDir, tmpDir, {
+        recursive: true,
+        force: true,
+        preserveTimestamps: true
+      });
       runCommandSync('npm install --production --no-optional --no-audit', tmpDir);
       const instanaPath = path.join(tmpDir, 'node_modules', '@instana');
       mkdirp.sync(instanaPath);

@@ -9,7 +9,6 @@ const { logger: Logger, uninstrumentedFs: fs } = require('@instana/core');
 let logger = Logger.getLogger('shared-metrics/native-module-retry');
 
 const EventEmitter = require('events');
-const copy = require('recursive-copy');
 const os = require('os');
 const tar = require('tar');
 const path = require('path');
@@ -182,12 +181,13 @@ function copyPrecompiled(opts, loaderEmitter, callback) {
         const targetDir = path.join(opts.nativeModulePath, 'precompiled');
 
         // @ts-ignore
-        copy(
+        fs.cp(
           path.join(os.tmpdir(), opts.nativeModuleName),
           targetDir,
           {
-            overwrite: true,
-            dot: true
+            force: true,
+            preserveTimestamps: true,
+            recursive: true
           },
           // @ts-ignore
           cpErr => {

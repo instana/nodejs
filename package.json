@@ -59,9 +59,9 @@
     "@apollo/gateway": "0.50.2",
     "@aws-sdk/client-dynamodb": "3.284.0",
     "@aws-sdk/client-dynamodb2": "npm:@aws-sdk/client-dynamodb@3.20.0",
+    "@aws-sdk/client-kinesis": "^3.379.1",
     "@aws-sdk/client-s3": "3.379.1",
     "@aws-sdk/client-s3-2": "npm:@aws-sdk/client-s3@3.321.1",
-    "@aws-sdk/client-kinesis": "^3.379.1",
     "@aws-sdk/client-sqs": "3.329.0",
     "@aws-sdk/client-sqs2": "npm:@aws-sdk/client-sqs@3.24.0",
     "@commitlint/cli": "^14.1.0",
@@ -183,7 +183,6 @@
     "proxyquire": "2.1.3",
     "q": "1.5.1",
     "read-pkg-up": "^7.0.1",
-    "recursive-copy": "^2.0.14",
     "redis": "^4.3.1",
     "redis-v0": "npm:redis@^0.12.1",
     "redis-v3": "npm:redis@^3.1.2",
@@ -210,11 +209,11 @@
   },
   "optionalDependencies": {
     "grpc": "1.24.11",
+    "ibm_db": "^2.8.2",
     "kafka-avro": "3.1.1",
     "mali": "0.23.0",
     "node-rdkafka": "2.16.1",
-    "pg-native": "3.0.1",
-    "ibm_db": "^2.8.2"
+    "pg-native": "3.0.1"
   },
   "config": {
     "commitizen": {
