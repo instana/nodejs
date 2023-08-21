@@ -251,6 +251,50 @@ app.get('/quick-query', (req, res) => {
       }
     });
 });
+app.get('/asynchronous-query', async (req, res) => {
+  try {
+    const firstQueryResults = await executeSelectDateQuery();
+    const secondQueryResults = executeLongRunningQuery(); // Not waiting for the results
+    const thirdQueryResults = inserUser(); // Not waiting for the results
+
+    const combinedResults = {
+      firstQuery: firstQueryResults,
+      secondQuery: secondQueryResults,
+      thirdQuery: thirdQueryResults
+    };
+    request(`http://127.0.0.1:${agentPort}`).then(() => {
+      res.json(combinedResults);
+    });
+  } catch (err) {
+    log('Failed to execute queries', err);
+    res.sendStatus(500);
+  }
+});
+
+async function executeSelectDateQuery() {
+  return client.query('SELECT NOW()');
+}
+
+async function executeLongRunningQuery() {
+  try {
+    await client.query('SELECT NOW() FROM pg_sleep(2)');
+    return 'Long-running query executed successfully.';
+  } catch (err) {
+    log('Failed to execute long-running query', err);
+  }
+}
+
+async function inserUser() {
+  const insert = 'INSERT INTO users(name, email) VALUES($1, $2) RETURNING *';
+  const values = ['beaker', 'beaker@test.com'];
+
+  try {
+    await client.query(insert, values);
+    return 'User inserted successfully.';
+  } catch (err) {
+    log('Failed to insert user', err);
+  }
+}
 
 app.listen(port, () => {
   log(`Listening on port: ${port}`);
