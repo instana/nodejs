@@ -9,7 +9,8 @@
   "homepage": "https://github.com/instana/nodejs/blob/main/packages/aws-fargate/README.md",
   "main": "src/index.js",
   "files": [
-    "src"
+    "src",
+    "esm-loader.mjs"
   ],
   "publishConfig": {
     "access": "public"
