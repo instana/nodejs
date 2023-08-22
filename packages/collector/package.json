@@ -139,7 +139,7 @@
     "@instana/shared-metrics": "2.30.0",
     "bunyan": "^1.8.15",
     "semver": "7.5.3",
-    "serialize-error": "^11.0.1"
+    "serialize-error": "^8.1.0"
   },
   "optionalDependencies": {
     "@instana/autoprofile": "2.30.0"
