@@ -64,7 +64,7 @@ mochaSuiteFn('Instana OpenTelemetry Sampler', function () {
           'request handler - /otel-test',
           'tcp.connect',
           'tls.connect',
-          'HTTPS GET',
+          'GET',
           'GET /otel-test'
         ];
         expect(spanNames).to.eql(spans.map(s => s.data.operation));
@@ -112,7 +112,7 @@ mochaSuiteFn('Instana OpenTelemetry Sampler', function () {
         'request handler - /otel-test',
         'tcp.connect',
         'tls.connect',
-        'HTTPS GET',
+        'GET',
         'GET /otel-test'
       ];
       expect(spanNames).to.eql(resp.spans.map(s => s.name));
