@@ -110,6 +110,35 @@ function start(version, requestMethod) {
       });
     });
 
+    describe('with @aws-sdk/lib-dynamodb', function () {
+      const tableName = createTableName();
+
+      const appControls = new ProcessControls({
+        appPath: path.join(__dirname, './app'),
+        useGlobalAgent: true,
+        env: {
+          AWS_DYNAMODB_TABLE_NAME: tableName,
+          AWS_SDK_CLIENT_DYNAMODB_REQUIRE: version,
+          USE_LIB_DYNAMODB: true
+        }
+      });
+
+      ProcessControls.setUpHooksWithRetryTime(retryTime, appControls);
+
+      after(() => cleanup(tableName));
+
+      it('should succeed', async () => {
+        const apiPath = `/listTables/${requestMethod}`;
+
+        const response = await appControls.sendRequest({
+          method: 'GET',
+          path: `${apiPath}`
+        });
+
+        return verify(appControls, response, apiPath, 'listTables', false, tableName);
+      });
+    });
+
     describe('should handle errors', function () {
       const tableName = createTableName();
 
