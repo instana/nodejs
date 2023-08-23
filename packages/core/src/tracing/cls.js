@@ -28,6 +28,7 @@ const w3cTraceContextKey = 'com.instana.w3ctc';
 let serviceName;
 /** @type {import('../../../collector/src/pidStore')} */
 let processIdentityProvider = null;
+let isLoggingEnabled = false;
 
 /*
  * Access the Instana namespace in continuation local storage.
@@ -569,7 +570,7 @@ function skipExitTracing(options) {
   }
 
   if (!opts.skipParentSpanCheck && (!parentSpan || isExitSpanResult)) {
-    if (opts.log) {
+    if (opts.log && isLoggingEnabled) {
       logger.warn(
         // eslint-disable-next-line max-len
         `Cannot start an exit span as this requires an active entry (or intermediate) span as parent. ${
@@ -589,6 +590,13 @@ function skipExitTracing(options) {
   const skip = skipIsActive || skipIsTracing;
   if (opts.extendedResponse) return { skip, suppressed, isExitSpan: isExitSpanResult };
   else return skip;
+}
+
+/**
+ * @param {boolean} bool
+ */
+function setIsLoggingEnabled(bool) {
+  isLoggingEnabled = bool;
 }
 
 module.exports = {
@@ -616,5 +624,6 @@ module.exports = {
   enterAsyncContext,
   leaveAsyncContext,
   runInAsyncContext,
-  runPromiseInAsyncContext
+  runPromiseInAsyncContext,
+  setIsLoggingEnabled
 };
