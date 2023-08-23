@@ -49,9 +49,7 @@ exports.init = function init() {
   /**
    * @aws-sdk/smithly-client > 3.36.0
    */
-  requireHook.onModuleLoad('@smithy/smithy-client', function instrumentNewGlobalSmithy(Smithy) {
-    shimmer.wrap(Smithy.Client.prototype, 'send', shimSmithySend);
-  });
+  requireHook.onModuleLoad('@smithy/smithy-client', instrumentGlobalSmithy);
 };
 
 exports.isActive = function () {
