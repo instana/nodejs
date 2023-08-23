@@ -9,7 +9,6 @@
  * @typedef {import('@instana/core/src/util/stackTrace').InstanaExtendedError} InstanaExtendedError
  */
 
-// @ts-ignore @types/serialize-error is deprecated and updating to version 8.1.0 seems to break some stuff on our side
 const serializeError = require('serialize-error');
 
 /** @type {import('@instana/core/src/logger').GenericLogger} */
@@ -39,13 +38,6 @@ for (let i = 0; i < process.execArgv.length; i++) {
     unhandledRejectionsMode = 'strict';
   }
 }
-
-/**
- * @typedef {Object} SerializedErrorObject
- * @property {string} name
- * @property {string} message
- * @property {string} stack
- */
 
 /**
  * @param {import('../util/normalizeConfig').CollectorConfig} _config
@@ -159,8 +151,9 @@ function createEvent(error, title, severity, isPromiseRejection) {
  */
 function errorToMarkdown(error) {
   /* eslint-disable max-len */
-  /** @type {SerializedErrorObject} */
-  const serializedError = serializeError(error);
+  /** @type {import('serialize-error').ErrorObject} ErrorObject */
+  const serializedError = serializeError.serializeError(error);
+
   if (serializedError.name && serializedError.message && typeof serializedError.stack === 'string') {
     // prettier-ignore
     return `### ${serializedError.name}\n\n#### Message: \n\n${serializedError.message}\n\n#### Stack:\n\n${stackTraceToMarkdown(serializedError.stack)}`;
