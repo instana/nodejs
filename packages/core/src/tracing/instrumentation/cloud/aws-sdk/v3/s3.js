@@ -54,9 +54,8 @@ const operations = Object.keys(operationsInfo);
 const SPAN_NAME = 's3';
 
 class InstanaAWSS3 extends InstanaAWSProduct {
-  instrumentedSmithySend(ctx, originalSend, smithySendArgs) {
-    // NOTE: `shimSmithySend`  in index.js is already checking the result of `isActive`
-    if (cls.skipExitTracing()) {
+  instrumentedSmithySend(ctx, isActive, originalSend, smithySendArgs) {
+    if (cls.skipExitTracing({ isActive })) {
       return originalSend.apply(ctx, smithySendArgs);
     }
 

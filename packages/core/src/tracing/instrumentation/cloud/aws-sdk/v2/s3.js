@@ -56,11 +56,10 @@ class InstanaAWSS3 extends InstanaAWSProduct {
   /**
    * Original args for ALL AWS SDK Requets: [method, params, callback]
    */
-  instrumentedMakeRequest(ctx, originalMakeRequest, originalArgs) {
+  instrumentedMakeRequest(ctx, isActive, originalMakeRequest, originalArgs) {
     const self = this;
 
-    // NOTE: `shimMakeRequest`  in index.js is already checking the result of `isActive`
-    if (cls.skipExitTracing()) {
+    if (cls.skipExitTracing({ isActive })) {
       return originalMakeRequest.apply(ctx, originalArgs);
     }
 

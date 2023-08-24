@@ -42,11 +42,10 @@ const operationsInfo = {
 const operations = Object.keys(operationsInfo);
 
 class InstanaAWSKinesis extends InstanaAWSProduct {
-  instrumentedMakeRequest(ctx, originalMakeRequest, originalArgs) {
+  instrumentedMakeRequest(ctx, isActive, originalMakeRequest, originalArgs) {
     const self = this;
 
-    // NOTE: `shimMakeRequest`  in index.js is already checking the result of `isActive`
-    if (cls.skipExitTracing()) {
+    if (cls.skipExitTracing({ isActive })) {
       return originalMakeRequest.apply(ctx, originalArgs);
     }
 

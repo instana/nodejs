@@ -27,9 +27,8 @@ const operations = Object.keys(operationsInfo);
 const SPAN_NAME = 'dynamodb';
 
 class InstanaAWSDynamoDB extends InstanaAWSProduct {
-  instrumentedMakeRequest(ctx, originalMakeRequest, originalArgs) {
-    // NOTE: `shimMakeRequest`  in index.js is already checking the result of `isActive`
-    if (cls.skipExitTracing()) {
+  instrumentedMakeRequest(ctx, isActive, originalMakeRequest, originalArgs) {
+    if (cls.skipExitTracing({ isActive })) {
       return originalMakeRequest.apply(ctx, originalArgs);
     }
 

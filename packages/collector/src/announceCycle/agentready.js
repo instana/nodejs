@@ -100,7 +100,6 @@ function enter(_ctx) {
         requestHandler.handleRequests(requests);
       },
       function onError() {
-        tracing.getCls().setIsLoggingEnabled(false);
         ctx.transitionTo('unannounced');
       }
     );
@@ -125,7 +124,6 @@ function enter(_ctx) {
   }
 
   logger.info('The Instana Node.js collector is now fully initialized and connected to the Instana host agent.');
-  tracing.getCls().setIsLoggingEnabled(true);
 }
 
 function leave() {
