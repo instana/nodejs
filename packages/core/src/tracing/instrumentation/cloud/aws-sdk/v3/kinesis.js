@@ -12,8 +12,8 @@ const { InstanaAWSProduct } = require('./instana_aws_product');
 const SPAN_NAME = 'kinesis';
 
 class InstanaAWSKinesis extends InstanaAWSProduct {
-  instrumentedSmithySend(ctx, originalSend, smithySendArgs) {
-    if (cls.skipExitTracing()) {
+  instrumentedSmithySend(ctx, isActive, originalSend, smithySendArgs) {
+    if (cls.skipExitTracing({ isActive })) {
       return originalSend.apply(ctx, smithySendArgs);
     }
 

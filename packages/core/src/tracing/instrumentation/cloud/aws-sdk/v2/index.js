@@ -49,21 +49,17 @@ function instrumentAWS(AWS) {
 
 function shimMakeRequest(originalMakeRequest) {
   return function () {
-    if (isActive) {
-      const originalArgs = new Array(arguments.length);
-      for (let i = 0; i < originalArgs.length; i++) {
-        originalArgs[i] = arguments[i];
-      }
-
-      const awsProduct = operationMap[originalArgs[0]];
-
-      // to match operation + reference (S3, Dynamo, etc)
-      if (awsProduct) {
-        return awsProduct.instrumentedMakeRequest(this, originalMakeRequest, originalArgs);
-      }
-      return originalMakeRequest.apply(this, originalArgs);
+    const originalArgs = new Array(arguments.length);
+    for (let i = 0; i < originalArgs.length; i++) {
+      originalArgs[i] = arguments[i];
     }
 
-    return originalMakeRequest.apply(this, arguments);
+    const awsProduct = operationMap[originalArgs[0]];
+
+    // to match operation + reference (S3, Dynamo, etc)
+    if (awsProduct) {
+      return awsProduct.instrumentedMakeRequest(this, isActive, originalMakeRequest, originalArgs);
+    }
+    return originalMakeRequest.apply(this, originalArgs);
   };
 }

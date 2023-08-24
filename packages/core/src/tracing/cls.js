@@ -569,7 +569,11 @@ function skipExitTracing(options) {
   }
 
   if (!opts.skipParentSpanCheck && (!parentSpan || isExitSpanResult)) {
-    if (opts.log) {
+    // NOTE: We need to check for `isActive` otherwise we flood this warning in case the collector is not
+    //       yet connected to the agent, but the application receives traffic already
+    //       The underlying problem is that all instrumentations are already "working" before the collector
+    //       is successfully connected with the agent, but they are skipped with the `isActive` flag.
+    if (opts.log && opts.isActive) {
       logger.warn(
         // eslint-disable-next-line max-len
         `Cannot start an exit span as this requires an active entry (or intermediate) span as parent. ${

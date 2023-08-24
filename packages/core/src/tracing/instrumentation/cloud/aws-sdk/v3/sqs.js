@@ -64,12 +64,12 @@ class InstanaAWSSQS extends InstanaAWSProduct {
     });
   }
 
-  instrumentedSmithySend(ctx, originalSend, smithySendArgs) {
+  instrumentedSmithySend(ctx, isActive, originalSend, smithySendArgs) {
     const commandName = smithySendArgs[0].constructor.name;
     const operation = operationsInfo[commandName];
 
     if (operation && operation.sort === 'exit') {
-      return this.instrumentExit(ctx, originalSend, smithySendArgs, operation);
+      return this.instrumentExit(ctx, isActive, originalSend, smithySendArgs, operation);
     } else if (operation && operation.sort === 'entry') {
       return this.instrumentEntry(ctx, originalSend, smithySendArgs, operation);
     }
@@ -77,7 +77,7 @@ class InstanaAWSSQS extends InstanaAWSProduct {
     return originalSend.apply(ctx, smithySendArgs);
   }
 
-  instrumentExit(ctx, originalSend, smithySendArgs, operation) {
+  instrumentExit(ctx, isActive, originalSend, smithySendArgs, operation) {
     const command = smithySendArgs[0];
     const sendMessageInput = command.input;
 
@@ -109,8 +109,7 @@ class InstanaAWSSQS extends InstanaAWSProduct {
       attributes = sendMessageInput.MessageAttributes = {};
     }
 
-    // NOTE: `shimSmithySend`  in index.js is already checking the result of `isActive`
-    const skipTracingResult = cls.skipExitTracing({ extendedResponse: true });
+    const skipTracingResult = cls.skipExitTracing({ extendedResponse: true, isActive });
 
     if (skipTracingResult.skip) {
       if (skipTracingResult.suppressed) {
