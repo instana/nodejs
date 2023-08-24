@@ -28,7 +28,6 @@ awsProducts.forEach(awsProduct => {
 });
 
 let isActive = false;
-let onFileLoaded = false;
 
 exports.init = function init() {
   sqsConsumer.init();
@@ -66,12 +65,6 @@ exports.deactivate = function deactivate() {
 };
 
 function instrumentGlobalSmithy(Smithy) {
-  // NOTE: avoid instrumenting aws-sdk v3 twice, see init
-  if (onFileLoaded) {
-    return;
-  }
-
-  onFileLoaded = true;
   shimmer.wrap(Smithy.Client.prototype, 'send', shimSmithySend);
 }
 

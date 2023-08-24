@@ -19,7 +19,29 @@ require('../../../../../..')();
 
 const express = require('express');
 const fetch = require('node-fetch');
+const awsRegion = 'us-east-2';
+let dynamoDB;
+
 const awsSdk3 = require('@aws-sdk/client-dynamodb');
+
+if (process.env.USE_LIB_DYNAMODB) {
+  const { DynamoDBDocumentClient } = require('@aws-sdk/lib-dynamodb');
+
+  dynamoDB = DynamoDBDocumentClient.from(
+    new awsSdk3.DynamoDBClient({
+      region: awsRegion
+    }),
+    {
+      marshallOptions: {
+        removeUndefinedValues: true
+      }
+    }
+  );
+} else {
+  dynamoDB = new awsSdk3.DynamoDBClient({ region: awsRegion });
+}
+
+const dynamoDBv2 = new awsSdk3.DynamoDB({ region: awsRegion });
 const cls = require('../../../../../../../core/src/tracing/cls');
 
 const logPrefix = `AWS SDK v3 DynamoDB (${process.pid}):\t`;
@@ -28,10 +50,6 @@ const port = require('../../../../../test_util/app-port')();
 const agentPort = process.env.INSTANA_AGENT_PORT || 42699;
 const app = express();
 const tableName = process.env.AWS_DYNAMODB_TABLE_NAME || 'nodejs-team';
-const awsRegion = 'us-east-2';
-
-const dynamoDB = new awsSdk3.DynamoDBClient({ region: awsRegion });
-const dynamoDBv2 = new awsSdk3.DynamoDB({ region: awsRegion });
 
 const tableCreationParams = {
   TableName: tableName,
