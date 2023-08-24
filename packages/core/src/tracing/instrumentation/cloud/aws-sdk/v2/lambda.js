@@ -68,7 +68,6 @@ class InstanaAWSLambda extends InstanaAWSProduct {
     const self = this;
     const skipTracingResult = cls.skipExitTracing({ isActive, extendedResponse: true });
 
-    // NOTE: `shimMakeRequest`  in index.js is already checking the result of `isActive`
     if (skipTracingResult.skip) {
       if (skipTracingResult.suppressed) {
         this.propagateInstanaHeaders(originalArgs, null, skipTracingResult.suppressed);
