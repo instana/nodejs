@@ -89,10 +89,10 @@ function shimSmithySend(originalSend) {
       // @instana packages.
       awsProduct = operationMap[smithySendArgs[0].constructor.name];
       if (awsProduct) {
-        return awsProduct.instrumentedSmithySend(this, isActive, originalSend, smithySendArgs);
+        return awsProduct.instrumentedSmithySend(self, isActive, originalSend, smithySendArgs);
       }
 
-      return originalSend.apply(this, smithySendArgs);
+      return originalSend.apply(self, smithySendArgs);
     }
   };
 }
