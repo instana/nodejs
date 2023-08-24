@@ -79,7 +79,7 @@ You can find a list of all available images at <https://us-east-2.console.aws.am
 * Either create a new task definition from scratch, or
 * update the existing `fargate-nodejs-test-task` by creating a new revision based on the last one.
 * Scroll down to "Container definitions" section, click on the `fargate-nodejs-test-container` container name and paste the fully qualified image name into the "Image" field.
-* You might want to check the "Environmant" section in the container definition to see to which environmnt the task will report later.
+* You might want to check the "Environment" section in the container definition to see to which environment the task will report later.If no specific environment is defined, you will need to provide both the URL and the environment key.
 * Go to clusters: <https://us-east-2.console.aws.amazon.com/ecs/home?region=us-east-2#/clusters>
 * Create a new cluster from scratch or use the existing [test cluster](https://us-east-2.console.aws.amazon.com/ecs/home?region=us-east-2#/clusters/bastian-krol-test/services)
 * Update the cluster's only service with the new task definition version by clicking "Update".
