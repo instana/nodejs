@@ -28,14 +28,14 @@ const operations = Object.keys(operationsInfo);
 const SPAN_NAME = 'sns';
 
 class InstanaAWSSNS extends InstanaAWSProduct {
-  instrumentedMakeRequest(ctx, originalMakeRequest, originalArgs) {
+  instrumentedMakeRequest(ctx, isActive, originalMakeRequest, originalArgs) {
     const messageBody = originalArgs[1];
 
     if (!messageBody.MessageAttributes) {
       messageBody.MessageAttributes = {};
     }
 
-    const skipTracingResult = cls.skipExitTracing({ isActive: true, extendedResponse: true });
+    const skipTracingResult = cls.skipExitTracing({ isActive, extendedResponse: true });
     if (skipTracingResult.skip) {
       if (skipTracingResult.suppressed) {
         this.propagateSuppression(messageBody.MessageAttributes);
