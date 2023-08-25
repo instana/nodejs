@@ -53,6 +53,11 @@ class InstanaAWSProduct {
     }
   }
 
+  convertOperationName(operation) {
+    const convertedOperation = operation.replace(/Command$/, '');
+    return convertedOperation.charAt(0).toLowerCase() + convertedOperation.slice(1);
+  }
+
   supportsOperation(operation) {
     if (!this.operations || !this.operations.length) return true;
     return this.operations.includes(operation);
