@@ -10,20 +10,6 @@ const { EXIT } = require('../../../../constants');
 const tracingUtil = require('../../../../tracingUtil');
 const { InstanaAWSProduct } = require('./instana_aws_product');
 
-const operationsInfo = {
-  CreateTableCommand: { op: 'create' },
-  DeleteTableCommand: { op: 'delete' },
-  ListTablesCommand: { op: 'list' },
-  ScanCommand: { op: 'scan' },
-  QueryCommand: { op: 'query' },
-  GetItemCommand: { op: 'get' },
-  DeleteItemCommand: { op: 'delete' },
-  PutItemCommand: { op: 'put' },
-  UpdateItemCommand: { op: 'update' }
-};
-
-const operations = Object.keys(operationsInfo);
-
 const SPAN_NAME = 'dynamodb';
 
 class InstanaAWSDynamoDB extends InstanaAWSProduct {
@@ -73,9 +59,8 @@ class InstanaAWSDynamoDB extends InstanaAWSProduct {
   }
 
   buildSpanData(operation, params) {
-    const operationInfo = operationsInfo[operation];
     const spanData = {
-      op: operationInfo.op
+      op: this.convertOperationName(operation)
     };
 
     if (params && params.TableName) {
@@ -103,4 +88,4 @@ class InstanaAWSDynamoDB extends InstanaAWSProduct {
   }
 }
 
-module.exports = new InstanaAWSDynamoDB(SPAN_NAME, operations);
+module.exports = new InstanaAWSDynamoDB(SPAN_NAME);

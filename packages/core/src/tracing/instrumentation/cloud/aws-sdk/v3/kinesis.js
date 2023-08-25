@@ -76,11 +76,6 @@ class InstanaAWSKinesis extends InstanaAWSProduct {
 
     return spanData;
   }
-
-  convertOperationName(operation) {
-    const convertedOperation = operation.replace(/Command$/, '');
-    return convertedOperation.charAt(0).toLowerCase() + convertedOperation.slice(1);
-  }
 }
 
 module.exports = new InstanaAWSKinesis(SPAN_NAME);
