@@ -87,15 +87,23 @@ Control.prototype.startMonitoredProcess = function startMonitoredProcess() {
     process.env,
     this.opts.env
   );
-
+  let execArg;
   if (this.opts.unconfigured !== false) {
     env.INSTANA_ENDPOINT_URL = this.backendBaseUrl;
     env.INSTANA_AGENT_KEY = this.instanaAgentKey;
   }
-
+  if (!this.opts.containerAppPath && this.opts.env && this.opts.env.ESM_TEST) {
+    if (this.opts.containerAppPath.endsWith('.mjs')) {
+      execArg = [`--experimental-loader=${path.join(__dirname, '..', 'esm-loader.mjs')}`];
+    } else {
+      execArg = ['--require', PATH_TO_INSTANA_GOOGLE_CLOUD_RUN_PACKAGE];
+    }
+  } else {
+    execArg = ['--require', PATH_TO_INSTANA_GOOGLE_CLOUD_RUN_PACKAGE];
+  }
   this.cloudRunContainerApp = fork(this.opts.containerAppPath, {
     stdio: config.getAppStdio(),
-    execArgv: ['--require', PATH_TO_INSTANA_GOOGLE_CLOUD_RUN_PACKAGE],
+    execArgv: execArg,
     env
   });
   this.googleCloudRunAppHasStarted = true;
