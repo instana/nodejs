@@ -16,7 +16,6 @@ const retry = require('../../../serverless/test/util/retry');
 
 const downstreamDummyPort = 4567;
 const downstreamDummyUrl = `http://localhost:${downstreamDummyPort}/`;
-const fs = require('fs');
 const region = 'us-east-2';
 const account = '555123456789';
 const instrumentedContainerName = 'nodejs-fargate-test-container';
@@ -36,14 +35,6 @@ const requestHeaders = {
 function prelude(opts = {}) {
   this.timeout(config.getTestTimeout());
   this.slow(config.getTestTimeout() / 2);
-  if (__dirname) {
-    const files = fs.readdirSync(__dirname);
-    const esmApp = files.find(f => f.indexOf('.mjs') !== -1);
-    if (esmApp) {
-      opts.execArgv = [`--experimental-loader=${path.join(__dirname, '..', '..', 'esm-loader.mjs')}`];
-      opts.appPath = path.join(__dirname, 'app.mjs');
-    }
-  }
   opts.platformVersion = opts.platformVersion || '1.3.0';
   if (opts.startBackend == null) {
     opts.startBackend = true;
@@ -52,7 +43,8 @@ function prelude(opts = {}) {
   let env = {
     INSTANA_EXTRA_HTTP_HEADERS:
       'x-entry-request-header-1; X-ENTRY-REQUEST-HEADER-2 ; x-entry-response-header-1;X-ENTRY-RESPONSE-HEADER-2 , ' +
-      'x-eXit-Request-Header-1; X-EXIT-REQUEST-HEADER-2 '
+      'x-eXit-Request-Header-1; X-EXIT-REQUEST-HEADER-2 ',
+    ESM_TEST: true
   };
   if (opts.env) {
     env = {

@@ -16,7 +16,7 @@ const config = require('../../serverless/test/config');
 const AbstractServerlessControl = require('../../serverless/test/util/AbstractServerlessControl');
 
 const PATH_TO_INSTANA_FARGATE_PACKAGE = path.join(__dirname, '..');
-
+let execArg;
 function Control(opts) {
   AbstractServerlessControl.call(this, opts);
   this.port = opts.port || 4215;
@@ -95,10 +95,19 @@ Control.prototype.startMonitoredProcess = function startMonitoredProcess() {
     env.INSTANA_ENDPOINT_URL = this.backendBaseUrl;
     env.INSTANA_AGENT_KEY = this.instanaAgentKey;
   }
+  if (this.opts.containerAppPath && this.opts.env && this.opts.env.ESM_TEST) {
+    if (this.opts.containerAppPath.endsWith('.mjs')) {
+      execArg = [`--experimental-loader=${path.join(__dirname, '..', 'esm-loader.mjs')}`];
+    } else {
+      execArg = ['--require', PATH_TO_INSTANA_FARGATE_PACKAGE];
+    }
+  } else {
+    execArg = ['--require', PATH_TO_INSTANA_FARGATE_PACKAGE];
+  }
 
   this.fargateContainerApp = fork(this.opts.containerAppPath, {
     stdio: config.getAppStdio(),
-    execArgv: ['--require', PATH_TO_INSTANA_FARGATE_PACKAGE],
+    execArgv: execArg,
     env
   });
   this.fargateContainerAppHasStarted = true;
