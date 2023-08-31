@@ -32,7 +32,8 @@ const availableOperations = [
   'getItem',
   'scan',
   'query',
-  'deleteItem'
+  'deleteItem',
+  'batchWriteItem'
 ];
 
 const retryTime = config.getTestTimeout() * 2;

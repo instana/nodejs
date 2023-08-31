@@ -65,6 +65,8 @@ class InstanaAWSDynamoDB extends InstanaAWSProduct {
 
     if (params && params.TableName) {
       spanData.table = params.TableName;
+    } else if (params && params.RequestItems) {
+      spanData.table = Object.keys(params.RequestItems).toString();
     }
 
     return spanData;

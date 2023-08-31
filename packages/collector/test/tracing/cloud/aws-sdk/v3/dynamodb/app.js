@@ -120,6 +120,36 @@ const operationParams = {
         }
       }
     }
+  },
+  batchWriteItem: {
+    RequestItems: {
+      [tableName]: [
+        {
+          PutRequest: {
+            Item: {
+              year: {
+                N: '2002'
+              },
+              title: {
+                S: 'batch record 1'
+              }
+            }
+          }
+        },
+        {
+          PutRequest: {
+            Item: {
+              year: {
+                N: '2003'
+              },
+              title: {
+                S: 'batch record 2'
+              }
+            }
+          }
+        }
+      ]
+    }
   }
 };
 
