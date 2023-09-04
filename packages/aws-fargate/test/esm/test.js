@@ -21,13 +21,9 @@ const account = '555123456789';
 const instrumentedContainerName = 'nodejs-fargate-test-container';
 const taskArn = `arn:aws:ecs:${region}:${account}:task/55566677-c1e5-5780-9806-aabbccddeeff`;
 const instrumentedContainerId = `${taskArn}::${instrumentedContainerName}`;
-const semver = require('semver');
-
+const esmSupportedVersion = require('@instana/core').tracing.esmSupportedVersion;
 const containerAppPath = path.join(__dirname, './app.mjs');
 const instanaAgentKey = 'aws-fargate-dummy-key';
-const nodeMajorVersion = process.versions.node;
-const minNodeJsVersion = '14.0.0';
-const maxNodeJsVersion = '18.17.1';
 const requestHeaders = {
   'X-Entry-Request-Header-1': 'entry request header value 1',
   'X-Entry-Request-Header-2': ['entry', 'request', 'header', 'value 2'],
@@ -71,7 +67,7 @@ function prelude(opts = {}) {
 }
 
 // Run the tests only for supported node versions
-if (semver.lt(nodeMajorVersion, maxNodeJsVersion) && semver.gt(nodeMajorVersion, minNodeJsVersion)) {
+if (esmSupportedVersion(process.versions.node)) {
   describe('AWS fargate esm test', function () {
     describe('when the back end is up (platform version 1.3.0)', function () {
       const control = prelude.bind(this)({
@@ -199,7 +195,7 @@ if (semver.lt(nodeMajorVersion, maxNodeJsVersion) && semver.gt(nodeMajorVersion,
   describe('AWS fargate esm test', function () {
     it('should skip tests for unsupported Node.js version', function () {
       // eslint-disable-next-line no-console
-      console.log(`Skipping tests. Node.js version ${nodeMajorVersion} is not supported.`);
+      console.log(`Skipping tests. Node.js version ${process.versions.node} is not supported.`);
     });
   });
 }
