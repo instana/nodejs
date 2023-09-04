@@ -134,7 +134,7 @@ function shimCmapGetMore(original) {
 }
 
 function instrumentedCmapQuery(ctx, originalQuery, originalArgs) {
-  const { originalCallback, callbackIndex } = findCallback(originalArgs);
+  const { originalCallback, callbackIndex } = tracingUtil.findCallback(originalArgs);
   if (callbackIndex < 0) {
     return originalQuery.apply(ctx, originalArgs);
   }
@@ -171,7 +171,7 @@ function instrumentedCmapQuery(ctx, originalQuery, originalArgs) {
 }
 
 function instrumentedCmapMethod(ctx, originalMethod, originalArgs, command) {
-  const { originalCallback, callbackIndex } = findCallback(originalArgs);
+  const { originalCallback, callbackIndex } = tracingUtil.findCallback(originalArgs);
   if (callbackIndex < 0) {
     return originalMethod.apply(ctx, originalArgs);
   }
@@ -217,7 +217,7 @@ function instrumentedCmapMethod(ctx, originalMethod, originalArgs, command) {
 }
 
 function instrumentedCmapGetMore(ctx, originalMethod, originalArgs) {
-  const { originalCallback, callbackIndex } = findCallback(originalArgs);
+  const { originalCallback, callbackIndex } = tracingUtil.findCallback(originalArgs);
   if (callbackIndex < 0) {
     return originalMethod.apply(ctx, originalArgs);
   }
@@ -268,7 +268,7 @@ function shimLegacyWrite(original) {
 function instrumentedLegacyWrite(ctx, originalWrite, originalArgs) {
   // pool.js#write throws a sync error if there is no callback, so we can safely assume there is one. If there was no
   // callback, we wouldn't be able to finish the span, so we won't start one.
-  const { originalCallback, callbackIndex } = findCallback(originalArgs);
+  const { originalCallback, callbackIndex } = tracingUtil.findCallback(originalArgs);
   if (callbackIndex < 0) {
     return originalWrite.apply(ctx, originalArgs);
   }
@@ -365,22 +365,6 @@ function instrumentedLegacyWrite(ctx, originalWrite, originalArgs) {
 
     return originalWrite.apply(ctx, originalArgs);
   });
-}
-
-function findCallback(originalArgs) {
-  let originalCallback;
-  let callbackIndex = -1;
-  for (let i = 1; i < originalArgs.length; i++) {
-    if (typeof originalArgs[i] === 'function') {
-      originalCallback = originalArgs[i];
-      callbackIndex = i;
-      break;
-    }
-  }
-  return {
-    originalCallback,
-    callbackIndex
-  };
 }
 
 function findCollection(cmdObj) {

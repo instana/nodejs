@@ -254,3 +254,24 @@ exports.requireModuleFromApplicationUnderMonitoringSafely = function requireModu
 ) {
   return require(path.join(basePath, ...relativePath));
 };
+
+exports.findCallback = (/** @type {string | any[]} */ originalArgs) => {
+  let originalCallback;
+  let callbackIndex = -1;
+
+  // If there is any function that takes two or more functions as an argument,
+  // the convention would be to pass in the callback as the last argument, thus searching
+  // from the end backwards might be marginally safer.
+  for (let i = originalArgs.length - 1; i >= 0; i--) {
+    if (typeof originalArgs[i] === 'function') {
+      originalCallback = originalArgs[i];
+      callbackIndex = i;
+      break;
+    }
+  }
+
+  return {
+    originalCallback,
+    callbackIndex
+  };
+};

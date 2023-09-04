@@ -16,27 +16,6 @@ let logger = require('../../../../../logger').getLogger('tracing/sns/v3', newLog
   logger = newLogger;
 });
 
-function findCallback(originalArgs) {
-  let originalCallback;
-  let callbackIndex = -1;
-
-  // If there is any function that takes two or more functions as an argument,
-  // the convention would be to pass in the callback as the last argument, thus searching
-  // from the end backwards might be marginally safer.
-  for (let i = originalArgs.length - 1; i >= 0; i--) {
-    if (typeof originalArgs[i] === 'function') {
-      originalCallback = originalArgs[i];
-      callbackIndex = i;
-      break;
-    }
-  }
-
-  return {
-    originalCallback,
-    callbackIndex
-  };
-}
-
 class InstanaAWSNS extends InstanaAWSProduct {
   instrumentedSmithySend(ctx, isActive, originalSend, smithySendArgs) {
     const skipTracingResult = cls.skipExitTracing({ extendedResponse: true, isActive });
@@ -58,7 +37,7 @@ class InstanaAWSNS extends InstanaAWSProduct {
       span.data[this.spanName] = this.buildSpanData(smithySendArgs[0]);
       this.propagateTraceContext(smithySendArgs[0], span);
 
-      const { originalCallback, callbackIndex } = findCallback(smithySendArgs);
+      const { originalCallback, callbackIndex } = tracingUtil.findCallback(smithySendArgs);
 
       if (callbackIndex !== -1) {
         smithySendArgs[callbackIndex] = cls.ns.bind(function (err) {
