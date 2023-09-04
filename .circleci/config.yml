@@ -411,6 +411,7 @@ jobs:
       - <<: *memcached
       - <<: *couchbase
       - <<: *couchbase-setup
+      - <<: *localstack
     <<: *shared
     parallelism: 15
     resource_class: medium+
@@ -433,6 +434,7 @@ jobs:
       - <<: *memcached
       - <<: *couchbase
       - <<: *couchbase-setup
+      - <<: *localstack
     <<: *shared
     parallelism: 15
     resource_class: medium+
@@ -455,6 +457,7 @@ jobs:
       - <<: *memcached
       - <<: *couchbase
       - <<: *couchbase-setup
+      - <<: *localstack
     <<: *shared
     parallelism: << pipeline.parameters.executors >>
     resource_class: medium+
@@ -480,6 +483,7 @@ jobs:
       - <<: *memcached
       - <<: *couchbase
       - <<: *couchbase-setup
+      - <<: *localstack
     <<: *shared
     parallelism: << pipeline.parameters.executors >>
     resource_class: medium+
@@ -504,6 +508,7 @@ jobs:
       - <<: *memcached
       - <<: *couchbase
       - <<: *couchbase-setup
+      - <<: *localstack
     <<: *shared
     parallelism: << pipeline.parameters.executors >>
     resource_class: medium+
@@ -528,6 +533,7 @@ jobs:
       - <<: *memcached
       - <<: *couchbase
       - <<: *couchbase-setup
+      - <<: *localstack
     <<: *shared
     parallelism: << pipeline.parameters.executors >>
     resource_class: medium+
@@ -550,6 +556,7 @@ jobs:
       - <<: *memcached
       - <<: *couchbase
       - <<: *couchbase-setup
+      - <<: *localstack
     <<: *shared
     parallelism: << pipeline.parameters.executors >>
     resource_class: medium+
@@ -574,6 +581,7 @@ jobs:
       - <<: *memcached
       - <<: *couchbase
       - <<: *couchbase-setup
+      - <<: *localstack
     <<: *shared
     parallelism: 1
     resource_class: large
