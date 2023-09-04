@@ -18,6 +18,7 @@ const DEFAULT_ENV_VALUES = {
   REDIS_ALTERNATIVE: 'localhost:6379',
   COUCHBASE: 'couchbase://127.0.0.1',
   COUCHBASE_ALTERNATIVE: 'couchbase://localhost',
+  LOCALSTACK_AWS: 'localstack://127.0.0.1:4566',
   MYSQL_HOST: '127.0.0.1',
   MYSQL_PORT: '3306',
   MYSQL_USER: 'node',

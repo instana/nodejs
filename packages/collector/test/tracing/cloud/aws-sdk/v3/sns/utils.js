@@ -7,14 +7,14 @@
 const uuid = require('uuid');
 const semver = require('semver');
 const awsSdk3 = require('@aws-sdk/client-sqs');
-const sqs = new awsSdk3.SQS({ region: 'us-east-2', endpoint: 'localstack://127.0.0.1:4566' });
+const sqs = new awsSdk3.SQS({ region: 'us-east-2', endpoint: process.env.LOCALSTACK_AWS });
 
 const clientOpts = {
   credentials: {
     accessKeyId: 'test',
     secretAccessKey: 'test'
   },
-  endpoint: 'localstack://127.0.0.1:4566',
+  endpoint: process.env.LOCALSTACK_AWS,
   region: 'us-east-2'
 };
 const sns = require('@aws-sdk/client-sns');

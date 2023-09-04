@@ -20,7 +20,7 @@ const clientOpts = {
     accessKeyId: 'test',
     secretAccessKey: 'test'
   },
-  endpoint: 'localstack://127.0.0.1:4566',
+  endpoint: process.env.LOCALSTACK_AWS,
   region: 'us-east-2'
 };
 

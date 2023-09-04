@@ -88,7 +88,7 @@ function start(version) {
           appPath: path.join(__dirname, '../sqs/receiver'),
           useGlobalAgent: true,
           env: {
-            AWS_ENDPOINT: 'localstack://127.0.0.1:4566',
+            AWS_ENDPOINT: process.env.LOCALSTACK_AWS,
             AWS_SQS_QUEUE_URL: queueUrl,
             SQS_POLL_DELAY: 5
           }
@@ -134,7 +134,7 @@ function start(version) {
           appPath: path.join(__dirname, '../sqs/receiver'),
           useGlobalAgent: true,
           env: {
-            AWS_ENDPOINT: 'localstack://127.0.0.1:4566',
+            AWS_ENDPOINT: process.env.LOCALSTACK_AWS,
             AWS_SQS_QUEUE_URL: queueUrl,
             SQS_POLL_DELAY: 5
           }
