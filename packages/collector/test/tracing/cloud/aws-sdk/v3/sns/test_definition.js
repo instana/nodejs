@@ -24,7 +24,7 @@ const utils = require('./utils');
 
 let topicArn;
 const topicName = 'MyNodeTopicArn';
-
+const availableStyles = ['default', 'callback', 'v2'];
 const availableCommands = {
   PublishCommand: {
     Message: 'STRING_VALUE',
@@ -32,8 +32,6 @@ const availableCommands = {
     Subject: 'STRING_VALUE'
   }
 };
-
-const availableStyles = ['default', 'callback', 'v2'];
 
 /*
 fs
@@ -109,21 +107,49 @@ function start(version) {
         await appControls.stop();
       });
 
-      Object.keys(availableCommands).forEach(key => {
-        availableStyles.forEach(style => {
-          it(`should trace operation: ${key}, style: ${style}`, async () => {
-            const url = '/execute/';
+      availableStyles.forEach(style => {
+        const key = 'PublishCommand';
 
-            const opts = availableCommands[key];
-            opts.TopicArn = topicArn;
+        it(`should trace operation: ${key}, style: ${style}`, async () => {
+          const url = '/execute/';
 
-            const response = await appControls.sendRequest({
-              method: 'GET',
-              path: `${url}?style=${style}&command=${key}&${qs.stringify(opts)}`
-            });
+          const opts = availableCommands[key];
+          opts.TopicArn = topicArn;
 
-            return verify(appControls, response, url, key);
+          await appControls.sendRequest({
+            method: 'GET',
+            path: `${url}?style=${style}&command=${key}&${qs.stringify(opts)}`
           });
+
+          return verify(appControls, url);
+        });
+
+        it(`should trace operation: ${key}, style: ${style} with message attributes`, async () => {
+          const url = '/execute/';
+
+          const opts = availableCommands[key];
+          opts.TopicArn = topicArn;
+
+          await appControls.sendRequest({
+            method: 'GET',
+            path: `${url}?msgattrs=3&style=${style}&command=${key}&${qs.stringify(opts)}`
+          });
+
+          return verify(appControls, url);
+        });
+
+        it(`should trace operation: ${key}, style: ${style} but too many message attributes`, async () => {
+          const url = '/execute/';
+
+          const opts = availableCommands[key];
+          opts.TopicArn = topicArn;
+
+          await appControls.sendRequest({
+            method: 'GET',
+            path: `${url}?msgattrs=15&style=${style}&command=${key}&${qs.stringify(opts)}`
+          });
+
+          return verify(appControls, url, false);
         });
       });
     });
@@ -235,21 +261,21 @@ function start(version) {
       });
     });
 
-    function verify(controls, response, apiPath, operation, withError = false) {
+    function verify(controls, apiPath, withSqsParent = true) {
       return retry(
-        () => agentControls.getSpans().then(spans => verifySpans(controls, spans, apiPath, operation, withError)),
+        () => agentControls.getSpans().then(spans => verifySpans(controls, spans, apiPath, withSqsParent)),
         retryTime
       );
     }
 
-    function verifySpans(controls, spans, apiPath, operation, withError) {
+    function verifySpans(controls, spans, apiPath, withSqsParent) {
       const httpEntry = verifyHttpRootEntry({ spans, apiPath, pid: String(controls.getPid()) });
 
       const exitSpan = verifyExitSpan({
         spanName: 'sns',
         spans,
         parent: httpEntry,
-        withError,
+        withError: false,
         pid: String(controls.getPid()),
         extraTests: [
           span => expect(typeof span.data.sns.topic).to.exist,
@@ -258,10 +284,8 @@ function start(version) {
         ]
       });
 
-      if (!withError) {
-        verifyHttpExit({ spans, parent: httpEntry, pid: String(controls.getPid()) });
-        verifySQSEntrySpan(spans, String(receiverControls.getPid()), exitSpan);
-      }
+      verifyHttpExit({ spans, parent: httpEntry, pid: String(controls.getPid()) });
+      verifySQSEntrySpan(spans, String(receiverControls.getPid()), withSqsParent ? exitSpan : null);
     }
 
     function verifySQSEntrySpan(spans, receiverPid, parent) {

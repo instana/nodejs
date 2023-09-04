@@ -28,6 +28,17 @@ const sns = require('@aws-sdk/client-sns');
 const client = new sns.SNSClient(clientOpts);
 const clientV2 = new sns.SNS(clientOpts);
 
+const addMsgAttributes = (options, msgattrs) => {
+  options.MessageAttributes = {};
+
+  for (let i = 0; i < msgattrs; i++) {
+    options.MessageAttributes[`dummy-attribute-${i}`] = {
+      DataType: 'String',
+      StringValue: `dummy value ${i}`
+    };
+  }
+};
+
 const defaultStyle = async (Command, options) => {
   return client.send(new Command(options));
 };
@@ -44,9 +55,13 @@ async function executeCommand(options) {
   const Command = sns[options.command];
   const style = options.style;
   const command = options.command;
+  const msgattrs = options.msgattrs || 0;
 
   delete options.command;
   delete options.style;
+  delete options.msgattrs;
+
+  addMsgAttributes(options, msgattrs);
 
   if (style === 'callback') {
     return new Promise((resolve, reject) => {
