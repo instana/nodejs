@@ -106,7 +106,7 @@ class InstanaAWSNS extends InstanaAWSProduct {
   }
 
   propagateSuppression(cmd) {
-    if (!cmd.input) {
+    if (!cmd || !cmd.input) {
       return;
     }
 
