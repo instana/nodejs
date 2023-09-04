@@ -251,7 +251,11 @@ function start(version) {
         parent: httpEntry,
         withError,
         pid: String(controls.getPid()),
-        extraTests: [span => expect(typeof span.data.sns.topic).to.exist]
+        extraTests: [
+          span => expect(typeof span.data.sns.topic).to.exist,
+          span => expect(typeof span.data.sns.subject).to.exist,
+          span => expect(typeof span.data.sns.target).to.exist
+        ]
       });
 
       if (!withError) {
