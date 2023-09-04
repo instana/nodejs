@@ -60,7 +60,7 @@ exports.generateQueueName = () => {
   let queueName = 'nodejs-team';
 
   if (process.env.SQS_QUEUE_NAME) {
-    queueName = `${process.env.SQS_QUEUE_NAME}-v3-${semver.major(process.versions.node)}-${uuid()}`;
+    queueName = `${process.env.SQS_QUEUE_NAME}-v3-${semver.major(process.versions.node)}-${uuid.v4()}`;
   }
 
   const randomNumber = Math.floor(Math.random() * 1000);
