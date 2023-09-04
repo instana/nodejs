@@ -6,6 +6,6 @@
 
 const npmVersion = '@aws-sdk/client-sns';
 
-describe.only('tracing/cloud/aws-sdk/v3/sns', function () {
+describe('tracing/cloud/aws-sdk/v3/sns', function () {
   require('../test_definition').bind(this)(npmVersion);
 });
