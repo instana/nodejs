@@ -217,6 +217,7 @@ class InstanaAWSSQS extends InstanaAWSProduct {
 
       if (typeof smithySendArgs[1] === 'function') {
         const _callback = smithySendArgs[1];
+
         smithySendArgs[1] = cls.ns.bind(function (err, data) {
           if (err) {
             _callback.apply(this, arguments);
@@ -233,12 +234,15 @@ class InstanaAWSSQS extends InstanaAWSProduct {
               if (!hasTracingAttributes(tracingAttributes)) {
                 tracingAttributes = readTracingAttributesFromSns(messages[0].Body);
               }
+
               if (tracingAttributes.level === '0') {
                 cls.setTracingLevel('0');
                 setImmediate(() => span.cancel());
+                _callback.apply(self, arguments);
+                return;
               }
-              configureEntrySpan(span, data, tracingAttributes);
 
+              configureEntrySpan(span, data, tracingAttributes);
               setImmediate(() => {
                 self.finishSpan(null, span);
               });
