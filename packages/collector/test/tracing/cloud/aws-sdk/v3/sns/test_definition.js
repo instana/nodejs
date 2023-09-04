@@ -111,7 +111,7 @@ function start(version) {
 
       Object.keys(availableCommands).forEach(key => {
         availableStyles.forEach(style => {
-          it(`operation: ${key}, style: ${style}`, async () => {
+          it(`should trace operation: ${key}, style: ${style}`, async () => {
             const url = '/execute/';
 
             const opts = availableCommands[key];
@@ -157,7 +157,61 @@ function start(version) {
 
       Object.keys(availableCommands).forEach(key => {
         availableStyles.forEach(style => {
-          it(`operation: ${key}, style: ${style}`, async () => {
+          it(`should not trace operation: ${key}, style: ${style}`, async () => {
+            const url = '/execute/';
+
+            const opts = availableCommands[key];
+            opts.TopicArn = topicArn;
+
+            await appControls.sendRequest({
+              method: 'GET',
+              path: `${url}?style=${style}&command=${key}&${qs.stringify(opts)}`,
+              suppressTracing: true
+            });
+
+            return retry(() => delay(config.getTestTimeout() / 4), retryTime)
+              .then(() => agentControls.getSpans())
+              .then(spans => {
+                if (spans.length > 0) {
+                  fail(`Unexpected spans (AWS SNS suppressed: ${stringifyItems(spans)}`);
+                }
+              });
+          });
+        });
+      });
+    });
+
+    describe('tracing disabled', function () {
+      before(async () => {
+        receiverControls = new ProcessControls({
+          appPath: path.join(__dirname, '../sqs/receiver'),
+          useGlobalAgent: true,
+          tracingEnabled: false,
+          env: {
+            AWS_ENDPOINT: process.env.LOCALSTACK_AWS,
+            AWS_SQS_QUEUE_URL: queueUrl,
+            SQS_POLL_DELAY: 5
+          }
+        });
+
+        appControls = new ProcessControls({
+          appPath: path.join(__dirname, 'app'),
+          useGlobalAgent: true,
+          env: {}
+        });
+
+        await receiverControls.startAndWaitForAgentConnection();
+        await appControls.startAndWaitForAgentConnection();
+      });
+
+      after(async () => {
+        await receiverControls.stop();
+        await appControls.stop();
+      });
+
+      Object.keys(availableCommands).forEach(key => {
+        availableStyles.forEach(style => {
+          it(`should not trace operation: ${key}, style: ${style}`, async () => {
             const url = '/execute/';
 
             const opts = availableCommands[key];
