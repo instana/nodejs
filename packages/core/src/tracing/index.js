@@ -15,6 +15,7 @@ const tracingUtil = require('./tracingUtil');
 const spanBuffer = require('./spanBuffer');
 const supportedVersion = require('./supportedVersion');
 const { otelInstrumentations } = require('./opentelemetry-instrumentations');
+const esmSupportedVersion = require('./esmSupportedVersion');
 
 let tracingEnabled = false;
 let tracingActivated = false;
@@ -120,6 +121,7 @@ exports.sdk = sdk;
 exports.spanBuffer = spanBuffer;
 exports.supportedVersion = supportedVersion;
 exports.util = tracingUtil;
+exports.esmSupportedVersion = esmSupportedVersion;
 
 /**
  * @param {Array.<InstanaInstrumentedModule>} _additionalInstrumentationModules
