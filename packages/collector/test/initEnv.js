@@ -39,7 +39,6 @@ const DEFAULT_ENV_VALUES = {
 };
 
 if (isCI()) {
-  // DEFAULT_ENV_VALUES.LOCALSTACK_AWS = 'localstack:4566';
   DEFAULT_ENV_VALUES.LOCALSTACK_AWS = 'localstack://localstack:4566';
 }
 

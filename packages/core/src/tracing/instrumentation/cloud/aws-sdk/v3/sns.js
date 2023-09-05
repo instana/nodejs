@@ -80,7 +80,7 @@ class InstanaAWSNS extends InstanaAWSProduct {
   }
 
   propagateTraceContext(cmd, span) {
-    if (!cmd.input) {
+    if (!cmd || !cmd.input) {
       return;
     }
 

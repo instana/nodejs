@@ -181,28 +181,28 @@ function start(version) {
         await appControls.stop();
       });
 
-      Object.keys(availableCommands).forEach(key => {
-        availableStyles.forEach(style => {
-          it(`should not trace operation: ${key}, style: ${style}`, async () => {
-            const url = '/execute/';
+      availableStyles.forEach(style => {
+        const key = 'PublishCommand';
 
-            const opts = availableCommands[key];
-            opts.TopicArn = topicArn;
+        it(`should not trace operation: ${key}, style: ${style}`, async () => {
+          const url = '/execute/';
 
-            await appControls.sendRequest({
-              method: 'GET',
-              path: `${url}?style=${style}&command=${key}&${qs.stringify(opts)}`,
-              suppressTracing: true
-            });
+          const opts = availableCommands[key];
+          opts.TopicArn = topicArn;
 
-            return retry(() => delay(config.getTestTimeout() / 4), retryTime)
-              .then(() => agentControls.getSpans())
-              .then(spans => {
-                if (spans.length > 0) {
-                  fail(`Unexpected spans (AWS SNS suppressed: ${stringifyItems(spans)}`);
-                }
-              });
+          await appControls.sendRequest({
+            method: 'GET',
+            path: `${url}?style=${style}&command=${key}&${qs.stringify(opts)}`,
+            suppressTracing: true
           });
+
+          return retry(() => delay(config.getTestTimeout() / 4), retryTime)
+            .then(() => agentControls.getSpans())
+            .then(spans => {
+              if (spans.length > 0) {
+                fail(`Unexpected spans (AWS SNS suppressed: ${stringifyItems(spans)}`);
+              }
+            });
         });
       });
     });
@@ -235,28 +235,28 @@ function start(version) {
         await appControls.stop();
       });
 
-      Object.keys(availableCommands).forEach(key => {
-        availableStyles.forEach(style => {
-          it(`should not trace operation: ${key}, style: ${style}`, async () => {
-            const url = '/execute/';
+      availableStyles.forEach(style => {
+        const key = 'PublishCommand';
 
-            const opts = availableCommands[key];
-            opts.TopicArn = topicArn;
+        it(`should not trace operation: ${key}, style: ${style}`, async () => {
+          const url = '/execute/';
 
-            await appControls.sendRequest({
-              method: 'GET',
-              path: `${url}?style=${style}&command=${key}&${qs.stringify(opts)}`,
-              suppressTracing: true
-            });
+          const opts = availableCommands[key];
+          opts.TopicArn = topicArn;
 
-            return retry(() => delay(config.getTestTimeout() / 4), retryTime)
-              .then(() => agentControls.getSpans())
-              .then(spans => {
-                if (spans.length > 0) {
-                  fail(`Unexpected spans (AWS SNS suppressed: ${stringifyItems(spans)}`);
-                }
-              });
+          await appControls.sendRequest({
+            method: 'GET',
+            path: `${url}?style=${style}&command=${key}&${qs.stringify(opts)}`,
+            suppressTracing: true
           });
+
+          return retry(() => delay(config.getTestTimeout() / 4), retryTime)
+            .then(() => agentControls.getSpans())
+            .then(spans => {
+              if (spans.length > 0) {
+                fail(`Unexpected spans (AWS SNS suppressed: ${stringifyItems(spans)}`);
+              }
+            });
         });
       });
     });

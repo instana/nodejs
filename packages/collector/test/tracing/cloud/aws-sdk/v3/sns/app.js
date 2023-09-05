@@ -15,8 +15,6 @@ const port = require('../../../../../test_util/app-port')();
 const logPrefix = `AWS SDK v3 SNS (${process.pid}):\t`;
 const log = require('@instana/core/test/test_util/log').getLogger(logPrefix);
 
-// eslint-disable-next-line no-console
-console.log(process.env.LOCALSTACK_AWS);
 const clientOpts = {
   credentials: {
     accessKeyId: 'test',
