@@ -8,5 +8,5 @@ const semver = require('semver');
 
 /** @type {(version: string) => boolean} */
 module.exports = exports = function esmSupportedVersion(version) {
-  return semver.satisfies(version, '>=14.0.0 <=18.17.1');
+  return semver.satisfies(version, '>=14.0.0 <20.0.0');
 };
