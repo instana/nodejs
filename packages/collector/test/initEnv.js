@@ -39,7 +39,8 @@ const DEFAULT_ENV_VALUES = {
 };
 
 if (isCI()) {
-  DEFAULT_ENV_VALUES.LOCALSTACK_AWS = 'localstack:4566';
+  // DEFAULT_ENV_VALUES.LOCALSTACK_AWS = 'localstack:4566';
+  DEFAULT_ENV_VALUES.LOCALSTACK_AWS = 'localstack://localstack:4566';
 }
 
 // CASE: if env variable is not set from outside, fallback to defaults
