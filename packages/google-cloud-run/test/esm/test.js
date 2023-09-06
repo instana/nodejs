@@ -13,7 +13,7 @@ const Control = require('../Control');
 const { expectExactlyOneMatching } = require('../../../core/test/test_util');
 const config = require('../../../serverless/test/config');
 const retry = require('../../../serverless/test/util/retry');
-
+const esmSupportedVersion = require('@instana/core').tracing.esmSupportedVersion;
 const downstreamDummyPort = 4568;
 const downstreamDummyUrl = `http://localhost:${downstreamDummyPort}/`;
 
@@ -29,11 +29,7 @@ const host = `gcp:cloud-run:revision:${revision}`;
 
 const containerAppPath = path.join(__dirname, './app.mjs');
 const instanaAgentKey = 'google-cloud-run-dummy-key';
-const semver = require('semver');
 const testStartedAt = Date.now();
-const nodeMajorVersion = process.versions.node;
-const minNodeJsVersion = '14.0.0';
-const maxNodeJsVersion = '18.17.1';
 function prelude(opts = {}) {
   this.timeout(config.getTestTimeout());
   this.slow(config.getTestTimeout() / 2);
@@ -60,7 +56,8 @@ function prelude(opts = {}) {
   };
   return new Control(controlOpts).registerTestHooks();
 }
-if (semver.lt(nodeMajorVersion, maxNodeJsVersion) && semver.gt(nodeMajorVersion, minNodeJsVersion)) {
+// Run the tests only for supported node versions
+if (esmSupportedVersion(process.versions.node)) {
   describe('Google Cloud Run esm test', function () {
     describe('when the back end is up', function () {
       const control = prelude.bind(this)();
@@ -267,7 +264,7 @@ if (semver.lt(nodeMajorVersion, maxNodeJsVersion) && semver.gt(nodeMajorVersion,
   describe('AWS fargate esm test', function () {
     it('should skip tests for unsupported Node.js version', function () {
       // eslint-disable-next-line no-console
-      console.log(`Skipping tests. Node.js version ${nodeMajorVersion} is not supported.`);
+      console.log(`Skipping tests. Node.js version ${process.versions.node} is not supported.`);
     });
   });
 }

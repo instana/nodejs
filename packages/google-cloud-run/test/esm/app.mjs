@@ -2,8 +2,6 @@
  * (c) Copyright IBM Corp. 2023
  */
 
-'use strict';
-
 import http from 'http';
 import fetch from 'node-fetch';
 
