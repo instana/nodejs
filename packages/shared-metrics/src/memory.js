@@ -9,7 +9,7 @@ exports.payloadPrefix = 'memory';
 // @ts-ignore
 exports.currentPayload = {};
 
-/** @type {NodeJS.Timer} */
+/** @type {NodeJS.Timeout } */
 let activeIntervalHandle = null;
 
 exports.activate = function activate() {
