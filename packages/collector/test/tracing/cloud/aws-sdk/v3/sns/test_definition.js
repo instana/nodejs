@@ -33,18 +33,6 @@ const availableCommands = {
   }
 };
 
-/*
-fs
-  .readdirSync(`${path.dirname(require.resolve('@aws-sdk/client-sns'))}/commands`)
-  .filter(cmd => {
-    if (!cmd.match(/command/gi)) return false;
-    return true;
-  })
-  .map(cmd => {
-    return cmd.match(/(.*).js/)[1];
-  });
-*/
-
 function start(version) {
   let mochaSuiteFn;
   this.timeout(config.getTestTimeout() * 4);
