@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.32.0](https://github.com/instana/nodejs/compare/v2.31.0...v2.32.0) (2023-09-11)
+
+
+### Features
+
+* added esm support for aws fargate ([#847](https://github.com/instana/nodejs/issues/847)) ([80472de](https://github.com/instana/nodejs/commit/80472dee48287a50d6af5bb9128fc113a3d40968))
+
+
+
+
+
 # [2.31.0](https://github.com/instana/nodejs/compare/v2.30.2...v2.31.0) (2023-09-04)
 
 **Note:** Version bump only for package @instana/aws-fargate
