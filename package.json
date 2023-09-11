@@ -157,7 +157,7 @@
     "mocha-junit-reporter": "^2.0.2",
     "mocha-multi-reporters": "^1.5.1",
     "mock-require": "3.0.3",
-    "mongodb": "^5.4.0",
+    "mongodb": "^6.0.0",
     "mongodb-v3": "npm:mongodb@^3.7.3",
     "mongodb-v4": "npm:mongodb@^4.16.0",
     "mongoose": "^7.1.0",
