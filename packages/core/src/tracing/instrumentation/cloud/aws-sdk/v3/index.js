@@ -15,7 +15,8 @@ const awsProducts = [
   require('./dynamodb'),
   require('./s3'),
   require('./sqs'),
-  require('./kinesis')
+  require('./kinesis'),
+  require('./sns')
 ];
 
 const sqsConsumer = require('./sqs-consumer');

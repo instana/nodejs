@@ -6,6 +6,7 @@
 'use strict';
 
 const semver = require('semver');
+const { isCI } = require('../../core/test/test_util');
 
 // NOTE: default docker compose hosts, ports and credentials
 const DEFAULT_ENV_VALUES = {
@@ -18,6 +19,7 @@ const DEFAULT_ENV_VALUES = {
   REDIS_ALTERNATIVE: 'localhost:6379',
   COUCHBASE: 'couchbase://127.0.0.1',
   COUCHBASE_ALTERNATIVE: 'couchbase://localhost',
+  LOCALSTACK_AWS: 'localstack://127.0.0.1:4566',
   MYSQL_HOST: '127.0.0.1',
   MYSQL_PORT: '3306',
   MYSQL_USER: 'node',
@@ -35,6 +37,10 @@ const DEFAULT_ENV_VALUES = {
   MSSQL_USER: 'sa',
   MSSQL_PW: 'stanCanHazMsSQL1'
 };
+
+if (isCI()) {
+  DEFAULT_ENV_VALUES.LOCALSTACK_AWS = 'localstack://localstack:4566';
+}
 
 // CASE: if env variable is not set from outside, fallback to defaults
 Object.keys(DEFAULT_ENV_VALUES).forEach(key => {

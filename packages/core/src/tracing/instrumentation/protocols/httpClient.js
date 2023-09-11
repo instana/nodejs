@@ -107,7 +107,10 @@ function shouldBeBypassed(parentSpan, options) {
   // Same regex used by AWS SDK at /lib/services/sqs.js
   const hostMatchesSQS = evaluateHeaderValue(hostInfo, header => header.match(/^sqs\.(?:.+?)\./) !== null);
 
-  if (parentSpan && parentSpan.n === 'sqs' && isAWSNodeJSHeader && hostMatchesSQS) {
+  // 'user-agent': 'aws-sdk-js/3.329.0 os/darwin/22.5.0 lang/js md/nodejs/18.14.2 api/sqs/3.329.0'
+  const agentMatchesSQS = evaluateHeaderValue(userAgent, header => header.toLowerCase().indexOf('api/sqs') > -1);
+
+  if (parentSpan && parentSpan.n === 'sqs' && isAWSNodeJSHeader && (hostMatchesSQS || agentMatchesSQS)) {
     return true;
   }
 

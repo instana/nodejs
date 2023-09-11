@@ -263,7 +263,7 @@ function instrumentTransactions(cluster, connectionStr) {
 
     const origRun = transactions.run;
     transactions.run = function instanaRun() {
-      const { originalCallback, callbackIndex } = findCallback(arguments);
+      const { originalCallback, callbackIndex } = tracingUtil.findCallback(arguments);
 
       if (callbackIndex >= 0) {
         arguments[callbackIndex] = function instanaRunCallback(attempt) {
@@ -369,7 +369,7 @@ function instrumentOperation({ connectionStr, bucketName, getBucketTypeFn, sqlTy
         sql: sqlType
       };
 
-      const { originalCallback, callbackIndex } = findCallback(originalArgs);
+      const { originalCallback, callbackIndex } = tracingUtil.findCallback(originalArgs);
 
       if (callbackIndex < 0) {
         const prom = original.apply(originalThis, originalArgs);
@@ -450,26 +450,5 @@ function getBucketType(c, n) {
 
   return () => {
     return bucketType;
-  };
-}
-
-function findCallback(originalArgs) {
-  let originalCallback;
-  let callbackIndex = -1;
-
-  // If there is any function that takes two or more functions as an argument,
-  // the convention would be to pass in the callback as the last argument, thus searching
-  // from the end backwards might be marginally safer.
-  for (let i = originalArgs.length - 1; i >= 0; i--) {
-    if (typeof originalArgs[i] === 'function') {
-      originalCallback = originalArgs[i];
-      callbackIndex = i;
-      break;
-    }
-  }
-
-  return {
-    originalCallback,
-    callbackIndex
   };
 }

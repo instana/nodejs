@@ -194,6 +194,7 @@ class InstanaAWSSQS extends InstanaAWSProduct {
     // context belonging to this SQS promise.
     return cls.ns.runAndReturn(() => {
       const self = this;
+
       const span = cls.startSpan(SPAN_NAME, ENTRY);
       span.stack = tracingUtil.getStackTrace(this.instrumentEntry, 2);
       span.data.sqs = this.buildSpanData(operation, sendMessageInput);
@@ -216,6 +217,7 @@ class InstanaAWSSQS extends InstanaAWSProduct {
 
       if (typeof smithySendArgs[1] === 'function') {
         const _callback = smithySendArgs[1];
+
         smithySendArgs[1] = cls.ns.bind(function (err, data) {
           if (err) {
             _callback.apply(this, arguments);
@@ -227,16 +229,20 @@ class InstanaAWSSQS extends InstanaAWSProduct {
               setImmediate(() => self.finishSpan(null, span));
             } else if (data && data.Messages && data.Messages.length > 0) {
               const messages = data.Messages;
+
               let tracingAttributes = readTracingAttributes(messages[0].MessageAttributes);
               if (!hasTracingAttributes(tracingAttributes)) {
                 tracingAttributes = readTracingAttributesFromSns(messages[0].Body);
               }
+
               if (tracingAttributes.level === '0') {
                 cls.setTracingLevel('0');
                 setImmediate(() => span.cancel());
+                _callback.apply(self, arguments);
+                return;
               }
-              configureEntrySpan(span, data, tracingAttributes);
 
+              configureEntrySpan(span, data, tracingAttributes);
               setImmediate(() => {
                 self.finishSpan(null, span);
               });
@@ -263,7 +269,6 @@ class InstanaAWSSQS extends InstanaAWSProduct {
               setImmediate(() => this.finishSpan(null, span));
             } else if (data && data.Messages && data.Messages.length > 0) {
               const messages = data.Messages;
-
               let tracingAttributes = readTracingAttributes(messages[0].MessageAttributes);
               if (!hasTracingAttributes(tracingAttributes)) {
                 tracingAttributes = readTracingAttributesFromSns(messages[0].Body);
@@ -271,6 +276,7 @@ class InstanaAWSSQS extends InstanaAWSProduct {
               if (tracingAttributes.level === '0') {
                 cls.setTracingLevel('0');
                 setImmediate(() => span.cancel());
+                return data;
               }
 
               configureEntrySpan(span, data, tracingAttributes);
