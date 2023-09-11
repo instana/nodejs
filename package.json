@@ -57,7 +57,7 @@
   "devDependencies": {
     "@apollo/federation": "0.38.1",
     "@apollo/gateway": "0.50.2",
-    "@aws-sdk/client-dynamodb": "3.284.0",
+    "@aws-sdk/client-dynamodb": "3.409.0",
     "@aws-sdk/client-dynamodb2": "npm:@aws-sdk/client-dynamodb@3.20.0",
     "@aws-sdk/client-kinesis": "^3.379.1",
     "@aws-sdk/client-s3": "3.379.1",
