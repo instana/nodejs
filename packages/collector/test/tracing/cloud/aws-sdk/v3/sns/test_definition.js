@@ -20,7 +20,7 @@ const {
   verifyHttpExit
 } = require('@instana/core/test/test_util/common_verifications');
 const constants = require('@instana/core').tracing.constants;
-const utils = require('./utils');
+let utils;
 
 let topicArn;
 const topicName = 'MyNodeTopicArn';
@@ -34,16 +34,15 @@ const availableCommands = {
 };
 
 function start(version) {
-  let mochaSuiteFn;
   this.timeout(config.getTestTimeout() * 4);
 
   // https://github.com/aws/aws-sdk-js-v3/blob/v3.391.0/clients/client-sns/package.json#L70
   if (!supportedVersion(process.versions.node) || semver.lt(process.versions.node, '14.0.0')) {
-    mochaSuiteFn = describe.skip;
-  } else {
-    mochaSuiteFn = describe;
+    it.skip(`npm: ${version}`, () => {});
+    return;
   }
 
+  utils = require('./utils');
   const queueName = utils.generateQueueName();
   const retryTime = config.getTestTimeout() * 5;
   let queueUrl;
@@ -64,7 +63,7 @@ function start(version) {
     await utils.removeQueue(queueUrl);
   });
 
-  mochaSuiteFn(`npm: ${version}`, function () {
+  describe(`npm: ${version}`, function () {
     globalAgent.setUpCleanUpHooks();
     const agentControls = globalAgent.instance;
 
