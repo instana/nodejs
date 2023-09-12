@@ -27,6 +27,8 @@ awsProducts.forEach(awsProduct => {
 
 let isActive = false;
 
+exports.instrumentationName = 'aws-sdk/v2';
+
 exports.isActive = function () {
   return isActive;
 };

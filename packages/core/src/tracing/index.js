@@ -41,8 +41,10 @@ let processIdentityProvider = null;
 const instrumentations = [
   './instrumentation/cloud/aws-sdk/v2/index',
   './instrumentation/cloud/aws-sdk/v3/index',
+
   './instrumentation/cloud/aws-sdk/v2/sdk',
   './instrumentation/cloud/aws-sdk/v2/sqs',
+
   './instrumentation/cloud/gcp/pubsub',
   './instrumentation/cloud/gcp/storage',
   './instrumentation/control_flow/bluebird',
@@ -101,6 +103,7 @@ const instrumentations = [
  * @property {Function} [updateConfig]
  * @property {boolean} [batchable]
  * @property {string} [spanName]
+ * @property {string} [instrumentationName]
  */
 
 /**
@@ -182,8 +185,13 @@ function initInstrumenations(_config) {
   if (!instrumenationsInitialized) {
     instrumentations.forEach(instrumentationKey => {
       instrumentationModules[instrumentationKey] = require(instrumentationKey);
-      const instrumentationName = instrumentationKey.match(/.\/instrumentation\/[^/]*\/(.*)/)[1];
-      const isInstrumentationDisabled = _config.tracing.disabledTracers.includes(instrumentationName.toLowerCase());
+
+      const extractedInstrumentationName = instrumentationKey.match(/.\/instrumentation\/[^/]*\/(.*)/)[1];
+
+      const isInstrumentationDisabled =
+        _config.tracing.disabledTracers.includes(extractedInstrumentationName.toLowerCase()) ||
+        _config.tracing.disabledTracers.includes(instrumentationModules[instrumentationKey].instrumentationName);
+
       if (!isInstrumentationDisabled) {
         instrumentationModules[instrumentationKey].init(_config);
       }
@@ -216,11 +224,11 @@ exports.activate = function activate(extraConfig = {}) {
 
     if (automaticTracingEnabled) {
       instrumentations.forEach(instrumentationKey => {
-        const instrumentationName = /.\/instrumentation\/[^/]*\/(.*)/.exec(instrumentationKey)[1];
+        const extractedInstrumentationName = /.\/instrumentation\/[^/]*\/(.*)/.exec(instrumentationKey)[1];
 
         const isDisabled =
-          config.tracing.disabledTracers.findIndex(disabledKey => instrumentationName.toLowerCase() === disabledKey) !==
-          -1;
+          config.tracing.disabledTracers.includes(extractedInstrumentationName.toLowerCase()) ||
+          config.tracing.disabledTracers.includes(instrumentationModules[instrumentationKey].instrumentationName);
 
         if (!isDisabled) {
           instrumentationModules[instrumentationKey].activate(extraConfig);
