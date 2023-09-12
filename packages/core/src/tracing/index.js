@@ -190,7 +190,8 @@ function initInstrumenations(_config) {
 
       const isInstrumentationDisabled =
         _config.tracing.disabledTracers.includes(extractedInstrumentationName.toLowerCase()) ||
-        _config.tracing.disabledTracers.includes(instrumentationModules[instrumentationKey].instrumentationName);
+        (instrumentationModules[instrumentationKey].instrumentationName &&
+          _config.tracing.disabledTracers.includes(instrumentationModules[instrumentationKey].instrumentationName));
 
       if (!isInstrumentationDisabled) {
         instrumentationModules[instrumentationKey].init(_config);
@@ -228,7 +229,8 @@ exports.activate = function activate(extraConfig = {}) {
 
         const isDisabled =
           config.tracing.disabledTracers.includes(extractedInstrumentationName.toLowerCase()) ||
-          config.tracing.disabledTracers.includes(instrumentationModules[instrumentationKey].instrumentationName);
+          (instrumentationModules[instrumentationKey].instrumentationName &&
+            config.tracing.disabledTracers.includes(instrumentationModules[instrumentationKey].instrumentationName));
 
         if (!isDisabled) {
           instrumentationModules[instrumentationKey].activate(extraConfig);
