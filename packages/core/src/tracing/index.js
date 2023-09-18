@@ -41,10 +41,8 @@ let processIdentityProvider = null;
 const instrumentations = [
   './instrumentation/cloud/aws-sdk/v2/index',
   './instrumentation/cloud/aws-sdk/v3/index',
-
   './instrumentation/cloud/aws-sdk/v2/sdk',
   './instrumentation/cloud/aws-sdk/v2/sqs',
-
   './instrumentation/cloud/gcp/pubsub',
   './instrumentation/cloud/gcp/storage',
   './instrumentation/control_flow/bluebird',
