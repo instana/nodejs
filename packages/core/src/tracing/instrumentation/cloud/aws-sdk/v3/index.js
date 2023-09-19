@@ -16,7 +16,8 @@ const awsProducts = [
   require('./s3'),
   require('./sqs'),
   require('./kinesis'),
-  require('./sns')
+  require('./sns'),
+  require('./lambda')
 ];
 
 const sqsConsumer = require('./sqs-consumer');
@@ -78,7 +79,8 @@ function shimSmithySend(originalSend) {
     const smithySendArgs = getFunctionArguments(arguments);
     const command = smithySendArgs[0];
 
-    const serviceId = self.config && self.config.serviceId;
+    let serviceId = self.config && self.config.serviceId;
+    serviceId = serviceId === 'Lambda' ? 'aws.lambda.invoke' : serviceId;
     let awsProduct = serviceId && awsProducts.find(aws => aws.spanName === serviceId.toLowerCase());
 
     if (awsProduct && awsProduct.supportsOperation(command.constructor.name)) {
