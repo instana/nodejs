@@ -125,6 +125,20 @@ exports.util = tracingUtil;
 exports.esmSupportedVersion = esmSupportedVersion;
 
 /**
+ * @param {import('../util/normalizeConfig').InstanaConfig} cfg
+ * @param {string} instrumentationKey
+ */
+const isInstrumentationDisabled = (cfg, instrumentationKey) => {
+  const extractedInstrumentationName = instrumentationKey.match(/.\/instrumentation\/[^/]*\/(.*)/)[1];
+
+  return (
+    cfg.tracing.disabledTracers.includes(extractedInstrumentationName.toLowerCase()) ||
+    (instrumentationModules[instrumentationKey].instrumentationName &&
+      cfg.tracing.disabledTracers.includes(instrumentationModules[instrumentationKey].instrumentationName))
+  );
+};
+
+/**
  * @param {Array.<InstanaInstrumentedModule>} _additionalInstrumentationModules
  */
 exports.registerAdditionalInstrumentations = function registerAdditionalInstrumentations(
@@ -184,14 +198,7 @@ function initInstrumenations(_config) {
     instrumentations.forEach(instrumentationKey => {
       instrumentationModules[instrumentationKey] = require(instrumentationKey);
 
-      const extractedInstrumentationName = instrumentationKey.match(/.\/instrumentation\/[^/]*\/(.*)/)[1];
-
-      const isInstrumentationDisabled =
-        _config.tracing.disabledTracers.includes(extractedInstrumentationName.toLowerCase()) ||
-        (instrumentationModules[instrumentationKey].instrumentationName &&
-          _config.tracing.disabledTracers.includes(instrumentationModules[instrumentationKey].instrumentationName));
-
-      if (!isInstrumentationDisabled) {
+      if (!isInstrumentationDisabled(_config, instrumentationKey)) {
         instrumentationModules[instrumentationKey].init(_config);
       }
 
@@ -223,14 +230,7 @@ exports.activate = function activate(extraConfig = {}) {
 
     if (automaticTracingEnabled) {
       instrumentations.forEach(instrumentationKey => {
-        const extractedInstrumentationName = /.\/instrumentation\/[^/]*\/(.*)/.exec(instrumentationKey)[1];
-
-        const isDisabled =
-          config.tracing.disabledTracers.includes(extractedInstrumentationName.toLowerCase()) ||
-          (instrumentationModules[instrumentationKey].instrumentationName &&
-            config.tracing.disabledTracers.includes(instrumentationModules[instrumentationKey].instrumentationName));
-
-        if (!isDisabled) {
+        if (!isInstrumentationDisabled(config, instrumentationKey)) {
           instrumentationModules[instrumentationKey].activate(extraConfig);
         }
       });
