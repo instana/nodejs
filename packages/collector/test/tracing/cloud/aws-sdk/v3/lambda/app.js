@@ -9,13 +9,20 @@ require('../../../../../../src')();
 const { LambdaClient, InvokeCommand, Lambda, InvokeAsyncCommand } = require('@aws-sdk/client-lambda');
 const express = require('express');
 const logPrefix = `AWS SDK v3 Lambda (${process.pid}):\t`;
-const AWS_REGION = 'us-east-2';
-const lambda = new LambdaClient({ region: AWS_REGION });
 const functionName = process.env.AWS_LAMBDA_FUNCTION_NAME || 'wrapped-async';
 const log = require('@instana/core/test/test_util/log').getLogger(logPrefix);
-const lambdav2 = new Lambda({ region: AWS_REGION });
 const app = express();
 const port = require('../../../../../test_util/app-port')();
+const clientOpts = {
+  credentials: {
+    accessKeyId: 'test',
+    secretAccessKey: 'test'
+  },
+  endpoint: process.env.LOCALSTACK_AWS,
+  region: 'us-east-2'
+};
+const lambda = new LambdaClient(clientOpts);
+const lambdav2 = new Lambda(clientOpts);
 const operations = {
   invoke: {
     FunctionName: functionName,

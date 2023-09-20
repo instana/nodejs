@@ -44,6 +44,7 @@ function start(version) {
         appPath: path.join(__dirname, 'app'),
         useGlobalAgent: true,
         env: {
+          AWS_ENDPOINT: process.env.LOCALSTACK_AWS,
           AWS_LAMBDA_FUNCTION_NAME: functionName
         }
       });
@@ -115,6 +116,7 @@ function start(version) {
         useGlobalAgent: true,
         tracingEnabled: false,
         env: {
+          AWS_ENDPOINT: process.env.LOCALSTACK_AWS,
           AWS_LAMBDA_FUNCTION_NAME: functionName
         }
       });
@@ -144,6 +146,7 @@ function start(version) {
         appPath: path.join(__dirname, 'app'),
         useGlobalAgent: true,
         env: {
+          AWS_ENDPOINT: process.env.LOCALSTACK_AWS,
           AWS_LAMBDA_FUNCTION_NAME: functionName
         }
       });
