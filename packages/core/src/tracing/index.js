@@ -101,6 +101,7 @@ const instrumentations = [
  * @property {Function} [updateConfig]
  * @property {boolean} [batchable]
  * @property {string} [spanName]
+ * @property {string} [instrumentationName]
  */
 
 /**
@@ -122,6 +123,20 @@ exports.spanBuffer = spanBuffer;
 exports.supportedVersion = supportedVersion;
 exports.util = tracingUtil;
 exports.esmSupportedVersion = esmSupportedVersion;
+
+/**
+ * @param {import('../util/normalizeConfig').InstanaConfig} cfg
+ * @param {string} instrumentationKey
+ */
+const isInstrumentationDisabled = (cfg, instrumentationKey) => {
+  const extractedInstrumentationName = instrumentationKey.match(/.\/instrumentation\/[^/]*\/(.*)/)[1];
+
+  return (
+    cfg.tracing.disabledTracers.includes(extractedInstrumentationName.toLowerCase()) ||
+    (instrumentationModules[instrumentationKey].instrumentationName &&
+      cfg.tracing.disabledTracers.includes(instrumentationModules[instrumentationKey].instrumentationName))
+  );
+};
 
 /**
  * @param {Array.<InstanaInstrumentedModule>} _additionalInstrumentationModules
@@ -182,9 +197,8 @@ function initInstrumenations(_config) {
   if (!instrumenationsInitialized) {
     instrumentations.forEach(instrumentationKey => {
       instrumentationModules[instrumentationKey] = require(instrumentationKey);
-      const instrumentationName = instrumentationKey.match(/.\/instrumentation\/[^/]*\/(.*)/)[1];
-      const isInstrumentationDisabled = _config.tracing.disabledTracers.includes(instrumentationName.toLowerCase());
-      if (!isInstrumentationDisabled) {
+
+      if (!isInstrumentationDisabled(_config, instrumentationKey)) {
         instrumentationModules[instrumentationKey].init(_config);
       }
 
@@ -216,13 +230,7 @@ exports.activate = function activate(extraConfig = {}) {
 
     if (automaticTracingEnabled) {
       instrumentations.forEach(instrumentationKey => {
-        const instrumentationName = /.\/instrumentation\/[^/]*\/(.*)/.exec(instrumentationKey)[1];
-
-        const isDisabled =
-          config.tracing.disabledTracers.findIndex(disabledKey => instrumentationName.toLowerCase() === disabledKey) !==
-          -1;
-
-        if (!isDisabled) {
+        if (!isInstrumentationDisabled(config, instrumentationKey)) {
           instrumentationModules[instrumentationKey].activate(extraConfig);
         }
       });
