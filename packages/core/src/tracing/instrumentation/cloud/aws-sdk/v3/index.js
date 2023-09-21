@@ -79,10 +79,11 @@ function shimSmithySend(originalSend) {
     const smithySendArgs = getFunctionArguments(arguments);
     const command = smithySendArgs[0];
 
-    let serviceId = self.config && self.config.serviceId;
-    serviceId = serviceId === 'Lambda' ? 'aws.lambda.invoke' : serviceId;
-    let awsProduct = serviceId && awsProducts.find(aws => aws.spanName === serviceId.toLowerCase());
-
+    const serviceId = self.config && self.config.serviceId;
+    let awsProduct =
+      serviceId &&
+      (awsProducts.find(aws => aws.spanName === serviceId.toLowerCase()) ||
+        awsProducts.find(aws => aws.customProductName === serviceId.toLowerCase()));
     if (awsProduct && awsProduct.supportsOperation(command.constructor.name)) {
       return awsProduct.instrumentedSmithySend(self, isActive, originalSend, smithySendArgs);
     } else {

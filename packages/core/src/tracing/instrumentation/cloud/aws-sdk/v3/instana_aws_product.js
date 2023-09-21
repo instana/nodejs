@@ -9,10 +9,12 @@ class InstanaAWSProduct {
   /**
    * @param {string} spanName
    * @param {Array.<string>} operations
+   * @param {string} customProductName
    */
-  constructor(spanName, operations) {
+  constructor(spanName, operations, customProductName) {
     this.spanName = spanName;
     this.operations = operations || [];
+    this.customProductName = customProductName || '';
   }
 
   instrumentedSmithySend(/** ctx, originalSend, smithySendArgs */) {

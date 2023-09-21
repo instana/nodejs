@@ -12,6 +12,7 @@ const { InstanaAWSProduct } = require('./instana_aws_product');
 const MAX_CONTEXT_SIZE = 3582;
 
 const SPAN_NAME = 'aws.lambda.invoke';
+const CUSTOM_PRODUCT_NAME = 'lambda';
 
 class InstanaAWSLambda extends InstanaAWSProduct {
   propagateInstanaHeaders(originalArgs, span, suppressed = false) {
@@ -118,4 +119,4 @@ class InstanaAWSLambda extends InstanaAWSProduct {
   }
 }
 
-module.exports = new InstanaAWSLambda(SPAN_NAME);
+module.exports = new InstanaAWSLambda(SPAN_NAME, null, CUSTOM_PRODUCT_NAME);

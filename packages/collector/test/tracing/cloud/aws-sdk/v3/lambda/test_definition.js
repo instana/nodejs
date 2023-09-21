@@ -17,8 +17,9 @@ const { verifyHttpRootEntry, verifyExitSpan } = require('@instana/core/test/test
 
 const SPAN_NAME = 'aws.lambda.invoke';
 const functionName = 'wrapped-async';
+let appControls;
 let mochaSuiteFn;
-
+let utils;
 const availableCtx = [null, '{"Custom": {"awesome_company": "Instana"}}', '{"Custom": "Something"}'];
 const requestMethods = ['Callback', 'Promise', 'CallbackV2', 'PromiseV2'];
 const availableOperations = ['invoke', 'invokeAsync'];
@@ -31,25 +32,38 @@ function start(version) {
   } else {
     mochaSuiteFn = describe;
   }
-
+  utils = require('./utils');
   const retryTime = config.getTestTimeout() * 5;
+  before(async () => {
+    await utils.createFunction(functionName);
+  });
 
+  after(async () => {
+    await utils.removeFunction(functionName);
+  });
   mochaSuiteFn(`npm: ${version}`, function () {
     this.timeout(config.getTestTimeout() * 10);
     globalAgent.setUpCleanUpHooks();
     const agentControls = globalAgent.instance;
 
     describe('tracing enabled, no suppression', function () {
-      const appControls = new ProcessControls({
-        appPath: path.join(__dirname, 'app'),
-        useGlobalAgent: true,
-        env: {
-          AWS_ENDPOINT: process.env.LOCALSTACK_AWS,
-          AWS_LAMBDA_FUNCTION_NAME: functionName
-        }
+      before(async () => {
+        appControls = new ProcessControls({
+          appPath: path.join(__dirname, 'app'),
+          useGlobalAgent: true,
+          env: {
+            AWS_LAMBDA_FUNCTION_NAME: functionName,
+            AWS_ENDPOINT: process.env.LOCALSTACK_AWS
+          }
+        });
+
+        await appControls.startAndWaitForAgentConnection();
       });
 
-      ProcessControls.setUpHooksWithRetryTime(retryTime, appControls);
+      after(async () => {
+        await appControls.stop();
+      });
+
       availableOperations.forEach(operation => {
         availableCtx.forEach(ctx => {
           const requestMethod = getNextCallMethod();
@@ -111,16 +125,23 @@ function start(version) {
     describe('tracing disabled', () => {
       this.timeout(config.getTestTimeout() * 2);
 
-      const appControls = new ProcessControls({
-        appPath: path.join(__dirname, 'app'),
-        useGlobalAgent: true,
-        tracingEnabled: false,
-        env: {
-          AWS_ENDPOINT: process.env.LOCALSTACK_AWS,
-          AWS_LAMBDA_FUNCTION_NAME: functionName
-        }
+      before(async () => {
+        appControls = new ProcessControls({
+          appPath: path.join(__dirname, 'app'),
+          useGlobalAgent: true,
+          tracingEnabled: false,
+          env: {
+            AWS_LAMBDA_FUNCTION_NAME: functionName,
+            AWS_ENDPOINT: process.env.LOCALSTACK_AWS
+          }
+        });
+
+        await appControls.startAndWaitForAgentConnection();
       });
-      ProcessControls.setUpHooksWithRetryTime(retryTime, appControls);
+
+      after(async () => {
+        await appControls.stop();
+      });
       describe('attempt to get result', () => {
         availableOperations.forEach(operation => {
           const requestMethod = getNextCallMethod();
@@ -142,16 +163,22 @@ function start(version) {
     });
 
     describe('tracing enabled but suppressed', () => {
-      const appControls = new ProcessControls({
-        appPath: path.join(__dirname, 'app'),
-        useGlobalAgent: true,
-        env: {
-          AWS_ENDPOINT: process.env.LOCALSTACK_AWS,
-          AWS_LAMBDA_FUNCTION_NAME: functionName
-        }
+      before(async () => {
+        appControls = new ProcessControls({
+          appPath: path.join(__dirname, 'app'),
+          useGlobalAgent: true,
+          env: {
+            AWS_LAMBDA_FUNCTION_NAME: functionName,
+            AWS_ENDPOINT: process.env.LOCALSTACK_AWS
+          }
+        });
+
+        await appControls.startAndWaitForAgentConnection();
       });
 
-      ProcessControls.setUpHooksWithRetryTime(retryTime, appControls);
+      after(async () => {
+        await appControls.stop();
+      });
 
       describe('attempt to get result', () => {
         availableOperations.forEach(operation => {

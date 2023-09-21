@@ -14,10 +14,6 @@ const log = require('@instana/core/test/test_util/log').getLogger(logPrefix);
 const app = express();
 const port = require('../../../../../test_util/app-port')();
 const clientOpts = {
-  credentials: {
-    accessKeyId: 'test',
-    secretAccessKey: 'test'
-  },
   endpoint: process.env.LOCALSTACK_AWS,
   region: 'us-east-2'
 };
