@@ -24,7 +24,7 @@ const USE_ATLAS = process.env.USE_ATLAS === 'true';
   let mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
   if (version === 'latest') {
-    mochaSuiteFn = semver.lt(process.versions.node, '14.0.0') ? describe.skip : mochaSuiteFn;
+    mochaSuiteFn = semver.lt(process.versions.node, '16.20.1') ? describe.skip : mochaSuiteFn;
   } else if (version === 'v4') {
     mochaSuiteFn = semver.lt(process.versions.node, '12.0.0') ? describe.skip : mochaSuiteFn;
   }
