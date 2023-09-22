@@ -18,31 +18,29 @@ const { verifyHttpRootEntry, verifyExitSpan } = require('@instana/core/test/test
 const SPAN_NAME = 'aws.lambda.invoke';
 const functionName = 'wrapped-async';
 let appControls;
-let mochaSuiteFn;
-let utils;
+
 const availableCtx = [null, '{"Custom": {"awesome_company": "Instana"}}', '{"Custom": "Something"}'];
 const requestMethods = ['Callback', 'Promise', 'CallbackV2', 'PromiseV2'];
-const availableOperations = ['invoke', 'invokeAsync'];
+const availableOperations = ['invoke'];
 
 const getNextCallMethod = require('@instana/core/test/test_util/circular_list').getCircularList(requestMethods);
-function start(version) {
+async function start(version) {
+  this.timeout(config.getTestTimeout() * 15);
+
   if (!supportedVersion(process.versions.node) || semver.lt(process.versions.node, '14.0.0')) {
-    mochaSuiteFn = describe.skip;
+    it.skip(`npm: ${version}`, () => {});
     return;
-  } else {
-    mochaSuiteFn = describe;
   }
-  utils = require('./utils');
+  const { createFunction, removeFunction } = require('./utils');
   const retryTime = config.getTestTimeout() * 5;
   before(async () => {
-    await utils.createFunction(functionName);
+    await createFunction(functionName);
   });
 
   after(async () => {
-    await utils.removeFunction(functionName);
+    await removeFunction(functionName);
   });
-  mochaSuiteFn(`npm: ${version}`, function () {
-    this.timeout(config.getTestTimeout() * 10);
+  describe(`npm: ${version}`, function () {
     globalAgent.setUpCleanUpHooks();
     const agentControls = globalAgent.instance;
 

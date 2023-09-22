@@ -4,7 +4,12 @@
 
 'use strict';
 
-const { LambdaClient, CreateFunctionCommand, DeleteFunctionCommand } = require('@aws-sdk/client-lambda');
+const {
+  LambdaClient,
+  CreateFunctionCommand,
+  DeleteFunctionCommand,
+  GetFunctionConfigurationCommand
+} = require('@aws-sdk/client-lambda');
 const AdmZip = require('adm-zip');
 const clientOpts = {
   credentials: {
@@ -37,8 +42,28 @@ exports.createFunction = async functionName => {
       ZipFile: zipBuffer
     }
   };
-  return lambdaClient.send(new CreateFunctionCommand(createFunctionParams));
+  await lambdaClient.send(new CreateFunctionCommand(createFunctionParams));
+
+  return new Promise(resolve => {
+    const intervalId = setInterval(async () => {
+      try {
+        const isCreationComplete = await isFunctionCreationComplete(functionName);
+        if (isCreationComplete) {
+          clearInterval(intervalId);
+          resolve(true);
+        }
+      } catch (error) {
+        clearInterval(intervalId);
+        resolve(false);
+      }
+    }, 3000);
+  });
 };
+
+async function isFunctionCreationComplete(functionName) {
+  const data = await lambdaClient.send(new GetFunctionConfigurationCommand({ FunctionName: functionName }));
+  return data.State === 'Active';
+}
 
 exports.removeFunction = async functionName => {
   const deleteFunctionParams = {
