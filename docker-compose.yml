@@ -222,4 +222,6 @@ services:
     environment:
       - DEBUG=${DEBUG-}
       - DOCKER_HOST=unix:///var/run/docker.sock
-      - LAMBDA_RUNTIME_ENVIRONMENT_TIMEOUT=30000
+      - LAMBDA_RUNTIME_ENVIRONMENT_TIMEOUT=30
+      - PROVIDER_OVERRIDE_LAMBDA=legacy
+      - LAMBDA_EXECUTOR=docker

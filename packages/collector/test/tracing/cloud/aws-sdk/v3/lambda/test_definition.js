@@ -25,14 +25,14 @@ const availableOperations = ['invoke'];
 
 const getNextCallMethod = require('@instana/core/test/test_util/circular_list').getCircularList(requestMethods);
 async function start(version) {
-  this.timeout(config.getTestTimeout() * 15);
+  this.timeout(config.getTestTimeout() * 20);
 
   if (!supportedVersion(process.versions.node) || semver.lt(process.versions.node, '14.0.0')) {
     it.skip(`npm: ${version}`, () => {});
     return;
   }
   const { createFunction, removeFunction } = require('./utils');
-  const retryTime = config.getTestTimeout() * 5;
+  const retryTime = config.getTestTimeout() * 10;
   before(async () => {
     await createFunction(functionName);
   });
@@ -121,8 +121,6 @@ async function start(version) {
     });
 
     describe('tracing disabled', () => {
-      this.timeout(config.getTestTimeout() * 2);
-
       before(async () => {
         appControls = new ProcessControls({
           appPath: path.join(__dirname, 'app'),
