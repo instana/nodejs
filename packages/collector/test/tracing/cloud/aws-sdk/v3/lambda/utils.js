@@ -12,10 +12,6 @@ const {
 } = require('@aws-sdk/client-lambda');
 const AdmZip = require('adm-zip');
 const clientOpts = {
-  credentials: {
-    accessKeyId: 'test',
-    secretAccessKey: 'test'
-  },
   endpoint: process.env.LOCALSTACK_AWS,
   region: 'us-east-2'
 };
@@ -42,7 +38,7 @@ exports.createFunction = async functionName => {
       ZipFile: zipBuffer
     }
   };
-  await lambdaClient.send(new CreateFunctionCommand(createFunctionParams));
+    await lambdaClient.send(new CreateFunctionCommand(createFunctionParams));
 
   return new Promise(resolve => {
     const intervalId = setInterval(async () => {
@@ -56,13 +52,13 @@ exports.createFunction = async functionName => {
         clearInterval(intervalId);
         resolve(false);
       }
-    }, 3000);
-  });
+    }, 100);
+    });
 };
 
 async function isFunctionCreationComplete(functionName) {
   const data = await lambdaClient.send(new GetFunctionConfigurationCommand({ FunctionName: functionName }));
-  return data.State === 'Active';
+    return data.State === 'Active';
 }
 
 exports.removeFunction = async functionName => {
