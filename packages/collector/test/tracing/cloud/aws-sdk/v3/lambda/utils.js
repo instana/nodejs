@@ -38,7 +38,7 @@ exports.createFunction = async functionName => {
       ZipFile: zipBuffer
     }
   };
-    await lambdaClient.send(new CreateFunctionCommand(createFunctionParams));
+  await lambdaClient.send(new CreateFunctionCommand(createFunctionParams));
 
   return new Promise(resolve => {
     const intervalId = setInterval(async () => {
@@ -53,17 +53,24 @@ exports.createFunction = async functionName => {
         resolve(false);
       }
     }, 100);
-    });
+  });
 };
 
 async function isFunctionCreationComplete(functionName) {
   const data = await lambdaClient.send(new GetFunctionConfigurationCommand({ FunctionName: functionName }));
-    return data.State === 'Active';
+  return data.State === 'Active';
 }
 
 exports.removeFunction = async functionName => {
-  const deleteFunctionParams = {
-    FunctionName: functionName
-  };
-  await lambdaClient.send(new DeleteFunctionCommand(deleteFunctionParams));
+  try {
+    const deleteFunctionParams = {
+      FunctionName: functionName
+    };
+    await lambdaClient.send(new DeleteFunctionCommand(deleteFunctionParams));
+  } catch (error) {
+    if (error.name === 'ResourceNotFoundException') {
+      // eslint-disable-next-line no-console
+      console.log(`Lambda function not found: ${functionName}`);
+    }
+  }
 };

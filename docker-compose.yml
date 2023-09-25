@@ -222,6 +222,7 @@ services:
       - DEBUG=1
       - DOCKER_HOST=unix:///var/run/docker.sock
       - LAMBDA_RUNTIME_ENVIRONMENT_TIMEOUT=30
+      - PROVIDER_OVERRIDE_LAMBDA=legacy  #test for legacy 
     volumes:
       # - "${LOCALSTACK_VOLUME_DIR:-./volume}:/var/lib/localstack"
       - "/var/run/docker.sock:/var/run/docker.sock"

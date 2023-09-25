@@ -34,6 +34,7 @@ async function start(version) {
   const { createFunction, removeFunction } = require('./utils');
   const retryTime = config.getTestTimeout() * 10;
   before(async () => {
+    await removeFunction(functionName);
     await createFunction(functionName);
   });
 
