@@ -1,0 +1,339 @@
+---
+
+instrumentationDirectory: packages/core/src/tracing/instrumentation
+sourceFileSuffix: .js
+firstTag: v1.0.0
+
+overrides:
+
+  # Show support for this package as support for "Apollo Federation" in the documentation.
+  "@apollo/gateway":
+    displayName: Apollo Federation
+
+  # We instrument @aws-sdk/smithy-client (the legacy package) as well as @smithy/smithy-client (the newer package name).
+  # Both refer to support for various AWS SDK v3 clients. See the override definition for @smithy/smithy-client, which
+  # is mapped to the individual @aws-sdk/client-... packages. We only need this mapping for one of the two packages, and
+  # we arbitrarily define the mapping for @smithy/smithy-client and ignore @aws-sdk/smithy-client completely.
+  "@aws-sdk/smithy-client":
+    ignore: 'true'
+
+  # We do not have a dev dependency for @prisma/client, it is installed on the fly by the test.
+  "@prisma/client":
+    displayName: Prisma
+    testedVersions:
+    - 4.5.0
+    supportedSinceVersion: v2.11.0
+
+  "@hapi/call":
+    displayName: hapi path templates (@hapi/call)
+    supportedSinceVersion: v1.68.0
+    firstHistoricallyTestedVersion: 5.1.0
+
+  # The main package that is instrumented is named "redis", "@redis/client" is only additionally instrumented to collect
+  # the available Redis commands at startup. We do not need dedicated documentation for this package.
+  "@redis/client":
+    ignore: 'true'
+
+  # We only instrument this central package @smithy/smithy-client (plus the legacy package @aws-sdk/smithy-client) via
+  # the require hook to support a numberof AWS SDK v3 client libraries. Thus when finding a require hook for
+  # @smithy/smithy-client, we actually want to check package-lock.json's for the individial @aws-sdk/client-...
+  # dependencies.
+  "@smithy/smithy-client":
+    mapTo:
+    - "@aws-sdk/client-dynamodb"
+    - "@aws-sdk/lib-dynamodb"
+    - "@aws-sdk/client-kinesis"
+    - "@aws-sdk/client-s3"
+    - "@aws-sdk/client-sns"
+    - "@aws-sdk/client-sqs"
+
+  # This instrumentation is in the packages/core/src/tracing/instrumentation/cloud/ folder, thus we extract the category
+  # "cloud" from the path. But we also want to list it under the database category. Same for other @aws-sdk client
+  # packages.
+  "@aws-sdk/client-dynamodb":
+    displayName: AWS SDK v3 DynamoDB
+    additionalCategories:
+    - database
+
+  "@aws-sdk/client-kinesis":
+    displayName: AWS SDK v3 Kinesis
+    additionalCategories:
+    - messaging
+
+  "@aws-sdk/client-s3":
+    displayName: AWS SDK v3 S3
+    additionalCategories:
+    - database
+
+  "@aws-sdk/client-sns":
+    displayName: AWS SDK v3 SNS
+    additionalCategories:
+    - messaging
+
+  "@aws-sdk/client-sqs":
+    displayName: AWS SDK v3 SQS
+    additionalCategories:
+    - messaging
+
+  "@aws-sdk/lib-dynamodb":
+    additionalCategories:
+    - database
+
+  "@google-cloud/pubsub":
+    displayName: Google Cloud PubSub
+    additionalCategories:
+    - messaging
+
+  "@google-cloud/storage":
+    displayName: Google Cloud Storage
+    additionalCategories:
+    - database
+
+  # See additionalLibraries and the various entries for aws-sdk v2 there.
+  aws-sdk:
+    ignore: true
+
+  bunyan:
+    supportedSinceVersion: v1.54.0
+    firstHistoricallyTestedVersion: 1.8.12
+
+  # Bluebird was added to the devDependency section already in one of the first commits
+  # (e88e0cdc4aa95b167e075d00e4d502475fc111f6), but we didn't have instrumentation for it back then. (It was added for
+  # other reasons to the dev dependencies.) Tracing support only came in a later commit.
+  bluebird:
+    supportedAddedWithCommit: 5807fcae721c1b5b9fbf61d64402778bf9c2b850
+
+  cls-hooked:
+    ignore: true
+
+  # We didn't have a package-lock.json file back when support for elasticsearch was added. Thus we specify the version
+  # that was tested back then directly.
+  # The package-lock.json file has only been added with commit 6bf5a3abd0803820257246d20c681e6085b45821, between version
+  # 1.28.1 and 1.29.0.
+  elasticsearch:
+    displayName: elasticsearch (deprecated legacy package)
+    firstHistoricallyTestedVersion: 11.0.1
+
+  # Express.js was added to the devDependency section already in one of the first commits
+  # (979e269923c55311b3902f7b760a192cd1a1d640), but we didn't have specific instrumatation Express path templates back
+  # then. (It was added for other reasons to the dev dependencies.) Specific tracing support for Express (capturing
+  # errors in Express handlers) only came in a later commit.
+  express:
+    displayName: Express error handling & path templates
+    # This commit (617181db731d81344c69a416b948b4b485d646bb) introduced support for Express.js error handling. Support
+    # for capturing path templates came with commit 48676ca9691b9aae855b980f5ac2661043099e18/release 1.43.0. I don't
+    # think this distinction matters anymore.
+    supportedAddedWithCommit: 617181db731d81344c69a416b948b4b485d646bb
+
+  grpc:
+    # grpc suppor was added in 1.59.0, but it had a rather severe bug, which was fixed in version 1.63.1.
+    supportedSinceVersion: v1.63.1
+
+  # We didn't have a package-lock.json file back when support for kafka-node was added. Thus we specify the version
+  # that was tested back then directly.
+  kafka-node:
+    firstHistoricallyTestedVersion: 1.0.7
+
+  koa-router:
+    displayName: koa-router path templates
+
+  # See additionalPackages#edgemicro
+  memored:
+    ignore: true
+
+  # We didn't have a package-lock.json file back when support for mongodb was added. Thus we specify the version
+  # that was tested back then directly.
+  mongodb:
+    firstHistoricallyTestedVersion: 2.2.9
+
+  mongodb-core:
+    mapTo: mongodb
+
+  mysql:
+    firstHistoricallyTestedVersion: 2.13.0
+
+  mysql2/promise:
+    mapTo: mysql2
+
+  pg:
+    displayName: Postgres (pg)
+
+  pg-native:
+    displayName: Postgres (pg-native)
+
+  # The pino dev dependency moved around quite a bit between the root package-lock.json and
+  # the packages' package-lock.json files. Somehow that throws off git bisect.
+  pino:
+    supportedAddedWithCommit: 1f6518726714e9a7dfcc3a3faeedf6ae1ae707fc
+
+
+additionalLibraries:
+
+# The core http module is not instrumented via a requireHook statement. Also support.lowerBound/upperBound are treated
+# differently than for normal third-party libraries, since this is a core module, and we always support it for all
+# Node.js versions that are supported. This is why this module is listed as an additionalLibraries entry.
+- name: http-client
+  displayName: HTTP(s) clients
+  supportedSinceVersion: v1.10.0
+  support:
+    lowerBound: all supported Node.js versions
+    upperBound: all supported Node.js versions
+  firstHistoricallyTestedVersion: 4.0.0
+  link: https://nodejs.org/api/http.html
+  # Surprisingly, Node.js is available on npm (!) so the following works and provides the latest version of the Node.js
+  # runtime :)
+  packageNameForLatestAvailableVersion: node
+
+# The core http module is not instrumented via a requireHook statement. Also support.lowerBound/upperBound are treated
+# differently than for normal third-party libraries, since this is a core module, and we always support it for all
+# Node.js versions that are supported. This is why this module is listed as an additionalLibraries entry.
+- name: http-server
+  displayName: HTTP(s) servers
+  supportedSinceVersion: v1.10.0
+  support:
+    lowerBound: all supported Node.js versions
+    upperBound: all supported Node.js versions
+  firstHistoricallyTestedVersion: 4.0.0
+  link: https://nodejs.org/api/http.html
+  packageNameForLatestAvailableVersion: node
+
+# The core http2 module is not instrumented via a requireHook statement. Also support.lowerBound/upperBound are treated
+# differently than for normal third-party libraries, since this is a core module, and we always support it for all
+# Node.js versions that are supported. This is why this module is listed as an additionalLibraries entry.
+- name: http2-client
+  displayName: HTTP/2 clients
+  supportedSinceVersion: v1.103.0
+  support:
+    lowerBound: all supported Node.js versions
+    upperBound: all supported Node.js versions
+  firstHistoricallyTestedVersion: 4.0.0
+  link: https://nodejs.org/api/http2.html
+  packageNameForLatestAvailableVersion: node
+
+# The core http2 module is not instrumented via a requireHook statement. Also support.lowerBound/upperBound are treated
+# differently than for normal third-party libraries, since this is a core module, and we always support it for all
+# Node.js versions that are supported. This is why this module is listed as an additionalLibraries entry.
+- name: http2-server
+  displayName: HTTP/2 servers
+  supportedSinceVersion: v1.103.0
+  support:
+    lowerBound: all supported Node.js versions
+    upperBound: all supported Node.js versions
+  firstHistoricallyTestedVersion: 4.0.0
+  link: https://nodejs.org/api/http2.html
+  packageNameForLatestAvailableVersion: node
+
+- name: request
+  supportedSinceVersion: v1.10.0
+  support:
+    lowerBound: 2.74.0
+    upperBound: 2.88.2
+
+- name: request-promise
+  supportedSinceVersion: v1.10.0
+  support:
+    lowerBound: 4.1.1
+    upperBound: 4.2.6
+
+# All information about AWS SDK v2 support is added manually here, since it is not expected to change in the future
+# (apart from maybe dropping support for it at some point).
+- name: aws-sdk-v2/s3
+  displayName: AWS SDK v2 S3
+  supportedSinceVersion: v1.115.0
+  firstHistoricallyTestedVersion: 2.553.0
+  support:
+    lowerBound: 2.916.0
+    upperBound: 2.1450.0
+  link: https://www.npmjs.com/package/aws-sdk
+  packageNameForLatestAvailableVersion: aws-sdk
+
+- name: aws-sdk-v2/dynamodb
+  displayName: AWS SDK v2 DynamoDB
+  supportedSinceVersion: v1.116.0
+  firstHistoricallyTestedVersion: 2.553.0
+  support:
+    lowerBound: 2.916.0
+    upperBound: 2.1450.0
+  link: https://www.npmjs.com/package/aws-sdk
+  packageNameForLatestAvailableVersion: aws-sdk
+
+- name: aws-sdk-v2/sns
+  displayName: AWS SDK v2 SNS
+  supportedSinceVersion: v1.136.0
+  firstHistoricallyTestedVersion: 2.916.0
+  support:
+    lowerBound: 2.916.0
+    upperBound: 2.1450.0
+  link: https://www.npmjs.com/package/aws-sdk
+  packageNameForLatestAvailableVersion: aws-sdk
+
+- name: aws-sdk-v2/sqs
+  displayName: AWS SDK v2 SQS
+  supportedSinceVersion: v1.114.0
+  firstHistoricallyTestedVersion: 2.553.0
+  support:
+    lowerBound: 2.916.0
+    upperBound: 2.1450.0
+  link: https://www.npmjs.com/package/aws-sdk
+  packageNameForLatestAvailableVersion: aws-sdk
+
+- name: aws-sdk-v2/kinesis
+  displayName: AWS SDK v2 Kinesis
+  supportedSinceVersion: v1.120.0
+  firstHistoricallyTestedVersion: 2.553.0
+  support:
+    lowerBound: 2.916.0
+    upperBound: 2.1450.0
+  link: https://www.npmjs.com/package/aws-sdk
+  packageNameForLatestAvailableVersion: aws-sdk
+
+# The edgemicro instrumentation is quite atypical and it is easier to add the data manually than to let the tool figure
+# it out. No future updates are expected for this library at the moment.
+- name: edgemicro
+  displayName: Apigee Microgateway/edgemicro
+  testedVersions:
+  - 2.4.0
+  - 2.5.0
+  - 3.0.9
+  supportedSinceVersion: v1.89.0
+
+- name: bookshelf
+  displayName: bookshelf
+  categories:
+  - database
+  support:
+    lowerBound: 1.2.0
+    upperBound: 1.2.0
+  supportedSinceVersion: v1.136.0
+  link: https://www.npmjs.com/package/bookshelf
+
+- name: knex
+  displayName: knex
+  categories:
+  - database
+  support:
+    lowerBound: 0.95.11
+    upperBound: 0.95.11
+  supportedSinceVersion: v1.136.0
+  link: https://www.npmjs.com/package/knex
+
+- name: sequelize
+  categories:
+  - database
+  support:
+    lowerBound: 6.21.3
+    upperBound: 6.21.3
+  supportedSinceVersion: v1.136.0
+  firstHistoricallyTestedVersion: 6.3.4
+  link: https://www.npmjs.com/package/sequelize
+
+- name: typeorm
+  categories:
+  - database
+  support:
+    lowerBound: 0.3.17
+    upperBound: 0.3.17
+  supportedSinceVersion: v1.136.0
+  firstHistoricallyTestedVersion: 0.2.37
+  link: https://www.npmjs.com/package/typeorm
+
