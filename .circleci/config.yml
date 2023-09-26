@@ -335,7 +335,7 @@ couchbase-setup: &couchbase-setup
         tail -f /dev/null
 
 localstack: &localstack
-  image: localstack/localstack
+  image: localstack/localstack:latest
   name: localstack
 
 schema-registry: &schema-registry
