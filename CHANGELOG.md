@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [2.33.1](https://github.com/instana/nodejs/compare/v2.33.0...v2.33.1) (2023-09-26)
+
+
+### Bug Fixes
+
+* improved how to disable aws sdk instrumentation ([#866](https://github.com/instana/nodejs/issues/866)) ([d0483c2](https://github.com/instana/nodejs/commit/d0483c2f80a5639f56cb95ef98ac8f5085aea5fc))
+
+
+
+
+
 # [2.33.0](https://github.com/instana/nodejs/compare/v2.32.0...v2.33.0) (2023-09-18)
 
 
