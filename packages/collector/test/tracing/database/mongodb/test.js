@@ -20,11 +20,13 @@ const globalAgent = require('../../../globalAgent');
 
 const USE_ATLAS = process.env.USE_ATLAS === 'true';
 
-['latest', 'v4', 'v3'].forEach(version => {
+['latest', 'v5', 'v4'].forEach(version => {
   let mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
   if (version === 'latest') {
     mochaSuiteFn = semver.lt(process.versions.node, '16.20.1') ? describe.skip : mochaSuiteFn;
+  } else if (version === 'v5') {
+    mochaSuiteFn = semver.lt(process.versions.node, '14.0.0') ? describe.skip : mochaSuiteFn;
   } else if (version === 'v4') {
     mochaSuiteFn = semver.lt(process.versions.node, '12.0.0') ? describe.skip : mochaSuiteFn;
   }
