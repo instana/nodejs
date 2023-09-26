@@ -6,7 +6,7 @@
 'use strict';
 
 require('./mockVersion');
-const isLatest = process.env.MONGODB_VERSION === 'latest';
+const isLatest = process.env.MONGODB_VERSION === 'latest' || process.env.MONGODB_VERSION === 'v5';
 
 const agentPort = process.env.INSTANA_AGENT_PORT;
 
