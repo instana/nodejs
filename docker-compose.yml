@@ -220,6 +220,7 @@ services:
     environment:
       - DEBUG=1
       - DOCKER_HOST=unix:///var/run/docker.sock
+      - LAMBDA_REMOTE_DOCKER=true
       # - LAMBDA_RUNTIME_ENVIRONMENT_TIMEOUT=30
       # - PROVIDER_OVERRIDE_LAMBDA=legacy  #test for legacy 
     volumes:
