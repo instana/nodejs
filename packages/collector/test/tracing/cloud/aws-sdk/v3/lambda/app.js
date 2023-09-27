@@ -48,14 +48,22 @@ async function execOperation(op, cb, ctx = null) {
   }
   const command = new commandMapping[op](options);
   if (typeof cb === 'function') {
+    // eslint-disable-next-line no-console
+    console.time('lambdaExecution');
     lambda.send(command, (err, data) => {
       cb(err, {
         data,
         clientContext: options.ClientContext
       });
+      // eslint-disable-next-line no-console
+      console.timeEnd('lambdaExecution'); //
     });
   } else {
+    // eslint-disable-next-line no-console
+    console.time('invokeOperation');
     const response = await lambda.send(command);
+    // eslint-disable-next-line no-console
+    console.timeEnd('invokeOperation');
     return {
       data: response,
       clientContext: options.ClientContext || ''

@@ -437,7 +437,7 @@ jobs:
       - <<: *localstack
     <<: *shared
     parallelism: 15
-    resource_class: medium+
+    resource_class: xlarge
 
   "node-16":
     docker:

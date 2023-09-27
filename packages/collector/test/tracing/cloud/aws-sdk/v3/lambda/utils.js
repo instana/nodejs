@@ -38,6 +38,8 @@ exports.createFunction = async functionName => {
       ZipFile: zipBuffer
     }
   };
+  // eslint-disable-next-line no-console
+  console.time('Createdfunction');
   await lambdaClient.send(new CreateFunctionCommand(createFunctionParams));
 
   return new Promise(resolve => {
@@ -53,6 +55,9 @@ exports.createFunction = async functionName => {
         resolve(false);
       }
     }, 100);
+  }).then(() => {
+    // eslint-disable-next-line no-console
+    console.timeEnd('Createdfunction');
   });
 };
 
