@@ -44,21 +44,12 @@ const USE_ATLAS = process.env.USE_ATLAS === 'true';
     ['legacy', 'unified'].forEach(topology => registerSuite.bind(this)(topology));
 
     function registerSuite(topology) {
-      let describeStr = 'default';
+      const describeStr = 'default';
       const env = { MONGODB_VERSION: version };
 
-      if (topology === 'legacy' && version !== 'v3') {
+      if (topology === 'legacy') {
         return;
       }
-
-      if (version === 'v3') {
-        describeStr = `with topology ${topology}`;
-
-        if (topology === 'legacy') {
-          env.USE_LEGACY_3_X_CONNECTION_MECHANISM = true;
-        }
-      }
-
       describe(describeStr, () => {
         const controls = new ProcessControls({
           dirname: __dirname,
@@ -147,33 +138,18 @@ const USE_ATLAS = process.env.USE_ATLAS === 'true';
                     'update',
                     null,
                     null,
-                    version === 'v3'
-                      ? JSON.stringify([
-                          {
-                            q: {
-                              unique
-                            },
-                            u: {
-                              $set: {
-                                content: 'updated content'
-                              }
-                            },
-                            upsert: false,
-                            multi: false
+                    JSON.stringify([
+                      {
+                        q: {
+                          unique
+                        },
+                        u: {
+                          $set: {
+                            content: 'updated content'
                           }
-                        ])
-                      : JSON.stringify([
-                          {
-                            q: {
-                              unique
-                            },
-                            u: {
-                              $set: {
-                                content: 'updated content'
-                              }
-                            }
-                          }
-                        ])
+                        }
+                      }
+                    ])
                   );
 
                   expectHttpExit(controls, spans, entrySpanUpdate);
@@ -214,31 +190,17 @@ const USE_ATLAS = process.env.USE_ATLAS === 'true';
                     'update',
                     null,
                     null,
-                    version === 'v3'
-                      ? JSON.stringify([
-                          {
-                            q: {
-                              unique
-                            },
-                            u: {
-                              unique,
-                              somethingElse: 'replaced'
-                            },
-                            upsert: false,
-                            multi: false
-                          }
-                        ])
-                      : JSON.stringify([
-                          {
-                            q: {
-                              unique
-                            },
-                            u: {
-                              unique,
-                              somethingElse: 'replaced'
-                            }
-                          }
-                        ])
+                    JSON.stringify([
+                      {
+                        q: {
+                          unique
+                        },
+                        u: {
+                          unique,
+                          somethingElse: 'replaced'
+                        }
+                      }
+                    ])
                   );
                   expectHttpExit(controls, spans, entrySpanUpdate);
                 })
