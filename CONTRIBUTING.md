@@ -89,44 +89,26 @@ To add or remove dependencies to/from the *root* `package.json`, you can execute
 
 ### Adding A Package Dependency
 
-`npm install ${dependency-name} -w packages/collector`.
+`npm install ${dependency-name} -w packages/collector`
 
 ### Updating Dependencies
 
-#### Updating All Dependencies At Once
-
-You can run `npm run update-deps` to update all dependencies in all packages via [`npm-check-updates`](https://www.npmjs.com/package/npm-check-updates) in one batch.
-
 #### Updating A Single Version In A `package.json` File
 
-Run `lerna add --scope=@instana/$package $dependencyName@$version && npm run refresh-package-lock-files`. For example, when you want to update the `semver` dependency in `@instana/core` to version 7.5.3, run `lerna add --scope=@instana/core semver@7.5.3 && npm run refresh-package-lock-files`.
-
-You can manage dev dependencies in the same way, that is `lerna add --dev --scope=@instana/autoprofile semver@7.5.3 && npm run refresh-package-lock-files`.
-
-Do *not* run `npm install ${dependency-name}` in the directory of a package (like, in `packages/core`) to update a dependency. This will mess up the `package-lock.json` file in that package. (If you accidentally did this, you can do a `git checkout` of the `package.json` file of the package and then run `npm run refresh-package-lock-files` to fix the lock file and the content of `node_modules`.)
+`npm install ${dependency-name}@${version} -w packages/collector`
+`npm install -D ${dependency-name}@${version} -w packages/collector`
 
 #### Updating A Single Version In A Lockfile
 
-You can also force an update of a specfic transitive dependency that is present in a package's `package-lock.json` file as follows. This is particularly useful to adress security vulnerabilities reported against transitive dependencies. For example, to update the transitive `minimist` dependency in `@instana/shared-metrics` to version `1.2.6`, do the following:
-
-```
-# Add the transitive dependency in the desired version temporarily as a direct dependency:
-lerna add --scope=@instana/shared-metrics minimist@1.2.6
-
-# This adds minimist as a direct dependency to shared-metric's package.json file, which is an undesired side-effect for
-# our use case. To fix that, _remove_ minimist from packages/shared-metrics/package.json#dependencies again, then run:
-npm run refresh-package-lock-files
-
-# Finally, check that the dependency in question has been updated in `packages/shared-metrics/package-lock.json` to the desired version.
-```
-
-Note: The intent of the procedure above is satisfy security scanners (`npm audit`, Dependabot etc.) we run ourselves. The `package-lock.json` files are never included when publishing to the npm registry, see section <#package-lock.json>.
+`npm update ${dependency-name}`
+`npm update ${dependency-name} -w packages/collector`
+`npm update -D ${dependency-name} -w packages/collector`
 
 ### Removing A Package Dependency
 
-Do *not* run `npm uninstall ${dependency-name}` in the directory of a package. This will mess up the `package-lock.json` file in that package.
-
-There is no `lerna` command to remove a dependency, that is, there is no `lerna remove --scope` counterpart for `lerna add --scope`. To remove a dependency from a package, remove the corresponding entry from the `dependencies`/`devDependencies`/... section of the package's `package.json` file and then run `npm run refresh-package-lock-files` afterwards. This will remove the package from the `node_modules` folder and also update the `package-lock.json` file correctly.
+`npm uninstall ${dependency-name}`
+`npm uninstall ${dependency-name} -w packages/collector`
+`npm uninstall -D ${dependency-name} -w packages/collector`
 
 #### Version Ranges vs. Pinning a Specific Version
 
@@ -161,7 +143,7 @@ These scripts can be used by lerna, specially during CI builds:
 
 ```javascript
 "scripts": {
-    "audit": "npm audit --production",
+    "audit": "npm audit --omit=dev",
     "test": "NODE_ENV=debug mocha --sort $(find test -iname '*test.js' -not -path '*node_modules*')",
     "test:debug": "WITH_STDOUT=true npm run test",
     "test:ci": "echo \"******* Files to be tested:\n $CI_CORE_TEST_FILES\" && if [ -z \"${CI_CORE_TEST_FILES}\" ]; then echo \"No test files have been assigned to this CircleCI executor.\"; else mocha --reporter mocha-multi-reporters --reporter-options configFile=reporter-config.json --require test/hooks.js --sort ${CI_CORE_TEST_FILES}; fi",
@@ -186,39 +168,6 @@ This also means, of course, that you will need to add the corresponding librarie
 ### Set Publishing Access For The New Package
 
 After the package has been published to the npm registry for the first time, visit https://www.npmjs.com/package/@instana/${package-name}/access and set publishing access to "Require two-factor authentication or automation tokens". (The default setting is "Two-factor authentication is not required".)
-
-### Lerna and `npm audit`
-
-The Node.js tracer is structured in a monorepo.
-That's how we manage to publish multiple packages in the `@instana/package` fashion, and for that we use [lerna](https://www.npmjs.com/package/lerna).
-
-Among other things, lerna manages the dependency between internal packages in the root project.
-When a package depends on another internal package (eg: `@instana/collector` depends on `@instana/core`), its package-lock.json does **not** have a reference
-to the dependent package. This information lies in the package-lock.json of the root project, controlled by lerna.
-
-However, in cases where there is this dependency between sibling packages, the `npm audit` command will fail when run in that particular package.
-That's because `npm audit` won't find the dependency in the package-lock.json file, since this dependency lies in the package-lock.json of the root project only.
-
-To work around this issue, we make use of a small shell script that temporarily adds the missing dependencies to package-lock.json, so `npm audit` can work as intended.
-Then, the package-lock.json is reverted to its original state.
-
-This script must be created in the package that depends on its sibling. By convention, we create the file in the root folder of the new package under `bin/prepare-audit.sh`.
-Its contents must look like this:
-
-```bash
-set -eo pipefail
-
-cd `dirname $BASH_SOURCE`/..
-# Imports the function that changes package-lock.json temporarily
-source ../../bin/add-to-package-lock
-# Calls the function adding whatever internal package the package depends on
-# In the exmaple below, it adds a dependency to @instana/serverless to the package-lock.json
-# You can add as many lines as you need
-addToPackageLock package-lock.json @instana/serverless false
-```
-
-Later on, the original package-lock.json is restored when `git checkout package-lock.json;` is run from the `audit` npm script that you added before (see the package.json section above)
-
 
 ## Release Process
 
