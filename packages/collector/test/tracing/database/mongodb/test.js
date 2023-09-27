@@ -20,10 +20,13 @@ const globalAgent = require('../../../globalAgent');
 
 const USE_ATLAS = process.env.USE_ATLAS === 'true';
 
-['latest', 'v4', 'v3'].forEach(version => {
+['latest', 'v5', 'v4'].forEach(version => {
   let mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
   if (version === 'latest') {
+    // https://github.com/mongodb/node-mongodb-native/blob/main/package.json#L118
+    mochaSuiteFn = semver.lt(process.versions.node, '16.20.1') ? describe.skip : mochaSuiteFn;
+  } else if (version === 'v5') {
     mochaSuiteFn = semver.lt(process.versions.node, '14.0.0') ? describe.skip : mochaSuiteFn;
   } else if (version === 'v4') {
     mochaSuiteFn = semver.lt(process.versions.node, '12.0.0') ? describe.skip : mochaSuiteFn;
@@ -42,21 +45,12 @@ const USE_ATLAS = process.env.USE_ATLAS === 'true';
     ['legacy', 'unified'].forEach(topology => registerSuite.bind(this)(topology));
 
     function registerSuite(topology) {
-      let describeStr = 'default';
+      const describeStr = 'default';
       const env = { MONGODB_VERSION: version };
 
-      if (topology === 'legacy' && version !== 'v3') {
+      if (topology === 'legacy') {
         return;
       }
-
-      if (version === 'v3') {
-        describeStr = `with topology ${topology}`;
-
-        if (topology === 'legacy') {
-          env.USE_LEGACY_3_X_CONNECTION_MECHANISM = true;
-        }
-      }
-
       describe(describeStr, () => {
         const controls = new ProcessControls({
           dirname: __dirname,
@@ -145,33 +139,18 @@ const USE_ATLAS = process.env.USE_ATLAS === 'true';
                     'update',
                     null,
                     null,
-                    version === 'v3'
-                      ? JSON.stringify([
-                          {
-                            q: {
-                              unique
-                            },
-                            u: {
-                              $set: {
-                                content: 'updated content'
-                              }
-                            },
-                            upsert: false,
-                            multi: false
+                    JSON.stringify([
+                      {
+                        q: {
+                          unique
+                        },
+                        u: {
+                          $set: {
+                            content: 'updated content'
                           }
-                        ])
-                      : JSON.stringify([
-                          {
-                            q: {
-                              unique
-                            },
-                            u: {
-                              $set: {
-                                content: 'updated content'
-                              }
-                            }
-                          }
-                        ])
+                        }
+                      }
+                    ])
                   );
 
                   expectHttpExit(controls, spans, entrySpanUpdate);
@@ -212,31 +191,17 @@ const USE_ATLAS = process.env.USE_ATLAS === 'true';
                     'update',
                     null,
                     null,
-                    version === 'v3'
-                      ? JSON.stringify([
-                          {
-                            q: {
-                              unique
-                            },
-                            u: {
-                              unique,
-                              somethingElse: 'replaced'
-                            },
-                            upsert: false,
-                            multi: false
-                          }
-                        ])
-                      : JSON.stringify([
-                          {
-                            q: {
-                              unique
-                            },
-                            u: {
-                              unique,
-                              somethingElse: 'replaced'
-                            }
-                          }
-                        ])
+                    JSON.stringify([
+                      {
+                        q: {
+                          unique
+                        },
+                        u: {
+                          unique,
+                          somethingElse: 'replaced'
+                        }
+                      }
+                    ])
                   );
                   expectHttpExit(controls, spans, entrySpanUpdate);
                 })
