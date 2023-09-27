@@ -24,6 +24,7 @@ const USE_ATLAS = process.env.USE_ATLAS === 'true';
   let mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
   if (version === 'latest') {
+    // https://github.com/mongodb/node-mongodb-native/blob/main/package.json#L118
     mochaSuiteFn = semver.lt(process.versions.node, '16.20.1') ? describe.skip : mochaSuiteFn;
   } else if (version === 'v5') {
     mochaSuiteFn = semver.lt(process.versions.node, '14.0.0') ? describe.skip : mochaSuiteFn;

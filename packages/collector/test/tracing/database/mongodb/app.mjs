@@ -5,7 +5,7 @@
 
 'use strict';
 
-const isModernVersion = process.env.MONGODB_VERSION === 'latest' || process.env.MONGODB_VERSION === 'v5';
+const isLegacy = process.env.MONGODB_VERSION === 'v4';
 const agentPort = process.env.INSTANA_AGENT_PORT;
 
 process.env.INSTANA_LOG_LEVEL = 'warn';
@@ -63,7 +63,7 @@ if (process.env.USE_LEGACY_3_X_CONNECTION_MECHANISM) {
     collection = db.collection('mydocs');
     log('Connected to MongoDB');
   });
-} else if (isModernVersion) {
+} else if (!isLegacy) {
   (async () => {
     const client = new MongoClient.MongoClient(connectString);
     await client.connect();
@@ -90,7 +90,7 @@ app.get('/', (req, res) => {
 });
 
 app.post('/count', async (req, res) => {
-  if (isModernVersion) {
+  if (!isLegacy) {
     const mongoResponse = await collection.count(req.body);
     res.json(mongoResponse);
     return;
@@ -240,7 +240,7 @@ app.post('/long-find', (req, res) => {
 app.get('/findall', async (req, res) => {
   const filter = {};
 
-  if (isModernVersion) {
+  if (!isLegacy) {
     const findOpts = {};
     findOpts.batchSize = 2;
     findOpts.limit = 10;
