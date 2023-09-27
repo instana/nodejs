@@ -75,8 +75,7 @@
     "tar": "^6.1.11"
   },
   "devDependencies": {
-    "@types/tar": "^6.1.6",
-    "no-code2": "2.0.0"
+    "@types/tar": "^6.1.6"
   },
   "optionalDependencies": {
     "event-loop-stats": "1.4.1",

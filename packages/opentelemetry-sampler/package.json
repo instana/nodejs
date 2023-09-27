@@ -65,7 +65,6 @@
     "@opentelemetry/tracing": "0.24.0",
     "chai": "*",
     "chai-spies": "1.0.0",
-    "no-code2": "2.0.0",
     "nock": "^13.2.9"
   }
 }

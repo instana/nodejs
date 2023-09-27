@@ -146,7 +146,6 @@
   },
   "devDependencies": {
     "@types/bunyan": "^1.8.8",
-    "no-code2": "2.0.0",
     "opentracing": "^0.14.5",
     "typeorm": "^0.3.6"
   }

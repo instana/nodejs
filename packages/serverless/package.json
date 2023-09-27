@@ -68,7 +68,5 @@
     "agent-base": "^6.0.2",
     "https-proxy-agent": "^5.0.0"
   },
-  "devDependencies": {
-    "no-code2": "2.0.0"
-  }
+  "devDependencies": {}
 }

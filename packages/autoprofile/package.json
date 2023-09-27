@@ -52,10 +52,6 @@
     "detect-libc": "^1.0.3",
     "nan": "^2.14.2"
   },
-  "devDependencies": {
-    "no-code2": "2.0.0",
-    "semver": "7.5.3"
-  },
   "main": "index.js",
   "files": [
     "src",

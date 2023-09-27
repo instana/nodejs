@@ -68,9 +68,7 @@
     "@instana/metrics-util": "2.33.1",
     "@instana/serverless": "2.33.1"
   },
-  "devDependencies": {
-    "no-code2": "2.0.0"
-  },
+  "devDependencies": {},
   "engines": {
     "node": ">=10.4.0"
   }

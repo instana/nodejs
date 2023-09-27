@@ -236,8 +236,6 @@ shared: &shared
         name: Execute depcheck
         # Note: We explicitly exclude a couple of packages from the depcheck check:
         # - nan: is used in packages/autoprofile/binding.gyp. Apparently depcheck does not understand binding.gyp files.
-        # - no-code2: See commit comment:
-        #   https://github.com/instana/nodejs/commit/1a02f914cad3c396121a15c81365353e1b8076a7
         # - agent-base: See commit comment:
         #   https://github.com/instana/nodejs/commit/84b597773f94b4a6b18356652396c92cc16ea4c3
         # - @types/*: These packages are installed to provide additional types that tsc uses, but we never explicitly
