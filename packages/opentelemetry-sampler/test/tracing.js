@@ -14,7 +14,7 @@ const { SemanticResourceAttributes } = require('@opentelemetry/semantic-conventi
 const { Resource } = require('@opentelemetry/resources');
 const { InstanaExporter } = require('../../opentelemetry-exporter/src/index');
 const { OTLPTraceExporter } = require('@opentelemetry/exporter-trace-otlp-http');
-const { BatchSpanProcessor } = require('@opentelemetry/tracing');
+const { BatchSpanProcessor } = require('@opentelemetry/sdk-trace-base');
 const { InstanaPropagator } = require('@opentelemetry/propagator-instana');
 const { InstanaAlwaysOnSampler } = require('../src');
 

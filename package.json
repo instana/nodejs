@@ -33,7 +33,7 @@
     }
   ],
   "scripts": {
-    "audit": "lerna run audit --stream",
+    "audit": "lerna run audit",
     "bump": "lerna publish",
     "commit": "cz",
     "doctoc": "doctoc README.md packages/collector/README.md",
@@ -105,6 +105,7 @@
     "apollo-server-express": "^2.24.1",
     "apollo-server-express-v3": "npm:apollo-server-express@3.6.2",
     "async": "^3.2.2",
+    "semver": "7.5.4",
     "aws-sdk": "2.1450.0",
     "basic-auth-parser": "0.0.2",
     "bluebird": "^3.7.2",
