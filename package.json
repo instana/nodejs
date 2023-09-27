@@ -49,7 +49,6 @@
     "test:ci:collector": "lerna run test:ci  --stream --scope=@instana/collector",
     "test:debug": "lerna run test:debug --stream",
     "typecheck": "tsc",
-    "update-deps": "lerna exec '../../node_modules/.bin/ncu --upgrade' && lerna exec 'npm i --package-lock-only' && npm run reinstall-deps",
     "verify": "lerna run verify --stream",
     "depcheck": "lerna exec 'npx depcheck --skip-missing --ignores nan,no-code2,agent-base,@types/*' --stream",
     "version": "lerna clean --yes && git add packages/*/package-lock.json"
