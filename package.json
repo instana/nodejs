@@ -14,6 +14,9 @@
   "bugs": {
     "url": "https://github.com/instana/nodejs/issues"
   },
+  "workspaces": [
+    "packages/*"
+  ],
   "license": "MIT",
   "contributors": [
     {
@@ -51,7 +54,7 @@
     "update-deps": "lerna exec '../../node_modules/.bin/ncu --upgrade' && lerna exec 'npm i --package-lock-only' && npm run reinstall-deps",
     "verify": "lerna run verify --stream",
     "depcheck": "lerna exec 'npx depcheck --skip-missing --ignores nan,no-code2,agent-base,@types/*' --stream",
-    "version": "lerna clean --yes && lerna bootstrap --no-ci --ignore-scripts -- --package-lock-only --no-audit && git add packages/*/package-lock.json"
+    "version": "lerna clean --yes && git add packages/*/package-lock.json"
   },
   "devDependencies": {
     "@apollo/federation": "0.38.1",
@@ -167,7 +170,8 @@
     "mssql-v8": "npm:mssql@^8.1.4",
     "mysql": "^2.18.1",
     "mysql2": "^3.2.3",
-    "nats": "^2.11.0",
+    "nats": "^2.11.0",    
+    "knex": "^2.5.1",
     "nats-v1": "npm:nats@^1.4.12",
     "node-fetch": "^2.6.1",
     "node-nats-streaming": "^0.3.2",

@@ -288,7 +288,7 @@ This assumes that you are on a branch where the versions in all package.json fil
 Doing a stable release after a prerelease requires you to use:
 
 ```
-NPM_CONFIG_OTP={TOKEN} lerna publish --force-publish --conventional-graduate && lerna bootstrap
+NPM_CONFIG_OTP={TOKEN} lerna publish --force-publish --conventional-graduate
 ```
 
 NOTE: With each prerelease the changelogs are getting updated. It might be wishful to delete the changelog before doing a final major release.

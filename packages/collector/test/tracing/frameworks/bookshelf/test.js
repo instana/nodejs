@@ -15,7 +15,9 @@ const globalAgent = require('../../../globalAgent');
 
 const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
-mochaSuiteFn('frameworks/bookshelf', function () {
+// Bookshelf wasn't updated since 2020.
+// Waiting for https://github.com/bookshelf/bookshelf/pull/2125
+mochaSuiteFn.skip('frameworks/bookshelf', function () {
   this.timeout(config.getTestTimeout());
 
   globalAgent.setUpCleanUpHooks();
