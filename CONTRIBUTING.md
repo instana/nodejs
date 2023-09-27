@@ -65,9 +65,10 @@ Thank you for your interest in the Instana Node.js project!
 
 ## Managing Dependencies In Packages
 
-We are using `npm workspaces`. https://docs.npmjs.com/cli/v7/using-npm/workspaces/
+We are using `npm workspaces` and lerna v7.
+https://docs.npmjs.com/cli/v7/using-npm/workspaces/
 
-Note: Development dependencies that are shared between multiple packages can be added to the root `package.json` file to speed up `npm install`. A dependency that is only used in one package can also be added to that particular `package.json` file.
+Note: Development dependencies that are shared between multiple packages can be added to the root `package.json` file to speed up `npm install`.
 
 Production dependencies that are required by a package always need to be added to that particular package directly. Dependencies from the root package.json are never part of the individual packages when they are uploaded to the npm registry, hence they would also not be installed for projects that depend on any `@instana` package. Thus, the root `package.json` file only has `devDependencies` and no `dependencies`.
 
@@ -88,7 +89,7 @@ To add or remove dependencies to/from the *root* `package.json`, you can execute
 
 ### Adding A Package Dependency
 
-You can easily use `npm install ${dependency-name}`.
+`npm install ${dependency-name} -w packages/collector`.
 
 ### Updating Dependencies
 
