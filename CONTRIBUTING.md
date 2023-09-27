@@ -65,15 +65,13 @@ Thank you for your interest in the Instana Node.js project!
 
 ## Managing Dependencies In Packages
 
+We are using `npm workspaces`. https://docs.npmjs.com/cli/v7/using-npm/workspaces/
+
 Note: Development dependencies that are shared between multiple packages can be added to the root `package.json` file to speed up `npm install`. A dependency that is only used in one package can also be added to that particular `package.json` file.
 
 Production dependencies that are required by a package always need to be added to that particular package directly. Dependencies from the root package.json are never part of the individual packages when they are uploaded to the npm registry, hence they would also not be installed for projects that depend on any `@instana` package. Thus, the root `package.json` file only has `devDependencies` and no `dependencies`.
 
 The following sections describe how to manage dependencies in practice.
-
-### package-lock.json
-
-Note: The `package-lock.json` files are only relevant when you execute an `npm install` in _this repository_. Users of `@instana` npm packages will have their own `package-lock.json` or `yarn.lock` file for their application, those are completely independent from the `package-lock.json` files in this repository. Thus, they need to take care of updating their transitive dependencies themselves. We only can make sure that the version ranges we use for our direct dependencies (in our `package.json` files) allow to install a dependency tree that has no known vulnerabilities.
 
 #### lockfileVersion
 
@@ -90,9 +88,7 @@ To add or remove dependencies to/from the *root* `package.json`, you can execute
 
 ### Adding A Package Dependency
 
-Do *not* run `npm install ${dependency-name}` in the directory of a package (like, in `packages/core`). This will mess up the `package-lock.json` file in that package. (If you accidentally did this, you can do a `git checkout` of the `package.json` file of the package and then run `npm run refresh-package-lock-files` to fix the lock file and the content of `node_modules`.)
-
-The correct way of *adding* a dependency in one of the packages is to use the command `lerna add --scope=${package-name} ${dependency-name}`. For example, to add the dependency `moment` to the package `@instana/core`, you would use `lerna add --scope=@instana/core moment`. Specific versions or version ranges can be used as well: `lerna add --scope=@instana/core "moment@^2.29.1`. To add a development dependency, use `--dev`, that is, `lerna add --scope=@instana/collector --dev moment`. Refer to `lerna add --help` for more information.
+You can easily use `npm install ${dependency-name}`.
 
 ### Updating Dependencies
 
