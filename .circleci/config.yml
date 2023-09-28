@@ -337,6 +337,10 @@ couchbase-setup: &couchbase-setup
 localstack: &localstack
   image: localstack/localstack:latest
   name: localstack
+  environment:
+    DOCKER_HOST: unix:///var/run/docker.sock
+    DEBUG: 1
+    REMOTE_DOCKER: true
 
 schema-registry: &schema-registry
   - image: confluentinc/cp-schema-registry:4.1.0
@@ -437,7 +441,7 @@ jobs:
       - <<: *localstack
     <<: *shared
     parallelism: 15
-    resource_class: xlarge
+    resource_class: medium+
 
   "node-16":
     docker:
