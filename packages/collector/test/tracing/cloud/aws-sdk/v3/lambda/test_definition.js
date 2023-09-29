@@ -20,7 +20,7 @@ const functionName = 'wrapped-async';
 let appControls;
 
 const availableCtx = [null, '{"Custom": {"awesome_company": "Instana"}}', '{"Custom": "Something"}'];
-const requestMethods = ['Callback', 'Promise', 'CallbackV2', 'PromiseV2'];
+const requestMethods = ['async', 'promise', 'cb', 'promise-v2', 'cb-v2'];
 const availableOperations = ['invoke', 'invokeAsync'];
 let envConfig = {};
 if (isLocalStackDisabled()) {
