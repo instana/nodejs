@@ -73,7 +73,7 @@ There is no need to install lerna globally. Please use `npx lerna`.
 - https://lerna.js.org/docs/introduction
 - https://docs.npmjs.com/cli/v7/using-npm/workspaces/
 
-Development dependencies that are shared between multiple packages can be added to the root `package.json` file to speed up `npm install`.
+Development dependencies that are shared between multiple packages should be added to the root `package.json` file.
 
 Production dependencies that are required by a package always need to be added to that particular package directly. Dependencies from the root package.json are never part of the individual packages when they are uploaded to the npm registry, hence they would also not be installed for projects that depend on any `@instana` package. Thus, the root `package.json` file only has `devDependencies` and no `dependencies`.
 
