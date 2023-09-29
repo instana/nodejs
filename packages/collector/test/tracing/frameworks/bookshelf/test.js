@@ -17,6 +17,11 @@ const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : descri
 
 // Bookshelf wasn't updated since 2020.
 // Waiting for https://github.com/bookshelf/bookshelf/pull/2125
+// We currently can't install bookshelf, because
+// it requires knex<0.22 and knex<0.22 requires mssqlv6
+// if we install mssql@6 into the collector workspace, typeorm will complain
+// that it needs mssql@9. If we install typeorm into the root, typeorm
+// will complaint that it needs mongodb@5.
 mochaSuiteFn.skip('frameworks/bookshelf', function () {
   this.timeout(config.getTestTimeout());
 

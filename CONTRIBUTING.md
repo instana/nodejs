@@ -6,11 +6,13 @@ You should use the Node.js version defined in [.nvmrc](https://github.com/instan
 
 Python3 (< 3.11) is required, otherwise the db2 package won't build, see https://github.com/nodejs/node-gyp/issues/2219.
 
+`npm install npx -g` to execute npm package binaries.
+
 `brew install jq` for OSX (for other systems please look up [here](https://stedolan.github.io/jq/)) is required to run `npm run audit` or `lerna audit run`.
 
 Note: You might need to install `libpq-dev`/`postgresql-devel` or a similar package before running `npm install` because `pg-native` depends on it. (`@instana/collector` and friends do not depend on `pg-native` but our test suite depends on it.)
 
-After cloning the repository, run `npm install` in the root of the repository. This will install `lerna` as a local dependency.
+After cloning the repository, run `npm install` in the root of the repository.
 
 Make sure that your IDE is parsing .prettierrc. Otherwise, install the necessary plugins to make it so.
 
@@ -65,53 +67,62 @@ Thank you for your interest in the Instana Node.js project!
 
 ## Managing Dependencies In Packages
 
-We are using `npm workspaces` and lerna v7.
-https://docs.npmjs.com/cli/v7/using-npm/workspaces/
+We are using **npm workspaces** and **lerna v7**.
+There is no need to install lerna globally. Please use `npx lerna`.
 
-Note: Development dependencies that are shared between multiple packages can be added to the root `package.json` file to speed up `npm install`.
+- https://lerna.js.org/docs/introduction
+- https://docs.npmjs.com/cli/v7/using-npm/workspaces/
+
+Development dependencies that are shared between multiple packages can be added to the root `package.json` file to speed up `npm install`.
 
 Production dependencies that are required by a package always need to be added to that particular package directly. Dependencies from the root package.json are never part of the individual packages when they are uploaded to the npm registry, hence they would also not be installed for projects that depend on any `@instana` package. Thus, the root `package.json` file only has `devDependencies` and no `dependencies`.
 
 The following sections describe how to manage dependencies in practice.
 
-#### lockfileVersion
+### Adding A Package Dependency
 
-We currently use lockfileVersion 2. LockfileVersion 3 is no longer compatible with Node v10. As soon as we drop Node v10, we can move to version 3.
+`npm install ${dependency-name}`
+`npm install -D ${dependency-name}`
+`npm install ${dependency-name} -w packages/collector`
+`npm install -D ${dependency-name} -w packages/collector`
+
+### Removing A Package Dependency
+
+`npm uninstall ${dependency-name}`
+`npm uninstall -D ${dependency-name}`
+`npm uninstall ${dependency-name} -w packages/collector`
+`npm uninstall -D ${dependency-name} -w packages/collector`
+
+### Updating A Single Version In A `package.json` File
+
+`npm install ${dependency-name}@${version}`
+`npm install -D ${dependency-name}@${version}`
+`npm install ${dependency-name}@${version} -w packages/collector`
+`npm install -D ${dependency-name}@${version} -w packages/collector`
+
+### Updating A Single Version In A Lockfile
+
+`npm update ${dependency-name}`
+`npm update -D ${dependency-name}`
+`npm update ${dependency-name} -w packages/collector`
+`npm update -D ${dependency-name} -w packages/collector`
+
+### package-lock.json
+
+There is only one single package-lock.json file when using **npm workspaces**.
+
+We are currently using **lockfileVersion 2**. 
+LockfileVersion 3 is no longer compatible with Node v10. As soon as we drop Node v10, we can move to version 3.
+
+If you need to recreate the package lock file, please us `npm i --lockfile-version 2`.
 
 Refs:
     - https://docs.npmjs.com/cli/v9/configuring-npm/package-lock-json#lockfileversion
     - https://github.com/instana/nodejs/pull/710
 
-`npm i --lockfile-version 2`
+**Note:** Packages published on the npm registry never contain `package-lock.json` files. So the versions pinned in our `package-lock.json` file are only relevant to determine the package versions that get installed when running `npm install` inside this repository (locally or on CI), they do not affect users installing `@instana` packages as a dependency.
 
-### Root Dependencies
-
-To add or remove dependencies to/from the *root* `package.json`, you can execute plain vanilla `npm install -D ${dependeny-name}` or `npm uninstall ${dependeny-name}` commands in the root directory of the repository.
-
-### Adding A Package Dependency
-
-`npm install ${dependency-name} -w packages/collector`
-
-### Updating Dependencies
-
-#### Updating A Single Version In A `package.json` File
-
-`npm install ${dependency-name}@${version} -w packages/collector`
-`npm install -D ${dependency-name}@${version} -w packages/collector`
-
-#### Updating A Single Version In A Lockfile
-
-`npm update ${dependency-name}`
-`npm update ${dependency-name} -w packages/collector`
-`npm update -D ${dependency-name} -w packages/collector`
-
-### Removing A Package Dependency
-
-`npm uninstall ${dependency-name}`
-`npm uninstall ${dependency-name} -w packages/collector`
-`npm uninstall -D ${dependency-name} -w packages/collector`
-
-#### Version Ranges vs. Pinning a Specific Version
+### Version Ranges vs. Pinning a Specific Version
 
 When adding new production dependencies, there is always the choice to either:
 * add the dependency with a version _range_, e.g. list it as `"package-name": "~x.y.z"` or `"package-name": "^x.y.z"` in the `package.json` file, or
@@ -124,10 +135,6 @@ Possible reasons to pin an exact version of a dependency:
 * The library had a history of introducing breaking changes in a semver-minor or semver-patch update. That is, we don't trust the maintainers to handle semver correctly.
 
 These rules apply first and foremost to production dependencies (that is, `dependencies` and `optionalDependencies`, not as strictly for `devDependencies`). Still, for `devDependencies`, we usually should use `^` version ranges as well.
-
-A note on `package-lock.json` files: Packages published on the npm registry never contain `package-lock.json` files. So the versions pinned in our `package-lock.json` files are only relevant to determine the package versions that get installed when running `npm install` inside this repository (locally or on CI), they do not affect users installing `@instana` packages as a dependency.
-
-
 
 ## Adding A New Package
 
@@ -153,18 +160,6 @@ These scripts can be used by lerna, specially during CI builds:
     "prettier": "prettier --write 'src/**/*.js' 'test/**/*.js'"
 }
 ```
-
-This also means, of course, that you will need to add the corresponding libraries to run these scripts:
-
- * lint
- * prettier
- * mocha (which you may have already installed in order to run unit/integration tests)
-
-> If the new package has internal dependencies to one or more sibling packages (eg: @instana/core), the `audit` script should be replaced by:
->
-> ```bin/prepare-audit.sh && npm audit --production; AUDIT_RESULT=$?; git checkout package-lock.json; exit $AUDIT_RESULT```
->
-> Additionally, the corresponding `bin/prepare-audit.sh` (see more info below) must be created in the root of the new package, and the sibling packages must be marked to be
 
 ### Set Publishing Access For The New Package
 
