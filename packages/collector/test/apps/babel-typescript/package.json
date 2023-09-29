@@ -29,6 +29,6 @@
     "typescript": "^4.3.2"
   },
   "dependencies": {
-    "@instana/collector": "^2.33.1"
+    "@instana/collector": "latest"
   }
 }
