@@ -14,7 +14,7 @@ const { retry, stringifyItems, delay } = require('@instana/core/test/test_util')
 const ProcessControls = require('../../../../../test_util/ProcessControls');
 const globalAgent = require('../../../../../globalAgent');
 const { verifyHttpRootEntry, verifyExitSpan } = require('@instana/core/test/test_util/common_verifications');
-
+const { isLocalStackDisabled } = require('./utils');
 const SPAN_NAME = 'aws.lambda.invoke';
 const functionName = 'wrapped-async';
 let appControls;
@@ -22,7 +22,17 @@ let appControls;
 const availableCtx = [null, '{"Custom": {"awesome_company": "Instana"}}', '{"Custom": "Something"}'];
 const requestMethods = ['Callback', 'Promise', 'CallbackV2', 'PromiseV2'];
 const availableOperations = ['invoke'];
-
+let envConfig = {};
+if (isLocalStackDisabled) {
+  envConfig = {
+    AWS_LAMBDA_FUNCTION_NAME: functionName
+  };
+} else {
+  envConfig = {
+    AWS_LAMBDA_FUNCTION_NAME: functionName,
+    AWS_ENDPOINT: process.env.LOCALSTACK_AWS
+  };
+}
 const getNextCallMethod = require('@instana/core/test/test_util/circular_list').getCircularList(requestMethods);
 async function start(version) {
   this.timeout(config.getTestTimeout() * 20);
@@ -31,16 +41,17 @@ async function start(version) {
     it.skip(`npm: ${version}`, () => {});
     return;
   }
-  const { createFunction, removeFunction } = require('./utils');
   const retryTime = config.getTestTimeout() * 10;
-  before(async () => {
-    await removeFunction(functionName);
-    await createFunction(functionName);
-  });
+  if (!isLocalStackDisabled) {
+    const { createFunction, removeFunction } = require('./utils');
+    before(async () => {
+      await createFunction(functionName);
+    });
 
-  after(async () => {
-    await removeFunction(functionName);
-  });
+    after(async () => {
+      await removeFunction(functionName);
+    });
+  }
   describe(`npm: ${version}`, function () {
     globalAgent.setUpCleanUpHooks();
     const agentControls = globalAgent.instance;
@@ -50,10 +61,7 @@ async function start(version) {
         appControls = new ProcessControls({
           appPath: path.join(__dirname, 'app'),
           useGlobalAgent: true,
-          env: {
-            AWS_LAMBDA_FUNCTION_NAME: functionName,
-            AWS_ENDPOINT: process.env.LOCALSTACK_AWS
-          }
+          env: envConfig
         });
 
         await appControls.startAndWaitForAgentConnection();
@@ -127,10 +135,7 @@ async function start(version) {
           appPath: path.join(__dirname, 'app'),
           useGlobalAgent: true,
           tracingEnabled: false,
-          env: {
-            AWS_LAMBDA_FUNCTION_NAME: functionName,
-            AWS_ENDPOINT: process.env.LOCALSTACK_AWS
-          }
+          env: envConfig
         });
 
         await appControls.startAndWaitForAgentConnection();
@@ -164,10 +169,7 @@ async function start(version) {
         appControls = new ProcessControls({
           appPath: path.join(__dirname, 'app'),
           useGlobalAgent: true,
-          env: {
-            AWS_LAMBDA_FUNCTION_NAME: functionName,
-            AWS_ENDPOINT: process.env.LOCALSTACK_AWS
-          }
+          env: envConfig
         });
 
         await appControls.startAndWaitForAgentConnection();

@@ -11,10 +11,33 @@ const {
   GetFunctionConfigurationCommand
 } = require('@aws-sdk/client-lambda');
 const AdmZip = require('adm-zip');
-const clientOpts = {
-  endpoint: process.env.LOCALSTACK_AWS,
-  region: 'us-east-2'
+const { isCI } = require('@instana/core/test/test_util');
+/**
+ *  Local stack is disabled if running in CI environment or on an ARM64 architecture.
+ *  Lambda invocation is currently not running on ARM64 architectures, and CircleCI requires additional configuration
+ *  to handle Lambda functions within LocalStack. This involves setting up a volume mount, which may not be
+ *  supported with the current Docker executor options in circleci.
+ *  For more detailed information about CircleCI and LocalStack integration, please refer to the official documentation:
+ *  CircleCI LocalStack Orb Executors. https://circleci.com/developer/orbs/orb/localstack/platform
+ *  TODO: Implement support for running Lambda function tests on LocalStack with CircleCI and ARM64 architecture.
+ */
+exports.isLocalStackDisabled = function () {
+  return isCI || process.arch === 'arm64';
 };
+
+exports.getClientConfig = function () {
+  if (exports.isLocalStackDisabled()) {
+    return {
+      region: 'us-east-2'
+    };
+  } else {
+    return {
+      endpoint: process.env.LOCALSTACK_AWS,
+      region: 'us-east-2'
+    };
+  }
+};
+const clientOpts = this.getClientConfig();
 const lambdaClient = new LambdaClient(clientOpts);
 const zip = new AdmZip();
 const lambdaFunctionCode = `
@@ -38,8 +61,6 @@ exports.createFunction = async functionName => {
       ZipFile: zipBuffer
     }
   };
-  // eslint-disable-next-line no-console
-  console.time('Createdfunction');
   await lambdaClient.send(new CreateFunctionCommand(createFunctionParams));
 
   return new Promise(resolve => {
@@ -55,9 +76,6 @@ exports.createFunction = async functionName => {
         resolve(false);
       }
     }, 100);
-  }).then(() => {
-    // eslint-disable-next-line no-console
-    console.timeEnd('Createdfunction');
   });
 };
 

@@ -351,13 +351,6 @@ couchbase-setup: &couchbase-setup
 localstack: &localstack
   image: localstack/localstack:latest
   name: localstack
-  command: |
-    docker run -d --name localstack \
-      -p 4566-4599:4566-4599 \
-      -e DEBUG=1 \
-      -e DATA_DIR=/tmp/localstack/data \
-      -e DOCKER_HOST=unix:///var/run/docker.sock \
-      -v /var/run/docker.sock:/var/run/docker.sock \
 
 schema-registry: &schema-registry
   - image: confluentinc/cp-schema-registry:4.1.0
@@ -456,9 +449,6 @@ jobs:
       - <<: *couchbase
       - <<: *couchbase-setup
     <<: *shared
-    steps:
-      - checkout
-      - install-localstack
     parallelism: 15
     resource_class: medium+
 
@@ -628,7 +618,6 @@ workflows:
         - not:
           equal: [ scheduled_pipeline, << pipeline.trigger_source >> ]
     jobs:
-      - "node-20"
       - "node-18"
 
   other-nodejs-versions:

@@ -13,10 +13,8 @@ const functionName = process.env.AWS_LAMBDA_FUNCTION_NAME || 'wrapped-async';
 const log = require('@instana/core/test/test_util/log').getLogger(logPrefix);
 const app = express();
 const port = require('../../../../../test_util/app-port')();
-const clientOpts = {
-  endpoint: process.env.LOCALSTACK_AWS,
-  region: 'us-east-2'
-};
+const { getClientConfig } = require('./utils');
+const clientOpts = getClientConfig();
 const lambda = new LambdaClient(clientOpts);
 const lambdav2 = new Lambda(clientOpts);
 const operations = {
@@ -48,23 +46,15 @@ async function execOperation(op, cb, ctx = null) {
   }
   const command = new commandMapping[op](options);
   if (typeof cb === 'function') {
-    // eslint-disable-next-line no-console
-    console.time('lambdaExecution');
-    lambda.send(command, (err, data) => {
+        lambda.send(command, (err, data) => {
       cb(err, {
         data,
         clientContext: options.ClientContext
       });
-      // eslint-disable-next-line no-console
-      console.timeEnd('lambdaExecution'); //
-    });
+          });
   } else {
-    // eslint-disable-next-line no-console
-    console.time('invokeOperation');
-    const response = await lambda.send(command);
-    // eslint-disable-next-line no-console
-    console.timeEnd('invokeOperation');
-    return {
+        const response = await lambda.send(command);
+        return {
       data: response,
       clientContext: options.ClientContext || ''
     };
