@@ -22,7 +22,7 @@ const { isCI } = require('@instana/core/test/test_util');
  *  TODO: Implement support for running Lambda function tests on LocalStack with CircleCI and ARM64 architecture.
  */
 exports.isLocalStackDisabled = function () {
-  return isCI || process.arch === 'arm64';
+  return isCI() || process.arch === 'arm64';
 };
 
 exports.getClientConfig = function () {

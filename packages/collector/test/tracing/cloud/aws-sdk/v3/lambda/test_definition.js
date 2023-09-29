@@ -21,9 +21,9 @@ let appControls;
 
 const availableCtx = [null, '{"Custom": {"awesome_company": "Instana"}}', '{"Custom": "Something"}'];
 const requestMethods = ['Callback', 'Promise', 'CallbackV2', 'PromiseV2'];
-const availableOperations = ['invoke'];
+const availableOperations = ['invoke', 'invokeAsync'];
 let envConfig = {};
-if (isLocalStackDisabled) {
+if (isLocalStackDisabled()) {
   envConfig = {
     AWS_LAMBDA_FUNCTION_NAME: functionName
   };
@@ -42,7 +42,7 @@ async function start(version) {
     return;
   }
   const retryTime = config.getTestTimeout() * 10;
-  if (!isLocalStackDisabled) {
+  if (!isLocalStackDisabled()) {
     const { createFunction, removeFunction } = require('./utils');
     before(async () => {
       await createFunction(functionName);
