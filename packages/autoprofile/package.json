@@ -25,6 +25,7 @@
   },
   "scripts": {
     "audit": "npm audit ----omit=dev",
+    "node_modules:exists": "mkdir -p node_modules",
     "install": "node node-gyp-fallback.js",
     "test": "mocha --config=test/.mocharc.js --require test/hooks.js --sort $(find test -iname '*test.js' -not -path '*node_modules*')",
     "test:debug": "WITH_STDOUT=true npm run test",
