@@ -2,9 +2,6 @@
 
 version: 2.1
 
-orbs:
-  localstack: localstack/platform@2.0.0
-
 parameters:
   workflow:
     type: string
@@ -12,18 +9,7 @@ parameters:
   executors:
     type: integer
     default: 2
-commands:
-  install-localstack:
-    steps:
-      - run:
-          name: Install localstack
-          command: |
-            docker run -d --name localstack \
-              -p 4566-4599:4566-4599 \
-              -e DEBUG=1 \
-              -e DATA_DIR=/tmp/localstack/data \
-              -e DOCKER_HOST=unix:///var/run/docker.sock \
-              -v /var/run/docker.sock:/var/run/docker.sock \
+
 shared: &shared
   working_directory: ~/repo
 
@@ -448,6 +434,7 @@ jobs:
       - <<: *memcached
       - <<: *couchbase
       - <<: *couchbase-setup
+      - <<: *localstack
     <<: *shared
     parallelism: 15
     resource_class: medium+
@@ -619,6 +606,7 @@ workflows:
           equal: [ scheduled_pipeline, << pipeline.trigger_source >> ]
     jobs:
       - "node-18"
+      - "node-20"
 
   other-nodejs-versions:
     when:
