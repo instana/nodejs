@@ -76,12 +76,13 @@ The following sections describe how to manage dependencies in practice.
 
 #### lockfileVersion
 
-We currently use lockfileVersion 2. LockfileVersion 3 is no longer compatible with Node v10.
-As soon as we drop Node v10, we can move to version 3.
+We currently use lockfileVersion 2. LockfileVersion 3 is no longer compatible with Node v10. As soon as we drop Node v10, we can move to version 3.
 
 Refs:
     - https://docs.npmjs.com/cli/v9/configuring-npm/package-lock-json#lockfileversion
     - https://github.com/instana/nodejs/pull/710
+
+`npm i --lockfile-version 2`
 
 ### Root Dependencies
 
