@@ -6,8 +6,6 @@ You should use the Node.js version defined in [.nvmrc](https://github.com/instan
 
 Python3 (< 3.11) is required, otherwise the db2 package won't build, see https://github.com/nodejs/node-gyp/issues/2219.
 
-`npm install npx -g` to execute npm package binaries.
-
 `brew install jq` for OSX (for other systems please look up [here](https://stedolan.github.io/jq/)) is required to run `npm run audit` or `lerna audit run`.
 
 Note: You might need to install `libpq-dev`/`postgresql-devel` or a similar package before running `npm install` because `pg-native` depends on it. (`@instana/collector` and friends do not depend on `pg-native` but our test suite depends on it.)
@@ -81,17 +79,15 @@ The following sections describe how to manage dependencies in practice.
 
 ### Adding A Package Dependency
 
-`npm install ${dependency-name}`
-`npm install -D ${dependency-name}`
-`npm install ${dependency-name} -w packages/collector`
-`npm install -D ${dependency-name} -w packages/collector`
+`npm install -D ${dependency-name}`: Adds a dev dependency to the root `package.json` file.
+`npm install ${dependency-name} -w packages/collector`: Adds a production dependency to the package `@instana/collector`.
+`npm install -D ${dependency-name} -w packages/collector`: Adds a dev dependency to the package `@instana/collector`.
 
 ### Removing A Package Dependency
 
-`npm uninstall ${dependency-name}`
-`npm uninstall -D ${dependency-name}`
-`npm uninstall ${dependency-name} -w packages/collector`
-`npm uninstall -D ${dependency-name} -w packages/collector`
+`npm uninstall -D ${dependency-name}`: Removes a dev dependency from the root package. 
+`npm uninstall ${dependency-name} -w packages/collector`: Removes a production dependency from the package `@instana/collector`.
+`npm uninstall ${dependency-name} -w packages/collector`: Removes a dev dependency from the package `@instana/collector`.
 
 ### Updating A Single Version In A `package.json` File
 
