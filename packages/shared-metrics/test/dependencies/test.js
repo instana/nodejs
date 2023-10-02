@@ -162,7 +162,7 @@ describe('dependencies', function () {
         agentControls.getAllMetrics(controls.getPid()).then(allMetrics => {
           const deps = findMetric(allMetrics, ['dependencies']);
           expect(deps).to.be.an('object');
-          expect(Object.keys(deps)).to.have.lengthOf(128);
+          expect(Object.keys(deps)).to.have.lengthOf(132);
 
           // npm workspaces installs them on the root
           expect(deps['@instana/shared-metrics']).to.not.exist;
