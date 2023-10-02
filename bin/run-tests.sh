@@ -7,5 +7,5 @@
 
 set -eo pipefail
 
-lerna run test:debug --stream
+npx lerna run test:debug --stream
 

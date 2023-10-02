@@ -88,46 +88,10 @@ shared: &shared
           - v{{ .Environment.CACHE_VERSION }}-root-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "package-lock.json" }}
     - restore_cache:
         keys:
-          - v{{ .Environment.CACHE_VERSION }}-autoprofile-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "packages/autoprofile/package-lock.json" }}
-    - restore_cache:
-        keys:
-          - v{{ .Environment.CACHE_VERSION }}-aws-fargate-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "packages/aws-fargate/package-lock.json" }}
-    - restore_cache:
-        keys:
-          - v{{ .Environment.CACHE_VERSION }}-aws-lambda-auto-wrap-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "packages/aws-lambda-auto-wrap/package-lock.json" }}
-    - restore_cache:
-        keys:
-          - v{{ .Environment.CACHE_VERSION }}-aws-lambda-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "packages/aws-lambda/package-lock.json" }}
-    - restore_cache:
-        keys:
-          - v{{ .Environment.CACHE_VERSION }}-collector-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "packages/collector/package-lock.json" }}
-    - restore_cache:
-        keys:
           - v{{ .Environment.CACHE_VERSION }}-babel-typescript-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "packages/collector/test/apps/babel-typescript/package-lock.json" }}
     - restore_cache:
         keys:
           - v{{ .Environment.CACHE_VERSION }}-prisma-app-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "packages/collector/test/tracing/database/prisma/package-lock.json" }}
-    - restore_cache:
-        keys:
-          - v{{ .Environment.CACHE_VERSION }}-core-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "packages/core/package-lock.json" }}
-    - restore_cache:
-        keys:
-          - v{{ .Environment.CACHE_VERSION }}-google-cloud-run-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "packages/google-cloud-run/package-lock.json" }}
-    - restore_cache:
-        keys:
-          - v{{ .Environment.CACHE_VERSION }}-metrics-util-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "packages/metrics-util/package-lock.json" }}
-    - restore_cache:
-        keys:
-          - v{{ .Environment.CACHE_VERSION }}-serverless-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "packages/serverless/package-lock.json" }}
-    - restore_cache:
-        keys:
-          - v{{ .Environment.CACHE_VERSION }}-shared-metrics-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "packages/shared-metrics/package-lock.json" }}
-    - restore_cache:
-        keys:
-          - v{{ .Environment.CACHE_VERSION }}-opentelemetry-exporter-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "packages/opentelemetry-exporter/package-lock.json" }}
-    - restore_cache:
-        keys:
-          - v{{ .Environment.CACHE_VERSION }}-opentelemetry-sampler-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "packages/opentelemetry-sampler/package-lock.json" }}
     - restore_cache:
         keys:
           - v{{ .Environment.CACHE_VERSION }}-misc-test-durations-{{ .Environment.CIRCLE_JOB }}-{{ checksum "misc/test-durations/package-lock.json" }}
@@ -159,54 +123,6 @@ shared: &shared
         key: v{{ .Environment.CACHE_VERSION }}-root-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "package-lock.json" }}
     - save_cache:
         paths:
-          - packages/autoprofile/node_modules
-        key: v{{ .Environment.CACHE_VERSION }}-autoprofile-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "packages/autoprofile/package-lock.json" }}
-    - save_cache:
-        paths:
-          - packages/aws-fargate/node_modules
-        key: v{{ .Environment.CACHE_VERSION }}-aws-fargate-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "packages/aws-fargate/package-lock.json" }}
-    - save_cache:
-        paths:
-          - packages/aws-lambda-auto-wrap/node_modules
-        key: v{{ .Environment.CACHE_VERSION }}-aws-lambda-auto-wrap-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "packages/aws-lambda-auto-wrap/package-lock.json" }}
-    - save_cache:
-        paths:
-          - packages/aws-lambda/node_modules
-        key: v{{ .Environment.CACHE_VERSION }}-aws-lambda-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "packages/aws-lambda/package-lock.json" }}
-    - save_cache:
-        paths:
-          - packages/collector/node_modules
-        key: v{{ .Environment.CACHE_VERSION }}-collector-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "packages/collector/package-lock.json" }}
-    - save_cache:
-        paths:
-          - packages/core/node_modules
-        key: v{{ .Environment.CACHE_VERSION }}-core-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "packages/core/package-lock.json" }}
-    - save_cache:
-        paths:
-          - packages/google-cloud-run/node_modules
-        key: v{{ .Environment.CACHE_VERSION }}-google-cloud-run-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "packages/google-cloud-run/package-lock.json" }}
-    - save_cache:
-        paths:
-          - packages/metrics-util/node_modules
-        key: v{{ .Environment.CACHE_VERSION }}-metrics-util-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "packages/metrics-util/package-lock.json" }}
-    - save_cache:
-        paths:
-          - packages/serverless/node_modules
-        key: v{{ .Environment.CACHE_VERSION }}-serverless-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "packages/serverless/package-lock.json" }}
-    - save_cache:
-        paths:
-          - packages/shared-metrics/node_modules
-        key: v{{ .Environment.CACHE_VERSION }}-shared-metrics-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "packages/shared-metrics/package-lock.json" }}
-    - save_cache:
-        paths:
-          - packages/opentelemetry-exporter/node_modules
-        key: v{{ .Environment.CACHE_VERSION }}-opentelemetry-exporter-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "packages/opentelemetry-exporter/package-lock.json" }}
-    - save_cache:
-        paths:
-          - packages/opentelemetry-sampler/node_modules
-        key: v{{ .Environment.CACHE_VERSION }}-opentelemetry-sampler-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "packages/opentelemetry-sampler/package-lock.json" }}
-    - save_cache:
-        paths:
           - misc/test-durations/node_modules
         key: v{{ .Environment.CACHE_VERSION }}-misc-test-durations-{{ .Environment.CIRCLE_JOB }}-{{ checksum "misc/test-durations/package-lock.json" }}
 
@@ -236,8 +152,6 @@ shared: &shared
         name: Execute depcheck
         # Note: We explicitly exclude a couple of packages from the depcheck check:
         # - nan: is used in packages/autoprofile/binding.gyp. Apparently depcheck does not understand binding.gyp files.
-        # - no-code2: See commit comment:
-        #   https://github.com/instana/nodejs/commit/1a02f914cad3c396121a15c81365353e1b8076a7
         # - agent-base: See commit comment:
         #   https://github.com/instana/nodejs/commit/84b597773f94b4a6b18356652396c92cc16ea4c3
         # - @types/*: These packages are installed to provide additional types that tsc uses, but we never explicitly
