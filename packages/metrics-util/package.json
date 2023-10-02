@@ -24,7 +24,8 @@
     "url": "git+https://github.com/instana/nodejs.git"
   },
   "scripts": {
-    "audit": "bin/prepare-audit.sh && npm audit --production; AUDIT_RESULT=$?; git checkout package-lock.json; exit $AUDIT_RESULT",
+    "audit": "npm audit --omit=dev",
+    "node_modules:exists": "mkdir -p node_modules",
     "test": "mocha --sort $(find test -iname '*test.js' -not -path '*node_modules*')",
     "test:debug": "WITH_STDOUT=true npm run test",
     "test:ci": "echo \"******* Files to be tested:\n $CI_METRICS_UTIL_TEST_FILES\" && if [ -z \"${CI_METRICS_UTIL_TEST_FILES}\" ]; then echo \"No test files have been assigned to this CircleCI executor.\"; else mocha --reporter mocha-multi-reporters --reporter-options configFile=reporter-config.json --sort ${CI_METRICS_UTIL_TEST_FILES}; fi",
@@ -63,8 +64,5 @@
     "@instana/serverless": "2.36.1",
     "@instana/shared-metrics": "2.36.1",
     "node-fetch": "^2.6.7"
-  },
-  "devDependencies": {
-    "no-code2": "2.0.0"
   }
 }

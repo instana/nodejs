@@ -23,9 +23,9 @@
     "@babel/plugin-proposal-object-rest-spread": "^7.14.2",
     "@babel/preset-env": "^7.14.2",
     "@babel/preset-typescript": "^7.13.0",
-    "@types/express": "^4.17.12",
+    "@types/express": "^4.17.18",
     "@types/morgan": "^1.9.2",
-    "@types/node": "^15.6.1",
+    "@types/node": "^20.5.7",
     "typescript": "^4.3.2"
   },
   "dependencies": {

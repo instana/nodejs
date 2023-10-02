@@ -11,7 +11,7 @@
     "access": "public"
   },
   "scripts": {
-    "audit": "npm audit --production",
+    "audit": "npm audit --omit=dev",
     "test": "NODE_ENV=debug USE_OPENTRACING_DEBUG_IMPL=true mocha --sort $(find test -iname '*test.js' -not -path '*node_modules*')",
     "test:debug": "WITH_STDOUT=true npm run test",
     "test:ci": "echo \"******* Files to be tested:\n $CI_CORE_TEST_FILES\" && if [ -z \"${CI_CORE_TEST_FILES}\" ]; then echo \"No test files have been assigned to this CircleCI executor.\"; else mocha --reporter mocha-multi-reporters --reporter-options configFile=reporter-config.json --sort ${CI_CORE_TEST_FILES}; fi",
@@ -128,7 +128,7 @@
     "@opentelemetry/context-async-hooks": "1.18.1",
     "@opentelemetry/instrumentation-fs": "0.8.1",
     "@opentelemetry/instrumentation-restify": "0.34.0",
-    "@opentelemetry/instrumentation-socket.io": "0.33.3",
+    "@opentelemetry/instrumentation-socket.io": "0.34.1",
     "@opentelemetry/sdk-trace-base": "1.14.0",
     "cls-bluebird": "^2.1.0",
     "lru-cache": "6.0.0",
@@ -136,8 +136,5 @@
     "opentracing": "^0.14.5",
     "semver": "7.5.4",
     "shimmer": "1.2.1"
-  },
-  "devDependencies": {
-    "no-code2": "2.0.0"
   }
 }

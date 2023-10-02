@@ -7,5 +7,5 @@
 
 set -eo pipefail
 
-lerna exec "npm run test:debug" --scope=@instana/google-cloud-run
+npx lerna exec "npm run test:debug" --scope=@instana/google-cloud-run
 

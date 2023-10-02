@@ -14,6 +14,9 @@
   "bugs": {
     "url": "https://github.com/instana/nodejs/issues"
   },
+  "workspaces": [
+    "packages/*"
+  ],
   "license": "MIT",
   "contributors": [
     {
@@ -31,28 +34,23 @@
   ],
   "scripts": {
     "audit": "lerna run audit --stream",
-    "bootstrap": "lerna bootstrap",
-    "bump": "lerna publish",
     "commit": "cz",
     "doctoc": "doctoc README.md packages/collector/README.md",
     "lint": "node misc/is_eol || (eslint .*.js *.js && npm run typecheck && lerna run lint --stream && eslint misc && eslint dockerfile-examples && eslint bin)",
-    "postinstall": "husky install && npm run bootstrap",
+    "postinstall": "husky install && lerna run node_modules:exists",
     "precommit": "npm run doctoc",
     "coverage-all": "nyc --reporter=lcov lerna run test --stream",
     "coverage": "nyc --reporter=lcov lerna run test --scope=${npm_config_scope} && npm run open-coverage",
     "open-coverage": "open coverage/lcov-report/index.html",
     "prettier": "prettier --write 'misc/**/*.js' 'dockerfile-examples/**/*.js' 'bin/**/*.js' && lerna run prettier --stream",
-    "refresh-package-lock-files": "lerna exec 'rm -rf node_modules' && npm install",
     "reinstall-deps": "lerna clean -y && rm -rf node_modules && npm install",
     "test": "lerna run test --stream",
     "test:ci": "lerna run test:ci --stream",
     "test:ci:collector": "lerna run test:ci  --stream --scope=@instana/collector",
     "test:debug": "lerna run test:debug --stream",
     "typecheck": "tsc",
-    "update-deps": "lerna exec '../../node_modules/.bin/ncu --upgrade' && lerna exec 'npm i --package-lock-only' && npm run reinstall-deps",
     "verify": "lerna run verify --stream",
-    "depcheck": "lerna exec 'npx depcheck --skip-missing --ignores nan,no-code2,agent-base,@types/*' --stream",
-    "version": "lerna clean --yes && lerna bootstrap --no-ci --ignore-scripts -- --package-lock-only --no-audit && git add packages/*/package-lock.json"
+    "depcheck": "lerna exec 'npx depcheck --skip-missing --ignores nan,agent-base,@types/*' --stream"
   },
   "devDependencies": {
     "@apollo/federation": "^0.38.1",
@@ -95,7 +93,7 @@
     "@types/rimraf": "^3.0.2",
     "@types/semver": "^7.3.9",
     "@types/shimmer": "^1.0.2",
-    "@types/sinon": "^10.0.6",
+    "@types/sinon": "^10.0.17",
     "@types/superagent": "^4.1.13",
     "admin": "^1.4.1",
     "admin-plugin-healthcheck": "^1.1.0",
@@ -143,11 +141,12 @@
     "ioredis": "^5.3.2",
     "kafka-node": "^5.0.0",
     "kafkajs": "^2.2.4",
+    "knex": "^2.5.1",
     "koa": "^2.13.4",
     "koa-bodyparser": "^4.3.0",
     "koa-morgan": "^1.0.1",
     "koa-router": "^12.0.1",
-    "lerna": "^3.22.1",
+    "lerna": "^7.3.0",
     "lodash": "^4.17.21",
     "log4js": "^6.3.0",
     "mali-latest": "npm:mali@^0.46.1",
@@ -173,7 +172,6 @@
     "nats-v1": "npm:nats@^1.4.12",
     "node-fetch": "^2.6.1",
     "node-nats-streaming": "^0.3.2",
-    "npm-check-updates": "^16.3.18",
     "nyc": "^15.1.0",
     "pg": "^8.7.1",
     "pino": "^6.13.3",
@@ -195,8 +193,9 @@
     "request-promise-native": "^1.0.5",
     "restify": "^8.6.1",
     "rimraf": "^3.0.2",
+    "semver": "7.5.4",
     "sequelize": "^6.17.0",
-    "sinon": "^11.1.1",
+    "sinon": "^15.2.0",
     "sinon-chai": "^3.7.0",
     "socket.io": "^4.6.0",
     "socket.io-client": "^4.6.0",
