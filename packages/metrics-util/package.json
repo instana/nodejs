@@ -64,6 +64,5 @@
     "@instana/serverless": "2.33.1",
     "@instana/shared-metrics": "2.33.1",
     "node-fetch": "^2.6.7"
-  },
-  "devDependencies": {}
+  }
 }

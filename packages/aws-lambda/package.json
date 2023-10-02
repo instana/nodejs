@@ -71,6 +71,5 @@
   "dependencies": {
     "@instana/core": "2.33.1",
     "@instana/serverless": "2.33.1"
-  },
-  "devDependencies": {}
+  }
 }

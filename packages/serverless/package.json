@@ -68,6 +68,5 @@
     "@instana/core": "2.33.1",
     "agent-base": "^6.0.2",
     "https-proxy-agent": "^5.0.0"
-  },
-  "devDependencies": {}
+  }
 }

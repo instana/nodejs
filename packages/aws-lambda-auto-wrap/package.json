@@ -66,6 +66,5 @@
   "dependencies": {
     "@instana/aws-lambda": "2.33.1",
     "@instana/core": "2.33.1"
-  },
-  "devDependencies": {}
+  }
 }
