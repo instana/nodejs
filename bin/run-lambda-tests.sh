@@ -7,5 +7,5 @@
 
 set -eo pipefail
 
-lerna exec "npm run test:debug" --scope=@instana/aws-lambda
+npx lerna exec "npm run test:debug" --scope=@instana/aws-lambda
 

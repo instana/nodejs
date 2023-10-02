@@ -7,5 +7,5 @@
 
 set -eo pipefail
 
-lerna exec "npm run test:debug" --scope=@instana/shared-metrics
+npx lerna exec "npm run test:debug" --scope=@instana/shared-metrics
 
