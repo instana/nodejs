@@ -373,7 +373,7 @@ jobs:
       - <<: *couchbase-setup
       - <<: *localstack
     <<: *shared
-    parallelism: << pipeline.parameters.executors >>
+    parallelism: 15
     resource_class: medium+
 
   "node-18-esm":
@@ -424,7 +424,7 @@ jobs:
       - <<: *couchbase-setup
       - <<: *localstack
     <<: *shared
-    parallelism: << pipeline.parameters.executors >>
+    parallelism: 15
     resource_class: medium+
 
   "node-12":
@@ -521,6 +521,8 @@ workflows:
     jobs:
       - "node-20"
       - "node-18"
+      - "node-16"
+      - "node-14"
 
   other-nodejs-versions:
     when:
