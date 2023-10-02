@@ -65,7 +65,7 @@
     "@opentelemetry/auto-instrumentations-node": "0.38.0",
     "@opentelemetry/resources": "1.14.0",
     "@opentelemetry/sdk-node": "0.38.0",
-    "@opentelemetry/semantic-conventions": "1.12.0",
+    "@opentelemetry/semantic-conventions": "1.17.0",
     "@opentelemetry/tracing": "0.24.0",
     "chai": "*",
     "chai-spies": "1.0.0"
