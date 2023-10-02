@@ -91,17 +91,17 @@ The following sections describe how to manage dependencies in practice.
 
 ### Updating A Single Version In A `package.json` File
 
-`npm install ${dependency-name}@${version}`
-`npm install -D ${dependency-name}@${version}`
-`npm install ${dependency-name}@${version} -w packages/collector`
-`npm install -D ${dependency-name}@${version} -w packages/collector`
+`npm install ${dependency-name}@${version}`: Updates a specific production dependency on the root.
+`npm install -D ${dependency-name}@${version}`: Updates a specific dev dependency on the root.
+`npm install ${dependency-name}@${version} -w packages/collector`: Updates a specific production dependency in the package `@instana/collector`. This is equivalent to `cd packages/collector; npm install ${dependency-name}@${version}`.
+`npm install -D ${dependency-name}@${version} -w packages/collector`: Updates a specific dev dependency in the package `@instana/collector`. This is equivalent to `cd packages/collector; npm install -D ${dependency-name}@${version}`.
 
 ### Updating A Single Version In A Lockfile
 
-`npm update ${dependency-name}`
-`npm update -D ${dependency-name}`
-`npm update ${dependency-name} -w packages/collector`
-`npm update -D ${dependency-name} -w packages/collector`
+`npm update ${dependency-name}`: Updates a specific production dependency on the root lock file.
+`npm update -D ${dependency-name}`: Updates a specific dev dependency on the root lock file.
+`npm update ${dependency-name} -w packages/collector`: Updates a specific production dependency of the package `@instana/collector`.
+`npm update -D ${dependency-name} -w packages/collector`: Updates a specific dev dependency of the package `@instana/collector`.
 
 ### package-lock.json
 
