@@ -80,14 +80,14 @@ The following sections describe how to manage dependencies in practice.
 ### Adding A Package Dependency
 
 `npm install -D ${dependency-name}`: Adds a dev dependency to the root `package.json` file.
-`npm install ${dependency-name} -w packages/collector`: Adds a production dependency to the package `@instana/collector`.
-`npm install -D ${dependency-name} -w packages/collector`: Adds a dev dependency to the package `@instana/collector`.
+`npm install ${dependency-name} -w packages/collector`: Adds a production dependency to the package `@instana/collector`. This is equivalent to `cd packages/collector; npm install ${dependency-name}`.
+`npm install -D ${dependency-name} -w packages/collector`: Adds a dev dependency to the package `@instana/collector`. This is equivalent to `cd packages/collector; npm install -D ${dependency-name}`.
 
 ### Removing A Package Dependency
 
-`npm uninstall -D ${dependency-name}`: Removes a dev dependency from the root package. 
-`npm uninstall ${dependency-name} -w packages/collector`: Removes a production dependency from the package `@instana/collector`.
-`npm uninstall ${dependency-name} -w packages/collector`: Removes a dev dependency from the package `@instana/collector`.
+`npm uninstall -D ${dependency-name}`: Removes a dev dependency from the root package.
+`npm uninstall ${dependency-name} -w packages/collector`: Removes a production dependency from the package `@instana/collector`. This is equivalent to `cd packages/collector; npm uninstall ${dependency-name}`.
+`npm uninstall -D ${dependency-name} -w packages/collector`: Removes a dev dependency from the package `@instana/collector`. This is equivalent to `cd packages/collector; npm uninstall -D ${dependency-name}`.
 
 ### Updating A Single Version In A `package.json` File
 
@@ -100,14 +100,14 @@ The following sections describe how to manage dependencies in practice.
 
 `npm update ${dependency-name}`: Updates a specific production dependency on the root lock file.
 `npm update -D ${dependency-name}`: Updates a specific dev dependency on the root lock file.
-`npm update ${dependency-name} -w packages/collector`: Updates a specific production dependency of the package `@instana/collector`.
-`npm update -D ${dependency-name} -w packages/collector`: Updates a specific dev dependency of the package `@instana/collector`.
+`npm update ${dependency-name} -w packages/collector`: Updates a specific production dependency of the package `@instana/collector`. This is equivalent to `cd packages/collector; npm update ${dependency-name}`.
+`npm update -D ${dependency-name} -w packages/collector`: Updates a specific dev dependency of the package `@instana/collector`. This is equivalent to `cd packages/collector; npm update -D ${dependency-name}`.
 
 ### package-lock.json
 
 There is only one single package-lock.json file when using **npm workspaces**.
 
-We are currently using **lockfileVersion 2**. 
+We are currently using **lockfileVersion 2**.
 LockfileVersion 3 is no longer compatible with Node v10. As soon as we drop Node v10, we can move to version 3.
 
 If you need to recreate the package lock file, please us `npm i --lockfile-version 2`.
