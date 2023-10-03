@@ -12,7 +12,7 @@ const { InstanaAWSProduct } = require('./instana_aws_product');
 const MAX_CONTEXT_SIZE = 3582;
 
 const SPAN_NAME = 'aws.lambda.invoke';
-const CUSTOM_PRODUCT_NAME = 'lambda';
+const CUSTOM_SERVICE_NAME = 'lambda';
 
 class InstanaAWSLambda extends InstanaAWSProduct {
   propagateInstanaHeaders(originalArgs, span, suppressed = false) {
@@ -80,23 +80,19 @@ class InstanaAWSLambda extends InstanaAWSProduct {
       span.data[this.spanName] = this.buildSpanData(smithySendArgs[0], smithySendArgs[0].input);
 
       this.propagateInstanaHeaders(smithySendArgs, span);
-      const callback = typeof smithySendArgs[1] === 'function' ? smithySendArgs[1] : smithySendArgs[2];
-      if (callback) {
-        const callbackIndex = callback === smithySendArgs[1] ? 1 : 2;
-        smithySendArgs[callbackIndex] = cls.ns.bind(function (err, data) {
-          if (data && data.code) {
-            self.finishSpan(data, span);
-          } else {
-            self.finishSpan(err, span);
-          }
-          callback.apply(this, arguments);
+
+      const { originalCallback, callbackIndex } = tracingUtil.findCallback(smithySendArgs);
+      if (callbackIndex !== -1) {
+        smithySendArgs[callbackIndex] = cls.ns.bind(function (err) {
+          self.finishSpan(err, span);
+          return originalCallback.apply(this, arguments);
         });
         return originalSend.apply(ctx, smithySendArgs);
       } else {
         const request = originalSend.apply(ctx, smithySendArgs);
         request
           .then(() => {
-            this.finishSpan(null, span);
+                        this.finishSpan(null, span);
           })
           .catch(err => {
             this.finishSpan(err, span);
@@ -109,7 +105,7 @@ class InstanaAWSLambda extends InstanaAWSProduct {
 
   buildSpanData(_operation, params) {
     const spanData = {
-      function: (params && params.FunctionName) || ''
+      function: params && params.FunctionName
     };
 
     if (params && params.InvocationType) {
@@ -119,4 +115,4 @@ class InstanaAWSLambda extends InstanaAWSProduct {
   }
 }
 
-module.exports = new InstanaAWSLambda(SPAN_NAME, null, CUSTOM_PRODUCT_NAME);
+module.exports = new InstanaAWSLambda(SPAN_NAME, null, CUSTOM_SERVICE_NAME);

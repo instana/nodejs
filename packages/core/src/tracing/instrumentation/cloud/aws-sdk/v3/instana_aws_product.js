@@ -9,12 +9,12 @@ class InstanaAWSProduct {
   /**
    * @param {string} spanName
    * @param {Array.<string>} operations
-   * @param {string} customProductName
+   * @param {string} serviceName
    */
-  constructor(spanName, operations, customProductName) {
+  constructor(spanName, operations, serviceName) {
     this.spanName = spanName;
     this.operations = operations || [];
-    this.customProductName = customProductName || '';
+    this.serviceName = serviceName || '';
   }
 
   instrumentedSmithySend(/** ctx, originalSend, smithySendArgs */) {
@@ -63,6 +63,10 @@ class InstanaAWSProduct {
   supportsOperation(operation) {
     if (!this.operations || !this.operations.length) return true;
     return this.operations.includes(operation);
+  }
+
+  getServiceIdName() {
+    return this.serviceName || this.spanName;
   }
 }
 

@@ -80,10 +80,7 @@ function shimSmithySend(originalSend) {
     const command = smithySendArgs[0];
 
     const serviceId = self.config && self.config.serviceId;
-    let awsProduct =
-      serviceId &&
-      (awsProducts.find(aws => aws.spanName === serviceId.toLowerCase()) ||
-        awsProducts.find(aws => aws.customProductName === serviceId.toLowerCase()));
+    let awsProduct = serviceId && awsProducts.find(aws => aws.getServiceIdName() === serviceId.toLowerCase());
     if (awsProduct && awsProduct.supportsOperation(command.constructor.name)) {
       return awsProduct.instrumentedSmithySend(self, isActive, originalSend, smithySendArgs);
     } else {

@@ -6,10 +6,16 @@
 
 require('../../../../../../src')();
 
-const { LambdaClient, InvokeCommand, Lambda, InvokeAsyncCommand } = require('@aws-sdk/client-lambda');
+const {
+  LambdaClient,
+  InvokeCommand,
+  Lambda,
+  InvokeAsyncCommand,
+  GetFunctionCommand
+} = require('@aws-sdk/client-lambda');
 const express = require('express');
 const logPrefix = `AWS SDK v3 Lambda (${process.pid}):\t`;
-const functionName = process.env.AWS_LAMBDA_FUNCTION_NAME || 'wrapped-async';
+const functionName = process.env.AWS_LAMBDA_FUNCTION_NAME || 'wrapped-async-v3';
 const log = require('@instana/core/test/test_util/log').getLogger(logPrefix);
 const app = express();
 const port = require('../../../../../test_util/app-port')();
@@ -27,11 +33,15 @@ const operations = {
   invokeAsync: {
     FunctionName: functionName,
     InvokeArgs: '{"ok": true}'
+  },
+  getFunction: {
+    FunctionName: functionName
   }
 };
 const commandMapping = {
   invoke: InvokeCommand,
-  invokeAsync: InvokeAsyncCommand
+  invokeAsync: InvokeAsyncCommand,
+  getFunction: GetFunctionCommand
 };
 async function executeOperation(op, ctx = null, method) {
   const options = { ...operations[op] };

@@ -16,14 +16,17 @@ const globalAgent = require('../../../../../globalAgent');
 const { verifyHttpRootEntry, verifyExitSpan } = require('@instana/core/test/test_util/common_verifications');
 const { isLocalStackDisabled } = require('./utils');
 const SPAN_NAME = 'aws.lambda.invoke';
-const functionName = 'wrapped-async';
+const functionName = 'wrapped-async-v3';
 let appControls;
 
 const availableCtx = [null, '{"Custom": {"awesome_company": "Instana"}}', '{"Custom": "Something"}'];
 const requestMethods = ['async', 'promise', 'cb', 'promise-v2', 'cb-v2'];
-const availableOperations = ['invoke', 'invokeAsync'];
+const availableOperations = ['invoke', 'getFunction'];
 let envConfig = {};
 if (isLocalStackDisabled()) {
+  // invokeAsync currently not supported in localstack
+  // https://docs.localstack.cloud/references/coverage/coverage_lambda/
+  availableOperations.push('invokeAsync');
   envConfig = {
     AWS_LAMBDA_FUNCTION_NAME: functionName
   };
