@@ -92,7 +92,7 @@ class InstanaAWSLambda extends InstanaAWSProduct {
         const request = originalSend.apply(ctx, smithySendArgs);
         request
           .then(() => {
-                        this.finishSpan(null, span);
+            this.finishSpan(null, span);
           })
           .catch(err => {
             this.finishSpan(err, span);
