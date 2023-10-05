@@ -53,6 +53,7 @@
     "depcheck": "lerna exec 'npx depcheck --skip-missing --ignores nan,agent-base,@types/*' --stream"
   },
   "devDependencies": {
+    "@apollo/cache-control-types": "^1.0.2",
     "@apollo/federation": "0.38.1",
     "@apollo/gateway": "0.50.2",
     "@aws-sdk/client-dynamodb": "3.415.0",
