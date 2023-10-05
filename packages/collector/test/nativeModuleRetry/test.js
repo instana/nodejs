@@ -25,10 +25,18 @@ describe('retry loading native addons', function () {
   globalAgent.setUpCleanUpHooks();
   const agentControls = globalAgent.instance;
 
+  // CASE: protect for Node < v14
+  let nativeModulePath;
+  try {
+    nativeModulePath = require.resolve('event-loop-stats');
+  } catch (err) {
+    // ignore
+  }
+
   const metricAddonsTestConfigs = [
     {
       name: 'event-loop-stats',
-      nativeModulePath: require.resolve('event-loop-stats'),
+      nativeModulePath,
       backupPath: path.join(os.tmpdir(), 'event-loop-stats-backup'),
       check: ([allMetrics, aggregated]) => {
         // check that libuv stats are initially reported as unsupported
