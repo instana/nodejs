@@ -26,9 +26,12 @@ describe('retry loading native addons', function () {
   const agentControls = globalAgent.instance;
 
   // CASE: protect for Node < v14
-  let nativeModulePath;
+  let nativeModulePathEventLoopStats;
+  let nativeModulePathGcStats;
+
   try {
-    nativeModulePath = require.resolve('event-loop-stats');
+    nativeModulePathEventLoopStats = require.resolve('event-loop-stats');
+    nativeModulePathGcStats = require.resolve('gcstats.js');
   } catch (err) {
     // ignore
   }
@@ -36,7 +39,7 @@ describe('retry loading native addons', function () {
   const metricAddonsTestConfigs = [
     {
       name: 'event-loop-stats',
-      nativeModulePath,
+      nativeModulePath: nativeModulePathEventLoopStats,
       backupPath: path.join(os.tmpdir(), 'event-loop-stats-backup'),
       check: ([allMetrics, aggregated]) => {
         // check that libuv stats are initially reported as unsupported
@@ -65,7 +68,7 @@ describe('retry loading native addons', function () {
     },
     {
       name: 'gcstats.js',
-      nativeModulePath: require.resolve('gcstats.js'),
+      nativeModulePath: nativeModulePathGcStats,
       backupPath: path.join(os.tmpdir(), 'gcstats.js-backup'),
       check: ([allMetrics, aggregated]) => {
         // check that gc stats are initially reported as unsupported
