@@ -199,7 +199,7 @@ function initInstrumenations(_config) {
       instrumentationModules[instrumentationKey] = require(instrumentationKey);
 
       if (!isInstrumentationDisabled(_config, instrumentationKey)) {
-        instrumentationModules[instrumentationKey].init(_config);
+        instrumentationModules[instrumentationKey].init(_config, instrumenationsInitialized);
       }
 
       if (instrumentationModules[instrumentationKey].batchable && instrumentationModules[instrumentationKey].spanName) {
@@ -215,7 +215,7 @@ function initInstrumenations(_config) {
   } else {
     instrumentations.forEach(instrumentationKey => {
       if (instrumentationModules[instrumentationKey].updateConfig) {
-        instrumentationModules[instrumentationKey].updateConfig(_config);
+        instrumentationModules[instrumentationKey].updateConfig(_config, instrumenationsInitialized);
       }
     });
   }

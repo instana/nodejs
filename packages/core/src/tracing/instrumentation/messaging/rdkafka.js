@@ -21,18 +21,18 @@ logger = require('../../../logger').getLogger('tracing/rdkafka', newLogger => {
 
 let isActive = false;
 
-exports.init = function init(config) {
+exports.init = function init(config, instrumenationsInitialized) {
   requireHook.onFileLoad(/\/node-rdkafka\/lib\/producer\.js/, instrumentProducer);
   requireHook.onFileLoad(/\/node-rdkafka\/lib\/kafka-consumer-stream\.js/, instrumentConsumerAsStream);
   requireHook.onModuleLoad('node-rdkafka', instrumentConsumer);
 
   traceCorrelationEnabled = config.tracing.kafka.traceCorrelation;
-  logWarningForKafkaHeaderFormat(config.tracing.kafka.headerFormat);
+  logForKafka(config, instrumenationsInitialized);
 };
 
-exports.updateConfig = function updateConfig(config) {
+exports.updateConfig = function updateConfig(config, instrumenationsInitialized) {
   traceCorrelationEnabled = config.tracing.kafka.traceCorrelation;
-  logWarningForKafkaHeaderFormat(config.tracing.kafka.headerFormat);
+  logForKafka(config, instrumenationsInitialized);
 };
 
 exports.activate = function activate(extraConfig) {
@@ -48,6 +48,16 @@ exports.activate = function activate(extraConfig) {
 exports.deactivate = function deactivate() {
   isActive = false;
 };
+
+// The value of instrumenationsInitialized can be true, false or undefined( since it is an optional parametre).
+// It is declared as an optional parameter because of the scope of calling it from outside other than in initInstrumenations function of tracing.
+// If initInstrumenations is not done the value will be false, this makes sure the logging in updateConfig's execution.
+function logForKafka(config,instrumenationsInitialized){
+  if(instrumenationsInitialized!==false){
+    logWarningForKafkaHeaderFormat(config.tracing.kafka.headerFormat)
+};
+}
+
 
 // Note: This function can be removed as soon as we finish the Kafka header migration and remove the ability to
 // configure the header format (at that point, we will only be using string headers).

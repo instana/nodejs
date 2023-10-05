@@ -24,6 +24,8 @@ function init() {
     logger.setLevel(process.env.INSTANA_DEBUG ? 'debug' : process.env.INSTANA_LOG_LEVEL);
   }
 
+  // The instanaCore.preInit call makes sure the tracing instrumentations can monkey-patch the modules that we instrument before the application under monitoring can access them via require
+  // Initializing the instrumentations/monkey-patching needs to happen synchronously, directly at startup inorder to init the tracer automatically when that package is loaded
   instanaCore.preInit();
 
   metrics.init(config, function onReady(err, ecsContainerPayload) {
