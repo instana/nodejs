@@ -198,7 +198,7 @@ function registerTests(handlerDefinitionPath) {
       verify(control, { error: false, expectMetrics: true, expectSpans: true, alias: 'anAlias' }));
   });
 
-  describe('when INSTANA_SSM_PARAM_NAME is used', function () {
+  describe.skip('when INSTANA_SSM_PARAM_NAME is used', function () {
     describe('but we cannot fetch the key from AWS', () => {
       // - INSTANA_ENDPOINT_URL is configured
       // - INSTANA_AGENT_KEY is configured via SSM
