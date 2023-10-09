@@ -65,6 +65,7 @@
     "@aws-sdk/client-sns": "^3.405.0",
     "@aws-sdk/client-sqs": "3.329.0",
     "@aws-sdk/client-sqs2": "npm:@aws-sdk/client-sqs@3.24.0",
+    "@aws-sdk/client-lambda": "^3.421.0",
     "@aws-sdk/lib-dynamodb": "^3.395.0",
     "@commitlint/cli": "^14.1.0",
     "@commitlint/config-conventional": "^14.1.0",
@@ -208,7 +209,8 @@
     "uuid": "^8.3.2",
     "winston": "^3.3.3",
     "ws": "^8.11.0",
-    "yargs": "^17.5.1"
+    "yargs": "^17.5.1",
+    "adm-zip": "^0.5.10"
   },
   "optionalDependencies": {
     "grpc": "1.24.11",

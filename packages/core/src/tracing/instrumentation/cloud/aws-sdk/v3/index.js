@@ -16,7 +16,8 @@ const awsProducts = [
   require('./s3'),
   require('./sqs'),
   require('./kinesis'),
-  require('./sns')
+  require('./sns'),
+  require('./lambda')
 ];
 
 const sqsConsumer = require('./sqs-consumer');
@@ -79,8 +80,7 @@ function shimSmithySend(originalSend) {
     const command = smithySendArgs[0];
 
     const serviceId = self.config && self.config.serviceId;
-    let awsProduct = serviceId && awsProducts.find(aws => aws.spanName === serviceId.toLowerCase());
-
+    let awsProduct = serviceId && awsProducts.find(aws => aws.getServiceIdName() === serviceId.toLowerCase());
     if (awsProduct && awsProduct.supportsOperation(command.constructor.name)) {
       return awsProduct.instrumentedSmithySend(self, isActive, originalSend, smithySendArgs);
     } else {
