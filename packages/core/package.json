@@ -126,7 +126,7 @@
   "dependencies": {
     "@opentelemetry/api": "1.4.1",
     "@opentelemetry/context-async-hooks": "1.9.1",
-    "@opentelemetry/instrumentation-fs": "0.7.3",
+    "@opentelemetry/instrumentation-fs": "0.8.1",
     "@opentelemetry/instrumentation-restify": "0.32.3",
     "@opentelemetry/instrumentation-socket.io": "0.33.3",
     "@opentelemetry/sdk-trace-base": "1.14.0",
