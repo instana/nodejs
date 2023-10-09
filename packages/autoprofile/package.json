@@ -24,8 +24,7 @@
     "url": "git+https://github.com/instana/nodejs.git"
   },
   "scripts": {
-    "audit": "npm audit ----omit=dev",
-    "node_modules:exists": "mkdir -p node_modules",
+    "audit": "npm audit --production",
     "install": "node node-gyp-fallback.js",
     "test": "mocha --config=test/.mocharc.js --require test/hooks.js --sort $(find test -iname '*test.js' -not -path '*node_modules*')",
     "test:debug": "WITH_STDOUT=true npm run test",
@@ -52,6 +51,10 @@
     "@instana/core": "2.33.1",
     "detect-libc": "^1.0.3",
     "nan": "^2.14.2"
+  },
+  "devDependencies": {
+    "no-code2": "2.0.0",
+    "semver": "7.5.3"
   },
   "main": "index.js",
   "files": [
