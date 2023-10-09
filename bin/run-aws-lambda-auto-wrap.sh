@@ -6,5 +6,5 @@
 
 set -eo pipefail
 
-npx lerna exec "npm run test:debug" --scope=instana-aws-lambda-auto-wrap
+lerna exec "npm run test:debug" --scope=instana-aws-lambda-auto-wrap
 

@@ -82,7 +82,7 @@ describe('dependencies', function () {
       mkdirp.sync(instanaPath);
       const collectorPath = path.join(instanaPath, 'collector');
       // We create a symlink to this repo for the @instana/collector package to be able to test with the current code
-      // base.
+      // base. A downside of this is that also the dev dependencies of @instana/collector and friends will be found.
       symlinkSync(path.join(repoRootDir, 'packages', 'collector'), collectorPath);
       unlinkSync(path.join(tmpDir, 'package.json'));
     });
@@ -107,14 +107,12 @@ describe('dependencies', function () {
         agentControls.getAllMetrics(controls.getPid()).then(allMetrics => {
           const deps = findMetric(allMetrics, ['dependencies']);
           expect(deps).to.be.an('object');
-          expect(Object.keys(deps)).to.have.lengthOf(123);
+          expect(Object.keys(deps)).to.have.lengthOf(200);
 
-          // npm workspaces installs them on the root
-          expect(deps['@instana/shared-metrics']).to.not.exist;
-          expect(deps['@instana/core']).to.not.exist;
-          expect(deps['@instana/autoprofile']).to.not.exist;
-
+          expect(deps['@instana/shared-metrics']).to.exist;
+          expect(deps['@instana/core']).to.exist;
           expect(deps['@instana/collector']).to.exist;
+          expect(deps['@instana/autoprofile']).to.exist;
 
           expectVersion(deps.fastify, '^3.20.2');
           expectVersion(deps.express, '^4.17.1');
@@ -137,7 +135,7 @@ describe('dependencies', function () {
       mkdirp.sync(instanaPath);
       const collectorPath = path.join(instanaPath, 'collector');
       // We create a symlink to this repo for the @instana/collector package to be able to test with the current code
-      // base.
+      // base. A downside of this is that also the dev dependencies of @instana/collector and friends will be found.
       symlinkSync(path.join(repoRootDir, 'packages', 'collector'), collectorPath);
     });
 
@@ -162,14 +160,12 @@ describe('dependencies', function () {
         agentControls.getAllMetrics(controls.getPid()).then(allMetrics => {
           const deps = findMetric(allMetrics, ['dependencies']);
           expect(deps).to.be.an('object');
-          expect(Object.keys(deps)).to.have.lengthOf(128);
+          expect(Object.keys(deps)).to.have.lengthOf(200);
 
-          // npm workspaces installs them on the root
-          expect(deps['@instana/shared-metrics']).to.not.exist;
-          expect(deps['@instana/core']).to.not.exist;
-          expect(deps['@instana/autoprofile']).to.not.exist;
-
+          expect(deps['@instana/shared-metrics']).to.exist;
+          expect(deps['@instana/core']).to.exist;
           expect(deps['@instana/collector']).to.exist;
+          expect(deps['@instana/autoprofile']).to.exist;
 
           expectVersion(deps.fastify, '^3.20.2');
           expectVersion(deps.express, '^4.17.1');

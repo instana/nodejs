@@ -65,7 +65,7 @@ exports.getExtraHeadersFromNormalizedObjectLiteral = function getExtraHeadersFro
  * Headers object (https://developer.mozilla.org/en-US/docs/Web/API/Headers) and the header names are normalized
  * to lower case.
  *
- * @param {import('node-fetch').Headers} headers a Fetch API Headers object
+ * @param {Headers} headers a Fetch API Headers object
  * @param {Array<string>} extraHttpHeadersToCapture the configured list of headers that need to be captured
  * @returns {Object | undefined} an object literal with the captured headers or undefined if no headers matched the
  * extraHttpHeadersToCapture list
@@ -223,7 +223,7 @@ exports.mergeExtraHeadersFromNormalizedObjectLiteral = function mergeExtraHeader
  *
  * @param {Object.<string, string> | undefined} headersAlreadyCapturedIfAny an object literal representing the headers
  * that have already been captured earlier
- * @param {import('node-fetch').Headers} headers a Fetch API Headers object
+ * @param {Headers} headers a Fetch API Headers object
  * @param {Array<string>} extraHttpHeadersToCapture the configured list of headers that need to be captured
  * @returns {Object | undefined} a new object literal with the merged captured headers, or the parameter
  * `headersAlreadyCapturedIfAny` unmodified if no new headers were found
