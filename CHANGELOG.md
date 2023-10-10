@@ -3,6 +3,24 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.34.0](https://github.com/instana/nodejs/compare/v2.33.1...v2.34.0) (2023-10-10)
+
+
+### Features
+
+* added esm support for google cloud platform ([#859](https://github.com/instana/nodejs/issues/859)) ([55fd6ff](https://github.com/instana/nodejs/commit/55fd6ff93373d8c8f169fc7360b0c8285a64002a))
+* added support for aws sdk v3 lambda ([#871](https://github.com/instana/nodejs/issues/871)) ([eb85c91](https://github.com/instana/nodejs/commit/eb85c91228144084191d12589f3b1152f6e2529d))
+
+
+### Reverts
+
+* Revert "chore: migrated to npm workspaces and lerna v7 (#876)" ([763ac7e](https://github.com/instana/nodejs/commit/763ac7e69d56742009e18964d267313918813c80)), closes [#876](https://github.com/instana/nodejs/issues/876)
+* Revert "chore: fixed lock file" ([ec79043](https://github.com/instana/nodejs/commit/ec79043de6d9c94c0c3983ad9e9b765364abf8e2))
+
+
+
+
+
 ## [2.33.1](https://github.com/instana/nodejs/compare/v2.33.0...v2.33.1) (2023-09-26)
 
 
