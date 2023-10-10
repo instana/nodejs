@@ -14,7 +14,6 @@ const { retry, stringifyItems, delay } = require('@instana/core/test/test_util')
 const ProcessControls = require('../../../../../test_util/ProcessControls');
 const globalAgent = require('../../../../../globalAgent');
 const { verifyHttpRootEntry, verifyExitSpan } = require('@instana/core/test/test_util/common_verifications');
-const { isLocalStackDisabled } = require('./utils');
 const SPAN_NAME = 'aws.lambda.invoke';
 const functionName = 'wrapped-async-v3';
 let appControls;
@@ -23,19 +22,6 @@ const availableCtx = [null, '{"Custom": {"awesome_company": "Instana"}}', '{"Cus
 const requestMethods = ['async', 'promise', 'cb', 'promise-v2', 'cb-v2'];
 const availableOperations = ['invoke', 'getFunction'];
 let envConfig = {};
-if (isLocalStackDisabled()) {
-  // invokeAsync currently not supported in localstack
-  // https://docs.localstack.cloud/references/coverage/coverage_lambda/
-  availableOperations.push('invokeAsync');
-  envConfig = {
-    AWS_LAMBDA_FUNCTION_NAME: functionName
-  };
-} else {
-  envConfig = {
-    AWS_LAMBDA_FUNCTION_NAME: functionName,
-    AWS_ENDPOINT: process.env.LOCALSTACK_AWS
-  };
-}
 const getNextCallMethod = require('@instana/core/test/test_util/circular_list').getCircularList(requestMethods);
 async function start(version) {
   this.timeout(config.getTestTimeout() * 20);
@@ -43,6 +29,20 @@ async function start(version) {
   if (!supportedVersion(process.versions.node) || semver.lt(process.versions.node, '14.0.0')) {
     it.skip(`npm: ${version}`, () => {});
     return;
+  }
+  const { isLocalStackDisabled } = require('./utils');
+  if (isLocalStackDisabled()) {
+    // invokeAsync currently not supported in localstack
+    // https://docs.localstack.cloud/references/coverage/coverage_lambda/
+    availableOperations.push('invokeAsync');
+    envConfig = {
+      AWS_LAMBDA_FUNCTION_NAME: functionName
+    };
+  } else {
+    envConfig = {
+      AWS_LAMBDA_FUNCTION_NAME: functionName,
+      AWS_ENDPOINT: process.env.LOCALSTACK_AWS
+    };
   }
   const retryTime = config.getTestTimeout() * 10;
   if (!isLocalStackDisabled()) {
