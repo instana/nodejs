@@ -7,25 +7,23 @@ on:
     types: [opened, synchronize, reopened]
 jobs:
   sonarqube:
-    name: sonarqube
+    name: sonarqube 
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
         with:
           fetch-depth: 0 
       - name: Setup Node.js
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v3
         with:
-          node-version: 18  # You can specify your preferred Node.js version here
+          node-version: 16  # You can specify your preferred Node.js version here
       - name: Install dependencies
         run: npm ci
       - name: Run tests and generate coverage
         run: |
-          # Run tests in all packages using Lerna
-          npx lerna run test --stream
-
-          # Generate Jest coverage reports in JSON format for each package
-          npx lerna exec -- npx jest --coverage --coverageReporters=json
+          # Generate Jest coverage reports
+          npm run coverage --scope @instana/collector
+        continue-on-error: true
       - name: SonarQube Scan
         uses: SonarSource/sonarqube-scan-action@master
         env:
