@@ -34,7 +34,7 @@ function instrumentLog4jsLogger(loggerModule) {
 
 function shimLog(originalLog) {
   return function (level) {
-    if (cls.skipExitTracing({ isActive, log: false })) {
+    if (cls.skipExitTracing({ isActive })) {
       return originalLog.apply(this, arguments);
     }
 

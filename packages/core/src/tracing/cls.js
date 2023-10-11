@@ -539,8 +539,6 @@ function call(fn) {
  * |                     | For example because of suppression.
  * | skipParentSpanCheck | Some instrumentations have a very specific handling for checking the parent span.
  * |                     | With this flag you can skip the default parent span check.
- * | log                 | Logger instrumentations might not want to log because they run into recursive
- * |                     | problem raising `RangeError: Maximum call stack size exceeded`.
  * | skipIsTracing       | Instrumentation wants to handle `cls.isTracing` on it's own (e.g db2)
  *
  * @param {Object.<string, *>} options
@@ -551,7 +549,6 @@ function skipExitTracing(options) {
       isActive: true,
       extendedResponse: false,
       skipParentSpanCheck: false,
-      log: true,
       skipIsTracing: false
     },
     options
@@ -569,21 +566,6 @@ function skipExitTracing(options) {
   }
 
   if (!opts.skipParentSpanCheck && (!parentSpan || isExitSpanResult)) {
-    // NOTE: We need to check for `isActive` otherwise we flood this warning in case the collector is not
-    //       yet connected to the agent, but the application receives traffic already
-    //       The underlying problem is that all instrumentations are already "working" before the collector
-    //       is successfully connected with the agent, but they are skipped with the `isActive` flag.
-    if (opts.log && opts.isActive) {
-      logger.warn(
-        // eslint-disable-next-line max-len
-        `Cannot start an exit span as this requires an active entry (or intermediate) span as parent. ${
-          parentSpan
-            ? `But the currently active span is itself an exit span: ${JSON.stringify(parentSpan)}`
-            : 'Currently there is no span active at all'
-        }`
-      );
-    }
-
     if (opts.extendedResponse) return { skip: true, suppressed, isExitSpan: isExitSpanResult };
     else return true;
   }
