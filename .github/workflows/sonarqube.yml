@@ -19,11 +19,6 @@ jobs:
           node-version: 16  # You can specify your preferred Node.js version here
       - name: Install dependencies
         run: npm ci
-      - name: Run tests and generate coverage
-        run: |
-          # Generate Jest coverage reports
-          npm run coverage --scope @instana/collector
-        continue-on-error: true
       - name: SonarQube Scan
         uses: SonarSource/sonarqube-scan-action@master
         env:
