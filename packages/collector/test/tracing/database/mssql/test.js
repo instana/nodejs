@@ -22,9 +22,9 @@ describe('tracing/mssql', function () {
     // v10 drop support for NodeJS <= 14
     // v9 dropped support for < 14
     if (mssqlVersion === 'latest') {
-      mochaSuiteFn = semver.gte(process.versions.node, '16.0.0') ? describe.skip : describe;
+      mochaSuiteFn = semver.gte(process.versions.node, '16.0.0') ? describe : describe.skip;
     } else if (mssqlVersion === 'v9') {
-      mochaSuiteFn = semver.gte(process.versions.node, '14.0.0') ? describe.skip : describe;
+      mochaSuiteFn = semver.gte(process.versions.node, '14.0.0') ? describe : describe.skip;
     } else {
       mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
     }
