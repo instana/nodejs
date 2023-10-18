@@ -21,7 +21,7 @@ describe('tracing/mssql', function () {
 
     // v9 dropped support for < 14
     if (mssqlVersion === 'latest') {
-      mochaSuiteFn = semver.gte(process.versions.node, '14.0.0') ? describe : describe.skip;
+      mochaSuiteFn = semver.gt(process.versions.node, '14.0.0') ? describe : describe.skip;
     } else {
       mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
     }
