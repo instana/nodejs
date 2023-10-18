@@ -16,12 +16,15 @@ const ProcessControls = require('../../../test_util/ProcessControls');
 const globalAgent = require('../../../globalAgent');
 
 describe('tracing/mssql', function () {
-  ['latest', 'v8'].forEach(mssqlVersion => {
+  ['latest', 'v9', 'v8'].forEach(mssqlVersion => {
     let mochaSuiteFn;
 
+    // v10 drop support for NodeJS <= 14
     // v9 dropped support for < 14
     if (mssqlVersion === 'latest') {
-      mochaSuiteFn = semver.gt(process.versions.node, '14.0.0') ? describe : describe.skip;
+      mochaSuiteFn = semver.gte(process.versions.node, '16.0.0') ? describe.skip : describe;
+    } else if (mssqlVersion === 'v9') {
+      mochaSuiteFn = semver.gte(process.versions.node, '14.0.0') ? describe.skip : describe;
     } else {
       mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
     }
