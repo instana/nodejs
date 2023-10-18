@@ -279,6 +279,20 @@ shared: &shared
     - run:
         name: Analyze Test Durations
         command: node misc/test-durations/ci
+    # Generate ESLint JSON report for Sonarqube.
+    - run:
+        name: Run ESLint and generate ESLint report
+        command: |
+          if [ -n "$NODE_COVERAGE" ]; then
+            npx eslint packages/ -f json > eslint-report.json || exit 0
+          fi
+    # Execute the SonarScanner to analyze the project
+    - run:
+        name: Run SonarQube Scanner
+        command: |
+          if [ -n "$NODE_COVERAGE" ]; then
+            npx sonarqube-scanner 
+          fi
 
     - store_artifacts:
         path: coverage
