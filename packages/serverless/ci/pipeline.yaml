@@ -367,6 +367,8 @@ jobs:
                 CONTAINER_REGISTRY_PASSWORD=((concourse-icr-containers-public.password)) \
                 AWS_ACCESS_KEY_ID=((aws-ci-manage-lambda-layers.aws_access_key_id)) \
                 AWS_SECRET_ACCESS_KEY=((aws-ci-manage-lambda-layers.aws_secret_access_key)) \
+                AWS_ACCESS_KEY_ID_CHINA=((aws-ci-manage-lambda-layers-china.aws_access_key_id)) \
+                AWS_SECRET_ACCESS_KEY_CHINA=((aws-ci-manage-lambda-layers-china.aws_secret_access_key)) \
                 nodejs-repository/packages/aws-lambda/layer/bin/publish-layer.sh
 
       - task: build-and-publish-aws-lambda-layer-and-image-arm64
@@ -389,6 +391,8 @@ jobs:
                 CONTAINER_REGISTRY_PASSWORD=((concourse-icr-containers-public.password)) \
                 AWS_ACCESS_KEY_ID=((aws-ci-manage-lambda-layers.aws_access_key_id)) \
                 AWS_SECRET_ACCESS_KEY=((aws-ci-manage-lambda-layers.aws_secret_access_key)) \
+                AWS_ACCESS_KEY_ID_CHINA=((aws-ci-manage-lambda-layers-china.aws_access_key_id)) \
+                AWS_SECRET_ACCESS_KEY_CHINA=((aws-ci-manage-lambda-layers-china.aws_secret_access_key)) \
                 nodejs-repository/packages/aws-lambda/layer/bin/publish-layer.sh
 
     on_success:

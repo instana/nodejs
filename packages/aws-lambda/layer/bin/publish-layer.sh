@@ -112,20 +112,41 @@ fi
 ZIP_NAME=$ZIP_PREFIX.zip
 TMP_ZIP_DIR=tmp
 
+# The connection to AWS China cn-north-1 is very slow from Europe, possibly also from the US. We need to upload roughly
+# 8-10 MB and it takes forever. Thus we configure a very generous timeout when publishing the layer to a Chinese region.
+# For some reason, cn-northwest-1 is fine though.
+AWS_CLI_TIMEOUT_FOR_CHINA=1800
+
 if [[ -z $AWS_ACCESS_KEY_ID ]] || [[ -z $AWS_SECRET_ACCESS_KEY ]]; then
   printf "Warning: Environment variables AWS_ACCESS_KEY_ID or AWS_SECRET_ACCESS_KEY are not set.\n"
   printf "This might be okay if you have set up AWS authentication via other means.\n"
   printf "If not, the AWS cli commands will fail.\n"
 fi
 
-printf "\nstep 1/9: Fetching AWS regions\n"
 
-# us-gov-* only available to US government agencies, U.S. government etc.
-# cn-* (china regions) completely disconnected from normal AWS account. 
-SKIPPED_REGIONS=$'cn-north-1\ncn-northwest-1\nus-gov-east-1\nus-gov-west-1'
+# The us-gov-* regions are only available to US government agencies, U.S. government etc. The regions have not been (and
+# maybe cannot be) enabled for our AWS account. We currently do not publish Lambda layers to these regions.
+SKIPPED_REGIONS=$'us-gov-east-1\nus-gov-west-1'
+
+# AWS China is completely separated from the rest of AWS. You cannot enable the Chinese regions in a global AWS account.
+# Instead, we have a separate account for AWS China.
+CHINESE_REGIONS=$'cn-northwest-1\ncn-north-1'
+
+# For publishing to the Chinese regions, we need different credentials. This is implemented by temporarily replacing
+# AWS_ACCESS_KEY_ID/AWS_SECRET_ACCESS_KEY with the credentials for the Chinese account. The two following variables
+# allow us to restore the original credentials for the global AWS account.
+AWS_ACCESS_KEY_ID_BACKUP=$AWS_ACCESS_KEY_ID
+AWS_SECRET_ACCESS_KEY_BACKUP=$AWS_SECRET_ACCESS_KEY
 
 if [[ -z $REGIONS ]]; then
+  printf "\nstep 1/9: Fetching AWS regions\n"
   REGIONS=$(aws ssm get-parameters-by-path --path /aws/service/global-infrastructure/services/lambda/regions --output text --query "Parameters[].Value" | tr '\t' '\n' | sort)
+else
+  # If REGIONS has been provided as an environment variable, we expect it to be a comma-separated list (as it is
+  # cumbersome to provide a newline separated list via an environment variable). We need to convert this to a newline-
+  # separated string, as this is what the remainder of this script expects.
+  REGIONS=${REGIONS/,/$'\n'}
+  printf "\nstep 1/9: Using provided AWS regions\n"
 fi
 
 printf "\n#### Summary ####\n\n"
@@ -135,8 +156,12 @@ echo "LAMBDA_ARCHITECTURE: $LAMBDA_ARCHITECTURE"
 echo "SKIP_DOCKER_IMAGE: $SKIP_DOCKER_IMAGE"
 echo "SKIP_DOCKER_IMAGE_PUSH: $SKIP_DOCKER_IMAGE_PUSH"
 echo "DOCKER_IMAGE_NAME: $DOCKER_IMAGE_NAME"
-echo "REGIONS: $REGIONS"
-echo "SKIPPED REGIONS: $SKIPPED_REGIONS"
+echo "REGIONS:"
+echo "$REGIONS"
+echo "SKIPPED REGIONS:"
+echo "$SKIPPED_REGIONS"
+echo "CHINESE_REGIONS:"
+echo "$CHINESE_REGIONS"
 echo "PACKAGE_VERSION: $PACKAGE_VERSION"
 echo "BUILD_LAYER_WITH: $BUILD_LAYER_WITH"
 echo "SKIP_AWS_PUBLISH_LAYER: $SKIP_AWS_PUBLISH_LAYER"
@@ -287,7 +312,7 @@ mv $ZIP_NAME ..
 popd > /dev/null
 
 if [[ -z $SKIP_AWS_PUBLISH_LAYER ]]; then
-  echo "step 6/9: publishing $ZIP_NAME as AWS Lambda layer $LAYER_NAME to all regions"
+  echo "step 6/9: publishing $ZIP_NAME as AWS Lambda layer $LAYER_NAME to specifed regions"
 
   while read -r region; do
     skip=0
@@ -300,14 +325,40 @@ if [[ -z $SKIP_AWS_PUBLISH_LAYER ]]; then
     done <<< "$SKIPPED_REGIONS"
 
     if [[ $skip -eq 1 ]]; then
-      echo " - skipping region: $region"      
+      echo " - skipping region: $region"
     else
       echo " - publishing to region $region:"
-          
+
+      is_chinese_region=0
+      while read -r chinese_region; do
+        if [[ "$region" == "$chinese_region" ]]; then
+          is_chinese_region=1
+          break
+        fi
+      done <<< "$CHINESE_REGIONS"
+      aws_cli_timeout_options=""
+      if [[ $is_chinese_region -eq 1 ]]; then
+        if [[ -z $AWS_ACCESS_KEY_ID_CHINA ]] || [[ -z $AWS_SECRET_ACCESS_KEY_CHINA ]]; then
+          printf "Error: Trying to publish to Chinese region $region, but at least one of the environment variables\n"
+          printf "AWS_ACCESS_KEY_ID_CHINA or AWS_SECRET_ACCESS_KEY_CHINA is not set.\n"
+          exit 1
+        fi
+        # Publishing to a Chinese regions requires different credentials, because it is a different AWS account. The
+        # AWS credential environment variables will be reverted after the publish for this region is done.
+        AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID_CHINA
+        AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY_CHINA
+        aws_cli_timeout_options="--cli-read-timeout $AWS_CLI_TIMEOUT_FOR_CHINA --cli-connect-timeout $AWS_CLI_TIMEOUT_FOR_CHINA"
+      fi
+
       # See https://docs.aws.amazon.com/cli/latest/reference/lambda/publish-layer-version.html for documentation.
       # NOTE: --compatible-architectures $LAMBDA_ARCHITECTURE is not working in all regions.
       lambda_layer_version=$( \
-        AWS_PAGER="" aws --region $region lambda publish-layer-version \
+        AWS_PAGER="" \
+        aws \
+        --region $region  \
+        $aws_cli_timeout_options \
+        lambda \
+          publish-layer-version \
           --layer-name $LAYER_NAME \
           --description "Provides Instana tracing and monitoring for AWS Lambdas (@instana/aws-lambda@$VERSION)" \
           --license-info $LICENSE \
@@ -320,7 +371,12 @@ if [[ -z $SKIP_AWS_PUBLISH_LAYER ]]; then
       echo "   + published version $lambda_layer_version to region $region"
       if [[ $lambda_layer_version =~ ^[0-9]+$ ]]; then
         echo "   + setting required permission on Lambda layer $LAYER_NAME / version $lambda_layer_version in region $region"
-        AWS_PAGER="" aws --region $region lambda add-layer-version-permission \
+        AWS_PAGER="" \
+        aws \
+        --region $region \
+        $aws_cli_timeout_options \
+        lambda \
+        add-layer-version-permission \
           --layer-name $LAYER_NAME \
           --version-number $lambda_layer_version \
           --statement-id public-permission-all-accounts \
@@ -329,6 +385,12 @@ if [[ -z $SKIP_AWS_PUBLISH_LAYER ]]; then
           --output text
       else
         echo "   + WARNING: Lambda layer version $lambda_layer_version does not seem to be numeric, will not set permissions in region $region"
+      fi
+
+      if [[ $is_chinese_region -eq 1 ]]; then
+        # Revert access key swap for publishing to a Chinese AWS region:
+        AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID_BACKUP
+        AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY_BACKUP
       fi
     fi
   done <<< "$REGIONS"
