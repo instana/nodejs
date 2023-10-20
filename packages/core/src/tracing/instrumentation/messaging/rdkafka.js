@@ -66,7 +66,7 @@ function logWarningForKafkaHeaderFormat(headerFormat) {
   // configured explicitly, we log a warning and ignore the config value. The rdkafka instrumentation alwas acts as if
   // format 'string' had been configured.
   if (headerFormat === 'binary') {
-    logger.debug(
+    logger.warn(
       "Ignoring configuration value 'binary' for Kafka header format in node-rdkafka instrumentation, using header " +
         "format 'string' instead. Binary headers do not work with node-rdkafka, see " +
         'https://github.com/Blizzard/node-rdkafka/pull/968.'
