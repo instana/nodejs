@@ -13,6 +13,7 @@ const cls = require('../../cls');
 const shimmer = require('../../shimmer');
 const { getFunctionArguments } = require('../../../util/function_arguments');
 let traceCorrelationEnabled = constants.kafkaTraceCorrelationDefault;
+let configHeader = null;
 
 let logger;
 logger = require('../../../logger').getLogger('tracing/rdkafka', newLogger => {
@@ -27,21 +28,23 @@ exports.init = function init(config) {
   requireHook.onModuleLoad('node-rdkafka', instrumentConsumer);
 
   traceCorrelationEnabled = config.tracing.kafka.traceCorrelation;
-  logWarningForKafkaHeaderFormat(config.tracing.kafka.headerFormat);
+  configHeader = config.tracing.kafka.headerFormat;
 };
 
 exports.updateConfig = function updateConfig(config) {
   traceCorrelationEnabled = config.tracing.kafka.traceCorrelation;
-  logWarningForKafkaHeaderFormat(config.tracing.kafka.headerFormat);
+  configHeader = config.tracing.kafka.headerFormat;
 };
-
+// The extraConfig is coming from the agent configs. You can set the kafka format in the agent.
 exports.activate = function activate(extraConfig) {
+  let extraConfigHeader = null;
   if (extraConfig && extraConfig.tracing && extraConfig.tracing.kafka) {
     if (extraConfig.tracing.kafka.traceCorrelation != null) {
       traceCorrelationEnabled = extraConfig.tracing.kafka.traceCorrelation;
     }
-    logWarningForKafkaHeaderFormat(extraConfig.tracing.kafka.headerFormat);
+    extraConfigHeader = extraConfig.tracing.kafka.headerFormat;
   }
+  logWarningForKafkaHeaderFormat(extraConfigHeader || configHeader);
   isActive = true;
 };
 
@@ -63,7 +66,7 @@ function logWarningForKafkaHeaderFormat(headerFormat) {
   // configured explicitly, we log a warning and ignore the config value. The rdkafka instrumentation alwas acts as if
   // format 'string' had been configured.
   if (headerFormat === 'binary') {
-    logger.warn(
+    logger.debug(
       "Ignoring configuration value 'binary' for Kafka header format in node-rdkafka instrumentation, using header " +
         "format 'string' instead. Binary headers do not work with node-rdkafka, see " +
         'https://github.com/Blizzard/node-rdkafka/pull/968.'
