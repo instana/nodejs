@@ -13,6 +13,7 @@ const cls = require('../../cls');
 const shimmer = require('../../shimmer');
 const { getFunctionArguments } = require('../../../util/function_arguments');
 let traceCorrelationEnabled = constants.kafkaTraceCorrelationDefault;
+let configHeader = null;
 
 let logger;
 logger = require('../../../logger').getLogger('tracing/rdkafka', newLogger => {
@@ -27,21 +28,23 @@ exports.init = function init(config) {
   requireHook.onModuleLoad('node-rdkafka', instrumentConsumer);
 
   traceCorrelationEnabled = config.tracing.kafka.traceCorrelation;
-  logWarningForKafkaHeaderFormat(config.tracing.kafka.headerFormat);
+  configHeader = config.tracing.kafka.headerFormat;
 };
 
 exports.updateConfig = function updateConfig(config) {
   traceCorrelationEnabled = config.tracing.kafka.traceCorrelation;
-  logWarningForKafkaHeaderFormat(config.tracing.kafka.headerFormat);
+  configHeader = config.tracing.kafka.headerFormat;
 };
-
+// The extraConfig is coming from the agent configs. You can set the kafka format in the agent.
 exports.activate = function activate(extraConfig) {
+  let extraConfigHeader = null;
   if (extraConfig && extraConfig.tracing && extraConfig.tracing.kafka) {
     if (extraConfig.tracing.kafka.traceCorrelation != null) {
       traceCorrelationEnabled = extraConfig.tracing.kafka.traceCorrelation;
     }
-    logWarningForKafkaHeaderFormat(extraConfig.tracing.kafka.headerFormat);
+    extraConfigHeader = extraConfig.tracing.kafka.headerFormat;
   }
+  logWarningForKafkaHeaderFormat(extraConfigHeader || configHeader);
   isActive = true;
 };
 
