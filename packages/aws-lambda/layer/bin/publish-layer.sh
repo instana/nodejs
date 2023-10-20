@@ -112,11 +112,6 @@ fi
 ZIP_NAME=$ZIP_PREFIX.zip
 TMP_ZIP_DIR=tmp
 
-# The connection to AWS China cn-north-1 is very slow from Europe, possibly also from the US. We need to upload roughly
-# 8-10 MB and it takes forever. Thus we configure a very generous timeout when publishing the layer to a Chinese region.
-# For some reason, cn-northwest-1 is fine though.
-AWS_CLI_TIMEOUT_FOR_CHINA=1800
-
 if [[ -z $AWS_ACCESS_KEY_ID ]] || [[ -z $AWS_SECRET_ACCESS_KEY ]]; then
   printf "Warning: Environment variables AWS_ACCESS_KEY_ID or AWS_SECRET_ACCESS_KEY are not set.\n"
   printf "This might be okay if you have set up AWS authentication via other means.\n"
@@ -347,7 +342,6 @@ if [[ -z $SKIP_AWS_PUBLISH_LAYER ]]; then
         # AWS credential environment variables will be reverted after the publish for this region is done.
         AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID_CHINA
         AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY_CHINA
-        aws_cli_timeout_options="--cli-read-timeout $AWS_CLI_TIMEOUT_FOR_CHINA --cli-connect-timeout $AWS_CLI_TIMEOUT_FOR_CHINA"
       fi
 
       # See https://docs.aws.amazon.com/cli/latest/reference/lambda/publish-layer-version.html for documentation.
@@ -356,7 +350,6 @@ if [[ -z $SKIP_AWS_PUBLISH_LAYER ]]; then
         AWS_PAGER="" \
         aws \
         --region $region  \
-        $aws_cli_timeout_options \
         lambda \
           publish-layer-version \
           --layer-name $LAYER_NAME \
@@ -374,7 +367,6 @@ if [[ -z $SKIP_AWS_PUBLISH_LAYER ]]; then
         AWS_PAGER="" \
         aws \
         --region $region \
-        $aws_cli_timeout_options \
         lambda \
         add-layer-version-permission \
           --layer-name $LAYER_NAME \
