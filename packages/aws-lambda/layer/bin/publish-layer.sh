@@ -121,11 +121,15 @@ fi
 
 # The us-gov-* regions are only available to US government agencies, U.S. government etc. The regions have not been (and
 # maybe cannot be) enabled for our AWS account. We currently do not publish Lambda layers to these regions.
-SKIPPED_REGIONS=$'us-gov-east-1\nus-gov-west-1'
+# For now, we also skip cn-north-1, since preliminary tests have shown that we cannot upload Lambda layers there, not
+# even when setting the aws cli timeout options to 30 minutes. Needs more investigation. This is the error:
+#   Connection was closed before we received a valid response from endpoint URL: "https://lambda.cn-north-1.amazonaws.com.cn/2018-10-31/layers/.../versions".
+SKIPPED_REGIONS=$'us-gov-east-1\nus-gov-west-1\ncn-north-1'
 
 # AWS China is completely separated from the rest of AWS. You cannot enable the Chinese regions in a global AWS account.
 # Instead, we have a separate account for AWS China.
-CHINESE_REGIONS=$'cn-northwest-1\ncn-north-1'
+# Note: See above (SKIPPED_REGIONS) for why cn-north-1 is not included here at the moment.
+CHINESE_REGIONS=$'cn-northwest-1'
 
 # For publishing to the Chinese regions, we need different credentials. This is implemented by temporarily replacing
 # AWS_ACCESS_KEY_ID/AWS_SECRET_ACCESS_KEY with the credentials for the Chinese account. The two following variables
