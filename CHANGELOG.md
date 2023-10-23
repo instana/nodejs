@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [2.34.1](https://github.com/instana/nodejs/compare/v2.34.0...v2.34.1) (2023-10-23)
+
+
+### Bug Fixes
+
+* **rdkafka:** only log warning about header format once ([#897](https://github.com/instana/nodejs/issues/897)) ([d8bf0ce](https://github.com/instana/nodejs/commit/d8bf0ce377115eeaa6c186f6447072a06f45055a))
+* reduced log warnings when there is no entry span ([#891](https://github.com/instana/nodejs/issues/891)) ([8543808](https://github.com/instana/nodejs/commit/854380826eb7f67f93009fed1ed79bccc7d69508)), closes [#885](https://github.com/instana/nodejs/issues/885)
+
+
+
+
+
 # [2.34.0](https://github.com/instana/nodejs/compare/v2.33.1...v2.34.0) (2023-10-10)
 
 
