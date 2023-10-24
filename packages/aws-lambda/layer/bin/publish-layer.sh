@@ -306,6 +306,8 @@ zip -qr $ZIP_PREFIX .
 mv $ZIP_NAME ..
 popd > /dev/null
 
+export AWS_PAGER=""
+
 if [[ -z $SKIP_AWS_PUBLISH_LAYER ]]; then
   echo "step 6/9: publishing $ZIP_NAME as AWS Lambda layer $LAYER_NAME to specifed regions"
 
@@ -331,7 +333,6 @@ if [[ -z $SKIP_AWS_PUBLISH_LAYER ]]; then
           break
         fi
       done <<< "$CHINESE_REGIONS"
-      aws_cli_timeout_options=""
       if [[ $is_chinese_region -eq 1 ]]; then
         if [[ -z $AWS_ACCESS_KEY_ID_CHINA ]] || [[ -z $AWS_SECRET_ACCESS_KEY_CHINA ]]; then
           printf "Error: Trying to publish to Chinese region $region, but at least one of the environment variables\n"
@@ -347,7 +348,6 @@ if [[ -z $SKIP_AWS_PUBLISH_LAYER ]]; then
       # See https://docs.aws.amazon.com/cli/latest/reference/lambda/publish-layer-version.html for documentation.
       # NOTE: --compatible-architectures $LAMBDA_ARCHITECTURE is not working in all regions.
       lambda_layer_version=$( \
-        AWS_PAGER="" \
         aws \
         --region $region  \
         lambda \
@@ -364,7 +364,6 @@ if [[ -z $SKIP_AWS_PUBLISH_LAYER ]]; then
       echo "   + published version $lambda_layer_version to region $region"
       if [[ $lambda_layer_version =~ ^[0-9]+$ ]]; then
         echo "   + setting required permission on Lambda layer $LAYER_NAME / version $lambda_layer_version in region $region"
-        AWS_PAGER="" \
         aws \
         --region $region \
         lambda \
