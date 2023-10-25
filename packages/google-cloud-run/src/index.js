@@ -21,7 +21,6 @@ try {
   }
   if (majorVersion >= 10) {
     module.exports = exports = require('./preactivate');
-    return;
   } else if (majorVersion >= 6 && majorVersion < 10) {
     // eslint-disable-next-line no-console
     console.log(
@@ -42,7 +41,6 @@ try {
     //
     // eslint-disable-next-line
     module.exports = exports = require('/instana/legacy-1x/node_modules/@instana/google-cloud-run/src/index');
-    return;
   }
   // Node.js versions < 6 are unsupported and will not be instrumented at all.
 } catch (e) {
