@@ -1,7 +1,7 @@
 blank_issues_enabled: false
 contact_links:
   - name: Instana Support Portal
-    url: https://support.instana.com
+    url: https://www.ibm.com/mysupport
     about: Please ask usage questions there.
   - name: Feature Requests
     url: https://automation-management.ideas.ibm.com/?project=INSTANA

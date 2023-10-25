@@ -6,7 +6,7 @@ body:
   - type: markdown
     attributes:
       value: |
-        Thank you for taking the time to fill out this bug report. Please do not submit usage questions, support requests or feature requests here. Those need to be filed at [Instana's support portal](https://support.instana.com).
+        Thank you for taking the time to fill out this bug report. Please do not submit usage questions, support requests or feature requests here. Support requests need to be filed at [IBM's support portal](https://www.ibm.com/mysupport), while feature requests can be submitted via [IBM's ideas portal]<https://automation-management.ideas.ibm.com/?project=INSTANA>.
 
         Please also refrain from filing issues or support tickets if your audit tool (npm audit, Snyk, etc.) reported a CVE for a dependency of an Instana package -- we run these audits with every build and take appropriate action automatically.
   - type: textarea
