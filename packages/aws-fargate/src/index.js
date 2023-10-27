@@ -4,9 +4,11 @@
 
 'use strict';
 
+const path = require('path');
 // MAINTENANCE NOTE: All code in this file needs to be compatible with all Node.js versions >= 6.0.0.
 
 try {
+  console.log('@instana/aws-fargate module version:', require(path.join(__dirname, '..', 'package.json')).version);
   const nodeJsVersion = process.version;
   if (typeof nodeJsVersion !== 'string') {
     return;
