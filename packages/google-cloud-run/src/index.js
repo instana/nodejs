@@ -9,6 +9,7 @@ const path = require('path');
 
 try {
   const nodeJsVersion = process.version;
+  // eslint-disable-next-line no-console
   console.log('@instana/google-cloud-run module version:', require(path.join(__dirname, '..', 'package.json')).version);
   if (typeof nodeJsVersion !== 'string') {
     return;
