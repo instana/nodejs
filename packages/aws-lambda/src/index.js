@@ -18,6 +18,9 @@ if (isNodeJsTooOld()) {
 
 const { environment: environmentUtil } = require('@instana/serverless');
 const ssm = require('./ssm');
+const path = require('path');
+// eslint-disable-next-line no-console
+console.log('@instana/aws-lambda module version:', require(path.join(__dirname, '..', 'package.json')).version);
 
 environmentUtil.validate({
   validateInstanaAgentKey: ssm.validate
