@@ -63,6 +63,16 @@ Please print, fill out, and sign the [contributor license agreement](https://git
 
 Thank you for your interest in the Instana Node.js project!
 
+## Commit messages
+
+We are adhering to the [Conventional Commits standard](https://www.conventionalcommits.org/en/v1.0.0/), which defines specific commit message types. These types include: chore, docs, feat, fix, refactor, style, or test.
+
+For any change that is customer-facing and should appear in the changelog file, we require the use of either 'fix' or 'feat' in the commit message. If the change is not customer-facing and is more related to internal tasks or housekeeping, it should use 'chore,' for instance.
+
+When composing commit messages, it's important to use past tense. Additionally, if there is a corresponding ticket or issue associated with the change, please reference it in the commit message.
+
+For instance, you can refer to this example commit message: https://github.com/instana/nodejs/commit/bd3e7554fe21188c3ad10d442e4d72546d5c2267
+
 ## Managing Dependencies In Packages
 
 Note: Development dependencies that are shared between multiple packages can be added to the root `package.json` file to speed up `npm install`. A dependency that is only used in one package can also be added to that particular `package.json` file.
