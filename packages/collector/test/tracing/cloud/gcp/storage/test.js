@@ -63,7 +63,7 @@ if (
     mochaSuiteFn = describe;
   }
 
-  mochaSuiteFn.only('tracing/cloud/gcp/storage', function () {
+  mochaSuiteFn('tracing/cloud/gcp/storage', function () {
     this.timeout(config.getTestTimeout() * 2);
 
     globalAgent.setUpCleanUpHooks();
