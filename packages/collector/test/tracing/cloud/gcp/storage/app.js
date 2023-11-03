@@ -21,7 +21,6 @@ const { isCI } = require('@instana/core/test/test_util');
 const logPrefix = `Google Cloud Storage Client (${process.pid}):\t`;
 
 const options = { projectId: process.env.GCP_PROJECT };
-const isV6 = process.env.GCS_VERSION === 'v6';
 if (isCI() && process.env.GOOGLE_APPLICATION_CREDENTIALS_CONTENT) {
   options.credentials = JSON.parse(process.env.GOOGLE_APPLICATION_CREDENTIALS_CONTENT);
 } else if (!isCI()) {
@@ -202,7 +201,7 @@ const bucketRoutes = [
         method: 'addLifecycleRule',
         args: [
           {
-            action: 'delete', // action: 'delete', // action: { type: 'Delete' },
+            action: { type: 'Delete' },
             condition: {
               age: 1
             }
@@ -354,15 +353,7 @@ bucketRoutes.forEach(({ pathPrefix, actions }) => {
       const bucket = storage.bucket(bucketName);
       for (let i = 0; i < actions.length; i++) {
         const { method, args } = actions[i];
-        if (method === 'addLifecycleRule' && !isV6) {
-          const index = args.findIndex(item => item.action);
-          args[index].action = { type: 'Delete' };
-          // eslint-disable-next-line no-await-in-loop
-          await bucket[method].apply(bucket, args);
-        } else {
-          // eslint-disable-next-line no-await-in-loop
-          await bucket[method].apply(bucket, args);
-        }
+        await bucket[method].apply(bucket, args);
       }
       res.sendStatus(200);
     } catch (e) {
