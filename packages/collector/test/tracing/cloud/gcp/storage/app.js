@@ -353,6 +353,7 @@ bucketRoutes.forEach(({ pathPrefix, actions }) => {
       const bucket = storage.bucket(bucketName);
       for (let i = 0; i < actions.length; i++) {
         const { method, args } = actions[i];
+        // eslint-disable-next-line no-await-in-loop
         await bucket[method].apply(bucket, args);
       }
       res.sendStatus(200);
