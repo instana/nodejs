@@ -355,12 +355,11 @@ bucketRoutes.forEach(({ pathPrefix, actions }) => {
       for (let i = 0; i < actions.length; i++) {
         const { method, args } = actions[i];
         if (method === 'addLifecycleRule' && !isV6) {
-          let index = args.findIndex(item => item.action);
+          const index = args.findIndex(item => item.action);
           args[index].action = { type: 'Delete' };
           // eslint-disable-next-line no-await-in-loop
           await bucket[method].apply(bucket, args);
-        }
-        else {
+        } else {
           // eslint-disable-next-line no-await-in-loop
           await bucket[method].apply(bucket, args);
         }

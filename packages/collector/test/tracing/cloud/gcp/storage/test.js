@@ -71,8 +71,7 @@ if (
     // v7 drop support for NodeJS < 14
     if (gcsVersion === 'latest') {
       mochaSuiteFn = semver.gte(process.versions.node, '14.0.0') ? mochaSuiteFn : describe.skip;
-    } 
-    else if (gcsVersion === 'v6') {
+    } else if (gcsVersion === 'v6') {
       mochaSuiteFn = semver.lt(process.versions.node, '14.0.0') ? mochaSuiteFn : describe.skip;
     }
     mochaSuiteFn.only(`tracing/cloud/gcp/storage with google-cloud/storage@${gcsVersion}`, function () {
@@ -122,7 +121,7 @@ if (
         });
     };
 
-    ['promise'/*, 'callback'*/].forEach(apiVariant => {
+    ['promise', 'callback'].forEach(apiVariant => {
       [
         {
           pathPrefix: 'storage-createBucket-bucket-delete',
