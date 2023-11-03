@@ -51,30 +51,19 @@ if (
     });
   });
 } else {
-  // if (
-  //   !supportedVersion(process.versions.node) ||
-  //   !process.env.GCP_PROJECT ||
-  //   semver.lt(process.versions.node, '12.0.0')
-  // ) {
-  //   mochaSuiteFn = describe.skip;
-  // } else {
-  //   mochaSuiteFn = describe;
-  // }
+  let mochaSuiteFn;
 
-  describe('tracing/googleCloudStorage', function () {
-  ['latest', 'v6'].forEach(gcsVersion => {
-    // let mochaSuiteFn;
-    let mochaSuiteFn = !supportedVersion(process.versions.node) ||
+  if (
+    !supportedVersion(process.versions.node) ||
     !process.env.GCP_PROJECT ||
-    semver.lt(process.versions.node, '12.0.0') ? describe.skip : describe;
+    semver.lt(process.versions.node, '12.0.0')
+  ) {
+    mochaSuiteFn = describe.skip;
+  } else {
+    mochaSuiteFn = describe;
+  }
 
-    // v7 drop support for NodeJS < 14
-    if (gcsVersion === 'latest') {
-      mochaSuiteFn = semver.gte(process.versions.node, '14.0.0') ? mochaSuiteFn : describe.skip;
-    } else if (gcsVersion === 'v6') {
-      mochaSuiteFn = semver.lt(process.versions.node, '14.0.0') ? mochaSuiteFn : describe.skip;
-    }
-    mochaSuiteFn.only(`tracing/cloud/gcp/storage with google-cloud/storage@${gcsVersion}`, function () {
+  mochaSuiteFn.only('tracing/cloud/gcp/storage', function () {
     this.timeout(config.getTestTimeout() * 2);
 
     globalAgent.setUpCleanUpHooks();
@@ -82,10 +71,7 @@ if (
 
     const controls = new ProcessControls({
       dirname: __dirname,
-      useGlobalAgent: true,
-      env: {
-        GCS_VERSION: gcsVersion
-      }
+      useGlobalAgent: true
     });
 
     ProcessControls.setUpHooks(controls);
@@ -101,7 +87,9 @@ if (
       }
 
       tries += 1;
+
       await agentControls.clearReceivedData();
+
       return controls
         .sendRequest({
           method: 'POST',
@@ -822,6 +810,4 @@ if (
       return matchingFunction(spans, expectations);
     }
   });
-  });
-});
 }
