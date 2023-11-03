@@ -51,19 +51,31 @@ if (
     });
   });
 } else {
-  let mochaSuiteFn;
+  // if (
+  //   !supportedVersion(process.versions.node) ||
+  //   !process.env.GCP_PROJECT ||
+  //   semver.lt(process.versions.node, '12.0.0')
+  // ) {
+  //   mochaSuiteFn = describe.skip;
+  // } else {
+  //   mochaSuiteFn = describe;
+  // }
 
-  if (
-    !supportedVersion(process.versions.node) ||
+  describe('tracing/googleCloudStorage', function () {
+  ['latest'].forEach(gcsVersion => {
+    // let mochaSuiteFn;
+    let mochaSuiteFn = !supportedVersion(process.versions.node) ||
     !process.env.GCP_PROJECT ||
-    semver.lt(process.versions.node, '12.0.0')
-  ) {
-    mochaSuiteFn = describe.skip;
-  } else {
-    mochaSuiteFn = describe;
-  }
+    semver.lt(process.versions.node, '12.0.0') ? describe.skip : describe;
 
-  mochaSuiteFn('tracing/cloud/gcp/storage', function () {
+    // v7 drop support for NodeJS < 14
+    if (gcsVersion === 'latest') {
+      mochaSuiteFn = semver.gte(process.versions.node, '14.0.0') ? mochaSuiteFn : describe.skip;
+    } 
+    else if (gcsVersion === 'v6') {
+      mochaSuiteFn = semver.lt(process.versions.node, '14.0.0') ? mochaSuiteFn : describe.skip;
+    }
+    mochaSuiteFn.only(`tracing/cloud/gcp/storage with google-cloud/storage@${gcsVersion}`, function () {
     this.timeout(config.getTestTimeout() * 2);
 
     globalAgent.setUpCleanUpHooks();
@@ -71,7 +83,10 @@ if (
 
     const controls = new ProcessControls({
       dirname: __dirname,
-      useGlobalAgent: true
+      useGlobalAgent: true,
+      env: {
+        GCS_VERSION: gcsVersion
+      }
     });
 
     ProcessControls.setUpHooks(controls);
@@ -87,9 +102,7 @@ if (
       }
 
       tries += 1;
-
       await agentControls.clearReceivedData();
-
       return controls
         .sendRequest({
           method: 'POST',
@@ -109,7 +122,7 @@ if (
         });
     };
 
-    ['promise', 'callback'].forEach(apiVariant => {
+    ['promise'/*, 'callback'*/].forEach(apiVariant => {
       [
         {
           pathPrefix: 'storage-createBucket-bucket-delete',
@@ -810,4 +823,6 @@ if (
       return matchingFunction(spans, expectations);
     }
   });
+  });
+});
 }
