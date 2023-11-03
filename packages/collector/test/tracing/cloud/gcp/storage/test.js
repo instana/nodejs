@@ -62,7 +62,7 @@ if (
   // }
 
   describe('tracing/googleCloudStorage', function () {
-  ['latest'].forEach(gcsVersion => {
+  ['latest', 'v6'].forEach(gcsVersion => {
     // let mochaSuiteFn;
     let mochaSuiteFn = !supportedVersion(process.versions.node) ||
     !process.env.GCP_PROJECT ||
