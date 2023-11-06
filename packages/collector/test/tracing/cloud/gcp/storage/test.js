@@ -56,7 +56,7 @@ if (
   if (
     !supportedVersion(process.versions.node) ||
     !process.env.GCP_PROJECT ||
-    semver.lt(process.versions.node, '12.0.0')
+    semver.lt(process.versions.node, '14.0.0')
   ) {
     mochaSuiteFn = describe.skip;
   } else {
