@@ -20,7 +20,7 @@ let patterns = [
   /\/@elastic\/elasticsearch\/index.js/,
   /\/@google-cloud\/pubsub\/build\/src\/publisher\/index.js/,
   /\/@google-cloud\/pubsub\/build\/src\/subscriber.js/,
-  /\/@google-cloud\/storage\/build\/src\/index.js/,
+  /\/@google-cloud\/storage\/build\/cjs\/src\/index.js/,
   /\/@grpc\/grpc-js\/build\/src\//,
   /\/@hapi\/call\/lib\//,
   /\/@prisma\/client\//,
