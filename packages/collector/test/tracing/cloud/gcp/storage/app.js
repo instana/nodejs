@@ -21,7 +21,6 @@ const { isCI } = require('@instana/core/test/test_util');
 const logPrefix = `Google Cloud Storage Client (${process.pid}):\t`;
 
 const options = { projectId: process.env.GCP_PROJECT };
-
 if (isCI() && process.env.GOOGLE_APPLICATION_CREDENTIALS_CONTENT) {
   options.credentials = JSON.parse(process.env.GOOGLE_APPLICATION_CREDENTIALS_CONTENT);
 } else if (!isCI()) {
@@ -202,7 +201,7 @@ const bucketRoutes = [
         method: 'addLifecycleRule',
         args: [
           {
-            action: 'delete',
+            action: { type: 'Delete' },
             condition: {
               age: 1
             }
