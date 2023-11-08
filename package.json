@@ -73,7 +73,7 @@
     "@elastic/elasticsearch-v7.17.0": "npm:@elastic/elasticsearch@7.17.0",
     "@elastic/elasticsearch-v7.9.0": "npm:@elastic/elasticsearch@7.9.0",
     "@google-cloud/pubsub": "4.0.2",
-    "@google-cloud/storage": "^6.9.4",
+    "@google-cloud/storage": "^7.5.0",
     "@grpc/grpc-js": "^1.5.7",
     "@grpc/proto-loader": "^0.5.6",
     "@grpc/proto-loader-latest": "npm:@grpc/proto-loader@^0.6.9",
