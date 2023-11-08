@@ -58,9 +58,8 @@ function instrument(build) {
 
     app.addHook('onRequest', function onRequest(request, reply, done) {
       try {
-        // NOTE: v1 uses _context https://github.com/fastify/fastify/blob/1.x/fastify.js#L276
-        //       v2/v3 uses context https://github.com/fastify/fastify/blob/2.x/test/handler-context.test.js#L41
-        const url = reply._context ? reply._context.config.url : reply.context.config.url;
+        // NOTE: v4/v3 uses context https://github.com/fastify/fastify/blob/2.x/test/handler-context.test.js#L41
+        const url = reply.context.config.url;
 
         annotateHttpEntrySpanWithPathTemplate(app, url);
       } catch (err) {
