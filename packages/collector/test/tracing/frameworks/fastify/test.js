@@ -17,7 +17,7 @@ const globalAgent = require('../../../globalAgent');
 
 const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
-mochaSuiteFn.only('tracing/fastify', function () {
+mochaSuiteFn('tracing/fastify', function () {
   this.timeout(config.getTestTimeout());
 
   ['latest', 'v3'].forEach(version => {
