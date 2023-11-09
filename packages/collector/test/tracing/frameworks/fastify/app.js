@@ -5,9 +5,8 @@
 
 'use strict';
 
-const semver = require('semver');
-const FASTIFY_VERSION = process.env.FASTIFY_VERSION || '1.14.6';
-const FASTIFY_REQUIRE = semver.major(FASTIFY_VERSION) === 1 ? 'fastify' : `fastify${semver.major(FASTIFY_VERSION)}`;
+const FASTIFY_VERSION = process.env.FASTIFY_VERSION || 'latest';
+const FASTIFY_REQUIRE = FASTIFY_VERSION === 'latest' ? 'fastify' : `fastify-${FASTIFY_VERSION}`;
 
 const mock = require('mock-require');
 
@@ -27,10 +26,7 @@ const port = require('../../../test_util/app-port')();
 
 // NOTE: beforeHandler got deprecated in v2 and removed in v3
 //       see https://github.com/fastify/fastify/pull/1750
-let handlerKey = 'beforeHandler';
-if ([2, 3].indexOf(semver.major(FASTIFY_VERSION)) !== -1) {
-  handlerKey = 'preHandler';
-}
+const handlerKey = 'preHandler';
 
 const app = fastify();
 const logPrefix = `Fastify (${process.pid}):\t`;
