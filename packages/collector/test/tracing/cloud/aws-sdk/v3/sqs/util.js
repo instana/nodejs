@@ -18,10 +18,12 @@ const AWS = require('@aws-sdk/client-sqs');
 const sqs = new AWS.SQS({ region: 'us-east-2' });
 
 exports.createQueues = function (queueNames) {
-  const promises = queueNames.map(name =>
+  const promises = queueNames.map(name => {
+    console.log(" name------------->>>>", queueNames)
     sqs.createQueue({
       QueueName: name
     })
+  }
   );
 
   return Promise.all(promises);

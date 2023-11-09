@@ -45,7 +45,7 @@ function start(version) {
     mochaSuiteFn = describe;
   }
 
-  mochaSuiteFn(`npm: ${version}`, function () {
+  mochaSuiteFn.only(`npm: ${version}`, function () {
     this.timeout(config.getTestTimeout() * 4);
 
     let queueName = 'nodejs-team';
@@ -60,6 +60,7 @@ function start(version) {
     const queueURL = `${queueUrlPrefix}${queueName}`;
     const queueNames = [queueName, `${queueName}-consumer`, `${queueName}-batch`];
     const queueURLs = queueNames.map(name => `${queueUrlPrefix}${name}`);
+    console.log("queueNames    -------->",queueNames)
 
     before(async () => {
       await createQueues(queueNames);
@@ -71,7 +72,7 @@ function start(version) {
 
     globalAgent.setUpCleanUpHooks();
     const agentControls = globalAgent.instance;
-
+    
     describe('tracing enabled, no suppression', function () {
       const senderControls = new ProcessControls({
         appPath: path.join(__dirname, 'sender'),
