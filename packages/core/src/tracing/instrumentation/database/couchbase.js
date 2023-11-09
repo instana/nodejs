@@ -100,6 +100,7 @@ function instrumentCluster(cluster, connectionStr) {
   // #### TRANSACTIONS
   instrumentTransactions(cluster, connectionStr);
 
+  // cluster.query
   shimmer.wrap(cluster, 'query', instrumentOperation.bind(null, { connectionStr, sqlType: 'QUERY' }));
 
   // #### ANALYTICS SERVICE
@@ -129,11 +130,11 @@ function instrumentCollection(cluster, connectionStr) {
     bucket.scope = function instanaScope() {
       const scope = origScope.apply(this, arguments);
       const origCollection = scope.collection;
+      const bucketName = bucket._name;
 
       scope.collection = function instanaCollection() {
         const collection = origCollection.apply(this, arguments);
 
-        const bucketName = bucket._name;
         const getBucketTypeFn = getBucketType(cluster, bucketName);
 
         // `this._conn` === c++ implementation
@@ -160,7 +161,16 @@ function instrumentCollection(cluster, connectionStr) {
         return collection;
       };
 
-      shimmer.wrap(scope, 'query', instrumentOperation.bind(null, { connectionStr, sqlType: 'QUERY' }));
+      shimmer.wrap(
+        scope,
+        'query',
+        instrumentOperation.bind(null, {
+          connectionStr,
+          sqlType: 'QUERY',
+          bucketName,
+          getBucketTypeFn: getBucketType(cluster, bucketName)
+        })
+      );
 
       return scope;
     };
