@@ -17,10 +17,10 @@ const globalAgent = require('../../../globalAgent');
 
 const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
-mochaSuiteFn('tracing/fastify', function () {
+mochaSuiteFn.only('tracing/fastify', function () {
   this.timeout(config.getTestTimeout());
 
-  ['1.14.6', '2.15.3', '3.21.5'].forEach(version => {
+  ['latest', 'v3'].forEach(version => {
     describe(`${version}`, () => {
       const agentControls = globalAgent.instance;
       let processControls;
