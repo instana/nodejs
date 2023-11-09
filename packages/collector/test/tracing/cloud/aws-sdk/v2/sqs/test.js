@@ -29,7 +29,7 @@ const defaultPrefix = 'https://sqs.us-east-2.amazonaws.com/410797082306/';
 const queueUrlPrefix = process.env.SQS_QUEUE_URL_PREFIX || defaultPrefix;
 
 const queueNamePrefix = process.env.SQS_QUEUE_NAME || 'nodejs-team';
-const queueName = `${queueNamePrefix}${semver.major(process.versions.node)}-${uuid()}`;
+const queueName = `${queueNamePrefix}-${semver.major(process.versions.node)}-${uuid()}`;
 const queueURL = `${queueUrlPrefix}${queueName}`;
 
 let mochaSuiteFn;
