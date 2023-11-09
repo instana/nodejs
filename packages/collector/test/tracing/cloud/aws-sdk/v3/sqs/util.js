@@ -21,7 +21,7 @@ exports.createQueues = function (queueNames) {
   const promises = queueNames.map(name => {
     // eslint-disable-next-line no-console
     console.log('name------------->>>>', queueNames);
-    sqs.createQueue({
+    return sqs.createQueue({
       QueueName: name
     });
   }

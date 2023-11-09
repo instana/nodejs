@@ -61,7 +61,7 @@ function start(version) {
     const queueNames = [queueName, `${queueName}-consumer`, `${queueName}-batch`];
     const queueURLs = queueNames.map(name => `${queueUrlPrefix}${name}`);
     // eslint-disable-next-line no-console
-    console.log("queueNames    -------->", queueNames);
+    console.log('queueNames    -------->', queueNames);
 
     before(async () => {
       await createQueues(queueNames);
