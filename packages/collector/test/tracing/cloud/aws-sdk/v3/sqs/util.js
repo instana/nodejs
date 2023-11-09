@@ -20,7 +20,7 @@ const sqs = new AWS.SQS({ region: 'us-east-2' });
 exports.createQueues = function (queueNames) {
   const promises = queueNames.map(name => {
     // eslint-disable-next-line no-console
-    console.log('name------------->>>>', queueNames);
+    console.log('name------------->>>>', name);
     return sqs.createQueue({
       QueueName: name
     });

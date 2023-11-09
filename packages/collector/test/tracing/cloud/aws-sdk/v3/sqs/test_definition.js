@@ -52,6 +52,8 @@ function start(version) {
 
     if (process.env.SQS_QUEUE_NAME) {
       queueName = `${process.env.SQS_QUEUE_NAME}-v3-${semver.major(process.versions.node)}-${uuid()}`;
+      // eslint-disable-next-line no-console
+      console.log('queueName    -------->', queueName, 'env    -------->', process.env.SQS_QUEUE_NAME);
     }
 
     const randomNumber = Math.floor(Math.random() * 1000);
