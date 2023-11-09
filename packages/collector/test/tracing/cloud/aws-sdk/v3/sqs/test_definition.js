@@ -60,7 +60,8 @@ function start(version) {
     const queueURL = `${queueUrlPrefix}${queueName}`;
     const queueNames = [queueName, `${queueName}-consumer`, `${queueName}-batch`];
     const queueURLs = queueNames.map(name => `${queueUrlPrefix}${name}`);
-    console.log("queueNames    -------->",queueNames)
+    // eslint-disable-next-line no-console
+    console.log("queueNames    -------->", queueNames);
 
     before(async () => {
       await createQueues(queueNames);
@@ -72,7 +73,6 @@ function start(version) {
 
     globalAgent.setUpCleanUpHooks();
     const agentControls = globalAgent.instance;
-    
     describe('tracing enabled, no suppression', function () {
       const senderControls = new ProcessControls({
         appPath: path.join(__dirname, 'sender'),
