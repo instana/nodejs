@@ -481,7 +481,7 @@ mochaSuiteFn('tracing/couchbase', function () {
 
             return retry(() =>
               verifySpans(agentControls, controls, {
-                spanLength: 8,
+                spanLength: 9,
                 verifyCustom: (entrySpan, spans) => {
                   expectExactlyOneMatching(
                     spans,
@@ -498,12 +498,37 @@ mochaSuiteFn('tracing/couchbase', function () {
                     })
                   );
 
+                  // cluster query
                   expectExactlyNMatching(
                     spans,
-                    2,
+                    1,
                     verifyCouchbaseSpan(controls, entrySpan, {
                       bucket: '',
                       type: '',
+                      sql: 'QUERY'
+                    })
+                  );
+
+                  // bucket query success
+                  expectExactlyNMatching(
+                    spans,
+                    1,
+                    verifyCouchbaseSpan(controls, entrySpan, {
+                      bucket: 'companies',
+                      type: 'ephemeral',
+                      sql: 'QUERY'
+                    })
+                  );
+
+                  // bucket query error
+                  expectExactlyNMatching(
+                    spans,
+                    1,
+                    verifyCouchbaseSpan(controls, entrySpan, {
+                      bucket: 'companies',
+                      // FYI: this error msg does not come from us.
+                      error: 'bucket not found',
+                      type: 'ephemeral',
                       sql: 'QUERY'
                     })
                   );
