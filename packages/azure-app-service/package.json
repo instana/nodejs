@@ -1,0 +1,58 @@
+{
+  "name": "@instana/azure-app-service",
+  "version": "2.34.1",
+  "description": "Instana tracing and monitoring for Node.js based Azure",
+  "author": {
+    "name": "Arya Mohanan",
+    "email": "arya.mohanan@ibm.com"
+  },
+  "homepage": "https://github.com/instana/nodejs/blob/main/packages/azure-app-service/README.md",
+  "main": "src/index.js",
+  "files": [
+    "src",
+    "esm-loader.mjs"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "directories": {
+    "lib": "src"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/instana/nodejs.git"
+  },
+  "scripts": {
+    "audit": "bin/prepare-audit.sh && npm audit --production; AUDIT_RESULT=$?; git checkout package-lock.json; exit $AUDIT_RESULT",
+    "test": "NODE_ENV=debug mocha --sort $(find test -iname '*test.js' -not -path '*node_modules*')",
+    "test:debug": "WITH_STDOUT=true npm run test",
+    "test:ci": "echo \"******* Files to be tested:\n $CI_CORE_TEST_FILES\" && if [ -z \"${CI_CORE_TEST_FILES}\" ]; then echo \"No test files have been assigned to this CircleCI executor.\"; else mocha --reporter mocha-multi-reporters --reporter-options configFile=reporter-config.json --require test/hooks.js --sort ${CI_CORE_TEST_FILES}; fi",
+    "lint": "eslint src test",
+    "verify": "npm run lint && npm test",
+    "prettier": "prettier --write 'src/**/*.js' 'test/**/*.js'"
+},
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "contributors": [
+    {
+      "name": "Arya Mohanan",
+      "email": "arya.mohanan@ibm.com"
+    },
+    {
+      "name": "Katharina Irrgang",
+      "email": "katharina.irrgang@instana.com"
+    }
+  ],
+  "bugs": {
+    "url": "https://github.com/instana/nodejs/issues"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "@instana/core": "2.34.1",
+    "@instana/serverless": "2.34.1"
+  },
+  "devDependencies": {
+    "no-code2": "2.0.0"
+  }
+}
