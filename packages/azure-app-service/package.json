@@ -29,7 +29,7 @@
     "test:ci": "echo \"******* Files to be tested:\n $CI_CORE_TEST_FILES\" && if [ -z \"${CI_CORE_TEST_FILES}\" ]; then echo \"No test files have been assigned to this CircleCI executor.\"; else mocha --reporter mocha-multi-reporters --reporter-options configFile=reporter-config.json --require test/hooks.js --sort ${CI_CORE_TEST_FILES}; fi",
     "verify": "npm run lint && npm test",
     "prettier": "prettier --write 'src/**/*.js' 'test/**/*.js'"
-},
+  },
   "engines": {
     "node": ">=16.0.0"
   },
@@ -37,7 +37,7 @@
     {
       "name": "Arya Mohanan",
       "email": "arya.mohanan@ibm.com"
-    },
+},
     {
       "name": "Katharina Irrgang",
       "email": "katharina.irrgang@instana.com"

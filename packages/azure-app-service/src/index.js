@@ -4,11 +4,11 @@
 
 'use strict';
 
-const { isNodeJsTooOld } = require('@instana/core/src/util/nodeJsVersionCheck');
+const { isNodeJsTooOld, minimumNodeJsVersion } = require('@instana/core/src/util/nodeJsVersionCheck');
 
-const minimumNodeJsVersion = '16.0.0';
-
-if (isNodeJsTooOld() && process.version >= minimumNodeJsVersion) {
+// https://learn.microsoft.com/en-us/azure/app-service/configure-language-nodejs?pivots=platform-linux
+// currently azure app servie supports node version 16 and 18
+if (isNodeJsTooOld()) {
   // eslint-disable-next-line no-console
   console.error(
     `The package @instana/azure-app-service requires at least Node.js ${minimumNodeJsVersion} but this process is ` +

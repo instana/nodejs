@@ -30,7 +30,7 @@ function init() {
     tracing.activate();
   } catch (e) {
     logger.error(
-      'Initializing @instana/azure-app-service failed. This Cloud Run container instance will not be monitored.',
+      'Initializing @instana/azure-app-service failed. This azure container instance will not be monitored.',
       e
     );
   }
