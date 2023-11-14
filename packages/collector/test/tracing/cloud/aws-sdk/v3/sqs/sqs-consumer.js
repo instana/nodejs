@@ -10,7 +10,7 @@ if (process.env.AWS_SDK_CLIENT_SQS_REQUIRE !== '@aws-sdk/client-sqs') {
   mock('@aws-sdk/client-sqs', process.env.AWS_SDK_CLIENT_SQS_REQUIRE);
 }
 
-mock('sqs-consumer', 'sqs-consumer-v6');
+mock('sqs-consumer', 'sqs-consumer-v7');
 
 const instana = require('../../../../../../src')();
 const express = require('express');
