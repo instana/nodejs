@@ -6,7 +6,6 @@
 'use strict';
 
 const expect = require('chai').expect;
-const semver = require('semver');
 const constants = require('@instana/core').tracing.constants;
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('../../../../../core/test/config');
@@ -28,15 +27,7 @@ describe('tracing/redis', function () {
   const agentControls = globalAgent.instance;
 
   ['latest', 'v3', 'v0'].forEach(redisVersion => {
-    let mochaSuiteFn;
-
-    // v4 dropped support for < 12, but they introduced another drop of Node v12 in a feature release
-    // See https://github.com/redis/node-redis/issues/2283
-    if (redisVersion === 'latest') {
-      mochaSuiteFn = semver.gte(process.versions.node, '14.0.0') ? describe : describe.skip;
-    } else {
-      mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
-    }
+    const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
     mochaSuiteFn(`redis@${redisVersion}`, function () {
       globalAgent.setUpCleanUpHooks();

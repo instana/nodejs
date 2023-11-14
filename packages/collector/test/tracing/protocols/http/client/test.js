@@ -61,7 +61,7 @@ function registerTests(useHttps) {
 
   // HTTP requests can be triggered via http.request(...) + request.end(...) or http.get(...).
   // Both http.request and http.get accept
-  // - an URL, an options object and a callback (since Node 10.9.0),
+  // - an URL, an options object and a callback
   // - only an URL and a callback, or
   // - only an options object (containing the parts of the URL) and a callback.
   // The URL can be a string or an URL object.

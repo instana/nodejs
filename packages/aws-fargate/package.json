@@ -70,6 +70,6 @@
     "@instana/serverless": "2.33.1"
   },
   "engines": {
-    "node": ">=10.4.0"
+    "node": ">=14.0.0"
   }
 }

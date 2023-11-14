@@ -6,7 +6,7 @@
 
 const path = require('path');
 const _ = require('lodash');
-const semver = require('semver');
+const { supportedVersion } = require('@instana/core').tracing;
 const expect = require('chai').expect;
 
 const testUtils = require('@instana/core/test/test_util');
@@ -14,8 +14,7 @@ const config = require('@instana/core/test/config');
 
 const ProcessControls = require('../../../collector/test/test_util/ProcessControls');
 
-// NOTE: Node 10 needs to use .mjs file ending & --experimental-modules flag
-const mochaSuiteFn = semver.gte(process.versions.node, '12.0.0') ? describe : describe.skip;
+const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
 mochaSuiteFn('ejs require collector in preload', function () {
   this.timeout(config.getTestTimeout());

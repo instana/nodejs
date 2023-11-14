@@ -153,17 +153,10 @@ describe('cjs wrapper', function () {
       const wrapper = require('../src/index');
       await wrapper.handler();
     } catch (e) {
-      // NOTE: Node v10 has no knowledge regarding the concept of ES modules at all
-      //       We cannot show a better custom error message, because "Unexpected Identified"
-      //       can mean anything
-      if (semver.lt(process.versions.node, '12.0.0')) {
-        expect(e.message).to.eql('SyntaxError: Unexpected identifier');
-      } else {
-        expect(e.message).to.eql(
-          'Your Lambda function is using an ES module. ' +
-            "Please use the 'instana-aws-lambda-auto-wrap-esm.handler' as runtime handler."
-        );
-      }
+      expect(e.message).to.eql(
+        'Your Lambda function is using an ES module. ' +
+          "Please use the 'instana-aws-lambda-auto-wrap-esm.handler' as runtime handler."
+      );
     }
 
     expect(instana.wrap.called).to.be.false;
@@ -176,14 +169,10 @@ describe('cjs wrapper', function () {
       const wrapper = require('../src/index');
       await wrapper.handler();
     } catch (e) {
-      if (semver.lt(process.versions.node, '12.0.0')) {
-        expect(e.message).to.eql('SyntaxError: Unexpected identifier');
-      } else {
-        expect(e.message).to.eql(
-          'Your Lambda function is using an ES module. ' +
-            "Please use the 'instana-aws-lambda-auto-wrap-esm.handler' as runtime handler."
-        );
-      }
+      expect(e.message).to.eql(
+        'Your Lambda function is using an ES module. ' +
+          "Please use the 'instana-aws-lambda-auto-wrap-esm.handler' as runtime handler."
+      );
     }
 
     expect(instana.wrap.called).to.be.false;
@@ -196,14 +185,10 @@ describe('cjs wrapper', function () {
       const wrapper = require('../src/index');
       await wrapper.handler();
     } catch (e) {
-      if (semver.lt(process.versions.node, '12.0.0')) {
-        expect(e.message).to.eql('SyntaxError: Unexpected identifier');
-      } else {
-        expect(e.message).to.eql(
-          'Your Lambda function is using an ES module. ' +
-            "Please use the 'instana-aws-lambda-auto-wrap-esm.handler' as runtime handler."
-        );
-      }
+      expect(e.message).to.eql(
+        'Your Lambda function is using an ES module. ' +
+          "Please use the 'instana-aws-lambda-auto-wrap-esm.handler' as runtime handler."
+      );
     }
 
     expect(instana.wrap.called).to.be.false;

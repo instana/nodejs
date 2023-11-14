@@ -10,7 +10,7 @@ const execute = require('./execute-sync');
 const getDockerOpts = require('./docker-opts');
 
 module.exports = exports = function buildOnDocker(platform, family, abi, version) {
-  const { dockerTag } = getDockerOpts(family);
+  const { dockerTag } = getDockerOpts(family, version);
 
   console.log(`Stopping and removing ${dockerTag}.`);
   execute(`docker stop ${dockerTag} > /dev/null || true`);

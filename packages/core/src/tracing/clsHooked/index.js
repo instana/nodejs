@@ -12,8 +12,7 @@ const semver = require('semver');
 /**
  * In order to increase Node.js version support, this loads an implementation of a CLS (continuation local storage) API
  * which is appropriate for the version of on Node.js that is running.
- * - Node.js < 12.17: our vendored-in fork of cls-hooked (based on async_hooks)
- * - Node.js 12.17 - 16.6: AsyncLocalStorage
+ * - Node.js 14.0 - 16.6: AsyncLocalStorage
  * - Node.js 16.7 - 16.6: our vendored-in fork of cls-hooked (based on async_hooks) (see below for reasons)
  * - Node.js >= 16.14: AsyncLocalStorage
  *
@@ -23,7 +22,7 @@ const semver = require('semver');
  */
 if (
   process.env.INSTANA_FORCE_LEGACY_CLS !== 'true' &&
-  semver.satisfies(process.versions.node, '12.17 - 16.6 || ^16.14 || >=17.2')
+  semver.satisfies(process.versions.node, '14.0 - 16.6 || ^16.14 || >=17.2')
 ) {
   module.exports = require('./async_local_storage_context');
 } else {

@@ -107,8 +107,7 @@ The following sections describe how to manage dependencies in practice.
 
 There is only one single package-lock.json file when using **npm workspaces**.
 
-We are currently using **lockfileVersion 2**.
-LockfileVersion 3 is no longer compatible with Node v10. As soon as we drop Node v10, we can move to version 3.
+We are currently using **lockfileVersion 3**.
 
 If you need to recreate the package lock file, please us `npm i --lockfile-version 2`.
 

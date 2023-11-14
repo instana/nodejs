@@ -1,4 +1,4 @@
-ARG LAMBDA_BASE_IMAGE=public.ecr.aws/lambda/nodejs:14
+ARG LAMBDA_BASE_IMAGE=public.ecr.aws/lambda/nodejs:18
 ARG INSTANA_LAYER=icr.io/instana/aws-lambda-nodejs:latest
 
 # add the Instana Lambda layer via the container image

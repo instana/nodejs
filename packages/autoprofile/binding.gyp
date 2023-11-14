@@ -9,5 +9,8 @@
       ],
       "include_dirs": ["<!(node -e \"require('nan')\")"]
     }
-  ]
+  ],
+  "variables": {
+    "openssl_fips" : ""
+	}
 }

@@ -28,7 +28,7 @@ The AWS Lambda demo is comprised of all Lambda functions in this folder prefixed
 
 ### Initial Setup
 
-To set up the demo initially for a new AWS account, go to https://us-east-2.console.aws.amazon.com/lambda/home?region=us-east-2#/functions (link might be different depending on the region you want to deploy to). Create four Lambda functions with the names from the list below. Choose the `Node.js 10` runtime. Each function will need the `INSTANA_ENDPOINT_URL` and `INSTANA_AGENT_KEY` environment variable as outlined in our documentation. Some functions need additional environment variables to know where to reach the other components they talk to.
+To set up the demo initially for a new AWS account, go to https://us-east-2.console.aws.amazon.com/lambda/home?region=us-east-2#/functions (link might be different depending on the region you want to deploy to). Create four Lambda functions with the names from the list below. Choose the `Node.js 18` runtime. Each function will need the `INSTANA_ENDPOINT_URL` and `INSTANA_AGENT_KEY` environment variable as outlined in our documentation. Some functions need additional environment variables to know where to reach the other components they talk to.
 
 * `demo-cloudwatch-events-processor`
     * `RDS_HOSTNAME` (mandatory)
@@ -105,7 +105,7 @@ To deploy the zip, upload it to an EC2 instance (or wherever you want to deploy 
 ```
 sudo yum install -y gcc-c++ make   # required to compile native Node.js addons
 
-curl -sL https://rpm.nodesource.com/setup_10.x | sudo -E bash -
+curl -sL https://rpm.nodesource.com/setup_18.x | sudo -E bash -
 sudo yum install -y nodejs
 mkdir /opt/demo-app
 cp /tmp/demo-ec2-app.zip /opt/demo-app/
@@ -132,7 +132,9 @@ Before you deploy zip files, you need to actually build them, see above.
 
 Use `bin/deploy-demo.sh` to deploy all four demo Lambda zip files. They will be deployed to region `us-east-2` by default. You can repeat that step as often as you like if the Lambda code has changed or you want to deploy zip files with a more recent npm package/local package.
 
-If you have built the zip files with `BUILD_LAMBDAS_WITH=layer`, the script will try to add the Lambda layer "instana-nodejs" to the deployed Lambda functions. The script will try to figure out the latest version of the Instana Node.js Lambda layer. Alternatively, you can also use `LAYER_VERSION` and `LAYER_ARN` to specifiy which layer you want to have added. E.g. run something like `LAYER_VERSION=23 LAYER_ARN=arn:aws:lambda:us-east-2:410797082306:layer:instana-nodejs:23 bin/deploy-demo.sh` or `LAYER_VERSION=10 LAYER_ARN=arn:aws:lambda:us-east-2:410797082306:layer:experimental-instana-nodejs-with-extension:10 bin/deploy-demo.sh`).
+If you have built the zip files with `BUILD_LAMBDAS_WITH=layer`, the script will try to add the Lambda layer "instana-nodejs" to the deployed Lambda functions. The script will try to figure out the latest version of the Instana Node.js Lambda layer. Alternatively, you can also use `LAYER_VERSION` and `LAYER_ARN` to specifiy which layer you want to have added. Checkout the latest layers here: https://www.ibm.com/docs/en/instana-observability/current?topic=lambda-aws-native-tracing-nodejs
+
+E.g. run something like `LAYER_VERSION=167 LAYER_ARN=arn:aws:lambda:ap-southeast-1:410797082306:layer:instana-nodejs:167 bin/deploy-demo.sh`.
 
 Note that if you have use `BUILD_LAMBDAS_WITH=npm` or `BUILD_LAMBDAS_WITH=local` and the function already has the Instana Lambda layer, the deploy script will try to remove it and revert the handler back to `index.handler`.
 

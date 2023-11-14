@@ -457,13 +457,4 @@ function onTimeout(localUseLambdaExtension, req, resourcePath, payload, finalLam
 
 function destroyRequest(req) {
   req.destroy();
-
-  // Before Node.js 14, req.destroy does not set the req.destroyed property,
-  // see https://github.com/nodejs/node/pull/33131. We rely on that property in some scenarios. Specifically, when
-  // deciding whether to fall back to sending data to the back end directly after a request to the extension has failed.
-  // Without this workaround, we would send the data to the back end twice after a request to the extension has failed:
-  // Once from the onTimeout handler and once from the req.on('error') handler.
-  //
-  // This workaround can be removed as soon as we drop support for Node.js 12.
-  req.destroyed = true;
 }

@@ -24,9 +24,8 @@
 #     - local         -> use a local Docker base image
 #     - gcr           -> use an image from the GCR registry with test base images
 # $2: Node.js version. One of:
-#     - 12
-#     - 10
-#     - 8
+#     - 18
+#     - 16
 # $3: Linux distribution. One of:
 #     - standard               -> (uses node:$version, that is, Debian)
 #     - alpine                 -> (uses node:$version-alpine, that is, Alpine)
@@ -37,7 +36,7 @@
 #       it to our pre-release Google Cloud container registry with the tag "next" by doing
 #       packages/google-cloud-run/images/instana-google-cloud-run/build.sh npm next
 #       then using that pre-release base image here by specifying "next" for $4 as
-#       well -> packages/google-cloud-run/images/test-images/build.sh gcr 12 standard next
+#       well -> packages/google-cloud-run/images/test-images/build.sh gcr 18 standard next
 
 set -eo pipefail
 

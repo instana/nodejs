@@ -6,7 +6,6 @@
 
 const expect = require('chai').expect;
 const path = require('path');
-const semver = require('semver');
 
 const config = require('../../../../core/test/config');
 const { delay, retry } = require('../../../../core/test/test_util');
@@ -16,12 +15,7 @@ const globalAgent = require('../../globalAgent');
 
 // See https://instana.kanbanize.com/ctrl_board/56/cards/48699/details/ for more details on worker threads.
 
-const mochaSuiteFn =
-  supportedVersion(process.versions.node) &&
-  // worker threads became stable in Node.js 12.
-  semver.gte(process.versions.node, '12.0.0')
-    ? describe
-    : describe.skip;
+const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
 mochaSuiteFn('worker threads', function () {
   this.timeout(config.getTestTimeout());

@@ -25,30 +25,38 @@
 var edgemicroVersion = require('../package.json').version;
 const writeConsoleLog = require('microgateway-core').Logging.writeConsoleLog;
 const version = process.version;
-const ltsVersion = 8;
-const experimental = ["v7", "v9","v11"];
-const latest = 12;
+const ltsVersion = 14;
+const experimental = ['v15', 'v17', 'v19'];
+const latest = 20;
 
 const CONSOLE_LOG_TAG_COMP = 'microgateway edgemicro';
 
 //don't print versions when obtaining a token.
-if (!process.argv.includes("token") && !process.argv.includes("get")) {
-    writeConsoleLog('log',{component: CONSOLE_LOG_TAG_COMP},'current nodejs version is %s', version);
-    writeConsoleLog('log',{component: CONSOLE_LOG_TAG_COMP},'current edgemicro version is %s', edgemicroVersion);
+if (!process.argv.includes('token') && !process.argv.includes('get')) {
+  writeConsoleLog('log', { component: CONSOLE_LOG_TAG_COMP }, 'current nodejs version is %s', version);
+  writeConsoleLog('log', { component: CONSOLE_LOG_TAG_COMP }, 'current edgemicro version is %s', edgemicroVersion);
 }
 
 for (var ver in experimental) {
-    if (version.includes(experimental[ver])) {
-        writeConsoleLog('log',{component: CONSOLE_LOG_TAG_COMP},"You are using a version of NodeJS that is not supported");
-        return;
-    }
+  if (version.includes(experimental[ver])) {
+    writeConsoleLog(
+      'log',
+      { component: CONSOLE_LOG_TAG_COMP },
+      'You are using a version of NodeJS that is not supported'
+    );
+    return;
+  }
 }
 
-var majorVersion = parseInt(version.split(".")[0].replace("v", ""));
+var majorVersion = parseInt(version.split('.')[0].replace('v', ''));
 
 if (majorVersion < ltsVersion || majorVersion > latest) {
-    writeConsoleLog('log',{component: CONSOLE_LOG_TAG_COMP},"You are using a version of NodeJS that is not supported");
-    return;
+  writeConsoleLog(
+    'log',
+    { component: CONSOLE_LOG_TAG_COMP },
+    'You are using a version of NodeJS that is not supported'
+  );
+  return;
 } else {
-    require('./cmd')()
+  require('./cmd')();
 }

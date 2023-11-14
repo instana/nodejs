@@ -11,9 +11,7 @@ cd `dirname $BASH_SOURCE`
 # Maintenance Note:
 # This should be kept in sync with packages/autoprofile/precompile/build-all-addons.js-> ABI_VERSIONS.
 declare -A ABI_VERSIONS=( \
-  ["64"]="10.24.1" \
-  ["72"]="12.22.1" \
-  ["83"]="14.17.0" \
+  ["83"]="14.21.3" \
   ["88"]="15.14.0" \
   ["93"]="16.3.0" \
   ["108"]="18.0.0" \

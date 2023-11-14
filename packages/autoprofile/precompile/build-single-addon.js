@@ -11,8 +11,6 @@ const { copyFileSync, existsSync } = require('fs');
 const { mkdirp } = require('mkdirp');
 const path = require('path');
 const os = require('os');
-// eslint-disable-next-line import/no-extraneous-dependencies
-const semver = require('semver');
 
 module.exports = exports = function buildSingleAddOn(abi, version) {
   const platform = os.platform();
@@ -32,18 +30,14 @@ module.exports = exports = function buildSingleAddOn(abi, version) {
     mkdirp.sync(addonDir);
   }
 
-  let darwinNodeJs10Fix = '';
-  if (platform === 'darwin' && semver.gte(version, '10.0.0') && semver.lt(version, '12.0.0')) {
-    darwinNodeJs10Fix = '--build_v8_with_gn=false';
-  }
-
-  let command = `node node_modules/node-gyp/bin/node-gyp.js rebuild --target=${version} ${darwinNodeJs10Fix} --arch=x64`;
+  let command = `node node_modules/node-gyp/bin/node-gyp.js rebuild --target=${version} --arch=x64`;
   const cwd = path.join(__dirname, '..');
 
-  // NOTE: the command is not only executed on the container, also on your local developer machine if you run `build-all-addons`
+  // NOTE: for darwin, we execute the rebuild on the local developer machine
   if (cwd !== '/opt/autoprofile') {
     const rootGyp = path.join(__dirname, '..', '..', '..', 'node_modules');
-    command = `node ${rootGyp}/node-gyp/bin/node-gyp.js rebuild --target=${version} ${darwinNodeJs10Fix} --arch=x64`;
+    // NOTE: Node v14 failed because of: https://github.com/nodejs/node-gyp/issues/2673
+    command = `node ${rootGyp}/node-gyp/bin/node-gyp.js rebuild --target=${version} --arch=x64`;
   }
 
   console.log(`Running "${command}" in directory "${cwd}".`);
