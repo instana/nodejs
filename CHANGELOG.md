@@ -3,6 +3,24 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.35.0](https://github.com/instana/nodejs/compare/v2.34.1...v2.35.0) (2023-11-14)
+
+
+### Bug Fixes
+
+* **couchbase:** added missing bucket type and name for bucket.query ([#922](https://github.com/instana/nodejs/issues/922)) ([fc2a9c0](https://github.com/instana/nodejs/commit/fc2a9c0e6b71e23a2106eb1de11d55a049a8ed9e))
+* adds version information for all NPM packages ([#906](https://github.com/instana/nodejs/issues/906)) ([3301aff](https://github.com/instana/nodejs/commit/3301aff98e4bdcbc2230912d7778836393ae6433))
+
+
+### Features
+
+* **fastify:** added support for fastify v4 ([#920](https://github.com/instana/nodejs/issues/920)) ([fb22cb7](https://github.com/instana/nodejs/commit/fb22cb701579ba13271e42069f4a5dd860b42a79))
+* **google cloud storage:** added support for google cloud storage v7 ([#913](https://github.com/instana/nodejs/issues/913)) ([33be8da](https://github.com/instana/nodejs/commit/33be8da7f327bb15c96594b44e01b6b9ed0eefdc))
+
+
+
+
+
 ## [2.34.1](https://github.com/instana/nodejs/compare/v2.34.0...v2.34.1) (2023-10-23)
 
 

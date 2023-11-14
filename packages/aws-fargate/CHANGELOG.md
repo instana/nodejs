@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.35.0](https://github.com/instana/nodejs/compare/v2.34.1...v2.35.0) (2023-11-14)
+
+
+### Bug Fixes
+
+* adds version information for all NPM packages ([#906](https://github.com/instana/nodejs/issues/906)) ([3301aff](https://github.com/instana/nodejs/commit/3301aff98e4bdcbc2230912d7778836393ae6433))
+
+
+
+
+
 ## [2.34.1](https://github.com/instana/nodejs/compare/v2.34.0...v2.34.1) (2023-10-23)
 
 **Note:** Version bump only for package @instana/aws-fargate
