@@ -201,7 +201,6 @@
     "socket.io": "^4.6.0",
     "socket.io-client": "^4.6.0",
     "sqs-consumer": "5.7.0",
-    "sqs-consumer-v6": "npm:sqs-consumer@^6.2.0",
     "sqs-consumer-v7": "npm:sqs-consumer@^7.4.0",
     "superagent": "^6.1.0",
     "tsoa": "^3.14.1",
