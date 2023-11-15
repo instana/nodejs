@@ -586,9 +586,9 @@ function start(version) {
       if (withError !== 'publisher') {
         const sqsEntry = verifySQSEntry({ receiverControls, spans, parent: sqsExit, withError, isBatch });
         /**
-       * When receiving messages in batch, SQS may not send all messages in one batch and we cannot guarantee that all 
-       * messages will be in the batch. The expectation can vary for the no:of http exit spans sent per message  received.
-       * So we are expectign atleast one matching for http exit spans.
+       * When receiving messages in batch, SQS may not send all messages in one batch and we cannot guarantee that all
+       * messages will be in the batch. The expectation can vary for the no:of http exit spans sent per message
+       * received. So we are expectign atleast one matching for http exit spans.
        */
 
         if (isSQSConsumer) {
