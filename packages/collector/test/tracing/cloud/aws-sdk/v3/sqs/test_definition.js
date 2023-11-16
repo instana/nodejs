@@ -182,7 +182,6 @@ function start(version) {
         });
       });
 
-      // See https://github.com/bbc/sqs-consumer/issues/356
       if (semver.gte(process.versions.node, '18.0.0')) {
         describe('sqs-consumer API', () => {
           describe('[handleMessage] message processed with success', () => {
