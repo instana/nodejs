@@ -75,8 +75,8 @@
     "@google-cloud/pubsub": "^4.0.2",
     "@google-cloud/storage": "^7.5.0",
     "@grpc/grpc-js": "^1.5.7",
-    "@grpc/proto-loader": "^0.7.10",
-    "@grpc/proto-loader-latest": "npm:@grpc/proto-loader@^0.6.9",
+    "@grpc/proto-loader": "^0.6.9",
+    "@grpc/proto-loader-latest": "npm:@grpc/proto-loader@^0.7.10",
     "@hapi/hapi": "^21.3.0",
     "@opentelemetry/auto-instrumentations-node": "^0.38.0",
     "@opentelemetry/exporter-trace-otlp-http": "^0.44.0",
@@ -215,10 +215,10 @@
   "optionalDependencies": {
     "grpc": "^1.24.11",
     "ibm_db": "^2.8.2",
-    "kafka-avro": "^3.1.1",
-    "mali": "^0.23.0",
-    "node-rdkafka": "^2.17.0",
-    "pg-native": "^3.0.1"
+    "kafka-avro": "3.1.1",
+    "mali": "^0.46.1",
+    "node-rdkafka": "2.17.0",
+    "pg-native": "3.0.1"
   },
   "config": {
     "commitizen": {
