@@ -409,7 +409,7 @@ jobs:
     environment:
       NODE_GYP_VERSION: 8.4.1
     docker:
-      - image: cimg/node:20.3
+      - image: cimg/node:20.9
       - <<: *zookeeper
       - <<: *elasticsearch
       - <<: *mongo
@@ -432,7 +432,7 @@ jobs:
 
   "node-18":
     docker:
-      - image: cimg/node:18.16
+      - image: cimg/node:18.18
       - <<: *zookeeper
       - <<: *elasticsearch
       - <<: *mongo
@@ -481,7 +481,7 @@ jobs:
       RUN_ESM: true
       COLLECTOR_ONLY: true
     docker:
-      - image: cimg/node:18.16
+      - image: cimg/node:18.18
       - <<: *zookeeper
       - <<: *elasticsearch
       - <<: *mongo
@@ -579,7 +579,7 @@ jobs:
     environment:
         NODE_COVERAGE: true
     docker:
-      - image: cimg/node:18.16
+      - image: cimg/node:18.18
       - <<: *zookeeper
       - <<: *elasticsearch
       - <<: *mongo
