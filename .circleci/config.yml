@@ -291,7 +291,7 @@ shared: &shared
         name: Run SonarQube Scanner
         command: |
           if [ -n "$NODE_COVERAGE" ]; then
-            npx sonarqube-scanner 
+            npx sonarqube-scanner
           fi
 
     - store_artifacts:
@@ -619,7 +619,6 @@ workflows:
         - not:
           equal: [ scheduled_pipeline, << pipeline.trigger_source >> ]
     jobs:
-      - "node-20"
       - "node-18"
 
   other-nodejs-versions:
@@ -631,6 +630,7 @@ workflows:
         # by providing the parameter "workflow: other-nodejs-versions"
         - equal: [ other-nodejs-versions, << pipeline.parameters.workflow >> ]
     jobs:
+      - "node-20"
       - "node-16"
       - "node-14"
       - "node-12"
