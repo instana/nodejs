@@ -2,8 +2,11 @@
  * (c) Copyright IBM Corp. 2023
  */
 
+/* eslint-disable max-len */
+
 'use strict';
 
+const semver = require('semver');
 const cls = require('../../cls');
 const constants = require('../../constants');
 const {
@@ -18,6 +21,10 @@ const originalFetch = global.fetch;
 
 let extraHttpHeadersToCapture;
 let isActive = false;
+
+const addHeadersToOptionsUnconditionally =
+  semver.gte(process.version, '20.8.1') ||
+  (semver.gte(process.version, '18.18.2') && semver.lt(process.version, '20.0.0'));
 
 exports.init = function init(config) {
   if (originalFetch == null) {
@@ -196,29 +203,42 @@ function addW3cTraceContextHeaders(headersToAdd, w3cTraceContext) {
 }
 
 function injectHeaders(originalArgs, headersToAdd) {
-  // Headers can be present in the second parameter to fetch (the options object) as well as in the first parameter, if
-  // and only if it is a Fetch API Request object. We need to pay close attention when deciding whether to inject our
-  // headers into the first or the second parameter. Getting this wrong could either lead to our headers not being sent
-  // or (even worse) accidentally discarding headers that were present on the original fetch call. For example, if the
-  // original call used a Fetch API Request object as the first parameter and did not have a second parameter (no
-  // options object), or that options object did not have the headers option, adding headers to the options would
-  // effectively discard the headers from the Request object. (Because the Fetch API gives options.headers precedence
-  // over Request.headers, and it does not merge the two sets of headers.)
+  // Headers can be present in the second parameter to fetch (the options object) as well as in the first parameter if
+  // the first parameter is a Fetch API Request object (and not a string or a URL object). If headers are present in
+  // the request object as well as in the options, the two sets of headers are _not_ merged, instead, the headers from
+  // the request object are ignored and the headers from the options object are used exclusively.
+  //
+  // Therefore we need to pay close attention when deciding whether to inject our headers into the first or the second
+  // parameter. Getting this wrong could either lead to our headers not being sent or (even worse) accidentally
+  // discarding headers that were present on the original fetch call. For example, if the original call used a Fetch API
+  // Request object as the first parameter and did not have a second parameter (no options object), adding headers to
+  // the options would effectively discard the headers from the Request object. (Because the Fetch API gives
+  // options.headers precedence over Request.headers, and it does not merge the two sets of headers.)
+  //
+  // To add insult to injury details of that behavior changeed between Node.js 20.8.0 and 20.8.1, with the update from
+  // undici version 5.25.2 to 5.26.3: Up until Node.js version 20.8.0, if there is an options object, but it does not
+  // have the headers option, the headers from the request object will be used. Starting with Node.js 20.8.1, if there
+  // is an options parameters, the request object's headers will be ignored unconditionally - no matter if the options
+  // object has a header option or not. This change has also been backported to Node.js 18.18.2, so versions >= 18.18.2
+  // and < 20.0.0 are also affected.
   //
   // Note: If the first parameter is a Request object, it always has a headers attribute, even if that had not been
-  // provieded explicitly when creating the Request (that is, the constructor normalizes that to an empty Headers
+  // provided explicitly when creating the Request (that is, the constructor normalizes that to an empty Headers
   // object). Also, when the Request object's headers have been initialized with an object literal, the constructor will
   // have normalized that to a Fetch API Headers object.
   //
   // The following two tables list the relevant cases, depending on what has been passed to the original fetch() call.
   //
-  // | Case | First Parameter (resource) | Second Parameter (options) | Action                                     |
-  // | ---- | -------------------------- | -------------------------- | ------------------------------------------ |
-  // |  (1) | Not a Fetch API Request    | Absent                     | Create options and inject there            |
-  // |  (2) | Not a Fetch API Request    | Present                    | Inject headers into options                |
-  // |  (3) | Fetch API Request          | Absent                     | add to Request#headers, do not add options |
-  // |  (4) | Fetch API Request          | Present but has no headers | add to Request#headers                     |
-  // |  (5) | Fetch API Request          | Present with headers       | add to options#headers                     |
+  // | Node.js  | Case | First Parameter (resource) | Second Parameter (options) | Action                                     |
+  // | -------- | ---- | -------------------------- | -------------------------- | ------------------------------------------ |
+  // |        * |  (1) | Not a Fetch API Request    | Absent                     | Create options and inject there            |
+  // |        * |  (2) | Not a Fetch API Request    | Present                    | Inject headers into options                |
+  // |        * |  (3) | Fetch API Request          | Absent                     | add to Request#headers, do not add options |
+  // | <=20.8.0 |  (4) | Fetch API Request          | Present but has no headers | add to Request#headers                     |
+  // | >=18.18.2|      |                            |                            |                                            |
+  // | >=20.8.1 |  (5) | Fetch API Request          | Present but has no headers | add to options#headers                     |
+  // | >=18.18.2|      |                            |                            |                                            |
+  // |        * |  (6) | Fetch API Request          | Present with headers       | add to options#headers                     |
   //
   // Some additional notes:
   // * Cases (1) & (2): If the first parameter is not a Request object, it is either a simple string, a URL object or
@@ -230,7 +250,10 @@ function injectHeaders(originalArgs, headersToAdd) {
   //   the Fetch API discard the headers from the request object, altering the behavior of the application. Thus, for
   //   this case, we add our headers to the Request object. The Request constructor guarantees that Request#headers
   //   exists and is a Fetch API Headers object.
-  // * Case (5): There is a Request object (with or without headers) and an options object with headers. The Fetch API
+  // * Case (5): This is the same case as case 5 with respect to the input, but since Node.js/undici would discard
+  //   Request.headers anyway in this case starting with Node.js 20.8.1, we can (and must) add the headers as
+  //   options.headers instead of Request#headers.
+  // * Case (6): There is a Request object (with or without headers) and an options object with headers. The Fetch API
   //   will ignore any headers from the Request object and only use the headers from the options object, so that is
   //   where we need to add our headers as well.
 
@@ -241,8 +264,11 @@ function injectHeaders(originalArgs, headersToAdd) {
     // The original fetch call's first argument is not a Fetch API Request object. We can only inject headers into the
     // options object (which we might or might not need to add to the call).
     injectHeadersIntoOptions(originalArgs, headersToAdd);
-  } else if (options && options.headers) {
-    // The original fetch call had an options object including headers, we need to add our headers there.
+  } else if (options && (options.headers || addHeadersToOptionsUnconditionally)) {
+    // Node.js <= 20.8.0: The original fetch call had an options object including headers, we need to add our headers
+    // there.
+    // Node.js >= 20.8.1: The original fetch call had an options object. Independent of whether it contained headers, we
+    // need to add our headers to the options object. Headers that may exist in the request object will be ignored.
     injectHeadersIntoOptions(originalArgs, headersToAdd);
   } else {
     // The original fetch call has no options object (or an options object without headers) and the resource argument is
@@ -299,13 +325,19 @@ function injectHeadersIntoOptions(originalArgs, headersToAdd) {
 }
 
 function isFetchApiRequest(obj) {
-  return isType(obj, 'Request');
+  // The internal class we are looking for here has been renamed from Request to _Request in release 20.8.1,
+  // in this commit:
+  // https://github.com/nodejs/node/commit/2860631359#diff-f516ab824a7722da938a4c7c851520d39731ddeb4f7198dff4e932c5d4f8fdf7R5030
+  return isType(obj, ['Request', '_Request']);
 }
 
 function isFetchApiHeaders(obj) {
-  return isType(obj, 'Headers');
+  // The internal class we are looking for here has been renamed from Headers to _Header in release 20.8.1,
+  // in this commit:
+  // https://github.com/nodejs/node/commit/2860631359#diff-f516ab824a7722da938a4c7c851520d39731ddeb4f7198dff4e932c5d4f8fdf7R1918
+  return isType(obj, ['Headers', '_Headers']);
 }
 
-function isType(obj, constructorName) {
-  return obj != null && obj.constructor && obj.constructor.name === constructorName;
+function isType(obj, possibleConstructorNames) {
+  return obj != null && obj.constructor && possibleConstructorNames.includes(obj.constructor.name);
 }
