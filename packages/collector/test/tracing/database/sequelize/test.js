@@ -18,7 +18,10 @@ const globalAgent = require('../../../globalAgent');
 
 const agentControls = globalAgent.instance;
 
-// See https://github.com/sequelize/sequelize/releases/tag/v7.0.0-alpha.27
+// There is no official sequelize release with support for Node.js >= 20 yet. It seems to be work in progress though:
+// https://github.com/sequelize/sequelize/releases/tag/v7.0.0-alpha.27
+// Once there is an official 7.0.0 release, we can switch to it and remove the restriction to skip the sequelize tests
+// in Node.js 20.
 const mochaSuiteFn =
   supportedVersion(process.versions.node) && semver.lt(process.versions.node, '20.0.0') ? describe : describe.skip;
 
