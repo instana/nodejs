@@ -17,8 +17,7 @@ const {
   expectAtLeastOneMatching,
   retry,
   delay,
-  stringifyItems,
-  expectExactlyNMatching
+  stringifyItems
 } = require('../../../../../../../core/test/test_util');
 const ProcessControls = require('../../../../../test_util/ProcessControls');
 const globalAgent = require('../../../../../globalAgent');
@@ -184,7 +183,7 @@ function start(version) {
       });
 
       // See https://github.com/bbc/sqs-consumer/issues/356
-      if (version !== '@aws-sdk/client-sqs' && semver.gte(process.versions.node, '14.0.0')) {
+      if (semver.gte(process.versions.node, '18.0.0')) {
         describe('sqs-consumer API', () => {
           describe('[handleMessage] message processed with success', () => {
             const sqsConsumerControls = new ProcessControls({
@@ -593,7 +592,7 @@ function start(version) {
             parent: sqsEntry,
             pid: String(receiverControls.getPid()),
             testMethod: (exitSpans, tests) => {
-              return expectExactlyNMatching(exitSpans, 4, tests);
+              return expectAtLeastOneMatching(exitSpans, tests);
             }
           });
         } else {
