@@ -24,6 +24,8 @@ function normalizeArgs {
   elif [[ $nodeJsVersion -lt 14 ]]; then
     echo "Unsupported Node version: $nodeJsVersion"
     exit 1
+  else
+    NODEJS_VERSION=$nodeJsVersion
   fi
 
   local distribution=$3

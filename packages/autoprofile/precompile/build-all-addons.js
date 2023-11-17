@@ -35,7 +35,6 @@ const ABI_VERSIONS = {
   // 14.17.x was no longer working
   // https://stackoverflow.com/questions/76094428/debian-stretch-repositories-404-not-found
   83: '14.21.3',
-  88: '15.14.0',
   93: '16.20.2',
   108: '18.18.2',
   115: '20.3.0'
