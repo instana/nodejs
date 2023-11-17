@@ -54,12 +54,7 @@ const topic = 'rdkafka-topic';
 
 let mochaSuiteFn;
 
-// Node v20 https://github.com/Blizzard/node-rdkafka/issues/1025
-if (
-  !supportedVersion(process.versions.node) ||
-  semver.lte(process.versions.node, '14.0.0') ||
-  semver.gte(process.versions.node, '20.0.0')
-) {
+if (!supportedVersion(process.versions.node) || semver.lte(process.versions.node, '14.0.0')) {
   mochaSuiteFn = describe.skip;
 } else {
   mochaSuiteFn = describe;
