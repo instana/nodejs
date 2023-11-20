@@ -1,6 +1,6 @@
 {
   "name": "@instana/azure-container-services",
-  "version": "2.34.1",
+  "version": "2.35.0",
   "description": "Instana tracing and monitoring for Node.js based Azure Container Services",
   "author": {
     "name": "Arya Mohanan",
@@ -44,8 +44,8 @@
   },
   "license": "MIT",
   "dependencies": {
-    "@instana/core": "2.34.1",
-    "@instana/serverless": "2.34.1"
+    "@instana/core": "2.35.0",
+    "@instana/serverless": "2.35.0"
   },
   "devDependencies": {
     "no-code2": "2.0.0"

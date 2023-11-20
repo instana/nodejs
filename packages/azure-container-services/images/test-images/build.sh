@@ -97,5 +97,3 @@ docker build \
   -t $azure_repository/$image_tag \
   .
 echo "docker build exit status: $?"
-# Building Dockerfile-standard -> fargate-nodejs-test-12.16.3-local:latest 
-# (INSTANA_LAYER: instana-aws-fargate-nodejs-local:latest, NODEJS_VERSION: 12.16.3)
