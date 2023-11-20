@@ -5,7 +5,7 @@ function normalizeArgs {
     instana_layer_without_tag=icr.io/instana/azure-container-services-nodejs
     INSTANA_LAYER_MODE=released
   elif [[ $instanaLayerMode = authenticated ]]; then
-    instana_layer_without_tag=containers.instana.io/instana/release/azure-container-services/nodejs
+    instana_layer_without_tag=containers.instana.io/instana/release/azure/azure-container-services/nodejs
     INSTANA_LAYER_MODE=authenticated
   elif [[ $instanaLayerMode = local ]]; then
     instana_layer_without_tag=instana-azure-container-services-nodejs-local
@@ -24,6 +24,8 @@ function normalizeArgs {
   elif [[ $nodeJsVersion -lt 14 ]]; then
     echo "Unsupported Node version: $nodeJsVersion"
     exit 
+  else
+    NODEJS_VERSION=$nodeJsVersion
   fi
 
   local distribution=$3
