@@ -12,18 +12,14 @@ function normalizeArgs {
   fi
 
   local nodeJsVersion=$2
-  if [[ -z "${nodeJsVersion-}" || $nodeJsVersion = 14 ]]; then
-    NODEJS_VERSION=14
-    LAMBDA_BASE_IMAGE=public.ecr.aws/lambda/nodejs:14
-  elif [[ $nodeJsVersion = 12 ]]; then
-    NODEJS_VERSION=12
-    LAMBDA_BASE_IMAGE=public.ecr.aws/lambda/nodejs:12
-  elif [[ $nodeJsVersion = 10 ]]; then
-    NODEJS_VERSION=10
-    LAMBDA_BASE_IMAGE=public.ecr.aws/lambda/nodejs:10
-  else
-    echo "Unknown option for Node.js version: $nodeJsVersion"
+  if [[ -z "${nodeJsVersion-}" ]]; then
+    NODEJS_VERSION=18
+    LAMBDA_BASE_IMAGE=public.ecr.aws/lambda/nodejs:18
+  elif [[ $nodeJsVersion -lt 14 ]]; then
+    echo "Unsupported Node version: $nodeJsVersion"
     exit 1
+  else
+    NODEJS_VERSION=$nodeJsVersion
   fi
 }
 

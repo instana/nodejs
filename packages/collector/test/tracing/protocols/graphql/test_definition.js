@@ -5,7 +5,6 @@
 'use strict';
 
 const path = require('path');
-const semver = require('semver');
 const expect = require('chai').expect;
 
 const constants = require('@instana/core').tracing.constants;
@@ -23,16 +22,10 @@ const globalAgent = require('../../../globalAgent');
 
 const agentControls = globalAgent.instance;
 
-const skipNodeVersion = {
-  14: semver.lt(process.versions.node, '10.0.0'),
-  15: semver.lt(process.versions.node, '10.0.0'),
-  16: semver.lt(process.versions.node, '12.0.0')
-};
-
 function start(graphqlVersion) {
   this.timeout(config.getTestTimeout() * 2);
 
-  if (!supportedVersion(process.versions.node) || skipNodeVersion[graphqlVersion]) {
+  if (!supportedVersion(process.versions.node)) {
     return;
   }
 

@@ -24,9 +24,8 @@
 #     - local         -> use a local Docker base image
 #     - aws           -> use an image from the AWS ECR registry with test base images
 # $2: Node.js version. One of:
-#     - 12
-#     - 10
-#     - 8
+#     - 18
+#     - 16
 # $3: Linux distribution. One of:
 #     - standard               -> (uses node:$version, that is, Debian)
 #     - alpine                 -> (uses node:$version-alpine, that is, Alpine, and installs build dependencies)
@@ -38,7 +37,7 @@
 #       it to our pre-release AWS ECR registry with the tag "next" by doing
 #       packages/aws-fargate/images/instana-aws-fargate/build.sh npm next
 #       then using that pre-release base image here by specifying "next" for $4 as
-#       well -> packages/aws-fargate/images/test-images/build.sh aws 12 standard next
+#       well -> packages/aws-fargate/images/test-images/build.sh aws 18 standard next
 
 # use -eox to see better output
 set -eo pipefail

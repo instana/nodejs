@@ -11,15 +11,11 @@ cd `dirname $BASH_SOURCE`
 # Maintenance Note:
 # This should be kept in sync with packages/autoprofile/precompile/build-all-addons.js-> ABI_VERSIONS.
 declare -A ABI_VERSIONS=( \
-  ["64"]="10.24.1" \
-  ["72"]="12.22.1" \
-  ["83"]="14.17.0" \
-  ["88"]="15.14.0" \
-  ["93"]="16.3.0" \
-  ["108"]="18.0.0" \
+  ["83"]="14.21.3" \
+  ["93"]="16.20.2" \
+  ["108"]="18.18.2" \
   ["115"]="20.3.0" \
 )
-# Note: We do not provide for older non-LTS versions (Node.js 9, 11, 13).
 
 LIBC_VARIANTS=( \
   "glibc" \

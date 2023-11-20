@@ -10,14 +10,14 @@ const getDockerOpts = require('./docker-opts');
 
 const getOutput = execute.getOutput;
 
-module.exports = exports = function prepareDockerImages(libcFamilies) {
+module.exports = exports = function prepareDockerImages(libcFamilies, version) {
   libcFamilies.forEach(family => {
     const {
       //
       baseImage,
       dockerFile,
       dockerTag
-    } = getDockerOpts(family);
+    } = getDockerOpts(family, version);
 
     if (process.env.RECREATE) {
       console.log(`Deleting ${dockerTag}, will be recreated.`);

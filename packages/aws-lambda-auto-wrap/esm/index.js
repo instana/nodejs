@@ -12,13 +12,12 @@ const majorNodeVersion = Number(process.versions.node.split('.')[0]);
 // CASE: ES support was added in Node v14, throw error if the handler is used in < 14
 // NOTE: The esm handler can be used for Lambdas with commonjs or es module.
 //       See https://github.com/nodejs/node/pull/35249
-// NOTE: Theoretically you can use this handler with Node > 10, because in Node v12
-//       dynamic imports were added. But as soon as we switch to a real ES module
-//       we will no longer use dynamic imports. We might use top level imports.
+// NOTE: v3 dropped support for < Node v14
 if (majorNodeVersion < 14) {
   throw new localUtils.errors.lambda.ImportModuleError(
-    `ES Module support was added in Node v14. Your Lambda function is using ${majorNodeVersion}.` +
-      "Please use the 'instana-aws-lambda-auto-wrap.handler' as runtime handler."
+    `Your Lambda function is using ${majorNodeVersion}. This version is not supported.` +
+      'Please use a layer version which is compatible with your Node.js version.' +
+      'See https://www.ibm.com/docs/en/instana-observability/current?topic=lambda-aws-native-tracing-nodejs'
   );
 }
 

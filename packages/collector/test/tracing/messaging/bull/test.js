@@ -35,9 +35,7 @@ if (process.env.BULL_QUEUE_NAME) {
   queueName = `${process.env.BULL_QUEUE_NAME}${semver.major(process.versions.node)}`;
 }
 
-// Bull@4.10.2 has dropped support for Node v10
-const mochaSuiteFn =
-  supportedVersion(process.versions.node) && semver.gte(process.versions.node, '12.0.0') ? describe : describe.skip;
+const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
 const sendingOptions = ['default', 'bulk=true', 'repeat=true'];
 // We don't need to test the callback case, as the Process case is handled as Callback already

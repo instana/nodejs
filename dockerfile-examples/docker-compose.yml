@@ -2,7 +2,7 @@ version: '3'
 
 services:
   node:
-    image: node-12.18.3-instana
+    image: node-16.13.0-instana
     networks:
       node-agent-network:
         aliases:
@@ -17,7 +17,7 @@ services:
       - agent
 
   agent:
-    image: instana/agent:latest
+    image: icr.io/instana/agent:latest
     pid: "host"
     privileged: true
     volumes:
@@ -34,7 +34,7 @@ services:
       - INSTANA_AGENT_ENDPOINT_PORT=${agent_endpoint_port:-443}
       - INSTANA_AGENT_KEY=${agent_key:?No agent key provided}
       - INSTANA_DOWNLOAD_KEY=${download_key:-}
-      - INSTANA_AGENT_ZONE=${agent_zone:-instana-nodejs-example-dockerfiles}
+      - INSTANA_AGENT_ZONE=${agent_zone:-instana-nodejs-example-dockerfiles}          
     expose:
       - 42699
 
