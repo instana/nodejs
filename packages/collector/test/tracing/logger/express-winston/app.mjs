@@ -19,16 +19,7 @@ const port = getAppPort();
 
 const require = createRequire(import.meta.url);
 const expressWinstonLocation = require.resolve('express-winston');
-let winston1x;
-
-if (semver.satisfies(process.version, '>=12.2.0')) {
-  // Use require.resolve and createRequire to get the winston dependency of express-winston (which is Winston 1.x) and
-  // not the Winston version we depend on via our root package's devDependencies (which is 3.x):
-  winston1x = moduleModule.createRequire(expressWinstonLocation)('winston');
-} else {
-  // Same as above, but use createRequireFromPath instead of createRequire.
-  winston1x = moduleModule.createRequireFromPath(expressWinstonLocation)('winston');
-}
+const winston = moduleModule.createRequire(expressWinstonLocation)('winston');
 
 const app = express();
 const logPrefix = `express-winston app (${process.pid}):\t`;
@@ -41,7 +32,7 @@ app.use(bodyParser.json());
 
 app.use(
   expressWinston.logger({
-    transports: [new winston1x.transports.Console()],
+    transports: [new winston.transports.Console()],
     statusLevels: true
   })
 );

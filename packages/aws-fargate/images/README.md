@@ -64,10 +64,10 @@ Once the Instana Node.js Fargate base image with the release candidate has been 
 ```
 # Remember to provide an .env file in test-images, too.
 
-test-images/build-and-push.sh aws 12 standard next
+test-images/build-and-push.sh aws 18 standard next
 ```
 
-The first parameter (`aws`) specifies from where to fetch the Instana Node.js Fargate base image (in this case, from the AWS ECR registry instead of icr.io). The second parameter (`12`) specifies the Node.js version. The third parameter determines the Linux distribution to use (`standard` means Debian here). The last parameter, `next` refers to the Docker tag that has been applied to the Instana Node.js Fargate base image earlier, when building and pushing it. The tag `next` has been applied because that was the npm dist-tag that has been used. If you used a different dist-tag, you need to use that as the Docker tag here as well.
+The first parameter (`aws`) specifies from where to fetch the Instana Node.js Fargate base image (in this case, from the AWS ECR registry instead of icr.io). The second parameter (`18`) specifies the Node.js version. The third parameter determines the Linux distribution to use (`standard` means Debian here). The last parameter, `next` refers to the Docker tag that has been applied to the Instana Node.js Fargate base image earlier, when building and pushing it. The tag `next` has been applied because that was the npm dist-tag that has been used. If you used a different dist-tag, you need to use that as the Docker tag here as well.
 
 Finally, use the AWS ECS web UI to include that test application image in a Fargate task and run it (see below).
 

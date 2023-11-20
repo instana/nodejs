@@ -30,7 +30,7 @@
     "url": "git+https://github.com/instana/nodejs.git"
   },
   "engines": {
-    "node": ">=10.4.0"
+    "node": ">=14.0.0"
   },
   "scripts": {
     "audit": "npm audit --omit=dev",

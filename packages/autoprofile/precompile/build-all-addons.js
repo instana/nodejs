@@ -32,18 +32,16 @@ const LIBC_FAMILIES = [GLIBC, MUSL];
 // Maintenance Note:
 // This should be kept in sync with native-dep-packs/rebuild-precompiled-addons.sh -> ABI_VERSIONS.
 const ABI_VERSIONS = {
-  64: '10.24.1',
-  72: '12.22.1',
-  83: '14.17.0',
-  88: '15.14.0',
-  93: '16.3.0',
-  108: '18.0.0',
+  // 14.17.x was no longer working
+  // https://stackoverflow.com/questions/76094428/debian-stretch-repositories-404-not-found
+  83: '14.21.3',
+  93: '16.20.2',
+  108: '18.18.2',
   115: '20.3.0'
 };
 
 function buildForPlatform(platform) {
   if (platform === 'linux') {
-    prepareDockerImages(LIBC_FAMILIES);
     LIBC_FAMILIES.forEach(family => {
       buildForAllAbis(platform, family);
     });
@@ -54,6 +52,7 @@ function buildForPlatform(platform) {
 
 function buildForAllAbis(platform, family) {
   Object.entries(ABI_VERSIONS).forEach(([abi, version]) => {
+    prepareDockerImages(LIBC_FAMILIES, version);
     buildOnHostOrDocker(platform, family, abi, version);
   });
 }

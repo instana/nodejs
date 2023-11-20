@@ -6,8 +6,7 @@
 'use strict';
 
 const expect = require('chai').expect;
-const semver = require('semver');
-
+const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const constants = require('@instana/core').tracing.constants;
 const config = require('../../../../../core/test/config');
 const testUtils = require('../../../../../core/test/test_util');
@@ -21,15 +20,7 @@ describe('tracing/logger/pino', function () {
   const agentControls = globalAgent.instance;
 
   ['8', '7'].forEach(pinoVersion => {
-    let mochaSuiteFn;
-
-    // NOTE: v7 dropped Node 10 support
-    // NOTE: v8 dropped Node 12 support
-    if (pinoVersion === '8') {
-      mochaSuiteFn = semver.gte(process.versions.node, '14.0.0') ? describe : describe.skip;
-    } else {
-      mochaSuiteFn = semver.gte(process.versions.node, '12.0.0') ? describe : describe.skip;
-    }
+    const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
     mochaSuiteFn(`pino@${pinoVersion}`, function () {
       const controls = new ProcessControls({

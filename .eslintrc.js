@@ -18,8 +18,9 @@ module.exports = {
   },
 
   parserOptions: {
-    // With Node.js 10 as the minimum required Node.js version, ES 2018 is appropriate, see  https://node.green/#ES2018.
-    ecmaVersion: 2018,
+    // https://node.green/#ES2020
+    // Min version is 14, ES2020 looks appropiate.
+    ecmaVersion: 2020,
     sourceType: 'script'
   },
 

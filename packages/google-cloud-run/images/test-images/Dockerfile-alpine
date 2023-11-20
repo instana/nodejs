@@ -1,5 +1,5 @@
 ARG INSTANA_LAYER=icr.io/instana/google-cloud-run-nodejs:latest
-ARG NODEJS_VERSION=12.16.3
+ARG NODEJS_VERSION=18
 
 FROM ${INSTANA_LAYER} as instanaLayer
 

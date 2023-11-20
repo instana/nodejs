@@ -441,54 +441,6 @@ jobs:
     parallelism: 15
     resource_class: medium+
 
-  "node-12":
-    environment:
-      NPM_VERSION: 8.6.0
-    docker:
-      - image: circleci/node:12
-      - <<: *zookeeper
-      - <<: *elasticsearch
-      - <<: *mongo
-      - <<: *redis
-      - <<: *kafka
-      - <<: *schema-registry
-      - <<: *mysql
-      - <<: *postgres
-      - <<: *mssql
-      - <<: *rabbitmq
-      - <<: *nats
-      - <<: *nats-streaming
-      - <<: *memcached
-      - <<: *couchbase
-      - <<: *couchbase-setup
-      - <<: *localstack
-    <<: *shared
-    parallelism: << pipeline.parameters.executors >>
-    resource_class: medium+
-
-  "node-10":
-    docker:
-      - image: circleci/node:10
-      - <<: *zookeeper
-      - <<: *elasticsearch
-      - <<: *mongo
-      - <<: *redis
-      - <<: *kafka
-      - <<: *schema-registry
-      - <<: *mysql
-      - <<: *postgres
-      - <<: *mssql
-      - <<: *rabbitmq
-      - <<: *nats
-      - <<: *nats-streaming
-      - <<: *memcached
-      - <<: *couchbase
-      - <<: *couchbase-setup
-      - <<: *localstack
-    <<: *shared
-    parallelism: << pipeline.parameters.executors >>
-    resource_class: medium+
-
   "node-coverage":
     environment:
         NODE_COVERAGE: true
@@ -549,8 +501,6 @@ workflows:
       - "node-20"
       - "node-16"
       - "node-14"
-      - "node-12"
-      - "node-10"
 
   esm-build:
     when:

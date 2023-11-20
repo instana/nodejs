@@ -7,10 +7,10 @@
 'use strict';
 
 /**
- * Exits with exit 1 if running on Node.js >= 12.x.y, otherwise with exit code 0.
- * That is, for EOL versions (10, 8, 6, ...), this script will pass and for non-EOL versions it will fail.
+ * See https://github.com/nodejs/Release
+ * Exits with exit 1 if running on Node.js > latest EOL version, otherwise with exit code 0.
  */
-if (parseInt(/v(\d+)\./.exec(process.version)[1], 10) >= 12) {
+if (parseInt(/v(\d+)\./.exec(process.version)[1], 10) >= 18) {
   process.exit(1);
 } else {
   process.exit(0);

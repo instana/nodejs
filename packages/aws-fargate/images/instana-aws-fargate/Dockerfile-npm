@@ -1,23 +1,6 @@
-FROM node:12.22.7-buster AS instana-aws-fargate-build-nodejs
+FROM node:18.18.2-buster AS instana-aws-fargate-build-nodejs
 
 ARG package_version
-
-ARG legacy_package_version_range="<2.0.0"
-
-# ---- @instana/aws-fargate@1.x for Node.js < 10.x ----
-WORKDIR /instana/legacy-1x
-COPY package.json.npm ./
-RUN sed -e s/SELF_VERSION/$package_version/g \
-        -e s/INSTANA_AWS_FARGATE_VERSION/$legacy_package_version_range/g \
-        package.json.npm > package.json
-COPY .npmrc ./
-RUN npm install --only=production
-RUN rm -f instana-*.tgz && \
- rm -f package.json && \
- rm -f package.json.npm && \
- rm -f .npmrc
-
-# ---- @instana/aws-fargate@latest for Node.js >= 10.x ----
 WORKDIR /instana
 COPY package.json.npm ./
 RUN sed -e s/SELF_VERSION/$package_version/g \
