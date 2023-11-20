@@ -11,7 +11,8 @@ if (isNodeJsTooOld()) {
   // eslint-disable-next-line no-console
   console.error(
     `The package @instana/aws-fargate requires at least Node.js ${minimumNodeJsVersion} but this process is ` +
-      `running on Node.js ${process.version}. This Fargate container will not be monitored by Instana.`
+      `running on Node.js ${process.version}. This Fargate container will not be monitored by Instana.` +
+      'See https://www.ibm.com/docs/en/instana-observability/current?topic=agents-aws-fargate#versioning.'
   );
   return;
 }
