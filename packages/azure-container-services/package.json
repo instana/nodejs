@@ -26,7 +26,6 @@
     "audit": "bin/prepare-audit.sh && npm audit --production; AUDIT_RESULT=$?; git checkout package-lock.json; exit $AUDIT_RESULT",
     "test": "NODE_ENV=debug mocha --sort $(find test -iname '*test.js' -not -path '*node_modules*')",
     "test:debug": "WITH_STDOUT=true npm run test",
-    "test:ci": "echo \"******* Files to be tested:\n $CI_CORE_TEST_FILES\" && if [ -z \"${CI_CORE_TEST_FILES}\" ]; then echo \"No test files have been assigned to this CircleCI executor.\"; else mocha --reporter mocha-multi-reporters --reporter-options configFile=reporter-config.json --require test/hooks.js --sort ${CI_CORE_TEST_FILES}; fi",
     "verify": "npm run lint && npm test",
     "prettier": "prettier --write 'src/**/*.js' 'test/**/*.js'"
   },
