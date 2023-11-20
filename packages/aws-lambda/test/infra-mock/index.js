@@ -35,7 +35,7 @@ const legacySensorMode = process.env.LEGACY_SENSOR != null;
 const anotherLambda = process.env.ANOTHER != null;
 const onlyLatest = process.env.ONLY_LATEST;
 
-const name = process.env.LAMBDA_FUNCTION_NAME || 'wrapped_async_8_10';
+const name = process.env.LAMBDA_FUNCTION_NAME || 'wrapped-async';
 const unqualifiedArn = anotherLambda
   ? `arn:aws:lambda:us-east-2:521808193417:function:${name}`
   : `arn:aws:lambda:us-east-2:410797082306:function:${name}`;
@@ -60,7 +60,7 @@ function sendPayload(callback) {
     aws_grouping_zone: 'us-east-2',
     name,
     arn: legacySensorMode ? unqualifiedArn : qualifiedArn,
-    runtime: 'nodejs8.10',
+    runtime: 'nodejs18.x',
     handler: 'index.handler',
     timeout: 3,
     memory_size: 128,

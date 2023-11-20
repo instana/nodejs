@@ -64,10 +64,10 @@ Once the Instana Node.js Google Cloud Run base image with the release candidate 
 ```
 # Remember to provide an .env file in test-images, too.
 
-test-images/build-and-push.sh gcr 12 standard next
+test-images/build-and-push.sh gcr 18 standard next
 ```
 
-The first parameter (`gcr`) specifies from where to fetch the Instana Node.js Google Cloud Run base image (in this case, from the Google Cloud container registry instead of icr.io). The second parameter (`12`) specifies the Node.js version. The third parameter determines the Linux distribution to use (`standard` means Debian here). The last parameter, `next` refers to the Docker tag that has been applied to the Instana Node.js Google Cloud Run base image earlier, when building and pushing it. The tag `next` has been applied because that was the npm dist-tag that has been used. If you used a different dist-tag, you need to use that as the Docker tag here as well.
+The first parameter (`gcr`) specifies from where to fetch the Instana Node.js Google Cloud Run base image (in this case, from the Google Cloud container registry instead of icr.io). The second parameter (`18`) specifies the Node.js version. The third parameter determines the Linux distribution to use (`standard` means Debian here). The last parameter, `next` refers to the Docker tag that has been applied to the Instana Node.js Google Cloud Run base image earlier, when building and pushing it. The tag `next` has been applied because that was the npm dist-tag that has been used. If you used a different dist-tag, you need to use that as the Docker tag here as well.
 
 Finally, use the [Google Cloud web UI](https://console.cloud.google.com/run?project=k8s-brewery) to include that image in a Google Cloud Run service and run it (see below).
 

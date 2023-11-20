@@ -153,7 +153,6 @@ function instrumentedDispatchMessage(ctx, originalDispatchMessage, originalArgs)
   const consumerTag = fields.consumerTag;
   let consumer;
 
-  // 0.10.x
   // https://github.com/amqp-node/amqplib/commit/d483493e6825ed7d770e68f4cec60979d0feeae7
   if (ctx.consumers.get && typeof ctx.consumers.get === 'function') {
     consumer = ctx.consumers.get(consumerTag);
