@@ -90,7 +90,7 @@ shared: &shared
           - v{{ .Environment.CACHE_VERSION }}-misc-test-durations-{{ .Environment.CIRCLE_JOB }}-{{ checksum "misc/test-durations/package-lock.json" }}
     - restore_cache:
         keys:
-          - v{{ .Environment.CACHE_VERSION }}-azure-app-service-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "packages/azure-app-service/package-lock.json" }}
+          - v{{ .Environment.CACHE_VERSION }}-azure-container-services-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "packages/azure-container-services/package-lock.json" }}
 
     # We do not use npm ci (short for clean install) because it removes the existing node_modules folder. But we want to
     # re-use the existing node_modules folders from CircleCI's cache. Using npm ci would defeat that purpose. For the
@@ -122,8 +122,8 @@ shared: &shared
         key: v{{ .Environment.CACHE_VERSION }}-misc-test-durations-{{ .Environment.CIRCLE_JOB }}-{{ checksum "misc/test-durations/package-lock.json" }}
     - save_cache:
         paths:
-          - packages/azure-app-service/node_modules
-        key: v{{ .Environment.CACHE_VERSION }}-azure-app-service-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "packages/azure-app-service/package-lock.json" }}
+          - packages/azure-container-services/node_modules
+        key: v{{ .Environment.CACHE_VERSION }}-azure-container-services-dependencies-{{ .Environment.CIRCLE_JOB }}-{{ checksum "packages/azure-container-services/package-lock.json" }}
     
 
     # Only run audit with the most recent Node.js version - one Node version is enough.

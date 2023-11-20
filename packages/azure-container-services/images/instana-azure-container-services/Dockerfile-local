@@ -1,0 +1,14 @@
+FROM node:18-buster AS instana-azure-container-services-build-nodejs
+
+WORKDIR /instana
+COPY package.json ./
+COPY instana-*.tgz ./
+COPY .npmrc ./
+RUN npm install --only=production
+RUN rm -f instana-*.tgz
+RUN rm -f package.json
+RUN rm -f .npmrc
+
+# ---- Start over from scratch and copy npm modules
+FROM scratch
+COPY --from=instana-azure-container-services-build-nodejs /instana /instana

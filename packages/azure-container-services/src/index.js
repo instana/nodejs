@@ -6,13 +6,15 @@
 
 const { isNodeJsTooOld, minimumNodeJsVersion } = require('@instana/core/src/util/nodeJsVersionCheck');
 
-// https://learn.microsoft.com/en-us/azure/app-service/configure-language-nodejs?pivots=platform-linux
-// currently azure app servie supports node version 16 and 18
+// As of now, Azure App Service supports Node.js versions 16 and 18. However, for existing services, older
+// Node.js versions might still be supported. You can find more information about configuring Node.js on Azure
+// App Service at: https://learn.microsoft.com/en-us/azure/app-service/configure-language-nodejs?pivots=platform-linux
+
 if (isNodeJsTooOld()) {
   // eslint-disable-next-line no-console
   console.error(
-    `The package @instana/azure-app-service requires at least Node.js ${minimumNodeJsVersion} but this process is ` +
-      `running on Node.js ${process.version}. This azure app service will not be monitored by Instana.`
+    `The package @instana/azure-container-services requires at least Node.js ${minimumNodeJsVersion} but this` +
+      `process is running on Node.js ${process.version}. This azure container service will not be monitored by Instana.`
   );
   return;
 }

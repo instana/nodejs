@@ -30,7 +30,7 @@ function init() {
     tracing.activate();
   } catch (e) {
     logger.error(
-      'Initializing @instana/azure-app-service failed. This azure container instance will not be monitored.',
+      'Initializing @instana/azure-container-services failed. This azure container service will not be monitored.',
       e
     );
   }
@@ -39,7 +39,7 @@ function init() {
 init();
 
 exports.currentSpan = function getHandleForCurrentSpan() {
-return tracing.getHandleForCurrentSpan();
+  return tracing.getHandleForCurrentSpan();
 };
 
 exports.sdk = tracing.sdk;

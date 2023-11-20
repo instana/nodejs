@@ -1,12 +1,12 @@
 {
-  "name": "@instana/azure-app-service",
+  "name": "@instana/azure-container-services",
   "version": "2.34.1",
-  "description": "Instana tracing and monitoring for Node.js based Azure",
+  "description": "Instana tracing and monitoring for Node.js based Azure Container Services",
   "author": {
     "name": "Arya Mohanan",
     "email": "arya.mohanan@ibm.com"
   },
-  "homepage": "https://github.com/instana/nodejs/blob/main/packages/azure-app-service/README.md",
+  "homepage": "https://github.com/instana/nodejs/blob/main/packages/azure-container-services/README.md",
   "main": "src/index.js",
   "files": [
     "src",
@@ -30,17 +30,14 @@
     "verify": "npm run lint && npm test",
     "prettier": "prettier --write 'src/**/*.js' 'test/**/*.js'"
   },
-  "engines": {
-    "node": ">=16.0.0"
-  },
   "contributors": [
     {
       "name": "Arya Mohanan",
       "email": "arya.mohanan@ibm.com"
-},
+    },
     {
       "name": "Katharina Irrgang",
-      "email": "katharina.irrgang@instana.com"
+      "email": "katharina.irrgang@ibm.com"
     }
   ],
   "bugs": {

@@ -1,0 +1,22 @@
+function setImageTag {
+  local prefix=$1
+
+  local build_mode=$2
+  if [[ -z "${build_mode-}" ]]; then
+    build_mode=local
+  fi
+
+  local npm_tag=$3
+  if [[ -z "${npm_tag-}" ]]; then
+    npm_tag=latest
+  fi
+
+  if [[ "${build_mode}" == "npm" ]]; then
+    image_tag_without_version=$prefix
+  else
+    image_tag_without_version=$prefix-$build_mode
+  fi
+
+  image_tag=$image_tag_without_version:$npm_tag
+}
+
