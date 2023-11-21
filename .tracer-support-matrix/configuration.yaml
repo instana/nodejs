@@ -134,6 +134,14 @@ overrides:
   kafka-node:
     firstHistoricallyTestedVersion: 1.0.7
 
+  # We downgraded the tested knex version in commit b355a7ca225bf9a06841619aae64bdefa1c0957a from "^0.95.11" to
+  # "^0.21.17". Withouth this override, we would get an odd (but technically correct) result:
+  # "Earliest Supported Version (Historically)": "0.95.11",
+  # "Supported Version (Lower Bound)": "0.21.21",
+  # "Supported Version (Upper Bound)": "0.21.21",
+  knex:
+    firstHistoricallyTestedVersion: 0.21.21
+
   koa-router:
     displayName: koa-router path templates
 
@@ -165,6 +173,20 @@ overrides:
   # the packages' package-lock.json files. Somehow that throws off git bisect.
   pino:
     supportedAddedWithCommit: 1f6518726714e9a7dfcc3a3faeedf6ae1ae707fc
+
+
+additionalLibraryNames:
+  # Some packages like bookshel, knex, typeorm are not instrumented directly, because support for them is implemented
+  # by instrumenting underlying low level packages (e.g. tests for ORM packages but instrumentation happens via
+  # underlying database driver packagess). But we have tests for them and want to document support for them explicitly.
+  - bookshelf:
+      category: database
+  - knex:
+      category: database
+  - sequelize:
+      category: database
+  - typeorm:
+      category: database
 
 
 additionalLibraries:
@@ -296,44 +318,4 @@ additionalLibraries:
   - 2.5.0
   - 3.0.9
   supportedSinceVersion: v1.89.0
-
-- name: bookshelf
-  displayName: bookshelf
-  categories:
-  - database
-  support:
-    lowerBound: 1.2.0
-    upperBound: 1.2.0
-  supportedSinceVersion: v1.136.0
-  link: https://www.npmjs.com/package/bookshelf
-
-- name: knex
-  displayName: knex
-  categories:
-  - database
-  support:
-    lowerBound: 0.95.11
-    upperBound: 0.95.11
-  supportedSinceVersion: v1.136.0
-  link: https://www.npmjs.com/package/knex
-
-- name: sequelize
-  categories:
-  - database
-  support:
-    lowerBound: 6.21.3
-    upperBound: 6.21.3
-  supportedSinceVersion: v1.136.0
-  firstHistoricallyTestedVersion: 6.3.4
-  link: https://www.npmjs.com/package/sequelize
-
-- name: typeorm
-  categories:
-  - database
-  support:
-    lowerBound: 0.3.17
-    upperBound: 0.3.17
-  supportedSinceVersion: v1.136.0
-  firstHistoricallyTestedVersion: 0.2.37
-  link: https://www.npmjs.com/package/typeorm
 
