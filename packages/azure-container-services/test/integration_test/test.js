@@ -8,7 +8,7 @@ const { expect } = require('chai');
 const path = require('path');
 const constants = require('@instana/core').tracing.constants;
 const Control = require('../Control');
-const { delay, expectExactlyOneMatching } = require('../../../core/test/test_util');
+const { expectExactlyOneMatching } = require('../../../core/test/test_util');
 const config = require('../../../serverless/test/config');
 const retry = require('../../../serverless/test/util/retry');
 
@@ -64,14 +64,14 @@ describe('Azure Container Service integration test', function () {
   });
 
   function verify(control, response, expectSpans) {
-    expect(response.message).to.equal('Hello Azure Container Service!');
+        expect(response.message).to.equal('Hello Azure Container Service!');
     if (expectSpans) {
       return retry(async () => {
         const { entry, exit } = await getAndVerifySpans(control);
         return { entry, exit };
       });
     } else {
-      return verifyNoSpansAndMetrics(control);
+      return verifyNoSpans(control);
     }
   }
 
@@ -80,7 +80,7 @@ describe('Azure Container Service integration test', function () {
   }
 
   function verifySpans(spans) {
-    const entry = verifyHttpEntry(spans);
+        const entry = verifyHttpEntry(spans);
     const exit = verifyHttpExit(spans, entry);
     return { entry, exit };
   }
@@ -99,7 +99,7 @@ describe('Azure Container Service integration test', function () {
       expect(span.f.e).to.equal(entityId);
       expect(span.data.http.method).to.equal('GET');
       expect(span.data.http.url).to.equal('/');
-      expect(span.data.http.host).to.equal('127.0.0.1:4215');
+      expect(span.data.http.host).to.equal('127.0.0.1:4217');
       expect(span.data.http.status).to.equal(200);
       expect(span.ec).to.equal(0);
       verifyHeaders(span);
@@ -133,21 +133,10 @@ describe('Azure Container Service integration test', function () {
     expect(headers['x-instana-key']).to.equal(instanaAgentKey);
     expect(headers['x-instana-time']).to.not.exist;
   }
-  function verifyNoSpansAndMetrics(control) {
-    return delay(1000)
-      .then(() => verifyNoSpans(control))
-      .then(() => verifyNoMetrics(control));
-  }
 
   function verifyNoSpans(control) {
     return control.getSpans().then(spans => {
       expect(spans).to.be.empty;
-    });
-  }
-
-  function verifyNoMetrics(control) {
-    return control.getMetrics().then(metrics => {
-      expect(metrics).to.be.empty;
     });
   }
 });

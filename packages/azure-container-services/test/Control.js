@@ -18,7 +18,7 @@ const PATH_TO_INSTANA_AZURE_PACKAGE = path.join(__dirname, '..');
 let execArg;
 function Control(opts) {
   AbstractServerlessControl.call(this, opts);
-  this.port = opts.port || 4215;
+  this.port = opts.port || 4217;
   this.baseUrl = `http://127.0.0.1:${this.port}`;
   this.backendPort = this.opts.backendPort || 9443;
   this.backendBaseUrl = this.opts.backendBaseUrl || `https://localhost:${this.backendPort}/serverless`;
@@ -90,7 +90,7 @@ Control.prototype.startMonitoredProcess = function startMonitoredProcess() {
   });
 
   this.azureContainerApp.on('message', message => {
-    this.messagesFromAzureContainer.push(message);
+        this.messagesFromAzureContainer.push(message);
   });
 };
 
@@ -112,7 +112,7 @@ Control.prototype.killMonitoredProcess = function killMonitoredProcess() {
 };
 
 Control.prototype.sendRequest = function (opts) {
-  if (opts.suppressTracing === true) {
+    if (opts.suppressTracing === true) {
     opts.headers = opts.headers || {};
     opts.headers['X-INSTANA-L'] = '0';
   }
