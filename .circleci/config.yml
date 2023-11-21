@@ -74,13 +74,6 @@ shared: &shared
             sudo npm install npm@$NPM_VERSION -g
           fi
 
-    - run:
-        name: Optionally Install A Specific node-gyp Version
-        command: |
-          if [ -n "$NODE_GYP_VERSION" ]; then
-            npm install node-gyp@$NODE_GYP_VERSION
-          fi
-
     - run: npm --version
 
     - restore_cache:
@@ -320,8 +313,6 @@ memcached: &memcached
 
 jobs:
   "node-20":
-    environment:
-      NODE_GYP_VERSION: 8.4.1
     docker:
       - image: cimg/node:20.9
       - <<: *zookeeper
