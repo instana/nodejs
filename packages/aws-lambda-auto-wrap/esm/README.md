@@ -12,4 +12,4 @@ We are affected by the second bug. When AWS fixes the underlying problem in thei
 
 For now: We ship the ES handler as commonjs module with the help of dynamic imports.
 
-In 3.x: We remove the aws-lambda-auto-wrap npm package and manually copy over the files in the publish layer script.
+In 4.x: We remove the aws-lambda-auto-wrap npm package and manually copy over the files in the publish layer script.
