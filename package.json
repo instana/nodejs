@@ -150,7 +150,7 @@
     "lerna": "6.4.1",
     "lodash": "^4.17.21",
     "log4js": "^6.3.0",
-    "mali-latest": "npm:mali@^0.46.1",
+    "mali": "^0.47.1",
     "memcached": "2.2.2",
     "mkdirp": "^3.0.1",
     "mocha": "^8.4.0 ",
@@ -213,7 +213,6 @@
   "optionalDependencies": {
     "ibm_db": "^2.8.2",
     "kafka-avro": "3.1.1",
-    "mali": "0.23.0",
     "node-rdkafka": "2.17.0",
     "pg-native": "3.0.1"
   },
