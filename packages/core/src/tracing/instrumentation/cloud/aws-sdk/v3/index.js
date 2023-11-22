@@ -88,7 +88,7 @@ function shimSmithySend(originalSend) {
       // introduced in https://github.com/instana/nodejs/pull/838 for kinesis. That is: Do not use an explicit
       // operationsInfo/operationsMap map that restricts the traced operations to a subset of possible operations, but
       // instead allow _all_ operations to be traced, using the operation name from `command.constructor.name` for
-      // span.data.$spanName.op. We plan to finish this refactoring before or with the next major release (3.x) of the
+      // span.data.$spanName.op. We plan to finish this refactoring before or with the next major release (4.x) of the
       // @instana packages.
       awsProduct = operationMap[smithySendArgs[0].constructor.name];
       if (awsProduct) {
