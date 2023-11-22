@@ -116,7 +116,6 @@
     "depcheck": "^1.4.3",
     "dev-null": "^0.1.1",
     "doctoc": "^2.1.0",
-    "elasticsearch": "^16.7.2",
     "eslint": "^8.38.0",
     "eslint-config-airbnb": "^19.0.4",
     "eslint-config-airbnb-base": "^15.0.0",
