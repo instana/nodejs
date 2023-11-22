@@ -5,7 +5,14 @@
 # (c) Copyright Instana Inc. and contributors 2019
 #######################################
 
-set -eEo pipefail
+set -exEo pipefail
+
+if [[ -z "${1-}" ]]; then
+  echo "Usage $0 <lambda-folder-name>"
+  echo
+  echo "The mandatory argument <lambda-folder-name> is missing."
+  exit 1
+fi
 
 cd `dirname $BASH_SOURCE`/../zip
 
@@ -33,7 +40,6 @@ Aborting.
 EOF
   exit 1
 }
-
 
 REGION=us-east-2
 
@@ -89,7 +95,7 @@ function deploy_zip {
 
     if [[ -z $LAYER_VERSION || -z $LAYER_ARN ]]; then
       echo "No layer ARN and version specified, will ask for the latest Instana Node.js layer..."
-      LAYER_INFO=$( curl https://dfd6bfhs8c.execute-api.us-east-2.amazonaws.com/default/nodejs?region=us-east-2 2> /dev/null )
+      LAYER_INFO=$( curl https://lambda-layers.instana.io/instana-nodejs?region=us-east-2 2> /dev/null )
 
       echo layer info: $LAYER_INFO
       LAYER_VERSION=$(echo $LAYER_INFO | jq .version)
@@ -139,20 +145,8 @@ function deploy_zip {
   fi
 }
 
-if [[ -z $1 ]]; then
-  echo Deploying all demo zip files.
-  echo
-  for zip_file in demo-*.zip ; do
-    if [[ $zip_file == demo-ec2-app.zip ]]; then
-      echo Skipping $zip_file.
-      continue
-    fi
-    deploy_zip $zip_file
-  done
-else
-  echo "Deploying only $1.zip"
-  deploy_zip $1.zip
-fi
+echo "Deploying $1.zip"
+deploy_zip $1.zip
 
 echo
 echo Done.
