@@ -211,7 +211,6 @@
     "yargs": "^17.5.1"
   },
   "optionalDependencies": {
-    "grpc": "1.24.11",
     "ibm_db": "^2.8.2",
     "kafka-avro": "3.1.1",
     "mali": "0.23.0",
