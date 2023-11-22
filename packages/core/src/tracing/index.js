@@ -81,7 +81,6 @@ const instrumentations = [
   './instrumentation/process/memored',
   './instrumentation/process/process',
   './instrumentation/protocols/graphql',
-  './instrumentation/protocols/grpc',
   './instrumentation/protocols/grpcJs',
   './instrumentation/protocols/http2Client',
   './instrumentation/protocols/http2Server',
