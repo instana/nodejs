@@ -22,19 +22,8 @@ const logPrefix = `Redis Legacy App (${process.pid}):\t`;
 let connectedToRedis = false;
 
 const agentPort = process.env.INSTANA_AGENT_PORT;
-
-let client;
-let client2;
-if (process.env.REDIS_VERSION === 'v3') {
-  client = redis.createClient(`//${process.env.REDIS}`);
-  client2 = redis.createClient(`//${process.env.REDIS_ALTERNATIVE}`);
-} else {
-  // v0
-  const portAndHost = process.env.REDIS.split(':');
-  client = redis.createClient(portAndHost[1], portAndHost[0]);
-  const portAndHost2 = process.env.REDIS_ALTERNATIVE.split(':');
-  client2 = redis.createClient(portAndHost2[1], portAndHost2[0]);
-}
+const client = redis.createClient(`//${process.env.REDIS}`);
+const client2 = redis.createClient(`//${process.env.REDIS_ALTERNATIVE}`);
 
 let clientReady = false;
 let client2Ready = false;
