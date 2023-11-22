@@ -8,7 +8,7 @@ const port = require('../../../test_util/app-port')();
 
 require('../../../..')();
 
-const Mali = require('mali-latest');
+const Mali = require('mali');
 const pinoLogger = require('pino')();
 const express = require('express');
 const morgan = require('morgan');
