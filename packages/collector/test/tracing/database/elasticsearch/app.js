@@ -20,7 +20,7 @@ const { Client } = require('@elastic/elasticsearch');
 const port = require('../../../test_util/app-port')();
 
 const app = express();
-const logPrefix = `Elasticsearch ${process.env.ELASTIC_VERSION} (Modern Client) (${process.pid}):\t`;
+const logPrefix = `Elasticsearch ${process.env.ELASTIC_VERSION} (${process.pid}):\t`;
 const isLatest = process.env.ELASTIC_VERSION === 'latest';
 
 if (process.env.WITH_STDOUT) {

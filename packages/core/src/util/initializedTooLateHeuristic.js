@@ -30,7 +30,6 @@ let patterns = [
   // deliberately not including bunyan because we depend on bunyan ourselves
   /\/bull\/index.js/,
   /\/cls-hooked\/index.js/,
-  /\/elasticsearch\/src\/elasticsearch.js/,
   /\/express\/index.js/,
   /\/fastify\/fastify/,
   /\/graphql-subscriptions\/dist\//,
