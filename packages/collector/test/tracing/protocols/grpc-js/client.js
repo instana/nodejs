@@ -31,7 +31,7 @@ let startBidiStreaming;
 function runClient() {
   log('Running GRPC-JS client.');
 
-  const protoLoader = require('@grpc/proto-loader-latest');
+  const protoLoader = require('@grpc/proto-loader');
   const packageDefinition = protoLoader.loadSync(PROTO_PATH, {
     keepCase: true,
     longs: String,
