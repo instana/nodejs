@@ -26,7 +26,7 @@ describe('tracing/redis', function () {
 
   const agentControls = globalAgent.instance;
 
-  ['latest', 'v3', 'v0'].forEach(redisVersion => {
+  ['latest', 'v3'].forEach(redisVersion => {
     const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
     mochaSuiteFn(`redis@${redisVersion}`, function () {
@@ -442,93 +442,85 @@ describe('tracing/redis', function () {
             )
           ));
 
-      // v0 has no batch feature at all
-      // v4 has removed client.batch, but they batch internally (https://github.com/redis/node-redis/issues/1796)
-      if (redisVersion === 'v3' || redisVersion === 'latest') {
-        it('must trace batch calls', () =>
-          controls
-            .sendRequest({
-              method: 'GET',
-              path: '/batchSuccess'
-            })
-            .then(() =>
-              retry(() =>
-                agentControls.getSpans().then(spans => {
-                  const writeEntrySpan = expectAtLeastOneMatching(spans, [
-                    span => expect(span.n).to.equal('node.http.server'),
-                    span => expect(span.data.http.method).to.equal('GET')
-                  ]);
+      it('must trace batch calls', () =>
+        controls
+          .sendRequest({
+            method: 'GET',
+            path: '/batchSuccess'
+          })
+          .then(() =>
+            retry(() =>
+              agentControls.getSpans().then(spans => {
+                const writeEntrySpan = expectAtLeastOneMatching(spans, [
+                  span => expect(span.n).to.equal('node.http.server'),
+                  span => expect(span.data.http.method).to.equal('GET')
+                ]);
 
-                  expectAtLeastOneMatching(spans, [
-                    span => expect(span.t).to.equal(writeEntrySpan.t),
-                    span => expect(span.p).to.equal(writeEntrySpan.s),
-                    span => expect(span.n).to.equal('redis'),
-                    span => expect(span.k).to.equal(constants.EXIT),
-                    span => expect(span.f.e).to.equal(String(controls.getPid())),
-                    span => expect(span.f.h).to.equal('agent-stub-uuid'),
-                    span => expect(span.async).to.not.exist,
-                    span => expect(span.error).to.not.exist,
-                    span => expect(span.ec).to.equal(0),
-                    span => expect(span.b).to.be.an('object'),
-                    span => expect(span.b.s).to.equal(2),
-                    span => expect(span.b.u).to.not.exist,
-                    span => expect(span.data.redis.connection).to.contain(process.env.REDIS),
-                    span => expect(span.data.redis.command).to.equal('pipeline'),
-                    span =>
-                      redisVersion === 'latest'
-                        ? expect(span.data.redis.subCommands).to.deep.equal(['GET', 'SET'])
-                        : expect(span.data.redis.subCommands).to.deep.equal(['hset', 'hget'])
-                  ]);
+                expectAtLeastOneMatching(spans, [
+                  span => expect(span.t).to.equal(writeEntrySpan.t),
+                  span => expect(span.p).to.equal(writeEntrySpan.s),
+                  span => expect(span.n).to.equal('redis'),
+                  span => expect(span.k).to.equal(constants.EXIT),
+                  span => expect(span.f.e).to.equal(String(controls.getPid())),
+                  span => expect(span.f.h).to.equal('agent-stub-uuid'),
+                  span => expect(span.async).to.not.exist,
+                  span => expect(span.error).to.not.exist,
+                  span => expect(span.ec).to.equal(0),
+                  span => expect(span.b).to.be.an('object'),
+                  span => expect(span.b.s).to.equal(2),
+                  span => expect(span.b.u).to.not.exist,
+                  span => expect(span.data.redis.connection).to.contain(process.env.REDIS),
+                  span => expect(span.data.redis.command).to.equal('pipeline'),
+                  span =>
+                    redisVersion === 'latest'
+                      ? expect(span.data.redis.subCommands).to.deep.equal(['GET', 'SET'])
+                      : expect(span.data.redis.subCommands).to.deep.equal(['hset', 'hget'])
+                ]);
 
-                  verifyHttpExit(spans, writeEntrySpan);
-                })
-              )
-            ));
-      }
+                verifyHttpExit(spans, writeEntrySpan);
+              })
+            )
+          ));
 
-      // v0 has no batch feature at all
-      // v4 has removed client.batch, but they batch internally (https://github.com/redis/node-redis/issues/1796)
-      if (redisVersion === 'v3' || redisVersion === 'latest') {
-        it('must trace failed batch calls', () =>
-          controls
-            .sendRequest({
-              method: 'GET',
-              path: '/batchFailure'
-            })
-            .then(() =>
-              retry(() =>
-                agentControls.getSpans().then(spans => {
-                  const writeEntrySpan = expectAtLeastOneMatching(spans, [
-                    span => expect(span.n).to.equal('node.http.server'),
-                    span => expect(span.data.http.method).to.equal('GET')
-                  ]);
+      it('must trace failed batch calls', () =>
+        controls
+          .sendRequest({
+            method: 'GET',
+            path: '/batchFailure'
+          })
+          .then(() =>
+            retry(() =>
+              agentControls.getSpans().then(spans => {
+                const writeEntrySpan = expectAtLeastOneMatching(spans, [
+                  span => expect(span.n).to.equal('node.http.server'),
+                  span => expect(span.data.http.method).to.equal('GET')
+                ]);
 
-                  expectAtLeastOneMatching(spans, [
-                    span => expect(span.t).to.equal(writeEntrySpan.t),
-                    span => expect(span.p).to.equal(writeEntrySpan.s),
-                    span => expect(span.n).to.equal('redis'),
-                    span => expect(span.k).to.equal(constants.EXIT),
-                    span => expect(span.f.e).to.equal(String(controls.getPid())),
-                    span => expect(span.f.h).to.equal('agent-stub-uuid'),
-                    span => expect(span.async).to.not.exist,
-                    span => expect(span.error).to.not.exist,
-                    span => expect(span.ec).to.equal(1),
-                    span => expect(span.b).to.be.an('object'),
-                    span => expect(span.b.s).to.equal(2),
-                    span => expect(span.b.u).to.not.exist,
-                    span => expect(span.data.redis.connection).to.contain(process.env.REDIS),
-                    span => expect(span.data.redis.command).to.equal('pipeline'),
-                    span =>
-                      redisVersion === 'latest'
-                        ? expect(span.data.redis.subCommands).to.deep.equal(['GET', 'SET'])
-                        : expect(span.data.redis.subCommands).to.deep.equal(['hset', 'hget'])
-                  ]);
+                expectAtLeastOneMatching(spans, [
+                  span => expect(span.t).to.equal(writeEntrySpan.t),
+                  span => expect(span.p).to.equal(writeEntrySpan.s),
+                  span => expect(span.n).to.equal('redis'),
+                  span => expect(span.k).to.equal(constants.EXIT),
+                  span => expect(span.f.e).to.equal(String(controls.getPid())),
+                  span => expect(span.f.h).to.equal('agent-stub-uuid'),
+                  span => expect(span.async).to.not.exist,
+                  span => expect(span.error).to.not.exist,
+                  span => expect(span.ec).to.equal(1),
+                  span => expect(span.b).to.be.an('object'),
+                  span => expect(span.b.s).to.equal(2),
+                  span => expect(span.b.u).to.not.exist,
+                  span => expect(span.data.redis.connection).to.contain(process.env.REDIS),
+                  span => expect(span.data.redis.command).to.equal('pipeline'),
+                  span =>
+                    redisVersion === 'latest'
+                      ? expect(span.data.redis.subCommands).to.deep.equal(['GET', 'SET'])
+                      : expect(span.data.redis.subCommands).to.deep.equal(['hset', 'hget'])
+                ]);
 
-                  verifyHttpExit(spans, writeEntrySpan);
-                })
-              )
-            ));
-      }
+                verifyHttpExit(spans, writeEntrySpan);
+              })
+            )
+          ));
 
       it('must trace call sequences', () =>
         controls
