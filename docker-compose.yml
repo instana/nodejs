@@ -35,30 +35,6 @@ services:
           curl -v -u node:nodepwd -X POST http://couchbase:8091/pools/default/buckets -d name=projects -d bucketType=couchbase -d ramQuota=128 -d flushEnabled=1 && \
           curl -v -u node:nodepwd -X POST http://couchbase:8091/pools/default/buckets -d name=companies -d bucketType=ephemeral -d ramQuota=128 -d flushEnabled=1
 
-  # # Elasticsearch 2.3
-  # elasticsearch:
-  #   image: elasticsearch:2.3.5
-  #   ports:
-  #     - 9200:9200
-
-  # # Elasticsearch 5.6
-  # elasticsearch:
-  #   image: elasticsearch:5.6.16
-  #   ports:
-  #     - 9200:9200
-  #   environment:
-  #    discovery.type: single-node
-  #    ES_JAVA_OPTS: "-Xms500m -Xmx500m"
-
-  # # Elasticsearch 6.8
-  # elasticsearch:
-  #   image: elasticsearch:6.8.8
-  #   ports:
-  #     - 9200:9200
-  #   environment:
-  #    discovery.type: single-node
-  #    ES_JAVA_OPTS: "-Xms500m -Xmx500m"
-
   # Elasticsearch 7 compatible with client v7
   # elasticsearch:
   #  image: docker.elastic.co/elasticsearch/elasticsearch:7.6.2
