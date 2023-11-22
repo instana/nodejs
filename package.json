@@ -162,7 +162,6 @@
     "morgan": "^1.10.0",
     "mssql": "^10.0.1",
     "mssql-v9": "npm:mssql@^9.0.1",
-    "mssql-v8": "npm:mssql@^8.1.4",
     "mysql": "^2.18.1",
     "mysql2": "^3.2.3",
     "nats": "^2.11.0",
