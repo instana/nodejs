@@ -25,8 +25,8 @@ echo "Building and publishing new layer version:"
 
 SKIP_DOCKER_IMAGE=true BUILD_LAYER_WITH=local LAYER_NAME=$LAYER_NAME ../layer/bin/publish-layer.sh
 
-echo "Re-Building and deploying test Lambda:"
-BUILD_LAMBDAS_WITH=layer LAYER_VERSION=$LAYER_VERSION LAYER_ARN=arn:aws:lambda:$REGION:$AWS_ACCNT:layer:$LAYER_NAME:$LAYER_VERSION bin/rebuild-redeploy-single.sh simple-nodejs-lambda
+echo "Re-building and deploying test Lambda:"
+BUILD_LAMBDAS_WITH=layer LAYER_VERSION=$LAYER_VERSION LAYER_ARN=arn:aws:lambda:$REGION:$AWS_ACCNT:layer:$LAYER_NAME:$LAYER_VERSION bin/rebuild-redeploy.sh simple-nodejs-lambda
 
 echo "Done!"
 

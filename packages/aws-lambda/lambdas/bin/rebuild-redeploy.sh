@@ -7,8 +7,15 @@
 
 set -eEuo pipefail
 
+if [[ -z "${1-}" ]]; then
+  echo "Usage $0 <lambda-folder-name>"
+  echo
+  echo "The mandatory argument <lambda-folder-name> is missing."
+  exit 1
+fi
+
 cd `dirname $BASH_SOURCE`/..
 
-bin/create-zips.sh $1
-bin/deploy-demo.sh $1
+bin/create-zip.sh $1
+bin/deploy-zip.sh $1
 
