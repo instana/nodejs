@@ -130,11 +130,9 @@ function instrument(redis) {
 
     // Batch === Individual commands fail and the whole batch executation will NOT fail
     // Multi === Individual commands fail and the whole multi executation will fail
-    // Different version of redis (in particular ancient ones like 0.10.x) have rather different APIs for the multi
+    // Different version of redis have rather different APIs for the multi
     // operations. Shimming them conditionally is not really necessary (shimmer checks for itself) but supresses a log
     // statement from shimmer.
-    // 0.x => multi (https://github.com/redis/node-redis/blob/v0.12.1/index.js#L1105) exec
-    // 0.x => no batch
     // eslint-disable-next-line max-len
     // 3.x => multi(https://github.com/redis/node-redis/blob/v3.1.2/lib/individualCommands.js#L24) exec = exec_transaction
     // 3.x => batch(https://github.com/redis/node-redis/blob/v3.1.2/lib/individualCommands.js#L31) exec = exec_batch
@@ -160,13 +158,9 @@ function instrument(redis) {
         shimmer.wrap(redis.Multi.prototype, 'EXEC', wrapExec(false));
       }
 
-      // 0.x multi and 3.x batch use `exec` but we need to differeniate if batch or multi
+      // 3.x batch
       if (typeof redis.Multi.prototype.exec === 'function') {
-        if (typeof redis.Multi.prototype.exec_transaction !== 'function') {
-          shimmer.wrap(redis.Multi.prototype, 'exec', wrapExec(true));
-        } else {
-          shimmer.wrap(redis.Multi.prototype, 'exec', wrapExec(false));
-        }
+        shimmer.wrap(redis.Multi.prototype, 'exec', wrapExec(false));
       }
     }
   }
@@ -176,7 +170,7 @@ function shimAllCommands(redisClass, addressUrl, cbStyle, redisCommands) {
   let list = redisCommands;
 
   if (!list || !list.length) {
-    // v0, v3 legacy
+    // v3 legacy
     // from https://github.com/NodeRedis/redis-commands/blob/master/commands.json
     list = require('./redis-commands.json');
   }
@@ -314,7 +308,7 @@ function instrumentMultiExec(origCtx, origArgs, original, address, isAtomic, cbS
           subCommand.callback = buildSubCommandCallback(span, subCommand.callback);
         }
       } else {
-        // v0, v4
+        // v4
         subCommand = queue[i];
         if (!Array.isArray(subCommand) || subCommand.length === 0) {
           continue;

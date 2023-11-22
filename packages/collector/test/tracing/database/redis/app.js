@@ -10,5 +10,6 @@ const redisLatest = process.env.REDIS_VERSION === 'latest';
 if (redisLatest) {
   require('./latestApp');
 } else {
+  // v3
   require('./legacyApp');
 }
