@@ -118,8 +118,8 @@ function traceQueryOrMutation(
     // will still trace the GraphQL entry but might lose trace continuity, as X-Instana-T andX-Instana-S are not
     // transported at the GraphQL layer but rather in the underlying transport layer (HTTP, AMQP, ...)
     //
-    // 2) If a customer does multiple things in an HTTP, AMQP, GRPc, ... call, only one of which is running a GraphQL
-    // query, it is possible that they would rather see this call as the HTTP/AMQP/GRPc/... call instead of a GraphQL
+    // 2) If a customer does multiple things in an HTTP, AMQP, GRPC, ... call, only one of which is running a GraphQL
+    // query, it is possible that they would rather see this call as the HTTP/AMQP/GRPC/... call instead of a GraphQL
     // call. But since we give GraphQL preference over protocol level entry spans, it will show up as a GraphQL call.
 
     // Replace generic node.http.server/rabbitmq/... span by a more specific graphql.server span. We change the values
