@@ -10,7 +10,14 @@ set -eEuo pipefail
 cd `dirname $BASH_SOURCE`/..
 
 pushd .. > /dev/null
-pwd
+
+if [[ -z "${1-}" ]]; then
+  echo "Usage $0 <lambda-folder-name>"
+  echo
+  echo "The mandatory argument <lambda-folder-name> is missing."
+  exit 1
+fi
+
 rm -rf instana-serverless*.tgz
 rm -rf instana-aws-lambda*.tgz
 
@@ -72,25 +79,12 @@ fi
 
 popd > /dev/null
 
-if [[ -z "${1-}" ]]; then
-  echo Creating *all* zip files.
-  echo
-  for lambda_directory in */ ; do
-    if [[ -d "$lambda_directory" && ! -L "$lambda_directory" && -e "$lambda_directory/bin/create-zip.sh" ]]; then
-      echo "next directory: $lambda_directory"
-      $lambda_directory/bin/create-zip.sh
-    else
-      echo "skipping directory: $lambda_directory"
-    fi
-  done
+echo "Creating $1.zip"
+lambda_directory=$1
+if [[ -d "$lambda_directory" && ! -L "$lambda_directory" && -e "$lambda_directory/bin/create-zip.sh" ]]; then
+  $lambda_directory/bin/create-zip.sh
 else
-  echo "Creating *only* $1.zip"
-  lambda_directory=$1
-  if [[ -d "$lambda_directory" && ! -L "$lambda_directory" && -e "$lambda_directory/bin/create-zip.sh" ]]; then
-    $lambda_directory/bin/create-zip.sh
-  else
-    echo "Cannot create zip file for $lambda_directory, either the directory does not exist or is a symlink or it has no bin/create-zip.sh script."
-  fi
+  echo "Cannot create zip file for $lambda_directory, either the directory does not exist or is a symlink or it has no bin/create-zip.sh script."
 fi
 
 echo
