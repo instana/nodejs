@@ -7,7 +7,6 @@
 
 const errors = require('request-promise/errors');
 const expect = require('chai').expect;
-const semver = require('semver');
 const constants = require('@instana/core').tracing.constants;
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('../../../../../core/test/config');
@@ -16,15 +15,8 @@ const ProcessControls = require('../../../test_util/ProcessControls');
 const globalAgent = require('../../../globalAgent');
 
 describe('tracing/mssql', function () {
-  ['latest', 'v8'].forEach(mssqlVersion => {
-    let mochaSuiteFn;
-
-    // v9 dropped support for < 14
-    if (mssqlVersion === 'latest') {
-      mochaSuiteFn = semver.gte(process.versions.node, '14.0.0') ? describe : describe.skip;
-    } else {
-      mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
-    }
+  ['latest'].forEach(mssqlVersion => {
+    const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
     mochaSuiteFn(`mssql@${mssqlVersion}`, function () {
       this.timeout(isCI() ? 70000 : config.getTestTimeout());
