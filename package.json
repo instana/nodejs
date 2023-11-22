@@ -133,7 +133,6 @@
     "got": "^11.8.5",
     "graphql": "^15.8.0",
     "graphql-subscriptions": "^2.0.0",
-    "graphql-v14": "npm:graphql@14.7.0",
     "graphql-v16": "npm:graphql@16.6.0",
     "graphql-ws": "^5.5.5",
     "husky": "^7.0.4",
