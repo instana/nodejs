@@ -108,8 +108,7 @@ shared: &shared
           npm install
           git checkout package-lock.json
 
-    # Cache the node_modules folders for the next run (before potentially installing other module versions like grpc,
-    # see below).
+    # Cache the node_modules folders for the next run
     - save_cache:
         paths:
           - node_modules
