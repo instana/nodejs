@@ -22,7 +22,7 @@ const ProcessControls = require('../../../test_util/ProcessControls');
 const globalAgent = require('../../../globalAgent');
 const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
-mochaSuiteFn('tracing/elasticsearch (modern client)', function () {
+mochaSuiteFn('tracing/elasticsearch', function () {
   this.timeout(Math.max(config.getTestTimeout() * 4, 30000));
 
   /**
@@ -30,7 +30,7 @@ mochaSuiteFn('tracing/elasticsearch (modern client)', function () {
    * api: instrumentation < 7.9.1
    *
    * The words "transport" and "api" try to describe the different
-   * mechanismn we use in core/src/tracing/instrumentation/database/elasticsearchModern.js
+   * mechanismn we use in core/src/tracing/instrumentation/database/elasticsearch.js
    */
   [
     {
