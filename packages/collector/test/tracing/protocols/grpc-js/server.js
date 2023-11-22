@@ -24,7 +24,7 @@ const runServer = async () => {
   log('Running GRPC-JS server.');
 
   const grpc = require('@grpc/grpc-js');
-  const protoloader = require('@grpc/proto-loader-latest');
+  const protoloader = require('@grpc/proto-loader');
 
   const loadedTestServiceProto = protoloader.loadSync(PROTO_PATH, {
     keepCase: true,
