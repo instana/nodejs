@@ -14,7 +14,7 @@ const retry = require('../../../serverless/test/util/retry');
 const esmSupportedVersion = require('@instana/core').tracing.esmSupportedVersion;
 const downstreamDummyPort = 4569;
 const downstreamDummyUrl = `http://localhost:${downstreamDummyPort}/`;
-const entityId = 'com.instana.plugin.azure.appservice';
+const entityId = '/subscriptions/instana/resourceGroups/East US/providers/Microsoft.Web/sites/test-app';
 const containerAppPath = path.join(__dirname, './app.mjs');
 const instanaAgentKey = 'azure-container-service-dummy-key';
 
@@ -26,7 +26,10 @@ function prelude(opts = {}) {
     opts.startBackend = true;
   }
   let env = {
-    ESM_TEST: true
+    ESM_TEST: true,
+    WEBSITE_OWNER_NAME: 'instana+123',
+    WEBSITE_RESOURCE_GROUP: 'East US',
+    WEBSITE_SITE_NAME: 'test-app'
   };
   if (opts.env) {
     env = {
@@ -73,7 +76,7 @@ if (esmSupportedVersion(process.versions.node)) {
     });
 
     function verify(control, response, expectSpans) {
-            expect(response.message).to.equal('Hello Azure Container Service!');
+      expect(response.message).to.equal('Hello Azure Container Service!');
       if (expectSpans) {
         return retry(async () => {
           const { entry, exit } = await getAndVerifySpans(control);
@@ -138,7 +141,7 @@ if (esmSupportedVersion(process.versions.node)) {
     function verifyHeaders(payload) {
       const headers = payload._receivedHeaders;
       expect(headers).to.exist;
-      expect(headers['x-instana-host']).to.equal('com.instana.plugin.azure.appservice');
+      expect(headers['x-instana-host']).to.equal(entityId);
       expect(headers['x-instana-key']).to.equal(instanaAgentKey);
       expect(headers['x-instana-time']).to.not.exist;
     }

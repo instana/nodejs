@@ -14,7 +14,7 @@ const retry = require('../../../serverless/test/util/retry');
 
 const downstreamDummyPort = 4569;
 const downstreamDummyUrl = `http://localhost:${downstreamDummyPort}/`;
-const entityId = 'com.instana.plugin.azure.appservice';
+const entityId = '/subscriptions/instana/resourceGroups/East US/providers/Microsoft.Web/sites/test-app';
 const containerAppPath = path.join(__dirname, './app');
 const instanaAgentKey = 'azure-container-service-dummy-key';
 
@@ -25,9 +25,21 @@ function prelude(opts = {}) {
   if (opts.startBackend == null) {
     opts.startBackend = true;
   }
-
+  let env = {
+    ESM_TEST: true,
+    WEBSITE_OWNER_NAME: 'instana+123',
+    WEBSITE_RESOURCE_GROUP: 'East US',
+    WEBSITE_SITE_NAME: 'test-app'
+  };
+  if (opts.env) {
+    env = {
+      ...env,
+      ...opts.env
+    };
+  }
   const controlOpts = {
     ...opts,
+    env,
     containerAppPath,
     downstreamDummyPort,
     downstreamDummyUrl,
@@ -129,7 +141,7 @@ describe('Azure Container Service integration test', function () {
   function verifyHeaders(payload) {
     const headers = payload._receivedHeaders;
     expect(headers).to.exist;
-    expect(headers['x-instana-host']).to.equal('com.instana.plugin.azure.appservice');
+    expect(headers['x-instana-host']).to.equal(entityId);
     expect(headers['x-instana-key']).to.equal(instanaAgentKey);
     expect(headers['x-instana-time']).to.not.exist;
   }
