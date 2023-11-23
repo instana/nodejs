@@ -14,6 +14,8 @@ const { delay, expectExactlyOneMatching, retry } = require('../../../../../../co
 const ProcessControls = require('../../../../test_util/ProcessControls');
 const globalAgent = require('../../../../globalAgent');
 
+const instrumentation = require('../../../../../../core/src/tracing/instrumentation/protocols/nativeFetch');
+
 let mochaSuiteFn;
 if (!supportedVersion(process.versions.node)) {
   mochaSuiteFn = describe.skip;
@@ -469,6 +471,32 @@ mochaSuiteFn('tracing/native fetch', function () {
     await delay(500);
     const spans = await globalAgent.instance.getSpans();
     expect(spans).to.have.lengthOf(0);
+  });
+
+  it('must not discard headers', async function () {
+    const isThisANodeJsVersionWhereNativeFetchHeaderHandlingIsBroken =
+      instrumentation.shouldAddHeadersToOptionsUnconditionally();
+
+    if (isThisANodeJsVersionWhereNativeFetchHeaderHandlingIsBroken) {
+      // The Node.js versions that are affected by the header handling bug (see comments in fetch instrumentation) will
+      // discard request.headers for this combination, independent of what our instrumentation does. Thus, we need to
+      // skip this test on those versions.
+      return this.skip();
+    }
+
+    const response = await clientControls.sendRequest({
+      path: constructPath({
+        resourceType: 'request-object',
+        headersInRequestObject: 'literal',
+        withOptions: true
+      })
+    });
+    verifyResponse(response, 'GET', {
+      'x-my-exit-request-object-request-header': 'x-my-exit-request-object-request-header-value',
+      'x-my-exit-request-object-request-multi-header':
+        'x-my-exit-request-object-request-multi-header-value-1,x-my-exit-request-object-request-multi-header-value-2',
+      'x-exit-not-captured-header': 'whatever'
+    });
   });
 });
 

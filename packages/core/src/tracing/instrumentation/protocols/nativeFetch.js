@@ -22,9 +22,19 @@ const originalFetch = global.fetch;
 let extraHttpHeadersToCapture;
 let isActive = false;
 
-const addHeadersToOptionsUnconditionally =
-  semver.gte(process.version, '20.8.1') ||
-  (semver.gte(process.version, '18.18.2') && semver.lt(process.version, '20.0.0'));
+// This determines whether we need to apply a workaround for a bug in Node.js fetch implementation (or rather, the
+// underlying dependency undici) which was introduced in version 20.8.1 and fixed in 20.10.0. It was also backported to
+// 18.x, starting with 18.18.2 (the fix will probably be in the next 18.x version, which is not yet released, so it will
+// be either 18.18.3 or 18.19.0). The exact nature of the bug and the necessary workaround is described below, see the
+// very extensive comment at the start of the injectHeaders function,
+exports.shouldAddHeadersToOptionsUnconditionally = function () {
+  return (
+    (semver.gte(process.version, '20.8.1') && semver.lt(process.version, '20.10.0')) ||
+    (semver.gte(process.version, '18.18.2') && semver.lt(process.version, '20.0.0'))
+  );
+};
+
+const addHeadersToOptionsUnconditionally = exports.shouldAddHeadersToOptionsUnconditionally();
 
 exports.init = function init(config) {
   if (originalFetch == null) {
@@ -215,17 +225,28 @@ function injectHeaders(originalArgs, headersToAdd) {
   // the options would effectively discard the headers from the Request object. (Because the Fetch API gives
   // options.headers precedence over Request.headers, and it does not merge the two sets of headers.)
   //
-  // To add insult to injury details of that behavior changeed between Node.js 20.8.0 and 20.8.1, with the update from
-  // undici version 5.25.2 to 5.26.3: Up until Node.js version 20.8.0, if there is an options object, but it does not
-  // have the headers option, the headers from the request object will be used. Starting with Node.js 20.8.1, if there
-  // is an options parameters, the request object's headers will be ignored unconditionally - no matter if the options
-  // object has a header option or not. This change has also been backported to Node.js 18.18.2, so versions >= 18.18.2
-  // and < 20.0.0 are also affected.
-  //
   // Note: If the first parameter is a Request object, it always has a headers attribute, even if that had not been
   // provided explicitly when creating the Request (that is, the constructor normalizes that to an empty Headers
   // object). Also, when the Request object's headers have been initialized with an object literal, the constructor will
   // have normalized that to a Fetch API Headers object.
+  //
+  // To add insult to injury, details of that behavior changed for a while due to a bug in Node.js/undici, which was
+  // present in Node.js 20.8.1-20.9.0 and 18.18.2-?: For Node.js versions unaffected by this bug
+  // (e.g. <=20.8.0, >=20.10.0, <=18.18.1), if there is an options object, but it does not have the headers option, the
+  // headers from the request object will be used. In affected Node.js version (20.8.1-20.9.0, 18.18.2-?), if there is
+  // an options parameters, the request object's headers will be ignored unconditionally - no matter if the options
+  // object has a header option or not.
+  //
+  // This actually violates the fetch specification, see https://fetch.spec.whatwg.org/#request-class
+  // -> "The new Request(input, init) constructor steps are:”
+  // -> step 33.2: “If init[“headers”] exists, then set headers to init[“headers”].”
+  // (`input` is the request object and `init` is the options object.)
+  // Thus, options.headers should only overwrite request.headers, if options.headers actually exists. Otherwise,
+  // request.headers must be used. We can work around this issue by also adding our trace correlation headers to
+  // options.headers if an options object is used. For the Node.js versions affected by this bug, that workaround is
+  // okay, because Node.js would discard request.headers anyway. We must not apply this workaround to unaffected Node.js
+  // versions, because then we might accidentally be responsible for discarding headers set by the application under
+  // monitoring, which Node.js would not discard otherwise.
   //
   // The following two tables list the relevant cases, depending on what has been passed to the original fetch() call.
   //
@@ -235,9 +256,13 @@ function injectHeaders(originalArgs, headersToAdd) {
   // |        * |  (2) | Not a Fetch API Request    | Present                    | Inject headers into options                |
   // |        * |  (3) | Fetch API Request          | Absent                     | add to Request#headers, do not add options |
   // | <=20.8.0 |  (4) | Fetch API Request          | Present but has no headers | add to Request#headers                     |
-  // | >=18.18.2|      |                            |                            |                                            |
+  // | >=20.10.0|      |                            |                            |                                            |
+  // | <=18.18.1|      |                            |                            |                                            |
+  // | >18.?    |      |                            |                            |                                            |
   // | >=20.8.1 |  (5) | Fetch API Request          | Present but has no headers | add to options#headers                     |
+  // | <20.10.0 |      |                            |                            |                                            |
   // | >=18.18.2|      |                            |                            |                                            |
+  // | <18.?    |      |                            |                            |                                            |
   // |        * |  (6) | Fetch API Request          | Present with headers       | add to options#headers                     |
   //
   // Some additional notes:
