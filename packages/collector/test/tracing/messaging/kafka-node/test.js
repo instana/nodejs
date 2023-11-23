@@ -19,6 +19,8 @@ const agentControls = globalAgent.instance;
 
 const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
+// FYI: officially deprecated. No release since 4 years. But still very
+//      high usage on npm trends. We will drop in 4.x v4.
 mochaSuiteFn('tracing/kafka-node', function () {
   // Too many moving parts with Kafka involved. Increase the default timeout.
   // This is especially important since the Kafka client has an
