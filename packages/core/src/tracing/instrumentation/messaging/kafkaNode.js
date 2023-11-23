@@ -19,13 +19,18 @@ logger = require('../../../logger').getLogger('tracing/kafka-node', newLogger =>
 
 let isActive = false;
 
+// FYI: officially deprecated. No release since 4 years. But still very
+//      high usage on npm trends. We will drop in 4.x v4.
 exports.init = function init() {
   requireHook.onModuleLoad('kafka-node', instrument);
 };
 
 function instrument(kafka) {
+  logger.warn('kafka-node is deprecated. The support will be removed in the next major release.');
+
   shimmer.wrap(Object.getPrototypeOf(kafka.Producer.prototype), 'send', shimSend);
   shimmer.wrap(kafka.Consumer.prototype, 'emit', shimEmit);
+
   if (kafka.HighLevelConsumer) {
     // kafka-node 4.0.0 dropped the HighLevelConsumer API
     shimmer.wrap(kafka.HighLevelConsumer.prototype, 'emit', shimEmit);
