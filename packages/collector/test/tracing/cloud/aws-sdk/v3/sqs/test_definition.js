@@ -591,7 +591,7 @@ function start(version) {
           // while we receive sqs batch messages in multiple batches
           const sqsEntrySpans = spans.filter(span => span.k === 1 && span.n === 'sqs');
           sqsEntrySpans.forEach(sqsEntrySpan => {
-            const n =  sqsEntrySpan.data.sqs.size;
+            const n = sqsEntrySpan.data.sqs.size;
             verifyHttpExit({
               spans,
               parent: sqsEntrySpan,
