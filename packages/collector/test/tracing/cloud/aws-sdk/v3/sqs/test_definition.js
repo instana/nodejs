@@ -587,13 +587,19 @@ function start(version) {
         const sqsEntry = verifySQSEntry({ receiverControls, spans, parent: sqsExit, withError, isBatch });
 
         if (isSQSConsumer) {
-          verifyHttpExit({
-            spans,
-            parent: sqsEntry,
-            pid: String(receiverControls.getPid()),
-            testMethod: (exitSpans, tests) => {
-              return expectExactlyNMatching(exitSpans, 4, tests);
-            }
+          // filter out entry spans in case of multiple entry spans created,
+          // while we receive sqs batch messages in multiple batches
+          const sqsEntrySpans = spans.filter(span => span.k === 1 && span.n === 'sqs');
+          sqsEntrySpans.forEach(sqsEntrySpan => {
+            const n =  sqsEntrySpan.data.sqs.size;
+            verifyHttpExit({
+              spans,
+              parent: sqsEntrySpan,
+              pid: String(receiverControls.getPid()),
+              testMethod: (exitSpans, tests) => {
+                return expectExactlyNMatching(exitSpans, n, tests);
+              }
+            });
           });
         } else {
           verifyHttpExit({
