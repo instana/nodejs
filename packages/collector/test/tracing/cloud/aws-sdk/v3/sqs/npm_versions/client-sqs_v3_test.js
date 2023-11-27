@@ -4,7 +4,7 @@
 
 'use strict';
 
-const npmVersion = '@aws-sdk/client-sqs2';
+const npmVersion = '@aws-sdk/client-sqs-v3';
 
 describe('tracing/cloud/aws-sdk/v3/sqs', function () {
   require('../test_definition').bind(this)(npmVersion);
