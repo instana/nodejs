@@ -133,7 +133,7 @@
     "fastify": "^4.24.3",
     "fastify-v3": "npm:fastify@^3.21.5",
     "google-protobuf": "^3.19.1",
-    "got": "^11.8.5",
+    "got": "^13.0.0",
     "graphql": "^15.8.0",
     "graphql-subscriptions": "^2.0.0",
     "graphql-v14": "npm:graphql@^14.7.0",
