@@ -9,7 +9,7 @@ const mock = require('mock-require');
 
 /**
  * NOTE:
- * Link e.g. @aws-sdk/client-s3-2 to @aws-sdk/client-s3
+ * Link e.g. @aws-sdk/client-s3-v3 to @aws-sdk/client-s3
  */
 if (process.env.AWS_SDK_CLIENT_S3_REQUIRE !== '@aws-sdk/client-s3') {
   mock('@aws-sdk/client-s3', process.env.AWS_SDK_CLIENT_S3_REQUIRE);
