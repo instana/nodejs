@@ -54,7 +54,7 @@
   },
   "devDependencies": {
     "no-code2": "2.0.0",
-    "semver": "7.5.3"
+    "semver": "7.5.4"
   },
   "main": "index.js",
   "files": [
