@@ -14,15 +14,13 @@ const config = require('../../../../../core/test/config');
 const testUtils = require('../../../../../core/test/test_util');
 const ProcessControls = require('../../../test_util/ProcessControls');
 const globalAgent = require('../../../globalAgent');
-const semver = require('semver');
 
-let mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
+const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
+
 ['latest', 'v3'].forEach(version => {
-  if (version === 'latest') {
-    mochaSuiteFn = semver.lt(process.versions.node, '14.0.0') ? describe.skip : mochaSuiteFn;
-  }
   mochaSuiteFn('tracing/fastify', function () {
     this.timeout(config.getTestTimeout());
+
     describe(`${version}`, () => {
       const agentControls = globalAgent.instance;
       let processControls;
