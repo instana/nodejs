@@ -20,7 +20,7 @@ const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : descri
 mochaSuiteFn('tracing/fastify', function () {
   this.timeout(config.getTestTimeout());
 
-  ['1.14.6', '2.15.3', '3.21.5'].forEach(version => {
+  ['latest', 'v2'].forEach(version => {
     describe(`${version}`, () => {
       const agentControls = globalAgent.instance;
       let processControls;
