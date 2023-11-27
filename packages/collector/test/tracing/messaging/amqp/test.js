@@ -24,7 +24,7 @@ let consumerControls;
 
 const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
-['latest', '0.8.0'].forEach(version => {
+['latest', 'v0'].forEach(version => {
   mochaSuiteFn(`tracing/amqp: ${version}`, function () {
     this.timeout(config.getTestTimeout());
 
