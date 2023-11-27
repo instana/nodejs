@@ -15,7 +15,7 @@ const abi = process.versions.modules;
 let family = null;
 if (platform === 'linux') {
   const detectLibc = require('detect-libc');
-  family = detectLibc.family;
+  family = detectLibc.familySync();
   if (!family) {
     family = detectLibc.GLIBC;
   }
