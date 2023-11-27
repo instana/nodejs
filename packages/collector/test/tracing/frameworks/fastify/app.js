@@ -12,7 +12,7 @@ const mock = require('mock-require');
 
 /**
  * NOTE:
- * Link e.g. fastify2 to fastify or fastify3 to fastify
+ * Link e.g. fastify-v2 to fastify or fastify-v3 to fastify
  * We have to create the link otherwise the fastify instrumentation
  * will no longer work because we use ´onModuleLoad('fastify')`
  */
@@ -27,7 +27,6 @@ const port = require('../../../test_util/app-port')();
 // NOTE: beforeHandler got deprecated in v2 and removed in v3
 //       see https://github.com/fastify/fastify/pull/1750
 const handlerKey = 'preHandler';
-
 const app = fastify();
 const logPrefix = `Fastify (${process.pid}):\t`;
 const jsonResponse = { hello: 'world' };
