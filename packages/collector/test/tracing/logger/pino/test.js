@@ -19,7 +19,7 @@ describe('tracing/logger/pino', function () {
   globalAgent.setUpCleanUpHooks();
   const agentControls = globalAgent.instance;
 
-  ['8', '7'].forEach(pinoVersion => {
+  ['latest', 'v7', 'v6'].forEach(pinoVersion => {
     const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
     mochaSuiteFn(`pino@${pinoVersion}`, function () {
