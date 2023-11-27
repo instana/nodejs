@@ -97,7 +97,7 @@
     "admin": "^1.4.1",
     "admin-plugin-healthcheck": "^1.1.0",
     "amqplib": "^0.10.3",
-    "amqplib-v0.8.0": "npm:amqplib@^0.8.0",
+    "amqplib-v0": "npm:amqplib@^0.8.0",
     "apollo-server-express": "^2.24.1",
     "apollo-server-express-v3": "npm:apollo-server-express@^3.6.2",
     "async": "^3.2.2",
