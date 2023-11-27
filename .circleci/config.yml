@@ -462,9 +462,6 @@ workflows:
           equal: [ scheduled_pipeline, << pipeline.trigger_source >> ]
     jobs:
       - "node-20"
-      - "node-18"
-      - "node-16"
-      - "node-14"
 
   other-nodejs-versions:
     when:
@@ -475,6 +472,7 @@ workflows:
         # by providing the parameter "workflow: other-nodejs-versions"
         - equal: [ other-nodejs-versions, << pipeline.parameters.workflow >> ]
     jobs:
+      - "node-18"
       - "node-16"
       - "node-14"
 
