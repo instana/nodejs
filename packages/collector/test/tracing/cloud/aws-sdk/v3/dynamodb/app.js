@@ -9,7 +9,7 @@ const mock = require('mock-require');
 
 /**
  * NOTE:
- * Link e.g. @aws-sdk/client-dynamodb2 to @aws-sdk/client-dynamodb
+ * Link e.g. @aws-sdk/client-dynamodb-v3 to @aws-sdk/client-dynamodb
  */
 if (process.env.AWS_SDK_CLIENT_DYNAMODB_REQUIRE !== '@aws-sdk/client-dynamodb') {
   mock('@aws-sdk/client-dynamodb', process.env.AWS_SDK_CLIENT_DYNAMODB_REQUIRE);
