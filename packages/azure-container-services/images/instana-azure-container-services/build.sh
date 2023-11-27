@@ -4,33 +4,29 @@
 # (c) Copyright IBM Corp. 2023
 #######################################
 
-# This script is only used locally to build test versions of the container image. The production image on icr.io
-# is built and published via Concourse, see serverless/ci/pipeline.yml. However, note that the files Dockerfile-npm and
-# package.json.npm in this directory are used for the production image.
-#
-# The use cases for this script are:
-# * Built a azure base container image from your local sources (including all local modifications), and
-# * Building a base container image from an npm image that does not have the dist tag "latest", for example a
-#   release candidate npm package tagged with "next".
-# * Testing changes in the Dockerfile or package.json used for building the base container image.
-#
-# The images built by this script can either be used locally or pushed to a Docker registry, see ./build-and-push.sh for
-# a script that includes uploading the image to a remote Docker registry.
+# This script is exclusively used locally for building test versions of the container image.
+# The production image on icr.io is built and published via Concourse (see serverless/ci/pipeline.yml).
+# Note that Dockerfile-npm and package.json.npm in this directory are used for the production image.
 
-# ##############
-# # Parameters #
-# ##############
-#
-# $1: Build mode:
+# Use cases for this script:
+# - Build an Azure base container image from local sources, including modifications.
+# - Build a base container image from an npm image without the "latest" dist tag (e.g., a release candidate npm package tagged with "next").
+# - Test changes in Dockerfile or package.json for building the base container image.
+
+# The images built by this script can either be used locally or pushed to a Docker registry.
+# See ./build-and-push.sh for a script that includes uploading the image to a remote Docker registry.
+
+# Parameters:
+# - $1: Build mode:
 #     - local: Builds the container image from your local machine, including all local modifications.
-#     - npm: Downloads @instana/azure-container-services from the npm registry and puts that into the image. Local modifications or
+#     - npm: Downloads @instana/azure-container-services from the npm registry and includes that in the image. Local modifications or
 #       commits not included in the release are ignored.
-# $2: npm dist tag:
+# - $2: npm dist tag:
 #     - latest (this is the default)
 #     - any other dist tag that is available in the npm registry for @instana/azure-container-services.
 #       The most common use case would be to build a base image from a pre-release npm dist tag like "next" for testing.
 
-# use -eox to see better output
+# Use -eox to display better output
 set -eo pipefail
 
 cd `dirname $BASH_SOURCE`
@@ -73,8 +69,10 @@ setImageTag $image_tag_prefix $build_mode $npm_tag
 echo "Building $image_tag from $dockerfile"
 
 if [[ $build_mode = local ]]; then
+  # Remove existing local artifacts
   rm -rf instana-*.tgz
 
+  # Pack and move core and serverless packages
   pushd ../../../core > /dev/null
   rm -f instana-core-*.tgz
   npm pack
@@ -94,8 +92,9 @@ if [[ $build_mode = local ]]; then
   popd > /dev/null
 
   cp package.json.local package.json
+# Handle npm build mode
 elif [[ $build_mode = npm ]]; then
-  if [[ -n $npm_tag ]]; then
+    if [[ -n $npm_tag ]]; then
     package_version=$(npm show @instana/azure-container-services@$npm_tag version)
   else
     package_version=$(npm show @instana/azure-container-services version)
@@ -109,10 +108,12 @@ else
   exit 1
 fi
 
+# Remove existing images
 echo "Removing images $image_tag_without_version and $image_tag"
 docker rmi -f $image_tag_without_version
 docker rmi -f $image_tag
 
+# Build the Docker image
 echo "Building $dockerfile -> $image_tag"
 docker build --progress=plain $build_arg -f $dockerfile -t $image_tag -t $azure_repository/$image_tag .
 echo "docker build exit status: $?"
@@ -122,5 +123,5 @@ if [[ $build_mode = npm ]]; then
   docker tag $image_tag $image_tag_without_version:$package_version
   docker tag $azure_repository/$image_tag $azure_repository/$image_tag_without_version:$package_version
 fi
-
+# Clean up
 rm -f package.json

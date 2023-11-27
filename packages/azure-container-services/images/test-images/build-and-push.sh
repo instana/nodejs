@@ -4,17 +4,13 @@
 # (c) Copyright IBM Corp. 2023
 #######################################
 
-# This script builds and pushes a test image that can be used as a Azure service. You can either the Instana Node.js
-# Azure base image from one of various sources (published production image, image from your local Docker registry,
-# image from an Azure container registry with pre-release images).
+# This script builds and pushes a test image that can be used as an Azure service.
+# You can use the Instana Node.js Azure base image from various sources, such as a published production image,
+# an image from your local Docker registry, or an image from an Azure container registry with pre-release images.
 
-# ##############
-# # Parameters #
-# ##############
-#
-# ./build-and-push.sh <instana-layer-mode> <node-js-version> <linux-distribution> <docker-tag>
-#
-# See ./build.sh for a more details description of the parameters that this script accepts.
+# Parameters:
+# - ./build-and-push.sh <instana-layer-mode> <node-js-version> <linux-distribution> <docker-tag>
+#   See ./build.sh for a more detailed description of the parameters that this script accepts.
 
 set -eo pipefail
 

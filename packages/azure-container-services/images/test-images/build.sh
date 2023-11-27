@@ -5,40 +5,34 @@
 #######################################
 
 
-# This script builds a test image that can be used as a Azure service. You can either use the Instana 
-# Node.js Azure base image from one of various sources (published production image, image from your local
-# Docker registry, image from an azure container registry with pre-release images). You would usually not call this script
-# directly but either use ./build-and-push.sh to directly push the built image to a registry to use it in an actual
-# Azure service or use ./build-and-run.sh to run it locally in a simulated Azure environment.
+# This script builds a test image that can be used as an Azure container service.
+# You can use the Instana Node.js Azure base image from various sources, such as a published production image,
+# an image from your local Docker registry, or an image from an Azure container registry with pre-release images.
+# You would usually not call this script directly but either use ./build-and-push.sh to push the built image
+# to a registry for use in an actual Azure service or use ./build-and-run.sh to run it locally in a simulated Azure environment.
 
-# ##############
-# # Parameters #
-# ##############
-#
-# $1: Instana Layer Mode, aka which Docker base image layer to use. One of:
+# Parameters:
+# - $1: Instana Layer Mode, which Docker base image layer to use. Options:
 #     - released      -> use an official production image from the public IBM container registry (icr.io)
-#     - authenticated -> use an official production image from Instana's own registry (containers.instana.io);
-#                        these are the very same images that are available from icr.io, but containers.instana.io
-#                        requires authentication. See https://www.ibm.com/docs/en/obi/current?topic=agents-monitoring-azure-container-services#getting-the-nodejs-layer-from-containersinstanaio-instead
-#     - local         -> use a local Docker base image
-#     - azure           -> use an image from the azure container registry with test base images
-# $2: Node.js version. One of:
+#     - authenticated -> use an official production image from Instana's registry (containers.instana.io); authentication required.
+#     - local -> use a local Docker base image
+#     - azure -> use an image from the Azure container registry with test base images
+# - $2: Node.js version. Options:
 #     - 18
 #     - 16
-# $3: Linux distribution. One of:
-#     - standard               -> (uses node:$version, that is, Debian)
-#     - alpine                 -> (uses node:$version-alpine, that is, Alpine, and installs build dependencies)
-#     - alpine-no-build-deps   -> (uses node:$version-alpine, that is, Alpine, and does not install build dependencies)
-# $4: Docker Tag. Use a base image with a specific Docker tag instead of ":latest". One of:
-#     - latest (this is the default)
-#     - any other Docker tag that is available in the registry you are referring to via $1/Instana Layer Mode.
-#       The most common use case would be to build a base image from a pre-release npm dist tag like "next" and publish
-#       it to our pre-release azure container registry with the tag "next" by doing
-#       packages/azure-container-services/images/instana-azure-container-services/build.sh npm next
-#       then using that pre-release base image here by specifying "next" for $4 as
-#       well -> packages/azure-container-services/images/test-images/build.sh azure 18 standard next
+# - $3: Linux distribution. Options:
+#     - standard             -> uses node:$version, Debian
+#     - alpine               -> uses node:$version-alpine, Alpine, and installs build dependencies
+#     - alpine-no-build-deps -> uses node:$version-alpine, Alpine, without installing build dependencies
+# - $4: Docker Tag. Use a specific Docker tag instead of ":latest". Options:
+#     - latest (default)
+#     - any other Docker tag available in the registry referred to via $1/Instana Layer Mode.
+#       Common use case: build a base image from a pre-release npm dist tag like "next" and publish it to
+#       a pre-release Azure container registry with the tag "next".
+#       Example: packages/azure-container-services/images/instana-azure-container-services/build.sh npm next
+#                then use that pre-release base image here by specifying "next" for $4 as well.
 
-# use -eox to see better output
+# Use -eox to display better output
 set -eo pipefail
 
 cd `dirname $BASH_SOURCE`

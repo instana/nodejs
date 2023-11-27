@@ -3,12 +3,13 @@ Node.js Azure Container Images
 
 This folder contains code to build and test the container image that is used by customers to monitor Node.js on Azure.
 
-There are two types of container images, each in their own sub folder:
+There are two distinct container image types, each in their own sub folder:
 
 * `instana-azure-container-services`: This is the production base image that we provide to customers for monitoring Node.js Azure container services. The production image is published to icr.io, which is the public IBM Container Registry. This happens on our CI system, see `packages/serverless/ci/pipeline.yaml`. The [CI pipeline](https://ci.instana.io/teams/nodejs/pipelines/serverless-in-process-collectors:main/jobs/azure-container-services-nodejs-container-image-layer) uses the Dockerfile and package.json file in that folder, but not the build scripts `build.sh` or `build-and-push.sh`. These scripts are used to build variants of this image locally and to push them to a Azure container registry, which is very useful for testing. Available scripts:
     * `instana-azure-container-services/build.sh` builds the Instana Node.js Azure base image, either from your local sources or from an already published npm package.
     * `instana-azure-container-services/build-and-push.sh` builds the Instana Node.js Azure base image and pushes it to a container image registry of your choice (usually our internal Azure container registry).
     * Both scripts each have documentation, explaining their purpose and the parameters they accept.
+
 * `test-images`: The scripts in this folder can build various versions of a simple test application that uses the base image from `instana-azure-container-services`. Such an image basically represents a customer's application/Azure container service using our Node.js Azure monitoring setup. Available scripts:
     * `test-images/build.sh`: Builds the test application image.
     * `test-images/build-and-push.sh`: Builds the test application image and pushes it to a registry.

@@ -41,8 +41,6 @@ function prelude(opts = {}) {
     ...opts,
     env,
     containerAppPath,
-    downstreamDummyPort,
-    downstreamDummyUrl,
     instanaAgentKey
   };
   return new Control(controlOpts).registerTestHooks();

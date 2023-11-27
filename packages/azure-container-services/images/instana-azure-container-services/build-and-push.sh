@@ -4,26 +4,22 @@
 # (c) Copyright IBM Corp. 2023
 #######################################
 
-# This script is only used locally to build and push test versions of the container image. The production image on
-# icr.io is built and published via Concourse, see serverless/ci/pipeline.yml. However, note that the files
-# Dockerfile-npm and package.json.npm in this directory _are_ actually used for the production image.
-#
-# The use cases for this script are:
-# * Built a azure base container image from your local sources (including all local modifications), and
-# * Building a base container image from an npm image that does not have the dist tag "latest", for example a
-#   release candidate npm package tagged with "next".
-# * Testing changes in the Dockerfile or package.json used for building the base container image.
-#
-# This script will upload the image directly to a remote Docker registry after building it. By default, we use an
-# Azure container registry (this can be configured via .env).
+# This script is used locally for building and pushing test versions of the container image.
+# The production image on icr.io is built and published through Concourse (see serverless/ci/pipeline.yml).
+# Note that Dockerfile-npm and package.json.npm in this directory are used for the production image.
 
-# ##############
-# # Parameters #
-# ##############
-#
-# See ./build.sh for a detailed description of the parameters that this script accepts.
+# Use cases for this script:
+# - Build an Azure base container image from local sources, including modifications.
+# - Build a base container image from an npm image without the "latest" dist tag (e.g., a release candidate npm package tagged with "next").
+# - Test changes in Dockerfile or package.json for building the base container image.
 
-# use -eox to see better output
+# This script uploads the image directly to a remote Docker registry after building it. By default, we use an
+# Azure container registry (configurable via .env).
+
+# Parameters:
+# - See ./build.sh for a detailed description of the parameters accepted by this script.
+
+# Use -eox to display better output
 set -eo pipefail
 
 cd `dirname $BASH_SOURCE`
@@ -36,6 +32,7 @@ if [[ ! -f .env ]]; then
 fi
 source .env
 
+# Check required environment variables
 if [[ -z "${image_tag_prefix-}" ]]; then
   echo Please set image_tag_prefix in .env.
   exit 1
@@ -59,6 +56,7 @@ setImageTag $image_tag_prefix $build_mode $npm_tag
 echo "Pushing image $image_tag to $azure_repository"
 docker push $azure_repository/$image_tag
 
+# For npm build mode, push an additional image with the package version
 if [[ $build_mode = npm ]]; then
   if [[ -n $npm_tag ]]; then
     package_version=$(npm show @instana/azure-container-services@$npm_tag version)
