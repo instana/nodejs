@@ -476,8 +476,6 @@ workflows:
           equal: [ scheduled_pipeline, << pipeline.trigger_source >> ]
     jobs:
       - "node-18"
-      - "node-16"
-      - "node-14"
 
   other-nodejs-versions:
     when:
