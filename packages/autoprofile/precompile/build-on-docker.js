@@ -24,9 +24,14 @@ module.exports = exports = function buildOnDocker(platform, family, abi, version
 
   // NOTE: we need to bind the root dependencies, because mkdirp & node-gyp is not installed in autoprofile package
   const rootModules = path.join(__dirname, '..', '..', '..', 'node_modules');
+
+  // NOTE: root modules also has a version of detect-libc from a third party lib
+  const detectLibcModule = path.join(__dirname, '..', 'node_modules', 'detect-libc');
+
   execute(`docker run \
            --mount type=bind,source="$(pwd)",target=/opt/autoprofile \
            --mount type=bind,source="${rootModules}",target=/opt/autoprofile/node_modules \
+           --mount type=bind,source="${detectLibcModule}",target=/opt/autoprofile/node_modules/detect-libc \
            --name ${dockerTag} ${dockerTag} \
            ${abi} \
            ${version}

@@ -18,7 +18,7 @@ module.exports = exports = function buildSingleAddOn(abi, version) {
 
   let family = null;
   if (platform === 'linux') {
-    family = require('detect-libc').family;
+    family = require('detect-libc').familySync();
   }
 
   const addonDir = path.join(__dirname, '..', 'addons', platform, arch, family || '', abi);
