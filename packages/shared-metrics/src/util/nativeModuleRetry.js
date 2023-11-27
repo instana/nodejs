@@ -31,7 +31,10 @@ const copyPrecompiledDisabled =
 
 const platform = os.platform();
 const arch = process.arch;
-let { family, GLIBC } = detectLibc;
+
+const { GLIBC, familySync } = detectLibc;
+let family = familySync();
+
 if (!family) {
   // assume glibc if libc family cannot be detected
   family = GLIBC;
