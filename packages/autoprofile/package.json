@@ -50,7 +50,7 @@
   ],
   "dependencies": {
     "@instana/core": "2.33.1",
-    "detect-libc": "^1.0.3",
+    "detect-libc": "^2.0.2",
     "nan": "^2.14.2"
   },
   "main": "index.js",
