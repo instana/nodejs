@@ -5,7 +5,7 @@
 
 'use strict';
 
-const LRU = require('lru-cache');
+const { LRUCache } = require('lru-cache');
 const shimmer = require('../../shimmer');
 
 const requireHook = require('../../../util/requireHook');
@@ -15,7 +15,7 @@ const cls = require('../../cls');
 
 let isActive = false;
 
-const preparedStatements = new LRU(100000);
+const preparedStatements = new LRUCache({ max: 100000 });
 
 // See https://www.postgresql.org/docs/9.3/libpq-connect.html#AEN39692
 // Pattern: postgresql://[user[:password]@][netloc][:port][/dbname][?param1=value1&...]
