@@ -125,7 +125,7 @@
   "homepage": "https://github.com/instana/nodejs/blob/main/packages/core/README.md",
   "dependencies": {
     "@opentelemetry/api": "1.4.1",
-    "@opentelemetry/context-async-hooks": "1.9.1",
+    "@opentelemetry/context-async-hooks": "1.18.1",
     "@opentelemetry/instrumentation-fs": "0.8.1",
     "@opentelemetry/instrumentation-restify": "0.34.0",
     "@opentelemetry/instrumentation-socket.io": "0.33.3",
