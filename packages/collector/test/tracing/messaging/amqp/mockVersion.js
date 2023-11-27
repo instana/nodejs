@@ -8,8 +8,7 @@ const Module = require('module');
 const mock = require('mock-require');
 const requireHook = require('../../../../../core/src/util/requireHook');
 
-const AMQPLIB_REQUIRE =
-  process.env.AMQPLIB_VERSION === 'latest' ? 'amqplib' : `amqplib-v${process.env.AMQPLIB_VERSION}`;
+const AMQPLIB_REQUIRE = process.env.AMQPLIB_VERSION === 'latest' ? 'amqplib' : `amqplib-${process.env.AMQPLIB_VERSION}`;
 
 if (AMQPLIB_REQUIRE !== 'amqplib') {
   mock('amqplib', AMQPLIB_REQUIRE);
