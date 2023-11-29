@@ -1,6 +1,6 @@
 {
   "name": "instana-aws-lambda-auto-wrap",
-  "version": "2.35.0",
+  "version": "2.36.0",
   "description": "Automatically wrap AWS Lambdas for Instana tracing and monitoring without code modification.",
   "author": {
     "name": "Bastian Krol",
@@ -63,8 +63,8 @@
     "url": "https://github.com/instana/nodejs/issues"
   },
   "dependencies": {
-    "@instana/aws-lambda": "2.35.0",
-    "@instana/core": "2.35.0"
+    "@instana/aws-lambda": "2.36.0",
+    "@instana/core": "2.36.0"
   },
   "devDependencies": {
     "no-code2": "2.0.0"

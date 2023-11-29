@@ -3,6 +3,22 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.36.0](https://github.com/instana/nodejs/compare/v2.35.0...v2.36.0) (2023-11-29)
+
+
+### Bug Fixes
+
+* **fetch:** fix header handling for native fetch for Node.js >= 20.10.0 ([ece1a9a](https://github.com/instana/nodejs/commit/ece1a9a0ba346cd12ad060b2f0827979f03dcb95))
+
+
+### Features
+
+* **sqs-consumer:** added v7 support for sqs-consumer ([#941](https://github.com/instana/nodejs/issues/941)) ([5394726](https://github.com/instana/nodejs/commit/539472675daaecc4d944da01d56e8253a773251e))
+
+
+
+
+
 # [2.35.0](https://github.com/instana/nodejs/compare/v2.34.1...v2.35.0) (2023-11-14)
 
 
