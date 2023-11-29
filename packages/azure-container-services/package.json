@@ -15,9 +15,6 @@
   "publishConfig": {
     "access": "public"
   },
-  "directories": {
-    "lib": "src"
-  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/instana/nodejs.git"

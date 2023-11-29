@@ -1,11 +1,9 @@
 Node.js Azure Container Images
 ================================
 
-This folder contains code to build and test the container image that is used by customers to monitor Node.js on Azure.
-
 There are two distinct container image types, each in their own sub folder:
 
-* `instana-azure-container-services`: This is the production base image that we provide to customers for monitoring Node.js Azure container services. The production image is published to icr.io, which is the public IBM Container Registry. This happens on our CI system, see `packages/serverless/ci/pipeline.yaml`. The [CI pipeline](https://ci.instana.io/teams/nodejs/pipelines/serverless-in-process-collectors:main/jobs/azure-container-services-nodejs-container-image-layer) uses the Dockerfile and package.json file in that folder, but not the build scripts `build.sh` or `build-and-push.sh`. These scripts are used to build variants of this image locally and to push them to a Azure container registry, which is very useful for testing. Available scripts:
+* `instana-azure-container-services`: This folder contains the production base image that we provide to customers for monitoring Node.js Azure container services. The production image is published to icr.io, which is the public IBM Container Registry. This happens on our CI system, see `packages/serverless/ci/pipeline.yaml`. The [CI pipeline](https://ci.instana.io/teams/nodejs/pipelines/serverless-in-process-collectors:main/jobs/azure-container-services-nodejs-container-image-layer) uses the Dockerfile and package.json file in that folder, but not the build scripts `build.sh` or `build-and-push.sh`. These scripts are used to build variants of this image locally and to push them to a Azure container registry, which is very useful for testing. Available scripts:
     * `instana-azure-container-services/build.sh` builds the Instana Node.js Azure base image, either from your local sources or from an already published npm package.
     * `instana-azure-container-services/build-and-push.sh` builds the Instana Node.js Azure base image and pushes it to a container image registry of your choice (usually our internal Azure container registry).
     * Both scripts each have documentation, explaining their purpose and the parameters they accept.
@@ -19,11 +17,18 @@ There are two distinct container image types, each in their own sub folder:
 How-To for Common Use Cases
 ---------------------------
 
+### Requirements
+
+- Azure Account: Ensure you have access to an Azure account for deploying and testing container images.
+- Azure CLI: Install the Azure CLI for authentication and azure operations.
+- Docker: Make sure Docker is installed for building container images locally.
+
+
 ### Initial Setup
 
 - Copy `instana-azure-container-services/.env.template` to `instana-azure-container-services/.env`. Usually, no modification is necessary.
 - Copy `test-images/.env.template` to `test-images/.env`. Just for building and pushing the test images, no modification is necessary. If you want to run the test images locally and report to an Instana environment, you need to configure a few things, which are documented in the `.env.template` file.
-- Authenticate with the Azure container registry by executing `packages/azure-container-services/images/azure-registry-login.sh`. This assumes that you have installed the [Azure CLI](https://learn.microsoft.com/en-us/cli/azure/) and have yourself via the Azure CLI. This step is only necessary if you want to push images to Instana's internal Azure container registry for test images. If you want to push your test images to another registry please replace that in the script azure-registry-login.sh.
+- Authenticate with the Azure container registry by executing `packages/azure-container-services/images/azure-registry-login.sh`. This step is only necessary if you want to push images to Instana's internal Azure container registry for test images. If you want to push your test images to another registry please replace that in the script azure-registry-login.sh.
 
 ### Test the Current Release
 
@@ -60,8 +65,6 @@ With the default settings (default Azure container registry) you would find the 
 Once the Instana Node.js Azure base image with the release candidate has been created, you can create a test application image with it:
 
 ```
-# Remember to provide an .env file in test-images, too.
-
 test-images/build-and-push.sh azure 18 standard next
 ```
 
@@ -69,7 +72,7 @@ The first parameter (`azure`) specifies from where to fetch the Instana Node.js 
 
 Finally, use the Azure web portal to include that test application image in a Azure container service and run it (see below).
 
-### Using the Image in a Azure Container Service
+### Using the Image in a Azure App Service
 
 * Navigate to the Azure portal at https://portal.azure.com.
 * Access the Azure app service by visiting https://portal.azure.com/#view/HubsExtension/BrowseResource/resourceType/Microsoft.Web%2Fsites and create a new web app.

@@ -4,9 +4,6 @@ function normalizeArgs {
   if [[ -z "${instanaLayerMode-}" || $instanaLayerMode = released ]]; then
     instana_layer_without_tag=icr.io/instana/azure-container-services-nodejs
     INSTANA_LAYER_MODE=released
-  elif [[ $instanaLayerMode = authenticated ]]; then
-    instana_layer_without_tag=containers.instana.io/instana/release/azure/azure-container-services/nodejs
-    INSTANA_LAYER_MODE=authenticated
   elif [[ $instanaLayerMode = local ]]; then
     instana_layer_without_tag=instana-azure-container-services-nodejs-local
     INSTANA_LAYER_MODE=local

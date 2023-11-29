@@ -6,8 +6,8 @@
 
 const { isNodeJsTooOld, minimumNodeJsVersion } = require('@instana/core/src/util/nodeJsVersionCheck');
 
-// As of now, Azure App Service supports Node.js versions 16 and 18. However, for existing services, older
-// Node.js versions might still be supported. You can find more information about configuring Node.js on Azure
+// As of now, Azure App Service supports Node.js versions 16-lts,18-lts and 20-lts. However, for existing services,
+// older Node.js versions might still be supported. You can find more information about configuring Node.js on Azure
 // App Service at: https://learn.microsoft.com/en-us/azure/app-service/configure-language-nodejs?pivots=platform-linux
 
 if (isNodeJsTooOld()) {

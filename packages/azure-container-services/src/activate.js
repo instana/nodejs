@@ -21,8 +21,6 @@ function init() {
     logger.setLevel(process.env.INSTANA_DEBUG ? 'debug' : process.env.INSTANA_LOG_LEVEL);
   }
 
-  instanaCore.preInit();
-
   try {
     identityProvider.init();
     backendConnector.init(identityProvider, logger, false, true, 950);
