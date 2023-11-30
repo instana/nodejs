@@ -192,7 +192,7 @@ Parameters for the release Github action:
 
 Lerna will determine if this is going to be a minor or patch version from the commit comments of all commits since the last release. It will also automatically update the CHANGELOG.md files in the root of the repository and also in all individual packages, based on those commits.
 
-If you want to locally review the changes that lerna is about to apply (for example the CHANGELOG files), you can execute `lerna version --no-git-tag-version --no-push` locally beforehand, inspect the diff, and discard the changes afterwards. You can also use the dry run option (see above).
+If you want to locally review the changes that lerna is about to apply (for example the CHANGELOG files), you can execute `lerna version --no-git-tag-version --no-push --conventional-commits` locally beforehand, inspect the diff, and discard the changes afterwards. You can also use the dry run option (see above).
 
 For each release, we also publishing a new Lambda layer, a Fargate Docker image layer and a Google Cloud Run image layer. This happens automatically via [CI](https://ci.instana.io/teams/nodejs/pipelines/serverless-in-process-collectors:main).
 
