@@ -15,6 +15,10 @@
   "publishConfig": {
     "access": "public"
   },
+  "directories": {
+    "lib": "src",
+    "test": "test"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/instana/nodejs.git"
@@ -32,7 +36,7 @@
     {
       "name": "Arya Mohanan",
       "email": "arya.mohanan@ibm.com"
-},
+    },
     {
       "name": "Katharina Irrgang",
       "email": "katharina.irrgang@ibm.com"

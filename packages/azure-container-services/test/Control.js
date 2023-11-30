@@ -19,7 +19,7 @@ class Control extends AbstractServerlessControl {
     super(opts);
     this.port = opts.port || 4217;
     this.baseUrl = `http://127.0.0.1:${this.port}`;
-    this.backendPort = this.opts.backendPort || 9443;
+    this.backendPort = this.opts.backendPort || 9445;
     this.backendBaseUrl = this.opts.backendBaseUrl || `https://localhost:${this.backendPort}/serverless`;
     this.downstreamDummyPort = this.opts.downstreamDummyPort || 4569;
     this.downstreamDummyUrl = this.opts.downstreamDummyUrl || `http://localhost:${this.downstreamDummyPort}`;
@@ -29,7 +29,6 @@ class Control extends AbstractServerlessControl {
   reset() {
     super.reset();
     this.messagesFromAzureContainer = [];
-    this.messagesFromMetadataMock = [];
     this.azureContainerAppHasStarted = false;
     this.azureContainerAppHasTerminated = false;
   }
@@ -42,10 +41,6 @@ class Control extends AbstractServerlessControl {
       }
     });
     return this;
-  }
-
-  killAdditionalAuxiliaryProcesses() {
-    return this.killChildProcess(this.metadataMock);
   }
 
   startMonitoredProcess() {

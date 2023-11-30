@@ -5,7 +5,11 @@
 'use strict';
 
 const http = require('http');
-const fetch = require('node-fetch');
+if (Number(process.versions.node.split('.')[0]) < 18) {
+  // eslint-disable-next-line no-console
+  console.error('Node.js version 18 or higher is required.');
+  return;
+}
 
 const app = new http.Server();
 const port = process.env.PORT || 4816;
