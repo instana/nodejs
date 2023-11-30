@@ -19,22 +19,22 @@ describe('util.nodeJsTooOld', () => {
 
   it('should reject Node.js 0.10', () => {
     setProcessVersion('v0.10.48');
-    expect(isNodeJsTooOld(10)).to.be.true;
+    expect(isNodeJsTooOld()).to.be.true;
   });
 
   it('should reject Node.js 4', () => {
     setProcessVersion('v4.9.1');
-    expect(isNodeJsTooOld(10)).to.be.true;
+    expect(isNodeJsTooOld()).to.be.true;
   });
 
   it('should reject Node.js 6', () => {
     setProcessVersion('v6.17.1');
-    expect(isNodeJsTooOld(10)).to.be.true;
+    expect(isNodeJsTooOld()).to.be.true;
   });
 
   it('should reject Node.js 8', () => {
     setProcessVersion('v8.17.0');
-    expect(isNodeJsTooOld(10)).to.be.true;
+    expect(isNodeJsTooOld()).to.be.true;
   });
 
   it('should reject Node.js 8 when 10 is the default', () => {
@@ -44,27 +44,27 @@ describe('util.nodeJsTooOld', () => {
 
   it('should reject Node.js 9', () => {
     setProcessVersion('v9.11.2');
-    expect(isNodeJsTooOld(10)).to.be.true;
+    expect(isNodeJsTooOld()).to.be.true;
   });
 
-  it('should accept Node.js 10', () => {
+  it('should reject Node.js 10', () => {
     setProcessVersion('v10.0.0');
-    expect(isNodeJsTooOld(10)).to.be.false;
+    expect(isNodeJsTooOld()).to.be.true;
   });
 
-  it('should accept Node.js 11', () => {
+  it('should reject Node.js 11', () => {
     setProcessVersion('v11.0.0');
-    expect(isNodeJsTooOld(10)).to.be.false;
+    expect(isNodeJsTooOld()).to.be.true;
   });
 
-  it('should accept Node.js 12', () => {
+  it('should reject Node.js 12', () => {
     setProcessVersion('v12.22.8');
-    expect(isNodeJsTooOld(10)).to.be.false;
+    expect(isNodeJsTooOld()).to.be.true;
   });
 
   it('should accept Node.js 14', () => {
     setProcessVersion('v14.18.2');
-    expect(isNodeJsTooOld(10)).to.be.false;
+    expect(isNodeJsTooOld()).to.be.false;
   });
 
   it('should accept Node.js 16', () => {
@@ -74,27 +74,27 @@ describe('util.nodeJsTooOld', () => {
 
   it('should accept Node.js 17', () => {
     setProcessVersion('v17.3.0');
-    expect(isNodeJsTooOld(10)).to.be.false;
+    expect(isNodeJsTooOld()).to.be.false;
   });
 
   it('should accept if process.version is not set', () => {
     setProcessVersion(undefined);
-    expect(isNodeJsTooOld(10)).to.be.false;
+    expect(isNodeJsTooOld()).to.be.false;
   });
 
   it('should accept if process.version is not a string', () => {
     setProcessVersion(1234);
-    expect(isNodeJsTooOld(10)).to.be.false;
+    expect(isNodeJsTooOld()).to.be.false;
   });
 
   it('should accept if process.version is in an unexpected format (not major.minor.patch)', () => {
     setProcessVersion('v123');
-    expect(isNodeJsTooOld(10)).to.be.false;
+    expect(isNodeJsTooOld()).to.be.false;
   });
 
   it('should accept if process.version is in an unexpected format (no v prefix)', () => {
     setProcessVersion('11.22.33');
-    expect(isNodeJsTooOld(10)).to.be.false;
+    expect(isNodeJsTooOld()).to.be.false;
   });
 });
 
