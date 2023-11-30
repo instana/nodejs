@@ -297,6 +297,29 @@ memcached: &memcached
   - image: memcached:1.6.9
 
 jobs:
+  "node-21":
+    docker:
+      - image: cimg/node:21.2
+      - <<: *zookeeper
+      - <<: *elasticsearch
+      - <<: *mongo
+      - <<: *redis
+      - <<: *kafka
+      - <<: *schema-registry
+      - <<: *mysql
+      - <<: *postgres
+      - <<: *mssql
+      - <<: *rabbitmq
+      - <<: *nats
+      - <<: *nats-streaming
+      - <<: *memcached
+      - <<: *couchbase
+      - <<: *couchbase-setup
+      - <<: *localstack
+    <<: *shared
+    parallelism: 15
+    resource_class: large
+
   "node-20":
     docker:
       - image: cimg/node:20.3
@@ -462,7 +485,6 @@ workflows:
           equal: [ scheduled_pipeline, << pipeline.trigger_source >> ]
     jobs:
       - "node-18"
-
   other-nodejs-versions:
     when:
       or:
@@ -472,6 +494,7 @@ workflows:
         # by providing the parameter "workflow: other-nodejs-versions"
         - equal: [ other-nodejs-versions, << pipeline.parameters.workflow >> ]
     jobs:
+      - "node-21"
       - "node-20"
       - "node-16"
       - "node-14"

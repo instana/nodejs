@@ -37,7 +37,8 @@ const ABI_VERSIONS = {
   83: '14.21.3',
   93: '16.20.2',
   108: '18.18.2',
-  115: '20.3.0'
+  115: '20.3.0',
+  120: '21.2.0'
 };
 
 function buildForPlatform(platform) {
