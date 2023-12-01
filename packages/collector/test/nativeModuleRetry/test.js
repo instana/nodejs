@@ -16,13 +16,8 @@ const config = require('../../../core/test/config');
 const { retry } = require('../../../core/test/test_util');
 const ProcessControls = require('../test_util/ProcessControls');
 const globalAgent = require('../globalAgent');
-// const semver = require('semver');
 
 describe('retry loading native addons', function () {
-  // todo: fix the failing unit test cases
-  // if (semver.eq(process.versions.node, '21.2.0')) {
-  // return;
-  // }
   const timeout = Math.max(config.getTestTimeout(), 20000);
   this.timeout(timeout);
   const retryTimeout = timeout / 2;
