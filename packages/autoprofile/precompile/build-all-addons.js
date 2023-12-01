@@ -32,8 +32,6 @@ const LIBC_FAMILIES = [GLIBC, MUSL];
 // Maintenance Note:
 // This should be kept in sync with native-dep-packs/rebuild-precompiled-addons.sh -> ABI_VERSIONS.
 const ABI_VERSIONS = {
-  // 14.17.x was no longer working
-  // https://stackoverflow.com/questions/76094428/debian-stretch-repositories-404-not-found
   83: '14.21.3',
   93: '16.20.2',
   108: '18.18.2',
