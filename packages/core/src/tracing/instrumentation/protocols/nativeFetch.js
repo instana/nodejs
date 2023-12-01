@@ -23,14 +23,18 @@ let extraHttpHeadersToCapture;
 let isActive = false;
 
 // This determines whether we need to apply a workaround for a bug in Node.js fetch implementation (or rather, the
-// underlying dependency undici) which was introduced in version 20.8.1 and fixed in 20.10.0. It was also backported to
-// 18.x, starting with 18.18.2 (the fix will probably be in the next 18.x version, which is not yet released, so it will
-// be either 18.18.3 or 18.19.0). The exact nature of the bug and the necessary workaround is described below, see the
-// very extensive comment at the start of the injectHeaders function,
+// underlying dependency undici).
+// * This is the Node.js bug report: https://github.com/nodejs/node/issues/50263
+// * In the 21.x release line, the bug was introduced in version 21.0.0 and fixed in 21.1.0.
+// * In the 20.x release line, the bug was introduced in version 20.8.1 and fixed in 20.10.0.
+// * In the 18.x release line, the bug was introduced in version 18.18.2 and fixed in 18.19.0.
+// The exact nature of the bug and the necessary workaround are described below, see the very extensive comment at the
+// start of the injectHeaders function.
 exports.shouldAddHeadersToOptionsUnconditionally = function () {
   return (
+    semver.eq(process.version, '21.0.0') ||
     (semver.gte(process.version, '20.8.1') && semver.lt(process.version, '20.10.0')) ||
-    (semver.gte(process.version, '18.18.2') && semver.lt(process.version, '20.0.0'))
+    (semver.gte(process.version, '18.18.2') && semver.lt(process.version, '18.19.0'))
   );
 };
 
@@ -231,11 +235,11 @@ function injectHeaders(originalArgs, headersToAdd) {
   // have normalized that to a Fetch API Headers object.
   //
   // To add insult to injury, details of that behavior changed for a while due to a bug in Node.js/undici, which was
-  // present in Node.js 20.8.1-20.9.0 and 18.18.2-?: For Node.js versions unaffected by this bug
-  // (e.g. <=20.8.0, >=20.10.0, <=18.18.1), if there is an options object, but it does not have the headers option, the
-  // headers from the request object will be used. In affected Node.js version (20.8.1-20.9.0, 18.18.2-?), if there is
-  // an options parameters, the request object's headers will be ignored unconditionally - no matter if the options
-  // object has a header option or not.
+  // present in Node.js 21.0.0, 20.8.1-20.9.0 and 18.18.2: For Node.js versions unaffected by this bug
+  // (e.g. >=21.1.0, <=20.8.0, >=20.10.0, <=18.18.1, >=18.19.0), if there is an options object, but it does not have the
+  // headers option, the headers from the request object will be used. In affected Node.js version
+  // (21.0.0, 20.8.1-20.9.0, 18.18.2), if there is an options parameters, the request object's headers will be ignored
+  // unconditionally - no matter if the options object has a header option or not.
   //
   // This actually violates the fetch specification, see https://fetch.spec.whatwg.org/#request-class
   // -> "The new Request(input, init) constructor steps are:”
@@ -255,14 +259,14 @@ function injectHeaders(originalArgs, headersToAdd) {
   // |        * |  (1) | Not a Fetch API Request    | Absent                     | Create options and inject there            |
   // |        * |  (2) | Not a Fetch API Request    | Present                    | Inject headers into options                |
   // |        * |  (3) | Fetch API Request          | Absent                     | add to Request#headers, do not add options |
-  // | <=20.8.0 |  (4) | Fetch API Request          | Present but has no headers | add to Request#headers                     |
+  // |   21.0.0 |  (4) | Fetch API Request          | Present but has no headers | add to Request#headers                     |
+  // | <=20.8.0 |      |                            |                            |                                            |
   // | >=20.10.0|      |                            |                            |                                            |
-  // | <=18.18.1|      |                            |                            |                                            |
-  // | >18.?    |      |                            |                            |                                            |
-  // | >=20.8.1 |  (5) | Fetch API Request          | Present but has no headers | add to options#headers                     |
-  // | <20.10.0 |      |                            |                            |                                            |
-  // | >=18.18.2|      |                            |                            |                                            |
-  // | <18.?    |      |                            |                            |                                            |
+  // | <=18.18.1, >=18.19.0 |                       |                            |                                            |
+  // | >=18.19.0|      |                            |                            |                                            |
+  // | >=21.1.0 |  (5) | Fetch API Request          | Present but has no headers | add to options#headers                     |
+  // | >=20.8.1 & <20.10.0 |                        |                            |                                            |
+  // |  18.18.2 |      |                            |                            |                                            |
   // |        * |  (6) | Fetch API Request          | Present with headers       | add to options#headers                     |
   //
   // Some additional notes:
@@ -276,8 +280,8 @@ function injectHeaders(originalArgs, headersToAdd) {
   //   this case, we add our headers to the Request object. The Request constructor guarantees that Request#headers
   //   exists and is a Fetch API Headers object.
   // * Case (5): This is the same case as case 5 with respect to the input, but since Node.js/undici would discard
-  //   Request.headers anyway in this case starting with Node.js 20.8.1, we can (and must) add the headers as
-  //   options.headers instead of Request#headers.
+  //   Request.headers anyway in this case in the Node.js affected by the undici bug, we can (and must) add the headers
+  //   as options.headers instead of Request#headers.
   // * Case (6): There is a Request object (with or without headers) and an options object with headers. The Fetch API
   //   will ignore any headers from the Request object and only use the headers from the options object, so that is
   //   where we need to add our headers as well.
