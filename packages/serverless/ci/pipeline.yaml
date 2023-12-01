@@ -128,15 +128,6 @@ resources:
       password: ((concourse-icr-containers-public.password))
       tag: latest
 
-  - name: azure-container-services-nodejs-image-containers-instana-io
-    type: registry-image
-    icon: docker
-    source:
-      repository: delivery.instana.io/rel-docker-agent-local/agent/azure/container-services/nodejs
-      username: ((delivery-instana-io-release-project-artifact-read-writer-creds.username))
-      password: ((delivery-instana-io-release-project-artifact-read-writer-creds.password))
-      tag: latest
-
 resource_types:
 
   - name: npm-resource

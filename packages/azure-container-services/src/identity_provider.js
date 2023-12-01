@@ -34,5 +34,5 @@ function extractEntityId() {
     entityId =
       `/subscriptions/${subscriptionId}/resourceGroups/${resourceGroup}/providers/Microsoft.Web/sites/${appName}`;
   }
-  return entityId || 'com.instana.plugin.azure.appservice';
+  return entityId;
 }

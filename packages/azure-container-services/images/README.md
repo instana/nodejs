@@ -1,6 +1,8 @@
 Node.js Azure Container Images
 ================================
 
+This directory includes Dockerfiles designed for testing the base images of azure-container-services-nodejs.
+
 There are two distinct container image types, each in their own sub folder:
 
 * `instana-azure-container-services`: This folder contains the production base image that we provide to customers for monitoring Node.js Azure container services. The production image is published to icr.io, which is the public IBM Container Registry. This happens on our CI system, see `packages/serverless/ci/pipeline.yaml`. The [CI pipeline](https://ci.instana.io/teams/nodejs/pipelines/serverless-in-process-collectors:main/jobs/azure-container-services-nodejs-container-image-layer) uses the Dockerfile and package.json file in that folder, but not the build scripts `build.sh` or `build-and-push.sh`. These scripts are used to build variants of this image locally and to push them to a Azure container registry, which is very useful for testing. Available scripts:
@@ -22,7 +24,6 @@ How-To for Common Use Cases
 - Azure Account: Ensure you have access to an Azure account for deploying and testing container images.
 - Azure CLI: Install the Azure CLI for authentication and azure operations.
 - Docker: Make sure Docker is installed for building container images locally.
-
 
 ### Initial Setup
 

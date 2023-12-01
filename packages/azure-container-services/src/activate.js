@@ -20,7 +20,13 @@ function init() {
   if (process.env.INSTANA_DEBUG || process.env.INSTANA_LOG_LEVEL) {
     logger.setLevel(process.env.INSTANA_DEBUG ? 'debug' : process.env.INSTANA_LOG_LEVEL);
   }
-
+  if (!process.env.WEBSITE_OWNER_NAME && !process.env.WEBSITE_SITE_NAME && !process.env.WEBSITE_RESOURCE_GROUP) {
+    logger.error(
+      'Initializing @instana/azure-container-services failed. The environment variables are not set.' +
+        'This container instance will not be monitored.'
+    );
+    return;
+  }
   try {
     identityProvider.init();
     backendConnector.init(identityProvider, logger, false, true, 950);
