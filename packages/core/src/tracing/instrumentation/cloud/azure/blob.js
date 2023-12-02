@@ -26,11 +26,27 @@ function instrumentBlob(blob) {
 }
 function instrumentContainer(blobClient) {
     shimmer.wrap(blobClient.prototype, 'delete', shimDelete);
+    shimmer.wrap(blobClient.prototype, 'download', shimDownload);
 }
 function instrumentBlockBlob(blockBlobClient) {
     shimmer.wrap(blockBlobClient.prototype, 'upload', shimUpload);
     shimmer.wrap(blockBlobClient.prototype, 'stageBlock', shimUpload);
 }
+function shimDownload(original) {
+    /* eslint-disable no-console */
+    console.log('**********>>>>>>>>>>>>>>>>>>>>>>> shimDownload >>>>>>>>>>>>>>>>>>>>>************');
+    return function () {
+        if (cls.skipExitTracing({ isActive })) {
+            return original.apply(this, arguments);
+        }
+        const argsForOriginalQuery = new Array(arguments.length);
+        for (let i = 0; i < arguments.length; i++) {
+            argsForOriginalQuery[i] = arguments[i];
+        }
+        return instrumentedOperation(this, original, argsForOriginalQuery, this._name, this._containerName);
+    };
+}
+
 function shimDelete(original) {
     /* eslint-disable no-console */
     console.log('**********>>>>>>>>>>>>>>>>>>>>>>> shimDelete >>>>>>>>>>>>>>>>>>>>>************');
