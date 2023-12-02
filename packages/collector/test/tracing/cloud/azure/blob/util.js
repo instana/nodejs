@@ -7,7 +7,7 @@
 
 exports.miniNodeJsVer = '8.16.0';
 
-if (require('semver').lt(process.versions.node, exports.minimumNodeJsVersion)) {
+if (require('semver').lt(process.versions.node, exports.miniNodeJsVer)) {
     exports.deleteContainer = function () { };
     exports.createContainer = function () { };
     return;
