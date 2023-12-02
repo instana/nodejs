@@ -86,6 +86,21 @@ const download = async (_blobName) => {
   }
 };
 
+const streamToString = async (
+  readableStream
+) => {
+  return new Promise((resolve, reject) => {
+    const chunks = [];
+    readableStream.on('data', (_data) => {
+      chunks.push(_data);
+    });
+    readableStream.on('end', () => {
+      resolve(Buffer.concat(chunks).toString('base64'));
+    });
+    readableStream.on('error', reject);
+  });
+};
+
 app.use(bodyParser.json());
 
 app.get('/', (req, res) => {
@@ -101,6 +116,27 @@ app.get('/download', async (req, res) => {
     res.send();
   } catch (e) {
     console.log('Error in /download:', e);
+    res.send();
+  }
+});
+
+app.get('/download-await', async (req, res) => {
+  try {
+    await uploadDocumentToAzure();
+    const response = await blockBlobClient.download(0);
+    if (response.readableStreamBody) {
+      await streamToString(response.readableStreamBody);
+      await deleteDocumentFromAzure(blobName);
+      res.send();
+    } else {
+      await deleteDocumentFromAzure(blobName);
+      console.log(
+        `Error downloading document ${blockBlobClient.name} from container ${blockBlobClient.containerName}`
+      );
+      res.send();
+    }
+  } catch (e) {
+    console.log('Error in /download-await:', e);
     res.send();
   }
 });
