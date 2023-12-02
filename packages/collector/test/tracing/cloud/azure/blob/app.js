@@ -105,6 +105,44 @@ app.get('/download', async (req, res) => {
   }
 });
 
+app.get('/download-promise', async (req, res) => {
+  try {
+    await uploadDocumentToAzure();
+    blockBlobClient.downloadToFile(localFilePath)
+      .then(async () => {
+        console.log(`Downloaded blob to ${localFilePath}`);
+        fs.unlinkSync(localFilePath);
+        await deleteDocumentFromAzure(blobName);
+        res.send();
+      })
+      .catch(error => {
+        console.error(`Error downloading blob: ${error.message}`);
+      });
+  } catch (e) {
+    console.log('Error in /download-promise:', e);
+    res.send();
+  }
+});
+
+app.get('/download-promise-err', async (req, res) => {
+  try {
+    blockBlobClient.downloadToFile(localFilePath)
+      .then(async () => {
+        console.log(`Downloaded blob to ${localFilePath}`);
+        fs.unlinkSync(localFilePath);
+        await deleteDocumentFromAzure(blobName);
+        res.send();
+      })
+      .catch(error => {
+        console.log(`Error downloading blob: ${error.message}`);
+        res.send();
+      });
+  } catch (e) {
+    console.log('Error in /download-promise-err:', e);
+    res.send();
+  }
+});
+
 app.get('/download-err', async (req, res) => {
   try {
     await uploadDocumentToAzure();

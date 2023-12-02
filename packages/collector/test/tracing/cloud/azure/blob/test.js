@@ -7,7 +7,7 @@
 
 const { v4: uuid } = require('uuid');
 const expect = require('chai').expect;
-// const semver = require('semver');
+const semver = require('semver');
 const constants = require('@instana/core').tracing.constants;
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('../../../../../../core/test/config');
@@ -17,13 +17,14 @@ const {
 } = require('../../../../../../core/test/test_util');
 const ProcessControls = require('../../../../test_util/ProcessControls');
 const globalAgent = require('../../../../globalAgent');
-const { createContainer, deleteContainer } = require('./util');
+const { createContainer, deleteContainer, miniNodeJsVer } = require('./util');
 
-const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
+const mochaSuiteFn =
+supportedVersion(process.versions.node || semver.lt(process.versions.node, miniNodeJsVer)) ? describe : describe.skip;
 
 const { BlobServiceClient } = require('@azure/storage-blob');
 const containerName = `test-${uuid()}`;
-const storageAccount = 'blobtest098';
+const storageAccount = 'blobtest098'; // process.env.STORAGE_ACCOUNT;
 const accountKey = process.env.KEY;
 const connStr =
 `DefaultEndpointsProtocol=https;AccountName=${storageAccount};AccountKey=${accountKey};EndpointSuffix=core.windows.net`;
@@ -172,6 +173,36 @@ mochaSuiteFn.only('tracing/blob', function () {
             n: 3,
             path: '/download',
             withError: false
+        });
+    });
+
+    it('download-promise', async () => {
+        await controls
+            .sendRequest({
+                method: 'GET',
+                path: '/download-promise'
+            });
+        await verify({
+            spanName: 'az_storage',
+            dataProperty: 'az_storage',
+            n: 3,
+            path: '/download-promise',
+            withError: false
+        });
+    });
+
+    it('download-promise-err', async () => {
+        await controls
+            .sendRequest({
+                method: 'GET',
+                path: '/download-promise-err'
+            });
+        await verify({
+            spanName: 'az_storage',
+            dataProperty: 'az_storage',
+            n: 1,
+            path: '/download-promise-err',
+            withError: true
         });
     });
 
