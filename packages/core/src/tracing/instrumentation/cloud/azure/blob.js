@@ -25,16 +25,16 @@ function instrumentBlob(blob) {
     instrumentContainer(blob.BlobClient);
 }
 function instrumentContainer(blobClient) {
-    shimmer.wrap(blobClient.prototype, 'delete', shimDelete);
-    shimmer.wrap(blobClient.prototype, 'download', shimDownload);
+    shimmer.wrap(blobClient.prototype, 'delete', shimMethod);
+    shimmer.wrap(blobClient.prototype, 'download', shimMethod);
 }
 function instrumentBlockBlob(blockBlobClient) {
-    shimmer.wrap(blockBlobClient.prototype, 'upload', shimUpload);
-    shimmer.wrap(blockBlobClient.prototype, 'stageBlock', shimUpload);
+    shimmer.wrap(blockBlobClient.prototype, 'upload', shimMethod);
+    shimmer.wrap(blockBlobClient.prototype, 'stageBlock', shimMethod);
 }
-function shimDownload(original) {
+function shimMethod(original) {
     /* eslint-disable no-console */
-    console.log('**********>>>>>>>>>>>>>>>>>>>>>>> shimDownload >>>>>>>>>>>>>>>>>>>>>************');
+    console.log('**********>>>>>>>>>>>>>>>>>>>>>>> shimMethod >>>>>>>>>>>>>>>>>>>>>************');
     return function () {
         if (cls.skipExitTracing({ isActive })) {
             return original.apply(this, arguments);
@@ -46,38 +46,52 @@ function shimDownload(original) {
         return instrumentedOperation(this, original, argsForOriginalQuery, this._name, this._containerName);
     };
 }
+// function shimDownload(original) {
+//     /* eslint-disable no-console */
+//     console.log('**********>>>>>>>>>>>>>>>>>>>>>>> shimDownload >>>>>>>>>>>>>>>>>>>>>************');
+//     return function () {
+//         if (cls.skipExitTracing({ isActive })) {
+//             return original.apply(this, arguments);
+//         }
+//         const argsForOriginalQuery = new Array(arguments.length);
+//         for (let i = 0; i < arguments.length; i++) {
+//             argsForOriginalQuery[i] = arguments[i];
+//         }
+//         return instrumentedOperation(this, original, argsForOriginalQuery, this._name, this._containerName);
+//     };
+// }
 
-function shimDelete(original) {
-    /* eslint-disable no-console */
-    console.log('**********>>>>>>>>>>>>>>>>>>>>>>> shimDelete >>>>>>>>>>>>>>>>>>>>>************');
-    return function () {
-        if (cls.skipExitTracing({ isActive })) {
-            return original.apply(this, arguments);
-        }
-        const argsForOriginalQuery = new Array(arguments.length);
-        for (let i = 0; i < arguments.length; i++) {
-            argsForOriginalQuery[i] = arguments[i];
-        }
-        return instrumentedOperation(this, original, argsForOriginalQuery, this._name, this._containerName);
-    };
-}
+// function shimDelete(original) {
+//     /* eslint-disable no-console */
+//     console.log('**********>>>>>>>>>>>>>>>>>>>>>>> shimDelete >>>>>>>>>>>>>>>>>>>>>************');
+//     return function () {
+//         if (cls.skipExitTracing({ isActive })) {
+//             return original.apply(this, arguments);
+//         }
+//         const argsForOriginalQuery = new Array(arguments.length);
+//         for (let i = 0; i < arguments.length; i++) {
+//             argsForOriginalQuery[i] = arguments[i];
+//         }
+//         return instrumentedOperation(this, original, argsForOriginalQuery, this._name, this._containerName);
+//     };
+// }
 
-function shimUpload(original) {
-    return function () {
-        if (cls.skipExitTracing({ isActive })) {
-            return original.apply(this, arguments);
-            // this is the Client object. arguments is the original function arguments .eg in db it is query
-        }
-        const argsForOriginalQuery = new Array(arguments.length);
-        for (let i = 0; i < arguments.length; i++) {
-            argsForOriginalQuery[i] = arguments[i];
-        }
-        // console.log("====>>>>>>>>>>>>>>>>>>>>>>>=====",this)
-        // console.log("====>>>>>>>>>>>argsForOriginalQuery>>>>>>>>>>>>=====",argsForOriginalQuery)
-        // console.log("====>>>>>>>>>>>arguments>>>>>>>>>>>>=====", arguments)
-        return instrumentedOperation(this, original, argsForOriginalQuery, this._name, this._containerName);
-    };
-}
+// function shimUpload(original) {
+//     return function () {
+//         if (cls.skipExitTracing({ isActive })) {
+//             return original.apply(this, arguments);
+//             // this is the Client object. arguments is the original function arguments .eg in db it is query
+//         }
+//         const argsForOriginalQuery = new Array(arguments.length);
+//         for (let i = 0; i < arguments.length; i++) {
+//             argsForOriginalQuery[i] = arguments[i];
+//         }
+//         // console.log("====>>>>>>>>>>>>>>>>>>>>>>>=====",this)
+//         // console.log("====>>>>>>>>>>>argsForOriginalQuery>>>>>>>>>>>>=====",argsForOriginalQuery)
+//         // console.log("====>>>>>>>>>>>arguments>>>>>>>>>>>>=====", arguments)
+//         return instrumentedOperation(this, original, argsForOriginalQuery, this._name, this._containerName);
+//     };
+// }
 function instrumentedOperation(ctx, originalQuery, argsForOriginalQuery, _blobName, _container) {
     // argsForOriginalQuery is the query function params araay
     // originalQuery is instanaOriginalFunctionWrapper

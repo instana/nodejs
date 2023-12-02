@@ -66,6 +66,9 @@ const uploadDocumentToAzure = async (options = {}) => {
 
 const deleteDocumentFromAzure = async (_blobName) => {
   const response = await containerClient.deleteBlob(_blobName);
+  if (response._response.status === 202) {
+    console.log(`Deleted ${_blobName}`);
+  }
   if (response._response.status !== 202) {
     throw new Error(`Error deleting ${_blobName}`);
   }
@@ -98,6 +101,18 @@ app.get('/download', async (req, res) => {
     res.send();
   } catch (e) {
     console.log('Error in /download:', e);
+    res.send();
+  }
+});
+
+app.get('/download-err', async (req, res) => {
+  try {
+    await uploadDocumentToAzure();
+    await download('unknown');
+    await deleteDocumentFromAzure(blobName);
+    res.send();
+  } catch (e) {
+    console.log('Error in /download-err:', e);
     res.send();
   }
 });
