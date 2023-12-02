@@ -57,21 +57,6 @@ mochaSuiteFn.only('tracing/blob', function () {
     });
     ProcessControls.setUpHooks(controls);
 
-    it('download', async () => {
-        await controls
-            .sendRequest({
-                method: 'GET',
-                path: '/download'
-            });
-        await verify({
-            spanName: 'az_storage',
-            dataProperty: 'az_storage',
-            n: 3,
-            path: '/download',
-            withError: false
-        });
-    });
-
     it('uploadData and delete', async () => {
         await controls
             .sendRequest({
@@ -172,6 +157,42 @@ mochaSuiteFn.only('tracing/blob', function () {
             dataProperty: 'az_storage',
             n: 2,
             path: '/uploadData-delete-blobBatch-blobClient',
+            withError: false
+        });
+    });
+    it('download', async () => {
+        await controls
+            .sendRequest({
+                method: 'GET',
+                path: '/download'
+            });
+        await verify({
+            spanName: 'az_storage',
+            dataProperty: 'az_storage',
+            n: 3,
+            path: '/download',
+            withError: false
+        });
+    });
+
+    it('download - err', async () => {
+        await controls
+            .sendRequest({
+                method: 'GET',
+                path: '/download-err'
+            });
+        await verify({
+            spanName: 'az_storage',
+            dataProperty: 'az_storage',
+            n: 1,
+            path: '/download-err',
+            withError: true
+        });
+        await verify({
+            spanName: 'az_storage',
+            dataProperty: 'az_storage',
+            n: 2,
+            path: '/download-err',
             withError: false
         });
     });
