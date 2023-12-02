@@ -23,14 +23,15 @@ const app = express();
 const logPrefix = `Express / azure blob App (${process.pid}):\t`;
 const fs = require('fs');
 
-const filePath = `${__dirname}/one.pdf`;
+const filePath = `${__dirname}/sam.pdf`;
+const localFilePath = `${__dirname}/out.pdf`;
 const data1 = fs.readFileSync(filePath);
 const accountKey = process.env.ACC_KEY;
 const connStr = process.env.CONN_STR;
 const storageAccount = process.env.STORAGE_ACC;
 
 const blobServiceClient = BlobServiceClient.fromConnectionString(connStr);
-const containerName = process.env.CONTAINER_NAME; // 'test'
+const containerName = process.env.CONTAINER_NAME;
 const blobName = 'first.pdf';
 const containerClient = blobServiceClient.getContainerClient(
   containerName
@@ -55,6 +56,7 @@ const uploadDocumentToAzure = async (options = {}) => {
         `Error uploading document ${blockBlobClient.name} to container ${blockBlobClient.containerName}`
       );
     } else {
+      console.log('uploaded successsfully');
       return ('uploaded successsfully');
     }
   } catch (e) {
@@ -70,14 +72,38 @@ const deleteDocumentFromAzure = async (_blobName) => {
   return response;
 };
 
+const download = async (_blobName) => {
+  const _blockBlobClient = containerClient.getBlockBlobClient(_blobName);
+  try {
+    const downloadBlobResponse = await _blockBlobClient.downloadToFile(localFilePath);
+    console.log(`Downloaded blob to ${localFilePath}:`);
+    return downloadBlobResponse;
+  } catch (e) {
+    console.log('Error occured while downloading:', e);
+  }
+};
+
 app.use(bodyParser.json());
 
 app.get('/', (req, res) => {
   res.sendStatus(200);
 });
 
+app.get('/download', async (req, res) => {
+  try {
+    await uploadDocumentToAzure();
+    await download(blobName);
+    fs.unlinkSync(localFilePath);
+    await deleteDocumentFromAzure(blobName);
+    res.send();
+  } catch (e) {
+    console.log('Error in /download:', e);
+    res.send();
+  }
+});
+
 app.get('/uploadDataBlock', async (req, res) => {
-  const resp = await uploadDocumentToAzure({ maxSingleShotSize: 1 * 1024 * 1024 });
+  const resp = await uploadDocumentToAzure({ maxSingleShotSize: 20 * 1024 });
   res.send(resp);
 });
 

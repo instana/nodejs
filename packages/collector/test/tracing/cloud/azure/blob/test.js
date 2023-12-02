@@ -57,6 +57,21 @@ mochaSuiteFn.only('tracing/blob', function () {
     });
     ProcessControls.setUpHooks(controls);
 
+    it('download', async () => {
+        await controls
+            .sendRequest({
+                method: 'GET',
+                path: '/download'
+            });
+        await verify({
+            spanName: 'az_storage',
+            dataProperty: 'az_storage',
+            n: 3,
+            path: '/download',
+            withError: false
+        });
+    });
+
     it('uploadData and delete', async () => {
         await controls
             .sendRequest({
@@ -163,8 +178,7 @@ mochaSuiteFn.only('tracing/blob', function () {
 
     async function verify({ spanName, dataProperty, n, path, withError }) {
         const spans = await agentControls.getSpans();
-        // spans.forEach(i =>
-        //     console.log('---------------spans------------->', i);
+        // spans.forEach((i) => { console.log('---------------spans------------->', i) }
         // );
         const _pid = String(controls.getPid());
         const parent = verifyHttpRootEntry({
