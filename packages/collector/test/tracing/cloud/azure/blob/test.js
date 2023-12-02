@@ -161,6 +161,22 @@ mochaSuiteFn.only('tracing/blob', function () {
             withError: false
         });
     });
+
+    it('download-await', async () => {
+        await controls
+            .sendRequest({
+                method: 'GET',
+                path: '/download-await'
+            });
+        await verify({
+            spanName: 'az_storage',
+            dataProperty: 'az_storage',
+            n: 3,
+            path: '/download-await',
+            withError: false
+        });
+    });
+
     it('download', async () => {
         await controls
             .sendRequest({
