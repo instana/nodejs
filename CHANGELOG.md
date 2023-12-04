@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [2.36.1](https://github.com/instana/nodejs/compare/v2.36.0...v2.36.1) (2023-12-04)
+
+
+### Bug Fixes
+
+* **fetch:** fix header handling for Node.js >= 18.19.0 and >= 21.1.0 ([6420063](https://github.com/instana/nodejs/commit/6420063932c15b44a4aa436ec522dab4c03cca54))
+
+
+
+
+
 # [2.36.0](https://github.com/instana/nodejs/compare/v2.35.0...v2.36.0) (2023-11-29)
 
 
