@@ -120,6 +120,37 @@ app.get('/download', async (req, res) => {
   }
 });
 
+app.get('/download-buffer', async (req, res) => {
+  try {
+    await uploadDocumentToAzure();
+    const response = await blockBlobClient.downloadToBuffer();
+    fs.writeFileSync(localFilePath, response);
+    fs.unlinkSync(localFilePath);
+    await deleteDocumentFromAzure(blobName);
+    res.send();
+  } catch (e) {
+    console.log('Error in /download-buffer:', e);
+    res.send();
+  }
+});
+
+app.get('/download-buffer-promise', async (req, res) => {
+  try {
+    await uploadDocumentToAzure();
+    blockBlobClient.downloadToBuffer().then(response => {
+      fs.writeFileSync(localFilePath, response);
+      fs.unlinkSync(localFilePath);
+    }).catch(error => {
+      console.error(`Error downloading blob: ${error.message}`);
+    });
+    await deleteDocumentFromAzure(blobName);
+    res.send();
+  } catch (e) {
+    console.log('Error in /download-buffer-promise:', e);
+    res.send();
+  }
+});
+
 app.get('/download-await', async (req, res) => {
   try {
     await uploadDocumentToAzure();
