@@ -70,9 +70,14 @@ const verifySpans = (agentControls, controls, options = {}) =>
 
     expectExactlyOneMatching(spans, verifyCouchbaseSpan(controls, entrySpan, options));
   });
+  let mochaSuiteFn;
 // https://github.com/couchbase/couchnode/blob/e43550a0aec12a222edccee67e34dd10d523c125/package.json#L6
-const mochaSuiteFn =
-  supportedVersion(process.versions.node) && semver.gte(process.versions.node, '16.0.0') ? describe : describe.skip;
+if (!supportedVersion(process.versions.node) || semver.lt(process.versions.node, '16.0.0')) {
+  mochaSuiteFn = describe.skip;
+  return;
+} else {
+  mochaSuiteFn = describe;
+}
 
 // NOTE: it takes 1-2 minutes till the couchbase server can be reached via docker
 mochaSuiteFn('tracing/couchbase', function () {
