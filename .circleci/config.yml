@@ -317,7 +317,7 @@ jobs:
       - <<: *couchbase-setup
       - <<: *localstack
     <<: *shared
-    parallelism: 15
+    parallelism: << pipeline.parameters.executors >>
     resource_class: large
 
   "node-20":
