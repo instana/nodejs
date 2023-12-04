@@ -79,7 +79,7 @@
     "@grpc/proto-loader-latest": "npm:@grpc/proto-loader@^0.6.9",
     "@hapi/hapi": "^21.3.0",
     "@opentelemetry/auto-instrumentations-node": "^0.38.0",
-    "@opentelemetry/exporter-trace-otlp-http": "^0.44.0",
+    "@opentelemetry/exporter-trace-otlp-http": "^0.45.1",
     "@opentelemetry/sdk-node": "^0.38.0",
     "@opentelemetry/tracing": "^0.24.0",
     "@types/bull": "^4.10.0",
