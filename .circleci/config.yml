@@ -331,7 +331,7 @@ jobs:
       - <<: *couchbase-setup
       - <<: *localstack
     <<: *shared
-    parallelism: 15
+    parallelism: << pipeline.parameters.executors >>
     resource_class: large
 
   "node-18":
@@ -377,7 +377,7 @@ jobs:
       - <<: *couchbase-setup
       - <<: *localstack
     <<: *shared
-    parallelism: 15
+    parallelism: << pipeline.parameters.executors >>
     resource_class: medium+
 
   "node-18-esm":
@@ -428,7 +428,7 @@ jobs:
       - <<: *couchbase-setup
       - <<: *localstack
     <<: *shared
-    parallelism: 15
+    parallelism: << pipeline.parameters.executors >>
     resource_class: medium+
 
   "node-coverage":
