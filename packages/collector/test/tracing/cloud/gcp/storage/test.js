@@ -54,7 +54,7 @@ if (
   // https://github.com/googleapis/nodejs-storage/issues/2368
 
   if (!supportedVersion(process.versions.node) || !process.env.GCP_PROJECT ||
-  semver.eq(process.versions.node, '21.2.0')) {
+  semver.gte(process.versions.node, '21.2.0')) {
     mochaSuiteFn = describe.skip;
   } else {
         mochaSuiteFn = describe;
