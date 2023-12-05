@@ -22,7 +22,7 @@ const { fail } = expect;
 const { createContainer, deleteContainer, miniNodeJsVer } = require('./util');
 const { BlobServiceClient } = require('@azure/storage-blob');
 const containerName = `test-${uuid()}`;
-const storageAccount = 'blobtest098'; // process.env.STORAGE_ACCOUNT;
+const storageAccount = process.env.STORAGE_ACCOUNT;
 const accountKey = process.env.ACCOUNT_KEY;
 const endPoint = 'core.windows.net';
 const connStr =
@@ -34,7 +34,7 @@ const mochaSuiteFn =
     supportedVersion(process.versions.node ||
         semver.lt(process.versions.node, miniNodeJsVer)) ? describe : describe.skip;
 
-mochaSuiteFn.only('tracing/cloud/azure/blob', function () {
+mochaSuiteFn('tracing/cloud/azure/blob', function () {
     globalAgent.setUpCleanUpHooks();
     const agentControls = globalAgent.instance;
 
@@ -57,6 +57,8 @@ mochaSuiteFn.only('tracing/cloud/azure/blob', function () {
             );
         });
     } else {
+        // eslint-disable-next-line no-console
+        console.log('All configs are met');
         this.timeout(config.getTestTimeout());
 
         before(async () => {
@@ -65,36 +67,6 @@ mochaSuiteFn.only('tracing/cloud/azure/blob', function () {
 
         after(async () => {
             await deleteContainer(containerClient);
-        });
-
-        it('uploadData and delete', async () => {
-            await controls
-                .sendRequest({
-                    method: 'GET',
-                    path: '/uploadData'
-                });
-            await verify({
-                spanName: 'az_storage',
-                dataProperty: 'az_storage',
-                n: 2,
-                path: '/uploadData',
-                withError: false
-            });
-        });
-
-        it('Error in delete-promise', async () => {
-            await controls
-                .sendRequest({
-                    method: 'GET',
-                    path: '/deleteError'
-                });
-            await verify({
-                spanName: 'az_storage',
-                dataProperty: 'az_storage',
-                n: 1,
-                path: '/deleteError',
-                withError: true
-            });
         });
 
         it('uploads block data', async () => {
@@ -126,6 +98,7 @@ mochaSuiteFn.only('tracing/cloud/azure/blob', function () {
                 withError: false
             });
         });
+
         it('upload - err', async () => {
             await controls
                 .sendRequest({
@@ -137,6 +110,36 @@ mochaSuiteFn.only('tracing/cloud/azure/blob', function () {
                 dataProperty: 'az_storage',
                 n: 1,
                 path: '/upload-err',
+                withError: true
+            });
+        });
+
+        it('uploadData and delete', async () => {
+            await controls
+                .sendRequest({
+                    method: 'GET',
+                    path: '/uploadData'
+                });
+            await verify({
+                spanName: 'az_storage',
+                dataProperty: 'az_storage',
+                n: 2,
+                path: '/uploadData',
+                withError: false
+            });
+        });
+
+        it('Error in delete-promise', async () => {
+            await controls
+                .sendRequest({
+                    method: 'GET',
+                    path: '/deleteError'
+                });
+            await verify({
+                spanName: 'az_storage',
+                dataProperty: 'az_storage',
+                n: 1,
+                path: '/deleteError',
                 withError: true
             });
         });
@@ -286,8 +289,6 @@ mochaSuiteFn.only('tracing/cloud/azure/blob', function () {
 
 async function verify({ spanName, dataProperty, n, path, withError }) {
     const spans = await agentControls.getSpans();
-    // spans.forEach((i) => { console.log('---------------spans------------->', i) }
-    // );
     const _pid = String(controls.getPid());
     const parent = verifyHttpRootEntry({
         spans,
