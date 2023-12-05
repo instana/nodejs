@@ -5,7 +5,7 @@
 
 'use strict';
 
-exports.miniNodeJsVer = '18.0.0';
+exports.miniNodeJsVer = '8.16.0';
 
 if (require('semver').lt(process.versions.node, exports.miniNodeJsVer)) {
     exports.deleteContainer = function () { };
