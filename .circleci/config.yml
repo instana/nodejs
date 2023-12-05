@@ -317,7 +317,7 @@ jobs:
       - <<: *couchbase-setup
       - <<: *localstack
     <<: *shared
-    parallelism: 15
+    parallelism: << pipeline.parameters.executors >>
     resource_class: large
 
   "node-18":
@@ -363,7 +363,7 @@ jobs:
       - <<: *couchbase-setup
       - <<: *localstack
     <<: *shared
-    parallelism: 15
+    parallelism: << pipeline.parameters.executors >>
     resource_class: medium+
 
   "node-18-esm":
@@ -414,7 +414,7 @@ jobs:
       - <<: *couchbase-setup
       - <<: *localstack
     <<: *shared
-    parallelism: 15
+    parallelism: << pipeline.parameters.executors >>
     resource_class: medium+
 
   "node-coverage":
@@ -461,7 +461,7 @@ workflows:
         - not:
           equal: [ scheduled_pipeline, << pipeline.trigger_source >> ]
     jobs:
-      - "node-20"
+      - "node-18"
 
   other-nodejs-versions:
     when:
@@ -472,7 +472,7 @@ workflows:
         # by providing the parameter "workflow: other-nodejs-versions"
         - equal: [ other-nodejs-versions, << pipeline.parameters.workflow >> ]
     jobs:
-      - "node-18"
+      - "node-20"
       - "node-16"
       - "node-14"
 
