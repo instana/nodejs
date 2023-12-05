@@ -26,7 +26,7 @@ const storageAccount = 'blobtest098'; // process.env.STORAGE_ACCOUNT;
 const accountKey = process.env.ACCOUNT_KEY;
 const endPoint = 'core.windows.net';
 const connStr =
-    `DefaultEndpointsProtocol=https;AccountName=${storageAccount};AccountKey=${accountKey};EndpointSuffix=${endPoint}`;
+`DefaultEndpointsProtocol=https;AccountName=${storageAccount};AccountKey=${accountKey};EndpointSuffix=${endPoint}`;
 const blobServiceClient = BlobServiceClient.fromConnectionString(connStr);
 const containerClient = blobServiceClient.getContainerClient(containerName);
 
