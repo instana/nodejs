@@ -5,7 +5,7 @@ ARG package_version
 WORKDIR /instana
 COPY package.json.npm ./
 RUN sed -e s/SELF_VERSION/$package_version/g \
-        -e s/INSTANA_AZURE_CONTAINER_SERVICE_VERSION/$package_version/g \
+        -e s/INSTANA_AZURE_CONTAINER_SERVICES_VERSION/$package_version/g \
         package.json.npm > package.json
 COPY .npmrc ./
 RUN npm install --only=production

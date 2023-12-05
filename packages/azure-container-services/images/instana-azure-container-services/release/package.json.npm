@@ -9,6 +9,6 @@
   "author": "Arya Mohanan <arya.mohanan@ibm.com",
   "license": "ISC",
   "dependencies": {
-    "@instana/azure-container-services": "INSTANA_AZURE-CONTAINER-SERVICES_VERSION"
+    "@instana/azure-container-services": "INSTANA_AZURE_CONTAINER_SERVICES_VERSION"
   }
 }

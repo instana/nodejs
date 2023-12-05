@@ -6,7 +6,7 @@
 
 # This script is used locally for building and pushing test versions of the container image.
 # The production image on icr.io is built and published through Concourse (see serverless/ci/pipeline.yml).
-# Note that Dockerfile-npm and package.json.npm in this directory are used for the production image.
+# Note that the files in release directory are used for the production image.
 
 # Use cases for this script:
 # - Build an Azure base container image from local sources, including modifications.

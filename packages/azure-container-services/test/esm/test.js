@@ -25,21 +25,8 @@ function prelude(opts = {}) {
   if (opts.startBackend == null) {
     opts.startBackend = true;
   }
-  let env = {
-    ESM_TEST: true,
-    WEBSITE_OWNER_NAME: 'instana+123',
-    WEBSITE_RESOURCE_GROUP: 'East US',
-    WEBSITE_SITE_NAME: 'test-app'
-  };
-  if (opts.env) {
-    env = {
-      ...env,
-      ...opts.env
-    };
-  }
   const controlOpts = {
     ...opts,
-    env,
     containerAppPath,
     instanaAgentKey
   };
@@ -49,7 +36,14 @@ function prelude(opts = {}) {
 if (esmSupportedVersion(process.versions.node)) {
   describe('Azure Container Service esm test', function () {
     describe('when the back end is up', function () {
-      const control = prelude.bind(this)();
+      const control = prelude.bind(this)({
+        env: {
+          ESM_TEST: true,
+          WEBSITE_OWNER_NAME: 'instana+123',
+          WEBSITE_RESOURCE_GROUP: 'East US',
+          WEBSITE_SITE_NAME: 'test-app'
+        }
+      });
       it('should trace http requests', () =>
         control
           .sendRequest({
@@ -71,6 +65,16 @@ if (esmSupportedVersion(process.versions.node)) {
             path: '/'
           })
           .then(response => verify(control, response, false)));
+    });
+    describe('when requirent environment variables are not present', function () {
+      const control = prelude.bind(this)();
+      it('should not trace', () =>
+        control
+          .sendRequest({
+            method: 'GET',
+            path: '/'
+          })
+          .then(verifyNoSpans(control)));
     });
 
     function verify(control, response, expectSpans) {

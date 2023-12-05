@@ -13,22 +13,18 @@ const { expectExactlyOneMatching } = require('../../../core/test/test_util');
 const config = require('../../../serverless/test/config');
 const retry = require('../../../serverless/test/util/retry');
 
-const entityId =
-  '/subscriptions/instana/resourceGroups/East US/providers/Microsoft.Web/sites/test-app';
+const entityId = '/subscriptions/instana/resourceGroups/East US/providers/Microsoft.Web/sites/test-app';
 const containerAppPath = path.join(__dirname, './app');
 const instanaAgentKey = 'azure-container-service-dummy-key';
 
 function prelude(opts = {}) {
   this.timeout(config.getTestTimeout());
   this.slow(config.getTestTimeout() / 2);
-  let env = {
+  const env = {
     WEBSITE_OWNER_NAME: 'instana+123',
     WEBSITE_RESOURCE_GROUP: 'East US',
     WEBSITE_SITE_NAME: 'test-app'
   };
-  if (opts.env) {
-    env = { ...env, ...opts.env };
-  }
   const controlOpts = {
     ...opts,
     env,
@@ -60,7 +56,7 @@ describe('Using the API', function () {
           method: 'GET',
           path: '/'
         })
-        .then((response) => verifyNoOp(control, response)));
+        .then(response => verifyNoOp(control, response)));
   });
 
   function verify(control, response) {
@@ -85,7 +81,7 @@ describe('Using the API', function () {
   }
 
   function verifyHttpEntry(spans) {
-    return expectExactlyOneMatching(spans, (span) => {
+    return expectExactlyOneMatching(spans, span => {
       expect(span.t).to.exist;
       expect(span.p).to.not.exist;
       expect(span.s).to.exist;
@@ -105,7 +101,7 @@ describe('Using the API', function () {
   }
 
   function verifyCustomExit(spans, entry) {
-    return expectExactlyOneMatching(spans, (span) => {
+    return expectExactlyOneMatching(spans, span => {
       expect(span.t).to.equal(entry.t);
       expect(span.p).to.equal(entry.s);
       expect(span.s).to.exist;
@@ -137,7 +133,7 @@ describe('Using the API', function () {
   }
 
   function verifyNoSpans(control) {
-    return control.getSpans().then((spans) => {
+    return control.getSpans().then(spans => {
       expect(spans).to.be.empty;
     });
   }

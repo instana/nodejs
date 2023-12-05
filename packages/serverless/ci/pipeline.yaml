@@ -456,7 +456,7 @@ jobs:
               tag: latest
           params:
             CONTEXT: nodejs-repository/packages/azure-container-services/images/instana-azure-container-services/
-            DOCKERFILE: nodejs-repository/packages/azure-container-services/images/instana-azure-container-services/Dockerfile-npm
+            DOCKERFILE: nodejs-repository/packages/azure-container-services/images/instana-azure-container-services/release/Dockerfile-npm
             BUILD_ARG_package_version: ((.:package-version))
           inputs:
             - name: nodejs-repository
@@ -466,12 +466,6 @@ jobs:
             path: build
 
       - put: azure-container-services-nodejs-image-icr
-        params:
-          image: image/image.tar
-          additional_tags: instana-azure-container-services-npm-package/version
-        get_params:
-          skip_download: true
-      - put: azure-container-services-nodejs-image-containers-instana-io
         params:
           image: image/image.tar
           additional_tags: instana-azure-container-services-npm-package/version

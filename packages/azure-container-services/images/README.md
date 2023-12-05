@@ -1,16 +1,16 @@
 Node.js Azure Container Images
 ================================
 
-This directory includes Dockerfiles designed for testing the base images of azure-container-services-nodejs.
+This directory contains Dockerfiles and scripts for testing Node.js Azure Container Service images.
 
 There are two distinct container image types, each in their own sub folder:
 
-* `instana-azure-container-services`: This folder contains the production base image that we provide to customers for monitoring Node.js Azure container services. The production image is published to icr.io, which is the public IBM Container Registry. This happens on our CI system, see `packages/serverless/ci/pipeline.yaml`. The [CI pipeline](https://ci.instana.io/teams/nodejs/pipelines/serverless-in-process-collectors:main/jobs/azure-container-services-nodejs-container-image-layer) uses the Dockerfile and package.json file in that folder, but not the build scripts `build.sh` or `build-and-push.sh`. These scripts are used to build variants of this image locally and to push them to a Azure container registry, which is very useful for testing. Available scripts:
+* `instana-azure-container-services`: This subfolder includes the Dockerfile for the production base image used to monitor Node.js Azure container services. The production image is published to icr.io, the public IBM Container Registry, through our CI system, see `packages/serverless/ci/pipeline.yaml`. The [CI pipeline](https://ci.instana.io/teams/nodejs/pipelines/serverless-in-process-collectors:main/jobs/azure-container-services-nodejs-container-image-layer) . The CI pipeline utilizes the Dockerfile and package.json file in the release folder. The `build.sh` and `build-and-push.sh` scripts facilitate local image building and pushing to an Azure container registry for testing purposes. Available scripts:
     * `instana-azure-container-services/build.sh` builds the Instana Node.js Azure base image, either from your local sources or from an already published npm package.
     * `instana-azure-container-services/build-and-push.sh` builds the Instana Node.js Azure base image and pushes it to a container image registry of your choice (usually our internal Azure container registry).
     * Both scripts each have documentation, explaining their purpose and the parameters they accept.
 
-* `test-images`: The scripts in this folder can build various versions of a simple test application that uses the base image from `instana-azure-container-services`. Such an image basically represents a customer's application/Azure container service using our Node.js Azure monitoring setup. Available scripts:
+* `test-images`: This subfolder contains scripts to build different versions of a simple test application using the base image from `instana-azure-container-services`. These images simulate a customer's application or Azure container service utilizing our Node.js Azure monitoring setup.. Available scripts:
     * `test-images/build.sh`: Builds the test application image.
     * `test-images/build-and-push.sh`: Builds the test application image and pushes it to a registry.
     * `test-images/build-and-run.sh`: Builds the test application image and runs it locally.
@@ -81,7 +81,7 @@ Finally, use the Azure web portal to include that test application image in a Az
 * Head to the "Docker" tab, enter the Docker image details, select the Azure Container Registry where your Docker image is stored, and choose the specific Docker image.
 * Click on "Review + create" and then proceed to click "Create" to initiate the deployment of the Azure web app.
 * After deployment, access the app service details to find the public IP address or DNS name for accessing your application.
-* In the "Configuration" section of the web app, enter the Instana URL and environment key to specify the environment to which the app will report later. If no specific environment is defined, include both the URL and the environment key in the application settings.
+* In the "Configuration" section of the web app, enter the Instana URL and environment key to specify the environment to which the app will report later.
 * Go to the Instana environment you are reporting to (for example [test/pink](https://test-instana.pink.instana.rocks/#/physical?q=entity.type%3Acloudrun)) and inspect the data.
 * Test tracing:
     * You can find the service's public URL on its [details tab](https://console.cloud.google.com/run/detail/us-central1/cloud-run-nodejs-test/general?project=k8s-brewery).
