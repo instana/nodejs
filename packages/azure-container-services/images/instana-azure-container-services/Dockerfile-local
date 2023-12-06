@@ -1,4 +1,4 @@
-FROM node:18-buster AS instana-azure-container-services-build-nodejs
+FROM node:18 AS instana-azure-container-services-build-nodejs
 
 WORKDIR /instana
 COPY package.json ./
