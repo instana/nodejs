@@ -2,12 +2,5 @@ ARG BASE_IMAGE
 FROM ${BASE_IMAGE}
 WORKDIR /instana
 
-RUN apt -y update
-RUN apt install build-essential zlib1g-dev libncurses5-dev libgdbm-dev libnss3-dev libssl-dev libsqlite3-dev libreadline-dev libffi-dev curl libbz2-dev -y
-RUN curl -O https://www.python.org/ftp/python/3.8.2/Python-3.8.2.tar.xz
-RUN tar -xf Python-3.8.2.tar.xz
-RUN cd Python-3.8.2 && ./configure --enable-optimizations && make -j 4 && make altinstall
-RUN rm /usr/bin/python3
-RUN ln -s /usr/local/bin/python3.8 /usr/bin/python3
 
 RUN npm install @instana/collector@latest
