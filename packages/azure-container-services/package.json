@@ -47,8 +47,8 @@
   },
   "license": "MIT",
   "dependencies": {
-    "@instana/core": "2.36.0",
-    "@instana/serverless": "2.36.0"
+    "@instana/core": "2.36.1",
+    "@instana/serverless": "2.36.1"
   },
   "devDependencies": {
     "no-code2": "2.0.0"
