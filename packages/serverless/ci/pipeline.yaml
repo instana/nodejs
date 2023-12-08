@@ -456,7 +456,7 @@ jobs:
               tag: latest
           params:
             CONTEXT: nodejs-repository/packages/azure-container-services/images/instana-azure-container-services/
-            DOCKERFILE: nodejs-repository/packages/azure-container-services/images/instana-azure-container-services/release/Dockerfile-npm
+            DOCKERFILE: nodejs-repository/packages/azure-container-services/images/instana-azure-container-services/Dockerfile-npm
             BUILD_ARG_package_version: ((.:package-version))
           inputs:
             - name: nodejs-repository

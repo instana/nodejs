@@ -6,7 +6,7 @@
 
 # This script is exclusively used locally for building test versions of the container image.
 # The production image on icr.io is built and published via Concourse (see serverless/ci/pipeline.yml).
- # Note that the files in release directory are used for the production image.
+ # Note that the Dockerfile-npm and package.json.npm are used for the production image.
 
 # Use cases for this script:
 # - Build an Azure base container image from local sources, including modifications.
@@ -21,7 +21,7 @@
 #     - local: Builds the container image from your local machine, including all local modifications.
 #     - npm: Downloads @instana/azure-container-services from the npm registry and includes that in the image. Local modifications or
 #       commits not included in the release are ignored. 
-#       The corresponding dockerfile and package.json file are located in release folder.
+#       The corresponding Dockerfile-npm and package.json.npm file are used for the production image.
 # - $2: npm dist tag:
 #     - latest (this is the default)
 #     - any other dist tag that is available in the npm registry for @instana/azure-container-services.
@@ -63,11 +63,7 @@ fi
 echo Build Mode: ${build_mode}
 echo npm Tag: ${npm_tag}
 
-if [[ $build_mode = npm ]]; then
-  dockerfile=../release/Dockerfile-$build_mode
-else
-  dockerfile=Dockerfile-$build_mode
-fi
+dockerfile=Dockerfile-$build_mode
 
 build_arg=
 setImageTag $image_tag_prefix $build_mode $npm_tag
@@ -121,16 +117,6 @@ docker rmi -f $image_tag
 
 # Build the Docker image
 echo "Building $dockerfile -> $image_tag"
-
-if [[ $build_mode = npm ]]; then
-  cd release
-
-# Verify that the Dockerfile exists in the directory
-  if [ ! -f Dockerfile-npm ]; then
-    echo "Error: Dockerfile-npm not found in the release directory."
-    exit 1
-  fi
-fi
 
 docker build --progress=plain $build_arg -f $dockerfile -t $image_tag -t $azure_repository/$image_tag .
 echo "docker build exit status: $?"
