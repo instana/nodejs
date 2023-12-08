@@ -16,10 +16,7 @@ module.exports = exports = function getDockerOpts(family, version) {
   const targetNodeVersion = version || nodeJsVersion;
 
   if (family === GLIBC) {
-    // NOTE: debian stretch was no longer working good with some Node versions
-    // https://stackoverflow.com/questions/76094428/debian-stretch-repositories-404-not-found
-    // https://stackoverflow.com/questions/52083380/in-docker-image-names-what-is-the-difference-between-alpine-jessie-stretch-an
-    baseImage = `node:${targetNodeVersion}-buster`;
+    baseImage = `node:${targetNodeVersion}`;
     distro = 'standard';
   } else if (family === MUSL) {
     baseImage = `node:${targetNodeVersion}-alpine`;
