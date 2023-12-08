@@ -40,6 +40,7 @@ describe('retry loading native addons', function () {
             break;
           }
         }
+
         expect(foundAtLeastOneUnsupported).to.be.true;
 
         // The for loop above ensures that the first metric POST that had the libuv payload
