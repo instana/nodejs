@@ -1,4 +1,4 @@
-FROM node:18.18.2-buster AS instana-aws-fargate-build-nodejs
+FROM node:18 AS instana-aws-fargate-build-nodejs
 
 ARG package_version
 WORKDIR /instana

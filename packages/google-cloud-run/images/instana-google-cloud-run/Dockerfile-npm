@@ -1,4 +1,4 @@
-FROM node:18-buster AS instana-google-cloud-run-build-nodejs
+FROM node:18 AS instana-google-cloud-run-build-nodejs
 
 ARG package_version
 WORKDIR /instana
