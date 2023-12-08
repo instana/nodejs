@@ -14,7 +14,7 @@ const os = require('os');
 
 module.exports = exports = function buildSingleAddOn(abi, version) {
   const platform = os.platform();
-  const arch = process.arch;
+  const arch = process.arch === 'arm64' ? 'x64' : process.arch;
 
   let family = null;
   if (platform === 'linux') {
