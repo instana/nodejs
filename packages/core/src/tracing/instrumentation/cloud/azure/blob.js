@@ -14,7 +14,7 @@ const cls = require('../../../cls');
 
 let isActive = false;
 
-exports.spanName = 'az_storage';
+exports.spanName = 'azstorage';
 
 exports.init = function init() {
     requireHook.onModuleLoad('@azure/storage-blob', instrumentBlob);
@@ -25,14 +25,14 @@ function instrumentBlob(blob) {
     instrumentContainer(blob.BlobClient);
 }
 function instrumentContainer(blobClient) {
-    shimmer.wrap(blobClient.prototype, 'delete', shimMethod);
-    shimmer.wrap(blobClient.prototype, 'download', shimMethod);
+    shimmer.wrap(blobClient.prototype, 'delete', shimDelete);
+    shimmer.wrap(blobClient.prototype, 'download', shimDownload);
 }
 function instrumentBlockBlob(blockBlobClient) {
-    shimmer.wrap(blockBlobClient.prototype, 'upload', shimMethod);
-    shimmer.wrap(blockBlobClient.prototype, 'stageBlock', shimMethod);
+    shimmer.wrap(blockBlobClient.prototype, 'upload', shimUpload);
+    shimmer.wrap(blockBlobClient.prototype, 'stageBlock', shimUpload);
 }
-function shimMethod(original) {
+function shimUpload(original) {
     return function () {
         if (cls.skipExitTracing({ isActive })) {
             return original.apply(this, arguments);
@@ -41,19 +41,79 @@ function shimMethod(original) {
         for (let i = 0; i < arguments.length; i++) {
             argsForOriginalQuery[i] = arguments[i];
         }
-        return instrumentedOperation(this, original, argsForOriginalQuery, this._name, this._containerName);
+        return instrumentedOperation({
+            ctx: this,
+            originalQuery: original,
+            argsForOriginalQuery: argsForOriginalQuery,
+            _blobName: this._name,
+            _container: this._containerName,
+            accntName: this.accountName,
+            operation: 'upload'
+        });
     };
 }
-function instrumentedOperation(ctx, originalQuery, argsForOriginalQuery, _blobName, _container) {
+function shimDelete(original) {
+    return function () {
+        if (cls.skipExitTracing({ isActive })) {
+            return original.apply(this, arguments);
+        }
+        const argsForOriginalQuery = new Array(arguments.length);
+        for (let i = 0; i < arguments.length; i++) {
+            argsForOriginalQuery[i] = arguments[i];
+        }
+        return instrumentedOperation({
+            ctx: this,
+            originalQuery: original,
+            argsForOriginalQuery: argsForOriginalQuery,
+            _blobName: this._name,
+            _container: this._containerName,
+            accntName: this.accountName,
+            operation: 'delete'
+        });
+    };
+}
+function shimDownload(original) {
+    return function () {
+        if (cls.skipExitTracing({ isActive })) {
+            return original.apply(this, arguments);
+        }
+        const argsForOriginalQuery = new Array(arguments.length);
+        for (let i = 0; i < arguments.length; i++) {
+            argsForOriginalQuery[i] = arguments[i];
+        }
+        return instrumentedOperation({
+            ctx: this,
+            originalQuery: original,
+            argsForOriginalQuery: argsForOriginalQuery,
+            _blobName: this._name,
+            _container: this._containerName,
+            accntName: this.accountName,
+            operation: 'download'
+        });
+    };
+}
+
+function instrumentedOperation({ ctx,
+    originalQuery,
+    argsForOriginalQuery,
+    _blobName,
+    _container,
+    accntName,
+    operation
+}) {
     const blob = _blobName;
     const container = _container;
+    const accountName = accntName;
+    const op = operation;
 
     return cls.ns.runAndReturn(() => {
         const span = cls.startSpan(exports.spanName, constants.EXIT);
         span.stack = tracingUtil.getStackTrace(instrumentedOperation);
-        span.data.az_storage = {
+        span.data.azstorage = {
             container,
-            blob
+            blob,
+            accountName,
+            op
         };
         let originalCallback;
         let callbackIndex = -1;
@@ -92,7 +152,7 @@ function instrumentedOperation(ctx, originalQuery, argsForOriginalQuery, _blobNa
 function finishSpan(error, span) {
     if (error) {
         span.ec = 1;
-        span.data.az_storage.error = tracingUtil.getErrorDetails(error);
+        span.data.azstorage.error = tracingUtil.getErrorDetails(error);
     }
     span.d = Date.now() - span.ts;
     span.transmit();

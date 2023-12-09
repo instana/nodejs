@@ -76,8 +76,8 @@ mochaSuiteFn('tracing/cloud/azure/blob', function () {
                     path: '/uploadDataBlock'
                 });
             await verify({
-                spanName: 'az_storage',
-                dataProperty: 'az_storage',
+                spanName: 'azstorage',
+                dataProperty: 'azstorage',
                 n: 1,
                 path: '/uploadDataBlock',
                 withError: false
@@ -91,8 +91,8 @@ mochaSuiteFn('tracing/cloud/azure/blob', function () {
                     path: '/upload'
                 });
             await verify({
-                spanName: 'az_storage',
-                dataProperty: 'az_storage',
+                spanName: 'azstorage',
+                dataProperty: 'azstorage',
                 n: 1,
                 path: '/upload',
                 withError: false
@@ -106,8 +106,8 @@ mochaSuiteFn('tracing/cloud/azure/blob', function () {
                     path: '/upload-err'
                 });
             await verify({
-                spanName: 'az_storage',
-                dataProperty: 'az_storage',
+                spanName: 'azstorage',
+                dataProperty: 'azstorage',
                 n: 1,
                 path: '/upload-err',
                 withError: true
@@ -121,8 +121,8 @@ mochaSuiteFn('tracing/cloud/azure/blob', function () {
                     path: '/uploadData'
                 });
             await verify({
-                spanName: 'az_storage',
-                dataProperty: 'az_storage',
+                spanName: 'azstorage',
+                dataProperty: 'azstorage',
                 n: 2,
                 path: '/uploadData',
                 withError: false
@@ -136,8 +136,8 @@ mochaSuiteFn('tracing/cloud/azure/blob', function () {
                     path: '/deleteError'
                 });
             await verify({
-                spanName: 'az_storage',
-                dataProperty: 'az_storage',
+                spanName: 'azstorage',
+                dataProperty: 'azstorage',
                 n: 1,
                 path: '/deleteError',
                 withError: true
@@ -151,8 +151,8 @@ mochaSuiteFn('tracing/cloud/azure/blob', function () {
                     path: '/uploadData-delete-blobBatch-blobUri'
                 });
             await verify({
-                spanName: 'az_storage',
-                dataProperty: 'az_storage',
+                spanName: 'azstorage',
+                dataProperty: 'azstorage',
                 n: 2,
                 path: '/uploadData-delete-blobBatch-blobUri',
                 withError: false
@@ -166,8 +166,8 @@ mochaSuiteFn('tracing/cloud/azure/blob', function () {
                     path: '/uploadData-delete-blobBatch-blobClient'
                 });
             await verify({
-                spanName: 'az_storage',
-                dataProperty: 'az_storage',
+                spanName: 'azstorage',
+                dataProperty: 'azstorage',
                 n: 2,
                 path: '/uploadData-delete-blobBatch-blobClient',
                 withError: false
@@ -181,8 +181,8 @@ mochaSuiteFn('tracing/cloud/azure/blob', function () {
                     path: '/download-await'
                 });
             await verify({
-                spanName: 'az_storage',
-                dataProperty: 'az_storage',
+                spanName: 'azstorage',
+                dataProperty: 'azstorage',
                 n: 3,
                 path: '/download-await',
                 withError: false
@@ -196,8 +196,8 @@ mochaSuiteFn('tracing/cloud/azure/blob', function () {
                     path: '/download'
                 });
             await verify({
-                spanName: 'az_storage',
-                dataProperty: 'az_storage',
+                spanName: 'azstorage',
+                dataProperty: 'azstorage',
                 n: 3,
                 path: '/download',
                 withError: false
@@ -211,8 +211,8 @@ mochaSuiteFn('tracing/cloud/azure/blob', function () {
                     path: '/download-buffer'
                 });
             await verify({
-                spanName: 'az_storage',
-                dataProperty: 'az_storage',
+                spanName: 'azstorage',
+                dataProperty: 'azstorage',
                 n: 3,
                 path: '/download-buffer',
                 withError: false
@@ -226,8 +226,8 @@ mochaSuiteFn('tracing/cloud/azure/blob', function () {
                     path: '/download-buffer-promise'
                 });
             await verify({
-                spanName: 'az_storage',
-                dataProperty: 'az_storage',
+                spanName: 'azstorage',
+                dataProperty: 'azstorage',
                 n: 3,
                 path: '/download-buffer-promise',
                 withError: false
@@ -241,8 +241,8 @@ mochaSuiteFn('tracing/cloud/azure/blob', function () {
                     path: '/download-promise'
                 });
             await verify({
-                spanName: 'az_storage',
-                dataProperty: 'az_storage',
+                spanName: 'azstorage',
+                dataProperty: 'azstorage',
                 n: 3,
                 path: '/download-promise',
                 withError: false
@@ -256,8 +256,8 @@ mochaSuiteFn('tracing/cloud/azure/blob', function () {
                     path: '/download-promise-err'
                 });
             await verify({
-                spanName: 'az_storage',
-                dataProperty: 'az_storage',
+                spanName: 'azstorage',
+                dataProperty: 'azstorage',
                 n: 1,
                 path: '/download-promise-err',
                 withError: true
@@ -271,15 +271,15 @@ mochaSuiteFn('tracing/cloud/azure/blob', function () {
                     path: '/download-err'
                 });
             await verify({
-                spanName: 'az_storage',
-                dataProperty: 'az_storage',
+                spanName: 'azstorage',
+                dataProperty: 'azstorage',
                 n: 1,
                 path: '/download-err',
                 withError: true
             });
             await verify({
-                spanName: 'az_storage',
-                dataProperty: 'az_storage',
+                spanName: 'azstorage',
+                dataProperty: 'azstorage',
                 n: 2,
                 path: '/download-err',
                 withError: false
@@ -296,7 +296,7 @@ async function verify({ spanName, dataProperty, n, path, withError }) {
         pid: _pid
     });
     return expectExactlyNMatching(spans, n, [
-        span => expect(span.n).to.equal('az_storage'),
+        span => expect(span.n).to.equal('azstorage'),
         span => expect(span.k).to.equal(constants.EXIT),
         span => expect(span.t).to.equal(parent.t),
         span => expect(span.p).to.equal(parent.s),
@@ -304,7 +304,9 @@ async function verify({ spanName, dataProperty, n, path, withError }) {
         span => expect(span.f.h).to.equal('agent-stub-uuid'),
         span => expect(span.ec).to.equal(withError ? 1 : 0),
         span => expect(span.data).to.exist,
-        span => expect(span.data[dataProperty || spanName]).to.be.an('object')
+        span => expect(span.data[dataProperty || spanName]).to.be.an('object'),
+        span => expect(span.data[dataProperty || spanName].accountName).to.exist,
+        span => expect(span.data[dataProperty || spanName].op).to.exist
     ]);
 }
 });
