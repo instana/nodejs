@@ -107,9 +107,9 @@ describe('dependencies', function () {
         agentControls.getAllMetrics(controls.getPid()).then(allMetrics => {
           const deps = findMetric(allMetrics, ['dependencies']);
           expect(deps).to.be.an('object');
-          expect(Object.keys(deps)).to.have.lengthOf(122);
+          expect(Object.keys(deps)).to.have.lengthOf(132);
 
-          // npm workspaces installs them on the root
+          // npm workspaces installs most of the deps on the root
           expect(deps['@instana/shared-metrics']).to.not.exist;
           expect(deps['@instana/core']).to.not.exist;
           expect(deps['@instana/autoprofile']).to.not.exist;
@@ -162,9 +162,9 @@ describe('dependencies', function () {
         agentControls.getAllMetrics(controls.getPid()).then(allMetrics => {
           const deps = findMetric(allMetrics, ['dependencies']);
           expect(deps).to.be.an('object');
-          expect(Object.keys(deps)).to.have.lengthOf(131);
+          expect(Object.keys(deps)).to.have.lengthOf(143);
 
-          // npm workspaces installs them on the root
+          // npm workspaces installs most of the deps on the root
           expect(deps['@instana/shared-metrics']).to.not.exist;
           expect(deps['@instana/core']).to.not.exist;
           expect(deps['@instana/autoprofile']).to.not.exist;
