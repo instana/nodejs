@@ -25,11 +25,15 @@ function init() {
   if (!process.env.WEBSITE_OWNER_NAME && !process.env.WEBSITE_SITE_NAME && !process.env.WEBSITE_RESOURCE_GROUP) {
     logger.error(
       'Initializing @instana/azure-container-services failed. The environment variables' +
-        `${process.env.WEBSITE_OWNER_NAME} ${process.env.WEBSITE_SITE_NAME} ${process.env.WEBSITE_RESOURCE_GROUP} ` +
-        'are not set. This container instance will not be monitored.'
+        `WEBSITE_OWNER_NAME: ${process.env.WEBSITE_OWNER_NAME} WEBSITE_SITE_NAME: ${process.env.WEBSITE_SITE_NAME} ` +
+        `WEBSITE_RESOURCE_GROUP: ${process.env.WEBSITE_RESOURCE_GROUP} are not set. ` +
+        'This container instance will not be monitored.'
     );
     return;
   }
+  // In contrast to Fargate, the Azure Agent collects required metrics information from Azure APIs to oversee
+  // services under Azure management. Therefore, our package is currently not fetching any metrics information.
+
   try {
     identityProvider.init();
     backendConnector.init(identityProvider, logger, false, true, 950);
