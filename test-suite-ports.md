@@ -17,3 +17,4 @@ For this reason, we maintain an overview of the ports used by the integration te
 | shared-metrics         | app under test: 7215, mock agent: 7211 |
 | opentelemetry-exporter | app under test: 6215, mock back end: 10443 |
 | opentelemetry-sampler  | app under test: 8215, mock back end: 10455 |
+| azure-container-services | app under test: 4217, mock back end: 9445 |

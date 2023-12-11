@@ -1,0 +1,95 @@
+function normalizeArgs {
+  local instanaLayerMode=$1
+
+  if [[ -z "${instanaLayerMode-}" || $instanaLayerMode = released ]]; then
+    instana_layer_without_tag=icr.io/instana/azure-container-services-nodejs
+    INSTANA_LAYER_MODE=released
+  elif [[ $instanaLayerMode = local ]]; then
+    instana_layer_without_tag=instana-azure-container-services-nodejs-local
+    INSTANA_LAYER_MODE=local
+  elif [[ $instanaLayerMode = azure ]]; then
+    instana_layer_without_tag=teamnodejsregistry.azurecr.io/instana-azure-container-services-nodejs
+    INSTANA_LAYER_MODE=azure
+  else
+    echo "Unknown option for Instana layer: $instanaLayerMode"
+    exit 1
+  fi
+
+  local nodeJsVersion=$2
+   if [[ -z "${nodeJsVersion-}" ]]; then
+    NODEJS_VERSION=18
+  elif [[ $nodeJsVersion -lt 14 ]]; then
+    echo "Unsupported Node version: $nodeJsVersion"
+    exit 
+  else
+    NODEJS_VERSION=$nodeJsVersion
+  fi
+
+  local distribution=$3
+  if [[ -z "${distribution-}" || $distribution = standard ]]; then
+    LINUX_DISTRIBUTION=standard
+  elif [[ $distribution = alpine ]]; then
+    LINUX_DISTRIBUTION=alpine
+  elif [[ $distribution = alpine-no-build-deps ]]; then
+    LINUX_DISTRIBUTION=alpine-no-build-deps
+  else
+    echo "Unknown option for Linux distribution: $distribution"
+    exit 1
+  fi
+
+  local docker_tag=$4
+  if [[ -n "${docker_tag-}" ]]; then
+    DOCKER_TAG=$docker_tag
+  else
+    DOCKER_TAG=latest
+  fi
+  INSTANA_LAYER=$instana_layer_without_tag:$DOCKER_TAG
+}
+
+function setImageTag {
+  local prefix=$1
+
+  local nodeJsVersion=$2
+
+  local distribution=$3
+  if [[ $distribution = standard ]]; then
+    distribution=""
+  elif [[ $distribution = alpine ]]; then
+    distribution=-alpine
+  elif [[ $distribution = alpine-no-build-deps ]]; then
+    distribution=-alpine-no-build-deps
+  else
+    echo "Unknown option for Linux distribution: $distribution"
+    exit 1
+  fi
+
+  local instanaLayerMode=$4
+
+  local docker_tag=$5
+
+  image_tag=$prefix-$nodeJsVersion$distribution-$instanaLayerMode:$docker_tag
+}
+
+function setContainerName {
+  local prefix=$1
+
+  local nodeJsVersion=$2
+
+  local distribution=$3
+  if [[ $distribution = standard ]]; then
+    distribution=""
+  elif [[ $distribution = alpine ]]; then
+    distribution=-alpine
+  elif [[ $distribution = alpine-no-build-deps ]]; then
+    distribution=-alpine-no-build-deps
+  else
+    echo "Unknown option for Linux distribution: $distribution"
+    exit 1
+  fi
+
+  local instanaLayerMode=$4
+
+  local docker_tag=$5
+
+  container_name=$prefix-$nodeJsVersion$distribution-$instanaLayerMode-$docker_tag
+}

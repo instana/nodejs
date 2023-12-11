@@ -1,0 +1,16 @@
+{
+  "name": "instana-azure-container-services-docker-image",
+  "version": "1.0.0",
+  "description": "Provides @instana/azure-container-services as an image for multi stage Dockerfiles",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/instana/nodejs.git"
+  },
+  "author": "Arya Mohanan <arya.mohanan@ibm.com>",
+  "license": "ISC",
+  "dependencies": {
+    "@instana/azure-container-services": "instana-azure-container-services.tgz",
+    "@instana/core": "instana-core.tgz",
+    "@instana/serverless": "instana-serverless.tgz"
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "reporterEnabled": "spec, mocha-junit-reporter, ../core/test/test_util/retryReporter.js",
+  "mochaJunitReporterReporterOptions": {
+    "mochaFile": "../../test-results/azure-container-services/results.xml"
+  }
+}

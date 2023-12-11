@@ -110,6 +110,23 @@ resources:
     source:
       url: ((tracer-community-slack-hook))
 
+  - name: instana-azure-container-services-npm-package
+    type: npm-resource
+    icon: cube-outline
+    source:
+      scope: instana
+      package: azure-container-services
+      registry:
+        uri: https://registry.npmjs.org/
+
+  - name: azure-container-services-nodejs-image-icr
+    type: registry-image
+    icon: docker
+    source:
+      repository: icr.io/instana/azure-container-services-nodejs
+      username: ((concourse-icr-containers-public.apikey))
+      password: ((concourse-icr-containers-public.password))
+      tag: latest
 
 resource_types:
 
@@ -412,3 +429,63 @@ jobs:
               :x: Building/publishing a new version of the Instana Node.js AWS Lambda layer and the container image `icr.io/instana/aws-lambda-nodejs` has failed.
         attachments: *slack-alert-attachements-failure
     on_error: *slack-notify-failure-lambda
+
+  - name: azure-container-services-nodejs-container-image-layer
+    serial: true
+    plan:
+      - in_parallel:
+        - get: instana-azure-container-services-npm-package
+          trigger: true
+          params:
+            skip_download: true
+        - get: nodejs-repository
+          passed:
+          - self-update
+      - load_var: package-version
+        file: instana-azure-container-services-npm-package/version
+        reveal: true
+
+      - task: build-and-publish-azure-container-services-image
+        privileged: true
+        config:
+          platform: linux
+          image_resource:
+            type: registry-image
+            source:
+              repository: vito/oci-build-task
+              tag: latest
+          params:
+            CONTEXT: nodejs-repository/packages/azure-container-services/images/instana-azure-container-services/
+            DOCKERFILE: nodejs-repository/packages/azure-container-services/images/instana-azure-container-services/Dockerfile-npm
+            BUILD_ARG_package_version: ((.:package-version))
+          inputs:
+            - name: nodejs-repository
+          outputs:
+            - name: image
+          run:
+            path: build
+
+      - put: azure-container-services-nodejs-image-icr
+        params:
+          image: image/image.tar
+          additional_tags: instana-azure-container-services-npm-package/version
+        get_params:
+          skip_download: true
+
+    on_success:
+      put: slack-alert
+      params:
+        channel: '#team-node'
+        icon_emoji: ':white_check_mark:'
+        text: |
+              :white_check_mark: Version ((.:package-version)) of the container image `instana/azure-container-services-nodejs` has been pushed to the IBM Container registry `icr.io` as well as `delivery.instana.io`/`containers.instana.io`.
+        attachments: *slack-alert-attachements-success
+    on_failure: &slack-notify-failure-azure-container-services
+      put: slack-alert
+      params:
+        channel: '#team-node'
+        icon_emoji: ':check-failed:'
+        text: |
+              :x: Building/pushing a new version of the container image `instana/azure-container-services-nodejs` has failed.
+        attachments: *slack-alert-attachements-failure
+    on_error: *slack-notify-failure-azure-container-services

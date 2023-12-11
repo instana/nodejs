@@ -1,0 +1,19 @@
+FROM node:18 AS instana-azure-container-services-build-nodejs
+
+ARG package_version
+
+WORKDIR /instana
+COPY package.json.npm ./
+RUN sed -e s/SELF_VERSION/$package_version/g \
+        -e s/INSTANA_AZURE_CONTAINER_SERVICES_VERSION/$package_version/g \
+        package.json.npm > package.json
+COPY .npmrc ./
+RUN npm install --only=production
+RUN rm -f instana-*.tgz && \
+ rm -f package.json && \
+ rm -f package.json.npm && \
+ rm -f .npmrc
+
+# ---- Start over from scratch and copy npm modules
+FROM scratch
+COPY --from=instana-azure-container-services-build-nodejs /instana /instana

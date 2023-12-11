@@ -1,0 +1,20 @@
+ARG INSTANA_LAYER=icr.io/instana/azure-container-services-nodejs:latest
+ARG NODEJS_VERSION=18
+
+FROM ${INSTANA_LAYER} as instanaLayer
+
+FROM node:${NODEJS_VERSION}
+WORKDIR /usr/src/app
+
+COPY package*.json ./
+RUN npm install --only=production
+
+COPY . .
+
+COPY --from=instanaLayer /instana /instana
+
+ENV NODE_OPTIONS="--require /instana/node_modules/@instana/azure-container-services"
+
+EXPOSE 4816
+
+ENTRYPOINT [ "npm", "start" ]
