@@ -172,6 +172,34 @@ app.get('/download-await', async (req, res) => {
   }
 });
 
+app.get('/download-blockblob-promise', async (req, res) => {
+  try {
+    await uploadDocumentToAzure();
+  blockBlobClient.download()
+  .then(async (downloadBlobResponse) => {
+    const readableStream = downloadBlobResponse.readableStreamBody;
+    const chunks = [];
+
+    readableStream.on('data', (chunk) => {
+      chunks.push(chunk);
+    });
+
+    readableStream.on('end', () => {
+      Buffer.concat(chunks);
+      console.log('Downloaded blob content');
+    });
+        await deleteDocumentFromAzure(blobName);
+        res.send();
+  })
+  .catch((error) => {
+    console.error('Error downloading blob:', error.message);
+  });
+  } catch (e) {
+    console.log('Error in /download-blockblob-promise:', e);
+    res.send();
+  }
+});
+
 app.get('/download-promise', async (req, res) => {
   try {
     await uploadDocumentToAzure();
