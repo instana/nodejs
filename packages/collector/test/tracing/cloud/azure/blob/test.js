@@ -284,6 +284,21 @@ mochaSuiteFn('tracing/cloud/azure/blob', function () {
                 withError: false
             });
         });
+
+        it('download-blockblob-promise', async () => {
+            await controls
+                .sendRequest({
+                    method: 'GET',
+                    path: '/download-blockblob-promise'
+                });
+            await verify({
+                spanName: 'azstorage',
+                dataProperty: 'azstorage',
+                n: 3,
+                path: '/download-blockblob-promise',
+                withError: false
+            });
+        });
 }
 
 async function verify({ spanName, dataProperty, n, path, withError }) {
