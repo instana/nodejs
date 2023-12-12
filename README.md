@@ -28,9 +28,9 @@ The following packages are meant for direct consumption by Instana users, all  o
 
 ## Breaking Changes
 
-The current major release is `2.x.y`.
+The current major release is `3.x.y`.
 
-Checkout our [breaking changes documentation](https://www.ibm.com/docs/en/obi/current?topic=technologies-monitoring-nodejs#breaking-changes) to upgrade from v1 to v2.
+Checkout our [breaking changes documentation](https://www.ibm.com/docs/en/obi/current?topic=technologies-monitoring-nodejs#breaking-changes).
 
 ## Filing Issues
 
