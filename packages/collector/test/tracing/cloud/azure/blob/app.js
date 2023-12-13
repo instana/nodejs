@@ -251,7 +251,7 @@ app.get('/download-err', async (req, res) => {
 });
 
 app.get('/uploadDataBlock', async (req, res) => {
-  const resp = await uploadDocumentToAzure({ maxSingleShotSize: 20 * 1024 });
+  const resp = await uploadDocumentToAzure({ maxSingleShotSize: 3 * 1024 });
   res.send(resp);
 });
 
