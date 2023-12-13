@@ -1,0 +1,169 @@
+/*
+ * (c) Copyright IBM Corp. 2021
+ * (c) Copyright Instana Inc. and contributors 2018
+ */
+
+/* eslint-disable no-console */
+
+'use strict';
+
+// const agentPort = process.env.INSTANA_AGENT_PORT;
+
+require('../../../../..')();
+
+const { BlobServiceClient, BlobBatchClient, BlobClient, StorageSharedKeyCredential } = require('@azure/storage-blob');
+
+const express = require('express');
+// const morgan = require('morgan');
+// const request = require('request-promise-native');
+const bodyParser = require('body-parser');
+const port = require('../../../../test_util/app-port')();
+
+const app = express();
+const logPrefix = `Express / azure blob App (${process.pid}):\t`;
+const fs = require('fs');
+
+const filePath = `${__dirname}/one.pdf`;
+const data1 = fs.readFileSync(filePath);
+const accountKey = process.env.ACC_KEY;
+const connStr = process.env.CONN_STR;
+const storageAccount = process.env.STORAGE_ACC;
+
+const blobServiceClient = BlobServiceClient.fromConnectionString(connStr);
+const containerName = process.env.CONTAINER_NAME; // 'test'
+const blobName = 'first.pdf';
+const containerClient = blobServiceClient.getContainerClient(
+  containerName
+);
+const cred = new StorageSharedKeyCredential(storageAccount, accountKey);
+const data = Buffer.from(data1.toString('base64'), 'base64');
+const blockBlobClient = containerClient.getBlockBlobClient(blobName);
+
+const uploadDocumentToAzure = async (options = {}) => {
+  try {
+    const opts = {
+      blobHTTPHeaders: {
+        blobContentType: 'application/pdf'
+      }
+    };
+    if (options.maxSingleShotSize) {
+      opts.maxSingleShotSize = options.maxSingleShotSize;
+    }
+    const response = await blockBlobClient.uploadData(data, opts);
+    if (response._response.status !== 201) {
+      throw new Error(
+        `Error uploading document ${blockBlobClient.name} to container ${blockBlobClient.containerName}`
+      );
+    } else {
+      return ('uploaded successsfully');
+    }
+  } catch (e) {
+    console.log('err:', e);
+  }
+};
+
+const deleteDocumentFromAzure = async (_blobName) => {
+  const response = await containerClient.deleteBlob(_blobName);
+  if (response._response.status !== 202) {
+    throw new Error(`Error deleting ${_blobName}`);
+  }
+  return response;
+};
+
+app.use(bodyParser.json());
+
+app.get('/', (req, res) => {
+  res.sendStatus(200);
+});
+
+app.get('/uploadDataBlock', async (req, res) => {
+  const resp = await uploadDocumentToAzure({ maxSingleShotSize: 1 * 1024 * 1024 });
+  res.send(resp);
+});
+
+app.get('/uploadData', async (req, res) => {
+  try {
+    await uploadDocumentToAzure();
+    await deleteDocumentFromAzure(blobName);
+    res.send();
+  } catch (e) {
+    res.send();
+  }
+});
+app.get('/uploadData-delete-blobBatch-blobUri', async (req, res) => {
+  try {
+    await uploadDocumentToAzure();
+    const blobBatchClient = new BlobBatchClient(`https://${storageAccount}.blob.core.windows.net`, cred);
+    await blobBatchClient.deleteBlobs(
+      [`https://${storageAccount}.blob.core.windows.net/${containerName}/${blobName}`], cred);
+    res.send();
+  } catch (e) {
+    res.send();
+  }
+});
+
+app.get('/uploadData-delete-blobBatch-blobClient', async (req, res) => {
+  try {
+    await uploadDocumentToAzure();
+    const blobClient = new BlobClient(connStr, containerName, blobName);
+    const blobBatchClient = new BlobBatchClient(`https://${storageAccount}.blob.core.windows.net`, cred);
+    await blobBatchClient.deleteBlobs([blobClient], cred);
+    res.send();
+  } catch (e) {
+    res.send();
+  }
+});
+
+app.get('/deleteError', async (req, res) => {
+  try {
+    await uploadDocumentToAzure();
+    await deleteDocumentFromAzure(blobName);
+    containerClient.deleteBlob(blobName)
+      .then(() => {
+        console.log('Blob deleted successfully.');
+        res.send();
+      })
+      .catch(error => {
+        console.error('Error deleting blob:', error.message);
+        res.send();
+      });
+  } catch (e) {
+    res.send();
+  }
+});
+
+app.get('/upload', async (req, res) => {
+  const pdfData = fs.readFileSync(filePath);
+  blockBlobClient.upload(pdfData, pdfData.length)
+    .then(() => {
+      console.log('PDF file uploaded successfully.');
+      res.send('successss');
+    })
+    .catch((error) => {
+      console.error('Failed to upload PDF file:', error);
+      res.send();
+    });
+});
+
+app.get('/upload-err', async (req, res) => {
+  const pdfData = fs.readFileSync(filePath);
+  blockBlobClient.upload(pdfData)
+    .then(() => {
+      console.log('PDF file uploaded successfully.');
+      res.send('successss');
+    })
+    .catch((error) => {
+      console.error('Failed to upload PDF file:', error);
+      res.send();
+    });
+});
+
+app.listen(port, () => {
+  log(`Listening on port: ${port}`);
+});
+
+function log() {
+  const args = Array.prototype.slice.call(arguments);
+  args[0] = logPrefix + args[0];
+  console.log.apply(console, args);
+}
