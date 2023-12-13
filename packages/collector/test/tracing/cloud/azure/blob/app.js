@@ -23,7 +23,7 @@ const app = express();
 const logPrefix = `Express / azure blob App (${process.pid}):\t`;
 const fs = require('fs');
 
-const filePath = `${__dirname}/sam.pdf`;
+const filePath = `${__dirname}/sample.pdf`;
 const localFilePath = `${__dirname}/out.pdf`;
 const data1 = fs.readFileSync(filePath);
 const accountKey = process.env.ACC_KEY;
