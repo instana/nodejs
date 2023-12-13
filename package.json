@@ -219,8 +219,5 @@
     "commitizen": {
       "path": "./node_modules/cz-conventional-changelog"
     }
-  },
-  "dependencies": {
-    "@azure/storage-blob": "^12.17.0"
   }
 }
