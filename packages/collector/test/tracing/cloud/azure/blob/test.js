@@ -30,9 +30,8 @@ const connStr =
 const blobServiceClient = BlobServiceClient.fromConnectionString(connStr);
 const containerClient = blobServiceClient.getContainerClient(containerName);
 
-const mochaSuiteFn =
-    supportedVersion(process.versions.node ||
-        semver.lt(process.versions.node, miniNodeJsVer)) ? describe : describe.skip;
+let mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
+mochaSuiteFn = semver.lt(process.versions.node, miniNodeJsVer) ? describe.skip : mochaSuiteFn;
 
 mochaSuiteFn('tracing/cloud/azure/blob', function () {
     globalAgent.setUpCleanUpHooks();
