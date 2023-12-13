@@ -65,6 +65,7 @@
     "@aws-sdk/client-sqs-v3": "npm:@aws-sdk/client-sqs@3.24.0",
     "@aws-sdk/client-lambda": "^3.421.0",
     "@aws-sdk/lib-dynamodb": "^3.395.0",
+    "@azure/storage-blob": "^12.17.0",
     "@commitlint/cli": "^14.1.0",
     "@commitlint/config-conventional": "^14.1.0",
     "@elastic/elasticsearch": "^8.6.0",
@@ -94,6 +95,7 @@
     "@types/shimmer": "^1.0.2",
     "@types/sinon": "^10.0.17",
     "@types/superagent": "^4.1.13",
+    "adm-zip": "^0.5.10",
     "admin": "^1.4.1",
     "admin-plugin-healthcheck": "^1.1.0",
     "amqplib": "^0.10.3",
@@ -202,8 +204,7 @@
     "uuid": "^9.0.1",
     "winston": "^3.3.3",
     "ws": "^8.11.0",
-    "yargs": "^17.5.1",
-    "adm-zip": "^0.5.10"
+    "yargs": "^17.5.1"
   },
   "optionalDependencies": {
     "ibm_db": "^2.8.2",
@@ -218,5 +219,8 @@
     "commitizen": {
       "path": "./node_modules/cz-conventional-changelog"
     }
+  },
+  "dependencies": {
+    "@azure/storage-blob": "^12.17.0"
   }
 }
