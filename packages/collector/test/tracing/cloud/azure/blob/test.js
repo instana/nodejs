@@ -33,7 +33,7 @@ const containerClient = blobServiceClient.getContainerClient(containerName);
 let mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 mochaSuiteFn = semver.lt(process.versions.node, miniNodeJsVer) ? describe.skip : mochaSuiteFn;
 
-mochaSuiteFn('tracing/cloud/azure/blob', function () {
+mochaSuiteFn.only('tracing/cloud/azure/blob', function () {
     globalAgent.setUpCleanUpHooks();
     const agentControls = globalAgent.instance;
 
