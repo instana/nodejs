@@ -33,6 +33,20 @@
     "verify": "npm run lint && npm test",
     "prettier": "prettier --write 'src/**/*.js' 'test/**/*.js' 'images/**/*.js'"
   },
+  "keywords": [
+    "distributed-tracing",
+    "azure",
+    "app-service",
+    "container-service",
+    "caas",
+    "instana",
+    "memory",
+    "metrics",
+    "monitoring",
+    "opentracing",
+    "performance",
+    "tracing"
+  ],
   "contributors": [
     {
       "name": "Arya Mohanan",
