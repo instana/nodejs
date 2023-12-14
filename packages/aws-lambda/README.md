@@ -1,5 +1,6 @@
 Instana Node.js In-Process Collector For AWS Lambda
 ===================================================
 
-This npm package enables you to monitor Node.js-based AWS Lambdas with Instana. See <https://www.ibm.com/docs/de/obi/current?topic=kinesis-aws-lambda-native-tracing-nodejs/>.
+This npm package enables you to monitor Node.js-based AWS Lambdas with Instana. 
 
+Follow our [documentation](https://www.ibm.com/docs/en/instana-observability/current?topic=lambda-aws-native-tracing-nodejs) for more information.
