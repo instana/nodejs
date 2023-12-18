@@ -239,6 +239,9 @@ overrides:
 
   typeorm:
     displayName: TypeORM
+    firstHistoricallyTestedVersion: 0.2.37
+    testedVersions:
+    - 0.3.6
 
   superagent:
     category: http
@@ -275,7 +278,6 @@ additionalLibraries:
   support:
     lowerBound: all supported Node.js versions
     upperBound: all supported Node.js versions
-  firstHistoricallyTestedVersion: 4.0.0
   link: https://nodejs.org/docs/latest/api/http.html
   # Surprisingly, Node.js is available on npm (!) so the following works and provides the latest version of the Node.js
   # runtime :)
@@ -291,7 +293,6 @@ additionalLibraries:
   support:
     lowerBound: all supported Node.js versions
     upperBound: all supported Node.js versions
-  firstHistoricallyTestedVersion: 4.0.0
   link: https://nodejs.org/docs/latest/api/http.html
   packageNameForLatestAvailableVersion: node
 
@@ -305,7 +306,6 @@ additionalLibraries:
   support:
     lowerBound: all supported Node.js versions
     upperBound: all supported Node.js versions
-  firstHistoricallyTestedVersion: 4.0.0
   link: https://nodejs.org/docs/latest/api/http2.html
   packageNameForLatestAvailableVersion: node
 
@@ -319,7 +319,6 @@ additionalLibraries:
   support:
     lowerBound: all supported Node.js versions
     upperBound: all supported Node.js versions
-  firstHistoricallyTestedVersion: 4.0.0
   link: https://nodejs.org/docs/latest/api/http2.html
   packageNameForLatestAvailableVersion: node
 
