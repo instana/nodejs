@@ -3,8 +3,8 @@
 Monitor your Node.js applications with Instana!
 
 **[Installation](#installation-and-usage) |**
-**[Configuration](https://www.ibm.com/docs/de/instana-observability/current?topic=nodejs-collector-configuration) |**
-**[API](https://www.ibm.com/docs/de/instana-observability/current?topic=nodejs-instana-api) |**
+**[Configuration](https://www.ibm.com/docs/en/instana-observability/current?topic=nodejs-collector-configuration) |**
+**[API](https://www.ibm.com/docs/en/instana-observability/current?topic=nodejs-instana-api) |**
 **[Changelog](https://github.com/instana/nodejs/blob/main/CHANGELOG.md)**
 
 ---
@@ -27,7 +27,7 @@ This package is for monitoring *Node.js server applications* with Instana.
 
 If you want to monitor JavaScript applications...
 
-- **running in a browser**, check out our docs on [website monitoring](https://www.ibm.com/docs/de/obi/current?topic=instana-monitoring-websites).
+- **running in a browser**, check out our docs on [website monitoring](https://www.ibm.com/docs/en/instana-observability/current?topic=instana-monitoring-websites).
 
 - **running on AWS**, check out our documentation for [AWS Lambda](https://www.ibm.com/docs/en/instana-observability/current?topic=lambda-aws-native-tracing-nodejs) or [AWS Fargate](https://www.ibm.com/docs/en/instana-observability/current?topic=agents-aws-fargate#nodejs).
 
@@ -54,15 +54,15 @@ require('@instana/collector')();
 // const express = require('express');
 ```
 
-For more in-depth information, refer to the [installation page](https://www.ibm.com/docs/de/obi/current?topic=nodejs-collector-installation).
+For more in-depth information, refer to the [installation page](https://www.ibm.com/docs/en/instana-observability/current?topic=nodejs-collector-installation).
 
 ## CPU Profiling, Garbage Collection And Event Loop Information
 
-The Node.js collector uses Native addons for some metrics. Check out the [native addons documentation](https://www.ibm.com/docs/de/obi/current?topic=nodejs-collector-installation#native-addons) for details.
+The Node.js collector uses Native addons for some metrics. Check out the [native addons documentation](https://www.ibm.com/docs/en/instana-observability/current?topic=nodejs-collector-installation#native-addons) for details.
 
 ## API / SDK
 
-In most cases it is enough to require and initialize `@instana/collector` and let it do its work. However, there is an [API / SDK](https://www.ibm.com/docs/de/obi/current?topic=nodejs-instana-api) for more advanced use cases.
+In most cases it is enough to require and initialize `@instana/collector` and let it do its work. However, there is an [API / SDK](https://www.ibm.com/docs/en/instana-observability/current?topic=nodejs-instana-api) for more advanced use cases.
 
 ## Filing Issues
 
