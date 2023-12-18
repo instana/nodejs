@@ -45,7 +45,7 @@ describe('Using the API', function () {
           method: 'GET',
           path: '/'
         })
-        .then((response) => verify(control, response)));
+        .then(response => verify(control, response)));
   });
 
   describe('when not configured properly', function () {
