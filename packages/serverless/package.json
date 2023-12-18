@@ -67,6 +67,6 @@
   "dependencies": {
     "@instana/core": "3.0.0",
     "agent-base": "^6.0.2",
-    "https-proxy-agent": "^5.0.0"
+    "https-proxy-agent": "^7.0.2"
   }
 }

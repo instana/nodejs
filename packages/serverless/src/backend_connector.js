@@ -39,7 +39,7 @@ if (process.env[proxyEnvVar] && !environmentUtil.sendUnencrypted) {
       `server: ${proxyUrl}.`
   );
 
-  const HttpsProxyAgent = require('https-proxy-agent');
+  const { HttpsProxyAgent } = require('https-proxy-agent');
   proxyAgent = new HttpsProxyAgent(proxyUrl);
 } else if (process.env[proxyEnvVar] && environmentUtil.sendUnencrypted) {
   logger.warn(
