@@ -225,10 +225,18 @@ you will need to wait five minutes before trying again. In case some packages ha
 To publish a pre-release for the next major version, execute:
 
 ```
-NPM_CONFIG_OTP={your token} lerna publish --conventional-prerelease --dist-tag next --preid rc
+NPM_CONFIG_OTP={your token} lerna publish --dist-tag next --preid rc
 ```
 
 This assumes that you are on a branch where the versions in all package.json files have already been bumped to `x.0.0` with `x` being the next major version.
+
+#### Publishing without Pre-Releases
+
+To publish the next major version, execute:
+
+```
+NPM_CONFIG_OTP={TOKEN} lerna publish --no-verify-access --force-publish
+```
 
 #### Publishing A Major Release When A Pre-Release Exists
 
