@@ -3,8 +3,8 @@
 Monitor your Node.js applications with Instana!
 
 **[Installation](#installation-and-usage) |**
-**[Configuration](CONFIGURATION.md) |**
-**[API](API.md) |**
+**[Configuration](https://www.ibm.com/docs/en/instana-observability/current?topic=nodejs-collector-configuration) |**
+**[API](https://www.ibm.com/docs/en/instana-observability/current?topic=nodejs-instana-api) |**
 **[Changelog](https://github.com/instana/nodejs/blob/main/CHANGELOG.md)**
 
 ---
@@ -12,19 +12,28 @@ Monitor your Node.js applications with Instana!
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 
-- [Server Only](#server-only)
+- [Restrictions](#restrictions)
+- [Breaking Changes](https://www.ibm.com/docs/en/instana-observability/current?topic=technologies-monitoring-nodejs#breaking-changes)
 - [Installation And Usage](#installation-and-usage)
 - [CPU Profiling, Garbage Collection And Event Loop Information](#cpu-profiling-garbage-collection-and-event-loop-information)
-- [API](#api)
+- [API / SDK](#api)
 - [Filing Issues](#filing-issues)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-Most of this document has been moved to the [Node.js page](https://www.ibm.com/docs/de/obi/current?topic=technologies-monitoring-nodejs) of the [Instana documentation portal](https://www.ibm.com/docs/de/obi/current). The following sections mostly serve as redirects for people having arrived here following outdated links.
+## Restrictions
 
-## Server Only
+This package is for monitoring *Node.js server applications* with Instana. 
 
-**PSA**: This package is for monitoring *Node.js server applications* with Instana. If you want to monitor JavaScript applications running in a browser, check out our docs on [website monitoring](https://www.ibm.com/docs/de/obi/current?topic=instana-monitoring-websites).
+If you want to monitor JavaScript applications...
+
+- **running in a browser**, check out our docs on [Website Monitoring](https://www.ibm.com/docs/en/instana-observability/current?topic=instana-monitoring-websites).
+
+- **running on AWS**, check out our documentation for [AWS Lambda](https://www.ibm.com/docs/en/instana-observability/current?topic=lambda-aws-native-tracing-nodejs) or [AWS Fargate](https://www.ibm.com/docs/en/instana-observability/current?topic=agents-aws-fargate#nodejs).
+
+- **running on Azure**, check out our documentation for [Azure App Services](https://www.ibm.com/docs/en/instana-observability/current?topic=services-azure-app-service-tracing-nodejs).
+
+- **running on Google Cloud**, check out our documentation for [Google Cloud Run](ttps://www.ibm.com/docs/en/instana-observability/current?topic=agents-google-cloud-run#nodejs).
 
 ## Installation And Usage
 
@@ -45,15 +54,15 @@ require('@instana/collector')();
 // const express = require('express');
 ```
 
-For more in-depth information, refer to the [installation page](https://www.ibm.com/docs/de/obi/current?topic=nodejs-collector-installation).
+For more in-depth information, refer to the [installation page](https://www.ibm.com/docs/en/instana-observability/current?topic=nodejs-collector-installation).
 
 ## CPU Profiling, Garbage Collection And Event Loop Information
 
-The Node.js collector uses Native addons for some metrics. Check out the [native addons documentation](https://www.ibm.com/docs/de/obi/current?topic=nodejs-collector-installation#native-addons) for details.
+The Node.js collector uses Native addons for some metrics. Check out the [native addons documentation](https://www.ibm.com/docs/en/instana-observability/current?topic=nodejs-collector-installation#native-addons) for details.
 
-## API
+## API / SDK
 
-In most cases it is enough to require and initialize `@instana/collector` and let it do its work. However, there is an [API](https://www.ibm.com/docs/de/obi/current?topic=nodejs-instana-api) for more advanced use cases.
+In most cases it is enough to require and initialize `@instana/collector` and let it do its work. However, there is an [API / SDK](https://www.ibm.com/docs/en/instana-observability/current?topic=nodejs-instana-api) for more advanced use cases.
 
 ## Filing Issues
 
