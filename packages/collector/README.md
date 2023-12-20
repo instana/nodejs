@@ -27,7 +27,7 @@ This package is for monitoring *Node.js server applications* with Instana.
 
 If you want to monitor JavaScript applications...
 
-- **running in a browser**, check out our docs on [website monitoring](https://www.ibm.com/docs/en/instana-observability/current?topic=instana-monitoring-websites).
+- **running in a browser**, check out our docs on [Website Monitoring](https://www.ibm.com/docs/en/instana-observability/current?topic=instana-monitoring-websites).
 
 - **running on AWS**, check out our documentation for [AWS Lambda](https://www.ibm.com/docs/en/instana-observability/current?topic=lambda-aws-native-tracing-nodejs) or [AWS Fargate](https://www.ibm.com/docs/en/instana-observability/current?topic=agents-aws-fargate#nodejs).
 
