@@ -12,7 +12,7 @@ Note: You might need to install `libpq-dev`/`postgresql-devel` or a similar pack
 
 After cloning the repository, run `npm install` in the root of the repository.
 
-Make sure that your IDE is parsing .prettierrc. Otherwise, install the necessary plugins to make it so.
+Ensure that your IDE is set up to utilize **ESLint** and **Prettier**, with automatic code formatting enabled.
 
 Troubleshooting `pg_config: command not found`: The tests in this package depend on (among others) `pg-native` and that in turn depends on the native add-on `libpq`. That add-on might try to call `pg_config` during `npm install`. If `npm install` terminates with `pg_config: command not found`, install the PostgreSQL package for your system (e.g. `brew install postgresql` or similar). If you do not want to run any tests, you can also omit this step and install dependencies with `npm install --production` instead.
 
