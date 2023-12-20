@@ -7,7 +7,9 @@
 const { fork } = require('child_process');
 const path = require('path');
 const request = require('request-promise');
-const { assert: { fail } } = require('chai');
+const {
+  assert: { fail }
+} = require('chai');
 const config = require('../../serverless/test/config');
 const AbstractServerlessControl = require('../../serverless/test/util/AbstractServerlessControl');
 
@@ -79,15 +81,14 @@ class Control extends AbstractServerlessControl {
       this.azureContainerAppHasTerminated = true;
     });
 
-    this.azureContainerApp.on('message', (message) => {
+    this.azureContainerApp.on('message', message => {
       this.messagesFromAzureContainer.push(message);
     });
   }
 
   hasMonitoredProcessStarted() {
     return (
-      this.messagesFromAzureContainer.includes('azure-app-service: listening') &&
-      !this.azureContainerAppHasTerminated
+      this.messagesFromAzureContainer.includes('azure-app-service: listening') && !this.azureContainerAppHasTerminated
     );
   }
 
@@ -96,9 +97,7 @@ class Control extends AbstractServerlessControl {
   }
 
   killMonitoredProcess() {
-    return this.hasMonitoredProcessTerminated()
-      ? Promise.resolve()
-      : this.killChildProcess(this.azureContainerApp);
+    return this.hasMonitoredProcessTerminated() ? Promise.resolve() : this.killChildProcess(this.azureContainerApp);
   }
 
   sendRequest(opts) {

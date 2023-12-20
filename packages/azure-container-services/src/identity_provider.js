@@ -31,8 +31,8 @@ function extractEntityId() {
   const resourceGroup = process.env.WEBSITE_RESOURCE_GROUP;
   const appName = process.env.WEBSITE_SITE_NAME;
   if (subscriptionId && resourceGroup && appName) {
-    entityId =
-      `/subscriptions/${subscriptionId}/resourceGroups/${resourceGroup}/providers/Microsoft.Web/sites/${appName}`;
+    // eslint-disable-next-line max-len
+    entityId = `/subscriptions/${subscriptionId}/resourceGroups/${resourceGroup}/providers/Microsoft.Web/sites/${appName}`;
   }
   return entityId;
 }

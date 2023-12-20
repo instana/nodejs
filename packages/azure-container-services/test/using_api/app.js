@@ -37,13 +37,13 @@ const app = http.createServer((req, res) => {
     });
   });
 
-// we only call disableAutoEnd to verify the function is there
+  // we only call disableAutoEnd to verify the function is there
   currentSpan.disableAutoEnd();
-// revert disableAutoEnd immediately
+  // revert disableAutoEnd immediately
   if (currentSpan.span) {
     currentSpan.span.manualEndMode = false;
   }
-// check that the opentracing API is available
+  // check that the opentracing API is available
   instana.opentracing.createTracer();
 });
 
@@ -53,7 +53,7 @@ app.listen(port, () => {
 });
 
 function logAndCapture(level) {
-  return (msg) => {
+  return msg => {
     capturedLogs[level].push(msg);
     console[level](msg);
   };
