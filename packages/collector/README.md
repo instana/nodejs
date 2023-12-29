@@ -25,15 +25,15 @@ Monitor your Node.js applications with Instana!
 
 This package is for monitoring *Node.js server applications* with Instana. 
 
-If you want to monitor JavaScript applications...
+For monitoring JavaScript applications that:
 
-- **running in a browser**, check out our docs on [Website Monitoring](https://www.ibm.com/docs/en/instana-observability/current?topic=instana-monitoring-websites).
+- Run in a browser, see [Website Monitoring](https://www.ibm.com/docs/en/instana-observability/current?topic=instana-monitoring-websites).
 
-- **running on AWS**, check out our documentation for [AWS Lambda](https://www.ibm.com/docs/en/instana-observability/current?topic=lambda-aws-native-tracing-nodejs) or [AWS Fargate](https://www.ibm.com/docs/en/instana-observability/current?topic=agents-aws-fargate#nodejs).
+- Run on Amazon Web Services (AWS), see [AWS Lambda](https://www.ibm.com/docs/en/instana-observability/current?topic=lambda-aws-native-tracing-nodejs) or [AWS Fargate](https://www.ibm.com/docs/en/instana-observability/current?topic=agents-aws-fargate#nodejs).
 
-- **running on Azure**, check out our documentation for [Azure App Services](https://www.ibm.com/docs/en/instana-observability/current?topic=services-azure-app-service-tracing-nodejs).
+- Run on Microsoft Azure, see [Azure App Services](https://www.ibm.com/docs/en/instana-observability/current?topic=services-azure-app-service-tracing-nodejs).
 
-- **running on Google Cloud**, check out our documentation for [Google Cloud Run](ttps://www.ibm.com/docs/en/instana-observability/current?topic=agents-google-cloud-run#nodejs).
+- Run on Google Cloud, see [Google Cloud Run](ttps://www.ibm.com/docs/en/instana-observability/current?topic=agents-google-cloud-run#nodejs).
 
 ## Installation And Usage
 
