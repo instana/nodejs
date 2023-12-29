@@ -53,6 +53,10 @@ module.exports.init = (_config, cls) => {
       if (targetInstrumentationModule.transform) {
         otelSpan = targetInstrumentationModule.transform(otelSpan);
       }
+    } else {
+      // CASE: A customer has installed an Opentelemetry instrumentation, but
+      //       we do not want to capture these spans. We only support our own set of modules.
+      return;
     }
 
     if (cls.tracingSuppressed()) {
