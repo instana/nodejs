@@ -479,6 +479,9 @@ if (!storageAccount || !accountKey) {
                 span => expect(span.f.h).to.equal('agent-stub-uuid'),
                 span => expect(span.ec).to.equal(withError ? 1 : 0),
                 span => expect(span.data).to.exist,
+                span => !withError ?
+                    expect(span.data[spanName].error).to.exist :
+                    expect(span.data[spanName].error).to.be.undefined,
                 span => expect(span.data[dataProperty || spanName]).to.be.an('object'),
                 span => expect(span.data[dataProperty || spanName].accountName).to.exist,
                 span => expect(span.data[dataProperty || spanName].blobName).to.exist,
