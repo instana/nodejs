@@ -27,7 +27,7 @@ const accountKey = process.env.BLOB_ACCOUNT_KEY;
 // endPoint is assigned with the default costant value for EndpointSuffix in connection string of an azure account
 const endPoint = 'core.windows.net';
 const connStr =
-`DefaultEndpointsProtocol=https;AccountName=${storageAccount};AccountKey=${accountKey};EndpointSuffix=${endPoint}`;
+    `DefaultEndpointsProtocol=https;AccountName=${storageAccount};AccountKey=${accountKey};EndpointSuffix=${endPoint}`;
 const blobServiceClient = BlobServiceClient.fromConnectionString(connStr);
 const containerClient = blobServiceClient.getContainerClient(containerName);
 
