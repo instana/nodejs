@@ -1,6 +1,5 @@
 /*
- * (c) Copyright IBM Corp. 2021
- * (c) Copyright Instana Inc. and contributors 2018
+ * (c) Copyright IBM Corp. 2023
  */
 
 'use strict';
@@ -22,9 +21,12 @@ exports.init = function init() {
 
 function instrumentBlob(blob) {
     instrumentBlockBlob(blob.BlockBlobClient);
-    instrumentContainer(blob.BlobClient);
+    instrumentBlobClient(blob.BlobClient);
 }
-function instrumentContainer(blobClient) {
+
+// For the download and delete functionality applicable to block blobs, the BlockBlobClient extends BlobClient
+// and uses the 'download' and 'delete' methods respectively. Hence we are instrmenting the BlobClient
+function instrumentBlobClient(blobClient) {
     shimmer.wrap(blobClient.prototype, 'delete', shimDelete);
     shimmer.wrap(blobClient.prototype, 'download', shimDownload);
 }
@@ -33,7 +35,7 @@ function instrumentBlockBlob(blockBlobClient) {
     shimmer.wrap(blockBlobClient.prototype, 'stageBlock', shimUpload);
 }
 function shimUpload(original) {
-    return function () {
+    return function instrumentUpload() {
         if (cls.skipExitTracing({ isActive })) {
             return original.apply(this, arguments);
         }
@@ -53,7 +55,7 @@ function shimUpload(original) {
     };
 }
 function shimDelete(original) {
-    return function () {
+    return function instrumentDelete() {
         if (cls.skipExitTracing({ isActive })) {
             return original.apply(this, arguments);
         }
@@ -73,7 +75,7 @@ function shimDelete(original) {
     };
 }
 function shimDownload(original) {
-    return function () {
+    return function instrumentDownload() {
         if (cls.skipExitTracing({ isActive })) {
             return original.apply(this, arguments);
         }
@@ -101,8 +103,8 @@ function instrumentedOperation({ ctx,
     accntName,
     operation
 }) {
-    const blob = _blobName;
-    const container = _container;
+    const blobName = _blobName;
+    const containerName = _container;
     const accountName = accntName;
     const op = operation;
 
@@ -110,28 +112,11 @@ function instrumentedOperation({ ctx,
         const span = cls.startSpan(exports.spanName, constants.EXIT);
         span.stack = tracingUtil.getStackTrace(instrumentedOperation);
         span.data.azstorage = {
-            container,
-            blob,
+            containerName,
+            blobName,
             accountName,
             op
         };
-        let originalCallback;
-        let callbackIndex = -1;
-        for (let i = 1; i < argsForOriginalQuery.length; i++) {
-            if (typeof argsForOriginalQuery[i] === 'function') {
-                originalCallback = argsForOriginalQuery[i];
-                callbackIndex = i;
-                break;
-            }
-        }
-
-        if (callbackIndex >= 0) {
-            const wrappedCallback = function (error) {
-                finishSpan(error, span);
-                return originalCallback.apply(this, arguments);
-            };
-            argsForOriginalQuery[callbackIndex] = cls.ns.bind(wrappedCallback);
-        }
 
         const promise = originalQuery.apply(ctx, argsForOriginalQuery);
         if (promise && typeof promise.then === 'function') {

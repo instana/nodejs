@@ -1,21 +1,16 @@
 /*
- * (c) Copyright IBM Corp. 2021
- * (c) Copyright Instana Inc. and contributors 2018
+ * (c) Copyright IBM Corp. 2023
  */
 
 /* eslint-disable no-console */
 
 'use strict';
 
-// const agentPort = process.env.INSTANA_AGENT_PORT;
-
 require('../../../../..')();
 
 const { BlobServiceClient, BlobBatchClient, BlobClient, StorageSharedKeyCredential } = require('@azure/storage-blob');
 
 const express = require('express');
-// const morgan = require('morgan');
-// const request = require('request-promise-native');
 const bodyParser = require('body-parser');
 const port = require('../../../../test_util/app-port')();
 
@@ -55,20 +50,14 @@ const uploadDocumentToAzure = async (options = {}) => {
       throw new Error(
         `Error uploading document ${blockBlobClient.name} to container ${blockBlobClient.containerName}`
       );
-    } else {
-      console.log('uploaded successsfully');
-      return ('uploaded successsfully');
     }
   } catch (e) {
-    console.log('err:', e);
+    log('err:', e);
   }
 };
 
 const deleteDocumentFromAzure = async (_blobName) => {
   const response = await containerClient.deleteBlob(_blobName);
-  if (response._response.status === 202) {
-    console.log(`Deleted ${_blobName}`);
-  }
   if (response._response.status !== 202) {
     throw new Error(`Error deleting ${_blobName}`);
   }
@@ -79,10 +68,9 @@ const download = async (_blobName) => {
   const _blockBlobClient = containerClient.getBlockBlobClient(_blobName);
   try {
     const downloadBlobResponse = await _blockBlobClient.downloadToFile(localFilePath);
-    console.log(`Downloaded blob to ${localFilePath}:`);
     return downloadBlobResponse;
   } catch (e) {
-    console.log('Error occured while downloading:', e);
+    log('Error occured while downloading:', e);
   }
 };
 
@@ -115,7 +103,7 @@ app.get('/download', async (req, res) => {
     await deleteDocumentFromAzure(blobName);
     res.send();
   } catch (e) {
-    console.log('Error in /download:', e);
+    log('Error in /download:', e);
     res.send();
   }
 });
@@ -129,7 +117,7 @@ app.get('/download-buffer', async (req, res) => {
     await deleteDocumentFromAzure(blobName);
     res.send();
   } catch (e) {
-    console.log('Error in /download-buffer:', e);
+    log('Error in /download-buffer:', e);
     res.send();
   }
 });
@@ -141,12 +129,12 @@ app.get('/download-buffer-promise', async (req, res) => {
       fs.writeFileSync(localFilePath, response);
       fs.unlinkSync(localFilePath);
     }).catch(error => {
-      console.error(`Error downloading blob: ${error.message}`);
+      log(`Error downloading blob: ${error.message}`);
     });
     await deleteDocumentFromAzure(blobName);
     res.send();
   } catch (e) {
-    console.log('Error in /download-buffer-promise:', e);
+    log('Error in /download-buffer-promise:', e);
     res.send();
   }
 });
@@ -161,13 +149,13 @@ app.get('/download-await', async (req, res) => {
       res.send();
     } else {
       await deleteDocumentFromAzure(blobName);
-      console.log(
+      log(
         `Error downloading document ${blockBlobClient.name} from container ${blockBlobClient.containerName}`
       );
       res.send();
     }
   } catch (e) {
-    console.log('Error in /download-await:', e);
+    log('Error in /download-await:', e);
     res.send();
   }
 });
@@ -175,27 +163,26 @@ app.get('/download-await', async (req, res) => {
 app.get('/download-blockblob-promise', async (req, res) => {
   try {
     await uploadDocumentToAzure();
-  blockBlobClient.download()
-  .then(async (downloadBlobResponse) => {
-    const readableStream = downloadBlobResponse.readableStreamBody;
-    const chunks = [];
+    blockBlobClient.download()
+      .then(async (downloadBlobResponse) => {
+        const readableStream = downloadBlobResponse.readableStreamBody;
+        const chunks = [];
 
-    readableStream.on('data', (chunk) => {
-      chunks.push(chunk);
-    });
+        readableStream.on('data', (chunk) => {
+          chunks.push(chunk);
+        });
 
-    readableStream.on('end', () => {
-      Buffer.concat(chunks);
-      console.log('Downloaded blob content');
-    });
+        readableStream.on('end', () => {
+          Buffer.concat(chunks);
+        });
         await deleteDocumentFromAzure(blobName);
         res.send();
-  })
-  .catch((error) => {
-    console.error('Error downloading blob:', error.message);
-  });
+      })
+      .catch((error) => {
+        log('Error downloading blob:', error.message);
+      });
   } catch (e) {
-    console.log('Error in /download-blockblob-promise:', e);
+    log('Error in /download-blockblob-promise:', e);
     res.send();
   }
 });
@@ -205,16 +192,15 @@ app.get('/download-promise', async (req, res) => {
     await uploadDocumentToAzure();
     blockBlobClient.downloadToFile(localFilePath)
       .then(async () => {
-        console.log(`Downloaded blob to ${localFilePath}`);
         fs.unlinkSync(localFilePath);
         await deleteDocumentFromAzure(blobName);
         res.send();
       })
       .catch(error => {
-        console.error(`Error downloading blob: ${error.message}`);
+        log(`Error downloading blob: ${error.message}`);
       });
   } catch (e) {
-    console.log('Error in /download-promise:', e);
+    log('Error in /download-promise:', e);
     res.send();
   }
 });
@@ -223,17 +209,16 @@ app.get('/download-promise-err', async (req, res) => {
   try {
     blockBlobClient.downloadToFile(localFilePath)
       .then(async () => {
-        console.log(`Downloaded blob to ${localFilePath}`);
         fs.unlinkSync(localFilePath);
         await deleteDocumentFromAzure(blobName);
         res.send();
       })
       .catch(error => {
-        console.log(`Error downloading blob: ${error.message}`);
+        log(`Error downloading blob: ${error.message}`);
         res.send();
       });
   } catch (e) {
-    console.log('Error in /download-promise-err:', e);
+    log('Error in /download-promise-err:', e);
     res.send();
   }
 });
@@ -245,13 +230,13 @@ app.get('/download-err', async (req, res) => {
     await deleteDocumentFromAzure(blobName);
     res.send();
   } catch (e) {
-    console.log('Error in /download-err:', e);
+    log('Error in /download-err:', e);
     res.send();
   }
 });
 
 app.get('/uploadDataBlock', async (req, res) => {
-  const resp = await uploadDocumentToAzure({ maxSingleShotSize: 3 * 1024 });
+  const resp = await uploadDocumentToAzure({ maxSingleShotSize: 1 * 1024 });
   res.send(resp);
 });
 
@@ -294,11 +279,10 @@ app.get('/deleteError', async (req, res) => {
     await deleteDocumentFromAzure(blobName);
     containerClient.deleteBlob(blobName)
       .then(() => {
-        console.log('Blob deleted successfully.');
         res.send();
       })
       .catch(error => {
-        console.error('Error deleting blob:', error.message);
+        log('Error deleting blob:', error.message);
         res.send();
       });
   } catch (e) {
@@ -310,11 +294,10 @@ app.get('/upload', async (req, res) => {
   const pdfData = fs.readFileSync(filePath);
   blockBlobClient.upload(pdfData, pdfData.length)
     .then(() => {
-      console.log('PDF file uploaded successfully.');
       res.send('successss');
     })
     .catch((error) => {
-      console.error('Failed to upload PDF file:', error);
+      log('Failed to upload PDF file:', error);
       res.send();
     });
 });
@@ -323,11 +306,10 @@ app.get('/upload-err', async (req, res) => {
   const pdfData = fs.readFileSync(filePath);
   blockBlobClient.upload(pdfData)
     .then(() => {
-      console.log('PDF file uploaded successfully.');
       res.send('successss');
     })
     .catch((error) => {
-      console.error('Failed to upload PDF file:', error);
+      log('Failed to upload PDF file:', error);
       res.send();
     });
 });

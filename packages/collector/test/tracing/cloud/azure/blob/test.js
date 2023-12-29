@@ -1,6 +1,5 @@
 /*
- * (c) Copyright IBM Corp. 2021
- * (c) Copyright Instana Inc. and contributors 2018
+ * (c) Copyright IBM Corp. 2023
  */
 
 'use strict';
@@ -18,12 +17,14 @@ const {
 const ProcessControls = require('../../../../test_util/ProcessControls');
 const globalAgent = require('../../../../globalAgent');
 const { fail } = expect;
-
-const { createContainer, deleteContainer, miniNodeJsVer } = require('./util');
+const testUtils = require('../../../../../../core/test/test_util');
+const { createContainer, deleteContainer, minimumNodeJsVer } = require('./util');
 const { BlobServiceClient } = require('@azure/storage-blob');
-const containerName = `test-${uuid()}`;
-const storageAccount = process.env.STORAGE_ACCOUNT;
-const accountKey = process.env.ACCOUNT_KEY;
+const containerName = `nodejs-team-${uuid()}`;
+const storageAccount = process.env.BLOB_STORAGE_ACCOUNT;
+const accountKey = process.env.BLOB_ACCOUNT_KEY;
+
+// endPoint is assigned with the default costant value for EndpointSuffix in connection string of an azure account
 const endPoint = 'core.windows.net';
 const connStr =
 `DefaultEndpointsProtocol=https;AccountName=${storageAccount};AccountKey=${accountKey};EndpointSuffix=${endPoint}`;
@@ -31,33 +32,38 @@ const blobServiceClient = BlobServiceClient.fromConnectionString(connStr);
 const containerClient = blobServiceClient.getContainerClient(containerName);
 
 let mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
-mochaSuiteFn = semver.lt(process.versions.node, miniNodeJsVer) ? describe.skip : mochaSuiteFn;
+mochaSuiteFn = semver.lt(process.versions.node, minimumNodeJsVer) ? describe.skip : mochaSuiteFn;
 
-mochaSuiteFn('tracing/cloud/azure/blob', function () {
-    globalAgent.setUpCleanUpHooks();
-    const agentControls = globalAgent.instance;
-
-    const controls = new ProcessControls({
-        dirname: __dirname,
-        useGlobalAgent: true,
-        env: {
-            CONTAINER_NAME: containerName,
-            CONN_STR: connStr,
-            STORAGE_ACC: storageAccount,
-            ACC_KEY: accountKey,
-            CONT_CLIENT: containerClient
-        }
-    });
-    ProcessControls.setUpHooks(controls);
-    if (!process.env.ACCOUNT_KEY) {
+/**
+ * This suite is skipped if no storageAccount or accountKey has been provided via BLOB_STORAGE_ACCOUNT
+ * and BLOB_ACCOUNT_KEY. For the Azure blob tests, the azure storage account used is teamnodejstracer
+ * which is the value for BLOB_STORAGE_ACCOUNT. From the azure portal, navigate to this storage account
+ * and under the Access keys, Key can be found for BLOB_ACCOUNT_KEY.
+ */
+if (!storageAccount || !accountKey) {
+    describe('tracing/cloud/azure/blob', function () {
         it('The configuration for Azure is missing', () => {
             fail(
-                'Please set process.env.ACCOUNT_KEY and process.env.STORAGE_ACCOUNT before tests.'
+                'Please set process.env.BLOB_ACCOUNT_KEY and process.env.BLOB_STORAGE_ACCOUNT before tests.'
             );
         });
-    } else {
-        // eslint-disable-next-line no-console
-        console.log('All configs are met');
+    });
+} else {
+    mochaSuiteFn('tracing/cloud/azure/blob', function () {
+        globalAgent.setUpCleanUpHooks();
+        const agentControls = globalAgent.instance;
+
+        const controls = new ProcessControls({
+            dirname: __dirname,
+            useGlobalAgent: true,
+            env: {
+                CONTAINER_NAME: containerName,
+                CONN_STR: connStr,
+                STORAGE_ACC: storageAccount,
+                ACC_KEY: accountKey
+            }
+        });
+        ProcessControls.setUpHooks(controls);
         this.timeout(config.getTestTimeout());
 
         before(async () => {
@@ -74,12 +80,22 @@ mochaSuiteFn('tracing/cloud/azure/blob', function () {
                     method: 'GET',
                     path: '/uploadDataBlock'
                 });
-            await verify({
-                spanName: 'azstorage',
-                dataProperty: 'azstorage',
-                n: 1,
-                path: '/uploadDataBlock',
-                withError: false
+            await testUtils.retry(async () => {
+                const spans = await agentControls.getSpans();
+                await verifyOp({
+                    dataProperty: 'azstorage',
+                    op: 'upload',
+                    n: 1,
+                    spans: spans
+                });
+                await verify({
+                    spanName: 'azstorage',
+                    dataProperty: 'azstorage',
+                    n: 1,
+                    path: '/uploadDataBlock',
+                    withError: false,
+                    spans: spans
+                });
             });
         });
 
@@ -89,12 +105,23 @@ mochaSuiteFn('tracing/cloud/azure/blob', function () {
                     method: 'GET',
                     path: '/upload'
                 });
-            await verify({
-                spanName: 'azstorage',
-                dataProperty: 'azstorage',
-                n: 1,
-                path: '/upload',
-                withError: false
+
+            await testUtils.retry(async () => {
+                const spans = await agentControls.getSpans();
+                await verifyOp({
+                    dataProperty: 'azstorage',
+                    op: 'upload',
+                    n: 1,
+                    spans: spans
+                });
+                await verify({
+                    spanName: 'azstorage',
+                    dataProperty: 'azstorage',
+                    n: 1,
+                    path: '/upload',
+                    withError: false,
+                    spans: spans
+                });
             });
         });
 
@@ -104,12 +131,23 @@ mochaSuiteFn('tracing/cloud/azure/blob', function () {
                     method: 'GET',
                     path: '/upload-err'
                 });
-            await verify({
-                spanName: 'azstorage',
-                dataProperty: 'azstorage',
-                n: 1,
-                path: '/upload-err',
-                withError: true
+
+            await testUtils.retry(async () => {
+                const spans = await agentControls.getSpans();
+                await verifyOp({
+                    dataProperty: 'azstorage',
+                    op: 'upload',
+                    n: 1,
+                    spans: spans
+                });
+                await verify({
+                    spanName: 'azstorage',
+                    dataProperty: 'azstorage',
+                    n: 1,
+                    path: '/upload-err',
+                    withError: true,
+                    spans: spans
+                });
             });
         });
 
@@ -119,12 +157,23 @@ mochaSuiteFn('tracing/cloud/azure/blob', function () {
                     method: 'GET',
                     path: '/uploadData'
                 });
-            await verify({
-                spanName: 'azstorage',
-                dataProperty: 'azstorage',
-                n: 2,
-                path: '/uploadData',
-                withError: false
+
+            await testUtils.retry(async () => {
+                const spans = await agentControls.getSpans();
+                await verifyOp({
+                    dataProperty: 'azstorage',
+                    op: 'upload',
+                    n: 1,
+                    spans: spans
+                });
+                await verify({
+                    spanName: 'azstorage',
+                    dataProperty: 'azstorage',
+                    n: 2,
+                    path: '/uploadData',
+                    withError: false,
+                    spans: spans
+                });
             });
         });
 
@@ -134,12 +183,23 @@ mochaSuiteFn('tracing/cloud/azure/blob', function () {
                     method: 'GET',
                     path: '/deleteError'
                 });
-            await verify({
-                spanName: 'azstorage',
-                dataProperty: 'azstorage',
-                n: 1,
-                path: '/deleteError',
-                withError: true
+
+            await testUtils.retry(async () => {
+                const spans = await agentControls.getSpans();
+                await verifyOp({
+                    dataProperty: 'azstorage',
+                    op: 'delete',
+                    n: 2,
+                    spans: spans
+                });
+                await verify({
+                    spanName: 'azstorage',
+                    dataProperty: 'azstorage',
+                    n: 1,
+                    path: '/deleteError',
+                    withError: true,
+                    spans: spans
+                });
             });
         });
 
@@ -149,12 +209,23 @@ mochaSuiteFn('tracing/cloud/azure/blob', function () {
                     method: 'GET',
                     path: '/uploadData-delete-blobBatch-blobUri'
                 });
-            await verify({
-                spanName: 'azstorage',
-                dataProperty: 'azstorage',
-                n: 2,
-                path: '/uploadData-delete-blobBatch-blobUri',
-                withError: false
+
+            await testUtils.retry(async () => {
+                const spans = await agentControls.getSpans();
+                await verifyOp({
+                    dataProperty: 'azstorage',
+                    op: 'delete',
+                    n: 1,
+                    spans: spans
+                });
+                await verify({
+                    spanName: 'azstorage',
+                    dataProperty: 'azstorage',
+                    n: 2,
+                    path: '/uploadData-delete-blobBatch-blobUri',
+                    withError: false,
+                    spans: spans
+                });
             });
         });
 
@@ -164,12 +235,23 @@ mochaSuiteFn('tracing/cloud/azure/blob', function () {
                     method: 'GET',
                     path: '/uploadData-delete-blobBatch-blobClient'
                 });
-            await verify({
-                spanName: 'azstorage',
-                dataProperty: 'azstorage',
-                n: 2,
-                path: '/uploadData-delete-blobBatch-blobClient',
-                withError: false
+
+            await testUtils.retry(async () => {
+                const spans = await agentControls.getSpans();
+                await verifyOp({
+                    dataProperty: 'azstorage',
+                    op: 'delete',
+                    n: 1,
+                    spans: spans
+                });
+                await verify({
+                    spanName: 'azstorage',
+                    dataProperty: 'azstorage',
+                    n: 2,
+                    path: '/uploadData-delete-blobBatch-blobClient',
+                    withError: false,
+                    spans: spans
+                });
             });
         });
 
@@ -179,12 +261,23 @@ mochaSuiteFn('tracing/cloud/azure/blob', function () {
                     method: 'GET',
                     path: '/download-await'
                 });
-            await verify({
-                spanName: 'azstorage',
-                dataProperty: 'azstorage',
-                n: 3,
-                path: '/download-await',
-                withError: false
+
+            await testUtils.retry(async () => {
+                const spans = await agentControls.getSpans();
+                await verifyOp({
+                    dataProperty: 'azstorage',
+                    op: 'download',
+                    n: 1,
+                    spans: spans
+                });
+                await verify({
+                    spanName: 'azstorage',
+                    dataProperty: 'azstorage',
+                    n: 3,
+                    path: '/download-await',
+                    withError: false,
+                    spans: spans
+                });
             });
         });
 
@@ -194,12 +287,23 @@ mochaSuiteFn('tracing/cloud/azure/blob', function () {
                     method: 'GET',
                     path: '/download'
                 });
-            await verify({
-                spanName: 'azstorage',
-                dataProperty: 'azstorage',
-                n: 3,
-                path: '/download',
-                withError: false
+
+            await testUtils.retry(async () => {
+                const spans = await agentControls.getSpans();
+                await verifyOp({
+                    dataProperty: 'azstorage',
+                    op: 'download',
+                    n: 1,
+                    spans: spans
+                });
+                await verify({
+                    spanName: 'azstorage',
+                    dataProperty: 'azstorage',
+                    n: 3,
+                    path: '/download',
+                    withError: false,
+                    spans: spans
+                });
             });
         });
 
@@ -209,12 +313,23 @@ mochaSuiteFn('tracing/cloud/azure/blob', function () {
                     method: 'GET',
                     path: '/download-buffer'
                 });
-            await verify({
-                spanName: 'azstorage',
-                dataProperty: 'azstorage',
-                n: 3,
-                path: '/download-buffer',
-                withError: false
+
+            await testUtils.retry(async () => {
+                const spans = await agentControls.getSpans();
+                await verifyOp({
+                    dataProperty: 'azstorage',
+                    op: 'download',
+                    n: 1,
+                    spans: spans
+                });
+                await verify({
+                    spanName: 'azstorage',
+                    dataProperty: 'azstorage',
+                    n: 3,
+                    path: '/download-buffer',
+                    withError: false,
+                    spans: spans
+                });
             });
         });
 
@@ -224,12 +339,23 @@ mochaSuiteFn('tracing/cloud/azure/blob', function () {
                     method: 'GET',
                     path: '/download-buffer-promise'
                 });
-            await verify({
-                spanName: 'azstorage',
-                dataProperty: 'azstorage',
-                n: 3,
-                path: '/download-buffer-promise',
-                withError: false
+
+            await testUtils.retry(async () => {
+                const spans = await agentControls.getSpans();
+                await verifyOp({
+                    dataProperty: 'azstorage',
+                    op: 'download',
+                    n: 1,
+                    spans: spans
+                });
+                await verify({
+                    spanName: 'azstorage',
+                    dataProperty: 'azstorage',
+                    n: 3,
+                    path: '/download-buffer-promise',
+                    withError: false,
+                    spans: spans
+                });
             });
         });
 
@@ -239,12 +365,23 @@ mochaSuiteFn('tracing/cloud/azure/blob', function () {
                     method: 'GET',
                     path: '/download-promise'
                 });
-            await verify({
-                spanName: 'azstorage',
-                dataProperty: 'azstorage',
-                n: 3,
-                path: '/download-promise',
-                withError: false
+
+            await testUtils.retry(async () => {
+                const spans = await agentControls.getSpans();
+                await verifyOp({
+                    dataProperty: 'azstorage',
+                    op: 'download',
+                    n: 1,
+                    spans: spans
+                });
+                await verify({
+                    spanName: 'azstorage',
+                    dataProperty: 'azstorage',
+                    n: 3,
+                    path: '/download-promise',
+                    withError: false,
+                    spans: spans
+                });
             });
         });
 
@@ -254,12 +391,23 @@ mochaSuiteFn('tracing/cloud/azure/blob', function () {
                     method: 'GET',
                     path: '/download-promise-err'
                 });
-            await verify({
-                spanName: 'azstorage',
-                dataProperty: 'azstorage',
-                n: 1,
-                path: '/download-promise-err',
-                withError: true
+
+            await testUtils.retry(async () => {
+                const spans = await agentControls.getSpans();
+                await verifyOp({
+                    dataProperty: 'azstorage',
+                    op: 'download',
+                    n: 1,
+                    spans: spans
+                });
+                await verify({
+                    spanName: 'azstorage',
+                    dataProperty: 'azstorage',
+                    n: 1,
+                    path: '/download-promise-err',
+                    withError: true,
+                    spans: spans
+                });
             });
         });
 
@@ -269,19 +417,23 @@ mochaSuiteFn('tracing/cloud/azure/blob', function () {
                     method: 'GET',
                     path: '/download-err'
                 });
-            await verify({
-                spanName: 'azstorage',
-                dataProperty: 'azstorage',
-                n: 1,
-                path: '/download-err',
-                withError: true
-            });
-            await verify({
-                spanName: 'azstorage',
-                dataProperty: 'azstorage',
-                n: 2,
-                path: '/download-err',
-                withError: false
+
+            await testUtils.retry(async () => {
+                const spans = await agentControls.getSpans();
+                await verifyOp({
+                    dataProperty: 'azstorage',
+                    op: 'download',
+                    n: 1,
+                    spans: spans
+                });
+                await verify({
+                    spanName: 'azstorage',
+                    dataProperty: 'azstorage',
+                    n: 1,
+                    path: '/download-err',
+                    withError: true,
+                    spans: spans
+                });
             });
         });
 
@@ -291,36 +443,53 @@ mochaSuiteFn('tracing/cloud/azure/blob', function () {
                     method: 'GET',
                     path: '/download-blockblob-promise'
                 });
-            await verify({
-                spanName: 'azstorage',
-                dataProperty: 'azstorage',
-                n: 3,
-                path: '/download-blockblob-promise',
-                withError: false
+
+            await testUtils.retry(async () => {
+                const spans = await agentControls.getSpans();
+                await verifyOp({
+                    dataProperty: 'azstorage',
+                    op: 'download',
+                    n: 1,
+                    spans: spans
+                });
+                await verify({
+                    spanName: 'azstorage',
+                    dataProperty: 'azstorage',
+                    n: 3,
+                    path: '/download-blockblob-promise',
+                    withError: false,
+                    spans: spans
+                });
             });
         });
-}
 
-async function verify({ spanName, dataProperty, n, path, withError }) {
-    const spans = await agentControls.getSpans();
-    const _pid = String(controls.getPid());
-    const parent = verifyHttpRootEntry({
-        spans,
-        apiPath: path,
-        pid: _pid
+        async function verify({ spanName, dataProperty, n, path, withError, spans }) {
+            const _pid = String(controls.getPid());
+            const parent = verifyHttpRootEntry({
+                spans,
+                apiPath: path,
+                pid: _pid
+            });
+            return expectExactlyNMatching(spans, n, [
+                span => expect(span.n).to.equal('azstorage'),
+                span => expect(span.k).to.equal(constants.EXIT),
+                span => expect(span.t).to.equal(parent.t),
+                span => expect(span.p).to.equal(parent.s),
+                span => expect(span.f.e).to.equal(_pid),
+                span => expect(span.f.h).to.equal('agent-stub-uuid'),
+                span => expect(span.ec).to.equal(withError ? 1 : 0),
+                span => expect(span.data).to.exist,
+                span => expect(span.data[dataProperty || spanName]).to.be.an('object'),
+                span => expect(span.data[dataProperty || spanName].accountName).to.exist,
+                span => expect(span.data[dataProperty || spanName].blobName).to.exist,
+                span => expect(span.data[dataProperty || spanName].containerName).to.exist,
+                span => expect(span.data[dataProperty || spanName].op).to.exist
+            ]);
+        }
+        async function verifyOp({ dataProperty, op, n, spans }) {
+            return expectExactlyNMatching(spans, n, [
+                span => expect(span.data[dataProperty].op).to.equal(op)
+            ]);
+        }
     });
-    return expectExactlyNMatching(spans, n, [
-        span => expect(span.n).to.equal('azstorage'),
-        span => expect(span.k).to.equal(constants.EXIT),
-        span => expect(span.t).to.equal(parent.t),
-        span => expect(span.p).to.equal(parent.s),
-        span => expect(span.f.e).to.equal(_pid),
-        span => expect(span.f.h).to.equal('agent-stub-uuid'),
-        span => expect(span.ec).to.equal(withError ? 1 : 0),
-        span => expect(span.data).to.exist,
-        span => expect(span.data[dataProperty || spanName]).to.be.an('object'),
-        span => expect(span.data[dataProperty || spanName].accountName).to.exist,
-        span => expect(span.data[dataProperty || spanName].op).to.exist
-    ]);
 }
-});
