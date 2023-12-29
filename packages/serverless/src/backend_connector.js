@@ -39,7 +39,7 @@ if (process.env[proxyEnvVar] && !environmentUtil.sendUnencrypted) {
       `server: ${proxyUrl}.`
   );
 
-  const HttpsProxyAgent = require('https-proxy-agent');
+  const { HttpsProxyAgent } = require('https-proxy-agent');
   proxyAgent = new HttpsProxyAgent(proxyUrl);
 } else if (process.env[proxyEnvVar] && environmentUtil.sendUnencrypted) {
   logger.warn(
@@ -203,6 +203,13 @@ function getBackendTimeout(localUseLambdaExtension) {
 }
 
 function send(resourcePath, payload, finalLambdaRequest, callback) {
+  let callbackWasCalled = false;
+  const handleCallback = args => {
+    if (callbackWasCalled) return;
+    callbackWasCalled = true;
+    callback(args);
+  };
+
   // We need a local copy of the global useLambdaExtension variable, otherwise it might be changed concurrently by
   // scheduleLambdaExtensionHeartbeatRequest. But we need to remember the value at the time we _started_ the request to
   // decide whether to fall back to sending to the back end directly or give up sending data completely.
@@ -213,7 +220,7 @@ function send(resourcePath, payload, finalLambdaRequest, callback) {
       `Not attempting to send data to ${resourcePath} as a previous request has already timed out or failed.`
     );
 
-    callback();
+    handleCallback();
     return;
   } else {
     logger.debug(`Sending data to Instana (${resourcePath}).`);
@@ -298,7 +305,8 @@ function send(resourcePath, payload, finalLambdaRequest, callback) {
         req.removeAllListeners();
         req.on('error', () => {});
       }
-      callback();
+
+      handleCallback();
     });
   }
 
@@ -308,7 +316,9 @@ function send(resourcePath, payload, finalLambdaRequest, callback) {
   // see https://nodejs.org/api/http.html#http_request_settimeout_timeout_callback:
   // > Once a socket is assigned to this request **and is connected**
   // > socket.setTimeout() will be called.
-  req.on('timeout', () => onTimeout(localUseLambdaExtension, req, resourcePath, payload, finalLambdaRequest, callback));
+  req.on('timeout', () =>
+    onTimeout(localUseLambdaExtension, req, resourcePath, payload, finalLambdaRequest, handleCallback)
+  );
 
   req.on('error', e => {
     // CASE: we manually destroy streams, skip these errors
@@ -316,6 +326,8 @@ function send(resourcePath, payload, finalLambdaRequest, callback) {
     // We already print the warning that a timeout happened
     // https://nodejs.org/api/http.html#requestdestroyed
     if (req.destroyed) {
+      // CASE: connection refused e.g. proxy or BE is not up, but we need to check if the cb was called
+      handleCallback();
       return;
     }
 
@@ -354,7 +366,7 @@ function send(resourcePath, payload, finalLambdaRequest, callback) {
         }
       }
 
-      callback(propagateErrorsUpstream ? e : undefined);
+      handleCallback(propagateErrorsUpstream ? e : undefined);
     }
   });
 
@@ -390,7 +402,7 @@ function send(resourcePath, payload, finalLambdaRequest, callback) {
       }
 
       // We finish as soon as the request has been flushed, without waiting for the response.
-      callback();
+      handleCallback();
     });
   } else {
     // See above for why the proxy case has no callback on req.end. Instead, it uses the more traditional callback on
@@ -399,7 +411,7 @@ function send(resourcePath, payload, finalLambdaRequest, callback) {
   }
 }
 
-function onTimeout(localUseLambdaExtension, req, resourcePath, payload, finalLambdaRequest, callback) {
+function onTimeout(localUseLambdaExtension, req, resourcePath, payload, finalLambdaRequest, handleCallback) {
   if (localUseLambdaExtension) {
     // This is a timeout from talking to the Lambda extension on localhost. Most probably it is simply not available
     // because @instana/aws-lambda has been installed as a normal npm dependency instead of using Instana's
@@ -424,7 +436,7 @@ function onTimeout(localUseLambdaExtension, req, resourcePath, payload, finalLam
     }
 
     // Retry the request immediately, this time sending it to serverless-acceptor directly.
-    send(resourcePath, payload, finalLambdaRequest, callback);
+    send(resourcePath, payload, finalLambdaRequest, handleCallback);
   } else {
     // We are not using the Lambda extension, because we are either not in an AWS Lambda, or a previous request to the
     // extension has already failed. Thus, this is a timeout from talking directly to serverless-acceptor
@@ -451,7 +463,8 @@ function onTimeout(localUseLambdaExtension, req, resourcePath, payload, finalLam
     if (!propagateErrorsUpstream) {
       logger.warn(message);
     }
-    callback(propagateErrorsUpstream ? new Error(message) : undefined);
+
+    handleCallback(propagateErrorsUpstream ? new Error(message) : undefined);
   }
 }
 
