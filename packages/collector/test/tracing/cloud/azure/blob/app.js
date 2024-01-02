@@ -28,9 +28,7 @@ const storageAccount = process.env.STORAGE_ACC;
 const blobServiceClient = BlobServiceClient.fromConnectionString(connStr);
 const containerName = process.env.CONTAINER_NAME;
 const blobName = 'first.pdf';
-const containerClient = blobServiceClient.getContainerClient(
-  containerName
-);
+const containerClient = blobServiceClient.getContainerClient(containerName);
 const cred = new StorageSharedKeyCredential(storageAccount, accountKey);
 const data = Buffer.from(data1.toString('base64'), 'base64');
 const blockBlobClient = containerClient.getBlockBlobClient(blobName);
@@ -47,16 +45,14 @@ const uploadDocumentToAzure = async (options = {}) => {
     }
     const response = await blockBlobClient.uploadData(data, opts);
     if (response._response.status !== 201) {
-      throw new Error(
-        `Error uploading document ${blockBlobClient.name} to container ${blockBlobClient.containerName}`
-      );
+      throw new Error(`Error uploading document ${blockBlobClient.name} to container ${blockBlobClient.containerName}`);
     }
   } catch (e) {
     log('err:', e);
   }
 };
 
-const deleteDocumentFromAzure = async (_blobName) => {
+const deleteDocumentFromAzure = async _blobName => {
   const response = await containerClient.deleteBlob(_blobName);
   if (response._response.status !== 202) {
     throw new Error(`Error deleting ${_blobName}`);
@@ -64,7 +60,7 @@ const deleteDocumentFromAzure = async (_blobName) => {
   return response;
 };
 
-const download = async (_blobName) => {
+const download = async _blobName => {
   const _blockBlobClient = containerClient.getBlockBlobClient(_blobName);
   try {
     const downloadBlobResponse = await _blockBlobClient.downloadToFile(localFilePath);
@@ -74,12 +70,10 @@ const download = async (_blobName) => {
   }
 };
 
-const streamToString = async (
-  readableStream
-) => {
+const streamToString = async readableStream => {
   return new Promise((resolve, reject) => {
     const chunks = [];
-    readableStream.on('data', (_data) => {
+    readableStream.on('data', _data => {
       chunks.push(_data);
     });
     readableStream.on('end', () => {
@@ -125,12 +119,15 @@ app.get('/download-buffer', async (req, res) => {
 app.get('/download-buffer-promise', async (req, res) => {
   try {
     await uploadDocumentToAzure();
-    blockBlobClient.downloadToBuffer().then(response => {
-      fs.writeFileSync(localFilePath, response);
-      fs.unlinkSync(localFilePath);
-    }).catch(error => {
-      log(`Error downloading blob: ${error.message}`);
-    });
+    blockBlobClient
+      .downloadToBuffer()
+      .then(response => {
+        fs.writeFileSync(localFilePath, response);
+        fs.unlinkSync(localFilePath);
+      })
+      .catch(error => {
+        log(`Error downloading blob: ${error.message}`);
+      });
     await deleteDocumentFromAzure(blobName);
     res.send();
   } catch (e) {
@@ -149,9 +146,7 @@ app.get('/download-await', async (req, res) => {
       res.send();
     } else {
       await deleteDocumentFromAzure(blobName);
-      log(
-        `Error downloading document ${blockBlobClient.name} from container ${blockBlobClient.containerName}`
-      );
+      log(`Error downloading document ${blockBlobClient.name} from container ${blockBlobClient.containerName}`);
       res.send();
     }
   } catch (e) {
@@ -163,12 +158,13 @@ app.get('/download-await', async (req, res) => {
 app.get('/download-blockblob-promise', async (req, res) => {
   try {
     await uploadDocumentToAzure();
-    blockBlobClient.download()
-      .then(async (downloadBlobResponse) => {
+    blockBlobClient
+      .download()
+      .then(async downloadBlobResponse => {
         const readableStream = downloadBlobResponse.readableStreamBody;
         const chunks = [];
 
-        readableStream.on('data', (chunk) => {
+        readableStream.on('data', chunk => {
           chunks.push(chunk);
         });
 
@@ -178,7 +174,7 @@ app.get('/download-blockblob-promise', async (req, res) => {
         await deleteDocumentFromAzure(blobName);
         res.send();
       })
-      .catch((error) => {
+      .catch(error => {
         log('Error downloading blob:', error.message);
       });
   } catch (e) {
@@ -190,7 +186,8 @@ app.get('/download-blockblob-promise', async (req, res) => {
 app.get('/download-promise', async (req, res) => {
   try {
     await uploadDocumentToAzure();
-    blockBlobClient.downloadToFile(localFilePath)
+    blockBlobClient
+      .downloadToFile(localFilePath)
       .then(async () => {
         fs.unlinkSync(localFilePath);
         await deleteDocumentFromAzure(blobName);
@@ -207,7 +204,8 @@ app.get('/download-promise', async (req, res) => {
 
 app.get('/download-promise-err', async (req, res) => {
   try {
-    blockBlobClient.downloadToFile(localFilePath)
+    blockBlobClient
+      .downloadToFile(localFilePath)
       .then(async () => {
         fs.unlinkSync(localFilePath);
         await deleteDocumentFromAzure(blobName);
@@ -254,7 +252,9 @@ app.get('/uploadData-delete-blobBatch-blobUri', async (req, res) => {
     await uploadDocumentToAzure();
     const blobBatchClient = new BlobBatchClient(`https://${storageAccount}.blob.core.windows.net`, cred);
     await blobBatchClient.deleteBlobs(
-      [`https://${storageAccount}.blob.core.windows.net/${containerName}/${blobName}`], cred);
+      [`https://${storageAccount}.blob.core.windows.net/${containerName}/${blobName}`],
+      cred
+    );
     res.send();
   } catch (e) {
     res.send();
@@ -277,7 +277,8 @@ app.get('/deleteError', async (req, res) => {
   try {
     await uploadDocumentToAzure();
     await deleteDocumentFromAzure(blobName);
-    containerClient.deleteBlob(blobName)
+    containerClient
+      .deleteBlob(blobName)
       .then(() => {
         res.send();
       })
@@ -292,11 +293,12 @@ app.get('/deleteError', async (req, res) => {
 
 app.get('/upload', async (req, res) => {
   const pdfData = fs.readFileSync(filePath);
-  blockBlobClient.upload(pdfData, pdfData.length)
+  blockBlobClient
+    .upload(pdfData, pdfData.length)
     .then(() => {
       res.send('successss');
     })
-    .catch((error) => {
+    .catch(error => {
       log('Failed to upload PDF file:', error);
       res.send();
     });
@@ -304,11 +306,12 @@ app.get('/upload', async (req, res) => {
 
 app.get('/upload-err', async (req, res) => {
   const pdfData = fs.readFileSync(filePath);
-  blockBlobClient.upload(pdfData)
+  blockBlobClient
+    .upload(pdfData)
     .then(() => {
       res.send('successss');
     })
-    .catch((error) => {
+    .catch(error => {
       log('Failed to upload PDF file:', error);
       res.send();
     });

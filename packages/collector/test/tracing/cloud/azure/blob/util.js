@@ -7,19 +7,19 @@
 exports.minimumNodeJsVer = '18.0.0';
 
 exports.deleteContainer = async function (containerClient) {
-    try {
-        await containerClient.delete();
-    } catch (error) {
-        // eslint-disable-next-line no-console
-        console.error('Error deleting container:', error.message);
-    }
+  try {
+    await containerClient.delete();
+  } catch (error) {
+    // eslint-disable-next-line no-console
+    console.error('Error deleting container:', error.message);
+  }
 };
 
 exports.createContainer = async function (containerClient) {
-    try {
-        await containerClient.create();
-    } catch (e) {
-        // eslint-disable-next-line no-console
-        console.log('Error in container creation:', e);
-    }
+  try {
+    await containerClient.create();
+  } catch (e) {
+    // eslint-disable-next-line no-console
+    console.log('Error in container creation:', e);
+  }
 };
