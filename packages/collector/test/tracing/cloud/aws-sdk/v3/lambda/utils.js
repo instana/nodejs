@@ -13,18 +13,18 @@ const {
 const AdmZip = require('adm-zip');
 const { isCI } = require('@instana/core/test/test_util');
 /**
- *  Local stack is disabled if running in CI environment or on an ARM64 architecture.
- *  Lambda invocation is currently not running on ARM64 architectures, and CircleCI requires additional configuration
+ *  Local stack is disabled if running in CI environment.
+ *  Lambda invocation is currently not running on CircleCI requires additional configuration
  *  to handle Lambda functions within LocalStack. This involves setting up a volume mount, which may not be
  *  supported with the current Docker executor options in circleci.
- *  GH issues: https://github.com/localstack/localstack/issues/8878, https://discuss.localstack.cloud
+ *  GH issues: https://discuss.localstack.cloud
  *  /t/lambda-is-currently-not-working-on-circleci-for-my-current-docker-configurations/535
  *  For more detailed information about CircleCI and LocalStack integration, please refer to the official documentation:
  *  CircleCI LocalStack Orb Executors. https://circleci.com/developer/orbs/orb/localstack/platform
- *  TODO: Implement support for running Lambda function tests on LocalStack with CircleCI and ARM64 architecture.
+ *  TODO: Implement support for running Lambda function tests on LocalStack with CircleCI.
  */
 exports.isLocalStackDisabled = function () {
-  return isCI() || process.arch === 'arm64';
+  return isCI();
 };
 
 exports.getClientConfig = function () {
