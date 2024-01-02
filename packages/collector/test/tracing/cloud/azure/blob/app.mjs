@@ -22,12 +22,12 @@ const __dirname = path.dirname(__filename);
 const filePath = `${__dirname}/sample.pdf`;
 const localFilePath = `${__dirname}/out.pdf`;
 const data1 = fs.readFileSync(filePath);
-const accountKey = process.env.ACCOUNT_KEY;
-const connStr = process.env.CONNECTION_STRING;
-const storageAccount = process.env.STORAGE_ACCOUNT;
+const accountKey = process.env.AZURE_ACCOUNT_KEY;
+const connStr = process.env.AZURE_CONNECTION_STRING;
+const storageAccount = process.env.AZURE_STORAGE_ACCOUNT;
 
 const blobServiceClient = BlobServiceClient.fromConnectionString(connStr);
-const containerName = process.env.CONTAINER_NAME;
+const containerName = process.env.AZURE_CONTAINER_NAME;
 const blobName = 'first.pdf';
 const containerClient = blobServiceClient.getContainerClient(
   containerName

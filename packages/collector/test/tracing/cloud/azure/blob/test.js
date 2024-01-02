@@ -18,8 +18,8 @@ const testUtils = require('../../../../../../core/test/test_util');
 const { createContainer, deleteContainer, minimumNodeJsVer } = require('./util');
 const { BlobServiceClient } = require('@azure/storage-blob');
 const containerName = `nodejs-team-${uuid()}`;
-const storageAccount = process.env.BLOB_STORAGE_ACCOUNT;
-const accountKey = process.env.BLOB_ACCOUNT_KEY;
+const storageAccount = process.env.AZ_STORAGE_ACCOUNT_NAME;
+const accountKey = process.env.AZ_STORAGE_ACCOUNT_KEY;
 
 /**
  * endPoint is assigned with the default constant string for appending EndpointSuffix
@@ -34,15 +34,15 @@ let mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe
 mochaSuiteFn = semver.lt(process.versions.node, minimumNodeJsVer) ? describe.skip : mochaSuiteFn;
 
 /**
- * This suite is skipped if no storageAccount or accountKey has been provided via BLOB_STORAGE_ACCOUNT
- * and BLOB_ACCOUNT_KEY. For the Azure blob tests, the azure storage account used is teamnodejstracer
- * which is the value for BLOB_STORAGE_ACCOUNT. From the azure portal, navigate to this storage account
- * and under the Access keys, Key can be found for BLOB_ACCOUNT_KEY.
+ * This suite is skipped if no storageAccount or accountKey has been provided via AZ_STORAGE_ACCOUNT_NAME
+ * and AZ_STORAGE_ACCOUNT_KEY. For the Azure blob tests, the azure storage account used is teamnodejstracer
+ * which is the value for AZ_STORAGE_ACCOUNT_NAME. From the azure portal, navigate to this storage account
+ * and under the Access keys, Key can be found for AZ_STORAGE_ACCOUNT_KEY.
  */
 if (!storageAccount || !accountKey) {
   describe('tracing/cloud/azure/blob', function () {
     it('The configuration for Azure is missing', () => {
-      fail('Please set process.env.BLOB_ACCOUNT_KEY and process.env.BLOB_STORAGE_ACCOUNT before tests.');
+      fail('Please set process.env.AZ_STORAGE_ACCOUNT_KEY and process.env.AZ_STORAGE_ACCOUNT_NAME before tests.');
     });
   });
 } else {
@@ -54,10 +54,10 @@ if (!storageAccount || !accountKey) {
       dirname: __dirname,
       useGlobalAgent: true,
       env: {
-        CONTAINER_NAME: containerName,
-        CONNECTION_STRING: connStr,
-        STORAGE_ACCOUNT: storageAccount,
-        ACCOUNT_KEY: accountKey
+        AZURE_CONTAINER_NAME: containerName,
+        AZURE_CONNECTION_STRING: connStr,
+        AZURE_STORAGE_ACCOUNT: storageAccount,
+        AZURE_ACCOUNT_KEY: accountKey
       }
     });
     ProcessControls.setUpHooks(controls);
