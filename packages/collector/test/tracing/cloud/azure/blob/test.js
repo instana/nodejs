@@ -21,7 +21,10 @@ const containerName = `nodejs-team-${uuid()}`;
 const storageAccount = process.env.BLOB_STORAGE_ACCOUNT;
 const accountKey = process.env.BLOB_ACCOUNT_KEY;
 
-// endPoint is assigned with the default costant value for EndpointSuffix in connection string of an azure account
+/**
+ * endPoint is assigned with the default constant string for appending EndpointSuffix
+ * to connection string of an azure account
+ */
 const endPoint = 'EndpointSuffix=core.windows.net';
 const connStr = `DefaultEndpointsProtocol=https;AccountName=${storageAccount};AccountKey=${accountKey};${endPoint}`;
 const blobServiceClient = BlobServiceClient.fromConnectionString(connStr);
@@ -52,9 +55,9 @@ if (!storageAccount || !accountKey) {
       useGlobalAgent: true,
       env: {
         CONTAINER_NAME: containerName,
-        CONN_STR: connStr,
-        STORAGE_ACC: storageAccount,
-        ACC_KEY: accountKey
+        CONNECTION_STRING: connStr,
+        STORAGE_ACCOUNT: storageAccount,
+        ACCOUNT_KEY: accountKey
       }
     });
     ProcessControls.setUpHooks(controls);

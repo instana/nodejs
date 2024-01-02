@@ -21,9 +21,9 @@ const fs = require('fs');
 const filePath = `${__dirname}/sample.pdf`;
 const localFilePath = `${__dirname}/out.pdf`;
 const data1 = fs.readFileSync(filePath);
-const accountKey = process.env.ACC_KEY;
-const connStr = process.env.CONN_STR;
-const storageAccount = process.env.STORAGE_ACC;
+const accountKey = process.env.ACCOUNT_KEY;
+const connStr = process.env.CONNECTION_STRING;
+const storageAccount = process.env.STORAGE_ACCOUNT;
 
 const blobServiceClient = BlobServiceClient.fromConnectionString(connStr);
 const containerName = process.env.CONTAINER_NAME;
