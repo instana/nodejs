@@ -3,7 +3,7 @@ npm-debug*
 lerna-debug.log
 nodejs-license-report.csv
 docker-compose.yaml
-.nyc_output
+test-duration-breakdown
 coverage
 /db2
 instana-*.tgz

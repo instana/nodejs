@@ -4,13 +4,7 @@
 
 'use strict';
 
-if (
-  !process.env.NODE_OPTIONS ||
-  // nyc adds its own NODE_OPTIONS=--require, thus only checking for the existence of NODE_OPTIONS is not good enough.
-  !process.env.NODE_OPTIONS.includes('src/immediate')
-) {
-  // Either the test instruments this app via NODE_OTIONS=--require... or it expects the app to be instrumneted via
-  // an in-code require.
+if (!process.env.NODE_OPTIONS || !process.env.NODE_OPTIONS.includes('src/immediate')) {
   require('../../..')();
 }
 
