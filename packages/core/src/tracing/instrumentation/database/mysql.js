@@ -13,7 +13,7 @@ const constants = require('../../constants');
 const cls = require('../../cls');
 
 let isActive = false;
-
+console.log('NODE_V8_COVERAGE', process.env.NODE_V8_COVERAGE);
 exports.spanName = 'mysql';
 exports.batchable = true;
 
