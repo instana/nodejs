@@ -51,15 +51,6 @@ const generateTableName = () => {
   return randomStr;
 };
 
-/**
- * NOTE: When using `nyc` (our coverage tool) the number of spans are different,
- *       because `nyc` is using `node-preload`, which adds certain npm packages to the require cache.
- *       And if the require cache is containing libraries, which we instrument, we loose spans.
- *       DB2 is using fs-extra, which uses graceful-fs. `nyc` is using `graceful-fs` too.
- *       That's why we are loosing fs spans.
- *       We have removed the assertions for checking the exact number of spans for now.
- *       See https://github.com/instana/nodejs/pull/825#discussion_r1268002295
- */
 const verifySpans = (agentControls, controls, options = {}) =>
   agentControls.getSpans().then(spans => {
     if (options.expectSpans === false) {
@@ -77,6 +68,8 @@ const verifySpans = (agentControls, controls, options = {}) =>
       expect(spans.length).to.equal(1);
       return;
     }
+
+    expect(spans.length).to.equal(options.numberOfSpans || 2);
 
     if (options.verifyCustom) return options.verifyCustom(entrySpan, spans);
 

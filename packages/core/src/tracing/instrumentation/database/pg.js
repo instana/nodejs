@@ -18,10 +18,12 @@ exports.spanName = 'postgres';
 exports.batchable = true;
 
 exports.init = function init() {
+  console.log('pg init');
   requireHook.onModuleLoad('pg', instrumentPg);
 };
 
 function instrumentPg(pg) {
+  console.log('instrumentPg');
   instrumentClient(pg.Client);
 }
 
@@ -30,6 +32,7 @@ function instrumentClient(Client) {
 }
 
 function shimQuery(original) {
+  console.log('shimQuery');
   return function () {
     if (cls.skipExitTracing({ isActive })) {
       return original.apply(this, arguments);
