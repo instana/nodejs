@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [3.1.0](https://github.com/instana/nodejs/compare/v3.0.0...v3.1.0) (2024-01-04)
+
+### Bug Fixes
+
+- ignored opentelemetry spans which are not traces by us ([#974](https://github.com/instana/nodejs/issues/974)) ([62add1c](https://github.com/instana/nodejs/commit/62add1ce576d524986862e28b9547d02ebe602ad))
+
 # [3.0.0](https://github.com/instana/nodejs/compare/v2.36.1...v3.0.0) (2023-12-12)
 
 ### Bug Fixes

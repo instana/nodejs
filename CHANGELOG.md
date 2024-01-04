@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [3.1.0](https://github.com/instana/nodejs/compare/v3.0.0...v3.1.0) (2024-01-04)
+
+### Bug Fixes
+
+- ignored opentelemetry spans which are not traces by us ([#974](https://github.com/instana/nodejs/issues/974)) ([62add1c](https://github.com/instana/nodejs/commit/62add1ce576d524986862e28b9547d02ebe602ad))
+- **serverless:** ensured callback gets called for proxy connection issues ([#979](https://github.com/instana/nodejs/issues/979)) ([46c99fc](https://github.com/instana/nodejs/commit/46c99fca51bad226665d8afdfb1085cf62bf67d2))
+- updated code formats ([#971](https://github.com/instana/nodejs/issues/971)) ([0e24014](https://github.com/instana/nodejs/commit/0e2401484079c1bb8a35a67ecc67408364dd6cd4))
+
+### Features
+
+- **aws-lambda:** added support for Node.js v20 runtime ([#975](https://github.com/instana/nodejs/issues/975)) ([7b44f8e](https://github.com/instana/nodejs/commit/7b44f8e814a81c589cbdd7bfc82eefa517336f14))
+
 # [3.0.0](https://github.com/instana/nodejs/compare/v2.36.1...v3.0.0) (2023-12-12)
 
 ### Bug Fixes
