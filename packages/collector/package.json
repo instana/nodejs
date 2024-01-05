@@ -51,84 +51,16 @@
   ],
   "contributors": [
     {
-      "name": "Bastian Krol",
-      "email": "bastian.krol@instana.com"
-    },
-    {
-      "name": "Ben Ripkes",
-      "email": "ben@instana.com"
-    },
-    {
-      "name": "Simon Thiele",
-      "email": "simon.thiele@instana.com"
-    },
-    {
-      "name": "Robert Hostlowsky",
-      "email": "lowsky@users.noreply.github.com"
-    },
-    {
-      "name": "Piérre Reimertz",
-      "email": "reimertz@users.noreply.github.com"
-    },
-    {
-      "name": "Joshua Horowitz",
-      "email": "joshua.horowitz@jet.com"
-    },
-    {
-      "name": "Andrew Schmadel",
-      "email": "andrewschmadel@upside.com"
-    },
-    {
-      "name": "Omar Gonzalez",
-      "email": "s9tpepper@apache.org"
-    },
-    {
-      "name": "Colin Ihrig",
-      "email": "cjihrig@gmail.com"
-    },
-    {
-      "name": "Christian Kellner",
-      "email": "christian.kellner@instana.com"
-    },
-    {
-      "name": "Fabian Lange",
-      "email": "lange.fabian@gmail.com"
-    },
-    {
-      "name": "Peter Giacomo Lombardo",
-      "email": "pglombardo@gmail.com"
-    },
-    {
-      "name": "Borut Jegrisnik",
-      "email": "borut.jegrisnik@instana.com"
-    },
-    {
-      "name": "Denis Fäcke",
-      "email": "serayaeryn@gmail.com"
-    },
-    {
-      "name": "DtRWoS",
-      "email": "work@dtrwos.com"
-    },
-    {
-      "name": "Osasu Eboh",
-      "email": "osasu.eboh@jet.com"
-    },
-    {
-      "name": "Sebastian Klose",
-      "email": "mail@sklose.com"
-    },
-    {
-      "name": "Emelia Smith",
-      "email": "ThisIsMissEm@users.noreply.github.com"
-    },
-    {
       "name": "Willian Carvalho",
       "email": "willian.carvalho@instana.com"
     },
     {
       "name": "Katharina Irrgang",
-      "email": "katharina.irrgang@instana.com"
+      "email": "katharina.irrgang@ibm.com"
+    },
+    {
+      "name": "Arya Mohanan",
+      "email": "arya.mohanan@ibm.com"
     }
   ],
   "bugs": {
