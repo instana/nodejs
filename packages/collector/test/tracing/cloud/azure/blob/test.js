@@ -47,6 +47,7 @@ if (!storageAccount || !accountKey) {
   });
 } else {
   mochaSuiteFn('tracing/cloud/azure/blob', function () {
+    this.timeout(config.getTestTimeout());
     globalAgent.setUpCleanUpHooks();
     const agentControls = globalAgent.instance;
 
@@ -61,7 +62,6 @@ if (!storageAccount || !accountKey) {
       }
     });
     ProcessControls.setUpHooks(controls);
-    this.timeout(config.getTestTimeout());
 
     before(async () => {
       await createContainer(containerClient);
@@ -78,19 +78,15 @@ if (!storageAccount || !accountKey) {
       });
       await testUtils.retry(async () => {
         const spans = await agentControls.getSpans();
-        await verifyOp({
-          dataProperty: 'azstorage',
-          op: 'upload',
-          n: 1,
-          spans: spans
-        });
         await verify({
           spanName: 'azstorage',
           dataProperty: 'azstorage',
           n: 1,
           path: '/uploadDataBlock',
           withError: false,
-          spans: spans
+          spans: spans,
+          op: 'upload',
+          opSpanCount: 1
         });
       });
     });
@@ -100,22 +96,17 @@ if (!storageAccount || !accountKey) {
         method: 'GET',
         path: '/upload'
       });
-
       await testUtils.retry(async () => {
         const spans = await agentControls.getSpans();
-        await verifyOp({
-          dataProperty: 'azstorage',
-          op: 'upload',
-          n: 1,
-          spans: spans
-        });
         await verify({
           spanName: 'azstorage',
           dataProperty: 'azstorage',
           n: 1,
           path: '/upload',
           withError: false,
-          spans: spans
+          spans: spans,
+          op: 'upload',
+          opSpanCount: 1
         });
       });
     });
@@ -125,22 +116,17 @@ if (!storageAccount || !accountKey) {
         method: 'GET',
         path: '/upload-err'
       });
-
       await testUtils.retry(async () => {
         const spans = await agentControls.getSpans();
-        await verifyOp({
-          dataProperty: 'azstorage',
-          op: 'upload',
-          n: 1,
-          spans: spans
-        });
         await verify({
           spanName: 'azstorage',
           dataProperty: 'azstorage',
           n: 1,
           path: '/upload-err',
           withError: true,
-          spans: spans
+          spans: spans,
+          op: 'upload',
+          opSpanCount: 1
         });
       });
     });
@@ -150,22 +136,17 @@ if (!storageAccount || !accountKey) {
         method: 'GET',
         path: '/uploadData'
       });
-
       await testUtils.retry(async () => {
         const spans = await agentControls.getSpans();
-        await verifyOp({
-          dataProperty: 'azstorage',
-          op: 'upload',
-          n: 1,
-          spans: spans
-        });
         await verify({
           spanName: 'azstorage',
           dataProperty: 'azstorage',
           n: 2,
           path: '/uploadData',
           withError: false,
-          spans: spans
+          spans: spans,
+          op: 'upload',
+          opSpanCount: 1
         });
       });
     });
@@ -175,22 +156,17 @@ if (!storageAccount || !accountKey) {
         method: 'GET',
         path: '/deleteError'
       });
-
       await testUtils.retry(async () => {
         const spans = await agentControls.getSpans();
-        await verifyOp({
-          dataProperty: 'azstorage',
-          op: 'delete',
-          n: 2,
-          spans: spans
-        });
         await verify({
           spanName: 'azstorage',
           dataProperty: 'azstorage',
           n: 1,
           path: '/deleteError',
           withError: true,
-          spans: spans
+          spans: spans,
+          op: 'delete',
+          opSpanCount: 2
         });
       });
     });
@@ -200,22 +176,17 @@ if (!storageAccount || !accountKey) {
         method: 'GET',
         path: '/uploadData-delete-blobBatch-blobUri'
       });
-
       await testUtils.retry(async () => {
         const spans = await agentControls.getSpans();
-        await verifyOp({
-          dataProperty: 'azstorage',
-          op: 'delete',
-          n: 1,
-          spans: spans
-        });
         await verify({
           spanName: 'azstorage',
           dataProperty: 'azstorage',
           n: 2,
           path: '/uploadData-delete-blobBatch-blobUri',
           withError: false,
-          spans: spans
+          spans: spans,
+          op: 'delete',
+          opSpanCount: 1
         });
       });
     });
@@ -225,22 +196,17 @@ if (!storageAccount || !accountKey) {
         method: 'GET',
         path: '/uploadData-delete-blobBatch-blobClient'
       });
-
       await testUtils.retry(async () => {
         const spans = await agentControls.getSpans();
-        await verifyOp({
-          dataProperty: 'azstorage',
-          op: 'delete',
-          n: 1,
-          spans: spans
-        });
         await verify({
           spanName: 'azstorage',
           dataProperty: 'azstorage',
           n: 2,
           path: '/uploadData-delete-blobBatch-blobClient',
           withError: false,
-          spans: spans
+          spans: spans,
+          op: 'delete',
+          opSpanCount: 1
         });
       });
     });
@@ -250,22 +216,17 @@ if (!storageAccount || !accountKey) {
         method: 'GET',
         path: '/download-await'
       });
-
       await testUtils.retry(async () => {
         const spans = await agentControls.getSpans();
-        await verifyOp({
-          dataProperty: 'azstorage',
-          op: 'download',
-          n: 1,
-          spans: spans
-        });
         await verify({
           spanName: 'azstorage',
           dataProperty: 'azstorage',
           n: 3,
           path: '/download-await',
           withError: false,
-          spans: spans
+          spans: spans,
+          op: 'download',
+          opSpanCount: 1
         });
       });
     });
@@ -275,22 +236,17 @@ if (!storageAccount || !accountKey) {
         method: 'GET',
         path: '/download'
       });
-
       await testUtils.retry(async () => {
         const spans = await agentControls.getSpans();
-        await verifyOp({
-          dataProperty: 'azstorage',
-          op: 'download',
-          n: 1,
-          spans: spans
-        });
         await verify({
           spanName: 'azstorage',
           dataProperty: 'azstorage',
           n: 3,
           path: '/download',
           withError: false,
-          spans: spans
+          spans: spans,
+          op: 'download',
+          opSpanCount: 1
         });
       });
     });
@@ -300,22 +256,17 @@ if (!storageAccount || !accountKey) {
         method: 'GET',
         path: '/download-buffer'
       });
-
       await testUtils.retry(async () => {
         const spans = await agentControls.getSpans();
-        await verifyOp({
-          dataProperty: 'azstorage',
-          op: 'download',
-          n: 1,
-          spans: spans
-        });
         await verify({
           spanName: 'azstorage',
           dataProperty: 'azstorage',
           n: 3,
           path: '/download-buffer',
           withError: false,
-          spans: spans
+          spans: spans,
+          op: 'download',
+          opSpanCount: 1
         });
       });
     });
@@ -325,22 +276,17 @@ if (!storageAccount || !accountKey) {
         method: 'GET',
         path: '/download-buffer-promise'
       });
-
       await testUtils.retry(async () => {
         const spans = await agentControls.getSpans();
-        await verifyOp({
-          dataProperty: 'azstorage',
-          op: 'download',
-          n: 1,
-          spans: spans
-        });
         await verify({
           spanName: 'azstorage',
           dataProperty: 'azstorage',
           n: 3,
           path: '/download-buffer-promise',
           withError: false,
-          spans: spans
+          spans: spans,
+          op: 'download',
+          opSpanCount: 1
         });
       });
     });
@@ -350,22 +296,17 @@ if (!storageAccount || !accountKey) {
         method: 'GET',
         path: '/download-promise'
       });
-
       await testUtils.retry(async () => {
         const spans = await agentControls.getSpans();
-        await verifyOp({
-          dataProperty: 'azstorage',
-          op: 'download',
-          n: 1,
-          spans: spans
-        });
         await verify({
           spanName: 'azstorage',
           dataProperty: 'azstorage',
           n: 3,
           path: '/download-promise',
           withError: false,
-          spans: spans
+          spans: spans,
+          op: 'download',
+          opSpanCount: 1
         });
       });
     });
@@ -375,22 +316,17 @@ if (!storageAccount || !accountKey) {
         method: 'GET',
         path: '/download-promise-err'
       });
-
       await testUtils.retry(async () => {
         const spans = await agentControls.getSpans();
-        await verifyOp({
-          dataProperty: 'azstorage',
-          op: 'download',
-          n: 1,
-          spans: spans
-        });
         await verify({
           spanName: 'azstorage',
           dataProperty: 'azstorage',
           n: 1,
           path: '/download-promise-err',
           withError: true,
-          spans: spans
+          spans: spans,
+          op: 'download',
+          opSpanCount: 1
         });
       });
     });
@@ -400,22 +336,17 @@ if (!storageAccount || !accountKey) {
         method: 'GET',
         path: '/download-err'
       });
-
       await testUtils.retry(async () => {
         const spans = await agentControls.getSpans();
-        await verifyOp({
-          dataProperty: 'azstorage',
-          op: 'download',
-          n: 1,
-          spans: spans
-        });
         await verify({
           spanName: 'azstorage',
           dataProperty: 'azstorage',
           n: 1,
           path: '/download-err',
           withError: true,
-          spans: spans
+          spans: spans,
+          op: 'download',
+          opSpanCount: 1
         });
       });
     });
@@ -425,34 +356,29 @@ if (!storageAccount || !accountKey) {
         method: 'GET',
         path: '/download-blockblob-promise'
       });
-
       await testUtils.retry(async () => {
         const spans = await agentControls.getSpans();
-        await verifyOp({
-          dataProperty: 'azstorage',
-          op: 'download',
-          n: 1,
-          spans: spans
-        });
         await verify({
           spanName: 'azstorage',
           dataProperty: 'azstorage',
           n: 3,
           path: '/download-blockblob-promise',
           withError: false,
-          spans: spans
+          spans: spans,
+          op: 'download',
+          opSpanCount: 1
         });
       });
     });
 
-    async function verify({ spanName, dataProperty, n, path, withError, spans }) {
+    async function verify({ spanName, dataProperty, n, path, withError, spans, op, opSpanCount }) {
       const _pid = String(controls.getPid());
       const parent = verifyHttpRootEntry({
         spans,
         apiPath: path,
         pid: _pid
       });
-      return expectExactlyNMatching(spans, n, [
+      expectExactlyNMatching(spans, n, [
         span => expect(span.n).to.equal('azstorage'),
         span => expect(span.k).to.equal(constants.EXIT),
         span => expect(span.t).to.equal(parent.t),
@@ -469,9 +395,7 @@ if (!storageAccount || !accountKey) {
         span => expect(span.data[dataProperty || spanName].containerName).to.exist,
         span => expect(span.data[dataProperty || spanName].op).to.exist
       ]);
-    }
-    async function verifyOp({ dataProperty, op, n, spans }) {
-      return expectExactlyNMatching(spans, n, [span => expect(span.data[dataProperty].op).to.equal(op)]);
+      expectExactlyNMatching(spans, opSpanCount, [span => expect(span.data[dataProperty].op).to.equal(op)]);
     }
   });
 }
