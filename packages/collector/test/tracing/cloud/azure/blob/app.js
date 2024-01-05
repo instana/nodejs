@@ -13,11 +13,11 @@ const { BlobServiceClient, BlobBatchClient, BlobClient, StorageSharedKeyCredenti
 const express = require('express');
 const bodyParser = require('body-parser');
 const port = require('../../../../test_util/app-port')();
-
+const agentPort = process.env.INSTANA_AGENT_PORT;
 const app = express();
 const logPrefix = `Express / azure blob App (${process.pid}):\t`;
 const fs = require('fs');
-
+const request = require('request-promise-native');
 const filePath = `${__dirname}/sample.pdf`;
 const localFilePath = `${__dirname}/out.pdf`;
 const data1 = fs.readFileSync(filePath);
@@ -296,7 +296,9 @@ app.get('/upload', async (req, res) => {
   blockBlobClient
     .upload(pdfData, pdfData.length)
     .then(() => {
-      res.send('successss');
+      request(`http://127.0.0.1:${agentPort}`).then(() => {
+        res.json('success');
+      });
     })
     .catch(error => {
       log('Failed to upload PDF file:', error);
