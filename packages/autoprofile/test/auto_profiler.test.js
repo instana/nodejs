@@ -43,7 +43,6 @@ describe('AutoProfiler', () => {
       profiler.cpuSamplerScheduler.profileStartTs =
         Date.now() - profiler.cpuSamplerScheduler.config.reportInterval - 10000;
       span.stop(() => {
-        console.log(profiler);
         assert.equal(profiler.profileRecorder.queue.length, 1);
         done();
       });
