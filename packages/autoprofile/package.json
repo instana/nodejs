@@ -52,7 +52,11 @@
     "@instana/core": "3.6.0",
     "detect-libc": "^2.0.2",
     "nan": "^2.14.2",
-    "node-gyp-build": "^4.7.1"
+    "node-gyp-build": "^4.7.1",
+    "semver": "^7.5.4"
+  },
+  "engines": {
+    "node": ">=14.0.0"
   },
   "main": "index.js",
   "files": [
@@ -65,6 +69,5 @@
   "publishConfig": {
     "access": "public"
   },
-  "license": "BSD-3-Clause",
-  "devDependencies": {}
+  "license": "BSD-3-Clause"
 }
