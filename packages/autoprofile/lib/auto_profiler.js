@@ -109,7 +109,7 @@ class AutoProfiler {
     }
 
     if (semver.lt(process.versions.node, '14.0.0')) {
-      this.error(`This node.js version ${process.versions.node} is not supported`);
+      this.error(`This node.js version ${process.versions.node} is not supported.`);
       return;
     }
 
