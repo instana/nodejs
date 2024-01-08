@@ -7,10 +7,11 @@
 
 const assert = require('assert');
 const async = require('async');
-
 const CpuSampler = require('../../lib/samplers/cpu_sampler').CpuSampler;
+const supportedVersion = require('@instana/core').tracing.supportedVersion;
+const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
-describe('CpuSampler', () => {
+mochaSuiteFn('CpuSampler', () => {
   let profiler;
 
   beforeEach(() => {

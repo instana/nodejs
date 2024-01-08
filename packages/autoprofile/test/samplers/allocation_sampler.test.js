@@ -7,10 +7,11 @@
 
 const assert = require('assert');
 const async = require('async');
-const semver = require('semver');
+const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const AllocationSampler = require('../../lib/samplers/allocation_sampler').AllocationSampler;
+const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
 
-describe('AllocationSampler', () => {
+mochaSuiteFn('AllocationSampler', () => {
   let profiler;
 
   beforeEach(() => {
@@ -19,11 +20,6 @@ describe('AllocationSampler', () => {
 
   describe('startSampler()', () => {
     it('should record allocation profile', done => {
-      if (semver.lt(process.versions.node, '14.0.0')) {
-        done();
-        return;
-      }
-
       const sampler = new AllocationSampler(profiler);
       if (!sampler.test()) {
         done();
