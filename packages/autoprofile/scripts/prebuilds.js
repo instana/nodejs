@@ -32,11 +32,15 @@ if (!argv.abi) {
   targets = argv.abi.split(',').join(' -t ');
 }
 
+console.log(`\n### Building darwin prebuilds for ${targets}...\n`);
+
 // darwin
 if (!argv.os || (argv.os && argv.os === 'darwin')) {
   childProcess.execSync(`npx prebuildify -t ${targets} --strip --arch arm64`, { stdio: 'inherit' });
   childProcess.execSync(`npx prebuildify -t ${targets} --strip --arch x64`, { stdio: 'inherit' });
 }
+
+console.log(`\n### Building linux prebuilds for ${targets}...\n`);
 
 // linux
 // alpine = x64 musl
