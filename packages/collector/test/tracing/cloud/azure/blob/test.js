@@ -10,10 +10,7 @@ const semver = require('semver');
 const constants = require('@instana/core').tracing.constants;
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('../../../../../../core/test/config');
-const {
-  verifyHttpRootEntry,
-  stringifyItems
-} = require('../../../../../../core/test/test_util');
+const { verifyHttpRootEntry, stringifyItems } = require('../../../../../../core/test/test_util');
 const ProcessControls = require('../../../../test_util/ProcessControls');
 const globalAgent = require('../../../../globalAgent');
 const { fail } = expect;
@@ -383,7 +380,8 @@ if (!storageAccount || !accountKey) {
           span => expect(span.data[dataProperty || spanName].blobName).to.exist,
           span => expect(span.data[dataProperty || spanName].containerName).to.exist,
           span => expect(span.data[dataProperty || spanName].op).to.exist,
-          span => expect(span.data[dataProperty].op).to.equal(op)]);
+          span => expect(span.data[dataProperty].op).to.equal(op)
+        ]);
       }
     });
     describe('tracing disabled', () => {
@@ -417,7 +415,44 @@ if (!storageAccount || !accountKey) {
           await testUtils.retry(async () => {
             const spans = await agentControls.getSpans();
             if (spans.length > 0) {
-              fail(`Unexpected spans (AWS DynamoDB suppressed: ${stringifyItems(spans)}`);
+              fail(`Unexpected spans : ${stringifyItems(spans)}`);
+            }
+          });
+        });
+      });
+    });
+    describe('tracing enabled, but supressed', () => {
+      const controls = new ProcessControls({
+        dirname: __dirname,
+        useGlobalAgent: true,
+        env: {
+          AZURE_CONTAINER_NAME: containerName,
+          AZURE_CONNECTION_STRING: connStr,
+          AZURE_STORAGE_ACCOUNT: storageAccount,
+          AZURE_ACCOUNT_KEY: accountKey
+        }
+      });
+      ProcessControls.setUpHooks(controls);
+
+      before(async () => {
+        await createContainer(containerClient);
+      });
+
+      after(async () => {
+        await deleteContainer(containerClient);
+      });
+
+      describe('attempt to get result', () => {
+        it('should not trace', async () => {
+          await controls.sendRequest({
+            suppressTracing: true,
+            method: 'GET',
+            path: '/upload'
+          });
+          await testUtils.retry(async () => {
+            const spans = await agentControls.getSpans();
+            if (spans.length > 0) {
+              fail(`Unexpected spans (suppressed: ${stringifyItems(spans)}`);
             }
           });
         });
