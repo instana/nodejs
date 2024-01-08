@@ -247,6 +247,35 @@ app.get('/uploadData', async (req, res) => {
     res.send();
   }
 });
+
+app.get('/upload', async (req, res) => {
+  const pdfData = fs.readFileSync(filePath);
+  blockBlobClient
+    .upload(pdfData, pdfData.length)
+    .then(() => {
+      request(`http://127.0.0.1:${agentPort}`).then(() => {
+        res.json('success');
+      });
+    })
+    .catch(error => {
+      log('Failed to upload PDF file:', error);
+      res.send();
+    });
+});
+
+app.get('/upload-err', async (req, res) => {
+  const pdfData = fs.readFileSync(filePath);
+  blockBlobClient
+    .upload(pdfData)
+    .then(() => {
+      res.send('successss');
+    })
+    .catch(error => {
+      log('Failed to upload PDF file:', error);
+      res.send('fail');
+    });
+});
+
 app.get('/uploadData-delete-blobBatch-blobUri', async (req, res) => {
   try {
     await uploadDocumentToAzure();
@@ -287,34 +316,6 @@ app.get('/deleteError', async (req, res) => {
   } catch (e) {
     res.send();
   }
-});
-
-app.get('/upload', async (req, res) => {
-  const pdfData = fs.readFileSync(filePath);
-  blockBlobClient
-    .upload(pdfData, pdfData.length)
-    .then(() => {
-      request(`http://127.0.0.1:${agentPort}`).then(() => {
-        res.json('success');
-      });
-    })
-    .catch(error => {
-      log('Failed to upload PDF file:', error);
-      res.send();
-    });
-});
-
-app.get('/upload-err', async (req, res) => {
-  const pdfData = fs.readFileSync(filePath);
-  blockBlobClient
-    .upload(pdfData)
-    .then(() => {
-      res.send('successss');
-    })
-    .catch(error => {
-      log('Failed to upload PDF file:', error);
-      res.send();
-    });
 });
 
 app.listen(port, () => {
