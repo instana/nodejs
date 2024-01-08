@@ -92,12 +92,9 @@ class AutoProfiler {
     try {
       // NOTE: will either load the prebuild or the build from build/release
       this.addon = nodeGypBuild(path.join(__dirname, '..'));
-      return true;
     } catch (err) {
-      this.log(`Prebuild not found: ${err.message}`);
+      this.error(`Could not load native autoprofiler addon: ${err.message}`);
     }
-
-    return false;
   }
 
   start(opts) {
@@ -129,10 +126,11 @@ class AutoProfiler {
       }
     }
 
-    if (this.loadAddon()) {
-      this.log(`Using pre-built native addon for ${family}, ${arch}, ${abi}`);
-    } else {
-      this.log(`Using pre-built native addon for ${family}, ${arch}, ${abi}`);
+    this.debug(`System: ${platform}, ${family}, ${arch}, ${abi}`);
+    this.loadAddon();
+
+    if (!this.addon) {
+      return;
     }
 
     if (this.profilerDestroyed) {
