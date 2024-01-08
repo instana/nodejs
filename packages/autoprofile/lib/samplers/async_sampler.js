@@ -8,6 +8,7 @@
 'use strict';
 
 const { uninstrumentedFs: fs } = require('@instana/core');
+const semver = require('semver');
 const util = require('util');
 const CallSite = require('../profile').CallSite;
 const Profile = require('../profile').Profile;
@@ -38,7 +39,7 @@ class AsyncSampler {
       return false;
     }
 
-    if (!this.profiler.matchVersion('v8.1.0', null)) {
+    if (semver.lt(process.versions.node, '14.0.0')) {
       this.profiler.log('Async sampler is supported starting Node.js v8.1.0');
       return false;
     }

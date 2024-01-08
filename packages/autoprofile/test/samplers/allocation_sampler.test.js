@@ -7,6 +7,7 @@
 
 const assert = require('assert');
 const async = require('async');
+const semver = require('semver');
 const AllocationSampler = require('../../lib/samplers/allocation_sampler').AllocationSampler;
 
 describe('AllocationSampler', () => {
@@ -18,7 +19,7 @@ describe('AllocationSampler', () => {
 
   describe('startSampler()', () => {
     it('should record allocation profile', done => {
-      if (!profiler.matchVersion('v8.6.0', null)) {
+      if (semver.lt(process.versions.node, '14.0.0')) {
         done();
         return;
       }
