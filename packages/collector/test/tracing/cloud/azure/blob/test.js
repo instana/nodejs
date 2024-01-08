@@ -10,7 +10,11 @@ const semver = require('semver');
 const constants = require('@instana/core').tracing.constants;
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('../../../../../../core/test/config');
-const { verifyHttpRootEntry, expectExactlyNMatching } = require('../../../../../../core/test/test_util');
+const {
+  verifyHttpRootEntry,
+  expectExactlyNMatching,
+  stringifyItems
+} = require('../../../../../../core/test/test_util');
 const ProcessControls = require('../../../../test_util/ProcessControls');
 const globalAgent = require('../../../../globalAgent');
 const { fail } = expect;
@@ -51,337 +55,390 @@ if (!storageAccount || !accountKey) {
     this.timeout(config.getTestTimeout());
     globalAgent.setUpCleanUpHooks();
     const agentControls = globalAgent.instance;
+    describe('tracing enabled', function () {
+      const controls = new ProcessControls({
+        dirname: __dirname,
+        useGlobalAgent: true,
+        env: {
+          AZURE_CONTAINER_NAME: containerName,
+          AZURE_CONNECTION_STRING: connStr,
+          AZURE_STORAGE_ACCOUNT: storageAccount,
+          AZURE_ACCOUNT_KEY: accountKey
+        }
+      });
+      ProcessControls.setUpHooks(controls);
 
-    const controls = new ProcessControls({
-      dirname: __dirname,
-      useGlobalAgent: true,
-      env: {
-        AZURE_CONTAINER_NAME: containerName,
-        AZURE_CONNECTION_STRING: connStr,
-        AZURE_STORAGE_ACCOUNT: storageAccount,
-        AZURE_ACCOUNT_KEY: accountKey
+      before(async () => {
+        await createContainer(containerClient);
+      });
+
+      after(async () => {
+        await deleteContainer(containerClient);
+      });
+
+      it('uploads block data', async () => {
+        await controls.sendRequest({
+          method: 'GET',
+          path: '/uploadDataBlock'
+        });
+        await testUtils.retry(async () => {
+          const spans = await agentControls.getSpans();
+          await verify({
+            spanName: 'azstorage',
+            dataProperty: 'azstorage',
+            n: 1,
+            path: '/uploadDataBlock',
+            withError: false,
+            spans: spans,
+            op: 'upload',
+            totalspans: 3
+          });
+        });
+      });
+
+      it('upload - promise', async () => {
+        await controls.sendRequest({
+          method: 'GET',
+          path: '/upload'
+        });
+        await testUtils.retry(async () => {
+          const spans = await agentControls.getSpans();
+          await verify({
+            spanName: 'azstorage',
+            dataProperty: 'azstorage',
+            n: 1,
+            path: '/upload',
+            withError: false,
+            spans: spans,
+            op: 'upload',
+            totalspans: 4
+          });
+        });
+      });
+
+      it('upload - err', async () => {
+        await controls.sendRequest({
+          method: 'GET',
+          path: '/upload-err'
+        });
+        await testUtils.retry(async () => {
+          const spans = await agentControls.getSpans();
+          await verify({
+            spanName: 'azstorage',
+            dataProperty: 'azstorage',
+            n: 1,
+            path: '/upload-err',
+            withError: true,
+            spans: spans,
+            op: 'upload',
+            totalspans: 3
+          });
+        });
+      });
+
+      it('uploadData and delete', async () => {
+        await controls.sendRequest({
+          method: 'GET',
+          path: '/uploadData'
+        });
+        await testUtils.retry(async () => {
+          const spans = await agentControls.getSpans();
+          await verify({
+            spanName: 'azstorage',
+            dataProperty: 'azstorage',
+            n: 2,
+            path: '/uploadData',
+            withError: false,
+            spans: spans,
+            op: 'upload',
+            totalspans: 3
+          });
+        });
+      });
+
+      it('Error in delete-promise', async () => {
+        await controls.sendRequest({
+          method: 'GET',
+          path: '/deleteError'
+        });
+        await testUtils.retry(async () => {
+          const spans = await agentControls.getSpans();
+          await verify({
+            spanName: 'azstorage',
+            dataProperty: 'azstorage',
+            n: 1,
+            path: '/deleteError',
+            withError: true,
+            spans: spans,
+            op: 'delete',
+            totalspans: 2
+          });
+        });
+      });
+
+      it('uploadData-delete-blobBatch-blobUri', async () => {
+        await controls.sendRequest({
+          method: 'GET',
+          path: '/uploadData-delete-blobBatch-blobUri'
+        });
+        await testUtils.retry(async () => {
+          const spans = await agentControls.getSpans();
+          await verify({
+            spanName: 'azstorage',
+            dataProperty: 'azstorage',
+            n: 2,
+            path: '/uploadData-delete-blobBatch-blobUri',
+            withError: false,
+            spans: spans,
+            op: 'delete',
+            totalspans: 4
+          });
+        });
+      });
+
+      it('uploadData-delete-blobBatch-blobClient', async () => {
+        await controls.sendRequest({
+          method: 'GET',
+          path: '/uploadData-delete-blobBatch-blobClient'
+        });
+        await testUtils.retry(async () => {
+          const spans = await agentControls.getSpans();
+          await verify({
+            spanName: 'azstorage',
+            dataProperty: 'azstorage',
+            n: 2,
+            path: '/uploadData-delete-blobBatch-blobClient',
+            withError: false,
+            spans: spans,
+            op: 'delete',
+            totalspans: 4
+          });
+        });
+      });
+
+      it('download-await', async () => {
+        await controls.sendRequest({
+          method: 'GET',
+          path: '/download-await'
+        });
+        await testUtils.retry(async () => {
+          const spans = await agentControls.getSpans();
+          await verify({
+            spanName: 'azstorage',
+            dataProperty: 'azstorage',
+            n: 3,
+            path: '/download-await',
+            withError: false,
+            spans: spans,
+            op: 'download',
+            totalspans: 4
+          });
+        });
+      });
+
+      it('download', async () => {
+        await controls.sendRequest({
+          method: 'GET',
+          path: '/download'
+        });
+        await testUtils.retry(async () => {
+          const spans = await agentControls.getSpans();
+          await verify({
+            spanName: 'azstorage',
+            dataProperty: 'azstorage',
+            n: 3,
+            path: '/download',
+            withError: false,
+            spans: spans,
+            op: 'download',
+            totalspans: 6
+          });
+        });
+      });
+
+      it('download to buffer', async () => {
+        await controls.sendRequest({
+          method: 'GET',
+          path: '/download-buffer'
+        });
+        await testUtils.retry(async () => {
+          const spans = await agentControls.getSpans();
+          await verify({
+            spanName: 'azstorage',
+            dataProperty: 'azstorage',
+            n: 3,
+            path: '/download-buffer',
+            withError: false,
+            spans: spans,
+            op: 'download',
+            totalspans: 7
+          });
+        });
+      });
+
+      it('download to buffer-promise', async () => {
+        await controls.sendRequest({
+          method: 'GET',
+          path: '/download-buffer-promise'
+        });
+        await testUtils.retry(async () => {
+          const spans = await agentControls.getSpans();
+          await verify({
+            spanName: 'azstorage',
+            dataProperty: 'azstorage',
+            n: 3,
+            path: '/download-buffer-promise',
+            withError: false,
+            spans: spans,
+            op: 'download',
+            totalspans: 7
+          });
+        });
+      });
+
+      it('download-promise', async () => {
+        await controls.sendRequest({
+          method: 'GET',
+          path: '/download-promise'
+        });
+        await testUtils.retry(async () => {
+          const spans = await agentControls.getSpans();
+          await verify({
+            spanName: 'azstorage',
+            dataProperty: 'azstorage',
+            n: 3,
+            path: '/download-promise',
+            withError: false,
+            spans: spans,
+            op: 'download',
+            totalspans: 6
+          });
+        });
+      });
+
+      it('download-promise-err', async () => {
+        await controls.sendRequest({
+          method: 'GET',
+          path: '/download-promise-err'
+        });
+        await testUtils.retry(async () => {
+          const spans = await agentControls.getSpans();
+          await verify({
+            spanName: 'azstorage',
+            dataProperty: 'azstorage',
+            n: 1,
+            path: '/download-promise-err',
+            withError: true,
+            spans: spans,
+            op: 'download',
+            totalspans: 2
+          });
+        });
+      });
+
+      it('download - err', async () => {
+        await controls.sendRequest({
+          method: 'GET',
+          path: '/download-err'
+        });
+        await testUtils.retry(async () => {
+          const spans = await agentControls.getSpans();
+          await verify({
+            spanName: 'azstorage',
+            dataProperty: 'azstorage',
+            n: 1,
+            path: '/download-err',
+            withError: true,
+            spans: spans,
+            op: 'download',
+            totalspans: 4
+          });
+        });
+      });
+
+      it('download-blockblob-promise', async () => {
+        await controls.sendRequest({
+          method: 'GET',
+          path: '/download-blockblob-promise'
+        });
+        await testUtils.retry(async () => {
+          const spans = await agentControls.getSpans();
+          await verify({
+            spanName: 'azstorage',
+            dataProperty: 'azstorage',
+            n: 3,
+            path: '/download-blockblob-promise',
+            withError: false,
+            spans: spans,
+            op: 'download',
+            totalspans: 4
+          });
+        });
+      });
+
+      async function verify({ spanName, dataProperty, n, path, withError, spans, op }) {
+        const _pid = String(controls.getPid());
+        const parent = verifyHttpRootEntry({
+          spans,
+          apiPath: path,
+          pid: _pid
+        });
+        expectExactlyNMatching(spans, n, [
+          span => expect(span.n).to.equal('azstorage'),
+          span => expect(span.k).to.equal(constants.EXIT),
+          span => expect(span.t).to.equal(parent.t),
+          span => expect(span.p).to.equal(parent.s),
+          span => expect(span.f.e).to.equal(_pid),
+          span => expect(span.f.h).to.equal('agent-stub-uuid'),
+          span => expect(span.ec).to.equal(withError ? 1 : 0),
+          span => expect(span.data).to.exist,
+          span =>
+            withError ? expect(span.data[spanName].error).to.exist : expect(span.data[spanName].error).to.be.undefined,
+          span => expect(span.data[dataProperty || spanName]).to.be.an('object'),
+          span => expect(span.data[dataProperty || spanName].accountName).to.exist,
+          span => expect(span.data[dataProperty || spanName].blobName).to.exist,
+          span => expect(span.data[dataProperty || spanName].containerName).to.exist,
+          span => expect(span.data[dataProperty || spanName].op).to.exist
+        ]);
+        expectExactlyOneMatching(spans, [span => expect(span.data[dataProperty].op).to.equal(op)]);
       }
     });
-    ProcessControls.setUpHooks(controls);
-
-    before(async () => {
-      await createContainer(containerClient);
-    });
-
-    after(async () => {
-      await deleteContainer(containerClient);
-    });
-
-    it('uploads block data', async () => {
-      await controls.sendRequest({
-        method: 'GET',
-        path: '/uploadDataBlock'
+    describe('tracing disabled', () => {
+      const controls = new ProcessControls({
+        dirname: __dirname,
+        useGlobalAgent: true,
+        tracingEnabled: false,
+        env: {
+          AZURE_CONTAINER_NAME: containerName,
+          AZURE_CONNECTION_STRING: connStr,
+          AZURE_STORAGE_ACCOUNT: storageAccount,
+          AZURE_ACCOUNT_KEY: accountKey
+        }
       });
-      await testUtils.retry(async () => {
-        const spans = await agentControls.getSpans();
-        await verify({
-          spanName: 'azstorage',
-          dataProperty: 'azstorage',
-          n: 1,
-          path: '/uploadDataBlock',
-          withError: false,
-          spans: spans,
-          op: 'upload'
+      ProcessControls.setUpHooks(controls);
+
+      before(async () => {
+        await createContainer(containerClient);
+      });
+
+      after(async () => {
+        await deleteContainer(containerClient);
+      });
+
+      describe('attempt to get result', () => {
+        it('should not trace', async () => {
+          await controls.sendRequest({
+            method: 'GET',
+            path: '/upload'
+          });
+          await testUtils.retry(async () => {
+            const spans = await agentControls.getSpans();
+            if (spans.length > 0) {
+              fail(`Unexpected spans (AWS DynamoDB suppressed: ${stringifyItems(spans)}`);
+            }
+          });
         });
       });
     });
-
-    it('upload - promise', async () => {
-      await controls.sendRequest({
-        method: 'GET',
-        path: '/upload'
-      });
-      await testUtils.retry(async () => {
-        const spans = await agentControls.getSpans();
-        await verify({
-          spanName: 'azstorage',
-          dataProperty: 'azstorage',
-          n: 1,
-          path: '/upload',
-          withError: false,
-          spans: spans,
-          op: 'upload'
-        });
-      });
-    });
-
-    it('upload - err', async () => {
-      await controls.sendRequest({
-        method: 'GET',
-        path: '/upload-err'
-      });
-      await testUtils.retry(async () => {
-        const spans = await agentControls.getSpans();
-        await verify({
-          spanName: 'azstorage',
-          dataProperty: 'azstorage',
-          n: 1,
-          path: '/upload-err',
-          withError: true,
-          spans: spans,
-          op: 'upload'
-        });
-      });
-    });
-
-    it('uploadData and delete', async () => {
-      await controls.sendRequest({
-        method: 'GET',
-        path: '/uploadData'
-      });
-      await testUtils.retry(async () => {
-        const spans = await agentControls.getSpans();
-        await verify({
-          spanName: 'azstorage',
-          dataProperty: 'azstorage',
-          n: 2,
-          path: '/uploadData',
-          withError: false,
-          spans: spans,
-          op: 'upload'
-        });
-      });
-    });
-
-    it('Error in delete-promise', async () => {
-      await controls.sendRequest({
-        method: 'GET',
-        path: '/deleteError'
-      });
-      await testUtils.retry(async () => {
-        const spans = await agentControls.getSpans();
-        await verify({
-          spanName: 'azstorage',
-          dataProperty: 'azstorage',
-          n: 1,
-          path: '/deleteError',
-          withError: true,
-          spans: spans,
-          op: 'delete'
-        });
-      });
-    });
-
-    it('uploadData-delete-blobBatch-blobUri', async () => {
-      await controls.sendRequest({
-        method: 'GET',
-        path: '/uploadData-delete-blobBatch-blobUri'
-      });
-      await testUtils.retry(async () => {
-        const spans = await agentControls.getSpans();
-        await verify({
-          spanName: 'azstorage',
-          dataProperty: 'azstorage',
-          n: 2,
-          path: '/uploadData-delete-blobBatch-blobUri',
-          withError: false,
-          spans: spans,
-          op: 'delete'
-        });
-      });
-    });
-
-    it('uploadData-delete-blobBatch-blobClient', async () => {
-      await controls.sendRequest({
-        method: 'GET',
-        path: '/uploadData-delete-blobBatch-blobClient'
-      });
-      await testUtils.retry(async () => {
-        const spans = await agentControls.getSpans();
-        await verify({
-          spanName: 'azstorage',
-          dataProperty: 'azstorage',
-          n: 2,
-          path: '/uploadData-delete-blobBatch-blobClient',
-          withError: false,
-          spans: spans,
-          op: 'delete'
-        });
-      });
-    });
-
-    it('download-await', async () => {
-      await controls.sendRequest({
-        method: 'GET',
-        path: '/download-await'
-      });
-      await testUtils.retry(async () => {
-        const spans = await agentControls.getSpans();
-        await verify({
-          spanName: 'azstorage',
-          dataProperty: 'azstorage',
-          n: 3,
-          path: '/download-await',
-          withError: false,
-          spans: spans,
-          op: 'download'
-        });
-      });
-    });
-
-    it('download', async () => {
-      await controls.sendRequest({
-        method: 'GET',
-        path: '/download'
-      });
-      await testUtils.retry(async () => {
-        const spans = await agentControls.getSpans();
-        await verify({
-          spanName: 'azstorage',
-          dataProperty: 'azstorage',
-          n: 3,
-          path: '/download',
-          withError: false,
-          spans: spans,
-          op: 'download'
-        });
-      });
-    });
-
-    it('download to buffer', async () => {
-      await controls.sendRequest({
-        method: 'GET',
-        path: '/download-buffer'
-      });
-      await testUtils.retry(async () => {
-        const spans = await agentControls.getSpans();
-        await verify({
-          spanName: 'azstorage',
-          dataProperty: 'azstorage',
-          n: 3,
-          path: '/download-buffer',
-          withError: false,
-          spans: spans,
-          op: 'download'
-        });
-      });
-    });
-
-    it('download to buffer-promise', async () => {
-      await controls.sendRequest({
-        method: 'GET',
-        path: '/download-buffer-promise'
-      });
-      await testUtils.retry(async () => {
-        const spans = await agentControls.getSpans();
-        await verify({
-          spanName: 'azstorage',
-          dataProperty: 'azstorage',
-          n: 3,
-          path: '/download-buffer-promise',
-          withError: false,
-          spans: spans,
-          op: 'download'
-        });
-      });
-    });
-
-    it('download-promise', async () => {
-      await controls.sendRequest({
-        method: 'GET',
-        path: '/download-promise'
-      });
-      await testUtils.retry(async () => {
-        const spans = await agentControls.getSpans();
-        await verify({
-          spanName: 'azstorage',
-          dataProperty: 'azstorage',
-          n: 3,
-          path: '/download-promise',
-          withError: false,
-          spans: spans,
-          op: 'download'
-        });
-      });
-    });
-
-    it('download-promise-err', async () => {
-      await controls.sendRequest({
-        method: 'GET',
-        path: '/download-promise-err'
-      });
-      await testUtils.retry(async () => {
-        const spans = await agentControls.getSpans();
-        await verify({
-          spanName: 'azstorage',
-          dataProperty: 'azstorage',
-          n: 1,
-          path: '/download-promise-err',
-          withError: true,
-          spans: spans,
-          op: 'download'
-        });
-      });
-    });
-
-    it('download - err', async () => {
-      await controls.sendRequest({
-        method: 'GET',
-        path: '/download-err'
-      });
-      await testUtils.retry(async () => {
-        const spans = await agentControls.getSpans();
-        await verify({
-          spanName: 'azstorage',
-          dataProperty: 'azstorage',
-          n: 1,
-          path: '/download-err',
-          withError: true,
-          spans: spans,
-          op: 'download'
-        });
-      });
-    });
-
-    it('download-blockblob-promise', async () => {
-      await controls.sendRequest({
-        method: 'GET',
-        path: '/download-blockblob-promise'
-      });
-      await testUtils.retry(async () => {
-        const spans = await agentControls.getSpans();
-        await verify({
-          spanName: 'azstorage',
-          dataProperty: 'azstorage',
-          n: 3,
-          path: '/download-blockblob-promise',
-          withError: false,
-          spans: spans,
-          op: 'download'
-        });
-      });
-    });
-
-    async function verify({ spanName, dataProperty, n, path, withError, spans, op }) {
-      const _pid = String(controls.getPid());
-      const parent = verifyHttpRootEntry({
-        spans,
-        apiPath: path,
-        pid: _pid
-      });
-      expectExactlyNMatching(spans, n, [
-        span => expect(span.n).to.equal('azstorage'),
-        span => expect(span.k).to.equal(constants.EXIT),
-        span => expect(span.t).to.equal(parent.t),
-        span => expect(span.p).to.equal(parent.s),
-        span => expect(span.f.e).to.equal(_pid),
-        span => expect(span.f.h).to.equal('agent-stub-uuid'),
-        span => expect(span.ec).to.equal(withError ? 1 : 0),
-        span => expect(span.data).to.exist,
-        span =>
-          withError ? expect(span.data[spanName].error).to.exist : expect(span.data[spanName].error).to.be.undefined,
-        span => expect(span.data[dataProperty || spanName]).to.be.an('object'),
-        span => expect(span.data[dataProperty || spanName].accountName).to.exist,
-        span => expect(span.data[dataProperty || spanName].blobName).to.exist,
-        span => expect(span.data[dataProperty || spanName].containerName).to.exist,
-        span => expect(span.data[dataProperty || spanName].op).to.exist
-      ]);
-      expectExactlyOneMatching(spans, [span => expect(span.data[dataProperty].op).to.equal(op)]);
-    }
   });
 }
