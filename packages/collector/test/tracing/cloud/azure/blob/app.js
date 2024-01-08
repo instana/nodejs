@@ -20,17 +20,17 @@ const fs = require('fs');
 const request = require('request-promise-native');
 const filePath = `${__dirname}/sample.pdf`;
 const localFilePath = `${__dirname}/out.pdf`;
-const data1 = fs.readFileSync(filePath);
-const accountKey = process.env.AZURE_ACCOUNT_KEY;
-const connStr = process.env.AZURE_CONNECTION_STRING;
-const storageAccount = process.env.AZURE_STORAGE_ACCOUNT;
+const binaryData = fs.readFileSync(filePath);
+const azureAccountKey = process.env.AZURE_ACCOUNT_KEY;
+const connectionString = process.env.AZURE_CONNECTION_STRING;
+const azureStorageAccount = process.env.AZURE_STORAGE_ACCOUNT;
 
-const blobServiceClient = BlobServiceClient.fromConnectionString(connStr);
+const blobServiceClient = BlobServiceClient.fromConnectionString(connectionString);
 const containerName = process.env.AZURE_CONTAINER_NAME;
 const blobName = 'first.pdf';
 const containerClient = blobServiceClient.getContainerClient(containerName);
-const cred = new StorageSharedKeyCredential(storageAccount, accountKey);
-const data = Buffer.from(data1.toString('base64'), 'base64');
+const cred = new StorageSharedKeyCredential(azureStorageAccount, azureAccountKey);
+const encodedData = Buffer.from(binaryData.toString('base64'), 'base64');
 const blockBlobClient = containerClient.getBlockBlobClient(blobName);
 
 const uploadDocumentToAzure = async (options = {}) => {
@@ -43,7 +43,7 @@ const uploadDocumentToAzure = async (options = {}) => {
     if (options.maxSingleShotSize) {
       opts.maxSingleShotSize = options.maxSingleShotSize;
     }
-    const response = await blockBlobClient.uploadData(data, opts);
+    const response = await blockBlobClient.uploadData(encodedData, opts);
     if (response._response.status !== 201) {
       throw new Error(`Error uploading document ${blockBlobClient.name} to container ${blockBlobClient.containerName}`);
     }
@@ -66,7 +66,7 @@ const download = async _blobName => {
     const downloadBlobResponse = await _blockBlobClient.downloadToFile(localFilePath);
     return downloadBlobResponse;
   } catch (e) {
-    log('Error occured while downloading:', e);
+    log('Error occured while downloading');
   }
 };
 
@@ -212,11 +212,10 @@ app.get('/download-promise-err', async (req, res) => {
         res.send();
       })
       .catch(error => {
-        log(`Error downloading blob: ${error.message}`);
+        log(`Error downloading blob`);
         res.send();
       });
   } catch (e) {
-    log('Error in /download-promise-err:', e);
     res.send();
   }
 });
@@ -228,7 +227,6 @@ app.get('/download-err', async (req, res) => {
     await deleteDocumentFromAzure(blobName);
     res.send();
   } catch (e) {
-    log('Error in /download-err:', e);
     res.send();
   }
 });
@@ -268,10 +266,9 @@ app.get('/upload-err', async (req, res) => {
   blockBlobClient
     .upload(pdfData)
     .then(() => {
-      res.send('successss');
+      res.send('success');
     })
     .catch(error => {
-      log('Failed to upload PDF file:', error);
       res.send('fail');
     });
 });
@@ -279,9 +276,9 @@ app.get('/upload-err', async (req, res) => {
 app.get('/uploadData-delete-blobBatch-blobUri', async (req, res) => {
   try {
     await uploadDocumentToAzure();
-    const blobBatchClient = new BlobBatchClient(`https://${storageAccount}.blob.core.windows.net`, cred);
+    const blobBatchClient = new BlobBatchClient(`https://${azureStorageAccount}.blob.core.windows.net`, cred);
     await blobBatchClient.deleteBlobs(
-      [`https://${storageAccount}.blob.core.windows.net/${containerName}/${blobName}`],
+      [`https://${azureStorageAccount}.blob.core.windows.net/${containerName}/${blobName}`],
       cred
     );
     res.send();
@@ -293,8 +290,8 @@ app.get('/uploadData-delete-blobBatch-blobUri', async (req, res) => {
 app.get('/uploadData-delete-blobBatch-blobClient', async (req, res) => {
   try {
     await uploadDocumentToAzure();
-    const blobClient = new BlobClient(connStr, containerName, blobName);
-    const blobBatchClient = new BlobBatchClient(`https://${storageAccount}.blob.core.windows.net`, cred);
+    const blobClient = new BlobClient(connectionString, containerName, blobName);
+    const blobBatchClient = new BlobBatchClient(`https://${azureStorageAccount}.blob.core.windows.net`, cred);
     await blobBatchClient.deleteBlobs([blobClient], cred);
     res.send();
   } catch (e) {

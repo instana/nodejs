@@ -28,9 +28,8 @@ const storageAccount = process.env.AZURE_STORAGE_ACCOUNT_NAME;
 const accountKey = process.env.AZURE_STORAGE_ACCOUNT_KEY;
 
 /**
- * endPoint is assigned with the default constant string for appending EndpointSuffix
- * to connection string of an azure account
- * refer https://learn.microsoft.com/en-us/azure/storage/common/storage-configure-connection-string
+ * refer for azure connection-string and its components:
+ * https://learn.microsoft.com/en-us/azure/storage/common/storage-configure-connection-string
  */
 const endPoint = 'EndpointSuffix=core.windows.net';
 const connStr = `DefaultEndpointsProtocol=https;AccountName=${storageAccount};AccountKey=${accountKey};${endPoint}`;
