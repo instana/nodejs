@@ -39,11 +39,6 @@ class AsyncSampler {
       return false;
     }
 
-    if (semver.lt(process.versions.node, '14.0.0')) {
-      this.profiler.log('Async sampler is supported starting Node.js v8.1.0');
-      return false;
-    }
-
     return true;
   }
 
