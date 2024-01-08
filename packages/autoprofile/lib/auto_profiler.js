@@ -6,7 +6,7 @@
 'use strict';
 
 const path = require('path');
-const pkg = require(path.join(__dirname, '/../package.json'));
+const pkg = require(path.join(__dirname, '..', 'package.json'));
 const os = require('os');
 const semver = require('semver');
 const nodeGypBuild = require('node-gyp-build');
@@ -22,8 +22,6 @@ let profiler = null;
 class AutoProfiler {
   constructor() {
     this.AGENT_FRAME_REGEXP = /node_modules\/@instana\//;
-
-    this.version = pkg.version;
 
     this.addon = undefined;
 
@@ -108,7 +106,7 @@ class AutoProfiler {
       this.options = {};
     }
 
-    if (semver.lt(process.versions.node, '14.0.0')) {
+    if (!semver.satisfies(process.versions.node, pkg.engines.node)) {
       this.error(`This node.js version ${process.versions.node} is not supported.`);
       return;
     }
