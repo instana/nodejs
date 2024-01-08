@@ -17,6 +17,7 @@ const { fail } = expect;
 const testUtils = require('../../../../../../core/test/test_util');
 const { createContainer, deleteContainer, minimumNodeJsVer } = require('./util');
 const { BlobServiceClient } = require('@azure/storage-blob');
+const expectExactlyOneMatching = require('@instana/core/test/test_util/expectExactlyOneMatching');
 const containerName = `nodejs-team-${uuid()}`;
 const storageAccount = process.env.AZ_STORAGE_ACCOUNT_NAME;
 const accountKey = process.env.AZ_STORAGE_ACCOUNT_KEY;
@@ -85,8 +86,7 @@ if (!storageAccount || !accountKey) {
           path: '/uploadDataBlock',
           withError: false,
           spans: spans,
-          op: 'upload',
-          opSpanCount: 1
+          op: 'upload'
         });
       });
     });
@@ -105,8 +105,7 @@ if (!storageAccount || !accountKey) {
           path: '/upload',
           withError: false,
           spans: spans,
-          op: 'upload',
-          opSpanCount: 1
+          op: 'upload'
         });
       });
     });
@@ -125,8 +124,7 @@ if (!storageAccount || !accountKey) {
           path: '/upload-err',
           withError: true,
           spans: spans,
-          op: 'upload',
-          opSpanCount: 1
+          op: 'upload'
         });
       });
     });
@@ -145,8 +143,7 @@ if (!storageAccount || !accountKey) {
           path: '/uploadData',
           withError: false,
           spans: spans,
-          op: 'upload',
-          opSpanCount: 1
+          op: 'upload'
         });
       });
     });
@@ -165,8 +162,7 @@ if (!storageAccount || !accountKey) {
           path: '/deleteError',
           withError: true,
           spans: spans,
-          op: 'delete',
-          opSpanCount: 2
+          op: 'delete'
         });
       });
     });
@@ -185,8 +181,7 @@ if (!storageAccount || !accountKey) {
           path: '/uploadData-delete-blobBatch-blobUri',
           withError: false,
           spans: spans,
-          op: 'delete',
-          opSpanCount: 1
+          op: 'delete'
         });
       });
     });
@@ -205,8 +200,7 @@ if (!storageAccount || !accountKey) {
           path: '/uploadData-delete-blobBatch-blobClient',
           withError: false,
           spans: spans,
-          op: 'delete',
-          opSpanCount: 1
+          op: 'delete'
         });
       });
     });
@@ -225,8 +219,7 @@ if (!storageAccount || !accountKey) {
           path: '/download-await',
           withError: false,
           spans: spans,
-          op: 'download',
-          opSpanCount: 1
+          op: 'download'
         });
       });
     });
@@ -245,8 +238,7 @@ if (!storageAccount || !accountKey) {
           path: '/download',
           withError: false,
           spans: spans,
-          op: 'download',
-          opSpanCount: 1
+          op: 'download'
         });
       });
     });
@@ -265,8 +257,7 @@ if (!storageAccount || !accountKey) {
           path: '/download-buffer',
           withError: false,
           spans: spans,
-          op: 'download',
-          opSpanCount: 1
+          op: 'download'
         });
       });
     });
@@ -285,8 +276,7 @@ if (!storageAccount || !accountKey) {
           path: '/download-buffer-promise',
           withError: false,
           spans: spans,
-          op: 'download',
-          opSpanCount: 1
+          op: 'download'
         });
       });
     });
@@ -305,8 +295,7 @@ if (!storageAccount || !accountKey) {
           path: '/download-promise',
           withError: false,
           spans: spans,
-          op: 'download',
-          opSpanCount: 1
+          op: 'download'
         });
       });
     });
@@ -325,8 +314,7 @@ if (!storageAccount || !accountKey) {
           path: '/download-promise-err',
           withError: true,
           spans: spans,
-          op: 'download',
-          opSpanCount: 1
+          op: 'download'
         });
       });
     });
@@ -345,8 +333,7 @@ if (!storageAccount || !accountKey) {
           path: '/download-err',
           withError: true,
           spans: spans,
-          op: 'download',
-          opSpanCount: 1
+          op: 'download'
         });
       });
     });
@@ -365,13 +352,12 @@ if (!storageAccount || !accountKey) {
           path: '/download-blockblob-promise',
           withError: false,
           spans: spans,
-          op: 'download',
-          opSpanCount: 1
+          op: 'download'
         });
       });
     });
 
-    async function verify({ spanName, dataProperty, n, path, withError, spans, op, opSpanCount }) {
+    async function verify({ spanName, dataProperty, n, path, withError, spans, op }) {
       const _pid = String(controls.getPid());
       const parent = verifyHttpRootEntry({
         spans,
@@ -395,7 +381,7 @@ if (!storageAccount || !accountKey) {
         span => expect(span.data[dataProperty || spanName].containerName).to.exist,
         span => expect(span.data[dataProperty || spanName].op).to.exist
       ]);
-      expectExactlyNMatching(spans, opSpanCount, [span => expect(span.data[dataProperty].op).to.equal(op)]);
+      expectExactlyOneMatching(spans, [span => expect(span.data[dataProperty].op).to.equal(op)]);
     }
   });
 }

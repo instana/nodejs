@@ -275,8 +275,6 @@ app.get('/uploadData-delete-blobBatch-blobClient', async (req, res) => {
 
 app.get('/deleteError', async (req, res) => {
   try {
-    await uploadDocumentToAzure();
-    await deleteDocumentFromAzure(blobName);
     containerClient
       .deleteBlob(blobName)
       .then(() => {
