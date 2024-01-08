@@ -10,21 +10,27 @@ const semver = require('semver');
 const constants = require('@instana/core').tracing.constants;
 const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('../../../../../../core/test/config');
-const { verifyHttpRootEntry, stringifyItems } = require('../../../../../../core/test/test_util');
+const {
+  verifyHttpRootEntry,
+  expectExactlyNMatching,
+  stringifyItems,
+  retry,
+  delay
+} = require('../../../../../../core/test/test_util');
 const ProcessControls = require('../../../../test_util/ProcessControls');
 const globalAgent = require('../../../../globalAgent');
 const { fail } = expect;
-const testUtils = require('../../../../../../core/test/test_util');
 const { createContainer, deleteContainer, minimumNodeJsVer } = require('./util');
 const { BlobServiceClient } = require('@azure/storage-blob');
 const expectExactlyOneMatching = require('@instana/core/test/test_util/expectExactlyOneMatching');
 const containerName = `nodejs-team-${uuid()}`;
-const storageAccount = process.env.AZ_STORAGE_ACCOUNT_NAME;
-const accountKey = process.env.AZ_STORAGE_ACCOUNT_KEY;
+const storageAccount = process.env.AZURE_STORAGE_ACCOUNT_NAME;
+const accountKey = process.env.AZURE_STORAGE_ACCOUNT_KEY;
 
 /**
  * endPoint is assigned with the default constant string for appending EndpointSuffix
  * to connection string of an azure account
+ * refer https://learn.microsoft.com/en-us/azure/storage/common/storage-configure-connection-string
  */
 const endPoint = 'EndpointSuffix=core.windows.net';
 const connStr = `DefaultEndpointsProtocol=https;AccountName=${storageAccount};AccountKey=${accountKey};${endPoint}`;
@@ -35,15 +41,15 @@ let mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe
 mochaSuiteFn = semver.lt(process.versions.node, minimumNodeJsVer) ? describe.skip : mochaSuiteFn;
 
 /**
- * This suite is skipped if no storageAccount or accountKey has been provided via AZ_STORAGE_ACCOUNT_NAME
- * and AZ_STORAGE_ACCOUNT_KEY. For the Azure blob tests, the azure storage account used is teamnodejstracer
- * which is the value for AZ_STORAGE_ACCOUNT_NAME. From the azure portal, navigate to this storage account
- * and under the Access keys, Key can be found for AZ_STORAGE_ACCOUNT_KEY.
+ * This suite is skipped if no storageAccount or accountKey has been provided via AZURE_STORAGE_ACCOUNT_NAME
+ * and AZURE_STORAGE_ACCOUNT_KEY. For the Azure blob tests, the azure storage account used is teamnodejstracer
+ * which is the value for AZURE_STORAGE_ACCOUNT_NAME. From the azure portal, navigate to this storage account
+ * and under the Access keys, Key can be found for AZURE_STORAGE_ACCOUNT_KEY.
  */
 if (!storageAccount || !accountKey) {
   describe('tracing/cloud/azure/blob', function () {
     it('The configuration for Azure is missing', () => {
-      fail('Please set process.env.AZ_STORAGE_ACCOUNT_KEY and process.env.AZ_STORAGE_ACCOUNT_NAME before tests.');
+      fail('Please set process.env.AZURE_STORAGE_ACCOUNT_KEY and process.env.AZURE_STORAGE_ACCOUNT_NAME before tests.');
     });
   });
 } else {
@@ -51,6 +57,14 @@ if (!storageAccount || !accountKey) {
     this.timeout(config.getTestTimeout());
     globalAgent.setUpCleanUpHooks();
     const agentControls = globalAgent.instance;
+
+    before(async () => {
+      await createContainer(containerClient);
+    });
+
+    after(async () => {
+      await deleteContainer(containerClient);
+    });
     describe('tracing enabled', function () {
       const controls = new ProcessControls({
         dirname: __dirname,
@@ -64,20 +78,12 @@ if (!storageAccount || !accountKey) {
       });
       ProcessControls.setUpHooks(controls);
 
-      before(async () => {
-        await createContainer(containerClient);
-      });
-
-      after(async () => {
-        await deleteContainer(containerClient);
-      });
-
       it('uploads block data', async () => {
         await controls.sendRequest({
           method: 'GET',
           path: '/uploadDataBlock'
         });
-        await testUtils.retry(async () => {
+        await retry(async () => {
           const spans = await agentControls.getSpans();
           await verify({
             spanName: 'azstorage',
@@ -86,7 +92,7 @@ if (!storageAccount || !accountKey) {
             withError: false,
             spans: spans,
             op: 'upload',
-            totalspans: 3
+            totalspans: 3 // expects 1 azure upload span and 2 http spans
           });
         });
       });
@@ -96,7 +102,7 @@ if (!storageAccount || !accountKey) {
           method: 'GET',
           path: '/upload'
         });
-        await testUtils.retry(async () => {
+        await retry(async () => {
           const spans = await agentControls.getSpans();
           await verify({
             spanName: 'azstorage',
@@ -105,7 +111,7 @@ if (!storageAccount || !accountKey) {
             withError: false,
             spans: spans,
             op: 'upload',
-            totalspans: 4
+            totalspans: 4 // expects 1 azure upload span, 1 fs span of otel and 2 http spans
           });
         });
       });
@@ -115,7 +121,7 @@ if (!storageAccount || !accountKey) {
           method: 'GET',
           path: '/upload-err'
         });
-        await testUtils.retry(async () => {
+        await retry(async () => {
           const spans = await agentControls.getSpans();
           await verify({
             spanName: 'azstorage',
@@ -124,7 +130,7 @@ if (!storageAccount || !accountKey) {
             withError: true,
             spans: spans,
             op: 'upload',
-            totalspans: 3
+            totalspans: 3 // expects 1 azure upload span, 1 fs span of otel and 1 http span
           });
         });
       });
@@ -134,7 +140,7 @@ if (!storageAccount || !accountKey) {
           method: 'GET',
           path: '/uploadData'
         });
-        await testUtils.retry(async () => {
+        await retry(async () => {
           const spans = await agentControls.getSpans();
           await verify({
             spanName: 'azstorage',
@@ -143,7 +149,7 @@ if (!storageAccount || !accountKey) {
             withError: false,
             spans: spans,
             op: 'upload',
-            totalspans: 3
+            totalspans: 3 // expects 1 azure upload span, 1 azure delete span and 1 http span
           });
         });
       });
@@ -153,7 +159,7 @@ if (!storageAccount || !accountKey) {
           method: 'GET',
           path: '/deleteError'
         });
-        await testUtils.retry(async () => {
+        await retry(async () => {
           const spans = await agentControls.getSpans();
           await verify({
             spanName: 'azstorage',
@@ -162,7 +168,7 @@ if (!storageAccount || !accountKey) {
             withError: true,
             spans: spans,
             op: 'delete',
-            totalspans: 2
+            totalspans: 2 // expects 1 azure delete span and 1 http span
           });
         });
       });
@@ -172,7 +178,7 @@ if (!storageAccount || !accountKey) {
           method: 'GET',
           path: '/uploadData-delete-blobBatch-blobUri'
         });
-        await testUtils.retry(async () => {
+        await retry(async () => {
           const spans = await agentControls.getSpans();
           await verify({
             spanName: 'azstorage',
@@ -181,7 +187,7 @@ if (!storageAccount || !accountKey) {
             withError: false,
             spans: spans,
             op: 'delete',
-            totalspans: 4
+            totalspans: 4 // expects 1 azure delete span, 1 azure upload span and 2 http span
           });
         });
       });
@@ -191,7 +197,7 @@ if (!storageAccount || !accountKey) {
           method: 'GET',
           path: '/uploadData-delete-blobBatch-blobClient'
         });
-        await testUtils.retry(async () => {
+        await retry(async () => {
           const spans = await agentControls.getSpans();
           await verify({
             spanName: 'azstorage',
@@ -200,7 +206,7 @@ if (!storageAccount || !accountKey) {
             withError: false,
             spans: spans,
             op: 'delete',
-            totalspans: 4
+            totalspans: 4 // expects 1 azure delete span, 1 azure upload span and 2 http span
           });
         });
       });
@@ -210,7 +216,7 @@ if (!storageAccount || !accountKey) {
           method: 'GET',
           path: '/download-await'
         });
-        await testUtils.retry(async () => {
+        await retry(async () => {
           const spans = await agentControls.getSpans();
           await verify({
             spanName: 'azstorage',
@@ -219,7 +225,7 @@ if (!storageAccount || !accountKey) {
             withError: false,
             spans: spans,
             op: 'download',
-            totalspans: 4
+            totalspans: 4 // expects 1 azure delete span, 1 azure upload span, 1 azure download span and 1 http span
           });
         });
       });
@@ -229,7 +235,7 @@ if (!storageAccount || !accountKey) {
           method: 'GET',
           path: '/download'
         });
-        await testUtils.retry(async () => {
+        await retry(async () => {
           const spans = await agentControls.getSpans();
           await verify({
             spanName: 'azstorage',
@@ -238,7 +244,7 @@ if (!storageAccount || !accountKey) {
             withError: false,
             spans: spans,
             op: 'download',
-            totalspans: 6
+            totalspans: 6 // expects 3 azure spans( delete, upload, download ), 2 fs spans and 1 http span
           });
         });
       });
@@ -248,7 +254,7 @@ if (!storageAccount || !accountKey) {
           method: 'GET',
           path: '/download-buffer'
         });
-        await testUtils.retry(async () => {
+        await retry(async () => {
           const spans = await agentControls.getSpans();
           await verify({
             spanName: 'azstorage',
@@ -257,7 +263,7 @@ if (!storageAccount || !accountKey) {
             withError: false,
             spans: spans,
             op: 'download',
-            totalspans: 7
+            totalspans: 7 // expects 3 azure spans( delete, upload, download ), 2 fs spans and 2 http spans
           });
         });
       });
@@ -267,7 +273,7 @@ if (!storageAccount || !accountKey) {
           method: 'GET',
           path: '/download-buffer-promise'
         });
-        await testUtils.retry(async () => {
+        await retry(async () => {
           const spans = await agentControls.getSpans();
           await verify({
             spanName: 'azstorage',
@@ -276,7 +282,7 @@ if (!storageAccount || !accountKey) {
             withError: false,
             spans: spans,
             op: 'download',
-            totalspans: 7
+            totalspans: 7 // expects 3 azure spans( delete, upload, download ), 2 fs spans and 2 http spans
           });
         });
       });
@@ -286,7 +292,7 @@ if (!storageAccount || !accountKey) {
           method: 'GET',
           path: '/download-promise'
         });
-        await testUtils.retry(async () => {
+        await retry(async () => {
           const spans = await agentControls.getSpans();
           await verify({
             spanName: 'azstorage',
@@ -295,7 +301,7 @@ if (!storageAccount || !accountKey) {
             withError: false,
             spans: spans,
             op: 'download',
-            totalspans: 6
+            totalspans: 6 // expects 3 azure spans( delete, upload, download ), 2 fs spans and 1 http span
           });
         });
       });
@@ -305,7 +311,7 @@ if (!storageAccount || !accountKey) {
           method: 'GET',
           path: '/download-promise-err'
         });
-        await testUtils.retry(async () => {
+        await retry(async () => {
           const spans = await agentControls.getSpans();
           await verify({
             spanName: 'azstorage',
@@ -314,7 +320,7 @@ if (!storageAccount || !accountKey) {
             withError: true,
             spans: spans,
             op: 'download',
-            totalspans: 2
+            totalspans: 2 // expects 1 azure download span and 1 http span
           });
         });
       });
@@ -324,7 +330,7 @@ if (!storageAccount || !accountKey) {
           method: 'GET',
           path: '/download-err'
         });
-        await testUtils.retry(async () => {
+        await retry(async () => {
           const spans = await agentControls.getSpans();
           await verify({
             spanName: 'azstorage',
@@ -333,7 +339,7 @@ if (!storageAccount || !accountKey) {
             withError: true,
             spans: spans,
             op: 'download',
-            totalspans: 4
+            totalspans: 4 // expects 3 azure spans( delete, upload, download ) and 1 http span
           });
         });
       });
@@ -343,7 +349,7 @@ if (!storageAccount || !accountKey) {
           method: 'GET',
           path: '/download-blockblob-promise'
         });
-        await testUtils.retry(async () => {
+        await retry(async () => {
           const spans = await agentControls.getSpans();
           await verify({
             spanName: 'azstorage',
@@ -352,12 +358,12 @@ if (!storageAccount || !accountKey) {
             withError: false,
             spans: spans,
             op: 'download',
-            totalspans: 4
+            totalspans: 4 // expects 3 azure spans( delete, upload, download ) and 1 http span
           });
         });
       });
 
-      async function verify({ spanName, dataProperty, path, withError, spans, op }) {
+      async function verify({ spanName, dataProperty, path, withError, spans, op, totalspans }) {
         const _pid = String(controls.getPid());
         const parent = verifyHttpRootEntry({
           spans,
@@ -382,6 +388,17 @@ if (!storageAccount || !accountKey) {
           span => expect(span.data[dataProperty || spanName].op).to.exist,
           span => expect(span.data[dataProperty].op).to.equal(op)
         ]);
+        expectExactlyNMatching(spans, totalspans, [
+          span => expect(span.n).exist,
+          span => expect(span.k).to.exist,
+          span => expect(span.t).to.exist,
+          span => expect(span.f.e).to.equal(_pid),
+          span => expect(span.f.h).to.equal('agent-stub-uuid'),
+          span => expect(span.s).to.exist,
+          span => expect(span.data).to.exist,
+          span => expect(span.ec).to.exist,
+          span => expect(span.stack).to.exist
+        ]);
       }
     });
     describe('tracing disabled', () => {
@@ -398,26 +415,19 @@ if (!storageAccount || !accountKey) {
       });
       ProcessControls.setUpHooks(controls);
 
-      before(async () => {
-        await createContainer(containerClient);
-      });
-
-      after(async () => {
-        await deleteContainer(containerClient);
-      });
-
       describe('attempt to get result', () => {
         it('should not trace', async () => {
           await controls.sendRequest({
             method: 'GET',
             path: '/upload'
           });
-          await testUtils.retry(async () => {
-            const spans = await agentControls.getSpans();
-            if (spans.length > 0) {
-              fail(`Unexpected spans : ${stringifyItems(spans)}`);
-            }
-          });
+          return retry(() => delay(config.getTestTimeout() / 4))
+            .then(() => agentControls.getSpans())
+            .then(spans => {
+              if (spans.length > 0) {
+                fail(`Unexpected spans : ${stringifyItems(spans)}`);
+              }
+            });
         });
       });
     });
@@ -434,14 +444,6 @@ if (!storageAccount || !accountKey) {
       });
       ProcessControls.setUpHooks(controls);
 
-      before(async () => {
-        await createContainer(containerClient);
-      });
-
-      after(async () => {
-        await deleteContainer(containerClient);
-      });
-
       describe('attempt to get result', () => {
         it('should not trace', async () => {
           await controls.sendRequest({
@@ -449,12 +451,13 @@ if (!storageAccount || !accountKey) {
             method: 'GET',
             path: '/upload'
           });
-          await testUtils.retry(async () => {
-            const spans = await agentControls.getSpans();
-            if (spans.length > 0) {
-              fail(`Unexpected spans (suppressed: ${stringifyItems(spans)}`);
-            }
-          });
+          return retry(() => delay(config.getTestTimeout() / 4))
+            .then(() => agentControls.getSpans())
+            .then(spans => {
+              if (spans.length > 0) {
+                fail(`Unexpected spans (suppressed: ${stringifyItems(spans)})`);
+              }
+            });
         });
       });
     });
