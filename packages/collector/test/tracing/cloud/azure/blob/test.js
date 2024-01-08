@@ -12,7 +12,6 @@ const supportedVersion = require('@instana/core').tracing.supportedVersion;
 const config = require('../../../../../../core/test/config');
 const {
   verifyHttpRootEntry,
-  expectExactlyNMatching,
   stringifyItems
 } = require('../../../../../../core/test/test_util');
 const ProcessControls = require('../../../../test_util/ProcessControls');
@@ -86,7 +85,6 @@ if (!storageAccount || !accountKey) {
           await verify({
             spanName: 'azstorage',
             dataProperty: 'azstorage',
-            n: 1,
             path: '/uploadDataBlock',
             withError: false,
             spans: spans,
@@ -106,7 +104,6 @@ if (!storageAccount || !accountKey) {
           await verify({
             spanName: 'azstorage',
             dataProperty: 'azstorage',
-            n: 1,
             path: '/upload',
             withError: false,
             spans: spans,
@@ -126,7 +123,6 @@ if (!storageAccount || !accountKey) {
           await verify({
             spanName: 'azstorage',
             dataProperty: 'azstorage',
-            n: 1,
             path: '/upload-err',
             withError: true,
             spans: spans,
@@ -146,7 +142,6 @@ if (!storageAccount || !accountKey) {
           await verify({
             spanName: 'azstorage',
             dataProperty: 'azstorage',
-            n: 2,
             path: '/uploadData',
             withError: false,
             spans: spans,
@@ -166,7 +161,6 @@ if (!storageAccount || !accountKey) {
           await verify({
             spanName: 'azstorage',
             dataProperty: 'azstorage',
-            n: 1,
             path: '/deleteError',
             withError: true,
             spans: spans,
@@ -186,7 +180,6 @@ if (!storageAccount || !accountKey) {
           await verify({
             spanName: 'azstorage',
             dataProperty: 'azstorage',
-            n: 2,
             path: '/uploadData-delete-blobBatch-blobUri',
             withError: false,
             spans: spans,
@@ -206,7 +199,6 @@ if (!storageAccount || !accountKey) {
           await verify({
             spanName: 'azstorage',
             dataProperty: 'azstorage',
-            n: 2,
             path: '/uploadData-delete-blobBatch-blobClient',
             withError: false,
             spans: spans,
@@ -226,7 +218,6 @@ if (!storageAccount || !accountKey) {
           await verify({
             spanName: 'azstorage',
             dataProperty: 'azstorage',
-            n: 3,
             path: '/download-await',
             withError: false,
             spans: spans,
@@ -246,7 +237,6 @@ if (!storageAccount || !accountKey) {
           await verify({
             spanName: 'azstorage',
             dataProperty: 'azstorage',
-            n: 3,
             path: '/download',
             withError: false,
             spans: spans,
@@ -266,7 +256,6 @@ if (!storageAccount || !accountKey) {
           await verify({
             spanName: 'azstorage',
             dataProperty: 'azstorage',
-            n: 3,
             path: '/download-buffer',
             withError: false,
             spans: spans,
@@ -286,7 +275,6 @@ if (!storageAccount || !accountKey) {
           await verify({
             spanName: 'azstorage',
             dataProperty: 'azstorage',
-            n: 3,
             path: '/download-buffer-promise',
             withError: false,
             spans: spans,
@@ -306,7 +294,6 @@ if (!storageAccount || !accountKey) {
           await verify({
             spanName: 'azstorage',
             dataProperty: 'azstorage',
-            n: 3,
             path: '/download-promise',
             withError: false,
             spans: spans,
@@ -326,7 +313,6 @@ if (!storageAccount || !accountKey) {
           await verify({
             spanName: 'azstorage',
             dataProperty: 'azstorage',
-            n: 1,
             path: '/download-promise-err',
             withError: true,
             spans: spans,
@@ -346,7 +332,6 @@ if (!storageAccount || !accountKey) {
           await verify({
             spanName: 'azstorage',
             dataProperty: 'azstorage',
-            n: 1,
             path: '/download-err',
             withError: true,
             spans: spans,
@@ -366,7 +351,6 @@ if (!storageAccount || !accountKey) {
           await verify({
             spanName: 'azstorage',
             dataProperty: 'azstorage',
-            n: 3,
             path: '/download-blockblob-promise',
             withError: false,
             spans: spans,
@@ -376,14 +360,14 @@ if (!storageAccount || !accountKey) {
         });
       });
 
-      async function verify({ spanName, dataProperty, n, path, withError, spans, op }) {
+      async function verify({ spanName, dataProperty, path, withError, spans, op }) {
         const _pid = String(controls.getPid());
         const parent = verifyHttpRootEntry({
           spans,
           apiPath: path,
           pid: _pid
         });
-        expectExactlyNMatching(spans, n, [
+        expectExactlyOneMatching(spans, [
           span => expect(span.n).to.equal('azstorage'),
           span => expect(span.k).to.equal(constants.EXIT),
           span => expect(span.t).to.equal(parent.t),
@@ -398,9 +382,8 @@ if (!storageAccount || !accountKey) {
           span => expect(span.data[dataProperty || spanName].accountName).to.exist,
           span => expect(span.data[dataProperty || spanName].blobName).to.exist,
           span => expect(span.data[dataProperty || spanName].containerName).to.exist,
-          span => expect(span.data[dataProperty || spanName].op).to.exist
-        ]);
-        expectExactlyOneMatching(spans, [span => expect(span.data[dataProperty].op).to.equal(op)]);
+          span => expect(span.data[dataProperty || spanName].op).to.exist,
+          span => expect(span.data[dataProperty].op).to.equal(op)]);
       }
     });
     describe('tracing disabled', () => {
