@@ -271,7 +271,7 @@ BUILD_FOR_MACOS=true ./rebuild-precompiled-addons.sh
 
 #### autoprofile package
 
-Please read the `README.md` in `packages/autoprofile`.
+Please read `packages/autoprofile/CONTRIBUTING.md`.
 
 ## Support for Cloud Services
 
