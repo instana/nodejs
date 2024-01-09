@@ -32,21 +32,33 @@ if (!argv.abi) {
   targets = argv.abi.split(',').join(' -t ');
 }
 
-console.log(`\n### Building darwin prebuilds for ${targets}...\n`);
-
 // darwin
 if (!argv.os || (argv.os && argv.os === 'darwin')) {
-  childProcess.execSync(`npx prebuildify -t ${targets} --strip --arch arm64`, { stdio: 'inherit' });
-  childProcess.execSync(`npx prebuildify -t ${targets} --strip --arch x64`, { stdio: 'inherit' });
-}
+  let archs = ['arm64', 'x64'];
 
-console.log(`\n### Building linux prebuilds for ${targets}...\n`);
+  if (argv.arch) {
+    archs = argv.arch.split(',');
+  }
+
+  console.log(`\n### Building darwin prebuilds for ${targets} ${archs}...\n`);
+
+  archs.forEach(arch => {
+    childProcess.execSync(`npx prebuildify -t ${targets} --strip --arch ${arch}`, { stdio: 'inherit' });
+  });
+}
 
 // linux
 // alpine = x64 musl
 // centos7-devtoolset7 = x64 glibc
 if (!argv.os || (argv.os && argv.os === 'linux')) {
-  ['alpine', 'linux-arm64', 'centos7-devtoolset7'].forEach(image => {
+  let archs = ['alpine', 'linux-arm64', 'centos7-devtoolset7', 'linux-armv6', 'linux-armv7'];
+  if (argv.arch) {
+    archs = argv.arch.split(',');
+  }
+
+  console.log(`\n### Building linux prebuilds for ${targets} ${archs}...\n`);
+
+  archs.forEach(image => {
     childProcess.execSync(`npx prebuildify-cross --modules ../../node_modules -i ${image} -t ${targets} --strip`, {
       stdio: 'inherit'
     });
