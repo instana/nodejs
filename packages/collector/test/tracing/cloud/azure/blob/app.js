@@ -212,8 +212,8 @@ app.get('/download-promise-err', async (req, res) => {
         res.send();
       })
       .catch(error => {
-        log(`Error downloading blob`);
-        res.send();
+        log('Error downloading blob');
+        res.send(error);
       });
   } catch (e) {
     res.send();
@@ -269,7 +269,7 @@ app.get('/upload-err', async (req, res) => {
       res.send('success');
     })
     .catch(error => {
-      res.send('fail');
+      res.send(error);
     });
 });
 
