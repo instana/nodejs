@@ -4,9 +4,13 @@
 
 'use strict';
 
-// npx prebuildify -t node@14.0.0 -t node@16.0.0 -t node@18.0.0 -t node@20.0.0 -t node@21.0.0 --strip --arch arm64
-// eslint-disable-next-line max-len
-// npx prebuildify-cross --modules ../../node_modules -i linux-arm64 -t node@14.0.0 -t node@16.0.0 -t node@18.0.0 -t node@20.0.0 -t node@21.0.0 --strip
+/**
+ * This is just a wrapper around the CLI commands `prebuildify` and `prebuildify-cross`.
+ *
+ * Instead of using this wrapper, you can manually run the commands:
+ * npx prebuildify -t node@14.0.0 -t node@16.0.0 -t node@18.0.0 -t node@20.0.0 -t node@21.0.0 --strip --arch arm64
+ * npx prebuildify-cross --modules ../../node_modules -i linux-arm64 -t node@14.0.0 --strip
+ */
 
 const abi = require('node-abi');
 const yargs = require('yargs/yargs');
