@@ -14,7 +14,7 @@ const { getNodeAutoInstrumentations } = require('@opentelemetry/auto-instrumenta
 const { InstanaExporter } = require('../src/index');
 const { Resource } = require('@opentelemetry/resources');
 const { SemanticResourceAttributes } = require('@opentelemetry/semantic-conventions');
-const { BatchSpanProcessor } = require('@opentelemetry/tracing');
+const { BatchSpanProcessor } = require('@opentelemetry/sdk-trace-base');
 const pinkAgentKey = '';
 const pinkEndpointUrl = '';
 
