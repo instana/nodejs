@@ -57,7 +57,7 @@ It's not recommended to run `coverage-all` locally, because it can take up to 1 
 
 This is an open source project, and we appreciate your help!
 
-Each source file must include a license header e.g.
+Each source file must include this license header:
 
 ```
 /*
