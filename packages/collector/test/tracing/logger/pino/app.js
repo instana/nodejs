@@ -51,7 +51,7 @@ if (process.env.PINO_VERSION === '8') {
 }
 
 const plainVanillaPino = pino(pinoOptions);
-const expressPino = require('express-pino-logger')(pinoOptions);
+const expressPino = require('pino-http')(pinoOptions);
 
 const app = express();
 const logPrefix = `Pino App (${process.pid}):\t`;
