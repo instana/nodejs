@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [3.1.1](https://github.com/instana/nodejs/compare/v3.1.0...v3.1.1) (2024-01-10)
+
+### Bug Fixes
+
+- resolved Lambda execution delay with env variable check ([#991](https://github.com/instana/nodejs/issues/991)) ([b6ed50b](https://github.com/instana/nodejs/commit/b6ed50b9a70e0f4af579e0cf66320d0b8ac36ca9))
+
 # [3.1.0](https://github.com/instana/nodejs/compare/v3.0.0...v3.1.0) (2024-01-04)
 
 ### Bug Fixes
