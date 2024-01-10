@@ -57,9 +57,17 @@ It's not recommended to run `coverage-all` locally, because it can take up to 1 
 
 This is an open source project, and we appreciate your help!
 
-In order to clarify the intellectual property license granted with contributions from any person or entity, a Contributor License Agreement ("CLA") must be on file that has been signed by each contributor, indicating agreement to the license terms below. This license is for your protection as a contributor as well as the protection of Instana and its customers; it does not change your rights to use your own contributions for any other purpose.
+Each source file must include a license header e.g.
 
-Please print, fill out, and sign the [contributor license agreement](https://github.com/instana/nodejs/raw/main/misc/instana-nodejs-cla-individual.pdf). Once completed, please scan the document as a PDF file and email to the following email address: bastian.krol@instana.com.
+```
+/*
+ * (c) Copyright IBM Corp. 2024
+ */
+```
+
+Furthermore you must include a sign-off statement in the commit message.
+
+> Signed-off-by: John Doe <john.doe@example.com>
 
 Thank you for your interest in the Instana Node.js project!
 
