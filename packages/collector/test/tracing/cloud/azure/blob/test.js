@@ -43,9 +43,7 @@ mochaSuiteFn = semver.lt(process.versions.node, minimumNodeJsVer) ? describe.ski
  * This suite is skipped if no storageAccount or accountKey has been provided via AZURE_STORAGE_ACCOUNT_NAME
  * and AZURE_STORAGE_ACCOUNT_KEY. For the Azure blob tests, the azure storage account used is 'teamnodejstracer'
  * which is the value for AZURE_STORAGE_ACCOUNT_NAME. From the azure portal, navigate to this storage account
- * and under the Access keys, Key can be found for AZURE_STORAGE_ACCOUNT_KEY( in 1pwd it is added under
- * Team Node.js Azure Storage Account Key).
- * NOTE: Any changes for Azure storage account in future, should ensure the key value changes in CI and 1PWD.
+ * and under the Access keys, Key can be found for AZURE_STORAGE_ACCOUNT_KEY
  */
 if (!storageAccount || !accountKey) {
   describe('tracing/cloud/azure/blob', function () {
