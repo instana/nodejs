@@ -29,6 +29,7 @@ const subscriptionUpdate = 'subscription-update';
 exports.init = function init() {
   requireHook.onFileLoad(/\/graphql\/execution\/execute.js/, instrumentExecute);
   requireHook.onFileLoad(/\/@apollo\/gateway\/dist\/executeQueryPlan.js/, instrumentApolloGatewayExecuteQueryPlan);
+  requireHook.onModuleLoad('@apollo/federation', logDeprecatedWarning);
 };
 
 function instrumentExecute(executeModule) {
@@ -339,6 +340,11 @@ function shimApolloGatewayExecuteQueryPlanFunction(originalFunction) {
     }
     return resultPromise;
   };
+}
+function logDeprecatedWarning() {
+  logger.warn(
+    'The support for @apollo-federation has been deprecated, following its official end-of-life in September 2023.'
+  );
 }
 
 exports.activate = function activate() {
