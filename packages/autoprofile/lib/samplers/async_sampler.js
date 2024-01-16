@@ -38,11 +38,6 @@ class AsyncSampler {
       return false;
     }
 
-    if (!this.profiler.matchVersion('v8.1.0', null)) {
-      this.profiler.log('Async sampler is supported starting Node.js v8.1.0');
-      return false;
-    }
-
     return true;
   }
 
