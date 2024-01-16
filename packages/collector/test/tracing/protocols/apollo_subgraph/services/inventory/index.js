@@ -1,18 +1,18 @@
 /*
  * (c) Copyright IBM Corp. 2021
- * (c) Copyright Instana Inc. and contributors 2020
  */
 
 'use strict';
 
 require('../../../../../..')();
 
-const { ApolloServer, gql } = require('apollo-server-express');
-const { buildFederatedSchema } = require('@apollo/federation');
+const { ApolloServer } = require('apollo-server-express');
+const { buildSubgraphSchema } = require('@apollo/subgraph'); // Updated import
 const bodyParser = require('body-parser');
 const express = require('express');
 const http = require('http');
 const morgan = require('morgan');
+const { gql } = require('graphql-tag');
 
 const port = require('../../../../../test_util/app-port')();
 const app = express();
@@ -58,7 +58,8 @@ const resolvers = {
 };
 
 const server = new ApolloServer({
-  schema: buildFederatedSchema([
+  schema: buildSubgraphSchema([
+    // Updated function
     {
       typeDefs,
       resolvers
@@ -70,13 +71,14 @@ app.get('/', (req, res) => {
   res.sendStatus(200);
 });
 
-server.applyMiddleware({ app });
-
-const httpServer = http.createServer(app);
-
-httpServer.listen({ port }, () => {
-  log(`Listening on ${port}`);
-});
+(async () => {
+  await server.start();
+  server.applyMiddleware({ app });
+  const httpServer = http.createServer(app);
+  httpServer.listen({ port }, () => {
+    log(`Listening at ${port}`);
+  });
+})();
 
 function log() {
   /* eslint-disable no-console */

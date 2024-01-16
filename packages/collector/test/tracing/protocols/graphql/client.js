@@ -5,7 +5,6 @@
 
 'use strict';
 
-require('./mockVersion');
 require('../../../..')();
 
 const amqp = require('amqplib');

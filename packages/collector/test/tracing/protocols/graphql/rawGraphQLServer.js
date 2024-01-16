@@ -5,7 +5,6 @@
 
 'use strict';
 
-require('./mockVersion');
 require('../../../..')();
 
 const bodyParser = require('body-parser');
@@ -50,26 +49,16 @@ amqp
         });
         return;
       }
-
-      if (process.env.GRAPHQL_REQUIRE === 'graphql-v16') {
-        graphql({
-          schema,
-          source: requestContent.query,
-          variableValues: requestContent.variables
-        }).then(result => {
-          const stringifiedResult = JSON.stringify(result);
-          channel.sendToQueue(msg.properties.replyTo, Buffer.from(stringifiedResult), {
-            correlationId: msg.properties.correlationId
-          });
+      graphql({
+        schema,
+        source: requestContent.query,
+        variableValues: requestContent.variables
+      }).then(result => {
+        const stringifiedResult = JSON.stringify(result);
+        channel.sendToQueue(msg.properties.replyTo, Buffer.from(stringifiedResult), {
+          correlationId: msg.properties.correlationId
         });
-      } else {
-        graphql(schema, requestContent.query, null, null, requestContent.variables).then(result => {
-          const stringifiedResult = JSON.stringify(result);
-          channel.sendToQueue(msg.properties.replyTo, Buffer.from(stringifiedResult), {
-            correlationId: msg.properties.correlationId
-          });
-        });
-      }
+      });
     });
     amqpConnected = true;
     log('amqp connection established');
@@ -89,15 +78,9 @@ app.post('/graphql', (req, res) => {
   if (!req.body || typeof req.body.query !== 'string') {
     return res.status(400).send('You need to provide a query.');
   }
-  if (process.env.GRAPHQL_REQUIRE === 'graphql-v16') {
-    graphql({ schema, source: req.body.query, variableValues: req.body.variables }).then(result => {
-      res.send(result);
-    });
-  } else {
-    graphql(schema, req.body.query, null, null, req.body.variables).then(result => {
-      res.send(result);
-    });
-  }
+  graphql({ schema, source: req.body.query, variableValues: req.body.variables }).then(result => {
+    res.send(result);
+  });
 });
 
 app.listen(port, () => {

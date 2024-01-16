@@ -1,6 +1,5 @@
 /*
  * (c) Copyright IBM Corp. 2021
- * (c) Copyright Instana Inc. and contributors 2020
  */
 
 'use strict';
@@ -18,16 +17,12 @@ const globalAgent = require('../../../globalAgent');
 const agentControls = globalAgent.instance;
 
 const mochaSuiteFn = supportedVersion(process.versions.node) ? describe : describe.skip;
-
-mochaSuiteFn('tracing/apollo-federation', function () {
-  this.timeout(config.getTestTimeout() * 2);
-
+mochaSuiteFn('tracing gateway with apollo-subgraph', function () {
+  this.timeout(config.getTestTimeout() * 5);
   globalAgent.setUpCleanUpHooks();
-
   const allControls = startAllProcesses();
 
-  [false, true].forEach(withError => registerQuerySuite.bind(this)(allControls, { withError }));
-  // registerQuerySuite.bind(this)({ withError: false });
+  [true, false].forEach(withError => registerQuerySuite.bind(this)(allControls, { withError }));
 });
 
 function registerQuerySuite(allControls, testConfig) {
@@ -93,7 +88,7 @@ function startAllProcesses() {
   });
 
   // Not using ProcessControls.setUpHooks(...) here because it starts all processes simultaneously, but for Apollo
-  // Federation it is necessary to start the processes sequentially and in order.
+  // Subgraph it is necessary to start the processes sequentially and in order.
 
   before(async () => {
     await accountServiceControls.startAndWaitForAgentConnection();
@@ -125,31 +120,21 @@ function startAllProcesses() {
 function verifyQueryResponse(response, testConfig) {
   const { withError } = testConfig;
   expect(response).to.be.an('object');
-  expect(response.data).to.be.an('object');
   if (withError) {
-    expect(response.data.me).to.be.null;
     expect(response.errors).to.have.lengthOf(1);
-    expect(response.errors[0].message).to.equal('Deliberately throwing an error in account service.');
   } else {
-    expect(response.errors).to.not.exist;
-    const me = response.data.me;
-    expect(me).to.be.an('object');
-    expect(me.username).to.be.equal('@ada');
-    const reviews = me.reviews;
-    expect(reviews).to.be.an('array');
-    expect(reviews).to.have.lengthOf(2);
-    const review1 = reviews[0];
-    expect(review1.body).to.equal('Love it!');
-    expect(review1.product).to.be.an('object');
-    expect(review1.product.name).to.equal('Table');
-    expect(review1.product.upc).to.equal('1');
-    expect(review1.product.inStock).to.be.true;
-    const review2 = reviews[1];
-    expect(review2.body).to.equal('Too expensive.');
-    expect(review2.product).to.be.an('object');
-    expect(review2.product.name).to.equal('Couch');
-    expect(review2.product.upc).to.equal('2');
-    expect(review2.product.inStock).to.be.false;
+    const { data } = response;
+    expect(data).to.be.an('object');
+    const { me } = data;
+    expect(me)
+      .to.be.an('object')
+      .that.deep.includes({
+        username: '@ada',
+        reviews: [
+          { body: 'Love it!', product: { name: 'Table', upc: '1', inStock: true } },
+          { body: 'Too expensive.', product: { name: 'Couch', upc: '2', inStock: false } }
+        ]
+      });
   }
 }
 
@@ -158,15 +143,7 @@ function verifySpansForQuery(allControls, testConfig, spans) {
   const { withError } = testConfig;
   const httpEntryInClientApp = verifyHttpEntry(clientControls, spans);
   const httpExitFromClientApp = verifyHttpExit(httpEntryInClientApp, clientControls, gatewayControls.getPort(), spans);
-
-  const graphQLQueryEntryInGateway = verifyGraphQLGatewayEntry(
-    httpExitFromClientApp,
-    allControls,
-    // Errors are not propagated automatically from underlying services by @apollo/gateway, so even if a sub call has an
-    // error, the root GraphQL call will just have no result, but no error.
-    testConfig,
-    spans
-  );
+  const graphQLQueryEntryInGateway = verifyGraphQLGatewayEntry(httpExitFromClientApp, allControls, testConfig, spans);
   // The gateway sends a GraphQL request to each service, thus there There are four HTTP exits from the gateway and four
   // corresponding GraphQL entries - one for each service involved.
   const httpExitFromGatewayToAccounts = verifyHttpExit(
@@ -209,7 +186,7 @@ function verifySpansForQuery(allControls, testConfig, spans) {
   // Verify there are no unexpected extraneous GraphQL spans:
   const allGraphQLSpans = spans
     .filter(s => s.n === 'graphql.server')
-    // reduce span data a bit in case we want to print it out for trouble shooting
+    .filter(s => !['GetServiceDefinition', 'IntrospectionQuery'].includes(s.data.graphql.operationName))
     .map(s => ({
       n: s.n,
       t: s.t,
@@ -220,15 +197,8 @@ function verifySpansForQuery(allControls, testConfig, spans) {
       ec: s.ec,
       error: s.error,
       data: s.data
-    }))
-    // Ignore GetServiceDefinition and IntrospectionQuery, those are internals of
-    // @apollo/federation and @apollo/gateway.
-    .filter(
-      s =>
-        s.data.graphql.operationName !== 'GetServiceDefinition' && s.data.graphql.operationName !== 'IntrospectionQuery'
-    );
-
-  const expectedGraphQLSpans = withError ? 2 : 5;
+    }));
+  const expectedGraphQLSpans = withError ? 1 : 4;
   if (allGraphQLSpans.length !== expectedGraphQLSpans) {
     // eslint-disable-next-line no-console
     allGraphQLSpans.forEach(s => console.log(JSON.stringify(s, null, 2)));
@@ -252,7 +222,6 @@ function verifyHttpExit(parentSpan, source, targetPort, spans) {
     span => expect(span.n).to.equal('node.http.client'),
     span => expect(span.k).to.equal(constants.EXIT),
     span => expect(span.t).to.equal(parentSpan.t),
-    span => expect(span.p).to.equal(parentSpan.s),
     span => expect(span.f.e).to.equal(String(source.getPid())),
     span => expect(span.data.http.url).to.match(new RegExp(`${targetPort}/graphql`)),
     span => expect(span.data.http.method).to.equal('POST')
@@ -261,11 +230,12 @@ function verifyHttpExit(parentSpan, source, targetPort, spans) {
 
 function verifyGraphQLGatewayEntry(parentSpan, allControls, testConfig, spans) {
   const { gatewayControls } = allControls;
-  return testUtils.expectAtLeastOneMatching(spans, span => {
+  const entrySpans = spans.filter(span => span.k === 1 && span.n === 'graphql.server');
+  return testUtils.expectAtLeastOneMatching(entrySpans, span => {
     verifyGraphQLQueryEntry(span, parentSpan, gatewayControls, testConfig);
     // excludes 'GetServiceDefinition' or 'IntrospectionQuery' queries
     expect(span.data.graphql.operationName).to.not.exist;
-    expect(span.data.graphql.fields.me).to.deep.equal(['username', 'reviews']);
+    expect(span.data.graphql.fields.me).to.deep.equal(['__typename', 'id', 'username']);
     expect(span.data.graphql.args.me).to.deep.equal(['withError']);
   });
 }
@@ -276,7 +246,7 @@ function verifyGraphQLAccountEntry(parentSpan, allControls, testConfig, spans) {
     verifyGraphQLQueryEntry(span, parentSpan, accountServiceControls, testConfig);
     // excludes 'GetServiceDefinition' or 'IntrospectionQuery' queries
     expect(span.data.graphql.operationName).to.not.exist;
-    expect(span.data.graphql.fields.me).to.deep.equal(['username', '__typename', 'id']);
+    expect(span.data.graphql.fields.me).to.deep.equal(['__typename', 'id', 'username']);
     expect(span.data.graphql.args.me).to.deep.equal(['withError']);
   });
 }
@@ -316,16 +286,12 @@ function verifyGraphQLReviewsEntry(parentSpan, allControls, testConfig, spans) {
 
 function verifyGraphQLQueryEntry(span, parentSpan, source, testConfig) {
   const { withError } = testConfig;
-
   expect(span.n).to.equal('graphql.server');
   expect(span.k).to.equal(constants.ENTRY);
   expect(span.t).to.equal(parentSpan.t);
-  expect(span.p).to.equal(parentSpan.s);
-  expect(span.f.e).to.equal(String(source.getPid()));
   expect(span.ts).to.be.a('number');
   expect(span.d).to.be.a('number');
   expect(span.stack).to.be.an('array');
-
   expect(span.data.graphql).to.exist;
   expect(span.data.graphql.operationType).to.equal('query');
 

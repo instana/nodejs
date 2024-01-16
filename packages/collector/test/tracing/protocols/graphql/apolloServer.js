@@ -5,7 +5,6 @@
 
 'use strict';
 
-require('./mockVersion');
 require('../../../..')();
 
 const { ApolloServer } = require('apollo-server-express');

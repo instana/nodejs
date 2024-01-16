@@ -1,6 +1,5 @@
 /*
  * (c) Copyright IBM Corp. 2021
- * (c) Copyright Instana Inc. and contributors 2020
  */
 
 'use strict';
@@ -10,7 +9,7 @@ require('../../../..')();
 const bodyParser = require('body-parser');
 const express = require('express');
 const morgan = require('morgan');
-const rp = require('request-promise');
+const fetch = require('node-fetch');
 
 const serverPort = process.env.SERVER_PORT;
 const serverBaseUrl = `http://127.0.0.1:${serverPort}`;
@@ -18,7 +17,7 @@ const serverGraphQLEndpoint = `${serverBaseUrl}/graphql`;
 
 const app = express();
 const port = require('../../../test_util/app-port')();
-const logPrefix = `Apollo Federation Client (${process.pid}):\t`;
+const logPrefix = `Apollo Subgraph Client (${process.pid}):\t`;
 
 if (process.env.WITH_STDOUT) {
   app.use(morgan(`${logPrefix}:method :url :status`));
@@ -53,21 +52,21 @@ function runQuery(req, res) {
 }
 
 function runQueryViaHttp(query, res) {
-  return rp({
+  return fetch(serverGraphQLEndpoint, {
     method: 'POST',
-    url: serverGraphQLEndpoint,
-    body: JSON.stringify({
-      query
-    }),
     headers: {
       'Content-Type': 'application/json'
-    }
-  })
-    .then(response => {
-      res.send(response);
+    },
+    body: JSON.stringify({
+      query
     })
-    .catch(e => {
-      log(e);
+  })
+    .then(response => response.json())
+    .then(data => {
+      res.send(data);
+    })
+    .catch(error => {
+      log(error);
       res.sendStatus(500);
     });
 }

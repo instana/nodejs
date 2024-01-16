@@ -1,6 +1,5 @@
 /*
  * (c) Copyright IBM Corp. 2021
- * (c) Copyright Instana Inc. and contributors 2020
  */
 
 'use strict';
@@ -8,7 +7,7 @@
 require('../../../..')();
 
 const { ApolloServer } = require('apollo-server-express');
-const { ApolloGateway } = require('@apollo/gateway');
+const { ApolloGateway, IntrospectAndCompose } = require('@apollo/gateway');
 const bodyParser = require('body-parser');
 const express = require('express');
 const http = require('http');
@@ -22,7 +21,7 @@ const reviewsPort = process.env.SERVICE_PORT_REVIEWS;
 const port = require('../../../test_util/app-port')();
 const app = express();
 
-const logPrefix = `Apollo Federation Gateway (${process.pid}):\t`;
+const logPrefix = `Apollo Subgraph Gateway (${process.pid}):\t`;
 
 if (process.env.WITH_STDOUT) {
   app.use(morgan(`${logPrefix}:method :url :status`));
@@ -31,27 +30,27 @@ if (process.env.WITH_STDOUT) {
 app.use(bodyParser.json());
 
 const gateway = new ApolloGateway({
-  serviceList: [
-    { name: 'accounts', url: `http://localhost:${accountsPort}/graphql` },
-    { name: 'inventory', url: `http://localhost:${inventoryPort}/graphql` },
-    { name: 'products', url: `http://localhost:${productsPort}/graphql` },
-    { name: 'reviews', url: `http://localhost:${reviewsPort}/graphql` }
-  ]
+  supergraphSdl: new IntrospectAndCompose({
+    subgraphs: [
+      { name: 'accounts', url: `http://localhost:${accountsPort}/graphql` },
+      { name: 'inventory', url: `http://localhost:${inventoryPort}/graphql` },
+      { name: 'products', url: `http://localhost:${productsPort}/graphql` },
+      { name: 'reviews', url: `http://localhost:${reviewsPort}/graphql` }
+    ]
+  })
 });
-
 app.get('/', (req, res) => {
   res.sendStatus(200);
 });
 
 (async () => {
   const { schema, executor } = await gateway.load();
-
   const server = new ApolloServer({ schema, executor });
+  await server.start();
   server.applyMiddleware({ app });
   const httpServer = http.createServer(app);
-
   httpServer.listen({ port }, () => {
-    log(`Listening at ${port}.`);
+    log(`Listening at ${port}`);
   });
 })();
 
