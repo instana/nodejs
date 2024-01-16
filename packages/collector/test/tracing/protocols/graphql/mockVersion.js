@@ -36,10 +36,6 @@ if (GRAPHQL_REQUIRE !== 'graphql') {
   mock('graphql/error', `${GRAPHQL_REQUIRE}/error`);
 }
 
-if (GRAPHQL_REQUIRE === 'graphql-v16') {
-  mock('apollo-server-express', 'apollo-server-express-v3');
-}
-
 /**
  * We monkey patch our own graphql instrumentation.
  * The reason we have to do that is because we are testing against
