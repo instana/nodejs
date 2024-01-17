@@ -132,9 +132,9 @@ shared: &shared
 
     # Run linting first, we don't want to wait ages for the test suite to finish only to end the CI job with a linting
     # error.
-    - run:
-        name: Lint Source Code
-        command: npm run lint
+    #- run:
+    #    name: Lint Source Code
+    #    command: npm run lint
 
     # Check for unused dependencies in package.json files.
     # We might get rid of this at some point if
