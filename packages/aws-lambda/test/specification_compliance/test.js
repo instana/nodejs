@@ -38,7 +38,7 @@ allTestCases.forEach(testDefinition => {
   }
 });
 
-describe.skip('AWS Lambda spec compliance', function () {
+describe('AWS Lambda spec compliance', function () {
   this.timeout(config.getTestTimeout());
 
   [false, true].forEach(w3cTraceCorrelationDisabled => {

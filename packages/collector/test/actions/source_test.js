@@ -20,9 +20,7 @@ describe('actions/source', function () {
   globalAgent.setUpCleanUpHooks();
   const agentControls = globalAgent.instance;
 
-  expressControls.registerTestHooks({
-    agentControls
-  });
+  expressControls.registerTestHooks();
 
   beforeEach(() => agentControls.waitUntilAppIsCompletelyInitialized(expressControls.getPid()));
 

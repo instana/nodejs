@@ -13,11 +13,12 @@ const testUtils = require('../../../../../core/test/test_util');
 
 describe('tracing/asyncAwait', function () {
   const expressAsyncAwaitControls = require('./controls');
-  const agentStubControls = require('../../../apps/agentStubControls');
+  const { AgentStubControls } = require('../../../apps/agentStubControls');
   const expressControls = require('../../../apps/expressControls');
 
   this.timeout(config.getTestTimeout());
 
+  const agentStubControls = new AgentStubControls();
   agentStubControls.registerTestHooks();
   expressControls.registerTestHooks({ agentControls: agentStubControls });
 

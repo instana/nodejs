@@ -19,7 +19,7 @@ describe('agentCommunication', function () {
   const agentControls = globalAgent.instance;
 
   const expressControls = require('./apps/expressControls');
-  expressControls.registerTestHooks({ agentControls });
+  expressControls.registerTestHooks();
 
   it('must announce itself to the agent', () =>
     retry(() =>
@@ -118,7 +118,6 @@ describe('announce retry', function () {
     beforeEach(async () => {
       await agentControls.rejectAnnounceAttempts(rejectedAttempts);
       return expressControls.start({
-        agentControls,
         env: {
           INSTANA_LOG_LEVEL: 'info'
         }

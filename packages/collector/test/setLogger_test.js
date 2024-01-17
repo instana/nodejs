@@ -22,7 +22,7 @@ mochaSuiteFn('setLogger', function () {
   globalAgent.setUpCleanUpHooks();
 
   const expressControls = require('./apps/expressControls');
-  expressControls.registerTestHooks({ agentControls: globalAgent.instance });
+  expressControls.registerTestHooks();
 
   const dummyLogFile = path.join(os.tmpdir(), 'instana-nodejs-dummy-test.log');
 
