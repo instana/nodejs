@@ -5,8 +5,8 @@
 
 'use strict';
 
+const fetch = require('node-fetch');
 const rp = require('request-promise');
-const request = require('request');
 
 require('../../../..')({
   agentPort: process.env.AGENT_PORT,
@@ -68,20 +68,17 @@ async function sendRequest(requestOptions) {
     return response;
   }
 
-  // a custom wrapper around request. Yes, this exists out of the box for request, but this
-  // is supposed to be a repro case for a customer issue.
-  const response = await new Promise((resolve, reject) => {
-    request(requestOptions, (error, res) => {
-      if (error) {
-        reject(error);
-      } else if (res.statusCode >= 200 && res.statusCode <= 299) {
-        resolve(res);
-      } else {
-        reject(res);
-      }
-    });
+  const url = `${requestOptions.uri}${requestOptions.query ? `?${new URLSearchParams(requestOptions.query)}` : ''}`;
+  const response = await fetch(url, {
+    method: requestOptions.method
   });
-  return response;
+  if (response.ok) {
+    return {
+      statusCode: response.status
+    };
+  } else {
+    throw response;
+  }
 }
 
 app.listen(port, () => {

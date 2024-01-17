@@ -9,7 +9,6 @@
     "@instana/collector": "latest",
     "dotenv": "^5.0.1",
     "express": "^4.16.3",
-    "request": "^2.85.0",
     "request-promise": "^4.2.5"
   }
 }

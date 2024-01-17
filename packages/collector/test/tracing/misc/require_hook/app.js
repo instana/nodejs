@@ -12,6 +12,7 @@ require('../../../..')();
 const bodyParser = require('body-parser');
 const express = require('express');
 const morgan = require('morgan');
+const fetch = require('node-fetch');
 const port = require('../../../test_util/app-port')();
 const app = express();
 const logPrefix = `requireHook App (${process.pid}):\t`;
@@ -26,11 +27,16 @@ app.get('/', (req, res) => {
   res.sendStatus(200);
 });
 
-app.get('/requireRequestPromiseMultipleTimes', (req, res) => {
-  require('request');
-  require('request-promise'); // executes stealthy-require
-  require('request-promise-native'); // executes stealthy-require
-  res.sendStatus(200);
+app.get('/requireRequestPromiseMultipleTimes', async (req, res) => {
+  try {
+    await fetch('https://example.com/test1');
+    await fetch('https://example.com/test2');
+    await fetch('https://example.com/test3');
+    res.sendStatus(200);
+  } catch (error) {
+    console.error(error);
+    res.sendStatus(500);
+  }
 });
 
 app.listen(port, () => {

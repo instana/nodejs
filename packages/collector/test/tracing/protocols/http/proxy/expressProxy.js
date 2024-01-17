@@ -20,7 +20,6 @@ require('../../../../..')({
 });
 
 const express = require('express');
-const request = require('request');
 const fetch = require('node-fetch');
 const port = require('../../../../test_util/app-port')();
 const app = express();
@@ -40,38 +39,17 @@ app.use((req, res) => {
       url = `http://localhost:${process.env.UPSTREAM_PORT}/proxy-call${req.url}`;
     }
 
-    if (req.query.httpLib === 'node-fetch') {
-      // use node-fetch
-      fetch(url, {
-        method: req.method,
-        timeout: 500
+    fetch(url, {
+      method: req.method,
+      timeout: 500
+    })
+      .then(response => {
+        res.sendStatus(response.status);
       })
-        .then(response => {
-          res.sendStatus(response.status);
-        })
-        .catch(err => {
-          res.sendStatus(500);
-          log('Unexpected error', err);
-        });
-    } else {
-      // use request package
-      request(
-        {
-          method: req.method,
-          url,
-          qs: req.query,
-          timeout: 500
-        },
-        (err, response) => {
-          if (err) {
-            res.sendStatus(500);
-            log('Unexpected error', err);
-          } else {
-            res.sendStatus(response.statusCode);
-          }
-        }
-      );
-    }
+      .catch(err => {
+        res.sendStatus(500);
+        log('Unexpected error', err);
+      });
   }, delay * 0.25);
 });
 

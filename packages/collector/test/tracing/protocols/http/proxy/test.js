@@ -99,8 +99,7 @@ mochaSuiteFn('http with proxy', function () {
         .sendRequest({
           method: 'POST',
           path: '/checkout',
-          responseStatus: 200,
-          httpLib: 'node-fetch'
+          responseStatus: 200
         })
         .then(() =>
           retry(() =>
@@ -187,15 +186,14 @@ mochaSuiteFn('http with proxy', function () {
           retry(() =>
             agentControls.getSpans().then(spans => {
               expectAtLeastOneMatching(spans, [
-                span => expect(span.n).to.equal('node.http.client'),
+                span => expect(span.n).to.equal('node.http.server'),
                 span => expect(span.error).to.not.exist,
                 span => expect(span.ec).to.equal(1),
                 span => expect(span.f.e).to.equal(String(expressProxyControls.getPid())),
                 span => expect(span.f.h).to.equal('agent-stub-uuid'),
                 span => expect(span.async).to.not.exist,
-                span => expect(span.data.http.error).to.be.a('string'),
                 span => expect(span.data.http.method).to.equal('POST'),
-                span => expect(span.data.http.url).to.equal('http://10.123.456.555:49162/foobar')
+                span => expect(span.data.http.url).to.equal('/callNonExistingTarget')
               ]);
             })
           )

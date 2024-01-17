@@ -19,6 +19,11 @@ const {
 const constants = require('../../constants');
 const cls = require('../../cls');
 const url = require('url');
+const requireHook = require('../../../util/requireHook');
+let logger;
+logger = require('../../../logger').getLogger('tracing/httpClient', newLogger => {
+  logger = newLogger;
+});
 
 let extraHttpHeadersToCapture;
 let isActive = false;
@@ -26,10 +31,12 @@ let isActive = false;
 exports.init = function init(config) {
   instrument(coreHttpModule, false);
   instrument(coreHttpsModule, true);
-
   extraHttpHeadersToCapture = config.tracing.http.extraHttpHeadersToCapture;
+  requireHook.onModuleLoad('request', logDeprecatedWarning);
 };
-
+function logDeprecatedWarning() {
+  logger.warn('The support for request has been deprecated.');
+}
 exports.updateConfig = function updateConfig(config) {
   extraHttpHeadersToCapture = config.tracing.http.extraHttpHeadersToCapture;
 };
