@@ -75,7 +75,7 @@ Thank you for your interest in the Instana Node.js project!
 
 We are adhering to the [Conventional Commits standard](https://www.conventionalcommits.org/en/v1.0.0/), which defines specific commit message types. The types we are using are: chore, build, docs, feat, fix, refactor, ci, or test.
 
-For any change that is customer-facing and should appear in the changelog file, we require the use of either 'fix' or 'feat' in the commit message. If the change is not customer-facing and is more related to internal tasks or housekeeping, it should use 'chore' for instance.
+For any change that is customer-facing and should appear in the changelog file, we require the use of either 'fix' or 'feat' in the commit message. If the change is not customer-facing and is more related to internal tasks or housekeeping, it should use 'chore' for instance. Please use 'fix' if you need to deprecate a library.
 
 When composing commit messages, it's important to use past tense. Additionally, if there is a corresponding ticket or issue associated with the change, please reference it in the commit message.
 
